@@ -103,7 +103,7 @@ endif
 # Target which installs everything after it has been built (should not need
 # modifying).
 install:		install_includes install_manpages install_archive \
-			install_executables
+			install_executables install_release
 
 # Target which installs an archive (should not need modifying).
 install_archive:	$(ARCHIVE)
@@ -118,6 +118,13 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			$(install_executables)
+
+# Target which installs release executables (should not need modifying).
+install_release:	$(EXECUTABLES)
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			$(install_release)
 
 # Target which installs the public 'C' header files (should not need 
 # modifying).
