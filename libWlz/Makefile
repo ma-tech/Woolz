@@ -70,6 +70,7 @@ CSOURCES		= \
 			WlzConvexHull.c \
 			WlzConvolve.c \
 			WlzCopy.c \
+			WlzCCor.c \
 			WlzCutObjToBox.c \
 			WlzDebug.c \
 			WlzDiffDomain.c \
