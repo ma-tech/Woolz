@@ -169,6 +169,122 @@ extern "C" {
   return(alcErrno);
 
 /*!
+* \def		ALC_TEMPLATE_SYM_C2D(D,T,N,F)
+* \ingroup	AlcArray
+* \brief	A template for functions which allocate 2 dimensional
+*		zero'd symetric arrays of any type. Obviously symetric
+*               arrays are square, but in this representation only the
+*		lower trinagle is stored.
+* 		- D:			Destination pointer, of type T **.
+*		- T:			Type, eg char, short, int, ....
+*		- N:			Number of rows or columns.
+*		- F:			String with name of function.
+*/
+#define ALC_TEMPLATE_SYM_C2D(D,T,N,F) \
+  size_t	totElm, \
+  		index, \
+		offset; \
+  T		*dump0 = NULL; \
+  T		**dump1 = NULL; \
+  AlcErrno	alcErrno = ALC_ER_NONE; \
+  \
+  if((D) == NULL) \
+  { \
+    alcErrno = ALC_ER_NULLPTR; \
+  } \
+  else if((N) < 1) \
+  { \
+    alcErrno = ALC_ER_NUMELEM; \
+  } \
+  else \
+  { \
+    totElm = ((N) * ((N) + 1)) / 2; \
+    if(((dump0 = (T *)AlcCalloc(totElm, sizeof(T))) == NULL) || \
+        ((dump1 = (T **)AlcMalloc((N) * sizeof(T *))) == NULL)) \
+    { \
+      alcErrno = ALC_ER_ALLOC; \
+    } \
+  } \
+  if(alcErrno == ALC_ER_NONE) \
+  { \
+    offset = 0; \
+    *(D) = dump1; \
+    for(index = 0; index < (N); ++index) \
+    { \
+      dump1[index] = dump0 + offset; \
+      offset += index + 1; \
+    } \
+  } \
+  else \
+  { \
+    if(D) \
+    { \
+      *(D) = NULL; \
+    } \
+    AlcFree(dump0); \
+    AlcFree(dump1); \
+  } \
+  return(alcErrno);
+
+/*!
+* \def		ALC_TEMPLATE_SYM_M2D(D,T,N,F)
+* \ingroup	AlcArray
+* \brief	A template for functions which allocate 2 dimensional
+*		zero'd symetric arrays of any type. Obviously symetric
+*               arrays are square, but in this representation only the
+*		lower trinagle is stored.
+* 		- D:			Destination pointer, of type T **.
+*		- T:			Type, eg char, short, int, ....
+*		- N:			Number of rows or columns.
+*		- F:			String with name of function.
+*/
+#define ALC_TEMPLATE_SYM_M2D(D,T,N,F) \
+  size_t	totElm, \
+  		index, \
+		offset; \
+  T		*dump0 = NULL; \
+  T		**dump1 = NULL; \
+  AlcErrno	alcErrno = ALC_ER_NONE; \
+  \
+  if((D) == NULL) \
+  { \
+    alcErrno = ALC_ER_NULLPTR; \
+  } \
+  else if((N) < 1) \
+  { \
+    alcErrno = ALC_ER_NUMELEM; \
+  } \
+  else \
+  { \
+    totElm = ((N) * ((N) + 1)) / 2; \
+    if(((dump0 = (T *)AlcMalloc(totElm * sizeof(T))) == NULL) || \
+        ((dump1 = (T **)AlcMalloc((N) * sizeof(T *))) == NULL)) \
+    { \
+      alcErrno = ALC_ER_ALLOC; \
+    } \
+  } \
+  if(alcErrno == ALC_ER_NONE) \
+  { \
+    offset = 0; \
+    *(D) = dump1; \
+    for(index = 0; index < (N); ++index) \
+    { \
+      dump1[index] = dump0 + offset; \
+      offset += index + 1; \
+    } \
+  } \
+  else \
+  { \
+    if(D) \
+    { \
+      *(D) = NULL; \
+    } \
+    AlcFree(dump0); \
+    AlcFree(dump1); \
+  } \
+  return(alcErrno);
+
+/*!
 * \def		ALC_TEMPLATE_F2D(D,F)
 * \ingroup	AlcArray
 * \brief	A template for functions which free 2 dimensional
