@@ -96,6 +96,7 @@ static WlzContour 	*WlzContourFromPoints3D(
 			  double oAlpha,
 			  double delta,
 			  double tau,
+			  double samFac,
 			  WlzErrorNum *dstErr);
 static WlzErrorNum 	WlzContourFromPoints3DPn(
 			  WlzDomain dom,
@@ -383,7 +384,7 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    break;
 	  case WLZ_CONTOUR_MTD_RBFBND:
 	    ctr = WlzContourRBFBndObj3D(srcObj, 2, 2, 10, 10, 10,
-	    			        1.0, 2.0, 0.1, 0.1,
+	    			        1.0, 2.0, 0.1, 0.1, 1.0,
 	    				&errNum);
 	    break;
 	  default:
@@ -413,6 +414,10 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 *		radial basis functions. The contour is then computed from the
 *		zero level set of the radial basis functions within the
 *		given distance object.
+*		The distance object sampling factor is used to subsample the
+*		distance object prior to cuting the zero value isosurface.
+*		The surface computed from a sampled distance object is then
+*		transformed using the inverse of the sampling transform.
 * \param	dObj			Object with double values, within
 *					which the distance function will be
 *					evaluated.
@@ -434,6 +439,7 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 * 					smoothness parameter.
 * \param	tau			Multiorder spline \f$\tau\f$
 *					smoothness parameter.
+* \param	samFac			Distance object sampling factor.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
@@ -446,6 +452,7 @@ WlzContour	*WlzContourFromPoints(WlzObject *dObj,
 				      int nOPts, WlzVertexP oPts,
 				      double oDist, double oAlpha,
 				      double delta, double tau,
+				      double samFac,
 				      WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;
@@ -481,7 +488,7 @@ WlzContour	*WlzContourFromPoints(WlzObject *dObj,
 				     nSPts, sPts, sAlpha,
 				     nIPts, iPts, iDist, iAlpha,
 				     nOPts, oPts, oDist, oAlpha,
-				     delta, tau, &errNum);
+				     delta, tau, samFac, &errNum);
 	break;
       default:
 	errNum = WLZ_ERR_PARAM_TYPE;
@@ -505,6 +512,10 @@ WlzContour	*WlzContourFromPoints(WlzObject *dObj,
 *		radial basis functions. The contour is then computed from the
 *		zero level set of the radial basis functions within the given
 *		distance object.
+*		The distance object sampling factor is used to subsample the
+*		distance object prior to cuting the zero value isosurface.
+*		The surface computed from a sampled distance object is then
+*		transformed using the inverse of the sampling transform.
 *		All parameters are assumed valid.
 * \param	dObj			3D object with double values, within
 *					which the distance function will be
@@ -528,6 +539,7 @@ WlzContour	*WlzContourFromPoints(WlzObject *dObj,
 * 					smoothness parameter.
 * \param	tau			Multiorder spline \f$\tau\f$
 *					smoothness parameter.
+* \param	samFac			Distance object sampling factor.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
@@ -536,23 +548,30 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
 		       int nSPts, WlzVertexP sPts, double sAlpha,
 		       int nIPts, WlzVertexP iPts, double iDist, double iAlpha,
 		       int nOPts, WlzVertexP oPts, double oDist, double oAlpha,
-		       double delta, double tau, WlzErrorNum *dstErr)
+		       double delta, double tau, double samFac,
+		       WlzErrorNum *dstErr)
 {
   int		tI0,
 		pnCnt,
 		pnIdx,
 		pnPos,
-  		nCPts;
-  double	*alpha = NULL,
+  		nCPts,
+		freeSDObj = 0;
+  double	tD0,
+  		*alpha = NULL,
   		*dist = NULL;
   WlzDVertex3	*cPts = NULL;
   WlzContour	*ctr = NULL;
   WlzBasisFn	*basisFn = NULL;
   WlzDomain	*domP;
   WlzValues	*valP;
-  WlzVoxelValues *dVal;
-  WlzPlaneDomain *dDom;
-  WlzObject	*dObj2D;
+  WlzVoxelValues *dVal,
+  		 *sDVal;
+  WlzPlaneDomain *dDom,
+  		*sDDom;
+  WlzAffineTransform *tr = NULL;
+  WlzObject	*sDObj = NULL,
+  		*dObj2D = NULL;
   double	bFnParam[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -674,28 +693,75 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
     }
 #endif
   }
+  /* Subsample the distance object before generating the surface if
+   * required. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(samFac > (1.0 + DBL_EPSILON))
+    {
+      tr = WlzAffineTransformFromScale(WLZ_TRANSFORM_3D_AFFINE,
+      				       samFac, samFac, samFac,
+				       &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        sDObj = WlzAffineTransformObj(dObj, tr, WLZ_INTERPOLATION_LINEAR,
+				      &errNum);
+        freeSDObj = 1;
+      }
+      if(tr)
+      {
+        (void )WlzFreeAffineTransform(tr);
+      }
+    }
+    else
+    {
+      sDObj = dObj;
+    }
+  }
   /* Compute the zero valued surface through the distance object. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(dDom->plane1 == dDom->lastpl)
+    sDDom = sDObj->domain.p;
+    sDVal = sDObj->values.vox;
+    if(sDDom->plane1 == sDDom->lastpl)
     {
       dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-      			   *(dDom->domains + 0), *(dVal->values + 0), 
+      			   *(sDDom->domains + 0), *(sDVal->values + 0), 
 			   NULL, NULL, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
         ctr = WlzContourObj(dObj2D, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, 0, &errNum);
       }
+      (void )WlzFreeObj(dObj2D);
     }
     else
     {
-      ctr = WlzContourObj(dObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, 0, &errNum);
+      ctr = WlzContourObj(sDObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, 0, &errNum);
     }
   }
   AlcFree(cPts);
   AlcFree(alpha);
   AlcFree(dist);
   WlzBasisFnFree(basisFn);
+  if(freeSDObj)
+  {
+    (void )WlzFreeObj(sDObj);
+  }
+  /* Transform the surface to account for subsampling of the distance
+   * function if required. */
+  if((errNum == WLZ_ERR_NONE) && (samFac > (1.0 + DBL_EPSILON)))
+  {
+    tD0 = 1.0 / samFac;
+    tr = WlzAffineTransformFromScale(WLZ_TRANSFORM_3D_AFFINE,
+    				     tD0, tD0, tD0,
+				     &errNum);
+
+    (void )WlzAffineTransformContour(ctr, tr, 0, &errNum);
+    if(tr)
+    {
+      (void )WlzFreeAffineTransform(tr);
+    }
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -2014,6 +2080,10 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 *		domain by extracting the zero level set of an approximate
 *		signed distance function computed using a multi-order
 *		spline radial basis function.
+*		The distance object sampling factor is used to subsample the
+*		distance object prior to cuting the zero value isosurface.
+*		The surface computed from a sampled distance object is then
+*		transformed using the inverse of the sampling transform.
 * \param	gObj			The given object.
 * \param	bErosion		Object boundary erosion for
 *					interior points.
@@ -2037,6 +2107,7 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 *					parameter.
 * \param	tau			Multi-order spline \f$tau\f$
 *					parameter.
+* \param	samFac			Distance object sampling factor.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
@@ -2045,6 +2116,7 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
 				int sFac, int oFac,
 				double sAlpha, double oAlpha,
 				double delta, double tau,
+				double samFac,
 				WlzErrorNum *dstErr)
 {
   int		idx,
@@ -2217,7 +2289,7 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
     			       nSPts, sPts, sAlpha,
 			       nEPts, ePts, bErosion, oAlpha,
 			       nDPts, dPts, bDilation, oAlpha,
-			       delta, tau, &errNum);
+			       delta, tau, samFac, &errNum);
   }
   /* Free remaining storage. */
   (void )WlzFreeObj(dObj);
