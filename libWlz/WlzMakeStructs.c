@@ -7,7 +7,7 @@
 *               $Revision$
 *               $Name$
 * \par Copyright:
-*               1994-2002 Medical Research Council, UK.
+*               1994-2003 Medical Research Council, UK.
 *               All rights reserved.
 * \par Address:
 *               MRC Human Genetics Unit,
@@ -19,21 +19,6 @@
 * \todo         -
 * \bug          None known
 *
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-* Maintenance log with most recent changes at top of list.
-* 07-12-00 bill Set error flag if invalid grey type in WlzNewValueTb().
-*		Correct order of parameters in calll to AlcCalloc() in
-*		WlzMakeValueTb().
-* 15-08-00 bill	Move WlzMakeContour() from WlzContour.c to here.
-*		Add WLZ_CONTOUR to WlzMakemain().
-* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
 */
 
 #include <stdlib.h>
@@ -57,8 +42,7 @@ the interval line array and set the pointer.
 * \par      Source:
 *                WlzMakeStructs.c
 */
-WlzIntervalDomain *
-WlzMakeIntervalDomain(WlzObjectType type,
+WlzIntervalDomain *WlzMakeIntervalDomain(WlzObjectType type,
 		      int l1,
 		      int ll,
 		      int k1,
@@ -205,6 +189,85 @@ WlzMakePlaneDomain(WlzObjectType type,
     *dstErr = errNum;
   }
   return(planedm);
+}
+
+/*!
+* \return	New voxel value table.
+* \ingroup      WlzAllocation
+* \brief	From the domain of the given source object a new voxel
+*		value table is created with the given grey type and
+*		background value.
+* \param	sObj			Source object.
+* \param	gTType			Given grey table type for the plane
+*					value tables.
+* \param	bgdV			Background value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzVoxelValues	*WlzNewValuesVox(WlzObject *sObj, WlzObjectType gTType,
+				 WlzPixelV bgdV, WlzErrorNum *dstErr)
+{
+  int		idx0;
+  WlzDomain	*domP0;
+  WlzValues	*valP0;
+  WlzObject	*tObj;
+  WlzVoxelValues *vox = NULL;
+  WlzValues	tVal,
+  		dumVal;
+  WlzPlaneDomain *pDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dumVal.core = NULL;
+  if(sObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(sObj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(sObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(sObj->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pDom = sObj->domain.p;
+    vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+			      pDom->plane1, pDom->lastpl,
+			      bgdV, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx0 = pDom->plane1;
+    domP0 = pDom->domains;
+    valP0 = vox->values;
+    while((idx0 <= pDom->lastpl) && (errNum == WLZ_ERR_NONE))
+    {
+      if((*domP0).core)
+      {
+	tObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domP0, dumVal,
+			   NULL, NULL, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  tVal.v = WlzNewValueTb(tObj, gTType, bgdV, &errNum);
+	  *valP0  = WlzAssignValues(tVal, NULL);
+	  (void )WlzFreeObj(tObj);
+	}
+      }
+      ++valP0;
+      ++domP0;
+      ++idx0;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vox);
 }
 
 /* function:     WlzMakeMain    */
@@ -928,6 +991,136 @@ WlzObject *WlzMakeRect(int 			line1,
 
   if( dstErr ){
     *dstErr = errNum;
+  }
+  return(obj);
+}
+
+/*!
+* \return	New 3D domain object with values or NULL on error.
+* \ingroup      WlzAllocation
+* \brief	Creates a 3D domain object with values, for which the
+*		domain is a cuboid and the values are of the given
+*		type and initialized to have value zero.
+* \param	plane1			First plane.
+* \param	lastpl			Last plane.
+* \param	line1			First line.
+* \param	lastln			Last line.
+* \param	kol1			First column.
+* \param	lastkl			Last column.
+* \param	pixType			Pixel type for the grey values.
+* \param	bgdV			Background pixel value.
+* \param	plist			Property list to be attached.
+* \param	assocObj		Associated object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
+			       int line1, int lastln,
+			       int kol1, int lastkl,
+			       WlzGreyType pixType, WlzPixelV bgdV,
+			       WlzPropertyList *plist, WlzObject *assocObj,
+			       WlzErrorNum *dstErr)
+{
+  int		pPos;
+  size_t	arSz,
+  		arElmSz;
+  void		*arDat = NULL;
+  WlzDomain	dom,
+  		dom2D;
+  WlzDomain	*dom2DP;
+  WlzObjectType	tbType;
+  WlzValues	val,
+  		val2D;
+  WlzValues	*val2DP;
+  WlzObject	*obj = NULL;
+  AlcErrno	alcErr = ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dom.core = NULL;
+  val.core = NULL;
+  dom2D.core = NULL;
+  val2D.core = NULL;
+  if((arElmSz = WlzValueSize(pixType)) == 0)
+  {
+    errNum = WLZ_ERR_GREY_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    arSz = (lastln - line1 + 1) * (lastkl - kol1 + 1);
+    dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+			       plane1, lastpl, line1, lastln, kol1, lastkl,
+			       &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+    				  plane1, lastpl, bgdV, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pPos = plane1				;
+    dom2DP = dom.p->domains;
+    val2DP = val.vox->values;
+    tbType = WlzGreyTableType(WLZ_GREY_TAB_RECT, pixType, &errNum);
+    while((errNum == WLZ_ERR_NONE) && (pPos <= lastpl))
+    {
+      dom2D.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+      				      line1, lastln, kol1, lastkl, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        if((arDat = AlcCalloc(arSz, arElmSz)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        val2D.r = WlzMakeRectValueTb(tbType, line1, lastln,
+				    kol1, lastkl - kol1 + 1,
+				    bgdV, (int *)arDat, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	val2D.r->freeptr = AlcFreeStackPush(val2D.r->freeptr, arDat, &alcErr);
+	if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	++pPos;
+        *dom2DP++ = WlzAssignDomain(dom2D, NULL);
+        *val2DP++ = WlzAssignValues(val2D, NULL);
+	dom2D.core = NULL;
+	val2D.core = NULL;
+	arDat = NULL;
+      }
+      else
+      {
+        (void )WlzFreeDomain(dom2D);
+	if(val2D.core)
+	{
+	  (void )WlzFreeValues(val2D);
+	}
+	else
+	{
+	  AlcFree(arDat);
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dom.p->voxel_size[0] = 1.0;
+    dom.p->voxel_size[1] = 1.0;
+    dom.p->voxel_size[2] = 1.0;
+    obj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dom, val, plist, assocObj, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    obj = NULL;
+    (void )WlzFreeDomain(dom);
+    (void )WlzFreeValues(val);
   }
   return(obj);
 }
