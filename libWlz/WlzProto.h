@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 16-11-00 bill Add WlzGMModelDeleteS().
 * 06-11-00 bill Add WlzVerticiesFromObj() and WlzRegICPObjs().
 * 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
 * 10-10-00 bill Add WlzAffineTransformContour(),
@@ -1016,6 +1017,10 @@ extern WlzErrorNum      WlzGMModelFreeV(
 extern WlzErrorNum      WlzGMModelFreeVT(
 			  WlzGMModel *model,
 			  WlzGMVertexT *vertexT);
+/* Deletion of geometric modeling elements along with children */
+extern WlzErrorNum	WlzGMModelDeleteS(
+			  WlzGMModel *model,
+			  WlzGMShell *shell);
 /* Searching */
 extern WlzGMVertex	*WlzGMModelMatchVertexG3D(
 			  WlzGMModel *model,
