@@ -33,7 +33,7 @@ import uk.ac.mrc.hgu.Wlz.*;
 
 /**
  *   <b>Model</b>  class for SectionViewer.
- *   <br>Encapsulates the View Structure which represents arbitrary 
+ *   <br>Encapsulates the View Structure which represents arbitrary
  *   sections through a 3D Woolz object.
  */
 public class ViewStructModel implements WlzObjectType {
@@ -151,7 +151,7 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Sets the View Structure's <em>ViewMode</em> parameter.
     *   @param modeStr a description of the ViewMode.
-    *   This must be one of 
+    *   This must be one of
     *   <ul><li>absolute</li><li>uo is up</li><li>fixed line</li></ul>
     */
    public void setViewMode(String modeStr) {
@@ -212,9 +212,9 @@ public class ViewStructModel implements WlzObjectType {
 //----------------------------------------------
    /**
     *   Sets the ViewStructModel's <em>Psi</em> parameter.
-    *   Note that this is <b>not</b> a View Structure parameter, 
+    *   Note that this is <b>not</b> a View Structure parameter,
     *   it is only used by the ViewStructModel to calculate
-    *   the change in Theta Phi and Zeta required to produce 
+    *   the change in Theta Phi and Zeta required to produce
     *   a rotation of Psi around the fixed line..
     *   @param degs the rotation angle in degrees.
     */
@@ -281,9 +281,9 @@ public class ViewStructModel implements WlzObjectType {
    // fixed line rotation
    /**
     *   Sets the ViewStructModel's <em>Psi</em> parameter.
-    *   Note that this is <b>not</b> a View Structure parameter, 
+    *   Note that this is <b>not</b> a View Structure parameter,
     *   it is only used by the ViewStructModel to calculate
-    *   the change in Theta Phi and Zeta required to produce 
+    *   the change in Theta Phi and Zeta required to produce
     *   a rotation of Psi around the fixed line..
     *   @param rads the rotation angle in radians.
     */
@@ -339,7 +339,7 @@ public class ViewStructModel implements WlzObjectType {
 //----------------------------------------------
    /**
     *   Sets the View Structure's <em>Dist</em> parameter.
-    *   @param dist orthogonal distance from the <em>fixed point</em> 
+    *   @param dist orthogonal distance from the <em>fixed point</em>
     *   to the plane of the current section.
     */
    public void setDist(double dist) {
@@ -412,9 +412,9 @@ public class ViewStructModel implements WlzObjectType {
 //----------------------------------------------
    /**
     *   Sets the ViewStructModel's <em>Norm2</em> parameter.
-    *   Note that this is <b>not</b> a View Structure parameter, 
+    *   Note that this is <b>not</b> a View Structure parameter,
     *   it is only used by the ViewStructModel to calculate
-    *   the change in Theta Phi and Zeta required to produce 
+    *   the change in Theta Phi and Zeta required to produce
     *   a rotation of Psi around the fixed line..
     *   @param x x value of the norm2 vector.
     *   @param y y value of the norm2 vector.
@@ -429,9 +429,9 @@ public class ViewStructModel implements WlzObjectType {
 //----------------------------------------------
    /**
     *   Sets the ViewStructModel's <em>Norm3</em> parameter.
-    *   Note that this is <b>not</b> a View Structure parameter, 
+    *   Note that this is <b>not</b> a View Structure parameter,
     *   it is only used by the ViewStructModel to calculate
-    *   the change in Theta Phi and Zeta required to produce 
+    *   the change in Theta Phi and Zeta required to produce
     *   a rotation of Psi around the fixed line..
     *   @param x x value of the norm3 vector.
     *   @param y y value of the norm3 vector.
@@ -448,7 +448,7 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Gets the View Structure's <em>Phi</em> parameter.
     *   @param phi a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getPhi(double[] phi) {
@@ -460,11 +460,24 @@ public class ViewStructModel implements WlzObjectType {
      }
    }
 
+   public double getPhi(){
+     double[] phi = new double[1];
+     phi[0] = 0.0;
+     try {
+       _obj.Wlz3DViewGetPhi(_VS, phi);
+     } catch (WlzException e) {
+       System.err.println("getPhi");
+       System.err.println(e);
+     }
+
+     return phi[0];
+   }
+
 //----------------------------------------------
    /**
     *   Gets the View Structure's <em>Theta</em> parameter.
     *   @param theta a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getTheta(double[] theta) {
@@ -476,11 +489,23 @@ public class ViewStructModel implements WlzObjectType {
      }
    }
 
+   public double getTheta(){
+     double theta[] = new double[1];
+     theta[0] = 0.0;
+     try {
+        _obj.Wlz3DViewGetZeta(_VS, theta);
+      } catch (WlzException e) {
+        System.err.println("getZeta");
+        System.err.println(e);
+      }
+     return theta[0];
+   }
+
 //----------------------------------------------
    /**
     *   Gets the View Structure's <em>Zeta</em> parameter.
     *   @param zeta a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getZeta(double[] zeta) {
@@ -492,11 +517,22 @@ public class ViewStructModel implements WlzObjectType {
       }
    }
 
+   public double getZeta(){
+     double zeta[] = new double[1];
+     zeta[0] = 0.0;
+     try {
+        _obj.Wlz3DViewGetZeta(_VS, zeta);
+      } catch (WlzException e) {
+        System.err.println("getZeta");
+        System.err.println(e);
+      }
+     return zeta[0];
+   }
 //----------------------------------------------
    /**
     *   Gets the View Structure's <em>Dist</em> parameter.
     *   @param dist a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getDist(double[] dist) {
@@ -512,13 +548,13 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Gets the View Structure's <em>Fixed Point</em>.
     *   @param x a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param y a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param z a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getFixedPoint(double[] x, double[] y, double[] z) {
@@ -534,13 +570,13 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Gets the View Structure's <em>Fixed Point</em>.
     *   @param x a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param y a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param z a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @return a 3 element array holding the
     *   <em>fixed point</em> coordinates.
@@ -550,7 +586,7 @@ public class ViewStructModel implements WlzObjectType {
       double[] y = new double[1];
       double[] z = new double[1];
       double[] fp = new double[3];
-   
+
       try {
         _obj.Wlz3DViewGetFixed(_VS, x, y, z);
       }
@@ -558,7 +594,7 @@ public class ViewStructModel implements WlzObjectType {
         System.err.println("getFixedPoint");
         System.err.println(e);
       }
-   
+
       fp[0] = x[0];
       fp[1] = y[0];
       fp[2] = z[0];
@@ -568,7 +604,7 @@ public class ViewStructModel implements WlzObjectType {
 
 //----------------------------------------------
    /**
-    *   Gets the initial <em>fixed point</em> from 
+    *   Gets the initial <em>fixed point</em> from
     *   the ViewStructModel.
     *   @return a 3 element array holding the initial
     *   <em>fixed point</em> coordinates.
@@ -581,13 +617,13 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Gets the View Structure's <em>2nd Fixed Point</em>.
     *   @param x a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param y a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param z a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getAxisPoint(double[] x, double[] y, double[] z) {
@@ -603,13 +639,13 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Gets the View Structure's <em>2nd Fixed Point</em>.
     *   @param x a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param y a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @param z a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     *   @return a 3 element array holding the
     *   2nd <em>fixed point</em> coordinates.
@@ -619,7 +655,7 @@ public class ViewStructModel implements WlzObjectType {
       double[] y = new double[1];
       double[] z = new double[1];
       double[] ap = new double[3];
-   
+
       try {
         _obj.Wlz3DViewGetFixed2(_VS, x, y, z);
       }
@@ -627,7 +663,7 @@ public class ViewStructModel implements WlzObjectType {
         System.err.println("getAxisPoint");
         System.err.println(e);
       }
-   
+
       ap[0] = x[0];
       ap[1] = y[0];
       ap[2] = z[0];
@@ -639,7 +675,7 @@ public class ViewStructModel implements WlzObjectType {
    /**
     *   Gets the View Structure's <em>ViewMode</em> parameter.
     *   @return the description of the ViewMode returned by the View Structure.
-    *   This will be one of 
+    *   This will be one of
     *   <ul><li>WLZ_STATUE_MODE</li>
     *   <li>WLZ_UP_IS_UP_MODE  (corresponding to <em>up is up</em>)</li>
     *   <li>WLZ_FIXED_LINE_MODE  (corresponding to <em>fixed line</em>)</li>
@@ -679,7 +715,7 @@ public class ViewStructModel implements WlzObjectType {
     *   This is the angle (in radians) of the
     *   <em>fixed line</em> on a 2D section.
     *   @param arg a single element array used to retrieve
-    *   the value of a <em>pointer to double</em> from 
+    *   the value of a <em>pointer to double</em> from
     *   a native C function.
     */
    public void getFixedLineAngle(double[] ang) {
@@ -716,7 +752,7 @@ public class ViewStructModel implements WlzObjectType {
 
 //----------------------------------------------
    /**
-    *   Gets the current View Structure. 
+    *   Gets the current View Structure.
     *   @return the current View Structure.
     */
    public WlzThreeDViewStruct getViewStruct() {
