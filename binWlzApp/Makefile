@@ -34,7 +34,8 @@ EXECUTABLES		= \
 			WlzSizeSelect \
 			WlzObjCompareSpecial_01 \
 			WlzVtxToObj \
-			WlzFixDomains
+			WlzFixDomains \
+			WlzMatchICPPlane
 
 SCRIPTS			= \
 			WlzObjCompareSpecial_01.csh
@@ -52,7 +53,8 @@ CSOURCES		= \
 			WlzSizeSelect.c \
 			WlzObjCompareSpecial_01.c \
 			WlzVtxToObj.c \
-			WlzFixDomains.c
+			WlzFixDomains.c \
+			WlzMatchICPPlane.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
