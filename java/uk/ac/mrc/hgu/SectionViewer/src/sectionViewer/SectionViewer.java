@@ -1625,7 +1625,7 @@ public class SectionViewer
       else {
         M1 = _parent.getClass().getSuperclass().getDeclaredMethod(
 	    "removeView",
-            new Class[]{this.getClass( )});
+            new Class[]{this.getClass( ).getSuperclass()});
       }
       M1.invoke(_parent, new Object[] {this});
     }
