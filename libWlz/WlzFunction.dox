@@ -1,0 +1,29 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzFunction.dox
+* \author       Bill Hill
+* \date         January 2003
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Documentation for the WlzFunction module.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup	Wlz
+* \defgroup	WlzFunction	WlzFunction
+*
+* A basis function is the sum of a set of radialy symetric
+* component functions. With each component function defined by node
+* and some set of parameters which specify the value of points
+* distant from the node, the values having radial symmetry. 
+*/
+
