@@ -2079,12 +2079,12 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 					    int clampFlag, int noCopyFlag,
 					    WlzErrorNum *dstErr)
 {
-  int		tI0,
-  		planeCount,
+  int  		planeCount,
   		planeIdx,
 		planeOffset,
 		planePos,
 		txFlag = 0;
+  size_t	aSz;
   int		*tIP0;
   double	*bufP = NULL;
   WlzGreyP	dstValP,
@@ -2150,40 +2150,35 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
     }
     else
     {
-      tI0 = arraySize.vtX * arraySize.vtY * arraySize.vtZ;
+      aSz = arraySize.vtX * arraySize.vtY * arraySize.vtZ;
       switch(dstGreyType)
       {
 	case WLZ_GREY_INT:
-	  if((dstValP.inp = (int *)AlcMalloc((unsigned long )(tI0 *
-					                sizeof(int)))) == NULL)
+	  if((dstValP.inp = (int *)AlcMalloc(aSz * sizeof(int))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_SHORT:
-	  if((dstValP.shp = (short *)AlcMalloc((unsigned long )(tI0 *
-					              sizeof(short)))) == NULL)
+	  if((dstValP.shp = (short *)AlcMalloc(aSz * sizeof(short))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_UBYTE:
-	  if((dstValP.ubp = (UBYTE *)AlcMalloc((unsigned long )(tI0 *
-					              sizeof(UBYTE)))) == NULL)
+	  if((dstValP.ubp = (UBYTE *)AlcMalloc(aSz * sizeof(UBYTE))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_FLOAT:
-	  if((dstValP.flp = (float *)AlcMalloc((unsigned long )(tI0 *
-					              sizeof(float)))) == NULL)
+	  if((dstValP.flp = (float *)AlcMalloc(aSz * sizeof(float))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  if((dstValP.dbp = (double *)AlcMalloc((unsigned long )(tI0 *
-						     sizeof(double)))) == NULL)
+	  if((dstValP.dbp = (double *)AlcMalloc(aSz * sizeof(double))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
