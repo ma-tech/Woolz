@@ -150,6 +150,10 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	  red[i] = (unsigned char) CVT(redcolormap[i]);
 	  green[i] = (unsigned char) CVT(greencolormap[i]);
 	  blue[i] = (unsigned char) CVT(bluecolormap[i]);
+	  if( (red[i] != green[i]) || (red[i] != blue[i]) ){
+	    wlzDepth = sizeof(int);
+	    newpixtype = WLZ_GREY_RGBA;
+	  }
 	}
 	break;
 
@@ -240,6 +244,37 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	break;
 
       case PHOTOMETRIC_PALETTE:
+	switch (bitspersample) {
+	case 4:
+	  for (col = 0; col < width / 2; col++) {
+	    wlzData.ubp[offset++] = *inp >> 4;
+	    wlzData.ubp[offset++] = *inp++ & 0xf;
+	  }
+	  break;
+	case 8:
+	  switch( newpixtype ){
+	  case WLZ_GREY_UBYTE:
+	    for (col = 0; col < width; col++, offset++){
+	      wlzData.ubp[offset] = *inp++;
+	    }
+	    break;
+	  case WLZ_GREY_RGBA:
+	    for (col = 0; col < width; col++, offset++){
+	      WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+				red[*inp], green[*inp], blue[*inp],
+				255);
+	      inp += 1;	/* skip to next value */
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_FILE_FORMAT;
+	  }
+	  break;
+
+	default:
+	  errNum = WLZ_ERR_FILE_FORMAT;
+	  break;
+	}
 	break;
 
       default:
