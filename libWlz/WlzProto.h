@@ -1937,6 +1937,7 @@ extern WlzIntervalValues 	*WlzMakeIntervalValues(
 				  WlzPixelV bckgrnd,
 				  WlzErrorNum *dstErr);
 
+#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzMakeProperties.c							*
 ************************************************************************/
@@ -1973,6 +1974,7 @@ extern WlzProperty 		WlzGetProperty(
 extern WlzErrorNum              WlzRemoveProperty(
                                   AlcDLPList		*plist,
 				  WlzProperty		prop);
+#endif /* WLZ_EXT_BIND */
 
 #ifndef WLZ_EXT_BIND
 /************************************************************************
