@@ -157,11 +157,14 @@ public class ViewStructModel implements WlzObjectType {
    public void setViewMode(String modeStr) {
      int mode;
 
-     if(0 == modeStr.compareTo("absolute")) {
+     if ((modeStr.equals("absolute")) ||
+	 (modeStr.equals("Absolute"))) {
        mode = WlzThreeDViewMode.WLZ_ZETA_MODE;
-     } else if(0 == modeStr.compareTo("up is up")) {
+     } else if((modeStr.equals("up is up")) ||
+	 (modeStr.equals("Up is up"))) {
        mode = WlzThreeDViewMode.WLZ_UP_IS_UP_MODE;
-     } else if(0 == modeStr.compareTo("fixed line")) {
+     } else if((modeStr.equals("fixed line")) ||
+	 (modeStr.equals("Fixed line"))) {
        mode = WlzThreeDViewMode.WLZ_FIXED_LINE_MODE;
      } else {
        mode = WlzThreeDViewMode.WLZ_UP_IS_UP_MODE; // default
