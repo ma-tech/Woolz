@@ -46,6 +46,67 @@ static WlzErrorNum 		WlzGMFilterGeomSetVertices(
 
 /*!
 * \return	Woolz error code.
+* \brief	Flips the orientation of edges in 2D models and
+*		faces in 3D models. This is done in place.
+* \param	model			Given model.
+*/
+WlzErrorNum	WlzGMFilterFlipOrient(WlzGMModel *model)
+{
+  int		eIdx,
+  		eCnt;
+  AlcVector	*eVec;
+  WlzGMEdge	*edge;
+  WlzGMFace	*face;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(model->type)   
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D:  
+	eIdx = 0;
+	eCnt = model->res.edge.numIdx;
+	eVec = model->res.edge.vec;
+	while(eIdx < eCnt)
+	{
+	  edge = (WlzGMEdge *)AlcVectorItemGet(eVec, eIdx);
+	  if(edge && (edge->idx >= 0))
+	  {
+	    edge->edgeT = edge->edgeT->opp;
+	  }
+	  ++eIdx;
+	}
+	break;
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D:  
+	eIdx = 0;
+	eCnt = model->res.face.numIdx;
+	eVec = model->res.face.vec;
+	while(eIdx < eCnt)
+	{
+	  face = (WlzGMFace *)AlcVectorItemGet(eVec, eIdx);
+	  if(face && (face->idx >= 0))
+	  {
+	    face->loopT = face->loopT->opp;
+	  }
+	  ++eIdx;
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Removes small shells from the given geometric model.
 * \param	model			Given model.

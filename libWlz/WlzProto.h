@@ -1684,6 +1684,8 @@ extern int		WlzGMShellSimplexCnt(
 /************************************************************************
 * WlzGeoModelFilters.c
 ************************************************************************/
+extern WlzErrorNum		WlzGMFilterFlipOrient(
+				  WlzGMModel *model);
 extern WlzErrorNum		WlzGMFilterRmSmShells(
 				  WlzGMModel *model,
 				  int maxElm);
