@@ -1,27 +1,128 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzIntRescaleObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Rescale a Woolz object using an integral scale.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 22-01-2003 Elizabeth Guest Fixed the scanning of the table so that it works
-*               with non-zero k1. Replaced k with k+iwsp.lftpos where kp is
-*               calculated.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzIntRescaleObj.c
+* \author       Richard Baldock, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Rescale a Woolz object using an integral scale.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
+* \note		Log changes below, with most recent at top of list.
+*
+* 05-03-2003	Bill changed to doxygen documentation and implemented code
+*		for 3D domain objects.
+*
+* 22-01-2003	Elizabeth Guest Fixed the scanning of the table so that it
+*		works with non-zero k1. Replaced k with k+iwsp.lftpos where kp
+*		is calculated.
+*
+* 03-03-2000	Bill replaced WlzPushFreePtr(), WlzPopFreePtr() and
+* 		WlzFreeFreePtr() with AlcFreeStackPush(), AlcFreeStackPop()
+* 		and AlcFreeStackFree().
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
+static int 			check_intvs(
+				  WlzInterval *intvs,
+				  int nintvs);
+static WlzObject 		*WlzIntRescaleObj2D(
+				  WlzObject *obj,
+				  int scale,
+				  int expand,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzIntRescaleObj3D(
+				  WlzObject *obj,
+				  int scale,
+				  int expand,
+				  WlzErrorNum *dstErr);
+
+/*!
+* \return	Rescaled object.
+* \ingroup	WlzTransform
+* \brief	Rescales the given object using an integer scale.
+* \param	gObj			Given object.
+* \param	scale			Integer scale factor.
+* \param	expand			If zero use \f$\frac{1}{scale}\f$.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzIntRescaleObj(WlzObject *gObj, int scale, int expand,
+				WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(scale < 1)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(gObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	if(gObj->domain.i == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else if(gObj->domain.i->type == WLZ_EMPTY_DOMAIN)
+	{
+	  rObj = WlzMakeEmpty(&errNum);
+	}
+	else if(scale == 1)
+	{
+          rObj = WlzMakeMain(gObj->type, gObj->domain, gObj->values,
+			     NULL, NULL, &errNum);
+	}
+	else
+	{
+	  rObj = (gObj->type == WLZ_2D_DOMAINOBJ)?
+	         WlzIntRescaleObj2D(gObj, scale, expand, &errNum):
+	         WlzIntRescaleObj3D(gObj, scale, expand, &errNum);
+	}
+	break;
+      case WLZ_TRANS_OBJ: /* FALLTHROUGH */
+      case WLZ_2D_POLYGON: /* FALLTHROUGH */
+      case WLZ_BOUNDLIST: /* FALLTHROUGH */
+      case WLZ_3D_POLYGON:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+      case WLZ_EMPTY_OBJ:
+	rObj = WlzMakeEmpty(&errNum);
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	Number of intervals.
+* \ingroup	WlzTransform
+* \brief	Check and count intervals.
+* \param	intvs		Given intervals.
+* \param	nintvs		Number of intervals.
+*/
 static int check_intvs(
   WlzInterval	*intvs,
   int		nintvs)
@@ -55,7 +156,16 @@ static int check_intvs(
   return( nintvs );
 }
 
-WlzObject *WlzIntRescaleObj(
+/*!
+* \return	Rescaled object.
+* \ingroup	WlzTransform
+* \brief	Rescales the given 2D domain object using an integer scale.
+* \param	obj			Given object.
+* \param	scale			Integer scale factor.
+* \param	expand			If zero use \f$\frac{1}{scale}\f$.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzIntRescaleObj2D(
   WlzObject	*obj,
   int		scale,
   int		expand,
@@ -68,78 +178,27 @@ WlzObject *WlzIntRescaleObj(
   int			k1, kl, l1, ll, l, num_intvls;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-  /* check object */
-  if( obj == NULL )
+  /* check expand or contract */
+  if( expand )
   {
-    errNum = WLZ_ERR_OBJECT_NULL;
+    k1 = obj->domain.i->kol1   * scale;
+    kl = obj->domain.i->lastkl * scale + scale - 1;
+    l1 = obj->domain.i->line1  * scale;
+    ll = obj->domain.i->lastln * scale + scale - 1;
   }
   else {
-    switch( obj->type ){
-
-    case WLZ_2D_DOMAINOBJ:
-      /* check the domain */
-      if( obj->domain.i == NULL ){
-	errNum = WLZ_ERR_DOMAIN_NULL;
-      }
-      else if( obj->domain.i->type == WLZ_EMPTY_DOMAIN ){
-	return WlzMakeEmpty(dstErr);
-      }
-      break;
-
-    case WLZ_3D_DOMAINOBJ:
-    case WLZ_TRANS_OBJ:
-    case WLZ_2D_POLYGON:
-    case WLZ_BOUNDLIST:
-    case WLZ_3D_POLYGON:
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      break;
-
-    case WLZ_EMPTY_OBJ:
-      return WlzMakeEmpty(dstErr);
-
-    default:
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      break;
-    }
-  }
-
-  /* check the scale and for no change */
-  if( errNum == WLZ_ERR_NONE ){
-    if( scale < 1 ){
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-    else if( scale == 1 )
-    {
-      return WlzMakeMain(obj->type, obj->domain, obj->values,
-			  NULL, NULL, dstErr);
-    }
-  }
-
-  /* check expand or contract */
-  if( errNum == WLZ_ERR_NONE ){
-    if( expand )
-    {
-      k1 = obj->domain.i->kol1   * scale;
-      kl = obj->domain.i->lastkl * scale + scale - 1;
-      l1 = obj->domain.i->line1  * scale;
-      ll = obj->domain.i->lastln * scale + scale - 1;
-    }
-    else {
-      k1 = obj->domain.i->kol1   / scale;
-      kl = obj->domain.i->lastkl / scale;
-      l1 = obj->domain.i->line1  / scale;
-      ll = obj->domain.i->lastln / scale;
-    }
+    k1 = obj->domain.i->kol1   / scale;
+    kl = obj->domain.i->lastkl / scale;
+    l1 = obj->domain.i->line1  / scale;
+    ll = obj->domain.i->lastln / scale;
   }
 
   /* create a new object */
-  if( errNum == WLZ_ERR_NONE ){
-    if( domain.i = WlzMakeIntervalDomain(obj->domain.i->type,
-					 l1, ll, k1, kl, &errNum) ){
-      values.core = NULL;
-      rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, 
-			   NULL, NULL, NULL);
-    }
+  if( domain.i = WlzMakeIntervalDomain(obj->domain.i->type,
+				       l1, ll, k1, kl, &errNum) ){
+    values.core = NULL;
+    rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, 
+			 NULL, NULL, NULL);
   }
 
   /* fill in the intervals */
@@ -251,4 +310,119 @@ WlzObject *WlzIntRescaleObj(
     *dstErr = errNum;
   }
   return rtnObj;
+}
+
+/*!
+* \return	Rescaled object.
+* \ingroup	WlzTransform
+* \brief	Rescales the given 3D domain object using an integer scale.
+* \param	gObj			Given object.
+* \param	scale			Integer scale factor.
+* \param	expand			If zero use \f$\frac{1}{scale}\f$.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzIntRescaleObj3D(WlzObject *gObj, int scale, int expand,
+				    WlzErrorNum *dstErr)
+{
+  int		gPIdx,
+  		nPIdx;
+  WlzDomain	gDom,
+  		nDom;
+  WlzValues	gVal,
+  		nVal,
+		dumVal;
+  WlzObject	*gTObj = NULL,
+  		*nTObj = NULL,
+		*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzIBox3	nBox;
+
+  nDom.core = NULL;
+  nVal.core = NULL;
+  dumVal.core = NULL;
+  gDom = gObj->domain;
+  gVal = gObj->values;
+  if(expand)
+  {
+    nBox.xMin = gDom.p->kol1 * scale;
+    nBox.xMax = ((gDom.p->lastkl + 1) * scale) - 1;
+    nBox.yMin = gDom.p->line1 * scale;
+    nBox.yMax = ((gDom.p->lastln + 1) * scale) - 1;
+    nBox.zMin = gDom.p->plane1 * scale;
+    nBox.zMax = ((gDom.p->lastpl + 1) * scale) - 1;
+  }
+  else
+  {
+    nBox.xMin = gDom.p->kol1 / scale;
+    nBox.xMax = gDom.p->lastkl / scale;
+    nBox.yMin = gDom.p->line1 / scale;
+    nBox.yMax = gDom.p->lastln / scale;
+    nBox.zMin = gDom.p->plane1 / scale;
+    nBox.zMax = gDom.p->lastpl / scale;
+  }
+  nDom.p = WlzMakePlaneDomain(gDom.p->type, nBox.zMin, nBox.zMax,
+			      nBox.yMin, nBox.yMax, nBox.xMin, nBox.xMax,
+			      &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(gVal.core && (gVal.core->type != WLZ_EMPTY_OBJ))
+    {
+      nVal.vox = WlzMakeVoxelValueTb(gVal.vox->type, nBox.zMin, nBox.zMax,
+				     WlzGetBackground(gObj, NULL),
+				     NULL, &errNum);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nPIdx = nBox.zMin;
+    while((errNum == WLZ_ERR_NONE) && (nPIdx <= nBox.zMax))
+    {
+      gPIdx = (expand)? nPIdx / scale: nPIdx * scale;
+      if(nVal.vox)
+      {
+        gTObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+                            *(gDom.p->domains + gPIdx),
+                            *(gVal.vox->values + gPIdx),
+                            NULL, NULL, &errNum);
+      }
+      else
+      {
+        gTObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+                            *(gDom.p->domains + gPIdx),
+                            dumVal,
+                            NULL, NULL, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	nTObj = WlzIntRescaleObj2D(gTObj, scale, expand, &errNum);
+      }
+      (void )WlzFreeObj(gTObj);
+      gTObj = NULL;
+      if(errNum == WLZ_ERR_NONE)
+      {
+        *(nDom.p->domains + nPIdx) = WlzAssignDomain(nTObj->domain, NULL);
+        if(nVal.vox)
+        {
+          *(nVal.vox->values + nPIdx) = WlzAssignValues(nTObj->values, NULL);
+        }
+      }
+      (void )WlzFreeObj(nTObj);
+      nTObj = NULL;
+      ++nPIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(gObj->type, nDom, nVal, NULL, NULL, &errNum);
+  }
+  else
+  {
+    (void )WlzFreePlaneDomain(nDom.p);
+    (void )WlzFreeVoxelValueTb(nVal.vox);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
 }
