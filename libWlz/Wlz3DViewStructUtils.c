@@ -763,28 +763,64 @@ int Wlz3DViewGetBoundingBoxIntersection(
 					 rtnVtxs, dstErr);
 }
 
+/*!
+* \return	The number of vertices in the intersection.
+* \ingroup	WlzSectionTransform
+* \brief	Gets the vertices of intersection between a section and
+*               the given bounding box. The vertices are returned in 
+*               order to be used for display etc.
+* \param	viewStr			The section View.
+* \param	dstSizeArrayVtxs	Number of intersection verticies
+* 					allocated, always 12 unless an
+*					error occurs.
+* \param	dstArrayVtxs		Destination pointer for the array for
+* 					computed vertices. The array will have
+* 					12 verticies allocated by AlcMalloc().
+* \param	dstErr			Destination pointer for error code, may
+* 					be NULL.
+*/
 int Wlz3DViewGetBoundingBoxIntersectionA(
   WlzThreeDViewStruct	*viewStr,
   int 			*dstSizeArrayVtxs,
   WlzDVertex3 		**dstArrayVtxs,
   WlzErrorNum 		*dstErr)
 {
-  WlzDVertex3	*vtxs=NULL;
-  int		numVtxs=0;
+  int		arraySz = 0,
+  		numVtxs = 0;
+  WlzDVertex3	*vtxs = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if( vtxs = (WlzDVertex3 *) AlcMalloc(sizeof(WlzDVertex3) * 12) ){
-    numVtxs = Wlz3DViewGetBoundingBoxIntersection(viewStr,
-						  vtxs, dstErr);
-    *dstSizeArrayVtxs = 12;
+  if(viewStr == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
   }
-  else {
-    *dstSizeArrayVtxs = 0;
-    if( dstErr ){
-      *dstErr = WLZ_ERR_MEM_ALLOC;
+  else if(viewStr->ref_obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    if( vtxs = (WlzDVertex3 *) AlcMalloc(sizeof(WlzDVertex3) * 12) ){
+      numVtxs = Wlz3DViewGetBoundingBoxIntersection(viewStr,
+	  vtxs, dstErr);
+      arraySz = 12;
+    }
+    else {
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-
-  *dstArrayVtxs = vtxs;
+  if(dstSizeArrayVtxs)
+  {
+    *dstSizeArrayVtxs = arraySz;
+  }
+  if(dstArrayVtxs)
+  {
+    *dstArrayVtxs = vtxs;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
   return numVtxs;
 }
 
@@ -792,8 +828,8 @@ int Wlz3DViewGetBoundingBoxIntersectionA(
 /*! 
 * \ingroup      WlzSectionTransform
 * \brief        get the vertices of intersection between a section and
-the given bounding box. The vertices
-are returned in order to be used for display etc.
+*		the given bounding box. The vertices
+*		are returned in order to be used for display etc.
 *
 * \return       The number of vertices in the intersection
 * \param    viewStr	The section View
