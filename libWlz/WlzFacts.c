@@ -56,9 +56,9 @@ static WlzErrorNum		WlzObjFactsValueTab(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzValues val);
-static WlzErrorNum WlzObjFactsProperty(
-  WlzObjFactsData *fData,
-  WlzProperty	property);
+static WlzErrorNum 		WlzObjFactsProperty(
+				  WlzObjFactsData *fData,
+				  WlzProperty	property);
 static WlzErrorNum		WlzObjFactsPropList(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
@@ -92,6 +92,15 @@ static WlzErrorNum 		WlzObjFactsGMModel(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzGMModel *model);
+static WlzErrorNum 		WlzObjFactsPixelV(
+				  WlzObjFactsData *fData,
+				  const char *prefix,
+				  WlzPixelV pV);
+static WlzErrorNum 		WlzObjFactsGreyV(
+				  WlzObjFactsData *fData,
+				  const char *prefix,
+				  WlzGreyType gType,
+				  WlzGreyV gV);
 		
 
 /*!
@@ -154,8 +163,9 @@ WlzErrorNum	WlzObjectFacts(WlzObject *obj, FILE *factsFile, char **dstStr,
 */
 static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 {
-  int		pIdx,
-		pCount;
+  int		idx,
+		count;
+  WlzCompoundArray *objCA;
   WlzObject	*obj2D = NULL;
   WlzValues	val2D;
   WlzDomain	dom2D;
@@ -215,20 +225,20 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  if((errNum == WLZ_ERR_NONE) && fData->verbose &&
 	     (obj->domain.core != NULL))
 	  {
-	    pIdx = 0;
-	    pCount = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
+	    idx = 0;
+	    count = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
             ++(fData->indent);
 	    fData->verbose = 0;
-	    while((errNum == WLZ_ERR_NONE) && (pIdx < pCount))
+	    while((errNum == WLZ_ERR_NONE) && (idx < count))
 	    {
 	      errNum = WlzObjFactsAppend(fData, "Plane %d.\n",
-	      				 obj->domain.p->plane1 + pIdx);
+	      				 obj->domain.p->plane1 + idx);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		dom2D = *(obj->domain.p->domains + pIdx);
-		if(obj->values.core && (obj->values.vox->values + pIdx)->core)
+		dom2D = *(obj->domain.p->domains + idx);
+		if(obj->values.core && (obj->values.vox->values + idx)->core)
 		{
-		  val2D = *(obj->values.vox->values + pIdx);
+		  val2D = *(obj->values.vox->values + idx);
 		}
 		else
 		{
@@ -250,7 +260,7 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	        WlzFreeObj(obj2D);
 		obj2D = NULL;
 	      }
-	      ++pIdx;
+	      ++idx;
 	    }
 	    fData->verbose = 1;
             --(fData->indent);
@@ -269,18 +279,38 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  break;
 	case WLZ_2D_POLYGON:
 	  errNum = WlzObjFactsPolygon2D(fData, obj->domain.poly);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
 	  break;
 	case WLZ_BOUNDLIST:
 	  errNum = WlzObjFactsBoundlist(fData, obj->domain.b);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
 	  break;
 	case WLZ_CONTOUR:
 	  errNum = WlzObjFactsContour(fData, obj, obj->domain.ctr);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
 	  break;
 	case WLZ_HISTOGRAM:
 	  errNum = WlzObjFactsHistogram(fData, obj, obj->domain.hist);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
 	  break;
 	case WLZ_AFFINE_TRANS:
 	  errNum = WlzObjFactsAffineTrans(fData, obj->domain.t);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
 	  break;
 	case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
 	case WLZ_CONV_HULL:       /* FALLTHROUGH */
@@ -292,12 +322,39 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	case WLZ_FMATCHOBJ:       /* FALLTHROUGH */
 	case WLZ_TEXT:            /* FALLTHROUGH */
 	case WLZ_COMPOUND_ARR_1:  /* FALLTHROUGH */
-	case WLZ_COMPOUND_ARR_2:  /* FALLTHROUGH */
+	case WLZ_COMPOUND_ARR_2:
+	  objCA = (WlzCompoundArray *)obj;
+          tStr = WlzStringFromObjTypeValue(objCA->otype, &errNum);
+	  if(tStr)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "otype: %s.\n", tStr);
+	  }
+	  else
+	  {
+	    (void )WlzObjFactsAppend(fData, "otype: Unknown (%d).\n", tStr);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "n: %d.\n", objCA->n);
+	  }
+	  idx = 0;
+	  while((errNum == WLZ_ERR_NONE) && (idx < objCA->n))
+	  {
+	    errNum = WlzObjFactsObject(fData, *(objCA->o + idx));
+	    ++idx;
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, objCA->p);
+	  }
+	  break;
 	case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
 	case WLZ_COMPOUND_LIST_2: /* FALLTHROUGH */
 	case WLZ_PROPERTY_OBJ:    /* FALLTHROUGH */
 	case WLZ_EMPTY_OBJ:       /* FALLTHROUGH */
 	default:
+	  errNum = WlzObjFactsAppend(fData,
+	  		"Facts not implemeented for this object type.\n");
 	  break;
       }
     }
@@ -383,40 +440,92 @@ static WlzErrorNum WlzObjFactsBackground(WlzObjFactsData *fData,
 					 WlzPixelV bgdV)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzObjFactsPixelV(fData, "Background", bgdV);
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of a pixel value.
+* \param	fData			Facts data structure.
+* \param	prefix			Prefix string.
+* \param	pix			Pixel value.
+*/
+static WlzErrorNum WlzObjFactsPixelV(WlzObjFactsData *fData,
+					const char *prefix, WlzPixelV pV)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*tStr;
 
   if(errNum == WLZ_ERR_NONE)
   {
-    tStr = WlzStringFromGreyType(bgdV.type, &errNum);
+    tStr = WlzStringFromGreyType(pV.type, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzObjFactsAppend(fData, "Background grey type: %s.\n", tStr);
+    errNum = WlzObjFactsAppend(fData, "%s type: %s.\n",
+    			       prefix, tStr);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    switch(bgdV.type)
-    {
-      case WLZ_GREY_INT:
-	errNum = WlzObjFactsAppend(fData, "Background value: %d.\n",
-				   bgdV.v.inv);
-        break;
-      case WLZ_GREY_SHORT:
-	errNum = WlzObjFactsAppend(fData, "Background value: %d.\n",
-				   bgdV.v.shv);
-      case WLZ_GREY_UBYTE:
-	errNum = WlzObjFactsAppend(fData, "Background value: %d.\n",
-				   bgdV.v.ubv);
-        break;
-      case WLZ_GREY_FLOAT:
-	errNum = WlzObjFactsAppend(fData, "Background value: %g.\n",
-				   bgdV.v.flv);
-        break;
-      case WLZ_GREY_DOUBLE:
-	errNum = WlzObjFactsAppend(fData, "Background value: %g.\n",
-				   bgdV.v.dbv);
-	break;
-    }
+    errNum = WlzObjFactsGreyV(fData, prefix, pV.type, pV.v);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of a grey value.
+* \param	fData			Facts data structure.
+* \param	prefix			Prefix string.
+* \param	gType			The grey type.
+* \param	gV			Grey value.
+*/
+static WlzErrorNum WlzObjFactsGreyV(WlzObjFactsData *fData,
+				    const char *prefix,
+				    WlzGreyType gType, WlzGreyV gV)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  switch(gType)
+  {
+    case WLZ_GREY_LONG:
+      errNum = WlzObjFactsAppend(fData, "%s value: %d.\n",
+				 prefix, gV.lnv);
+      break;
+    case WLZ_GREY_INT:
+      errNum = WlzObjFactsAppend(fData, "%s value: %d.\n",
+				 prefix, gV.inv);
+      break;
+    case WLZ_GREY_SHORT:
+      errNum = WlzObjFactsAppend(fData, "%s value: %d.\n",
+				 prefix, gV.shv);
+    case WLZ_GREY_UBYTE:
+      errNum = WlzObjFactsAppend(fData, "%s value: %d.\n",
+				 prefix, gV.ubv);
+      break;
+    case WLZ_GREY_FLOAT:
+      errNum = WlzObjFactsAppend(fData, "%s value: %g.\n",
+				 prefix, gV.flv);
+      break;
+    case WLZ_GREY_DOUBLE:
+      errNum = WlzObjFactsAppend(fData, "%s value: %g.\n",
+				 prefix, gV.dbv);
+      break;
+    case WLZ_GREY_RGBA:
+      errNum = WlzObjFactsAppend(fData, "%s value: %d %d %d %d.\n",
+				 prefix,
+				 gV.rgbv & 0xff,
+				 (gV.rgbv >> 8) & 0xff,
+				 (gV.rgbv >> 16) & 0xff,
+				 (gV.rgbv >> 24) & 0xff);
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
   }
   return(errNum);
 }
@@ -629,102 +738,128 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 * \ingroup      WlzDebug
 * \brief	Produces a text description of a property.
 * \param	fData			Facts data structure.
-* \param	property		Given property.
+* \param	prop			Given property.
 */
-static WlzErrorNum WlzObjFactsProperty(
-  WlzObjFactsData *fData,
-  WlzProperty	property)
+static WlzErrorNum WlzObjFactsProperty(WlzObjFactsData *fData,
+					WlzProperty prop)
 {
+  const char	*pStr;
+  WlzEMAPProperty *eProp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* no indent because already done by WlzObjFactsPropertyList */
-  if( property.core == NULL ){
+  /* No indent because already done by WlzObjFactsPropertyList(). */
+  if(prop.core == NULL)
+  {
     (void )WlzObjFactsAppend(fData, "Property NULL.\n");
   }
-  else {
-    switch( property.core->type ){
-    case WLZ_PROPERTY_SIMPLE:
-      (void) WlzObjFactsAppend(fData,
-			       "Property type: WLZ_PROPERTY_SIMPLE\n");
-      ++(fData->indent);
-      errNum = WlzObjFactsAppend(fData,
-				 "Linkcount: %d.\n",
-				 property.core->linkcount);
-      if(errNum == WLZ_ERR_NONE)
+  else
+  {
+    pStr = WlzStringFromPropertyType(prop, NULL);
+    if(pStr)
+    {
+      (void )WlzObjFactsAppend(fData, "Property type:%s\n", pStr);
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Property type: Unknown (%d).\n",
+      			       (int )(prop.core->type));
+    }
+    ++(fData->indent);
+    errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n",
+    			       prop.core->linkcount);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      switch(prop.core->type)
       {
-	errNum = WlzObjFactsAppend(fData, "Size: %d.\n",
-				   property.simple->size);
-      }
-      --(fData->indent);
-      break;
-
-    case WLZ_PROPERTY_EMAP:
-      (void) WlzObjFactsAppend(fData,
-			       "Property type: WLZ_PROPERTY_EMAP\n");
-      ++(fData->indent);
-      errNum = WlzObjFactsAppend(fData,
-				 "Linkcount: %d.\n",
-				 property.core->linkcount);
-      if(errNum == WLZ_ERR_NONE)
-      {
-	WlzEMAPProperty *eprop = property.emap;
-	switch( eprop->emapType ){
-	case WLZ_EMAP_PROPERTY_GREY_MODEL:
-	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
-			    "WLZ_EMAP_PROPERTY_GREY_MODEL");
+	case WLZ_PROPERTY_SIMPLE:
+	  errNum = WlzObjFactsAppend(fData, "Size: %d.\n",
+				     prop.simple->size);
 	  break;
-	case WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN:
-	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
-			    "WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN");
+	case WLZ_PROPERTY_EMAP:
+	  eProp = prop.emap;
+	  pStr = WlzStringFromEMAPPropertyType(eProp, NULL);
+	  if(pStr)
+	  {
+	    errNum = WlzObjFactsAppend(fData,
+	    			"EMAP property type: %s.\n", pStr);
+	  }
+	  else
+	  {
+	    errNum = WlzObjFactsAppend(fData,
+	    			"EMAP property type: Unknown (%d).\n",
+	    		      	(int )eProp->type);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	      errNum = WlzObjFactsAppend(fData, "Theiler Stage: %d\n",
+	      			eProp->theilerStage);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Model name: %s\n",
+	      			eProp->modelName);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Model version: %s\n",
+	      			eProp->version);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Filename: %s\n",
+	      			eProp->fileName?eProp->fileName:"NULL");
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Creation time: %s",
+	      			ctime((time_t *) &(eProp->creationTime)));
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Creation author: %s\n",
+	      			eProp->creationAuthor);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Creation machine name: %s\n",
+	      			eProp->creationMachineName);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Modification time: %s",
+	      			ctime((time_t *) &(eProp->modificationTime)));
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Modification author: %s\n",
+	      			eProp->modificationAuthor);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Comment: %s\n",
+	      			eProp->comment?eProp->comment:"NULL");
+	  }
 	  break;
-	case WLZ_EMAP_PROPERTY_OTHER_DOMAIN:
-	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
-			    "WLZ_EMAP_PROPERTY_OTHER_DOMAIN");
+	case WLZ_PROPERTY_NAME:
+	  errNum = WlzObjFactsAppend(fData, "Name: %s.\n",
+	  		    	prop.name->name? prop.name->name: "NULL");
+	  break;
+	case WLZ_PROPERTY_GREY:
+	  errNum = WlzObjFactsAppend(fData, "Name: %s.\n",
+	  		    	prop.greyV->name? prop.greyV->name: "NULL");
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+  	    errNum = WlzObjFactsPixelV(fData, "Grey", prop.greyV->value);
+	  }
 	  break;
 	default:
-	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
-			    "UNKNOWN");
 	  break;
-	}
-	WlzObjFactsAppend(fData, "Theiler Stage: %d\n",
-			  eprop->theilerStage);
-	WlzObjFactsAppend(fData, "Model name: %s\n",
-			  eprop->modelName);
-	WlzObjFactsAppend(fData, "Model version: %s\n",
-			  eprop->version);
-	WlzObjFactsAppend(fData, "Filename: %s\n",
-			  eprop->fileName?eprop->fileName:"NULL");
-	WlzObjFactsAppend(fData, "Creation time: %s",
-			  ctime((time_t *) &(eprop->creationTime)));
-	WlzObjFactsAppend(fData, "Creation author: %s\n",
-			  eprop->creationAuthor);
-	WlzObjFactsAppend(fData, "Creation machine name: %s\n",
-			  eprop->creationMachineName);
-	WlzObjFactsAppend(fData, "Modification time: %s",
-			  ctime((time_t *) &(eprop->modificationTime)));
-	WlzObjFactsAppend(fData, "Modification author: %s\n",
-			  eprop->modificationAuthor);
-	WlzObjFactsAppend(fData, "Comment: %s\n",
-			  eprop->comment?eprop->comment:"NULL");
       }
-      --(fData->indent);
-      break;
-
-    default:
-      (void) WlzObjFactsAppend(fData,
-			       "Property type: UNKNOWN\n");
-      ++(fData->indent);
-      errNum = WlzObjFactsAppend(fData,
-				 "Linkcount: %d.\n",
-				 property.core->linkcount);
-      --(fData->indent);
-      break;
     }
+    --(fData->indent);
   }
-
   return(errNum);
 }
-
 
 /*!
 * \return	Error number.
