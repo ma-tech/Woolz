@@ -3098,7 +3098,6 @@ typedef struct _WlzMeshTransform3D
 } WlzMeshTransform3D;
 
 #endif /* WLZ_EXT_BIND */
-/* nickb 27.02.03 */
 
 /*!
 * \struct	_WlzMeshTransform2D5
@@ -3254,6 +3253,7 @@ typedef struct  _WlzCMeshBucketGrid2D
   WlzDVertex2   bSz;                    /*!< Size of each bucket. */
   WlzCMeshNod2D ***buckets;             /*!< The mesh node buckets. */
 } WlzCMeshBucketGrid2D;
+
 /*!
 * \struct       _WlzCMeshBucketGrid3D
 * \ingroup      WlzMesh
@@ -3280,7 +3280,7 @@ typedef struct  _WlzCMeshBucketGrid3D
 #ifndef WLZ_EXT_BIND
 typedef WlzErrorNum (*WlzCMeshCbFn)(void *, void *, void *);
 #else
-typedef void * WlzCMeshCbFn;
+typedef void *WlzCMeshCbFn;
 #endif
 
 /*!
@@ -3291,7 +3291,11 @@ typedef void * WlzCMeshCbFn;
 */
 typedef struct _WlzCMeshCbEntry
 {
+#ifndef WLZ_EXT_BIND
   WlzCMeshCbFn	fn;
+#else
+  void		*fn;
+#endif
   void		*data;
   struct _WlzCMeshCbEntry *next;
 } WlzCMeshCbEntry;
