@@ -1294,7 +1294,7 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
     pMskOrg.vtY = bBox.yMin;
     pMskSz.vtX = bBox.xMax - bBox.xMin + 1;
     pMskSz.vtY = bBox.yMax - bBox.yMin + 1;
-    if(AlcBit2Malloc(&pMsk, pMskSz.vtY, pMskSz.vtX) != ALC_ER_NONE)
+    if(AlcBit2Calloc(&pMsk, pMskSz.vtY+1, pMskSz.vtX) != ALC_ER_NONE)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }

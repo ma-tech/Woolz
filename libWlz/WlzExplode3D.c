@@ -63,7 +63,7 @@ WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
   {
     errNum = WLZ_ERR_VALUES_NULL;
     }*/
-  else if((objCount = srcDom.p->lastpl - srcDom.p->plane1 + 1) > 1)
+  else if((objCount = srcDom.p->lastpl - srcDom.p->plane1 + 1) >= 1)
   {
     if((objVec = (WlzObject **)AlcMalloc((unsigned long )objCount *
                                          sizeof(WlzObject *))) == NULL)
