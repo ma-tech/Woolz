@@ -279,7 +279,8 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
   WlzGMEdgeT	*tET;
   WlzGMElemP	eP;
   WlzGMResIdxTb	*resIdxTb = NULL;
-  WlzDVertex3	vtx;
+  WlzDVertex3	vtx,
+  		nrm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -293,10 +294,12 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
         dim = 2;
 	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
 	dim = 3;
         break;
       default:
@@ -350,8 +353,9 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
      * are found in the model resouces. */
     switch(model->type)
     {
-      case WLZ_GMMOD_2I:
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
 	(void )fprintf(fP,
 		        "LINES %d %d\n",
 			model->res.edge.numElm, 3 * model->res.edge.numElm);
@@ -373,8 +377,9 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 	  }
 	}
         break;
-      case WLZ_GMMOD_3I:
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
 	(void )fprintf(fP,
 		       "POLYGONS %d %d\n",
 		       model->res.face.numElm, 4 * model->res.face.numElm);
@@ -399,6 +404,30 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 	  }
 	}
         break;
+    }
+  }
+  /* Output the normals if they are in the model, i.e. the model is
+   * either a WLZ_GMMOD_2N or WLZ_GMMOD_3N. */
+  if((errNum == WLZ_ERR_NONE)  &&
+     ((model->type == WLZ_GMMOD_2N) || (model->type == WLZ_GMMOD_3N)))
+  {
+    (void )fprintf(fP,
+		   "\n"
+		   "POINT_DATA %d\n"
+		   "NORMALS normals float\n",
+		   resIdxTb->vertex.idxCnt);
+    /* Output the vertex normals. */
+    idI = 0;
+    vec = model->res.vertex.vec;
+    iCnt = model->res.vertex.numIdx;
+    while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+    {
+      eP.vertex = (WlzGMVertex *)AlcVectorItemGet(vec, idI++);
+      if(eP.vertex->idx >= 0)
+      {
+	(void )WlzGMVertexGetG3N(eP.vertex, &vtx, &nrm);
+	(void )fprintf(fP, "%g %g %g\n", nrm.vtX, nrm.vtY, nrm.vtZ);
+      }
     }
   }
   if(resIdxTb)
