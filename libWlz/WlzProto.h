@@ -902,6 +902,24 @@ extern WlzObject		*WlzBasisFnTransformObj(
 				  WlzBasisFnTransform *basisTr,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
+extern WlzPolygonDomain		*WlzBasisFnTransformPoly2(
+				  WlzPolygonDomain *srcPoly,
+				  WlzBasisFnTransform *basisTr,
+				  int newPoly,
+				  WlzErrorNum *dstErr);
+extern WlzBoundList		*WlzBasisFnTransformBoundList(
+				  WlzBoundList *srcBnd,
+				  WlzBasisFnTransform *basisTr,
+				  int newBnd,
+				  WlzErrorNum *dstErr);
+extern WlzContour 		*WlzBasisFnTransformContour(
+				  WlzContour *srcCtr,
+				  WlzBasisFnTransform *basisTr,
+				  int newCtr,
+				  WlzErrorNum *dstErr);
+extern WlzGMModel		*WlzBasisFnTransformGMModel(WlzGMModel *srcM,
+				  WlzBasisFnTransform *basisTr,
+				  int newModel, WlzErrorNum *dstErr);
 extern WlzIVertex2		WlzBasisFnTransformVertexI(
 				  WlzBasisFnTransform *basisTr,
 				  WlzIVertex2 srcVxF,
@@ -913,6 +931,12 @@ extern WlzFVertex2		WlzBasisFnTransformVertexF(
 extern WlzDVertex2		WlzBasisFnTransformVertexD(
 				  WlzBasisFnTransform *basisTr,
 			          WlzDVertex2 srcVxF,
+				  WlzErrorNum *dstErr);
+extern WlzDVertex2     		WlzBasisFnTransformNormalD(
+				  WlzBasisFnTransform *basisTr,
+				  WlzDVertex2 srcVx,
+				  WlzDVertex2 srcNr,
+				  WlzDVertex2 *dstVx,
 				  WlzErrorNum *dstErr);
 
 extern WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
