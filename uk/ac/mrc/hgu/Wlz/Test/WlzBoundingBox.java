@@ -80,7 +80,7 @@ public class WlzBoundingBox
 	    in = new WlzFileInputStream(args[optIdx]);
 	  }
           WlzObject obj0 = WlzObject.WlzReadObj(in);
-	  WlzIBox3 bBox = WlzObject.WlzBoundingBox3D(obj0);
+	  WlzIBox3 bBox = WlzObject.WlzBoundingBox3I(obj0);
 	  if(verboseFlg)
 	  {
 	    System.out.println("file: " + inFile);

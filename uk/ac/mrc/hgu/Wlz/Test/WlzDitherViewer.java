@@ -108,7 +108,7 @@ public class WlzDitherViewer extends JFrame implements ActionListener
       obj = WlzObject.WlzImageArithmetic(newObj0,
       	      WlzObject.WlzGreyDitherObj(newObj1, 0x0080),
 	      WlzBinaryOperatorType.WLZ_BO_OR, 0);
-      bBox = WlzObject.WlzBoundingBox2D(obj);
+      bBox = WlzObject.WlzBoundingBox2I(obj);
       gVWSp = WlzObject.WlzGreyValueMakeWSp(obj);
       Rectangle bRec = bBox.toRectangle();
       setPreferredSize(new Dimension(bRec.width, bRec.height));

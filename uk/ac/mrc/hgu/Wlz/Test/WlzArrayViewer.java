@@ -94,7 +94,7 @@ public class WlzArrayViewer extends JFrame implements ActionListener
     public void setWlzObj(WlzObject newObj, String objName) throws WlzException
     {
       obj = newObj;
-      bBox = WlzObject.WlzBoundingBox2D(obj);
+      bBox = WlzObject.WlzBoundingBox2I(obj);
       org = new WlzIVertex2(bBox.xMin, bBox.yMin);
       Rectangle bRec = bBox.toRectangle();
       setPreferredSize(new Dimension(bRec.width, bRec.height));

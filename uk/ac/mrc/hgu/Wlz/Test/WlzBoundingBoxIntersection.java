@@ -107,7 +107,7 @@ public class WlzBoundingBoxIntersection
           }
 
           WlzObject obj0 = WlzObject.WlzReadObj(in);
-          WlzIBox3 bBox = WlzObject.WlzBoundingBox3D(obj0);
+          WlzIBox3 bBox = WlzObject.WlzBoundingBox3I(obj0);
 	  
 	  System.out.println(bBox.xMin + " " +
 		     bBox.yMin + " " +
