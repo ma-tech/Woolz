@@ -12,43 +12,102 @@
 * Purpose:      Writes a Woolz to a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 14-08-00 bill	Add WLZ_CONTOUR to object types written by WlzWriteObj().
+*		Add WlzWriteContour() and WlzWriteGMModel(). Remove
+*		obolete object types:WLZ_VECTOR_(FLOAT|INT),
+*		WLZ_POINT_(FLOAT|INT), WLZ_DISP_FRAME,
+*		WLZ_DISP_GRID, WLZ_DISP_FRAMEX, Wlz[IF]Vector and
+*		and Wlz[IF]Point. Add WlzWriteVertex[23][ID](),
+*		WlzWriteBox[23][ID]() and WlzWriteInt().
 ************************************************************************/
 #include <stdlib.h>
 #include <limits.h>
 #include <Wlz.h>
 
-static WlzErrorNum	WlzWriteIntervalDomain(FILE *fp,
-				WlzIntervalDomain *itvl),
-		   	WlzWritePlaneDomain(FILE *fp,
-		    		WlzPlaneDomain *planedm),
-			WlzWriteProperty(FILE *fp,
-			    	WlzSimpleProperty *plist),
-			WlzWriteValueTable(FILE	*fp,
-			      	WlzObject *obj),
-			WlzWriteVoxelValueTable(FILE *fp,
-				WlzObject *obj),
-			WlzWritePolygon(FILE *fp,
-				WlzPolygonDomain *poly),
-			WlzWriteBoundList(FILE *fp,
-				WlzBoundList *blist),
-			WlzWriteRect(FILE *fp,
-				WlzIRect *rdom),
-			WlzWriteVector(FILE *fp,
-				WlzIVector *vec),
-			WlzWritePoint(FILE *fp,
-				WlzIPoint *pnt),
-			WlzWriteHistogramDomain(FILE *fp,
-				WlzHistogramDomain *hist),
-			WlzWriteCompoundA(FILE *fp,
-				WlzCompoundArray *c),
-			WlzWriteAffineTransform(FILE *fp,
-				WlzAffineTransform *trans),
-			WlzWriteWarpTrans(FILE *fp,
-				WlzWarpTrans *obj),
-			WlzWriteFMatchObj(FILE *fp,
-				WlzFMatchObj *obj),
-			WlzWrite3DWarpTrans(FILE *fp,
-				Wlz3DWarpTrans *obj);
+static WlzErrorNum	WlzWriteIntervalDomain(
+			  FILE *fp,
+			  WlzIntervalDomain *itvl);
+static WlzErrorNum   	WlzWritePlaneDomain(
+			  FILE *fp,
+		    	  WlzPlaneDomain *planedm);
+static WlzErrorNum	WlzWriteProperty(
+			  FILE *fp,
+			  WlzSimpleProperty *plist);
+static WlzErrorNum	WlzWriteValueTable(
+			  FILE	*fp,
+			  WlzObject *obj);
+static WlzErrorNum	WlzWriteVoxelValueTable(
+			  FILE *fp,
+			  WlzObject *obj);
+static WlzErrorNum	WlzWritePolygon(
+			  FILE *fp,
+			  WlzPolygonDomain *poly);
+static WlzErrorNum	WlzWriteBoundList(
+			  FILE *fp,
+			  WlzBoundList *blist);
+static WlzErrorNum	WlzWriteRect(
+			  FILE *fp,
+			  WlzIRect *rdom);
+static WlzErrorNum	WlzWriteHistogramDomain(
+			  FILE *fp,
+			  WlzHistogramDomain *hist);
+static WlzErrorNum	WlzWriteCompoundA(
+			  FILE *fp,
+			  WlzCompoundArray *c);
+static WlzErrorNum	WlzWriteAffineTransform(
+			  FILE *fp,
+			  WlzAffineTransform *trans);
+static WlzErrorNum	WlzWriteWarpTrans(
+			  FILE *fp,
+			  WlzWarpTrans *obj);
+static WlzErrorNum	WlzWriteFMatchObj(
+			  FILE *fp,
+			  WlzFMatchObj *obj);
+static WlzErrorNum	WlzWrite3DWarpTrans(
+			  FILE *fp,
+			  Wlz3DWarpTrans *obj);
+static WlzErrorNum 	WlzWriteContour(
+			  FILE *fP,
+			  WlzContour *ctr);
+static WlzErrorNum 	WlzWriteGMModel(
+			  FILE *fP,
+			  WlzGMModel *model);
+static WlzErrorNum	WlzWriteInt(
+			  FILE *fP,
+			  int *iP,
+			  int nI);
+static WlzErrorNum 	WlzWriteVertex2I(
+			  FILE *fP,
+			  WlzIVertex2 *vP,
+			  int nV);
+static WlzErrorNum 	WlzWriteVertex2D(
+			  FILE *fP,
+			  WlzDVertex2 *vP,
+			  int nV);
+static WlzErrorNum 	WlzWriteVertex3I(
+			  FILE *fP,
+			  WlzIVertex3 *vP,
+			  int nV);
+static WlzErrorNum 	WlzWriteVertex3D(
+			  FILE *fP,
+			  WlzDVertex3 *vP,
+			  int nV);
+static WlzErrorNum 	WlzWriteBox2I(
+			  FILE *fP,
+			  WlzIBox2 *bP,
+			  int nB);
+static WlzErrorNum 	WlzWriteBox2D(
+			  FILE *fP,
+			  WlzDBox2 *bP,
+			  int nB);
+static WlzErrorNum 	WlzWriteBox3I(
+			  FILE *fP,
+			  WlzIBox3 *bP,
+			  int nB);
+static WlzErrorNum 	WlzWriteBox3D(
+			  FILE *fP,
+			  WlzDBox3 *bP,
+			  int nB);
 
 /* a set of functions to convert from VAX to SUN byte ordering
    in the future these should be replaced by calls using XDR procedures
@@ -81,7 +140,7 @@ static int putword(int i, FILE *fp)
   cout[2] = *(cin+2);
   cout[3] = *(cin+3);
 #endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(int), 1, fp) );
+  return( (int) fwrite(&cout[0], sizeof(char), 4, fp) );
 }
 
 /************************************************************************
@@ -107,7 +166,7 @@ static int putshort(short i, FILE *fp)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
 #endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(short), 1, fp) );
+  return( (int) fwrite(&cout[0], sizeof(char), 2, fp) );
 }
 
 /************************************************************************
@@ -138,7 +197,7 @@ static int putfloat(float f, FILE *fp)
   cout[1] = *(cin+3) + 1;
   cout[0] = *(cin+2);
 #endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(float), 1, fp) );
+  return( (int) fwrite(&cout[0], sizeof(char), 4, fp) );
 }
 
 /************************************************************************
@@ -177,7 +236,7 @@ static int putdouble(double d, FILE *fp)
   cout[5] = *(cin+1);
   cout[4] = *cin;
 #endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(double), 1, fp) );
+  return( (int) fwrite(&cout[0], sizeof(char), 8, fp) );
 }
 
 /************************************************************************
@@ -257,16 +316,11 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
       case WLZ_HISTOGRAM:
 	errNum = WlzWriteHistogramDomain(fp, obj->domain.hist);
 	break;
+      case WLZ_CONTOUR:
+        errNum = WlzWriteContour(fp, obj->domain.ctr);
+	break;
       case WLZ_RECTANGLE:
 	errNum = WlzWriteRect(fp, obj->domain.r);
-	break;
-      case WLZ_VECTOR_INT: /* FALLTHROUGH */
-      case WLZ_VECTOR_FLOAT:
-	errNum = WlzWriteVector(fp, (WlzIVector *)obj);
-	break;
-      case WLZ_POINT_INT: /* FALLTHROUGH */
-      case WLZ_POINT_FLOAT:
-	errNum = WlzWritePoint(fp, (WlzIPoint *)obj);
 	break;
       case WLZ_AFFINE_TRANS:
 	errNum = WlzWriteAffineTransform(fp, obj->domain.t);
@@ -289,9 +343,6 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
       case WLZ_3D_POLYGON:      /* FALLTHROUGH */
       case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
       case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
-      case WLZ_DISP_FRAME:      /* FALLTHROUGH */
-      case WLZ_DISP_GRID:       /* FALLTHROUGH */
-      case WLZ_DISP_FRAMEX:     /* FALLTHROUGH */
       case WLZ_TEXT:            /* FALLTHROUGH */
       case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
       case WLZ_COMPOUND_LIST_2: /* FALLTHROUGH */
@@ -299,6 +350,241 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 	errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
     }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteInt
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given native int to the given file stream
+*		as a 4 byte integer.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		int *iP:		Ptr to native ints.
+*		int nI:			Number of ints.
+************************************************************************/
+static WlzErrorNum WlzWriteInt(FILE *fP, int *iP, int nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  {
+    if(!putword(*iP, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++iP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteVertex2I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 2D integer verticies to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIVertex2 *vP:	Ptr to 2D integer verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzWriteVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    if(!putword(vP->vtY, fP) || !putword(vP->vtX, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++vP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteVertex2D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 2D double verticies to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDVertex2 *vP:	Ptr to 2D double verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzWriteVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    if(!putdouble(vP->vtY, fP) || !putdouble(vP->vtX, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++vP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteVertex3I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 3D integer verticies to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIVertex3 *vP:	Ptr to 3D integer verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzWriteVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    if(!putword(vP->vtX, fP) || !putword(vP->vtY, fP) ||
+       !putword(vP->vtZ, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++vP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteVertex3D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 3D double verticies to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDVertex3 *vP:	Ptr to 3D double verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzWriteVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    if(!putdouble(vP->vtX, fP) || !putdouble(vP->vtY, fP) ||
+       !putdouble(vP->vtZ, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++vP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteBox2I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 2D integer box to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIBox2 *bP:		Ptr to 2D integer box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzWriteBox2I(FILE *fP, WlzIBox2 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    if(!putword(bP->xMin, fP) || !putword(bP->yMin, fP) ||
+       !putword(bP->xMax, fP) || !putword(bP->yMax, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++bP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteBox2D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 2D double box to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDBox2 *bP:		Ptr to 2D double box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzWriteBox2D(FILE *fP, WlzDBox2 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    if(!putdouble(bP->xMin, fP) || !putdouble(bP->yMin, fP) ||
+       !putdouble(bP->xMax, fP) || !putdouble(bP->yMax, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++bP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteBox3I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 3D integer box to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIBox3 *bP:		Ptr to 3D integer box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzWriteBox3I(FILE *fP, WlzIBox3 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    if(!putword(bP->xMin, fP) || !putword(bP->yMin, fP) ||
+       !putword(bP->zMin, fP) ||
+       !putword(bP->xMax, fP) || !putword(bP->yMax, fP) ||
+       !putword(bP->zMax, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++bP;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteBox3D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's the given 3D double box to the given
+*		file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDBox3 *bP:		Ptr to 3D double box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzWriteBox3D(FILE *fP, WlzDBox3 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    if(!putdouble(bP->xMin, fP) || !putdouble(bP->yMin, fP) ||
+       !putdouble(bP->zMin, fP) ||
+       !putdouble(bP->xMax, fP) || !putdouble(bP->yMax, fP) ||
+       !putdouble(bP->zMax, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++bP;
   }
   return(errNum);
 }
@@ -1059,90 +1345,6 @@ static WlzErrorNum WlzWriteRect(FILE *fp, WlzIRect *rdom)
 }
 
 /************************************************************************
-*   Function   : WlzWriteVector						*
-*   Date       : Sun Oct 20 19:02:23 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-static WlzErrorNum WlzWriteVector(FILE *fp, WlzIVector *vec)
-{
-  WlzFVector	*fvec = (WlzFVector *)vec;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  /* Note no need to check for NULL because checked by WlzWriteObj() */
-  switch(vec->type) 
-  {
-    case WLZ_VECTOR_INT:
-      if(!putword(vec->k1, fp) ||
-	 !putword(vec->l1, fp) ||
-	 !putword(vec->k2, fp) ||
-	 !putword(vec->l2, fp) ||
-	 !putword(vec->style, fp))
-      {
-	errNum = WLZ_ERR_WRITE_INCOMPLETE;
-      }
-      break;
-    case WLZ_VECTOR_FLOAT:
-      if(!putfloat(fvec->k1, fp) ||
-	 !putfloat(fvec->l1, fp) ||
-	 !putfloat(fvec->k2, fp) ||
-	 !putfloat(fvec->l2, fp) ||
-	 !putword(fvec->style, fp))
-      {
-	errNum = WLZ_ERR_WRITE_INCOMPLETE;
-      }
-      break;
-    default:
-      errNum = WLZ_ERR_VECTOR_TYPE;
-      break;
-  }
-  return(errNum);
-}
-			
-/************************************************************************
-*   Function   : WlzWritePoint						*
-*   Date       : Sun Oct 20 19:07:03 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-static WlzErrorNum WlzWritePoint(FILE *fp, WlzIPoint *pnt)
-{
-  WlzFPoint	*fpnt = (WlzFPoint *) pnt;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  /* Note no need to check for NULL because checked by WlzWriteObj() */
-  switch(pnt->type)
-  {
-    case WLZ_POINT_INT:
-      if(!putword(pnt->k, fp) ||
-	 !putword(pnt->l, fp) ||
-	 !putword(pnt->style, fp))
-      {
-	errNum = WLZ_ERR_WRITE_INCOMPLETE;
-      }
-      break;
-    case WLZ_POINT_FLOAT:
-      if(!putfloat(fpnt->k, fp) ||
-	 !putfloat(fpnt->l, fp) ||
-	 !putword(fpnt->style, fp))
-      {
-	errNum = WLZ_ERR_WRITE_INCOMPLETE;
-      }
-      break;
-  default:
-    errNum = WLZ_ERR_POINT_TYPE;
-    break;
-  }
-  return(errNum);
-}
-
-/************************************************************************
 *   Function   : WlzWriteHistogramDomain				*
 *   Date       : Sun Oct 20 19:17:14 1996				*
 *************************************************************************
@@ -1490,6 +1692,245 @@ static WlzErrorNum WlzWrite3DWarpTrans(FILE *fp, Wlz3DWarpTrans *obj)
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
     }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteContour
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's a WlzContour data structure to a file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzContour *ctr:	Given contour to output.
+************************************************************************/
+static WlzErrorNum WlzWriteContour(FILE *fP, WlzContour *ctr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ctr == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(ctr->type != WLZ_CONTOUR)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    if(putc((unsigned int )(ctr->type), fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    else
+    {
+      errNum = WlzWriteGMModel(fP, ctr->model);
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzWriteGMModel
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Write's a GM model data structure to a file stream.
+*	 	Format is:
+*		  model->type (byte)
+*		  {
+*		    case WLZ_GMMOD_2I
+*		    case WLZ_GMMOD_2D
+*		      nEdge (int)
+*		    case WLZ_GMMOD_3I
+*		    case WLZ_GMMOD_3D
+*		      nLoop (int)
+*		  }
+*		  {
+*		    case model->type == WLZ_GMMOD_2I
+*		      vertexGU.vg2I->vtx (WlzIVertex2, int * 2)
+*		    case model->type == WLZ_GMMOD_2D
+*		      vertexGU.vg2D->vtx (WlzDVertex2, double * 2)
+*		    case model->type == WLZ_GMMOD_3I
+*		      vertexGU.vg3I->vtx (WlzIVertex2, int * 3)
+*		    case model->type == WLZ_GMMOD_3D
+*		      vertexGU.vg3D->vtx (WlzDVertex2, double * 3)
+*		  } * nVertex
+*		  {
+*		    case WLZ_GMMOD_2I
+*		    case WLZ_GMMOD_2D
+*		    {
+*		      2 vertex indicies
+*		    } * nEdge
+*		    case WLZ_GMMOD_3I
+*		    case WLZ_GMMOD_3D
+*		    {
+*		      2 vertex indicies
+*		    } * nLoop
+*		  }
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzGMModel *model:	Given model to output.
+************************************************************************/
+static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
+{
+
+  int		idI,
+  		iCnt,
+		vCnt,
+		encodeMtd = 0;
+  int		bufI[3];
+  AlcVector	*vec;
+  WlzGMEdgeT	*tET;
+  WlzGMElemP	eP;
+  WlzGMResIdxTb	*resIdxTb = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    /* Check the model type. */
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D:
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Index the verticies. */
+    resIdxTb = WlzGMModelResIdx(model, WLZ_GMELMFLG_VERTEX, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Check there are verticies! */
+    if(resIdxTb->vertex.idxCnt < 1)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output model type and file encoding method, followed by the number of
+     * verticies and the number of simplicies. Currently the file encoding
+     * method is just output as '0', but in future new encoding methods
+     * may be used, for example strips of simplicies to reduce the file
+     * size. */
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D:
+	if((putc((unsigned int )(model->type), fP) == EOF) ||
+	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
+	    !putword(resIdxTb->vertex.idxCnt, fP) ||
+	    !putword(model->res.edge.numElm, fP))
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	break;
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D:
+	if((putc((unsigned int )(model->type), fP) == EOF) ||
+	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
+	    !putword(resIdxTb->vertex.idxCnt, fP) ||
+	    !putword(model->res.loop.numElm, fP))
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the vertex geometries. */
+    idI = 0;
+    vec = model->res.vertex.vec;
+    iCnt = model->res.vertex.numIdx;
+    vCnt = 0;
+    while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+    {
+      eP.vertex = (WlzGMVertex *)AlcVectorItemGet(vec, idI++);
+      if(eP.vertex->idx >= 0)
+      {
+	++vCnt;
+	switch(model->type)
+	{
+	  case WLZ_GMMOD_2I:
+	    errNum = WlzWriteVertex2I(fP, &(eP.vertex->geo.vg2I->vtx), 1);
+	    break;
+	  case WLZ_GMMOD_2D:
+	    errNum = WlzWriteVertex2D(fP, &(eP.vertex->geo.vg2D->vtx), 1);
+	    break;
+	  case WLZ_GMMOD_3I:
+	    errNum = WlzWriteVertex3I(fP, &(eP.vertex->geo.vg3I->vtx), 1);
+	    break;
+	  case WLZ_GMMOD_3D:
+	    errNum = WlzWriteVertex3D(fP, &(eP.vertex->geo.vg3D->vtx), 1);
+	    break;
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the vertex indicies of the simplicies. */
+    idI = 0;
+    vCnt = 0;
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I:
+      case WLZ_GMMOD_2D:
+	vec = model->res.edge.vec;
+	iCnt = model->res.edge.numIdx;
+	while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+	{
+	  ++vCnt;
+	  eP.edge = (WlzGMEdge *)AlcVectorItemGet(vec, idI++);
+	  if(eP.edge->idx >= 0)
+	  {
+	    tET = eP.edge->edgeT;
+	    bufI[0] = *(resIdxTb->vertex.idxLut +
+	                tET->vertexT->diskT->vertex->idx);
+	    bufI[1] = *(resIdxTb->vertex.idxLut +
+	                tET->opp->vertexT->diskT->vertex->idx);
+	    errNum = WlzWriteInt(fP, bufI, 2);
+	  }
+	}
+        break;
+      case WLZ_GMMOD_3I:
+      case WLZ_GMMOD_3D:
+	vec = model->res.loop.vec;
+	iCnt = model->res.loop.numIdx;
+	while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+	{
+	  eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI++);
+	  if(eP.loop->idx >= 0)
+	  {
+	    ++vCnt;
+	    /* Loop IS a triangle, in 3D nothing else is allowed. */
+	    tET = eP.loop->loopT->edgeT;
+	    bufI[0] = *(resIdxTb->vertex.idxLut +
+	    		tET->vertexT->diskT->vertex->idx);
+	    bufI[1] = *(resIdxTb->vertex.idxLut +
+	    		tET->next->vertexT->diskT->vertex->idx);
+	    bufI[2] = *(resIdxTb->vertex.idxLut +
+	    		tET->prev->vertexT->diskT->vertex->idx);
+	    errNum = WlzWriteInt(fP, bufI, 3);
+	  }
+	}
+        break;
+    }
+  }
+  if(resIdxTb)
+  {
+    WlzGMModelResIdxFree(resIdxTb);
   }
   return(errNum);
 }
