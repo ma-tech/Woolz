@@ -1,0 +1,3892 @@
+/************************************************************************
+* Project:      Java Woolz
+* Title:        WlzC2Java.jj
+* Date:         December 1998
+* Purpose:      Javacc parser for Woolz header files to create a java
+*		binding to Woolz.
+*		To compile into java source use the command line:
+*                 javacc WlzC2Java.jj
+*		There are some restrictions on what can be put into the
+*		Woolz header files:
+*		  * No varargs functions can be parsed.
+*		  * All enumerated types must be typedef'd.
+*		  * All structures must be typedef'd.
+*		  * No global variables can be parsed.
+*		  * All function prototype declarations must extern'd.
+*		  * All function prototypes must be ANSI C.
+*		This parser is based on the grammer of the javacc
+*		demo C.jj by Doug South (dsouth@squirrel.com.au).
+* Copyright:	1997 Medical Research Council, UK.
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Maintenance:	Log changes below, with most recent at top of list.
+* @author       Bill Hill (bill@hgu.mrc.ac.uk)
+* @version 	MRC HGU %I%, %G%
+************************************************************************/
+
+PARSER_BEGIN(WlzC2Java)
+
+import java.io.*;
+import java.util.*;
+
+
+public class WlzC2Java
+{
+  public static class WlzJParamTypes
+  {
+    // Parsing error (NOT a Woolz error)
+    static final int WLZ_JPM_KEY_PARSE_ERROR	= 0x00000000;
+    // Basic type mask
+    static final int WLZ_JPM_MASK_TYPE		= 0x00000fff;
+    // Indirection mask
+    static final int WLZ_JPM_MASK_PTR		= 0x0000f000;
+    // Array mask
+    static final int WLZ_JPM_MASK_ARY		= 0x000f0000;
+    // Woolz error (NOT a parsing error)
+    static final int WLZ_JPM_KEY_THROW_ERROR	= 0x01000000;
+    // Basic types
+    static final int WLZ_JPM_KEY_VOID		= 0x00000001;
+    static final int WLZ_JPM_KEY_BYTE		= 0x00000002;
+    static final int WLZ_JPM_KEY_SHORT		= 0x00000003;
+    static final int WLZ_JPM_KEY_INT		= 0x00000004;
+    static final int WLZ_JPM_KEY_LONG		= 0x00000005;
+    static final int WLZ_JPM_KEY_FLOAT		= 0x00000006;
+    static final int WLZ_JPM_KEY_DOUBLE		= 0x00000007;
+    static final int WLZ_JPM_KEY_STRING		= 0x00000008;
+    static final int WLZ_JPM_KEY_WLZ		= 0x00000009;
+    static final int WLZ_JPM_KEY_FILE		= 0x0000000a;
+    static final int WLZ_JPM_KEY_WLZ_GREYV	= 0x00000010;
+    static final int WLZ_JPM_KEY_WLZ_PIXELV	= 0x00000011;
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX2	= 0x00000012;
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX2	= 0x00000013;
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX2	= 0x00000014;
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX3	= 0x00000015;
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX3	= 0x00000016;
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX3	= 0x00000017;
+    static final int WLZ_JPM_KEY_WLZ_IBOX2	= 0x00000018;
+    static final int WLZ_JPM_KEY_WLZ_DBOX2	= 0x00000019;
+    static final int WLZ_JPM_KEY_WLZ_IBOX3	= 0x0000001a;
+    static final int WLZ_JPM_KEY_WLZ_DBOX3	= 0x0000001b;
+    // Indirection values
+    static final int WLZ_JPM_MASK_PTR_1		= 0x00001000;
+    static final int WLZ_JPM_MASK_PTR_2		= 0x00002000;
+    // Array dimension values
+    static final int WLZ_JPM_MASK_ARY_1		= 0x00010000;
+    static final int WLZ_JPM_MASK_ARY_2		= 0x00020000;
+    static final int WLZ_JPM_MASK_ARY_3		= 0x00030000;
+    // All the derived types
+    static final int WLZ_JPM_KEY_VOID_PTR1	=
+						(WLZ_JPM_KEY_VOID |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_BYTE_PTR1	=
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_SHORT_PTR1	=
+    						(WLZ_JPM_KEY_SHORT |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_INT_PTR1	=
+    						(WLZ_JPM_KEY_INT |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_LONG_PTR1	=
+    						(WLZ_JPM_KEY_LONG |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_FLOAT_PTR1	=
+    						(WLZ_JPM_KEY_FLOAT |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_DOUBLE_PTR1	=
+    						(WLZ_JPM_KEY_DOUBLE |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_STRING_PTR1	=
+    						(WLZ_JPM_KEY_STRING |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_PTR1	=
+    						(WLZ_JPM_KEY_WLZ |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_FILE_PTR1	=
+    						(WLZ_JPM_KEY_FILE |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_GREYV_PTR1	=
+    						(WLZ_JPM_KEY_WLZ_GREYV |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_PIXELV_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_PIXELV |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_IVERTEX2 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_FVERTEX2 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_DVERTEX2 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_IVERTEX3 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_FVERTEX3 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1 =
+    						(WLZ_JPM_KEY_WLZ_DVERTEX3 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_IBOX2_PTR1	 =
+    						(WLZ_JPM_KEY_WLZ_IBOX2 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_DBOX2_PTR1	 =
+    						(WLZ_JPM_KEY_WLZ_DBOX2 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_IBOX3_PTR1	 =
+    						(WLZ_JPM_KEY_WLZ_IBOX3 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_DBOX3_PTR1	 =
+    						(WLZ_JPM_KEY_WLZ_DBOX3 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_BYTE_ARY1      =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_SHORT_ARY1     =
+    						(WLZ_JPM_KEY_SHORT |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_INT_ARY1       =
+    						(WLZ_JPM_KEY_INT |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_LONG_ARY1      =
+    						(WLZ_JPM_KEY_LONG |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_FLOAT_ARY1     =
+    						(WLZ_JPM_KEY_FLOAT |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_DOUBLE_ARY1    =
+    						(WLZ_JPM_KEY_DOUBLE |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_BYTE_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_GREYV_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_GREYV |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_PIXELV_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_PIXELV |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_SHORT_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_SHORT |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_INT_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_INT |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_LONG_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_LONG |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_FLOAT_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_FLOAT |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_DOUBLE_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_DOUBLE |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_PTR1_ARY1 	=
+    						(WLZ_JPM_KEY_WLZ |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_PTR2_ARY1 	=
+    						(WLZ_JPM_KEY_WLZ |
+						 WLZ_JPM_MASK_PTR_2 |
+    						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_IVERTEX2 |
+						WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_FVERTEX2 |
+						WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_DVERTEX2 |
+						WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_IVERTEX3 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_FVERTEX3 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_DVERTEX3 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_IBOX2_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_IBOX2 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_DBOX2_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_DBOX2 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_IBOX3_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_IBOX3 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_DBOX3_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_DBOX3 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_PTR2	=
+    						(WLZ_JPM_KEY_WLZ |
+						 WLZ_JPM_MASK_PTR_2);
+    static final int WLZ_JPM_KEY_BYTE_ARY2      =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_SHORT_ARY2     =
+    						(WLZ_JPM_KEY_SHORT |
+    					   	 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_INT_ARY2       =
+    						(WLZ_JPM_KEY_INT |
+						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_LONG_ARY2      =
+    						(WLZ_JPM_KEY_LONG |
+						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_FLOAT_ARY2     =
+    						(WLZ_JPM_KEY_FLOAT |
+						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_DOUBLE_ARY2    =
+    						(WLZ_JPM_KEY_DOUBLE |
+						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_BYTE_PTR1_ARY2 =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_SHORT_PTR1_ARY2 =
+    						(WLZ_JPM_KEY_SHORT |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_INT_PTR1_ARY2 =
+    						(WLZ_JPM_KEY_INT |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_LONG_PTR1_ARY2 =
+    						(WLZ_JPM_KEY_LONG |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_FLOAT_PTR1_ARY2 =
+    						(WLZ_JPM_KEY_FLOAT |
+						 WLZ_JPM_MASK_PTR_1 |
+    						   WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_DOUBLE_PTR1_ARY2 =
+    						(WLZ_JPM_KEY_DOUBLE |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_2);
+    static final int WLZ_JPM_KEY_BYTE_ARY3      =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_SHORT_ARY3     =
+    						(WLZ_JPM_KEY_SHORT |
+						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_INT_ARY3       =
+    						(WLZ_JPM_KEY_INT |
+						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_LONG_ARY3      =
+    						(WLZ_JPM_KEY_LONG |
+    						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_FLOAT_ARY3     =
+    						(WLZ_JPM_KEY_FLOAT |
+    						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_DOUBLE_ARY3    =
+    						(WLZ_JPM_KEY_DOUBLE |
+    						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_BYTE_PTR1_ARY3 =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_SHORT_PTR1_ARY3 =
+    						(WLZ_JPM_KEY_SHORT |
+						 WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_INT_PTR1_ARY3 =
+    						(WLZ_JPM_KEY_INT |
+					         WLZ_JPM_MASK_PTR_1 |
+    						 WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_LONG_PTR1_ARY3	=
+    						  (WLZ_JPM_KEY_LONG |
+						   WLZ_JPM_MASK_PTR_1 |
+    						   WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_FLOAT_PTR1_ARY3 =
+    						  (WLZ_JPM_KEY_FLOAT |
+						   WLZ_JPM_MASK_PTR_1 |
+    						   WLZ_JPM_MASK_ARY_3);
+    static final int WLZ_JPM_KEY_DOUBLE_PTR1_ARY3 =
+    						  (WLZ_JPM_KEY_DOUBLE |
+						   WLZ_JPM_MASK_PTR_1 |
+    						   WLZ_JPM_MASK_ARY_3);
+    public static Hashtable jPmKeyTable;
+    public int		jPmKey;
+    public String	jPmClass;
+    public String	jniPmType;
+
+    public WlzJParamTypes()
+    {
+      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+      jPmClass = "";
+      jniPmType = "";
+      jPmKeyTable = new Hashtable();
+      buildPmTypeTable();
+    }
+
+    public void buildPmTypeTable()
+    {
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_PARSE_ERROR),
+      		      "WLZ_JPM_KEY_PARSE_ERROR");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_TYPE),
+		      "WLZ_JPM_MASK_TYPE");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_PTR),
+		      "WLZ_JPM_MASK_PTR");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_PTR_1),
+		      "WLZ_JPM_MASK_PTR_1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_PTR_2),
+		      "WLZ_JPM_MASK_PTR_2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_ARY),
+		      "WLZ_JPM_MASK_ARY");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_ARY_1),
+		      "WLZ_JPM_MASK_ARY_1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_ARY_2),
+		      "WLZ_JPM_MASK_ARY_2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_MASK_ARY_3),
+		      "WLZ_JPM_MASK_ARY_3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_THROW_ERROR),
+		      "WLZ_JPM_KEY_THROW_ERROR");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_VOID),
+		      "WLZ_JPM_KEY_VOID");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE),
+		      "WLZ_JPM_KEY_BYTE");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT),
+		      "WLZ_JPM_KEY_SHORT");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT),
+		      "WLZ_JPM_KEY_INT");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG),
+		      "WLZ_JPM_KEY_LONG");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT),
+		      "WLZ_JPM_KEY_FLOAT");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE),
+		      "WLZ_JPM_KEY_DOUBLE");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_STRING),
+		      "WLZ_JPM_KEY_STRING");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ),
+		      "WLZ_JPM_KEY_WLZ");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FILE),
+		      "WLZ_JPM_KEY_FILE");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_GREYV),
+		      "WLZ_JPM_KEY_WLZ_GREYV");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PIXELV),
+		      "WLZ_JPM_KEY_WLZ_PIXELV");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX2),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX2),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX2),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX3),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX3),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX3),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX2),
+		      "WLZ_JPM_KEY_WLZ_IBOX2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX2),
+		      "WLZ_JPM_KEY_WLZ_DBOX2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX3),
+		      "WLZ_JPM_KEY_WLZ_IBOX3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX3),
+		      "WLZ_JPM_KEY_WLZ_DBOX3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_VOID_PTR1),
+		      "WLZ_JPM_KEY_VOID_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_PTR1),
+		      "WLZ_JPM_KEY_BYTE_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_PTR1),
+		      "WLZ_JPM_KEY_SHORT_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_PTR1),
+		      "WLZ_JPM_KEY_INT_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_PTR1),
+		      "WLZ_JPM_KEY_LONG_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_PTR1),
+		      "WLZ_JPM_KEY_FLOAT_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_PTR1),
+		      "WLZ_JPM_KEY_DOUBLE_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_STRING_PTR1),
+		      "WLZ_JPM_KEY_STRING_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR1),
+		      "WLZ_JPM_KEY_WLZ_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FILE_PTR1),
+		      "WLZ_JPM_KEY_WLZ_FILE_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_GREYV_PTR1),
+		      "WLZ_JPM_KEY_WLZ_GREYV_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PIXELV_PTR1),
+		      "WLZ_JPM_KEY_WLZ_PIXELV_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX2_PTR1),
+		      "WLZ_JPM_KEY_WLZ_IBOX2_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX2_PTR1),
+		      "WLZ_JPM_KEY_WLZ_DBOX2_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX3_PTR1),
+		      "WLZ_JPM_KEY_WLZ_IBOX3_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX3_PTR1),
+		      "WLZ_JPM_KEY_WLZ_DBOX3_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_ARY1),
+		      "WLZ_JPM_KEY_BYTE_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_ARY1),
+		      "WLZ_JPM_KEY_SHORT_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_ARY1),
+		      "WLZ_JPM_KEY_INT_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_ARY1),
+		      "WLZ_JPM_KEY_LONG_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_ARY1),
+		      "WLZ_JPM_KEY_FLOAT_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_ARY1),
+		      "WLZ_JPM_KEY_DOUBLE_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_PTR1_ARY1),
+		      "WLZ_JPM_KEY_BYTE_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_PTR1_ARY1),
+		      "WLZ_JPM_KEY_SHORT_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_PTR1_ARY1),
+		      "WLZ_JPM_KEY_INT_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_PTR1_ARY1),
+		      "WLZ_JPM_KEY_LONG_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_PTR1_ARY1),
+		      "WLZ_JPM_KEY_FLOAT_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_PTR1_ARY1),
+		      "WLZ_JPM_KEY_DOUBLE_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_PTR2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_GREYV_ARY1),
+		      "WLZ_JPM_KEY_WLZ_GREYV_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PIXELV_ARY1),
+		      "WLZ_JPM_KEY_WLZ_PIXELV_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_IBOX2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_DBOX2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX3_ARY1),
+		      "WLZ_JPM_KEY_WLZ_IBOX3_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX3_ARY1),
+		      "WLZ_JPM_KEY_WLZ_DBOX3_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR2),
+		      "WLZ_JPM_KEY_WLZ_PTR2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_ARY2),
+		      "WLZ_JPM_KEY_BYTE_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_ARY2),
+		      "WLZ_JPM_KEY_SHORT_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_ARY2),
+		      "WLZ_JPM_KEY_INT_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_ARY2),
+		      "WLZ_JPM_KEY_LONG_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_ARY2),
+		      "WLZ_JPM_KEY_FLOAT_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_ARY2),
+		      "WLZ_JPM_KEY_DOUBLE_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_PTR1_ARY2),
+		      "WLZ_JPM_KEY_BYTE_PTR1_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_PTR1_ARY2),
+		      "WLZ_JPM_KEY_SHORT_PTR1_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_PTR1_ARY2),
+		      "WLZ_JPM_KEY_INT_PTR1_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_PTR1_ARY2),
+		      "WLZ_JPM_KEY_LONG_PTR1_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_PTR1_ARY2),
+		      "WLZ_JPM_KEY_FLOAT_PTR1_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_PTR1_ARY2),
+		      "WLZ_JPM_KEY_DOUBLE_PTR1_ARY2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_ARY3),
+		      "WLZ_JPM_KEY_BYTE_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_ARY3),
+		      "WLZ_JPM_KEY_SHORT_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_ARY3),
+		      "WLZ_JPM_KEY_INT_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_ARY3),
+		      "WLZ_JPM_KEY_LONG_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_ARY3),
+		      "WLZ_JPM_KEY_FLOAT_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_ARY3),
+		      "WLZ_JPM_KEY_DOUBLE_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_PTR1_ARY3),
+		      "WLZ_JPM_KEY_BYTE_PTR1_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_SHORT_PTR1_ARY3),
+		      "WLZ_JPM_KEY_SHORT_PTR1_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_INT_PTR1_ARY3),
+		      "WLZ_JPM_KEY_INT_PTR1_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_LONG_PTR1_ARY3),
+		      "WLZ_JPM_KEY_LONG_PTR1_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_FLOAT_PTR1_ARY3),
+		      "WLZ_JPM_KEY_FLOAT_PTR1_ARY3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_DOUBLE_PTR1_ARY3),
+		      "WLZ_JPM_KEY_DOUBLE_PTR1_ARY3");
+    }
+
+    public static String keyString(WlzJParamTypes pt)
+    {
+      return((String )(jPmKeyTable.get(new Integer(pt.jPmKey))));
+    }
+
+    public static boolean canBeCast(WlzJParamTypes pt)
+    {
+      boolean canBe = false;
+      switch(pt.jPmKey)
+      {
+        case WlzJParamTypes.WLZ_JPM_KEY_BYTE:	// FALLTHROUGH
+        case WlzJParamTypes.WLZ_JPM_KEY_SHORT:	// FALLTHROUGH
+        case WlzJParamTypes.WLZ_JPM_KEY_INT:	// FALLTHROUGH
+        case WlzJParamTypes.WLZ_JPM_KEY_LONG:	// FALLTHROUGH
+        case WlzJParamTypes.WLZ_JPM_KEY_FLOAT:	// FALLTHROUGH
+        case WlzJParamTypes.WLZ_JPM_KEY_DOUBLE:	// FALLTHROUGH
+        case WlzJParamTypes.WLZ_JPM_KEY_STRING:
+	  canBe = true;
+	  break;
+        default:
+	  canBe = WlzJParamTypes.isPtr(pt) || WlzJParamTypes.isArray(pt);
+	  break;
+      }
+      return(canBe);
+    }
+
+    public static boolean isPtr(WlzJParamTypes pt)
+    {
+      return(WlzJParamTypes.isPtr1(pt) ||
+      	     WlzJParamTypes.isPtr2(pt));
+    }
+
+    public static boolean isPtr1(WlzJParamTypes pt)
+    {
+      return((pt.jPmKey & WlzJParamTypes.WLZ_JPM_MASK_PTR) == 
+      	     WlzJParamTypes.WLZ_JPM_MASK_PTR_1);
+    }
+
+    public static boolean isPtr2(WlzJParamTypes pt)
+    {
+      return((pt.jPmKey & WlzJParamTypes.WLZ_JPM_MASK_PTR) == 
+      	     WlzJParamTypes.WLZ_JPM_MASK_PTR_2);
+    }
+
+    public static boolean isArray(WlzJParamTypes pt)
+    {
+      return(WlzJParamTypes.isArray1D(pt) ||
+      	     WlzJParamTypes.isArray2D(pt) ||
+	     WlzJParamTypes.isArray3D(pt));
+    }
+
+    public static boolean isArray1D(WlzJParamTypes pt)
+    {
+      return((pt.jPmKey & WlzJParamTypes.WLZ_JPM_MASK_ARY) == 
+      	     WlzJParamTypes.WLZ_JPM_MASK_ARY_1);
+    }
+
+    public static boolean isArray2D(WlzJParamTypes pt)
+    {
+      return((pt.jPmKey & WlzJParamTypes.WLZ_JPM_MASK_ARY) == 
+      	     WlzJParamTypes.WLZ_JPM_MASK_ARY_2);
+    }
+
+    public static boolean isArray3D(WlzJParamTypes pt)
+    {
+      return((pt.jPmKey & WlzJParamTypes.WLZ_JPM_MASK_ARY) == 
+	     WlzJParamTypes.WLZ_JPM_MASK_ARY_3);
+    }
+
+    public static void writeParamTypesToC(PrintWriter out)
+    {
+      out.println("");
+      out.println("typedef enum");
+      out.println("{");
+      Enumeration enm = jPmKeyTable.keys();
+      while(enm.hasMoreElements())
+      {
+	Integer val = (Integer )(enm.nextElement());
+	String str = (String )(jPmKeyTable.get(val));
+        out.print("  " + str + " = " + val);
+	if(enm.hasMoreElements())
+	{
+	  out.print(",");
+	}
+	out.println("");
+
+      }
+      out.println("} WlzJParamTypes;");
+      out.println("");
+    }
+
+    /**********************************************************************
+    * Purpose:	Classify a Woolz C function parameter for conversion to
+    *		a to Java member parameter.
+    * @return	void
+    * @param:	ePmType		parameter type (eg "char")
+    *		cPmQual		parameter type qualifier (eg "const")
+    *		cIdrCnt		parameter indirection count (eg "*" = 1)
+    *		cPmIdent	parameter identifier
+    **********************************************************************/
+    public void cToJFnParam(String cPmType, String cPmQual, int cIdrCnt,
+			     String cPmIdent)
+    {
+
+      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+      switch(cIdrCnt)
+      {
+	case 0:
+	  if(cPmType.equals("long"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_LONG;
+	  }
+	  else if(cPmType.equals("int"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_INT;
+	  }
+	  else if(cPmType.equals("short"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_SHORT;
+	  }
+	  else if(cPmType.equals("float"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_FLOAT;
+	  }
+	  else if(cPmType.equals("double"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_DOUBLE;
+	  }
+	  else if(isEnumType(cPmType))
+	  {
+	    jPmKey = WLZ_JPM_KEY_INT;
+	  }
+	  else if(cPmType.equals("char"))
+	  {
+	    // A C char is closest to a Java byte.
+	    jPmKey = WLZ_JPM_KEY_BYTE;
+	  }
+	  else if(cPmType.startsWith(stPrefix))
+	  {
+            if(cPmType.equals("WlzGreyV"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_GREYV;
+	    }
+	    else if(cPmType.equals("WlzPixelV"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_PIXELV;
+	    }
+	    else if(cPmType.equals("WlzIVertex2"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX2;
+	    }
+	    else if(cPmType.equals("WlzFVertex2"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX2;
+	    }
+	    else if(cPmType.equals("WlzDVertex2"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX2;
+	    }
+	    else if(cPmType.equals("WlzIVertex3"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX3;
+	    }
+	    else if(cPmType.equals("WlzFVertex3"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX3;
+	    }
+	    else if(cPmType.equals("WlzDVertex3"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX3;
+	    }
+	    else if(cPmType.equals("WlzIBox2"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_IBOX2;
+	    }
+	    else if(cPmType.equals("WlzDBox2"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_DBOX2;
+	    }
+	    else if(cPmType.equals("WlzIBox3"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_IBOX3;
+	    }
+	    else if(cPmType.equals("WlzDBox3"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_DBOX3;
+	    }
+	    else	      /* Add other Woolz types passed by value here. */
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	case 1:
+	  if(cPmType.equals("long"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_LONG_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_LONG_PTR1;
+	    }
+	  }
+	  else if(cPmType.equals("int"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_PTR1;
+	    }
+	  }
+	  else if(cPmType.equals("short"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_SHORT_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_SHORT_PTR1;
+	    }
+	  }
+	  else if(cPmType.equals("char"))
+	  {
+	    if(cPmIdent.startsWith("dst"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_BYTE_PTR1;
+	    }
+	    else if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_BYTE_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_STRING;
+	    }
+	  }
+	  else if(cPmType.equals("float"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_FLOAT_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_FLOAT_PTR1;
+	    }
+	  }
+	  else if(cPmType.equals("double"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_PTR1;
+	    }
+	  }
+	  else if(cPmType.startsWith(stPrefix))
+	  {
+	    if(isEnumType(cPmType))
+	    {
+	      if(cPmType.equals("WlzErrorNum") && cPmIdent.equals("dstErr"))
+	      {
+		// Destination pointer for error number.
+		jPmKey = WLZ_JPM_KEY_THROW_ERROR;
+	      }
+	      else
+	      {
+		if(cPmIdent.startsWith("array"))
+		{
+		  jPmKey = WLZ_JPM_KEY_INT_ARY1;
+		}
+		else
+		{
+		  jPmKey = WLZ_JPM_KEY_INT_PTR1;
+		}
+	      }
+	    }
+	    else
+	    {
+	      if(cPmIdent.startsWith("dst"))
+	      {
+		if(cPmType.equals("WlzGreyV"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_GREYV_PTR1;
+		}
+		else if(cPmType.equals("WlzPixelV"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_PIXELV_PTR1;
+		}
+		else if(cPmType.equals("WlzIVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1;
+		}
+		else if(cPmType.equals("WlzFVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1;
+		}
+		else if(cPmType.equals("WlzDVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1;
+		}
+		else if(cPmType.equals("WlzIVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1;
+		}
+		else if(cPmType.equals("WlzFVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1;
+		}
+		else if(cPmType.equals("WlzDVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1;
+		}
+		else if(cPmType.equals("WlzIBox2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX2_PTR1;
+		}
+		else if(cPmType.equals("WlzDBox2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DBOX2_PTR1;
+		}
+		else if(cPmType.equals("WlzIBox3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX3_PTR1;
+		}
+		else if(cPmType.equals("WlzDBox3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DBOX3_PTR1;
+		}
+		else	      /* Add other Woolz types passed by value here. */
+		{
+		  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+		}
+	      }
+	      else if(cPmIdent.startsWith("array"))
+	      {
+		if(cPmType.equals("WlzGreyV"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_GREYV_ARY1;
+		}
+		else if(cPmType.equals("WlzPixelV"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_PIXELV_ARY1;
+		}
+		else if(cPmType.equals("WlzIVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1;
+		}
+		else if(cPmType.equals("WlzFVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1;
+		}
+		else if(cPmType.equals("WlzDVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1;
+		}
+		else if(cPmType.equals("WlzIVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1;
+		}
+		else if(cPmType.equals("WlzFVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1;
+		}
+		else if(cPmType.equals("WlzDVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1;
+		}
+		else if(cPmType.equals("WlzIBox2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX2_ARY1;
+		}
+		else if(cPmType.equals("WlzDBox2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DBOX2_ARY1;
+		}
+		else if(cPmType.equals("WlzIBox3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX3_ARY1;
+		}
+		else if(cPmType.equals("WlzDBox3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DBOX3_ARY1;
+		}
+		else	      /* Add other Woolz types passed by value here. */
+		{
+		  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+		}
+	      }
+	      else
+	      {
+		// Woolz object pointer.
+		jPmKey = WLZ_JPM_KEY_WLZ_PTR1;
+	      }
+	    }
+	  }
+	  else if(isEnumType(cPmType))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_ARY1;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_PTR1;
+	    }
+	  }
+	  else if(isType(cPmType) && cPmType.equals("FILE"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_WLZ_FILE_PTR1;
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	case 2:
+	  if(cPmType.equals("long"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_LONG_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("int"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("short"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_SHORT_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("char"))
+	  {
+	    if(cPmIdent.startsWith("dst"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_STRING_PTR1;
+	    }
+	    else if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_BYTE_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("float"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_FLOAT_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("double"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_ARY2;
+	    }
+	  }
+	  else if(cPmType.startsWith(stPrefix))
+	  {
+	    if(isEnumType(cPmType))
+	    {
+	      if(cPmIdent.startsWith("array"))
+	      {
+		jPmKey = WLZ_JPM_KEY_INT_ARY2;
+	      }
+	      else
+	      {
+		jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	      }
+	    }
+	    else
+	    {
+	      if(cPmIdent.startsWith("dst"))
+	      {
+	        jPmKey = WLZ_JPM_KEY_WLZ_PTR2;
+	      }
+	      else if(cPmIdent.startsWith("array"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_PTR1_ARY1;
+	      }
+	      else
+	      {
+	        jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	      }
+	    }
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	case 3:
+	  if(cPmType.equals("long"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_LONG_ARY3;
+	    }
+	    else if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_LONG_PTR1_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("int"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_ARY3;
+	    }
+	    else if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_PTR1_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("short"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_SHORT_ARY3;
+	    }
+	    else if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_SHORT_PTR1_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("char"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_BYTE_ARY3;
+	    }
+	    else if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_BYTE_PTR1_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("float"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_FLOAT_ARY3;
+	    }
+	    else if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_FLOAT_PTR1_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("double"))
+	  {
+	    if(cPmIdent.startsWith("array"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_ARY3;
+	    }
+	    else if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_PTR1_ARY2;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.startsWith(stPrefix))
+	  {
+	    if(isEnumType(cPmType))
+	    {
+	      if(cPmIdent.startsWith("array"))
+	      {
+		jPmKey = WLZ_JPM_KEY_INT_ARY3;
+	      }
+	      else
+	      {
+		jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	      }
+	    }
+	    else
+	    {
+	      // Array of Woolz object pointers.
+	      jPmKey = WLZ_JPM_KEY_WLZ_PTR2_ARY1;
+	    }
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	case 4:
+	  if(cPmType.equals("long"))
+	  {
+	    if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_LONG_PTR1_ARY3;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("int"))
+	  {
+	    if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_PTR1_ARY3;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("short"))
+	  {
+	    if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_SHORT_PTR1_ARY3;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("char"))
+	  {
+	    if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_BYTE_PTR1_ARY3;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("float"))
+	  {
+	    if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_FLOAT_PTR1_ARY3;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else if(cPmType.equals("double"))
+	  {
+	    if(cPmIdent.startsWith("dstArray"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_DOUBLE_PTR1_ARY3;
+	    }
+	    else
+	    {
+	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	    }
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	default:
+	  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  break;
+      }
+      cToJComputeStrings(cPmType);
+    }
+
+    /**********************************************************************
+    * Purpose:	Classify a Woolz C function return type.
+    * @return	void
+    * @param:	cFnType		parameter type (eg "char")
+    *		cFnQual		parameter type qualifier (eg "const")
+    *		cIdrCnt		parameter indirection count (eg "*" = 1)
+    **********************************************************************/
+    public void cToJFnRtn(String cFnType, String cFnQual, int cIdrCnt)
+    {
+
+      switch(cIdrCnt)
+      {
+        case 0:
+	  if(cFnType.equals("void"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_VOID;
+	  }
+	  else if(cFnType.equals("long"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_LONG;
+	  }
+	  else if(cFnType.equals("int"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_INT;
+	  }
+	  else if(cFnType.equals("short"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_SHORT;
+	  }
+	  else if(cFnType.equals("float"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_FLOAT;
+	  }
+	  else if(cFnType.equals("double"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_DOUBLE;
+	  }
+	  else if(cFnType.equals("char"))
+	  {
+	    // A C char is closest to a Java byte.
+	    jPmKey = WLZ_JPM_KEY_BYTE;
+	  }
+	  else if(cFnType.startsWith(stPrefix))
+	  {
+	    if(isEnumType(cFnType))
+	    {
+	      if(cFnType.equals("WlzErrorNum"))
+	      {
+		// Returns an error code.
+		jPmKey = WLZ_JPM_KEY_THROW_ERROR;
+	      }
+	      else
+	      {
+		jPmKey = WLZ_JPM_KEY_INT;
+	      }
+	    }
+	    else
+	    {
+	      if(cFnType.equals("WlzGreyV"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_GREYV;
+	      }
+	      else if(cFnType.equals("WlzPixelV"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_PIXELV;
+	      }
+	      else if(cFnType.equals("WlzIVertex2"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX2;
+	      }
+	      else if(cFnType.equals("WlzFVertex2"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX2;
+	      }
+	      else if(cFnType.equals("WlzDVertex2"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX2;
+	      }
+	      else if(cFnType.equals("WlzIVertex3"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX3;
+	      }
+	      else if(cFnType.equals("WlzFVertex3"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX3;
+	      }
+	      else if(cFnType.equals("WlzDVertex3"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX3;
+	      }
+	      else if(cFnType.equals("WlzIBox2"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_IBOX2;
+	      }
+	      else if(cFnType.equals("WlzDBox2"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_DBOX2;
+	      }
+	      else if(cFnType.equals("WlzIBox3"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_IBOX3;
+	      }
+	      else if(cFnType.equals("WlzDBox3"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_DBOX3;
+	      }
+	      else		  /* Add Woolz types returned by value here. */
+	      {
+		jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	      }
+	    }
+	  }
+	  else if(isEnumType(cFnType))
+	  {
+	    jPmKey = WLZ_JPM_KEY_INT;
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	case 1:
+	  if(cFnType.equals("long"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_LONG_PTR1;
+	  }
+	  else if(cFnType.equals("int"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_INT_PTR1;
+	  }
+	  else if(cFnType.equals("short"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_SHORT_PTR1;
+	  }
+	  else if(cFnType.equals("char"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_STRING;
+	  }
+	  else if(cFnType.equals("float"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_FLOAT_PTR1;
+	  }
+	  else if(cFnType.equals("double"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_DOUBLE_PTR1;
+	  }
+	  else if(cFnType.startsWith(stPrefix))
+	  {
+	    if(isEnumType(cFnType))
+	    {
+	      jPmKey = WLZ_JPM_KEY_INT_PTR1;
+	    }
+	    else
+	    {
+	      // Woolz object pointer.
+	      jPmKey = WLZ_JPM_KEY_WLZ_PTR1;
+	    }
+	  }
+	  else if(isEnumType(cFnType))
+	  {
+	    jPmKey = WLZ_JPM_KEY_INT_PTR1;
+	  }
+	  else if(isType(cFnType) && cFnType.equals("FILE"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_WLZ_FILE_PTR1;
+	  }
+	  else
+	  {
+	    jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  }
+	  break;
+	default:
+	  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  break;
+      }
+      cToJComputeStrings(cFnType);
+    }
+
+    /**********************************************************************
+    * Purpose:	Classify a Woolz C function parameter for conversion to
+    *		a to Java member parameter.
+    * @return	void
+    * @param:	cType		Woolz C type string.
+    **********************************************************************/
+    private void cToJComputeStrings(String cType)
+    {
+      jPmClass = "";
+      jniPmType = ""; 
+      switch(jPmKey)
+      {
+    	case WLZ_JPM_KEY_VOID:
+	  jPmClass = "void";
+	  jniPmType = "void"; 
+	  break;
+    	case WLZ_JPM_KEY_BYTE:
+	  jPmClass = "byte";
+	  jniPmType = "jbyte"; 
+	  break;
+    	case WLZ_JPM_KEY_SHORT:
+	  jPmClass = "short";
+	  jniPmType = "jshort"; 
+	  break;
+    	case WLZ_JPM_KEY_INT:
+	  jPmClass = "int";
+	  jniPmType = "jint";
+	  break;
+    	case WLZ_JPM_KEY_LONG:
+	  jPmClass = "long";
+	  jniPmType = "jlong";
+	  break;
+    	case WLZ_JPM_KEY_FLOAT:
+	  jPmClass = "float";
+	  jniPmType = "jfloat";
+	  break;
+    	case WLZ_JPM_KEY_DOUBLE:
+	  jPmClass = "double";
+	  jniPmType = "jdouble";
+	  break;
+    	case WLZ_JPM_KEY_STRING:
+	  jPmClass = "String";
+	  jniPmType = "jstring";
+	  break;
+	case WLZ_JPM_KEY_WLZ_GREYV: 	// FALLTHROUGH
+	case WLZ_JPM_KEY_WLZ_PIXELV:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX2:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX2:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX2:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX3:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX3:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX3:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IBOX2:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DBOX2:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IBOX3:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DBOX3:
+	  jPmClass = cType;
+	  jniPmType = "jobject";
+	  break;
+    	case WLZ_JPM_KEY_BYTE_PTR1: 	// FALLTHROUGH
+    	case WLZ_JPM_KEY_BYTE_ARY1:
+	  jPmClass = "byte []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_SHORT_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_SHORT_ARY1:
+	  jPmClass = "short []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_INT_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_INT_ARY1:
+	  jPmClass = "int []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_LONG_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_LONG_ARY1:
+	  jPmClass = "long []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_FLOAT_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_FLOAT_ARY1:
+	  jPmClass = "float []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_DOUBLE_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_DOUBLE_ARY1:
+	  jPmClass = "double []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_STRING_PTR1:
+	  jPmClass = "String []";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_WLZ_PTR1:
+	  jPmClass = cType;
+	  jniPmType = "jobject";
+	  break;
+    	case WLZ_JPM_KEY_WLZ_FILE_PTR1:
+	  jPmClass = "WlzFileStream";
+	  jniPmType = "jobject";
+	  break;
+	case WLZ_JPM_KEY_WLZ_GREYV_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_WLZ_GREYV_ARY1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_WLZ_PIXELV_PTR1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_WLZ_PIXELV_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IBOX2_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IBOX2_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DBOX2_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DBOX2_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IBOX3_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IBOX3_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DBOX3_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DBOX3_ARY1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_WLZ_PTR2:
+	  jPmClass = cType + " []";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_WLZ_PTR1_ARY1:
+	  jPmClass = cType + " []";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_BYTE_ARY2:
+	  jPmClass = "byte [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_SHORT_ARY2:
+	  jPmClass = "short [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_INT_ARY2:
+	  jPmClass = "int [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_LONG_ARY2:
+	  jPmClass = "long [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_FLOAT_ARY2:
+	  jPmClass = "float [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_DOUBLE_ARY2:
+	  jPmClass = "double [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_WLZ_PTR2_ARY1:
+	  jPmClass = cType + " [][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_BYTE_PTR1_ARY2:
+	  jPmClass = "byte [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_SHORT_PTR1_ARY2:
+	  jPmClass = "short [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_INT_PTR1_ARY2:
+	  jPmClass = "int [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_LONG_PTR1_ARY2:
+	  jPmClass = "long [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_FLOAT_PTR1_ARY2:
+	  jPmClass = "float [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_DOUBLE_PTR1_ARY2:
+	  jPmClass = "double [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_BYTE_ARY3:
+	  jPmClass = "byte [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_SHORT_ARY3:
+	  jPmClass = "Short [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_INT_ARY3:
+	  jPmClass = "int [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_LONG_ARY3:
+	  jPmClass = "long [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_FLOAT_ARY3:
+	  jPmClass = "float [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_DOUBLE_ARY3:
+	  jPmClass = "double [][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_BYTE_PTR1_ARY3:
+	  jPmClass = "byte [][][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_SHORT_PTR1_ARY3:
+	  jPmClass = "short [][][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_INT_PTR1_ARY3:
+	  jPmClass = "int [][][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_LONG_PTR1_ARY3:
+	  jPmClass = "long [][][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_FLOAT_PTR1_ARY3:
+	  jPmClass = "float [][][][]";
+	  jniPmType = "jarray";
+	  break;
+	case WLZ_JPM_KEY_DOUBLE_PTR1_ARY3:
+	  jPmClass = "double [][][][]";
+	  jniPmType = "jarray";
+	  break;
+    	case WLZ_JPM_KEY_THROW_ERROR:
+	  break;
+        case WLZ_JPM_KEY_PARSE_ERROR:
+	  break;
+        default:
+	  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	  break;
+      }
+    }
+  }
+
+  // Hashtable for storing typedef types.
+  private static Hashtable types = new Hashtable();
+  // Stack for determining when the parser is parsing a typdef definition.
+  private static Stack 	typedefParsingStack = new Stack();
+  // Enum parsing flag.
+  public static int	enFlg = 0;
+  // Function signature parsing flag.
+  public static int	fnFlg = 0;
+  // Structure and union parsing flag.
+  public static int	stFlg = 0;
+  // Last identifier parsed.
+  public static String	lastIdent = "";
+  // Last pointer parsed.
+  public static String	lastPtr = "";
+  // Last type-qualifier parsed.
+  public static String	lastQual = "";
+  // Last type parsed.
+  public static String	lastType = "int";
+  // Parsed enum name.
+  public static String  enName = "";
+  // Parsed function pointer.
+  public static String	fnPtr = "";
+  // Parsed function type-qualifier.
+  public static String	fnQual = "";
+  // Parsed function type.
+  public static String	fnType = "";
+  // Parsed function name.
+  public static String	fnName = "";
+  // The Woolz typedef'd enum prefix
+  public static String  fnPrefix  = "Wlz";
+  // The Woolz typedef'd struct prefix
+  public static String  stPrefix  = "Wlz";
+  // The Woolz function prefix
+  public static String  enPrefix  = "Wlz";
+  // The Java Woolz package name
+  public static String  pkgName = "";
+  // List of parsed function parameter identifiers.
+  public static List	fnPmIdentLst = new LinkedList();
+  // List of parsed function parameter pointers.
+  public static List	fnPmPtrLst = new LinkedList();
+  // List of parsed function parameter type-qualifiers.
+  public static List	fnPmQualLst = new LinkedList();
+  // List of parsed function parameter types.
+  public static List	fnPmTypeLst = new LinkedList();
+  // List of parsed enum idenifiers.
+  public static List 	enumIdentLst = new LinkedList();
+  // List of parsed enum values.
+  public static List	enumValueLst = new LinkedList();
+  // Stack for evaluating enum value expresions.
+  public static Stack	enumExpStack = new Stack();
+  // Hash table for looking up enum values when evaluating enum value
+  // expressions.
+  public static Hashtable enumIdentTbl = new Hashtable();
+  // Hash table for looking up enum types.
+  public static Hashtable enumTypeTbl = new Hashtable();
+  // Parsed struct name.
+  public static String  stName = "";
+  // Output file stream for java source.
+  public static PrintWriter outFJ;
+  // Output file stream for c source.
+  public static PrintWriter outFC;
+  // Output file stream for c header.
+  public static PrintWriter outFCH;
+  // C to Java parameter conversion.
+  public static WlzJParamTypes jFnParam = new WlzJParamTypes();
+
+  /**********************************************************************
+  * Purpose:	Looks in the types hash table to see if the given string
+  *		is a typedef type.
+  * @return	true if the given string is a typedef type.
+  * @param:	type		the given string.
+  **********************************************************************/
+  private static boolean isType(String type)
+  {
+    return(types.get(type) != null);
+  }
+
+  /**********************************************************************
+  * Purpose:	Adds a given string to the types hash table.
+  * @return	void
+  * @param:	type		the given string.
+  **********************************************************************/
+  private static void addType(String type)
+  {
+    types.put(type, Boolean.TRUE);
+  }
+
+  /**********************************************************************
+  * Purpose:	Prints out all the types used in parsing the c source.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void printTypes()
+  {
+    Enumeration enm = types.keys();
+
+    while(enm.hasMoreElements())
+    {
+      System.out.println(enm.nextElement());
+    }
+  }
+
+  /**********************************************************************
+  * Purpose:	Looks in the enum types hash table to see if the given
+  *		string is a typedef'd enum type.
+  * @return	true if the given string is a typedef'd enum type.
+  * @param:	type		the given string.
+  **********************************************************************/
+  private static boolean isEnumType(String type)
+  {
+    return(enumTypeTbl.get(type) != null);
+  }
+
+  /**********************************************************************
+  * Purpose:	Adds a given string to the enum types hash table.
+  * @return	void
+  * @param:	type		the given string.
+  **********************************************************************/
+  private static void addEnumType(String type)
+  {
+    enumTypeTbl.put(type, Boolean.TRUE);
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs the package info
+  * @return	void
+  * @param:	outF		output print writer.
+  **********************************************************************/
+  private static void outputPkg(PrintWriter outF)
+  {
+    outF.println("");
+    outF.println("package " + pkgName + ";");
+    outF.println("import " + pkgName + ".*;");
+    outF.println("");
+  }
+
+  /**********************************************************************
+  * Purpose:	Parses the package name and the Woolz C function name
+  * 		and generates a C binding function name.
+  * @return	The C binding function name.
+  * @param:	wFnName		the Woolz function name.
+  **********************************************************************/
+  private static String	jniFnName(String wFnName)
+  {
+    String	bFnName,
+    		tStr;
+
+    tStr = pkgName.replace('.', '_');
+    if(tStr.endsWith("_") == false)
+    {
+      tStr = tStr + "_";
+    }
+    bFnName = new String("Java_" + tStr + "WlzObject_J" + wFnName);
+    return(bFnName);
+  }
+
+  /**********************************************************************
+  * Purpose:	Begin parser output.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputBegin()
+  {
+    String fName = "WlzObjectC2J.javapp";
+
+    try
+    {
+      outFJ = new PrintWriter(
+	      new BufferedWriter(
+	      new FileWriter("Binding/" + fName)));
+      outFJ.println("/*");
+      outFJ.println(" * " + fName + ": Generated by WlzC2Java");
+      outFJ.println(" */");
+      outFJ.println("");
+      fName = "WlzObjectC2J.h";
+      outFCH = new PrintWriter(
+	      new BufferedWriter(
+	      new FileWriter("Binding/" + fName)));
+      outFCH.println("/*");
+      outFCH.println("* " + fName + ": Generated by WlzC2Java");
+      outFCH.println("*/");
+      outFCH.println("");
+      jFnParam.writeParamTypesToC(outFCH);
+      outFCH.close();
+      fName = "WlzObjectC2J.c";
+      outFC = new PrintWriter(
+	      new BufferedWriter(
+	      new FileWriter("Binding/" + fName)));
+      outFC.println("/*");
+      outFC.println("* " + fName + ": Generated by WlzC2Java");
+      outFC.println("*/");
+      outFC.println("");
+      outFC.println("#include <WlzJava.h>");
+      outFC.println("");
+    }
+    catch(IOException e)
+    {
+      System.err.println("WlzC2Java: failed to open file " + fName + ".");
+      System.exit(1);
+    }
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs a parsed enum.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputEnum()
+  {
+    String fName = enName + ".java";
+
+    try
+    {
+      PrintWriter outFFJ = new PrintWriter(
+			   new BufferedWriter(
+			   new FileWriter("Binding/Enum/" + fName)));
+      outFFJ.println("/*");
+      outFFJ.println(" * " + fName + ": Generated by WlzC2Java");
+      outFFJ.println(" */");
+      outputPkg(outFFJ);
+      outFFJ.println("public interface " + enName);
+      outFFJ.println("{");
+      for(int idx = 0; idx < enumIdentLst.size(); ++idx)
+      {
+	outFFJ.println("  int " + enumIdentLst.get(idx) +
+		      " = "  + (enumValueLst.get(idx)).toString() +
+		      ";");
+      }
+      outFFJ.println("}");
+      outFFJ.println("");
+      outFFJ.close();
+    }
+    catch(IOException e)
+    {
+      System.err.println("WlzC2Java: failed to open file " + fName + ".");
+      System.exit(1);
+    }
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs a parsed struct.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputStruct()
+  {
+    if(stName.equals("WlzObject") == false)
+    {
+      String fName = stName + ".java";
+
+      try
+      {
+	PrintWriter outFFJ = new PrintWriter(
+			     new BufferedWriter(
+			     new FileWriter("Binding/Struct/" + fName)));
+	outFFJ.println("/*");
+	outFFJ.println(" * " + fName + ": Generated by WlzC2Java");
+	outFFJ.println(" */");
+        outputPkg(outFFJ);
+	outFFJ.println("public class " + stName +
+			   " extends WlzPointer");
+	outFFJ.println("{");
+	outFFJ.println("}");
+	outFFJ.close();
+      }
+      catch(IOException e)
+      {
+        System.err.println("WlzC2Java: failed to open file " + fName + ".");
+	System.exit(1);
+      }
+    }
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs a parsed function with bindings for both java
+  *		and c.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputFunction() throws ParseException
+  {
+    outputCBindingFunction();
+    outputJavaNativeMember();
+    outputJavaPublicMember();
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs the C binding between the Woolz library and the
+  *		java native member function for the current Woolz C
+  *		function.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputCBindingFunction() throws ParseException
+  {
+    int 	fnThrowsWlz;
+    String	lFnType,
+		pmIdent,
+		pmPtr,
+		pmQual,
+		pmRef,
+    		pmType;
+    Stack 	jniFnFreeStk = new Stack();
+
+    // System.err.println("HACK outputCBindingFunction() " + fnName);
+    fnThrowsWlz = 0;
+    jFnParam.cToJFnRtn(fnType, fnQual, fnPtr.length());
+    if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
+    {
+      ParseException e = new ParseException("Failed to parse function " +
+					    fnName +
+					    " problem with function type");
+      throw e;
+    }
+    else if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_THROW_ERROR)
+    {
+      lFnType = "void";
+      fnThrowsWlz = 1;
+    }
+    else
+    {
+      lFnType = jFnParam.jniPmType;
+    }
+    outFC.println("JNIEXPORT " + lFnType + " JNICALL" +
+    		  " " + jniFnName(fnName) + "(");
+    outFC.println("    JNIEnv *jEnv,");
+    outFC.print("    jclass jCls");
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
+      {
+	ParseException e = new ParseException("Failed to parse function " +
+					      fnName +
+					      " problem with parameter "  +
+					      idx);
+	throw e;
+      }
+      else if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_THROW_ERROR)
+      {
+	fnThrowsWlz = idx + 2;
+      }
+      else
+      {
+        outFC.println(",");
+	outFC.print("    " + jFnParam.jniPmType + " jj" + pmIdent);
+      }
+
+    }
+    outFC.println(")");
+    // Print out the C function body.
+    outFC.println("{");
+    // Declare parameters for the Woolz lib function.
+    if(fnType.equals("void") == false)
+    {
+      jFnParam.cToJFnRtn(fnType, fnQual, fnPtr.length());
+      if(fnType.equals("WlzErrorNum") == false)
+      {
+        outFC.println("  " + lFnType + " " + "jjRtn;");
+      }
+      outFC.println("  " + fnType + " " + fnPtr + "jwRtn;");
+    }
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      outFC.print("  " + pmType + " ");
+      if(pmIdent.startsWith("dst"))
+      {
+	if(pmPtr.length() <= 1)
+	{
+	  pmPtr = "";
+	}
+	else
+	{
+	  pmPtr = pmPtr.substring(0, pmPtr.length() - 1);
+	}
+      }
+      else if(WlzJParamTypes.canBeCast(jFnParam) == false)
+      {
+	outFC.print("*");
+	jniFnFreeStk.push(pmIdent);
+      }
+      else if(WlzJParamTypes.isArray(jFnParam))
+      {
+        jniFnFreeStk.push(pmIdent);
+      }
+      outFC.print(pmPtr + pmIdent);
+      if(pmPtr.length() != 0)
+      {
+	outFC.print(" = NULL");
+      }
+      else if(pmType.equals("WlzErrorNum"))
+      {
+	outFC.print(" = WLZ_ERR_NONE");
+      }
+      outFC.println(";");
+      if(WlzJParamTypes.isArray(jFnParam))
+      {
+        outFC.println("  jboolean " + pmIdent + "IsCopy;");
+      }
+    }
+    outFC.println("");
+    // Set all parameters ready for calling the Woolz lib function.
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      if(pmIdent.startsWith("dst") == false)
+      {
+	if((pmPtr.length() == 0) && WlzJParamTypes.canBeCast(jFnParam))
+	{
+	  outFC.print("  " + pmIdent +
+			" =  (" +
+			pmType + " " + pmPtr + ")");
+	  outFC.println("jj" + pmIdent + ";");
+	}
+	else
+	{
+	  if(pmPtr.length() == 0)
+	  {
+	    outFC.print("  " + pmIdent +
+			  " =  (" +
+			  pmType + " *)");
+	  }
+	  else
+	  {
+	    outFC.print("  " + pmIdent +
+			  " =  (" +
+			  pmType + " " + pmPtr + ")");
+	  }
+	  if(jFnParam.isArray(jFnParam))
+	  {
+	    if(jFnParam.isArray1D(jFnParam))
+	    {
+	      outFC.println("WlzJavaArray1DGet(jEnv,");
+	      outFC.println("    \"" + pmType + "\", " +
+			    "\"" + jFnParam.jPmClass + "\", " +
+			    "\"" + jFnParam.jniPmType + "\",");
+	      outFC.println("    " + pmPtr.length() + ", " +
+			    jFnParam.keyString(jFnParam) + ", " +
+			    "jj" + pmIdent + ", ");
+	      outFC.println("    " +
+			    (String )(fnPmIdentLst.get(idx - 1)) + ", " +
+			    "&" + pmIdent + "IsCopy" +");"); 
+	    }
+	    else if(jFnParam.isArray2D(jFnParam))
+	    {
+	      outFC.println("WlzJavaArray2DGet(jEnv,");
+	      outFC.println("    \"" + pmType + "\", " +
+			    "\"" + jFnParam.jPmClass + "\", " +
+			    "\"" + jFnParam.jniPmType + "\",");
+	      outFC.println("    " + pmPtr.length() + ", " +
+			    jFnParam.keyString(jFnParam) + ", " +
+			    "jj" + pmIdent + ", ");
+	      outFC.println("    *" +
+			    (String )(fnPmIdentLst.get(idx - 1)) + ", " +
+			    "&" + pmIdent + "IsCopy" +");");
+	    }
+	    else if(jFnParam.isArray3D(jFnParam))
+	    {
+	      outFC.println("WlzJavaArray3DGet(jEnv,");
+	      outFC.println("    \"" + pmType + "\", " +
+			    "\"" + jFnParam.jPmClass + "\", " +
+			    "\"" + jFnParam.jniPmType + "\",");
+	      outFC.println("    " + pmPtr.length() + ", " +
+			    jFnParam.keyString(jFnParam) + ", " +
+			    "jj" + pmIdent + ", ");
+	      outFC.println("    *" +
+			    (String )(fnPmIdentLst.get(idx - 1)) + ", " +
+			    "&" + pmIdent + "IsCopy" +");");
+	    }
+	  }
+	  else
+	  {
+	    outFC.println("WlzJavaValueGet(jEnv,");
+	    outFC.println("    \"" + pmType + "\", " +
+			  "\"" + jFnParam.jPmClass + "\", " +
+			  "\"" + jFnParam.jniPmType + "\",");
+	    outFC.println("    " + pmPtr.length() + ", " +
+			  jFnParam.keyString(jFnParam) + ", " +
+			  "jj" + pmIdent + ");"); 
+	  }
+        }
+      }
+    }
+    // Call the Woolz lib function.
+    if(fnType.equals("void") == false)
+    {
+      outFC.print("  jwRtn = ");
+    }
+    outFC.print(fnName + "(");
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmRef = "";
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      if(pmIdent.startsWith("dst"))
+      {
+	pmRef = "&";
+	if(pmIdent.equals("dstErr"))
+	{
+	  outFC.print("&dstErr");
+	}
+	else
+	{
+	  // Pass on native NULL pointer if given java null
+	  outFC.print("(jj" + pmIdent + ")? ");
+	  outFC.print(pmRef + pmIdent);
+	  outFC.print(": NULL");
+	}
+      }
+      else if(jniFnFreeStk.search(pmIdent) >= 0)
+      {
+	if((WlzJParamTypes.isArray(jFnParam) == false) &&
+	   (WlzJParamTypes.isPtr(jFnParam) == false))
+	{
+          pmRef = "*";
+	}
+	outFC.print(pmRef + pmIdent);
+      }
+      else
+      {
+        outFC.print(pmRef + pmIdent);
+      }
+      if(idx < fnPmIdentLst.size() - 1)
+      {
+        outFC.print(", ");
+      }
+    }
+    outFC.println(");");
+    // Set any destination parameters (but not dstErr).
+    if((fnType.equals("void") == false) &&
+       (fnType.equals("WlzErrorNum") == false))
+    {
+      // Woolz data structure passed by value in C.
+      jFnParam.cToJFnRtn(fnType, fnQual, fnPtr.length());
+      if((jFnParam.jPmKey != jFnParam.WLZ_JPM_KEY_STRING) &&
+	 (jFnParam.isPtr(jFnParam) == false))
+      {
+	if((jFnParam.jPmKey == jFnParam.WLZ_JPM_KEY_BYTE) ||
+	   (jFnParam.jPmKey == jFnParam.WLZ_JPM_KEY_SHORT) ||
+	   (jFnParam.jPmKey == jFnParam.WLZ_JPM_KEY_INT) ||
+	   (jFnParam.jPmKey ==  jFnParam.WLZ_JPM_KEY_LONG) ||
+	   (jFnParam.jPmKey == jFnParam.WLZ_JPM_KEY_FLOAT) ||
+	   (jFnParam.jPmKey == jFnParam.WLZ_JPM_KEY_DOUBLE))
+	{
+	  // Can still pass by value and cast. 
+	  outFC.println("  jjRtn = (" + lFnType + " )jwRtn;");
+	}
+	else
+	{
+	  // Have to pass by reference.
+	  outFC.println("  jjRtn = WlzJavaValueWrap(jEnv,");
+	  outFC.println("    \"" + fnType + "\", " + 
+			"\"" + jFnParam.jPmClass + "\", " +
+			"\"" + jFnParam.jniPmType + "\",");
+	  outFC.println("    " + fnPtr.length() + ", " +
+			jFnParam.keyString(jFnParam) + ", " +
+			"(long )&jwRtn);");
+	}
+      }
+      else
+      {
+        // Woolz data structure passed by reference in C.
+        outFC.println("  jjRtn = WlzJavaValueWrap(jEnv,");
+	outFC.println("    \"" + fnType + "\", " +
+		      "\"" + jFnParam.jPmClass + "\", " +
+		      "\"" + jFnParam.jniPmType + "\",");
+        outFC.println("    " + fnPtr.length() + ", " +
+		      jFnParam.keyString(jFnParam) + ", " +
+		      "(long )jwRtn);");
+      }
+    }
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      if(pmIdent.startsWith("dst") &&
+	 (pmType.equals("WlzErrorNum") == false))
+      {
+	outFC.println("  if(jj" + pmIdent + ")");
+	outFC.println("  {");
+	if(WlzJParamTypes.isArray1D(jFnParam))
+	{
+	  outFC.println("    WlzJavaArray1DSet(jEnv,");
+	  outFC.println("      jj" + pmIdent + ", " +
+			"\"" + pmType + "\", " +
+			"\"" + jFnParam.jPmClass + "\", " +
+			"\"" + jFnParam.jniPmType + "\", " +
+			pmPtr.length() + ", " +
+			jFnParam.keyString(jFnParam) + ", " +
+			"(void *)" + pmIdent + ", " +
+			(String )(fnPmIdentLst.get(idx - 1)) + ");");
+	}
+	else if(WlzJParamTypes.isArray2D(jFnParam))
+	{
+	  outFC.println("    WlzJavaArray2DSet(jEnv,");
+	  outFC.println("      jj" + pmIdent + ", " +
+			"\"" + pmType + "\", " +
+			"\"" + jFnParam.jPmClass + "\", " +
+			"\"" + jFnParam.jniPmType + "\", " +
+			pmPtr.length() + ", " +
+			jFnParam.keyString(jFnParam) + ", " +
+			"(void *)" + pmIdent + ", " +
+			(String )(fnPmIdentLst.get(idx - 1)) + ");");
+	}
+	else if(WlzJParamTypes.isArray3D(jFnParam))
+	{
+	  outFC.println("    WlzJavaArray3DSet(jEnv,");
+	  outFC.println("      jj" + pmIdent + ", " +
+			"\"" + pmType + "\", " +
+			"\"" + jFnParam.jPmClass + "\", " +
+			"\"" + jFnParam.jniPmType + "\", " +
+			pmPtr.length() + ", " +
+			jFnParam.keyString(jFnParam) + ", " +
+			"(void *)" + pmIdent + ", " +
+			(String )(fnPmIdentLst.get(idx - 1)) + ");");
+	}
+	else
+	{
+	  outFC.println("    WlzJavaValueSet(jEnv,");
+	  outFC.println("      jj" + pmIdent + ", " +
+			"\"" + pmType + "\", " +
+			"\"" + jFnParam.jPmClass + "\", " +
+			"\"" + jFnParam.jniPmType + "\", " +
+			pmPtr.length() + ", " +
+			jFnParam.keyString(jFnParam) + ", " +
+			"(long )&" + pmIdent + ");");
+	}
+	outFC.println("  }");
+      }
+      if(jniFnFreeStk.search(pmIdent) >= 0)
+      {
+	if(WlzJParamTypes.isArray1D(jFnParam))
+	{
+	  outFC.println("  WlzJavaArray1DFree(" + pmIdent + ", " +
+				 (String )(fnPmIdentLst.get(idx - 1)) + ", " +
+				 jFnParam.keyString(jFnParam) + ", " +
+				 pmIdent + "IsCopy);");
+	}
+	else if(WlzJParamTypes.isArray2D(jFnParam))
+	{
+	  outFC.println("  WlzJavaArray2DFree(" + pmIdent + ", " +
+			   "*" + (String )(fnPmIdentLst.get(idx - 1)) + ", " +
+			   jFnParam.keyString(jFnParam) + ", " +
+			   pmIdent + "IsCopy);");
+	}
+	else if(WlzJParamTypes.isArray3D(jFnParam))
+	{
+	  outFC.println("  WlzJavaArray3DFree(" + pmIdent + ", " +
+			   "*" + (String )(fnPmIdentLst.get(idx - 1)) + ", " +
+			   jFnParam.keyString(jFnParam) + ", " +
+			   pmIdent + "IsCopy);");
+	}
+	else
+	{
+	  outFC.println("  WlzJavaValueFree(" + pmIdent + ", " +
+					 jFnParam.keyString(jFnParam) + ", " +
+					 "(jboolean )0);");
+	}
+      }
+    }
+    // Throw an exception if an error has occured.
+    if(fnThrowsWlz > 0)
+    {
+      if(fnThrowsWlz == 1)
+      {
+        pmIdent = "jwRtn";
+      }
+      else
+      {
+	pmIdent = "dstErr";
+      }
+      outFC.println("  if(" + pmIdent + " != WLZ_ERR_NONE)");
+      outFC.println("  {");
+      outFC.println("    WlzJavaThrowWlzException(jEnv, " + pmIdent + ");");
+      outFC.println("  }");
+    }
+    // Return value if required.
+    if((fnType.equals("void") == false) &&
+       (fnType.equals("WlzErrorNum") == false))
+    {
+      outFC.println("  return(jjRtn);");
+    }
+    outFC.println("}");
+    outFC.println("");
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs the java native member function for the current
+  *		Woolz c function.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputJavaNativeMember() throws ParseException
+  {
+    boolean	firstPmFlg = true;
+    int 	fnThrowsWlz,
+    		pmTypeKey;
+    String  	delim,
+    	    	lFnType,
+	    	pmType,
+	    	pmPtr,
+		pmQual,
+	    	pmIdent;
+
+    fnThrowsWlz = 0;
+    jFnParam.cToJFnRtn(fnType, fnQual, fnPtr.length());
+    if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
+    {
+      ParseException e = new ParseException("Failed to parse function " +
+					    fnName +
+					    " problem with function type");
+      throw e;
+    }
+    else if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_THROW_ERROR)
+    {
+      lFnType = "void";
+      fnThrowsWlz = 1;
+    }
+    else
+    {
+      lFnType = jFnParam.jPmClass;
+    }
+    outFJ.println("  private static native " + lFnType + " " +
+    	          "J" + fnName + "(");
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
+      {
+	ParseException e = new ParseException("Failed to parse function " +
+					      fnName +
+					      " problem with parameter "  +
+					      idx);
+	throw e;
+      }
+      else if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_THROW_ERROR)
+      {
+	fnThrowsWlz = idx + 2;
+      }
+      else
+      {
+	if(firstPmFlg)
+	{
+	  firstPmFlg = false;
+	}
+	else
+	{
+	  outFJ.println(",");
+	}
+	outFJ.print("    " + jFnParam.jPmClass + " " + pmIdent);
+      }
+    }
+    outFJ.print(")");
+    if(fnThrowsWlz != 0)
+    {
+      outFJ.print(" throws WlzException");
+    }
+    outFJ.println(";");
+    outFJ.println("");
+  }
+
+  /**********************************************************************
+  * Purpose:	Outputs the java public member function for the current
+  *		Woolz c function.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputJavaPublicMember() throws ParseException
+  {
+    int		fnThrowsWlz,
+    		pmTypeKey = WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR;
+    boolean	firstPmFlg = true;
+    String  	delim,
+    	    	lFnType,
+	    	pmType,
+		pmQual,
+	    	pmPtr,
+	    	pmIdent;
+
+    fnThrowsWlz = 0;
+    jFnParam.cToJFnRtn(fnType, fnQual, fnPtr.length());
+    if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
+    {
+      ParseException e = new ParseException("Failed to parse function " +
+					    fnName +
+					    " problem with function type");
+      throw e;
+    }
+    else if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_THROW_ERROR)
+    {
+      lFnType = "void";
+      fnThrowsWlz = 1;
+    }
+    else
+    {
+      lFnType = jFnParam.jPmClass;
+    }
+    outFJ.println("  public static " + lFnType + " " + fnName + "(");
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      pmQual = (String )(fnPmQualLst.get(idx));
+      jFnParam.cToJFnParam(pmType, pmQual, pmPtr.length(), pmIdent);
+      if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
+      {
+	ParseException e = new ParseException("Failed to parse function " +
+					      fnName +
+					      " problem with parameter "  +
+					      idx);
+	throw e;
+      }
+      else if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_THROW_ERROR)
+      {
+	fnThrowsWlz = idx + 2;
+      }
+      else
+      {
+	if(firstPmFlg)
+	{
+	  firstPmFlg = false;
+	}
+	else
+	{
+	  outFJ.println(",");
+	}
+	outFJ.print("    " + jFnParam.jPmClass + " " + pmIdent);
+      }
+    }
+    outFJ.print(")");
+    if(fnThrowsWlz != 0)
+    {
+      outFJ.print(" throws WlzException");
+    }
+    outFJ.println("");
+    outFJ.println("  {");
+    // Print out the public member's body.
+    outFJ.print("    ");
+    if(lFnType.equals("void") == false)
+    {
+      outFJ.print("return(");
+    }
+    outFJ.println("J" + fnName + "(");
+    firstPmFlg = true;
+    for(int idx = 0; idx < fnPmIdentLst.size(); ++idx)
+    {
+      pmType = (String )(fnPmTypeLst.get(idx));
+      pmPtr = (String )(fnPmPtrLst.get(idx));
+      pmIdent = (String )(fnPmIdentLst.get(idx));
+      if((pmType.equals("WlzErrorNum") == false) ||
+	 (pmPtr.equals("*") == false) ||
+	 (pmIdent.equals("dstErr") == false))
+      {
+	if(firstPmFlg)
+	{
+	  firstPmFlg = false;
+	}
+	else
+	{
+	  outFJ.println(",");
+	}
+	outFJ.print("      " + pmIdent);
+      }
+    }
+    if(lFnType.equals("void") == false)
+    {
+      outFJ.print(")");
+    }
+    outFJ.println(");");
+    outFJ.println("  }");
+    outFJ.println("");
+  }
+
+  /**********************************************************************
+  * Purpose:	End parser output.
+  * @return	void
+  * @param:	void
+  **********************************************************************/
+  private static void outputEnd()
+  {
+    outFJ.println("");
+    outFC.close();
+    outFJ.close();
+  }
+
+  /**********************************************************************
+  * Purpose:	Runs the parser on given files.
+  * @return	void
+  * @param:	args		command line arguments.
+  **********************************************************************/
+  public static void main(String args [])
+  {
+    WlzC2Java 	parser;
+    int		optIdx = 0;
+    boolean	usageError = false;
+
+    while((optIdx < args.length) && (args[optIdx].startsWith("-")))
+    {
+      String	arg = args[optIdx++];
+      if(arg.equals("-package"))
+      {
+        if(optIdx < args.length)
+	{
+	  pkgName = args[optIdx++];
+	}
+	else
+	{
+	  usageError = true;
+	}
+      }
+    }
+    if(usageError)
+    {
+      System.err.println("Usage: WlzC2Java [-package #] [file]");
+      System.exit(1);
+    }
+    else
+    {
+      addType("FILE");
+      addType("UBYTE");
+      if(optIdx == args.length)
+      {
+	parser = new WlzC2Java(System.in);
+	try
+	{
+	  outputBegin();
+	  parser.TranslationUnit();
+	  outputEnd();
+	}
+	catch(ParseException e)
+	{
+	  System.err.println("WlzC2Java: Parse errors in stdin.");
+          System.exit(1);
+	}
+      }
+      else
+      {
+	while(optIdx < args.length)
+	{
+	  try
+	  {
+	    parser = new WlzC2Java(new FileInputStream(args[optIdx]));
+	    outputBegin();
+	    parser.TranslationUnit();
+	    outputEnd();
+	  }
+	  catch(ParseException e)
+	  {
+	    System.err.println("WlzC2Java: Parse errors in file " +
+	    		       args[optIdx] +
+			       " lastFn >" + fnName +
+			       "< lastSt >" + stName + "<");
+            System.exit(1);
+	    System.err.println(e.toString());
+            System.exit(1);
+	  }
+	  catch(java.io.FileNotFoundException e)
+	  {
+	    System.err.println("WlzC2Java:  File " + args[optIdx] +
+			       " not found.");
+            System.exit(1);
+	  }
+	  ++optIdx;
+	}
+      }
+    }
+  }
+}
+
+PARSER_END(WlzC2Java)
+
+// What's to be skip'd over (includes white-space's, comments and
+// any residual #'d lines).
+SKIP:
+{
+  " " |
+  "\t" |
+  "\n" |
+  "\r" |
+  <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")> |
+  <"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/"> |
+  <"#"  (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+}
+
+// ANSI C literal token definitions.
+TOKEN:
+{
+ <INTEGER_LITERAL:
+   <DECIMAL_LITERAL>
+     (["l","L"])? |
+   <HEX_LITERAL>
+     (["l","L"])? |
+   <OCTAL_LITERAL>
+     (["l","L"])?> |
+ <#DECIMAL_LITERAL:
+   ["1"-"9"] (["0"-"9"])*> |
+ <#HEX_LITERAL:
+   "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+> |
+ <#OCTAL_LITERAL:
+   "0" (["0"-"7"])*> |
+ <FLOATING_POINT_LITERAL:
+   (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])? |
+   "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])? |
+   (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])? |
+   (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]> |
+ <#EXPONENT:
+   ["e","E"] (["+","-"])? (["0"-"9"])+> |
+ <CHARACTER_LITERAL:
+   "\'" (~["\'","\\","\n","\r"] |
+   "\\" (["n","t","b","r","f","\\","\'","\""] |
+   ["0"-"7"] (["0"-"7"])? |
+   ["0"-"3"] ["0"-"7"] ["0"-"7"])) "\'"> |
+ <STRING_LITERAL:
+   "\"" (~["\"","\\","\n","\r"] |
+   "\\"
+ (["n","t","b","r","f","\\","\'","\""] |
+ ["0"-"7"] (["0"-"7"])? |
+ ["0"-"3"] ["0"-"7"] ["0"-"7"]))* "\"">
+}
+
+// ANSI C keyword token definitions.
+TOKEN:
+{
+  <CONTINUE: "continue"> |
+  <VOLATILE: "volatile"> |
+  <REGISTER: "register"> |
+  <UNSIGNED: "unsigned"> |
+  <TYPEDEF: "typedef"> |
+  <DFLT: "default"> |
+  <DOUBLE: "double"> |
+  <SIZEOF: "sizeof"> |
+  <SWITCH: "switch"> |
+  <RETURN: "return"> |
+  <EXTERN: "extern"> |
+  <STRUCT: "struct"> |
+  <STATIC: "static"> |
+  <SIGNED: "signed"> |
+  <WHILE: "while"> |
+  <BREAK: "break"> |
+  <UNION: "union"> |
+  <CONST: "const"> |
+  <FLOAT: "float"> |
+  <SHORT: "short"> |
+  <ELSE: "else"> |
+  <CASE: "case"> |
+  <LONG: "long"> |
+  <ENUM: "enum"> |
+  <AUTO: "auto"> |
+  <VOID: "void"> |
+  <CHAR: "char"> |
+  <GOTO: "goto"> |
+  <FOR: "for"> |
+  <INT: "int"> |
+  <IF: "if"> |
+  <DO: "do">
+}
+
+// ANSI C identifier token definitions.
+TOKEN:
+{
+ <IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)*> |
+ <#LETTER: ["$","A"-"Z","_","a"-"z"]> |
+ <#DIGIT: ["0"-"9"]>
+}
+
+// The root of the parser.
+void TranslationUnit():
+{
+}
+{
+  (ExternalDeclaration())+
+  {
+    // Uncomment to print out all external declarations.
+    // printTypes();
+  }
+}
+
+void ExternalDeclaration():
+{
+}
+{
+  {
+    // Make sure things are clear'd before parsing a declaration.
+    fnFlg = 0;
+    lastIdent = "";
+    lastPtr = "";
+    lastQual = "";
+    lastType = "int";
+    fnName = "";
+    fnPtr = "";
+    fnQual = "";
+    typedefParsingStack.push(Boolean.TRUE);
+    enFlg = 0;
+    enumIdentLst.clear();
+    enumValueLst.clear();
+    fnPmIdentLst.clear();
+    fnPmPtrLst.clear();
+    fnPmQualLst.clear();
+    fnPmTypeLst.clear();
+    stFlg = 0;
+    stName = "";
+  } 
+  (
+    LOOKAHEAD(FunctionDefinition())
+    FunctionDefinition() |
+    Declaration()
+  )
+}
+
+void FunctionDefinition():
+{
+}
+{
+  [
+    LOOKAHEAD(DeclarationSpecifiers())
+    DeclarationSpecifiers()
+  ]
+  Declarator()
+  [
+    DeclarationList()
+  ]
+  CompoundStatement()
+}
+
+void Declaration():
+{
+}
+{
+  DeclarationSpecifiers()
+  {
+    if(fnFlg == 1)
+    {
+      fnQual = lastQual;
+      fnType = lastType;
+      fnFlg = 2;
+    }
+  }
+  [
+    InitDeclaratorList()
+  ]
+  ";"
+  {
+    if(fnFlg == 4)
+    {
+      // System.out.println("HACK Declaration() " + fnName);
+      if(fnName.startsWith(fnPrefix))
+      {
+        outputFunction();
+      }
+      fnFlg = 0;
+    }
+  }
+}
+
+void DeclarationList():
+{
+}
+{
+  (
+    LOOKAHEAD(Declaration())
+    Declaration()
+  )+
+}
+
+void DeclarationSpecifiers():
+{
+}
+{
+  StorageClassSpecifier()
+  [
+    LOOKAHEAD(DeclarationSpecifiers())
+    DeclarationSpecifiers()
+  ] |
+  TypeSpecifier()
+  [
+    LOOKAHEAD(DeclarationSpecifiers())
+    DeclarationSpecifiers()
+  ] |
+  TypeQualifier()
+  [
+    LOOKAHEAD(DeclarationSpecifiers())
+    DeclarationSpecifiers() 
+  ]
+}
+
+void StorageClassSpecifier():
+{
+}
+{
+  <AUTO> |
+  <REGISTER> |
+  <STATIC> |
+  <EXTERN>
+  {
+    fnFlg = 1;
+  } |
+  <TYPEDEF>
+}
+
+void TypeSpecifier():
+{
+  Token tTok;
+}
+{
+  (
+    tTok = <VOID> |
+    tTok = <CHAR> |
+    tTok = <SHORT> |
+    tTok = <INT> |
+    tTok = <LONG> |
+    tTok = <FLOAT> |
+    tTok = <DOUBLE> |
+    tTok = <SIGNED> |
+    tTok = <UNSIGNED>
+  )
+  {
+    lastType = tTok.toString();
+    // System.out.println("HACK TypeSpecifier() 1: " + lastType);
+  } |
+  (
+    StructOrUnionSpecifier() |
+    EnumSpecifier() |
+    LOOKAHEAD( { isType(getToken(1).toString()) } )
+    TypedefName() 
+  )
+  {
+    lastType = getToken(0).toString();
+    // System.out.println("HACK TypeSpecifier() 2: " + lastType);
+  }
+}
+
+void TypeQualifier():
+{
+  Token qTok;
+}
+{
+  (
+    qTok = <CONST> |
+    qTok = <VOLATILE>
+  )
+  {
+    lastQual = qTok.toString();
+  }
+}
+
+void StructOrUnionSpecifier():
+{
+}
+{
+  {
+    typedefParsingStack.push(Boolean.FALSE);
+  }
+  StructOrUnion()
+  (
+    LOOKAHEAD(3)
+    [
+      <IDENTIFIER>
+    ]
+    "{"
+    StructDeclarationList()
+    "}" |
+    <IDENTIFIER>
+  )
+  {
+    typedefParsingStack.pop();
+  }
+}
+
+void StructOrUnion():
+{
+}
+{
+  (
+    <STRUCT> |
+    <UNION>
+  )
+}
+
+void StructDeclarationList():
+{
+}
+{
+  (StructDeclaration())+
+}
+
+void InitDeclaratorList():
+{
+}
+{
+  InitDeclarator()
+  (
+    ","
+    InitDeclarator()
+  )*
+  {
+    // Finished with a typedefDeclaration??
+    if(!(typedefParsingStack.empty()) &&
+       ((Boolean)typedefParsingStack.peek()).booleanValue())
+    {
+      typedefParsingStack.pop();
+    }
+  }
+}
+
+void InitDeclarator():
+{
+}
+{
+  Declarator()
+  [
+    "="
+    Initializer()
+  ]
+}
+
+void StructDeclaration():
+{
+}
+{
+  {
+    stFlg = 1;
+  }
+  SpecifierQualifierList()
+  StructDeclaratorList()
+  ";"
+  {
+    stFlg = 2;
+  }
+}
+
+void SpecifierQualifierList():{}
+{
+  TypeSpecifier()
+  [ 
+    LOOKAHEAD(SpecifierQualifierList())
+    SpecifierQualifierList()
+  ]|
+  TypeQualifier()
+  [
+    LOOKAHEAD(SpecifierQualifierList())
+    SpecifierQualifierList()
+  ]
+}
+
+void StructDeclaratorList():
+{
+}
+{
+  StructDeclarator()
+  (
+    ","
+    StructDeclarator()
+  )*
+}
+
+void StructDeclarator():
+{
+}
+{
+  (
+    LOOKAHEAD(3)
+    Declarator() |
+    [
+      Declarator()
+    ]
+    ":"
+    ConstantExpression()
+  )
+}
+
+void  EnumSpecifier():
+{
+}
+{
+  <ENUM>
+  {
+    enFlg = 1;
+  }
+  (
+    LOOKAHEAD(3)
+    [
+      <IDENTIFIER>
+    ]
+    "{"
+    EnumeratorList()
+    "}" |
+    <IDENTIFIER>
+  )
+  {
+    enFlg = 2;
+  }
+}
+
+void  EnumeratorList():
+{
+}
+{
+  Enumerator()
+  (
+    ","
+    Enumerator()
+  )*
+}
+
+void Enumerator():
+{
+  Token iTok,
+	lastTok;
+
+  enumExpStack.clear();
+}
+{
+  iTok = <IDENTIFIER>
+  {
+    enumIdentLst.add(iTok.toString());
+  }
+  [
+    "="
+    ConstantExpression()
+  ]
+  {
+    int valI = 0;
+
+    lastTok = getToken(0); // Get last matched token
+    if(iTok == lastTok) // Only identifier given
+    {
+      int idx = enumValueLst.size();
+      if(idx > 0)
+      {
+        valI = ((Integer )(enumValueLst.get(idx - 1))).intValue() + 1;
+      }
+    }
+    else // Constant expression used
+    {
+      valI = ((Integer )(enumExpStack.pop())).intValue();
+    }
+    if(enumIdentTbl.containsKey(iTok.toString()))
+    {
+      ParseException e = new ParseException(
+      				"Duplicate emumerated type identifier: " +
+                                iTok.toString());
+      throw e;
+    }
+    Integer valInt = new Integer(valI);
+    enumValueLst.add(valInt);
+    enumIdentTbl.put(iTok.toString(), valInt);
+  }
+}
+
+void Declarator():
+{
+}
+{
+  {
+    lastPtr = "";
+  }
+  [
+    Pointer()
+  ]
+  DirectDeclarator()
+}
+
+void DirectDeclarator():
+{
+  Token tok;
+}
+{
+  (
+    tok = <IDENTIFIER>
+    {
+      lastIdent = tok.toString();
+      if(!(typedefParsingStack.empty()) &&
+         ((Boolean)typedefParsingStack.peek()).booleanValue())
+      {
+        // System.out.println("HACK DirectDeclarator() " + lastIdent);
+	if(enFlg == 2)
+	{
+	  addType(lastIdent); // Add new type to the typedef hash list
+	  enName = lastIdent;
+	  addEnumType(enName);
+	  if(enName.startsWith(enPrefix))
+	  {
+	    outputEnum();
+	  }
+	  lastIdent = "";
+	  enFlg = 0;
+	}
+	if(stFlg == 2)
+	{
+	  addType(lastIdent); // Add new type to the typedef hash list
+	  stName = lastIdent;
+	  if(stName.startsWith(stPrefix))
+	  {
+	    outputStruct();
+	  }
+	  lastIdent = "";
+	  stFlg = 0;
+	}
+      }
+    } |
+    "("
+    Declarator()
+    ")" 
+  )
+  (
+    "["
+    [ ConstantExpression() ]
+    "]" |
+    LOOKAHEAD(3)
+    "("
+    ParameterTypeList()
+    ")" |
+    "("
+    [ IdentifierList() ]
+    ")"
+  )*
+}
+
+void Pointer():
+{
+}
+{
+  "*"
+  {
+    lastPtr = lastPtr + "*";
+  }
+  [
+    TypeQualifierList()
+  ]
+  [
+    Pointer()
+  ]
+}
+
+void TypeQualifierList():
+{
+}
+{
+  (
+    TypeQualifier()
+  )+
+}
+
+void ParameterTypeList():
+{
+}
+{
+  {
+    if(fnFlg == 2)
+    {
+      fnPtr = lastPtr;
+      fnName = lastIdent;
+      fnFlg = 3;
+    }
+  }
+  (
+    ParameterList()
+    [
+      ","
+      "..."
+    ]
+  )
+  {
+    if(fnFlg == 3)
+    {
+      fnFlg = 4;
+    }
+  }
+
+}
+
+void ParameterList():
+{
+}
+{
+  ParameterDeclaration()
+  (
+    LOOKAHEAD(2)
+    ","
+    ParameterDeclaration()
+  )*
+}
+
+void ParameterDeclaration():
+{
+}
+{
+  {
+    lastIdent = "";
+    lastPtr = "";
+    lastQual = "";
+    lastType = "";
+  }
+  DeclarationSpecifiers()
+  (
+    LOOKAHEAD(Declarator())
+    Declarator() |
+    [
+      AbstractDeclarator()
+    ]
+  )
+  {
+    fnPmIdentLst.add(lastIdent);
+    fnPmPtrLst.add(lastPtr);
+    fnPmQualLst.add(lastQual);
+    fnPmTypeLst.add(lastType);
+  }
+}
+
+void IdentifierList():
+{
+}
+{
+  <IDENTIFIER>
+  (
+    ","
+    <IDENTIFIER>
+  )*
+}
+
+void Initializer():
+{
+}
+{
+  (
+    AssignmentExpression() |
+    "{"
+    InitializerList()
+    [
+      ","
+    ]
+    "}"
+  )
+}
+
+void InitializerList():
+{
+}
+{
+  Initializer()
+  (LOOKAHEAD(2)
+  ","
+  Initializer())*
+}
+
+void TypeName():
+{
+}
+{
+  SpecifierQualifierList()
+  [
+    AbstractDeclarator()
+  ]
+}
+
+void AbstractDeclarator():
+{
+}
+{
+  {
+    lastPtr = "";
+  }
+  (
+    LOOKAHEAD(3)
+    Pointer() |
+    [
+      Pointer()
+    ]
+    DirectAbstractDeclarator()
+  )
+}
+
+void DirectAbstractDeclarator():
+{
+}
+{
+  (
+    LOOKAHEAD(2)
+    "(" AbstractDeclarator() ")" |
+    "[" [ConstantExpression()] "]" |
+    "(" [ParameterTypeList()] ")"
+  )
+  (
+    "["
+    [ ConstantExpression() ] "]" |
+    "(" [ ParameterTypeList() ] ")"
+  )*
+}
+
+void TypedefName():
+{
+}
+{
+  <IDENTIFIER>
+}
+
+void Statement():
+{
+}
+{
+  (
+    LOOKAHEAD(2)
+    LabeledStatement() |
+    ExpressionStatement() |
+    CompoundStatement() |
+    SelectionStatement() |
+    IterationStatement() |
+    JumpStatement()
+  )
+}
+
+void LabeledStatement():
+{
+}
+{
+  (
+    <IDENTIFIER> ":" Statement() |
+    <CASE> ConstantExpression() ":" Statement() |
+    <DFLT> ":" Statement() 
+  )
+}
+
+void ExpressionStatement():
+{
+}
+{
+  [ Expression() ] ";"
+}
+
+void CompoundStatement():
+{
+}
+{
+  "{"
+  [ LOOKAHEAD(DeclarationList()) DeclarationList() ]
+  [ StatementList() ]
+  "}"
+}
+
+void StatementList():
+{
+}
+{
+  (Statement())+
+}
+
+void SelectionStatement():
+{
+}
+{
+  (
+    <IF> "(" Expression() ")"
+    Statement()
+    [
+      LOOKAHEAD(2)
+      <ELSE>
+      Statement()
+    ] |
+    <SWITCH> "(" Expression() ")"
+    Statement()
+  )
+}
+
+void IterationStatement():
+{
+}
+{
+  (
+    <WHILE> "(" Expression() ")" Statement() |
+    <DO> Statement() <WHILE> "(" Expression() ")" ";" |
+    <FOR>
+    "("
+    [ Expression() ] ";"
+    [ Expression() ] ";"
+    [ Expression() ]
+    ")"
+    Statement()
+  )
+}
+
+void JumpStatement():
+{
+}
+{
+  (
+    <GOTO> <IDENTIFIER> ";" |
+    <CONTINUE> ";" |
+    <BREAK> ";" |
+    <RETURN> [ Expression() ] ";" 
+  )
+}
+
+void Expression():
+{
+}
+{
+  AssignmentExpression()
+  ("," AssignmentExpression())*
+}
+
+void AssignmentExpression():
+{
+}
+{
+  LOOKAHEAD(UnaryExpression() AssignmentOperator())
+  UnaryExpression() AssignmentOperator() AssignmentExpression() |
+  LOOKAHEAD(3) ConditionalExpression()
+}
+
+void AssignmentOperator():
+{
+}
+{
+  (
+    "=" |
+    "*=" |
+    "/=" |
+    "%=" |
+    "+=" |
+    "-=" |
+    "<<=" |
+    ">>=" |
+    "&=" |
+    "^=" |
+    "|="
+  )
+}
+
+void ConditionalExpression():
+{
+}
+{
+  LogicalORExpression()
+  [ "?" Expression() ":" ConditionalExpression() ]
+}
+
+void ConstantExpression():
+{
+}
+{
+  ConditionalExpression()
+}
+
+void LogicalORExpression():
+{
+}
+{
+  LogicalANDExpression()
+  [ "||" LogicalORExpression() ]
+}
+
+void LogicalANDExpression():
+{
+}
+{
+  InclusiveORExpression()
+  [ "&&" LogicalANDExpression() ]
+}
+
+void InclusiveORExpression():
+{
+}
+{
+  ExclusiveORExpression()
+  [
+    "|"
+    InclusiveORExpression()
+    {
+      if(enFlg == 1)
+      {
+	int valI1 = ((Integer )(enumExpStack.pop())).intValue();
+	int valI0 = ((Integer )(enumExpStack.pop())).intValue();
+	valI0 = valI0 | valI1;
+	enumExpStack.push(new Integer(valI0));
+      }
+    }
+  ]
+}
+
+void ExclusiveORExpression():
+{
+}
+{
+  ANDExpression()
+  [
+    "^"
+    ExclusiveORExpression()
+    {
+      if(enFlg == 1)
+      {
+	int valI1 = ((Integer )(enumExpStack.pop())).intValue();
+	int valI0 = ((Integer )(enumExpStack.pop())).intValue();
+	valI0 = valI0 ^ valI1;
+	enumExpStack.push(new Integer(valI0));
+      }
+    }
+  ]
+}
+
+void ANDExpression():
+{
+}
+{
+  EqualityExpression()
+  [
+    "&"
+    ANDExpression()
+    {
+      if(enFlg == 1)
+      {
+	int valI1 = ((Integer )(enumExpStack.pop())).intValue();
+	int valI0 = ((Integer )(enumExpStack.pop())).intValue();
+	valI0 = valI0 & valI1;
+	enumExpStack.push(new Integer(valI0));
+      }
+    }
+  ]
+}
+
+void EqualityExpression():
+{
+}
+{
+  RelationalExpression()
+  [ ( "==" | "!=" ) EqualityExpression() ]
+}
+
+void RelationalExpression():
+{
+}
+{
+  ShiftExpression()
+  [
+    (
+      "<" |
+      ">" |
+      "<=" |
+      ">="
+    )
+    RelationalExpression()
+  ]
+}
+
+void ShiftExpression():
+{
+  Token opTok;
+}
+{
+  AdditiveExpression()
+  [
+    (
+      opTok = "<<" |
+      opTok = ">>"
+    )
+    ShiftExpression()
+    {
+      if(enFlg == 1)
+      {
+        int valI1 = ((Integer )(enumExpStack.pop())).intValue();
+	int valI0 = ((Integer )(enumExpStack.pop())).intValue();
+	if(opTok.toString().equals("<<"))
+	{
+	  valI0 = valI0 << valI1;
+	}
+	else if(opTok.toString().equals(">>"))
+	{
+	  valI0 = valI0 >>> valI1;
+	}
+        enumExpStack.push(new Integer(valI0));
+      }
+    }
+  ]
+}
+
+void AdditiveExpression():
+{
+  Token opTok;
+}
+{
+  MultiplicativeExpression()
+  [
+    (
+      opTok = "+" |
+      opTok = "-"
+    )
+    AdditiveExpression()
+    {
+      if(enFlg == 1)
+      { 
+	int valI1 = ((Integer )(enumExpStack.pop())).intValue();
+	int valI0 = ((Integer )(enumExpStack.pop())).intValue();
+	if(opTok.toString().equals("+"))
+	{
+	  valI0 = valI0 + valI1;
+	}
+	else if(opTok.toString().equals("-"))
+	{
+	  valI0 = valI0 - valI1;
+	}
+	enumExpStack.push(new Integer(valI0));
+      }
+    }
+  ]
+}
+
+void MultiplicativeExpression():
+{
+  Token opTok;
+}
+{
+  CastExpression()
+  [
+    (
+      opTok = "*" |
+      opTok = "/" |
+      opTok = "%"
+    )
+    MultiplicativeExpression()
+    {
+      if(enFlg == 1)
+      { 
+	int valI1 = ((Integer )(enumExpStack.pop())).intValue();
+	int valI0 = ((Integer )(enumExpStack.pop())).intValue();
+	if(opTok.toString().equals("*"))
+	{
+	  valI0 = valI0 * valI1;
+	}
+	else if(opTok.toString().equals("/"))
+	{
+	  valI0 = valI0 / valI1;
+	}
+	else if(opTok.toString().equals("%"))
+	{
+	  valI0 = valI0 % valI1;
+	}
+	enumExpStack.push(new Integer(valI0));
+      }
+    }
+  ]
+}
+
+void CastExpression():
+{
+}
+{
+  (
+    LOOKAHEAD("(" TypeName() ")" CastExpression() )
+    "(" TypeName() ")" CastExpression() | UnaryExpression()
+  )
+}
+
+void UnaryExpression():
+{
+}
+{
+  ( LOOKAHEAD(3) PostfixExpression() |
+    "++" UnaryExpression() |
+    "--" UnaryExpression() |
+    UnaryOperator() CastExpression() |
+    <SIZEOF>
+    (
+      LOOKAHEAD(UnaryExpression() )
+      UnaryExpression() |
+      "(" TypeName() ")" 
+    ) 
+  )
+}
+
+void UnaryOperator():
+{
+}
+{
+  ( "&" | "*" | "+" | "-" | "~" | "!" )
+}
+
+void PostfixExpression():
+{
+}
+{
+  PrimaryExpression()
+  (
+    "[" Expression() "]" |
+    "("
+    [
+      LOOKAHEAD(ArgumentExpressionList() )
+      ArgumentExpressionList() 
+    ]
+    ")" |
+    "." <IDENTIFIER> |
+    "->" <IDENTIFIER> |
+    "++" |
+    "--" 
+  )*
+}
+
+void PrimaryExpression():
+{
+  Token iTok;
+}
+{
+  (
+    iTok = <IDENTIFIER>
+    {
+      if(enFlg == 1)
+      {
+	if(enumIdentTbl.containsKey(iTok.toString()) == false)
+	{
+	  ParseException e = new ParseException(
+				    "Undefined emumerated type identifier: " +
+				    iTok.toString());
+	  throw e;
+	}
+	else
+	{
+	  enumExpStack.push((Integer )(enumIdentTbl.get(iTok.toString())));
+	}
+        // System.out.println("HACK PrimaryExpression() " + iTok.toString());
+      }
+    } |
+    Constant() |
+    "(" Expression() ")"
+  )
+}
+
+void ArgumentExpressionList():
+{
+}
+{
+  AssignmentExpression() ( "," AssignmentExpression() )*
+}
+
+void Constant():
+{
+  Token		tok;
+}
+{
+  tok = <INTEGER_LITERAL>
+  {
+    if(enFlg == 1)
+    {
+      int vI = Integer.parseInt(tok.toString());
+      enumExpStack.push(new Integer(vI));
+      // System.out.println("HACK Constant()" + tok.toString());
+    }
+  } |
+  tok = <FLOATING_POINT_LITERAL>
+  {
+    if(enFlg == 1)
+    {
+      ParseException e = new ParseException(
+      				"Floating point emumeration value.");
+      throw e;
+    }
+  } |
+  tok = <CHARACTER_LITERAL>
+  {
+    if(enFlg == 1)
+    {
+      ParseException e = new ParseException(
+      				"Char emumeration value.");
+      throw e;
+    }
+  } |
+  tok = <STRING_LITERAL>
+  {
+    if(enFlg == 1)
+    {
+      ParseException e = new ParseException(
+      				"String emumeration value.");
+      throw e;
+    }
+  }
+}
