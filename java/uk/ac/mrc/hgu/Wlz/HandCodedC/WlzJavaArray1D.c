@@ -919,7 +919,7 @@ jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
 	}
         break;
       case WLZ_JPM_KEY_WLZ_PTR1_ARY1:
-	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	if((jWFqClassName = WlzJavaBuildFQClassName(cObjName)) != NULL)
 	{
 	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
 	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "()V");
@@ -935,10 +935,10 @@ jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
 	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID);
 	    if(isWlzObject)
 	    {
-	      (void )WlzAssignObject((WlzObject *)aVal + idN0, NULL);
+	      (void )WlzAssignObject(*((WlzObject **)aVal + idN0), NULL);
 	    }
 	    (*jEnv)->SetLongField(jEnv, tObj0, fldID,
-				  (jlong )((WlzObject *)aVal + idN0));
+				  (jlong )(*((WlzObject **)aVal + idN0)));
 	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
 					   idN0, tObj0);
 	  }
