@@ -263,7 +263,7 @@ RecError	RecExplode3DFileToFile(char *dstDirStr, char *dstBodyStr,
   }
   if(errFlag == REC_ERR_NONE)
   {
-    srcObj = WlzEffReadObj(NULL, srcFile, srcFmt, &wlzErr);
+    srcObj = WlzEffReadObj(NULL, srcFile, srcFmt, 0, &wlzErr);
     errFlag = RecErrorFromWlz(wlzErr);
   }
   if(srcObj)
