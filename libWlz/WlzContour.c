@@ -66,12 +66,6 @@ static WlzContour	*WlzContourIsoObj3D(
 			  WlzObject *srcObj,
 			  double isoVal,
 			  WlzErrorNum *dstErr);
-static WlzContour 	*WlzContourGrdObj2D(
-			  WlzObject *srcObj,
-			  double grdLo,
-			  double grdHi,
-			  double ftrPrm,
-			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourGrdObj3D(
 			  WlzObject *srcObj,
 			  double grdLo,
@@ -269,7 +263,8 @@ WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
     switch(srcObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
-	ctr = WlzContourGrdObj2D(srcObj, ctrLo, ctrHi, ctrWth, &errNum);
+	ctr = WlzContourGrdObj2D(srcObj, NULL, NULL,
+				 ctrLo, ctrHi, ctrWth, &errNum);
 	break;
       case WLZ_3D_DOMAINOBJ:
 	ctr = WlzContourGrdObj3D(srcObj, ctrLo, ctrHi, ctrWth, &errNum);
@@ -336,7 +331,8 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourIsoObj2D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj2D(srcObj, (ctrVal + 9.0) / 10.0, ctrVal,
+	    ctr = WlzContourGrdObj2D(srcObj, NULL, NULL,
+	    			     (ctrVal + 9.0) / 10.0, ctrVal,
 	    			     ctrWth, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_BND:
@@ -1166,9 +1162,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
  
 \endverbatim
 * \param	srcObj			Given object from which to
-*                                       compute the contours.
-* \param	dstGrd			Destination pointer for gradients,
-*                                       may be NULL.
+*                                       compute gradients for the contours.
+* \param	gGXObj			If non NULL used for gradients
+*					across columns.
+* \param	gGYObj			If non NULL used for gradient
+*					through lines.
 * \param	grdLo			Lower threshold for modulus of
 *                                       gradient.
 * \param	grdHi			Upper threshold for modulus of
@@ -1177,9 +1175,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
-static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
-				      double grdLo, double grdHi,
-				      double ftrPrm, WlzErrorNum *dstErr)
+WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
+				    WlzObject *gGXObj,
+				    WlzObject *gGYObj,
+				    double grdLo, double grdHi,
+				    double ftrPrm, WlzErrorNum *dstErr)
 {
   int		idX,
 		dCode,
@@ -1220,7 +1220,7 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   		org,
   		posAbs,
 		posRel;
-   WlzDVertex2	pos;
+  WlzDVertex2	pos;
   WlzDVertex2	*grd;
   WlzIntervalWSpace gXIWSp,
   		gYIWSp;
@@ -1228,22 +1228,29 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   		gYGWSp;
   const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
-  if(srcObj->values.core == NULL)
+  if(srcObj == NULL)
+  {
+    if((gGXObj == NULL) || (gGYObj == NULL))
+    {
+      errNum = WLZ_ERR_OBJECT_NULL;
+    }
+    else
+    {
+      gXObj = gGXObj;
+      gYObj = gGYObj;
+    }
+  }
+  else if(srcObj->domain.core == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  /* Create a new contour. */
-  if(errNum == WLZ_ERR_NONE)
+  else if(srcObj->values.core == NULL)
   {
-    if((ctr = WlzMakeContour(&errNum)) != NULL)
-    {
-      ctr->model = WlzAssignGMModel(
-	  WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
-    }
+    errNum = WLZ_ERR_VALUES_NULL;
   }
-  if(errNum == WLZ_ERR_NONE)
+  /* Compute the partial derivatives. */
+  if((errNum == WLZ_ERR_NONE) && srcObj)
   {
-    /* Compute the partial derivatives. */
     if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
 				     ftrPrm, &errNum)) != NULL)
     {
@@ -1257,6 +1264,15 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 	gYObj = WlzRsvFilterObj(srcObj, ftr, WLZ_RSVFILTER_ACTION_Y, &errNum);
       }
       WlzRsvFilterFreeFilter(ftr);
+    }
+  }
+  /* Create a new contour. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      ctr->model = WlzAssignGMModel(
+	  WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
     }
   }
   /* Make scan line buffers. */
@@ -1515,8 +1531,14 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   {
     Alc2Free((void **)grdYBuf);
   }
-  (void )WlzFreeObj(gXObj);
-  (void )WlzFreeObj(gYObj);
+  if(gGXObj != NULL)
+  {
+    (void )WlzFreeObj(gXObj);
+  }
+  if(gGYObj != NULL)
+  {
+    (void )WlzFreeObj(gYObj);
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1570,7 +1592,8 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   WlzIVertex3	bufPos,
   		cbOrg;
   WlzIVertex2	bufSz,
-  		bufOff;
+  		bufOff,
+		bufOrg;
   WlzIBox2	bBox2D;
   WlzIBox3	bBox3D;
   int		bufIdx[3],
@@ -1618,6 +1641,8 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
     bBox3D = WlzBoundingBox3I(srcObj, &errNum);
     bufSz.vtX = bBox3D.xMax - bBox3D.xMin + 1;
     bufSz.vtY = bBox3D.yMax - bBox3D.yMin + 1;
+    bufOrg.vtX = bBox3D.xMin;
+    bufOrg.vtY = bBox3D.yMin;
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1716,8 +1741,8 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	/* Update buffers. */
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  bufOff.vtX = bBox2D.xMin;
-	  bufOff.vtY = bBox2D.yMin;
+	  bufOff.vtX = bBox2D.xMin - bBox3D.xMin;
+	  bufOff.vtY = bBox2D.yMin - bBox3D.yMin;
 	  if((bufOff.vtX < 0) || (bufOff.vtY < 0))
 	  {
 	    errNum = WLZ_ERR_DOMAIN_DATA;
@@ -1726,22 +1751,22 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzToArray2D((void ***)&(iBuf[bufIdx[2]]), srcObj2D,
-				bufSz, bufOff, 0, WLZ_GREY_BIT);
+				bufSz, bufOrg, 0, WLZ_GREY_BIT);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzToArray2D((void ***)&(xBuf[bufIdx[2]]), xObj2D,
-				bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+				bufSz, bufOrg, 0, WLZ_GREY_DOUBLE);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzToArray2D((void ***)&(yBuf[bufIdx[2]]), yObj2D,
-				bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+				bufSz, bufOrg, 0, WLZ_GREY_DOUBLE);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzToArray2D((void ***)&(zBuf[bufIdx[2]]), zObj2D,
-				bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+				bufSz, bufOrg, 0, WLZ_GREY_DOUBLE);
 	}
 	/* Check to see if there are 3 consecutive non-empty planes. */
 	if((errNum == WLZ_ERR_NONE) &&
@@ -1762,16 +1787,16 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	   * elements and add them to the model. */
 	  bufPos.vtZ = bufIdx[0];
           cbOrg.vtZ = bBox3D.zMin + pnIdx - 2;
-	  bufPos.vtY = bBox2D.yMin - bBox3D.yMin;
-	  cbOrg.vtY = bBox2D.yMin;
-	  while((errNum == WLZ_ERR_NONE) && (cbOrg.vtY < (bBox3D.yMax - 2)))
+	  bufPos.vtY = bufOff.vtY;
+	  while((errNum == WLZ_ERR_NONE) && (bufPos.vtY < (bufSz.vtY - 2)))
 	  {
-	    bufPos.vtX = bBox2D.xMin - bBox3D.xMin;
-	    cbOrg.vtX = bBox2D.xMin;
-	    while((errNum == WLZ_ERR_NONE) && (cbOrg.vtX < (bBox3D.xMax - 2)))
+	    cbOrg.vtY = bufPos.vtY + bBox3D.yMin;
+	    bufPos.vtX = bufOff.vtX;
+	    while((errNum == WLZ_ERR_NONE) && (bufPos.vtX < (bufSz.vtX - 2)))
 	    {
-	      cbInObj = 1;
+	      cbOrg.vtX = bufPos.vtX + bBox3D.xMin;
 	      idY = 0;
+	      cbInObj = 1;
 	      while(cbInObj && (idY < 3))
 	      {
 	        idX = 0;
@@ -1809,10 +1834,8 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 #endif /* WLZ_CONTOUR_DEBUG */
 	      }
 	      ++(bufPos.vtX);
-	      ++(cbOrg.vtX);
 	    }
 	    ++(bufPos.vtY);
-	    ++(cbOrg.vtY);
 	  }
 	}
 	if(xObj2D)
