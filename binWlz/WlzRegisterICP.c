@@ -31,6 +31,7 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		idx,
+		grdFlg = 0,
 		option,
 		ok = 1,
 		usage = 0;
@@ -46,7 +47,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   char  	*inObjFileStr[2];
   const char	*errMsg;
-  static char	optList[] = "i:o:hrt",
+  static char	optList[] = "i:o:ghart",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -67,6 +68,12 @@ int             main(int argc, char **argv)
 	break;
       case 'o':
         outObjFileStr = optarg;
+	break;
+      case 'g':
+        grdFlg = 1;
+	break;
+      case 'a':
+        trType = WLZ_TRANSFORM_2D_AFFINE;
 	break;
       case 'r':
         trType = WLZ_TRANSFORM_2D_REG;
@@ -172,49 +179,55 @@ int             main(int argc, char **argv)
     {
       switch(inObj[0]->type)
       {
-        case WLZ_2D_POLYGON: /* FALLTHROUGH */
-        case WLZ_BOUNDLIST:
-	  break;
-	case WLZ_CONTOUR:
-	  if((inObj[0]->domain.ctr->model == NULL) ||
-	     (inObj[1]->domain.ctr->model == NULL))
-	  {
-	    errNum = WLZ_ERR_DOMAIN_NULL;
-	  }
-	  else if(inObj[0]->domain.ctr->model->type !=
-	          inObj[1]->domain.ctr->model->type)
-	  {
-	    errNum = WLZ_ERR_DOMAIN_TYPE;
-	  }
-	  else
-	  {
-	    switch(inObj[0]->domain.ctr->model->type)
-	    {
-	      case WLZ_GMMOD_2I:
-	      case WLZ_GMMOD_2D:
-	        break;
-	      case WLZ_GMMOD_3I:
-	      case WLZ_GMMOD_3D:
-		/* Make sure the type of affine transform is appropriate. */
-		switch(trType)
-		{
-		  case WLZ_TRANSFORM_2D_REG:
-		    trType = WLZ_TRANSFORM_3D_REG;
-		    break;
-		  case WLZ_TRANSFORM_2D_TRANS:
-		    trType = WLZ_TRANSFORM_3D_TRANS;
-		    break;
-		}
-	        break;
-	      default:
-		errNum = WLZ_ERR_DOMAIN_TYPE;
-	        break;
-	    }
-	  }
-	  break;
-	default:
-	  errNum = WLZ_ERR_OBJECT_TYPE;
-	  break;
+        case WLZ_2D_DOMAINOBJ:
+          break;
+        case WLZ_3D_DOMAINOBJ:
+          switch(trType)
+          {
+            case WLZ_TRANSFORM_2D_REG:
+              trType = WLZ_TRANSFORM_3D_REG;
+              break;
+            case WLZ_TRANSFORM_2D_AFFINE:
+              trType = WLZ_TRANSFORM_3D_AFFINE;
+              break;
+          }
+          break;
+        case WLZ_CONTOUR:
+          if((inObj[0]->domain.core == NULL) ||
+             (inObj[0]->domain.ctr->model == NULL))
+          {
+            errNum = WLZ_ERR_DOMAIN_NULL;
+          }
+          else
+          {
+            switch(inObj[0]->domain.ctr->model->type)
+            {
+              case WLZ_GMMOD_2I: /* FALLTHROUGH */
+              case WLZ_GMMOD_2D:
+                break;
+              case WLZ_GMMOD_3I: /* FALLTHROUGH */
+              case WLZ_GMMOD_3D:
+                switch(trType)
+                {
+                  case WLZ_TRANSFORM_2D_REG:
+                    trType = WLZ_TRANSFORM_3D_REG;
+                    break;
+                  case WLZ_TRANSFORM_2D_AFFINE:
+                    trType = WLZ_TRANSFORM_3D_AFFINE;
+                    break;
+                }
+                break;
+              default:
+                errNum = WLZ_ERR_DOMAIN_TYPE;
+                ok = 0;
+                break;
+            }
+          }
+          break;
+        default:
+          errNum = WLZ_ERR_OBJECT_TYPE;
+          ok = 0;
+          break;
       }
     }
     if(errNum != WLZ_ERR_NONE)
@@ -227,9 +240,19 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    outDom.t = WlzRegICPObjs(inObj[0], inObj[1],
-    			     inTrObj? inTrObj->domain.t: NULL, trType,
-			     NULL, NULL, 1000, &errNum);
+    if(grdFlg)
+    {
+      outDom.t = WlzRegICPObjsGrd(inObj[0], inObj[1],
+				  inTrObj? inTrObj->domain.t: NULL,
+				  trType, 50.0, 50.0, 1.6,
+				  NULL, NULL, 200, &errNum);
+    }
+    else
+    {
+      outDom.t = WlzRegICPObjs(inObj[0], inObj[1],
+			       inTrObj? inTrObj->domain.t: NULL, trType,
+			       NULL, NULL, 1000, &errNum);
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -295,8 +318,10 @@ int             main(int argc, char **argv)
     "Options:\n"
     "  -i  Initial affine transform object.\n"
     "  -o  Output file name for affine transform.\n"
-    "  -t  Find the translation only transform.\n"
+    "  -g  Use maximal gradient contours.\n"
+    "  -a  Find the general affine transform.\n"
     "  -r  Find the rigid body (aka registration) transform, default.\n"
+    "  -t  Find the translation only transform.\n"
     "  -h  Help, prints this usage message.\n"
     "Attempts to register two objects using an itterative closest point\n"
     "(ICP) algorithm.  The two objects must be contours, boundary lists\n"
