@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 08-03-01 bill Add WlzContourSzSelect.
 # 06-12-00 bill Add WlzRegisterICP.
 # 16-08-00 bill Add WlzContourObj.
 # 07-02-00 bill	Add WlzHistogramFitPeaks.
@@ -40,6 +41,7 @@ EXECUTABLES		= \
 			WlzCompThresh \
 			WlzCompound \
 			WlzContourObj \
+			WlzContourSzSelect \
 			WlzConvertPix \
 			WlzConvexPoly \
 			WlzCutObjToBox \
@@ -117,6 +119,7 @@ CSOURCES		= \
 			WlzCompound.c \
 			WlzCompThresh.c \
 			WlzContourObj.c \
+			WlzContourSzSelect.c \
 			WlzConvertPix.c \
 			WlzConvexPoly.c \
 			WlzCutObjToBox.c \
