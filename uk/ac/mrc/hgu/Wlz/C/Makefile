@@ -83,7 +83,7 @@ DLLOBJECTS		= $(DLLCSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
 UNIXFLAGS		= -DUNIX
-COPTIMISE		= -O2
+COPTIMISE		= -fast -xchip=ultra
 ANSI_CONFORMANCE	=
 DEFINES			= $(THREADS) \
 			  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"

@@ -19,6 +19,7 @@ include			../../../../../../../../Makefile.conf
 
 JAVASOURCES		= \
 			  WlzBoundingBox.java \
+			  WlzBoundingBoxIntersection.java \
 			  WlzDitherViewer.java \
 			  WlzFacts.java \
 			  WlzGetBackground.java \
@@ -52,6 +53,12 @@ demo:			$(CLASSES)
 			@echo "WlzBoundingBox simply prints the bounding box"
 			@echo "of the given woolz object:"
 			$(JAVA) $(JAVAFLAGS) WlzBoundingBox t0.wlz
+			@echo 
+			@echo "WlzBoundingBoxIntersection prints the"
+			@echo "intersection of the bounding box of the"
+			@echo "given woolz object with a section plane:"
+			$(JAVA) $(JAVAFLAGS) WlzBoundingBoxIntersection \
+					     -d 20.0 -p 90.0 t0.wlz
 			@echo 
 			@echo "WlzDitherViewer throws up a window with the"
 			@echo "second object dithered onto the first (the"

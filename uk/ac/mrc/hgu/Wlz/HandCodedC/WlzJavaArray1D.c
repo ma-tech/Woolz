@@ -620,7 +620,7 @@ void		WlzJavaArray1DSet(JNIEnv *jEnv, jobjectArray dstJObj,
 				void *aVal,
 				int aSz)
 {
-  jobject	newJObj;
+  jobject	newJObj = NULL;
 
   if(aVal && (aSz > 0))
   {
@@ -630,47 +630,80 @@ void		WlzJavaArray1DSet(JNIEnv *jEnv, jobjectArray dstJObj,
 	newJObj = WlzJavaArray1DWrap(jEnv, "char", "jbyte", "jbyteArray",
 				     2, WLZ_JPM_KEY_BYTE_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
 	break;
       case WLZ_JPM_KEY_SHORT_PTR1_ARY1:
 	newJObj = WlzJavaArray1DWrap(jEnv, "short", "jshort", "jshortArray",
 				     2, WLZ_JPM_KEY_LONG_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
 	break;
       case WLZ_JPM_KEY_INT_PTR1_ARY1:
 	newJObj = WlzJavaArray1DWrap(jEnv, "int", "jint", "jintArray",
 				     2, WLZ_JPM_KEY_INT_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
 	break;
       case WLZ_JPM_KEY_LONG_PTR1_ARY1:
 	newJObj = WlzJavaArray1DWrap(jEnv, "long", "jlong", "jlongArray",
 				     2, WLZ_JPM_KEY_LONG_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
 	break;
       case WLZ_JPM_KEY_FLOAT_PTR1_ARY1:
 	newJObj = WlzJavaArray1DWrap(jEnv, "float", "jfloat", "jfloatArray",
 				     2, WLZ_JPM_KEY_FLOAT_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
 	break;
       case WLZ_JPM_KEY_DOUBLE_PTR1_ARY1:
 	newJObj = WlzJavaArray1DWrap(jEnv, "double", "jdouble", "jdoubleArray",
 				     2, WLZ_JPM_KEY_DOUBLE_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv,
+				"WlzIVertex2", "WlzIVertex2", "jobjectArray",
+			        2, WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1,
+			        aVal, aSz);
+	break;
+      case WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv,
+				"WlzFVertex2", "WlzFVertex2", "jobjectArray",
+			        2, WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1,
+			        aVal, aSz);
+	break;
+      case WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv,
+				"WlzDVertex2", "WlzDVertex2", "jobjectArray",
+			        2, WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1,
+			        aVal, aSz);
+	break;
+      case WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv,
+				"WlzIVertex3", "WlzIVertex3", "jobjectArray",
+			        2, WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1,
+			        aVal, aSz);
+	break;
+      case WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv,
+				"WlzFVertex3", "WlzFVertex3", "jobjectArray",
+			        2, WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1,
+			        aVal, aSz);
+	break;
+      case WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv,
+				"WlzDVertex3", "WlzDVertex3", "jobjectArray",
+			        2, WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1,
+			        aVal, aSz);
 	break;
       case WLZ_JPM_KEY_WLZ_PTR2_ARY1:
 	newJObj = WlzJavaArray1DWrap(jEnv, cObjName, jObjName, "jobjectArray",
 				     2, WLZ_JPM_KEY_WLZ_PTR1_ARY1,
 				     aVal, aSz);
-	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
 	break;
       default:
 	break;
     }
+  }
+  if(newJObj)
+  {
+    (*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
   }
 }
 
@@ -762,6 +795,129 @@ jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
 					aVal);
 	}
 	break;
+      case WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "(II)V");
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID,
+	    			       ((WlzIVertex2 *)aVal + idN0)->vtX,
+				       ((WlzIVertex2 *)aVal + idN0)->vtY);
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+        break;
+      case WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "(FF)V");
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID,
+	    			       ((WlzFVertex2 *)aVal + idN0)->vtX,
+				       ((WlzFVertex2 *)aVal + idN0)->vtY);
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+        break;
+      case WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "(DD)V");
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID,
+	    			       ((WlzDVertex2 *)aVal + idN0)->vtX,
+				       ((WlzDVertex2 *)aVal + idN0)->vtY);
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+        break;
+      case WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "(III)V");
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID,
+	    			       ((WlzIVertex3 *)aVal + idN0)->vtX,
+				       ((WlzIVertex3 *)aVal + idN0)->vtY,
+				       ((WlzIVertex3 *)aVal + idN0)->vtZ);
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+        break;
+      case WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "(FFF)V");
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID,
+	    			       ((WlzFVertex3 *)aVal + idN0)->vtX,
+				       ((WlzFVertex3 *)aVal + idN0)->vtY,
+				       ((WlzFVertex3 *)aVal + idN0)->vtZ);
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+        break;
+      case WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "(DDD)V");
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID,
+	    			       ((WlzDVertex3 *)aVal + idN0)->vtX,
+				       ((WlzDVertex3 *)aVal + idN0)->vtY,
+				       ((WlzDVertex3 *)aVal + idN0)->vtZ);
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+        break;
       case WLZ_JPM_KEY_WLZ_PTR1_ARY1:
 	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
 	{
