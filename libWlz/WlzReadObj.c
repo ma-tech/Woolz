@@ -2874,8 +2874,10 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
   WlzGMModel	*model = NULL;
   WlzIVertex2	tIV2;
   WlzIVertex3	tIV3;
-  WlzDVertex2	pos2D[2];
-  WlzDVertex3	pos3D[3];
+  WlzDVertex2	pos2D[2],
+  		nrm2D[2];
+  WlzDVertex3	pos3D[3],
+  		nrm3D[3];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   mType = getc(fP);
@@ -2892,11 +2894,17 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
     case WLZ_GMMOD_2D:
       vgElmSz = sizeof(WlzDVertex2);
       break;
+    case WLZ_GMMOD_2N:
+      vgElmSz = 2 * sizeof(WlzDVertex2);
+      break;
     case WLZ_GMMOD_3I:
       vgElmSz = sizeof(WlzIVertex3);
       break;
     case WLZ_GMMOD_3D:
       vgElmSz = sizeof(WlzDVertex3);
+      break;
+    case WLZ_GMMOD_3N:
+      vgElmSz = 2 * sizeof(WlzDVertex3);
       break;
     default:
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2954,11 +2962,17 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
       case WLZ_GMMOD_2D:
 	errNum = WlzReadVertex2D(fP, (WlzDVertex2 *)bufVG, nVertex);
 	break;
+      case WLZ_GMMOD_2N:
+	errNum = WlzReadVertex2D(fP, (WlzDVertex2 *)bufVG, 2 * nVertex);
+	break;
       case WLZ_GMMOD_3I:
 	errNum = WlzReadVertex3I(fP, (WlzIVertex3 *)bufVG, nVertex);
 	break;
       case WLZ_GMMOD_3D:
 	errNum = WlzReadVertex3D(fP, (WlzDVertex3 *)bufVG, nVertex);
+	break;
+      case WLZ_GMMOD_3N:
+	errNum = WlzReadVertex3D(fP, (WlzDVertex3 *)bufVG, 2 * nVertex);
 	break;
     }
   }
@@ -2992,6 +3006,17 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 	    errNum = WlzGMModelConstructSimplex2D(model, pos2D);
 	  }
 	  break;
+	case WLZ_GMMOD_2N:
+	  if((errNum = WlzReadInt(fP, bufI, 2)) == WLZ_ERR_NONE)
+	  {
+	    for(idN = 0; idN < 2; ++idN)
+	    {
+	      pos2D[idN] = *(((WlzDVertex2 *)bufVG) + (2 * bufI[idN]) + 0);
+	      nrm2D[idN] = *(((WlzDVertex2 *)bufVG) + (2 * bufI[idN]) + 1);
+	    }
+	    errNum = WlzGMModelConstructSimplex2N(model, pos2D, nrm2D);
+	  }
+	  break;
 	case WLZ_GMMOD_3I:
 	  if((errNum = WlzReadInt(fP, bufI, 3)) == WLZ_ERR_NONE)
 	  {
@@ -3013,6 +3038,17 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 	      pos3D[idN] = *(((WlzDVertex3 *)bufVG) + bufI[idN]);
 	    }
 	    errNum = WlzGMModelConstructSimplex3D(model, pos3D);
+	  }
+	  break;
+	case WLZ_GMMOD_3N:
+	  if((errNum = WlzReadInt(fP, bufI, 3)) == WLZ_ERR_NONE)
+	  {
+	    for(idN = 0; idN < 3; ++idN)
+	    {
+	      pos3D[idN] = *(((WlzDVertex3 *)bufVG) + (2 * bufI[idN]) + 0);
+	      nrm3D[idN] = *(((WlzDVertex3 *)bufVG) + (2 * bufI[idN]) + 1);
+	    }
+	    errNum = WlzGMModelConstructSimplex3N(model, pos3D, nrm3D);
 	  }
 	  break;
       }
