@@ -287,7 +287,7 @@ AlcDLPItem	*AlcDLPItemUnlink(AlcDLPList *list, AlcDLPItem *item,
     }
     if(freeItem)
     {
-      AlcDLPItemFree(item);
+      (void )AlcDLPItemFree(item);
     }
   }
   if(dstErr)

@@ -284,21 +284,21 @@ extern AlcErrno			AlcDouble3Free(
 extern AlcErrno			AlcDouble1ReadAsci(
 				  FILE *fP,
 				  double **dstA,
-				  int *dstNElem);
+				  size_t *dstNElem);
 extern AlcErrno			AlcDouble2ReadAsci(
 				  FILE *fP,
 				  double ***dstA,
-				  int *dstMElem,
-				  int *dstNElem);
+				  size_t *dstMElem,
+				  size_t *dstNElem);
 extern AlcErrno			AlcDouble1WriteAsci(
 				  FILE *fP,
 				  double *ar,
-				  int nElem);
+				  size_t nElem);
 extern AlcErrno			AlcDouble2WriteAsci(
 				  FILE *fP,
 				  double **ar,
-				  int mElem,
-				  int nElem);
+				  size_t mElem,
+				  size_t nElem);
 
 /************************************************************************
 * AlcBlockStack.c
@@ -438,7 +438,7 @@ extern AlcErrno 		AlcHashItemInsert(
 				  AlcHashItem *newItem);
 extern AlcErrno			AlcHashItemFree(
 				  AlcHashItem *item);
-extern int			AlcHashTableCount(
+extern size_t			AlcHashTableCount(
 				  AlcHashTable *hTbl,
 				  AlcErrno *dstErr);
 extern AlcHashItem		*AlcHashTableIterate(
@@ -462,7 +462,7 @@ extern AlcKDTTree	       *AlcKDTTreeNew(
 				   AlcPointType type,
 				  int dim,
 				  double tol,
-				  int nNodes,
+				  size_t nNodes,
 				  AlcErrno *dstErr);
 extern AlcErrno 	  	AlcKDTTreeFree(
 				    AlcKDTTree *tree);
@@ -508,39 +508,39 @@ extern char			*AlcStrDup(
 * AlcVector.c
 ************************************************************************/
 extern AlcVector		*AlcVectorNew(
-				  unsigned int elmCnt,
-				  unsigned int elmSz,
-				  unsigned int blkSz,
+				  size_t elmCnt,
+				  size_t elmSz,
+				  size_t blkSz,
                               	  AlcErrno *dstErr);
 extern AlcErrno			AlcVectorFree(
 				  AlcVector *vec);
 extern AlcErrno			AlcVectorExtend(
 				  AlcVector *vec,
-				  unsigned int elmCnt);
+				  size_t elmCnt);
 extern void			*AlcVectorItemGet(
 				  AlcVector *vec,
-				  unsigned int idx);
+				  size_t idx);
 extern void			*AlcVectorExtendAndGet(
 				  AlcVector *vec,
-				  unsigned int idx);
-extern unsigned int		AlcVectorCount(
+				  size_t idx);
+extern size_t			AlcVectorCount(
 				  AlcVector *vec);
 extern void			AlcVectorSetArray1D(
 				  AlcVector *vec,
-				  int fIdx,
-				  int lIdx,
+				  size_t fIdx,
+				  size_t lIdx,
 				  void *aM);
 extern void			*AlcVectorToArray1D(
 				  AlcVector *vec,
-				  int fIdx,
-				  int lIdx,
+				  size_t fIdx,
+				  size_t lIdx,
 				  AlcErrno *dstErr);
 void				**AlcVectorToArray2D(
 				  AlcVector *vec,
-				  int fIdx,
-				  int lIdx,
-				  int nR,
-				  int nC,
+				  size_t fIdx,
+				  size_t lIdx,
+				  size_t nR,
+				  size_t nC,
 				  AlcErrno *dstErr);
 #ifdef __cplusplus
 }

@@ -199,8 +199,8 @@ typedef struct _AlcHashItem
 typedef struct _AlcHashTable
 {
   int		(*keyCmp)(void *, void *); /*!< Key comparison function */
-  unsigned	(*hashFn)(void *);         /*!< The hashing function */
-  int		tableSz;		   /*!< Number of list slots in the
+  size_t	(*hashFn)(void *);         /*!< The hashing function */
+  size_t	tableSz;		   /*!< Number of list slots in the
   						hash table */
   AlcHashItem	**table;		   /*!< Table of lists */
 } AlcHashTable;
@@ -215,10 +215,10 @@ typedef struct _AlcHashTable
 */
 typedef struct _AlcVector
 {
-  unsigned int	elmSz;		/*!< Size of elements of the vector */
-  unsigned int	blkCnt;		/*!< Number of block pointers */
-  unsigned int	blkUse;		/*!< Number of blocks used */
-  unsigned int	blkSz;		/*!< Number of elements in a block, must NOT be
+  size_t	elmSz;		/*!< Size of elements of the vector */
+  size_t	blkCnt;		/*!< Number of block pointers */
+  size_t	blkUse;		/*!< Number of blocks used */
+  size_t	blkSz;		/*!< Number of elements in a block, must NOT be
   				     changed once vector has been created! */
   void		*freeStack;	/*!< Free stack */
   void		**blocks;	/*!< Data blocks */
@@ -258,7 +258,7 @@ typedef union _AlcPointP
 */
 typedef struct _AlcKDTNode
 {
-  int		idx;		/*!< Index or identifier for the node */
+  size_t	idx;		/*!< Index or identifier for the node */
   int		split;  	/*!< The splitting dimension */
   struct _AlcKDTNode *parent; 	/*!< The parent node, NULL if the node is
   				     the root of the tree */
@@ -282,13 +282,13 @@ typedef struct _AlcKDTTree
    AlcPointType	type;		/*!< The type of tree, ie the type of node
    				     key */
   int		dim;		/*!< Dimension of the tree. */
-  int		keySz;		/*!< sizeof(key) * dimension */
+  size_t	keySz;		/*!< sizeof(key) * dimension */
   double	tol; 		/*!< Comparision tollerance for double key
   				     values */
-  int		nNodes;  	/*!< Number of nodes in the tree */
+  size_t	nNodes;  	/*!< Number of nodes in the tree */
   struct _AlcKDTNode *root;	/*!< The root node of the tree. */
   struct _AlcKDTNode *nodeStack; /*!< Stack of nodes available for use */
-  int		nodeBlockSz; 	/*!< Number of nodes allocated in a block */
+  size_t	nodeBlockSz; 	/*!< Number of nodes allocated in a block */
   AlcBlockStack *freeStack;	/*!< Stack of allocated node blocks */
 } AlcKDTTree;
 

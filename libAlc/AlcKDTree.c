@@ -77,19 +77,19 @@ static AlcKDTNode 		*AlcKDTNodeGetNN(
 *					negative it is set to a default
 *					value.
 * \param	nNodes			Expected number of nodes in the
-*					tree, <= 0 if unknown. This
+*					tree,  0 if unknown. This
 *					can be used to optimise node
 *					allocation.
 * \param        dstErr		    	Destination pointer for error
 *                                       code, may be NULL.
 */
 AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
-			       int nNodes, AlcErrno *dstErr)
+			       size_t nNodes, AlcErrno *dstErr)
 {
-  int		keySz;
+  size_t	keySz;
   AlcKDTTree	*tree = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
-  const int	minNodeBlockSz = 1024;
+  const size_t	minNodeBlockSz = 1024;
   const double	defTol = 1.0E-06;
 
   if(dim < 1)
@@ -151,9 +151,9 @@ int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
   {
     (void )fprintf(fP, "type         %-d\n", tree->type);
     (void )fprintf(fP, "dim          %-d\n", tree->dim);
-    (void )fprintf(fP, "keySz        %-d\n", tree->keySz);
+    (void )fprintf(fP, "keySz        %-d\n", (int )(tree->keySz));
     (void )fprintf(fP, "tol          %-g\n", tree->tol);
-    (void )fprintf(fP, "nNodes       %-d\n", tree->nNodes);
+    (void )fprintf(fP, "nNodes       %-d\n", (int )(tree->nNodes));
     (void )fprintf(fP, "root         0x-%lx\n",
 		    (unsigned long )(tree->root));
     (void )fprintf(fP, "nodeStack    0x%-lx\n",
@@ -183,17 +183,17 @@ static int	AlcKDTNodeFacts(AlcKDTTree *tree, AlcKDTNode *node, FILE *fP)
   if(node)
   {
     nNodes = 1;
-    (void )fprintf(fP, "idx          %-d\n", node->idx);
+    (void )fprintf(fP, "idx          %-d\n", (int )(node->idx));
     (void )fprintf(fP, "split        %-d\n", node->split);
     (void )fprintf(fP, "parent       0x%-lx (%d)\n",
 		    (unsigned long )(node->parent),
-		    (node->parent)? node->parent->idx: -1);
+		    (node->parent)? (int )(node->parent->idx): -1);
     (void )fprintf(fP, "childN       0x%-lx (%d)\n",
 		    (unsigned long )(node->childN),
-		    node->childN? node->childN->idx: -1);
+		    node->childN? (int )(node->childN->idx): -1);
     (void )fprintf(fP, "childP       0x%-lx (%d)\n",
 		    (unsigned long )(node->childP),
-		    node->childP? node->childP->idx: -1);
+		    node->childP? (int )(node->childP->idx): -1);
     (void )fprintf(fP, "key          ");
     AlcKDTPointFacts(tree, node->key, fP);
     (void )fprintf(fP, "\n");
@@ -249,8 +249,7 @@ static void	AlcKDTPointFacts(AlcKDTTree *tree, AlcPointP pnt, FILE *fP)
 */
 static AlcErrno AlcKDTTreeExpand(AlcKDTTree *tree)
 {
-  int		idx,
-		cnt;
+  size_t	cnt;
   AlcKDTNode	*node;
   AlcPointP	key;
   AlcBlockStack	*nStk,
@@ -355,7 +354,6 @@ AlcKDTNode	*AlcKDTNodeNew(AlcKDTTree *tree, AlcKDTNode *parent,
 			       AlcPointP key, int cmp,
 			       AlcErrno *dstErr)
 {
-  int		idx;
   AlcKDTNode	*node = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
@@ -501,9 +499,9 @@ void		AlcKDTNodeFree(AlcKDTTree *tree, AlcKDTNode *node)
 }
 
 /*!
-* \return	New node added to tree, NULL on
+* \return	New node added to tree, NULL on error or if key
+*		matched in tree.
 * \ingroup	AlcKDTree
-*					error or if key matched in tree.
 * \brief  	Checks for a node in the tree with the given key, if
 *		such a node doesn't exist then insert a new one.
 * \param     	tree			Given tree.
@@ -519,8 +517,7 @@ AlcKDTNode	*AlcKDTInsert(AlcKDTTree *tree,  void *keyVal,
 			      AlcKDTNode **dstFndNod, AlcErrno *dstErr)
 {
 
-  int		cmp,
-		found = 0;
+  int		cmp;
   AlcKDTNode	*nodS,
 		*newNod = NULL,
 		*tstNod = NULL;
@@ -646,11 +643,9 @@ AlcKDTNode 	*AlcKDTGetLeaf(AlcKDTTree *tree,  AlcKDTNode *node,
 {
 
   int		cmp;
-  double	distSq = DBL_MAX;
   AlcKDTNode	*tstNod0,
 		*tstNod1,
 		*leafNode = NULL;
-  AlcErrno	errNum = ALC_ER_NONE;
 
   tstNod1 = tstNod0 = node;
   while(tstNod1 && ((cmp = AlcKDTNodeValueCompare(tree, tstNod0, key)) != 0))
@@ -698,7 +693,6 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
 			     AlcErrno *dstErr)
 {
 
-  int		cmp;
   double	dist,
 		distSq;
   AlcPointP	key;
@@ -904,7 +898,8 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
   {
     do
     {
-      if((tD0 = (tD1 = *(centre.kI + idx)) - *(node->boundN.kI + idx)) < 0.0)
+      if((tD0 = (tD1 = (double )(*(centre.kI + idx)) -
+                                 *(node->boundN.kI + idx))) < 0.0)
       {
 	sum += tD0 * tD0;
       }
@@ -986,7 +981,7 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
   {
     do
     {
-      tD0 = *(key0.kI + idx) - *(key1.kI + idx);
+      tD0 = (double )(*(key0.kI + idx) - *(key1.kI + idx));
       distSq += tD0 * tD0;
     }
     while(++idx < tree->dim);

@@ -116,7 +116,7 @@ AlcHashItem	*AlcHashItemNew(void *entry, void (*freeFn)(void *),
 */
 AlcErrno	AlcHashTableFree(AlcHashTable *hTbl)
 {
-  int		hCnt;
+  size_t	hCnt;
   AlcHashItem	*item,
 		*fItem;
   AlcHashItem 	**head;
@@ -132,7 +132,7 @@ AlcErrno	AlcHashTableFree(AlcHashTable *hTbl)
     hCnt = hTbl->tableSz;
     while(hCnt-- > 0)
     {
-      if(item = *head++)
+      if((item = *head++) != NULL)
       {
 	while(item)
 	{
@@ -178,7 +178,7 @@ AlcErrno	AlcHashTableEntryInsert(AlcHashTable *hTbl, void *key,
     {
       if((errNum = AlcHashItemInsert(hTbl, newItem)) != ALC_ER_NONE)
       {
-        AlcHashItemFree(newItem);
+        (void )AlcHashItemFree(newItem);
       }
     }
   }
@@ -197,10 +197,9 @@ AlcErrno	AlcHashTableEntryInsert(AlcHashTable *hTbl, void *key,
 AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
 				  int freeItem)
 {
-  unsigned	hIdx;
+  size_t	hIdx;
   AlcHashItem	**head;
-  AlcHashItem	*item,
-		*pItem,
+  AlcHashItem	*pItem,
   		*nItem;
   AlcErrno	errNum = ALC_ER_NONE;
 
@@ -227,7 +226,7 @@ AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
     }
     if(freeItem)
     {
-      AlcHashItemFree(rItem);
+      (void )AlcHashItemFree(rItem);
     }
   }
   return(errNum);
@@ -246,7 +245,7 @@ AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
 AlcErrno	AlcHashItemInsert(AlcHashTable *hTbl, AlcHashItem *newItem)
 {
   int		cmp;
-  unsigned	hIdx;
+  size_t	hIdx;
   AlcHashItem 	**head;
   AlcHashItem	*item,
   		*pItem,
@@ -282,7 +281,7 @@ AlcErrno	AlcHashItemInsert(AlcHashTable *hTbl, AlcHashItem *newItem)
 	/* Replace list head with the new item. */
 	item = *head;
 	*head = newItem;
-	AlcHashItemFree(item);
+	(void )AlcHashItemFree(item);
       }
       else if(cmp < 0)
       {
@@ -338,7 +337,7 @@ AlcErrno	AlcHashItemInsert(AlcHashTable *hTbl, AlcHashItem *newItem)
 	  nItem->prev = newItem;
 	}
 	newItem->next = nItem;
-        AlcHashItemFree(item);
+        (void )AlcHashItemFree(item);
       }
       else if(cmp < 0)
       {
@@ -385,9 +384,9 @@ AlcErrno	AlcHashItemFree(AlcHashItem *item)
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-int		AlcHashTableCount(AlcHashTable *hTbl, AlcErrno *dstErr)
+size_t		AlcHashTableCount(AlcHashTable *hTbl, AlcErrno *dstErr)
 {
-  int		cnt = 0,
+  size_t	cnt = 0,
   		hCnt;
   AlcHashItem 	*item,
   		**head;
@@ -465,7 +464,6 @@ AlcHashItem	*AlcHashTableIterate(AlcHashTable *hTbl, AlcDirection dir,
 				     void *iterData, AlcErrno *dstErr)
 {
   int		iterate = 1;
-  void		*key;
   AlcHashItem	**head;
   AlcHashItem 	*item,
   		*lastItem = NULL;
@@ -562,9 +560,7 @@ AlcErrno	AlcHashTableUnlinkAll(AlcHashTable *hTbl,
 				      		    AlcHashItem *, void *),
 				      void *fnData, int freeItems)
 {
-  int		hIdx;
-  int		iterate = 1;
-  void		*key;
+  size_t	hIdx;
   AlcHashItem	**head;
   AlcHashItem 	*item,
   		*nItem;
@@ -612,7 +608,7 @@ AlcHashItem	*AlcHashItemGet(AlcHashTable *hTbl, void *key,
 				AlcErrno *dstErr)
 {
   int		cmp;
-  unsigned	hIdx;
+  size_t	hIdx;
   AlcHashItem 	**head;
   AlcHashItem	*nItem,
   		*item = NULL;
@@ -649,9 +645,9 @@ AlcHashItem	*AlcHashItemGet(AlcHashTable *hTbl, void *key,
 
 /*!
 * \return	>0 if item0 before item1 or
-* \ingroup	AlcHashTable
 *		== 0 if item0 is item1 or
 *		< 0 if item0 after item1.
+* \ingroup	AlcHashTable
 * \brief	Finds the order in which the given items would occur
 *		in the hash table.
 * \param	hTbl			The hash table.
@@ -661,19 +657,38 @@ AlcHashItem	*AlcHashItemGet(AlcHashTable *hTbl, void *key,
 int		AlcHashItemOrder(AlcHashTable *hTbl,
 				 AlcHashItem *item0, AlcHashItem *item1)
 {
-  int		order,
-  		hIdx0,
-  		hIdx1;
-  unsigned 	hVal0,
+  int		order;
+  size_t 	hIdx0,
+  		hIdx1,
+		hVal0,
   		hVal1;
 
   hVal0 = (*(hTbl->hashFn))(item0->key);
   hIdx0 = hVal0 % hTbl->tableSz;
   hVal1 = (*(hTbl->hashFn))(item1->key);
   hIdx1 = hVal1 % hTbl->tableSz;
-  if((order = hIdx1 - hIdx0) == 0)
+  if(hIdx1 == hIdx0)
   {
-    order = hVal1 - hVal0;
+    if(hVal1 == hVal0)
+    {
+      order = 0;
+    }
+    else if(hVal1 > hVal0)
+    {
+      order = 1;
+    }
+    else /* hVal1 < hVal0 */
+    {
+      order = -1;
+    }
+  }
+  else if(hIdx1 > hIdx0)
+  {
+    order = 1;
+  }
+  else /* hIdx1 < hIdx0 */
+  {
+    order = -1;
   }
   return(order);
 }

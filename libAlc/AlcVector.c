@@ -39,17 +39,17 @@
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-AlcVector	*AlcVectorNew(unsigned int elmCnt, unsigned int elmSz,
-			      unsigned int blkSz, AlcErrno *dstErr)
+AlcVector	*AlcVectorNew(size_t elmCnt, size_t elmSz,
+			      size_t blkSz, AlcErrno *dstErr)
 {
-  unsigned int	blkCnt,
+  size_t	blkCnt,
 		blkUse,
 		blkIdx,
 		blkInc;
   char		*data;
   AlcVector	*nVec = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
-  const unsigned int defaultBlkSz = 1024;
+  const size_t defaultBlkSz = 1024;
 
   if(elmSz <= 0)
   {
@@ -134,7 +134,7 @@ AlcErrno	AlcVectorFree(AlcVector *vec)
   {
     if(vec->freeStack)
     {
-      AlcFreeStackFree(vec->freeStack);
+      (void )AlcFreeStackFree(vec->freeStack);
     }
     if(vec->blocks)
     {
@@ -153,9 +153,9 @@ AlcErrno	AlcVectorFree(AlcVector *vec)
 * \param	vec			Vector to extend.
 * \param	elmCnt			Required number of elements.
 */
-AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
+AlcErrno	AlcVectorExtend(AlcVector *vec, size_t elmCnt)
 {
-  int		blkIdx,
+  size_t	blkIdx,
   		nBlkUse,
   		nBlkCnt,
   		eBlkUse,
@@ -167,9 +167,10 @@ AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
   AlcErrno	errNum = ALC_ER_NONE;
 
   nBlkUse = (elmCnt + vec->blkSz - 1) / vec->blkSz;
-  if((eBlkUse = nBlkUse - vec->blkUse) > 0)
+  if(nBlkUse > vec->blkUse)
   {
     /* Check the number of block pointers and allocate more if required */
+    eBlkUse = nBlkUse - vec->blkUse;
     if(nBlkUse > vec->blkCnt)
     {
       nBlkCnt = ((nBlkUse + vec->blkSz - 1) / vec->blkSz) *
@@ -239,9 +240,9 @@ AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
 * \param	vec			Vector to extend.
 * \param	idx			Given item index.
 */
-void		*AlcVectorItemGet(AlcVector *vec, unsigned int idx)
+void		*AlcVectorItemGet(AlcVector *vec, size_t idx)
 {
-  unsigned int	blkIdx;
+  size_t	blkIdx;
   void		*data = NULL;
 
   if(vec && ((blkIdx = idx / vec->blkSz) < vec->blkUse))
@@ -261,9 +262,9 @@ void		*AlcVectorItemGet(AlcVector *vec, unsigned int idx)
 * \param	vec			Vector to extend.
 * \param	idx			Given item index.
 */
-void		*AlcVectorExtendAndGet(AlcVector *vec, unsigned int idx)
+void		*AlcVectorExtendAndGet(AlcVector *vec, size_t idx)
 {
-  unsigned int	blkIdx;
+  size_t	blkIdx;
   void		*data = NULL;
 
   if((AlcVectorExtend(vec, idx + 1) == ALC_ER_NONE) &&
@@ -283,10 +284,9 @@ void		*AlcVectorExtendAndGet(AlcVector *vec, unsigned int idx)
 *		before it needs to be extended.
 * \param	vec			Vector to extend.
 */
-unsigned int	AlcVectorCount(AlcVector *vec)
+size_t		AlcVectorCount(AlcVector *vec)
 {
-  unsigned int	cnt = 0;
-  void		*data = NULL;
+  size_t	cnt = 0;
 
   if(vec)
   {
@@ -307,10 +307,10 @@ unsigned int	AlcVectorCount(AlcVector *vec)
 *					vector to copy.
 * \param	aM			The 1 dimensional array.
 */
-void		AlcVectorSetArray1D(AlcVector *vec, int fIdx, int lIdx,
+void		AlcVectorSetArray1D(AlcVector *vec, size_t fIdx, size_t lIdx,
 				    void *aM)
 {
-  int		aIdx,
+  size_t	aIdx,
 		fVIdx,
 		lVIdx,
   		fVBlkIdx,
@@ -348,14 +348,9 @@ void		AlcVectorSetArray1D(AlcVector *vec, int fIdx, int lIdx,
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-void		*AlcVectorToArray1D(AlcVector *vec, int fIdx, int lIdx,
+void		*AlcVectorToArray1D(AlcVector *vec, size_t fIdx, size_t lIdx,
 				    AlcErrno *dstErr)
 {
-  int		aIdx,
-		fVIdx,
-		lVIdx,
-  		fVBlkIdx,
-		lVBlkIdx;
   void		*aM = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
@@ -363,7 +358,7 @@ void		*AlcVectorToArray1D(AlcVector *vec, int fIdx, int lIdx,
   {
     errNum = ALC_ER_NULLPTR;
   }
-  else if((fIdx < 0) || (lIdx < fIdx))
+  else if(lIdx < fIdx)
   {
     errNum = ALC_ER_PARAM;
   }
@@ -400,11 +395,11 @@ void		*AlcVectorToArray1D(AlcVector *vec, int fIdx, int lIdx,
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-void		**AlcVectorToArray2D(AlcVector *vec, int fIdx, int lIdx,
-				     int nR, int nC,
+void		**AlcVectorToArray2D(AlcVector *vec, size_t fIdx, size_t lIdx,
+				     size_t nR, size_t nC,
 				     AlcErrno *dstErr)
 {
-  int		iR,
+  size_t	iR,
   		nRC;
   void		**aM = NULL;
   
@@ -414,7 +409,7 @@ void		**AlcVectorToArray2D(AlcVector *vec, int fIdx, int lIdx,
   {
     errNum = ALC_ER_NULLPTR;
   }
-  else if((fIdx < 0) || (lIdx < fIdx) || (nR < 1) || (nC < 1) ||
+  else if((lIdx < fIdx) || (nR < 1) || (nC < 1) ||
           ((nRC = nR * nC) != lIdx - fIdx + 1))
   {
     errNum = ALC_ER_PARAM;

@@ -1054,17 +1054,17 @@ AlcErrno	AlcDouble3Free(double ***dest)
 * \param	fP:			File pointer.
 * \param	dstA 			Destination pointer for the new
 *					array.
-* \param	nElem			Destination pointer for the number
+* \param	dstNElem		Destination pointer for the number
 *					of elements in the 1D array.
 */
 AlcErrno	AlcDouble1ReadAsci(FILE *fP, double **dstA,
-				   int *dstNElem)
+				   size_t *dstNElem)
 {
-  int		nR = 0;
+  size_t	nR = 0;
   double	*dP0,
   		*aM = NULL;
   AlcVector	*vec = NULL;
-  const int	vecCnt = 1024;		/* Initial number of elements in
+  const size_t	vecCnt = 1024;		/* Initial number of elements in
   					 * the vector */
   const int	maxRecLen = 8192;	/* Maximum number of chars in an
   					 * input record */
@@ -1114,17 +1114,17 @@ AlcErrno	AlcDouble1ReadAsci(FILE *fP, double **dstA,
 *					fields per record).
 */
 AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
-				   int *dstMElem, int *dstNElem)
+				   size_t *dstMElem, size_t *dstNElem)
 {
-  int		iF,
-		nR = 0,
+  size_t	iF,
+  		nR = 0,
   		nF = 0,
 		nV = 0;
   double	*dP0;
   double	**aM = NULL;
   char		*parseS,
   		*tokS;
-  const int	vecCnt = 1024; 		/* Initial number of elements in
+  const size_t	vecCnt = 1024; 		/* Initial number of elements in
   					 * the vector */
   const int	maxRecLen = 8192; 	/* Maximum number of chars in an
   					 * input record */
@@ -1192,9 +1192,9 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
 * \param	nElem			Number of elements in the 1D array.
 */
 AlcErrno	AlcDouble1WriteAsci(FILE *fP, double *ar,
-				    int nElem)
+				    size_t nElem)
 {
-  int		iR;
+  size_t	iR;
   AlcErrno	errNum = ALC_ER_NONE;
 
   iR = 0;
@@ -1225,9 +1225,9 @@ AlcErrno	AlcDouble1WriteAsci(FILE *fP, double *ar,
 *					(number of fields per record).
 */
 AlcErrno	AlcDouble2WriteAsci(FILE *fP, double **ar,
-				    int mElem, int nElem)
+				    size_t mElem, size_t nElem)
 {
-  int		iC,
+  size_t	iC,
 		iR;
   AlcErrno	errNum = ALC_ER_NONE;
 

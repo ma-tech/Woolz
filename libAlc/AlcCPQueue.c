@@ -38,8 +38,6 @@
 
 static AlcErrno			AlcCPQMoreItems(
 				  AlcCPQQueue *q);
-static AlcErrno			AlcCPQQueueDecSize(
-				  AlcCPQQueue *q);
 static AlcErrno			AlcCPQQueueIncSize(
 				  AlcCPQQueue *q);
 static AlcErrno			AlcCPQQueueResize(
@@ -50,6 +48,8 @@ static AlcCPQItem 		*AlcCPQUnlinkItemInList(
 static float			AlcCPQQueueNewBWidth(
 				  AlcCPQQueue *q,
 				  AlcErrno *errNum);
+static void			AlcCPQQueueDecSize(
+				  AlcCPQQueue *q);
 static void			AlcCPQInsertItemInList(
 				  AlcCPQQueue *q,
 				  int gIdx,
@@ -89,10 +89,11 @@ AlcCPQQueue	*AlcCPQQueueNew(AlcErrno *dstErr)
     q->resizable = 1;
     q->lastPriority = 0.0;
     if((q->buckets = (AlcCPQItem **)
-    		     AlcCalloc(q->maxBucket, sizeof(AlcCPQItem *))) == NULL)
+    		     AlcCalloc((size_t )(q->maxBucket),
+		     	       sizeof(AlcCPQItem *))) == NULL)
     {
       errNum = ALC_ER_ALLOC;
-      AlcCPQQueueFree(q);
+      (void )AlcCPQQueueFree(q);
       q = NULL;
     }
   }
@@ -162,7 +163,7 @@ AlcErrno	AlcCPQQueueFree(AlcCPQQueue *q)
   if(q)
   {
     AlcFree(q->buckets);
-    AlcBlockStackFree(q->freeStack);
+    (void )AlcBlockStackFree(q->freeStack);
     AlcFree(q);
   }
   return(errNum);
@@ -352,8 +353,9 @@ static AlcErrno	AlcCPQMoreItems(AlcCPQQueue *q)
   		*mItem;
   AlcErrno	errNum = ALC_ER_NONE;
 
-  if((q->freeStack = AlcBlockStackNew(q->itemBlockSz, sizeof(AlcCPQItem),
-       				       q->freeStack, NULL)) == NULL)
+  if((q->freeStack = AlcBlockStackNew((size_t )q->itemBlockSz,
+  				      sizeof(AlcCPQItem),
+       				      q->freeStack, NULL)) == NULL)
   {
     errNum = ALC_ER_ALLOC;
   }
@@ -367,7 +369,7 @@ static AlcErrno	AlcCPQMoreItems(AlcCPQQueue *q)
     }
     q->freeItem = mItem;
     ++mItem;
-    iCnt = q->freeStack->maxElm - 1;
+    iCnt = (int )(q->freeStack->maxElm) - 1;
     for(idx = 1; idx < iCnt; ++idx)
     {
       mItem->prev = lItem;
@@ -490,22 +492,19 @@ static AlcErrno	AlcCPQQueueIncSize(AlcCPQQueue *q)
 }
 
 /*!
-* \return	Alc error code.
+* \return	void
 * \ingroup	AlcCPQ
 * \brief	Decrease the queue size by a factor of two.
 * \param	q			The queue.
 */
-static AlcErrno	AlcCPQQueueDecSize(AlcCPQQueue *q)
+static void	AlcCPQQueueDecSize(AlcCPQQueue *q)
 {
-  AlcErrno	errNum = ALC_ER_NONE;
-
   if(q->resizable)
   {
     q->resizable = 0;
-    errNum = AlcCPQQueueResize(q, 0);
+    (void )AlcCPQQueueResize(q, 0);
     q->resizable = 1;
   }
-  return(errNum);
 }
 
 /*!
@@ -529,48 +528,48 @@ static AlcErrno	AlcCPQQueueResize(AlcCPQQueue *q, int incFlag)
 
 #ifdef ALC_CPQ_DEBUG
   (void )fprintf(stderr, "AlcCPQQueueResize() FE\n");
-  if(errNum == ALC_ER_NONE)
-  {
-    AlcCPQDebugOut(q);
-  }
+  AlcCPQDebugOut(q);
 #endif /* ALC_CPQ_DEBUG */
   oldNBuckets = q->nBucket;
   oldBucketBase = q->bucketBase;
   q->bucketWidth = AlcCPQQueueNewBWidth(q, &errNum);
-  if(incFlag)
+  if(errNum == ALC_ER_NONE)
   {
-    q->nBucket = q->nBucket * 2;
-    q->nItemIncThr = q->nBucket * 2;
-    if(q->nItemIncThr == 64)
+    if(incFlag)
     {
-      q->nItemDecThr = 16;
-    }
-    else if(q->nItemDecThr > 0)
-    {
-      q->nItemDecThr *= 2;
-    }
-  }
-  else
-  {
-    q->nBucket = q->nBucket / 2;
-    q->nItemIncThr = q->nBucket / 2;
-    if(q->nItemIncThr < 64)
-    {
-      q->nItemDecThr = 0;
+      q->nBucket = q->nBucket * 2;
+      q->nItemIncThr = q->nBucket * 2;
+      if(q->nItemIncThr == 64)
+      {
+	q->nItemDecThr = 16;
+      }
+      else if(q->nItemDecThr > 0)
+      {
+	q->nItemDecThr *= 2;
+      }
     }
     else
     {
-      q->nItemDecThr /= 2;
+      q->nBucket = q->nBucket / 2;
+      q->nItemIncThr = q->nBucket / 2;
+      if(q->nItemIncThr < 64)
+      {
+	q->nItemDecThr = 0;
+      }
+      else
+      {
+	q->nItemDecThr /= 2;
+      }
     }
-  }
-  q->nItem = 0;
-  q->lastIdx = 0;
-  q->lastPriority = 0.0;
-  q->bucketBase = (oldBucketBase)? 0: q->maxBucket - q->nBucket;
-  q->bucketMin = -1.0;
-  for(idx = 0; idx < q->nBucket; ++idx)
-  {
-    *(q->buckets + q->bucketBase + idx) = NULL;
+    q->nItem = 0;
+    q->lastIdx = 0;
+    q->lastPriority = 0.0;
+    q->bucketBase = (oldBucketBase)? 0: q->maxBucket - q->nBucket;
+    q->bucketMin = -1.0;
+    for(idx = 0; idx < q->nBucket; ++idx)
+    {
+      *(q->buckets + q->bucketBase + idx) = NULL;
+    }
   }
   idx = 0;
   while((errNum == ALC_ER_NONE) && (idx < oldNBuckets))
@@ -579,7 +578,7 @@ static AlcErrno	AlcCPQQueueResize(AlcCPQQueue *q, int incFlag)
     while((errNum == ALC_ER_NONE) && oldItem)
     {
       oldNextItem = oldItem->next;
-      AlcCPQItemInsert(q, oldItem);
+      errNum = AlcCPQItemInsert(q, oldItem);
       oldItem = oldNextItem;
     }
     ++idx;
