@@ -1341,7 +1341,7 @@ public class SectionViewer
 //-------------------------------------------------------------
 // get view structure model etc
 //-------------------------------------------------------------
-  protected ViewStructModel getViewStructModel() {
+  public ViewStructModel getViewStructModel() {
     return _VSModel;
   }
 
