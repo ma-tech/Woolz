@@ -402,7 +402,7 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
         errNum = WlzEffWriteObjAm(fP, obj);
 	break;
       case WLZEFF_FORMAT_JPEG:
-        errNum = WlzEffWriteObjJpeg(fP, obj, (char *) fName);
+        errNum = WlzEffWriteObjJpeg(fP, obj, "");
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
