@@ -20,7 +20,6 @@
 */
 #include <float.h>
 #include <Wlz.h>
-#include <WlzExtFF.h>
 
 typedef struct _WlzSplitObjData
 {
