@@ -29,6 +29,7 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			WlzExtFF.c \
+			WlzExtFFAm.c \
 			WlzExtFFBmp.c \
 			WlzExtFFDen.c \
 			WlzExtFFIcs.c \
