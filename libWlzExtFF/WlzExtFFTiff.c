@@ -82,16 +82,19 @@ WlzObject	*WlzEffReadObjTiff(
 	depth = 1;
 	wlzDepth = sizeof(char);
 	newpixtype = WLZ_GREY_UBYTE;
+	bckgrnd.v.ubv = 0;
       }
       else if (bitspersample <= 8){
 	depth = 8;
 	wlzDepth = sizeof(char);
 	newpixtype = WLZ_GREY_UBYTE;
+	bckgrnd.v.ubv = 0;
       }
       else {
 	depth = 16;
 	wlzDepth = sizeof(short);
 	newpixtype = WLZ_GREY_SHORT;
+	bckgrnd.v.shv = 0;
       }
       break;
 
@@ -103,6 +106,7 @@ WlzObject	*WlzEffReadObjTiff(
 	depth = 24;
 	wlzDepth = sizeof(int);
 	newpixtype = WLZ_GREY_RGBA;
+	bckgrnd.v.rgbv = 0;
       }
       break;
 
@@ -114,6 +118,7 @@ WlzObject	*WlzEffReadObjTiff(
 	wlzDepth = sizeof(int);
 	newpixtype = WLZ_GREY_RGBA;
 	depth = 32;
+	bckgrnd.v.inv = 0;
       }
       break;
 
@@ -121,6 +126,7 @@ WlzObject	*WlzEffReadObjTiff(
       errNum = WLZ_ERR_IMAGE_TYPE;
       break;
     }
+    bckgrnd.type = newpixtype;
   }
 
   if(errNum == WLZ_ERR_NONE)
