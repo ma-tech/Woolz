@@ -5,47 +5,36 @@
 
 <toc version="1.0">
 
-   <tocitem text="3D Viewer" target="cont">
-      <tocitem text="description" target="cont.description"/>
-      <tocitem text="menus" target="cont.menus">
-         <tocitem text="File" target="cont.menus.file"/>
-         <tocitem text="View Section" target="cont.menus.view"/>
-         <tocitem text="Anatomy" target="cont.menus.anat"/>
-         <tocitem text="3D View" target="cont.menus.threeD"/>
-         <tocitem text="Orientation" target="cont.menus.orient"/>
-         <tocitem text="Help" target="cont.menus.help"/>
-      </tocitem>
-      <tocitem text="concepts" target="cont.concepts">
-         <tocitem text="surface" target="cont.concepts.surface"/>
-      </tocitem>
-      <tocitem text="controls" target="cont.controls">
-         <tocitem text="mouse" target="cont.controls.mouse"/>
-      </tocitem>
-   </tocitem>
-
    <tocitem text="Section Viewer" target="sv">
       <tocitem text="description" target="sv.description"/>
       <tocitem text="menus" target="sv.menus">
          <tocitem text="file" target="sv.menus.file"/>
-         <tocitem text="config" target="sv.menus.config"/>
-         <tocitem text="view mode" target="sv.menus.mode"/>
+         <tocitem text="control" target="sv.menus.control"/>
+         <tocitem text="show" target="sv.menus.show"/>
          <tocitem text="fixed point" target="sv.menus.fixed"/>
          <tocitem text="3D" target="sv.menus.threeD"/>
          <tocitem text="help" target="sv.menus.help"/>
+      </tocitem>
+      <tocitem text="controls" target="sv.controls">
+         <tocitem text="mouse" target="sv.controls.mouse"/>
+         <tocitem text="slider" target="sv.controls.slider"/>
+         <tocitem text="zoom" target="sv.controls.zoom"/>
+         <tocitem text="colour button" target="sv.controls.colour"/>
+         <tocitem text="point entry" target="sv.controls.point"/>
       </tocitem>
       <tocitem text="concepts" target="sv.concepts">
          <tocitem text="Woolz" target="sv.concepts.wlz"/>
          <tocitem text="view structure" target="sv.concepts.vs"/>
          <tocitem text="yaw pitch roll" target="sv.concepts.angles"/>
          <tocitem text="fixed point" target="sv.concepts.fp"/>
+         <tocitem text="rotation axis" target="sv.concepts.axis"/>
          <tocitem text="distance" target="sv.concepts.dist"/>
 	 <tocitem text="view mode" target="sv.concepts.vm"/>
+	 <tocitem text="bean" target="sv.concepts.bean" />
       </tocitem>
-      <tocitem text="controls" target="sv.controls">
-         <tocitem text="colour button" target="sv.controls.colour"/>
-         <tocitem text="mouse" target="sv.controls.mouse"/>
-         <tocitem text="point entry" target="sv.controls.point"/>
-         <tocitem text="slider" target="sv.controls.slider"/>
+      <tocitem text="requirements" target="sv.req">
+	 <tocitem text="software" target="sv.req.soft"/>
+	 <tocitem text="hardware" target="sv.req.hard"/>
       </tocitem>
    </tocitem>
 
@@ -54,9 +43,5 @@
       <tocitem text="controls" target="key.controls"/>
    </tocitem>
 
-   <tocitem text="requirements" target="req">
-      <tocitem text="software" target="req.soft"/>
-      <tocitem text="hardware" target="req.hard"/>
-   </tocitem>
 
 </toc>

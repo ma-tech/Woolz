@@ -5,10 +5,10 @@
 
 <helpset version="1.0">
 
-   <title>Wlz Viewer - Help</title>
+   <title>Wlz Section Viewer - Help</title>
 
    <maps>
-      <homeID>cont.description</homeID>
+      <homeID>sv.description</homeID>
       <mapref location="Map.jhm"/>
    </maps>
 

@@ -5,51 +5,43 @@
 
 <index version="1.0">
 
-   <indexitem text="3D viewer" target="cont.description"/>
-   <indexitem text="menus" target="cont.menus">
-      <indexitem text="File" target="cont.menus.file"/>
-      <indexitem text="View Section" target="cont.menus.view"/>
-      <indexitem text="Anatomy" target="cont.menus.anat"/>
-      <indexitem text="3D View" target="cont.menus.threeD"/>
-      <indexitem text="Orientation" target="cont.menus.orient"/>
-      <indexitem text="Help" target="cont.menus.help"/>
-   </indexitem>
-   <indexitem text="concepts" target="cont.concepts">
-      <indexitem text="surface" target="cont.concepts.surface"/>
-   </indexitem>
-   <indexitem text="controls" target="cont.controls">
-      <indexitem text="mouse" target="cont.controls.mouse"/>
-   </indexitem>
-
-   <indexitem text="section viewer" target="sv.description"/>
-   <indexitem text="menus" target="sv.menus">
-      <indexitem text="file" target="sv.menus.file"/>
-      <indexitem text="config" target="sv.menus.config"/>
-      <indexitem text="view mode" target="sv.menus.mode"/>
-      <indexitem text="fixed point" target="sv.menus.fixed"/>
-      <indexitem text="3D" target="sv.menus.threeD"/>
-      <indexitem text="help" target="sv.menus.help"/>
-   </indexitem>
-   <indexitem text="concepts" target="sv.concepts">
-      <indexitem text="Woolz" target="sv.concepts.wlz"/>
-      <indexitem text="view structure" target="sv.concepts.vs"/>
-      <indexitem text="yaw pitch roll" target="sv.concepts.angles"/>
-      <indexitem text="fixed point" target="sv.concepts.fp"/>
-      <indexitem text="distance" target="sv.concepts.dist"/>
-      <indexitem text="view mode" target="sv.concepts.vm"/>
-   </indexitem>
-   <indexitem text="controls" target="sv.controls">
-      <indexitem text="colour button" target="sv.controls.colour"/>
-      <indexitem text="mouse" target="sv.controls.mouse"/>
-      <indexitem text="point entry" target="sv.controls.point"/>
-      <indexitem text="slider" target="sv.controls.slider"/>
+   <indexitem text="Section Viewer" target="sv">
+      <indexitem text="description" target="sv.description"/>
+      <indexitem text="menus" target="sv.menus">
+         <indexitem text="file" target="sv.menus.file"/>
+         <indexitem text="control" target="sv.menus.control"/>
+         <indexitem text="show" target="sv.menus.show"/>
+         <indexitem text="fixed point" target="sv.menus.fixed"/>
+         <indexitem text="3D" target="sv.menus.threeD"/>
+         <indexitem text="help" target="sv.menus.help"/>
+      </indexitem>
+      <indexitem text="controls" target="sv.controls">
+         <indexitem text="mouse" target="sv.controls.mouse"/>
+         <indexitem text="slider" target="sv.controls.slider"/>
+         <indexitem text="zoom" target="sv.controls.zoom"/>
+         <indexitem text="colour button" target="sv.controls.colour"/>
+         <indexitem text="point entry" target="sv.controls.point"/>
+      </indexitem>
+      <indexitem text="concepts" target="sv.concepts">
+         <indexitem text="Woolz" target="sv.concepts.wlz"/>
+         <indexitem text="view structure" target="sv.concepts.vs"/>
+         <indexitem text="yaw pitch roll" target="sv.concepts.angles"/>
+         <indexitem text="fixed point" target="sv.concepts.fp"/>
+         <indexitem text="rotation axis" target="sv.concepts.axis"/>
+         <indexitem text="distance" target="sv.concepts.dist"/>
+	 <indexitem text="view mode" target="sv.concepts.vm"/>
+	 <indexitem text="bean" target="sv.concepts.bean" />
+      </indexitem>
+      <indexitem text="requirements" target="sv.req">
+	 <indexitem text="software" target="sv.req.soft"/>
+	 <indexitem text="hardware" target="sv.req.hard"/>
+      </indexitem>
    </indexitem>
 
-   <indexitem text="anatomy key" target="key.description">
-   <indexitem text="controls" target="key.controls"/>
+   <indexitem text="anatomy key" target="key">
+      <indexitem text="description" target="key.description"/>
+      <indexitem text="controls" target="key.controls"/>
    </indexitem>
 
-   <indexitem text="software" target="req.soft"/>
-   <indexitem text="hardware" target="req.hard"/>
 
 </index>
