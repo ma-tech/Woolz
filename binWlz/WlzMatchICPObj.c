@@ -1,23 +1,23 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file        	WlzMatchICPObj.c
-* \author       Bill Hill
-* \date         March 2002
-* \version	$Id$
-* \note
-*		Copyright:
-*		2001 Medical Research Council, UK.
-*		All rights reserved.
-* \par  Address:
-*		MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* \brief	Object matching using ICP based registration to
-*		find corresponding points.
-* \ingroup	WlzTransform
-* \todo         
-* \bug
-*/
+ * \file               WlzMatchICPObj.c
+ * \author       Bill Hill
+ * \date         March 2002
+ * \version    $Id$
+ * \note
+ *             Copyright:
+ *             2001 Medical Research Council, UK.
+ *             All rights reserved.
+ * \par  Address:
+ *             MRC Human Genetics Unit,
+ *             Western General Hospital,
+ *             Edinburgh, EH4 2XU, UK.
+ * \brief      Object matching using ICP based registration to
+ *             find corresponding points.
+ * \ingroup    WlzTransform
+ * \todo
+ * \bug
+ */
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
@@ -39,11 +39,13 @@ int             main(int argc, char *argv[])
 		nMatch,
 		maxItr = 200,
 		minSpx = 20,
+		matchImpNN = 7,
   		option,
   		ok = 1,
 		usage = 0;
-  double	thrMeanD = 1.0,
-  		thrMaxD = 3.0;
+  double	thrMeanD = 2.0,
+  		thrMaxD = 3.0,
+		matchImpThr = 1.5;
   FILE		*fP = NULL;
   char		*inTrFileStr,
   		*outFileStr,
@@ -55,7 +57,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrb:d:D:n:o:t:i:s:x:";
+  static char	optList[] = "aghrb:d:D:n:N:o:t:i:I:s:x:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -96,6 +98,13 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
+      case 'N':
+        if((sscanf(optarg, "%d", &matchImpNN) != 1) || (matchImpNN < 1))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -104,6 +113,13 @@ int             main(int argc, char *argv[])
 	break;
       case 'i':
         if((sscanf(optarg, "%d", &maxItr) != 1) || (maxItr <= 0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'I':
+        if((sscanf(optarg, "%g", &matchImpThr) != 1) || (matchImpThr < 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -214,7 +230,8 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD);
+			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD,
+			     matchImpNN, matchImpThr);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -293,27 +310,32 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       "Usage: %s%s",
       *argv,
-      " [-b#] [-d#] [-D#] [-o#] [-t#] [-i#] [-h]\n"
-      "          [<input object 0>] [<input object 1>]\n"
+      " [-b#] [-d#] [-D#] [-o#] [-t#] [-i#] [-s#] [-n#] [-x#] [-I#] [-N]\n"
+      "          [-h] [<input object 0>] [<input object 1>]\n"
       "Options:\n"
       "  -b  Shell breaking control value.\n"
       "  -d  Debug output file.\n"
       "  -D  Debug flag:\n"
       "        0  no debug output.\n"
       "        1  untransformed decomposed source model.\n"
-      "        2  transformed decomposed source model.\n"
       "  -h  Prints this usage information.\n"
-      "  -n  Threshold mean source normal vertex distance for fragment to\n"
-      "      be used in correspondence computation.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"
       "  -i  Maximum number of iterations.\n"
       "  -s  Miimum number of simplicies.\n"
+      "  -n  Threshold mean source normal vertex distance for fragment to\n"
+      "      be used in correspondence computation.\n"
       "  -x  Threshold maximum source normal vertex distance for fragment to\n"
       "      be used in correspondence computation.\n"
-      "Reads a pair of Woolz objects, which idealy are contours and then\n"
-      "computes a set of correspondence points using an ICP based matching\n"
-      "algorithm.\n");
+      "  -I  Implausibility threshold for rejecting implausible\n"
+      "      correspondence points which should be greater than zero,\n"
+      "      although the useful range is probably [0.5-2.5]. Higher\n"
+      "      values allow more implausible matches to be returned.\n"
+      "  -N  Number of match points in neighbourhood when checking the\n"
+      "	     plausibility of the correspondence points.\n"
+      "Reads a pair of contours and computes a set of correspondence points\n"
+      "using an ICP based matching algorithm. The correspondence points are\n"
+      "ranked by plausibility, with the most plausible first\n");
   }
   return(!ok);
 }

@@ -52,6 +52,12 @@ typedef struct _WlzMatchICPCbData
   struct _WlzMatchICPShellList *list;
 } WlzMatchICPCbData;
 
+typedef struct _WlzMatchICPTPPair2D
+{
+  WlzDVertex2	sVx;
+  WlzDVertex2	tVx;
+} WlzMatchICPTPPair2D;
+
 static WlzErrorNum  		WlzMatchICPCtr(
 				  WlzContour *tCtr,
 				  WlzContour *sCtr,
@@ -63,7 +69,9 @@ static WlzErrorNum  		WlzMatchICPCtr(
 				  WlzVertexP *dstSMatch,
 				  int brkFlg,
 				  double  thrMeanD,
-				  double thrMaxD);
+				  double thrMaxD,
+    				  int matchImpNN,
+				  double matchImpThr);
 static WlzErrorNum		WlzMatchICPRegShellLst(
 				  AlcKDTTree *tTree,
 				  WlzGMModel *sGM,
@@ -151,7 +159,8 @@ static int			WlzMatchICPGetPoints2D(
 				  WlzDVertex2 *tNr,
 				  WlzDVertex2 *sNr,
 				  WlzDVertex2 *tMatch,
-				  WlzDVertex2 *sMatch);
+				  WlzDVertex2 *sMatch,
+				  WlzErrorNum *dstErr);
 static WlzErrorNum		WlzMatchICPBreakShellCon(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
@@ -188,6 +197,29 @@ static WlzErrorNum 		WlzMatchICPBreakShellCur2D(
 				  WlzDVertex2 *sNr,
 				  int *iBuf,
 				  int minSpx);
+static WlzErrorNum		WlzMatchICPFilterPts(
+				  WlzVertexType vType,
+				  WlzVertexP tMatch,
+				  WlzVertexP sMatch,
+				  int *nMatch,
+				  WlzAffineTransform *globTr,
+				  int nN,
+				  double impThr);
+static WlzErrorNum 		WlzMatchICPFilterPts2D(
+				  WlzDVertex2 *tVx,
+				  WlzDVertex2 *sVx, int *nVx,
+				  WlzAffineTransform *globTr,
+				  int nN,
+				  double impThr);
+static WlzErrorNum		WlzMatchICPFilterPtsRmDup2D(
+				  WlzDVertex2 *tVx,
+				  WlzDVertex2 *sVx,
+				  int *nVxP);
+static int			WlzMatchICPTPPairSortFnD(
+				  void *p0,
+				  void *p1);
+static WlzGMVertex 		*WlzMatchICPLoopTMid(
+				  WlzGMLoopT *gLT);
 static WlzGMVertex 		*WlzMatchICPLoopTMaxMinCurv2D(
 				  WlzGMLoopT *gLT,
 				  WlzDVertex2 *gNr,
@@ -202,6 +234,11 @@ static WlzErrorNum 		WlzMatchICPRemoveVerticies(
 static int			WlzMatchICPShellSzCmp(
 				  const void *val0,
 				  const void *val1);
+static int			WlzMatchICPDblSortFnD(
+				  void *data,
+				  int *idx,
+				  int id0,
+				  int id1);
 static void			WlzMatchICPShellCb(
 				  WlzGMModel *model,
 				  WlzGMElemP elm,
@@ -230,6 +267,8 @@ static void			WlzMatchICPShellListElmUnlink(
 * \ingroup	WlzTransform
 * \brief	Finds matching points in two objects using an ICP
 *		based matching algorithm.
+*		On return the match points are ranked by plausibility
+*		with the most plausible matches first.
 *		If either the target or source object is a contour
 *		then it's model is modified in place. If this isn't
 *		wanted then use WlzCopyObj() to copy the contours
@@ -275,12 +314,21 @@ static void			WlzMatchICPShellListElmUnlink(
 *					distance for a registered shell
 *					to be used for correspondence
 *					computation.
+* \param	matchImpNN		Number match points in neighbourhood
+*					when removing implausible match
+*					points, must be \f$> 2\f$.
+* \param	matchImpThr		Implausibility threshold which should
+*					be \f$> 0\f$ but the useful range
+*					is probably \f$[0.5-2.5]\f$. Higher
+*					values allow more implausible matches
+*					to be returned.
 */
 WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 				WlzAffineTransform *initTr,
 				int *dstNMatch, WlzVertexP *dstTMatch,
 				WlzVertexP *dstSMatch, int maxItr, int minSpx,
-				int brkFlg, double thrMeanD, double thrMaxD)
+				int brkFlg, double thrMeanD, double thrMaxD,
+				int matchImpNN, double matchImpThr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -326,7 +374,8 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 	      errNum = WlzMatchICPCtr(tObj->domain.ctr, sObj->domain.ctr,
 	      			      initTr, maxItr, minSpx,
 				      dstNMatch, dstTMatch, dstSMatch,
-				      brkFlg, thrMeanD, thrMaxD);
+				      brkFlg, thrMeanD, thrMaxD,
+    				      matchImpNN, matchImpThr);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -390,13 +439,22 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 *					distance for a registered shell
 *					to be used for correspondence
 *					computation.
+* \param	matchImpNN		Number match points in neighbourhood
+*					when removing implausible match
+*					points, must be \f$> 2\f$.
+* \param	matchImpThr		Implausibility threshold which should
+*					be \f$> 0\f$ but the useful range
+*					is probably \f$[0.5-2.5]\f$. Higher
+*					values allow more implausible matches
+*					to be returned.
 */
 static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 				   WlzAffineTransform *initTr,
 				   int maxItr, int minSpx,
 				   int *dstNMatch, WlzVertexP *dstTMatch,
 				   WlzVertexP *dstSMatch, int brkFlg,
-				   double  thrMeanD, double thrMaxD)
+				   double  thrMeanD, double thrMaxD,
+    				   int matchImpNN, double matchImpThr)
 {
   int		idS,
 		n0,
@@ -547,12 +605,14 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
    * matching of small shells. */
   if((errNum == WLZ_ERR_NONE) && (brkFlg > 0))
   {
+    idS = 0;
     sMS = sMSBuf;
     cSS = sGM->child;
     do
     {
       sMS->shell = cSS;
       sMS->size = WlzGMShellSimplexCnt(cSS);
+      ++idS;
       ++sMS;
       cSS = cSS->next;
     } while(cSS != sGM->child);
@@ -634,7 +694,6 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  WlzMatchICPShellListInsertList(bSList, vSList);
-	  vSList->head = vSList->tail = NULL;
 	}
       }
       else
@@ -648,7 +707,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     WlzGMModelRemResCb(sGM, WlzMatchICPShellCb, &cbData);
   }
   /* Make sure that all simplex topology elements are connected through
-   * next/prev. There's no need to re-register the shell. */
+   * next/prev. No new shells will be create and there's no need to
+   * re-register the shells. */
   if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
   {
     lElm0 = bSList->head;
@@ -727,7 +787,6 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		   * taking care that the new list elements are before any
 		   * of the existing list elements. */
 		  WlzMatchICPShellListInsertList(bSList, vSList);
-		  vSList->head = vSList->tail = NULL;
 		}
 	      }
 	    }
@@ -766,7 +825,6 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       if(errNum == WLZ_ERR_NONE)
       {
 	WlzMatchICPShellListInsertList(rSList, bSList);
-	bSList = NULL;
       }
     }
   }
@@ -845,6 +903,12 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       lElm0 = lElm0->next;
     }
     nMatch = n0;
+  }
+  /* Filter out poor matches. */
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1) && (nMatch > 0))
+  {
+    errNum = WlzMatchICPFilterPts(vType, tVBuf, sVBuf, &nMatch, globTr,
+				  matchImpNN, matchImpThr);
   }
   /* Free the temporary storage that's been allocated. */
   if((errNum == WLZ_ERR_NONE) && (nMatch > 0))
@@ -1030,6 +1094,7 @@ static void	WlzMatchICPShellListInsertList(WlzMatchICPShellList *list0,
       list1->tail->next = list0->head;
       list0->head = list1->head;
     }
+    list1->head = list1->tail = NULL;
   }
 }
 
@@ -1055,10 +1120,10 @@ static void	WlzMatchICPShellListInsertList(WlzMatchICPShellList *list0,
 * \param        nSV			Number of source verticies.
 * \param        sVx 			The source verticies.
 * \param	sNr			The source normals.
-*		iBuf			Buffer with at least nSV ints.
+* \param	iBuf			Buffer with at least nSV ints.
 * \param	tVBuf			A buffer with room for at least
 *					nS verticies.
-*		sVBuf			A buffer with room for at least
+* \param	sVBuf			A buffer with room for at least
 *					nS verticies.
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
@@ -1127,10 +1192,10 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 * \param        nSV			Number of source verticies.
 * \param        sVx 			The source verticies.
 * \param	sNr			The source normals.
-*		iBuf			Buffer with at least nSV ints.
+* \param	iBuf			Buffer with at least nSV ints.
 * \param	tVBuf			A buffer with room for at least
 *					nS verticies.
-*		sVBuf			A buffer with room for at least
+* \param	sVBuf			A buffer with room for at least
 *					nS verticies.
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
@@ -1355,7 +1420,8 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
   {
     case WLZ_VERTEX_D2:
       nMatch = WlzMatchICPGetPoints2D(tTree, mS, tVx.d2, tNr.d2, sNr.d2,
-      				      tMatch.d2 + offset, sMatch.d2 + offset);
+      				      tMatch.d2 + offset, sMatch.d2 + offset,
+				      &errNum);
       break;
     case WLZ_VERTEX_D3: /* FALLTHROUGH */
     default:
@@ -1389,11 +1455,15 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 *					match vertex.
 * \param	sMatch			Allocated space for the source
 *					match vertex.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
 */
 static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 				       WlzDVertex2 *tVx, 
 				       WlzDVertex2 *tNr, WlzDVertex2 *sNr,
-				       WlzDVertex2 *tMatch, WlzDVertex2 *sMatch)
+				       WlzDVertex2 *tMatch,
+				       WlzDVertex2 *sMatch,
+				       WlzErrorNum *dstErr)
 {
   int		nMatch = 0;
   WlzGMShell	*sS;
@@ -1403,28 +1473,319 @@ static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
   		tSV;
   double	cDist;
   double	vxD2[2];
+  WlzAffineTransform *iTr = NULL;
   AlcKDTNode	*tNode;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	minSpx = 5; /* Avoid end regions of shells. */
-  const double	maxDist = 5.0; /* TODO There's some experimentation to be
-  				* done in choosing the value. */
 
   if(mS && ((sS = mS->shell) != NULL) && (sS->child == sS->child->next))
   {
     cV = WlzMatchICPLoopTMaxMinCurv2D(sS->child, sNr, minSpx, 1, NULL);
-    (void )WlzGMVertexGetG2D(cV, &sV);
-    tSV = WlzAffineTransformVertexD2(mS->tr, sV, NULL);
-    vxD2[0] = tSV.vtX;
-    vxD2[1] = tSV.vtY;
-    tNode = AlcKDTGetNN(tTree, vxD2, maxDist, &cDist, NULL);
-    if(tNode && (cDist <= maxDist))
+    /* cV = WlzMatchICPLoopTMid(sS->child); */
+    if(cV)
     {
-      tV = *(tVx + tNode->idx);
-      *(sMatch) = sV;
-      *(tMatch) = tV;
-      nMatch = 1;
+      (void )WlzGMVertexGetG2D(cV, &tSV);
+      vxD2[0] = tSV.vtX;
+      vxD2[1] = tSV.vtY;
+      tNode = AlcKDTGetNN(tTree, vxD2, DBL_MAX, &cDist, NULL);
+      if(tNode)
+      {
+	tV = *(tVx + tNode->idx);
+	/* Invert the transform for this shell to get the untransformed
+	 * position of the source shell vertex. */
+	iTr = WlzAffineTransformInverse(mS->tr, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  sV = WlzAffineTransformVertexD2(iTr, tSV, NULL);
+	}
+	(void )WlzFreeAffineTransform(iTr);
+	*(sMatch) = sV;
+	*(tMatch) = tV;
+	nMatch = 1;
+      }
+    }
+    if(dstErr)
+    {
+      *dstErr = errNum;
     }
   }
   return(nMatch);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Filter the matched points by ranking the matches by their
+*		plausibility and removing those whichtre implausible.
+* \param	vType		Vertex type.
+* \param	tVx		Given target matches.
+* \param	sVx		Given source matches.
+* \param	nVx		Pointer to the number of matched point pairs,
+				may be modified on return.
+* \param	globTr		The global affine transform associated with
+*				the source, which maps it onto the target.
+* \param	nN		Number of points in neighbourhood, must
+*				be \f$> 2\f$.
+* \param	impThr		Implausibility threshold which should be
+* 				greater than zero.
+*/
+static WlzErrorNum WlzMatchICPFilterPts(WlzVertexType vType,
+					WlzVertexP tVx, WlzVertexP sVx,
+					int *nVx,
+					WlzAffineTransform *globTr,
+					int nN,
+					double impThr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(vType)
+  {
+    case WLZ_VERTEX_D2:
+      errNum = WlzMatchICPFilterPtsRmDup2D(tVx.d2, sVx.d2, nVx);
+      if(*nVx > 0)
+      {
+	errNum = WlzMatchICPFilterPts2D(tVx.d2, sVx.d2, nVx, globTr, nN,
+	    			        impThr);
+      }
+      break;
+    case WLZ_VERTEX_D3: /* FALLTHROUGH */
+    default:
+      errNum = WLZ_ERR_UNIMPLEMENTED;
+      break;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Filter the matched points to avoid duplicate target
+*		points.
+*		The match points are sorted by target point position,
+*		then scaned through skiping any duplicate target points.
+* \param	tVx		Given target matches.
+* \param	sVx		Given source matches.
+* \param	nVxP		Pointer to the number of matches for both
+*				input and return.
+*/
+static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
+					       WlzDVertex2 *sVx, int *nVxP)
+{
+  int		idN,
+  		idM,
+		nVx;
+  WlzDVertex2	dVx;
+  WlzMatchICPTPPair2D *buf = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	delta = 0.5;
+
+  nVx = *nVxP;
+  if((buf = (WlzMatchICPTPPair2D *)
+            AlcMalloc(sizeof(WlzMatchICPTPPair2D) * nVx)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy the match points to the new buffer. */
+    for(idN = 0; idN < nVx; ++idN)
+    {
+      (buf + idN)->sVx = *(sVx + idN);
+      (buf + idN)->tVx = *(tVx + idN);
+    }
+    /* Sort the buffer match points, first by vtY and then by vtX, into
+     * increasing order. */
+    qsort(buf, nVx, sizeof(WlzMatchICPTPPair2D), 
+    	  (int (*)(const void *, const void *))WlzMatchICPTPPairSortFnD);
+    /* Now put the buffer match points back skiping over those with
+     * near identical target positions. */
+    idN = 0;
+    idM = 1;
+    *sVx = buf->sVx;
+    *tVx = buf->tVx;
+    while(idM < nVx)
+    {
+      WLZ_VTX_2_SUB(dVx, *(tVx + idN), (buf + idM)->tVx);
+      if((fabs(dVx.vtX) > delta) && (fabs(dVx.vtY) > delta))
+      {
+	++idN;
+	*(sVx + idN) = (buf + idM)->sVx;
+	*(tVx + idN) = (buf + idM)->tVx;
+      }
+      ++idM;
+    }
+    nVx = idN;
+    *nVxP = nVx;
+  }
+  AlcFree(buf);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Filter the matched points by ranking the matches by their
+*		implausibly and removing those for which the implausibly
+*		is above threshold.
+*		Affine transformed source points are computed and used to
+*		compute the implausibly of the matches. The implausibly
+*		of a match is computed by first finding all target points
+*		that are near neighbours of the particular target point.
+*		The mean and standard deviation of displacements in the
+*		neighbourhood of the target point are then computed.
+*		The implausibly of a match is computed in 'displacement
+*		space'. Given a mean \f$\mu\f$ and a standard deviation
+*		\f$\sigma\f$, then \f$\mu\f$ and \f$\sigma\f$ define an
+*		ellipse with centre \f$\mu\f$ and half major axes
+*		\f$\sigma\f$.
+*		The implausibly of a match with displacement \f$d\f$
+*		is: \f$\frac{{|d - \mu|}^2}{{|d_e - \mu|}^2}\f$ where
+*		\f$d_e\f$ is the distance from \f$\mu\f$ through \f$d\f$
+*		to the ellipse.
+*		This gives an implausibly value in the range 0.0-\f$\infty\f$,
+*		with 0.0 being completely plausible and \f$\infty\f$ being
+*		completely implausible. The matches are ranked according
+*		to their implausibly with those outside the ellipsoid
+*		being removed by reducing the value of *nVx.
+* \param	tVx		Given target matches.
+* \param	sVx		Given source matches.
+* \param	nVxP		Pointer to the number of matches for both
+*				input and return.
+* \param	globTr		The global affine transform associated with
+*				the source, which maps it onto the target.
+* \param	nN		Number of points in neighbourhood, must
+*				be \f$> 2\f$.
+* \param	impThr		Implausibility threshold which should be
+*				greater than zero.
+*/
+static WlzErrorNum WlzMatchICPFilterPts2D(WlzDVertex2 *tVx,
+				          WlzDVertex2 *sVx, int *nVxP,
+				          WlzAffineTransform *globTr,
+					  int nN, double impThr)
+{
+  int		tI0,
+  		tI1,
+  		idN,
+  		idS,
+  		idT,
+		nVx;
+  double	tD0,
+  		tD1;
+  WlzDVertex2	tV0,
+		sum,
+		sumSq,
+  		mean,
+		stddev;
+  int		*indicies = NULL;
+  double	*bufD = NULL,
+        	*imp = NULL;
+  WlzDVertex2	*bufU = NULL,
+  		*bufV = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nVx = *nVxP;
+  /* Create buffers for the transformed source points/point buffers,
+   * implausibly measure, neighbour indicies/rank indicies and neighbour
+   * distances. */
+  if(((imp = (double *)AlcMalloc(sizeof(double) * nVx)) == NULL) ||
+     ((bufU = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * nVx)) == NULL) ||
+     ((bufV = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * nVx)) == NULL) ||
+     ((indicies = (int *)AlcMalloc(sizeof(int) * nVx)) == NULL) ||
+     ((bufD = (double *)AlcMalloc(sizeof(double) * nVx)) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create a set of transformed source points. */
+    for(idS = 0; idS < nVx; ++idS)
+    {
+      *(bufV + idS) = WlzAffineTransformVertexD2(globTr, *(sVx + idS), NULL);
+    }
+    /* Compute implausibilities for each target vertex indexed by idT. */
+    for(idT = 0; idT < nVx; ++idT)
+    {
+      /* Get indicies of neighbourhood. */
+      for(idN = 0; idN < nN; ++idN)
+      {
+        *(bufD + idN) = DBL_MAX;
+      }
+      for(idS = 0; idS < nVx; ++idS)
+      {
+        /* Compute distance to neighbour and insert into the neighbourhood
+	 * if it's less than the current maximum distance in it. */
+	WLZ_VTX_2_SUB(tV0, *(tVx + idT), *(tVx + idS));
+        tD0 = WLZ_VTX_2_LENGTH(tV0);
+	if(tD0 < *(bufD + nN - 1))
+	{
+	  /* Add to point to neighbourhood. */
+	  idN = 0;
+	  while((*(bufD + idN) < tD0) && (idN < nN))
+	  {
+	    ++idN;
+	  }
+	  tI0 = idS;
+	  while(idN < nN)
+	  {
+	    tI1 = *(indicies + idN);
+	    tD1 = *(bufD + idN);
+	    *(indicies + idN) = tI0;
+	    *(bufD + idN) = tD0;
+	    tI0 = tI1;
+	    tD0 = tD1;
+	    ++idN;
+	  }
+	}
+      }
+      /* Compute mean and standard deviation of displacements in the
+       * neighbourhood while not including the vertex itself. */
+      sum.vtX = sum.vtY = sumSq.vtX = sumSq.vtY = 0.0;
+      for(idN = 1; idN < nN; ++idN)
+      {
+	tI0 = *(indicies + idN);
+        WLZ_VTX_2_SUB(tV0, *(tVx + tI0), *(bufV + tI0));
+	sum.vtX += tV0.vtX;
+	sum.vtY += tV0.vtY;
+	sumSq.vtX += tV0.vtX * tV0.vtX;
+	sumSq.vtY += tV0.vtY * tV0.vtY;
+      }
+      mean.vtX = sum.vtX / (nN - 1);
+      mean.vtY = sum.vtY / (nN - 1);
+      stddev.vtX = sqrt((sumSq.vtX - (sum.vtX * sum.vtX / (nN - 1))) /
+                        (nN - 2));
+      stddev.vtY = sqrt((sumSq.vtY - (sum.vtY * sum.vtY / (nN - 1))) /
+                        (nN - 2));
+      /* Compute implausibilities. */
+      WLZ_VTX_2_SUB(tV0, *(tVx + idT), *(bufV + idT));
+      *(imp + idT) = WlzGeomEllipseVxDistSq(mean, stddev, tV0);
+    }
+    /* Rank matches by plausibility, least plausible last. */
+    for(idT = 0; idT < nVx; ++idT)
+    {
+      *(indicies + idT) = idT;
+    }
+    (void )AlgHeapSortIdx(imp, indicies, nVx, WlzMatchICPDblSortFnD);
+    for(idT = 0; idT < nVx; ++idT)
+    {
+      *(bufU + idT) = *(sVx + idT);
+      *(bufV + idT) = *(tVx + idT);
+    }
+    for(idT = 0; idT < nVx; ++idT)
+    {
+      *(sVx + idT) = *(bufU + *(indicies + idT));
+      *(tVx + idT) = *(bufV + *(indicies + idT));
+      *(bufD + idT) = *(imp + *(indicies + idT));
+    }
+    /* Reduce the number of matches to filter out any that are implausible. */
+    while((nVx > 0) && (*(bufD + nVx - 1) > impThr))
+    {
+      --nVx;
+    }
+  }
+  *nVxP = nVx;
+  AlcFree(bufD);
+  AlcFree(bufU);
+  AlcFree(bufV);
+  AlcFree(imp);
+  AlcFree(indicies);
+  return(errNum);
 }
 
 /*!
@@ -1693,6 +2054,47 @@ static WlzErrorNum WlzMatchICPBreakShellCur2D(WlzMatchICPCbData *cbData,
 }
 
 /*!
+* \return
+* \brief	Find the vertex at the middle of the given loop topology
+* 		element, where the given loop topology element is the only
+*		one in it's parents shell.
+* \param	gLT			Given loop topology element.
+*/
+static WlzGMVertex *WlzMatchICPLoopTMid(WlzGMLoopT *gLT)
+{
+  int		cnt;
+  WlzGMVertex	*mV = NULL;
+  WlzGMEdgeT	*fET,
+  		*lET,
+		*mET,
+		*tET;
+
+  /* Find edge topology element at one end. */
+  fET = gLT->edgeT;
+  while(((tET = fET->prev) != fET->opp) && (tET != gLT->edgeT))
+  {
+    fET = tET;
+  }
+  /* Find edge topology element at other end, counting elements. */
+  cnt = 0;
+  lET = fET;
+  while(((tET = lET->next) != lET->opp) && (tET != fET))
+  {
+    lET = tET;
+    ++cnt;
+  }
+  /* Go back half the edget topology elements. */
+  cnt /= 2;
+  mET = fET;
+  while(cnt-- > 0)
+  {
+    mET = mET->next;
+  }
+  mV = mET->vertexT->diskT->vertex;
+  return(mV);
+}
+
+/*!
 * \return				Vertex at point of weighted
 *					minimum or maximum curvature.
 * \brief	Given a loop topology element and an array of normals
@@ -1725,7 +2127,7 @@ static WlzErrorNum WlzMatchICPBreakShellCur2D(WlzMatchICPCbData *cbData,
 * \param	maxFlg			Search is for maximum curvature
 *					if non-zero.
 * \param	dstAngle		Destination pointer for maximum
-*					of minimum angle found.
+*					or minimum angle found.
 */
 static WlzGMVertex *WlzMatchICPLoopTMaxMinCurv2D(WlzGMLoopT *gLT,
 					WlzDVertex2 *gNr, int minEdg,
@@ -1951,6 +2353,73 @@ static int	WlzMatchICPShellSzCmp(const void *val0, const void *val1)
   int 		cmp;
 
   cmp = ((WlzMatchICPShell *)val1)->size - ((WlzMatchICPShell *)val0)->size;
+  return(cmp);
+}
+
+/*!
+* \return	Comparison value.
+* \ingroup	WlzTransform
+* \brief	Compare double values for AlgHeapSortIdx. 
+* \param	data			Double data for softing.
+* \param	idx			Indicies to be sorted.
+* \param	id0			Index of index of first datum.
+* \param	id1			Index of index of second datum.
+*/
+static int	WlzMatchICPDblSortFnD(void *data, int *idx, int id0, int id1)
+{
+  int		cmp;
+  double	diff;
+
+  diff = *((double *)data + *(idx + id0)) - *((double *)data + *(idx + id1));
+  if(diff > DBL_EPSILON)
+  {
+    cmp = 1;
+  }
+  else if(diff < -(DBL_EPSILON))
+  {
+    cmp = -1;
+  }
+  else
+  {
+    cmp = 0.0;
+  }
+  return(cmp);
+}
+
+/*!
+* \return	Comparison value.
+* \brief	Compare the target points of matched points, sorting
+*		in increasing vtY then vtX.
+* \param	p0		Pointer to first matched points.
+* \param	p1		Pointer to second matched points.
+*/
+static int	WlzMatchICPTPPairSortFnD(void *p0, void *p1)
+{
+  int		cmp = 0;
+  WlzMatchICPTPPair2D *tPP0,
+  		*tPP1;
+  
+  tPP0 = (WlzMatchICPTPPair2D *)p0;
+  tPP1 = (WlzMatchICPTPPair2D *)p1;
+  if(tPP0->tVx.vtY > (tPP1->tVx.vtY + DBL_EPSILON))
+  {
+    cmp = 1;
+  }
+  else if(tPP0->tVx.vtY < (tPP1->tVx.vtY - DBL_EPSILON))
+  {
+    cmp = -1;
+  }
+  else
+  {
+    if(tPP0->tVx.vtX > (tPP1->tVx.vtX + DBL_EPSILON))
+    {
+      cmp = 1;
+    }
+    else if(tPP0->tVx.vtX < (tPP1->tVx.vtX - DBL_EPSILON))
+    {
+      cmp = -1;
+    }
+  }
   return(cmp);
 }
 
@@ -2188,11 +2657,13 @@ int             main(int argc, char *argv[])
 		nMatch,
 		maxItr = 200,
 		minSpx = 100,
+		matchImpNN = 7,
   		option,
   		ok = 1,
 		usage = 0;
   double	thrMeanD = 1.0,
-  		thrMaxD = 3.0;
+  		thrMaxD = 3.0,
+		matchImpThr = 1.5;
   FILE		*fP = NULL;
   char		*inTrFileStr,
   		*outFileStr,
@@ -2204,7 +2675,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrb:d:D:n:o:t:i:s:x:";
+  static char	optList[] = "aghrb:d:D:n:N:o:t:i:I:s:x:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -2245,6 +2716,13 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
+      case 'N':
+        if((sscanf(optarg, "%d", &matchImpNN) != 1) || (matchImpNN < 1))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -2253,6 +2731,13 @@ int             main(int argc, char *argv[])
 	break;
       case 'i':
         if((sscanf(optarg, "%d", &maxItr) != 1) || (maxItr <= 0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'I':
+        if((sscanf(optarg, "%g", &matchImpThr) != 1) || (matchImpThr < 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -2363,7 +2848,8 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD);
+			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD,
+			     matchImpNN, matchImpThr);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -2452,16 +2938,23 @@ int             main(int argc, char *argv[])
       "        1  untransformed decomposed source model.\n"
       "        2  transformed decomposed source model.\n"
       "  -h  Prints this usage information.\n"
-      "  -n  Threshold mean source normal vertex distance for fragment to\n"
-      "      be used in correspondence computation.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"
       "  -i  Maximum number of iterations.\n"
       "  -s  Miimum number of simplicies.\n"
+      "  -n  Threshold mean source normal vertex distance for fragment to\n"
+      "      be used in correspondence computation.\n"
       "  -x  Threshold maximum source normal vertex distance for fragment to\n"
       "      be used in correspondence computation.\n"
-      "Reads a pair of contours and computes a set of correspondence points"
-      "using an ICP based matching algorithm.\n");
+      "  -I  Implausibility threshold for rejecting implausible\n"
+      "      correspondence points which should be greater than zero,\n"
+      "      although the useful range is probably [0.5-2.5]. Higher\n"
+      "      values allow more implausible matches to be returned.\n"
+      "  -N  Number of matc points in neighbourhood when checking the\n"
+      "	     plausibility of the correspondence points.\n"
+      "Reads a pair of contours and computes a set of correspondence points\n"
+      "using an ICP based matching algorithm. The correspondence points are\n"
+      "ranked by plausibility, with the most plausible first\n");
   }
   return(!ok);
 }

@@ -1226,16 +1226,16 @@ extern WlzErrorNum      WlzGMModelFreeVT(
 			  WlzGMVertexT *vertexT);
 /* Deletion of geometric modeling elements along with children and any parents
  * that depend solely on the element being deleted. */
-WlzErrorNum     	WlzGMModelDeleteV(
+extern WlzErrorNum     	WlzGMModelDeleteV(
 			  WlzGMModel *model,
 			   WlzGMVertex *dV);
-WlzErrorNum            	WlzGMModelDeleteE(
+extern WlzErrorNum     	WlzGMModelDeleteE(
 			  WlzGMModel *model,
 			  WlzGMEdge *dE);
-void            	WlzGMModelDeleteF(
+extern WlzErrorNum     	WlzGMModelDeleteF(
 			  WlzGMModel *model,
 			  WlzGMFace *dL);
-extern void		WlzGMModelDeleteS(
+extern WlzErrorNum	WlzGMModelDeleteS(
 			  WlzGMModel *model,
 			  WlzGMShell *shell);
 /* Searching */
@@ -1502,6 +1502,10 @@ extern int			WlzGeomPlaneLineIntersect(
 				  WlzDVertex3 p0,
 				  WlzDVertex3 p1,
 				  WlzDVertex3 *dstIsn);
+extern double			WlzGeomEllipseVxDistSq(
+				  WlzDVertex2 centre,
+				  WlzDVertex2 sAx,
+				  WlzDVertex2 gPnt);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -2045,7 +2049,7 @@ extern WlzContour		*WlzMakeContour(
 
 #ifndef WLZ_EXT_BIND
 /************************************************************************
-* WlzMatchICP.c                                                    *
+* WlzMatchICP.c
 ************************************************************************/
 extern WlzErrorNum		WlzMatchICPObjs(
 				  WlzObject *tObj,
@@ -2058,7 +2062,9 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  int minSpx,
 				  int brkFlg,
 				  double thrMeanD,
-				  double thrMaxD);
+				  double thrMaxD,
+				  int matchImpNN,
+				  double matchImpThr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************

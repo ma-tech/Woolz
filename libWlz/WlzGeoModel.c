@@ -45,12 +45,42 @@ static void	 	WlzGMShellMergeG(
 static void	 	WlzGMShellMergeT(
 			  WlzGMShell *s0,
 			  WlzGMShell *s1);
+
+#define WLZ_GM_NEW_DELETE_CODE_HACK
+#ifdef WLZ_GM_NEW_DELETE_CODE_HACK
+static WlzErrorNum 	WlzGMModelDeleteE3D(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelDeleteE2D(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelDeleteE2D0V1L(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelDeleteE2D1V1L(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelDeleteE2D2V1L(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelDeleteE2D2V2L(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+#else
 static WlzErrorNum 	WlzGMModelDeleteE2D(
 			  WlzGMModel *model,
 			  WlzGMEdge *dE);
 static WlzErrorNum 	WlzGMModelDeleteE3D(
 			  WlzGMModel *model,
 			  WlzGMEdge *dE);
+static void		WlzGMModelDeleteET(
+			  WlzGMModel *model,
+			  WlzGMEdgeT *dET);
+static void 		WlzGMModelDeleteLT(
+			  WlzGMModel *model,
+			  WlzGMLoopT *dLT);
+#endif /* WLZ_GM_NEW_DELETE_CODE_HACK */
+
 static unsigned int 	WlzGMHashPos2D(
 			  WlzDVertex2 pos);
 static unsigned int 	WlzGMHashPos3D(
@@ -117,6 +147,11 @@ static WlzErrorNum      WlzGMModelJoinL2D(
                           WlzGMModel *model,
                           WlzGMEdgeT *eET0,
                           WlzGMEdgeT *eET1);
+static void		WlzGMLoopTSetAdjT(
+			  WlzGMLoopT *gLT,
+			  WlzGMShell *gS);
+static void		WlzGMShellSetT(
+			  WlzGMShell *gS);
 static void             WlzGMLoopTSetT(
                           WlzGMLoopT *eLT);
 static void             WlzGMModelAddVertex(
@@ -127,12 +162,6 @@ static void		WlzGMModelRemVertex(
 			  WlzGMVertex *dV);
 static void		WlzGMElmMarkFree(
 			  int *idxP);
-static void		WlzGMModelDeleteET(
-			  WlzGMModel *model,
-			  WlzGMEdgeT *dET);
-static void 		WlzGMModelDeleteLT(
-			  WlzGMModel *model,
-			  WlzGMLoopT *dLT);
 
 /* Resource callback function list manipulation. */
 
@@ -1627,6 +1656,494 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 
 /* Deletion of geometric modeling elements along with children */
 
+#ifdef WLZ_GM_NEW_DELETE_CODE_HACK
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief        Deletes a shell by unlinking it and then freeing it and
+*               all it's children.
+* \param        model                   Model with resources.
+* \param        dS                      Shell to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
+{
+  WlzGMVertexT	*cVT;
+  WlzGMEdgeT	*cET,
+  		*fET;
+  WlzGMLoopT	*cLT,
+		*fLT;
+
+  if(model && dS && (dS->idx >= 0))
+  {
+    WlzGMShellUnlink(dS);
+    if((cLT = fLT = dS->child) != NULL)
+    {
+      do 				     /* For each loopT of the shell. */
+      {
+	cLT = cLT->next;
+	if(cLT->idx >= 0)
+	{
+	  cET = fET = cLT->edgeT;
+	  do 				     /* For each edgeT of the loopT. */
+	  {
+	    /* Don't need to follow the opposite or radial edgeT's because
+	     * each of these will be part of some loopT within this shell.
+	     * All the element freeing functions check that the element's
+	     * is valid, so no need to check for NULL element pointers or
+	     * if already freed. */
+	    cET = cET->next;
+	    cVT = cET->vertexT;
+	    (void )WlzGMModelFreeV(model,  cVT->diskT->vertex);
+	    (void )WlzGMModelFreeDT(model,  cVT->diskT);
+	    (void )WlzGMModelFreeVT(model, cVT);
+	    (void )WlzGMModelFreeE(model, cET->edge);
+	    (void )WlzGMModelFreeET(model, cET);
+	  } while(cET != fET);
+	  (void )WlzGMModelFreeF(model, cLT->face);
+	  (void )WlzGMModelFreeLT(model, cLT);
+	}
+      } while(cLT != fLT);
+    }
+    WlzGMModelFreeS(model, dS);
+  }
+  return(WLZ_ERR_NONE);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes a face along with all the elements which depend
+*		on it. This may change the geometry and/or the topology
+*		of the parent shell.
+* \todo		This function is yet to be written.
+* \param	model			Model with resources.
+* \param	dF			Face to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteF(WlzGMModel *model, WlzGMFace *dF)
+{
+  /* TODO */
+  return(WLZ_ERR_UNIMPLEMENTED);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes a edge along with all the elements which depend
+*		on it. This may change the geometry and/or the topology
+*		of the parent shell. On return all shell geometries are
+*		valid.
+* \todo		Deletion of edges has only been implemented for 2D models.
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model && dE && (dE->idx >= 0))
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D:
+	errNum = WlzGMModelDeleteE2D(model, dE);
+	break;
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D:
+	errNum = WlzGMModelDeleteE2D(model, dE);
+	break;
+      default:
+	errNum = WLZ_ERR_GMELM_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes a edge along with all the elements which depend
+*		on it. This may change the geometry and/or the topology
+*		of the parent shell. Special case for 2D models.
+*		The topology of the edge to be deleted is used to classify
+*		the problem into one of four cases. This classification
+*		is based on the number of the edge's verticies which connect
+*		it to the rest of the shell and on the number of loop
+*		topology elements that run along the edge. On return all
+*		shell geometries are valid.
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE2D(WlzGMModel *model, WlzGMEdge *dE)
+{
+  int		nV,  /* Number of verticies on the edge connecting it to the
+  	              * rest of the shell. */
+  		nLT, /* Non-zero if the edge has two distinct edgeTs running
+		      * along it. */
+                con;
+  WlzGMEdgeT	*tET0;
+  WlzGMVertexT	*tVT0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* TODO Check this fn. */
+  tET0 = dE->edgeT;
+  tVT0 = tET0->vertexT;
+  nV = (tVT0 != tVT0->next);
+  tVT0 = tET0->opp->vertexT;
+  nV += (tVT0 != tVT0->next);
+  nLT = tET0->parent != tET0->opp->parent;
+  con = (nLT * 4) + nV;
+  switch(con)
+  {
+    /* TODO Add case con == 6 */
+    case 0:	/* nV = 0, nLT = 0: Edge is isolated in it's own shell. */
+      errNum = WlzGMModelDeleteE2D0V1L(model, dE);
+      break;
+    case 1:	/* nV = 1, nLT = 0: Edge is a hair extending from it's shell,
+    		 * attached to the shell at a single vertex. */
+      errNum = WlzGMModelDeleteE2D1V1L(model, dE);
+      break;
+    case 2:	/* nV = 2, nLT = 0: Edge is a bridge which connects two
+    		 * otherwise isolated shells. */
+      errNum = WlzGMModelDeleteE2D2V1L(model, dE);
+      break;
+    case 6:	/* nV = 2, nLT = 1: Edge joins two loopTs within the shell. */
+      errNum = WlzGMModelDeleteE2D2V2L(model, dE);
+      break;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes a edge along with all the elements which depend
+*		on it. This may change the geometry and/or the topology
+*		of the parent shell. Special case for 3D models.
+* \todo		This function is yet to be written.
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE3D(WlzGMModel *model, WlzGMEdge *dE)
+{
+  return(WLZ_ERR_UNIMPLEMENTED);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Deletes a vertex along with all the elements which depend
+*		on it. All elements which depend on the vertex are unlinked
+*		and then freed. If the vertex's parents were to depend
+*		only on the vertex then they would be free'd too as
+*		the Woolz geometric models can not hold an isolated
+*		vertex.
+*		The basic algorithm used is: Build a collection of edges
+*		which use the vertex and then delete all edges in the
+*		collection. If there are no edges (in the collection) then
+*		just unlink and free the vertex.
+*		The geometries of the existing and new shells will be
+*		valid on return.
+* \todo		This only works for 2D models, it needs to be extend to
+*		3D models.
+* \param	model			Model with resources.
+* \param	dV			The vertex to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
+{
+  int		eCnt,
+  		eMax;
+  WlzGMVertexT	*tVT0,
+  		*tVT1;
+  WlzGMDiskT	*tDT0,
+  		*tDT1;
+  WlzGMEdge	**edgeCol = NULL;
+  WlzGMShell	*pS;
+  const int	eStp = 16;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model && dV && (dV->idx >= 0))
+  {
+    /* Allocate initial storage for the edge collection. With luck eStp
+     * will have been chosen to be some small value that's > than the the
+     * number of edges incident with most verticies and the edge collection
+     * won't need reallocating. */
+    eCnt = eMax = 0;
+    /* Build a collection of all the edges that will be destroyed by deleting
+     * the vertex. */
+    tDT1 = tDT0 = dV->diskT;
+    do
+    {
+      tDT1 = tDT1->next;
+      tVT1 = tVT0 = tDT1->vertexT;
+      do
+      {
+	tVT1 = tVT1->next;
+	if(eCnt >= eMax)
+	{
+	  eMax = (eMax == 0)? eStp: eMax * 2;
+	  if((edgeCol = (WlzGMEdge **)AlcRealloc(edgeCol,
+					sizeof(WlzGMEdge *) * eMax)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  *(edgeCol + eCnt++) = tVT1->parent->edge;
+	}
+      } while((errNum == WLZ_ERR_NONE) && (tVT1 != tVT0));
+    } while((errNum == WLZ_ERR_NONE) && (tDT1 != tDT0));
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(eCnt == 0)
+      {
+	/* Unlink the lone vertex (removing it from the hash table)
+	 * and then free it. Currently this isn't needed because lone
+	 * verticies aren't allowed in the models. */
+      }
+      else
+      {
+	/* Delete all the edges in the collection. */
+	while(eCnt > 0)
+	{
+	  errNum = WlzGMModelDeleteE(model, *(edgeCol + --eCnt));
+	}
+      }
+    }
+    if(edgeCol)
+    {
+      AlcFree(edgeCol);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes an isolated edge. Since the edge is in it's own
+*		shell this is simply a matter of deleting the shell.
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE2D0V1L(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzErrorNum	errNum;
+
+  errNum = WlzGMModelDeleteS(model, dE->edgeT->parent->parent);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes an edge connected to the rest of it's shell through
+*		a single vertex of the edge.
+*		On the shell has had it's geometry set.
+* \verbatim
+*
+*                                              tVT0   tET0        
+*                 -->   o------------------>   o------------------>   
+*                                                      dE              
+*                 ----@----------------------@----------------------@  
+*                                                                      
+*                 --o   <------------------o   <------------------o   
+*                                                     tET1
+*
+* \endverbatim
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE2D1V1L(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzGMLoopT	*cLT;
+  WlzGMEdgeT	*tET0,
+  		*tET1;
+  WlzGMVertexT	*tVT0;
+  WlzDVertex2	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tET0 = dE->edgeT;
+  if(tET0->next != tET0->opp)
+  {
+    tET0 = tET0->opp;
+  }
+  tET1 = tET0->opp;
+  tVT0 = tET0->vertexT;
+  cLT = tET0->parent;
+  if((cLT->edgeT == tET0) || (cLT->edgeT = tET1))
+  {
+    cLT->edgeT = tET0->prev;
+  }
+  tET0->prev->next = tET1->next;
+  tET1->next->prev = tET0->prev;
+  errNum = WlzGMVertexGetG2D(tVT0->diskT->vertex, &pos);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzGMVertexTUnlink(tVT0);
+    WlzGMModelFreeV(model, tET1->vertexT->diskT->vertex);
+    WlzGMModelFreeDT(model, tET1->vertexT->diskT);
+    WlzGMModelFreeVT(model, tET1->vertexT);
+    WlzGMModelFreeE(model, dE);
+    WlzGMModelFreeET(model, tET0);
+    WlzGMModelFreeET(model, tET1);
+    WlzGMModelFreeVT(model, tVT0);
+    errNum = WlzGMShellDndateG2D(cLT->parent, pos);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes an edge which connects two otherwise seperate shells
+*		and in doing so creates a new shell.
+*		On return both the current and new shell have had their
+*		geometries set.
+*		This is the most expensive of the edge deletions because
+*		it changes both the topology and geometry of the model.
+* \verbatim
+*
+*                 pET0          tVT0    tET0        
+*                 ---------->   o------------------>   o------------
+*                                        dE                          
+*                 ------------@----------------------@--------------
+*                                                                      
+*                 ----------o   <------------------o   <------------
+*                                       tET1       tVT1     pET1
+*
+* \endverbatim
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE2D2V1L(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzGMEdgeT	*tET0,
+  		*tET1,
+		*pET0,
+		*pET1,
+		*nET0,
+		*nET1;
+  WlzGMVertexT	*tVT0,
+  		*tVT1;
+  WlzGMLoopT	*cLT,
+  		*nLT;
+  WlzGMShell	*cS,
+  		*nS;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tET0 = dE->edgeT;
+  tET1 = tET0->opp;
+  pET0 = tET0->prev;
+  pET1 = tET1->prev;
+  nET0 = tET0->next;
+  nET1 = tET1->next;
+  tVT0 = tET0->vertexT;
+  tVT1 = tET1->vertexT;
+  nET0->prev = pET1;
+  pET1->next = nET0;
+  nET1->prev = pET0;
+  pET0->next = nET1;
+  WlzGMVertexTUnlink(tVT0);
+  WlzGMVertexTUnlink(tVT1);
+  cLT = pET0->parent;
+  nLT = WlzGMModelNewLT(model, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    cS = cLT->parent;
+    nS = WlzGMModelNewS(model, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    cLT->edgeT = pET0;
+    nLT->edgeT = pET1;
+    nLT->parent = nS;
+    nLT->next = nLT->prev = nLT->opp = nLT;
+    nS->child = nLT;
+    nS->parent = model;
+    nS->next = nS->prev = nS;
+    WlzGMShellAppend(cS, nS);
+    WlzGMLoopTSetT(nLT); /* TODO Check this fn. */
+    WlzGMModelFreeE(model, dE);
+    WlzGMModelFreeET(model, tET0);
+    WlzGMModelFreeET(model, tET1);
+    WlzGMModelFreeVT(model, tVT0);
+    WlzGMModelFreeVT(model, tVT1);
+    errNum = WlzGMShellComputeGBB(cS);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGMShellComputeGBB(nS);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Deletes an edge which seperates two loop topology elements.
+*		Because the edge is internal to the shell then the geometry
+*		of the shell is not changed.
+*
+*                        o--------------->   o--------------->       
+*                 -----@-------------------@-------------------@----
+*                      | <---------------o | <---------------o |    
+*                      |                 ^ | o tVT1 pET1       |    
+*                      |                 | | |                 |    
+*                      |                 | | |                 |    
+*                      |            tET0 | | | tET1            |    
+*                      |       tLT0      | | |      tLT1       |    
+*                      |                 | |--- dE             |    
+*                      |                 | | |                 |    
+*                      |       pET0 tVT0 o | V                 |    
+*                      | o---------------> | o---------------> |    
+*                 -----@-------------------@-------------------@----
+*                        <---------------o   <---------------o       
+*                                                                      
+*
+* \param	model			Model with resources.
+* \param	dE			Edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE2D2V2L(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzGMEdgeT	*tET0,
+  		*tET1,
+		*pET0,
+		*pET1,
+		*nET0,
+		*nET1;
+  WlzGMVertexT	*tVT0,
+  		*tVT1;
+  WlzGMLoopT	*tLT0,
+  		*tLT1;
+
+  tET0 = dE->edgeT;
+  tET1 = tET0->opp;
+  pET0 = tET0->prev;
+  pET1 = tET1->prev;
+  nET0 = tET0->next;
+  nET1 = tET1->next;
+  tVT0 = tET0->vertexT;
+  tVT1 = tET1->vertexT;
+  nET0->prev = pET1;
+  pET1->next = nET0;
+  nET1->prev = pET0;
+  pET0->next = nET1;
+  WlzGMVertexTUnlink(tVT0);
+  WlzGMVertexTUnlink(tVT1);
+  tLT0 = pET0->parent;
+  tLT1 = pET1->parent;
+  if(tLT0->edgeT == tET0)
+  {
+    tLT0->edgeT = pET0;
+  }
+  WlzGMLoopTUnlink(tLT1);
+  WlzGMLoopTSetT(tLT0);
+  WlzGMModelFreeE(model, dE);
+  WlzGMModelFreeET(model, tET0);
+  WlzGMModelFreeET(model, tET1);
+  WlzGMModelFreeVT(model, tVT0);
+  WlzGMModelFreeVT(model, tVT1);
+  WlzGMModelFreeLT(model, tLT1);
+  return(WLZ_ERR_NONE);
+}
+
+#else /* WLZ_GM_NEW_DELETE_CODE_HACK */
 /*!
 * \return				<void>
 * \ingroup      WlzGeoModel
@@ -1706,7 +2223,7 @@ void		WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 * \brief	Deletes a vertex along with all the elements which depend
 *		on it. All elements which depend on the vertex are unlinked
 *		and then freed. If the vertex's parents were to depend
-*		soley on the vertex then they would be free'd too. However
+*		only on the vertex then they would be free'd too. However
 *		the Woolz geometric models can not hold an isolated
 *		vertex.
 *		The basic algorithm used is: Build a collection of edges
@@ -2139,6 +2656,8 @@ static void	WlzGMModelDeleteET(WlzGMModel *model, WlzGMEdgeT *dET)
     WlzGMModelFreeET(model, dET);
   }
 }
+
+#endif /* WLZ_GM_NEW_DELETE_CODE_HACK */
 
 /* Model access and testing. */
 
@@ -8391,12 +8910,12 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 }
 
 /*!
-* \return				<void>
+* \return	<void>
 * \ingroup      WlzGeoModel
 * \brief	Walks around a loop topology element's child edge
 *               topology elements setting their parent and making
-*		sure that the loop topology element's have the
-*		correct parent too.
+*		sure that the loop topology element's adjacent to
+*		it have the correct parent too.
 * \param	gLT			The loop topology element.
 */
 static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
@@ -8407,13 +8926,71 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
   
   if(gLT && ((tET = fET = gLT->edgeT) != NULL))
   {
+    /* Set each of the edgeT's to have the given loopT as it's parent. */
     gS = gLT->parent;
     do
     {
       tET->parent = gLT;
-      tET->opp->parent->parent = gS;
+      /* tET->opp->parent->parent = gS; HACK THIS LINE WAS HERE */
     } while((tET = tET->next)->idx != fET->idx);
+    WlzGMLoopTSetAdjT(gLT, gLT->parent); /* HACK NEW LINE to replace above */
   }
+}
+
+/*!
+* \return	<void>
+* \ingroup      WlzGeoModel
+* \brief	Moves all loop topology elements connected to the given
+*		loop topology element from their current shell to the
+*		iparent shell of the given loop topology element.
+* \param	gLT			The loop topology element.
+* \param 	gS			The shell to which all adjacent
+*					loop topology elements are to be
+*					moved.
+*/
+static void	WlzGMShellSetT(WlzGMShell *gS)
+{
+  /* TODO Check this fn. */
+  if(gS && (gS->child != NULL))
+  {
+    WlzGMLoopTSetAdjT(gS->child, gS);
+  }
+}
+
+/*!
+* \return	<void>
+* \ingroup      WlzGeoModel
+* \brief	Recursive function which moves loop topology elements
+*		from their current shell to the given shell if they are
+*		adjacent to the given loop topology element.
+* \param	gLT			The loop topology element.
+* \param 	gS			The shell to which all adjacent
+*					loop topology elements are to be
+*					moved.
+*/
+static void	WlzGMLoopTSetAdjT(WlzGMLoopT *gLT, WlzGMShell *gS)
+{
+  WlzGMLoopT	*cLT;
+  WlzGMEdgeT	*cET,
+  		*fET;
+
+  /* TODO Check this fn. */
+  if(gLT->parent != gS)
+  {
+    WlzGMLoopTUnlink(gLT);
+    WlzGMLoopTAppend(gS->child, gLT);
+    gLT->parent = gS;
+  }
+  cET = fET = gLT->edgeT;
+  do
+  {
+    cLT = cET->parent;
+    if(cLT->parent != gS)
+    {
+      WlzGMLoopTSetAdjT(cLT, gS);
+    }
+    cET = cET->next;
+  } while(cET != fET);
 }
 
 /*!

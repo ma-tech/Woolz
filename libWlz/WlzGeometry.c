@@ -29,9 +29,8 @@ static int		WlzGeomVtxSortRadialFn(
 			  int idx1);
 
 /*!
-* \return				Zero if the circumcentre of the
-*					triangle lies at infinity, else
-*					non-zero.
+* \return	Zero if the circumcentre of the triangle lies at infinity,
+*		else non-zero.
 * \ingroup	WlzGeometry
 * \brief	Computes the circumcentre of the given triangle.
 *
@@ -102,8 +101,7 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 }
 
 /*!
-* \return				Non-zero if vertex is inside the
-* 					triangle.
+* \return	Non-zero if vertex is inside the triangle.
 * \ingroup	WlzGeometry
 * \brief	Test's to set if the given vertex lies within the given
 *		triangle using a barycentric coordinates test.
@@ -167,8 +165,7 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /*!
-* \return				Twice the signed area of the given
-* 					triangle.
+* \return	Twice the signed area of the given triangle.
 * \ingroup	WlzGeometry
 * \brief	Computes twice the signed area of the given triangle.
 *
@@ -193,8 +190,8 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /*!
-* \return				Non zero if the given vertex is inside
-* 					the circumcircle of the given triangle.
+* \return	Non zero if the given vertex is inside the circumcircle of
+*		the given triangle.
 * \ingroup      WlzGeometry
 * \brief	Tests to see if the given vertex is inside the circumcircle of
 * 		the given triangle.
@@ -240,7 +237,7 @@ int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /*!
-* \return				Non zero if line segments intersect.
+* \return	Non zero if line segments intersect.
 * \ingroup	WlzGeometry
 * \brief	Tests to see if the two given line segments intersect.
 *
@@ -286,9 +283,8 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
 }
 
 /*!
-* \return				Result of comparison: -ve, 0
-*                                       or +ve. Only the sign is
-*                                       meaningful.
+* \return	Result of comparison: -ve, 0 or +ve. Only the sign is
+*               meaningful.
 * \ingroup	WlzGeometry
 * \brief	Given two end connected 2D line segments this function
 *		compares the CCW angle of the segments.
@@ -418,8 +414,7 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
 }
 
 /*!
-* \return				1 if node positions are equal,
-*                                       else 0.
+* \return	1 if node positions are equal, else 0.
 * \ingroup	WlzGeometry
 * \brief	Checks to see if two verticies are the same
 *               within some tollerance.
@@ -439,7 +434,7 @@ int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
 }
 
 /*!
-* \return				Result of comparison.
+* \return	Result of comparison.
 * \ingroup	WlzGeometry
 * \brief	Simple wrapper for WlzGeomCmpAngle().
 * \param	p0			Ptr to verticies.
@@ -508,7 +503,7 @@ void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
 }
 
 /*!
-* \return
+* \return	Normal vector.
 * \ingroup	WlzGeometry
 * \brief	Computes the unit normal vector perpendicular to the
 *               triangle \f$v_0, v_1, v_2\f$.
@@ -540,7 +535,7 @@ WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
 }
 
 /*!
-* \return
+* \return	Non-zero if there is an intersection.
 * \ingroup	WlzGeometry
 * \brief	Tests for an intersection between the plane defined by the
 *		equation: \f$ax + by + cz + d = 0\f$ and the given axis
@@ -630,11 +625,9 @@ int		WlzGeomPlaneAABBIntersect(double a, double b,
 }
 
 /*!
-* \return				0 if the plane and line do not
-* 					intersect, 1 if the line segment
-*					intersects the plane at a single
-*					point or 2 if the line segment is
-*					wholly on the plane.
+* \return	0 if the plane and line do not intersect, 1 if the line
+*		segment intersects the plane at a single point or 2 if the
+*		line segment is wholly on the plane.
 * \ingroup	WlzGeometry
 * \brief	Tests for an intersection between the plane defined by the
 *		equation: \f$ax + by + cz + d = 0\f$ and the line segment
@@ -704,16 +697,13 @@ int		WlzGeomPlaneLineIntersect(double a, double b,
 }
 
 /*!
-* \return				An intersection code:
-*					  - 0 if the plane and triangle do
-* 					    not intersect;
-*					  - 1 if a single vertex of the
-*					    triangle is on the plane;
-*					  - 2 if a single edge or a line
-*					    through the triangle is on the
-*					    plane;
-*					  - 3 if the triangle is wholly on
-*					    the plane.
+* \return	An intersection code:
+*			- 0 if the plane and triangle do not intersect;
+*			- 1 if a single vertex of the triangle is on the
+*		            plane;
+*		        - 2 if a single edge or a line through the triangle
+*			    is on the plane;
+*		  	- 3 if the triangle is wholly on the plane.
 * \ingroup	WlzGeometry
 * \brief	Tests for an intersection between a plane and a triangle.
 *
@@ -890,4 +880,66 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
     *dstIsn1 = isn1;
   }
   return(intersect);
+}
+
+/*!
+* \return	Distance ratio.
+* \ingroup	WlzGeometry
+* \brief	Given an ellipse defined by it's centre \f$\mathbf{c}\f$
+*		and it's semi axes \f$\mathbf{a}\f$. This function computes
+*		the square of the ratio of the distances from the centre
+*		of the ellipse to the given point and from the centre of
+*		the ellipse in the direction of the given point to the
+*		ellipse.
+*
+*		Equation of ellipse is:
+* 		\f[
+		{(\frac{x}{a})}^2 + {(\frac{y}{b})}^2 = 1
+		\f]
+*		and a straight line through the origin:
+*		\f[
+		y = m x
+		\f]
+*		Solving for \f$x\f$ and \f$y\f$ at the ellipse gives the
+*		square of the distance ratio for given point \f$\mathbf{p}\f$
+*		is
+*		\f[
+		d = \frac{({(p_x - c_x)}^2 + {(p_y - c_y)}^2)
+		          (a_x^2 m^2 + a_y^2)}
+		         {a_x^2 a_y^2 ( 1 + m^2)}
+		\f]
+*		with \f$m = \frac{p_y - c_y}{p_x - c_x}\f$.
+* 
+* \param	centre			Centre of ellipse.
+* \param	sAx			Ellipse semi axes, both \f$> 0.0\f$.
+* \param	gPnt			Given point.
+*/
+double		WlzGeomEllipseVxDistSq(WlzDVertex2 centre, WlzDVertex2 sAx,
+				       WlzDVertex2 gPnt)
+{
+  double 	grdSq,
+  		dRatSq;
+  WlzDVertex2	sAxSq,
+  		rPntSq;
+
+  WLZ_VTX_2_SUB(rPntSq, gPnt, centre);
+  rPntSq.vtX = rPntSq.vtX * rPntSq.vtX;
+  rPntSq.vtY = rPntSq.vtY * rPntSq.vtY;
+  sAxSq.vtX = sAx.vtX * sAx.vtX;
+  sAxSq.vtY = sAx.vtY * sAx.vtY;
+  if(rPntSq.vtX < DBL_EPSILON)
+  {
+    dRatSq = rPntSq.vtY / sAxSq.vtY;
+  }
+  else if(rPntSq.vtY < DBL_EPSILON)
+  {
+    dRatSq = rPntSq.vtX / sAxSq.vtX;
+  }
+  else
+  {
+    grdSq = rPntSq.vtY / rPntSq.vtX;
+    dRatSq = ((rPntSq.vtX + rPntSq.vtY) * ((sAxSq.vtX * grdSq) + sAxSq.vtY)) /
+             (sAxSq.vtX * sAxSq.vtY * (1.0 + grdSq));
+  }
+  return(dRatSq);
 }
