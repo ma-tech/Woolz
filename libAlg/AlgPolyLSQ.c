@@ -67,7 +67,7 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
 	   (unsigned long )cVec));
   if(xVec && yVec && cVec && (vecSz > 0) && (polyDeg > 0) && (vecSz > polyDeg))
   {
-    polyDeg2 = polyDeg2 * 2;
+    polyDeg2 = polyDeg * 2;
     tI0 = sizeof(double) * (polyDeg + 1);
     tI1 = sizeof(double) * (polyDeg2 + 1);
     if(((sig = (double *)AlcMalloc(tI1)) == NULL) ||
