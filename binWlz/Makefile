@@ -68,6 +68,7 @@ EXECUTABLES		= \
 			WlzGreySetValue \
 			WlzGreyStats \
 			WlzGreyTemplate \
+			WlzGreyTransfer \
 			WlzHasIntersect \
 			WlzHistogramData \
 			WlzHistogramEqualiseObj \
@@ -155,6 +156,7 @@ CSOURCES		= \
 			WlzGreySetValue.c \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
+			WlzGreyTransfer.c \
 			WlzHasIntersect.c \
 			WlzHistogramData.c \
 			WlzHistogramEqualiseObj.c \
