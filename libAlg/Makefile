@@ -13,6 +13,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 07-11-00 bill Add AlgShuffle.c.
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -41,7 +42,8 @@ CSOURCES		= \
 			  AlgMixture.c \
 			  AlgPolyLSQ.c \
 			  AlgRand.c \
-			  AlgRange.c
+			  AlgRange.c \
+			  AlgShuffle.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).

@@ -15,6 +15,7 @@
 *		Human Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 07-11-00 bill Add AlgShuffleIdx().
 * 08-08-00 bill Add AlgBitNextSet().
 * 12-07-00 bill	Add AlgHeapSort(), AlgHeapSortIdx() and AlgHeapElmSwap().
 * 11-05-00 bill	Add AlgGammaLog(), AlgGammaP(), AlgLinearFit1D(),
@@ -291,6 +292,11 @@ extern AlgError		AlgRangeIdx1D(
 			  double *dstMin,
 			  double *dstMax);
 
+/* From AlgShuffle.c */
+extern AlgError		AlgShuffleIdx(
+			  int nShuffle,
+			  int *shuffle,
+			  int seed);
 /* Debugging */
 extern AlgDbgMask 	algDbgMask;
 extern void		*algDbgData;
