@@ -1584,7 +1584,7 @@ public class SectionViewer
      intersectionArr =  getIntersectionArr() ;
      int len = intersectionArr.length;
      for(int i=0; i<len; i++) {
-	printIntersection(intersectionArr[i]);
+	printIntersection(intersectionArr[i], i);
      }
 
      if(_debug) System.out.println("exiting adjustIntersectionArray");
