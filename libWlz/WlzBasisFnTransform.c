@@ -578,19 +578,24 @@ WlzBoundList *WlzBasisFnTransformBoundList(WlzBoundList *srcBnd,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((newBnd == 0) ||
-          ((dstBnd = (WlzBoundList *)
-                     AlcCalloc(sizeof(WlzBoundList), 1)) == NULL))
+  else
   {
     if(newBnd)
     {
       dstBnd->type = srcBnd->type;
       dstBnd->wrap = srcBnd->wrap;
+      if((dstBnd = (WlzBoundList *)AlcCalloc(sizeof(WlzBoundList), 1)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
     else
     {
       dstBnd = srcBnd;
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     /* Transform the polygon */
     if((dstBnd->poly = WlzBasisFnTransformPoly2(srcBnd->poly, basisTr,
                                                 newBnd, &errNum)) != NULL)
