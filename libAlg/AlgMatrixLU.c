@@ -20,13 +20,13 @@
 * \bug          None known.
 */
 
-/*!
-* \ingroup	AlgMatrix
-* @{
-*/
-
 #include <Alg.h>
 #include <float.h>
+
+/*!
+* \ingroup   	AlgMatrix
+* @{
+*/
 
 /*!
 * \return				Error code.

@@ -20,15 +20,15 @@
 * Maintenance log with most recent changes at top of list.
 */
 
-/*!
-* \ingroup      AlgMatrix
-* @{
-*/
-
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
 #include <Alg.h>
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
 
 /*!
 * \return       	                  Error code.
@@ -49,7 +49,8 @@
 * \param	dM 			Given array for the return of the
 * 					diagonal elements.
 * \param	oM 			Given array for the return of the
-* 					off diagonal elements.
+* 					off diagonal elements with the first
+*					element set to 0.0.
 */
 AlgError	AlgMatrixRSTDiag(double **aM, int aSz, double *dM, double *oM)
 {
@@ -140,7 +141,7 @@ AlgError	AlgMatrixRSTDiag(double **aM, int aSz, double *dM, double *oM)
     for(id0 = 0; id0 < aSz; ++id0)
     {
       id1 = id0 - 1;
-      if(dM[id0])
+      if(fabs(dM[id0]) > DBL_EPSILON)
       {
 	for(id3 = 0; id3 <= id1; ++id3)
 	{

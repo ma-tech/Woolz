@@ -19,13 +19,13 @@
 * \bug          None known.
 */
 
-/*!
-* \ingroup     	AlgMatrix
-* @{
-*/
-
 #include <Alg.h>
 #include <float.h>
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
 
 /*!
 * \return				Error code.
@@ -174,4 +174,3 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
 /*!
 * @}
 */
-

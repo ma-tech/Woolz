@@ -17,16 +17,15 @@
 * \bug          None known.
 */
 
+#include <Alg.h>
+#include <float.h>
+
+static double	AlgMatrixSVPythag(double, double);
+
 /*!
 * \ingroup      AlgMatrix
 * @{
 */
-
-#include <Alg.h>
-#include <float.h>
-
-
-static double	AlgMatrixSVPythag(double, double);
 
 /*!
 * \return				Error code.
