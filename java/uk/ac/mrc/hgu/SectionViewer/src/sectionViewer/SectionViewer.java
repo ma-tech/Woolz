@@ -1955,7 +1955,8 @@ public class SectionViewer
         double[] zeta = null;
         double roll = 0.0;
 
-        if (mode.equals("up is up")) {
+        if ((mode.equals("up is up")) ||
+	    (mode.equals("Up is up"))) {
            _fixedLineRotation = false;
            resetFixedLine(false);
            controlMenu_2_1.setSelected(true);
@@ -1970,7 +1971,8 @@ public class SectionViewer
            rollSetter.setEnabled(false);
            rotSetter.setEnabled(false);
         }
-        else if (mode.equals("absolute")) {
+        else if ((mode.equals("absolute")) ||
+	         (mode.equals("Absolute"))) {
            _fixedLineRotation = false;
            resetFixedLine(false);
            controlMenu_2_2.setSelected(true);
@@ -1981,7 +1983,8 @@ public class SectionViewer
            rollSetter.setEnabled(true);
            rotSetter.setEnabled(false);
         }
-        else if(mode.equals("fixed line")) {
+        else if((mode.equals("fixed line")) ||
+	        (mode.equals("Fixed line"))) {
            _fixedLineRotation = true;
            controlMenu_2_3.setEnabled(true);
            controlMenu_2_3.setSelected(true);
