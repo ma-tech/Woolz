@@ -69,8 +69,7 @@ INCDIRS			= \
 LIBDIRS			= \
 			  $(DEPENDDIRS) \
 			  $(HGU_LIB_DIR) \
-			  /opt/local/lib \
-			  $(SYSLIB)
+			  $(SYSLIB) 
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
