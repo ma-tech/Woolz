@@ -221,7 +221,7 @@ WlzObject *WlzRGBAMultiThreshold(
 
 typedef struct _WlzVectorThresholdStruct
 {
-  WlzThresholdType	type;
+  WlzRGBAThresholdType	type;
   double	       	origin[3];
   double		direction[3];
   double		dist;
