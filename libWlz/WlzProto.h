@@ -3546,6 +3546,7 @@ extern  int   WlzIsoIntersectWithTetrahadronIndex(double zConst,
 
 #endif /* !WLZ_EXT_BIND */
 				  
+#ifndef WLZ_EXT_BIND
 extern void WlzMakeAffine3D4pointsTrFn(WlzDVertex3 sr1, WlzDVertex3 sr2, WlzDVertex3 sr3,
                          WlzDVertex3  sr4,  WlzDVertex3  targ1,  WlzDVertex3   targ2, 
                          WlzDVertex3  targ3, WlzDVertex3 targ4, 
@@ -3562,6 +3563,7 @@ extern void WlzMakeAffine3D4pointsTrFnByGauss(WlzDVertex3 sr1,
 					      WlzDVertex3 targ4, 
 			                      double    **Affine3D4pointsTrFun);
 
+#endif /* !WLZ_EXT_BIND */
 
 #ifdef  __cplusplus
 }
