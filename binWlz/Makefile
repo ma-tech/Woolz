@@ -12,6 +12,9 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+#
+# 28-01-03 Rao  Add WlzGeometryTrackUpAndDown.c
+# 18-09-02 Jianguo add Wlz3DWarpMQ
 # 14-03-01 bill Add WlzRasterObj.
 # 08-03-01 bill Add WlzContourSzSelect.
 # 06-12-00 bill Add WlzRegisterICP.
@@ -28,7 +31,9 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
+			Wlz3DWarpMQ \
 			WlzAffineTransformLSq \
+			WlzAffineTransformVertices \
 			WlzAffineTransformObj \
 			WlzArea \
 			WlzBasisFnTransformObj \
@@ -58,6 +63,7 @@ EXECUTABLES		= \
 			WlzFacts \
 			WlzGauss \
 			WlzGaussNoise \
+			WlzGeometryTrackUpAndDown \
 			WlzGreyCrossing \
 			WlzGreyGradient \
 			WlzGreyInvert \
@@ -117,8 +123,10 @@ EXECUTABLES		= \
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			Wlz3DWarpMQ.c \
 			MADomainTest.c \
 			WlzAffineTransformLSq.c \
+			WlzAffineTransformVertices.c \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
 			WlzBasisFnTransformObj.c \
@@ -150,6 +158,7 @@ CSOURCES		= \
 			WlzFacts.c \
 			WlzGauss.c \
 			WlzGaussNoise.c \
+			WlzGeometryTrackUpAndDown.c \
 			WlzGreyCrossing.c \
 			WlzGreyGradient.c \
 			WlzGreyInvert.c \

@@ -12,6 +12,8 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 28-01-03 Rao  Add WlzGeometryTrackUpAndDown_s.c
+# 18-01-02 Rao  Add Wlz3DWarpMQ_S.c
 # 14-03-01 bill Add WlzRaster.c
 # 01-02-01 bill Add WlzRegCCor.c
 # 23-01-01 bill Add WlzShadeCorrect.c
@@ -42,6 +44,7 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			Wlz2DContains.c \
+			Wlz3DWarpMQ_S.c \
 			Wlz3DSection.c \
 			Wlz3DSectionFromGeoModel.c \
 			Wlz3DSectionSegmentObject.c \
@@ -87,6 +90,7 @@ CSOURCES		= \
 			WlzGeoModel.c \
 			WlzGeoModelFilters.c \
 			WlzGeometry.c \
+			WlzGeometryTrackUpAndDown_s.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
 			WlzGreyGradient.c \
@@ -227,6 +231,7 @@ MANPAGES		= \
 			WlzFileIO.3 \
 			WlzFree.3 \
 			WlzGetSectionFromObject.3 \
+			WlzGeometryTrackUpAndDown_s.3 \
 			WlzGreyCrossing.3 \
 			WlzGreyFunctions.3 \
 			WlzGreyGradient.3 \

@@ -18,6 +18,7 @@
 * \ingroup	WlzTransform
 * \todo         -
 * \bug          None known.
+* 25-08-2001 J. Rao added WlzBasisFnTrFromCPts3() functions
 */
 #include <stdlib.h>
 #include <stdarg.h>
@@ -156,6 +157,93 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
   }
   return(basisTr);
 }
+
+
+/*!
+* \return:	WlzBasisFnTransform *:	New basis function transform.
+* \ingroup:	WlzBasisFnTrFromCPts3	
+* \brief:	Creates a new basis function transform of the given
+*		type, which will transform an object with the given
+*		source verticies into an object with the given 	
+*		destination verticies.			
+* \param:	WlzFnType type:	        Required basis function type.
+* \param:	int order:		Order of polynomial, only 
+*					used for WLZ_BASISFN_POLY.
+* \param:	int nDPts:		Number of destination control
+*					points.			
+* \param:	WlzDVertex3 *dPts:	Destination control points.
+* \param:	int nSPts:		Number of source control points
+*					(must be same as nDPts)
+* \param:	WlzDVertex3 *sPts:	Source control points.	
+* \param:	WlzErrorNum *dstErr:	Destination error pointer,
+*					may be NULL.
+*   added by J. Rao  27/08/2001                      
+*/
+WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
+					  int order,
+					  int nDPts,
+					  WlzDVertex3 *dPts,
+					  int nSPts,
+					  WlzDVertex3 *sPts,
+					  WlzErrorNum *dstErr)
+{
+  WlzBasisFnTransform *basisTr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nDPts != nSPts) || (nDPts <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if((dPts == NULL) || (sPts == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((basisTr = WlzMakeBasisFnTransform(NULL)) == NULL)
+  {
+   errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    switch(type)
+    { /* ------
+      case WLZ_BASISFN_GAUSS:
+	basis = WlzBasisFnGaussFromCPts(nDPts, dPts, sPts, 0.9, &errNum);
+	break;
+      case WLZ_BASISFN_POLY:
+	basis = WlzBasisFnPolyFromCPts(nDPts, order, dPts, sPts, &errNum);
+	break;
+      */
+      case WLZ_FN_BASIS_3DMQ:
+        {
+	  basisTr->basisFn = WlzBasisFnMQ3DFromCPts(nDPts, dPts, sPts, 0.2, &errNum);
+	  basisTr->linkcount = 0;
+	  basisTr->freeptr   = NULL;
+	  
+	}
+	break;
+      /*
+      case WLZ_BASISFN_TPS:
+	basis = WlzBasisFnTPSFromCPts(nDPts, dPts, sPts, &errNum);
+	break;
+      case WLZ_BASISFN_CONF_POLY:
+	basis = WlzBasisFnConfFromCPts(nDPts, order, dPts, sPts, &errNum);
+	break;
+      */
+      default:
+	 errNum = WLZ_ERR_TRANSFORM_TYPE;
+	 break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(basisTr);
+}
+
+
+
+
 
 /*!
 * \return	Error number.
@@ -401,3 +489,6 @@ WlzIVertex2	WlzBasisFnTransformVertexI(WlzBasisFnTransform *basisTr,
   dstVxI.vtY = WLZ_NINT(dstVxD.vtY);
   return(dstVxI);
 }
+
+
+

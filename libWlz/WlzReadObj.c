@@ -16,6 +16,7 @@
 * \brief	Reads a Woolz object from a file stream.
 * \ingroup	WlzIO
 * \todo         -
+* 11-10-01 JRAO add WlzReadMeshTransform3D();
 * \bug          None known.
 */
 #include <stdlib.h>
@@ -2883,3 +2884,145 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
   }
   return(model);
 }
+
+
+/************************************************************************
+*   Function   : WlzReadMeshTransform3D					*
+*   Date       : Wednesday Oct 11 2001   				*
+*************************************************************************
+*   written by :  J. Rao 						*
+*   Synopsis   : reads a woolz 3D MeshTransform 			*
+*   Returns    : WlzWlzMeshTransform3D *:				*
+*   Parameters : FILE *fp:	input stream				*
+*   Global refs: -							*
+************************************************************************/
+WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
+				      WlzErrorNum *dstErr)
+{
+  /* local variables */
+  int		i,
+  		j;
+  WlzDVertex3 	*vptr;
+  WlzMeshNode3D	*dptr;
+  WlzMeshElem3D	*eptr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  /* WlzObjectType type; */
+  WlzMeshTransform3D   	*obj=NULL;
+  /*
+  type = (WlzObjectType) getc(fp);
+  if( type == (WlzObjectType) EOF ){
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if( type == WLZ_NULL ){
+    errNum = WLZ_ERR_EOO;
+  }
+  */
+  /* this is a repeat of the same char read by WlzReadObj 
+     and therefore is redundant, this can only be different if the file
+     is corrupt */
+     /*
+  else if( type != WLZ_WARP_TRANS ){
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  */
+  /* make space for obj */
+  if( (obj = (WlzMeshTransform3D *) AlcMalloc(sizeof(WlzMeshTransform3D)))
+	  == NULL )
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else 
+  {
+    /*
+    obj->type = type;
+    obj->linkcount = 0;
+    */
+    obj->nElem = getword(fp);
+    obj->nNodes = getword(fp);
+    if( feof(fp) != 0 )
+    {
+      AlcFree( (void *) obj );
+      obj = NULL;
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  /* read  nodal position and displacement */
+  if( errNum == WLZ_ERR_NONE )
+  {
+    if( (obj->nodes = (WlzMeshNode3D *)AlcMalloc(  obj->nNodes * sizeof(WlzMeshNode3D))) == NULL )
+    {
+      AlcFree( (void *) obj->nodes );
+      AlcFree( (void *) obj );
+      obj = NULL;
+      errNum = WLZ_ERR_MEM_ALLOC;
+      printf("Failed to allocate memory!");
+      exit(1);
+    }
+    dptr = obj->nodes;
+    for(i = 0; (i < obj->nNodes) && (errNum == WLZ_ERR_NONE); i++, dptr++)
+    {  /* read position */
+        dptr->position.vtX = (double) getfloat(fp);
+        dptr->position.vtY = (double) getfloat(fp);
+        dptr->position.vtZ = (double) getfloat(fp);
+       /* read displacement */
+        dptr->displacement.vtX =(double) getfloat(fp);
+        dptr->displacement.vtY =(double) getfloat(fp);
+        dptr->displacement.vtZ =(double) getfloat(fp);
+    }
+  } 
+
+  /* read elements */
+  if( errNum == WLZ_ERR_NONE ){
+    if( (obj->elements = (WlzMeshElem3D *)AlcMalloc(  obj->nElem * 
+                           sizeof(WlzMeshElem3D))) == NULL )
+     {
+      AlcFree( (void *) obj->nodes );
+      AlcFree( (void *) obj->elements );
+      AlcFree( (void *) obj );
+      obj = NULL;
+      errNum = WLZ_ERR_MEM_ALLOC;
+     }
+     else 
+     {
+     /* read elements */
+     eptr = obj->elements;
+       for(i = 0; (i < obj->nElem) && (errNum == WLZ_ERR_NONE); i++, eptr++)
+       {/*
+        if(!putc((unsigned int )eptr->type, fp)  )
+         {
+          errNum = WLZ_ERR_WRITE_INCOMPLETE;
+         } */
+         /* get the index of this element */
+         eptr->idx = getword(fp);
+         /* get nodes indeces */ 
+         for(j = 0; (j < 4) && (errNum == WLZ_ERR_NONE); j++)
+         {
+           eptr->nodes[j] = getword(fp);
+         }
+         /* output its neighbours */
+         /*
+         for(j = 0; (j < 4) && (errNum == WLZ_ERR_NONE); j++)
+         {
+	  eptr->neighbours[j] = getword(fp);
+         }
+         */
+       }
+     }
+   }  
+  /* check if EOF error has been set */
+  if( (errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
+    AlcFree( (void *) obj->elements );
+    AlcFree( (void *) obj->nodes );
+    AlcFree((void *) obj);
+    obj = NULL;
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return(obj) ;
+}
+
+

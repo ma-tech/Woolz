@@ -18,6 +18,7 @@
 *		byte ordering.
 * \ingroup	WlzIO
 * \todo         -
+* 11-10-01 JRAO add WlzWriteMeshTransform3D();
 * \bug          None known.
 */
 #include <stdlib.h>
@@ -2198,3 +2199,110 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
   }
   return(errNum);
 }
+
+/************************************************************************
+*   Function   : WlzWriteMeshTransform3D				*
+*   Date       : Wednesday Oct 10 2001   				*
+*************************************************************************
+*   written by :  J. Rao 						*
+*   Synopsis   :							*
+*   Returns    :  type are not included, will added later		*
+*   Parameters :							*
+*   Global refs:							*
+************************************************************************/
+WlzErrorNum    WlzWriteMeshTransform3D(
+				  FILE *fp,
+			          WlzMeshTransform3D *obj)
+{
+  int		i,
+  		j;
+  WlzMeshNode3D	*dptr;
+  WlzMeshElem3D	*eptr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  /*
+  if( !putc((unsigned int )obj->type, fp) )
+  {
+    errNum = WLZ_ERR_WRITE_EOF;
+  }
+  */
+  if(     !putword(obj->nElem,  fp) ||
+	  !putword(obj->nNodes ,fp) ) 
+  {
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+  }
+  else
+  {
+    /* Write out nodal position and displacement */
+    dptr = obj->nodes;
+    for(i = 0; (i < obj->nNodes) && (errNum == WLZ_ERR_NONE); i++, dptr++)
+    {  /* position */
+      if(!putfloat((float) dptr->position.vtX, fp) ||
+         !putfloat((float) dptr->position.vtY, fp) ||
+	 !putfloat((float) dptr->position.vtZ, fp))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      /* displacement */
+      if(!putfloat((float) dptr->displacement.vtX, fp) ||
+         !putfloat((float) dptr->displacement.vtY, fp) ||
+	 !putfloat((float) dptr->displacement.vtZ, fp))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+       
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Write out elements */
+    eptr = obj->elements;
+    for(i = 0; (i < obj->nElem) && (errNum == WLZ_ERR_NONE); i++, eptr++)
+    {/*
+      if(!putc((unsigned int )eptr->type, fp)  )
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      } */
+      /* output the index of this element */
+      if(!putword(eptr->idx, fp))
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      /* output nodes indeces */ 
+      for(j = 0; (j < 4) && (errNum == WLZ_ERR_NONE); j++)
+      {
+	if (!putword(eptr->nodes[j], fp))
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+      }
+      /* output its neighbours */
+      /*
+      for(j = 0; (j < 4) && (errNum == WLZ_ERR_NONE); j++)
+      {
+	if (!putword(eptr->neighbours[j], fp))
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+      }
+      */
+    }
+  }
+    /* now Write out displacement */
+    /*
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dptr = obj->nodes;
+    for(i = 0; (i < obj->nNodes) && (errNum == WLZ_ERR_NONE); i++, dptr++)
+    { 
+      if(!putfloat((float) dptr->displacement.vtX, fp) ||
+         !putfloat((float) dptr->displacement.vtY, fp) ||
+	 !putfloat((float) dptr->displacement.vtZ, fp))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+  }
+  */
+  return(errNum);
+}
+

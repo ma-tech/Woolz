@@ -2444,11 +2444,11 @@ typedef struct _WlzRsvFilter
 */
 typedef enum _WlzFnType
 {
-  WLZ_FN_BASIS_2DGAUSS,        		/*!< 2D Gaussian basis function */
-  WLZ_FN_BASIS_2DPOLY,                  /*!< 2D Polynomial basis function */
-  WLZ_FN_BASIS_2DMQ,			/*!< 2D Multiquadric basis function */
-  WLZ_FN_BASIS_2DTPS,              	/*!< 2D Thin plate spline basis
-  					     function */
+  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
+  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
+  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
+  WLZ_FN_BASIS_3DMQ,			/*!< Multiquadric basis function */
+  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
   WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
   					     function */
   WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
@@ -2706,7 +2706,6 @@ typedef struct _WlzMeshTransform3D
   WlzMeshNode3D 	*nodes;		/*!< Mesh nodes */
 } WlzMeshTransform3D;
 
-/* <<<<<<< WlzType.h */
 /*!
 * \struct	_WlzMeshTransform2D5
 * \ingroup	WlzTransform
