@@ -1,38 +1,25 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzWriteObj.c
-* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Thu Aug  1 17:18:12 2002
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
+* \author       Richard Baldock and Bill Hill
+* \date         November 2002
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
 *               All rights reserved.
 * \par Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzIO
-* \brief        Procedures for writing woolz objects. Only WlzWriteObj() is
- non-static and currently documented using Doxygen.
-*               
+* \brief	Functions for writing Woolz objects.
+*		For historical reasons most data are written using DEC VAX
+*		byte ordering.
+* \ingroup	WlzIO
 * \todo         -
-* \bug          None known
-*
-* Maintenance log with most recent changes at top of list.
-* Maintenance:	Log changes below, with most recent at top of list.
-* 13-12-00 bill Allow GM's with no verticies to be written.
-* 02-10-00 bill No longer write primitives in WlzWriteAffineTransform().
-* 14-08-00 bill	Add WLZ_CONTOUR to object types written by WlzWriteObj().
-*		Add WlzWriteContour() and WlzWriteGMModel(). Remove
-*		obolete object types:WLZ_VECTOR_(FLOAT|INT),
-*		WLZ_POINT_(FLOAT|INT), WLZ_DISP_FRAME,
-*		WLZ_DISP_GRID, WLZ_DISP_FRAMEX, Wlz[IF]Vector and
-*		and Wlz[IF]Point. Add WlzWriteVertex[23][ID](),
-*		WlzWriteBox[23][ID]() and WlzWriteInt().
+* \bug          None known.
 */
-
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -129,21 +116,25 @@ static WlzErrorNum 	WlzWriteBox3D(
 			  FILE *fP,
 			  WlzDBox3 *bP,
 			  int nB);
-
-/* a set of functions to convert from VAX to SUN byte ordering
-   in the future these should be replaced by calls using XDR procedures
-   */
-
-/************************************************************************
-*   Function   : putword						*
-*   Date       : Sun Oct 20 11:37:44 1996				*
-*************************************************************************
-*   Synopsis   : write an integer reordered to vax format		*
-*   Returns    : number of bytes written				*
-*   Parameters : int i: value written					*
-*		FILE *fp: output stream					*
-*   Global refs: -							*
-************************************************************************/
+static WlzErrorNum	WlzWriteStr(
+			  FILE *fP,
+			  char *str);
+static WlzErrorNum	WlzWritePixelV(
+			  FILE *fP,
+			  WlzPixelV *pV,
+			  int nPV);
+static WlzErrorNum	WlzWriteGreyV(
+			  FILE *fP,
+			  WlzGreyType type,
+			  WlzGreyV *gV,
+			  int nGV);
+/*!
+* \return	Number of bytes written.
+* \ingroup 	WlzIO
+* \brief	Writes an integer reordered to DEC VAX(!) format.
+* \param	i			Value written.
+* \param	fp			Given file.
+*/
 static int putword(int i, FILE *fp)
 {
   unsigned char *cin, cout[4];
@@ -164,16 +155,13 @@ static int putword(int i, FILE *fp)
   return( (int) fwrite(&cout[0], sizeof(char), 4, fp) );
 }
 
-/************************************************************************
-*   Function   : putshort						*
-*   Date       : Sun Oct 20 11:37:57 1996				*
-*************************************************************************
-*   Synopsis   : write an short reordered to vax format			*
-*   Returns    : number of bytes written				*
-*   Parameters : short i: value written					*
-*		FILE *fp: output stream					*
-*   Global refs: -							*
-************************************************************************/
+/*!
+* \return	Number of bytes written.
+* \ingroup	WlzIO
+* \brief	Writes a short reordered to DEC VAX(!) format.
+* \param	i			Value written.
+* \param	fp			Given file.
+*/
 static int putshort(short i, FILE *fp)
 {
   unsigned char *cin, cout[2];
@@ -190,16 +178,13 @@ static int putshort(short i, FILE *fp)
   return( (int) fwrite(&cout[0], sizeof(char), 2, fp) );
 }
 
-/************************************************************************
-*   Function   : putfloat						*
-*   Date       : Sun Oct 20 11:38:26 1996				*
-*************************************************************************
-*   Synopsis   : write an float modified to vax format			*
-*   Returns    : number of bytes written				*
-*   Parameters : float f: value written					*
-*		FILE *fp: output stream					*
-*   Global refs: -							*
-************************************************************************/
+/*!
+* \return	Number of bytes written.
+* \ingroup	WlzIO
+* \brief	Writes a float reordered to DEC VAX(!) format.
+* \param	f			Value written.
+* \param	fp			Given file.
+*/
 static int putfloat(float f, FILE *fp)
 {
   float ff = f;
@@ -221,16 +206,13 @@ static int putfloat(float f, FILE *fp)
   return( (int) fwrite(&cout[0], sizeof(char), 4, fp) );
 }
 
-/************************************************************************
-*   Function   : putdouble						*
-*   Date       : Sun Oct 20 11:38:42 1996				*
-*************************************************************************
-*   Synopsis   : write an double reordered to vax format		*
-*   Returns    : number of bytes written				*
-*   Parameters : double d: value written				*
-*		FILE *fp: output stream					*
-*   Global refs: -							*
-************************************************************************/
+/*!
+* \return	Number of bytes written.
+* \ingroup	WlzIO
+* \brief	Writes a double reordered to DEC VAX(!) format.
+* \param	f			Value written.
+* \param	fp			Given file.
+*/
 static int putdouble(double d, FILE *fp)
 {
   double dd = d;
@@ -260,18 +242,13 @@ static int putdouble(double d, FILE *fp)
   return( (int) fwrite(&cout[0], sizeof(char), 8, fp) );
 }
 
-/* function:     WlzWriteObj    */
 /*! 
+* \return       Woolz error number code.
 * \ingroup      WlzIO
 * \brief        Top-level procedure for writing an object to a file stream.
 *
-* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_PARAM_NULL,
- WLZ_ERR_WRITE_EOF, WLZ_ERR_OBJECT_TYPE, WLZ_ERR_WRITE_INCOMPLETE,
- WLZ_ERR_DOMAIN_TYPE, WLZ_ERR_EOO.
-* \param    fp	File pointer for output stream.
-* \param    obj	Pointer to top-level object to be written.
-* \par      Source:
-*                WlzWriteObj.c
+* \param    	fp			File pointer for output.
+* \param    	obj			Ptr to top-level object to be written.
 */
 WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 {
@@ -384,16 +361,15 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteInt
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given native int to the given file stream
-*		as a 4 byte integer.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		int *iP:		Ptr to native ints.
-*		int nI:			Number of ints.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's the given native int values to the given file
+*               as a 4 byte integer.
+* \param	fP			Given file.
+* \param	iP			Ptr to native ints.
+* \param	nI			Number of ints.
+*/
 static WlzErrorNum WlzWriteInt(FILE *fP, int *iP, int nI)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -409,16 +385,14 @@ static WlzErrorNum WlzWriteInt(FILE *fP, int *iP, int nI)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteVertex2I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 2D integer verticies to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIVertex2 *vP:	Ptr to 2D integer verticies.
-*		int nV:			Number of verticies.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 2D integer verticies to the given file.
+* \param	fP			Given file.
+* \param	vP			Ptr to 2D integer verticies.
+* \param	nV			Number of verticies.
+*/
 static WlzErrorNum WlzWriteVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -434,16 +408,14 @@ static WlzErrorNum WlzWriteVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteVertex2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 2D double verticies to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDVertex2 *vP:	Ptr to 2D double verticies.
-*		int nV:			Number of verticies.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 2D double verticies to the given file.
+* \param	fP			Given file.
+* \param	vP			Ptr to 2D double verticies.
+* \param	nV			Number of verticies.
+*/
 static WlzErrorNum WlzWriteVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -459,16 +431,14 @@ static WlzErrorNum WlzWriteVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteVertex3I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 3D integer verticies to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIVertex3 *vP:	Ptr to 3D integer verticies.
-*		int nV:			Number of verticies.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 3D integer verticies to the given file.
+* \param	fP			Given file.
+* \param	vP			Ptr to 3D integer verticies.
+* \param	nV			Number of verticies.
+*/
 static WlzErrorNum WlzWriteVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -485,16 +455,14 @@ static WlzErrorNum WlzWriteVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteVertex3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 3D double verticies to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDVertex3 *vP:	Ptr to 3D double verticies.
-*		int nV:			Number of verticies.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 3D double verticies to the given file.
+* \param	fP			Given file stream.
+* \param	vP			Ptr to 3D double verticies.
+* \param	nV			Number of verticies.
+*/
 static WlzErrorNum WlzWriteVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -511,16 +479,14 @@ static WlzErrorNum WlzWriteVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteBox2I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 2D integer box to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIBox2 *bP:		Ptr to 2D integer box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 2D integer box to the given file.
+* \param	fP			Given file.
+* \param	bP			Ptr to 2D integer box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzWriteBox2I(FILE *fP, WlzIBox2 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -537,16 +503,14 @@ static WlzErrorNum WlzWriteBox2I(FILE *fP, WlzIBox2 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteBox2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 2D double box to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDBox2 *bP:		Ptr to 2D double box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 2D double box to the given file.
+* \param	fP			Given file.
+* \param	bP			Ptr to 2D double box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzWriteBox2D(FILE *fP, WlzDBox2 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -563,16 +527,14 @@ static WlzErrorNum WlzWriteBox2D(FILE *fP, WlzDBox2 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteBox3I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 3D integer box to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIBox3 *bP:		Ptr to 3D integer box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's the given 3D integer box to the given file.
+* \param	fP			Given file.
+* \param	bP			Ptr to 3D integer box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzWriteBox3I(FILE *fP, WlzIBox3 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -591,16 +553,14 @@ static WlzErrorNum WlzWriteBox3I(FILE *fP, WlzIBox3 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteBox3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's the given 3D double box to the given
-*		file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDBox3 *bP:		Ptr to 3D double box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given 3D double box to the given file.
+* \param	fP			Given file.
+* \param	bP			Ptr to 3D double box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzWriteBox3D(FILE *fP, WlzDBox3 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -619,15 +579,149 @@ static WlzErrorNum WlzWriteBox3D(FILE *fP, WlzDBox3 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteIntervalDomain					*
-*   Date       : Sun Oct 20 13:16:08 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    : Woolz error code.					*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes an ASCII string to the given file.
+*		\verbatim
+		<number of characters> int, 4 bytes
+		<characters>
+		\endverbatim
+* \param	fP			Given file.
+* \param	str			The string.
+*/
+static WlzErrorNum	WlzWriteStr(FILE *fP, char *str)
+{
+  int		len;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  len = strlen(str);
+  if((putword(len, fP) !=  4) || (fwrite(str, 1, len, fP) != len))
+  {
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes the given grey values to the given file. Each
+*		of the grey values may be of the same type.
+* \param	fP			Given file.
+* \param	type			Grey value type.
+* \param	gV			The grey values.
+* \param	nGV			Number of grey values to write.
+*/
+static WlzErrorNum	WlzWriteGreyV(FILE *fP, WlzGreyType type,
+				      WlzGreyV *gV, int nGV)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(type)
+  {
+    case WLZ_GREY_INT:
+      while((errNum == WLZ_ERR_NONE) && (nGV-- > 0))
+      {
+	if(putword(gV->inv, fP) != 4)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	++gV;
+      }
+      break;
+    case WLZ_GREY_SHORT:
+      while((errNum == WLZ_ERR_NONE) && (nGV-- > 0))
+      {
+	if(putshort(gV->shv, fP) != 2)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	++gV;
+      }
+      break;
+    case WLZ_GREY_UBYTE:
+      while((errNum == WLZ_ERR_NONE) && (nGV-- > 0))
+      {
+	if(putc(((unsigned int )(gV->ubv)), fP) == EOF)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	++gV;
+      }
+      break;
+    case WLZ_GREY_FLOAT:
+      while((errNum == WLZ_ERR_NONE) && (nGV-- > 0))
+      {
+        if(putfloat(gV->flv, fP) != 4)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	++gV;
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      while((errNum == WLZ_ERR_NONE) && (nGV-- > 0))
+      {
+        if(putdouble(gV->dbv, fP) != 8)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	++gV;
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      while((errNum == WLZ_ERR_NONE) && (nGV-- > 0))
+      {
+	if(putword((int )(gV->rgbv), fP) != 4)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	++gV;
+      }
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes the given pixel values to the given file. Each
+*		of the pixel values may be of a different type.
+* \param	fP			Given file.
+* \param	pV			The pixel values.
+* \param	nGV			Number of grey values to write.
+*/
+static WlzErrorNum	WlzWritePixelV(FILE *fP, WlzPixelV *pV, int nPV)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nPV-- > 0))
+  {
+    if(putc((unsigned int)pV->type, fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    else
+    {
+      errNum = WlzWriteGreyV(fP, pV->type, &(pV->v), 1);
+    }
+    ++pV;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Write's the given Woolz interval domain to the given file.
+* \param	fp			Given file.
+* \param	itvl			Interval domain.
+*/
 static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
 {
   int 			i,
@@ -700,15 +794,13 @@ static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWritePlaneDomain					*
-*   Date       : Sun Oct 20 12:48:32 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    : Woolz error code.					*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a plane domain to the given file.
+* \param	fp			Given file.
+* \param	planedm			Palne domain.
+*/
 static WlzErrorNum WlzWritePlaneDomain(FILE *fp, WlzPlaneDomain *planedm)
 {
   int		i, 
@@ -802,15 +894,13 @@ static WlzErrorNum WlzWritePlaneDomain(FILE *fp, WlzPlaneDomain *planedm)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteProperty					*
-*   Date       : Sun Oct 20 12:57:19 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    : Woolz error code.					*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a single property to the given file.
+* \param	fp			Given file.
+* \param	property		Property to be written.
+*/
 static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -885,11 +975,41 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
 	}
       }
       break;
+    case WLZ_PROPERTY_NAME:
+      if(putc((unsigned int) WLZ_PROPERTY_NAME, fp) == EOF)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else
+      {
+        errNum = WlzWriteStr(fp, property.name->name);
+      }
+      break;
+    case WLZ_PROPERTY_GREY:
+      if(putc((unsigned int) WLZ_PROPERTY_GREY, fp) == EOF)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else if((errNum = WlzWriteStr(fp, property.greyV->name)) == WLZ_ERR_NONE)
+      {
+        errNum = WlzWritePixelV(fp, &(property.greyV->value), 1);
+      }
+      break;
+    default:
+      errNum = WLZ_ERR_PROPERTY_TYPE;
+      break;
     }
   }
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a property list to the given file.
+* \param	fp			Given file.
+* \param	plist			Property list.
+*/
 static WlzErrorNum WlzWritePropertyList(
   FILE *fp,
   AlcDLPList	*plist)
@@ -930,15 +1050,15 @@ static WlzErrorNum WlzWritePropertyList(
   return errNum;
 }
 
-/************************************************************************
-*   Function   : WlzWriteValueTable					*
-*   Date       : Sun Oct 20 13:16:38 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes the 2D values of a Woolz 2D domain object to the
+*		given file.
+* \param	fp			Given file.
+* \param	obj			Object containing values that
+*					are to be written to file.
+*/
 static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
 {
   WlzIntervalWSpace	iwsp;
@@ -1203,15 +1323,13 @@ static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteVoxelValueTable				*
-*   Date       : Sun Oct 20 13:37:48 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes the voxel values of a Woolz object to the given file.
+* \param	fp			Given file.
+* \param	obj			Object with values.
+*/
 static WlzErrorNum WlzWriteVoxelValueTable(FILE *fp, WlzObject *obj)
 {
   int			i, nplanes;
@@ -1271,15 +1389,13 @@ static WlzErrorNum WlzWriteVoxelValueTable(FILE *fp, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWritePolygon					*
-*   Date       : Sun Oct 20 13:48:57 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup 	WlzIO
+* \brief	Writes a polygon domain to the given file.
+* \param	fp			Given file.
+* \param	poly			Polygon domain.
+*/
 static WlzErrorNum WlzWritePolygon(FILE *fp, WlzPolygonDomain *poly)
 {
   int		nvertices, i;
@@ -1347,15 +1463,13 @@ static WlzErrorNum WlzWritePolygon(FILE *fp, WlzPolygonDomain *poly)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteBoundList					*
-*   Date       : Sun Oct 20 13:57:58 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a boundary list to the given file.
+* \param	fp			Given file.
+* \param	blist			Boundary list.
+*/
 static WlzErrorNum WlzWriteBoundList(FILE *fp, WlzBoundList *blist)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1389,15 +1503,14 @@ static WlzErrorNum WlzWriteBoundList(FILE *fp, WlzBoundList *blist)
   }
   return(errNum);
 }
-/************************************************************************
-*   Function   : WlzWriteConvexHullValues				*
-*   Date       : Fri Aug  2 15:20:30 2002				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO 
+* \brief	Writes a convex hull to the given file.
+* \param	fp			Given file.
+* \param	cnvhull			Convex hull.
+*/
 static WlzErrorNum      WlzWriteConvexHullValues(
   FILE *fp,
   WlzConvHullValues *cnvhull)
@@ -1445,15 +1558,13 @@ static WlzErrorNum      WlzWriteConvexHullValues(
   return(errNum);
 }
   
-/************************************************************************
-*   Function   : WlzWriteRect						*
-*   Date       : Sun Oct 20 18:55:59 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes an integer rectangle to the given file.
+* \param	fp			Given file.
+* \param	rdom			Integer rectangle.
+*/
 static WlzErrorNum WlzWriteRect(FILE *fp, WlzIRect *rdom)
 {
   WlzFRect	*frdom;
@@ -1527,16 +1638,13 @@ static WlzErrorNum WlzWriteRect(FILE *fp, WlzIRect *rdom)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteHistogramDomain				*
-*   Date       : Sun Oct 20 19:17:14 1996				*
-*************************************************************************
-*   Synopsis   : Writes a Woolz histogram domain.			*
-*   Returns    : Woolz error code.					*
-*   Parameters : FILE *fp:	Output stream				*
-*		 WlzHistogramDomain *hist: Histogram domain to write.	*
-*   Global refs: -							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a histogram domain to the given file.
+* \param	fp			Given file.
+* \param	hist			Histogram domain.
+*/
 static WlzErrorNum WlzWriteHistogramDomain(FILE *fp, WlzHistogramDomain *hist)
 {
   int		tI0;
@@ -1598,15 +1706,13 @@ static WlzErrorNum WlzWriteHistogramDomain(FILE *fp, WlzHistogramDomain *hist)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteCompoundA					*
-*   Date       : Sun Oct 20 19:21:20 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a compound array object to the given file.
+* \param	fp			Given file.
+* \param	c			Compound array object.
+*/
 static WlzErrorNum WlzWriteCompoundA(FILE *fp, WlzCompoundArray *c)
 {
   int 		i;
@@ -1642,15 +1748,13 @@ static WlzErrorNum WlzWriteCompoundA(FILE *fp, WlzCompoundArray *c)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteAffineTransform				*
-*   Date       : Sun Oct 20 19:23:53 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a Woolz affine transform to the given file.
+* \param	fp			Given file.
+* \param	trans			Affine transform.
+*/
 static WlzErrorNum WlzWriteAffineTransform(FILE *fp, WlzAffineTransform *trans)
 {
   int		i,
@@ -1688,15 +1792,13 @@ static WlzErrorNum WlzWriteAffineTransform(FILE *fp, WlzAffineTransform *trans)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteWarpTrans					*
-*   Date       : Sun Oct 20 19:25:54 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a FE warp transform to the given file.
+* \param	fp			Given file.
+* \param	obj			Warp transform.
+*/
 static WlzErrorNum WlzWriteWarpTrans(FILE *fp, WlzWarpTrans *obj)
 {
   int		i,
@@ -1779,15 +1881,13 @@ static WlzErrorNum WlzWriteWarpTrans(FILE *fp, WlzWarpTrans *obj)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteFMatchObj					*
-*   Date       : Sun Oct 20 19:27:24 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes FE warp match features to the given file.
+* \param	fp			Given file.
+* \param	obj			Match features.
+*/
 static WlzErrorNum WlzWriteFMatchObj(FILE *fp, WlzFMatchObj *obj)
 {
   int		i,
@@ -1823,15 +1923,13 @@ static WlzErrorNum WlzWriteFMatchObj(FILE *fp, WlzFMatchObj *obj)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWrite3DWarpTrans					*
-*   Date       : Sun Oct 20 19:29:39 1996				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a 3D FE warp transform to the given file.
+* \param	fp			Given file.
+* \param	obj			Warp transform.
+*/
 static WlzErrorNum WlzWrite3DWarpTrans(FILE *fp, Wlz3DWarpTrans *obj)
 {
   int 		i;
@@ -1866,14 +1964,13 @@ static WlzErrorNum WlzWrite3DWarpTrans(FILE *fp, Wlz3DWarpTrans *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteContour
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's a WlzContour data structure to a file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzContour *ctr:	Given contour to output.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes either a 2D or 3D contour to the given file.
+* \param	fP			Given file.
+* \param	ctr			Contour.
+*/
 static WlzErrorNum WlzWriteContour(FILE *fP, WlzContour *ctr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1900,46 +1997,47 @@ static WlzErrorNum WlzWriteContour(FILE *fP, WlzContour *ctr)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzWriteGMModel
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Write's a GM model data structure to a file stream.
-*	 	Format is:
-*		  model->type (byte)
-*		  {
-*		    case WLZ_GMMOD_2I
-*		    case WLZ_GMMOD_2D
-*		      nEdge (int)
-*		    case WLZ_GMMOD_3I
-*		    case WLZ_GMMOD_3D
-*		      nLoop (int)
-*		  }
-*		  {
-*		    case model->type == WLZ_GMMOD_2I
-*		      vertexGU.vg2I->vtx (WlzIVertex2, int * 2)
-*		    case model->type == WLZ_GMMOD_2D
-*		      vertexGU.vg2D->vtx (WlzDVertex2, double * 2)
-*		    case model->type == WLZ_GMMOD_3I
-*		      vertexGU.vg3I->vtx (WlzIVertex2, int * 3)
-*		    case model->type == WLZ_GMMOD_3D
-*		      vertexGU.vg3D->vtx (WlzDVertex2, double * 3)
-*		  } * nVertex
-*		  {
-*		    case WLZ_GMMOD_2I
-*		    case WLZ_GMMOD_2D
-*		    {
-*		      2 vertex indicies
-*		    } * nEdge
-*		    case WLZ_GMMOD_3I
-*		    case WLZ_GMMOD_3D
-*		    {
-*		      2 vertex indicies
-*		    } * nLoop
-*		  }
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzGMModel *model:	Given model to output.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's a geometric model data structure to the given file.
+*		The format is:
+*		\verbatim
+ 		  model->type (byte)
+ 		  {
+ 		    case WLZ_GMMOD_2I
+ 		    case WLZ_GMMOD_2D
+ 		      nEdge (int)
+ 		    case WLZ_GMMOD_3I
+ 		    case WLZ_GMMOD_3D
+ 		      nLoop (int)
+ 		  }
+ 		  {
+ 		    case model->type == WLZ_GMMOD_2I
+ 		      vertexGU.vg2I->vtx (WlzIVertex2, int * 2)
+ 		    case model->type == WLZ_GMMOD_2D
+ 		      vertexGU.vg2D->vtx (WlzDVertex2, double * 2)
+ 		    case model->type == WLZ_GMMOD_3I
+ 		      vertexGU.vg3I->vtx (WlzIVertex2, int * 3)
+ 		    case model->type == WLZ_GMMOD_3D
+ 		      vertexGU.vg3D->vtx (WlzDVertex2, double * 3)
+ 		  } * nVertex
+ 		  {
+ 		    case WLZ_GMMOD_2I
+ 		    case WLZ_GMMOD_2D
+ 		    {
+ 		      2 vertex indicies
+ 		    } * nEdge
+ 		    case WLZ_GMMOD_3I
+ 		    case WLZ_GMMOD_3D
+ 		    {
+ 		      2 vertex indicies
+ 		    } * nLoop
+ 		  }
+		\endverbatim
+* \param	fP			Given file.
+* \param	model			Geometric model.
+*/
 static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 {
 
