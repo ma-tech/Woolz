@@ -1728,7 +1728,9 @@ extern WlzObject		*WlzMeshTransformObj(
 				  WlzMeshTransform *mesh,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
-
+extern WlzDVertex2 		WlzMeshTransformVtx(WlzDVertex2 vtx,
+						    WlzMeshTransform *mesh,
+						    WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzMeshUtils.c							*
