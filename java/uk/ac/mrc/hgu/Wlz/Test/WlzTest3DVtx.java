@@ -82,7 +82,7 @@ public class WlzTest3DVtx
 	System.out.println(vtx.vtX + " " + vtx.vtY + " " + vtx.vtZ);
 	
 	/* create a viewStruct, initialize it */
-	WlzIBox3 bBox3 = WlzObject.WlzBoundingBox3D(obj0);
+	WlzIBox3 bBox3 = WlzObject.WlzBoundingBox3I(obj0);
 	WlzThreeDViewStruct vs=obj0.WlzMake3DViewStruct(160);
 	obj0.Wlz3DViewSetTheta(vs,Math.PI/2.0d);
 	obj0.Wlz3DViewSetPhi(vs,Math.PI/2.0d);
