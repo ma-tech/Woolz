@@ -16,12 +16,15 @@
 *		These can be either planar graphs or 3D surfaces, with
 *		the surfaces being either manifold or non-manifold.
 * \ingroup      WlzGeoModel
-* \todo         -
+* \todo         - The element deletion functions are only partly written
+*		  and only partly work for 2D models.
 * \bug          None known.
 */
 #include <Wlz.h>
 #include <limits.h>
 
+static WlzGMShell 	*WlzGMLoopTFindShell(
+			  WlzGMLoopT *gLT);
 static WlzErrorNum 	WlzGMShellMergeG(
 			  WlzGMShell *shell0,
 			  WlzGMShell *shell1);
@@ -129,8 +132,113 @@ static void             WlzGMLoopTSetT(
 static void             WlzGMModelAddVertex(
                           WlzGMModel *model,
                           WlzGMVertex *nV);
+static void		WlzGMModelRemVertex(
+			  WlzGMModel *model,
+			  WlzGMVertex *dV);
 static void		WlzGMElmMarkFree(
 			  int *idxP);
+static void		WlzGMModelDeleteET(
+			  WlzGMModel *model,
+			  WlzGMEdgeT *dET);
+static void 		WlzGMModelDeleteLT(
+			  WlzGMModel *model,
+			  WlzGMLoopT *dLT);
+
+/* Resource callback function list manipulation. */
+
+/*!
+* \return				Woolz error code.
+* \brief	Add a resource allocation callback to the models resources.
+* \param	model			The model.
+* \param	fn			The callback function.
+* \param	data			The callback data to be passed on
+*					to the callback function.
+*/
+WlzErrorNum	WlzGMModelAddResCb(WlzGMModel *model, WlzGMCbFn fn,
+				   void *data)
+{
+  WlzGMCbEntry	*newCbE = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model && fn)
+  {
+    if((newCbE = (WlzGMCbEntry *)AlcMalloc(sizeof(WlzGMCbEntry))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      newCbE->fn = fn;
+      newCbE->data = data;
+      newCbE->next = model->res.callbacks;
+      model->res.callbacks = newCbE;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	<void>
+* \brief	Removes a resource allocation callback from the models
+*		resources. Both the callback function and callback data
+*		must have the same values as when the callback was added
+*		since they are used to find the corresponding callback
+*		entry.
+* \param	model			The model.
+* \param	fn			The callback function.
+* \param	data			The callback data.
+*/
+void		WlzGMModelRemResCb(WlzGMModel *model, WlzGMCbFn fn,
+				   void *data)
+{
+  WlzGMCbEntry	*cBE0,
+  		*cBE1;
+
+  if(model && fn && ((cBE1 = model->res.callbacks) != NULL))
+  {
+    cBE0 = NULL;
+    while((fn != cBE1->fn) && (data != cBE1->data) && cBE1->next)
+    {
+      cBE0 = cBE1;
+      cBE1 = cBE1->next;
+    }
+    if((fn == cBE1->fn) && (data == cBE1->data))
+    {
+      if(cBE0)
+      {
+        cBE0->next = cBE1->next;
+      }
+      else
+      {
+        model->res.callbacks = NULL;
+      }
+      AlcFree(cBE1);
+    }
+  }
+}
+
+/*!
+* \return	<void>
+* \brief	Calls all resource allocation callbacks passing on the
+*		given model, element and reason along with the data from
+*		the callback entry.
+* \param	model			The model.
+* \param	elm			The callback function.
+* \param	reason			The callback data.
+*/
+static void	WlzGMModelCallResCb(WlzGMModel *model, WlzGMElemP elm,
+				    WlzGMCbReason reason)
+{
+  WlzGMCbEntry	*cBE;
+
+  if(model && elm.core && ((cBE = model->res.callbacks) != NULL))
+  {
+    do
+    {
+      (*(cBE->fn))(model, elm, reason, cBE->data);
+    } while((cBE = cBE->next) != NULL);
+  }
+}
 
 /* Creation  of geometric modeling elements */
 
@@ -211,7 +319,7 @@ WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
     					    blkSz, NULL)) == NULL) ||
        ((model->res.edgeT.vec = AlcVectorNew(1, sizeof(WlzGMEdgeT),
     					     blkSz, NULL)) == NULL) ||
-       ((model->res.loop.vec = AlcVectorNew(1, sizeof(WlzGMLoop),
+       ((model->res.face.vec = AlcVectorNew(1, sizeof(WlzGMFace),
     					    blkSz, NULL)) == NULL) ||
        ((model->res.loopT.vec = AlcVectorNew(1, sizeof(WlzGMLoopT),
     					     blkSz, NULL)) == NULL) ||
@@ -262,6 +370,7 @@ WlzGMShell	*WlzGMModelNewS(WlzGMModel *model, WlzErrorNum *dstErr)
   WlzGMResource	*resS,
   		*resSG;
   WlzGMShell	*shell = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -290,6 +399,8 @@ WlzGMShell	*WlzGMModelNewS(WlzGMModel *model, WlzErrorNum *dstErr)
     shell->idx = (resS->numIdx)++;
     shell->geo.core->type = WlzGMModelGetSGeomType(model);
     shell->geo.core->idx = (resSG->numIdx)++;
+    elm.shell = shell;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -304,19 +415,18 @@ WlzGMShell	*WlzGMModelNewS(WlzGMModel *model, WlzErrorNum *dstErr)
 }
 
 /*!
-* \return				New loop.
+* \return				New face.
 * \ingroup      WlzGeoModel
-* \brief	Creates an empty loop with a loop geometry element.
-*               The loop geometry element only has it's index set
-*               to a meaningful value.
+* \brief	Creates an empty face.
 * \param	model			Parent model.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
-WlzGMLoop	*WlzGMModelNewL(WlzGMModel *model, WlzErrorNum *dstErr)
+WlzGMFace	*WlzGMModelNewF(WlzGMModel *model, WlzErrorNum *dstErr)
 {
-  WlzGMResource	*resL;
-  WlzGMLoop	*loop = NULL;
+  WlzGMResource	*resF;
+  WlzGMFace	*face = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -325,29 +435,31 @@ WlzGMLoop	*WlzGMModelNewL(WlzGMModel *model, WlzErrorNum *dstErr)
   }
   else
   {
-    /* Get a new loop and loop geometry element from the model */
-    resL = &(model->res.loop);
-    if((loop = (WlzGMLoop *)
-     	       (AlcVectorExtendAndGet(resL->vec, resL->numIdx))) == NULL)
+    /* Get a new face element from the model */
+    resF = &(model->res.face);
+    if((face = (WlzGMFace *)
+     	       (AlcVectorExtendAndGet(resF->vec, resF->numIdx))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    ++(resL->numElm);
-    loop->type = WLZ_GMELM_LOOP;
-    loop->idx = (resL->numIdx)++;
+    ++(resF->numElm);
+    face->type = WLZ_GMELM_FACE;
+    face->idx = (resF->numIdx)++;
+    elm.face = face;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(loop);
+  return(face);
 }
 
 /*!
-* \return				New loop.
+* \return				New loop topology element.
 * \ingroup      WlzGeoModel
 * \brief	Creates a loop topology element.
 * \param	model			Parent model.
@@ -358,6 +470,7 @@ WlzGMLoopT	*WlzGMModelNewLT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resLT;
   WlzGMLoopT	*loopT = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -379,6 +492,8 @@ WlzGMLoopT	*WlzGMModelNewLT(WlzGMModel *model, WlzErrorNum *dstErr)
     ++(resLT->numElm);
     loopT->type = WLZ_GMELM_LOOP_T;
     loopT->idx = (resLT->numIdx)++;
+    elm.loopT = loopT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -404,6 +519,7 @@ WlzGMDiskT     *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resDT;
   WlzGMDiskT	*diskT = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -425,6 +541,8 @@ WlzGMDiskT     *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
     ++(resDT->numElm);
     diskT->type = WLZ_GMELM_DISK_T;
     diskT->idx = (resDT->numIdx)++;
+    elm.diskT = diskT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -452,6 +570,7 @@ WlzGMEdge      *WlzGMModelNewE(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resE;
   WlzGMEdge	*edge = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -473,6 +592,8 @@ WlzGMEdge      *WlzGMModelNewE(WlzGMModel *model, WlzErrorNum *dstErr)
     ++(resE->numElm);
     edge->type = WLZ_GMELM_EDGE;
     edge->idx = (model->res.edge.numIdx)++;
+    elm.edge = edge;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -498,6 +619,7 @@ WlzGMEdgeT     *WlzGMModelNewET(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resET;
   WlzGMEdgeT	*edgeT = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -519,6 +641,8 @@ WlzGMEdgeT     *WlzGMModelNewET(WlzGMModel *model, WlzErrorNum *dstErr)
     ++(resET->numElm);
     edgeT->type = WLZ_GMELM_EDGE_T;
     edgeT->idx = (resET->numIdx)++;
+    elm.edgeT = edgeT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -547,6 +671,7 @@ WlzGMVertex      *WlzGMModelNewV(WlzGMModel *model, WlzErrorNum *dstErr)
   WlzGMResource	*resV,
   		*resVG;
   WlzGMVertex	*vertex = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -575,6 +700,8 @@ WlzGMVertex      *WlzGMModelNewV(WlzGMModel *model, WlzErrorNum *dstErr)
     vertex->idx = (resV->numIdx)++;
     vertex->geo.core->type = WlzGMModelGetVGeomType(model);
     vertex->geo.core->idx = (resVG->numIdx)++;
+    elm.vertex = vertex;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -600,6 +727,7 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resVT;
   WlzGMVertexT	*vertexT = NULL;
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
@@ -621,6 +749,8 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
     ++(resVT->numElm);
     vertexT->type = WLZ_GMELM_VERTEX_T;
     vertexT->idx = (resVT->numIdx)++;
+    elm.vertexT = vertexT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
   /* Clear up on error */
   if(errNum != WLZ_ERR_NONE)
@@ -685,7 +815,7 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 				WLZ_GMELMFLG_DISK_T |
 				WLZ_GMELMFLG_EDGE |
 				WLZ_GMELMFLG_EDGE_T |
-				WLZ_GMELMFLG_LOOP |
+				WLZ_GMELMFLG_FACE |
 				WLZ_GMELMFLG_LOOP_T |
 				WLZ_GMELMFLG_SHELL |
 				WLZ_GMELMFLG_SHELL_G,
@@ -969,15 +1099,15 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Copy loop's */
+    /* Copy faces */
     gIdx = 0;
-    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.loop.numIdx))
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.face.numIdx))
     {
-      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.loop.vec, gIdx);
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.face.vec, gIdx);
       if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
       {
-	nIdx = *(resIdxTb->loop.idxLut + gIdx);
-	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.loop.vec,
+	nIdx = *(resIdxTb->face.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.face.vec,
 						       nIdx)) == NULL)
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
@@ -986,11 +1116,11 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	{
 	  nElmP.core->type = gElmP.core->type;
 	  nElmP.core->idx = nIdx;
-	  nElmP.loop->loopT = (WlzGMLoopT *)
+	  nElmP.face->loopT = (WlzGMLoopT *)
 	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
 					       *(resIdxTb->loopT.idxLut +
-						 gElmP.loop->loopT->idx));
-	  if(nElmP.loop->loopT == NULL)
+						 gElmP.face->loopT->idx));
+	  if(nElmP.face->loopT == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -1030,10 +1160,10 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
 					       *(resIdxTb->loopT.idxLut +
 						 gElmP.loopT->opp->idx));
-	  nElmP.loopT->loop = (WlzGMLoop *)
-	  		      AlcVectorExtendAndGet(nM->res.loop.vec,
-					       *(resIdxTb->loop.idxLut +
-						 gElmP.loopT->loop->idx));
+	  nElmP.loopT->face = (WlzGMFace *)
+	  		      AlcVectorExtendAndGet(nM->res.face.vec,
+					       *(resIdxTb->face.idxLut +
+						 gElmP.loopT->face->idx));
 	  nElmP.loopT->edgeT = (WlzGMEdgeT *)
 	  		      AlcVectorExtendAndGet(nM->res.edgeT.vec,
 					       *(resIdxTb->edgeT.idxLut +
@@ -1045,7 +1175,7 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	  if((nElmP.loopT->next == NULL) ||
 	     (nElmP.loopT->prev == NULL) ||
 	     (nElmP.loopT->opp == NULL) ||
-	     (nElmP.loopT->loop == NULL) ||
+	     (nElmP.loopT->face == NULL) ||
 	     (nElmP.loopT->edgeT == NULL) ||
 	     (nElmP.loopT->parent == NULL))
 	  {
@@ -1158,7 +1288,7 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
     nM->res.diskT.numElm = nM->res.diskT.numIdx = gM->res.diskT.numElm;
     nM->res.edge.numElm = nM->res.edge.numIdx = gM->res.edge.numElm;
     nM->res.edgeT.numElm = nM->res.edgeT.numIdx = gM->res.edgeT.numElm;
-    nM->res.loop.numElm = nM->res.loop.numIdx = gM->res.loop.numElm;
+    nM->res.face.numElm = nM->res.face.numIdx = gM->res.face.numElm;
     nM->res.loopT.numElm = nM->res.loopT.numIdx = gM->res.loopT.numElm;
     nM->res.shell.numElm = nM->res.shell.numIdx = gM->res.shell.numElm;
     nM->res.shellG.numElm = nM->res.shellG.numIdx = gM->res.shellG.numElm;
@@ -1203,7 +1333,7 @@ WlzErrorNum	WlzGMModelFree(WlzGMModel *model)
     (void )AlcVectorFree(model->res.diskT.vec);
     (void )AlcVectorFree(model->res.edge.vec);
     (void )AlcVectorFree(model->res.edgeT.vec);
-    (void )AlcVectorFree(model->res.loop.vec);
+    (void )AlcVectorFree(model->res.face.vec);
     (void )AlcVectorFree(model->res.loopT.vec);
     (void )AlcVectorFree(model->res.shell.vec);
     (void )AlcVectorFree(model->res.shellG.vec);
@@ -1241,6 +1371,7 @@ static void	WlzGMElmMarkFree(int *idxP)
 */
 WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (shell == NULL))
@@ -1253,7 +1384,9 @@ WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Can't really free the loop so just mark it and it's geometry element
+    elm.shell = shell;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
+    /* Can't really free the shell so just mark it and it's geometry element
      * as invalid by making the indicies < 0. */
     WlzGMElmMarkFree(&(shell->idx));
     if(shell->geo.core != NULL)
@@ -1269,15 +1402,16 @@ WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
-* \brief	Marks a loop as invalid and suitable for reclaiming.
+* \brief	Marks a face as invalid and suitable for reclaiming.
 * \param	model			Model with resources.
-* \param	loop			Loop to free.
+* \param	face			Face to free.
 */
-WlzErrorNum	WlzGMModelFreeL(WlzGMModel *model, WlzGMLoop *loop)
+WlzErrorNum	WlzGMModelFreeF(WlzGMModel *model, WlzGMFace *face)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((model == NULL) || (loop == NULL))
+  if((model == NULL) || (face == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
@@ -1287,10 +1421,12 @@ WlzErrorNum	WlzGMModelFreeL(WlzGMModel *model, WlzGMLoop *loop)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Can't really free the loop so just mark it as invalid by making
+    elm.face = face;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
+    /* Can't really free the face so just mark it as invalid by making
      * the indicies < 0. */
-    WlzGMElmMarkFree(&(loop->idx));
-    --(model->res.loop.numElm);
+    WlzGMElmMarkFree(&(face->idx));
+    --(model->res.face.numElm);
   }
   return(errNum);
 }
@@ -1305,6 +1441,7 @@ WlzErrorNum	WlzGMModelFreeL(WlzGMModel *model, WlzGMLoop *loop)
 */
 WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (loopT == NULL))
@@ -1317,6 +1454,8 @@ WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    elm.loopT = loopT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
     /* Can't really free the loopT so just mark it as invalid by making
      * the index < 0. */
     WlzGMElmMarkFree(&(loopT->idx));
@@ -1335,6 +1474,7 @@ WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
 */
 WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (diskT == NULL))
@@ -1347,6 +1487,8 @@ WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    elm.diskT = diskT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
     /* Can't really free the diskT so just mark it as invalid by making
      * the index < 0. */
     WlzGMElmMarkFree(&(diskT->idx));
@@ -1364,6 +1506,7 @@ WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
 */
 WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (edge == NULL))
@@ -1376,6 +1519,8 @@ WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    elm.edge = edge;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
     /* Can't really free the edge so just mark it as invalid by making
      * the indicies < 0. */
     WlzGMElmMarkFree(&(edge->idx));
@@ -1394,6 +1539,7 @@ WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
 */
 WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (edgeT == NULL))
@@ -1406,6 +1552,8 @@ WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    elm.edgeT = edgeT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
     /* Can't really free the edgeT so just mark it as invalid by making
      * the index < 0. */
     WlzGMElmMarkFree(&(edgeT->idx));
@@ -1424,6 +1572,7 @@ WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
 */
 WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (vertex == NULL))
@@ -1436,6 +1585,8 @@ WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    elm.vertex = vertex;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
     /* Can't really free the vertex so just mark it and it's geometry element
      * as invalid by making the indicies < 0. */
     WlzGMElmMarkFree(&(vertex->idx));
@@ -1459,6 +1610,7 @@ WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
 */
 WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 {
+  WlzGMElemP	elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((model == NULL) || (vertexT == NULL))
@@ -1471,6 +1623,8 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    elm.vertexT = vertexT;
+    WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
     /* Can't really free the vertexT so just mark it as invalid by making
      * the index < 0. */
     WlzGMElmMarkFree(&(vertexT->idx));
@@ -1482,14 +1636,14 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 /* Deletion of geometric modeling elements along with children */
 
 /*!
-* \return				Woolz error code.
+* \return				<void>
 * \ingroup      WlzGeoModel
 * \brief	Deletes a shell by unlinking it and then freeing it and
 *               all it's children.
 * \param	model			Model with resources.
 * \param	dS			Shell to delete.
 */
-WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
+void		WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 {
   WlzGMVertexT	*tVT;
   WlzGMEdgeT	*fET,
@@ -1498,13 +1652,8 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
   WlzGMLoopT	*fLT,
   		*nLT,
   		*tLT;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((model == NULL) || (dS == NULL))
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
+  if(model && dS && (dS->idx >= 0))
   {
     /* Unlink the shell. */
     WlzGMShellUnlink(dS);
@@ -1544,18 +1693,366 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 	}
 	tET = nET;
       } while(tET != fET);
-      /* Free the loopT and loop. */
+      /* Free the loopT and face. */
       nLT = tLT->next;
-      if(tLT->loop->idx >= 0)
+      if(tLT->face->idx >= 0)
       {
-        (void )WlzGMModelFreeL(model, tLT->loop);
+        (void )WlzGMModelFreeF(model, tLT->face);
       }
       (void )WlzGMModelFreeLT(model, tLT);
       tLT = nLT;
     } while(tLT != fLT);
     (void )WlzGMModelFreeS(model, dS);
   }
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Deletes a vertex along with all the elements which depend
+*		on it. All elements which depend on the vertex are unlinked
+*		and then freed. If the vertex's parents were to depend
+*		soley on the vertex then they would be free'd too. However
+*		the Woolz geometric models can not hold an isolated
+*		vertex.
+*		The basic algorithm used is: Build a collection of edges
+*		which use the vertex and then delete all edges in the
+*		collection. If there are no edges (in the collection) then
+*		just unlink and free the vertex.
+*		The geometry of the existing and possible new shells may
+*		not be correct after deleting a vertex using this function
+*		and this should be taken care of by the calling function.
+*		TODO This only works for 2D models I need to extend it to
+*		3D models.
+* \param	model			Model with resources.
+* \param	dV			The vertex to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
+{
+  int		eCnt,
+  		eMax;
+  WlzGMVertexT	*tVT0,
+  		*tVT1;
+  WlzGMDiskT	*tDT0,
+  		*tDT1;
+  WlzGMEdge	**edgeCol = NULL;
+  const int	eStp = 16;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model && dV && (dV->idx >= 0))
+  {
+    /* Allocate initial storage for the edge collection. With luck eStp
+     * will have been chosen to be some small value that's > than the the
+     * number of edges incident with most verticies and the edge collection
+     * won't need reallocating. */
+    eCnt = 0;
+    eMax = eStp;
+    if((edgeCol = (WlzGMEdge **)AlcMalloc(sizeof(WlzGMEdge *) * eMax)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      /* Build a collection of all the edges that will be destroyed by deleting
+       * the vertex. */
+      tDT1 = tDT0 = dV->diskT;
+      do
+      {
+	tDT1 = tDT1->next;
+	tVT1 = tVT0 = tDT1->vertexT;
+	do
+	{
+	  tVT1 = tVT1->next;
+	  if(eCnt >= eMax)
+	  {
+	    eMax += eStp;
+	    if((edgeCol = (WlzGMEdge **)AlcRealloc(edgeCol,
+					  sizeof(WlzGMEdge *) * eMax)) == NULL)
+	    {
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    *(edgeCol + eCnt++) = tVT1->parent->edge;
+	  }
+	} while((errNum == WLZ_ERR_NONE) && (tVT1 != tVT0));
+      } while((errNum == WLZ_ERR_NONE) && (tDT1 != tDT0));
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(eCnt == 0)
+      {
+	/* Unlink the lone vertex (removing it from the hash table)
+	 * and then free it. Currently this isn't needed because lone
+	 * verticies aren't allowed in the models. */
+      }
+      else
+      {
+	/* Delete all the edges in the collection. */
+	while(eCnt > 0)
+	{
+	  errNum = WlzGMModelDeleteE(model, *(edgeCol + --eCnt));
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* TODO Update the shell's geometry. */
+    }
+    if(edgeCol)
+    {
+      AlcFree(edgeCol);
+    }
+  }
   return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Deletes an edge along with all the elements which depend
+*		on it. All elements which depend on the edge are unlinked
+*		and then freed. If the edge's parents depend solely on the
+*		edge then they free'd too.
+*		Because many of the operations on Woolz geometric model
+*		are only implemented for models containing simplicies this
+*		function should be used with care for 3D models.
+*		The basic algorithm used is: Check to see if the edge is the
+*		only edge in a loop lopology element, if so then delete the
+*		loop topology element, otherwise delete all elements which
+*		depend on the edge and the edge itself.
+* \param	model			Model with resources.
+* \param	dE			The edge to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
+{
+  int		termEdgFlg;
+  WlzGMEdgeT	*tET0,
+  		*tET1,
+		*tET2,
+		*tET3,
+		*tET4;
+  WlzGMShell	*eS,
+  		*nS = NULL;
+  WlzGMFace	*nF = NULL;
+  WlzGMLoopT	*nLT = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model && dE && (dE->idx >= 0))
+  {
+    /* If the edge is either the only edge in it's parent loopT or deleting the
+     * edge would leave the loopT consisting of a single shared edge, then
+     * delete the loopT. */
+    tET0 = dE->edgeT;
+    if((tET0 == tET0->rad) && (tET0->prev == tET0->next))
+    {
+      if(tET0->parent->face)
+      {
+        WlzGMModelDeleteF(model, tET0->parent->face);
+      }
+      else
+      {
+        WlzGMModelDeleteLT(model, tET0->parent);
+      }
+    }
+    else
+    {
+      /* Delete all edge topology elements that lie along the edge. */
+      tET1 = tET0;
+      do
+      {
+        tET1 = tET1->rad;
+	/* By deleting an edge we can either split and existing loopT or
+	 * joint 2 existing loopT's. */
+	tET2 = tET1->opp;
+	tET3 = tET1->next;
+	tET4 = tET2->next;
+	termEdgFlg = (tET2 == tET1->next) || (tET1 == tET2->next);
+	WlzGMModelDeleteET(model, tET1);
+	WlzGMModelDeleteET(model, tET2);
+	if(tET3->parent == tET4->parent) /* A single loopT has been split */
+	{
+	  /* Update the loop topology elements. */
+	  WlzGMLoopTSetT(tET3->parent); /* TODO: Not needed? */
+	  /* Either one loopT has been split into two, or a terminal
+	   * edge has been removed. */
+	  /* If a terminal edge has been removed then there is no change
+	   * to the loopT/shell. But if the loopT has been split
+	   * into two, creating a new loopT. Possibley
+	   * also create a new shell too. */
+	  if(!termEdgFlg)
+	  {
+	    nLT = WlzGMModelNewLT(model, &errNum);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      if(tET3->parent->face)
+	      {
+	        nF = WlzGMModelNewF(model, &errNum);
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      /* Set the parent field in all the edgeTs to be the new loopT. */
+	      nLT->next = nLT->prev = nLT->opp = nLT;
+	      nLT->face = nF;
+	      nLT->edgeT = tET4;
+	      nLT->parent = tET3->parent->parent;
+	      WlzGMLoopTSetT(nLT);
+	      /* Look to see if the loopT has edgeT elements which have
+	       * opposite elements in a different loopT. */
+              if((eS = WlzGMLoopTFindShell(nLT)) != NULL)
+	      {
+	        nLT->parent = eS;
+	      }
+	      else
+	      {
+	        /* Need to create a new shell. */
+		if((nS = WlzGMModelNewS(model, &errNum)) != NULL)
+		{
+		  WlzGMShellAppend(tET3->parent->parent, nS);
+		  nS->child = nLT;
+		  nS->parent = model;
+		  nLT->parent = nS;
+		  errNum = WlzGMShellComputeGBB(nS);
+		}
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        errNum = WlzGMShellComputeGBB(tET3->parent->parent);
+	      }
+	    }
+	  }
+	}
+	else				/* Two loopTs have been joined. */
+	{
+	  /* Unlink and free the unused face and loopT. */
+	  WlzGMLoopTUnlink(tET4->parent);
+	  if(tET4->parent->face && (tET4->parent == tET4->parent->opp))
+	  {
+	    WlzGMModelFreeF(model, tET4->parent->face);
+	  }
+	  WlzGMModelFreeLT(model, tET4->parent);
+	  /* Update the loop topology elements. */
+	  WlzGMLoopTSetT(tET3->parent);
+	}
+      } while(tET1 != tET0);
+      (void )WlzGMModelFreeE(model, dE);
+    }
+  }
+  return(errNum);
+}
+
+
+/*!
+* \return				<void>
+* \ingroup	WlzGeoModel
+* \brief	Deletes a face along with all the elements which depend
+*		on it. All elements which depend on the face are unlinked
+*		and then freed. If the parent of the face depends solely
+*		on this face then it is free'd too.
+* \param	model			Model with resources.
+* \param	dF			The face to delete.
+*/
+void		WlzGMModelDeleteF(WlzGMModel *model, WlzGMFace *dF)
+{
+  WlzGMEdgeT	*tET0,
+  		*tET1;
+  WlzGMLoopT	*tLT0,
+  		*tLT1;
+
+  if(model && dF && (dF->idx >- 0))
+  {
+    tLT0 = dF->loopT;
+    /* If the face is the only face in it's parent shell then delete the
+     * shell. */
+    if(tLT0->next == tLT0->opp)
+    {
+      WlzGMModelDeleteS(model, tLT0->parent);
+    }
+    else
+    {
+      /* Delete all loop topology elements of the face. */
+      WlzGMModelDeleteLT(model, tLT0->opp);
+      WlzGMModelDeleteLT(model, tLT0);
+      WlzGMModelFreeF(model, dF);
+    }
+  }
+}
+
+/*!
+* \return
+* \brief	Deletes a loop topology element along with all edge
+*		topology elements which depend on it.
+*		If the loop topology element's shell depends solely
+*		on this loop topology element then the shell is deleted.
+* \param	model
+* \param	dLT
+*/
+static void 	WlzGMModelDeleteLT(WlzGMModel *model, WlzGMLoopT *dLT)
+{
+  WlzGMEdgeT	*tET0,
+  		*tET1;
+
+  if(model && dLT && (dLT->idx >= 0))
+  {
+    if(dLT->next == dLT)
+    {
+      WlzGMModelDeleteS(model, dLT->parent);
+    }
+    else
+    {
+      tET0 = tET1 = dLT->edgeT;
+      do
+      {
+	tET1 = tET1->next;
+	WlzGMModelDeleteET(model, tET1);
+      } while(tET1 != tET0);
+      WlzGMLoopTUnlink(dLT);
+      WlzGMModelFreeLT(model, dLT);
+    }
+  }
+}
+
+/*!
+* \return
+* \brief	Deletes an edge topology element and all the elements which
+* 		depend on it. All elements which depend on the edge topology
+* 		element are unlinked and then freed. No parent of the edge
+*		topology element is ever freed by this function.
+* \param	model			The model.
+* \param	dET			The edge topology element to be
+* 					deleted.
+*/
+static void	WlzGMModelDeleteET(WlzGMModel *model, WlzGMEdgeT *dET)
+{
+  WlzGMVertexT	*tVT0;
+  WlzGMDiskT	*tDT0;
+
+  if(model && dET && (dET->idx >= 0))
+  {
+    tVT0 = dET->vertexT;
+    /* If the edge topology element's vertex topology element is the only
+     * member of it's disk topology element then delete the disk topology
+     * element. */
+    if(tVT0 == tVT0->next)
+    {
+      tDT0 = tVT0->diskT;
+      /* If the vertex topology is the only on in the disk topology element
+       * then delete the vertex too. */
+      if(tDT0 == tDT0->next)
+      {
+	WlzGMModelRemVertex(model, tDT0->vertex);
+	WlzGMModelFreeV(model, tDT0->vertex);
+      }
+      WlzGMDiskTUnlink(tDT0);
+      WlzGMModelFreeDT(model, tDT0);
+    }
+    WlzGMVertexTUnlink(tVT0);
+    WlzGMModelFreeVT(model, tVT0);
+    WlzGMEdgeTUnlink(dET);
+    WlzGMModelFreeET(model, dET);
+  }
 }
 
 /* Model access and testing. */
@@ -1582,481 +2079,6 @@ WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
       break;
   }
   return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 3D model to the specified file using the
-*               VTK polydata format. This should not be in libWlz
-*		because it writes to a non-Woolz file format, but
-*		it is here because it is invaluable for testing!
-*		With no file pointer given the model elements
-*		are still traversed but with no output.
-* \param	model			Given model.
-* \param	fP			File ptr, may be NULL if
-*                                       no output required.
-*/
-WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
-{
-  int		idI,
-  		idV,
-		cnt,
-		vCntMax;
-  char		*lFlg = NULL;
-  int		*vIdxTb = NULL;
-  WlzDVertex3	vtx;
-  AlcVector	*vec;
-  WlzGMVertex	*vP;
-  WlzGMShell	*fS,
-  		*tS;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(model == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    switch(model->type)
-    {
-      case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
-	break;
-      default:
-        errNum = WLZ_ERR_DOMAIN_TYPE;
-	break;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Allocate shell, loop and edge flags. */
-    if((lFlg = (char *)AlcCalloc(model->res.loop.numIdx,
-    				 sizeof(char))) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Allocate a vertex index table. */
-    vCntMax = model->res.vertex.numIdx;
-    if((vIdxTb = (int *)AlcCalloc(vCntMax, sizeof(int))) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Output the file header. */
-    (void )fprintf(fP,
-    		   "# vtk DataFile Version 1.0\n"
-    		   "WlzGeoModel test output\n"
-		   "ASCII\n"
-		   "DATASET POLYDATA\n"
-		   "POINTS %d float\n",
-		   model->res.vertex.numElm);
-    /* Output the verticies while building the index table. */
-    idI = idV = 0;
-    vec = model->res.vertex.vec;
-    for(idI = 0; idI < model->res.vertex.numIdx; ++idI)
-    {
-      vP = (WlzGMVertex *)AlcVectorItemGet(vec, idI);
-      if(vP->idx >= 0)
-      {
-	*(vIdxTb + vP->idx) = idV++;
-	(void )WlzGMVertexGetG3D(vP, &vtx);
-	(void )fprintf(fP, "%g %g %g\n", vtx.vtX, vtx.vtY, vtx.vtZ);
-      }
-    }
-    if((tS = fS = model->child) != NULL)
-    {
-      (void )fprintf(fP,
-      		     "POLYGONS %d %d\n",
-		     model->res.loop.numElm, 4 * model->res.loop.numElm);
-      do
-      {
-	if(tS->idx >= 0)
-	{
-	  errNum = WlzGMShellTestOutVTK(tS, vIdxTb, lFlg, fP);
-	}
-	tS = tS->next;
-      } while((errNum == WLZ_ERR_NONE) && (tS->idx != fS->idx));
-    }
-  }
-  if(lFlg)
-  {
-    AlcFree(lFlg);
-  }
-  if(vIdxTb)
-  {
-    AlcFree(vIdxTb);
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 3D shell to the specified file using the
-*		VTK polydata format. See WlzGMModelTestOutVTK().
-* \param	shell			Given shell.
-* \param	vIdxTb			Vertex index table.
-* \param	lFlg			Loop flags.
-* \param	fP			File ptr, may be NULL if
-*                                       no output required.
-*/
-static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell, int *vIdxTb,
-					char *lFlg, FILE *fP)
-{
-  WlzGMLoopT	*tLT;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  
-  if(shell == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(shell->type != WLZ_GMELM_SHELL)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else if((tLT = shell->child)  != NULL)
-  {
-    do
-    {
-      if((tLT->idx >= 0) && (*(lFlg + tLT->loop->idx) == 0))
-      {
-        errNum = WlzGMLoopTTestOutputVTK(tLT, vIdxTb, fP);
-	*(lFlg + tLT->loop->idx) = 1;
-      }
-      tLT = tLT->next;
-    } while((errNum == WLZ_ERR_NONE) && (tLT->idx != shell->child->idx));
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 3D loopT to the specified file using the
-*               VTK polydata format. See WlzGMModelTestOutVTK().
-* \param	fLT			Given loopT.
-* \param	vIdxTb			Vertex index table.
-* \param	fP			File ptr, may be NULL if
-*                                       no output required.
-*/
-static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT, int *vIdxTb,
-					   FILE *fP)
-{
-  WlzGMEdgeT	*tET;
-  WlzGMVertex	*vBuf[3];
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(fLT == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(fLT->type != WLZ_GMELM_LOOP_T)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else
-  {
-    /* Get the verticies around this loop and check that the loop is around
-     * a triangular face. */
-    if(fLT->edgeT == NULL)
-    {
-      errNum = WLZ_ERR_DOMAIN_NULL;
-    }
-    else if((tET = fLT->edgeT)->type != WLZ_GMELM_EDGE_T)
-    {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-    }
-    else
-    {
-      vBuf[0] = tET->vertexT->diskT->vertex;
-      tET = tET->next;
-      if(tET->idx == fLT->edgeT->idx)
-      {
-	errNum = WLZ_ERR_DOMAIN_DATA;
-      }
-      else
-      {
-	vBuf[1] = tET->vertexT->diskT->vertex;
-	tET = tET->next;
-	if(tET->idx == fLT->edgeT->idx)
-	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
-	}
-	else
-	{
-	  vBuf[2] = tET->vertexT->diskT->vertex;
-	  tET = tET->next;
-	  if(tET->idx != fLT->edgeT->idx)
-	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
-	  }
-	}
-      }
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      /* Output the face enclosed by this loop and mark it as having been
-       * output. */
-      (void )fprintf(fP, "3 %d %d %d\n",
-		     *(vIdxTb + vBuf[0]->idx), *(vIdxTb + vBuf[1]->idx),
-		     *(vIdxTb + vBuf[2]->idx));
-    }
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 2D model to the specified file as Postscript.
-*               To make shell identification easier Postscript colors
-*               can be cycled. This should not be in libWlz
-*		because it writes to a non-Woolz file format, but
-*		it is here because it is invaluable for testing!
-*		With no file pointer given the model elements
-*		are still traversed but with no output.
-* \param	model			Given model.
-* \param	fP			File ptr, may be NULL if
-*                                       no output required.
-* \param	offset			Postscript offset.
-* \param	scale			Postscript scale.
-* \param	nCol			Number of colours to cycle
-*                                       through.
-*/
-WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
-				    WlzDVertex2 offset, WlzDVertex2 scale,
-				    int nCol)
-{
-  int		colIdx  = 0;
-  char		*lFlg = NULL,
-		*eFlg = NULL;
-  WlzGMShell	*shell0,
-  		*shell1;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	maxCol = 7;			  /* Colours to cycle though */
-  const int	colR[] = {0,   255, 0,   255, 0,   200, 0},
-		colG[] = {0,   0,   255, 200, 0,   0,   255},
-		colB[] = {0,   0,   0,   0,   255, 255, 200};
-
-  if(model == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if((model->type != WLZ_GMMOD_2I) && (model->type != WLZ_GMMOD_2D))
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else
-  {
-    /* Allocate shell, loop and edge flags. */
-    if(((lFlg = (char *)AlcCalloc(model->res.loop.numIdx,
-    				  sizeof(char))) == NULL) ||
-       ((eFlg = (char *)AlcCalloc(model->res.edge.numIdx,
-    				  sizeof(char))) == NULL))
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((shell0 = model->child) != NULL)
-    {
-      if(nCol > maxCol)
-      {
-        nCol = maxCol;
-      }
-      shell1 = shell0;
-      do
-      {
-	if(shell1->idx >= 0)
-	{
-	  /* Set colour. */
-	  if(fP && (nCol > 1))
-	  {
-	    (void )fprintf(fP,
-			   "%d %d %d setrgbcolor\n",
-			   colR[colIdx], colG[colIdx], colB[colIdx]);
-	    colIdx = ++colIdx % nCol;
-	  }
-	  errNum = WlzGMShellTestOutPS(shell1, lFlg, eFlg, fP, offset, scale);
-	  shell1 = shell1->next;
-	}
-      }
-      while((errNum == WLZ_ERR_NONE) && (shell1->idx != shell0->idx));
-    }
-  }
-  if(lFlg)
-  {
-    AlcFree(lFlg);
-  }
-  if(eFlg)
-  {
-    AlcFree(eFlg);
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 2D shell to the specified file as Postscript.
-*		See WlzGMModelTestOutPS().
-* \param	shell			Given shell.
-* \param	lFlg			Loop flags.
-* \param	eFlg			Edge flags.
-* \param	fP			Output file ptr, may be NULL if
-*                                       no output required.
-* \param	offset			Postscript offset.
-* \param	scale			Postscript scale.
-*/
-static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell,
-				       char *lFlg, char *eFlg,
-				       FILE *fP,
-				       WlzDVertex2 offset, WlzDVertex2 scale)
-{
-  WlzGMLoopT	*loopT0,
-  		*loopT1;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(shell == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if((loopT0 = shell->child) == NULL)
-  {
-    errNum = WLZ_ERR_NONE;	         /* TODO Is an empty shell an error? */
-  }
-  else
-  {
-    loopT1 = loopT0;
-    do
-    {
-      if(*(lFlg + loopT1->loop->idx) == 0)
-      {
-	errNum = WlzGMLoopTTestOutPS(loopT1, eFlg, fP, offset, scale);
-	*(lFlg + loopT1->loop->idx) = 1;
-      }
-      loopT1 = loopT1->next;
-    }
-    while((errNum == WLZ_ERR_NONE) && (loopT1->idx != loopT0->idx));
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 2D loop topology element to the specified
-*               file as Postscript. See WlzGMModelTestOutPS().
-* \param	loopT			Given loop topology element.
-* \param	eFlg			Edge flags.
-* \param	fP			Output file ptr, may be NULL if
-*                                       no output required.
-* \param	offset			Postscript offset.
-* \param	scale			Postscript scale.
-*/
-static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT,
-				       char *eFlg, FILE *fP,
-			               WlzDVertex2 offset, WlzDVertex2 scale)
-{
-  WlzGMEdgeT	*edgeT0,
-  		*edgeT1;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((loopT == NULL) || ((edgeT0 = loopT->edgeT) == NULL))
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    edgeT1 = edgeT0;
-    do
-    {
-      if((edgeT1->idx >= 0) && (*(eFlg + edgeT1->edge->idx) == 0))
-      {
-        errNum = WlzGMEdgeTTestOutPS(edgeT1, fP, offset, scale);
-      }
-      *(eFlg + edgeT1->edge->idx) = 1;
-      edgeT1 = edgeT1->next;
-    } 
-    while((errNum == WLZ_ERR_NONE) && (edgeT1->idx != edgeT0->idx));
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 2D edge topology element to the specified
-*               file as Postscript. See WlzGMModelTestOutPS().
-* \param	edgeT			Given edge topology element.
-* \param	fP			Output file ptr, may be NULL if
-*                                       no output required.
-* \param	offset			Postscript offset.
-* \param	scale			Postscript scale.
-*/
-static WlzErrorNum WlzGMEdgeTTestOutPS(WlzGMEdgeT *edgeT, FILE *fP,
-			               WlzDVertex2 offset, WlzDVertex2 scale)
-{
-  WlzDVertex2	pos0,
-  		pos1;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((edgeT == NULL) || (edgeT->opp == NULL) ||
-     (edgeT->vertexT == NULL) || (edgeT->opp->vertexT == NULL) ||
-     (edgeT->vertexT->diskT->vertex == NULL) ||
-     (edgeT->opp->vertexT->diskT->vertex == NULL))
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    if(((errNum = WlzGMVertexGetG2D(edgeT->vertexT->diskT->vertex,
-    				    &pos0)) == WLZ_ERR_NONE) &&
-       ((errNum = WlzGMVertexGetG2D(edgeT->next->vertexT->diskT->vertex,
-    				    &pos1)) == WLZ_ERR_NONE) &&
-       fP)
-    {
-      WlzGMTestOutLinePS(fP,  pos0, pos1, offset, scale);
-    }
-  }
-  return(errNum);
-}
-
-/*!
-* \return				<void>
-* \ingroup      WlzGeoModel
-* \brief	Outputs a 2D line segment, as defined by two endpoint
-*               coordinates, to  the specifiedfile as Postscript.
-*		See WlzGMModelTestOutPS().
-* \param	fP			Output file ptr.
-* \param	pos0			Position of vertex at start of
-*					the line segment.
-* \param	pos1			Position of vertex at end of
-*					the line segment.
-* \param	offset			Postscript offset.
-* \param	scale			Postscript scale.
-*/
-static void	WlzGMTestOutLinePS(FILE *fP,
-				   WlzDVertex2 pos0, WlzDVertex2 pos1,
-				   WlzDVertex2 offset, WlzDVertex2 scale)
-{
-  pos0.vtX = offset.vtX + (scale.vtX * pos0.vtX);
-  pos0.vtY = offset.vtY + (scale.vtY * pos0.vtY);
-  pos1.vtX = offset.vtX + (scale.vtX * pos1.vtX);
-  pos1.vtY = offset.vtY + (scale.vtY * pos1.vtY);
-  (void )fprintf(fP,
-  		 "%f %f moveto "
-		 "%f %f lineto "
-		 "stroke\n",
-		 pos0.vtX, pos0.vtY,
-		 pos1.vtX, pos1.vtY);
 }
 
 /* Geometry access, update and testing */
@@ -4416,9 +4438,9 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 *                           screen/page        of new simplex
 * \endverbatim
 *                                                                 
-*		Given a directed edge which forms part of a loop in
-*		a new triangle simplex. Define points around the
-*		the simplex:
+*		Given a directed edge which forms part of a loop
+*		topology element in a new triangle simplex. Define
+*		points around the the simplex:
 * \verbatim
 *                                O p1                                     
 *                              ^ |\                                      
@@ -4451,7 +4473,7 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 *		where
 *		  \f[v_i = p_{2i} - p_0\f]
 *		and \f$p_{2i}\f$ are the \f$p_2\f$ verticies on the
-*		candidate loop/face.
+*		candidate face.
 *		Use the projections to find the previous radial edge,
 *		then insert the edge in the cyclic radial list.
 * \param	nET 			New edge topology element to
@@ -4565,8 +4587,10 @@ void	   	WlzGMLoopTAppend(WlzGMLoopT *eLT, WlzGMLoopT *nLT)
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given loop topology element from a doubly
 *               linked list of loop topology element's, knowing that
-*               it is not NULL. If this is the only loopT in parent
-*               the parent's list of loopT's is set to NULL.
+*               it is not NULL. If this is the only loop topology
+*		element in parent the parent's list of loop topology
+*		elements is set to NULL. Other elements which point
+*		to this loop topology element are not modified.
 * \param	dLT			Loop topology element to be
 *                                       unlinked.
 */
@@ -4574,13 +4598,112 @@ void		WlzGMLoopTUnlink(WlzGMLoopT *dLT)
 {
   dLT->prev->next = dLT->next;
   dLT->next->prev = dLT->prev;
-  if(dLT->idx == dLT->next->idx)
+  if(dLT == dLT->next)
   {
     dLT->next = dLT->prev = NULL;
   }
-  if(dLT->parent->child->idx == dLT->idx)
+  if(dLT == dLT->parent->child)
   {
     dLT->parent->child = dLT->next;
+  }
+}
+
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Unlinks the given edge topology element from it's loop
+*		topology element and it's opposite edge topology element.
+*		The opposite edge topology element MUST be unlinked before
+*		the model is valid again.
+* \param	dET			Edge topology element to be
+*                                       unlinked.
+*/
+void		WlzGMEdgeTUnlink(WlzGMEdgeT *dET)
+{
+    WlzGMEdgeT	*cET,
+    		*pET;
+
+  if(dET != dET->opp)
+  {
+    dET->prev->next = dET->opp->next;  
+    dET->next->prev = dET->opp->prev;
+    dET->opp->opp = dET->opp;
+  }
+  else
+  {
+    /* No longer have an opposite edgeT as it's already been unlinked. */
+    pET = dET->prev;
+    while((cET = pET->opp->prev) != dET->prev)
+    {
+      pET = cET;
+    }
+    dET->prev->next = pET->opp;
+    pET = dET->next;
+    while((cET = pET->opp->next) != dET->next)
+    {
+      pET = cET;
+    }
+    dET->next->prev = pET->opp;
+  }
+  if(dET == dET->next)
+  {
+    dET->next = NULL;
+  }
+  if(dET == dET->parent->edgeT)
+  {
+    dET->parent->edgeT = (dET->next->idx >= 0)? dET->next: dET->prev;
+  }
+}
+
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Unlinks the given vertex topology element from a doubly
+*               linked list of vertex topology element's, knowing that
+*               it is not NULL. If this is the only vertex topology
+*		element in parent the parent's list of vertex topology
+*		elements is set to NULL. Other elements which point
+*		to this vertex topology element are not modified.
+* \param	dVT			Vertex topology element to be
+*                                       unlinked.
+*/
+void		WlzGMVertexTUnlink(WlzGMVertexT *dVT)
+{
+  dVT->prev->next = dVT->next;  
+  dVT->next->prev = dVT->prev;
+  if(dVT == dVT->next)
+  {
+    dVT->next = dVT->prev = NULL;
+  }
+  if(dVT == dVT->parent->vertexT)
+  {
+    dVT->parent->vertexT = dVT->next;
+  }
+}
+
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Unlinks the given disk topology element from a doubly
+*               linked list of disk topology element's, knowing that
+*               it is not NULL. If this is the only disk topology
+*		element of the vertex the vertex's list of disk topology
+*		elements is set to NULL. Other elements which point
+*		to this disk topology element are not modified.
+* \param	dDT			Disk topology element to be
+*                                       unlinked.
+*/
+void		WlzGMDiskTUnlink(WlzGMDiskT *dDT)
+{
+  dDT->prev->next = dDT->next;
+  dDT->next->prev = dDT->prev;
+  if(dDT == dDT->next)
+  {
+    dDT->next = dDT->prev = NULL;
+  }
+  if(dDT == dDT->vertex->diskT)
+  {
+    dDT->vertex->diskT = dDT->next;
   }
 }
 
@@ -4632,7 +4755,6 @@ void		WlzGMShellUnlink(WlzGMShell *dS)
     dS->prev->next = dS->next;
     dS->next->prev = dS->prev;
   }
-  dS->next = dS->prev = NULL;
 }
 
 /*!
@@ -4690,7 +4812,8 @@ void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
 WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 				  WlzErrorNum *dstErr)
 {
-  int		iCnt,
+  int		dim,
+  		iCnt,
 		vCnt;
   unsigned int 	eMskTst;
   int		*iLut;
@@ -4709,8 +4832,11 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
     {
       case WLZ_GMMOD_2I:
       case WLZ_GMMOD_2D:
+        dim = 2;
+	break;
       case WLZ_GMMOD_3I:
       case WLZ_GMMOD_3D:
+	dim = 3;
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -4793,13 +4919,13 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  if((errNum == WLZ_ERR_NONE) && (eMsk & WLZ_GMELMFLG_LOOP))
+  if((errNum == WLZ_ERR_NONE) && (eMsk & WLZ_GMELMFLG_FACE) && (dim == 3))
   {
-    eMskTst &= ~(WLZ_GMELMFLG_LOOP);
-    vec = model->res.loop.vec;
-    resIdxTb->loop.idxCnt = model->res.loop.numIdx;
-    if((resIdxTb->loop.idxLut = (int *)
-	    	AlcCalloc(resIdxTb->loop.idxCnt, sizeof(int))) == NULL)
+    eMskTst &= ~(WLZ_GMELMFLG_FACE);
+    vec = model->res.face.vec;
+    resIdxTb->face.idxCnt = model->res.face.numIdx;
+    if((resIdxTb->face.idxLut = (int *)
+	    	AlcCalloc(resIdxTb->face.idxCnt, sizeof(int))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -4974,21 +5100,21 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
       }
       resIdxTb->edgeT.idxCnt = iCnt;
     }
-    if(eMsk & WLZ_GMELMFLG_LOOP)
+    if((eMsk & WLZ_GMELMFLG_FACE) && (dim == 3))
     {
-      /* Compute loop index lut. */
+      /* Compute face index lut. */
       iCnt = vCnt = 0;
-      vec = model->res.loop.vec;
-      iLut = resIdxTb->loop.idxLut;
-      while(vCnt < resIdxTb->loop.idxCnt)
+      vec = model->res.face.vec;
+      iLut = resIdxTb->face.idxLut;
+      while(vCnt < resIdxTb->face.idxCnt)
       {
-	eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, vCnt++);
-	if(eP.loop->idx >= 0)
+	eP.face = (WlzGMFace *)AlcVectorItemGet(vec, vCnt++);
+	if(eP.face->idx >= 0)
 	{
-	  *(iLut + eP.loop->idx) = iCnt++;
+	  *(iLut + eP.face->idx) = iCnt++;
 	}
       }
-      resIdxTb->loop.idxCnt = iCnt;
+      resIdxTb->face.idxCnt = iCnt;
     }
     if(eMsk & WLZ_GMELMFLG_LOOP_T)
     {
@@ -5120,9 +5246,9 @@ void		WlzGMModelResIdxFree(WlzGMResIdxTb *resIdxTb)
     {
       AlcFree(resIdxTb->edgeT.idxLut);
     }
-    if(resIdxTb->loop.idxLut)
+    if(resIdxTb->face.idxLut)
     {
-      AlcFree(resIdxTb->loop.idxLut);
+      AlcFree(resIdxTb->face.idxLut);
     }
     if(resIdxTb->shell.idxLut)
     {
@@ -5203,17 +5329,17 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
-* \brief	Constructs a new shell, face, loop and 3 edges (with
+* \brief	Constructs a new shell, face and 3 edges (with
 *		topological elements) and adds them to the model. Given
 *		3 3D double precision points which are known not to
 *		be in the model.
 * 
-*   	        Constructs a new shell, face, loop and 3 edges (with
+*   	        Constructs a new shell, face and 3 edges (with
 *		topological elements) and adds them to the model. Given
 *		3 3D double precision points which are known not to
 *		be in the model.
 *		None of the verticies already exists within the shell.
-*		Need to create a new shell (nShell) with: 1 loop (nL),
+*		Need to create a new shell (nShell) with: 1 face (nF),
 *		2 loop topology element (nLT0, nLT1), 3 edges (*nE),
 *		6 edge topology elements (*nET0, *nET1), 3 disk
 *		topology elements *(nDT), 3 verticies (*nV) with
@@ -5261,7 +5387,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 		pIdx;
   WlzGMShell	*eShell,
   		*nShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -5274,7 +5400,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 
   if(model &&
      ((nShell = WlzGMModelNewS(model, &errNum)) != NULL) &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -5347,15 +5473,14 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     nLT[0]->next = nLT[0]->prev = nLT[1];
     nLT[1]->next = nLT[1]->prev = nLT[0];
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = nShell;
@@ -5384,13 +5509,13 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding a:
-*		loop, 3 edges and 2 verticies (with topological elements).
+*		face, 3 edges and 2 verticies (with topological elements).
 *
 *       	Extends an existing shell within the model by adding a:
 *		loop, 3 edges and 2 verticies (with topological elements).
 *		The 2 given 3D double precision points which are known
 *		not to be in the model.
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology elements
 *		(nDT[0,1,2]), 2 verticies (nV[0,1]) with geometry
@@ -5439,7 +5564,7 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
   		nIdx,
 		pIdx;
   WlzGMShell	*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -5452,7 +5577,7 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -5532,15 +5657,14 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -5556,13 +5680,13 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding a:
-*		loop, 2 edges and 1 vertex (with topological elements).
+*		face, 2 edges and 1 vertex (with topological elements).
 *
 *       	Extends an existing shell within the model by adding a:
-*		loop, 2 edges and 1 vertex (with topological elements).
+*		face, 2 edges and 1 vertex (with topological elements).
 *		The given 3D double precision point is known not to be
 *		in the model.
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 1 disk topology element
 *		(nDT), 1 vertex (nV) with geometry (pos0) and
@@ -5608,7 +5732,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
   		nIdx,
 		pIdx;
   WlzGMShell	*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[2];
   WlzGMEdgeT	*nET0[3],
@@ -5621,7 +5745,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -5699,22 +5823,20 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
     /* Need to set radial edges for nET0[0] and nET1[1]. */
     WlzGMEdgeTInsertRadial(nET0[0]);
     WlzGMEdgeTInsertRadial(nET1[1]);
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* Update shell */
-    (void )WlzGMShellUpdateG3D(eShell, pos[0]);
-    (void )WlzGMShellUpdateG3D(eShell, pos[1]);
+    (void )WlzGMShellUpdateG3D(eShell, pos[2]);
   }
   return(errNum);
 }
@@ -5723,13 +5845,13 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding a:
-*		loop, 3 edges and 1 vertex (with topological elements).
+*		face, 3 edges and 1 vertex (with topological elements).
 * 
 *        	Extends an existing shell within the model by adding a:
-*		loop, 3 edges and 1 vertex (with topological elements).
+*		face, 3 edges and 1 vertex (with topological elements).
 *		Both the given 3D double precision points are known not
 *		to be in the model.
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]), 1 vertex (nV) with geometry (pos0) and
@@ -5777,7 +5899,7 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
   		nIdx,
 		pIdx;
   WlzGMShell	*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -5790,7 +5912,7 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -5867,15 +5989,14 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -5890,13 +6011,13 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins two existing shells within the model by adding:
-*		1 loop, 3 edges and 1 vertex (with topological elements).
+*		1 face, 3 edges and 1 vertex (with topological elements).
 *
 *		Joins two existing shells within the model by adding:
-*		1 loop, 3 edges and 1 vertex (with topological elements).
+*		1 face, 3 edges and 1 vertex (with topological elements).
 *		Both the given 3D double precision points are known not
 *		to be in the model.
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]), 1 vertex (nV) with geometry (pos0) and
@@ -5949,7 +6070,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
   WlzGMShell	*eShell,
   		*dShell,
 		*tShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -5963,7 +6084,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -6052,15 +6173,14 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -6081,11 +6201,11 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins three existing shells within the model by adding:
-*		1 loop and 3 edges (with topological elements).
+*		1 face and 3 edges (with topological elements).
 *
 *		Joins three existing shells within the model by adding:
-*		1 loop and 3 edges (with topological elements).
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		1 face and 3 edges (with topological elements).
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
@@ -6134,7 +6254,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
   WlzGMShell	*eShell,
   		*tShell;
   WlzGMShell	*dShell[2];
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -6149,7 +6269,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 
   eV[0] = gEV[0]; eV[1] = gEV[1]; eV[2] = gEV[2];
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -6241,15 +6361,14 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -6272,11 +6391,11 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins two existing shells within the model by adding:
-*		1 loop and 3 edges (with topological elements).
+*		1 face and 3 edges (with topological elements).
 *
 *		Joins two existing shells within the model by adding:
-*		1 loop and 3 edges (with topological elements).
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		1 face and 3 edges (with topological elements).
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
@@ -6324,7 +6443,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
   WlzGMShell	*dShell,
   		*eShell;
   WlzGMShell	*tShell[3];
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -6336,7 +6455,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -6404,7 +6523,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
       eShell = tShell[1];
       dShell = tShell[0];
     }
-    else /* tShell[2]->idx == tShell[0]->idx) */
+    else /* tShell[2]->idx == tShell[0]->idx */
     {
       eShell = tShell[2];
       dShell = tShell[1];
@@ -6450,15 +6569,14 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -6478,11 +6596,11 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding:
-*		1 loop and 3 edges (with topological elements).
+*		1 face and 3 edges (with topological elements).
 *
 *		Extends an existing shell within the model by adding:
-*		1 loop and 3 edges (with topological elements).
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		1 face and 3 edges (with topological elements).
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
@@ -6527,7 +6645,7 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
   		nIdx,
 		pIdx;
   WlzGMShell	*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[3];
   WlzGMEdgeT	*nET0[3],
@@ -6539,7 +6657,7 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -6609,15 +6727,14 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -6631,11 +6748,11 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding:
-*		1 loop and 2 edges (with topological elements).
+*		1 face and 2 edges (with topological elements).
 *
 *		Extends an existing shell within the model by adding:
-*		1 loop and 2 edges (with topological elements).
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		1 face and 2 edges (with topological elements).
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
@@ -6680,7 +6797,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
   		nIdx,
 		pIdx;
   WlzGMShell	*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[2];
   WlzGMEdgeT	*nET0[3],
@@ -6693,7 +6810,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -6769,15 +6886,14 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
     /* Need to set radial edges for nET0[0] and nET1[1]. */
     WlzGMEdgeTInsertRadial(nET0[0]);
     WlzGMEdgeTInsertRadial(nET1[1]);
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -6792,11 +6908,11 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins two existing shells within the model by adding:
-*		1 loop and 2 edges (with topological elements).
+*		1 face and 2 edges (with topological elements).
 *
 *		Joins two existing shells within the model by adding:
-*		1 loop and 2 edges (with topological elements).
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		1 face and 2 edges (with topological elements).
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
@@ -6843,7 +6959,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 		pIdx;
   WlzGMShell	*dShell,
   		*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE[2];
   WlzGMEdgeT	*nET0[3],
@@ -6856,7 +6972,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE[0] = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -6933,15 +7049,14 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     /* Need to set radial edges for nET0[0], nET1[1]. */
     WlzGMEdgeTInsertRadial(nET0[0]);
     WlzGMEdgeTInsertRadial(nET1[1]);
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -6962,11 +7077,11 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends a shell within the model by adding:
-*		1 loop and 1 edge (with topological elements).
+*		1 face and 1 edge (with topological elements).
 * 
 *		Extends a shell within the model by adding:
-*		1 loop and 1 edge (with topological elements).
-*		Need to create: 1 loop (nL), 2 loop topology elements
+*		1 face and 1 edge (with topological elements).
+*		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 1 edge (nE), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]) and 6 vertex topology elements
 *		(nVT[0,1,2] and nVT1[0,1,2]).
@@ -7008,7 +7123,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
   		nIdx,
 		pIdx;
   WlzGMShell	*eShell;
-  WlzGMLoop	*nL;
+  WlzGMFace	*nF;
   WlzGMLoopT	*nLT[2];
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET0[3],
@@ -7022,7 +7137,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
+     ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -7100,15 +7215,14 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
     WlzGMEdgeTInsertRadial(nET1[1]);
     WlzGMEdgeTInsertRadial(nET0[1]);
     WlzGMEdgeTInsertRadial(nET1[2]);
-    /* New loop */
-    nL->loopT = nLT[0];
-    /* New loop topology elements. */
+    /* New face and loop topology elements. */
+    nF->loopT = nLT[0];
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->loop = nL;
-    nLT[1]->loop = nL;
+    nLT[0]->face = nF;
+    nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
     nLT[0]->parent = eShell;
@@ -7141,15 +7255,15 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
-* \brief	Constructs a new shell, loop and edge (with topological
+* \brief	Constructs a new shell, edge (with topological
 *		elements) and adds them to the model.
 *
-*		Constructs a new shell, loop and edge (with topological
+*		Constructs a new shell, edge (with topological
 *		elements) and adds them to the model.
 *		Given a pair of 2D double precision edge end points which
 *		are known not to be in the model.
 *		Neither of the verticies already exists within the shell.
-*		Need to create a new shell with: 1 loop (nL), 1 loop
+*		Need to create a new shell with: 1 loop
 *		topology element (nLT), 1 edge (nE) 2 edge
 *		topology elements (nET[0,1]), 2 disk topology elements,
 *		(nDT[0,1]), 2 verticies (nV[0,1] with geometry
@@ -7176,7 +7290,6 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
   int		idx;
   WlzGMShell	*eShell,
   		*nShell;
-  WlzGMLoop	*nL;
   WlzGMLoopT	*nLT;
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET[2];
@@ -7187,7 +7300,6 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 
   if(model &&
      ((nShell = WlzGMModelNewS(model, &errNum)) != NULL) &&
-     ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
      ((nLT = WlzGMModelNewLT(model, &errNum)) != NULL) &&
      ((nE = WlzGMModelNewE(model, &errNum)) != NULL) &&
      ((nET[0] = WlzGMModelNewET(model, &errNum)) != NULL) &&
@@ -7217,16 +7329,17 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
     /* New Edges and their topology elements */
     nE->edgeT = nET[0];
     nET[0]->edge = nET[1]->edge = nE;
-    nET[0]->rad = nET[0]->next = nET[0]->prev = nET[0]->opp = nET[1];
+    nET[0]->rad = nET[0];
+    nET[0]->next = nET[0]->prev = nET[0]->opp = nET[1];
     nET[0]->vertexT = nVT[0];
     nET[0]->parent = nLT;
-    nET[1]->rad = nET[1]->next = nET[1]->prev = nET[1]->opp = nET[0];
+    nET[1]->rad = nET[1];
+    nET[1]->next = nET[1]->prev = nET[1]->opp = nET[0];
     nET[1]->vertexT = nVT[1];
     nET[1]->parent = nLT;
-    /* New loop and loop topology elements */
-    nL->loopT = nLT;
+    /* New loop topology elements */
     nLT->next = nLT->prev = nLT->opp = nLT;
-    nLT->loop = nL;
+    nLT->face = NULL;
     nLT->edgeT = nET[0];
     nLT->parent = nShell;
     /* New shell in model */
@@ -7262,7 +7375,7 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 *		at the other end of the new edge, where the new end
 *		point is known not to be in the model.
 *		Only one vertex already exists within the model so no new
-*		shell or loop is required, instead an existing loop is
+*		shell is required, instead an existing shell is
 *		extended using: 1 edge (nE), 2 edge topology elements
 *		(nET0, nET1), 1 disk topology element (nDT), 1 vertex
 *		(nV0 with geometry (nPos) and 2 vertex topology elements
@@ -7363,8 +7476,8 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 *		Split a loop within a shell by adding a new edge between the
 *		two matched verticies.
 *		Create: 1 edge (nE), 2 edge topology elements (nET0,
-*		nET1), 2 vertex topology elements (nVT0, nVT1), a
-*		loop (nL) and a loop topology element (nLT).
+*		nET1), 2 vertex topology elements (nVT0, nVT1) and
+*		a loop topology element (nLT).
 * \verbatim
 *		      O ------------->     O --------------->
 *		    @- - - - - - - - - -@- - - - - - - - - - -@
@@ -7397,7 +7510,6 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET0,
   		*nET1;
-  WlzGMLoop	*nL;
   WlzGMLoopT	*eLT,
   		*nLT;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -7411,7 +7523,6 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
        ((nET1 = WlzGMModelNewET(model, &errNum)) != NULL) &&
        ((nVT0 = WlzGMModelNewVT(model, &errNum)) != NULL) &&
        ((nVT1 = WlzGMModelNewVT(model, &errNum)) != NULL) &&
-       ((nL = WlzGMModelNewL(model, &errNum)) != NULL) &&
        ((nLT = WlzGMModelNewLT(model, &errNum)) != NULL))
     {
       /* Vertex topology elements */
@@ -7441,13 +7552,12 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
       nET0->prev->next = nET0;
       nET1->next->prev = nET1;
       nET1->prev->next = nET1;
-      /* Loop and loop topology element */
+      /* Loop topology element */
       eLT = eET0->parent;
       eLT->edgeT = nET0;
-      nL->loopT = nLT;
       WlzGMLoopTAppend(eET0->parent, nLT);	       /* Add loopT to shell */
       nLT->opp = nLT;
-      nLT->loop = nL;
+      nLT->face = NULL;
       nLT->parent = eLT->parent;
       /* Set/update the loops by walking around the edge topology elements
        * setting their parents. */
@@ -7472,8 +7582,8 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
 *		adding a new edge between the two matched verticies.
 *		Create: 1 edge (nE), 2 edge topology elements (nET0,
 *		nET1) and 2 vertex topology elements (nVT0, nVT1).
-*		Delete: 1 loop (dL), 1 loop topology element (dLT)
-*		and 1 shell (dShell). If edges were (they're not in 2D)
+*		Delete: 1 loop topology element (dLT)
+*		and 1 shell (dShell). If edges were (they're not)
 *		allowed to cross then it would be possible to have a
 *		pair of verticies within the same shell but NOT within
 *		a common loop. Check for this disallowed case and return
@@ -7506,7 +7616,6 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET0,
   		*nET1;
-  WlzGMLoop	*dL;
   WlzGMLoopT	*eLT,
   		*dLT;
   WlzGMShell	*dS;
@@ -7546,10 +7655,9 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
     nET0->prev->next = nET0;
     nET1->next->prev = nET1;
     nET1->prev->next = nET1;
-    /* Loop and loop topology elements */
+    /* Loop topology elements */
     eLT = eET0->parent;
     dLT = eET1->parent;
-    dL = dLT->loop;
     dS = dLT->parent;
     /* Look to see if loops share the same shell. */
     if((dS = dLT->parent)->idx == eLT->parent->idx)
@@ -7561,13 +7669,12 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
       /* Merge the two shell's geometries. */
       (void )WlzGMShellMergeG(eLT->parent, dS);
     }
-    /* Set/update the retained loop by walking around the edge topology
-     * elements setting their parents. */
+    /* Set/update the retained loop topology element by walking around the
+     * edge topology  elements setting their parents. */
     WlzGMLoopTSetT(eLT);
-    /* Unlink and free the deleted loop and loop topology element. */
+    /* Unlink and free the deleted loop topology element. */
     WlzGMLoopTUnlink(dLT);
     (void )WlzGMModelFreeLT(model, dLT);
-    (void )WlzGMModelFreeL(model, dL);
     /* If deleted loop had a different parent shell then unlink it and
      * free the deleted loops parent shell if it's childless. */
     if(dS)
@@ -7638,7 +7745,7 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
 	else
 	{
 	  /* The two verticies do NOT share a common loop so loops will be
-	   * JOINed by a new edge, destroying a loop.  */
+	   * joined by a new edge, destroying a loop.  */
 	  errNum = WlzGMModelJoinL2D(model, matchEdgeT[0], matchEdgeT[1]);
 	  
 	}
@@ -7830,8 +7937,10 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	  break;
 	case 3:
           /* All three verticies and all three edges are within the model,
-	   * but is the loop formed by these verticies within it?
-	   * TODO Check and insert loop if required. */
+	   * need to check if the three verticies are in a common loop and then
+	   * if ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
+	   * vertexT's. */
+	  /* TODO Write code for this! */
 	  break;
       }
   }
@@ -7842,20 +7951,101 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 * \return				<void>
 * \ingroup      WlzGeoModel
 * \brief	Walks around a loop topology element's child edge
-*               topology elements setting their parent.
+*               topology elements setting their parent and making
+*		sure that the loop topology element's have the
+*		correct parent too.
 * \param	gLT			The loop topology element.
 */
 static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 {
+  WlzGMShell	*gS;
   WlzGMEdgeT	*fET,
   		*tET;
   
   if(gLT && ((tET = fET = gLT->edgeT) != NULL))
   {
+    gS = gLT->parent;
     do
     {
       tET->parent = gLT;
+      tET->opp->parent->parent = gS;
     } while((tET = tET->next)->idx != fET->idx);
+  }
+}
+
+/*!
+* \return				The parent shell or NULL if no
+*					parent shell was found.
+* \brief	Walks around a loop topology element looking for another
+*		loop topology element connected to the given one. If
+*		such a loop topology element exists this function returns
+*		it's shell.
+* \param	gLT			The given loopT.
+*/
+static WlzGMShell *WlzGMLoopTFindShell(WlzGMLoopT *gLT)
+{
+  WlzGMEdgeT	*fET,
+  		*tET;
+  WlzGMShell	*fS = NULL;
+
+  tET = fET = gLT->edgeT;
+  do
+  {
+    tET = tET->next;
+    if(tET->opp->parent != gLT)
+    {
+      /* LoopTs connected by an edge. */
+      fS = tET->opp->parent->parent;
+    }
+    else if(tET->vertexT->diskT != tET->vertexT->diskT->next)
+    {
+      /* loopTs connected by a vertex. */
+      /* TODO not implemented yet, needed for 3D. */
+    }
+  } while((fS == NULL) && (tET != fET));
+  return(fS);
+}
+
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Removes a vertex from the models vertex hash table.
+*               The vertex's geometry must have been set.
+* \param	model			The model.
+* \param	dV			The vertex to remove from the
+*                                       models hash table.
+*/
+static void	WlzGMModelRemVertex(WlzGMModel *model, WlzGMVertex *dV)
+{
+  WlzDVertex3	nPos;
+  unsigned int 	hVal;
+  WlzGMVertex  	**hdV;
+  WlzGMVertex	*tV,
+		*pV;
+
+  (void )WlzGMVertexGetG3D(dV, &nPos);
+  hVal = WlzGMHashPos3D(nPos);
+  hdV = model->vertexHT + (hVal % model->vertexHTSz);
+  if(*hdV)
+  {
+    /* Need to search for position in the linked list. */
+    tV = *hdV;
+    pV = NULL;
+    while(tV && (WlzGMVertexCmpSign3D(tV, nPos) < 0))
+    {
+      pV = tV;
+      tV = tV->next;
+    }
+    /* tV is now dV. */
+    if(pV == NULL)
+    {
+      *hdV = dV->next;
+    }
+    else
+    {
+      pV->next = dV->next;
+    }
+    dV->next = NULL;
   }
 }
 
@@ -7863,7 +8053,7 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 * \return				<void>
 * \ingroup      WlzGeoModel
 * \brief	Adds a new vertex into the models vertex hash table.
-*               The verticies geometry must have been set.
+*               The vertex's geometry must have been set.
 * \param	model			The model.
 * \param	nV			New vertex to insert into the
 *                                       models hash table.
@@ -7881,7 +8071,7 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
   hdV = model->vertexHT + (hVal % model->vertexHTSz);
   if(*hdV == NULL)
   {
-    /* No verticies at this position in the hash table yet. */
+    /* No vertex at this position in the hash table yet. */
     *hdV = nV;
     nV->next = NULL;
   }

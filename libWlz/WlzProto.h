@@ -1128,6 +1128,15 @@ extern WlzErrorNum		WlzGaussNoise(
 * WlzGeoModel.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+/* Resource callback function list manipulation. */
+extern WlzErrorNum	WlzGMModelAddResCb(
+			  WlzGMModel *model,
+			  WlzGMCbFn fn,
+			  void *data);
+extern void		WlzGMModelRemResCb(
+			  WlzGMModel *model,
+			  WlzGMCbFn fn,
+			  void *data);
 /* Creation  of geometric modeling elements */
 extern WlzGMModel	*WlzGMModelNew(
 			  WlzGMModelType modType,
@@ -1137,7 +1146,7 @@ extern WlzGMModel	*WlzGMModelNew(
 extern WlzGMShell	*WlzGMModelNewS(
 			  WlzGMModel *model,
 			  WlzErrorNum *dstErr);
-extern WlzGMLoop	*WlzGMModelNewL(
+extern WlzGMFace	*WlzGMModelNewF(
 			  WlzGMModel *model,
 			  WlzErrorNum *dstErr);
 extern WlzGMLoopT	*WlzGMModelNewLT(
@@ -1164,9 +1173,9 @@ extern WlzErrorNum	WlzGMModelFree(
 extern WlzErrorNum      WlzGMModelFreeS(
 			  WlzGMModel *model,
 			  WlzGMShell *shell);
-extern WlzErrorNum      WlzGMModelFreeL(
+extern WlzErrorNum      WlzGMModelFreeF(
 			  WlzGMModel *model,
-			  WlzGMLoop *loop);
+			  WlzGMFace *loop);
 extern WlzErrorNum      WlzGMModelFreeLT(
 			  WlzGMModel *model,
 			  WlzGMLoopT *loopT);
@@ -1185,8 +1194,18 @@ extern WlzErrorNum      WlzGMModelFreeV(
 extern WlzErrorNum      WlzGMModelFreeVT(
 			  WlzGMModel *model,
 			  WlzGMVertexT *vertexT);
-/* Deletion of geometric modeling elements along with children */
-extern WlzErrorNum	WlzGMModelDeleteS(
+/* Deletion of geometric modeling elements along with children and any parents
+ * that depend solely on the element being deleted. */
+WlzErrorNum     	WlzGMModelDeleteV(
+			  WlzGMModel *model,
+			   WlzGMVertex *dV);
+WlzErrorNum            	WlzGMModelDeleteE(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+void            	WlzGMModelDeleteF(
+			  WlzGMModel *model,
+			  WlzGMFace *dL);
+extern void		WlzGMModelDeleteS(
 			  WlzGMModel *model,
 			  WlzGMShell *shell);
 /* Searching */
@@ -1304,16 +1323,6 @@ extern WlzGMShell	*WlzGMVertexCommonShell(
 			  WlzGMVertex *eV1);
 extern WlzGMShell	*WlzGMVertexGetShell(
 			  WlzGMVertex *eV);
-/* Tests */
-extern WlzErrorNum	WlzGMModelTestOutVTK(
-			  WlzGMModel *model,
-			  FILE *fP);
-extern WlzErrorNum	WlzGMModelTestOutPS(
-			  WlzGMModel *model,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale,
-			  int nCol);
 /* Model list management */
 extern void	   	WlzGMVertexTAppend(
 			  WlzGMVertexT *eVT,
@@ -1335,6 +1344,12 @@ extern void	   	WlzGMLoopTAppend(
 extern void	   	WlzGMShellAppend(
 			  WlzGMShell *pS,
 			  WlzGMShell *newS);
+extern void		WlzGMEdgeTUnlink(
+			  WlzGMEdgeT *dLT);
+extern void		WlzGMVertexTUnlink(
+			  WlzGMVertexT *dLT);
+extern void		WlzGMDiskTUnlink(
+			  WlzGMDiskT *dLT);
 extern void		WlzGMLoopTUnlink(
 			  WlzGMLoopT *dLT);
 extern void		WlzGMShellUnlink(

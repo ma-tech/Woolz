@@ -245,7 +245,7 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
   sz.vtX = bBox.xMax - bBox.xMin + 1;
   sz.vtY = bBox.yMax - bBox.yMin + 1;
   sz.vtZ = bBox.zMax - bBox.zMin + 1;
-  if(((lFlg = (char *)AlcCalloc(model->res.loop.numIdx,
+  if(((lFlg = (char *)AlcCalloc(model->res.face.numIdx,
   				sizeof(char))) == NULL) ||
      (AlcBit3Calloc(&dAry, sz.vtZ, sz.vtY, sz.vtX) != ALC_ER_NONE))
   {
@@ -266,9 +266,9 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
       do
       {
 	tLT = tLT->next;
-	/* For each loop, there are two loopT's per loop make sure we only
-	 * rasterize each loop once. */
-        if(*(lFlg + tLT->loop->idx) == 0)
+	/* For each face, there are two loopT's per face make sure we only
+	 * rasterize each face once. */
+        if(*(lFlg + tLT->face->idx) == 0)
 	{
 	  /* For each edgeT of the loopT add it's vertex to the simplex
 	   * vertex buffer. */
@@ -507,38 +507,40 @@ static void	WlzRasterLine3I(UBYTE ***bMsk, WlzIVertex3 *seg)
   errXY = abs.vtY - abs.vtX;
   errXZ = abs.vtZ - abs.vtX;
   errZY = abs.vtY - abs.vtZ;
-  cnt = abs.vtX + abs.vtY + abs.vtZ;
-  while(cnt-- > 0)
+  if((cnt = abs.vtX + abs.vtY + abs.vtZ) > 0)
   {
+    while(cnt-- > 0)
+    {
+      WlzRasterSetVoxel(bMsk, pos);
+      if(errXY < 0 )
+      {
+	if(errXZ < 0)
+	{
+	  pos.vtX += sgn.vtX;
+	  errXY += inc.vtY; errXZ += inc.vtZ;
+	}
+	else
+	{
+	  pos.vtZ += sgn.vtZ;
+	  errXZ -= inc.vtX; errZY += inc.vtY;
+	}
+      }
+      else
+      {
+	if(errZY < 0)
+	{
+	  pos.vtZ += sgn.vtZ;
+	  errXZ -= inc.vtX; errZY += inc.vtY;
+	}
+	else
+	{
+	  pos.vtY += sgn.vtY;
+	  errXY -= inc.vtX; errZY -= inc.vtZ;
+	}
+      }
+    }
     WlzRasterSetVoxel(bMsk, pos);
-    if(errXY < 0 )
-    {
-      if(errXZ < 0)
-      {
-        pos.vtX += sgn.vtX;
-        errXY += inc.vtY; errXZ += inc.vtZ;
-      }
-      else
-      {
-        pos.vtZ += sgn.vtZ;
-        errXZ -= inc.vtX; errZY += inc.vtY;
-      }
-    }
-    else
-    {
-      if(errZY < 0)
-      {
-        pos.vtZ += sgn.vtZ;
-        errXZ -= inc.vtX; errZY += inc.vtY;
-      }
-      else
-      {
-        pos.vtY += sgn.vtY;
-        errXY -= inc.vtX; errZY -= inc.vtZ;
-      }
-    }
   }
-  WlzRasterSetVoxel(bMsk, pos);
 }
 
 /************************************************************************

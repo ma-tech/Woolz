@@ -604,7 +604,7 @@ WlzErrorNum	WlzFreeContour(WlzContour *ctr)
   {
     if(WlzUnlink(&(ctr->linkcount), &errNum))
     {
-      if(ctr->model)
+      if(ctr->model && WlzUnlink(&(ctr->model->linkcount), &errNum))
       {
         (void )WlzGMModelFree(ctr->model);
       }

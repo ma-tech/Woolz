@@ -650,7 +650,8 @@ typedef enum _WlzGMModelType
 */
 typedef enum _WlzGMElemType
 {
-  WLZ_GMELM_VERTEX = 0,
+  WLZ_GMELM_NONE = 0,
+  WLZ_GMELM_VERTEX,
   WLZ_GMELM_VERTEX_G2I,
   WLZ_GMELM_VERTEX_G2D,
   WLZ_GMELM_VERTEX_G3I,
@@ -659,7 +660,7 @@ typedef enum _WlzGMElemType
   WLZ_GMELM_DISK_T,
   WLZ_GMELM_EDGE,
   WLZ_GMELM_EDGE_T,
-  WLZ_GMELM_LOOP,
+  WLZ_GMELM_FACE,
   WLZ_GMELM_LOOP_T,
   WLZ_GMELM_SHELL,
   WLZ_GMELM_SHELL_G2I,
@@ -682,7 +683,7 @@ typedef enum _WlzGMElemTypeFlags
   WLZ_GMELMFLG_DISK_T =     (1 << 3),
   WLZ_GMELMFLG_EDGE =       (1 << 4),
   WLZ_GMELMFLG_EDGE_T =     (1 << 5),
-  WLZ_GMELMFLG_LOOP =       (1 << 6),
+  WLZ_GMELMFLG_FACE =       (1 << 6),
   WLZ_GMELMFLG_LOOP_T =     (1 << 7),
   WLZ_GMELMFLG_SHELL =      (1 << 8),
   WLZ_GMELMFLG_SHELL_G =    (1 << 9)
@@ -707,7 +708,7 @@ typedef union _WlzGMElemP
   struct _WlzGMDiskT	*diskT;
   struct _WlzGMEdge 	*edge;
   struct _WlzGMEdgeT 	*edgeT;
-  struct _WlzGMLoop 	*loop;
+  struct _WlzGMFace 	*face;
   struct _WlzGMLoopT 	*loopT;
   struct _WlzGMShell 	*shell;
   struct _WlzGMShellG2I *shellG2I;
@@ -911,7 +912,7 @@ typedef struct _WlzGMEdge
 /*!
 * \struct	_WlzGMLoopT
 * \ingroup	WlzGeoModel
-* \brief	The topological properties of a loop.
+* \brief	A directed loop or the topological properties of a loop.
 *		Typedef: ::WlzGMLoopT.
 */
 typedef struct _WlzGMLoopT
@@ -924,26 +925,27 @@ typedef struct _WlzGMLoopT
   					     parent. */
   struct _WlzGMLoopT *opp;	        /*!< The opposite loop topology
   					     element. */
-  struct _WlzGMLoop *loop;		/*!< The loop. */
+  struct _WlzGMFace *face;		/*!< The face not used in 2D models. */
   WlzGMEdgeT *edgeT;			/*!< An edge topology element in
-  					     the loop, others can be found
-					     by walking the edgeT's next/prev
-					     fields. */
+  					     this loop topology element, the
+					     others can be found by walking
+					     the edgeT's next/prev fields. */
   struct _WlzGMShell *parent;		/*!< Parent of this loopT. */
 } WlzGMLoopT;
 
 /*!
-* \struct	_WlzGMLoop
+* \struct	_WlzGMFace
 * \ingroup	WlzGeoModel
 * \brief	A circuit of edges.
-*		Typedef: ::WlzGMLoop
+*		Typedef: ::WlzGMFace
 */
-typedef struct _WlzGMLoop
+typedef struct _WlzGMFace
 {
-  WlzGMElemType type;			/*!< WLZ_GMELM_LOOP */
-  int		idx;			/*!< Unique identifier for loop. */
-  WlzGMLoopT 	*loopT;			/*!< the loop's topology. */
-} WlzGMLoop;
+  WlzGMElemType type;			/*!< WLZ_GMELM_FACE */
+  int		idx;			/*!< Unique identifier for face. */
+  WlzGMLoopT 	*loopT;			/*!< A directed loop topology element
+  					     of the face. */
+} WlzGMFace;
 
 /*!
 * \struct	_WlzGMShellG2I
@@ -1042,6 +1044,39 @@ typedef struct _WlzGMShell
 } WlzGMShell;
 
 /*!
+* \enum		_WlzGMCbReason
+* \ingroup	WlzGeoModel
+* \brief	The reason a callback function is called.
+*/
+typedef enum _WlzGMCbReason
+{
+  WLZ_GMCB_NEW,				/*!< New element has been created. */
+  WLZ_GMCB_FREE				/*!< Existing element is about to
+  					     be free'd. */
+} WlzGMCbReason;
+
+/*!
+* \typedef	WlzGMCbFn
+* \ingroup	WlzGeoModel
+* \brief	A pointer function to a function called when elements of a
+*		Woolz geometric model are either created or deleted.
+*/
+typedef void	(*WlzGMCbFn)(struct _WlzGMModel *, WlzGMElemP ,
+			     WlzGMCbReason, void *);
+
+/*!
+* \struct	_WlzGMCbEntry
+* \ingroup	WlzGeoModel
+* \brief	
+*/
+typedef struct	_WlzGMCbEntry
+{
+  WlzGMCbFn	fn;
+  void		*data;
+  struct _WlzGMCbEntry *next;
+} WlzGMCbEntry;
+
+/*!
 * \struct	_WlzGMResource
 * \ingroup	WlzGeoModel
 * \brief	A resource vector (extensible array) used for allocating
@@ -1067,13 +1102,17 @@ typedef struct _WlzGMResource
 */
 typedef struct _WlzGMShellR
 {
+  WlzGMCbEntry	*callbacks;		/*! Linked list of functions which
+  					    are called when new elements are
+					    created or existing elements are
+					    destroyed. */
   WlzGMResource vertex;			/*!< Vertex elements. */
   WlzGMResource vertexT;	        /*!< Vertex topology elements. */
   WlzGMResource vertexG;	     	/*!< Vertex geometry elements. */
   WlzGMResource diskT;			/*!< Disk geometry elements. */
   WlzGMResource edge;			/*!< Edge elements. */
   WlzGMResource edgeT;		        /*!< Edge topology element elements. */
-  WlzGMResource loop;			/*!< Loop elements. */
+  WlzGMResource face;			/*!< Face elements. */
   WlzGMResource loopT;		        /*!< Loop topology element elements. */
   WlzGMResource	shell;			/*!< Shell elements. */
   WlzGMResource	shellG;			/*!< Shell geometry elements. */
@@ -1132,7 +1171,7 @@ typedef struct _WlzGMResIdxTb
   WlzGMResIdx   diskT;
   WlzGMResIdx   edge;
   WlzGMResIdx   edgeT;
-  WlzGMResIdx   loop;
+  WlzGMResIdx   face;
   WlzGMResIdx   loopT;
   WlzGMResIdx   shell;
   WlzGMResIdx   shellG;

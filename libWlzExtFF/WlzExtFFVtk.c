@@ -377,17 +377,17 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
       case WLZ_GMMOD_3D:
 	(void )fprintf(fP,
 		       "POLYGONS %d %d\n",
-		       model->res.loop.numElm, 4 * model->res.loop.numElm);
+		       model->res.face.numElm, 4 * model->res.face.numElm);
 	idI = 0;
-	vec = model->res.loop.vec;
-	iCnt = model->res.loop.numIdx;
+	vec = model->res.face.vec;
+	iCnt = model->res.face.numIdx;
 	while(iCnt-- > 0)
 	{
-	  eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI++);
-	  if(eP.loop->idx >= 0)
+	  eP.face = (WlzGMFace *)AlcVectorItemGet(vec, idI++);
+	  if(eP.face->idx >= 0)
 	  {
-	    /* Loop IS a triangle, in 3D nothing else is allowed. */
-	    tET = eP.loop->loopT->edgeT;
+	    /* Face IS a triangle, in 3D nothing else is allowed. */
+	    tET = eP.face->loopT->edgeT;
 	    bufI[0] = *(resIdxTb->vertex.idxLut +
 	    		tET->vertexT->diskT->vertex->idx);
 	    bufI[1] = *(resIdxTb->vertex.idxLut +
@@ -586,6 +586,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 {
   int		valI,
 		pIdx,
+		nLine,
 		nPoly,
 		nPoints,
 		sumPoints,
@@ -598,6 +599,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzDVertex3	*pointBuf = NULL;
   WlzDVertex3	triBuf[3];
+  WlzDVertex2	linBuf[3];
   int		polyBuf[3];
   char		buf[256];
 
@@ -742,7 +744,69 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      errNum == WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_VERTICIES: /* FALLTHROUGH */
+	      /* TODO Read triangle strip polydata. */
+	      errNum == WLZ_ERR_READ_INCOMPLETE;
+	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_LINES:     /* FALLTHROUGH */
+	      if(model == NULL)
+	      {
+		vHTSz = (nPoints < 1024)? 1024: nPoints / 2;
+    		model = WlzGMModelNew(WLZ_GMMOD_2D, 0, vHTSz, &errNum);
+	      }
+	      else
+	      {
+	        vHTSz = (sumPoints < 1024)? 1024: sumPoints / 2;
+		if(model->vertexHTSz < vHTSz)
+		{
+		  errNum = WlzGMModelRehashVHT(model, vHTSz);
+		}
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		valS = strtok(NULL, " \t\n");
+		if((valS == NULL) || (sscanf(valS, "%d", &nLine) != 1) ||
+		   (nLine < 0))
+		{
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        valS = strtok(NULL, " \t\n");
+		if((valS == NULL) || (sscanf(valS, "%d", &valI) != 1) ||
+		   (valI < 0) || ((valI / nLine) != 3))
+	        {
+		  /* Can only use line formed by two verticies at it's
+		   * ends ((valI / nLine) != (1 + 2)). */
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        pIdx = 0;
+		while((errNum == WLZ_ERR_NONE) && (pIdx < nLine))
+		{
+		  if((fscanf(fP, "%d", &valI) != 1) || (valI != 2) ||
+		     (fscanf(fP, "%d %d",
+		             polyBuf + 0, polyBuf + 1) != 2) ||
+		     (*(polyBuf + 0) < 0) || (*(polyBuf + 0) >= nPoints) ||
+		     (*(polyBuf + 1) < 0) || (*(polyBuf + 1) >= nPoints))
+		  {
+		    errNum = WLZ_ERR_READ_INCOMPLETE;
+		  }
+		  else
+		  {
+		    /* Add line to GM. */
+		    (linBuf + 0)->vtX = (pointBuf + *(polyBuf + 0))->vtX;
+		    (linBuf + 0)->vtY = (pointBuf + *(polyBuf + 0))->vtY;
+		    (linBuf + 1)->vtX = (pointBuf + *(polyBuf + 1))->vtX;
+		    (linBuf + 1)->vtY = (pointBuf + *(polyBuf + 1))->vtY;
+		    errNum = WlzGMModelConstructSimplex2D(model, linBuf);
+		    ++pIdx;
+		  }
+		}
+	      }
+	      break;
 	    default:
 	      errNum == WLZ_ERR_READ_INCOMPLETE;
 	      break;

@@ -77,22 +77,18 @@ WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int maxElm)
 */
 static WlzErrorNum WlzGMFilterRmSmShells2(WlzGMModel *model, int maxElm)
 {
-  int		fETIdx,
-  		fLTIdx,
-  		eCnt;
-  WlzGMEdgeT	*tET;
-  WlzGMLoopT	*tLT;
+  int		eCnt;
+  WlzGMEdgeT	*fET,
+  		*tET;
+  WlzGMLoopT	*fLT,
+  		*tLT;
   WlzGMShell	*lS,
 		*nS,
 		*tS;
-  char		*eFlg = NULL,
-  		*lFlg = NULL;
+  char		*eFlg = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(((eFlg = (char *)AlcCalloc(model->res.edge.numIdx,
-  			        sizeof(char))) == NULL) ||
-     ((lFlg = (char *)AlcCalloc(model->res.loop.numIdx,
-  			        sizeof(char))) == NULL))
+  if((eFlg = (char *)AlcCalloc(model->res.edge.numIdx, sizeof(char))) == NULL)
   {
     errNum == WLZ_ERR_MEM_ALLOC;
   }
@@ -106,44 +102,33 @@ static WlzErrorNum WlzGMFilterRmSmShells2(WlzGMModel *model, int maxElm)
       eCnt = 0;
       tS = nS;
       nS = nS->next;
-      tLT = tS->child;
-      fLTIdx = tLT->idx;
+      tLT = fLT = tS->child;
       /* For each loopT. */
       do
       {
-	if(*(lFlg + tLT->loop->idx) == 0)
+	/* For each loopT count the number of edges. */
+	tET = fET = tLT->edgeT;
+	do
 	{
-	  /* For each loop, there are two loopT's per loop, count the
-	   * number of edges. */
-	  tET = tLT->edgeT;
-          fETIdx = tET->idx;
-	  do
+	  if(*(eFlg + tET->edge->idx) == 0)
 	  {
-	    if(*(eFlg + tET->edge->idx) == 0)
-	    {
-	      ++eCnt;
-	      *(eFlg + tET->edge->idx) = 1; 		/* Mark edge visited */
-	    }
-	    tET = tET->next;
-	  } while((tET->idx != fETIdx) && (eCnt <= maxElm));
-	  *(lFlg + tLT->loop->idx) = 1; 		/* Mark loop visited */
-	}
+	    ++eCnt;
+	    *(eFlg + tET->edge->idx) = 1; 		/* Mark edge visited */
+	  }
+	  tET = tET->next;
+	} while((tET != fET) && (eCnt <= maxElm));
 	tLT = tLT->next;
-      } while((tLT->idx != fLTIdx) && (eCnt <= maxElm));
+      } while((tLT != fLT) && (eCnt <= maxElm));
       if(eCnt < maxElm)
       {
         /* This is a small shell, so delete it from the model. */
-	errNum = WlzGMModelDeleteS(model, tS);
+	WlzGMModelDeleteS(model, tS);
       }
-    } while((errNum == WLZ_ERR_NONE) && model->child && (tS->idx != lS->idx));
+    } while(model->child && (tS != lS));
   }
   if(eFlg)
   {
     AlcFree(eFlg);
-  }
-  if(lFlg)
-  {
-    AlcFree(lFlg);
   }
   return(errNum);
 }
@@ -159,16 +144,16 @@ static WlzErrorNum WlzGMFilterRmSmShells2(WlzGMModel *model, int maxElm)
 */
 static WlzErrorNum WlzGMFilterRmSmShells3(WlzGMModel *model, int maxElm)
 {
-  int		fLTIdx,
-  		lCnt;
-  WlzGMLoopT	*tLT;
+  int		lCnt;
+  WlzGMLoopT	*fLT,
+  		*tLT;
   WlzGMShell	*lS,
 		*nS,
 		*tS;
-  char		*lFlg = NULL;
+  char		*fFlg = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((lFlg = (char *)AlcCalloc(model->res.loop.numIdx, sizeof(char))) == NULL)
+  if((fFlg = (char *)AlcCalloc(model->res.face.numIdx, sizeof(char))) == NULL)
   {
     errNum == WLZ_ERR_MEM_ALLOC;
   }
@@ -182,28 +167,27 @@ static WlzErrorNum WlzGMFilterRmSmShells3(WlzGMModel *model, int maxElm)
       lCnt = 0;
       tS = nS;
       nS = nS->next;
-      tLT = tS->child;
-      fLTIdx = tLT->idx;
+      fLT = tLT = tS->child;
       /* For each loopT. */
       do
       {
-	if(*(lFlg + tLT->loop->idx) == 0)
+	if(*(fFlg + tLT->face->idx) == 0)
 	{
 	  ++lCnt;
-	  *(lFlg + tLT->loop->idx) = 1;
+	  *(fFlg + tLT->face->idx) = 1;
 	}
 	tLT = tLT->next;
-      } while((tLT->idx != fLTIdx) && (lCnt <= maxElm));
+      } while((tLT != fLT) && (lCnt <= maxElm));
       if(lCnt < maxElm)
       {
         /* This is a small shell, so delete it from the model. */
-	errNum = WlzGMModelDeleteS(model, tS);
+	WlzGMModelDeleteS(model, tS);
       }
-    } while((errNum == WLZ_ERR_NONE) && model->child && (tS->idx != lS->idx));
+    } while(model->child && (tS->idx != lS->idx));
   }
-  if(lFlg)
+  if(fFlg)
   {
-    AlcFree(lFlg);
+    AlcFree(fFlg);
   }
   return(errNum);
 }
@@ -233,24 +217,23 @@ int             main(int argc, char *argv[])
   char		*inObjFileStr;
   WlzObject	*inObj;
   WlzDomain	ctrDom;
-  WlzDVertex2	tstOutOffset2D,
-  		tstOutScale2D;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "s:h:";
-  const char	inObjFileStrDef[] = "-";
+  static char	optList[] = "o:s:h:";
+  const char	inObjFileStrDef[] = "-",
+  		outObjFileStrDef[] = "-";
 
   inObj = NULL;
   ctrDom.core = NULL;
-  tstOutOffset2D.vtX = 100.0;
-  tstOutOffset2D.vtY = 100.0;
-  tstOutScale2D.vtX = 1.0;
-  tstOutScale2D.vtY = 1.0;
   inObjFileStr = (char *)inObjFileStrDef;
+  outObjFileStr = (char *)outObjFileStrDef;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
     {
+      case 'o':
+        outObjFileStr = optarg;
+	break;
       case 's':
         if(sscanf(optarg, "%d", &smShellSz) != 1)
 	{
@@ -316,45 +299,6 @@ int             main(int argc, char *argv[])
 		     argv[0]);
     }
   }
-  if(ok)
-  {
-    if((fP = fopen("tstOut0", "w")) == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-		     "%s: failed to open test output file (%s)\n",
-		     *argv, "tstOut");
-    }
-  }
-  if(ok)
-  {
-    switch(inObj->domain.ctr->model->type)
-    {
-      case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
-	(void )fprintf(fP, "%%!\n"
-			   "0.001 setlinewidth\n"
-			   "255 0 0 setrgbcolor\n");
-	errNum = WlzGMModelTestOutPS(inObj->domain.ctr->model, fP,
-				     tstOutOffset2D, tstOutScale2D, 1);
-	break;
-      case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
-	errNum = WlzGMModelTestOutVTK(inObj->domain.ctr->model, fP);
-	break;
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s: Failed to write to test file.\n",
-		     *argv);
-    }
-  }
-  if(fP)
-  {
-    (void )fclose(fP);
-    fP = NULL;
-  }
   if(ok && (smShellSz > 0))
   {
     errNum = WlzGMFilterRmSmShells(inObj->domain.ctr->model, smShellSz);
@@ -379,26 +323,24 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-    switch(inObj->domain.ctr->model->type)
+  if((fP = (strcmp(outObjFileStr, "-")?
+           fopen(outObjFileStr, "w"): stdout)) == NULL)
     {
-      case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
-        (void )fprintf(fP, "%%!\n"
-			   "0.001 setlinewidth\n"
-			   "0 64 64 setrgbcolor\n");
-	errNum = WlzGMModelTestOutPS(inObj->domain.ctr->model, fP,
-				     tstOutOffset2D, tstOutScale2D, 1);
-	break;
-      case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
-	errNum = WlzGMModelTestOutVTK(inObj->domain.ctr->model, fP);
-	break;
+      ok = 0;
+      (void )fprintf(stderr,
+                     "%s: Failed to open output file %s.\n",
+                     argv[0], outObjFileStr);
     }
+  }
+  if(ok)
+  {
+    errNum = WlzWriteObj(fP, inObj);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
-      (void )fprintf(stderr, "%s: Failed to write to test file.\n",
-		     *argv);
+      (void )fprintf(stderr,
+                     "%s: Failed to write output object.\n",
+                     argv[0]);
     }
   }
   if(fP)
@@ -417,6 +359,7 @@ int             main(int argc, char *argv[])
       *argv,
       " [-h] [<input object>]\n"
       "Options:\n"
+      "  -o  Output file.\n"
       "  -s  Threshold shell size (edges in 2D, loops in 3D) for small\n"
       "      shells to be removed from the model.\n"
       "  -h  Prints this usage information.\n"

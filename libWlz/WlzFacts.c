@@ -1175,6 +1175,7 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 				      WlzObject *obj,
 				      WlzGMModel *model)
 {
+  int		dim;
   const char	*tStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1192,6 +1193,17 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
     }
     else
     {
+      switch(model->type)
+      {
+        case WLZ_GMMOD_2I:
+	case WLZ_GMMOD_2D:
+	  dim = 2;
+	  break;
+	case WLZ_GMMOD_3I:
+	case WLZ_GMMOD_3D:
+	  dim = 3;
+	  break;
+      }
       errNum = WlzObjFactsAppend(fData, "Model type: %s.\n", tStr);
       if(errNum == WLZ_ERR_NONE)
       {
@@ -1233,11 +1245,11 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 	  			     "nEdgeT: %d\n",
 				     model->res.edgeT.numElm);
 	}
-        if(errNum == WLZ_ERR_NONE)
+        if((errNum == WLZ_ERR_NONE) && (dim == 3))
 	{
 	  errNum = WlzObjFactsAppend(fData,
-	  			     "nLoop: %d\n",
-				     model->res.loop.numElm);
+	  			     "nFace: %d\n",
+				     model->res.face.numElm);
 	}
         if(errNum == WLZ_ERR_NONE)
 	{

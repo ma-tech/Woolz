@@ -1824,7 +1824,7 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 	if((putc((unsigned int )(model->type), fP) == EOF) ||
 	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
 	    !putword(model->res.vertex.numElm, fP) ||
-	    !putword(model->res.loop.numElm, fP))
+	    !putword(model->res.face.numElm, fP))
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	}
@@ -1894,16 +1894,16 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 	  break;
 	case WLZ_GMMOD_3I:
 	case WLZ_GMMOD_3D:
-	  vec = model->res.loop.vec;
-	  iCnt = model->res.loop.numIdx;
+	  vec = model->res.face.vec;
+	  iCnt = model->res.face.numIdx;
 	  while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
 	  {
-	    eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI++);
-	    if(eP.loop->idx >= 0)
+	    eP.face = (WlzGMFace *)AlcVectorItemGet(vec, idI++);
+	    if(eP.face->idx >= 0)
 	    {
 	      ++vCnt;
 	      /* Loop IS a triangle, in 3D nothing else is allowed. */
-	      tET = eP.loop->loopT->edgeT;
+	      tET = eP.face->loopT->edgeT;
 	      bufI[0] = *(resIdxTb->vertex.idxLut +
 			  tET->vertexT->diskT->vertex->idx);
 	      bufI[1] = *(resIdxTb->vertex.idxLut +

@@ -34,8 +34,6 @@
 #define WLZ_CTR_TOLERANCE	(1.0e-06)
 
 /* #define WLZ_CONTOUR_DEBUG */
-static void 	WlzContourTestOutPSLn2D(FILE *fP,
-					WlzDVertex2 org, WlzDVertex2 dst);
 
 /************************************************************************
 * WlzContourTriIsn2D: Classification of intersection of line segment
@@ -1699,20 +1697,6 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg,
   };
 
   conCnt = 0;
-#ifdef WLZ_CONTOUR_DEBUG
-  fprintf(stderr, "255 0 0 setrgbcolor\n");
-  seg[0].vtX = org.vtX + klOff + 1.0 - 0.1;
-  seg[0].vtY = org.vtY + lnOff + 1.0 - 0.1;
-  seg[1].vtX = org.vtX + klOff + 1.0 + 0.1;
-  seg[1].vtY = org.vtY + lnOff + 1.0 + 0.1;
-  WlzContourTestOutPSLn2D(stderr, seg[0], seg[1]);
-  seg[0].vtX = org.vtX + klOff + 1.0 - 0.1;
-  seg[0].vtY = org.vtY + lnOff + 1.0 + 0.1;
-  seg[1].vtX = org.vtX + klOff + 1.0 + 0.1;
-  seg[1].vtY = org.vtY + lnOff + 1.0 - 0.1;
-  WlzContourTestOutPSLn2D(stderr, seg[0], seg[1]);
-  fprintf(stderr, "0 0 0 setrgbcolor\n");
-#endif /* WLZ_CONTOUR_DEBUG */
   /* Find 4 connected neighbours. */
   for(idN = 0; idN < 3;  ++idN)
   {
@@ -1745,9 +1729,6 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg,
       idM = nbr[idN];
       seg[1].vtX = org.vtX + klOff + offConKl[idM];
       seg[1].vtY = org.vtY + lnOff + offConLn[idM];
-#ifdef WLZ_CONTOUR_DEBUG
-      WlzContourTestOutPSLn2D(stderr, seg[0], seg[1]);
-#endif /* WLZ_CONTOUR_DEBUG */
       errNum = WlzGMModelConstructSimplex2D(ctr->model, seg);
     }
   }
@@ -2003,9 +1984,6 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 	  tIsn[0].vtY += sqOrg.vtY;
 	  tIsn[1].vtX += sqOrg.vtX;
 	  tIsn[1].vtY += sqOrg.vtY;
-#ifdef WLZ_CONTOUR_DEBUG
-  	  WlzContourTestOutPSLn2D(stderr, tIsn[0], tIsn[1]);
-#endif /* WLZ_CONTOUR_DEBUG */
 	  errNum = WlzGMModelConstructSimplex2D(ctr->model, tIsn);
 	}
       }
@@ -3165,116 +3143,6 @@ static WlzDVertex3 WlzContourItpTetSide(double valOrg, double valDst,
   return(itp);
 }
 
-/************************************************************************
-* Function:	WlzContourTestOutPSLn2D
-* Returns:	void
-* Purpose:	Prints out line segment for testing.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file.
-		WlzDVertex2 org:	Start of line segment.
-*		WlzDVertex2 dst:	End of line segment.
-************************************************************************/
-static void 	WlzContourTestOutPSLn2D(FILE *fP,
-					WlzDVertex2 org, WlzDVertex2 dst)
-{
-  const double	scaleX = 1.0,
-  		scaleY = 1.0,
-  		offsetX = 0.0,
-		offsetY = 0.0;
-
-  (void )fprintf(fP,
-  		 "%f %f moveto "
-  		 "%f %f lineto "
-		 "stroke\n",
-		 (org.vtX * scaleX) + offsetX,
-		 (org.vtY * scaleY) + offsetY,
-		 (dst.vtX * scaleX) + offsetX,
-		 (dst.vtY * scaleY) + offsetY);
-}
-
-/************************************************************************
-* Function:	WlzContourTestOutVTK
-* Returns:	WlzErrorNum		Woolz error code.
-* Purpose:	Prints out a 3D contour as a VTK polydata file
-*		for testing.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour to print out.
-*		FILE *fP:		Output file.
-************************************************************************/
-WlzErrorNum	WlzContourTestOutVTK(WlzContour *ctr, FILE *fP)
-{
-  WlzGMModel	*model;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctr == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(ctr->type != WLZ_CONTOUR)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((model = ctr->model) != NULL)
-    {
-      errNum = WlzGMModelTestOutVTK(model, fP);
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourTestOutPS
-* Returns:	WlzErrorNum		Woolz error code.
-* Purpose:	Prints out a 2D contour as postscript for testing.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour to print out.
-*		FILE *fP:		Output file.
-*		int nCol:		Number of colours to cycle
-*					through.
-*		int headAndFoot:	Print a postscript header and
-*					footer if non-zero.
-************************************************************************/
-WlzErrorNum	WlzContourTestOutPS(WlzContour *ctr, FILE *fP,
-				    int nCol, int headAndFoot,
-				    WlzDVertex2 offset, WlzDVertex2 scale)
-{
-  WlzGMModel	*model;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctr == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(ctr->type != WLZ_CONTOUR)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(headAndFoot)
-    {
-      (void )fprintf(fP, "%%!\n"
-		     "1 setlinecap\n"
-		     "1 setlinejoin\n"
-		     "0.01 setlinewidth\n");
-    }
-    if((model = ctr->model) != NULL)
-    {
-      errNum = WlzGMModelTestOutPS(model, fP, offset, scale, nCol);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(headAndFoot)
-    {
-      (void )fprintf(fP, "showpage\n");
-    }
-  }
-  return(errNum);
-}
-
 /* #define TEST_WLZCONTOUR */
 #ifdef TEST_WLZCONTOUR
 /* Test main() for WlzContourObj(). */
@@ -3435,34 +3303,6 @@ int             main(int argc, char *argv[])
       ok = 0;
       (void )fprintf(stderr, "%s Failed to compute contour.\n",
       	     	     argv[0]);
-    }
-  }
-  if(ok)
-  {
-    switch(ctr->model->type)
-    {
-      case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
-	scale.vtX = 2.0;
-	scale.vtY = -2.0;
-	offset.vtX = -240.0;
-	offset.vtY = 700.0;
-        errNum = WlzContourTestOutPS(ctr, fP, nCol, 1, offset, scale);
-	break;
-      case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
-        errNum = WlzContourTestOutVTK(ctr, fP);
-	break;
-      default: 
-        errNum = WLZ_ERR_DOMAIN_TYPE;
-	break;
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s Failed to output contour to file (%d).\n",
-      		     argv[0], (int )errNum);
     }
   }
   if(ok && nmEdgeFlg)
