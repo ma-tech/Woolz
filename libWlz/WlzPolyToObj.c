@@ -325,10 +325,8 @@ WlzObject *WlzPolyToObj(
     new_poly = WlzAssignObject(new_poly, NULL);
     vtxs     = new_poly->domain.poly->vtx;
     num_vtxs = new_poly->domain.poly->nvertices - wrap;
-  }
 
-  /* find line and column bounds */
-  if( errNum == WLZ_ERR_NONE ){
+    /* find line and column bounds */
     l1 = ll = vtxs->vtY;
     k1 = lk = vtxs->vtX;
     for(i=1, vtxs++; i < num_vtxs; i++, vtxs++){
@@ -350,26 +348,20 @@ WlzObject *WlzPolyToObj(
 
     /* order the vertices first wrt line number then wrt kol number */
     qsort((void *) vtxs, num_vtxs, sizeof(WlzIVertex2), vtx_compare);
-  }
 
-  /* build an object with intervals given by non-polynomial points */
-  if( errNum == WLZ_ERR_NONE ){
-     if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					  l1, ll, k1, lk, &errNum) ){
-       values.core = NULL;
-       if( obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
-			      NULL, &errNum) ){
-	 obj1 = WlzAssignObject(obj1, NULL);
-       }
-       else {
-	 WlzFreeDomain(domain);
-	 WlzFreeObj(new_poly);
-       }
-     }
-     else {
-       WlzFreeObj(new_poly);
-     }
-  }	
+    /* build an object with intervals given by non-polynomial points */
+    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					 l1, ll, k1, lk, &errNum) ){
+      values.core = NULL;
+      if( obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
+			     NULL, &errNum) ){
+	obj1 = WlzAssignObject(obj1, NULL);
+      }
+      else {
+	WlzFreeDomain(domain);
+      }
+    }
+  }
 
   /* maximum number of intervals = num_vtxs + height */
   if((errNum == WLZ_ERR_NONE) &&
@@ -379,8 +371,6 @@ WlzObject *WlzPolyToObj(
     				         NULL);
   }
   else {
-    WlzFreeObj(obj1);
-    WlzFreeObj(new_poly);
     errNum = WLZ_ERR_MEM_ALLOC;
   }
 
@@ -390,8 +380,7 @@ WlzObject *WlzPolyToObj(
     intptr->iright = lk - k1;
     WlzMakeInterval(l1, domain.i, 1, intptr);	/* first line - empty */
     intptr++;
-  }
-  if( errNum == WLZ_ERR_NONE ){
+
     intptr->ileft = 0;
     intptr->iright = lk - k1;
     WlzMakeInterval(ll, domain.i, 1, intptr);	/* last line - empty */
@@ -431,6 +420,9 @@ WlzObject *WlzPolyToObj(
       intptr++;
       nints++;
       WlzMakeInterval(j, domain.i, nints, intptr-nints);
+    }
+    if( new_poly ){
+      WlzFreeObj(new_poly);
     }
 
     /* switch on fill mode */
@@ -484,8 +476,9 @@ WlzObject *WlzPolyToObj(
       break;
 
     }
+  }
+  if( obj1 ){
     WlzFreeObj(obj1);
-    WlzFreeObj(new_poly);
   }
 
   /* find residual object */
