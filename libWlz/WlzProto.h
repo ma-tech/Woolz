@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 06-11-00 bill Add WlzVerticiesFromObj() and WlzRegICPObjs().
 * 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
 * 10-10-00 bill Add WlzAffineTransformContour(),
 *               WlzAffineTransformGMModel(),
@@ -183,8 +184,10 @@ extern WlzAffineTransform	*WlzAffineTransformFromPrimVal(
 				  double trXsi,
 				  int trInvert,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzAffineTransform	*WlzAffineTransformFromPrim(
 				  WlzAffineTransformPrim prim);
+#endif /* WLZ_EXT_BIND */
 extern WlzAffineTransform	*WlzAffineTransformFromSpin(
 				  double spX,
 				  double spY,
@@ -272,10 +275,10 @@ extern WlzGMModel      		*WlzAffineTransformGMModel(
 				  WlzAffineTransform *tr,
 				  int newModFlg,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum	     	WlzAffineTransformPrimGet(
 				  WlzAffineTransform *tr,
 				  WlzAffineTransformPrim *prim);
-#ifndef WLZ_EXT_BIND
 extern WlzErrorNum 		WlzAffineTransformMatrixSet(
 				  WlzAffineTransform *trans,
 				  double **arrayMat);
@@ -307,9 +310,11 @@ extern WlzErrorNum 		WlzAffineTransformPrimValSet(
 				  double trPsi,
 				  double trXsi,
 				  int trInvert);
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum 		WlzAffineTransformPrimSet(
 				  WlzAffineTransform *tr,
 				  WlzAffineTransformPrim prim);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzAffineTransformLSq.c						*
@@ -1895,6 +1900,18 @@ extern WlzObject		*WlzReadObj(
 				  FILE *fp,
 			          WlzErrorNum *dstErr);
 /************************************************************************
+* WlzRegICP.c
+************************************************************************/
+extern WlzAffineTransform	*WlzRegICPObjs(
+				  WlzObject *tObj,
+				  WlzObject *sObj,
+				  WlzTransformType trType,
+				  int *dstConv,
+				  int *dstItr,
+				  int maxItr,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzRsvFilter.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -2520,6 +2537,18 @@ extern WlzErrorNum 		WlzVerifyInterval(
 				  WlzInterval *intv,
 				  int fix);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzVerticies.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzVertexP		WlzVerticiesFromObj(
+				  WlzObject *obj,
+				  int *dstCnt,
+				  WlzVertexType *dstType,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
 
 /************************************************************************
 * WlzVolume.c								*
