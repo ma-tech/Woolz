@@ -77,7 +77,7 @@ EXECUTABLES		= \
 			WlzSetBackground \
 			WlzSetVoxelSize \
 			WlzShiftObj \
-			WlzSkeleton.c \
+			WlzSkeleton \
 			WlzSobel \
 			WlzTransposeObj \
 			WlzThreshold \
@@ -148,6 +148,7 @@ CSOURCES		= \
 			WlzSetBackground.c \
 			WlzSetVoxelSize.c \
 			WlzShiftObj.c \
+			WlzSkeleton.c \
 			WlzSobel.c \
 			WlzTransposeObj.c \
 			WlzThreshold.c \
