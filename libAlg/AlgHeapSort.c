@@ -317,6 +317,7 @@ int		main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
+      case 'h': /* FALLTHROUGH */
       default:
 	usage = 1;
 	ok = 0;
@@ -488,14 +489,16 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    		   "Usage: %s [-c] [-i] [-r] [-s#]\n",
+    		   "Usage: %s [-c] [-i] [-r] [-s#]\n%s",
 		   "Options:\n"
+		   "  -h  Show this usage message.\n"
 		   "  -c  Do a heap sort of chars instead of ints.\n"
 		   "  -i  Do an indexed heap sort.\n"
 		   "  -r  Use random instead of inverse values\n"
 		   "  -s  Data size (number of data elements to sort).\n"
-		   "Test for AlgHeapSort() and AlgHeapSortIdx().\n");
+		   "Test for AlgHeapSort() and AlgHeapSortIdx().\n",
+		   *argv);
   }
-  return(0);
+  return(!ok);
 }
 #endif /* ALG_HEAPSORT_TEST */
