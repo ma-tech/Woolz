@@ -93,6 +93,7 @@ EXECUTABLES		= \
 			WlzRegisterICP \
 			WlzRsvFilterObj \
 			WlzSampleObj \
+			WlzScalarFeatures \
 			WlzSelect1InN \
 			WlzSetBackground \
 			WlzSetVoxelSize \
@@ -183,6 +184,7 @@ CSOURCES		= \
 			WlzRegisterICP.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
+			WlzScalarFeatures.c \
 			WlzSelect1InN.c \
 			WlzSetBackground.c \
 			WlzSetVoxelSize.c \
