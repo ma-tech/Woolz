@@ -94,6 +94,7 @@ EXECUTABLES		= \
 			WlzIntersect \
 			WlzLabel \
 			WlzLaplacian \
+			WlzMarkersToDomain \
 			WlzMatchICPObj \
 			WlzObjToBoundary \
 			WlzPolarSample \
@@ -195,6 +196,7 @@ CSOURCES		= \
 			WlzIntersect.c \
 			WlzLabel.c \
 			WlzLaplacian.c \
+			WlzMarkersToDomain.c \
 			WlzMatchICPObj.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c \
