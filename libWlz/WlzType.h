@@ -2460,6 +2460,14 @@ typedef enum _WlzFnType
 } WlzFnType;
 
 /*!
+* \typedef	WlzBasisEvalFn
+* \ingroup	WlzFunction
+* \brief	An alternative basis function evaluation function that may
+*		may be called.
+*/
+typedef double (*WlzBasisEvalFn)(void *, double);
+
+/*!
 * \struct	_WlzBasisFn
 * \ingroup	WlzFunction
 * \brief	A basis function.
@@ -2483,6 +2491,15 @@ typedef struct _WlzBasisFn
 					     in a single block to allow
 					     the parameters to be freed
 					     by AlcFree(). */
+  WlzBasisEvalFn evalFn;		/*!< An alternative basis function
+  					     evaluation function that may
+					     be called if non NULL. */
+  WlzHistogramDomain *evalData;		/*!< Data passed to the alternative
+  					     basis function evaluation
+					     function if the function poionter
+					     is non NULL. AlcFree() will be
+					     called to free the data when the
+					     basis function is free'd. */
 } WlzBasisFn;
 
 /************************************************************************
