@@ -12,8 +12,11 @@
 * Purpose:	Functions for extracting contours from Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Add 3D isosurface generation. Removed unused variables.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+* 15-08-00 bill	Move WlzFreeContour to WlzFreeSpace.c and WlzMakeContour
+*		to WlzMakeStructs.c.
+* 10-08-00 bill Add WlzContourGrdObj3D() and modify WlzMakeContour().
+* 05-06-00 bill Add 3D isosurface generation. Removed unused variables.
+* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
@@ -152,88 +155,8 @@ static WlzErrorNum	WlzContourGrdLink2D(
 static WlzErrorNum	WlzContourGrdLink3D(
 			  WlzContour *ctr,
 			  UBYTE ***mBuf,
-			  WlzIVertex3 bufpos,
+			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
-
-/************************************************************************
-* Function:	WlzMakeContour
-* Returns:	WlzContour *:		New contour.
-* Purpose:	Makes a new contour data structure.
-* Global refs:	-
-* Parameters:	WlzContourType ctrType:	Contour type 2D or 3D.
-		WlzErrorNum *dstErr:	Destination error pointer, may
-					be null.
-************************************************************************/
-WlzContour	*WlzMakeContour(WlzContourType ctrType, WlzErrorNum *dstErr)
-{
-  WlzContour	*ctr = NULL;
-  WlzGMModelType modType;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  switch(ctrType)
-  {
-    case WLZ_CONTOUR_TYPE_2D:
-      modType = WLZ_GMMOD_2D;
-      break;
-    case WLZ_CONTOUR_TYPE_3D:
-      modType = WLZ_GMMOD_3D;
-      break;
-    default:
-      errNum = WLZ_ERR_DOMAIN_TYPE;
-      break;
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((ctr = AlcCalloc(1, sizeof(WlzContour))) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      ctr->type = WLZ_CONTOUR;
-      ctr->model = WlzGMModelNew(modType, &errNum);
-      if(errNum != WLZ_ERR_NONE)
-      {
-        AlcFree(ctr);
-      }
-    }
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(ctr);
-}
-
-/************************************************************************
-* Function:	WlzFreeContour
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Free's a WlzContour data structure.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour to free.
-************************************************************************/
-WlzErrorNum	WlzFreeContour(WlzContour *ctr)
-{
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctr == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(ctr->type != WLZ_CONTOUR)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else
-  {
-    if(WlzUnlink(&(ctr->linkcount), &errNum))
-    {
-      (void )WlzGMModelFree(ctr->model);
-      AlcFree((void *)ctr);
-    }
-  }
-  return(errNum);
-}
 
 /************************************************************************
 * Function:	WlzContourObj
@@ -355,7 +278,11 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Create contour. */
-  ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
+  if((ctr = WlzMakeContour(&errNum)) != NULL)
+  {
+    ctr->model = WlzAssignGMModel(
+    		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+  }
   /* Make buffers. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -521,7 +448,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Create contour. */
-    ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_3D, &errNum);
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      ctr->model = WlzAssignGMModel(
+      		   WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum), NULL);
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -720,7 +651,11 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
   /* Create a new contour. */
-  ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
+  if((ctr = WlzMakeContour(&errNum)) != NULL)
+  {
+    ctr->model = WlzAssignGMModel(
+    		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Compute the partial derivatives. */
@@ -1026,9 +961,7 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   int		cnt,
   		idX,
 		idY,
-		idCX,
-		idCY,
-		idCZ,
+		idZ,
 		pnIdx,
   		pnCnt,
 		cbInObj;
@@ -1076,7 +1009,11 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Create contour. */
-    ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_3D, &errNum);
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      ctr->model = WlzAssignGMModel(
+      		   WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum), NULL);
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1091,7 +1028,7 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
     if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
 				     ftrPrm, &errNum)) != NULL)
     {
-      ftr->c *= 4;
+      ftr->c *= 4.0;
       zObj = WlzAssignObject(
              WlzRsvFilterObj(srcObj, ftr, WLZ_RSVFILTER_ACTION_Z,
 	     		     &errNum), NULL);
@@ -1131,6 +1068,9 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
     pnCnt = srcDom.p->lastpl - srcDom.p->plane1 + 1;
     while((errNum == WLZ_ERR_NONE) && (pnCnt-- > 0))
     { 
+#ifdef WLZ_CONTOUR_DEBUG
+    (void )fprintf(stderr, "WLZ_CONTOUR_DEBUG pnCnt = %d\n", pnCnt);
+#endif /* WLZ_CONTOUR_DEBUG */
       bufIdx[0] = (pnIdx + 3 - 2) % 3;
       bufIdx[1] = (pnIdx + 3 - 1) % 3;
       bufIdx[2] = (pnIdx + 3 - 0) % 3;
@@ -1177,6 +1117,13 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	{
 	  bufOff.vtX = bBox2D.xMin - bBox3D.xMin;
 	  bufOff.vtY = bBox2D.yMin - bBox3D.yMin;
+	  if((bufOff.vtX < 0) || (bufOff.vtY < 0))
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
 	  errNum = WlzToArray2D((void ***)&(iBuf[bufIdx[2]]), srcObj2D,
 				bufSz, bufOff, 0, WLZ_GREY_BIT);
 	}
@@ -1214,35 +1161,36 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	   * elements and add them to the model. */
 	  bufPos.vtZ = bufIdx[0];
           cbOrg.vtZ = bBox3D.zMin + pnIdx - 2;
-	  idY = bufOff.vtY;
-	  cbOrg.vtY = bBox3D.yMin;
-	  while((errNum == WLZ_ERR_NONE) && (cbOrg.vtY < bBox3D.yMax - 2))
+	  bufPos.vtY = bufOff.vtY;
+	  cbOrg.vtY = bBox2D.yMin;
+	  while((errNum == WLZ_ERR_NONE) && (cbOrg.vtY < (bBox3D.yMax - 2)))
 	  {
-	    bufPos.vtY = idY;
-	    idX = bufOff.vtX;
-	    cbOrg.vtX = bBox3D.xMin;
-	    while((errNum == WLZ_ERR_NONE) && (cbOrg.vtX < bBox3D.xMax - 2))
+	    bufPos.vtX = bufOff.vtX;
+	    cbOrg.vtX = bBox2D.xMin;
+	    while((errNum == WLZ_ERR_NONE) && (cbOrg.vtX < (bBox3D.xMax - 2)))
 	    {
-	      bufPos.vtX = idX;
 	      cbInObj = 1;
-	      idCY = 0;
-	      while(cbInObj && (idCY < 3))
+	      idY = 0;
+	      while(cbInObj && (idY < 3))
 	      {
-	        idCX = 0;
-	  	iMP = *(iBuf[bufIdx[0]] + idY + idCY);
-		while(cbInObj && (idCX < 3))
+	        idX = 0;
+	  	iMP = *(iBuf[bufIdx[0]] + bufPos.vtY + idY);
+		while(cbInObj && (idX < 3))
 		{
-		  cbInObj = WLZ_BIT_GET(iMP, idX + idCX);
-		  ++idCX;
+		  cbInObj = WLZ_BIT_GET(iMP, bufPos.vtX + idX);
+		  ++idX;
 		}
-		++idCY;
+		++idY;
 	      }
 	      if(cbInObj)
 	      {
 		/* Compute central voxel square of modulus of gradient. */
-		gV = *(*(xBuf[bufIdx[1]] + 1) + 1); sGV = (gV * gV);
-		gV = *(*(yBuf[bufIdx[1]] + 1) + 1); sGV += (gV * gV);
-		gV = *(*(zBuf[bufIdx[1]] + 1) + 1); sGV += (gV * gV);
+		gV = *(*(xBuf[bufIdx[1]] + bufPos.vtY + 1) + bufPos.vtX + 1);
+		sGV = (gV * gV);
+		gV = *(*(yBuf[bufIdx[1]] + bufPos.vtY + 1) + bufPos.vtX + 1);
+		sGV += (gV * gV);
+		gV = *(*(zBuf[bufIdx[1]] + bufPos.vtY + 1) + bufPos.vtX + 1);
+		sGV += (gV * gV);
 		/* If central voxel has a modulus of gradient greater than the
 		 * threshold value then compute the maximal surface
 		 * simplicies and add them to the model. */
@@ -1252,10 +1200,10 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 		  			       bufPos, cbOrg);
 		}
 	      }
-	      ++idX;
+	      ++(bufPos.vtX);
 	      ++(cbOrg.vtX);
 	    }
-	    ++idY;
+	    ++(bufPos.vtY);
 	    ++(cbOrg.vtY);
 	  }
 	}
@@ -1302,27 +1250,27 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   {
     (void )WlzFreeObj(zObj);
   }
-  for(idX = 0; idX < 3; ++idX)
+  for(idZ = 0; idZ < 3; ++idZ)
   {
-    if(iBuf[idX])
+    if(iBuf[idZ])
     {
-      Alc2Free((void **)(iBuf[idX]));
+      Alc2Free((void **)(iBuf[idZ]));
     }
-    if(mBuf[idX])
+    if(mBuf[idZ])
     {
-      Alc2Free((void **)(mBuf[idX]));
+      Alc2Free((void **)(mBuf[idZ]));
     }
-    if(xBuf[idX])
+    if(xBuf[idZ])
     {
-      Alc2Free((void **)(xBuf[idX]));
+      Alc2Free((void **)(xBuf[idZ]));
     }
-    if(yBuf[idX])
+    if(yBuf[idZ])
     {
-      Alc2Free((void **)(yBuf[idX]));
+      Alc2Free((void **)(yBuf[idZ]));
     }
-    if(zBuf[idX])
+    if(zBuf[idZ])
     {
-      Alc2Free((void **)(zBuf[idX]));
+      Alc2Free((void **)(zBuf[idZ]));
     }
   }
   if(ftr)
@@ -1341,14 +1289,14 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 * Function:	WlzContourGrdLink3D
 * Returns:	WlzErrorNum		Woolz error code.
 * Purpose:	Computes edge simplicies(s) linking the voxel at the
-*		centre of a 3x3 neighbourhood to 6 connected neighbours.
+*		centre of a 2x3x3 neighbourhood to it's neighbours.
 *
 *                z=0 +---+---+---+
-*                    |   |   |   |
-*                    +---+---+---+    z=1 +---+---+---+              
-*                    |   | 0 |   |        | 2 | C | 3 |                     
+*                    | 9 | 5 |10 |
+*                    +---+---+---+    z=1 +---+---+                  
+*                    | 6 | 2 | 7 |        | 0 | C |                         
 *                 y  +---+---+---+        +---+---+---+
-*                 ^  |   |   |   |        |   | 1 |   |           
+*                 ^  |11 | 8 |12 |        | 3 | 1 | 4 |           
 *                 |  +---+---+---+        +---+---+---+           
 *                 --->x                                   
 * Global refs:	-
@@ -1356,152 +1304,108 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 *		UBYTE ***mBuf:		Buffers containing non-zero
 *					values for maximal gradient
 *					voxels.
-*		WlzIVertex3 bufpos:	Offset into the buffer for the
+*		WlzIVertex3 bufPos:	Offset into the buffer for the
 *					neighbourhoods origin.
 *		WlzIVertex3 pos:	Absolute position of the 
 *					neighbourhoods origin.
 ************************************************************************/
 static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
-					    WlzIVertex3 bufpos,
+					    WlzIVertex3 bufPos,
 					    WlzIVertex3 cbOrg)
 {
-  int		idN,
-  		nbrCnt,
-  	        spxCnt,
-		spxIdx;
-  unsigned 	nbrMsk;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzIVertex3	tIV0;
+  int		tI0,
+  		tI1,
+  		idN,
+		mCnt;
+  unsigned int	tU0,
+  		mMsk;
+  WlzIVertex3	tIV0,
+  		tIV1;
   WlzDVertex3	sIsn[3];
-  const WlzIVertex3 nbrOffTb[4] =
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const WlzIVertex3 nbrOffTb[13] =
   {
-    /* Offsets into neighbourhood for numbered neighbours, where the members
-     * are in vtX, vtY, vtZ order. */
-    {1, 1, 0}, /* 0 */
-    {1, 0, 1}, /* 1 */
-    {0, 1, 1}, /* 2 */
-    {2, 1, 1}  /* 3 */
+    /* Offsets into the maximal gradient voxel buffer for the 6, 18 and
+     * 26 connected neighbours, used for setting the maximal gradient
+     * voxels mask. Vertex members are in vtX, vtY, vtZ order.*/
+    {0, 1, 1}, /* index  0,  6 connected neighbour */
+    {1, 0, 1}, /* index  1,  6 connected neighbour */
+    {1, 1, 0}, /* index  2,  6 connected neighbour */
+    {0, 0, 1}, /* index  3, 18 connected neighbour */
+    {2, 0, 1}, /* index  4, 18 connected neighbour */
+    {1, 2, 0}, /* index  5, 18 connected neighbour */
+    {0, 1, 0}, /* index  6, 18 connected neighbour */
+    {2, 1, 0}, /* index  7, 18 connected neighbour */
+    {1, 0, 0}, /* index  8, 18 connected neighbour */
+    {0, 2, 0}, /* index  9, 26 connected neighbour */
+    {2, 2, 0}, /* index 10, 26 connected neighbour */
+    {0, 0, 0}, /* index 11, 26 connected neighbour */
+    {2, 0, 0}  /* index 12, 26 connected neighbour */
   };
-  const int spxNbrTb[5][2] =
+  const int sPr[15][2] =
   {
-    /* Neibours of the central voxel which make up simplicies . */
-    {0, 1}, /* 0 */
-    {0, 2}, /* 1 */
-    {0, 3}, /* 2 */
-    {1, 2}, /* 3 */
-    {1, 3}  /* 4 */
-  };
-  const int spxLstTb[20] =
-  {
-    /* Concatonation of all neighbour mask simplex lists into one table. */
-    0, /*  0, nbrMsk =  3. */
-    1, /*  1, nbrMsk =  5. */
-    3, /*  2, nbrMsk =  6. */
-    1, /*  3, nbrMsk =  7. */
-    0, /*  4, nbrMsk =  7. */
-    3, /*  5, nbrMsk =  7. */
-    2, /*  6, nbrMsk =  9. */
-    3, /*  7, nbrMsk = 10. */
-    3, /*  8, nbrMsk = 11. */
-    0, /*  9, nbrMsk = 11. */
-    2, /* 10, nbrMsk = 11. */
-    1, /* 11, nbrMsk = 13. */
-    2, /* 12, nbrMsk = 13. */
-    3, /* 13, nbrMsk = 14. */
-    4, /* 14, nbrMsk = 14. */
-    0, /* 15, nbrMsk = 15. */
-    1, /* 16, nbrMsk = 15. */
-    2, /* 17, nbrMsk = 15. */
-    3, /* 18, nbrMsk = 15. */
-    4  /* 19 nbrMsk = 15. */
-  };
-  const int spxCntTb[16] =
-  {
-    /* Number of simplicies for each neighbour mask. */
-    0, /* nbrMsk =  0. */
-    0, /* nbrMsk =  1. */
-    0, /* nbrMsk =  2. */
-    1, /* nbrMsk =  3. */
-    0, /* nbrMsk =  4. */
-    1, /* nbrMsk =  5. */
-    1, /* nbrMsk =  6. */
-    3, /* nbrMsk =  7. */
-    0, /* nbrMsk =  8. */
-    1, /* nbrMsk =  9. */
-    1, /* nbrMsk = 10. */
-    3, /* nbrMsk = 11. */
-    0, /* nbrMsk = 12. */
-    3, /* nbrMsk = 13. */
-    2, /* nbrMsk = 14. */
-    5, /* nbrMsk = 15. */
-  };
-  const int spxOffTb[16] =
-  {
-    /* Offset into simplex table for each neighbour mask. */
-    -1, /* nbrMsk =  0. */
-    -1, /* nbrMsk =  1. */
-    -1, /* nbrMsk =  2. */
-     0, /* nbrMsk =  3. */
-    -1, /* nbrMsk =  4. */
-     1, /* nbrMsk =  5. */
-     2, /* nbrMsk =  6. */
-     3, /* nbrMsk =  7. */
-    -1, /* nbrMsk =  8. */
-     6, /* nbrMsk =  9. */
-     7, /* nbrMsk = 10. */
-     8, /* nbrMsk = 11. */
-    -1, /* nbrMsk = 12. */
-    11, /* nbrMsk = 13. */
-    13, /* nbrMsk = 14. */
-    15, /* nbrMsk = 15. */
+   { 0,  3},
+   { 3,  1},
+   { 1,  4},
+   { 5,  2},
+   { 9,  2},
+   { 6,  2},
+   {11,  2},
+   { 8,  2},
+   {12,  2},
+   { 7,  2},
+   {10,  2},
+   { 6,  0},
+   {11,  3},
+   { 8,  1},
+   {12,  4}
+
   };
 
-#define HACK
-#ifdef HACK
-  static int hack = 0;
-  static WlzDVertex3 hackV[3];
+#ifdef WLZ_CONTOUR_DEBUG
+  (void )fprintf(stderr,
+  		 "G %d %d %d\n",
+  	  	 cbOrg.vtX + 1, cbOrg.vtY + 1, cbOrg.vtZ + 1);
+#endif /* WLZ_CONTOUR_DEBUG */
 
-  if(hack == 0)
+  /* Create a maximal gradient neighbouring voxel mask. */
+  idN = 0;
+  mCnt = 0;
+  mMsk = 0;
+  while(idN < 13)
   {
-    hack = 1;
-    hackV[0].vtX = hackV[0].vtY = hackV[0].vtZ = 0.0;
-    hackV[1].vtX = -10.0; hackV[1].vtY =  5.0; hackV[1].vtZ = 0.0;
-    hackV[2].vtX = -10.0; hackV[2].vtY = -5.0; hackV[2].vtZ = 0.0;
-    WlzGMModelConstructSimplex3D(ctr->model, hackV);
-  }
-#endif /* HACK */
-
-  nbrMsk = 0;
-  /* Find 8 connected neighbours and build a mask. */
-  for(idN = 0; idN < 4; ++idN)
-  {
-    tIV0.vtX = bufpos.vtX + nbrOffTb[idN].vtX;
-    tIV0.vtY = bufpos.vtY + nbrOffTb[idN].vtY;
-    tIV0.vtZ = (bufpos.vtZ + nbrOffTb[idN].vtZ) % 3;
-    if(*(*(*(mBuf + tIV0.vtZ) + tIV0.vtY) + tIV0.vtX))
+    tIV0 = nbrOffTb[idN];
+    tIV0.vtX += bufPos.vtX;
+    tIV0.vtY += bufPos.vtY;
+    tIV0.vtZ = (tIV0.vtZ + bufPos.vtZ) % 3;
+    if(*(*(*(mBuf + tIV0.vtZ) + tIV0.vtY) + tIV0.vtX) != 0)
     {
-      nbrMsk |= 1 << idN;
+      mMsk |= 1 << idN;
+      ++mCnt;
     }
+    ++idN;
   }
-  /* Look up number of simplicies for the mask value. */
-  if((spxCnt = spxCntTb[nbrMsk]) > 0)
+  if(mCnt > 1)
   {
-    sIsn[0].vtX = cbOrg.vtX + 1.0;
-    sIsn[0].vtY = cbOrg.vtY + 1.0;
-    sIsn[0].vtZ = cbOrg.vtZ + 1.0;
-    spxIdx = spxOffTb[nbrMsk];
-    while((errNum == WLZ_ERR_NONE) && (spxCnt-- > 0))
+    sIsn[0].vtX = cbOrg.vtX + 1;
+    sIsn[0].vtY = cbOrg.vtY + 1;
+    sIsn[0].vtZ = cbOrg.vtZ + 1;
+    /* Check for simplicies and add them to the model. */
+    idN = 0;
+    while((errNum == WLZ_ERR_NONE) && (idN < 15))
     {
-      idN = 0;
-      while(idN < 2)
+      tI0 = sPr[idN][0];
+      tI1 = sPr[idN][1];
+      tU0 = (1 << tI0) | (1 << tI1);
+      if((mMsk & tU0) == tU0)
       {
-        tIV0 = nbrOffTb[spxNbrTb[spxLstTb[spxIdx]][idN++]];
-	sIsn[idN].vtX = cbOrg.vtX + tIV0.vtX; 
-	sIsn[idN].vtY = cbOrg.vtY + tIV0.vtY; 
-	sIsn[idN].vtZ = cbOrg.vtZ + tIV0.vtZ; 
+        tIV0 = nbrOffTb[tI0];
+        tIV1 = nbrOffTb[tI1];
+        WLZ_VTX_3_ADD(sIsn[1], cbOrg, tIV0);
+        WLZ_VTX_3_ADD(sIsn[2], cbOrg, tIV1);
+	errNum = WlzGMModelConstructSimplex3D(ctr->model, sIsn);
       }
-      errNum = WlzGMModelConstructSimplex3D(ctr->model, sIsn);
-      ++spxIdx;
+      ++idN;
     }
   }
   return(errNum);
@@ -2287,7 +2191,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
 		 (*(*(*(zBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[1]) +
 		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[2]) +
 		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[3]);
-	gF[idF] = WLZ_VTX_3_LENGTH(tV) * 0.25;
+	gF[idF] = WLZ_VTX_3_LENGTH(tV);
       }
       break;
     case 2: /* FALLTHROUGH */
@@ -2330,7 +2234,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
 		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[1]) +
 		 (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[2]) +
 		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[3]);
-	gF[idF] = WLZ_VTX_3_LENGTH(tV) * 0.25;
+	gF[idF] = WLZ_VTX_3_LENGTH(tV);
       }
       break;
     case 4: /* FALLTHROUGH */
@@ -2373,7 +2277,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
 		 (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[1]) +
 		 (*(*(*(zBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[2]) +
 		 (*(*(*(zBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ1.vtX) * lIP[3]);
-	gF[idF] = WLZ_VTX_3_LENGTH(tV) * 0.25;
+	gF[idF] = WLZ_VTX_3_LENGTH(tV);
       }
       break;
   }
