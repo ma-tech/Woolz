@@ -554,7 +554,7 @@ WlzErrorNum WlzTetrahedronProducerFromCube(
 *         the table containing the number of tetrahedron whose body intersected
 *            with the give plane.
 *  \param   intersectIndex    stores the intex of tetrahedron whose body been cutted by the given plane.
-*  \param   linkList[i][j]    Store the number of points cutted to the tetrahedra of intersectIndex[i] 
+*  \param   linkList          linkList[i][j] stores the number of points cutted to the tetrahedra of intersectIndex[i] 
 *                             in j = 0. And store the sequence number in j=0,1,...intersectIndex[i][0]-1;
 *  \param   planepoints       store the cuting points sequentially according the cuting order.
 *  \param   noRedundancyCutingNum store the number of cuting points.
@@ -2596,7 +2596,7 @@ void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 * \ingroup  WlzIO
 * \brief    output the cutted plane.
 * \param    fp               pointer pointing to a specific file.
-* \param    wmt3D            mesh transform.
+* \param    wmt2D5           mesh transform.
 * \author:       J. Rao, R. Baldock and B. Hill
 */
 void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
@@ -5556,7 +5556,7 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 */
 WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst, 
                                                    WlzMeshTransform3D *wmt3D,
-						   WlzErrorNum *disErr)
+						   WlzErrorNum *dstErr)
 						   {
    WlzMeshTransform2D5 *wmt2D5 = NULL;
    int  nInterSectEsimate, 
@@ -5581,7 +5581,7 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
                    if( ( intersectIndex = (int *)AlcRealloc( intersectIndex, 
 		                                  (nInterSectEsimate+1) * sizeof(int) )  ) == NULL)
                    {
-                     *disErr = WLZ_ERR_MEM_ALLOC;
+                     *dstErr = WLZ_ERR_MEM_ALLOC;
                      printf("Failed to allocate memory for intersectIdex!");
                      exit(1);
                    }
@@ -5590,7 +5590,7 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
                    if( ( wmt2D5 = (WlzMeshTransform2D5 *)AlcRealloc(wmt2D5, 
 		                sizeof(WlzMeshTransform2D5) )  ) == NULL)
                    {
-                      *disErr = WLZ_ERR_MEM_ALLOC;
+                      *dstErr = WLZ_ERR_MEM_ALLOC;
                       printf("Failed to allocate memory for 2D5 mesh!");
                       exit(1);
                    }
@@ -5600,7 +5600,7 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
                    if( (wmt2D5->nodes = (WlzMeshNode2D5 *)AlcCalloc(sizeof(WlzMeshNode2D5), 
 		                        numEstCutingPoints)) == NULL )
                    {
-                      *disErr = WLZ_ERR_MEM_ALLOC;
+                      *dstErr = WLZ_ERR_MEM_ALLOC;
                       printf("Failed to allocate memory!");
                       exit(1);
                    }
@@ -5610,7 +5610,7 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
                    if( (wmt2D5->elements = (WlzMeshElem *)AlcCalloc(sizeof(WlzMeshElem), 
 		                         numEstTrangularsElem)) == NULL )
                    {
-                      *disErr = WLZ_ERR_MEM_ALLOC;
+                      *dstErr = WLZ_ERR_MEM_ALLOC;
                       printf("Failed to allocate memory!");
                       exit(1);
                    }
@@ -5620,7 +5620,7 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
                    if( ( planepoints = (WlzDVertex3 *)AlcRealloc(planepoints, 
 		               4 * nInterSectEsimate * sizeof(WlzDVertex3) )  ) == NULL)
                    {
-                     *disErr = WLZ_ERR_MEM_ALLOC;
+                     *dstErr = WLZ_ERR_MEM_ALLOC;
                      printf("Failed to allocate memory for planepoints!");
                      exit(1);
                    }
@@ -5629,18 +5629,18 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
                    if( ( planepointsO = (WlzDVertex3 *)AlcRealloc(planepointsO, 
 		          4*nInterSectEsimate*sizeof(WlzDVertex3) )  ) == NULL)
                    {
-                      *disErr = WLZ_ERR_MEM_ALLOC;
+                      *dstErr = WLZ_ERR_MEM_ALLOC;
                       printf("Failed to allocate memory for planepointsO!");
                       exit(1);
                    }
                    if( (AlcInt2Malloc(&linkList, nInterSectEsimate,5) !=  ALC_ER_NONE)  )
                    {
-                     *disErr = WLZ_ERR_MEM_ALLOC;
+                     *dstErr = WLZ_ERR_MEM_ALLOC;
                      printf("Failed to allocate memory for link list!");
                      exit(1);
                    }
 
-    WlzGet2D5TrangularMeshFrom3DMesh( wmt2D5, wmt3D, (int) zConst, disErr,
+    WlzGet2D5TrangularMeshFrom3DMesh( wmt2D5, wmt3D, (int) zConst, dstErr,
 				   intersectIndex,
 				   planepoints,
 				   planepointsO,

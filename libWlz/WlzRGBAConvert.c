@@ -97,6 +97,7 @@ static void WlzRGBAConvertRGBToHSV_UBYTENormalised(
 *
 * \return       Compound array of rgba values
 * \param    obj	Input domain object with value type WLZ_GREY_RGBA
+* \param    colSpc	The colour space.
 * \param    dstErr	error return
 * \par      Source:
 *                WlzRGBAConvert.c
