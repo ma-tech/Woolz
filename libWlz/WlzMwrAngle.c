@@ -40,16 +40,15 @@
 /* function:     WlzMwrAngle    */
 /*! 
 * \ingroup      WlzConvexHull
-* \brief        extract angle (as scaled sin, cos) of minimum width rectangle
-from convex hull (it is relatively obvious that minimum width rectangle long
- side must be parallel to a chord of convex hull, and all sides must have at
- least one vertex of convex hull lying within them).
-*
 * \return       angle of the minimum width rectangle
+* \brief        extract angle (as scaled sin, cos) of minimum width rectangle
+*		from convex hull (it is relatively obvious that minimum width
+*		rectangle long side must be parallel to a chord of convex hull,
+*		and all sides must have at least one vertex of convex hull
+*		lying within them).
+*
 * \param    cvh	input convex hull
 * \param    dstErr	destination error
-* \par      Source:
-*                WlzMwrangle.c
 */
 double WlzMwrAngle(WlzObject *cvh, WlzErrorNum *dstErr)
 {
