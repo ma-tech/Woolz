@@ -19,5 +19,7 @@
 #include <WlzType.h>
 #include <WlzError.h>
 #include <WlzProto.h>
+#include <WlzExtFFType.h>
+#include <WlzExtFFProto.h>
 #include <WlzBndType.h>
 #include <WlzBndProto.h>
