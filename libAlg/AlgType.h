@@ -16,6 +16,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      Alg
 * \brief        Type definitions for the MRC HGU numerical algorithm
+* 		Typedef: ::
 *               library.
 * \todo         -
 * \bug          None known.
@@ -51,6 +52,7 @@ extern "C" {
 /*!
 * \enum		_AlgDistribution
 * \brief	Statistical distributions.
+* 		Typedef: ::AlgDistribution.
 */
 enum _AlgDistribution
 {
@@ -65,6 +67,7 @@ typedef enum _AlgDistribution AlgDistribution;
 /*!
 * \enum		_AlgPadType
 * \brief	Types of daat padding.
+* 		Typedef: ::AlgPadType.
 */
 enum _AlgPadType
 {
@@ -77,6 +80,7 @@ typedef enum _AlgPadType AlgPadType;
 /*!
 * \struct	_ComplexD
 * \brief	Complex number data type.
+* 		Typedef: ::ComplexD.
 */
 struct __ComplexD
 {
@@ -89,6 +93,7 @@ typedef struct __ComplexD ComplexD;
 /*
 * \enum		_AlgError
 * \brief	Error codes.
+* 		Typedef: ::AlgError.
 */
 enum _AlgError
 {
@@ -108,6 +113,7 @@ typedef enum _AlgError AlgError;
 /*
 * \enum		_AlgDbgMask
 * \brief	Debug mask values.
+* 		Typedef: ::AlgDbgMask.
 */
 enum _AlgDbgMask
 {
