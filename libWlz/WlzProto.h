@@ -2044,6 +2044,21 @@ extern WlzContour		*WlzMakeContour(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzMatchICP.c                                                    *
+************************************************************************/
+extern WlzErrorNum		WlzMatchICPObjs(
+				  WlzObject *tObj,
+				  WlzObject *sObj,
+				  WlzAffineTransform *initTr,
+				  int *dstNMatch,
+				  WlzVertexP *dstTMatch,
+				  WlzVertexP *dstSMatch,
+				  int maxItr,
+				  int minSpx,
+				  int brkFlg,
+				  int dbgFlg);
+
+/************************************************************************
 * WlzMeshTransform.c							*
 ************************************************************************/
 extern WlzErrorNum		WlzMeshFreeTransform(
