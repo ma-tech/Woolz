@@ -14,6 +14,8 @@
 *		  * No global variables can be parsed.
 *		  * All function prototype declarations must extern'd.
 *		  * All function prototypes must be ANSI C.
+*		To debug the parser set the value of debugLevel to a
+*		value greater than zero.
 *		This parser is based on the grammer of the javacc
 *		demo C.jj by Doug South (dsouth@squirrel.com.au).
 * Copyright:	1997 Medical Research Council, UK.
@@ -161,15 +163,15 @@ public class WlzC2Java
     static final int WLZ_JPM_KEY_DOUBLE_ARY1    =
     						(WLZ_JPM_KEY_DOUBLE |
 						 WLZ_JPM_MASK_ARY_1);
-    static final int WLZ_JPM_KEY_BYTE_PTR1_ARY1 =
-    						(WLZ_JPM_KEY_BYTE |
-						 WLZ_JPM_MASK_PTR_1 |
-						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_WLZ_GREYV_ARY1	=
     						(WLZ_JPM_KEY_WLZ_GREYV |
 						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_WLZ_PIXELV_ARY1 =
     						(WLZ_JPM_KEY_WLZ_PIXELV |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_BYTE_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_BYTE |
+						 WLZ_JPM_MASK_PTR_1 |
 						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_SHORT_PTR1_ARY1 =
     						(WLZ_JPM_KEY_SHORT |
@@ -195,6 +197,30 @@ public class WlzC2Java
     						(WLZ_JPM_KEY_WLZ |
 						 WLZ_JPM_MASK_PTR_1 |
     						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_IVERTEX2 |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_FVERTEX2 |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_DVERTEX2 |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_IVERTEX3 |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_FVERTEX3 |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1 =
+    						(WLZ_JPM_KEY_WLZ_DVERTEX3 |
+						 WLZ_JPM_MASK_PTR_1 |
+						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_WLZ_PTR2_ARY1 	=
     						(WLZ_JPM_KEY_WLZ |
 						 WLZ_JPM_MASK_PTR_2 |
@@ -466,6 +492,18 @@ public class WlzC2Java
 		      "WLZ_JPM_KEY_DOUBLE_PTR1_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR1_ARY1),
 		      "WLZ_JPM_KEY_WLZ_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1),
+		      "WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR2_ARY1),
 		      "WLZ_JPM_KEY_WLZ_PTR2_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_GREYV_ARY1),
@@ -1058,9 +1096,55 @@ public class WlzC2Java
 	    }
 	    else
 	    {
+	      /* HACK START NEW CODE */
+	      if(cPmIdent.startsWith("dstArray"))
+	      {
+		if(cPmType.equals("WlzIVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1_ARY1;
+		}
+		else if(cPmType.equals("WlzFVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1_ARY1;
+		}
+		else if(cPmType.equals("WlzDVertex2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1;
+		}
+		else if(cPmType.equals("WlzIVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1;
+		}
+		else if(cPmType.equals("WlzFVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1;
+		}
+		else if(cPmType.equals("WlzDVertex3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1;
+		}
+		else
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_PTR1_ARY1;
+		}
+	      }
+	      else if(cPmIdent.startsWith("dst"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_PTR2;
+	      }
+	      else if(cPmIdent.startsWith("array"))
+	      {
+		  jPmKey = WLZ_JPM_KEY_WLZ_PTR1_ARY1;
+	      }
+	      else
+	      {
+	        jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
+	      }
+	      /* HACK END NEW CODE */
+	      /* HACK START OLD CODE
 	      if(cPmIdent.startsWith("dst"))
 	      {
-	        jPmKey = WLZ_JPM_KEY_WLZ_PTR2;
+		jPmKey = WLZ_JPM_KEY_WLZ_PTR2;
 	      }
 	      else if(cPmIdent.startsWith("array"))
 	      {
@@ -1070,6 +1154,7 @@ public class WlzC2Java
 	      {
 	        jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	      }
+	      HACK END OLD CODE */
 	    }
 	  }
 	  else
@@ -1268,6 +1353,14 @@ public class WlzC2Java
 	  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	  break;
       }
+      if(debugLevel > 0)
+      {
+	System.err.println("DEBUG: cToJFnParam(cPmType = " + cPmType +
+					    ", cPmQual = " + cPmQual +
+					    ", cIdrCnt = " + cIdrCnt +
+					    ", cPmIdent = " + cPmIdent +
+			   "), jPmKey = " + jPmKey);
+      }
       cToJComputeStrings(cPmType);
     }
 
@@ -1446,6 +1539,13 @@ public class WlzC2Java
 	  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	  break;
       }
+      if(debugLevel > 0)
+      {
+	System.err.println("DEBUG: cToJFnRtn(cFnType = " + cFnType +
+					    ", cFnQual = " + cFnQual +
+					    ", cIdrCnt = " + cIdrCnt +
+			   "), jPmKey = " + jPmKey);
+      }
       cToJComputeStrings(cFnType);
     }
 
@@ -1578,8 +1678,14 @@ public class WlzC2Java
 	  jPmClass = cType + " []";
 	  jniPmType = "jarray";
 	  break;
+        case WLZ_JPM_KEY_WLZ_IVERTEX2_PTR1_ARY1: // FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX2_PTR1_ARY1: // FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1: // FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1: // FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1: // FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1: // FALLTHROUGH
 	case WLZ_JPM_KEY_WLZ_PTR1_ARY1:
-	  jPmClass = cType + " []";
+	  jPmClass = cType + " [][]";
 	  jniPmType = "jarray";
 	  break;
 	case WLZ_JPM_KEY_BYTE_ARY2:
@@ -1690,6 +1796,12 @@ public class WlzC2Java
 	  jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	  break;
       }
+      if(debugLevel > 0)
+      {
+	System.err.println("DEBUG: cToJComputeStrings(cType = " +
+			   cType + "), jPmKey = " + jPmKey + ", jPmClass = " +
+			   ", jniPmType = " + jniPmType);
+      }
     }
   }
 
@@ -1758,6 +1870,8 @@ public class WlzC2Java
   public static PrintWriter outFCH;
   // C to Java parameter conversion.
   public static WlzJParamTypes jFnParam = new WlzJParamTypes();
+  // Set the debug level for debug output: 0 = none, 1 = lots, 2 = more
+  public static int debugLevel = 0;
 
   /**********************************************************************
   * Purpose:	Looks in the types hash table to see if the given string
@@ -1997,7 +2111,11 @@ public class WlzC2Java
     		pmType;
     Stack 	jniFnFreeStk = new Stack();
 
-    // System.err.println("HACK outputCBindingFunction() " + fnName);
+    if(debugLevel > 0)
+    {
+      System.err.println("DEBUG: outputCBindingFunction(), fnName =  " +
+      			 fnName);
+    }
     fnThrowsWlz = 0;
     jFnParam.cToJFnRtn(fnType, fnQual, fnPtr.length());
     if(jFnParam.jPmKey == WlzJParamTypes.WLZ_JPM_KEY_PARSE_ERROR)
@@ -2862,7 +2980,10 @@ void Declaration():
   {
     if(fnFlg == 4)
     {
-      // System.out.println("HACK Declaration() " + fnName);
+      if(debugLevel > 0)
+      {
+        System.out.println("DEBUG: Declaration(), fnName = " + fnName);
+      }
       if(fnName.startsWith(fnPrefix))
       {
         outputFunction();
@@ -2935,7 +3056,10 @@ void TypeSpecifier():
   )
   {
     lastType = tTok.toString();
-    // System.out.println("HACK TypeSpecifier() 1: " + lastType);
+    if(debugLevel > 1)
+    {
+      System.out.println("DEBUG: TypeSpecifier()@1 lastType = " + lastType);
+    }
   } |
   (
     StructOrUnionSpecifier() |
@@ -2945,7 +3069,10 @@ void TypeSpecifier():
   )
   {
     lastType = getToken(0).toString();
-    // System.out.println("HACK TypeSpecifier() 2: " + lastType);
+    if(debugLevel > 1)
+    {
+      System.out.println("DEBUG: TypeSpecifier()@2 lastType = " + lastType);
+    }
   }
 }
 
@@ -3192,7 +3319,11 @@ void DirectDeclarator():
       if(!(typedefParsingStack.empty()) &&
          ((Boolean)typedefParsingStack.peek()).booleanValue())
       {
-        // System.out.println("HACK DirectDeclarator() " + lastIdent);
+	if(debugLevel > 1)
+	{
+          System.out.println("DEBUG: DirectDeclarator() lastIdent = " +
+	  		     lastIdent);
+	}
 	if(enFlg == 2)
 	{
 	  addType(lastIdent); // Add new type to the typedef hash list
@@ -3834,7 +3965,11 @@ void PrimaryExpression():
 	{
 	  enumExpStack.push((Integer )(enumIdentTbl.get(iTok.toString())));
 	}
-        // System.out.println("HACK PrimaryExpression() " + iTok.toString());
+	if(debugLevel > 1)
+	{
+          System.out.println("DEBUG: PrimaryExpression() iTok = " +
+	  		     iTok.toString());
+	}
       }
     } |
     Constant() |
@@ -3860,7 +3995,10 @@ void Constant():
     {
       int vI = Integer.parseInt(tok.toString());
       enumExpStack.push(new Integer(vI));
-      // System.out.println("HACK Constant()" + tok.toString());
+      if(debugLevel > 1)
+      {
+        System.out.println("DEBUG: Constant() tok = " + tok.toString());
+      }
     }
   } |
   tok = <FLOATING_POINT_LITERAL>
