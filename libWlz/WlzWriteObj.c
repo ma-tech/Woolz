@@ -69,18 +69,18 @@ static int putword(int i, FILE *fp)
   unsigned char *cin, cout[4];
 
   cin = (unsigned char *) &i;
-#ifdef __sparc
+#if defined (__sparc) || defined (__mips)
   cout[0] = *(cin+3);
   cout[1] = *(cin+2);
   cout[2] = *(cin+1);
   cout[3] = *(cin+0);
-#endif /* __sparc */
-#ifdef __x86
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
   cout[2] = *(cin+2);
   cout[3] = *(cin+3);
-#endif /* __x86 */
+#endif /* __x86 || __alpha */
   return( (int) fwrite(&cout[0], sizeof(int), 1, fp) );
 }
 
@@ -99,14 +99,14 @@ static int putshort(short i, FILE *fp)
   unsigned char *cin, cout[2];
 
   cin = (unsigned char *) &i;
-#ifdef __sparc
+#if defined (__sparc) || defined (__mips)
   cout[0] = *(cin+1);
   cout[1] = *(cin+0);
-#endif /* __sparc */
-#ifdef __x86
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
-#endif /* __x86 */
+#endif /* __x86 || __alpha */
   return( (int) fwrite(&cout[0], sizeof(short), 1, fp) );
 }
 
@@ -126,10 +126,18 @@ static int putfloat(float f, FILE *fp)
   unsigned char *cin, cout[4];
 
   cin = (unsigned char *) &ff;
+#if defined (__sparc) || defined (__mips)
   cout[0] = *(cin+1);
   cout[1] = *cin + 1;
   cout[2] = *(cin+3);
   cout[3] = *(cin+2);
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+  cout[3] = *(cin+1);
+  cout[2] = *(cin+0);
+  cout[1] = *(cin+3) + 1;
+  cout[0] = *(cin+2);
+#endif /* __x86 || __alpha */
   return( (int) fwrite(&cout[0], sizeof(float), 1, fp) );
 }
 
@@ -149,6 +157,7 @@ static int putdouble(double d, FILE *fp)
   unsigned char *cin, cout[8];
 
   cin = (unsigned char *) &dd;
+#if defined (__sparc) || defined (__mips)
   cout[0] = *(cin+7);
   cout[1] = *(cin+6);
   cout[2] = *(cin+5);
@@ -157,6 +166,17 @@ static int putdouble(double d, FILE *fp)
   cout[5] = *(cin+2);
   cout[6] = *(cin+1);
   cout[7] = *cin;
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+  cout[3] = *(cin+7);
+  cout[2] = *(cin+6);
+  cout[1] = *(cin+5);
+  cout[0] = *(cin+4);
+  cout[7] = *(cin+3);
+  cout[6] = *(cin+2);
+  cout[5] = *(cin+1);
+  cout[4] = *cin;
+#endif /* __x86 || __alpha */
   return( (int) fwrite(&cout[0], sizeof(double), 1, fp) );
 }
 

@@ -1924,14 +1924,14 @@ static void	WlzContourMatchEdg2D(WlzContourWSpace *ctrWSp,
 #ifdef WLZ_CONTOUR_DEBUG
 	    (void *)fprintf(stderr, "%% WlzContourMatchEdg2D %d e%d == e%d\n",
 	    		    idF, edg0->index, edg1->index);
-#endif WLZ_CONTOUR_DEBUG
+#endif /* WLZ_CONTOUR_DEBUG */
 	  }
 	  else
 	  {
 #ifdef WLZ_CONTOUR_DEBUG
 	    (void *)fprintf(stderr, "%% WlzContourMatchEdg2D %d e%d\n",
 	    		    idF, edg0->index);
-#endif WLZ_CONTOUR_DEBUG
+#endif /* WLZ_CONTOUR_DEBUG */
 	    /* Matched node is connected to more than one other node, so need
 	     * to search for next edge. */
 	    mPos = (*(fndEdg + idF))->node.nod2->pos;
@@ -2286,7 +2286,7 @@ static WlzContourList *WlzContourWSpSegment2D(WlzContourWSpace *ctrWSp,
 #ifdef WLZ_CONTOUR_DEBUG
   (void )fprintf(stderr, "\n%%Contour Count = %d\n",
   		 AlcHashTableCount(ctrWSp->conTable, NULL));
-#endif WLZ_CONTOUR_DEBUG
+#endif /* WLZ_CONTOUR_DEBUG */
   /* Copy each segmented contour from the workspace. */
   ctrItem = NULL;
   ctrHead = ctrWSp->conTable->table;

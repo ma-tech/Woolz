@@ -77,18 +77,18 @@ static int getword(FILE *fp)
   char cin[4], cout[4];
 
   fread(cin,sizeof(char),4,fp);
-#ifdef __sparc
+#if defined (__sparc) || defined (__mips)
   cout[0] = cin[3];
   cout[1] = cin[2];
   cout[2] = cin[1];
   cout[3] = cin[0];
-#endif /* __sparc */
-#ifdef __x86
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
   cout[0] = cin[0];
   cout[1] = cin[1];
   cout[2] = cin[2];
   cout[3] = cin[3];
-#endif /* __x86 */
+#endif /* __x86 || __alpha */
   return(*((int *) &cout[0]));
 }
 
@@ -105,14 +105,14 @@ static int getshort(FILE *fp)
   char cin[2], cout[2];
 
   fread(cin,sizeof(char),2,fp);
-#ifdef __sparc
+#if defined (__sparc) || defined (__mips)
   cout[0] = cin[1];
   cout[1] = cin[0];
-#endif /* __sparc */
-#ifdef __x86
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
   cout[0] = cin[0];
   cout[1] = cin[1];
-#endif /* __x86 */
+#endif /* __x86 || __alpha */
   return((int) *((short *) &cout[0]));
 }
 
@@ -129,10 +129,18 @@ static float getfloat(FILE *fp)
   char cin[4], cout[4];
 
   fread(cin,sizeof(char),4,fp);
+#if defined (__sparc) || defined (__mips)
   cout[0] = cin[1] - 1;
   cout[1] = cin[0];
   cout[2] = cin[3];
   cout[3] = cin[2];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+  cout[3] = cin[1] - 1;
+  cout[2] = cin[0];
+  cout[1] = cin[3];
+  cout[0] = cin[2];
+#endif /* __x86 || __alpha */
   return(*((float *) &cout[0]));
 }
 
@@ -149,6 +157,7 @@ static double getdouble(FILE *fp)
   char cin[8], cout[8];
 
   fread(cin,sizeof(char),8,fp);
+#if defined (__sparc) || defined (__mips)
   cout[0] = cin[7];
   cout[1] = cin[6];
   cout[2] = cin[5];
@@ -157,6 +166,17 @@ static double getdouble(FILE *fp)
   cout[5] = cin[2];
   cout[6] = cin[1];
   cout[7] = cin[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+  cout[3] = cin[7];
+  cout[2] = cin[6];
+  cout[1] = cin[5];
+  cout[0] = cin[4];
+  cout[7] = cin[3];
+  cout[6] = cin[2];
+  cout[5] = cin[1];
+  cout[4] = cin[0];
+#endif /* __x86 || __alpha */
   return(*((double *) &cout[0]));
 }
 

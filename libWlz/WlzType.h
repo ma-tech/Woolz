@@ -26,9 +26,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 /************************************************************************
-* UBYTE: An 8 bit unsigned integer.				
+* UBYTE: An 8 bit unsigned integer.
+* UINT: 32-bit unsigned integer	- assumes int is 4-bytes
 ************************************************************************/
 typedef unsigned char UBYTE;
+typedef unsigned int  UINT;
 
 /************************************************************************
 * WlzGreyType: The valid grey value types.			
@@ -42,6 +44,7 @@ typedef enum
   WLZ_GREY_FLOAT		= 4,
   WLZ_GREY_DOUBLE		= 5,
   WLZ_GREY_BIT			= 6,
+  WLZ_GREY_RGBA			= 7,
   /**********************************************************************
   * WLZ_GREY_ERROR is not a grey type. It is an invalid grey type!
   * Keep it the last enumerator!				
@@ -133,16 +136,22 @@ typedef enum
   WLZ_VALUETABLE_RAGR_UBYTE	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_UBYTE),
   WLZ_VALUETABLE_RAGR_FLOAT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_FLOAT),
   WLZ_VALUETABLE_RAGR_DOUBLE	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_RAGR_BIT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_RAGR_RGBA	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_RGBA),
   WLZ_VALUETABLE_RECT_INT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_INT),
   WLZ_VALUETABLE_RECT_SHORT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_SHORT),
   WLZ_VALUETABLE_RECT_UBYTE	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_UBYTE),
   WLZ_VALUETABLE_RECT_FLOAT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_FLOAT),
   WLZ_VALUETABLE_RECT_DOUBLE	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_RECT_BIT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_RECT_RGBA	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_RGBA),
   WLZ_VALUETABLE_INTL_INT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_INT),
   WLZ_VALUETABLE_INTL_SHORT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_SHORT),
   WLZ_VALUETABLE_INTL_UBYTE	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_UBYTE),
   WLZ_VALUETABLE_INTL_FLOAT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_FLOAT),
   WLZ_VALUETABLE_INTL_DOUBLE	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_INTL_BIT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_INTL_RGBA	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_RGBA),
   WLZ_FEATVALUETABLE_RAGR	= 50,
   WLZ_FEATVALUETABLE_RECT	= 60,
   /**********************************************************************
@@ -843,6 +852,7 @@ typedef union
   UBYTE *ubp;
   float *flp;
   double *dbp;
+  UINT *rgbp;
 } WlzGreyP;
 
 /************************************************************************
@@ -856,6 +866,7 @@ typedef union
   UBYTE ubv;
   float flv;
   double dbv;
+  UINT rgbv;
 } WlzGreyV;
 
 /************************************************************************

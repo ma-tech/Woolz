@@ -235,7 +235,10 @@ WlzObject *WlzGetSectionFromObject(
 
   /* scan object setting values */
   if( errNum == WLZ_ERR_NONE ){
-    if( gVWSp = WlzGreyValueMakeWSp(obj, &errNum) ){
+    if( voxvals ){
+      gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
+    }
+    if( errNum == WLZ_ERR_NONE ){
       errNum = WlzInitGreyScan(newobj, &iwsp, &gwsp);
       while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
@@ -281,11 +284,12 @@ WlzObject *WlzGetSectionFromObject(
 	  }
 	  else {
 	    if( WlzInsideDomain(obj, vtx.vtZ, vtx.vtY, vtx.vtX, NULL) ){
-	      *(gwsp.u_grintptr.ubp) = 1;
+	      *(gwsp.u_grintptr.ubp) = 128;
 	    }
 	    else {
 	      *(gwsp.u_grintptr.ubp) = 0;
 	    }
+	    gwsp.u_grintptr.ubp++;
 	  }
 	}
       }
@@ -293,14 +297,16 @@ WlzObject *WlzGetSectionFromObject(
       {
 	errNum = WLZ_ERR_NONE;
       }
-      WlzGreyValueFreeWSp(gVWSp);
+      if( gVWSp ){
+	WlzGreyValueFreeWSp(gVWSp);
+      }
     }
   }
 
   /* if binary then threshold and free valuetable */
   if( (errNum == WLZ_ERR_NONE) && (voxvals == NULL) ){
     pixval.type = WLZ_GREY_INT;
-    pixval.v.inv = 1;
+    pixval.v.inv = 128;
     tmp_obj = WlzThreshold(newobj, pixval, WLZ_THRESH_HIGH, &errNum);
     WlzFreeObj(newobj);
     newobj = tmp_obj;

@@ -54,6 +54,9 @@ WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
         case WLZ_GREY_DOUBLE:
 	  gTabType = WLZ_VALUETABLE_RAGR_DOUBLE;
 	  break;
+        case WLZ_GREY_RGBA:
+	  gTabType = WLZ_VALUETABLE_RAGR_RGBA;
+	  break;
         default:
 	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
@@ -77,6 +80,9 @@ WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
         case WLZ_GREY_DOUBLE:
 	  gTabType = WLZ_VALUETABLE_RECT_DOUBLE;
 	  break;
+        case WLZ_GREY_RGBA:
+	  gTabType = WLZ_VALUETABLE_RECT_RGBA;
+	  break;
         default:
 	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
@@ -99,6 +105,9 @@ WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
 	  break;
         case WLZ_GREY_DOUBLE:
 	  gTabType = WLZ_VALUETABLE_INTL_DOUBLE;
+	  break;
+        case WLZ_GREY_RGBA:
+	  gTabType = WLZ_VALUETABLE_INTL_RGBA;
 	  break;
         default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -158,6 +167,11 @@ WlzGreyType	WlzGreyTableTypeToGreyType(WlzObjectType gTabType,
     case WLZ_VALUETABLE_INTL_DOUBLE:
       greyType = WLZ_GREY_DOUBLE;
       break;
+    case WLZ_VALUETABLE_RAGR_RGBA: /* FALLTHROUGH */
+    case WLZ_VALUETABLE_RECT_RGBA: /* FALLTHROUGH */
+    case WLZ_VALUETABLE_INTL_RGBA:
+      greyType = WLZ_GREY_RGBA;
+      break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
       break;
@@ -190,21 +204,24 @@ WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
     case WLZ_VALUETABLE_RAGR_SHORT: /* FALLTHROUGH */
     case WLZ_VALUETABLE_RAGR_UBYTE: /* FALLTHROUGH */
     case WLZ_VALUETABLE_RAGR_FLOAT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RAGR_DOUBLE:
+    case WLZ_VALUETABLE_RAGR_DOUBLE: /* FALLTHROUGH */
+    case WLZ_VALUETABLE_RAGR_RGBA:
       tableType = WLZ_GREY_TAB_RAGR;
       break;
     case WLZ_VALUETABLE_RECT_INT:   /* FALLTHROUGH */
     case WLZ_VALUETABLE_RECT_SHORT: /* FALLTHROUGH */
     case WLZ_VALUETABLE_RECT_UBYTE: /* FALLTHROUGH */
     case WLZ_VALUETABLE_RECT_FLOAT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_DOUBLE:
+    case WLZ_VALUETABLE_RECT_DOUBLE /* FALLTHROUGH */:
+    case WLZ_VALUETABLE_RECT_RGBA:
       tableType = WLZ_GREY_TAB_RECT;
       break;
     case WLZ_VALUETABLE_INTL_INT:   /* FALLTHROUGH */
     case WLZ_VALUETABLE_INTL_SHORT: /* FALLTHROUGH */
     case WLZ_VALUETABLE_INTL_UBYTE: /* FALLTHROUGH */
     case WLZ_VALUETABLE_INTL_FLOAT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_DOUBLE:
+    case WLZ_VALUETABLE_INTL_DOUBLE: /* FALLTHROUGH */
+    case WLZ_VALUETABLE_INTL_RGBA:
       tableType = WLZ_GREY_TAB_INTL;
       break;
     default:
