@@ -1215,6 +1215,7 @@ static WlzObject *WlzMatchICPPlaneCreateContourObj(WlzObject *gObj,
   WlzValues	tVal;
   FILE		*dFP = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const		nrmFlg = 1;
 
   tVal.core = NULL;
   if(medianSz > 0)
@@ -1249,7 +1250,7 @@ static WlzObject *WlzMatchICPPlaneCreateContourObj(WlzObject *gObj,
 	(void )fclose(dFP);
       }
     }
-    tDom.ctr = WlzContourObj(tObj1, WLZ_CONTOUR_MTD_GRD, cThr, 1.0,
+    tDom.ctr = WlzContourObj(tObj1, WLZ_CONTOUR_MTD_GRD, cThr, 1.0, nrmFlg,
 			     &errNum);
   }
   WlzFreeObj(tObj0);
