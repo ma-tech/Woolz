@@ -47,7 +47,7 @@ int             main(int argc, char **argv)
   		*inObj = NULL;
   WlzObject	**objVec = NULL;
   WlzCompoundArray	*cmpObj;
-  char 		*name,
+  char 		*name = NULL,
   		*outObjFileBodyStr = NULL,
 		*outObjFileExtStr = NULL,
   		*inObjFileStr;
