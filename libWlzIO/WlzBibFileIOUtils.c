@@ -322,6 +322,7 @@ WlzErrorNum parse_WlzWarpTransformParams_Record(
   char		basisFnTypeStr[32];
   char		meshMthdStr[32];
   int		numParsedFields=0;
+  BibFileField	*bibfileField;
 
   /* check inputs */
   if((bibfileRecord == NULL) ||
@@ -343,6 +344,30 @@ WlzErrorNum parse_WlzWarpTransformParams_Record(
        NULL);
     if( numParsedFields < 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  /* doesn't read the strings correctly - ask Bill */
+  if( errNum == WLZ_ERR_NONE ){
+    bibfileField = bibfileRecord->field;
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+    numParsedFields = 0;
+    while( bibfileField ){
+      if( strncmp(bibfileField->name, "BasisFnType", 11) == 0 ){
+	strcpy(basisFnTypeStr, bibfileField->value);
+	numParsedFields++;
+      }
+      if( strncmp(bibfileField->name, "MeshGenMethod", 13) == 0 ){
+	strcpy(meshMthdStr, bibfileField->value);
+	numParsedFields++;
+      }
+      bibfileField = bibfileField->next;
+    }
+    if( numParsedFields < 2 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else {
+      errNum = WLZ_ERR_NONE;
     }
   }
 
@@ -599,6 +624,9 @@ WlzErrorNum parse_File_Record(
     }
     if( numParsedFields < 2 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else {
+      errNum = WLZ_ERR_NONE;
     }
   }
 
