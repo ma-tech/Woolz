@@ -26,20 +26,24 @@ static void			WlzGMFilterGeomLPL2D(
 				  WlzGMModel *model,
 				  WlzDVertex2 *vGIn,
 				  WlzDVertex2 *vGOut,
-				  double lambda);
+				  double lambda,
+				  int nonMan);
 static void			WlzGMFilterGeomLPL3D(
 				  WlzGMModel *model,
 				  WlzDVertex3 *vGIn,
 				  WlzDVertex3 *vGOut,
-				  double lambda);
+				  double lambda,
+				  int nonMan);
 static WlzDVertex2 		WlzGMFilterGeomLPL2Delta(
 				  WlzGMModel *model,
 				  WlzGMVertex *gV,
-				  WlzDVertex2 *vGIn);
+				  WlzDVertex2 *vGIn,
+				  int nonMan);
 static WlzDVertex3 		WlzGMFilterGeomLPL3Delta(
 				  WlzGMModel *model,
 				  WlzGMVertex *gV,
-				  WlzDVertex3 *vGIn);
+				  WlzDVertex3 *vGIn,
+				  int nonMan);
 static WlzErrorNum 		WlzGMFilterGeomSetVertices(
 				  WlzGMModel *model,
 				  WlzVertexP vtxBuf);
@@ -172,9 +176,12 @@ WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int minSpx)
 * \param	dPB			The pass band maximum deviation.
 * \param	dSB			The stop band maximum deviation.
 * \param	maxItr			Minimum number of itterations.
+* \param	nonMan			If non-zero allows non manifold
+* 					vertices to be filtered.
 */
 WlzErrorNum	WlzGMFilterGeomLP(WlzGMModel *model, double kPB, double kSB,
-				  double dPB, double dSB, int maxItr)
+				  double dPB, double dSB, int maxItr,
+				  int nonMan)
 {
   int		nItr;
   double	lambda,
@@ -195,7 +202,7 @@ WlzErrorNum	WlzGMFilterGeomLP(WlzGMModel *model, double kPB, double kSB,
     {
       nItr = maxItr;
     }
-    errNum = WlzGMFilterGeomLPLM(model, lambda, mu, nItr);
+    errNum = WlzGMFilterGeomLPLM(model, lambda, mu, nItr, nonMan);
   }
   return(errNum);
 }
@@ -379,9 +386,11 @@ WlzErrorNum	WlzGMFilterGeomLPParam(double *dstLambda, double *dstMu,
 * \param	lambda			Positive filter parameter.
 * \param	mu			Negative filter parameter.
 * \param	nItr			Number of itterations.
+* \param	nonMan			If non-zero allows non manifold
+					vertices to be filtered.
 */
 WlzErrorNum 	WlzGMFilterGeomLPLM(WlzGMModel *model, double lambda, double mu,
-				    int nItr)
+				    int nItr, int nonMan)
 {
   int 		itr,
   		dim,
@@ -441,16 +450,20 @@ WlzErrorNum 	WlzGMFilterGeomLPLM(WlzGMModel *model, double lambda, double mu,
     {
       for(itr = 0; itr < nItr; ++itr)
       {
-        WlzGMFilterGeomLPL2D(model, vtxBuf[0].d2, vtxBuf[1].d2, lambda);
-        WlzGMFilterGeomLPL2D(model, vtxBuf[1].d2, vtxBuf[0].d2, mu);
+        WlzGMFilterGeomLPL2D(model, vtxBuf[0].d2, vtxBuf[1].d2,
+			     lambda, nonMan);
+        WlzGMFilterGeomLPL2D(model, vtxBuf[1].d2, vtxBuf[0].d2,
+			     mu, nonMan);
       }
     }
     else /* dim == 3 */
     {
       for(itr = 0; itr < nItr; ++itr)
       {
-        WlzGMFilterGeomLPL3D(model, vtxBuf[0].d3, vtxBuf[1].d3, lambda);
-        WlzGMFilterGeomLPL3D(model, vtxBuf[1].d3, vtxBuf[0].d3, mu);
+        WlzGMFilterGeomLPL3D(model, vtxBuf[0].d3, vtxBuf[1].d3,
+			     lambda, nonMan);
+        WlzGMFilterGeomLPL3D(model, vtxBuf[1].d3, vtxBuf[0].d3,
+			     mu, nonMan);
       }
     }
     errNum = WlzGMFilterGeomSetVertices(model, vtxBuf[0]);
@@ -468,10 +481,12 @@ WlzErrorNum 	WlzGMFilterGeomLPLM(WlzGMModel *model, double lambda, double mu,
 * \param	vGIn			Input vertex geometries.
 * \param	vGOut			Output vertex geometries.
 * \param	lambda			The filter parameter.
+* \param	nonMan			If non-zero allows non manifold
+					vertices to be filtered.
 */
 static void	WlzGMFilterGeomLPL2D(WlzGMModel *model,
 				     WlzDVertex2 *vGIn, WlzDVertex2 *vGOut,
-				     double lambda)
+				     double lambda, int nonMan)
 {
   int		idx,
   		cnt;
@@ -488,7 +503,7 @@ static void	WlzGMFilterGeomLPL2D(WlzGMModel *model,
     if(cV->idx >= 0)
     {
       tV0 = *(vGIn + idx);
-      tV1 = WlzGMFilterGeomLPL2Delta(model, cV, vGIn);
+      tV1 = WlzGMFilterGeomLPL2Delta(model, cV, vGIn, nonMan);
       tV0.vtX += lambda * tV1.vtX;
       tV0.vtY += lambda * tV1.vtY;
       *(vGOut + idx) = tV0;
@@ -506,10 +521,12 @@ static void	WlzGMFilterGeomLPL2D(WlzGMModel *model,
 * \param	vGIn			Input vertex geometries.
 * \param	vGOut			Output vertex geometries.
 * \param	lambda			The filter parameter.
+* \param	nonMan			If non-zero allows non manifold
+					vertices to be filtered.
 */
 static void	WlzGMFilterGeomLPL3D(WlzGMModel *model,
 				     WlzDVertex3 *vGIn, WlzDVertex3 *vGOut,
-				     double lambda)
+				     double lambda, int nonMan)
 {
   int		idx,
   		cnt;
@@ -526,7 +543,7 @@ static void	WlzGMFilterGeomLPL3D(WlzGMModel *model,
     if(cV->idx >= 0)
     {
       tV0 = *(vGIn + idx);
-      tV1 = WlzGMFilterGeomLPL3Delta(model, cV, vGIn);
+      tV1 = WlzGMFilterGeomLPL3Delta(model, cV, vGIn, nonMan);
       tV0.vtX += lambda * tV1.vtX;
       tV0.vtY += lambda * tV1.vtY;
       tV0.vtZ += lambda * tV1.vtZ;
@@ -547,9 +564,11 @@ static void	WlzGMFilterGeomLPL3D(WlzGMModel *model,
 * \param	model			The given model.
 * \param	cV			Given vertex.
 * \param	vGIn			Buffer of vertex geometries.
+* \param	nonMan			If non-zero allows non manifold
+					vertices to be filtered.
 */
 static WlzDVertex2 WlzGMFilterGeomLPL2Delta(WlzGMModel *model, WlzGMVertex *gV,
-					    WlzDVertex2 *vGIn)
+					    WlzDVertex2 *vGIn, int nonMan)
 {
   WlzGMEdgeT	*fET,
   		*nET0,
@@ -561,7 +580,7 @@ static WlzDVertex2 WlzGMFilterGeomLPL2Delta(WlzGMModel *model, WlzGMVertex *gV,
   fET = gV->diskT->vertexT->parent->next;
   nET0 = fET->next->opp;
   nET1 = nET0->next->opp;
-  if(nET1 == fET)
+  if((nET1 == fET) || nonMan)
   {
     sVG = *(vGIn + nET0->vertexT->diskT->vertex->idx);
     tVGP = vGIn + nET1->vertexT->diskT->vertex->idx;
@@ -591,9 +610,11 @@ static WlzDVertex2 WlzGMFilterGeomLPL2Delta(WlzGMModel *model, WlzGMVertex *gV,
 * \param	model			The given model.
 * \param	cV			Given vertex.
 * \param	vGIn			Buffer of vertex geometries.
+* \param	nonMan			If non-zero allows non manifold
+					vertices to be filtered.
 */
 static WlzDVertex3 WlzGMFilterGeomLPL3Delta(WlzGMModel *model, WlzGMVertex *gV,
-					    WlzDVertex3 *vGIn)
+					    WlzDVertex3 *vGIn, int nonMan)
 {
   int		nN = 0,
   		manifold = 1;
@@ -608,19 +629,22 @@ static WlzDVertex3 WlzGMFilterGeomLPL3Delta(WlzGMModel *model, WlzGMVertex *gV,
   sVG.vtX = sVG.vtY = sVG.vtZ = 0.0;
   manifold = gV->diskT == gV->diskT->next;
   fET = gV->diskT->vertexT->parent->opp;
-  if(manifold)
+  if(manifold || nonMan)
   {
     nET = fET;
     do
     {
       ++nN;
-      manifold = (nET != nET->rad) && (nET == nET->rad->rad);
+      if(!nonMan)
+      {
+        manifold = (nET != nET->rad) && (nET == nET->rad->rad);
+      }
       nV = nET->vertexT->diskT->vertex;
       nVG = *(vGIn + nV->idx);
       WLZ_VTX_3_ADD(sVG, sVG, nVG);
       nET = nET->rad->opp->prev;
     } while((nET != fET) && manifold);
-    if(manifold)
+    if(manifold || nonMan)
     {
       tD0 = 1.0 / nN;
       tVGP = vGIn + gV->idx;
