@@ -11,7 +11,6 @@
          <indexitem text="file" target="sv.menus.file"/>
          <indexitem text="control" target="sv.menus.control"/>
          <indexitem text="show" target="sv.menus.show"/>
-         <indexitem text="fixed point" target="sv.menus.fixed"/>
          <indexitem text="3D" target="sv.menus.threeD"/>
          <indexitem text="help" target="sv.menus.help"/>
       </indexitem>
@@ -30,6 +29,7 @@
          <indexitem text="rotation axis" target="sv.concepts.axis"/>
          <indexitem text="distance" target="sv.concepts.dist"/>
 	 <indexitem text="view mode" target="sv.concepts.vm"/>
+	 <indexitem text="painting" target="sv.concepts.paint"/>
 	 <indexitem text="bean" target="sv.concepts.bean" />
       </indexitem>
       <indexitem text="requirements" target="sv.req">
