@@ -53,17 +53,25 @@ INCLUDES_PRV		=
 # extension (eg cat.1) (modify as required).
 MANPAGES		= 
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= \
+			  . \
+			  ../libAlc \
+			  ../libAlg \
+			  ../libWlz
+
 # List of all header file directories to be searched (modify as required).
-INCDIRS			= . \
-			/opt/MouseAtlas/src/libWlz/src \
-			$(HGU_INC_DIR) \
-                        $(OS_ROOTDIR)/include 
+INCDIRS			= \
+			  $(DEPENDDIRS) \
+			  $(HGU_INC_DIR) \
+			  $(OS_ROOTDIR)/include 
 
 # List of library search paths (modify as required).
-LIBDIRS			= . \
-			/opt/MouseAtlas/src/libWlz/src \
-			$(SYSLIB) \
-			$(HGU_LIB_DIR)
+LIBDIRS			= \
+			  $(DEPENDDIRS) \
+			  $(SYSLIB) \
+			  $(HGU_LIB_DIR)
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
@@ -96,10 +104,10 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-# CDEBUG		= -g -DDEBUG
-# COPTIMISE	= -xchip=ultra
-# CXXDEBUG	= -g -DDEBUG
-# CXXOPTIMISE	= -xchip=ultra
+#CDEBUG		= -g -DDEBUG 
+#COPTIMISE	= -xchip=ultra -KPIC
+#CXXDEBUG	= -g -DDEBUG
+#CXXOPTIMISE	= -xchip=ultra -KPIC
 DEFINES		= $(THREADS) \
 		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)

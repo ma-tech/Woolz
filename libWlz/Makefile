@@ -155,7 +155,7 @@ MANPAGES		= \
 			WlzClipObjToBox.3 \
 			WlzConvolve.3 \
 			WlzCopy.3 \
-			WlzCutObjToBox.3 \ \
+			WlzCutObjToBox.3 \
 			WlzDebug.3 \
 			WlzDomainFill.3 \
 			WlzDomainUtils.3 \
@@ -190,17 +190,23 @@ MANPAGES		= \
 			WlzVerify.3 \
 			WlzWindow.3
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= \
+			  . \
+			  ../libAlc \
+			  ../libAlg
+
 # List of all header file directories to be searched (modify as required).
-#INCDIRS			= . \
-#			$(HGU_INC_DIR) \
-#                        $(OS_ROOTDIR)/include 
-INCDIRS			= . \
-			$(HGU_INC_DIR)
+INCDIRS			= \
+			  $(DEPENDDIRS) \
+			  $(HGU_INC_DIR)
 
 # List of library search paths (modify as required).
-LIBDIRS			= . \
-			$(SYSLIB) \
-			$(HGU_LIB_DIR)
+LIBDIRS			= \
+			  $(DEPENDDIRS) \
+			  $(SYSLIB) \
+			  $(HGU_LIB_DIR)
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
@@ -233,12 +239,10 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-ifeq 		($(UNIXTYPE), SUNOS5)
-CDEBUG		= -g -DDEBUG
-COPTIMISE	= -xchip=ultra -KPIC
+#CDEBUG		= -g -DDEBUG 
+#COPTIMISE	= -xchip=ultra -KPIC
 #CXXDEBUG	= -g -DDEBUG
 #CXXOPTIMISE	= -xchip=ultra -KPIC
-endif
 DEFINES		= $(THREADS) \
 		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)

@@ -185,15 +185,25 @@ MANPAGES		= \
 			  WlzSobel.1 \
 			  WlzWindow.1
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= \
+			  . \
+			  ../libAlc \
+			  ../libAlg \
+			  ../libWlz
+
 # List of all header file directories to be searched (modify as required).
-INCDIRS			= . \
-			$(HGU_INC_DIR) \
-                        $(OS_ROOTDIR)/include 
+INCDIRS			= \
+			  $(DEPENDDIRS) \
+			  $(HGU_INC_DIR) \
+                          $(OS_ROOTDIR)/include 
 
 # List of library search paths (modify as required).
-LIBDIRS			= . \
-			$(SYSLIB) \
-			$(HGU_LIB_DIR)
+LIBDIRS			= \
+			  $(DEPENDDIRS) \
+			  $(SYSLIB) \
+			  $(HGU_LIB_DIR)
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
@@ -228,6 +238,7 @@ OBJECTS			= $(CSOURCES:%.c=%.o)
 # Basic flags for controlling compilation (modify as required).
 #CDEBUG			= -g 
 #COPTIMISE		= -xchip=ultra -KPIC
+#CXXDEBUG		= -g 
 #CXXOPTIMISE		= -xchip=ultra -KPIC
 
 # un-comment these lines to make a 32-bit library for the IRIX 6

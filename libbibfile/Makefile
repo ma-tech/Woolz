@@ -43,9 +43,19 @@ INCLUDES_PRV		= bibFile.h
 MANPAGES		= bibfile.3 \
 			  bibfile.5
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= \
+			  . \
+			  ../libAlc
+
 # List of all header file directories to be searched (modify as required).
-INCDIRS			= ./  \
-			  $(HGUHOME)/include
+INCDIRS			= \
+			  $(DEPENDDIRS)/  \
+			  $(HGU_INC_DIR)/include
+
+# List of library search paths (modify as required).
+LIBDIR			=
 
 # List of all sub directories that contain makefiles (modify as required).
 SUBSYSTEMS		= Test
@@ -62,23 +72,16 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-DEFINES			= 
-CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES) $(UNIXFLAGS)
-
-# un-comment these lines to make a 32-bit library for the IRIX 6
-#ifeq ($(UNIXTYPE), IRIX646)
-#ANSI_CONFORMANCE	= -xansi -fullwarn
-#CC			= cc -32
-#COPTIMISE		= -mips2 -O2
-#SYSLIB			= /usr/lib
-#EXTRA_LIBS		= m
-#UNIXFLAGS		= -DUNIX  -DSYSV -DSVR4 
-#endif	
-
-#CDEBUG			= -g -DDEBUG
-CDEBUG			=
-#COPTIMISE		= -KPIC -xchip=ultra
-CFLAGS			= $(ANSI_CONFORMANCE) $(CDEBUG) $(COPTIMISE)
+#CDEBUG		= -g -DDEBUG 
+#COPTIMISE	= -xchip=ultra -KPIC
+#CXXDEBUG	= -g -DDEBUG
+#CXXOPTIMISE	= -xchip=ultra -KPIC
+DEFINES		= $(THREADS) \
+		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
+CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
+CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
+CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
+ 
 
 # Default traget which builds everything (should not need modifying).
 all:			archive executables includes manpages tag
@@ -154,6 +157,9 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 
 # Target to clean up after making (should not need modifying).
 clean:
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
 			-$(RM) core $(OBJECTS) $(EXECUTABLES) $(ARCHIVE)
 
 # Target to clean up everything that might not be wanted (should not need

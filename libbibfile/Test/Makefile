@@ -38,12 +38,19 @@ INCLUDES_PRV		= bibFile.h
 # extension (eg cat.1) (modify as required).
 MANPAGES		=
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= . \
+			  ..
+
 # List of all header file directories to be searched (modify as required).
-INCDIRS			= ../  \
+INCDIRS			= \
+			  $(DEPENDDIRS) \
 			  $(HGUHOME)/include
 
 # List of library search paths (modify as required).
-LIBDIRS			= .. \
+LIBDIRS			= \
+			  $(DEPENDDIRS) \
 			  $(SYSLIB)
 
 # List of libraries to link (modify as required).
@@ -70,13 +77,15 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-DEFINES			= -D$(UNIXTYPE)
-CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES)
-#CDEBUG			=
-CDEBUG			= -g -DDEBUG
-COPTIMISE		= -KPIC -xchip=ultra
-#COPTIMISE		= 
-CFLAGS			= $(CDEBUG) $(COPTIMISE)
+#CDEBUG		= -g -DDEBUG 
+#COPTIMISE	= -xchip=ultra -KPIC
+#CXXDEBUG	= -g -DDEBUG
+#CXXOPTIMISE	= -xchip=ultra -KPIC
+DEFINES		= $(THREADS) \
+		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
+CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
+CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
+CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
 
 # Default traget which builds everything (should not need modifying).
 all:			archive executables includes manpages

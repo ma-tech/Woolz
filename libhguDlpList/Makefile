@@ -40,13 +40,20 @@ INCLUDES_PRV		= HGUDlpList.h
 # extension (eg cat.1) (modify as required).
 MANPAGES		= HGUDlpList.3
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= \
+			  .
+
 # List of all header file directories to be searched (modify as required).
-INCDIRS			= .
+INCDIRS			= \
+			  $(DEPENDDIRS)
 
 # List of library search paths (modify as required).
-LIBDIRS			= 
+LIBDIRS			= \
+			  $(DEPENDDIRS)
 
-# List of libraries to link (modify as required).
+# List of libraries to link (modify as required)
 LIBRARIES		= 
 
 # List of all sub directories that contain makefiles. The subsystems will be
@@ -67,8 +74,10 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-# CXXDEBUG	= -g -DDEBUG
-# CXXOPTIMISE	=
+#CDEBUG		= -g -DDEBUG 
+#COPTIMISE	= -xchip=ultra -KPIC
+#CXXDEBUG	= -g -DDEBUG
+#CXXOPTIMISE	= -xchip=ultra -KPIC
 DEFINES		= -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
@@ -148,6 +157,9 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 
 # Target to clean up after making (should not need modifying).
 clean:
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
 			-$(RM) core $(OBJECTS) $(EXECUTABLES) $(ARCHIVE)
 
 # Target to clean up everything that might not be wanted (should not need

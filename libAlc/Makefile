@@ -15,7 +15,7 @@
 #########################################################################
 
 # Include the configuration makefile (modify as required).
-include			../Makefile.conf
+include			../../Makefile.conf
 
 # Name of archive (library) to be built (modify as required).
 ARCHIVE			= libAlc.a
@@ -44,8 +44,17 @@ INCLUDES_PRV		= AlcTemplates.h
 # extension (eg cat.1) (modify as required).
 MANPAGES		= Alc.3
 
+# List of all directories to be searched before the standard include
+# and lib directories (modify as required).
+DEPENDDIRS		= .
+
 # List of all header file directories to be searched (modify as required).
-INCDIRS			= .
+INCDIRS			= \
+			  $(DEPENDDIRS)
+
+# List of library search paths (modify as required).
+LIBDIRS			= \
+			  $(DEPENDDIRS)
 
 # List of all sub directories that contain makefiles (modify as required).
 SUBSYSTEMS		= 
@@ -62,12 +71,10 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-ifeq ($(UNIXTYPE), SUNOS5)
-CDEBUG		= -g -DDEBUG
-COPTIMISE	= -xchip=ultra -KPIC
-CXXDEBUG	= -g -DDEBUG
-CXXOPTIMISE	= -xchip=ultra -KPIC
-endif
+#CDEBUG			= -g 
+#COPTIMISE		= -xchip=ultra -KPIC
+#CXXDEBUG		= -g 
+#CXXOPTIMISE		= -xchip=ultra -KPIC
 DEFINES		= $(THREADS) \
 		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
