@@ -774,10 +774,62 @@ extern WlzErrorNum 		WlzSetBackground(
 				  WlzPixelV bckgrnd);
 
 /************************************************************************
+* WlzBasisFn.c								*
+************************************************************************/
+extern WlzErrorNum		WlzBasisFnFree(
+				  WlzBasisFn *basisFn);
+extern WlzDVertex2		WlzBasisFnValueGauss2D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex2 srcVx);
+extern WlzDVertex2		WlzBasisFnValuePoly2D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex2 srcVx);
+extern WlzDVertex2		WlzBasisFnValueMQ2D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex2 srcVx);
+extern WlzDVertex2		WlzBasisFnValueTPS2D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex2 srcVx);
+extern WlzDVertex2		WlzBasisFnValueConf2D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex2 srcVx);
+extern WlzBasisFn		*WlzBasisFnGauss2DFromCPts(
+				  int nPts,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  double delta,
+				  WlzErrorNum *dstErr);
+extern WlzBasisFn		*WlzBasisFnPoly2DFromCPts(
+				  int nPts,
+				  int order,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  WlzErrorNum *dstErr);
+extern WlzBasisFn 		*WlzBasisFnConf2DFromCPts(
+				  int nPts,
+				  int order,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  WlzErrorNum *dstErr);
+extern WlzBasisFn		*WlzBasisFnMQ2DFromCPts(
+				  int nPts,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  double delta,
+				  WlzErrorNum *dstErr);
+extern WlzBasisFn		*WlzBasisFnTPS2DFromCPts(
+				  int nPts,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzBasisFnTransform.c							*
 ************************************************************************/
-extern WlzBasisFnTransform	*WlzBasisFnTrFromCPts(
-				  WlzBasisFnType type,
+extern WlzBasisFnTransform	*WlzMakeBasisFnTransform(
+				  WlzErrorNum *dstErr);
+extern WlzBasisFnTransform	*WlzBasisFnTrFromCPts2D(
+				  WlzFnType type,
 				  int order,
 				  int sizeArrayDPts,
 				  WlzDVertex2 *arrayDPts,
@@ -786,24 +838,24 @@ extern WlzBasisFnTransform	*WlzBasisFnTrFromCPts(
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzBasisFnSetMesh(
 				  WlzMeshTransform *mesh,
-				  WlzBasisFnTransform *basis);
+				  WlzBasisFnTransform *basisTr);
 extern WlzErrorNum 		WlzBasisFnFreeTransform(
-				  WlzBasisFnTransform *basis);
+				  WlzBasisFnTransform *basisTr);
 extern WlzObject		*WlzBasisFnTransformObj(
 				  WlzObject *srcObj,
-				  WlzBasisFnTransform *basis,
+				  WlzBasisFnTransform *basisTr,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
 extern WlzIVertex2		WlzBasisFnTransformVertexI(
-				  WlzBasisFnTransform *basis,
+				  WlzBasisFnTransform *basisTr,
 				  WlzIVertex2 srcVxF,
 				  WlzErrorNum *dstErr);
 extern WlzFVertex2		WlzBasisFnTransformVertexF(
-				  WlzBasisFnTransform *basis,
+				  WlzBasisFnTransform *basisTr,
 			          WlzFVertex2 srcVxF,
 				  WlzErrorNum *dstErr);
 extern WlzDVertex2		WlzBasisFnTransformVertexD(
-				  WlzBasisFnTransform *basis,
+				  WlzBasisFnTransform *basisTr,
 			          WlzDVertex2 srcVxF,
 				  WlzErrorNum *dstErr);
 
@@ -2244,7 +2296,7 @@ extern WlzObject		*WlzMeshTransformObj(
 				  WlzErrorNum *dstErr);
 extern WlzMeshTransform 	*WlzMeshTransformFromCPts(
 				  WlzObject *obj,
-				  WlzBasisFnType basisFnType,
+				  WlzFnType basisFnType,
 				  int polyOrder,
 				  int nDPts,
 				  WlzDVertex2 *dPts,

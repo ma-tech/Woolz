@@ -535,7 +535,7 @@ WlzObject	*WlzMeshTransformObj(WlzObject *srcObj,
 * \param	obj			Given object.
 * \param	basisFnType		Required basis function type.
 * \param	polyOrder		Order of polynomial, only used for
-*					WLZ_BASISFN_POLY.
+*					WLZ_FN_BASIS_2DPOLY.
 * \param	nSPts			Number of source control points.
 * \param	sPts			Source control points.
 * \param	nDPts			Number of destination control points.
@@ -547,7 +547,7 @@ WlzObject	*WlzMeshTransformObj(WlzObject *srcObj,
 *					NULL.
 */
 WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
-				WlzBasisFnType basisFnType, int polyOrder,
+				WlzFnType basisFnType, int polyOrder,
 				int nSPts, WlzDVertex2 *sPts,
 				int nDPts, WlzDVertex2 *dPts,
 				WlzMeshGenMethod meshGenMtd,
@@ -607,7 +607,7 @@ WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
 	{
           dPtsT[idx] = WlzAffineTransformVertexD2(aTrI, dPts[idx], NULL);
 	}
-        bTr = WlzBasisFnTrFromCPts(basisFnType, polyOrder,
+        bTr = WlzBasisFnTrFromCPts2D(basisFnType, polyOrder,
 			  	   nSPts, sPts, nSPts, dPtsT, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)

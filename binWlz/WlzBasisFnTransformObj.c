@@ -55,7 +55,7 @@ int             main(int argc, char **argv)
   WlzMeshTransform *meshTr = NULL;
   WlzMeshGenMethod meshGenMth = WLZ_MESH_GENMETHOD_GRADIENT;
   WlzBasisFnTransform *basisTr = NULL;
-  WlzBasisFnType basisFnType = WLZ_BASISFN_MQ;
+  WlzFnType basisFnType = WLZ_FN_BASIS_2DMQ;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   FILE		*fP = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -87,10 +87,10 @@ int             main(int argc, char **argv)
         debugPSOutput = 1;
 	break;
       case 'c':
-        basisFnType = WLZ_BASISFN_CONF_POLY;
+        basisFnType = WLZ_FN_BASIS_2DCONF_POLY;
 	break;
       case 'g':
-        basisFnType = WLZ_BASISFN_GAUSS;
+        basisFnType = WLZ_FN_BASIS_2DGAUSS;
 	break;
       case 'G':
         meshGenMth = WLZ_MESH_GENMETHOD_GRADIENT;
@@ -116,13 +116,13 @@ int             main(int argc, char **argv)
         tiePtFileStr = optarg;
 	break;
       case 'q':
-        basisFnType = WLZ_BASISFN_MQ;
+        basisFnType = WLZ_FN_BASIS_2DMQ;
 	break;
       case 's':
-        basisFnType = WLZ_BASISFN_TPS;
+        basisFnType = WLZ_FN_BASIS_2DTPS;
 	break;
       case 'y':
-        basisFnType = WLZ_BASISFN_POLY;
+        basisFnType = WLZ_FN_BASIS_2DPOLY;
 	break;
       case 't':
         basisFnTrFileStr = optarg;
@@ -285,9 +285,9 @@ int             main(int argc, char **argv)
   {
     if(restrictToBasisFn)
     {
-      basisTr = WlzBasisFnTrFromCPts(basisFnType, basisFnPolyOrder,
-	  nTiePP, vxVec0,
-	  nTiePP, vxVec1, &errNum);
+      basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
+					nTiePP, vxVec0,
+					nTiePP, vxVec1, &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;

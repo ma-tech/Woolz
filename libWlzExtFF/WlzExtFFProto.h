@@ -186,14 +186,14 @@ extern WlzErrorNum 		WlzEffBibParse3DSectionViewParamsRecord(
 extern WlzErrorNum 		WlzEffBibWriteWarpTransformParamsRecord(
 				  FILE *fp,
 				  char *recordName,
-				  WlzBasisFnType basisFnType,
+				  WlzFnType basisFnType,
 				  WlzTransformType affineType,
 				  WlzMeshGenMethod meshMthd,
 				  int meshMinDst,
 				  int meshMaxDst);
 extern WlzErrorNum 		WlzEffBibParseWarpTransformParamsRecord(
 				  BibFileRecord *bibfileRecord,
-				  WlzBasisFnType *basisFnType,
+				  WlzFnType *basisFnType,
 				  WlzTransformType *affineType,
 				  WlzMeshGenMethod *meshMthd,
 				  int *meshMinDst,

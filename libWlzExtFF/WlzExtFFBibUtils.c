@@ -216,7 +216,7 @@ WlzErrorNum WlzEffBibParse3DSectionViewParamsRecord(
 WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
   FILE			*fp,
   char			*recordName,
-  WlzBasisFnType	basisFnType,
+  WlzFnType		basisFnType,
   WlzTransformType	affineType,
   WlzMeshGenMethod	meshMthd,
   int			meshMinDst,
@@ -237,24 +237,24 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
 
   /*  types */
   switch( basisFnType ){
-  case WLZ_BASISFN_TPS:
+  case WLZ_FN_BASIS_2DTPS:
   default:
     sprintf(basisFnTypeStr, "Thin-plate-spline");
     break;
 
-  case WLZ_BASISFN_GAUSS:
+  case WLZ_FN_BASIS_2DGAUSS:
     sprintf(basisFnTypeStr, "Gaussian");
     break;
 
-  case WLZ_BASISFN_POLY:
+  case WLZ_FN_BASIS_2DPOLY:
     sprintf(basisFnTypeStr, "Polynomial");
     break;
 
-  case WLZ_BASISFN_MQ:
+  case WLZ_FN_BASIS_2DMQ:
     sprintf(basisFnTypeStr, "Multiquadric");
     break;
 
-  case WLZ_BASISFN_CONF_POLY:
+  case WLZ_FN_BASIS_2DCONF_POLY:
     sprintf(basisFnTypeStr, "Conformal-polynomial");
     break;
   }
@@ -322,7 +322,7 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
 */
 WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
   BibFileRecord		*bibfileRecord,
-  WlzBasisFnType	*basisFnType,
+  WlzFnType		*basisFnType,
   WlzTransformType	*affineType,
   WlzMeshGenMethod	*meshMthd,
   int			*meshMinDst,
@@ -390,22 +390,22 @@ WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
 
   if( errNum == WLZ_ERR_NONE ){
     if( strncmp(basisFnTypeStr, "Thin-plate-spline", 17) == 0 ){
-      *basisFnType = WLZ_BASISFN_TPS;
+      *basisFnType = WLZ_FN_BASIS_2DTPS;
     }
     else if( strncmp(basisFnTypeStr, "Gaussian", 8) == 0 ){
-      *basisFnType = WLZ_BASISFN_GAUSS;
+      *basisFnType = WLZ_FN_BASIS_2DGAUSS;
     }
     else if( strncmp(basisFnTypeStr, "Polynomial", 10) == 0 ){
-      *basisFnType = WLZ_BASISFN_POLY;
+      *basisFnType = WLZ_FN_BASIS_2DPOLY;
     }
     else if( strncmp(basisFnTypeStr, "Multiquadric", 12) == 0 ){
-      *basisFnType = WLZ_BASISFN_MQ;
+      *basisFnType = WLZ_FN_BASIS_2DMQ;
     }
     else if( strncmp(basisFnTypeStr, "Conformal-polynomial", 20) == 0 ){
-      *basisFnType = WLZ_BASISFN_CONF_POLY;
+      *basisFnType = WLZ_FN_BASIS_2DCONF_POLY;
     }
     else {
-      *basisFnType = WLZ_BASISFN_TPS;
+      *basisFnType = WLZ_FN_BASIS_2DTPS;
     }
   }
 
