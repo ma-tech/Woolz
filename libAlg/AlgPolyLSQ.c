@@ -1,37 +1,44 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgPolyLSQ.c
-* Date:         March 1999
-* Author:       JK Elder, Richard Baldock, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for fitting a polynomial using
-*		least squares for the MRC Human Genetics Unit numerical
-*		algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgPolyLSQ.c
+* \author       John Elder, Richard Baldock, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for fitting a polynomial using
+*		least squares.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgPolyLSQ
+* @{
+*/
+
 #include <Alg.h>
 
-/************************************************************************
-* Function:	AlgPolynomialLSq					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Attempts to fit a polynomial to the given data using	*
-*		a least squares approach.				*
-* Global refs:	-							*
-* Parameters:	double *xVec:		Data vector x of size vecSz.	*
-*		double *yVec:		Data vector y of size vecSz.	*
-*		int vecSz:		Size of data vectors.		*
-*		int polyDeg:		Degree of ploynomial.		*
-*		double *cVec:		Destination vector for the 	*
-*					polynomial coefficients, which	*
-*					must have at least polyDeg + 1	*
-*					elements.			*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Attempts to fit a polynomial to the given data using
+*		a least squares approach.
+* \param	xVec			Data vector x of size vecSz.
+* \param	yVec			Data vector y of size vecSz.
+* \param	vecSz			Size of data vectors.
+* \param	polyDeg			Degree of ploynomial.
+* \param	cVec			Destination vector for the
+*					polynomial coefficients, which
+*					must have at least polyDeg + 1
+*					elements.
+*/
 AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
 				 int vecSz, int polyDeg, double *cVec)
 {
@@ -139,3 +146,7 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
 	   (int )errCode));
   return(errCode);
 }
+
+/*!
+* @}
+*/

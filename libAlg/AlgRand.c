@@ -1,20 +1,28 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgRand.c
-* Date:         March 1999
-* Author:       Richard Baldock, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions which produce pseudo-random values
-*		for the	MRC Human Genetics Unit numerical algorithm
-*		library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgRand.c
+* \author       Richard Baldock, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions which produce pseudo-random values.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgRand
+* @{
+*/
+
 #include <Alg.h>
 
 #ifdef CYGWIN
@@ -23,26 +31,22 @@
 #define lrand48() ((long) ((((double) rand()) / RAND_MAX) * (1<<31)))
 #endif /* CYGWIN */
 
-/************************************************************************
-* Function:	AlgRandSeed						*
-* Returns:	void							*
-* Purpose:	Seeds the pseudo-random number generators.		*
-* Global refs:	-							*
-* Parameters:	long seed:		Given seed value.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Seeds the pseudo-random number generators.
+* \param	 seed			Given seed value.
+*/
 void		AlgRandSeed(long seed)
 {
   srand48(seed);
 }
 
-/************************************************************************
-* Function:	AlgRandUniform						*
-* Returns:	double:			Pseudo-random value.		*
-* Purpose:	Produces a pseudo-random value from a uniform		*
-*		distribution over the interval [0.0, 1.0].		*
-* Global refs:	-							*
-* Parameters:	void							*
-************************************************************************/
+/*!
+* \return				Pseudo-random value.
+* \brief	Produces a pseudo-random value from a uniform
+*		distribution over the interval [0.0, 1.0].
+* \param	<void>
+*/
 double		AlgRandUniform(void)
 {
   double	value;
@@ -51,16 +55,14 @@ double		AlgRandUniform(void)
   return(value);
 }
 
-/************************************************************************
-* Function:	AlgRandNormal						*
-* Returns:	double:			Pseudo-random value.		*
-* Purpose:	Produces a pseudo-random value from a normal		*
-*		distribution over the interval [-1.0, 1.0].		*
-* Global refs:	-							*
-* Parameters:	double mu:		Mean of distribution.		*
-*		double sigma:		Standard deviation of 		*
-*					distribution.			*
-************************************************************************/
+/*!
+* \return				Pseudo-random value.
+* \brief	Produces a pseudo-random value from a normal
+*		distribution over the interval [-1.0, 1.0].
+* \param	mu			Mean of distribution.
+* \param	sigma			Standard deviation of
+*					distribution.
+*/
 double		AlgRandNormal(double mu, double sigma)
 {
   double	value;
@@ -71,3 +73,7 @@ double		AlgRandNormal(double mu, double sigma)
   value = ((value - 6.0) * sigma) + mu;
   return(value);
 }
+
+/*!
+* @}
+*/

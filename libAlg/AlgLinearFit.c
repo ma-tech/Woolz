@@ -1,50 +1,57 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgLinearFit.c
-* Date:         May 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for fitting linear models to data,
-*		ie linear regression, for the MRC Human Genetics Unit
-*		numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgLinearFit.c
+* \author       Bill Hill
+* \date         may 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for fitting linear models to data,
+*		ie linear regression.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgLinearFit
+* @{
+*/
+
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgLinearFit1D
-* Returns:	AlgError:		Error code.
-* Purpose:	Computes the least squares best fit straight line
+/*!
+* \return				Error code.
+* \brief	Computes the least squares best fit straight line
 *		(y = a + bx) through the given data, ie linear
 *		regression.
 *		This function is based on the function fit():
 *		Press W. H., Teukolsky S. A., Vetterling W. T.
 *		and Flannery B. P, Numerical Recipies in C,
 *		1992, CUP.
-* Global refs:	-
-* Parameters:   int datSz:		Number of elements in given
+*  \param	datSz			Number of elements in given
 *					data arrays array.
-*		double *datXA:		Data array with 'x' values.
-*		double *datYA:		Data array with 'y' values.
-*		double *dstA:		Destination ptr for intercept
+* \param	datXA			Data array with 'x' values.
+* \param	datYA			Data array with 'y' values.
+* \param	dstA			Destination ptr for intercept
 *					'a', may be NULL.
-*		double *dstB:		Destination ptr for gradient
+* \param	dstB			Destination ptr for gradient
 *					'b', may be NULL.
-*		double *dstSigA:	Destination ptr for std dev
+* \param	dstSigA			Destination ptr for std dev
 *					of 'a', may be NULL.
-*		double *dstSigB:	Destination ptr for std dev
+* \param	dstSigB			Destination ptr for std dev
 *					of 'b', may be NULL.
-*		double *dstQ:		Destination ptr for goodness
+* \param	dstQ			Destination ptr for goodness
 *					of fit, may be NULL.
-************************************************************************/
+*/
 AlgError	AlgLinearFit1D(int datSz, double *datXA, double *datYA,
 			       double *dstA, double *dstB,
 			       double *dstSigA, double *dstSigB,
@@ -134,34 +141,32 @@ AlgError	AlgLinearFit1D(int datSz, double *datXA, double *datYA,
   return(algErr);
 }
 
-/************************************************************************
-* Function:	AlgLinearFitIdx1D
-* Returns:	AlgError:		Error code.
-* Purpose:	Computes the least squares best fit straight line
+/*!
+* \return				Error code.
+* \brief	Computes the least squares best fit straight line
 *		(y = a + bx) through the given data, ie linear
 *		regression.
-* Global refs:	-
-* Parameters:   double *datXA:		Data array with 'x' values.
-*		double *datYA:		Data array with 'y' values.
-*		int *idxXA:		Index array with indicies into
+* \param	datXA			Data array with 'x' values.
+* \param	datYA			Data array with 'y' values.
+* \param	idxXA			Index array with indicies into
 *					the 'x' data buffer.
 *					for the values use examine.
-*		int *idxYA:		Index array with indicies into
+* \param	idxYA			Index array with indicies into
 *					the 'y' data buffer.
 *					for the values use examine.
-*		int idxASz:		Number of elements in each of
+* \param	idxASz			Number of elements in each of
 *					the given index arrays.
-*		double *dstA:		Destination ptr for intercept
+* \param	dstA			Destination ptr for intercept
 *					'a', may be NULL.
-*		double *dstB:		Destination ptr for gradient
+* \param	dstB			Destination ptr for gradient
 *					'b', may be NULL.
-*		double *dstSigA:	Destination ptr for std dev
+* \param	dstSigA			Destination ptr for std dev
 *					of 'a', may be NULL.
-*		double *dstSigB:	Destination ptr for std dev
+* \param	dstSigB			Destination ptr for std dev
 *					of 'b', may be NULL.
-*		double *dstQ:		Destination ptr for goodness
+* \param	dstQ			Destination ptr for goodness
 *					of fit, may be NULL.
-************************************************************************/
+*/
 AlgError	AlgLinearFitIdx1D(double *datXA, double *datYA,
 				  int *idxXA, int *idxYA, int idxASz,
 				  double *dstA, double *dstB,
@@ -376,3 +381,7 @@ int		main(int argc, char **argv)
 }
 
 #endif /* ALG_LINEARFIT_TEST */
+
+/*!
+* @}
+*/

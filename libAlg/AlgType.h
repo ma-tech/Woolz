@@ -1,23 +1,26 @@
 #ifndef ALGTYPE_H
 #define ALGTYPE_H
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgType.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Header file with type definitions for the MRC Human
-*		Genetics Unit numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-* 26-01-00 bill	Added AlgPadType.
-* 21-01-00 bill	Added ALG_ERR_CONVERGENCE and AlgDistribution.
-************************************************************************/
+/*!
+* \file         AlgType.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      Alg
+* \brief        Type definitions for the MRC HGU numerical algorithm
+*               library.
+* \todo         -
+* \bug          None known.
+*/
+
 
 #ifdef  __cplusplus
 extern "C" {
@@ -45,52 +48,76 @@ extern "C" {
 #define ALG_M_SQRT2	(1.4142135623730950488016887242096980785696)
 #define	ALG_M_SQRT1_2	(0.70710678118654752440)
 
-/* Named distribution functions. */
-typedef enum
+/*!
+* \enum		_AlgDistribution
+* \brief	Statistical distributions.
+*/
+enum _AlgDistribution
 {
   ALG_DISTRIBUTION_NORMAL,
   ALG_DISTRIBUTION_EXP,   
   ALG_DISTRIBUTION_POISSON,
   ALG_DISTRIBUTION_BINOMIAL 
-} AlgDistribution;
+};
+typedef enum _AlgDistribution AlgDistribution;
 
-typedef enum
+
+/*!
+* \enum		_AlgPadType
+* \brief	Types of daat padding.
+*/
+enum _AlgPadType
 {
-  ALG_PAD_NONE,                    /* No padding, same as padding with zeros */
-  ALG_PAD_ZERO,                                       /* Pad data with zeros */
-  ALG_PAD_END                        /* Pad data with first/last data values */
-} AlgPadType;
+  ALG_PAD_NONE,              	/*!< No padding, same as padding with zeros */
+  ALG_PAD_ZERO,                 /*!< Pad data with zeros */
+  ALG_PAD_END                   /*!< Pad data with first/last data values */
+};
+typedef enum _AlgPadType AlgPadType;
 
-/* complex number data type */
-typedef struct {
+/*!
+* \struct	_ComplexD
+* \brief	Complex number data type.
+*/
+struct __ComplexD
+{
   double	re;
   double	im;
-} ComplexD;
+};
+typedef struct __ComplexD ComplexD;
 
 
-/* Error codes */
-typedef enum
+/*
+* \enum		_AlgError
+* \brief	Error codes.
+*/
+enum _AlgError
 {
   ALG_ERR_NONE		= (0),
-  ALG_ERR_FUNC,				      /* Function parameters invalid */
-  ALG_ERR_MALLOC,				/* Memory allocation failure */
-  ALG_ERR_SINGULAR,					  /* Singular matrix */
-  ALG_ERR_HOMOGENEOUS,				       /* Homogeneous matrix */
-  ALG_ERR_CONVERGENCE,			              /* Failure to converge */
-  ALG_ERR_NONGLOBAL,   /* Finds local solution, but fails to global solution */
-  ALG_ERR_DIVZERO,   					   /* Divide by zero */
+  ALG_ERR_FUNC,			/*!< Function parameters invalid */
+  ALG_ERR_MALLOC,		/*!< Memory allocation failure */
+  ALG_ERR_SINGULAR,		/*!< Singular matrix */
+  ALG_ERR_HOMOGENEOUS,		/*!< Homogeneous matrix */
+  ALG_ERR_CONVERGENCE,		/*!< Failure to converge */
+  ALG_ERR_NONGLOBAL,   		/*!< Finds local solution, but fails to global
+  				     solution */
+  ALG_ERR_DIVZERO,   		/*!< Divide by zero */
   ALG_ERR_MAX
-} AlgError;
+};
+typedef enum _AlgError AlgError;
 
-/* Debug mask values */
-typedef enum
+/*
+* \enum		_AlgDbgMask
+* \brief	Debug mask values.
+*/
+enum _AlgDbgMask
 {
   ALG_DBG_NONE          = (0),
   ALG_DBG_LVL_1         = (1),
   ALG_DBG_LVL_2         = (1<<1),
   ALG_DBG_LVL_3         = (1<<2),
   ALG_DBG_LVL_FN        = (1<<3)
-} AlgDbgMask;
+};
+typedef enum _AlgDbgMask AlgDbgMask;
 
 typedef AlgError        (*AlgDbgFn)(char *, ...);
  

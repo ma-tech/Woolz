@@ -1,16 +1,18 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgFourier.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Fast Fourier and Hartley transform functions for the
-*	  	MRC Human Genetics Unit numerical algorithm library.
+/*!
+* \file         AlgFourier.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Fast Fourier and Hartley transform functions.
 *		The history of this software is (as stated by Mayer):
 *		  Euler		- Probable inventor of the fourier
 *				  transform.
@@ -40,9 +42,16 @@
 *		the number of concurrent threads available as a
 *		parameter, this can be 0 or 1 if multi-threading is not
 *		required.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgFourier
+* @{
+*/
+
 #include <Alg.h>
 #include <float.h>
 
@@ -51,33 +60,53 @@
 #define ALG_THREADS_MAX	(64)
 #endif /* ALG_THREADS_USED */
 
-typedef enum			     /* Forward or inverse Fourier transform */
+/*!
+* \enum 	_AlgFourDirection
+* \brief	 Forward or inverse Fourier transform.
+*/
+enum _AlgFourDirection
 {
   ALG_FOUR_DIR_FWD = 0,
   ALG_FOUR_DIR_INV = 1
-} AlgFourDirection;
+};
+typedef enum _AlgFourDirection  AlgFourDirection;
 
 #ifdef ALG_THREADS_USED
 #define ALG_FOUR_THR_NUM1D 512  /* Min size of 1D complex FT, to use threads */
 
-typedef struct    /* Used for args by AlgFourThrHart1D(), AlgFourThrReal1D() */
-{						/* and AlgFourThrRealInv1D() */
+/*!
+* \struct 	_AlgFourArgs1
+* \brief	Used for args by AlgFourThrHart1D(), AlgFourThrReal1D()
+*		and AlgFourThrRealInv1D()
+*/
+struct _AlgFourArgs1
+{
   double	*data;
   int		num;
   int		step;
   int		cThr;
-} AlgFourArgs1;
+};
+typedef struct _AlgFourArgs1 AlgFourArgs1;
 
-typedef struct        /* Used for args by AlgFourThr1D() and AlgFourThrInv1D */
+/*!
+* \struct	_AlgFourArgs2
+* \brief	Used for args by AlgFourThr1D() and AlgFourThrInv1D.
+*/
+struct _AlgFourArgs2
 {
   double	*real;
   double	*imag;
   int		num;
   int		step;
   int		cThr;
-} AlgFourArgs2;
+};
+typedef struct _AlgFourArgs2  AlgFourArgs2;
 
-typedef struct			 /* Used for args by AlgFourThrRepXYReal1D() */
+/*!
+* \struct	_AlgFourArgs3
+* \brief	Used for args by AlgFourThrRepXYReal1D().
+*/
+struct _AlgFourArgs3
 {
   double	**data;
   double	*reBuf;
@@ -88,9 +117,14 @@ typedef struct			 /* Used for args by AlgFourThrRepXYReal1D() */
   int		repY;
   AlgFourDirection dir;
   int		cThr;
-} AlgFourArgs3;
+};
+typedef struct _AlgFourArgs3  AlgFourArgs3;
 
-typedef struct        		     /* Used for args by AlgFourThrRepXY1D() */
+/*!
+* \struct	_AlgFourArgs4
+* \brief	Used for args by AlgFourThrRepXY1D().
+*/
+struct _AlgFourArgs4
 {
   double	**real;
   double	**imag;
@@ -102,7 +136,8 @@ typedef struct        		     /* Used for args by AlgFourThrRepXY1D() */
   int		repY;
   AlgFourDirection dir;
   int		cThr;
-} AlgFourArgs4;
+};
+typedef struct _AlgFourArgs4  AlgFourArgs4;
 #endif /* ALG_THREADS_USED */
 
 static void	AlgFourRepXY1D(double **real, double **imag,
@@ -125,20 +160,18 @@ static void	*AlgFourThrHart1D(AlgFourArgs1 *args),
 		*AlgFourThrRepXY1D(AlgFourArgs4 *args);
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFourHart1D						*
-* Returns:	void							*
-* Purpose:	Computes the Hartley transform of the given one		*
-*		dimensional data, and does it in place.			*
-* Global refs:	-							*
-* Parameters:	double *data:		Given data.			*
-*		int num:		Number of data.			*
-*		int step:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int cThr:		Concurrent threads available,	*
-*					if cThr <= 1 then no threads	*
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the Hartley transform of the given one
+*		dimensional data, and does it in place.
+* \param	data		Given data.
+* \param	num		Number of data.
+* \param	step		Offset in data elements between
+*				the data to be transformed.
+* \param	cThr		Concurrent threads available,
+*				if cThr <= 1 then no threads
+*				will be created.
+*/
 void		AlgFourHart1D(double *data, int num, int step, int cThr)
 {
 #ifdef ALG_FOUR_LONGDBL_TRIG
@@ -649,14 +682,12 @@ void		AlgFourHart1D(double *data, int num, int step, int cThr)
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThrHart1D					*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFourHart1D(), used for thread 	*
-*		creation.						*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs1 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFourHart1D(), used for thread
+*		creation.
+* \param	args			Parameter list.
+*/
 static void	*AlgFourThrHart1D(AlgFourArgs1 *args)
 {
   AlgFourHart1D(args->data, args->num, args->step, args->cThr);
@@ -664,21 +695,19 @@ static void	*AlgFourThrHart1D(AlgFourArgs1 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFour1D						*
-* Returns:	void							*
-* Purpose:	Computes the Fourier transform of the given one		*
-*		dimensional complex data, and does it in place.		*
-* Global refs:	-							*
-* Parameters:	double *real:		Given real data.		*
-*		double *imag:		Given imaginary data.		*
-*		int num:		Number of data.			*
-*		int step:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the Fourier transform of the given one
+*		dimensional complex data, and does it in place.
+* \param	real			Given real data.
+* \param	imag			Given imaginary data.
+* \param	num			Number of data.
+* \param	step			Offset in data elements between
+*					the data to be transformed.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFour1D(double *real, double *imag, int num, int step,
 			  int cThr)
 {
@@ -753,14 +782,12 @@ void		AlgFour1D(double *real, double *imag, int num, int step,
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThr1D						*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFour1D(), used for thread 	*
-*		creation.						*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs2 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFour1D(), used for thread
+*		creation.
+* \param	args			Parameter list.
+*/
 static void	*AlgFourThr1D(AlgFourArgs2 *args)
 {
   AlgFour1D(args->real, args->imag, args->num, args->step, args->cThr);
@@ -768,21 +795,19 @@ static void	*AlgFourThr1D(AlgFourArgs2 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFourInv1D						*
-* Returns:	void							*
-* Purpose:	Computes the inverse Fourier transform of the given	*
-*		complex one dimensional data, and does it in place.	*
-* Global refs:	-							*
-* Parameters:	double *real:		Given real data.		*
-*		double *imag:		Given imaginary data.		*
-*		int num:		Number of data.			*
-*		int step:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the inverse Fourier transform of the given
+*		complex one dimensional data, and does it in place.
+* \param	real			Given real data.
+* \param	imag			Given imaginary data.
+* \param	num			Number of data.
+* \param	step			Offset in data elements between
+*					the data to be transformed.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFourInv1D(double *real, double *imag, int num, int step,
 			     int cThr)
 {
@@ -858,14 +883,12 @@ void		AlgFourInv1D(double *real, double *imag, int num, int step,
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThrInv1D						*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFourInv1D(), used for thread 	*
-*		creation.						*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs2 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFourInv1D(), used for thread
+*		creation.
+* \param	args			Parameter list.
+*/
 void		*AlgFourThrInv1D(AlgFourArgs2 *args)
 {
   AlgFourInv1D(args->real, args->imag, args->num, args->step, args->cThr);
@@ -873,37 +896,35 @@ void		*AlgFourThrInv1D(AlgFourArgs2 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFourRepXY1D						*
-* Returns:	void							*
-* Purpose:	Computes repeated the Fourier transforms of the given	*
-*	 	one dimensional complex data sets.			*
-*		These may either be done wrt the rows or columns of	*
-*		the data. Buffers may be provided for the columns to	*
-*		improve efficiency, if provided (non NULL) then these	*
-*		should be large enough to hold a single column of data.	*
-*		Multiple threads may be used (if cThr > 1) for repeated	*
-*		rows, but (because of the column buffers) not for the	*
-*		columns. Although AlgFour1D()/AlgFourInv1D() can make	*
-*		use of two threads in themselves.			*
-* Global refs:	-							*
-* Parameters:	double **real:		Given real data sets.		*
-*		double **imag:		Given imaginary data sets.	*
-*		double *reBuf:		Given buffer(s) for real data.	*
-*		double *imBuf:		Given buffer(s) for imaginary	*
-*					data.				*
-*		int numData:		Number of data in a row/column.	*
-*		int stepData:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int repX:		Number of data columns to be	*
-*					transformed.			*
-*		int repY:		Number of data rows to be	*
-*					transformed.			*
-*		AlgFourDirection dir:	Forward or inverse transform.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes repeated the Fourier transforms of the given
+*	 	one dimensional complex data sets.
+*		These may either be done wrt the rows or columns of
+*		the data. Buffers may be provided for the columns to
+*		improve efficiency, if provided (non NULL) then these
+*		should be large enough to hold a single column of data.
+*		Multiple threads may be used (if cThr > 1) for repeated
+*		rows, but (because of the column buffers) not for the
+*		columns. Although AlgFour1D()/AlgFourInv1D() can make
+*		use of two threads in themselves.
+* \param	real			Given real data sets.
+* \param	imag			Given imaginary data sets.
+* \param	reBuf			Given buffer(s) for real data.
+* \param	imBuf			Given buffer(s) for imaginary
+*					data.
+* \param	numData			Number of data in a row/column.
+* \param	stepData		Offset in data elements between
+*					the data to be transformed.
+* \param	repX			Number of data columns to be
+*					transformed.
+* \param	repY			Number of data rows to be
+*					transformed.
+* \param	dir			Forward or inverse transform.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 static void	AlgFourRepXY1D(double **real, double **imag,
 			       double *reBuf, double *imBuf,
 			       int numData, int stepData,
@@ -1111,14 +1132,12 @@ static void	AlgFourRepXY1D(double **real, double **imag,
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThrRepXY1D					*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFourRepXY1D(), used for thread 	*
-*		creation.						*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs4 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFourRepXY1D(), used for thread
+*		creation.
+* \param	args			Parameter list.
+*/
 static void	*AlgFourThrRepXY1D(AlgFourArgs4 *args)
 {
   AlgFourRepXY1D(args->real, args->imag, args->reBuf, args->imBuf,
@@ -1128,20 +1147,18 @@ static void	*AlgFourThrRepXY1D(AlgFourArgs4 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFourReal1D						*
-* Returns:	void							*
-* Purpose:	Computes the Fourier transform of the given one 	*
-*		dimensional real data, and does it in place.		*
-* Global refs:	-							*
-* Parameters:	double *real:		Given real data.		*
-*		int num:		Number of data.			*
-*		int step:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the Fourier transform of the given one
+*		dimensional real data, and does it in place.
+* \param	real			Given real data.
+* \param	num			Number of data.
+* \param	step			Offset in data elements between
+*					the data to be transformed.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFourReal1D(double *real, int num, int step, int cThr)
 {
   double	tD0,
@@ -1184,14 +1201,12 @@ void		AlgFourReal1D(double *real, int num, int step, int cThr)
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThrReal1D					*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFourReal1D(), used for thread 	*
-*		creation.						*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs1 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFourReal1D(), used for thread
+*		creation.
+* \param	args			Parameter list.
+*/
 void		*AlgFourThrReal1D(AlgFourArgs1 *args)
 {
   AlgFourReal1D(args->data, args->num, args->step, args->cThr);
@@ -1199,20 +1214,18 @@ void		*AlgFourThrReal1D(AlgFourArgs1 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFourRealInv1D					*
-* Returns:	void							*
-* Purpose:	Computes the inverse Fourier transform of the given one	*
-*		one dimensional real data, and does it in place.	*
-* Global refs:	-							*
-* Parameters:	double *real:		Given real/complex data.	*
-*		int num:		Number of data.			*
-*		int step:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the inverse Fourier transform of the given one
+*		one dimensional real data, and does it in place.
+* \param	real			Given real/complex data.
+* \param	num			Number of data.
+* \param	step			Offset in data elements between
+*					the data to be transformed.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFourRealInv1D(double *real, int num, int step, int cThr)
 {
   double	tD0,
@@ -1255,14 +1268,12 @@ void		AlgFourRealInv1D(double *real, int num, int step, int cThr)
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThrRealInv1D					*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFourRealInv1D(), used for thread 	*
-*		creation.						*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs1 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFourRealInv1D(), used for thread
+*		creation.
+* \param	args			Parameter list.
+*/
 void		*AlgFourThrRealInv1D(AlgFourArgs1 *args)
 {
   AlgFourRealInv1D(args->data, args->num, args->step, args->cThr);
@@ -1270,36 +1281,34 @@ void		*AlgFourThrRealInv1D(AlgFourArgs1 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFourRepXYReal1D					*
-* Returns:	void							*
-* Purpose:	Computes repeated the Fourier transforms of the given	*
-*	 	one dimensional real data sets.				*
-*		These may either be done wrt the rows or columns of	*
-*		the data. Buffers may be provided for the columns to	*
-*		improve efficiency, if provided (non NULL) then these	*
-*		should be large enough to hold a single column of data.	*
-*		Multiple threads may be used (if cThr > 1) for repeated	*
-*		rows, but (because of the column buffers) not for the	*
-*		columns. Although AlgFour1D()/AlgFourInv1D() can make	*
-*		use of two threads in themselves.			*
-* Global refs:	-							*
-* Parameters:	double **data:		Given data sets.		*
-*		double *reBuf:		Given buffer(s) for real data.	*
-*		double *imBuf:		Given buffer(s) for imaginary	*
-*					data.				*
-*		int numData:		Number of data in row/column.	*
-*		int stepData:		Offset in data elements between	*
-*					the data to be transformed.	*
-*		int repX:		Number of data columns to be	*
-*					transformed.			*
-*		int repY:		Number of data rows to be	*
-*					transformed.			*
-*		AlgFourDirection dir:	Forward or inverse transform.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes repeated the Fourier transforms of the given
+*	 	one dimensional real data sets.
+*		These may either be done wrt the rows or columns of
+*		the data. Buffers may be provided for the columns to
+*		improve efficiency, if provided (non NULL) then thes
+*		should be large enough to hold a single column of data.
+*		Multiple threads may be used (if cThr > 1) for repeated
+*		rows, but (because of the column buffers) not for the
+*		columns. Although AlgFour1D()/AlgFourInv1D() can make
+*		use of two threads in themselves.
+* \param	data			Given data sets.
+* \param	reBuf			Given buffer(s) for real data.
+* \param	imBuf			Given buffer(s) for imaginary
+*					data.
+* \param	numData			Number of data in row/column.
+* \param	stepData		Offset in data elements between
+*					the data to be transformed.
+* \param	repX			Number of data columns to be
+*					transformed.
+* \param	repY			Number of data rows to be
+*					transformed.
+* \param	dir			Forward or inverse transform.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 static void	AlgFourRepXYReal1D(double **data, double *reBuf, double *imBuf,
 				   int numData, int stepData,
 				   int repX, int repY,
@@ -1549,14 +1558,12 @@ static void	AlgFourRepXYReal1D(double **data, double *reBuf, double *imBuf,
 }
 
 #ifdef ALG_THREADS_USED
-/************************************************************************
-* Function:	AlgFourThrRepXYReal1D					*
-* Returns:	void *:			Always NULL.			*
-* Purpose:	Simple wrapper for AlgFourRepXYReal1D(), used for 	*
-*		thread creation.					*
-* Global refs:	-							*
-* Parameters:	AlgFourArgs3 *args:	Parameter list.			*
-************************************************************************/
+/*!
+* \return				Always NULL.
+* \brief	Simple wrapper for AlgFourRepXYReal1D(), used for
+*		thread creation.
+* \param	args			Parameter list.
+*/
 static void	*AlgFourThrRepXYReal1D(AlgFourArgs3 *args)
 {
   AlgFourRepXYReal1D(args->data, args->reBuf, args->imBuf,
@@ -1566,29 +1573,27 @@ static void	*AlgFourThrRepXYReal1D(AlgFourArgs3 *args)
 }
 #endif /* ALG_THREADS_USED */
 
-/************************************************************************
-* Function:	AlgFour2D						*
-* Returns:	void							*
-* Purpose:	Computes the Fourier transform of the given two		*
-*		dimensional complex data, and does it in place.		*
-*		If the two buffer pointers are NULL then the transform	*
-*		will be done without copying the data between temporary	*
-*		buffers.						*
-* Global refs:	-							*
-* Parameters:	double **real:		Given real data.		*
-*		double **imag:		Given imaginary data.		*
-*		double *reBuf:		Given buffer for real data,	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		double *imBuf:		Given buffer for imaginary data	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		int numX:		Number of data in each row.	*
-*		int numX:		Number of data in each column.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the Fourier transform of the given two
+*		dimensional complex data, and does it in place.
+*		If the two buffer pointers are NULL then the transform
+*		will be done without copying the data between temporary
+*		buffers.
+* \param	real			Given real data.
+* \param	imag			Given imaginary data.
+* \param	reBuf			Given buffer for real data,
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	imBuf			Given buffer for imaginary data
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	numX			Number of data in each row.
+* \param	numX			Number of data in each column.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFour2D(double **real, double **imag,
 			  double *reBuf, double *imBuf, int numX, int numY,
 			  int cThr)
@@ -1605,29 +1610,27 @@ void		AlgFour2D(double **real, double **imag,
 	  ("AlgFour2D FX\n"));
 }
 
-/************************************************************************
-* Function:	AlgFourInv2D						*
-* Returns:	void							*
-* Purpose:	Computes the inverse Fourier transform of the given two	*
-*		dimensional complex data, and does it in place.		*
-*		If the two buffer pointers are NULL then the transform	*
-*		will be done without copying the data between temporary	*
-*		buffers.						*
-* Global refs:	-							*
-* Parameters:	double **real:		Given real data.		*
-*		double **imag:		Given imaginary data.		*
-*		double *reBuf:		Given buffer for real data,	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		double *imBuf:		Given buffer for imaginary data	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		int numX:		Number of data in each row.	*
-*		int numX:		Number of data in each column.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the inverse Fourier transform of the given two
+*		dimensional complex data, and does it in place.
+*		If the two buffer pointers are NULL then the transform
+*		will be done without copying the data between temporary
+*		buffers.
+* \param	real			Given real data.
+* \param	imag			Given imaginary data.
+* \param	reBuf			Given buffer for real data,
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	imBuf			Given buffer for imaginary data
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	numX			Number of data in each row.
+* \param	numX			Number of data in each column.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFourInv2D(double **real, double **imag,
 			     double *reBuf, double *imBuf,
 			     int numX, int numY, int cThr)
@@ -1644,28 +1647,26 @@ void		AlgFourInv2D(double **real, double **imag,
 	  ("AlgFourInv2D FX\n"));
 }
 
-/************************************************************************
-* Function:	AlgFourReal2D						*
-* Returns:	void							*
-* Purpose:	Computes the Fourier transform of the given two		*
-*		dimensional real data, and does it in place.		*
-*		If the two buffer pointers are NULL then the transform	*
-*		will be done without copying the data between temporary	*
-*		buffers.						*
-* Global refs:	-							*
-* Parameters:	double **real:		Given real data.		*
-*		double *reBuf:		Given buffer for real data,	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		double *imBuf:		Given buffer for imaginary data	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		int numX:		Number of data in each row.	*
-*		int numX:		Number of data in each column.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the Fourier transform of the given two
+*		dimensional real data, and does it in place.
+*		If the two buffer pointers are NULL then the transform
+*		will be done without copying the data between temporary
+*		buffers.
+* \param	real			Given real data.
+* \param	reBuf			Given buffer for real data,
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	imBuf			Given buffer for imaginary data
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	numX			Number of data in each row.
+* \param	numX			Number of data in each column.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFourReal2D(double **real, double *reBuf, double *imBuf,
 			      int numX, int numY, int cThr)
 {
@@ -1681,29 +1682,27 @@ void		AlgFourReal2D(double **real, double *reBuf, double *imBuf,
 	  ("AlgFourReal2D FX\n"));
 }
 
-/************************************************************************
-* Function:	AlgFourRealInv2D					*
-* Returns:	void							*
-* Purpose:	Computes the Fourier transform of the given two		*
-*		dimensional data which resulted from a transform using	*
-*		AlgFourReal2D(), and does it in place.			*
-*		If the two buffer pointers are NULL then the transform	*
-*		will be done without copying the data between temporary	*
-*		buffers.						*
-* Global refs:	-							*
-* Parameters:	double **real:		Given real/complex data.	*
-*		double *reBuf:		Given buffer for real data,	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		double *imBuf:		Given buffer for imaginary data	*
-*					may be NULL or a buffer region	*
-*					suitable for a single column.	*
-*		int numX:		Number of data in each row.	*
-*		int numX:		Number of data in each column.	*
-*		int cThr:		Concurrent threads available,   *
-*					if cThr <= 1 then no threads    *
-*					will be created.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Computes the Fourier transform of the given two
+*		dimensional data which resulted from a transform using
+*		AlgFourReal2D(), and does it in place.
+*		If the two buffer pointers are NULL then the transform
+*		will be done without copying the data between temporary
+*		buffers.
+* \param	real			Given real/complex data.
+* \param	reBuf			Given buffer for real data,
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	imBuf			Given buffer for imaginary data
+*					may be NULL or a buffer region
+*					suitable for a single column.
+* \param	numX			Number of data in each row.
+* \param	numX			Number of data in each column.
+* \param	cThr			Concurrent threads available,
+*					if cThr <= 1 then no threads
+*					will be created.
+*/
 void		AlgFourRealInv2D(double **real,double *reBuf, double *imBuf,
 				 int numX, int numY, int cThr)
 {
@@ -1718,3 +1717,8 @@ void		AlgFourRealInv2D(double **real,double *reBuf, double *imBuf,
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFourRealInv2D FX\n"));
 }
+
+/*!
+* @}
+*/
+

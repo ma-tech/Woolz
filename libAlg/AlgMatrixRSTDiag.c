@@ -12,8 +12,6 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \defgroup     AlcKDTree
-* \ingroup      Alc
 * \brief        Reduces a real symmetric matrix to symmetric
 *		tridiagonal form by orthogonal similarity transformation
 *		and construction of the right operator of the reduction.
@@ -21,6 +19,12 @@
 * \note
 * Maintenance log with most recent changes at top of list.
 */
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
@@ -163,3 +167,7 @@ AlgError	AlgMatrixRSTDiag(double **aM, int aSz, double *dM, double *oM)
   }
   return(errCode);
 }
+
+/*!
+* @}
+*/

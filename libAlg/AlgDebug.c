@@ -1,19 +1,28 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgDebug.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for debug output from the MRC
-*	  	Human Genetics Unit numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgDebug.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides debug output.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgDebug
+* @{
+*/
+
 #include <Alg.h>
 #include <float.h>
 
@@ -23,15 +32,14 @@ AlgDbgMask	algDbgMask = ALG_DBG_NONE;
 void		*algDbgData = NULL;
 AlgDbgFn	algDbgOutFn = AlgDbgWrite;
 
-/************************************************************************
-* Function:	AlgDbgWrite						*
-* Returns:	AlgError:		Non zero if fails to output	*
-*					given message.			*
-* Purpose:	Writes out the given debug message to the debug file.	*
-* Global refs:	void *algDbgData:	Used to hold debug output file.	*
-* Parameters:	char *fmt:		Format for printing message.	*
-*		...			Varargs function.		*
-************************************************************************/
+/*!
+* \return				Non zero if fails to output
+*					given message.
+* \brief	Writes out the given debug message to the debug file.
+* \note		Uses global void *algDbgData to hold debug output file.
+* \param	fmt:			Format for printing message.
+* \param	...			Varargs function.
+*/
 AlgError	AlgDbgWrite(char *fmt, ...)
 {
   AlgError	errFlag = ALG_ERR_NONE;

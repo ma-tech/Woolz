@@ -1,39 +1,46 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgRange.c
-* Date:         May 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for computing the range of values
-*		within a given array for the MRC Human Genetics Unit
-*		numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgRange.c
+* \author       Bill Hill
+* \date         May 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for computing the range of values
+*		within a given array.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgRange
+* @{
+*/
+
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgRange1D
-* Returns:	AlgError:		Error code.
-* Purpose:	Computes the range of the given data, ie it's minimum
+/*!
+* \return				Error code.
+* \brief	Computes the range of the given data, ie it's minimum
 *		and maximum values.
-* Global refs:	-
-* Parameters:   int datASz:		Number of elements in given data
+* \param	datASz			Number of elements in given data
 *					array.
-*		double *datA:		Data array to examine for minimum
+* \param	datA			Data array to examine for minimum
 *					and maximum values.
-*		double *dstMin:		Destination ptr for minimum
+* \param	dstMin			Destination ptr for minimum
 *					value, may be NULL.
-*		double *dstMax:		Destination ptr for maximum
+* \param	dstMax			Destination ptr for maximum
 *					value, may be NULL.
-************************************************************************/
+*/
 AlgError	AlgRange1D(int datASz, double *datA,
 			   double *dstMin, double *dstMax)
 {
@@ -77,24 +84,22 @@ AlgError	AlgRange1D(int datASz, double *datA,
   return(algErr);
 }
 
-/************************************************************************
-* Function:	AlgRangeIdx1D
-* Returns:	AlgError:		Error code.
-* Purpose:	Computes the range of the given indexed data, ie it's
+/*!
+* \return				Error code.
+* \brief	Computes the range of the given indexed data, ie it's
 *		minimum and maximum values.
-* Global refs:	-
-* Parameters:   double *datA:		Data array to examine for minimum
+* \param	datA			Data array to examine for minimum
 *					and maximum values.
-*		int idxASz:		Number of elements in given
+* \param	idxASz			Number of elements in given
 *					index array.
-*		int *idxA:		Index array with indicies into
+* \param	idxA			Index array with indicies into
 *					the data buffer for the values
 *					to examine.
-*		double *dstMin:		Destination ptr for minimum
+* \param	dstMin			Destination ptr for minimum
 *					value, may be NULL.
-*		double *dstMax:		Destination ptr for maximum
+* \param	dstMax			Destination ptr for maximum
 *					value, may be NULL.
-************************************************************************/
+*/
 AlgError	AlgRangeIdx1D(double *datA, int idxASz, int *idxA,
 			      double *dstMin, double *dstMax)
 {
@@ -255,3 +260,7 @@ int		main(int argc, char **argv)
 }
 
 #endif /* ALG_RANGE_TEST */
+
+/*!
+* @}
+*/

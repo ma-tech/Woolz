@@ -13,6 +13,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 07-06-01 bill	Add AlgMatrixMath.c
 # 04-06-01 bill Add AlgMatrixRSTDiag.c, AlgMatrixTDiagQLI.c and
 #		AlgMatrixRSEigen.c
 # 01-02-01 bill	Add AlgCrossCorr.c
@@ -50,6 +51,7 @@ CSOURCES		= \
 			  AlgLinearFit.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLU.c \
+			  AlgMatrixMath.c \
 			  AlgMatrixRSEigen.c \
 			  AlgMatrixRSTDiag.c \
 			  AlgMatrixSV.c \
@@ -75,6 +77,15 @@ INCLUDES_PUB		= Alg.h \
 INCLUDES_PRV		= Alg.h \
 			  AlgType.h \
 			  AlgProto.h
+
+# Source man documentation directory
+SRC_MAN_DIR		= man
+
+# Source html documentation directory
+SRC_WWW_DIR		= html
+
+# Destination html documentation directory
+DST_WWW_DIR		= $(HGU_WWW_DIR)/src/Core/libAlg
 
 # List of all troff sources for manual pages, these should have the appropriate
 # extension (eg cat.1) (modify as required).
@@ -117,7 +128,7 @@ CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
  
 
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages
+all:			archive executables includes documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
@@ -189,8 +200,11 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 # Target to clean up after making (should not need modifying).
 clean:
 			-$(RM) core $(OBJECTS) $(DLLOBJECTS) $(EXECUTABLES) \
-			$(ARCHIVE) $(SOARCHIVE) $(DLLARCHIVE) $(DLLBASE) \
-			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) *~
+			$(ARCHIVE) $(SOARCHIVE) \
+			$(DLLARCHIVE) $(DLLBASE) \
+			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) \
+			doxygen.tag *~
+			-$(RMDIR) man html
 
 # Target to clean up everything that might not be wanted (should not need
 # modifying).
@@ -200,14 +214,20 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
 
-# making the tag file
-tags:
-	$(CTAGS)  $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
-
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
+
+# Use doxygen to make the documentation (should not need modifying).
+documentation:		doxygen.tag
+
+doxygen.tag:		$(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			doxygen
+
+# making the tag file
+tags:
+	$(CTAGS)  $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 # Targets to create archives, dependencies and rules (modify as required).
 $(ARCHIVE):		$(OBJECTS)

@@ -1,18 +1,28 @@
-#pragma ident "MRC HGU $Id"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgHeapSort.c
-* Date:         July 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      General purpose heap sort algorithms.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlgHeapSort.c
+* \author       Bill Hill
+* \date         July 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        General purpose heap sort algorithms.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgHeapSort
+* @{
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,20 +41,18 @@ static void 		AlgHeapSiftDownIdx(
 			   int idL,
 			   int idU);
 
-/************************************************************************
-* Function:	AlgHeapSort
-* Returns:	AlgError:		Error code.
-* Purpose:	Sorts given data using a heapsort algorithm.
-* Global refs:	-
-* Parameters:	void *data:		The given data to sort.
-*		unsigned nElm:		Number of data elements.
-*		unsigned elmSz:		Size of the data elements.
-*		int (*cmpFn)(void *, void *): Given element comparison
+/*!
+* \return				Error code.
+* \brief	Sorts given data using a heapsort algorithm.
+* \param	data			The given data to sort.
+* \param	nElm			Number of data elements.
+* \param	elmSz			Size of the data elements.
+* \param	cmpFn			Given element comparison
 *					function which must return
 *					an integer < 0, == 0 or > 0 to
 *					indicate that the first entry
 *					is <, == or > the second.
-************************************************************************/
+*/
 AlgError	AlgHeapSort(void *data, unsigned nElm, unsigned elmSz,
 			     int (*cmpFn)(void *, void *))
 {
@@ -81,23 +89,21 @@ AlgError	AlgHeapSort(void *data, unsigned nElm, unsigned elmSz,
   return(algErr);
 }
 
-/************************************************************************
-* Function:	AlgHeapSortIdx
-* Returns:	AlgError:		Error code.
-* Purpose:	Sorts given data using a heapsort algorithm only the
+/*!
+* \return				Error code.
+* \brief	Sorts given data using a heapsort algorithm only the
 *		indicies are modified.
-* Global refs:	-
-* Parameters:	void *data:		The given data.
-*		int *idx:		Data indicies to sort.
-*		unsigned nElm:		Number of data elements.
-*		int (*cmpFn)(void *, int *, int, int): Given indexed
+* \param	data			The given data.
+* \param	idx			Data indicies to sort.
+* \param	nElm			Number of data elements.
+* \param	cmpFn			Given indexed
 *					element comparison function
 *					which must return an integer
 *					that is < 0, == 0 or > 0 to
 *					indicate that the first entry
 *					is <, == or > the second indexed
 *					entry.
-************************************************************************/
+*/
 AlgError	AlgHeapSortIdx(void *data, int *idx,
 			       unsigned nElm,
 			       int (*cmpFn)(void *, int *, int, int))
@@ -134,15 +140,13 @@ AlgError	AlgHeapSortIdx(void *data, int *idx,
   return(algErr);
 }
 
-/************************************************************************
-* Function:	AlgHeapElmSwap
-* Returns:	void
-* Purpose:	Swaps two data elements.
-* Global refs:	-
-* Parameters:	void *elm0:		Ptr to first element.
-*		void *elm1:		Ptr to second element.
-*		int cnt:		Element size.
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Swaps two data elements.
+* \param	elm0			Ptr to first element.
+* \param	elm1			Ptr to second element.
+* \param	cnt			Element size.
+*/
 void 		AlgHeapElmSwap(void *elm0, void *elm1, int cnt)
 {
   char		tC0;
@@ -157,18 +161,15 @@ void 		AlgHeapElmSwap(void *elm0, void *elm1, int cnt)
   }
 }
 
-/************************************************************************
-* Function:	AlgHeapSiftDown
-* Returns:	void
-* Purpose:	Sifts a data element down through the heap.
-* Global refs:	-
-* Parameters:	char *data:		Data elements.
-*		int elmSz:		Size of a data element.
-*		int (*cmpFn)(void *, void *): Given element comparison
-					function.
-*		int idL:		Lower data index.
-*		int idu:		Upper data index.
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Sifts a data element down through the heap.
+* \param	data			Data elements.
+* \param	elmSz			Size of a data element.
+* \param	cmpFn			Given element comparison function.
+* \param	idL			Lower data index.
+* \param	idu			Upper data index.
+*/
 static void 	AlgHeapSiftDown(char *data, int elmSz,
 			        int (*cmpFn)(void *, void *),
 				int idL, int idU)
@@ -195,18 +196,15 @@ static void 	AlgHeapSiftDown(char *data, int elmSz,
   }
 }
 
-/************************************************************************
-* Function:	AlgHeapSiftDownIdx
-* Returns:	void
-* Purpose:	Sifts an indexed data element down through the heap.
-* Global refs:	-
-* Parameters:	char *data:		Data elements.
-*		int *idx:		Indicies to data elements.
-*		int (*cmpFn)(void *, int *, int, int): Given element
-*					comparison function.
-*		int idL:		Lower data index.
-*		int idu:		Upper data index.
-************************************************************************/
+/*!
+* \return	<void>
+* \brief	Sifts an indexed data element down through the heap.
+* \param	data			Data elements.
+* \param	idx			Indicies to data elements.
+* \param	cmpFn			Given element comparison function.
+* \param	idL			Lower data index.
+* \param	idu			Upper data index.
+*/
 static void 	AlgHeapSiftDownIdx(void *data, int *idx,
 				   int (*cmpFn)(void *, int *, int, int),
 				   int idL, int idU)
@@ -502,3 +500,7 @@ int		main(int argc, char *argv[])
   return(!ok);
 }
 #endif /* ALG_HEAPSORT_TEST */
+
+/*!
+* @}
+*/

@@ -1,21 +1,33 @@
 #ifndef ALG_H
 #define ALG_H
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        Alg.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Main header file for the MRC Human Genetics Unit
-*		numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         Alg.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \defgroup     Alg
+* \brief        MRC HGU numerical algorithms library.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \mainpage     
+* This library contains numerical algorithms which depend on no other
+* non system library apart from the allocation and fundamental types
+* library libAlc.
+* 
+*/
+
 #ifndef __EXTENSIONS__
 #define __EXTENSIONS__
 #endif

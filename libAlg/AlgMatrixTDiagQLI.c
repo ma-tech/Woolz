@@ -12,14 +12,18 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \defgroup     AlcKDTree
-* \ingroup      Alc
 * \brief        Determines the eigenvalues and eigenvectors of a
 *		real symmetric tridiagonal matrix using implicit shifts.
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
 */
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
@@ -152,3 +156,7 @@ AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
   }
   return(errCode);
 }
+
+/*!
+* @}
+*/

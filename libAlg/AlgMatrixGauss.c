@@ -1,42 +1,48 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgMatrixGauss.c
-* Date:         March 1999
-* Author:       JK Elder, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides a function for solving matrix equations of the
-*		form: A.x = b for x using Gaussian elimination with
-*		partial pivoting. For the MRC Human Genetics Unit
-*		numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgMatrixGauss.c
+* \author       John Elder, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides a function for solving matrix equations of the
+*               form: A.x = b for x using Gaussian elimination with
+*               partial pivoting.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup     	AlgMatrix
+* @{
+*/
+
 #include <Alg.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgMatrixGaussSolve					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Solves the matrix equation A.x = b for x by Gaussian	*
-*		elimination with partial pivoting. Matrix A is the 	*
-*		matrix of coefficients.					*
-* Global refs:	-							*
-* Parameters:	double **abMat:		The augmented matrix of size	*
-*					aSz x (aSz + 1), whose columns	*
-*					0 - (aSz - 1) are the		*
-*					corresponding columns of A, and	*
-*					aSz'th column is b. Overwritten	*
-*					on exit.			*
-*		int aSz:		Size of matrix A: The number of	*
-*					unknowns.			*
-*		double *xMat:		On exit contains the solution	*
-*					matrix x.			*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Solves the matrix equation A.x = b for x by Gaussian
+*		elimination with partial pivoting. Matrix A is the
+*		matrix of coefficients.
+* \param	abMat			The augmented matrix of size
+*					aSz x (aSz + 1), whose columns
+*					0 - (aSz - 1) are the
+*					corresponding columns of A, and
+*					aSz'th column is b. Overwritten
+*					on exit.
+* \param	aSz	 		Size of matrix A: The number of
+*					unknowns.
+* \param	xMat			On exit contains the solution
+*					matrix x.
+*/
 AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
 			            double *xMat)
 {
@@ -164,3 +170,8 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
 	   (int )errCode));
   return(errCode);
 }
+
+/*!
+* @}
+*/
+

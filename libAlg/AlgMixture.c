@@ -1,21 +1,30 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgMixture.c
-* Date:         January 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides a function for computing the maximum liklihood
-*		parameters of a mixture of distributions which fit the
-*		given data for the MRC Human Genetics Unit numerical
-*		algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgMixture.c
+* \author       Bill Hill
+* \date         January 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides a function for computing the maximum liklihood
+*               parameters of a mixture of distributions which fit the
+*               given data.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgMixture
+* @{
+*/
+
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
@@ -26,10 +35,9 @@
 #define lrand48() ((long) ((((double) rand()) / RAND_MAX) * (1<<31)))
 #endif /* CYGWIN */
 
-/************************************************************************
-* Function:	AlgMixtureMLG
-* Returns:	AlgError:		Error code.
-* Purpose:	Computes the maximum liklihood estimate of the
+/*!
+* \return				Error code.
+* \brief	Computes the maximum liklihood estimate of the
 *		parameters of a mixture of normal distributions which
 *		best fit the give frequencies. These parameters are the
 *		miximg proportions, means, and standard deviations.
@@ -39,32 +47,31 @@
 *		Agha M. and Ibrahim M.T.
 *		Maximum Liklihood Estimation of Mixtures of Distributions
 *	 	AS203 Applied Statistics 33(3):327-332, 1984.
-* Global refs:	-
-* Parameters:	int nDbn:		Number of distributions in the
+* \param	nDbn			Number of distributions in the
 *					mixture.
-*		int nCls:		Number of classes in the
+* \param	nCls			Number of classes in the
 *					frequency distribution.
-*		double samOrg:		Position of first sample (origin).
-*		double samItv:		Sample interval.
-*		double *freq:		Given frequency samples.
-*		double *alpha:		Estimates of nDbn alpha values,
+* \param	samOrg			Position of first sample (origin).
+* \param	samItv			Sample interval.
+* \param	freq			Given frequency samples.
+*		alpha			Estimates of nDbn alpha values,
 *					both given and returned.
 *				 	Alpha values must be in the
 *					range (0,1].
-*		double *mu:		Estimates of nDbn mean values,
+* \param	mu			Estimates of nDbn mean values,
 *					both given and returned.
-*		double *sd:		Estimates of nDbn standard
+* \param	sd			Estimates of nDbn standard
 *					deviation values,
 *					both given and returned.
-*		double tol:		Difference between two
+* \param	tol			Difference between two
 *					consecutive log liklihood values
 *					required to terminate iteration.
-*		int sumFreq:		Number of observations.
-*		double *dstLL:		Destination pointer for the
+* \param	sumFreq			Number of observations.
+* \param	dstLL			Destination pointer for the
 *					log liklihood.
-*		double *dstNItn:	Destination pointer for the
+* \param	dstNItn			Destination pointer for the
 *					number of iterations taken.
-************************************************************************/
+*/
 AlgError	AlgMixtureMLG(int nDbn, int nCls,
 			      double samOrg, double samItv, double *freq,
 			      double *alpha, double *mu, double *sd,
@@ -268,27 +275,24 @@ AlgError	AlgMixtureMLG(int nDbn, int nCls,
   return(algErr);
 }
 
-/************************************************************************
-* Function:	AlgMixtureSyn
-* Returns:	AlgError:		Error code.
-* Purpose:	Synthesise a mixture of normal distributions.
-* Global refs:	-
-* Parameters:	
-*		int nCls:		Number of classes in the
+/*!
+* \return				Error code.
+* \brief	Synthesise a mixture of normal distributions.
+* \param	nCls			Number of classes in the
 *					frequency distribution.
-*		int *synFreq:		Buffer for synthesised
+* \param	synFreq			Buffer for synthesised
 *					frequencies.
-*		int nObv:		Number of observations.
-*		double synOrg:		Origin of synFreq buffer.
-*		double synStep:		Sample interval for the synFreq
+* \param	nObv			Number of observations.
+* \param	synOrg			Origin of synFreq buffer.
+* \param	synStep			Sample interval for the synFreq
 *					buffer.
-*		int nDbn:		Number of distributions in the
+* \param	nDbn			Number of distributions in the
 *					mixture.
-*		double *alpha:		Estimates of nDbn alpha values.
-*		double *mu:		Estimates of nDbn mu values.
-*		double *sigma:		Estimates of nDbn standard
+* \param	alpha			Estimates of nDbn alpha values.
+* \param	mu			Estimates of nDbn mu values.
+* \param	sigma			Estimates of nDbn standard
 *					deviation values.
-************************************************************************/
+*/
 AlgError	AlgMixtureSyn(int nCls, int *synFreq, int nObv,
 			      double synOrg, double synStep,
 			      int nDbn,
@@ -463,3 +467,9 @@ int		main(int argc, char **argv)
   }
 }
 #endif /* ALG_MIXTURE_TEST */
+
+
+/*!
+* @}
+*/
+

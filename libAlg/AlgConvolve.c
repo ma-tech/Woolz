@@ -1,40 +1,46 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgConvolve.c
-* Date:         January 2000
-* Author:       Richard Baldock, Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides a function for convolving to vectors for
-*	  	the MRC Human Genetics Unit numerical algorithm
-*		library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgConvolve.c
+* \author       Richard Baldock, Bill Hill
+* \date         January 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for convolving data arrays.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgConvolve
+* @{
+*/
+
 #include <Alg.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgConvolve
-* Returns:	AlgError:		Error code.
-* Purpose:	Convolves 1D kernel and data arrays, cnv = krn * data.
+/*!
+* \return				Error code.
+* \brief	Convolves 1D kernel and data arrays, cnv = krn * data.
 *		The return convolution array must not be aliased to
 *		either the kernel or data arrays.
-* Global refs:	-
-* Parameters:	int sizeArrayCnv:	Length of return array must be
+* \param	sizeArrayCnv		Length of return array must be
 *					>= max(len(dat),len(krn)).
-*		double *arrayCnv:	Return convolution array.
-*		int sizeArrayKrn:	Length of kernel array, must be
+* \param	arrayCnv		Return convolution array.
+* \param	sizeArrayKrn		Length of kernel array, must be
 *					odd.
-*		double *arrayKrn:	Kernel array.
-*		int sizeArrayDat:	Length of data array.
-*		double *arrayDat:	Data array.
-*		AlgPadType pad:		Type of padding.
-************************************************************************/
+* \param	arrayKrn		Kernel array.
+* \param	sizeArrayDat		Length of data array.
+* \param	arrayDat		Data array.
+* \param	pad			Type of padding.
+*/
 AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
 			    int sizeArrayKrn, double *arrayKrn,
 			    int sizeArrayDat, double *arrayDat,
@@ -193,3 +199,7 @@ int		main(int argc, char *argv[])
   errCode = AlgConvolve(25, cnv, 5, krn, 25, dat, pad);
 }
 #endif /* ALGCONVOLVE_TEST0 */
+
+/*!
+* @}
+*/

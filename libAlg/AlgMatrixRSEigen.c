@@ -12,14 +12,18 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \defgroup     AlcKDTree
-* \ingroup      Alc
 * \brief        Functions to find the eigenvalues and eigenvectors of a
 *		real symmetric matrix.
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
 */
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -48,8 +52,8 @@ static void			AlgMatrixRSEigenSort(
 * \param        aSz 		        Size of the array.
 * \param	vM 			Given array for the return of the
 * 					eigenvalues.
-*		reqEV			Non zero if the eigenvectors are
-					required.
+* \param	reqEV			Non zero if the eigenvectors are
+*					required.
 */
 AlgError	AlgMatrixRSEigen(double **aM, int aSz, double *vM, int reqEV)
 {
@@ -330,3 +334,7 @@ int		main(int argc, char *argv[])
   return(!ok);
 }
 #endif /* ALG_MATRIXRSEIGEN_TEST */
+
+/*!
+* @}
+*/

@@ -1,44 +1,49 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgMatrixSV.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for singular value decomposition.
-*		decomposition for the MRC Human Genetics Unit
-*		numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgMatrixSV.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for singular value decomposition.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
+
 #include <Alg.h>
 #include <float.h>
 
 
 static double	AlgMatrixSVPythag(double, double);
 
-/************************************************************************
-* Function:	AlgMatrixSVSolve					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Solves the matrix equation A.x = b for x, where A is a	*
-*		matrix with at least as many columns as rows.		*
-*		On return the matrix A is overwritten by the matrix U	*
-*		in the singular value decomposition:			*
-*		  A = U.W.V'						*
-* Global refs:	-							*
-* Parameters:	double **aMat:		Matrix A.			*
-*		int nM:			Number of rows in matrix A.	*
-*		int nN:			Number of columns in matrix A.  *
-*		double *bMat:		Column matrix b, overwritten	*
-*					by matrix x on return.		*
-*		double tol:		Tolerance for singular values,	*
-*					1.0e-06 should be suitable as	*
-*					a default value.		*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Solves the matrix equation A.x = b for x, where A is a
+*		matrix with at least as many columns as rows.
+*		On return the matrix A is overwritten by the matrix U
+*		in the singular value decomposition:
+*		  A = U.W.V'
+* \param	aMat			Matrix A.
+* \param	nM			Number of rows in matrix A.
+* \param	nN			Number of columns in matrix A.
+* \param	bMat			Column matrix b, overwritten
+*					by matrix x on return.
+* \param	tol			Tolerance for singular values,
+*					1.0e-06 should be suitable as
+*					a default value.
+*/
 AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
 				 double *bMat, double tol)
 {
@@ -106,29 +111,27 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixSVDecomp					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Performs singular value decomposition of the given	*
-*		matrix (A) and computes two additional matricies 	*
-*		(U and V) such that:					*
-*		  A = U.W.V'						*
-*		where V' is the transpose of V.				*
-*		The code for AlgMatrixSVDecomp was derived from:	*
-*		Numerical Recipies function svdcmp(), EISPACK		*
-*		subroutine SVD(), CERN subroutine SVD() and ACM		*
-*		algorithm 358.						*
-*		See AlgMatrixSVSolve() for a usage example.		*
-* Global refs:	-							*
-* Parameters:	double **aMat:		The given matrix A, and U on	*
-*					return.				*
-*		int nM:			Number of rows in matrix A.	*
-*		int nN:			Number of columns in matrix A.	*
-*		double *wMat:		The diagonal matrix of singular	*
-*					values, returned as a vector.	*	
-*		double **vMat:		The matrix V (not it's 		*
-*					transpose).			*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Performs singular value decomposition of the given
+*		matrix (A) and computes two additional matricies
+*		(U and V) such that:
+*		  A = U.W.V'
+*		where V' is the transpose of V.
+*		The code for AlgMatrixSVDecomp was derived from:
+*		Numerical Recipies function svdcmp(), EISPACK
+*		subroutine SVD(), CERN subroutine SVD() and ACM
+*		algorithm 358.
+*		See AlgMatrixSVSolve() for a usage example.
+* \param	aMat			The given matrix A, and U on
+*					return.
+* \param	nM			Number of rows in matrix A.
+* \param	nN			Number of columns in matrix A.
+* \param	wMat			The diagonal matrix of singular
+*					values, returned as a vector.
+* \param	vMat			The matrix V (not it's
+*					transpose).
+*/
 AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 				  double *wMat, double **vMat)
 {
@@ -565,29 +568,27 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixSVBackSub					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Solves the set of of linear equations A.x = b where	*
-*		A is input as its singular value decomposition in	*
-*		the three matricies U, W and V, as returned by		*
-*		AlgMatrixSVDecomp().					*
-*		The code for AlgMatrixSVBackSub was derived from:	*
-*		Numerical Recipies function svbksb().			*
-* Global refs:	-							*
-* Parameters:	double **uMat:		Given matrix U.			*
-*		int nM:			Number of rows in matrix U and	*
-*					number of elements in matrix B.	*
-*		int nN:			Number of columns in matricies	*
-*					U and V, also the number of	*
-*					elements in matricies W and x.	*
-*		double *wMat:		The diagonal matrix of singular	*
-*					values, returned as a vector.	*	
-*		double **vMat:		The matrix V (not it's 		*
-*					transpose).			*
-*		double *bMat:		Column matrix b, overwritten by	*
-*					column matrix x on return.	*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Solves the set of of linear equations A.x = b where
+*		A is input as its singular value decomposition in
+*		the three matricies U, W and V, as returned by
+*		AlgMatrixSVDecomp().
+*		The code for AlgMatrixSVBackSub was derived from:
+*		Numerical Recipies function svbksb().
+* \param	uMat			Given matrix U.
+* \param	nM 			Number of rows in matrix U and
+* \param				number of elements in matrix B.
+* \param	nN 			Number of columns in matricies
+*					U and V, also the number of
+*					elements in matricies W and x.
+* \param	wMat			The diagonal matrix of singular
+*					values, returned as a vector.
+* \param	vMat			The matrix V (not it's
+*					transpose).
+* \param	bMat			Column matrix b, overwritten by
+*					column matrix x on return.
+*/
 AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
 				   double *wMat, double **vMat,
 				   double *bMat)
@@ -655,15 +656,13 @@ AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixSVPythag					*
-* Returns:	double:			Square root of sum of squares.	*
-* Purpose:	Computes sqrt(size0^2 + size1^2) without underflow or	*
-*		overflow.						*
-* Global refs:	-							*
-* Parameters:	double side0:		Length of first side.		*
-*		double side1:		Length of second side1.		*
-************************************************************************/
+/*!
+* \return				Square root of sum of squares.
+* \brief	Computes sqrt(size0^2 + size1^2) without underflow or
+*		overflow.
+* \param	side0			Length of first side.
+* \param	side1			Length of second side1.
+*/
 static double	AlgMatrixSVPythag(double sd0, double sd1)
 {
   double	tD0,
@@ -683,3 +682,7 @@ static double	AlgMatrixSVPythag(double sd0, double sd1)
   }
   return(hyp);
 }
+
+/*!
+* @}
+*/

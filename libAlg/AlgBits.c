@@ -1,32 +1,37 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgBits.c
-* Date:         May 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides bit fiddling functions for the MRC Human
-*		Genetics Unit numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-* 31-01-01 bill	Add AlgBitNextPowerOfTwo().
-* 08-08-00 bill Add AlgBitNextSet().
-************************************************************************/
+/*!
+* \file         AlgBits.c
+* \author       Bill Hill
+* \date         May 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides bit fiddling functions.
+* \todo         -
+* \bug          None known.
+*/
+
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgBitSetCount
-* Returns:	int:			Number of bits set.
-* Purpose:	Counts the number of bits set in the given mask.
-* Global refs:	-
-* Parameters:   unsigned long gMsk:	Given bit mask.
-************************************************************************/
+/*!
+* \ingroup	Alg
+* \defgroup	AlgBits
+* @{
+*/
+
+/*!
+* \return				Number of bits set.
+* \brief	Counts the number of bits set in the given mask.
+* \param        gMsk			Given bit mask.
+*/
 int		AlgBitSetCount(unsigned long gMsk)
 {
   int		cnt = 0;
@@ -39,19 +44,17 @@ int		AlgBitSetCount(unsigned long gMsk)
   return(cnt);
 }
 
-/************************************************************************
-* Function:	AlgBitSetPositions
-* Returns:	int:			Number of bits set.
-* Purpose:	Counts the number of bits set in the given mask
+/*!
+* \return				Number of bits set.
+* \brief	Counts the number of bits set in the given mask
 *		and sets the first elements of the given bit position
 *		array.
-* Global refs:	-
-* Parameters:   int *posA:		Bit set position array, MUST
+* \param	posA 			Bit set position array, MUST
 *					have a length >= the number of
 *					bits in the unsigned long bit
 *					mask.
-* 		unsigned long gMsk:	Given bit mask.
-************************************************************************/
+* \param	gMsk		 	Given bit mask.
+*/
 int		AlgBitSetPositions(int *posA, unsigned long gMsk)
 {
   int		bIdx = 0,
@@ -66,11 +69,10 @@ int		AlgBitSetPositions(int *posA, unsigned long gMsk)
   return(cnt);
 }
 
-/************************************************************************
-* Function:	AlgBitNextNOfM
-* Returns:	unsigned long:		Next bit mask for n bits, or
+/*!
+* \return				Next bit mask for n bits, or
 *					zero on error.
-* Purpose:	Computes a bit mask which has n bits set and is <=
+* \brief	Computes a bit mask which has n bits set and is <=
 *		maxMsk, the new bit mask is the next after the given
 *		current mask.
 *		The maximum number of bits that can be stored in an
@@ -82,15 +84,14 @@ int		AlgBitSetPositions(int *posA, unsigned long gMsk)
 *		of N of M. Eg to select all ordered combinations of 3
 *		out of 5 this function would return 00111, 01011,
 *		01101, 01110, 10110, 11010, 11100.
-* Global refs:	-
-* Parameters:	unsigned long curMsk:	Current mask value. If the
+* \param	curMsk			Current mask value. If the
 *					current value is zero then the
 *					first valid mask will be
 *					computed, otherwise the current
 *					mask is assumed to be valid.
-*		int n:			Number of bits to be set.
-*		int m:			Maximum number of bits to use.
-************************************************************************/
+* \param	n			Number of bits to be set.
+* \param	m			Maximum number of bits to use.
+*/
 unsigned long	AlgBitNextNOfM(unsigned long curMsk, int n, int m)
 {
   int		idx,
@@ -152,20 +153,18 @@ unsigned long	AlgBitNextNOfM(unsigned long curMsk, int n, int m)
   return(nxtMsk);
 }
 
-/************************************************************************
-* Function:	AlgBitNextSet
-* Returns:	int:			Index of the next bit set in
+/*!
+* \return				Index of the next bit set in
 *					the given mask, will be -ve if
 *					no next bit set.
-* Purpose:	Computes the index of the next bit set in the given mask
+* \brief	Computes the index of the next bit set in the given mask
 *		using the index to the current bit as the start index.
 *		maxMsk, the new bit mask is the next after the given
 *		current mask.
-* Global refs:	-
-* Parameters:	unsigned long msk:	Given bit mask.
-*		int idC:		Current bit index, -ve to find
+* \param	msk			Given bit mask.
+* \param	idC			Current bit index, -ve to find
 *					first bit set.
-************************************************************************/
+*/
 int		AlgBitNextSet(unsigned long msk, int idC)
 {
   int		idN = -1,
@@ -187,19 +186,17 @@ int		AlgBitNextSet(unsigned long msk, int idC)
   return(idN);
 }
 
-/************************************************************************
-* Function:	AlgBitNextPowerOfTwo
-* Returns:	int:			Index of the single bit that
+/*!
+* \return				Index of the single bit that
 *					should be set for an unsigned
 *					integer that's >= the given int.
-* Purpose:	Computes the next integer that is >= the given integer
+* \brief	Computes the next integer that is >= the given integer
 *		and has only a single bit set.
-* Global refs:	-
-* Parameters:	unsigned int *dstP2I:		Destination ptr for integer
+* \param	dstP2I			Destination ptr for integer
 *					that's >= the given integer
 *					and is a power of two.
-*		unsigned int gI:	Given integer.
-************************************************************************/
+* \param	gI			Given integer.
+*/
 int		AlgBitNextPowerOfTwo(unsigned int *dstP2I, unsigned int gI)
 {
   unsigned int	pI = 0,
@@ -216,3 +213,7 @@ int		AlgBitNextPowerOfTwo(unsigned int *dstP2I, unsigned int gI)
   }
   return(pI);
 }
+
+/*!
+* @}
+*/

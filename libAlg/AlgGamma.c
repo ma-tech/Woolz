@@ -1,20 +1,28 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgGamma.c
-* Date:         May 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for computing gamma and incomplete
-*		gamma functions for the MRC Human Genetics Unit
-*		numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgGamma.c
+* \author       Bill Hill
+* \date         May 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Functions for computing gamma and incomplete gamma functions.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgGamma
+* @{
+*/
+
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
@@ -22,20 +30,18 @@
 static double	AlgGammaCF(double a, double x, AlgError *dstErr);
 static double	AlgGammaS(double a, double x, AlgError *dstErr);
 
-/************************************************************************
-* Function:	AlgGammaLog
-* Returns:	double:			Log of gamma function value.
-* Purpose:	Computes the log gamma function log(Gamma(x)), ie
+/*!
+* \return				Log of gamma function value.
+* \brief	Computes the log gamma function log(Gamma(x)), ie
 *		exp(AlgGammaLog(n + 1)) = n!.
 *		This function is based on the function gammln():
 *		Press W. H., Teukolsky S. A., Vetterling W. T.
 *		and Flannery B. P, Numerical Recipies in C,
 *		1992, CUP.
-* Global refs:	-
-* Parameters:   double x:		Given value.
-*		AlgError *dstErr:	Destination ptr for error code,
+* \param   	x			Given value.
+* \param	dstErr			Destination ptr for error code,
 *					may be NULL.
-************************************************************************/
+*/
 double		AlgGammaLog(double x, AlgError *dstErr)
 {
   int 		j;
@@ -73,21 +79,19 @@ double		AlgGammaLog(double x, AlgError *dstErr)
   return(lnGam);
 }
 
-/************************************************************************
-* Function:	AlgGammaP
-* Returns:	double:			Incomplete gamma function value.
-* Purpose:	Computes the incomplete gamma function P(a,x), which
+/*!
+* \return				Incomplete gamma function value.
+* \brief	Computes the incomplete gamma function P(a,x), which
 *		has the limiting values P(a,0) = 0, P(a, oo) = 1..
 *		This function is based on the function gammp():
 *		Press W. H., Teukolsky S. A., Vetterling W. T.
 *		and Flannery B. P, Numerical Recipies in C,
 *		1992, CUP.
-* Global refs:	-
-* Parameters:   double a:		Incomplete gamma fn parameter.
-*		double x:		Incomplete gamma fn parameter.
-*		AlgError *dstErr:	Destination ptr for error code,
+* \param	a			Incomplete gamma fn parameter.
+* \param	x			Incomplete gamma fn parameter.
+* \param	dstErr			Destination ptr for error code,
 *					may be NULL.
-************************************************************************/
+*/
 double		AlgGammaP(double a, double x, AlgError *dstErr)
 {
   double	gamma = 0.0;
@@ -115,21 +119,19 @@ double		AlgGammaP(double a, double x, AlgError *dstErr)
   return(gamma);
 }
 
-/************************************************************************
-* Function:	AlgGammaS
-* Returns:	double:			Incomplete gamma function value.
-* Purpose:	Computes the incomplete gamma function P(a,x), using
+/*!
+* \return				Incomplete gamma function value.
+* \brief	Computes the incomplete gamma function P(a,x), using
 *		a series method.
 *		This function is based on the function gser():
 *		Press W. H., Teukolsky S. A., Vetterling W. T.
 *		and Flannery B. P, Numerical Recipies in C,
 *		1992, CUP.
-* Global refs:	-
-* Parameters:   double a:		Incomplete gamma fn parameter.
-*		double x:		Incomplete gamma fn parameter.
-*		AlgError *dstErr:	Destination ptr for error code,
+* \param	a			Incomplete gamma fn parameter.
+* \param	x			Incomplete gamma fn parameter.
+* \param	dstErr			Destination ptr for error code,
 *					may be NULL.
-************************************************************************/
+*/
 double		AlgGammaS(double a, double x, AlgError *dstErr)
 {
   int 		cnt;
@@ -177,21 +179,19 @@ double		AlgGammaS(double a, double x, AlgError *dstErr)
   return(gamma);
 }
 
-/************************************************************************
-* Function:	AlgGammaCF
-* Returns:	double:			Incomplete gamma function value.
-* Purpose:	Computes the incomplete gamma function P(a,x) using
+/*!
+* \return				Incomplete gamma function value.
+* \brief	Computes the incomplete gamma function P(a,x) using
 *		continued fractions.
 *		This function is based on the function gcf():
 *		Press W. H., Teukolsky S. A., Vetterling W. T.
 *		and Flannery B. P, Numerical Recipies in C,
 *		1992, CUP.
-* Global refs:	-
-* Parameters:   double a:		Incomplete gamma fn parameter.
-*		double x:		Incomplete gamma fn parameter.
-*		AlgError *dstErr:	Destination ptr for error code,
+* \param	a			Incomplete gamma fn parameter.
+* \param	x			Incomplete gamma fn parameter.
+* \param	dstErr			Destination ptr for error code,
 *					may be NULL.
-************************************************************************/
+*/
 static double	AlgGammaCF(double a, double x, AlgError *dstErr)
 {
   int		idx;
@@ -317,3 +317,7 @@ int		main(int argc, char **argv)
 }
 
 #endif /* ALG_GAMMA_TEST */
+
+/*!
+* @}
+*/

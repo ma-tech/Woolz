@@ -1,41 +1,47 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgCrossCor.c
-* Date:         January 2001
-* Author:       Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Frequency domain cross correlation functions for the
-*		MRC Human Genetics Unit numerical algorithm library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlgCrossCorr.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Frequency domain cross correlation functions.
+* \todo         -
+* \bug          None known.
+*/
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgCrossCorrelate2D
-* Returns:	AlgError:		Error code.
-* Purpose:	Cross correlates the given 2D double arrays leaving
+/*!
+* \ingroup      Alg
+* \defgroup     AlgCrossCorr
+* @{
+*/
+
+/*!
+* \return				Error code.
+* \brief	Cross correlates the given 2D double arrays leaving
 *		the result in the first of the two arrays.
 *		The cross correlation data are un-normalized.
-* Global refs:	-
-* Parameters:	double **data0:		Data for/with obj0's FFT 
+* \param	data0			Data for/with obj0's FFT 
 *					(source: AlcDouble2Malloc)
 *					which holds the cross	
 *					correlation data on return.
-*		double **data1:		Data for/with obj1's FFT 
+* \param	data1			Data for/with obj1's FFT 
 *					(source: AlcDouble2Malloc).
-*		int nX:			Number of columns in each of the
+* \param	nX			Number of columns in each of the
 *					data arrays.
-*		int nY:			Number of lines in each of the
+* \param	nY			Number of lines in each of the
 *					data arrays.
-************************************************************************/
+*/
 AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
 			            int nX, int nY)
 {
@@ -133,28 +139,26 @@ AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlgCrossCorrPeakXY					
-* Returns:	void						
-* Purpose:	Find the maximum correlation value in the given two
+/*!
+* \return	<void>
+* \brief	Find the maximum correlation value in the given two
 *		dimensional array. Because the correlation data are 
 *		stored in wrap-around order and the maximum is known
 *		to lie within a limited search range, only the four
 *		corners of the array are searched.		
-* Global refs:	-						
-* Parameters:	int *dstMaxX:		Destination ptr for column
+* \param	dstMaxX			Destination ptr for column
 *					coordinate with maximum value.
-*		int *dstMaxY:		Destination ptr for line
+* \param	dstMaxY			Destination ptr for line
 *					coordinate with maximum value.		
-*		double *dstMaxVal	Destination ptr for maximum value.	
-*		double **data:		Data to search for maximum.
-*		int nX:			Number of colimns in data.
-*		int nY:			Number of lines in data.
-*		int searchX:		Maximum number of columns to
+* \param	dstMaxVal		Destination ptr for maximum value.	
+* \param	data			Data to search for maximum.
+* \param	nX			Number of colimns in data.
+* \param	nY			Number of lines in data.
+* \param	searchX			Maximum number of columns to
 *					search.
-*		int searchY:		Maximum number of lines to
+* \param	searchY			Maximum number of lines to
 *					search.
-************************************************************************/
+*/
 void		AlgCrossCorrPeakXY(int *dstMaxX, int *dstMaxY,
 				   double *dstMaxVal,
 				   double **data, int nX, int nY,
@@ -229,23 +233,21 @@ void		AlgCrossCorrPeakXY(int *dstMaxX, int *dstMaxY,
   }
 }
 
-/************************************************************************
-* Function:	AlgCrossCorrPeakY					
-* Returns:	void						
-* Purpose:	Finds peak value in cross correlation data, only
+/*!
+* \return	<void>
+* \brief	Finds peak value in cross correlation data, only
 *		searching the first column.
 *		The search is particularly simple because only the
 *		first column of the cross correlation data needs to be
 *		searched for the angle of rotation.		
 *		Data are in wrap around order.			
-* Global refs:	-						
-* Parameters:	double *dstMaxY:	Destination ptr for line
+* \param	dstMaxY			Destination ptr for line
 *					coordinate with maximum value.
 *					correlation maximum.	
-*		double *dstMaxVal:	Cross correlation maximum.
-*		double **data:		Cross correlation data.	
-*		int nY:			Number of lines in data array.
-************************************************************************/
+* \param	dstMaxVal		Cross correlation maximum.
+* \param	data			Cross correlation data.	
+* \param	nY			Number of lines in data array.
+*/
 void		AlgCrossCorrPeakY(int *dstMaxY, double *dstMaxVal,
 				   double **data, int nY)
 {
@@ -361,3 +363,6 @@ int		main(int argc, char *argv[])
 }
 #endif /* ALG_CROSSCORR_TEST */
 
+/*!
+* @}
+*/

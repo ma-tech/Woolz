@@ -1,18 +1,28 @@
-#pragma ident "MRC HGU $Id"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgShuffle.c
-* Date:         November 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for randomly permuting data.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlgShuffle.c
+* \author       Bill Hill
+* \date         November 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Functions for randomly permuting data.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup      Alg
+* \defgroup     AlgShuffle
+* @{
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,23 +34,21 @@
 #define lrand48() ((long) ((((double) rand()) / RAND_MAX) * (1<<31)))
 #endif /* CYGWIN */
 
-/************************************************************************
-* Function:	AlgShuffleIdx
-* Returns:	AlgError:		Error code.
-* Purpose:	Inserts indicies into the given array which can be used
+/*!
+* \return				Error code.
+* \brief	Inserts indicies into the given array which can be used
 *		to shuffle data.
 *		The permuted indicies are in the range [0-(nShuffle-1)]
 *		with a random order.
 *		This shuffling algorithm is based on a published
 *		paper! Dursenfeld R. "Random Permutation" CACM July
 *		1964 No 7 p420.
-* Global refs:	-
-* Parameters:	int nShuffle:		Number of permuted indicies
+* \param	nShuffle		Number of permuted indicies
 *					to insert into in shuffle.
-*		int *shuffle:		Array into which shuffled
+* \param	shuffle			Array into which shuffled
 *					indicies are placed.
-*		int seed:		Seed fro random permutation.
-************************************************************************/
+* \param	seed			Seed fro random permutation.
+*/
 AlgError	AlgShuffleIdx(int nShuffle, int *shuffle, int seed)
 {
   int		tI0,
@@ -147,3 +155,7 @@ int		main(int argc, char *argv[])
   return(!ok);
 }
 #endif /* ALG_SHUFFLE_TEST */
+
+/*!
+* @}
+*/

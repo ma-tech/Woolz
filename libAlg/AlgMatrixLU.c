@@ -1,40 +1,45 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        AlgMatrixLU.c
-* Date:         March 1999
-* Author:       Richard Baldock, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Provides functions for solving matrix equations of the
+/*!
+* \file         AlgMatrixLU.c
+* \author       Richard Baldock, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for solving matrix equations of the
 *		form: A.x = b for x, inverting a matrix, calculating
-*		the determinant of a matrix and performing LU
-*		decomposition.
-*	  	All for the MRC Human Genetics Unit numerical algorithm
-*		library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-************************************************************************/
+*               the determinant of a matrix and performing LU
+*               decomposition.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup	AlgMatrix
+* @{
+*/
+
 #include <Alg.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	AlgMatrixLUSolve					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Solves the matrix equation A.x = b for x, where A is a 	*
-*		square matrix.						*
-*		On return the matrix A is overwritten with its LU	*
-*		decomposition and the column matrix b is overwitten	*
-*		with the solution column matrix x.			*
-* Global refs:	-							*
-* Parameters:	double **aMat:		Matrix A.			*
-*		int aSz:		Size of matrix A.		*
-*		double *bMat:		Column matrix b.		*
-*		int bSz:		Size of matrix b (and x).	*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Solves the matrix equation A.x = b for x, where A is a
+*		square matrix.
+*		On return the matrix A is overwritten with its LU
+*		decomposition and the column matrix b is overwitte
+*		with the solution column matrix x.
+* \param	aMat			Matrix A.
+* \param	aSz			Size of matrix A
+* \param	bMat			Column matrix b.
+* \param	bSz			Size of matrix b (and x).
+*/
 AlgError	AlgMatrixLUSolve(double **aMat, int aSz,
 				 double *bMat, int bSz)
 {
@@ -76,14 +81,12 @@ AlgError	AlgMatrixLUSolve(double **aMat, int aSz,
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixLUInvert					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Calculates the inverse of a square matrix.		*
-* Global refs:	-							*
-* Parameters:	double **aMat:		Given matrix A.			*
-*		int aSz:		Size of matrix A.		*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Calculates the inverse of a square matrix.
+* \param	aMat			Given matrix A.
+* \param	aSz			Size of matrix A.
+*/
 AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
 {
   int		idx0,
@@ -135,17 +138,15 @@ AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixLUDeterm					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Calculates the determinant of a matrix. The matrix is	*
-*		overwitten with its LU decomposition on exit.		*
-* Global refs:	-							*
-* Parameters:	double **aMat:		Given matrix A.			*
-*		int aSz:		Size of matrix A.		*
-*		double *determ:		Destination ptr for the	 	*
-*					determinant (may be NULL).	*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Calculates the determinant of a matrix. The matrix is
+*		overwitten with its LU decomposition on exit.
+* \param	aMat			Given matrix A.
+* \param	aSz			Size of matrix A.
+* \param	determ			Destination ptr for the
+*					determinant (may be NULL).
+*/
 AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
 {
   int		idx;
@@ -185,21 +186,19 @@ AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixLUDecomp					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Replaces the given matrix with the LU decomposition	*
-*		of a row-wise permutation of itself.			*
-*		The given index vector is used to record the 		*
-*		permutation effected by the partial pivoting.		*
-* Global refs:	-							*
-* Parameters:	double **aMat:		Given matrix A.			*
-*		int aSz:		Size of matrix A.		*
-*		int *idxVec:		Index vector.			*
-*		double *evenOdd:	Set to +/-1.0 depending on 	*
-*					whether the permutation was 	*
-*					even or odd (may be NULL).	*
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Replaces the given matrix with the LU decomposition
+*		of a row-wise permutation of itself.
+*		The given index vector is used to record the
+*		permutation effected by the partial pivoting.
+* \param	aMat			Given matrix A.
+* \param	aSz			Size of matrix A.
+* \param	idxVec			Index vector.
+* \param	evenOdd			Set to +/-1.0 depending on
+*					whether the permutation was
+*					even or odd (may be NULL).
+*/
 AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
     				  int *idxVec, double *evenOdd)
 {
@@ -344,21 +343,19 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
   return(errCode);
 }
 
-/************************************************************************
-* Function:	AlgMatrixLUBackSub					*
-* Returns:	AlgError:		Error code.			*
-* Purpose:	Solves the set of of linear equations A.x = b where	*
-*		A is input as its LU decomposition determined with	*
+/*!
+* \return				Error code.
+* \brief	Solves the set of of linear equations A.x = b where
+*		A is input as its LU decomposition determined with
 *		AlgMatrixLUDecomp()
-*		of a row-wise permutation of itself.			*
-*		The given index vector is used to record the 		*
-*		permutation effected by the partial pivoting.		*
-* Global refs:	-							*
-* Parameters:	double **aMat:		Given matrix A.			*
-*		int aSz:		Size of matrix A.		*
-*		int *idxVec:		Index vector.			*
-*		double *bMat:		Column matrix b.		*
-************************************************************************/
+*		of a row-wise permutation of itself.
+*		The given index vector is used to record the
+*		permutation effected by the partial pivoting
+* \param	aMat			Given matrix A.
+* \param	aSz			Size of matrix A.
+* \param	idxVec			Index vector.
+* \param	bMat			Column matrix b.
+*/
 AlgError	AlgMatrixLUBackSub(double **aMat, int aSz,
     				  int *idxVec, double *bMat)
 {
@@ -419,3 +416,7 @@ AlgError	AlgMatrixLUBackSub(double **aMat, int aSz,
 	   (int )errCode));
   return(errCode);
 }
+
+/*!
+* @}
+*/
