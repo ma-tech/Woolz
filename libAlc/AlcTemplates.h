@@ -324,4 +324,5 @@ extern "C" {
 #ifdef __cplusplus
 }  					       /* Close scope of 'extern "C" */
 #endif
+
 #endif /* ALCTEMPLATES_H */
