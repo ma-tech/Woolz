@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-11-00 bill	Add WlzGMShellComputeGBB() and WlzGMFilterRmSmShells().
 * 16-11-00 bill Add WlzGMModelDeleteS().
 * 06-11-00 bill Add WlzVerticiesFromObj() and WlzRegICPObjs().
 * 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
@@ -1080,6 +1081,8 @@ extern WlzErrorNum	WlzGMVertexSetG3D(
 extern WlzErrorNum	WlzGMVertexSetG2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMShellComputeGBB(
+			  WlzGMShell *shell);
 extern WlzErrorNum	WlzGMVertexGetG3D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex3 *dstPos);
@@ -1183,6 +1186,13 @@ extern WlzErrorNum	WlzGMModelConstructSimplex2D(
 			  WlzGMModel *model,
 			  WlzDVertex2 *pos);
 #endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzGeoModelFilters.c
+************************************************************************/
+extern WlzErrorNum	WlzGMFilterRmSmShells(
+			  WlzGMModel *model,
+			  int maxElm);
 
 /************************************************************************
 * WlzGeometry.c								*
