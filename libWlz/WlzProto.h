@@ -2864,6 +2864,12 @@ extern WlzVertexP               WlzVerticiesFromCtr(
                                   int *dstCnt,
                                   WlzVertexType *dstType,
                                   WlzErrorNum *dstErr);
+extern AlcKDTTree      		*WlzVerticiesBuildTree(
+				  WlzVertexType vType,
+				  int nV,
+				  WlzVertexP vtx,
+				  int *shfBuf,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 

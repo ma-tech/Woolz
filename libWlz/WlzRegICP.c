@@ -37,16 +37,16 @@
 */
 struct _WlzRegICPWSp
 {
-  /*! Itteration control. */
+  /* Itteration control. */
   int		itr;		/*!< Current iteration */
   double	sumDistCur;	/*!< Current sum of distances between NN */
   double	sumDistLst;	/*!< Last sum of distances between NN */
-  /*! Nearest neighbour search. */
+  /* Nearest neighbour search. */
   double	maxDist;	/*!< Maximum distance to consider for a NN */
   AlcKDTTree	*tTree;		/*!< kD-tree */
   int		*sNN;		/*!< Indicies of NN to source verticies */
   double	*dist;		/*!< NN distances */
-  /*! Vericies and normals. */
+  /* Vericies and normals. */
   WlzVertexType vType;		/*!< Type of verticies WLZ_VERTEX_D2 or
   				     WLZ_VERTEX_D3 */
   int		nT;		/*!< Number of target verticies/normals */
@@ -59,12 +59,12 @@ struct _WlzRegICPWSp
   WlzVertexP    tSVx;		/*!< Transformed source verticies. */
   WlzVertexP    tSNr;		/*!< Transformed source normals. */
   WlzVertexP    nNTVx;		/*!< NN ordered target verticies. */
-  /*! Match weighting */
+  /* Match weighting */
   double	kVx;		/*!< Coefficient for vertex weighting */
   double	kNr;		/*!< Coefficient for normal weighting */
   double	*wgtVx;		/*!< Weights for vertex matches */
   double	*wgtNr;		/*!< Weights for normal matches */
-  /*! Affine transform. */
+  /* Affine transform. */
   WlzAffineTransform *tr;	/*!< Current affine transform */
 };
 typedef struct _WlzRegICPWSp WlzRegICPWSp;
@@ -723,78 +723,11 @@ WlzAffineTransform	*WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
 */
 static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
 {
-  int		idx,
-		sIdx,
-  		treeDim;
-  int		*shuffle = NULL;
-  int		datI[3];
-  double	datD[3];
-  AlcKDTNode	*node;
-  WlzVertexP	tVP;
-  AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(wSp->vType == WLZ_VERTEX_D2)
-  {
-    treeDim = 2;
-  }
-  else /* wSp->vType == WLZ_VERTEX_D3 */
-  {
-    treeDim = 3;
-  }
-  /* Create tree. */
-  if((wSp->tTree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, treeDim, -1.0, wSp->nT,
-  				 NULL)) == NULL)
-  {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Use wSp->sNN as a temporay buffer of shuffling indcies. */
-    (void )AlgShuffleIdx(wSp->nT, wSp->sNN, 0);
-  }
-  /* Populate tree using a shuffle index to get the behaviour of a randomized
-   * k-D tree, making sure that the indicies of nodes of the tree are not
-   * shuffled too. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    idx = 0;
-    if(wSp->vType == WLZ_VERTEX_D2)
-    {
-      while((alcErr == ALC_ER_NONE) && (idx < wSp->nT))
-      {
-	sIdx = *(wSp->sNN + idx);
-	tVP.d2 = (wSp->gTVx.d2 + sIdx);
-	datD[0] = tVP.d2->vtX;
-	datD[1] = tVP.d2->vtY;
-	if((node = AlcKDTInsert(wSp->tTree, datD, NULL, &alcErr)) != NULL)
-	{
-	  node->idx = sIdx;
-	}
-        ++idx;
-      }
-    }
-    else /* wSp->vType == WLZ_VERTEX_D3 */
-    {
-      while((alcErr == ALC_ER_NONE) && (idx < wSp->nT))
-      {
-	sIdx = *(wSp->sNN + idx);
-	tVP.d3 = (wSp->gTVx.d3 + sIdx);
-	datD[0] = tVP.d3->vtX;
-	datD[1] = tVP.d3->vtY;
-	datD[2] = tVP.d3->vtZ;
-	if((node = AlcKDTInsert(wSp->tTree, datD, NULL, &alcErr)) != NULL)
-	{
-	  node->idx = sIdx;
-	}
-        ++idx;
-      }
-    }
-    if(alcErr != ALC_ER_NONE)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
+  /* Use wSp->sNN as a temporay buffer of shuffling indcies. */
+  wSp->tTree = WlzVerticiesBuildTree(wSp->vType, wSp->nT, wSp->gTVx,
+  				     wSp->sNN, &errNum);
   return(errNum);
 }
 

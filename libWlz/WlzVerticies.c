@@ -423,7 +423,10 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
       cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
       if(cV->idx >= 0)
       {
-	*(vId + idx) = cV->idx;
+	if(vId)
+	{
+	  *(vId + idx) = cV->idx;
+	}
 	if(model->type == WLZ_GMMOD_2I)
 	{
 	  *(vData.i2 + idx) = cV->geo.vg2I->vtx;
@@ -997,6 +1000,7 @@ static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
 }
 
 /*!
+* \ingroup      WlzFeatures
 * \return				Normal vector.
 * \brief	Computes the normal (n) at a vertex. This is chosen to
 *		be the mean of normals of the two line segments which the
@@ -1058,3 +1062,109 @@ static WlzDVertex2 WlzVerticiesNormTriple2(WlzDVertex2 v0, WlzDVertex2 v1,
   }
   return(nrm);
 }
+
+/*!
+* \ingroup      WlzFeatures
+* \return				Woolz error code
+* \brief	Allocates and populates a k-D tree from the given verticies.
+* 		The verticies are either WlzDVertex2 orWlzDVertex3
+* \param	vType 			Type of verticies.
+* \param	nV 			Number of verticies.
+* \param	vtx 			The verticies.
+* \param	shfBuf			Workspace with at least nV ints
+*					used to shuffle verticies for
+*					randomized input to the K-D tree.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+AlcKDTTree	*WlzVerticiesBuildTree(WlzVertexType vType, int nV,
+				      WlzVertexP vtx, int *shfBuf,
+				      WlzErrorNum *dstErr)
+{
+  int		idx,
+		sIdx,
+  		treeDim;
+  int		*shuffle = NULL;
+  int		datI[3];
+  double	datD[3];
+  AlcKDTTree	*tree;
+  AlcKDTNode	*node;
+  WlzVertexP	tVP;
+  AlcErrno	alcErr = ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(vType)
+  {
+    case WLZ_VERTEX_D2:
+      treeDim = 2;
+      break;
+    case WLZ_VERTEX_D3:
+      treeDim = 3;
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_TYPE;
+      break;
+  }
+  /* Create tree. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, treeDim, -1.0, nV,
+				   NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )AlgShuffleIdx(nV, shfBuf, 0);
+  }
+  /* Populate tree using a shuffle index to get the behaviour of a randomized
+   * k-D tree, making sure that the indicies of nodes of the tree are not
+   * shuffled too. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx = 0;
+    switch(vType)
+    {
+      case WLZ_VERTEX_D2:
+	while((alcErr == ALC_ER_NONE) && (idx < nV))
+	{
+	  sIdx = *(shfBuf + idx);
+	  tVP.d2 = (vtx.d2 + sIdx);
+	  datD[0] = tVP.d2->vtX;
+	  datD[1] = tVP.d2->vtY;
+	  if((node = AlcKDTInsert(tree, datD, NULL, &alcErr)) != NULL)
+	  {
+	    node->idx = sIdx;
+	  }
+	  ++idx;
+	}
+	break;
+      case WLZ_VERTEX_D3:
+	while((alcErr == ALC_ER_NONE) && (idx < nV))
+	{
+	  sIdx = *(shfBuf + idx);
+	  tVP.d3 = (vtx.d3 + sIdx);
+	  datD[0] = tVP.d3->vtX;
+	  datD[1] = tVP.d3->vtY;
+	  datD[2] = tVP.d3->vtZ;
+	  if((node = AlcKDTInsert(tree, datD, NULL, &alcErr)) != NULL)
+	  {
+	    node->idx = sIdx;
+	  }
+	  ++idx;
+	}
+	break;
+    }
+    if(dstErr)
+    {
+      if(alcErr != ALC_ER_NONE)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      *dstErr = errNum;
+    }
+  }
+  return(tree);
+}
+
