@@ -1299,10 +1299,6 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
       ++gIdx;
     }
   }
-  if(resIdxTb)
-  {
-    WlzGMModelResIdxFree(resIdxTb);
-  }
   if(errNum == WLZ_ERR_NONE)
   {
     nM->child = (WlzGMShell *)AlcVectorItemGet(nM->res.shell.vec,
@@ -1319,6 +1315,10 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
     nM->res.shell.numElm = nM->res.shell.numIdx = gM->res.shell.numElm;
     nM->res.shellG.numElm = nM->res.shellG.numIdx = gM->res.shellG.numElm;
     errNum = WlzGMModelRehashVHT(nM, 0);
+  }
+  if(resIdxTb)
+  {
+    WlzGMModelResIdxFree(resIdxTb);
   }
   if(errNum != WLZ_ERR_NONE)
   {
