@@ -560,6 +560,7 @@ static WlzDVertex2 WlzCentreOfMassCtr2D(WlzObject *srcObj, double *dstMass,
     {
       case WLZ_GMMOD_2I:
       case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2N:
 	cMass3 = WlzCentreOfMassGM(ctr->model, &mass, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -618,8 +619,10 @@ static WlzDVertex3 WlzCentreOfMassCtr3D(WlzObject *srcObj, double *dstMass,
     {
       case WLZ_GMMOD_2I:
       case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2N:
       case WLZ_GMMOD_3I:
       case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3N:
 	cMass = WlzCentreOfMassGM(ctr->model, &mass, &errNum);
 	if((errNum == WLZ_ERR_NONE) && dstMass)
 	{
