@@ -357,10 +357,20 @@ WlzErrorNum WlzStandardIntervalDomain(WlzIntervalDomain *idom)
     return WLZ_ERR_NONE;
   }
 
+  /* check interval line is non NULL */
+  if( idom->intvlines == NULL ){
+    return WLZ_ERR_INTERVALLINE_NULL;
+  }
+
   /* find first non-empty line */
   while (idom->line1 < idom->lastln && idom->intvlines->nintvs == 0) {
     idom->line1++;
     idom->intvlines++;
+  }
+
+  /* check interval line has no intervals */
+  if( idom->intvlines->nintvs == 0 ){
+    return WLZ_ERR_EOO;
   }
 
   /* find last non-empy line */
@@ -412,6 +422,8 @@ WlzErrorNum WlzStandardIntervalDomain(WlzIntervalDomain *idom)
 * 		(voxel-tables must have exactly matching valuetables) by
 * 		stripping leading and trailing NULL domains and standardising
 * 		each domain in turn. The bounding box is reset to be minimal.
+*		Both the domain and values may be modified by this function.
+*		Any plane which has an invalid interval domain is discarded.
 * \param	pdom			Given plane domain, must NOT be NULL..
 * \param	voxtb			Corresponding voxel table, maybe NULL.
 */
@@ -420,9 +432,11 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
 {
   /* local variables */
   WlzObject 	tempobj;
-  WlzDomain 	*domains;
+  WlzDomain 	*domains,
+  		*tDom;
+  WlzValues	*tVal;
   int	 	line1, lastln, kol1, lastkl;
-  int 		p, nplanes, np, firstplane, lastplane;
+  int 		p, nplanes, np, firstplane, lastplane, bndFnd;
 
   /* check domain argument */
   if( pdom == NULL ){
@@ -433,34 +447,57 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
   nplanes = pdom->lastpl - pdom->plane1 + 1;
   domains = pdom->domains;
 
-  /* check for at least one intervaldomain
-     the loop exits with the plane index of the first non-NULL domain.
-     np is set to the value of the first non-NULL index.
-     If this value is >= nplanes then all domains are NULL. */
-  for (p=0; p < nplanes; p++, domains++){
-    if( (*domains).i != NULL ){
-      WlzStandardIntervalDomain((*domains).i);
-      line1 = (*domains).i->line1;
-      lastln = (*domains).i->lastln;
-      kol1 = (*domains).i->kol1;
-      lastkl = (*domains).i->lastkl;
-      break;
+  /* check line and column limits */
+  bndFnd = 0;
+  for(p = 0; p < nplanes; ++p, ++domains)
+  {
+    if((*domains).core)
+    {
+      if(WlzStandardIntervalDomain((*domains).i) == WLZ_ERR_NONE)
+      {
+	if(bndFnd == 0)
+	{
+	  np = p;
+	  bndFnd = 1;
+	  line1 = (*domains).i->line1;
+	  lastln = (*domains).i->lastln;
+	  kol1 = (*domains).i->kol1;
+	  lastkl = (*domains).i->lastkl;
+	}
+	else
+	{
+	  if((*domains).i->line1 < line1)
+	  {
+	    line1 = (*domains).i->line1;
+	  }
+	  if((*domains).i->lastln > lastln)
+	  {
+	    lastln = (*domains).i->lastln;
+	  }
+	  if((*domains).i->kol1 < kol1)
+	  {
+	    kol1 = (*domains).i->kol1;
+	  }
+	  if((*domains).i->lastkl > lastkl)
+	  {
+	    lastkl = (*domains).i->lastkl;
+	  }
+	}
+      }
+      else
+      {
+        /* There's something wrong with this plane! Throw it away. */
+	WlzFreeIntervalDomain(domains->i);
+	domains->core = NULL;
+	if(voxtb)
+	{
+	  WlzFreeValueTb((voxtb->values + p)->v);
+	  (voxtb->values + p)->core = NULL;
+	}
+      }
     }
-  }
-  if( (np = p) >= nplanes ){
-    return( WLZ_ERR_NONE );
   }
 
-  /* check line and column limits */
-  for(p=np; p < nplanes; p++, domains++){
-    if ( (*domains).i != NULL ){
-      WlzStandardIntervalDomain((*domains).i);
-      if( (*domains).i->line1 < line1 )  { line1  = (*domains).i->line1;}
-      if( (*domains).i->lastln > lastln ){ lastln = (*domains).i->lastln;}
-      if( (*domains).i->kol1 < kol1 )    { kol1   = (*domains).i->kol1;}
-      if( (*domains).i->lastkl > lastkl ){ lastkl = (*domains).i->lastkl;}
-    }
-  }
   pdom->line1 = line1;
   pdom->lastln = lastln;
   pdom->kol1 = kol1;
