@@ -26,7 +26,7 @@
 #include <float.h>
 #include <Wlz.h>
 
-#define WLZ_MESH_DEBUG
+/* #define WLZ_MESH_DEBUG */
 
 /*!
 * \enum		_WlzMeshType
@@ -286,6 +286,7 @@ typedef struct _WlzMeshWSp2D
   AlcVector	*cNodVec;
   AlcVector	*cOppVec;
   AlcVector	*cSegVec;
+  AlcCPQQueue	*ePQ;
 } WlzMeshWSp2D;
 
 WlzMesh2D			*WlzMeshNew2D(
@@ -723,7 +724,8 @@ WlzMeshWSp2D	*WlzMeshNewWSp2D(void)
      ((wSp->cOppVec = AlcVectorNew(1, sizeof(WlzMeshEdg2D),
      				   64, NULL)) == NULL) ||
      ((wSp->cSegVec = AlcVectorNew(1, sizeof(WlzMeshSeg2D),
-     				   64, NULL)) == NULL))
+     				   64, NULL)) == NULL) ||
+     ((wSp->ePQ = AlcCPQQueueNew(NULL)) == NULL))
   {
     (void )WlzMeshFreeWSp2D(wSp);
   }
@@ -750,6 +752,7 @@ WlzErrorNum	WlzMeshFreeWSp2D(WlzMeshWSp2D *wSp)
     (void )AlcVectorFree(wSp->cNodVec);
     (void )AlcVectorFree(wSp->cOppVec);
     (void )AlcVectorFree(wSp->cSegVec);
+    (void )AlcCPQQueueFree(wSp->ePQ);
   }
   return(errNum);
 }
@@ -2573,7 +2576,11 @@ WlzErrorNum 	WlzMeshConform2D(WlzMesh2D *mesh, WlzMeshWSp2D *wSp,
 		     "WlzMeshConform2D() pass = %d, nSplit = %d\n",
 		     pass++, nSplit);
 #endif /* WLZ_MESH_DEBUG */
-  } while((errNum == WLZ_ERR_NONE) && (nSplit > 0) && (pass < 1000));
+  } while((errNum == WLZ_ERR_NONE) && (nSplit > 0)
+#ifdef WLZ_MESH_DEBUG
+          && (pass < 1000)
+#endif /* WLZ_MESH_DEBUG */
+	  );
   return(errNum);
 }
 
