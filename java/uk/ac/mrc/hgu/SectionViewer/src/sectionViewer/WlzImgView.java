@@ -1166,7 +1166,7 @@ public class WlzImgView extends Component {
    private ChangeEvent ce;
    private Object[] listeners;
    private ChangeListener cl;
-   protected void fireChange() {
+   public void fireChange() {
       // Create the event:
       ce = new ChangeEvent(this);
       // Get the listener list
