@@ -19,7 +19,7 @@
 #include <limits.h>
 #include <float.h>
 #include <Wlz.h>
-#include <WlzIO.h>
+#include <WlzExtFF.h>
 #include <bibFile.h>
 
 /* externals required by getopt  - not in ANSI C standard */
