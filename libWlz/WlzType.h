@@ -15,6 +15,7 @@
 *		primatives, enumerations and structures.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 10-11-00 bill Add WlzVertex.
 * 03-11-00 bill	Add WlzVertexP and modified the unused WlzVertexType.
 * 29-09-00 bill	Move the primitives from the WlzAffineTransform into
 *		their own data structure.
@@ -529,6 +530,7 @@ typedef enum
 
 typedef union
 {
+  void		*v;
   WlzIVertex2	*vI2;
   WlzFVertex2	*vF2;
   WlzDVertex2	*vD2;
@@ -536,6 +538,16 @@ typedef union
   WlzFVertex3	*vF3;
   WlzDVertex3	*vD3;
 } WlzVertexP;
+
+typedef union
+{
+  WlzIVertex2	vI2;
+  WlzFVertex2	vF2;
+  WlzDVertex2	vD2;
+  WlzIVertex3	vI3;
+  WlzFVertex3	vF3;
+  WlzDVertex3	vD3;
+} WlzVertex;
 
 /************************************************************************
 * Bounding boxes.						
