@@ -44,7 +44,8 @@ int             main(int argc, char *argv[])
   		option,
   		ok = 1,
 		usage = 0;
-  double	maxAng = 30 / (2.0 * ALG_M_PI),
+  double	delta = 0.01,
+  		maxAng = 30.0 * ALG_M_PI / 180.0,
   		maxDeform = 0.5,
   		maxDisp = 25.0,
 		matchImpThr = 1.5;
@@ -59,7 +60,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "ahrA:b:d:D:F:N:o:t:i:I:s:P:S:";
+  static char	optList[] = "ahrA:b:d:D:E:F:N:o:t:i:I:s:P:S:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -85,14 +86,6 @@ int             main(int argc, char *argv[])
 	dbgFlg = 1;
         outDbgFileStr = optarg;
 	break;
-      case 'D':
-        if((sscanf(optarg, "%d", &dbgFlg) != 1) ||
-	   (dbgFlg < 0) || (dbgFlg > 2))
-        {
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
       case 'A':
         if((sscanf(optarg, "%lg", &maxAng) != 1) ||
 	   (maxAng < 0.0) || (maxAng > 180.0))
@@ -102,7 +95,22 @@ int             main(int argc, char *argv[])
 	}
 	else
 	{
-	  maxAng *= 1 / (2.0 * ALG_M_PI);
+	  maxAng *= ALG_M_PI / 180.0;
+	}
+	break;
+      case 'D':
+        if((sscanf(optarg, "%d", &dbgFlg) != 1) ||
+	   (dbgFlg < 0) || (dbgFlg > 2))
+        {
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'E':
+        if((sscanf(optarg, "%lg", &delta) != 1) || (delta < 0.0))
+        {
+	  usage = 1;
+	  ok = 0;
 	}
 	break;
       case 'F':
@@ -253,7 +261,7 @@ int             main(int argc, char *argv[])
 			     &nMatch, &matchTP, &matchSP,
 			     maxItr, minSpx, minSegSpx, brkFlg,
 			     maxDisp, maxAng, maxDeform,
-			     matchImpNN, matchImpThr);
+			     matchImpNN, matchImpThr, delta);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -332,7 +340,7 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       "Usage: %s%s",
       *argv,
-      " [-b#] [-d#] [-D#] [-o#] [-t#] [-g#] [-i#] [-s#]\n"
+      " [-b#] [-d#] [-D#] [-E#] [-o#] [-t#] [-g#] [-i#] [-s#]\n"
       "          [-A#] [-S#] [-I#] [-I#] [-N]\n"
       "          [-h] [<input object 0>] [<input object 1>]\n"
       "Options:\n"
@@ -341,6 +349,7 @@ int             main(int argc, char *argv[])
       "  -D  Debug flag:\n"
       "        0  no debug output.\n"
       "        1  untransformed decomposed source model.\n"
+      "  -E  Tolerance in mean registration metric value.\n"
       "  -h  Prints this usage information.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"

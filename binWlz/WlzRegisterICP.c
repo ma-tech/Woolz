@@ -9,7 +9,7 @@
 * Address:	MRC Human Genetics Unit,
 *		Western General Hospital,
 *		Edinburgh, EH4 2XU, UK.
-* Purpose:      Attempts to register two objects using an itterative
+* Purpose:      Attempts to register two objects using an iterative
 *		closest point algorithm.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
 #include <string.h>
 #include <Wlz.h>
 
@@ -32,9 +33,12 @@ int             main(int argc, char **argv)
 {
   int		idx,
 		grdFlg = 0,
+		maxItr = INT_MAX,
 		option,
 		ok = 1,
 		usage = 0;
+  double	minDistWgt = 0.25,
+  		delta = 0.1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzTransformType trType = WLZ_TRANSFORM_2D_REG;
   WlzDomain	outDom;
@@ -47,7 +51,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   char  	*inObjFileStr[2];
   const char	*errMsg;
-  static char	optList[] = "i:o:ghart",
+  static char	optList[] = "i:o:E:M:gIhart",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -63,6 +67,28 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'E':
+        if(sscanf(optarg, "%lg", &delta) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'I':
+        if(sscanf(optarg, "%d", &maxItr) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'M':
+        if((sscanf(optarg, "%lg", &minDistWgt) != 1) ||
+	   (minDistWgt < 0.0) || (minDistWgt > 1.0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'i':
         inTrObjFileStr = optarg;
 	break;
@@ -247,13 +273,15 @@ int             main(int argc, char **argv)
       outDom.t = WlzRegICPObjsGrd(inObj[0], inObj[1],
 				  inTrObj? inTrObj->domain.t: NULL,
 				  trType, 50.0, 50.0, 1.6,
-				  NULL, NULL, 200, &errNum);
+				  NULL, NULL, maxItr,
+				  delta, minDistWgt, &errNum);
     }
     else
     {
       outDom.t = WlzRegICPObjs(inObj[0], inObj[1],
 			       inTrObj? inTrObj->domain.t: NULL, trType,
-			       NULL, NULL, 1000, &errNum);
+			       NULL, NULL, maxItr, 
+			       delta, minDistWgt, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -316,9 +344,13 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-i <init tr>] [-o<out obj>] [-t] [-r]\n"
+    " [-E #] [-I] [-M #] [-i <init tr>] [-o<out obj>] [-t] [-r]\n"
     "                      [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
+    "  -I  Maximum number of iterations.\n"
+    "  -M  Minimum distance weight, range [0.0-1.0]: Useful values are\n"
+    "      0.25 (default) for global matching and 0.0 for local matching.\n"
+    "  -E  Tolerance in the mean registration metric value.\n"
     "  -i  Initial affine transform object.\n"
     "  -o  Output file name for affine transform.\n"
     "  -g  Use maximal gradient contours.\n"
@@ -326,7 +358,7 @@ int             main(int argc, char **argv)
     "  -r  Find the rigid body (aka registration) transform, default.\n"
     "  -t  Find the translation only transform.\n"
     "  -h  Help, prints this usage message.\n"
-    "Attempts to register two objects using an itterative closest point\n"
+    "Attempts to register two objects using an iterative closest point\n"
     "(ICP) algorithm.  The two objects must be contours, boundary lists\n"
     "or polygons.\n"
     "The input objects are read from stdin and values are written to stdout\n"
