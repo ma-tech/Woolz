@@ -105,7 +105,7 @@ public class WlzImgView extends Component {
    private boolean _threshold;
    private boolean _threshConstraint;
    private boolean _overlay;
-   private boolean _showInterSecLines = true;
+   private boolean _showInterSecLines = false;
 
    private boolean _tiepoint = true;
    private Vector tps = null;
@@ -1072,6 +1072,9 @@ public class WlzImgView extends Component {
    public int getGreyVal() {
       return _greyVal;
    }
+   public void setShowInterSecLines(boolean flag) {
+       _showInterSecLines = flag;
+     }
 
    //-------------------------------------------------------------
    public Dimension getImgSize() {
@@ -1096,12 +1099,11 @@ public class WlzImgView extends Component {
      }
 
    //-------------------------------------------------------------
-   public BufferedImage getComponentBufferedImage(boolean showInterSecLines) {
-     _showInterSecLines = showInterSecLines;
-     return getComponentBufferedImage();
+   public BufferedImage getComponentBufferedImage() {
+     return getComponentBufferedImage(_showInterSecLines);
    }
    //-------------------------------------------------------------
-   public BufferedImage getComponentBufferedImage() {
+   public BufferedImage getComponentBufferedImage(boolean showInterSecLines) {
      BufferedImage _compImage =
          new BufferedImage(_bufImage.getWidth(), _bufImage.getHeight(),
                            BufferedImage.TYPE_INT_RGB);
@@ -1111,7 +1113,7 @@ public class WlzImgView extends Component {
      drawGreyImage(g);
      drawOverlay(g);
      drawAnatomy(g);
-     if (_showInterSecLines) drawIntersection(g);
+     if (showInterSecLines) drawIntersection(g);
      return _compImage;
    }
 
