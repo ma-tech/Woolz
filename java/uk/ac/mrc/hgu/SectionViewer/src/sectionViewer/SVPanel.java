@@ -22,14 +22,15 @@ import wsetter.*;
 import zoom.*;
 import uk.ac.mrc.hgu.Wlz.*;
 
-public class SectionViewer
-    extends SectionViewerGUI
-    implements Serializable, WlzObjectType, WSetterConstants {
+public class SVPanel
+    extends SVPanelGUI
+    implements Serializable,
+               WlzObjectType,
+	       WSetterConstants {
 
   private final boolean _debug = false;
-  private final boolean _NBdebug = false;
 
-  // allows SectionViewer to fire events when true
+  // allows SVPanel to fire events when true
   private boolean _enabled = true;
   protected boolean _parentIsRoot = true;
 
@@ -81,15 +82,19 @@ public class SectionViewer
 
   private String SLASH = System.getProperty("file.separator");
 
+  private Container _frame = null;
+
   //=========================================================
   // constructor
   //=========================================================
-  public SectionViewer(String viewstr, Object parent) {
+  public SVPanel(String viewstr, Object parent) {
 
-    if (_debug) System.out.println("enter SectionViewer");
+    if (_debug) System.out.println("enter SVPanel");
 
+    /*
     FrameActivationHandler activationHandler = new FrameActivationHandler();
     this.addWindowListener(activationHandler);
+    */
 
     _parent = parent;
     try {
@@ -209,8 +214,12 @@ public class SectionViewer
 
 
     if (_debug)
-      System.out.println("exit SectionViewer");
+      System.out.println("exit SVPanel");
   } // constructor
+
+  public void setContainer(Container frame) {
+     _frame = frame;
+  }
 
 //-------------------------------------------------------------
 // methods for adding / removing panels from the gui
@@ -226,7 +235,8 @@ public class SectionViewer
     transientPanel.setPreferredSize(dim);
     transientPanel.setMinimumSize(dim);
     transientPanel.add(pitchYawRollPanel, BorderLayout.NORTH);
-    _rootPane.validate();
+    revalidate();
+    _bigPanel.repaint();
   }
 
   protected void removeStandardControls() {
@@ -241,7 +251,8 @@ public class SectionViewer
     transientPanel.setMinimumSize(dim);
     transientPanel.remove(pitchYawRollPanel);
     transientPanel.repaint();
-    _rootPane.validate();
+    revalidate();
+    _bigPanel.repaint();
   }
 
   //...............................
@@ -257,7 +268,8 @@ public class SectionViewer
     transientPanel.setPreferredSize(dim);
     transientPanel.setMinimumSize(dim);
     transientPanel.add(userDefinedRotPanel, BorderLayout.SOUTH);
-    _rootPane.validate();
+    revalidate();
+    _bigPanel.repaint();
   }
 
   protected void removeUserControls() {
@@ -272,20 +284,23 @@ public class SectionViewer
     transientPanel.setMinimumSize(dim);
     transientPanel.remove(userDefinedRotPanel);
     transientPanel.repaint();
-    _rootPane.validate();
+    revalidate();
+    _bigPanel.repaint();
   }
 
   //...............................
 
   protected void addFeedback() {
     feedbackImagePanel.add(feedbackPanel, BorderLayout.NORTH);
-    _rootPane.validate();
+    revalidate();
+    _bigPanel.repaint();
   }
 
   protected void removeFeedback() {
     feedbackImagePanel.remove(feedbackPanel);
     feedbackImagePanel.repaint();
-    _rootPane.validate();
+    revalidate();
+    _bigPanel.repaint();
   }
 
 //-------------------------------------------------------------
@@ -711,7 +726,7 @@ public class SectionViewer
   protected Line2D.Double[] getIntersectionArr() {
 
     Line2D.Double intersectionArr[] = null;
-    SectionViewer SV = null;
+    SVPanel SV = null;
     Vector svVec = null;
     try {
       Method M1 = null;
@@ -778,7 +793,7 @@ public class SectionViewer
     //..............................
     int j = 0;
     for (int i = 0; i < num; i++) {
-      SV = (SectionViewer) svVec.elementAt(i);
+      SV = (SVPanel) svVec.elementAt(i);
       if (!this.equals(SV)) {
          vs2 = SV.getViewStructModel().getViewStruct();
       }
@@ -855,7 +870,7 @@ public class SectionViewer
   protected Color[] getInterColArr() {
 
     Color colarr[] = null;
-    SectionViewer SV = null;
+    SVPanel SV = null;
     Vector svVec = null;
     try {
       Method M1 = null;
@@ -883,7 +898,7 @@ public class SectionViewer
     colarr = new Color[num - 1];
     int j = 0;
     for (int i = 0; i < num; i++) {
-      SV = (SectionViewer) svVec.elementAt(i);
+      SV = (SVPanel) svVec.elementAt(i);
       if (!this.equals(SV)) {
          colarr[j] = SV.getSecColorClt().getBackground();
 	 j++;
@@ -906,7 +921,7 @@ public class SectionViewer
 //-------------------------
   protected void updateIntersections() {
 
-    SectionViewer SV = null;
+    SVPanel SV = null;
     Vector svVec = null;
     try {
       Method M1 = null;
@@ -932,7 +947,7 @@ public class SectionViewer
 
     int num = svVec.size();
     for (int i = 0; i < num; i++) {
-      SV = (SectionViewer) svVec.elementAt(i);
+      SV = (SVPanel) svVec.elementAt(i);
       SV.doIntersection();
     }
   }
@@ -1110,7 +1125,22 @@ public class SectionViewer
         break;
     }
     String viewTitle = pitch + " | " + yaw + " | " + roll;
-    this.setTitle(viewTitle);
+    try {
+      Method M1 = null;
+      M1 = _frame.getClass().getMethod("setTitle",
+                                        new Class[] {viewTitle.getClass()});
+      M1.invoke(_frame, new Object[] {viewTitle});
+    }
+    catch (InvocationTargetException e) {
+      System.out.println(e.getMessage());
+    }
+    catch (NoSuchMethodException ne) {
+      System.out.println("setTitle: no such method");
+      System.out.println(ne.getMessage());
+    }
+    catch (IllegalAccessException ae) {
+      System.out.println(ae.getMessage());
+    }
 
   }
 
@@ -1569,7 +1599,24 @@ public class SectionViewer
     }
     closeView();
     updateIntersections();
-    this.dispose();
+
+    //System.out.println("SV is in "+_frame.getClass().getName());
+    try {
+      Method M1 = null;
+      M1 = _frame.getClass().getMethod("dispose", null);
+      M1.invoke(_frame, null);
+    }
+    catch (InvocationTargetException e) {
+      System.out.println(e.getMessage());
+    }
+    catch (NoSuchMethodException ne) {
+      System.out.println("dispose: no such method");
+      System.out.println(ne.getMessage());
+    }
+    catch (IllegalAccessException ae) {
+      System.out.println(ae.getMessage());
+    }
+
   }
 
 //-------------------------------------------------------------
@@ -2051,7 +2098,7 @@ public class SectionViewer
   public class helpMenuHandler
       implements ActionListener {
 
-    // help system belongs to SectionViewer Utils class
+    // help system belongs to SVPanel Utils class
 
     HelpBroker hb = null;
     JMenuItem mi = null;
@@ -2575,9 +2622,8 @@ public class SectionViewer
           (int) (imgSize.height * mag + 10));
       setViewTitle();
       _bigPanel.setPreferredSize(newSize);
-      _rootPane.validate();
-      //revalidate();
-      //_bigPanel.repaint();
+      revalidate();
+      _bigPanel.repaint();
 
       updateIntersections();
 
@@ -3262,7 +3308,7 @@ public class SectionViewer
           //System.out.println("stack thread finished");
         }
         catch (Exception ex) {
-          System.out.println("SectionViewer stack thread");
+          System.out.println("SVPanel stack thread");
           ex.printStackTrace();
         }
       } // sync1
@@ -3302,7 +3348,7 @@ public class SectionViewer
   private ChangeListener cl;
   protected void fireChange() {
     if (_enabled == true) {
-      //System.out.println("firing an event from SectionViewer");
+      //System.out.println("firing an event from SVPanel");
       // Create the event:
       ce = new ChangeEvent(this);
       // Get the listener list
@@ -3357,4 +3403,4 @@ public class SectionViewer
     }
   } // fireEvent
 
-} // class SectionViewer
+} // class SVPanel

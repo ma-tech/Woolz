@@ -127,8 +127,8 @@ public class WlzObjModel implements WlzObjectType {
 	 }
       }
       catch (WlzException e) {
-	System.err.println("makeSection2");
-	System.err.println(e);
+	//System.err.println("makeSection2");
+	//System.err.println(e);
       }
 
       return ret;
