@@ -14,6 +14,7 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 26-09-00 bill Change WlzSampleObj parameters.
 ************************************************************************/
 #include <Reconstruct.h>
 #include <string.h>
@@ -74,8 +75,8 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
 		tD0,
 		tD1;
   WlzAffineTransform	*tTr;
+  WlzIVertex3	samFac;
   WlzIVertex2	tIV0,
-  		samFac,
 		maxShift;
   WlzDVertex2	tDV0,
   		cMass0,
@@ -124,6 +125,7 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
       		     ppCtrl->sample.factor;
       samFac.vtX = ppCtrl->sample.factor;
       samFac.vtY = ppCtrl->sample.factor;
+      samFac.vtZ = 1;
       newPP.sample.factor = 1;
       newPP.sample.function = WLZ_SAMPLEFN_NONE;
       newPP.method = (RecPPMethod )((unsigned int )newPP.method & 

@@ -14,6 +14,7 @@
 *		the MRC Human Genetics Unit reconstruction library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 26-09-00 bill Change WlzSampleObj parameters.
 ************************************************************************/
 #include <Reconstruct.h>
 #include <string.h>
@@ -46,8 +47,8 @@ WlzObject	*RecPreProcObj(WlzObject *obj, RecPPControl *ppCtrl,
   		tV1;
   WlzErrorNum	wlzErr = WLZ_ERR_NONE;
   WlzWindowFnType winFn;
-  WlzIVertex2	samFac,
-  		winRad,
+  WlzIVertex3	samFac;
+  WlzIVertex2	winRad,
 		winOrg;
   RecError	errFlag = REC_ERR_NONE;
 
@@ -69,11 +70,13 @@ WlzObject	*RecPreProcObj(WlzObject *obj, RecPPControl *ppCtrl,
     {
       samFac.vtX = ppCtrl->sample.factor;
       samFac.vtY = ppCtrl->sample.factor;
+      samFac.vtZ = 1;
     }
     else
     {
       samFac.vtX = 1;
       samFac.vtY = 1;
+      samFac.vtZ = 1;
     }
     if(((ppObj1 = WlzAssignObject(
                   WlzSampleObj(obj, samFac, ppCtrl->sample.function,

@@ -14,7 +14,8 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
-* 15-02-2k bill	Add dither flag for WlzHistogramMatchObj().
+* 26-09-00 bill Change WlzSampleObj parameters.
+* 15-02-00 bill	Add dither flag for WlzHistogramMatchObj().
 ************************************************************************/
 #include <Reconstruct.h>
 #include <string.h>
@@ -96,7 +97,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
   HGUDlpListItem *secItem;
   WlzDomain	dstDom;
   WlzValues	dstVal;
-  WlzIVertex2	samFacI2;
+  WlzIVertex3	samFacI3;
   WlzIBox2      srcClip2I,
   		dstClip2I;
   WlzIBox3	dstClip3I,
@@ -248,8 +249,9 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
       {
         samFn = WLZ_SAMPLEFN_POINT;
       }
-      samFacI2.vtX = WLZ_NINT(1.0 / scale.vtX);
-      samFacI2.vtY = WLZ_NINT(1.0 / scale.vtY);
+      samFacI3.vtX = WLZ_NINT(1.0 / scale.vtX);
+      samFacI3.vtY = WLZ_NINT(1.0 / scale.vtY);
+      samFacI3.vtZ = 1;
     }
     else
     {
@@ -430,7 +432,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	  if((affineScaleFlg == 0) && (scale.vtX < 1.0))
 	  {
 	    tObj1 = WlzAssignObject(
-	    	    WlzSampleObj(tObj0, samFacI2, samFn, &wlzErr), NULL);
+	    	    WlzSampleObj(tObj0, samFacI3, samFn, &wlzErr), NULL);
 	    errFlag = RecErrorFromWlz(wlzErr);
 	    if(tObj0)
 	    {
