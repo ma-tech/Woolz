@@ -226,13 +226,14 @@ public class AnatKey extends AnatKeyGUI{
     */
    public static KeyEntry getRow(int indx) {
 
-      Enumeration rows = _keyEntryVec.elements();
-      KeyEntry row = null;
-      while (rows.hasMoreElements()) {
-         row = (KeyEntry)rows.nextElement();
-         if(row.getIndx() == indx) break;
+      int i = -1;
+      int size = _keyEntryVec.size();
+      for(i=0; i<size; i++) {
+	 if(((KeyEntry)_keyEntryVec.elementAt(i)).getIndx() == indx) {
+	    break;
+	 }
       }
-      return row;
+      return (KeyEntry)_keyEntryVec.elementAt(i);
    }
 
 //-------------------------------------------------------------
@@ -243,6 +244,18 @@ public class AnatKey extends AnatKeyGUI{
    public int nextIndx() {
       _indx++;
       return _indx;
+   }
+
+//-------------------------------------------------------------
+   /**
+    *   Sets all the 3D visibility control icons.
+    *   @param state true if controls are to have viz3DIcon.
+    */
+   public void set3DVisIcons(boolean visible) {
+     int size = _keyEntryVec.size();
+     for(int i=0; i<size; i++) {
+        ((KeyEntry)_keyEntryVec.elementAt(i)).set3DVisIcon(visible);
+     }
    }
 
 //-------------------------------------------------------------
