@@ -50,7 +50,7 @@ static void			WlzRasterSetVoxel(
 
 /************************************************************************
 * Function:	WlzRasterObj
-* Returns:	WlzObject *:		Woolz domain object, NULLon
+* Returns:	WlzObject *:		Woolz domain object, NULL on
 *					error.
 * Purpose:	Rasterizes the given geometric object, creating a new
 *		domain object.
