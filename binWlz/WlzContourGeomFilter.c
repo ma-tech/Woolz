@@ -47,7 +47,8 @@ int		main(int argc, char *argv[])
   		ok = 1,
   		option,
   		usage = 0,
-		nItr = 200;
+		nItr = 200,
+		nonMan = 0;
   unsigned int	flags = 0;
   double 	lambda,
   		mu,
@@ -61,7 +62,7 @@ int		main(int argc, char *argv[])
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*obj = NULL;
-  static char   optList[] = "ho:l:m:n:p:s:P:S:";
+  static char   optList[] = "hNo:l:m:n:p:s:P:S:";
   const char    inObjFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-",
 		setMsg[] =    "set on command line",
@@ -74,6 +75,9 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'N':
+        nonMan = 1;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -225,7 +229,8 @@ int		main(int argc, char *argv[])
     }
     else
     {
-      errNum = WlzGMFilterGeomLPLM(obj->domain.ctr->model, lambda, mu, nItr);
+      errNum = WlzGMFilterGeomLPLM(obj->domain.ctr->model, lambda, mu, nItr,
+      				   nonMan);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -268,6 +273,7 @@ int		main(int argc, char *argv[])
     "        [-l#] [-m#] [-n#]\n"
     "        [-p#] [-s#] [-P#] [-S#] [<input file>]\n"
     "  -h  Output this usage message.\n"
+    "  -N  Allow non manifild vertices to be filtered.n"
     "  -o  Output file name, default is the standard output.\n"
     "  -l  Filter parameter lambda.\n"
     "  -m  Filter parameter mu.\n"

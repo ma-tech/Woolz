@@ -40,6 +40,7 @@ int             main(int argc, char **argv)
 		usage = 0,
 		flip = 0,
 		nItr = 10,
+		nonMan = 0,
 		unitVoxelSz = 0,
 		filterGeom = 0;
   double	lambda,
@@ -61,7 +62,7 @@ int             main(int argc, char **argv)
   const double	filterDPB = 0.25,
   		filterDSB = 0.10;
   const char	*errMsgStr;
-  static char	optList[] = "bghilFUo:p:s:n:v:w:";
+  static char	optList[] = "bghilFNUo:p:s:n:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -123,6 +124,9 @@ int             main(int argc, char **argv)
 	break;
       case 'F':
         filterGeom = 1;
+	break;
+      case 'N':
+        nonMan = 1;
 	break;
       case 'U':
         unitVoxelSz = 1;
@@ -209,7 +213,8 @@ int             main(int argc, char **argv)
     				    filterPB, filterSB, filterDPB, filterDSB);
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzGMFilterGeomLPLM(ctrDom.ctr->model, lambda, mu, nItr);
+      errNum = WlzGMFilterGeomLPLM(ctrDom.ctr->model, lambda, mu,
+      				   nItr, nonMan);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -294,7 +299,7 @@ int             main(int argc, char **argv)
       "Usage: %s%sExample: %s%s",
       *argv,
       " [-o<output object>] [-h] [-o] [-g] [-i] [-l] [-o#]\n"
-      "        [-F] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
+      "        [-F] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -304,6 +309,7 @@ int             main(int argc, char **argv)
       "  -i  Compute iso-value contours.\n"
       "  -l  Flip orientation (normals will be reversed).\n"
       "  -F  Use geometry filter.\n"
+      "  -N  Allow non manifold vertices to be filtered.\n"
       "  -U  Use unit voxel size.\n"
       "  -p  Geometry filter low band value.\n"
       "  -s  Geometry filter stop band value.\n"
