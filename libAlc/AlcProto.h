@@ -143,6 +143,42 @@ extern AlcErrno			AlcDouble2Malloc(
 				  double ***dest,
 				  size_t mElem,
 				  size_t nElem);
+extern AlcErrno        		AlcSymChar2Calloc(
+				  char ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymUnchar2Calloc(
+				  unsigned char ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymShort2Calloc(
+				  short ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymInt2Calloc(
+				  int ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymFloat2Calloc(
+				  float ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymDouble2Calloc(
+				  double ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymChar2Malloc(
+				  char ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymUnchar2Malloc(
+				  unsigned char ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymShort2Malloc(
+				  short ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymInt2Malloc(
+				  int ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymFloat2Malloc(
+				  float ***dest,
+				  size_t nElem);
+extern AlcErrno        		AlcSymDouble2Malloc(
+				  double ***dest,
+				  size_t nElem);
 extern AlcErrno			Alc2Free(
 				  void **dat);
 extern AlcErrno			AlcBit2Free(
