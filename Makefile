@@ -65,6 +65,7 @@ SUBSYSTEMS		= \
 			libAlg \
 			libbibfile \
 			libhguDlpList \
+			libReconstruct \
 			libWlz \
 			libWlzExtFF \
 			binWlz \
