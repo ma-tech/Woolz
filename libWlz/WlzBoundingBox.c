@@ -865,3 +865,134 @@ WlzDBox3	WlzBoundingBox3ITo3D(WlzIBox3 bBox3I)
   bBox3D.zMax = bBox3I.zMax;
   return(bBox3D);
 }
+
+/*!
+* \return	Axis alligned 2D integer bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 2D integer bounding box which
+*		encloses the given pair of bounding boxes.
+* \param	box0			First bounding box.
+* \param	box1			Second bounding box.
+*/
+WlzIBox2	WlzBoundingBoxUnion2I(WlzIBox2 box0, WlzIBox2 box1)
+{
+  if(box1.xMin < box0.xMin)
+  {
+    box0.xMin = box1.xMin;
+  }
+  if(box1.xMax > box0.xMax)
+  {
+    box0.xMax = box1.xMax;
+  }
+  if(box1.yMin < box0.yMin)
+  {
+    box0.yMin = box1.yMin;
+  }
+  if(box1.yMax > box0.yMax)
+  {
+    box0.yMax = box1.yMax;
+  }
+  return(box0);
+}
+
+/*!
+* \return	Axis alligned 2D double precision bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 2D double precision bounding box which
+*		encloses the given pair of bounding boxes.
+* \param	box0			First bounding box.
+* \param	box1			Second bounding box.
+*/
+WlzDBox2	WlzBoundingBoxUnion2D(WlzDBox2 box0, WlzDBox2 box1)
+{
+  if(box1.xMin < box0.xMin)
+  {
+    box0.xMin = box1.xMin;
+  }
+  if(box1.xMax > box0.xMax)
+  {
+    box0.xMax = box1.xMax;
+  }
+  if(box1.yMin < box0.yMin)
+  {
+    box0.yMin = box1.yMin;
+  }
+  if(box1.yMax > box0.yMax)
+  {
+    box0.yMax = box1.yMax;
+  }
+  return(box0);
+}
+/*!
+* \return	Axis alligned 3D integer bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 3D integer bounding box which
+*		encloses the given pair of bounding boxes.
+* \param	box0			First bounding box.
+* \param	box1			Second bounding box.
+*/
+WlzIBox3	WlzBoundingBoxUnion3I(WlzIBox3 box0, WlzIBox3 box1)
+{
+  if(box1.xMin < box0.xMin)
+  {
+    box0.xMin = box1.xMin;
+  }
+  if(box1.xMax > box0.xMax)
+  {
+    box0.xMax = box1.xMax;
+  }
+  if(box1.yMin < box0.yMin)
+  {
+    box0.yMin = box1.yMin;
+  }
+  if(box1.yMax > box0.yMax)
+  {
+    box0.yMax = box1.yMax;
+  }
+  if(box1.zMin < box0.zMin)
+  {
+    box0.zMin = box1.zMin;
+  }
+  if(box1.zMax > box0.zMax)
+  {
+    box0.zMax = box1.zMax;
+  }
+  return(box0);
+}
+
+/*!
+* \return	Axis alligned 3D double precision bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 3D double precision bounding box which
+*		encloses the given pair of bounding boxes.
+* \param	box0			First bounding box.
+* \param	box1			Second bounding box.
+*/
+WlzDBox3	WlzBoundingBoxUnion3D(WlzDBox3 box0, WlzDBox3 box1)
+{
+  if(box1.xMin < box0.xMin)
+  {
+    box0.xMin = box1.xMin;
+  }
+  if(box1.xMax > box0.xMax)
+  {
+    box0.xMax = box1.xMax;
+  }
+  if(box1.yMin < box0.yMin)
+  {
+    box0.yMin = box1.yMin;
+  }
+  if(box1.yMax > box0.yMax)
+  {
+    box0.yMax = box1.yMax;
+  }
+  if(box1.zMin < box0.zMin)
+  {
+    box0.zMin = box1.zMin;
+  }
+  if(box1.zMax > box0.zMax)
+  {
+    box0.zMax = box1.zMax;
+  }
+  return(box0);
+}
