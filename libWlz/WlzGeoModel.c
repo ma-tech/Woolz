@@ -13,6 +13,7 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 10-10-00 bill Add WlzGMModelCopy().
 * 25-08-00 bill Fix bugs in 3D model construction. Remove element's
 *		data and flags.
 * 10-08-00 bill Do some optimization so that when joining shells, the
@@ -636,6 +637,548 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(vertexT);
+}
+
+/************************************************************************
+* Function:     WlzGMModelCopy
+* Returns:      WlzGMModel *:		New copy of the given model.
+* Purpose:	Copies the given model. All unused elements are squeezed
+*		out.
+* Global refs:	-
+* Parameters:	WlzGMModel *gM:	Given model.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.
+************************************************************************/
+WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
+{
+  int		gIdx,
+  		nIdx,
+  		nBkSz,
+		nHTSz;
+  WlzGMElemP	gElmP,
+  		nElmP;
+  WlzGMResIdxTb *resIdxTb = NULL;
+  const int	minBkSz = 1024,
+  		minHTSz = 1024;
+  WlzGMModel 	*nM = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(gM == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    /* Make a new model. */
+    if((nBkSz = gM->res.vertex.numElm / 16) < minBkSz)
+    {
+      nBkSz = minBkSz;
+    }
+    if((nHTSz = gM->res.vertex.numElm / 8) < minHTSz)
+    {
+      nHTSz = minHTSz;
+    }
+    nM = WlzGMModelNew(gM->type, nBkSz, nHTSz, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute element index tables to be used in setting up the elements
+     * of the new model while sqeezing out the unused elements. */
+    resIdxTb = WlzGMModelResIdx(gM,
+				WLZ_GMELMFLG_VERTEX |
+				WLZ_GMELMFLG_VERTEX_G |
+				WLZ_GMELMFLG_VERTEX_T |
+				WLZ_GMELMFLG_DISK_T |
+				WLZ_GMELMFLG_EDGE |
+				WLZ_GMELMFLG_EDGE_T |
+				WLZ_GMELMFLG_LOOP |
+				WLZ_GMELMFLG_LOOP_T |
+				WLZ_GMELMFLG_SHELL |
+				WLZ_GMELMFLG_SHELL_G,
+    				&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy verticies. */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.vertex.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.vertex.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->vertex.idxLut + gIdx);
+        if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.vertex.vec,
+							 nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = WLZ_GMELM_VERTEX;
+	  nElmP.core->idx = nIdx;
+	  nElmP.vertex->diskT = (WlzGMDiskT *)
+	  			AlcVectorExtendAndGet(nM->res.diskT.vec,
+						 *(resIdxTb->diskT.idxLut + 
+						   gElmP.vertex->diskT->idx));
+	  nElmP.vertex->geo.core = (WlzGMCore *)
+	  			   AlcVectorExtendAndGet(nM->res.vertexG.vec,
+						 *(resIdxTb->vertexG.idxLut + 
+						 gElmP.vertex->geo.core->idx));
+	  if(gElmP.vertex->next)
+	  {
+	    nElmP.vertex->next = (WlzGMVertex *)
+				 AlcVectorExtendAndGet(nM->res.vertex.vec,
+						  *(resIdxTb->vertex.idxLut +
+						    gElmP.vertex->next->idx));
+	  }
+	  else
+	  {
+	    nElmP.vertex->next = NULL;
+	  }
+	  if((nElmP.vertex->diskT == NULL) ||
+	     (nElmP.vertex->geo.core == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy vertex geometries */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.vertexG.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.vertexG.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->vertexG.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.vertexG.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  switch(nElmP.core->type)
+	  {
+	    case WLZ_GMELM_VERTEX_G2I:
+	      nElmP.vertexG2I->vtx = gElmP.vertexG2I->vtx;
+	      break;
+	    case WLZ_GMELM_VERTEX_G2D:
+	      nElmP.vertexG2D->vtx = gElmP.vertexG2D->vtx;
+	      break;
+	    case WLZ_GMELM_VERTEX_G3I:
+	      nElmP.vertexG3I->vtx = gElmP.vertexG3I->vtx;
+	      break;
+	    case WLZ_GMELM_VERTEX_G3D:
+	      nElmP.vertexG3D->vtx = gElmP.vertexG3D->vtx;
+	      break;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy vertexT's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.vertexT.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.vertexT.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->vertexT.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.vertexT.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.vertexT->next = (WlzGMVertexT *)
+	  			AlcVectorExtendAndGet(nM->res.vertexT.vec,
+						 *(resIdxTb->vertexT.idxLut +
+						   gElmP.vertexT->next->idx));
+	  nElmP.vertexT->prev = (WlzGMVertexT *)
+	  			AlcVectorExtendAndGet(nM->res.vertexT.vec,
+						 *(resIdxTb->vertexT.idxLut +
+						   gElmP.vertexT->prev->idx));
+	  nElmP.vertexT->diskT = (WlzGMDiskT *)
+	  			 AlcVectorExtendAndGet(nM->res.diskT.vec,
+						 *(resIdxTb->diskT.idxLut +
+						   gElmP.vertexT->diskT->idx));
+	  nElmP.vertexT->parent = (WlzGMEdgeT *)
+	  			  AlcVectorExtendAndGet(nM->res.edgeT.vec,
+						 *(resIdxTb->edgeT.idxLut +
+						  gElmP.vertexT->parent->idx));
+	  if((nElmP.vertexT->next == NULL) ||
+	     (nElmP.vertexT->prev == NULL) ||
+	     (nElmP.vertexT->diskT == NULL) ||
+	     (nElmP.vertexT->parent == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy diskT's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.diskT.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.diskT.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->diskT.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.diskT.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.diskT->next = (WlzGMDiskT *)
+	  		      AlcVectorExtendAndGet(nM->res.diskT.vec,
+					       *(resIdxTb->diskT.idxLut +
+						 gElmP.diskT->next->idx));
+	  nElmP.diskT->prev = (WlzGMDiskT *)
+			      AlcVectorExtendAndGet(nM->res.diskT.vec,
+					       *(resIdxTb->diskT.idxLut +
+					         gElmP.diskT->prev->idx));
+	  nElmP.diskT->vertex = (WlzGMVertex *)
+	  			 AlcVectorExtendAndGet(nM->res.vertex.vec,
+						 *(resIdxTb->vertex.idxLut +
+						   gElmP.diskT->vertex->idx));
+	  nElmP.diskT->vertexT = (WlzGMVertexT *)
+	  			  AlcVectorExtendAndGet(nM->res.vertexT.vec,
+						 *(resIdxTb->vertexT.idxLut +
+						  gElmP.diskT->vertexT->idx));
+	  if((nElmP.diskT->next == NULL) ||
+	     (nElmP.diskT->prev == NULL) ||
+	     (nElmP.diskT->vertex == NULL) ||
+	     (nElmP.diskT->vertexT == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy edge's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.edge.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.edge.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->edge.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.edge.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.edge->edgeT = (WlzGMEdgeT *)
+	  		      AlcVectorExtendAndGet(nM->res.edgeT.vec,
+					       *(resIdxTb->edgeT.idxLut +
+						 gElmP.edge->edgeT->idx));
+	  if(nElmP.edge->edgeT == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy edgeT's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.edgeT.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.edgeT.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->edgeT.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.edgeT.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.edgeT->next = (WlzGMEdgeT *)
+	  		       AlcVectorExtendAndGet(nM->res.edgeT.vec,
+					       *(resIdxTb->edgeT.idxLut +
+						 gElmP.edgeT->next->idx));
+	  nElmP.edgeT->prev = (WlzGMEdgeT *)
+	  		       AlcVectorExtendAndGet(nM->res.edgeT.vec,
+					       *(resIdxTb->edgeT.idxLut +
+						 gElmP.edgeT->prev->idx));
+	  nElmP.edgeT->opp = (WlzGMEdgeT *)
+	  		     AlcVectorExtendAndGet(nM->res.edgeT.vec,
+					      *(resIdxTb->edgeT.idxLut +
+					        gElmP.edgeT->opp->idx));
+	  nElmP.edgeT->rad = (WlzGMEdgeT *)
+	  		       AlcVectorExtendAndGet(nM->res.edgeT.vec,
+					       *(resIdxTb->edgeT.idxLut +
+						 gElmP.edgeT->rad->idx));
+	  nElmP.edgeT->edge = (WlzGMEdge *)
+	  		      AlcVectorExtendAndGet(nM->res.edge.vec,
+					       *(resIdxTb->edge.idxLut +
+						 gElmP.edgeT->edge->idx));
+	  nElmP.edgeT->vertexT = (WlzGMVertexT *)
+	  		         AlcVectorExtendAndGet(nM->res.vertexT.vec,
+					          *(resIdxTb->vertexT.idxLut +
+						   gElmP.edgeT->vertexT->idx));
+	  nElmP.edgeT->parent = (WlzGMLoopT *)
+	  		        AlcVectorExtendAndGet(nM->res.loopT.vec,
+					       *(resIdxTb->loopT.idxLut +
+						 gElmP.edgeT->parent->idx));
+
+	  if((nElmP.edgeT->next == NULL) || 
+	     (nElmP.edgeT->prev == NULL) || 
+	     (nElmP.edgeT->opp == NULL) || 
+	     (nElmP.edgeT->rad == NULL) || 
+	     (nElmP.edgeT->edge == NULL) || 
+	     (nElmP.edgeT->vertexT == NULL) || 
+	     (nElmP.edgeT->parent == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy loop's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.loop.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.loop.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->loop.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.loop.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.loop->loopT = (WlzGMLoopT *)
+	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
+					       *(resIdxTb->loopT.idxLut +
+						 gElmP.loop->loopT->idx));
+	  if(nElmP.loop->loopT == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy loopT's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.loopT.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.loopT.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->loopT.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.loopT.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.loopT->next = (WlzGMLoopT *)
+	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
+					       *(resIdxTb->loopT.idxLut +
+						 gElmP.loopT->next->idx));
+	  nElmP.loopT->prev = (WlzGMLoopT *)
+	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
+					       *(resIdxTb->loopT.idxLut +
+						 gElmP.loopT->prev->idx));
+	  nElmP.loopT->opp = (WlzGMLoopT *)
+	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
+					       *(resIdxTb->loopT.idxLut +
+						 gElmP.loopT->opp->idx));
+	  nElmP.loopT->loop = (WlzGMLoop *)
+	  		      AlcVectorExtendAndGet(nM->res.loop.vec,
+					       *(resIdxTb->loop.idxLut +
+						 gElmP.loopT->loop->idx));
+	  nElmP.loopT->edgeT = (WlzGMEdgeT *)
+	  		      AlcVectorExtendAndGet(nM->res.edgeT.vec,
+					       *(resIdxTb->edgeT.idxLut +
+						 gElmP.loopT->edgeT->idx));
+	  nElmP.loopT->parent = (WlzGMShell *)
+				AlcVectorExtendAndGet(nM->res.shell.vec,
+						 *(resIdxTb->shell.idxLut +
+						   gElmP.loopT->parent->idx));
+	  if((nElmP.loopT->next == NULL) ||
+	     (nElmP.loopT->prev == NULL) ||
+	     (nElmP.loopT->opp == NULL) ||
+	     (nElmP.loopT->loop == NULL) ||
+	     (nElmP.loopT->edgeT == NULL) ||
+	     (nElmP.loopT->parent == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy shell's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.shell.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.shell.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->shell.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.shell.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  nElmP.shell->next = (WlzGMShell *)
+	  		      AlcVectorExtendAndGet(nM->res.shell.vec,
+					       *(resIdxTb->shell.idxLut +
+						 gElmP.shell->next->idx));
+	  nElmP.shell->prev = (WlzGMShell *)
+	  		      AlcVectorExtendAndGet(nM->res.shell.vec,
+					       *(resIdxTb->shell.idxLut +
+						 gElmP.shell->prev->idx));
+	  nElmP.shell->geo.core = (WlzGMCore *)
+	  		      AlcVectorExtendAndGet(nM->res.shellG.vec,
+					       *(resIdxTb->shellG.idxLut +
+						 gElmP.shell->geo.core->idx));
+	  nElmP.shell->child = (WlzGMLoopT *)
+	  		       AlcVectorExtendAndGet(nM->res.loopT.vec,
+					       *(resIdxTb->loopT.idxLut +
+						 gElmP.shell->child->idx));
+	  nElmP.shell->parent = nM;
+	  if((nElmP.shell->next == NULL) ||
+	     (nElmP.shell->prev == NULL) ||
+	     (nElmP.shell->geo.core == NULL) ||
+	     (nElmP.shell->child == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy shellG's */
+    gIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (gIdx < gM->res.shellG.numIdx))
+    {
+      gElmP.core = (WlzGMCore *)AlcVectorItemGet(gM->res.shellG.vec, gIdx);
+      if((gElmP.core != NULL) && (gElmP.core->idx >= 0))
+      {
+	nIdx = *(resIdxTb->shellG.idxLut + gIdx);
+	if((nElmP.core = (WlzGMCore *)AlcVectorExtendAndGet(nM->res.shellG.vec,
+						       nIdx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  nElmP.core->type = gElmP.core->type;
+	  nElmP.core->idx = nIdx;
+	  switch(nElmP.core->type)
+	  {
+	    case WLZ_GMELM_SHELL_G2I:
+	      nElmP.shellG2I->bBox = gElmP.shellG2I->bBox;
+	      break;
+	    case WLZ_GMELM_SHELL_G2D:
+	      nElmP.shellG2D->bBox = gElmP.shellG2D->bBox;
+	      break;
+	    case WLZ_GMELM_SHELL_G3I:
+	      nElmP.shellG3I->bBox = gElmP.shellG3I->bBox;
+	      break;
+	    case WLZ_GMELM_SHELL_G3D:
+	      nElmP.shellG3D->bBox = gElmP.shellG3D->bBox;
+	      break;
+	  }
+        }
+      }
+      ++gIdx;
+    }
+  }
+  if(resIdxTb)
+  {
+    WlzGMModelResIdxFree(resIdxTb);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nM->child = (WlzGMShell *)AlcVectorItemGet(nM->res.shell.vec,
+					       *(resIdxTb->shell.idxLut +
+						 gM->child->idx));
+    nM->res.vertex.numElm = nM->res.vertex.numIdx = gM->res.vertex.numElm;
+    nM->res.vertexG.numElm = nM->res.vertexG.numIdx = gM->res.vertexG.numElm;
+    nM->res.vertexT.numElm = nM->res.vertexT.numIdx = gM->res.vertexT.numElm;
+    nM->res.diskT.numElm = nM->res.diskT.numIdx = gM->res.diskT.numElm;
+    nM->res.edge.numElm = nM->res.edge.numIdx = gM->res.edge.numElm;
+    nM->res.edgeT.numElm = nM->res.edgeT.numIdx = gM->res.edgeT.numElm;
+    nM->res.loop.numElm = nM->res.loop.numIdx = gM->res.loop.numElm;
+    nM->res.loopT.numElm = nM->res.loopT.numIdx = gM->res.loopT.numElm;
+    nM->res.shell.numElm = nM->res.shell.numIdx = gM->res.shell.numElm;
+    nM->res.shellG.numElm = nM->res.shellG.numIdx = gM->res.shellG.numElm;
+    errNum = WlzGMModelRehashVHT(nM, 0);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzGMModelFree(nM);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nM);
 }
 
 /* Freeing  of geometric modeling elements */
@@ -4116,18 +4659,25 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
   AlcVector	*vec;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(vHTSz > 0)
+  if(model == NULL)
   {
-    if((newVHT = AlcCalloc(vHTSz, sizeof(WlzGMVertex *))) == NULL)
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    if(vHTSz > 0)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      model->vertexHTSz = vHTSz;
-      oldVHT = model->vertexHT;
-      model->vertexHT = newVHT;
-      AlcFree(oldVHT);
+      if((newVHT = AlcCalloc(vHTSz, sizeof(WlzGMVertex *))) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	model->vertexHTSz = vHTSz;
+	oldVHT = model->vertexHT;
+	model->vertexHT = newVHT;
+	AlcFree(oldVHT);
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
