@@ -1,18 +1,19 @@
 #pragma ident "MRC HGU $Id$"
 #define _WlzAffineTransformObj_c
 /************************************************************************
-* Project:      Woolz							*
-* Title:        WlzAffineTransformObj.c			                *
-* Date:         March 1999	                                    	*
-* Author:       Bill Hill 				    		*
-* Copyright:	1999 Medical Research Council, UK.			*
-*		All rights reserved.					*
-* Address:	MRC Human Genetics Unit,				*
-*		Western General Hospital,				*
-*		Edinburgh, EH4 2XU, UK.					*
-* Purpose:      Applies an affine transform to a Woolz object.		*
+* Project:      Woolz
+* Title:        WlzAffineTransformObj.c
+* Date:         March 1999
+* Author:       Bill Hill
+* Copyright:	1999 Medical Research Council, UK.
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Purpose:      Applies an affine transform to a Woolz object.
 * $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.	*
+* Maintenance:	Log changes below, with most recent at top of list.
+* 21-12-00 bill Add affine transform input from an ascii matrix.
 * 04-12-00 bill Add affine transform output.
 ************************************************************************/
 #include <stdio.h>
@@ -30,7 +31,8 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		option,
+  int		idx,
+  		option,
 		ok = 1,
 		usage = 0,
 		trInvert = 0,
@@ -60,11 +62,12 @@ int             main(int argc, char **argv)
   FILE		*fP = NULL;
   char 		*outFileStr,
   		*inObjFileStr,
+		*inMatFileStr = NULL,
 		*inTrObjFileStr = NULL,
 		*outTrObjFileStr = NULL;
   const char	*trTypeStr;
   WlzAffineTransformPrim prim;
-  static char	optList[] = "3LMNPRhiIo:a:b:s:t:T:u:v:w:x:y:z:",
+  static char	optList[] = "23LMNPRhiIo:a:b:m:s:t:T:u:v:w:x:y:z:",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -99,6 +102,9 @@ int             main(int argc, char **argv)
       case 'I':
         inverseTransformFlag = 1;
 	break;
+      case '2':
+	trType = WLZ_TRANSFORM_2D_AFFINE;
+        break;
       case '3':
 	trType = WLZ_TRANSFORM_3D_AFFINE;
         break;
@@ -116,6 +122,9 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	}
         break;
+      case 'm':
+        inMatFileStr = optarg;
+	break;
       case 's':
 	if(sscanf(optarg, "%lg", &trScale) != 1)
 	{
@@ -225,7 +234,7 @@ int             main(int argc, char **argv)
     }
   }
 
-  /* get the transform - either from file or from input primitives */
+  /* Get the transform - either from file or from input primitives */
   if(ok)
   {
     if(inTrObjFileStr)
@@ -260,6 +269,60 @@ int             main(int argc, char **argv)
 	}
       }
     }
+    else if(inMatFileStr)
+    {
+      if((trans = WlzMakeAffineTransform(trType, &errNum)) != NULL)
+      {
+	if((*inMatFileStr == '\0') ||
+	   ((fP = (strcmp(inMatFileStr, "-")?
+		  fopen(inMatFileStr, "r"): stdin)) == NULL))
+	{
+	  ok = 0;
+	}
+	else
+	{
+	  if(trType == WLZ_TRANSFORM_2D_AFFINE)
+	  {
+	    idx = 0;
+	    while((idx < 3) &&
+	          ((ok = fscanf(fP, "%lg %lg %lg", 
+		  		&(trans->mat[idx][0]), &(trans->mat[idx][1]),
+				&(trans->mat[idx][2])) == 3) != 0))
+	    {
+	      ++idx;
+	    }
+	  }
+	  else /* trType == WLZ_TRANSFORM_3D_AFFINE */
+	  {
+	    idx = 0;
+	    while((idx < 4) &&
+	          ((ok = fscanf(fP, "%lg %lg %lg %lg", 
+		  		&(trans->mat[idx][0]), &(trans->mat[idx][1]),
+				&(trans->mat[idx][2]),
+				&(trans->mat[idx][3])) == 4) != 0))
+	    {
+	      ++idx;
+	    }
+	  }
+	}
+	if(ok == 0)
+	{
+	  (void )fprintf(stderr,
+			 "%s: failed to read matrix from file %s\n",
+			 *argv, inMatFileStr);
+	}
+	if(fP && strcmp(inMatFileStr, "-"))
+	{
+	  fclose(fP);
+	}
+      }
+      if(errNum != WLZ_ERR_NONE)
+      {
+	(void )fprintf(stderr,
+		       "%s: failed to make affine transform from matrix\n",
+		       *argv);
+      }
+    }
     else
     {
       trans = WlzAffineTransformFromPrimVal(trType, trX, trY, trZ,
@@ -286,7 +349,7 @@ int             main(int argc, char **argv)
     }
     else 
     {
-      (void) WlzFreeAffineTransform(trans);
+      (void )WlzFreeAffineTransform(trans);
       trans = tmpTrans;
     }
   }
@@ -345,9 +408,9 @@ int             main(int argc, char **argv)
     {
       case 2:
 	(void )fprintf(stderr,
-		       "matrix %-10g %-10g %-10g\n"
-		       "       %-10g %-10g %-10g\n"
-		       "       %-10g %-10g %-10g\n",
+		       "%-10g %-10g %-10g\n"
+		       "%-10g %-10g %-10g\n"
+		       "%-10g %-10g %-10g\n",
 		       trans->mat[0][0], trans->mat[0][1],
 		       trans->mat[0][2],
 		       trans->mat[1][0], trans->mat[1][1],
@@ -357,10 +420,10 @@ int             main(int argc, char **argv)
         break;
       case 3:
 	(void )fprintf(stderr,
-		       "matrix %-10g %-10g %-10g %-10g\n"
-		       "       %-10g %-10g %-10g %-10g\n"
-		       "       %-10g %-10g %-10g %-10g\n"
-		       "       %-10g %-10g %-10g %-10g\n",
+		       "%-10g %-10g %-10g %-10g\n"
+		       "%-10g %-10g %-10g %-10g\n"
+		       "%-10g %-10g %-10g %-10g\n"
+		       "%-10g %-10g %-10g %-10g\n",
 		       trans->mat[0][0], trans->mat[0][1],
 		       trans->mat[0][2], trans->mat[0][3],
 		       trans->mat[1][0], trans->mat[1][1],
@@ -472,6 +535,7 @@ int             main(int argc, char **argv)
     "[-t#] [-T#] [-a#] [-b#] [-u#] [-v#] [-w#]\n"
     "        [<input object>]\n" 
     "Options:\n"
+    "  -2  2D transform (default).\n"
     "  -3  3D transform instead of 2D.\n"
     "  -L  Use linear interpolation instead of nearest neighbour.\n"
     "  -M  Print matix values.\n"
@@ -483,6 +547,8 @@ int             main(int argc, char **argv)
     "  -h  Help, prints this usage message.\n"
     "  -i  Invert: reflect about the y-axis.\n"
     "  -I  Inverse: use the inverse of the input transform.\n"
+    "  -m  Input ascii affine transform matrix values which must be either a\n"
+    "      3x3 matrix for 2D or a 4x4 matrix for 3D.\n"
     "  -o  Output object file name.\n"
     "  -s  Scale factor.\n" 
     "  -t  Input affine transform object.\n" 
