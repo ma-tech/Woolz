@@ -1,0 +1,24 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzFeatures.dox
+* \author       Bill Hill
+* \date         August 2001
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Documentation for the WlzFeatures module.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \ingroup	Wlz
+* \defgroup	WlzFeatures
+*/
+
