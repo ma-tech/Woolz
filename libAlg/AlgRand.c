@@ -18,13 +18,9 @@
 * \bug          None known.
 */
 
+#include <stdlib.h>
+#include <math.h>
 #include <Alg.h>
-
-#if defined (CYGWIN) || defined (DARWIN)
-#define drand48() (((double) rand()) / RAND_MAX)
-#define srand48(X) (srand((unsigned int) X))
-#define lrand48() ((long) ((((double) rand()) / RAND_MAX) * (1<<31)))
-#endif /* CYGWIN || DARWIN */
 
 /*!
 * \return	<void>
@@ -34,7 +30,7 @@
 */
 void		AlgRandSeed(long seed)
 {
-  srand48(seed);
+  srand((unsigned int )seed);
 }
 
 /*!
@@ -47,7 +43,7 @@ double		AlgRandUniform(void)
 {
   double	value;
 
-  value = drand48();
+  value = ((double) rand()) / RAND_MAX;
   return(value);
 }
 
@@ -64,9 +60,10 @@ double		AlgRandNormal(double mu, double sigma)
 {
   double	value;
 
-  value = drand48() + drand48() + drand48() + drand48() +
-          drand48() + drand48() + drand48() + drand48() +
-          drand48() + drand48() + drand48() + drand48();
+  value = AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
+  	  AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
+	  AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
+	  AlgRandUniform() + AlgRandUniform() + AlgRandUniform();
   value = ((value - 6.0) * sigma) + mu;
   return(value);
 }
