@@ -47,6 +47,8 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 26-04-01 bill Add WlzContourObjGrd().
+* 23-04-01 bill Add WlzRegICPVerticies().
 * 23-03-01 bill Add WlzGreyTypeFromObj().
 * 14-03-01 bill Add WlzRasterObj().
 * 01-02-01 bill Add WlzRegCCorObjs().
@@ -341,6 +343,14 @@ extern WlzIVertex3     		WlzAffineTransformVertexI3(
 				  WlzAffineTransform *trans,
 				  WlzIVertex3 srcVtx,
 				  WlzErrorNum *dstErr);
+extern WlzDVertex2		WlzAffineTransformNormalD2(
+				  WlzAffineTransform *trans,
+				  WlzDVertex2 srcNrm,
+				  WlzErrorNum *dstErr);
+extern WlzDVertex3		WlzAffineTransformNormalD3(
+				  WlzAffineTransform *trans,
+				  WlzDVertex3 srcNrm,
+				  WlzErrorNum *dstErr);
 extern WlzIBox2        		WlzAffineTransformBBoxI2(
 				  WlzAffineTransform *tr,
 				  WlzIBox2 srcBox,
@@ -412,6 +422,18 @@ extern WlzErrorNum 		WlzAffineTransformPrimSet(
 * WlzAffineTransformLSq.c						*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzAffineTransform 	*WlzAffineTransformLSq2(
+				  WlzVertexType vtxType,
+				  int nV,
+				  double *vW,
+				  WlzVertexP v0,
+				  WlzVertexP v1,
+				  int nN,
+				  double *nW,
+				  WlzVertexP n0,
+				  WlzVertexP n1,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
 extern WlzAffineTransform	*WlzAffineTransformLSq(
 				  WlzVertexType vtxType,
 				  int arraySizeVec0,
@@ -815,6 +837,15 @@ extern WlzContour		*WlzContourObj(
 				  double ctrVal,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzContour		*WlzContourObjGrd(
+				  WlzObject *srcObj,
+				  WlzVertexP *dstGrd,
+				  double ctrLo,
+				  double ctrHi,
+				  double ctrWth,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzConvertPix.c							*
@@ -2081,6 +2112,34 @@ extern WlzAffineTransform	*WlzRegICPObjs(
 				  int *dstItr,
 				  int maxItr,
 				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzRegICPObjsGrd(
+				  WlzObject *tObj,
+				  WlzObject *sObj,
+				  WlzAffineTransform *initTr,
+				  WlzTransformType trType,
+				  double ctrLo,
+				  double ctrHi,
+				  double ctrWth,
+				  int *dstConv,
+				  int *dstItr,
+				  int maxItr,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzAffineTransform	*WlzRegICPVerticies(
+				  WlzVertexP tVx,
+				  WlzVertexP tNr,
+				  int tCnt,
+				  WlzVertexP sVx,
+				  WlzVertexP sNr,
+				  int sCnt,
+				  WlzVertexType vType,
+				  WlzAffineTransform *initTr,
+				  WlzTransformType trType,
+				  int *dstConv,
+				  int *dstItr,
+				  int maxItr,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzRsvFilter.c
