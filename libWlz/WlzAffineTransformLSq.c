@@ -44,7 +44,7 @@ static WlzAffineTransform 	*WlzAffineTransformLSqTrans3D(
 				  WlzDVertex3 *pos1,
 				  int nVtx,
 				  WlzErrorNum *dstErr);
-static WlzAffineTransform	*WlzAffineTransformLSqReg3D(
+static WlzAffineTransform	*WlzAffineTransformLSqSVDReg3D(
 				  WlzDVertex3 *vtxVec0,
 				  WlzDVertex3 *vtxVec1,
 				  int nVtx,
@@ -91,6 +91,82 @@ static WlzAffineTransform 	*WlzAffineTransformLSqDQ2D(
 				  WlzDVertex2 *n1,
 				  WlzDVertex2 *n0,
 				  WlzErrorNum *dstErr);
+static WlzAffineTransform  	*WlzAffineTransformLSqSVDWgtReg3D(
+				  WlzDVertex3 *pos0,
+				  WlzDVertex3 *pos1,
+				  double *wgt,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform  	*WlzAffineTransformLSqSVDWgtReg2D(
+				  WlzDVertex2 *pos0,
+				  WlzDVertex2 *pos1,
+				  double *wgt,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
+
+/*!
+* \ingroup	WlzTransform
+* \return				Computed affine transform, may
+*					be NULL on error.
+* \brief	Computes the rigid body affine transform which gives the
+*		best weighted least squares fit when used to transform the
+*		first set of vertices onto the second set. The vertex
+*		weights are optional but if given must correspond to
+*		the vertices.
+* \param	vtxType			Type of vertices.
+* \param	nV			Number of vertices.
+* \param	vW			Vertex weights, may be NULL which
+*					implies that all the weights are 1.0.
+* \param	v0			Vertices of the first set.
+* \param	v1			Vertices of the second set.
+* \param	trType			Required transform type.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+WlzAffineTransform *WlzAffineTransformLSqSVD(WlzVertexType vtxType,
+					     int nV, double *vW,
+					     WlzVertexP v0, WlzVertexP v1,
+					     WlzTransformType trType,
+					     WlzErrorNum *dstErr)
+{
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nV <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA; 
+  }
+  else if((v0.v == NULL) || (v1.v == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((vtxType != WLZ_VERTEX_D2) && (vtxType != WLZ_VERTEX_D3))
+  {
+    errNum = WLZ_ERR_PARAM_TYPE;
+  }
+  else
+  {
+    switch(trType)
+    {
+      case WLZ_TRANSFORM_2D_REG:
+        tr = WlzAffineTransformLSqSVDWgtReg2D(v0.d2, v1.d2, vW, nV,
+					      &errNum);
+        break;
+      case WLZ_TRANSFORM_3D_REG: 
+        tr = WlzAffineTransformLSqSVDWgtReg3D(v0.d3, v1.d3, vW, nV,
+					      &errNum);
+	break;
+      default:
+        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
 
 /*!
 * \ingroup	WlzTransform
@@ -409,7 +485,8 @@ WlzAffineTransform *WlzAffineTransformLSq3D(int nVtx0, WlzDVertex3 *vtxVec0,
 	}
 	else
 	{
-	  trans = WlzAffineTransformLSqReg3D(vtxVec0, vtxVec1, nVtx0, &errNum);
+	  trans = WlzAffineTransformLSqSVDReg3D(vtxVec0, vtxVec1, nVtx0,
+	  				        &errNum);
 	}
 	break;
       default:
@@ -513,7 +590,7 @@ WlzAffineTransform *WlzAffineTransformLSq2D(int nVtx0, WlzDVertex2 *vtxVec0,
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
-static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
+static WlzAffineTransform *WlzAffineTransformLSqSVDReg3D(WlzDVertex3 *pos0,
 		    		WlzDVertex3 *pos1, int nVtx,
 				WlzErrorNum *dstErr)
 {
@@ -675,6 +752,513 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 	   (trMx[2][2] * cen0.vtZ));
 	/* Build affine transform. */
 	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trMx,
+	    &errNum);
+      }
+      /* Clear up on error. */
+      if(wMx)
+      {
+	(void )AlcFree(wMx);
+      }
+      if(hMx)
+      {
+	(void )AlcDouble2Free(hMx);
+      }
+      if(vMx)
+      {
+	(void )AlcDouble2Free(vMx);
+      }
+      if(trMx)
+      {
+	(void )AlcDouble2Free(trMx);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/*!
+* \ingroup	WlzTransform
+* \return	Computed affine transform, may be NULL on error.
+* \brief	Computes the Woolz 3D registration transform which
+*		gives the best (weighted least squares) fit when used to
+*		transform the first set of vertices onto the second
+*		using the given match weights.
+*		The transform is constrained to rotation and
+*		translation only.
+*		The algorithm has been addapted from the algorithm:
+*		Arun K.S., Huang T.T. and Blostein S.D. "Least-Squares
+*		Fitting of Two 3-D Point Sets" PAMI 9(5), 698-700, 1987,
+*		by including vertex weights and computing the translation
+*		component of the transform using
+	        \f[
+	          \mathbf{T} = \frac{\sum_{i=0}^{N-1}{w_i^2 \mathbf{x}_i}}
+				    {\sum_{i=0}^{N-1}{w_i^2}}
+	        \f]
+	        \f[
+	          \mathbf{x}_i = {\mathbf{p}_i}' - \mathbf{R}\mathbf{p}_i
+	        \f]
+*	        where \f$w_i\f$ are the weights, \f${\mathbf{p}_i}'\f$ are
+*		the target vertices, \f$\mathbf{p}_i\f$ are the source
+*		vertices and \f$\mathbf{R}\f$ is the rotation matrix.
+* \param	pos0			First array of vertices.
+* \param	pos1			Second array of vertices.
+* \param	wgt			Array of weights.
+* \param	nVtx			Number of vertices in each array.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+static WlzAffineTransform  *WlzAffineTransformLSqSVDWgtReg3D(WlzDVertex3 *pos0,
+		    		WlzDVertex3 *pos1, double *wgt, int nVtx,
+				WlzErrorNum *dstErr)
+{
+  int		tI0,
+  		idN,
+  		idK,
+		idR;
+  double	tD0,
+  		meanSqD,
+		sumSqWgt;
+  WlzDVertex3	p0,
+  		p1,
+		cen0,
+  		cen1,
+		rel0,
+		rel1,
+		wgtDsp;
+  double	*wMx = NULL;
+  double	**hMx = NULL,
+  		**vMx = NULL,
+		**trMx = NULL;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	tol = 1.0E-06;
+
+  if(((wMx = (double *)AlcCalloc(sizeof(double), 3)) == NULL) ||
+     (AlcDouble2Calloc(&hMx, 3, 3) !=  ALC_ER_NONE) ||
+     (AlcDouble2Malloc(&vMx, 3, 3) !=  ALC_ER_NONE) ||
+     (AlcDouble2Malloc(&trMx, 4, 4) !=  ALC_ER_NONE))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute weighted centroids (cen0 and cen1) and a mean of squares of
+     * distance * between the weighted vertices. */
+    if(wgt)
+    {
+      WLZ_VTX_3_SCALE(p0, *pos0, *wgt);
+      WLZ_VTX_3_SCALE(p1, *pos1, *wgt);
+    }
+    else
+    {
+      p0 = *pos0;
+      p1 = *pos1;
+    }
+    WLZ_VTX_3_SUB(rel0, p0, p1);
+    meanSqD = WLZ_VTX_3_DOT(rel0, rel0);
+    for(idN = 1; idN < nVtx; ++idN)
+    {
+      if(wgt)
+      {
+	WLZ_VTX_3_SCALE(p0, *(pos0 + idN), *(wgt + idN));
+	WLZ_VTX_3_SCALE(p1, *(pos1 + idN), *(wgt + idN));
+      }
+      else
+      {
+        p0 = *(pos0 + idN);
+	p1 = *(pos1 + idN);
+      }
+      WLZ_VTX_3_ADD(cen0, cen0, p0);
+      WLZ_VTX_3_ADD(cen1, cen1, p1);
+      WLZ_VTX_3_SUB(rel0, p0, p1);
+      meanSqD += WLZ_VTX_3_DOT(rel0, rel0);
+    }
+    tD0 = 1.0 / nVtx;
+    meanSqD *= tD0;
+    if(meanSqD < tol)
+    {
+      /* The vertices coincide, make an identity transform. */
+      tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
+    }
+    else
+    {
+      WLZ_VTX_3_SCALE(cen0, cen0, tD0);
+      WLZ_VTX_3_SCALE(cen1, cen1, tD0);
+      /* Compute the 3x3 matrix hMx, which is the sum of tensor products of
+       * the weighted vertices relative to their centroids. */
+      for(idN = 0; idN < nVtx; ++idN)
+      {
+	if(wgt)
+	{
+	  WLZ_VTX_3_SCALE(p0, *(pos0 + idN), *(wgt + idN));
+	  WLZ_VTX_3_SCALE(p1, *(pos1 + idN), *(wgt + idN));
+	}
+	else
+	{
+	  p0 = *(pos0 + idN);
+	  p1 = *(pos1 + idN);
+	}
+	WLZ_VTX_3_SUB(rel0, p0, cen0);
+	WLZ_VTX_3_SUB(rel1, p1, cen1);
+	hMx[0][0] += rel0.vtX * rel1.vtX;
+	hMx[0][1] += rel0.vtX * rel1.vtY;
+	hMx[0][2] += rel0.vtX * rel1.vtZ;
+	hMx[1][0] += rel0.vtY * rel1.vtX;
+	hMx[1][1] += rel0.vtY * rel1.vtY;
+	hMx[1][2] += rel0.vtY * rel1.vtZ;
+	hMx[2][0] += rel0.vtZ * rel1.vtX;
+	hMx[2][1] += rel0.vtZ * rel1.vtY;
+	hMx[2][2] += rel0.vtZ * rel1.vtZ;
+      }
+      /* Compute the SVD of the 3x3 matrix, hMx = hMx.mMx.vMx. */
+      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hMx, 3, 3, wMx, vMx));
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Compute 3x3 rotation matrix trMx = vMx.hMx', where hMx' is the
+	 * transpose of hMx. */
+	for(idR = 0; idR < 3; ++idR)
+	{
+	  for(idK = 0; idK < 3; ++idK)
+	  {
+	    trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+	      vMx[idR][1] * hMx[idK][1] + 
+	      vMx[idR][2] * hMx[idK][2];
+	  }
+	}
+	/* Test for degeneracy using the determinant of the rotation matrix. */
+	tD0 = (trMx[0][0] * trMx[1][1] * trMx[2][2]) -
+	  (trMx[0][0] * trMx[1][2] * trMx[2][1]) +
+	  (trMx[0][1] * trMx[1][2] * trMx[2][0]) -
+	  (trMx[0][1] * trMx[1][0] * trMx[2][2]) +
+	  (trMx[0][2] * trMx[1][0] * trMx[2][1]) -
+	  (trMx[0][2] * trMx[1][1] * trMx[2][0]);
+	if(tD0 < 0.0)
+	{
+	  /* Are source vertices (rel0) coplanar? They are iff one of the 3
+	   * singular values of hMx in wMx is zero. If the source vertices
+	   * are not coplanar, the the solution of the SVD is correct. */
+	  tI0 = (fabs(*(wMx + 0)) >= DBL_EPSILON) |
+	        ((fabs(*(wMx + 1)) >= DBL_EPSILON) << 1) |
+	        ((fabs(*(wMx + 2)) >= DBL_EPSILON) << 1);
+	  switch(tI0)
+	  {
+	    case 0:
+	      /* Source vertices are not coplanar or colinear. The SVD gives
+	       * the correct rotation. */
+	      break;
+	    case 1:
+	    case 2:
+	    case 4:
+	      /* Source vertices are coplanar, but not colinear. There is a
+	       * unique reflection as well as a unique rotation. The SVD
+	       * may give either BUT in this case it has found the reflection
+	       * so need to recompute for the rotation.
+	       * If the singular values of \f$\mathbf{W}\f$ are
+	       * \f$w_0 > w_1 > w_2 = 0\f$, then
+	       * \f[
+	         \mathbf{H} = w_0 u_0 v_0^t + w_1 u_1 v_1^t + 0.u_2 v_2^t
+		 \f]
+	       * where \f$u_i\f$ and \f$v_i\f$ are the columns of the
+	       * matricies \f$\mathbf{H}\f$ and \f$\mathbf{V}\f$
+	       * respectively (hMx is used for both \f$\mathbf{H}\f$
+	       * and \f$\mathbf{U}\f$).
+	       * So to get the rotation rather than the reflection we
+	       * recalculate the transform matrix with \f$v_2 = -v_2\f$.
+	       */
+	      for(idR = 0; idR < 3; ++idR)
+	      {
+		for(idK = 0; idK < 3; ++idK)
+		{
+		  trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+		    vMx[idR][1] * hMx[idK][1] -
+		    vMx[idR][2] * hMx[idK][2];
+		}
+	      }
+	      break;
+	    case 3:
+	    case 5:
+	    case 6:
+	      /* Source vertices are colinear and there exists an infinity of
+	       * solutions. But select the identity rotation matrix */
+	      trMx[0][0] = trMx[1][1] = trMx[2][2] = 1.0;
+	      trMx[0][1] = trMx[0][2] =
+	      trMx[1][0] = trMx[1][2] =
+	      trMx[2][0] = trMx[2][1] = 0.0;
+	      break;
+	  }
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Fill in other matrix elements. */
+	trMx[3][0] = trMx[3][1] = trMx[3][2] = 0.0;
+	trMx[3][3] = 1.0;
+	/* Compute the translation by applying the rotation to the source
+	 * tie points before computing the translation \f$\mathbf{T}\f$
+	 * using:
+	 * \f[
+	   \mathbf{T} = \frac{\sum_{i=0}^{N-1}{w_i^2 \mathbf{x}_i}}
+	                     {\sum_{i=0}^{N-1}{w_i^2}}
+	   \f]
+	 * \f[
+	   \mathbf{x}_i = {\mathbf{p}_i}' - \mathbf{R}\mathbf{p}_i
+	   \f]
+	 * where \f$w_i\f$ are the weights, \f${\mathbf{p}_i}'\f$ are the
+	 * target vertices, \f$\mathbf{p}_i\f$ are the source vertices
+	 and \f$\mathbf{R}\f$ is the rotation matrix.
+	 */
+	sumSqWgt = (wgt)? 0.0: nVtx;
+	wgtDsp.vtX = wgtDsp.vtY = wgtDsp.vtZ = 0.0;
+	for(idN = 0; idN < nVtx; ++idN)
+	{
+	  WLZ_VTX_3_SUB(p0, *(pos0 + idN), *(pos1 + idN));
+	  if(wgt)
+	  {
+	    tD0 = *(wgt + idN) * *(wgt + idN);
+	    sumSqWgt += tD0;
+	    WLZ_VTX_3_SCALE(p0, p0, tD0);
+	  }
+	  WLZ_VTX_3_ADD(wgtDsp, wgtDsp, p0);
+	}
+	tD0 = 1.0 / sumSqWgt;
+	trMx[0][3] = tD0 * wgtDsp.vtX;
+	trMx[1][3] = tD0 * wgtDsp.vtY;
+	trMx[2][3] = tD0 * wgtDsp.vtZ;
+	/* Build affine transform. */
+	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trMx,
+	    &errNum);
+      }
+      /* Clear up on error. */
+      if(wMx)
+      {
+	(void )AlcFree(wMx);
+      }
+      if(hMx)
+      {
+	(void )AlcDouble2Free(hMx);
+      }
+      if(vMx)
+      {
+	(void )AlcDouble2Free(vMx);
+      }
+      if(trMx)
+      {
+	(void )AlcDouble2Free(trMx);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/*!
+* \ingroup	WlzTransform
+* \return	Computed affine transform, may be NULL on error.
+* \brief	Computes the Woolz 2D registration transform which
+*		gives the best (weighted least squares) fit when used to
+*		transform the first set of vertices onto the second
+*		using the given match weights.
+*		The transform is constrained to rotation and
+*		translation only.
+*		The algorithm has been addapted from the algorithm:
+*		Arun K.S., Huang T.T. and Blostein S.D. "Least-Squares
+*		Fitting of Two 3-D Point Sets" PAMI 9(5), 698-700, 1987,
+*		by transforming the problem to a 2D space, including
+*		vertex weights and computing the translation component
+*		of the transform using
+	        \f[
+	          \mathbf{T} = \frac{\sum_{i=0}^{N-1}{w_i^2 \mathbf{x}_i}}
+				    {\sum_{i=0}^{N-1}{w_i^2}}
+	        \f]
+	        \f[
+	          \mathbf{x}_i = {\mathbf{p}_i}' - \mathbf{R}\mathbf{p}_i
+	        \f]
+*	        where \f$w_i\f$ are the weights, \f${\mathbf{p}_i}'\f$ are
+*		the target vertices, \f$\mathbf{p}_i\f$ are the source
+*		vertices and \f$\mathbf{R}\f$ is the rotation matrix.
+* \param	pos0			First array of vertices.
+* \param	pos1			Second array of vertices.
+* \param	wgt			Array of weights.
+* \param	nVtx			Number of vertices in each array.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+static WlzAffineTransform *WlzAffineTransformLSqSVDWgtReg2D(WlzDVertex2 *pos0,
+		    		WlzDVertex2 *pos1, double *wgt, int nVtx,
+				WlzErrorNum *dstErr)
+{
+  int		tI0,
+  		idN,
+  		idK,
+		idR;
+  double	tD0,
+  		meanSqD,
+		sumSqWgt;
+  WlzDVertex2	p0,
+  		p1,
+		cen0,
+  		cen1,
+		rel0,
+		rel1,
+		wgtDsp;
+  double	*wMx = NULL;
+  double	**hMx = NULL,
+  		**vMx = NULL,
+		**trMx = NULL;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	tol = 1.0E-06;
+
+  if(((wMx = (double *)AlcCalloc(sizeof(double), 2)) == NULL) ||
+     (AlcDouble2Calloc(&hMx, 2, 2) !=  ALC_ER_NONE) ||
+     (AlcDouble2Malloc(&vMx, 2, 2) !=  ALC_ER_NONE) ||
+     (AlcDouble2Malloc(&trMx, 4, 4) !=  ALC_ER_NONE))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute weighted centroids (cen0 and cen1) and a mean of squares of
+     * distance * between the weighted vertices. */
+    if(wgt)
+    {
+      WLZ_VTX_2_SCALE(p0, *pos0, *wgt);
+      WLZ_VTX_2_SCALE(p1, *pos1, *wgt);
+    }
+    else
+    {
+      p0 = *pos0;
+      p1 = *pos1;
+    }
+    WLZ_VTX_2_SUB(rel0, p0, p1);
+    meanSqD = WLZ_VTX_2_DOT(rel0, rel0);
+    for(idN = 1; idN < nVtx; ++idN)
+    {
+      if(wgt)
+      {
+	WLZ_VTX_2_SCALE(p0, *(pos0 + idN), *(wgt + idN));
+	WLZ_VTX_2_SCALE(p1, *(pos1 + idN), *(wgt + idN));
+      }
+      else
+      {
+        p0 = *(pos0 + idN);
+	p1 = *(pos1 + idN);
+      }
+      WLZ_VTX_2_ADD(cen0, cen0, p0);
+      WLZ_VTX_2_ADD(cen1, cen1, p1);
+      WLZ_VTX_2_SUB(rel0, p0, p1);
+      meanSqD += WLZ_VTX_2_DOT(rel0, rel0);
+    }
+    tD0 = 1.0 / nVtx;
+    meanSqD *= tD0;
+    if(meanSqD < tol)
+    {
+      /* The vertices coincide, make an identity transform. */
+      tr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
+    }
+    else
+    {
+      WLZ_VTX_2_SCALE(cen0, cen0, tD0);
+      WLZ_VTX_2_SCALE(cen1, cen1, tD0);
+      /* Compute the 2x2 matrix hMx, which is the sum of tensor products of
+       * the weighted vertices relative to their centroids. */
+      for(idN = 0; idN < nVtx; ++idN)
+      {
+	if(wgt)
+	{
+	  WLZ_VTX_2_SCALE(p0, *(pos0 + idN), *(wgt + idN));
+	  WLZ_VTX_2_SCALE(p1, *(pos1 + idN), *(wgt + idN));
+	}
+	else
+	{
+	  p0 = *(pos0 + idN);
+	  p1 = *(pos1 + idN);
+	}
+	WLZ_VTX_2_SUB(rel0, p0, cen0);
+	WLZ_VTX_2_SUB(rel1, p1, cen1);
+	hMx[0][0] += rel0.vtX * rel1.vtX;
+	hMx[0][1] += rel0.vtX * rel1.vtY;
+	hMx[1][0] += rel0.vtY * rel1.vtX;
+	hMx[1][1] += rel0.vtY * rel1.vtY;
+      }
+      /* Compute the SVD of the 2x2 matrix, hMx = hMx.mMx.vMx. */
+      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hMx, 2, 2, wMx, vMx));
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Compute 2x2 rotation matrix trMx = vMx.hMx', where hMx' is the
+	 * transpose of hMx. */
+	for(idR = 0; idR < 2; ++idR)
+	{
+	  for(idK = 0; idK < 2; ++idK)
+	  {
+	    trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+	      vMx[idR][1] * hMx[idK][1];
+	  }
+	}
+	/* Test for degeneracy using the determinant of the rotation matrix. */
+	tD0 = (trMx[0][0] * trMx[1][1]) - (trMx[0][1] * trMx[1][0]);
+	if(tD0 < 0.0)
+	{
+	  /* Are source vertices (rel0) colinear? They are iff one of the 2
+	   * singular values of hMx in wMx is zero. If the source vertices
+	   * are not coplanar, the the solution of the SVD is correct. */
+	  tI0 = (fabs(*(wMx + 0)) >= DBL_EPSILON) |
+		((fabs(*(wMx + 1)) >= DBL_EPSILON) << 1);
+	  if(tI0)
+	  {
+	    /* Source vertices are colinear and there exists an infinity of
+	     * solutions. But select the identity rotation matrix */
+	    trMx[0][0] = trMx[1][1] = trMx[2][2] = 1.0;
+	    trMx[0][1] = trMx[0][2] =
+	    trMx[1][0] = trMx[1][2] =
+	    trMx[2][0] = trMx[2][1] = 0.0;
+	  }
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Fill in other matrix elements. */
+	trMx[2][0] = trMx[2][1] = 0.0;
+	trMx[2][2] = 1.0;
+	/* Compute the translation by applying the rotation to the source
+	 * tie points before computing the translation \f$\mathbf{T}\f$
+	 * using:
+	 * \f[
+	   \mathbf{T} = \frac{\sum_{i=0}^{N-1}{w_i^2 \mathbf{x}_i}}
+	                     {\sum_{i=0}^{N-1}{w_i^2}}
+	   \f]
+	 * \f[
+	   \mathbf{x}_i = {\mathbf{p}_i}' - \mathbf{R}\mathbf{p}_i
+	   \f]
+	 * where \f$w_i\f$ are the weights, \f${\mathbf{p}_i}'\f$ are the
+	 * target vertices, \f$\mathbf{p}_i\f$ are the source vertices
+	 and \f$\mathbf{R}\f$ is the rotation matrix.
+	 */
+	sumSqWgt = (wgt)? 0.0: nVtx;
+	wgtDsp.vtX = wgtDsp.vtY = 0.0;
+	for(idN = 0; idN < nVtx; ++idN)
+	{
+	  WLZ_VTX_2_SUB(p0, *(pos0 + idN), *(pos1 + idN));
+	  if(wgt)
+	  {
+	    tD0 = *(wgt + idN) * *(wgt + idN);
+	    sumSqWgt += tD0;
+	    WLZ_VTX_2_SCALE(p0, p0, tD0);
+	  }
+	  WLZ_VTX_2_ADD(wgtDsp, wgtDsp, p0);
+	}
+	tD0 = 1.0 / sumSqWgt;
+	trMx[0][2] = tD0 * wgtDsp.vtX;
+	trMx[1][2] = tD0 * wgtDsp.vtY;
+	/* Build affine transform. */
+	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trMx,
 	    &errNum);
       }
       /* Clear up on error. */
@@ -1126,15 +1710,66 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 *		algorithm: M.W. Walker  and Shao L. Estimating 3-D
 *		Location Parameters Using Dual Number Quaternions,
 *		CVGIP 54(3), 1991.
-*		Equation 47 from this paper can be simplified to
-*		\f[
+*		This algorithm may be less stable than the SVD algorithm
+*		particularly when the data are co--linear.
+*		Given a set on \f$k\f$ source points
+*		\f$\bar{\mathbf{p}}^0_i\f$, \f$l\f$ source unit
+*		normals \f$\bar{\mathbf{n}}^0_i\f$;
+*		the corresponding target points \f$\mathbf{p}^0_i\f$
+*		and unit normals \f$\mathbf{n}^0_i\f$, with weights
+*		\f$alpha_i\f$ and \f$beta_i\f$ the algorithm performs
+*		the following steps:
+*		<ol>
+*		  <li> Compute \f$\mathbf{C}_1\f$, \f$\mathbf{C}_2\f$,
+*	               \f$\mathbf{C}_3\f$:
+*	               \f[
+  \mathbf{C}_1 = -2 \sum_{i=1}^k{
+    \alpha_i \mathbf{Q}(\bar{\mathbf{n}}_i)^T\mathbf{W}(\mathbf{n}^0_i)} -
+                    2 \sum_{i=1}^l{
+    \beta_i \mathbf{Q}(\bar{\mathbf{p}}_i)^T\mathbf{W}(\mathbf{p}^0_i)}
+		       \f]
+*	               \f[
+  \mathbf{C}_2 = \left(\sum_{i=1}^l{\beta_i} \right)\mathbf{I}
+		       \f]
+*	               \f[
+  \mathbf{C}_3 = 2 \sum_{i=1}^l{\beta_i
+    (\mathbf{W}(\mathbf{p}^0_i) - \mathbf{Q}(\bar{\mathbf{p}}_i)) }
+		       \f]
+*		  <li> Compute the \f$4 \times 4\f$ symetric matrix
+*		       \f$\mathbf{A}\f$:
+*		       \f[
+  \mathbf{A} = \frac{1}{2}
+    (\mathbf{C}_3^T(\mathbf{C}_2 + \mathbf{C}_2^T)^{-1}\mathbf{C}_3 -
+     \mathbf{C}_1 - \mathbf{C}_1^T)
+		       \f]
+*                     This can be simplified to:
+*		       \f[
 		 \mathbf{A} = {\frac{1}{4\sum{i=1}{n}{\beta_i}}}
 			      {\mathbf{C}_3^T\mathbf{C}_3} -
 			      \mathbf{C}_1
-		\f]
-*    		because \f$\mathbf{C}_1\f$ is real and symetric,
-*		\f$\mathbf{C}_2\f$ is scalar and \f$\mathbf{C}_3\f$
-*		is anti-symetric.
+		       \f]
+*    		      because \f$\mathbf{C}_1\f$ is real and symetric,
+*		      \f$\mathbf{C}_2\f$ is scalar and \f$\mathbf{C}_3\f$
+*		      is anti-symetric.
+*		  <li> Compute the eigenvector of \f$r\f$ corresponding to
+*		       the largest positie eigenvalue of matrix
+*		       \f$\mathbf{A}\f$ and derive \f$\mathbf{s}\f$ from
+*		       \f$\mathbf{r}\f$ using
+*		       \f[
+  \mathbf{t} = \mathbf{W}(\mathbf{r})^T \mathbf{s}
+		       \f]
+*		   <li> Compute the translation vector \f$mathbf{t}\f$ and
+*			rotation matrix \f$\mathbf{R}\f$ using:
+*		       \f[
+  \mathbf{t} = \mathbf{W}(\mathbf{r})^T \mathbf{s}
+                       \f]
+*		       and
+*		       \f[
+  \mathbf{R} = (r^2_4 - \mathbf{r}^T\mathbf{r}) \mathbf{I} +
+               2 \mathbf{r} \mathbf{r}^T +
+	       2 r_4 \mathbf{K}(\mathbf{r})
+                       \f]
+*		</ol>
 * \param	vtxType			Type of vertices.
 * \param	nV			Number of vertices.
 * \param	vW			Vertex weights (Walker's beta),
@@ -1420,11 +2055,21 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
   /* Compute c1M, c2M and c3M (see Walker's paper). */
   if(errNum == WLZ_ERR_NONE)
   {
-    sumVW = 0.0;
+    if(vW)
+    {
+      sumVW = 0.0;
+    }
+    else
+    {
+      sumVW = 1.0;
+    }
     for(id0 = 0; id0 < nV; ++id0)
     {
       /* Update sumVW */
-      sumVW += (vW)? vW[id0]: 1.0;
+      if(vW)
+      {
+        sumVW += vW[id0];
+      }
       /* Update c1M: Compute \beta_i{Q(v_i^t)}^TW(v_i_s) */
       wt = (vW)? vW[id0]: 1.0;
       t0V.vtX = (v0 + id0)->vtX; t0V.vtY = (v0 + id0)->vtY; t0V.vtZ = 0.0;
