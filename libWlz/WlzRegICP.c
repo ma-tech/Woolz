@@ -22,6 +22,7 @@
 *		    13(2):119-152, 1994.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
 * 06-12-00 bill Remove special case fn WlzRegICPCompTransform2D() and
 *		integrate code for both 2D and 3D into
 *		WlzRegICPCompTransform().
@@ -254,7 +255,7 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
       {
         if(dim[idx] == 2)
 	{
-	  if((tVP.vD2 = (WlzDVertex2 *)
+	  if((tVP.d2 = (WlzDVertex2 *)
 	                AlcMalloc(vCnt[idx] * sizeof(WlzDVertex2))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
@@ -265,12 +266,12 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 	    switch(vType[idx])
 	    {
 	      case WLZ_VERTEX_I2:
-		WlzValueCopyIVertexToDVertex(tVP.vD2, vData[idx].vI2,
+		WlzValueCopyIVertexToDVertex(tVP.d2, vData[idx].i2,
 					      vCnt[idx]);
 		copiedFlg = 1;
 		break;
 	      case WLZ_VERTEX_F2:
-		WlzValueCopyFVertexToDVertex(tVP.vD2, vData[idx].vF2,
+		WlzValueCopyFVertexToDVertex(tVP.d2, vData[idx].f2,
 					      vCnt[idx]);
 		copiedFlg = 1;
 		break;
@@ -279,13 +280,13 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 	    {
 	      vType[idx] = WLZ_VERTEX_D2;
 	      AlcFree(vData[idx].v);
-	      vData[idx].vD2 = tVP.vD2;
+	      vData[idx].d2 = tVP.d2;
 	    }
 	  }
 	}
 	else /* dim[idx] == 3 */
 	{
-	  if((tVP.vD3 = (WlzDVertex3 *)
+	  if((tVP.d3 = (WlzDVertex3 *)
 	                AlcMalloc(vCnt[idx] * sizeof(WlzDVertex3))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
@@ -296,12 +297,12 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 	    switch(vType[idx])
 	    {
 	      case WLZ_VERTEX_I3:
-		WlzValueCopyIVertexToDVertex3(tVP.vD3, vData[idx].vI3,
+		WlzValueCopyIVertexToDVertex3(tVP.d3, vData[idx].i3,
 					      vCnt[idx]);
 		copiedFlg = 1;
 		break;
 	      case WLZ_VERTEX_F3:
-		WlzValueCopyFVertexToDVertex3(tVP.vD3, vData[idx].vF3,
+		WlzValueCopyFVertexToDVertex3(tVP.d3, vData[idx].f3,
 					      vCnt[idx]);
 		copiedFlg = 1;
 		break;
@@ -310,7 +311,7 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 	    {
 	      vType[idx] = WLZ_VERTEX_D3;
 	      AlcFree(vData[idx].v);
-	      vData[idx].vD3 = tVP.vD3;
+	      vData[idx].d3 = tVP.d3;
 	    }
 	  }
 	}
@@ -392,9 +393,9 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
   {
     if(vType == WLZ_VERTEX_D2)
     {
-      if(((wSp.tMatchVx.vD2 = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) *
+      if(((wSp.tMatchVx.d2 = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) *
       						       maxCnt)) == NULL) ||
-         ((wSp.sMatchVx.vD2 = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) *
+         ((wSp.sMatchVx.d2 = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) *
       						       maxCnt)) == NULL))
       {
         errNum = WLZ_ERR_MEM_ALLOC;
@@ -402,9 +403,9 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
     }
     else /* vType == WLZ_VERTEX_D3 */
     {
-      if(((wSp.tMatchVx.vD3 = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
+      if(((wSp.tMatchVx.d3 = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
       						       maxCnt)) == NULL) ||
-         ((wSp.sMatchVx.vD3 = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
+         ((wSp.sMatchVx.d3 = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
       						       maxCnt)) == NULL))
       {
         errNum = WLZ_ERR_MEM_ALLOC;
@@ -550,9 +551,9 @@ static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
       while((alcErr == ALC_ER_NONE) && (idx < wSp->nT))
       {
 	sIdx = *(wSp->rank + idx);
-	tVP.vD2 = (wSp->tVx.vD2 + sIdx);
-	datD[0] = tVP.vD2->vtX;
-	datD[1] = tVP.vD2->vtY;
+	tVP.d2 = (wSp->tVx.d2 + sIdx);
+	datD[0] = tVP.d2->vtX;
+	datD[1] = tVP.d2->vtY;
 	if((node = AlcKDTInsert(wSp->tTree, datD, NULL, &alcErr)) != NULL)
 	{
 	  node->idx = sIdx;
@@ -565,10 +566,10 @@ static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
       while((alcErr == ALC_ER_NONE) && (idx < wSp->nT))
       {
 	sIdx = *(wSp->rank + idx);
-	tVP.vD3 = (wSp->tVx.vD3 + sIdx);
-	datD[0] = tVP.vD3->vtX;
-	datD[1] = tVP.vD3->vtY;
-	datD[2] = tVP.vD3->vtZ;
+	tVP.d3 = (wSp->tVx.d3 + sIdx);
+	datD[0] = tVP.d3->vtX;
+	datD[1] = tVP.d3->vtY;
+	datD[2] = tVP.d3->vtZ;
 	if((node = AlcKDTInsert(wSp->tTree, datD, NULL, &alcErr)) != NULL)
 	{
 	  node->idx = sIdx;
@@ -606,13 +607,13 @@ static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
   {
     if(wSp->vType == WLZ_VERTEX_D2)
     {
-      tVD2 = WlzAffineTransformVertexD2(wSp->tr, *(wSp->sVx.vD2 + idx), NULL);
+      tVD2 = WlzAffineTransformVertexD2(wSp->tr, *(wSp->sVx.d2 + idx), NULL);
       datD[0] = tVD2.vtX;
       datD[1] = tVD2.vtY;
     }
     else /* wSp->vType == WLZ_VERTEX_D3 */
     {
-      tVD3 = WlzAffineTransformVertexD3(wSp->tr, *(wSp->sVx.vD3 + idx), NULL);
+      tVD3 = WlzAffineTransformVertexD3(wSp->tr, *(wSp->sVx.d3 + idx), NULL);
       datD[0] = tVD3.vtX;
       datD[1] = tVD3.vtY;
       datD[2] = tVD3.vtZ;
@@ -653,15 +654,15 @@ static void	WlzRegICPRankMatch(WlzRegICPWSp *wSp)
   sCentroid = WlzRegICPCompCentroid(wSp->vType, wSp->sVx, wSp->nS);
   if(wSp->vType == WLZ_VERTEX_D2)
   {
-    dist.vtX = wSp->tCentroid.vD2.vtX - sCentroid.vD2.vtX;
-    dist.vtY = wSp->tCentroid.vD2.vtY - sCentroid.vD2.vtY;
+    dist.vtX = wSp->tCentroid.d2.vtX - sCentroid.d2.vtX;
+    dist.vtY = wSp->tCentroid.d2.vtY - sCentroid.d2.vtY;
     maxDist = 2.0 * sqrt((dist.vtX * dist.vtX) + (dist.vtY * dist.vtY) + 1.0);
   }
   else /* wSp->vType == WLZ_VERTEX_D3 */
   {
-    dist.vtX = wSp->tCentroid.vD3.vtX - sCentroid.vD3.vtX;
-    dist.vtY = wSp->tCentroid.vD3.vtY - sCentroid.vD3.vtY;
-    dist.vtZ = wSp->tCentroid.vD3.vtZ - sCentroid.vD3.vtZ;
+    dist.vtX = wSp->tCentroid.d3.vtX - sCentroid.d3.vtX;
+    dist.vtY = wSp->tCentroid.d3.vtY - sCentroid.d3.vtY;
+    dist.vtZ = wSp->tCentroid.d3.vtZ - sCentroid.d3.vtZ;
     maxDist = 2.0 * sqrt((dist.vtX * dist.vtX) + (dist.vtY * dist.vtY) +
                          (dist.vtZ * dist.vtZ) + 1.0);
   }
@@ -731,12 +732,12 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
     for(idx = 0; idx < wSp->nMatch; ++idx)
     {
       rIdx = *(wSp->rank + idx);
-      *(wSp->tMatchVx.vD2 + idx) = *(wSp->tVx.vD2 + rIdx);
-      *(wSp->sMatchVx.vD2 + idx) = *(wSp->sVx.vD2 + rIdx);
+      *(wSp->tMatchVx.d2 + idx) = *(wSp->tVx.d2 + rIdx);
+      *(wSp->sMatchVx.d2 + idx) = *(wSp->sVx.d2 + rIdx);
     }
     /* Compute the affine transform. */
-    newTr = WlzAffineTransformLSq2D(wSp->nMatch, wSp->sMatchVx.vD2,
-				    wSp->nMatch, wSp->tMatchVx.vD2,
+    newTr = WlzAffineTransformLSq2D(wSp->nMatch, wSp->sMatchVx.d2,
+				    wSp->nMatch, wSp->tMatchVx.d2,
 				    trType, &errNum);
   }
   else /* wSp->vType == WLZ_VERTEX_D3 */
@@ -745,12 +746,12 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
     for(idx = 0; idx < wSp->nMatch; ++idx)
     {
       rIdx = *(wSp->rank + idx);
-      *(wSp->tMatchVx.vD3 + idx) = *(wSp->tVx.vD3 + rIdx);
-      *(wSp->sMatchVx.vD3 + idx) = *(wSp->sVx.vD3 + rIdx);
+      *(wSp->tMatchVx.d3 + idx) = *(wSp->tVx.d3 + rIdx);
+      *(wSp->sMatchVx.d3 + idx) = *(wSp->sVx.d3 + rIdx);
     }
     /* Compute the affine transform. */
-    newTr = WlzAffineTransformLSq3D(wSp->nMatch, wSp->sMatchVx.vD3,
-				    wSp->nMatch, wSp->tMatchVx.vD3,
+    newTr = WlzAffineTransformLSq3D(wSp->nMatch, wSp->sMatchVx.d3,
+				    wSp->nMatch, wSp->tMatchVx.d3,
 				    trType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -828,30 +829,30 @@ static WlzVertex WlzRegICPCompCentroid(WlzVertexType vType, WlzVertexP vxP,
 
   if(vType == WLZ_VERTEX_D2)
   {
-    cVx.vD2.vtX = vxP.vD2->vtX;
-    cVx.vD2.vtY = vxP.vD2->vtY;
+    cVx.d2.vtX = vxP.d2->vtX;
+    cVx.d2.vtY = vxP.d2->vtY;
     for(idx = 1; idx < nVx; ++idx)
     {
-      cVx.vD2.vtX += (vxP.vD2 + idx)->vtX;
-      cVx.vD2.vtY += (vxP.vD2 + idx)->vtY;
+      cVx.d2.vtX += (vxP.d2 + idx)->vtX;
+      cVx.d2.vtY += (vxP.d2 + idx)->vtY;
     }
-    cVx.vD2.vtX /= nVx;
-    cVx.vD2.vtY /= nVx;
+    cVx.d2.vtX /= nVx;
+    cVx.d2.vtY /= nVx;
   }
   else /* vType == WLZ_VERTEX_D3 */
   {
-    cVx.vD3.vtX = vxP.vD3->vtX;
-    cVx.vD3.vtY = vxP.vD3->vtY;
-    cVx.vD3.vtZ = vxP.vD3->vtZ;
+    cVx.d3.vtX = vxP.d3->vtX;
+    cVx.d3.vtY = vxP.d3->vtY;
+    cVx.d3.vtZ = vxP.d3->vtZ;
     for(idx = 1; idx < nVx; ++idx)
     {
-      cVx.vD3.vtX += (vxP.vD3 + idx)->vtX;
-      cVx.vD3.vtY += (vxP.vD3 + idx)->vtY;
-      cVx.vD3.vtZ += (vxP.vD3 + idx)->vtZ;
+      cVx.d3.vtX += (vxP.d3 + idx)->vtX;
+      cVx.d3.vtY += (vxP.d3 + idx)->vtY;
+      cVx.d3.vtZ += (vxP.d3 + idx)->vtZ;
     }
-    cVx.vD3.vtX /= nVx;
-    cVx.vD3.vtY /= nVx;
-    cVx.vD3.vtZ /= nVx;
+    cVx.d3.vtX /= nVx;
+    cVx.d3.vtY /= nVx;
+    cVx.d3.vtZ /= nVx;
   }
   return(cVx);
 }

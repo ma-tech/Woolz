@@ -14,6 +14,7 @@
 *		used to transform one set of verticies to another.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
 * 05-12-00 bill In WlzAffineTransformLSqReg3D add code for degenerate
 *		solutions.
 * 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
@@ -92,13 +93,13 @@ WlzAffineTransform *WlzAffineTransformLSq(WlzVertexType vtxType,
     switch(vtxType)
     {
       case WLZ_VERTEX_D2:
-	tr = WlzAffineTransformLSq2D(nVtx0, vtxVec0.vD2,
-				     nVtx1, vtxVec1.vD2, 
+	tr = WlzAffineTransformLSq2D(nVtx0, vtxVec0.d2,
+				     nVtx1, vtxVec1.d2, 
 				     trType, &errNum);
 	break;
       case WLZ_VERTEX_D3:
-	tr = WlzAffineTransformLSq3D(nVtx0, vtxVec0.vD3, 
-				     nVtx1, vtxVec1.vD3,
+	tr = WlzAffineTransformLSq3D(nVtx0, vtxVec0.d3, 
+				     nVtx1, vtxVec1.d3,
 				     trType, &errNum);
 	break;
       default:

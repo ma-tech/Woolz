@@ -13,6 +13,7 @@
 *		represented by verticies, eg WLZ_2D_POLYGON.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
 ************************************************************************/
 #include <Wlz.h>
 
@@ -134,17 +135,17 @@ static WlzVertexP WlzVerticiesFromPoly2(WlzPolygonDomain *poly, int *dstCnt,
       {
 	case WLZ_POLYGON_INT:
 	  type = WLZ_VERTEX_I2;
-	  WlzValueCopyIVertexToIVertex(vData.vI2,
+	  WlzValueCopyIVertexToIVertex(vData.i2,
 				       (WlzIVertex2 *)(poly->vtx), cnt);
 	  break;
 	case WLZ_POLYGON_FLOAT:
 	  type = WLZ_VERTEX_F2;
-	  WlzValueCopyFVertexToFVertex(vData.vF2,
+	  WlzValueCopyFVertexToFVertex(vData.f2,
 				       (WlzFVertex2 *)(poly->vtx), cnt);
 	  break;
 	case WLZ_POLYGON_DOUBLE:
 	  type = WLZ_VERTEX_D2;
-	  WlzValueCopyDVertexToDVertex(vData.vD2,
+	  WlzValueCopyDVertexToDVertex(vData.d2,
 				       (WlzDVertex2 *)(poly->vtx), cnt);
 	  break;
 	default:
@@ -257,7 +258,7 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr, int *dstCnt,
 	    cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
 	    if(cV->idx >= 0)
 	    {
-	      *(vData.vI2 + idx) = cV->geo.vg2I->vtx;
+	      *(vData.i2 + idx) = cV->geo.vg2I->vtx;
 	    }
 	  }
 	}
@@ -275,7 +276,7 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr, int *dstCnt,
 	    cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
 	    if(cV->idx >= 0)
 	    {
-	      *(vData.vD2 + idx) = cV->geo.vg2D->vtx;
+	      *(vData.d2 + idx) = cV->geo.vg2D->vtx;
 	    }
 	  }
 	}
@@ -293,7 +294,7 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr, int *dstCnt,
 	    cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
 	    if(cV->idx >= 0)
 	    {
-	      *(vData.vI3 + idx) = cV->geo.vg3I->vtx;
+	      *(vData.i3 + idx) = cV->geo.vg3I->vtx;
 	    }
 	  }
 	}
@@ -311,7 +312,7 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr, int *dstCnt,
 	    cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
 	    if(cV->idx >= 0)
 	    {
-	      *(vData.vD3 + idx) = cV->geo.vg3D->vtx;
+	      *(vData.d3 + idx) = cV->geo.vg3D->vtx;
 	    }
 	  }
 	}
@@ -377,7 +378,7 @@ static WlzErrorNum WlzVerticiesCpBound(WlzVertexP vData,
 	}
 	else
 	{
-	  WlzValueCopyIVertexToIVertex(vData.vI2 + *off,
+	  WlzValueCopyIVertexToIVertex(vData.i2 + *off,
 				       (WlzIVertex2 *)(poly->vtx), cnt);
 	  *off += cnt;
 	}
@@ -389,7 +390,7 @@ static WlzErrorNum WlzVerticiesCpBound(WlzVertexP vData,
 	}
 	else
 	{
-	  WlzValueCopyFVertexToFVertex(vData.vF2 + *off,
+	  WlzValueCopyFVertexToFVertex(vData.f2 + *off,
 				       (WlzFVertex2 *)(poly->vtx), cnt);
 	  *off += cnt;
 	}
@@ -401,7 +402,7 @@ static WlzErrorNum WlzVerticiesCpBound(WlzVertexP vData,
 	}
 	else
 	{
-	  WlzValueCopyDVertexToDVertex(vData.vD2 + *off,
+	  WlzValueCopyDVertexToDVertex(vData.d2 + *off,
 				       (WlzDVertex2 *)(poly->vtx), cnt);
 	  *off += cnt;
 	}
