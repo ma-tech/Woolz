@@ -106,6 +106,11 @@ extern AlcErrno			AlcDouble2ReadAsci(
 				  double ***dstA,
 				  int *dstMElem,
 				  int *dstNElem);
+extern AlcErrno			AlcDouble2WriteAsci(
+				  FILE *fP,
+				  double **ar,
+				  int mElem,
+				  int nElem);
 
 /************************************************************************
 * AlcBlockStack.c

@@ -838,5 +838,41 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
 }
 
 /*!
+* \return		 		Error code.
+* \brief	Writes a 2D double array in numeric ASCI format to the
+*		given file file.
+*		Fields in the file are white space seperated and
+*		records are on separate lines.
+* \param	fP:			File pointer.
+* \param	ar 			Given array.
+* \param	mElem			Number of 1D arrays (number of
+*					records).
+* \param	nElem			Number of elements in each 1D array
+*					(number of fields per record).
+*/
+AlcErrno	AlcDouble2WriteAsci(FILE *fP, double **ar,
+				    int mElem, int nElem)
+{
+  int		iC,
+		iR;
+  AlcErrno	errNum = ALC_ER_NONE;
+
+  iR = 0;
+  while((iR < mElem) && (errNum == ALC_ER_NONE))
+  {
+    for(iC = 0; iC < nElem; ++iC)
+    {
+      (void )fprintf(fP, "%lg ", ar[iR][iC]);
+    }
+    if(fprintf(fP, "\n") != 1)
+    {
+      errNum = ALC_ER_WRITE;
+    }
+    ++iR;
+  }
+  return(errNum);
+}
+
+/*!
 * @}
 */
