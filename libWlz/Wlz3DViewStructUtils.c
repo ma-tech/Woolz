@@ -473,6 +473,36 @@ WlzErrorNum Wlz3DSectionTransformVtx(
 }
 
 /************************************************************************
+*   Function   : Wlz3DSectionTransformVtxR				*
+*   Date       : Thu Feb  6 11:03:13 1997				*
+*************************************************************************
+*   Synopsis   :Transform a 3D vertex using the section transform, This *
+*		is a wrapper routine to provide a destination vertex	*
+*		for JWlz						*
+*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
+*   Parameters :							*
+*   Global refs:							*
+************************************************************************/
+WlzErrorNum Wlz3DSectionTransformVtxR(
+  WlzDVertex3		*vtx,
+  WlzDVertex3		*dstVtx,
+  WlzThreeDViewStruct	*viewStr)
+{
+  WlzDVertex3	new;
+  WlzErrorNum	errNum;
+
+  new.vtX = vtx->vtX;
+  new.vtY = vtx->vtY;
+  new.vtZ = vtx->vtZ;
+  errNum = Wlz3DSectionTransformVtx(&new, viewStr);
+  dstVtx->vtX = new.vtX;
+  dstVtx->vtY = new.vtY;
+  dstVtx->vtZ = new.vtZ;
+  
+  return errNum;
+}
+
+/************************************************************************
 *   Function   : Wlz3DSectionTransformInvVtx				*
 *   Date       : Thu Feb  6 11:03:13 1997				*
 *************************************************************************
@@ -498,6 +528,36 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
     vtx->vtZ += (r[0][2] * x + r[1][2] * y + r[2][2] * z);
 
     return WLZ_ERR_NONE;
+}
+
+/************************************************************************
+*   Function   : Wlz3DSectionTransformInvVtxR				*
+*   Date       : Thu Feb  6 11:03:13 1997				*
+*************************************************************************
+*   Synopsis   :Transform a 3D vertex using the section transform, This *
+*		is a wrapper routine to provide a destination vertex	*
+*		for JWlz						*
+*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
+*   Parameters :							*
+*   Global refs:							*
+************************************************************************/
+WlzErrorNum Wlz3DSectionTransformInvVtxR(
+  WlzDVertex3		*vtx,
+  WlzDVertex3		*dstVtx,
+  WlzThreeDViewStruct	*viewStr)
+{
+  WlzDVertex3	new;
+  WlzErrorNum	errNum;
+
+  new.vtX = vtx->vtX;
+  new.vtY = vtx->vtY;
+  new.vtZ = vtx->vtZ;
+  errNum = Wlz3DSectionTransformInvVtx(&new, viewStr);
+  dstVtx->vtX = new.vtX;
+  dstVtx->vtY = new.vtY;
+  dstVtx->vtZ = new.vtZ;
+  
+  return errNum;
 }
 
 /************************************************************************
