@@ -204,10 +204,6 @@ public class SectionViewer
       System.out.println("exit SectionViewer");
   } // constructor
 
-  public void setFrame(Container frame) {
-    _frame = frame;
-  }
-
 //-------------------------------------------------------------
 // methods for adding / removing panels from the gui
 //-------------------------------------------------------------
@@ -1690,7 +1686,7 @@ public class SectionViewer
   WlzImgViewToPosAdaptor WI2P_1;
   WlzImgViewToGreyAdaptor WI2G_1;
   WlzImgViewToAnatAdaptor WI2A_1;
-  MouseToFBAdaptor M2FB_1;
+  public MouseToFBAdaptor M2FB_1; // GFeng needs access from external package
   MouseToFPAdaptor M2FP_1;
   MouseToThresholdAdaptor M2T_1;
   MouseToThreshConstraintAdaptor M2TC_1;
@@ -1905,6 +1901,30 @@ public class SectionViewer
    }
 
 //......................................
+   public JTextField getXyzTextField() {
+      return xyzTextField;
+   }
+
+//......................................
+   public JScrollPane getImageScrollPane() {
+      return _imageScrollPane;
+   }
+
+//......................................
+  public Container getFrame() {
+    return _frame;
+  }
+
+//......................................
+  public void setFrame(Container frame) {
+    _frame = frame;
+  }
+
+//......................................
+  public ViewStructModel getViewStructModel() {
+    return _VSModel;
+  }
+
 
 //HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 //-------------------------------------------------------------
