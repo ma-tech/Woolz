@@ -839,3 +839,369 @@ int Wlz3DViewGetBoundingBoxIntersection(
   return numVtxs;
 }
 
+/************************************************************************
+*   Function   : Wlz3DViewGetFixed					*
+*   Date       : Fri Dec  1 08:33:41 2000				*
+*************************************************************************
+*   Synopsis   : Get and set functions for the 3D view structure	*
+*   Returns    :							*
+*   Parameters :							*
+*   Global refs:							*
+************************************************************************/
+
+WlzErrorNum Wlz3DViewGetFixed(
+  WlzThreeDViewStruct	*vs,
+  double		*dstX,
+  double		*dstY,
+  double		*dstZ)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstX = vs->fixed.vtX;
+    *dstY = vs->fixed.vtY;
+    *dstZ = vs->fixed.vtZ;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetFixed(
+  WlzThreeDViewStruct	*vs,
+  double		x,
+  double	        y,
+  double		z)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->fixed.vtX = x;
+    vs->fixed.vtY = y;
+    vs->fixed.vtZ = z;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+
+WlzErrorNum Wlz3DViewGetTheta(
+  WlzThreeDViewStruct	*vs,
+  double		*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->theta;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetTheta(
+  WlzThreeDViewStruct	*vs,
+  double		val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->theta = val;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetPhi(
+  WlzThreeDViewStruct	*vs,
+  double		*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->phi;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetPhi(
+  WlzThreeDViewStruct	*vs,
+  double		val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->phi = val;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetZeta(
+  WlzThreeDViewStruct	*vs,
+  double		*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->zeta;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetZeta(
+  WlzThreeDViewStruct	*vs,
+  double		val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->zeta = val;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetDist(
+  WlzThreeDViewStruct	*vs,
+  double		*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->dist;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetDist(
+  WlzThreeDViewStruct	*vs,
+  double		val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->dist = val;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetScale(
+  WlzThreeDViewStruct	*vs,
+  double		*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->scale;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetScale(
+  WlzThreeDViewStruct	*vs,
+  double		val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->scale = val;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetViewMode(
+  WlzThreeDViewStruct	*vs,
+  WlzThreeDViewMode	*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->view_mode;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetViewMode(
+  WlzThreeDViewStruct	*vs,
+  WlzThreeDViewMode	val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    switch( val ){
+    case WLZ_STATUE_MODE:
+    case WLZ_UP_IS_UP_MODE:
+    case WLZ_FIXED_LINE_MODE:
+    case WLZ_ZERO_ZETA_MODE:
+    case WLZ_ZETA_MODE:
+      vs->view_mode = val;
+      break;
+
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+    }
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetUp(
+  WlzThreeDViewStruct	*vs,
+  double		*dstX,
+  double		*dstY,
+  double		*dstZ)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstX = vs->up.vtX;
+    *dstY = vs->up.vtY;
+    *dstZ = vs->up.vtZ;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetUp(
+  WlzThreeDViewStruct	*vs,
+  double		x,
+  double	        y,
+  double		z)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->up.vtX = x;
+    vs->up.vtY = y;
+    vs->up.vtZ = z;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetFixed2(
+  WlzThreeDViewStruct	*vs,
+  double		*dstX,
+  double		*dstY,
+  double		*dstZ)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstX = vs->fixed_2.vtX;
+    *dstY = vs->fixed_2.vtY;
+    *dstZ = vs->fixed_2.vtZ;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetFixed2(
+  WlzThreeDViewStruct	*vs,
+  double		x,
+  double	        y,
+  double		z)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->fixed_2.vtX = x;
+    vs->fixed_2.vtY = y;
+    vs->fixed_2.vtZ = z;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetFixedLineAngle(
+  WlzThreeDViewStruct	*vs,
+  double		*dstVal)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstVal = vs->fixed_line_angle;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewSetFixedLineAngle(
+  WlzThreeDViewStruct	*vs,
+  double		val)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    vs->fixed_line_angle = val;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}

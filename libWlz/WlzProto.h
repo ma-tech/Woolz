@@ -47,6 +47,8 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 01-12-00 RAB	Add WlzHasIntersection().
+* 01-12-00 RAB	Add get and set functions for 3D view structure params.
 * 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
 *		add WlzAffineTransformLSq3D and a new WlzAffineTransformLSq.
 * 28-11-00 bill	Add WlzGMShellComputeGBB() and WlzGMFilterRmSmShells().
@@ -140,7 +142,58 @@ extern int 			Wlz3DViewGetBoundingBoxIntersection(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzDVertex3 *rtnVtxs,
 				  WlzErrorNum *dstErr);
-
+extern WlzErrorNum Wlz3DViewGetFixed(WlzThreeDViewStruct	*vs,
+				     double			*dstX,
+				     double			*dstY,
+				     double			*dstZ);
+extern WlzErrorNum Wlz3DViewSetFixed(WlzThreeDViewStruct	*vs,	
+				     double			x,
+				     double	       		y,
+				     double			z);
+extern WlzErrorNum Wlz3DViewGetTheta(WlzThreeDViewStruct	*vs,
+				     double			*dstVal);
+extern WlzErrorNum Wlz3DViewSetTheta(WlzThreeDViewStruct	*vs,
+				     double			val);
+extern WlzErrorNum Wlz3DViewGetPhi(WlzThreeDViewStruct	*vs,
+				   double		*dstVal);
+extern WlzErrorNum Wlz3DViewSetPhi(WlzThreeDViewStruct	*vs,
+				   double		val);
+extern WlzErrorNum Wlz3DViewGetZeta(WlzThreeDViewStruct	*vs,
+				    double		*dstVal);
+extern WlzErrorNum Wlz3DViewSetZeta(WlzThreeDViewStruct	*vs,
+				    double		val);
+extern WlzErrorNum Wlz3DViewGetDist(WlzThreeDViewStruct	*vs,
+				    double		*dstVal);
+extern WlzErrorNum Wlz3DViewSetDist(WlzThreeDViewStruct	*vs,
+				    double		val);
+extern WlzErrorNum Wlz3DViewGetScale(WlzThreeDViewStruct	*vs,
+				     double			*dstVal);
+extern WlzErrorNum Wlz3DViewSetScale(WlzThreeDViewStruct	*vs,
+				     double			val);
+extern WlzErrorNum Wlz3DViewGetViewMode(WlzThreeDViewStruct	*vs,
+					WlzThreeDViewMode	*dstVal);
+extern WlzErrorNum Wlz3DViewSetViewMode(WlzThreeDViewStruct	*vs,
+					WlzThreeDViewMode	val);
+extern WlzErrorNum Wlz3DViewGetUp(WlzThreeDViewStruct	*vs,
+				  double		*dstX,
+				  double		*dstY,
+				  double		*dstZ);
+extern WlzErrorNum Wlz3DViewSetUp(WlzThreeDViewStruct	*vs,
+				  double		x,
+				  double	        y,
+				  double		z);
+extern WlzErrorNum Wlz3DViewGetFixed2(WlzThreeDViewStruct	*vs,
+				      double			*dstX,
+				      double			*dstY,
+				      double			*dstZ);
+extern WlzErrorNum Wlz3DViewSetFixed2(WlzThreeDViewStruct	*vs,
+				      double			x,
+				      double	      		y,
+				      double			z);
+extern WlzErrorNum Wlz3DViewGetFixedLineAngle(WlzThreeDViewStruct	*vs,
+					      double		*dstVal);
+extern WlzErrorNum Wlz3DViewSetFixedLineAngle(WlzThreeDViewStruct	*vs,
+					      double		val);
 /************************************************************************
 * Wlz3DViewTransformObj.c						*
 ************************************************************************/
@@ -1555,6 +1608,12 @@ extern WlzObject 		*WlzIntersectN(
 				  int uvt,
 				  WlzErrorNum *dstErr);
 
+/************************************************************************
+* WlzHasIntersect.c							*
+************************************************************************/
+extern int WlzHasIntersection(WlzObject	*obj1,
+			      WlzObject	*obj2,
+			      WlzErrorNum	*dstErr);
 /************************************************************************
 * WlzIntervalCount.c							*
 ************************************************************************/

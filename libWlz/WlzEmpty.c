@@ -18,7 +18,7 @@
 *   Author Name :  Richard Baldock					*
 *   Author Login:  richard@hgu.mrc.ac.uk				*
 *   Date        :  Mon Oct 30 17:34:21 2000				*
-*   $Revision$								*
+*   $Revision$							*
 *   $Name$								*
 *   Synopsis    : 							*
 *************************************************************************
@@ -52,7 +52,7 @@ int WlzIsEmpty(WlzObject *obj, WlzErrorNum *wlzErr)
 	switch( obj->domain.i->type ){
 	case WLZ_INTERVALDOMAIN_INTVL:
 	  for(i=obj->domain.i->line1; i <=  obj->domain.i->lastln; i++){
-	    if( obj->domain.i->intvlines[i-obj->domain.i->line1].nintvs ){
+	    if( obj->domain.i->intvlines[i-obj->domain.i->line1].nintvs > 0 ){
 	      emptyFlg = 0;
 	      break;
 	    }
@@ -94,6 +94,9 @@ int WlzIsEmpty(WlzObject *obj, WlzErrorNum *wlzErr)
 	      emptyFlg = 0;
 	      break;
 	    }
+	  }
+	  else {
+	    emptyFlg = 1;
 	  }
 	}
       }

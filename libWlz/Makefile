@@ -85,6 +85,7 @@ CSOURCES		= \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
 			WlzGreyValue.c \
+			WlzHasIntersect.c \
 			WlzHistogram.c \
 			WlzHyThreshold.c \
 			WlzImageArithmetic.c \
