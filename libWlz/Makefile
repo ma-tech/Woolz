@@ -3,7 +3,7 @@
 # Title:        Makefile
 # Date:         March 1999
 # Author:       Bill Hill
-# Copyright:	1999 Medical Research Council, UK.
+# Copyright:	2003 Medical Research Council, UK.
 #		All rights reserved.
 # Address:	MRC Human Genetics Unit,
 #		Western General Hospital,
