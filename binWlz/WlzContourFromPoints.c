@@ -58,10 +58,14 @@ int             main(int argc, char **argv)
 		oAlpha,
 		iDist,
 		oDist;
+  WlzObject 	*dObj = NULL;
+  WlzBox	bBox0,
+  		bBox1;
   WlzIVertex2	tDASz;
   WlzVertexP	sPts,
   		iPts,
 		oPts;
+  WlzPixelV	bgdV;
   WlzDomain	outDom;
   WlzValues	dumVal;
   WlzObject	*outObj = NULL;
@@ -75,6 +79,7 @@ int             main(int argc, char **argv)
   static char	optList[] = "h23o:S:I:O:a:b:c:d:e:D:T:X:",
 		defFileStr[] = "-";
 
+  bgdV.type = WLZ_GREY_DOUBLE;
   outDom.core = NULL;
   dumVal.core = NULL;
   sPts.v = iPts.v = oPts.v = NULL;
@@ -293,19 +298,54 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
+    bgdV.v.dbv = oDist;
+    bgdV.type = WLZ_GREY_DOUBLE;
     switch(dim)
     {
       case 2:
         errNum = WLZ_ERR_UNIMPLEMENTED;
 	break;
       case 3:
-	outDom.ctr = WlzContourFromPoints(WLZ_VERTEX_D3,
+	/* Compute ounding box of points. */
+	bBox0.d3 = WlzBoundingBoxVtx3D(nSPts, sPts.d3, NULL);
+	bBox1.d3 = WlzBoundingBoxVtx3D(nIPts, iPts.d3, NULL);
+	bBox0.d3 = WlzBoundingBoxUnion3D(bBox0.d3, bBox1.d3);
+	bBox1.d3 = WlzBoundingBoxVtx3D(nOPts, oPts.d3, NULL);
+	bBox0.d3 = WlzBoundingBoxUnion3D(bBox0.d3, bBox1.d3);
+	/* Create distance object that will be used to accumulate distance
+	   values. If only a 2D contour is required then create a distance
+	   object with a single plane. */
+	dObj = WlzMakeCuboid((planeFlg)?
+	                     planeIdx: (int )floor(bBox0.d3.zMin) - 2,
+			     (planeFlg)?
+			     planeIdx: (int )ceil(bBox0.d3.zMax) + 2,
+			     (int )floor(bBox0.d3.yMin) - 2,
+			     (int )ceil(bBox0.d3.yMax) + 2,
+			     (int )floor(bBox0.d3.xMin) - 2,
+			     (int )ceil(bBox0.d3.xMax) + 2,
+			     WLZ_GREY_DOUBLE, bgdV,
+			     NULL, NULL, &errNum);
+	if((dObj == NULL) || (errNum != WLZ_ERR_NONE))
+	{
+	  ok = 0;
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  (void )WlzStringFromErrorNum(errNum, &errMsg);
+	  (void )fprintf(stderr,
+	  		 "%s: failed to allocate distance object (%s).\n",
+			 *argv, errMsg);
+
+	}
+	/* Compute contour using given distance object. */
+	outDom.ctr = WlzContourFromPoints(dObj, WLZ_VERTEX_D3,
 					  nSPts, sPts, sAlpha,
 					  nIPts, iPts, iDist, iAlpha,
 					  nOPts, oPts, oDist, oAlpha,
 					  delta, tau,
-					  planeFlg, planeIdx,
 					  &errNum);
+	WlzFreeObj(dObj);
 	break;
     }
     if(errNum != WLZ_ERR_NONE)
