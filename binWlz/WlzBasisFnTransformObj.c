@@ -63,7 +63,7 @@ int             main(int argc, char **argv)
 		*tiePtFileStr = NULL,
   		*outObjFileStr;
   const char    *errMsg;
-  static char	optList[] = "m:o:p:t:M:Y:ghqsyBDGLT",
+  static char	optList[] = "m:o:p:t:M:Y:cghqsyBDGLT",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-",
   		inRecord[IN_RECORD_MAX];
@@ -83,6 +83,9 @@ int             main(int argc, char **argv)
 	break;
       case 'D':
         debugPSOutput = 1;
+	break;
+      case 'c':
+        basisFnType = WLZ_BASISFN_CONF_POLY;
 	break;
       case 'g':
         basisFnType = WLZ_BASISFN_GAUSS;
@@ -385,6 +388,7 @@ int             main(int argc, char **argv)
     "  -o  Output object file name.\n"
     "  -p  Tie point file.\n"
     "  -t  Basis function transform object.\n"
+    "  -c  Use conformal polynomial basis function if tie points are given.\n"
     "  -g  Use Gaussian basis function if tie points are given.\n"
     "  -h  Help, prints this usage message.\n"
     "  -q  Use multi-quadric basis function if tie points are given.\n"
