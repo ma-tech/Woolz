@@ -64,6 +64,8 @@ public class WSetter extends WSetterGUI
     slidingEvents = sliding;
     _type = type;
     _enabled = false;
+    _slider.setEnabled(false);
+    textf.setEditable(false);
     try {
       initWSetter();
     }
@@ -79,6 +81,8 @@ public class WSetter extends WSetterGUI
    */
   public void setEnabled(boolean state) {
      _enabled = state;
+     _slider.setEnabled(state);
+     textf.setEditable(state);
   }
 //-------------------------------------------------------------
   /**
@@ -260,6 +264,15 @@ public class WSetter extends WSetterGUI
 
    public boolean isSliderEnabled() {
       return _slider.isEnabled();
+   }
+
+//.....................................
+   public void setTextFieldEditable(boolean bool) {
+      textf.setEditable(bool);
+   }
+
+   public boolean isTextFieldEditable() {
+      return textf.isEditable();
    }
 
 //===========================================
