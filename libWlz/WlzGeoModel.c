@@ -4311,12 +4311,12 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
     (void )WlzGMShellSetG3D(nShell, 3, pos);
     nShell->child = nLT[0];
     nShell->parent = model;
+    nShell->next = nShell->prev = nShell;
     /* Is this the first shell of the model? */
     if((eShell = model->child) == NULL)
     {
       /* First shell in model */
       model->child = nShell;
-      nShell->next = nShell->prev = nShell;
     }
     else
     {
@@ -6137,12 +6137,12 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
     (void )WlzGMShellSetG2D(nShell, 2, pos);
     nShell->child = nLT;
     nShell->parent = model;
+    nShell->next = nShell->prev = nShell;
     /* Is this the first shell of the model? */
     if((eShell = model->child) == NULL)
     {
       /* First shell in model */
       model->child = nShell;
-      nShell->next = nShell->prev = nShell;
     }
     else
     {
