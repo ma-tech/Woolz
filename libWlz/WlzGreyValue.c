@@ -243,6 +243,7 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   WlzIntervalLine *itvLn;
 
   kol1 = gVWSp->iDom2D->kol1;
+  gVWSp->bkdFlag = 0;
   if((gVWSp->values2D.core) && 
      (kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
   {
@@ -283,6 +284,7 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   if(valSet == 0)
   {
     WlzGreyValueSetBkdP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType, gVWSp->gBkd);
+    gVWSp->bkdFlag = 1;
   }
 }
 
@@ -335,6 +337,7 @@ static void	WlzGreyValueGet3D1(WlzGreyValueWSpace *gVWSp,
   if(valSet == 0)
   {
     WlzGreyValueSetBkdP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType, gVWSp->gBkd);
+    gVWSp->bkdFlag = 1;
   }
 }
 

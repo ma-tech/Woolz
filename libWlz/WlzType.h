@@ -1951,6 +1951,7 @@ typedef struct _WlzGreyValueWSpace
   WlzGreyV      gBkd;              /* Background grey value, always of gType */
   WlzGreyP      gPtr[8];        	 /* One, four or eight grey pointers */
   WlzGreyV      gVal[8];        	   /* One, four or eight grey values */
+  int		bkdFlag;	  /* flag set to 1 if background used else 0 */
 } WlzGreyValueWSpace;
 
 /************************************************************************

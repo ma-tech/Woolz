@@ -105,6 +105,10 @@ extern WlzObject 		*WlzGetSectionFromObject(
 				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
 				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzGetMaskedSectionFromObject(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *viewStr,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * Wlz3DSectionSegmentObject.c						*

@@ -2663,6 +2663,7 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
       case WLZ_BOUNDLIST:
       case WLZ_CONTOUR:
       case WLZ_TRANS_OBJ:
+      case WLZ_AFFINE_TRANS:
 	if(srcObj->domain.core == NULL)
 	{
 	  errNum = WLZ_ERR_DOMAIN_NULL;
@@ -2684,6 +2685,11 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	      					     trans, 1, &errNum);
 	      break;
 	    case WLZ_TRANS_OBJ:
+	      dstDom.t = WlzAffineTransformProduct(srcObj->domain.t,
+	      					   trans, &errNum);
+	      srcValues = srcObj->values;
+	      break;
+	    case WLZ_AFFINE_TRANS:
 	      dstDom.t = WlzAffineTransformProduct(srcObj->domain.t,
 	      					   trans, &errNum);
 	      break;
