@@ -929,7 +929,7 @@ public class WlzImgView extends Component {
      for (int i = 0; i < tps.size(); i++){
        Point p = (Point) tps.get(i);
        g.setColor((Color)tpsCol.get(i));
-       g.fillOval((int)_mag*p.x - 4, (int)_mag*p.y - 4, 8, 8);
+       g.fillOval((int)(_mag*p.x) - 4, (int)(_mag*p.y) - 4, 8, 8);
      }
      g.scale(_mag, _mag);
      g.setColor(orgColor);
