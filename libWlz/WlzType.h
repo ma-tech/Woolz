@@ -309,7 +309,8 @@ typedef enum
 ************************************************************************/
 typedef enum
 {
-  WLZ_8_CONNECTED		= 0,
+  WLZ_0_CONNECTED		= 0,
+  WLZ_8_CONNECTED,
   WLZ_4_CONNECTED,
   WLZ_6_CONNECTED,
   WLZ_18_CONNECTED,

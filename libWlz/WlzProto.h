@@ -503,6 +503,18 @@ extern WlzObject		*WlzBoundaryToObj(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+ * WlzCannyDeriche.c							*
+ ************************************************************************/
+extern WlzObject		*WlzCannyDeriche(
+				  WlzObject **dstGObj,
+				  WlzObject *srcObj,
+				  double alpha,
+				  double mult,
+				  WlzPixelV pMinGrdV,
+				  WlzPixelV sMinGrdV,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
  * WlzCentreOfMass.c							*
  ************************************************************************/
 extern WlzDVertex2 		WlzCentreOfMass2D(
@@ -816,6 +828,17 @@ extern WlzObject 		*WlzGreyDitherObj(WlzObject *o,
 				   WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzGreyGradient.c							*
+************************************************************************/
+extern WlzObject 		*WlzGreyGradient(
+				  WlzObject **dstGrdZ,
+				  WlzObject **dstGrdY,
+				  WlzObject **dstGrdX,
+				  WlzObject *srcObj,
+				  WlzRsvFilter *flt,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzGreyInvertMinMax.c							*
 ************************************************************************/
 extern WlzErrorNum 		WlzGreyInvertMinMax(
@@ -996,6 +1019,17 @@ extern WlzErrorNum 		WlzHistogramMatchObj(
 extern WlzErrorNum 		WlzHistogramEqualiseObj(
 				  WlzObject *srcObj,
 				  int smoothing);
+
+/************************************************************************
+* WlzHyThreshold.c							*
+************************************************************************/
+extern WlzObject		*WlzHyThreshold(
+				  WlzObject *srcObj,
+				  WlzPixelV pThrV,
+				  WlzPixelV sThrV,
+				  WlzThresholdType hilo,
+				  WlzConnectType con,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzImageArithmetic.c							*
@@ -1339,6 +1373,17 @@ extern WlzErrorNum		WlzMeshNodeDelIdx(
 extern WlzErrorNum		WlzMeshSqueeze(
 				  WlzMeshTransform *mesh);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzNMSuppress.c							*
+************************************************************************/
+extern WlzObject		*WlzNMSuppress(
+				  WlzObject *grdM,
+				  WlzObject *grdZ,
+				  WlzObject *grdY,
+				  WlzObject *grdX,
+			          WlzPixelV minThrV,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzObjToBoundary.c							*

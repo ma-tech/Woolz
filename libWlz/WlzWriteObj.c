@@ -69,10 +69,18 @@ static int putword(int i, FILE *fp)
   unsigned char *cin, cout[4];
 
   cin = (unsigned char *) &i;
+#ifdef __sparc
   cout[0] = *(cin+3);
   cout[1] = *(cin+2);
   cout[2] = *(cin+1);
-  cout[3] = *cin;
+  cout[3] = *(cin+0);
+#endif /* __sparc */
+#ifdef __x86
+  cout[0] = *(cin+0);
+  cout[1] = *(cin+1);
+  cout[2] = *(cin+2);
+  cout[3] = *(cin+3);
+#endif /* __x86 */
   return( (int) fwrite(&cout[0], sizeof(int), 1, fp) );
 }
 
@@ -91,8 +99,14 @@ static int putshort(short i, FILE *fp)
   unsigned char *cin, cout[2];
 
   cin = (unsigned char *) &i;
+#ifdef __sparc
   cout[0] = *(cin+1);
-  cout[1] = *cin;
+  cout[1] = *(cin+0);
+#endif /* __sparc */
+#ifdef __x86
+  cout[0] = *(cin+0);
+  cout[1] = *(cin+1);
+#endif /* __x86 */
   return( (int) fwrite(&cout[0], sizeof(short), 1, fp) );
 }
 

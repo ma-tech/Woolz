@@ -458,7 +458,7 @@ static void	WlzBufMagI(WlzGreyP gP1, WlzGreyP gP0, int count)
   iP1 = gP1.inp;
   while(count-- > 0)
   {
-    if(*iP0 && *iP1)
+    if(*iP0 || *iP1)
     {
       dV0 = (*iP0 * *iP0) + (*iP1 * *iP1);
       dV0 = sqrt(dV0);

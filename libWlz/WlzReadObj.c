@@ -77,10 +77,18 @@ static int getword(FILE *fp)
   char cin[4], cout[4];
 
   fread(cin,sizeof(char),4,fp);
+#ifdef __sparc
   cout[0] = cin[3];
   cout[1] = cin[2];
   cout[2] = cin[1];
   cout[3] = cin[0];
+#endif /* __sparc */
+#ifdef __x86
+  cout[0] = cin[0];
+  cout[1] = cin[1];
+  cout[2] = cin[2];
+  cout[3] = cin[3];
+#endif /* __x86 */
   return(*((int *) &cout[0]));
 }
 
@@ -97,8 +105,14 @@ static int getshort(FILE *fp)
   char cin[2], cout[2];
 
   fread(cin,sizeof(char),2,fp);
+#ifdef __sparc
   cout[0] = cin[1];
   cout[1] = cin[0];
+#endif /* __sparc */
+#ifdef __x86
+  cout[0] = cin[0];
+  cout[1] = cin[1];
+#endif /* __x86 */
   return((int) *((short *) &cout[0]));
 }
 

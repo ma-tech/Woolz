@@ -38,6 +38,7 @@ CSOURCES		= \
 			WlzBasisFnTransform.c \
 			WlzBoundingBox.c \
 			WlzBoundToObj.c \
+			WlzCannyDeriche.c \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
 			WlzCompThresh.c \
@@ -64,6 +65,7 @@ CSOURCES		= \
 			WlzGeometry.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
+			WlzGreyGradient.c \
 			WlzGreyInvertMinMax.c \
 			WlzGreyMask.c \
 			WlzGreyModGradient.c \
@@ -76,6 +78,7 @@ CSOURCES		= \
 			WlzGreyTemplate.c \
 			WlzGreyValue.c \
 			WlzHistogram.c \
+			WlzHyThreshold.c \
 			WlzImageArithmetic.c \
 			WlzInsideDomain.c \
 			WlzIntersect2.c \
@@ -95,6 +98,7 @@ CSOURCES		= \
 			WlzMakeStructs.c \
 			WlzMeshTransform.c \
 			WlzMeshUtils.c \
+			WlzNMSuppress.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c  \
 			WlzPolyToObj.c \

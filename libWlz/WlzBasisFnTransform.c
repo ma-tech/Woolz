@@ -21,6 +21,7 @@
 #include <float.h>
 #include <Wlz.h>
 
+
 static WlzBasisFnTransform *WlzBasisFnGaussFromCPts(int, WlzDVertex2 *,
 				WlzDVertex2 *, double, WlzErrorNum *),
 		*WlzBasisFnPolyFromCPts(int, int, WlzDVertex2 *, 
@@ -619,7 +620,6 @@ static WlzDVertex2 WlzBasisFnDisplacementConf(WlzBasisFnTransform *basis,
   }
   dspVx.vtX = z.re;
   dspVx.vtY = z.im;
-
   return(dspVx);
 }
 

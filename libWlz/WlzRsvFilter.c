@@ -22,7 +22,7 @@
 #include <Wlz.h>
 
 /* #define WLZ_RSVFILTER_TEST_1D */
-#define WLZ_RSVFILTER_TEST_2D
+/* #define WLZ_RSVFILTER_TEST_2D */
 /* #define WLZ_RSVFILTER_TEST_3D */
 
 #define WLZ_RSVFILTER_IFAC	(1<<10)     /* Fixed point arithmetic factor */
