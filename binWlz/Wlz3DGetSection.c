@@ -91,6 +91,7 @@ int main(int	argc,
     case 'o':
       outFile = optarg;
       break;
+
     case 'h':
     default:
       usage(argv[0]);
@@ -107,7 +108,7 @@ int main(int	argc,
       return 1;
     }
   }
-  if(strcmp(outFile, "_"))
+  if(strcmp(outFile, "-"))
   {
     if((outFP = fopen(outFile, "w")) == NULL)
     {
