@@ -2036,7 +2036,7 @@ static WlzErrorNum WlzWriteContour(FILE *fP, WlzContour *ctr)
  		    case WLZ_GMMOD_3I
  		    case WLZ_GMMOD_3D
  		    {
- 		      2 vertex indicies
+ 		      3 vertex indicies
  		    } * nLoop
  		  }
 		\endverbatim
