@@ -65,7 +65,7 @@ public interface SVParent {
     *   Tests for the existence of an AnatKey.
     *   @return true if there is an AnatKey.
     */
-    public AnatKey		getAnatKey();
+    public AnatKey		getAnatomyKey();
 
 }
 

@@ -44,6 +44,11 @@ public class SectionViewer
    */
   public Object _parent = null;
 
+  /**
+   *   Instance of AnatKey.
+   */
+  private AnatKey _key = null;
+
   /**   Cursor used for operations within a grey-level image. */
   protected Cursor xhairCursor = new Cursor(Cursor.CROSSHAIR_CURSOR);
 
@@ -528,6 +533,21 @@ public class SectionViewer
       System.out.println(ae.getMessage());
     }
 
+    try {
+      Method M1 = null;
+      M1 = _parent.getClass().getMethod("getAnatomyKey", null);
+      _key = (AnatKey) M1.invoke(_parent, null);
+    }
+    catch (InvocationTargetException e) {
+      System.out.println(e.getMessage());
+    }
+    catch (NoSuchMethodException ne) {
+      System.out.println("getAnatomyKey: no such method");
+    }
+    catch (IllegalAccessException ae) {
+      System.out.println(ae.getMessage());
+    }
+
     _VSModel = new ViewStructModel(_OBJModel);
     _OBJModel.makeSection(_VSModel.getViewStruct());
     setDistLimits(0.0);
@@ -892,11 +912,12 @@ public class SectionViewer
 // show anatomy selected from menu
 //-------------------------------------------------------------
   /**
-   *   Gets an collection of anatomy components from <em>_parent</em> and
+   *   Gets a collection of anatomy components from <em>_parent</em> and
    *   calls anatomyFromMenu(Vector vec).
    */
   public void anatomyFromMenu() {
 
+    if(_key == null) return;
     Vector vec = null;
     if (null != _parent) {
       try {
@@ -926,10 +947,11 @@ public class SectionViewer
    */
   public void anatomyFromMenu(Vector vec) {
 
+    if(_key == null) return;
     int num = vec.size();
-    if(num != AnatKey.getNRows()) {
+    if(num != _key.getNRows()) {
        System.out.println("anatomyFromMenu: vec length "+num+
-                          " nrows "+AnatKey.getNRows());
+                          " nrows "+_key.getNRows());
     }
     WlzObject obj2D[] = new WlzObject[num];
     boolean viz[] = new boolean[num];
@@ -944,7 +966,7 @@ public class SectionViewer
       el = (AnatomyElement)els.nextElement();
       if (el != null) {
         viz[i] = el.isVisible();
-	col[i] = AnatKey.getColor(el.getIndx());
+	col[i] = _key.getColor(el.getIndx());
         obj2D[i] = _OBJModel.makeSection(
             el.getObj(),
             _VSModel.getViewStruct());
@@ -3756,17 +3778,21 @@ public class SectionViewer
       oObj = null;
       oSection = null;
 
-      int num = AnatKey.getNRows();
+      /*
+      if(_key != null) {
+	 int num = _key.getNRows();
 
-      obj2D = new WlzObject[num];
-      boolean viz[] = new boolean[num];
-      Color col[] = new Color[num];
-      
-      for (int i = 0; i < num; i++) {
-        obj2D[i] = null;
-        viz[i] = false;
-	col[i] = null;
+	 obj2D = new WlzObject[num];
+	 boolean viz[] = new boolean[num];
+	 Color col[] = new Color[num];
+	 
+	 for (int i = 0; i < num; i++) {
+	   obj2D[i] = null;
+	   viz[i] = false;
+	   col[i] = null;
+	 }
       }
+      */
 
       view.clearThreshold();
       view.enableThreshConstraint(false);
@@ -3788,60 +3814,74 @@ public class SectionViewer
       doShowFixedLine();
 //-------------------------
       // draw the anatomy components
-      try {
-        if (null != _parent) {
-          try {
-            Method M1 = null;
-            M1 = _parent.getClass().getMethod("getAnatomyElements", null);
-            anatVec = (Vector)M1.invoke(_parent, null);
-          }
-          catch (InvocationTargetException ie) {
-            System.out.println(ie.getMessage());
-          }
-          catch (NoSuchMethodException ne) {
-            System.out.println("getAnatomyElements: no such method");
-            System.out.println(ne.getMessage());
-          }
-          catch (IllegalAccessException ae) {
-            System.out.println(ae.getMessage());
-          }
-        }
+      if(_key != null) {
+	 int num = _key.getNRows();
 
-        if ( (anatVec != null) && (viz != null) && (obj2D != null)) {
-	  Enumeration els = anatVec.elements();
+	 obj2D = new WlzObject[num];
+	 boolean viz[] = new boolean[num];
+	 Color col[] = new Color[num];
+	 
+	 for (int i = 0; i < num; i++) {
+	   obj2D[i] = null;
+	   viz[i] = false;
+	   col[i] = null;
+	 }
 
-	  int i = 0;
-	  AnatomyElement el = null;
+	 try {
+	   if (null != _parent) {
+	     try {
+	       Method M1 = null;
+	       M1 = _parent.getClass().getMethod("getAnatomyElements", null);
+	       anatVec = (Vector)M1.invoke(_parent, null);
+	     }
+	     catch (InvocationTargetException ie) {
+	       System.out.println(ie.getMessage());
+	     }
+	     catch (NoSuchMethodException ne) {
+	       System.out.println("getAnatomyElements: no such method");
+	       System.out.println(ne.getMessage());
+	     }
+	     catch (IllegalAccessException ae) {
+	       System.out.println(ae.getMessage());
+	     }
+	   }
 
-	  while(els.hasMoreElements()) {
-	    el = (AnatomyElement)els.nextElement();
-	    if (el != null) {
-	      viz[i] = el.isVisible();
-	      col[i] = AnatKey.getColor(el.getIndx());
-	      obj2D[i] = _OBJModel.makeSection(
-		  el.getObj(),
-		  VS);
-	      if (obj2D[i] != null) {
-		if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
-		    WlzObjectType.WLZ_EMPTY_OBJ) {
-		  obj2D[i] = null;
-		}
-	      }
-	    }
-	    else {
-	      obj2D[i] = null;
-	      viz[i] = false;
-	      col[i] = null;
-	    }
-	    i++;
-	  } // while
-          view.setAnatomyObj(obj2D, viz, col);
-        }
-      }
-      catch (WlzException e2) {
-        System.out.println("ViewStructModelToViewAdaptor #2");
-        System.out.println(e2.getMessage());
-      }
+	   if ( (anatVec != null) && (viz != null) && (obj2D != null)) {
+	     Enumeration els = anatVec.elements();
+
+	     int i = 0;
+	     AnatomyElement el = null;
+
+	     while(els.hasMoreElements()) {
+	       el = (AnatomyElement)els.nextElement();
+	       if (el != null) {
+		 viz[i] = el.isVisible();
+		 col[i] = _key.getColor(el.getIndx());
+		 obj2D[i] = _OBJModel.makeSection(
+		     el.getObj(),
+		     VS);
+		 if (obj2D[i] != null) {
+		   if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
+		       WlzObjectType.WLZ_EMPTY_OBJ) {
+		     obj2D[i] = null;
+		   }
+		 }
+	       }
+	       else {
+		 obj2D[i] = null;
+		 viz[i] = false;
+		 col[i] = null;
+	       }
+	       i++;
+	     } // while
+	     view.setAnatomyObj(obj2D, viz, col);
+	   }
+	 }
+	 catch (WlzException e2) {
+	   System.out.println("ViewStructModelToViewAdaptor #2");
+	   System.out.println(e2.getMessage());
+	 }
+      } // if(_key != null)
 //-------------------------
       // draw the 'mouse-click' anatomy
       if (_thresholding != true) {
