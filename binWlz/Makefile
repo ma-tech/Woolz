@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 06-12-00 bill Add WlzRegisterICP.
 # 16-08-00 bill Add WlzContourObj.
 # 07-02-00 bill	Add WlzHistogramFitPeaks.
 # 02-02-00 bill	Add WlzHistogramFindPeaks and WlzHistogramGauss.
@@ -80,6 +81,7 @@ EXECUTABLES		= \
 			WlzPolarSample \
 			WlzPolygonToObj \
 			WlzPrinicipalAngle \
+			WlzRegisterICP \
 			WlzRsvFilterObj \
 			WlzSampleObj \
 			WlzSelect1InN \
@@ -158,6 +160,7 @@ CSOURCES		= \
 			WlzPolarSample.c \
 			WlzPolygonToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRegisterICP.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
 			WlzSelect1InN.c \
