@@ -85,6 +85,7 @@ EXECUTABLES		= \
 			WlzSkeleton \
 			WlzSobel \
 			WlzTransposeObj \
+			WlzTransposePlanes \
 			WlzThreshold \
 			WlzUnion \
 			WlzVerifyObj \
@@ -159,6 +160,7 @@ CSOURCES		= \
 			WlzSkeleton.c \
 			WlzSobel.c \
 			WlzTransposeObj.c \
+			WlzTransposePlanes.c \
 			WlzThreshold.c \
 			WlzUnion.c \
 			WlzVerifyObj.c \
@@ -200,6 +202,7 @@ MANPAGES		= \
 			  WlzSampleObj.1 \
 			  WlzShiftObj.1 \
 			  WlzSobel.1 \
+			WlzTransposePlanes.1 \
 			  WlzWindow.1
 
 # List of all directories to be searched before the standard include
