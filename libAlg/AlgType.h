@@ -53,40 +53,54 @@ extern "C" {
 * \brief	Statistical distributions.
 * 		Typedef: ::AlgDistribution.
 */
-enum _AlgDistribution
+typedef enum _AlgDistribution
 {
   ALG_DISTRIBUTION_NORMAL,
   ALG_DISTRIBUTION_EXP,   
   ALG_DISTRIBUTION_POISSON,
   ALG_DISTRIBUTION_BINOMIAL 
-};
-typedef enum _AlgDistribution AlgDistribution;
+} AlgDistribution;
 
+/*!
+* \enum		_AlgMatrixType
+* \brief	Matrix representations.
+*		Typedef: ::AlgMatrixType
+*/
+typedef enum _AlgMatrixType
+{
+  ALG_MATRIX_RECT,		/*!< Rectangular matrix, with storage
+  				     for each element. These matrices should
+				     be allocated using the libAlc array
+				     allocation functions. */
+  ALG_MATRIX_SYM		/*!< Symetric matrix, with storage
+  				     for the upper triangle only. These
+				     matrices should be allocated using the
+				     libAlc symetric array allocation
+				     functions. */
+} AlgMatrixType;
 
 /*!
 * \enum		_AlgPadType
 * \brief	Types of daat padding.
 * 		Typedef: ::AlgPadType.
 */
-enum _AlgPadType
+typedef enum _AlgPadType
 {
   ALG_PAD_NONE,              	/*!< No padding, same as padding with zeros */
   ALG_PAD_ZERO,                 /*!< Pad data with zeros */
   ALG_PAD_END                   /*!< Pad data with first/last data values */
-};
-typedef enum _AlgPadType AlgPadType;
+} AlgPadType;
 
 /*!
 * \struct	_ComplexD
 * \brief	Complex number data type.
 * 		Typedef: ::ComplexD.
 */
-struct __ComplexD
+typedef struct _ComplexD
 {
   double	re;
   double	im;
-};
-typedef struct __ComplexD ComplexD;
+} ComplexD;
 
 
 /*
@@ -94,7 +108,7 @@ typedef struct __ComplexD ComplexD;
 * \brief	Error codes.
 * 		Typedef: ::AlgError.
 */
-enum _AlgError
+typedef enum _AlgError
 {
   ALG_ERR_NONE		= (0),
   ALG_ERR_FUNC,			/*!< Function parameters invalid */
@@ -106,23 +120,21 @@ enum _AlgError
   				     solution */
   ALG_ERR_DIVZERO,   		/*!< Divide by zero */
   ALG_ERR_MAX
-};
-typedef enum _AlgError AlgError;
+} AlgError;
 
 /*
 * \enum		_AlgDbgMask
 * \brief	Debug mask values.
 * 		Typedef: ::AlgDbgMask.
 */
-enum _AlgDbgMask
+typedef enum _AlgDbgMask
 {
   ALG_DBG_NONE          = (0),
   ALG_DBG_LVL_1         = (1),
   ALG_DBG_LVL_2         = (1<<1),
   ALG_DBG_LVL_3         = (1<<2),
   ALG_DBG_LVL_FN        = (1<<3)
-};
-typedef enum _AlgDbgMask AlgDbgMask;
+} AlgDbgMask;
 
 typedef AlgError        (*AlgDbgFn)(char *, ...);
  
