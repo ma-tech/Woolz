@@ -92,7 +92,7 @@ int main(int	argc,
     switch( option ){
 
     case 'a':
-      switch( sscanf(optarg, "%lg,%lg", &pitch, &yaw, &roll) < 2 ){
+      switch( sscanf(optarg, "%lg,%lg", &pitch, &yaw, &roll) ){
       default:
 	usage(argv[0]);
 	return 1;
