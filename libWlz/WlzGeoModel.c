@@ -13,6 +13,8 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 21-11-00 bill	Fix shell leak in WlzGMModelJoinL2D().
+* 16-11-00 bill Add WlzGMModelDeleteS().
 * 12-10-00 bill Fix bug counting shells in WlzGMModelConstructSimplex3D().
 * 10-10-00 bill Add WlzGMModelCopy().
 * 25-08-00 bill Fix bugs in 3D model construction. Remove element's
@@ -1494,6 +1496,84 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
      * the index < 0. */
     WlzGMElmMarkFree(&(vertexT->idx));
     --(model->res.vertexT.numElm);
+  }
+  return(errNum);
+}
+
+/* Deletion of geometric modeling elements along with children */
+
+/************************************************************************
+* Function:	WlzGMModelDeleteS
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Deletes a shell by unlinking it and then freeing it and
+*		all it's children.
+* Global refs:	-
+* Parameters:	WlzGMModel *model:	Model with resources.
+*		WlzGMShell *dS:		Shell to delete.
+************************************************************************/
+WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
+{
+  WlzGMVertexT	*tVT;
+  WlzGMEdgeT	*nET,
+		*tET;
+  WlzGMLoopT	*nLT,
+  		*tLT;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((model == NULL) || (dS == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    /* Unlink the shell. */
+    WlzGMShellUnlink(dS);
+    /* For each loopT. */
+    tLT = dS->child;
+    do
+    {
+      /* Fro each edgeT. */
+      tET = tLT->edgeT;
+      do
+      {
+	tVT = tET->vertexT;
+	if(tVT->diskT->vertex->idx >= 0)
+	{
+	  (void )WlzGMModelFreeV(model, tVT->diskT->vertex);
+	}
+	if(tVT->diskT->idx >= 0)
+	{
+	  (void )WlzGMModelFreeDT(model, tVT->diskT);
+	}
+	if(tVT->idx >= 0)
+	{
+	  (void )WlzGMModelFreeVT(model, tVT);
+	}
+	if(tET->rad->idx >= 0)
+	{
+	  (void )WlzGMModelFreeET(model, tET->rad);
+	}
+	if(tET->edge->idx >= 0)
+	{
+	  (void )WlzGMModelFreeE(model, tET->edge);
+        }
+	nET = tET->next;
+	if(tET->idx >= 0)
+	{
+	  (void )WlzGMModelFreeET(model, tET);
+	}
+	tET = nET;
+      } while(tET->idx >= 0);
+      /* Free the loopT and loop. */
+      nLT = tLT->next;
+      if(tLT->loop->idx >= 0)
+      {
+        (void )WlzGMModelFreeL(model, tLT->loop);
+      }
+      (void )WlzGMModelFreeLT(model, tLT);
+      tLT = nLT;
+    } while(tLT->idx >= 0);
+    (void )WlzGMModelFreeS(model, dS);
   }
   return(errNum);
 }
@@ -4145,7 +4225,15 @@ void		WlzGMShellUnlink(WlzGMShell *dS)
   if(dS->idx == dS->parent->child->idx)
   {
     /* Change child held by parent model */
-    dS->parent->child = dS->next;
+    if(dS->idx == dS->next->idx)
+    {
+      /* The model only has one shell and this is it. */
+      dS->parent = NULL;
+    }
+    else
+    {
+      dS->parent->child = dS->next;
+    }
   }
   if(dS->next != NULL)
   {
@@ -7030,10 +7118,7 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
     if(dS)
     {
       WlzGMShellUnlink(dS);
-      if(dS->child == NULL)
-      {
-        (void )WlzGMModelFreeS(model, dS);
-      }
+      (void )WlzGMModelFreeS(model, dS);
     }
   }
   return(errNum);
