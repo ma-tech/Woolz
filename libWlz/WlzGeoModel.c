@@ -13,6 +13,7 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 12-12-00 bill	Fixed linked list bug in WlzGMModelAddVertex().
 * 27-11-00 bill Add shell geometry updates during 2D model creation,
 *		write WlzGMShellMergeG(). Fix bug allowing insertion
 *		of duplicate simplicies in WlzGMModelConstructSimplex2D().
@@ -7790,7 +7791,7 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
     }
     if(pV == NULL)
     {
-      nV->next = NULL;
+      nV->next = *hdV;
       *hdV = nV;
     }
     else if(tV == NULL)
