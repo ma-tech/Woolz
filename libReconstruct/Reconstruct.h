@@ -15,7 +15,9 @@
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
 ************************************************************************/
+#ifndef __EXTENSIONS__
 #define __EXTENSIONS__
+#endif
 
 #include <stdio.h>
 #include <math.h>
