@@ -15,6 +15,8 @@
 *		primatives, enumerations and structures.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Add WlzBox and WlzBoxP, change members of WlzVertex and
+*		WlzVertexP.
 * 10-11-00 bill Add WlzVertex.
 * 03-11-00 bill	Add WlzVertexP and modified the unused WlzVertexType.
 * 29-09-00 bill	Move the primitives from the WlzAffineTransform into
@@ -531,22 +533,22 @@ typedef enum
 typedef union
 {
   void		*v;
-  WlzIVertex2	*vI2;
-  WlzFVertex2	*vF2;
-  WlzDVertex2	*vD2;
-  WlzIVertex3	*vI3;
-  WlzFVertex3	*vF3;
-  WlzDVertex3	*vD3;
+  WlzIVertex2	*i2;
+  WlzFVertex2	*f2;
+  WlzDVertex2	*d2;
+  WlzIVertex3	*i3;
+  WlzFVertex3	*f3;
+  WlzDVertex3	*d3;
 } WlzVertexP;
 
 typedef union
 {
-  WlzIVertex2	vI2;
-  WlzFVertex2	vF2;
-  WlzDVertex2	vD2;
-  WlzIVertex3	vI3;
-  WlzFVertex3	vF3;
-  WlzDVertex3	vD3;
+  WlzIVertex2	i2;
+  WlzFVertex2	f2;
+  WlzDVertex2	d2;
+  WlzIVertex3	i3;
+  WlzFVertex3	f3;
+  WlzDVertex3	d3;
 } WlzVertex;
 
 /************************************************************************
@@ -587,6 +589,23 @@ typedef struct
   double	yMax;
   double	zMax;
 } WlzDBox3;
+
+typedef union
+{
+  void		*v;
+  WlzIBox2	*i2;
+  WlzDBox2	*d2;
+  WlzIBox3	*i3;
+  WlzDBox3	*d3;
+} WlzBoxP;
+
+typedef union
+{
+  WlzIBox2	i2;
+  WlzDBox2	d2;
+  WlzIBox3	i3;
+  WlzDBox3	d3;
+} WlzBox;
 
 /************************************************************************
 * Data structures for geometric models.
