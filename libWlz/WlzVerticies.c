@@ -146,6 +146,328 @@ WlzVertexP	WlzVerticesFromObj(WlzObject *obj, WlzVertexP *dstNr,
 }
 
 /*!
+* \return	Allocated vertices.
+* \ingroup	WlzFeatures
+* \brief	Extracts all vertices that lie on the boundary of the
+*		given objects domain.
+* \param	obj			Given 2D or 3D domain object.
+* \param	dstCnt			Destination ptr for the number
+*					of vertices.
+* \param	dstType			Destination ptr for the type
+*					of vertices, which will always
+*					be integer.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzVertexP 	WlzVerticesFromObjBnd(WlzObject *obj,
+				      int *dstCnt,
+				      WlzVertexType *dstType,
+				      WlzErrorNum *dstErr)
+{
+  WlzVertexP	vP;
+  WlzVertexType	vType;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  vP.v = NULL;
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(obj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	*dstType = WLZ_VERTEX_I2;
+	errNum = WlzVerticesFromObjBnd2I(obj, dstCnt, &(vP.i2));
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	*dstType = WLZ_VERTEX_I3;
+	errNum = WlzVerticesFromObjBnd3I(obj, dstCnt, &(vP.i3));
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vP);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	WlzFeatures
+* \brief	Extracts all vertices that lie on the boundary of the
+*		given 2D domain object's domain.
+* \param	obj			Given 2D domain object.
+* \param	dstNVtx			Destination ptr for the number
+*					of vertices, MUST NOT be NULL.
+* \param	dstVtx			Destination ptr for the vertices,
+*					MUST NOT be NULL.
+*/
+WlzErrorNum	WlzVerticesFromObjBnd2I(WlzObject *obj,
+					int *dstNVtx, WlzIVertex2 **dstVtx)
+{
+  int		nVtx = 0;
+  WlzVertexP	vtx;
+  WlzObject	*bObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  vtx.v = NULL;
+  bObj = WlzObjToBoundary(obj, 0, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nVtx = WlzVerticesCntBound(bObj->domain.b);
+  }
+  if(nVtx > 0)
+  {
+    if((vtx.i2 = (WlzIVertex2 *)AlcMalloc(sizeof(WlzIVertex2) * nVtx)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      errNum = WlzVerticesCpBound(vtx, NULL, WLZ_VERTEX_I2, 0, bObj->domain.b);
+    }
+  }
+  (void )WlzFreeObj(bObj);
+  *dstNVtx = nVtx;
+  *dstVtx = vtx.i2;
+  return(errNum);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	WlzFeatures
+* \brief	Extracts all vertices that lie on the boundary of the
+*		given 3D domain object's domain.
+* \param	obj			Given 3D domain object.
+* \param	dstNVtx			Destination ptr for the number
+*					of vertices, MUST NOT be NULL.
+* \param	dstVtx			Destination ptr for the vertices,
+*					MUST NOT be NULL.
+*/
+WlzErrorNum	WlzVerticesFromObjBnd3I(WlzObject *obj,
+					int *dstNVtx, WlzIVertex3 **dstVtx)
+{
+  int		nVtx = 0;
+  WlzIVertex3	*vtx = NULL;
+  WlzObject	*tObj = NULL,
+  		*bObj = NULL;
+  WlzValues	dumVal;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dumVal.core = NULL;
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  /* Create object which has only boundary voxels. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tObj = WlzErosion(obj, WLZ_6_CONNECTED, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bObj = WlzDiffDomain(obj, tObj, &errNum);
+  }
+  WlzFreeObj(tObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzVerticesFromObj3I(bObj, &nVtx, &vtx);
+  }
+  WlzFreeObj(bObj);
+  *dstNVtx = nVtx;
+  *dstVtx = vtx;
+  return(errNum);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	WlzFeatures
+* \brief	Extracts all vertices that lie within the given 2D domain
+*		object's domain.
+* \param	obj			Given 2D domain object.
+* \param	dstNVtx			Destination ptr for the number
+*					of vertices, MUST NOT be NULL.
+* \param	dstVtx			Destination ptr for the vertices,
+*					MUST NOT be NULL.
+*/
+WlzErrorNum	WlzVerticesFromObj2I(WlzObject *obj,
+				     int *dstNVtx, WlzIVertex2 **dstVtx)
+{
+  int		idK,
+		vCnt,
+  		nVtx = 0;
+  WlzIVertex2   *vtx0 = NULL,
+  		*vtx1;
+  WlzIntervalWSpace iWsp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nVtx = WlzArea(obj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nVtx <= 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((vtx0 = (WlzIVertex2 *)AlcMalloc(nVtx * sizeof(WlzIVertex2))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzInitRasterScan(obj, &iWsp, WLZ_RASTERDIR_ILIC);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vCnt = 0;
+    vtx1 = vtx0;
+    while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE)
+    {
+      vCnt += iWsp.rgtpos - iWsp.lftpos + 1;
+      if(vCnt > nVtx)
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+      else
+      {
+	for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
+	{
+	  vtx1->vtX = idK;
+	  vtx1->vtY = iWsp.linpos;
+	  ++vtx1;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  *dstNVtx = nVtx;
+  *dstVtx = vtx0;
+  return(errNum);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	WlzFeatures
+* \brief	Extracts all vertices that lie within the given 3D domain
+*		object's domain.
+* \param	obj			Given 3D domain object.
+* \param	dstNVtx			Destination ptr for the number
+*					of vertices, MUST NOT be NULL.
+* \param	dstVtx			Destination ptr for the vertices,
+*					MUST NOT be NULL.
+*/
+WlzErrorNum	WlzVerticesFromObj3I(WlzObject *obj,
+				     int *dstNVtx, WlzIVertex3 **dstVtx)
+{
+  int		idP,
+		pCnt,
+		vCnt,
+  		nVtx = 0;
+  WlzDomain	*domP;
+  WlzValues	*valP;
+  WlzIVertex3	*vtx0 = NULL,
+  		*vtx1;
+  WlzIVertex2	*vtxP0 = NULL,
+  		*vtxP1;
+  WlzPlaneDomain *pDom;
+  WlzValues	dumVal;
+  WlzObject	*pObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dumVal.core = NULL;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nVtx = WlzVolume(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nVtx <= 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((vtx0 = (WlzIVertex3 *)AlcMalloc(nVtx * sizeof(WlzIVertex3))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vCnt = 0;
+    vtx1 = vtx0;
+    pDom = obj->domain.p;
+    idP = pDom->plane1;
+    domP = pDom->domains;
+    while((idP <= pDom->lastpl) && (errNum == WLZ_ERR_NONE))
+    {
+      if((*domP).core)
+      {
+        pObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domP, dumVal,
+			   NULL, NULL, &errNum);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzVerticesFromObj2I(pObj, &pCnt, &vtxP0);
+	}
+	(void )WlzFreeObj(pObj);
+	pObj = NULL;
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  vCnt += pCnt;
+	  if(vCnt > nVtx)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	  }
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  vtxP1 = vtxP0;
+	  while(pCnt-- > 0)
+	  {
+	    vtx1->vtX = vtxP1->vtX;
+	    vtx1->vtY = vtxP1->vtY;
+	    vtx1->vtZ = idP;
+	    ++vtx1;
+	    ++vtxP1;
+	  }
+	}
+	AlcFree(vtxP0);
+	vtxP0 = NULL;
+      }
+      ++domP;
+      ++idP;
+    }
+  }
+  *dstNVtx = nVtx;
+  *dstVtx = vtx0;
+  return(errNum);
+}
+
+/*!
 * \ingroup      WlzFeatures
 * \return				Allocated vertices.
 * \brief	Allocates a buffer which it fills with the vertices
