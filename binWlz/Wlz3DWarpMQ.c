@@ -57,6 +57,7 @@ int main(int	argc,
 	        zmin = -10.0, zmax = 10.0,
 		       zConst = 0.;
   char                *inFileStr, *outFileStr, *TiePointsFileStr;
+  char                *outFileMeshTrWlzStr, *inFileMeshTrWlzStr;
   const char	      *errMsg;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   WlzMeshTransform3D  *wmt3D = NULL;
@@ -77,7 +78,7 @@ int main(int	argc,
 
   /* read the argument list and check for an input file */
 
-  static char	optList[] = "l:m:n:x:y:z:X:Y:Z:i:j:k:O:o:p:t:M:c:C:b:u:r:R:e:E:f:F:g:G:a:A:Q:W:hqBGL",
+  static char	optList[] = "l:m:n:x:y:z:X:Y:Z:i:j:k:O:o:p:t:M:c:C:b:u:r:R:e:E:f:F:g:G:a:A:Q:q:W:B:hGL",
 
   opterr = 0;
   /*
@@ -176,6 +177,12 @@ int main(int	argc,
 	    break;
         case 't':
 	    TiePointsFileStr = optarg;
+	    break;
+         case 'q':
+	    outFileMeshTrWlzStr = optarg;
+	    break;
+        case 'B':
+	    inFileMeshTrWlzStr = optarg;
 	    break;
         case 'c':
 	    if(sscanf(optarg, "%lg", &zConst) != 1)
@@ -297,8 +304,6 @@ int main(int	argc,
 	    }
 	    break;
 	case 'p':
-	case 'q':
-	case 'B':
 	case 'L':
         default:
               return(0);
@@ -350,7 +355,7 @@ int main(int	argc,
 
         if(ReadMeshTransformFromFile)
         {
-            if((inFile = fopen("MeshTransform3D.wlz", "r")) == NULL )
+            if((inFile = fopen(inFileMeshTrWlzStr, "r")) == NULL )
             {
                printf("cannot open the input file of MeshTransform3D.wlz.\n");
                exit(1);
@@ -428,7 +433,7 @@ int main(int	argc,
                /* output transformed mesh in Woolz format */
                if(outputTransformedMeshWLZ)
                {
-                  if((inFile = fopen("MeshTransform3D.wlz", "w")) == NULL )
+                  if((inFile = fopen(outFileMeshTrWlzStr, "w")) == NULL )
                    {
                       printf("cannot open the output file of MeshTransform3D.wlz.\n");
                       exit(1);
@@ -546,11 +551,23 @@ static void usage(char *proc_str)
           "\t  -i        input file name for the Woolz Object\n"
           "\t  -o        output file name for the warped Woolz Object\n"
           "\t  -t        input file name for the tiepoints\n"
+          "\t  -q        input file name for output Mesh Transform in Wlz format\n"
+          "\t  -B        input file name for input  Mesh Transform in Wlz Format\n"
 	  "\t  -g        input the minimum z-coordinate target plane\n"
 	  "\t                                      default is  0\n"
 	  "\t  -G        input the maximum Z-coordinate target plane\n"
 	  "\t                                      default is   -1\n"
 	  "\t  -R        The tiepoint contains displacement \n"
+	  "\t                                                       1 for yes\n"
+	  "\t                                                       0 for  no\n"
+	  "\t                                                  default is  no\n"
+	  "\t                                                                \n"
+	  "\t  -r        Read Mesh transform from a file\n"
+	  "\t                                                       1 for yes\n"
+	  "\t                                                       0 for  no\n"
+	  "\t                                                  default is  no\n"
+	  "\t                                                                \n"
+	  "\t  -Q        output Mesh transform in Wlz format to a file\n"
 	  "\t                                                       1 for yes\n"
 	  "\t                                                       0 for  no\n"
 	  "\t                                                  default is  no\n"
