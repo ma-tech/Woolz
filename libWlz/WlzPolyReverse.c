@@ -59,8 +59,8 @@ WlzPolygonDomain *WlzPolyReverse(
     errNum = WLZ_ERR_OBJECT_NULL;
   }
   else {
-    if( rtnPoly = WlzMakePolyDmn(poly->type, NULL,
-				 poly->nvertices, poly->nvertices, 1, &errNum) ){
+    if( rtnPoly = WlzMakePolygonDomain(poly->type, poly->nvertices, NULL,
+				 poly->nvertices, 1, &errNum) ){
       switch( rtnPoly->type ){
       case WLZ_POLYGON_INT:
 	n = rtnPoly->nvertices;

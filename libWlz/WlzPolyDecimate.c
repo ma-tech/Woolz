@@ -199,7 +199,7 @@ WlzPolygonDomain  *WlzPolyDecimate(
      reset to 1 (one) i.e. the last point set equal to the first.
   */
   if((errNum == WLZ_ERR_NONE) &&
-     (rtnPoly = WlzMakePolyDmn(poly->type, NULL, 0,
+     (rtnPoly = WlzMakePolygonDomain(poly->type, 0, NULL,
 			       poly->nvertices, 1, &errNum))){
     switch( poly->type ){
     case WLZ_POLYGON_INT:

@@ -378,7 +378,7 @@ WlzPolygonDomain *WlzConvertPolyType(
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
   else {
-    if( rtnDom = WlzMakePolyDmn(type, NULL, pdom->nvertices,
+    if( rtnDom = WlzMakePolygonDomain(type, pdom->nvertices, NULL,
 				pdom->nvertices, 1, &errNum) ){
       switch( type ){
       case WLZ_POLYGON_INT:

@@ -171,7 +171,7 @@ WlzPolygonDomain  *WlzPolyEquispace(
   if( errNum == WLZ_ERR_NONE ){
     length = WlzPolyLength(poly, wrap, &errNum);
     n = length / spacing + wrap + poly->nvertices;
-    rtnPoly = WlzMakePolyDmn(poly->type, NULL, 0, n, 1, &errNum);
+    rtnPoly = WlzMakePolygonDomain(poly->type, 0, NULL, n, 1, &errNum);
   }
 
   /* set values, interpolate as required */

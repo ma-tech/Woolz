@@ -571,8 +571,8 @@ WlzObject *WlzPolyTo8Polygon(
 
   /* make an eight-connected polyline */
   if( errNum == WLZ_ERR_NONE ){
-    if( (npgdm = WlzMakePolyDmn(WLZ_POLYGON_INT,
-				NULL, 0, length+10+wrap,
+    if( (npgdm = WlzMakePolygonDomain(WLZ_POLYGON_INT,
+				0, NULL, length+10+wrap,
 				1, &errNum)) == NULL ){
       if( freeptr ){
 	AlcFree( freeptr );

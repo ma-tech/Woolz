@@ -498,7 +498,7 @@ WlzObject *WlzObjToBoundary(
        */
       cur_pt.bl->poly =
 	WlzAssignPolygonDomain(
-	  WlzMakePolyDmn(WLZ_POLYGON_INT,pvtx,nv,nv+wrap-1,1, &errNum),
+	  WlzMakePolygonDomain(WLZ_POLYGON_INT,nv,pvtx,nv+wrap-1,1, &errNum),
 	  NULL);
 
       /*

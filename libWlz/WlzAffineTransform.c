@@ -417,7 +417,7 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
   {
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
-  else if((dstPoly = WlzMakePolyDmn(srcPoly->type, NULL, 0,
+  else if((dstPoly = WlzMakePolygonDomain(srcPoly->type, 0, NULL,
                                     srcPoly->nvertices, 1, &errNum)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
@@ -2121,8 +2121,6 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
 * \param	trXsi			3D shear angle.
 * \param	trInvert		Reflection about y-axis if
 *					non-zero.
-* \param	dstErr			Destination pointer for error
-*					number.
 */
 WlzErrorNum	WlzAffineTransformPrimValSet(WlzAffineTransform *tr,
 					     double trX,
@@ -2371,11 +2369,10 @@ WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double spX, double spY,
 }
 
 /*!
+* \return	New affine transform, or NULL on error.
 * \ingroup	WlzTransform
-* \return				New affine transform, or NULL
-*					on error.
 * \brief	Copies the given affine transform.
-* \param	trans			Given affine transform.
+* \param	tr			Given affine transform.
 * \param	dstErr			Destination pointer for error
 *					number.
 */

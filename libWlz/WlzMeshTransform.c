@@ -872,7 +872,8 @@ static WlzPolygonDomain	*WlzMeshTransformPoly(WlzPolygonDomain *srcPoly,
   }
   else
   {
-    dstPoly = WlzMakePolyDmn(srcPoly->type, srcPoly->vtx, srcPoly->nvertices,
+    dstPoly = WlzMakePolygonDomain(srcPoly->type,
+    			     srcPoly->nvertices, srcPoly->vtx,
     			     srcPoly->nvertices, 1, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)

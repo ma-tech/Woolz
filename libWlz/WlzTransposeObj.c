@@ -313,7 +313,7 @@ static WlzPolygonDomain *WlzTransposePolygon(
   }
   /* first make a new polygon domain, allocating space */
   else {
-    newpoly = WlzMakePolyDmn(poly->type, poly->vtx, poly->nvertices,
+    newpoly = WlzMakePolygonDomain(poly->type, poly->nvertices, poly->vtx,
 				poly->nvertices, 1, &errNum);
   }
 

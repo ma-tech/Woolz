@@ -146,7 +146,7 @@ WlzObject *WlzObjToConvexPolygon(
      convex polygon = (2 * num_lines + 1) the extra is to allow the polygon
      to be closed i.e. first = last */
   if( errNum == WLZ_ERR_NONE ){
-    if((domain.poly = WlzMakePolyDmn(WLZ_POLYGON_INT, NULL, 0,
+    if((domain.poly = WlzMakePolygonDomain(WLZ_POLYGON_INT, 0, NULL,
 				      3+2*(obj->domain.i->lastln -
 					   obj->domain.i->line1),
 				      1, &errNum))){
