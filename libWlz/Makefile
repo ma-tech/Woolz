@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 14-03-01 bill Add WlzRaster.c
 # 01-02-01 bill Add WlzRegCCor.c
 # 23-01-01 bill Add WlzShadeCorrect.c
 # 28-11-00 bill Add WlzGeoModelFilters.c
@@ -123,6 +124,7 @@ CSOURCES		= \
 			WlzPolarSample.c  \
 			WlzPolyToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRaster.c \
 			WlzReadObj.c \
 			WlzRegCCor.c \
 			WlzRegICP.c \
