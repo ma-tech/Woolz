@@ -133,11 +133,12 @@ int             main(int argc, char *argv[])
   WlzThreeDViewStruct *view = NULL;
   WlzVertexP	matchRP,
   		matchSP;
+  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzAffineTransformPrim inTrPrim;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		fileNameBuf[FILENAME_MAX];
   const char	*errMsg;
-  static char	optList[] = "dhvVo:r:Yt:x:y:a:s:ef:g:k:u:i:p:A:S:F:m:n:c:N";
+  static char	optList[] = "dhvVo:r:Yt:x:y:a:s:ef:g:k:u:i:p:A:S:F:m:n:c:NL";
   const char	nullStr[] = "<NULL>",
   		inFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
@@ -324,6 +325,9 @@ int             main(int argc, char *argv[])
 	break;
       case 'N':
         noMatching = 1;
+	break;
+      case 'L':
+        interp = WLZ_INTERPOLATION_LINEAR;
 	break;
       default:
         usage = 1;
@@ -525,7 +529,7 @@ int             main(int argc, char *argv[])
     /* Create the section object. */
     if(ok)
     {
-      refObj2D = WlzGetSectionFromObject(refObj3D, view, &errNum);
+      refObj2D = WlzGetSectionFromObject(refObj3D, view, interp, &errNum);
       if((errNum == WLZ_ERR_NONE) && (refObj2D != NULL) &&
 	  (refObj2D->type = WLZ_2D_DOMAINOBJ) && (refObj2D->domain.core))
       {
@@ -819,7 +823,7 @@ int             main(int argc, char *argv[])
       "          [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
       "          [-g#,#] [-k#,#] [-u#,#]\n"
       "          [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
-      "          [-c<contour file base>] [-N]\n"
+      "          [-c<contour file base>] [-N] [-L]\n"
       "          [<section parameters file>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -860,6 +864,8 @@ int             main(int argc, char *argv[])
       "  -c  Outputs the computed and decomposed geometric models using\n"
       "	     the given file base.\n"
       "  -N  Don't compute the tie-points.\n"
+      "  -L  Use linear interpolation (instead of nearest neighbour) when\n"
+      "      cuting sections.\n"
       "  Reads a 3D reference object and a MAPaint section parameters file.\n"
       "Computes tie-points and then writes a new MAPaint section parameters\n"
       "file which includes the tie-points.\n"
