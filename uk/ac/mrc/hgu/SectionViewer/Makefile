@@ -17,6 +17,7 @@ SOURCES = \
 	  $(SOURCEPATH)ScrollableTextField.java \
 	  $(SOURCEPATH)PointEntryGUI.java \
 	  $(SOURCEPATH)PointEntry.java \
+	  $(SOURCEPATH)SVLocks.java \
 	  $(SOURCEPATH)AnatKey.java \
 	  $(SOURCEPATH)AnatKeyGUI.java \
 	  $(SOURCEPATH)AnatomyElement.java \
@@ -25,18 +26,20 @@ SOURCES = \
 	  $(SOURCEPATH)WlzImgView.java \
 	  $(SOURCEPATH)WlzObjModel.java \
 	  $(SOURCEPATH)ViewStructModel.java \
+	  $(SOURCEPATH)SVFrame.java \
+	  $(SOURCEPATH)SVFrameInt.java \
 	  $(SOURCEPATH)SVParent.java \
+	  $(SOURCEPATH)SVParent2D.java \
 	  $(SOURCEPATH)SectionViewerGUI.java \
 	  $(SOURCEPATH)SectionViewer.java \
-	  $(SOURCEPATH)SVFileFilter.java \
-	  $(SOURCEPATH)SVUtils.java \
-	  $(SOURCEPATH)SVStatus.java
+	  $(SOURCEPATH)SVFileFilter.java
 
 OBJECTS = \
 	  $(TARGETPATH)SelectableMenu.class \
 	  $(TARGETPATH)ScrollableTextField.class \
 	  $(TARGETPATH)PointEntryGUI.class \
 	  $(TARGETPATH)PointEntry.class \
+	  $(TARGETPATH)SVLocks.java \
 	  $(TARGETPATH)AnatKey.class \
 	  $(TARGETPATH)AnatKeyGUI.class \
 	  $(TARGETPATH)AnatomyElement.class \
@@ -45,12 +48,13 @@ OBJECTS = \
 	  $(TARGETPATH)WlzImgView.class \
 	  $(TARGETPATH)WlzObjModel.class \
 	  $(TARGETPATH)ViewStructModel.class \
+	  $(TARGETPATH)SVFrame.java \
+	  $(TARGETPATH)SVFrameInt.java \
 	  $(TARGETPATH)SVParent.class \
+	  $(TARGETPATH)SVParent2D.class \
 	  $(TARGETPATH)SectionViewerGUI.class \
 	  $(TARGETPATH)SectionViewer.class \
-	  $(TARGETPATH)SVFileFilter.class \
-	  $(TARGETPATH)SVUtils.class \
-	  $(TARGETPATH)SVStatus.class
+	  $(TARGETPATH)SVFileFilter.class
 
 
 
