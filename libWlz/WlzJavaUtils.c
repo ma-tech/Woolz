@@ -98,3 +98,42 @@ WlzObject *WlzSetGreyValues(WlzObject           *domainObj,
   return (retObj);
 
 }
+/*---------------------------------*/
+WlzAffineTransform *WlzGetAffineTransform(
+                           WlzThreeDViewStruct *viewStr,
+			   WlzErrorNum         *dstErr) {
+
+   WlzAffineTransform *retObj = NULL;
+   WlzErrorNum  errNum = WLZ_ERR_NONE;
+
+   if(viewStr == NULL) return (NULL);
+
+   retObj = viewStr->trans;
+
+   *dstErr = errNum;
+   return (retObj);
+
+}
+/*---------------------------------*/
+void WlzGetTransformMatrix(
+               WlzIVertex2 *dstSizeArrayDat,
+	       double  ***dstArrayDat,
+	       WlzAffineTransform *trans,
+	       WlzErrorNum *dstErr) {
+
+   WlzErrorNum   errNum = WLZ_ERR_NONE;
+   WlzIVertex2 size;
+
+   size.vtX = 4;
+   size.vtY = 4;
+
+   if(dstArrayDat == NULL) {
+     errNum = WLZ_ERR_PARAM_NULL;
+   } else {
+     *dstSizeArrayDat = size;
+     *dstArrayDat = trans->mat;
+   }
+
+   *dstErr = errNum;
+}
+/*---------------------------------*/

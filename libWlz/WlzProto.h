@@ -2211,7 +2211,14 @@ extern int			WlzGetPlaneDomainLastKl(WlzObject *obj);
 extern WlzObject	       *WlzSetGreyValues(WlzObject *domainObj,
 						WlzObject *valuesObj,
 						WlzErrorNum *dstErr);
-
+extern WlzAffineTransform      *WlzGetAffineTransform(
+						WlzThreeDViewStruct *viewStr,
+						WlzErrorNum *dstErr);
+extern void                     WlzGetTransformMatrix(
+                                                WlzIVertex2 *dstSizeArrayDat,
+	                                        double  ***dstArrayDat,
+			                        WlzAffineTransform *trans,
+						WlzErrorNum *dstErr);
 /************************************************************************
 * "THE BEAST" - WlzLabel.c						*
 ************************************************************************/
