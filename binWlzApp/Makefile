@@ -104,30 +104,6 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-#CDEBUG			= -g 
-#COPTIMISE		= -xchip=ultra -KPIC
-#CXXDEBUG		= -g 
-#CXXOPTIMISE		= -xchip=ultra -KPIC
-
-# un-comment these lines to make a 32-bit library for the IRIX 6
-ifeq ($(UNIXTYPE), IRIX5)
-ANSI_CONFORMANCE	= -xansi -fullwarn
-CC			= cc -32
-COPTIMISE		= -mips2 -O1
-SYSLIB			= /usr/lib
-UNIXFLAGS		= -DUNIX  -DSYSV -DSVR4 
-endif	
-
-ifeq 		($(UNIXTYPE), IRIX646)
-ANSI_CONFORMANCE	= -xansi -fullwarn
-CC			= cc -32
-COPTIMISE		= -mips2 -O1
-SYSLIB			= /usr/lib
-UNIXFLAGS		= -DUNIX  -DSYSV -DSVR4 
-# CDEBUG			= 
-# COPTIMISE		= -O1 -OPT:roundoff=3
-endif
-
 # DEFINES			= -DUSE_OSTORE -D__EXTENSIONS__
 DEFINES			= 
 CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES) $(UNIXFLAGS)

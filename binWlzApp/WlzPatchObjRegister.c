@@ -333,12 +333,7 @@ double WlzMass(
 
 	case WLZ_GREY_UBYTE:
 	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-	    if( *gptr.ubp < 0 ){
-	      mass -= *gptr.ubp;
-	    }
-	    else {
-	      mass += *gptr.ubp;
-	    }
+	    mass += *gptr.ubp;
 	  }
 	  break;
 
@@ -879,7 +874,7 @@ WlzErrorNum WlzRegisterPatchTreeDF(
   ppCtrl.window.size.vtY = 90;
   ppCtrl.window.offset.vtX = 0;
   ppCtrl.window.offset.vtY = 0;
-  ppCtrl.sample.function = NULL;
+  ppCtrl.sample.function = (WlzSampleFn) NULL;
   ppCtrl.sample.factor = 0;
   ppCtrl.erode = 0;
   for(i=0; i < patchTree->nchildren; i++){

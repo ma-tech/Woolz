@@ -33,7 +33,6 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
-#include <ieeefp.h>
 
 #include <Wlz.h>
 #include <bibFile.h>
