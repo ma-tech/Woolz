@@ -16,7 +16,9 @@
 ************************************************************************/
 #define  HGUDLPLIST_C
 #include <stdio.h>
+#ifndef __ppc
 #include <malloc.h>
+#endif
 #include <assert.h>
 #include <HGUDlpList.h>
 

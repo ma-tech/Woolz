@@ -130,7 +130,7 @@ static int putword(int i, FILE *fp)
   unsigned char *cin, cout[4];
 
   cin = (unsigned char *) &i;
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = *(cin+3);
   cout[1] = *(cin+2);
   cout[2] = *(cin+1);
@@ -160,7 +160,7 @@ static int putshort(short i, FILE *fp)
   unsigned char *cin, cout[2];
 
   cin = (unsigned char *) &i;
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = *(cin+1);
   cout[1] = *(cin+0);
 #endif /* __sparc || __mips */
@@ -187,7 +187,7 @@ static int putfloat(float f, FILE *fp)
   unsigned char *cin, cout[4];
 
   cin = (unsigned char *) &ff;
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = *(cin+1);
   cout[1] = *cin + 1;
   cout[2] = *(cin+3);
@@ -218,7 +218,7 @@ static int putdouble(double d, FILE *fp)
   unsigned char *cin, cout[8];
 
   cin = (unsigned char *) &dd;
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = *(cin+7);
   cout[1] = *(cin+6);
   cout[2] = *(cin+5);

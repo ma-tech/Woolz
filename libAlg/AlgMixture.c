@@ -29,11 +29,11 @@
 #include <math.h>
 #include <float.h>
 
-#ifdef CYGWIN
+#if defined (CYGWIN) || defined (DARWIN)
 #define drand48() (((double) rand()) / RAND_MAX)
 #define srand48(X) (srand((unsigned int) X))
 #define lrand48() ((long) ((((double) rand()) / RAND_MAX) * (1<<31)))
-#endif /* CYGWIN */
+#endif /* CYGWIN || DARWIN */
 
 /*!
 * \return				Error code.

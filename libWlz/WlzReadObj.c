@@ -143,7 +143,7 @@ static int getword(FILE *fp)
   char cin[4], cout[4];
 
   fread(cin,sizeof(char),4,fp);
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[3];
   cout[1] = cin[2];
   cout[2] = cin[1];
@@ -171,7 +171,7 @@ static int getshort(FILE *fp)
   char cin[2], cout[2];
 
   fread(cin,sizeof(char),2,fp);
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (_ppc)
   cout[0] = cin[1];
   cout[1] = cin[0];
 #endif /* __sparc || __mips */
@@ -195,7 +195,7 @@ static float getfloat(FILE *fp)
   char cin[4], cout[4];
 
   fread(cin,sizeof(char),4,fp);
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[1] - 1;
   cout[1] = cin[0];
   cout[2] = cin[3];
@@ -223,7 +223,7 @@ static double getdouble(FILE *fp)
   char cin[8], cout[8];
 
   fread(cin,sizeof(char),8,fp);
-#if defined (__sparc) || defined (__mips)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[7];
   cout[1] = cin[6];
   cout[2] = cin[5];
