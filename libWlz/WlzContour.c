@@ -102,12 +102,18 @@ static WlzContour	*WlzContourIsoObj3D(
 			  WlzObject *srcObj,
 			  double isoVal,
 			  WlzErrorNum *dstErr);
-static WlzContour	*WlzContourGrdObj2D(WlzObject *srcObj,
-				double minGrd, double ftrPrm,
-				WlzErrorNum *dstErr);
-static WlzContour	*WlzContourGrdObj3D(
+static WlzContour 	*WlzContourGrdObj2D(
 			  WlzObject *srcObj,
-			  double minGrd,
+			  WlzDVertex2 **dstGrd,
+			  double grdLo,
+			  double grdHi,
+			  double ftrPrm,
+			  WlzErrorNum *dstErr);
+static WlzContour 	*WlzContourGrdObj3D(
+			  WlzObject *srcObj,
+			  WlzDVertex3 **dstGrd,
+			  double grdLo,
+			  double grdHi,
 			  double ftrPrm,
 			  WlzErrorNum *dstErr);
 static WlzDVertex2	WlzContourItpTriSide(
@@ -128,6 +134,7 @@ static WlzErrorNum	WlzContourIsoCube2D(
 			  WlzDVertex2 sqOrg);
 static WlzErrorNum 	WlzContourGrdCube3D(
 			  WlzContour *ctr,
+			  int *dstLnkFlg,
 			  UBYTE ***mBuf,
 			  double ***zBuf,
 			  double ***yBuf,
@@ -156,6 +163,7 @@ static WlzErrorNum	WlzContourIsoTet3D(
 			  WlzDVertex3 cbOrg);
 static WlzErrorNum	WlzContourGrdLink2D(
 			  WlzContour *ctr,
+			  int *dstLnkFlg,
 			  UBYTE **grdDBuf,
 			  WlzIVertex2 org,
 			  int lnOff,
@@ -163,10 +171,82 @@ static WlzErrorNum	WlzContourGrdLink2D(
 			  int klP);
 static WlzErrorNum	WlzContourGrdLink3D(
 			  WlzContour *ctr,
+			  int *dstLnkFlg,
 			  UBYTE ***mBuf,
 			  int *bufIdx,
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
+
+/************************************************************************
+* Function:	WlzContourObjGrd
+* Returns:	WlzContour:		Contour, or NULL on error.
+* Purpose:	Creates a contour (list of connected edges or surface
+*		patches) from a Woolz object with values using a
+*		maximal gradient algorithm and retains the
+*		gradient vectors.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given object from which to
+*					compute the contours.
+*		WlzVertexP *dstGrd:	Destination pointer for the
+*					gradients, which are indexed
+*					by the contour's GM vertex
+*					indicies. The gradients are
+*					always either 2D or 3D double
+*					verticies. They are only valid
+*					for valid vertex indicies.
+*		double ctrLo:		Lower maximal gradient
+*					threshold value.
+*		double ctrHi:		Higher maximal gradient
+*					threshold value.
+*		double ctrWth:		Contour filter width.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.
+************************************************************************/
+WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
+				  WlzVertexP *dstGrd,
+				  double ctrLo, double ctrHi, double ctrWth,
+				  WlzErrorNum *dstErr)
+{
+  WlzContour	*ctr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(srcObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(srcObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	ctr = WlzContourGrdObj2D(srcObj,
+				(dstGrd)? &((*dstGrd).d2): NULL,
+				ctrLo, ctrHi, ctrWth, &errNum);
+	break;
+      case WLZ_3D_DOMAINOBJ:
+	ctr = WlzContourGrdObj3D(srcObj,
+				 (dstGrd)? &((*dstGrd).d3): NULL,
+				 ctrLo, ctrHi, ctrWth, &errNum);
+	break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
 
 /************************************************************************
 * Function:	WlzContourObj
@@ -223,7 +303,8 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourIsoObj2D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj2D(srcObj, ctrVal, ctrWth, &errNum);
+	    ctr = WlzContourGrdObj2D(srcObj, NULL,
+	    			     ctrVal, ctrVal, ctrWth, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -237,7 +318,8 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourIsoObj3D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj3D(srcObj, ctrVal, ctrWth, &errNum);
+	    ctr = WlzContourGrdObj3D(srcObj, NULL,
+	    			     ctrVal, ctrVal, ctrWth, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -607,21 +689,28 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
-*		double minGrd:		Minimum modulus of gradient.
+*		WlzDVertex2 **dstGrd:	Destination pointer for gradients,
+*					may be NULL.
+*		double grdLo:		Lower threshold for modulus of
+*					gradient.
+*		double grdHi:		Upper threshold for modulus of
+*					gradient. TODO Use grdHi!
 *		double ftrPrm:		Filter width parameter.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
-				      double minGrd, double ftrPrm,
-				      WlzErrorNum *dstErr)
+static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj, WlzDVertex2 **dstGrd,
+				      double grdLo, double grdHi,
+				      double ftrPrm, WlzErrorNum *dstErr)
 {
   int		idX,
 		dCode,
 		iCnt,
 		iLen,
 		iBufSz,
-		lnInc;
+		lnInc,
+		lnkFlg,
+		grdMaxIdx;
   UBYTE		doLn;
   double	tD0,
   		grdM0,
@@ -646,6 +735,7 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   double	**grdMBuf = NULL,	            /* Magnitude of gradient */
   		**grdXBuf = NULL,    	    /* Horizontal gradient component */
   		**grdYBuf = NULL;             /* Vertical gradient component */
+  WlzGMVertex	*mVtx;
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   int		lnIdx[3],
@@ -654,17 +744,30 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   		org,
   		posAbs,
 		posRel;
+   WlzDVertex2	pos;
+  WlzDVertex2	*grd;
   WlzIntervalWSpace gXIWSp,
   		gYIWSp;
   WlzGreyWSpace	gXGWSp,
   		gYGWSp;
+  AlcVector	*grdVec = NULL;
   const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
+  const unsigned int grdBlkSz = 1000;       /* Any reasoonable size would do */
 
   /* Create a new contour. */
   if((ctr = WlzMakeContour(&errNum)) != NULL)
   {
     ctr->model = WlzAssignGMModel(
     		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+  }
+  if((errNum == WLZ_ERR_NONE) && dstGrd)
+  {
+    grdMaxIdx = -1;
+    if((grdVec = AlcVectorNew(1, sizeof(WlzDVertex3),
+				   grdBlkSz, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -743,7 +846,7 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
     /* Add interval to interval mask buffer. */
     WlzBitLnSetItv(*(grdIBuf + lnIdx[2]), posRel.vtX, posRel.vtX + iLen - 1,
     		   bufSz.vtX);
-    /* Copy this intervals of gradient data into buffers. */
+    /* Copy this interval of gradient data into buffers. */
     WlzValueCopyGreyToGrey(grdXGP, posRel.vtX,
     			   WLZ_GREY_DOUBLE, gXGWSp.u_grintptr, 0,
 			   gXGWSp.pixeltype, iLen);
@@ -791,7 +894,7 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 	  {
 	    /* Check if gradient magnitude at the centre of the neighbourhood
 	     * is above the minimum gradient threshold. */
-	    if((grdM0 = *(*(grdMBuf + lnIdx[1]) + klIdx[1])) >= minGrd)
+	    if((grdM0 = *(*(grdMBuf + lnIdx[1]) + klIdx[1])) >= grdLo)
 	    {
 	      /* Compute and classify the direction of gradient at centre of
 	       * neighbourhood. */
@@ -894,8 +997,34 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 	    if(*(*(grdDBuf + lnIdx[1]) + klIdx[1]))
 	    {
 	      /* Generate and link edge segments. */
-	      errNum = WlzContourGrdLink2D(ctr, grdDBuf, org, posRel.vtY - 2,
+	      errNum = WlzContourGrdLink2D(ctr, &lnkFlg,
+	      				   grdDBuf, org, posRel.vtY - 2,
 					   lnIdx, klIdx[0]);
+	      /* If gradients are to be returned set the gradient for this
+	       * pixel and if it's in the model, then  add the gradient to
+	       * the gradient vector. */
+	      if(grdVec && lnkFlg)
+	      {
+		pos.vtX = org.vtX + klIdx[0] + 1;
+		pos.vtY = org.vtY + posRel.vtY - 1;
+	        if((mVtx = WlzGMModelMatchVertexG2D(ctr->model, pos)) != NULL)
+		{
+		  if((grd = (WlzDVertex2 *)
+		  	    AlcVectorExtendAndGet(grdVec, mVtx->idx)) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		  else
+		  {
+		    if(grdMaxIdx < mVtx->idx)
+		    {
+		      grdMaxIdx = mVtx->idx;
+		    }
+		    grd->vtX = *(*(grdXBuf + lnIdx[1]) + klIdx[1]);
+		    grd->vtY = *(*(grdYBuf + lnIdx[1]) + klIdx[1]);
+		  }
+		}
+	      }
 	    }
 	  }
 	  klIdx[0] = klIdx[1];
@@ -944,6 +1073,15 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   {
     (void )WlzFreeObj(gYObj);
   }
+  if(grdVec)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      *dstGrd = (WlzDVertex2 *)AlcVectorToArray1D(grdVec, 0, grdMaxIdx,
+      						  NULL);
+    }
+    (void )AlcVectorFree(grdVec);
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -959,14 +1097,19 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
-*		double minGrd:		Minimum modulus of gradient.
+*		WlzDVertex3 **dstGrd:	Destination pointer for gradients,
+*					may be NULL.
+*		double grdLo:		Lower threshold for modulus of
+*					gradient.
+*		double grdHi:		Upper threshold for modulus of
+*					gradient. TODO use grdHi!
 *		double ftrPrm:		Filter width parameter.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
-				      double minGrd, double ftrPrm,
-				      WlzErrorNum *dstErr)
+static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj, WlzDVertex3 **dstGrd,
+				      double grdLo, double grdHi,
+				      double ftrPrm, WlzErrorNum *dstErr)
 {
   int		cnt,
   		idX,
@@ -974,14 +1117,17 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 		idZ,
 		pnIdx,
   		pnCnt,
-		cbInObj;
+		cbInObj,
+		grdMaxIdx,
+		lnkFlg;
   double	gV,
   		sGV,
-		minGrdSq;
+		grdLoSq;
   WlzDomain	srcDom;
   UBYTE		*iMP,
 	  	*iMC,
 	  	*iMN;
+  WlzGMVertex	*mVtx;
   WlzRsvFilter	*ftr = NULL;
   WlzObject	*srcObj2D = NULL,
   		*xObj2D = NULL,
@@ -989,6 +1135,8 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 		*zObj2D = NULL,
   		*zObj = NULL;
   WlzContour 	*ctr = NULL;
+  WlzDVertex3	pos;
+  WlzDVertex3	*grd;
   WlzIVertex3	bufPos,
   		cbOrg;
   WlzIVertex2	bufSz,
@@ -1002,7 +1150,9 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   double	**xBuf[3],
   		**yBuf[3],
 		**zBuf[3];
+  AlcVector	*grdVec = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const unsigned int grdBlkSz = 10000;      /* Any reasoonable size would do */
 
   iBufClr[0] = iBufClr[1] = iBufClr[2] = 1;
   iBuf[0] = iBuf[1] = iBuf[2] = NULL;
@@ -1021,6 +1171,14 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   else if(srcObj->values.vox->values == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(dstGrd)
+  {
+    grdMaxIdx = -1;
+    if((grdVec = AlcVectorNew(1, sizeof(WlzDVertex3), grdBlkSz, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1076,9 +1234,9 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Enforce a minimum gradient. */
-    if((minGrdSq = minGrd * minGrd) < 1.0)
+    if((grdLoSq = grdLo * grdLo) < 1.0)
     {
-      minGrdSq = 1.0;
+      grdLoSq = 1.0;
     }
     pnIdx = 0;
     pnCnt = srcDom.p->lastpl - srcDom.p->plane1 + 1;
@@ -1210,10 +1368,43 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 		/* If central voxel has a modulus of gradient greater than the
 		 * threshold value then compute the maximal surface
 		 * simplicies and add them to the model. */
-		if(sGV >= minGrdSq)
+		if(sGV >= grdLoSq)
 		{
-		  errNum = WlzContourGrdCube3D(ctr, mBuf, zBuf, yBuf, xBuf,
+		  errNum = WlzContourGrdCube3D(ctr, &lnkFlg,
+		  			       mBuf, zBuf, yBuf, xBuf,
 		  			       bufIdx, bufPos, cbOrg);
+		/* If gradients are to be returned set the gradient for this
+		 * pixel and if it's in the model, then add the gradient to
+		 * the gradient vector. */
+		  if(grdVec && lnkFlg)
+		  {
+		    pos.vtX = cbOrg.vtX + 1;
+		    pos.vtY = cbOrg.vtY + 1;
+		    pos.vtZ = cbOrg.vtZ + 1; 
+		    if((mVtx = WlzGMModelMatchVertexG3D(ctr->model,
+		    					pos)) != NULL)
+		    {
+		      if((grd = (WlzDVertex3 *)
+				AlcVectorExtendAndGet(grdVec,
+						      mVtx->idx)) == NULL)
+		      {
+			errNum = WLZ_ERR_MEM_ALLOC;
+		      }
+		      else
+		      {
+			if(grdMaxIdx < mVtx->idx)
+			{
+			  grdMaxIdx = mVtx->idx;
+			}
+			grd->vtX = *(*(xBuf[bufIdx[1]] + bufPos.vtY + 1) +
+				     bufPos.vtX + 1);
+			grd->vtY = *(*(yBuf[bufIdx[1]] + bufPos.vtY + 1) +
+				     bufPos.vtX + 1);
+			grd->vtZ = *(*(zBuf[bufIdx[1]] + bufPos.vtY + 1) +
+				     bufPos.vtX + 1);
+		      }
+		    }
+		  }
 		}
 #ifdef WLZ_CONTOUR_DEBUG
 		else
@@ -1296,6 +1487,16 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
       Alc2Free((void **)(zBuf[idZ]));
     }
   }
+  if(grdVec)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* Allocate *dstGrd and copy the gradients. */
+      *dstGrd = (WlzDVertex3 *)AlcVectorToArray1D(grdVec, 0, grdMaxIdx,
+      						  NULL);
+    }
+    (void )AlcVectorFree(grdVec);
+  }
   if(ftr)
   {
     WlzRsvFilterFreeFilter(ftr);
@@ -1324,6 +1525,9 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 *                 --->x                                   
 * Global refs:	-
 * Parameters:	WlzContour *ctr: 	Contour being built.
+*		int *dstLnkFlg:		Destination pointer for flag
+*					set to non-zero value if pixel
+*					linked. Must NOT be NULL.
 *		UBYTE ***mBuf:		Buffers containing non-zero
 *					values for maximal gradient
 *					voxels.
@@ -1333,14 +1537,16 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 *		WlzIVertex3 pos:	Absolute position of the 
 *					neighbourhoods origin.
 ************************************************************************/
-static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
+static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, int *dstLnkFlg,
+					    UBYTE ***mBuf,
 					    int *bufIdx, WlzIVertex3 bufPos,
 					    WlzIVertex3 cbOrg)
 {
   int		tI0,
   		tI1,
   		idN,
-		mCnt;
+		mCnt,
+		spxCnt = 0;
   unsigned int	tU0,
   		mMsk;
   WlzIVertex3	tIV0,
@@ -1383,7 +1589,6 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
    {11,  3},
    { 8,  1},
    {12,  4}
-
   };
 
 #ifdef WLZ_CONTOUR_DEBUG
@@ -1427,11 +1632,13 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
         tIV1 = nbrOffTb[tI1];
         WLZ_VTX_3_ADD(sIsn[1], cbOrg, tIV0);
         WLZ_VTX_3_ADD(sIsn[2], cbOrg, tIV1);
+	++spxCnt;;
 	errNum = WlzGMModelConstructSimplex3D(ctr->model, sIsn);
       }
       ++idN;
     }
   }
+  *dstLnkFlg = spxCnt;
   return(errNum);
 }
 
@@ -1454,6 +1661,9 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
 *		    +----+----+----+    +---> cols
 * Global refs:	-
 * Parameters:	WlzContour *ctr: 	Contour being built.
+*		int *dstLnkFlg:		Destination pointer for flag
+*					set to non-zero value if pixel
+*					linked. Must NOT be NULL.
 *		UBYTE **grdDBuf:	Buffers containing gradient
 *					direction codes for maximal
 *					gradient pixels.
@@ -1463,8 +1673,8 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
 *		int lnIdx[]:		Line indicies.
 *		int klOff:		Column offset of first column.
 ************************************************************************/
-static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
-				       WlzIVertex2 org,
+static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg, 
+				       UBYTE **grdDBuf, WlzIVertex2 org,
 				       int lnOff, int lnIdx[], int klOff)
 {
   int		idN,
@@ -1538,6 +1748,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
       errNum = WlzGMModelConstructSimplex2D(ctr->model, seg);
     }
   }
+  *dstLnkFlg = conCnt;
   return(errNum);
 }
 
@@ -2018,6 +2229,9 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 *		The buffer position wrt z is always modulo 3.
 * Global refs:	-
 * Parameters:	WlzContour *ctr: 	Contour being built.
+*		int *dstLnkFlg:		Destination pointer for flag
+*					set to non-zero value if pixel
+*					linked. Must NOT be NULL.
 *		UBYTE ***mBuf:		Buffer with maximal voxels
 *					marked non-zero.
 *		double ***zBuf:		Z gradients.
@@ -2027,7 +2241,8 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 *		WlzIVertex3 bufPos:	Index into buffers.
 *		WlzIVertex3 cbOrg:	Origin of the cube.
 ************************************************************************/
-static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
+static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, int *dstLnkFlg,
+				       UBYTE ***mBuf,
 				       double ***zBuf, double ***yBuf,
 				       double ***xBuf,
 				       int *bufIdx, WlzIVertex3 bufPos,
@@ -2242,7 +2457,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
                    modCGV * cGV.vtX, modCGV * cGV.vtY, modCGV * cGV.vtZ);
 #endif /* WLZ_CONTOUR_DEBUG */
     *(*(*(mBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX) = 1;
-    errNum = WlzContourGrdLink3D(ctr, mBuf, bufIdx, bufPos, cbOrg);
+    errNum = WlzContourGrdLink3D(ctr, dstLnkFlg, mBuf, bufIdx, bufPos, cbOrg);
   }
 #ifdef WLZ_CONTOUR_DEBUG
   else
