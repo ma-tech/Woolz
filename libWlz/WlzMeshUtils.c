@@ -2331,7 +2331,7 @@ static void	 WlzMeshElemReplace1With3(WlzMeshTransform *mesh,
 *					elements to replace.
 * \param	zElmCnt			Number of zombie elements.
 * \param	newVx			New node vertex.
-* \param	 unsignednodeFlags	Node flags to set (eg source).
+* \param	nodeFlags		Node flags to set (eg source).
 */
 static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
 					    int *zElmIdVec,

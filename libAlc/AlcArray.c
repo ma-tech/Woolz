@@ -34,6 +34,7 @@
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd bit array.
 *		Should be free'd using AlcFree().
 * \param	dest 			Destination for allocated array
@@ -47,6 +48,7 @@ AlcErrno	AlcBit1Calloc(unsigned char **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd array of chars.
 *		Should be free'd using AlcFree().
 * \param	dest 			Destination for allocated array
@@ -60,6 +62,7 @@ AlcErrno	AlcChar1Calloc(char **dest, int mElem)
 
 /*!
 * \return	 	 	 	Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd array of unsigned chars.
 *               Should be free'd using AlcFree().
 * \param	dest 			 Destination for allocated array
@@ -73,6 +76,7 @@ AlcErrno	AlcUnchar1Calloc(unsigned char **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd array of shorts.
 *               Should be free'd using AlcFree().
 * \param	dest 			Destination for allocated array
@@ -86,6 +90,7 @@ AlcErrno	AlcShort1Calloc(short **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd array of ints.
 *               Should be free'd using AlcFree().
 * \param	dest 	 		Destination for allocated array
@@ -99,6 +104,7 @@ AlcErrno	AlcInt1Calloc(int **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd array of floats.
 *               Should be free'd using AlcFree().
 * \param	dest 		 	Destination for allocated array
@@ -112,6 +118,7 @@ AlcErrno	AlcFloat1Calloc(float **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional zero'd array of doubles.
 *               Should be free'd using AlcFree().
 * \param	dest 		 	Destination for allocated array
@@ -125,6 +132,7 @@ AlcErrno	AlcDouble1Calloc(double **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd bit array.
 *               Should be free'd using AlcFree().
 * \param	dest 			Destination for allocated array
@@ -138,6 +146,7 @@ AlcErrno	AlcBit1Malloc(unsigned char **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of chars.
 *               Should be free'd using AlcFree().
 * \param	dest 		 	Destination for allocated array
@@ -151,6 +160,7 @@ AlcErrno	AlcChar1Malloc(char **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of unsigned chars.
 *               Should be free'd using AlcFree().
 * \param	dest 			 Destination for allocated array
@@ -164,6 +174,7 @@ AlcErrno	AlcUnchar1Malloc(unsigned char **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of shorts.
 *               Should be free'd using AlcFree().
 * \param	dest 		 	Destination for allocated array
@@ -177,6 +188,7 @@ AlcErrno	AlcShort1Malloc(short **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of ints.
 *               Should be free'd using AlcFree().
 * \param	dest 	 		Destination for allocated array
@@ -190,6 +202,7 @@ AlcErrno	AlcInt1Malloc(int **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of floats.
 *               Should be free'd using AlcFree().
 * \param	dest 		 	Destination for allocated array
@@ -203,6 +216,7 @@ AlcErrno	AlcFloat1Malloc(float **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of doubles.
 *               Should be free'd using AlcFree().
 * \param	dest 		 	Destination for allocated array
@@ -216,6 +230,7 @@ AlcErrno	AlcDouble1Malloc(double **dest, int mElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd bit array.
 *               Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -231,6 +246,7 @@ AlcErrno	AlcBit2Calloc(unsigned char ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd array of chars.
 *               Should be free'd using Alc2Free().
 * \param	dest 	 		Destination for allocated array
@@ -246,6 +262,7 @@ AlcErrno	AlcChar2Calloc(char ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd array of unsigned chars.
 *               Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -261,6 +278,7 @@ AlcErrno	AlcUnchar2Calloc(unsigned char ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd array of shorts.
 *               Should be free'd using Alc2Free().
 * \param	dest 		 	Destination for allocated array
@@ -276,6 +294,7 @@ AlcErrno	AlcShort2Calloc(short ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd array of ints.
 *               Should be free'd using Alc2Free().
 * \param	dest 		 	Destination for allocated array
@@ -291,6 +310,7 @@ AlcErrno	AlcInt2Calloc(int ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd array of floats.
 *               Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -306,6 +326,7 @@ AlcErrno	AlcFloat2Calloc(float ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional zero'd array of doubles.
 *               Should be free'd using Alc2Free().
 * \param	dest 		 	Destination for allocated array
@@ -321,6 +342,7 @@ AlcErrno	AlcDouble2Calloc(double ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd bit array.
 *		Should be free'd using Alc2Free().
 * \param	dest 			 Destination for allocated array
@@ -336,6 +358,7 @@ AlcErrno	AlcBit2Malloc(unsigned char ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd array of chars.
 *		Should be free'd using Alc2Free().
 * \param	dest 		 	Destination for allocated array
@@ -351,6 +374,7 @@ AlcErrno	AlcChar2Malloc(char ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd array of unsigned chars.
 *		Should be free'd using Alc2Free().
 * \param	dest 			 Destination for allocated array
@@ -366,6 +390,7 @@ AlcErrno	AlcUnchar2Malloc(unsigned char ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd array of shorts.
 *		Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -381,6 +406,7 @@ AlcErrno	AlcShort2Malloc(short ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd array of ints.
 *		Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -396,6 +422,7 @@ AlcErrno	AlcInt2Malloc(int ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd array of floats.
 *		Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -411,6 +438,7 @@ AlcErrno	AlcFloat2Malloc(float ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 2 dimensional non-zero'd array of doubles.
 *		Should be free'd using Alc2Free().
 * \param	dest 			Destination for allocated array
@@ -426,6 +454,7 @@ AlcErrno	AlcDouble2Malloc(double ***dest, int mElem, int nElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Free's a 2 dimensional array allocated by one of the
 *		2 dimensional array allocation functions.
 * \param	dest 			 Ptr with array to be free'd.
@@ -472,6 +501,7 @@ AlcErrno	AlcDouble2Free(double **dest)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional zero'd bit array.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -489,6 +519,7 @@ AlcErrno	AlcBit3Calloc(unsigned char ****dest,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional array of chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -506,6 +537,7 @@ AlcErrno	AlcChar3Calloc(char ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional array of unsigned chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -523,6 +555,7 @@ AlcErrno	AlcUnchar3Calloc(unsigned char ****dest,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional array of chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -540,6 +573,7 @@ AlcErrno	AlcShort3Calloc(short ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional array of chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -556,6 +590,7 @@ AlcErrno	AlcInt3Calloc(int ****dest, int mElem, int nElem, int oElem)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional array of chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -607,6 +642,7 @@ AlcErrno	AlcBit3Malloc(unsigned char ****dest,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional non-zero'd array of chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -624,6 +660,7 @@ AlcErrno	AlcChar3Malloc(char ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional non-zero'd array of unsigned chars.
 *		Should be free'd using Alc3Free().
 * \param	dest 			 Destination for allocated array
@@ -641,6 +678,7 @@ AlcErrno	AlcUnchar3Malloc(unsigned char ****dest,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional non-zero'd array of shorts.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -658,6 +696,7 @@ AlcErrno	AlcShort3Malloc(short ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional non-zero'd array of ints.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -675,6 +714,7 @@ AlcErrno	AlcInt3Malloc(int ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional non-zero'd array of floats.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -692,6 +732,7 @@ AlcErrno	AlcFloat3Malloc(float ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional non-zero'd array of doubles.
 *		Should be free'd using Alc3Free().
 * \param	dest 			Destination for allocated array
@@ -709,6 +750,7 @@ AlcErrno	AlcDouble3Malloc(double ****dest, int mElem, int nElem,
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Free's a 3 dimensional array allocated by one of the
 *		3 dimensional array allocation functions.
 * \param	dest 			 Ptr with array to be free'd.
@@ -755,6 +797,7 @@ AlcErrno	AlcDouble3Free(double ***dest)
 
 /*!
 * \return		 		Error code.
+* \ingroup	AlcArray
 * \brief	Reads a 2D double array from the given numeric ASCI file.
 *		Fields in the file must be white space saperated and
 *		records must be on separate lines. The number of fields
@@ -838,7 +881,36 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
 }
 
 /*!
-* \return		 		Error code.
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Writes a 1D double array in numeric ASCI format to the
+*		given file file. Elements are on separate lines.
+* \param	fP:			File pointer.
+* \param	ar 			Given array.
+* \param	nElem			Number of elements in the 1D array.
+*/
+AlcErrno	AlcDouble1WriteAsci(FILE *fP, double *ar,
+				    int nElem)
+{
+  int		iR;
+  AlcErrno	errNum = ALC_ER_NONE;
+
+  iR = 0;
+  while((iR < nElem) && (errNum == ALC_ER_NONE))
+  {
+    (void )fprintf(fP, "%lg ", ar[iR]);
+    if(fprintf(fP, "\n") != 1)
+    {
+      errNum = ALC_ER_WRITE;
+    }
+    ++iR;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
 * \brief	Writes a 2D double array in numeric ASCI format to the
 *		given file file.
 *		Fields in the file are white space seperated and

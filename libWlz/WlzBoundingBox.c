@@ -393,6 +393,127 @@ WlzDBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
 }
 
 /*!
+* \return	Double precision 3D bounding box.
+* \brief	Computes the bounding box of the given 3D double precision
+*		vertices.
+* \param	nVtx			Number of vertices.
+* \param	vtx			Vertices.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzDBox3	WlzBoundingBoxVtx3D(int nVtx, WlzDVertex3 *vtx,
+				    WlzErrorNum *dstErr)
+{
+  int		cnt;
+  WlzDBox3	bBox3D;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nVtx <= 0) || (vtx == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    cnt = nVtx;
+    bBox3D.xMin = bBox3D.xMax = vtx->vtX;
+    bBox3D.yMin = bBox3D.yMax = vtx->vtY;
+    bBox3D.zMin = bBox3D.zMax = vtx->vtZ;
+    while(--cnt > 0)
+    {
+      ++vtx;
+      if(vtx->vtX < bBox3D.xMin)
+      {
+	bBox3D.xMin = vtx->vtX;
+      }
+      else if(vtx->vtX > bBox3D.xMax)
+      {
+        bBox3D.xMax = vtx->vtX;
+      }
+      if(vtx->vtY < bBox3D.yMin)
+      {
+	bBox3D.yMin = vtx->vtY;
+      }
+      else if(vtx->vtY > bBox3D.yMax)
+      {
+        bBox3D.yMax = vtx->vtY;
+      }
+      if(vtx->vtZ < bBox3D.zMin)
+      {
+	bBox3D.zMin = vtx->vtZ;
+      }
+      else if(vtx->vtZ > bBox3D.zMax)
+      {
+        bBox3D.zMax = vtx->vtZ;
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox3D);
+}
+
+/*!
+* \return	Integer 3D bounding box.
+* \brief	Computes the bounding box of the given 3D integer vertices.
+* \param	nVtx			Number of vertices.
+* \param	vtx			Vertices.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzIBox3	WlzBoundingBoxVtx3I(int nVtx, WlzIVertex3 *vtx,
+				    WlzErrorNum *dstErr)
+{
+  int		cnt;
+  WlzIBox3	bBox3I;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nVtx <= 0) || (vtx == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    cnt = nVtx;
+    bBox3I.xMin = bBox3I.xMax = vtx->vtX;
+    bBox3I.yMin = bBox3I.yMax = vtx->vtY;
+    bBox3I.zMin = bBox3I.zMax = vtx->vtZ;
+    while(--cnt > 0)
+    {
+      ++vtx;
+      if(vtx->vtX < bBox3I.xMin)
+      {
+	bBox3I.xMin = vtx->vtX;
+      }
+      else if(vtx->vtX > bBox3I.xMax)
+      {
+        bBox3I.xMax = vtx->vtX;
+      }
+      if(vtx->vtY < bBox3I.yMin)
+      {
+	bBox3I.yMin = vtx->vtY;
+      }
+      else if(vtx->vtY > bBox3I.yMax)
+      {
+        bBox3I.yMax = vtx->vtY;
+      }
+      if(vtx->vtZ < bBox3I.zMin)
+      {
+	bBox3I.zMin = vtx->vtZ;
+      }
+      else if(vtx->vtZ > bBox3I.zMax)
+      {
+        bBox3I.zMax = vtx->vtZ;
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox3I);
+}
+
+/*!
 * \return	3D bounding box.
 * \ingroup      WlzFeatures
 * \brief	Computes the 3D axis aligned bounding box of the

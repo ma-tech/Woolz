@@ -120,6 +120,23 @@ static WlzContour 	*WlzContourBndObj3D(
 			  WlzObject *obj,
 			  double ctrVal,
 			  WlzErrorNum *dstErr);
+static WlzContour 	*WlzContourFromPoints3D(
+			  int nSPts,
+			  WlzDVertex3 *sPts,
+			  double sAlpha,
+			  int nIPts,
+			  WlzDVertex3 *iPts,
+			  double iDist,
+			  double iAlpha,
+			  int nOPts,
+			  WlzDVertex3 *oPts,
+			  double oDist,
+			  double oAlpha,
+			  double delta,
+			  double tau,
+			  int inPln,
+			  int plnIdx,
+			  WlzErrorNum *dstErr);
 static WlzDVertex2	WlzContourItpTriSide(
 			  double valOrg,
 			  double valDst,
@@ -272,7 +289,7 @@ WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
 }
 
 /*!
-* \return				Contour, or NULL on error.
+* \return	Contour, or NULL on error.
 * \ingroup	WlzContour
 * \brief	Creates a contour (list of connected edges or surface
 *               patches) from a Woolz object's values.
@@ -370,6 +387,287 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	break;
     }
   }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return	New contour or NULL on error.
+* \ingroup	WlzContour
+* \brief	Given three points sets: On, inside and outside some
+*		curve this function computes a contour for the curve.
+*		This is done by approximating (or interpolating) the
+*		distance function for the curve using multi order spline
+*		radial basis functions. The contour is then computed from the
+*		zero level set of the radial basis functions.
+* \param	vtxType			Type of all vertices.
+* \param	nSPts			Number of on surface points.
+* \param	sPts			Positions of the on surface points.
+* \param	sAlpha			Alpha value for the on surface points.
+* \param	nIPts			Number of inside points.
+* \param	iPts			Positions of the inside points.
+* \param	iDist			Distance from surface for the inside
+* 					points.
+* \param	iAlpha			Alpha value for the inside points.
+* \param	nOPts			Number of outside points.
+* \param	oPts			Positions of the outside points.
+* \param	oDist			Distance from surface for the outside
+* 					points.
+* \param	oAlpha			Alpha value for the outside points.
+* \param	delta			Multiorder spline \f$\delta\f$
+* 					smoothness parameter.
+* \param	tau			Multiorder spline \f$\tau\f$
+*					smoothness parameter.
+* \param	inPln			Find contour in plane, only used if
+*					vertices are 3D.
+* \param	plnIdx			Plane definition, currently the XY
+*					plane with the given Z coordinate.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+WlzContour	*WlzContourFromPoints(WlzVertexType vtxType,
+				      int nSPts, WlzVertexP sPts,
+				      double sAlpha,
+				      int nIPts, WlzVertexP iPts,
+				      double iDist, double iAlpha,
+				      int nOPts, WlzVertexP oPts,
+				      double oDist, double oAlpha,
+				      double delta, double tau,
+				      int inPln,
+				      int plnIdx,
+				      WlzErrorNum *dstErr)
+{
+  WlzContour	*ctr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nSPts <= 0) || (sPts.v == NULL) ||
+     (nIPts <= 0) || (iPts.v == NULL) ||
+     (nOPts <= 0) || (oPts.v == NULL) ||
+     (delta < 0) || (tau < 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(vtxType)
+    {
+      case WLZ_VERTEX_D3:
+	ctr = WlzContourFromPoints3D(nSPts, sPts.d3, sAlpha,
+	    nIPts, iPts.d3, iDist, iAlpha,
+	    nOPts, oPts.d3, oDist, oAlpha,
+	    delta, tau, inPln, plnIdx, &errNum);
+	break;
+      default:
+	errNum = WLZ_ERR_PARAM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return	New contour or NULL on error.
+* \ingroup	WlzContour
+* \brief	Given three 3D points sets: On, inside and outside some
+*		surface this function computes a contour for the surface.
+*		This is done by approximating (or interpolating) the
+*		distance function for the surface using multi order spline
+*		radial basis functions. The contour is then computed from the
+*		zero level set of the radial basis functions.
+*		All parameters are assumed valid.
+* \param	nSPts			Number of on surface points.
+* \param	sPts			Positions of the on surface points.
+* \param	sAlpha			Alpha value for the on surface points.
+* \param	nIPts			Number of inside points.
+* \param	iPts			Positions of the inside points.
+* \param	iDist			Distance from surface for the inside
+* 					points.
+* \param	iAlpha			Alpha value for the inside points.
+* \param	nOPts			Number of outside points.
+* \param	oPts			Positions of the outside points.
+* \param	oDist			Distance from surface for the outside
+* 					points.
+* \param	oAlpha			Alpha value for the outside points.
+* \param	delta			Multiorder spline \f$\delta\f$
+* 					smoothness parameter.
+* \param	tau			Multiorder spline \f$\tau\f$
+*					smoothness parameter.
+* \param	inPln			Find contour in plane, only used if
+*					vertices are 3D.
+* \param	plnIdx			Plane definition, currently the XY
+*					plane with the given Z coordinate.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+static WlzContour *WlzContourFromPoints3D(int nSPts, WlzDVertex3 *sPts,
+					double sAlpha,
+					int nIPts, WlzDVertex3 *iPts,
+					double iDist, double iAlpha,
+					int nOPts, WlzDVertex3 *oPts,
+					double oDist, double oAlpha,
+					double delta, double tau,
+					int inPln, int plnIdx,
+					WlzErrorNum *dstErr)
+{
+  int		tI0,
+  		nCPts;
+  double	*alpha = NULL,
+  		*dist = NULL;
+  WlzObject	*dObj = NULL;
+  WlzDVertex3	*cPts = NULL;
+  WlzContour	*ctr = NULL;
+  WlzBasisFn	*basisFn = NULL;
+  double	**dVal2D = NULL;
+  double	***dVal3D = NULL;
+  WlzIVertex2	dOrg2D,
+  		dSz2D;
+  WlzIVertex3	dIx,
+		dOrg3D,
+  		dSz3D;
+  WlzDVertex3	dVx;
+  WlzDBox3	dBBoxD;
+  WlzIBox3	dBBoxI;
+  double	bFnParam[2];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bFnParam[0] = delta;
+  bFnParam[1] = tau;
+  nCPts = nSPts + nIPts + nOPts;
+  if(((cPts = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
+  				       nCPts)) == NULL) ||
+     ((alpha = (double *)AlcMalloc(sizeof(double) * nCPts)) == NULL) ||
+     ((dist = (double *)AlcMalloc(sizeof(double) * nCPts)) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  /* Compute multiorder spline basis function. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValueCopyDVertexToDVertex3(cPts, sPts, nSPts);
+    WlzValueSetDouble(alpha, sAlpha, nSPts);
+    WlzValueSetDouble(dist, 0.0, nSPts);
+    WlzValueCopyDVertexToDVertex3(cPts + nSPts, iPts, nIPts);
+    WlzValueSetDouble(alpha + nSPts, iAlpha, nIPts);
+    WlzValueSetDouble(dist + nSPts, -iDist, nIPts);
+    WlzValueCopyDVertexToDVertex3(cPts + nSPts + nIPts, oPts, nOPts);
+    WlzValueSetDouble(alpha + nSPts + nIPts, oAlpha, nOPts);
+    WlzValueSetDouble(dist + nSPts + nIPts, oDist, nOPts);
+    basisFn = WlzBasisFnScalarMOS3DFromCPts(nCPts, cPts, dist, alpha,
+    					bFnParam, &errNum);
+  }
+  /* Create a WLZ_GREY_DOUBLE valued distance object with a domain which
+   * encloses all the given points. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dBBoxD = WlzBoundingBoxVtx3D(nCPts, cPts, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dBBoxI = WlzBoundingBox3DTo3I(dBBoxD);
+    if(((dSz3D.vtX = dBBoxI.xMax - dBBoxI.xMin + 1) < 1) ||
+       ((dSz3D.vtY = dBBoxI.yMax - dBBoxI.yMin + 1) < 1) ||
+       ((dSz3D.vtZ = dBBoxI.zMax - dBBoxI.zMin + 1) < 1))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(inPln)
+    {
+      dSz2D.vtX = dSz3D.vtX;
+      dSz2D.vtY = dSz3D.vtY;
+      if(AlcDouble2Malloc(&dVal2D, dSz2D.vtY, dSz2D.vtX) != ALC_ER_NONE)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	dVx.vtZ = plnIdx;
+	for(dIx.vtY = 0; dIx.vtY < dSz2D.vtY; ++(dIx.vtY))
+	{
+	  dVx.vtY = dBBoxI.yMin + dIx.vtY;
+	  for(dIx.vtX = 0; dIx.vtX < dSz2D.vtX; ++(dIx.vtX))
+	  {
+	    dVx.vtX = dBBoxI.xMin + dIx.vtX;
+	    *(*(dVal2D + dIx.vtY) + dIx.vtX) =
+				  WlzBasisFnValueScalarMOS3D(basisFn, dVx);
+	  }
+	}
+	dOrg2D.vtX = dBBoxI.xMin;
+	dOrg2D.vtY = dBBoxI.yMin;
+	dObj = WlzFromArray2D((void **)dVal2D, dSz2D, dOrg2D,
+			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
+			      0.0, 1.0, 0, 1, &errNum);
+	if(dObj)
+	{
+	  *dVal2D = NULL;
+	}
+      }
+    }
+    else
+    {
+      if(AlcDouble3Malloc(&dVal3D,
+      			  dSz3D.vtZ, dSz3D.vtY, dSz3D.vtX) != ALC_ER_NONE)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	for(dIx.vtZ = 0; dIx.vtZ < dSz3D.vtZ; ++(dIx.vtZ))
+	{
+	  dVx.vtZ = dBBoxI.zMin + dIx.vtZ;
+	  for(dIx.vtY = 0; dIx.vtY < dSz3D.vtY; ++(dIx.vtY))
+	  {
+	    dVx.vtY = dBBoxI.yMin + dIx.vtY;
+	    for(dIx.vtX = 0; dIx.vtX < dSz3D.vtX; ++(dIx.vtX))
+	    {
+	      dVx.vtX = dBBoxI.xMin + dIx.vtX;
+	      *(*(*(dVal3D + dIx.vtZ) + dIx.vtY) + dIx.vtX) =
+				    WlzBasisFnValueScalarMOS3D(basisFn, dVx);
+	    }
+	  }
+	}
+	dOrg3D.vtX = dBBoxI.xMin;
+	dOrg3D.vtY = dBBoxI.yMin;
+	dOrg3D.vtZ = dBBoxI.zMin;
+	dObj = WlzFromArray3D((void ***)dVal3D, dSz3D, dOrg3D,
+			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
+			      0.0, 1.0, 0, 1, &errNum);
+	if(dObj)
+	{
+	  **dVal3D = NULL;
+	}
+      }
+    }
+#ifdef WLZ_CONTOURFROMPOINTS_DEBUG
+    if(errNum == WLZ_ERR_NONE)
+    {
+      FILE *fP;
+      fP = fopen("DEBUG_mosval.wlz", "w");
+      (void )WlzWriteObj(fP, dObj);
+      fclose(fP);
+    }
+#endif
+  }
+  /* Compute the zero valued surface through the distance object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    ctr = WlzContourObj(dObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, &errNum);
+  }
+  (void )Alc2Free((void **)dVal2D);
+  (void )Alc3Free((void ***)dVal3D);
+  AlcFree(cPts);
+  AlcFree(alpha);
+  AlcFree(dist);
+  (void )WlzFreeObj(dObj);
   if(dstErr)
   {
     *dstErr = errNum;

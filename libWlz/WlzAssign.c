@@ -182,7 +182,7 @@ WlzProperty WlzAssignProperty(WlzProperty property, WlzErrorNum *dstErr)
 * \return	Property list with incremented link count or NULL on error.
 * \brief	Assigned a Woolz property list, incrementing the link count
 		or the number of times the property list is used.
-* \param	plist			Given property list.
+* \param	pList			Given property list.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzPropertyList *WlzAssignPropertyList(WlzPropertyList *pList,

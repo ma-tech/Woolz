@@ -2444,23 +2444,26 @@ typedef struct _WlzRsvFilter
 */
 typedef enum _WlzFnType
 {
-  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
-  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
-  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
-  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis
+  WLZ_FN_BASIS_2DGAUSS,        		/*!< 2D Gaussian basis function */
+  WLZ_FN_BASIS_2DPOLY,                  /*!< 2D Polynomial basis function */
+  WLZ_FN_BASIS_2DMQ,			/*!< 2D Multiquadric basis function */
+  WLZ_FN_BASIS_2DTPS,              	/*!< 2D Thin plate spline basis
   					     function */
-  WLZ_FN_BASIS_2DCONF_POLY,		/*!< Conformal polynomial basis
+  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
   					     function */
+  WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
+  WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
+                                             values. */
   WLZ_FN_COUNT				/*!< Not a function but the number
   					     of functions. Keep this the
-					     last in the enums! */
+					     last of the enums! */
 } WlzFnType;
 
 /*!
 * \struct	_WlzBasisFn
 * \ingroup	WlzFunction
 * \brief	A basis function.
-*		Typedef: ::WlzAffineTransformPrim.
+*		Typedef: ::WlzBasisFn.
 */
 typedef struct _WlzBasisFn
 {
@@ -2567,7 +2570,7 @@ typedef struct _WlzBasisFnTransform
   WlzTransformType type;       		/*!< From WlzCoreDomain. */
   int           linkcount;      	/*!< From WlzCoreDomain. */
   void 		*freeptr;		/*!< From WlzCoreDomain. */
-  WlzBasisFn	*basisFn;			/*!< The basis function for the
+  WlzBasisFn	*basisFn;		/*!< The basis function for the
   					     transform. */
 } WlzBasisFnTransform;
 

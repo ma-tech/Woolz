@@ -793,6 +793,16 @@ extern WlzDVertex2		WlzBasisFnValueTPS2D(
 extern WlzDVertex2		WlzBasisFnValueConf2D(
 				  WlzBasisFn *basisFn,
 				  WlzDVertex2 srcVx);
+WlzDVertex3     		WlzBasisFnValueMOS3D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex3 srcVx);
+double          		WlzBasisFnValueScalarMOS3D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex3 srcVx);
+double          		WlzBasisFnValueMOSPhi(
+				  double r,
+				  double delta,
+				  double tau);
 extern WlzBasisFn		*WlzBasisFnGauss2DFromCPts(
 				  int nPts,
 				  WlzDVertex2 *dPts,
@@ -821,6 +831,20 @@ extern WlzBasisFn		*WlzBasisFnTPS2DFromCPts(
 				  int nPts,
 				  WlzDVertex2 *dPts,
 				  WlzDVertex2 *sPts,
+				  WlzErrorNum *dstErr);
+WlzBasisFn 			*WlzBasisFnMOS3DFromCPts(
+				  int nPts,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  double *alpha,
+				  double *param,
+				  WlzErrorNum *dstErr);
+WlzBasisFn 			*WlzBasisFnScalarMOS3DFromCPts(
+				  int nPts,
+				  WlzDVertex3 *cPts,
+				  double *cVal,
+				  double *alpha,
+				  double *param,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -884,6 +908,14 @@ extern WlzIBox3 		WlzBoundingBox3I(
 				  WlzErrorNum *dstErr);
 extern WlzDBox3 		WlzBoundingBox3D(
 				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+extern WlzDBox3			WlzBoundingBoxVtx3D(
+				  int sizeArrayVtx,
+				  WlzDVertex3 *arrayVtx,
+				  WlzErrorNum *dstErr);
+extern WlzIBox3			WlzBoundingBoxVtx3I(
+				  int sizeArrayVtx,
+				  WlzIVertex3 *arrayVtx,
 				  WlzErrorNum *dstErr);
 extern WlzIBox2        		WlzBoundingBox2DTo2I(
 				  WlzDBox2 bBox2D);
@@ -968,6 +1000,26 @@ extern WlzContour		*WlzContourObjGrd(
 				  double ctrHi,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzContour		*WlzContourFromPoints(
+				  WlzVertexType vtxType,
+				  int nSPts,
+				  WlzVertexP sPts,
+				  double sAlpha,
+				  int nIPts,
+				  WlzVertexP iPts,
+				  double iDist,
+				  double iAlpha,
+				  int nOPts,
+				  WlzVertexP oPts,
+				  double oDist,
+				  double oAlpha,
+				  double delta,
+				  double tau,
+				  int inPln,
+				  int plnIdx,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzConvertPix.c							*

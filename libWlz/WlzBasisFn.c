@@ -47,9 +47,20 @@ static void			WlzBasisFnTPS2DCoef(
 				  WlzDBox2 *extentDB,
 				  double range,
 				  int forX);
+static double   		WlzBasisFnValueMOSPhiPC(
+				  double r,
+				  double v,
+				  double w,
+				  double delta,
+				  double rv,
+				  double rw,
+				  double norm);
 static WlzDVertex2 		WlzBasisFnValueRedPoly2D(
 				  WlzDVertex2 *poly,
 				  WlzDVertex2 srcVx);
+static WlzDVertex3 		WlzBasisFnValueRedPoly3D(
+				  WlzDVertex3 *poly,
+				  WlzDVertex3 srcVx);
 
 /*!
 * \return	Woolz error number.
@@ -88,8 +99,11 @@ WlzErrorNum	WlzBasisFnFree(WlzBasisFn *basisFn)
 * \return       New vertex value.
 * \ingroup      WlzFunction
 * \brief        Calculates the value for the given vertex using
-*               a polynomial basis function.
-* \param        basis                   Basis function.
+*               a 2D polynomial basis function. This is not a basis
+*		function just a polynomial, but it makes sense for
+*		it to be incuded in the basis functions since they
+*		have a polynomial component.
+* \param        basisFn                   Basis function.
 * \param        srcVx                   Source vertex.
 */
 WlzDVertex2 	WlzBasisFnValuePoly2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
@@ -125,7 +139,7 @@ WlzDVertex2 	WlzBasisFnValuePoly2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 * \return	New vertex value.
 * \ingroup	WlzFunction
 * \brief	Calculates the value for the given vertex using
-*		a Gaussian basis function.
+*		a 2D Gaussian basis function.
 * \param	basisFn			Basis function.
 * \param	srcVx			Source vertex.
 */
@@ -167,7 +181,7 @@ WlzDVertex2 	WlzBasisFnValueGauss2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 * \return	New vertex value.
 * \ingroup	WlzFunction
 * \brief	Calculates the value for the given vertex using
-*		a multiquadric basis function.
+*		a 2D multiquadric basis function.
 * \param	basisFn			Basis function.
 * \param	srcVx			Source vertex.
 */
@@ -212,7 +226,7 @@ WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 * \return	New vertex value.
 * \ingroup	WlzFunction
 * \brief	Calculates the value for the given vertex using
-*		a thin plate spline basis function.
+*		a 2D thin plate spline basis function.
 * \param	basisFn			Basis function.
 * \param	srcVx			Source vertex.
 */
@@ -255,7 +269,7 @@ WlzDVertex2 	WlzBasisFnValueTPS2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 * \return	New vertex value.
 * \ingroup	WlzFunction
 * \brief	Calculates the value for the given vertex using
-*		a conformal polynomial basis function.
+*		a 2D conformal polynomial basis function.
 * \param	basisFn			Basis function.
 * \param	srcVx			Source vertex.
 */
@@ -285,6 +299,256 @@ WlzDVertex2 	WlzBasisFnValueConf2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
   newVx.vtX = z.re;
   newVx.vtY = z.im;
   return(newVx);
+}
+
+/*!
+* \return	New vertex value.
+* \ingroup	WlzFunction
+* \brief	Calculates the value for the given vertex using
+*		a 3D multiorder basis function:
+*		\f[
+		\phi(r) = \frac{1}{4 \pi \delta^2 r}
+			  (1 -
+			   \frac{w}{w - v} e^{- \sqrt{v} r} +
+			   \frac{v}{w - v} e^{- \sqrt{w} r})
+		\f]
+		\f[
+		v = \frac{1 + \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+		\f[
+		w = \frac{1 - \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+* \param	basisFn			Basis function.
+* \param	srcVx			Source vertex.
+*/
+WlzDVertex3 	WlzBasisFnValueMOS3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
+{
+  int           count;
+  double        tD0,
+		tD1,
+		v,
+		w,
+		rad,
+		phi,
+		delta,
+		tau,
+		rv,
+		rw,
+		norm;
+  WlzDVertex3   *basisCo,
+		*cPts;
+  WlzDVertex3   dispVx,
+  		polyVx,
+  		newVx;
+
+  newVx.vtX = 0.0;
+  newVx.vtY = 0.0;
+  newVx.vtZ = 0.0;
+  count = basisFn->nVtx;
+  cPts = basisFn->vertices.d3;
+  basisCo = basisFn->basis.d3;
+  delta = *((double *)(basisFn->param) + 0);
+  tau = *((double *)(basisFn->param) + 1);
+  tD0 = 2.0 * tau * delta;
+  tD1 = sqrt(1 - (tD0 * tD0));
+  tD0 = 2.0 * tau;
+  v = (1 + tD1) / tD0;
+  w = (1 - tD1) / tD0;
+  rv = sqrt(v);
+  rw = sqrt(w);
+  norm = 1.0 / (4.0 * ALG_M_PI * delta * delta);
+  while(count-- > 0)
+  {
+    WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
+    rad = WLZ_VTX_3_LENGTH(dispVx);
+    phi = WlzBasisFnValueMOSPhiPC(rad, w, v, delta, rv, rw, norm);
+    newVx.vtX += basisCo->vtX * phi;
+    newVx.vtY += basisCo->vtY * phi;
+    newVx.vtZ += basisCo->vtZ * phi;
+    ++cPts;
+    ++basisCo;
+  }
+  polyVx = WlzBasisFnValueRedPoly3D(basisFn->poly.d3, srcVx);
+  WLZ_VTX_3_ADD(newVx, newVx, polyVx);
+  return(newVx);
+}
+
+/*!
+* \return	New scalar value.
+* \ingroup	WlzFunction
+* \brief	Calculates the value for the given vertex using
+*		a scalar 3D multiorder basis function:
+*		\f[
+		\phi(r) = \frac{1}{4 \pi \delta^2 r}
+			  (1 -
+			   \frac{w}{w - v} e^{- \sqrt{v} r} +
+			   \frac{v}{w - v} e^{- \sqrt{w} r})
+		\f]
+		\f[
+		v = \frac{1 + \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+		\f[
+		w = \frac{1 - \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+* \param	basisFn			Basis function.
+* \param	srcVx			Source vertex.
+*/
+double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
+					   WlzDVertex3 srcVx)
+{
+  int           count;
+  double        tD0,
+		tD1,
+		v,
+		w,
+		phi,
+		delta,
+		tau,
+		rv,
+		rw,
+		rad,
+		norm,
+		value;
+  double	*basisCo;
+  WlzDVertex3	*cPts;
+  WlzDVertex3   dispVx;
+
+  value = 0.0;
+  count = basisFn->nVtx;
+  cPts = basisFn->vertices.d3;
+  basisCo = (double *)(basisFn->basis.v);
+  delta = *((double *)(basisFn->param) + 0);
+  tau = *((double *)(basisFn->param) + 1);
+  tD0 = 2.0 * tau * delta;
+  tD1 = sqrt(1 - (tD0 * tD0));
+  tD0 = 2.0 * tau * tau;
+  v = (1 + tD1) / tD0;
+  w = (1 - tD1) / tD0;
+  rv = sqrt(v);
+  rw = sqrt(w);
+  norm = 1.0 / (4.0 * ALG_M_PI * delta * delta);
+  while(count-- > 0)
+  {
+    WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
+    rad = WLZ_VTX_3_LENGTH(dispVx);
+    phi = WlzBasisFnValueMOSPhiPC(rad, w, v, delta, rv, rw, norm);
+    value += *basisCo * phi;
+    ++basisCo;
+    ++cPts;
+  }
+  value += *(double *)(basisFn->poly.v);
+  return(value);
+}
+
+/*!
+* \return	The value of a single multiorder radial basis function.
+* \brief	Computes the value of a single multiorder radial basis
+*		function:
+*		\f[
+		\phi(r) = \frac{1}{4 \pi \delta^2 r}
+			  (1 -
+			   \frac{w}{w - v} e^{- \sqrt{v} r} +
+			   \frac{v}{w - v} e^{- \sqrt{w} r})
+		\f]
+		\f[
+		v = \frac{1 + \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+		\f[
+		w = \frac{1 - \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+* \param	r			Radial distance, \f$(r > 0)\f$.
+* \param	delta			The 1st order smoothness parameter
+*					\f$\delta\f$, \f$(\delta > 0)\f$.
+* \param	tau			The 3rd order smoothness parameter
+*					 \f$\tau\f$, \f$(\tau > 0)\f$.
+*/
+double          WlzBasisFnValueMOSPhi(double r, double delta, double tau)
+{
+  double        tD0,
+                tD1,
+                v,
+                w,
+                rv,
+                rw,
+                norm,
+                phi;
+
+  tD0 = 2.0 * tau * delta;
+  tD1 = sqrt(1.0 - (tD0 * tD0));
+  tD0 = 2.0 * tau * tau;
+  v = (1 + tD1) / tD0;
+  w = (1 - tD1) / tD0;
+  rv = sqrt(v);
+  rw = sqrt(w);
+  norm = 1.0 / (4.0 * ALG_M_PI * delta * delta);
+  phi = WlzBasisFnValueMOSPhiPC(r, v, w, delta, rv, rw, norm);
+  return(phi);
+}
+
+/*!
+* \return	The value of a single multiorder radial basis function.
+* \brief	Computes the value of a single multiorder radial basis
+*		function using either an approximation:
+*		\f[
+		phi'(r) = \frac{\frac{\sqrt{w} - \sqrt{v}}{w - v}
+		                (\sqrt{w v} - \frac{w v}{6}) +
+		                \frac{v w r^3}{24}}
+		               {4 \pi \delta^2}
+*		\f]
+*		if the radial distance is near to zero or else the
+*		function:
+*		\f[
+		\phi(r) = \frac{1}{4 \pi \delta^2 r}
+			  (1 -
+			   \frac{w}{w - v} e^{- \sqrt{v} r} +
+			   \frac{v}{w - v} e^{- \sqrt{w} r})
+		\f]
+*		where
+		\f[
+		v = \frac{1 + \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+		\f[
+		w = \frac{1 - \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+* \param	r			Radial distance, \f$(r > 0)\f$.
+* \param	v			Precomputed parameter \f$ v \f$.
+* \param	w			Precomputed parameter \f$ w \f$.
+* \param	delta			The 1st order smoothness parameter
+*					\f$ \delta \f$.
+* \param	rv			Precomputed parameter \f$ \sqrt{v} \f$.
+* \param	rw			Precomputed parameter \f$ \sqrt{w} \f$.
+* \param	norm			Precomputed parameter,
+*					\f$ 4 \pi \delta^2 \f$.
+*/
+static double   WlzBasisFnValueMOSPhiPC(double r, double v, double w,
+                                        double delta, double rv, double rw,
+                                        double norm)
+{
+  double        phi = 0.0,
+                wv,
+                rwv,
+                rvr,
+                rwr;
+
+  wv = w - v;
+  if(fabs(wv) > DBL_EPSILON)
+  {
+    rwv = rw - rv;
+    if(((rvr = rv * r) < 0.05) || ((rwr = rw * r) < 0.05))
+    {
+      phi = (rwv * rw * rv) / wv;
+      if(r > DBL_EPSILON)
+      {
+        phi += -(v * w * r * r) * ((rwv / (6.0 * wv)) + (r / 24.0));
+      }
+    }
+    else
+    {
+      phi = (1.0  - (w * exp(-rvr) - v * exp(-rwr)) / wv) / r;
+    }
+    phi *= norm;
+  }
+  return(phi);
 }
 
 /*!
@@ -1137,6 +1401,316 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 }
 
 /*!
+* \return	New basis function.
+* \ingroup	WlzFunction
+* \brief	Creates a new 3D multi order spline basis function:
+*		\f[
+		\phi(r) = \frac{1}{4 \pi \delta^2 r}
+			  (1 -
+			   \frac{w}{w - v} e^{- \sqrt{v} r} +
+			   \frac{v}{w - v} e^{- \sqrt{w} r})
+		\f]
+		\f[
+		v = \frac{1 + \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+		\f[
+		w = \frac{1 - \sqrt{1 - 4 \pi \tau^2 \delta^2}}{2 \tau^2}
+		\f]
+		\f[
+		f(\mathbf{x}) = P(\mathbf{x}) +
+			        \sum_{i=1}^{n}{\lambda_i \phi(r_i)}
+		\f]
+		\f[
+		r_i = |\mathbf{x} - \mathbf{x'_i}|
+		\f]
+*		The multi order spline may either be an exact interpolating
+*		function or one which approximates the given control points.
+*		In the approximating case values for the regularization
+*		parameters should be given, with the regularization
+*		parameters \f$\alpha_i\f$ given by:
+*		\f[
+		H[f] = \beta[f] +
+		       \sum_{i=1}^{n}{\frac{(y_i - f(x))^2}{\alpha_i}}
+		\f]
+		Giving the design equation:
+		\f[
+		\left(
+		\begin{array}{cccccccc}
+		0 & 0 & 0 & 0 & 1 & 1 & \cdots & 1 \\
+		0 & 0 & 0 & 0 & x_1 & x_2 & \cdots & x_n \\
+		0 & 0 & 0 & 0 & y_1 & y_2 & \cdots & y_n \\
+		0 & 0 & 0 & 0 & z_1 & z_2 & \cdots & z_n \\
+		1 & x_1 & y_1 & z_1 & \phi(r_{11}) + \alpha_1 & \phi(r_{12}) &
+		          \cdots & \phi(r_{1n}) \\
+		\dotfill \\
+		1 & x_n & y_n & z_n & \phi(r_{n1}) & \phi(r_{n2}) &
+		          \cdots & \phi(r_{nn} + \alpha_n)
+		\end{array}
+		\right)
+
+		\left(
+		\begin{array}{c}
+		a_o \\
+		a_1 \\
+		a_2 \\
+		a_3 \\
+		\lambda_1 \\
+		\lambda_1 \\
+		\vdots \\
+		\lambda_n
+		\end{array}
+		\right)
+		
+		=
+
+		\left(
+		\begin{array}{c}
+		0 \\
+		0 \\
+		0 \\
+		0 \\
+		f(\mathbf{x_1}) \\
+		f(\mathbf{x_1}) \\
+		\vdots \\
+		f(\mathbf{x_n})
+		\end{array}
+		\right)
+		\f]
+*		The vertex values with components  \f$x\f$, \f$y \f$ and
+*		\f$z\f$ are used to solve for the four polynomial
+*		coefficients and the three basis function weights 
+*		\f$\lambda\f$, \f$\mu\f$ and \f$\nu\f$.
+*		The given values of \f$\lambda\f$ and \f$\tau\f$ are
+*		constrained by \f$\lambda > 0, \tau > 0\f$ and
+*		\f$\lambda \tau < 0.5\f$.
+* \param	nPts			Number of control point pairs.
+* \param	dPts			Destination control points.
+* \param	sPts			Source control points.
+* \param	alpha			Regularization parameter for the
+*					control points. If NULL all
+*					regularization parameters are set to
+*					zero for exact interpolation.
+* \param	param			Smoothness parameters \f$\delta\f$
+*					and \f$\tau\f$ in that order,
+*					but may be NULL in which case default
+*					parameter values will be used.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBasisFn *WlzBasisFnMOS3DFromCPts(int nPts,
+				  WlzDVertex2 *dPts, WlzDVertex2 *sPts,
+				  double *alpha, double *param,
+				  WlzErrorNum *dstErr)
+{
+  WlzBasisFn	*basisFn = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  /* TODO */
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(basisFn);
+}
+
+/*!
+* \return	New basis function.
+* \ingroup	WlzFunction
+* \brief	Computes a new 3D multi order spline basis function
+*		which either interpolates or approximates the given
+*		scalar values. See WlzBasisFnMOS3DFromCPts() for details
+*		of the multi order spline.
+*		The given values of \f$\lambda\f$ and \f$\tau\f$ are
+*		constrained by \f$\lambda > 0, \tau > 0\f$ and
+*		\f$\lambda \tau < 0.5\f$.
+* \param	nPts			Number of values.
+* \param	cPts			Positions of the control points.
+* \param	cVal			Values at the control points.
+* \param	alpha			Regularization parameter for the
+*					control points. If NULL all
+*					regularization parameters are set to
+*					zero for exact interpolation.
+* \param	param			Smoothness parameters \f$\delta\f$
+*					and \f$\tau\f$ in that order,
+*					but may be NULL in which case default
+*					parameter values will be used.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
+				  WlzDVertex3 *cPts, double *cVal,
+				  double *alpha, double *param,
+				  WlzErrorNum *dstErr)
+{
+  int		idN,
+  		idX,
+		idY,
+		idX1,
+		idY1,
+		nSys;
+  double	tD0,
+		rad,
+		phi0,
+		thresh,
+		delta,
+		tau,
+		wMax;
+  double	*bMx = NULL,
+  		*wMx = NULL;
+  double	**aMx = NULL,
+  		**vMx = NULL;
+  WlzBasisFn	*basisFn = NULL;
+  WlzDVertex3	tV0,
+  		tV1,
+		tV2;
+  WlzDBox2	extentDB;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	tol = 1.0e-06;
+
+  
+  delta = *(param + 0);
+  tau = *(param + 1);
+  if((delta < DBL_EPSILON) || (tau < DBL_EPSILON) ||
+     (delta * tau > (0.5 - DBL_EPSILON)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nSys = nPts + 1;
+    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+	((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+	(AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
+	(AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
+	((basisFn = (WlzBasisFn *)
+	  AlcCalloc(sizeof(WlzBasisFn), 1)) == NULL) ||
+	((basisFn->poly.v = AlcMalloc(sizeof(double) * 1)) == NULL) ||
+	((basisFn->basis.v = AlcMalloc(sizeof(double) * nPts)) == NULL) ||
+	((basisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex3) *
+	                                  nPts)) == NULL) ||
+	((basisFn->param = AlcMalloc(sizeof(double) * 2)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *((double *)(basisFn->param) + 0) = delta;
+    *((double *)(basisFn->param) + 1) = tau;
+    basisFn->type = WLZ_FN_BASIS_SCALAR_3DMOS;
+    basisFn->nPoly = 1;
+    basisFn->nBasis = nPts;
+    basisFn->nVtx = nPts;
+    WlzValueCopyDVertexToDVertex3(basisFn->vertices.d3, cPts, nPts);
+    *(*(aMx + 0) + 0) = 0.0;
+    for(idX = 0; idX < nPts; ++idX)
+    {
+      idX1 = idX + 1;
+      *(*(aMx + 0) + idX1) = 1.0;
+    }
+    *(bMx + 0) = 0.0;
+    phi0 = WlzBasisFnValueMOSPhi(0.0, delta, tau);
+    for(idY = 0; idY < nPts; ++idY)
+    {
+      idY1 = idY + 1;
+      tV0 = *(cPts + idY);
+      *(bMx + idY1) = *(cVal + idY);
+      *(*(aMx + idY1) + 0) = 1.0;
+      for(idX = 0; idX < idY; ++idX)
+      {
+	idX1 = idX + 1;
+	tV1 = *(cPts + idX);
+	WLZ_VTX_3_SUB(tV2, tV1, tV0);
+	rad = WLZ_VTX_3_LENGTH(tV2);
+	tD0 = WlzBasisFnValueMOSPhi(rad, delta, tau);
+	*(*(aMx + idY1) + idX1) = *(*(aMx + idX1) + idY1) = tD0;
+      }
+      *(*(aMx + idY1) + idY1) = phi0 + *(alpha + idY);
+    }
+#ifdef WLZ_BASISFNSCALARMOS3DFROMCPTS_DEBUG
+    {
+      FILE	*fP;
+      fP = fopen("DEBUG_aMx.num", "w");
+      AlcDouble2WriteAsci(fP, aMx, nSys, nSys);
+      fclose(fP);
+      fP = fopen("DEBUG_bMx.num", "w");
+      AlcDouble1WriteAsci(fP, bMx, nSys);
+      fclose(fP);
+    }
+#endif
+    /* Perform singular value decomposition of matrix A. */
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Edit the singular values. */
+    wMax = 0.0;
+    for(idN = 0; idN < nSys; ++idN)
+    {
+      if(*(wMx + idN) > wMax)
+      {
+	wMax = *(wMx + idN);
+      }
+    }
+    thresh = tol * wMax;
+    for(idN = 0; idN < nSys; ++idN)
+    {
+      if(*(wMx + idN) < thresh)
+      {
+	*(wMx + idN) = 0.0;
+      }
+    }
+    /* Solve for lambda and the polynomial coefficients. */
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
+    						vMx, bMx));
+  }
+#ifdef WLZ_BASISFNSCALARMOS3DFROMCPTS_DEBUG
+    {
+      FILE	*fP;
+      fP = fopen("DEBUG_bMxBS.num", "w");
+      AlcDouble1WriteAsci(fP, bMx, nSys);
+      fclose(fP);
+    }
+#endif
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *(double *)(basisFn->poly.v) = *bMx;	      /* Only constant used. */
+    for(idY = 0; idY < nPts; ++idY)
+    {
+      idY1 = idY + 1;
+      *((double *)(basisFn->basis.v) + idY) = *(bMx + idY1);
+    }
+  }
+  if(bMx)
+  {
+    AlcFree(bMx);
+  }
+  if(wMx)
+  {
+    AlcFree(wMx);
+  }
+  if(aMx)
+  {
+    (void )AlcDouble2Free(aMx);
+  }
+  if(vMx)
+  {
+    (void )AlcDouble2Free(vMx);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(basisFn)
+    {
+      (void )WlzBasisFnFree(basisFn);
+      basisFn = NULL;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(basisFn);
+}
+
+/*!
 * \return	<void>
 * \ingroup	WlzFunction
 * \brief	Computes the extent (bounding box) of two arrays of
@@ -1361,9 +1935,9 @@ static void	WlzBasisFnTPS2DCoef(WlzBasisFn *basisFn,
 }
 
 /*!
-* \return	Displacement due to reduced polynomial.
+* \return	Displacement due to reduced 2D polynomial.
 * \ingroup	WlzFunction
-* \brief	Computes the value of the reduced polynomial
+* \brief	Computes the value of the reduced 2D polynomial
 * 		used by the TPS, MQ and Gauss basis functions.
 * \param	poly			Given polynomial coefficients.
 * \param	srcVx			Source vertex.
@@ -1381,5 +1955,35 @@ static WlzDVertex2 WlzBasisFnValueRedPoly2D(WlzDVertex2 *poly,
   ++poly;
   newVx.vtX += poly->vtX * srcVx.vtY;
   newVx.vtY += poly->vtY * srcVx.vtY;
+  return(newVx);
+}
+
+/*!
+* \return	Displacement due to reduced 3D polynomial.
+* \ingroup	WlzFunction
+* \brief	Computes the value of the reduced 3D polynomial
+* 		used by the MOS basis function.
+* \param	poly			Given polynomial coefficients.
+* \param	srcVx			Source vertex.
+*/
+static WlzDVertex3 WlzBasisFnValueRedPoly3D(WlzDVertex3 *poly,
+					WlzDVertex3 srcVx)
+{
+  WlzDVertex3	newVx;
+
+  newVx.vtX = poly->vtX;
+  newVx.vtY = poly->vtY;
+  ++poly;
+  newVx.vtX += poly->vtX * srcVx.vtX;
+  newVx.vtY += poly->vtY * srcVx.vtX;
+  newVx.vtZ += poly->vtZ * srcVx.vtX;
+  ++poly;
+  newVx.vtX += poly->vtX * srcVx.vtY;
+  newVx.vtY += poly->vtY * srcVx.vtY;
+  newVx.vtZ += poly->vtZ * srcVx.vtY;
+  ++poly;
+  newVx.vtX += poly->vtX * srcVx.vtZ;
+  newVx.vtY += poly->vtY * srcVx.vtZ;
+  newVx.vtZ += poly->vtZ * srcVx.vtZ;
   return(newVx);
 }
