@@ -2,8 +2,7 @@
 
 SOURCEPATH = ./src/wsetter/
 TARGETPATH = ./classes/wsetter/
-#JAVAC = /opt/java/bin/javac
-JAVAC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javac
+JAVAC = /opt/java/bin/javac
 JAR = /opt/java/bin/jar
 
 SOURCES = \
@@ -29,7 +28,7 @@ all:		$(OBJECTS) jar
 classes:	$(OBJECTS)
 
 $(OBJECTS):	$(SOURCES)
-	cd ./src/wsetter; gmake all
+	cd ./src/wsetter; $(JAVAC) *.java
 	mv $(SOURCEPATH)*.class $(TARGETPATH)
 
 jar: 		$(OBJECTS)
