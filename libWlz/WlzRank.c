@@ -728,7 +728,6 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		idZ,
 		rCnt,
 		fSz2;
-  		hack;
   UBYTE		*iP0;
   WlzGreyP	gP0;
   WlzDomain	gDom;
