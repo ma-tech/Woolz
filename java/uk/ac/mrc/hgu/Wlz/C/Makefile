@@ -24,7 +24,7 @@ DLLARCHIVE		= $(ARCHIVE:lib%.a=%.dll)
 DLLIMPORTLIB		= $(ARCHIVE:%.a=%.dll.a)
 PROTOTYPES		= 
 DLLLIBDIRS		= $(DEPENDDIRS:%=-L%)
-DLLLIBDEPS		= -lWlz -lAlg -lAlc
+DLLLIBDEPS		= -lWlzBnd -lWlz -lAlg -lAlc
 DLLLIBSEXT		= -L. -lg -lkernel32 -lm -lc
 
 # Names of executables to be built (modify as required).
@@ -51,7 +51,8 @@ DEPENDDIRS		= \
 			  . \
 			  ../../../../../../../libAlc \
 			  ../../../../../../../libAlg \
-			  ../../../../../../../libWlz
+			  ../../../../../../../libWlz \
+			  ../../../../../../../libWlzBnd
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS                 = \
@@ -72,7 +73,7 @@ endif
 ifeq ($(UNIXTYPE), LINUX2)
 EXTRA_LIBS		= m
 endif
-LIBRARIES		= Wlz Alg Alc \
+LIBRARIES		= WlzBnd Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be

@@ -56,7 +56,8 @@ MANPAGES		=
 DEPENDDIRS		= \
 			  ../../../../../../../libAlc \
 			  ../../../../../../../libAlg \
-			  ../../../../../../../libWlz
+			  ../../../../../../../libWlz \
+			  ../../../../../../../libWlzBnd
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \

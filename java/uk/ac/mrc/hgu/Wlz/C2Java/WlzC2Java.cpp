@@ -19,3 +19,5 @@
 #include <WlzType.h>
 #include <WlzError.h>
 #include <WlzProto.h>
+#include <WlzBndType.h>
+#include <WlzBndProto.h>
