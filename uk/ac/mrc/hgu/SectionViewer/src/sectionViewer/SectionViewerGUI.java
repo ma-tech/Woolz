@@ -237,9 +237,11 @@ public class SectionViewerGUI extends JPanel {
   /**   file sub-menu name */
   String fileMenu_2str = "save view settings";
   /**   file sub-menu name */
-  String fileMenu_3str = "load view settings";
+  String fileMenu_3str = "load view settings from xml";
   /**   file sub-menu name */
-  String fileMenu_4str = "close view";
+  String fileMenu_4str = "load view settings from bib";
+  /**   file sub-menu name */
+  String fileMenu_5str = "close view";
 
   /**   file menu */
   JMenu fileMenu = new JMenu(fileMenuStr);
@@ -252,6 +254,8 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem fileMenu_3 = new JMenuItem(fileMenu_3str);
   /**   file sub-menu */
   JMenuItem fileMenu_4 = new JMenuItem(fileMenu_4str);
+  /**   file sub-menu */
+  JMenuItem fileMenu_5 = new JMenuItem(fileMenu_5str);
   //-------------------------------
   /**   control menu name */
   String controlMenuStr = "control";
@@ -606,12 +610,14 @@ public class SectionViewerGUI extends JPanel {
     fileMenu.addSeparator();
     fileMenu.add(fileMenu_2);
     fileMenu.add(fileMenu_3);
-    fileMenu.addSeparator();
     fileMenu.add(fileMenu_4);
+    fileMenu.addSeparator();
+    fileMenu.add(fileMenu_5);
     fileMenu_1.setEnabled(true);
     fileMenu_2.setEnabled(true);
     fileMenu_3.setEnabled(true);
     fileMenu_4.setEnabled(true);
+    fileMenu_5.setEnabled(true);
  //...............................
  //...............................
     controlMenu.add(controlMenu_1);
