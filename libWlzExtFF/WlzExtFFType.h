@@ -23,7 +23,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum
+typedef enum _WlzEffFormat
 {
   WLZEFF_FORMAT_NONE,
   WLZEFF_FORMAT_BMP,
@@ -43,6 +43,8 @@ typedef enum
   WLZEFF_FORMAT_COUNT 			     /* Keep last: Number of formats */
 } WlzEffFormat;
 
+#ifndef WLZ_EXT_BIND
+
 #define WLZEFF_BMP_MAGIC_0		('B')
 #define WLZEFF_BMP_MAGIC_1		('M')
 
@@ -61,7 +63,7 @@ typedef	unsigned short	WLZEFF_BMP_UINT;
 typedef int		WLZEFF_BMP_DWORD;
 typedef int		WLZEFF_BMP_LONG;
 
-typedef struct
+typedef struct _WlzEffBmpFileHead
 {
   WLZEFF_BMP_UINT	bfType;
   WLZEFF_BMP_DWORD 	bfSize;
@@ -70,7 +72,7 @@ typedef struct
   WLZEFF_BMP_DWORD	bfOffBits;
 } WlzEffBmpFileHead;
 
-typedef struct
+typedef struct _WlzEffBmpInfoHead
 {
   WLZEFF_BMP_DWORD	biSize;
   WLZEFF_BMP_LONG	biWidth;
@@ -85,7 +87,7 @@ typedef struct
   WLZEFF_BMP_DWORD	biClrImportant;
 } WlzEffBmpInfoHead;
 
-typedef struct
+typedef struct _WlzEffBmpRGBQuad
 {
   WLZEFF_BMP_BYTE	rgbBlue;
   WLZEFF_BMP_BYTE	rgbGreen;
@@ -96,7 +98,7 @@ typedef struct
 
 #define WLZEFF_DEN_VERSION		(1)
 
-typedef struct
+typedef struct _WlzEffDenHeader
 {
   short		version;
   short		orgMin[3];		/* Dimensions of original data file */
@@ -117,7 +119,7 @@ typedef struct
 #define WLZEFF_ICS_VERSION_MINOR	(0)
 #define WLZEFF_ICS_PARAMETERS_MAX	(8)
 
-typedef enum
+typedef enum _WlzEffIcsToken
 {
   WLZEFF_ICS_TKN_NONE =			(0),
   WLZEFF_ICS_TKN_BITS,
@@ -145,7 +147,7 @@ typedef enum
   WLZEFF_ICS_TKN_Z
 } WlzEffIcsToken;
 
-typedef struct
+typedef struct _WlzEffIcsHeader
 {
   int		versionMajor;
   int		versionMinor;
@@ -190,7 +192,7 @@ typedef struct
   V |= *((unsigned char *)H + O); \
 }
 
-typedef struct
+typedef struct _WlzEffPicHeader
 {
   short		nX;
   short		nY;
@@ -210,7 +212,7 @@ typedef struct
 
 #define WLZEFF_PGM_MAGIC		"P5"
 
-typedef enum
+typedef enum _WlzEffPnmType
 {
   WLZEFF_PNM_TYPE_NONE =		(0),
   WLZEFF_PNM_TYPE_PBM_ASC,
@@ -221,7 +223,7 @@ typedef enum
   WLZEFF_PNM_TYPE_PPM_BIN
 } WlzEffPnmType;
 
-typedef struct
+typedef struct _WlzEffStackCtrHeader
 {
   WlzIVertex3	volOrigin;
   WlzIVertex3	volSize;
@@ -243,7 +245,7 @@ typedef struct
 
 #define WLZEFF_SLC_MAGIC		(11111)
 
-typedef enum
+typedef enum _WlzEffSlcDataUnits
 {
   WLZEFF_SLC_DATAUNITS_METER,
   WLZEFF_SLC_DATAUNITS_MILLIMETER,
@@ -251,7 +253,7 @@ typedef enum
   WLZEFF_SLC_DATAUNITS_FOOT
 } WlzEffSlcDataUnits;
 
-typedef enum
+typedef enum _WlzEffSlcDataSource
 {
   WLZEFF_SLC_DATASRC_BIORAD,
   WLZEFF_SLC_DATASRC_MRI,
@@ -262,7 +264,7 @@ typedef enum
   WLZEFF_SLC_DATASRC_OTHER
 } WlzEffSlcDataSource;
 
-typedef enum
+typedef enum _WlzEffSlcDataMod
 {
   WLZEFF_SLC_DATAMOD_ORIGINAL,
   WLZEFF_SLC_DATAMOD_RESAMPLED,
@@ -271,7 +273,7 @@ typedef enum
   WLZEFF_SLC_DATAMOD_OTHER
 } WlzEffSlcDataMod;
 
-typedef struct
+typedef struct _WlzEffSlcHeader
 {
   int		magic;
   WlzIVertex3	size;
@@ -287,7 +289,7 @@ typedef struct
 
 #define WLZEFF_VFF_REC_LEN_MAX		(256)
 
-typedef enum
+typedef enum _WlzEffVffRecord
 {
   WLZEFF_VFF_REC_NONE =			(0),
   WLZEFF_VFF_REC_NCAA,
@@ -303,14 +305,14 @@ typedef enum
   WLZEFF_VFF_REC_ASPECT
 } WlzEffVffRecord;
 
-typedef enum
+typedef enum _WlzEffVffFormat
 {
   WLZEFF_VFF_FORMAT_NONE =		(0),
   WLZEFF_VFF_FORMAT_BASE,
   WLZEFF_VFF_FORMAT_SLICE
 } WlzEffVffFormat;
 
-typedef enum
+typedef enum _WlzEffVffType
 {
   WLZEFF_VFF_TYPE_NONE =		(0),
   WLZEFF_VFF_TYPE_CONNECTIVITY,
@@ -320,7 +322,7 @@ typedef enum
   WLZEFF_VFF_TYPE_VERTICIES
 } WlzEffVffType;
 
-typedef struct
+typedef struct _WlzEffVffHeader
 {
   int		ncaa;
   WlzEffVffType   type;
@@ -338,13 +340,13 @@ typedef struct
 #define	WLZEFF_VTK_VERSION_MAJOR	(1)
 #define	WLZEFF_VTK_VERSION_MINOR	(0)
 
-typedef enum
+typedef enum _WlzEffVtkDataType
 {
   WLZEFF_VTK_DATATYPE_ASCII,
   WLZEFF_VTK_DATATYPE_BINARY
 } WlzEffVtkDataType;
 
-typedef enum
+typedef enum _WlzEffVtkType
 {
   WLZEFF_VTK_TYPE_STRUCTURED_POINTS,
   WLZEFF_VTK_TYPE_STRUCTURED_GRID,
@@ -353,7 +355,7 @@ typedef enum
   WLZEFF_VTK_TYPE_RECTILNEAR_GRID
 } WlzEffVtkType;
 
-typedef enum
+typedef enum _WlzEffVtkPolyDataType
 {
   WLZEFF_VTK_POLYDATATYPE_POINTS,
   WLZEFF_VTK_POLYDATATYPE_VERTICIES,
@@ -362,7 +364,7 @@ typedef enum
   WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS
 } WlzEffVtkPolyDataType;
 
-typedef struct
+typedef struct _WlzEffVtkHeader
 {
   int		versionMajor;
   int		versionMinor;
@@ -373,7 +375,7 @@ typedef struct
 
 /* IPLab format */
 
-typedef enum
+typedef enum _WlzEffIPLType
 {
   WLZEFF_IPL_TYPE_UBYTE		= 0,
   WLZEFF_IPL_TYPE_SHORT		= 1,
@@ -387,7 +389,7 @@ typedef enum
 
 typedef void * WlzIPLCSpecArray;
 
-typedef struct
+typedef struct _WlzEffIPLHeader
 {
   char		version[5];
   unsigned char	format;
@@ -557,6 +559,7 @@ typedef struct _WlzEffBibWarpInputThresholdParamsStruct
 
 } WlzEffBibWarpInputThresholdParamsStruct;
 
+#endif /* WLZ_EXT_BIND */
 
 #ifdef  __cplusplus
 }
