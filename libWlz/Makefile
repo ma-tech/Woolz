@@ -53,6 +53,7 @@ CSOURCES		= \
 			WlzArray.c \
                         WlzAssign.c \
 			WlzBackground.c \
+			WlzBasisFn.c \
 			WlzBasisFnTransform.c \
 			WlzBoundaryUtils.c \
 			WlzBoundingBox.c \
