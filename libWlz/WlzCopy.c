@@ -12,7 +12,9 @@
 * Purpose:      Functions to make 'deep' copies of Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Fixed possible bug caused by unset values pointer
+* 15-08-00 bill	Removed obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
+*		WLZ_POINT_(INT)|(FLOAT).
+* 05-06-00 bill Fixed possible bug caused by unset values pointer
 *		in WlzCopyValues().
 ************************************************************************/
 #include <stdlib.h>
@@ -83,11 +85,8 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_CONV_HULL:
       case WLZ_3D_WARP_TRANS:
       case WLZ_3D_POLYGON:
+      case WLZ_CONTOUR:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
@@ -273,11 +272,8 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
+      case WLZ_CONTOUR:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
@@ -407,11 +403,8 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
+      case WLZ_CONTOUR:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
