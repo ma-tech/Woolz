@@ -53,7 +53,8 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		option,
+  int		tI0,
+  		option,
 		ok = 1,
 		usage = 0,
       		inR,
@@ -80,9 +81,10 @@ int             main(int argc, char **argv)
   WlzAffineTransLSqAlg alg = WLZ_AFFINETRANSLSQ_ALG_WLZ;
   FILE		*fP = NULL;
   char 		*outObjFileStr,
-  		*inFileStr;
+  		*inFileStr,
+		*wgtFileStr;
   const char	*errMsg;
-  static char	optList[] = "A:o:23Tanrth",
+  static char	optList[] = "A:o:w:23Tanrth",
 		outObjFileStrDef[] = "-",
   		inFileStrDef[] = "-";
   const WlzDVertex2 testVx2D[4] =
@@ -149,6 +151,9 @@ int             main(int argc, char **argv)
 	break;
       case 't':
         trType = WLZ_TRANSFORM_2D_TRANS;
+	break;
+      case 'w':
+        wgtFileStr = optarg;
 	break;
       case 'h':
       default:
@@ -359,6 +364,38 @@ int             main(int argc, char **argv)
 	}
       }
       AlcDouble2Free(inData);
+      if(wgtFileStr)
+      {
+	fP = NULL;
+        if(ok)
+	{
+          if((fP = (strcmp(wgtFileStr, "-")?
+	      fopen(wgtFileStr, "r"): stdin)) == NULL)
+	  {
+	    ok = 0;
+	    errNum = WLZ_ERR_READ_EOF;
+	    (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+			   "%s: failed to open input weights file %s (%s).\n",
+			   *argv, wgtFileStr, errMsg);
+	  }
+	}
+	if(ok)
+	{
+	  if((AlcDouble1ReadAsci(fP, &vWgt, &tI0) != ALC_ER_NONE) ||
+	     (tI0 < nVtx))
+	  {
+	    ok = 0;
+	    (void )fprintf(stderr,
+			   "%s: failed to read weights file %s.\n",
+			   *argv, wgtFileStr);
+	  }
+	}
+	if(fP && strcmp(wgtFileStr, "-"))
+	{
+	  fclose(fP);
+	}
+      }
     }
   }
   if(ok)
@@ -393,6 +430,10 @@ int             main(int argc, char **argv)
   if(vtx1.v)
   {
     AlcFree(vtx1.v);
+  }
+  if(vWgt)
+  {
+    AlcFree(vWgt);
   }
   if(ok)
   {
@@ -442,7 +483,7 @@ int             main(int argc, char **argv)
     *argv,
     " [-o<out obj>] [-A<algorithm>]\n"
     "                             [-2] [-3] [-T] [-a] [-r] [-t] [-h]\n"
-    "                             [<in data>]\n"
+    "                             [-w<weights>] [<in data>]\n"
     "Options:\n"
     "  -2  Compute a 2D transform, requires verticies in 2D format.\n"
     "  -3  Compute a 3D transform, requires verticies in 3D format.\n"
@@ -456,6 +497,8 @@ int             main(int argc, char **argv)
     "  -n  Compute no-shear transform, translate, rotate, scale only.\n"
     "  -r  Compute registration transform, affine but no scale or shear.\n"
     "  -t  Compute translation transform.\n"
+    "  -w  Weights file with a weight value for each vertex displacement\n"
+    "      pair.\n"
     "  -h  Help, prints this usage message.\n"
     "Calculates the best (least squares) affine transform from the given\n"
     "input vertex/vertex displacement list.\n"
