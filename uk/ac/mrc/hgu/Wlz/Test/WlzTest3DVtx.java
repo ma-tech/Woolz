@@ -42,8 +42,12 @@ public class WlzTest3DVtx
     {
       try
       {
+        System.err.println("blah blah blah");
+
         Double	d;
 	WlzDVertex3 vtx = new WlzDVertex3();
+	System.err.println("blah blah blah");
+
 	
 	if( optIdx < args.length )
 	{
