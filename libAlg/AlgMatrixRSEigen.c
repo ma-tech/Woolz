@@ -19,11 +19,6 @@
 * Maintenance log with most recent changes at top of list.
 */
 
-/*!
-* \ingroup      AlgMatrix
-* @{
-*/
-
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -35,6 +30,11 @@ static void			AlgMatrixRSEigenSort(
 				  double *xM,
 				  int n,
 				  int reqEV);
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
+
 
 /*!
 * \return       	                  Error code.
@@ -48,7 +48,8 @@ static void			AlgMatrixRSEigenSort(
 *		computed if required.
 * \param        aM 			Given real symmetric matrix
 *					which contains the eigenvectors
-*					in it's columns on return.
+*					in it's columns on return if
+*					required.
 * \param        aSz 		        Size of the array.
 * \param	vM 			Given array for the return of the
 * 					eigenvalues.
@@ -69,9 +70,12 @@ AlgError	AlgMatrixRSEigen(double **aM, int aSz, double *vM, int reqEV)
   {
     errCode = ALG_ERR_MALLOC;
   }
-  else if((errCode = AlgMatrixRSTDiag(aM, aSz, vM, oM)) == ALG_ERR_NONE)
+  if(errCode == ALG_ERR_NONE)
   {
-    errCode = AlgMatrixTDiagQLI(vM, oM, aSz, reqEV? aM: NULL);
+    if((errCode = AlgMatrixRSTDiag(aM, aSz, vM, oM)) == ALG_ERR_NONE)
+    {
+      errCode = AlgMatrixTDiagQLI(vM, oM, aSz, reqEV? aM: NULL);
+    }
   }
   if(errCode == ALG_ERR_NONE)
   {
@@ -149,9 +153,8 @@ int		main(int argc, char *argv[])
   int		idC,
   		idR,
 		idV,
-  		nC,
-		nR,
-		nV,
+  		nC = 0,
+		nR = 0,
 		option,
 		ok = 1,
 		usage = 0,
@@ -159,13 +162,7 @@ int		main(int argc, char *argv[])
   double	**aM = NULL;
   double	*dP0,
   		*vM = NULL;
-  AlcVector	*vec = NULL;
-  char		*parseS,
-  		*tokS;
-  char		ioStrBuf[/*maxRecStrLen = */ 1024]; 
   static char	optList[] = "hn";
-  const char	errMsgMem[] = "%s: Failed to allocate sufficient storage";
-  const int	maxRecStrLen = 1024;
 
   opterr = 0;
   /* Parse command line. */
@@ -183,106 +180,33 @@ int		main(int argc, char *argv[])
 	break;
     }
   }
-  /* Create a vector (extensible 1D array) for temporary storage of the
-   * matrix values. */
-  if(ok)
+  /* Read matrix from stdin. */
+  if(AlcDouble2ReadAsci(stdin, &aM, &nR, &nC) != ALC_ER_NONE)
   {
-    idV = nV = 0;
-    if((vec = AlcVectorNew(256, sizeof(double), 256, NULL)) == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr, errMsgMem, *argv);
-    }
-  }
-  /* Read matrix values. */
-  if(ok)
-  {
-    nC = 0;
-    nR = 0;
-    while(ok && (fgets(ioStrBuf, maxRecStrLen, stdin) != NULL))
-    {
-      idC = 0;
-      parseS = ioStrBuf;
-      while(ok &&
-            ((tokS = strtok(parseS, " \t")) != NULL) && *tokS)
-      {
-	parseS = NULL;
-	if((dP0 = (double *)AlcVectorExtendAndGet(vec, idV)) == NULL)
-	{
-	  ok = 0;
-	  (void )fprintf(stderr, errMsgMem, *argv);
-	}
-	else if(sscanf(tokS, "%lg", dP0) != 1)
-	{
-	  ok = 0;
-	}
-	else
-	{
-	  ++idC;
-	  ++idV;
-	}
-      }
-      if(ok)
-      {
-	if(nR == 0)
-	{
-	  nC = idC;
-	}
-	else if(idC != nC)
-	{
-	  ok = 0;
-	}
-	++nR;
-      }
-    }
-    if(ok == 0)
-    {
-      (void )fprintf(stderr,
-      		     "%s: Failed to read input matrix at row %d, column %d.\n",
-		     *argv, idR, idC);
-    }
+    ok = 0;
+    (void )fprintf(stderr, "%s: Failed to read matrix\n", *argv);
   }
   if(ok)
   {
-    if((nR < 2) || (nC < 2))
+    if(nR != nC)
     {
       ok = 0;
-      (void )fprintf(stderr,
-      		     "%s: Matrix must have at least two rows and columns.\n",
-		     *argv);
+      (void )fprintf(stderr, "%s: Input matrix is not square\n", *argv);
     }
-    else if(nR != nC)
+    else if(nR < 2)
     {
       ok = 0;
-      (void )fprintf(stderr,
-                     "%s: Matricies must be square (rows = %d, cols = %d).\n",
-		     *argv, nR, nC);
+      (void )fprintf(stderr, "%s: Input matrix smaller than 2x2\n", *argv);
     }
   }
-  /* Form 2D matrix from the vector and then free the vector. */
+  /* Create space for the eigen values. */
   if(ok)
   {
-    if((AlcDouble2Malloc(&aM, nR, nC) != ALC_ER_NONE) ||
-       ((vM = (double *)AlcMalloc(sizeof(double) * nR)) == NULL))
+    if((vM = (double *)AlcMalloc(sizeof(double) * nR)) == NULL)
     {
       ok = 0;
-      (void )fprintf(stderr, errMsgMem, *argv);
+      (void )fprintf(stderr, "%s: Failed to allocate storage.\n", *argv);
     }
-    else
-    {
-      for(idR = 0, idV = 0; idR < nR; ++idR)
-      {
-	for(idC = 0; idC < nC; ++idC)
-	{
-	  dP0 = (double *)AlcVectorItemGet(vec, idV++);
-	  aM[idR][idC] = *dP0;
-	}
-      }
-    }
-  }
-  if(vec)
-  {
-    (void )AlcVectorFree(vec);
   }
   /* Find the eigenvalues and eigenvectors. */
   if(ok)
@@ -308,28 +232,31 @@ int		main(int argc, char *argv[])
   {
     for(idR = 0, idV = 0; idR < nR; ++idR)
     {
-      (void )printf("%g", vM[idR]);
-      if(reqEV)
+      (void )printf("%g\n", vM[idR]);
+    }
+    if(reqEV)
+    {
+      for(idR = 0, idV = 0; idR < nR; ++idR)
       {
-        for(idC = 0; idC < nC; ++idC)
+	for(idC = 0; idC < nC; ++idC)
 	{
-	  (void )printf(" %g", aM[idR][idC]);
+	  (void )printf("%g ", aM[idR][idC]);
 	}
+	(void )printf("\n");
       }
-      (void )printf("\n");
     }
   }
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h]\n%s",
+    "Usage: %s [-h] [-n]\n%s",
+    *argv,
     "Options:\n"
     "  -h  Show this usage message.\n"
     "  -n  Dont compute the eigen vectors.\n"
     "Test for AlgMatrixRSEigen(). Reads white space separated, ascii\n"
     "encoded, floating point matrix values from the standard input and\n"
-    "then prints the matrix's eigen values followed by it's eigen vectors.\n",
-    *argv);
+    "then prints the matrix's eigen values followed by it's eigen vectors.\n");
   }
   return(!ok);
 }
