@@ -226,6 +226,12 @@ AlcErrno	AlcCPQItemInsert(AlcCPQQueue *q, AlcCPQItem *item)
   int		idx;
   AlcErrno	errNum = ALC_ER_NONE;
 
+#ifdef ALC_CPQ_DEBUG
+  (void )fprintf(stderr,
+		 "AlcCPQItemInsert() 0x%lx 0x%lx\n",
+		 (unsigned long )q, (unsigned long)item);
+  AlcCPQDebugOut(q);
+#endif /* ALC_CPQ_DEBUG */
   if((q->nItem >= q->nItemIncThr) && (q->resizable != 0))
   {
     errNum = AlcCPQQueueIncSize(q);
@@ -243,6 +249,12 @@ AlcErrno	AlcCPQItemInsert(AlcCPQQueue *q, AlcCPQItem *item)
       q->bucketMin = floor(item->priority / q->bucketWidth) * q->bucketWidth;
     }
   }
+#ifdef ALC_CPQ_DEBUG
+  AlcCPQDebugOut(q);
+  (void )fprintf(stderr,
+		 "AlcCPQItemInsert() %d\n",
+		 (int )errNum);
+#endif /* ALC_CPQ_DEBUG */
   return(errNum);
 }
 
