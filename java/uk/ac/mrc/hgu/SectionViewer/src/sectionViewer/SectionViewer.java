@@ -82,7 +82,7 @@ public class SectionViewer
 
   private String SLASH = System.getProperty("file.separator");
 
-  private Container _frame = null;
+  protected Container _frame = null;
 
   //=========================================================
   // constructor
@@ -999,12 +999,12 @@ public class SectionViewer
 	return;
 
      _VSModel.getDist(dist);
-     /* 
+     /*
       * assumes that rotation axis will be set in the same plane
       * as the fixed point
       */
      if(dist[0] == 0.0) {
-     
+
 	pt3d = _VSModel.getAxisPoint();
 	double vals[] = _OBJModel.get2DPoint(
 	      pt3d,
@@ -1816,9 +1816,9 @@ public class SectionViewer
     return _enabled;
   }
 
-//==========================================  
+//==========================================
 // get and set methods
-//==========================================  
+//==========================================
 
    public double getDist() {
       double ret = 0;
@@ -2080,7 +2080,7 @@ public class SectionViewer
         vals = null;
       }
       else if (e.getActionCommand().equals(controlMenu_3_3str)) {
-        // reset 
+        // reset
         resetFixedPoint(true);
       }
       // rotation axis ------------------------------
@@ -2135,7 +2135,7 @@ public class SectionViewer
         vals = null;
       }
       else if (e.getActionCommand().equals(controlMenu_4_3str)) {
-        // reset 
+        // reset
         resetAxisPoint(true);
         _VSModel.fireChange();
       }
