@@ -2686,6 +2686,11 @@ typedef struct _WlzMeshTransform
 } WlzMeshTransform;
 
 
+/* 
+   nickb 27.02.03
+   to prevent parse errors in WlzC2Java.c
+*/
+#ifndef WLZ_EXT_BIND
 /*!
 * \struct	_WlzMeshTransform3D
 * \ingroup	WlzTransform
@@ -2705,6 +2710,9 @@ typedef struct _WlzMeshTransform3D
   WlzMeshElem3D         *elements;     	/*!< Mesh elements */
   WlzMeshNode3D 	*nodes;		/*!< Mesh nodes */
 } WlzMeshTransform3D;
+
+#endif /* WLZ_EXT_BIND */
+/* nickb 27.02.03 */
 
 /*!
 * \struct	_WlzMeshTransform2D5
