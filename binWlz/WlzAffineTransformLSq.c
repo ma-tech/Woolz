@@ -37,7 +37,7 @@ enum _WlzAffineTransLSqAlg
   WLZ_AFFINETRANSLSQ_ALG_SVD,	/*!< Arun's singular value decomposition
   				 *   algorithm for 3D verticies */
   WLZ_AFFINETRANSLSQ_ALG_DQ     /*!< Walker's dual quaternion algorithm for
-  				 *   3D verticies with optional normal
+  				 *   2D or 3D verticies with optional normal
 				 *   vectors and weights */
 };
 typedef enum _WlzAffineTransLSqAlg WlzAffineTransLSqAlg;
