@@ -85,16 +85,6 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-ifeq ($(UNIXTYPE), SUNOS5)
-#THREADS = -D_REENTRANT
-THREADS         =
-else
-THREADS         =
-endif
-#CDEBUG		= -g -DDEBUG
-#COPTIMISE	= -KPIC -xchip=ultra
-#CXXDEBUG	= -g -DDEBUG
-#CXXOPTIMISE	= -KPIC -xchip=ultra
 DEFINES		= $(THREADS) \
 		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
