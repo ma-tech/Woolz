@@ -13,6 +13,8 @@
 *		and from a stack of 2D files.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 16-06-2000 bill Fixed freeing unallocated memory bug in
+*		WlzEffReadObjStack3D.
 ************************************************************************/
  #include <ctype.h>
 #include <string.h>
@@ -605,10 +607,8 @@ static WlzObject *WlzEffReadObjStack3D(const char *gvnFileName,
   {
     if(obj)
     {
-      for(planeIdx = 0; planeIdx < header.volSize.vtZ; ++planeIdx)
-      {
-        AlcFree(*(data + planeIdx)); 		    /* **data used in object */
-      }
+      /* **data used in object */
+      AlcFree(*data);
       AlcFree(data);
     }
     else
