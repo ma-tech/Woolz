@@ -1,3 +1,5 @@
+#ifndef WLZ_PROTO_H
+#define WLZ_PROTO_H
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzProto.h
@@ -89,8 +91,6 @@
 * 19-09-01 JRAO Add WlzMakeCuboidObject().
 * 19-09-01 JRAO Add WlzMakeRectangleObject().
 */
-#ifndef WLZ_PROTO_H
-#define WLZ_PROTO_H
 
 #ifdef  __cplusplus
 extern "C" {
@@ -2106,7 +2106,6 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 				  int scale,
 				  int expand,
 				  WlzErrorNum *dstErr);
-
 /************************************************************************
 * WlzJavaUtils.c							*
 ************************************************************************/
@@ -2366,6 +2365,7 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  double matchImpThr);
 #endif /* WLZ_EXT_BIND */
 
+#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzMeshTransform.c							*
 ************************************************************************/
@@ -2421,6 +2421,8 @@ extern double 			WlzClassValCon4(
                                   double	*gVals,
 				  double	xOffset,
 				  double	yOffset);
+#endif /* WLZ_EXT_BIND */
+
 #ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzMeshUtils.c							*
@@ -2605,8 +2607,11 @@ extern WlzObject		*WlzRasterObj(
 extern WlzObject		*WlzReadObj(
 				  FILE *fp,
 			          WlzErrorNum *dstErr);
+
+#ifndef WLZ_EXT_BIND
 extern WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
 				      WlzErrorNum *dstErr);
+#endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzRegCCor.c
@@ -2950,7 +2955,7 @@ extern WlzScalarFeatureType 	WlzStringToScalarFeatureType(
 extern const char		*WlzStringFromPropertyType(
 				  WlzProperty prop,
 				  WlzErrorNum *dstErr);
-#endif /* WLZ_EXT_BIND */
+#endif /* !WLZ_EXT_BIND */
 extern WlzObjectType		WlzStringToPropertyType(
 				  const char *pStr,
 				  WlzErrorNum *dstErr);
@@ -3460,9 +3465,11 @@ extern WlzErrorNum 		WlzWriteObj(
 				  FILE *fp,
 			          WlzObject *obj);
 
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum                     WlzWriteMeshTransform3D(
 				  FILE *fp,
 			          WlzMeshTransform3D *obj);
+#endif /* !WLZ_EXT_BIND */
 				  
 /************************************************************************
 * WlzMwrAngle.c								*
@@ -3480,12 +3487,14 @@ extern WlzErrorNum WlzTetrahedronProducerFromCube(
 				int nx, int ny, int nz,
 			        int indexOfNextFirst, WlzMeshElem3D *elements);
 
+#ifndef WLZ_EXT_BIND
 extern WlzMeshTransform3D *WlzTetrahedronMeshFromObj(WlzObject *wObjC, const WlzDBox3 bBoxS,
 				       const int numOfElemAlonX,
 				       const int numOfElemAlonY,
 				       const int numOfElemAlonZ,
                                        WlzErrorNum *errNums
                                   );
+#endif /* !WLZ_EXT_BIND */
 
 extern WlzErrorNum  read_WlzTiePoints( FILE *fp, int *nTiePP, 
                      WlzDVertex3 **vxVec0, 
@@ -3502,6 +3511,7 @@ extern 	WlzErrorNum WlzTetrahedronProducer(int nxmax, int nymax, int nzmax,
    WlzIBox3        bBox0
    );
 
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum WlzGetTransformedMesh(WlzMeshTransform3D *wmt3D, WlzBasisFnTransform* basisTr);
 extern WlzObject       *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 				         WlzMeshTransform3D   *wmt3D,
@@ -3518,6 +3528,7 @@ extern  void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
 extern WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst, 
                                                    WlzMeshTransform3D *wmt3D,
 						   WlzErrorNum *disErr);
+#endif /* !WLZ_EXT_BIND */
 
 extern void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5);
 
@@ -3525,6 +3536,7 @@ extern void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2
 
 
 
+#ifndef WLZ_EXT_BIND
 extern  int   WlzIsoIntersectWithTetrahadronIndex(double zConst, 
         const WlzMeshTransform3D *wmt3D, 
 	int *intersectIndex, 
@@ -3532,6 +3544,7 @@ extern  int   WlzIsoIntersectWithTetrahadronIndex(double zConst,
 	int *noRedundancyCutingNum,
 	int *numOfTrangularElem);
 
+#endif /* !WLZ_EXT_BIND */
 				  
 extern void WlzMakeAffine3D4pointsTrFn(WlzDVertex3 sr1, WlzDVertex3 sr2, WlzDVertex3 sr3,
                          WlzDVertex3  sr4,  WlzDVertex3  targ1,  WlzDVertex3   targ2, 
@@ -3548,7 +3561,6 @@ extern void WlzMakeAffine3D4pointsTrFnByGauss(WlzDVertex3 sr1,
                                               WlzDVertex3 targ3, 
 					      WlzDVertex3 targ4, 
 			                      double    **Affine3D4pointsTrFun);
-
 
 
 #ifdef  __cplusplus
