@@ -79,30 +79,36 @@ static WlzErrorNum 	WlzGMModelDeleteE2D2V2L(
 static WlzErrorNum      WlzGMModelConstructNewS3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
-                          WlzDVertex3 *pos);
+                          WlzDVertex3 *pos,
+			  WlzGMVertex **nV);
 static WlzErrorNum      WlzGMModelExtend1V0E1S3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
                           WlzGMVertex *eV,
                           WlzDVertex3 pos0,
-                          WlzDVertex3 pos1);
+			  WlzGMVertex *nV0,
+                          WlzDVertex3 pos1,
+			  WlzGMVertex *nV1);
 static WlzErrorNum      WlzGMModelExtend2V1E1S3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
                           WlzGMEdge *eE,
-                          WlzDVertex3 pos2);
+                          WlzDVertex3 pos2,
+			  WlzGMVertex *nV);
 static WlzErrorNum      WlzGMModelExtend2V0E1S3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
                           WlzGMVertex *eV0,
                           WlzGMVertex *eV1,
-                          WlzDVertex3 pos2);
+                          WlzDVertex3 pos2,
+			  WlzGMVertex *nV);
 static WlzErrorNum      WlzGMModelJoin2V0E0S3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
                           WlzGMVertex *eV0,
                           WlzGMVertex *eV1,
-                          WlzDVertex3 pos2);
+                          WlzDVertex3 pos2,
+			  WlzGMVertex *nV);
 static WlzErrorNum      WlzGMModelJoin3V0E3S3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
@@ -136,11 +142,13 @@ static WlzErrorNum 	WlzGMModelExtend3V3E1S3D(
 			  WlzGMEdge **cE);
 static WlzErrorNum      WlzGMModelConstructNewS2D(
                           WlzGMModel *model,
-                          WlzDVertex2 *pos);
+                          WlzDVertex2 *pos,
+			  WlzGMVertex **nV);
 static WlzErrorNum      WlzGMModelExtendL2D(
                           WlzGMModel *model,
                           WlzGMEdgeT *eET,
-                          WlzDVertex2 nPos);
+                          WlzDVertex2 nPos,
+			  WlzGMVertex *nV);
 static WlzErrorNum      WlzGMModelConstructSplitL2D(
                           WlzGMModel *model,
                           WlzGMEdgeT *eET0,
@@ -156,12 +164,6 @@ static void		WlzGMShellSetT(
 			  WlzGMShell *gS);
 static void             WlzGMLoopTSetT(
                           WlzGMLoopT *eLT);
-static void             WlzGMModelAddVertex(
-                          WlzGMModel *model,
-                          WlzGMVertex *nV);
-static void		WlzGMModelRemVertex(
-			  WlzGMModel *model,
-			  WlzGMVertex *dV);
 static void		WlzGMElmMarkFree(
 			  int *idxP);
 
@@ -308,6 +310,11 @@ WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
       vertexGSz = sizeof(WlzGMVertexG2D);
       shellGSz = sizeof(WlzGMShellG2D);
       break;
+    case WLZ_GMMOD_2N:
+      dim = 2;
+      vertexGSz = sizeof(WlzGMVertexG2N);
+      shellGSz = sizeof(WlzGMShellG2D);
+      break;
     case WLZ_GMMOD_3I:
       dim = 3;
       vertexGSz = sizeof(WlzGMVertexG3I);
@@ -316,6 +323,11 @@ WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
     case WLZ_GMMOD_3D:
       dim = 3;
       vertexGSz = sizeof(WlzGMVertexG3D);
+      shellGSz = sizeof(WlzGMShellG3D);
+      break;
+    case WLZ_GMMOD_3N:
+      dim = 3;
+      vertexGSz = sizeof(WlzGMVertexG3N);
       shellGSz = sizeof(WlzGMShellG3D);
       break;
     default:
@@ -914,11 +926,19 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	    case WLZ_GMELM_VERTEX_G2D:
 	      nElmP.vertexG2D->vtx = gElmP.vertexG2D->vtx;
 	      break;
+	    case WLZ_GMELM_VERTEX_G2N:
+	      nElmP.vertexG2N->vtx = gElmP.vertexG2N->vtx;
+	      nElmP.vertexG2N->nrm = gElmP.vertexG2N->nrm;
+	      break;
 	    case WLZ_GMELM_VERTEX_G3I:
 	      nElmP.vertexG3I->vtx = gElmP.vertexG3I->vtx;
 	      break;
 	    case WLZ_GMELM_VERTEX_G3D:
 	      nElmP.vertexG3D->vtx = gElmP.vertexG3D->vtx;
+	      break;
+	    case WLZ_GMELM_VERTEX_G3N:
+	      nElmP.vertexG3N->vtx = gElmP.vertexG3N->vtx;
+	      nElmP.vertexG3N->nrm = gElmP.vertexG3N->nrm;
 	      break;
 	  }
         }
@@ -1729,10 +1749,12 @@ WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2N:
 	errNum = WlzGMModelDeleteE2D(model, dE);
 	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
       case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3N:
 	errNum = WlzGMModelDeleteE3D(model, dE);
 	break;
       default:
@@ -2156,10 +2178,12 @@ int	 	WlzGMModelGetDimension(WlzGMModel *model, WlzErrorNum *dstErr)
   {
     case WLZ_GMMOD_2I:
     case WLZ_GMMOD_2D:
+    case WLZ_GMMOD_2N:
       dim = 2;
       break;
     case WLZ_GMMOD_3I:
     case WLZ_GMMOD_3D:
+    case WLZ_GMMOD_3N:
       dim = 3;
       break;
   }
@@ -2184,8 +2208,10 @@ WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
   {
     case WLZ_GMMOD_2I: /* FALLTHROUGH */
     case WLZ_GMMOD_2D: /* FALLTHROUGH */
+    case WLZ_GMMOD_2N: /* FALLTHROUGH */
     case WLZ_GMMOD_3I: /* FALLTHROUGH */
-    case WLZ_GMMOD_3D:
+    case WLZ_GMMOD_3D: /* FALLTHROUGH */
+    case WLZ_GMMOD_3N:
       break;
     default:
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2214,10 +2240,16 @@ WlzGMElemType 	WlzGMModelGetSGeomType(WlzGMModel *model)
     case WLZ_GMMOD_2D:
       sGType = WLZ_GMELM_SHELL_G2D;
       break;
+    case WLZ_GMMOD_2N:
+      sGType = WLZ_GMELM_SHELL_G2D;
+      break;
     case WLZ_GMMOD_3I:
       sGType = WLZ_GMELM_SHELL_G3I;
       break;
     case WLZ_GMMOD_3D:
+      sGType = WLZ_GMELM_SHELL_G3D;
+      break;
+    case WLZ_GMMOD_3N:
       sGType = WLZ_GMELM_SHELL_G3D;
       break;
   }
@@ -2242,11 +2274,17 @@ WlzGMElemType 	WlzGMModelGetVGeomType(WlzGMModel *model)
     case WLZ_GMMOD_2D:
       vGType = WLZ_GMELM_VERTEX_G2D;
       break;
+    case WLZ_GMMOD_2N:
+      vGType = WLZ_GMELM_VERTEX_G2N;
+      break;
     case WLZ_GMMOD_3I:
       vGType = WLZ_GMELM_VERTEX_G3I;
       break;
     case WLZ_GMMOD_3D:
       vGType = WLZ_GMELM_VERTEX_G3D;
+      break;
+    case WLZ_GMMOD_3N:
+      vGType = WLZ_GMELM_VERTEX_G3N;
       break;
   }
   return(vGType);
@@ -2641,7 +2679,8 @@ WlzErrorNum	WlzGMModelSetSG(WlzGMModel *model)
 	  nS = nS->next;
 	} while(nS != fS);
 	break;
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
         do
 	{
           sGP.d2 = &(nS->geo.sg2D->bBox);
@@ -2664,7 +2703,8 @@ WlzErrorNum	WlzGMModelSetSG(WlzGMModel *model)
 	  nS = nS->next;
 	} while(nS != fS);
 	break;
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
         do
 	{
           sGP.d3 = &(nS->geo.sg3D->bBox);
@@ -2714,7 +2754,8 @@ WlzErrorNum	WlzGMModelSetSG(WlzGMModel *model)
 	  }
 	}
 	break;
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
 	for(idx = 0; idx < vCnt; ++idx)
 	{
 	  nV = (WlzGMVertex *)AlcVectorItemGet(vVec, idx);
@@ -2772,7 +2813,8 @@ WlzErrorNum	WlzGMModelSetSG(WlzGMModel *model)
 	  }
 	}
 	break;
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
 	for(idx = 0; idx < vCnt; ++idx)
 	{
 	  nV = (WlzGMVertex *)AlcVectorItemGet(vVec, idx);
@@ -3773,54 +3815,9 @@ int		WlzGMShellGInBB2D(WlzGMShell *shell, WlzDVertex2 pos)
 }
 
 /*!
-* \return				Woolz error code.
+* \return	Woolz error code.
 * \ingroup      WlzGeoModel
-* \brief	Sets a veticies geometry using the given double
-*               precision position.
-* \param	vertex			Given vertex with geometry to
-*                                       be set.
-* \param	pos			Given position.
-*/
-WlzErrorNum	WlzGMVertexSetG3D(WlzGMVertex *vertex, WlzDVertex3 pos)
-{
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((vertex == NULL) || (vertex->geo.core == NULL))
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    switch(vertex->geo.core->type)
-    {
-      case WLZ_GMELM_VERTEX_G2I:
-        vertex->geo.vg2I->vtx.vtX = WLZ_NINT(pos.vtX);
-        vertex->geo.vg2I->vtx.vtY = WLZ_NINT(pos.vtY);
-	break;
-      case WLZ_GMELM_VERTEX_G2D:
-        vertex->geo.vg2D->vtx.vtX = pos.vtX;
-	vertex->geo.vg2D->vtx.vtY = pos.vtY;
-	break;
-      case WLZ_GMELM_VERTEX_G3I:
-        vertex->geo.vg3I->vtx.vtX = WLZ_NINT(pos.vtX);
-	vertex->geo.vg3I->vtx.vtY = WLZ_NINT(pos.vtY);
-	vertex->geo.vg3I->vtx.vtZ = WLZ_NINT(pos.vtZ);
-	break;
-      case WLZ_GMELM_VERTEX_G3D:
-        vertex->geo.vg3D->vtx = pos;
-	break;
-      default:
-        errNum = WLZ_ERR_DOMAIN_TYPE;
-	break;
-    }
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Sets a veticies geometry using the given double
+* \brief	Sets a vertex geometry using the given double
 *               precision position.
 * \param	vertex			Given vertex with geometry to
 *                                       be set.
@@ -3842,8 +3839,62 @@ WlzErrorNum	WlzGMVertexSetG2D(WlzGMVertex *vertex, WlzDVertex2 pos)
         vertex->geo.vg2I->vtx.vtX = WLZ_NINT(pos.vtX);
         vertex->geo.vg2I->vtx.vtY = WLZ_NINT(pos.vtY);
 	break;
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
+        vertex->geo.vg2D->vtx = pos;
+	break;
+      case WLZ_GMELM_VERTEX_G3I:
+        vertex->geo.vg3I->vtx.vtX = WLZ_NINT(pos.vtX);
+	vertex->geo.vg3I->vtx.vtY = WLZ_NINT(pos.vtY);
+	vertex->geo.vg3I->vtx.vtZ = 0;
+	break;
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
+        vertex->geo.vg3D->vtx.vtX = pos.vtX;
+	vertex->geo.vg3D->vtx.vtY = pos.vtY;
+	vertex->geo.vg3D->vtx.vtZ = 0.0;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a vertex geometry using the given double
+*               precision position and normal.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	pos			Given position.
+* \param	nrm			Given normal.
+*/
+WlzErrorNum	WlzGMVertexSetG2N(WlzGMVertex *vertex,
+				  WlzDVertex2 pos, WlzDVertex2 nrm)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((vertex == NULL) || (vertex->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(vertex->geo.core->type)
+    {
+      case WLZ_GMELM_VERTEX_G2I:
+        vertex->geo.vg2I->vtx.vtX = WLZ_NINT(pos.vtX);
+        vertex->geo.vg2I->vtx.vtY = WLZ_NINT(pos.vtY);
+	break;
       case WLZ_GMELM_VERTEX_G2D:
         vertex->geo.vg2D->vtx = pos;
+	break;
+      case WLZ_GMELM_VERTEX_G2N:
+	vertex->geo.vg2N->vtx = pos;
+        vertex->geo.vg2N->nrm = nrm;
 	break;
       case WLZ_GMELM_VERTEX_G3I:
         vertex->geo.vg3I->vtx.vtX = WLZ_NINT(pos.vtX);
@@ -3854,6 +3905,118 @@ WlzErrorNum	WlzGMVertexSetG2D(WlzGMVertex *vertex, WlzDVertex2 pos)
         vertex->geo.vg3D->vtx.vtX = pos.vtX;
 	vertex->geo.vg3D->vtx.vtY = pos.vtY;
 	vertex->geo.vg3D->vtx.vtZ = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G3N:
+        vertex->geo.vg3N->vtx.vtX = pos.vtX;
+	vertex->geo.vg3N->vtx.vtY = pos.vtY;
+	vertex->geo.vg3N->vtx.vtZ = 0.0;
+        vertex->geo.vg3N->nrm.vtX = nrm.vtX;
+	vertex->geo.vg3N->nrm.vtY = nrm.vtY;
+	vertex->geo.vg3N->nrm.vtZ = 0.0;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a vertex geometry using the given double
+*               precision position.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	pos			Given position.
+*/
+WlzErrorNum	WlzGMVertexSetG3D(WlzGMVertex *vertex, WlzDVertex3 pos)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((vertex == NULL) || (vertex->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(vertex->geo.core->type)
+    {
+      case WLZ_GMELM_VERTEX_G2I:
+        vertex->geo.vg2I->vtx.vtX = WLZ_NINT(pos.vtX);
+        vertex->geo.vg2I->vtx.vtY = WLZ_NINT(pos.vtY);
+	break;
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
+        vertex->geo.vg2D->vtx.vtX = pos.vtX;
+	vertex->geo.vg2D->vtx.vtY = pos.vtY;
+	break;
+      case WLZ_GMELM_VERTEX_G3I:
+        vertex->geo.vg3I->vtx.vtX = WLZ_NINT(pos.vtX);
+	vertex->geo.vg3I->vtx.vtY = WLZ_NINT(pos.vtY);
+	vertex->geo.vg3I->vtx.vtZ = WLZ_NINT(pos.vtZ);
+	break;
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
+        vertex->geo.vg3D->vtx = pos;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a vertex geometry using the given double
+*               precision position and normal.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	pos			Given position.
+* \param	nrm			Given normal.
+*/
+WlzErrorNum	WlzGMVertexSetG3N(WlzGMVertex *vertex,
+				  WlzDVertex3 pos, WlzDVertex3 nrm)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((vertex == NULL) || (vertex->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(vertex->geo.core->type)
+    {
+      case WLZ_GMELM_VERTEX_G2I:
+        vertex->geo.vg2I->vtx.vtX = WLZ_NINT(pos.vtX);
+        vertex->geo.vg2I->vtx.vtY = WLZ_NINT(pos.vtY);
+	break;
+      case WLZ_GMELM_VERTEX_G2D:
+        vertex->geo.vg2D->vtx.vtX = pos.vtX;
+	vertex->geo.vg2D->vtx.vtY = pos.vtY;
+	break;
+      case WLZ_GMELM_VERTEX_G2N:
+        vertex->geo.vg2N->vtx.vtX = pos.vtX;
+	vertex->geo.vg2N->vtx.vtY = pos.vtY;
+        vertex->geo.vg2N->nrm.vtX = nrm.vtX;
+	vertex->geo.vg2N->nrm.vtY = nrm.vtY;
+	break;
+      case WLZ_GMELM_VERTEX_G3I:
+        vertex->geo.vg3I->vtx.vtX = WLZ_NINT(pos.vtX);
+	vertex->geo.vg3I->vtx.vtY = WLZ_NINT(pos.vtY);
+	vertex->geo.vg3I->vtx.vtZ = WLZ_NINT(pos.vtZ);
+	break;
+      case WLZ_GMELM_VERTEX_G3D:
+        vertex->geo.vg3D->vtx = pos;
+	break;
+      case WLZ_GMELM_VERTEX_G3N:
+        vertex->geo.vg3N->vtx = pos;
+        vertex->geo.vg3N->nrm = nrm;
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -3890,7 +4053,8 @@ WlzErrorNum	WlzGMVertexGetG3D(WlzGMVertex *vertex, WlzDVertex3 *dstPos)
 	dstPos->vtY = vertex->geo.vg2I->vtx.vtY;
 	dstPos->vtZ = 0;
 	break;
-      case WLZ_GMELM_VERTEX_G2D:
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
 	dstPos->vtX = vertex->geo.vg2D->vtx.vtX;
 	dstPos->vtY = vertex->geo.vg2D->vtx.vtY;
 	dstPos->vtZ = 0.0;
@@ -3900,8 +4064,86 @@ WlzErrorNum	WlzGMVertexGetG3D(WlzGMVertex *vertex, WlzDVertex3 *dstPos)
 	dstPos->vtY = vertex->geo.vg3I->vtx.vtY;
 	dstPos->vtZ = vertex->geo.vg3I->vtx.vtZ;
 	break;
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
+	*dstPos = vertex->geo.vg3D->vtx;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets a vertex geometry into the given double
+*               precision position and normaldestination pointers.
+*		If the model vertex geometry does not have normals
+*		then the normal will be {0,0,0}, the zero vector.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	dstPos			Given position destination
+*                                       pointer, may NOT be NULL.
+* \param	dstNrm			Given normal destination
+*                                       pointer, may NOT be NULL.
+*/
+WlzErrorNum	WlzGMVertexGetG3N(WlzGMVertex *vertex,
+				  WlzDVertex3 *dstPos, WlzDVertex3 *dstNrm)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((vertex == NULL) || (vertex->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(vertex->geo.core->type)
+    {
+      case WLZ_GMELM_VERTEX_G2I:
+	dstPos->vtX = vertex->geo.vg2I->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg2I->vtx.vtY;
+	dstPos->vtZ = 0.0;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	dstNrm->vtZ = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G2D:
+	dstPos->vtX = vertex->geo.vg2D->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg2D->vtx.vtY;
+	dstPos->vtZ = 0.0;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	dstNrm->vtZ = 0.0;
+        break;
+      case WLZ_GMELM_VERTEX_G2N:
+	dstPos->vtX = vertex->geo.vg2N->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg2N->vtx.vtY;
+	dstPos->vtZ = 0.0;
+	dstNrm->vtX = vertex->geo.vg2N->nrm.vtX;
+	dstNrm->vtY = vertex->geo.vg2N->nrm.vtY;
+	dstNrm->vtZ = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G3I:
+	dstPos->vtX = vertex->geo.vg3I->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg3I->vtx.vtY;
+	dstPos->vtZ = vertex->geo.vg3I->vtx.vtZ;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	dstNrm->vtZ = 0.0;
+	break;
       case WLZ_GMELM_VERTEX_G3D:
 	*dstPos = vertex->geo.vg3D->vtx;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	dstNrm->vtZ = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G3N:
+	*dstPos = vertex->geo.vg3N->vtx;
+	*dstNrm = vertex->geo.vg3N->nrm;
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -3937,16 +4179,86 @@ WlzErrorNum	WlzGMVertexGetG2D(WlzGMVertex *vertex, WlzDVertex2 *dstPos)
 	dstPos->vtX = vertex->geo.vg2I->vtx.vtX;
 	dstPos->vtY = vertex->geo.vg2I->vtx.vtY;
 	break;
-      case WLZ_GMELM_VERTEX_G2D:
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
 	*dstPos = vertex->geo.vg2D->vtx;
 	break;
       case WLZ_GMELM_VERTEX_G3I:
 	dstPos->vtX = vertex->geo.vg3I->vtx.vtX;
 	dstPos->vtY = vertex->geo.vg3I->vtx.vtY;
 	break;
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
+	dstPos->vtX = vertex->geo.vg3D->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg3D->vtx.vtY;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets a vertex geometry into the given double
+*               precision position and normal destination pointers.
+*		If the model vertex geometry does not have normals
+*		then the normal will be {0,0}, the zero vector.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	dstPos			Given position destination
+*                                       pointer, may NOT be NULL.
+* \param	dstNrm			Given normal destination
+*                                       pointer, may NOT be NULL.
+*/
+WlzErrorNum	WlzGMVertexGetG2N(WlzGMVertex *vertex,
+				  WlzDVertex2 *dstPos, WlzDVertex2 *dstNrm)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((vertex == NULL) || (vertex->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(vertex->geo.core->type)
+    {
+      case WLZ_GMELM_VERTEX_G2I:
+	dstPos->vtX = vertex->geo.vg2I->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg2I->vtx.vtY;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G2D:
+	*dstPos = vertex->geo.vg2D->vtx;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G2N:
+	*dstPos = vertex->geo.vg2N->vtx;
+	*dstNrm = vertex->geo.vg2N->nrm;
+	break;
+      case WLZ_GMELM_VERTEX_G3I:
+	dstPos->vtX = vertex->geo.vg3I->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg3I->vtx.vtY;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	break;
       case WLZ_GMELM_VERTEX_G3D:
 	dstPos->vtX = vertex->geo.vg3D->vtx.vtX;
 	dstPos->vtY = vertex->geo.vg3D->vtx.vtY;
+	dstNrm->vtX = 0.0;
+	dstNrm->vtY = 0.0;
+	break;
+      case WLZ_GMELM_VERTEX_G3N:
+	dstPos->vtX = vertex->geo.vg3N->vtx.vtX;
+	dstPos->vtY = vertex->geo.vg3N->vtx.vtY;
+	dstNrm->vtX = vertex->geo.vg3N->nrm.vtX;
+	dstNrm->vtY = vertex->geo.vg3N->nrm.vtY;
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -3979,7 +4291,8 @@ WlzDVertex3	WlzGMVertexCmp3D(WlzGMVertex *vertex, WlzDVertex3 pos)
         cmp.vtX = vertex->geo.vg2I->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg2I->vtx.vtY - pos.vtY;
         break;
-      case WLZ_GMELM_VERTEX_G2D:
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
         cmp.vtX = vertex->geo.vg2D->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg2D->vtx.vtY - pos.vtY;
         break;
@@ -3988,7 +4301,8 @@ WlzDVertex3	WlzGMVertexCmp3D(WlzGMVertex *vertex, WlzDVertex3 pos)
         cmp.vtY = vertex->geo.vg3I->vtx.vtY - pos.vtY;
         cmp.vtZ = vertex->geo.vg3I->vtx.vtZ - pos.vtZ;
         break;
-      case WLZ_GMELM_VERTEX_G3D:
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
         cmp.vtX = vertex->geo.vg3D->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg3D->vtx.vtY - pos.vtY;
         cmp.vtZ = vertex->geo.vg3D->vtx.vtZ - pos.vtZ;
@@ -4023,7 +4337,8 @@ WlzDVertex2	WlzGMVertexCmp2D(WlzGMVertex *vertex, WlzDVertex2 pos)
         cmp.vtX = vertex->geo.vg2I->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg2I->vtx.vtY - pos.vtY;
         break;
-      case WLZ_GMELM_VERTEX_G2D:
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
         cmp.vtX = vertex->geo.vg2D->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg2D->vtx.vtY - pos.vtY;
         break;
@@ -4031,7 +4346,8 @@ WlzDVertex2	WlzGMVertexCmp2D(WlzGMVertex *vertex, WlzDVertex2 pos)
         cmp.vtX = vertex->geo.vg3I->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg3I->vtx.vtY - pos.vtY;
         break;
-      case WLZ_GMELM_VERTEX_G3D:
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
         cmp.vtX = vertex->geo.vg3D->vtx.vtX - pos.vtX;
         cmp.vtY = vertex->geo.vg3D->vtx.vtY - pos.vtY;
         break;
@@ -4106,7 +4422,8 @@ double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 	tD1 = pos.vtY - vertex->geo.vg2I->vtx.vtY;
 	dstSq = (tD0 * tD0) + (tD1 * tD1);
         break;
-      case WLZ_GMELM_VERTEX_G2D:
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
         tD0 = pos.vtX - vertex->geo.vg2D->vtx.vtX;
 	tD1 = pos.vtY - vertex->geo.vg2D->vtx.vtY;
 	dstSq = (tD0 * tD0) + (tD1 * tD1);
@@ -4117,7 +4434,8 @@ double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 	tD2 = pos.vtZ - vertex->geo.vg3I->vtx.vtZ;
 	dstSq = (tD0 * tD0) + (tD1 * tD1) + (tD2 * tD2);
         break;
-      case WLZ_GMELM_VERTEX_G3D:
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
         tD0 = pos.vtX - vertex->geo.vg3D->vtx.vtX;
 	tD1 = pos.vtY - vertex->geo.vg3D->vtx.vtY;
 	tD2 = pos.vtZ - vertex->geo.vg3D->vtx.vtZ;
@@ -4274,7 +4592,8 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 	tD1 = pos.vtY - vertex->geo.vg2I->vtx.vtY;
 	dstSq = (tD0 * tD0) + (tD1 * tD1);
         break;
-      case WLZ_GMELM_VERTEX_G2D:
+      case WLZ_GMELM_VERTEX_G2D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G2N:
         tD0 = pos.vtX - vertex->geo.vg2D->vtx.vtX;
 	tD1 = pos.vtY - vertex->geo.vg2D->vtx.vtY;
 	dstSq = (tD0 * tD0) + (tD1 * tD1);
@@ -4284,7 +4603,8 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 	tD1 = pos.vtY - vertex->geo.vg3I->vtx.vtY;
 	dstSq = (tD0 * tD0) + (tD1 * tD1);
         break;
-      case WLZ_GMELM_VERTEX_G3D:
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N:
         tD0 = pos.vtX - vertex->geo.vg3D->vtx.vtX;
 	tD1 = pos.vtY - vertex->geo.vg3D->vtx.vtY;
 	dstSq = (tD0 * tD0) + (tD1 * tD1);
@@ -4878,9 +5198,11 @@ WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
     {
       case WLZ_GMMOD_2I:
       case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2N:
         break;
       case WLZ_GMMOD_3I:
       case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3N:
 	tEI = 0;
 	nmEI = 0;
 	while((errNum == WLZ_ERR_NONE) && (tEI < model->res.edge.numIdx))
@@ -5956,6 +6278,16 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 	    }
 	  }
 	  break;
+	case WLZ_GMMOD_2N:
+	  while(vCnt < resIdxTb->vertexG.idxCnt)
+	  {
+	    eP.vertexG2N = (WlzGMVertexG2N *)AlcVectorItemGet(vec, vCnt++);
+	    if(eP.vertexG2N->idx >= 0)
+	    {
+	      *(iLut + eP.vertexG2N->idx) = iCnt++;
+	    }
+	  }
+	  break;
 	case WLZ_GMMOD_3I:
 	  while(vCnt < resIdxTb->vertexG.idxCnt)
 	  {
@@ -5973,6 +6305,16 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 	    if(eP.vertexG3D->idx >= 0)
 	    {
 	      *(iLut + eP.vertexG3D->idx) = iCnt++;
+	    }
+	  }
+	  break;
+	case WLZ_GMMOD_3N:
+	  while(vCnt < resIdxTb->vertexG.idxCnt)
+	  {
+	    eP.vertexG3N = (WlzGMVertexG3N *)AlcVectorItemGet(vec, vCnt++);
+	    if(eP.vertexG3N->idx >= 0)
+	    {
+	      *(iLut + eP.vertexG3N->idx) = iCnt++;
 	    }
 	  }
 	  break;
@@ -6093,7 +6435,8 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 	    }
 	  }
 	  break;
-	case WLZ_GMMOD_2D:
+	case WLZ_GMMOD_2D: /* FALLTHROUGH */
+	case WLZ_GMMOD_2N:
 	  while(vCnt < resIdxTb->shellG.idxCnt)
 	  {
 	    eP.shellG2D = (WlzGMShellG2D *)AlcVectorItemGet(vec, vCnt++);
@@ -6113,7 +6456,8 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 	    }
 	  }
 	  break;
-	case WLZ_GMMOD_3D:
+	case WLZ_GMMOD_3D: /* FALLTHROUGH */
+	case WLZ_GMMOD_3N:
 	  while(vCnt < resIdxTb->shellG.idxCnt)
 	  {
 	    eP.shellG3D = (WlzGMShellG3D *)AlcVectorItemGet(vec, vCnt++);
@@ -6217,7 +6561,7 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
       if(vertex->idx >= 0)
       {
 	vertex->next = NULL;
-	WlzGMModelAddVertex(model, vertex);
+	WlzGMModelAddVertexToHT(model, vertex);
       }
       ++idV;
     }
@@ -6280,10 +6624,12 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 * \param	model			The model to add the segment to.
 * \param	dstNF			Destination pointer for the new face.
 * \param	pos			Positions of the 3 points.
+* \param	nV			New vertices with geometry set.
 */
 static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 					     WlzGMFace **dstNF,
-					     WlzDVertex3 *pos)
+					     WlzDVertex3 *pos,
+					     WlzGMVertex **nV)
 {
   int		idx,
   		nIdx,
@@ -6296,7 +6642,6 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
   WlzGMDiskT	*nDT[3];
-  WlzGMVertex	*nV[3];
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -6318,9 +6663,6 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
      ((nDT[0] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[1] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[2] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV[0] = WlzGMModelNewV(model, &errNum)) != NULL) &&
-     ((nV[1] = WlzGMModelNewV(model, &errNum)) != NULL) &&
-     ((nV[2] = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT0[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[2] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
@@ -6331,9 +6673,8 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
     /* New verticies. */
     for(idx = 0; idx < 3; ++idx)
     {
-      (void )WlzGMVertexSetG3D(nV[idx], *(pos + idx));
       nV[idx]->diskT = nDT[idx];
-      WlzGMModelAddVertex(model, nV[idx]);
+      WlzGMModelAddVertexToHT(model, nV[idx]);
     }
     /* New vertex topology elements */
     for(idx = 0; idx < 3; ++idx)
@@ -6422,8 +6763,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 *		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology elements
-*		(nDT[0,1,2]), 2 verticies (nV[0,1]) with geometry
-*		(pos0, pos1) and 6 vertex topology elements (nVT[0,1,2]
+*		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
 * \verbatim
 *                           nVT00        nET00
@@ -6460,11 +6800,17 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 * \param	dstNF			Destination pointer for new face.
 * \param	eV			Shared vertex.
 * \param	pos0			Position of the first point.
+* \param	nV0			New vertex with geometry set for the
+*					first point.
 * \param	pos1			Position of the second point.
+* \param	nV1			New vertex with geometry set for the
+*					second point.
 */
 static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model,
-					    WlzGMFace **dstNF, WlzGMVertex *eV,
-					    WlzDVertex3 pos0, WlzDVertex3 pos1)
+					    WlzGMFace **dstNF,
+					    WlzGMVertex *eV,
+					    WlzDVertex3 pos0, WlzGMVertex *nV0,
+					    WlzDVertex3 pos1, WlzGMVertex *nV1)
 {
   int		idx,
   		nIdx,
@@ -6498,8 +6844,6 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model,
      ((nDT[0] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[1] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[2] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV[0] = WlzGMModelNewV(model, &errNum)) != NULL) &&
-     ((nV[1] = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT0[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[2] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
@@ -6509,15 +6853,16 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model,
   {
     pos[0] = pos0;
     pos[1] = pos1;
+    nV[0] = nV0;
+    nV[1] = nV1;
     (void )WlzGMVertexGetG3D(eV, pos + 2);
     /* Get shell that's to be extended. */
     eShell = WlzGMVertexGetShell(eV);
     /* New verticies. */
     for(idx = 0; idx < 2; ++idx)
     {
-      (void )WlzGMVertexSetG3D(nV[idx], pos[idx]);
       nV[idx]->diskT = nDT[idx];
-      WlzGMModelAddVertex(model, nV[idx]);
+      WlzGMModelAddVertexToHT(model, nV[idx]);
     }
     /* New vertex topology elements */
     for(idx = 0; idx < 3; ++idx)
@@ -6596,8 +6941,8 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model,
 *		Need to create: 1 face (nF), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 1 disk topology element
-*		(nDT), 1 vertex (nV) with geometry (pos0) and
-*		6 vertex topology elements (nVT[0,1,2] and nVT1[0,1,2]).
+*		(nDT), and 6 vertex topology elements (nVT[0,1,2] and
+*		nVT1[0,1,2]).
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
@@ -6635,7 +6980,7 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model,
 */
 static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model,
 					    WlzGMFace **dstNF, WlzGMEdge *eE,
-					    WlzDVertex3 nPos)
+					    WlzDVertex3 nPos, WlzGMVertex *nV)
 {
   int		idx,
   		nIdx,
@@ -6647,7 +6992,6 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model,
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
   WlzGMDiskT	*nDT;
-  WlzGMVertex	*nV;
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -6665,7 +7009,6 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model,
      ((nET1[1] = WlzGMModelNewET(model, &errNum)) != NULL) &&
      ((nET1[2] = WlzGMModelNewET(model, &errNum)) != NULL) &&
      ((nDT = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT0[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[2] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
@@ -6677,9 +7020,8 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model,
     eShell = WlzGMEdgeGetShell(eE);
     /* Get geometry of all 3 verticies. */
     /* New vertex. */
-    (void )WlzGMVertexSetG3D(nV, nPos);
     nV->diskT = nDT;
-    WlzGMModelAddVertex(model, nV);
+    WlzGMModelAddVertexToHT(model, nV);
     /* New vertex topology elements. */
     WlzGMVertexTAppend(eE->edgeT->vertexT, nVT0[0]);
     WlzGMVertexTAppend(eE->edgeT->vertexT, nVT1[0]);
@@ -6797,11 +7139,12 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model,
 * \param	eV0			First shared vertex.
 * \param	eV1			Second shared vertex.
 * \param	nPos			Position of new vertex.
+* \param	nV			New vertex with geometry set.
 */
 static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 					    WlzGMFace **dstNF,
 					    WlzGMVertex *eV0, WlzGMVertex *eV1,
-					    WlzDVertex3 nPos)
+					    WlzDVertex3 nPos, WlzGMVertex *nV)
 {
   int		idx,
   		nIdx,
@@ -6813,7 +7156,6 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
   WlzGMDiskT	*nDT[3];
-  WlzGMVertex	*nV;
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
   WlzDVertex3	pos[3];
@@ -6835,7 +7177,6 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
      ((nDT[0] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[1] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[2] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT0[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[2] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
@@ -6850,9 +7191,8 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
     (void )WlzGMVertexGetG3D(eV1, pos + 1);
     pos[2] = nPos;
     /* New vertex. */
-    (void )WlzGMVertexSetG3D(nV, nPos);
     nV->diskT = nDT[2];
-    WlzGMModelAddVertex(model, nV);
+    WlzGMModelAddVertexToHT(model, nV);
     /* New vertex topology elements. */
     for(idx = 0; idx < 3; ++idx)
     {
@@ -6967,11 +7307,12 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 * \param	eV0			First shared vertex.
 * \param	eV1			Second shared vertex.
 * \param	nPos			Position of new vertex.
+* \param	nV			New vertex with geometry set.
 */
 static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 					  WlzGMFace **dstNF,
 					  WlzGMVertex *eV0, WlzGMVertex *eV1,
-					  WlzDVertex3 nPos)
+					  WlzDVertex3 nPos, WlzGMVertex *nV)
 {
   int		idx,
   		nIdx,
@@ -6987,8 +7328,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
   WlzGMDiskT	*nDT[3];
-  WlzGMVertex	*nV,
-  		*tV;
+  WlzGMVertex 	*tV;
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
   WlzDVertex3	pos[3];
@@ -7010,7 +7350,6 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
      ((nDT[0] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[1] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[2] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT0[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT0[2] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
@@ -7037,9 +7376,8 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
     (void )WlzGMVertexGetG3D(eV1, pos + 1);
     pos[2] = nPos;
     /* New vertex. */
-    (void )WlzGMVertexSetG3D(nV, nPos);
     nV->diskT = nDT[2];
-    WlzGMModelAddVertex(model, nV);
+    WlzGMModelAddVertexToHT(model, nV);
     /* New vertex topology elements. */
     for(idx = 0; idx < 3; ++idx)
     {
@@ -8327,10 +8665,13 @@ static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model,
 *		                               nV1 /
 * \endverbatim
 * \param	model			The model to add the segment to.
-* \param	pos			Ptr to 1st then 2nd point.
+* \param	pos			First then second vertex positions.
+* \param	nV			First then second vertex with geometry
+* 					set.
 */
 static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
-					     WlzDVertex2 *pos)
+					     WlzDVertex2 *pos,
+					     WlzGMVertex **nV)
 {
   int		idx;
   WlzGMShell	*eShell,
@@ -8339,7 +8680,6 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET[2];
   WlzGMDiskT	*nDT[2];
-  WlzGMVertex	*nV[2];
   WlzGMVertexT	*nVT[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -8351,8 +8691,6 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
      ((nET[1] = WlzGMModelNewET(model, &errNum)) != NULL) &&
      ((nDT[0] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
      ((nDT[1] = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV[0] = WlzGMModelNewV(model, &errNum)) != NULL) &&
-     ((nV[1] = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT[1] = WlzGMModelNewVT(model, &errNum)) != NULL))
   {
@@ -8360,8 +8698,7 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
     {
       /* New vertcies */
       nV[idx]->diskT = nDT[idx];
-      (void )WlzGMVertexSetG2D(nV[idx], *(pos + idx));
-      WlzGMModelAddVertex(model, nV[idx]);
+      WlzGMModelAddVertexToHT(model, nV[idx]);
       /* New vertex topology elements */
       nVT[idx]->next = nVT[idx]->prev = nVT[idx];
       nVT[idx]->diskT = nDT[idx];
@@ -8443,11 +8780,11 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 *                                       new edge topology element directed
 *                                       away from the new end point.
 * \param	nPos			The new end point.
+* \param 	nV			New vertex with geometry set.
 */
 static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
-				       WlzDVertex2 nPos)
+				       WlzDVertex2 nPos, WlzGMVertex *nV)
 {
-  WlzGMVertex	*nV;
   WlzGMVertexT	*nVT0,
   		*nVT1;
   WlzGMDiskT	*nDT;
@@ -8462,15 +8799,13 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
      ((nET0 = WlzGMModelNewET(model, &errNum)) != NULL) &&
      ((nET1 = WlzGMModelNewET(model, &errNum)) != NULL) &&
      ((nDT = WlzGMModelNewDT(model, &errNum)) != NULL) &&
-     ((nV = WlzGMModelNewV(model, &errNum)) != NULL) &&
      ((nVT0 = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT1 = WlzGMModelNewVT(model, &errNum)) != NULL))
   {
     eET1 = eET0->prev;
     /* New vertex */
     nV->diskT = nDT;
-    (void )WlzGMVertexSetG2D(nV, nPos);
-    WlzGMModelAddVertex(model, nV);
+    WlzGMModelAddVertexToHT(model, nV);
     /* Set vertex topology elements */
     nVT0->prev = nVT0->next = nVT0;
     nVT0->diskT = nDT;
@@ -8747,57 +9082,137 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
 WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
 					     WlzDVertex2 *pos)
 {
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzGMModelConstructSimplex2N(model, pos, NULL);
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a 2D simplex (edge) defined by two double
+*               precision end points with normal components. Either
+*		of the two points may already exist within the model.
+*               See WlzGMShellMatchVtxG2D() for the meaning of the
+*               backwards, forwards and distance search parameters.
+* \param	model			The model to add the segment to.
+* \param	pos			Pointer to first then second
+*                                       positions.
+* \param	nrm			Pointer to the normal values in
+*					the same order as the positions,
+*					may be NULL.
+*/
+WlzErrorNum	WlzGMModelConstructSimplex2N(WlzGMModel *model,
+					     WlzDVertex2 *pos,
+					     WlzDVertex2 *nrm)
+{
+
   unsigned int	matchCode;
+  WlzGMVertex	*nV[2];
   WlzGMEdgeT	*matchEdgeT[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-#ifdef WLZ_GM_DEBUG_CONSTRUCT_SPX_2D
-  (void )fprintf(stderr, "%g %g %g %g\n",
+#ifdef WLZ_GM_DEBUG_CONSTRUCT_SPX_2N
+  (void )fprintf(stderr, "%g %g %g %g",
 		 (pos + 0)->vtX, (pos + 0)->vtY,
 		 (pos + 1)->vtX, (pos + 1)->vtY);
+  if(nrm)
+  {
+    (void )fprintf(stderr, " %g %g %g %g",
+		   (nrm + 0)->vtX, (nrm + 0)->vtY,
+		   (nrm + 1)->vtX, (nrm + 1)->vtY);
+  }
+  (void )fprintf(stderr, "\n");
   (void )fflush(stderr);
 #endif
-  WlzGMModelMatchEdgeTG2D(model, matchEdgeT, pos);
-  matchCode = ((matchEdgeT[1] != NULL) << 1) | (matchEdgeT[0] != NULL);
-  switch(matchCode)
+  /* Check that the two positions aren't coincident and silently ignore them
+   * if they are. */
+  if(WlzGeomVtxEqual2D(*(pos + 0), *(pos + 1), WLZ_GM_TOLERANCE_SQ) == 0)
   {
-    case 0:
-      /* Edge makes a new shell. */
-      errNum = WlzGMModelConstructNewS2D(model, pos);
-      break;
-    case 1:
-      /* Edge extends a loop and shell. */
-      errNum = WlzGMModelExtendL2D(model, matchEdgeT[0], *(pos + 1));
-      break;
-    case 2:
-      /* Edge extends a loop and shell. */
-      errNum = WlzGMModelExtendL2D(model, matchEdgeT[1], *(pos + 0));
-      break;
-    case 3:
-      /* Both verticies already exist within the model.
-         Don't insert this simplex if it is already in the model. */
-      if((matchEdgeT[0]->edge != matchEdgeT[1]->edge) &&
-         (matchEdgeT[0]->prev->edge != matchEdgeT[1]->prev->edge))
-      {
-	/* Both verticies already exist within the model so adding another
-	 * edge between the two verticies will change the number of loops
-	 * and shells. */
-	if(WlzGMEdgeTCommonLoopT(matchEdgeT[0], matchEdgeT[1]) != NULL)
-	{
-	  /* Both of the verticies lie on a common loop then that loop needs
-	   * to be SPLIT by a new edge. */
-	  errNum = WlzGMModelConstructSplitL2D(model,
-						matchEdgeT[0], matchEdgeT[1]);
+    /* Find which of the positions are shared by vertices already in the
+     * model. */
+    WlzGMModelMatchEdgeTG2D(model, matchEdgeT, pos);
+    matchCode = ((matchEdgeT[1] != NULL) << 1) | (matchEdgeT[0] != NULL);
+    switch(matchCode)
+    {
+      case 0:
+	/* Create new vertices and set their geometry. */
+        if(((nV[0] = WlzGMModelNewV(model, &errNum)) != NULL) &&
+           ((nV[1] = WlzGMModelNewV(model, &errNum)) != NULL))
+        {
+	  if(nrm)
+	  {
+	    (void )WlzGMVertexSetG2N(nV[0], *(pos + 0), *(nrm + 0));
+	    (void )WlzGMVertexSetG2N(nV[1], *(pos + 1), *(nrm + 1));
+	  }
+	  else
+	  {
+	    (void )WlzGMVertexSetG2D(nV[0], *(pos + 0));
+	    (void )WlzGMVertexSetG2D(nV[1], *(pos + 1));
+	  }
 	}
-	else
-	{
-	  /* The two verticies do NOT share a common loop so loops will be
-	   * joined by a new edge, destroying a loop.  */
-	  errNum = WlzGMModelJoinL2D(model, matchEdgeT[0], matchEdgeT[1]);
-	  
+	/* Edge makes a new shell. */
+	errNum = WlzGMModelConstructNewS2D(model, pos, nV);
+	break;
+      case 1:
+	/* Create new vertex and set it's geometry. */
+        if((nV[1] = WlzGMModelNewV(model, &errNum)) != NULL)
+        {
+	  if(nrm)
+	  {
+	    (void )WlzGMVertexSetG2N(nV[1], *(pos + 1), *(nrm + 1));
+	  }
+	  else
+	  {
+	    (void )WlzGMVertexSetG2D(nV[1], *(pos + 1));
+	  }
 	}
-      }
-      break;
+	/* Edge extends a loop and shell. */
+	errNum = WlzGMModelExtendL2D(model, matchEdgeT[0], *(pos + 1), nV[1]);
+	break;
+      case 2:
+	/* Create new vertex and set it's geometry. */
+        if((nV[0] = WlzGMModelNewV(model, &errNum)) != NULL)
+        {
+	  if(nrm)
+	  {
+	    (void )WlzGMVertexSetG2N(nV[0], *(pos + 0), *(nrm + 0));
+	  }
+	  else
+	  {
+	    (void )WlzGMVertexSetG2D(nV[0], *(pos + 0));
+	  }
+	}
+	/* Edge extends a loop and shell. */
+	errNum = WlzGMModelExtendL2D(model, matchEdgeT[1], *(pos + 0), nV[0]);
+	break;
+      case 3:
+	/* Both verticies already exist within the model.
+	   Don't insert this simplex if it is already in the model. */
+	if((matchEdgeT[0]->edge != matchEdgeT[1]->edge) &&
+	   (matchEdgeT[0]->prev->edge != matchEdgeT[1]->prev->edge))
+	{
+	  /* Both verticies already exist within the model so adding another
+	   * edge between the two verticies will change the number of loops
+	   * and shells. */
+	  if(WlzGMEdgeTCommonLoopT(matchEdgeT[0], matchEdgeT[1]) != NULL)
+	  {
+	    /* Both of the verticies lie on a common loop then that loop needs
+	     * to be SPLIT by a new edge. */
+	    errNum = WlzGMModelConstructSplitL2D(model,
+						  matchEdgeT[0], matchEdgeT[1]);
+	  }
+	  else
+	  {
+	    /* The two verticies do NOT share a common loop so loops will be
+	     * joined by a new edge, destroying a loop.  */
+	    errNum = WlzGMModelJoinL2D(model, matchEdgeT[0], matchEdgeT[1]);
+	    
+	  }
+	}
+	break;
+    }
   }
   return(errNum);
 }
@@ -8817,6 +9232,31 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
 WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 				       	     WlzDVertex3 *pos)
 {
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzGMModelConstructSimplex3N(model, pos, NULL);
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a 3D simplex (triangle) defined by three
+*               double precision verticies with normals, any of which
+*		may already exist within the model.
+*		If a new face is created then the child loopT of that
+*		face will have edgeT's that use the given vertices in
+*		their given order.
+* \param	model			The model to add the segment to.
+* \param	pos			Pointer to triangle verticies.
+* \param	nrm			Pointer to the normal values in
+*					the same order as the positions,
+*					may be NULL.
+*/
+WlzErrorNum	WlzGMModelConstructSimplex3N(WlzGMModel *model,
+				       	     WlzDVertex3 *pos,
+					     WlzDVertex3 *nrm)
+{
   int		idx0,
   		idx1,
 		idx2,
@@ -8828,6 +9268,7 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
   WlzGMVertex	*v0,
   		*v1;
   unsigned int	matchCode;
+  WlzGMVertex	*nV[3];
   WlzGMEdge	*cE[3];
   WlzGMVertex	*matchV[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -8872,169 +9313,193 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
   if(WlzGeomTriangleArea2Sq3(*(pos + 0), *(pos + 1),
                              *(pos + 2)) > WLZ_GM_TOLERANCE_SQ)
   {
-    for(idx0 = 0; idx0 < 3; ++idx0)
+    idx0 = 0;
+    while((idx0 < 3) && (errNum == WLZ_ERR_NONE))
     {
-      matchV[idx0] = WlzGMModelMatchVertexG3D(model, *(pos + idx0));
-    }
-    matchCode = ((matchV[2] != NULL) << 2) |
-		((matchV[1] != NULL) << 1) | (matchV[0] != NULL);
-    switch(bitCntTb[matchCode])
-    {
-      case 0:
-	/* No verticies matched, construct a new shell. */
-	errNum = WlzGMModelConstructNewS3D(model, &nF,  pos);
-	break;
-      case 1:
-	/* Single vertex matched, extend existing shell. */
-	idx0 = matchVtxIdx[matchCode][0];
-	idx1 = matchVtxIdx[matchCode][1];
-	idx2 = matchVtxIdx[matchCode][2];
-	errNum = WlzGMModelExtend1V0E1S3D(model, &nF,  matchV[idx0],
-					  *(pos + idx1), *(pos + idx2));
-	break;
-      case 2:
-	/* Two verticies matched, check for existing edges and shells. */
-	idx0 = matchVtxIdx[matchCode][0];
-	idx1 = matchVtxIdx[matchCode][1];
-	idx2 = matchVtxIdx[matchCode][2];
-	if(WlzGMVertexCommonShell(matchV[idx0], matchV[idx1]) != NULL)
+      if((matchV[idx0] = WlzGMModelMatchVertexG3D(model,
+	      *(pos + idx0))) == NULL)
+      {
+	if((nV[idx0] = WlzGMModelNewV(model, &errNum)) != NULL)
 	{
-	  if((cE[0] = WlzGMVertexCommonEdge(matchV[idx0],
-					    matchV[idx1])) != NULL)
+	  if(nrm)
 	  {
-	    /* Matched 2 verticies connected by an edge. */
-	    errNum = WlzGMModelExtend2V1E1S3D(model, &nF, cE[0], *(pos + idx2));
+	    (void )WlzGMVertexSetG3N(nV[idx0], *(pos + idx0), *(nrm + idx0));
 	  }
 	  else
 	  {
-	    /* Matched 2 verticies in same shell but not connected by an edge. */
-	    errNum = WlzGMModelExtend2V0E1S3D(model, &nF,
-					      matchV[idx0], matchV[idx1],
-					      *(pos + idx2));
+	    (void )WlzGMVertexSetG3D(nV[idx0], *(pos + idx0));
 	  }
 	}
-	else
-	{
-	  /* Matched 2 verticies in different shells. */
-	  errNum = WlzGMModelJoin2V0E0S3D(model, &nF, matchV[idx0], matchV[idx1],
-					  *(pos + idx2));
-	}
-	break;
-      case 3:
-	/* Three verticies matched, count existing edges and shells which use
-	 * these verticies. */
-	edgeCnt = ((cE[0] = WlzGMVertexCommonEdge(matchV[0],
-						  matchV[1])) != NULL) +
-		  ((cE[1] = WlzGMVertexCommonEdge(matchV[1],
-						  matchV[2])) != NULL) +
-		  ((cE[2] = WlzGMVertexCommonEdge(matchV[2],
-						  matchV[0])) != NULL);
-	idx0 = (WlzGMVertexGetShell(matchV[0]))->idx;
-	idx1 = (WlzGMVertexGetShell(matchV[1]))->idx;
-	idx2 = (WlzGMVertexGetShell(matchV[2]))->idx;
-	if((idx0 != idx1) && (idx1 != idx2) && (idx2 != idx0))
-	{
-	  shellCnt = 3;
-	}
-	else if((idx0 == idx1) && (idx1 == idx2) && (idx2 == idx0))
-	{
-	  shellCnt = 1;
-	}
-	else
-	{
-	  shellCnt = 2;
-	}
-	switch(edgeCnt)
-	{
-	  case 0:
-	    switch(shellCnt)
+      }
+      ++idx0;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      matchCode = ((matchV[2] != NULL) << 2) | ((matchV[1] != NULL) << 1) |
+                  (matchV[0] != NULL);
+      switch(bitCntTb[matchCode])
+      {
+	case 0:
+	  /* No verticies matched, construct a new shell. */
+	  errNum = WlzGMModelConstructNewS3D(model, &nF,  pos, nV);
+	  break;
+	case 1:
+	  /* Single vertex matched, extend existing shell. */
+	  idx0 = matchVtxIdx[matchCode][0];
+	  idx1 = matchVtxIdx[matchCode][1];
+	  idx2 = matchVtxIdx[matchCode][2];
+	  errNum = WlzGMModelExtend1V0E1S3D(model, &nF,  matchV[idx0],
+	      *(pos + idx1), nV[idx1], *(pos + idx2), nV[idx2]);
+	  break;
+	case 2:
+	  /* Two verticies matched, check for existing edges and shells. */
+	  /* HACK TODO set normals. */
+	  idx0 = matchVtxIdx[matchCode][0];
+	  idx1 = matchVtxIdx[matchCode][1];
+	  idx2 = matchVtxIdx[matchCode][2];
+	  if(WlzGMVertexCommonShell(matchV[idx0], matchV[idx1]) != NULL)
+	  {
+	    if((cE[0] = WlzGMVertexCommonEdge(matchV[idx0],
+		    matchV[idx1])) != NULL)
 	    {
-	      case 1:
-		/* All 3 matched verticies share the same shell but there
-		 * are no common edges between the 3 verticies. */
-		errNum = WlzGMModelExtend3V0E1S3D(model, &nF, matchV);
-		break;
-	      case 2: /* 3V0E2S */
-		/* Two of the 3 matched verticies share the same shell but
-		 * there is no common edge between any of the matched
-		 * verticies. */
-		errNum = WlzGMModelJoin3V0E2S3D(model, &nF, matchV);
-		break;
-	      case 3: /* 3V0E3S */
-		/* All 3 verticies are in different shells and there are
-		 * no common edges between any of the matched verticies. */
-		errNum = WlzGMModelJoin3V0E3S3D(model, &nF, matchV);
-		break;
-	    }
-	    break;
-	  case 1:
-	    idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
-		   ((cE[2] != NULL) << 2);
-	    idx0 = firstCtgBitTb[idx2];
-	    idx1 = (idx0 + 2) % 3;
-	    if(shellCnt == 1)
-	    {
-	      /* Two of the 3 matched verticies are connected by a single edge,
-	       * all of the 3 are in a single shell. */
-	       errNum = WlzGMModelExtend3V1E1S3D(model, &nF,
-						 cE[idx0], matchV[idx1]);
+	      /* Matched 2 verticies connected by an edge. */
+	      errNum = WlzGMModelExtend2V1E1S3D(model, &nF, cE[0],
+	                                        *(pos + idx2), nV[idx2]);
 	    }
 	    else
 	    {
-	      /* Two of the 3 matched verticies are connected by a single edge,
-	       * the other vertex is in a different shell. */
-	       errNum = WlzGMModelJoin3V1E2S3D(model, &nF,
-					       cE[idx0], matchV[idx1]);
+	      /* Matched 2 verticies in same shell but not connected by an
+	       * edge. */
+	      errNum = WlzGMModelExtend2V0E1S3D(model, &nF,
+						matchV[idx0], matchV[idx1],
+						*(pos + idx2), nV[idx2]);
 	    }
-	    break;
-	  case 2:
-	    /* All 3 verticies share the same shell, and two pairs of verticies
-	     * are connected by edges. */
-	    idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
-		   ((cE[2] != NULL) << 2);
-	    idx0 = firstCtgBitTb[idx2];
-	    idx1 = (idx0 + 1) % 3;
-	    errNum = WlzGMModelExtend3V2E1S3D(model, &nF, cE[idx0], cE[idx1]);
-	    break;
-	  case 3:
-	    /* All three verticies and all three edges are within the model,
-	     * need to check if the three verticies are in a common loop and then
-	     * if ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
-	     * vertexT's. */
-	    errNum = WlzGMModelExtend3V3E1S3D(model, &nF, cE);
-	    break;
-	}
-    }
-  }
-  /* Make sure that the order of the vertices are as given for the child
-   * loopT of the new face. */
-  if(nF)
-  {
-    for(idx0 = 0; idx0 < 3; ++idx0)
-    {
-      if(matchV[idx0] == NULL)
-      {
-        matchV[idx0] = WlzGMModelMatchVertexG3D(model, *(pos + idx0));
+	  }
+	  else
+	  {
+	    /* Matched 2 verticies in different shells. */
+	    errNum = WlzGMModelJoin2V0E0S3D(model, &nF, matchV[idx0],
+	                                    matchV[idx1],
+					    *(pos + idx2), nV[idx2]);
+	  }
+	  break;
+	case 3:
+	  /* Three verticies matched, count existing edges and shells which use
+	   * these verticies. */
+	  edgeCnt = ((cE[0] = WlzGMVertexCommonEdge(matchV[0],
+		  matchV[1])) != NULL) +
+	    ((cE[1] = WlzGMVertexCommonEdge(matchV[1],
+					    matchV[2])) != NULL) +
+	    ((cE[2] = WlzGMVertexCommonEdge(matchV[2],
+					    matchV[0])) != NULL);
+	  idx0 = (WlzGMVertexGetShell(matchV[0]))->idx;
+	  idx1 = (WlzGMVertexGetShell(matchV[1]))->idx;
+	  idx2 = (WlzGMVertexGetShell(matchV[2]))->idx;
+	  if((idx0 != idx1) && (idx1 != idx2) && (idx2 != idx0))
+	  {
+	    shellCnt = 3;
+	  }
+	  else if((idx0 == idx1) && (idx1 == idx2) && (idx2 == idx0))
+	  {
+	    shellCnt = 1;
+	  }
+	  else
+	  {
+	    shellCnt = 2;
+	  }
+	  switch(edgeCnt)
+	  {
+	    case 0:
+	      switch(shellCnt)
+	      {
+		case 1:
+		  /* All 3 matched verticies share the same shell but there
+		   * are no common edges between the 3 verticies. */
+		  errNum = WlzGMModelExtend3V0E1S3D(model, &nF, matchV);
+		  break;
+		case 2: /* 3V0E2S */
+		  /* Two of the 3 matched verticies share the same shell but
+		   * there is no common edge between any of the matched
+		   * verticies. */
+		  errNum = WlzGMModelJoin3V0E2S3D(model, &nF, matchV);
+		  break;
+		case 3: /* 3V0E3S */
+		  /* All 3 verticies are in different shells and there are
+		   * no common edges between any of the matched verticies. */
+		  errNum = WlzGMModelJoin3V0E3S3D(model, &nF, matchV);
+		  break;
+	      }
+	      break;
+	    case 1:
+	      idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
+		((cE[2] != NULL) << 2);
+	      idx0 = firstCtgBitTb[idx2];
+	      idx1 = (idx0 + 2) % 3;
+	      if(shellCnt == 1)
+	      {
+		/* Two of the 3 matched verticies are connected by a single
+		 * edge, all of the 3 are in a single shell. */
+		errNum = WlzGMModelExtend3V1E1S3D(model, &nF,
+		    cE[idx0], matchV[idx1]);
+	      }
+	      else
+	      {
+		/* Two of the 3 matched verticies are connected by a single
+		 * edge, the other vertex is in a different shell. */
+		errNum = WlzGMModelJoin3V1E2S3D(model, &nF,
+		    cE[idx0], matchV[idx1]);
+	      }
+	      break;
+	    case 2:
+	      /* All 3 verticies share the same shell, and two pairs of
+	       * verticies are connected by edges. */
+	      idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
+		((cE[2] != NULL) << 2);
+	      idx0 = firstCtgBitTb[idx2];
+	      idx1 = (idx0 + 1) % 3;
+	      errNum = WlzGMModelExtend3V2E1S3D(model, &nF,
+	      				        cE[idx0], cE[idx1]);
+	      break;
+	    case 3:
+	      /* All three verticies and all three edges are within the model,
+	       * need to check if the three verticies are in a common loop
+	       * and then if ther're not add a new loop, 2 loopT's, 6 edgeT's
+	       and 6 vertexT's. */
+	      errNum = WlzGMModelExtend3V3E1S3D(model, &nF, cE);
+	      break;
+	  }
       }
-    }
-    eT = nF->loopT->edgeT;
-    v0 = eT->vertexT->diskT->vertex;
-    v1 = eT->next->vertexT->diskT->vertex;
-    if(matchV[0] == v0)
-    {
-      revOrder = matchV[1] != v1;
-    }
-    else if(matchV[1] == v0)
-    {
-      revOrder = matchV[2] != v1;
-    }
-    else
-    {
-      revOrder = matchV[0] != v1;
-    }
-    if(revOrder)
-    {
-      nF->loopT = nF->loopT->opp;
+      /* Make sure that the order of the vertices are as given for the child
+       * loopT of the new face. */
+      if(nF)
+      {
+	for(idx0 = 0; idx0 < 3; ++idx0)
+	{
+	  if(matchV[idx0] == NULL)
+	  {
+	    matchV[idx0] = WlzGMModelMatchVertexG3D(model, *(pos + idx0));
+	  }
+	}
+	eT = nF->loopT->edgeT;
+	v0 = eT->vertexT->diskT->vertex;
+	v1 = eT->next->vertexT->diskT->vertex;
+	if(matchV[0] == v0)
+	{
+	  revOrder = matchV[1] != v1;
+	}
+	else if(matchV[1] == v0)
+	{
+	  revOrder = matchV[2] != v1;
+	}
+	else
+	{
+	  revOrder = matchV[0] != v1;
+	}
+	if(revOrder)
+	{
+	  nF->loopT = nF->loopT->opp;
+	}
+      }
     }
   }
   return(errNum);
@@ -9163,7 +9628,7 @@ static WlzGMShell *WlzGMLoopTFindShell(WlzGMLoopT *gLT)
 * \param	dV			The vertex to remove from the
 *                                       models hash table.
 */
-static void	WlzGMModelRemVertex(WlzGMModel *model, WlzGMVertex *dV)
+void		WlzGMModelRemVertex(WlzGMModel *model, WlzGMVertex *dV)
 {
   WlzDVertex3	nPos;
   unsigned int 	hVal;
@@ -9206,7 +9671,7 @@ static void	WlzGMModelRemVertex(WlzGMModel *model, WlzGMVertex *dV)
 * \param	nV			New vertex to insert into the
 *                                       models hash table.
 */
-static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
+void		WlzGMModelAddVertexToHT(WlzGMModel *model, WlzGMVertex *nV)
 {
   WlzDVertex3	nPos;
   unsigned int 	hVal;
