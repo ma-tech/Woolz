@@ -1330,7 +1330,7 @@ extern WlzErrorNum		WlzGaussNoise(
 extern WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject     *sObj,   
                                        		  WlzObject     *tObj,
 				       		  int            numberOfPixelsZ,
-					          char           TwoDImageFilesNameList[][],
+					      unsigned    char         **TwoDImageFilesNameList,
 					          int            numOf2DWlzFiles,
 				       		  int            downOrUp,
                                                   int            sectionLength_N,
@@ -1339,6 +1339,10 @@ extern WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject     *sObj,
 						  char          *surfacePointFileName,
 						  char          *surfaceInPointFileName,
 						  char          *surfaceOutPointFileName,
+						  int            startShell,
+						  int            endShell,
+						  int            startSection,
+						  int            endSection,
 		                       		  WlzErrorNum   *dstErr
 		                                );
 

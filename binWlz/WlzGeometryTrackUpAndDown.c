@@ -51,7 +51,6 @@ static void  outPutSectionsForTest(
 		  int          iloop,
 		  WlzErrorNum *errNum);
 
-char fileNameData[300][100];
 
 static void usage(char *proc_str);  
 
@@ -62,15 +61,11 @@ int main(int	argc,
 
   FILE	       *inFile = NULL;   /* used to read Woolz object */ 
   FILE	       *outFile = NULL;   /* used to read Woolz object */
-  int           i,j,k, m, l1, label[3], individual[4];
+  int           i,j,k, m, l1;
+  int           startShell = -10, endShell = -15, startSection = -10, endSection = -15;
   int           downOrUp = 0;
   int		option;
   int           numChar, numChar1, TotalN;
-  int           outputAutoMeshVTK        = 0,
-                outputAutoMeshWLZ        = 0,
-                outputTransformedMeshWLZ = 0,
-		outputCutPlaneAndCorrepSurfaceVTK        = 0,
-		WARP                     = 1;
   int           basisFnPolyOrder = 3;
   int           Inumber, numP_in_Z= 10;
   int           globalCycle;
@@ -78,9 +73,8 @@ int main(int	argc,
   int           centorOfMass = 1;
   int           numOf2DWlzFiles = 0, numOfVtkFiles = 0;
   int           initialn0, endNum0,initialn1, endNum1;
-  int           BibFileIndex[50];
   int           sectionLength_N       = 40;
-  int           subSubSectionLength_L;
+  int           subSubSectionLength_L = sectionLength_N /2;
   int           numberOfSampleP_k     =  2;
   int           iloop=1, test=0;
   double	zConst                   = 0.;
@@ -88,20 +82,12 @@ int main(int	argc,
   char          under ='_';
   char          ctemp;
   char         *inFileStr, *inFileStr3, *outFileStr;
-  char          inFileStrSec[100];
-  char          TwoDImageFilesNameList[700][120];
-  char          TwoDImagePureFilesNameList[700][50];
-  char          PureBibFilesNameList[700][50];
-  char          SampleBibFilesNameList[50][120];
-  char          SampleBibPureFilesName[50][50];
-  char          SampleBibFilesDir[100];
-  char          TwoDImageFilesDir[100];
+  unsigned char        **TwoDImageFilesNameList;
   char         *StandContourFileName, *ToBeTrackedContourFileName;
   char         *ContourFilesNameList;
   char         *surfacePointFileName, *surfaceInPointFileName, *surfaceOutPointFileName;
   char         *Wlz2DFileName;
   char         *cstr;
-  char          StringCh[100];
   const char   *errMsg;
   WlzDVertex3          *SurfacePatchPoints;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
@@ -112,7 +98,7 @@ int main(int	argc,
   WlzObjectType        wtp = WLZ_3D_DOMAINOBJ;
 
   /* read the argument list and check for an input file */
-  static char	optList[] = "S:s:w:t:N:n:o:O:i:l:L:j:J:h",
+  static char	optList[] = "S:s:w:t:N:n:o:O:i:l:L:j:J:a:A:b:B:c:h",
 
   opterr = 0;
  
@@ -170,6 +156,13 @@ int main(int	argc,
 	       exit(1);
 	     }
 	     break;
+       case 'c':
+	 if(sscanf(optarg, "%d", &subSubSectionLength_L) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
         case 'o':
 	     outFileStr = optarg;
 	     break;
@@ -182,14 +175,51 @@ int main(int	argc,
         case 'O':
 	     surfaceOutPointFileName = optarg;
 	     break;
+       case 'a':
+	 if(sscanf(optarg, "%d", &startShell) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'A':
+	 if(sscanf(optarg, "%d", &endShell) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'b':
+	 if(sscanf(optarg, "%d", &startSection) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'B':
+	 if(sscanf(optarg, "%d", &endSection) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+	     
         default:
              return(0);
       }
   }
 
   
-  subSubSectionLength_L = sectionLength_N/2 ;
   
+  // allocate memory for the file name list
+  alcErr = AlcUnchar2Calloc(&TwoDImageFilesNameList, 50, 120);
+  if(alcErr != ALC_ER_NONE)
+  {
+     printf("allocate memory for 2D array of file list");
+     exit(1);
+
+  }
+     
   /* Read the contour Wlz file name List */
   if((inFile = fopen(ContourFilesNameList, "r")) == NULL )
   {
@@ -199,8 +229,8 @@ int main(int	argc,
   i=0;
   while(!feof(inFile))
   {
-        fscanf(inFile, "%s", TwoDImageFilesNameList[i]);
-	printf("%s\n", TwoDImageFilesNameList[i]);
+        fscanf(inFile, "%s", *(TwoDImageFilesNameList + i ));
+	printf("%s\n", *(TwoDImageFilesNameList + i ) );
 	i++;
   }
   fclose(inFile); 
@@ -286,12 +316,17 @@ int main(int	argc,
 							surfacePointFileName,
 							surfaceInPointFileName,
 							surfaceOutPointFileName, 
+							startShell,
+							endShell,
+							startSection,
+							endSection,
 						       &errNum );
     }
 
    AlcFree(WObjS);
    AlcFree(WObj2D);
    AlcFree(WObjTrack);
+   Alc2Free( (void **)TwoDImageFilesNameList);
 
   return ( 0 );
 }
@@ -342,7 +377,13 @@ static void usage(char *proc_str)
 	  "\t                     default is 2                                   \n"
 	  "\t  -J        input length to be used to segment the line in unit of number of pixels\n"
 	  "\t                     default is 40                                   \n"
+	  "\t  -c        input length to be used to sample the data in unit of number of pixels\n"
+	  "\t                     default is 40                                   \n"
 	  "\t  -l        input number of lth loop for output \n"
+	  "\t  -a        input the start shell number (not index ) for tracking\n"
+	  "\t  -A        input the end   shell number (not index ) for tracking\n"
+	  "\t  -b        input the start section number for tracking\n"
+	  "\t  -B        input the end   section number for tracking\n"
 	  "\t                  \n"
 	        	  "", 
 	  proc_str);

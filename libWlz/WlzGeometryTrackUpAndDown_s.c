@@ -16,6 +16,32 @@
 
 #define	IN_RECORD_MAX   (1024)
 #define	NumberToTrack   (10)
+static double SixTimesOfVoulumeOfTetraHedron(WlzDVertex3 p0, 
+			WlzDVertex3 p1,
+			WlzDVertex3 p2,
+			WlzDVertex3 p3
+);
+
+static int IsDVertexZero(WlzDVertex3  normal);
+static int IsDVertexEqual(WlzDVertex3 p1, WlzDVertex3 p2);
+
+static void RecalculateInAndOutPointsByUsing3DNormal(
+				            double         distance,
+		                            WlzDVertex3   *SurfacePoints, 
+					    int            nOfVInTheSFile,
+					    WlzDVertex3   *InPoints,      
+					    int           *nOfVInTheInFile,
+					    WlzDVertex3   *OutPoints,     
+					    int           *nOfVInTheOutFile );
+
+static void pureThisGM(WlzGMModel *gMC, int LoopIdx, int numOfEnds, 
+                       int *EndsIdx, int *bifurIdx, 
+		       WlzErrorNum *dstErrgMC);
+
+static void outputVerticesInThisLoop(WlzGMModel *gMC, int LoopIdx, WlzErrorNum *dstErr);
+
+static void WlzGMModelPure( WlzGMModel *gMC, WlzErrorNum *dstErr);
+
 static void GetInOutAndFromSurfacePoints( 
 				   int          numberOfPixelsZ,
                                    WlzDVertex2  StandSampleP[NumberToTrack],
@@ -198,28 +224,38 @@ static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
                                    WlzErrorNum *dstErr );
 
 /*!
-* - Function:	WlzGeometryTrackUpAndDown_s.c
-* - Returns:	WlzDVertex3:  The nearest edge point
+* \ingroup	WlzFeatures:	WlzGeometryTrackUpAndDown_s.c
+* \return:	WlzDVertex3:  The nearest edge point
 *		
-* - Purpose:    track down a curve lines 
-* - Global refs:	-
-* - Parameters:	
-*       -#  *sObj:	                    Woolz contour object 
-*       -#  *tObj:	                    Woolz contour object 
-*       -#   numberOfPixelsZ:	            the input z-direction of pixel number
-*       -#   downOrUp:                      parameter to track down or up z-direction	
-*       -#  *surfacePointFileName:          FileNameStr to output the surface points
-*       -#  *surfaceInPointFileName:        FileNameStr to output the in  surface points 
+* \brief:    track down a curve lines 
+* \ref:	-
+* \param:	
+*      \param   *sObj:	                    Woolz contour object (input)
+*      \param   *tObj:	                    Woolz contour object (input)
+*      \param    numberOfPixelsZ:	            the input z-direction of pixel number (input)
+*      \param  **TwoDImageFilesNameList         2D image FIles name list. ( input )
+*      \param    downOrUp:                      parameter to track down or up z-direction
+*      \param    sectionLength_N                length used to cut a patch (unit in pixel) (input )
+*      \param    subSubSectionLength_L          length smalle than the above used to sample points
+*                                                  in the region
+*      \param    numberOfSampleP_k              number of points will be sampled in the above section
+*      \param   *surfacePointFileName:          FileNameStr to output the surface points
+*      \param   *surfaceInPointFileName:        FileNameStr to output the in  surface points 
 *                                                  and their distances to the surface
-*       -#  *surfaceOutPointFileName:       FileNameStr to output the out surface points
+*      \param   *surfaceOutPointFileName:       FileNameStr to output the out surface points
 *                                                  and their distances to the surface
-*	-#  *dstErr:	        Destination error pointer, may be NULL.
-* - Author:       J. Rao, R. Baldock and B. Hill
+*      \param    startShell                     the n-th Shell to begin with tracking
+*      \param    endShell                       the end  Shell from where stop tracking 
+*      \param    startSection                   the n-th Section to begin with tracking
+*      \param    endSection                     the section to stop tracking.
+*      \param   
+*      \param#  *dstErr:	        Destination error pointer, may be NULL.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,   
                                            WlzObject          *tObj,
 				           int                 numberOfPixelsZ,
-					   char                TwoDImageFilesNameList[50][120],
+					   unsigned  char    **TwoDImageFilesNameList,
 					   int                 numOf2DWlzFiles,
 				           int                 downOrUp,
                                            int                 sectionLength_N,
@@ -228,11 +264,15 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 					   char               *surfacePointFileName,
 					   char               *surfaceInPointFileName,
 					   char               *surfaceOutPointFileName,
+					   int                 startShell,
+					   int                 endShell,
+					   int                 startSection,
+					   int                 endSection,
 		                           WlzErrorNum        *dstErr
 		                     )
 {
   WlzErrorNum	      errNum = WLZ_ERR_NONE;
-  WlzGMModel         *gM, *gMS, *gMT;
+  WlzGMModel         *gM, *gMS, *gMT, *gMC;
   WlzGMModel         *gM2;
 
 
@@ -307,6 +347,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 
   exit(0);
   */
+  distance = 10.;
 
   /* initial the outpoint  */
   
@@ -333,7 +374,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
       //i = numOf2DWlzFiles/2;
       i = 0;
       // read the first one as a start point
-      if((testFile = fopen(TwoDImageFilesNameList[i], "r")) == NULL )
+      if((testFile = fopen( (const char *)  TwoDImageFilesNameList[i], "r")) == NULL )
       {
         printf("cannot open the standard contour Wlz file .\n");
         exit(1);
@@ -362,6 +403,19 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
       {
         // get the G Model for standard
         gM       = newSObj->domain.ctr->model;
+
+	// copy the model
+	//  gMC      = WlzGMModelCopy( gM, &errNum);
+
+      }
+
+      // pure the model
+      if( errNum == WLZ_ERR_NONE)
+      {
+      
+	// WlzGMModelPure(gMC, &errNum);
+	//  exit(0);
+
         // get the number of Shells in this model
         numOfShellsInStartGM  = NumberOfShellsAboutGM(gM);
         // get the Index for each Shell;
@@ -403,7 +457,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
         // begin the track process:
         for(i=0; i<numOf2DWlzFiles; i++)
         {
-                if((testFile = fopen(TwoDImageFilesNameList[i], "r")) == NULL )
+                if((testFile = fopen( (const char *) TwoDImageFilesNameList[i], "r")) == NULL )
                 {
          		printf("cannot open the standard contour Wlz file .\n");
          		exit(1);
@@ -450,8 +504,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
    if( errNum == WLZ_ERR_NONE)
    {
        printf("number of Shells = %d\n",  numOfShellsInStartGM );
-       //for(j=0; j<numOfShellsInStartGM; j++)
-       for(j=3; j<4; j++)
+       if(startShell <0)
+            startShell = 0;
+       if(endShell < 0)
+            endShell   = numOfShellsInStartGM;
+       for(j=startShell; j< endShell; j++)
         {
            // get number loops in this shell
            numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gM,  startShellIdx[j] );
@@ -461,6 +518,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
            // get the index for the loops
            startLoopIdx            =  WlzLoopIndexAboutGM(gM, startShellIdx[j], numOfLoopsInStartShell, &errNum);
 
+	   // output for test:
+	   test = 0;
+	   if(test)
+	      outputVerticesInThisLoop( gM, startShellIdx[j], &errNum );
+	   test = 0;	
 	   // always use the first loop (as shell has as most as two loops and this only happens where
 	   // the shell is a cycle !)
         
@@ -494,8 +556,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 
 
 	       // cycle through the sections
-	       //for(i_s =0; i_s <numOfSections; i_s++)
-	       for(i_s =0; i_s <3; i_s++)
+	       if( startSection < 0 )
+	            startSection = 0;
+	       if( endSection < 0 )
+	            endSection = numOfSections;
+	       for(i_s =startSection; i_s <endSection; i_s++)
 	       {
 	          printf("The  %d th section\n",  i_s );
 
@@ -516,7 +581,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 			suc = 1;
          		for(i=0; i<numOf2DWlzFiles; i++)
          		{      
-                		if((testFile = fopen(TwoDImageFilesNameList[i], "r")) == NULL )
+                		if((testFile = fopen( (const char *) TwoDImageFilesNameList[i], "r")) == NULL )
                 		{
          				printf("cannot open the standard contour Wlz file .\n");
          				exit(1);
@@ -567,7 +632,8 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 
 	      			if(!suc)
 	      			{
-	         			WlzFreeObj(newTObj);
+				        if(newTObj)
+	         			    WlzFreeObj(newTObj);
                  			break; // break this section track
 
 	      			}
@@ -591,8 +657,9 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 				        if(!suc)
 	      				{
 	        	 			//AlcFree(tTree);
-	         				WlzFreeObj(newTObj);
-                 				break; // break this section track
+						if(newTObj)
+	         				   WlzFreeObj(newTObj);
+                 				   break; // break this section track
 
 	      				}
 	      
@@ -607,8 +674,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 	       	    			}
 
 	   	    			// get the loop index we have just tracked
-           	    			distance = 10.;
-	            			// calculate the in and out surface points 
+           	    		         // calculate the in and out surface points 
 
 					/*
 					  bugs in this part:
@@ -622,11 +688,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 					*/	 
 
                                         GetInOutAndFromSurfacePoints( (int) zdvoxels, 
-					                              StandSampleP,
-								      distance,
-                                        	                      InPoints,   
+					                                StandSampleP,
+								            distance,
+                                        	                            InPoints,   
 								     &nOfVInTheInFile, 
-					 	                      OutPoints,  
+					 	                           OutPoints,  
 								     &nOfVInTheOutFile,
 								     &errNum);
 
@@ -635,7 +701,8 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
               			  // prepare for next section track:
 				  if(!suc)
 				  {
-	         				WlzFreeObj(newTObj);
+				                if(newTObj)
+	         				   WlzFreeObj(newTObj);
                  				break; // break this section track
 				  }
 				  if(newTObj)
@@ -649,6 +716,18 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
 
                 if(suc)
 	        {
+                     // recalculate in and out points by using 3D 
+		     // (as they are needed in Bill's code which seems to
+		     //  use the in and outside points to get normal for
+		     //  the interpolate surface!!!)
+
+		     //Calculate the IN and Out points by using 3D normal
+		     RecalculateInAndOutPointsByUsing3DNormal(  distance,
+		     						SurfacePoints, nOfVInTheSFile,
+		     						InPoints,      &nOfVInTheInFile, 
+		     						OutPoints,     &nOfVInTheOutFile
+									);
+		
         	     //output points
 
 		     outputSurfaceInAndOutPoints(surfacefp, infp,  outfp, 
@@ -914,8 +993,8 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject          *sObj,
     */
    }
 
-   
-   fclose(testFile);
+   if(testFile)
+      fclose(testFile);
    fclose(infp);
    fclose(outfp);
    fclose(surfacefp);
@@ -2507,7 +2586,7 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
     WlzVertexP         tLoopVData;
 
     WlzErrorNum errNum = WLZ_ERR_NONE;
-    WlzDVertex2         segV[3],  fPoint, *vNorm=NULL, *inPoints=NULL, *outPoints=NULL;
+    WlzDVertex2         segV[3],  fPoint, bPoint, *vNorm=NULL, *inPoints=NULL, *outPoints=NULL;
     inN  = *nOfVInTheInFile;
     outN = *nOfVInTheOutFile;
     *suc  = 1;
@@ -2590,17 +2669,29 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
 		  i = k;
 	        do
 	        {
+		  /*
 	          segV[0].vtX = (tLoopVData.d2  + i)->vtX; 
 	          segV[0].vtY = (tLoopVData.d2  + i)->vtY;
 	          segV[1].vtX = (tLoopVData.d2  + i+1)->vtX; 
 	          segV[1].vtY = (tLoopVData.d2  + i+1)->vtY;	      
 	          segV[2].vtX = (tLoopVData.d2  + i+2)->vtX; 
 	          segV[2].vtY = (tLoopVData.d2  + i+2)->vtY;
+		  */
+	          segV[0].vtX = StandSampleP[0].vtX; 
+	          segV[0].vtY = StandSampleP[0].vtY;
+	          segV[1].vtX = StandSampleP[5].vtX; 
+	          segV[1].vtY = StandSampleP[5].vtY;	      
+	          segV[2].vtX = StandSampleP[NumberToTrack-1].vtX; 
+	          segV[2].vtY = StandSampleP[NumberToTrack-1].vtY;
+
+		  
 		  // printf("%lg   %lg\n", segV[1].vtX, segV[1].vtY );
 	         *(vNorm + idx) = WlzVerticesNormTriple2(segV[0], segV[1], segV[2]);
 		  // get the in and out points using the normal and points
 		  fPoint.vtX =  segV[1].vtX + distance * (vNorm+idx)->vtX;
 		  fPoint.vtY =  segV[1].vtY + distance * (vNorm+idx)->vtY;
+		  bPoint.vtX =  segV[1].vtX - distance * (vNorm+idx)->vtX;
+		  bPoint.vtY =  segV[1].vtY - distance * (vNorm+idx)->vtY;
 		  // check its out or in
 		  di = WlzGeomTriangleSnArea2(segV[0], segV[1], fPoint); 
 		  if( ( ( di >  0. ) && ( loopDirection == 1) ) ||
@@ -2608,11 +2699,11 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
 		  )
 		  {
 		     // fPoint is on the left of line segV[0]->segV[1]
-		     (inPoints +idx)->vtX =  fPoint.vtX; 
-		     (inPoints +idx)->vtY =  fPoint.vtY;
+		     (inPoints +idx)->vtX  = fPoint.vtX; 
+		     (inPoints +idx)->vtY  = fPoint.vtY;
 		     
-		     (outPoints +idx)->vtX =   segV[1].vtX - distance * (vNorm+idx)->vtX;
-		     (outPoints +idx)->vtY =   segV[1].vtY - distance * (vNorm+idx)->vtY;
+		     (outPoints +idx)->vtX = bPoint.vtX;
+		     (outPoints +idx)->vtY = bPoint.vtY;
 		      i += 4;
 		      idx++;	     
   
@@ -2624,8 +2715,8 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
 		     (outPoints +idx)->vtX =  fPoint.vtX; 
 		     (outPoints +idx)->vtY =  fPoint.vtY;
 		     
-		     (inPoints +idx)->vtX =   segV[1].vtX - distance * (vNorm+idx)->vtX;
-		     (inPoints +idx)->vtY =   segV[1].vtY - distance * (vNorm+idx)->vtY;
+		     (inPoints +idx)->vtX  =  bPoint.vtX;
+		     (inPoints +idx)->vtY  =  bPoint.vtY;
                      i += 4;
 		     idx++;	
 		  }
@@ -2864,6 +2955,7 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 	int                 Continue;
         double              datD[3];
         AlcKDTNode         *node;
+	AlcErrno            errNo = ALC_ER_NONE;
         int                 LoopIndex[NumberToTrack];
         int                 ShellIndex[NumberToTrack];
         int                 indexStr[NumberToTrack]; 
@@ -2880,9 +2972,10 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 	{
           datD[0] = StandSampleP[i].vtX;
           datD[1] = StandSampleP[i].vtY;
+	  datD[2] = 0.;
           // printf("Point %lg %lg\n",datD[0], datD[1]);
-          node    = AlcKDTGetNN(tTree, datD, minDis, NULL, NULL);
-     	  if(node)
+          node    = AlcKDTGetNN(tTree, datD, minDis, NULL, &errNo);
+     	  if(  node && (errNum == ALC_ER_NONE) )
   	  {
              TrackedSampleP[i].vtX = *(node->key.kD);
              TrackedSampleP[i].vtY = *(node->key.kD + 1);
@@ -3165,7 +3258,9 @@ static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
        if(nV < 62)
        {
            printf("This section is too short, please change a section and try again!\n");
-	   exit(0);
+	   AlcFree(sLoopVData.d2);
+	  *suc = 0;
+	   return; 
        }
 
        // get the position of the index
@@ -3510,6 +3605,22 @@ static void GetSamplePointsFromAllVertices(   WlzVertexP   sLoopVData,
 
 }
 
+/*!
+* \return       none.	
+* \ingroup	WlzFeatures
+* \brief	out put points on surface, in and out of the surface
+*		from a 3D GM.
+* \param       *surfacefp		Given File pointer points to the file to output points on surface.
+* \param       *infp		        Given File pointer points to the file to output points in surface.
+* \param       *outfp		        Given File pointer points to the file to output points out surface.
+* \param       *SurfacePoints           Given pointer points to the surface points.
+* \param        nOfVInTheSFile          Given the number of points on the surface. 
+* \param       *InPoints                Given pointer points to the surface points.
+* \param        nOfVInTheSFile          Given the number of points on the surface. 
+* \param       *OutPoints               Given pointer points to the points in surface.
+* \param        nOfVInTheSFile          Given the number of points outside  the surface. 
+* \todo         
+*/
 static void	outputSurfaceInAndOutPoints(FILE          *surfacefp, 
 					    FILE          *infp,  
 					    FILE          *outfp, 
@@ -3553,6 +3664,20 @@ static void	outputSurfaceInAndOutPoints(FILE          *surfacefp,
 
 
 }
+
+/*!
+* \return	the pure the Geometry Model to a simple case by cutting small braches.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices
+*		from a 3D GM.
+* \param	gMC			Given model.
+* \param	LoopIdx                 Given Loop index.
+* \param       *EndsIdx                 Given the indices of ends points in this Loop
+* \param       *bifurIdx                Given the indices of bifurcation points in this Loop
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+* \todo        old vertion will be delet in the future 
+*/
 static void GetInOutAndFromSurfacePoints( 
 				   int          numberOfPixelsZ,
                                    WlzDVertex2  StandSampleP[NumberToTrack],
@@ -3678,5 +3803,482 @@ static void GetInOutAndFromSurfacePoints(
       }
       *nOfVInTheOutFile = outN;
       *nOfVInTheInFile  = inN;
+
+}
+
+/*!
+* \return	the pure the Geometry Model to a simple case by cutting small braches.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices
+*		from a 3D GM.
+* \param	gMC			Given model.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+* \todo         haven't finished
+*/
+static void WlzGMModelPure( WlzGMModel *gMC, WlzErrorNum *dstErr)
+{
+   int             numOfShellsInStartGM;
+   int           numOfLoopsInStartShell;
+   int                   *startShellIdx;
+   int                    *startLoopIdx;
+   int                    *EndsIdx;
+   int                    *bifurIdx;
+   int                              i,j;
+   int                        numOfEnds;
+   WlzErrorNum                   errNum = WLZ_ERR_NONE;
+   
+        // get the number of Shells in this model
+        numOfShellsInStartGM  = NumberOfShellsAboutGM(gMC);
+        // get the Index for each Shell;
+        startShellIdx = WlzShellsIndexAboutGM(gMC, numOfShellsInStartGM, &errNum);
+        
+	if(errNum == WLZ_ERR_NONE)
+	{
+          for(i=0; i<numOfShellsInStartGM; i++)
+	  {
+	     // get number loops in this shell
+             numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gMC,  startShellIdx[i] );
+	     printf("The  %d th Shell\n",  i );
+
+             // get the index for the loops
+             startLoopIdx            =  WlzLoopIndexAboutGM(gMC, startShellIdx[i], numOfLoopsInStartShell, &errNum);
+	     
+	     if(errNum == WLZ_ERR_NONE )
+	     {
+                for(j=0; j<numOfLoopsInStartShell; j++)
+		{
+		   //outputVerticesInThisLoop(gMC, startLoopIdx[j], &errNum);
+		   if( errNum != WLZ_ERR_NONE )
+		          break;
+	           // check is it a cycle
+		   if(!IsACycle(gMC, startLoopIdx[j], &errNum))
+		   {
+                        if(errNum == WLZ_ERR_NONE )
+			{
+			   numOfEnds = HowManyEndsInTheNonCycleLine( gMC, 
+                                                            startLoopIdx[j], 
+                                                            &errNum );
+			  if( ( numOfEnds > 2 ) && (errNum == WLZ_ERR_NONE) ) 
+			  {
+                             //pure this cycle
+                               EndsIdx =   GetTheEndsPointsIndexInTheNonCycleLine( gMC, 
+                                           startLoopIdx[j],
+					   numOfEnds,
+                                           &errNum );
+					   
+			       bifurIdx = GetThebifurcatePointsIndexInTheNonCycleLine(   gMC, 
+                                           startLoopIdx[j],
+					   numOfEnds,
+                                           &errNum );
+			       pureThisGM(gMC, startLoopIdx[j], numOfEnds, EndsIdx, bifurIdx, &errNum);	
+			       
+                               AlcFree(EndsIdx);
+			       AlcFree(bifurIdx);
+
+			  }   
+			     
+			}
+
+		   }
+
+		}
+	     }
+	     if(startLoopIdx)
+	     AlcFree(startLoopIdx);  
+
+	  }
+
+	}
+
+	AlcFree(startShellIdx);
+	
+	if(errNum != WLZ_ERR_NONE)
+	        *dstErr = errNum;
+}
+
+/*!
+* \return	none.
+* \ingroup	WlzFeatures
+* \brief	output vertices of a specific  loop.
+*		from a 3D GM.
+* \param	gMC			Given model.
+* \param	LoopIdx                 Given Loop index.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+* \todo         
+*/
+static void outputVerticesInThisLoop(WlzGMModel *gMC, int LoopIdx, WlzErrorNum *dstErr)
+{
+   int numberOfEnds, numBAgain;
+   WlzErrorNum errNum = WLZ_ERR_NONE;
+   int nVertices;
+   AlcVector          *vec;
+   WlzGMLoopT         *cLT;
+   WlzGMShell         *cS;
+   WlzGMEdgeT         *cET, *fET;
+  
+   numberOfEnds = 0;
+   numBAgain    = 0;
+   vec    =  gMC->res.loopT.vec;
+
+   /* get the loop corresponding to the LoopIdx of the model. */
+    cLT = (WlzGMLoopT *) AlcVectorItemGet(vec, LoopIdx);
+
+   /* For each edge topology element of the model. */
+    cET = fET = cLT->edgeT;
+
+   /* For each loop topology element of the model. */
+    do
+    {
+	cET = cET->next;
+	printf("%6.2f   %6.2f\n",cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtX,
+	                         cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtY);
+    } while (cET != fET);
+
+
+}
+
+/*!
+* \return	the pure the Geometry Model to a simple case by cutting small braches.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices
+*		from a 3D GM.
+* \param	gMC			Given model.
+* \param	LoopIdx                 Given Loop index.
+* \param       *EndsIdx                 Given the indices of ends points in this Loop
+* \param       *bifurIdx                Given the indices of bifurcation points in this Loop
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+* \todo         haven't finished
+*/
+static void pureThisGM(WlzGMModel *gMC, int LoopIdx, int numOfEnds, int *EndsIdx, int *bifurIdx, WlzErrorNum *dstErr)
+{
+   int      numberOfEnds, numBAgain;
+   WlzErrorNum       errNum = WLZ_ERR_NONE;
+   int                 nVertices;
+   int      i, j, d1, d2, d3, it;
+   int      dx, dy, dz;
+   int      *length;
+   AlcVector          *vec;
+   WlzGMLoopT         *cLT;
+   WlzGMShell         *cS;
+   WlzGMEdgeT         *cET, *fET, *aET, *bET, *ffET;
+
+    vec          =  gMC->res.loopT.vec;
+    
+    /* get the loop corresponding to the LoopIdx of the model. */
+    cLT = (WlzGMLoopT *) AlcVectorItemGet(vec, LoopIdx);
+
+    /* For each edge topology element of the model. */
+    cET = fET = cLT->edgeT;
+   /*
+   // delete bifurcation one by one but from the shortest to the longest
+   for(i=0; i<numOfEnds; i++)
+   {
+      do
+      {
+  	  cET = cET->next;
+	  if(    cET->vertexT->diskT->vertex->idx  ==   *(bifurIdx+i)  )
+	       break;
+      } while (cET != fET);
+      // check its length to the nearst bifurcation points
+
+      aET = ffET = cET->next;
+      it = 0;
+      do
+      {
+            it++;
+            aET = aET->next;
+	    for(j=0; j<numOfEnds-1; j++)
+	    {
+                  if(    aET->vertexT->diskT->vertex->idx  ==   *(bifurIdx+j)  )
+		  {
+		          break;
+		  }  
+	    }
+
+      } while ( aET != ffET );
+
+   }
+   
+
+
+   */
+   
+   for(i=0; i<numOfEnds-2; i++)
+   {
+
+      do
+      {
+  	  cET = cET->next;
+	  if(    cET->vertexT->diskT->vertex->idx  ==   *(bifurIdx+i)  )
+	       break;
+      } while (cET != fET);
+      // find the shortest braches from the bifurcation points
+      it = 0;
+      d1 = 5;
+      aET = cET->opp->next;
+      bET = ffET = cET;
+      do
+      {
+          // walking along three directions
+  	  cET = cET->next;
+	  dx  = cET->vertexT->diskT->vertex->idx;
+	  for(j=0; j<numOfEnds; j++)
+	  {
+	     if(  dx  ==   *(EndsIdx+j)  )
+	     {
+	          d1 = 0; 
+	          break;
+	     }	  
+	  }
+	  
+
+	  if(d1 < 5)
+	  {
+	       it++;
+	       break;
+	  }     
+  	  aET = aET->next;
+	  dy = aET->vertexT->diskT->vertex->idx;
+	  for(j=0; j<numOfEnds; j++)
+	  {
+	     if(  dy  ==   *(EndsIdx+j)  )
+	     {
+	          d1 = 1;
+	          break;
+	     }	  
+	  }
+
+	  
+	  if(d1 < 5)
+	  {
+	       it++;
+	       break;
+	  }     
+  
+  	  bET = bET->prev;
+	  dz = bET->vertexT->diskT->vertex->idx;
+	  for(j=0; j<numOfEnds; j++)
+	  {
+	     if(   dz  ==   *(EndsIdx+j)  )
+	     {
+	          d1 = 2;
+	          break;
+	     }	  
+	  }
+
+	  if(d1 < 5)
+	  {    
+	       it++;
+	       break;
+	  }     
+		  
+	  it++;
+      } while (bET != ffET);
+     
+
+      for(j=it; j>1; j--)
+      {
+            cET--;
+	    aET--;
+	    bET++;
+      }
+      if( d1== 0 )
+      {
+             errNum = WlzGMModelDeleteV( gMC, cET->vertexT->diskT->vertex);
+	     if(it > 1)
+	         errNum = WlzGMModelDeleteS( gMC, cET->parent->parent);
+
+      }
+      else if( d1== 1 )
+      {
+             errNum = WlzGMModelDeleteV( gMC, aET->vertexT->diskT->vertex);
+	     if(it > 1)
+	       errNum = WlzGMModelDeleteS( gMC, aET->parent->parent);
+      }
+      else if( d1== 2 )
+      {
+             errNum = WlzGMModelDeleteV( gMC, bET->vertexT->diskT->vertex);
+	     if(it > 1)
+	        errNum = WlzGMModelDeleteS( gMC, bET->parent->parent);
+      }
+
+
+
+   }
+  
+   if(errNum != WLZ_ERR_NONE)
+        *dstErr = errNum;
+
+
+
+}
+
+/*!
+* \return       none.	
+* \ingroup	WlzFeatures
+* \brief	Calculate In and Out points by using 3D normal:
+*		from a 3D GM.
+* \param        distance                Given distance of the in or out points to the surface.
+* \param       *SurfacePoints           Given pointer points to the surface points.
+* \param        nOfVInTheSFile          Given the number of points on the surface. 
+* \param       *InPoints                Given pointer points to the surface points.
+* \param        nOfVInTheSFile          Given the number of points on the surface. 
+* \param       *OutPoints               Given pointer points to the points in surface.
+* \param        nOfVInTheSFile          Given the number of points outside  the surface. 
+* \todo         
+*/
+static void RecalculateInAndOutPointsByUsing3DNormal(
+				            double         distance,
+		                            WlzDVertex3   *SurfacePoints, 
+					    int            nOfVInTheSFile,
+					    WlzDVertex3   *InPoints,      
+					    int           *nOfVInTheInFile,
+					    WlzDVertex3   *OutPoints,     
+					    int           *nOfVInTheOutFile )
+{
+   int i, j, k, l, count;
+   WlzDVertex3 p[4], normal, inOrOut[2];
+   double volume;
+	k = NumberToTrack/2;
+	l = *nOfVInTheInFile - 3;
+
+     // recalculate the in points and out points
+     for(i=0; i<l; i++)
+     {
+        j = 0;
+        // take three points from the surface:
+	for(j=0; j<k; j++)
+	{
+	   WlzValueCopyDVertexToDVertex3(p,  (SurfacePoints + j+1), 1);
+	   WlzValueCopyDVertexToDVertex3(&p[1],  (SurfacePoints + j + k - 1), 1);
+	   if( !IsDVertexEqual(p[0], p[1]) )
+	          break;
+        }
+	
+	WlzValueCopyDVertexToDVertex3(&p[2],  (SurfacePoints + (i+2) * NumberToTrack +j+ 5), 1);
+        // calculate the normal			
+	normal = WlzGeomTriangleNormal(p[0], p[1], p[2]);
+	if( !IsDVertexZero(normal) )
+	{
+	     // detremine the in and out points:
+	     WlzValueCopyDVertexToDVertex3( &p[3], ( InPoints + j), 1 ); 
+             volume = SixTimesOfVoulumeOfTetraHedron( p[0], p[1], p[2], p[3]); 
+             if( volume != 0.)
+	     {
+	       inOrOut[0].vtX = p[2].vtX + distance * normal.vtX;
+	       inOrOut[0].vtY = p[2].vtY + distance * normal.vtY;
+	       inOrOut[0].vtZ = p[2].vtZ + distance * normal.vtZ;
+	       
+	       inOrOut[1].vtX = p[2].vtX - distance * normal.vtX;
+	       inOrOut[1].vtY = p[2].vtY - distance * normal.vtY;
+	       inOrOut[1].vtZ = p[2].vtZ - distance * normal.vtZ;
+		
+		if(volume > 0)
+		{
+                       (InPoints + count)->vtX  = inOrOut[0].vtX;
+                       (InPoints + count)->vtY  = inOrOut[0].vtY;
+                       (InPoints + count)->vtZ  = inOrOut[0].vtZ;
+
+                       (OutPoints + count)->vtX = inOrOut[1].vtX;
+                       (OutPoints + count)->vtY = inOrOut[1].vtY;
+                       (OutPoints + count)->vtZ = inOrOut[1].vtZ;
+		}
+		else
+		{
+                       (InPoints + count)->vtX  = inOrOut[1].vtX;
+                       (InPoints + count)->vtY  = inOrOut[1].vtY;
+                       (InPoints + count)->vtZ  = inOrOut[1].vtZ;
+
+                       (OutPoints + count)->vtX = inOrOut[0].vtX;
+                       (OutPoints + count)->vtY = inOrOut[0].vtY;
+                       (OutPoints + count)->vtZ = inOrOut[0].vtZ;
+
+		}
+	        // replace the normal with new one!
+                count++;
+	     }	
+	}
+        
+
+
+
+
+     }
+
+     *nOfVInTheInFile   = count;
+     *nOfVInTheOutFile  = count;
+
+
+
+}
+
+static int IsDVertexEqual(WlzDVertex3 p1, WlzDVertex3 p2)
+{
+   int equal;
+   equal = 0;
+   if( p1.vtX == p2.vtX )
+   {
+      if( (p1.vtY == p2.vtY) && (p1.vtZ == p2.vtZ) )
+      {
+         equal = 1;
+      }
+   }
+   return equal;
+}
+
+
+static int IsDVertexZero(WlzDVertex3  normal)
+{
+   int isZero;
+   isZero = 0;
+   if( normal.vtX == 0. )
+   {
+      if( (normal.vtY == 0. ) && (normal.vtZ == 0.) )
+      {
+        isZero  = 1;
+      }
+   }
+   return isZero;
+
+
+}
+
+
+static double SixTimesOfVoulumeOfTetraHedron(WlzDVertex3 p0, 
+			WlzDVertex3 p1,
+			WlzDVertex3 p2,
+			WlzDVertex3 p3
+)
+{
+   double vol;
+   double ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz;
+
+   ax = p0.vtX;
+   ay = p0.vtY;
+   az = p0.vtZ;
+   
+   bx = p1.vtX;
+   by = p1.vtY;
+   bz = p1.vtZ;
+   
+   cx = p2.vtX;
+   cy = p2.vtY;
+   cz = p2.vtZ;
+   
+   dx = p3.vtX;
+   dy = p3.vtY;
+   dz = p3.vtZ;
+
+   vol = - az * by * cx+ay * bz * cx+az * bx * cy - ax * bz * cy
+         - ay * bx * cz+ax * by * cz+az * by * dx - ay * bz * dx
+	 - az * cy * dx+bz * cy * dx+ay * cz * dx - by * cz * dx
+	 - az * bx * dy+ax * bz * dy+az * cx * dy - bz * cx * dy
+	 - ax * cz * dy+bx * cz * dy+ay * bx * dz - ax * by * dz;
+	 - ay * cx * dz+by * cx * dz+ax * cy * dz - bx * cy * dz;
+		 
+   return vol;
 
 }
