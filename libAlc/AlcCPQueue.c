@@ -849,7 +849,7 @@ int		main(int argc, char *argv[])
   idP = 0;
   for(idI = 0; (errNum == ALC_ER_NONE) && (idI < maxItems); ++idI)
   {
-    errNum = AlcCPQEntryInsert(q, *(priority + idP), NULL, NULL);
+    errNum = AlcCPQEntryInsert(q, *(priority + idP), NULL);
 #ifdef ALC_CPQ_DEBUG
     AlcCPQDebugOut(q);
 #endif /* ALC_CPQ_DEBUG */
