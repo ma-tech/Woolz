@@ -113,7 +113,7 @@ void checkTrans(
 }
 
 WlzObject *SecListToTransforms(
-  HGUDlpList	*secList,
+  RecSectionList	*secList,
   int		relFlg,
   WlzErrorNum	*dstErr)
 {
@@ -124,22 +124,30 @@ WlzObject *SecListToTransforms(
   WlzValues	values;
   RecSection	*sec;
   HGUDlpListItem	*listItem;
+  WlzAffineTransform	*recTrans, *tmpTrans;
 
   /* sort the section list and find the section range */
-  RecSecListSort(secList, REC_SECMSK_INDEX);
+  RecSecListSort(secList->list, REC_SECMSK_INDEX);
 
   /* calculate the cumulative transforms */
-  listItem = HGUDlpListTail(secList);
+  listItem = HGUDlpListTail(secList->list);
   if( relFlg ){
-    RecSecCumTransfSet(secList, listItem);
+    RecSecCumTransfSet(secList->list, listItem);
   }
 
+  /* define the reconstruct transform */
+  recTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+					0.0, 0.0, 0.0,
+					secList->reconstruction.scale.vtX,
+					0.0, 0.0, 0.0, 0.0,
+					0.0, 0, NULL);
+
   /* create the transforms object */
-  listItem = HGUDlpListHead(secList);
-  sec = (RecSection *) HGUDlpListEntryGet(secList, listItem);
+  listItem = HGUDlpListHead(secList->list);
+  sec = (RecSection *) HGUDlpListEntryGet(secList->list, listItem);
   pMin = sec->index;
-  listItem = HGUDlpListTail(secList);
-  sec = (RecSection *) HGUDlpListEntryGet(secList, listItem);
+  listItem = HGUDlpListTail(secList->list);
+  sec = (RecSection *) HGUDlpListEntryGet(secList->list, listItem);
   pMax = sec->index;
   if( errNum == WLZ_ERR_NONE ){
     if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
@@ -152,9 +160,9 @@ WlzObject *SecListToTransforms(
   }
 
   /* now put in the transforms */
-  listItem = HGUDlpListHead(secList);
+  listItem = HGUDlpListHead(secList->list);
   while( listItem ){
-    sec = (RecSection *) HGUDlpListEntryGet(secList, listItem);
+    sec = (RecSection *) HGUDlpListEntryGet(secList->list, listItem);
     p = sec->index;
     i = p - rtnObj->domain.p->plane1;
     if( relFlg ){
@@ -174,8 +182,17 @@ WlzObject *SecListToTransforms(
       rtnObj->domain.p->domains[i].t =
 	WlzAssignAffineTransform(sec->transform, NULL);
     }
-    listItem = HGUDlpListNext(secList, listItem);
+
+    /* apply the reconstruct transform */
+    tmpTrans = WlzAffineTransformProduct(rtnObj->domain.p->domains[i].t,
+					 recTrans, NULL);
+    WlzFreeAffineTransform(rtnObj->domain.p->domains[i].t);
+    rtnObj->domain.p->domains[i].t = WlzAssignAffineTransform(tmpTrans, NULL);
+
+    listItem = HGUDlpListNext(secList->list, listItem);
   }
+
+  WlzFreeAffineTransform(recTrans);
 
   if( dstErr ){
     *dstErr = errNum;
@@ -194,7 +211,8 @@ int main(int	argc,
   char 		optList[] = "f:F:hV";
   int		option;
   int		verboseFlg=0;
-  HGUDlpList	*secList1, *secList2;
+  RecSectionList	recSecList1, recSecList2;
+  RecSectionList	*secList1=&recSecList1, *secList2=&recSecList2;
   HGUDlpListItem	*listItem1, *listItem2;
   RecSection	*sec1, *sec2;
   char		*errMsg = NULL;
@@ -203,7 +221,7 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzObject	*transformsObj1, *transformsObj2;
   int		p, i, ip;
-  WlzAffineTransform	*newTrans, *tmpTrans;
+  WlzAffineTransform	*newTrans, *tmpTrans, *reconTrans;
   int		pPrev, pPost, iPrev, iPost;
   double	tx, txPrev, txPost;
   double	ty, tyPrev, tyPost;
@@ -276,7 +294,6 @@ int main(int	argc,
 
   /* read the bibfiles */
   if( inFile1 != NULL ){
-    secList1 = HGUDlpListCreate(NULL);
     errFlg = RecFileSecListRead(secList1, &numSec1, inFile1, &errMsg);
     if( errFlg == REC_ERR_NONE ){
       transformsObj1 = SecListToTransforms(secList1, 1, &errNum);
@@ -294,7 +311,6 @@ int main(int	argc,
   }
 
   if( inFile2 != NULL ){
-    secList2 = HGUDlpListCreate(NULL);
     errFlg = RecFileSecListRead(secList2, &numSec2, inFile2, &errMsg);
     if( errFlg == REC_ERR_NONE ){
       transformsObj2 = SecListToTransforms(secList2, 1, &errNum);
@@ -312,9 +328,9 @@ int main(int	argc,
   }
 
   /* establish the plane indices of the fixed planes */
-  listItem1 = HGUDlpListHead(secList1);
+  listItem1 = HGUDlpListHead(secList1->list);
   while( listItem1 ){
-    sec1 = (RecSection *) HGUDlpListEntryGet(secList1, listItem1);
+    sec1 = (RecSection *) HGUDlpListEntryGet(secList1->list, listItem1);
     if( strncmp(sec1->imageFile, "empty", 5) == 0 ){
       i = sec1->index - transformsObj1->domain.p->plane1;
       if( transformsObj1->domain.p->domains[i].t ){
@@ -322,7 +338,7 @@ int main(int	argc,
       }
       transformsObj1->domain.p->domains[i].t = NULL;
     }
-    listItem1 = HGUDlpListNext(secList1, listItem1);
+    listItem1 = HGUDlpListNext(secList1->list, listItem1);
   }
 
   /* set the corrective transform if matching transforms are in the
@@ -438,10 +454,36 @@ int main(int	argc,
     }
   }
 
+  /*  take out the reconstruct transform */
+  if( secList2 ){
+    /* take out the reconstruct transform first */
+    reconTrans = WlzAffineTransformFromPrim
+      (WLZ_TRANSFORM_2D_AFFINE, 0.0, 0.0, 0.0,
+       1.0 / secList2->reconstruction.scale.vtX,
+       0.0, 0.0, 0.0, 0.0, 0.0, 0, NULL);
+    listItem2 = HGUDlpListHead(secList2->list);
+    while( listItem2 ){
+      sec2 = (RecSection *) HGUDlpListEntryGet(secList2->list, listItem2);
+      if( sec2 ){
+	p = sec2->index;
+	i = p - transformsObj2->domain.p->plane1;
+	if( transformsObj2->domain.p->domains[i].t ){
+	  tmpTrans = WlzAffineTransformProduct
+	    (transformsObj2->domain.p->domains[i].t, reconTrans, NULL);
+	  WlzFreeAffineTransform(transformsObj2->domain.p->domains[i].t);
+	  transformsObj2->domain.p->domains[i].t =
+	    WlzAssignAffineTransform(tmpTrans, NULL);
+	}
+      }
+      listItem2 = HGUDlpListNext(secList2->list, listItem2);
+    }
+
+  }
+
   /* convert to relative */
-  listItem2 = HGUDlpListTail(secList2);
-  while( listItem2 != HGUDlpListHead(secList2) ){
-    sec2 = (RecSection *) HGUDlpListEntryGet(secList2, listItem2);
+  listItem2 = HGUDlpListTail(secList2->list);
+  while( listItem2 != HGUDlpListHead(secList2->list) ){
+    sec2 = (RecSection *) HGUDlpListEntryGet(secList2->list, listItem2);
     if( sec2 ){
       p = sec2->index;
       i = p - transformsObj2->domain.p->plane1;
@@ -455,15 +497,15 @@ int main(int	argc,
       }
       else {
 	/* walk backwards to previous non-empty section */
-	listItem1 = HGUDlpListPrev(secList2, listItem2);
-	while( listItem1 != HGUDlpListHead(secList2) ){
-	  sec1 = (RecSection *) HGUDlpListEntryGet(secList2, listItem1);
+	listItem1 = HGUDlpListPrev(secList2->list, listItem2);
+	while( listItem1 != HGUDlpListHead(secList2->list) ){
+	  sec1 = (RecSection *) HGUDlpListEntryGet(secList2->list, listItem1);
 	  if( strncmp(sec1->imageFile, "empty", 5) ){
 	    break;
 	  }
-	  listItem1 = HGUDlpListPrev(secList2, listItem1);
+	  listItem1 = HGUDlpListPrev(secList2->list, listItem1);
 	}
-	sec1 = (RecSection *) HGUDlpListEntryGet(secList2, listItem1);
+	sec1 = (RecSection *) HGUDlpListEntryGet(secList2->list, listItem1);
 	ip = sec1->index - transformsObj2->domain.p->plane1;
 	tmpTrans =
 	  WlzAffineTransformInverse(transformsObj2->domain.p->domains[ip].t,
@@ -477,18 +519,18 @@ int main(int	argc,
 	transformsObj2->domain.p->domains[i].t = newTrans;
       }
     }
-    listItem2 = HGUDlpListPrev(secList2, listItem2);
+    listItem2 = HGUDlpListPrev(secList2->list, listItem2);
   }
   
   /* put back the transforms and write to stdout */
-  listItem2 = HGUDlpListHead(secList2);
+  listItem2 = HGUDlpListHead(secList2->list);
   while( listItem2 ){
-    sec2 = (RecSection *) HGUDlpListEntryGet(secList2, listItem2);
+    sec2 = (RecSection *) HGUDlpListEntryGet(secList2->list, listItem2);
     p = sec2->index;
     i = p - transformsObj2->domain.p->plane1;
     sec2->transform = 
       transformsObj2->domain.p->domains[i].t;
-    listItem2 = HGUDlpListNext(secList2, listItem2);
+    listItem2 = HGUDlpListNext(secList2->list, listItem2);
   }
   RecFileSecListWrite(stdout, secList2, numSec2, &errMsg);
 

@@ -38,22 +38,31 @@ extern char     *optarg;
 #endif /* __STDC__ ] */
 
 static WlzIVertex2	defMaxShift;
+static double		matchPercent=10.0;
 
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [-v] [-t#[,#]] [-g] [-G] [<input file>]\n"
+	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-g] [-G]"
+	  "[<input file>]\n"
 	  "\tWoolz in a compound woolz object assumed\n"
 	  "\tto be output of patch images from xmgrab.\n"
 	  "\tRegister the patches and output the single\n"
 	  "\tdomain object.\n"
 	  "\tOptions are:\n"
+	  "\t  -b        Ordered breadth-first search, darkest\n"
+	  "\t            images first (default)\n"
+	  "\t  -d        Unordered depth-first search\n"
 	  "\t  -t#[,#]   Set maximum translation values\n"
 	  "\t            default (30,30) one input value implies\n"
 	  "\t            equal maximum shift in x & y directions\n"
+	  "\t  -p#       percent of pixels match default 10 - higher\n"
+	  "\t            is better but slower\n"
 	  "\t  -g        Attempt to reset mean grey values to be equal\n"
 	  "\t            within matched regions (on by default)\n"
 	  "\t  -G        Switch off grey-level matching\n"
+	  "\t  -T#       Threshold the input images e.g. to remove\n"
+	  "\t            spurious lines around the edge\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
 	  "",
@@ -725,14 +734,14 @@ WlzErrorNum DumbRegMatch(
   WlzIVertex2	rtnShift;
 
   /* no checks just go for it */
-
+  
   minMeanDiff = 10000.0;
   rtnShift.vtX = 0;
   rtnShift.vtY = 0;
   for(i = - (int) maxShift.vtX; i <= (int) maxShift.vtX; i++){
     for(j = - (int) maxShift.vtY; j <= (int) maxShift.vtY; j++){
       o2 = WlzShiftObject(obj2, i, j, 0, NULL);
-      meanDiff = WlzGreyMeanDifference(obj1, o2, 5.0, NULL);
+      meanDiff = WlzGreyMeanDifference(obj1, o2, matchPercent, NULL);
       if( meanDiff < minMeanDiff ){
 	minMeanDiff = meanDiff;
 	rtnShift.vtX = i;
@@ -748,7 +757,107 @@ WlzErrorNum DumbRegMatch(
   return errNum;
 }
 
-int WlzRegisterPatchTree(
+WlzPatchTree *WlzPatchTreeUnalignedChild(
+  WlzPatchTree	*patchTree,
+  int		depth,
+  WlzDVertex2	*shift)
+{
+  WlzPatchTree	*child=NULL;
+  int		i;
+
+  if( patchTree ){
+    shift->vtX += patchTree->xOff;
+    shift->vtY += patchTree->yOff;
+    if(patchTree->depth < depth){
+      for(i=0; i < patchTree->nchildren; i++){
+	if( child = WlzPatchTreeUnalignedChild(patchTree->children[i],
+					       depth, shift) ){
+	  break;
+	}
+      }
+    }
+    else if( patchTree->depth == depth ){
+      if( !patchTree->offsetsCalculatedFlag ){
+	child = patchTree;
+      }
+    }
+    if( !child ){
+      shift->vtX -= patchTree->xOff;
+      shift->vtY -= patchTree->yOff;
+    }
+  }
+
+  return child;
+}
+
+int WlzPatchMaxDepth(
+  WlzPatchTree	*patchTree)
+{
+  int i, d, depth=0;
+
+  if( patchTree ){
+    if( patchTree->nchildren ){
+      depth = WlzPatchMaxDepth(patchTree->children[0]);
+      for(i=1; i < patchTree->nchildren; i++){
+	d = WlzPatchMaxDepth(patchTree->children[i]);
+	if( d > depth ){
+	  depth = d;
+	}
+      }
+    }
+    else {
+      depth = patchTree->depth;
+    }
+  }
+
+  return depth;
+}
+  
+WlzErrorNum WlzRegisterPatchTreeBF(
+  WlzPatchTree	*patchTree)
+{
+  WlzObject	*obj, *obj1, *obj2, *objs[2];
+  WlzPatchTree	*child;
+  int 		i, depth;
+  WlzDVertex2	shift;
+  double	ccVal;
+  WlzIVertex2	maxShift;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* assume nothing registered, get image to depth 0 */
+  obj = WlzAssignObject(patchTree->obj, NULL);
+  patchTree->offsetsCalculatedFlag = 1;
+  depth = patchTree->depth + 1;
+
+  /* get children to current depth, align and merge */
+  maxShift.vtX = defMaxShift.vtX;
+  maxShift.vtY = defMaxShift.vtY;
+  shift.vtX = 0;
+  shift.vtY = 0;
+  while( depth <= WlzPatchMaxDepth(patchTree) ){
+    while( child = WlzPatchTreeUnalignedChild(patchTree, depth, &shift) ){
+      obj1 = WlzShiftObject(child->obj, shift.vtX, shift.vtY, 0, NULL);
+      (void) DumbRegMatch(&shift, &ccVal, obj, obj1, maxShift);
+      child->offsetsCalculatedFlag = 1;
+      child->xOff = shift.vtX;
+      child->yOff = shift.vtY;
+      objs[1] = WlzShiftObject(obj1, shift.vtX, shift.vtY, 0, NULL);
+      WlzFreeObj(obj1);
+      objs[0] = obj;
+      obj2 = WlzUnionN(2, objs, 1, NULL);
+      WlzFreeObj(obj);
+      WlzFreeObj(objs[1]);
+      obj = WlzAssignObject(obj2, NULL);
+      shift.vtX = 0;
+      shift.vtY = 0;
+    }
+    depth++;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum WlzRegisterPatchTreeDF(
   WlzPatchTree	*patchTree)
 {
   WlzObject	*obj, *obj1, *obj2;
@@ -758,6 +867,7 @@ int WlzRegisterPatchTree(
   double	ccVal;
   WlzIVertex2	maxShift;
   RecPPControl	ppCtrl;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* calculate the offsets for each child then
      register each child tree */
@@ -783,10 +893,10 @@ int WlzRegisterPatchTree(
     patchTree->children[i]->offsetsCalculatedFlag = 1;
     patchTree->children[i]->xOff = shift.vtX;
     patchTree->children[i]->yOff = shift.vtY;
-    WlzRegisterPatchTree(patchTree->children[i]);
+    WlzRegisterPatchTreeDF(patchTree->children[i]);
   }
 
-  return 0;
+  return errNum;
 }
 
 WlzObject *WlzPatchTreeToObject(
@@ -846,6 +956,27 @@ WlzObject *WlzPatchTreeToObject(
   return rtnObj;
 }
 
+int WlzPatchHitBuffers(
+  WlzPatchTree	*patchTree)
+{
+  int i;
+
+  if((abs(patchTree->xOff) >= defMaxShift.vtX) ||
+     (abs(patchTree->yOff) >= defMaxShift.vtY)){
+    return 1;
+  }
+
+  for(i=0; i < patchTree->nchildren; i++){
+    if( WlzPatchHitBuffers(patchTree->children[i]) ){
+      return 1;
+    }
+  }
+
+  return 0;
+}
+  
+     
+
 WlzErrorNum WlzPatchFacts(
   WlzPatchTree	*patchTree,
   FILE		*fp,
@@ -892,7 +1023,7 @@ int main(int	argc,
   WlzPatchTree	*patchTree;
   WlzCompoundArray	*cobj;
   FILE		*inFile;
-  char 		optList[] = "gGhvt:";
+  char 		optList[] = "bdgGhvp:t:T:";
   int		option;
   int		verboseFlg=0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -901,6 +1032,9 @@ int main(int	argc,
   WlzGreyType	dstGType;
   double	dstMin, dstMax, dstSum, dstSumSq;
   double	dstMean, dstStdDev, extMean;
+  int		breadthFirstFlg=1;
+  WlzPixelV	threshV;
+  int		val, threshFlg=0;
 
   /* set the default maximum shift */
   defMaxShift.vtX = 30;
@@ -910,12 +1044,34 @@ int main(int	argc,
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+    case 'b':
+      breadthFirstFlg = 1;
+      break;
+
+    case 'd':
+      breadthFirstFlg = 0;
+      break;
+
     case 'g':
       alignGreysFlg = 1;
       break;
 
     case 'G':
       alignGreysFlg = 0;
+      break;
+
+    case 'p':
+      if( sscanf(optarg, "%lf", &matchPercent) == 1 ){
+	if( matchPercent > 100.0 ){
+	  matchPercent = 100.0;
+	}
+	else if( matchPercent < 2.0 ){
+	  matchPercent = 2.0;
+	}
+      }
+      else {
+	matchPercent = 10.0;
+      }
       break;
 
     case 't':
@@ -936,6 +1092,13 @@ int main(int	argc,
 	break;
 
       }
+      break;
+
+    case 'T':
+      if( sscanf(optarg, "%d", &val) < 1 ){
+	val = 1;
+      }
+      threshFlg = 1;
       break;
 
     case 'v':
@@ -973,10 +1136,21 @@ int main(int	argc,
 	nobj = WlzAssignObject(cobj->o[0], &errNum);
       }
       else {
-	/* copy the object list so the patch tree can be built */
+	/* copy the object list so the patch tree can be built 
+	   threshold at 1 to remove funny black lines */
 	objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * cobj->n);
+	threshV.type = WLZ_GREY_INT;
+	threshV.v.inv = 1;
 	for(i=0; i < cobj->n; i++){
-	  objs[i] = WlzAssignObject(cobj->o[i], NULL);
+	  if( threshFlg ){
+	    objs[i] = 
+	      WlzAssignObject(WlzThreshold(cobj->o[i], threshV,
+					   WLZ_THRESH_HIGH, NULL), NULL);
+	  }
+	  else {
+	    objs[i] = 
+	      WlzAssignObject(cobj->o[i], NULL);
+	  }
 	}
 
 	/* find the most dense object - assumed to have the
@@ -996,24 +1170,41 @@ int main(int	argc,
 	  }
 	}
 
-	/* generate the patch tree - depth first search */
-	/*obj1 = objs[startIndx];
-	objs[startIndx] = NULL;
-	patchTree = WlzGetPatchTree(obj1, objs, cobj->n);
-	WlzFreeObj(obj1);*/
-
-	/* generate the patch tree - breadth first search */
-	depth = 0;
-	patchTree = WlzMakePatchTree(objs[startIndx], depth, extMean);
-	patchTree->index = startIndx;
-	objs[startIndx] = NULL;
-	while( numObjsLeft(objs, cobj->n) ){
-	  depth++;
-	  WlzGetPatchTreeToDepth(objs, cobj->n, patchTree, depth);
+	if( breadthFirstFlg ){
+	  /* generate the patch tree - breadth first search */
+	  depth = 0;
+	  patchTree = WlzMakePatchTree(objs[startIndx], depth, extMean);
+	  patchTree->index = startIndx;
+	  objs[startIndx] = NULL;
+	  while( numObjsLeft(objs, cobj->n) && (depth <= cobj->n) ){
+	    depth++;
+	    WlzGetPatchTreeToDepth(objs, cobj->n, patchTree, depth);
+	  }
+	}
+	else {
+	  /* generate the patch tree - depth first search */
+	  obj1 = objs[startIndx];
+	  objs[startIndx] = NULL;
+	  patchTree = WlzGetPatchTree(obj1, objs, cobj->n);
+	  WlzFreeObj(obj1);
 	}
 
 	/* calculate the offsets */
-	WlzRegisterPatchTree(patchTree);
+	if( 0 ){
+	  errNum = WlzRegisterPatchTreeDF(patchTree);
+	}
+	else {
+	  errNum = WlzRegisterPatchTreeBF(patchTree);
+	}
+
+	/* check if hit the buffers */
+	if( WlzPatchHitBuffers(patchTree) ){
+	  fprintf(stderr,
+		  "\007\007 %s: hit the shift limit somewhere, use the -v\n"
+		  "flag to print out the offsets. Try extending the limits\n"
+		  "with the -t flag or remove the non-matching image\n\007",
+		  argv[0]);
+	}
 
 	/* print out the patch data and offsets */
 	if( verboseFlg ){

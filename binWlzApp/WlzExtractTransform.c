@@ -72,6 +72,7 @@ int main(int	argc,
   int		outputOpt=2;
   int		absoluteFlg=0;
   WlzAffineTransform	*inTrans, *outTrans, *tmpTrans;
+  WlzAffineTransform	*reconTrans;
   WlzObject	*outObj;
   WlzDomain	domain;
   WlzValues	values;
@@ -134,15 +135,14 @@ int main(int	argc,
   outTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
 					0.0, 0.0, 0.0, 1.0,
 					0.0, 0.0, 0.0, 0.0, 0.0, 0, NULL);
+  reconTrans = NULL;
 
   /* read bibfile records until the filename matches */
   bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, inFile);
   while( bibFileErr == BIBFILE_ER_NONE ) 
   {
-    if( strncmp(bibfileRecord->name, "Section", 7) ){
-      BibFileRecordFree(&bibfileRecord);
-    }
-    else {
+    if( !strncmp(bibfileRecord->name, "Section", 7) ){
+
       /* parse the record */
       numParsedFields = BibFileFieldParseFmt
 	(bibfileRecord->field,
@@ -175,18 +175,41 @@ int main(int	argc,
 	BibFileRecordFree(&bibfileRecord);
 	break;
       }
-
-      BibFileRecordFree(&bibfileRecord);
     }
+    else if( !strncmp(bibfileRecord->name, "Reconstruction", 14) ){
+      double	scaleX, scaleY, scaleZ;
+
+      /* parse the record */
+      numParsedFields = BibFileFieldParseFmt
+	(bibfileRecord->field,
+	 (void *) &scaleX, "%lg %*lg %*lg", "Scale",
+	 (void *) &scaleY, "%*lg %lg %*lg", "Scale",
+	 (void *) &scaleZ, "%*lg %*lg %lg", "Scale",
+	 NULL);
+
+      /* make the transform for this record */
+      reconTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+					      0.0, 0.0, 0.0, scaleX,
+					      theta, 0.0, 0.0, 0.0,
+					      0.0, 0, NULL);
+    }
+    BibFileRecordFree(&bibfileRecord);
     bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, inFile);
   }
 
   if( outTrans ){
+    if( absoluteFlg && reconTrans ){
+      tmpTrans = WlzAffineTransformProduct(reconTrans, outTrans, NULL);
+      WlzFreeAffineTransform(reconTrans);
+      WlzFreeAffineTransform(outTrans);
+      outTrans = tmpTrans;
+    }
+
     switch( outputOpt ){
     default:
     case 2:
-      fprintf(stdout, " -R -x%g -y%g -a%g", outTrans->tx, outTrans->ty,
-	      outTrans->theta);
+      fprintf(stdout, " -R -x%g -y%g -a%g -s%g", outTrans->tx, outTrans->ty,
+	      outTrans->theta, outTrans->scale);
       break;
 
     case 1:
@@ -200,8 +223,9 @@ int main(int	argc,
     case 0:
       fprintf(stdout,
 	      "Translation = (%f, %f)\n"
-	      "Rotation = %g\n",
-	      outTrans->tx, outTrans->ty, outTrans->theta);
+	      "Rotation = %g\n"
+	      "Scale = %g\n",
+	      outTrans->tx, outTrans->ty, outTrans->theta, outTrans->scale);
       break;
     }
   }
