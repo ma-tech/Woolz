@@ -668,6 +668,7 @@ extern WlzObject 		*WlzDomainFill(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 
+#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzDomainUtils.c							*
 ************************************************************************/
@@ -693,6 +694,7 @@ extern WlzErrorNum		WlzStandardPlaneDomain(
 			 	  WlzVoxelValues *voxtb);
 extern WlzErrorNum		WlzStandardIntervalDomain(
 				  WlzIntervalDomain *idom);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzErosion.c								*
@@ -710,7 +712,6 @@ extern WlzErrorNum 		WlzErrorFromAlg(
 				  AlgError algErr);
 #endif /* !WLZ_EXT_BIND */
 
-#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzExplode3D.c							*
 ************************************************************************/
@@ -718,7 +719,6 @@ extern WlzErrorNum 		WlzExplode3D(
 				  int *dstArraySizeExpObj,
 				  WlzObject ***dstArrayExpObj,
 				  WlzObject *srcObj);
-#endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzFacts.c								*
