@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 23-01-01 bill Add WlzShadeCorrect().
 * 16-01-01 bill	Add WlzGeomTriangleNormal() and WlzGMVertexNormal3D().
 * 22-12-00 bill Add initial affine transform parameter to WlzRegICPObjs().
 *		Add normals to WlzVerticiesFromObj().
@@ -2115,6 +2116,16 @@ extern WlzObject 		*WlzSeqPar(
 				  int (*transformFn)(WlzSeqParWSpace *, void *),
 				  WlzErrorNum	*dstErr);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzShift.c								*
+************************************************************************/
+extern WlzObject		*WlzShadeCorrect(
+				  WlzObject *srcObj,
+				  WlzObject *shdObj,
+				  double nrmVal,
+				  int inPlace,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzShift.c								*
