@@ -55,6 +55,7 @@ EXECUTABLES		= \
 			WlzConvertPix \
 			WlzConvexPoly \
 			WlzCreateSpecialSE \
+			WlzCrossCorValue \
 			WlzCutObjToBox \
 			WlzDiffDomain \
 			WlzDilation \
@@ -105,6 +106,7 @@ EXECUTABLES		= \
 			WlzRankObj \
 			WlzRasterObj \
 			WlzRBFContourObj \
+			WlzRegisterCCor \
 			WlzRegisterICP \
 			WlzRsvFilterObj \
 			WlzSampleObj \
@@ -158,6 +160,7 @@ CSOURCES		= \
 			WlzConvertPix.c \
 			WlzConvexPoly.c \
 			WlzCreateSpecialSE.c \
+			WlzCrossCorValue.c \
 			WlzCutObjToBox.c \
 			WlzDiffDomain.c \
 			WlzDilation.c \
@@ -210,6 +213,7 @@ CSOURCES		= \
 			WlzRankObj.c \
 			WlzRasterObj.c \
 			WlzRBFContourObj.c \
+			WlzRegisterCCor.c \
 			WlzRegisterICP.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
