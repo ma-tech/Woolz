@@ -1,101 +1,85 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzProto.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Defines the Woolz function prototypes.
+*		
+*		To allow bindings to other languages (ie Java) to be
+*               generated automaticaly from this file, the following
+*               conventions MUST be followed:
+*		<ul>
+*		  <li>
+*                 The preprocessor identifier #WLZ_EXT_BIND controls
+*                 whether code is bound.
+*		  </li>
+*		  <li>
+*                 All prototypes to be bound must provide both
+*                 parameter types and parameter identifiers.
+*		  </li>
+*		  <li>
+*                 If a function returns a WlzErrorNum type it is
+*                 assumed to be the error code.
+*		  </li>
+*		  <li>
+*                 If a parameter is used to return the error code then
+*                 it must be declared as 'WlzErrorNum *dstErr' and it
+*                 may be a good idea to make it the last parameter.
+*		  </li>
+*		  <li>
+*                 If either a function return type or parameter is
+*                 'char' and it is not a pointer then it is assummed
+*                 to be a byte.
+*		  </li>
+*		  <li>
+*                 All Woolz types and functions start with 'Wlz'.
+*		  </li>
+*		  <li>
+*                 All enum's are typedef'd.
+*		  </li>
+*		  <li>
+*                 All structs are typedef'd.
+*		  </li>
+*		  <li>
+*                 If a parameter identifier starts with 'dst' and is
+*                 a pointer then it is assumed to be a destination
+*                 pointer.
+*		  </li>
+*		  <li>
+*                 All function return types or parameters of type
+*                 'char *' are assumed to be strings unless the
+*                 parameter identifier starts with 'dst'.
+*		  </li>
+*		  <li>
+*                 All arrays must either start with 'array' or
+*                 'dstArray', with 'dstArray' being used to identify
+*                 arrays which are allocated within the function being
+*                 called. An array pointer must be followed by it's
+*                 size, the type should be int, WlzIVertex2, ... and
+*                 the identifier should be the same as array's but with
+*                 'size' prepended as is the example 'sizeArrayName'.
+*                 Arrays can not be pointers to void and wrappers may
+*                 be needed to avoid this.
+*		  </li>
+*		  <li>
+*		  Because of a parsing bug UBYTE should be expanded to
+*		  unsigned char.
+*		</ul>
+* \ingroup	Wlz
+* \todo         -
+* \bug          None known.
+*/
 #ifndef WLZ_PROTO_H
 #define WLZ_PROTO_H
-#pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzProto.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Defines the Woolz function prototypes.
-*		To allow bindings to other languages (ie Java) to be
-*		automaticly generated from this file, the following
-*		conventions MUST be followed:
-*		* The preprocessor identifier #WLZ_EXT_BIND controls
-*		  whether code is bound.
-*		* All prototypes to be bound must provide both
-*		  parameter types and parameter identifiers.
-*		* If a function returns a WlzErrorNum type it is
-*		  assumed to be the error code.
-*		* If a parameter is used to return the error code then
-*		  it must be declared as 'WlzErrorNum *dstErr' and it
-*		  may be a good idea to make it the last parameter.
-*		* If either a function return type or parameter is
-*		  'char' and it is not a pointer then it is assummed
-*		  to be a byte.
-*		* All Woolz types and functions start with 'Wlz'.
-*		* All enum's are typedef'd.
-*		* All structs are typedef'd.
-*		* If a parameter identifier starts with 'dst' and is
-*		  a pointer then it is assumed to be a destination
-*		  pointer.
-*		* All function return types or parameters of type
-*		  'char *' are assumed to be strings unless the
-*		  parameter identifier starts with 'dst'.
-*		* All arrays must either start with 'array' or
-*		  'dstArray', with 'dstArray' being used to identify
-*		  arrays which are allocated within the	function being
-*		  called. An array pointer must be followed by it's
-*		  size, the type should be int, WlzIVertex2, ... and
-*		  the identifier should be the same as array's but with
-*		  'size' prepended as is the example 'sizeArrayName'.
-*		  Arrays can not be pointers to void and wrappers may
-*		  be needed to avoid this.
-*		* UBYTE should be expanded to unsigned char - (why?) RAB
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 19-09-02 nick Add WlzJavaUtils.c and moved WlzObjGetType() to it.
-* 12-09-02 nick Add WlzObjGetType().
-* 21-08-02 nick Add Wlz2DContains().
-* 26-04-01 bill Add WlzContourObjGrd().
-* 23-04-01 bill Add WlzRegICPVertices().
-* 23-03-01 bill Add WlzGreyTypeFromObj().
-* 14-03-01 bill Add WlzRasterObj().
-* 01-02-01 bill Add WlzRegCCorObjs().
-* 26-01-01 bill Change parameters of WlzGeomVtxSortRadial().
-* 23-01-01 bill Add WlzShadeCorrect().
-* 16-01-01 bill	Add WlzGeomTriangleNormal() and WlzGMVertexNormal3D().
-* 22-12-00 bill Add initial affine transform parameter to WlzRegICPObjs().
-*		Add normals to WlzVerticesFromObj().
-* 01-12-00 RAB	Add WlzHasIntersection().
-* 01-12-00 RAB	Add get and set functions for 3D view structure params.
-* 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
-*		add WlzAffineTransformLSq3D and a new WlzAffineTransformLSq.
-* 28-11-00 bill	Add WlzGMShellComputeGBB() and WlzGMFilterRmSmShells().
-* 16-11-00 bill Add WlzGMModelDeleteS().
-* 06-11-00 bill Add WlzVerticesFromObj() and WlzRegICPObjs().
-* 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
-* 10-10-00 bill Add WlzAffineTransformContour(),
-*               WlzAffineTransformGMModel(),
-*               WlzAffineTransformBBoxI2(),
-*               WlzAffineTransformBBoxD2(),
-*               WlzAffineTransformBBoxI3() and
-*               WlzAffineTransformBBoxD3().
-* 28-09-00 bill	Add WlzAffineTransformDimension(),
-* 		WlzAffineTransformTranslationSet(),
-*		WlzAffineTransformFromTranslation(),
-*		WlzAffineTransformRotationSet(),
-*		WlzAffineTransformFromScale(),
-*		WlzAffineTransformScaleSet() and
-*		WlzAffineTransformFromRotation().
-* 10-08-00 bill	Modify WlzMakeContour().
-*		Add WlzStringFromGMModelType(), WlzStringToGMModelType()
-*		and WlzAssignGMModel().
-* 17-03-00 bill Strip out all the WlzEdge functions and add
-* 		functions for Woolz geometric models.
-* 04-02-00 bill Add WlzHistogramFitPeaks().
-* 02-02-00 bill Added WlzRsvFilterBuffer(), WlzHistogramRsvGauss(),
-*		WlzHistogramRsvFilter() and modified WlzHistogramSmooth().
-*		Add WlzHistogramConvolve() and WlzHistogramCnvGauss().
-*		Add WlzHistogramFindPeaks().
-* 29-11-00 bill Add all the WlzContour and WlzEdge functions.
-* 31-08-00 bill Modify array size parameters for JavaWoolz.
-*		Allowed more functions to be bound using JavaWoolz.
-************************************************************************/
 
 #ifdef  __cplusplus
 extern "C" {
@@ -997,8 +981,8 @@ extern WlzValues		WlzCopyValues(
 				  WlzValues inVal,
 				  WlzDomain inDom,
 				  WlzErrorNum *dstErr);
-extern WlzSimpleProperty	*WlzCopySimpleProperty(
-				  WlzSimpleProperty *inPLst,
+extern AlcDLPList		*WlzCopyPropertyList(
+				  AlcDLPList *gList,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -2056,6 +2040,13 @@ extern WlzEMAPProperty          *WlzMakeEMAPProperty(
 				  char			*fileName,
 				  char			*comment,
 				  WlzErrorNum *dstErr);
+extern WlzNameProperty 		*WlzMakeNameProperty(
+				  char *name,
+				  WlzErrorNum *dstErr);
+extern WlzGreyProperty 		*WlzMakeGreyProperty(
+				  char *name,
+				  WlzPixelV val,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum              WlzChangeEMAPProperty(
                                   WlzEMAPProperty	*prop,
                                   WlzEMAPPropertyType	type,
@@ -2078,10 +2069,17 @@ extern WlzErrorNum              WlzRemoveProperty(
 				  WlzProperty		prop);
 #endif /* WLZ_EXT_BIND */
 
-#ifndef WLZ_EXT_BIND
 /************************************************************************
  * WlzMakeStructs.c
  ************************************************************************/
+extern WlzPolygonDomain		*WlzMakePolygonDomain(
+				  WlzObjectType type,
+				  int sizeArrayVertices,
+				  WlzIVertex2 *arrayVertices,
+				  int maxVertices,
+				  int copy,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzObject 		*WlzMakeMain(
 				  WlzObjectType type,
 				  WlzDomain domain,
@@ -2140,13 +2138,6 @@ extern WlzVoxelValues		*WlzMakeVoxelValueTb(
 				  int pl,
 				  WlzPixelV bckgrnd,
 				  WlzObject *original,
-				  WlzErrorNum *dstErr);
-extern WlzPolygonDomain		*WlzMakePolyDmn(
-				  WlzObjectType type,
-				  WlzIVertex2 *vtxs,
-				  int nvertices,
-				  int max_nverts,
-				  int copy,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzMakeRect(
 				  int line1,
@@ -2720,6 +2711,9 @@ extern WlzObject 		*WlzMakeStdStructElement(
 extern const char 		*WlzStringFromObjType(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+extern const char		*WlzStringFromObjTypeValue(
+				  WlzObjectType objType,
+				  WlzErrorNum *dstErr);
 extern WlzObjectType 		WlzStringToObjType(
 				  const char *oTypeStr,
 				  WlzErrorNum *dstErr);
@@ -2737,6 +2731,18 @@ extern WlzObjectType 		WlzStringToObjValuesType(
 				  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromGreyType(
 				  WlzGreyType gType,
+				  WlzErrorNum *dstErr);
+extern const char		*WlzStringFromPropertyType(
+				  WlzProperty prop,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType		WlzStringToPropertyType(
+				  const char *pStr,
+				  WlzErrorNum *dstErr);
+extern const char      		*WlzStringFromEMAPPropertyType(
+				  WlzEMAPProperty *eProp,
+				  WlzErrorNum *dstErr);
+extern WlzEMAPPropertyType 	WlzStringToEMAPPropertyType(
+				  const char *pStr,
 				  WlzErrorNum *dstErr);
 extern WlzTransformType 	WlzStringToTransformType(
 				  const char *tStr,
