@@ -211,9 +211,9 @@ typedef enum
 /*!
 * \enum		_WlzTransformType
 * \ingroup	WlzTransform
-* \brief	Types of spatial transformation.
+* \brief	Types of spatial transformation, typedef: ::WlzTransformType
 */
-enum _WlzTransformType
+typedef enum _WlzTransformType
 {
   WLZ_TRANSFORM_2D_AFFINE = 1,		/*!< General 2D affine transform */
   WLZ_TRANSFORM_2D_REG,	      		/*!< 2D affine but only rotation
@@ -233,15 +233,15 @@ enum _WlzTransformType
   WLZ_TRANSFORM_2D5_MESH,     		/*!< 2.5D (plane wise) triangular
   					     mesh transform */
   WLZ_TRANSFORM_3D_MESH			/*!< 3D tetrahedral mesh transform */
-};
-typedef enum _WlzTransformType WlzTransformType;
+} WlzTransformType;
 
 /*!
 * \enum         _WlzBasisFnType
 * \ingroup	WlzTransform
 * \brief	The types of basis function for basis function transforms.
+Typedef: ::WlzBasisFnType
 */
-enum _WlzBasisFnType
+typedef enum _WlzBasisFnType
 {
   WLZ_BASISFN_GAUSS,        		/*!< Gaussian basis function */
   WLZ_BASISFN_POLY,                     /*!< Polynomial basis function */
@@ -250,28 +250,26 @@ enum _WlzBasisFnType
   					     function */
   WLZ_BASISFN_CONF_POLY			/*!< Conformal polynomial basis
   					     function */
-};
-typedef enum _WlzBasisFnType WlzBasisFnType;
+} WlzBasisFnType;
 
 /*!
 * \enum		_WlzMeshElemType
 * \ingroup	WlzTransform
-* \brief	Mesh transform element types.
+* \brief	Mesh transform element types. Typedef: ::WlzMeshElemType
 */
-enum _WlzMeshElemType
+typedef enum _WlzMeshElemType
 {
   WLZ_MESH_ELEM_TRILINEAR,
   WLZ_MESH_ELEM_TRIINCOMPRESSIBLE,
   WLZ_MESH_ELEM_TRICOMPRESSIBLE
-};
-typedef enum _WlzMeshElemType WlzMeshElemType;
+} WlzMeshElemType;
 
 /*!
 * \enum		_WlzMeshElemFlags
 * \ingroup	WlzTransform
-* \brief	Mesh transform element flag bit masks.
+* \brief	Mesh transform element flag bit masks. Typedef: ::WlzMeshElemFlags
 */
-enum _WlzMeshElemFlags
+typedef enum _WlzMeshElemFlags
 {
   WLZ_MESH_ELEM_FLAGS_NONE      = (0),
   WLZ_MESH_ELEM_FLAGS_NBR_0     = (1),	  /*!< Neighbour on side 0 exists */
@@ -279,15 +277,14 @@ enum _WlzMeshElemFlags
   WLZ_MESH_ELEM_FLAGS_NBR_2     = (1<<2), /*!< Neighbour on side 2 exists */
   WLZ_MESH_ELEM_FLAGS_ZOMBIE	= (1<<3), /*!< Dead, awaiting replacement */
   WLZ_MESH_ELEM_FLAGS_REFINE	= (1<<4)  /*!< Available for refinement */
-};
-typedef enum _WlzMeshElemFlags WlzMeshElemFlags;
+} WlzMeshElemFlags;
 
 /*!
 * \enum		_WlzMeshNodeFlags
 * \ingroup	WlzTransform
-* \brief	Mesh transform node flag masks.
+* \brief	Mesh transform node flag masks. Typedef: ::WlzMeshNodeFlags
 */
-enum _WlzMeshNodeFlags
+typedef enum _WlzMeshNodeFlags
 {
   WLZ_MESH_NODE_FLAGS_NONE      = (0),
   WLZ_MESH_NODE_FLAGS_BBOX     	= (1),	  /*!< Created from bounding box. */
@@ -296,29 +293,27 @@ enum _WlzMeshNodeFlags
   					       domain */
   WLZ_MESH_NODE_FLAGS_POLY	= (1<<3), /*!< Created along polygon domain */
   WLZ_MESH_NODE_FLAGS_ZOMBIE	= (1<<4)  /*!< Dead, awaiting replacement */
-};
-typedef enum _WlzMeshNodeFlags WlzMeshNodeFlags;
+} WlzMeshNodeFlags;
 
 /*!
 * \enum		_WlzMeshGenMethod
 * \ingroup	WlzTransform
-* \brief	Mesh generation methods.
+* \brief	Mesh generation methods. Typedef: ::WlzMeshGenMethod
 */
-enum _WlzMeshGenMethod
+typedef enum _WlzMeshGenMethod
 {
   WLZ_MESH_GENMETHOD_BLOCK,	       	/*!< Uniform (triangulated) block
   					     grid. */
   WLZ_MESH_GENMETHOD_GRADIENT  		/*!< Triangulated grid based on image
   					     gradient. */
-};
-typedef enum _WlzMeshGenMethod WlzMeshGenMethod;
+} WlzMeshGenMethod;
 
 /*!
 * \enum		_WlzMeshError
 * \ingroup	WlzTransform
-* \brief	Mesh error bit masks.
+* \brief	Mesh error bit masks. Typedef: ::WlzMeshError
 */
-enum _WlzMeshError
+typedef enum _WlzMeshError
 {
   WLZ_MESH_ERR_NONE		= (0),	  /*!< No error, mesh valid */
   WLZ_MESH_ERR_ELEM_CW		= (1),	  /*!< Element not CCW */
@@ -330,8 +325,7 @@ enum _WlzMeshError
   WLZ_MESH_ERR_NELEM_NODE	= (1<<6), /*!< Neighbour node invalid */
   WLZ_MESH_ERR_NELEM_NOTNBR	= (1<<7), /*!< Neighbour not a neighbour */
   WLZ_MESH_ERR_NELEM_ZOMBIE	= (1<<8)  /*!< Neighbour is a zombie */
-};
-typedef enum _WlzMeshError WlzMeshError;
+} WlzMeshError;
 
 /************************************************************************
 * Connectivity.							
@@ -435,14 +429,14 @@ typedef enum
 * \enum		_WlzPolyFillMode	
 * \ingroup	WlzPolyline
 * \brief	Polygon fill modes.
+Typedef: ::WlzPolyFillMode
 */
-enum _WlzPolyFillMode
+typedef enum _WlzPolyFillMode
 {
-  WLZ_SIMPLE_FILL,	/*! Fill all pixels with winding number > 0 */
-  WLZ_EVEN_ODD_FILL,	/*! Fill all pixels with odd winding number */
-  WLZ_VERTEX_FILL	/*! Fill all pixels lying under the polyline */
-};
-typedef enum _WlzPolyFillMode WlzPolyFillMode;
+  WLZ_SIMPLE_FILL,	/*!< Fill all pixels with winding number > 0 */
+  WLZ_EVEN_ODD_FILL,	/*!< Fill all pixels with odd winding number */
+  WLZ_VERTEX_FILL	/*!< Fill all pixels lying under the polyline */
+} WlzPolyFillMode;
 
 /************************************************************************
 * Standard 3D views.						
@@ -1278,10 +1272,10 @@ typedef struct _WlzVoxelValues
 * 2D Polygon domain.						
 ************************************************************************/
 /*!
-* \struct	WlzPolygonDomain
+* \struct	_WlzPolygonDomain
 * \ingroup	WlzPolyline
 * \brief	A 2D polyline domain with possible types:WLZ_POLYGON_INT, 
-WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
+WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. Typedef: ::WlzPolygonDomain
 */
 typedef struct _WlzPolygonDomain
 {
@@ -1469,28 +1463,28 @@ typedef struct
 * \union	_WlzTransform
 * \ingroup	WlzTransform
 * \brief	A union of all valid transforms.
+Typedef: ::WlzTransform
 */
-union _WlzTransform
+typedef union _WlzTransform
 {
   struct _WlzCoreTransform *core;	/*!< Core transform. */
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
   struct _WlzMeshTransform *mesh;	/* Ant mesh transform. */
-};
-typedef union _WlzTransform WlzTransform;
+} WlzTransform;
 
 /*!
 * \struct	_WlzCoreTransform
 * \ingroup	WlzTransform
 * \brief	The core transform, with members common to all transforms.
+Typedef: ::WlzCoreTransform
 */
-struct _WlzCoreTransform
+typedef struct _WlzCoreTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
   void 		*freeptr;		/*!< From the core domain. */
-};
-typedef struct _WlzCoreTransform WlzCoreTransform;
+} WlzCoreTransform;
 
 /*!
 * \struct	_WlzAffineTransform
@@ -1498,9 +1492,10 @@ typedef struct _WlzCoreTransform WlzCoreTransform;
 * \brief	Either a 2D or 3D affine transform.
 *		The homogeneous matrix (mat) is always allocated as a 4x4
 *		AlcDouble2Alloc style array. It is used as a 3x3
-*		matrix for 2D and as a 4x4 matrix for 3D affine transforms. 
+*		matrix for 2D and as a 4x4 matrix for 3D affine transforms.
+Typedef: ::WlzAffineTransform
 */
-struct _WlzAffineTransform
+typedef struct _WlzAffineTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
@@ -1509,15 +1504,15 @@ struct _WlzAffineTransform
   					     used as a 3x3 matrix for 2D
 					     transforms and as a 4x4 matrix for
 					     3D affine transforms. */
-};
-typedef struct _WlzAffineTransform WlzAffineTransform;
+} WlzAffineTransform;
 
 /*!
 * \struct	_WlzAffineTransformPrim
 * \ingroup	WlzTransform
 * \brief	Affine tranform primitives.
+Typedef: ::WlzAffineTransformPrim
 */
-struct _WlzAffineTransformPrim
+typedef struct _WlzAffineTransformPrim
 {
   double        tx,             	/*!< X translation */
 		ty,             	/*!< Y translation */
@@ -1530,8 +1525,7 @@ struct _WlzAffineTransformPrim
 		xsi;			/*!< 3D shear angle */
   int           invert;                 /*!< Non-zero if reflection about
   					     the y-axis */
-};
-typedef struct _WlzAffineTransformPrim WlzAffineTransformPrim;
+} WlzAffineTransformPrim;
 
 /*!
 * \struct	_WlzBasisFnTransform
@@ -1540,8 +1534,9 @@ typedef struct _WlzAffineTransformPrim WlzAffineTransformPrim;
 * 		The delta is used by the MQ and Gauss basis functions:
 *		For the MQ basis fn delta = R^2, and for the Gaussian basis fn
 *		delta = 1/s^2.
+Typedef: ::WlzBasisFnTransform
 */
-struct _WlzBasisFnTransform
+typedef struct _WlzBasisFnTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
@@ -1557,21 +1552,20 @@ struct _WlzBasisFnTransform
   WlzDVertex2    *poly;          	/*!< Polynomial coefficients */
   WlzDVertex2    *basis;         	/*!< Basis function coefficients */
   WlzDVertex2    *verticies;     	/*!< Control point verticies */
-};
-typedef struct _WlzBasisFnTransform WlzBasisFnTransform;
+} WlzBasisFnTransform;
 
 /*!
 * \struct	_WlzMeshNode
 * \ingroup	WlzTransform
 * \brief	Defines a node within a mesh transform.
+Typedef: ::WlzMeshNode
 */
-struct  _WlzMeshNode
+typedef struct  _WlzMeshNode
 {
   unsigned int	flags;			/*!< Mesh node flags */
   WlzDVertex2	position;		/*!< Node position */
   WlzDVertex2	displacement;		/*!< Node displacement */
-};
-typedef struct _WlzMeshNode WlzMeshNode;
+} WlzMeshNode;
 
 /*!
 * \struct	_WlzMeshElem
@@ -1580,9 +1574,10 @@ typedef struct _WlzMeshNode WlzMeshNode;
 * 		The nodes and neighbours are indexed such that:		
 * 		Neighbour 0 shares nodes 1 and 2, neighbour 1 shares nodes 2
 *		and 0 and neighbour 2 shares nodes 0 and 1. All the nodes
-*		are stored in counter clockwise (CCW) order.				
+*		are stored in counter clockwise (CCW) order. 
+Typedef: ::WlzMeshElem
 */
-struct _WlzMeshElem
+typedef struct _WlzMeshElem
 {
   WlzMeshElemType type;         	/*!< Type of mesh element */
   int           idx;            	/*!< Index of this element */
@@ -1593,15 +1588,15 @@ struct _WlzMeshElem
   double        strainU[3];             /*!< Constants of strain energy
   					     function: */
   double        strainA[3];
-};
-typedef struct _WlzMeshElem WlzMeshElem;
+} WlzMeshElem;
 
 /*!
 * \struct	_WlzMeshTransform
 * \ingroup	WlzTransform
 * \brief	Defines a mesh transform.
+Typedef: ::WlzMeshTransform
 */
-struct _WlzMeshTransform
+typedef struct _WlzMeshTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
@@ -1613,8 +1608,7 @@ struct _WlzMeshTransform
   					     nodes */
   WlzMeshElem   *elements;      	/*!< Mesh elements */
   WlzMeshNode	*nodes;			/*!< Mesh nodes */
-};
-typedef struct _WlzMeshTransform WlzMeshTransform;
+} WlzMeshTransform;
 
 /************************************************************************
 * Sequential/local transformation workspace structure.		

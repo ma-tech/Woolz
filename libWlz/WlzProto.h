@@ -45,6 +45,7 @@
 *		  'size' prepended as is the example 'sizeArrayName'.
 *		  Arrays can not be pointers to void and wrappers may
 *		  be needed to avoid this.
+*		* UBYTE should be expanded to unsigned char - (why?) RAB
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
 * 26-04-01 bill Add WlzContourObjGrd().
@@ -226,18 +227,18 @@ extern WlzErrorNum Wlz3DViewGetMinvals(WlzThreeDViewStruct	*vs,
 extern WlzObject *Wlz3DViewTransformObj(WlzObject		*srcObj,
 					WlzThreeDViewStruct	*viewStr,
 					WlzErrorNum		*dstErr);
-  extern WlzObject *Wlz3DViewTransformBitmap(UBYTE		*bitData,
-					     int		width,
-					     int 		height,
-					     int 		x_offset,
-					     int 		y_offset,
-					     double 		x,
-					     double 		y,
-					     double 		z,
-					     double 		theta,
-					     double 		phi,
-					     double 		distance,
-					     WlzErrorNum	*dstErr);
+extern WlzObject *Wlz3DViewTransformBitmap(unsigned char	*bitData,
+					   int		width,
+					   int 		height,
+					   int 		x_offset,
+					   int 		y_offset,
+					   double      	x,
+					   double      	y,
+					   double      	z,
+					   double      	theta,
+					   double      	phi,
+					   double      	distance,
+					   WlzErrorNum	*dstErr);
 /************************************************************************
 * WlzAffineTransform.c
 ************************************************************************/
