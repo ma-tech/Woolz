@@ -422,6 +422,14 @@ extern WlzErrorNum 		WlzAffineTransformPrimSet(
 * WlzAffineTransformLSq.c						*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzAffineTransform	*WlzAffineTransformLSqWgt(
+				  WlzVertexType vtxType,
+				  int nVtx,
+				  double *wgt,
+				  WlzVertexP vtxVec0,
+				  WlzVertexP vtxVec1,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
 extern WlzAffineTransform 	*WlzAffineTransformLSq2(
 				  WlzVertexType vtxType,
 				  int nV,

@@ -40,7 +40,7 @@
 struct _WlzRegICPWSp
 {
   /*! Itteration control. */
-  int		itr;		/*!< Current itteration */
+  int		itr;		/*!< Current iteration */
   double	sumDistCur;	/*!< Current sum of distances between NN */
   double	sumDistLst;	/*!< Last sum of distances between NN */
   /*! Nearest neighbour search. */
@@ -77,6 +77,11 @@ static void			WlzRegICPFindNN(
 				  WlzRegICPWSp *wSp);
 static void			WlzRegICPWeight(
 				  WlzRegICPWSp *wSp);
+static int			WlzRegICPItr(
+				  WlzRegICPWSp *wSp,
+			          WlzTransformType trType,
+				  int maxItr,
+				  WlzErrorNum *dstErr);
 static WlzErrorNum		WlzRegICPCompTransform(
 				  WlzRegICPWSp *wSp,
 				  WlzTransformType trType,
@@ -648,20 +653,28 @@ WlzAffineTransform	*WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Iterate to find the registration transform. */
-    conv = 0;
-    do
+    switch(trType)
     {
-      wSp.sumDistLst = wSp.sumDistCur;
-      /* Apply current transform to the verticies and normals. */
-      WlzRegICPTrans(&wSp);
-      /* Find closest points. */
-      WlzRegICPFindNN(&wSp);
-      /* Compute weightings of the matches. */
-      WlzRegICPWeight(&wSp);
-      /* Compute registration transform and check for convergence. */
-      errNum = WlzRegICPCompTransform(&wSp, trType, &conv);
-    } while((errNum == WLZ_ERR_NONE) && (wSp.itr++ < maxItr) && (conv == 0));
+      case WLZ_TRANSFORM_2D_AFFINE:
+      case WLZ_TRANSFORM_3D_AFFINE:
+        conv = WlzRegICPItr(&wSp, (trType == WLZ_TRANSFORM_2D_AFFINE)?
+			          WLZ_TRANSFORM_2D_REG: WLZ_TRANSFORM_3D_REG,
+			    maxItr, &errNum);
+	if(conv && (errNum == WLZ_ERR_NONE))
+	{
+	  wSp.sumDistCur = DBL_MAX;
+	  wSp.sumDistLst = DBL_MAX;
+          conv = WlzRegICPItr(&wSp, trType, maxItr, &errNum);
+	}
+        break;
+      case WLZ_TRANSFORM_2D_REG:
+      case WLZ_TRANSFORM_3D_REG:
+        conv = WlzRegICPItr(&wSp, trType, maxItr, &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -780,6 +793,43 @@ static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
     }
   }
   return(errNum);
+}
+
+/*!
+* \return				Nonzero if the iteration has
+* 					converged.
+* \brief	The iterative loop of the ICP, which iterates to find the
+* 		registration transform.
+* \param	wSp			ICP registration workspace.
+* \param	trType			Type of affine transform.
+* \param	maxItr			Maximum number of iterations.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+static int	WlzRegICPItr(WlzRegICPWSp *wSp,
+			     WlzTransformType trType, int maxItr,
+			     WlzErrorNum *dstErr)
+{
+  int		conv = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  do
+  {
+    wSp->sumDistLst = wSp->sumDistCur;
+    /* Apply current transform to the verticies and normals. */
+    WlzRegICPTrans(wSp);
+    /* Find closest points. */
+    WlzRegICPFindNN(wSp);
+    /* Compute weightings of the matches. */
+    WlzRegICPWeight(wSp);
+    /* Compute registration transform and check for convergence. */
+    errNum = WlzRegICPCompTransform(wSp, trType, &conv);
+  } while((errNum == WLZ_ERR_NONE) && (wSp->itr++ < maxItr) && (conv == 0));
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(conv);
 }
 
 /*!
@@ -1026,10 +1076,25 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
   }
 #endif /* WLZ_REGICP_DEBUG */
   /* Compute new affine trasform. */
-  newTr = WlzAffineTransformLSq2(wSp->vType,
-			       wSp->nMatch, wSp->wgtVx, wSp->tSVx, wSp->nNTVx,
-			       0, NULL, nullP, nullP,
-			       trType, &errNum);
+  switch(trType)
+  {
+    case WLZ_TRANSFORM_2D_REG:
+    case WLZ_TRANSFORM_3D_REG:
+      newTr = WlzAffineTransformLSq2(wSp->vType, wSp->nMatch,
+      				     wSp->wgtVx, wSp->tSVx, wSp->nNTVx,
+				     0, NULL, nullP, nullP,
+				     trType, &errNum);
+      break;
+    case WLZ_TRANSFORM_2D_AFFINE:
+    case WLZ_TRANSFORM_3D_AFFINE:
+      newTr = WlzAffineTransformLSqWgt(wSp->vType, wSp->nMatch, 
+      				       wSp->wgtVx, wSp->tSVx, wSp->nNTVx,
+				       trType, &errNum);
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
 #ifdef WLZ_REGICP_DEBUG
@@ -1101,7 +1166,7 @@ int             main(int argc, char *argv[])
   WlzTransformType trType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "gho:";
+  static char	optList[] = "aghro:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -1115,12 +1180,18 @@ int             main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'a':
+        trType = WLZ_TRANSFORM_2D_AFFINE;
+	break;
       case 'g':
         grdFlg = 1;
 	break;
       case 'h':
         usage = 1;
 	ok = 0;
+	break;
+      case 'r':
+        trType = WLZ_TRANSFORM_2D_REG;
 	break;
       case 'o':
         outObjFileStr = optarg;
@@ -1190,10 +1261,17 @@ int             main(int argc, char *argv[])
       switch(inObj[0]->type)
       {
       	case WLZ_2D_DOMAINOBJ:
-	  trType = WLZ_TRANSFORM_2D_REG;
 	  break;
       	case WLZ_3D_DOMAINOBJ:
-	  trType = WLZ_TRANSFORM_3D_REG;
+	  switch(trType)
+	  {
+	    case WLZ_TRANSFORM_2D_REG:
+	      trType = WLZ_TRANSFORM_3D_REG;
+	      break;
+	    case WLZ_TRANSFORM_2D_AFFINE:
+	      trType = WLZ_TRANSFORM_3D_AFFINE;
+	      break;
+	  }
 	  break;
 	case WLZ_CONTOUR:
 	  if((inObj[0]->domain.core == NULL) ||
@@ -1207,11 +1285,18 @@ int             main(int argc, char *argv[])
 	    {
 	      case WLZ_GMMOD_2I: /* FALLTHROUGH */
 	      case WLZ_GMMOD_2D:
-	        trType = WLZ_TRANSFORM_2D_REG;
 		break;
 	      case WLZ_GMMOD_3I: /* FALLTHROUGH */
 	      case WLZ_GMMOD_3D:
-	        trType = WLZ_TRANSFORM_3D_REG;
+	        switch(trType)
+		{
+		  case WLZ_TRANSFORM_2D_REG:
+		    trType = WLZ_TRANSFORM_3D_REG;
+		    break;
+		  case WLZ_TRANSFORM_2D_AFFINE:
+		    trType = WLZ_TRANSFORM_3D_AFFINE;
+		    break;
+		}
 		break;
 	      default:
 		errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -1232,8 +1317,8 @@ int             main(int argc, char *argv[])
     if(grdFlg)
     {
       outDom.t = WlzRegICPObjsGrd(inObj[0], inObj[1], NULL,
-				       trType, 50.0, 100.0, 1.0,
-				       NULL, NULL, 100, &errNum);
+				       trType, 50.0, 50.0, 1.6,
+				       NULL, NULL, 200, &errNum);
     }
     else
     {
@@ -1300,10 +1385,13 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       "Usage: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-g] [<input object 0>] [<input object 1>]\n"
+      " [-o<output object>] [-a] [-h] [-g] [-r]\n"
+      "          [<input object 0>] [<input object 1>]\n"
       "Options:\n"
+      "  -a  Compute affine transform.\n"
       "  -g  Use maximal gradient surfaces.\n"
       "  -h  Prints this usage information.\n"
+      "  -r  Compute registration transform, affine but no scale or shear.\n"
       "  -o  Output object file name.\n"
       "Computes a registration transform which registers the second of the\n"
       "given objects to the first using an ICP algorithm.\n"

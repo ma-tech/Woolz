@@ -25,6 +25,20 @@
 #include <float.h>
 #include <Wlz.h>
 
+static WlzAffineTransform 	*WlzAffineTransformLSqWgt3D(
+				  int nVtx,
+				  double *wgt,
+				  WlzDVertex3 *vtxVec0,
+				  WlzDVertex3 *vtxVec1,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform 	*WlzAffineTransformLSqWgt2D(
+				  int nVtx,
+				  double *wgt,
+				  WlzDVertex2 *vtxVec0,
+				  WlzDVertex2 *vtxVec1,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
 static WlzAffineTransform 	*WlzAffineTransformLSqTrans3D(
 				  WlzDVertex3 *pos0,
 				  WlzDVertex3 *pos1,
@@ -49,6 +63,12 @@ static WlzAffineTransform	*WlzAffineTransformLSqReg2D(
 static WlzAffineTransform	*WlzAffineTransformLSqTrans2D(
 				  WlzDVertex2 *vtxVec0,
 				  WlzDVertex2 *vtxVec1,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform 	*WlzAffineTransformLSqWgtGen2D(
+				  WlzDVertex2 *vtxVec0,
+				  WlzDVertex2 *vtxVec1,
+				  double *wgt,
 				  int nVtx,
 				  WlzErrorNum *dstErr);
 static WlzAffineTransform 	*WlzAffineTransformLSqDQ3D(
@@ -196,6 +216,144 @@ WlzAffineTransform *WlzAffineTransformLSq(WlzVertexType vtxType,
 	break;
     }
   }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/*!
+* \ingroup	WlzTransform
+* \return				Computed affine transform, may
+*					be NULL on error.
+* \brief	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of verticies onto the second, while using
+*		the given vertex weights.
+* \param	vtxType			Type of verticies.
+* \param	nVtx			Number of vertex pairs.
+* \param	wgt			Weights for the matched pairs
+*					of verticies.
+* \param	vtxVec0			First vector of verticies.
+* \param	vtxVec1			Second vector of verticies.
+* \param	trType			Required transform type.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+WlzAffineTransform *WlzAffineTransformLSqWgt(WlzVertexType vtxType,
+				          int nVtx, double *wgt,
+					  WlzVertexP vtxVec0,
+					  WlzVertexP vtxVec1,
+					  WlzTransformType trType,
+					  WlzErrorNum *dstErr)
+{
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(nVtx <= 0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA; 
+  }
+  else if((vtxVec0.v == NULL) || (vtxVec1.v == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    switch(vtxType)
+    {
+      case WLZ_VERTEX_D2:
+	tr = WlzAffineTransformLSqWgt2D(nVtx, wgt, vtxVec0.d2, vtxVec1.d2, 
+					trType, &errNum);
+	break;
+      case WLZ_VERTEX_D3:
+	tr = WlzAffineTransformLSqWgt3D(nVtx, wgt, vtxVec0.d3, vtxVec1.d3, 
+					trType, &errNum);
+	break;
+      default:
+	errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/*!
+* \ingroup	WlzTransform
+* \return				Computed affine transform, may
+*					be NULL on error.
+* \brief	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of 2D double verticies onto the second,
+*		while using the given vertex weights.
+* \param	nVtx			Number of vertex pairs.
+* \param	wgt			Weights for the matched pairs
+*					of verticies.
+* \param	vtxVec0			First vector of verticies.
+* \param	vtxVec1			Second vector of verticies.
+* \param	trType			Required transform type.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+static WlzAffineTransform *WlzAffineTransformLSqWgt2D(int nVtx, double *wgt,
+					WlzDVertex2 *vtxVec0,
+					WlzDVertex2 *vtxVec1,
+					WlzTransformType trType,
+					WlzErrorNum *dstErr)
+{
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  switch(trType)
+  {
+    case WLZ_TRANSFORM_2D_AFFINE:
+      tr = WlzAffineTransformLSqWgtGen2D(vtxVec0, vtxVec1, wgt, nVtx, &errNum);
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+
+/*!
+* \ingroup	WlzTransform
+* \return				Computed affine transform, may
+*					be NULL on error.
+* \brief	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of 3D double verticies onto the second,
+*		while using the given vertex weights.
+* \todo		UNIMPLEMENTED
+* \param	nVtx			Number of vertex pairs.
+* \param	wgt			Weights for the matched pairs
+*					of verticies.
+* \param	vtxVec0			First vector of verticies.
+* \param	vtxVec1			Second vector of verticies.
+* \param	trType			Required transform type.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+static WlzAffineTransform *WlzAffineTransformLSqWgt3D(int nVtx, double *wgt,
+					WlzDVertex3 *vtxVec0,
+					WlzDVertex3 *vtxVec1,
+					WlzTransformType trType,
+					WlzErrorNum *dstErr)
+{
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  /* TODO UNIMPLEMENTED. */
   if(dstErr)
   {
     *dstErr = errNum;
@@ -800,6 +958,116 @@ static WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
   }
   return(trans);
 }
+
+/*!
+* \ingroup	WlzTransform
+* \return				Computed affine transform, may
+*					be NULL on error.
+* \brief	Computes the Woolz general 2D affine transform which
+*		gives the best (least squares) fit when used to
+*		transform the first set of verticies onto the second,
+*		while using the given vertex weights.
+* \param	vtxVec0			First vector of verticies.
+* \param	vtxVec1			Second vector of verticies.
+* \param	nVtx			Number of verticies in vectors.
+* \param	wgt			Weights for the matched pairs
+*					of verticies.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+static WlzAffineTransform *WlzAffineTransformLSqWgtGen2D(WlzDVertex2 *vtxVec0,
+				WlzDVertex2 *vtxVec1, double *wgt, int nVtx,
+				WlzErrorNum *dstErr)
+{
+  int		idx;
+  double 	*b = NULL;
+  double	**a = NULL,
+		**trMat = NULL;
+  double	A[12];
+  WlzDVertex2	wV0,
+  		wV1;
+  WlzAffineTransform *trans = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Initialise the array */
+  for(idx = 0; idx < 12; ++idx)
+  {
+    A[idx] = 0;
+  }
+  /* Accumulate values */
+  for(idx = 0; idx < nVtx; ++idx)
+  {
+    WLZ_VTX_2_SCALE(wV0, *vtxVec0, wgt[idx]);
+    WLZ_VTX_2_SCALE(wV1, *vtxVec1, wgt[idx]);
+    A[0] += 1;
+    A[1] += wV0.vtX;
+    A[2] += wV0.vtY;
+    A[3] += wV0.vtX * wV0.vtX;
+    A[4] += wV0.vtX * wV0.vtY;
+    A[5] += wV0.vtY * wV0.vtY;
+    A[6] += wV1.vtX;
+    A[7] += wV0.vtX * wV1.vtX;
+    A[8] += wV0.vtY * wV1.vtX;
+    A[9] += wV1.vtY;
+    A[10] += wV0.vtX * wV1.vtY;
+    A[11] += wV0.vtY * wV1.vtY;
+    ++vtxVec0;
+    ++vtxVec1;
+  }
+  /* Allocate workspace */
+  if((AlcDouble2Malloc(&a, 3, 3) != ALC_ER_NONE) ||
+      (AlcDouble1Malloc(&b, 3) != ALC_ER_NONE) ||
+      (AlcDouble2Malloc(&trMat, 4, 4) != ALC_ER_NONE))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Determine the least square transformation matrix values */
+    /* x parameters first */
+    a[0][0] = A[0];  a[0][1] = A[1];  a[0][2] = A[2];
+    a[1][0] = A[1];  a[1][1] = A[3];  a[1][2] = A[4];
+    a[2][0] = A[2];  a[2][1] = A[4];  a[2][2] = A[5];
+    b[0] = A[6];     b[1] = A[7];     b[2] = A[8];
+    errNum = WlzErrorFromAlg(AlgMatrixLUSolve(a, 3, b, 1));
+    trMat[0][0] = b[1]; trMat[0][1] = b[2]; trMat[0][2] = b[0];
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* now y parameters */
+    a[0][0] = A[0];  a[0][1] = A[1];  a[0][2] = A[2];
+    a[1][0] = A[1];  a[1][1] = A[3];  a[1][2] = A[4];
+    a[2][0] = A[2];  a[2][1] = A[4];  a[2][2] = A[5];
+    b[0] = A[9];     b[1] = A[10];    b[2] = A[11];
+    errNum = WlzErrorFromAlg(AlgMatrixLUSolve(a, 3, b, 1));
+    trMat[1][0] = b[1]; trMat[1][1] = b[2]; trMat[1][2] = b[0];
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Make the transform */
+    trMat[2][0] = 0; trMat[2][1] = 0; trMat[2][2] = 1;
+    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trMat,
+					 &errNum);
+  }
+  if(a)
+  {
+    (void )AlcDouble2Free(a);
+  }
+  if(b)
+  {
+    (void )AlcFree((void *)b);
+  }
+  if(trMat)
+  {
+    (void )AlcDouble2Free(trMat);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(trans);
+}
+
 
 /*!
 * \ingroup	WlzTransform
