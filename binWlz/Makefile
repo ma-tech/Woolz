@@ -41,6 +41,7 @@ EXECUTABLES		= \
 			WlzClipObjToBox \
 			WlzCompThresh \
 			WlzCompound \
+			WlzContourGeomFilter \
 			WlzContourObj \
 			WlzContourSzSelect \
 			WlzConvertPix \
@@ -128,6 +129,7 @@ CSOURCES		= \
 			WlzClipObjToBox.c \
 			WlzCompound.c \
 			WlzCompThresh.c \
+			WlzContourGeomFilter.c \
 			WlzContourObj.c \
 			WlzContourSzSelect.c \
 			WlzConvertPix.c \
