@@ -132,7 +132,8 @@ CSOURCES		= \
 			WlzVerifyObj.c \
 			WlzVolume.c \
 			WlzWindow.c \
-			WlzWriteObj.c
+			WlzWriteObj.c 
+#			WlzXdr.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -259,7 +260,9 @@ DEFINES		= $(THREADS) \
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
- 
+ifeq ($(UNIXTYPE), SUNOS5)
+ANSI_CONFORMANCE	= -v -Xc
+endif
 
 # Default traget which builds everything (should not need modifying).
 all:			archive executables includes manpages

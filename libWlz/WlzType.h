@@ -1037,7 +1037,7 @@ typedef union
   struct _WlzRect	     *r;
   struct _WlzFRect           *fr;
   struct _WlzAffineTransform *t;
-  struct _WlzWarpTrans	     *wt;
+  struct _WlzWarpTrans    *wt;
 } WlzDomain;
 
 /************************************************************************
