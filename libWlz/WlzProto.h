@@ -2556,7 +2556,21 @@ extern WlzObject 		*WlzSampleObj(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
-* WlzScalarArithmeticOp.c						*
+* WlzSampleValuesAndCoords.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum     		WlzSampleValuesAndCoords(
+				  WlzObject *obj,
+				  WlzGreyType *dstGType,
+				  int *dstNVal,
+				  WlzGreyP *dstValP,
+				  WlzVertexP *dstCoords,
+				  WlzSampleFn samFn,
+				  int samFac);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzScalarArithmeticOp.c
 ************************************************************************/
 extern WlzObject		*WlzScalarAdd(
 				  WlzObject *o1,
@@ -2581,7 +2595,7 @@ extern WlzObject		*WlzScalarBinaryOp2(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
-* WlzScalarBinaryOp.c							*
+* WlzScalarBinaryOp.c
 ************************************************************************/
 extern WlzErrorNum 		WlzScalarBinaryOp(
 				  WlzObject *o1,
@@ -2589,10 +2603,24 @@ extern WlzErrorNum 		WlzScalarBinaryOp(
 				  WlzObject *o3,
 				  WlzBinaryOperatorType op);
 
-#ifndef WLZ_EXT_BIND
 /************************************************************************
-* WlzSepTrans.c								*
+* WlzScalarFeatures2D.c
 ************************************************************************/
+extern WlzErrorNum     		WlzScalarFeatures2D(
+				  WlzObject *obj,
+				  int *dstSizeArrayFeat,
+				  WlzIVertex2 **dstArrayFeat,
+				  WlzScalarFeatureType fType,
+				  WlzThresholdType thrHL,
+				  WlzPixelV thrV,
+				  double filterV,
+				  double minDist);
+
+
+/************************************************************************
+* WlzSepTrans.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
 typedef WlzErrorNum 		(*WlzIntervalConvFunc)(
 				  WlzSepTransWSpace *stwspc,
 				  void *params);
@@ -2734,9 +2762,17 @@ extern WlzObjectType 		WlzStringToObjValuesType(
 extern const char 		*WlzStringFromGreyType(
 				  WlzGreyType gType,
 				  WlzErrorNum *dstErr);
+extern const char      		*WlzStringFromScalarFeatureType(
+				  WlzScalarFeatureType fType,
+				  WlzErrorNum *dstErr);
+extern WlzScalarFeatureType 	WlzStringToScalarFeatureType(
+				  const char *fTypeStr,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern const char		*WlzStringFromPropertyType(
 				  WlzProperty prop,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObjectType		WlzStringToPropertyType(
 				  const char *pStr,
 				  WlzErrorNum *dstErr);
