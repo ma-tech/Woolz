@@ -39,9 +39,10 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-n] [-h] [-v] [<input file>]\n"
 	  "\tTest if the input objects have a non-zero intersection\n"
 	  "\tOptions are:\n"
+	  "\t  -n        numerical output: 0 - no intersect, 1 - intersect\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n"
 	  "",
@@ -55,9 +56,10 @@ int main(int	argc,
 
   WlzObject	*obj1, *obj2;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "hnv";
   int		option;
   int		verboseFlg=0;
+  int		numOutputFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
   /* read the argument list and check for an input file */
@@ -65,6 +67,10 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'n':
+      numOutputFlg = 1;
+      break;
 
     case 'v':
       verboseFlg = 1;
@@ -100,11 +106,21 @@ int main(int	argc,
       case WLZ_2D_DOMAINOBJ:
       case WLZ_3D_DOMAINOBJ:
 	if( WlzHasIntersection(obj1, obj2, &errNum) ){
-	  fprintf(stdout, "Objects intersect\n");
+	  if( numOutputFlg ){
+	    fprintf(stdout, "1");
+	  }
+	  else {
+	    fprintf(stdout, "Objects intersect\n");
+	  }
 	}
 	else {
 	  if( errNum == WLZ_ERR_NONE ){
-	    fprintf(stdout, "Objects do not intersect\n");
+	    if( numOutputFlg ){
+	      fprintf(stdout, "0");
+	    }
+	    else {
+	      fprintf(stdout, "Objects do not intersect\n");
+	    }
 	  }
 	  else {
 	    fprintf(stderr, "%s: some sort of error\n", argv[0]);

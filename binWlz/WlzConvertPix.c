@@ -38,10 +38,11 @@ static void usage(char *proc_str)
 	  "\t                %d: unsigned byte (default)\n"
 	  "\t                %d: float\n"
 	  "\t                %d: double\n"
+	  "\t                %d: rgba\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
 	  proc_str, WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
-	  WLZ_GREY_FLOAT, WLZ_GREY_DOUBLE);
+	  WLZ_GREY_FLOAT, WLZ_GREY_DOUBLE, WLZ_GREY_RGBA);
   return;
 }
  
@@ -68,6 +69,7 @@ int main(int	argc,
       case WLZ_GREY_UBYTE:
       case WLZ_GREY_FLOAT:
       case WLZ_GREY_DOUBLE:
+      case WLZ_GREY_RGBA:
 	break;
 
       default:

@@ -95,6 +95,10 @@ int main(int	argc,
        }
        break;
 
+    case WLZ_EMPTY_OBJ:
+      fprintf(stderr, "Object %d: number of voxels = %d\n", count, 0);
+      break;
+
      default:
        fprintf(stderr, "Object %d: not 3D object type\n", count);
        break;

@@ -110,6 +110,7 @@ EXECUTABLES		= \
 			WlzRBFContourObj \
 			WlzRegisterCCor \
 			WlzRegisterICP \
+			WlzRGBAConvert \
 			WlzRMSDiff \
 			WlzRsvFilterObj \
 			WlzSampleObj \
@@ -117,6 +118,7 @@ EXECUTABLES		= \
 			WlzSelect1InN \
 			WlzSetBackground \
 			WlzSetVoxelSize \
+			WlzShadeCorrect \
 			WlzShiftObj \
 			WlzSkeleton \
 			WlzSobel \
@@ -221,6 +223,7 @@ CSOURCES		= \
 			WlzRBFContourObj.c \
 			WlzRegisterCCor.c \
 			WlzRegisterICP.c \
+			WlzRGBAConvert.c \
 			WlzRMSDiff.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
@@ -228,6 +231,7 @@ CSOURCES		= \
 			WlzSelect1InN.c \
 			WlzSetBackground.c \
 			WlzSetVoxelSize.c \
+			WlzShadeCorrect.c \
 			WlzShiftObj.c \
 			WlzSkeleton.c \
 			WlzSobel.c \
