@@ -886,7 +886,6 @@ public class SectionViewerGUI extends JPanel {
     rollSetter.setMin(0.0);
     rollSetter.setMax(360.0);
     rollSetter.setValue(0.0);
-    rollSetter.setSliderEnabled(false);
 
     rollControlPanel.setPreferredSize(new Dimension(totalW, rH));
     rollControlPanel.setMinimumSize(new Dimension(totalW, rH));

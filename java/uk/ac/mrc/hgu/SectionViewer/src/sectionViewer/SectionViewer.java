@@ -367,10 +367,10 @@ public class SectionViewer
         rollSetter.setValue(90.0);
       }
     }
-    rollSetter.setSliderEnabled(false);
+    //rollSetter.setSliderEnabled(false);
     if (rotSetter != null) {
       rotSetter.setValue(0.0);
-      rotSetter.setSliderEnabled(false);
+      //rotSetter.setSliderEnabled(false);
     }
     resetFeedbackText();
 
@@ -626,12 +626,12 @@ public class SectionViewer
     state = distSetter.isEnabled();
 
     distSetter.setEnabled(false);
-    distSetter.setSliderEnabled(true);
+    //distSetter.setSliderEnabled(true);
     distSetter.setMin(min);
     distSetter.setMax(max);
     distSetter.setValue(val);
     distSetter.setEnabled(state);
-    distSetter.setSliderEnabled(sliderState);
+    //distSetter.setSliderEnabled(sliderState);
   }
 
 //-------------------------------------------------------------
@@ -1747,40 +1747,28 @@ public class SectionViewer
         if (mode.equals("up is up")) {
            _fixedLineRotation = false;
            resetFixedLine(false);
-	   _VSModel.setViewMode(mode);
            controlMenu_2_1.setSelected(true);
 	   enableFPMenus(true);
-           yawSetter.setSliderEnabled(true);
-           yawSetter.setEnabled(true);
-           pitchSetter.setSliderEnabled(true);
-           pitchSetter.setEnabled(true);
-           rollSetter.setSliderEnabled(true);
 	   zeta = new double[1];
 	   _VSModel.getZeta(zeta);
 	   roll = zeta[0] * 180.0 / Math.PI;
            rollSetter.setValue(roll);
-           rollSetter.setSliderEnabled(false);
-           rotSetter.setEnabled(false);
-           rotSetter.setSliderEnabled(true);
            rotSetter.setValue(0.0);
-           rotSetter.setSliderEnabled(false);
+           yawSetter.setEnabled(true);
+           pitchSetter.setEnabled(true);
+           rollSetter.setEnabled(false);
+           rotSetter.setEnabled(false);
         }
         else if (mode.equals("absolute")) {
            _fixedLineRotation = false;
            resetFixedLine(false);
-	   _VSModel.setViewMode(mode);
            controlMenu_2_2.setSelected(true);
 	   enableFPMenus(true);
-           yawSetter.setSliderEnabled(true);
+           rotSetter.setValue(0.0);
            yawSetter.setEnabled(true);
-           pitchSetter.setSliderEnabled(true);
            pitchSetter.setEnabled(true);
-           rollSetter.setSliderEnabled(true);
            rollSetter.setEnabled(true);
            rotSetter.setEnabled(false);
-           rotSetter.setSliderEnabled(true);
-           rotSetter.setValue(0.0);
-           rotSetter.setSliderEnabled(false);
         }
         else if(mode.equals("fixed line")) {
            _fixedLineRotation = true;
@@ -1788,16 +1776,12 @@ public class SectionViewer
            controlMenu_2_3.setSelected(true);
            controlMenu_2_3.setEnabled(false);
 	   enableFPMenus(false);
-           yawSetter.setSliderEnabled(false);
            yawSetter.setEnabled(false);
-           pitchSetter.setSliderEnabled(false);
            pitchSetter.setEnabled(false);
-           rollSetter.setSliderEnabled(false);
            rollSetter.setEnabled(false);
-           rotSetter.setSliderEnabled(true);
            rotSetter.setEnabled(true);
-	   _VSModel.setViewMode(mode);
         }
+	_VSModel.setViewMode(mode);
      }
   }
 
@@ -2058,11 +2042,6 @@ public class SectionViewer
     distSetter.setValue(0.0);
     zoomSetter.setValue(100);
     rotSetter.setValue(0.0);
-    distSetter.setSliderEnabled(true);
-    pitchSetter.setSliderEnabled(true);
-    yawSetter.setSliderEnabled(true);
-    rollSetter.setSliderEnabled(false);
-    rotSetter.setSliderEnabled(false);
     setViewMode("up is up");
     removeThreshold();
     removeThreshConstraint();
@@ -3525,9 +3504,9 @@ public class SectionViewer
        VSmodel.setPhiDeg(val);
        VSmodel.getZeta(valArr);
        val = (180.0 / Math.PI) * valArr[0];
-       rollSetter.setSliderEnabled(true);
+       //rollSetter.setSliderEnabled(true);
        rollSetter.setValue(val);
-       rollSetter.setSliderEnabled(false);
+       //rollSetter.setSliderEnabled(false);
        if (!control.isAdjusting()) {
 	  VSmodel.getDist(valArr);
 	  setDistLimits(valArr[0]);
@@ -3680,21 +3659,21 @@ public class SectionViewer
            //if (!control.isAdjusting()) {
               VSmodel.getTheta(valArr);
               double dangle = (180.0 / Math.PI) * valArr[0];
-              yawSetter.setSliderEnabled(true);
+              //yawSetter.setSliderEnabled(true);
               yawSetter.setValue(dangle);
-              yawSetter.setSliderEnabled(false);
+              //yawSetter.setSliderEnabled(false);
 
               VSmodel.getPhi(valArr);
               dangle = (180.0 / Math.PI) * valArr[0];
-              pitchSetter.setSliderEnabled(true);
+              //pitchSetter.setSliderEnabled(true);
               pitchSetter.setValue(dangle);
-              pitchSetter.setSliderEnabled(false);
+              //pitchSetter.setSliderEnabled(false);
 
               VSmodel.getZeta(valArr);
               dangle = (180.0 / Math.PI) * valArr[0];
-              rollSetter.setSliderEnabled(true);
+              //rollSetter.setSliderEnabled(true);
               rollSetter.setValue(dangle);
-              rollSetter.setSliderEnabled(false);
+              //rollSetter.setSliderEnabled(false);
 
               VSmodel.getDist(valArr);
               setDistLimits(valArr[0]);
