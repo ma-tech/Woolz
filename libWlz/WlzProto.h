@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 14-03-01 bill Add WlzRasterObj().
 * 01-02-01 bill Add WlzRegCCorObjs().
 * 26-01-01 bill Change parameters of WlzGeomVtxSortRadial().
 * 23-01-01 bill Add WlzShadeCorrect().
@@ -2008,6 +2009,13 @@ extern double 			WlzPrincipalAngle(
 				  WlzDVertex2 cMass,
 				  int binObjFlg,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzRaster.c
+************************************************************************/
+extern WlzObject		*WlzRasterObj(
+				  WlzObject *gObj,
+			          WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzReadObj.c								*
