@@ -107,6 +107,7 @@ EXECUTABLES		= \
 			WlzRBFContourObj \
 			WlzRegisterCCor \
 			WlzRegisterICP \
+			WlzRMSDiff \
 			WlzRsvFilterObj \
 			WlzSampleObj \
 			WlzScalarFeatures \
@@ -215,6 +216,7 @@ CSOURCES		= \
 			WlzRBFContourObj.c \
 			WlzRegisterCCor.c \
 			WlzRegisterICP.c \
+			WlzRMSDiff.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
 			WlzScalarFeatures.c \
