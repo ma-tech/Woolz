@@ -12,6 +12,8 @@
 * Purpose:      Reads a Woolz object from a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 02-10-00 bill No longer read primitives (commented out code left in
+*		place) in WlzReadAffineTransform().
 * 14-08-00 bill	Add WLZ_CONTOUR to object types read by WlzReadObj().
 *		Add WlzReadContour() and WlzReadGMModel(). Remove
 *		obolete object types:WLZ_VECTOR_(FLOAT|INT),
@@ -2083,17 +2085,20 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
     trans->linkcount = 0;
     trans->freeptr   = NULL;
 
-    /* read parameter values */
-    trans->tx = getdouble(fp);
-    trans->ty = getdouble(fp);
-    trans->tz = getdouble(fp);
-    trans->scale = getdouble(fp);
-    trans->theta = getdouble(fp);
-    trans->phi = getdouble(fp);
-    trans->alpha = getdouble(fp);
-    trans->psi = getdouble(fp);
-    trans->xsi = getdouble(fp);
-    trans->invert = getword(fp);
+    /* This code has been commented out rather than removed, just incase
+     * there are any 2D affine transforms or afftine transobj's written to
+     * a file somewhere.
+     * dummyTx = getdouble(fp);
+     * dummyTy = getdouble(fp);
+     * dummyTz = getdouble(fp);
+     * dummyScale = getdouble(fp);
+     * dummyTheta = getdouble(fp);
+     * dummyPhi = getdouble(fp);
+     * dummyAlpha = getdouble(fp);
+     * dummyPsi = getdouble(fp);
+     * dummyXsi = getdouble(fp);
+     * dummyInvert = getword(fp);
+     */
 
     /* read the matrix */
     for(i=0; i < 4; i++){

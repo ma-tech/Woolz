@@ -12,6 +12,7 @@
 * Purpose:      Writes a Woolz to a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 02-10-00 bill No longer write primitives in WlzWriteAffineTransform().
 * 14-08-00 bill	Add WLZ_CONTOUR to object types written by WlzWriteObj().
 *		Add WlzWriteContour() and WlzWriteGMModel(). Remove
 *		obolete object types:WLZ_VECTOR_(FLOAT|INT),
@@ -1487,19 +1488,6 @@ static WlzErrorNum WlzWriteAffineTransform(FILE *fp, WlzAffineTransform *trans)
     if(putc((unsigned int) trans->type, fp) == EOF)
     {
       errNum = WLZ_ERR_WRITE_EOF;
-    }
-    else if(!putdouble(trans->tx, fp) ||
-	    !putdouble(trans->ty, fp) ||
-	    !putdouble(trans->tz, fp) ||
-	    !putdouble(trans->scale, fp) ||
-	    !putdouble(trans->theta, fp) ||
-	    !putdouble(trans->phi, fp) ||
-	    !putdouble(trans->alpha, fp) ||
-	    !putdouble(trans->psi, fp) ||
-	    !putdouble(trans->xsi, fp) ||
-	    !putword(trans->invert, fp))
-    {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
     if(errNum == WLZ_ERR_NONE)
     {

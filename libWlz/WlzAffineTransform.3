@@ -1,408 +1,515 @@
-.\" te
 .\" ident MRC HGU $Id$
 .\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 .\" Project:    Woolz
 .\" Title:      WlzAffineTransform.3
-.\" Date:       March 1999
-.\" Author:     Richard Baldock
-.\" Copyright:	1999 Medical Research Council, UK.
+.\" Date:       March 2000
+.\" Author:     Richard Baldock, Bill Hill
+.\" Copyright:	2000 Medical Research Council, UK.
 .\"		All rights reserved.
 .\" Address:	MRC Human Genetics Unit,
 .\"		Western General Hospital,
 .\"		Edinburgh, EH4 2XU, UK.
-.\" Purpose:    Woolz functions for computing and applying Woolz
-.\"		affine transforms.
+.\" Purpose:    Functions for computing Woolz affine transforms and
+.\"		applying them to Woolz objects.
 .\" $Revision$
 .\" Maintenance:Log changes below, with most recent at top of list.
 .\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-.nh
+.tr ~ 
 .TH "WlzAffineTransform" 3 "%G%" "MRC HGU Woolz" "Woolz Procedure Library"
-.SH NAME
-WlzAffineTransform \- Woolz functions for computing and applying Woolz
-affine transforms.
+.SH NAME \
+WlzAffineTransformFromMatrix, \
+WlzAffineTransformFromTranslation, \
+WlzAffineTransformFromScale, \
+WlzAffineTransformFromRotation, \
+WlzAffineTransformFromPrimVal, \
+WlzAffineTransformFromPrim, \
+WlzAffineTransformFromSpin, \
+WlzAffineTransformFromSpinSqueeze, \
+WlzAffineTransformProduct, \
+WlzAffineTransformInverse, \
+WlzAffineTransformCopy, \
+WlzAffineTransformDimension, \
+WlzAffineTransformIsTranslate, \
+WlzAffineTransformIsIdentity, \
+WlzAffineTransformObj, \
+WlzAffineTransformVertexD2, \
+WlzAffineTransformVertexD3, \
+WlzAffineTransformVertexF2, \
+WlzAffineTransformVertexF3, \
+WlzAffineTransformVertexI2, \
+WlzAffineTransformVertexI3, \
+WlzAffineTransformPrimGet, \
+WlzAffineTransformMatrixSet, \
+WlzAffineTransformTranslationSet, \
+WlzAffineTransformScaleSet, \
+WlzAffineTransformRotationSet, \
+WlzAffineTransformPrimValSet, \
+WlzAffineTransformPrimSet \- \
+Data structures and functions for computing Woolz affine transforms and \
+applying them to Woolz data structures and objects.
 .SH SYNOPSIS
 .LP
 .B #include <Wlz.h>
 .LP
-.BI "WlzAffineTransform *WlzAffineTransformFromMatrix("
-.in +4m
+.BI "WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType " type ,
+.in +10m
 .br
-.BI "WlzTransformType " "type" ,
-.BL "WlzIVertex2 " matrixSz ,
-.BI "double **" "matrix" ,
-.br
-.BI "WlzErrorNum " "dstErrNum" );
-.in -4m
+.BI "double **" arrayMat ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
 .LP
-.BI "WlzAffineTransform *WlzAffineTransformFromMatrix4X4("
-.in +4m
+.BI "WlzAffineTransform *WlzAffineTransformFromTranslation(WlzTransformType " type ,
+.in +10m
 .br
-.BI "WlzTransformType " "type" ,
-.BI "double **" "matrix" ,
+.BI "double " tX ,
+.BI "double " tY ,
+.BI "double " tZ ,
 .br
-.BI "WlzErrorNum " "dstErrNum" );
-.in -4m
+.BI "WlzErrorNum *" dstErr );
+.in -10m
 .LP
-.BI "WlzAffineTransform *WlzAffineTransformFromPrim("
-.in +4m
+.BI "WlzAffineTransform *WlzAffineTransformFromScale(WlzTransformType " type ,
+.in +10m
 .br
-.BI "WlzTransformType " "type" ,
+.BI "double " sX ,
+.BI "double " sY ,
+.BI "double " sZ ,
+.br
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzAffineTransform *WlzAffineTransformFromRotation(WlzTransformType " type ,
+.in +10m
+.br
+.BI "double " rX ,
+.BI "double " rY ,
+.BI "double " rZ ,
+.br
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType " type ,
+.in +10m
 .br
 .BI "double " trX ,
 .BI "double " trY ,
 .BI "double " trZ ,
 .br
 .BI "double " trScale ,
-.BI "double " trTheta  ,
+.BI "double " trTheta ,
 .BI "double " trPhi ,
 .br
-.BI "double " trAlpha  ,
+.BI "double " trAlpha ,
 .BI "double " trPsi ,
 .BI "double " trXsi ,
 .br
 .BI "int " trInvert ,
 .BI "WlzErrorNum *" dstErr );
-.in -4m
+.in -10m
 .LP
-.BI "WlzAffineTransform *WlzAffineTransformFromSpin("
-.in +4m
+.BI "WlzAffineTransform *WlzAffineTransformFromPrim(WlzAffineTransformPrim " prim );
+.LP
+.BI "WlzAffineTransform *WlzAffineTransformFromSpin(double " spX ,
+.in +10m
 .br
-.BI "double " spX ,
 .BI "double " spY ,
 .BI "double " spTheta ,
-.br
 .BI "WlzErrorNum *" dstErr );
-.in -4m
+.in -10m
 .LP
-.BI "WlzAffineTransform *WlzAffineTransformFromSpinSqueeze("
-.in +4m
+.BI "WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double " spX ,
+.in +10m
 .br
-.BI "double " spX ,
 .BI "double " spY ,
-.BI "double " spTheta ,
-.br
+.BI "double " spTheta  ,
 .BI "double " sqX ,
+.br
 .BI "double " sqY ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzAffineTransform *WlzAffineTransformProduct(WlzAffineTransform *" trans0 ,
+.in +10m
+.br
+.BI "WlzAffineTransform *" trans1 ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzAffineTransform *WlzAffineTransformInverse(WlzAffineTransform *" tr ,
+.in +10m
 .br
 .BI "WlzErrorNum *" dstErr );
-.in -4m
+.in -10m
 .LP
-.BI "WlzErrorNum WlzAffineTransformMatrixSet("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans ,
-.br
-.BI "WlzIVertex2 **" matrixSz );
-.br
-.BI "double **" matrix );
-.in -4m
+.BI "WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzErrorNum *" dstErr );
+.in -10m
 .LP
-.BI "WlzErrorNum WlzAffineTransformMatrixSet4X4("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans ,
-.br
-.BI "double **" matrix );
-.in -4m
+.BI "int WlzAffineTransformDimension(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzErrorNum *" dstErr );
+.in -10m
 .LP
-.BI "WlzErrorNum WlzAffineTransformPrimSet("
-.in +4m
+.BI "int WlzAffineTransformIsTranslate(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzObject *" obj ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "int WlzAffineTransformIsIdentity(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzObject *WlzAffineTransformObj(WlzObject *" srcObj ,
+.in +10m
 .br
-.BI "WlzAffineTransform *" trans ,
+.BI "WlzAffineTransform *" tr ,
+.BI "WlzInterpolationType " interp ,
 .br
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzDVertex2 WlzAffineTransformVertexD2(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzDVertex2 " srcVtx ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzDVertex3 WlzAffineTransformVertexD3(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzDVertex3 " srcVtx ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzFVertex2 WlzAffineTransformVertexF2(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzFVertex2 " srcVtx ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzFVertex3 WlzAffineTransformVertexF3(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzFVertex3 " srcVtx ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzIVertex2 WlzAffineTransformVertexI2(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzIVertex2 " srcVtx ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzIVertex3 WlzAffineTransformVertexI3(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzIVertex3 " srcVtx ,
+.BI "WlzErrorNum *" dstErr );
+.in -10m
+.LP
+.BI "WlzErrorNum WlzAffineTransformPrimGet(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzAffineTransformPrim *" prim );
+.in -10m
+.LP
+.BI "WlzErrorNum WlzAffineTransformMatrixSet(WlzAffineTransform *" tr ,
+.in +10m
+.BI "double **" arrayMat );
+.in -10m
+.LP
+.BI "WlzErrorNum WlzAffineTransformTranslationSet(WlzAffineTransform *" tr ,
+.in +10m
+.BI "double " tX ,
+.BI "double " tY ,
+.BI "double " tZ );
+.in -10m
+.LP
+.BI "WlzErrorNum WlzAffineTransformScaleSet(WlzAffineTransform *" tr ,
+.in +10m
+.BI "double " sX ,
+.BI "double " sY ,
+.BI "double " sZ );
+.in -10m
+.LP
+.BI "WlzErrorNum WlzAffineTransformRotationSet(WlzAffineTransform *" tr ,
+.in +10m
+.BI "double " rX ,
+.BI "double " rY ,
+.BI "double " rZ );
+.in -10m
+.LP
+.BI "WlzErrorNum WlzAffineTransformPrimValSet(WlzAffineTransform *" tr ,
+.in +10m
 .BI "double " trX ,
 .BI "double " trY ,
 .BI "double " trZ ,
 .br
 .BI "double " trScale ,
-.BI "double " trTheta  ,
+.BI "double " trTheta ,
 .BI "double " trPhi ,
 .br
-.BI "double " trAlpha  ,
+.BI "double " trAlpha ,
 .BI "double " trPsi ,
 .BI "double " trXsi ,
 .br
 .BI "int " trInvert );
-.in -4m
+.in -10m
 .LP
-.BI "WlzErrorNum WlzAffineTransformMatrixUpdate("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans );
-.LP
-.BI "WlzErrorNum WlzAffineTransformMatrixPrimUpdate("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans );
-.in -4m
-.LP
-.BI "WlzAffineTransform *WlzAffineTransformProduct("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans0 ,
-.br
-.BI "WlzAffineTransform *" trans1 ,
-.br 
-.BI "WlzErrorNum *" dstErr );
-.in -4m
-.LP 
-.BI "WlzAffineTransform *WlzAffineTransformInverse("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans ,
-.br
-.BI "WlzErrorNum *" dstErr );
-.in -4m
-.LP
-.BI "int WlzAffineTransformIsIdentity("
-.in +4m
-.BI "WlzAffineTransform *" trans ,
-.br
-.BI "WlzErrorNum *" dstErr );
-.in -4m
-.LP 
-.BI "WlzObject *WlzAffineTransformObj("
-.in +4m
-.br
-.BI "WlzObject * srcObj ,
-.BI "WlzAffineTransform*" trans ,
-.br
-.BI "WlzInterpolationType " interp ,
-.BI "WlzErrorNum *" dstErr );
-.in -4m
-.LP 
-.BI "WlzIVertex2 WlzAffineTransformVertexI("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans ,
-.BI "WlzIVertex2 " srcVtx  ,
-.BI "WlzErrorNum *" dstErr );
-.in -4m
-.LP 
-.BI "WlzFVertex2 WlzAffineTransformVertexF("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans ,
-.BI "WlzFVertex2 " srcVtx  ,
-.BI "WlzErrorNum *" dstErr );
-.in -4m
-.LP 
-.BI "WlzDVertex2 WlzAffineTransformVertexD("
-.in +4m
-.br
-.BI "WlzAffineTransform *" trans ,
-.BI "WlzDVertex2 " srcVtx  ,
-.BI "WlzErrorNum *" dstErr );
-.in -4m
+.BI "WlzErrorNum WlzAffineTransformPrimSet(WlzAffineTransform *" tr ,
+.in +10m
+.BI "WlzAffineTransformPrim " prim );
+.in -10m
+.SP 1
+.ps -2
+.cs R 24
+.nf
+typedef enum
+{
+  WLZ_TRANSFORM_2D_AFFINE = 1,                /* General 2D affine transform */
+  WLZ_TRANSFORM_2D_REG,       /* 2D affine but only rotation and translation */
+  WLZ_TRANSFORM_2D_TRANS,                  /* 2D affine but only translation */
+  WLZ_TRANSFORM_2D_NOSHEAR,                        /* 2D affine but no shear */
+  WLZ_TRANSFORM_3D_AFFINE,                    /* General 3D affine transform */
+  WLZ_TRANSFORM_3D_REG,       /* 3D affine but only rotation and translation */
+  WLZ_TRANSFORM_3D_TRANS,                  /* 3D affine but only translation */
+  WLZ_TRANSFORM_3D_NOSHEAR,                        /* 3D affine but no shear */
+  .
+  .
+  .
+} WlzTransformType;
+.fi
+.cs R
+.ps +2
+.SP 1
+.ps -2
+.cs R 24
+.nf
+typedef struct _WlzAffineTransform
+{
+  WlzTransformType type;
+  int           linkcount;
+  void          *freeptr;
+  double        **mat;
+} WlzAffineTransform;
+.fi
+.cs R
+.ps +2
+.SP 1
+A Woolz affine transform is defined by a homogeneous matrix array (\fImat\fR).
+For 2D transforms this is used as a 3x3 matrix and for 3D transforms as a 4x4
+matrix. The array is always allocated as a 4x4 AlcDouble2Alloc array.
+.SP 1
+.ps -2
+.cs R 24
+.nf
+typedef struct _WlzAffineTransformPrim
+{
+  double        tx,                                         /* X translation */
+                ty,                                         /* Y translation */
+                tz,                                         /* Z translation */
+                scale,                               /* Scale transformation */
+                theta,                              /* Rotation about z-axis */
+                phi,                                /* Rotation about y-axis */
+                alpha,                                     /* Shear strength */
+                psi,                             /* Shear angle in x-y plane */
+                xsi;                                       /* 3D shear angle */
+  int           invert;               /* Non-zero if reflection about y-axis */
+} WlzAffineTransformPrim;
+.fi
+.cs R
+.ps +2
+.SP 1
+The primitives data structure provides a convinient method of accessing the
+transform primitives.
 .SH ARGUMENTS
 .TS
 tab(^);
 lI l.
-dstErrNum^Destination pointer for error number.
-interp^Interpolation type.
-matrix^Transform matrix (\fBdouble\fR \fImatrix\fB[\fR3\fB][\fR3\fB]\fR).
-spTheta^Spin angle.
-spX^Spin origin (x).
-spY^Spin origin (y).
-sqX^Squeeze scale factor (x).
-sqY^Squeeze scale factor (y).
-srcObj^Woolz domain object with grey values.
-trAlpha^Shear strength.
-trInvert^Non\-zero if reflection about y-axis.
-trPhi^Rotation about y\-axis.
-trPsi^Shear angle in x\-y plane.
-trScale^Scale.
-trTheta^Rotation about z\-axis.
-trX^Column (x) translation.
-trXsi^3D shear angle.
-trY^Line (y) translation.
-trZ^Plane (z) translation.
-trans^Given affine transform.
-trans0^First affine transform.
-trans1^Second affine transform.
-type^Woolz transform type.
+dstErrNum^destination pointer for error number, may be null.
+interp^level of interpolation to use
+obj^Woolz object
+prim^affine transform primitives
+rx^rotation about the x-axis, ignored for 2D transforms
+ry^rotation about the y-axis, ignored for 2D transforms
+rz^rotation about the z-axis
+spTheta^spin rotation about centre
+spX^spin centre column (x)
+spY^spin centre line (y)
+sqX^squeeze (x) factor
+sqY^squeeze (y) factor
+srcVtx^vertex to be transformed
+sx^scale along the x-axis
+sy^scale along the y-axis
+sz^scale along the z-axis
+tr^affine transform
+trAlpha^shear strength
+trInvert^reflection about y-axis if non-zero
+trPhi^rotation about y-axis
+trPsi^shear angle in x-y plane
+trScale^total scale transformation
+trTheta^rotation about z-axis
+trX^translation along the x-axis
+trXsi^3D shear angle
+trY^translation along the y-axis
+trZ^translation along the z-axis
 .TE
 .SH MT-LEVEL
 .LP
 Safe
 .SH DESCRIPTION
+These functions and data structures enable Woolz affine transforms to be
+computed, manipulated and applied to Woolz objects.
 .LP
-.B WlzAffineTransformFromMatrix
-creates a new affine transform of the given type,
-copies the given matrix values
-and updates the transform primatives.
+.B WlzAffineTransformDimension
+computes the dimension of the given affine transform and returns an integer
+with the value 2 or 3 for a 2D or 3D affine transform, 0 on error.
 .LP
-.B WlzAffineTransformFromPrim
-creates a new affine transform of the given type,
-copies the transform primatives
-and updates the matrix values.
-.LP
-.B WlzAffineTransformFromSpin
-creates a new 2D affine transform 
-from the given spin angle and centre of rotation.
-.LP
-.B WlzAffineTransformFromSpinSqueeze
-creates a new 2D affine transform
-from the given spin angle, centre of rotation and scale factors.
-.LP
-.B WlzAffineTransformMatrixSet
-copies the given matrix values
-and updates the transform primatives.
+.B WlzAffineTransformIsTranslate
+tests whether the given affine transform is a simple integer translation and
+returns non-zero if it is.
 .LP
 .B WlzAffineTransformPrimSet
-copies the transform primatives
-and updates the matrix values.
+sets the given transform's matrix from an affine transform primitives data
+structure.
+A composite transform is built from the primitives
+with the order of composition being scale (applied first),
+shear, rotation and then translation (applied last), ie:
+.in +8m
+.B A = T.R.Sh.Sc,~x' = A.x
+.in -8m
 .LP
-.B WlzAffineTransformMatrixUpdate
-updates the given transform's matrix from it's
-primitives. This function \fBmust\fR be called
-if an affine transform's primitives have been
-modified without using one of the
-transform functions.
+.B WlzAffineTransformTranslationSet
+sets the given transform's matrix from the given translations.
 .LP
-.B WlzAffineTransformPrimUpdate
-updates the given transform's primitivesfrom it's
-matrix. This function \fBmust\fR be called
-if an affine transform's matrix valueshave been
-modified without using one of the
-transform functions.
+.B WlzAffineTransformFromTranslation
+creates a new affine transform from the given translations.
+.LP
+.B WlzAffineTransformScaleSet
+sets the given transform's matrix from the given scales.
+.LP
+.B WlzAffineTransformFromScale
+creates a new affine transform from the given scales.
+.LP
+.B WlzAffineTransformRotationSet
+sets the given transform's matrix from the given
+rotations. Although the 3 rotations contain redundant
+information this may be a useful method for setting
+rotation transforms. The order of composition is
+.in +8m
+.B R = Rz.Ry.Rx, x' = R.x.
+.in -8m
+.LP
+.B WlzAffineTransformFromRotation
+creates a new affine transform from the given rotations, see
+\fBWlzAffineTransformRotationSet\fR
+for the order of composition.
+.LP
+.B WlzAffineTransformPrimGet
+gets the given 2D transform's primitives.
+.LP
+.B WlzAffineTransformMatrixSet
+sets the given transform from the given matrix.
+.LP
+.B WlzAffineTransformFromMatrix
+creates a new affine transform from the given matrix.
+.LP
+.B WlzAffineTransformPrimValSet
+sets an affine transform from the given primitive values.
+.LP
+.B WlzAffineTransformFromPrimVal
+creates a new affine transform from the given primitive values.
+.LP
+.B WlzAffineTransformFromSpin
+creates a new 2D affine transform from the given spin angle and centre of
+rotation.
+.LP
+.B WlzAffineTransformFromSpinSqueeze
+creates a new 2D affine transform from the given spin angle, centre of rotation
+and scale factors.
+.LP
+.B WlzAffineTransformCopy
+copies the given affine transform.
 .LP
 .B WlzAffineTransformProduct
 computes the product of the two given affine transforms.
 .LP
 .B WlzAffineTransformInverse
-computes the inverse of the given affine  transform.
+computes the inverse of the given affine transform.
 .LP
 .B WlzAffineTransformIsIdentity
-checks whether the given transform is an identity
-transform and returns a non\-zero value if
-it is an identity transform.
+checks whether the given transform is an identity transform and returns
+a non-zero value if it is  an identity transform.
 .LP
 .B WlzAffineTransformObj
-applies the given affine transform to the given
-Woolz object.
+applies the given affine transform to the given Woolz object.
 .LP
-.B WlzAffineTransformVertexI
-applies the given affine transform to the given integer vertex.
+.B WlzAffineTransformVertexI2
+transforms the given WlzIVertex2 vertex.
 .LP
-.B WlzAffineTransformVertexF
-applies the given affine transform to the given floating point vertex.
+.B WlzAffineTransformVertexI3
+transforms the given WlzIVertex3 vertex.
 .LP
-.B WlzAffineTransformVertexD
-applies the given affine transform to the given double presision floating
-point vertex.
+.B WlzAffineTransformVertexF2
+transforms the given WlzFVertex2 vertex.
+.LP
+.B WlzAffineTransformVertexF3
+transforms the given WlzFVertex3 vertex.
+.LP
+.B WlzAffineTransformVertexD2
+transforms the given WlzDVertex2 vertex.
+.LP
+.B WlzAffineTransformVertexD3
+transforms the given WlzDVertex3 vertex.
 .SH EXAMPLES
 .LP
 .ps -2
-.cs B 24
 .cs R 24
 .nf
-
-/* Simple example which reads a Woolz object from the
- * standard input, transforms it such that it's origin
- * is at (0, 0, 0) and writes the transformed object to
- * the standard output.
+/*
+ * Simple example of using WlzAffineTransformObj() to translate an object
+ * in the x-y plane.
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
- 
-int             main(char *argv[], int argc)
+
+int	        main(char *argv[], int argc)
 {
-  WlzDVertex3    offset;
-  WlzObject     *srcObj = NULL,
-                *dstObj = NULL;
-  WlzAffineTransform *trans = NULL;
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzAffineTransform *tr = NULL;
+  double	tx = 300,
+  		ty = 400;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
- 
-  if((srcObj = WlzAssignObject(WlzReadObj(stdin, &errNum),
-                               NULL)) == NULL)
+
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
   {
-    (void )fprintf(stderr,
-                   "%s: failed to read object.\\n",
-                   argv[0]);
-    errNum = EOF_READ_ERROR;
+    (void )fprintf(stderr, "%s: Failed to read input object.\\n", *argv);
   }
-  else if(((srcObj->type != WLZ_2D_DOMAINOBJ) &&
-           (srcObj->type != WLZ_3D_DOMAINOBJ)) ||
-          (srcObj->domain.core == NULL))
+  else if(((tr = WlzAffineTransformFromTranslation( WLZ_TRANSFORM_2D_AFFINE,
+  			tx, ty, 0.0, &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
   {
-    (void )fprintf(stderr,
-                   "%s: Inappropriate object type.\\n",
-                   argv[0]);
-    errNum = INVALID_OBJECT_TYPE;
+    (void )fprintf(stderr, "%s: Failed to create affine transform.n", *argv);
   }
-  else
+  else if((outObj = WlzAffineTransformObj(inObj, tr,
+  					  WLZ_INTERPOLATION_NEAREST,
+  					  &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
   {
-    if(srcObj->type == WLZ_2D_DOMAINOBJ)
-    {
-      offset.vtX = -(srcObj->domain.i->kol1);
-      offset.vtY = -(srcObj->domain.i->line1);
-      offset.vtZ = 0.0;
-    }
-    else
-    {
-      offset.vtX = -(srcObj->domain.p->kol1);
-      offset.vtY = -(srcObj->domain.p->line1);
-      offset.vtZ = -(srcObj->domain.p->plane1);
-    }
-    if((trans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-                                           offset.vtX,
-                                           offset.vtY,
-                                           offset.vtZ,
-                                           1.0, 0.0, 0.0,
-                                           0.0, 0.0, 0.0,
-                                           0, &errNum)) == NULL)
- 
-    {
-      (void )fprintf(stderr,
-                     "%s: Failed to compute affine transform.\\n",
-                     argv[0]);
-    }
+    (void )fprintf(stderr, "%s: Failed to transform object.\\n", *argv);
   }
-  if(errNum == WLZ_ERR_NONE)
+  else if((errNum = WlzWriteObj(stdout, outObj)) != WLZ_ERR_NONE)
   {
-    if((dstObj = WlzAffineTransformObj(srcObj, trans,
-                                       WLZ_INTERPOLATION_NEAREST,
-                                       &errNum)) == NULL)
- 
-    {
-      (void )fprintf(stderr,
-                     "%s: Failed to transform object.\\n",
-                     argv[0]);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((errNum = WlzWriteObj(stdout, dstObj)) != WLZ_ERR_NONE)
-    {
-      (void )fprintf(stderr,
-                     "%s: Failed to write output object\\n",
-                     *argv);
-    }
-  }
-  if(srcObj)
-  {
-    (void )WlzFreeObj(srcObj);
-  }
-  if(dstObj)
-  {
-    (void )WlzFreeObj(dstObj);
-  }
-  if(trans)
-  {
-    (void )WlzFreeAffineTransform(trans);
+    (void )fprintf(stderr, "%s: Failed to write output object.\\n", *argv);
   }
   return(errNum);
 }
-
 .fi
 .cs R
-.cs B
 .ps +2
 .SH SEE ALSO
-WlzInitRasterScan(3),
-WlzError(3)
+Alc(3), WlzError(3)
 .SH BUGS
 Still to be found.

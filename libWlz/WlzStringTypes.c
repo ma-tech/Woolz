@@ -634,7 +634,7 @@ WlzGMModelType	WlzStringToGMModelType(const char *tStr,
 					WlzErrorNum *dstErr)
 {
   int		tI0;
-  WlzTransformType	tType = WLZ_GMMOD_2I;
+  WlzGMModelType mType = WLZ_GMMOD_2I;
   WlzErrorNum	errNum = WLZ_ERR_DOMAIN_TYPE;
 
   if(WlzStringMatchValue(&tI0, tStr,
@@ -644,14 +644,14 @@ WlzGMModelType	WlzStringToGMModelType(const char *tStr,
 			 "WLZ_GMMOD_3D", WLZ_GMMOD_3D,
 			 NULL))
   {
-    tType = tI0;
+    mType = tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(tType);
+  return(mType);
 }
 
 /************************************************************************

@@ -47,10 +47,17 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-09-00 bill	Add WlzAffineTransformDimension(),
+* 		WlzAffineTransformTranslationSet(),
+*		WlzAffineTransformFromTranslation(),
+*		WlzAffineTransformRotationSet(),
+*		WlzAffineTransformFromScale(),
+*		WlzAffineTransformScaleSet() and
+*		WlzAffineTransformFromRotation().
 * 10-08-00 bill	Modify WlzMakeContour().
 *		Add WlzStringFromGMModelType(), WlzStringToGMModelType()
 *		and WlzAssignGMModel().
-* 17-03-00  bill Strip out all the WlzEdge functions and add
+* 17-03-00 bill Strip out all the WlzEdge functions and add
 * 		functions for Woolz geometric models.
 * 04-02-00 bill Add WlzHistogramFitPeaks().
 * 02-02-00 bill Added WlzRsvFilterBuffer(), WlzHistogramRsvGauss(),
@@ -133,17 +140,30 @@ extern WlzObject *Wlz3DViewTransformObj(WlzObject		*srcObj,
 * WlzAffineTransform.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
-extern WlzAffineTransform	*WlzAffineTransformFromMatrix4X4(
+extern WlzAffineTransform	*WlzAffineTransformFromMatrix(
 				  WlzTransformType type,
 				  double **arrayMat,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
-extern WlzAffineTransform	*WlzAffineTransformFromMatrix(
+extern WlzAffineTransform	*WlzAffineTransformFromTranslation(
 				  WlzTransformType type,
-				  WlzIVertex2 arraySizeMat,
-				  double **arrayMat,
+				  double tX,
+				  double tY,
+				  double tZ,
 				  WlzErrorNum *dstErr);
-extern WlzAffineTransform	*WlzAffineTransformFromPrim(
+extern WlzAffineTransform	*WlzAffineTransformFromScale(
+				  WlzTransformType type,
+				  double sX,
+				  double sY,
+				  double sZ,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformFromRotation(
+				  WlzTransformType type,
+				  double rX,
+				  double rY,
+				  double rZ,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformFromPrimVal(
 				  WlzTransformType type,
 				  double trX,
 				  double trY,
@@ -156,6 +176,8 @@ extern WlzAffineTransform	*WlzAffineTransformFromPrim(
 				  double trXsi,
 				  int trInvert,
 				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformFromPrim(
+				  WlzAffineTransformPrim prim);
 extern WlzAffineTransform	*WlzAffineTransformFromSpin(
 				  double spX,
 				  double spY,
@@ -178,6 +200,9 @@ extern WlzAffineTransform	*WlzAffineTransformInverse(
 extern WlzAffineTransform	*WlzAffineTransformCopy(
 				  WlzAffineTransform *trans,
 				  WlzErrorNum *dstErr);
+extern int			WlzAffineTransformDimension(
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
 extern int			WlzAffineTransformIsTranslate(
 				  WlzAffineTransform *trans,
 				  WlzObject *obj,
@@ -190,28 +215,54 @@ extern WlzObject 		*WlzAffineTransformObj(
 				  WlzAffineTransform *trans,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
-extern WlzDVertex2     		WlzAffineTransformVertexD(
+extern WlzDVertex2     		WlzAffineTransformVertexD2(
 				  WlzAffineTransform *trans,
 				  WlzDVertex2 srcVtx,
 				  WlzErrorNum *dstErr);
-extern WlzFVertex2     		WlzAffineTransformVertexF(
+extern WlzDVertex3     		WlzAffineTransformVertexD3(
+				  WlzAffineTransform *trans,
+				  WlzDVertex3 srcVtx,
+				  WlzErrorNum *dstErr);
+extern WlzFVertex2     		WlzAffineTransformVertexF2(
 				  WlzAffineTransform *trans,
 				  WlzFVertex2 srcVtx,
 				  WlzErrorNum *dstErr);
-extern WlzIVertex2     		WlzAffineTransformVertexI(
+extern WlzFVertex3     		WlzAffineTransformVertexF3(
+				  WlzAffineTransform *trans,
+				  WlzFVertex3 srcVtx,
+				  WlzErrorNum *dstErr);
+extern WlzIVertex2     		WlzAffineTransformVertexI2(
 				  WlzAffineTransform *trans,
 				  WlzIVertex2 srcVtx,
 				  WlzErrorNum *dstErr);
+extern WlzIVertex3     		WlzAffineTransformVertexI3(
+				  WlzAffineTransform *trans,
+				  WlzIVertex3 srcVtx,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum	     	WlzAffineTransformPrimGet(
+				  WlzAffineTransform *tr,
+				  WlzAffineTransformPrim *prim);
 #ifndef WLZ_EXT_BIND
-extern WlzErrorNum 		WlzAffineTransformMatrixSet4X4(
+extern WlzErrorNum 		WlzAffineTransformMatrixSet(
 				  WlzAffineTransform *trans,
 				  double **arrayMat);
 #endif /* WLZ_EXT_BIND */
-extern WlzErrorNum 		WlzAffineTransformMatrixSet(
-				  WlzAffineTransform *trans,
-				  WlzIVertex2 arraySizeMat,
-				  double **arrayMat);
-extern WlzErrorNum 		WlzAffineTransformPrimSet(
+extern WlzErrorNum		WlzAffineTransformTranslationSet(
+				  WlzAffineTransform *tr,
+				  double tX,
+				  double tY,
+				  double tZ);
+extern WlzErrorNum		WlzAffineTransformScaleSet(
+				  WlzAffineTransform *tr,
+				  double sX,
+				  double sY,
+				  double sZ);
+extern WlzErrorNum		WlzAffineTransformRotationSet(
+				  WlzAffineTransform *tr,
+				  double rX,
+				  double rY,
+				  double rZ);
+extern WlzErrorNum 		WlzAffineTransformPrimValSet(
 				WlzAffineTransform *trans,
 				  double trX,
 				  double trY,
@@ -223,10 +274,9 @@ extern WlzErrorNum 		WlzAffineTransformPrimSet(
 				  double trPsi,
 				  double trXsi,
 				  int trInvert);
-extern WlzErrorNum 		WlzAffineTransformMatrixUpdate(
-				  WlzAffineTransform *trans);
-extern WlzErrorNum 		WlzAffineTransformPrimUpdate(
-				  WlzAffineTransform *trans);
+extern WlzErrorNum 		WlzAffineTransformPrimSet(
+				  WlzAffineTransform *tr,
+				  WlzAffineTransformPrim prim);
 
 /************************************************************************
 * WlzAffineTransformLSq.c						*

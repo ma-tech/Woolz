@@ -69,7 +69,6 @@ WlzAffineTransform *WlzMakeAffineTransform(WlzTransformType type,
   {
     trans->type = type;
     /* Initialize to the identity transform */
-    trans->scale = 1.0;
     trans->mat[0][0] = 1.0;
     trans->mat[1][1] = 1.0;
     trans->mat[2][2] = 1.0;

@@ -181,8 +181,8 @@ static WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vtxVec0,
   {
     /* Make the transform */
     trMat[2][0] = 0; trMat[2][1] = 0; trMat[2][2] = 1;
-    trans = WlzAffineTransformFromMatrix4X4(WLZ_TRANSFORM_2D_AFFINE, trMat,
-					    &errNum);
+    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trMat,
+					 &errNum);
   }
   if(a)
   {
@@ -288,8 +288,8 @@ static WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
     trMat[0][0] = b[1];  trMat[0][1] = b[2]; trMat[0][2] = b[0];
     trMat[1][0] = -b[2]; trMat[1][1] = b[1]; trMat[1][2] = b[3];
     trMat[2][0] = 0; trMat[2][1] = 0; trMat[2][2] = 1;
-    trans = WlzAffineTransformFromMatrix4X4(WLZ_TRANSFORM_2D_AFFINE, trMat,
-					    &errNum);
+    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trMat,
+					 &errNum);
   }
   if(a)
   {
@@ -344,9 +344,10 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
     ++vtxVec0;
     ++vtxVec1;
   }
-  trans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE, 
-  				     sum.vtX / nVtx, sum.vtY / nVtx, 0.0,
-				     1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, &errNum);
+  trans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE, 
+					sum.vtX / nVtx, sum.vtY / nVtx, 0.0,
+					1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
+					&errNum);
   if(dstErr)
   {
     *dstErr = errNum;

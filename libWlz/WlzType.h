@@ -15,6 +15,8 @@
 *		primatives, enumerations and structures.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 29-09-00 bill	Move the primitives from the WlzAffineTransform into
+*		their own data structure.
 * 14-08-00 bill	Remove WLZ_CONTOUR_LIST object type. Add contour to
 *		the domain union. Remove WLZ_VECTOR_(FLOAT|INT),
 *		WLZ_POINT_(FLOAT|INT), WLZ_DISP_FRAME,
@@ -1393,13 +1395,35 @@ typedef struct
 } WlzRsvFilter;
  
 /************************************************************************
-* Affine tranform: WLZ_TRANSFORM_2D_AFFINE or WLZ_TRANSFORM_3D_AFFINE.
+* 2D or 3D affine transform. The homogeneous matrix (mat) is always
+* allocated as a 4x4 AlcDouble2Alloc array. It is used as a 3x3
+* matrix for 2D and as a 4x4 matrix for 3D affine transforms.
 ************************************************************************/
 typedef struct _WlzAffineTransform
 {
   WlzTransformType type;        		  		     /* CORE */
   int           linkcount;      				     /* CORE */
-  void *freeptr;						     /* CORE */
+  void 		*freeptr;					     /* CORE */
+  double        **mat;
+} WlzAffineTransform;
+
+/************************************************************************
+* Affine tranform primitives:
+* In 2D:
+*   invert:     x' = -x, y' = y.
+*   translate:  x' = x + tx, y' = y + ty.
+*   scale:      x' = scale * x, y' = scale * y.
+*   rotate:     x' = cos(theta) * x - sin(theta) * y
+*               y' = sin(theta) * x + cos(theta) * y
+*   shear:      x' = (1 - alpha * sin(psi) * cos(psi)) * x
+*                   + alpha * cos(psi) * cos(psi) * y
+*               y' = -alpha * sin(psi) * sin(psi) * x
+*                   + (1 + alpha * sin(psi) * cos(psi)) * y
+*  In 3D:
+* TODO
+************************************************************************/
+typedef struct _WlzAffineTransformPrim
+{
   double        tx,             			    /* X translation */
 		ty,             			    /* Y translation */
 		tz,             			    /* Z translation */
@@ -1410,8 +1434,7 @@ typedef struct _WlzAffineTransform
 		psi,            		 /* Shear angle in x-y plane */
 		xsi;					   /* 3D shear angle */
   int           invert;               /* Non-zero if reflection about y-axis */
-  double        **mat;
-} WlzAffineTransform;
+} WlzAffineTransformPrim;
 
 /************************************************************************
 * Basis function transform: WLZ_TRANSFORM_2D_BASISFN,		

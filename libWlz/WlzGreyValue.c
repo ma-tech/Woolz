@@ -13,7 +13,8 @@
 *		of 2D and 3D Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables.
+* 02-10-00 bill	Use 3D transform for 3D object in WlzGreyValueGet().
+* 05-06-00 bill Removed unused variables.
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -537,12 +538,11 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
   		idY,
 		idZ,
 		plane0;
-  WlzDVertex2	vtx;
+  WlzDVertex2	vtx2;
+  WlzDVertex3	vtx3;
   WlzGreyP	gPtr[8];
   WlzGreyV	gVal[8];
 
-  vtx.vtX = kol;
-  vtx.vtY = line;
   switch(gVWSp->objType)
   {
     case WLZ_2D_DOMAINOBJ:
@@ -551,10 +551,10 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
       {
 	for(idX = 0; idX < 2; ++idX)
 	{
-	  vtx.vtX = kol + idX;
-	  vtx.vtY = line + idY;
-	  vtx = WlzAffineTransformVertexD(gVWSp->invTrans, vtx, NULL);
-	  WlzGreyValueGet2D1(gVWSp, vtx.vtY, vtx.vtX);
+	  vtx2.vtX = kol + idX;
+	  vtx2.vtY = line + idY;
+	  vtx2 = WlzAffineTransformVertexD2(gVWSp->invTrans, vtx2, NULL);
+	  WlzGreyValueGet2D1(gVWSp, vtx2.vtY, vtx2.vtX);
 	  gPtr[idN] = gVWSp->gPtr[0];
 	  gVal[idN] = gVWSp->gVal[0];
 	  ++idN;
@@ -575,10 +575,11 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 	{
 	  for(idX = 0; idX < 2; ++idX)
 	  {
-	    vtx.vtX = kol + idX;
-	    vtx.vtY = line + idY;
-	    vtx = WlzAffineTransformVertexD(gVWSp->invTrans, vtx, NULL);
-	    WlzGreyValueGet3D1(gVWSp, plane0 + idZ, vtx.vtY, vtx.vtX);
+	    vtx3.vtX = kol + idX;
+	    vtx3.vtY = line + idY;
+	    vtx3.vtZ = plane + idZ;
+	    vtx3 = WlzAffineTransformVertexD3(gVWSp->invTrans, vtx3, NULL);
+	    WlzGreyValueGet3D1(gVWSp, vtx3.vtZ, vtx3.vtY, vtx3.vtX);
 	    gPtr[idN] = gVWSp->gPtr[0];
 	    gVal[idN] = gVWSp->gVal[0];
 	    ++idN;
@@ -921,24 +922,35 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
 			        double plane, double line, double kol)
 {
-  WlzDVertex2	vtx;
+  WlzDVertex2	vtx2;
+  WlzDVertex3	vtx3;
 
   if(gVWSp)
   {
-    if(gVWSp->invTrans)
-    {
-      vtx.vtX = kol;
-      vtx.vtY = line;
-      vtx = WlzAffineTransformVertexD(gVWSp->invTrans, vtx, NULL);
-      kol = vtx.vtX;
-      line = vtx.vtY;
-    }
     switch(gVWSp->objType)
     {
       case WLZ_2D_DOMAINOBJ:
+	if(gVWSp->invTrans)
+	{
+	  vtx2.vtX = kol;
+	  vtx2.vtY = line;
+	  vtx2 = WlzAffineTransformVertexD2(gVWSp->invTrans, vtx2, NULL);
+	  kol = vtx2.vtX;
+	  line = vtx2.vtY;
+	}
 	WlzGreyValueGet2D1(gVWSp, line, kol);
 	break;
       case WLZ_3D_DOMAINOBJ:
+	if(gVWSp->invTrans)
+	{
+	  vtx3.vtX = kol;
+	  vtx3.vtY = line;
+	  vtx3.vtZ = plane;
+	  vtx3 = WlzAffineTransformVertexD3(gVWSp->invTrans, vtx3, NULL);
+	  kol = vtx3.vtX;
+	  line = vtx3.vtY;
+	  plane = vtx3.vtZ;
+	}
 	WlzGreyValueGet3D1(gVWSp, plane, line, kol);
 	break;
       default:

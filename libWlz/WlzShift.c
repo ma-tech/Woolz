@@ -216,10 +216,9 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 	break;
       case WLZ_TRANS_OBJ: /* FALLTHROUGH */
       case WLZ_AFFINE_TRANS:
-        tDom0.t = WlzAffineTransformFromPrim(inDom.t->type, (double )xShift,
-					     (double )yShift, (double )zShift,
-					     1.0, 0.0, 0.0, 0.0,
-					     0.0, 0.0, 0, &errNum);
+	tDom0.t = WlzAffineTransformFromPrimVal(inDom.t->type,
+		      (double)xShift, (double )yShift, (double )zShift,
+		      1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  outDom.t = WlzAffineTransformProduct(inDom.t, tDom0.t, &errNum);

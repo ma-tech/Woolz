@@ -253,7 +253,7 @@ static WlzIBox3	WlzBoundingBoxTransObj3D(WlzObject *inObj,
     idx = 0;
     while((idx < 4) && (errNum == WLZ_ERR_NONE))
     {
-      bufVx[idx] = WlzAffineTransformVertexI(trans, bufVx[idx], &errNum);
+      bufVx[idx] = WlzAffineTransformVertexI2(trans, bufVx[idx], &errNum);
       ++idx;
     }
   }

@@ -710,7 +710,7 @@ static WlzDVertex2 WlzCentreOfMassTrans2D(WlzObject *srcObj,
   cMass = WlzCentreOfMass2D(srcObj, binObjFlag, &mass, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    cMass = WlzAffineTransformVertexD(trans, cMass, &errNum);
+    cMass = WlzAffineTransformVertexD2(trans, cMass, &errNum);
   }
   if((errNum == WLZ_ERR_NONE) && dstMass)
   {

@@ -12,6 +12,8 @@
 * Purpose:      Text description (facts) of a Woolz object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 02-10-00 bill Modify WlzObjFactsAffineTrans() to print an affine
+*		transform's matrix rather than it's primitives.
 * 15-08-00 bill	Removed obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
 *		WLZ_POINT_(INT)|(FLOAT). Add WlzObjFactsContour()
 *		and WlzObjFactsGMModel().
@@ -814,43 +816,37 @@ static WlzErrorNum WlzObjFactsAffineTrans(WlzObjFactsData *fData,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzObjFactsAppend(fData, "tx: %g.\n", trans->tx);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "ty: %g.\n", trans->ty);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "tz: %g.\n", trans->tz);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "scale: %g.\n", trans->scale);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "theta: %g.\n", trans->theta);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "phi: %g.\n", trans->phi);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "alpha: %g.\n", trans->alpha);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "psi: %g.\n", trans->psi);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "xsi: %g.\n", trans->xsi);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "invert: %d.\n", trans->invert);
+      switch(WlzAffineTransformDimension(trans, NULL))
+      {
+        case 2:
+	  errNum = WlzObjFactsAppend(fData, "mat: %-10g %-10g %-10g\n",
+				     trans->mat[0][0], trans->mat[0][1],
+				     trans->mat[0][2]);
+	  errNum = WlzObjFactsAppend(fData, "     %-10g %-10g %-10g\n",
+				     trans->mat[1][0], trans->mat[1][1],
+				     trans->mat[1][2]);
+	  errNum = WlzObjFactsAppend(fData, "     %-10g %-10g %-10g\n",
+				     trans->mat[2][0], trans->mat[2][1],
+				     trans->mat[2][2]);
+	  break;
+	case 3:
+	  errNum = WlzObjFactsAppend(fData, "mat: %-10g %-10g %-10g %-10g\n",
+			  trans->mat[0][0], trans->mat[0][1],
+			  trans->mat[0][2], trans->mat[0][3]);
+	  errNum = WlzObjFactsAppend(fData, "     %-10g %-10g %-10g %-10g\n",
+			  trans->mat[1][0], trans->mat[1][1],
+			  trans->mat[1][2], trans->mat[1][3]);
+	  errNum = WlzObjFactsAppend(fData, "     %-10g %-10g %-10g %-10g\n",
+			  trans->mat[2][0], trans->mat[2][1],
+			  trans->mat[2][2], trans->mat[2][3]);
+	  errNum = WlzObjFactsAppend(fData, "     %-10g %-10g %-10g %-10g\n",
+			  trans->mat[3][0], trans->mat[3][1],
+			  trans->mat[3][2], trans->mat[3][3]);
+	  break;
+        default:
+	  errNum = WLZ_ERR_TRANSFORM_TYPE;
+	  break;
+      }
     }
   }
   --(fData->indent);
@@ -1127,7 +1123,7 @@ static WlzErrorNum WlzObjFactsHistogram(WlzObjFactsData *fData,
 * Purpose:	Produces a text description of a contour domain.	*
 * Global refs:	-							*
 * Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object type, not used.
+*		WlzObject *obj:		Object for type, not used.
 *		WlzContour *ctr:	Given contour domain.		*
 ************************************************************************/
 static WlzErrorNum WlzObjFactsContour(WlzObjFactsData *fData,

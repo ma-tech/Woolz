@@ -13,6 +13,7 @@
 *		vertex lies within an object's domain.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 02-10-00 bill Add switch for transform type in WlzInsideDomain().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -129,7 +130,8 @@ int		WlzInsideDomain(WlzObject *obj,
 				WlzErrorNum *dstErr)
 {
   int		inside = 0;
-  WlzDVertex2	vtx;
+  WlzDVertex2	vtx2;
+  WlzDVertex3	vtx3;
   WlzAffineTransform *invTrans = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -183,13 +185,31 @@ int		WlzInsideDomain(WlzObject *obj,
 	else if((invTrans = WlzAffineTransformInverse(obj->domain.t,
 						      &errNum)) != NULL)
 	{
-	  vtx.vtX = kol;
-	  vtx.vtY = line;
-	  vtx = WlzAffineTransformVertexD(invTrans, vtx, &errNum);
-	  if(errNum == WLZ_ERR_NONE)
+	  switch(WlzAffineTransformDimension(obj->domain.t,NULL))
 	  {
-	    inside = WlzInsideDomain(obj->values.obj, plane, vtx.vtY, vtx.vtX,
-				     &errNum);
+	    case 2:
+	      vtx2.vtX = kol;
+	      vtx2.vtY = line;
+	      vtx2 = WlzAffineTransformVertexD2(invTrans, vtx2, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		inside = WlzInsideDomain(obj->values.obj,
+					 plane, vtx2.vtY, vtx2.vtX, &errNum);
+	      }
+	      break;
+	    case 3:
+	      vtx3.vtX = kol;
+	      vtx3.vtY = line;
+	      vtx3.vtZ = plane;
+	      vtx3 = WlzAffineTransformVertexD3(invTrans, vtx3, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		inside = WlzInsideDomain(obj->values.obj,
+					 vtx3.vtZ, vtx3.vtY, vtx3.vtX, &errNum);
+	      }
+	    default:
+	      errNum = WLZ_ERR_TRANSFORM_TYPE;
+	      break;
 	  }
 	  (void )WlzFreeAffineTransform(invTrans);
 	}
