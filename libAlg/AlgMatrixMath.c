@@ -33,14 +33,20 @@
 /*!
 * \return       <void>
 * \brief        Computes the sum of two matricies and returns
-*		the result in a third supplied matrix,
-*		aM = bM + cM. The dimensions of the all three
-*		matricies must be nR, nC. It is safe to supply
-*		the same matrix as any combination of aM, bM and cM.
+*		the result in a third supplied matrix:
+*		\f[
+		  \mathbf{A} = \mathbf{B} + \mathbf{C}
+		\f]
+*		The dimensions of the all three matricies must be
+*		nR, nC. It is safe to supply the same matrix as any
+*		combination of aM, bM and cM.
 * \note		For efficiency the given parameters are not checked.
-* \param        aM 			Supplied matrix for result.
-* \param        bM 			First matrix in the sum.
-* \param        cM			Second matrix in the sum.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param        bM 			First matrix in the sum,
+*					\f$\mathbf{B}\f$.
+* \param        cM			Second matrix in the sum,
+*					\f$\mathbf{C}\f$.
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
@@ -68,14 +74,20 @@ void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 /*!
 * \return       <void>
 * \brief        Subtracts on matrix from another and returns the
-*		result in a third supplied matrix,
-*		aM = bM - cM. The dimensions of the all three
+*		result in a third supplied matrix:
+*		\f[
+		  \mathbf{A} = \mathbf{B} - \mathbf{C}
+		\f]
+*		The dimensions of the all three
 *		matricies must be nR, nC. It is safe to supply
 *		the same matrix as any combination of aM, bM and cM.
 * \note		For efficiency the given parameters are not checked.
-* \param        aM 			Supplied matrix for result.
-* \param        bM 			First matrix in the subtraction.
-* \param        cM			Second matrix in the subtraction.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param        bM 			First matrix in the subtraction,
+					\f$\mathbf{B}\f$.
+* \param        cM			Second matrix in the subtraction,
+					\f$\mathbf{C}\f$.
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
@@ -103,13 +115,18 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
 /*!
 * \return       <void>
 * \brief        Computes the product of two matricies and returns
-*		the result in a third supplied matrix,
-*		aM = bM x cM. The dimensions of the result matrix
-*		(aM) must be cR, bC.
+*		the result in a third supplied matrix:
+*               \f[
+                  \mathbf{A} = \mathbf{B} \mathbf{C}
+		\f]
+*		The dimensions of the result matrix (aM) must be cR, bC.
 * \note		For efficiency the given parameters are not checked.
-* \param        aM 			Supplied matrix for result.
-* \param        bM 			First matrix in the product.
-* \param        cM			Second matrix in the product.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$
+* \param        bM 			First matrix in the product,
+*					\f$\mathbf{B}\f$
+* \param        cM			Second matrix in the product,
+*					\f$\mathbf{C}\f$
 * \param	bR			Number of rows in matrix bM.
 * \param	bC			Number of columns in matrix bM.
 * \param	cC			Number of columns in matrix cM.
@@ -160,12 +177,17 @@ double		AlgMatrixTrace(double **aM, int nRC)
 
 /*!
 * \return       <void>
-* \brief        Computes the transpose of the given matrix.
+* \brief        Computes the transpose of the given matrix:
+*		\f[
+		\mathbf{A} = \mathbf{B^T}
+		\f]
 *		aM = transpose(bM). The dimensions of the result
 *		matrix (aM) must be aR == bC, aC == bR.
 * \note		For efficiency the given parameters are not checked.
-* \param        aM 			Supplied matrix for result.
-* \param        bM 			Matrix to transpose.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param        bM 			Matrix to transpose,
+*					\f$\mathbf{B}\f$.
 * \param	bR			Number of rows in matrix bM.
 * \param	bC			Number of columns in matrix bM.
 */
@@ -186,10 +208,14 @@ void		AlgMatrixTranspose(double **aM, double **bM, int bR, int bC)
 /*!
 * \return       <void>
 * \brief        Copies the values of the matrix bM to the result
-*		matric aM.
+*		matric aM:
+*		\f[
+		\mathbf{A} = \mathbf{B}
+		\f]
 * \note		For efficiency the given parameters are not checked.
-* \param        aM 			Supplied matrix for result.
-* \param        bM 			Matrix to transpose.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param        bM 			Matrix to copy, \f$\mathbf{B}\f$.
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
@@ -213,26 +239,73 @@ void		AlgMatrixCopy(double **aM, double **bM, int nR, int nC)
 
 /*!
 * \return       <void>
-* \brief        Multiplies the given matrix by the given scalar in
-*		place, aM = sv aM.
+* \brief        Multiplies the given matrix by the given scalar:
+*		\f[
+		\mathbf{A} = s \mathbf{B}
+		\f]
 * \note		For efficiency the given parameters are not checked.
-* \param        aM 			Supplied matrix for result.
-* \param	sv			Scalar value.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param        bM 			Given matrix to scale,
+*					\f$\mathbf{B}\f$.
+* \param	sv			Scalar value, \f$s\f$.
 * \param	nR			Number of rows in matrix aM.
 * \param	nC			Number of columns in matrix aM.
 */
-void		AlgMatrixScale(double **aM, double sv, int nR, int nC)
+void		AlgMatrixScale(double **aM, double **bM, double sv,
+			       int nR, int nC)
 {
   int		id0,
   		id1;
-  double 	*aRowM;
+  double 	*aRowM,
+  		*bRowM;
 
   for(id0 = 0; id0 < nR; ++id0)
   {
     aRowM = aM[id0];
+    bRowM = bM[id0];
     for(id1 = 0; id1 < nC; ++id1)
     {
-      *aRowM++ *= sv;
+      *aRowM++ *= *bRowM++ * sv;
+    }
+  }
+}
+
+/*!
+* \return       <void>
+* \brief        Multiplies the a matrix by a scalar and then adds
+*		another matrix:
+*		\f[
+		\mathbf{A} = \mathbf{B} + s \mathbf{C}.
+		\f]
+*		All the matrices must have the same dimensions.
+* \note		For efficiency the given parameters are not checked.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param        bM 			Given matrix to scale,
+*					\f$\mathbf{B}\f$.
+* \param	cM			Matrix too add, \f$\mathbf{C}\f$.
+* \param	sv			Scalar value, \f$s\f$.
+* \param	nR			Number of rows in each matrix.
+* \param	nC			Number of columns in each matrix.
+*/
+void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
+				  double sv, int nR, int nC)
+{
+  int		id0,
+  		id1;
+  double 	*aRowM,
+  		*bRowM,
+		*cRowM;
+
+  for(id0 = 0; id0 < nR; ++id0)
+  {
+    aRowM = aM[id0];
+    bRowM = bM[id0];
+    cRowM = cM[id0];
+    for(id1 = 0; id1 < nC; ++id1)
+    {
+      *aRowM++ = *bRowM++ + (*cRowM++ * sv);
     }
   }
 }
@@ -240,26 +313,23 @@ void		AlgMatrixScale(double **aM, double sv, int nR, int nC)
 /*!
 * \return       <void>
 * \brief        Sets the elements of the given square matrix so that it
-*		is a scalar matrix, aM = sv I.
+*		is a scalar matrix:
+*		\f[
+                \mathbf{A} = s \mathbf{I}
+		\f]
 * \note		For efficiency the given parameters are not checked.
 * \note		This function assumes that the matrix has been allocated
 *		by AlcDouble2Malloc().
-* \param        aM 			Supplied matrix for result.
-* \param	sv			Scalar value.
+* \param        aM 			Supplied matrix for result,
+*					\f$\mathbf{A}\f$.
+* \param	sv			Scalar value, \f$s\f$.
 * \param	nRC			Number of rows and columns in matrix.
 */
 void		AlgMatrixScalar(double **aM, double sv, int nRC)
 {
-  int		id0,
-  		nRCSq;
-  double	*aRowM;
+  int		id0;
 
-  aRowM = aM[0];
-  nRCSq = nRC * nRC;
-  for(id0 = 0; id0 < nRCSq; ++id0)
-  {
-    aRowM[id0] = 0.0;
-  }
+  (void )memset(*aM, 0, nRC * nRC);
   for(id0 = 0; id0 < nRC; ++id0)
   {
     aM[id0][id0] = sv;
@@ -270,6 +340,9 @@ void		AlgMatrixScalar(double **aM, double sv, int nRC)
 * \return       <void>
 * \brief        Sets the elements of the given matrix to zero.
 * \note		For efficiency the given parameters are not checked.
+*		\f[
+		\mathbf{A} = \mathbf{0}
+		\f]
 * \note		This function assumes that the matrix has been allocated
 *		by AlcDouble2Malloc().
 * \param        aM 			Supplied matrix for result.
@@ -282,14 +355,46 @@ void		AlgMatrixZero(double **aM, int nR, int nC)
   		nRC;
   double	*aRowM;
 
-  aRowM = aM[0];
-  nRC = nR * nR;
-  for(id0 = 0; id0 < nRC; ++id0)
-  {
-    aRowM[id0] = 0.0;
-  }
+  (void )memset(*aM, 0, nR * nC);
 }
 
+/*!
+* \return
+* \brief	Multiplies the matrix \f$\mathbf{B}\f$ by the vector
+*		\f$\mathbf{c}\f$:
+*		\f[
+		\mathbf{a} = \mathbf{B} \mathbf{c}
+		\f]
+*		This function assumes that the matrix has been allocated
+*		by AlcDouble2Malloc().
+* \param	aV			Supplied vector for result.
+* \param	bM			Matrix \f$mathbf{B}\f$.
+* \param	cV			Vector \f$\mathbf{c}\f$.
+* \param	nR			The number of rows in \f$mathbf{B}\f$.
+* \param	nC			The number of columns in
+* 					\f$mathbf{c}\f$.
+*/
+void 		AlgMatrixVectorMul(double *aV, double **bM, double *cV,
+				   int nR, int nC)
+{
+  int		id0,
+  		id1;
+  double	tD0;
+  double	*bRow,
+  		*cCol;
+
+  for(id0 = 0; id0 < nR; ++id0)
+  {
+    tD0 = 0.0;
+    cCol = cV;
+    bRow = bM[id0];
+    for(id1 = 0; id1 < nC; ++id1)
+    {
+      tD0 += *bRow++ * *cCol++;
+    }
+    aV[id0] = tD0;
+  }
+}
 
 /*!
 * @}
