@@ -53,6 +53,7 @@ EXECUTABLES		= \
 			WlzContourGeomFilter \
 			WlzContourObj \
 			WlzContourSzSelect \
+			WlzContourSpxStats \
 			WlzConvertPix \
 			WlzConvexPoly \
 			WlzCreateSpecialSE \
@@ -160,6 +161,7 @@ CSOURCES		= \
 			WlzContourFromPoints.c \
 			WlzContourGeomFilter.c \
 			WlzContourObj.c \
+			WlzContourSpxStats.c \
 			WlzContourSzSelect.c \
 			WlzConvertPix.c \
 			WlzConvexPoly.c \
