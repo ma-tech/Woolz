@@ -82,9 +82,13 @@ JNIEXPORT jlong JNICALL	Java_uk_ac_mrc_hgu_Wlz_WlzFileStream_JWlzOpen(
 				jstring jName, jstring jMode)
 {
   FILE		*fP = NULL;
-  const char	*cName,
-  		*cMode;
+  const char	*cName;
+  jboolean      isCopyName;
+  const char	*cMode;
+  jboolean      isCopyMode;
 
+
+/* #define JWLZ_DEBUG */
 #ifdef JWLZ_DEBUG
   int hack = 1;
   (void )fprintf(stderr, "process id: %d", (int )getpid());
@@ -93,8 +97,11 @@ JNIEXPORT jlong JNICALL	Java_uk_ac_mrc_hgu_Wlz_WlzFileStream_JWlzOpen(
     sleep(2);
   }
 #endif /* JWLZ_DEBUG */
-  cName = (*jEnv)->GetStringUTFChars(jEnv, jName, NULL);
-  cMode = (*jEnv)->GetStringUTFChars(jEnv, jMode, NULL);
+
+
+  cMode = (*jEnv)->GetStringUTFChars(jEnv, jMode, &isCopyMode);
+  cName = (*jEnv)->GetStringUTFChars(jEnv, jName, &isCopyName);
+
   if(strlen(cMode) == 0)
   {
     if(strcmp(cName, "stdin") == 0)
@@ -117,7 +124,13 @@ JNIEXPORT jlong JNICALL	Java_uk_ac_mrc_hgu_Wlz_WlzFileStream_JWlzOpen(
       ThrowFileIOException(jEnv);
     }
   }
-  (*jEnv)->ReleaseStringUTFChars(jEnv, jName, NULL);
-  (*jEnv)->ReleaseStringUTFChars(jEnv, jMode, NULL);
+
+  if(isCopyName == JNI_TRUE) {
+     (*jEnv)->ReleaseStringUTFChars(jEnv, jName, cName);
+  }
+  if(isCopyMode == JNI_TRUE) {
+     (*jEnv)->ReleaseStringUTFChars(jEnv, jMode, cMode);
+  }
+
   return((jlong )fP);
 }
