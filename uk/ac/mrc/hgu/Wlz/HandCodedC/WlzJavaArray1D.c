@@ -347,6 +347,93 @@ static jlong	WlzJavaArray1DGetNonPrim(
 	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
       }
       break;
+    case WLZ_JPM_KEY_WLZ_IVERTEX3_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzIVertex3))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtX", "I");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtY", "I");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtZ", "I");
+	((WlzIVertex3 *)bufW)->vtX = (*jEnv)->GetIntField(jEnv, jWObj,
+							  fldID[0]);
+	((WlzIVertex3 *)bufW)->vtY = (*jEnv)->GetIntField(jEnv, jWObj,
+							  fldID[1]);
+	((WlzIVertex3 *)bufW)->vtZ = (*jEnv)->GetIntField(jEnv, jWObj,
+							  fldID[2]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzIVertex3 *)bufW + idN0)->vtX = (*jEnv)->GetIntField(jEnv, jWObj, 
+	  							   fldID[0]);
+	  ((WlzIVertex3 *)bufW + idN0)->vtY = (*jEnv)->GetIntField(jEnv, jWObj,
+	  							   fldID[1]);
+	  ((WlzIVertex3 *)bufW + idN0)->vtZ = (*jEnv)->GetIntField(jEnv, jWObj,
+	  							   fldID[2]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_FVERTEX3_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzFVertex3))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtX", "F");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtY", "F");
+	fldID[2] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtZ", "F");
+	((WlzFVertex3 *)bufW)->vtX = (*jEnv)->GetFloatField(jEnv, jWObj,
+							    fldID[0]);
+	((WlzFVertex3 *)bufW)->vtY = (*jEnv)->GetFloatField(jEnv, jWObj,
+							    fldID[1]);
+	((WlzFVertex3 *)bufW)->vtZ = (*jEnv)->GetFloatField(jEnv, jWObj,
+							    fldID[2]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzFVertex3 *)bufW + idN0)->vtX = (*jEnv)->GetFloatField(jEnv,
+							      jWObj, fldID[0]);
+	  ((WlzFVertex3 *)bufW + idN0)->vtY = (*jEnv)->GetFloatField(jEnv,
+	  						      jWObj, fldID[1]);
+	  ((WlzFVertex3 *)bufW + idN0)->vtZ = (*jEnv)->GetFloatField(jEnv,
+	  						      jWObj, fldID[2]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzDVertex3))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtX", "D");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtY", "D");
+	fldID[2] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtZ", "D");
+	((WlzDVertex3 *)bufW)->vtX = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							     fldID[0]);
+	((WlzDVertex3 *)bufW)->vtY = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							     fldID[1]);
+	((WlzDVertex3 *)bufW)->vtZ = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							     fldID[2]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzDVertex3 *)bufW + idN0)->vtX = (*jEnv)->GetDoubleField(jEnv,
+							      jWObj, fldID[0]);
+	  ((WlzDVertex3 *)bufW + idN0)->vtY = (*jEnv)->GetDoubleField(jEnv,
+							      jWObj, fldID[1]);
+	  ((WlzDVertex3 *)bufW + idN0)->vtZ = (*jEnv)->GetDoubleField(jEnv,
+							      jWObj, fldID[2]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
     case WLZ_JPM_KEY_WLZ_IBOX2_ARY1:
       if((bufW = AlcMalloc(wArraySz * sizeof(WlzIBox2))) != NULL)
       {
