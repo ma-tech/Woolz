@@ -15,7 +15,6 @@
 #include <float.h>
 #include <Wlz.h>
 
-#define	IN_RECORD_MAX   (1024)
 #define	NumberToTrack   (10)
 #define MaxNumOfFiles   (50)
 #define TOL 1.0e-5
@@ -23,14 +22,14 @@
 
 static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model, 
                                             int            LoopIdx, 
-					    int            numOfVertices, 
+					    int           *numOfVertices, 
 					    WlzErrorNum   *dstErr   );
 
 
 
 static WlzVertexP WlzVerticesThisLoopOfSimpleShell2DGM(  WlzGMModel  *model, 
 					    int          LoopIdx,
-					    int          numOfVertices,
+					    int         *numOfVertices,
 					    WlzErrorNum *dstErr   );
 
 
@@ -162,26 +161,26 @@ static void GetSamplePointsFromAllVertices(   WlzVertexP   sLoopVData,
                                               WlzDVertex2  StandSampleP[NumberToTrack],
                                               WlzErrorNum *dstErr );
 
-static int NumberOfVerticesDoubleInNonCycleCaseInTheLoopOfGM(WlzGMModel   *gM, 
+static int NumberOfVerticesDoubleInNonCycleCaseInTheLoopOfGM( WlzGMModel  *gM, 
  						int sLoopIdx, 
 						WlzErrorNum *dstErr);
 
-static int *GetThebifurcatePointsIndexInTheNonCycleLine(   WlzGMModel  *gM, 
+static int *GetThebifurcatePointsIndexInTheNonCycleLine(  WlzGMModel *gM, 
                                            int          LoopIdx,
 					   int          numOfEnds,
                                            WlzErrorNum *dstErr );
 
 
-static int *GetTheEndsPointsIndexInTheNonCycleLine(   WlzGMModel  *gM, 
+static int *GetTheEndsPointsIndexInTheNonCycleLine(  WlzGMModel *gM, 
                                            int          LoopIdx,
 					   int          numOfEnds,
                                            WlzErrorNum *dstErr );
 
-static int HowManyEndsInTheNonCycleLine(   WlzGMModel  *gM, 
+static int HowManyEndsInTheNonCycleLine(  WlzGMModel  *gM, 
                                            int          LoopIdx, 
                                            WlzErrorNum *dstErr );
 
-static int IsACycle(   WlzGMModel  *gM, int  LoopIdx, WlzErrorNum *dstErr );
+static int IsACycle(  WlzGMModel  *gM, int  LoopIdx, WlzErrorNum *dstErr );
 
 static void  WlzOutputForFormingSurface( FILE *testFile, 
 					 char *Fstr, 
@@ -260,13 +259,10 @@ static WlzDVertex2 *WlzDVerticesThisLoopOfGM2(WlzGMModel  *model,
 					    int            numOfVertices, 
 					    WlzErrorNum   *dstErr   );
 
-
-
 static WlzDVertex3 *WlzDVerticesThisLoopOfGM3(WlzGMModel  *model, 
                                             int            LoopIdx, 
 					    int            numOfVertices, 
 					    WlzErrorNum   *dstErr   );
-
 
 static WlzDVertex2 *WlzVerticesThisIndexOfGM2(WlzGMModel  *model, 
                                             int            Idx, 
@@ -328,6 +324,7 @@ static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
 			   int		nOfTracked,
 			   int         *suc,
                            WlzErrorNum *dstErr );
+
 static void GetSamplePointsForNextTrackFromTheTrackedLoopOfGM(
                            int          i_file,
 			   int          sectionLength_L,
@@ -433,7 +430,8 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
   int                 numOfVerticesInTheStartLoop, numOfSections, i_s;
   int                 nOfVOnTheS, nOfVWithinTheS, nOfVOutTheS;
   int                *iBuf, numHV;
-  int                 endLoop;
+  int                 endLoop, ifile;
+  int                 numberN1, numberN2;
 
   AlcVector          *vec;
    
@@ -448,6 +446,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
   int                 imax, nOfTracked;
 
   int                 i,j, k, ix, jy, it, jt, kt, test = 0, nE, i_l;
+  int                 loopForFile, loopForShell, loopForLoop, loopForSection;
   int                 tempI, tempJ, tempK, tempL, tempM, tempN;
   int                 nS, nL, nV, ntS, ntL, ntV;
   int                 Continue;
@@ -462,19 +461,22 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
   int                 deltaX, deltaY, startI, fianlI;
   FILE                *testFile = NULL, *surfacefp, *infp= NULL, *outfp=NULL;
   char                *testFileStr = "outputForTest.dat";
+
+   ifileStar = startTrackingFile;
+   //ifileStar = 10;
  
    /* read the wlz object: */
    if( errNum == WLZ_ERR_NONE)
    {
-       for(i=0; i<numOf2DWlzFiles; i++)
+       for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
        {
-	        if((testFile = fopen( (const char *) TwoDImageFilesNameList[i], "r")) == NULL )
+	        if((testFile = fopen( (const char *) TwoDImageFilesNameList[loopForFile], "r")) == NULL )
                 {
          		printf("cannot open the standard contour Wlz file .\n");
          		exit(1);
       		}
 
-      		if( !(WObj[i] = WlzReadObj(testFile, &errNum) ) )
+      		if( !(WObj[loopForFile] = WlzReadObj(testFile, &errNum) ) )
       		{
          		printf("input Woolz Object Error.\n");
          		fclose(testFile); 
@@ -483,12 +485,12 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
       		fclose(testFile); 
       		testFile = NULL;
 		
-     		if(  ( (WObj[i]->type) != WLZ_CONTOUR ) )
+     		if(  ( (WObj[loopForFile]->type) != WLZ_CONTOUR ) )
       		{
        	 		errNum = WLZ_ERR_DOMAIN_TYPE;
       		}
 
-      		if(  ( WObj[i]->domain.core == NULL ) )
+      		if(  ( WObj[loopForFile]->domain.core == NULL ) )
       		{
 	 		errNum = WLZ_ERR_DOMAIN_NULL;
       		}
@@ -498,62 +500,116 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
    /*  get g-model */
    if( errNum == WLZ_ERR_NONE)
    {
-        for(i=0; i<numOf2DWlzFiles; i++)
+        for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
         {
       	     if( errNum == WLZ_ERR_NONE)
       	     {
-                   gModel[i] = WObj[i]->domain.ctr->model;
+                   gModel[loopForFile] = WObj[loopForFile]->domain.ctr->model;
              }
 	}
    }	
 
-   /* output for test: */
-   test = 1;
-   i = numOf2DWlzFiles/2;
-   ifileStar = startTrackingFile;
+   test = 0;
 
+
+   /* out put for test */
    if( test && (errNum == WLZ_ERR_NONE) )
    {
-        /*  get the number of Shells in this model */
-        numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[ifileStar]);
-	startShellIdx = WlzShellsIndexAboutGM(gModel[ifileStar], numOfShellsInStartGM, &errNum);
+        printf("BEFORE break down:::\n");
+          printf("teststart\n");
 
    }
    if( test && ( errNum == WLZ_ERR_NONE) )
    {
-       for(j=0; j< numOfShellsInStartGM; j++)
+     
+
+     for(loopForFile=0; loopForFile<numOf2DWlzFiles ; loopForFile++)
+     {
+       printf("------ file %d test: -------\n", loopForFile); 
+        /* get the number of Shells in this model */
+        numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[loopForFile]);
+	startShellIdx         = WlzShellsIndexAboutGM(gModel[loopForFile], numOfShellsInStartGM, &errNum);
+       
+       for(loopForShell=0; loopForShell< numOfShellsInStartGM; loopForShell++)
        {
-	 numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[ifileStar],  startShellIdx[j] );
-         printf("The  %d th Shell\n",  j );
-         printf("num of loops is    %d\n", numOfLoopsInStartShell );
-         /* get the Index for each Shell; */
+	 numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[loopForFile],  startShellIdx[loopForShell] );
+         /* get the index for the loops */
+         startLoopIdx            =  WlzLoopIndexAboutGM(gModel[loopForFile], startShellIdx[loopForShell], 
+	                                      numOfLoopsInStartShell, &errNum);
+           printf("The  %d th Shell\n",  loopForShell); 
+           printf("num of loops is    %d\n", numOfLoopsInStartShell ); 
+	 for(loopForLoop=0; loopForLoop<numOfLoopsInStartShell ; loopForLoop++)
+	 {
+	   /* get number of vertices in this loop */
+           numOfVerticesInTheStartLoop = NumberOfVerticesInTheLoopOfGM(
+	 				gModel[loopForFile], 
+	                                startLoopIdx[loopForLoop], &errNum);
+					
+	    printf("loop %d with %d number of vertices\n", loopForLoop, numOfVerticesInTheStartLoop );
+	   if( numOfVerticesInTheStartLoop < sectionLength_N )
+	                  break;
+	   
+           AllVerticesInThisStartLoop  = WlzVerticesThisLoopOfGM( gModel[loopForFile], 
+	                                                          startLoopIdx[loopForLoop], 
+								  numOfVerticesInTheStartLoop, 
+								 &errNum  );
+	   /*							    
+           for(k=0; k<numOfVerticesInTheStartLoop; k++)
+	   {
+                printf("%lg  %lg  %lg\n", ( AllVerticesInThisStartLoop.d2 + k )->vtX,
+		                          ( AllVerticesInThisStartLoop.d2 + k )->vtY, 0.0 );
+	   }
+	   */
+
+	   if(AllVerticesInThisStartLoop.d2)
+	       AlcFree(AllVerticesInThisStartLoop.d2);
+	 }				
+         if(startLoopIdx)
+	   AlcFree(startLoopIdx);
+
        }
-       /* if(startShellIdx) */
+       
+      if(startShellIdx)
        AlcFree(startShellIdx);
+     } 
+     /*
+       for(i=0; i<numOf2DWlzFiles; i++)
+       {
+          WlzFreeObj(WObj[i]);
+       }
+
+       printf("testend\n");
+       exit(0);
+      */
    }
 
 
    /*  break the model into simple one: */
    if( errNum == WLZ_ERR_NONE)
    {
-        for(i=0; i<numOf2DWlzFiles; i++)
+        for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
         {
  		
                 /* break down the shell to simple one */
       		if( errNum == WLZ_ERR_NONE)
       		{
-                   iBuf  = WlzGetAllHighConVertOfGM2D( gModel[i], &numHV, &errNum);
+                   iBuf  = WlzGetAllHighConVertOfGM2D( gModel[loopForFile], &numHV, &errNum);
                 }
 		
       		if( errNum == WLZ_ERR_NONE)
       		{
-		    /* printf("number of HV:  %d\n",numHV);
-		     for(k=0; k<numHV; k++)
+		     if(test && (loopForFile == ifileStar) )
 		     {
-                       printf("%d\n", *(iBuf + k) );
-		     } */
+		       // printf("number of HV:  %d\n",numHV);
+		       /*
+		       for(k=0; k<numHV; k++)
+		       {
+                         printf("%d\n", *(iBuf + k) );
+		       }
+		       */
+		     }  
 
-		    errNum =  WlzRemoveVertices( gModel[i], iBuf, numHV);
+		    errNum =  WlzRemoveVertices( gModel[loopForFile], iBuf, numHV);
 		    AlcFree(iBuf);
                 }
 
@@ -566,99 +622,111 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 	}
  
    }
- 
-   /* test */
-   i = numOf2DWlzFiles/2;
-   ifileStar = startTrackingFile;
-   if( test && (errNum == WLZ_ERR_NONE) )
-   {
-        /* get the number of Shells in this model */
-        numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[ifileStar]);
-	startShellIdx = WlzShellsIndexAboutGM(gModel[ifileStar], numOfShellsInStartGM, &errNum);
 
-   }
+
+   test = 0;
+   /* out put for test */
+   printf("AFTER BREAK INTO SIMPLE GM\n");
+   printf("teststart\n");
    if( test && ( errNum == WLZ_ERR_NONE) )
    {
-       for(j=0; j< numOfShellsInStartGM; j++)
-       {
-	 numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[ifileStar],  startShellIdx[j] );
-         /* get the index for the loops */
-         startLoopIdx            =  WlzLoopIndexAboutGM(gModel[ifileStar], startShellIdx[j], 
-	                                      numOfLoopsInStartShell, &errNum);
 
-         printf("The  %d th Shell\n",  j);
-         printf("num of loops is    %d\n", numOfLoopsInStartShell );
-	 for(i_l=0; i_l<numOfLoopsInStartShell; i_l++)
+     for(loopForFile=0; loopForFile< numOf2DWlzFiles; loopForFile++)
+     {
+         printf("=======file  %d test =======\n", loopForFile);
+        /* get the number of Shells in this model */
+        numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[loopForFile]);
+	startShellIdx         = WlzShellsIndexAboutGM(gModel[loopForFile], numOfShellsInStartGM, &errNum);
+
+
+
+       for(loopForShell=0; loopForShell< numOfShellsInStartGM; loopForShell++)
+       {
+	 numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[loopForFile],  startShellIdx[loopForShell] );
+         /* get the index for the loops */
+         startLoopIdx            =  WlzLoopIndexAboutGM(gModel[loopForFile], startShellIdx[loopForShell], 
+	                                      numOfLoopsInStartShell, &errNum);
+          printf("The  %d th Shell\n",  loopForShell); 
+          printf("num of loops is    %d\n", numOfLoopsInStartShell ); 
+	 for(loopForLoop=0; loopForLoop<numOfLoopsInStartShell ; loopForLoop++)
 	 {
+	   if(errNum != WLZ_ERR_NONE)
+	   {
+              if( startLoopIdx  )
+	         AlcFree(startLoopIdx);
+	      break;	 
+	   }
 	   /* get number of vertices in this loop */
            numOfVerticesInTheStartLoop = NumberOfVerticesInTheLoopOfGM(
-	 				gModel[ifileStar], 
-	                                startLoopIdx[i_l], &errNum);
-	   printf("loop %d with %d number of vertices\n", i_l, numOfVerticesInTheStartLoop );				
+	 				gModel[loopForFile], 
+	                                startLoopIdx[loopForLoop], &errNum);
+					
+	    printf("loop %d with %d number of vertices\n", loopForLoop, numOfVerticesInTheStartLoop );
+	   //if( numOfVerticesInTheStartLoop < sectionLength_N )
+	   if( numOfVerticesInTheStartLoop < 2 )
+		                  break;
+	   
+           AllVerticesInThisStartLoop  = WlzVerticesThisLoopOfGM( gModel[loopForFile], 
+	                                                             startLoopIdx[loopForLoop], 
+								     numOfVerticesInTheStartLoop, 
+								    &errNum  );
+								    /*
+	   if( (loopForFile == 8) && (loopForShell == 62))
+	   {
+              for(k=0; k<numOfVerticesInTheStartLoop; k++)
+	      {
+                printf("%lg  %lg  %lg\n", ( AllVerticesInThisStartLoop.d2 + k )->vtX,
+		                          ( AllVerticesInThisStartLoop.d2 + k )->vtY, 0.0 );
+	      }
+	   } 
+	   */
+	   if(AllVerticesInThisStartLoop.d2)
+	       AlcFree(AllVerticesInThisStartLoop.d2);
 	 }				
          if(startLoopIdx)
 	   AlcFree(startLoopIdx);
 
        }
        
-       for(i=0; i<numOf2DWlzFiles; i++)
-       {
-          WlzFreeObj(WObj[i]);
-       }
       if(startShellIdx)
        AlcFree(startShellIdx);
-
+       } 
+      for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
+      {
+          WlzFreeObj(WObj[loopForFile]);
+      }
+     
+       printf("testend\n");
        exit(0);
-
+     
    }
 
+
+
+
    /*  as kd tree is very expensive to build so build once and use them afterwards */ 
-   if( errNum == WLZ_ERR_NONE)
+   if( errNum == WLZ_ERR_NONE )
    {
         /* begin the building of kd tree: */
-        for(i=0; i<numOf2DWlzFiles; i++)
+        for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
         {
       		if( errNum == WLZ_ERR_NONE)
       		{
 	           /* get a KD Tree for the target vertices of the Woolz contour */
-       		   tTreeArray[i] = GetTreeFromGM(WObj[i], &errNum);
+       		   tTreeArray[loopForFile] = GetTreeFromGM(WObj[loopForFile], &errNum);
                 }
 	}
 
    }	 
 
-  /* initial the outpoint  */
-  if( ( surfP = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) * 100 )) == NULL ) 
-  {
+
+   /* initial the outpoint  */
+   if( ( surfP = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) * 100 )) == NULL ) 
+   {
      errNum = WLZ_ERR_MEM_ALLOC;
-  }
+   }
 
-  /* initial the standard obj first: */
-  if( errNum == WLZ_ERR_NONE)
-  {
 
-      i = numOf2DWlzFiles/2;
-      ifileStar = startTrackingFile;
-      if( errNum == WLZ_ERR_NONE)
-      {
-        /* get the number of Shells in this model */
-        numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[ifileStar]);
-	printf("num of shells = %d\n", numOfShellsInStartGM);
-	if( endShell > numOfShellsInStartGM )
-	{
-	    printf("not that many shells!\n");
-	    for(k=0; k<numOf2DWlzFiles; k++)
-	    {
-	     if(WObj[k])
-	        WlzFreeObj(WObj[k]);
-	    }	
-             exit(0);
-	}
-        /* get the Index for each Shell; */
-        startShellIdx = WlzShellsIndexAboutGM(gModel[ifileStar], numOfShellsInStartGM, &errNum);
-      }
-      zdvoxels = 0;			
-   } 
 
    /* allocate memory to store the tracked surface , in and out points. */
    if( ( SurfacePoints = ( WlzDVertex3 *)AlcMalloc(sizeof( WlzDVertex3) * ( numOf2DWlzFiles 
@@ -687,18 +755,18 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 
    if(errNum == WLZ_ERR_NONE)
    {
-       for(i=0; i<numOf2DWlzFiles; i++)
+       for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
        {
-          *(numOfPInS + i )  = 0;
+          *(numOfPInS + loopForFile )  = 0;
        }
      
    }
   
    /* allocate memory to store the line sections of tracking data for each file */
 
-   for(i=0; i<numOf2DWlzFiles; i++)
+   for(loopForFile=0; loopForFile<numOf2DWlzFiles; loopForFile++)
    {
-     if( ( sectionData[i] = ( WlzIVertex2 *)AlcMalloc(sizeof( WlzIVertex2) *  subSubSectionLength_L  
+     if( ( sectionData[loopForFile] = ( WlzIVertex2 *)AlcMalloc(sizeof( WlzIVertex2) *  subSubSectionLength_L  
                 )) == NULL ) 
       {
          errNum = WLZ_ERR_MEM_ALLOC;
@@ -706,6 +774,112 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
       if(errNum != WLZ_ERR_NONE)
          break;
    }   
+
+   /* output for test */
+   test = 0;
+   
+
+   //ifileStar = 0;
+   //printf("teststart\n");
+   if( test && (errNum == WLZ_ERR_NONE) )
+   {
+        /* get the number of Shells in this model */
+        numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[ifileStar]);
+	startShellIdx = WlzShellsIndexAboutGM(gModel[ifileStar], numOfShellsInStartGM, &errNum);
+
+   }
+   if( test && ( errNum == WLZ_ERR_NONE) )
+   {
+       for(loopForShell=0; loopForShell< numOfShellsInStartGM; loopForShell++)
+       {
+	 numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[ifileStar],  startShellIdx[loopForShell] );
+         /* get the index for the loops */
+         startLoopIdx            =  WlzLoopIndexAboutGM(gModel[ifileStar], startShellIdx[loopForShell], 
+	                                      numOfLoopsInStartShell, &errNum);
+          //printf("The  %d th Shell\n",  loopForShell); 
+          //printf("num of loops is    %d\n", numOfLoopsInStartShell );
+	  
+	 for(loopForLoop=0; loopForLoop< 1; loopForLoop++)
+	 {
+	   /* get number of vertices in this loop */
+           numOfVerticesInTheStartLoop = NumberOfVerticesInTheLoopOfGM(
+	 				gModel[ifileStar], 
+	                                startLoopIdx[loopForLoop], &errNum);
+					
+	   if(numOfLoopsInStartShell == 1)
+	   {
+	       numOfVerticesInTheStartLoop =  numOfVerticesInTheStartLoop/2 + 1;
+	   }	   
+
+	    //printf("loop %d with %d number of vertices\n", loopForLoop, numOfVerticesInTheStartLoop ); 
+	   if( numOfVerticesInTheStartLoop < sectionLength_N )
+	   {
+	      
+	                  break;
+	   }		  
+           AllVerticesInThisStartLoop  = WlzVerticesThisLoopOfSimpleShell2DGM( gModel[ifileStar], 
+	                                                             startLoopIdx[loopForLoop], 
+								    &numOfVerticesInTheStartLoop, 
+								    &errNum  );
+          /* AllVerticesInThisStartLoop  = WlzVerticesThisLoopOfGM( gModel[ifileStar], 
+	                                                             startLoopIdx[loopForLoop], 
+								     numOfVerticesInTheStartLoop, 
+								    &errNum  );
+								    */
+           for(k=0; k<numOfVerticesInTheStartLoop; k++)
+	   {
+                printf("%lg  %lg  %lg\n", ( AllVerticesInThisStartLoop.d2 + k )->vtX,
+		                          ( AllVerticesInThisStartLoop.d2 + k )->vtY, 0.0 );
+	   }
+	   if(AllVerticesInThisStartLoop.d2)
+	       AlcFree(AllVerticesInThisStartLoop.d2);
+	 }				
+         if(startLoopIdx)
+	   AlcFree(startLoopIdx);
+
+       }
+       
+       for(i=0; i<numOf2DWlzFiles; i++)
+       {
+          WlzFreeObj(WObj[i]);
+       }
+      if(startShellIdx)
+       AlcFree(startShellIdx);
+       //printf("testend\n");
+       exit(0);
+
+   }
+
+
+
+
+
+
+  
+   /* initial the standard obj first: */
+   if( errNum == WLZ_ERR_NONE)
+   {
+
+         if( errNum == WLZ_ERR_NONE)
+         {
+            /* get the number of Shells in this model */
+            numOfShellsInStartGM  = NumberOfShellsAboutGM(gModel[ifileStar]);
+	    printf("num of shells = %d\n", numOfShellsInStartGM);
+	    if( endShell > numOfShellsInStartGM )
+	    {
+	        printf("not that many shells!\n");
+	        for(k=0; k<numOf2DWlzFiles; k++)
+	        {
+	            if(WObj[k])
+	               WlzFreeObj(WObj[k]);
+	        }	
+                exit(0);
+	    }
+            /* get the Index for each Shell; */
+            startShellIdx = WlzShellsIndexAboutGM(gModel[ifileStar], numOfShellsInStartGM, &errNum);
+         }
+         zdvoxels = 0;			
+   } 
 
    /* begin tracking */ 
    if( ( errNum == WLZ_ERR_NONE) && !test  )
@@ -719,45 +893,46 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
             endShell   = numOfShellsInStartGM;
 	   
        /* cycle for each shell */
-       for(j=startShell; j< endShell; j++)
+       for(loopForShell=startShell; loopForShell< endShell; loopForShell++)
         {
            /* get number loops in this shell */
-           numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[ifileStar],  startShellIdx[j] );
-	   if(test)
-	       printf("The  %d th Shell\n",  j );
+           numOfLoopsInStartShell  =  NumberOfLoopsInThe_nThShellOfGM(gModel[ifileStar],  startShellIdx[loopForShell] );
+	   printf("The  %d th Shell\n",  loopForShell );
 
            /* get the index for the loops */
-           startLoopIdx            =  WlzLoopIndexAboutGM(gModel[ifileStar], startShellIdx[j], 
+           startLoopIdx            =  WlzLoopIndexAboutGM(gModel[ifileStar], startShellIdx[loopForShell], 
 	                                      numOfLoopsInStartShell, &errNum);
 
            /* cycle for loops now as we only have simple shell, we will only use one loop for each shell
-              for(i_l=0; i_l < numOfLoopsInStartShell; i_l++) */
+              for(loopForLoop=0; loopForLoop < numOfLoopsInStartShell; loopForLoop++) */
 	   endLoop = numOfLoopsInStartShell;
-	   if(numOfLoopsInStartShell == 2)
-	         endLoop = 1;
-	   for(i_l=0; i_l < endLoop; i_l++)
+	   for(loopForLoop=0; loopForLoop < endLoop; loopForLoop++)
 	   {
-	      if(test)
-	         printf("The %d th loop\n",i_l);
-	      /* output for test: */
-	      if(test)
-	      {
-	         /* printf("The  start of %d th Shell data\n",  j ); */
-	         outputVerticesInThisLoop( gModel[ifileStar], startLoopIdx[i_l], &errNum );
-                 /* printf("The  end   of %d th Shell data\n",  j ); */
 
-	      }   
+              printf("The %d th loop\n",loopForLoop);
 
               if( errNum == WLZ_ERR_NONE)
               {
-	        /* get number of vertices in this loop
-                  numOfVerticesInTheStartLoop  = NumberOfVerticesDoubleInNonCycleCaseInTheLoopOfGM(
-	        					gM, startLoopIdx[0], &errNum);
-		*/
-                    numOfVerticesInTheStartLoop  = NumberOfVerticesInTheLoopOfGM(
-						gModel[ifileStar], startLoopIdx[i_l], &errNum);
-		if(numOfLoopsInStartShell == 1)
-		    numOfVerticesInTheStartLoop =  numOfVerticesInTheStartLoop/2 + 1;
+	        /* get number of vertices in this loop */
+                numOfVerticesInTheStartLoop =   NumberOfVerticesInTheLoopOfGM(gModel[ifileStar], startLoopIdx[loopForLoop], &errNum);
+
+	        if( ( numOfLoopsInStartShell == 2 ) && (loopForLoop == 0 ) )
+	        {
+		    if( IsACycle(gModel[ifileStar],  startLoopIdx[loopForLoop], &errNum ) )
+		    {
+	                     endLoop = 1;
+		    }	     
+		    else
+		    {
+                             numOfVerticesInTheStartLoop =  numOfVerticesInTheStartLoop/2 + 1;
+		    }
+	        }	 
+	        else
+	        {
+                    numOfVerticesInTheStartLoop =  numOfVerticesInTheStartLoop/2 + 1;
+	        }
+		if(numOfVerticesInTheStartLoop < sectionLength_N )
+		      break;
               }
       
               if( errNum == WLZ_ERR_NONE)
@@ -765,14 +940,21 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
                  /* get all the vertices in this loop (accurately it double the vertices!!) */
 		 /*
                  AllVerticesInThisStartLoop  = WlzVerticesThisLoopOfGM( gModel[ifileStar], 
-	                                                             startLoopIdx[i_l], 
+	                                                             startLoopIdx[loopForLoop], 
 								     numOfVerticesInTheStartLoop, 
 								    &errNum  );
 								    */
                  AllVerticesInThisStartLoop  = WlzVerticesThisLoopOfSimpleShell2DGM( gModel[ifileStar], 
-	                                                             startLoopIdx[i_l], 
-								     numOfVerticesInTheStartLoop, 
+	                                                             startLoopIdx[loopForLoop], 
+								    &numOfVerticesInTheStartLoop, 
 								    &errNum  );
+			   /* for test */					    
+		           for(k=0; k<numOfVerticesInTheStartLoop; k++)
+	   		   {
+                			printf("%lg  %lg\n", ( AllVerticesInThisStartLoop.d2 + k )->vtX,
+		                	     		     ( AllVerticesInThisStartLoop.d2 + k )->vtY );
+	   		   }
+						    
               }
 
               if( errNum == WLZ_ERR_NONE )
@@ -791,7 +973,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 	             startSection = 0;
 	          if( endSection < 0 )
 	             endSection = numOfSections;
-	          for(i_s =startSection; i_s <endSection; i_s++)
+	          for(loopForSection =startSection; loopForSection <endSection; loopForSection++)
 	          {
 	             nOfVOnTheS   = 0;
 	             nOfVWithinTheS  = 0;
@@ -801,28 +983,29 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 		     /*  and for check */
 		     if(test)
 		     {
-		       printf("Start of This section: %d\n", i_s);
+		       printf("Start of This section: %d\n", loopForSection);
 		  
 		       outputThisSection(  AllVerticesInThisStartLoop, 
-                                              i_s * sectionLength_N,
+                                              loopForSection * sectionLength_N,
                                               subSubSectionLength_L,
                                              &errNum    );
 
-		       printf("End of This section: %d\n", i_s);
+		       printf("End of This section: %d\n", loopForSection);
 		     }   
 
-                     /*  get the sampe points in the i_s th section */
+                     /*  get the sampe points in the loopForSection th section for track down */
                      GetSamplePointsFromAllVertices( AllVerticesInThisStartLoop, 
-                                                   i_s * sectionLength_N,
-                                                   subSubSectionLength_L,
-                                                   StandSampleP,
-                                                  &errNum );
+                                                     loopForSection * sectionLength_N,
+                                                     subSubSectionLength_L,
+                                                     StandSampleP,
+                                                    &errNum );
+
                      /*  the again for future track up: */
                      GetSamplePointsFromAllVertices( AllVerticesInThisStartLoop, 
-                                                   i_s * sectionLength_N,
-                                                   subSubSectionLength_L,
-                                                   StandSampleP0,
-                                                  &errNum );
+                                                     loopForSection * sectionLength_N,
+                                                     subSubSectionLength_L,
+                                                     StandSampleP0,
+                                                    &errNum );
 		     suc = 1;	
 
 
@@ -834,46 +1017,14 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 
          		 for(i= startTrackingFile-1; i >= startTrackingFile - numberOfFilesDownOrUp; i--)
           		 {     
-
-
-			       /*
-                		if((testFile = fopen( (const char *) TwoDImageFilesNameList[i], "r")) == NULL )
-                		{
-         				printf("cannot open the standard contour Wlz file .\n");
-         				exit(1);
-      				}
-
-      				if( !(newTObj = WlzReadObj(testFile, &errNum) ) )
-      				{
-         				printf("input Woolz Object Error.\n");
-         				fclose(testFile); 
-         				exit(1);
-      				}
-      				fclose(testFile); 
-      				testFile = NULL;
-
-   
-      				if(  ( (newTObj->type) != WLZ_CONTOUR ) )
-      				{
-       	 				errNum = WLZ_ERR_DOMAIN_TYPE;
-      				}
-
-      				if(  ( newTObj->domain.core == NULL ) )
-      				{
-	 				errNum = WLZ_ERR_DOMAIN_NULL;
-      				}
-				*/
 				
 	       			if( errNum == WLZ_ERR_NONE   )
        				{ 
-				      
-                                        if(test)
-         	        		    printf("------Target -------\n");
-          				/*  get the G Model for target to be tracked */
-         		 		/*  gM2 = newTObj->domain.ctr->model; */
+                                    if(test)
+         	        	         printf("------Target -------\n");
 
-	  				/*  get the tracked points in a loop and get the loop index and */
-	 		 		/*  number of sample points  */
+	  			     /*  get the tracked points in a loop and get the loop index and */
+	 		 	     /*  number of sample points  */
 	 		 		GetTrackedSamplePointsFromOneLoopOfGM(gModel[i], 
 	                                        tTreeArray[i], 
 					       &ntL, 
@@ -884,14 +1035,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 						&nOfTracked,
 						&suc,
 						&errNum);
-	
 
               			}
                                 
 	      			if(!suc)
 	      			{
-				       /*  if(newTObj) */
-	         			/*     WlzFreeObj(newTObj); */
                  			break; /*  break this section track */
 
 	      			}
@@ -925,8 +1073,6 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 	      			{
 				        if(!suc)
 	      				{
-			                   /* 	if(newTObj) */
-	         			   /* 	   WlzFreeObj(newTObj); */
                  				   break; /*  break this section track */
 
 	      				}
@@ -957,8 +1103,6 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
               			  /*  prepare for next section track: */
 				  if(!suc)
 				  {
-				            /*     if(newTObj) */
-	         			/* 	   WlzFreeObj(newTObj); */
                  				break; /*  break this section track */
 				  }
 				  /* if(newTObj) */
@@ -983,41 +1127,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
          		 /* for(i=0; i<numOf2DWlzFiles; i++), track up first: */
          		 for(i= startTrackingFile; i<= startTrackingFile + numberOfFilesDownOrUp; i++)
           		 {    
-			     /*
-                		if((testFile = fopen( (const char *) TwoDImageFilesNameList[i], "r")) == NULL )
-                		{
-         				printf("cannot open the standard contour Wlz file .\n");
-         				exit(1);
-      				}
-
-      				if( !(newTObj = WlzReadObj(testFile, &errNum) ) )
-      				{
-         				printf("input Woolz Object Error.\n");
-         				fclose(testFile); 
-         				exit(1);
-      				}
-      				fclose(testFile); 
-      				testFile = NULL;
-
-   
-      				if(  ( (newTObj->type) != WLZ_CONTOUR ) )
-      				{
-       	 				errNum = WLZ_ERR_DOMAIN_TYPE;
-      				}
-
-      				if(  ( newTObj->domain.core == NULL ) )
-      				{
-	 				errNum = WLZ_ERR_DOMAIN_NULL;
-      				}
-				*/
 	       			if( errNum == WLZ_ERR_NONE   )
        				{ 
 				      
                                         if(test)
          	        		    printf("------Target -------\n");
-          				/*  get the G Model for target to be tracked */
-         		 		/* gM2 = newTObj->domain.ctr->model; */
-
 	  				/*  get the tracked points in a loop and get the loop index and */
 	 		 		/*  number of sample points  */
 	 		 		GetTrackedSamplePointsFromOneLoopOfGM(gModel[i], 
@@ -1031,13 +1145,10 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 						&suc,
 						&errNum);
 	
-
               			}
 
 	      			if(!suc)
 	      			{
-				        /* if(newTObj) */
-	         			  /*   WlzFreeObj(newTObj); */
                  			break; /*  break this section track */
 
 	      			}
@@ -1051,7 +1162,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 					/*
 	     	    			GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
 					               j, 
-						       i_s, 
+						       loopForSection, 
 						       i,
 						       subSubSectionLength_L,
 						       numOfPInS,
@@ -1154,8 +1265,8 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
         	     /* output points */
 		     /*
 		     outputSurfaceInAndOutPoints(j, 
-		                                 i_l,
-						 i_s,
+		                                 loopForLoop,
+						 loopForSection,
                                                  2*numberOfFilesDownOrUp+1,
                              			 numOfPInS,
                              			 sectionData,
@@ -1174,9 +1285,9 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 						 &errNum
 						 );
 					*/	 
-		    outputSurfaceByPatch(j, 
-		                                 i_l,
-						 i_s,
+		    outputSurfaceByPatch(loopForShell, 
+		                                 loopForLoop,
+						 loopForSection,
                                                  2*numberOfFilesDownOrUp+1,
 						 subSubSectionLength_L,
                              			 numOfPInS,
@@ -1489,10 +1600,6 @@ static int *WlzLoopIndexAboutGM(WlzGMModel *gM, int nThShell, int numLoops, WlzE
         *dstErr = WLZ_ERR_MEM_ALLOC;
      }
      
-     if( *dstErr == WLZ_ERR_NONE)
-     {
-         *dstErr = WLZ_ERR_MEM_ALLOC;
-     }
      *vData = -19;
      return vData;
    }
@@ -1520,6 +1627,9 @@ static int *WlzLoopIndexAboutGM(WlzGMModel *gM, int nThShell, int numLoops, WlzE
             cLT = cLT->next;
        } while(cLT != fLT);
    }
+
+
+
    return vData;
 }
 
@@ -2101,31 +2211,6 @@ static int NumberOfVerticesInTheLoopOfGM(WlzGMModel   *gM,
    
    *dstErr = errNum;
 
-  /*
-   if( sLoopIdx == 883 )
-   {
-     nVertices = 0;
-     do
-     {
-
-        nVertices += 1;
-	cET = cET->next;
-	if(nVertices > 1360 )
-	     break;
-	        printf(" i= %d  idx %d  x %lg   y %lg\n", nVertices , cET->vertexT->diskT->idx,
-                                                  cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtX,
-                                                  cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtY );
-     } while (cET != fET);
-     exit(1);
-   }
-   */
-   /*
-    if(IsACycle(gM, sLoopIdx, &errNum))
-    {
-               return (nVertices);
-    }	   
-    return ( nVertices / 2  + 1 );
-   */
     return nVertices;
 
    
@@ -3316,10 +3401,10 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 
 	/*  check, how many loops in the target group: */
         /*  check, whether it continue ?: */
-	Continue = 0;
+	Continue   = 0;
 	/*  get the accurate number of points for each group */
 	/*  and answer the continunities of the data */
-	GroupNum           = GroupDivid(LoopIndex, &NumOfGroup, &Continue, NumberToTrack, &errNum);
+	GroupNum   = GroupDivid(LoopIndex, &NumOfGroup, &Continue, NumberToTrack, &errNum);
 	
         if(errNum == WLZ_ERR_NONE)
         {
@@ -3931,7 +4016,7 @@ static void GetSamplePointsForNextTrackFromTheTrackedLoopOfGM(
 *               a better way to do it seems to know how many loops with a
 *               shell in a given model.
 *               if a shell has two loops, it's a cycle. one loops is a
-*               section.
+*               section. This is not a correct way!!!!!
 *  \param       gM                  given G model (input)
 *  \param       nThLoop             n-th loop of the n-th shell in the model (input )
 */
@@ -3941,7 +4026,8 @@ static int IsACycle(   WlzGMModel  *gM,
 {
    int cycle, nLoop;
    WlzErrorNum errNum = WLZ_ERR_NONE;
-   int nVertices;
+   int nV1, nV2;
+   int *tLoopIdx, Sidx;
    AlcVector          *vec;
    WlzGMLoopT         *cLT, *fLT;
    WlzGMShell         *cS;
@@ -3959,20 +4045,41 @@ static int IsACycle(   WlzGMModel  *gM,
        printf("no parent shell for this loop");
        exit(0);
    }
-    cS =  (WlzGMShell *) cLT->parent;
 
+    cS =  (WlzGMShell *) cLT->parent;
+    Sidx = cS->idx;
 
     cLT = fLT = cS->child;
-   /* For each loop topology element of the model. */
-     do
-     {
+    /* For each loop topology element of the model. */
+    do
+    {
         cLT = cLT->next;
         ++nLoop;
-     } while(  cLT != fLT );
+    } while(  cLT != fLT );
 
-    if(nLoop > 1)
-       cycle = 1;
-   return(cycle);
+
+    if(nLoop == 2)
+    {
+      nV1 = -3;
+      nV2 = -1;
+      if(errNum == WLZ_ERR_NONE )
+      {
+        tLoopIdx = WlzLoopIndexAboutGM(gM, Sidx, nLoop, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE )
+      {
+         nV1 = NumberOfVerticesInTheLoopOfGM(gM, tLoopIdx[0], &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE )
+      {
+         nV2 = NumberOfVerticesInTheLoopOfGM(gM, tLoopIdx[1], &errNum);
+      } 
+      if(tLoopIdx)
+         AlcFree(tLoopIdx);
+      if(nV1 == nV2)
+                cycle = 1;
+    }
+    return(cycle);
 }
 
 /*!
@@ -5625,7 +5732,7 @@ static void	outputSurfaceByPatch(int j_shell,
      char    fullname_sectionTC[90];
      char    fullname_sectionTN[90];
      char    fStr[80];
-     char    tempStr[3];
+     char    tempStr[4];
      int     i, k, j, l, m, delta, dimV;
      int     polyDeg = 3;
      FILE   *secfp = NULL;
@@ -6460,7 +6567,13 @@ static int *WlzGetAllHighConVertOfGM2D( WlzGMModel *sGM,
     do
     {
       cS = cS->next;
-
+      /* this should not happen but i have no choice, possible bug in Bill's code */
+      if(!cS->child)
+      {
+         if(cS == fS )
+	      break;
+         continue; 
+      }
       cLT = fLT = cS->child;
       do
       {
@@ -6542,7 +6655,7 @@ static WlzErrorNum WlzRemoveVertices(
 */
 static WlzVertexP WlzVerticesThisLoopOfSimpleShell2DGM(  WlzGMModel  *model, 
 					    int          LoopIdx,
-					    int          numOfVertices,
+					    int         *numOfVertices,
 					    WlzErrorNum *dstErr   )
 {
  WlzVertexP vData;
@@ -6586,10 +6699,10 @@ static WlzVertexP WlzVerticesThisLoopOfSimpleShell2DGM(  WlzGMModel  *model,
 */
 static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model, 
                                             int            LoopIdx, 
-					    int            numOfVertices, 
+					    int           *numOfVertices, 
 					    WlzErrorNum   *dstErr   )
 {
-   WlzDVertex2   *vData = NULL;
+   WlzDVertex2   *vData = NULL, *vData2 = NULL;
    WlzErrorNum   errNum = WLZ_ERR_NONE;
    int nVertices;
    AlcVector          *vec;
@@ -6597,15 +6710,15 @@ static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model,
    WlzGMEdgeT         *cET, *fET;
    int test = 0;
    
-  if((vData = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * numOfVertices)) == NULL)
+  if((vData = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * (*numOfVertices) )) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   if(errNum == WLZ_ERR_NONE)
   {
    
-   vec    =  model->res.loopT.vec;
-   nVertices     = 0;
+   vec         =  model->res.loopT.vec;
+   nVertices   = 0;
     /* get the loopT of the model. */
     cLT = (WlzGMLoopT *) AlcVectorItemGet(vec, LoopIdx);
     /* For each edge topology element of the model. */    
@@ -6617,7 +6730,7 @@ static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model,
     {
        do
        {
-           if(nVertices >= numOfVertices )
+           if(nVertices >= (*numOfVertices) )
 	     break;
 
 	   if(model->type == WLZ_GMMOD_2I)
@@ -6631,12 +6744,6 @@ static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model,
 
 	      (vData + nVertices)->vtX     = cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtX;
 	      (vData + nVertices)->vtY     = cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtY;
-	      if(test && nVertices < 200)
-	      {
-	         printf(" idx %d  x %lg   y %lg\n", cET->vertexT->diskT->idx,
-	                                            (vData + nVertices)->vtX,
-	                                           (vData + nVertices)->vtY );
-	      } 
 	      nVertices += 1;
 
 	   }
@@ -6657,6 +6764,7 @@ static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model,
 	 }    
 	 cET = cET->next;
       } while (cET != fET);
+       
 
       /*  get the vertices until we meet the other ends ! */
       do
@@ -6664,11 +6772,35 @@ static WlzDVertex2 *WlzDVerticesThisLoopSimpleShellGM2(WlzGMModel  *model,
  	 (vData + nVertices)->vtX     = cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtX;
 	 (vData + nVertices)->vtY     = cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtY;
          nVertices += 1;
-
-	 if( ( cET->prev->vertexT->diskT->idx == cET->next->vertexT->diskT->idx ) )
+	 if(nVertices >= (*numOfVertices)  )
 	 {
+            break;
+	 }
+
+	 if( ( cET->prev->vertexT->diskT->idx == cET->next->vertexT->diskT->idx ) && ( nVertices > 1) )
+	 {
+	    /* this part should not be happen but as bill's code to delete vertices , I have to 
+	       use this part to get over it should be corrected in the future ! */
+	    if( nVertices != (*numOfVertices) )
+	    {
+                 if((vData2 = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * nVertices )) == NULL)
+                 {
+                    errNum = WLZ_ERR_MEM_ALLOC;
+                 }
+                 if(errNum == WLZ_ERR_NONE)
+                 {
+                       WlzValueCopyDVertexToDVertex( vData2,  vData, nVertices);
+		       AlcFree(vData);
+		       if(dstErr)
+		       {
+		          *dstErr = errNum;
+		       }
+		       *numOfVertices = nVertices;
+		       return(vData2);
+		 }
+	    }
 	    break;
-	 }    
+	 }   
 	 cET = cET->next;
       } while (cET != fET);
          
