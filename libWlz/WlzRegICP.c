@@ -22,6 +22,7 @@
 *		    13(2):119-152, 1994.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 30-11-00 bill Make changes for 3D least squares affine transforms.
 ************************************************************************/
 #include <float.h>
 #include <Wlz.h>
@@ -757,9 +758,9 @@ static WlzErrorNum WlzRegICPCompTransform2D(WlzRegICPWSp *wSp,
     *(wSp->sMatchVx.vD2 + idx) = *(wSp->sVx.vD2 + rIdx);
   }
   /* Compute the affine transform. */
-  newTr = WlzAffineTransformLSq(wSp->nMatch, wSp->sMatchVx.vD2,
-				wSp->nMatch, wSp->tMatchVx.vD2,
-				trType, &errNum);
+  newTr = WlzAffineTransformLSq2D(wSp->nMatch, wSp->sMatchVx.vD2,
+				  wSp->nMatch, wSp->tMatchVx.vD2,
+				  trType, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     if(wSp->tr)
