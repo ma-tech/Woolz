@@ -424,6 +424,7 @@ void		**AlcVectorToArray2D(AlcVector *vec, int fIdx, int lIdx,
   {
     for(iR = 0; iR < nR; ++iR)
     {
+      *(aM + iR) = (void *)(*(char **)aM + (vec->elmSz * nC * iR));
       AlcVectorSetArray1D(vec, fIdx + (iR * nC), fIdx + ((iR + 1) * nC) - 1,
       			  *(aM + iR));
     }
@@ -434,6 +435,7 @@ void		**AlcVectorToArray2D(AlcVector *vec, int fIdx, int lIdx,
     {
       AlcFree(*aM);
       AlcFree(aM);
+      aM = NULL;
     }
   }
   if(dstErr)

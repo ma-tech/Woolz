@@ -827,6 +827,12 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
   {
     aM = (double **)AlcVectorToArray2D(vec, 0, nV - 1, nR, nF, &errNum);
   }
+  if(errNum == ALC_ER_NONE)
+  {
+    *dstA = aM;
+    *dstNElem = nF;
+    *dstMElem = nR;
+  }
   (void )AlcVectorFree(vec);
   return(errNum);
 }
