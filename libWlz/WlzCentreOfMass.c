@@ -501,7 +501,7 @@ static WlzDVertex3 WlzCentreOfMassDom3D(WlzObject *srcObj, int binObjFlag,
     }
     srcObj2D->domain.core = NULL;
     srcObj2D->values.core = NULL;
-    WlzFreeObj(srcObj2D);
+    (void )WlzFreeObj(srcObj2D);
     if(errNum == WLZ_ERR_NONE)
     {
       if((mass > DBL_EPSILON) || (mass < (-(DBL_EPSILON))))
@@ -684,7 +684,7 @@ static WlzDVertex3 WlzCentreOfMassGM(WlzGMModel *model, double *dstMass,
     }
     if(dstMass)
     {
-      *dstMass = mass;
+      *dstMass = (double )mass;
     }
   }
   if(dstErr)
