@@ -3182,7 +3182,9 @@ typedef struct _WlzThreeDViewStruct
   double	zeta;			
   double	dist;			/*!< Perpendicular distance from the
   					     fixed point to the view plane. */
-  double	scale;
+  double	scale;			/*!< Overall scale parameter */
+  double	voxelSize[3];		/*!< Voxel rescaling if required */
+  int		voxelRescaleFlg;	/*!< Use voxel rescaling if set */
   WlzThreeDViewMode view_mode;		/*!< Determines the angle at which the
   					     section cut. */
   WlzDVertex3	up;			/*!< Up vector. */
@@ -3193,7 +3195,10 @@ typedef struct _WlzThreeDViewStruct
   WlzDVertex3	maxvals;
   double	*xp_to_x, *xp_to_y, *xp_to_z;
   double	*yp_to_x, *yp_to_y, *yp_to_z;
-  double	**rotation;
+/*  double	**rotation;*/
+  WlzAffineTransform	*trans;		/*!< Affine transform for given
+					  parameters. Could include the
+					  voxel size rescaling */
 } WlzThreeDViewStruct;
 
 #ifdef  __cplusplus

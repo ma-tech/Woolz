@@ -57,8 +57,8 @@ WlzErrorNum WlzWrite3DViewStruct(
 /*!
 * \return				A new view.
 * \ingroup      WlzSectionTransform
-* \brief	Allocates and intialises a 3D view. Nether of the transform
-*		look up tables or the rotation matrix are allocated.
+* \brief	Allocates and intialises a 3D view. The transform
+*		look up tables are not allocated.
 * \param	type			Only WLZ_3D_VIEW_STRUCT is
 *					currently allowed.
 * \param	dstErr			Destination pointer for an error
@@ -70,6 +70,7 @@ WlzThreeDViewStruct *WlzMake3DViewStruct(
 {
   WlzThreeDViewStruct	*viewStr;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzAffineTransform	*trans = NULL;
 
   /* check type - in principle that is, when defined!! */
   switch( type ){
@@ -105,12 +106,18 @@ WlzThreeDViewStruct *WlzMake3DViewStruct(
     viewStr->zeta 	= 0.0;
     viewStr->dist 	= 0.0;
     viewStr->scale 	= 1.0;
+    viewStr->voxelSize[0] = 1.0;
+    viewStr->voxelSize[1] = 1.0;
+    viewStr->voxelSize[2] = 1.0;
+    viewStr->voxelRescaleFlg = 0;
     viewStr->view_mode	= WLZ_STATUE_MODE;
     viewStr->up.vtX 	= 0.0;
     viewStr->up.vtY 	= 0.0;
     viewStr->up.vtZ 	= 1.0;
     viewStr->ref_obj 	= NULL;
-    AlcDouble2Malloc(&viewStr->rotation, 3, 3);
+    /*AlcDouble2Malloc(&viewStr->rotation, 3, 3);*/
+    trans = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
+    viewStr->trans = WlzAssignAffineTransform(trans, &errNum);
   }
 
   if( dstErr ){
@@ -148,8 +155,9 @@ WlzErrorNum WlzFree3DViewStruct(
       WlzFreeObj( viewStr->ref_obj );
     }
 
-    /* free the structure */
-    AlcDouble2Free(viewStr->rotation);
+    /* free the affine transform and structure */
+    /*AlcDouble2Free(viewStr->rotation);*/
+    (void) WlzFreeAffineTransform(viewStr->trans);
     AlcFree((void *) viewStr);
   }
 
@@ -195,12 +203,17 @@ static void setupEulerRotationMatrix(
 * \brief	Sets up the rotation matrix of the given view.
 * \param	viewStr			Given view.
 */
-static WlzErrorNum setup3DSectionRotationMatrix(
+static WlzErrorNum setup3DSectionAffineTransform(
   WlzThreeDViewStruct	*viewStr)
 {
   double xsi, eta, zeta;
   double cos_t, sin_t, cos_p, sin_p;
   double upp_x, upp_y;
+  double fx, fy, fz;
+  double **rotation;
+  WlzAffineTransform	*tmpTrans, *tr, *tf, *ts;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int i;
 
   /* check pointer */
   if( viewStr == NULL ){
@@ -220,9 +233,18 @@ static WlzErrorNum setup3DSectionRotationMatrix(
     sin_t = sin(viewStr->theta);
     cos_p = cos(viewStr->phi);
     sin_p = sin(viewStr->phi);
-    upp_x = (viewStr->up.vtX*cos_p*cos_t + viewStr->up.vtY*cos_p*sin_t -
-	    viewStr->up.vtZ*sin_p);
-    upp_y = (-viewStr->up.vtX*sin_t + viewStr->up.vtY*cos_t);
+    if( viewStr->voxelRescaleFlg ){
+      upp_x = (viewStr->up.vtX*viewStr->voxelSize[0]*cos_p*cos_t +
+	       viewStr->up.vtY*viewStr->voxelSize[1]*cos_p*sin_t -
+	       viewStr->up.vtZ*viewStr->voxelSize[2]*sin_p);
+      upp_y = (-viewStr->up.vtX*viewStr->voxelSize[0]*sin_t +
+	       viewStr->up.vtY*viewStr->voxelSize[1]*cos_t);
+    }
+    else {
+      upp_x = (viewStr->up.vtX*cos_p*cos_t + viewStr->up.vtY*cos_p*sin_t -
+	       viewStr->up.vtZ*sin_p);
+      upp_y = (-viewStr->up.vtX*sin_t + viewStr->up.vtY*cos_t);
+    }
     zeta = atan2(upp_x, upp_y);
     break;
 
@@ -235,15 +257,21 @@ static WlzErrorNum setup3DSectionRotationMatrix(
     break;
 
   case WLZ_FIXED_LINE_MODE:
+    /* this will need fixing -- done */
     cos_t = cos(viewStr->theta);
     sin_t = sin(viewStr->theta);
     cos_p = cos(viewStr->phi);
     sin_p = sin(viewStr->phi);
-    upp_x = ((viewStr->fixed_2.vtX - viewStr->fixed.vtX)*cos_p*cos_t +
-	     (viewStr->fixed_2.vtY - viewStr->fixed.vtY)*cos_p*sin_t -
-	     (viewStr->fixed_2.vtZ - viewStr->fixed.vtZ)*sin_p);
-    upp_y = (-(viewStr->fixed_2.vtX - viewStr->fixed.vtX)*sin_t +
-	     (viewStr->fixed_2.vtY - viewStr->fixed.vtY)*cos_t);
+    fx = viewStr->fixed_2.vtX - viewStr->fixed.vtX;
+    fy = viewStr->fixed_2.vtY - viewStr->fixed.vtY;
+    fz = viewStr->fixed_2.vtZ - viewStr->fixed.vtZ;
+    if( viewStr->voxelRescaleFlg ){
+      fx *= viewStr->voxelSize[0];
+      fy *= viewStr->voxelSize[1];
+      fz *= viewStr->voxelSize[2];
+    }
+    upp_x = (fx*cos_p*cos_t + fy*cos_p*sin_t - fz*sin_p);
+    upp_y = (-fx*sin_t + fz*cos_t);
     zeta = -(viewStr->fixed_line_angle - atan2(upp_y, upp_x));
     break;
     
@@ -256,7 +284,44 @@ static WlzErrorNum setup3DSectionRotationMatrix(
   while( zeta < 0.0 ){ zeta += 2 * WLZ_M_PI;}
   viewStr->zeta = zeta;
 
-  setupEulerRotationMatrix(viewStr->rotation, xsi, eta, zeta);
+  /* allocate workspace for the augmented transform matrix */
+  AlcDouble2Malloc(&rotation, 4, 4);
+  setupEulerRotationMatrix(rotation, xsi, eta, zeta);
+
+  /* build the transform matrix */
+  rotation[3][3] = 1.0;
+  for(i=0; i < 3; i++){
+    rotation[i][3] = 1.0;
+    rotation[3][i] = 0.0;
+  }
+  tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE,
+				    rotation, &errNum);
+  AlcDouble2Free(rotation);
+  tf = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_3D_AFFINE,
+					 -viewStr->fixed.vtX,
+					 -viewStr->fixed.vtY,
+					 -viewStr->fixed.vtZ,
+					 &errNum);
+
+  /* check for rescaling */
+  if( viewStr->voxelRescaleFlg ){
+    /* define re-scaling affine transform */ 
+  }
+  else {
+    ts = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_3D_AFFINE,
+					   0.0, 0.0, 0.0, &errNum);
+  }
+  tmpTrans = WlzAffineTransformProduct(tf, ts, &errNum);
+  WlzFreeAffineTransform(tf);
+  WlzFreeAffineTransform(ts);
+  ts = tmpTrans;
+  tmpTrans = WlzAffineTransformProduct(ts, tr, &errNum);
+  WlzFreeAffineTransform(ts);
+  WlzFreeAffineTransform(tr);
+
+  /* assign to the transform */
+  WlzAffineTransformMatrixSet(viewStr->trans, tmpTrans->mat);
+  WlzFreeAffineTransform(tmpTrans);
 
   return WLZ_ERR_NONE;
 }
@@ -271,30 +336,32 @@ static void setupTransformLuts(
   WlzThreeDViewStruct	*viewStr)
 {
   int		xp, yp, i;
+  WlzAffineTransform	*trans;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzDVertex3	vtx, dst;
+
+  /* get the inverse transform */
+  trans = WlzAffineTransformInverse(viewStr->trans, &errNum);
 
   for(xp= WLZ_NINT(viewStr->minvals.vtX), i=0;
       xp <= WLZ_NINT(viewStr->maxvals.vtX); xp++, i++){
-    viewStr->xp_to_x[i] =
-      (viewStr->rotation[0][0] * xp +
-       viewStr->fixed.vtX +
-       viewStr->rotation[2][0] * viewStr->dist);
-    viewStr->xp_to_y[i] =
-      (viewStr->rotation[0][1] * xp +
-       viewStr->fixed.vtY +
-       viewStr->rotation[2][1] * viewStr->dist);
-    viewStr->xp_to_z[i] =
-      (viewStr->rotation[0][2] * xp +
-       viewStr->fixed.vtZ +
-       viewStr->rotation[2][2] * viewStr->dist);
+    vtx.vtX = xp;
+    vtx.vtY = 0.0;
+    vtx.vtZ = viewStr->dist;
+    dst = WlzAffineTransformVertexD3(trans, vtx, &errNum);
+    viewStr->xp_to_x[i] = dst.vtX;
+    viewStr->xp_to_y[i] = dst.vtY;
+    viewStr->xp_to_z[i] = dst.vtZ;
   }
 
   for(yp= WLZ_NINT(viewStr->minvals.vtY), i=0;
       yp <= WLZ_NINT(viewStr->maxvals.vtY); yp++, i++){
-    viewStr->yp_to_x[i] = viewStr->rotation[1][0] * yp;
-    viewStr->yp_to_y[i] = viewStr->rotation[1][1] * yp;
-    viewStr->yp_to_z[i] = viewStr->rotation[1][2] * yp;
+    viewStr->yp_to_x[i] = trans->mat[0][1]*yp;
+    viewStr->yp_to_y[i] = trans->mat[1][1]*yp;
+    viewStr->yp_to_z[i] = trans->mat[2][1]*yp;
   }
 
+  WlzFreeAffineTransform(trans);
   return;
 }
 
@@ -368,8 +435,13 @@ WlzErrorNum WlzInit3DViewStruct(
       return WLZ_ERR_DOMAIN_TYPE;
     }
 
+    /* put in the voxel sizes, rescaled to min 1.0 */
+    viewStr->voxelSize[0] = planedmn->voxel_size[0];
+    viewStr->voxelSize[1] = planedmn->voxel_size[1];
+    viewStr->voxelSize[2] = planedmn->voxel_size[2];
+
     /* set the rotation matrix */
-    (void) setup3DSectionRotationMatrix(viewStr);
+    (void) setup3DSectionAffineTransform(viewStr);
     break;
 
   case WLZ_2D_DOMAINOBJ:	/* assume this is the section */
@@ -377,7 +449,7 @@ WlzErrorNum WlzInit3DViewStruct(
       return WLZ_ERR_DOMAIN_TYPE;
     }
     /* get the 3D bounding box */
-    (void) setup3DSectionRotationMatrix(viewStr);
+    (void) setup3DSectionAffineTransform(viewStr);
     vtx.vtX = obj->domain.i->kol1;
     vtx.vtY = obj->domain.i->line1;
     Wlz3DSectionTransformInvVtx( &vtx, viewStr );
@@ -470,17 +542,13 @@ WlzErrorNum Wlz3DSectionTransformVtx(
   WlzDVertex3		*vtx,
   WlzThreeDViewStruct	*viewStr)
 {
-    double	x, y, z, **r;
+    WlzDVertex3 dst;
+    WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-    x = vtx->vtX - viewStr->fixed.vtX;
-    y = vtx->vtY - viewStr->fixed.vtY;
-    z = vtx->vtZ - viewStr->fixed.vtZ;
-    r = viewStr->rotation;
-    vtx->vtX = r[0][0] * x + r[0][1] * y + r[0][2] * z;
-    vtx->vtY = r[1][0] * x + r[1][1] * y + r[1][2] * z;
-    vtx->vtZ = r[2][0] * x + r[2][1] * y + r[2][2] * z;
+    dst = WlzAffineTransformVertexD3(viewStr->trans, *vtx, &errNum);
+    *vtx = dst;
 
-    return WLZ_ERR_NONE;
+    return errNum;
 }
 
 /*!
@@ -498,15 +566,23 @@ WlzErrorNum Wlz3DSectionTransformVtxR(
   WlzDVertex3		*dstVtx)
 {
   WlzDVertex3	new;
-  WlzErrorNum	errNum;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  new.vtX = vtx.vtX;
-  new.vtY = vtx.vtY;
-  new.vtZ = vtx.vtZ;
-  errNum = Wlz3DSectionTransformVtx(&new, viewStr);
-  dstVtx->vtX = new.vtX;
-  dstVtx->vtY = new.vtY;
-  dstVtx->vtZ = new.vtZ;
+  if (dstVtx == NULL){
+	  errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if( viewStr == NULL ){
+	  errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else {
+    new.vtX = vtx.vtX;
+    new.vtY = vtx.vtY;
+    new.vtZ = vtx.vtZ;
+    errNum = Wlz3DSectionTransformVtx(&new, viewStr);
+    dstVtx->vtX = new.vtX;
+    dstVtx->vtY = new.vtY;
+    dstVtx->vtZ = new.vtZ;
+  }
   
   return errNum;
 }
@@ -525,17 +601,17 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
   WlzThreeDViewStruct	*viewStr)
 {
     double	x, y, z, **r;
+    WlzDVertex3		dst;
+    WlzAffineTransform	*trans;
+    WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-    x = vtx->vtX;
-    y = vtx->vtY;
-    z = viewStr->dist;
-    r = viewStr->rotation;
-    *vtx = viewStr->fixed;
-    vtx->vtX += (r[0][0] * x + r[1][0] * y + r[2][0] * z);
-    vtx->vtY += (r[0][1] * x + r[1][1] * y + r[2][1] * z);
-    vtx->vtZ += (r[0][2] * x + r[1][2] * y + r[2][2] * z);
+    if( trans = WlzAffineTransformInverse(viewStr->trans, &errNum) ){
+      dst = WlzAffineTransformVertexD3(trans, *vtx, &errNum);
+      *vtx = dst;
+      WlzFreeAffineTransform(trans);
+    }
 
-    return WLZ_ERR_NONE;
+    return errNum;
 }
 
 /*!
@@ -556,21 +632,19 @@ WlzErrorNum Wlz3DSectionTransformInvVtxR(
   WlzErrorNum	errNum;
 
   if (dstVtx == NULL){
-	  errNum = WLZ_ERR_PARAM_NULL;
-	  printf("dstVtx = NULL\n");
+    errNum = WLZ_ERR_PARAM_NULL;
   }
   else if( viewStr == NULL ){
-	  errNum = WLZ_ERR_PARAM_NULL;
-	  printf("viewStr = NULL\n");
+    errNum = WLZ_ERR_PARAM_NULL;
   }
   else {
-  	 new.vtX = vtx.vtX;
- 	 new.vtY = vtx.vtY;
- 	 new.vtZ = vtx.vtZ;
- 	 errNum = Wlz3DSectionTransformInvVtx(&new, viewStr);
- 	 dstVtx->vtX = new.vtX;
- 	 dstVtx->vtY = new.vtY;
- 	 dstVtx->vtZ = new.vtZ;
+    new.vtX = vtx.vtX;
+    new.vtY = vtx.vtY;
+    new.vtZ = vtx.vtZ;
+    errNum = Wlz3DSectionTransformInvVtx(&new, viewStr);
+    dstVtx->vtX = new.vtX;
+    dstVtx->vtY = new.vtY;
+    dstVtx->vtZ = new.vtZ;
   }
   
   return errNum;
@@ -595,17 +669,22 @@ WlzErrorNum Wlz3DSectionIncrementDistance(
   double		incr)
 {
   int		xp;
+  WlzAffineTransform	*trans;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-  for(xp=0; xp <=  WLZ_NINT(viewStr->maxvals.vtX) -
-	 WLZ_NINT(viewStr->minvals.vtX); xp++){
-    viewStr->xp_to_x[xp] += viewStr->rotation[2][0] * incr;
-    viewStr->xp_to_y[xp] += viewStr->rotation[2][1] * incr;
-    viewStr->xp_to_z[xp] += viewStr->rotation[2][2] * incr;
+  /* get the inverse transform */
+  if( trans = WlzAffineTransformInverse(viewStr->trans, &errNum) ){
+    for(xp=0; xp <=  WLZ_NINT(viewStr->maxvals.vtX) -
+	  WLZ_NINT(viewStr->minvals.vtX); xp++){
+      viewStr->xp_to_x[xp] += trans->mat[0][2]*incr;
+      viewStr->xp_to_y[xp] += trans->mat[1][2]*incr;
+      viewStr->xp_to_z[xp] += trans->mat[2][2]*incr;
+    }
+    errNum = WlzFreeAffineTransform(trans);
+    viewStr->dist += incr;
   }
 
-  viewStr->dist += incr;
-
-  return WLZ_ERR_NONE;
+  return errNum;
 }
 
 /*!
@@ -628,8 +707,9 @@ WlzDVertex2 Wlz3DViewGetIntersectionPoint(
 {
   WlzDVertex2	rtnVtx;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzAffineTransform	*t1, *t2;
   double	*a[3], ap[3][3], b[3];
-  double	dot_prod=0.0;
+  double	dp1=0.0, dp12=0.0;
   int		i;
   double	d1 = v1->dist;
   double	d2 = v2->dist;
@@ -642,35 +722,43 @@ WlzDVertex2 Wlz3DViewGetIntersectionPoint(
     errNum = WLZ_ERR_PARAM_DATA;
   }
   else {
-    for(i=0; i < 3; i++){
-      dot_prod += v1->rotation[2][i] * v2->rotation[2][i];
-    }
-    ap[0][0] = v2->rotation[0][0];
-    ap[1][0] = v2->rotation[0][1];
-    ap[2][0] = v2->rotation[0][2];
-    ap[0][1] = v2->rotation[1][0];
-    ap[1][1] = v2->rotation[1][1];
-    ap[2][1] = v2->rotation[1][2];
-    ap[0][2] = -(dot_prod*v1->rotation[2][0] - v2->rotation[2][0]);
-    ap[1][2] = -(dot_prod*v1->rotation[2][1] - v2->rotation[2][1]);
-    ap[2][2] = -(dot_prod*v1->rotation[2][2] - v2->rotation[2][2]);
-    a[0] = &ap[0][0];
-    a[1] = &ap[1][0];
-    a[2] = &ap[2][0];
+    if( t1 = WlzAffineTransformInverse(v1->trans, &errNum) ){
+      if( t2 = WlzAffineTransformInverse(v2->trans, &errNum) ){
+	for(i=0; i < 3; i++){
+	  dp1 += t1->mat[2][i] * t1->mat[2][i];
+	  dp12 += t1->mat[2][i] * t2->mat[2][i];
+	}
+	ap[0][0] = t2->mat[0][0];
+	ap[1][0] = t2->mat[1][0];
+	ap[2][0] = t2->mat[2][0];
+	ap[0][1] = t2->mat[0][1];
+	ap[1][1] = t2->mat[1][1];
+	ap[2][1] = t2->mat[2][1];
+	ap[0][2] = -(dp12*t1->mat[0][2] - dp1*t2->mat[0][2]);
+	ap[1][2] = -(dp12*t1->mat[1][2] - dp1*t2->mat[1][2]);
+	ap[2][2] = -(dp12*t1->mat[2][2] - dp1*t2->mat[2][2]);
+	a[0] = &ap[0][0];
+	a[1] = &ap[1][0];
+	a[2] = &ap[2][0];
 
-    b[0] = v1->fixed.vtX - v2->fixed.vtX +
-      v1->rotation[2][0]*d1 - v2->rotation[2][0]*d2 ;
-    b[1] = v1->fixed.vtY - v2->fixed.vtY +
-      v1->rotation[2][1]*d1 - v2->rotation[2][1]*d2;
-    b[2] = v1->fixed.vtZ - v2->fixed.vtZ +
-      v1->rotation[2][2]*d1 - v2->rotation[2][2]*d2;
+	b[0] = t1->mat[0][2]*d1 + t1->mat[0][3]
+	  - t2->mat[0][2]*d2 - t2->mat[0][3];
+	b[1] = t1->mat[1][2]*d1 + t1->mat[1][3]
+	  - t2->mat[1][2]*d2 - t2->mat[1][3];
+	b[2] = t1->mat[2][2]*d1 + t1->mat[2][3]
+	  - t2->mat[2][2]*d2 - t2->mat[2][3];
 
-    if( AlgMatrixLUSolve(a, 3, b, 1) ){
-      rtnVtx.vtX = -1.0;
-      rtnVtx.vtY = -1.0;
-    } else {
-      rtnVtx.vtX = b[0] - v2->minvals.vtX;
-      rtnVtx.vtY = b[1] - v2->minvals.vtY;
+	if( AlgMatrixLUSolve(a, 3, b, 1) ){
+	  rtnVtx.vtX = -1.0;
+	  rtnVtx.vtY = -1.0;
+	  errNum = WLZ_ERR_ALG;
+	} else {
+	  rtnVtx.vtX = b[0];
+	  rtnVtx.vtY = b[1];
+	}
+	WlzFreeAffineTransform(t2);
+      }
+      WlzFreeAffineTransform(t1);
     }
   }
 
@@ -696,6 +784,7 @@ double Wlz3DViewGetIntersectionAngle(
 {
   double	rtnAngle;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzAffineTransform	*t1, *t2;
   double	vector_prod[3], l[3];
   int		i, j;
 
@@ -707,26 +796,33 @@ double Wlz3DViewGetIntersectionAngle(
     errNum = WLZ_ERR_PARAM_DATA;
   }
   else {
-    for(i=3; i < 6; i++){
-      vector_prod[i%3] =
-	(v1->rotation[2][(i+1)%3] * v2->rotation[2][(i-1)%3] - 
-	 v1->rotation[2][(i-1)%3] * v2->rotation[2][(i+1)%3]);
-    }
+    if( t1 = WlzAffineTransformInverse(v1->trans, &errNum) ){
+      if( t2 = WlzAffineTransformInverse(v2->trans, &errNum) ){
+	for(i=3; i < 6; i++){
+	  vector_prod[i%3] =
+	    (t1->mat[(i+1)%3][2] * t2->mat[(i-1)%3][2] - 
+	     t1->mat[(i-1)%3][2] * t2->mat[(i+1)%3][2]);
+	}
 
-    for(i=0; i < 3; i++ ){
-      l[i] = 0.0;
-      for(j=0; j < 3; j++){
-	l[i] += v2->rotation[i][j] * vector_prod[j];
+	for(i=0; i < 3; i++ ){
+	  l[i] = 0.0;
+	  for(j=0; j < 3; j++){
+	    l[i] += v2->trans->mat[i][j] * vector_prod[j];
+	  }
+	}
+
+	/* check for undefined angle - from planes with the same normal */
+	if( l[1] == 0.0 && l[0]== 0.0 )
+	  rtnAngle = 0.0;
+	else
+	  rtnAngle = atan2(l[1], l[0]);
+
+	WlzFreeAffineTransform(t2);
       }
+      WlzFreeAffineTransform(t1);
     }
-
-    /* check for undefined angle - from planes with the same normal */
-    if( l[1] == 0.0 && l[0]== 0.0 )
-      rtnAngle = 0.0;
-    else
-      rtnAngle = atan2(l[1], l[0]);
   }
-
+ 
   if( dstErr ){
     *dstErr = errNum;
   }
