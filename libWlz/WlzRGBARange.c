@@ -108,7 +108,7 @@ WlzErrorNum WlzRGBAModulusRange(
 
 	  tempobj.domain = *domains;
 	  tempobj.values = *values;
-	  errNum = WlzRGBARange(&tempobj, min, max);
+	  errNum = WlzRGBAModulusRange(&tempobj, min, max);
 	  if( errNum != WLZ_ERR_NONE ){
 	    return( errNum );
 	  }
@@ -139,7 +139,7 @@ WlzErrorNum WlzRGBAModulusRange(
       break;
 
     case WLZ_TRANS_OBJ:
-      return( WlzRGBARange(obj->values.obj, min, max) );
+      return( WlzRGBAModulusRange(obj->values.obj, min, max) );
 
     case WLZ_EMPTY_OBJ:
       *min = 0.0;
