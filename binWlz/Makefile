@@ -30,6 +30,7 @@ ARCHIVE			=
 EXECUTABLES		= \
 			Wlz3DGetSection \
 			Wlz3DViewTransformObj \
+			Wlz3DViewTransformBitmap \
 			WlzAffineTransformLSq \
 			WlzAffineTransformObj \
 			WlzArea \
@@ -113,6 +114,8 @@ EXECUTABLES		= \
 CSOURCES		= \
 			MADomainTest.c \
 			Wlz3DGetSection.c \
+			Wlz3DViewTransformObj.c \
+			Wlz3DViewTransformBitmap.c \
 			WlzAffineTransformLSq.c \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
