@@ -191,6 +191,47 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /*!
+* \return	Twice the square of the area of the given triangle.
+* \ingroup	WlzGeometry
+* \brief	Computes twice the square of the area of the given
+*		3D triangle.
+*
+*		A nieve approach is used in which the area \f$A\f$ is
+*		computed using:
+*		\f[
+		2 A^2 = \left|\left| \: \left|
+			\begin{array}{ccc}
+			\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+			a_x & a_y & a_z \\
+			b_x & b_y & b_z
+			\end{array}
+		        \right| \: \right|\right|^2
+		\f]
+*		Where \f$\mathbf{a} = \mathbf{v_0} - \mathbf{v_1}\f$ and
+*		\f$\mathbf{b} = \mathbf{v_2} - \mathbf{v_1}\f$.
+* \param	vx0			First vertex of triangle
+* 					\f$\mathbf{v_0}\f$.
+* \param	vx1			Second vertex of triangle
+*					\f$\mathbf{v_1}\f$.
+* \param	vx2			Third vertex of triangle
+*					\f$\mathbf{v_2}\f$.
+*/
+double		WlzGeomTriangleArea2Sq3(WlzDVertex3 vx0, WlzDVertex3 vx1,
+				        WlzDVertex3 vx2)
+{
+  WlzDVertex3	a,
+  		b,
+		t;
+  double	area3;
+
+  WLZ_VTX_3_SUB(a, vx1, vx0);
+  WLZ_VTX_3_SUB(b, vx2, vx0);
+  WLZ_VTX_3_CROSS(t, a, b);
+  area3 = WLZ_VTX_3_SQRLEN(t);
+  return(area3);
+}
+
+/*!
 * \return	Non zero if the given vertex is inside the circumcircle of
 *		the given triangle.
 * \ingroup      WlzGeometry
