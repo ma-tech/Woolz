@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        A general purpose doubly linked circular list of pointers.
+* \ingroup	AlcDLPList
 * \todo		-
 * \bug          None known.
 * \note		This code has been derived from the hguDlpList but
@@ -22,20 +23,17 @@
 #include <stdlib.h>
 #include <Alc.h>
 
-/*!
-* \ingroup      Alc
-* \defgroup	AlcDLPList
-* @{
-*/
-
-static void	AlcDLPListSortPv(AlcDLPItem *low, AlcDLPItem *high,
-				 int lowIdx, int highIdx,
-				 int (*entryCompFn)(void *, void *));
+static void			AlcDLPListSortPv(
+				  AlcDLPItem *low,
+				  AlcDLPItem *high,
+				  int lowIdx,
+				  int highIdx,
+				  int (*entryCompFn)(void *, void *));
 
 
 /*!
-* \return			 	List data structure, or NULL on
-*					error.
+* \return	List data structure, or NULL on error.
+* \ingroup	AlcDLPList
 * \brief	Creates a list data structure which is required by all
 *               the other AlcDLPList functions.
 * \param	dstErr 			Destination pointer for error
@@ -58,8 +56,8 @@ AlcDLPList	*AlcDLPListNew(AlcErrno *dstErr)
 }
 
 /*!
-* \return				List item structure, or	NULL on
-*					error.
+* \return	List item structure, or	NULL on error.
+* \ingroup	AlcDLPList
 * \brief	Creates a list item data structure for building into
 *		a AlcDLPList list.
 * \param	entry 			New list entry.
@@ -91,7 +89,8 @@ AlcDLPItem	*AlcDLPItemNew(void *entry, void (*freeFn)(void *),
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Free's the given list data structure and any list items.
 * \param	list 		 	The list data structure.
 */
@@ -129,7 +128,8 @@ AlcErrno	AlcDLPListFree(AlcDLPList *list)
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Inserts the given entry into the list before the given
 *		item.
 * \param	list 			The list data structure.
@@ -185,7 +185,8 @@ AlcErrno	AlcDLPListEntryInsert(AlcDLPList *list, AlcDLPItem *insBefore,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Appends the given entry into the list after the given
 *		item.
 * \param	list 			The list data structure.
@@ -240,9 +241,9 @@ AlcErrno	AlcDLPListEntryAppend(AlcDLPList *list, AlcDLPItem *appAfter,
 }
 
 /*!
-* \return				Next list item after the item
-*					removed, NULL on error or if
-*					last item removed.
+* \return	Next list item after the item removed, NULL on error or
+* \ingroup	AlcDLPList
+*		if last item removed.
 * \brief	Removes the item from the list, but does not free the
 *		item unless the freeItem flag is set.
 * \param	list 			The list data structure.
@@ -297,7 +298,8 @@ AlcDLPItem	*AlcDLPItemUnlink(AlcDLPList *list, AlcDLPItem *item,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Inserts a new item into the list before the given
 *		item.
 * \param	list 			The list data structure.
@@ -347,7 +349,8 @@ AlcErrno	AlcDLPItemInsert(AlcDLPList *list,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Appends a new item into the list after the given
 *		item.
 * \param	list 			The list data structure.
@@ -396,7 +399,8 @@ AlcErrno	AlcDLPItemAppend(AlcDLPList *list,
 }
 
 /*!
-* \return		 		Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Free's the list item which has already been removed
 *		from the list.
 * \param	item 		 	Item to be deleted.
@@ -421,7 +425,8 @@ AlcErrno	AlcDLPItemFree(AlcDLPItem *item)
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Sorts the entire list using the given entry comparison
 *		function.
 * \param	AlcDLPList *list:	The list data structure.
@@ -452,7 +457,8 @@ AlcErrno	AlcDLPListSort(AlcDLPList *list,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcDLPList
 * \brief	Private recursive quick sort function to sorts the
 *		list using the given entry comparison function.
 *		The values of the indicies must be such that lowIdx is
@@ -546,8 +552,8 @@ static void	AlcDLPListSortPv(AlcDLPItem *low, AlcDLPItem *high,
 }
 
 /*!
-* \return:				Number of items in list. This
-*					is always >= 0.
+* \return:	Number of items in list. This is always >= 0.
+* \ingroup	AlcDLPList
 * \brief	Returns the number of items in the list.
 * \param	list 			The list data structure.
 * \param	dstErr 			Destination pointer for error
@@ -581,7 +587,8 @@ int		AlcDLPListCount(AlcDLPList *list, AlcErrno *dstErr)
 }
 
 /*!
-* \return				Last item.
+* \return	Last item.
+* \ingroup	AlcDLPList
 * \brief	Iterates the given function through the list, starting
 *		with the given item. The iteration may proceed towards
 *		either the head or tail of the list. The iterated
@@ -670,7 +677,3 @@ AlcDLPItem	*AlcDLPListIterate(AlcDLPList *list, AlcDLPItem *item,
   }
   return(lastItem);
 }
-
-/*!
-* @}
-*/

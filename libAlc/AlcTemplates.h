@@ -14,7 +14,6 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup	Alc
 * \ingroup	AlcArray
 * \brief        Templates used by the 'C' pre-processor to generate the
 *		body of the MRC HGU array allocation functions and the
@@ -29,6 +28,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_C1D(D,T,M,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which allocate 1 dimensional
 *		zero'd arrays of any type.
 * 		- D:			Destination pointer, of type T *.
@@ -54,6 +54,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_M1D(D,T,M,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which allocate	1 dimensional
 *		non-zero'd arrays of any type.
 * 		- D:			Destination pointer, of type T *.
@@ -79,6 +80,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_C2D(D,T,M,N,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which allocate 2 dimensional
 *		zero'd arrays of any type.
 * 		- D:			Destination pointer, of type T **.
@@ -89,7 +91,7 @@ extern "C" {
 *		- F:			String with name of function.
 */
 #define ALC_TEMPLATE_C2D(D,T,M,N,F) \
-  int		index; \
+  size_t	index; \
   T		*dump0 = NULL; \
   T		**dump1 = NULL; \
   AlcErrno	alcErrno = ALC_ER_NONE; \
@@ -123,6 +125,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_M2D(D,T,M,N,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which allocate 2 dimensional
 *		non-zero'd arrays of any type.
 * 		- D:			Destination pointer, of type T **.
@@ -133,7 +136,7 @@ extern "C" {
 *		- F:			String with name of function.
 */
 #define ALC_TEMPLATE_M2D(D,T,M,N,F) \
-  int		index; \
+  size_t	index; \
   T		*dump0 = NULL; \
   T  		**dump1 = NULL; \
   AlcErrno	alcErrno = ALC_ER_NONE; \
@@ -167,6 +170,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_F2D(D,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which free 2 dimensional
 *		arrays of any type, actualy no type information
 *		is used in freeing the array.
@@ -190,6 +194,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_C3D(D,T,M,N,O,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which allocate 3 dimensional
 *		zero'd arrays of any type.
 * 		- D:			Destination pointer, of type T **.
@@ -201,7 +206,7 @@ extern "C" {
 *		- F:			String with name of function.
 */
 #define ALC_TEMPLATE_C3D(D,T,M,N,O,F) \
-  int		index0, \
+  size_t	index0, \
   		index1; \
   T		*dump0 = NULL, \
   		**dump1 = NULL, \
@@ -245,6 +250,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_M3D(D,T,M,N,O,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which allocate 3 dimensional
 *		non-zero'd arrays of any type.
 * 		- D:			Destination pointer, of type T **.
@@ -256,7 +262,7 @@ extern "C" {
 *		- F:			String with name of function.
 */
 #define ALC_TEMPLATE_M3D(D,T,M,N,O,F) \
-  int		index0, \
+  size_t	index0, \
   		index1; \
   T		*dump0 = NULL, \
   		**dump1 = NULL, \
@@ -300,6 +306,7 @@ extern "C" {
 
 /*!
 * \def		ALC_TEMPLATE_F3D(D,F)
+* \ingroup	AlcArray
 * \brief	A template for functions which free 3 dimensional
 *		arrays of any type, actualy no type information
 *		is used in freeing the array.

@@ -14,6 +14,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        A general purpose memory block allocator. Blocks are
 *		allocated and stored in on a stack.
+* \ingroup	AlcBlockStack
 * \todo		-
 * \bug          None found.
 */
@@ -22,14 +23,8 @@
 #include <Alc.h>
 
 /*!
-* \ingroup      Alc
-* \defgroup	AlcBlockStack
-* @{
-*/
-
-/*!
-* \return				New block stack, or NULL on
-*					error.
+* \return	New block stack, or NULL on error.
+* \ingroup	AlcBlockStack
 * \brief	Creates a new memory block with the required number of
 *               elements and adds it to the stack of existing blocks.
 * \param	nElem 		 	Number of elements in block.
@@ -38,7 +33,7 @@
 * \param	dstErr 			Destination pointer for error
 *					code, may be NULL.
 */
-AlcBlockStack	*AlcBlockStackNew(unsigned nElem, unsigned elmSz,
+AlcBlockStack	*AlcBlockStackNew(size_t nElem, size_t elmSz,
 				  AlcBlockStack *tBlk, AlcErrno *dstErr)
 {
   AlcBlockStack	*nBlk = NULL;
@@ -71,7 +66,8 @@ AlcBlockStack	*AlcBlockStackNew(unsigned nElem, unsigned elmSz,
 }
 
 /*!
-* \return		 		Error code.
+* \return	Error code.
+* \ingroup	AlcBlockStack
 * \brief	Free's the given block and it's elements together with
 *               all those below it in the stack. It's not an error for
 *               a block's elements pointer to be NULL.
@@ -101,7 +97,3 @@ AlcErrno	AlcBlockStackFree(AlcBlockStack *blk)
   }
   return(errNum);
 }
-
-/*!
-* @}
-*/

@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions for string duplication.
+* \ingroup	AlcString
 * \todo		-
 * \bug          None found.
 */
@@ -21,13 +22,8 @@
 #include <Alc.h>
 
 /*!
-* \ingroup      Alc
-* \defgroup	AlcString
-* @{
-*/
-
-/*!
-* \return		 		Duplicated string or NULL on error.
+* \return	Duplicated string or NULL on error.
+* \ingroup	AlcString
 * \brief	Allocates space for and duplicates the given NULL
 *		terminated character string.
 * \param	srcStr			 Given string.
@@ -43,7 +39,3 @@ char		*AlcStrDup(const char *srcStr)
   }
   return(dstStr);
 }
-
-/*!
-* @}
-*/

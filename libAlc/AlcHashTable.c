@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        A general purpose hash table.
+* \ingroup	AlcHashTable
 * \todo		-
 * \bug          None known.
 */
@@ -20,17 +21,12 @@
 #include <stdlib.h>
 #include <Alc.h>
 
-/*!
-* \ingroup      Alc
-* \defgroup	AlcHashTable
-* @{
-*/
-
-static AlcHashItem *AlcHashItemListLast(AlcHashItem *item);
+static AlcHashItem 		*AlcHashItemListLast(
+				  AlcHashItem *item);
 
 /*!
-* \return				Hash table structure, or NULL on
-*					error.
+* \return	Hash table structure, or NULL on error.
+* \ingroup	AlcHashTable
 * \brief	Creates a hash table data structure which is required
 *		by all the other AlcHashTable functions.
 * \param	tableSz 		Hash table size.
@@ -39,7 +35,7 @@ static AlcHashItem *AlcHashItemListLast(AlcHashItem *item);
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-AlcHashTable	*AlcHashTableNew(unsigned tableSz,
+AlcHashTable	*AlcHashTableNew(size_t tableSz,
 				 int (*keyCmp)(void *, void *),
 				 unsigned (*hashFn)(void *),
 			         AlcErrno *dstErr)
@@ -77,8 +73,8 @@ AlcHashTable	*AlcHashTableNew(unsigned tableSz,
 }
 
 /*!
-* \return				Hash item structure, or	NULL on
-*					error.
+* \return	Hash item structure, or	NULL on error.
+* \ingroup	AlcHashTable
 * \brief	Creates a hash item data structure for building into
 *		an AlcHashTable.
 * \param	entry			New table entry.
@@ -112,7 +108,8 @@ AlcHashItem	*AlcHashItemNew(void *entry, void (*freeFn)(void *),
 }
 
 /*!
-* \return	<AlcErrno>:		Error code.
+* \return	Error code.
+* \ingroup	AlcHashTable
 * \brief	Free's the given hash table data structure and any hash
 *		table items.
 * \param	hTbl 			The hash table data structure.
@@ -155,7 +152,8 @@ AlcErrno	AlcHashTableFree(AlcHashTable *hTbl)
 }
 
 /*!
-* \return	<AlcErrno>:		Error code.
+* \return	Error code.
+* \ingroup	AlcHashTable
 * \brief	Inserts the given entry into the hash table.
 * \param	hTbl 			The hash table data structure.
 * \param	key			Hash key.
@@ -188,7 +186,8 @@ AlcErrno	AlcHashTableEntryInsert(AlcHashTable *hTbl, void *key,
 }
 
 /*!
-* \return	<AlcErrno>:		Error code.
+* \return	Error code.
+* \ingroup	AlcHashTable
 * \brief	Removes the item from the hash table, but does not free
 *		the item unless the freeItem flag is set.
 * \param	hTbl			The hash table data structure.
@@ -237,7 +236,8 @@ AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
 }
 
 /*!
-* \return	<AlcErrno>:		Error code.
+* \return	Error code.
+* \ingroup	AlcHashTable
 * \brief	Inserts a new item into the hash table.
 *		First find the table list head by generating an
 *		index from the key using the hash function, then
@@ -354,7 +354,8 @@ AlcErrno	AlcHashItemInsert(AlcHashTable *hTbl, AlcHashItem *newItem)
 }
 
 /*!
-* \return	<AlcErrno>:		Error code.
+* \return	Error code.
+* \ingroup	AlcHashTable
 * \brief	Free's the list item which has already been removed
 *		from the list.
 * \param	item			Item to be deleted.
@@ -379,8 +380,8 @@ AlcErrno	AlcHashItemFree(AlcHashItem *item)
 }
 
 /*!
-* \return	<int>:			Number of items in list. This
-*					is always >= 0.
+* \return	Number of items in list. This is always >= 0.
+* \ingroup	AlcHashTable
 * \brief	Returns the number of items in the list.
 * \param	hTbl			The hash table data structure.
 * \param	dstErr			Destination pointer for error
@@ -421,7 +422,8 @@ int		AlcHashTableCount(AlcHashTable *hTbl, AlcErrno *dstErr)
 }
 
 /*!
-* \return	<AlcHashItem>:		Last item.
+* \return	Last item.
+* \ingroup	AlcHashTable
 * \brief	Iterates the given function through all entries of
 *		the hash table, starting with either the first or
 *		last item. The iteration proceeds towards either the
@@ -545,7 +547,8 @@ AlcHashItem	*AlcHashTableIterate(AlcHashTable *hTbl, AlcDirection dir,
 }
 
 /*!
-* \return	<AlcErrno>:		Error code.
+* \return	Error code.
+* \ingroup	AlcHashTable
 * \brief	Unlinks all items which are matched by the given
 *		match function. If the match pointer function is
 *		NULL then all the items are unlinked.
@@ -598,7 +601,8 @@ AlcErrno	AlcHashTableUnlinkAll(AlcHashTable *hTbl,
 }
 
 /*!
-* \return	<AlcHashItem>:		Matched item, NULL if no match.
+* \return	Matched item, NULL if no match.
+* \ingroup	AlcHashTable
 * \brief	Gets the item from the hash table with the matching
 *		key, it's not an error if a matching item isn't found.
 * \param	hTbl			The hash table data structure.
@@ -646,9 +650,10 @@ AlcHashItem	*AlcHashItemGet(AlcHashTable *hTbl, void *key,
 }
 
 /*!
-* \return	<int>:			 >0 if item0 before item1 or
-*					== 0 if item0 is item1 or
-*					 < 0 if item0 after item1
+* \return	>0 if item0 before item1 or
+* \ingroup	AlcHashTable
+*		== 0 if item0 is item1 or
+*		< 0 if item0 after item1.
 * \brief	Finds the order in which the given items would occur
 *		in the hash table.
 * \param	hTbl			The hash table.
@@ -676,8 +681,8 @@ int		AlcHashItemOrder(AlcHashTable *hTbl,
 }
 
 /*!
-* \return	<AlcHashItem>:		Last item (from given) in list,
-*					NULL if given NULL.
+* \return	Last item (from given) in list, NULL if given NULL.
+* \ingroup	AlcHashTable
 * \brief	Finds the last item in the list from the given item.
 * \param	item			Given item.
 */
@@ -694,7 +699,3 @@ static AlcHashItem *AlcHashItemListLast(AlcHashItem *item)
   }
   return(item);
 }
-
-/*!
-* @}
-*/

@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        A general purpose 1D vector (extensible array).
+* \ingroup	AlcVector
 * \todo		-
 * \bug          None found.
 */
@@ -22,13 +23,8 @@
 #include <Alc.h>
 
 /*!
-* \ingroup      Alc
-* \defgroup	AlcVector
-* @{
-*/
-
-/*!
-* \return				New vector, or NULL on error.
+* \return	New vector, or NULL on error.
+* \ingroup	AlcVector
 * \brief	Creates a new 1D vector (extensible array) with
 *		the required element size and initial number of
 *		elements. Vector elements are initialised by setting
@@ -121,7 +117,8 @@ AlcVector	*AlcVectorNew(unsigned int elmCnt, unsigned int elmSz,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcVector
 * \brief	Free's the given vector.
 * \param	vec			Vector to free.
 */
@@ -149,7 +146,8 @@ AlcErrno	AlcVectorFree(AlcVector *vec)
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcVector
 * \brief	Extend the vector for at least the given number of 
 *		elements.
 * \param	vec			Vector to extend.
@@ -235,7 +233,8 @@ AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
 }
 
 /*!
-* \return				Vector item, or NULL on error.
+* \return	Vector item, or NULL on error.
+* \ingroup	AlcVector
 * \brief	Gets a pointer to the vector item with the given index.
 * \param	vec			Vector to extend.
 * \param	idx			Given item index.
@@ -255,7 +254,8 @@ void		*AlcVectorItemGet(AlcVector *vec, unsigned int idx)
 
 
 /*!
-* \return				Vector item, or NULL on error.
+* \return	Vector item, or NULL on error.
+* \ingroup	AlcVector
 * \brief	Extends the vector and gets the vector item with the 
 * 		given index
 * \param	vec			Vector to extend.
@@ -277,7 +277,8 @@ void		*AlcVectorExtendAndGet(AlcVector *vec, unsigned int idx)
 }
 
 /*!
-* \return				Number of elements in vector.
+* \return	Number of elements in vector.
+* \ingroup	AlcVector
 * \brief	Gets the number of elements that the vector can hold
 *		before it needs to be extended.
 * \param	vec			Vector to extend.
@@ -296,6 +297,7 @@ unsigned int	AlcVectorCount(AlcVector *vec)
 
 /*!
 * \return	<void>
+* \ingroup	AlcVector
 * \brief	Copies elements from the vector into a 1 dimensional
 *		array.
 * \param	vec		 	Given vector.
@@ -332,7 +334,8 @@ void		AlcVectorSetArray1D(AlcVector *vec, int fIdx, int lIdx,
 }
 
 /*!
-* \return		 		Array of copied elements.
+* \return	Array of copied elements.
+* \ingroup	AlcVector
 * \brief	Creates a 1 dimensional array which contains a copy
 *		of the vectors elements.
 * \param	vec		 	Given vector.
@@ -380,7 +383,8 @@ void		*AlcVectorToArray1D(AlcVector *vec, int fIdx, int lIdx,
 }
 
 /*!
-* \return		 		Array of copied elements.
+* \return	Array of copied elements.
+* \ingroup	AlcVector
 * \brief	Creates a 2 dimensional array which contains a copy
 *		of the vectors elements.
 * \param	vec		 	Given vector.
@@ -444,7 +448,3 @@ void		**AlcVectorToArray2D(AlcVector *vec, int fIdx, int lIdx,
   }
   return(aM);
 }
-
-/*!
-* @}
-*/

@@ -1,0 +1,23 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlcBlockStack.dox
+* \author       Bill Hill
+* \date         March 2003
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Alc block stack module.
+* \ingroup	Alc
+* \defgroup	AlcBlockStack
+* \todo         -
+* \bug          None known.
+*/
+
+

@@ -14,6 +14,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        A general purpose free stack which allows a single
 *               pointer to be used to keep a list of data to be free'd.
+* \ingroup	AlcFreeStack
 * \todo		-
 * \bug          None known.
 */
@@ -21,11 +22,6 @@
 #include <stdlib.h>
 #include <Alc.h>
 
-/*!
-* \ingroup      Alc
-* \defgroup	AlcFreeStack
-* @{
-*/
 
 typedef struct _AlcFreeStack
 {
@@ -34,8 +30,8 @@ typedef struct _AlcFreeStack
 } AlcFreeStack;
 
 /*!
-* \return				New free stack pointer or
-*					NULL on error.
+* \return	New free stack pointer or NULL on error.
+* \ingroup	AlcFreeStack
 * \brief	Push's the given pointer onto the free stack on top
 *		of the previous free stack pointer.
 * \param	prev 			Previous free stack pointer.
@@ -66,8 +62,8 @@ void 		*AlcFreeStackPush(void *prev, void *data, AlcErrno *dstErr)
 }
 
 /*!
-* \return					New free stack pointer or
-*					NULL on error.
+* \return	New free stack pointer or NULL on error.
+* \ingroup	AlcFreeStack
 * \brief	Pop's the top entry from the free stack. Returns a
 *		free stack pointer and set's the given destination
 *		pointer to the entry's data. The entry's data is NOT
@@ -106,7 +102,8 @@ void 		*AlcFreeStackPop(void *prev, void **dstData, AlcErrno *dstErr)
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlcFreeStack
 * \brief	Free's all entries on the given free stack.
 * \param	stack 			The stack of pointers to be free'd.
 */
@@ -136,7 +133,3 @@ AlcErrno	AlcFreeStackFree(void *stack)
   }
   return(errNum);
 }
-
-/*!
-* @}
-*/

@@ -14,6 +14,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        A general purpose, arbitrary dimension, integer/floating
 *		point binary space partition tree (kD-tree).
+* \ingroup	AlcKDTree
 * \todo		-
 * \bug          None known.
 */
@@ -23,12 +24,6 @@
 #include <float.h>
 #include <limits.h>
 #include <Alc.h>
-
-/*!
-* \ingroup      Alc
-* \defgroup	AlcKDTree
-* @{
-*/
 
 static void			AlcKDTBoundSet(
 				  AlcKDTTree *tree,
@@ -71,8 +66,8 @@ static AlcKDTNode 		*AlcKDTNodeGetNN(
 				  double *dstDist);
 
 /*!
-* \return     				KD-tree data structure, or NULL
-*					on error.
+* \return     	KD-tree data structure, or NULL on error.
+* \ingroup	AlcKDTree
 * \brief        Creates a KD-tree data structure.
 * \param        AlcPointType type:	Type of tree node key.
 * \param	dim			Dimension of tree (must be >= 1).
@@ -142,7 +137,8 @@ AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
 }
 
 /*!
-* \return      				Number of nodes.
+* \return      	Number of nodes.
+* \ingroup	AlcKDTree
 * \brief        Prints facts about the kD-tree structure to a file.
 * \param        tree		 	The KD-tree tree
 * \param	fP			Output file stream.
@@ -173,7 +169,8 @@ int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
 }
 
 /*!
-* \return      				Number of child nodes.
+* \return      	Number of child nodes.
+* \ingroup	AlcKDTree
 * \brief        Prints facts about the kD-tree node structure to a file.
 * \param        tree		 	The KD-tree tree.
 * \param	node			The KD-tree node.
@@ -220,6 +217,7 @@ static int	AlcKDTNodeFacts(AlcKDTTree *tree, AlcKDTNode *node, FILE *fP)
 
 /*!
 * \return       <void>
+* \ingroup	AlcKDTree
 * \brief        Prints facts the given point.
 * \param        tree		 	The KD-tree tree.
 * \param	pnt			Given point.
@@ -243,7 +241,8 @@ static void	AlcKDTPointFacts(AlcKDTTree *tree, AlcPointP pnt, FILE *fP)
 }
 
 /*!
-* \return:     		               Error code.
+* \return:     	Error code.
+* \ingroup	AlcKDTree
 * \brief        Expands the given tree by allocating more nodes and
 *		then adding them to the available node stack.
 * \param        tree		 	The KD-tree data structure.
@@ -312,7 +311,8 @@ static AlcErrno AlcKDTTreeExpand(AlcKDTTree *tree)
 }
 
 /*!
-* \return      		               	Error code.
+* \return      	Error code.
+* \ingroup	AlcKDTree
 * \brief        Free's the given KD-tree data structure and any nodes
 *               in the tree.
 * \param        tree			The KD-tree data structure.
@@ -333,7 +333,8 @@ AlcErrno        AlcKDTTreeFree(AlcKDTTree *tree)
 }
 
 /*!
-* \return      				New node, NULL on error.
+* \return      	New node, NULL on error.
+* \ingroup	AlcKDTree
 * \brief        Allocates a new node and sets it's fields.
 * \param        tree		 	The KD-tree data structure.
 * \param	parent			Parent node, NULL if this is
@@ -376,6 +377,7 @@ AlcKDTNode	*AlcKDTNodeNew(AlcKDTTree *tree, AlcKDTNode *parent,
 
 /*!
 * \return       <void>
+* \ingroup	AlcKDTree
 * \brief        Sets the bounding values of the given node.
 * \param        tree		 	The KD-tree data structure.
 * \param	node			Node for which to set bounds.
@@ -443,7 +445,8 @@ static void	AlcKDTBoundSet(AlcKDTTree *tree, AlcKDTNode *node, int cmp)
 }
 
 /*!
-* \return      				New node, NULL on error.
+* \return      	New node, NULL on error.
+* \ingroup	AlcKDTree
 * \brief        Allocates a new node by popping it from the stack of
 *		available free nodes.
 * \param        tree<AlcKDTTree *>: 	The KD-tree data structure.
@@ -480,6 +483,7 @@ static AlcKDTNode *AlcKDTNodeAlcNew(AlcKDTTree *tree, AlcErrno *dstErr)
 
 /*!
 * \return       <void>
+* \ingroup	AlcKDTree
 * \brief        Free's the given KD-tree node and all it's child nodes
 *		by pushing them onto the stack of available nodes.
 * \param        tree		 	The KD-tree data structure.
@@ -497,7 +501,8 @@ void		AlcKDTNodeFree(AlcKDTTree *tree, AlcKDTNode *node)
 }
 
 /*!
-* \return				New node added to tree, NULL on
+* \return	New node added to tree, NULL on
+* \ingroup	AlcKDTree
 *					error or if key matched in tree.
 * \brief  	Checks for a node in the tree with the given key, if
 *		such a node doesn't exist then insert a new one.
@@ -574,8 +579,8 @@ AlcKDTNode	*AlcKDTInsert(AlcKDTTree *tree,  void *keyVal,
 }
 
 /*!
-* \return				Matched node in tree, NULL on
-*					error or if key not matched.
+* \return	Matched node in tree, NULL on error or if key not matched.
+* \ingroup	AlcKDTree
 * \brief  	Searches for a node with a matching key to the given key.
 * \param     	tree			Given tree,
 * \param	keyVal			Key values which must be
@@ -625,7 +630,8 @@ AlcKDTNode	*AlcKDTGetMatch(AlcKDTTree *tree,  void *keyVal,
 }
 
 /*!
-* \return				Leaf node containing the given
+* \return	Leaf node containing the given
+* \ingroup	AlcKDTree
 *					key or NULL if tree has no nodes.
 * \brief  	Searches for the leaf node containing the given key.
 *		progressing downwards in the tree.
@@ -667,9 +673,9 @@ AlcKDTNode 	*AlcKDTGetLeaf(AlcKDTTree *tree,  AlcKDTNode *node,
 }
 
 /*!
-* \return				Nearest neighbour node in tree,
-*					NULL on error or if tree has no
-*					nodes.
+* \return	Nearest neighbour node in tree, NULL on error or if
+* \ingroup	AlcKDTree
+*		tree has no nodes.
 * \brief  	Searches for the nearest neighbour node to the given
 *		key within the tree.
 * \param     	tree			Given tree,
@@ -754,9 +760,9 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
 }
 
 /*!
-* \return:				Nearest neighbour node in tree,
-*					NULL on error or if tree has no
-*					nodes.
+* \return:	Nearest neighbour node in tree, NULL on error or if tree
+* \ingroup	AlcKDTree
+*		has no nodes.
 * \brief  	Walks down the tree testing nodes that intersect the
 * 		hyper-sphere until either the child is NULL (at a leaf)
 *		or the child does not intersect the hyper-sphere,
@@ -819,8 +825,8 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 
 
 /*!
-* \return				Non zero if the given node
-*					intersects the given sphere.
+* \return	Non zero if the given node intersects the given sphere.
+* \ingroup	AlcKDTree
 * \brief  	Computes whether the given node intersects the given
 *		hyper-sphere.
 *		There are 3 algorithms that can be used.
@@ -930,6 +936,7 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 
 /*!
 * \return	<void>
+* \ingroup	AlcKDTree
 * \brief  	Sets the first value to the value of the second.
 * \param     	tree			Tree, used to determine value type.
 * \param	val0			First value.
@@ -960,8 +967,8 @@ static void	AlcKDTValuesSet(AlcKDTTree *tree,
 }
 
 /*!
-* \return 				Square of distance between the
-*					two keys.
+* \return 	Square of distance between the two keys.
+* \ingroup	AlcKDTree
 * \brief  	Computes the squared distance between the two keys.
 * \param     	tree			Tree, used to determine key type.
 *		key0			First key.
@@ -997,8 +1004,8 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
 }
 
 /*!
-* \return				Result of comparision 0, -ve or
-*					+ve.
+* \return	Result of comparision 0, -ve or +ve.
+* \ingroup	AlcKDTree
 * \brief  	Compares the values of the given key with those of the
 *		given node.
 * \param     	tree			Tree, used to determine key type
@@ -1223,7 +1230,3 @@ int		main(int argc, char *argv[])
   return(errNum);
 }
 #endif /* ALC_KDT_TEST */
-
-/*!
-* @}
-*/

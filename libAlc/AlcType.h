@@ -27,6 +27,7 @@ extern "C" {
 
 /*!
 * \enum 	_AlcErrno
+* \ingroup	AlcError
 * \brief	Error codes returned by functions of the
 *		memory allocation and fundamental type library.
 *               Typedef: ::AlcErrno
@@ -54,8 +55,8 @@ typedef enum _AlcErrno
 */
 typedef struct _AlcBlockStack
 {
-  int           elmCnt;		/*!< Number of elements used in block */
-  int           maxElm;  	/*!< Number of elements space allocated for
+  size_t           elmCnt;	/*!< Number of elements used in block */
+  size_t           maxElm;  	/*!< Number of elements space allocated for
   				     in block */
   void          *elements;      /*!< Block of elements */
   struct _AlcBlockStack *prev;  /*!< Previous block up in stack */

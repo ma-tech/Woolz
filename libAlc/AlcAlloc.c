@@ -17,6 +17,7 @@
 *               ANSI functions malloc(3), calloc(3), realloc(3) and
 *               free(3) but they may be used to encapsulate more
 *               complex allocation such as for persistant storage.
+* \ingroup	AlcAlloc
 * \todo		-
 * \bug          None known.
 */
@@ -25,20 +26,15 @@
 #include <Alc.h>
 
 /*!
-* \ingroup	Alc
-* \defgroup	AlcAlloc
-* @{
-*/
-
-/*!
-* \return				Allocated storage or NULL on error.
+* \return	Allocated storage or NULL on error.
+* \ingroup	AlcAlloc
 * \brief	Allocates space for the given number of elements with
 *		each element set to zero. At it's most basic this
 *		function is a wrapper for calloc(3).
 * \param	elCount 		Number of elements.
 * \param	elSz 			Size of an element.
 */
-void		*AlcCalloc(int elCount, int elSz)
+void		*AlcCalloc(size_t elCount, size_t elSz)
 {
   void		*data = NULL;
 
@@ -50,12 +46,13 @@ void		*AlcCalloc(int elCount, int elSz)
 }
 
 /*!
-* \return		 		Allocated storage or NULL on error.
+* \return	Allocated storage or NULL on error.
+* \ingroup	AlcAlloc
 * \brief	Allocates space for the given number of bytes with each
 *		each element set an undefined value.
 * \param	byteCount 	 	Number of bytes.
 */
-void		*AlcMalloc(int byteCount)
+void		*AlcMalloc(size_t byteCount)
 {
   void		*data = NULL;
 
@@ -67,13 +64,14 @@ void		*AlcMalloc(int byteCount)
 }
 
 /*!
-* \return		 		Allocated storage or NULL on error.
+* \return	Allocated storage or NULL on error.
+* \ingroup	AlcAlloc
 * \brief	Re-allocates space for the given number of bytes with
 *               the contents of given data being unchanged.
 * \param	givenData 	 	Given storage.
 * \param	byteCount 	 	Number of bytes required.
 */
-void		*AlcRealloc(void *givenData, int byteCount)
+void		*AlcRealloc(void *givenData, size_t byteCount)
 {
   void		*data = NULL;
 
@@ -86,6 +84,7 @@ void		*AlcRealloc(void *givenData, int byteCount)
 
 /*!
 * \return	<void>
+* \ingroup	AlcAlloc
 * \brief	Free's the given storage.
 * \param	data 	 		Given storage.
 */
@@ -96,7 +95,3 @@ void		AlcFree(void *data)
     free(data);
   }
 }
-
-/*!
-* @}
-*/
