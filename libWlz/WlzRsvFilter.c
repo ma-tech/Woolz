@@ -16,6 +16,8 @@
 *		WLZ_RSVFILTER_TEST_3D. See code below.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 06-09-1999 bill	Object type error was not returned from
+*			WlzRsvFilterObj().
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -335,7 +337,7 @@ WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
 	}
         break;
       default:
-        WLZ_ERR_OBJECT_TYPE;
+        errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
     }
   }
