@@ -14,6 +14,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Functions for computing Woolz affine transforms and
 *		applying them to Woolz objects.
+* \ingroup      WlzTransform
 * \todo         -
 * \bug          None known.
 */

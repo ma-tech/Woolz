@@ -1,35 +1,33 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzRegICP.c
-* Date:         November 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to register two objects using an
-*		implementation of the iterative closest point
-*		algorithm.
-*		See
-*		  * Besel P. J. and McKay N. D. A method for
-*   		    registration of 3-D shapes. PAMI, 14(2): 239-256,
-*		    1992.
-*		  * Zhang Z. Iterative point matching for
-*		    registration of free-form curves and surfaces.
-*		    International Journal of Computer Vision,
-*		    13(2):119-152, 1994.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 22-12-00 bill Add initial affine transform parameter. Add normals.
-*		Modify convergence test.
-* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
-* 06-12-00 bill Remove special case fn WlzRegICPCompTransform2D() and
-*		integrate code for both 2D and 3D into
-*		WlzRegICPCompTransform().
-* 30-11-00 bill Make changes for 3D least squares affine transforms.
-************************************************************************/
+/*!
+* \file        	WlzRegICP.c
+* \author       Bill Hill
+* \date         November 2000
+* \version      $Id$
+* \note
+*               Copyright:
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par  Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Functions for the registration of two objects using an
+*               implementation of the iterative closest point
+*               algorithm.
+*               See
+*                 * Besel P. J. and McKay N. D. A method for
+*                   registration of 3-D shapes. PAMI, 14(2): 239-256,
+*                   1992.
+*                 * Zhang Z. Iterative point matching for
+*                   registration of free-form curves and surfaces.
+*                   International Journal of Computer Vision,
+*                   13(2):119-152, 1994.
+* \ingroup      WlzTransform
+* \todo         -
+* \bug
+*/
+
 #include <float.h>
 #include <Wlz.h>
 
@@ -94,6 +92,7 @@ static WlzErrorNum 		WlzRegICPBuildTree(
 				  WlzRegICPWSp *wSp);
 
 /*!
+* \ingroup	WlzTransform
 * \return				Affine transform which brings
 *					the two objects into register.
 * \brief	Registers the two given objects using the iterative
@@ -266,6 +265,7 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Affine transform which brings
 *					the two objects into register.
 * \brief	Registers the two given objects using the iterative
@@ -367,6 +367,7 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Woolz error code.
 * \brief	Checks the two sets of verticies and promotes the
 *		vertex type to double (2 or 3D) if not already double
@@ -506,6 +507,7 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Affine transform which brings
 *					the two sets of verticies into
 *					register.
@@ -713,6 +715,7 @@ WlzAffineTransform	*WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Woolz error code
 * \brief	Allocates and populates a k-D tree from the given verticies.
 * 		The verticies are either WlzDVertex2 orWlzDVertex3
@@ -796,6 +799,7 @@ static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Nonzero if the iteration has
 * 					converged.
 * \brief	The iterative loop of the ICP, which iterates to find the
@@ -833,6 +837,7 @@ static int	WlzRegICPItr(WlzRegICPWSp *wSp,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return       <void>
 * \brief        Transforms the source verticies and normals using the
 *               current affine transform.
@@ -877,6 +882,7 @@ static void     WlzRegICPTrans(WlzRegICPWSp *wSp)
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return	<void>
 * \brief	Finds nearest neighbour matches in the target tree for
 *		the source verticies, sets the nearest neighbour
@@ -923,6 +929,7 @@ static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return	<void>
 * \brief	Weights the matched verticies by combining weightings
 *		for the vertex position and normal matches.
@@ -994,6 +1001,7 @@ static void	WlzRegICPWeight(WlzRegICPWSp *wSp)
 #endif /* WLZ_REGICP_SAMEWEIGHT */
 
 /*!
+* \ingroup	WlzTransform
 * \return		 		Woolz error code.
 * \brief	Computes an affine transform from matched verticies
 *		and the weights.

@@ -15,7 +15,7 @@
 * \brief        Functions for computing Woolz affine transforms that
 *		give the best fit, in a least squares sense, when
 *		used to transform one set of verticies to another.
-* \ingroup     WlzAffineTransform
+* \ingroup      WlzTransform
 * \todo         -
 * \bug          None known.
 * \note
