@@ -529,30 +529,8 @@ public class WlzImgView extends Component {
       _mag = 1.0;
       _imgSize = new Dimension();
 
-      _num = AnatKey._nrows;
+      _num = 0;
 
-      _abufImage = new BufferedImage[_num];
-      _adataBuf = new DataBuffer[_num];
-      _asppsm = new SinglePixelPackedSampleModel[_num];
-      _aimageData = new int[_num][];
-      _aorg = new WlzIVertex2[_num];
-      _axofs = new double[_num];
-      _ayofs = new double[_num];
-      _abRec = new Rectangle[_num];
-      _aras = new WritableRaster[_num];
-
-      // initialise
-      for(int i=0; i<_num; i++) {
-	 _abufImage[i] = null;
-	 _adataBuf[i] = null;
-	 _asppsm[i] = null;
-	 _aimageData[i] = null;
-	 _aorg[i] = null;
-	 _axofs[i] = 0.0;
-	 _ayofs[i] = 0.0;
-	 _abRec[i] = null;
-	 _aras[i] = null;
-      }
       _intersectionVec = new Vector();
       _interColVec = new Vector();
       _interColVec.add(Color.red);
@@ -952,13 +930,18 @@ public class WlzImgView extends Component {
     *   @param viz an array of booleans indicating the visibility
     *   of each of the anatomy components.
     */
-   public void setAnatomyObj(WlzObject[] objs, boolean[] viz)
+   public void setAnatomyObj(WlzObject[] objs,
+                             boolean[] viz,
+			     Color[] col)
       throws WlzException {
 
-	 int total = AnatKey._nrows;
 	 _viz = viz;
 
-	 for(int i = 0; i < total; i++) {
+	 if(objs.length != _num) {
+	    _num = objs.length;
+	    initArrays();
+	 }
+	 for(int i = 0; i < _num; i++) {
 	    if(_viz[i] == false) {
 	       _aorg[i] = null;
 	       _abufImage[i] = null;
@@ -1003,8 +986,12 @@ public class WlzImgView extends Component {
 			      255 | (255 << 8) | (255 << 16) | (0 << 24);
 			} else {
 			   // colour the overlay part
-			   _aimageData[i][(idY * _abRec[i].width) + idX] =
-			      AnatKey._cols[i];
+                           ii = col[i].getBlue() |
+                                col[i].getGreen() << 8 |
+                                col[i].getRed() << 16 |
+                                125 << 24;
+
+			   _aimageData[i][(idY * _abRec[i].width) + idX] = ii;
 			}
 		     } // for
 		  } // for
@@ -1078,6 +1065,45 @@ public class WlzImgView extends Component {
       setAnatomyOffsets();
       _anatomy = true;
 
+   }
+
+   //-------------------------------------------------------------
+   /**
+    *   Creates and initialises arrays required for
+    *   anatomy from menu.
+    */
+   private void initArrays() {
+      _abufImage = null;
+      _adataBuf = null;
+      _asppsm = null;
+      _aimageData = null;
+      _aorg = null;
+      _axofs = null;
+      _ayofs = null;
+      _abRec = null;
+      _aras = null;
+
+      _abufImage = new BufferedImage[_num];
+      _adataBuf = new DataBuffer[_num];
+      _asppsm = new SinglePixelPackedSampleModel[_num];
+      _aimageData = new int[_num][];
+      _aorg = new WlzIVertex2[_num];
+      _axofs = new double[_num];
+      _ayofs = new double[_num];
+      _abRec = new Rectangle[_num];
+      _aras = new WritableRaster[_num];
+
+      for(int i=0; i<_num; i++) {
+	 _abufImage[i] = null;
+	 _adataBuf[i] = null;
+	 _asppsm[i] = null;
+	 _aimageData[i] = null;
+	 _aorg[i] = null;
+	 _axofs[i] = 0.0;
+	 _ayofs[i] = 0.0;
+	 _abRec[i] = null;
+	 _aras[i] = null;
+      }
    }
 
    //-------------------------------------------------------------
@@ -1221,9 +1247,8 @@ public class WlzImgView extends Component {
     */
    public void drawAnatomy(Graphics2D g2) {
       if (_anatomy == false) return;
-      int total = AnatKey._nrows;
 
-      for(int i=0; i<total; i++) {
+      for(int i=0; i<_num; i++) {
 	 if(_viz[i] == false) continue;
 	 if(_abufImage[i] != null) {
 	    g2.translate(_axofs[i], _ayofs[i]);
@@ -1825,10 +1850,8 @@ public class WlzImgView extends Component {
     *   when displayed on screen.
     */
    protected void setAnatomyOffsets() {
-      int total = AnatKey._nrows ;
-      if(total==0) return;
 
-      for(int i=0; i<total; i++) {
+      for(int i=0; i<_num; i++) {
 	 if(_aorg[i] != null) {
 	    _axofs[i] = Math.abs(_aorg[i].vtX - _org.vtX);
 	    _ayofs[i] = Math.abs(_aorg[i].vtY - _org.vtY);

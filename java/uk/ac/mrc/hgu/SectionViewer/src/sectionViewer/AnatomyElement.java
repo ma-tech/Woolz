@@ -10,7 +10,8 @@ import java.io.*;
 import uk.ac.mrc.hgu.Wlz.*;
 
 /**
- *   Corresponds to a single row of the Anatomy Key
+ *   Corresponds to a single row of the Anatomy Key.
+ *   (ie a KeyElement object).
  *   @see sectionViewer.AnatKey
  */
 public class AnatomyElement {
@@ -21,27 +22,28 @@ public class AnatomyElement {
    /**   The full name of the anatomy component.  */
    private String _descr;
 
-   /**   The position (row) of the anatomy component in the AnatKey.  */
+   /**   A unique index number for the anatomy component.  */
    private int _indx;
+
    /**   True if the anatomy component will be displayed.  */
    private boolean _visible;
    /**   True if the anatomy component has been removed from the AnatKey.  */
-   private boolean _removed;
+   //private boolean _removed;
 
    /**
     *   Creates an AnatomyElement with the given anatomy component (obj), 
-    *   name (descr) and position in the AnatKey (indx).
+    *   and name (descr).
     *   @param obj A 3D Woolz object representing an anatomy component.
     *   @param descr A String giving the full name of the anatomy component.
-    *   @param indx An int giving the position (row) of the anatomy component
-    *   in the AnatKey. Possible values are 0 to 5.
     */
-   public AnatomyElement(WlzObject obj, String descr, int indx) {
+   public AnatomyElement(WlzObject obj,
+                         String descr,
+			 int indx) {
       _obj = obj;
       _descr = descr;
       _indx = indx;
       _visible = true;
-      _removed = false;
+      //_removed = false;
    }
 
    /**
@@ -50,6 +52,14 @@ public class AnatomyElement {
     */
    protected WlzObject getObj() {
       return _obj;
+   }
+
+   /**
+    *   Returns the unique index number.
+    *   @return _indx
+    */
+   public int getIndx() {
+      return _indx;
    }
 
    /**
@@ -66,7 +76,7 @@ public class AnatomyElement {
     *   Toggles the visibility of the anatomy component.
     *   @param state true if anatomy component is visible.
     */
-   public void setVisible(boolean state) {
+   public void setElementVisible(boolean state) {
       _visible = state;
    }
 
@@ -74,17 +84,21 @@ public class AnatomyElement {
     *   Returns the removed or replaced status of the anatomy component.
     *   @return true if anatomy component has been removed.
     */
+/*
    public boolean isRemoved() {
       return _removed;
    }
+*/
 
    /**
     *   Toggles the removed or replaced status of the anatomy component.
     *   @param state true if anatomy component is to be removed.
     */
+/*
    public void setRemoved(boolean state) {
       _removed = state;
    }
+*/
 
    /**
     *   Returns the full name of the anatomy component.
@@ -102,50 +116,7 @@ public class AnatomyElement {
       _descr = descr;
    }
 
-   /**
-    *   Returns the position (row) of the anatomy component
-    *   in the AnatKey.
-    *   @return the position (row) of the anatomy component.
-    */
-   protected int getIndex() {
-      return _indx;
-   }
 
-   /**
-    *   Sets the position (row) of the anatomy component
-    *   in the AnatKey.
-    *   @param indx the position of the anatomy component.
-    */
-   protected void setIndex(int indx) {
-      _indx = indx;
-   }
-
-   /**
-    *   Returns the position (row) of the next available
-    *   row in the AnatKey.
-    *   If an anatomy component has been removed from the AnatKey
-    *   this row is immediately available.
-    *   If no anatomy components have been deleted the next available 
-    *   row is the next empty one (or row 0 if all 6 rows are occupied).
-    *   @param arr an array of AnatomyElements from which the next available 
-    *   space is deduced.
-    *   @return the next available row in the AnatKey..
-    */
-   public static int getNextIndex(AnatomyElement[] arr) {
-      // return the lowest available empty space in the array
-
-      AnatomyElement el = null;
-      int ret = 0;
-
-      for(int i=0; i<AnatKey._nrows; i++) {
-         el = arr[i];
-         if((el == null) || (el.isRemoved())) {
-	    ret = i;
-	    break;
-	 }
-      }
-      return ret;
-   }
 }
 
  

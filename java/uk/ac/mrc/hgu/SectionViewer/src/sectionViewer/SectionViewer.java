@@ -891,29 +891,29 @@ public class SectionViewer
 // show anatomy selected from menu
 //-------------------------------------------------------------
   /**
-   *   Gets an array of anatomy components from <em>_parent</em> and
-   *   calls anatomyFromMenu(AnatomyElement[] arr).
+   *   Gets an collection of anatomy components from <em>_parent</em> and
+   *   calls anatomyFromMenu(Vector vec).
    */
   public void anatomyFromMenu() {
 
-    AnatomyElement anatArr[] = null;
+    Vector vec = null;
     if (null != _parent) {
       try {
         Method M1 = null;
-        M1 = _parent.getClass().getMethod("getAnatomyArr", null);
-        anatArr = (AnatomyElement[]) M1.invoke(_parent, null);
+        M1 = _parent.getClass().getMethod("getAnatomyElements", null);
+        vec = (Vector) M1.invoke(_parent, null);
       }
       catch (InvocationTargetException e) {
         System.out.println(e.getMessage());
       }
       catch (NoSuchMethodException ne) {
-        System.out.println("getAnatomyArray: no such method 1");
+        System.out.println("getAnatomyElements: no such method 1");
         System.out.println(ne.getMessage());
       }
       catch (IllegalAccessException ae) {
         System.out.println(ae.getMessage());
       }
-      anatomyFromMenu(anatArr);
+      anatomyFromMenu(vec);
     }
   }
 
@@ -921,18 +921,31 @@ public class SectionViewer
    *   Gets a section through each of the given 3D anatomy components
    *   using the current View Structure
    *   then calls _imgV.setAnatomyObj().
-   *   @param arr the array of 3D anatomy components.
+   *   @param vec the collection of 3D anatomy components.
    */
-  public void anatomyFromMenu(AnatomyElement[] arr) {
-    int num = AnatKey._nrows;
+  public void anatomyFromMenu(Vector vec) {
+
+    int num = vec.size();
+    if(num != AnatKey.getNRows()) {
+       System.out.println("anatomyFromMenu: vec length "+num+
+                          " nrows "+AnatKey.getNRows());
+    }
     WlzObject obj2D[] = new WlzObject[num];
     boolean viz[] = new boolean[num];
+    Color col[] = new Color[num];
 
-    for (int i = 0; i < num; i++) {
-      if ( (arr[i] != null) && (arr[i].isRemoved() == false)) {
-        viz[i] = arr[i].isVisible();
+    Enumeration els = vec.elements();
+
+    int i = 0;
+    AnatomyElement el = null;
+
+    while(els.hasMoreElements()) {
+      el = (AnatomyElement)els.nextElement();
+      if (el != null) {
+        viz[i] = el.isVisible();
+	col[i] = AnatKey.getColor(el.getIndx());
         obj2D[i] = _OBJModel.makeSection(
-            arr[i].getObj(),
+            el.getObj(),
             _VSModel.getViewStruct());
         if (obj2D[i] != null) {
           if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
@@ -944,18 +957,21 @@ public class SectionViewer
       else {
         obj2D[i] = null;
         viz[i] = false;
+        col[i] = null;
       }
-    }
+      i++;
+    } // while
 
     try {
       _imgV.clearAnatomy();
-      _imgV.setAnatomyObj(obj2D, viz);
+      _imgV.setAnatomyObj(obj2D, viz, col);
       _imgV.repaint();
     }
     catch (WlzException err) {
       System.out.println("WlzException #?");
       System.out.println(err.getMessage());
     }
+
   }
 
 //-------------------------------------------------------------
@@ -3711,8 +3727,8 @@ public class SectionViewer
     WlzObject oSection;
     WlzObject oObj;
     WlzIBox2 bbox2;
-    AnatomyElement arr[];
-    WlzObject obj2D[];
+    Vector anatVec;
+    WlzObject obj2D[] = null;
 
     public ViewStructModelToViewAdaptor(ViewStructModel mdl1,
                                         WlzObjModel mdl2,
@@ -3734,14 +3750,16 @@ public class SectionViewer
       oObj = null;
       oSection = null;
 
-      int num = AnatKey._nrows;
+      int num = AnatKey.getNRows();
 
       obj2D = new WlzObject[num];
       boolean viz[] = new boolean[num];
-
+      Color col[] = new Color[num];
+      
       for (int i = 0; i < num; i++) {
         obj2D[i] = null;
         viz[i] = false;
+	col[i] = null;
       }
 
       view.clearThreshold();
@@ -3768,14 +3786,14 @@ public class SectionViewer
         if (null != _parent) {
           try {
             Method M1 = null;
-            M1 = _parent.getClass().getMethod("getAnatomyArr", null);
-            arr = (AnatomyElement[]) M1.invoke(_parent, null);
+            M1 = _parent.getClass().getMethod("getAnatomyElements", null);
+            anatVec = (Vector)M1.invoke(_parent, null);
           }
           catch (InvocationTargetException ie) {
             System.out.println(ie.getMessage());
           }
           catch (NoSuchMethodException ne) {
-            System.out.println("getAnatomyArr: no such method");
+            System.out.println("getAnatomyElements: no such method");
             System.out.println(ne.getMessage());
           }
           catch (IllegalAccessException ae) {
@@ -3783,27 +3801,35 @@ public class SectionViewer
           }
         }
 
-        if ( (arr != null) && (viz != null) && (obj2D != null)) {
-          for (int i = 0; i < num; i++) {
-            if (arr[i] != null) {
-              viz[i] = (arr[i].isVisible() &&
-                        !arr[i].isRemoved());
-              obj2D[i] = _OBJModel.makeSection(
-                  arr[i].getObj(),
-                  VS);
-              if (obj2D[i] != null) {
-                if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
-                    WlzObjectType.WLZ_EMPTY_OBJ) {
-                  obj2D[i] = null;
-                }
-              }
-            }
-            else {
-              viz[i] = false;
-              obj2D[i] = null;
-            }
-          }
-          view.setAnatomyObj(obj2D, viz);
+        if ( (anatVec != null) && (viz != null) && (obj2D != null)) {
+	  Enumeration els = anatVec.elements();
+
+	  int i = 0;
+	  AnatomyElement el = null;
+
+	  while(els.hasMoreElements()) {
+	    el = (AnatomyElement)els.nextElement();
+	    if (el != null) {
+	      viz[i] = el.isVisible();
+	      col[i] = AnatKey.getColor(el.getIndx());
+	      obj2D[i] = _OBJModel.makeSection(
+		  el.getObj(),
+		  VS);
+	      if (obj2D[i] != null) {
+		if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
+		    WlzObjectType.WLZ_EMPTY_OBJ) {
+		  obj2D[i] = null;
+		}
+	      }
+	    }
+	    else {
+	      obj2D[i] = null;
+	      viz[i] = false;
+	      col[i] = null;
+	    }
+	    i++;
+	  } // while
+          view.setAnatomyObj(obj2D, viz, col);
         }
       }
       catch (WlzException e2) {

@@ -37,18 +37,18 @@ public class SVParent2D implements SVParent {
   /**   Indicates colour of anatomy components in SectionViewers. */
   protected AnatKey _key = null;
 
-  /**   Array of objects corresponding to rows in the AnatKey. */
+  /**
+   * Array of objects corresponding to rows in the AnatKey.
+   * Obsolete.
+   */
   protected AnatomyElement _anatomyArr[];
+
+  /**   Array of objects corresponding to rows in the AnatKey. */
+  protected Vector _elementVec = null;
 
   /**   Manages events initiated from the AnatKey controls. */
   protected keyToControllerAdaptor K2C_1 = null;
 
-  /**
-   *   The number of rows in the AnatKey.
-   *   This is currently fixed at 6.
-   *   A future release may have an expandable AnatKey.
-   */
-  protected int _nAnatRows;
 
   /**   Java Help Helpset for SectionViewer. */
   private HelpSet _hs = null;
@@ -118,20 +118,12 @@ public class SVParent2D implements SVParent {
   protected void init2D() {
     _openViews = new Vector();
     _key = AnatKey.instance();
-    _key.setSize(900,500);
     _key.pack();
     _key.setVisible(false);
     _key.setResizable(true);
-    _nAnatRows = AnatKey._nrows;
-    _anatomyArr = new AnatomyElement[_nAnatRows];
+    _elementVec = new Vector();
 
-    for (int i=0; i<_nAnatRows; i++) {
-      _anatomyArr[i] = null;
-    }
-
-    if (K2C_1 != null) _key.removeActionListener(K2C_1);
     K2C_1 = new keyToControllerAdaptor();
-    _key.addActionListener(K2C_1);
   }
 //-----------------------------------------------------
   /**
@@ -398,16 +390,15 @@ public class SVParent2D implements SVParent {
       SV.setAnatomyText(SV._anatomyStr);
     }
 
-    for(int i=0; i<_nAnatRows; i++) {
-      _anatomyArr[i] = null;
-    }
-    AnatKey.reset();
+    _elementVec.clear();
+    _key.reset();
   }
 
 //-------------------------------------------------------------
   /**
-   *   Adds the given (atomic) component to the array of anatomy components
-   *   and causes it to be displayed in all open SectionViewers.
+   *   Adds the given (atomic) component to the collection
+   *   of anatomy components and causes it to be displayed
+   *   in all open SectionViewers.
    *   @param str the filename of the anatomy component to add.
    */
   public void showAnatomy(String str) {
@@ -425,14 +416,17 @@ public class SVParent2D implements SVParent {
 
     try {
       in = new WlzFileInputStream(str);
-      updateAnatomyArr(WlzObject.WlzReadObj(in), capitalise(anatName1)+" *");
-    } catch(WlzException we) {
+      updateElementVec(WlzObject.WlzReadObj(in),
+                       capitalise(anatName1)+" *");
+    }
+    catch(WlzException we) {
       System.out.println("showAnatomy: 1");
       System.out.println(we.getMessage());
       if(we.getMessage().indexOf("WLZ_ERR_OBJECT_NULL") != -1) {
-        updateAnatomyArr(null, capitalise(anatName1));
+        updateElementVec(null, capitalise(anatName1));
       }
-    } catch (IOException ie) {
+    }
+    catch (IOException ie) {
       System.out.println(ie.getMessage());
     }
 
@@ -443,18 +437,18 @@ public class SVParent2D implements SVParent {
     for(int i=0; i<numViews; i++) {
       SV = (SectionViewer)_openViews.elementAt(i);
       SV.removeAnatomy();
-      SV.anatomyFromMenu(_anatomyArr);
+      SV.anatomyFromMenu(_elementVec);
     }
   }
 
 //-------------------------------------------------------------
   /**
-   *   Adds the given (high level) component to the array of anatomy components
-   *   and causes it to be displayed in all open SectionViewers.
+   *   Adds the given (high level) component to the collection
+   *   of anatomy components and causes it to be displayed
+   *   in all open SectionViewers.
    *   @param str the filename of the anatomy component to add.
    */
   public void showCombinedAnatomy(String str) {
-//    Vector files = null; // String pathname to file or dir
 
     File thisDir = new File(str);
     Vector files = collectWlzFiles(str, new Vector());
@@ -463,10 +457,9 @@ public class SVParent2D implements SVParent {
     String fullName = thisDir.getAbsolutePath();
     String anatName = fullName.substring(pathlen);
   
-    //System.out.println("anatName = "+anatName);
-
     try {
-      updateAnatomyArr(combineWlzObjs(files), capitalise(anatName));
+      updateElementVec(combineWlzObjs(files),
+                       capitalise(anatName));
     } catch (Exception e) {
       System.out.println("Can not load the anatomy!");
     }
@@ -481,7 +474,7 @@ public class SVParent2D implements SVParent {
     for(int i=0; i<numViews; i++) {
       SV = (SectionViewer)_openViews.elementAt(i);
       SV.removeAnatomy();
-      SV.anatomyFromMenu(_anatomyArr);
+      SV.anatomyFromMenu(_elementVec);
     }
   }
 
@@ -539,23 +532,27 @@ public class SVParent2D implements SVParent {
 
 //-------------------------------------------------------------
   /**
-   *   Updates the array of AnatomyElements represented by
-   *   the rows in the AnatKey..
-   *   The AnatKey will be filled from top to bottom
-   *   unless there is a gap where a component has been removed.
-   *   When the AnatKey is full components will be replaced
-   *   starting with those at the top.
+   *   Updates the Vector of AnatomyElements represented by
+   *   the rows in the AnatKey.
    *   @param obj 3D Woolz object representing an anatomy component.
    *   @param str the full path name of the anatomy component.
    */
-  public void updateAnatomyArr(WlzObject obj, String str) {
+  public void updateElementVec(WlzObject obj, String str) {
+
+    int indx = 0;
 
     String descr = str;
     if(obj == null) descr = new String(str+" (not painted)");
 
-    int indx = AnatomyElement.getNextIndex(_anatomyArr);
-    _anatomyArr[indx] = new AnatomyElement(obj, descr, indx);
-    AnatKey.update(_anatomyArr);
+    indx = _key.nextIndx();
+    AnatomyElement el = new AnatomyElement(obj, descr, indx);
+    _elementVec.add(el);
+
+    _key.addRow(descr);
+    KeyEntry row = _key.getRow(indx);
+    if(row != null) {
+       row.addActionListener(K2C_1);
+    }
   }
 
 //-------------------------------------------------------------
@@ -606,7 +603,7 @@ public class SVParent2D implements SVParent {
 //-------------------------------------------------------------
   /**
    *   Returns the AnatKey.
-   *   @return the AnatKey.
+   *   @return _key.
    */
   public AnatKey getAnatomyKey() {
     return _key;
@@ -614,12 +611,12 @@ public class SVParent2D implements SVParent {
 
 //-------------------------------------------------------------
   /**
-   *   Returns the array of objects represented by
+   *   Returns the collection of objects represented by
    *   the rows of the AnatKey.
-   *   @return the AnatomyElement array.
+   *   @return the AnatomyElement Vector.
    */
-  public AnatomyElement[] getAnatomyArr() {
-    return _anatomyArr;
+  public Vector getAnatomyElements() {
+    return _elementVec;
   }
 
 //-------------------------------------------------------------
@@ -648,6 +645,24 @@ public class SVParent2D implements SVParent {
   public Vector getOpenViews() {
     return _openViews;
   }
+
+//-------------------------------------------------------------
+  /**
+   *   Returns the AnatomyElement with the specified indx.
+   *   @param indx a unique index.
+   *   @return the AnatomyElement with the specified indx.
+   */
+  public AnatomyElement getAnatomyElement(int indx) {
+
+     Enumeration els = _elementVec.elements();
+     AnatomyElement el = null;
+     while (els.hasMoreElements()) {
+        el = (AnatomyElement)els.nextElement();
+        if(el.getIndx() == indx) break;
+     }
+     return el;
+  }
+
 
 //===============================================================
 // Thread stuff
@@ -680,48 +695,43 @@ public class SVParent2D implements SVParent {
    *   Listens for ActionEvents from an AnatKey and implements the
    *   appropriate action depending upon the ActionCommand.
    */
-  public class keyToControllerAdaptor implements ActionListener {
+  public class keyToControllerAdaptor
+      implements ActionListener {
 
     int numViews;
     int indx;
     SectionViewer SV = null;
-    Color newCol = null;
 
     public keyToControllerAdaptor() {
     }
 
     public void actionPerformed(ActionEvent e) {
       String cmd = e.getActionCommand();
-      boolean wasRemoved = false;
 
-      indx = (
-          Integer.valueOf(cmd.substring(cmd.length()-1))).intValue();
-      //if(_anatomyArr[indx] == null) return;
+      String[] splits = cmd.split("\\d", 2);
+      /* 
+       * assumes cmd is of the form "name123"
+       * where 'name' describes the action to be taken 
+       * and '123' is the unique index number of the keyEntry
+       */
+      indx = (Integer.valueOf(
+                cmd.substring(splits[0].length()))).intValue();
 
       if(cmd.indexOf("makeVisible") != -1) {
-	if(_anatomyArr[indx] != null) {
-	   _anatomyArr[indx].setVisible(true);
-	}
+         _key.setEntryVisible(indx, true);
+	 getAnatomyElement(indx).setElementVisible(true);
       } else if(cmd.indexOf("makeInvisible") != -1) {
-	if(_anatomyArr[indx] != null) {
-	   _anatomyArr[indx].setVisible(false);
-	}
+         _key.setEntryVisible(indx, false);
+	 getAnatomyElement(indx).setElementVisible(false);
       } else if(cmd.indexOf("zap") != -1) {
-	if(_anatomyArr[indx] != null) {
-	   wasRemoved = _anatomyArr[indx].isRemoved();
-	   _key.setZapToolTips(indx, !wasRemoved);
-	   _anatomyArr[indx].setRemoved(!wasRemoved);
-	}
+	 _key.removeRow(indx);
+	 _elementVec.remove(getAnatomyElement(indx));
       } else if(cmd.indexOf("colour") != -1) {
-         newCol = JColorChooser.showDialog(null,
-	                                   "choose colour for anatomy component",
-					   new Color(_key._cols[indx]));
-         _key.setCol(newCol, indx);
+         _key.setCol(indx);
       } else {
         System.out.println("unknown command");
       }
 
-      AnatKey.update(_anatomyArr);
       doChange();
     }
 
@@ -732,7 +742,7 @@ public class SVParent2D implements SVParent {
       for(int i=0; i<numViews; i++) {
         SV = (SectionViewer)_openViews.elementAt(i);
         SV.removeAnatomy();
-        SV.anatomyFromMenu(_anatomyArr);
+        SV.anatomyFromMenu(_elementVec);
       }
     }
   }

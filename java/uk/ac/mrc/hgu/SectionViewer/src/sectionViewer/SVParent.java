@@ -38,9 +38,9 @@ public interface SVParent {
    /**
     *   Supplies the collection of elements that make up
     *   the AnatKey.
-    *   @return the AnatomyElement array for this SectionViewer.
+    *   @return the Vector of AnatomyElements for this SectionViewer.
     */
-   public AnatomyElement[]	getAnatomyArr();
+   public Vector		getAnatomyElements();
 
    /**
     *   Supplies the collection of currently open SectionViewers.
