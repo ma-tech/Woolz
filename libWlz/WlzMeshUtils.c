@@ -206,7 +206,7 @@ WlzErrorNum	WlzMeshVxVecAdd(WlzMeshTransform *mesh, WlzDVertex2 *vxVec,
 	{
 	  /* Node already exists find which node of element and modify
 	   * it's flags. */
-	  if((nId = WlzMeshElemNodeIdxFromVx(mesh, elm, *vxVecP0)) > 0)
+	  if((nId = WlzMeshElemNodeIdxFromVx(mesh, elm, *vxVecP0)) >= 0)
 	  {
 	    nod = mesh->nodes + *(elm->nodes + nId);
 	    nod->flags = nodeFlags;
