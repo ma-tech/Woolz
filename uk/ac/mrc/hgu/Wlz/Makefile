@@ -35,14 +35,27 @@ install:		install_archive install_jar
 binding:
 			cd C2Java; $(MAKE) JAVA_PACKAGE=$(JAVA_PACKAGE) binding
 
+ifeq ($(UNIXTYPE), CYGWIN) 
 archive:
 			$(CP) C2Java/Binding/WlzObjectC2J.c C
 			$(CP) C2Java/Binding/WlzObjectC2J.h C
 			$(CP) HandCodedC/*.c HandCodedC/*.h C
-			cd C; $(MAKE) archive
+			cd C; $(MAKE) dll
+else
+archive:
+			$(CP) C2Java/Binding/WlzObjectC2J.c C
+			$(CP) C2Java/Binding/WlzObjectC2J.h C
+			$(CP) HandCodedC/*.c HandCodedC/*.h C
+			cd C; $(MAKE) soarchive
+endif							
 
+ifeq ($(UNIXTYPE), CYGWIN) 
 install_archive:
-			cd C; $(MAKE) install_archive
+			cd C; $(MAKE) install_dll
+else
+install_archive:
+			cd C; $(MAKE) install_soarchive
+endif
 
 install_jar:		$(JARFILE)
 			cd ../../../../..; \
