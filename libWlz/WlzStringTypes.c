@@ -750,251 +750,263 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
 				       const char **dstMsgStr)
 {
   const char	*errStr = NULL,
-  		*msgStr = NULL;
+    *msgStr = NULL;
 
   switch(wlzErr)
   {
-    case WLZ_ERR_NONE:
-      errStr = "WLZ_ERR_NONE",
+  case WLZ_ERR_NONE:
+    errStr = "WLZ_ERR_NONE",
       msgStr = "No error";
-      break;
-    case WLZ_ERR_EOO:
-      errStr = "WLZ_ERR_EOO",
+    break;
+  case WLZ_ERR_EOO:
+    errStr = "WLZ_ERR_EOO",
       msgStr = "End of object";
-      break;
-    case WLZ_ERR_OBJECT_NULL:
-      errStr = "WLZ_ERR_OBJECT_NULL",
+    break;
+  case WLZ_ERR_OBJECT_NULL:
+    errStr = "WLZ_ERR_OBJECT_NULL",
       msgStr = "NULL object";
-      break;
-    case WLZ_ERR_OBJECT_TYPE:
-      errStr = "WLZ_ERR_OBJECT_TYPE",
+    break;
+  case WLZ_ERR_OBJECT_TYPE:
+    errStr = "WLZ_ERR_OBJECT_TYPE",
       msgStr = "Invalid object type";
-      break;
-    case WLZ_ERR_OBJECT_DATA:
-      errStr = "WLZ_ERR_OBJECT_DATA",
+    break;
+  case WLZ_ERR_OBJECT_DATA:
+    errStr = "WLZ_ERR_OBJECT_DATA",
       msgStr = "Object data";
-      break;
-    case WLZ_ERR_DOMAIN_NULL :
-      errStr = "WLZ_ERR_DOMAIN_NULL ",
+    break;
+  case WLZ_ERR_DOMAIN_NULL :
+    errStr = "WLZ_ERR_DOMAIN_NULL ",
       msgStr = "NULL domain";
-      break;
-    case WLZ_ERR_DOMAIN_TYPE:
-      errStr = "WLZ_ERR_DOMAIN_TYPE",
+    break;
+  case WLZ_ERR_DOMAIN_TYPE:
+    errStr = "WLZ_ERR_DOMAIN_TYPE",
       msgStr = "Invalid domain type";
-      break;
-    case WLZ_ERR_DOMAIN_DATA:
-      errStr = "WLZ_ERR_DOMAIN_DATA",
+    break;
+  case WLZ_ERR_DOMAIN_DATA:
+    errStr = "WLZ_ERR_DOMAIN_DATA",
       msgStr = "Domain data";
-      break;
-    case WLZ_ERR_VALUES_NULL:
-      errStr = "WLZ_ERR_VALUES_NULL",
+    break;
+  case WLZ_ERR_VALUES_NULL:
+    errStr = "WLZ_ERR_VALUES_NULL",
       msgStr = "NULL values";
-      break;
-    case WLZ_ERR_VALUES_TYPE:
-      errStr = "WLZ_ERR_VALUES_TYPE",
+    break;
+  case WLZ_ERR_VALUES_TYPE:
+    errStr = "WLZ_ERR_VALUES_TYPE",
       msgStr = "Invalid values type";
-      break;
-    case WLZ_ERR_VALUES_DATA:
-      errStr = "WLZ_ERR_VALUES_DATA",
+    break;
+  case WLZ_ERR_VALUES_DATA:
+    errStr = "WLZ_ERR_VALUES_DATA",
       msgStr = "Values data";
-      break;
-    case WLZ_ERR_PROPERTY_NULL:
-      errStr = "WLZ_ERR_PROPERTY_NULL",
+    break;
+  case WLZ_ERR_PROPERTY_NULL:
+    errStr = "WLZ_ERR_PROPERTY_NULL",
       msgStr = "NULL property";
-      break;
-    case WLZ_ERR_GMELM_NULL:
-      errStr = "WLZ_ERR_GMELM_NULL",
+    break;
+  case WLZ_ERR_GMELM_NULL:
+    errStr = "WLZ_ERR_GMELM_NULL",
       msgStr = "Geometric model element NULL";
-      break;
-    case WLZ_ERR_GMELM_TYPE:
-      errStr = "WLZ_ERR_GMELM_TYPE",
+    break;
+  case WLZ_ERR_GMELM_TYPE:
+    errStr = "WLZ_ERR_GMELM_TYPE",
       msgStr = "Geometric model element type";
-      break;
-    case WLZ_ERR_GMELM_DATA:
-      errStr = "WLZ_ERR_GMELM_DATA",
+    break;
+  case WLZ_ERR_GMELM_DATA:
+    errStr = "WLZ_ERR_GMELM_DATA",
       msgStr = "Geometric model element data";
-      break;
-    case WLZ_ERR_PARAM_NULL:
-      errStr = "WLZ_ERR_PARAM_NULL",
+    break;
+  case WLZ_ERR_PARAM_NULL:
+    errStr = "WLZ_ERR_PARAM_NULL",
       msgStr = "NULL parameter";
-      break;
-    case WLZ_ERR_PARAM_TYPE:
-      errStr = "WLZ_ERR_PARAM_TYPE",
+    break;
+  case WLZ_ERR_PARAM_TYPE:
+    errStr = "WLZ_ERR_PARAM_TYPE",
       msgStr = "Invalid parameter type";
-      break;
-    case WLZ_ERR_PARAM_DATA:
-      errStr = "WLZ_ERR_PARAM_DATA",
+    break;
+  case WLZ_ERR_PARAM_DATA:
+    errStr = "WLZ_ERR_PARAM_DATA",
       msgStr = "Parameter data";
-      break;
-    case WLZ_ERR_INT_DATA:
-      errStr = "WLZ_ERR_INT_DATA",
+    break;
+  case WLZ_ERR_INT_DATA:
+    errStr = "WLZ_ERR_INT_DATA",
       msgStr = "Int data";
-      break;
-    case WLZ_ERR_SHORT_DATA:
-      errStr = "WLZ_ERR_SHORT_DATA",
+    break;
+  case WLZ_ERR_SHORT_DATA:
+    errStr = "WLZ_ERR_SHORT_DATA",
       msgStr = "Short int data";
-      break;
-    case WLZ_ERR_UBYTE_DATA:
-      errStr = "WLZ_ERR_UBYTE_DATA",
+    break;
+  case WLZ_ERR_UBYTE_DATA:
+    errStr = "WLZ_ERR_UBYTE_DATA",
       msgStr = "Unsigned byte data";
-      break;
-    case WLZ_ERR_FLOAT_DATA:
-      errStr = "WLZ_ERR_FLOAT_DATA",
+    break;
+  case WLZ_ERR_FLOAT_DATA:
+    errStr = "WLZ_ERR_FLOAT_DATA",
       msgStr = "Float data";
-      break;
-    case WLZ_ERR_DOUBLE_DATA:
-      errStr = "WLZ_ERR_DOUBLE_DATA",
+    break;
+  case WLZ_ERR_DOUBLE_DATA:
+    errStr = "WLZ_ERR_DOUBLE_DATA",
       msgStr = "Double data";
-      break;
-    case WLZ_ERR_GREY_TYPE:
-      errStr = "WLZ_ERR_GREY_TYPE",
+    break;
+  case WLZ_ERR_GREY_TYPE:
+    errStr = "WLZ_ERR_GREY_TYPE",
       msgStr = "Invalid grey type";
-      break;
-    case WLZ_ERR_GREY_DATA:
-      errStr = "WLZ_ERR_GREY_DATA",
+    break;
+  case WLZ_ERR_GREY_DATA:
+    errStr = "WLZ_ERR_GREY_DATA",
       msgStr = "Grey data";
-      break;
-    case WLZ_ERR_PLANEDOMAIN_TYPE:
-      errStr = "WLZ_ERR_PLANEDOMAIN_TYPE",
+    break;
+  case WLZ_ERR_PLANEDOMAIN_TYPE:
+    errStr = "WLZ_ERR_PLANEDOMAIN_TYPE",
       msgStr = "Invalid planedomain type";
-      break;
-    case WLZ_ERR_PLANEDOMAIN_DATA:
-      errStr = "WLZ_ERR_PLANEDOMAIN_DATA",
+    break;
+  case WLZ_ERR_PLANEDOMAIN_DATA:
+    errStr = "WLZ_ERR_PLANEDOMAIN_DATA",
       msgStr = "";
-      break;
-    case WLZ_ERR_INTERVALDOMAIN_NULL:
-      errStr = "WLZ_ERR_INTERVALDOMAIN_NULL",
+    break;
+  case WLZ_ERR_INTERVALDOMAIN_NULL:
+    errStr = "WLZ_ERR_INTERVALDOMAIN_NULL",
       msgStr = "NULL intervaldomain";
-      break;
-    case WLZ_ERR_INTERVALDOMAIN_TYPE:
-      errStr = "WLZ_ERR_INTERVALDOMAIN_TYPE",
+    break;
+  case WLZ_ERR_INTERVALDOMAIN_TYPE:
+    errStr = "WLZ_ERR_INTERVALDOMAIN_TYPE",
       msgStr = "Invalid intervaldomain type";
-      break;
-    case WLZ_ERR_INTERVALLINE_NULL:
-      errStr = "WLZ_ERR_INTERVALLINE_NULL",
+    break;
+  case WLZ_ERR_INTERVALLINE_NULL:
+    errStr = "WLZ_ERR_INTERVALLINE_NULL",
       msgStr = "NULL intervalline";
-      break;
-    case WLZ_ERR_INTERVAL_NULL:
-      errStr = "WLZ_ERR_INTERVAL_NULL",
+    break;
+  case WLZ_ERR_INTERVAL_NULL:
+    errStr = "WLZ_ERR_INTERVAL_NULL",
       msgStr = "NULL interval";
-      break;
-    case WLZ_ERR_INTERVAL_DATA:
-      errStr = "WLZ_ERR_INTERVAL_DATA",
+    break;
+  case WLZ_ERR_INTERVAL_DATA:
+    errStr = "WLZ_ERR_INTERVAL_DATA",
       msgStr = "Interval data";
-      break;
-    case WLZ_ERR_INTERVAL_ADJACENT:
-      errStr = "WLZ_ERR_INTERVAL_ADJACENT",
+    break;
+  case WLZ_ERR_INTERVAL_ADJACENT:
+    errStr = "WLZ_ERR_INTERVAL_ADJACENT",
       msgStr = "Adjacent interval";
-      break;
-    case WLZ_ERR_INTERVAL_BOUND:
-      errStr = "WLZ_ERR_INTERVAL_BOUND",
+    break;
+  case WLZ_ERR_INTERVAL_BOUND:
+    errStr = "WLZ_ERR_INTERVAL_BOUND",
       msgStr = "Interval bounds";
-      break;
-    case WLZ_ERR_INTERVAL_NUMBER:
-      errStr = "WLZ_ERR_INTERVAL_NUMBER",
+    break;
+  case WLZ_ERR_INTERVAL_NUMBER:
+    errStr = "WLZ_ERR_INTERVAL_NUMBER",
       msgStr = "Interval number";
-      break;
-    case WLZ_ERR_TRANSFORM_DATA:
-      errStr = "WLZ_ERR_TRANSFORM_DATA",
+    break;
+  case WLZ_ERR_TRANSFORM_DATA:
+    errStr = "WLZ_ERR_TRANSFORM_DATA",
       msgStr = "Transform data";
-      break;
-    case WLZ_ERR_TRANSFORM_TYPE:
-      errStr = "WLZ_ERR_TRANSFORM_TYPE",
+    break;
+  case WLZ_ERR_TRANSFORM_TYPE:
+    errStr = "WLZ_ERR_TRANSFORM_TYPE",
       msgStr = "Invalid transform type";
-      break;
-    case WLZ_ERR_VOXELVALUES_TYPE:
-      errStr = "WLZ_ERR_VOXELVALUES_TYPE",
+    break;
+  case WLZ_ERR_VOXELVALUES_TYPE:
+    errStr = "WLZ_ERR_VOXELVALUES_TYPE",
       msgStr = "Invalid voxelvalues";
-      break;
-    case WLZ_ERR_COLUMN_DATA:
-      errStr = "WLZ_ERR_COLUMN_DATA",
+    break;
+  case WLZ_ERR_COLUMN_DATA:
+    errStr = "WLZ_ERR_COLUMN_DATA",
       msgStr = "Column data";
-      break;
-    case WLZ_ERR_LINE_DATA:
-      errStr = "WLZ_ERR_LINE_DATA",
+    break;
+  case WLZ_ERR_LINE_DATA:
+    errStr = "WLZ_ERR_LINE_DATA",
       msgStr = "Line data";
-      break;
-    case WLZ_ERR_PLANE_DATA:
-      errStr = "WLZ_ERR_PLANE_DATA",
+    break;
+  case WLZ_ERR_PLANE_DATA:
+    errStr = "WLZ_ERR_PLANE_DATA",
       msgStr = "Plane data";
-      break;
-    case WLZ_ERR_BINARY_OPERATOR_TYPE:
-      errStr = "WLZ_ERR_BINARY_OPERATOR_TYPE",
+    break;
+  case WLZ_ERR_BINARY_OPERATOR_TYPE:
+    errStr = "WLZ_ERR_BINARY_OPERATOR_TYPE",
       msgStr = "Invalid binary operator type";
-      break;
-    case WLZ_ERR_COMPTHRESH_TYPE:
-      errStr = "WLZ_ERR_COMPTHRESH_TYPE",
+    break;
+  case WLZ_ERR_COMPTHRESH_TYPE:
+    errStr = "WLZ_ERR_COMPTHRESH_TYPE",
       msgStr = "Invalid computed threshold type";
-      break;
-    case WLZ_ERR_CONNECTIVITY_TYPE:
-      errStr = "WLZ_ERR_CONNECTIVITY_TYPE",
+    break;
+  case WLZ_ERR_CONNECTIVITY_TYPE:
+    errStr = "WLZ_ERR_CONNECTIVITY_TYPE",
       msgStr = "Invalid connectivity type";
-      break;
-    case WLZ_ERR_INTERPOLATION_TYPE:
-      errStr = "WLZ_ERR_INTERPOLATION_TYPE",
+    break;
+  case WLZ_ERR_INTERPOLATION_TYPE:
+    errStr = "WLZ_ERR_INTERPOLATION_TYPE",
       msgStr = "Invalid interpolation type";
-      break;
-    case WLZ_ERR_POLYGON_TYPE:
-      errStr = "WLZ_ERR_POLYGON_TYPE",
+    break;
+  case WLZ_ERR_POLYGON_TYPE:
+    errStr = "WLZ_ERR_POLYGON_TYPE",
       msgStr = "Invalid polygon type";
-      break;
-    case WLZ_ERR_RASTERDIR_TYPE:
-      errStr = "WLZ_ERR_RASTERDIR_TYPE",
+    break;
+  case WLZ_ERR_RASTERDIR_TYPE:
+    errStr = "WLZ_ERR_RASTERDIR_TYPE",
       msgStr = "Invalid raster direction type";
-      break;
-    case WLZ_ERR_LINKCOUNT_DATA:
-      errStr = "WLZ_ERR_LINKCOUNT_DATA",
+    break;
+  case WLZ_ERR_LINKCOUNT_DATA:
+    errStr = "WLZ_ERR_LINKCOUNT_DATA",
       msgStr = "Linkcount data";
-      break;
-    case WLZ_ERR_MEM_ALLOC:
-      errStr = "WLZ_ERR_MEM_ALLOC",
+    break;
+  case WLZ_ERR_MEM_ALLOC:
+    errStr = "WLZ_ERR_MEM_ALLOC",
       msgStr = "Memory allocation";
-      break;
-    case WLZ_ERR_MEM_FREE:
-      errStr = "WLZ_ERR_MEM_FREE",
+    break;
+  case WLZ_ERR_MEM_FREE:
+    errStr = "WLZ_ERR_MEM_FREE",
       msgStr = "Memory de-allocation";
-      break;
-    case WLZ_ERR_READ_EOF:
-      errStr = "WLZ_ERR_READ_EOF",
+    break;
+  case WLZ_ERR_READ_EOF:
+    errStr = "WLZ_ERR_READ_EOF",
       msgStr = "End of file when reading an object";
-      break;
-    case WLZ_ERR_READ_INCOMPLETE:
-      errStr = "WLZ_ERR_READ_INCOMPLETE",
+    break;
+  case WLZ_ERR_READ_INCOMPLETE:
+    errStr = "WLZ_ERR_READ_INCOMPLETE",
       msgStr = "Incomplete object read";
-      break;
-    case WLZ_ERR_WRITE_EOF:
-      errStr = "WLZ_ERR_WRITE_EOF",
+    break;
+  case WLZ_ERR_WRITE_EOF:
+    errStr = "WLZ_ERR_WRITE_EOF",
       msgStr = "End of file when writing an object";
-      break;
-    case WLZ_ERR_WRITE_INCOMPLETE:
-      errStr = "WLZ_ERR_WRITE_INCOMPLETE",
+    break;
+  case WLZ_ERR_WRITE_INCOMPLETE:
+    errStr = "WLZ_ERR_WRITE_INCOMPLETE",
       msgStr = "Incomplete object write";
-      break;
-    case WLZ_ERR_ALG:
-      errStr = "WLZ_ERR_ALG",
+    break;
+  case WLZ_ERR_ALG:
+    errStr = "WLZ_ERR_ALG",
       msgStr = "Numerical algorithm error";
-      break;
-    case WLZ_ERR_ALG_SINGULAR:
-      errStr = "WLZ_ERR_ALG_SINGULAR",
+    break;
+  case WLZ_ERR_ALG_SINGULAR:
+    errStr = "WLZ_ERR_ALG_SINGULAR",
       msgStr = "Numerical algorithm singular matrix";
-      break;
-    case WLZ_ERR_ALG_HOMOGENEOUS:
-      errStr = "WLZ_ERR_ALG_HOMOGENEOUS",
+    break;
+  case WLZ_ERR_ALG_HOMOGENEOUS:
+    errStr = "WLZ_ERR_ALG_HOMOGENEOUS",
       msgStr = "Numerical algorithm homogeneous matrix";
-      break;
-    case WLZ_ERR_ALG_CONVERGENCE:
-      errStr = "WLZ_ERR_ALG_CONVERGENCE",
+    break;
+  case WLZ_ERR_ALG_CONVERGENCE:
+    errStr = "WLZ_ERR_ALG_CONVERGENCE",
       msgStr = "Numerical algorithm failed to converge";
-      break;
-    case WLZ_ERR_UNIMPLEMENTED:
-      errStr = "WLZ_ERR_UNIMPLEMENTED",
+    break;
+  case WLZ_ERR_UNIMPLEMENTED:
+    errStr = "WLZ_ERR_UNIMPLEMENTED",
       msgStr = "Unimplemented feature";
-      break;
-    default:	/* FALLTHROUGH */
-    case WLZ_ERR_UNSPECIFIED:
-      errStr = "WLZ_ERR_UNSPECIFIED",
+    break;
+  case WLZ_ERR_FILE_OPEN:
+    errStr = "WLZ_ERR_FILE_OPEN",
+      msgStr = "File open failure";
+    break;
+  case WLZ_ERR_FILE_FORMAT:
+    errStr = "WLZ_ERR_FILE_FORMAT",
+      msgStr = "Invalid file format";
+    break;
+  case WLZ_ERR_IMAGE_TYPE:
+    errStr = "WLZ_ERR_IMAGE_TYPE",
+      msgStr = "Attempt to read an image type not-supported in Woolz";
+    break;
+  default:	/* FALLTHROUGH */
+  case WLZ_ERR_UNSPECIFIED:
+    errStr = "WLZ_ERR_UNSPECIFIED",
       msgStr = "Unspecified error";
-      break;
+    break;
   }
   if(dstMsgStr)
   {
@@ -1076,6 +1088,9 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_ALG_HOMOGENEOUS", WLZ_ERR_ALG_HOMOGENEOUS,
 	      "WLZ_ERR_ALG_CONVERGENCE", WLZ_ERR_ALG_CONVERGENCE,
 	      "WLZ_ERR_UNIMPLEMENTED", WLZ_ERR_UNIMPLEMENTED,
+	      "WLZ_ERR_FILE_OPEN", WLZ_ERR_FILE_OPEN,
+	      "WLZ_ERR_FILE_FORMAT", WLZ_ERR_FILE_FORMAT,
+	      "WLZ_ERR_IMAGE_TYPE", WLZ_ERR_IMAGE_TYPE,
 	      "WLZ_ERR_UNSPECIFIED", WLZ_ERR_UNSPECIFIED,
 	      NULL))
   {
