@@ -537,7 +537,7 @@ static WlzIBox3 WlzBoundingBoxContour(WlzContour *ctr, WlzErrorNum *dstErr)
     bBox3I.zMin = (int )floor(bBox3D.zMin);
     bBox3I.xMax = (int )ceil(bBox3D.xMax);
     bBox3I.yMax = (int )ceil(bBox3D.yMax);
-    bBox3I.yMax = (int )ceil(bBox3D.yMax);
+    bBox3I.zMax = (int )ceil(bBox3D.zMax);
   }
   if(dstErr)
   {
