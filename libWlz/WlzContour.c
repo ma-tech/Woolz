@@ -116,9 +116,11 @@ static WlzContour 	*WlzContourGrdObj3D(
 			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourBndObj2D(
 			  WlzObject *obj,
+			  double ctrVal,
 			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourBndObj3D(
 			  WlzObject *obj,
+			  double ctrVal,
 			  WlzErrorNum *dstErr);
 static WlzDVertex2	WlzContourItpTriSide(
 			  double valOrg,
@@ -132,6 +134,7 @@ static WlzDVertex3 	WlzContourItpTetSide(
 			  WlzDVertex3 posDst);
 static WlzErrorNum	WlzContourBndLine2D(
 			  WlzContour *ctr,
+			  double isoVal,
 			  int line0,
 			  UBYTE **itvBuf,
 			  int bufLnIdx,
@@ -139,6 +142,7 @@ static WlzErrorNum	WlzContourBndLine2D(
 			  int bufSz);
 static WlzErrorNum 	WlzContourBndPlane3D(
 			  WlzContour *ctr,
+			  double isoVal,
 			  int plane0,
 			  UBYTE ***itvBuf,
 			  int bufPnIdx,
@@ -146,12 +150,14 @@ static WlzErrorNum 	WlzContourBndPlane3D(
 			  WlzIVertex2 bufSz);
 static WlzErrorNum	WlzContourBndEmptyLine2D(
 			  WlzContour *ctr,
+			  double isoVal,
 			  int line0,
 			  UBYTE *itvBuf,
 			  int bufOrg,
 			  int bufSz);
 static WlzErrorNum 	WlzContourBndEmptyPlane3D(
 			  WlzContour *ctr,
+			  double isoVal,
 			  int plane0,
 			  UBYTE **itvBuf,
 			  WlzIVertex2 bufOrg,
@@ -334,7 +340,15 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    			     ctrVal, ctrVal, ctrWth, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_BND:
-	    ctr = WlzContourBndObj2D(srcObj, &errNum);
+	    if(ctrVal < 0.0)
+	    {
+	      ctrVal = 0.0;
+	    }
+	    else if(ctrVal > 1.0)
+	    {
+	      ctrVal = 1.0;
+	    }
+	    ctr = WlzContourBndObj2D(srcObj, ctrVal, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -352,7 +366,15 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    			     ctrVal, ctrVal, ctrWth, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_BND:
-	    ctr = WlzContourBndObj3D(srcObj, &errNum);
+	    if(ctrVal < 0.0)
+	    {
+	      ctrVal = 0.0;
+	    }
+	    else if(ctrVal > 1.0)
+	    {
+	      ctrVal = 1.0;
+	    }
+	    ctr = WlzContourBndObj3D(srcObj, ctrVal, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -1567,10 +1589,15 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj, WlzDVertex3 **dstGrd,
 * \brief	Computes a 2D contour from the boundary of the given objects
 *		domain.
 * \param	obj			The given object.
+* \param	ctrVal			Parameter controling how close
+*					contour is to pixel edges,
+*					range [0.0-1.0], 0.0 and 1.0 for
+*					exact edges, 0.5 for rounded edges.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
-static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
+static WlzContour *WlzContourBndObj2D(WlzObject *obj, double ctrVal,
+				      WlzErrorNum *dstErr)
 {
   int		idX,
   		bufSz,
@@ -1618,7 +1645,7 @@ static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
         bufLnIdx = !bufLnIdx;
         if(srcIWSp.nwlpos > 1)
 	{
-	  errNum = WlzContourBndEmptyLine2D(ctr, lastLn,
+	  errNum = WlzContourBndEmptyLine2D(ctr, ctrVal, lastLn,
 	  				    itvBuf[bufLnIdx], bufOrg, bufSz);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
@@ -1633,12 +1660,12 @@ static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
 	WlzBitLnSetItv(itvBuf[bufLnIdx], srcIWSp.lftpos - bufOrg,
 		       srcIWSp.rgtpos - bufOrg, bufSz);
 	/* Compute the values at the corners of squares along the interval,
-	 * where the values are set to 0 if the picel is outside the domain
+	 * where the values are set to 0 if the pixel is outside the domain
 	 * and 1 if it is inside. Squares (2D square) are marched along the
 	 * interval on the current and previous lines. */
 	if(srcIWSp.intrmn == 0)
 	{
-	  errNum = WlzContourBndLine2D(ctr, lastLn,
+	  errNum = WlzContourBndLine2D(ctr, ctrVal, lastLn,
 	  			       itvBuf, bufLnIdx, bufOrg, bufSz);
 	  lastLn = srcIWSp.linpos;
 	}
@@ -1650,7 +1677,7 @@ static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzContourBndEmptyLine2D(ctr, lastLn,
+      errNum = WlzContourBndEmptyLine2D(ctr, ctrVal, lastLn,
       					itvBuf[bufLnIdx], bufOrg, bufSz);
     }
   }
@@ -1680,10 +1707,15 @@ static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
 * \brief	Computes a 3D contour from the boundary of the given objects
 *		domain.
 * \param	obj			The given object.
+* \param	ctrVal			Parameter controling how close
+*					contour is to pixel edges,
+*					range [0.0-1.0], 0.0 and 1.0 for
+*					exact edges, 0.5 for rounded edges.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
-static WlzContour *WlzContourBndObj3D(WlzObject *obj, WlzErrorNum *dstErr)
+static WlzContour *WlzContourBndObj3D(WlzObject *obj, double ctrVal,
+				      WlzErrorNum *dstErr)
 {
   int		pnIdx,
 		pnCnt,
@@ -1761,7 +1793,8 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, WlzErrorNum *dstErr)
          (obj2D->domain.core->type == WLZ_EMPTY_DOMAIN))
       {
         (void )memset(*(itvBuf[bufPnIdx]), 0, bufSzBytes);
-	errNum = WlzContourBndEmptyPlane3D(ctr, lastPn, itvBuf[!bufPnIdx],
+	errNum = WlzContourBndEmptyPlane3D(ctr, ctrVal,
+					   lastPn, itvBuf[!bufPnIdx],
 	                                   bufOrg2D, bufSz2D);
       }
       else
@@ -1773,8 +1806,9 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, WlzErrorNum *dstErr)
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  errNum = WlzContourBndPlane3D(ctr, lastPn, itvBuf, bufPnIdx,
-	      bufOrg2D, bufSz2D);
+	  errNum = WlzContourBndPlane3D(ctr, ctrVal,
+	  				lastPn, itvBuf, bufPnIdx,
+	      				bufOrg2D, bufSz2D);
 	}
       }
       ++lastPn;
@@ -1784,7 +1818,8 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, WlzErrorNum *dstErr)
     (void )WlzFreeObj(obj2D);
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzContourBndEmptyPlane3D(ctr, lastPn, itvBuf[!bufPnIdx],
+      errNum = WlzContourBndEmptyPlane3D(ctr, ctrVal,
+      					 lastPn, itvBuf[!bufPnIdx],
 					 bufOrg2D, bufSz2D);
     }
   }
@@ -2053,6 +2088,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg,
 * \brief	Computes the iso-value contour segments by marching a square
 * 		along the pair of given lines.
 * \param	ctr			Given contour, which is being built.
+* \param	isoVal			Iso value.
 * \param	line0			The line on which the origin of
 *					each square lies.
 * \param	itvBuf			Two bit buffers for the lines.
@@ -2060,9 +2096,9 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg,
 * \param	bufOrg			Bit buffer origin.
 * \param	bufSz			Bit buffer size in bits.
 */
-static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, int line0,
-				       UBYTE **itvBuf, int bufLnIdx,
-				       int bufOrg, int bufSz)
+static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, double isoVal,
+				       int line0, UBYTE **itvBuf,
+				       int bufLnIdx, int bufOrg, int bufSz)
 {
   int		idX,
 		sqCnt;
@@ -2072,7 +2108,6 @@ static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, int line0,
   double	vLnD0[2],
   		vLnD1[2];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
-  const double  isoVal = 1.0;
 
   idX = 0;
   sqOrg.vtY = line0;
@@ -2101,6 +2136,7 @@ static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, int line0,
 * \brief	Computes the iso-value contour elements by marching a cube
 *               along the pair of given planes.
 * \param	ctr			Given contour, which is being built.
+* \param	isoVal			Iso value.
 * \param	plane0			The plane on which the origin of
 *					each cube lies.
 * \param	itvBu			Two bit buffers for the planes.
@@ -2108,9 +2144,10 @@ static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, int line0,
 * \param	bufOrg			Bit buffer origin.
 * \param	bufSz			Bit buffer size in bits.
 */
-static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, int plane0,
-				        UBYTE ***itvBuf, int bufPnIdx,
-				        WlzIVertex2 bufOrg, WlzIVertex2 bufSz)
+static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, double isoVal,
+					int plane0, UBYTE ***itvBuf,
+					int bufPnIdx, WlzIVertex2 bufOrg,
+					WlzIVertex2 bufSz)
 {
   int		idX,
   		idY,
@@ -2129,7 +2166,6 @@ static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, int plane0,
 		dPn1Ln1[2];
   WlzDVertex3	cbOrg;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
-  const double	isoVal = 1.0;
 
   idY = 0;
   cbOrg.vtZ = plane0;
@@ -2181,14 +2217,15 @@ static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, int plane0,
 * \brief	Computes the iso-value contour segments by marching a square
 *		along the given line and a later empty line.
 * \param	ctr			Given contour, which is being built.
+* \param	isoVal			Iso value.
 * \param	line0			The line on which the origin of
 *					each square lies.
 * \param	itvBuf			The bit buffer for the line.
 * \param	bufOrg			Bit buffer origin.
 * \param	bufSz			Bit buffer size in bits.
 */
-static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, int line0,
-					    UBYTE *itvBuf,
+static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, double isoVal,
+					    int line0, UBYTE *itvBuf,
 					    int bufOrg, int bufSz)
 {
   int		idX,
@@ -2198,7 +2235,6 @@ static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, int line0,
   double	vLnD0[2],
   		vLnD1[2];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
-  const double  isoVal = 1.0;
 
   idS = idX = 0;
   sqOrg.vtY = line0 - 1;
@@ -2224,14 +2260,15 @@ static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, int line0,
 * \brief	Computes the iso-value contour elements by marching a cube
 *               along the pair of given plane and a later empty plane.
 * \param	ctr			Given contour, which is being built.
+* \param	isoVal			Iso value.
 * \param	plane0			The plane on which the origin of
 *					each cube lies.
 * \param	itvBu			Bit buffers for the plane.
 * \param	bufOrg			Bit buffer origin.
 * \param	bufSz			Bit buffer size in bits.
 */
-static WlzErrorNum WlzContourBndEmptyPlane3D(WlzContour *ctr, int plane0,
-					UBYTE **itvBuf,
+static WlzErrorNum WlzContourBndEmptyPlane3D(WlzContour *ctr, double isoVal,
+					int plane0, UBYTE **itvBuf,
 					WlzIVertex2 bufOrg, WlzIVertex2 bufSz)
 {
   int		idX,
@@ -2247,7 +2284,6 @@ static WlzErrorNum WlzContourBndEmptyPlane3D(WlzContour *ctr, int plane0,
 		dPn1Ln1[2];
   WlzDVertex3	cbOrg;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
-  const double	isoVal = 1.0;
 
   idY = 0;
   dPn1Ln0[0] = 0.0;
