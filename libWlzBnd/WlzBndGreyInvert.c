@@ -14,7 +14,6 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief
-* \ingroup
 * \todo         -
 * \bug          None known.
 */
