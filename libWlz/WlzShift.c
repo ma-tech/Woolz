@@ -1,24 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzShift.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz functions for shifting (applying integer
-*		translations) to Woolz objects, domains and values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 13-12-00 bill Add WlzShiftGMModel() to allow shifting of contours
-*		and GM's.
-* 15-08-00 bill Remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
-*		WLZ_POINT_(INT)|(FLOAT).
-* 08-03-00 bill Fix bug in WlzShiftValues for 3D value table.
-************************************************************************/
+/*!
+* \file         WlzShift.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Woolz functions for shifting (applying efficient integer
+*		translations) to  Woolz objects, domains and values.
+* \ingroup 	WlzTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -31,24 +31,22 @@ static WlzGMModel		*WlzShiftGMModel(
 				  int zShift,
 				  WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzShiftObject
-* Returns:	WlzObject *:		Shifted object.
-* Purpose:	The external object shift interface function.
-*		Shifts a Woolz object in place, cf WlzAffineTransform()
-*		which always creates a new object with both a new
-*		domain and a new value table.
-*		WlzShiftObject always makes a new domain but keeps
-*		as much of the given object's value table as possible.
-* Global refs:	-
-* Parameters:	WlzObject *inObj:	The given object.
-*		int xShift:		Column shift.
-*		int yShift:		Line shift.
-*		int zShift:		Plane shift (only used for 3D
+/*!
+* \return	Shifted object.
+* \ingroup 	WlzTransform
+* \brief	The external object shift interface function.
+*               Shifts a Woolz object in place, cf WlzAffineTransform()
+*               which always creates a new object with both a new
+*               domain and a new value table.
+*               WlzShiftObject always makes a new domain but keeps
+*               as much of the given object's value table as possible.
+* \param	inObj			The given object.
+* \param	xShift			Column shift.
+* \param	yShift			Line shift.
+* \param	zShift			Plane shift (only used for 3D
 *					objects).
-*		WlzErrorNum *dstErr:	Destination error pointer,
-*					may be NULL.
-************************************************************************/
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzShiftObject(WlzObject *inObj,
 				int xShift, int yShift, int zShift,
 				WlzErrorNum *dstErr)
@@ -128,21 +126,18 @@ WlzObject	*WlzShiftObject(WlzObject *inObj,
   return(outObj);
 }
 
-/************************************************************************
-* Function:	WlzShiftDomain
-* Returns:	WlzDomain:		Shifted domain, NULL on error.
-* Purpose:	Creates a new shifted domain.
-* Global refs:	-
-* Parameters:	WlzObjectType inObjType: Type of given domain's parent
-*					object.
-*		WlzDomain inDom:	Domain to be shifted.
-*		int xShift:		Column shift.
-*		int yShift:		Line shift.
-*		int zShift:		Plane shift (only used for 3D
+/*!
+* \return	Shifted domain, NULL on error.
+* \ingroup 	WlzTransform
+* \brief	Creates a new shifted domain.
+* \param	inObjType		Type of given domain's parent object.
+* \param	inDom			Domain to be shifted.
+* \param	xShift			Column shift.
+* \param	yShift			Line shift.
+* \param	zShift			Plane shift (only used for 3D
 *					objects).
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be NULL.
-************************************************************************/
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 			        int xShift, int yShift, int zShift,
 			        WlzErrorNum *dstErr)
@@ -240,8 +235,9 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 	}
 	break;
       case WLZ_2D_POLYGON:
-        outDom.poly = WlzMakePolyDmn(inDom.poly->type, inDom.poly->vtx,
+        outDom.poly = WlzMakePolygonDomain(inDom.poly->type,
 				     inDom.poly->nvertices,
+				     inDom.poly->vtx,
 				     inDom.poly->maxvertices,
 				     1, &errNum);
 	if(errNum == WLZ_ERR_NONE)
@@ -368,24 +364,22 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
   return(outDom);
 }
 
-/************************************************************************
-* Function:	WlzShiftValues
-* Returns:	WlzValues:		Shifted values, NULL on error.
-* Purpose:	Shifts the given objects values.
-* Global refs:	-
-* Parameters:	WlzObjectType inObjType: Type of given domain's parent
-*					object.
-*		WlzValues inVal:	Values to be shifted.
-*		WlzDomain inDom:	Domain over which values are
-*					defined (parent object's
-*					domain).
-*		int xShift:		Column shift.
-*		int yShift:		Line shift.
-*		int zShift:		Plane shift (only used for 3D
-*					objects).
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be NULL.
-************************************************************************/
+/*!
+* \return	Shifted values, NULL on error.
+* \ingroup      WlzTransform
+* \brief	Shifts the given objects values.
+* \param	inObjType		Type of given domain's parent object.
+* \param	inVal			Values to be shifted.
+* \param	inDom			Domain over which values are
+*                                       defined (parent object's
+*                                       domain).
+* \param	xShift			Column shift.
+* \param	yShift			Line shift.
+* \param	zShift			Plane shift (only used for 3D
+*                                       objects).
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 			       WlzDomain inDom,
 			       int xShift, int yShift, int zShift,
@@ -598,19 +592,18 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
   return(outVal);
 }
 
-/************************************************************************
-* Function:	WlzShiftGMModel
-* Returns:	WlzGMModel *:		Shifted model or NULL on error.
-* Purpose:	Shifts the given geometric model.
-* Global refs:	-
-* Parameters:	WlzContour *model: 	Given geometric model.
-*		int xShift:		Column shift.
-*		int yShift:		Line shift.
-*		int zShift:		Plane shift (only used for 3D
-*					objects).
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number.
-************************************************************************/
+/*!
+* \return	Shifted model or NULL on error.
+* \ingroup      WlzTransform
+* \brief	Shifts the given geometric model.
+* \param	model			Given geometric model.
+* \param	xShift			Column shift.
+* \param	yShift			Line shift.
+* \param	zShift			Plane shift (only used for 3D
+*                                       objects).
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzGMModel	*WlzShiftGMModel(WlzGMModel *model,
 				 int xShift, int yShift, int zShift,
 				 WlzErrorNum *dstErr)
