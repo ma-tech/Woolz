@@ -49,6 +49,8 @@ WLZEFF_FORMAT_VTK,
 .br
 WLZEFF_FORMAT_WLZ,
 .br
+WLZEFF_FORMAT_TIFF,
+.br
 WLZEFF_FORMAT_COUNT
 .in -4m
 .br
@@ -146,7 +148,7 @@ l l l l.
 File Formats Supported.
 
 String^Enumerated type^Ext(s)^Multiple files
-Microsoft Bitmap^WLZEFF_FORMAT_BMP^bmpOne 2D bmp file
+Microsoft Bitmap^WLZEFF_FORMAT_BMP^bmp^One 2D bmp file
 ^^^for each plane
 ^^^plus a single
 ^^^control file for
@@ -166,6 +168,11 @@ Sunvision VFF^WLZEFF_FORMAT_VFF^vff^No.
 Visualization Toolkit^WLZEFF_FORMAT_VTK^vtk^No.
 VTK^^^
 Woolz^WLZEFF_FORMAT_WLZ^wlz^No.
+Tagged Image Format^WLZEFF_FORMAT_TIFF^tif^File name required,
+^^^cannot be read from a
+^^^file pointer. Only
+^^^tested for a small
+^^^selection of tif files.
 .TE
 .LP 
 A control file is used to support 3D volumes using 2D data formats. This

@@ -38,7 +38,8 @@ CSOURCES		= \
 			WlzExtFFSlc.c \
 			WlzExtFFStack.c \
 			WlzExtFFVff.c \
-			WlzExtFFVtk.c
+			WlzExtFFVtk.c \
+			WlzExtFFTiff.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -61,7 +62,8 @@ DEPENDDIRS		= \
 			  . \
 			  ../libAlc \
 			  ../libAlg \
-			  ../libWlz
+			  ../libWlz \
+			  ../../External/Tiff/libtiff
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \

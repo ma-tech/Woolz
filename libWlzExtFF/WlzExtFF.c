@@ -43,6 +43,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "vtk", WLZEFF_FORMAT_VTK,
 			 "wlz", WLZEFF_FORMAT_WLZ,
 			 "ipl", WLZEFF_FORMAT_IPL,
+			 "tif", WLZEFF_FORMAT_TIFF,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -73,6 +74,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 			 "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
 			 "Woolz", WLZEFF_FORMAT_WLZ,
 			 "IPLab", WLZEFF_FORMAT_IPL,
+			 "Tiff", WLZEFF_FORMAT_TIFF,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -116,7 +118,9 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*extWlzStr = "wlz",
 		*fmtWlzStr = "Woolz",
 		*extIPLStr = "ipl",
-		*fmtIPLStr = "IPLab";
+		*fmtIPLStr = "IPLab",
+		*extTiffStr = "tif",
+		*fmtTiffStr = "Tiff";
 
   switch(fileFmt)
   {
@@ -199,7 +203,7 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
   else if(fP == NULL)
   {
     if((fFmt != WLZEFF_FORMAT_ICS) && (fFmt != WLZEFF_FORMAT_PNM) &&
-       (fFmt != WLZEFF_FORMAT_BMP))
+       (fFmt != WLZEFF_FORMAT_BMP) && (fFmt != WLZEFF_FORMAT_TIFF))
     {
       if((fP = fopen(fName, "r")) == NULL)
       {
@@ -244,6 +248,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_IPL:
         obj = WlzEffReadObjIPL(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_TIFF:
+	obj = WlzEffReadObjTiff(fName, &errNum);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
@@ -331,6 +338,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_IPL:
 	errNum = WlzEffWriteObjIPL(fP, obj);
+	break;
+      case WLZEFF_FORMAT_TIFF:
+	errNum = WlzEffWriteObjTiff(fName, obj);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
