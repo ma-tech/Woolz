@@ -1,31 +1,48 @@
 # JAVAHEAPSIZE = 50m
 
-# wsetter classes
-
 SOURCEPATH = ./src/wsetter/
 TARGETPATH = ./classes/wsetter/
-JAVAC = /opt/java/bin/javac
+#JAVAC = /opt/java/bin/javac
+JAVAC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javac
 JAR = /opt/java/bin/jar
-JAVACFLAGS = -d classes
 
-OBJECTS = $(TARGETPATH)/WSetterGUI.class \
-          $(TARGETPATH)/WSetter.class \
-          $(TARGETPATH)/WSetterConstants.class \
-          $(TARGETPATH)/WSetterModel.class \
-	  $(TARGETPATH)/SliderRangeModel.class \
-	  $(TARGETPATH)/LimitListener.class \
-	  $(TARGETPATH)/LimitEvent.class
+SOURCES = \
+          $(SOURCEPATH)LimitEvent.java \
+          $(SOURCEPATH)LimitListener.java \
+          $(SOURCEPATH)WSetterConstants.java \
+          $(SOURCEPATH)WSetterGUI.java \
+          $(SOURCEPATH)WSetterModel.java \
+          $(SOURCEPATH)SliderRangeModel.java \
+          $(SOURCEPATH)WSetter.java
 
-all:	$(OBJECTS)
+OBJECTS = \
+          $(TARGETPATH)LimitEvent.class \
+          $(TARGETPATH)LimitListener.class \
+          $(TARGETPATH)WSetterConstants.class \
+          $(TARGETPATH)WSetterGUI.class \
+          $(TARGETPATH)WSetterModel.class \
+          $(TARGETPATH)SliderRangeModel.class \
+          $(TARGETPATH)WSetter.class
 
-rule to make classes from .java files
-$(TARGETPATH)%.class:   $(SOURCEPATH)%.java
-	$(JAVAC) $(JAVACFLAGS) $<
+all:		$(OBJECTS) jar
 
-clean: clobber
+classes:	$(OBJECTS)
+
+$(OBJECTS):	$(SOURCES)
+	cd ./src/wsetter; gmake all
+	mv $(SOURCEPATH)*.class $(TARGETPATH)
+
+jar: 		$(OBJECTS)
+	cd ./classes;$(JAR) cfm ../wsetter.jar bean.tmp wsetter
+
+# Use doxygen to make the documentation
+doc:
+	cd src/wsetter; doxygen
+
+clean: 		clobber
 
 clobber:
-	-rm -rf classes/wsetter/*.class *.jar META-INF
+	-rm -rf *.jar META-INF dox
+	cd src/wsetter; rm -rf *.class doxygen.tag
+	cd classes; rm -rf wsetter/*.class
 
-jar: $(OBJECTS)
-	cd ./classes; $(JAR) cfm ../wsetter.jar bean.tmp wsetter
