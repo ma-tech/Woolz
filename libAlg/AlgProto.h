@@ -15,6 +15,7 @@
 *		Human Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 08-08-00 bill Add AlgBitNextSet().
 * 12-07-00 bill	Add AlgHeapSort(), AlgHeapSortIdx() and AlgHeapElmSwap().
 * 11-05-00 bill	Add AlgGammaLog(), AlgGammaP(), AlgLinearFit1D(),
 *		AlgLinearFitIdx1D(), AlgRange1D(), AlgRangeIdx1D()
@@ -37,6 +38,9 @@ extern unsigned long	AlgBitNextNOfM(
 			  unsigned long curMsk,
 			  int n,
 			  int m);
+extern int		AlgBitNextSet(
+			  unsigned long msk,
+			  int idC);
 /* From AlgComplexUtils.c */
 extern double		AlgCMod(
 			  ComplexD z);

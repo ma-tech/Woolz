@@ -13,6 +13,7 @@
 *		Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 08-08-00 bill Add AlgBitNextSet().
 ************************************************************************/
 #include <Alg.h>
 #include <math.h>
@@ -148,4 +149,39 @@ unsigned long	AlgBitNextNOfM(unsigned long curMsk, int n, int m)
     }
   }
   return(nxtMsk);
+}
+
+/************************************************************************
+* Function:	AlgBitNextSet
+* Returns:	int:			Index of the next bit set in
+*					the given mask, will be -ve if
+*					no next bit set.
+* Purpose:	Computes the index of the next bit set in the given mask
+*		using the index to the current bit as the start index.
+*		maxMsk, the new bit mask is the next after the given
+*		current mask.
+* Global refs:	-
+* Parameters:	unsigned long msk:	Given bit mask.
+*		int idC:		Current bit index, -ve to find
+*					first bit set.
+************************************************************************/
+int		AlgBitNextSet(unsigned long msk, int idC)
+{
+  int		idN = -1,
+  		limit;
+
+  limit = sizeof(unsigned long) * 8;
+  if(++idC < 0)
+  {
+    idC = 0;
+  }
+  while((idC < limit) && ((msk & (1 << idC)) == 0))
+  {
+    ++idC;
+  }
+  if(idC < limit)
+  {
+    idN = idC;
+  }
+  return(idN);
 }
