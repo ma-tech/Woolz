@@ -13,6 +13,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 01-02-01 bill	Add AlgCrossCorr.c
 # 07-11-00 bill Add AlgShuffle.c.
 #########################################################################
 
@@ -31,6 +32,7 @@ CSOURCES		= \
 			  AlgBits.c \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
+			  AlgCrossCorr.c \
 			  AlgDebug.c \
 			  AlgHeapSort.c \
 			  AlgGamma.c \
