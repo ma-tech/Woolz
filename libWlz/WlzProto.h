@@ -48,6 +48,7 @@
 *		* UBYTE should be expanded to unsigned char - (why?) RAB
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 12-09-02 nick Add WlzObjGetType().
 * 21-08-02 nick Add Wlz2DContains().
 * 26-04-01 bill Add WlzContourObjGrd().
 * 23-04-01 bill Add WlzRegICPVertices().
@@ -99,6 +100,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/************************************************************************
+* WlzObjGetType.c							*
+************************************************************************/
+extern int 		        WlzObjGetType(WlzObject *obj);
 /************************************************************************
 * Wlz2DContains.c							*
 ************************************************************************/

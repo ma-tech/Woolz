@@ -86,6 +86,7 @@ CSOURCES		= \
 			WlzGeoModel.c \
 			WlzGeoModelFilters.c \
 			WlzGeometry.c \
+			WlzObjGetType.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
 			WlzGreyGradient.c \
