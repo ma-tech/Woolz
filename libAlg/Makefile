@@ -57,6 +57,7 @@ CSOURCES		= \
 			  AlgMatrixTDiagQLI.c \
 			  AlgMixture.c \
 			  AlgPolyLSQ.c \
+			  AlgQSort.c \
 			  AlgRand.c \
 			  AlgRange.c \
 			  AlgRank.c \
