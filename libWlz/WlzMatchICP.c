@@ -137,8 +137,12 @@ static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  void *usrWgtData,
 				  WlzErrorNum *dstErr);
 static int			WlzMatchICPGetPoints(
+				  WlzGMModel *tGM,
+				  WlzGMModel *sGM,
 				  AlcKDTTree *tTree,
 				  WlzMatchICPShell *mS,
+				  int minSegSpx,
+				  double maxMnDisp,
 				  WlzVertexType vType,
 				  WlzVertexP tVx,
 				  WlzVertexP tNr,
@@ -148,8 +152,12 @@ static int			WlzMatchICPGetPoints(
 				  int offset,
 				  WlzErrorNum *dstErr);
 static int			WlzMatchICPGetPoints2D(
+				  WlzGMModel *tGM,
+				  WlzGMModel *sGM,
 				  AlcKDTTree *tTree,
 				  WlzMatchICPShell *mS,
+				  int minSpx,
+				  double maxMnDisp,
 				  WlzDVertex2 *tVx,
 				  WlzDVertex2 *tNr,
 				  WlzDVertex2 *sNr,
@@ -230,6 +238,17 @@ static WlzErrorNum		WlzMatchICPFilterPtsRmDup2D(
 				  WlzDVertex2 *tVx,
 				  WlzDVertex2 *sVx,
 				  int *nVxP);
+static int			WlzMatchICPGetMSPoints2D(
+				  WlzGMModel *tGM,
+				  WlzGMModel *sGM,
+				  AlcKDTTree *tTree,
+				  WlzMatchICPShell *mS,
+				  WlzDVertex2 *tVx,
+				  int minSpx,
+				  double maxMnDisp,
+				  WlzDVertex2 *sMatch,
+				  WlzDVertex2 *tMatch,
+				  WlzErrorNum *dstErr);
 static int			WlzMatchICPTPPairSortFnD(
 				  void *p0,
 				  void *p1);
@@ -333,6 +352,10 @@ static void			WlzMatchICPShellListElmUnlink(
 * \param	maxItr			Maximum number of iterations.
 * \param	minSpx			Minimum number of simplicies in
 *					a contour shell for matching.
+* \param	minSegSpx		Minimum number of simplices per
+*					matched shell segment, with a tie
+*					point pair possibly being generated
+*					for each matched shell segment.
 * \param	brkFlg			Controls the breaking of the source
 *					shells. Possible values are:
 *					  - 0
@@ -378,7 +401,7 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 				WlzAffineTransform *initTr,
 				int *dstNMatch, WlzVertexP *dstTMatch,
 				WlzVertexP *dstSMatch, int maxItr,
-				int minSpx, int brkFlg,
+				int minSpx, int minSegSpx, int brkFlg,
 				double maxDisp, double maxAng, 
 				double maxDeform,
 				int matchImpNN, double matchImpThr)
@@ -434,7 +457,7 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 	      cbData.maxDisp = maxDisp;
 	      cbData.nScatter = nScatter;
 	      errNum = WlzMatchICPCtr(tObj->domain.ctr, sObj->domain.ctr,
-	      			      initTr, maxItr, minSpx,
+	      			      initTr, maxItr, minSpx, minSegSpx,
 				      dstNMatch, dstTMatch, dstSMatch, brkFlg,
 				      maxDisp, maxAng, maxDeform,
     				      matchImpNN, matchImpThr,
@@ -471,6 +494,10 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 * \param	maxItr			Maximum number of iterations.
 * \param	minSpx			Minimum number of simplicies in
 *					a contour shell for matching.
+* \param	minSegSpx		Minimum number of simplices per
+*					matched shell segment, with a tie
+*					point pair possibly being generated
+*					for each matched shell segment.
 * \param	dstNMatch		Destination pointer for the number
 *					of match points found.
 * \param	dstTMatch		Destination pointer for the target
@@ -520,7 +547,7 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 */
 WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 			       WlzAffineTransform *initTr,
-			       int maxItr, int minSpx,
+			       int maxItr, int minSpx, int minSegSpx,
 			       int *dstNMatch, WlzVertexP *dstTMatch,
 			       WlzVertexP *dstSMatch, int brkFlg,
 			       double  maxDisp, double maxAng,
@@ -543,8 +570,6 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		convFlg,
 		nMatch = 0,
   	 	dbgFlg = 0;
-  double	maxD,
-  		meanD;
   int		*vIBuf = NULL;
   double	*wBuf = NULL;
   WlzGMModel	*tGM,
@@ -903,8 +928,9 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	  (qTop->entry != NULL))
     {
       sMS = (WlzMatchICPShell *)(qTop->entry);
-      n1 = WlzMatchICPGetPoints(tTree, sMS, vType, tVx,
-				tNr, sNr, tVBuf, sVBuf, n0, &errNum);
+      n1 = WlzMatchICPGetPoints(tGM, sGM, tTree, sMS, minSegSpx, maxDisp,
+      				vType, tVx, tNr, sNr, tVBuf, sVBuf, n0,
+				&errNum);
       if(trSrcFlg)
       {
         (void )WlzAffineTransformGMShell(sMS->shell, sMS->tr);
@@ -1583,9 +1609,16 @@ static int	WlzMatchICPRegCheckConv3D(WlzGMShell *shell,
 * \ingroup	WlzTransform
 * \brief	Computes matching points from the broken source shells
 *		and their affine transforms.
+* \param	tGM			Target model.
+* \param	sGM			Source model.
 * \param	tTree			kD-tree populated by the target
 *					vertices.
 * \param	mS			Match shell.
+* \param	minSegSpx		Minimum number of simplices per
+*					matched shell segment.
+* \param 	maxMnDisp		Maximum mean displacement along a
+*					matched shell segment for a valid
+*					match.
 * \param	vType			Type of vertices.
 * \param	tVx			Target vertex geometries.
 * \param 	tNr			Target normals.
@@ -1598,7 +1631,9 @@ static int	WlzMatchICPRegCheckConv3D(WlzGMShell *shell,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
-static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
+static int	WlzMatchICPGetPoints(WlzGMModel *tGM, WlzGMModel *sGM,
+				     AlcKDTTree *tTree, WlzMatchICPShell *mS,
+				     int minSegSpx, double maxMnDisp,
 				     WlzVertexType vType, WlzVertexP tVx,
 				     WlzVertexP tNr, WlzVertexP sNr,
 				     WlzVertexP tMatch, WlzVertexP sMatch,
@@ -1610,7 +1645,9 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
   switch(vType)
   {
     case WLZ_VERTEX_D2:
-      nMatch = WlzMatchICPGetPoints2D(tTree, mS, tVx.d2, tNr.d2, sNr.d2,
+      nMatch = WlzMatchICPGetPoints2D(tGM, sGM, tTree,
+                                      mS, minSegSpx, maxMnDisp,
+				      tVx.d2, tNr.d2, sNr.d2,
       				      tMatch.d2 + offset, sMatch.d2 + offset,
 				      &errNum);
       break;
@@ -1627,7 +1664,7 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 }
 
 /*!
-* \return				Number of matched points.
+* \return	Number of matched points.
 * \ingroup	WlzTransform
 * \brief	Computes matching points from the broken source shell
 *		it's associated affine transform and the target kD-tree.
@@ -1636,9 +1673,16 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 *		shell data structure to the vertices geometry then finds the
 *		closest point in the target model to the transformed vertex
 *		using the target kD-tree.
+* \param	tGM			Target model.
+* \param	sGM			Source model.
 * \param	tTree			kD-tree populated by the target
 *					vertices.
 * \param	mS			Match shell.
+* \param	minSegSpx		Minimum number of simplices per
+*					matched shell segment.
+* \param 	maxMnDisp		Maximum mean displacement along a
+*					matched shell segment for a valid
+*					match.
 * \param	tVx			Target vertex geometries.
 * \param 	tNr			Target normals.
 * \param 	sNr			Source normals.
@@ -1649,7 +1693,9 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
-static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
+static int	WlzMatchICPGetPoints2D(WlzGMModel *tGM, WlzGMModel *sGM,
+				       AlcKDTTree *tTree, WlzMatchICPShell *mS,
+				       int minSegSpx, double maxMnDisp,
 				       WlzDVertex2 *tVx, 
 				       WlzDVertex2 *tNr, WlzDVertex2 *sNr,
 				       WlzDVertex2 *tMatch,
@@ -1664,35 +1710,176 @@ static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
   		tSV;
   double	cDist;
   double	vxD2[2];
-  WlzAffineTransform *iTr = NULL;
   AlcKDTNode	*tNode;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	minSpx = 5; /* Avoid end regions of shells. */
 
   if(mS && ((sS = mS->shell) != NULL) && (sS->child == sS->child->next))
   {
-    /* TODO replace WlzMatchICPLoopTMid() with variable function which
-     * gets a specified number of tie points (1, 2 or 3) for each
-     * matched shell. */
-    cV = WlzMatchICPLoopTMid(sS->child);
-    if(cV)
+    if(minSegSpx > 0) /* Find nMatch points seperated by at least minSegSpx per
+    		       * matched shell. */
     {
+      nMatch = WlzMatchICPGetMSPoints2D(tGM, sGM, tTree,
+      					mS, tVx, minSegSpx, maxMnDisp,
+					sMatch, tMatch, &errNum);
+      
+    }
+    else /* minSegSpx == 0: Find a single point per matched shell. */
+    {
+      cV = WlzMatchICPLoopTMid(sS->child);
       (void )WlzGMVertexGetG2D(cV, &sV);
       tSV = WlzAffineTransformVertexD2(mS->tr, sV, NULL);
       vxD2[0] = tSV.vtX;
       vxD2[1] = tSV.vtY;
       tNode = AlcKDTGetNN(tTree, vxD2, DBL_MAX, &cDist, NULL);
-      if(tNode)
       {
-	tV = *(tVx + tNode->idx);
-	*(sMatch) = sV;
-	*(tMatch) = tV;
-	nMatch = 1;
+        tV = *(tVx + tNode->idx);
+	*(sMatch + 0) = sV;
+	*(tMatch + 0) = tV;
+        nMatch = 1;
       }
     }
     if(dstErr)
     {
       *dstErr = errNum;
+    }
+  }
+  return(nMatch);
+}
+
+/*!
+* \return	Number of matched points.
+* \ingroup	WlzTransform
+* \brief	Finds multiple match point pairs fro the given match shell.
+*		The match shell is considered to be composed of a number of
+*		segments, each with at least minSpx simplices. Within each
+*		segment the number of matching target shells is computed and
+*		the mean source target distance. If the number of matched
+*		shells is one and the mean distance is less than the threshold
+*		distance then a match point pair is generated for the
+*		segment of the match shell.
+* \param	tGM			Target model.
+* \param	sGM			Source model.
+* \param	tTree			kD-tree populated by the target
+*					vertices.
+* \param	mS			Match shell.
+* \param	tVx			Target vertex geometries.
+* \param	minSegSpx		Minimum number of simplices per
+*					segment of the matched shell.
+* \param 	maxMnDisp		Maximum mean displacement along a
+*					matched shell segment for a valid
+*					match.
+* \param	sMatch			Allocated space for the source
+*					(matched shell) vertices.
+* \param	tMatch			Allocated space for the target
+*					(matched shell) vertices.
+* \param	dstErr			Destination error pointer,
+					may be NULL.
+*/
+static int	WlzMatchICPGetMSPoints2D(WlzGMModel *tGM, WlzGMModel *sGM,
+				AlcKDTTree *tTree,
+				WlzMatchICPShell *mS, WlzDVertex2 *tVx,
+				int minSegSpx, double maxMnDisp,
+				WlzDVertex2 *sMatch,
+				WlzDVertex2 *tMatch, WlzErrorNum *dstErr)
+{
+  int		id0,
+  		id1,
+		nSeg,
+		nSpx = 0,
+  		nMatch = 0,
+		nTShell = 0,
+		minSegSpx2;
+  double	d,
+  		dist;
+  WlzGMShell	*sS,
+  		*tS0,
+		*tS1;
+  WlzGMLoopT	*sLT;
+  WlzGMVertex	*sV,
+  		*tV;
+  WlzGMEdgeT	*fET,
+  		*lET,
+		*tET0;
+  AlcKDTNode	*tNode;
+  double	vxD2[2];
+  WlzDVertex2	sPos,
+  		tSPos,
+		tPos;
+
+  if(mS && mS->tr && ((sS = mS->shell) != NULL) &&
+     (sS->child == sS->child->next))
+  {
+    sLT = sS->child;
+    /* Find edge topology element at one end. */
+    fET = sLT->edgeT;
+    while(((tET0 = fET->prev) != fET->opp) && (tET0 != sLT->edgeT))
+    {
+      fET = tET0;
+    }
+    /* Find edge topology element at other end, counting elements. */
+    nSpx = 0;
+    lET = fET;
+    while(((tET0 = lET->next) != lET->opp) && (tET0 != fET))
+    {
+      lET = tET0;
+      ++nSpx;
+    }
+  }
+  if(nSpx >= minSegSpx)
+  {
+    tET0 = fET;
+    minSegSpx2 = minSegSpx / 2;
+    nSeg = nSpx / minSegSpx;
+    /* For each matched shell segment. */
+    for(id0 = 0; id0 < nSeg; ++id0)
+    {
+      dist = 0.0;
+      nTShell = 0;
+      tS0 = NULL;
+      /* Work along the segment computing:
+       *   * Number of traget shells which have a vertex nearest to segment
+       *     vertices.
+       *   * Mean source - target vertex distance.
+       */
+      for(id1 = 0; id1 < minSegSpx; ++id1)
+      {
+        sV = tET0->vertexT->diskT->vertex;
+	(void )WlzGMVertexGetG2D(sV, &sPos);
+	tSPos = WlzAffineTransformVertexD2(mS->tr, sPos, NULL);
+	vxD2[0] = tSPos.vtX;
+	vxD2[1] = tSPos.vtY;
+	tNode = AlcKDTGetNN(tTree, vxD2, DBL_MAX, &d, NULL);
+	if(tNode)
+	{
+	  dist += d;
+	  tPos = *(tVx + tNode->idx);
+	  tV = WlzGMModelMatchVertexG2D(tGM, tPos);
+	  if(tV == NULL)
+	  {
+	    nTShell = 2;
+	  }
+	  else
+	  {
+	    tS1 = tV->diskT->vertexT->parent->parent->parent;
+	    nTShell += tS0 != tS1;
+	    tS0 = tS1;
+	    if(id1 == minSegSpx2) /* Midpoint of segment. */
+	    {
+	      (void )WlzGMVertexGetG2D(sV, sMatch + nMatch);
+	      (void )WlzGMVertexGetG2D(tV, tMatch + nMatch);
+	    }
+	  }
+	}
+        tET0 = tET0->next;
+      }
+      dist /= minSegSpx;
+      /* If only one target shell is matched by segment and distance
+       * is less than threshold add mipoint of segment to the match
+       * point list. */
+      if((nTShell == 1) && (dist < maxMnDisp))
+      {
+        ++nMatch;
+      }
     }
   }
   return(nMatch);
@@ -1917,16 +2104,24 @@ static WlzErrorNum WlzMatchICPFilterPtsDisp2D(WlzDVertex2 *tVx,
 	  {
 	    ++idN;
 	  }
-	  tI0 = idS;
-	  while(idN < nN)
+	  if(idN == 0)
 	  {
-	    tI1 = *(indicies + idN);
-	    tD1 = *(bufD + idN);
-	    *(indicies + idN) = tI0;
-	    *(bufD + idN) = tD0;
-	    tI0 = tI1;
-	    tD0 = tD1;
-	    ++idN;
+	    *(indicies + 0) = idS;
+	    *(bufD + 0) = tD0;
+	  }
+	  else
+          {
+	    tI0 = idS;
+	    while(idN < nN)
+	    {
+	      tI1 = *(indicies + idN);
+	      tD1 = *(bufD + idN);
+	      *(indicies + idN) = tI0;
+	      *(bufD + idN) = tD0;
+	      tI0 = tI1;
+	      tD0 = tD1;
+	      ++idN;
+	    }
 	  }
 	}
       }
@@ -2897,6 +3092,8 @@ static double	WlzMatchICPWeightMatches3D(WlzAffineTransform *curTr,
 				       	double maxDisp, int nScatter)
 {
   /* TODO */
+
+  return(0.0);
 }
 
 /*!

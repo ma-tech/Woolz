@@ -19,6 +19,7 @@
  * \bug
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <limits.h>
 #include <float.h>
@@ -76,7 +77,7 @@ extern int	optind,
 		opterr,
 		optopt;
 
-int             main(int argc, char *argv[])
+int             main(int argc, char **argv)
 {
   int		option,
   		ok = 1,
@@ -89,6 +90,7 @@ int             main(int argc, char *argv[])
 		useCOfM = 0,
 		maxItr = 200,
 		minSpx = 15,
+		minSegSpx = 10,
 		matchImpNN = 7,
 		noMatching = 0,
 		decompLimit = INT_MAX,
@@ -142,7 +144,7 @@ int             main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		fileNameBuf[FILENAME_MAX];
   const char	*errMsg;
-  static char	optList[] = "dhvVo:r:Yt:x:y:a:s:ef:g:k:u:i:p:A:S:F:m:n:c:NL";
+  static char	optList[] = "dhvVo:r:Yt:x:y:a:s:efg:k:u:i:p:A:S:F:P:m:n:c:NL";
   const int	nScatter = 5;
   const char	nullStr[] = "<NULL>",
   		inFileStrDef[] = "-",
@@ -281,7 +283,13 @@ int             main(int argc, char *argv[])
 	}
 	break;
       case 'p':
-        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
+        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 10))
+	{
+	  usage = 1;
+	}
+	break;
+      case 'P':
+        if(sscanf(optarg, "%d", &minSegSpx) != 1)
 	{
 	  usage = 1;
 	}
@@ -376,7 +384,8 @@ int             main(int argc, char *argv[])
     (void )fprintf(stderr, "  refObjFileStr = %s\n",
 		   refObjFileStr? refObjFileStr: nullStr);
     (void )fprintf(stderr, "  multipleFiles = %d\n", multipleFiles);
-    (void )fprintf(stderr, "  inTrFileStr = %s\n", inTrFileStr);
+    (void )fprintf(stderr, "  inTrFileStr = %s\n",
+                   inTrFileStr? inTrFileStr: nullStr);
     (void )fprintf(stderr, "  inTrPrim.tx = %g\n", inTrPrim.tx);
     (void )fprintf(stderr, "  inTrPrim.ty = %g\n", inTrPrim.ty);
     (void )fprintf(stderr, "  inTrPrim.theta = %g (Radians)\n",
@@ -724,7 +733,7 @@ int             main(int argc, char *argv[])
       cbData.maxDisp = maxDisp;
       cbData.nScatter = nScatter;
       errNum = WlzMatchICPCtr(refCObj2D->domain.ctr, srcCObj2D->domain.ctr,
-			      NULL, maxItr, minSpx,
+			      NULL, maxItr, minSpx, minSegSpx,
 			      &nMatch, &matchRP, &matchSP, decompLimit,
 			      maxDisp, maxAng, maxDeform,
 			      matchImpNN, matchImpThr,
@@ -732,7 +741,7 @@ int             main(int argc, char *argv[])
 #else
       errNum = WlzMatchICPObjs(refCObj2D, srcCObj2D, NULL,
 			       &nMatch, &matchRP, &matchSP,
-			       maxItr, minSpx, decompLimit,
+			       maxItr, minSpx, minSegSpx, decompLimit,
 			       maxDisp, maxAng, maxDeform,
 			       matchImpNN, matchImpThr);
 #endif
@@ -871,6 +880,9 @@ int             main(int argc, char *argv[])
       "      doesn't do this.\n"
       "  -i  Maximum number of iterations.\n"
       "  -p  Minimum number of simplices per shell.\n"
+      "  -P  Minimum number of simplices per matched shell segment, with a\n"
+      "      pair of correspondence points possibly being generated per\n"
+      "      matched shell segment.\n"
       "  -A  Maximum angle (degrees) from a global transformation.\n"
       "  -S  Maximum displacement from a global transformed position.\n"
       "  -F  Maximum deformation from a global transformation.\n"
