@@ -71,6 +71,7 @@ static WlzContour 	*WlzContourGrdObj3D(
 			  double grdLo,
 			  double grdHi,
 			  double ftrPrm,
+			  int nrmFlg,
 			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourBndObj2D(
 			  WlzObject *obj,
@@ -200,7 +201,10 @@ static WlzErrorNum	WlzContourGrdLink2D(
 			  WlzIVertex2 org,
 			  int lnOff,
 			  int lnIdx[],
-			  int klP);
+			  int klP,
+			  int useNrm,
+			  double **grdXBuf,
+			  double **grdYBuf);
 static WlzErrorNum	WlzContourGrdLink3D(
 			  WlzContour *ctr,
 			  UBYTE ***mBuf,
@@ -236,12 +240,14 @@ static WlzErrorNum 	WlzContourBnd2DAddSeg(
 * \param	ctrHi			Higher maximal gradient
 *                                       threshold value.
 * \param	ctrWth			Contour filter width.
+* \param	nrmFlg			Add image gradients as normals to
+*					contour if non zero.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
 WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
 				  double ctrLo, double ctrHi, double ctrWth,
-				  WlzErrorNum *dstErr)
+				  int nrmFlg, WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -264,10 +270,11 @@ WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
     {
       case WLZ_2D_DOMAINOBJ:
 	ctr = WlzContourGrdObj2D(srcObj, NULL, NULL,
-				 ctrLo, ctrHi, ctrWth, &errNum);
+				 ctrLo, ctrHi, ctrWth, nrmFlg, &errNum);
 	break;
       case WLZ_3D_DOMAINOBJ:
-	ctr = WlzContourGrdObj3D(srcObj, ctrLo, ctrHi, ctrWth, &errNum);
+	ctr = WlzContourGrdObj3D(srcObj, ctrLo, ctrHi, ctrWth, nrmFlg,
+				 &errNum);
 	break;
       default:
 	errNum = WLZ_ERR_OBJECT_TYPE;
@@ -302,11 +309,13 @@ WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
 * \param	ctrMtd			Contour generation method.
 * \param	ctrVal			Contour value.
 * \param	ctrWth			Contour filter width.
+* \param	nrmFlg			Generate normals from image if
+*					possible.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
 WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
-			       double ctrVal, double ctrWth,
+			       double ctrVal, double ctrWth, int nrmFlg,
 			       WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;
@@ -333,7 +342,7 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	  case WLZ_CONTOUR_MTD_GRD:
 	    ctr = WlzContourGrdObj2D(srcObj, NULL, NULL,
 	    			     (ctrVal + 9.0) / 10.0, ctrVal,
-	    			     ctrWth, &errNum);
+	    			     ctrWth, nrmFlg, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_BND:
 	    if(ctrVal < 0.0)
@@ -358,7 +367,8 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourIsoObj3D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj3D(srcObj, ctrVal, ctrVal, ctrWth, &errNum);
+	    ctr = WlzContourGrdObj3D(srcObj, ctrVal, ctrVal, ctrWth, 0,
+	    			     &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_BND:
 	    if(ctrVal < 0.0)
@@ -674,12 +684,12 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
 			   NULL, NULL, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        ctr = WlzContourObj(dObj2D, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, &errNum);
+        ctr = WlzContourObj(dObj2D, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, 0, &errNum);
       }
     }
     else
     {
-      ctr = WlzContourObj(dObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, &errNum);
+      ctr = WlzContourObj(dObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, 0, &errNum);
     }
   }
   AlcFree(cPts);
@@ -1174,8 +1184,10 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 * \param	grdLo			Lower threshold for modulus of
 *                                       gradient.
 * \param	grdHi			Upper threshold for modulus of
-*                                       gradient. TODO Use grdHi!
+*                                       gradient.
 * \param	ftrPrm			Filter width parameter.
+* \param	nrmFlg			Add image gradients as normals to
+*					contour if non zero.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
@@ -1183,7 +1195,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 				    WlzObject *gGXObj,
 				    WlzObject *gGYObj,
 				    double grdLo, double grdHi,
-				    double ftrPrm, WlzErrorNum *dstErr)
+				    double ftrPrm, int nrmFlg,
+				    WlzErrorNum *dstErr)
 {
   int		idX,
 		dCode,
@@ -1224,7 +1237,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   		org,
   		posAbs,
 		posRel;
-  WlzDVertex2	pos;
+  WlzDVertex2	pos,
+  		nrm;
   WlzDVertex2	*grd;
   WlzIntervalWSpace gXIWSp,
   		gYIWSp;
@@ -1276,7 +1290,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
     if((ctr = WlzMakeContour(&errNum)) != NULL)
     {
       ctr->model = WlzAssignGMModel(
-	  WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+	  WlzGMModelNew((nrmFlg)? WLZ_GMMOD_2N: WLZ_GMMOD_2D,
+	  		0, 0, &errNum), NULL);
     }
   }
   /* Make scan line buffers. */
@@ -1493,8 +1508,11 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 	    if(*(*(grdLBuf + lnIdx[1]) + klIdx[1]))
 	    {
 	      /* Generate and link edge segments. */
+	      nrm.vtX = grdX0;
+	      nrm.vtY = grdY0;
 	      errNum = WlzContourGrdLink2D(ctr, grdLBuf, org, posRel.vtY - 2,
-					   lnIdx, klIdx[0]);
+					   lnIdx, klIdx[0],
+					   nrmFlg, grdXBuf, grdYBuf);
 	    }
 	  }
 	  klIdx[0] = klIdx[1];
@@ -1562,13 +1580,17 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 * \param	grdHi			Upper threshold for modulus of
 *                                       gradient. TODO use grdHi!
 * \param	ftrPrm			Filter width parameter.
+* \param	nrmFlg			Add image gradients as normals to
+* 					contour if non zero.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
 static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 				      double grdLo, double grdHi,
-				      double ftrPrm, WlzErrorNum *dstErr)
+				      double ftrPrm, int nrmFlg,
+				      WlzErrorNum *dstErr)
 {
+  /* TODO use nrmFlg */
   int		cnt,
   		idX,
 		idY,
@@ -2822,16 +2844,25 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr,
 *                                       pixel line.
 * \param	lnIdx[]			Line indicies.
 * \param	klOff			Column offset of first column.
+* \param	useNrm			Add normal to contour if non zero.
+* \param	grdXBuf			Buffer of horizontal gradient
+* 					components.
+* \param	grdYBuf			Buffer of vertical gradient
+* 					components.
 */
 static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
 				       UBYTE **grdLBuf, WlzIVertex2 org,
-				       int lnOff, int lnIdx[], int klOff)
+				       int lnOff, int lnIdx[], int klOff,
+				       int useNrm,
+				       double **grdXBuf, double **grdYBuf)
 {
   int		idN,
 		conFnd = 0;
   int		con[6],
      		thr[6];
-  WlzDVertex2	seg[2];
+  double	len;
+  WlzDVertex2	seg[2],
+  		nrm[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	offConKl[6] =
   {
@@ -2882,13 +2913,36 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
     /* Compute segment end points and add them to the contour workspace. */
     seg[0].vtX = org.vtX + klOff + 1.0;
     seg[0].vtY = org.vtY + lnOff + 1.0;
-    for(idN = 1; idN < 6;  ++idN)
+    if(useNrm == 0)
     {
-      if(con[idN])
+      for(idN = 1; idN < 6;  ++idN)
       {
-	seg[1].vtX = org.vtX + klOff + offConKl[idN];
-	seg[1].vtY = org.vtY + lnOff + offConLn[idN];
-	errNum = WlzGMModelConstructSimplex2D(ctr->model, seg);
+	if(con[idN])
+	{
+	  seg[1].vtX = org.vtX + klOff + offConKl[idN];
+	  seg[1].vtY = org.vtY + lnOff + offConLn[idN];
+	  errNum = WlzGMModelConstructSimplex2D(ctr->model, seg);
+	}
+      }
+    }
+    else
+    {
+      nrm[0].vtX = *(*(grdXBuf + lnIdx[1]) + klOff + 1);
+      nrm[0].vtY = *(*(grdYBuf + lnIdx[1]) + klOff + 1);
+      nrm[0] = WlzGeomUnitVector2D(nrm[0]);
+      for(idN = 1; idN < 6;  ++idN)
+      {
+	if(con[idN])
+	{
+	  seg[1].vtX = org.vtX + klOff + offConKl[idN];
+	  seg[1].vtY = org.vtY + lnOff + offConLn[idN];
+	  nrm[1].vtX = *(*(grdXBuf + lnIdx[offConLn[idN]]) +
+	                 klOff + offConKl[idN]); 
+	  nrm[1].vtY = *(*(grdYBuf + lnIdx[offConLn[idN]]) +
+	                 klOff + offConKl[idN]); 
+          nrm[1] = WlzGeomUnitVector2D(nrm[1]);
+	  errNum = WlzGMModelConstructSimplex2N(ctr->model, seg, nrm);
+	}
       }
     }
   }
@@ -4816,7 +4870,7 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-    ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, &errNum);
+    ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, 0, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
