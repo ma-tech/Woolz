@@ -36,7 +36,7 @@
 
 /* function:    WlzIVtx2TriangleHeight */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Calculate the height of a triangle from the last vertex
 *		to the line defined by the first two.
 *
@@ -145,7 +145,7 @@ static double WlzDVtx2TriangleHeight(
 
 /* function:     WlzPolyDecimate */
 /*! 
-* \ingroup    WlzPolylineOps
+* \ingroup    WlzPolyline
 * \return       decimated polygon domain, NULL on error
 * \brief        Decimate a polyline by removing vertices that are
 *		within straight line segments as defined by a maximum
@@ -297,9 +297,9 @@ WlzPolygonDomain  *WlzPolyDecimate(
 
 /* function:     WlzBoundDecimate */
 /*! 
-* \ingroup    WlzPolylineOps
+* \ingroup    WlzBoundary
 * \return       decimated boundary list, NULL on error
-* \brief        Decimate a boundary list using WlzPolyDecimate on the
+* \brief        Decimate a boundary list using WlzPolyDecimate() on the
 *		boundary polylines.
 *
 * \param    bound	input boundary list

@@ -35,21 +35,18 @@
 #include <stdio.h>
 #include <Wlz.h>
 
-/*!
-* \ingroup     Wlz
-* \defgroup    WlzPolylineOps
-* @{
-*/
 
 /*!
- * \def MAX_POLYSMOOTH_ITERATIONS
- * 	Maximum number of iterations of 1-2-1 smoothing in WlzPolySmooth
- */
+* \ingroup WlzPolyline
+* \def MAX_POLYSMOOTH_ITERATIONS
+* 	Maximum number of iterations of 1-2-1 smoothing in WlzPolySmooth
+*/
 
 #define MAX_POLYSMOOTH_ITERATIONS 10
 
 /* function:     WlzPolySmooth   */
 /*! 
+* \ingroup WlzPolyline
 * \return       smoothed polygon domain, NULL on error
 * \brief        performs iterative 1-2-1 smoothing on the polyline
 *		treating the x & y values independently. The smoothing
@@ -236,8 +233,9 @@ WlzPolygonDomain *WlzPolySmooth(
 
 /* function:     WlzBoundSmooth   */
 /*! 
+* \ingroup WlzBoundary
 * \return       new boundlist, NULL on error
-* \brief        Smooth a boundary list using WlzPolySmooth.
+* \brief        Smooth a boundary list using WlzPolySmooth().
 *
 * \param    bound	input boundary list
 * \param    iterations	number of iterations for smoothing the polylines
@@ -287,8 +285,3 @@ WlzBoundList *WlzBoundSmooth(
   }
   return rtnBound;
 }
-
-/*!
-* @}
-*/
-

@@ -25,7 +25,7 @@
 
 /* function:     WlzPolyCrossings    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Procedure to calculate winding number of the polygon with
 respect to the vertex. The algorithm is from "Comp Geom in C" by O'Rourke
 chap 7. It assumes integer vertices and that the vertex is not on the
@@ -70,7 +70,7 @@ int WlzPolyCrossings(
 
 /* function:     WlzInsidePolyEO    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Procedure to calculate if a vertex is 
 inside the polygon using the
 even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
@@ -132,7 +132,7 @@ static int vtx_compare(
 
 /* function:     WlzPolygonToObj    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Convert the input polygon to an interval domain. The
 domain is defined by the fillMode see WlzPolyToObj().
 *
@@ -245,7 +245,7 @@ WlzObject *WlzPolygonToObj(
 
 /* function:     WlzPolyToObj    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Convert the input polygon to an interval domain. The
 domain is defined by the fillMode: WLZ_SIMPLE_FILL - all pixels with winding
 number non-zero; WLZ_EVEN_ODD_FILL - all pixels with odd winding number;
@@ -458,7 +458,7 @@ WlzObject *WlzPolyToObj(
 
 /* function:     WlzPolyTo8Polygon    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Returns the 8-connected, integer vertex polyline corresponding
 to the input polygon. The wrap value (number of overlapping vertices of
 the polygon ends) is preserved. WLZ_POLYGON_FLOAT and WLZ_POLYGON_DOUBLE

@@ -32,7 +32,7 @@
 
 /* function:     WlzPolyReverse   */
 /*! 
-* \ingroup	WlzPolylineOps
+* \ingroup	WlzPolyline
 * \brief        Reverse the vertex ordering in a polygon domain.
 *
 * \return       New polygon domain with vertices reversed

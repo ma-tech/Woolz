@@ -28,7 +28,7 @@ old.
 
 /* function:     WlzPolyLength    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Calculate the length of the input polyline.
 *
 * \return       length of the input polygon domain
@@ -118,7 +118,7 @@ double WlzPolyLength(
 
 /* function:     WlzPolyEquispace    */
 /*! 
-* \ingroup      WlzPolylineOps
+* \ingroup      WlzPolyline
 * \brief        Create a new polygon domain with vertices qually spaced
 along the original polyline. The wrap value is preserved and if keepOrigVtxs
 is non-zero then the original vertices will be kept. This results in non-equal
