@@ -12,7 +12,9 @@
 * Purpose:      Makes Woolz object types.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+* 15-08-00 bill	Move WlzMakeContour() from WlzContour.c to here.
+*		Add WLZ_CONTOUR to WlzMakemain().
+* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
@@ -224,6 +226,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_BOUNDLIST:
     case WLZ_CONV_HULL:
     case WLZ_HISTOGRAM:
+    case WLZ_CONTOUR:
     case WLZ_RECTANGLE:
     case WLZ_AFFINE_TRANS:
     case WLZ_PROPERTY_OBJ:
@@ -1481,4 +1484,32 @@ WlzNewIDomain(WlzObjectType outDomType,
     *dstErr = errNum;
   }
   return(outDom);
+}
+
+/************************************************************************
+* Function:	WlzMakeContour
+* Returns:	WlzContour *:		New contour.
+* Purpose:	Makes a new contour data structure.
+* Global refs:	-
+* Parameters:	WlzErrorNum *dstErr:	Destination error pointer, may
+					be null.
+************************************************************************/
+WlzContour	*WlzMakeContour(WlzErrorNum *dstErr)
+{
+  WlzContour	*ctr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((ctr = AlcCalloc(1, sizeof(WlzContour))) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    ctr->type = WLZ_CONTOUR;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
 }
