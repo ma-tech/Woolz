@@ -106,6 +106,7 @@ int             main(int argc, char *argv[])
   		*lFP = NULL,
   		*fP = NULL;
   char		*inFileStr = NULL,
+		*inTrFileStr = NULL,
   		*outFileBaseStr = NULL,
 		*ctrFileBaseStr = NULL;
   char		secParFile[256];
@@ -136,7 +137,7 @@ int             main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		fileNameBuf[FILENAME_MAX];
   const char	*errMsg;
-  static char	optList[] = "dhvVo:r:Yx:y:a:s:ef:g:k:u:i:p:A:S:F:m:n:c:N";
+  static char	optList[] = "dhvVo:r:Yt:x:y:a:s:ef:g:k:u:i:p:A:S:F:m:n:c:N";
   const char	nullStr[] = "<NULL>",
   		inFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
@@ -175,6 +176,9 @@ int             main(int argc, char *argv[])
         break;
       case 'Y':
         multipleFiles = 1;
+	break;
+      case 't':
+        inTrFileStr = optarg;
 	break;
       case 'x':
         if(sscanf(optarg, "%lg", &(inTrPrim.tx)) != 1)
@@ -363,6 +367,7 @@ int             main(int argc, char *argv[])
     (void )fprintf(stderr, "  refObjFileStr = %s\n",
 		   refObjFileStr? refObjFileStr: nullStr);
     (void )fprintf(stderr, "  multipleFiles = %d\n", multipleFiles);
+    (void )fprintf(stderr, "  inTrFileStr = %s\n", inTrFileStr);
     (void )fprintf(stderr, "  inTrPrim.tx = %g\n", inTrPrim.tx);
     (void )fprintf(stderr, "  inTrPrim.ty = %g\n", inTrPrim.ty);
     (void )fprintf(stderr, "  inTrPrim.theta = %g (Radians)\n",
@@ -391,10 +396,38 @@ int             main(int argc, char *argv[])
   /* Create the initial affine transform and it's inverse. */
   if(ok)
   {
-    inTr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
-    if(errNum == WLZ_ERR_NONE)
+    if(inTrFileStr)
     {
-      errNum = WlzAffineTransformPrimSet(inTr, inTrPrim);
+      tObj0 = NULL;
+      if(((fP = fopen(inTrFileStr, "r")) == NULL) ||
+         ((tObj0 = WlzReadObj(fP, &errNum)) == NULL) ||
+	 (tObj0->type != WLZ_AFFINE_TRANS) ||
+	 (tObj0->domain.core == NULL))
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      else
+      {
+        inTr = WlzAffineTransformCopy(tObj0->domain.t, &errNum);
+      }
+      if(fP)
+      {
+        (void )fclose(fP);
+	fP = NULL;
+      }
+      if(tObj0)
+      {
+        WlzFreeObj(tObj0);
+	tObj0 = NULL;
+      }
+    }
+    else
+    {
+      inTr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	errNum = WlzAffineTransformPrimSet(inTr, inTrPrim);
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -410,8 +443,8 @@ int             main(int argc, char *argv[])
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-      "%s: Failed to compute affine transforms from primatives (%s).\n",
-      *argv, errMsg);
+      		     "%s: Failed to set initial affine transform (%s).\n",
+		     *argv, errMsg);
     }
     else
     {
@@ -783,7 +816,7 @@ int             main(int argc, char *argv[])
       *argv,
       " [-h] [-d] [-v] [-V]\n"
       "          [-o<output file base>] [-r <reference file>] [-Y]\n" 
-      "          [-x#] [-y#] [-a#] [-s#] [-e]\n"
+      "          [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
       "          [-g#,#] [-k#,#] [-u#,#]\n"
       "          [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
       "          [-c<contour file base>] [-N]\n"
@@ -799,6 +832,8 @@ int             main(int argc, char *argv[])
       "  -Y  The section parameters file is a list of section parameters\n"
       "      files, one per line.\n"
       "  -e  Use centres of mass of geometric models to compute translation.\n"
+      "  -t  Initial affine transform (if given all initial affine\n"
+      "      transform primitives are ignored).\n"
       "  -x  Initial horizontal translation.\n"
       "  -y  Initial vertical translation.\n"
       "  -a  Initial angle of rotation (degrees).\n"
