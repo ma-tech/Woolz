@@ -1106,8 +1106,9 @@ public class WlzImgView extends Component {
      drawGreyImage(g);
      drawOverlay(g);
      drawAnatomy(g);
-     drawIntersection(g);
-     drawFixedPoint(g);
+     //drawIntersection(g);
+//if (showInterSecLines) drawIntersectionA(g, meanGreyVal)
+     if (showInterSecLines) drawIntersection(g);
      return _compImage;
    }
 
