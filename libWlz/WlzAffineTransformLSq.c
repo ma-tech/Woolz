@@ -55,7 +55,7 @@ static WlzAffineTransform	*WlzAffineTransformLSqTrans2D(
 				  WlzDVertex2 *vtxVec1,
 				  int nVtx,
 				  WlzErrorNum *dstErr);
-static WlzAffineTransform 	*WlzAffineTransformLSqDQ(
+static WlzAffineTransform 	*WlzAffineTransformLSqDQ3D(
 				  int nV,
 				  double *vW,
 				  WlzDVertex3 *v0,
@@ -64,6 +64,16 @@ static WlzAffineTransform 	*WlzAffineTransformLSqDQ(
 				  double *nW,
 				  WlzDVertex3 *n0,
 				  WlzDVertex3 *n1,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform 	*WlzAffineTransformLSqDQ2D(
+				  int nV,
+				  double *vW,
+				  WlzDVertex2 *v1,
+				  WlzDVertex2 *v0,
+				  int nN,
+				  double *nW,
+				  WlzDVertex2 *n1,
+				  WlzDVertex2 *n0,
 				  WlzErrorNum *dstErr);
 
 /*!
@@ -108,7 +118,7 @@ WlzAffineTransform *WlzAffineTransformLSq2(WlzVertexType vtxType,
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
-  else if(vtxType != WLZ_VERTEX_D3)
+  else if((vtxType != WLZ_VERTEX_D2) && (vtxType != WLZ_VERTEX_D3))
   {
     errNum = WLZ_ERR_PARAM_TYPE;
   }
@@ -116,17 +126,18 @@ WlzAffineTransform *WlzAffineTransformLSq2(WlzVertexType vtxType,
   {
     switch(trType)
     {
+      case WLZ_TRANSFORM_2D_REG:
+	tr = WlzAffineTransformLSqDQ2D(nV, vW, v0.d2, v1.d2,
+				       nN, nW, n0.d2, n1.d2, &errNum);
+        break;
       case WLZ_TRANSFORM_3D_REG: 
+	tr = WlzAffineTransformLSqDQ3D(nV, vW, v0.d3, v1.d3,
+				       nN, nW, n0.d3, n1.d3, &errNum);
 	break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
 	break;
     }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    tr = WlzAffineTransformLSqDQ(nV, vW, v0.d3, v1.d3, nN, nW, n0.d3, n1.d3,
-    				 &errNum);
   }
   if(dstErr)
   {
@@ -872,15 +883,14 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
-static WlzAffineTransform *WlzAffineTransformLSqDQ(int nV, double *vW,
+static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 					WlzDVertex3 *v1, WlzDVertex3 *v0,
 					int nN, double *nW,
 					WlzDVertex3 *n1, WlzDVertex3 *n0,
 					WlzErrorNum *dstErr)
 {
   int		id0,
-  		id1,
-		nSets;
+  		id1;
   double	wt,
 		sumVW,
 		t0D,
@@ -909,14 +919,13 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ(int nV, double *vW,
   WlzAffineTransform *trans = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nSets = ((n0 == NULL) || (n1 == NULL))? 1: 2;
   /* Allocate matricies required to compute c1M, c2M and c3M. */
-  if((AlcDouble2Malloc(&aM, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&c1M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&c3M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&t0M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&t1M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&t2M, 4, 4) != ALC_ER_NONE))
+  if((AlcDouble2Calloc(&aM, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&c1M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&c3M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&t0M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&t1M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&t2M, 4, 4) != ALC_ER_NONE))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
@@ -952,9 +961,6 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ(int nV, double *vW,
       t0D = wt * ( t13D - t31D); c1M[1][3] += t0D; c1M[3][1] += t0D;
       t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
       /* Update c3M: Compute \beta_i(W(v_i_s) - Q(v_i^t)) */
-      wt = (vW)? vW[id0]: 1.0;;
-      t0V = v0[id0];
-      t1V = v1[id0];
       t0D = wt * ( t1V.vtZ + t0V.vtZ); c3M[0][1] += t0D; c3M[1][0] -= t0D; 
       t0D = wt * (-t1V.vtY - t0V.vtY); c3M[0][2] += t0D; c3M[2][0] -= t0D; 
       t0D = wt * ( t1V.vtX - t0V.vtX); c3M[0][3] += t0D; c3M[3][0] -= t0D;
@@ -1071,3 +1077,196 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ(int nV, double *vW,
   }
   return(trans);
 }
+
+/*!
+* \return				Computed affine transform, may
+*					be NULL on error.
+* \brief	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of verticies and normals onto the second
+*		set. The vertex and normal weighting factors must
+*		be in the range [0-1].
+*		See WlzAffineTransformLSqDQ3D() from which this
+*		function has been derived.
+* \param	WlzVertexType vtxType:	Type of verticies.
+* \param	nV			Number of verticies.
+* \param	vW			Vertex weights (Walker's beta),
+*					may be NULL which implies that
+*					all the weights are 1.0.
+* \param	v1			Verticies of the target set.
+* \param	v0			Verticies of the source set.
+* \param	nN			Numbr of normals.
+* \param	nW			Normal weights (Walker's alpha).,
+*					may be NULL which implies that
+*					all the weights are 1.0
+* \param	n1			Normals of the target set, may
+*					be NULL.
+* \param	n0			Normals of the source set, may
+*					be NULL.
+* \param	trType			Required transform type.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+static WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
+					WlzDVertex2 *v1, WlzDVertex2 *v0,
+					int nN, double *nW,
+					WlzDVertex2 *n1, WlzDVertex2 *n0,
+					WlzErrorNum *dstErr)
+{
+  int		id0,
+  		id1;
+  double	wt,
+		sumVW,
+		t0D,
+		t11D,
+		t12D,
+		t21D,
+		t22D,
+		t33D,
+		t34D,
+		t44D;
+  double	rM[4];
+  double	**aM = NULL,		/* Walker's A */
+  		**t0M = NULL,		/* Working matrix */
+  		**t1M = NULL,		/* Working matrix */
+  		**t2M = NULL,		/* Working matrix */
+		**c1M = NULL,		/* Walker's C_1 */
+		**c3M = NULL;		/* Walker's C_3 */
+  WlzDVertex3	t0V,
+  		t1V;
+  WlzAffineTransform *trans = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  /* Allocate matricies required to compute c1M, c2M and c3M. */
+  if((AlcDouble2Calloc(&aM, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&c1M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&c3M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&t0M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&t1M, 4, 4) != ALC_ER_NONE) ||
+     (AlcDouble2Calloc(&t2M, 4, 4) != ALC_ER_NONE))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  /* Compute c1M, c2M and c3M (see Walker's paper). */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sumVW = 0.0;
+    for(id0 = 0; id0 < nV; ++id0)
+    {
+      /* Update sumVW */
+      sumVW += (vW)? vW[id0]: 1.0;
+      /* Update c1M: Compute \beta_i{Q(v_i^t)}^TW(v_i_s) */
+      wt = (vW)? vW[id0]: 1.0;
+      t0V.vtX = (v0 + id0)->vtX; t0V.vtY = (v0 + id0)->vtY; t0V.vtZ = 0.0;
+      t1V.vtX = (v1 + id0)->vtX; t1V.vtY = (v1 + id0)->vtY; t1V.vtZ = 0.0;
+      t11D = t0V.vtX * t1V.vtX;
+      t12D = t0V.vtX * t1V.vtY;
+      t21D = t0V.vtY * t1V.vtX;
+      t22D = t0V.vtY * t1V.vtY;
+      c1M[0][0] += wt * ( t11D - t22D);
+      c1M[1][1] += wt * (-t11D + t22D);
+      c1M[2][2] += wt * (-t11D - t22D);
+      c1M[3][3] += wt * ( t11D + t22D);
+      t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
+      t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
+      /* Update c3M: Compute \beta_i(W(v_i_s) - Q(v_i^t)) */
+      t0D = wt * (-t1V.vtY - t0V.vtY); c3M[0][2] += t0D; c3M[2][0] -= t0D; 
+      t0D = wt * ( t1V.vtX - t0V.vtX); c3M[0][3] += t0D; c3M[3][0] -= t0D;
+      t0D = wt * ( t1V.vtX + t0V.vtX); c3M[1][2] += t0D; c3M[2][1] -= t0D;
+      t0D = wt * ( t1V.vtY - t0V.vtY); c3M[1][3] += t0D; c3M[3][1] -= t0D;
+    }
+    for(id0 = 0; id0 < nN; ++id0)
+    {
+      /* Update c1M: Compute \alpha_i{Q(n_i^t)}^TW(n_i_s) */
+      wt = (nW)? nW[id0]: 1.0;
+      t0V.vtX = (n0 + id0)->vtX; t0V.vtY = (n0 + id0)->vtY; t0V.vtZ = 0.0;
+      t1V.vtX = (n1 + id0)->vtX; t1V.vtY = (n1 + id0)->vtY; t1V.vtZ = 0.0;
+      t11D = t0V.vtX * t1V.vtX;
+      t12D = t0V.vtX * t1V.vtY;
+      t21D = t0V.vtY * t1V.vtX;
+      t22D = t0V.vtY * t1V.vtY;
+      c1M[0][0] += wt * ( t11D - t22D);
+      c1M[1][1] += wt * (-t11D + t22D);
+      c1M[2][2] += wt * (-t11D - t22D);
+      c1M[3][3] += wt * ( t11D + t22D);
+      t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
+      t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
+    }
+    AlgMatrixScale(c1M, -2.0, 4, 4);
+    AlgMatrixScale(c3M, 2.0, 4, 4);
+    if(sumVW < DBL_EPSILON)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  /* Now compute A from C1, C3 and \sum_i^n{\beta_i} */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    AlgMatrixTranspose(t0M, c3M, 4, 4);		/* T0 = C3^T */
+    AlgMatrixMul(t1M, t0M, c3M, 4, 4, 4); 	/* T1 = C3^T C3 */
+    t0D = 1.0 / (4.0 * sumVW);
+    AlgMatrixScale(t1M, t0D, 4, 4);		
+    AlgMatrixSub(aM, t1M, c1M, 4, 4);
+    /* Find the eigenvector of A which has the greatest eigenvalue.
+     * This is returned in the first column of aM. */
+    AlgMatrixRSEigen(aM, 4, rM, 1);
+    rM[0] = aM[0][0]; rM[1] = aM[1][0];
+    rM[2] = aM[2][0]; rM[3] = aM[3][0];
+    /* Compute the transform's rotation elements from the eigen vector. */
+    t11D = rM[0] * rM[0];
+    t22D = rM[1] * rM[1];
+    t33D = rM[2] * rM[2];
+    t44D = rM[3] * rM[3];
+    t12D = 2.0 * rM[0] * rM[1];
+    t34D = 2.0 * rM[2] * rM[3];
+    aM[0][0] = t44D + t11D - t22D - t33D;
+    aM[0][1] = t12D - t34D;
+    aM[1][0] = t12D + t34D;
+    aM[1][1] = t44D - t11D + t22D - t33D;
+    /* Compute the translation elements from the eigen vector r, the sum of the
+     * vertex weights \sum_i{\beta_i} and matrix C3. */
+    /* Set t0M[0] to r (see Walker's paper). */
+    t0M[0][0] = rM[0]; t0M[1][0] = rM[1]; t0M[2][0] = rM[2]; t0M[3][0] = rM[3];
+    /* Compute s in t1M[0], but don't scale with -1/(2\sum_i{\beta_i} yet (see
+     * Walker's paper). */
+    AlgMatrixMul(t1M, c3M, t0M, 4, 4, 1);
+    /* Set t0M to be W^T(r) (see Walker's paper). */
+    t0M[0][0] =  rM[3]; t0M[0][1] =  rM[2];
+    t0M[0][2] =  rM[1]; t0M[0][3] = -rM[0];
+    t0M[1][0] = -rM[2]; t0M[1][1] =  rM[3];
+    t0M[1][2] =  rM[0]; t0M[1][3] = -rM[1];
+    t0M[2][0] =  rM[1]; t0M[2][1] = -rM[0];
+    t0M[2][2] =  rM[3]; t0M[2][3] = -rM[2];
+    t0M[3][0] =  rM[0]; t0M[3][1] =  rM[1];
+    t0M[3][2] =  rM[2]; t0M[3][3] =  rM[3];
+    /* Compute the product W^T(r) s (see Walker's paper). */
+    AlgMatrixMul(t1M, t0M, t1M, 4, 4, 1);
+    /* Extract the translation components and scale by -1/(2\sum_i{\beta_i}
+     * (see Walker's paper). */
+    t0D = -1.0 / (2.0 * sumVW);
+    aM[0][2] = t0D * t1M[0][0];
+    aM[1][2] = t0D * t1M[1][0];
+    /* Set the transform's perspective and scale elements. */
+    aM[2][0] = aM[2][1] = 0.0;
+    aM[2][2] = 1.0;
+    /* Create the affine transform. */
+    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, aM, &errNum);
+  }
+  /* Free the matricies. */
+  (void )AlcDouble2Free(aM);
+  (void )AlcDouble2Free(c1M);
+  (void )AlcDouble2Free(c3M);
+  (void )AlcDouble2Free(t0M);
+  (void )AlcDouble2Free(t1M);
+  (void )AlcDouble2Free(t2M);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(trans);
+}
+
+/*!
+* @}
+*/
+
