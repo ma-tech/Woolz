@@ -434,12 +434,6 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   double	**valBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-#ifdef HACK
-  static WlzDVertex3 hackHACK[3] =
-  {
-    {5.0, 6.0, 6.9}, {5.45, 6.55, 7.0}, {5.62, 6.38, 6.62}
-  };
-#endif /* HACK */
 
   dummyDom.core = NULL;
   dummyValues.core = NULL;
@@ -464,12 +458,6 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
       		   WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum), NULL);
     }
   }
-#ifdef HACK
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzGMModelConstructSimplex3D(ctr->model, hackHACK);
-  }
-#endif /* HACK */
   if(errNum == WLZ_ERR_NONE)
   {
     bBox3D = WlzBoundingBox3D(srcObj, &errNum);
