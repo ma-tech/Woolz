@@ -55,7 +55,7 @@ int		WlzStringMatchValue(int *datum,
 	     (unsigned long )testStr, (testStr)?(testStr):"(null)", testVal));
     if(!matchedFlag)
     {
-      matchedFlag = !strcmp(targetStr, testStr);
+      matchedFlag = !strncmp(targetStr, testStr, strlen(testStr));
       if(matchedFlag)
       {
 	*datum = testVal;

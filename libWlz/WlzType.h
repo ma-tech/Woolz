@@ -444,6 +444,18 @@ typedef enum _WlzPolyFillMode
   WLZ_VERTEX_FILL	/*! Fill all pixels lying under the polyline */
 } WlzPolyFillMode;
 
+/*!
+* \enum		_WlzGreyTransformType	
+* \ingroup	WlzTransform
+* \brief	Grey-level transform types.
+*/
+typedef enum _WlzGreyTransformType {
+  WLZ_GREYTRANSFORMTYPE_LINEAR,		/*! linear interpolation */
+  WLZ_GREYTRANSFORMTYPE_GAMMA,		/*! gamma function */
+  WLZ_GREYTRANSFORMTYPE_EXPONENTIAL,	/*! exponential function */
+  WLZ_GREYTRANSFORMTYPE_SIGMOID		/*! sigmoid function */
+} WlzGreyTransformType;
+
 /************************************************************************
 * Standard 3D views.						
 ************************************************************************/
