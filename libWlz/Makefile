@@ -86,7 +86,6 @@ CSOURCES		= \
 			WlzGeoModel.c \
 			WlzGeoModelFilters.c \
 			WlzGeometry.c \
-			WlzObjGetType.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
 			WlzGreyGradient.c \
@@ -114,6 +113,7 @@ CSOURCES		= \
 			WlzIntervalCount.c \
 			WlzIntervalDomScan.c \
 			WlzIntRescaleObj.c \
+			WlzJavaUtils.c \
 			WlzLabel.c \
 			WlzLabel3d.c \
 			WlzLaplacian.c \

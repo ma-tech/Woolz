@@ -48,6 +48,7 @@
 *		* UBYTE should be expanded to unsigned char - (why?) RAB
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 19-09-02 nick Add WlzJavaUtils.c and moved WlzObjGetType() to it.
 * 12-09-02 nick Add WlzObjGetType().
 * 21-08-02 nick Add Wlz2DContains().
 * 26-04-01 bill Add WlzContourObjGrd().
@@ -100,10 +101,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/************************************************************************
-* WlzObjGetType.c							*
-************************************************************************/
-extern int 		        WlzObjGetType(WlzObject *obj);
 /************************************************************************
 * Wlz2DContains.c							*
 ************************************************************************/
@@ -1931,6 +1928,21 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 				  int scale,
 				  int expand,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzJavaUtils.c							*
+************************************************************************/
+extern int 		        WlzObjGetType(WlzObject *obj);
+extern int			WlzGetIntervalDomainLine1(WlzObject *obj);
+extern int			WlzGetIntervalDomainLastLn(WlzObject *obj);
+extern int			WlzGetIntervalDomainKol1(WlzObject *obj);
+extern int			WlzGetIntervalDomainLastKl(WlzObject *obj);
+extern int			WlzGetPlaneDomainPlane1(WlzObject *obj);
+extern int			WlzGetPlaneDomainLastPl(WlzObject *obj);
+extern int			WlzGetPlaneDomainLine1(WlzObject *obj);
+extern int			WlzGetPlaneDomainLastLn(WlzObject *obj);
+extern int			WlzGetPlaneDomainKol1(WlzObject *obj);
+extern int			WlzGetPlaneDomainLastKl(WlzObject *obj);
 
 /************************************************************************
 * "THE BEAST" - WlzLabel.c						*
