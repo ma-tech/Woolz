@@ -34,10 +34,10 @@ public class KeyEntryGUI extends JPanel{
    /** The visibility button of a KeyEntry   */
    protected JButton btn02 = null;
 
-   /** The zap button of a KeyEntry   */
+   /** The 3D visibility button of a KeyEntry   */
    protected JButton btn03 = null;
 
-   /** The 3D visibility button of a KeyEntry   */
+   /** The zap button of a KeyEntry   */
    protected JButton btn04 = null;
 
    /** The 'left arrow' icon for the textfield scroll button  */
@@ -91,23 +91,23 @@ public class KeyEntryGUI extends JPanel{
    protected static final int _entryH = 25;
 //-------------------------------------------------------------
    /**
-    *   Constructs a KeyEntryGUI.
+    *   Constructs a KeyEntryGUI. 
     */
    protected KeyEntryGUI() {
       _is3D = false;
       makeGUI();
    }
-
+   
    /**
     *   Constructs a KeyEntryGUI with 3D visibility control if
-    *   is3D is true.
+    *   is3D is true. 
     *   @param is3D true if 3D visibility control is to be added.
     */
    protected KeyEntryGUI(boolean is3D) {
       _is3D = is3D;
       makeGUI();
    }
-
+   
 //-------------------------------------------------------------
    /**
     *   Called by the constructor. All of the work of building the GUI
@@ -121,27 +121,15 @@ public class KeyEntryGUI extends JPanel{
       int gap = 1;
       int W1 = 2*btnW1+btnW3+2*gap;
 
-      try {
-        String imgPath = "images/";
-        URL urlIcon = KeyEntryGUI.class.getResource(imgPath + "left.gif");
-        leftIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "right.gif");
-        rightIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "viz.gif");
-        vizIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "notViz.gif");
-        notVizIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "viz.gif");
-        viz3DIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "notViz.gif");
-        notViz3DIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "zap.gif");
-        zapIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "replace.gif");
-        replaceIcon = new ImageIcon(urlIcon);
-      }
-      catch (Exception ex) {
-      }
+      String imgPath = "sectionViewer"+SLASH+"images"+SLASH;
+      leftIcon = new ImageIcon(imgPath+"left.gif");
+      rightIcon = new ImageIcon(imgPath+"right.gif");
+      vizIcon = new ImageIcon(imgPath+"viz.gif");
+      notVizIcon = new ImageIcon(imgPath+"notViz.gif");
+      viz3DIcon = new ImageIcon(imgPath+"viz.gif");
+      notViz3DIcon = new ImageIcon(imgPath+"notViz.gif");
+      zapIcon = new ImageIcon(imgPath+"zap.gif");
+      replaceIcon = new ImageIcon(imgPath+"replace.gif");
 
       _vizCol = new Color(250,250,250);
       _notVizCol = new Color(200,200,200);
