@@ -24,8 +24,12 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
-
 #include <Wlz.h>
+
+#ifdef defined(_WIN32) && !defined(__x86)
+#define __x86
+#endif
+
 
 static WlzErrorNum	WlzWriteIntervalDomain(
 			  FILE *fp,
@@ -156,7 +160,7 @@ static int putword(int i, FILE *fp)
   cout[2] = *(cin+1);
   cout[3] = *(cin+0);
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined (_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
   cout[2] = *(cin+2);
@@ -181,7 +185,7 @@ static int putshort(short i, FILE *fp)
   cout[0] = *(cin+1);
   cout[1] = *(cin+0);
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined (_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
 #endif /* __x86 || __alpha */
@@ -239,7 +243,7 @@ static int putdouble(double d, FILE *fp)
   cout[6] = *(cin+1);
   cout[7] = *cin;
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined (_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[7] = *(cin+7);
   cout[6] = *(cin+6);
   cout[5] = *(cin+5);
@@ -264,15 +268,6 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-#ifdef _WIN32
-	int result;
-   result = _setmode(_fileno(fp), 0x8000);
-   if( result == -1 ){
-      perror( "Cannot set mode" );
-      errNum = WLZ_ERR_READ_EOF;
-   }
-#endif
-
 #ifdef _OPENMP
   #pragma omp critical
   {
@@ -281,6 +276,12 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
+#ifdef _WIN32
+  else if(_setmode(_fileno(fp), 0x8000) == -1)
+  {
+    errNum = WLZ_ERR_READ_EOF;
+  }
+#endif
   else if(obj == NULL)
   {
     if(putc((unsigned int )obj, fp) == EOF)

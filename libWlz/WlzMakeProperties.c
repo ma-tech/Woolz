@@ -263,7 +263,7 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
   WlzEMAPProperty	*rtnProp=NULL;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-  #ifndef _WIN32
+#ifndef _WIN32
   struct passwd		*pwdStruct;
 
   /* check the calling parameters */
@@ -337,7 +337,7 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
     *dstErr = errNum;
   }
 #else
-	errNum = WLZ_ERR_UNIMPLEMENTED;
+  errNum = WLZ_ERR_UNIMPLEMENTED;
 #endif
   return rtnProp;
 }
@@ -374,7 +374,7 @@ WlzErrorNum WlzChangeEMAPProperty(
 {
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-  #ifndef _WIN32
+#ifndef _WIN32
    struct passwd		*pwdStruct;
   int			modifiedFlg=0;
 
@@ -480,8 +480,9 @@ WlzErrorNum WlzChangeEMAPProperty(
     }
   }
 
+#else
+  errNum = WLZ_ERR_UNIMPLEMENTED;
 #endif
-
   return errNum;
 }
 

@@ -23,6 +23,10 @@
 #include <string.h>
 #include <Wlz.h>
 
+#ifdef defined(_WIN32) && !defined(__x86)
+#define __x86
+#endif
+
 static WlzIntervalDomain 	*WlzReadIntervalDomain(
 				  FILE *fp,
 				  WlzErrorNum *);
@@ -152,7 +156,7 @@ static int 	getword(FILE *fp)
   cout[2] = cin[1];
   cout[3] = cin[0];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined (_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[0] = cin[0];
   cout[1] = cin[1];
   cout[2] = cin[2];
@@ -177,7 +181,7 @@ static int 	getshort(FILE *fp)
   cout[0] = cin[1];
   cout[1] = cin[0];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined (_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[0] = cin[0];
   cout[1] = cin[1];
 #endif /* __x86 || __alpha */
@@ -203,7 +207,7 @@ fread(cin,sizeof(char),4,fp);
   cout[2] = cin[3];
   cout[3] = cin[2];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined (_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[3] = cin[1] - 1;
   cout[2] = cin[0];
   cout[1] = cin[3];
@@ -242,7 +246,7 @@ static double 	getdouble(FILE *fp)
   cout[6] = cin[1];
   cout[7] = cin[0];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha) || defined(_WIN32)
+#if defined (__x86) || defined (__alpha)
   cout[7] = cin[7];
   cout[6] = cin[6];
   cout[5] = cin[5];
@@ -275,27 +279,26 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   WlzErrorNum		errNum=WLZ_ERR_NONE;
   char buf[1];
 
-#ifdef _WIN32
- int result;
-   result = _setmode(_fileno(fp), 0x8000);
-   if( result == -1 ){
-      perror( "Cannot set mode" );
-      errNum = WLZ_ERR_READ_EOF;
-  }
-#endif
-
 #ifdef _OPENMP
   #pragma omp critical
   {
 #endif
   /* check the stream pointer */
-  if( fp == NULL ){
+  if( fp == NULL )
+  {
     errNum = WLZ_ERR_PARAM_NULL;
   }
-  else if( feof(fp) != 0 ){
+#ifdef _WIN32
+  else if(_setmode(_fileno(fp), 0x8000) == -1)
+  {
     errNum = WLZ_ERR_READ_EOF;
   }
-  else if (errNum == WLZ_ERR_NONE){
+#endif
+  else if( feof(fp) != 0 )
+  {
+    errNum = WLZ_ERR_READ_EOF;
+  }
+  if(errNum == WLZ_ERR_NONE){
     /* initialise the obj pointer and domain and values unions */
     obj = NULL;
     domain.core = NULL;
