@@ -25,6 +25,7 @@
 * added by J. Rao 10/09/2001 WlzMeshTransform3D
 * added by J. Rao 10/09/2001 WlzMeshElem3D
 * added by J. Rao 10/09/2001 WlzMeshNode3D
+* modified by GFeng 03/10/2003 WlzFnType
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -2546,12 +2547,15 @@ typedef struct _WlzRsvFilter
 typedef enum _WlzFnType
 {
   WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
+  WLZ_FN_BASIS_3DGAUSS,
   WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
+  WLZ_FN_BASIS_3DPOLY,
   WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
   WLZ_FN_BASIS_3DMQ,			/*!< Multiquadric basis function */
   WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
-  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
-  					     function */
+  WLZ_FN_BASIS_3DTPS,
+  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis function */
+  WLZ_FN_BASIS_3DCONF_POLY,
   WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
   WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
                                              values. */
