@@ -102,7 +102,7 @@ static unsigned int 		WlzMeshTransFillBlockLnNod(
 				  unsigned int);
 static WlzErrorNum 		WlzMeshRemoveObjBox(
 				  WlzMeshTransform *),
-				WlzMeshBoundPolyAdd(
+				WlzMeshBoundCvPolyAdd(
 				  WlzMeshTransform *,
 				  WlzObject *,
 				  double,
@@ -150,11 +150,6 @@ static WlzMeshTransform 	*WlzMeshFromObjBlock(
 				  WlzObject *,
 				  unsigned int,
 			          WlzErrorNum *),
-				*WlzMeshFromObjBox(
-				  WlzObject *,
-				  WlzIBox2 *,
-				  int,
-				  WlzErrorNum *),
         			*WlzMeshFromObjGrad(
 				  WlzObject *,
 				  unsigned int,
@@ -1318,7 +1313,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 * 					any possible node.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzMeshTransform *WlzMeshFromObjBox(WlzObject *srcObj, WlzIBox2 *dstBox,
+WlzMeshTransform 	*WlzMeshFromObjBox(WlzObject *srcObj, WlzIBox2 *dstBox,
 					   int boxDilation,
 					   WlzErrorNum *dstErr)
 {
@@ -1454,9 +1449,9 @@ static WlzErrorNum	WlzMeshRemoveObjBox(WlzMeshTransform *mesh)
 * \param	minDist			Minimum distance between mesh nodes.
 * \param	maxDist			Maximum distance between mesh nodes.
 */
-static WlzErrorNum WlzMeshBoundPolyAdd(WlzMeshTransform *mesh,
-				       WlzObject *polyObj,
-				       double minDist, double maxDist)
+static WlzErrorNum WlzMeshBoundCvPolyAdd(WlzMeshTransform *mesh,
+				         WlzObject *polyObj,
+				         double minDist, double maxDist)
 {
   WlzDVertex2	scaleVx;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1866,7 +1861,7 @@ static WlzMeshTransform *WlzMeshFromObjGrad(WlzObject *srcObj,
       /* Add nodes along the original object's convex hull. */
       if(cvPolyObj && (cvPolyObj->type == WLZ_2D_POLYGON))
       {
-	errNum = WlzMeshBoundPolyAdd(mesh, cvPolyObj, minDist, maxDist);
+	errNum = WlzMeshBoundCvPolyAdd(mesh, cvPolyObj, minDist, maxDist);
       }
     }
     if(errNum == WLZ_ERR_NONE)
