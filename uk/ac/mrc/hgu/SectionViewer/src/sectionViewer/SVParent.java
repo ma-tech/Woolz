@@ -345,7 +345,8 @@ public class SVParent
     int pathlen = _anatBuilder._pathLengthToAnatomy;
     String fullName = thisDir.getAbsolutePath();
     String anatName = fullName.substring(pathlen);
-
+  
+    //System.out.println("anatName = "+anatName);
 
     try {
       updateAnatomyArr(combineWlzObjs(files), capitalise(anatName));
@@ -462,6 +463,9 @@ public class SVParent
        endBit = buf.substring(lastSlash);
        buf.replace(lastSlash, buf.length(), endBit.toUpperCase());
        ret = buf.toString();
+    } else if(name.equals("embryo") ||
+              name.equals("extraembryonic_component")) {
+       ret = name.toUpperCase();
     }
 
     return ret;
