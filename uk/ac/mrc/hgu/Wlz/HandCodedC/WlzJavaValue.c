@@ -633,7 +633,7 @@ void		WlzJavaValueSet(JNIEnv *jEnv, jobjectArray dstJObj,
       break;
     case WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1:
       newJObj = WlzJavaValueWrap(jEnv, "WlzDVertex3", "WlzDVertex3", "jobject",
-      				 1, WLZ_JPM_KEY_WLZ_IVERTEX2, val);
+      				 1, WLZ_JPM_KEY_WLZ_DVERTEX3, val);
       (*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
       break;
     case WLZ_JPM_KEY_WLZ_IBOX2_PTR1:
