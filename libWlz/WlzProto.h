@@ -2249,31 +2249,6 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 				  int expand,
 				  WlzErrorNum *dstErr);
 /************************************************************************
-* WlzJavaUtils.c							*
-************************************************************************/
-extern int 		        WlzObjGetType(WlzObject *obj);
-extern int			WlzGetIntervalDomainLine1(WlzObject *obj);
-extern int			WlzGetIntervalDomainLastLn(WlzObject *obj);
-extern int			WlzGetIntervalDomainKol1(WlzObject *obj);
-extern int			WlzGetIntervalDomainLastKl(WlzObject *obj);
-extern int			WlzGetPlaneDomainPlane1(WlzObject *obj);
-extern int			WlzGetPlaneDomainLastPl(WlzObject *obj);
-extern int			WlzGetPlaneDomainLine1(WlzObject *obj);
-extern int			WlzGetPlaneDomainLastLn(WlzObject *obj);
-extern int			WlzGetPlaneDomainKol1(WlzObject *obj);
-extern int			WlzGetPlaneDomainLastKl(WlzObject *obj);
-extern WlzObject	       *WlzSetGreyValues(WlzObject *domainObj,
-						WlzObject *valuesObj,
-						WlzErrorNum *dstErr);
-extern WlzAffineTransform      *WlzGetAffineTransform(
-						WlzThreeDViewStruct *viewStr,
-						WlzErrorNum *dstErr);
-extern void                     WlzGetTransformMatrix(
-                                                WlzIVertex2 *dstSizeArrayDat,
-	                                        double  ***dstArrayDat,
-			                        WlzAffineTransform *trans,
-						WlzErrorNum *dstErr);
-/************************************************************************
 * "THE BEAST" - WlzLabel.c						*
 ************************************************************************/
 extern WlzErrorNum 		WlzLabel(
