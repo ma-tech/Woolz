@@ -1114,6 +1114,14 @@ extern WlzErrorNum		WlzCompThreshold(
 				  WlzObject *histObj,
 				  WlzCompThreshType method,
 				  double extraFrac);
+extern WlzErrorNum		WlzCompThresholdVT(
+				  WlzObject *hObj,
+				  WlzCompThreshType method,
+				  double param0,
+				  double param1,
+				  double extraFrac,
+				  WlzPixelV *dstTV,
+				  WlzThresholdType *dstTType);
 
 /************************************************************************
 * WlzConstruct3D.c
@@ -1383,6 +1391,16 @@ extern WlzErrorNum     		WlzDistMetricDirVertex3D(
 				  double *dstDistM,
 				  double *dstDistN,
 				  double *dstDistI);
+
+
+/************************************************************************
+* WlzDistTransform.c                                                    *
+************************************************************************/
+extern WlzObject 		*DistanceTransform(
+				  WlzObject *forObj,
+				  WlzObject *refObj,
+				  WlzDistanceType dFn,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzDomainFill.c							*
@@ -2444,6 +2462,9 @@ extern WlzObject                *WlzLBTMakeNodeIndexObj2D(
                                   WlzLBTDomain2D *lDom,
                                   WlzIntervalDomain *iDom,
                                   WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzLBTIndexObjSetAllNodes2D(
+				  WlzLBTDomain2D *lDom,
+				  WlzObject *iObj);
 extern WlzErrorNum              WlzFreeLBTDomain2D(
                                   WlzLBTDomain2D *lDom);
 extern WlzErrorNum              WlzLBTTestOutputNodesTxt(
@@ -2453,8 +2474,13 @@ extern int                      WlzLBTNodeSz2D(
                                   WlzLBTNode2D *nod);
 extern int                    	WlzLBTNodeLogSz2D(
                                   WlzLBTNode2D *nod);
-extern void                       WlzLBTPosToKey2D(
-                                WlzIVertex2 pos,
+extern int			WlzLBTCountNodNbrDir2D(
+				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN,
+				  WlzDirection dir);
+extern void                     WlzLBTPosToKey2D(
+                                  WlzIVertex2 pos,
                                   unsigned *keys);
 extern void                     WlzLBTGetKeyDigits2D(
                                   unsigned *keys,
@@ -2465,6 +2491,12 @@ extern void                     WlzLBTKeyToPos2I(
 extern void                     WlzLBTKeyToBox2I(
                                   unsigned *key,
                                   WlzIBox2 *box);
+extern void			WlzLBTClassifyNode2D(
+				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN,
+				  WlzLBTNodeClass2D *cls,
+				  int *dstRot);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -2755,6 +2787,115 @@ extern double          		WlzMatchICPWeightMatches(
 				  double wVx,
 				  double wNr,
 				  void *data);
+#endif /* WLZ_EXT_BIND */
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzMeshGen.c								*
+************************************************************************/
+extern WlzCMesh2D               *WlzCMeshNew2D(
+                                  WlzErrorNum *dstErr);
+extern WlzCMesh2D                     *WlzCMeshFromBalLBTDom2D(
+                                  WlzLBTDomain2D *lDom,
+                                  WlzObject *iObj,
+                                  WlzErrorNum *dstErr);
+extern WlzCMesh2D    		*WlzCMeshFromObj2D(
+                                  WlzObject *obj,
+                                  double minElmSz,
+                                  double maxElmSz,
+                                  WlzErrorNum *dstErr);
+extern WlzCMesh3D               *WlzCMeshFromObj3D(
+                                  WlzObject *obj,
+                                  WlzErrorNum *dstErr);
+extern WlzCMesh3D               *WlzCMeshNew3D(
+                                  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzCMeshAddNewNodCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshAddNewElmCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshAddDelNodCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshAddDelElmCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshRemNewNodCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshRemNewElmCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshRemDelNodCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzErrorNum		WlzCMeshRemDelElmCb2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshCbFn fn,
+				  void *data);
+extern WlzCMeshNod2D            *WlzCMeshNewNod2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzDVertex2 pos,
+                                  WlzErrorNum *dstErr);
+extern WlzCMeshNod2D            *WlzCMeshMatchNod2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzDVertex2 pos);
+extern WlzCMeshNod3D            *WlzCMeshNewNod3D(
+                                  WlzCMesh3D *mesh,
+                                  WlzDVertex3 pos,
+                                  WlzErrorNum *dstErr);
+extern WlzCMeshEdg2D            *WlzCMeshNodesFindCommonEdg2D(
+                                  WlzCMeshNod2D *nod0,
+                                  WlzCMeshNod2D *nod1);
+extern WlzCMeshElm2D            *WlzCMeshNewElm2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzCMeshNod2D *nod0,
+                                  WlzCMeshNod2D *nod1,
+                                  WlzCMeshNod2D *nod2,
+                                  WlzErrorNum *dstErr);
+extern WlzErrorNum              WlzCMeshFree2D(
+                                  WlzCMesh2D *mesh);
+extern WlzErrorNum              WlzCMeshFree3D(
+                                  WlzCMesh3D *mesh);
+extern WlzErrorNum              WlzCMeshVerify2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzCMeshElm2D **dstElm);
+extern WlzErrorNum              WlzCMeshAffineTransformNodes2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzAffineTransform *tr);
+extern void                     WlzCMeshNodFree2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzCMeshNod2D *nod);
+extern void                     WlzCMeshNodFree3D(
+                                  WlzCMesh3D *mesh,
+                                  WlzCMeshNod3D *nod);
+extern void                     WlzCMeshElmFree2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzCMeshElm2D *elm);
+extern void                     WlzCMeshElmFree3D(
+                                  WlzCMesh3D *mesh,
+                                  WlzCMeshElm3D *elm);
+extern int                      WlzCMeshMatchNNod2D(
+                                  WlzCMesh2D *mesh,
+                                  int nNod,
+                                  WlzDVertex2 *nPos,
+                                  WlzCMeshNod2D **mNod);
+extern int                      WlzCMeshLocateNod2D(
+                                  WlzCMesh2D *mesh,
+                                  WlzDVertex2 nPos,
+                                  WlzIVertex2 *dstGPos,
+                                  WlzCMeshNod2D **dstPrev,
+                                  WlzCMeshNod2D **dstNod);
+extern double                   WlzCMeshElmSnArea22D(
+                                  WlzCMeshElm2D *elm);
 #endif /* WLZ_EXT_BIND */
 
 #ifndef WLZ_EXT_BIND
@@ -3344,6 +3485,18 @@ extern WlzErrorNum     		WlzSnapFit(
 				   double minTDist,
 				   double minSDist);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzSplitObj.c        							*
+************************************************************************/
+extern WlzErrorNum		WlzSplitObj(
+				  WlzObject *refObj,
+				  WlzObject *ppObj,
+				  int bWidth,
+				  double bgdFrac,
+				  int nReqComp,
+				  int *dstSizeArrayComp,
+				  WlzObject ***dstArrayComp);
 
 /************************************************************************
 * WlzStdStructElements.c						*
