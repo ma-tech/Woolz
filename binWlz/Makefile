@@ -29,6 +29,7 @@ EXECUTABLES		= \
 			WlzBasisFnTransformObj \
 			WlzBoundaryToObj \
 			WlzBoundingBox \
+			WlzCannyDeriche \
 			WlzCentreOfMass \
 			WlzClipObjToBox \
 			WlzCompThresh \
@@ -68,6 +69,7 @@ EXECUTABLES		= \
 			WlzPolarSample \
 			WlzPolygonToObj \
 			WlzPrinicipalAngle \
+			WlzRsvFilterObj \
 			WlzSampleObj \
 			WlzSelect1InN \
 			WlzSetBackground \
@@ -94,6 +96,7 @@ CSOURCES		= \
 			WlzAutoTrackUpDown.c \
 			WlzBoundaryToObj.c \
 			WlzBoundingBox.c \
+			WlzCannyDeriche.c \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
 			WlzCompound.c \
@@ -135,6 +138,7 @@ CSOURCES		= \
 			WlzPolarSample.c \
 			WlzPolygonToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
 			WlzSelect1InN.c \
 			WlzSetBackground.c \
