@@ -56,7 +56,7 @@ WlzErrorNum WlzGreySetRange(
   WlzPixelV	Min,
   WlzPixelV	Max)
 {
-  double		factor;
+  double		factor, val;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
   WlzGreyP		gptr;
@@ -233,28 +233,36 @@ WlzErrorNum WlzGreySetRange(
 	switch (gwsp.pixeltype) {
 
 	case WLZ_GREY_INT:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
-	    *gptr.inp = (int) (factor * (*gptr.inp - min.v.dbv) + Min.v.dbv);
+	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
+            val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
+	    *gptr.inp = WLZ_NINT(val);
+          }
 	  break;
 
 	case WLZ_GREY_SHORT:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
-	    *gptr.shp = (short) (factor * (*gptr.shp - min.v.dbv) + Min.v.dbv);
+	  for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
+            val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
+	    *gptr.shp = WLZ_NINT(val);
+          }
 	  break;
 
 	case WLZ_GREY_UBYTE:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
-	    *gptr.ubp = (UBYTE) (factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv);
+	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
+            val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
+	    *gptr.ubp = WLZ_NINT(val);
+          }
 	  break;
 
 	case WLZ_GREY_FLOAT:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
+	  for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
 	    *gptr.flp = (float) (factor * (*gptr.flp - min.v.dbv) + Min.v.dbv);
+          }
 	  break;
 
 	case WLZ_GREY_DOUBLE:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.dbp++)
+	  for (i=0; i<iwsp.colrmn; i++, gptr.dbp++){
 	    *gptr.dbp = (double) (factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv);
+          }
 	  break;
 
 	default:
