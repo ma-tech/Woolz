@@ -16,6 +16,9 @@
 *		WLZ_RSVFILTER_TEST_3D. See code below.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 20-07-00 bill Fixed purify UMR's (uninitialized memory reads) in
+*		WlzRsvFilterFilterBufYF() and WlzRsvFilterFilterBufZF().
+* 05-07-00 bill Fixed bug in WlzRsvFilterFreeFilter().
 * 05-06-2000 bill Removed unused variables.
 * 02-02-2k bill	Added WlzRsvFilterBuffer().
 * 06-09-99 bill Object type error was not returned from WlzRsvFilterObj().
@@ -59,7 +62,7 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 ************************************************************************/
 void		WlzRsvFilterFreeFilter(WlzRsvFilter *ftr)
 {
-  if(ftr == NULL)
+  if(ftr != NULL)
   {
     AlcFree(ftr);
   }
@@ -506,7 +509,6 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
   int		cnt0,
 		cnt1,
 		kol,
-		in1,
 		iBM,
 		iBO,
 		iBS,
@@ -588,26 +590,27 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
       }
       else
       {
-	/* These data may be read from uninitialized memory if they lie
-	 * outside an interval. BUT if they lie outside an interval
-	 * their values will not be used.  */
-	d0 = *dP0++;
-	d1 = *dP1++;
-	d2 = *dP2++;
+	d0 = *dP0;
 	f0 = *fP0;
-	f1 = *fP1++;
-	f2 = *fP2;
 	iBM = 1 << iBS;
-	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
 	{
+	  d1 = d0;
 	  d2 = d0;
+	  f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
 	  f2 = ((a2 * a3) * d2) / (b0 + b1 + 1);
-	  if(in1 == 0)
-	  {
-	    d1 = d0;
-	    f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
-	  }
 	}
+	else
+	{
+	  d1 = *dP1;
+	  d2 = *dP2;
+	  f1 = *fP1;
+	  f2 = *fP2;
+	}
+	++dP0;
+	++dP1;
+	++dP2;
+	++fP1;
 	*fP0 = (a2 * d1) + (a3 * d2) - (b0 * f1) - (b1 * f2);
 	*fP2++ = c * (f0 + *fP0++);
 	--cnt0;
@@ -636,23 +639,24 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
       }
       else
       {
-	/* These data may be read from uninitialized memory if they lie
-	 * outside an interval. BUT if they lie outside an interval
-	 * their values will not be used.  */
-	d0 = *dP0++;
-	d1 = *dP1++;
-	f1 = *fP1++;
-	f2 = *fP2++;
+	d0 = *dP0;
 	iBM = 1 << iBS;
-	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
 	{
+	  d1 = d0;
+	  f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
 	  f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
-	  if(in1)
-	  {
-	    d1 = d0;
-	    f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
-	  }
 	}
+	else
+	{
+	  d1 = *dP1;
+	  f1 = *fP1;
+	  f2 = *fP2;
+	}
+	++dP0;
+	++dP1;
+	++fP1;
+	++fP2;
 	*fP0++ = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
 	--cnt0;
 	++kol;
@@ -691,7 +695,6 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 		cnt1,
 		kol,
 		lin,
-		in1,
 		iBM,
 		iBO,
 		iBS,
@@ -774,26 +777,27 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
       }
       else
       {
-	/* These data may be read from uninitialized memory if they lie
-	 * outside an interval. BUT if they lie outside an interval
-	 * their values will not be used.  */
-	d0 = *dP0++;
-	d1 = *dP1++;
-	d2 = *dP2++;
+	d0 = *dP0;
 	f0 = *fP0;
-	f1 = *fP1++;
-	f2 = *fP2;
 	iBM = 1 << iBS;
-	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
 	{
+	  d1 = d0;
 	  d2 = d0;
+	  f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
 	  f2 = ((a2 * a3) * d2) / (b0 + b1 + 1);
-	  if(in1 == 0)
-	  {
-	    d1 = d0;
-	    f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
-	  }
 	}
+	else
+	{
+	  f1 = *fP1;
+	  f2 = *fP2;
+	  d1 = *dP1;
+	  d2 = *dP2;
+	}
+	++dP0;
+	++dP1;
+	++dP2;
+	++fP1;
 	*fP0 = (a2 * d1) + (a3 * d2) - (b0 * f1) - (b1 * f2);
 	*fP2++ = c * (f0 + *fP0++);
 	--cnt0;
@@ -822,23 +826,24 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
       }
       else
       {
-	/* These data may be read from uninitialized memory if they lie
-	 * outside an interval. BUT if they lie outside an interval
-	 * their values will not be used.  */
-	d0 = *dP0++;
-	d1 = *dP1++;
-	f1 = *fP1++;
-	f2 = *fP2++;
+	d0 = *dP0;
 	iBM = 1 << iBS;
-	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
 	{
+	  d1 = d0;
+	  f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
 	  f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
-	  if(in1)
-	  {
-	    d1 = d0;
-	    f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
-	  }
 	}
+	else
+	{
+	  d1 = *dP1;
+	  f1 = *fP1;
+	  f2 = *fP2;
+	}
+	++dP0;
+	++dP1;
+	++fP1;
+	++fP2;
 	*fP0++ = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
 	--cnt0;
 	++kol;

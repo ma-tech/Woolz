@@ -31,6 +31,7 @@ CSOURCES		= \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
 			  AlgDebug.c \
+			  AlgHeapSort.c \
 			  AlgGamma.c \
 			  AlgFourier.c \
 			  AlgLinearFit.c \

@@ -15,6 +15,7 @@
 *		Human Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 12-07-00 bill	Add AlgHeapSort(), AlgHeapSortIdx() and AlgHeapElmSwap().
 * 11-05-00 bill	Add AlgGammaLog(), AlgGammaP(), AlgLinearFit1D(),
 *		AlgLinearFitIdx1D(), AlgRange1D(), AlgRangeIdx1D()
 *		AlgBitSetCount() and AlgBitSetPositions().
@@ -166,6 +167,22 @@ extern AlgError		AlgLinearFitIdx1D(
 			  double *dstSigA,
 			  double *dstSigB,
 			  double *dstQ);
+
+/* From AlgHeapSort.c */
+extern AlgError		AlgHeapSort(
+			  void *data,
+			  unsigned nElm,
+			  unsigned elmSz,
+			  int (*cmpFn)(void *, void *));
+extern AlgError		AlgHeapSortIdx(
+			  void *data,
+			  int *idx,
+			  unsigned nElm,
+			  int (*cmpFn)(void *, int *, int, int));
+extern void		AlgHeapElmSwap(
+			  void *elm0,
+			  void *elm1,
+			  int cnt);
 
 /* From AlgMatrixGauss.c */
 extern AlgError		AlgMatrixGaussSolve(
