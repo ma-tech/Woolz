@@ -122,6 +122,10 @@ CSOURCES		= \
 			WlzNMSuppress.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c  \
+			WlzPolyDecimate.c \
+			WlzPolyEquispace.c \
+			WlzPolyReverse.c \
+			WlzPolySmooth.c \
 			WlzPolyToObj.c \
 			WlzPrinicipalAngle.c \
 			WlzRaster.c \
@@ -174,6 +178,15 @@ INCLUDES_PUB		= \
 # List of all header files that are required by this archive or these
 # executables (modify as required).
 INCLUDES_PRV		=
+
+# Source man documentation directory
+SRC_MAN_DIR		= man
+
+# Source html documentation directory
+SRC_WWW_DIR		= html
+
+# Destination html documentation directory
+DST_WWW_DIR		= $(HGU_WWW_DIR)/src/Core/libWlz
 
 # List of all troff sources for manual pages, these should have the appropriate
 # extension (eg cat.1) (modify as required).
@@ -292,15 +305,15 @@ ANSI_CONFORMANCE	=
 endif
 
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages
+all:			archive executables includes documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 
 # Target which installs everything after it has been built (should not need
 # modifying).
-install:		install_includes install_manpages install_archive \
-			install_executables
+install:		install_includes install_archive \
+			install_executables install_documentation
 
 # Target which installs an archive (should not need modifying).
 install_archive:	$(ARCHIVE)
@@ -324,13 +337,30 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the manual pages in the appropriate directories,
-# watch out for the tabs in the sed regexp's (should not need modifying).
-install_manpages:	$(MANPAGES)
+# Target which installs the documentation in the appropriate directories,
+# (should not need modifying).
+install_documentation:	documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			$(install_manpages)
+			$(install_www)
+
+# Target which installs the man pages in the appropriate directories,
+# (should not need modifying).
+install_manpages:	documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			install_manpages
+
+# Target which installs the html pages in the appropriate directories,
+# (should not need modifying).
+install_www:		documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			install_www
 
 # Target for compressed tar files suitable for distribution (should not need
 # modifying).
@@ -365,8 +395,9 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 clean:			
 			-$(RM) core $(OBJECTS) $(DLLOBJECTS) $(EXECUTABLES) \
 			$(ARCHIVE) $(SOARCHIVE) $(DLLARCHIVE) $(DLLBASE) \
-			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) *~
-
+			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) \
+			doxygen.tag *~
+			-$(RMDIR) man html
 
 # Target to clean up everything that might not be wanted (should not need
 # modifying).
@@ -375,6 +406,12 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
+
+# Use doxygen to make the documentation (should not need modifying).
+documentation:		doxygen.tag
+
+doxygen.tag:		$(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			doxygen
 
 # making the tag file
 tags:			 $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)

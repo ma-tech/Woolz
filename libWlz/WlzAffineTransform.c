@@ -721,7 +721,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 					     WlzAffineTransform *trans,
 					     WlzInterpolationType interp)
 {
-  int		count;
+  int		count, indx;
   double	tD0,
   		tD1,
 		dx,
@@ -734,6 +734,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		cy,
 		lxyy,
 		lyyy;
+  double	gTmp[4];
   WlzIVertex2	posI;
   WlzGreyType	newGreyType;
   WlzPixelV	bkdV;
@@ -869,9 +870,54 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	    ++(posI.vtX);
 	  }
 	  break;
-	default:
-	  errNum = WLZ_ERR_INTERPOLATION_TYPE;
+      case WLZ_INTERPOLATION_CLASSIFY_1:
+	dx = lxyy + (cx * posI.vtX);
+	dy = lyyy + (sy * posI.vtX);
+	WlzGreyValueGetCon(gVWSp, 0, dy, dy);
+	tD0 = dx - floor(dx);
+	tD1 = dy - floor(dy);
+	switch(gWSp.pixeltype)
+	{
+	case WLZ_GREY_INT:
+	  for(indx=0; indx < 4; indx++){
+	    gTmp[indx] = (gVWSp->gVal[indx]).inv;
+	  }
+	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	  *(gWSp.u_grintptr.inp)++ = WLZ_NINT(tD0);
 	  break;
+	case WLZ_GREY_SHORT:
+	  for(indx=0; indx < 4; indx++){
+	    gTmp[indx] = (gVWSp->gVal[indx]).shv;
+	  }
+	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	  *(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  for(indx=0; indx < 4; indx++){
+	    gTmp[indx] = (gVWSp->gVal[indx]).ubv;
+	  }
+	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	  WLZ_CLAMP(tD0, 0.0, 255.0);
+	  *(gWSp.u_grintptr.ubp)++ = WLZ_NINT(tD0);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  for(indx=0; indx < 4; indx++){
+	    gTmp[indx] = (gVWSp->gVal[indx]).flv;
+	  }
+	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	  *(gWSp.u_grintptr.flp)++ = tD0;
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(indx=0; indx < 4; indx++){
+	    gTmp[indx] = (gVWSp->gVal[indx]).dbv;
+	  }
+	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	  *(gWSp.u_grintptr.dbp)++ = tD0;
+	  break;
+	}
+      default:
+	errNum = WLZ_ERR_INTERPOLATION_TYPE;
+	break;
       }
     }
     if(errNum == WLZ_ERR_EOO)	        /* Reset error from end of intervals */ 

@@ -716,8 +716,9 @@ static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
 					       WlzErrorNum *dstErr)
 {
   WlzDomain     dumDom;
-  WlzObject	*polyObj;
   WlzBoundList  *dstBound = NULL;
+  WlzObject	*polyobj;
+  WlzPolygonDomain	*pgdm1, *pgdm2;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if((dstBound = (WlzBoundList *)AlcCalloc(sizeof(WlzBoundList), 1)) == NULL)
@@ -726,38 +727,47 @@ static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
   }
   else
   {
+    /* wrap set to 1 for closed lines by WlzPolyDecimate */
     dstBound->type = srcBound->type;
-    dstBound->wrap = srcBound->wrap;
+    dstBound->wrap = srcBound->wrap?1:0;
+
     /* Transform the polygon */
-    polyObj = WlzPolyTo8Polygon(srcBound->poly, 1, &errNum);
+    if( polyobj = WlzPolyTo8Polygon(srcBound->poly, srcBound->wrap, &errNum) ){
+      if( pgdm1 = WlzMeshTransformPoly(polyobj->domain.poly, mesh,&errNum) ){
+	if( pgdm2 = WlzPolyDecimate(pgdm1, srcBound->wrap, 0.75, &errNum) ){
+	  dstBound->poly = WlzAssignPolygonDomain(pgdm2, NULL);
+	}
+	else {
+	  dstBound->poly = NULL;
+	}
+	WlzFreePolyDmn(pgdm1);
+      }
+      WlzFreeObj(polyobj);
+    }
+
+    /* transform the remaining boundlists */
     if(errNum == WLZ_ERR_NONE)
     {
-      if(((dstBound->poly = WlzMeshTransformPoly(polyObj->domain.poly, mesh,
-    					         &errNum)) != NULL) &&
-         (errNum == WLZ_ERR_NONE))
+      /* Transform next */
+      if(srcBound->next)
       {
-	/* Transform next */
-	if(srcBound->next)
+	if((dumDom.b = WlzMeshTransformBoundList(srcBound->next, mesh,
+						 &errNum)) != NULL)
 	{
-	  if((dumDom.b = WlzMeshTransformBoundList(srcBound->next, mesh,
-						   &errNum)) != NULL)
-	  {
-	    (void )WlzAssignDomain(dumDom, &errNum);
-	    dstBound->next = dumDom.b;
-	  }
-	}
-	/* Transform down */
-	if(srcBound->down && (errNum == WLZ_ERR_NONE))
-	{
-	  if((dumDom.b = WlzMeshTransformBoundList(srcBound->down, mesh,
-						   &errNum)) != NULL)
-	  {
-	    (void )WlzAssignDomain(dumDom, &errNum);
-	    dstBound->down = dumDom.b;
-	  }
+	  (void )WlzAssignDomain(dumDom, &errNum);
+	  dstBound->next = dumDom.b;
 	}
       }
-      WlzFreeObj(polyObj);
+      /* Transform down */
+      if(srcBound->down && (errNum == WLZ_ERR_NONE))
+      {
+	if((dumDom.b = WlzMeshTransformBoundList(srcBound->down, mesh,
+						 &errNum)) != NULL)
+	{
+	  (void )WlzAssignDomain(dumDom, &errNum);
+	  dstBound->down = dumDom.b;
+	}
+      }
     }
   }
   if(dstErr)
@@ -766,6 +776,58 @@ static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
   }
   return(dstBound);
 }
+
+double WlzClassValCon4(
+  double	*g,
+  double	p,
+  double	q)
+{
+  double	classVal[4], classProb[4], maxProb;
+  int		i, j, nClass;
+
+  /* initialise probability matrix */
+  for(i=0; i < 4; i++){classProb[i] = 0.0;}
+
+  /* determine classes and probabilities */
+  nClass = 0;
+  for(i=0; i < 4; i++){
+    for(j=0; j < nClass; j++){
+      if( g[i] == classVal[j] ){
+	break;
+      }
+    }
+    if( j == nClass ){
+      classVal[j] = g[i];
+      nClass++;
+    }
+    switch( i ){
+    case 0:
+      classProb[j] += (1-p)*(1-q);
+      break;
+    case 1:
+      classProb[j] += p*(1-q);
+      break;
+    case 2:
+      classProb[j] += (1-p)*q;
+      break;
+    case 3:
+      classProb[j] += p*q;
+      break;
+    }
+  }
+
+  /* find max probability */
+  maxProb = 0.0;
+  for(i=0; i < nClass; i++){
+    if( classProb[i] > maxProb ){
+      maxProb = classProb[i];
+      j = i;
+    }
+  }
+
+  return classVal[j];
+}
+  
 
 /************************************************************************
 * Function:     WlzMeshTransformValues2D				*
@@ -786,7 +848,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 					    WlzMeshTransform *mesh,
 					    WlzInterpolationType interp)
 {
-  int		mItvIdx;
+  int		mItvIdx, indx;
   double	tD0,
   		tD1,
 		tD2,
@@ -795,6 +857,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		trXYC,
 		trYX,
 		trYYC;
+  double	gTmp[4];
   WlzIVertex2	dPosI,
   		sPosI;
   WlzDVertex2	sPosD;
@@ -971,6 +1034,53 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 			((gVWSp->gVal[1]).dbv * tD0 * tD3) +
 			((gVWSp->gVal[2]).dbv * tD2 * tD1) +
 			((gVWSp->gVal[3]).dbv * tD0 * tD1);
+		  *(dGP.dbp)++ = tD0;
+		  break;
+		default:
+		  errNum = WLZ_ERR_GREY_TYPE;
+		  break;
+	      }
+	      break;
+	    case WLZ_INTERPOLATION_CLASSIFY_1:
+	      WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+	      tD0 = sPosD.vtX - floor(sPosD.vtX);
+	      tD1 = sPosD.vtY - floor(sPosD.vtY);
+	      switch(gWSp.pixeltype)
+	      {
+		case WLZ_GREY_INT:
+		  for(indx=0; indx < 4; indx++){
+		    gTmp[indx] = (gVWSp->gVal[indx]).inv;
+		  }
+		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+		  *(dGP.inp)++ = WLZ_NINT(tD0);
+		  break;
+		case WLZ_GREY_SHORT:
+		  for(indx=0; indx < 4; indx++){
+		    gTmp[indx] = (gVWSp->gVal[indx]).shv;
+		  }
+		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+		  *(dGP.shp)++ = WLZ_NINT(tD0);
+		  break;
+		case WLZ_GREY_UBYTE:
+		  for(indx=0; indx < 4; indx++){
+		    gTmp[indx] = (gVWSp->gVal[indx]).ubv;
+		  }
+		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+		  WLZ_CLAMP(tD0, 0.0, 255.0);
+		  *(dGP.ubp)++ = WLZ_NINT(tD0);
+		  break;
+		case WLZ_GREY_FLOAT:
+		  for(indx=0; indx < 4; indx++){
+		    gTmp[indx] = (gVWSp->gVal[indx]).flv;
+		  }
+		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+		  *(dGP.flp)++ = tD0;
+		  break;
+		case WLZ_GREY_DOUBLE:
+		  for(indx=0; indx < 4; indx++){
+		    gTmp[indx] = (gVWSp->gVal[indx]).dbv;
+		  }
+		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 		  *(dGP.dbp)++ = tD0;
 		  break;
 		default:

@@ -1,33 +1,34 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzHasIntersect.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Fri Dec  1 09:07:15 2000				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : determine if two objects have an intersection. Null	*
-*		object pointers are an error.				*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         WlzHasIntersect.c
+* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Dec  1 09:07:15 2000
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Determine if two objects have an intersection. Null object pointers are an error.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
 
 #include <stdlib.h>
 #include <Wlz.h>
+
+
+/*!
+* \ingroup     Wlz
+* \defgroup    WlzDomainUtils
+*/
 
 static int WlzIntervalHasIntersect(
   WlzInterval	*intvl1,
@@ -79,6 +80,20 @@ static int WlzIntervalLineHasIntersect(
 }
 
 
+/* function:     WlzHasIntersection    */
+/*! 
+* \ingroup      WlzDomainUtils
+* \brief        Determine if two domain objects intersect. The objects
+must WLZ_2D_DOMAINOBJ, WLZ_3D_DOMAINOBJ or WLZ_EMPTY_OBJ. If neither object
+is empty then they must be of the same type.
+*
+* \return       non-zero if the input objects intersect
+* \param    obj1	input object 1
+* \param    obj2	input object 2
+* \param    dstErr	error return
+* \par      Source:
+*                WlzHasIntersect.c
+*/
 int WlzHasIntersection(
   WlzObject	*obj1,
   WlzObject	*obj2,

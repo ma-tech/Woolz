@@ -418,7 +418,8 @@ typedef enum
 typedef enum
 {
   WLZ_INTERPOLATION_NEAREST     = 0,
-  WLZ_INTERPOLATION_LINEAR
+  WLZ_INTERPOLATION_LINEAR,
+  WLZ_INTERPOLATION_CLASSIFY_1
 } WlzInterpolationType;
 
 /************************************************************************

@@ -854,6 +854,18 @@ extern WlzObject 		*WlzConvertPix(
 				  WlzObject *obj,
 				  WlzGreyType nPixType,
 				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzConvertVtx(
+                                  WlzObject	*obj,
+				  WlzVertexType	newVtxType,
+				  WlzErrorNum	*dstErr);
+extern WlzBoundList 		*WlzConvertBoundType(
+                                  WlzBoundList	*bound,
+				  WlzObjectType	type,
+				  WlzErrorNum	*dstErr);
+extern WlzPolygonDomain 	*WlzConvertPolyType(
+                                  WlzPolygonDomain	*pdom,
+				  WlzObjectType		type,
+				  WlzErrorNum		*dstErr);
 
 /************************************************************************
 * WlzConvexHull.c							*
@@ -1951,6 +1963,10 @@ extern WlzObject		*WlzMeshTransformObj(
 extern WlzDVertex2 		WlzMeshTransformVtx(WlzDVertex2 vtx,
 						    WlzMeshTransform *mesh,
 						    WlzErrorNum *dstErr);
+extern double 			WlzClassValCon4(
+                                  double	*gVals,
+				  double	xOffset,
+				  double	yOffset);
 #ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzMeshUtils.c							*
@@ -2062,6 +2078,49 @@ extern int			WlzInsidePolyEO(WlzIVertex2	vtx,
 						WlzPolygonDomain  *pgdm,
 						WlzErrorNum	  *dstErr);
 
+/************************************************************************
+* WlzPolyEquispace.c							*
+************************************************************************/
+extern WlzPolygonDomain		*WlzPolyEquispace(
+                                  WlzPolygonDomain	*poly,
+				  int			wrap,
+				  double		spacing,
+				  int			keepOrigVtxs,
+				  WlzErrorNum		*dstErr);
+extern double 			WlzPolyLength(
+                                  WlzPolygonDomain	*poly,
+				  int			wrap,
+				  WlzErrorNum		*dstErr);
+/************************************************************************
+* WlzPolyDecimate.c							*
+************************************************************************/
+extern WlzPolygonDomain  	*WlzPolyDecimate(
+                                  WlzPolygonDomain	*poly,
+				  int			wrap,
+				  double		maxDist,
+				  WlzErrorNum		*dstErr);
+extern WlzBoundList 		*WlzBoundDecimate(
+                                  WlzBoundList	*bound,
+				  double 	maxDist,
+				  WlzErrorNum	*dstErr);
+/************************************************************************
+* WlzPolyReverse.c							*
+************************************************************************/
+extern WlzPolygonDomain 	*WlzPolyReverse(
+                                  WlzPolygonDomain 	*poly,
+				  WlzErrorNum		*dstErr);
+/************************************************************************
+* WlzPolySmooth.c							*
+************************************************************************/
+extern WlzPolygonDomain		*WlzPolySmooth(
+                                  WlzPolygonDomain	*poly,
+				  int			wrap,
+				  int 			iterations,
+				  WlzErrorNum		*dstErr);
+extern WlzBoundList 		*WlzBoundSmooth(
+                                  WlzBoundList	*bound,
+				  int 		iterations,
+				  WlzErrorNum	*dstErr);
 /************************************************************************
 * WlzPrinicipalAngle.c
 ************************************************************************/

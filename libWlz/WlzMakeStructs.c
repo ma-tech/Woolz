@@ -721,7 +721,9 @@ WlzMakePolyDmn(WlzObjectType	type,
       } 
       else {
 	p->vtx = (WlzIVertex2 *) (p + 1);
-	memcpy((void *) p->vtx, (void *) vertices, n*vertexsize);
+	if( vertices ){
+	  memcpy((void *) p->vtx, (void *) vertices, n*vertexsize);
+	}
       }
     }
   }

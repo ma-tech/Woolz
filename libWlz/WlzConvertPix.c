@@ -13,6 +13,8 @@
 *		types.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+************************************************************************
+* 6/7/1		richard	put in WlzConverVtx
 ************************************************************************/
 #include <stdlib.h>
 #include <limits.h>
@@ -21,6 +23,9 @@
 
 static WlzObject *WlzConvertPix3d(WlzObject	*obj,
 				  WlzGreyType	newpixtype,
+				  WlzErrorNum	*dstErr);
+static WlzObject *WlzConvertVtx3d(WlzObject	*obj,
+				  WlzVertexType	newVtxType,
 				  WlzErrorNum	*dstErr);
 
 /************************************************************************
@@ -32,8 +37,9 @@ static WlzObject *WlzConvertPix3d(WlzObject	*obj,
 *		domain is identical to the input. Returns NULL on error	*
 *		The error can be obtained with WlzGetError or by setting*
 *		an error handler. Possible errors:			*
-*		WLZ_ERR_OBJECT_NULL, WLZ_ERR_OBJECT_TYPE, WLZ_ERR_DOMAIN_NULL,		*
-*		WLZ_ERR_VALUES_NULL, WLZ_ERR_GREY_TYPE			*
+*		WLZ_ERR_OBJECT_NULL, WLZ_ERR_OBJECT_TYPE, 		*
+*		WLZ_ERR_DOMAIN_NULL, WLZ_ERR_VALUES_NULL,		*
+*		WLZ_ERR_GREY_TYPE				*
 *   Parameters :WlzObject	*obj: the object for conversion		*
 *		WlzGreyType	newpixtype: the required grey-value type*
 *   Global refs:None							*
@@ -356,5 +362,345 @@ static WlzObject *WlzConvertPix3d(
   }
   return WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values, NULL, NULL, dstErr);
 }
-	
+
+
+WlzPolygonDomain *WlzConvertPolyType(
+  WlzPolygonDomain	*pdom,
+  WlzObjectType		type,
+  WlzErrorNum		*dstErr)
+{
+  WlzPolygonDomain	*rtnDom=NULL;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzIVertex2		*iVtxs;
+  WlzFVertex2		*fVtxs;
+  WlzDVertex2		*dVtxs;
+
+  if( pdom == NULL ){
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if( pdom->nvertices <= 0 ){
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else {
+    if( rtnDom = WlzMakePolyDmn(type, NULL, pdom->nvertices,
+				pdom->nvertices, 1, &errNum) ){
+      switch( type ){
+      case WLZ_POLYGON_INT:
+	iVtxs = rtnDom->vtx;
+	switch( pdom->type ){
+	case WLZ_POLYGON_INT:
+	  WlzValueCopyIVertexToIVertex(iVtxs, pdom->vtx, pdom->nvertices);
+	  break;
+	case WLZ_POLYGON_FLOAT:
+	  WlzValueCopyFVertexToIVertex(iVtxs, (WlzFVertex2 *) pdom->vtx,
+				       pdom->nvertices);
+	  break;
+	case WLZ_POLYGON_DOUBLE:
+	  WlzValueCopyDVertexToIVertex(iVtxs, (WlzDVertex2 *) pdom->vtx,
+				       pdom->nvertices);
+	  break;
+	default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  WlzFreePolyDmn(rtnDom);
+	  rtnDom = NULL;
+	  break;
+	}
+	break;
+
+      case WLZ_POLYGON_FLOAT:
+	fVtxs = (WlzFVertex2 *) rtnDom->vtx;
+	switch( pdom->type ){
+	case WLZ_POLYGON_INT:
+	  WlzValueCopyIVertexToFVertex(fVtxs, pdom->vtx, pdom->nvertices);
+	  break;
+	case WLZ_POLYGON_FLOAT:
+	  WlzValueCopyFVertexToFVertex(fVtxs, (WlzFVertex2 *) pdom->vtx,
+				       pdom->nvertices);
+	  break;
+	case WLZ_POLYGON_DOUBLE:
+	  WlzValueCopyDVertexToFVertex(fVtxs, (WlzDVertex2 *) pdom->vtx,
+				       pdom->nvertices);
+	  break;
+	default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  WlzFreePolyDmn(rtnDom);
+	  rtnDom = NULL;
+	  break;
+	}
+	break;
+
+      case WLZ_POLYGON_DOUBLE:
+	dVtxs = (WlzDVertex2 *) rtnDom->vtx;
+	switch( pdom->type ){
+	case WLZ_POLYGON_INT:
+	  WlzValueCopyIVertexToDVertex(dVtxs, pdom->vtx, pdom->nvertices);
+	  break;
+	case WLZ_POLYGON_FLOAT:
+	  WlzValueCopyFVertexToDVertex(dVtxs, (WlzFVertex2 *) pdom->vtx,
+				       pdom->nvertices);
+	  break;
+	case WLZ_POLYGON_DOUBLE:
+	  WlzValueCopyDVertexToDVertex(dVtxs, (WlzDVertex2 *) pdom->vtx,
+				       pdom->nvertices);
+	  break;
+	default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  WlzFreePolyDmn(rtnDom);
+	  rtnDom = NULL;
+	  break;
+	}
+	break;
+
+      default:
+	errNum = WLZ_ERR_PARAM_TYPE;
+	break;
+      }
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnDom;
+}
+
+WlzBoundList *WlzConvertBoundType(
+  WlzBoundList		*bound,
+  WlzObjectType		type,
+  WlzErrorNum		*dstErr)
+{
+  WlzBoundList	*rtnBound=NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( bound == NULL ){
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if( rtnBound = WlzMakeBoundList(bound->type, bound->wrap,
+				       NULL, &errNum) ){
+    if( (errNum == WLZ_ERR_NONE) && bound->next ){
+      rtnBound->next =
+	WlzAssignBoundList(WlzConvertBoundType(bound->next, type,
+					       &errNum), NULL);
+    }
+
+    if( (errNum == WLZ_ERR_NONE) && bound->down ){
+      rtnBound->down =
+	WlzAssignBoundList(WlzConvertBoundType(bound->down, type,
+					       &errNum), NULL);
+    }
+
+    if( (errNum == WLZ_ERR_NONE) && bound->poly ){
+      rtnBound->poly =
+	WlzAssignPolygonDomain(WlzConvertPolyType(bound->poly,
+						  type, &errNum), NULL);
+    }
+    if( errNum != WLZ_ERR_NONE ){
+      WlzFreeBoundList(rtnBound);
+      rtnBound = NULL;
+    }
+      
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnBound;
+}
+
+WlzObject *WlzConvertVtx(
+  WlzObject	*obj,
+  WlzVertexType	newVtxType,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzDomain	domain;
+  WlzValues	values;
+
+  /* check the object */
+  if( obj == NULL ){
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+
+  if( errNum == WLZ_ERR_NONE){
+    switch( obj->type ){
+
+    case WLZ_2D_POLYGON:
+      switch( newVtxType ){
+      case WLZ_VERTEX_I2:
+	domain.poly = WlzConvertPolyType(obj->domain.poly, WLZ_POLYGON_INT,
+					 &errNum);
+	break;
+
+      case WLZ_VERTEX_F2:
+	domain.poly = WlzConvertPolyType(obj->domain.poly, WLZ_POLYGON_FLOAT,
+					 &errNum);
+	break;
+
+      case WLZ_VERTEX_D2:
+	domain.poly = WlzConvertPolyType(obj->domain.poly, WLZ_POLYGON_DOUBLE,
+					 &errNum);
+	break;
+
+      default:
+	domain.poly = NULL;
+	errNum = WLZ_ERR_PARAM_TYPE;
+      }
+      if( errNum == WLZ_ERR_NONE ){
+	values.core = NULL;
+	rtnObj = WlzMakeMain(obj->type, domain, values, NULL, NULL, NULL);
+      }
+      break;
+
+    case WLZ_BOUNDLIST:
+      switch( newVtxType ){
+      case WLZ_VERTEX_I2:
+	domain.b = WlzConvertBoundType(obj->domain.b, WLZ_POLYGON_INT,
+				       &errNum);
+	break;
+
+      case WLZ_VERTEX_F2:
+	domain.b = WlzConvertBoundType(obj->domain.b, WLZ_POLYGON_FLOAT,
+				       &errNum);
+	break;
+
+      case WLZ_VERTEX_D2:
+	domain.b = WlzConvertBoundType(obj->domain.b, WLZ_POLYGON_DOUBLE,
+				       &errNum);
+	break;
+
+      default:
+	domain.b = NULL;
+	errNum = WLZ_ERR_PARAM_TYPE;
+      }
+      if( errNum == WLZ_ERR_NONE ){
+	values.core = NULL;
+	rtnObj = WlzMakeMain(obj->type, domain, values, NULL, NULL, NULL);
+      }
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      rtnObj = WlzConvertVtx3d(obj, newVtxType, &errNum);
+      break;
+
+    case WLZ_TRANS_OBJ:
+      values.obj = WlzConvertVtx(obj->values.obj,
+				 newVtxType, &errNum);
+      if( errNum == WLZ_ERR_NONE ){
+	rtnObj = WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
+			     NULL, NULL, &errNum);
+      }
+      break;
+
+    case WLZ_EMPTY_OBJ:
+      rtnObj = WlzMakeMain(WLZ_EMPTY_OBJ, obj->domain, obj->values,
+			   NULL, NULL, &errNum);
+
+    case WLZ_3D_POLYGON:
+      errNum = WLZ_ERR_UNIMPLEMENTED;
+      break;
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}
+
+static WlzObject *WlzConvertVtx3d(
+  WlzObject	*obj,
+  WlzVertexType	newVtxType,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject		*rtnObj=NULL;
+  WlzObject		*tmp_obj1, *tmp_obj2;
+  WlzPlaneDomain 	*pdom, *new_pdom;
+  WlzDomain		domain;
+  WlzValues		values;
+  int	       		p;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+
+
+  /* the object, object type have been checked by WlzConvertVtx but
+     must still check domain, domain type */
+  if( obj->domain.core == NULL ){
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else {
+    switch( obj->domain.p->type ){
+    case WLZ_PLANEDOMAIN_POLYGON:
+    case WLZ_PLANEDOMAIN_BOUNDLIST:
+      break;
+
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+    }
+  }
+    
+  /* set up new 3D domains */
+  if( errNum == WLZ_ERR_NONE ){
+    pdom = obj->domain.p;
+    new_pdom = WlzMakePlaneDomain(pdom->type,
+				  pdom->plane1, pdom->lastpl,
+				  pdom->line1, pdom->lastln,
+				  pdom->kol1, pdom->lastkl, &errNum);
+  }
+  if( errNum == WLZ_ERR_NONE ){
+    for(p=0; p < 3; p++){
+      new_pdom->voxel_size[p] = pdom->voxel_size[p];
+    }
+  }
+
+  /* set up the interval and value tables */
+  if( errNum == WLZ_ERR_NONE ){
+    values.core = NULL;
+    for(p=0; (p < (pdom->lastpl - pdom->plane1 + 1)) &&
+	  (errNum == WLZ_ERR_NONE); p++){
+
+      if( (pdom->domains[p]).core == NULL ){
+	(new_pdom->domains[p]).i = NULL;
+	continue;
+      }
+
+      if( pdom->type == WLZ_PLANEDOMAIN_POLYGON ){
+	tmp_obj1 = WlzMakeMain(WLZ_2D_POLYGON, pdom->domains[p],
+			       values, NULL, NULL, &errNum);
+      }
+      else {
+	tmp_obj1 = WlzMakeMain(WLZ_BOUNDLIST, pdom->domains[p],
+			       values, NULL, NULL, &errNum);
+      }
+
+      if( errNum != WLZ_ERR_NONE ){break;}
+
+      tmp_obj2 = WlzConvertVtx(tmp_obj1, newVtxType, &errNum);
+      if( errNum != WLZ_ERR_NONE ){
+	WlzFreeObj(tmp_obj1);
+	break;
+      }
+
+      new_pdom->domains[p] = WlzAssignDomain(tmp_obj2->domain, NULL);
+      WlzFreeObj(tmp_obj2);
+      WlzFreeObj(tmp_obj1);
+    }
+  }
+
+  if( errNum == WLZ_ERR_NONE ){
+    domain.p = new_pdom;
+    values.core = NULL;
+    rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values, NULL, NULL, &errNum);
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}
 

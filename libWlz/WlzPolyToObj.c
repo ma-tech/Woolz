@@ -1,28 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzFilledPolyToObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Makes a Woolz domain object from a polygon.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzPolyToObj.c
+* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Jul 31 07:40:16 2001
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Makes a Woolz domain object from a polygon.
+*               
+* \todo         -
+* \bug          None known
+*
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/* procedure to calculate winding number of the polygon with respect
-   the vertexe. Algorithm from "Comp Geom in C" by O'Rourke chap 7
-   Assumes integer vertices and that the vertex is not on the
-   polyline */
+/* function:     WlzPolyCrossings    */
+/*! 
+* \ingroup      WlzPolylineOps
+* \brief        Procedure to calculate winding number of the polygon with
+respect to the vertex. The algorithm is from "Comp Geom in C" by O'Rourke
+chap 7. It assumes integer vertices and that the vertex is not on the
+polyline 
+*
+* \return       Winding number of the polyline with respect to the vertex
+* \param    vtx	input vertex
+* \param    pgdm	input polygon domain
+* \param    dstErr	error return
+* \par      Source:
+*               WlzPolyToObj.c
+*/
 int WlzPolyCrossings(
   WlzIVertex2	vtx,
   WlzPolygonDomain	*pgdm,
@@ -53,10 +68,22 @@ int WlzPolyCrossings(
   return crossings;
 }
 
-/* procedure to calculate if inside the polygon using the
-   even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
-   Assumes integer vertices and that the vertex is not on the
-   polyline */
+/* function:     WlzInsidePolyEO    */
+/*! 
+* \ingroup      WlzPolylineOps
+* \brief        Procedure to calculate if a vertex is 
+inside the polygon using the
+even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
+Assumes integer vertices and that the vertex is not on the
+polyline 
+*
+* \return       1 if the vertex is "inside" the polyline, 0 otherwise
+* \param    vtx	the input test vertex
+* \param    pgdm	input polygon domain
+* \param    dstErr	return error
+* \par      Source:
+*               WlzPolyToObj.c
+*/
 int WlzInsidePolyEO(
   WlzIVertex2	vtx,
   WlzPolygonDomain	*pgdm,
@@ -103,6 +130,20 @@ static int vtx_compare(
   }
 }
 
+/* function:     WlzPolygonToObj    */
+/*! 
+* \ingroup      WlzPolylineOps
+* \brief        Convert the input polygon to an interval domain. The
+domain is defined by the fillMode see WlzPolyToObj().
+*
+* \return       Woolz 2D domain object corresponding to the input polygon
+* \param    polygon	input polygon object
+* \param    fillMode	determines what is "inside" the domain, one of:
+WLZ_SIMPLE_FILL, WLZ_EVEN_ODD_FILL or WLZ_VERTEX_FILL
+* \param    dstErr	return error
+* \par      Source:
+*               WlzPolyToObj.c
+*/
 WlzObject *WlzPolygonToObj(
   WlzObject		*polygon,
   WlzPolyFillMode	fillMode,
@@ -202,6 +243,22 @@ WlzObject *WlzPolygonToObj(
   return rtnObj;
 }
 
+/* function:     WlzPolyToObj    */
+/*! 
+* \ingroup      WlzPolylineOps
+* \brief        Convert the input polygon to an interval domain. The
+domain is defined by the fillMode: WLZ_SIMPLE_FILL - all pixels with winding
+number non-zero; WLZ_EVEN_ODD_FILL - all pixels with odd winding number;
+WLZ_VERTEX_FILL - all pixels through which the polyline passes.
+*
+* \return       Woolz 2D domain object corresponding to the input polygon domain
+* \param    pgdm	input polygon domain
+* \param    fillMode	determines which pixels are part of the domain one of:
+WLZ_SIMPLE_FILL, WLZ_EVEN_ODD_FILL or WLZ_VERTEX_FILL
+* \param    dstErr	return error
+* \par      Source:
+*               WlzPolyToObj.c
+*/
 WlzObject *WlzPolyToObj(
   WlzPolygonDomain	*pgdm,
   WlzPolyFillMode	fillMode,
@@ -399,6 +456,21 @@ WlzObject *WlzPolyToObj(
 }
 
 
+/* function:     WlzPolyTo8Polygon    */
+/*! 
+* \ingroup      WlzPolylineOps
+* \brief        Returns the 8-connected, integer vertex polyline corresponding
+to the input polygon. The wrap value (number of overlapping vertices of
+the polygon ends) is preserved. WLZ_POLYGON_FLOAT and WLZ_POLYGON_DOUBLE
+polylines are converted to integer vertices using WlzValueCopyFVertexToIVertex and WlzValueCopyDVertexToIVertex respectively.
+*
+* \return       8-connected polygon object
+* \param    pgdm	input polygon domain
+* \param    wrap	wrap value of the polygon domain
+* \param    dstErr	error return
+* \par      Source:
+*               WlzPolyToObj.c
+*/
 WlzObject *WlzPolyTo8Polygon(
   WlzPolygonDomain	*pgdm,
   int			wrap,

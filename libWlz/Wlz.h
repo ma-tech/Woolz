@@ -30,4 +30,8 @@
 #include <WlzProto.h>
 #include <WlzMacro.h>
 
+/*!
+* \defgroup    Wlz
+*/
+
 #endif	/* !WLZ_H Don't put anything after this line */
