@@ -35,7 +35,9 @@ EXECUTABLES		= \
 			WlzObjCompareSpecial_01 \
 			WlzVtxToObj \
 			WlzFixDomains \
-			WlzMatchICPPlane
+			WlzMatchICPPlane \
+			WlzTiffStackToShade \
+			WlzTiffStackToPatches
 
 SCRIPTS			= \
 			WlzObjCompareSpecial_01.csh
@@ -54,7 +56,9 @@ CSOURCES		= \
 			WlzObjCompareSpecial_01.c \
 			WlzVtxToObj.c \
 			WlzFixDomains.c \
-			WlzMatchICPPlane.c
+			WlzMatchICPPlane.c \
+			WlzTiffStackToShade.c \
+			WlzTiffStackToPatches.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).

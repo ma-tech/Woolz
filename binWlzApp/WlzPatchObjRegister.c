@@ -160,6 +160,7 @@ WlzErrorNum	WlzGetPatchTreeToDepth(
   WlzGreyType	dstGType;
   double	dstMin, dstMax, dstSum, dstSumSq;
   double	dstMean, dstStdDev;
+  WlzObject	*obj1;
 
   if((patchTree == NULL) ||
      (patchTree->depth >= depth)){
@@ -169,9 +170,18 @@ WlzErrorNum	WlzGetPatchTreeToDepth(
   if( patchTree->depth == (depth - 1) ){
     for(i=0; (i < nobjs) && (patchTree->nchildren < 4); i++){
       if( objs[i] && WlzIsAdjacentPatch(patchTree->obj, objs[i]) ){
-	WlzGreyStats(objs[i], &dstGType, &dstMin, &dstMax,
-		     &dstSum, &dstSumSq, &dstMean, &dstStdDev,
-		     NULL);
+	if( WlzGreyTypeFromObj(objs[i], &errNum) == WLZ_GREY_RGBA ){
+	  obj1 = WlzRGBAToModulus(objs[i], &errNum);
+	  WlzGreyStats(obj1, &dstGType, &dstMin, &dstMax,
+		       &dstSum, &dstSumSq, &dstMean, &dstStdDev,
+		       NULL);
+	  WlzFreeObj(obj1);
+	}
+	else {
+	  WlzGreyStats(objs[i], &dstGType, &dstMin, &dstMax,
+		       &dstSum, &dstSumSq, &dstMean, &dstStdDev,
+		       NULL);
+	}
 	patchTree->children[patchTree->nchildren] =
 	  WlzMakePatchTree(objs[i], depth, dstMean);
 	patchTree->children[patchTree->nchildren]->index = i;
@@ -702,6 +712,21 @@ double WlzGreyMeanDifference(
 	countedArea++;
       }
       break;
+    case WLZ_GREY_RGBA:
+      for (i=0; i<iwsp1.colrmn; i += pixelIncr,
+	     gptr1.rgbp += pixelIncr, gptr2.rgbp += pixelIncr){
+	idiffIncr = WLZ_RGBA_RED_GET(*gptr1.rgbp)
+	  - WLZ_RGBA_RED_GET(*gptr2.rgbp);
+	idiff += (idiffIncr < 0)?-idiffIncr:idiffIncr;
+	idiffIncr = WLZ_RGBA_GREEN_GET(*gptr1.rgbp)
+	  - WLZ_RGBA_GREEN_GET(*gptr2.rgbp);
+	idiff += (idiffIncr < 0)?-idiffIncr:idiffIncr;
+	idiffIncr = WLZ_RGBA_BLUE_GET(*gptr1.rgbp)
+	  - WLZ_RGBA_BLUE_GET(*gptr2.rgbp);
+	idiff += (idiffIncr < 0)?-idiffIncr:idiffIncr;
+	countedArea++;
+      }
+      break;
     }
   } 
  
@@ -1024,7 +1049,7 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		i, startIndx, depth;
   int		alignGreysFlg=1;
-  WlzGreyType	dstGType;
+  WlzGreyType	gType, dstGType;
   double	dstMin, dstMax, dstSum, dstSumSq;
   double	dstMean, dstStdDev, extMean;
   int		breadthFirstFlg=1;
@@ -1152,13 +1177,32 @@ int main(int	argc,
 	   bulk of the foreground therefore a suitable starting
 	   point for matching. */
 	startIndx = 0;
-	WlzGreyStats(objs[0], &dstGType, &dstMin, &dstMax,
-		     &dstSum, &dstSumSq, &extMean, &dstStdDev,
-		     NULL);
-	for(i=1; i < cobj->n; i++){
-	  WlzGreyStats(objs[i], &dstGType, &dstMin, &dstMax,
-		       &dstSum, &dstSumSq, &dstMean, &dstStdDev,
+	gType = WlzGreyTypeFromObj(objs[0], &errNum);
+	if( gType == WLZ_GREY_RGBA ){
+	  obj1 = WlzRGBAToModulus(objs[0], &errNum);
+	  WlzGreyStats(obj1, &dstGType, &dstMin, &dstMax,
+		       &dstSum, &dstSumSq, &extMean, &dstStdDev,
 		       NULL);
+	  WlzFreeObj(obj1);
+	}
+	else {
+	  WlzGreyStats(objs[0], &dstGType, &dstMin, &dstMax,
+		       &dstSum, &dstSumSq, &extMean, &dstStdDev,
+		       NULL);
+	}
+	for(i=1; i < cobj->n; i++){
+	  if( gType == WLZ_GREY_RGBA ){
+	    obj1 = WlzRGBAToModulus(objs[i], &errNum);
+	    WlzGreyStats(obj1, &dstGType, &dstMin, &dstMax,
+			 &dstSum, &dstSumSq, &dstMean, &dstStdDev,
+			 NULL);
+	    WlzFreeObj(obj1);
+	  }
+	  else {
+	    WlzGreyStats(objs[i], &dstGType, &dstMin, &dstMax,
+			 &dstSum, &dstSumSq, &dstMean, &dstStdDev,
+			 NULL);
+	  }
 	  if( dstMean < extMean ){
 	    extMean = dstMean;
 	    startIndx = i;
