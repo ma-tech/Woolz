@@ -37,7 +37,7 @@ public class WSetterGUI extends JPanel {
     * draw itself beyond 800? unless you click on it.
     * If it is set to a number > screen resolution, say 2048, everything is OK
     */
-   private int _width = 2048;
+   protected int _width = 2048;
    /**
     * The height of the WSetter in pixels.
     */
