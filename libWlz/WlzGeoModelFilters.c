@@ -1,4 +1,4 @@
-#pragma ident "MRC HGU $Id$
+#pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzGeoModelFilters.c
 * \author       Bill Hill
