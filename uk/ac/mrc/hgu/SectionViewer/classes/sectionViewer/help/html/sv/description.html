@@ -12,25 +12,33 @@
    </center>
 
    <p>
-   This is a java class which can be used in conjunction with a 3D viewer programme to display 2D grey-level images derived from the (MRC proprietory) <b>Woolz</b> format.
-   <br>
-   The 3D viewer programme spawns (2D) section views in one of three initial orientations (XY, YZ or ZX).
+   The Section Viewer is a software component
+   (<A href="./concepts/bean.html"> java bean</A>) that can be dropped into a java application in order to display 2D sections through 3D
+   <A href="./concepts/wlz.html"><b>Woolz</b></A> images.
    </p>
 
    <p>
-   Controls are available to manipulate the position of the section in relation to the 3D image. Any arbitrary section is obtainable. The section viewer uses native <b>Woolz</b> libraries (written in C) to calculate each new section.
+   Applications will typically instantiate the <b>SVParent</b> class which manages the creation of section viewers. The SVParent class has methods which will create section viewers in either external or internal windows (JFrame or JInternalFrame) respectively.
    </p>
 
    <p>
-   Feedback is available (based on the cursor position in the grey-level image). The feedback relates to the x,y,z coordinates in the original 3D image. It also gives the grey level at the cursor position.
+   Applications which are capable of displaying a 3D image will typically extend SVParent so that changes to the section may be reflected in the 3D display. An example of such an extension is <b>SVParent3D</b> which is used with the JWlzViewer application.
    </p>
 
    <p>
-   If the image has anatomy associated with it, it may be possible to highlight this in the grey-level image by selecting anatomy components from a menu in the 3D viewer programme.
+   Controls in the Section Viewer allow the user to manipulate the position of the section relative to the underlying 3D image. Any arbitrary section is obtainable. The section viewer uses native <b>Woolz</b> libraries (written in C) to calculate each new section.
    </p>
 
    <p>
-   The section viewer can identify the anatomy component at the cursor position if required.
+   The cursor (mouse) position in the 2D image provides feedback of the x,y,z coordinates in the underlying 3D image. It also gives the grey level value at this position.
+   </p>
+
+   <p>
+   If the underlying 3D image has anatomy components associated with it, it is possible to highlight these in the grey-level image. This can be achieved in two ways:
+   <ul>
+      <li>by selecting anatomy components from a menu in the main application.</li>
+      <li>by clicking the mouse in the 2D image.</li>
+   </ul>
    </p>
 
 </body>
