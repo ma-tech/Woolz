@@ -37,25 +37,30 @@ int             main(int argc, char **argv)
 {
   int           option,
   		ok = 1,
-		useVoxSz = 0,
-		usage = 0;
-  double	ctrVal = 100,
-  		ctrWth = 1.0;
+		usage = 0,
+		nItr = 10,
+		unitVoxelSz = 0,
+		filterGeom = 0;
+  double	lambda,
+  		mu,
+  		ctrVal = 100,
+  		ctrWth = 1.0,
+		filterPB = 0.1,
+		filterSB = 1.1;
   FILE		*fP = NULL;
   char		*fStr,
 		*inObjFileStr,
   		*outFileStr;
-  WlzDVertex3	voxSz;
-  WlzDBox3	bBox;
   WlzObject     *inObj = NULL,
   		*outObj = NULL;
   WlzDomain	ctrDom;
   WlzValues	dumVal;
-  WlzAffineTransform *voxSzTr = NULL;
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double	filterDPB = 0.25,
+  		filterDSB = 0.10;
   const char	*errMsgStr;
-  static char	optList[] = "bghixo:v:w:";
+  static char	optList[] = "bghiFUo:p:s:n:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -91,8 +96,32 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	}
 	break;
-      case 'x':
-        useVoxSz = 1;
+      case 'n':
+        if(sscanf(optarg, "%d", &nItr) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'p':
+        if(sscanf(optarg, "%lg", &filterPB) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 's':
+        if(sscanf(optarg, "%lg", &filterSB) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'F':
+        filterGeom = 1;
+	break;
+      case 'U':
+        unitVoxelSz = 1;
 	break;
       case 'w':
         if(sscanf(optarg, "%lg", &ctrWth) != 1)
@@ -148,6 +177,16 @@ int             main(int argc, char **argv)
     }
 
   }
+  if(ok && unitVoxelSz)
+  {
+    if(inObj && (inObj->type == WLZ_3D_DOMAINOBJ) &&
+       inObj->domain.core && (inObj->domain.core->type = WLZ_2D_DOMAINOBJ))
+    {
+      inObj->domain.p->voxel_size[0] = 1.0;
+      inObj->domain.p->voxel_size[1] = 1.0;
+      inObj->domain.p->voxel_size[2] = 1.0;
+    } 
+  }
   if(ok)
   {
     ctrDom.ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, &errNum);
@@ -158,6 +197,23 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       		     "%s: Failed to compute contour (%s).\n",
       	     	     argv[0], errMsgStr);
+    }
+  }
+  if(ok && filterGeom)
+  {
+    errNum = WlzGMFilterGeomLPParam(&lambda, &mu, &nItr,
+    				    filterPB, filterSB, filterDPB, filterDSB);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzGMFilterGeomLPLM(ctrDom.ctr->model, lambda, mu, nItr);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+      "%s: Failed to filter output woolz object's geometry (%s).\n",
+      		     argv[0], errMsgStr);
     }
   }
   if(ok)
@@ -171,40 +227,6 @@ int             main(int argc, char **argv)
       		     "%s: Failed to create output woolz object (%s).\n",
 		     argv[0], errMsgStr);
     }
-  }
-  if(ok && useVoxSz)
-  {
-    /* Compute the transform to apply to the contour. */
-    voxSzTr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      bBox = WlzBoundingBox3D(inObj, &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      voxSz = WlzVozelSz(inObj, &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      /* set up the transform. */
-      voxSzTr->mat[0][0] = voxSz.vtX;
-      voxSzTr->mat[0][3] = bBox.xMin * (1.0 - voxSz.vtX);
-      voxSzTr->mat[1][1] = voxSz.vtY;
-      voxSzTr->mat[1][3] = bBox.yMin * (1.0 - voxSz.vtY);
-      voxSzTr->mat[2][2] = voxSz.vtZ;
-      voxSzTr->mat[2][3] = bBox.zMin * (1.0 - voxSz.vtZ);
-      /* Apply the transform. */
-      (void )WlzAffineTransformContour(ctrDom.ctr, voxSzTr, 0, &errNum);
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-      		     "%s: Failed to apply for voxel size corection (%s).\n",
-		     argv[0], errMsgStr);
-    }
-    WlzFreeAffineTransform(voxSzTr);
   }
   if(ok)
   {
@@ -252,7 +274,8 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       "Usage: %s%sExample: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i] [-o#] [-v#] [-x] [-w#]\n"
+      " [-o<output object>] [-h] [-o] [-g] [-i] [-o#]\n"
+      "        [-F] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -260,8 +283,12 @@ int             main(int argc, char **argv)
       "  -b  Compute object boundary contours.\n"
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
+      "  -F  Use geometry filter.\n"
+      "  -U  Use unit voxel size.\n"
+      "  -p  Geometry filter low band value.\n"
+      "  -s  Geometry filter stop band value.\n"
+      "  -n  Geometry filter itterations.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
-      "  -x  Use real voxel size.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
       "Computes a contour object from the given Woolz object and saves it\n"
       "using the VTK ascii polydata format.\n"
