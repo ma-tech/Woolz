@@ -19,15 +19,15 @@
 * Maintenance log with most recent changes at top of list.
 */
 
-/*!
-* \ingroup      AlgMatrix
-* @{
-*/
-
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
 #include <Alg.h>
+
+/*!
+* \ingroup      AlgMatrix
+* @{
+*/
 
 /*!
 * \return       	                  Error code.
@@ -49,6 +49,9 @@
 * \param	zM 			Given array for the return of the
 * 					eigenvectors, may be NULL if the
 *					eigenvectors are not required.
+*					If required the i'th eigenvector
+*					is returned in the i'th column
+*					of zM.
 */
 AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
 {
@@ -75,7 +78,6 @@ AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
   }
   else
   {
-
     for(id0 = 1; id0 < aSz; ++id0)
     {
       oM[id0 - 1] = oM[id0];
@@ -146,7 +148,7 @@ AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
 		}
 	      }
 	    }
-	    dM[id1] = dM[id1] - p;
+	    dM[id1] -= p;
 	    oM[id1] = g;
 	    oM[id3] = 0.0;
 	  }
