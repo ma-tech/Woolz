@@ -62,7 +62,7 @@ public class SectionViewer
   private boolean _anatomy; // for mouse click anatomy
   private boolean _thresholding;
   private boolean _threshConstraint;
-  private boolean _fixedPoint = false;
+  protected boolean _fixedPoint = false;
   private boolean _axisPoint = false;
   private boolean _setFixedPoint = false;
   private boolean _setAxisPoint = false;
