@@ -1309,9 +1309,11 @@ extern WlzErrorNum	WlzGMShellGetGBBV3D(
 			  WlzGMShell *shell,
 			  double *vol);
 extern WlzErrorNum	WlzGMShellGetGBB3D(
-                          WlzGMShell *shell, WlzDBox3 *bBox);
+                          WlzGMShell *shell,
+			  WlzDBox3 *bBox);
 extern WlzErrorNum	WlzGMShellGetGBB2D(
-                          WlzGMShell *shell, WlzDBox2 *bBox);
+                          WlzGMShell *shell,
+			  WlzDBox2 *bBox);
 extern WlzErrorNum	WlzGMShellSetGBB2D(
 			  WlzGMShell *shell,
 			  WlzDBox2 bBox);
@@ -1332,6 +1334,8 @@ extern int		WlzGMShellGInBB3D(
 extern int		WlzGMShellGInBB2D(
 			  WlzGMShell *shell,
 			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMModelSetSG(
+			  WlzGMModel *model);
 extern WlzErrorNum	WlzGMShellUpdateG3D(
 			  WlzGMShell *shell,
 			  WlzDVertex3 pos);
@@ -1425,8 +1429,19 @@ extern WlzGMLoopT	*WlzGMEdgeTCommonLoopT(
 extern WlzGMVertex	*WlzGMEdgeCommonVertex(
 			  WlzGMEdge *eE0,
 			  WlzGMEdge *eE1);
+extern WlzGMVertex	*WlzGMEdgeCommonVertexGetDiskTs(
+			  WlzGMEdge *eE0,
+			  WlzGMEdge *eE1,
+			  WlzGMDiskT **dstDT0,
+			  WlzGMDiskT **dstDT1);
+extern WlzGMDiskT	*WlzGMEdgeCommonDiskT(
+			  WlzGMEdge *eE0,
+			  WlzGMEdge *eE1);
 extern WlzGMShell	*WlzGMEdgeGetShell(
 			  WlzGMEdge *eE);
+extern WlzGMFace	*WlzGMEdgeCommonFace(
+			  WlzGMEdge *eE0,
+			  WlzGMEdge *eE1);
 extern WlzGMEdge	*WlzGMVertexCommonEdge(
 			  WlzGMVertex *eV0,
 			  WlzGMVertex *eV1);
@@ -1462,6 +1477,9 @@ extern void		WlzGMVertexTUnlink(
 			  WlzGMVertexT *dLT);
 extern void		WlzGMDiskTUnlink(
 			  WlzGMDiskT *dLT);
+extern void		WlzGMDiskTJoin(
+			  WlzGMDiskT *gDT0,
+			  WlzGMDiskT *gDT1);
 extern void		WlzGMLoopTUnlink(
 			  WlzGMLoopT *dLT);
 extern void		WlzGMShellUnlink(
@@ -1494,9 +1512,29 @@ extern int		WlzGMShellSimplexCnt(
 /************************************************************************
 * WlzGeoModelFilters.c
 ************************************************************************/
-extern WlzErrorNum	WlzGMFilterRmSmShells(
-			  WlzGMModel *model,
-			  int maxElm);
+extern WlzErrorNum		WlzGMFilterRmSmShells(
+				  WlzGMModel *model,
+				  int maxElm);
+extern WlzErrorNum		WlzGMFilterGeomLP(
+				  WlzGMModel *model,
+				  double kPB,
+				  double kSB,
+				  double dPB,
+				  double dSB,
+				  int maxItr);
+extern WlzErrorNum     		WlzGMFilterGeomLPParam(
+				  double *dstLambda,
+				  double *dstMu,
+				  int *dstNItr,
+				  double kPB,
+				  double kSB,
+				  double dPB,
+				  double dSB);
+extern WlzErrorNum     		WlzGMFilterGeomLPLM(
+				  WlzGMModel *model,
+				  double lambda,
+				  double mu,
+				  int nItr);
 
 /************************************************************************
 * WlzGeometry.c								*
@@ -3128,8 +3166,13 @@ extern WlzVertexP		WlzVerticesFromObj(
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
-extern WlzVertexP               WlzVerticesFromCtr(
-                                  WlzContour *ctr,
+extern WlzVertexP		WlzDVerticesFromGM(
+				  WlzGMModel *model,
+				  int *dstCnt,
+				  WlzVertexType *dstType,
+				  WlzErrorNum *dstErr);
+extern WlzVertexP               WlzVerticesFromGM(
+                                  WlzGMModel *model,
                                   WlzVertexP *dstNr,
                                   int **dstVId,
                                   int *dstCnt,

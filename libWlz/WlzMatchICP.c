@@ -590,11 +590,11 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   /* Get the vertices and normals from the target and source models. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVx = WlzVerticesFromCtr(tCtr, &tNr, NULL, &nTV, &tVType, &errNum);
+    tVx = WlzVerticesFromGM(tCtr->model, &tNr, NULL, &nTV, &tVType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    sVx = WlzVerticesFromCtr(sCtr, &sNr, NULL, &nSV, &vType, &errNum);
+    sVx = WlzVerticesFromGM(sCtr->model, &sNr, NULL, &nSV, &vType, &errNum);
     if(tVType != vType)
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;

@@ -73,6 +73,14 @@ static WlzDVertex2 		WlzVerticesNormTriple2(
 				  WlzDVertex2 v0,
 				  WlzDVertex2 v1,
 				  WlzDVertex2 v2);
+static WlzDVertex2 		*WlzDVerticesFromGM2(
+				  WlzGMModel *model,
+				  int *dstCnt,
+				  WlzErrorNum *dstErr);
+static WlzDVertex3 		*WlzDVerticesFromGM3(
+				  WlzGMModel *model,
+				  int *dstCnt,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \ingroup      WlzFeatures
@@ -122,7 +130,7 @@ WlzVertexP	WlzVerticesFromObj(WlzObject *obj, WlzVertexP *dstNr,
 				      dstCnt, dstType, &errNum);
 	break;
       case WLZ_CONTOUR:
-	vData = WlzVerticesFromCtr(obj->domain.ctr, dstNr, NULL,
+	vData = WlzVerticesFromGM(obj->domain.ctr->model, dstNr, NULL,
 				    dstCnt, dstType, &errNum);
 	break;
       default:
@@ -289,11 +297,11 @@ static WlzVertexP WlzVerticesFromBound(WlzBoundList *bound,
 }
 
 /*!
+* \return	Allocated vertices.
 * \ingroup	WlzFeatures
-* \return				Allocated vertices.
 * \brief	Allocates a buffer which it fills with the vertices
-*		from a contour.
-* \param	ctr			Given contour.
+*		from a geometric model.
+* \param	model			Given geometric model.
 * \param	dstNr			Destination ptr for normals,
 *					may be NULL.
 * \param	dstVId			Destination ptr for the GM
@@ -305,27 +313,27 @@ static WlzVertexP WlzVerticesFromBound(WlzBoundList *bound,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
-WlzVertexP 	WlzVerticesFromCtr(WlzContour *ctr,
-				    WlzVertexP *dstNr, int **dstVId,
-				    int *dstCnt, WlzVertexType *dstType,
-				    WlzErrorNum *dstErr)
+WlzVertexP 	WlzVerticesFromGM(WlzGMModel *model,
+				  WlzVertexP *dstNr, int **dstVId,
+				  int *dstCnt, WlzVertexType *dstType,
+				  WlzErrorNum *dstErr)
 {
   WlzVertexP    vData;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   vData.v = NULL;
-  if(ctr && (ctr->model != NULL))
+  if(model != NULL)
   {
-    switch(ctr->model->type)
+    switch(model->type)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D:
-	vData = WlzVerticesFromGM2(ctr->model, dstNr, dstVId, dstCnt, dstType,
+	vData = WlzVerticesFromGM2(model, dstNr, dstVId, dstCnt, dstType,
 				    &errNum);
         break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
       case WLZ_GMMOD_3D:
-	vData = WlzVerticesFromGM3(ctr->model, dstNr, dstVId, dstCnt, dstType,
+	vData = WlzVerticesFromGM3(model, dstNr, dstVId, dstCnt, dstType,
 				    &errNum);
         break;
       default:
@@ -341,8 +349,194 @@ WlzVertexP 	WlzVerticesFromCtr(WlzContour *ctr,
 }
 
 /*!
+* \return	Allocated vertices.
 * \ingroup	WlzFeatures
-* \return				Allocated vertices.
+* \brief	Allocates a buffer which it fills with either 2D or
+*		3D double precission vertices from the geometric model.
+*		The indicies of the vertices in the buffer are the same
+*		as the indices of the vertices in the model.
+* \param	model			Given geometric model.
+* \param	dstCnt			Destination ptr for the number
+*					of vertices.
+* \param	dstType			Destination ptr for the type
+*					of vertices.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+WlzVertexP 	WlzDVerticesFromGM(WlzGMModel *model,
+				   int *dstCnt, WlzVertexType *dstType,
+				   WlzErrorNum *dstErr)
+{
+  WlzVertexP    vData;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  vData.v = NULL;
+  if(model != NULL)
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D:
+	*dstType = WLZ_VERTEX_D2;
+	vData.d2 = WlzDVerticesFromGM2(model, dstCnt, &errNum);
+        break;
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D:
+	*dstType = WLZ_VERTEX_D3;
+	vData.d3 = WlzDVerticesFromGM3(model, dstCnt, &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vData);
+}
+
+/*!
+* \return	Allocated vertices.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices
+*		from a 2D GM.
+* \param	model			Given model.
+* \param	dstCnt			Destination ptr for the number
+*					of vertices.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+static WlzDVertex2 *WlzDVerticesFromGM2(WlzGMModel *model, int *dstCnt, 
+				        WlzErrorNum *dstErr)
+{
+  int		idx,
+  		cnt,
+		vIdx;
+  WlzVertexType	type;
+  WlzDVertex2   *tDVP,
+  		*vData = NULL;
+  WlzIVertex2	*tIVP;
+  WlzGMVertex	*cV;
+  AlcVector	*vec;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  vIdx = 0;
+  cnt = model->res.vertex.numElm;
+  vec = model->res.vertex.vec;
+  if((vData = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * cnt)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(model->type == WLZ_GMMOD_2I)
+    {
+      for(idx = 0; idx < cnt; ++idx)
+      {
+	cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
+	tIVP = &(cV->geo.vg2I->vtx);
+	tDVP = vData + idx;
+	tDVP->vtX = tIVP->vtX;
+	tDVP->vtY = tIVP->vtY;
+      }
+    }
+    else
+    {
+      for(idx = 0; idx < cnt; ++idx)
+      {
+	cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
+	*(vData + idx) = cV->geo.vg2D->vtx;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(dstCnt)
+    {
+      *dstCnt = cnt;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vData);
+}
+
+/*!
+* \return	Allocated vertices.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices
+*		from a 3D GM.
+* \param	model			Given model.
+* \param	dstCnt			Destination ptr for the number
+*					of vertices.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+static WlzDVertex3 *WlzDVerticesFromGM3(WlzGMModel *model, int *dstCnt, 
+				        WlzErrorNum *dstErr)
+{
+  int		idx,
+  		cnt,
+		vIdx;
+  WlzVertexType	type;
+  WlzDVertex3   *tDVP,
+  		*vData = NULL;
+  WlzIVertex3	*tIVP;
+  WlzGMVertex	*cV;
+  AlcVector	*vec;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  vIdx = 0;
+  cnt = model->res.vertex.numIdx;
+  vec = model->res.vertex.vec;
+  if((vData = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) * cnt)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(model->type == WLZ_GMMOD_3I)
+    {
+      for(idx = 0; idx < cnt; ++idx)
+      {
+	cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
+	tIVP = &(cV->geo.vg3I->vtx);
+	tDVP = vData + idx;
+	tDVP->vtX = tIVP->vtX;
+	tDVP->vtY = tIVP->vtY;
+	tDVP->vtZ = tIVP->vtZ;
+      }
+    }
+    else
+    {
+      for(idx = 0; idx < cnt; ++idx)
+      {
+	cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
+	*(vData + idx) = cV->geo.vg3D->vtx;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(dstCnt)
+    {
+      *dstCnt = cnt;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vData);
+}
+
+/*!
+* \return	Allocated vertices.
+* \ingroup	WlzFeatures
 * \brief	Allocates a buffer which it fills with the vertices
 *		from a 2D GM.
 * \param	model			Given model.
@@ -353,7 +547,7 @@ WlzVertexP 	WlzVerticesFromCtr(WlzContour *ctr,
 * \param	dstCnt			Destination ptr for the number
 *					of vertices.
 * \param	dstType			Destination ptr for the type
-*					of vertices.
+*					of vertices, may be NULL.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
@@ -553,8 +747,8 @@ static WlzVertexP WlzVerticesFromGM2(WlzGMModel *model,
 }
 
 /*!
-* \ingroup WlzFeatures
-* \return				Allocated vertices.
+* \return	Allocated vertices.
+* \ingroup 	WlzFeatures
 * \brief	Allocates a buffer which it fills with the vertices
 *		from a 3D GM.
 * \param	model			Given model.
@@ -565,7 +759,7 @@ static WlzVertexP WlzVerticesFromGM2(WlzGMModel *model,
 * \param	dstCnt			Destination ptr for the number
 *					of vertices.
 * \param	dstType			Destination ptr for the type
-*					of vertices.
+*					of vertices, may be NULL.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
@@ -785,7 +979,7 @@ static WlzErrorNum WlzVerticesCpBound(WlzVertexP vData, WlzDVertex2 *vNorm,
 /*!
 * \ingroup 	WlzFeatures
 * \return				Allocated vertices.
-* \brief	Allocates a buffer for copting the vertices of a
+* \brief	Allocates a buffer for copying the vertices of a
 *		polygon domain.
 * \param	polyType		Type of polygon domain.
 * \param	cnt			Number of vertices to allocate

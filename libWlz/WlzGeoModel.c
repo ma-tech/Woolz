@@ -123,6 +123,9 @@ static WlzErrorNum      WlzGMModelExtend3V2E1S3D(
                           WlzGMModel *model,
                           WlzGMEdge *eE0,
                           WlzGMEdge *eE1);
+static WlzErrorNum 	WlzGMModelExtend3V3E1S3D(
+			  WlzGMModel *model,
+			  WlzGMEdge **cE);
 static WlzErrorNum      WlzGMModelConstructNewS2D(
                           WlzGMModel *model,
                           WlzDVertex2 *pos);
@@ -2578,7 +2581,216 @@ WlzErrorNum	WlzGMShellSetG2D(WlzGMShell *shell,
 }
 
 /*!
-* \return				Woolz error code.
+* \return	Woolz eror code.
+* \ingroup      WlzGeoModel
+* \brief	Sets the geometry of each of the shells in the given model.
+* \param	model			Given geometric model.
+*/
+WlzErrorNum	WlzGMModelSetSG(WlzGMModel *model)
+{
+  int		idx,
+  		vCnt;
+  WlzBoxP	sGP;
+  WlzVertexP	vGP;
+  WlzGMShell	*fS,
+  		*nS;
+  WlzGMVertex	*nV;
+  AlcVector	*vVec;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    /* First pass: For each shell of the model just set the geometry to
+     * enclose a single vertex of the shell. */
+    nS = fS = model->child;
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I:
+        do
+	{
+          sGP.i2 = &(nS->geo.sg2I->bBox);
+          nV = nS->child->edgeT->vertexT->diskT->vertex;
+	  vGP.i2 = &(nV->geo.vg2I->vtx);
+	  sGP.i2->xMin = sGP.i2->xMax = vGP.i2->vtX;
+	  sGP.i2->yMin = sGP.i2->yMax = vGP.i2->vtY;
+	  nS = nS->next;
+	} while(nS != fS);
+	break;
+      case WLZ_GMMOD_2D:
+        do
+	{
+          sGP.d2 = &(nS->geo.sg2D->bBox);
+          nV = nS->child->edgeT->vertexT->diskT->vertex;
+	  vGP.d2 = &(nV->geo.vg2D->vtx);
+	  sGP.d2->xMin = sGP.d2->xMax = vGP.d2->vtX;
+	  sGP.d2->yMin = sGP.d2->yMax = vGP.d2->vtY;
+	  nS = nS->next;
+	} while(nS != fS);
+	break;
+      case WLZ_GMMOD_3I:
+        do
+	{
+          sGP.i3 = &(nS->geo.sg3I->bBox);
+          nV = nS->child->edgeT->vertexT->diskT->vertex;
+	  vGP.i3 = &(nV->geo.vg3I->vtx);
+	  sGP.i3->xMin = sGP.i3->xMax = vGP.i3->vtX;
+	  sGP.i3->yMin = sGP.i3->yMax = vGP.i3->vtY;
+	  sGP.i3->zMin = sGP.i3->zMax = vGP.i3->vtZ;
+	  nS = nS->next;
+	} while(nS != fS);
+	break;
+      case WLZ_GMMOD_3D:
+        do
+	{
+          sGP.d3 = &(nS->geo.sg3D->bBox);
+          nV = nS->child->edgeT->vertexT->diskT->vertex;
+	  vGP.d3 = &(nV->geo.vg3D->vtx);
+	  sGP.d3->xMin = sGP.d3->xMax = vGP.d3->vtX;
+	  sGP.d3->yMin = sGP.d3->yMax = vGP.d3->vtY;
+	  sGP.d3->zMin = sGP.d3->zMax = vGP.d3->vtZ;
+	  nS = nS->next;
+	} while(nS != fS);
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  /* Second pass: Now for each vertex of the model get the parent shell and
+   * update it's geometry. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vCnt = model->res.vertex.numElm;
+    vVec = model->res.vertex.vec;
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I:
+	for(idx = 0; idx < vCnt; ++idx)
+	{
+	  nV = (WlzGMVertex *)AlcVectorItemGet(vVec, idx);
+	  nS = nV->diskT->vertexT->parent->parent->parent;
+	  sGP.i2 = &(nS->geo.sg2I->bBox);
+	  vGP.i2 = &(nV->geo.vg2I->vtx);
+	  if(vGP.i2->vtX < sGP.i2->xMin)
+	  {
+	    sGP.i2->xMin = vGP.i2->vtX;
+	  }
+	  else if(vGP.i2->vtX > sGP.i2->xMax)
+	  {
+	    sGP.i2->xMax = vGP.i2->vtX;
+	  }
+	  if(vGP.i2->vtY < sGP.i2->yMin)
+	  {
+	    sGP.i2->yMin = vGP.i2->vtY;
+	  }
+	  else if(vGP.i2->vtY > sGP.i2->yMax)
+	  {
+	    sGP.i2->yMax = vGP.i2->vtY;
+	  }
+	}
+	break;
+      case WLZ_GMMOD_2D:
+	for(idx = 0; idx < vCnt; ++idx)
+	{
+	  nV = (WlzGMVertex *)AlcVectorItemGet(vVec, idx);
+	  nS = nV->diskT->vertexT->parent->parent->parent;
+	  sGP.d2 = &(nS->geo.sg2D->bBox);
+	  vGP.d2 = &(nV->geo.vg2D->vtx);
+	  if(vGP.d2->vtX < sGP.d2->xMin)
+	  {
+	    sGP.d2->xMin = vGP.d2->vtX;
+	  }
+	  else if(vGP.d2->vtX > sGP.d2->xMax)
+	  {
+	    sGP.d2->xMax = vGP.d2->vtX;
+	  }
+	  if(vGP.d2->vtY < sGP.d2->yMin)
+	  {
+	    sGP.d2->yMin = vGP.d2->vtY;
+	  }
+	  else if(vGP.d2->vtY > sGP.d2->yMax)
+	  {
+	    sGP.d2->yMax = vGP.d2->vtY;
+	  }
+        }
+	break;
+      case WLZ_GMMOD_3I:
+	for(idx = 0; idx < vCnt; ++idx)
+	{
+	  nV = (WlzGMVertex *)AlcVectorItemGet(vVec, idx);
+	  nS = nV->diskT->vertexT->parent->parent->parent;
+	  sGP.i3 = &(nS->geo.sg3I->bBox);
+	  vGP.i3 = &(nV->geo.vg3I->vtx);
+	  if(vGP.i3->vtX < sGP.i3->xMin)
+	  {
+	    sGP.i3->xMin = vGP.i3->vtX;
+	  }
+	  else if(vGP.i3->vtX > sGP.i3->xMax)
+	  {
+	    sGP.i3->xMax = vGP.i3->vtX;
+	  }
+	  if(vGP.i3->vtY < sGP.i3->yMin)
+	  {
+	    sGP.i3->yMin = vGP.i3->vtY;
+	  }
+	  else if(vGP.i3->vtY > sGP.i3->yMax)
+	  {
+	    sGP.i3->yMax = vGP.i3->vtY;
+	  }
+	  if(vGP.i3->vtZ < sGP.i3->zMin)
+	  {
+	    sGP.i3->zMin = vGP.i3->vtZ;
+	  }
+	  else if(vGP.i3->vtZ > sGP.i3->zMax)
+	  {
+	    sGP.i3->zMax = vGP.i3->vtZ;
+	  }
+	}
+	break;
+      case WLZ_GMMOD_3D:
+	for(idx = 0; idx < vCnt; ++idx)
+	{
+	  nV = (WlzGMVertex *)AlcVectorItemGet(vVec, idx);
+	  nS = nV->diskT->vertexT->parent->parent->parent;
+	  sGP.d3 = &(nS->geo.sg3D->bBox);
+	  vGP.d3 = &(nV->geo.vg3D->vtx);
+	  if(vGP.d3->vtX < sGP.d3->xMin)
+	  {
+	    sGP.d3->xMin = vGP.d3->vtX;
+	  }
+	  else if(vGP.d3->vtX > sGP.d3->xMax)
+	  {
+	    sGP.d3->xMax = vGP.d3->vtX;
+	  }
+	  if(vGP.d3->vtY < sGP.d3->yMin)
+	  {
+	    sGP.d3->yMin = vGP.d3->vtY;
+	  }
+	  else if(vGP.d3->vtY > sGP.d3->yMax)
+	  {
+	    sGP.d3->yMax = vGP.d3->vtY;
+	  }
+	  if(vGP.d3->vtZ < sGP.d3->zMin)
+	  {
+	    sGP.d3->zMin = vGP.d3->vtZ;
+	  }
+	  else if(vGP.d3->vtZ > sGP.d3->zMax)
+	  {
+	    sGP.d3->zMax = vGP.d3->vtZ;
+	  }
+	}
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Updates a shell's geometry using the given double
 *               precision position.
@@ -3142,12 +3354,12 @@ WlzErrorNum	WlzGMShellDndateG3D(WlzGMShell *shell, WlzDVertex3 pos)
 */
 WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 {
-  int		tI0,
-  		fETIdx,
-  		fLTIdx;
+  int		tI0;
   double	tD0;
-  WlzGMEdgeT	*tET;
-  WlzGMLoopT	*tLT;
+  WlzGMEdgeT	*fET,
+  		*tET;
+  WlzGMLoopT	*fLT,
+  		*tLT;
   WlzGMVertexGU	vGU;
   WlzGMShellGU	sGU;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3165,13 +3377,11 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	sGU.sg2I->bBox.xMin = sGU.sg2I->bBox.xMax = vGU.vg2I->vtx.vtX;
 	sGU.sg2I->bBox.yMin = sGU.sg2I->bBox.yMax = vGU.vg2I->vtx.vtY;
 	/* For each loopT */
-	tLT = shell->child;
-	fLTIdx = tLT->idx;
+	fLT = tLT = shell->child;
 	do
 	{
 	  /* For each edgeT */
-	  tET = tLT->edgeT;
-	  fETIdx = tET->idx;
+	  fET = tET = tLT->edgeT;
 	  do
 	  {
 	    /* Update the new bounding box. */
@@ -3194,22 +3404,20 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	    }
 	    /* Next edge topology element. */
 	    tET = tET->next;
-	  } while(tET->idx != fETIdx);
+	  } while(tET != fET);
 	  tLT = tLT->next;
-	} while(tLT->idx != fLTIdx);
+	} while(tLT != fLT);
 	break;
       case WLZ_GMELM_SHELL_G2D:
 	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
 	sGU.sg2D->bBox.xMin = sGU.sg2D->bBox.xMax = vGU.vg2D->vtx.vtX;
 	sGU.sg2D->bBox.yMin = sGU.sg2D->bBox.yMax = vGU.vg2D->vtx.vtY;
 	/* For each loopT */
-	tLT = shell->child;
-	fLTIdx = tLT->idx;
+	fLT = tLT = shell->child;
 	do
 	{
 	  /* For each edgeT */
-	  tET = tLT->edgeT;
-	  fETIdx = tET->idx;
+	  fET = tET = tLT->edgeT;
 	  do
 	  {
 	    /* Update the new bounding box. */
@@ -3232,9 +3440,9 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	    }
 	    /* Next edge topology element. */
 	    tET = tET->next;
-	  } while(tET->idx != fETIdx);
+	  } while(tET != fET);
 	  tLT = tLT->next;
-	} while(tLT->idx != fLTIdx);
+	} while(tLT != fLT);
 	break;
       case WLZ_GMELM_SHELL_G3I:
 	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
@@ -3242,13 +3450,11 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	sGU.sg3I->bBox.yMin = sGU.sg3I->bBox.yMax = vGU.vg3I->vtx.vtY;
 	sGU.sg3I->bBox.zMin = sGU.sg3I->bBox.zMax = vGU.vg3I->vtx.vtZ;
 	/* For each loopT */
-	tLT = shell->child;
-	fLTIdx = tLT->idx;
+	fLT = tLT = shell->child;
 	do
 	{
 	  /* For each edgeT */
-	  tET = tLT->edgeT;
-	  fETIdx = tET->idx;
+	  fET = tET = tLT->edgeT;
 	  do
 	  {
 	    /* Update the new bounding box. */
@@ -3279,9 +3485,9 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	    }
 	    /* Next edge topology element. */
 	    tET = tET->next;
-	  } while(tET->idx != fETIdx);
+	  } while(tET != fET);
 	  tLT = tLT->next;
-	} while(tLT->idx != fLTIdx);
+	} while(tLT != fLT);
 	break;
       case WLZ_GMELM_SHELL_G3D:
 	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
@@ -3289,13 +3495,11 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	sGU.sg3D->bBox.yMin = sGU.sg3D->bBox.yMax = vGU.vg3D->vtx.vtY;
 	sGU.sg3D->bBox.zMin = sGU.sg3D->bBox.zMax = vGU.vg3D->vtx.vtZ;
 	/* For each loopT */
-	tLT = shell->child;
-	fLTIdx = tLT->idx;
+	fLT = tLT = shell->child;
 	do
 	{
 	  /* For each edgeT */
-	  tET = tLT->edgeT;
-	  fETIdx = tET->idx;
+	  fET = tET = tLT->edgeT;
 	  do
 	  {
 	    /* Update the new bounding box. */
@@ -3326,9 +3530,9 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 	    }
 	    /* Next edge topology element. */
 	    tET = tET->next;
-	  } while(tET->idx != fETIdx);
+	  } while(tET != fET);
 	  tLT = tLT->next;
-	} while(tLT->idx != fLTIdx);
+	} while(tLT != fLT);
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -4004,7 +4208,7 @@ WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
   nrm.vtX = 0.0;
   nrm.vtY = 0.0;
   nrm.vtZ = 0.0;
-  if(gV->diskT->idx != gV->diskT->next->idx)
+  if(gV->diskT != gV->diskT->next)
   {
     /* The surface in the imediate neighbourhood of the vertex is
      * not manifold.*/
@@ -4021,8 +4225,7 @@ WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
     eT1 = vT1->parent;
     do
     {
-      if((eT1->idx == eT1->rad->idx) ||
-	  (eT1->idx != eT1->rad->rad->idx))
+      if((eT1 == eT1->rad) || (eT1 != eT1->rad->rad))
       {
 	/* More than two loops are joined by the edge, so the surface
 	 * in the imediate neighbourhood of the vertex is not manifold.
@@ -4050,8 +4253,7 @@ WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
 	vT1 = eT1->vertexT;
       }
     }
-    while((errNum == WLZ_ERR_NONE) && manifold &&
-	(vT1->idx != vT0->idx));
+    while((errNum == WLZ_ERR_NONE) && manifold && (vT1 != vT0));
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -4774,8 +4976,8 @@ WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
 	  if(tE->idx >= 0)
 	  {
 	    tET = tE->edgeT;
-	    if((tET->rad->idx == tET->idx) ||
-	       (tET->rad->rad->idx != tET->idx))
+	    if((tET->rad == tET) ||
+	       (tET->rad->rad != tET))
 	    {
 	      if((nmEIP = (int *)
 			  (AlcVectorExtendAndGet(nmEIVec, nmEI))) == NULL)
@@ -4840,7 +5042,7 @@ WlzGMLoopT	*WlzGMEdgeTCommonLoopT(WlzGMEdgeT *eT0, WlzGMEdgeT *eT1)
 {
   WlzGMLoopT	*loopT = NULL;
 
-  if(eT0->parent->idx == eT1->parent->idx)
+  if(eT0->parent == eT1->parent)
   {
     loopT = eT0->parent;
   }
@@ -4857,27 +5059,43 @@ WlzGMLoopT	*WlzGMEdgeTCommonLoopT(WlzGMEdgeT *eT0, WlzGMEdgeT *eT1)
 */
 WlzGMEdge	*WlzGMVertexCommonEdge(WlzGMVertex *eV0, WlzGMVertex *eV1)
 {
-  WlzGMVertexT	*vT0,
-		*vT1,
-  		*eVT0,
-  		*eVT1;
   WlzGMEdge	*e0,
-		*edge = NULL;
+  		*e1,
+		*eC = NULL;
+  WlzGMVertexT	*vT0,
+  		*vT1;
+  WlzGMDiskT	*dT0,
+  		*dT1;
 
-  vT0 = eVT0 = eV0->diskT->vertexT;
-  vT1 = eVT1 = eV1->diskT->vertexT;
+  dT1 = eV1->diskT;
   do
   {
-    e0 = vT0->parent->edge;
+    vT1 = dT1->vertexT;
     do
     {
-      if(e0->idx == vT1->parent->edge->idx)
+      e1 = vT1->parent->edge;
+      dT0 = eV0->diskT;
+      do
       {
-	edge = e0;
-      }
-    } while((edge == NULL) && ((vT1 = vT1->next)->idx != eVT1->idx));
-  } while((edge == NULL) && ((vT0 = vT0->next)->idx != eVT0->idx));
-  return(edge);
+	vT0 = dT0->vertexT;
+	do
+	{
+	  e0 = vT0->parent->edge;
+	  if(e0 == e1)
+	  {
+	      eC = e0;
+	      goto MATCH_FOUND;
+	  }
+	  vT0 = vT0->next;
+	} while(vT0 != dT0->vertexT);
+	dT0 = dT0->next;
+      } while(dT0 != eV0->diskT);
+      vT1 = vT1->next;
+    } while(vT1 != dT1->vertexT);
+    dT1 = dT1->next;
+  } while(dT1 != eV1->diskT);
+  MATCH_FOUND:
+  return(eC);
 }
 
 /*!
@@ -4896,7 +5114,7 @@ WlzGMShell	*WlzGMVertexCommonShell(WlzGMVertex *eV0, WlzGMVertex *eV1)
 
   if(((s0 = WlzGMVertexGetShell(eV0)) != NULL) &&
      ((s1 = WlzGMVertexGetShell(eV1)) != NULL) &&
-     (s0->idx == s1->idx))
+     (s0 == s1))
   {
     shell = s0;
   }
@@ -4938,8 +5156,7 @@ WlzGMShell	*WlzGMEdgeGetShell(WlzGMEdge *eE)
 }
 
 /*!
-* \return				The common vertex, NULL if it
-*                                       doesn't exist.
+* \return	The common vertex, NULL if it doesn't exist.
 * \ingroup      WlzGeoModel
 * \brief	Finds the common vertex of the two given edges.
 * \param	eE0			First edge element.
@@ -4950,19 +5167,140 @@ WlzGMVertex	*WlzGMEdgeCommonVertex(WlzGMEdge *eE0, WlzGMEdge *eE1)
   WlzGMVertex	*tV,
   		*cV = NULL;
 
-  if(((tV = eE0->edgeT->vertexT->diskT->vertex)->idx ==
-      eE1->edgeT->vertexT->diskT->vertex->idx) ||
-     (tV->idx == eE1->edgeT->opp->vertexT->diskT->vertex->idx))
+  if(((tV = eE0->edgeT->vertexT->diskT->vertex) ==
+      eE1->edgeT->vertexT->diskT->vertex) ||
+     (tV == eE1->edgeT->opp->vertexT->diskT->vertex))
   {
     cV = tV;
   }
-  else if(((tV = eE0->edgeT->opp->vertexT->diskT->vertex)->idx ==
-           eE1->edgeT->vertexT->diskT->vertex->idx) ||
-          (tV->idx == eE1->edgeT->opp->vertexT->diskT->vertex->idx))
+  else if(((tV = eE0->edgeT->opp->vertexT->diskT->vertex) ==
+           eE1->edgeT->vertexT->diskT->vertex) ||
+          (tV == eE1->edgeT->opp->vertexT->diskT->vertex))
   {
     cV = tV;
   }
   return(cV);
+}
+
+/*!
+* \return	The common vertex, NULL if it doesn't exist.
+* \ingroup      WlzGeoModel
+* \brief	Finds the common vertex of the two given edges and sets
+*		the disk topology element destination pointers if there
+*		is a common vertex.
+*		NULL*
+* \param	eE0			First edge element.
+* \param	eE1			Second edge element.
+* \param	dstDT0			First diskT destination pointer,
+					must not be NULL.
+* \param	dstDT1			Second diskT destination pointer,
+					must not be NULL.
+*/
+WlzGMVertex	*WlzGMEdgeCommonVertexGetDiskTs(WlzGMEdge *eE0, WlzGMEdge *eE1,
+				      WlzGMDiskT **dstDT0, WlzGMDiskT **dstDT1)
+{
+  WlzGMDiskT	*tDT00,
+  		*tDT01,
+		*tDT10,
+		*tDT11;
+  WlzGMVertex	*cV = NULL;
+
+  tDT00 = eE0->edgeT->vertexT->diskT;
+  tDT10 = eE1->edgeT->vertexT->diskT;
+  if(tDT00->vertex == tDT10->vertex)
+  {
+    cV = tDT00->vertex;
+    *dstDT0 = tDT00;
+    *dstDT1 = tDT10;
+  }
+  else
+  {
+    tDT11 = eE1->edgeT->opp->vertexT->diskT;
+    if(tDT00->vertex == tDT11->vertex)
+    {
+      cV = tDT00->vertex;
+      *dstDT0 = tDT00;
+      *dstDT1 = tDT11;
+    }
+    else
+    {
+      tDT01 = eE0->edgeT->opp->vertexT->diskT;
+      if(tDT01->vertex == tDT10->vertex)
+      {
+	cV = tDT01->vertex;
+	*dstDT0 = tDT01;
+	*dstDT1 = tDT10;
+      }
+      else if(tDT01->vertex == tDT11->vertex)
+      {
+	cV = tDT01->vertex;
+	*dstDT0 = tDT01;
+	*dstDT1 = tDT11;
+      }
+    }
+  }
+  return(cV);
+}
+
+/*!
+* \return				The common disk topology element,
+*					NULL if it doesn't exist.
+* \ingroup      WlzGeoModel
+* \brief	Finds the common disk topology element of the two given
+*		edges.
+* \param	eE0			First edge element.
+* \param	eE1			Second edge element.
+*/
+WlzGMDiskT	*WlzGMEdgeCommonDiskT(WlzGMEdge *eE0, WlzGMEdge *eE1)
+{
+  WlzGMDiskT	*tDT,
+  		*cDT = NULL;
+
+  if(((tDT = eE0->edgeT->vertexT->diskT) ==
+      eE1->edgeT->vertexT->diskT) ||
+     (tDT == eE1->edgeT->opp->vertexT->diskT))
+  {
+    cDT = tDT;
+  }
+  else if(((tDT = eE0->edgeT->opp->vertexT->diskT) ==
+           eE1->edgeT->vertexT->diskT) ||
+          (tDT == eE1->edgeT->opp->vertexT->diskT))
+  {
+    cDT = tDT;
+  }
+  return(cDT);
+}
+
+/*!
+* \return	The common face or NULL if it doesn't exist.
+* \brief	Finds the common face which is shared by the two given
+*		edges.
+* \param	eE0			First edge element.
+* \param	eE1			Second edge element.
+*/
+WlzGMFace	*WlzGMEdgeCommonFace(WlzGMEdge *eE0, WlzGMEdge *eE1)
+{
+  WlzGMEdgeT	*cET0,
+  		*cET1;
+  WlzGMFace	*cF = NULL;
+
+  cET0 = eE0->edgeT;
+  do
+  {
+    cET1 = eE1->edgeT;
+    do
+    {
+      if(cET0->parent->face == cET1->parent->face)
+      {
+        cF = cET0->parent->face;
+	goto MATCH_FOUND;
+      }
+      cET1 = cET1->rad;
+    } while(cET1 != eE1->edgeT);
+    cET0 = cET0->rad;
+  } while(cET0 != eE0->edgeT);
+  MATCH_FOUND:
+  return(cF);
 }
 
 /*!
@@ -5168,12 +5506,12 @@ void	   	WlzGMEdgeTInsertRadial(WlzGMEdgeT *nET)
 
   /* Get an edgeT of this edge with same direction as the given edgeT. */
   fET = nET->edge->edgeT;
-  if(fET->vertexT->diskT->vertex->idx != nET->vertexT->diskT->vertex->idx)
+  if(fET->vertexT->diskT->vertex != nET->vertexT->diskT->vertex)
   {
     /* fET is antiparrallel to the new edgeT so use it's opposite. */
     fET = fET->opp;
   }
-  if(fET->rad->idx == fET->idx)
+  if(fET->rad == fET)
   {
     /* Edge not shared. */
     pET = fET;
@@ -5205,7 +5543,7 @@ void	   	WlzGMEdgeTInsertRadial(WlzGMEdgeT *nET)
     WLZ_VTX_3_SUB(v2, p2, p0);
     pGrd.vtX = WLZ_VTX_3_DOT(v2, n1);
     pGrd.vtY = WLZ_VTX_3_DOT(v2, n2);
-    while((tET = tET->rad)->idx != fET->idx)
+    while((tET = tET->rad) != fET)
     {
       (void )WlzGMVertexGetG3D(tET->prev->vertexT->diskT->vertex, &p2);
       WLZ_VTX_3_SUB(v2, p2, p0);
@@ -5354,7 +5692,7 @@ void		WlzGMVertexTUnlink(WlzGMVertexT *dVT)
 }
 
 /*!
-* \return				<void>
+* \return	<void>
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given disk topology element from a doubly
 *               linked list of disk topology element's, knowing that
@@ -5381,7 +5719,42 @@ void		WlzGMDiskTUnlink(WlzGMDiskT *dDT)
 }
 
 /*!
-* \return				<void>
+* \return	<void>
+* \ingroup      WlzGeoModel
+* \brief	Joins the given pair of disk topology elements
+*		on return the first of the diskTs has all the
+*		vertexTs of both and the second of the diskTs
+*		should be free'd without being unlinked.
+* \param	gDT0			First disk topology element.
+* \param	gDT1			Second disk topology element
+*					which should be free'd on return.
+*/
+void		WlzGMDiskTJoin(WlzGMDiskT *gDT0, WlzGMDiskT *gDT1)
+{
+  WlzGMVertexT	*nVT0,
+  		*pVT1;
+
+  /* Set the diskT pointers of the second diskT's vertexT's. */
+  nVT0 = gDT1->vertexT;
+  do
+  {
+    nVT0->diskT = gDT0;
+    nVT0 = nVT0->next;
+  }
+  while(nVT0 != gDT1->vertexT);
+  /* Unlink the second diskT. */
+  WlzGMDiskTUnlink(gDT1);
+  /* Joint the lists of vertexTs. */
+  nVT0 = gDT0->vertexT->next;
+  pVT1 = gDT1->vertexT->prev;
+  gDT0->vertexT->next = gDT1->vertexT;
+  gDT1->vertexT->prev = gDT0->vertexT;
+  nVT0->prev = pVT1;
+  pVT1->next = nVT0;
+}
+
+/*!
+* \return	<void>
 * \ingroup      WlzGeoModel
 * \brief	Append new shell onto a doubly linked list of
 *               shells, knowing that neither is NULL.
@@ -6382,7 +6755,6 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
   WlzGMVertex	*nV;
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
-  WlzDVertex3	pos[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
@@ -6409,9 +6781,6 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
     /* Get shell that's to be extended. */
     eShell = WlzGMEdgeGetShell(eE);
     /* Get geometry of all 3 verticies. */
-    (void )WlzGMVertexGetG3D(eE->edgeT->vertexT->diskT->vertex, pos + 0);
-    (void )WlzGMVertexGetG3D(eE->edgeT->opp->vertexT->diskT->vertex, pos + 1);
-    pos[2] = nPos;
     /* New vertex. */
     (void )WlzGMVertexSetG3D(nV, nPos);
     nV->diskT = nDT;
@@ -6477,7 +6846,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* Update shell */
-    (void )WlzGMShellUpdateG3D(eShell, pos[2]);
+    (void )WlzGMShellUpdateG3D(eShell, nPos);
   }
   return(errNum);
 }
@@ -6828,7 +7197,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
     nLT[1]->parent = eShell;
     /* Update the extended shell and delete the joined shell. */
     (void )WlzGMShellUpdateG3D(eShell, nPos);
-    if(model->child->idx == dShell->idx)
+    if(model->child == dShell)
     {
       model->child = eShell;
     }
@@ -7017,7 +7386,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
     /* Update the extended shell and delete the joined shells. */
     for(idx = 0; idx < 2; ++idx)
     {
-      if(model->child->idx == dShell[idx]->idx)
+      if(model->child == dShell[idx])
       {
 	model->child = eShell;
       }
@@ -7151,19 +7520,19 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
       }
     }
     eShell = tShell[idx];
-    dShell = (tShell[idx]->idx == tShell[(idx + 1) % 3]->idx)?
+    dShell = (tShell[idx] == tShell[(idx + 1) % 3])?
              tShell[(idx + 2) % 3]: tShell[(idx + 1) % 3];
-    if(tShell[0]->idx == tShell[1]->idx)
+    if(tShell[0] == tShell[1])
     {
       eShell = tShell[0];
       dShell = tShell[2];
     }
-    else if(tShell[1]->idx == tShell[2]->idx)
+    else if(tShell[1] == tShell[2])
     {
       eShell = tShell[1];
       dShell = tShell[0];
     }
-    else /* tShell[2]->idx == tShell[0]->idx */
+    else /* tShell[2] == tShell[0] */
     {
       eShell = tShell[2];
       dShell = tShell[1];
@@ -7222,7 +7591,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* Update the extended shell and delete the joined shell. */
-    if(model->child->idx == dShell->idx)
+    if(model->child == dShell)
     {
       model->child = eShell;
     }
@@ -7499,6 +7868,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
     nDT->next = nDT->prev = nDT;
     nDT->vertex = eV[2];
     nDT->vertexT = nVT0[2];
+    WlzGMDiskTAppend(eV[2]->diskT, nDT);
     /* New edges. */
     nE[0]->edgeT = nET0[1];
     nE[1]->edgeT = nET0[2];
@@ -7606,9 +7976,9 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
   		*nET1[3];
   WlzGMDiskT	*nDT;
   WlzGMVertex	*eV[3];
+  WlzGMVertexT	*tVT;
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
-  WlzDVertex3	pos[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
@@ -7639,17 +8009,15 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     eV[1] = eE->edgeT->opp->vertexT->diskT->vertex;
     eV[2] = sV;
     /* Get geometry of all 3 verticies. */
-    for(idx = 0; idx < 3; ++idx)
-    {
-      (void )WlzGMVertexGetG3D(*(eV + idx), pos + idx);
-    }
     /* New vertex topology elements. */
-    WlzGMVertexTAppend(eE->edgeT->vertexT, nVT0[0]);
-    WlzGMVertexTAppend(eE->edgeT->vertexT, nVT1[0]);
-    nVT0[0]->diskT = nVT1[0]->diskT = eE->edgeT->vertexT->diskT;
-    WlzGMVertexTAppend(eE->edgeT->opp->vertexT, nVT0[1]);
-    WlzGMVertexTAppend(eE->edgeT->opp->vertexT, nVT1[1]);
-    nVT0[1]->diskT = nVT1[1]->diskT = eE->edgeT->opp->vertexT->diskT;
+    tVT = eE->edgeT->vertexT;
+    WlzGMVertexTAppend(tVT, nVT0[0]);
+    WlzGMVertexTAppend(tVT, nVT1[0]);
+    nVT0[0]->diskT = nVT1[0]->diskT = tVT->diskT;
+    tVT = eE->edgeT->opp->vertexT;
+    WlzGMVertexTAppend(tVT, nVT0[1]);
+    WlzGMVertexTAppend(tVT, nVT1[1]);
+    nVT0[1]->diskT = nVT1[1]->diskT = tVT->diskT;
     nVT0[2]->next = nVT0[2]->prev = nVT1[2];
     nVT1[2]->next = nVT1[2]->prev = nVT0[2];
     nVT0[2]->diskT = nVT1[2]->diskT = nDT;
@@ -7662,6 +8030,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     nDT->next = nDT->prev = nDT;
     nDT->vertex = eV[2];
     nDT->vertexT = nVT0[2];
+    WlzGMDiskTAppend(eV[2]->diskT, nDT);
     /* New edges. */
     nE[0]->edgeT = nET0[1];
     nE[1]->edgeT = nET0[2];
@@ -7702,8 +8071,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* Update extended shell and delete the joined shell. */
-    (void )WlzGMShellUpdateG3D(eShell, pos[2]);
-    if(model->child->idx == dShell->idx)
+    if(model->child == dShell)
     {
       model->child = eShell;
     }
@@ -7768,12 +8136,11 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
-  WlzGMDiskT	*eDT[2];
+  WlzGMDiskT	*eDT[3];
   WlzGMVertex	*eV[3];
   WlzGMVertexT	*eVT[3],
   		*nVT0[3],
   		*nVT1[3];
-  WlzDVertex3	pos[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model &&
@@ -7796,44 +8163,39 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
   {
     /* Get shell that's to be extended. */
     eShell = WlzGMEdgeGetShell(eE0);
-    /* Get verticies. */
-    eV[1] = WlzGMEdgeCommonVertex(eE0, eE1);
-    eV[0] = (eVT[0] = eE0->edgeT->vertexT)->diskT->vertex;
-    if(eV[0]->idx == eV[1]->idx)
+    /* Get verticies and disk topology elements. */
+    eV[1] = WlzGMEdgeCommonVertexGetDiskTs(eE0, eE1, eDT + 0, eDT + 1);
+    if(eDT[0] != eDT[1])
     {
-      eV[0] = (eVT[0] = eE0->edgeT->opp->vertexT)->diskT->vertex;
-      eVT[1] = eE0->edgeT->vertexT;
+      /* Join the disk topology elements. */
+      WlzGMDiskTJoin(eDT[1], eDT[0]);
+      WlzGMModelFreeDT(model, eDT[0]);
     }
-    else
+    eDT[0] = eE0->edgeT->vertexT->diskT;
+    eV[0] = eDT[0]->vertex;
+    if(eV[0] == eV[1])
     {
-      eVT[1] = eE0->edgeT->opp->vertexT;
+      eDT[0] = eE0->edgeT->opp->vertexT->diskT;
+      eV[0] = eDT[0]->vertex;
     }
-    eV[2] = (eVT[2] = eE1->edgeT->vertexT)->diskT->vertex;
-    if(eV[2]->idx == eV[1]->idx)
+    eDT[2] = eE1->edgeT->vertexT->diskT;
+    eV[2] = eDT[2]->vertex;
+    if(eV[2] == eV[1])
     {
-      eV[2] = (eVT[2] = eE1->edgeT->opp->vertexT)->diskT->vertex;
+      eDT[2] = eE1->edgeT->opp->vertexT->diskT;
+      eV[2] = eDT[2]->vertex;
     }
-    /* Get geometry of all 3 verticies. */
-    for(idx = 0; idx < 3; ++idx)
-    {
-      (void )WlzGMVertexGetG3D(*(eV + idx), pos + idx);
-    }
-    /* New vertex topology elements. */
-    for(idx = 0; idx < 3; ++idx)
-    {
-      WlzGMVertexTAppend(eVT[idx], nVT0[idx]);
-      WlzGMVertexTAppend(eVT[idx], nVT1[idx]);
-      nVT0[idx]->diskT = nVT1[idx]->diskT = eVT[idx]->diskT;
-      nVT0[idx]->parent = nET0[idx];
-      nVT1[idx]->parent = nET1[idx];
-    }
-    /* New edge. */
-    nE->edgeT = nET0[2];
-    /* New edge topology elements */
+    /* Set up new edge and vertex topology elements. */
     for(idx = 0; idx < 3; ++idx)
     {
       nIdx = (idx + 1) % 3;
       pIdx = (idx + 3 - 1) % 3;
+      nVT0[idx]->parent = nET0[idx];
+      nVT0[idx]->diskT = eDT[idx];
+      WlzGMVertexTAppend(eDT[idx]->vertexT, nVT0[idx]);
+      nVT1[idx]->parent = nET1[idx];
+      nVT1[idx]->diskT = eDT[idx];
+      WlzGMVertexTAppend(eDT[idx]->vertexT, nVT1[idx]);
       nET0[idx]->next = nET0[nIdx];
       nET0[idx]->prev = nET0[pIdx];
       nET0[idx]->opp = nET1[nIdx];
@@ -7847,50 +8209,171 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
       nET1[idx]->vertexT = nVT1[idx];
       nET1[idx]->parent = nLT[1];
     }
+    /* New and existing edges. */
+    nE->edgeT = nET0[2];
     nET1[1]->edge = nET0[0]->edge = eE0;
     nET1[2]->edge = nET0[1]->edge = eE1;
     nET1[0]->edge = nET0[2]->edge = nE;
-    /* Need to set radial edges. */
+    /* Set radial edges. */
     WlzGMEdgeTInsertRadial(nET0[0]);
     WlzGMEdgeTInsertRadial(nET1[1]);
     WlzGMEdgeTInsertRadial(nET0[1]);
     WlzGMEdgeTInsertRadial(nET1[2]);
     /* New face and loop topology elements. */
     nF->loopT = nLT[0];
-    WlzGMLoopTAppend(eShell->child, nLT[0]);
-    WlzGMLoopTAppend(eShell->child, nLT[1]);
     nLT[0]->opp = nLT[1];
     nLT[1]->opp = nLT[0];
-    nLT[0]->face = nF;
-    nLT[1]->face = nF;
+    nLT[0]->face = nLT[1]->face = nF;
     nLT[0]->edgeT = nET0[0];
     nLT[1]->edgeT = nET1[0];
-    nLT[0]->parent = eShell;
-    nLT[1]->parent = eShell;
-    /* No change to shell */
-    /* No new disk topology elements, but may need to delete one. */
-    eDT[0] = nET0[1]->rad->vertexT->diskT;
-    eDT[1] = nET1[1]->rad->vertexT->diskT;
-    if(eDT[0]->idx != eDT[1]->idx)
+    nLT[0]->parent = nLT[1]->parent = eShell;
+    WlzGMLoopTAppend(eShell->child, nLT[0]);
+    WlzGMLoopTAppend(eShell->child, nLT[1]);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	If it doesn't already exist in the model, constructs
+*		a new 3D simplex splices it into the given model.
+*
+*		Creates a new simplex has: A face (nF), 2 loop topology
+*		elements (nLT0, nLT1), 6 edge topology elements (*nET0,
+*		*nET1) and 6 vertex topology elements (*nVT0, *nVT1).
+*		No disk topology elements, vertices or edges are
+*		created by this function, nor is a shell.
+* 
+* \verbatim
+*                           nVT00        nET00
+*                  eDT0   O ------------------------------->        eDT1
+*                   eV0 @- - - - - - - - - eE0 - - - - - - - -@ eV1
+*                        \   <--------------------------- O  /
+*                       ^   O nVT10      nET11     nVT11  ^   O nVT01
+*                        \ \ \                           / / /
+*                         \   \                         /   /
+*                    e2 -----\ \                       / /----- e1
+*                           \   \ nET10               /   /
+*                            \ \ \        lt1        / / /      
+*                             \   \                 /   /
+*                        nET02 \ \ \         nET12 / / / nET01
+*                               \   \             /   /
+*                                \ \ \           / / /
+*                                 \   \ nVT12   /   /
+*                      lt0         \ \ \    |  / / /
+*                                   \   \   | /   /
+*                                    \ \ \  |/ / /
+*                               nVT02 O   v O   v
+*                                        \   /
+*                                          @  eV2
+*                                            eDT2
+* \endverbatim
+*                                             
+*                   LT0 = {nET00, nET01, nET02},
+*                   LT1 = {nET10, nET11, nET12}
+*
+* \param	model			The geometric model.
+* \param	eE			Array of three existing edges to be
+*					shared by the new facet.
+*/
+static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model, WlzGMEdge **eE)
+{
+  int		idx,
+		pIdx,
+		nIdx;
+  WlzGMVertexT	*nVT0[3],
+		*nVT1[3];
+  WlzGMVertex	*eV;
+  WlzGMDiskT	*eDT[2];
+  WlzGMEdgeT	*nET0[3],
+		*nET1[3];
+  WlzGMLoopT	*nLT[2];
+  WlzGMFace	*nF = NULL;
+  WlzGMShell	*eShell;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Check simplex is not already model. */
+  if(WlzGMEdgeCommonFace(eE[0], eE[1]) == NULL)
+  {
+    /* Make a new simplex. */
+    if(((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
+       ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
+       ((nLT[1] = WlzGMModelNewLT(model, &errNum)) != NULL) &&
+       ((nET0[0] = WlzGMModelNewET(model, &errNum)) != NULL) &&
+       ((nET0[1] = WlzGMModelNewET(model, &errNum)) != NULL) &&
+       ((nET0[2] = WlzGMModelNewET(model, &errNum)) != NULL) &&
+       ((nET1[0] = WlzGMModelNewET(model, &errNum)) != NULL) &&
+       ((nET1[1] = WlzGMModelNewET(model, &errNum)) != NULL) &&
+       ((nET1[2] = WlzGMModelNewET(model, &errNum)) != NULL) &&
+       ((nVT0[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
+       ((nVT0[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
+       ((nVT0[2] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
+       ((nVT1[0] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
+       ((nVT1[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
+       ((nVT1[2] = WlzGMModelNewVT(model, &errNum)) != NULL))
     {
-      eVT[0] = eVT[1] = eDT[1]->vertexT;
-      do
+      eShell = WlzGMEdgeGetShell(eE[0]);
+      /* For each vertex. */
+      for(idx = 0; idx < 3; ++idx)
       {
-        eVT[2] = eVT[1]->next;
-	WlzGMVertexTAppend(eDT[0]->vertexT, eVT[1]);
-	eVT[1]->diskT = eDT[0];
-	eVT[1] = eVT[2];
-      } while(eVT[1]->idx != eVT[0]->idx);
-      if(eV[1]->diskT->idx == eDT[1]->idx)
-      {
-        eV[1]->diskT = eDT[0];
+	nIdx = (idx + 1) % 3;
+	pIdx = (idx + 3 - 1) % 3;
+	eV = WlzGMEdgeCommonVertexGetDiskTs(eE[idx], eE[pIdx],
+						 eDT + 0, eDT + 1);
+	if(eDT[0] != eDT[1])
+	{
+	  /* Join the disk topology elements. */
+	  WlzGMDiskTJoin(eDT[0], eDT[1]);
+	  WlzGMModelFreeDT(model, eDT[1]);
+	}
+	/* New vertex topology elements */
+	nVT0[idx]->parent = nET0[idx];
+	nVT0[idx]->diskT = eDT[0];
+        WlzGMVertexTAppend(eDT[0]->vertexT, nVT0[idx]);
+	nVT1[idx]->parent = nET1[idx];
+	nVT1[idx]->diskT = eDT[0];
+        WlzGMVertexTAppend(eDT[0]->vertexT, nVT1[idx]);
+	/* New edge topology elements */
+	nET0[idx]->next = nET0[nIdx];
+	nET0[idx]->prev = nET0[pIdx];
+	nET0[idx]->opp = nET1[nIdx];
+	nET0[idx]->edge = eE[idx];
+	nET0[idx]->vertexT = nVT0[idx];
+	nET0[idx]->parent = nLT[0];
+	nET1[idx]->next = nET1[pIdx]; /* Previous because reverse direction. */
+	nET1[idx]->prev = nET1[nIdx];     /* Next because reverse direction. */
+	nET1[idx]->opp = nET0[pIdx];
+	nET1[idx]->edge = eE[pIdx];
+	nET1[idx]->vertexT = nVT1[idx];
+	nET1[idx]->parent = nLT[1];
       }
-      WlzGMModelFreeDT(model, eDT[1]);
+      for(idx = 0; idx < 3; ++idx)
+      {
+        WlzGMEdgeTInsertRadial(nET0[idx]);
+        WlzGMEdgeTInsertRadial(nET1[idx]);
+      }
+      /* New loop topology elements. */
+      nLT[0]->opp = nLT[1];
+      nLT[0]->face = nF;
+      nLT[0]->edgeT = nET0[0];
+      nLT[0]->parent = eShell;
+      WlzGMLoopTAppend(eShell->child, nLT[0]);
+      nLT[1]->opp = nLT[0];
+      nLT[1]->face = nF;
+      nLT[1]->edgeT = nET1[0];
+      nLT[1]->parent = eShell;
+      WlzGMLoopTAppend(eShell->child, nLT[1]);
+      /* New face. */
+      nF->loopT = nLT[0];
     }
   }
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
 
 /*!
 * \return				Woolz error code.
@@ -8155,7 +8638,7 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Check for duplicate edge. */
-  if(eET0->prev->idx != eET1->prev->opp->idx)
+  if(eET0->prev != eET1->prev->opp)
   {
     if(model && eET0 &&
        ((nE = WlzGMModelNewE(model, &errNum)) != NULL) &&
@@ -8300,7 +8783,7 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
     dLT = eET1->parent;
     dS = dLT->parent;
     /* Look to see if loops share the same shell. */
-    if((dS = dLT->parent)->idx == eLT->parent->idx)
+    if((dS = dLT->parent) == eLT->parent)
     {
       dS = NULL;
     }
@@ -8582,7 +9065,7 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	   * need to check if the three verticies are in a common loop and then
 	   * if ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
 	   * vertexT's. */
-	  /* TODO Write code for this! */
+	  errNum = WlzGMModelExtend3V3E1S3D(model, cE);
 	  break;
       }
   }
@@ -8611,7 +9094,7 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
     do
     {
       tET->parent = gLT;
-    } while((tET = tET->next)->idx != fET->idx);
+    } while((tET = tET->next) != fET);
     WlzGMLoopTSetAdjT(gLT, gLT->parent);
   }
 }
