@@ -47,6 +47,7 @@ CSOURCES		= \
 			Wlz3DSectionSegmentObject.c \
 			Wlz3DViewStructUtils.c \
 			Wlz3DViewTransformObj.c \
+			Wlz3DWarpMQ_S.c \
 			WlzAffineTransform.c \
 			WlzAffineTransformLSq.c \
 			WlzArea.c \
