@@ -672,10 +672,11 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		{
 		  if((fscanf(fP, "%lg", &((pointBuf + pIdx)->vtX)) != 1) ||
 		     (fscanf(fP, "%lg", &((pointBuf + pIdx)->vtY)) != 1) ||
-		     (fscanf(fP, "%lg", &((pointBuf + pIdx++)->vtZ)) != 1))
+		     (fscanf(fP, "%lg", &((pointBuf + pIdx)->vtZ)) != 1))
 		  {
 		    errNum = WLZ_ERR_READ_INCOMPLETE;
 		  }
+		  ++pIdx;
 		}
 		sumPoints += nPoints;
 	      }

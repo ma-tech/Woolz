@@ -183,15 +183,6 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-  if((fP = (strcmp(outFileStr, "-")?
-	   fopen(outFileStr, "w"): stdout)) == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s: Failed to open output file %s.\n",
-      	      	     argv[0], outFileStr);
-    }
-  }
   if(ok)
   {
     outObj = WlzMakeMain(WLZ_CONTOUR, ctrDom, dumVal, NULL, NULL, &errNum);
@@ -202,6 +193,15 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       		     "%s: Failed to create output woolz object (%s).\n",
 		     argv[0], errMsgStr);
+    }
+  }
+  if((fP = (strcmp(outFileStr, "-")?
+	   fopen(outFileStr, "w"): stdout)) == NULL)
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+      		     "%s: Failed to open output file %s.\n",
+      	      	     argv[0], outFileStr);
     }
   }
   if(ok)
@@ -215,6 +215,10 @@ int             main(int argc, char **argv)
       		     "%s: Failed to write output object (%s).\n",
       		     argv[0], errMsgStr);
     }
+    if(fP && strcmp(outFileStr, "-"))
+    {
+      (void )fclose(fP);
+    }
   }
   if(inObj)
   {
@@ -227,10 +231,6 @@ int             main(int argc, char **argv)
   else if(ctrDom.ctr)
   {
     (void )WlzFreeContour(ctrDom.ctr);
-  }
-  if(fP && strcmp(outFileStr, "-"))
-  {
-    (void )fclose(fP);
   }
   if(usage)
   {
