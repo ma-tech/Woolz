@@ -2035,7 +2035,8 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
 #else
     errNum = WlzErrorFromAlg(
-    	     AlgMatrixCGSolve(aMx, xMx, bMx, wMx, nSys, NULL, NULL, 0.000001,
+    	     AlgMatrixCGSolve(ALG_MATRIX_RECT,
+	     		      aMx, xMx, bMx, wMx, nSys, NULL, NULL, 0.000001,
 	                      1000, NULL, NULL));
 #endif
   }
