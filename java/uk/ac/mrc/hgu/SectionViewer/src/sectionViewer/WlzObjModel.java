@@ -98,7 +98,10 @@ public class WlzObjModel implements WlzObjectType {
    public WlzObject makeSection(WlzThreeDViewStruct VS) {
 
       try {
-	 _sectObj = _obj.WlzGetSectionFromObject(_obj, VS);
+	 _sectObj = _obj.WlzGetSectionFromObject(
+	      _obj,
+	      VS,
+	      WlzInterpolationType.WLZ_INTERPOLATION_NEAREST);
       }
       catch (WlzException e) {
 	System.err.println("makeSection");
@@ -114,7 +117,14 @@ public class WlzObjModel implements WlzObjectType {
 
       WlzObject ret = null;
       try {
-	 ret = obj.WlzGetSectionFromObject(obj, VS);
+	 ret = obj.WlzGetSectionFromObject(
+	      obj,
+	      VS,
+	      WlzInterpolationType.WLZ_INTERPOLATION_NEAREST);
+
+	 if(ret != null) {
+	    
+	 }
       }
       catch (WlzException e) {
 	System.err.println("makeSection2");
