@@ -32,26 +32,26 @@ public class AnatKeyGUI extends JFrame{
 
    private JPanel topPanel = null;
 
-   static protected JButton colBtn0 = null;	   
-   static protected JButton colBtn1 = null;	   
-   static protected JButton colBtn2 = null;	   
-   static protected JButton colBtn3 = null;	   
-   static protected JButton colBtn4 = null;	   
-   static protected JButton colBtn5 = null;	   
+   static protected JButton colBtn0 = null;
+   static protected JButton colBtn1 = null;
+   static protected JButton colBtn2 = null;
+   static protected JButton colBtn3 = null;
+   static protected JButton colBtn4 = null;
+   static protected JButton colBtn5 = null;
 
-   static protected JButton btn00 = null;	   
-   static protected JButton btn10 = null;	   
-   static protected JButton btn20 = null;	   
-   static protected JButton btn30 = null;	   
-   static protected JButton btn40 = null;	   
-   static protected JButton btn50 = null;	   
+   static protected JButton btn00 = null;
+   static protected JButton btn10 = null;
+   static protected JButton btn20 = null;
+   static protected JButton btn30 = null;
+   static protected JButton btn40 = null;
+   static protected JButton btn50 = null;
 
-   static protected JButton btn01 = null;	   
-   static protected JButton btn11 = null;	   
-   static protected JButton btn21 = null;	   
-   static protected JButton btn31 = null;	   
-   static protected JButton btn41 = null;	   
-   static protected JButton btn51 = null;	   
+   static protected JButton btn01 = null;
+   static protected JButton btn11 = null;
+   static protected JButton btn21 = null;
+   static protected JButton btn31 = null;
+   static protected JButton btn41 = null;
+   static protected JButton btn51 = null;
 
    static protected ScrollableTextField tf0 = null;
    static protected ScrollableTextField tf1 = null;
@@ -60,12 +60,12 @@ public class AnatKeyGUI extends JFrame{
    static protected ScrollableTextField tf4 = null;
    static protected ScrollableTextField tf5 = null;
 
-   static protected JCheckBox cbx0 = null;	   
-   static protected JCheckBox cbx1 = null;	   
-   static protected JCheckBox cbx2 = null;	   
-   static protected JCheckBox cbx3 = null;	   
-   static protected JCheckBox cbx4 = null;	   
-   static protected JCheckBox cbx5 = null;	   
+   static protected JCheckBox cbx0 = null;
+   static protected JCheckBox cbx1 = null;
+   static protected JCheckBox cbx2 = null;
+   static protected JCheckBox cbx3 = null;
+   static protected JCheckBox cbx4 = null;
+   static protected JCheckBox cbx5 = null;
 
    static protected boolean cbx0State;
    static protected boolean cbx1State;
@@ -74,12 +74,12 @@ public class AnatKeyGUI extends JFrame{
    static protected boolean cbx4State;
    static protected boolean cbx5State;
 
-   static protected JButton btn02 = null;	   
-   static protected JButton btn12 = null;	   
-   static protected JButton btn22 = null;	   
-   static protected JButton btn32 = null;	   
-   static protected JButton btn42 = null;	   
-   static protected JButton btn52 = null;	   
+   static protected JButton btn02 = null;
+   static protected JButton btn12 = null;
+   static protected JButton btn22 = null;
+   static protected JButton btn32 = null;
+   static protected JButton btn42 = null;
+   static protected JButton btn52 = null;
 
    static protected ImageIcon leftIcon = null;
    static protected ImageIcon rightIcon = null;
@@ -116,7 +116,7 @@ public class AnatKeyGUI extends JFrame{
       cbx5State = false;
       makeGUI();
    }
-   
+
 //-------------------------------------------------------------
    protected void setCols() {
 
@@ -147,7 +147,6 @@ public class AnatKeyGUI extends JFrame{
                  (_rgbt[5][1]<<8)|
                  (_rgbt[5][0]<<16)|
                  (_rgbt[5][3]<<24);
-
    }
 //-------------------------------------------------------------
    private void makeGUI() {
@@ -173,7 +172,7 @@ public class AnatKeyGUI extends JFrame{
 
       JPanel kTopPanel = new JPanel();
       kTopPanel.setLayout(new GridLayout(_nrows,1));
-      
+
 //......................................
       JPanel kPanel0 = new JPanel(); // 1 row of the key
       JPanel kPanel00 = new JPanel(); // holds colour panel & arrow button
@@ -205,17 +204,17 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel00 = new JPanel();
       btnPanel00.setPreferredSize(new Dimension(btnW1,0));
       btnPanel00.setLayout(new BorderLayout(gap1,gap1));
-      btn00 = new JButton();	   
+      btn00 = new JButton();
       if(leftIcon != null) {
-	 btn00.setIcon(leftIcon);	   
+	 btn00.setIcon(leftIcon);
       }
       btnPanel00.add(btn00, BorderLayout.CENTER);
       JPanel btnPanel01 = new JPanel();
       btnPanel01.setPreferredSize(new Dimension(btnW1,0));
       btnPanel01.setLayout(new BorderLayout(gap1,gap1));
-      btn01 = new JButton();	   
+      btn01 = new JButton();
       if(leftIcon != null) {
-	 btn01.setIcon(rightIcon);	   
+	 btn01.setIcon(rightIcon);
       }
       btnPanel01.add(btn01, BorderLayout.CENTER);
       navPanel0.add(btnPanel00);
@@ -230,7 +229,7 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel02 = new JPanel();
       btnPanel02.setPreferredSize(new Dimension(btnW2,0));
       btnPanel02.setLayout(new BorderLayout(gap1,gap1));
-      btn02 = new JButton();	   
+      btn02 = new JButton();
       btnPanel02.add(btn02, BorderLayout.CENTER);
 
       kPanel00.add(colPanel0);
@@ -272,17 +271,17 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel10 = new JPanel();
       btnPanel10.setPreferredSize(new Dimension(btnW1,0));
       btnPanel10.setLayout(new BorderLayout(gap1,gap1));
-      btn10 = new JButton();	   
+      btn10 = new JButton();
       if(leftIcon != null) {
-	 btn10.setIcon(leftIcon);	   
+	 btn10.setIcon(leftIcon);
       }
       btnPanel10.add(btn10, BorderLayout.CENTER);
       JPanel btnPanel11 = new JPanel();
       btnPanel11.setPreferredSize(new Dimension(btnW1,0));
       btnPanel11.setLayout(new BorderLayout(gap1,gap1));
-      btn11 = new JButton();	   
+      btn11 = new JButton();
       if(leftIcon != null) {
-	 btn11.setIcon(rightIcon);	   
+	 btn11.setIcon(rightIcon);
       }
       btnPanel11.add(btn11, BorderLayout.CENTER);
       navPanel1.add(btnPanel10);
@@ -296,7 +295,7 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel12 = new JPanel();
       btnPanel12.setPreferredSize(new Dimension(btnW2,0));
       btnPanel12.setLayout(new BorderLayout(gap1,gap1));
-      btn12 = new JButton();	   
+      btn12 = new JButton();
       btnPanel12.add(btn12, BorderLayout.CENTER);
 
       kPanel10.add(colPanel1);
@@ -338,17 +337,17 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel20 = new JPanel();
       btnPanel20.setPreferredSize(new Dimension(btnW1,0));
       btnPanel20.setLayout(new BorderLayout(gap1,gap1));
-      btn20 = new JButton();	   
+      btn20 = new JButton();
       if(leftIcon != null) {
-	 btn20.setIcon(leftIcon);	   
+	 btn20.setIcon(leftIcon);
       }
       btnPanel20.add(btn20, BorderLayout.CENTER);
       JPanel btnPanel21 = new JPanel();
       btnPanel21.setPreferredSize(new Dimension(btnW1,0));
       btnPanel21.setLayout(new BorderLayout(gap1,gap1));
-      btn21 = new JButton();	   
+      btn21 = new JButton();
       if(leftIcon != null) {
-	 btn21.setIcon(rightIcon);	   
+	 btn21.setIcon(rightIcon);
       }
       btnPanel21.add(btn21, BorderLayout.CENTER);
       navPanel2.add(btnPanel20);
@@ -362,7 +361,7 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel22 = new JPanel();
       btnPanel22.setPreferredSize(new Dimension(btnW2,0));
       btnPanel22.setLayout(new BorderLayout(gap1,gap1));
-      btn22 = new JButton();	   
+      btn22 = new JButton();
       btnPanel22.add(btn22, BorderLayout.CENTER);
 
       kPanel20.add(colPanel2);
@@ -404,17 +403,17 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel30 = new JPanel();
       btnPanel30.setPreferredSize(new Dimension(btnW1,0));
       btnPanel30.setLayout(new BorderLayout(gap1,gap1));
-      btn30 = new JButton();	   
+      btn30 = new JButton();
       if(leftIcon != null) {
-	 btn30.setIcon(leftIcon);	   
+	 btn30.setIcon(leftIcon);
       }
       btnPanel30.add(btn30, BorderLayout.CENTER);
       JPanel btnPanel31 = new JPanel();
       btnPanel31.setPreferredSize(new Dimension(btnW1,0));
       btnPanel31.setLayout(new BorderLayout(gap1,gap1));
-      btn31 = new JButton();	   
+      btn31 = new JButton();
       if(leftIcon != null) {
-	 btn31.setIcon(rightIcon);	   
+	 btn31.setIcon(rightIcon);
       }
       btnPanel31.add(btn31, BorderLayout.CENTER);
       navPanel3.add(btnPanel30);
@@ -428,7 +427,7 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel32 = new JPanel();
       btnPanel32.setPreferredSize(new Dimension(btnW2,0));
       btnPanel32.setLayout(new BorderLayout(gap1,gap1));
-      btn32 = new JButton();	   
+      btn32 = new JButton();
       btnPanel32.add(btn32, BorderLayout.CENTER);
 
       kPanel30.add(colPanel3);
@@ -470,17 +469,17 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel40 = new JPanel();
       btnPanel40.setPreferredSize(new Dimension(btnW1,0));
       btnPanel40.setLayout(new BorderLayout(gap1,gap1));
-      btn40 = new JButton();	   
+      btn40 = new JButton();
       if(leftIcon != null) {
-	 btn40.setIcon(leftIcon);	   
+	 btn40.setIcon(leftIcon);
       }
       btnPanel40.add(btn40, BorderLayout.CENTER);
       JPanel btnPanel41 = new JPanel();
       btnPanel41.setPreferredSize(new Dimension(btnW1,0));
       btnPanel41.setLayout(new BorderLayout(gap1,gap1));
-      btn41 = new JButton();	   
+      btn41 = new JButton();
       if(leftIcon != null) {
-	 btn41.setIcon(rightIcon);	   
+	 btn41.setIcon(rightIcon);
       }
       btnPanel41.add(btn41, BorderLayout.CENTER);
       navPanel4.add(btnPanel40);
@@ -494,7 +493,7 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel42 = new JPanel();
       btnPanel42.setPreferredSize(new Dimension(btnW2,0));
       btnPanel42.setLayout(new BorderLayout(gap1,gap1));
-      btn42 = new JButton();	   
+      btn42 = new JButton();
       btnPanel42.add(btn42, BorderLayout.CENTER);
 
       kPanel40.add(colPanel4);
@@ -536,17 +535,17 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel50 = new JPanel();
       btnPanel50.setPreferredSize(new Dimension(btnW1,0));
       btnPanel50.setLayout(new BorderLayout(gap1,gap1));
-      btn50 = new JButton();	   
+      btn50 = new JButton();
       if(leftIcon != null) {
-	 btn50.setIcon(leftIcon);	   
+	 btn50.setIcon(leftIcon);
       }
       btnPanel50.add(btn50, BorderLayout.CENTER);
       JPanel btnPanel51 = new JPanel();
       btnPanel51.setPreferredSize(new Dimension(btnW1,0));
       btnPanel51.setLayout(new BorderLayout(gap1,gap1));
-      btn51 = new JButton();	   
+      btn51 = new JButton();
       if(leftIcon != null) {
-	 btn51.setIcon(rightIcon);	   
+	 btn51.setIcon(rightIcon);
       }
       btnPanel51.add(btn51, BorderLayout.CENTER);
       navPanel5.add(btnPanel50);
@@ -560,7 +559,7 @@ public class AnatKeyGUI extends JFrame{
       JPanel btnPanel52 = new JPanel();
       btnPanel52.setPreferredSize(new Dimension(btnW2,0));
       btnPanel52.setLayout(new BorderLayout(gap1,gap1));
-      btn52 = new JButton();	   
+      btn52 = new JButton();
       btnPanel52.add(btn52, BorderLayout.CENTER);
 
       kPanel50.add(colPanel5);

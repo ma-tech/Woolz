@@ -58,7 +58,7 @@ public class AnatKey extends AnatKeyGUI{
       cbx5.addItemListener(cbxH);
 
    }
-   
+
 //-------------------------------------------------------------
    // makes sure only 1 instance of the class is created
    static public AnatKey instance() {
@@ -269,6 +269,10 @@ public class AnatKey extends AnatKeyGUI{
       } // switch
    }
 
+   public Color getColor(int index){
+     return new Color(_cols[index], true);
+   }
+
 //-------------------------------------------------------------
    public static void reset() {
 
@@ -315,9 +319,9 @@ public class AnatKey extends AnatKeyGUI{
 	       setEntryRemoved(i, el.getDescription());
 	    } else {
 	       if(el.isVisible()) {
-		  setEntryVisible(i, el.getDescription());	    
+		  setEntryVisible(i, el.getDescription());
 	       } else {
-		  setEntryInvisible(i, el.getDescription());	    
+		  setEntryInvisible(i, el.getDescription());
 	       }
 	    }
 	 }
@@ -346,23 +350,23 @@ public class AnatKey extends AnatKeyGUI{
          } else if(e.getSource() == btn01) {
             tf0.setScrollOffset(END); // go to end of text
          } else if(e.getSource() == btn10) {
-            tf1.setScrollOffset(START); 
+            tf1.setScrollOffset(START);
          } else if(e.getSource() == btn11) {
             tf1.setScrollOffset(END);
          } else if(e.getSource() == btn20) {
-            tf2.setScrollOffset(START); 
+            tf2.setScrollOffset(START);
          } else if(e.getSource() == btn21) {
             tf2.setScrollOffset(END);
          } else if(e.getSource() == btn30) {
-            tf3.setScrollOffset(START); 
+            tf3.setScrollOffset(START);
          } else if(e.getSource() == btn31) {
             tf3.setScrollOffset(END);
          } else if(e.getSource() == btn40) {
-            tf4.setScrollOffset(START); 
+            tf4.setScrollOffset(START);
          } else if(e.getSource() == btn41) {
             tf4.setScrollOffset(END);
          } else if(e.getSource() == btn50) {
-            tf5.setScrollOffset(START); 
+            tf5.setScrollOffset(START);
          } else if(e.getSource() == btn51) {
             tf5.setScrollOffset(END);
          }
