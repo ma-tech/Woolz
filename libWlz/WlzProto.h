@@ -1031,6 +1031,7 @@ extern WlzErrorNum		WlzCompThreshold(
 /************************************************************************
 * WlzConstruct3D.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzObject		*WlzConstruct3DObjFromFile(
 				  int sizeArrayFileStr,
 				  char **arrayFileStr,
@@ -1039,6 +1040,7 @@ extern WlzObject		*WlzConstruct3DObjFromFile(
 				  float ySz,
 				  float zSz,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzConstruct3DObjFromObj(
 				  int sizeArrayObjs,
 				  WlzObject **arrayObjs,
