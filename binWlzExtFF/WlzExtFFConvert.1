@@ -1,0 +1,125 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    XXXX
+.\" Title:      XXXX
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Converts objects between Woolz and other data file
+.\"		formats.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzExtFF" 1 "MRC HGU Woolz" "Woolz Library (External Data Formats)"
+.SH NAME
+WlzExtFFConvert \- Converts objects between Woolz and other data file formats.
+.SH SYNOPSIS
+.LP
+.BI "WlzExtFFConvert  [-h]
+.in +4m
+.BI "[-b" "<background>" ]
+.br
+.BI "[-f" "<input format>" "] [-F" "<output format>" ]
+.br
+.BI "[-x" "<x size>" "] [-y" "<y size>" "] [-z" "<z size>" ]
+.br
+.BI "[-o" "<output file>" "] [" "<input file>" ]
+.in -4m
+.SH OPTIONS
+.LP
+.B "-b "
+If the input object is read from a Woolz data file then it's background
+value remains as read, unless this option is specified.
+.LP
+.B "-f " 
+Input file format, the default is taken from the input file extension.
+.LP
+.B "-F "
+Output file format, the default is taken from the output file extension.
+.LP
+.B "-o "
+Output file name
+.LP
+.B "-x "
+X voxel/pixel size.
+.LP
+.B "-y "
+Y voxel/pixel size.
+.LP
+.B "-z "
+Z voxel/pixel size.
+.LP
+.B "-h "
+usage message.
+.SH DESCRIPTION
+.B WlzExtFFConvert
+Converts objects between Woolz and other data file formats.
+By default objects are read from the standard input and written to
+the standard output.
+.LP
+File formats which use more than one file can not be read or written
+using the standard input or standard output.
+.SH EXAMPLES
+.LP
+.cs R 24
+.nf
+
+host% WlzExtFFConvert -o out.slc in.wlz
+
+.fi
+.cs R
+Converts the Woolz object in.wlz to an SLC data file out.slc
+.cs R 24
+.nf
+
+host% WlzExtFFConvert -f den -o out.pgm < in.den
+
+.fi
+.cs R
+Converts the Stanford density file in.den to a series of PGM files
+each with a name of the form out000*.pgm and a control file which specifies
+the volume origin, size and voxel dimensions.
+.cs R 24
+.nf
+
+host% WlzExtFFConvert -p out.pgm in.wlz
+
+.fi
+.cs R
+If the input woolz object is a 2D domain object with values then
+a single pgm file out.pgm is created.
+If the input object is a 3D domain object with values then
+a series of PGM files is created together with a control file.
+.cs R 24
+.nf
+
+host% cat >in.ctr
+ident:WLZSTACKCTR:1.0
+volume origin:10 210 50
+volume size:120 120 8
+voxel size:1 1 1
+files
+50 in00.pgm
+51 in01.pgm
+52 in02.pgm
+53 in03.pgm
+54 in04.pgm
+55 in05.pgm
+56 in06.pgm
+57 in07.pgm
+^D
+host% WlzExtFFConvert -o out.wlz in.pgm
+
+.fi
+.cs R
+Creates a single woolz file out.wlz from the files in0[0-7].pgm and
+in.ctr.
+.SH SEE ALSO
+WlzExtFF(3), WlzExtFF(3)
+.SH BUGS
+Still to be found!
