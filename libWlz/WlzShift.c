@@ -13,6 +13,7 @@
 *		translations) to Woolz objects, domains and values.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 08-03-2000 bill Fix bug in WlzShiftValues for 3D value table.
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
@@ -517,8 +518,8 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  if((outVal.vox = WlzMakeVoxelValueTb(inVal.vox->type,
-					       inVal.vox->plane1,
-					       inVal.vox->lastpl,
+					       inVal.vox->plane1 + zShift,
+					       inVal.vox->lastpl + zShift,
 					       inVal.vox->bckgrnd, NULL,
 					       &errNum)) != NULL)
 	  {
@@ -530,8 +531,8 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 	    {
 	      *valP1++ = (valP0->core)?
 			 WlzAssignValues(
-			 WlzCopyValues(WLZ_2D_DOMAINOBJ, *valP0, *domP0,
-			 	       &errNum), NULL):
+			 WlzShiftValues(WLZ_2D_DOMAINOBJ, *valP0, *domP0,
+			 		xShift, yShift, 0, &errNum), NULL):
 			 nullVal;
 	      ++valP0;
 	      ++domP0;
