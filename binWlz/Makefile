@@ -119,7 +119,7 @@ CSOURCES		= \
 			WlzAffineTransformLSq.c \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
-			WlzAutoTrackUpDown.c \
+			WlzBasisFnTransformObj.c \
 			WlzBoundaryToObj.c \
 			WlzBoundingBox.c \
 			WlzBuildContour.c \
@@ -193,6 +193,8 @@ CSOURCES		= \
 			WlzVerifyObj.c \
 			WlzVolume.c \
 			WlzWindow.c
+
+#			WlzAutoTrackUpDown.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).

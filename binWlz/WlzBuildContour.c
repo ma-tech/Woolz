@@ -319,7 +319,7 @@ int             main(int argc, char **argv)
       "  -h  Prints this usage information.\n"
       "  -o  Output object file name.\n"
       "  -2  Build a 2D contour.\n"
-      "  -3  Build a 2D contour.\n"
+      "  -3  Build a 3D contour.\n"
       "  -d  Build a contour with double floating point geometry.\n"
       "  -i  Build a contour with integer geometry.\n"
       "Builds a contour from the given input simplicies.\n"
