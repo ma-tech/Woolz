@@ -690,7 +690,11 @@ public class WlzC2Java
       switch(cIdrCnt)
       {
 	case 0:
-	  if(cPmType.equals("long"))
+	  if(cPmType.equals("void"))
+	  {
+	    jPmKey = WLZ_JPM_KEY_LONG;
+	  }
+	  else if(cPmType.equals("long"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG;
 	  }
@@ -1096,7 +1100,6 @@ public class WlzC2Java
 	    }
 	    else
 	    {
-	      /* HACK START NEW CODE */
 	      if(cPmIdent.startsWith("dstArray"))
 	      {
 		if(cPmType.equals("WlzIVertex2"))
@@ -1140,21 +1143,6 @@ public class WlzC2Java
 	      {
 	        jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	      }
-	      /* HACK END NEW CODE */
-	      /* HACK START OLD CODE
-	      if(cPmIdent.startsWith("dst"))
-	      {
-		jPmKey = WLZ_JPM_KEY_WLZ_PTR2;
-	      }
-	      else if(cPmIdent.startsWith("array"))
-	      {
-		jPmKey = WLZ_JPM_KEY_WLZ_PTR1_ARY1;
-	      }
-	      else
-	      {
-	        jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
-	      }
-	      HACK END OLD CODE */
 	    }
 	  }
 	  else
@@ -3452,10 +3440,13 @@ void ParameterDeclaration():
     ]
   )
   {
-    fnPmIdentLst.add(lastIdent);
-    fnPmPtrLst.add(lastPtr);
-    fnPmQualLst.add(lastQual);
-    fnPmTypeLst.add(lastType);
+    if(lastIdent.length() > 0)
+    {
+      fnPmIdentLst.add(lastIdent);
+      fnPmPtrLst.add(lastPtr);
+      fnPmQualLst.add(lastQual);
+      fnPmTypeLst.add(lastType);
+    }
   }
 }
 
