@@ -29,8 +29,8 @@ extern "C"
 
 #include <Alg.h>
 
-#include <WlzType.h>
 #include <WlzError.h>
+#include <WlzType.h>
 #include <WlzDebug.h>
 #include <WlzProto.h>
 #include <WlzMacro.h>
