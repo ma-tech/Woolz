@@ -148,6 +148,8 @@ typedef enum _WlzObjectType
   					     a collection of intervals. */
   WLZ_INTERVALDOMAIN_RECT	= 2,	/*!< Spatial domain defined by an
   					     axis aligned rectangle. */
+  WLZ_LBTDOMAIN_2D		= 3,	/*!< 2D linear binary tree domain. */
+  WLZ_LBTDOMAIN_3D		= 4,	/*!< 3D linear binary tree domain. */
   WLZ_PLANEDOMAIN_DOMAIN	= WLZ_2D_DOMAINOBJ, /*!< 3D spatial domain
   					     composed of 2D spatial domains. */
   WLZ_PLANEDOMAIN_POLYGON	= WLZ_2D_POLYGON, /*!< 3D polygon domain
@@ -334,6 +336,21 @@ typedef enum _WlzRasterDir
   WLZ_RASTERDIR_DLDC  = 3		/*!< Decreasing lines, decreasing
   					     columns */
 } WlzRasterDir;
+
+/*!
+* \enum         _WlzDirection
+* \ingroup      WlzType
+* \brief        Basic directions.
+*/
+typedef enum _WlzDirection
+{
+  WLZ_DIRECTION_IC,             /*!< Increasing columns, ++x, east. */
+  WLZ_DIRECTION_IL,             /*!< Increasing lines, ++y, south. */
+  WLZ_DIRECTION_IP,             /*!< Increasing planes, ++z, up. */
+  WLZ_DIRECTION_DC,             /*!< Decreasing columns, --x, west. */
+  WLZ_DIRECTION_DL,             /*!< Decreasing lines, --y, north. */
+  WLZ_DIRECTION_DP              /*!< Decreasing planes, --z, down. */
+} WlzDirection;
 
 /*!
 * \enum		_WlzTransformType
@@ -1684,6 +1701,107 @@ typedef struct _WlzGMResIdxTb
 } WlzGMResIdxTb;
 
 /************************************************************************
+* data structure for linear binary tree domains.
+************************************************************************/
+/*!
+* \def          WLZ_LBTDOMAIN_MAXDIGITS
+* \ingroup      WlzType
+* \brief        The maximum number of linear binary tree key digits,
+*               which must be less than the number of bits in an int.
+*/
+#define WLZ_LBTDOMAIN_MAXDIGITS (30)
+
+/*!
+* \struct       _WlzLBTNode2D
+* \ingroup      WlzType
+* \brief        A 2D linear binary tree node for spatial domain representation.
+*               Typedef: ::WlzLBTNode.
+*/
+typedef struct _WlzLBTNode2D
+{
+  unsigned              keys[3];        /*!< A single location key which
+                                             uses bit interleaving with
+                                             the bits interleaved between
+                                             the elements for column, line
+                                             and term in that order.
+                                             Each of the array elements must
+                                             have at least
+                                             WLZ_LBTDOMAIN_MAXDIGITS bits. */
+} WlzLBTNode2D;
+
+/*!
+* \struct       _WlzLBTNode3D
+* \ingroup      WlzType
+* \brief        A 3D linear binary tree node for spatial domain representation.
+*               Typedef: ::WlzLBTNode.
+*/
+typedef struct _WlzLBTNode3D
+{
+  unsigned              keys[4];        /*!< A single location key which
+                                             uses bit interleaving with
+                                             the bits interleaved between
+                                             the elements for column, line
+                                             plane and term in that order.
+                                             Each of the array elements must
+                                             have at least
+                                             WLZ_LBTDOMAIN_MAXDIGITS bits. */
+} WlzLBTNode3D;
+
+/*!
+* \struct       _WlzLBTDomain2D
+* \ingroup      WlzType
+* \brief        A 2D linear binary tree spatial domain representation.
+*               Typedef: ::WlzLBTDomain.
+*/
+typedef struct _WlzLBTDomain2D
+{
+  WlzObjectType         type;           /*!< From WlzCoreDomain. */
+  int                   linkcount;      /*!< From WlzCoreDomain. */
+  void                  *freeptr;       /*!< From WlzCoreDomain. */
+  int                   line1;          /*!< First line coordinate. */
+  int                   lastln;         /*!< Last line coordinate. */
+  int                   kol1;           /*!< First column line
+                                             coordinate. */
+  int                   lastkl;         /*!< Last column  line
+                                             coordinate. */
+  int                   depth;          /*!< LBT depth. */
+  int                   nNodes;         /*!< Number of nodes in the
+                                             tree. */
+  int                   maxNodes;       /*!< Number of nodes
+                                             allocated. */
+  WlzLBTNode2D          *nodes;         /*!< Array of nodes sorted by their
+                                             location key. */
+} WlzLBTDomain2D;
+
+/*!
+* \struct       _WlzLBTDomain3D
+* \ingroup      WlzType
+* \brief        A 3D linear binary tree spatial domain representation.
+*               Typedef: ::WlzLBTDomain.
+*/
+typedef struct _WlzLBTDomain3D
+{
+  WlzObjectType         type;           /*!< From WlzCoreDomain. */
+  int                   linkcount;      /*!< From WlzCoreDomain. */
+  void                  *freeptr;       /*!< From WlzCoreDomain. */
+  int               	plane1;     	/*!< First plane coordinate. */
+  int               	lastpl; 	/*!< Last plane coordinate. */
+  int                   line1;          /*!< First line coordinate. */
+  int                   lastln;         /*!< Last line coordinate. */
+  int                   kol1;           /*!< First column line
+                                             coordinate. */
+  int                   lastkl;         /*!< Last column  line
+                                             coordinate. */
+  int                   depth;          /*!< LBT depth. */
+  int                   nNodes;         /*!< Number of nodes in the
+                                             tree. */
+  int                   maxNodes;       /*!< Number of nodes
+                                             allocated. */
+  WlzLBTNode3D          *nodes;         /*!< Array of nodes sorted by their
+                                             location key. */
+} WlzLBTDomain3D;
+
+/************************************************************************
 * Data structures for contours (both 2D and 3D).
 ************************************************************************/
 
@@ -1757,6 +1875,8 @@ typedef union _WlzDomain
   struct _WlzWarpTrans       *wt;
   struct _WlzContour 	     *ctr;
   struct _WlzMeshTransform   *mt;
+  struct _WlzLBTDomain2D     *l2;
+  struct _WlzLBTDomain3D     *l3;
 } WlzDomain;
 
 /*!
@@ -2090,6 +2210,20 @@ typedef struct _WlzDynItvPool
   int		offset;			/*!< Offset into array for next
   					     available interval. */
 } WlzDynItvPool;
+
+/*!
+* \struct       _WlzPartialItv2D
+* \ingroup      DomainOps
+* \brief        Data structure that can be used to hold partial intervals.
+*               These can then be sorted and condensed to find the intervals
+*               for an interval domain.
+*/
+typedef struct _WlzPartialItv2D
+{
+  int                   ileft;
+  int                   iright;
+  int                   ln;
+} WlzPartialItv2D;
 
 /************************************************************************
 * Grey value tables.
