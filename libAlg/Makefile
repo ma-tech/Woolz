@@ -177,7 +177,7 @@ endif
 
 # making the tag file
 tags:
-	$(ETAGS) -f $(ETAGSFILE) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+	$(CTAGS)  $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
