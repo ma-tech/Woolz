@@ -80,7 +80,7 @@ CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
  
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages tag
+all:			archive executables includes manpages
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
