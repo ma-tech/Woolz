@@ -1,38 +1,22 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzAffineTransform.c
-* Date:         March 1999
-* Author:       Richard Baldock, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing Woolz affine transforms and
+/*!
+* \file         WlzAffineTransform.c
+* \author       Richard Baldock, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Functions for computing Woolz affine transforms and
 *		applying them to Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 22-03-01 bill Make changes to allow transforming 3D domain objects,
-*		fix bugs in WlzAffineTransformBBox[ID]3().
-* 25-01-01 bill	Fix WlzAffineTransformBBox[ID][23].
-* 19-01-01 bill Modify WlzAffineTransformIsIdentity().
-* 30-11-00 bill WlzAffineTransformMatrixSet() now sets 3D matricies.
-* 10-10-00 bill	Add WlzAffineTransformContour(),
-*		WlzAffineTransformGMModel(),
-*		WlzAffineTransformBBoxI2(),
-*		WlzAffineTransformBBoxD2(),
-*		WlzAffineTransformBBoxI3() and
-*		WlzAffineTransformBBoxD3().
-* 27-09-00 bill Make modifications for 3D affine transforms.
-*		Add WlzAffineTransformDimension(),
-*               WlzAffineTransformTranslationSet(),
-*               WlzAffineTransformFromTranslation(),
-*               WlzAffineTransformRotationSet(),
-*               WlzAffineTransformFromScale(),
-*               WlzAffineTransformScaleSet() and
-*               WlzAffineTransformFromRotation().
-************************************************************************/
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
@@ -79,16 +63,20 @@ static void			WlzAffineTransformPrimGet2(
 				  WlzAffineTransform *tr,
 				  WlzAffineTransformPrim *prim);
 
-/************************************************************************
-* Function:	WlzAffineTransformDimension
-* Returns:	int:			2 or 3 for a 2D or 3D affine
+/*!
+* \ingroup	Wlz
+* \defgroup	WlzAffineTransform
+* @{
+*/
+
+/*!
+* \return				2 or 3 for a 2D or 3D affine
 *					transform, 0 on error.
-* Purpose:	Computes the dimension of the given affine transform.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given affine transform.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
+* \brief	Computes the dimension of the given affine transform.
+* \param 	tr			Given affine transform.
+* \param	dstErr			Destination error pointer, may
 *					be null.
-************************************************************************/
+*/
 int		WlzAffineTransformDimension(WlzAffineTransform *tr,
 					    WlzErrorNum *dstErr)
 {
@@ -127,17 +115,15 @@ int		WlzAffineTransformDimension(WlzAffineTransform *tr,
   return(dim);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformIsTranslate
-* Returns:	int:			Non-zero if translation.
-* Purpose:	Tests whether the given affine transform is a simple
+/*!
+* \return				Non-zero if translation.
+* \brief	Tests whether the given affine transform is a simple
 *		integer translation.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given affine transform.
-*		WlzObject *obj:		Optional object, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
+* \param	tr			Given affine transform.
+* \param	obj			Optional object, may be NULL.
+* \param	dstErr			Destination error pointer, may
 *					be null.
-************************************************************************/
+*/
 int		WlzAffineTransformIsTranslate(WlzAffineTransform *tr,
 					      WlzObject *obj,
 					      WlzErrorNum *dstErr)
@@ -171,19 +157,17 @@ int		WlzAffineTransformIsTranslate(WlzAffineTransform *tr,
   return(transFlg);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformIsTranslate2D
-* Returns:	int:			Non-zero if translation.
-* Purpose:	Tests wether the given 2D affine transform is a simple
+/*!
+* \return				Non-zero if translation.
+* \brief	Tests wether the given 2D affine transform is a simple
 *		integer translation.
 *		Because this is a static function the parameters are
 *		not checked.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D affine transform.
-*		WlzObject *obj:		Optional object, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
+* \param	tr			Given 2D affine transform.
+* \param	obj			Optional object, may be NULL.
+* \param	dstErr			Destination error pointer, may
 *					be null.
-************************************************************************/
+*/
 static int	WlzAffineTransformIsTranslate2(WlzAffineTransform *tr,
 						WlzObject *obj,
 						WlzErrorNum *dstErr)
@@ -248,19 +232,17 @@ static int	WlzAffineTransformIsTranslate2(WlzAffineTransform *tr,
   return(transFlg);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformIsTranslate3
-* Returns:	int:			Non-zero if translation.
-* Purpose:	Tests wether the given 3D affine transform is a simple
+/*!
+* \return				Non-zero if translation.
+* \brief	Tests wether the given 3D affine transform is a simple
 *		integer translation.
 *		Because this is a static function the parameters are
 *		not checked.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 3D affine transform.
-*		WlzObject *obj:		Optional object, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
+* \param	tr			Given 3D affine transform.
+* \param	obj			Optional object, may be NULL.
+* \param	dstErr			Destination error pointer, may
 *					be null.
-************************************************************************/
+*/
 static int	WlzAffineTransformIsTranslate3(WlzAffineTransform *tr,
 					       WlzObject *obj,
 					       WlzErrorNum *dstErr)
@@ -343,20 +325,18 @@ static int	WlzAffineTransformIsTranslate3(WlzAffineTransform *tr,
   return(transFlg);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformIntTranslate
-* Returns:	WlzObject *:		Translated object or NULL on
+/*!
+* \return				Translated object or NULL on
 *					error.
-* Purpose:	Translates the given 2D domain object with an integral
+* \brief	Translates the given 2D domain object with an integral
 *		translation.
 *		Because this is a static function the parameters are
 *		not checked.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given 2D domain object.
-*		WlzAffineTransform *tr: Given affine transform.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	srcObj			Given 2D domain object.
+* \param	tr			Given affine transform.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 static WlzObject *WlzAffineTransformIntTranslate(WlzObject *srcObj,
 					         WlzAffineTransform *tr,
 					      	 WlzErrorNum *dstErr)
@@ -392,19 +372,16 @@ static WlzObject *WlzAffineTransformIntTranslate(WlzObject *srcObj,
   return(newObj);
 }
 
-/************************************************************************
-* Function:     WlzAffineTransformPoly2
-* Returns:      WlzPolygonDomain *:     Transformed polygon domain or
-*                                       NULL on error.
-* Purpose:      Transforms the given polygon domain.
-*               Because this is a static function the parameters (other
-*               than polygon type) are not checked.
-* Global refs:  -
-* Parameters:   WlzPolygonDomain *srcPoly: Given polygon domain.
-*               WlzAffineTransform *trans: Given affine transform.
-*               WlzErrorNum *dstErr:    Destination pointer for error
-*                                       number.
-************************************************************************/
+/*!
+* \return			     	Transformed polygon domain or
+*                                    	NULL on error.
+* \brief      	Transforms the given polygon domain.
+*             	Because this is a static function the parameters (other
+*             	than polygon type) are not checked.
+* \param	srcPoly		 	Given polygon domain.
+* \param        trans		 	Given affine transform.
+* \param        dstErr		 	Destination pointer for error number.
+*/
 static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
                                                  WlzAffineTransform *trans,
                                                  WlzErrorNum *dstErr)
@@ -500,19 +477,17 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
   return(dstPoly);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformBoundList
-* Returns:	WlzBoundList *:		Transformed boundary list or
+/*!
+* \return				Transformed boundary list or
 *					NULL on error.
-* Purpose:	Transforms the given boundary list.
+* \brief	Transforms the given boundary list.
 *		Because this is a static function the parameters are
 *		not checked.
-* Global refs:	-
-* Parameters:	WlzBoundList *srcBound: Given boundary list.
-*		WlzAffineTransform *trans: Given affine transform.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	srcBound		Given boundary list.
+* \param	trans			Given affine transform.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 static WlzBoundList *WlzAffineTransformBoundList(WlzBoundList *srcBound,
 					        WlzAffineTransform *trans,
 					      	WlzErrorNum *dstErr)
@@ -570,20 +545,18 @@ static WlzBoundList *WlzAffineTransformBoundList(WlzBoundList *srcBound,
   return(dstBound);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformContour
-* Returns:	WlzContour *:		Transformed contour or
+/*!
+* \return				Transformed contour or
 *					NULL on error.
-* Purpose:	Transforms the given contour.
-* Global refs:	-
-* Parameters:	WlzContour *srcCtr: 	Given contour.
-*		WlzAffineTransform *tr: Given affine transform.
-*		int newModFlg:		Make a new model if non-zero,
+* \brief	Transforms the given contour.
+* \param	srcCtr		 	Given contour.
+* \param	tr			Given affine transform.
+* \param	newModFlg		Make a new model if non-zero,
 *					otherwise transform the given
 *					model in place.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzContour	*WlzAffineTransformContour(WlzContour *srcCtr,
 					   WlzAffineTransform *tr,
 					   int newModFlg,
@@ -610,20 +583,18 @@ WlzContour	*WlzAffineTransformContour(WlzContour *srcCtr,
   return(dstCtr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformGMModel
-* Returns:	WlzGMModel *:		Transformed model or
+/*!
+* \return				Transformed model or
 *					NULL on error.
-* Purpose:	Transforms the given geometric model.
-* Global refs:	-
-* Parameters:	WlzContour *srcM: 	Given geometric model.
-*		WlzAffineTransform *tr: Given affine transform.
-*		int newModFlg:		Make a new model if non-zero,
+* \brief	Transforms the given geometric model.
+* \param	srcM		 	Given geometric model.
+* \param	tr			Given affine transform.
+* \param	newModFlg		Make a new model if non-zero,
 *					otherwise transform the given
 *					model in place.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 					   WlzAffineTransform *tr,
 					   int newModFlg,
@@ -727,22 +698,20 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
   return(dstM);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformValues2
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Creates a new value table, fills in the values and
+/*!
+* \return				Error number.
+* \brief	Creates a new value table, fills in the values and
 *		adds it to the given new object.
 *		Because this is a static function the parameters are
 *		not checked.
-* Global refs:	-
-* Parameters:	WlzObject *newObj:	Partialy transformed object
+* \param	newObj			Partialy transformed object
 *					with a valid domain.
-*		WlzObject *srcObj:	2D domain object which is being
+* \param	srcObj			2D domain object which is being
 *					transformed.
-*		WlzAffineTransform *trans: Given affine transform.
-*		WlzInterpolationType interp: Level of interpolation to
+* \param	trans			Given affine transform.
+* \param	interp			Level of interpolation to
 *					use.
-************************************************************************/
+*/
 static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 					     WlzObject *srcObj,
 					     WlzAffineTransform *trans,
@@ -914,21 +883,19 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformValues3
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Creates new value, fills in the values and adds it
+/*!
+* \return				Error number.
+* \brief	Creates new value, fills in the values and adds it
 *		to the given new object.
 *		not checked.
-* Global refs:	-
-* Parameters:	WlzObject *newObj:	Partialy transformed object
+* \param	newObj			Partialy transformed object
 *					with a valid domain.
-*		WlzObject *srcObj:	3D domain object which is being
+* \param	srcObj			3D domain object which is being
 *					transformed.
-*		WlzAffineTransform *trans: Given affine transform.
-*		WlzInterpolationType interp: Level of interpolation to
+* \param	trans			Given affine transform.
+* \param	interp			Level of interpolation to
 *					use.
-************************************************************************/
+*/
 static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 					     WlzObject *srcObj,
 					     WlzAffineTransform *trans,
@@ -1221,21 +1188,19 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPDom
-* Returns:	WlzPlaneDomain *:	Transformed plane domain,
+/*!
+* \return				Transformed plane domain,
 *					NULL on error.
-* Purpose:	Creates a new plane domain which is the transformed
+* \brief	Creates a new plane domain which is the transformed
 *		plane domain of the given source object.
 *		The algorithm used by this function isn't very
 *		efficient. It would be better to forward transform
 *		the source objects domain, but that's not easy!
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given source object.
-*		WlzAffineTransform *trans: Given affine transform.
-*		WlzErrorNum *dstErr:	Destination ptr for Woolz error
+*  \param	srcObj			Given source object.
+* \param	trans			Given affine transform.
+* \param	dstErr			Destination ptr for Woolz error
 *					code, may be NULL.
-************************************************************************/
+*/
 static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 					      WlzAffineTransform *trans,
 					      WlzErrorNum *dstErr)
@@ -1364,20 +1329,18 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
   return(dstPDom);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPrimSet
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform's matrix from an
+/*!
+* \return				Error number.
+* \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
 *		A composite transform is built from the primitives
 *		with the order of composition being scale (applied first),
 *		shear, rotation and then translation (applied last),
 *		ie:
 *		  A = T.R.Sh.Sc, x' = A.x
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given affine transform.
-*		WlzAffineTransformPrim: Given primitives.
-************************************************************************/
+* \param	tr			 Given affine transform.
+* \param	prim			 Given primitives.
+*/
 WlzErrorNum	WlzAffineTransformPrimSet(WlzAffineTransform *tr,
 					  WlzAffineTransformPrim prim)
 {
@@ -1405,20 +1368,18 @@ WlzErrorNum	WlzAffineTransformPrimSet(WlzAffineTransform *tr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPrimSet2
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform's matrix from an
+/*!
+* \return				Error number.
+* \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
 *		A composite transform is built from the primitives
 *		with the order of composition being scale (applied first),
 *		shear, rotation and then translation (applied last),
 *		ie:
 *		  A = T.R.Sh.Sc, x' = A.x
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D affine transform.
-*		WlzAffineTransformPrim: Given primitives.
-************************************************************************/
+* \param	tr			Given 2D affine transform.
+* \param	prim			Given primitives.
+*/
 static WlzErrorNum WlzAffineTransformPrimSet2(WlzAffineTransform *tr,
 					      WlzAffineTransformPrim prim)
 {
@@ -1463,20 +1424,18 @@ static WlzErrorNum WlzAffineTransformPrimSet2(WlzAffineTransform *tr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPrimSet3
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform's matrix from an
+/*!
+* \return				Error number.
+* \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
 *		A composite transform is built from the primitives
 *		with the order of composition being scale (applied first),
 *		shear, rotation and then translation (applied last),
 *		ie:
 *		  A = T.R.Sh.Sc, x' = A.x
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D affine transform.
-*		WlzAffineTransformPrim: Given primitives.
-************************************************************************/
+* \prim		tr			Given 2D affine transform.
+* \param	prim			Given primitives.
+*/
 static WlzErrorNum WlzAffineTransformPrimSet3(WlzAffineTransform *tr,
 					      WlzAffineTransformPrim prim)
 {
@@ -1525,18 +1484,16 @@ static WlzErrorNum WlzAffineTransformPrimSet3(WlzAffineTransform *tr,
 }
 
 
-/************************************************************************
-* Function:	WlzAffineTransformTranslationSet
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform's matrix from the given
+/*!
+* \return				Error number.
+* \brief	Sets the given transform's matrix from the given
 *		translations.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D or 3D affine transform.
-*		double tx: 		Translation along the x-axis.
-*		double ty: 		Translation along the y-axis.
-*		double tz: 		Translation along the z-axis,
+* \param	tr			Given 2D or 3D affine transform.
+* \param	tx	 		Translation along the x-axis.
+* \param	ty	 		Translation along the y-axis.
+* \param	tz	 		Translation along the z-axis,
 *					ignored for 2D transforms.
-************************************************************************/
+*/
 WlzErrorNum	WlzAffineTransformTranslationSet(WlzAffineTransform *tr,
 					   double tx, double ty, double tz)
 {
@@ -1573,21 +1530,19 @@ WlzErrorNum	WlzAffineTransformTranslationSet(WlzAffineTransform *tr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformFromTranslation
-* Returns:	WlzAffineTransform *:	New affine transform,
+/*!
+* \return				New affine transform,
 *					NULL on error.
-* Purpose:	Constructs a new affine transform from the given 
+* \brief	Constructs a new affine transform from the given 
 *		translations.
-* Global refs:	-
-* Parameters:	WlzTransformType type:	Required transform type.
-* 		double tx: 		Translation along the x-axis.
-*		double ty: 		Translation along the y-axis.
-*		double tz: 		Translation along the z-axis,
+* \param	type			Required transform type.
+* \param	tx			Translation along the x-axis.
+* \param	ty			Translation along the y-axis.
+* \param	tz			Translation along the z-axis,
 *					ignored for 2D transforms.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromTranslation(WlzTransformType type,
 					double tx, double ty, double tz,
 				        WlzErrorNum *dstErr)
@@ -1611,18 +1566,16 @@ WlzAffineTransform *WlzAffineTransformFromTranslation(WlzTransformType type,
   return(newTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformScaleSet
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform's matrix from the given
+/*!
+* \return				Error number.
+* \brief	Sets the given transform's matrix from the given
 *		scales.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D or 3D affine transform.
-*		double sx: 		Scale along the x-axis.
-*		double sy: 		Scale along the y-axis.
-*		double sz: 		Scale along the z-axis,
+* \param	tr			Given 2D or 3D affine transform.
+* \param	sx			Scale along the x-axis.
+* \param	sy			Scale along the y-axis.
+* \param	sz			Scale along the z-axis,
 *					ignored for 2D transforms.
-************************************************************************/
+*/
 WlzErrorNum	WlzAffineTransformScaleSet(WlzAffineTransform *tr,
 					   double sx, double sy, double sz)
 {
@@ -1663,21 +1616,19 @@ WlzErrorNum	WlzAffineTransformScaleSet(WlzAffineTransform *tr,
 }
 
 
-/************************************************************************
-* Function:	WlzAffineTransformFromScale
-* Returns:	WlzAffineTransform *:	New affine transform,
+/*!
+* \return				New affine transform,
 *					NULL on error.
-* Purpose:	Constructs a new affine transform from the given 
+* \brief	Constructs a new affine transform from the given 
 *		scales.
-* Global refs:	-
-* Parameters:	WlzTransformType type:	Required transform type.
-* 		double sx: 		Scale along the x-axis.
-*		double sy: 		Scale along the y-axis.
-*		double sz: 		Scale along the z-axis,
+* \param	type			Required transform type.
+* \param	sx	 		Scale along the x-axis.
+* \param	sy	 		Scale along the y-axis.
+* \param	sz	 		Scale along the z-axis,
 *					ignored for 2D transforms.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromScale(WlzTransformType type,
 					double sx, double sy, double sz,
 				        WlzErrorNum *dstErr)
@@ -1701,22 +1652,20 @@ WlzAffineTransform *WlzAffineTransformFromScale(WlzTransformType type,
   return(newTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformRotationSet
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform's matrix from the given
+/*!
+* \return				Error number.
+* \brief	Sets the given transform's matrix from the given
 *		rotations. Although the 3 rotations contain redundant
 *		information this may be a useful method for setting
 *		rotation transforms. The order of composition is
 *		R = Rz.Ry.Rx, x' = R.x.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D or 3D affine transform.
-*		double rx: 		Rotation about the x-axis,
+* \param	tr			Given 2D or 3D affine transform.
+* \param	rx			Rotation about the x-axis,
 *					ignored for 2D transforms.
-*		double ry: 		Rotation about the y-axis,
+* \param	ry			Rotation about the y-axis,
 *					ignored for 2D transforms.
-*		double rz: 		Rotation about the z-axis.
-************************************************************************/
+* \param	rz			Rotation about the z-axis.
+*/
 WlzErrorNum	WlzAffineTransformRotationSet(WlzAffineTransform *tr,
 					    double rx, double ry, double rz)
 {
@@ -1767,22 +1716,20 @@ WlzErrorNum	WlzAffineTransformRotationSet(WlzAffineTransform *tr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformFromRotation
-* Returns:	WlzAffineTransform *:	New affine transform,
+/*!
+* \return				New affine transform,
 *					NULL on error.
-* Purpose:	Constructs a new affine transform from the given 
+* \brief	Constructs a new affine transform from the given 
 *		rotations.
-* Global refs:	-
-* Parameters:	WlzTransformType type:	Required transform type.
-*		double rx: 		Rotation about the x-axis,
+* \param	type			Required transform type.
+* \param	rx	 		Rotation about the x-axis,
 *					ignored for 2D transforms.
-*		double ry: 		Rotation about the y-axis,
+* \param	ry	 		Rotation about the y-axis,
 *					ignored for 2D transforms.
-*		double rz: 		Rotation about the z-axis.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	rz	 		Rotation about the z-axis.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromRotation(WlzTransformType type,
 					double rx, double ry, double rz,
 				        WlzErrorNum *dstErr)
@@ -1806,16 +1753,14 @@ WlzAffineTransform *WlzAffineTransformFromRotation(WlzTransformType type,
   return(newTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPrimGet
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Gets the given 2D transform's primitives from it's
+/*!
+* \return				Error number.
+* \brief	Gets the given 2D transform's primitives from it's
 *		matrix.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D affine transform.
-*		WlzAffineTransformPrim *prim: Primitives data
+* \param	tr			Given 2D affine transform.
+* \param	prim			Primitives data
 *					structure to be set.
-************************************************************************/
+*/
 WlzErrorNum	WlzAffineTransformPrimGet(WlzAffineTransform *tr,
 					   WlzAffineTransformPrim *prim)
 {
@@ -1849,16 +1794,14 @@ WlzErrorNum	WlzAffineTransformPrimGet(WlzAffineTransform *tr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPrimGet2
-* Returns:	void
-* Purpose:	Gets the given 2D transform's primitives from it's
+/*!
+* \return	<void>
+* \brief	Gets the given 2D transform's primitives from it's
 *		matrix.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given 2D affine transform.
-*		WlzAffineTransformPrim *prim: Primitives data
+* \param	tr			Given 2D affine transform.
+* \param	prim			Primitives data
 *					structure to be set.
-************************************************************************/
+*/
 static void	WlzAffineTransformPrimGet2(WlzAffineTransform *tr,
 					   WlzAffineTransformPrim *prim)
 {
@@ -1925,15 +1868,13 @@ static void	WlzAffineTransformPrimGet2(WlzAffineTransform *tr,
   }
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformMatrixSet
-* Returns:	WlzErrorNum:		Error number.
-* Purpose:	Sets the given transform from the given matrix.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Given affine transform.
-*		double **matrix:	4x4 transform matrix values to
+/*!
+* \return				Error number.
+* \brief	Sets the given transform from the given matrix.
+* \param	trans			Given affine transform.
+* \param	matrix			4x4 transform matrix values to
 *					be copied.
-************************************************************************/
+*/
 WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
 					    double **matrix)
 {
@@ -1985,27 +1926,25 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformPrimValSet
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Sets a 2D affine transform from the given primitives.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr:	Given 2D affine transform.
-*		double trX:		Column (x) translation.
-*		double trY:		Line (y) translation.
-*		double trZ:		Plane (z) translation.
-*		double trScale:		Scale transformation.
-*		double trTheta:		Rotation about z-axis.
-*		double trPhi:		Rotation about y-axis.
-*		double trAlpha:		Shear strength.
-*		double trPsi:		Shear angle in x-y plane.
-*		double trXsi:		3D shear angle.
-*		int trInvert:		Reflection about y-axis if
+* \brief	Sets a 2D affine transform from the given primitives.
+* \param	tr			Given 2D affine transform.
+* \param	trX			Column (x) translation.
+* \param	trY			Line (y) translation.
+* \param	trZ			Plane (z) translation.
+* \param	trScale			Scale transformation.
+* \param	trTheta			Rotation about z-axis.
+* \param	trPhi			Rotation about y-axis.
+* \param	trAlpha			Shear strength.
+* \param	trPsi			Shear angle in x-y plane.
+* \param	trXsi			3D shear angle.
+* \param	trInvert		Reflection about y-axis if
 *					non-zero.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzErrorNum	WlzAffineTransformPrimValSet(WlzAffineTransform *tr,
 					     double trX,
 					     double trY,
@@ -2050,18 +1989,16 @@ WlzErrorNum	WlzAffineTransformPrimValSet(WlzAffineTransform *tr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformFromMatrix
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Makes a new affine transform of the given type and
+* \brief	Makes a new affine transform of the given type and
 *		then sets it's matrix.
-* Global refs:	-
-* Parameters:	WlzTransformType type:	Required transform type.
-*		double **matrix:	Given matrix.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	type			Required transform type.
+* \param	matrix			Given matrix.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType type,
 						 double **matrix,
 						 WlzErrorNum *dstErr)
@@ -2098,28 +2035,26 @@ WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType type,
   return(newTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformFromPrimVal
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Makes a new affine transform from the given primitive
+* \brief	Makes a new affine transform from the given primitive
 *		transform properties.
-* Global refs:	-
-* Parameters:	WlzTransformType type:	Required transform type.
-*		double trX:		Column (x) translation.
-*		double trY:		Line (y) translation.
-*		double trZ:		Plane (z) translation.
-*		double trScale:		Scale transformation.
-*		double trTheta:		Rotation about z-axis.
-*		double trPhi:		Rotation about y-axis.
-*		double trAlpha:		Shear strength.
-*		double trPsi:		Shear angle in x-y plane.
-*		double trXsi:		3D shear angle.
-*		int trInvert:		Reflection about y-axis if
+* \param	type			Required transform type.
+* \param	trX			Column (x) translation.
+* \param	trY			Line (y) translation.
+* \param	trZ			Plane (z) translation.
+* \param	trScale			Scale transformation.
+* \param	trTheta			Rotation about z-axis.
+* \param	trPhi			Rotation about y-axis.
+* \param	trAlpha			Shear strength.
+* \param	trPsi			Shear angle in x-y plane.
+* \param	trXsi			3D shear angle.
+* \param	trInvert		Reflection about y-axis if
 *					non-zero.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType type,
 				    	double trX, double trY, double trZ,
 				    	double trScale, double trTheta,
@@ -2156,20 +2091,18 @@ WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType type,
 	   (unsigned long )newTr));
   return(newTr);
 }
-/************************************************************************
-* Function:	WlzAffineTransformFromSpin
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Makes a new 2D affine transform from the given spin
+* \brief	Makes a new 2D affine transform from the given spin
 *		angle and centre of rotation.
-* Global refs:	-
-* Parameters:	double spX:		Spin centre column (x).
-*		double spY:		Spin centre line (y).
-*		double spTheta:		Spin rotation about centre.
+* \param	spX			Spin centre column (x).
+* \param	spY			Spin centre line (y).
+* \param	spTheta			Spin rotation about centre.
 *					number.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromSpin(double spX, double spY,
 					       double spTheta,
 					       WlzErrorNum *dstErr)
@@ -2197,22 +2130,20 @@ WlzAffineTransform *WlzAffineTransformFromSpin(double spX, double spY,
   return(newTrans);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformFromSpinSqueeze
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Makes a new 2D affine transform from the given spin
+* \brief	Makes a new 2D affine transform from the given spin
 *		angle, centre of rotation and scale factors.
-* Global refs:	-
-* Parameters:	double spX:		Spin centre column (x).
-*		double spY:		Spin centre line (y).
-*		double spTheta:		Spin rotation about centre.
+* \param	spX			Spin centre column (x).
+* \param	spY			Spin centre line (y).
+* \param	spTheta			Spin rotation about centre.
 *					number.
-*		double sqX:		Squeeze (x) factor.
-*		double sqY:		Squeeze (y) factor.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	sqX			Squeeze (x) factor.
+* \param	sqY			Squeeze (y) factor.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double spX, double spY,
 					       double spTheta,
 					       double sqX, double sqY,
@@ -2256,16 +2187,14 @@ WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double spX, double spY,
   return(newTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformCopy
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Copies the given affine transform.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Given affine transform.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \brief	Copies the given affine transform.
+* \param	trans			Given affine transform.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *tr,
 					   WlzErrorNum *dstErr)
 {
@@ -2293,18 +2222,16 @@ WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *tr,
   return(newTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformProduct
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Computes the product of the two given affine
+* \brief	Computes the product of the two given affine
 *		transforms.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr0: First affine transform.
-*		WlzAffineTransform *tr1: Second affine transform.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	tr0			First affine transform.
+* \param	tr1			Second affine transform.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform *WlzAffineTransformProduct(WlzAffineTransform *tr0,
 					      WlzAffineTransform *tr1,
 					      WlzErrorNum *dstErr)
@@ -2379,16 +2306,14 @@ WlzAffineTransform *WlzAffineTransformProduct(WlzAffineTransform *tr0,
   return(prodTr);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformInverse
-* Returns:	WlzAffineTransform *:	New affine transform, or NULL
+/*!
+* \return				New affine transform, or NULL
 *					on error.
-* Purpose:	Computes the inverse of the given affine transform.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Given affine transform.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \brief	Computes the inverse of the given affine transform.
+* \param	tr			Given affine transform.
+* \param	dstErr			Destination pointer for error
 *					number.
-************************************************************************/
+*/
 WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
 					           WlzErrorNum *dstErr)
 {
@@ -2427,17 +2352,15 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
   return(invTr);
 }
 
-/************************************************************************
-* Function:     WlzAffineTransformIsIdentity
-* Returns:      int:                    Non-zero if the given transform
+/*!
+* \return		                Non-zero if the given transform
 *                                       is an identity transform.
-* Purpose:      Checks whether the given transform is an identity
+* \brief      	Checks whether the given transform is an identity
 *               transform.
-* Global refs:  -
-* Parameters:   WlzAffineTransform *trans: Given affine transform.
-*               WlzErrorNum *dstErr:    Destination pointer for error
+* \param	trans			Given affine transform.
+* \param        dstErr			Destination pointer for error
 *                                       number.
-************************************************************************/
+*/
 int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
 					     WlzErrorNum *dstErr)
 {
@@ -2512,20 +2435,18 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
   return(isIdentity);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformObj
-* Returns:	WlzObject *:		Transformed object, NULL on
+/*!
+* \return				Transformed object, NULL on
 *					error.
-* Purpose:	Applies the given affine transform to the given Woolz
+* \brief	Applies the given affine transform to the given Woolz
 *		object.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Object to be transformed.
-*		WlzAffineTransform *trans: Affine transform to apply.
-*		WlzInterpolationType interp: Level of interpolation to
+* \param	srcObj			Object to be transformed.
+* \param	trans			Affine transform to apply.
+* \param	interp			Level of interpolation to
 *					use.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 				       WlzAffineTransform *trans,
 				       WlzInterpolationType interp,
@@ -2693,16 +2614,14 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformVertexI2
-* Returns:	WlzIVertex2:		Transformed vertex.
-* Purpose:	Transforms the given WlzIVertex2.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzIVertex2 srcVtx:	Vertex to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzIVertex2.
+* \param	trans			Affine transform to apply.
+* \param	srcVtx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzIVertex2	WlzAffineTransformVertexI2(WlzAffineTransform *trans,
 					   WlzIVertex2 srcVtx,
 					   WlzErrorNum *dstErr)
@@ -2726,16 +2645,14 @@ WlzIVertex2	WlzAffineTransformVertexI2(WlzAffineTransform *trans,
   return(dstVtx);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformVertexI3
-* Returns:	WlzIVertex3:		Transformed vertex.
-* Purpose:	Transforms the given WlzIVertex3.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzIVertex3 srcVtx:	Vertex to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzIVertex3.
+* \param	trans			Affine transform to apply.
+* \param	srcVtx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzIVertex3	WlzAffineTransformVertexI3(WlzAffineTransform *trans,
 					   WlzIVertex3 srcVtx,
 					   WlzErrorNum *dstErr)
@@ -2761,16 +2678,14 @@ WlzIVertex3	WlzAffineTransformVertexI3(WlzAffineTransform *trans,
   return(dstVtx);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformVertexF2
-* Returns:	WlzFVertex2:		Transformed vertex.
-* Purpose:	Transforms the given WlzFVertex2.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzFVertex2 srcVtx:	Vertex to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzFVertex2.
+* \param	trans			Affine transform to apply.
+* \param	srcVtx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzFVertex2	WlzAffineTransformVertexF2(WlzAffineTransform *trans,
 					   WlzFVertex2 srcVtx,
 					   WlzErrorNum *dstErr)
@@ -2794,16 +2709,14 @@ WlzFVertex2	WlzAffineTransformVertexF2(WlzAffineTransform *trans,
   return(dstVtx);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformVertexF3
-* Returns:	WlzFVertex3:		Transformed vertex.
-* Purpose:	Transforms the given WlzFVertex3.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzFVertex3 srcVtx:	Vertex to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzFVertex3.
+* \param	trans			Affine transform to apply.
+* \param	srcVtx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzFVertex3	WlzAffineTransformVertexF3(WlzAffineTransform *trans,
 					   WlzFVertex3 srcVtx,
 					   WlzErrorNum *dstErr)
@@ -2829,16 +2742,14 @@ WlzFVertex3	WlzAffineTransformVertexF3(WlzAffineTransform *trans,
   return(dstVtx);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformVertexD2
-* Returns:	WlzDVertex2:		Transformed vertex.
-* Purpose:	Transforms the given WlzDVertex2.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzDVertex2 srcVtx:	Vertex to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzDVertex2.
+* \param	trans			Affine transform to apply.
+* \param	srcVtx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzDVertex2	WlzAffineTransformVertexD2(WlzAffineTransform *trans,
 					   WlzDVertex2 srcVtx,
 					   WlzErrorNum *dstErr)
@@ -2868,16 +2779,14 @@ WlzDVertex2	WlzAffineTransformVertexD2(WlzAffineTransform *trans,
   return(dstVtx);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformVertexD3
-* Returns:	WlzDVertex3:		Transformed vertex.
-* Purpose:	Transforms the given WlzDVertex3.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzDVertex3 srcVtx:	Vertex to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzDVertex3.
+* \param	trans			Affine transform to apply.
+* \param	srcVtx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzDVertex3	WlzAffineTransformVertexD3(WlzAffineTransform *trans,
 					   WlzDVertex3 srcVtx,
 					   WlzErrorNum *dstErr)
@@ -2921,16 +2830,14 @@ WlzDVertex3	WlzAffineTransformVertexD3(WlzAffineTransform *trans,
   return(dstVtx);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformNormalD2
-* Returns:	WlzDVertex2:		Transformed vertex.
-* Purpose:	Transforms the given WlzDVertex2 which is a normal.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzDVertex2 srcNrm:	Normal to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzDVertex2 which is a normal.
+* \param	trans			Affine transform to apply.
+* \param	srcNrm			Normal to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzDVertex2	WlzAffineTransformNormalD2(WlzAffineTransform *trans,
 					   WlzDVertex2 srcNrm,
 					   WlzErrorNum *dstErr)
@@ -2960,16 +2867,14 @@ WlzDVertex2	WlzAffineTransformNormalD2(WlzAffineTransform *trans,
   return(dstNrm);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformNormalD3
-* Returns:	WlzDVertex3:		Transformed vertex.
-* Purpose:	Transforms the given WlzDVertex3 which is a normal.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
-*		WlzDVertex3 srcNrm:	Normal to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed vertex.
+* \brief	Transforms the given WlzDVertex3 which is a normal.
+* \param	trans			Affine transform to apply.
+* \param	srcNrm			Normal to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzDVertex3	WlzAffineTransformNormalD3(WlzAffineTransform *trans,
 					   WlzDVertex3 srcNrm,
 					   WlzErrorNum *dstErr)
@@ -3013,16 +2918,14 @@ WlzDVertex3	WlzAffineTransformNormalD3(WlzAffineTransform *trans,
   return(dstNrm);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformBBoxI2
-* Returns:	WlzIBox2:		Transformed bounding box.
-* Purpose:	Transforms the given WlzIBox2.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
-*		WlzIBox2 srcBox:	Bounding box to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed bounding box.
+* \brief	Transforms the given WlzIBox2.
+* \param	tr			Affine transform to apply.
+* \param	srcBox			Bounding box to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzIBox2	WlzAffineTransformBBoxI2(WlzAffineTransform *tr,
 				         WlzIBox2 srcBox,
 					 WlzErrorNum *dstErr)
@@ -3073,16 +2976,14 @@ WlzIBox2	WlzAffineTransformBBoxI2(WlzAffineTransform *tr,
   return(dstBox);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformBBoxD2
-* Returns:	WlzDBox2:		Transformed bounding box.
-* Purpose:	Transforms the given WlzDBox2.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
-*		WlzDBox2 srcBox:	Bounding box to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed bounding box.
+* \brief	Transforms the given WlzDBox2.
+* \param	tr			Affine transform to apply.
+* \param	srcBox			Bounding box to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzDBox2	WlzAffineTransformBBoxD2(WlzAffineTransform *tr,
 				         WlzDBox2 srcBox,
 					 WlzErrorNum *dstErr)
@@ -3133,16 +3034,14 @@ WlzDBox2	WlzAffineTransformBBoxD2(WlzAffineTransform *tr,
   return(dstBox);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformBBoxI3
-* Returns:	WlzIBox3:		Transformed bounding box.
-* Purpose:	Transforms the given WlzIBox3.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
-*		WlzIBox3 srcBox:	Bounding box to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed bounding box.
+* \brief	Transforms the given WlzIBox3.
+* \param	tr			Affine transform to apply.
+* \param	srcBox			Bounding box to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzIBox3	WlzAffineTransformBBoxI3(WlzAffineTransform *tr,
 				         WlzIBox3 srcBox,
 					 WlzErrorNum *dstErr)
@@ -3206,16 +3105,14 @@ WlzIBox3	WlzAffineTransformBBoxI3(WlzAffineTransform *tr,
   return(dstBox);
 }
 
-/************************************************************************
-* Function:	WlzAffineTransformBBoxD3
-* Returns:	WlzDBox3:		Transformed bounding box.
-* Purpose:	Transforms the given WlzDBox3.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
-*		WlzDBox3 srcBox:	Bounding box to be transformed.
-*		WlzErrorNum *dstErr:	Destination pointer for error
+/*!
+* \return				Transformed bounding box.
+* \brief	Transforms the given WlzDBox3.
+* \param	tr			Affine transform to apply.
+* \param	srcBox			Bounding box to be transformed.
+* \param	dstErr			Destination pointer for error
 *					number, may be NULL.
-************************************************************************/
+*/
 WlzDBox3	WlzAffineTransformBBoxD3(WlzAffineTransform *tr,
 				         WlzDBox3 srcBox,
 					 WlzErrorNum *dstErr)
@@ -3278,3 +3175,8 @@ WlzDBox3	WlzAffineTransformBBoxD3(WlzAffineTransform *tr,
   }
   return(dstBox);
 }
+
+/*!
+* @}
+*/
+
