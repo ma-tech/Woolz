@@ -393,7 +393,7 @@ static void	WlzHistogramReBinUbyte(WlzHistogramDomain *histDom,
     while(srcBinIdx < 256)
     {
       dstBinIdx = floor((srcBinIdx - origin) / binSize);
-      if((dstBinIdx >= 0) && (dstBinIdx <= nBins))
+      if((dstBinIdx >= 0) && (dstBinIdx < nBins))
       {
         *(histBins + dstBinIdx) += oldBins[srcBinIdx];
       }

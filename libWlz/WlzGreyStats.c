@@ -249,7 +249,7 @@ int		WlzGreyStats(WlzObject *srcObj,
 		  min = min2D;
 		  max = max2D;
 		  area = area2D;
-		  sumSq = sum2D;
+		  sum = sum2D;
 		  sumSq = sumSq2D;
 		}
 		else
@@ -257,7 +257,7 @@ int		WlzGreyStats(WlzObject *srcObj,
 		  min = (min < min2D)? min: min2D;
 		  max = (max > max2D)? max: max2D;
 		  area += area2D;
-		  sumSq += sum2D;
+		  sum += sum2D;
 		  sumSq += sumSq2D;
 		}
 	      }

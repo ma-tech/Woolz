@@ -737,8 +737,8 @@ double Wlz3DViewGetIntersectionAngle(
 * \return				The number of vertices.
 * \ingroup      WlzSectionTransform
 * \brief	Gets the vertices of intersection between a section and the
-* 		bounding box of the reference object. The vertices
-*		are returned in order to be used for display etc..
+bounding box of the reference object. The vertices
+are returned in order to be used for display etc..
 * \param	viewStr			The section view.
 * \param	rtnVtxs			Array of 12 vertices to return values.
 * \param	dstErr			Destination pointer for an error code,
@@ -749,7 +749,45 @@ int Wlz3DViewGetBoundingBoxIntersection(
   WlzDVertex3		*rtnVtxs,
   WlzErrorNum		*dstErr)
 {
-  int		numVtxs=0, intersect[12], i, j;
+  WlzDVertex3	bbMin, bbMax;
+
+  /* set up bounding box */
+  bbMin.vtX = viewStr->ref_obj->domain.p->kol1;
+  bbMin.vtY = viewStr->ref_obj->domain.p->line1;
+  bbMin.vtZ = viewStr->ref_obj->domain.p->plane1;
+  bbMax.vtX = viewStr->ref_obj->domain.p->lastkl;
+  bbMax.vtY = viewStr->ref_obj->domain.p->lastln;
+  bbMax.vtZ = viewStr->ref_obj->domain.p->lastpl;
+
+  return Wlz3DViewGetGivenBBIntersection(viewStr, bbMin, bbMax,
+					 rtnVtxs, dstErr);
+}
+
+
+/* function:     Wlz3DViewGetGivenBBIntersection    */
+/*! 
+* \ingroup      WlzSectionTransform
+* \brief        get the vertices of intersection between a section and
+the given bounding box. The vertices
+are returned in order to be used for display etc.
+*
+* \return       The number of vertices in the intersection
+* \param    viewStr	The section View
+* \param    bbMin	Vertex defining the minimum values of the bounding box
+* \param    bbMax	Vertex defining the maximum values of the bounding box
+* \param    rtnVtxs	Array of returned vertices, must be an array of at least 12
+* \param    dstErr	error return
+* \par      Source:
+*                Wlz3DViewStructUtils.c
+*/
+int Wlz3DViewGetGivenBBIntersection(
+  WlzThreeDViewStruct	*viewStr,
+  WlzDVertex3		bbMin,
+  WlzDVertex3		bbMax,
+  WlzDVertex3		*rtnVtxs,
+  WlzErrorNum		*dstErr)
+{
+  int		numVtxs=0, intersect[12], i, j=0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   double	a[4], val1, val2;
   double	x1, x2, y1, y2, z1, z2;
@@ -773,12 +811,12 @@ int Wlz3DViewGetBoundingBoxIntersection(
   Wlz3DViewGetPlaneEqn(viewStr, a + 0, a + 1, a + 2, a + 3);
 
   /* set up an array of lines (2 vertices each) */
-  x1 = viewStr->ref_obj->domain.p->kol1;
-  x2 = viewStr->ref_obj->domain.p->lastkl;
-  y1 = viewStr->ref_obj->domain.p->line1;
-  y2 = viewStr->ref_obj->domain.p->lastln;
-  z1 = viewStr->ref_obj->domain.p->plane1;
-  z2 = viewStr->ref_obj->domain.p->lastpl;
+  x1 = bbMin.vtX;
+  x2 = bbMax.vtX;
+  y1 = bbMin.vtY;
+  y2 = bbMax.vtY;
+  z1 = bbMin.vtZ;
+  z2 = bbMax.vtZ;
 
   /* 3 lines from the minimum vertex values */
   vtxs[0][0].vtX = x1; vtxs[0][0].vtY = y1; vtxs[0][0].vtZ = z1;

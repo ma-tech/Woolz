@@ -161,6 +161,12 @@ extern int 			Wlz3DViewGetBoundingBoxIntersection(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzDVertex3 *rtnVtxs,
 				  WlzErrorNum *dstErr);
+extern int 			Wlz3DViewGetGivenBBIntersection(
+                                  WlzThreeDViewStruct	*viewStr,
+				  WlzDVertex3		bbMin,
+				  WlzDVertex3		bbMax,
+				  WlzDVertex3		*rtnVtxs,
+				  WlzErrorNum		*dstErr);
 extern WlzErrorNum Wlz3DViewGetFixed(WlzThreeDViewStruct	*vs,
 				     double			*dstX,
 				     double			*dstY,
@@ -1605,6 +1611,15 @@ extern WlzErrorNum		WlzGreySetRange(
 				  WlzPixelV max,
 				  WlzPixelV Min,
 				  WlzPixelV Max);
+
+/************************************************************************
+* WlzGreySetRangeLut.c							*
+************************************************************************/
+extern WlzErrorNum		WlzGreySetRangeLut(
+				  WlzObject *obj,
+				  WlzPixelV min,
+				  WlzPixelV max,
+				  WlzPixelP lut);
 
 /************************************************************************
 * WlzGreySetValue.c							*

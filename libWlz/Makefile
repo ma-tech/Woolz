@@ -94,6 +94,7 @@ CSOURCES		= \
 			WlzGreyRange.c \
 			WlzGreyScan.c \
 			WlzGreySetRange.c \
+			WlzGreySetRangeLut.c \
 			WlzGreySetValue.c \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
