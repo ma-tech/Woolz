@@ -261,7 +261,7 @@ CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
 ifeq ($(UNIXTYPE), SUNOS5)
-ANSI_CONFORMANCE	= -v
+ANSI_CONFORMANCE	=
 endif
 
 # Default traget which builds everything (should not need modifying).

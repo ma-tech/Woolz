@@ -13,6 +13,8 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 25-08-00 bill Fix bugs in 3D model construction. Remove element's
+*		data and flags.
 * 10-08-00 bill Do some optimization so that when joining shells, the
 *		shell who's geometry has the greatest bounding box
 *		volume is retained.
@@ -23,6 +25,7 @@
 static WlzErrorNum 	WlzGMShellTestOutVTK(
 			  WlzGMShell *shell,
 			  int *vIdxTb,
+			  char *lFlg,
 			  FILE *fP);
 static WlzErrorNum 	WlzGMLoopTTestOutputVTK(
 			  WlzGMLoopT *fLT,
@@ -30,11 +33,14 @@ static WlzErrorNum 	WlzGMLoopTTestOutputVTK(
 			  FILE *fP);
 static WlzErrorNum 	WlzGMShellTestOutPS(
 			  WlzGMShell *shell,
+			  char *lFlg,
+			  char *eFlg,
 			  FILE *fP,
 			  WlzDVertex2 offset,
 			  WlzDVertex2 scale);
 static WlzErrorNum	WlzGMLoopTTestOutPS(
 			  WlzGMLoopT *loopT,
+			  char *eFlg,
 			  FILE *fP,
 			  WlzDVertex2 offset,
 			  WlzDVertex2 scale);
@@ -178,7 +184,8 @@ WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
       errNum = WLZ_ERR_DOMAIN_TYPE;
       break;
   }
-  /* Create the new model */
+  /* Create the new model. All elements of the model including it's
+   * resources are set to zero. */
   if((errNum == WLZ_ERR_NONE) &&
      ((model = AlcCalloc(1, sizeof(WlzGMModel))) == NULL))
   {
@@ -210,30 +217,6 @@ WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
     					      blkSz, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      /* TODO remove these because set by calloc. */
-      model->res.vertex.numElm = 0;
-      model->res.vertex.numIdx = 0;
-      model->res.vertexT.numElm = 0;
-      model->res.vertexT.numIdx = 0;
-      model->res.vertexG.numElm = 0;
-      model->res.vertexG.numIdx = 0;
-      model->res.diskT.numElm = 0;
-      model->res.diskT.numIdx = 0;
-      model->res.edge.numElm = 0;
-      model->res.edge.numIdx = 0;
-      model->res.edgeT.numElm = 0;
-      model->res.edgeT.numIdx = 0;
-      model->res.loop.numElm = 0;
-      model->res.loop.numIdx = 0;
-      model->res.loopT.numElm = 0;
-      model->res.loopT.numIdx = 0;
-      model->res.shell.numElm = 0;
-      model->res.shell.numIdx = 0;
-      model->res.shellG.numElm = 0;
-      model->res.shellG.numIdx = 0;
     }
   }
   /* Create vertex hash table. */
@@ -985,7 +968,6 @@ WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 3D model to the specified file using the
 *		VTK polydata format.
-*		The model loop flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMModel *model:	Given model.
 *		FILE *fP:		File ptr, may be NULL if
@@ -997,6 +979,7 @@ WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
   		idV,
 		cnt,
 		vCntMax;
+  char		*lFlg = NULL;
   int		*vIdxTb = NULL;
   WlzDVertex3	vtx;
   AlcVector	*vec;
@@ -1023,10 +1006,15 @@ WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Clear shell, loop and edge flags. */
-    (void )WlzModelMaskFlags(model, WLZ_GMELMFLG_EDGE |
-			            WLZ_GMELMFLG_LOOP | WLZ_GMELMFLG_SHELL,
-			     WLZ_AND, ~(WLZ_GMELEMFLAGS_OUT_0));
+    /* Allocate shell, loop and edge flags. */
+    if((lFlg = (char *)AlcCalloc(model->res.loop.numIdx,
+    				 sizeof(char))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     /* Allocate a vertex index table. */
     vCntMax = model->res.vertex.numIdx;
     if((vIdxTb = (int *)AlcCalloc(vCntMax, sizeof(int))) == NULL)
@@ -1064,14 +1052,17 @@ WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
 		     model->res.loop.numElm, 4 * model->res.loop.numElm);
       do
       {
-	if((tS->flags & WLZ_GMELEMFLAGS_OUT_0) == 0)
+	if(tS->idx >= 0)
 	{
-	  errNum = WlzGMShellTestOutVTK(tS, vIdxTb, fP);
-	  tS->flags |= WLZ_GMELEMFLAGS_OUT_0;
+	  errNum = WlzGMShellTestOutVTK(tS, vIdxTb, lFlg, fP);
 	}
 	tS = tS->next;
       } while((errNum == WLZ_ERR_NONE) && (tS->idx != fS->idx));
     }
+  }
+  if(lFlg)
+  {
+    AlcFree(lFlg);
   }
   if(vIdxTb)
   {
@@ -1085,15 +1076,15 @@ WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 3D shell to the specified file using the
 *		VTK polydata format.
-*		The model loop flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMShell *shell:	Given shell.
 *		int *vIdxTb:		Vertex index table.
+*		char *lFlg:		Loop flags.
 *		FILE *fP:		File ptr, may be NULL if
 *					no output required.
 ************************************************************************/
-static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell,
-				        int *vIdxTb, FILE *fP)
+static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell, int *vIdxTb,
+					char *lFlg, FILE *fP)
 {
   WlzGMLoopT	*tLT;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1110,7 +1101,11 @@ static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell,
   {
     do
     {
-      errNum = WlzGMLoopTTestOutputVTK(tLT, vIdxTb, fP);
+      if((tLT->idx >= 0) && (*(lFlg + tLT->loop->idx) == 0))
+      {
+        errNum = WlzGMLoopTTestOutputVTK(tLT, vIdxTb, fP);
+	*(lFlg + tLT->loop->idx) = 1;
+      }
       tLT = tLT->next;
     } while((errNum == WLZ_ERR_NONE) && (tLT->idx != shell->child->idx));
   }
@@ -1123,15 +1118,14 @@ static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell,
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 3D loopT to the specified file using the
 *		VTK polydata format.
-*		The model loop flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMLoopT *fLT:	Given loopT.
 *		int *vIdxTb:		Vertex index table.
 *		FILE *fP:		File ptr, may be NULL if
 *					no output required.
 ************************************************************************/
-static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT,
-				           int *vIdxTb, FILE *fP)
+static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT, int *vIdxTb,
+					   FILE *fP)
 {
   WlzGMEdgeT	*tET;
   WlzGMVertex	*vBuf[3];
@@ -1145,7 +1139,7 @@ static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((fLT->loop->flags & WLZ_GMELEMFLAGS_OUT_0) == 0)
+  else
   {
     /* Get the verticies around this loop and check that the loop is around
      * a triangular face. */
@@ -1191,7 +1185,6 @@ static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT,
       (void )fprintf(fP, "3 %d %d %d\n",
 		     *(vIdxTb + vBuf[0]->idx), *(vIdxTb + vBuf[1]->idx),
 		     *(vIdxTb + vBuf[2]->idx));
-      fLT->loop->flags |= WLZ_GMELEMFLAGS_OUT_0;
     }
   }
   return(errNum);
@@ -1204,7 +1197,6 @@ static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT,
 * Purpose:	Outputs a 2D model to the specified file as Postscript.
 *		To make shell identification easier Postscript colors
 *		can be cycled.
-*		The model edge flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMModel *model:	Given model.
 *		FILE *fP:		File ptr, may be NULL if
@@ -1218,9 +1210,11 @@ WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
 				    WlzDVertex2 offset, WlzDVertex2 scale,
 				    int nCol)
 {
+  int		colIdx  = 0;
+  char		*lFlg = NULL,
+		*eFlg = NULL;
   WlzGMShell	*shell0,
   		*shell1;
-  int		colIdx  = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	maxCol = 7;			  /* Colours to cycle though */
   const int	colR[] = {0,   255, 0,   255, 0,   200, 0},
@@ -1237,8 +1231,17 @@ WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
   }
   else
   {
-    (void )WlzModelMaskFlags(model, WLZ_GMELMFLG_EDGE, WLZ_AND,
-    			     ~(WLZ_GMELEMFLAGS_OUT_0));
+    /* Allocate shell, loop and edge flags. */
+    if(((lFlg = (char *)AlcCalloc(model->res.loop.numIdx,
+    				  sizeof(char))) == NULL) ||
+       ((eFlg = (char *)AlcCalloc(model->res.edge.numIdx,
+    				  sizeof(char))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     if((shell0 = model->child) != NULL)
     {
       if(nCol > maxCol)
@@ -1248,22 +1251,30 @@ WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
       shell1 = shell0;
       do
       {
-        /* Set colour. */
-	if(fP && (nCol > 1))
+	if(shell1->idx >= 0)
 	{
-	  (void )fprintf(fP,
-	  	         "%d %d %d setrgbcolor\n",
-			 colR[colIdx], colG[colIdx], colB[colIdx]);
-	  colIdx = ++colIdx % nCol;
-	}
-	errNum = WlzGMShellTestOutPS(shell1, fP, offset, scale);
-	if((shell1 = shell1->next) == NULL)
-	{
-	  errNum = WLZ_ERR_DOMAIN_NULL;
+	  /* Set colour. */
+	  if(fP && (nCol > 1))
+	  {
+	    (void )fprintf(fP,
+			   "%d %d %d setrgbcolor\n",
+			   colR[colIdx], colG[colIdx], colB[colIdx]);
+	    colIdx = ++colIdx % nCol;
+	  }
+	  errNum = WlzGMShellTestOutPS(shell1, lFlg, eFlg, fP, offset, scale);
+	  shell1 = shell1->next;
 	}
       }
       while((errNum == WLZ_ERR_NONE) && (shell1->idx != shell0->idx));
     }
+  }
+  if(lFlg)
+  {
+    AlcFree(lFlg);
+  }
+  if(eFlg)
+  {
+    AlcFree(eFlg);
   }
   return(errNum);
 }
@@ -1272,15 +1283,18 @@ WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
 * Function:	WlzGMShellTestOutPS
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 2D shell to the specified file as Postscript.
-*		The model edge flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMShell *shell:	Given shell.
+*		char *lFlg:		Loop flags.
+*		char *eFlg:		Edge flags.
 *		FILE *fP:		Output file ptr, may be NULL if
 *					no output required.
 *		WlzDVertex2 offset:	Postscript offset.
 *		WlzDVertex2 scale:	Postscript scale.
 ************************************************************************/
-static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell, FILE *fP,
+static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell,
+				       char *lFlg, char *eFlg,
+				       FILE *fP,
 				       WlzDVertex2 offset, WlzDVertex2 scale)
 {
   WlzGMLoopT	*loopT0,
@@ -1300,11 +1314,12 @@ static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell, FILE *fP,
     loopT1 = loopT0;
     do
     {
-      if((errNum = WlzGMLoopTTestOutPS(loopT1, fP,
-      				       offset, scale)) == WLZ_ERR_NONE)
+      if(*(lFlg + loopT1->loop->idx) == 0)
       {
-        loopT1 = loopT1->next;
+	errNum = WlzGMLoopTTestOutPS(loopT1, eFlg, fP, offset, scale);
+	*(lFlg + loopT1->loop->idx) = 1;
       }
+      loopT1 = loopT1->next;
     }
     while((errNum == WLZ_ERR_NONE) && (loopT1->idx != loopT0->idx));
   }
@@ -1316,15 +1331,16 @@ static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell, FILE *fP,
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 2D loop topology element to the specified
 *		file as Postscript.
-*		The model edge flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMLoopT *loopT:	Given loop topology element.
+*		char *eFlg:		Edge flags.
 *		FILE *fP:		Output file ptr, may be NULL if
 *					no output required.
 *		WlzDVertex2 offset:	Postscript offset.
 *		WlzDVertex2 scale:	Postscript scale.
 ************************************************************************/
-static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT, FILE *fP,
+static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT,
+				       char *eFlg, FILE *fP,
 			               WlzDVertex2 offset, WlzDVertex2 scale)
 {
   WlzGMEdgeT	*edgeT0,
@@ -1340,11 +1356,12 @@ static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT, FILE *fP,
     edgeT1 = edgeT0;
     do
     {
-      if((errNum = WlzGMEdgeTTestOutPS(edgeT1, fP,
-      				       offset, scale)) == WLZ_ERR_NONE)
+      if((edgeT1->idx >= 0) && (*(eFlg + edgeT1->edge->idx) == 0))
       {
-        edgeT1 = edgeT1->next;
+        errNum = WlzGMEdgeTTestOutPS(edgeT1, fP, offset, scale);
       }
+      *(eFlg + edgeT1->edge->idx) = 1;
+      edgeT1 = edgeT1->next;
     } 
     while((errNum == WLZ_ERR_NONE) && (edgeT1->idx != edgeT0->idx));
   }
@@ -1356,8 +1373,6 @@ static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT, FILE *fP,
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 2D edge topology element to the specified
 *		file as Postscript.
-*		Model edge flags have the WLZ_GMELEMFLAGS_OUT_0
-*		flag set by this fuunction.
 * Global refs:	-
 * Parameters:	WlzGMEdgeT *edgeT:	Given edge topology element.
 *		FILE *fP:		Output file ptr, may be NULL if
@@ -1379,9 +1394,8 @@ static WlzErrorNum WlzGMEdgeTTestOutPS(WlzGMEdgeT *edgeT, FILE *fP,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if((edgeT->edge->flags & WLZ_GMELEMFLAGS_OUT_0) == 0)
+  else
   {
-    edgeT->edge->flags |= WLZ_GMELEMFLAGS_OUT_0;
     if(((errNum = WlzGMVertexGetG2D(edgeT->vertexT->diskT->vertex,
     				    &pos0)) == WLZ_ERR_NONE) &&
        ((errNum = WlzGMVertexGetG2D(edgeT->next->vertexT->diskT->vertex,
@@ -3004,9 +3018,109 @@ WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
 /* Topology query */
 
 /************************************************************************
+* Function:	WlzGMModelFindNMEdges
+* Returns:	WlzGMEdge *:		Ptr to an array of non-manifold
+*					edge ptrs, NULL if none exist or
+*					on error.
+* Purpose:	Finds a loop topology element in common for the two
+*		edge topology elements.
+* Global refs:	-
+* Parameters:	WlzGMModel *model:	The given model.
+*		int *dstNMCnt:		Destination pointer for number
+*					of non-manifold edges found.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.
+************************************************************************/
+WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
+				        WlzErrorNum *dstErr)
+{
+  int		tEI,
+  		nmEI;
+  int		*nmEIP;
+  WlzGMEdge	*tE;
+  WlzGMEdge	**nmE = NULL;
+  WlzGMEdgeT	*tET;
+  AlcVector	*nmEIVec = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nmEIVec = AlcVectorNew(1, sizeof(int), 1024, NULL)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I:
+      case WLZ_GMMOD_2D:
+        break;
+      case WLZ_GMMOD_3I:
+      case WLZ_GMMOD_3D:
+	tEI = 0;
+	nmEI = 0;
+	while((errNum == WLZ_ERR_NONE) && (tEI < model->res.edge.numIdx))
+	{
+	  tE = (WlzGMEdge *)AlcVectorItemGet(model->res.edge.vec, tEI);
+	  if(tE->idx >= 0)
+	  {
+	    tET = tE->edgeT;
+	    if((tET->rad->idx == tET->idx) ||
+	       (tET->rad->rad->idx != tET->idx))
+	    {
+	      if((nmEIP = (int *)
+			  (AlcVectorExtendAndGet(nmEIVec, nmEI))) == NULL)
+	      {
+		errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+		*nmEIP = tE->idx;
+	      }
+	      ++nmEI;
+	    }
+	  }
+	  ++tEI;
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (nmEI > 0))
+  {
+    if((nmE = (WlzGMEdge **)AlcMalloc(sizeof(WlzGMEdge *) * nmEI)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      for(tEI = 0; tEI < nmEI; ++tEI)
+      {
+        *(nmE + tEI) = (WlzGMEdge *)AlcVectorItemGet(model->res.edge.vec,
+						     tEI);
+      }
+    }
+  }
+  if(dstNMCnt)
+  {
+    *dstNMCnt = (errNum == WLZ_ERR_NONE)? nmEI: 0;
+  }
+  if(nmEIVec)
+  {
+    (void )AlcVectorFree(nmEIVec);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nmE);
+}
+
+/************************************************************************
 * Function:	WlzGMEdgeTCommonLoopT
 * Returns:	WlzGMLoopT:		Common loop topology element,
-					NULL if it doesn't exist.
+*					NULL if it doesn't exist.
 * Purpose:	Finds a loop topology element in common for the two
 *		edge topology elements.
 * Global refs:	-
@@ -3518,144 +3632,6 @@ void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
     /* Unlink the now childless shell. */
     WlzGMShellUnlink(dShell);
   }
-}
-
-/************************************************************************
-* Function:	WlzModelMaskFlags
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Applies the given mask to all the elements of the given
-*		type in	the model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model with the vertex
-*					resources.
-*		WlzGMElemType eType:	Element type.
-*		WlzBinaryOperatorType opp: Given opperator.
-*		unsigned int mask:		Given mask.
-************************************************************************/
-WlzErrorNum	WlzModelMaskFlags(WlzGMModel *model,
-				  unsigned int eMask,
-				  WlzBinaryOperatorType opp, unsigned int mask)
-{
-  int		idI;
-  WlzGMElemP	eP;
-  AlcVector	*vec;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(model == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    switch(opp)
-    {
-      case WLZ_AND:
-      case WLZ_OR:
-        break;
-      default:
-        errNum = WLZ_ERR_PARAM_TYPE;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(eMask & WLZ_GMELMFLG_VERTEX)
-    {
-      eMask &= ~(WLZ_GMELMFLG_VERTEX);
-      vec = model->res.vertex.vec;
-      for(idI = 0; idI < model->res.vertex.numIdx; ++idI)
-      {
-        eP.vertex = (WlzGMVertex *)AlcVectorItemGet(vec, idI);
-	if(eP.vertex->idx >= 0)
-	{
-	  switch(opp)
-	  {
-	    case WLZ_AND:
-	      eP.vertex->flags &= mask; 
-	      break;
-	    case WLZ_OR:
-	      eP.vertex->flags |= mask; 
-	      break;
-	    default:
-	      break;
-	  }
-	}
-      }
-    }
-    if(eMask & WLZ_GMELMFLG_EDGE)
-    {
-      eMask &= ~(WLZ_GMELMFLG_EDGE);
-      vec = model->res.edge.vec;
-      for(idI = 0; idI < model->res.edge.numIdx; ++idI)
-      {
-        eP.edge = (WlzGMEdge *)AlcVectorItemGet(vec, idI);
-	if(eP.edge->idx >= 0)
-	{
-	  switch(opp)
-	  {
-	    case WLZ_AND:
-	      eP.edge->flags &= mask; 
-	      break;
-	    case WLZ_OR:
-	      eP.edge->flags |= mask; 
-	      break;
-	    default:
-	      break;
-	  }
-	}
-      }
-    }
-    if(eMask & WLZ_GMELMFLG_LOOP)
-    {
-      eMask &= ~(WLZ_GMELMFLG_LOOP);
-      vec = model->res.loop.vec;
-      for(idI = 0; idI < model->res.loop.numIdx; ++idI)
-      {
-        eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI);
-	if(eP.loop->idx >= 0)
-	{
-	  switch(opp)
-	  {
-	    case WLZ_AND:
-	      eP.loop->flags &= mask; 
-	      break;
-	    case WLZ_OR:
-	      eP.loop->flags |= mask; 
-	      break;
-	    default:
-	      break;
-	  }
-	}
-      }
-    }
-    if(eMask & WLZ_GMELMFLG_SHELL)
-    {
-      eMask &= ~(WLZ_GMELMFLG_SHELL);
-      vec = model->res.shell.vec;
-      for(idI = 0; idI < model->res.shell.numIdx; ++idI)
-      {
-        eP.shell = (WlzGMShell *)AlcVectorItemGet(vec, idI);
-	if(eP.shell->idx >= 0)
-	{
-	  switch(opp)
-	  {
-	    case WLZ_AND:
-	      eP.shell->flags &= mask; 
-	      break;
-	    case WLZ_OR:
-	      eP.shell->flags |= mask; 
-	      break;
-	    default:
-	      break;
-	  }
-	}
-      }
-    }
-    if(eMask)
-    {
-      errNum = WLZ_ERR_PARAM_TYPE;
-    }
-  }
-  return(errNum);
 }
 
 /************************************************************************
@@ -5029,11 +5005,11 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
     nLT[1]->parent = eShell;
     /* Update the extended shell and delete the joined shell. */
     (void )WlzGMShellUpdateG3D(eShell, nPos);
-    WlzGMShellJoinAndUnlink(eShell, dShell);
     if(model->child->idx == dShell->idx)
     {
       model->child = eShell;
     }
+    WlzGMShellJoinAndUnlink(eShell, dShell);
     WlzGMModelFreeS(model, dShell);
   }
   return(errNum);
@@ -5217,11 +5193,11 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
     /* Update the extended shell and delete the joined shells. */
     for(idx = 0; idx < 2; ++idx)
     {
-      WlzGMShellJoinAndUnlink(eShell, dShell[idx]);
       if(model->child->idx == dShell[idx]->idx)
       {
 	model->child = eShell;
       }
+      WlzGMShellJoinAndUnlink(eShell, dShell[idx]);
       WlzGMModelFreeS(model, dShell[idx]);
     }
   }
@@ -5278,8 +5254,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
   int		idx,
   		nIdx,
 		pIdx;
-  double	eVol,
-  		dVol;
+  double	sVol[3];
   WlzGMShell	*dShell,
   		*eShell;
   WlzGMShell	*tShell[3];
@@ -5318,11 +5293,41 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
      ((nVT1[2] = WlzGMModelNewVT(model, &errNum)) != NULL))
   {
     /* Get shells and find which is to be extended and which is to be joined
-     * with it (and then deleated). */
+     * with it (and then deleated). Know that 2 of the shells are the same.
+     * Compute volumes of the shells bounding boxes, compare the volumes,
+     * delete the shell with the smallest volume and keep the shell with
+     * the largest volume. This is an optimazation, hopefuly the shell with
+     * greatest volume will have the greatest number of loops. */
     for(idx = 0; idx < 3; ++idx)
     {
       tShell[idx] = WlzGMVertexGetShell(*(eV + idx));
+      (void )WlzGMShellGetGBBV3D(tShell[idx],sVol + idx);
     }
+    if(sVol[0] > sVol[1])
+    {
+      if(sVol[0] > sVol[2])
+      {
+        idx = 0;
+      }
+      else
+      {
+        idx = 2;
+      }
+    }
+    else
+    {
+      if(sVol[1] > sVol[2])
+      {
+        idx = 1;
+      }
+      else
+      {
+        idx = 2;
+      }
+    }
+    eShell = tShell[idx];
+    dShell = (tShell[idx]->idx == tShell[(idx + 1) % 3]->idx)?
+             tShell[(idx + 2) % 3]: tShell[(idx + 1) % 3];
     if(tShell[0]->idx == tShell[1]->idx)
     {
       eShell = tShell[0];
@@ -5337,15 +5342,6 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
     {
       eShell = tShell[2];
       dShell = tShell[1];
-    }
-    /* Optimization: Get the shell geometries and compare their volume.
-     * Then make sure that the shell with the greatest volume (and hopefully
-     * the greatest number of loops) is the one that's to be kept. */
-    (void )WlzGMShellGetGBBV3D(eShell, &eVol);
-    (void )WlzGMShellGetGBBV3D(dShell, &dVol);
-    if(eVol < dVol)
-    {
-      tShell[0] = eShell; eShell = dShell; dShell = tShell[0];
     }
     /* New vertex topology elements. */
     for(idx = 0; idx < 3; ++idx)
@@ -5402,11 +5398,11 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* Update the extended shell and delete the joined shell. */
-    WlzGMShellJoinAndUnlink(eShell, dShell);
     if(model->child->idx == dShell->idx)
     {
       model->child = eShell;
     }
+    WlzGMShellJoinAndUnlink(eShell, dShell);
     WlzGMModelFreeS(model, dShell);
   }
   return(errNum);
@@ -5862,11 +5858,9 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     nET1[1]->edge = nET0[0]->edge = eE;
     nET1[2]->edge = nET0[1]->edge = nE[0];
     nET1[0]->edge = nET0[2]->edge = nE[1];
-    /* Need to set radial edges for nET0[1], nET1[2], nET0[2], nET1[0]. */
-    WlzGMEdgeTInsertRadial(nET0[1]);
-    WlzGMEdgeTInsertRadial(nET1[2]);
-    WlzGMEdgeTInsertRadial(nET0[2]);
-    WlzGMEdgeTInsertRadial(nET1[0]);
+    /* Need to set radial edges for nET0[0], nET1[1]. */
+    WlzGMEdgeTInsertRadial(nET0[0]);
+    WlzGMEdgeTInsertRadial(nET1[1]);
     /* New loop */
     nL->loopT = nLT[0];
     /* New loop topology elements. */
@@ -5882,11 +5876,11 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     nLT[1]->parent = eShell;
     /* Update extended shell and delete the joined shell. */
     (void )WlzGMShellUpdateG3D(eShell, pos[2]);
-    WlzGMShellJoinAndUnlink(eShell, dShell);
     if(model->child->idx == dShell->idx)
     {
       model->child = eShell;
     }
+    WlzGMShellJoinAndUnlink(eShell, dShell);
     WlzGMModelFreeS(model, dShell);
   }
   return(errNum);
@@ -6651,37 +6645,37 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 						matchV[2])) != NULL) +
 		((cE[2] = WlzGMVertexCommonEdge(matchV[2],
 						matchV[0])) != NULL);
-      shellCnt = 3 - (WlzGMVertexCommonShell(matchV[0], matchV[1]) != NULL) +
-      	         (WlzGMVertexCommonShell(matchV[1], matchV[2]) != NULL);
+      shellCnt = 3 - ((WlzGMVertexCommonShell(matchV[0], matchV[1]) != NULL) +
+      	              (WlzGMVertexCommonShell(matchV[1], matchV[2]) != NULL));
       switch(edgeCnt)
       {
         case 0:
 	  switch(shellCnt)
 	  {
-	    case 0:
-	      /* None of the 3 matched verticies share the same shell. */
-	      errNum = WlzGMModelJoin3V0E3S3D(model, matchV);
-	      break;
 	    case 1:
+	      /* All 3 matched verticies share the same shell but there
+	       * are no common edges between the 3 verticies. */
+	      errNum = WlzGMModelExtend3V0E1S3D(model, matchV);
+	      break;
+	    case 2: /* 3V0E2S */
 	      /* Two of the 3 matched verticies share the same shell but
-	       * are not connected by a single edge. The other vertex is
-	       * in a different shell. */
+	       * there is no common edge between any of the matched
+	       * verticies. */
 	      errNum = WlzGMModelJoin3V0E2S3D(model, matchV);
 	      break;
-	    case 2: /* FALLTHROUGH */
-	    case 3:
-	      /* All 3 verticies share the same shell but none of them are
-	       * connected by a single edge. */
-	      errNum = WlzGMModelExtend3V0E1S3D(model, matchV);
+	    case 3: /* 3V0E3S */
+	      /* All 3 verticies are in different shells and there are
+	       * no common edges between any of the matched verticies. */
+	      errNum = WlzGMModelJoin3V0E3S3D(model, matchV);
 	      break;
 	  }
 	  break;
 	case 1:
 	  idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
-	  	 ((cE[2] != NULL) << 2);;
+	  	 ((cE[2] != NULL) << 2);
 	  idx0 = firstCtgBitTb[idx2];
 	  idx1 = (idx0 + 2) % 3;
-	  if(shellCnt > 1)
+	  if(shellCnt == 1)
 	  {
 	    /* Two of the 3 matched verticies are connected by a single edge,
 	     * all of the 3 are in a single shell. */
@@ -6698,7 +6692,7 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	  /* All 3 verticies share the same shell, and two pairs of verticies
 	   * are connected by edges. */
 	  idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
-	  	 ((cE[2] != NULL) << 2);;
+	  	 ((cE[2] != NULL) << 2);
 	  idx0 = firstCtgBitTb[idx2];
 	  idx1 = (idx0 + 1) % 3;
 	  errNum = WlzGMModelExtend3V2E1S3D(model, cE[idx0], cE[idx1]);

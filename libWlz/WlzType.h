@@ -566,7 +566,7 @@ typedef struct
 /************************************************************************
 * Data structures for geometric models.
 ************************************************************************/
-#define	WLZ_GM_TOLERANCE	(1.0e-04)
+#define	WLZ_GM_TOLERANCE	(1.0e-06)
 #define	WLZ_GM_TOLERANCE_SQ	(WLZ_GM_TOLERANCE * WLZ_GM_TOLERANCE)
 
 /* Type identifiers for GM models */
@@ -613,16 +613,6 @@ typedef enum
   WLZ_GMELMFLG_SHELL =      (1 << 8),
   WLZ_GMELMFLG_SHELL_G =    (1 << 9)
 } WlzGMElemTypeFlags;
-
-/* Geometric model element flags. */
-typedef enum
-{
-  WLZ_GMELEMFLAGS_NONE		= (0),
-  WLZ_GMELEMFLAGS_OUT_0		= (1),
-  WLZ_GMELEMFLAGS_OUT_1		= (1<<1),
-  WLZ_GMELEMFLAGS_INT_0		= (1<<2),
-  WLZ_GMELEMFLAGS_INT_1		= (1<<3)
-} WlzGMElemFlags;
 
 /* Union of pointers to GM elements */
 typedef union
@@ -720,8 +710,6 @@ typedef struct _WlzGMVertex
 {
   WlzGMElemType type; 			/* WLZ_GMELM_VERTEX */
   unsigned int	idx;			/* Unique identifier for vertex */
-  unsigned int	flags;			/* Flags mask. */
-  void		*data; 	       		/* Hook for data */
   struct _WlzGMDiskT *diskT;		/* A disk topology element of this
   					 * vertex, others can be found by
 					 * following the diskT's next/prev */
@@ -768,8 +756,6 @@ typedef struct _WlzGMEdge
 {
   WlzGMElemType type;	        	/* WLZ_GMELM_EDGE */
   unsigned int	idx;		        /* Unique identifier for edge */
-  void		*data;		        /* Hook for data */
-  unsigned int	flags;			/* Flags mask. */
   WlzGMEdgeT	*edgeT;	       		/* An edge topology use */
 } WlzGMEdge;
 
@@ -794,8 +780,6 @@ typedef struct _WlzGMLoop
 {
   WlzGMElemType type;			/* WLZ_GMELM_LOOP */
   unsigned int	idx;			/* Unique identifier for loop */
-  void		*data;		  	/* Hook for data */
-  unsigned int	flags;			/* Flags mask. */
   WlzGMLoopT 	*loopT;			/* Loop topology */
 } WlzGMLoop;
 
@@ -850,8 +834,6 @@ typedef struct _WlzGMShell
 {
   WlzGMElemType type;	      		/* WLZ_GMELM_SHELL */
   unsigned int	idx;			/* Shell's index */
-  void		*data;		  	/* Hook for data */
-  unsigned int	flags;			/* Flags mask. */
   struct _WlzGMShell *next;		/* Next shell in the parent */
   struct _WlzGMShell *prev;		/* Previous shell in the parent */
   WlzGMShellGU geo;			/* Shell geometry */

@@ -1011,6 +1011,10 @@ extern double		WlzGMVertexDistSq2D(
 extern WlzErrorNum 	WlzGMModelTypeValid(
 			WlzGMModelType type);
 /* Topology query */
+extern WlzGMEdge	**WlzGMModelFindNMEdges(
+			  WlzGMModel *model,
+			  int *dstNMCnt,
+			  WlzErrorNum *dstErr);
 extern WlzGMLoopT	*WlzGMEdgeTCommonLoopT(
 			  WlzGMEdgeT *eT0,
 			  WlzGMEdgeT *eT1);
@@ -1064,11 +1068,6 @@ extern void		WlzGMShellUnlink(
 extern void		WlzGMShellJoinAndUnlink(
 			  WlzGMShell *eShell,
 			  WlzGMShell *dShell);
-extern WlzErrorNum	WlzModelMaskFlags(
-			  WlzGMModel *model,
-			  unsigned int eMask,
-			  WlzBinaryOperatorType opp,
-			  unsigned mask);
 extern WlzGMResIdxTb	*WlzGMModelResIdx(
 			  WlzGMModel *model,
 			  unsigned int eMsk,

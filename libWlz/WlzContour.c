@@ -12,6 +12,8 @@
 * Purpose:	Functions for extracting contours from Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 25-08-00 bill	Fix more bugs causing holes in 3D iso-surface.
+* 22-08-00 bill	Fix a bug causing holes in 3D iso-surface.
 * 15-08-00 bill	Move WlzFreeContour to WlzFreeSpace.c and WlzMakeContour
 *		to WlzMakeStructs.c.
 * 10-08-00 bill Add WlzContourGrdObj3D() and modify WlzMakeContour().
@@ -24,6 +26,8 @@
 #include <float.h>
 #include <string.h>
 #include <Wlz.h>
+
+#define WLZ_CTR_TOLERANCE	(1.0e-06)
 
 /* #define WLZ_CONTOUR_DEBUG */
 static void 	WlzContourTestOutPSLn2D(FILE *fP,
@@ -430,6 +434,12 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   double	**valBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+#ifdef HACK
+  static WlzDVertex3 hackHACK[3] =
+  {
+    {5.0, 6.0, 6.9}, {5.45, 6.55, 7.0}, {5.62, 6.38, 6.62}
+  };
+#endif /* HACK */
 
   dummyDom.core = NULL;
   dummyValues.core = NULL;
@@ -454,6 +464,12 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
       		   WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum), NULL);
     }
   }
+#ifdef HACK
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGMModelConstructSimplex3D(ctr->model, hackHACK);
+  }
+#endif /* HACK */
   if(errNum == WLZ_ERR_NONE)
   {
     bBox3D = WlzBoundingBox3D(srcObj, &errNum);
@@ -1662,13 +1678,15 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 		 sqOrg.vtX, sqOrg.vtY, sV[1], sV[2], sV[3], sV[4]);
 #endif /* WLZ_CONTOUR_DEBUG */
   /* Reject all squares not intersected by the iso-value. */
-  if(((sV[1] < 0.0) || (sV[2] < 0.0) || (sV[3] < 0.0) || (sV[4] < 0.0)) &&
-     ((sV[1] >= 0.0) || (sV[2] >= 0.0) || (sV[3] >= 0.0) || (sV[4] >= 0.0)))
+  if(!(((sV[1] < -(WLZ_CTR_TOLERANCE)) && (sV[2] < -(WLZ_CTR_TOLERANCE)) &&
+       (sV[3] < -(WLZ_CTR_TOLERANCE)) && (sV[4] < -(WLZ_CTR_TOLERANCE))) ||
+      ((sV[1] > WLZ_CTR_TOLERANCE) && (sV[2] > WLZ_CTR_TOLERANCE) &&
+       (sV[3] > WLZ_CTR_TOLERANCE) && (sV[4] > WLZ_CTR_TOLERANCE))))
   {
     /* Interpolate for centre of square */
     sV[0] = (sV[1] + sV[2] + sV[3] + sV[4]) / 4.0;
     tV[0] = sV[0];
-    lev[0] = (tV[0] >= DBL_EPSILON) + (tV[0] > -(DBL_EPSILON));
+    lev[0] = (tV[0] > WLZ_CTR_TOLERANCE) + (tV[0] > -(WLZ_CTR_TOLERANCE));
     /* For each triangle: Classify by node levels and compute intersection. */
     idT = 0;
     while((errNum == WLZ_ERR_NONE) && (idT < 4))
@@ -1685,8 +1703,8 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
       }
       tV[1] = sV[tN1];
       tV[2] = sV[tN2];
-      lev[1] = (tV[1] >= DBL_EPSILON) + (tV[1] > -(DBL_EPSILON));
-      lev[2] = (tV[2] >= DBL_EPSILON) + (tV[2] > -(DBL_EPSILON));
+      lev[1] = (tV[1] > WLZ_CTR_TOLERANCE) + (tV[1] > -(WLZ_CTR_TOLERANCE));
+      lev[2] = (tV[2] > WLZ_CTR_TOLERANCE) + (tV[2] > -(WLZ_CTR_TOLERANCE));
       iCode = iCodeTab[lev[2]][lev[1]][lev[0]];
       if(iCode)
       {
@@ -1923,14 +1941,22 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
   cVal[ 8] = *(vPn1Ln1 + 0) - isoVal;
   /* Test to se if there is an intersection between this cube and the
    * iso-surface. */
-  intersect = !(((cVal[ 1] < 0.0) && (cVal[ 2] < 0.0) &&
-		(cVal[ 3] < 0.0) && (cVal[ 4] < 0.0) &&
-		(cVal[ 5] < 0.0) && (cVal[ 6] < 0.0) &&
-		(cVal[ 7] < 0.0) && (cVal[ 8] < 0.0)) || 
-	       ((cVal[ 1] > 0.0) && (cVal[ 2] > 0.0) &&
-		(cVal[ 3] > 0.0) && (cVal[ 4] > 0.0) &&
-		(cVal[ 5] > 0.0) && (cVal[ 6] > 0.0) &&
-		(cVal[ 7] > 0.0) && (cVal[ 8] > 0.0)));
+  intersect = !(((cVal[ 1] < -(WLZ_CTR_TOLERANCE)) &&
+                 (cVal[ 2] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[ 3] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[ 4] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[ 5] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[ 6] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[ 7] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[ 8] < -(WLZ_CTR_TOLERANCE))) || 
+	        ((cVal[ 1] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 2] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 3] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 4] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 5] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 6] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 7] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[ 8] > WLZ_CTR_TOLERANCE)));
   if(intersect)
   {
     sVal[0] = cVal[ 1] + cVal[ 2];
@@ -2388,14 +2414,22 @@ static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
   cVal[7] = *(vPn1Ln1 + 0) - isoVal;
   /* Test to se if there is an intersection between this cube and the
    * iso-surface. */
-  intersect = !(((cVal[1] < 0.0) && (cVal[2] < 0.0) &&
-		 (cVal[3] < 0.0) && (cVal[4] < 0.0) &&
-		 (cVal[5] < 0.0) && (cVal[6] < 0.0) &&
-		 (cVal[7] < 0.0) && (cVal[8] < 0.0)) || 
-	        ((cVal[1] > 0.0) && (cVal[2] > 0.0) &&
-	 	 (cVal[3] > 0.0) && (cVal[4] > 0.0) &&
-		 (cVal[5] > 0.0) && (cVal[6] > 0.0) &&
-		 (cVal[7] > 0.0) && (cVal[8] > 0.0)));
+  intersect = !(((cVal[1] < -(WLZ_CTR_TOLERANCE)) &&
+                 (cVal[2] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[3] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[4] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[5] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[6] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[7] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[8] < -(WLZ_CTR_TOLERANCE))) || 
+	        ((cVal[1] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[2] > WLZ_CTR_TOLERANCE) &&
+	 	 (cVal[3] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[4] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[5] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[6] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[7] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[8] > WLZ_CTR_TOLERANCE)));
   if(intersect)
   {
     tIdx = 0;
@@ -2504,7 +2538,7 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
 	{
 	  /* 1000 */ WLZ_CONTOUR_TIC3D_NONE,
 	  /* 1001 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1002 */ WLZ_CONTOUR_TIC3D_V2S01S02
+	  /* 1002 */ WLZ_CONTOUR_TIC3D_V3S01S02
 	},
 	{
 	  /* 1010 */ WLZ_CONTOUR_TIC3D_NONE,
@@ -3103,21 +3137,27 @@ int             main(int argc, char *argv[])
   int           option,
   		ok = 1,
 		usage = 0,
-  		colIdx = 0,
+  		idN = 0,
 		nCol,
-		maxCol = 7;
+		maxCol = 7,
+		nmECnt,
+		nmEdgeFlg = 0;
   double	ctrVal = 100,
   		ctrWth = 1.0;
   FILE		*fP = NULL;
   char		*inObjFileStr,
   		*outFileStr;
+  WlzGMEdge	*tE;
+  WlzGMEdgeT	*tET;
+  WlzGMEdge	**nmE;
   WlzObject     *inObj = NULL;
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzContour	*ctr = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzDVertex3	tEGV[2];
   WlzDVertex2	scale,
   		offset;
-  static char	optList[] = "ghic:o:v:w:";
+  static char	optList[] = "eghic:o:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -3128,6 +3168,9 @@ int             main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'e':
+        nmEdgeFlg = 1;
+	break;
       case 'g':
         ctrMtd = WLZ_CONTOUR_MTD_GRD;
 	break;
@@ -3266,6 +3309,31 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       		     "%s Failed to output contour to file (%d).\n",
       		     argv[0], (int )errNum);
+    }
+  }
+  if(ok && nmEdgeFlg)
+  {
+    nmE = WlzGMModelFindNMEdges(ctr->model, &nmECnt, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+      		     "%s Failed to search for non-manifold edges (%d).\n",
+		     argv[0], (int )errNum);
+    }
+    else
+    {
+      for(idN = 0; idN < nmECnt; ++idN)
+      {
+        tE = *(nmE + idN);
+	tET = tE->edgeT;
+	(void )WlzGMVertexGetG3D(tET->vertexT->diskT->vertex, &tEGV[0]);
+	(void )WlzGMVertexGetG3D(tET->opp->vertexT->diskT->vertex, &tEGV[1]);
+	(void )fprintf(stderr, "%d {%g, %g, %g} {%g, %g, %g}\n",
+		       tE->idx,
+		       (tEGV + 0)->vtX, (tEGV + 0)->vtY, (tEGV + 0)->vtZ,
+		       (tEGV + 1)->vtX, (tEGV + 1)->vtY, (tEGV + 1)->vtZ);
+      }
     }
   }
   if(inObj)
