@@ -570,10 +570,10 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 	    /* set the mask value */
 	    if( WlzInsideDomain(obj, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
 				WLZ_NINT(vtx.vtX), NULL) ){
-	      *(gwsp1.u_grintptr.ubp) = 0;
+	      *(gwsp1.u_grintptr.ubp) = 128;
 	    }
 	    else {
-	      *(gwsp1.u_grintptr.ubp) = 128;
+	      *(gwsp1.u_grintptr.ubp) = 0;
 	    }
 	    gwsp1.u_grintptr.ubp++;
 	  }
