@@ -276,7 +276,6 @@ int main(int	argc,
   inFile = NULL;
   numOf2DWlzFiles = i-1;
 
-
   if( 2 * numOfTrackUpOrDown + 1 > numOf2DWlzFiles)
   {
       printf("there are not enough 2D image files to track.\n");
@@ -372,13 +371,13 @@ static void usage(char *proc_str)
 	  "\t  -d        input maximum distance in number of pixels allowed to be tracked \n"
 	  "\t                     default is 10                                   \n"
 	  "\t  -f        input  distance in number of pixels for in and out points \n"
-	  "\t                     default is 15  "   
+	  "\t                     default is 15 \n "   
 	  "\t  -F        input  distance in number of pixels for in and out points  guid\n"
-	  "\t                     default is 15  "   
+	  "\t                     default is 15  \n"   
 	  "\t  -g        input  number of files to tack up or down\n"
-	  "\t                     default is 5  "   
+	  "\t                     default is 5  \n"   
 	  "\t  -G        input  start tracking file number (counting from  0)\n"
-	  "\t                     default is 5  "   
+	  "\t                     default is 5  \n"   
 	  "\t  -j        input number of pixels to be sampled in the length of segmented line see J option\n"
 	  "\t                     default is 2                                   \n"
 	  "\t  -J        input length to be used to segment the line in unit of number of pixels\n"
