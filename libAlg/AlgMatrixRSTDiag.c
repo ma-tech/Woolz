@@ -15,6 +15,7 @@
 * \brief        Reduces a real symmetric matrix to symmetric
 *		tridiagonal form by orthogonal similarity transformation
 *		and construction of the right operator of the reduction.
+* \ingroup      AlgMatrix
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
@@ -26,12 +27,8 @@
 #include <Alg.h>
 
 /*!
-* \ingroup      AlgMatrix
-* @{
-*/
-
-/*!
 * \return       	                  Error code.
+* \ingroup      AlgMatrix
 * \brief        An implementation of Householder's alorithm which
 *		reduces a real aSz x aSz symmetric matrix to symmetric
 *		tridiagonal form by aSz - 2 orthogonal similarity
@@ -168,7 +165,3 @@ AlgError	AlgMatrixRSTDiag(double **aM, int aSz, double *dM, double *oM)
   }
   return(errCode);
 }
-
-/*!
-* @}
-*/

@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions for singular value decomposition.
+* \ingroup      AlgMatrix
 * \todo         -
 * \bug          None known.
 */
@@ -22,13 +23,10 @@
 
 static double	AlgMatrixSVPythag(double, double);
 
-/*!
-* \ingroup      AlgMatrix
-* @{
-*/
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x, where A is a
 *		matrix with at least as many columns as rows.
 *		On return the matrix A is overwritten by the matrix U
@@ -112,6 +110,7 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Performs singular value decomposition of the given
 *		matrix (A) and computes two additional matricies
 *		(U and V) such that:
@@ -569,6 +568,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Solves the set of of linear equations A.x = b where
 *		A is input as its singular value decomposition in
 *		the three matricies U, W and V, as returned by
@@ -657,6 +657,7 @@ AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
 
 /*!
 * \return				Square root of sum of squares.
+* \ingroup      AlgMatrix
 * \brief	Computes sqrt(size0^2 + size1^2) without underflow or
 *		overflow.
 * \param	side0			Length of first side.
@@ -681,7 +682,3 @@ static double	AlgMatrixSVPythag(double sd0, double sd1)
   }
   return(hyp);
 }
-
-/*!
-* @}
-*/

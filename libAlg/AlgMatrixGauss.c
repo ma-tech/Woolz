@@ -15,6 +15,7 @@
 * \brief        Provides a function for solving matrix equations of the
 *               form: A.x = b for x using Gaussian elimination with
 *               partial pivoting.
+* \ingroup      AlgMatrix
 * \todo         -
 * \bug          None known.
 */
@@ -23,12 +24,8 @@
 #include <float.h>
 
 /*!
-* \ingroup      AlgMatrix
-* @{
-*/
-
-/*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x by Gaussian
 *		elimination with partial pivoting. Matrix A is the
 *		matrix of coefficients.
@@ -170,7 +167,3 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
 	   (int )errCode));
   return(errCode);
 }
-
-/*!
-* @}
-*/

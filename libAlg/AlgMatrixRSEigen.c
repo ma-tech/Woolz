@@ -14,6 +14,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Functions to find the eigenvalues and eigenvectors of a
 *		real symmetric matrix.
+* \ingroup      AlgMatrix
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
@@ -30,14 +31,10 @@ static void			AlgMatrixRSEigenSort(
 				  double *xM,
 				  int n,
 				  int reqEV);
-/*!
-* \ingroup      AlgMatrix
-* @{
-*/
-
 
 /*!
 * \return       	                  Error code.
+* \ingroup      AlgMatrix
 * \brief        Determines the eigenvalues and eigenvectors of a
 *		real symmetric matrix by calling AlgMatrixRSTDiag()
 *		to create a tridiagonal symetric matrix and then
@@ -90,6 +87,7 @@ AlgError	AlgMatrixRSEigen(double **aM, int aSz, double *vM, int reqEV)
 
 /*!
 * \return       	                  <void>
+* \ingroup      AlgMatrix
 * \brief	Sorts the eigenvectors and eigenvalues into descending
 * 		eigenvalue order. Because AlgMatrixRSTDiag() runs in
 *		O(N^3) an O(N^2) insertion sort algorithm is used
@@ -261,7 +259,3 @@ int		main(int argc, char *argv[])
   return(!ok);
 }
 #endif /* ALG_MATRIXRSEIGEN_TEST */
-
-/*!
-* @}
-*/

@@ -16,6 +16,7 @@
 *		form: A.x = b for x, inverting a matrix, calculating
 *               the determinant of a matrix and performing LU
 *               decomposition.
+* \ingroup   	AlgMatrix
 * \todo         -
 * \bug          None known.
 */
@@ -23,13 +24,10 @@
 #include <Alg.h>
 #include <float.h>
 
-/*!
-* \ingroup   	AlgMatrix
-* @{
-*/
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x, where A is a
 *		square matrix.
 *		On return the matrix A is overwritten with its LU
@@ -83,6 +81,7 @@ AlgError	AlgMatrixLUSolve(double **aMat, int aSz,
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Calculates the inverse of a square matrix.
 * \param	aMat			Given matrix A.
 * \param	aSz			Size of matrix A.
@@ -140,6 +139,7 @@ AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Calculates the determinant of a matrix. The matrix is
 *		overwitten with its LU decomposition on exit.
 * \param	aMat			Given matrix A.
@@ -188,6 +188,7 @@ AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Replaces the given matrix with the LU decomposition
 *		of a row-wise permutation of itself.
 *		The given index vector is used to record the
@@ -345,6 +346,7 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 
 /*!
 * \return				Error code.
+* \ingroup      AlgMatrix
 * \brief	Solves the set of of linear equations A.x = b where
 *		A is input as its LU decomposition determined with
 *		AlgMatrixLUDecomp()
@@ -416,7 +418,3 @@ AlgError	AlgMatrixLUBackSub(double **aMat, int aSz,
 	   (int )errCode));
   return(errCode);
 }
-
-/*!
-* @}
-*/
