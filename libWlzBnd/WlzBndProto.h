@@ -68,5 +68,9 @@
 					  int arraySizeVec1, WlzDVertex3 *arrayVec1,
 					  WlzErrorNum *dstErr);
 		extern WlzErrorNum WlzSetVoxelSize(WlzObject *obj, double x, double y, double z);
-		
-		#endif	/* !WLZBND_PROTO_H Don't put anything after this line */
+		extern WlzObjectType WlzGetObjectType(WlzObject *obj);
+		extern WlzErrorNum WlzExplode(int *dstExpObjCount, WlzObject ***dstExpObjVecP, WlzObject *srcObj);
+		extern WlzObject *WlzGetContourObj(WlzObject *inObj);
+		extern const char *WlzGetPropName(WlzObject *obj);
+		extern int WlzDestroyObj(WlzObject *obj);
+#endif	/* !WLZBND_PROTO_H Don't put anything after this line */
