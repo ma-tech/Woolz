@@ -25,7 +25,6 @@
 * added by J. Rao 10/09/2001 WlzMeshTransform3D
 * added by J. Rao 10/09/2001 WlzMeshElem3D
 * added by J. Rao 10/09/2001 WlzMeshNode3D
-* modified by GFeng 03/10/2003 WlzFnType
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -580,6 +579,54 @@ typedef enum _WlzThresholdType
   WLZ_THRESH_HIGH		     /*!< Threshold >= thresh_value */
 } WlzThresholdType;
 
+
+/*!
+* \enum		_WlzRGBAThresholdType
+* \ingroup	WlzThreshold
+* \brief	Colour threshold type selection.
+* 		Typedef: ::WlzRGBAThresholdType.
+*/
+typedef enum _WlzRGBAThresholdType
+{
+  WLZ_RGBA_THRESH_NONE,
+  WLZ_RGBA_THRESH_SINGLE,
+  WLZ_RGBA_THRESH_MULTI,
+  WLZ_RGBA_THRESH_PLANE,
+  WLZ_RGBA_THRESH_SLICE,
+  WLZ_RGBA_THRESH_BOX,
+  WLZ_RGBA_THRESH_SPHERE
+} WlzRGBAThresholdType;
+
+/*!
+* \enum		_WlzRGBAColorSpace
+* \ingroup	WlzValueUtils
+* \brief	Colour space (i.e. rgb, hsb, grey etc.) selection.
+* 		Typedef: ::WlzRGBAColorSpace.
+*/
+typedef enum _WlzRGBAColorSpace
+{
+  WLZ_RGBA_SPACE_GREY,
+  WLZ_RGBA_SPACE_RGB,
+  WLZ_RGBA_SPACE_HSB
+} WlzRGBAColorSpace;
+
+/*!
+* \enum		_WlzRGBAColorChannel
+* \ingroup	WlzValueUtils
+* \brief	Colour channel selection.
+* 		Typedef: ::WlzRGBAColorChannel.
+*/
+typedef enum _WlzRGBAColorChannel
+{
+  WLZ_RGBA_CHANNEL_GREY,
+  WLZ_RGBA_CHANNEL_RED,
+  WLZ_RGBA_CHANNEL_GREEN,
+  WLZ_RGBA_CHANNEL_BLUE,
+  WLZ_RGBA_CHANNEL_HUE,
+  WLZ_RGBA_CHANNEL_SATURATION,
+  WLZ_RGBA_CHANNEL_BRIGHTNESS
+} WlzRGBAColorChannel;
+
 /*!
 * \enum		_WlzPolyFillMode	
 * \ingroup	WlzPolyline
@@ -1038,7 +1085,9 @@ typedef enum _WlzGMModelType
   WLZ_GMMOD_2I = 1,
   WLZ_GMMOD_2D,
   WLZ_GMMOD_3I,
-  WLZ_GMMOD_3D
+  WLZ_GMMOD_3D,
+  WLZ_GMMOD_2N,
+  WLZ_GMMOD_3N
 } WlzGMModelType;
 
 /*!
@@ -1053,8 +1102,10 @@ typedef enum _WlzGMElemType
   WLZ_GMELM_VERTEX,
   WLZ_GMELM_VERTEX_G2I,
   WLZ_GMELM_VERTEX_G2D,
+  WLZ_GMELM_VERTEX_G2N,
   WLZ_GMELM_VERTEX_G3I,
   WLZ_GMELM_VERTEX_G3D,
+  WLZ_GMELM_VERTEX_G3N,
   WLZ_GMELM_VERTEX_T,
   WLZ_GMELM_DISK_T,
   WLZ_GMELM_EDGE,
@@ -1101,8 +1152,10 @@ typedef union _WlzGMElemP
   struct _WlzGMVertex *vertex;
   struct _WlzGMVertexG2I *vertexG2I;
   struct _WlzGMVertexG2D *vertexG2D;
+  struct _WlzGMVertexG2N *vertexG2N;
   struct _WlzGMVertexG3I *vertexG3I;
   struct _WlzGMVertexG3D *vertexG3D;
+  struct _WlzGMVertexG3N *vertexG3N;
   struct _WlzGMVertexT *vertexT;
   struct _WlzGMDiskT	*diskT;
   struct _WlzGMEdge 	*edge;
@@ -1135,7 +1188,7 @@ typedef struct _WlzGMCore
 /*!
 * \struct	_WlzGMVertexG2I
 * \ingroup	WlzGeoModel
-* \brief	The geometric properties of point in 2D integer space.
+* \brief	The position of a point in 2D integer space.
 *		Typedef: ::WlzGMVertexG2I.
 */
 typedef struct _WlzGMVertexG2I
@@ -1149,7 +1202,7 @@ typedef struct _WlzGMVertexG2I
 /*!
 * \struct	_WlzGMVertexG2D
 * \ingroup	WlzGeoModel
-* \brief	The geometric properties of point in 2D double precision space.
+* \brief	The position of a point in 2D double precision space.
 *		Typedef: ::WlzGMVertexG2D.
 */
 typedef struct _WlzGMVertexG2D
@@ -1161,9 +1214,29 @@ typedef struct _WlzGMVertexG2D
 } WlzGMVertexG2D;
 
 /*!
+* \struct	_WlzGMVertexG2N
+* \ingroup	WlzGeoModel
+* \brief	The position of a point in 2D double precision space
+*		and the normal vector at that point.
+*		Note that the data structure is the same as ::WlzGMVertexG2D
+*		until the normal, this is important as it allows the type,
+*		index and position to be established without knowing whether
+*		the vertex geometry is ::WlzGMVertexG2D or ::WlzGMVertexG2N.
+*		Typedef: ::WlzGMVertexG2N.
+*/
+typedef struct _WlzGMVertexG2N
+{
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_G2N */
+  int		idx;		        /*!< Unique identifier for vertex
+  				             geometry */
+  WlzDVertex2	vtx;			/*!< Where the point lies in space */
+  WlzDVertex2	nrm;			/*!< Normal at the point. */
+} WlzGMVertexG2N;
+
+/*!
 * \struct	_WlzGMVertexG3I
 * \ingroup	WlzGeoModel
-* \brief	The geometric properties of point in 3D integer space.
+* \brief	The position of a point in 3D integer space.
 *		Typedef: ::WlzGMVertexG3I.
 */
 typedef struct _WlzGMVertexG3I
@@ -1177,8 +1250,8 @@ typedef struct _WlzGMVertexG3I
 /*!
 * \struct	_WlzGMVertexG3D
 * \ingroup	WlzGeoModel
-* \brief	The geometricproperties of point in 3D double precision space.
-*		Typedef: ::WlzGMVertexG3I.
+* \brief	The position of a point in 3D double precision space.
+*		Typedef: ::WlzGMVertexG3D.
 */
 typedef struct _WlzGMVertexG3D
 {
@@ -1187,6 +1260,26 @@ typedef struct _WlzGMVertexG3D
   				             geometry */
   WlzDVertex3	vtx;			/*!< Where the point lies in space */
 } WlzGMVertexG3D;
+
+/*!
+* \struct	_WlzGMVertexG3N
+* \ingroup	WlzGeoModel
+* \brief	The position of a point in 3D double precision space
+*		and the normal vector at that point.
+*		Note that the data structure is the same as ::WlzGMVertexG3D
+*		until the normal, this is important as it allows the type,
+*		index and position to be established without knowing whether
+*		the vertex geometry is ::WlzGMVertexG3D or ::WlzGMVertexG3N.
+*		Typedef: ::WlzGMVertexG3N.
+*/
+typedef struct _WlzGMVertexG3N
+{
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_G3N */
+  int		idx;		        /*!< Unique identifier for vertex
+  				             geometry */
+  WlzDVertex3	vtx;			/*!< Where the point lies in space */
+  WlzDVertex3	nrm;			/*!< Normal at the point. */
+} WlzGMVertexG3N;
 
 /*!
 * \union	_WlzGMVertexGU
@@ -1199,8 +1292,10 @@ typedef union _WlzGMVertexGU
   WlzGMCore 	*core;
   WlzGMVertexG2I *vg2I;
   WlzGMVertexG2D *vg2D;
+  WlzGMVertexG2N *vg2N;
   WlzGMVertexG3I *vg3I;
   WlzGMVertexG3D *vg3D;
+  WlzGMVertexG3N *vg3N;
 } WlzGMVertexGU;
 
 /*!
@@ -1861,8 +1956,7 @@ typedef struct _WlzCompoundArray
   int           linkcount;		/*!< From WlzCoreObject. */
   WlzObjectType otype;		       	/*!< The permitted type if
   					    constrained. */
-  int           n;		 	/*!< The maximum number of objects
-  					     (array length). */
+  int           n;		 	/*!< The  number of objects */
   WlzObject     **o;			/*!< The list of Woolz object
   					     pointers. */
   WlzPropertyList *plist;		/*! A list of the object's
@@ -2452,19 +2546,15 @@ typedef struct _WlzRsvFilter
 typedef enum _WlzFnType
 {
   WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
-  WLZ_FN_BASIS_3DGAUSS,
   WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
-  WLZ_FN_BASIS_3DPOLY,
   WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
   WLZ_FN_BASIS_3DMQ,			/*!< Multiquadric basis function */
   WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
-  WLZ_FN_BASIS_3DTPS,
-  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis function */
-  WLZ_FN_BASIS_3DCONF_POLY,
+  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
+  					     function */
   WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
   WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
                                              values. */
-  
   WLZ_FN_COUNT				/*!< Not a function but the number
   					     of functions. Keep this the
 					     last of the enums! */
@@ -2516,6 +2606,26 @@ typedef struct _WlzBasisFn
 					     called to free the data when the
 					     basis function is free'd. */
 } WlzBasisFn;
+
+/*!
+* \struct	_WlzThreshCbStr
+* \ingroup	WlzType
+* \brief	Callback structure from WlzCbThreshold()
+*		Typedef: ::WlzThreshCbStr.
+*/
+typedef struct _WlzThreshCbStr
+{
+  WlzPixelP	pix;
+  WlzIVertex3	pos;
+} WlzThreshCbStr;
+
+/*!
+* \typedef	WlzThreshCbFn
+* \ingroup	WlzFunction
+* \brief	Callback function for the WlzCbThreshold()
+*/
+typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
+
 
 /************************************************************************
 * Transforms
