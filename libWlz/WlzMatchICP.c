@@ -909,7 +909,7 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       WlzGMModelRemResCb(sGM, WlzMatchICPShellCb, &cbData);
     }
   }
-  if(qTop)
+  if(sMSQueue && qTop)
   {
     if(AlcCPQItemInsert(sMSQueue, qTop) != ALC_ER_NONE)
     {
