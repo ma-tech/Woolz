@@ -27,6 +27,8 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= AlcAlloc.c \
 			  AlcArray.c \
+			  AlcDLPList.c \
+			  AlcHashTable.c \
 			  AlcString.c
 
 
@@ -57,7 +59,7 @@ LIBDIRS			= \
 			  $(DEPENDDIRS)
 
 # List of all sub directories that contain makefiles (modify as required).
-SUBSYSTEMS		= 
+SUBSYSTEMS		= Test
 
 # List of files (should be top level directories) to be put used in creating
 # a compressed tar file for distribution.

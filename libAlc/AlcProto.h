@@ -15,20 +15,24 @@
 *		the MRC HGU memory allocation library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 01-11-1999 bill Added AlcDLPList.
 ************************************************************************/
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
+/************************************************************************
+* AlcAlloc.c
+************************************************************************/
 extern void	*AlcCalloc(int, int),
 		*AlcMalloc(int),
 		*AlcRealloc(void *, int);
-
 extern void	AlcFree(void *);
 
-extern char	*AlcStrDup(const char *srcStr);
-
+/************************************************************************
+* AlcArray.c
+************************************************************************/
 extern AlcErrno	AlcBit1Calloc(unsigned char **, int),
 		AlcChar1Calloc(char **, int),
 		AlcUnchar1Calloc(unsigned char **, int),
@@ -89,8 +93,117 @@ extern AlcErrno	AlcBit1Calloc(unsigned char **, int),
 		AlcFloat3Free(float ***),
 		AlcDouble3Free(double ***);
 
+/************************************************************************
+* AlcDLPList.c
+************************************************************************/
+extern AlcDLPList 		*AlcDLPListNew(
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcDLPListFree(
+				  AlcDLPList *list);
+extern AlcDLPItem		*AlcDLPItemNew(
+				  void *entry,
+				  void (*freeFn)(void *),
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcDLPListEntryAppend(
+				  AlcDLPList *list,
+				  AlcDLPItem *appAfter,
+				  void *entry,
+				  void (*freeFn)(void *));
+extern AlcErrno			AlcDLPListEntryInsert(
+				  AlcDLPList *list,
+				  AlcDLPItem *insBefore,
+				  void *entry,
+				  void (*freeFn)(void *));
+extern AlcDLPItem		*AlcDLPItemUnlink(
+				  AlcDLPList *list,
+				  AlcDLPItem *item,
+				  int freeItem,
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcDLPItemAppend(
+				  AlcDLPList *list,
+				  AlcDLPItem *appAfter,
+				  AlcDLPItem *item);
+extern AlcErrno			AlcDLPItemInsert(
+				  AlcDLPList *list,
+				  AlcDLPItem *insBefore,
+				  AlcDLPItem *item);
+extern AlcErrno			AlcDLPItemFree(
+				  AlcDLPItem *item);
+extern	int			AlcDLPListCount(
+				  AlcDLPList *list,
+				  AlcErrno *dstErr);
+extern AlcDLPItem  		*AlcDLPListIterate(
+				  AlcDLPList *list,
+				  AlcDLPItem *item,
+				  AlcDirection dir,
+				  int (*iterFn)(AlcDLPList *,
+				  		AlcDLPItem *, void *),
+				  void *iterData,
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcDLPListSort(
+				  AlcDLPList *list,
+				  int (*entryCompFn)(void *, void *));
+
+/************************************************************************
+* AlcHashTable.c
+************************************************************************/
+extern AlcHashTable		*AlcHashTableNew(
+				  unsigned tableSz,
+				  int (*keyCmp)(void *, void *),
+				  unsigned (*hashFn)(void *),
+				  AlcErrno *dstErr);
+extern AlcHashItem		*AlcHashItemNew(
+				  void *entry,
+				  void (*freeFn)(void *),
+				  void *key,
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcHashTableFree(
+				  AlcHashTable *hTbl);
+extern AlcErrno			AlcHashTableEntryInsert(
+				  AlcHashTable *hTbl,
+				  void *key,
+				  void *entry,
+				  void (*freeFn)(void *));
+extern AlcErrno			AlcHashItemUnlink(
+				  AlcHashTable *hTbl,
+				  AlcHashItem *rItem,
+				  int freeItem);
+extern AlcErrno        		AlcHashTableUnlinkAll(
+				  AlcHashTable *hTbl,
+                                  int (*testFn)(AlcHashTable *,
+                                                AlcHashItem *, void *),
+                                  void *fnData,
+				  int freeItems);
+extern AlcErrno 		AlcHashItemInsert(
+				  AlcHashTable *hTbl,
+				  AlcHashItem *newItem);
+extern AlcErrno			AlcHashItemFree(
+				  AlcHashItem *item);
+extern int			AlcHashTableCount(
+				  AlcHashTable *hTbl,
+				  AlcErrno *dstErr);
+extern AlcHashItem		*AlcHashTableIterate(
+				  AlcHashTable *hTbl,
+				  AlcDirection dir,
+				  int (*iterFn)(AlcHashTable *,
+				                AlcHashItem *, void *),
+				  void *iterData, AlcErrno *dstErr);
+extern AlcHashItem		*AlcHashItemGet(
+				  AlcHashTable *hTbl,
+				  void *key,
+				  AlcErrno *dstErr);
+extern int			AlcHashItemOrder(
+				  AlcHashTable *hTbl,
+				  AlcHashItem *item0,
+				  AlcHashItem *item1);
+
+/************************************************************************
+* AlcString.c
+************************************************************************/
+extern char	*AlcStrDup(const char *srcStr);
+
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif /* ALCPROTO_H */
