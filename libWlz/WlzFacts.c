@@ -101,7 +101,9 @@ static WlzErrorNum 		WlzObjFactsGreyV(
 				  const char *prefix,
 				  WlzGreyType gType,
 				  WlzGreyV gV);
-		
+static WlzErrorNum	        WlzObjFactsMeshTrans(
+				  WlzObjFactsData *fData,
+				   WlzMeshTransform *mtrans);		
 
 /*!
 * \return	Woolz error code.
@@ -346,6 +348,13 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsPropList(fData, obj, objCA->plist);
+	  }
+	  break;
+	case WLZ_MESH_TRANS:
+	  errNum = WlzObjFactsMeshTrans(fData, obj->domain.mt);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
 	case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
@@ -1493,6 +1502,49 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 				     model->res.shellG.numElm);
 	}
       }
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of an mesh transform.
+* \param	fData			Facts data structure.
+* \param	trans			Given mesh transform.
+*/
+static WlzErrorNum WlzObjFactsMeshTrans(WlzObjFactsData *fData,
+				          WlzMeshTransform *trans)
+{
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromTransformType(trans->type, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Transform NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Transform type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Transform type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", trans->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", trans->nElem);
+      errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", trans->nNodes);
+
     }
   }
   --(fData->indent);

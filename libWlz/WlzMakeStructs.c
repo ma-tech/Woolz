@@ -322,6 +322,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_PROPERTY_OBJ:
     case WLZ_EMPTY_OBJ:
     case WLZ_TRANS_OBJ:
+    case WLZ_MESH_TRANS:
       obj->type = type;
       obj->linkcount = 0;
       obj->domain = WlzAssignDomain(domain, &errNum);

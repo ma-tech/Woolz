@@ -125,6 +125,10 @@ static WlzErrorNum 		WlzReadGreyV(FILE *fP,
 				  WlzGreyType type,
 				  WlzGreyV *gV,
 				  int nGV);
+static WlzMeshTransform         *WlzReadMeshTransform2D(
+				  FILE *fp,
+				  WlzErrorNum *);
+
 #ifdef _OPENMP
 #define getc(S)	getc_unlocked(S)
 #endif
@@ -414,7 +418,11 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       obj = WlzMakeMain(type, domain, values,
 			WlzReadPropertyList(fp, NULL), NULL, &errNum);
       break;
-
+    case WLZ_MESH_TRANS:
+      if( domain.mt = WlzReadMeshTransform2D(fp, &errNum) ){
+	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      }
+      break;
       /* orphans and not yet implemented object types for I/O */
     case WLZ_CONV_HULL:
     case WLZ_3D_POLYGON:
@@ -3036,4 +3044,117 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
   return(obj) ;
 }
 
+/*!
+* \return	Mesh Transform.
+* \ingroup	WlzIO
+* \brief	Reads a mesh transform from the input file.
+* \param	fP			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
+				      WlzErrorNum *dstErr)
+{
 
+  /* local variables */
+  int		i,
+  		j;
+  WlzDVertex3 	*vptr;
+  WlzMeshNode	*dptr;
+  WlzMeshElem	*eptr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzObjectType type; 
+  WlzMeshTransform   	*obj=NULL;
+
+  /* make space for obj */
+  if( (obj = (WlzMeshTransform *) AlcMalloc(sizeof(WlzMeshTransform)))
+	  == NULL )
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else 
+  { 
+    obj->type = WLZ_TRANSFORM_2D_MESH;
+    obj->linkcount = 0;
+    
+    obj->nElem = getword(fp);
+    obj->nNodes = getword(fp);
+    if( feof(fp) != 0 )
+    {
+      AlcFree( (void *) obj );
+      obj = NULL;
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  /* read  nodal position and displacement */
+  if( errNum == WLZ_ERR_NONE )
+  {
+    if( (obj->nodes = (WlzMeshNode *)AlcMalloc(  obj->nNodes * sizeof(WlzMeshNode))) == NULL )
+    {
+      AlcFree( (void *) obj->nodes );
+      AlcFree( (void *) obj );
+      obj = NULL;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    if (errNum == WLZ_ERR_NONE)
+    {
+      dptr = obj->nodes;
+      for(i = 0; (i < obj->nNodes) && (errNum == WLZ_ERR_NONE); i++, dptr++)
+      {  /* read position */
+        dptr->position.vtX = (double) getfloat(fp);
+        dptr->position.vtY = (double) getfloat(fp);
+       /* read displacement */
+        dptr->displacement.vtX =(double) getfloat(fp);
+        dptr->displacement.vtY =(double) getfloat(fp);
+      }
+    } 
+
+    /* read elements */
+    if( errNum == WLZ_ERR_NONE ){
+      if( (obj->elements = (WlzMeshElem *)AlcMalloc(  obj->nElem * 
+                           sizeof(WlzMeshElem))) == NULL )
+      {
+        AlcFree( (void *) obj->nodes );
+        AlcFree( (void *) obj->elements );
+        AlcFree( (void *) obj );
+        obj = NULL;
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else 
+      {
+        /* read elements */
+        eptr = obj->elements;
+        for(i = 0; (i < obj->nElem) && (errNum == WLZ_ERR_NONE); i++, eptr++)
+        {
+          /* get the index of this element */
+          eptr->idx = getword(fp);
+          /* get nodes indeces */ 
+          for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
+          {
+            eptr->nodes[j] = getword(fp);
+          }
+          /* output its neighbours */
+         
+          for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
+          {
+	   eptr->neighbours[j] = getword(fp);
+          }
+        }
+      }
+    }
+  }
+ 
+  /* check if EOF error has been set */
+  if( (errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
+    AlcFree( (void *) obj->elements );
+    AlcFree( (void *) obj->nodes );
+    AlcFree((void *) obj);
+    obj = NULL;
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return(obj) ;
+}

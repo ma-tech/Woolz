@@ -134,6 +134,8 @@ typedef enum _WlzObjectType
   WLZ_EMPTY_OBJ			= 127,	/*!< Empty object: An object which
   					     occupies no space and has no
 					     values. */
+  WLZ_MESH_TRANS                = 128,
+
   WLZ_EMPTY_DOMAIN,			/*!< Empty domain: A domain which
   					     occupies no space. */
   WLZ_EMPTY_VALUES,			/*!< Empty values: A values which
@@ -1651,6 +1653,7 @@ typedef union _WlzDomain
   struct _WlzAffineTransform *t;
   struct _WlzWarpTrans       *wt;
   struct _WlzContour 	     *ctr;
+  struct _WlzMeshTransform   *mt;
 } WlzDomain;
 
 /*!

@@ -135,6 +135,9 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_EMPTY_OBJ:
       oTypeStr = "WLZ_EMPTY_OBJ";
       break;
+    case WLZ_MESH_TRANS:
+      oTypeStr = "WLZ_MESH_TRANS";
+      break;
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
@@ -749,6 +752,9 @@ const char	*WlzStringFromTransformType(WlzTransformType tType,
       break;
     case WLZ_TRANSFORM_3D_AFFINE:
       tStr = "WLZ_TRANSFORM_3D_AFFINE";
+      break;
+    case WLZ_TRANSFORM_2D_MESH:
+      tStr =  "WLZ_TRANSFORM_2D_MESH";
       break;
     default:
       errNum = WLZ_ERR_TRANSFORM_TYPE;
