@@ -13,6 +13,7 @@
 * Purpose:      Applies an affine transform to a Woolz object.		*
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.	*
+* 04-12-00 bill Add affine transform output.
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,6 +51,8 @@ int             main(int argc, char **argv)
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzTransformType trType = WLZ_TRANSFORM_2D_AFFINE;
   WlzAffineTransform *trans = NULL;
+  WlzValues	trVal;
+  WlzDomain	trDom;
   WlzObject	*inObj = NULL,
   		*outObj = NULL,
 		*trObj = NULL;
@@ -57,10 +60,11 @@ int             main(int argc, char **argv)
   FILE		*fP = NULL;
   char 		*outFileStr,
   		*inObjFileStr,
-		*inTrObjFileStr = NULL;
+		*inTrObjFileStr = NULL,
+		*outTrObjFileStr = NULL;
   const char	*trTypeStr;
   WlzAffineTransformPrim prim;
-  static char	optList[] = "3LMNPRhiIo:a:b:s:t:u:v:w:x:y:z:",
+  static char	optList[] = "3LMNPRhiIo:a:b:s:t:T:u:v:w:x:y:z:",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -121,6 +125,9 @@ int             main(int argc, char **argv)
         break;
       case 't':
         inTrObjFileStr = optarg;
+	break;
+      case 'T':
+        outTrObjFileStr = optarg;
 	break;
       case 'u':
 	if(sscanf(optarg, "%lg", &trAlpha) != 1)
@@ -239,7 +246,8 @@ int             main(int argc, char **argv)
       }
       if(trObj)
       {
-        if((trObj->type != WLZ_AFFINE_TRANS) || (trObj->domain.core == NULL))
+        if((trObj->type != WLZ_AFFINE_TRANS) ||
+	   (trObj->domain.core == NULL))
 	{
 	  ok = 0;
 	  (void )fprintf(stderr,
@@ -375,6 +383,40 @@ int             main(int argc, char **argv)
 
     }
   }
+  if(ok && (outTrObjFileStr != NULL))
+  {
+    if(trObj == NULL)
+    {
+      trDom.t = trans;
+      trVal.core = NULL;
+      trObj = WlzMakeMain(WLZ_AFFINE_TRANS, trDom, trVal, NULL, NULL,
+      			  &errNum);
+      if(errNum != WLZ_ERR_NONE)
+      {
+        ok = 0;
+	(void )fprintf(stderr,
+		       "%s: failed to make transform object.\n",
+		       *argv);
+      }
+    }
+    if(ok)
+    {
+      if(((fP = (strcmp(outTrObjFileStr, "-")?
+		fopen(outTrObjFileStr, "w"):
+		stdout)) == NULL) ||
+	  (WlzWriteObj(fP, trObj) != WLZ_ERR_NONE))
+      {
+	ok = 0;
+	(void )fprintf(stderr,
+		       "%s: failed to write output transform object\n",
+		       *argv);
+      }
+      if(fP && strcmp(outTrObjFileStr, "-"))
+      {
+	fclose(fP);
+      }
+    }
+  }
   if(ok && (noTransformationFlag == 0))
   {
     outObj = WlzAssignObject(WlzAffineTransformObj(inObj, trans, interp,
@@ -426,8 +468,8 @@ int             main(int argc, char **argv)
     "Usage: %s%sExample: %s%s",
     *argv,
     " [-o<output object>] [-L] [-M] [-N] [-P] [-R]\n"
-    "        [-h] [-i] [-3] [-x#] [-y#] [-z#] [-s#] [-s#]"
-    "[-a#] [-b#] [-u#] [-v#] [-w#]\n"
+    "        [-h] [-i] [-3] [-x#] [-y#] [-z#] [-s#]"
+    "[-t#] [-T#] [-a#] [-b#] [-u#] [-v#] [-w#]\n"
     "        [<input object>]\n" 
     "Options:\n"
     "  -3  3D transform instead of 2D.\n"
@@ -443,7 +485,8 @@ int             main(int argc, char **argv)
     "  -I  Inverse: use the inverse of the input transform.\n"
     "  -o  Output object file name.\n"
     "  -s  Scale factor.\n" 
-    "  -t  Affine transform object.\n" 
+    "  -t  Input affine transform object.\n" 
+    "  -T  Output affine transform object.\n" 
     "  -u  Shear strength.\n"
     "  -v  Shear angle in x-y plane.\n"
     "  -w  3D shear angle.\n"
