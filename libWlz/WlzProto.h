@@ -56,6 +56,12 @@ extern "C" {
 #endif /* __cplusplus */
 
 /************************************************************************
+* WlzSkeleton.c								*
+************************************************************************/
+extern WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
+				     WlzConnectType minCon,
+				     WlzErrorNum *dstErr);
+/************************************************************************
 * Wlz3DSection.c							*
 ************************************************************************/
 extern WlzObject 		*WlzGetSectionFromObject(
@@ -92,6 +98,9 @@ extern WlzErrorNum 		WlzInit3DViewStruct(
 extern WlzErrorNum 		Wlz3DSectionTransformVtx(
 				  WlzDVertex3 *vtx,
 				  WlzThreeDViewStruct *viewStr);
+extern WlzErrorNum 		Wlz3DSectionTransformInvVtx(
+				  WlzDVertex3 *vtx,
+				  WlzThreeDViewStruct *viewStr);
 extern WlzErrorNum 		Wlz3DSectionIncrementDistance(
 				  WlzThreeDViewStruct *viewStr,
 				  double incr);
@@ -107,6 +116,13 @@ extern int 			Wlz3DViewGetBoundingBoxIntersection(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzDVertex3 *rtnVtxs,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* Wlz3DViewTransformObj.c						*
+************************************************************************/
+extern WlzObject *Wlz3DViewTransformObj(WlzObject		*srcObj,
+					WlzThreeDViewStruct	*viewStr,
+					WlzErrorNum		*dstErr);
 
 /************************************************************************
 * WlzAffineTransform.c

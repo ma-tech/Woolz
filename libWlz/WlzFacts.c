@@ -184,6 +184,7 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	    pIdx = 0;
 	    pCount = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
             ++(fData->indent);
+	    fData->verbose = 0;
 	    while((errNum == WLZ_ERR_NONE) && (pIdx < pCount))
 	    {
 	      errNum = WlzObjFactsAppend(fData, "Plane %d.\n",
@@ -217,6 +218,7 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	      }
 	      ++pIdx;
 	    }
+	    fData->verbose = 1;
             --(fData->indent);
 	  }
 	  break;
@@ -419,6 +421,7 @@ static WlzErrorNum WlzObjFactsIntervalDom(WlzObjFactsData *fData,
     if(errNum == WLZ_ERR_DOMAIN_NULL)
     {
       (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+      errNum = WLZ_ERR_NONE;
     }
     else
     {
@@ -509,6 +512,7 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
     if(errNum == WLZ_ERR_VALUES_NULL)
     {
       (void )WlzObjFactsAppend(fData, "Values NULL.\n");
+      errNum = WLZ_ERR_NONE;
     }
     else
     {

@@ -29,6 +29,7 @@ CSOURCES		= \
 			Wlz3DSection.c \
 			Wlz3DSectionSegmentObject.c \
 			Wlz3DViewStructUtils.c \
+			Wlz3DViewTransformObj.c \
 			WlzAffineTransform.c \
 			WlzAffineTransformLSq.c \
 			WlzArea.c \
@@ -111,6 +112,7 @@ CSOURCES		= \
 			WlzSepTrans.c \
 			WlzSeqPar.c \
 			WlzShift.c \
+			WlzSkeleton.c \
 			WlzSobel.c \
 			WlzStdStructElements.c \
 			WlzStringTypes.c \

@@ -295,6 +295,21 @@ if( vtx.vtY > viewStr->maxvals.vtY )viewStr->maxvals.vtY = vtx.vtY; \
 if( vtx.vtZ < viewStr->minvals.vtZ )viewStr->minvals.vtZ = vtx.vtZ; \
 if( vtx.vtZ > viewStr->maxvals.vtZ )viewStr->maxvals.vtZ = vtx.vtZ;
 
+#define CHECK_3D_BB_VTX(X,Y) \
+vtx.vtX = X; \
+vtx.vtY = Y; \
+Wlz3DSectionTransformInvVtx( &vtx, viewStr ); \
+i = WLZ_NINT(vtx.vtX); \
+tmpPlanedmn.kol1 = WLZ_MIN(tmpPlanedmn.kol1, i); \
+tmpPlanedmn.lastkl = WLZ_MAX(tmpPlanedmn.lastkl, i); \
+i = WLZ_NINT(vtx.vtY); \
+tmpPlanedmn.line1 = WLZ_MIN(tmpPlanedmn.line1, i); \
+tmpPlanedmn.lastln = WLZ_MAX(tmpPlanedmn.lastln, i); \
+i = WLZ_NINT(vtx.vtZ); \
+tmpPlanedmn.plane1 = WLZ_MIN(tmpPlanedmn.plane1, i); \
+tmpPlanedmn.lastpl = WLZ_MAX(tmpPlanedmn.lastpl, i);
+
+
 
 /************************************************************************
 *   Function   : WlzInit3DViewStruct					*
@@ -318,29 +333,63 @@ WlzErrorNum WlzInit3DViewStruct(
   WlzObject		*obj)
 {
   double		*tDP0;
-  WlzPlaneDomain	*planedmn;
+  WlzPlaneDomain	*planedmn, tmpPlanedmn;
   WlzDVertex3		vtx;
-  unsigned int		widthp, heightp;
+  unsigned int		widthp, heightp, i;
   WlzErrorNum		dstErr;
+  
 
   /* check the pointers and types */
   if( viewStr == NULL || obj == NULL ){
     return WLZ_ERR_OBJECT_NULL;
   }
-  if( obj->type != WLZ_3D_DOMAINOBJ ){
+  switch( obj->type ){
+
+  case WLZ_3D_DOMAINOBJ: /* 3D object to be sectioned */
+    planedmn = obj->domain.p;
+    if( planedmn == NULL ){
+      return WLZ_ERR_DOMAIN_NULL;
+    }
+    if( planedmn->type != WLZ_PLANEDOMAIN_DOMAIN ){
+      return WLZ_ERR_DOMAIN_TYPE;
+    }
+
+    /* set the rotation matrix */
+    (void) setup_3DSectionRotationMatrix(viewStr);
+    break;
+
+  case WLZ_2D_DOMAINOBJ:	/* assume this is the section */
+    if( obj->domain.i == NULL ){
+      return WLZ_ERR_DOMAIN_TYPE;
+    }
+    /* get the 3D bounding box */
+    (void) setup_3DSectionRotationMatrix(viewStr);
+    vtx.vtX = obj->domain.i->kol1;
+    vtx.vtY = obj->domain.i->line1;
+    Wlz3DSectionTransformInvVtx( &vtx, viewStr );
+    tmpPlanedmn.kol1 = WLZ_NINT(vtx.vtX);
+    tmpPlanedmn.line1 = WLZ_NINT(vtx.vtY);
+    tmpPlanedmn.plane1 = WLZ_NINT(vtx.vtZ);
+    tmpPlanedmn.lastkl = tmpPlanedmn.kol1;
+    tmpPlanedmn.lastln = tmpPlanedmn.line1;
+    tmpPlanedmn.lastpl = tmpPlanedmn.plane1;
+    CHECK_3D_BB_VTX(obj->domain.i->kol1, obj->domain.i->lastln);
+    CHECK_3D_BB_VTX(obj->domain.i->lastkl, obj->domain.i->line1);
+    CHECK_3D_BB_VTX(obj->domain.i->lastkl, obj->domain.i->lastln);
+    tmpPlanedmn.kol1 -= 1;
+    tmpPlanedmn.line1 -= 1;
+    tmpPlanedmn.plane1 -= 1;
+    tmpPlanedmn.lastkl += 1;
+    tmpPlanedmn.lastln += 1;
+    tmpPlanedmn.lastpl += 1;
+    planedmn = &tmpPlanedmn;
+
+    break;
+
+  default:
     return WLZ_ERR_OBJECT_TYPE;
-  }
 
-  planedmn = obj->domain.p;
-  if( planedmn == NULL ){
-    return WLZ_ERR_DOMAIN_NULL;
   }
-  if( planedmn->type != WLZ_PLANEDOMAIN_DOMAIN ){
-    return WLZ_ERR_DOMAIN_TYPE;
-  }
-
-  /* set the rotation matrix */
-  (void) setup_3DSectionRotationMatrix(viewStr);
 
   /* if intialised then free existing luts */
   if( viewStr->initialised ){
@@ -416,6 +465,34 @@ WlzErrorNum Wlz3DSectionTransformVtx(
     vtx->vtX = r[0][0] * x + r[0][1] * y + r[0][2] * z;
     vtx->vtY = r[1][0] * x + r[1][1] * y + r[1][2] * z;
     vtx->vtZ = r[2][0] * x + r[2][1] * y + r[2][2] * z;
+
+    return WLZ_ERR_NONE;
+}
+
+/************************************************************************
+*   Function   : Wlz3DSectionTransformInvVtx				*
+*   Date       : Thu Feb  6 11:03:13 1997				*
+*************************************************************************
+*   Synopsis   :inverse Transform a 3D vertex using the section		*
+*		transform, note the vertex values are overwritten.	*
+*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
+*   Parameters :							*
+*   Global refs:							*
+************************************************************************/
+WlzErrorNum Wlz3DSectionTransformInvVtx(
+  WlzDVertex3		*vtx,
+  WlzThreeDViewStruct	*viewStr)
+{
+    double	x, y, z, **r;
+
+    x = vtx->vtX;
+    y = vtx->vtY;
+    z = viewStr->dist;
+    r = viewStr->rotation;
+    *vtx = viewStr->fixed;
+    vtx->vtX += (r[0][0] * x + r[1][0] * y + r[2][0] * z);
+    vtx->vtY += (r[0][1] * x + r[1][1] * y + r[2][1] * z);
+    vtx->vtZ += (r[0][2] * x + r[1][2] * y + r[2][2] * z);
 
     return WLZ_ERR_NONE;
 }

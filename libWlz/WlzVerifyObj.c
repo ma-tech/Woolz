@@ -65,6 +65,9 @@ WlzVerifyObject(WlzObject	*obj,
       }
       vals.core = NULL;
       for(p=0; p < nplanes; p++){
+	if( domains[p].core == NULL ){
+	  continue;
+	}
 	if( values ){
 	  tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains[p], values[p],
 			       NULL, NULL, NULL);
