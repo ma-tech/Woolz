@@ -1,8 +1,8 @@
 #pragma ident "MRC HGU $Id$"
 /*!
- * \file               WlzMatchICPObj.c
- * \author       Bill Hill
- * \date         March 2002
+ * \file       WlzMatchICPObj.c
+ * \author     Bill Hill
+ * \date       March 2002
  * \version    $Id$
  * \note
  *             Copyright:
@@ -38,7 +38,8 @@ int             main(int argc, char *argv[])
 		dbgFlg = 0,
 		nMatch,
 		maxItr = 200,
-		minSpx = 20,
+		minSpx = 15,
+		minSegSpx = 10,
 		matchImpNN = 7,
   		option,
   		ok = 1,
@@ -58,7 +59,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrA:b:d:D:F:N:o:t:i:I:s:S:";
+  static char	optList[] = "ahrA:b:d:D:F:N:o:t:i:I:s:P:S:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -138,8 +139,15 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
+      case 'P':
+        if(sscanf(optarg, "%d", &minSegSpx) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 's':
-        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
+        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 10))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -243,7 +251,7 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg,
+			     maxItr, minSpx, minSegSpx, brkFlg,
 			     maxDisp, maxAng, maxDeform,
 			     matchImpNN, matchImpThr);
     if(errNum != WLZ_ERR_NONE)
@@ -324,7 +332,8 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       "Usage: %s%s",
       *argv,
-      " [-b#] [-d#] [-D#] [-o#] [-t#] [-i#] [-s#] [-n#] [-x#] [-I#] [-N]\n"
+      " [-b#] [-d#] [-D#] [-o#] [-t#] [-g#] [-i#] [-s#]\n"
+      "          [-A#] [-S#] [-I#] [-I#] [-N]\n"
       "          [-h] [<input object 0>] [<input object 1>]\n"
       "Options:\n"
       "  -b  Shell breaking control value.\n"
@@ -335,8 +344,11 @@ int             main(int argc, char *argv[])
       "  -h  Prints this usage information.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"
+      "  -P  Minimum number of simplices per matched shell segment, with a\n"
+      "      pair of correspondence points possibly being generated per\n"
+      "      matched shell segment.\n"
       "  -i  Maximum number of iterations.\n"
-      "  -s  Miimum number of simplicies.\n"
+      "  -s  Minmum number of simplicies.\n"
       "  -A  Maximum angle (degrees) from a global transformation.\n"
       "  -S  Maximum displacement from a global transformed position.\n"
       "  -F  Maximum deformation from a global transformation.\n"
