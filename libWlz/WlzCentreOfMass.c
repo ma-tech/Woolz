@@ -230,7 +230,7 @@ WlzDVertex2	WlzCentreOfMass2D(WlzObject *srcObj, int binObjFlag,
 *		not set then the centre of mass is calculated using	*
 *		the grey level information.				*
 *		Cx = SUMxSUMySUMz{y*G(x,y,z)} / SUMxSUMySUMz{G(x,y,z)}	*
-*		Cy = SUMxSUMySUMz{x*G(x,y,z)} / SUMxSUMySUMz{G(x,y,z)}	*
+*		Cy = SUMxSUMySUMz{x*G(y,y,z)} / SUMxSUMySUMz{G(x,y,z)}	*
 *		Cz = SUMxSUMySUMz{z*G(x,y,z)} / SUMxSUMySUMz{G(x,y,z)}	*
 *		Where (Cx,Cy,Cz) are the coordinates of the centre of	*
 *		mass.							*
