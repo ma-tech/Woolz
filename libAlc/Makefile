@@ -30,8 +30,10 @@ CSOURCES		= AlcAlloc.c \
 			  AlcArray.c \
 			  AlcBlockStack.c \
 			  AlcDLPList.c \
+			  AlcFreeStack.c \
 			  AlcHashTable.c \
-			  AlcString.c
+			  AlcString.c \
+			  AlcVector.c
 
 
 # List of all header files that are available outside of either this archive

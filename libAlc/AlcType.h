@@ -15,6 +15,8 @@
 *		MRC HGU memory allocation library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 02-03-2K bill Added AlcVector.
+* 01-11-99 bill Added AlcDLPList.
 * 01-12-99 bill	Add AlcBlockStack and many comments.
 ************************************************************************/
 
@@ -87,6 +89,25 @@ typedef struct _AlcHashTable				       /* Hash table */
   int		tableSz;		    /* Number of list slots in table */
   AlcHashItem	**table;				   /* Table of lists */
 } AlcHashTable;
+
+/************************************************************************
+* General purpose vector, an extensible 1D array.
+************************************************************************/
+
+typedef struct _AlcVector
+{
+  unsigned int	elmSz;		/* Size of elements of the vector */
+  unsigned int	blkCnt;		/* Number of block pointers */
+  unsigned int	blkUse;		/* Number of blocks used */
+  unsigned int	blkSz;		/* Number of elements in a block, must NOT be
+  				 * changed once vector has been created! */
+  void		*freeStack;	/* Free stack */
+  void		**blocks;	/* Data blocks */
+} AlcVector;
+
+/*
+#define ALC_VECTOR_DATA(V,I) (void*)((char*)(*((V)->blocks+(I)))+(((I)%(V)->blkSz)*(V)->elmSz))
+*/
 
 #ifdef __cplusplus
 }					       /* Close scope of 'extern "C" */
