@@ -40,11 +40,19 @@ static double	AlgMatrixSVPythag(double, double);
 * \param	tol			Tolerance for singular values,
 *					1.0e-06 should be suitable as
 *					a default value.
+* \param	dstIC			Destination pointer for
+*					ill-conditioned flag, which may
+*					be NULL, but if not NULL is set
+*					to the number of singular values
+*					which are smaller than the maximum
+*					singular value times the given
+*					threshold.
 */
 AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
-				 double *bMat, double tol)
+				 double *bMat, double tol, int *dstIC)
 {
-  int		cnt0;
+  int		cnt0,
+  		cntIC;
   double	thresh,
   		wMax;
   double	*tDP0,
@@ -70,11 +78,13 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
     /* Find maximum singular value. */
     wMax = 0.0;
     cnt0 = nN;
+    cntIC = 0;
     tDP0 = wMat;
     while(cnt0-- > 0)
     {
       if(*tDP0 > wMax)
       {
+	++cntIC;
         wMax = *tDP0;
       }
       ++tDP0;
@@ -101,6 +111,10 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
   if(vMat)
   {
     AlcDouble2Free(vMat);
+  }
+  if(dstIC)
+  {
+    *dstIC = cntIC;
   }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgMatrixSVSolve FX %d\n",
