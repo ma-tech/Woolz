@@ -1,38 +1,36 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   Wlz3DViewTransformObj.c				*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Fri Oct 22 13:24:21 1999				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
-
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         Wlz3DViewTransformObj.c
+* \author       Bill Richard Baldock
+* \date         October 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	View transformation functions.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
 
+/*!
+* \return	Signed value for qsort.
+* \ingroup	WlzTransform
+* \brief	Compares to vertex values to allow sorting with qsort().
+* \param	 constp1		Pointer to first vertex.
+* \param	 constp2		Pointer to second vertex.
+*/
 static int compareVtxVal(
   const void *p1,
   const void *p2)
@@ -61,17 +59,16 @@ static int compareVtxVal(
   return 0;
 }
 
-/************************************************************************
-*   Function   : Wlz3DViewTransformObj					*
-*   Date       : Fri Oct 22 13:25:10 1999				*
-*************************************************************************
-*   Synopsis   : Transform an object using the given view-transform.	*
-*		Typically this is for mapping section data back into	*
-*		the 3D space of the reference image/reconstruction.	*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return	Transformed object.
+* \ingroup	WlzTransform
+* \brief	Transform an object using the given view-transform.
+*		Typically this is for mapping section data back into
+*		the 3D space of the reference image/reconstruction.
+* \param	srcObj			Given source object.
+* \param	viewStr			Given view transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *Wlz3DViewTransformObj(
   WlzObject		*srcObj,
   WlzThreeDViewStruct	*viewStr,
@@ -427,6 +424,27 @@ WlzObject *Wlz3DViewTransformObj(
 }
 
 
+/*!
+* \return
+* \ingroup	WlzTransform
+* \brief	Gets a 3D section through a byte packed bitmap.
+* \param	sizeBitData		Number of bytes in bitmap.
+* \param	bitData			Bitmap data.
+* \param	width			Bitmap width.
+* \param	height			Bitmap height.
+* \param	x_offset		Horizontal ofset into the bitmap.
+* \param	y_offset		Vertical offset into the bitmap.
+* \param	x			Fixed point x coordinate.
+* \param	y			Fixed point y coordinate.
+* \param	z			Fixed point z coordinate.
+* \param	theta			Angle of rotation about the z-axis
+*					(radians).
+* \param	phi			Angle between the viewing direction
+*					and the original z-axis (radians).
+* \param	distance		Perpendicular distance from the
+*					fixed point to the view plane.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *Wlz3DViewTransformBitmap(
   int		sizeBitData,
  UBYTE		*bitData,
