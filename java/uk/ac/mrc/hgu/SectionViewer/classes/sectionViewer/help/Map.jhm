@@ -37,6 +37,7 @@
 	 <mapID target="sv.concepts.angles" url="html/sv/concepts/angles.html"/>
 	 <mapID target="sv.concepts.dist" url="html/sv/concepts/dist.html"/>
 	 <mapID target="sv.concepts.vm" url="html/sv/concepts/viewmode.html"/>
+	 <mapID target="sv.concepts.paint" url="html/sv/concepts/paint.html"/>
 	 <mapID target="sv.concepts.bean" url="html/sv/concepts/bean.html"/>
       </mapID>
       <mapID target="sv.req">

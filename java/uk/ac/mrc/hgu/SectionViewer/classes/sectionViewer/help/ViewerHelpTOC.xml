@@ -11,7 +11,6 @@
          <tocitem text="file" target="sv.menus.file"/>
          <tocitem text="control" target="sv.menus.control"/>
          <tocitem text="show" target="sv.menus.show"/>
-         <tocitem text="fixed point" target="sv.menus.fixed"/>
          <tocitem text="3D" target="sv.menus.threeD"/>
          <tocitem text="help" target="sv.menus.help"/>
       </tocitem>
@@ -30,6 +29,7 @@
          <tocitem text="rotation axis" target="sv.concepts.axis"/>
          <tocitem text="distance" target="sv.concepts.dist"/>
 	 <tocitem text="view mode" target="sv.concepts.vm"/>
+	 <tocitem text="painting" target="sv.concepts.paint"/>
 	 <tocitem text="bean" target="sv.concepts.bean" />
       </tocitem>
       <tocitem text="requirements" target="sv.req">
