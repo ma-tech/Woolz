@@ -532,6 +532,12 @@ extern WlzAffineTransform 	*WlzAffineTransformLSqGen3D(
 				  double *vW,
 				  int nV,
 				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSqScale2D(
+				  WlzDVertex2 *vT,
+				  WlzDVertex2 *vS,
+				  double *vW,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
 extern WlzAffineTransform 	*WlzAffineTransformLSqReg2D(
 				  WlzDVertex2 *vT,
 				  WlzDVertex2 *vS,

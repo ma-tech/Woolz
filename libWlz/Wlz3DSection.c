@@ -335,6 +335,10 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
     errNum = WLZ_ERR_OBJECT_TYPE;
   }
 
+  if( (errNum == WLZ_ERR_NONE) && !(viewStr->initialised) ){
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
+
   /* check the interpolation parameter */
   if( errNum == WLZ_ERR_NONE ){
     switch( interp ){
@@ -715,6 +719,10 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 
   if( (errNum == WLZ_ERR_NONE) && (viewStr->type != WLZ_3D_VIEW_STRUCT) ){
     errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+
+  if( (errNum == WLZ_ERR_NONE) && !(viewStr->initialised) ){
+    errNum = WLZ_ERR_OBJECT_DATA;
   }
 
   /* check the interpolation parameter */

@@ -176,10 +176,37 @@ WlzAffineTransform *WlzAffineTransformLSq2D(int nVT, WlzDVertex2 *vT,
     {
       tr = WlzAffineTransformLSqTrans2D(vT, vS, vW, nVT, &errNum);
     }
-    else if((trType == WLZ_TRANSFORM_2D_REG) ||
-	    (trType == WLZ_TRANSFORM_2D_NOSHEAR) || (nVT < 3))
+    else if((trType == WLZ_TRANSFORM_2D_REG))
     {
       tr = WlzAffineTransformLSqReg2D(vT, vS, vW, nVT, &errNum);
+    }
+    else if((trType == WLZ_TRANSFORM_2D_NOSHEAR) || (nVT < 3))
+    {
+      WlzAffineTransform	*tr1, *tr2;
+      WlzDVertex2		*vS1;
+      int			i;
+
+      /* kludge for now - scale then rigid body */
+      if( tr1 = WlzAffineTransformLSqScale2D(vT, vS, vW, nVT, &errNum) ){
+	/* apply to the source vertices */
+	if( vS1 = (WlzDVertex2 *) AlcMalloc(sizeof(WlzDVertex2) * nVT) ){
+	  for(i=0; (i < nVT) && (errNum == WLZ_ERR_NONE); i++){
+	    vS1[i] = WlzAffineTransformVertexD2(tr1, vS[i], &errNum);
+	  }
+	  /* now rigid body from re-scaled vertices */
+	  if( errNum == WLZ_ERR_NONE ){
+	    if( tr2 = WlzAffineTransformLSqReg2D(vT, vS1, vW, nVT, &errNum) ){
+	      tr = WlzAffineTransformProduct(tr1, tr2, &errNum);
+	      WlzFreeAffineTransform(tr2);
+	    }
+	  }
+	  AlcFree(vS1);
+	}
+	else {
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	WlzFreeAffineTransform(tr1);
+      }
     }
     else
     {
@@ -1031,6 +1058,120 @@ WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vT,
   (void )AlcDouble2Free(hM);
   (void )AlcDouble2Free(vM);
   (void )AlcDouble2Free(trM);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+
+/* function:     WlzAffineTransformLSqScale2D    */
+/*! 
+* \ingroup      WlzTransform
+* \brief        Computes the 2D transform to rescale the source vertices.
+The assumption is that the source vertices have a different "spread" to the
+target and this re-scaling transform can be used in conjunction with the
+rigid-body (registration) tansform to determine a re-scaled shape-preserving
+transform i.e. no-shear. It is called by WlzAffineTransformLSq2D when
+transform type WLZ_TRANSFORM_2D_NOSHEAR is requested.
+The algorithm compares the mean distance from the centroid of each set of 
+vertices.
+*
+* \return       wlz affine transform
+* \param    vT	target vertices
+* \param    vS	source vertices
+* \param    vW	vertex weights
+* \param    nVtx	number of vertices
+* \param    dstErr	error return
+* \par      Source:
+*                WlzAffineTransformLSq.c
+*/
+WlzAffineTransform *WlzAffineTransformLSqScale2D(WlzDVertex2 *vT,
+		    		WlzDVertex2 *vS, double *vW, int nVtx,
+				WlzErrorNum *dstErr)
+{
+  int		tI0,
+  		idN;
+  double	tD0;
+  WlzDVertex2	p0,
+  		p1,
+		cen0,
+                cen1;
+  double	dist0, dist1;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	tol = 1.0E-06;
+
+  /* Compute weighted centroids (cen0 and cen1) */
+  if(vW)
+  {
+    WLZ_VTX_2_SCALE(p0, *vT, *vW);
+    WLZ_VTX_2_SCALE(p1, *vS, *vW);
+  }
+  else
+  {
+    p0 = *vT;
+    p1 = *vS;
+  }
+  cen0 = p0;
+  cen1 = p1;
+  for(idN = 1; idN < nVtx; ++idN)
+  {
+    if(vW)
+    {
+      WLZ_VTX_2_SCALE(p0, *(vT + idN), *(vW + idN));
+      WLZ_VTX_2_SCALE(p1, *(vS + idN), *(vW + idN));
+    }
+    else
+    {
+      p0 = *(vT + idN);
+      p1 = *(vS + idN);
+    }
+    WLZ_VTX_2_ADD(cen0, cen0, p0);
+    WLZ_VTX_2_ADD(cen1, cen1, p1);
+  }
+  tD0 = 1.0 / nVtx;
+  WLZ_VTX_2_SCALE(cen0, cen0, tD0);
+  WLZ_VTX_2_SCALE(cen1, cen1, tD0);
+
+  /* compute the sum of weighted distances from each centroid 
+     dist0 and dist1 */
+  dist0 = 0.0;
+  dist1 = 0.0;
+  for(idN=0; idN < nVtx; idN++){
+    if(vW)
+    {
+      WLZ_VTX_2_SCALE(p0, *(vT + idN), *(vW + idN));
+      WLZ_VTX_2_SCALE(p1, *(vS + idN), *(vW + idN));
+    }
+    else
+    {
+      p0 = *(vT + idN);
+      p1 = *(vS + idN);
+    }
+    WLZ_VTX_2_SUB(p0, p0, cen0);
+    WLZ_VTX_2_SUB(p1, p1, cen1);
+    if( (p0.vtX != 0.0) || (p0.vtY != 0.0) ){
+      dist0 += WLZ_VTX_2_LENGTH(p0);
+    }
+    if( (p1.vtX != 0.0) || (p1.vtY != 0.0) ){
+      dist1 += WLZ_VTX_2_LENGTH(p1);
+    }
+  }
+
+  /* now make the transform */
+  if( dist1 > tol ){
+    tr = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+				       0.0, 0.0, 0.0,
+				       dist0/dist1,
+				       0.0, 0.0, 0.0, 0.0, 0.0,
+				       0, &errNum);
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+
   if(dstErr)
   {
     *dstErr = errNum;
