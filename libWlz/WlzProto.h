@@ -1028,6 +1028,26 @@ extern WlzErrorNum		WlzCompThreshold(
 				  double extraFrac);
 
 /************************************************************************
+* WlzConstruct3D.c
+************************************************************************/
+extern WlzObject		*WlzConstruct3DObjFromFile(
+				  int sizeArrayFileStr,
+				  char **arrayFileStr,
+				  int plane1,
+				  float xSz,
+				  float ySz,
+				  float zSz,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzConstruct3DObjFromObj(
+				  int sizeArrayObjs,
+				  WlzObject **arrayObjs,
+				  int plane1,
+				  float xSz,
+				  float ySz,
+				  float zSz,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzContour.c
 ************************************************************************/
 extern WlzContour		*WlzContourObj(

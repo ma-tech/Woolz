@@ -63,6 +63,7 @@ CSOURCES		= \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
 			WlzCompThresh.c \
+			WlzConstruct3D.c \
 			WlzContour.c \
 			WlzConvertPix.c \
 			WlzConvexHull.c \
