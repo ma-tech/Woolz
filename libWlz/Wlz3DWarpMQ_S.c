@@ -4958,7 +4958,22 @@ void static GetIntersectionTable( const int nxmax, const int nymax, const int nz
 	  }
       }
   }
-  AlcFree(wObjCS);
+  
+  it = 0;
+
+  for(k=0; k<nzmax; k++ )
+  {
+     for(j=0; j<nymax; j++)
+     {
+        for(i=0; i<nxmax; i++)
+	{
+	   WlzFreeObj( *( wObjCS + it ) );
+	   it++;
+	}
+     }
+
+  }
+
 
 }
 			   
