@@ -1,0 +1,26 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzExtFF.dox
+* \author       Bill Hill
+* \date         November 2002
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Documentation for the Woolz external file format library.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+ * \defgroup	WlzExtFF
+ * Types data structures and functions for reading and writing external
+ * file formats to and from Woolz objects.
+ */
+
