@@ -1101,6 +1101,7 @@ extern WlzContour		*WlzContourRBFBndObj3D(
 				  double oAlpha,
 				  double delta,
 				  double tau,
+				  double samFac,
 				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzContour		*WlzContourFromPoints(
@@ -1119,6 +1120,7 @@ extern WlzContour		*WlzContourFromPoints(
 				  double oAlpha,
 				  double delta,
 				  double tau,
+				  double samFac,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -1852,6 +1854,19 @@ extern WlzErrorNum     		WlzGMFilterGeomLPLM(
 				  double mu,
 				  int nItr,
 				  int nonMan);
+
+/************************************************************************
+* WlzGeoModelStats.c
+************************************************************************/
+extern int			WlzGMModelSpxStats(
+				  WlzGMModel *model,
+				  double *dstMin,
+				  double *dstMax,
+				  double *dstSum,
+				  double *dstSumSq,
+				  double *dstMean,
+				  double *dstStdDev,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzGeometry.c								*
