@@ -21,7 +21,7 @@
 *
 * Maintenance log with most recent changes at top of list.
 * 13-12-00 bill Modify WlzReadGMModel() so that it doesn't generate an
-*		error if model has no verticies.
+*		error if model has no vertices.
 * 02-10-00 bill No longer read primitives (commented out code left in
 *		place) in WlzReadAffineTransform().
 * 14-08-00 bill	Add WLZ_CONTOUR to object types read by WlzReadObj().
@@ -474,13 +474,13 @@ static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
 /************************************************************************
 * Function:	WlzReadVertex2I
 * Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 2D integer verticies from the given file
+* Purpose:	Read's 2D integer vertices from the given file
 *		stream into a buffer (which must have room for
-*		at least nV verticies).
+*		at least nV vertices).
 * Global refs:	-
 * Parameters:	FILE *fP:		Given file stream.
-*		WlzIVertex2 *vP:	Buffer for 2D integer verticies.
-*		int nV:			Number of verticies.
+*		WlzIVertex2 *vP:	Buffer for 2D integer vertices.
+*		int nV:			Number of vertices.
 ************************************************************************/
 static WlzErrorNum WlzReadVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
 {
@@ -502,13 +502,13 @@ static WlzErrorNum WlzReadVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
 /************************************************************************
 * Function:	WlzReadVertex2D
 * Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 2D double verticies from the given file
+* Purpose:	Read's 2D double vertices from the given file
 *		stream into a buffer (which must have room for
-*		at least nV verticies).
+*		at least nV vertices).
 * Global refs:	-
 * Parameters:	FILE *fP:		Given file stream.
-*		WlzDVertex2 *vP:	Buffer for 2D integer verticies.
-*		int nV:			Number of verticies.
+*		WlzDVertex2 *vP:	Buffer for 2D integer vertices.
+*		int nV:			Number of vertices.
 ************************************************************************/
 static WlzErrorNum WlzReadVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
 {
@@ -530,13 +530,13 @@ static WlzErrorNum WlzReadVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
 /************************************************************************
 * Function:	WlzReadVertex3I
 * Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 3D integer verticies from the given file
+* Purpose:	Read's 3D integer vertices from the given file
 *		stream into a buffer (which must have room for
-*		at least nV verticies).
+*		at least nV vertices).
 * Global refs:	-
 * Parameters:	FILE *fP:		Given file stream.
-*		WlzIVertex3 *vP:	Buffer for 3D integer verticies.
-*		int nV:			Number of verticies.
+*		WlzIVertex3 *vP:	Buffer for 3D integer vertices.
+*		int nV:			Number of vertices.
 ************************************************************************/
 static WlzErrorNum WlzReadVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
 {
@@ -559,13 +559,13 @@ static WlzErrorNum WlzReadVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
 /************************************************************************
 * Function:	WlzReadVertex3D
 * Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 3D integer verticies from the given file
+* Purpose:	Read's 3D integer vertices from the given file
 *		stream into a buffer (which must have room for
-*		at least nV verticies).
+*		at least nV vertices).
 * Global refs:	-
 * Parameters:	FILE *fP:		Given file stream.
-*		WlzDVertex3 *vP:	Buffer for 3D integer verticies.
-*		int nV:			Number of verticies.
+*		WlzDVertex3 *vP:	Buffer for 3D integer vertices.
+*		int nV:			Number of vertices.
 ************************************************************************/
 static WlzErrorNum WlzReadVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
 {

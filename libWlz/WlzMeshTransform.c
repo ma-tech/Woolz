@@ -240,7 +240,7 @@ WlzMeshTransform *WlzMeshTransformAdapt(WlzMeshTransform *gMesh,
         elm0 = nMesh->elements + eId0;
 	if((elm0->flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0)
 	{
-	  /* Compute displaced verticies. */
+	  /* Compute displaced vertices. */
 	  for(nId0 = 0; nId0 < 3; ++nId0)
 	  {
 	    nod0 = nMesh->nodes + elm0->nodes[nId0];
@@ -360,9 +360,9 @@ WlzMeshTransform *WlzMeshTransformCopy(WlzMeshTransform *gMesh,
 * Parameters:	WlzObject *srcObj:	The given object.		*
 *		WlzMeshGenMethod method: Mesh generation method to use.	*
 *		double minDist:		Minimum distance between mesh	*
-*					verticies.			*
+*					vertices.			*
 *		double maxDist:		Maximum distance between mesh	*
-*					verticies.			*
+*					vertices.			*
 *		WlzErrorNum *dstErr:	Destination error pointer,	*
 *					may be NULL.			*
 ************************************************************************/
@@ -1349,7 +1349,7 @@ static WlzErrorNum WlzMeshBoundPolyFix(WlzObject *polyObj, double minDist)
   if(errNum == WLZ_ERR_NONE)
   {
     minDistSq = minDist * minDist;
-    /* Copy the given polygon's verticies into a linked list data 
+    /* Copy the given polygon's vertices into a linked list data 
      * structure. */
     tstId = 0;
     prvVxElm = NULL;
@@ -1369,8 +1369,8 @@ static WlzErrorNum WlzMeshBoundPolyFix(WlzObject *polyObj, double minDist)
     nxtVxElm = polyVxPool + nVxCnt - 1;
     fstVxElm->prev = nxtVxElm;
     nxtVxElm->next = fstVxElm;
-    /* Do a modified Jarvis March around the polygon until all verticies
-     * have been visited and the distance between the verticies is greater
+    /* Do a modified Jarvis March around the polygon until all vertices
+     * have been visited and the distance between the vertices is greater
      * than the given minimum distance. */
     loopFlg = 0;
     curVxElm = fstVxElm;
@@ -1442,7 +1442,7 @@ static WlzErrorNum WlzMeshBoundPolyFix(WlzObject *polyObj, double minDist)
     } while(((cntOut > 0) && (loopFlg < 3)) || distFlg);
     if(cntOut > 0)
     {
-      /* Copy verticies back into the polygon. */
+      /* Copy vertices back into the polygon. */
       tstId = 0;
       curVxP = poly->vtx;
       fstVxElm = curVxElm;
@@ -1607,14 +1607,14 @@ static WlzMeshTransform *WlzMeshFromObjBlock(WlzObject *srcObj,
 * Function:	WlzMeshFromObjGrad					*
 * Returns:	WlzMeshTransform *:	New mesh transform.		*
 * Purpose:	Creates a mesh transform for the given object where the	*
-*		mesh verticies are placed with a higher density where	*
+*		mesh vertices are placed with a higher density where	*
 *		the given object's gradient is highest.			*
 *		All mesh displacements are zero.			*
 * Global refs:	-							*
 * Parameters:	WlzObject *srcObj:	The given object.		*
 *		WlzMeshGenMethod method: Mesh generation method to use.	*
 *		unsigned int minDist:	Minimum distance between mesh	*
-*					verticies.			*
+*					vertices.			*
 *		WlzErrorNum *dstErr:	Destination error pointer,	*
 *					may be NULL.			*
 ************************************************************************/
@@ -2072,7 +2072,7 @@ static WlzErrorNum WlzMeshTransFillBlock(WlzMeshTransform *mesh,
 /************************************************************************
 * Function:	WlzMeshTransFillBlockLnNod				*
 * Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Calculates the mesh transform node verticies for a	*
+* Purpose:	Calculates the mesh transform node vertices for a	*
 *		single line between extrema of the interval.		*
 * Global refs:	-							*
 * Parameters:	WlzMeshNode *nod:	Ptr to first node available.	*
@@ -2109,14 +2109,14 @@ static unsigned int WlzMeshTransFillBlockLnNod(WlzMeshNode *nod,
 /************************************************************************
 * Function:	WlzMeshTransformVxVecI					*
 * Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Transforms the verticies in the given integer vertex	*
+* Purpose:	Transforms the vertices in the given integer vertex	*
 *		vector in place and using the given mesh transform.	*
 *		It is an error if any vertex is not in the mesh or if	*
 *		the signed area of any mesh element is <= zero.		*
 * Global refs:	-							*
 * Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
 *		WlzIVertex2 *vxVec:	Given integer vertex vector.	*
-*		int vxCount:		Number of verticies.		*
+*		int vxCount:		Number of vertices.		*
 ************************************************************************/
 static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
 					  WlzIVertex2 *vxVec,
@@ -2242,14 +2242,14 @@ static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
 /************************************************************************
 * Function:	WlzMeshTransformVxVecF					*
 * Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Transforms the verticies in the given double vertex	*
+* Purpose:	Transforms the vertices in the given double vertex	*
 *		vector, in place and using the given mesh transform.	*
 *		It is an error if any vertex is not in the mesh or if	*
 *		the signed area of any mesh element is <= zero.		*
 * Global refs:	-							*
 * Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
 *		WlzFVertex2 *vxVec:	Given double vertex vector.	*
-*		int vxCount:		Number of verticies.		*
+*		int vxCount:		Number of vertices.		*
 ************************************************************************/
 static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
 					  WlzFVertex2 *vxVec,
@@ -2408,14 +2408,14 @@ WlzDVertex2 WlzMeshTransformVtx(
 /************************************************************************
 * Function:	WlzMeshTransformVxVecD					*
 * Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Transforms the verticies in the given double vertex	*
+* Purpose:	Transforms the vertices in the given double vertex	*
 *		vector, in place and using the given mesh transform.	*
 *		It is an error if any vertex is not in the mesh or if	*
 *		the signed area of any mesh element is <= zero.		*
 * Global refs:	-							*
 * Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
 *		WlzDVertex2 *vxVec:	Given double vertex vector.	*
-*		int vxCount:		Number of verticies.		*
+*		int vxCount:		Number of vertices.		*
 ************************************************************************/
 static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
 					  WlzDVertex2 *vxVec,
@@ -2545,8 +2545,8 @@ static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
 *		double *yTr:		Transform coordinates for y.	*
 *		double dd:		Twice the area of the source	*
 *					triangle.			*
-*		WlzDVertex2 *sVx:	Source triangle verticies.	*
-*		WlzDVertex2 *dVx:	Destination triangle verticies.	*
+*		WlzDVertex2 *sVx:	Source triangle vertices.	*
+*		WlzDVertex2 *dVx:	Destination triangle vertices.	*
 ************************************************************************/
 static void	WlzMeshAfTrSolve(double *xTr, double *yTr, double dd,
 				 WlzDVertex2 *sVx, WlzDVertex2 *dVx)

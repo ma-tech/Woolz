@@ -142,12 +142,12 @@ WlzErrorNum	WlzMeshDomainAdd(WlzMeshTransform *mesh, WlzObject *obj,
 /************************************************************************
 * Function:	WlzMeshVxVecAdd						*
 * Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Adds mesh nodes at the verticies of the given (2D)	*
+* Purpose:	Adds mesh nodes at the vertices of the given (2D)	*
 *		vertex vector.						*
 * Global refs:	-							*
 * Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzDVertex2 *vxVec:	Given vector of verticies.	*
-*		int nVx:		Number of verticies.		*
+*		WlzDVertex2 *vxVec:	Given vector of vertices.	*
+*		int nVx:		Number of vertices.		*
 *		double minDistSq:	Square of the minimum distance	*
 *					between mesh nodes.		*
 *		unsigned int nodeFlags:	Node flags to set (eg source).	*
@@ -483,7 +483,7 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
     }
     else
     {
-      /* Convert to double verticies. */
+      /* Convert to double vertices. */
       switch(obj->domain.poly->type)
       {
 	case WLZ_POLYGON_INT:
@@ -508,7 +508,7 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      /* Scale verticies. */
+      /* Scale vertices. */
       if((fabs(scaleVx.vtX - 1.0) > DBL_EPSILON) ||
 	 (fabs(scaleVx.vtY - 1.0) > DBL_EPSILON))
       {
@@ -523,7 +523,7 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
       }
       if(sVxCnt > 1)
       {
-	/* Make a new vector of verticies in-between the given verticies. */
+	/* Make a new vector of vertices in-between the given vertices. */
 	/* Compute in-between vector size. */
 	dVxCnt = 0;
 	vxCnt0 = sVxCnt;
@@ -573,13 +573,13 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
     }
     if((errNum == WLZ_ERR_NONE) && (sVxCnt > 0))
     {
-      /* Add given verticies to the mesh. */
+      /* Add given vertices to the mesh. */
       errNum = WlzMeshVxVecAdd(mesh, sVxVec, sVxCnt, minDist * minDist,
       			       WLZ_MESH_NODE_FLAGS_POLY);
     }
     if((errNum == WLZ_ERR_NONE) && (dVxCnt > 0))
     {
-      /* Add in-between verticies to the mesh. */
+      /* Add in-between vertices to the mesh. */
       errNum = WlzMeshVxVecAdd(mesh, dVxVec, dVxCnt, minDist * minDist,
       			       WLZ_MESH_NODE_FLAGS_POLY);
     }
