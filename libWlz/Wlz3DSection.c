@@ -241,9 +241,12 @@ WlzObject *WlzGetSectionFromObject(
 	yp = iwsp.linpos - (int) viewStr->minvals.vtY;
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
 	  xp = k - viewStr->minvals.vtX;
-	  vtx.vtX = (int) (viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
-	  vtx.vtY = (int) (viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp]);
-	  vtx.vtZ = (int) (viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp]);
+	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
+	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
+	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
+	  vtx.vtX = WLZ_NINT(vtx.vtX);
+	  vtx.vtY = WLZ_NINT(vtx.vtY);
+	  vtx.vtZ = WLZ_NINT(vtx.vtZ);
 	  if( voxvals ){
 	    WlzGreyValueGet(gVWSp, vtx.vtZ, vtx.vtY, vtx.vtX);
 	    pixptr.p = *(gVWSp->gPtr);

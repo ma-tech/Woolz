@@ -636,11 +636,14 @@ static WlzObject *WlzStructDilation3d(
     for(p=plane1; p <= lastpl; p++, domains++){
       for(i=0; i < nStructPlanes; i++){
 	/* get the corresponding object plane */
-	if(((p+i) >= obj->domain.p->plane1) &&
-	   ((p+i) <= obj->domain.p->lastpl) &&
-	   domains1[p+i-obj->domain.p->plane1].core ){
-	  obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains1[i], values,
-			     NULL, NULL, NULL);
+	if(((p-i-structElm->domain.p->plane1) >= obj->domain.p->plane1) &&
+	   ((p-i-structElm->domain.p->plane1) <= obj->domain.p->lastpl) &&
+	   domains1[p-i-structElm->domain.p->plane1
+		    -obj->domain.p->plane1].core ){
+	  obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			     domains1[p-i-structElm->domain.p->plane1
+				      -obj->domain.p->plane1],
+			     values, NULL, NULL, NULL);
 	}
 	else {
 	  obj1 = WlzMakeEmpty(NULL);
@@ -660,7 +663,7 @@ static WlzObject *WlzStructDilation3d(
 	(*domains).core = NULL;
       }
       else {
-	*domains = WlzAssignDomain(obj->domain, NULL);
+	*domains = WlzAssignDomain(obj3->domain, NULL);
       }
       WlzFreeObj(obj1);
       WlzFreeObj(obj2);

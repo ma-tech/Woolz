@@ -842,9 +842,9 @@ static WlzObject *WlzDilation3d(
       WlzFreeObj( start_obj[0] );
       start_obj[0] = start_obj[1];
       start_obj[1] = start_obj[2];
-      if( (p < (nplanes-3)) && obj->domain.p->domains[p+1].core ){
+      if( (p < (nplanes-2)) && obj->domain.p->domains[p].core ){
 	start_obj[2] = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-				   obj->domain.p->domains[p+1],
+				   obj->domain.p->domains[p],
 				   values, NULL, NULL, NULL);
       }
       else {

@@ -167,11 +167,15 @@ WlzObject *WlzIntersect3d(WlzObject	**objs,
     }
     else {
       domains[p - min_plane] = WlzAssignDomain(newObj->domain, &errNum);
+
+
+
+
       if(uvt && (errNum == WLZ_ERR_NONE)){
 	values[p - min_plane] = WlzAssignValues(newObj->values, &errNum);
       }
-      WlzFreeObj(newObj);
     }
+    WlzFreeObj(newObj);
   }
   if(errNum == WLZ_ERR_NONE)
   {

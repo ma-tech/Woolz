@@ -554,8 +554,18 @@ static WlzObject *WlzStructErosion3d(
     /* make a new planedomain with planes eroded and shifted by the
        planes of the structuring element, leave the lines and kols 
        to be sorted out by WlzStandardPlaneDomain */
-    plane1 = obj->domain.p->plane1 - structElm->domain.p->plane1; 
+    /* assume at least one pixel on each structuring element plane */
+    plane1 = obj->domain.p->plane1 - structElm->domain.p->plane1;
+    plane1 = WLZ_MAX(plane1, obj->domain.p->plane1);
     lastpl = obj->domain.p->lastpl - structElm->domain.p->lastpl;
+    lastpl = WLZ_MIN(lastpl, obj->domain.p->lastpl);
+    if( lastpl < plane1 ){
+      rtnObj = WlzMakeEmpty(NULL);
+    }
+  }
+
+  /* now finally do the erosion */
+  if( (errNum == WLZ_ERR_NONE) && !rtnObj ){
     domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 				  plane1, lastpl,
 				  obj->domain.p->line1,
@@ -570,9 +580,11 @@ static WlzObject *WlzStructErosion3d(
     domains1 = obj->domain.p->domains;
     domains2 = structElm->domain.p->domains;
     values.core = NULL;
+
     nStructPlanes = structElm->domain.p->lastpl -
       structElm->domain.p->plane1 + 1;
     objList = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * nStructPlanes);
+
     for(p=plane1; p <= lastpl; p++, domains++, domains1++){
       for(i=0; i < nStructPlanes; i++){
 	if( domains1[i].core ){

@@ -14,6 +14,7 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 #include <stdlib.h>
+#include <string.h>
 #include <Wlz.h>
 
 /************************************************************************

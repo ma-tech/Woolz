@@ -234,8 +234,9 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 					 NULL);
 	}
 	else {
-	  WlzFreeObj( obj );
-	  obj = NULL;
+	  /* attempt to return a partial object */
+/*	  WlzFreeObj( obj );
+	  obj = NULL;*/
 	}
       }
       break;
@@ -408,7 +409,14 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
 	break;
       }
 
-      if( (itvl0 = (WlzInterval *)
+      if( nints == 0 ){
+	/* curious case of a no-intervals domain */
+	WlzFreeIntervalDomain(idmn);
+	idmn = NULL;
+	errNum = WLZ_ERR_EOO;
+	break;
+      }
+      else if( (itvl0 = (WlzInterval *)
 	   AlcMalloc(nints * sizeof(WlzInterval))) == NULL){
 	WlzFreeIntervalDomain(idmn);
 	idmn = NULL;
@@ -1161,21 +1169,27 @@ static WlzErrorNum WlzReadVoxelValues(FILE 	*fp,
       (*values).core = NULL;
       if( tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
 			       NULL, NULL, &errNum) ){
-	errNum = WlzReadGreyValues(fp, tmpobj);
-	*values = WlzAssignValues(tmpobj->values, NULL);
-	/* reset voxel-table background */
-	if( (*values).core != NULL ){
-	  switch( WlzGreyTableTypeToTableType((*values).core->type, NULL) ){
-	  case WLZ_GREY_TAB_RAGR:
-	    voxtab->bckgrnd = (*values).v->bckgrnd;
-	    break;
-	  case WLZ_GREY_TAB_RECT:
-	    voxtab->bckgrnd = (*values).r->bckgrnd;
-	    break;
-	  case WLZ_GREY_TAB_INTL:
-	    voxtab->bckgrnd = (*values).i->bckgrnd;
-	    break;
+	if( (errNum = WlzReadGreyValues(fp, tmpobj)) == WLZ_ERR_NONE ){
+	  *values = WlzAssignValues(tmpobj->values, NULL);
+	  /* reset voxel-table background */
+	  if( (*values).core != NULL ){
+	    switch( WlzGreyTableTypeToTableType((*values).core->type, NULL) ){
+	    case WLZ_GREY_TAB_RAGR:
+	      voxtab->bckgrnd = (*values).v->bckgrnd;
+	      break;
+	    case WLZ_GREY_TAB_RECT:
+	      voxtab->bckgrnd = (*values).r->bckgrnd;
+	      break;
+	    case WLZ_GREY_TAB_INTL:
+	      voxtab->bckgrnd = (*values).i->bckgrnd;
+	      break;
+	    }
 	  }
+	}
+	else {
+	  (*values).core = NULL;
+	  WlzFreeDomain(*domains);
+	  (*domains).core = NULL;
 	}
 	WlzFreeObj( tmpobj );
       }
@@ -1188,13 +1202,15 @@ static WlzErrorNum WlzReadVoxelValues(FILE 	*fp,
   }
 
   if( feof(fp) != 0 ){
-    WlzFreeVoxelValueTb( voxtab );
-    return WLZ_ERR_READ_INCOMPLETE;
+    /* allow incomplete object - set domains of unread
+       valuetables to empty */
+/*    WlzFreeVoxelValueTb( voxtab );*/
+    errNum = WLZ_ERR_READ_INCOMPLETE;
   }
   value.vox = voxtab;
   obj->values = WlzAssignValues(value, NULL);
 
-  return WLZ_ERR_NONE;
+  return errNum;
 }
 
 /************************************************************************

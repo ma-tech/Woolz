@@ -561,8 +561,12 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 
   /* threshold each plane */
   while( (errNum == WLZ_ERR_NONE) && nplanes-- ){
-    if( temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-			   NULL, NULL, &errNum) ){
+    if(((*domains).core == NULL) || ((*values).core == NULL)){
+      (*ndomains).core = NULL;
+      (*nvalues).core = NULL;
+    }
+    else if( temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				NULL, NULL, &errNum) ){
       
       if( (temp->domain.i != NULL) && 
 	 (obj1 = WlzThreshold(temp, threshV, highlow, &errNum)) ){
@@ -573,17 +577,17 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 	(*ndomains).core = NULL;
 	(*nvalues).core = NULL;
       }
-
-      domains++;
-      ndomains++;
-      values++;
-      nvalues++;
     }
     else {
       WlzFreePlaneDomain(npdom);
       WlzFreeVoxelValueTb( nvoxtab );
       break;
     }
+
+    domains++;
+    ndomains++;
+    values++;
+    nvalues++;
   }
 
   /* standardise the plane domain */
