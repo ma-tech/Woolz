@@ -74,12 +74,11 @@ public class SectionViewer
 
   fileMenuHandler handler_1 = null;
   controlMenuHandler handler_2 = null;
-  modeMenuHandler handler_3 = null;
-  fixedPointMenuHandler handler_4 = null;
+  showMenuHandler handler_3 = null;
+  helpMenuHandler handler_4 = null;
   // temporarily disabled ... don't remove
   thresholdMenuHandler handler_5 = null;
   //--------------------------------------
-  helpMenuHandler handler_6 = null;
   planeColChooser colourHandler = null;;
 
   private String SLASH = System.getProperty("file.separator");
@@ -158,50 +157,42 @@ public class SectionViewer
     // instantiate the event handlers
     handler_1 = new fileMenuHandler();
     handler_2 = new controlMenuHandler();
-    handler_3 = new modeMenuHandler();
-    handler_4 = new fixedPointMenuHandler();
+    handler_3 = new showMenuHandler();
+    handler_4 = new helpMenuHandler();
     handler_5 = new thresholdMenuHandler();
-    handler_6 = new helpMenuHandler();
 
     // attach event handlers to menu items
     fileMenu_1.addActionListener(handler_1);
     fileMenu_2.addActionListener(handler_1);
     fileMenu_3.addActionListener(handler_1);
     fileMenu_4.addActionListener(handler_1);
-    fileMenu_5.addActionListener(handler_1);
 
-    controlMenu_1.addActionListener(handler_2);
-    controlMenu_2.addActionListener(handler_2);
-    controlMenu_3.addActionListener(handler_2);
+    controlMenu_1_1.addActionListener(handler_2);
+    controlMenu_1_2.addActionListener(handler_2);
+    controlMenu_2_1.addActionListener(handler_2);
+    controlMenu_2_2.addActionListener(handler_2);
+    controlMenu_3_1.addActionListener(handler_2);
+    controlMenu_3_2.addActionListener(handler_2);
+    controlMenu_3_3.addActionListener(handler_2);
+    controlMenu_4_1.addActionListener(handler_2);
+    controlMenu_4_2.addActionListener(handler_2);
+    controlMenu_4_3.addActionListener(handler_2);
+    controlMenu_5.addActionListener(handler_2);
 
-    viewMenu_1.addActionListener(handler_2);
-    viewMenu_2.addActionListener(handler_2);
-    viewMenu_3.addActionListener(handler_2);
-
-
-    viewModeMenu_1.addActionListener(handler_3);
-    viewModeMenu_2.addActionListener(handler_3);
-    //viewModeMenu_3.addActionListener(handler_6);
-
-    //fixedPointMenu_1.addActionListener(handler_4);
-    fixedPointMenu_1_1.addActionListener(handler_4);
-    fixedPointMenu_1_2.addActionListener(handler_4);
-    fixedPointMenu_2.addActionListener(handler_4);
-    fixedPointMenu_3.addActionListener(handler_4);
-    //fixedPointMenu_4.addActionListener(handler_4);
-    fixedPointMenu_4_1.addActionListener(handler_4);
-    fixedPointMenu_4_2.addActionListener(handler_4);
-    fixedPointMenu_5.addActionListener(handler_4);
-    //fixedPointMenu_6.addActionListener(handler_6);
+    showMenu_1.addActionListener(handler_3);
+    showMenu_2.addActionListener(handler_3);
+    showMenu_3.addActionListener(handler_3);
+    showMenu_4.addActionListener(handler_3);
+    showMenu_5.addActionListener(handler_3);
 
     thresholdMenu_1.addActionListener(handler_5);
     thresholdMenu_2.addActionListener(handler_5);
     thresholdMenu_3.addActionListener(handler_5);
     thresholdMenu_4.addActionListener(handler_5);
 
-    helpMenu_1.addActionListener(handler_6);
-    helpMenu_2.addActionListener(handler_6);
-    helpMenu_3.addActionListener(handler_6);
+    helpMenu_1.addActionListener(handler_4);
+    helpMenu_2.addActionListener(handler_4);
+    helpMenu_3.addActionListener(handler_4);
 
     colourHandler = new planeColChooser();
     secColorClt.addActionListener(colourHandler);
@@ -1196,20 +1187,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // save image as jpeg
 //-------------------------------------------------------------
-  protected void saveImage(String str, boolean anaImg) {
+  protected void saveImage(String str) {
     File fil = new File(str);
     BufferedImage img = null;
 
-    if (anaImg) {
-      img = _imgV.getComponentBufferedImage(1000d);
-    }
-    else {
-      BufferedImage img1 = _imgV.getGreyBufferedImage();
-      img = new BufferedImage(img1.getWidth(), img1.getHeight(),
-                              BufferedImage.TYPE_INT_RGB);
-      Graphics2D g = img.createGraphics();
-      g.drawImage(img1, 0 , 0, null);
-    }
+    img = _imgV.getComponentBufferedImage(1000d);
 
     try {
       FileOutputStream fout = new FileOutputStream(fil);
@@ -1385,11 +1367,11 @@ public class SectionViewer
     if (_VSModel != null) {
       _VSModel.setViewMode(mode);
       if (mode.equals("absolute") == true) {
-        viewModeMenu_2.setSelected(true);
+        controlMenu_2_2.setSelected(true);
         rollSetter.setSliderEnabled(true);
       }
       else {
-        viewModeMenu_1.setSelected(true);
+        controlMenu_2_1.setSelected(true);
         rollSetter.setSliderEnabled(false);
       }
     }
@@ -1483,8 +1465,8 @@ public class SectionViewer
     if (showFP) {
       Runnable fpClick = new Runnable() {
         public void run() {
-          if (!fixedPointMenu_3state)
-            fixedPointMenu_3.doClick();
+          if (!showMenu_4state)
+            showMenu_4.doClick();
         }
       };
       SwingUtilities.invokeLater(fpClick);
@@ -1866,7 +1848,7 @@ public class SectionViewer
 
    public void setRoll(double val) {
       /* roll should not be adjusted if view mode is 'up_is_up' */
-      if((rollSetter != null)&&(viewModeMenu_2.isSelected())) {
+      if((rollSetter != null)&&(controlMenu_2_2.isSelected())) {
          rollSetter.setValue(val);
       }
    }
@@ -1907,11 +1889,15 @@ public class SectionViewer
       chooser = new JFileChooser(currentDirFile);
       if (e.getActionCommand() == fileMenu_1str) {
         // save image
+	gfFileFilter filter = new gfFileFilter();
+	filter.addExtension("jpg");
+	filter.setDescription("jpg image file");
+	chooser.setFileFilter(filter);
         int returnVal = chooser.showSaveDialog(null);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
           selectedFile = chooser.getSelectedFile();
           currentDirFile = chooser.getCurrentDirectory();
-          saveImage(checkFilename(selectedFile.toString(), "jpg"), false);
+          saveImage(checkFilename(selectedFile.toString(), "jpg"));
         }
       }
       else if (e.getActionCommand() == fileMenu_2str) {
@@ -1935,20 +1921,6 @@ public class SectionViewer
       else if (e.getActionCommand() == fileMenu_4str) {
         close();
       }
-      else if (e.getActionCommand() == fileMenu_5str) {
-        // save anatomy image
-        gfFileFilter filter = new gfFileFilter();
-        filter.addExtension("jpg");
-        filter.setDescription("jpg image file");
-        chooser.setFileFilter(filter);
-
-        int returnVal = chooser.showSaveDialog(null);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-          selectedFile = chooser.getSelectedFile();
-          currentDirFile = chooser.getCurrentDirectory();
-          saveImage(checkFilename(selectedFile.toString(), "jpg"), true);
-        }
-      }
     } // actionPerformed()
   } // class fileMenuHandler
 
@@ -1956,17 +1928,25 @@ public class SectionViewer
   public class controlMenuHandler
       implements ActionListener {
 
+    double xa[] = new double[1];
+    double ya[] = new double[1];
+    double za[] = new double[1];
+
+    double vals[] = null;
+
+    PointEntry pe = null;
+    JCheckBoxMenuItem src;
+
     public controlMenuHandler() {
     }
 
-    JCheckBoxMenuItem src;
-
     public void actionPerformed(ActionEvent e) {
 
-      if (e.getActionCommand() == controlMenu_1str) {
-        // see standard rotation controls
+      // rotation ------------------------------
+      if (e.getActionCommand().equals(controlMenu_1_1str)) {
+        // see yaw pitch roll controls
         src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != controlMenu_1state) {
+        if (src.isSelected() != controlMenu_1_1state) {
           if (src.isSelected() == true) {
             addStandardControls();
             _showStdCntrls = true;
@@ -1975,13 +1955,13 @@ public class SectionViewer
             removeStandardControls();
             _showStdCntrls = false;
           }
-          controlMenu_1state = src.isSelected();
+          controlMenu_1_1state = src.isSelected();
         }
       }
-      else if (e.getActionCommand() == controlMenu_2str) {
+      else if (e.getActionCommand().equals(controlMenu_1_2str)) {
         // see user defined rotation controls
         src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != controlMenu_2state) {
+        if (src.isSelected() != controlMenu_1_2state) {
           if (src.isSelected() == true) {
             addUserControls();
             _showUsrCntrls = true;
@@ -1990,27 +1970,102 @@ public class SectionViewer
             removeUserControls();
             _showUsrCntrls = false;
           }
-          controlMenu_2state = src.isSelected();
+          controlMenu_1_2state = src.isSelected();
         }
       }
-      else if (e.getActionCommand() == viewMenu_1str) {
-        // see feedback
+      // view mode ------------------------------
+      else if (e.getActionCommand().equals(controlMenu_2_1str)) {
+        // up is up mode => roll is fixed
+        setViewMode(controlMenu_2_1str);
+        rollSetter.setSliderEnabled(true);
+        rollSetter.setValue(0.0);
+        rollSetter.setSliderEnabled(false);
+      }
+      else if (e.getActionCommand().equals(controlMenu_2_2str)) {
+        setViewMode(controlMenu_2_2str);
+      }
+      // fixed point ------------------------------
+      else if (e.getActionCommand().equals(controlMenu_3_1str)) {
+        // change using mouse
+        _setFixedPoint = true;
+        setCursor(xhairCursor);
+      }
+      else if (e.getActionCommand().equals(controlMenu_3_2str)) {
+        // change by typing coordinates
+        _VSModel.getFixedPoint(xa, ya, za);
+        vals = new double[3];
+        vals[0] = xa[0];
+        vals[1] = ya[0];
+        vals[2] = za[0];
+        _FPBounce = 0;
+        pe = new PointEntry("Fixed Point Coordinates");
+        pe.setSize(250, 250);
+        pe.pack();
+        pe.setVisible(true);
+        pe.setInitVals(vals);
+        pe.addChangeListener(new FixedPointAdaptor(pe));
+        vals = null;
+      }
+      else if (e.getActionCommand().equals(controlMenu_3_3str)) {
+        // reset 
+        resetFixedPoint(true);
+      }
+      // rotation axis ------------------------------
+      else if (e.getActionCommand().equals(controlMenu_4_2str)) {
+        // change by typing coordinates
+        _VSModel.getFixedPoint(xa, ya, za);
+        vals = new double[3];
+        vals[0] = xa[0];
+        vals[1] = ya[0];
+        vals[2] = za[0];
+        _RABounce = 0;
+        pe = new PointEntry("Rotation Axis Coordinates");
+        pe.setSize(250, 250);
+        pe.pack();
+        pe.setVisible(true);
+        pe.setInitVals(vals);
+        pe.addChangeListener(new RotationAxisAdaptor(pe));
+        vals = null;
+      }
+      // reset ------------------------------
+      else if (e.getActionCommand() == controlMenu_5str) {
+        // reset user interface controls
+        resetGUI();
+        _VSModel.fireChange();
+      }
+    } // actionPerformed()
+
+  } // class controlMenuHandler
+
+//---------------------------------------
+  public class showMenuHandler
+      implements ActionListener {
+
+    JCheckBoxMenuItem src;
+
+    public showMenuHandler() {
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+      // cursor feedback ------------------------------
+      if (e.getActionCommand().equals(showMenu_1str)) {
         src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != viewMenu_1state) {
-          if (src.isSelected() == true) {
+        if (src.isSelected() != showMenu_1state) {
+          if (src.isSelected()) {
             addFeedback();
           }
           else {
             removeFeedback();
           }
-          viewMenu_1state = src.isSelected();
+          showMenu_1state = src.isSelected();
         }
       }
-      else if (e.getActionCommand() == viewMenu_2str) {
-        // see intersection
+      // intersection of views ------------------------------
+      else if (e.getActionCommand().equals(showMenu_2str)) {
         src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != viewMenu_2state) {
-          if (src.isSelected() == true) {
+        if (src.isSelected() != showMenu_2state) {
+          if (src.isSelected()) {
             _showIntersection = true;
             doIntersection();
           }
@@ -2018,14 +2073,14 @@ public class SectionViewer
             _showIntersection = false;
             removeIntersection();
           }
-          viewMenu_2state = src.isSelected();
+          showMenu_2state = src.isSelected();
         }
       }
-      else if (e.getActionCommand() == viewMenu_3str) {
-        // enable mouse-click anatomy
+      // mouse-click anatomy ------------------------------
+      else if (e.getActionCommand().equals(showMenu_3str)) {
         src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != viewMenu_3state) {
-          if (src.isSelected() == true) {
+        if (src.isSelected() != showMenu_3state) {
+          if (src.isSelected()) {
             enableAnatomy();
             /* remove & disable thresholding */
             if (thresholdMenu_1state) {
@@ -2044,94 +2099,13 @@ public class SectionViewer
             removeOverlay();
             resetAnatomyText();
           }
-          viewMenu_3state = src.isSelected();
+          showMenu_3state = src.isSelected();
         }
       }
-      else if (e.getActionCommand() == controlMenu_3str) {
-        // reset user interface controls
-        resetGUI();
-        _VSModel.fireChange();
-      }
-    } // actionPerformed()
-
-  } // class controlMenuHandler
-
-//---------------------------------------
-  public class modeMenuHandler
-      implements ActionListener {
-
-    HelpBroker hb = null;
-    JMenuItem mi = null;
-    String IDStr = "";
-    JMenuItem src;
-    String valstr;
-
-    public modeMenuHandler() {
-    }
-
-    public void actionPerformed(ActionEvent e) {
-      src = (JMenuItem) e.getSource();
-
-      if (src.equals(viewModeMenu_1)) {
-        /* this mode => roll is fixed */
-        setViewMode(viewModeMenu_1str);
-        rollSetter.setSliderEnabled(true);
-        rollSetter.setValue(0.0);
-        rollSetter.setSliderEnabled(false);
-      }
-      else if (src.equals(viewModeMenu_2)) {
-        setViewMode(viewModeMenu_2str);
-      }
-    } // actionPerformed()
-
-  } // class modeMenuHandler
-
-//---------------------------------------
-  public class fixedPointMenuHandler
-      implements ActionListener {
-
-    double xa[] = new double[1];
-    double ya[] = new double[1];
-    double za[] = new double[1];
-
-    double vals[] = null;
-
-    PointEntry pe = null;
-    JCheckBoxMenuItem src;
-
-    public fixedPointMenuHandler() {
-    }
-
-    public void actionPerformed(ActionEvent e) {
-      if (e.getActionCommand().equals(fixedPointMenu_1_1str)) {
-        // change fixed point: mouse click
-        _setFixedPoint = true;
-        setCursor(xhairCursor);
-      }
-      else if (e.getActionCommand().equals(fixedPointMenu_1_2str)) {
-        // change fixed point: typing
-        _VSModel.getFixedPoint(xa, ya, za);
-        vals = new double[3];
-        vals[0] = xa[0];
-        vals[1] = ya[0];
-        vals[2] = za[0];
-        _FPBounce = 0;
-        pe = new PointEntry("Fixed Point Coordinates");
-        pe.setSize(250, 250);
-        pe.pack();
-        pe.setVisible(true);
-        pe.setInitVals(vals);
-        pe.addChangeListener(new FixedPointAdaptor(pe));
-        vals = null;
-      }
-      else if (e.getActionCommand().equals(fixedPointMenu_2str)) {
-        // reset fixed point
-        resetFixedPoint(true);
-      }
-      else if (e.getActionCommand().equals(fixedPointMenu_3str)) {
-        // show fixed point
+      // fixed point ------------------------------
+      else if (e.getActionCommand().equals(showMenu_4str)) {
         src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != fixedPointMenu_3state) {
+        if (src.isSelected() != showMenu_4state) {
           if (src.isSelected()) {
             _fixedPoint = true;
             doShowFixedPoint();
@@ -2141,138 +2115,22 @@ public class SectionViewer
             _fixedPoint = false;
             removeFixedPoint();
           }
-          fixedPointMenu_3state = src.isSelected();
+          showMenu_4state = src.isSelected();
         }
       }
-      else if (e.getActionCommand().equals(fixedPointMenu_4_2str)) {
-        // change rotation axis
-        _VSModel.getFixedPoint(xa, ya, za);
-        vals = new double[3];
-        vals[0] = xa[0];
-        vals[1] = ya[0];
-        vals[2] = za[0];
-        _RABounce = 0;
-        pe = new PointEntry("Rotation Axis Coordinates");
-        pe.setSize(250, 250);
-        pe.pack();
-        pe.setVisible(true);
-        pe.setInitVals(vals);
-        pe.addChangeListener(new RotationAxisAdaptor(pe));
-        vals = null;
+      // rotation axis ------------------------------
+      else if (e.getActionCommand().equals(showMenu_5str)) {
+        src = (JCheckBoxMenuItem) e.getSource();
+        if (src.isSelected() != showMenu_5state) {
+          if (src.isSelected()) {
+          }
+          else {
+          }
+          showMenu_5state = src.isSelected();
+        }
       }
-    } // actionPerformed()
-
-  } // class fixedPointMenuHandler
-
-//---------------------------------------
-  public class thresholdMenuHandler
-      implements ActionListener {
-
-    /* the options are not part of a button group as they
-       are not mutually exclusive */
-    JCheckBoxMenuItem src;
-    JOptionPane jop;
-    String message;
-    int reply;
-
-    public thresholdMenuHandler() {
     }
-
-    public void actionPerformed(ActionEvent e) {
-
-      if (e.getActionCommand() == thresholdMenu_1str) {
-        src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != thresholdMenu_1state) {
-          if (src.isSelected() == true) {
-            /* allow a 'polygonal' constraint to be drawn */
-            resetFeedbackText();
-            enableThreshConstraint(true);
-            enableThresholding(false);
-            if (thresholdMenu_2state) {
-              thresholdMenu_2state = false;
-              thresholdMenu_2.setSelected(false);
-            }
-            /* remove & disable mouse click anatomy */
-            if (viewMenu_3state) {
-              viewMenu_3.doClick();
-            }
-          }
-          else {
-            enableThreshConstraint(false);
-          }
-          thresholdMenu_1state = src.isSelected();
-        }
-      }
-
-      if (e.getActionCommand() == thresholdMenu_2str) {
-        src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != thresholdMenu_2state) {
-          if (src.isSelected() == true) {
-            /* until bug is fixed vvvvvvvv */
-            message = new String(
-                "thresholding has a bug which may crash the program. Do you wish to proceed?");
-            reply = JOptionPane.showConfirmDialog(
-                null,
-                message,
-                "thresholding bug",
-                JOptionPane.YES_NO_OPTION);
-            if (reply == JOptionPane.YES_OPTION) {
-              /* threshold based on grey value of clicked point */
-              removeOverlay();
-              resetFeedbackText();
-              enableThresholding(true);
-              if (thresholdMenu_1state) {
-                thresholdMenu_1state = false;
-                thresholdMenu_1.setSelected(false);
-              }
-              /* remove & disable mouse click anatomy */
-              if (viewMenu_3state) {
-                viewMenu_3.doClick();
-              }
-            }
-            else {
-              enableThresholding(false);
-            }
-            /* until bug is fixed ^^^^^^^ */
-          }
-          else {
-            removeThreshold();
-            enableThresholding(false);
-          }
-          thresholdMenu_2state = src.isSelected();
-        }
-      }
-
-      if (e.getActionCommand() == thresholdMenu_3str) {
-        src = (JCheckBoxMenuItem) e.getSource();
-        if (src.isSelected() != thresholdMenu_3state) {
-          if (src.isSelected() == true) {
-            // show 'polygonal' constraint
-            _imgV.enableThreshConstraint(true);
-            _imgV.repaint();
-          }
-          else {
-            _imgV.enableThreshConstraint(false);
-            _imgV.repaint();
-          }
-          thresholdMenu_3state = src.isSelected();
-        }
-      }
-
-      if (e.getActionCommand() == thresholdMenu_4str) {
-        // remove 'polygonal' constraint
-        removeThreshConstraint();
-        enableThreshConstraint(false);
-        if (thresholdMenu_3state) {
-          thresholdMenu_3state = false;
-          thresholdMenu_3.setSelected(false);
-        }
-      }
-
-    } // actionPerformed()
-
-  } // class thresholdMenuHandler
-
+  } // class showMenuHandler
 //---------------------------------------
   public class helpMenuHandler
       implements ActionListener {
@@ -2335,6 +2193,115 @@ public class SectionViewer
     } // actionPerformed()
 
   } // class helpMenuHandler
+
+//---------------------------------------
+  public class thresholdMenuHandler
+      implements ActionListener {
+
+    /* the options are not part of a button group as they
+       are not mutually exclusive */
+    JCheckBoxMenuItem src;
+    JOptionPane jop;
+    String message;
+    int reply;
+
+    public thresholdMenuHandler() {
+    }
+
+    public void actionPerformed(ActionEvent e) {
+
+      if (e.getActionCommand() == thresholdMenu_1str) {
+        src = (JCheckBoxMenuItem) e.getSource();
+        if (src.isSelected() != thresholdMenu_1state) {
+          if (src.isSelected() == true) {
+            /* allow a 'polygonal' constraint to be drawn */
+            resetFeedbackText();
+            enableThreshConstraint(true);
+            enableThresholding(false);
+            if (thresholdMenu_2state) {
+              thresholdMenu_2state = false;
+              thresholdMenu_2.setSelected(false);
+            }
+            /* remove & disable mouse click anatomy */
+            if (showMenu_3state) {
+              showMenu_3.doClick();
+            }
+          }
+          else {
+            enableThreshConstraint(false);
+          }
+          thresholdMenu_1state = src.isSelected();
+        }
+      }
+
+      if (e.getActionCommand() == thresholdMenu_2str) {
+        src = (JCheckBoxMenuItem) e.getSource();
+        if (src.isSelected() != thresholdMenu_2state) {
+          if (src.isSelected() == true) {
+            /* until bug is fixed vvvvvvvv */
+            message = new String(
+                "thresholding has a bug which may crash the program. Do you wish to proceed?");
+            reply = JOptionPane.showConfirmDialog(
+                null,
+                message,
+                "thresholding bug",
+                JOptionPane.YES_NO_OPTION);
+            if (reply == JOptionPane.YES_OPTION) {
+              /* threshold based on grey value of clicked point */
+              removeOverlay();
+              resetFeedbackText();
+              enableThresholding(true);
+              if (thresholdMenu_1state) {
+                thresholdMenu_1state = false;
+                thresholdMenu_1.setSelected(false);
+              }
+              /* remove & disable mouse click anatomy */
+              if (showMenu_3state) {
+                showMenu_3.doClick();
+              }
+            }
+            else {
+              enableThresholding(false);
+            }
+            /* until bug is fixed ^^^^^^^ */
+          }
+          else {
+            removeThreshold();
+            enableThresholding(false);
+          }
+          thresholdMenu_2state = src.isSelected();
+        }
+      }
+
+      if (e.getActionCommand() == thresholdMenu_3str) {
+        src = (JCheckBoxMenuItem) e.getSource();
+        if (src.isSelected() != thresholdMenu_3state) {
+          if (src.isSelected() == true) {
+            // show 'polygonal' constraint
+            _imgV.enableThreshConstraint(true);
+            _imgV.repaint();
+          }
+          else {
+            _imgV.enableThreshConstraint(false);
+            _imgV.repaint();
+          }
+          thresholdMenu_3state = src.isSelected();
+        }
+      }
+
+      if (e.getActionCommand() == thresholdMenu_4str) {
+        // remove 'polygonal' constraint
+        removeThreshConstraint();
+        enableThreshConstraint(false);
+        if (thresholdMenu_3state) {
+          thresholdMenu_3state = false;
+          thresholdMenu_3.setSelected(false);
+        }
+      }
+
+    } // actionPerformed()
+
+  } // class thresholdMenuHandler
 
 //---------------------------------------
   public class planeColChooser
@@ -2877,8 +2844,8 @@ public class SectionViewer
       setCursor(defCursor);
       Runnable fpClick = new Runnable() {
         public void run() {
-          if (!fixedPointMenu_3state)
-            fixedPointMenu_3.doClick();
+          if (!showMenu_4state)
+            showMenu_4.doClick();
         }
       };
       SwingUtilities.invokeLater(fpClick);
@@ -3316,8 +3283,8 @@ public class SectionViewer
         setDistLimits(0.0);
         Runnable fpClick = new Runnable() {
           public void run() {
-            if (!fixedPointMenu_3state)
-              fixedPointMenu_3.doClick();
+            if (!showMenu_4state)
+              showMenu_4.doClick();
           }
         };
         SwingUtilities.invokeLater(fpClick);
@@ -3374,7 +3341,7 @@ public class SectionViewer
             _xembFileStack = (Stack) _anatBuilder.getXEmbFileStack().clone();
             _embObjStack = (Stack) _anatBuilder.getEmbObjStack().clone();
             _xembObjStack = (Stack) _anatBuilder.getXEmbObjStack().clone();
-            viewMenu_3.setEnabled(true);
+            showMenu_3.setEnabled(true);
           }
           //System.out.println("stack thread finished");
         }

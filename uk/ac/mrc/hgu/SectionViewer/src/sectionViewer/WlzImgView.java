@@ -824,7 +824,7 @@ public class WlzImgView extends Component {
       line = new Line2D.Double(fpa[0], fpa[1], fpa[0], fpa[1]+_fpr);
       _fixedPointVec.add(line);
 
-      setFixedPointOffsets(fpa[0], fpa[1]);
+      setFixedPointOffsets();
       _fixedPoint = true;
    }
 
@@ -841,7 +841,7 @@ public class WlzImgView extends Component {
       _iyofs = 0;
    }
    //-------------------------------------------------------------
-   public void setFixedPointOffsets(double x, double y) {
+   public void setFixedPointOffsets() {
       double X = Math.abs((_bBox.xMax - _bBox.xMin));
       double Y = Math.abs((_bBox.yMax - _bBox.yMin));
 
