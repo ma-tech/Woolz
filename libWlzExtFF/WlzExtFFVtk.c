@@ -655,17 +655,14 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
       }
       if(valS)
       {
+	/* Any other tokens apart from these are ignored. */
 	if((WlzStringMatchValue(&valI, valS,
 		"POINTS", WLZEFF_VTK_POLYDATATYPE_POINTS,
 		"VERTICIES", WLZEFF_VTK_POLYDATATYPE_VERTICIES,
 		"LINES", WLZEFF_VTK_POLYDATATYPE_LINES,
 		"POLYGONS", WLZEFF_VTK_POLYDATATYPE_POLYGONS,
 		"TRIANGLE_STRIPS", WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS,
-		NULL) == 0))
-	{
-	  //errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-	else
+		NULL) != 0))
 	{
 	  prim = valI;
 	  switch(prim)
