@@ -3481,6 +3481,7 @@ extern WlzErrorNum                     WlzWriteMeshTransform3D(
 ************************************************************************/
 extern double WlzMwrAngle(WlzObject *cvh,
 			  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 /************************************************************************
 * Wlz3DWarpMQ_S.c					         	*
 ************************************************************************/
@@ -3492,14 +3493,12 @@ extern WlzErrorNum WlzTetrahedronProducerFromCube(
 				int nx, int ny, int nz,
 			        int indexOfNextFirst, WlzMeshElem3D *elements);
 
-#ifndef WLZ_EXT_BIND
 extern WlzMeshTransform3D *WlzTetrahedronMeshFromObj(WlzObject *wObjC, const WlzDBox3 bBoxS,
 				       const int numOfElemAlonX,
 				       const int numOfElemAlonY,
 				       const int numOfElemAlonZ,
                                        WlzErrorNum *errNums
                                   );
-#endif /* !WLZ_EXT_BIND */
 
 extern WlzErrorNum  read_WlzTiePoints( FILE *fp, int *nTiePP, 
                      WlzDVertex3 **vxVec0, 
@@ -3516,7 +3515,6 @@ extern 	WlzErrorNum WlzTetrahedronProducer(int nxmax, int nymax, int nzmax,
    WlzIBox3        bBox0
    );
 
-#ifndef WLZ_EXT_BIND
 extern WlzErrorNum WlzGetTransformedMesh(WlzMeshTransform3D *wmt3D, WlzBasisFnTransform* basisTr);
 extern WlzObject       *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 				         WlzMeshTransform3D   *wmt3D,
@@ -3533,7 +3531,6 @@ extern  void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
 extern WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst, 
                                                    WlzMeshTransform3D *wmt3D,
 						   WlzErrorNum *disErr);
-#endif /* !WLZ_EXT_BIND */
 
 extern void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5);
 
@@ -3541,7 +3538,6 @@ extern void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2
 
 
 
-#ifndef WLZ_EXT_BIND
 extern  int   WlzIsoIntersectWithTetrahadronIndex(double zConst, 
         const WlzMeshTransform3D *wmt3D, 
 	int *intersectIndex, 
@@ -3549,9 +3545,7 @@ extern  int   WlzIsoIntersectWithTetrahadronIndex(double zConst,
 	int *noRedundancyCutingNum,
 	int *numOfTrangularElem);
 
-#endif /* !WLZ_EXT_BIND */
 				  
-#ifndef WLZ_EXT_BIND
 extern void WlzMakeAffine3D4pointsTrFn(WlzDVertex3 sr1, WlzDVertex3 sr2, WlzDVertex3 sr3,
                          WlzDVertex3  sr4,  WlzDVertex3  targ1,  WlzDVertex3   targ2, 
                          WlzDVertex3  targ3, WlzDVertex3 targ4, 
