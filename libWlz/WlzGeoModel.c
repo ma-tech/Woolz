@@ -82,49 +82,61 @@ static WlzErrorNum 	WlzGMModelDeleteE2D2V2L(
 			  WlzGMEdge *dE);
 static WlzErrorNum      WlzGMModelConstructNewS3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzDVertex3 *pos);
 static WlzErrorNum      WlzGMModelExtend1V0E1S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMVertex *eV,
                           WlzDVertex3 pos0,
                           WlzDVertex3 pos1);
 static WlzErrorNum      WlzGMModelExtend2V1E1S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMEdge *eE,
                           WlzDVertex3 pos2);
 static WlzErrorNum      WlzGMModelExtend2V0E1S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMVertex *eV0,
                           WlzGMVertex *eV1,
                           WlzDVertex3 pos2);
 static WlzErrorNum      WlzGMModelJoin2V0E0S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMVertex *eV0,
                           WlzGMVertex *eV1,
                           WlzDVertex3 pos2);
 static WlzErrorNum      WlzGMModelJoin3V0E3S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMVertex **eV);
 static WlzErrorNum      WlzGMModelJoin3V0E2S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMVertex **eV);
 static WlzErrorNum      WlzGMModelExtend3V0E1S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMVertex **eV);
 static WlzErrorNum      WlzGMModelExtend3V1E1S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMEdge *eE,
                           WlzGMVertex *eV);
 static WlzErrorNum      WlzGMModelJoin3V1E2S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMEdge *eE,
                           WlzGMVertex *eV);
 static WlzErrorNum      WlzGMModelExtend3V2E1S3D(
                           WlzGMModel *model,
+			  WlzGMFace **dstNF,
                           WlzGMEdge *eE0,
                           WlzGMEdge *eE1);
 static WlzErrorNum 	WlzGMModelExtend3V3E1S3D(
 			  WlzGMModel *model,
+			  WlzGMFace **dstNF,
 			  WlzGMEdge **cE);
 static WlzErrorNum      WlzGMModelConstructNewS2D(
                           WlzGMModel *model,
@@ -6227,7 +6239,7 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 }
 
 /*!
-* \return				<void>
+* \return	<void>
 * \ingroup      WlzGeoModel
 * \brief	Frees a GM index look up table data structure.
 * \param	resIdxTb		Given index lut data structure.
@@ -6236,47 +6248,21 @@ void		WlzGMModelResIdxFree(WlzGMResIdxTb *resIdxTb)
 {
   if(resIdxTb)
   {
-    if(resIdxTb->vertex.idxLut)
-    {
-      AlcFree(resIdxTb->vertex.idxLut);
-    }
-    if(resIdxTb->vertexT.idxLut)
-    {
-      AlcFree(resIdxTb->vertexT.idxLut);
-    }
-    if(resIdxTb->vertexG.idxLut)
-    {
-      AlcFree(resIdxTb->vertexG.idxLut);
-    }
-    if(resIdxTb->diskT.idxLut)
-    {
-      AlcFree(resIdxTb->diskT.idxLut);
-    }
-    if(resIdxTb->edge.idxLut)
-    {
-      AlcFree(resIdxTb->edge.idxLut);
-    }
-    if(resIdxTb->edgeT.idxLut)
-    {
-      AlcFree(resIdxTb->edgeT.idxLut);
-    }
-    if(resIdxTb->face.idxLut)
-    {
-      AlcFree(resIdxTb->face.idxLut);
-    }
-    if(resIdxTb->shell.idxLut)
-    {
-      AlcFree(resIdxTb->shell.idxLut);
-    }
-    if(resIdxTb->shellG.idxLut)
-    {
-      AlcFree(resIdxTb->shellG.idxLut);
-    }
+    AlcFree(resIdxTb->vertex.idxLut);
+    AlcFree(resIdxTb->vertexT.idxLut);
+    AlcFree(resIdxTb->vertexG.idxLut);
+    AlcFree(resIdxTb->diskT.idxLut);
+    AlcFree(resIdxTb->edge.idxLut);
+    AlcFree(resIdxTb->edgeT.idxLut);
+    AlcFree(resIdxTb->face.idxLut);
+    AlcFree(resIdxTb->loopT.idxLut);
+    AlcFree(resIdxTb->shell.idxLut);
+    AlcFree(resIdxTb->shellG.idxLut);
   }
 }
 
 /*!
-* \return				Woolz error code.
+* \return	Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Rehash the vertex matching hash table.
 * \param	model			The model.
@@ -6391,9 +6377,11 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 * \endverbatim
 *                                                                      
 * \param	model			The model to add the segment to.
+* \param	dstNF			Destination pointer for the new face.
 * \param	pos			Positions of the 3 points.
 */
 static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
+					     WlzGMFace **dstNF,
 					     WlzDVertex3 *pos)
 {
   int		idx,
@@ -6515,6 +6503,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
       /* Append new shell onto end of model's list of shells. */
       WlzGMShellAppend(eShell, nShell);
     }
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -6567,11 +6556,13 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 *
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param	dstNF			Destination pointer for new face.
 * \param	eV			Shared vertex.
 * \param	pos0			Position of the first point.
 * \param	pos1			Position of the second point.
 */
-static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
+static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF, WlzGMVertex *eV,
 					    WlzDVertex3 pos0, WlzDVertex3 pos1)
 {
   int		idx,
@@ -6686,6 +6677,7 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
     /* Update shell */
     (void )WlzGMShellUpdateG3D(eShell, pos0);
     (void )WlzGMShellUpdateG3D(eShell, pos1);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -6736,10 +6728,12 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eE			Shared edge.
 * \param	nPos			Position of new vertex.
 */
-static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
+static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF, WlzGMEdge *eE,
 					    WlzDVertex3 nPos)
 {
   int		idx,
@@ -6847,6 +6841,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
     nLT[1]->parent = eShell;
     /* Update shell */
     (void )WlzGMShellUpdateG3D(eShell, nPos);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -6897,11 +6892,13 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eV0			First shared vertex.
 * \param	eV1			Second shared vertex.
 * \param	nPos			Position of new vertex.
 */
 static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF,
 					    WlzGMVertex *eV0, WlzGMVertex *eV1,
 					    WlzDVertex3 nPos)
 {
@@ -7013,6 +7010,7 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
     nLT[1]->parent = eShell;
     /* Update shell */
     (void )WlzGMShellUpdateG3D(eShell, nPos);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -7064,11 +7062,13 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eV0			First shared vertex.
 * \param	eV1			Second shared vertex.
 * \param	nPos			Position of new vertex.
 */
 static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
+					  WlzGMFace **dstNF,
 					  WlzGMVertex *eV0, WlzGMVertex *eV1,
 					  WlzDVertex3 nPos)
 {
@@ -7203,6 +7203,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
     }
     WlzGMShellJoinAndUnlink(eShell, dShell);
     WlzGMModelFreeS(model, dShell);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -7252,9 +7253,11 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	gEV			The three given shared verticies.
 */
-static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
+static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model,
+					  WlzGMFace **dstNF, WlzGMVertex **gEV)
 {
   int		idx,
   		nIdx,
@@ -7393,6 +7396,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
       WlzGMShellJoinAndUnlink(eShell, dShell[idx]);
       WlzGMModelFreeS(model, dShell[idx]);
     }
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -7442,9 +7446,11 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eV			The three given shared verticies.
 */
-static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
+static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model,
+					  WlzGMFace **dstNF, WlzGMVertex **eV)
 {
   int		idx,
   		nIdx,
@@ -7597,6 +7603,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
     }
     WlzGMShellJoinAndUnlink(eShell, dShell);
     WlzGMModelFreeS(model, dShell);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -7645,9 +7652,11 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eV			The three shared vertex.
 */
 static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF,
 					    WlzGMVertex **eV)
 {
   int		idx,
@@ -7749,6 +7758,7 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* No change to shell. */
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -7795,11 +7805,13 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eE			The shared edge.
 * \param	sV			The shared vertex (not on the
 *                                       shared edge).
 */
 static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF,
 					    WlzGMEdge *eE, WlzGMVertex *sV)
 {
   int		idx,
@@ -7910,6 +7922,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
     nLT[1]->parent = eShell;
     /* Update shell */
     (void )WlzGMShellUpdateG3D(eShell, pos[2]);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -7957,11 +7970,13 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model to add the segment to.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eE			The shared edge.
 * \param	sV			The shared vertex (not on the
 *                                       shared edge).
 */
 static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
+					  WlzGMFace **dstNF,
 				          WlzGMEdge *eE, WlzGMVertex *sV)
 {
   int		idx,
@@ -8077,6 +8092,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
     }
     WlzGMShellJoinAndUnlink(eShell, dShell);
     WlzGMModelFreeS(model, dShell);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -8121,10 +8137,12 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 *                   nLT1 = {nET10, nET11, nET12}
 * \endverbatim
 * \param	model			The model.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eE0			First shared edge.
 * \param	eE1			Second shared edge.
 */
 static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF,
 					    WlzGMEdge *eE0, WlzGMEdge *eE1)
 {
   int		idx,
@@ -8229,6 +8247,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
     nLT[0]->parent = nLT[1]->parent = eShell;
     WlzGMLoopTAppend(eShell->child, nLT[0]);
     WlzGMLoopTAppend(eShell->child, nLT[1]);
+    *dstNF = nF;
   }
   return(errNum);
 }
@@ -8274,10 +8293,12 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 *                   LT1 = {nET10, nET11, nET12}
 *
 * \param	model			The geometric model.
+* \param        dstNF                   Destination pointer for new face.
 * \param	eE			Array of three existing edges to be
 *					shared by the new facet.
 */
-static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model, WlzGMEdge **eE)
+static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model,
+					    WlzGMFace **dstNF, WlzGMEdge **eE)
 {
   int		idx,
 		pIdx,
@@ -8366,6 +8387,7 @@ static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model, WlzGMEdge **eE)
       WlzGMLoopTAppend(eShell->child, nLT[1]);
       /* New face. */
       nF->loopT = nLT[0];
+      *dstNF = nF;
     }
   }
   return(errNum);
@@ -8885,6 +8907,9 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
 * \brief	Constructs a 3D simplex (triangle) defined by three
 *               double precision verticies, any of which may already
 *               exist within the model.
+*		If a new face is created then the child loopT of that
+*		face will have edgeT's that use the given vertices in
+*		their given order.
 * \param	model			The model to add the segment to.
 * \param	pos			Pointer to triangle verticies.
 */
@@ -8895,9 +8920,14 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
   		idx1,
 		idx2,
 		edgeCnt,
-		shellCnt;
-  WlzGMEdge	*cE[3];
+		shellCnt,
+		revOrder;
+  WlzGMEdgeT	*eT;
+  WlzGMFace	*nF = NULL;
+  WlzGMVertex	*v0,
+  		*v1;
   unsigned int	matchCode;
+  WlzGMEdge	*cE[3];
   WlzGMVertex	*matchV[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int 	bitCntTb[8] =	     /* Number of verticies matched for a given
@@ -8948,14 +8978,14 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
   {
     case 0:
       /* No verticies matched, construct a new shell. */
-      errNum = WlzGMModelConstructNewS3D(model, pos);
+      errNum = WlzGMModelConstructNewS3D(model, &nF,  pos);
       break;
     case 1:
       /* Single vertex matched, extend existing shell. */
       idx0 = matchVtxIdx[matchCode][0];
       idx1 = matchVtxIdx[matchCode][1];
       idx2 = matchVtxIdx[matchCode][2];
-      errNum = WlzGMModelExtend1V0E1S3D(model, matchV[idx0],
+      errNum = WlzGMModelExtend1V0E1S3D(model, &nF,  matchV[idx0],
 				        *(pos + idx1), *(pos + idx2));
       break;
     case 2:
@@ -8969,19 +8999,20 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 				          matchV[idx1])) != NULL)
 	{
 	  /* Matched 2 verticies connected by an edge. */
-	  errNum = WlzGMModelExtend2V1E1S3D(model, cE[0], *(pos + idx2));
+	  errNum = WlzGMModelExtend2V1E1S3D(model, &nF, cE[0], *(pos + idx2));
 	}
 	else
 	{
 	  /* Matched 2 verticies in same shell but not connected by an edge. */
-	  errNum = WlzGMModelExtend2V0E1S3D(model, matchV[idx0], matchV[idx1],
+	  errNum = WlzGMModelExtend2V0E1S3D(model, &nF,
+	  				    matchV[idx0], matchV[idx1],
 					    *(pos + idx2));
 	}
       }
       else
       {
 	/* Matched 2 verticies in different shells. */
-	errNum = WlzGMModelJoin2V0E0S3D(model, matchV[idx0], matchV[idx1],
+	errNum = WlzGMModelJoin2V0E0S3D(model, &nF, matchV[idx0], matchV[idx1],
 					*(pos + idx2));
       }
       break;
@@ -9017,18 +9048,18 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	    case 1:
 	      /* All 3 matched verticies share the same shell but there
 	       * are no common edges between the 3 verticies. */
-	      errNum = WlzGMModelExtend3V0E1S3D(model, matchV);
+	      errNum = WlzGMModelExtend3V0E1S3D(model, &nF, matchV);
 	      break;
 	    case 2: /* 3V0E2S */
 	      /* Two of the 3 matched verticies share the same shell but
 	       * there is no common edge between any of the matched
 	       * verticies. */
-	      errNum = WlzGMModelJoin3V0E2S3D(model, matchV);
+	      errNum = WlzGMModelJoin3V0E2S3D(model, &nF, matchV);
 	      break;
 	    case 3: /* 3V0E3S */
 	      /* All 3 verticies are in different shells and there are
 	       * no common edges between any of the matched verticies. */
-	      errNum = WlzGMModelJoin3V0E3S3D(model, matchV);
+	      errNum = WlzGMModelJoin3V0E3S3D(model, &nF, matchV);
 	      break;
 	  }
 	  break;
@@ -9041,13 +9072,15 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	  {
 	    /* Two of the 3 matched verticies are connected by a single edge,
 	     * all of the 3 are in a single shell. */
-	     errNum = WlzGMModelExtend3V1E1S3D(model, cE[idx0], matchV[idx1]);
+	     errNum = WlzGMModelExtend3V1E1S3D(model, &nF,
+	     				       cE[idx0], matchV[idx1]);
 	  }
 	  else
 	  {
 	    /* Two of the 3 matched verticies are connected by a single edge,
 	     * the other vertex is in a different shell. */
-	     errNum = WlzGMModelJoin3V1E2S3D(model, cE[idx0], matchV[idx1]);
+	     errNum = WlzGMModelJoin3V1E2S3D(model, &nF,
+	     				     cE[idx0], matchV[idx1]);
 	  }
 	  break;
 	case 2:
@@ -9057,16 +9090,47 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	  	 ((cE[2] != NULL) << 2);
 	  idx0 = firstCtgBitTb[idx2];
 	  idx1 = (idx0 + 1) % 3;
-	  errNum = WlzGMModelExtend3V2E1S3D(model, cE[idx0], cE[idx1]);
+	  errNum = WlzGMModelExtend3V2E1S3D(model, &nF, cE[idx0], cE[idx1]);
 	  break;
 	case 3:
           /* All three verticies and all three edges are within the model,
 	   * need to check if the three verticies are in a common loop and then
 	   * if ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
 	   * vertexT's. */
-	  errNum = WlzGMModelExtend3V3E1S3D(model, cE);
+	  errNum = WlzGMModelExtend3V3E1S3D(model, &nF, cE);
 	  break;
       }
+  }
+  /* Make sure that the order of the vertices are as given for the child
+   * loopT of the new face. */
+  if(nF)
+  {
+    for(idx0 = 0; idx0 < 3; ++idx0)
+    {
+      if(matchV[idx0] == NULL)
+      {
+        matchV[idx0] = WlzGMModelMatchVertexG3D(model, *(pos + idx0));
+      }
+    }
+    eT = nF->loopT->edgeT;
+    v0 = eT->vertexT->diskT->vertex;
+    v1 = eT->next->vertexT->diskT->vertex;
+    if(matchV[0] == v0)
+    {
+      revOrder = matchV[1] != v1;
+    }
+    else if(matchV[1] == v0)
+    {
+      revOrder = matchV[2] != v1;
+    }
+    else
+    {
+      revOrder = matchV[0] != v1;
+    }
+    if(revOrder)
+    {
+      nF->loopT = nF->loopT->opp;
+    }
   }
   return(errNum);
 }
