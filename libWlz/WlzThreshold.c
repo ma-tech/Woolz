@@ -652,8 +652,13 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 	}
 	if(obj1)
 	{
-	  *(ndomains + pnIdx) = WlzAssignDomain(obj1->domain, NULL);
-	  *(nvalues + pnIdx) = WlzAssignValues(obj1->values, NULL);
+	  if( obj1->type == WLZ_2D_DOMAINOBJ ){
+	    *(ndomains + pnIdx) = WlzAssignDomain(obj1->domain, NULL);
+	    *(nvalues + pnIdx) = WlzAssignValues(obj1->values, NULL);
+	  }
+	  else {
+	    (*(ndomains + pnIdx)).core = NULL;
+	    (*(nvalues + pnIdx).core = NULL;
 	  WlzFreeObj(obj1);
 	}
 	#pragma omp critical
@@ -674,12 +679,19 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
     }
     else if( temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
 				NULL, NULL, &errNum) ){
-      
-      if( (temp->domain.i != NULL) && 
-	 (obj1 = WlzThreshold(temp, threshV, highlow, &errNum)) ){
-	*ndomains = WlzAssignDomain(obj1->domain, NULL);
-	*nvalues = WlzAssignValues(obj1->values, NULL);
-	WlzFreeObj(obj1);
+
+      if( temp->domain.i != NULL ){
+	if( obj1 = WlzThreshold(temp, threshV, highlow, &errNum) ){
+	  if( obj1->type == WLZ_2D_DOMAINOBJ ){
+	    *ndomains = WlzAssignDomain(obj1->domain, NULL);
+	    *nvalues = WlzAssignValues(obj1->values, NULL);
+	  }
+	  else {
+	    (*ndomains).core = NULL;
+	    (*nvalues).core = NULL;
+	  }
+	  WlzFreeObj(obj1);
+	}
       } else {
 	(*ndomains).core = NULL;
 	(*nvalues).core = NULL;

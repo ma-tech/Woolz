@@ -498,11 +498,18 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
     }
   }
 
-  pdom->line1 = line1;
-  pdom->lastln = lastln;
-  pdom->kol1 = kol1;
-  pdom->lastkl = lastkl;
-  domains -= nplanes;
+  /* if bounds not found then must be empty - leave alone but return
+     for now without error */
+  if( bndFnd ){
+    pdom->line1 = line1;
+    pdom->lastln = lastln;
+    pdom->kol1 = kol1;
+    pdom->lastkl = lastkl;
+    domains -= nplanes;
+  }
+  else {
+    return WLZ_ERR_NONE;
+  }
 
   /* strip leading and trailing NULL or empty domains */
   tempobj.type = WLZ_2D_DOMAINOBJ;
