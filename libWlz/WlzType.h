@@ -20,6 +20,11 @@
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
+* added by J. Rao 23/10/2001 WlzMeshTransform2D5
+* added by J. Rao 23/10/2001 WlzMeshNode2D5
+* added by J. Rao 10/09/2001 WlzMeshTransform3D
+* added by J. Rao 10/09/2001 WlzMeshElem3D
+* added by J. Rao 10/09/2001 WlzMeshNode3D
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -2580,6 +2585,35 @@ typedef struct  _WlzMeshNode
 } WlzMeshNode;
 
 /*!
+* \struct	_WlzMeshNode3D
+* \ingroup	WlzTransform
+* \brief	Defines a 3D node within a mesh transform.
+*  added by J. Rao 10/09/2001
+*/
+struct  _WlzMeshNode3D
+{
+  unsigned int	flags;			/*!< Mesh node flags */
+  WlzDVertex3	position;		/*!< Node position */
+  WlzDVertex3	displacement;		/*!< Node displacement */
+};
+typedef struct _WlzMeshNode3D WlzMeshNode3D;
+
+
+
+/*!
+* \struct	_WlzMeshNode2D5
+* \ingroup	WlzTransform
+* \brief	Defines a 2D5 node within a mesh transform.
+*  added by J. Rao 23/10/2001
+*/
+typedef struct  _WlzMeshNode2D5
+{
+  unsigned int	flags;			/*!< Mesh node flags */
+  WlzDVertex2	position;		/*!< Node position */
+  WlzDVertex3	displacement;		/*!< Node displacement */
+} WlzMeshNode2D5;
+
+/*!
 * \struct	_WlzMeshElem
 * \ingroup	WlzTransform
 * \brief	Defines an triangular mesh element within a mesh transform.
@@ -2604,6 +2638,31 @@ typedef struct _WlzMeshElem
 } WlzMeshElem;
 
 /*!
+* \struct	_WlzMeshElem3D 
+* \ingroup	WlzTransform
+* \brief	Defines an tetrahedral mesh element within a mesh transform.
+* 		The nodes and neighbours are indexed such that:		
+* 		Neighbour 0 shares surface ( nodes 0, 1 and 2), neighbour 1 
+*               shares surface (nodes 1, 3 and 2), neighbour 2 shares surface
+*               (nodes 2, 3 and 0 ) and  neighbour 3 shares surface (nodes 0, 3 and 1 )
+*		All the nodes stored in the following sequence:
+*               0-1-2 formed a counter clockwise (CCW) order using the dircection of a 
+*               surface outwards from the tetrahedron. 0-2-3 are also stored in  
+*		counter clockwise (CCW) order.				
+*               added by J. Rao     10/09/2001
+*
+*/
+typedef struct _WlzMeshElem3D
+{
+  WlzMeshElemType type;         	/*!< Type of mesh element */
+  int           idx;            	/*!< Index of this element */
+  unsigned int  flags;          	/*!< Mesh element flags */
+  int           nodes[4];       	/*!< Node indicies (CCW order) */
+  int           neighbours[4];          /*!< Indicies of neighbouring
+  					     elements */
+} WlzMeshElem3D;
+
+/*!
 * \struct	_WlzMeshTransform
 * \ingroup	WlzTransform
 * \brief	A mesh transform.
@@ -2622,6 +2681,54 @@ typedef struct _WlzMeshTransform
   WlzMeshElem   *elements;      	/*!< Mesh elements. */
   WlzMeshNode	*nodes;			/*!< Mesh nodes. */
 } WlzMeshTransform;
+
+
+/*!
+* \struct	_WlzMeshTransform3D
+* \ingroup	WlzTransform
+* \brief	Defines a mesh transform.
+*               added by J. Rao 10/09/2001        
+*/
+typedef struct _WlzMeshTransform3D
+{
+  WlzTransformType type;       		/*!< From the core domain. */
+  int           linkcount;      	/*!< From the core domain. */
+  void 		*freeptr;		/*!< From the core domain. */
+  int           nElem;          	/*!< Number of elements */
+  int           nNodes;         	/*!< Number of vertex nodes */
+  int           maxElem;        	/*!< Space allocated for elements */
+  int           maxNodes;       	/*!< Space allocated for vertex 
+  					     nodes */
+  WlzMeshElem3D         *elements;     	/*!< Mesh elements */
+  WlzMeshNode3D 	*nodes;		/*!< Mesh nodes */
+} WlzMeshTransform3D;
+
+/* <<<<<<< WlzType.h */
+/*!
+* \struct	_WlzMeshTransform2D5
+* \ingroup	WlzTransform
+* \brief	Defines a mesh transform.
+*               added by J. Rao 23/10/2001        
+*/
+typedef struct _WlzMeshTransform2D5
+{
+  WlzTransformType type;       		/*!< From the core domain. */
+  int           linkcount;      	/*!< From the core domain. */
+  void 		*freeptr;		/*!< From the core domain. */
+  int           nElem;          	/*!< Number of elements */
+  int           nNodes;         	/*!< Number of vertex nodes */
+  int           maxElem;        	/*!< Space allocated for elements */
+  int           maxNodes;       	/*!< Space allocated for vertex 
+  					     nodes */
+  double        zConst;                 /*!< z plane const */
+  WlzMeshElem           *elements;     	/*!< Mesh elements */
+  WlzMeshNode2D5 	*nodes;		/*!< Mesh nodes */
+} WlzMeshTransform2D5;
+
+
+
+
+
 
 /************************************************************************
 * User weighting function for ICP based registration.
