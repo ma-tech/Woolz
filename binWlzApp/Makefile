@@ -82,8 +82,9 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		=  Reconstruct hguDlpList bibfile WlzExtFF Wlz Alg Alc \
-			  $(EXTRA_LIBS)
+LIBRARIES		=  Reconstruct hguDlpList bibfile \
+			   WlzExtFF Wlz Alg Alc \
+			   $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
 # built in the order in which they are given here (modify as required).
