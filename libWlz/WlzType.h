@@ -463,6 +463,21 @@ typedef enum _WlzMeshError
 } WlzMeshError;
 
 /*!
+* \enum         _WlzCMeshType
+* \ingroup      WlzMesh
+* \brief        Type of graph based mesh model.
+*               Typedef: ::WlzCMeshType.
+*/
+typedef enum _WlzCMeshType
+{
+  WLZ_CMESH_TRI2D,                      /*!< Planar mesh with triangular
+                                             mesh elements. */
+  WLZ_CMESH_TET3D                       /*!< Volumetric mesh with tetrahedral
+                                             mesh elements. */
+
+} WlzCMeshType;
+
+/*!
 * \enum		_WlzConnectType
 * \ingroup	WlzType
 * \brief	Connectivity in a 2D or 3D digital space.
@@ -552,24 +567,31 @@ typedef enum _WlzBinaryOperatorType
 */
 typedef enum _WlzCompThreshType
 {
-  WLZ_COMPTHRESH_FOOT,	/*!< The threshold value is intercept of a line fitted
-			 *  to the upper slope of the histogram main peak with
-			 *  the abscissa.
+  WLZ_COMPTHRESH_FOOT,	/*!< Can not determine threshold type.
+  			 * The threshold value is intercept of a line fitted
+			 * to the upper slope of the histogram main peak with
+			 * the abscissa.
 			 */
-  WLZ_COMPTHRESH_DEPTH, /*!< The threshold value is that point to the right of
-  			 *  the histogram peak that is maximally distant from
-			 *  the chord joining the peak and the histogram right
-			 *  hand end point.
-			 *  The histogram may need to be smoothed for this
-			 *  algorithm to work.
+  WLZ_COMPTHRESH_DEPTH, /*!< Can not determine threshold type.
+  			 * The threshold value is that point to the right of
+  			 * the histogram peak that is maximally distant from
+			 * the chord joining the peak and the histogram right
+			 * hand end point.
+			 * The histogram may need to be smoothed for this
+			 * algorithm to work.
 			 */
-  WLZ_COMPTHRESH_GRADIENT /*!< The threshold value is the first point to the
-			 *  right of the histogram main peak at which the
-			 *  gradient falls to zero (cf finding a minimum).
-			 *  To find the slope of the histogram at some
-			 *  point a straight line is fitted through the
-			 *  point \f$\pm\f$ a fixed number of points to
+  WLZ_COMPTHRESH_GRADIENT, /*!< Can not determine threshold type.
+  			 * The threshold value is the first point to the
+			 * right of the histogram main peak at which the
+			 * gradient falls to zero (cf finding a minimum).
+			 * To find the slope of the histogram at some
+			 * point a straight line is fitted through the
+			 * point \f$\pm\f$ a fixed number of points to
 			 * either side. */
+  WLZ_COMPTHRESH_FRACMIN /*!< The threshold type is determined from the
+  			 * position of the histogram's maximum and the
+			 * threshold value is the minimum following
+                         * the specified fraction of the values.  */
 } WlzCompThreshType;
 
 /*!
@@ -1703,6 +1725,83 @@ typedef struct _WlzGMResIdxTb
 /************************************************************************
 * data structure for linear binary tree domains.
 ************************************************************************/
+
+/*!
+* \enum		_WlzLBTNodeClass2D
+* \ingroup	WlzType
+* \brief	Classification of a 2D LBT node by its connectivity
+*		with it's neighbours.
+*/
+typedef enum _WlzLBTNodeClass2D
+{
+  WLZ_LBT_NODE_CLASS_2D_0, 	/*!< Node has no more than one neighbour on
+                                     any edge.
+\verbatim
++-----+
+|     |
+|     |
+|     |
+|     |
+|     |
++-----+
+\endverbatim */
+  WLZ_LBT_NODE_CLASS_2D_1, 	/*!< Node has no more than one neighbour on all
+  			  	     edges except one.
+\verbatim
++--+--+
+|     |
+|     |
+|     |
+|     |
++-----+
+\endverbatim */
+  WLZ_LBT_NODE_CLASS_2D_2,	/*!< Node only has more than one neighbour on
+  				     adjacent edges.
+\verbatim
++--+--+
+|     |
+|     |
+|     +
+|     |
+|     |
++-----+
+\endverbatim */
+  WLZ_LBT_NODE_CLASS_2D_3,	/*!< Node only has more than one neighbour on
+  				     opposite edges.
+\verbatim
++--+--+
+|     |
+|     |
+|     |
+|     |
+|     |
++--+--+
+\endverbatim */
+
+  WLZ_LBT_NODE_CLASS_2D_4,	/*!< Node has more than one neighbour on all
+  				     edges except one.
+\verbatim
++--+--+
+|     |
+|     |
+|     +
+|     |
+|     |
++--+--+
+\endverbatim */
+  WLZ_LBT_NODE_CLASS_2D_5	/*!< Node has more than one neighbour on all
+  				     edges.
+\verbatim
++--+--+
+|     |
+|     |
++     +
+|     |
+|     |
++--+--+
+\endverbatim */
+} WlzLBTNodeClass2D;
+
 /*!
 * \def          WLZ_LBTDOMAIN_MAXDIGITS
 * \ingroup      WlzType
@@ -1877,6 +1976,8 @@ typedef union _WlzDomain
   struct _WlzMeshTransform   *mt;
   struct _WlzLBTDomain2D     *l2;
   struct _WlzLBTDomain3D     *l3;
+  struct _WlzCMesh2D	     *cm2;
+  struct _WlzCMesh3D	     *cm3;
 } WlzDomain;
 
 /*!
@@ -3020,10 +3121,255 @@ typedef struct _WlzMeshTransform2D5
   WlzMeshNode2D5 	*nodes;		/*!< Mesh nodes */
 } WlzMeshTransform2D5;
 
+/************************************************************************
+* Conforming mesh data structures.
+************************************************************************/
 
+/*!
+* \struct       _WlzCMeshNod2D
+* \ingroup      WlzMesh
+* \brief        A node of a 2D mesh.
+*               Typedef: ::WlzCMeshNod2D.
+*/
+typedef struct _WlzCMeshNod2D
+{
+  int           idx;                    /*!< The node index. */
+  unsigned int  flags;                  /*!< Bitwise description of node. */
+  WlzDVertex2   pos;                    /*!< Node position. */
+  struct _WlzCMeshEdg2D *edg;           /*!< One of many edges which is
+                                             directed from the node. A
+                                             node is shared by many parents. */
+  struct _WlzCMeshNod2D *next;          /*!< Next node in bucket. */
+  void		*prop;      		/*!< Node properties. */
+} WlzCMeshNod2D;
 
+/*!
+* \struct       _WlzCMeshNod3D
+* \ingroup      WlzMesh
+* \brief        A node of a 3D mesh.
+*               Typedef: ::WlzCMeshNod3D.
+*/
+typedef struct _WlzCMeshNod3D
+{
+  int           idx;                    /*!< The node index. */
+  unsigned int  flags;                  /*!< Bitwise description of node. */
+  WlzDVertex3   pos;                    /*!< Node position. */
+  struct _WlzCMeshEdg3D *edg;           /*!< One of many edges which is
+                                             directed from the node. A
+                                             node is shared by many parents. */
+  struct _WlzCMeshNod3D *next;          /*!< Next node in bucket. */
+  void		*prop;      		/*!< Node properties. */
+} WlzCMeshNod3D;
 
+/*!
+* \struct       _WlzCMeshEdg2D
+* \ingroup      WlzMesh
+* \brief        A 2D CCW directed (half) edge within the parent simplex.
+*               Typedef: ::WlzCMeshEdg2D.
+*/
+typedef struct _WlzCMeshEdg2D
+{
+  struct _WlzCMeshNod2D *nod;           /*!< Node form which this edge is
+                                             directed. */
+  struct _WlzCMeshEdg2D *next;          /*!< Next directed edge, previous
+                                             can be found using next->next. */
+  struct _WlzCMeshEdg2D *opp;           /*!< Opposite directed edge. */
+  struct _WlzCMeshEdg2D *nnxt;          /*!< Next edge directed from the
+                                             same node (unordered). */
+  struct _WlzCMeshElm2D *elm;           /*!< Parent element. */
+} WlzCMeshEdg2D;
+/*!
+* \struct       _WlzCMeshEdg3D
+* \ingroup      WlzMesh
+* \brief        A 3D directed (half) edge within the parent face.
+*               Typedef: ::WlzCMeshEdg3D.
+*/
+typedef struct _WlzCMeshEdg3D
+{
+  struct _WlzCMeshNod3D *nod;           /*!< Node form which this edge is
+                                             directed. */
+  struct _WlzCMeshEdg3D *next;          /*!< Next directed edge, previous
+                                             can be found using next->next. */
+  struct _WlzCMeshEdg3D *opp;           /*!< Opposite directed edge on
+                                             neighboring face. */
+  struct _WlzCMeshEdg3D *nnxt;          /*!< Next edge directed from the
+                                             same node (unordered). */
+  struct _WlzCMeshFace *face;           /*!< Parent face. */
+} WlzCMeshEdg3D;
 
+/*!
+* \struct       _WlzCMeshFace
+* \ingroup      WlzMesh
+* \brief        A directed face within the parent simplex.
+*               Typedef: ::WlzCMeshFace.
+*/
+typedef struct _WlzCMeshFace
+{
+  struct _WlzCMeshEdg3D edg[3];         /*!< Directed edges of the face. */
+  struct _WlzCMeshFace *opp;            /*!< Opposite face on neighboring
+                                             mesh element. */
+  struct _WlzCMeshElm3D *elm;           /*!< Parent mesh element. */
+} WlzCMeshFace;
+
+/*!
+* \struct       _WlzCMeshElm2D
+* \ingroup      WlzMesh
+* \brief        A single 2D triangular mesh element.
+*               Typedef: ::WlzCMeshElm2D.
+*/
+typedef struct _WlzCMeshElm2D
+{
+  int           idx;                    /*!< The element index. */
+  unsigned int  flags;                  /*!< Element flags. */
+  struct _WlzCMeshEdg2D edg[3];         /*!< Edges of the mesh element. */
+  void		*prop;      		/*!< Element properties. */
+} WlzCMeshElm2D;
+
+/*!
+* \struct       _WlzCMeshElm3D
+* \ingroup      WlzMesh
+* \brief        A single 3D tetrahedral mesh element.
+*               Typedef: ::WlzCMeshElm3D.
+*/
+typedef struct _WlzCMeshElm3D
+{
+  int           idx;                    /*!< The element index. */
+  unsigned int  flags;                  /*!< Element flags. */
+  struct _WlzCMeshFace face[4];         /*!< Faces of the mesh element. */
+  void		*prop;      		/*!< Element properties. */
+} WlzCMeshElm3D;
+
+/*!
+* \struct       _WlzCMeshBucketGrid2D
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of buckets with each bucket holding
+*               a linked list of the 2D mesh nodes that fall within the
+*               bucket.
+*               Typedef: ::WlzCMeshBucketGrid2D.
+*/
+typedef struct  _WlzCMeshBucketGrid2D
+{
+  WlzIVertex2   nB;                     /*!< Dimensions of the bucket array in
+                                             terms of the number of buckets. */
+  WlzDVertex2   bSz;                    /*!< Size of each bucket. */
+  WlzCMeshNod2D ***buckets;             /*!< The mesh node buckets. */
+} WlzCMeshBucketGrid2D;
+/*!
+* \struct       _WlzCMeshBucketGrid3D
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of buckets with each bucket holding
+*               a linked list of the 3D mesh nodes that fall within the
+*               bucket.
+*               Typedef: ::WlzCMeshBucketGrid3D.
+*/
+typedef struct  _WlzCMeshBucketGrid3D
+{
+  WlzIVertex3   nB;                     /*!< Dimensions of the bucket array in
+                                             terms of the number of buckets. */
+  WlzDVertex3   bSz;                    /*!< Size of each bucket. */
+  WlzCMeshNod3D ****buckets;            /*!< The mesh node buckets. */
+} WlzCMeshBucketGrid3D;
+
+/*!
+* \typedef	WlzCMeshCbFn
+* \ingroup	WlzMesh
+* \brief	A pointer to a function called to make mesh entity
+*               properties.
+*		Parameters passed are: mesh, entity, data.
+*/
+#ifndef WLZ_EXT_BIND
+typedef WlzErrorNum (*WlzCMeshCbFn)(void *, void *, void *);
+#else
+typedef void * WlzCMeshCbFn;
+#endif
+
+/*!
+* \struct	_WlzCMeshCbEntry
+* \ingroup	WlzMesh
+* \brief	Callback entry for list of callbacks.
+*		Typedef: ::WlzCMeshCbEntry.
+*/
+typedef struct _WlzCMeshCbEntry
+{
+  WlzCMeshCbFn	fn;
+  void		*data;
+  struct _WlzCMeshCbEntry *next;
+} WlzCMeshCbEntry;
+
+/*!
+* \struct       _WlzCMeshEntRes
+* \ingroup      WlzMesh
+* \brief        Resources used for efficient allocation and recycling of
+*               mesh entities.
+*               Typedef: ::WlzCMeshEntRes.
+*/
+typedef struct _WlzCMeshEntRes
+{
+  unsigned int  numEnt;                 /*!< Number of valid entities in
+                                             vector. */
+  unsigned int  maxEnt;                 /*!< Space allocated in vector. */
+  unsigned int  nextIdx;                /*!< Index of next free mesh entity
+                                             in vector. */
+  AlcVector     *vec;                   /*!< Vector (extensible array) of
+                                             mesh entities. */
+  WlzCMeshCbEntry *newEntCb;		/*!< Callbacks for new entities. */
+  WlzCMeshCbEntry *delEntCb;		/*!< Callbacks for deleted entities. */
+} WlzCMeshEntRes;
+
+/*!
+* \struct       _WlzCMeshRes
+* \ingroup      WlzMesh
+* \brief        Resources used for efficient allocation, recycling and
+*               location of mesh elements and nodes.
+*               Typedef: ::WlzCMeshRes.
+*/
+typedef struct _WlzCMeshRes
+{
+  struct _WlzCMeshEntRes        nod;            /*!< Node resources. */
+  struct _WlzCMeshEntRes        elm;            /*!< Element resources. */
+} WlzCMeshRes;
+
+/*!
+* \struct       _WlzCMesh2D
+* \ingroup      WlzMesh
+* \brief        A graph based mesh model for 2D boundary conforming
+*               simplical meshes.
+*               The mesh inherits it's core fields from the Woolz core
+*               domain.
+*               Typedef: ::WlzCMesh2D.
+*/
+typedef struct _WlzCMesh2D
+{
+  int           type;                   /*!< Type of mesh. */
+  int           linkcount;              /*!< Core. */
+  void          *freeptr;               /*!< Core. */
+  WlzDBox2      bBox;                   /*!< Axis aligned bounding box of
+                                             the mesh. */
+  WlzCMeshBucketGrid2D bGrid;           /*!< Mesh grid of buckets. */
+  struct _WlzCMeshRes res;              /*!< Mesh resources. */
+
+} WlzCMesh2D;
+
+/*!
+* \struct       _WlzCMesh3D
+* \ingroup      WlzMesh
+* \brief        A graph based mesh model for 3D boundary conforming
+*               simplical meshes.
+*               The mesh inherits it's core fields from the Woolz core
+*               domain.
+*               Typedef: ::WlzCMesh3D.
+*/
+typedef struct _WlzCMesh3D
+{
+  int           type;                   /*!< Type of mesh. */
+  int           linkcount;              /*!< Core. */
+  void          *freeptr;               /*!< Core. */
+  WlzDBox3      bBox;                   /*!< Axis aligned bounding box of
+                                             the mesh. */
+  WlzCMeshBucketGrid3D bGrid;           /*!< Mesh grid of buckets. */
+  struct _WlzCMeshRes res;              /*!< Mesh resources. */
+
+} WlzCMesh3D;
 
 /************************************************************************
 * User weighting functions and callback data structures for ICP based
