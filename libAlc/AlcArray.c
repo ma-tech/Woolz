@@ -1049,6 +1049,57 @@ AlcErrno	AlcDouble3Free(double ***dest)
 /*!
 * \return	Error code.
 * \ingroup	AlcArray
+* \brief	Reads a 1D double array from the given numeric ASCI file.
+*		Each value should be on a seperate line.
+* \param	fP:			File pointer.
+* \param	dstA 			Destination pointer for the new
+*					array.
+* \param	nElem			Destination pointer for the number
+*					of elements in the 1D array.
+*/
+AlcErrno	AlcDouble1ReadAsci(FILE *fP, double **dstA,
+				   int *dstNElem)
+{
+  int		nR = 0;
+  double	*dP0,
+  		*aM = NULL;
+  AlcVector	*vec = NULL;
+  const int	vecCnt = 1024;		/* Initial number of elements in
+  					 * the vector */
+  const int	maxRecLen = 8192;	/* Maximum number of chars in an
+  					 * input record */
+  char		recS[8192 /* = maxRecLen */];
+  AlcErrno	errNum = ALC_ER_NONE;
+
+  vec = AlcVectorNew(vecCnt, sizeof(double), vecCnt, &errNum);
+  while((errNum == ALC_ER_NONE) && (fgets(recS, maxRecLen, fP) != NULL))
+  {
+    if((dP0 = (double *)AlcVectorExtendAndGet(vec, nR)) == NULL)
+    {
+      errNum = ALC_ER_ALLOC;
+    }
+    else if(sscanf(recS, "%lg", dP0) != 1)
+    {
+      errNum = ALC_ER_READ;
+    }
+    ++nR;
+  }
+  if(errNum == ALC_ER_NONE)
+  {
+    aM = (double *)AlcVectorToArray1D(vec, 0, nR - 1, &errNum);
+  }
+  if(errNum == ALC_ER_NONE)
+  {
+    *dstA = aM;
+    *dstNElem = nR;
+  }
+  (void )AlcVectorFree(vec);
+  return(errNum);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
 * \brief	Reads a 2D double array from the given numeric ASCI file.
 *		Fields in the file must be white space saperated and
 *		records must be on separate lines. The number of fields

@@ -281,6 +281,10 @@ extern AlcErrno			AlcFloat3Free(
 				  float ***dat);
 extern AlcErrno			AlcDouble3Free(
 				  double ***);
+extern AlcErrno			AlcDouble1ReadAsci(
+				  FILE *fP,
+				  double **dstA,
+				  int *dstNElem);
 extern AlcErrno			AlcDouble2ReadAsci(
 				  FILE *fP,
 				  double ***dstA,
