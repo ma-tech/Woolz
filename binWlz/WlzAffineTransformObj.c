@@ -528,7 +528,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%sExample: %s%sExample: %s%s",
     *argv,
     " [-o<output object>] [-L] [-M] [-N] [-P] [-R]\n"
     "        [-h] [-i] [-3] [-x#] [-y#] [-z#] [-s#]"
@@ -571,7 +571,12 @@ int             main(int argc, char **argv)
     *argv,
     " -x100 -y200 -o shifted.wlz myobj.wlz\n"
     "The input Woolz object is read from myobj.wlz, shifted 100 columns\n"
-    "and 200 lines and then written to shifted.wlz\n");
+    "and 200 lines and then written to shifted.wlz\n",
+    *argv,
+    " -2 -x10 -y20 -N -T t.wlz\n"
+    "Creates a 2D affine transform with x and y translations of 10 and 20\n"
+    "pixels respectively then writes it to the file t.wlz. Nothing is\n"
+    "transformed.\n");
   }
   return(!ok);
 }
