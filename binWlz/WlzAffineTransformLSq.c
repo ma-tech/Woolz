@@ -17,8 +17,9 @@
 *		Comment lines start with a '#' character.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
 * 30-11-00 bill Make changes for 3D least squares affine transforms
-		and add test code.
+*		and add test code.
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -218,9 +219,9 @@ int             main(int argc, char **argv)
 	  vtxCount = 0;
 	  while((errNum == WLZ_ERR_NONE) && (vtxCount < vtxLimit))
 	  {
-	    *(vtxVec1.vD2 + vtxCount) = WlzAffineTransformVertexD2(
+	    *(vtxVec1.d2 + vtxCount) = WlzAffineTransformVertexD2(
 	    					trObj->domain.t,
-						*(vtxVec0.vD2 + vtxCount),
+						*(vtxVec0.d2 + vtxCount),
 						&errNum);
 	    ++vtxCount;
 	  }
@@ -231,9 +232,9 @@ int             main(int argc, char **argv)
 	  vtxCount = 0;
 	  while((errNum == WLZ_ERR_NONE) && (vtxCount < vtxLimit))
 	  {
-	    *(vtxVec1.vD3 + vtxCount) = WlzAffineTransformVertexD3(
+	    *(vtxVec1.d3 + vtxCount) = WlzAffineTransformVertexD3(
 	    					trObj->domain.t,
-						*(vtxVec0.vD3 + vtxCount),
+						*(vtxVec0.d3 + vtxCount),
 						&errNum);
 	    ++vtxCount;
 	  }
@@ -280,13 +281,13 @@ int             main(int argc, char **argv)
 	    {
 	      if(vtxType == WLZ_VERTEX_D2)
 	      {
-		vtx0.vD2 = vtxVec0.vD2 + vtxCount;
-		vtx1.vD2 = vtxVec1.vD2 + vtxCount;
+		vtx0.d2 = vtxVec0.d2 + vtxCount;
+		vtx1.d2 = vtxVec1.d2 + vtxCount;
 	      }
 	      else /* vtxType == WLZ_VERTEX_D3 */
 	      {
-		vtx0.vD3 = vtxVec0.vD3 + vtxCount;
-		vtx1.vD3 = vtxVec1.vD3 + vtxCount;
+		vtx0.d3 = vtxVec0.d3 + vtxCount;
+		vtx1.d3 = vtxVec1.d3 + vtxCount;
 	      }
 	    }
 	  }
@@ -295,31 +296,31 @@ int             main(int argc, char **argv)
 	    if(vtxType == WLZ_VERTEX_D2)
 	    {
 	      if(sscanf(rec, "%lg %lg %lg %lg",
-			&(vtx0.vD2->vtX), &(vtx0.vD2->vtY),
-			&(vtx1.vD2->vtX), &(vtx1.vD2->vtY)) != 4)
+			&(vtx0.d2->vtX), &(vtx0.d2->vtY),
+			&(vtx1.d2->vtX), &(vtx1.d2->vtY)) != 4)
 	      {
 		errNum = WLZ_ERR_READ_INCOMPLETE;
 	      }
 	      else
 	      {
-		++(vtx0.vD2);
-		++(vtx1.vD2);
+		++(vtx0.d2);
+		++(vtx1.d2);
 		++vtxCount;
 	      }
 	    }
 	    else /* vtxType == WLZ_VERTEX_D3 */
 	    {
 	      if(sscanf(rec, "%lg %lg %lg %lg %lg %lg ",
-			&(vtx0.vD3->vtX), &(vtx0.vD3->vtY),
-			&(vtx0.vD3->vtZ), &(vtx1.vD3->vtX),
-			&(vtx1.vD3->vtY), &(vtx1.vD3->vtZ)) != 6)
+			&(vtx0.d3->vtX), &(vtx0.d3->vtY),
+			&(vtx0.d3->vtZ), &(vtx1.d3->vtX),
+			&(vtx1.d3->vtY), &(vtx1.d3->vtZ)) != 6)
 	      {
 		errNum = WLZ_ERR_READ_INCOMPLETE;
 	      }
 	      else
 	      {
-		++(vtx0.vD3);
-		++(vtx1.vD3);
+		++(vtx0.d3);
+		++(vtx1.d3);
 		++vtxCount;
 	      }
 	    }
@@ -330,27 +331,27 @@ int             main(int argc, char **argv)
 	  vtxLimit = vtxCount;
 	  if(vtxType == WLZ_VERTEX_D2)
 	  {
-	    vtx0.vD2 = vtxVec0.vD2;
-	    vtx1.vD2 = vtxVec1.vD2;
+	    vtx0.d2 = vtxVec0.d2;
+	    vtx1.d2 = vtxVec1.d2;
 	    while(vtxCount-- > 0)
 	    {
-	      vtx1.vD2->vtX += vtx0.vD2->vtX;
-	      vtx1.vD2->vtY += vtx0.vD2->vtY;
-	      ++(vtx0.vD2);
-	      ++(vtx1.vD2);
+	      vtx1.d2->vtX += vtx0.d2->vtX;
+	      vtx1.d2->vtY += vtx0.d2->vtY;
+	      ++(vtx0.d2);
+	      ++(vtx1.d2);
 	    }
 	  }
 	  else /* vtxType == WLZ_VERTEX_D3 */
 	  {
-	    vtx0.vD3 = vtxVec0.vD3;
-	    vtx1.vD3 = vtxVec1.vD3;
+	    vtx0.d3 = vtxVec0.d3;
+	    vtx1.d3 = vtxVec1.d3;
 	    while(vtxCount-- > 0)
 	    {
-	      vtx1.vD3->vtX += vtx0.vD3->vtX;
-	      vtx1.vD3->vtY += vtx0.vD3->vtY;
-	      vtx1.vD3->vtZ += vtx0.vD3->vtZ;
-	      ++(vtx0.vD3);
-	      ++(vtx1.vD3);
+	      vtx1.d3->vtX += vtx0.d3->vtX;
+	      vtx1.d3->vtY += vtx0.d3->vtY;
+	      vtx1.d3->vtZ += vtx0.d3->vtZ;
+	      ++(vtx0.d3);
+	      ++(vtx1.d3);
 	    }
 	  }
 	}
