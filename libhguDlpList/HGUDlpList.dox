@@ -1,0 +1,36 @@
+#pragma ident "MRC HGU $Id$"
+
+/*!
+* \defgroup	hguDlpList   libhguDlpList
+* \brief .Convenience procedures for creating, managing and querying
+ linked lists.
+* \ref libdlplistpage "libhguDlpList" for more detail. 
+*/
+
+/*!
+* \file         HGUDlpList.dox
+* \author       Richard Baldock
+* \date         September 2003
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \page libdlplistpage Woolz Linked List API
+* \section intro Introduction
+Linked lists are endemic in many applications and procedures. This library
+provides a standard and generalized linked list API.
+\section structure List Structures
+\section usage Example Usage
+\section standards Coding Conventions
+*/
