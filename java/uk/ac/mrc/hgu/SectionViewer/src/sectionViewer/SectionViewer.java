@@ -1016,7 +1016,7 @@ public class SectionViewer
         return;
 
      _VSModel.getDist(dist);
-     /* 
+     /*
       * assumes that fixed line will be set in the same plane
       * as the fixed point
       */
@@ -1935,7 +1935,7 @@ public class SectionViewer
      double arg = 0.0;
      double angle = 0.0;
 
-     double x = 0.0; 
+     double x = 0.0;
      double y = 0.0;
      double z = 0.0;
      double s = 0.0;
@@ -1987,9 +1987,9 @@ public class SectionViewer
 
      trans = _VSModel.getInverseTransform();
 
-     transMatrix = _VSModel.getTransMatrix(trans); 
+     transMatrix = _VSModel.getTransMatrix(trans);
      /*
-     if(transMatrix[0] != null){ 
+     if(transMatrix[0] != null){
         System.out.println(" got transform matrix");
 	//printMatrix(transMatrix[0]);
      } else {
@@ -2729,21 +2729,24 @@ public class SectionViewer
     }
 
     public void actionPerformed(ActionEvent e) {
-       // reverses the grey-level image
-       if(!_inverted) {
-          invertButton.setBackground(Color.black);
-          invertButton.setForeground(Color.white);
-          _imgV.setInverted(true);
-       } else {
-          invertButton.setBackground(Color.white);
-          invertButton.setForeground(Color.black);
-          _imgV.setInverted(false);
-       }
-       _inverted = !_inverted;
-       _bigPanel.revalidate();
-       _bigPanel.repaint();
-
+      invertSection();
     }
+  }
+
+  protected void invertSection(){
+    // reverses the grey-level image
+      if(!_inverted) {
+         invertButton.setBackground(Color.black);
+         invertButton.setForeground(Color.white);
+         _imgV.setInverted(true);
+      } else {
+         invertButton.setBackground(Color.white);
+         invertButton.setForeground(Color.black);
+         _imgV.setInverted(false);
+      }
+      _inverted = !_inverted;
+      _bigPanel.revalidate();
+      _bigPanel.repaint();
   }
 
 //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
