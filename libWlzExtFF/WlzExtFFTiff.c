@@ -51,7 +51,7 @@ WlzObject	*WlzEffReadObjTiff(
   short		bitspersample;
   short		samplesperpixel;
   short		photometric;
-  short     	*Map=NULL;
+  unsigned short *Map=NULL;
   unsigned short *redcolormap, *bluecolormap, *greencolormap;
   unsigned char red[256], green[256], blue[256];
   int		width, height, depth, numcolors;
@@ -140,13 +140,13 @@ WlzObject	*WlzEffReadObjTiff(
     if( numcolors > 2 ){
       switch (photometric) {
       case PHOTOMETRIC_MINISBLACK:
-	Map = (short *) AlcMalloc(numcolors * sizeof(short));
+	Map = (unsigned short *) AlcMalloc(numcolors * sizeof(unsigned short));
 	for (i = 0; i < numcolors; i++)
 	  Map[i] = ((numcolors-1) * i) / numcolors;
 	break;
 
       case PHOTOMETRIC_MINISWHITE:
-	Map = (short *) AlcMalloc(numcolors * sizeof(short));
+	Map = (unsigned short *) AlcMalloc(numcolors * sizeof(unsigned short));
 	for (i = 0; i < numcolors; i++)
 	  Map[i] = (numcolors-1) - (((numcolors-1) * i) / numcolors);
 	break;
