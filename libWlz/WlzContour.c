@@ -13,8 +13,6 @@
 *		Edinburgh, EH4 2XU, UK.
 * \brief	Functions for extracting contours from Woolz objects.
 * \ingroup	WlzContour
-* \todo		Parameter grdHi is unused in WlzContourGrdObj2D() and
-*		WlzContourGrdObj3D().
 * \bug		None known.
 */
 #include <stdio.h>
@@ -338,7 +336,7 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourIsoObj2D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj2D(srcObj, (ctrVal + 1.0) / 3.0, ctrVal,
+	    ctr = WlzContourGrdObj2D(srcObj, (ctrVal + 9.0) / 10.0, ctrVal,
 	    			     ctrWth, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_BND:
@@ -1249,7 +1247,10 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
     if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
 				     ftrPrm, &errNum)) != NULL)
     {
-      ftr->c *= 4;
+      /* Rescaling to reduce gradient quantization effects. */
+      grdHi *= 64.0;
+      grdLo *= 64.0;
+      ftr->c *= 256.0;
       gXObj = WlzRsvFilterObj(srcObj, ftr, WLZ_RSVFILTER_ACTION_X, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
@@ -1352,7 +1353,8 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
       itvP[3] = *(grdIBuf + 3); /* Used to store mask for all recent lines. */
       for(idX = 0; idX < iBufSz; ++idX)
       {
-	doLn |= *(itvP[3])++ = *(itvP[0])++ & *(itvP[1])++ & *(itvP[2])++;
+	*(itvP[3]) = *(itvP[0])++ & *(itvP[1])++ & *(itvP[2])++;
+	doLn |= *(itvP[3])++ != 0;
       }
       if(doLn)
       {
@@ -1513,14 +1515,8 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   {
     Alc2Free((void **)grdYBuf);
   }
-  if(gXObj)
-  {
-    (void )WlzFreeObj(gXObj);
-  }
-  if(gYObj)
-  {
-    (void )WlzFreeObj(gYObj);
-  }
+  (void )WlzFreeObj(gXObj);
+  (void )WlzFreeObj(gYObj);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1630,7 +1626,10 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
     if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
 				     ftrPrm, &errNum)) != NULL)
     {
-      ftr->c *= 4.0;
+      /* Rescaling to reduce gradient quantization effects. */
+      grdHi *= 64.0;
+      grdLo *= 64.0;
+      ftr->c *= 256.0;
       zObj = WlzAssignObject(
              WlzRsvFilterObj(srcObj, ftr, WLZ_RSVFILTER_ACTION_Z,
 	     		     &errNum), NULL);
