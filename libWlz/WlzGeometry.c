@@ -12,6 +12,7 @@
 * Purpose:      Provides geometry utility functions.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 30-01-01 bill Fix crazy octant calculation in WlzGeomCmpAngle().
 * 26-01-01 bill Fix bug in WlzGeomVtxSortRadial() and change it's
 *		parameters. Also change WlzGeomVtxSortRadialFn().
 * 08-01-01 bill	Add WlzGeomTriangleNormal().
@@ -292,7 +293,9 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
 ************************************************************************/
 int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
 {
-  int		q0,
+  int		i0,
+  		i1,
+		q0,
   		q1,
 		o0,
 		o1,
@@ -301,7 +304,7 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
   WlzDVertex2	s0,
   		s1;
   const int	quadTbl[4] = {2, 3, 1, 0},
-  		octTbl[8] = {4, 0, 1, 5, 6, 2, 3, 7};
+  		octTbl[8] = {5, 6, 2, 1, 4, 7, 3, 0};
 
   /* Compute relative endpoints. */
   /* Find quadrants:
@@ -313,8 +316,10 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
    *   q=2  | q=3
    *        |
    */
-  q0 = quadTbl[((p0.vtY > 0.0) << 1) | (p0.vtX > 0.0)]; 
-  q1 = quadTbl[((p1.vtY > 0.0) << 1) | (p1.vtX > 0.0)]; 
+  i0 = ((p0.vtY > 0.0) << 1) | (p0.vtX > 0.0);
+  i1 = ((p1.vtY > 0.0) << 1) | (p1.vtX > 0.0);
+  q0 = quadTbl[i0]; 
+  q1 = quadTbl[i1]; 
   /* Compare quadrants. */
   if((cmp = q0 - q1) == 0)
   {
@@ -332,8 +337,10 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
      */
     s0.vtX = p0.vtX * p0.vtX; s0.vtY = p0.vtY * p0.vtY;
     s1.vtX = p1.vtX * p1.vtX; s1.vtY = p1.vtY * p1.vtY;
-    o0 = octTbl[((s0.vtX > s0.vtY) << 2) | q0];
-    o1 = octTbl[((s1.vtX > s1.vtY) << 2) | q1];
+    i0 |= ((s0.vtX > s0.vtY) << 2);
+    i1 |= ((s1.vtX > s1.vtY) << 2);
+    o0 = octTbl[i0];
+    o1 = octTbl[i1];
     /* Compare octants. */
     if((cmp = o0 - o1) == 0)
     {
