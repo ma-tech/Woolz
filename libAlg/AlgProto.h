@@ -80,6 +80,18 @@ extern void	*algDbgData;
 extern AlgDbgFn	algDbgOutFn;
 extern AlgError	AlgDbgWrite(char *, ...);
 
+/* from AlgComplexUtils.c */
+extern double	AlgCMod(ComplexD z);
+extern double	AlgCArg(ComplexD z);
+extern double	AlgCRe(ComplexD z);
+extern double	AlgCIm(ComplexD z);
+extern ComplexD	AlgCConj(ComplexD z);
+extern ComplexD AlgCAdd(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCSub(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCMult(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCDiv(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCPow(ComplexD z, double pow);
+
 #ifdef  __cplusplus
 }
 #endif

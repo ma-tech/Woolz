@@ -26,7 +26,9 @@ SOARCHIVE		= $(ARCHIVE:%.a=%.so)
 EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
-CSOURCES		= AlgDebug.c \
+CSOURCES		= \
+			  AlgComplexUtils.c \
+			  AlgDebug.c \
 			  AlgFourier.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLU.c \
@@ -177,6 +179,10 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
 
+# making the tag file
+tags:
+	$(ETAGS) -f $(ETAGSFILE) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
@@ -190,6 +196,7 @@ $(SOARCHIVE):		$(OBJECTS)
 			$(CC) -G $(OBJECTS) -lC -o $(SOARCHIVE)
 
 # Targets to create executables, just a dependencies (modify as required).
+$(OBJECTS):		%.o: %.c $(INCLUDES_ALL) 
 
 # Target for Purified executables (modify as required).
 purify:

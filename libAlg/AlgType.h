@@ -43,6 +43,13 @@ extern "C" {
 #define ALG_M_SQRT2	(1.4142135623730950488016887242096980785696)
 #define	ALG_M_SQRT1_2	(0.70710678118654752440)
 
+/* complex number data type */
+typedef struct {
+  double	re;
+  double	im;
+} ComplexD;
+
+
 /* Error codes */
 typedef enum
 {
