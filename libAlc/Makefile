@@ -219,6 +219,8 @@ $(DLLARCHIVE):		$(OBJECTS)
 			-Wl,--whole-archive $(OBJECTS) $(DLLLIBDIRS) $(DLLLIBDEPS) \
 			-Wl,--no-whole-archive $(DLLLIBSEXT)
 
+AlcArray.o:		AlcArray.c AlcTemplates.h
+
 
 # Targets to create executables, just a dependencies (modify as required).
 
