@@ -13,6 +13,7 @@
 *		and arrays.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 31-08-99 bill	Modified array size parameters for JavaWoolz.
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
@@ -62,127 +63,140 @@ static WlzObject *WlzFromArrayGrey3D(void ***arrayP,
 * Purpose:	Extracts a bit, int, short, UBYTE, float or double Alc
 *		array from any Woolz 2D domain object.		
 * Global refs:	-						
-* Parameters:	WlzIVertex2 *dstSizeArrayDat: Source and destination
-*					pointer for array size.	
+* Parameters:	WlzIVertex2 *dstSizeArrayDat: Destination pointer for
+*					array size, may be NULL.	
 *		<TYPE> ***dstArrayDat:	Destination pointer for array
 *					of type: int, short, UBYTE,
 *					float or long.		
 *		WlzObject *srcObj:	Given Woolz object.	
 *		WlzIVertex2 origin:	Array origin wrt given object.
+*		WlzIVertex2 size:	Required region size.
 *		int noiseFlag:		Fill background with random 
 *					noise with the same mean and
 *					std. dev. as the given object
 *					if non-zero.		
 ************************************************************************/
 WlzErrorNum WlzToBArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex2 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
+    dstSizeArrayDat->vtX = (size.vtX + 7) / 8;
+    dstSizeArrayDat->vtY = size.vtY;
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
-    			  *dstSizeArrayDat, origin,
-			  noiseFlag, WLZ_GREY_BIT);
+    			  size, origin, noiseFlag, WLZ_GREY_BIT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToIArray2D(WlzIVertex2 *dstSizeArrayDat, int ***dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex2 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
+    *dstSizeArrayDat = size;
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
-    			  *dstSizeArrayDat, origin,
+    			  size, origin,
 			  noiseFlag, WLZ_GREY_INT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToSArray2D(WlzIVertex2 *dstSizeArrayDat, short ***dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex2 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
+    *dstSizeArrayDat = size;
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
-    			  *dstSizeArrayDat, origin,
+    			  size, origin,
     			  noiseFlag, WLZ_GREY_SHORT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToUArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex2 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
+    *dstSizeArrayDat = size;
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
-    			  *dstSizeArrayDat, origin,
+    			  size, origin,
     			  noiseFlag, WLZ_GREY_UBYTE);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToFArray2D(WlzIVertex2 *dstSizeArrayDat, float ***dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex2 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
+    *dstSizeArrayDat = size;
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
-    			  *dstSizeArrayDat, origin,
+    			  size, origin,
     			  noiseFlag, WLZ_GREY_FLOAT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToDArray2D(WlzIVertex2 *dstSizeArrayDat, double ***dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex2 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
+    *dstSizeArrayDat = size;
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
-    			  *dstSizeArrayDat, origin,
+    			  size, origin,
     			  noiseFlag, WLZ_GREY_DOUBLE);
   }
   return(errNum);
@@ -497,121 +511,136 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 * Purpose:	Extracts a bit, int, short, UBYTE, float or double Alc
 *		array from any Woolz 3D domain object.		
 * Global refs:	-						
-* Parameters:	WlzIVertex3 *dstSizeArrayDat: Source and destination
-*					pointer for array size.	
+* Parameters:	WlzIVertex3 *dstSizeArrayDat: Destination pointer for
+*					array size, may be NULL.	
 *		<TYPE> ****dstArrayDat:	Destination pointer for array
 *					of type: int, short, UBYTE,
 *					float or long.		
 *		WlzObject *srcObj:	Given Woolz object.	
 *		WlzIVertex3 origin:	Array origin wrt given object.
+*		WlzIVertex3 size:	Required region size.
 *		int noiseFlag:		Fill background with random 
 *					noise with the same mean and
 *					std. dev. as the given object
 *					if non-zero.		
 ************************************************************************/
 WlzErrorNum WlzToBArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex3 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    dstSizeArrayDat->vtX = (size.vtX + 7) / 8;
+    dstSizeArrayDat->vtY = size.vtY;
+    dstSizeArrayDat->vtZ = size.vtZ;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
     			  origin, noiseFlag, WLZ_GREY_BIT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToIArray3D(WlzIVertex3 *dstSizeArrayDat, int ****dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex3 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
     			  origin, noiseFlag, WLZ_GREY_INT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToSArray3D(WlzIVertex3 *dstSizeArrayDat, short ****dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex3 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
     			  origin, noiseFlag, WLZ_GREY_SHORT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToUArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex3 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
     			  origin, noiseFlag, WLZ_GREY_UBYTE);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToFArray3D(WlzIVertex3 *dstSizeArrayDat, float ****dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex3 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
     			  origin, noiseFlag, WLZ_GREY_FLOAT);
   }
   return(errNum);
 }
 
 WlzErrorNum WlzToDArray3D(WlzIVertex3 *dstSizeArrayDat, double ****dstArrayDat,
-			  WlzObject *srcObj, WlzIVertex3 origin,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
     			  origin, noiseFlag, WLZ_GREY_DOUBLE);
   }
   return(errNum);
@@ -760,7 +789,7 @@ static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
     origin2D.vtX = origin.vtX;
     origin2D.vtY = origin.vtY;
     plnIdx =  0;
-    plnSz = (size.vtY * size.vtX + 7) / 8;
+    plnSz = size.vtY * ((size.vtX + 7) / 8);
     plnCnt = srcDom.p->lastpl - srcDom.p->plane1 + 1;
     while((errNum == WLZ_ERR_NONE) && (plnCnt-- > 0))
     {

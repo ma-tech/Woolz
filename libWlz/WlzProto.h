@@ -36,17 +36,19 @@
 *		* All function return types or parameters of type
 *		  'char *' are assumed to be strings unless the
 *		  parameter identifier starts with 'dst'.
-*		* Arrays: All arrays must either start with 'array' or
+*		* All arrays must either start with 'array' or
 *		  'dstArray', with 'dstArray' being used to identify
 *		  arrays which are allocated within the	function being
 *		  called. An array pointer must be followed by it's
 *		  size, the type should be int, WlzIVertex2, ... and
 *		  the identifier should be the same as array's but with
 *		  'size' prepended as is the example 'sizeArrayName'.
-*		  Array can not be pointers to void and wrappers may
+*		  Arrays can not be pointers to void and wrappers may
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 31-08-99 bill	Modified array size parameters for JavaWoolz.
+		Allowed more functions to be bound using JavaWoolz.
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -227,65 +229,89 @@ extern int 			WlzArea(
 /************************************************************************
 * WlzArray.c								*
 ************************************************************************/
-extern WlzErrorNum		 WlzToIArray2D(
-				  WlzIVertex2 *dstSizeArrayDat,
-				  int ***dstArrayDat,
-				  WlzObject *srcObj,
-				  WlzIVertex2 origin,
-				  int noiseFlag);
-extern WlzErrorNum		 WlzToSArray2D(
-				  WlzIVertex2 *dstSizeArrayDat,
-				  short ***dstArrayDat,
-				  WlzObject *srcObj,
-				  WlzIVertex2 origin,
-				  int noiseFlag);
-extern WlzErrorNum		 WlzToUArray2D(
+extern WlzErrorNum		WlzToBArray2D(
 				  WlzIVertex2 *dstSizeArrayDat,
 				  unsigned char ***dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
 				  int noiseFlag);
-extern WlzErrorNum		 WlzToFArray2D(
+extern WlzErrorNum		WlzToIArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  int ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToSArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  short ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToUArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  unsigned char ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToFArray2D(
 				  WlzIVertex2 *dstSizeArrayDat,
 				  float ***dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
 				  int noiseFlag);
-extern WlzErrorNum		 WlzToDArray2D(
+extern WlzErrorNum		WlzToDArray2D(
 				  WlzIVertex2 *dstSizeArrayDat,
 				  double ***dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
 				  int noiseFlag);
-extern WlzErrorNum		 WlzToIArray3D(
-				  WlzIVertex3 *dstSizeArrayDat,
-				  int ****dstArrayDat,
-				  WlzObject *srcObj,
-				  WlzIVertex3 origin,
-				  int noiseFlag);
-extern WlzErrorNum		 WlzToSArray3D(
-				  WlzIVertex3 *dstSizeArrayDat,
-				  short ****dstArrayDat,
-				  WlzObject *srcObj,
-				  WlzIVertex3 origin,
-				  int noiseFlag);
-extern WlzErrorNum		 WlzToUArray3D(
+extern WlzErrorNum		WlzToBArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  unsigned char ****dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
 				  int noiseFlag);
-extern WlzErrorNum		 WlzToFArray3D(
+extern WlzErrorNum		WlzToIArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  int ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToSArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  short ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToUArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  unsigned char ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToFArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  float ****dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
 				  int noiseFlag);
-extern WlzErrorNum		 WlzToDArray3D(
+extern WlzErrorNum		WlzToDArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  double ****dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
 				  int noiseFlag);
 extern WlzObject		*WlzFromIArray2D(
 				  WlzIVertex2 arraySizeDat,
@@ -406,13 +432,13 @@ extern int			WlzArrayStats1D(
 				  double *dstStdDev);
 #endif /* WLZ_EXT_BIND */
 
-#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzAssign.c								*
 ************************************************************************/
 extern WlzObject		*WlzAssignObject(
 				  WlzObject *object,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzDomain		WlzAssignDomain(
 				  WlzDomain domain,
 				  WlzErrorNum *dstErr);
@@ -432,7 +458,7 @@ extern WlzPolygonDomain 	*WlzAssignPolygonDomain(
 				  WlzPolygonDomain *poly,
 				  WlzErrorNum *dstErr);
 extern int 			WlzUnlink(
-				  int *,
+				  int *linkcount,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -736,10 +762,10 @@ extern WlzErrorNum		WlzFillBlankPlanes(
 				  WlzObject *obj,
 				  int min_domain);
 
-#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzFreeSpace.c							*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern void			*WlzPushFreePtr(
 				  void *stack,
 				  void *data,
@@ -750,8 +776,10 @@ extern void			*WlzPopFreePtr(
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeFreePtr(
 				  void *stack);
+#endif /* !WLZ_EXT_BIND */
 extern WlzErrorNum		WlzFreeObj(
 				  WlzObject *obj);
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzFreeDomain(
 				  WlzDomain domain);
 extern WlzErrorNum		WlzFreeIntervalDomain(
