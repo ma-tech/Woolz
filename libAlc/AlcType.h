@@ -187,7 +187,7 @@ typedef struct _AlcHashItem
   struct _AlcHashItem *next;	/*!< Next item in the hash tables linked list,
   				     NULL if this is the last item */
   struct _AlcHashItem *prev; 	/*!< Previous item in the hash tables linked
-  				     list, NULL if this is thefirst item */
+  				     list, NULL if this is the first item */
 } AlcHashItem;
 
 /*!

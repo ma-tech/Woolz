@@ -40,6 +40,7 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   short		bitspersample;
   short		samplesperpixel;
+  short		sampleformat;
   short		photometric;
   unsigned short *Map=NULL;
   unsigned short *redcolormap, *bluecolormap, *greencolormap;
@@ -64,6 +65,9 @@ static WlzObject *WlzExtFFReadTiffDirObj(
     /* determine depth and pixel type */
     TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
     TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
+    if( TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT, &sampleformat) == 0 ){
+      sampleformat = SAMPLEFORMAT_UINT;
+    }
     switch( samplesperpixel ){
     case 1:
       if (bitspersample == 1){
@@ -78,11 +82,52 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	newpixtype = WLZ_GREY_UBYTE;
 	bckgrnd.v.ubv = 0;
       }
-      else {
+      else if (bitspersample <= 16){
 	depth = 16;
-	wlzDepth = sizeof(int);
-	newpixtype = WLZ_GREY_INT;
-	bckgrnd.v.inv = 0;
+	switch( sampleformat ){
+	case SAMPLEFORMAT_UINT:
+	  wlzDepth = sizeof(int);
+	  newpixtype = WLZ_GREY_INT;
+	  bckgrnd.v.inv = 0;
+	  break;
+
+	case SAMPLEFORMAT_INT:
+	  wlzDepth = sizeof(short);
+	  newpixtype = WLZ_GREY_SHORT;
+	  bckgrnd.v.shv = 0;
+	  break;
+
+	case SAMPLEFORMAT_IEEEFP:
+	  wlzDepth = sizeof(float);
+	  newpixtype = WLZ_GREY_FLOAT;
+	  bckgrnd.v.flv = 0;
+	  break;
+
+	default:
+	  errNum = WLZ_ERR_IMAGE_TYPE;
+	  break;
+	}
+      }
+      else {
+	depth = 32;
+	switch( sampleformat ){
+	case SAMPLEFORMAT_UINT:
+	case SAMPLEFORMAT_INT:
+	  wlzDepth = sizeof(int);
+	  newpixtype = WLZ_GREY_INT;
+	  bckgrnd.v.inv = 0;
+	  break;
+
+	case SAMPLEFORMAT_IEEEFP:
+	  wlzDepth = sizeof(float);
+	  newpixtype = WLZ_GREY_FLOAT;
+	  bckgrnd.v.flv = 0;
+	  break;
+
+	default:
+	  errNum = WLZ_ERR_IMAGE_TYPE;
+	  break;
+	}
       }
       break;
 
@@ -232,9 +277,24 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	  }
 	  break;
 	case 16:
-	  for (col = 0; col < width; col++, offset++){
-	    wlzData.inp[offset] = (inp[0]<<8) | (inp[1]);
-	    inp += 2;
+	  switch( newpixtype ){
+	  case WLZ_GREY_SHORT:
+	    for (col = 0; col < width; col++, offset++){
+	      wlzData.shp[offset] = (inp[0]<<8) | (inp[1]);
+	      inp += 2;
+	    }
+	    break;
+
+	  case WLZ_GREY_INT:
+	    for (col = 0; col < width; col++, offset++){
+	      wlzData.inp[offset] = (inp[0]<<8) | (inp[1]);
+	      inp += 2;
+	    }
+	    break;
+
+	  case WLZ_GREY_FLOAT:
+	    errNum = WLZ_ERR_FILE_FORMAT;
+	    break;
 	  }
 	  break;
 	default:
