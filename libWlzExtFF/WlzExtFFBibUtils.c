@@ -551,16 +551,18 @@ WlzErrorNum WlzEffBibWriteFileRecord(
 * \ingroup      WlzExtFF
 * \brief        Parse a bibfile record for a filename and type.
 * \return       woolz error
-* \param    bibfileRecord	bibfile record as read in by libbibFile
-* \param    index	index return
-* \param    dstFileName	file name return
-* \param    dstFileType	file type return
+* \param    	bibfileRecord	bibfile record as read in by libbibFile
+* \param    	dstIndex	Destination pointer for integer parsed from
+*				the record ID, may be NULL.
+* \param    	dstFileName	Destination pointer for file name, may be NULL.
+* \param    	dstFileType	Destination pointer for the file type, may be
+*				NULL.
 * \par      Source:
 *                WlzExtFFBibUtils.c
 */
 WlzErrorNum WlzEffBibParseFileRecord(
   BibFileRecord		*bibfileRecord,
-  int			*index,
+  int			*dstIndex,
   char			**dstFileName,
   WlzEffFormat		*dstFileType)
 {
@@ -571,9 +573,8 @@ WlzErrorNum WlzEffBibParseFileRecord(
   BibFileField	*bibfileField;
 
   /* check inputs */
-  if((bibfileRecord == NULL) ||
-     (*dstFileName == NULL) ||
-     (dstFileType == NULL)){
+  if(bibfileRecord == NULL)
+  {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   /* parse the record */
@@ -610,8 +611,19 @@ WlzErrorNum WlzEffBibParseFileRecord(
       errNum = WLZ_ERR_NONE;
     }
   }
-  *dstFileName = AlcStrDup(fileNameBuf);
-  *dstFileType = WlzEffStringToFormat(fileTypeBuf);
+  if(dstIndex)
+  {
+    *dstIndex = 0;
+    sscanf(bibfileRecord->id, "%d", dstIndex);
+  }
+  if(dstFileName)
+  {
+    *dstFileName = AlcStrDup(fileNameBuf);
+  }
+  if(dstFileType)
+  {
+    *dstFileType = WlzEffStringToFormat(fileTypeBuf);
+  }
   return errNum;
 }
   

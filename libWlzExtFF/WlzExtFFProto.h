@@ -203,7 +203,7 @@ extern WlzErrorNum WlzEffBibWriteFileRecord(
 				WlzEffFormat fileType);
 extern WlzErrorNum WlzEffBibParseFileRecord(
 				BibFileRecord *bibfileRecord,
-				int *index,
+				int *dstIndex,
 				char **dstFileName,
 				WlzEffFormat *dstFileType);
 extern WlzErrorNum WlzEffBibWriteWarpInputSegmentationParamsRecord(
