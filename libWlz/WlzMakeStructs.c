@@ -684,7 +684,7 @@ WlzMakeValueLine(WlzRagRValues 	*vtb,
   return( WLZ_ERR_NONE );
 }
 
-/* function:     WlzMakePolyDmn    */
+/* function:     WlzMakePolygonDomain    */
 /*! 
 * \ingroup      WlzAllocation
 * \brief        Make a polygon domain, allocating space and copying as
@@ -701,8 +701,8 @@ probably an error!!</li>
 * \return       Pointer to the initialised structure.
 * \param    type	one of WLZ_POLYGON_INT, WLZ_POLYGON_FLOAT,
  WLZ_POLYGON_DOUBLE
- * \param    vertices	vertices to be set, see type for value options.
  * \param    n	number of vertices if vertices!=NULL.
+ * \param    vertices	vertices to be set, see type for value options.
  * \param    maxv	size of array if vertices!=NULL else number of vertices for which space it to be allocated.
  * \param    copy	copy flag see description for values.
  * \param    dstErr	Error return, values: WLZ_ERR_NONE, WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC.
@@ -710,9 +710,9 @@ probably an error!!</li>
 *                WlzMakeStructs.c
 */
 WlzPolygonDomain *
-WlzMakePolyDmn(WlzObjectType	type,
-	       WlzIVertex2 	*vertices,
+WlzMakePolygonDomain(WlzObjectType	type,
 	       int 		n,
+	       WlzIVertex2 	*vertices,
 	       int 		maxv,
 	       int 		copy,
 	       WlzErrorNum		*dstErr)
