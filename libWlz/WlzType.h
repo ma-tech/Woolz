@@ -211,9 +211,9 @@ typedef enum
 /*!
 * \enum		_WlzTransformType
 * \ingroup	WlzTransform
-* \brief	Types of spatial transformation, typedef: ::WlzTransformType
+* \brief	Types of spatial transformation.
 */
-typedef enum _WlzTransformType
+enum _WlzTransformType
 {
   WLZ_TRANSFORM_2D_AFFINE = 1,		/*!< General 2D affine transform */
   WLZ_TRANSFORM_2D_REG,	      		/*!< 2D affine but only rotation
@@ -233,15 +233,15 @@ typedef enum _WlzTransformType
   WLZ_TRANSFORM_2D5_MESH,     		/*!< 2.5D (plane wise) triangular
   					     mesh transform */
   WLZ_TRANSFORM_3D_MESH			/*!< 3D tetrahedral mesh transform */
-} WlzTransformType;
+};
+typedef enum _WlzTransformType WlzTransformType;
 
 /*!
 * \enum         _WlzBasisFnType
 * \ingroup	WlzTransform
 * \brief	The types of basis function for basis function transforms.
-Typedef: ::WlzBasisFnType
 */
-typedef enum _WlzBasisFnType
+enum _WlzBasisFnType
 {
   WLZ_BASISFN_GAUSS,        		/*!< Gaussian basis function */
   WLZ_BASISFN_POLY,                     /*!< Polynomial basis function */
@@ -250,26 +250,28 @@ typedef enum _WlzBasisFnType
   					     function */
   WLZ_BASISFN_CONF_POLY			/*!< Conformal polynomial basis
   					     function */
-} WlzBasisFnType;
+};
+typedef enum _WlzBasisFnType WlzBasisFnType;
 
 /*!
 * \enum		_WlzMeshElemType
 * \ingroup	WlzTransform
-* \brief	Mesh transform element types. Typedef: ::WlzMeshElemType
+* \brief	Mesh transform element types.
 */
-typedef enum _WlzMeshElemType
+enum _WlzMeshElemType
 {
   WLZ_MESH_ELEM_TRILINEAR,
   WLZ_MESH_ELEM_TRIINCOMPRESSIBLE,
   WLZ_MESH_ELEM_TRICOMPRESSIBLE
-} WlzMeshElemType;
+};
+typedef enum _WlzMeshElemType WlzMeshElemType;
 
 /*!
 * \enum		_WlzMeshElemFlags
 * \ingroup	WlzTransform
-* \brief	Mesh transform element flag bit masks. Typedef: ::WlzMeshElemFlags
+* \brief	Mesh transform element flag bit masks.
 */
-typedef enum _WlzMeshElemFlags
+enum _WlzMeshElemFlags
 {
   WLZ_MESH_ELEM_FLAGS_NONE      = (0),
   WLZ_MESH_ELEM_FLAGS_NBR_0     = (1),	  /*!< Neighbour on side 0 exists */
@@ -277,14 +279,15 @@ typedef enum _WlzMeshElemFlags
   WLZ_MESH_ELEM_FLAGS_NBR_2     = (1<<2), /*!< Neighbour on side 2 exists */
   WLZ_MESH_ELEM_FLAGS_ZOMBIE	= (1<<3), /*!< Dead, awaiting replacement */
   WLZ_MESH_ELEM_FLAGS_REFINE	= (1<<4)  /*!< Available for refinement */
-} WlzMeshElemFlags;
+};
+typedef enum _WlzMeshElemFlags WlzMeshElemFlags;
 
 /*!
 * \enum		_WlzMeshNodeFlags
 * \ingroup	WlzTransform
-* \brief	Mesh transform node flag masks. Typedef: ::WlzMeshNodeFlags
+* \brief	Mesh transform node flag masks.
 */
-typedef enum _WlzMeshNodeFlags
+enum _WlzMeshNodeFlags
 {
   WLZ_MESH_NODE_FLAGS_NONE      = (0),
   WLZ_MESH_NODE_FLAGS_BBOX     	= (1),	  /*!< Created from bounding box. */
@@ -293,27 +296,29 @@ typedef enum _WlzMeshNodeFlags
   					       domain */
   WLZ_MESH_NODE_FLAGS_POLY	= (1<<3), /*!< Created along polygon domain */
   WLZ_MESH_NODE_FLAGS_ZOMBIE	= (1<<4)  /*!< Dead, awaiting replacement */
-} WlzMeshNodeFlags;
+};
+typedef enum _WlzMeshNodeFlags WlzMeshNodeFlags;
 
 /*!
 * \enum		_WlzMeshGenMethod
 * \ingroup	WlzTransform
-* \brief	Mesh generation methods. Typedef: ::WlzMeshGenMethod
+* \brief	Mesh generation methods.
 */
-typedef enum _WlzMeshGenMethod
+enum _WlzMeshGenMethod
 {
   WLZ_MESH_GENMETHOD_BLOCK,	       	/*!< Uniform (triangulated) block
   					     grid. */
   WLZ_MESH_GENMETHOD_GRADIENT  		/*!< Triangulated grid based on image
   					     gradient. */
-} WlzMeshGenMethod;
+};
+typedef enum _WlzMeshGenMethod WlzMeshGenMethod;
 
 /*!
 * \enum		_WlzMeshError
 * \ingroup	WlzTransform
-* \brief	Mesh error bit masks. Typedef: ::WlzMeshError
+* \brief	Mesh error bit masks.
 */
-typedef enum _WlzMeshError
+enum _WlzMeshError
 {
   WLZ_MESH_ERR_NONE		= (0),	  /*!< No error, mesh valid */
   WLZ_MESH_ERR_ELEM_CW		= (1),	  /*!< Element not CCW */
@@ -325,7 +330,8 @@ typedef enum _WlzMeshError
   WLZ_MESH_ERR_NELEM_NODE	= (1<<6), /*!< Neighbour node invalid */
   WLZ_MESH_ERR_NELEM_NOTNBR	= (1<<7), /*!< Neighbour not a neighbour */
   WLZ_MESH_ERR_NELEM_ZOMBIE	= (1<<8)  /*!< Neighbour is a zombie */
-} WlzMeshError;
+};
+typedef enum _WlzMeshError WlzMeshError;
 
 /************************************************************************
 * Connectivity.							
@@ -429,14 +435,14 @@ typedef enum
 * \enum		_WlzPolyFillMode	
 * \ingroup	WlzPolyline
 * \brief	Polygon fill modes.
-Typedef: ::WlzPolyFillMode
 */
-typedef enum _WlzPolyFillMode
+enum _WlzPolyFillMode
 {
-  WLZ_SIMPLE_FILL,	/*!< Fill all pixels with winding number > 0 */
-  WLZ_EVEN_ODD_FILL,	/*!< Fill all pixels with odd winding number */
-  WLZ_VERTEX_FILL	/*!< Fill all pixels lying under the polyline */
-} WlzPolyFillMode;
+  WLZ_SIMPLE_FILL,	/*! Fill all pixels with winding number > 0 */
+  WLZ_EVEN_ODD_FILL,	/*! Fill all pixels with odd winding number */
+  WLZ_VERTEX_FILL	/*! Fill all pixels lying under the polyline */
+};
+typedef enum _WlzPolyFillMode WlzPolyFillMode;
 
 /************************************************************************
 * Standard 3D views.						
@@ -630,17 +636,28 @@ typedef union
 #define	WLZ_GM_TOLERANCE	(1.0e-06)
 #define	WLZ_GM_TOLERANCE_SQ	(WLZ_GM_TOLERANCE * WLZ_GM_TOLERANCE)
 
-/* Type identifiers for GM models */
-typedef enum
+/*!
+* \enum		_WlzGMModelType
+* \ingroup	WlzGeoModel
+* \brief	Types of geometric models.
+*		Typedef: WlzGMModelType.
+*/
+enum _WlzGMModelType
 {
   WLZ_GMMOD_2I = 1,
   WLZ_GMMOD_2D,
   WLZ_GMMOD_3I,
   WLZ_GMMOD_3D
-} WlzGMModelType;
+};
+typedef enum _WlzGMModelType WlzGMModelType;
 
-/* Type identifiers for GM elements */
-typedef enum
+/*!
+* \enum		_WlzGMElemType
+* \ingroup	WlzGeoModel
+* \brief        Types of geometric model elements.
+*               Typedef: ::WlzGMElemType.
+*/
+enum _WlzGMElemType
 {
   WLZ_GMELM_VERTEX = 0,
   WLZ_GMELM_VERTEX_G2I,
@@ -658,10 +675,16 @@ typedef enum
   WLZ_GMELM_SHELL_G2D,
   WLZ_GMELM_SHELL_G3I,
   WLZ_GMELM_SHELL_G3D
-} WlzGMElemType;
+};
+typedef enum _WlzGMElemType WlzGMElemType;
 
-/* Type flags for GM elements */
-typedef enum
+/*!
+* \enum 	_WlzGMElemTypeFlags
+* \ingroup	WlzGeoModel
+* \brief	Bit masks for the types of geometric model elements.
+*               Typedef: ::WlzGMElemTypeFlags
+*/
+enum _WlzGMElemTypeFlags
 {
   WLZ_GMELMFLG_VERTEX =	    (1 << 0),
   WLZ_GMELMFLG_VERTEX_G =   (1 << 1),
@@ -673,10 +696,17 @@ typedef enum
   WLZ_GMELMFLG_LOOP_T =     (1 << 7),
   WLZ_GMELMFLG_SHELL =      (1 << 8),
   WLZ_GMELMFLG_SHELL_G =    (1 << 9)
-} WlzGMElemTypeFlags;
+};
+typedef enum _WlzGMElemTypeFlags WlzGMElemTypeFlags;
 
-/* Union of pointers to GM elements */
-typedef union
+/*!
+* \union	_WlzGMElemP
+* \ingroup	WlzGeoModel
+* \brief	A union of pointers to all the valid geometric model
+*		elements.
+*		Typedef: ::WlzGMElemP
+*/
+union _WlzGMElemP
 {
   struct _WlzGMCore *core;
   struct _WlzGMVertex *vertex;
@@ -695,265 +725,441 @@ typedef union
   struct _WlzGMShellG2D *shellG2D;
   struct _WlzGMShellG3I *shellG3I;
   struct _WlzGMShellG3D *shellG3D;
-} WlzGMElemP;
+};
+typedef union _WlzGMElemP WlzGMElemP;
 
-/* Core GM element with a type, used for building unions of GM elements */
-typedef struct _WlzGMCore
+/*!
+* \struct	_WlzGMCore
+* \ingroup	WlzGeoModel
+* \brief	The core geometric model element from which all
+* 		geometric modeling elements inherit the type and
+*		index fields.
+*		Typedef: ::WlzGMCore.
+*/
+struct _WlzGMCore
 {
-  WlzGMElemType type;			/* Any WlzGMElemType */
-  int		idx;			/* Unique identifier for the type. */
-} WlzGMCore;
+  WlzGMElemType type;			/*!< Any WlzGMElemType */
+  int		idx;			/*!< Unique identifier for the
+  					     instance of this type in it's
+					     model. */
+};
+typedef struct _WlzGMCore WlzGMCore;
 
-/* Geometric properties of point in 2D integer space */
-typedef struct _WlzGMVertexG2I
+/*!
+* \struct	_WlzGMVertexG2I
+* \ingroup	WlzGeoModel
+* \brief	The geometric properties of point in 2D integer space.
+*		Typedef: ::WlzGMVertexG2I.
+*/
+struct _WlzGMVertexG2I
 {
-  WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G2I */
-  int		idx;		    	/* Unique identifier for vertex
-  					 * geometry */
-  WlzIVertex2	vtx;			/* Where the point lies in space */
-} WlzGMVertexG2I;
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_G2I */
+  int		idx;		    	/*!< Unique identifier for the
+  					     vertex geometry. */
+  WlzIVertex2	vtx;			/*!< Where the point lies in space. */
+};
+typedef struct _WlzGMVertexG2I WlzGMVertexG2I;
 
-/* Geometric properties of point in 2D double precision space */
-typedef struct _WlzGMVertexG2D
+/*!
+* \struct	_WlzGMVertexG2D
+* \ingroup	WlzGeoModel
+* \brief	The geometric properties of point in 2D double precision space.
+*		Typedef: ::WlzGMVertexG2D.
+*/
+struct _WlzGMVertexG2D
 {
-  WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G2D */
-  int		idx;		    	/* Unique identifier for vertex
-  					 * geometry */
-  WlzDVertex2	vtx;			/* Where the point lies in space */
-} WlzGMVertexG2D;
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_G2D */
+  int		idx;		    	/*!< Unique identifier for vertex
+  					     geometry. */
+  WlzDVertex2	vtx;			/*!< Where the point lies in space. */
+};
+typedef struct _WlzGMVertexG2D WlzGMVertexG2D;
 
-/* Geometric properties of point in 3D integer space */
-typedef struct _WlzGMVertexG3I
+/*!
+* \struct	_WlzGMVertexG3I
+* \ingroup	WlzGeoModel
+* \brief	The geometric properties of point in 3D integer space.
+*		Typedef: ::WlzGMVertexG3I.
+*/
+struct _WlzGMVertexG3I
 {
-  WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G3I */
-  int		idx;		    	/* Unique identifier for vertex
-  					 * geometry */
-  WlzIVertex3	vtx;			/* Where the point lies in space */
-} WlzGMVertexG3I;
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_G3I */
+  int		idx;		    	/*!< Unique identifier for vertex
+  					     geometry. */
+  WlzIVertex3	vtx;			/*!< Where the point lies in space. */
+};
+typedef struct _WlzGMVertexG3I WlzGMVertexG3I;
 
-/* Geometric properties of point in 3D double precision space */
-typedef struct _WlzGMVertexG3D
+/*!
+* \struct	_WlzGMVertexG3D
+* \ingroup	WlzGeoModel
+* \brief	The geometricproperties of point in 3D double precision space.
+*		Typedef: ::WlzGMVertexG3I.
+*/
+struct _WlzGMVertexG3D
 {
-  WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G3D */
-  int		idx;		        /* Unique identifier for vertex
-  				         * geometry */
-  WlzDVertex3	vtx;			/* Where the point lies in space */
-} WlzGMVertexG3D;
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_G3D */
+  int		idx;		        /*!< Unique identifier for vertex
+  				             geometry */
+  WlzDVertex3	vtx;			/*!< Where the point lies in space */
+};
+typedef struct _WlzGMVertexG3D WlzGMVertexG3D;
 
-/* Union of pointers to the geometric properties of a point */
-typedef union
+/*!
+* \union	_WlzGMVertexGU
+* \ingroup	WlzGeoModel
+* \brief	A union of pointers to the geometric properties of a point.
+*		Typedef: ::WlzGMVertexGU.
+*/
+union _WlzGMVertexGU
 {
   WlzGMCore 	*core;
   WlzGMVertexG2I *vg2I;
   WlzGMVertexG2D *vg2D;
   WlzGMVertexG3I *vg3I;
   WlzGMVertexG3D *vg3D;
-} WlzGMVertexGU;
+};
+typedef union _WlzGMVertexGU WlzGMVertexGU;
 
-/* Topological properties of a point in space. The ordering of the linked list
- * of vertex topology elements formed by the 'next' and 'prev' pointers is
- * not significant. */
-typedef struct _WlzGMVertexT
+/*!
+* \struct	_WlzGMVertexT
+* \ingroup	WlzGeoModel
+* \brief	The topological properties of a point in space.
+*		The ordering of the linked list of vertex topology elements
+*		formed by the 'next' and 'prev' pointers is not significant.
+*		Typedef: ::WlzGMVertexT.
+*/
+struct _WlzGMVertexT
 {
-  WlzGMElemType type;			/* WLZ_GMELM_VERTEX_T */
-  int	 	idx; 	    	        /* Unique identifier for vertex
-  					 * topology element */
-  struct _WlzGMVertexT *next;		/* Next vertexT in disk. */
-  struct _WlzGMVertexT *prev;		/* Previous vertexT in disk. */
-  struct _WlzGMDiskT *diskT;		/* The disk topology element that this
-  					 * vertex topology element is in */
-  struct _WlzGMEdgeT *parent; 		/* Parent of this vertex topology
-  					 * element */
-} WlzGMVertexT;
+  WlzGMElemType type;			/*!< WLZ_GMELM_VERTEX_T */
+  int	 	idx; 	    	        /*!< Unique identifier for vertex
+  					     topology element. */
+  struct _WlzGMVertexT *next;		/*!< Next vertexT in disk. */
+  struct _WlzGMVertexT *prev;		/*!< Previous vertexT in disk. */
+  struct _WlzGMDiskT *diskT;		/*!< The disk topology element that
+  					     this vertex topology element
+					     is in. */
+  struct _WlzGMEdgeT *parent; 		/*!< Parent of this vertex topology
+  					     element. */
+};
+typedef struct _WlzGMVertexT WlzGMVertexT;
 
-/* A single point in space */
-typedef struct _WlzGMVertex
+/*!
+* \struct	_WlzGMVertex
+* \ingroup	WlzGeoModel
+* \brief	A single point in space defined in terms of both it's
+*		geometry and it's topology.
+*		Typedef: ::WlzGMVertex.
+*/
+struct _WlzGMVertex
 {
-  WlzGMElemType type; 			/* WLZ_GMELM_VERTEX */
-  int		idx;			/* Unique identifier for vertex */
-  struct _WlzGMDiskT *diskT;		/* A disk topology element of this
-  					 * vertex, others can be found by
-					 * following the diskT's next/prev */
-  WlzGMVertexGU geo;	 		/* Geometry of this vertex */
-  struct _WlzGMVertex *next;		/* Next in sorted list */
-} WlzGMVertex;
+  WlzGMElemType type; 			/*!< WLZ_GMELM_VERTEX */
+  int		idx;			/*!< Unique identifier for vertex. */
+  struct _WlzGMDiskT *diskT;		/*!< A disk topology element of this
+  					     vertex, others can be found by
+					     following the diskT's next/prev
+					     fields. */
+  WlzGMVertexGU geo;	 		/*!< Geometry of this vertex. */
+  struct _WlzGMVertex *next;		/*!< Next in sorted list. */
+};
+typedef struct _WlzGMVertex WlzGMVertex;
 
-/* Topological disk around a vertex. In 2D or in a 3D manifold there is one
- * disk per vertex. But in a 3D non-manifold shell many manifold surfaces
- * may be connected at a single vertex, in which case there is on disk per
- * sheet. The disk encodes the radial order of the vertex topology elements
- * around the vertex. */
-typedef struct _WlzGMDiskT
+/*!
+* \struct	_WlzGMDiskT
+* \ingroup	WlzGeoModel
+* \brief	A topological disk around a vertex. In 2D or 3D manifold
+*		there is one disk per vertex. But in a 3D non-manifold shell
+*		many sheets (manifold surfaces components) may be connected
+*		at a single vertex, in which case there is one disk per sheet.
+*		The disk encodes the radial order of the vertex topology
+*		elements around the vertex.
+*		Typedef: ::WlzGMDiskT.
+*/
+struct _WlzGMDiskT
 {
-  WlzGMElemType type; 			/* WLZ_GMELM_DISK_T */
-  int		idx;			/* Unique identifier for vertex */
-  struct _WlzGMDiskT *next;		/* Next diskT of vertex. */
-  struct _WlzGMDiskT *prev;		/* Previous diskT of vertex. */
-  WlzGMVertex	*vertex;		/* The vertex that this disk cycles
-  					 * around */
-  WlzGMVertexT	*vertexT;		/* A vertex topology element in this
-  					 * disk topology element. */
-} WlzGMDiskT;
+  WlzGMElemType type; 			/*!< WLZ_GMELM_DISK_T */
+  int		idx;			/*!< Unique identifier for vertex. */
+  struct _WlzGMDiskT *next;		/*!< Next diskT of vertex. */
+  struct _WlzGMDiskT *prev;		/*!< Previous diskT of vertex. */
+  WlzGMVertex	*vertex;		/*!< The vertex that this disk cycles
+  					     around. */
+  WlzGMVertexT	*vertexT;		/*!< A vertex topology element in this
+  					     disk topology element. */
+};
+typedef struct _WlzGMDiskT WlzGMDiskT;
 
-/* Topological properties of an edge */
-typedef struct _WlzGMEdgeT
+/*!
+* \struct	_WlzGMEdgeT
+* \ingroup	WlzGeoModel
+* \brief	The topological properties of a directed edge.
+*		Typedef: ::WlzGMEdgeT.
+*/
+struct _WlzGMEdgeT
 {
-  WlzGMElemType type;			/* WLZ_GMELM_EDGE_T */
-  int		idx;	      		/* Unique identifier for edge topology
-   					 * element */
-  struct _WlzGMEdgeT *next;		/* Next edgeT in the parent */
-  struct _WlzGMEdgeT *prev;		/* Previous edgeT in the parent */
-  struct _WlzGMEdgeT *opp;		/* Opposite edge topology element */
-  struct _WlzGMEdgeT *rad;		/* The radial edge topology element */
-  struct _WlzGMEdge *edge;		/* The edge */
-  struct _WlzGMVertexT *vertexT;  	/* Vertex FROM which this edge
-   					 * topology element is directed */
-  struct _WlzGMLoopT *parent;		/* Parent of this edge topology
-  					 * element */
-} WlzGMEdgeT;
+  WlzGMElemType type;			/*!< WLZ_GMELM_EDGE_T */
+  int		idx;	      		/*!< Unique identifier for the edge
+  					 *   topology element. */
+  struct _WlzGMEdgeT *next;		/*!< Next edgeT in the parent. */
+  struct _WlzGMEdgeT *prev;		/*!< Previous edgeT in the parent. */
+  struct _WlzGMEdgeT *opp;		/*!< Opposite edge topology element. */
+  struct _WlzGMEdgeT *rad;		/*!< The radial edge topology
+  					     element. */
+  struct _WlzGMEdge *edge;		/*!< The edge. */
+  struct _WlzGMVertexT *vertexT;  	/*!< Vertex FROM which this edge
+   					     topology element is directed. */
+  struct _WlzGMLoopT *parent;		/*!< Parent of this edge topology
+  					     element. */
+};
+typedef struct _WlzGMEdgeT WlzGMEdgeT;
 
-/* Line or curve between a pair of verticies */
-typedef struct _WlzGMEdge
+/*!
+* \struct	_WlzGMEdge
+* \ingroup	WlzGeoModel
+* \brief	A line or curve between a pair of verticies.
+*		Although this only has a topological component a geometric
+*		component would allow curves to be represented.
+*		Typedef: ::WlzGMEdge.
+*/
+struct _WlzGMEdge
 {
-  WlzGMElemType type;	        	/* WLZ_GMELM_EDGE */
-  int		idx;		        /* Unique identifier for edge */
-  WlzGMEdgeT	*edgeT;	       		/* An edge topology use */
-} WlzGMEdge;
+  WlzGMElemType type;	        	/*!< WLZ_GMELM_EDGE */
+  int		idx;		        /*!< Unique identifier for edge. */
+  WlzGMEdgeT	*edgeT;	       		/*!< One of the many edge topology
+  					     elements from which the others
+					     can be found by following it's
+					     opp/rad fields. */
+};
+typedef struct _WlzGMEdge WlzGMEdge;
 
-/* Topological properties of a loop */
-typedef struct _WlzGMLoopT
+/*!
+* \struct	_WlzGMLoopT
+* \ingroup	WlzGeoModel
+* \brief	The topological properties of a loop.
+*		Typedef: ::WlzGMLoopT.
+*/
+struct _WlzGMLoopT
 {
-  WlzGMElemType type;			/* WLZ_GMELM_LOOP_T */
-  int		idx;	      		/* Unique identifier for loop topology
-  					 * element */
-  struct _WlzGMLoopT *next;		/* Next loopT in the parent */
-  struct _WlzGMLoopT *prev;		/* Previous loopT in the parent */
-  struct _WlzGMLoopT *opp;	        /* The opposite loop topology element */
-  struct _WlzGMLoop *loop;		/* The loop */
-  WlzGMEdgeT *edgeT;			/* An edge in the loop, others can
-  					 * be found by walking the edgeT's
-					 * next/prev */
-  struct _WlzGMShell *parent;		/* Parent of this loop */
-} WlzGMLoopT;
+  WlzGMElemType type;			/*!< WLZ_GMELM_LOOP_T */
+  int		idx;	      		/*!< Unique identifier for loop
+  					     topology element. */
+  struct _WlzGMLoopT *next;		/*!< The next loopT in the parent. */
+  struct _WlzGMLoopT *prev;		/*!< The previous loopT in the
+  					     parent. */
+  struct _WlzGMLoopT *opp;	        /*!< The opposite loop topology
+  					     element. */
+  struct _WlzGMLoop *loop;		/*!< The loop. */
+  WlzGMEdgeT *edgeT;			/*!< An edge topology element in
+  					     the loop, others can be found
+					     by walking the edgeT's next/prev
+					     fields. */
+  struct _WlzGMShell *parent;		/*!< Parent of this loopT. */
+};
+typedef struct _WlzGMLoopT WlzGMLoopT;
 
-/* Circuit of edges (or single vertex) */
-typedef struct _WlzGMLoop
+/*!
+* \struct	_WlzGMLoop
+* \ingroup	WlzGeoModel
+* \brief	A circuit of edges.
+*		Typedef: ::WlzGMLoop
+*/
+struct _WlzGMLoop
 {
-  WlzGMElemType type;			/* WLZ_GMELM_LOOP */
-  int		idx;			/* Unique identifier for loop */
-  WlzGMLoopT 	*loopT;			/* Loop topology */
-} WlzGMLoop;
+  WlzGMElemType type;			/*!< WLZ_GMELM_LOOP */
+  int		idx;			/*!< Unique identifier for loop. */
+  WlzGMLoopT 	*loopT;			/*!< the loop's topology. */
+};
+typedef struct _WlzGMLoop WlzGMLoop;
 
-/* Geometric properties of a shell in 2D integer space */
-typedef struct _WlzGMShellG2I
+/*!
+* \struct	_WlzGMShellG2I
+* \ingroup	WlzGeoModel
+* \brief	The geometric properties of a shell in 2D integer space.
+*		Typedef: ::WlzGMShellG2I.
+*/
+struct _WlzGMShellG2I
 {
-  WlzGMElemType type;			/* WLZ_GMELM_SHELL_G2I */
-  int		idx;	     		/* Unique identifier for shell
-  					 * geometry element */
-  WlzIBox2	bBox;			/* Bounding box of the shell */
-} WlzGMShellG2I;
+  WlzGMElemType type;			/*!< WLZ_GMELM_SHELL_G2I */
+  int		idx;	     		/*!< Unique identifier for shell
+  					     geometry element. */
+  WlzIBox2	bBox;			/*!< The bounding box of the shell. */
+};
+typedef struct _WlzGMShellG2I WlzGMShellG2I;
 
-/* Geometric properties of a shell in 2D double precision space */
-typedef struct _WlzGMShellG2D
+/*!
+* \struct	_WlzGMShellG2D
+* \ingroup	WlzGeoModel
+* \brief        The geometric properties of a shell in 2D double precision
+*		space.
+*		Typedef: ::WlzGMShellG2D.
+*/
+struct _WlzGMShellG2D
 {
-  WlzGMElemType type;			/* WLZ_GMELM_SHELL_G2D */
-  int		idx;	     		/* Unique identifier for shell
-  					 * geometry element */
-  WlzDBox2	bBox;			/* Bounding box of the shell */
-} WlzGMShellG2D;
+  WlzGMElemType type;			/*!< WLZ_GMELM_SHELL_G2D */
+  int		idx;	     		/*!< Unique identifier for shell
+  					     geometry element. */
+  WlzDBox2	bBox;			/*!< Bounding box of the shell. */
+};
+typedef struct _WlzGMShellG2D WlzGMShellG2D;
 
-/* Geometric properties of a shell in 3D integer space */
-typedef struct _WlzGMShellG3I
+/*!
+* \struct	_WlzGMShellG3I
+* \ingroup	WlzGeoModel
+* \brief	The geometric properties of a shell in 3D integer space.
+*		Typedef: ::WlzGMShellG3I.
+*/
+struct _WlzGMShellG3I
 {
-  WlzGMElemType type;			/* WLZ_GMELM_SHELL_G3I */
-  int		idx;	     		/* Unique identifier for shell
-  					 * geometry element */
-  WlzIBox3	bBox;			/* Bounding box of the shell */
-} WlzGMShellG3I;
+  WlzGMElemType type;			/*!< WLZ_GMELM_SHELL_G3I */
+  int		idx;	     		/*!< Unique identifier for shell
+  					     geometry element. */
+  WlzIBox3	bBox;			/*!< Bounding box of the shell. */
+};
+typedef struct _WlzGMShellG3I WlzGMShellG3I;
 
-/* Geometric properties of a shell in 3D double precision space */
-typedef struct _WlzGMShellG3D
+/*!
+* \struct	_WlzGMShellG3D
+* \ingroup	WlzGeoModel
+* \brief	The geometric properties of a shell in 3D double precision.
+*		space.
+*		Typedef: ::WlzGMShellG3D.
+*/
+struct _WlzGMShellG3D
 {
-  WlzGMElemType type;			/* WLZ_GMELM_SHELL_G3D */
-  int		idx;	     		/* Unique identifier for shell
-  					 * geometry element */
-  WlzDBox3	bBox;			/* Bounding box of the shell */
-} WlzGMShellG3D;
+  WlzGMElemType type;			/*!< WLZ_GMELM_SHELL_G3D */
+  int		idx;	     		/*!< Unique identifier for shell
+  					     geometry element. */
+  WlzDBox3	bBox;			/*!< Bounding box of the shell. */
+};
+typedef struct _WlzGMShellG3D WlzGMShellG3D;
 
-/* Union of pointers to the geometric properties of a shell */
-typedef union
+/*!
+* \union	_WlzGMShellGU
+* \ingroup	WlzGeoModel
+* \brief	A union of pointers to the geometric properties of a shell.
+* 		Typedef: ::WlzGMShellGU.
+*/
+union _WlzGMShellGU
 {
   WlzGMCore 	*core;
   WlzGMShellG2I *sg2I;
   WlzGMShellG2D *sg2D;
   WlzGMShellG3I *sg3I;
   WlzGMShellG3D *sg3D;
-} WlzGMShellGU;
+};
+typedef union _WlzGMShellGU WlzGMShellGU;
 
-/* Collection of connected GM elements in a shell */
-typedef struct _WlzGMShell
+/*!
+* \struct	_WlzGMShell
+* \ingroup	WlzGeoModel
+* \brief	A shell which is a collection of connected geometric
+*		modeling elements.
+*		Typedef: ::WlzGMShell.
+*/
+struct _WlzGMShell
 {
-  WlzGMElemType type;	      		/* WLZ_GMELM_SHELL */
-  int		idx;			/* Shell's index */
-  struct _WlzGMShell *next;		/* Next shell in the parent */
-  struct _WlzGMShell *prev;		/* Previous shell in the parent */
-  WlzGMShellGU geo;			/* Shell geometry */
-  WlzGMLoopT	*child;			/* A child loop of the shell,
-					 * all others can be reached
-					 * by walking the next/prev */
-  struct _WlzGMModel *parent;		/* The parent model of the shell */
-} WlzGMShell;
+  WlzGMElemType type;	      		/*!< WLZ_GMELM_SHELL */
+  int		idx;			/*!< The shell's index. */
+  struct _WlzGMShell *next;		/*!< the next shell in the model. */
+  struct _WlzGMShell *prev;		/*!< The previous shell in the
+  					     model. */
+  WlzGMShellGU geo;			/*!< The shell's geometry. */
+  WlzGMLoopT	*child;			/*!< A child loop topology element
+  					     of the shell from which all
+					     the others can be reached
+					     by walking the next/prev
+					     fields. */
+  struct _WlzGMModel *parent;		/*!< The parent model of the shell. */
+};
+typedef struct _WlzGMShell WlzGMShell;
 
-/* A resource vector with a next index */
-typedef struct _WlzGMResource
+/*!
+* \struct	_WlzGMResource
+* \ingroup	WlzGeoModel
+* \brief	A resource vector (extensible array) used for allocating
+*		geometric modeling elements.
+*		Typedef: ::WlzGMResource.
+*/
+struct _WlzGMResource
 {
-  unsigned int  numElm;			/* Number of element type in model. */
-  unsigned int	numIdx;			/* Number of elements/indicies which
-   					 * have been pulled from the vector,
-  					 * ie idx < numIdx for all idx. */
-  AlcVector	*vec;			/* Vector of elements. */
-} WlzGMResource;
+  unsigned int  numElm;			/*!< Number of element type in model. */
+  unsigned int	numIdx;			/*!< Number of elements/indicies which
+   					     have been pulled from the vector,
+  					     with elm->idx < numIdx for all
+					     elements. */
+  AlcVector	*vec;			/*!< Vector (extensible array) of
+  					     elements. */
+};
+typedef struct _WlzGMResource WlzGMResource;
 
-/* Resources held by a model */
-typedef struct _WlzGMShellR
+/*!
+* \struct	_WlzGMShellR
+* \ingroup	WlzGeoModel
+* \brief	The resources used by a model.
+*		Typedef: ::WlzGMModelR.
+*/
+struct _WlzGMShellR
 {
-  WlzGMResource vertex;			/* Vertex elements */
-  WlzGMResource vertexT;	        /* Vertex topology elements */
-  WlzGMResource vertexG;	     	/* Vertex geometry elements */
-  WlzGMResource diskT;			/* Disk geometry elements */
-  WlzGMResource edge;			/* Edge elements */
-  WlzGMResource edgeT;		        /* Edge topology element elements */
-  WlzGMResource loop;			/* Loop elements */
-  WlzGMResource loopT;		        /* Loop topology element elements */
-  WlzGMResource	shell;			/* Shell elements */
-  WlzGMResource	shellG;			/* Shell geometry elements */
-} WlzGMModelR;
+  WlzGMResource vertex;			/*!< Vertex elements. */
+  WlzGMResource vertexT;	        /*!< Vertex topology elements. */
+  WlzGMResource vertexG;	     	/*!< Vertex geometry elements. */
+  WlzGMResource diskT;			/*!< Disk geometry elements. */
+  WlzGMResource edge;			/*!< Edge elements. */
+  WlzGMResource edgeT;		        /*!< Edge topology element elements. */
+  WlzGMResource loop;			/*!< Loop elements. */
+  WlzGMResource loopT;		        /*!< Loop topology element elements. */
+  WlzGMResource	shell;			/*!< Shell elements. */
+  WlzGMResource	shellG;			/*!< Shell geometry elements. */
+};
+typedef struct _WlzGMShellR WlzGMModelR;
 
-typedef struct _WlzGMModel
+/*!
+* \struct	_WlzGMModel
+* \ingroup	WlzGeoModel
+* \brief	A geometric model which can represent both 2D graphs
+*		and 3D surfaces, with the surfaces being either
+*		manifold or non-manifold.
+*		The geometric model inherits it's core fields from
+*		the Woolz core domain.
+*		Typedef: ::WlzGMModel.
+*/
+struct _WlzGMModel
 {
-  WlzGMModelType type;			/* Type of model integer or double
+  WlzGMModelType type;			/*!< Type of model integer or double
   				         * precision, 2D or 3D */
-  int		linkcount;		/* CORE */
-  void		*freeptr;		/* CORE */
-  WlzGMShell	*child;			/* A child shell of the model, others
-  					 * can be reached by walking the
-					 * next/prev */
-  int		vertexHTSz;		/* Vertex hash table size. */
-  WlzGMVertex	**vertexHT;		/* Vertex hash table */
-  WlzGMModelR	res;			/* Model resources */
-} WlzGMModel;
+  int		linkcount;		/*!< Core. */
+  void		*freeptr;		/*!< Core. */
+  WlzGMShell	*child;			/*!< A child shell of the model, others
+  					     can be reached by walking the
+					     next/prev fields. */
+  int		vertexHTSz;		/*!< Vertex hash table size. */
+  WlzGMVertex	**vertexHT;		/*!< Vertex hash table. */
+  WlzGMModelR	res;			/*!< Model resources. */
+};
+typedef struct _WlzGMModel WlzGMModel;
 
-/* A resource table which holds the number of the number of valid resource
- * indicies along with an arra of indicies. The array of indicies is a
- * look up table from the indicies of a GM to contigous indicies suitable
- * for copying or outputing a resource vector without holes. */
-typedef struct _WlzGMResIdx
+/*!
+* \struct	WlzGMResIdx
+* \brief	A resource index look up table (::WlzGMResIdxTb).
+*		The array of indicies is a look up table from the indicies of a
+*		GM to contigous indicies suitable for copying or outputing a
+*		resource vector without holes.
+*		Typedef: ::WlzGMResIdx.
+*/
+struct _WlzGMResIdx
 {
-  int           idxCnt;         	/* Number of indicies in lut */
-  int           *idxLut;        	/* Index look up table */
-} WlzGMResIdx;
+  int           idxCnt;         	/*!< Number of indicies in lut. */
+  int           *idxLut;        	/*!< Index look up table. */
+};
+typedef struct _WlzGMResIdx WlzGMResIdx;
 
-typedef struct _WlzGMResIdxTb
+/*
+* \struct	_WlzGMResIdxTb
+* \ingroup	WlzGeoModel
+* \brief	Resource look up tables for all geometric elements in
+*		a model.
+*		Typedef: ::WlzGMResIdxTb.
+*/
+struct _WlzGMResIdxTb
 {
   WlzGMResIdx   vertex;
   WlzGMResIdx   vertexT;
@@ -965,7 +1171,8 @@ typedef struct _WlzGMResIdxTb
   WlzGMResIdx   loopT;
   WlzGMResIdx   shell;
   WlzGMResIdx   shellG;
-} WlzGMResIdxTb;
+};
+typedef struct _WlzGMResIdxTb WlzGMResIdxTb;
 
 /************************************************************************
 * Data structures for contours (both 2D and 3D).
@@ -1272,10 +1479,10 @@ typedef struct _WlzVoxelValues
 * 2D Polygon domain.						
 ************************************************************************/
 /*!
-* \struct	_WlzPolygonDomain
+* \struct	WlzPolygonDomain
 * \ingroup	WlzPolyline
 * \brief	A 2D polyline domain with possible types:WLZ_POLYGON_INT, 
-WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. Typedef: ::WlzPolygonDomain
+WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
 */
 typedef struct _WlzPolygonDomain
 {
@@ -1463,28 +1670,28 @@ typedef struct
 * \union	_WlzTransform
 * \ingroup	WlzTransform
 * \brief	A union of all valid transforms.
-Typedef: ::WlzTransform
 */
-typedef union _WlzTransform
+union _WlzTransform
 {
   struct _WlzCoreTransform *core;	/*!< Core transform. */
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
   struct _WlzMeshTransform *mesh;	/* Ant mesh transform. */
-} WlzTransform;
+};
+typedef union _WlzTransform WlzTransform;
 
 /*!
 * \struct	_WlzCoreTransform
 * \ingroup	WlzTransform
 * \brief	The core transform, with members common to all transforms.
-Typedef: ::WlzCoreTransform
 */
-typedef struct _WlzCoreTransform
+struct _WlzCoreTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
   void 		*freeptr;		/*!< From the core domain. */
-} WlzCoreTransform;
+};
+typedef struct _WlzCoreTransform WlzCoreTransform;
 
 /*!
 * \struct	_WlzAffineTransform
@@ -1492,10 +1699,9 @@ typedef struct _WlzCoreTransform
 * \brief	Either a 2D or 3D affine transform.
 *		The homogeneous matrix (mat) is always allocated as a 4x4
 *		AlcDouble2Alloc style array. It is used as a 3x3
-*		matrix for 2D and as a 4x4 matrix for 3D affine transforms.
-Typedef: ::WlzAffineTransform
+*		matrix for 2D and as a 4x4 matrix for 3D affine transforms. 
 */
-typedef struct _WlzAffineTransform
+struct _WlzAffineTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
@@ -1504,15 +1710,15 @@ typedef struct _WlzAffineTransform
   					     used as a 3x3 matrix for 2D
 					     transforms and as a 4x4 matrix for
 					     3D affine transforms. */
-} WlzAffineTransform;
+};
+typedef struct _WlzAffineTransform WlzAffineTransform;
 
 /*!
 * \struct	_WlzAffineTransformPrim
 * \ingroup	WlzTransform
 * \brief	Affine tranform primitives.
-Typedef: ::WlzAffineTransformPrim
 */
-typedef struct _WlzAffineTransformPrim
+struct _WlzAffineTransformPrim
 {
   double        tx,             	/*!< X translation */
 		ty,             	/*!< Y translation */
@@ -1525,7 +1731,8 @@ typedef struct _WlzAffineTransformPrim
 		xsi;			/*!< 3D shear angle */
   int           invert;                 /*!< Non-zero if reflection about
   					     the y-axis */
-} WlzAffineTransformPrim;
+};
+typedef struct _WlzAffineTransformPrim WlzAffineTransformPrim;
 
 /*!
 * \struct	_WlzBasisFnTransform
@@ -1534,9 +1741,8 @@ typedef struct _WlzAffineTransformPrim
 * 		The delta is used by the MQ and Gauss basis functions:
 *		For the MQ basis fn delta = R^2, and for the Gaussian basis fn
 *		delta = 1/s^2.
-Typedef: ::WlzBasisFnTransform
 */
-typedef struct _WlzBasisFnTransform
+struct _WlzBasisFnTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
@@ -1552,20 +1758,21 @@ typedef struct _WlzBasisFnTransform
   WlzDVertex2    *poly;          	/*!< Polynomial coefficients */
   WlzDVertex2    *basis;         	/*!< Basis function coefficients */
   WlzDVertex2    *verticies;     	/*!< Control point verticies */
-} WlzBasisFnTransform;
+};
+typedef struct _WlzBasisFnTransform WlzBasisFnTransform;
 
 /*!
 * \struct	_WlzMeshNode
 * \ingroup	WlzTransform
 * \brief	Defines a node within a mesh transform.
-Typedef: ::WlzMeshNode
 */
-typedef struct  _WlzMeshNode
+struct  _WlzMeshNode
 {
   unsigned int	flags;			/*!< Mesh node flags */
   WlzDVertex2	position;		/*!< Node position */
   WlzDVertex2	displacement;		/*!< Node displacement */
-} WlzMeshNode;
+};
+typedef struct _WlzMeshNode WlzMeshNode;
 
 /*!
 * \struct	_WlzMeshElem
@@ -1574,10 +1781,9 @@ typedef struct  _WlzMeshNode
 * 		The nodes and neighbours are indexed such that:		
 * 		Neighbour 0 shares nodes 1 and 2, neighbour 1 shares nodes 2
 *		and 0 and neighbour 2 shares nodes 0 and 1. All the nodes
-*		are stored in counter clockwise (CCW) order. 
-Typedef: ::WlzMeshElem
+*		are stored in counter clockwise (CCW) order.				
 */
-typedef struct _WlzMeshElem
+struct _WlzMeshElem
 {
   WlzMeshElemType type;         	/*!< Type of mesh element */
   int           idx;            	/*!< Index of this element */
@@ -1588,15 +1794,15 @@ typedef struct _WlzMeshElem
   double        strainU[3];             /*!< Constants of strain energy
   					     function: */
   double        strainA[3];
-} WlzMeshElem;
+};
+typedef struct _WlzMeshElem WlzMeshElem;
 
 /*!
 * \struct	_WlzMeshTransform
 * \ingroup	WlzTransform
 * \brief	Defines a mesh transform.
-Typedef: ::WlzMeshTransform
 */
-typedef struct _WlzMeshTransform
+struct _WlzMeshTransform
 {
   WlzTransformType type;       		/*!< From the core domain. */
   int           linkcount;      	/*!< From the core domain. */
@@ -1608,7 +1814,8 @@ typedef struct _WlzMeshTransform
   					     nodes */
   WlzMeshElem   *elements;      	/*!< Mesh elements */
   WlzMeshNode	*nodes;			/*!< Mesh nodes */
-} WlzMeshTransform;
+};
+typedef struct _WlzMeshTransform WlzMeshTransform;
 
 /************************************************************************
 * Sequential/local transformation workspace structure.		
