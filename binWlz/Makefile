@@ -86,6 +86,7 @@ EXECUTABLES		= \
 			WlzHistogramRebin \
 			WlzHistogramSmooth \
 			WlzImageArithmetic \
+			WlzIntResizeObj \
 			WlzIsEmpty \
 			WlzIntersect \
 			WlzLabel \
@@ -181,6 +182,7 @@ CSOURCES		= \
 			WlzHistogramRebin.c \
 			WlzHistogramSmooth.c \
 			WlzImageArithmetic.c \
+			WlzIntResizeObj.c \
 			WlzIsEmpty.c \
 			WlzIntersect.c \
 			WlzLabel.c \
