@@ -18,7 +18,7 @@
 *   Author Name :  Richard Baldock					*
 *   Author Login:  richard@hgu.mrc.ac.uk				*
 *   Date        :  Mon Oct 23 14:43:18 2000				*
-*   $Revision$								*
+*   $Revision$							*
 *   $Name$								*
 *   Synopsis    : Converts a set of woolz domain files (3D binary) with	*
 *		associated ID file to GW XYZ format. The ID file	*
@@ -59,11 +59,17 @@ typedef struct _contourItem {
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s "
+	  "Usage:\t%s -m<minSize> -o<xOff,yOff> -p<plane> -s<width,height> -h -v"
 	  "<input file-list>\n"
 	  "\tRead the file list and convert the woolz domains to\n"
 	  "\tGlaxo-Wellcome XYZ format contour files.\n"
 	  "\tOptions are:\n"
+	  "\t  -m#       input the min size used to determine which\n"
+	  "\t            contours will be output (default 4).\n"
+	  "\t  -o#,#     x and y offsets to correspond to the grey-level\n"
+	  "\t            object so that all coordinates are +ve.\n"
+	  "\t  -s#,#     width and height for the XYZ file\n"
+	  "\t  -p#       required plane number\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
 	  "",
@@ -88,7 +94,8 @@ void XYZWriteHeader(
   XYZWriteComment(fp, "the first field indicates if the ColorMap is GrayScale of Color");
   XYZWriteComment(fp, "the second field indicates the image dimension (Width Height)");
   XYZWriteComment(fp, "the third field indicates the number of contours");
-  XYZWriteComment(fp, "For each CONTOUR: Auto Id, Marker Id, index, nb points XY, intern or extern contours");
+  XYZWriteComment(fp, "For each CONTOUR: Auto Id, Marker Id, index, nb points XY,"
+		  "intern or extern contours");
   XYZWriteComment(fp, "");
   XYZWriteComment(fp, "RAB note: index seemed to be missing out of the description, now inserted, and");
   XYZWriteComment(fp, "\tafter discussion with Frank Dorkeld the last number is interpreted as the");
@@ -96,7 +103,8 @@ void XYZWriteHeader(
   XYZWriteComment(fp, "");
   XYZWriteComment(fp, "X: x coordinate");
   XYZWriteComment(fp, "Y: y coordinate");
-  XYZWriteComment(fp, "Remark: Identifier (automatically determined by image analysis) of the contour type may be:");
+  XYZWriteComment(fp, "Remark: Identifier (automatically determined by image analysis)"
+		  "of the contour type may be:");
   XYZWriteComment(fp, "UNKNOWN         -> -1");
   XYZWriteComment(fp, "EXTERN          ->  0");
   XYZWriteComment(fp, "NUCLEAR MARKER  ->  1");
@@ -236,7 +244,7 @@ int main(int	argc,
   WlzObject	*obj;
   WlzValues	values;
   char		strBuf[1024];
-  int		plane=0, xOff=0, yOff=0;
+  int		plane=0, xOff=0, yOff=0, pOff;
   int		width=0, height=0;
   int		colorFlg = 0;
   int		minL, maxL, minK, maxK;
@@ -404,34 +412,35 @@ int main(int	argc,
     dmnItem = (DomainItem *) HGUDlpListEntryGet(dmnList, item);
     if((dmnItem->obj->domain.p->plane1 <= plane) &&
        (dmnItem->obj->domain.p->lastpl >= plane)){
-      switch( dmnItem->obj->domain.p->type ){
-      case WLZ_PLANEDOMAIN_DOMAIN:
-	values.core = NULL;
-	obj = 
-	  WlzMakeMain(WLZ_2D_DOMAINOBJ,
-		      dmnItem->obj->domain.p->domains
-		      [plane - dmnItem->obj->domain.p->plane1],
-		      values, NULL, NULL, NULL);
-	insertObject(cntrList, obj, dmnItem->uid);
-	WlzFreeObj(obj);
-	break;
+      pOff = plane - dmnItem->obj->domain.p->plane1;
+      if( dmnItem->obj->domain.p->domains[pOff].core ){
+	switch( dmnItem->obj->domain.p->type ){
 
-      case WLZ_PLANEDOMAIN_POLYGON:
-	insertPolygonDomain(
-	  cntrList, dmnItem->obj->domain.p->domains
-	  [plane - dmnItem->obj->domain.p->plane1].poly,
-	  dmnItem->uid);
-	break;
+	case WLZ_PLANEDOMAIN_DOMAIN:
+	  values.core = NULL;
+	  obj = 
+	    WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			dmnItem->obj->domain.p->domains[pOff],
+			values, NULL, NULL, NULL);
+	  insertObject(cntrList, obj, dmnItem->uid);
+	  WlzFreeObj(obj);
+	  break;
 
-      case WLZ_PLANEDOMAIN_BOUNDLIST:
-	insertBoundaryList(
-	  cntrList, dmnItem->obj->domain.p->domains
-	  [plane - dmnItem->obj->domain.p->plane1].b,
-	  dmnItem->uid);
-	break;
+	case WLZ_PLANEDOMAIN_POLYGON:
+	  insertPolygonDomain(
+	    cntrList, dmnItem->obj->domain.p->domains[pOff].poly,
+	    dmnItem->uid);
+	  break;
 
-      default:
-	break;
+	case WLZ_PLANEDOMAIN_BOUNDLIST:
+	  insertBoundaryList(
+	    cntrList, dmnItem->obj->domain.p->domains[pOff].b,
+	    dmnItem->uid);
+	  break;
+
+	default:
+	  break;
+	}
       }
     }
 
@@ -440,6 +449,20 @@ int main(int	argc,
 
   /* sort the contours and find nearest enclosing contour */
   HGUDlpListSort(cntrList, compContourItem);
+
+  /* remove contours less thatn the minimum size */
+  item = HGUDlpListHead(cntrList);
+  while( item ){
+    cntrItem = (ContourItem *) HGUDlpListEntryGet(cntrList, item);
+    obj = WlzPolyTo8Polygon(cntrItem->poly, 1, &errNum);
+    if( (obj->domain.poly->nvertices - 1) < minSize ){
+      item = HGUDlpListDelete(cntrList, item);
+    }
+    else {
+      item = HGUDlpListNext(cntrList, item);
+    }
+    WlzFreeObj(obj);
+  }
 
   /* write the XYZ file, put in offsets for back conversion
      assume all autoIds = -1 (unknown) */
@@ -492,6 +515,7 @@ int main(int	argc,
       }
       index++;
     }
+    WlzFreeObj(obj);
     item = HGUDlpListNext(cntrList, item);
   }
     
