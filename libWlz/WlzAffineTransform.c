@@ -516,63 +516,43 @@ static WlzErrorNum WlzAffineTransformValues2D(WlzObject *newObj,
 	    dx = lxyy + (cx * posI.vtX);
 	    dy = lyyy + (sy * posI.vtX);
 	    WlzGreyValueGetCon(gVWSp, 0, dy, dx);
-	    tD0 = dx - WLZ_NINT(dx);
-	    tD1 = dy - WLZ_NINT(dy);
+	    tD0 = dx - WLZ_NINT(dx-0.5);
+	    tD1 = dy - WLZ_NINT(dy-0.5);
 	    switch(gWSp.pixeltype)
 	    {
 	      case WLZ_GREY_INT:
-		tD0 = ((((gVWSp->gVal[0]).inv +
-		         (gVWSp->gVal[2]).inv) * (1.0 - tD0)) +
-		       (((gVWSp->gVal[1]).inv +
-		         (gVWSp->gVal[3]).inv) * tD0) +
-		       (((gVWSp->gVal[0]).inv +
-		         (gVWSp->gVal[1]).inv) * (1.0 - tD1)) +
-		       (((gVWSp->gVal[2]).inv +
-		         (gVWSp->gVal[3]).inv) * tD1)) / 4.0;
+		tD0 = (((gVWSp->gVal[0]).inv * (1.0 - tD0) * (1.0 - tD1)) +
+		       ((gVWSp->gVal[1]).inv * tD0 * (1.0 - tD1)) +
+		       ((gVWSp->gVal[2]).inv * (1.0 - tD0) * tD1) +
+		       ((gVWSp->gVal[3]).inv * tD0 * tD1));
 		*(gWSp.u_grintptr.inp)++ = WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_SHORT:
-		tD0 = ((((gVWSp->gVal[0]).shv +
-		         (gVWSp->gVal[2]).shv) * (1.0 - tD0)) +
-		       (((gVWSp->gVal[1]).shv +
-		         (gVWSp->gVal[3]).shv) * tD0) +
-		       (((gVWSp->gVal[0]).shv +
-		         (gVWSp->gVal[1]).shv) * (1.0 - tD1)) +
-		       (((gVWSp->gVal[2]).shv +
-		         (gVWSp->gVal[3]).shv) * tD1)) / 4.0;
+		tD0 = (((gVWSp->gVal[0]).shv * (1.0 - tD0) * (1.0 - tD1)) +
+		       ((gVWSp->gVal[1]).shv * tD0 * (1.0 - tD1)) +
+		       ((gVWSp->gVal[2]).shv * (1.0 - tD0) * tD1) +
+		       ((gVWSp->gVal[3]).shv * tD0 * tD1));
 		*(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_UBYTE:
-		tD0 = ((((gVWSp->gVal[0]).ubv +
-		         (gVWSp->gVal[2]).ubv) * (1.0 - tD0)) +
-		       (((gVWSp->gVal[1]).ubv +
-		         (gVWSp->gVal[3]).ubv) * tD0) +
-		       (((gVWSp->gVal[0]).ubv +
-		         (gVWSp->gVal[1]).ubv) * (1.0 - tD1)) +
-		       (((gVWSp->gVal[2]).ubv +
-		         (gVWSp->gVal[3]).ubv) * tD1)) / 4.0;
-		*(gWSp.u_grintptr.ubp)++ = WLZ_NINT(tD0);
+		tD0 = (((gVWSp->gVal[0]).ubv * (1.0 - tD0) * (1.0 - tD1)) +
+		       ((gVWSp->gVal[1]).ubv * tD0 * (1.0 - tD1)) +
+		       ((gVWSp->gVal[2]).ubv * (1.0 - tD0) * tD1) +
+		       ((gVWSp->gVal[3]).ubv * tD0 * tD1));
+		*(gWSp.u_grintptr.ubp)++ = WLZ_CLAMP(tD0, 0, 255);
 		break;
 	      case WLZ_GREY_FLOAT:
-		tD0 = ((((gVWSp->gVal[0]).flv +
-		         (gVWSp->gVal[2]).flv) * (1.0 - tD0)) +
-		       (((gVWSp->gVal[1]).flv +
-		         (gVWSp->gVal[3]).flv) * tD0) +
-		       (((gVWSp->gVal[0]).flv +
-		         (gVWSp->gVal[1]).flv) * (1.0 - tD1)) +
-		       (((gVWSp->gVal[2]).flv +
-		         (gVWSp->gVal[3]).flv) * tD1)) / 4.0;
+		tD0 = (((gVWSp->gVal[0]).flv * (1.0 - tD0) * (1.0 - tD1)) +
+		       ((gVWSp->gVal[1]).flv * tD0 * (1.0 - tD1)) +
+		       ((gVWSp->gVal[2]).flv * (1.0 - tD0) * tD1) +
+		       ((gVWSp->gVal[3]).flv * tD0 * tD1));
 		*(gWSp.u_grintptr.flp)++ = tD0;
 		break;
 	      case WLZ_GREY_DOUBLE:
-		tD0 = ((((gVWSp->gVal[0]).dbv +
-		         (gVWSp->gVal[2]).dbv) * (1.0 - tD0)) +
-		       (((gVWSp->gVal[1]).dbv +
-		         (gVWSp->gVal[3]).dbv) * tD0) +
-		       (((gVWSp->gVal[0]).dbv +
-		         (gVWSp->gVal[1]).dbv) * (1.0 - tD1)) +
-		       (((gVWSp->gVal[2]).dbv +
-		         (gVWSp->gVal[3]).dbv) * tD1)) / 4.0;
+		tD0 = (((gVWSp->gVal[0]).dbv * (1.0 - tD0) * (1.0 - tD1)) +
+		       ((gVWSp->gVal[1]).dbv * tD0 * (1.0 - tD1)) +
+		       ((gVWSp->gVal[2]).dbv * (1.0 - tD0) * tD1) +
+		       ((gVWSp->gVal[3]).dbv * tD0 * tD1));
 		*(gWSp.u_grintptr.dbp)++ = tD0;
 		break;
 	    }

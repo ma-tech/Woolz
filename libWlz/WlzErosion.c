@@ -576,15 +576,19 @@ static WlzObject *WlzErosion3d(
 	dest_obj[0] = WlzAssignObject(start_obj[0], NULL);
 	dest_obj[1] = WlzErosion(start_obj[1], WLZ_4_CONNECTED, NULL);
 	dest_obj[2] = WlzAssignObject(start_obj[2], NULL);
-	tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL);
-	if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	if( tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL) ){
+	  if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	    new_obj->domain.p->domains[p].core = NULL;
+	  }
+	  else{
+	    new_obj->domain.p->domains[p] = WlzAssignDomain(tmp_obj->domain,
+							    NULL);
+	  }
+	  WlzFreeObj( tmp_obj );
+	}
+	else {
 	  new_obj->domain.p->domains[p].core = NULL;
 	}
-	else{
-	  new_obj->domain.p->domains[p] = WlzAssignDomain(tmp_obj->domain,
-							  NULL);
-	}
-	WlzFreeObj( tmp_obj );
 	WlzFreeObj( dest_obj[0] );
 	WlzFreeObj( dest_obj[1] );
 	WlzFreeObj( dest_obj[2] );
@@ -594,15 +598,19 @@ static WlzObject *WlzErosion3d(
 	dest_obj[0] = WlzErosion(start_obj[0], WLZ_4_CONNECTED, NULL);
 	dest_obj[1] = WlzErosion(start_obj[1], WLZ_8_CONNECTED, NULL);
 	dest_obj[2] = WlzErosion(start_obj[2], WLZ_4_CONNECTED, NULL);
-	tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL);
-	if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	if( tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL) ){
+	  if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	    new_obj->domain.p->domains[p].core = NULL;
+	  }
+	  else{
+	    new_obj->domain.p->domains[p] = WlzAssignDomain(tmp_obj->domain,
+							    NULL);
+	  }
+	  WlzFreeObj( tmp_obj );
+	}
+	else {
 	  new_obj->domain.p->domains[p].core = NULL;
 	}
-	else{
-	  new_obj->domain.p->domains[p] = WlzAssignDomain(tmp_obj->domain,
-							  NULL);
-	}
-	WlzFreeObj( tmp_obj );
 	WlzFreeObj( dest_obj[0] );
 	WlzFreeObj( dest_obj[1] );
 	WlzFreeObj( dest_obj[2] );
@@ -612,15 +620,19 @@ static WlzObject *WlzErosion3d(
 	dest_obj[0] = WlzErosion(start_obj[0], WLZ_8_CONNECTED, NULL);
 	dest_obj[1] = WlzErosion(start_obj[1], WLZ_8_CONNECTED, NULL);
 	dest_obj[2] = WlzErosion(start_obj[2], WLZ_8_CONNECTED, NULL);
-	tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL);
-	if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	if( tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL) ){
+	  if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	    new_obj->domain.p->domains[p].core = NULL;
+	  }
+	  else{
+	    new_obj->domain.p->domains[p] = WlzAssignDomain(tmp_obj->domain,
+							    NULL);
+	  }
+	  WlzFreeObj( tmp_obj );
+	}
+	else {
 	  new_obj->domain.p->domains[p].core = NULL;
 	}
-	else{
-	  new_obj->domain.p->domains[p] = WlzAssignDomain(tmp_obj->domain,
-							  NULL);
-	}
-	WlzFreeObj( tmp_obj );
 	WlzFreeObj( dest_obj[0] );
 	WlzFreeObj( dest_obj[1] );
 	WlzFreeObj( dest_obj[2] );
