@@ -41,6 +41,7 @@ public class WlzAffineTransformLSq
 
 	if(firstPass)
 	{
+	  double [] aryW = {1.0, 1.0, 1.0, 1.0};
 	  WlzDVertex2 [] aryS2 = {new WlzDVertex2(0.0, 1.0),
 	  			  new WlzDVertex2(4.0, 1.0),
 	  			  new WlzDVertex2(4.0, 5.1),
@@ -50,7 +51,7 @@ public class WlzAffineTransformLSq
 	  			  new WlzDVertex2(4.0, 5.0),
 	  			  new WlzDVertex2(0.0, 5.0)};
 	  WlzAffineTransform tr2 = WlzObject.WlzAffineTransformLSq2D(
-	  				4, aryS2, 4, aryT2,
+	  				4, aryT2, 4, aryS2, 0, aryW,
 					WlzTransformType.WLZ_TRANSFORM_2D_REG);
 
 	  WlzDVertex3 [] aryS3 = {new WlzDVertex3(0.0, 1.0, 0.0),
@@ -62,7 +63,7 @@ public class WlzAffineTransformLSq
 	  			  new WlzDVertex3(4.0, 5.0, 0.0),
 	  			  new WlzDVertex3(0.0, 5.0, 0.0)};
 	  WlzAffineTransform tr3 = WlzObject.WlzAffineTransformLSq3D(
-	  				4, aryS3, 4, aryT3,
+	  				4, aryT3, 4, aryS3, 0, aryW,
 					WlzTransformType.WLZ_TRANSFORM_3D_REG);
 	}
       }
