@@ -45,7 +45,7 @@ int             main(int argc, char **argv)
   FILE		*fP = NULL;
   WlzObject	*outObj = NULL;
   WlzObject	*inObj[2];
-  WlzBinaryOperatorType operator = WLZ_ADD;
+  WlzBinaryOperatorType operator = WLZ_BO_ADD;
   char 		*outObjFileStr;
   char  	*inObjFileStr[2];
   WlzPixelV	gMin[3],
@@ -69,22 +69,22 @@ int             main(int argc, char **argv)
         outObjFileStr = optarg;
 	break;
       case 'a':
-        operator = WLZ_ADD;
+        operator = WLZ_BO_ADD;
 	break;
       case 'd':
-        operator = WLZ_DIVIDE;
+        operator = WLZ_BO_DIVIDE;
 	break;
       case 'g':
-      	operator = WLZ_MAGNITUDE;
+      	operator = WLZ_BO_MAGNITUDE;
 	break;
       case 'l':
-        operator = WLZ_MODULUS;
+        operator = WLZ_BO_MODULUS;
 	break;
       case 'm':
-        operator = WLZ_MULTIPLY;
+        operator = WLZ_BO_MULTIPLY;
 	break;
       case 's':
-        operator = WLZ_SUBTRACT;
+        operator = WLZ_BO_SUBTRACT;
 	break;
       case 'n':
         norm = WLZ_IMARNORM_INPUT;

@@ -16,6 +16,7 @@
 ************************************************************************/
 #include <Wlz.h>
 #include <limits.h>
+#include <string.h>
 
 extern int	getopt(int argc, char * const *argv, const char *optstring);
 

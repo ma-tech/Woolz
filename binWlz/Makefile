@@ -28,9 +28,6 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
-			Wlz3DGetSection \
-			Wlz3DViewTransformObj \
-			Wlz3DViewTransformBitmap \
 			WlzAffineTransformLSq \
 			WlzAffineTransformObj \
 			WlzArea \
@@ -84,6 +81,7 @@ EXECUTABLES		= \
 			WlzIntersect \
 			WlzLabel \
 			WlzLaplacian \
+			WlzMatchICPObj \
 			WlzObjToBoundary \
 			WlzPolarSample \
 			WlzPolygonToObj \
@@ -114,9 +112,6 @@ EXECUTABLES		= \
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			MADomainTest.c \
-			Wlz3DGetSection.c \
-			Wlz3DViewTransformObj.c \
-			Wlz3DViewTransformBitmap.c \
 			WlzAffineTransformLSq.c \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
@@ -233,7 +228,7 @@ MANPAGES		= \
 			  WlzSampleObj.1 \
 			  WlzShiftObj.1 \
 			  WlzSobel.1 \
-			WlzTransposePlanes.1 \
+			  WlzTransposePlanes.1 \
 			  WlzWindow.1
 
 # List of all directories to be searched before the standard include
@@ -242,11 +237,7 @@ DEPENDDIRS		= \
 			  . \
 			  ../libAlc \
 			  ../libAlg \
-			  ../libbibfile \
-			  ../libWlz \
-			  ../libWlzIO \
-			  ../libWlzExtFF \
-			  ../../External/Tiff/libtiff
+			  ../libWlz
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -262,15 +253,15 @@ LIBDIRS			= \
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
-EXTRA_LIBS		= tiff gen socket nsl m
+EXTRA_LIBS		= gen socket nsl m
 else
-EXTRA_LIBS		= tiff m
+EXTRA_LIBS		= m
 endif
 
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		= WlzIO WlzExtFF Wlz bibfile Alg Alc \
+LIBRARIES		= Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
