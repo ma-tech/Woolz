@@ -13,6 +13,9 @@
 *		in 2D and 3D.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <math.h>
@@ -40,8 +43,8 @@ static WlzObject *WlzSpecial_h4(WlzErrorNum *dstErr)  /*-*/
     if( obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			  NULL, NULL, &errNum) ){
       intl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*3);
-      domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)intl,
-      					 NULL);
+      domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intl,
+      					   NULL);
       for(i = -1; i < 2; i++){
 	if(i == 0){
 	  intl->ileft = 0;
@@ -84,8 +87,8 @@ static WlzObject *WlzSpecial_ex4(WlzErrorNum *dstErr)  /*-*/
     if( obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			  NULL, NULL, &errNum) ){
       intl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*3);
-      domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)intl,
-      					 NULL);
+      domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intl,
+      					   NULL);
       for(i = -1; i < 2; i++){
 	if(i == 0){
 	  intl->ileft = 1;
@@ -128,8 +131,8 @@ static WlzObject *WlzSpecial_a8(WlzErrorNum *dstErr)  /*-*/
     if( obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			  NULL, NULL, &errNum) ){
       intl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*3);
-      domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)intl,
-      					 NULL);
+      domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intl,
+      					   NULL);
       for(i = -1; i < 2; i++){
 	intl->ileft = 0;
 	intl->iright = 2;
@@ -483,8 +486,8 @@ WlzObject *WlzMakeSinglePixelObject(
       itv->iright = k;
       if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					   l, l, k, k, &errNum) ){
-	domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, itv,
-					   NULL);
+	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, itv,
+					     NULL);
 	domain.i->intvlines->nintvs = 1;
 	domain.i->intvlines->intvs = itv;
 	values.core = NULL;
@@ -562,8 +565,8 @@ WlzObject *WlzMakeCircleObject(
 					 &errNum) ){
       if( intvlPtr = (WlzInterval *) AlcCalloc((lastln - line1 + 1),
 					       sizeof(WlzInterval)) ){
-	domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr,
-					   (void *)intvlPtr, NULL);
+	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr,
+					     (void *)intvlPtr, NULL);
 	for(l=line1; l <= lastln; l++, intvlPtr++){
 	  delta = radius*radius - (l-y)*(l-y);
 	  if( delta < 0.5 ){

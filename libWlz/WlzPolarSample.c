@@ -12,6 +12,9 @@
 * Purpose:      Implements a rectangular to polar resampling filter.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -243,7 +246,8 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dstObj->values.r->freeptr = WlzPushFreePtr(dstObj->values.r->freeptr,
+	  dstObj->values.r->freeptr = AlcFreeStackPush(
+	  					     dstObj->values.r->freeptr,
 	  					     (void *)dstValP.ubp,
 						     NULL);
 	  angle = 0;

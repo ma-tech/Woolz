@@ -12,6 +12,9 @@
 * Purpose:      Performs erosion using a structuring element.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -200,8 +203,8 @@ WlzObject *WlzStructErosion(
       if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					   line1, lastln, kol1, lastkl,
 					   &errNum) ){
-	domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)jp,
-					   NULL);
+	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
+					     NULL);
 	values.core = NULL;
 	rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			     NULL, NULL, &errNum);

@@ -13,6 +13,9 @@
 *		Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -135,8 +138,8 @@ WlzObject *WlzDiffDomain(
 					   &errNum)) == NULL ){
       AlcFree((void *) intp);
     }
-    diffdom.i->freeptr = WlzPushFreePtr(diffdom.i->freeptr, (void *)intp,
-    					NULL);
+    diffdom.i->freeptr = AlcFreeStackPush(diffdom.i->freeptr, (void *)intp,
+    					  NULL);
   }
 
   if( errNum == WLZ_ERR_NONE ){

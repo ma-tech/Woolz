@@ -12,6 +12,9 @@
 * Purpose:      Rescale a Woolz object using an integral scale.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -145,9 +148,9 @@ WlzObject *WlzIntRescaleObj(
 
       num_intvls = WlzIntervalCount(obj->domain.i, NULL);
       num_intvls = expand ? num_intvls * scale : num_intvls;
-      intvls = (WlzInterval *) AlcMalloc(sizeof(WlzInterval) * num_intvls);
-      domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)intvls,
-      					 NULL);
+      intvls = (WlzInterval *)AlcMalloc(sizeof(WlzInterval) * num_intvls);
+      domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intvls,
+      					   NULL);
 
       for(l=l1; l <= ll; l++)
       {

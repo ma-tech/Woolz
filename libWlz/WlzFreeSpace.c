@@ -12,128 +12,12 @@
 * Purpose:      Functions to free objects and their data.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
-
-typedef struct _WlzFreeStackEntry
-{
-  void		*data;
-  struct _WlzFreeStackEntry *prev;
-} WlzFreeStackEntry;
-
-/************************************************************************
-* Function:	WlzPushFreePtr						*
-* Returns:	void *:			New free pointer for object or	*
-*					NULL on error.			*
-* Purpose:	Push's the given pointer onto the free stack on top	*
-*		of the previous free pointer.				*
-* Global refs:	-							*
-* Parameters:	void *prev:		Previous free pointer, as set	*
-*					in object.			*
-*		void *data:		New pointer to push onto the	*
-*					free stack.			*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
-void 		*WlzPushFreePtr(void *prev, void *data, WlzErrorNum *dstErr)
-{
-  WlzFreeStackEntry *fPtr = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((fPtr = (WlzFreeStackEntry *)
-	     AlcMalloc(sizeof(WlzFreeStackEntry))) == NULL)
-  {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  else
-  {
-    fPtr->data = data;
-    fPtr->prev = (WlzFreeStackEntry *)prev;
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return((void *)fPtr);
-}
-
-/************************************************************************
-* Function:	WlzPopFreePtr						*
-* Returns:	void *:			New free stack pointer for	*
-*					object, maybe NULL on error.	*
-* Purpose:	Pop's the top entry from the free stack. Returns a 	*
-*		free stack pointer and set's the given destination 	*
-*		pointer to the entry's data. The entry's data is NOT	*
-*		free'd.							*
-* Global refs:	-							*
-* Parameters:	void *prev:		The free stack.			*
-*		void **dstData:		Destination data pointer, may	*
-*					be NULL.			*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
-void 		*WlzPopFreePtr(void *prev, void **dstData, WlzErrorNum *dstErr)
-{
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzFreeStackEntry *entry0,
-  		*entry1 = NULL;
-
-  if(prev == NULL)
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else
-  {
-    entry0 = (WlzFreeStackEntry *)prev;
-    entry1 = entry0->prev;
-    if(dstData)
-    {
-      *dstData = entry0->data;
-    }
-    AlcFree(entry0);
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return((void *)entry1);
-}
-
-/************************************************************************
-* Function:	WlzFreeFreePtr						*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Free's all entries on the given free stack.		*
-* Global refs:	-							*
-* Parameters:	void *stack:		The stack of pointers to be	*
-*					free'd.				*
-************************************************************************/
-WlzErrorNum	WlzFreeFreePtr(void *stack)
-{
-  WlzFreeStackEntry *entry0,
-  		*entry1;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(stack == NULL)
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else
-  {
-    entry0 = (WlzFreeStackEntry *)stack;
-    while(entry0)
-    {
-      entry1 = entry0;
-      entry0 = entry1->prev;
-      if(entry1->data)
-      {
-        AlcFree(entry1->data);
-      }
-      AlcFree(entry1);
-    }
-  }
-  return(errNum);
-}
 
 /************************************************************************
 *   Function   : WlzFreeObj						*
@@ -390,7 +274,7 @@ WlzErrorNum WlzFreeDomain(WlzDomain domain)
   if( WlzUnlink(&(domain.core->linkcount), &errNum) ){
 
     if (domain.core->freeptr != NULL){
-      errNum = WlzFreeFreePtr(domain.core->freeptr);
+      errNum = AlcFreeStackFree(domain.core->freeptr);
     }
 
     AlcFree((void *) domain.core);
@@ -528,7 +412,7 @@ WlzErrorNum WlzFreeValues(WlzValues values)
       if( values.v->original_table.v != NULL ){
 	return( WLZ_ERR_VALUES_DATA );
       }
-      (void )WlzFreeFreePtr(values.v->freeptr);
+      (void )AlcFreeStackFree(values.v->freeptr);
 
     }
     

@@ -64,6 +64,9 @@
 *		may decide to delete points outside skObj and then muck
 *		up points within skObj.				
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdio.h>
 #include <Wlz.h>
@@ -270,9 +273,9 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	}
 	else
 	{
-	  delDom.i->freeptr = WlzPushFreePtr(delDom.i->freeptr,
-					     (void *)delItvBase,
-					     &errNum);
+	  delDom.i->freeptr = AlcFreeStackPush(delDom.i->freeptr,
+					       (void *)delItvBase,
+					       &errNum);
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -293,9 +296,9 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	}
 	else
 	{
-	  altDelDom.i->freeptr = WlzPushFreePtr(altDelDom.i->freeptr,
-					        (void *)altItvBase,
-					        &errNum);
+	  altDelDom.i->freeptr = AlcFreeStackPush(altDelDom.i->freeptr,
+						  (void *)altItvBase,
+						  &errNum);
 	}
       }
       skObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dumDom, dumVal, NULL, srcObj,
@@ -323,9 +326,9 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	}
 	else
 	{
-	  delDom.i->freeptr = WlzPushFreePtr(delDom.i->freeptr,
-	      				     (void *)delItvBase,
-					     &errNum);
+	  delDom.i->freeptr = AlcFreeStackPush(delDom.i->freeptr,
+					       (void *)delItvBase,
+					       &errNum);
 	}
       }
     }

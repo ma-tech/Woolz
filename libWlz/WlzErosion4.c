@@ -16,6 +16,9 @@
 *		to access 4-connected erosion.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 
@@ -142,7 +145,7 @@ WlzObject *WlzErosion4(
 				    line1, lastln,
 				    idmn2->kol1+1, idmn2->lastkl-1,
 				    &errNum)) ){
-    idmn1->freeptr = WlzPushFreePtr(idmn1->freeptr, (void *)jp, NULL); 
+    idmn1->freeptr = AlcFreeStackPush(idmn1->freeptr, (void *)jp, NULL); 
     itvl = &(idmn2->intvlines[line1 - idmn2->line1]);
     ptr = buff;
     for(line = line1; line <= lastln; line++){

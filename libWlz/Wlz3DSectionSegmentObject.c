@@ -12,6 +12,9 @@
 * Purpose:      Segments a sectionthrough a 3D object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <Wlz.h>
 
@@ -159,8 +162,8 @@ WlzErrorNum Wlz3DSectionSegmentObject(
 				    tmpObj->domain.i->lastkl,
 				    NULL);
       intvls0 = AlcMalloc(nints0*sizeof(WlzInterval));
-      idom0->freeptr = WlzPushFreePtr(idom0->freeptr,
-				      (void *)intvls0, NULL);
+      idom0->freeptr = AlcFreeStackPush(idom0->freeptr,
+				        (void *)intvls0, NULL);
 
       idom1 = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 				    tmpObj->domain.i->line1,
@@ -169,8 +172,8 @@ WlzErrorNum Wlz3DSectionSegmentObject(
 				    tmpObj->domain.i->lastkl,
 				    NULL);
       intvls1 = AlcMalloc(nints0*sizeof(WlzInterval));
-      idom1->freeptr = WlzPushFreePtr(idom1->freeptr,
-				      (void *)intvls1, NULL);
+      idom1->freeptr = AlcFreeStackPush(idom1->freeptr,
+				        (void *)intvls1, NULL);
 
       /* scan the original object adding/splitting intervals as required */
       nints0 = 0;

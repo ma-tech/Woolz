@@ -65,6 +65,7 @@ CSOURCES		= \
 			WlzFreeSpace.c \
 			WlzGauss.c \
 			WlzGaussNoise.c \
+			WlzGeoModel.c \
 			WlzGeometry.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
@@ -363,3 +364,6 @@ testWlzFacts:	testWlzFacts.o
 # Target for Purified executables (modify as required).
 purify:
 testWlzFacts.pure:	testWlzFacts.o
+
+$(OBJECTS):		%.o: %.c $(INCLUDES_ALL) 
+			$(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<

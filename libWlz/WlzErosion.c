@@ -12,6 +12,9 @@
 * Purpose:      Morphological erosion of a woolz domain.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -311,7 +314,7 @@ WlzObject *WlzErosion(
   
   if( errNum == WLZ_ERR_NONE ){
     jp = jwp;
-    domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)jp, NULL);
+    domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp, NULL);
     k1 = kol1;
     kol1 += 2;
     for(line = line1; line <= lastln; line++){

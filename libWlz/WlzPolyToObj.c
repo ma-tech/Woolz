@@ -12,6 +12,9 @@
 * Purpose:      Makes a Woolz domain object from a polygon.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -200,8 +203,8 @@ WlzObject *WlzPolyToObj(
   if((errNum == WLZ_ERR_NONE) &&
      (intptr = (WlzInterval *)
        AlcMalloc(sizeof(WlzInterval)*(num_vtxs + height + 1))) ){
-    domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)intptr,
-    				       NULL);
+    domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intptr,
+    				         NULL);
   }
   else {
     WlzFreeObj(obj1);

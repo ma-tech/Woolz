@@ -12,6 +12,9 @@
 * Purpose:      Subsamples an object through a convolution kernel.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -342,8 +345,8 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
-        dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr, (void *)dstItv0,
-					   &errNum);
+        dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
+					     &errNum);
       }
     }
     else
@@ -503,8 +506,8 @@ static WlzObject *WlzSampleObjPoint(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
-        dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr, (void *)dstItv0,
-					   &errNum);
+        dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
+					     &errNum);
       }
     }
     else
@@ -740,9 +743,9 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
       }
       else
       {
-	dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr,
-					   (void *)dstItvBase,
-					   &errNum);
+	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
+					     (void *)dstItvBase,
+					     &errNum);
       }
     }
     else
@@ -1087,9 +1090,9 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
       }
       else
       {
-	dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr,
-					   (void *)dstItvBase,
-					   &errNum);
+	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
+					     (void *)dstItvBase,
+					     &errNum);
       }
     }
     else
@@ -1415,9 +1418,9 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
-	dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr,
-					   (void *)dstItvBase,
-					   &errNum);
+	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
+					     (void *)dstItvBase,
+					     &errNum);
       }
     }
     else
@@ -1838,9 +1841,9 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
-	dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr,
-					   (void *)dstItvBase,
-					   &errNum);
+	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
+					     (void *)dstItvBase,
+					     &errNum);
       }
     }
     else
@@ -2382,9 +2385,9 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    values.r->freeptr = WlzPushFreePtr(values.r->freeptr,
-    				       greyValues, &errNum);
-  }
+    values.r->freeptr = AlcFreeStackPush(values.r->freeptr,
+					 greyValues, &errNum);
+    }
   if(errNum == WLZ_ERR_NONE)
   {
     if(dstValues)

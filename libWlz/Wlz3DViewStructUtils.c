@@ -12,6 +12,9 @@
 * Purpose:      Utility functions associated with 3D views.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <float.h>
@@ -147,7 +150,7 @@ WlzErrorNum WlzFree3DViewStruct(
   {
     /* free luts and rotation matrix if set */
     if( viewStr->initialised && viewStr->freeptr != NULL ){
-      WlzFreeFreePtr(viewStr->freeptr);
+      AlcFreeStackFree(viewStr->freeptr);
     }
     if( viewStr->ref_obj != NULL ){
       WlzFreeObj( viewStr->ref_obj );
@@ -392,7 +395,7 @@ WlzErrorNum WlzInit3DViewStruct(
   /* if intialised then free existing luts */
   if( viewStr->initialised ){
     if( viewStr->freeptr ){
-      WlzFreeFreePtr( viewStr->freeptr );
+      AlcFreeStackFree( viewStr->freeptr );
     }
   }
 
@@ -419,7 +422,7 @@ WlzErrorNum WlzInit3DViewStruct(
   heightp = WLZ_NINT(viewStr->maxvals.vtY) -
     WLZ_NINT(viewStr->minvals.vtY) + 1;
   AlcDouble1Malloc(&tDP0, 3*widthp + 3*heightp);
-  viewStr->freeptr = WlzPushFreePtr(NULL, tDP0, NULL);
+  viewStr->freeptr = AlcFreeStackPush(NULL, tDP0, NULL);
   viewStr->xp_to_x = tDP0;
   viewStr->xp_to_y = viewStr->xp_to_x + widthp;
   viewStr->xp_to_z = viewStr->xp_to_y + widthp;

@@ -12,6 +12,9 @@
 * Purpose:	Functions for extracting contours from Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -19,33 +22,8 @@
 #include <Wlz.h>
 
 /* #define WLZ_CONTOUR_DEBUG */
-
-typedef enum
-{
-  WLZ_CONTOURWS_CLEAR_NONE	= (0),
-  WLZ_CONTOURWS_CLEAR_DATA	= (1),
-  WLZ_CONTOURWS_CLEAR_FLAGS	= (1<<1)
-} WlzContourWSpClearMode;
-
-/************************************************************************
-* WlzContourWSpace: Workspace for 2D or 3D contour generation.
-************************************************************************/
-typedef struct _WlzContourWSpace
-{
-  WlzContourType type;			        /* Type of contour: 2D or 3D */
-  WlzContourMethod method;		   /* Iso-value or gradient contour. */
-  int		conIdx;				  /* Next connectivity index */
-  int		edgIdx;				          /* Next edge index */
-  int		nodIdx;				          /* Next node index */
-  int		newLn;    /* Non zero until edge created for line, then zero */
-  int		minBlkSz; 	     /* Minimum number of elements per block */
-  WlzEdge	*lstEdg;		     		        /* Last edge */
-  WlzEdge	*edgCurLn;		       /* First edge on current line */
-  WlzEdge	*edgLstLn;		          /* First edge on last line */
-  AlcBlockStack	*nodStk;				 /* Node block stack */
-  AlcBlockStack	*edgStk;				 /* Edge block stack */
-  AlcHashTable	*conTable;		 	       /* Connectivity table */
-} WlzContourWSpace;
+static void 	WlzContourTestOutPSLn2D(FILE *fP,
+					WlzDVertex2 org, WlzDVertex2 dst);
 
 /************************************************************************
 * WlzContourTriIsn2D: Classification of intersection of line segment
@@ -53,95 +31,77 @@ typedef struct _WlzContourWSpace
 ************************************************************************/
 typedef enum
 {
-  WLZ_CONTOUR_TIC2D_NONE,	       			   /*No intersection */
-  WLZ_CONTOUR_TIC2D_N1N0,	                          /* Node 1 - node 0 */
-  WLZ_CONTOUR_TIC2D_N0N2,		                  /* Node 0 - node 2 */
-  WLZ_CONTOUR_TIC2D_N2N1,			     	  /* Node 2 - node 1 */
-  WLZ_CONTOUR_TIC2D_N1S02,			        /* Node 1 - side 0-2 */
-  WLZ_CONTOUR_TIC2D_N0S21,			        /* Node 0 - side 2-1 */
-  WLZ_CONTOUR_TIC2D_N2S10,			        /* Node 2 - side 1-0 */
-  WLZ_CONTOUR_TIC2D_S10S02,			      /* Side 1-0 - side 0-2 */
-  WLZ_CONTOUR_TIC2D_S02S21,			      /* Side 0-2 - side 2-1 */
-  WLZ_CONTOUR_TIC2D_S21S10			      /* Side 2-1 - side 1-0 */
+  WLZ_CONTOUR_TIC2D_NONE,                                  /*No intersection */
+  WLZ_CONTOUR_TIC2D_N1N0,                                 /* Node 1 - node 0 */
+  WLZ_CONTOUR_TIC2D_N0N2,                                 /* Node 0 - node 2 */
+  WLZ_CONTOUR_TIC2D_N2N1,                                 /* Node 2 - node 1 */
+  WLZ_CONTOUR_TIC2D_N1S02,                              /* Node 1 - side 0-2 */
+  WLZ_CONTOUR_TIC2D_N0S21,                              /* Node 0 - side 2-1 */
+  WLZ_CONTOUR_TIC2D_N2S10,                              /* Node 2 - side 1-0 */
+  WLZ_CONTOUR_TIC2D_S10S02,                           /* Side 1-0 - side 0-2 */
+  WLZ_CONTOUR_TIC2D_S02S21,                           /* Side 0-2 - side 2-1 */
+  WLZ_CONTOUR_TIC2D_S21S10                            /* Side 2-1 - side 1-0 */
 } WlzContourTriIsn2D;
 
-static WlzContourWSpace *WlzMakeContourWSpace(WlzContourType type,
-				WlzContourMethod method,
-				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourWSpSegment(WlzContourWSpace *ctrWSp,
-				int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj,
-				double isoVal, int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourIsoObj3D(WlzObject *srcObj,
-				double isoVal, int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
+static WlzContour	*WlzContourIsoObj2D(
+			  WlzObject *srcObj,
+			  double isoVal,
+			  int minNod,
+			  int minEdg,
+			  WlzErrorNum *dstErr);
+static WlzContour	*WlzContourIsoObj3D(
+			  WlzObject *srcObj,
+			  double isoVal,
+			  int minNod,
+			  int minEdg,
+			  WlzErrorNum *dstErr);
+static WlzContour	*WlzContourGrdObj2D(WlzObject *srcObj,
 				double minGrd, double ftrPrm,
 				int minNod, int minEdg,
 				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourGrdObj3D(WlzObject *srcObj,
-				double minGrd, double ftrPrm,
-				int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourWSpSegment2D(WlzContourWSpace *ctrWSp,
-				int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzContourList *WlzContourWSpSegment3D(WlzContourWSpace *ctrWSp,
-				int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzContour *WlzContourExtractContour2D(WlzContourWSpace *ctrWSp,
-				WlzEdge *ctrEdg,
-				int minNod, int minEdg,
-				WlzErrorNum *dstErr);
-static WlzEdge	*WlzContourWSpEdgNextAlc(WlzEdge *edg);
-static WlzEdge	*WlzContourWSpEdgPrevAlc(WlzEdge *edg);
-static WlzDVertex2 WlzContourItpTriSide(double ht0, double ht1,
-				WlzDVertex2 org, WlzDVertex2 dst);
-static WlzErrorNum WlzFreeContourWSpace(WlzContourWSpace *ctrWSp);
-static WlzErrorNum WlzContourWSpAlcNod2D(WlzContourWSpace  *ctrWSp,
-                                WlzEdgeNode2 **dstNod, int reqCnt);
-static WlzErrorNum WlzContourWSpAlcEdg(WlzContourWSpace  *ctrWSp,
-                                WlzEdge **dstNod, int reqCnt);
-static WlzErrorNum WlzContourIsoCube2D(WlzContourWSpace *ctrWSp,
-				double isoVal, double *ln0, double *ln1,
-				WlzDVertex2 sqOrg);
-static WlzErrorNum WlzContourWSpAddEdg2D(WlzContourWSpace *ctrWSp,
-				WlzDVertex2 *iPos, WlzDVertex2 sqOrg);
-static WlzErrorNum WlzContourGrdLink2D(WlzContourWSpace *ctrWSp,
-			        UBYTE **grdDBuf,
-				int bufWd, WlzIVertex2 org,
-			        int lnOff, int lnIdx[], int klP);
-static WlzErrorNum  WlzContourEdgNodCount(WlzEdge *ctrEdg,
-				int *dstEdgCnt, int *dstNodCnt);
-static WlzErrorNum WlzContourWSpClearFlags(WlzContourWSpace *ctrWSp,
-				unsigned mode);
-static void	WlzContourExtractContour2DFn(WlzEdge *edgBlk,
-				int *edgIdx, WlzEdgeNode2 *nodBlk,
-				int *nodIdx, WlzEdge *ctrEdg);
-static void	WlzContourExtractContour2DFnNod(WlzEdgeNode2 *nodBlk,
-				int *nodIdx, WlzEdgeNode2 *wNod);
-static void	WlzContourExtractContour2DFnEdg(WlzEdge *edgBlk,
-				int *edgIdx, WlzEdge *wEdg);
-static void	WlzContourTestOutPS(FILE *,
-				WlzContour *ctr);
-static void	WlzContourTestOutPSFn(FILE *fP,
-				WlzEdge *edg);
-static void	WlzContourMatchEdg2D(WlzContourWSpace *ctrWSp,
-				WlzEdge **nxtEdg, WlzDVertex2 *iPos,
-				WlzDVertex2 sqOrg);
-static void	WlzContourEdgNodCountFn(WlzEdge *edg,
-				int *edgCnt, int *nodCnt);
-static void 	WlzContourTestOutPSLn2D(FILE *fP, WlzDVertex2 org,
-				WlzDVertex2 dst);
-static int	WlzContourHashCtrKeyCmpFn(void *key0, void *key1);
-static int	WlzContourWSpHashEntryIsNull(AlcHashTable *hTbl,
-				AlcHashItem *hItem,
-				void *dummy);
-static int	WlzContourWSpEdgJoin2D(WlzContourWSpace *ctrWSp, 
-				WlzEdge *conEdg0, WlzEdge *conEdg1);
-static unsigned	WlzContourHashFn(void *keyP);
+static WlzContour	*WlzContourGrdObj3D(
+			  WlzObject *srcObj,
+			  double minGrd,
+			  double ftrPrm,
+			  int minNod,
+			  int minEdg,
+			  WlzErrorNum *dstErr);
+static WlzDVertex2	WlzContourItpTriSide(
+			  double ht0,
+			  double ht1,
+			  WlzDVertex2 org,
+			  WlzDVertex2 dst);
+static WlzErrorNum	WlzContourIsoCube2D(
+			  WlzContour *ctr,
+			  double isoVal,
+			  double *ln0,
+			  double *ln1,
+			  WlzDVertex2 sqOrg,
+			  int *vtxSearchIdx);
+static WlzErrorNum	WlzContourIsoCube3D(WlzContour *ctr,
+			  double isoVal,
+			  double *pn0ln0,
+			  double *pn0ln1,
+			  double *pn1ln0,
+			  double *pn1ln1,
+			  WlzDVertex3 cbOrg);
+static WlzErrorNum	WlzContourIsoTet3D(
+			  WlzContour *ctr,
+			  double *tVal,
+			  WlzDVertex3 *tPos,
+			  WlzDVertex3 cbOrg);
+static WlzErrorNum	WlzContourGrdLink2D(
+			  WlzContour *ctr,
+			  UBYTE **grdDBuf,
+			  int bufWd,
+			  WlzIVertex2 org,
+			  int lnOff,
+			  int lnIdx[],
+			  int klP,
+			  int *vtxSearchIdx);
+static void		WlzContourTestOutVTK(
+			  FILE *fP,
+			  WlzContour *ctr);
 
 /************************************************************************
 * Function:	WlzMakeContour
@@ -155,20 +115,35 @@ static unsigned	WlzContourHashFn(void *keyP);
 WlzContour	*WlzMakeContour(WlzContourType ctrType, WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;
+  WlzGMModelType modType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((ctrType != WLZ_CONTOUR_TYPE_2D) && (ctrType != WLZ_CONTOUR_TYPE_3D))
+  switch(ctrType)
   {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
+    case WLZ_CONTOUR_TYPE_2D:
+      modType = WLZ_GMMOD_2D;
+      break;
+    case WLZ_CONTOUR_TYPE_3D:
+      modType = WLZ_GMMOD_3D;
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
   }
-  else if((ctr = AlcCalloc(1, sizeof(WlzContour))) == NULL)
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  else
-  {
-    ctr->type = WLZ_CONTOUR;
-    ctr->ctrType = ctrType;
+    if((ctr = AlcCalloc(1, sizeof(WlzContour))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      ctr->model = WlzGMModelNew(modType, &errNum);
+      if(errNum != WLZ_ERR_NONE)
+      {
+        AlcFree(ctr);
+      }
+    }
   }
   if(dstErr)
   {
@@ -200,7 +175,7 @@ WlzErrorNum	WlzFreeContour(WlzContour *ctr)
   {
     if(WlzUnlink(&(ctr->linkcount), &errNum))
     {
-      errNum = WlzFreeFreePtr(ctr->freeptr);
+      (void )WlzGMModelFree(ctr->model);
       AlcFree((void *)ctr);
     }
   }
@@ -208,240 +183,15 @@ WlzErrorNum	WlzFreeContour(WlzContour *ctr)
 }
 
 /************************************************************************
-* Function:	WlzMakeContourList
-* Returns:	WlzContourList *:		New contour list.
-* Purpose:	Makes a new contour list data structure.
-* Global refs:	-
-* Parameters:	WlzErrorNum *dstErr:	Destination error pointer, may
-					be null.
-************************************************************************/
-WlzContourList	*WlzMakeContourList(WlzErrorNum *dstErr)
-{
-  WlzContourList *ctrLst = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((ctrLst = AlcCalloc(1, sizeof(WlzContourList))) == NULL)
-  {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  else
-  {
-    ctrLst->type = WLZ_CONTOUR_LIST;
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(ctrLst);
-}
-
-/************************************************************************
-* Function:	WlzFreeContourList
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Recursivly free's a WlzContourList data structure.
-* Global refs:	-
-* Parameters:	WlzContourList *ctrLst:	Given contour to free.
-************************************************************************/
-WlzErrorNum	WlzFreeContourList(WlzContourList *ctrLst)
-{
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctrLst == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(ctrLst->type != WLZ_CONTOUR_LIST)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else
-  {
-    if(WlzUnlink(&(ctrLst->linkcount), &errNum))
-    {
-      if(ctrLst->contour)
-      {
-        errNum = WlzFreeContour(ctrLst->contour);
-      }
-      if(ctrLst->next)
-      {
-        errNum = WlzFreeContourList(ctrLst->next);
-      }
-      if(ctrLst->next)
-      {
-        errNum = WlzFreeContourList(ctrLst->prev);
-      }
-      AlcFree((void *)ctrLst);
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourClearFlags
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Clears the flags of all the contour's edges and
-*		nodes.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour to free.
-************************************************************************/
-WlzErrorNum	WlzContourClearFlags(WlzContour *ctr)
-{
-  int		cnt;
-  AlcBlockStack *blk;
-  WlzEdge	*edg;
-  WlzEdgeNode2	*nod2;
-  WlzEdgeNode3	*nod3;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctr == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(ctr->type != WLZ_CONTOUR)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else
-  {
-    /* Clear all edge flags. */
-    blk = ctr->edgeStk;
-    while(blk)
-    {
-
-      cnt = blk->elmCnt;
-      edg = (WlzEdge *)(blk->elements);
-      while(cnt-- > 0)
-      {
-        edg++->flags = WLZ_EDGE_FLAGS_NONE;
-      }
-      blk = blk->next;
-    }
-    /* Clear node flags. */
-    blk = ctr->nodeStk;
-    switch(ctr->ctrType)
-    {
-      case WLZ_CONTOUR_TYPE_2D:
-	while(blk)
-	{
-	  cnt = blk->elmCnt;
-	  nod2 = (WlzEdgeNode2 *)(blk->elements);
-	  while(cnt-- > 0)
-	  {
-	    nod2++->flags = WLZ_EDGE_FLAGS_NONE;
-	  }
-	  blk = blk->next;
-	}
-	break;
-      case WLZ_CONTOUR_TYPE_3D:
-	while(blk)
-	{
-	  cnt = blk->elmCnt;
-	  nod3 = (WlzEdgeNode3 *)(blk->elements);
-	  while(cnt-- > 0)
-	  {
-	    nod3++->flags = WLZ_EDGE_FLAGS_NONE;
-	  }
-	  blk = blk->next;
-	}
-	break;
-      default:
-	errNum = WLZ_ERR_DOMAIN_TYPE;
-        break;
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzMakeContourWSpace
-* Returns:	WlzContourWSpace *:		New contour.
-* Purpose:	Makes a new contour data structure.
-* Global refs:	-
-* Parameters:	WlzContourType type:	Contour type.
-*		WlzContourMethod method: Contour method.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
-static WlzContourWSpace *WlzMakeContourWSpace(WlzContourType type,
-				       WlzContourMethod method,
-				       WlzErrorNum *dstErr)
-{
-  WlzContourWSpace *ctrWSp = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	minBlkSz = 4096,
-  		segTblSz = 4096;
-
-  switch(type)
-  {
-    case WLZ_CONTOUR_TYPE_2D: /* FALLTHROUGH */
-    case WLZ_CONTOUR_TYPE_3D:
-      if((ctrWSp = AlcCalloc(1, sizeof(WlzContourWSpace))) == NULL)
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-      else
-      {
-	ctrWSp->type = type;
-	ctrWSp->method = method;
-  	ctrWSp->minBlkSz = minBlkSz;
-	ctrWSp->conTable = AlcHashTableNew(segTblSz,
-					   WlzContourHashCtrKeyCmpFn,
-					   WlzContourHashFn, NULL);
-        if(ctrWSp->conTable == NULL)
-	{
-	  AlcFree(ctrWSp);
-	  errNum = WLZ_ERR_MEM_ALLOC;
-	}
-      }
-      break;
-    default:
-      errNum = WLZ_ERR_PARAM_TYPE;
-      break;
-  }
-  return(ctrWSp);
-}
-
-/************************************************************************
-* Function:	WlzFreeContourWSpace
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Free's a WlzContourWSpace data structure.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Contour workspace to free.
-************************************************************************/
-static WlzErrorNum WlzFreeContourWSpace(WlzContourWSpace *ctrWSp)
-{
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctrWSp == NULL)
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else
-  {
-    switch(ctrWSp->type)
-    {
-      case WLZ_CONTOUR_TYPE_2D: /* FALLTHROUGH */
-      case WLZ_CONTOUR_TYPE_3D:
-	if(ctrWSp->conTable)
-	{
-	  (void )AlcHashTableFree(ctrWSp->conTable);
-	}
-	AlcFree((void *)ctrWSp);
-	break;
-      default:
-        errNum = WLZ_ERR_PARAM_TYPE;
-	break;
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
 * Function:	WlzContourObj
-* Returns:	WlzContourList:		Contour list, or NULL on error.
-* Purpose:	Creates a contour list from a Woolz object's values.
+* Returns:	WlzContour:		Contour, or NULL on error.
+* Purpose:	Creates a contour (list of connected edges or surface
+*		patches) from a Woolz object's values.
 *		The source object should either a 2D or 3D domain
-*		object with values.
+*		object with values. This is the top level contour
+*		generation function which calls the appropriate
+*		function for the given contour type (dimension) and 
+*		generation method.
 *		The given contour value is taken to be the iso-value
 *		for iso-value contours and the minimum gradient
 *		threshold value for maximal gradient contours.
@@ -459,12 +209,12 @@ static WlzErrorNum WlzFreeContourWSpace(WlzContourWSpace *ctrWSp)
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-WlzContourList	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
+WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 			       double ctrVal, double ctrWth,
 			       int minNod, int minEdg,
 			       WlzErrorNum *dstErr)
 {
-  WlzContourList *dstCtr = NULL;
+  WlzContour	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(srcObj == NULL)
@@ -487,11 +237,11 @@ WlzContourList	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	switch(ctrMtd)
 	{
 	  case WLZ_CONTOUR_MTD_ISO:
-	    dstCtr = WlzContourIsoObj2D(srcObj, ctrVal, minNod, minEdg,
+	    ctr = WlzContourIsoObj2D(srcObj, ctrVal, minNod, minEdg,
 	    				&errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    dstCtr = WlzContourGrdObj2D(srcObj, ctrVal, ctrWth, minNod,
+	    ctr = WlzContourGrdObj2D(srcObj, ctrVal, ctrWth, minNod,
 	    				minEdg, &errNum);
 	    break;
 	  default:
@@ -503,11 +253,11 @@ WlzContourList	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	switch(ctrMtd)
 	{
 	  case WLZ_CONTOUR_MTD_ISO:
-	    dstCtr = WlzContourIsoObj3D(srcObj, ctrVal, minNod, minEdg,
+	    ctr = WlzContourIsoObj3D(srcObj, ctrVal, minNod, minEdg,
 	    				&errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    dstCtr = WlzContourGrdObj3D(srcObj, ctrVal, ctrWth, minNod, 
+	    ctr = WlzContourGrdObj3D(srcObj, ctrVal, ctrWth, minNod, 
 	    				minEdg, &errNum);
 	    break;
 	  default:
@@ -524,14 +274,14 @@ WlzContourList	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
   {
     *dstErr = errNum;
   }
-  return(dstCtr);
+  return(ctr);
 }
 
 /************************************************************************
 * Function:	WlzContourIsoObj2D
-* Returns:	WlzContourList:		Contour list, or NULL on error.
-* Purpose:	Creates an iso-value contour list from a 2D Woolz
-*		object's values.
+* Returns:	WlzContour:		Contour, or NULL on error.
+* Purpose:	Creates an iso-value contour (list of edges) from a 2D
+*		Woolz object's values.
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
@@ -541,9 +291,9 @@ WlzContourList	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
-					  int minNod, int minEdg,
-					  WlzErrorNum *dstErr)
+static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
+				      int minNod, int minEdg,
+				      WlzErrorNum *dstErr)
 {
   int		idX,
   		bufSz,
@@ -551,20 +301,21 @@ static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 		bufRgt,
 		bufLnIdx,
   		itvLen,
-		itvBufWidth;
+		itvBufWidth,
+		prevFirstVtxOfLine,      /* Previous line first vertex index */
+		lastLnVtxSearchIdx;
   WlzDomain	srcDom;
   UBYTE		*itvBuf[2] = {NULL, NULL};
   double	*valBuf[2] = {NULL, NULL};
-  WlzContourList *dstCtr = NULL;
+  WlzContour 	*ctr = NULL;
   WlzDVertex2	sqOrg;
   WlzIntervalWSpace srcIWSp;
   WlzGreyWSpace	srcGWSp;
-  WlzContourWSpace *ctrWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Create contour workspace. */
-  ctrWSp = WlzMakeContourWSpace(WLZ_CONTOUR_TYPE_2D, WLZ_CONTOUR_MTD_ISO,
-  			        &errNum);
+  prevFirstVtxOfLine = 0;   			       /* Make index invalid */
+  /* Create contour. */
+  ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
   /* Make buffers. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -595,6 +346,8 @@ static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 	{
 	  WlzValueSetUByte(itvBuf[!bufLnIdx], 0, itvBufWidth);
 	}
+	lastLnVtxSearchIdx = prevFirstVtxOfLine;
+	prevFirstVtxOfLine = ctr->model->res.vertex.nxtIdx;
       }
       itvLen = srcIWSp.rgtpos - srcIWSp.lftpos + 1;
       bufLft = srcIWSp.lftpos - srcDom.i->kol1;
@@ -631,17 +384,12 @@ static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 	   (WLZ_BIT_GET(itvBuf[!bufLnIdx], (idX + 1)) != 0))
 	{
 	  sqOrg.vtX = srcIWSp.lftpos + idX;
-	  errNum = WlzContourIsoCube2D(ctrWSp, isoVal,
+	  errNum = WlzContourIsoCube2D(ctr, isoVal,
 				       valBuf[!bufLnIdx] + idX,
 				       valBuf[bufLnIdx] + idX,
-				       sqOrg);
+				       sqOrg, &lastLnVtxSearchIdx);
 	}
 	++idX;
-      }
-      if(srcIWSp.intrmn == 0)
-      {
-        ctrWSp->newLn = 1;
-	ctrWSp->edgLstLn = ctrWSp->edgCurLn;
       }
     }
     if(errNum == WLZ_ERR_EOO)
@@ -649,14 +397,11 @@ static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
       errNum = WLZ_ERR_NONE;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  /* Tidy up on error. */
+  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
   {
-    dstCtr = WlzContourWSpSegment(ctrWSp, minNod, minEdg, &errNum);
-  }
-  /* Free contour workspace. */
-  if(ctrWSp)
-  {
-    (void )WlzFreeContourWSpace(ctrWSp);
+    (void )WlzFreeContour(ctr);
+    ctr = NULL;
   }
   /* Free buffers. */
   for(idX = 0; idX < 2; ++idX)
@@ -675,14 +420,14 @@ static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   {
     *dstErr = errNum;
   }
-  return(dstCtr);
+  return(ctr);
 }
 
 /************************************************************************
 * Function:	WlzContourIsoObj3D
-* Returns:	WlzContourList:		Contour list, or NULL on error.
-* Purpose:	Creates an iso-value contour list from a 3D Woolz
-*		object's values.
+* Returns:	WlzContour:		Contour , or NULL on error.
+* Purpose:	Creates an iso-value contour (list of surface patches)
+*		from a 3D Woolz object's values.
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
@@ -692,27 +437,191 @@ static WlzContourList *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-static WlzContourList *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
-					  int minNod, int minEdg,
-					  WlzErrorNum *dstErr)
+static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
+				      int minNod, int minEdg,
+				      WlzErrorNum *dstErr)
 {
-  WlzContourList *dstCtr = NULL;
+  int		klIdx,
+  		lnIdx,
+		pnIdx,
+		klCnt,
+  		lnCnt,
+		pnCnt,
+  		bufIdx0,
+  		bufIdx1,
+		lastKlIn,
+		thisKlIn;
+  WlzObject	*obj2D = NULL;
+  WlzValues	*srcValues;
+  WlzValues	dummyValues;
+  WlzDomain	dummyDom,
+  		srcDom;
+  WlzIVertex2	bufSz,
+  		bufOrg,
+		bufOff;
+  WlzIBox2	bBox2D;
+  WlzIBox3	bBox3D;
+  WlzDVertex3	cbOrg;
+  UBYTE		*tUP0,
+  		*tUP1,
+		*tUP2,
+		*tUP3;
+  UBYTE		**itvBuf[2] = {NULL, NULL};
+  double	**valBuf[2] = {NULL, NULL};
+  WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* TODO */
-
+  dummyDom.core = NULL;
+  dummyValues.core = NULL;
+  if((srcDom = srcObj->domain).core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((srcValues = srcObj->values.vox->values) == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  /* Create contour. */
+  ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_3D, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox3D = WlzBoundingBox3D(srcObj, &errNum);
+  }
+  /* Make buffers. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bufSz.vtX = bBox3D.xMax - bBox3D.xMin + 1;
+    bufSz.vtY = bBox3D.yMax - bBox3D.yMin + 1;
+    bufOrg.vtX = bBox3D.xMin;
+    bufOrg.vtY = bBox3D.yMin;
+    if((AlcBit2Calloc(&(itvBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcBit2Calloc(&(itvBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(valBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(valBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Sweep down through the object using a pair of plane buffers. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dummyDom, dummyValues,
+			NULL, NULL, &errNum);
+    if((obj2D == NULL) && (errNum == WLZ_ERR_NONE))
+    {
+      errNum = WLZ_ERR_UNSPECIFIED;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pnIdx = 0;
+    pnCnt = srcObj->domain.p->lastpl - srcObj->domain.p->plane1 + 1;
+    while((errNum == WLZ_ERR_NONE) && (pnCnt-- > 0))
+    {
+      cbOrg.vtZ = bBox3D.zMin + pnIdx;
+      bufIdx0 = (pnIdx + 1) % 2;
+      bufIdx1 = pnIdx % 2;
+      obj2D->domain = *(srcObj->domain.p->domains + pnIdx);
+      obj2D->values = *(srcObj->values.vox->values + pnIdx);
+      bBox2D = WlzBoundingBox2D(obj2D, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        bufOff.vtX = bBox2D.xMin - bBox3D.xMin;
+        bufOff.vtY = bBox2D.yMin - bBox3D.yMin;
+        errNum = WlzToArray2D((void ***)&(itvBuf[bufIdx1]), obj2D,
+			      bufSz, bufOff, 0, WLZ_GREY_BIT);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzToArray2D((void ***)&(valBuf[bufIdx1]), obj2D,
+			      bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Compute the intersection of the iso-value plane with each cube
+	 * of values. */
+	if(pnIdx > 0)
+	{
+	  klCnt = bBox2D.xMax - bBox2D.xMin; 			  /* NOT + 1 */
+	  lnIdx = bufOff.vtY;
+	  lnCnt = bBox2D.yMax - bBox2D.yMin; 			  /* NOT + 1 */
+	  while(lnIdx < lnCnt)
+	  {
+            cbOrg.vtY = bBox3D.yMin + lnIdx;
+	    tUP0 = *(itvBuf[bufIdx0] + lnIdx);
+	    tUP1 = *(itvBuf[bufIdx0] + lnIdx + 1);
+	    tUP2 = *(itvBuf[bufIdx1] + lnIdx);
+	    tUP3 = *(itvBuf[bufIdx1] + lnIdx + 1);
+	    klIdx = bufOff.vtX;
+	    lastKlIn = (WLZ_BIT_GET(tUP0, klIdx) != 0) &&
+	    	       (WLZ_BIT_GET(tUP1, klIdx) != 0) &&
+		       (WLZ_BIT_GET(tUP2, klIdx) != 0) &&
+		       (WLZ_BIT_GET(tUP3, klIdx) != 0);
+	    while(klIdx < klCnt)
+	    {
+	      /* Check if cube is within the 3D object's domain. */
+	      thisKlIn = (WLZ_BIT_GET(tUP0, klIdx + 1) != 0) &&
+	      		 (WLZ_BIT_GET(tUP1, klIdx + 1) != 0) &&
+			 (WLZ_BIT_GET(tUP2, klIdx + 1) != 0) &&
+			 (WLZ_BIT_GET(tUP3, klIdx + 1) != 0);
+	      if(lastKlIn && thisKlIn)
+	      {
+                cbOrg.vtX = bBox3D.xMin + klIdx;
+		errNum = WlzContourIsoCube3D(ctr, isoVal,
+				       *(valBuf[bufIdx0] + lnIdx) + klIdx,
+				       *(valBuf[bufIdx0] + lnIdx + 1) + klIdx,
+				       *(valBuf[bufIdx1] + lnIdx) + klIdx,
+				       *(valBuf[bufIdx1] + lnIdx + 1) + klIdx,
+				       cbOrg);
+	      }
+	      lastKlIn = thisKlIn;
+	      ++klIdx;
+	    }
+	    ++lnIdx;
+	  }
+	}
+	++pnIdx;
+      }
+    }
+    obj2D->domain = dummyDom;
+    obj2D->values = dummyValues;
+    WlzFreeObj(obj2D);
+  }
+  /* Tidy up on error. */
+  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
+  {
+    (void )WlzFreeContour(ctr);
+    ctr = NULL;
+  }
+  /* Free buffers. */
+  for(pnIdx = 0; pnIdx < 2; ++pnIdx)
+  {
+    if(itvBuf[pnIdx])
+    {
+      Alc2Free((void **)itvBuf[pnIdx]);
+    }
+    if(valBuf[pnIdx])
+    {
+      Alc2Free((void **)valBuf[pnIdx]);
+    }
+  }
+  /* Set error code. */
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(dstCtr);
+  return(ctr);
 }
 
 /************************************************************************
 * Function:	WlzContourGrdObj2D
-* Returns:	WlzContourList:		Contour list, or NULL on error.
-* Purpose:	Creates an maximal gradient contour list from a 2D Woolz
-*		object's values.
+* Returns:	WlzContour:		Contour , or NULL on error.
+* Purpose:	Creates an maximal gradient contour (list of edges)
+*		from a 2D Woolz object's values.
 *		Direction of gradient is encoded as:
 *                 +------+------+
 *		  |\   2 | 1   /|
@@ -734,17 +643,19 @@ static WlzContourList *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
-					  double minGrd, double ftrPrm,
-					  int minNod, int minEdg,
-					  WlzErrorNum *dstErr)
+static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
+				      double minGrd, double ftrPrm,
+				      int minNod, int minEdg,
+				      WlzErrorNum *dstErr)
 {
   int		idX,
 		dCode,
 		iCnt,
 		iLen,
 		iBufSz,
-		lnInc;
+		lnInc,
+		prevFirstVtxOfLine,      /* Previous line first vertex index */
+		lastLnVtxSearchIdx;
   UBYTE		doLn;
   double	tD0,
   		grdM0,
@@ -770,8 +681,7 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
   double	**grdMBuf = NULL,	            /* Magnitude of gradient */
   		**grdXBuf = NULL,    	    /* Horizontal gradient component */
   		**grdYBuf = NULL;             /* Vertical gradient component */
-  WlzContourList *dstCtr = NULL;
-  WlzContourWSpace *ctrWSp;
+  WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   int		lnIdx[3],
   		klIdx[3];
@@ -785,9 +695,9 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
   		gYGWSp;
   const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
-  /* Create contour workspace. */
-  ctrWSp = WlzMakeContourWSpace(WLZ_CONTOUR_TYPE_2D, WLZ_CONTOUR_MTD_GRD,
-  				&errNum);
+  prevFirstVtxOfLine = 0;   			       /* Make index invalid */
+  /* Create a new contour. */
+  ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     /* Compute the partial derivatives. */
@@ -906,6 +816,8 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
 	klIdx[1] = 1;
 	klIdx[2] = 2;
         itvP[3] = *(grdIBuf + 3);
+	lastLnVtxSearchIdx = prevFirstVtxOfLine;
+	prevFirstVtxOfLine = ctr->model->res.vertex.nxtIdx;
 	while((errNum == WLZ_ERR_NONE) && (klIdx[2] < bufSz.vtX))
 	{
 	  if(WLZ_BIT_GET(itvP[3], klIdx[0]) &&
@@ -1016,10 +928,11 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
 	    }
 	    if(*(*(grdDBuf + lnIdx[1]) + klIdx[1]))
 	    {
-	      /* Generate and link edge segments in the contour workspace. */
-	      errNum = WlzContourGrdLink2D(ctrWSp, grdDBuf,
+	      /* Generate and link edge segments. */
+	      errNum = WlzContourGrdLink2D(ctr, grdDBuf,
 	      				   bufSz.vtX, org, posRel.vtY - 2,
-					   lnIdx, klIdx[0]);
+					   lnIdx, klIdx[0],
+					   &lastLnVtxSearchIdx);
 	    }
 	  }
 	  klIdx[0] = klIdx[1];
@@ -1027,22 +940,17 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
 	  ++klIdx[2];
 	}
       }
-      ctrWSp->newLn = 1;
-      ctrWSp->edgLstLn = ctrWSp->edgCurLn;
     }
   }
   if(errNum == WLZ_ERR_EOO)
   {
     errNum = WLZ_ERR_NONE;
   }
-  if(errNum == WLZ_ERR_NONE)
+  /* Tidy up on error. */
+  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
   {
-    dstCtr = WlzContourWSpSegment(ctrWSp, minNod, minEdg, &errNum);
-  }
-  /* Free contour workspace. */
-  if(ctrWSp)
-  {
-    (void )WlzFreeContourWSpace(ctrWSp);
+    (void )WlzFreeContour(ctr);
+    ctr = NULL;
   }
   /* Free buffers. */
   if(grdIBuf)
@@ -1077,14 +985,14 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
   {
     *dstErr = errNum;
   }
-  return(dstCtr);
+  return(ctr);
 }
 
 /************************************************************************
 * Function:	WlzContourGrdObj3D
-* Returns:	WlzContourList:		Contour list, or NULL on error.
-* Purpose:	Creates an maximal gradient contour list from a 3D Woolz
-*		object's values.
+* Returns:	WlzContour:		Contour or NULL on error.
+* Purpose:	Creates an maximal gradient contour (list of surface 
+*		patches) from a 3D Woolz object's values.
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
@@ -1095,21 +1003,27 @@ static WlzContourList *WlzContourGrdObj2D(WlzObject *srcObj,
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-static WlzContourList *WlzContourGrdObj3D(WlzObject *srcObj,
-					  double minGrd, double ftrPrm,
-					  int minNod, int minEdg,
-					  WlzErrorNum *dstErr)
+static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
+				      double minGrd, double ftrPrm,
+				      int minNod, int minEdg,
+				      WlzErrorNum *dstErr)
 {
-  WlzContourList *dstCtr = NULL;
+  WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* TODO */
 
+  /* Tidy up on error. */
+  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
+  {
+    (void )WlzFreeContour(ctr);
+    ctr = NULL;
+  }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(dstCtr);
+  return(ctr);
 }
 
 /************************************************************************
@@ -1130,8 +1044,7 @@ static WlzContourList *WlzContourGrdObj3D(WlzObject *srcObj,
 *		    + 3  + 1  + 4  +    |
 *		    +----+----+----+    +---> cols
 * Global refs:	-
-* Parameters:	WlzContourWSp *ctrWSp:  Contour generation
-*					workspace.
+* Parameters:	WlzContour *ctr: 	Contour being built.
 *		UBYTE **grdDBuf:	Buffers containing gradient
 *					direction codes for maximal
 *					gradient pixels.
@@ -1141,18 +1054,20 @@ static WlzContourList *WlzContourGrdObj3D(WlzObject *srcObj,
 *					pixel line.
 *		int lnIdx[]:		Line indicies.
 *		int klOff:		Column offset of first column.
+*		int *vtxSearchIdx:	Last line vertex search index.
 ************************************************************************/
-static WlzErrorNum WlzContourGrdLink2D(WlzContourWSpace *ctrWSp,
-				       UBYTE **grdDBuf,
+static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
 				       int bufWd, WlzIVertex2 org,
-				       int lnOff, int lnIdx[], int klOff)
+				       int lnOff, int lnIdx[], int klOff,
+			  	       int *vtxSearchIdx)
 {
   int		idN,
 		idM,
 		conCnt;
   int		con[5],
      		nbr[4];
-  WlzDVertex2	nbrOrg;
+  WlzDVertex2	nbrOrg,
+  		matchDist;
   WlzDVertex2	seg[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	offConKl[5] =
@@ -1167,6 +1082,8 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContourWSpace *ctrWSp,
   };
 
   conCnt = 0;
+  matchDist.vtX = 2.01;
+  matchDist.vtY = 2.01;
 #ifdef WLZ_CONTOUR_DEBUG
   fprintf(stderr, "255 0 0 setrgbcolor\n");
   seg[0].vtX = org.vtX + klOff + 1.0 - 0.1;
@@ -1218,7 +1135,8 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContourWSpace *ctrWSp,
 #ifdef WLZ_CONTOUR_DEBUG
       WlzContourTestOutPSLn2D(stderr, seg[0], seg[1]);
 #endif /* WLZ_CONTOUR_DEBUG */
-      errNum = WlzContourWSpAddEdg2D(ctrWSp, seg, nbrOrg);
+      errNum = WlzGMModelConstructSimplex2D(ctr->model,
+      					    matchDist, vtxSearchIdx, seg);
     }
   }
   return(errNum);
@@ -1264,8 +1182,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContourWSpace *ctrWSp,
 *		contouring subroutine, Paul Bourke. CONREC A Contouring
 *		Subroutine. BYTE, July 1997.
 * Global refs:	-
-* Parameters:	WlzContourWSp *ctrWSp: Contour generation
-					workspace.
+* Parameters:	WlzContour *ctr: 	Contour being built.
 *		double isoVal:		Iso-value to use.
 *		double *vLn0:		Ptr to 2 data values at
 *					y = yPos and x = xPos,
@@ -1274,11 +1191,12 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContourWSpace *ctrWSp,
 *					y = yPos + 1 and x = xPos,
 *					xpos + 1..
 *		WlzDVertex2 sqOrg:	The square's origin.
+*		int *vtxSearchIdx:	Last line vertex search index.
 ************************************************************************/
-static WlzErrorNum WlzContourIsoCube2D(WlzContourWSpace *ctrWSp,
+static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 				       double isoVal,
 				       double *vLn0, double *vLn1,
-				       WlzDVertex2 sqOrg)
+				       WlzDVertex2 sqOrg, int *vtxSearchIdx)
 {
   int		idT,
 		tN1,
@@ -1287,7 +1205,8 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContourWSpace *ctrWSp,
   double	tD0;
   WlzContourTriIsn2D iCode;
   WlzDVertex2	tVx0,
-  		tVx1;
+  		tVx1,
+		matchDist;
   int		lev[3];  /* Rel. triangle node level: above 2, on 1, below 0 */
   double	tV[3],			       /* Rel. triangle node values. */
   		sV[5];	 			 /* Rel. square node values. */
@@ -1349,13 +1268,29 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContourWSpace *ctrWSp,
       }
     }
   };
-  const WlzDVertex2 sNOff[5] =		  /* Square node horizontal offsets. */
+  const WlzDVertex2 sNOffTab[5] =	   /* Square node horizontal offsets */
   {
     {0.5, 0.5}, {0.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.0} /* {vtY, vtX} */
   };
+  const WlzDVertex2 dupIsnTab[2][4] =    /* Duplicate intersections to avoid */
+  {
+    {
+      {0.0, 0.0}, {0.5, 0.5}, {0.5, 0.5}, {1.0, 0.0}	       /* {vtY, vtX} */
+    },
+    {
+      {0.5, 0.5}, {0.0, 1.0}, {1.0, 1.0}, {0.5, 0.5}	       /* {vtY, vtX} */
+    }
+  };
 
+  matchDist.vtX = 1.01; /* TODO check match distances */
+  matchDist.vtY = 1.01;
   sV[1] = *vLn0 - isoVal; sV[2] = *(vLn0 + 1) - isoVal;
   sV[3] = *(vLn1 + 1) - isoVal; sV[4] = *vLn1 - isoVal;
+#ifdef WLZ_CONTOUR_DEBUG
+  (void )fprintf(stderr,
+		 "%% {%f %f} %f %f %f %f\n",
+		 sqOrg.vtX, sqOrg.vtY, sV[1], sV[2], sV[3], sV[4]);
+#endif /* WLZ_CONTOUR_DEBUG */
   /* Reject all squares not intersected by the iso-value. */
   if(((sV[1] < 0.0) || (sV[2] < 0.0) || (sV[3] < 0.0) || (sV[4] < 0.0)) &&
      ((sV[1] >= 0.0) || (sV[2] >= 0.0) || (sV[3] >= 0.0) || (sV[4] >= 0.0)))
@@ -1388,55 +1323,53 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContourWSpace *ctrWSp,
 	switch(iCode)
 	{
 	  case WLZ_CONTOUR_TIC2D_N1N0:
-	    tIsn[0] = sNOff[tN1];
-	    tIsn[1] = sNOff[tN0];
+	    tIsn[0] = sNOffTab[tN1];
+	    tIsn[1] = sNOffTab[tN0];
 	    break;
 	  case WLZ_CONTOUR_TIC2D_N0N2:
-	    tIsn[0] = sNOff[tN0];
-	    tIsn[1] = sNOff[tN2];
+	    tIsn[0] = sNOffTab[tN0];
+	    tIsn[1] = sNOffTab[tN2];
 	    break;
 	  case WLZ_CONTOUR_TIC2D_N2N1:
-	    tIsn[0] = sNOff[tN2];
-	    tIsn[1] = sNOff[tN1];
+	    tIsn[0] = sNOffTab[tN2];
+	    tIsn[1] = sNOffTab[tN1];
 	    break;
 	  case WLZ_CONTOUR_TIC2D_N1S02:
-	    tIsn[0] = sNOff[tN1];
+	    tIsn[0] = sNOffTab[tN1];
 	    tIsn[1] = WlzContourItpTriSide(tV[0], tV[2],
-	    				   sNOff[tN0], sNOff[tN2]);
+	    				   sNOffTab[tN0], sNOffTab[tN2]);
 	    break;
 	  case WLZ_CONTOUR_TIC2D_N0S21:
-	    tIsn[0] = sNOff[tN0];
+	    tIsn[0] = sNOffTab[tN0];
 	    tIsn[1] = WlzContourItpTriSide(tV[2], tV[1],
-	    				   sNOff[tN2], sNOff[tN1]);
+	    				   sNOffTab[tN2], sNOffTab[tN1]);
 	    break;
 	  case WLZ_CONTOUR_TIC2D_N2S10:
-	    tIsn[0] = sNOff[tN2];
+	    tIsn[0] = sNOffTab[tN2];
 	    tIsn[1] = WlzContourItpTriSide(tV[1], tV[0],
-	    				   sNOff[tN1], sNOff[tN0]);
+	    				   sNOffTab[tN1], sNOffTab[tN0]);
 	    break;
 	  case WLZ_CONTOUR_TIC2D_S10S02:
 	    tIsn[0] = WlzContourItpTriSide(tV[1], tV[0],
-	    				   sNOff[tN1], sNOff[tN0]);
+	    				   sNOffTab[tN1], sNOffTab[tN0]);
 	    tIsn[1] = WlzContourItpTriSide(tV[0], tV[2],
-	    				   sNOff[tN0], sNOff[tN2]);
+	    				   sNOffTab[tN0], sNOffTab[tN2]);
 	    break;
 	  case WLZ_CONTOUR_TIC2D_S02S21:
 	    tIsn[0] = WlzContourItpTriSide(tV[0], tV[2],
-	    				   sNOff[tN0], sNOff[tN2]);
+	    				   sNOffTab[tN0], sNOffTab[tN2]);
 	    tIsn[1] = WlzContourItpTriSide(tV[2], tV[1],
-	    				   sNOff[tN2], sNOff[tN1]);
+	    				   sNOffTab[tN2], sNOffTab[tN1]);
 	    break;
 	  case WLZ_CONTOUR_TIC2D_S21S10:
 	    tIsn[0] = WlzContourItpTriSide(tV[2], tV[1],
-	    				   sNOff[tN2], sNOff[tN1]);
+	    				   sNOffTab[tN2], sNOffTab[tN1]);
 	    tIsn[1] = WlzContourItpTriSide(tV[1], tV[0],
-	    				   sNOff[tN1], sNOff[tN0]);
+	    				   sNOffTab[tN1], sNOffTab[tN0]);
 	    break;
 	  default:
 	    break;
 	}
-	tIsn[0].vtX += sqOrg.vtX; tIsn[0].vtY += sqOrg.vtY;
-	tIsn[1].vtX += sqOrg.vtX; tIsn[1].vtY += sqOrg.vtY;
 	if(tIsn[0].vtX > tIsn[1].vtX)
 	{
 	  tVx0 = tIsn[0];
@@ -1444,55 +1377,250 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContourWSpace *ctrWSp,
 	  tIsn[1] = tVx0;
 	}
 	/* Avoid duplicate edge segments along the triangle diagonals! */
-	switch(idT)
-	{
-	  case 0:
-	    tVx0.vtX = sqOrg.vtX;
-	    tVx0.vtY = sqOrg.vtY;
-	    tVx1.vtX = sqOrg.vtX + 0.5;
-	    tVx1.vtY = sqOrg.vtY + 0.5;
-	    break;
-	  case 1:
-	    tVx0.vtX = sqOrg.vtX + 0.5;
-	    tVx0.vtY = sqOrg.vtY + 0.5;
-	    tVx1.vtX = sqOrg.vtX + 1.0;
-	    tVx1.vtY = sqOrg.vtY;
-	    break;
-	  case 2:
-	    tVx0.vtX = sqOrg.vtX + 0.5;
-	    tVx0.vtY = sqOrg.vtY + 0.5;
-	    tVx1.vtX = sqOrg.vtX + 1.0;
-	    tVx1.vtY = sqOrg.vtY + 1.0;
-	    break;
-	  case 3:
-	    tVx0.vtX = sqOrg.vtX;
-	    tVx0.vtY = sqOrg.vtY + 1.0;
-	    tVx1.vtX = sqOrg.vtX + 0.5;
-	    tVx1.vtY = sqOrg.vtY + 0.5;
-	    break;
-	}
-	dupIsn = WlzGeomVtxEqual2D(tIsn[0], tVx0, tol) &&
-		 WlzGeomVtxEqual2D(tIsn[1], tVx1, tol);
+	dupIsn = WlzGeomVtxEqual2D(tIsn[0], dupIsnTab[0][idT], tol) &&
+		 WlzGeomVtxEqual2D(tIsn[1], dupIsnTab[1][idT], tol);
 	if(!dupIsn)
 	{
 #ifdef WLZ_CONTOUR_DEBUG
 	  (void )fprintf(stderr,
-		         "%% {%f %f} T%d I%d {%g %g %g} {%g %g} {%g %g}\n",
-		         sqOrg.vtX, sqOrg.vtY, idT, iCode,
+		         "%% T%d I%d {%g %g %g} {%g %g} {%g %g}\n",
+		         idT, iCode,
 		         tV[0], tV[1], tV[2],
 		         tIsn[0].vtX, tIsn[0].vtY,
 		         tIsn[1].vtX, tIsn[1].vtY);
 #endif /* WLZ_CONTOUR_DEBUG */
-	/* Add new contour element to the contour workspace. */
-	  errNum = WlzContourWSpAddEdg2D(ctrWSp, tIsn, sqOrg);
+	  tIsn[0].vtX += sqOrg.vtX;
+	  tIsn[0].vtY += sqOrg.vtY;
+	  tIsn[1].vtX += sqOrg.vtX;
+	  tIsn[1].vtY += sqOrg.vtY;
 #ifdef WLZ_CONTOUR_DEBUG
   	  WlzContourTestOutPSLn2D(stderr, tIsn[0], tIsn[1]);
 #endif /* WLZ_CONTOUR_DEBUG */
+	  errNum = WlzGMModelConstructSimplex2D(ctr->model,
+						matchDist, vtxSearchIdx, tIsn);
 	}
       }
       ++idT;
     }
   }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzContourIsoCube3D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose: 	Checks to see if all above the cube's vertex values are
+*		either above or below the iso-value. If they are then
+*		there's no intersection between the iso-surface and the
+*		cube. If there is a possible intersection then the cube
+*		is split into 24 tetrahedra and each tetrahedra is
+*		passed to WlzContourIsoTet3D().
+*
+*		From the 8 data values at the verticies @[1-8] of
+*		the cube and interpolated values at it's centre *0,
+*		and the centres of the cubes faces (9,...,14) the cube
+*		is divided into 24 tetrahedra (0,...,23).
+*                                                                      
+*                          @8----------------@7                        
+*                         /|                /|                        
+*                        / |               / |                         
+*                       /  |              /  |                         
+*                      /   |    +14      /   |                         
+*                     /    |        +12 /    |                         
+*                    /     |           /     |                         
+*                   /      |          /      |                         
+*                  /       |         /       |                         
+*                 @5----------------@6       |                         
+*                 |    +13 |   *0   |    +11 |                         
+*                 |        @4-------|--------@3                                 
+*                 |       /         |       /                                 
+*                 |      /          |      /                                  
+*                 |     /           |     /                                  
+*                 |    /    +10 +9  |    /                                  
+*                 |   /             |   /                                  
+*                 |  /              |  /                                  
+*                 | /               | /                                  
+*                 |/                |/                                  
+*                 @1----------------@2                                 
+*
+*		The tetrahedra are are assigned the following indicies:
+*
+*		  tetradedron index  	cube vertex indicies
+*		   0       		0,  1, 2,  9
+*		   1       		0,  2, 3,  9
+*		   2       		0,  3, 4,  9
+*		   3       		0,  4, 1,  9
+*		   4        		0,  1, 2, 10
+*		   5        		0,  2, 6, 10
+*		   6        		0,  6, 5, 10
+*		   7        		0,  5, 1, 10
+*		   8        		0,  2, 3, 11
+*		   9        		0,  3, 7, 11
+*		  10        		0,  7, 6, 11
+*		  11       		0,  6, 2, 11
+*		  12       		0,  3, 4, 12
+*		  13       		0,  4, 8, 12
+*		  14       		0,  8, 7, 12
+*		  15       		0,  7, 3, 12
+*		  16       		0,  4, 1, 13
+*		  17       		0,  1, 5, 13
+*		  18       		0,  5, 8, 13
+*		  19       		0,  8, 4, 13
+*		  20       		0,  5, 6, 14
+*		  21       		0,  6, 7, 14
+*		  22       		0,  7, 8, 14
+*		  23       		0,  8, 5, 14
+*
+*		The values at these vertices are passed onto
+*		WlzContourIsoTet3D() using the following indicies:
+*		
+*                          +3
+*                         /|\                                              
+*                        / | \                                             
+*                       /  |  \                                            
+*                      /   |   \                                           
+*                     /    |    \                                          
+*                    /     |     \                                         
+*                   /      *0     \                                        
+*                  /    ,/    \,   \                                       
+*                 / / '          `\ \                                      
+*                 @1-----------------@2
+*
+*		The tetrahedra verticies are assigned using a look up table
+*		in which tetrahedron vertex 0 is always vertex 0 of the cube,
+*		tetrahedron vertex 3 is always the cube face vertex
+*		(9, 10, 11, 12, 13, 14) and the tetrahedron verticies
+*		1 and 2 are cube edge verticies.
+* Global refs:	-
+* Parameters:	WlzContour *ctr:	Contour being built.
+*		double isoVal:		Iso-value to use.
+*		double *vPn0Ln0:	Ptr to 2 data values at
+*					z = zPos, y = yPos and
+*					x = xPos, xpos + 1.
+*		double *vPn0Ln1:	Ptr to 2 data values at
+*					z = zPos, y = yPos + 1 and
+*					x = xPos, xpos + 1.
+*		double *vPn1Ln0:	Ptr to 2 data values at
+*					z = zPos + 1, y = yPos and
+*					x = xPos, xpos + 1.
+*		double *vPn1Ln1:	Ptr to 2 data values at
+*					z = zPos + 1, y = yPos + 1 and
+*					x = xPos, xpos + 1.
+*		WlzDVertex3 cbOrg:	The cube's origin.
+************************************************************************/
+static WlzErrorNum WlzContourIsoCube3D(WlzContour *ctr,
+				double isoVal,
+				double *vPn0Ln0, double *vPn0Ln1,
+				double *vPn1Ln0, double *vPn1Ln1,
+				WlzDVertex3 cbOrg)
+{
+  int		tIdx,
+		tI1,
+		tI2,
+		tI3,
+  		intersect;
+  double 	cVal[15],	  /* Cube's values relative to the iso-value */
+		sVal[8],        /* Temporary 'side' values for interpolation */
+  		tVal[4];			       /* Tetrahedron values */
+  WlzDVertex3	tPos[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	tVxLUT[24][4] =  /* Tetrahedron to cube vertex look up table */
+  {
+    {0, 1, 2,  9}, {0, 2, 3,  9}, {0, 3, 4,  9}, {0, 4, 1,  9},
+    {0, 1, 2, 10}, {0, 2, 6, 10}, {0, 6, 5, 10}, {0, 5, 1, 10},
+    {0, 2, 3, 11}, {0, 3, 7, 11}, {0, 7, 6, 11}, {0, 6, 2, 11},
+    {0, 3, 4, 12}, {0, 4, 8, 12}, {0, 8, 7, 12}, {0, 7, 3, 12},
+    {0, 4, 1, 13}, {0, 1, 5, 13}, {0, 5, 8, 13}, {0, 8, 4, 13},
+    {0, 5, 6, 14}, {0, 6, 7, 14}, {0, 7, 8, 14}, {0, 8, 5, 14}
+  };
+  const WlzDVertex3 cPos[15] =	 /* Cube positions, order is {vtX, vtY, vtZ} */
+  {
+    {0.5, 0.5, 0.5},
+    {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 1.0, 1.0},
+    {0.5, 0.5, 0.0},
+    {0.5, 0.0, 0.5}, {1.0, 0.5, 0.5}, {0.5, 1.0, 0.5}, {0.0, 0.5, 0.5},
+    {0.5, 0.5, 0.1}
+  };
+
+  cVal[ 1] = *(vPn0Ln0 + 0) - isoVal;
+  cVal[ 2] = *(vPn0Ln0 + 1) - isoVal;
+  cVal[ 3] = *(vPn0Ln1 + 1) - isoVal;
+  cVal[ 4] = *(vPn0Ln1 + 0) - isoVal;
+  cVal[ 5] = *(vPn1Ln0 + 0) - isoVal;
+  cVal[ 6] = *(vPn1Ln0 + 1) - isoVal;
+  cVal[ 7] = *(vPn1Ln1 + 1) - isoVal;
+  cVal[ 8] = *(vPn1Ln1 + 0) - isoVal;
+  intersect = !(((cVal[ 1] < 0.0) && (cVal[ 2] < 0.0) &&
+		(cVal[ 3] < 0.0) && (cVal[ 4] < 0.0) &&
+		(cVal[ 5] < 0.0) && (cVal[ 6] < 0.0) &&
+		(cVal[ 7] < 0.0) && (cVal[ 8] < 0.0)) || 
+	       ((cVal[ 1] > 0.0) && (cVal[ 2] > 0.0) &&
+		(cVal[ 3] > 0.0) && (cVal[ 4] > 0.0) &&
+		(cVal[ 5] > 0.0) && (cVal[ 6] > 0.0) &&
+		(cVal[ 7] > 0.0) && (cVal[ 8] > 0.0)));
+  if(intersect)
+  {
+    sVal[0] = cVal[ 1] + cVal[ 2];
+    sVal[1] = cVal[ 2] + cVal[ 3];
+    sVal[2] = cVal[ 3] + cVal[ 4];
+    sVal[3] = cVal[ 4] + cVal[ 1];
+    sVal[4] = cVal[ 5] + cVal[ 6];
+    sVal[5] = cVal[ 6] + cVal[ 7];
+    sVal[6] = cVal[ 7] + cVal[ 8];
+    sVal[7] = cVal[ 8] + cVal[ 5];
+    cVal[ 9] = (sVal[0] + sVal[2]) * 0.25;
+    cVal[10] = (sVal[0] + sVal[4]) * 0.25;
+    cVal[11] = (sVal[1] + sVal[5]) * 0.25;
+    cVal[12] = (sVal[2] + sVal[6]) * 0.25;
+    cVal[13] = (sVal[3] + sVal[7]) * 0.25;
+    cVal[14] = (sVal[4] + sVal[6]) * 0.25;
+    cVal[ 0] = (cVal[ 9] + cVal[14]) * 0.5;
+    tVal[0] = cVal[ 0];
+    tPos[0] = cPos[ 0];
+    for(tIdx = 0; tIdx < 24; ++tIdx)
+    {
+      tI1 = tVxLUT[tIdx][1];
+      tI2 = tVxLUT[tIdx][2];
+      tI3 = tVxLUT[tIdx][3];
+      tVal[1] = cVal[tI1]; tVal[2] = cVal[tI2]; tVal[3] = cVal[tI3];
+      intersect = !(((tVal[0] < 0.0) && (tVal[1] < 0.0) &&
+		     (tVal[2] < 0.0) && (tVal[3] < 0.0)) ||
+		    ((tVal[0] > 0.0) && (tVal[1] > 0.0) &&
+		     (tVal[2] > 0.0) && (tVal[3] > 0.0)));
+      if(intersect)
+      {
+	tPos[1] = cPos[tI1]; tPos[2] = cPos[tI2]; tPos[3] = cPos[tI3];
+        errNum = WlzContourIsoTet3D(ctr, tVal, tPos, cbOrg);
+      }
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzContourIsoTet3D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose: 	Computes the intersection of the given tetrahedron
+*		with the isovalue surface. Creates facet, edge and
+*		node elements and inserts them into the contour data
+*		structure.
+* Global refs:	-
+* Parameters:	WlzContourWSp *ctr:	Contour being built.
+*		double *tVal:		Values wrt the iso-value at the
+*					verticies of the tetrahedron.
+*		WlzDVertex3 *tPos:	Positions of the tetrahedron
+*					verticies wrt the cube's origin.
+*		WlzDVertex3 cbOrg:	The cube's origin.
+************************************************************************/
+static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
+				      double *tVal,
+				      WlzDVertex3 *tPos,
+				      WlzDVertex3 cbOrg)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* TODO */
   return(errNum);
 }
 
@@ -1521,1314 +1649,6 @@ static WlzDVertex2 WlzContourItpTriSide(double ht0, double ht1,
 }
 
 /************************************************************************
-* Function:	WlzContourWSpAddEdg2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Adds a line segment to the contour workspace, linking
-*		it's node to the workspace's node list and it's edge
-*		to the the workspace's edge list.
-*
-*                                                         / |
-*                                                         | |
-*                     iPos[0]   newEdg[1]       nxtEdg[1]-| |
-*		       |        |                         | /
-*		      ### ------------------------------\ ###
-*                     # #                                 # #
-*		      ### \------------------------------ ###
-*                     / |             |                    |
-*		      | |-nxtEdg[0]   newEdg[0]           iPos[1]
-*		      | |
-*		      | /
-*
-*		Line segment is always such that:
-*		  iPos[0].vtX <= iPos[1].vtX.
-*
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Contour workspace.
-*		WlzDVertex2 *iPos:	Positions of the intersections
-*					with the triangle.
-************************************************************************/
-static WlzErrorNum WlzContourWSpAddEdg2D(WlzContourWSpace *ctrWSp,
-				         WlzDVertex2 *iPos,
-					 WlzDVertex2 sqOrg)
-{
-  int		conIdx,
-  		done = 0;
-  WlzEdge	*tEdg;
-  WlzEdgeNode2	*newNod;
-  WlzEdge	*newEdg = NULL;
-  WlzEdge	*nxtEdg[2],
-		*prvEdg[2];
-  WlzDVertex2	diff;
-  AlcErrno	alcErr = ALC_ER_NONE;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	delta = 1.0e-6;
-
-  WlzContourMatchEdg2D(ctrWSp, nxtEdg, iPos, sqOrg);
-  if(nxtEdg[0] && nxtEdg[1])
-  {
-    /* Found edges directed from both the origin and destination nodes:
-     * need 0 new nodes and 2 new edges. */
-#ifdef WLZ_CONTOUR_DEBUG
-   fprintf(stderr,
-           "%% WlzContourWSpAddEdg2D "
-   	   "e%d {%g %g} {%g %g} e%d {%g %g} {%g %g}\n",
-	   (nxtEdg[0])->index,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->node))->pos.vtY,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->opp->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->opp->node))->pos.vtY,
-	   (nxtEdg[1])->index,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->node))->pos.vtY,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->opp->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->opp->node))->pos.vtY);
-#endif /* WLZ_CONTOUR_DEBUG */
-    /* Check haven't found this edge segment already. */
-    done = nxtEdg[0]->opp == nxtEdg[1];
-    if(!done)
-    {
-      /* Create new edge joining two possibly unconnected contours. */
-      errNum = WlzContourWSpAlcEdg(ctrWSp, &newEdg, 2);
-      if(errNum == WLZ_ERR_NONE)
-      {
-	(newEdg + 0)->opp = (newEdg + 1);
-	(newEdg + 1)->opp = (newEdg + 0);
-	/* Set nodes. */
-	(newEdg + 0)->node = nxtEdg[0]->opp->node;
-	(newEdg + 1)->node = nxtEdg[1]->opp->node;
-	/* Insert edge into existing edge lists. */
-	prvEdg[0] = nxtEdg[1]->prev;
-	prvEdg[1] = nxtEdg[0]->prev;
-	(newEdg + 0)->next = nxtEdg[0];
-	nxtEdg[0]->prev = (newEdg + 0);
-	(newEdg + 0)->prev = prvEdg[0];
-	prvEdg[0]->next = (newEdg + 0);
-	(newEdg + 1)->next = nxtEdg[1];
-	nxtEdg[1]->prev = (newEdg + 1);
-	(newEdg + 1)->prev = prvEdg[1];
-	prvEdg[1]->next = (newEdg + 1);
-	/* Join two possibly unconnected edges. */
-	conIdx = WlzContourWSpEdgJoin2D(ctrWSp, nxtEdg[0], nxtEdg[1]);
-	(newEdg + 0)->flags = (newEdg + 1)->flags = conIdx;
-      }
-    }
-  }
-  else if(nxtEdg[0])
-  {
-    /* Only found origin node: need 1 new node and 2 new edges. */
-#ifdef WLZ_CONTOUR_DEBUG
-   fprintf(stderr,
-           "%% WlzContourWSpAddEdg2D "
-   	   "e%d {%g %g} {%g %g} NULL {- -} {- -}\n",
-	   (nxtEdg[0])->index,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->node))->pos.vtY,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->opp->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[0]->opp->node))->pos.vtY);
-#endif /* WLZ_CONTOUR_DEBUG */
-    errNum = WlzContourWSpAlcEdg(ctrWSp, &newEdg, 2);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzContourWSpAlcNod2D(ctrWSp, &newNod, 1);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      (newEdg + 0)->opp = (newEdg + 1);
-      (newEdg + 1)->opp = (newEdg + 0);
-      /* Set nodes. */
-      (newNod + 0)->pos = iPos[1];
-      (newEdg + 0)->node = nxtEdg[0]->opp->node;
-      (newEdg + 1)->node.nod2 = newNod + 0;
-      /* Insert edge into existing edge lists. */
-      prvEdg[1] = nxtEdg[0]->prev;
-      (newEdg + 0)->next = nxtEdg[0];
-      nxtEdg[0]->prev = (newEdg + 0);
-      (newEdg + 0)->prev = (newEdg + 1);
-      (newEdg + 1)->next = (newEdg + 0);
-      (newEdg + 1)->prev = prvEdg[1];
-      prvEdg[1]->next = (newEdg + 1);
-      /* Propagate the connectivity index of one of the existing
-       * edges connected to the new edges. */
-      conIdx = nxtEdg[0]->flags;
-      (newEdg + 0)->flags = (newEdg + 1)->flags = conIdx;
-    }
-  }
-  else if(nxtEdg[1])
-  {
-    /* Only found destination node: need 1 new node and 2 new edges. */
-#ifdef WLZ_CONTOUR_DEBUG
-   fprintf(stderr,
-           "%% WlzContourWSpAddEdg2D "
-   	   "NULL {- -} {- -} 0x%x {%g %g} {%g %g}\n",
-	   (unsigned )(nxtEdg[1]),
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->node))->pos.vtY,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->opp->node))->pos.vtX,
-	   ((WlzEdgeNode2 *)(nxtEdg[1]->opp->node))->pos.vtY);
-#endif /* WLZ_CONTOUR_DEBUG */
-    errNum = WlzContourWSpAlcEdg(ctrWSp, &newEdg, 2);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzContourWSpAlcNod2D(ctrWSp, &newNod, 1);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      (newEdg + 0)->opp = (newEdg + 1);
-      (newEdg + 1)->opp = (newEdg + 0);
-      /* Set new node. */
-      (newNod + 0)->pos = iPos[0];
-      (newEdg + 0)->node.nod2 = newNod + 0;
-      (newEdg + 1)->node = nxtEdg[1]->opp->node;
-      /* Insert edge into existing edge lists. */
-      prvEdg[0] = nxtEdg[1]->prev;
-      (newEdg + 0)->next = (newEdg + 1);
-      (newEdg + 0)->prev = prvEdg[0];
-      prvEdg[0]->next = (newEdg + 0);
-      (newEdg + 1)->next = nxtEdg[1];
-      nxtEdg[1]->prev = (newEdg + 1);
-      (newEdg + 1)->prev = (newEdg + 0);
-      /* Propagate the connectivity index of one of the existing
-       * edges connected to the new edges. */
-      conIdx = nxtEdg[1]->flags;
-      (newEdg + 0)->flags = (newEdg + 1)->flags = conIdx;
-    }
-  }
-  else
-  {
-    /* Didn't find origin or destination nodes: need 2 new nodes and
-     * 2 new edges. */
-#ifdef WLZ_CONTOUR_DEBUG
-   fprintf(stderr,
-           "%% WlzContourWSpAddEdg2D "
-   	   "NULL {- -} {- -} NULL {- -} {- -}\n");
-#endif /* WLZ_CONTOUR_DEBUG */
-    errNum = WlzContourWSpAlcEdg(ctrWSp, &newEdg, 2);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzContourWSpAlcNod2D(ctrWSp, &newNod, 2);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      (newEdg + 0)->opp = (newEdg + 1);
-      (newEdg + 1)->opp = (newEdg + 0);
-      /* Set the two new nodes. */
-      (newNod + 0)->pos = iPos[0];
-      (newNod + 1)->pos = iPos[1];
-      (newEdg + 0)->node.nod2 = newNod + 0;
-      (newEdg + 1)->node.nod2 = newNod + 1;
-      /* Link new edge. */
-      (newEdg + 0)->next = (newEdg + 1);
-      (newEdg + 0)->prev = (newEdg + 1);
-      (newEdg + 1)->next = (newEdg + 0);
-      (newEdg + 1)->prev = (newEdg + 0);
-      /* Use edge flags to store connectivity index. */
-      (newEdg + 0)->flags = (newEdg + 1)->flags = ctrWSp->conIdx;
-      /* Have generated a new contour so add a entry to the connectivity
-       * hash table: key = connectivity index, value = -1 */
-      conIdx = (ctrWSp->conIdx)++;
-      alcErr = AlcHashTableEntryInsert(ctrWSp->conTable,
-      			      	       (void *)(newEdg + 0), NULL, NULL);
-      if(alcErr != ALC_ER_NONE)
-      {
-        errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
-  }
-  if(ctrWSp->newLn && newEdg)
-  {
-    ctrWSp->edgCurLn = newEdg;
-    ctrWSp->newLn = 0;
-  }
-#ifdef WLZ_CONTOUR_DEBUG
-  if(newEdg + 0)
-  {
-    fprintf(stderr,
-	    "%% WlzContourWSpAddEdg2D 0 e%d n%d {%g %g} e%d e%d e%d\n",
-	    (newEdg + 0)->index, 
-	    (newEdg + 0)->node->index,
-	    ((WlzEdgeNode2 *)((newEdg + 0)->node))->pos.vtX,
-	    ((WlzEdgeNode2 *)((newEdg + 0)->node))->pos.vtY,
-	    ((newEdg + 0)->next->index),
-	    ((newEdg + 0)->prev->index),
-	    ((newEdg + 0)->opp->index));
-    if(newEdg + 1)
-    {
-      fprintf(stderr,
-	      "%% WlzContourWSpAddEdg2D 1 e%d n%d {%g %g} e%d e%d e%d\n",
-	      (newEdg + 1)->index, 
-	      (newEdg + 1)->node->index,
-	      ((WlzEdgeNode2 *)((newEdg + 1)->node))->pos.vtX,
-	      ((WlzEdgeNode2 *)((newEdg + 1)->node))->pos.vtY,
-	       ((newEdg + 1)->next->index),
-	      ((newEdg + 1)->prev->index),
-	      ((newEdg + 1)->opp->index));
-    }
-  }
-  else
-  {
-    fprintf(stderr,
-    	    "%% WlzContourWSpAddEdg2D None\n");
-  }
-#endif /* WLZ_CONTOUR_DEBUG */
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourMatchEdg2D
-* Returns:	WlzEdge *:		Ptr to matching edge or NULL
-*					if no matching edge found.
-
-* Purpose:	Searches for edges directed to the nodes at the
-*		given position iPos[0] and iPos[1] the edges opposite
-*		to these edges, directed away from the matched edges,
-*		would be the next edges for new edges directed to
-*		these nodes:
-*		  nxtEdg[0] directed from iPos[0] and
-*		  nxtEdg[1] directed from iPos[1].
-*		The given positions are such that:
-*		  iPos[0].vtX <= iPos[1].vtX.
-*		Because the data arive in a WLZ_RASTERDIR_ILIC order
-*		(at least for the cube origin) and no edge segment
-*		has a length greater than 1.0, its easy to do a fast
-*		search.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		WlzEdge *nxtEdg:	Return for next edges.
-*		WlzDVertex2 *iPos:	Positions of intersections.
-*		WlzDVertex2 sqOrg:	Square origin.
-************************************************************************/
-static void	WlzContourMatchEdg2D(WlzContourWSpace *ctrWSp,
-				     WlzEdge **nxtEdg, WlzDVertex2 *iPos,
-				     WlzDVertex2 sqOrg)
-{
-  int		cnt,
-		idF,
-  		fndMsk,
-		schMsk,
-		lnIdx,
-		stpIdx;
-  double	tD0,
-  		tD1,
-		trX,
-		trY,
-		trCos,
-		trSin,
-		trScale;
-  WlzDVertex2	tPos,
-  		mPos,
-		oPos,
-		pos0,
-		pos1,
-  		off;
-  WlzEdge	*edg0,
-  		*edg1;
-  WlzEdge	*fndEdg[2];
-  const double	tol = 1.0e-06;
-
-  *(nxtEdg + 0) = NULL;
-  *(nxtEdg + 1) = NULL;
-  if(ctrWSp->lstEdg)
-  {
-    fndMsk = 0;
-    if(ctrWSp->newLn == 0)
-    {
-      switch(ctrWSp->method)
-      {
-        case WLZ_CONTOUR_MTD_ISO:
-	  cnt = 14;
-	  break;
-        case WLZ_CONTOUR_MTD_GRD:
-	  cnt = 4;
-	  break;
-      }
-      edg0 = ctrWSp->lstEdg;
-      do
-      {
-	pos0 = (edg0->node.nod2)->pos;
-	if(WlzGeomVtxEqual2D(*(iPos + 0), pos0, tol))
-	{
-	  fndMsk |= 1;
-	  *(fndEdg + 0) = edg0;
-	}
-	if(WlzGeomVtxEqual2D(*(iPos + 1), pos0, tol))
-	{
-	  fndMsk |= 2;
-	  *(fndEdg + 1) = edg0;
-	}
-      }
-      while((--cnt > 0) && (fndMsk != 3) &&
-	    ((edg0 = WlzContourWSpEdgPrevAlc(edg0)) != NULL));
-    }
-    /* If either intersection is not found yet and one of the intersection
-     * verticies lies close to the last line then: Update the last line
-     * marker and search forward from it for matching nodes. */
-    off.vtY = sqOrg.vtY + tol;
-    /* Generate a search mask with bits set if vertex is close to
-     * box line origin. */
-    schMsk = ((((iPos + 0)->vtY < off.vtY) << 0) |
-              (((iPos + 1)->vtY < off.vtY) << 1)) & ~fndMsk;
-    if((fndMsk != 3) && (schMsk != 0) && ctrWSp->edgLstLn)
-    {
-      /* Advance the last line edge marker until the next (allocated) edge
-       * would be in the box under this box. */
-      edg0 = ctrWSp->edgLstLn;
-      off.vtX = sqOrg.vtX - tol;
-      stpIdx = (ctrWSp->newLn)? ctrWSp->edgIdx: ctrWSp->edgCurLn->index;
-      while(edg0 && ((edg0->node.nod2->pos).vtX < off.vtX) &&
-	    (edg0->index < stpIdx))
-      {
-        ctrWSp->edgLstLn = edg0;
-	edg0 = WlzContourWSpEdgNextAlc(edg0);
-      }
-      /* Check all edges from the last line marker until the next (allocated)
-       * edge is not in the box under this box. */
-      edg0 = ctrWSp->edgLstLn;
-      off.vtX = sqOrg.vtX + tol + 2.0;
-      stpIdx = (ctrWSp->newLn)? ctrWSp->edgIdx: ctrWSp->edgCurLn->index;
-      while(edg0 &&
-            ((pos0 = edg0->node.nod2->pos).vtX < off.vtX) &&
-	    (edg0->index < stpIdx) &&
-            (schMsk != 0))
-      {
-        if(((schMsk & 1) != 0) &&
-	   WlzGeomVtxEqual2D(*(iPos + 0), pos0, tol))
-	{
-	  fndMsk |= 1;
-	  schMsk &= 2;
-	  *(fndEdg + 0) = edg0;
-	}
-        if(((schMsk & 2) != 0) &&
-	   WlzGeomVtxEqual2D(*(iPos + 1), pos0, tol))
-	{
-	  fndMsk |= 2;
-	  schMsk &= 1;
-	  *(fndEdg + 1) = edg0;
-	}
-	edg0 = WlzContourWSpEdgNextAlc(edg0);
-      }
-    }
-    if(fndMsk)
-    {
-      /* Having found matching nodes now find next edges. */
-      for(idF = 0; idF < 2; ++idF)
-      {
-        if(fndMsk & (1 << idF))
-	{
-	  edg0 = *(fndEdg+ idF);
-	  edg1 = edg0->opp->prev;
-	  if(edg0 == edg1)
-	  {
-	    /* Matched node is connected to only one other node, so the
-	     * next node is just it's opposite. */
-	    *(nxtEdg + idF) = edg0->opp;
-#ifdef WLZ_CONTOUR_DEBUG
-	    (void *)fprintf(stderr, "%% WlzContourMatchEdg2D %d e%d == e%d\n",
-	    		    idF, edg0->index, edg1->index);
-#endif /* WLZ_CONTOUR_DEBUG */
-	  }
-	  else
-	  {
-#ifdef WLZ_CONTOUR_DEBUG
-	    (void *)fprintf(stderr, "%% WlzContourMatchEdg2D %d e%d\n",
-	    		    idF, edg0->index);
-#endif /* WLZ_CONTOUR_DEBUG */
-	    /* Matched node is connected to more than one other node, so need
-	     * to search for next edge. */
-	    mPos = (*(fndEdg + idF))->node.nod2->pos;
-	    oPos = *(iPos + ((idF)? 0: 1));
-	    /* Compute the rigid body affine transform which takes the
-	     * line segment from the matched node at mPos to the new node at
-	     * oPos onto the x-axis and oriented from the origin. 
-	     * The transform is of the form:
-	     *   x' = scale * (x*cos(theta) - y*sin(theta) + dx)
-	     *   y' = scale * (x*sin(theta) + y*cos(theta) + dy) */
-	    tD0 = mPos.vtX - oPos.vtX;
-	    tD1 = mPos.vtY - oPos.vtY;
-	    trScale = (tD0 * tD0) + (tD1 * tD1);
-	    if(trScale > tol)
-	    {
-	      trScale = 1.0 / sqrt(trScale);
-	      trCos = (oPos.vtX - mPos.vtX);
-	      trSin = (mPos.vtY - oPos.vtY);
-	      trX = (mPos.vtX * mPos.vtX) + (mPos.vtY * mPos.vtY) -
-		    (mPos.vtX * oPos.vtX) - (mPos.vtY * oPos.vtY);
-	      trY = (mPos.vtX * oPos.vtY) - (mPos.vtY * oPos.vtX);
-	      /* Search for next edge by walking around the matched
-	       * node CCW, comparing the relative polar angles of the line
-	       * segments between the nodes until the next CCW node has a 
-	       * smaller polar angle than the current node. */
-	      tPos = edg0->node.nod2->pos;
-	      pos0.vtX = trScale *
-	      		 ((tPos.vtX * trCos) - (tPos.vtY * trSin) + trX);
-	      pos0.vtY = trScale *
-	      		 ((tPos.vtX * trSin) - (tPos.vtY * trCos) + trY);
-	      tPos = edg1->node.nod2->pos;
-	      pos1.vtX = trScale *
-	      		 ((tPos.vtX * trCos) - (tPos.vtY * trSin) + trX);
-	      pos1.vtY = trScale *
-	      		 ((tPos.vtX * trSin) - (tPos.vtY * trCos) + trY);
-	      while(WlzGeomCmpAngle(pos1, pos0) > 0)
-	      {
-		edg0 = edg1;
-		edg1 = edg1->opp->prev;
-		pos0 = pos1;
-		tPos = edg1->node.nod2->pos;
-		pos1.vtX = trScale *
-			   ((tPos.vtX * trCos) - (tPos.vtY * trSin) + trX);
-	        pos1.vtY = trScale *
-			   ((tPos.vtX * trSin) - (tPos.vtY * trCos) + trY);
-	      }
-	      *(nxtEdg + idF) = edg0->opp;
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-/************************************************************************
-* Function:	WlzContourWSpEdgJoin2D
-* Returns:	int:			Base connectivity index.
-* Purpose:	Having found two nodes which join possibly unconnected
-*		edges, find the base connectivity of the two given
-*		edges. Set the value of the upper of these to that of
-*		the lower and return the lower valued index.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		WlzEdge *conEdg0:	First connectivity labeled edge.
-*		WlzEdge *conEdg1:	Other connectivity labeled edge.
-************************************************************************/
-static int	WlzContourWSpEdgJoin2D(WlzContourWSpace *ctrWSp, 
-				       WlzEdge *conEdg0, WlzEdge *conEdg1)
-{
-  int		eIdx;
-  WlzEdge	*bConEdg[2];
-  AlcHashItem	*conItem[2];
-
-  bConEdg[0] = conEdg0;
-  bConEdg[1] = conEdg1;
-  if(conEdg0->flags != conEdg1->flags)
-  {
-    eIdx = 0;
-    while(eIdx < 2)
-    {
-      conEdg1 = bConEdg[eIdx];
-      do
-      {
-	conEdg0 = conEdg1;
-	conItem[eIdx] = AlcHashItemGet(ctrWSp->conTable, (void *)conEdg0,
-				       NULL);
-	conEdg1 = (WlzEdge *)(conItem[eIdx]->entry);
-      }
-      while(conEdg1 != NULL);
-      bConEdg[eIdx] = conEdg0;
-      ++eIdx;
-    }
-    if(bConEdg[0]->flags < bConEdg[1]->flags)
-    {
-      conItem[1]->entry = (void *)(bConEdg[0]); 
-    }
-    else if(bConEdg[1]->flags < bConEdg[0]->flags)
-    {
-      conItem[0]->entry = (void *)(bConEdg[1]);
-      bConEdg[0] = bConEdg[1];
-    }
-  }
-  return(bConEdg[0]->flags);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpAlcNod2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Allocates the requested number of new WlzEdgeNode2
-*		nodes.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		WlzEdgeNode2 **dstNod:	Destination pointer for the
-*					new nodes.
-*		int reqCnt:		Number of new nodes.
-************************************************************************/
-static WlzErrorNum WlzContourWSpAlcNod2D(WlzContourWSpace  *ctrWSp,
-					 WlzEdgeNode2 **dstNod, 
-					 int reqCnt)
-{
-  int		blkCnt;
-  WlzEdgeNode2	*nod;
-  AlcBlockStack	*blk,
-  		*nBlk;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(((blk = ctrWSp->nodStk) == NULL) ||
-     (blk->elmCnt >= (blk->maxElm - reqCnt)))
-  {
-    blkCnt = (reqCnt > ctrWSp->minBlkSz)? reqCnt: ctrWSp->minBlkSz;
-    if((nBlk = AlcBlockStackNew(blkCnt, sizeof(WlzEdgeNode2),
-    			        blk, NULL)) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      ctrWSp->nodStk = nBlk;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    blk = ctrWSp->nodStk;
-    *dstNod = nod = (WlzEdgeNode2 *)(blk->elements) + blk->elmCnt;
-    blk->elmCnt += reqCnt;
-    while(reqCnt-- > 0)
-    {
-      nod->index = (ctrWSp->nodIdx)++;
-      nod->data = NULL;
-      ++nod;
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpAlcEdg
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Allocates requested number of  new WlzEdge edges.
-*		The allocated edges are returned with ordered indicies
-*		(*dstEdg + i)->index < (*dstEdg + j)->index, iff i < j.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		WlzEdge **dstEdg:	Destination pointer for the
-*					new edges.
-*		int reqCnt:		Number of new edges.
-************************************************************************/
-static WlzErrorNum WlzContourWSpAlcEdg(WlzContourWSpace  *ctrWSp,
-				       WlzEdge **dstEdg, 
-				       int reqCnt)
-{
-  int		blkCnt;
-  WlzEdge	*edg;
-  AlcBlockStack	*blk,
-  		*nBlk;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(((blk = ctrWSp->edgStk) == NULL) ||
-     (blk->elmCnt >= (blk->maxElm - reqCnt)))
-  {
-    blkCnt = (reqCnt > ctrWSp->minBlkSz)? reqCnt: ctrWSp->minBlkSz;
-    if((nBlk = AlcBlockStackNew(blkCnt, sizeof(WlzEdge),
-    			        blk, NULL)) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      ctrWSp->edgStk = nBlk;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    blk = ctrWSp->edgStk;
-    *dstEdg = edg = (WlzEdge *)(blk->elements) + blk->elmCnt;
-    blk->elmCnt += reqCnt;
-    ctrWSp->lstEdg = edg + reqCnt - 1;
-    while(reqCnt-- > 0)
-    {
-      edg->index = (ctrWSp->edgIdx)++;
-      edg->data = (void *)blk;
-      ++edg;
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpEdgPrevAlc
-* Returns:	WlzEdge *:		Previous edge allocated.
-* Purpose:	Finds the edge allocated previous to the one given.
-* Global refs:	-
-* Parameters:	WlzEdge *edg:		Given edge.
-************************************************************************/
-static WlzEdge	*WlzContourWSpEdgPrevAlc(WlzEdge *edg)
-{
-  WlzEdge	*nEdg = NULL;
-  AlcBlockStack *blk;
-
-  if(edg)
-  {
-    if(edg > (WlzEdge *)(((AlcBlockStack *)(edg->data))->elements))
-    {
-      nEdg = edg - 1;
-    }
-    else
-    {
-      if((blk = ((AlcBlockStack *)(edg->data))->next) != NULL)
-      {
-	nEdg = (WlzEdge *)(blk->elements) + blk->elmCnt - 1;
-      }
-    }
-  }
-  return(nEdg);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpEdgNextAlc
-* Returns:	WlzEdge *:		Next edge allocated.
-* Purpose:	Finds the edge allocated after the one given.
-* Global refs:	-
-* Parameters:	WlzEdge *edg:		Given edge.
-************************************************************************/
-static WlzEdge	*WlzContourWSpEdgNextAlc(WlzEdge *edg)
-{
-  WlzEdge	*nEdg = NULL;
-  AlcBlockStack *blk;
-
-  if(edg)
-  {
-    if(edg < ((WlzEdge *)((blk = (AlcBlockStack *)(edg->data))->elements) +
-    				 blk->elmCnt - 1))
-    {
-      nEdg = edg + 1;
-    }
-    else
-    {
-      if((blk = ((AlcBlockStack *)(edg->data))->prev) != NULL)
-      {
-	nEdg = (WlzEdge *)(blk->elements) + 0;
-      }
-    }
-  }
-  return(nEdg);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpSegment
-* Returns:	WlzContourList *:	New contour list.
-* Purpose:	Segments the given contour workspace into unconnected
-*		contours.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
-static WlzContourList *WlzContourWSpSegment(WlzContourWSpace *ctrWSp,
-					    int minNod, int minEdg,
-					    WlzErrorNum *dstErr)
-{
-  WlzContourList *ctrLst = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((ctrWSp == NULL) ||
-     (ctrWSp->nodStk == NULL) || (ctrWSp->edgStk == NULL))
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else
-  {
-    switch(ctrWSp->type)
-    {
-      case WLZ_CONTOUR_TYPE_2D:
-        ctrLst = WlzContourWSpSegment2D(ctrWSp, minNod,  minEdg, &errNum);
-	break;
-      case WLZ_CONTOUR_TYPE_3D:
-        ctrLst = WlzContourWSpSegment3D(ctrWSp, minNod,  minEdg, &errNum);
-	break;
-      default:
-        errNum = WLZ_ERR_PARAM_TYPE;
-	break;
-    }
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(ctrLst);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpSegment2D
-* Returns:	WlzContourList *:	New contour list.
-* Purpose:	Segments the given 2D contour workspace into
-*		unconnected contours.
-*		Remove all non-basic contour edges (ie edges which
-*		refer to another edge) from the segmented contour
-*		hash list.
-*		Find number of contours.
-*		Compute number of nodes and edges for each contour.
-*		Allocate new contours.
-*		Copy segmented contours to new contours.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
-static WlzContourList *WlzContourWSpSegment2D(WlzContourWSpace *ctrWSp,
-					      int minNod, int minEdg,
-				              WlzErrorNum *dstErr)
-{
-  int		ctrHeadCnt;
-  WlzContour	*ctr;
-  WlzEdge	*ctrEdg;
-  AlcHashItem	*ctrItem;
-  AlcHashItem	**ctrHead;
-  WlzContourList *ctrLstItem,
-  		*ctrLstTop = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  /* Remove all non-basic contour edges from the connectivity hash list. */
-  (void )AlcHashTableUnlinkAll(ctrWSp->conTable, WlzContourWSpHashEntryIsNull,
-  			       NULL, 1);
-  /* Clear the workspace edge and node flags/data. */
-  (void *)WlzContourWSpClearFlags(ctrWSp, (WLZ_CONTOURWS_CLEAR_DATA |
-					   WLZ_CONTOURWS_CLEAR_FLAGS));
-#ifdef WLZ_CONTOUR_DEBUG
-  (void )fprintf(stderr, "\n%%Contour Count = %d\n",
-  		 AlcHashTableCount(ctrWSp->conTable, NULL));
-#endif /* WLZ_CONTOUR_DEBUG */
-  /* Copy each segmented contour from the workspace. */
-  ctrItem = NULL;
-  ctrHead = ctrWSp->conTable->table;
-  ctrHeadCnt = ctrWSp->conTable->tableSz;
-  while((errNum == WLZ_ERR_NONE) && (ctrHeadCnt > 0))
-  {
-    ctrItem = *ctrHead;
-    while(ctrItem)
-    {
-      ctrEdg = (WlzEdge *)(ctrItem->key);
-      ctr = WlzContourExtractContour2D(ctrWSp, ctrEdg, minNod, minEdg,
-      				       &errNum);
-      if((errNum == WLZ_ERR_NONE) && (ctr != NULL))
-      {
-	if((ctrLstItem  = WlzMakeContourList(&errNum)) != NULL)
-	{
-	  ctrLstItem->contour = ctr;
-	  if(ctrLstTop)
-	  {
-	    ctrLstItem->next = ctrLstTop;
-	    ctrLstTop->prev = ctrLstItem;
-	  }
-	  ctrLstTop = ctrLstItem;
-	}
-      }
-      ctrItem = ctrItem->next;
-    }   
-    ++ctrHead;
-    --ctrHeadCnt;
-  } 
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(ctrLstTop);
-}
-
-/************************************************************************
-* Function:	WlzContourExtractContour2D
-* Returns:	WlzContour *:		New contour.
-* Purpose:	Copies the contour which includes the given edge
-*		from the workspace.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		WlzEdge *ctrEdg:	An edge of the contour in the
-*					workspace.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
-static WlzContour *WlzContourExtractContour2D(WlzContourWSpace *ctrWSp,
-				WlzEdge *ctrEdg, int minNod, int minEdg,
-				WlzErrorNum *dstErr)
-{
-  int		eIdx,
-  		nIdx,
-		nEdg = 0,
-  		nNod = 0;
-  WlzEdge	*edgBlk = NULL;
-  WlzEdgeNode2	*nodBlk = NULL;
-  WlzContour	*newCtr = NULL;
-  WlzErrorNum	errNum;
-
-  /* Get number of edges and nodes in contour, also sets the node and
-   * edge WLZ_EDGE_FLAGS_STATS flag. */
-  errNum = WlzContourEdgNodCount(ctrEdg, &nEdg, &nNod);
-  if((errNum == WLZ_ERR_NONE) && (nNod >= minNod) && (nEdg >= minEdg))
-  {
-    /* Make a new contour. */
-    newCtr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
-    /* Allocate edge and node space. */
-    if(errNum == WLZ_ERR_NONE)
-    {
-      if(((newCtr->nodeStk = AlcBlockStackNew(nNod, sizeof(WlzEdgeNode2),
-				              NULL, NULL)) == NULL) ||
-         ((newCtr->edgeStk = AlcBlockStackNew(nEdg, sizeof(WlzEdge),
-				              NULL, NULL)) == NULL))
-      {
-	if(newCtr->nodeStk)
-	{
-	  AlcBlockStackFree(newCtr->nodeStk);
-	}
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
-    /* Push the edge and node blocks onto the contour's freestack. */
-    if(errNum == WLZ_ERR_NONE)
-    {
-      newCtr->nEdges = nEdg;
-      newCtr->edges = (WlzEdge *)(newCtr->edgeStk->elements);
-      newCtr->freeptr = WlzPushFreePtr(newCtr->freeptr,
-      				       (void *)(newCtr->edgeStk),
-				       &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      edgBlk = (WlzEdge *)(newCtr->edgeStk->elements);
-      newCtr->freeptr = WlzPushFreePtr(newCtr->freeptr, (void *)edgBlk,
-				       &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      newCtr->nNodes = nNod;
-      newCtr->nodes.nod2 = (WlzEdgeNode2 *)(newCtr->nodeStk->elements);
-      newCtr->freeptr = WlzPushFreePtr(newCtr->freeptr,
-      				       (void *)(newCtr->nodeStk),
-				       &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      nodBlk = (WlzEdgeNode2 *)(newCtr->nodeStk->elements);
-      newCtr->freeptr = WlzPushFreePtr(newCtr->freeptr,
-      				       (void *)nodBlk, &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      eIdx = 0;
-      nIdx = 0;
-      /* Copy the contour, also sets node and edge WLZ_EDGE_FLAGS_COPY flags. */
-      WlzContourExtractContour2DFn(edgBlk, &eIdx, nodBlk, &nIdx, ctrEdg);
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      if(newCtr)
-      {
-	WlzFreeContour(newCtr);
-	newCtr = NULL;
-      }
-    }
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(newCtr);
-}
-
-/************************************************************************
-* Function:	WlzContourExtractContour2DFn
-* Returns:	void
-* Purpose:	Copies the edges and nodes of a segmented contour
-*		from the contour work space to the new contour's,
-*		edge and edge node blocks.
-*		This is a recursive function which should only be
-*		called from WlzContourExtractContour2D().
-* Global refs:	-
-* Parameters:	WlzEdge *edgBlk:	New edge block.
-*		int *edgIdx:		Current index into the new edge
-*					block.
-*		WlzEdgeNode2 *nodBlk:	New edge node block.
-*		int *nodIdx:		Current index into the new node
-*					block.
-*		WlzEdge *wEdg:		Given workspace contour edge.
-************************************************************************/
-static void	WlzContourExtractContour2DFn(WlzEdge *edgBlk,
-			        int *edgIdx, WlzEdgeNode2 *nodBlk,
-				int *nodIdx, WlzEdge *wEdg)
-{
-  WlzEdgeNode2	*eNod0,
-  		*wNod0;
-  WlzEdge	*eEdg0,
-  		*wEdg0,
-  		*wEdg1;
-
-  /* Travel CCW around the loop that includes the given edge. */
-  wEdg0 = wEdg;
-  wEdg1 = wEdg->next;
-  do
-  {
-    if((wEdg0->flags & WLZ_EDGE_FLAGS_COPY) == WLZ_EDGE_FLAGS_NONE)
-    {
-      if(wEdg0->data == NULL)
-      {
-        WlzContourExtractContour2DFnEdg(edgBlk, edgIdx, wEdg0);
-      }
-      eEdg0 = (WlzEdge *)(wEdg0->data);
-      if(wEdg0->node.core->data == NULL)
-      {
-	WlzContourExtractContour2DFnNod(nodBlk, nodIdx, wEdg0->node.nod2);
-      }
-      eEdg0->node.nod2 = (WlzEdgeNode2 *)(wEdg0->node.nod2->data);
-      if(wEdg0->next->data == NULL)
-      {
-        WlzContourExtractContour2DFnEdg(edgBlk, edgIdx, wEdg0->next);
-      }
-      eEdg0->next = (WlzEdge *)(wEdg0->next->data);
-      if(wEdg0->prev->data == NULL)
-      {
-        WlzContourExtractContour2DFnEdg(edgBlk, edgIdx, wEdg0->prev);
-      }
-      eEdg0->prev = (WlzEdge *)(wEdg0->prev->data);
-      if(wEdg0->opp->data == NULL)
-      {
-        WlzContourExtractContour2DFnEdg(edgBlk, edgIdx, wEdg0->opp);
-      }
-      eEdg0->opp = (WlzEdge *)(wEdg0->opp->data);
-      wEdg0->flags |= WLZ_EDGE_FLAGS_COPY;
-    }
-    wEdg0 = wEdg1;
-    wEdg1 = wEdg1->next;
-  } while(wEdg0 != wEdg);
-  /* Travel around the same loop recursively calling this function function
-   * for each opposite edge which has not been visited yet. */
-  wEdg0 = wEdg;
-  wEdg1 = wEdg->next;
-  do
-  {
-    if((wEdg0->opp->flags & WLZ_EDGE_FLAGS_COPY) == WLZ_EDGE_FLAGS_NONE)
-    {
-      WlzContourExtractContour2DFn(edgBlk, edgIdx, nodBlk, nodIdx, wEdg0->opp);
-    }
-    wEdg0 = wEdg1;
-    wEdg1 = wEdg1->next;
-  } while(wEdg0 != wEdg);
-}
-
-/************************************************************************
-* Function:	WlzContourExtractContour2DFnNod
-* Returns:	void
-* Purpose:	Copies a node into the new contour's node block.
-* Global refs:	-
-* Parameters:	WlzEdgeNode2 *nodBlk:	New edge node block.
-*		int nNod:		Number of nodes in node block.
-*		int *nodIdx:		Current index into the new node
-*					block.
-*		WlzEdgeNode2 *wNod:	Node to copy.
-************************************************************************/
-static void	WlzContourExtractContour2DFnNod(WlzEdgeNode2 *nodBlk,
-				int *nodIdx, WlzEdgeNode2 *wNod)
-{
-  WlzEdgeNode2 *eNod;
-
-  eNod = nodBlk + *nodIdx;
-  wNod->data = (void *)eNod;
-  eNod->type = WLZ_EDGENODE_2D;
-  eNod->index = *nodIdx;
-  eNod->flags = WLZ_EDGE_FLAGS_NONE;
-  eNod->data = NULL;
-  eNod->pos = wNod->pos;
-  ++(*nodIdx);
-}
-
-/************************************************************************
-* Function:	WlzContourExtractContour2DFnEdg
-* Returns:	void
-* Purpose:	Copies an edge into the new contour's edge block.
-* Global refs:	-
-* Parameters:	WlzEdge *edgBlk:	New edge block.
-*		int nEdg:		Number of edges in edge block.
-*		int *edgIdx:		Current index into the new edge
-*					block.
-*		WlzEdgeNode2 *wEdg:	Edge to copy.
-************************************************************************/
-static void	WlzContourExtractContour2DFnEdg(WlzEdge *edgBlk,
-				int *edgIdx, WlzEdge *wEdg)
-{
-  WlzEdge	*eEdg;
-
-  eEdg  = edgBlk + *edgIdx;
-  wEdg->data = (void *)eEdg;
-  eEdg->index = *edgIdx;
-  eEdg->flags = WLZ_EDGE_FLAGS_NONE;
-  eEdg->data = NULL;
-  eEdg->next = NULL;
-  eEdg->prev = NULL;
-  eEdg->opp = NULL;
-  ++(*edgIdx);
-}
-
-/************************************************************************
-* Function:	WlzContourEdgNodCount
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Counts the number of edges and nodes that form a
-*		connected contour with the given edge.
-*		All the node and edge flags must have been cleared
-*		before calling this function.
-* Global refs:	-
-* Parameters:	WlzEdge *ctrEdg:	Given contour edge.
-*		int *dstEdgCnt:		Destination pointer for number
-*					of edges.
-*		int *dstNodCnt:		Destination pointer for number
-*					edge nodes.
-************************************************************************/
-static WlzErrorNum 	WlzContourEdgNodCount(WlzEdge *ctrEdg,
-				      	      int *dstEdgCnt, int *dstNodCnt)
-{
-  int		edgCnt = 0,
-  		nodCnt = 0;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctrEdg == NULL)
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else if(ctrEdg)
-  {
-    WlzContourEdgNodCountFn(ctrEdg, &edgCnt, &nodCnt);
-    if(dstEdgCnt)
-    {
-      *dstEdgCnt = edgCnt;
-    }
-    if(dstNodCnt)
-    {
-      *dstNodCnt = nodCnt;
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourEdgNodCountFn
-* Returns:	void
-* Purpose:	Counts the number of edges and nodes that form a
-*		connected contour with the given edge.
-*		This is a recursive function which should only be
-*		called from WlzContourEdgNodCount().
-* Global refs:	-
-* Parameters:	WlzEdge *edg:		Given contour edge.
-*		int *edgCnt:		Edge count.
-*		int *nodCnt:		Node count.
-************************************************************************/
-static void	WlzContourEdgNodCountFn(WlzEdge *edg,
-					int *edgCnt, int *nodCnt)
-{
-  WlzEdge 	*edg0,
-  		*edg1;
-
-  /* Travel CCW around the loop that includes the given edge. */
-  edg0 = edg;
-  edg1 = edg->next;
-  do
-  {
-    if((edg0->node.core->flags & WLZ_EDGE_FLAGS_STATS) == WLZ_EDGE_FLAGS_NONE)
-    {
-      ++*nodCnt;
-      edg0->node.core->flags |= WLZ_EDGE_FLAGS_STATS;
-    }
-    if((edg0->flags & WLZ_EDGE_FLAGS_STATS) == WLZ_EDGE_FLAGS_NONE)
-    {
-      edg0->flags |= WLZ_EDGE_FLAGS_STATS;
-      ++*edgCnt;
-    }
-    edg0 = edg1;
-    edg1 = edg1->next;
-  } while(edg0 != edg);
-  /* Travel around the same loop recursively calling this function for
-   * each opposite edge which has not been visited yet. */
-  edg0 = edg;
-  edg1 = edg->next;
-  do
-  {
-    if((edg0->opp->flags & WLZ_EDGE_FLAGS_STATS) == WLZ_EDGE_FLAGS_NONE)
-    {
-      WlzContourEdgNodCountFn(edg0->opp, edgCnt, nodCnt);
-    }
-    edg0 = edg1;
-    edg1 = edg1->next;
-  } while(edg0 != edg);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpClearFlags
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Clears the data and/or flags of all the nodes and edges
-*		in the contour workspace.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		unsigned mode:		Clear mode: data and/or flags.
-************************************************************************/
-static WlzErrorNum WlzContourWSpClearFlags(WlzContourWSpace *ctrWSp,
-					   unsigned mode)
-{
-  int		cnt;
-  WlzEdge	*edg;
-  WlzEdgeNode	nod;
-  WlzEdgeNode2	*nod2;
-  WlzEdgeNode3	*nod3;
-  AlcBlockStack	*blk;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(ctrWSp == NULL)
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else
-  {
-    /* Clear node flags. */
-    blk = ctrWSp->nodStk;
-    while(blk)
-    {
-      cnt = blk->elmCnt;
-      nod.core = (WlzEdgeNodeCore *)(blk->elements);
-      switch(nod.core->type)
-      {
-        case WLZ_EDGENODE_2D:
-	  nod2 = nod.nod2;
-	  while(cnt-- > 0)
-	  {
-	    if(mode & WLZ_CONTOURWS_CLEAR_DATA)
-	    {
-	      nod2->data = NULL;
-	    }
-	    if(mode & WLZ_CONTOURWS_CLEAR_FLAGS)
-	    {
-	      nod2->flags = WLZ_EDGE_FLAGS_NONE;
-	    }
-	    ++nod2;
-	  }
-	  break;
-	case WLZ_EDGENODE_3D:
-	  nod3 = nod.nod3;
-	  while(cnt-- > 0)
-	  {
-	    if(mode & WLZ_CONTOURWS_CLEAR_DATA)
-	    {
-	      nod3->data = NULL;
-	    }
-	    if(mode & WLZ_CONTOURWS_CLEAR_FLAGS)
-	    {
-	      nod3->flags = WLZ_EDGE_FLAGS_NONE;
-	    }
-	    ++nod3;
-	  }
-	  break;
-      }
-      blk = blk->next;
-    }
-    /* Clear edge flags. */
-    blk = ctrWSp->edgStk;
-    while(blk)
-    {
-      cnt = blk->elmCnt;
-      edg  = (WlzEdge *)(blk->elements);
-      while(cnt-- > 0)
-      {
-	if(mode & WLZ_CONTOURWS_CLEAR_DATA)
-	{
-          edg->data = NULL;
-	}
-	if(mode & WLZ_CONTOURWS_CLEAR_FLAGS)
-	{
-          edg->flags = WLZ_EDGE_FLAGS_NONE;
-	}
-	++edg;
-      }
-      blk = blk->next;
-    }
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzContourHashCtrKeyCmpFn
-* Returns:	int:			Key comparison <, ==, > 0.
-* Purpose:	Compares the two given hash keys.
-* Global refs:	-
-* Parameters:	void *key0:		First hash key.
-*		void *key1:		Second key.
-************************************************************************/
-static int	WlzContourHashCtrKeyCmpFn(void *key0, void *key1)
-{
-  return(((WlzEdge *)key0)->flags - ((WlzEdge *)key1)->flags);
-}
-
-/************************************************************************
-* Function:	WlzContourHashFn
-* Returns:	unsigned:		Hash value.
-* Purpose:	Generates hash values for the segmented contour hash
-*		table. Values are generated using a cheap random
-*		number generator.
-* Global refs:	-
-* Parameters:	void *keyP:		Key from which to generate hash
-*					value.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
-static unsigned WlzContourHashFn(void *keyP)
-{
-  unsigned      keyU,
-                hashVal;
-  const unsigned mask0 = 0xaaaaaaaa,
-                 mask1 = 0x55555555,
-                 mask2 = 0x33333333,
-                 prime0 = 16381,
-                 prime1 = 10211,
-                 prime2 = 13691;
-
-  keyU = (unsigned )(((WlzEdge *)keyP)->flags);
-  hashVal = ((keyU & mask0) * prime0) +
-            ((keyU & mask1) * prime1) +
-            ((keyU & mask2) * prime2);
-  return(hashVal);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpHashEntryIsNull
-* Returns:	int:			1 or 0.
-* Purpose:	Tests the given item, if it's entry is non NULL then
-*		returns 1 else returns 0.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	Connectivity hash table.
-*		AlcHashItem *hItem:	Given hash item.
-*		void *dummy:		Unused data pointer.
-************************************************************************/
-static int	WlzContourWSpHashEntryIsNull(AlcHashTable *hTbl,
-					     AlcHashItem *hItem,
-					     void *dummy)
-{
-  int		tstVal;
-
-  tstVal = (hItem && hItem->entry);
-  return(tstVal);
-}
-
-/************************************************************************
-* Function:	WlzContourWSpSegment3D
-* Returns:	WlzContourList *:	New contour list.
-* Purpose:	Segments the given 3D contour workspace into 
-*		unconnected contours.
-* Global refs:	-
-* Parameters:	WlzContourWSpace *ctrWSp: Woolz contour workspace.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
-static WlzContourList *WlzContourWSpSegment3D(WlzContourWSpace *ctrWSp,
-					      int minNod, int minEdg,
-				              WlzErrorNum *dstErr)
-{
-  WlzContourList *ctrLst = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(ctrLst);
-}
-
-/************************************************************************
 * Function:	WlzContourTestOutPSLn2D
 * Returns:	void
 * Purpose:	Prints out line segment for testing.
@@ -2841,9 +1661,9 @@ static void 	WlzContourTestOutPSLn2D(FILE *fP,
 					WlzDVertex2 org, WlzDVertex2 dst)
 {
   const double	scaleX = 1.0,
-  		scaleY = -1.0,
+  		scaleY = 1.0,
   		offsetX = 0.0,
-		offsetY = 840.0;
+		offsetY = 0.0;
 
   (void )fprintf(fP,
   		 "%f %f moveto "
@@ -2857,62 +1677,53 @@ static void 	WlzContourTestOutPSLn2D(FILE *fP,
 
 /************************************************************************
 * Function:	WlzContourTestOutPS
-* Returns:	void
-* Purpose:	Outputs the contour edge segments as postscript.
+* Returns:	WlzErrorNum		Woolz error code.
+* Purpose:	Prints out a 2D contour as postscript for testing.
 * Global refs:	-
-* Parameters:	FILE *fP:		Output file.
-*		WlzContour *ctr:	Given contour.
+* Parameters:	WlzContour *ctr:	Given contour to print out.
+*		FILE *fP:		Output file.
+*		int nCol:		Number of colours to cycle
+*					through.
+*		int headAndFoot:	Print a postscript header and
+*					footer if non-zero.
 ************************************************************************/
-static void	WlzContourTestOutPS(FILE *fP, WlzContour *ctr)
+WlzErrorNum	WlzContourTestOutPS(WlzContour *ctr, FILE *fP,
+				    int nCol, int headAndFoot,
+				    WlzDVertex2 offset, WlzDVertex2 scale)
 {
-  WlzContourTestOutPSFn(fP, ctr->edges);
-}
+  WlzGMModel	*model;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-/************************************************************************
-* Function:	WlzContourTestOutPSFn
-* Returns:	void
-* Purpose:	Outputs the contour edge segments as postscript.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file.
-*		WlzEdge *edg:		Given edge.
-************************************************************************/
-static void	WlzContourTestOutPSFn(FILE *fP, WlzEdge *edg)
-{
-  WlzEdge 	*edg0,
-  		*edg1;
-
-  /* Travel CCW around the loop that includes the given edge. */
-  edg0 = edg;
-  edg1 = edg->next;
-  do
+  if(ctr == NULL)
   {
-    if((edg0->node.core->flags & WLZ_EDGE_FLAGS_COPY) ==
-       WLZ_EDGE_FLAGS_NONE)
-    {
-      edg0->node.core->flags |= WLZ_EDGE_FLAGS_COPY;
-    }
-    if((edg0->flags & WLZ_EDGE_FLAGS_COPY) == WLZ_EDGE_FLAGS_NONE)
-    {
-      WlzContourTestOutPSLn2D(fP, edg0->node.nod2->pos,
-			      edg0->opp->node.nod2->pos);
-      edg0->flags |= WLZ_EDGE_FLAGS_COPY;
-    }
-    edg0 = edg1;
-    edg1 = edg1->next;
-  } while(edg0 != edg);
-  /* Travel around the same loop recursively calling this function function
-   * for each opposite edge which has not been visited yet. */
-  edg0 = edg;
-  edg1 = edg->next;
-  do
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(ctr->type != WLZ_CONTOUR_TYPE_2D)
   {
-    if((edg0->opp->flags & WLZ_EDGE_FLAGS_COPY) == WLZ_EDGE_FLAGS_NONE)
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(headAndFoot)
     {
-      WlzContourTestOutPSFn(fP, edg0->opp); 		       /* Recursive! */
+      (void )fprintf(fP, "%%!\n"
+		     "1 setlinecap\n"
+		     "1 setlinejoin\n"
+		     "0.01 setlinewidth\n");
     }
-    edg0 = edg1;
-    edg1 = edg1->next;
-  } while(edg0 != edg);
+    if((model = ctr->model) != NULL)
+    {
+      errNum = WlzGMModelTestOutPS(model, fP, offset, scale, nCol);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(headAndFoot)
+    {
+      (void )fprintf(fP, "showpage\n");
+    }
+  }
+  return(errNum);
 }
 
 /* #define TEST_WLZCONTOUR */
@@ -2933,9 +1744,10 @@ int             main(int argc, char *argv[])
 		usage = 0,
   		colIdx = 0,
 		nCol,
+		maxCol = 7,
 		minNod = 16,
 		minEdg = 16;
-  double	ctrVal = 16,
+  double	ctrVal = 100,
   		ctrWth = 1.0;
   FILE		*fP = NULL;
   char		*inObjFileStr,
@@ -2943,16 +1755,12 @@ int             main(int argc, char *argv[])
   WlzObject     *inObj = NULL;
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzContour	*ctr;
-  WlzContourList *ctrLst = NULL,
-  		*ctrItem;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzDVertex2	scale,
+  		offset;
   static char	optList[] = "ghic:e:n:o:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
-  const int	maxCol = 7;			 /* Colours to cycle though. */
-  const int	colR[] = {0,   255, 0,   255, 0,   200, 0},
-  		colG[] = {0,   0,   255, 200, 0,   0,   255},
-		colB[] = {0,   0,   0,   0,   255, 255, 200};
 
   nCol = maxCol;
   outFileStr = (char *)outFileStrDef;
@@ -3073,33 +1881,35 @@ int             main(int argc, char *argv[])
 	   fopen(outFileStr, "w"): stdout)) == NULL)
     {
       ok = 0;
-      fprintf(stderr, "%s Failed to open output file %s.\n",
-      	      argv[0], outFileStr);
+      (void )fprintf(stderr, "%s Failed to open output file %s.\n",
+      	      	     argv[0], outFileStr);
     }
   }
   if(ok)
   {
-    (void )fprintf(fP, "%%!\n"
-    		   "1 setlinecap\n"
-		   "1 setlinejoin\n"
-		   "0.01 setlinewidth\n");
-    ctrItem = ctrLst = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth,
-    				     minNod, minEdg, &errNum);
-    while((errNum == WLZ_ERR_NONE) && (ctrItem != NULL))
+    ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth,
+    			minNod, minEdg, &errNum);
+    if(errNum != WLZ_ERR_NONE)
     {
-      /* Set colour. */
-      if(nCol > 1)
-      {
-	(void )fprintf(fP,
-		       "%d %d %d setrgbcolor\n",
-		       colR[colIdx], colG[colIdx], colB[colIdx]);
-	colIdx = ++colIdx % nCol;
-      }
-      /* Output the contour. */
-      WlzContourTestOutPS(fP, ctrItem->contour);
-      ctrItem = ctrItem->next;
+      ok = 0;
+      (void )fprintf(stderr, "%s Failed to compute contour.\n",
+      	     	     argv[0]);
     }
-    (void )fprintf(fP, "showpage\n");
+  }
+  if(ok)
+  {
+    scale.vtX = 0.5;
+    scale.vtY = -0.5;
+    offset.vtX = 100.0;
+    offset.vtY = 700.0;
+    errNum = WlzContourTestOutPS(ctr, fP, nCol, 1, offset, scale);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+      		     "%s Failed to output contour as postscript (%d).\n",
+      		     argv[0], (int )errNum);
+    }
   }
   if(fP && strcmp(outFileStr, "-"))
   {
@@ -3107,32 +1917,33 @@ int             main(int argc, char *argv[])
   }
   if(usage)
   {
-  static char	optList[] = "ghic:e:n:o:v:w:";
-    (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
-    *argv,
-    " [-o<output object>] [-h] [-o] [-g] [-i]\n"
-    "        [-c#] [-e#] [-n#] [-o#] [-v#] [-w#]\n"
-    "        [<input object>]\n"
-    "Options:\n"
-    "  -h  Prints this usage information.\n"
-    "  -o  Output object file name.\n"
-    "  -g  Compute maximal gradient contours.\n"
-    "  -i  Compute iso-value contours.\n"
-    "  -c  Cycle contour colours (useful for debuging).\n"
-    "  -e  Minimum number of edges for each contour.\n"
-    "  -n  Minimum number of nodes for each contour.\n"
-    "  -v  Contour iso-value.\n"
-    "  -w  Contour (Deriche) gradient operator width.\n"
-    "Computes a contour list from the given input object.\n"
-    "The input object is read from stdin and output data are written\n"
-    "to stdout unless filenames are given.\n",
-    *argv,
-    " -i -v 0.0 -n 8 in.wlz\n"
-    "The input Woolz object is read from in.wlz, and the iso-value\n"
-    "(iso-value = 1.0) contour list is written to stdout.\n"
-    "Contours with less than 8 nodes are ignored.\n");
+    static char	optList[] = "ghic:e:n:o:v:w:";
+      (void )fprintf(stderr,
+      "Usage: %s%sExample: %s%s",
+      *argv,
+      " [-o<output object>] [-h] [-o] [-g] [-i]\n"
+      "        [-c#] [-e#] [-n#] [-o#] [-v#] [-w#]\n"
+      "        [<input object>]\n"
+      "Options:\n"
+      "  -h  Prints this usage information.\n"
+      "  -o  Output object file name.\n"
+      "  -g  Compute maximal gradient contours.\n"
+      "  -i  Compute iso-value contours.\n"
+      "  -c  Cycle contour colours (useful for debuging).\n"
+      "  -e  Minimum number of edges for each contour.\n"
+      "  -n  Minimum number of nodes for each contour.\n"
+      "  -v  Contour iso-value.\n"
+      "  -w  Contour (Deriche) gradient operator width.\n"
+      "Computes a contour list from the given input object.\n"
+      "The input object is read from stdin and output data are written\n"
+      "to stdout unless filenames are given.\n",
+      *argv,
+      " -i -v 0.0 -n 8 in.wlz\n"
+      "The input Woolz object is read from in.wlz, and the iso-value\n"
+      "(iso-value = 1.0) contour list is written to stdout.\n"
+      "Contours with less than 8 nodes are ignored.\n");
   }
   return(!ok);
 }
+
 #endif /* TEST_WLZCONTOUR */

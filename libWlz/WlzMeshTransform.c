@@ -804,7 +804,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
   WlzPixelV	bkdV;
   WlzValues	newValues;
 #ifdef WLZ_MESH_DEBUG
-  WlzMeshScanItv oldItvHACK;
+  WlzMeshScanItv oldItvDebug;
 #endif /* WLZ_MESH_DEBUG */
   WlzMeshScanItv *mItv;
   WlzMeshScanWSp *mSnWSp = NULL;
@@ -857,7 +857,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
       {
 	/* Find the appropriate mesh scan interval. */
 #ifdef WLZ_MESH_DEBUG
-	oldItvHACK = *mItv;
+	oldItvDebug = *mItv;
 #endif /* WLZ_MESH_DEBUG */
         while((mItv->line < dPosI.vtY) && (mItvIdx < mSnWSp->nItvs))
 	{
@@ -876,8 +876,8 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 #ifdef WLZ_MESH_DEBUG
   (void )fprintf(stderr,
-  "HACK oldItvHACK %d %d %d %d, mItv %d %d %d %d, dPos %d %d\n",
-  oldItvHACK.elmIdx, oldItvHACK.line, oldItvHACK.lftI, oldItvHACK.rgtI,
+  "Debug oldItvDebug %d %d %d %d, mItv %d %d %d %d, dPos %d %d\n",
+  oldItvDebug.elmIdx, oldItvDebug.line, oldItvDebug.lftI, oldItvDebug.rgtI,
   mItv->elmIdx, mItv->line, mItv->lftI, mItv->rgtI,
   dPosI.vtX, dPosI.vtY);
 #endif /* WLZ_MESH_DEBUG */

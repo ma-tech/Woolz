@@ -12,6 +12,9 @@
 * Purpose:      Makes Woolz object types.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
@@ -918,9 +921,9 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 	}
 	else
 	{
-	  hist->freeptr = WlzPushFreePtr(hist->freeptr,
-	  			         (void *)(hist->binValues.inp),
-					 &errNum);
+	  hist->freeptr = AlcFreeStackPush(hist->freeptr,
+					   (void *)(hist->binValues.inp),
+					   &errNum);
 	}
 	break;
       case WLZ_HISTOGRAMDOMAIN_FLOAT:
@@ -931,9 +934,9 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 	}
 	else
 	{
-	  hist->freeptr = WlzPushFreePtr(hist->freeptr, 
-	  				 (void *)(hist->binValues.dbp),
-					 &errNum);
+	  hist->freeptr = AlcFreeStackPush(hist->freeptr, 
+					   (void *)(hist->binValues.dbp),
+					   &errNum);
 	}
 	break;
     }
@@ -1236,7 +1239,7 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	  }
 	  else {
 	    memset((void *) g.inp, bgd_val, table_size);
-	    v.v->freeptr = WlzPushFreePtr(v.v->freeptr, (void *)g.inp, NULL);
+	    v.v->freeptr = AlcFreeStackPush(v.v->freeptr, (void *)g.inp, NULL);
 	    v.v->width = idom.i->lastkl - idom.i->kol1 + 1;
 	  }
 	}
@@ -1336,8 +1339,8 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
       else {
-	v.r->freeptr = WlzPushFreePtr(v.r->freeptr, (void *)v.r->values.inp,
-				      NULL);
+	v.r->freeptr = AlcFreeStackPush(v.r->freeptr, (void *)v.r->values.inp,
+				        NULL);
       }
       break;
 
@@ -1431,7 +1434,7 @@ WlzNewIDomain(WlzObjectType outDomType,
       else
       {
 	jtvl = itvl;
-	outDom->freeptr = WlzPushFreePtr(outDom->freeptr, (void *)itvl, NULL);
+	outDom->freeptr = AlcFreeStackPush(outDom->freeptr, (void *)itvl, NULL);
 	/* Set the new intervals. */
 	if(inDom->type == WLZ_INTERVALDOMAIN_INTVL)
 	{

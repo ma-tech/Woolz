@@ -13,6 +13,9 @@
 *		rectangular value tables.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <limits.h>
@@ -310,7 +313,7 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 				   dstBkgPix, NULL, NULL, &errNum);
 	      if( errNum == WLZ_ERR_NONE )
 	      {
-		dstObj->values.r->freeptr = WlzPushFreePtr(NULL,
+		dstObj->values.r->freeptr = AlcFreeStackPush(NULL,
 	         				(void *)(dstValP.inp), NULL);
 	      }
 	    }
@@ -674,7 +677,7 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      dstValues.vox->freeptr = WlzPushFreePtr(NULL,
+	      dstValues.vox->freeptr = AlcFreeStackPush(NULL,
 	      					      (void *)(dstValP.inp),
 						      NULL);
 	      dstDom.p->voxel_size[0] = srcObj->domain.p->voxel_size[0];

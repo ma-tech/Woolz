@@ -12,6 +12,9 @@
 * Purpose:      Reads a Woolz object from a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
@@ -445,7 +448,7 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
       }
       itvl = itvl0;
       ivln = idmn->intvlines;
-      idmn->freeptr = WlzPushFreePtr(idmn->freeptr, (void *)itvl0, NULL);
+      idmn->freeptr = AlcFreeStackPush(idmn->freeptr, (void *)itvl0, NULL);
 
       for (i=0; i<nints; i++,itvl++) {
 	itvl->ileft = getword(fp);
@@ -729,8 +732,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp,
       return WLZ_ERR_MEM_ALLOC;
     }
     memset((void *) v.inp, backgrnd.v.inv, table_size);
-    values.v->freeptr = WlzPushFreePtr(values.v->freeptr, (void *)v.inp,
-    				       NULL);
+    values.v->freeptr = AlcFreeStackPush(values.v->freeptr, (void *)v.inp,
+    				         NULL);
 
     if( (errNum = WlzInitRasterScan(obj, &iwsp,
     				    WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE ){
@@ -795,8 +798,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp,
       return WLZ_ERR_MEM_ALLOC;
     }
     memset((void *) v.shp, (int) backgrnd.v.shv, table_size);
-    values.v->freeptr = WlzPushFreePtr(values.v->freeptr, (void *)v.shp,
-    					NULL);
+    values.v->freeptr = AlcFreeStackPush(values.v->freeptr, (void *)v.shp,
+    					 NULL);
 
     if( (errNum = WlzInitRasterScan(obj, &iwsp,
     				    WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE ){
@@ -855,7 +858,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp,
       return WLZ_ERR_MEM_ALLOC;
     }
     memset((void *) v.ubp, (int) backgrnd.v.ubv, table_size);
-    values.v->freeptr = WlzPushFreePtr(values.v->freeptr, (void *)v.ubp, NULL);
+    values.v->freeptr = AlcFreeStackPush(values.v->freeptr, (void *)v.ubp,
+    					 NULL);
 
     if( (errNum = WlzInitRasterScan(obj, &iwsp,
     				    WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE ){
@@ -904,8 +908,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp,
       return WLZ_ERR_MEM_ALLOC;
     }
     memset((void *) v.flp, (int) backgrnd.v.flv, table_size);
-    values.v->freeptr = WlzPushFreePtr(values.v->freeptr, (void *)v.flp,
-    					NULL);
+    values.v->freeptr = AlcFreeStackPush(values.v->freeptr, (void *)v.flp,
+    					 NULL);
 
     if( (errNum = WlzInitRasterScan(obj, &iwsp,
     				    WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE ){
@@ -954,8 +958,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp,
       return WLZ_ERR_MEM_ALLOC;
     }
     memset((void *) v.dbp, (int) backgrnd.v.dbv, table_size);
-    values.v->freeptr = WlzPushFreePtr(values.v->freeptr, (void *)v.dbp,
-    					NULL);
+    values.v->freeptr = AlcFreeStackPush(values.v->freeptr, (void *)v.dbp,
+    					 NULL);
 
     if( (errNum = WlzInitRasterScan(obj, &iwsp,
     				    WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE ){
@@ -1064,7 +1068,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     WlzFreeValueTb(vtb.v);
     return WLZ_ERR_MEM_ALLOC;
   }
-  vtb.r->freeptr = WlzPushFreePtr(vtb.r->freeptr, (void *)values.inp, NULL);
+  vtb.r->freeptr = AlcFreeStackPush(vtb.r->freeptr, (void *)values.inp, NULL);
   vtb.r->values = values;
   obj->values = WlzAssignValues(vtb, NULL);
 

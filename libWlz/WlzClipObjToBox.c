@@ -13,6 +13,9 @@
 *		domain objects so that it lies within a given box.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -115,8 +118,8 @@ WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
 						      clipBox.xMax,
 						      &errNum)) != NULL))
 		{
-		  dstDom.i->freeptr = WlzPushFreePtr(dstDom.i->freeptr,
-		  				     (void *)dstItv0, NULL);
+		  dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
+		  				       (void *)dstItv0, NULL);
 		  itvLn = srcDom.i->intvlines + clipBox.yMin - srcDom.i->line1;
 		  relBox = clipBox;
 		  relBox.xMin -= srcDom.i->kol1;

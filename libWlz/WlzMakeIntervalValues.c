@@ -12,6 +12,9 @@
 * Purpose:      Makes an interval values table.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -135,7 +138,7 @@ WlzMakeIntervalValues(WlzObjectType	type,
    */
   if( errNum == WLZ_ERR_NONE ){
     v.i->type = type;
-    v.i->freeptr = WlzPushFreePtr(v.i->freeptr, (void *)g.inp, NULL);
+    v.i->freeptr = AlcFreeStackPush(v.i->freeptr, (void *)g.inp, NULL);
     v.i->line1 = idom->line1;
     v.i->lastln = idom->lastln;
     v.i->kol1 = idom->kol1;

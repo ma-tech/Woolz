@@ -12,6 +12,9 @@
 * Purpose:      Segment the given Woolz object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -450,7 +453,7 @@ WlzErrorNum WlzLabel(WlzObject	*obj,
 	    nob++;
 	    /* get the size correct here !!! */
 	    itvl = (WlzInterval *) AlcMalloc (nints * sizeof(WlzInterval));
-	    jdp->freeptr = WlzPushFreePtr(jdp->freeptr, (void *)itvl, NULL);
+	    jdp->freeptr = AlcFreeStackPush(jdp->freeptr, (void *)itvl, NULL);
 	    /* write intervals and interval pointers lists */
 	    for (jjj=ofl; jjj<=oll; jjj++) {
 	      jtvl = itvl;

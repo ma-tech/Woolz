@@ -12,6 +12,9 @@
 * Purpose:      Functions for dilating Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 
@@ -174,8 +177,8 @@ WlzObject *WlzDilation(
 					     line1-1, lastln+1,
 					     kol1-1, lastkl+1,
 					     &errNum) ){
-	  domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)jp,
-	  				     NULL);
+	  domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
+	  				       NULL);
 	  if((dilatobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, dilatvalues,
 				     NULL, NULL, &errNum)) == NULL){
 	    WlzFreeDomain(domain);
@@ -660,8 +663,8 @@ static WlzObject *WlzDilation4(
 					     &errNum) ){
       inttot = lastln - line1 + 3;
       if( jp = (WlzInterval *) AlcMalloc(inttot * sizeof(WlzInterval)) ){
-	domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)jp,
-					   NULL);
+	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
+					     NULL);
 	/* first line */
 	line = line1 - 1;
 	jp->ileft = 1;
@@ -708,8 +711,8 @@ static WlzObject *WlzDilation4(
 					     line1-1, lastln+1,
 					     kol1-1, lastkl+1,
 					     &errNum) ){
-	  domain.i->freeptr = WlzPushFreePtr(domain.i->freeptr, (void *)jp,
-	  				     NULL);
+	  domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
+	  				       NULL);
 	  if((dilatobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 				     NULL, NULL, &errNum)) == NULL){
 	    WlzFreeDomain(domain);

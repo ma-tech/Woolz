@@ -13,6 +13,9 @@
 *		and arrays.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 * 31-08-99 bill	Modified array size parameters for JavaWoolz.
 ************************************************************************/
 #include <stdlib.h>
@@ -422,7 +425,7 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
       {
 	if(cutObj->type == WLZ_2D_DOMAINOBJ)
 	{
-	  cutObj->values.r->freeptr = WlzPopFreePtr(
+	  cutObj->values.r->freeptr = AlcFreeStackPop(
 					   cutObj->values.r->freeptr,
 					   &tVP0, NULL);
 	  gValP.inp = (int *)tVP0;
@@ -878,7 +881,7 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
       {
 	if(cutObj->type == WLZ_3D_DOMAINOBJ)
 	{
-	  cutObj->values.vox->freeptr = WlzPopFreePtr(
+	  cutObj->values.vox->freeptr = AlcFreeStackPop(
 					      cutObj->values.vox->freeptr,
 					      &tVP0, NULL);
 	  gValP.inp = (int *)tVP0;
@@ -1476,9 +1479,9 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
   }
   if( (errNum == WLZ_ERR_NONE) && (noCopyFlag == 0) )
   {
-    dstObj->values.r->freeptr = WlzPushFreePtr(dstObj->values.r->freeptr,
-    					       (void *)(dstValP.inp),
-					       NULL);
+    dstObj->values.r->freeptr = AlcFreeStackPush(dstObj->values.r->freeptr,
+						 (void *)(dstValP.inp),
+						 NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1988,9 +1991,9 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
   {
     if(noCopyFlag == 0)
     {
-      dstValues.vox->freeptr = WlzPushFreePtr(dstValues.vox->freeptr,
-      					      (void *)(dstValP.inp),
-					      NULL);
+      dstValues.vox->freeptr = AlcFreeStackPush(dstValues.vox->freeptr,
+						(void *)(dstValP.inp),
+						NULL);
     }
     planeIdx = 0;
     planeCount = arraySize.vtZ;

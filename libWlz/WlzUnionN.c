@@ -12,6 +12,9 @@
 * Purpose:      Computes the set union of N Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <Wlz.h>
 
@@ -206,7 +209,7 @@ WlzUnionN(int		n,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
-      idom->freeptr = WlzPushFreePtr(idom->freeptr, (void *)itvl, NULL);
+      idom->freeptr = AlcFreeStackPush(idom->freeptr, (void *)itvl, NULL);
       lwas = line1;
       jtvl = itvl;
       nints = 0;

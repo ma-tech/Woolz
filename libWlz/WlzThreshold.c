@@ -12,6 +12,9 @@
 * Purpose:      Thresholds a Woolz grey-level object, 2D or 3D.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
 
@@ -305,7 +308,7 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 	  WlzFreeIntervalDomain(idom);
 	}
 	else {
-	  idom->freeptr = WlzPushFreePtr(idom->freeptr, (void *)itvl, NULL);
+	  idom->freeptr = AlcFreeStackPush(idom->freeptr, (void *)itvl, NULL);
 	}
       }
 

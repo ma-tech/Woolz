@@ -49,6 +49,9 @@ WlzErrorNum	WlzErrorFromAlg(AlgError algErr)
     case ALG_ERR_CONVERGENCE:
       wlzErr = WLZ_ERR_ALG_CONVERGENCE;
       break;
+    case ALG_ERR_DIVZERO:
+      wlzErr = WLZ_ERR_ALG;
+      break;
   }
   return(wlzErr);
 }

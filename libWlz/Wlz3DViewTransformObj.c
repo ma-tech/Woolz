@@ -23,6 +23,9 @@
 *   Synopsis    : 							*
 *************************************************************************
 *   Maintenance :  date - name - comments (Last changes at the top)	*
+* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+*		WlzFreeFreePtr() with AlcFreeStackPush(),
+*		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 
 #include <stdlib.h>
@@ -247,9 +250,9 @@ WlzObject *Wlz3DViewTransformObj(
 					  kol1, lastkl,
 					  &errNum);
       itvl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*numInts);
-      tmpDomain.i->freeptr = WlzPushFreePtr(tmpDomain.i->freeptr,
-					    (void *) itvl,
-					    &errNum);
+      tmpDomain.i->freeptr = AlcFreeStackPush(tmpDomain.i->freeptr,
+					      (void *) itvl,
+					      &errNum);
       
       /* one more loop to add the intervals */
       itvl->ileft = vertices[vtxIdx].vtX - kol1;

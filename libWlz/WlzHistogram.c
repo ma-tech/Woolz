@@ -13,6 +13,7 @@
 *		histogram objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-04-2k bill Modify WlzHistogramFindPeaks().
 * 04-02-2k bill	Add WlzHistogramFitPeaks().
 * 02-02-2k bill	Add WlzHistogramRsvGauss(), WlzHistogramRsvFilter(),
 *		WlzHistogramConvolve(), WlzHistogramCnvGauss() and
@@ -1758,39 +1759,51 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 /************************************************************************
 * Function:	WlzHistogramFindPeaks
 * Returns:	WlzErrorNum:		Error number.
-* Purpose:	Find the peaks of the given histogram.
+* Purpose:	Find the peaks and/or troughs  of the given histogram.
 *		Peaks are found by searching through the 1st derivative
 *		(h') of the histogram bin values (h). For a peak
 *		  (h'[i - 1] > 0) && (h'[i + 1] < 0) &&
 *		  (h[i] > thresh).
+*		If the first or last histogram bin has the maximum
+*		bin occupancy of the histogram it is classified as a
+*		peak too.
 * Global refs:	-
 * Parameters:	WlzObject *histObj:	Given histogram object.
 *		double sigma:		Gaussian sigma smooth histogram
 *					and compute 1st derivative.
 *		double thresh:		Minimum (smoothed) histogram
-*					value at peak.
-*		int *dstPeaksSz:	Destination ptr for the number
-*					of peaks found.
-*		int **dstPeaks:		Destination ptr for the array of
-*					peak positions (indicies into
-*					the histogram bin values). May
-*					have *dstPeaks == NULL on return
-*					if *dstPeaksSz == 0.
+*					value at peak, not used for
+*					troughs.
+*		int *dstFeatSz:		Destination ptr for the number
+*					of peaks/troughs found.
+*		int **dstFeat:		Destination ptr for the array of
+*					peak/trough positions (indicies
+*					into the histogram bin values).
+*					May have *dstFeat == NULL on
+*					return if *dstFeatSz == 0.
+*		WlzHistFeature feat:	Features to find: peaks, troughs
+*					or both.
 ************************************************************************/
 WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 				      double sigma, double thresh,
-				      int *dstPeaksSz, int **dstPeaks)
+				      int *dstFeatSz, int **dstFeat,
+				      WlzHistFeature feat)
 {
   int		binIdx,
   		binCnt,
 		binLst,
-  		pkIdx,
-  		pkMax,
-		threshI;
+		fndFlg,
+  		featIdx,
+  		featMax,
+		threshI,
+		maxI,
+		maxBinIdx,
+		minSep;
+  double	maxD;
   int		*dIC,
   		*dIN,
 		*sIC,
-		*pkDat = NULL;
+		*featDat = NULL;
   double	*dDC,
   		*dDN,
 		*sDC;
@@ -1798,11 +1811,11 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
   		*dHist = NULL;
   WlzHistogramDomain *histDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	minSep = 2; 		          /* Minimum peak separation */
   
   if((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE)
   {
-    if((dstPeaksSz == NULL) || (dstPeaks == NULL))
+    if((dstFeatSz == NULL) || (dstFeat == NULL) ||
+       ((feat & ~(WLZ_HIST_FEATURE_PEAK | WLZ_HIST_FEATURE_TROUGH)) != 0))
     {
       errNum = WLZ_ERR_PARAM_DATA;
     }
@@ -1821,28 +1834,32 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      /* Smooth. */
       errNum = WlzHistogramCnvGauss(sHist, sigma, 0);
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      /* 1st derivative. */
       errNum = WlzHistogramCnvGauss(dHist, sigma, 1);
     }
-    /* Allocate a peak array. */
+    /* Allocate a feature array. */
     if(errNum == WLZ_ERR_NONE)
     {
-      pkMax = histDom->nBins / 2;
-      if((pkDat = (int *)AlcMalloc(sizeof(int) * pkMax)) == NULL)
+      featMax = histDom->nBins / 2;
+      if((featDat = (int *)AlcMalloc(sizeof(int) * featMax)) == NULL)
       {
         errNum = WLZ_ERR_MEM_ALLOC;
       }
     }
-    /* Search through the histogram bins for peaks. */
+    /* Search through the histogram bins for peak/trough features. */
     if(errNum == WLZ_ERR_NONE)
     {
-      pkIdx = 0;
-      binLst = -1;
+      minSep = (int )ceil(sigma + 0.1);
+      binLst = -(minSep + 1);
+      featIdx = 0;
       binIdx = 0;
-      binCnt = histDom->nBins - 1;
+      binCnt = histDom->nBins;
+      maxBinIdx = WlzHistogramBinMax(sHist->domain.hist);
       switch(histDom->type)
       {
         case WLZ_HISTOGRAMDOMAIN_INT:
@@ -1850,13 +1867,47 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 	  dIC = dHist->domain.hist->binValues.inp;
 	  dIN = dIC + 1;
 	  sIC = sHist->domain.hist->binValues.inp;
+	  maxI = *(sIC + maxBinIdx);
 	  while(binIdx < binCnt)
 	  {
-	    if(((binIdx - binLst) > minSep) &&
-	       (*dIC <= 0) && (*dIN > 0) && (*sIC > threshI))
+	    fndFlg = 0;
+	    if(feat & WLZ_HIST_FEATURE_PEAK)
 	    {
-	      binLst = (abs(*dIC) < abs(*dIN))? binIdx: binIdx + 1;
-	      *(pkDat + pkIdx++) = binLst;
+	      if(*sIC > threshI)
+	      {
+		if(*sIC == maxI)
+		{
+		  if(((binIdx - binLst) > minSep) || (featIdx == 0))
+		  {
+		    fndFlg = 1;
+		    *(featDat + featIdx++) = binIdx;
+		    binLst = binIdx;
+		  }
+		  else
+		  {
+		    fndFlg = 1;
+		    *(featDat + featIdx - 1) = binIdx;
+		    binLst = binIdx;
+		  }
+		}
+		else if(((binIdx - binLst) > minSep) &&
+			(*dIC <= 0) && (*dIN > 0))
+		{
+		  fndFlg = 1;
+		  *(featDat + featIdx++) = binIdx;
+		  binLst = binIdx;
+		}
+	      }
+	    }
+	    if((fndFlg == 0) && (feat & WLZ_HIST_FEATURE_TROUGH))
+	    {
+	      if(((binIdx - binLst) > minSep) &&
+	      	  (*dIC > 0) && (*dIN <= 0))
+	      {
+	        fndFlg = 1;
+		*(featDat + featIdx++) = binIdx;
+		binLst = binIdx;
+	      }
 	    }
 	    ++dIC; ++dIN; ++sIC;
 	    ++binIdx;
@@ -1866,27 +1917,43 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 	  dDC = dHist->domain.hist->binValues.dbp;
 	  dDN = dDC + 1;
 	  sDC = sHist->domain.hist->binValues.dbp;
+	  maxD = *(sDC + maxBinIdx);
 	  while(binIdx < binCnt)
 	  {
-	    if(((binIdx - binLst) > minSep) &&
-	       (*dDC <= -(DBL_EPSILON)) && (*dDN > DBL_EPSILON) &&
-	       (*sDC > thresh))
+	    if(*sDC > thresh)
 	    {
-	      binLst = (abs(*dDC) < abs(*dDN))? binIdx: binIdx + 1;
-	      *(pkDat + pkIdx++) = binLst;
+	      if(*sDC == maxD)
+	      {
+		if(((binIdx - binLst) > minSep) || (featIdx == 0))
+		{
+		  *(featDat + featIdx++) = binIdx;
+		  binLst = binIdx;
+		}
+		else
+		{
+		  *(featDat + featIdx - 1) = binIdx;
+		  binLst = binIdx;
+		}
+	      }
+	      else if(((binIdx - binLst) > minSep) &&
+		      (*dDC <= -(DBL_EPSILON)) && (*dDN > DBL_EPSILON))
+	      {
+		*(featDat + featIdx++) = binIdx;
+		binLst = binIdx;
+	      }
 	    }
 	    ++dDC; ++dDN; ++sDC;
 	    ++binIdx;
 	  }
 	  break;
       }
-      if(pkIdx == 0)
+      if(featIdx == 0)
       {
-        AlcFree(pkDat);
-	pkDat = NULL;
+        AlcFree(featDat);
+	featDat = NULL;
       }
-      *dstPeaksSz = pkIdx;
-      *dstPeaks = pkDat;
+      *dstFeatSz = featIdx;
+      *dstFeat = featDat;
     }
     if(sHist)
     {
@@ -1956,16 +2023,20 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
   		idx,
   		binCnt,
   		pkCnt,
-		fitObs,
 		fitNI;
-  double	fitLL;
-  int		*pkIdx = NULL,
-  		*pkFreq = NULL;
-  double	*pkPos = NULL,
+  double	fitLL,
+		fitObs,
+		pkHgt,
+		pkHWHM,
+  		sumAlpha;
+  int		*pkIdx = NULL;
+  double	*pkFreq = NULL,
   		*pkApha = NULL,
 		*pkMu = NULL,
 		*pkSigma = NULL;
-  WlzHistogramDomain *histDom;
+  WlzObject	*smHistObj = NULL;
+  WlzHistogramDomain *histDom,
+  		*smHistDom;
   AlgError 	algErr = ALG_ERR_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1989,9 +2060,18 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    smHistObj = WlzCopyObject(histObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzHistogramCnvGauss(smHistObj, smooth, 0);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    smHistDom =smHistObj->domain.hist;
     if(numDbn > 0)
     {
-      if(numDbn > (histDom->nBins / 3))
+      if(numDbn > (smHistDom->nBins / 3))
       {
         errNum = WLZ_ERR_PARAM_DATA;
       }
@@ -2006,7 +2086,7 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
 	{
 	  for(idx = 0; idx < numDbn; ++idx)
 	  {
-	    *(pkIdx + idx) = (histDom->nBins * (idx + 1)) / (numDbn + 1);
+	    *(pkIdx + idx) = (smHistDom->nBins * (idx + 1)) / (numDbn + 1);
 	  }
 	}
       }
@@ -2014,14 +2094,13 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
     else
     {
       errNum = WlzHistogramFindPeaks(histObj, smooth, thresh,
-  				     &pkCnt, &pkIdx);
+  				     &pkCnt, &pkIdx, WLZ_HIST_FEATURE_PEAK);
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    binCnt = histDom->nBins;
-    if(((pkPos = (double *)AlcMalloc(sizeof(double) * binCnt)) == NULL) ||
-       ((pkFreq = (int *)AlcMalloc(sizeof(int) * binCnt)) == NULL) ||
+    binCnt = smHistDom->nBins;
+    if(((pkFreq = (double *)AlcMalloc(sizeof(double) * binCnt)) == NULL) ||
        ((pkApha = (double *)AlcMalloc(sizeof(double) * pkCnt)) == NULL) ||
        ((pkMu = (double *)AlcMalloc(sizeof(double) * pkCnt)) == NULL) ||
        ((pkSigma = (double *)AlcMalloc(sizeof(double) * pkCnt)) == NULL))
@@ -2032,36 +2111,97 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Fill in distribution parameters. */
-    for(idx = 0; idx < binCnt; ++idx)
-    {
-      *(pkPos + idx) = histDom->origin + (idx * histDom->binSize);
-    }
-    fitObs = 0;
-    switch(histDom->type)
+    fitObs = 0.0;
+    switch(smHistDom->type)
     {
       case WLZ_HISTOGRAMDOMAIN_INT:
 	for(idx = 0; idx < binCnt; ++idx)
 	{
-	  tI0 = *(histDom->binValues.inp + idx);
-	  fitObs += tI0;
-	  *(pkFreq + idx) = tI0;
-	  
+	  fitObs += *(pkFreq + idx) = *(smHistDom->binValues.inp + idx);
 	}
 	break;
       case WLZ_HISTOGRAMDOMAIN_FLOAT:
 	for(idx = 0; idx < binCnt; ++idx)
 	{
-	  tI0 = WLZ_NINT(*(histDom->binValues.dbp + idx));
-	  fitObs += tI0;
-	  *(pkFreq + idx) = tI0;
+	  fitObs += *(pkFreq + idx) = *(smHistDom->binValues.dbp + idx);
 	}
         break;
     }
-    for(idx = 0; idx < pkCnt; ++idx)
+    if(pkCnt == 0)
     {
-      *(pkMu + idx) = *(pkPos + *(pkIdx + idx));
-      *(pkSigma + idx) = smooth * 2.0;
-      *(pkApha + idx) = 1.0 / pkCnt;
+      *pkMu = smHistDom->origin + (binCnt * smHistDom->binSize * 0.5);
+      *pkSigma = smooth * 2.0;
+      *pkApha = 1.0;
+    }
+    else if(pkCnt == 1)
+    {
+      *pkMu = smHistDom->origin + (*pkIdx * smHistDom->binSize);
+      *pkSigma = smooth * 2.0;
+      *pkApha = 1.0;
+    }
+    else
+    {
+      /* Find sum of peak heights. */
+      sumAlpha = 0.0;
+      for(idx = 0; idx < pkCnt; ++idx)
+      {
+        sumAlpha += *(pkFreq + *(pkIdx + idx));
+      }
+      /* Set initial estimates */
+      pkHgt = *(pkFreq + *pkIdx);
+      *pkMu = smHistDom->origin + (smHistDom->binSize * *pkIdx);
+      if(pkHgt > *(pkFreq + *(pkIdx + 1)) * 0.5)
+      {
+	/* Find half height half width */
+	idx = *pkIdx;
+	pkHWHM = 1;
+	while((idx < *(pkIdx + 1)) && (*(pkFreq + idx) > pkHgt / 2))
+	{
+	  ++pkHWHM;
+	  ++idx;
+	}
+	/* Convert half height half width to sigma */
+	*pkSigma = 1.2 * pkHWHM;
+      }
+      else
+      {
+	*pkSigma = (*(pkIdx + 1) - *pkIdx) *
+		   0.25 * smooth * smHistDom->binSize;
+      }
+      *pkApha = pkHgt / sumAlpha;
+      for(idx = 1; idx < (pkCnt - 1); ++idx)
+      {
+	*(pkMu + idx) = smHistDom->origin +
+			(smHistDom->binSize * *(pkIdx + idx));
+	*(pkSigma + idx) = (*(pkIdx + idx + 1) - *(pkIdx + idx - 1)) *
+			   smHistDom->binSize * 0.25 * smooth;
+
+        *(pkApha + idx) = *(pkFreq + *(pkIdx + idx)) / sumAlpha;
+      }
+      pkHgt = *(pkFreq + *(pkIdx + pkCnt - 1));
+
+      *(pkMu + pkCnt - 1) = smHistDom->origin +
+      			    (smHistDom->binSize * *(pkIdx + pkCnt - 1));
+
+      if(pkHgt > *(pkFreq + *(pkIdx + pkCnt - 2)) * 0.5)
+      {
+        /* Find half height half width */
+	idx = *(pkIdx + pkCnt - 1);
+	pkHWHM = 1;
+	while((idx > *(pkIdx + pkCnt - 2)) && (*(pkFreq + idx) > pkHgt * 0.5))
+	{
+	  ++pkHWHM;
+	  --idx;
+	}
+	/* Convert half height half width to sigma */
+	*(pkSigma + pkCnt - 1) = 1.2 * pkHWHM;
+      }
+      else
+      {
+	 *(pkSigma + pkCnt - 1) = (*(pkIdx + pkCnt - 1) -
+	 			   *(pkIdx + pkCnt - 2)) * smHistDom->binSize;
+      }
+      *(pkApha + pkCnt - 1) = *(pkFreq + *(pkIdx + pkCnt - 1)) / sumAlpha;
     }
   }
   if(pkIdx)
@@ -2071,9 +2211,10 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Fit mixture of Gaussians to the histogram. */
-    algErr = AlgMixture(ALG_DISTRIBUTION_NORMAL, pkCnt, binCnt,
-    			pkPos, pkFreq, pkApha, pkMu, pkSigma,
-			tol, fitObs, &fitLL, &fitNI);
+    algErr = AlgMixtureMLG(pkCnt, binCnt,
+    			   smHistDom->origin, smHistDom->binSize, pkFreq,
+			   pkApha, pkMu, pkSigma,
+			   tol, fitObs, &fitLL, &fitNI);
     errNum = WlzErrorFromAlg(algErr);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2104,13 +2245,13 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
       AlcFree(pkSigma);
     }
   }
-  if(pkPos)
-  {
-    AlcFree(pkPos);
-  }
   if(pkFreq)
   {
     AlcFree(pkFreq);
+  }
+  if(smHistObj)
+  {
+    WlzFreeObj(smHistObj);
   }
   return(errNum);
 }
@@ -2410,7 +2551,7 @@ double		WlzHistogramDistance(WlzObject *histObj0,
     *dstErrNum = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramSmooth 01 %d\n",
+	  ("WlzHistogramDistance 01 %d\n",
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzHistogramDistance FX %g\n",
