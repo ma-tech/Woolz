@@ -22,6 +22,16 @@
 #include <float.h>
 #include <Wlz.h>
 
+static double viewStructAtan2(
+  double x,
+  double y)
+{
+  if( (fabs(y) < 1.e-6) && (fabs(x) < 1.e-6) ){
+    return 0.0;
+  }
+  return atan2(x, y);
+}
+
 /*!
 * \return				The 3D view or NULL on error.
 * \ingroup      WlzSectionTransform
@@ -246,7 +256,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
 	       viewStr->up.vtZ*sin_p);
       upp_y = (-viewStr->up.vtX*sin_t + viewStr->up.vtY*cos_t);
     }
-    zeta = atan2(upp_x, upp_y);
+    zeta = viewStructAtan2(upp_x, upp_y);
     break;
 
   case WLZ_ZERO_ZETA_MODE:
@@ -273,7 +283,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
     }
     upp_x = (fx*cos_p*cos_t + fy*cos_p*sin_t - fz*sin_p);
     upp_y = (-fx*sin_t + fy*cos_t);
-    zeta = -(viewStr->fixed_line_angle - atan2(upp_y, upp_x));
+    zeta = -(viewStr->fixed_line_angle - viewStructAtan2(upp_y, upp_x));
     break;
     
   default:
@@ -829,7 +839,7 @@ double Wlz3DViewGetIntersectionAngle(
 	if( l[1] == 0.0 && l[0]== 0.0 )
 	  rtnAngle = 0.0;
 	else
-	  rtnAngle = atan2(l[1], l[0]);
+	  rtnAngle = viewStructAtan2(l[1], l[0]);
 
 	WlzFreeAffineTransform(t2);
       }
