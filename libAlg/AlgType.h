@@ -77,6 +77,8 @@ typedef enum
   ALG_ERR_SINGULAR,					  /* Singular matrix */
   ALG_ERR_HOMOGENEOUS,				       /* Homogeneous matrix */
   ALG_ERR_CONVERGENCE,			              /* Failure to converge */
+  ALG_ERR_NONGLOBAL,   /* Finds local solution, but fails to global solution */
+  ALG_ERR_DIVZERO,   					   /* Divide by zero */
   ALG_ERR_MAX
 } AlgError;
 

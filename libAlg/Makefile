@@ -27,16 +27,20 @@ EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			  AlgBits.c \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
 			  AlgDebug.c \
+			  AlgGamma.c \
 			  AlgFourier.c \
+			  AlgLinearFit.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLU.c \
 			  AlgMatrixSV.c \
 			  AlgMixture.c \
 			  AlgPolyLSQ.c \
-			  AlgRand.c
+			  AlgRand.c \
+			  AlgRange.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
