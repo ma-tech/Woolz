@@ -22,6 +22,9 @@
 *		    13(2):119-152, 1994.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 06-12-00 bill Remove special case fn WlzRegICPCompTransform2D() and
+*		integrate code for both 2D and 3D into
+*		WlzRegICPCompTransform().
 * 30-11-00 bill Make changes for 3D least squares affine transforms.
 ************************************************************************/
 #include <float.h>
@@ -61,9 +64,6 @@ static int			WlzRegICPRankCmpFnD(
 				  int id0,
 				  int id1);
 static WlzErrorNum		WlzRegICPCompTransform(
-				  WlzRegICPWSp *wSp,
-				  WlzTransformType trType);
-static WlzErrorNum 		WlzRegICPCompTransform2D(
 				  WlzRegICPWSp *wSp,
 				  WlzTransformType trType);
 static WlzErrorNum 		WlzRegICPCheckVerticies(
@@ -719,48 +719,40 @@ static int	WlzRegICPRankCmpFnD(void *data, int *idx, int id0, int id1)
 static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 				          WlzTransformType trType)
 {
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(wSp->vType == WLZ_VERTEX_D2)
-  {
-    errNum = WlzRegICPCompTransform2D(wSp, trType);
-  }
-  else /* wSp->vType == WLZ_VERTEX_D3 */
-  {
-    /* TODO */
-    errNum = WLZ_ERR_TRANSFORM_TYPE;
-  }
-  return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzRegICPCompTransform2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Computes a 2D affine transform from matched verticies.
-* Global refs:	-
-* Parameters:	WlzRegICPWSp *wSp:	ICP registration workspace.
-*		WlzTransformType trType: Required transform type.
-************************************************************************/
-static WlzErrorNum WlzRegICPCompTransform2D(WlzRegICPWSp *wSp,
-				            WlzTransformType trType)
-{
   int		idx,
   		rIdx;
   WlzAffineTransform *curTr = NULL,
   		 *newTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Copy verticies to the matched vertex buffers. */
-  for(idx = 0; idx < wSp->nMatch; ++idx)
+  if(wSp->vType == WLZ_VERTEX_D2)
   {
-    rIdx = *(wSp->rank + idx);
-    *(wSp->tMatchVx.vD2 + idx) = *(wSp->tVx.vD2 + rIdx);
-    *(wSp->sMatchVx.vD2 + idx) = *(wSp->sVx.vD2 + rIdx);
+    /* Copy verticies to the matched vertex buffers. */
+    for(idx = 0; idx < wSp->nMatch; ++idx)
+    {
+      rIdx = *(wSp->rank + idx);
+      *(wSp->tMatchVx.vD2 + idx) = *(wSp->tVx.vD2 + rIdx);
+      *(wSp->sMatchVx.vD2 + idx) = *(wSp->sVx.vD2 + rIdx);
+    }
+    /* Compute the affine transform. */
+    newTr = WlzAffineTransformLSq2D(wSp->nMatch, wSp->sMatchVx.vD2,
+				    wSp->nMatch, wSp->tMatchVx.vD2,
+				    trType, &errNum);
   }
-  /* Compute the affine transform. */
-  newTr = WlzAffineTransformLSq2D(wSp->nMatch, wSp->sMatchVx.vD2,
-				  wSp->nMatch, wSp->tMatchVx.vD2,
-				  trType, &errNum);
+  else /* wSp->vType == WLZ_VERTEX_D3 */
+  {
+    /* Copy verticies to the matched vertex buffers. */
+    for(idx = 0; idx < wSp->nMatch; ++idx)
+    {
+      rIdx = *(wSp->rank + idx);
+      *(wSp->tMatchVx.vD3 + idx) = *(wSp->tVx.vD3 + rIdx);
+      *(wSp->sMatchVx.vD3 + idx) = *(wSp->sVx.vD3 + rIdx);
+    }
+    /* Compute the affine transform. */
+    newTr = WlzAffineTransformLSq3D(wSp->nMatch, wSp->sMatchVx.vD3,
+				    wSp->nMatch, wSp->tMatchVx.vD3,
+				    trType, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     if(wSp->tr)
