@@ -22,6 +22,14 @@ include			../../Makefile.conf
 # Name of archive (library) to be built (modify as required).
 ARCHIVE			= libAlc.a
 SOARCHIVE		= $(ARCHIVE:%.a=%.so)
+DLLARCHIVE		= $(ARCHIVE:lib%.a=%.dll)
+DLLARCHIVEA		= $(ARCHIVE:%.a=%_dll.a)
+DLLDEF			= $(ARCHIVE:%.a=%.def)
+DLLBASE			= $(ARCHIVE:%.a=%.base)
+DLLEXP			= $(ARCHIVE:%.a=%.exp)
+PROTOTYPES		= AlcProto.h
+DLLENTRY		= dll_entry
+DLLLIBDEPS		= cygwin
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		=
@@ -37,6 +45,9 @@ CSOURCES		= AlcAlloc.c \
 			  AlcString.c \
 			  AlcVector.c
 
+DLLCSOURCES		= \
+			init.c \
+			fixup.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -77,6 +88,7 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 
 # List of all object files required for archive (should not need modifying).
 OBJECTS			= $(CSOURCES:%.c=%.o)
+DLLOBJECTS		= $(DLLCSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
 DEFINES		= $(THREADS) \
@@ -141,6 +153,8 @@ archive:		$(ARCHIVE)
 
 soarchive:		$(SOARCHIVE)
 
+dll:			$(DLLARCHIVE)
+
 # Target for executables, just a dependency (should not need modifying).
 executables:		$(EXECUTABLES)
 
@@ -156,8 +170,9 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 
 # Target to clean up after making (should not need modifying).
 clean:
-			-$(RM) core $(OBJECTS) $(EXECUTABLES) \
-			$(ARCHIVE) $(SOARCHIVE)
+			-$(RM) core $(OBJECTS) $(DLLOBJECTS) $(EXECUTABLES) \
+			$(ARCHIVE) $(SOARCHIVE) $(DLLARCHIVE) $(DLLBASE) \
+			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) *~
 
 # Target to clean up everything that might not be wanted (should not need
 # modifying).
@@ -182,6 +197,33 @@ $(ARCHIVE):		$(OBJECTS)
 
 $(SOARCHIVE):		$(OBJECTS)
 			$(CC) -G $(OBJECTS) -lC -o $(SOARCHIVE)
+
+$(DLLARCHIVE):		$(OBJECTS) $(DLLOBJECTS) $(DLLDEF)
+			ld -s --base-file $(DLLBASE) --dll -o $(DLLARCHIVE) \
+			$(OBJECTS) $(DLLOBJECTS) $(DLLLIBDEPS:%=-l%) \
+			-e _$(DLLENTRY)@12 $(DEPENDDIRS:%=-L%)
+			dlltool --as=$(AS) --dllname $(DLLARCHIVE) \
+			--def $(DLLDEF) --base-file $(DLLBASE) \
+			--output-exp $(DLLEXP)
+			ld -s --base-file $(DLLBASE) $(DLLEXP) \
+			--dll -o $(DLLARCHIVE) \
+			$(OBJECTS) $(DLLOBJECTS) $(DLLLIBDEPS:%=-l%) \
+			-e _$(DLLENTRY)@12 $(DEPENDDIRS:%=-L%)
+			dlltool --as=$(AS) --dllname $(DLLARCHIVE) \
+			--def $(DLLDEF) --base-file $(DLLBASE) \
+			--output-exp $(DLLEXP)
+			ld $(DLLEXP) --dll -o $(DLLARCHIVE) $(OBJECTS) \
+			$(DLLOBJECTS) $(DLLLIBDEPS:%=-l%) -e _$(DLLENTRY)@12 \
+			$(DEPENDDIRS:%=-L%)
+			rm -f $(DLLBASE) $(DLLEXP)
+			dlltool --as=as --dllname $(DLLARCHIVE) \
+			--def $(DLLDEF) --output-lib $(DLLARCHIVEA)
+
+$(DLLDEF):		$(PROTOTYPES) $(OBJECTS) $(DLLOBJECTS)
+			echo "EXPORTS" > $(DLLDEF)
+			nm $(OBJECTS) $(DLLOBJECTS) | \
+			grep '^........ [T] _' | \
+			sed 's/[^_]*_//' >> $(DLLDEF)
 
 # Targets to create executables, just a dependencies (modify as required).
 

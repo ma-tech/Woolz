@@ -27,6 +27,9 @@ JAVASOURCES		= \
 			  WlzViewer.java
 
 CLASSPATH		= .:../../../../../..
+ifeq ($(UNIXTYPE), CYGWIN)
+CLASSPATH		= ".;../../../../../.."
+endif
 
 JAVAFLAGS		= -classpath $(CLASSPATH)
 JAVACFLAGS		= -classpath $(CLASSPATH)
