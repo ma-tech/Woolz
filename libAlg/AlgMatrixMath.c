@@ -383,44 +383,74 @@ void		AlgMatrixZero(double **aM, size_t nR, size_t nC)
 		\mathbf{a} = \mathbf{B} \mathbf{c}
 		\f]
 * \note		This function assumes that the matrix has been allocated
-*		by AlcDouble2Malloc().
+*		by either AlcDouble2Malloc() or AlcSymDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
+* \param	bType			Type of matrix \f$mathbf{B}\f$.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
 * \param	nR			The number of rows in \f$mathbf{B}\f$.
 * \param	nC			The number of columns in
 * 					\f$mathbf{c}\f$.
 */
-void 		AlgMatrixVectorMul(double *aV, double **bM, double *cV,
-				   size_t nR, size_t nC)
+void 		AlgMatrixVectorMul(double *aV,
+				   AlgMatrixType bType, double **bM,
+				   double *cV, size_t nR, size_t nC)
 {
 #ifdef _OPENMP
   int		id0,
+		id1,
 		oNR;
 #else
-  size_t	id0;
+  size_t	id0,
+  		id1;
 #endif
-  size_t	id1;
   double	tD0;
   double	*bRow,
   		*cCol;
 
 #ifdef _OPENMP
   oNR = nR;
-  #pragma omp parallel for default(shared) private(id0,id1,tD0,cCol,bRow)
-  for(id0 = 0; id0 < oNR; ++id0)
-#else
-  for(id0 = 0; id0 < nR; ++id0)
 #endif
+  switch(bType)
   {
-    tD0 = 0.0;
-    cCol = cV;
-    bRow = bM[id0];
-    for(id1 = 0; id1 < nC; ++id1)
-    {
-      tD0 += *bRow++ * *cCol++;
-    }
-    aV[id0] = tD0;
+    case ALG_MATRIX_RECT:
+#ifdef _OPENMP
+      #pragma omp parallel for default(shared) private(id0,id1,tD0,cCol,bRow)
+      for(id0 = 0; id0 < oNR; ++id0)
+#else
+      for(id0 = 0; id0 < nR; ++id0)
+#endif
+      {
+	tD0 = 0.0;
+	cCol = cV;
+	bRow = bM[id0];
+	for(id1 = 0; id1 < nC; ++id1)
+	{
+	  tD0 += bRow[id1] * cCol[id1];
+	}
+	aV[id0] = tD0;
+      }
+      break;
+    case ALG_MATRIX_SYM:
+#ifdef _OPENMP
+      #pragma omp parallel for default(shared) private(id0,id1,tD0,cCol)
+      for(id0 = 0; id0 < oNR; ++id0)
+#else
+      for(id0 = 0; id0 < nR; ++id0)
+#endif
+      {
+        tD0 = 0.0;
+	cCol = cV;
+	for(id1 = 0; id1 <= id0; ++id1)
+	{
+	  tD0 += bM[id0][id1] * cCol[id1];
+	}
+	for(id1 = id0 + 1; id1 < nR; ++id1)
+	{
+	  tD0 += bM[id1][id0] * cCol[id1];
+	}
+      }
+      break;
   }
 }
