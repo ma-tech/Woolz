@@ -115,6 +115,14 @@ static WlzErrorNum	WlzContourIsoCube2D(
 			  double *ln0,
 			  double *ln1,
 			  WlzDVertex2 sqOrg);
+static WlzErrorNum 	WlzContourGrdCube3D(
+			  WlzContour *ctr,
+			  UBYTE ***mBuf,
+			  double ***zBuf,
+			  double ***yBuf,
+			  double ***xBuf,
+			  WlzIVertex3 bufPos,
+			  WlzIVertex3 cbOrg);
 static WlzErrorNum	WlzContourIsoCube3D24T(WlzContour *ctr,
 			  double isoVal,
 			  double *pn0ln0,
@@ -141,6 +149,11 @@ static WlzErrorNum	WlzContourGrdLink2D(
 			  int lnOff,
 			  int lnIdx[],
 			  int klP);
+static WlzErrorNum	WlzContourGrdLink3D(
+			  WlzContour *ctr,
+			  UBYTE ***mBuf,
+			  WlzIVertex3 bufpos,
+			  WlzIVertex3 cbOrg);
 
 /************************************************************************
 * Function:	WlzMakeContour
@@ -177,6 +190,7 @@ WlzContour	*WlzMakeContour(WlzContourType ctrType, WlzErrorNum *dstErr)
     }
     else
     {
+      ctr->type = WLZ_CONTOUR;
       ctr->model = WlzGMModelNew(modType, &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
@@ -504,8 +518,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  /* Create contour. */
-  ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_3D, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create contour. */
+    ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_3D, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     bBox3D = WlzBoundingBox3D(srcObj, &errNum);
@@ -528,10 +545,6 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   {
     obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dummyDom, dummyValues,
 			NULL, NULL, &errNum);
-    if((obj2D == NULL) && (errNum == WLZ_ERR_NONE))
-    {
-      errNum = WLZ_ERR_UNSPECIFIED;
-    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -606,7 +619,7 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
     }
     obj2D->domain = dummyDom;
     obj2D->values = dummyValues;
-    WlzFreeObj(obj2D);
+    (void )WlzFreeObj(obj2D);
   }
   /* Tidy up on error. */
   if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
@@ -980,11 +993,11 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   }
   if(gXObj)
   {
-    WlzFreeObj(gXObj);
+    (void )WlzFreeObj(gXObj);
   }
   if(gYObj)
   {
-    WlzFreeObj(gYObj);
+    (void )WlzFreeObj(gYObj);
   }
   if(dstErr)
   {
@@ -1010,22 +1023,488 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 				      double minGrd, double ftrPrm,
 				      WlzErrorNum *dstErr)
 {
+  int		cnt,
+  		idX,
+		idY,
+		idCX,
+		idCY,
+		idCZ,
+		pnIdx,
+  		pnCnt,
+		cbInObj;
+  double	gV,
+  		sGV,
+		minGrdSq;
+  WlzDomain	srcDom;
+  UBYTE		*iMP,
+	  	*iMC,
+	  	*iMN;
+  WlzRsvFilter	*ftr = NULL;
+  WlzObject	*srcObj2D = NULL,
+  		*xObj2D = NULL,
+  		*yObj2D = NULL,
+		*zObj2D = NULL,
+  		*zObj = NULL;
   WlzContour 	*ctr = NULL;
+  WlzIVertex3	bufPos,
+  		cbOrg;
+  WlzIVertex2	bufSz,
+  		bufOff;
+  WlzIBox2	bBox2D;
+  WlzIBox3	bBox3D;
+  int		bufIdx[3],
+  		iBufClr[3] = {1, 1, 1}; /* Buffers are cleared when created */
+  UBYTE		**iBuf[3] = {NULL, NULL, NULL},
+  		**mBuf[3] = {NULL, NULL, NULL};
+  double	**xBuf[3] = {NULL, NULL, NULL},
+  		**yBuf[3] = {NULL, NULL, NULL},
+		**zBuf[3] = {NULL, NULL, NULL};
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* TODO */
-
+  if((srcDom = srcObj->domain).core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(srcObj->values.vox->values == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create contour. */
+    ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_3D, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox3D = WlzBoundingBox3D(srcObj, &errNum);
+    bufSz.vtX = bBox3D.xMax - bBox3D.xMin + 1;
+    bufSz.vtY = bBox3D.yMax - bBox3D.yMin + 1;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create a recursive filter and compute the partial derivatives
+     * through planes. */
+    if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
+				     ftrPrm, &errNum)) != NULL)
+    {
+      ftr->c *= 4;
+      zObj = WlzAssignObject(
+             WlzRsvFilterObj(srcObj, ftr, WLZ_RSVFILTER_ACTION_Z,
+	     		     &errNum), NULL);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create buffers. */
+    if((AlcUnchar2Calloc(&(mBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcUnchar2Calloc(&(mBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcUnchar2Calloc(&(mBuf[2]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcBit2Calloc(&(iBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcBit2Calloc(&(iBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcBit2Calloc(&(iBuf[2]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(xBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(xBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(xBuf[2]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(yBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(yBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(yBuf[2]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(zBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(zBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&(zBuf[2]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Work down through the object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Enforce a minimum gradient. */
+    if((minGrdSq = minGrd * minGrd) < 1.0)
+    {
+      minGrdSq = 1.0;
+    }
+    pnIdx = 0;
+    pnCnt = srcDom.p->lastpl - srcDom.p->plane1 + 1;
+    while((errNum == WLZ_ERR_NONE) && (pnCnt-- > 0))
+    { 
+      bufIdx[0] = (pnIdx + 3 - 2) % 3;
+      bufIdx[1] = (pnIdx + 3 - 1) % 3;
+      bufIdx[2] = (pnIdx + 3 - 0) % 3;
+      srcObj2D = WlzAssignObject(
+      	         WlzMakeMain(WLZ_2D_DOMAINOBJ,
+      			     *(srcObj->domain.p->domains + pnIdx),
+			     *(srcObj->values.vox->values + pnIdx),
+			     NULL, NULL, NULL), NULL);
+      zObj2D = WlzAssignObject(
+      	       WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			   *(zObj->domain.p->domains + pnIdx),
+			   *(zObj->values.vox->values + pnIdx),
+			   NULL, NULL, NULL), NULL);
+      /* Clear maximal voxel buffer for this plane. */
+      WlzValueSetUByte(*(mBuf[bufIdx[2]]), 0, bufSz.vtX * bufSz.vtY);
+      if(srcObj2D->domain.core == NULL)
+      {
+	/* Clear next plane interval buffer if this is an empty plane. */
+	if(iBufClr[bufIdx[2]] == 0)
+	{
+          WlzValueSetUByte(*(iBuf[bufIdx[2]]), 0, bufSz.vtX * bufSz.vtY);
+	  iBufClr[bufIdx[2]] = 1; /* Set plane interval buffer cleared flag. */
+	}
+      }
+      else
+      {
+	iBufClr[bufIdx[2]] = 0;
+	bBox2D = WlzBoundingBox2D(srcObj2D, &errNum);
+	/* Compute the partial derivatives through the columns and rows. */
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  xObj2D = WlzAssignObject(
+	  	   WlzRsvFilterObj(srcObj2D, ftr, WLZ_RSVFILTER_ACTION_X,
+	  			 &errNum), NULL);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  yObj2D = WlzAssignObject(
+	  	   WlzRsvFilterObj(srcObj2D, ftr, WLZ_RSVFILTER_ACTION_Y,
+	  			 &errNum), NULL);
+	}
+	/* Update buffers. */
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  bufOff.vtX = bBox2D.xMin - bBox3D.xMin;
+	  bufOff.vtY = bBox2D.yMin - bBox3D.yMin;
+	  errNum = WlzToArray2D((void ***)&(iBuf[bufIdx[2]]), srcObj2D,
+				bufSz, bufOff, 0, WLZ_GREY_BIT);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzToArray2D((void ***)&(xBuf[bufIdx[2]]), xObj2D,
+				bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzToArray2D((void ***)&(yBuf[bufIdx[2]]), yObj2D,
+				bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzToArray2D((void ***)&(zBuf[bufIdx[2]]), zObj2D,
+				bufSz, bufOff, 0, WLZ_GREY_DOUBLE);
+	}
+	/* Check to see if there are 3 consecutive non-empty planes. */
+	if((errNum == WLZ_ERR_NONE) &&
+	   (iBufClr[bufIdx[0]] == 0) && (iBufClr[bufIdx[1]] == 0))
+	{
+	  /* Form mask in the previous plane interval mask for the previous,
+	   * current and next planes interval masks. */
+	  cnt = (bufSz.vtX / 8) * bufSz.vtY;
+	  iMP = *(iBuf[bufIdx[0]]);
+	  iMC = *(iBuf[bufIdx[1]]);
+	  iMN = *(iBuf[bufIdx[2]]);
+	  while(cnt-- > 0)
+	  {
+	    *iMP++ &= *iMC++ & *iMN++;
+	  }
+	  /* For each cube with all interval mask bits set find the x, y, z
+	   * partial derivatives, cumpute the maximal gradient surface
+	   * elements and add them to the model. */
+	  bufPos.vtZ = bufIdx[0];
+          cbOrg.vtZ = bBox3D.zMin + pnIdx - 2;
+	  idY = bufOff.vtY;
+	  cbOrg.vtY = bBox3D.yMin;
+	  while((errNum == WLZ_ERR_NONE) && (cbOrg.vtY < bBox3D.yMax - 2))
+	  {
+	    bufPos.vtY = idY;
+	    idX = bufOff.vtX;
+	    cbOrg.vtX = bBox3D.xMin;
+	    while((errNum == WLZ_ERR_NONE) && (cbOrg.vtX < bBox3D.xMax - 2))
+	    {
+	      bufPos.vtX = idX;
+	      cbInObj = 1;
+	      idCY = 0;
+	      while(cbInObj && (idCY < 3))
+	      {
+	        idCX = 0;
+	  	iMP = *(iBuf[bufIdx[0]] + idY + idCY);
+		while(cbInObj && (idCX < 3))
+		{
+		  cbInObj = WLZ_BIT_GET(iMP, idX + idCX);
+		  ++idCX;
+		}
+		++idCY;
+	      }
+	      if(cbInObj)
+	      {
+		/* Compute central voxel square of modulus of gradient. */
+		gV = *(*(xBuf[bufIdx[1]] + 1) + 1); sGV = (gV * gV);
+		gV = *(*(yBuf[bufIdx[1]] + 1) + 1); sGV += (gV * gV);
+		gV = *(*(zBuf[bufIdx[1]] + 1) + 1); sGV += (gV * gV);
+		/* If central voxel has a modulus of gradient greater than the
+		 * threshold value then compute the maximal surface
+		 * simplicies and add them to the model. */
+		if(sGV >= minGrdSq)
+		{
+		  errNum = WlzContourGrdCube3D(ctr, mBuf, zBuf, yBuf, xBuf,
+		  			       bufPos, cbOrg);
+		}
+	      }
+	      ++idX;
+	      ++(cbOrg.vtX);
+	    }
+	    ++idY;
+	    ++(cbOrg.vtY);
+	  }
+	}
+	if(xObj2D)
+	{
+	  (void )WlzFreeObj(xObj2D);
+	  xObj2D = NULL;
+	}
+	if(yObj2D)
+	{
+	  (void )WlzFreeObj(yObj2D);
+	  yObj2D = NULL;
+	}
+      }
+      if(srcObj2D)
+      {
+	WlzFreeObj(srcObj2D);
+	srcObj2D = NULL;
+      }
+      if(zObj2D)
+      {
+	WlzFreeObj(zObj2D);
+	zObj2D = NULL;
+      }
+      ++pnIdx;
+    }
+  }
   /* Tidy up on error. */
   if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
   {
     (void )WlzFreeContour(ctr);
     ctr = NULL;
   }
+  /* Free buffer and temporary objects. */
+  if(xObj2D)
+  {
+    (void )WlzFreeObj(xObj2D);
+  }
+  if(yObj2D)
+  {
+    (void )WlzFreeObj(yObj2D);
+  }
+  if(zObj)
+  {
+    (void )WlzFreeObj(zObj);
+  }
+  for(idX = 0; idX < 3; ++idX)
+  {
+    if(iBuf[idX])
+    {
+      Alc2Free((void **)(iBuf[idX]));
+    }
+    if(mBuf[idX])
+    {
+      Alc2Free((void **)(mBuf[idX]));
+    }
+    if(xBuf[idX])
+    {
+      Alc2Free((void **)(xBuf[idX]));
+    }
+    if(yBuf[idX])
+    {
+      Alc2Free((void **)(yBuf[idX]));
+    }
+    if(zBuf[idX])
+    {
+      Alc2Free((void **)(zBuf[idX]));
+    }
+  }
+  if(ftr)
+  {
+    WlzRsvFilterFreeFilter(ftr);
+  }
+  /* Set error code. */
   if(dstErr)
   {
     *dstErr = errNum;
   }
   return(ctr);
+}
+
+/************************************************************************
+* Function:	WlzContourGrdLink3D
+* Returns:	WlzErrorNum		Woolz error code.
+* Purpose:	Computes edge simplicies(s) linking the voxel at the
+*		centre of a 3x3 neighbourhood to 6 connected neighbours.
+*
+*                z=0 +---+---+---+
+*                    |   |   |   |
+*                    +---+---+---+    z=1 +---+---+---+              
+*                    |   | 0 |   |        | 2 | C | 3 |                     
+*                 y  +---+---+---+        +---+---+---+
+*                 ^  |   |   |   |        |   | 1 |   |           
+*                 |  +---+---+---+        +---+---+---+           
+*                 --->x                                   
+* Global refs:	-
+* Parameters:	WlzContour *ctr: 	Contour being built.
+*		UBYTE ***mBuf:		Buffers containing non-zero
+*					values for maximal gradient
+*					voxels.
+*		WlzIVertex3 bufpos:	Offset into the buffer for the
+*					neighbourhoods origin.
+*		WlzIVertex3 pos:	Absolute position of the 
+*					neighbourhoods origin.
+************************************************************************/
+static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
+					    WlzIVertex3 bufpos,
+					    WlzIVertex3 cbOrg)
+{
+  int		idN,
+  		nbrCnt,
+  	        spxCnt,
+		spxIdx;
+  unsigned 	nbrMsk;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzIVertex3	tIV0;
+  WlzDVertex3	sIsn[3];
+  const WlzIVertex3 nbrOffTb[4] =
+  {
+    /* Offsets into neighbourhood for numbered neighbours, where the members
+     * are in vtX, vtY, vtZ order. */
+    {1, 1, 0}, /* 0 */
+    {1, 0, 1}, /* 1 */
+    {0, 1, 1}, /* 2 */
+    {2, 1, 1}  /* 3 */
+  };
+  const int spxNbrTb[5][2] =
+  {
+    /* Neibours of the central voxel which make up simplicies . */
+    {0, 1}, /* 0 */
+    {0, 2}, /* 1 */
+    {0, 3}, /* 2 */
+    {1, 2}, /* 3 */
+    {1, 3}  /* 4 */
+  };
+  const int spxLstTb[20] =
+  {
+    /* Concatonation of all neighbour mask simplex lists into one table. */
+    0, /*  0, nbrMsk =  3. */
+    1, /*  1, nbrMsk =  5. */
+    3, /*  2, nbrMsk =  6. */
+    1, /*  3, nbrMsk =  7. */
+    0, /*  4, nbrMsk =  7. */
+    3, /*  5, nbrMsk =  7. */
+    2, /*  6, nbrMsk =  9. */
+    3, /*  7, nbrMsk = 10. */
+    3, /*  8, nbrMsk = 11. */
+    0, /*  9, nbrMsk = 11. */
+    2, /* 10, nbrMsk = 11. */
+    1, /* 11, nbrMsk = 13. */
+    2, /* 12, nbrMsk = 13. */
+    3, /* 13, nbrMsk = 14. */
+    4, /* 14, nbrMsk = 14. */
+    0, /* 15, nbrMsk = 15. */
+    1, /* 16, nbrMsk = 15. */
+    2, /* 17, nbrMsk = 15. */
+    3, /* 18, nbrMsk = 15. */
+    4  /* 19 nbrMsk = 15. */
+  };
+  const int spxCntTb[16] =
+  {
+    /* Number of simplicies for each neighbour mask. */
+    0, /* nbrMsk =  0. */
+    0, /* nbrMsk =  1. */
+    0, /* nbrMsk =  2. */
+    1, /* nbrMsk =  3. */
+    0, /* nbrMsk =  4. */
+    1, /* nbrMsk =  5. */
+    1, /* nbrMsk =  6. */
+    3, /* nbrMsk =  7. */
+    0, /* nbrMsk =  8. */
+    1, /* nbrMsk =  9. */
+    1, /* nbrMsk = 10. */
+    3, /* nbrMsk = 11. */
+    0, /* nbrMsk = 12. */
+    3, /* nbrMsk = 13. */
+    2, /* nbrMsk = 14. */
+    5, /* nbrMsk = 15. */
+  };
+  const int spxOffTb[16] =
+  {
+    /* Offset into simplex table for each neighbour mask. */
+    -1, /* nbrMsk =  0. */
+    -1, /* nbrMsk =  1. */
+    -1, /* nbrMsk =  2. */
+     0, /* nbrMsk =  3. */
+    -1, /* nbrMsk =  4. */
+     1, /* nbrMsk =  5. */
+     2, /* nbrMsk =  6. */
+     3, /* nbrMsk =  7. */
+    -1, /* nbrMsk =  8. */
+     6, /* nbrMsk =  9. */
+     7, /* nbrMsk = 10. */
+     8, /* nbrMsk = 11. */
+    -1, /* nbrMsk = 12. */
+    11, /* nbrMsk = 13. */
+    13, /* nbrMsk = 14. */
+    15, /* nbrMsk = 15. */
+  };
+
+#define HACK
+#ifdef HACK
+  static int hack = 0;
+  static WlzDVertex3 hackV[3];
+
+  if(hack == 0)
+  {
+    hack = 1;
+    hackV[0].vtX = hackV[0].vtY = hackV[0].vtZ = 0.0;
+    hackV[1].vtX = -10.0; hackV[1].vtY =  5.0; hackV[1].vtZ = 0.0;
+    hackV[2].vtX = -10.0; hackV[2].vtY = -5.0; hackV[2].vtZ = 0.0;
+    WlzGMModelConstructSimplex3D(ctr->model, hackV);
+  }
+#endif /* HACK */
+
+  nbrMsk = 0;
+  /* Find 8 connected neighbours and build a mask. */
+  for(idN = 0; idN < 4; ++idN)
+  {
+    tIV0.vtX = bufpos.vtX + nbrOffTb[idN].vtX;
+    tIV0.vtY = bufpos.vtY + nbrOffTb[idN].vtY;
+    tIV0.vtZ = (bufpos.vtZ + nbrOffTb[idN].vtZ) % 3;
+    if(*(*(*(mBuf + tIV0.vtZ) + tIV0.vtY) + tIV0.vtX))
+    {
+      nbrMsk |= 1 << idN;
+    }
+  }
+  /* Look up number of simplicies for the mask value. */
+  if((spxCnt = spxCntTb[nbrMsk]) > 0)
+  {
+    sIsn[0].vtX = cbOrg.vtX + 1.0;
+    sIsn[0].vtY = cbOrg.vtY + 1.0;
+    sIsn[0].vtZ = cbOrg.vtZ + 1.0;
+    spxIdx = spxOffTb[nbrMsk];
+    while((errNum == WLZ_ERR_NONE) && (spxCnt-- > 0))
+    {
+      idN = 0;
+      while(idN < 2)
+      {
+        tIV0 = nbrOffTb[spxNbrTb[spxLstTb[spxIdx]][idN++]];
+	sIsn[idN].vtX = cbOrg.vtX + tIV0.vtX; 
+	sIsn[idN].vtY = cbOrg.vtY + tIV0.vtY; 
+	sIsn[idN].vtZ = cbOrg.vtZ + tIV0.vtZ; 
+      }
+      errNum = WlzGMModelConstructSimplex3D(ctr->model, sIsn);
+      ++spxIdx;
+    }
+  }
+  return(errNum);
 }
 
 /************************************************************************
@@ -1578,6 +2057,333 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
       errNum = WlzContourIsoTet3D(ctr, tVal, tPos, cbOrg);
       ++tIdx;
     }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzContourGrdCube3D
+* Returns:	WlzErrorNum		Woolz error code.
+* Purpose:	Computes maximal gradient surface simplicies within a
+*		3x3x3 cube. The modulus of the central gradient is known
+*		to be non-zero.
+*		The buffer position wrt z is always modulo 3.
+*		  * Compute central gradient vector's direction (cGV).
+*		  * Interpolate gradient at intersection of gradient
+*		    vector with the cube's faces.
+*		  * If modulus of gradient is greater than the mudulus
+*		    of the interpolated gradients at the cubes faces.
+*		    * Find intersection of the plane perpendicular
+*		      to the gradient vector with the cubes edges.
+*		    * Split intersection into simplicies and add to
+*		      the model.
+* Global refs:	-
+* Parameters:	WlzContour *ctr: 	Contour being built.
+*		UBYTE ***mBuf:		Buffer with maximal voxels
+*					marked non-zero.
+*		double ***zBuf:		Z gradients.
+*		double ***yBuf:		Y gradients.
+*		double ***xBuf:		X gradients.
+*		WlzIVertex3 bufPos:	Index into buffers.
+*		WlzIVertex3 cbOrg:	Origin of the cube.
+************************************************************************/
+static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
+				       double ***zBuf, double ***yBuf,
+				       double ***xBuf, WlzIVertex3 bufPos,
+				       WlzIVertex3 cbOrg)
+{
+  int		idE,
+  		idF,
+		idX,
+		idY,
+		idZ,
+  		isnIdx,
+  		isnCnt,
+  		clsIdx,
+		eSH;
+  double	tD0,
+		eU,
+		modCGV,
+		tCG;
+  WlzIVertex3	aFQ,
+		aFQ1,
+  		oFQ,
+		aCC;
+  WlzDVertex3	aCGV,
+  		cGV,
+		lI,
+		pFV,
+		rV,
+		sV,
+		tV,
+		fS;
+  double	eIP[2],
+  		gF[2],
+  		lIP[4];
+  WlzDVertex2	isnAux[12];
+  WlzDVertex3	tIsn[3],
+  		isnP[12];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  /*
+   * Tables cbVTb and cbETb encode the verticies (on edges) and edges of the
+   * cube:
+   *
+   *                          y
+   *                          |
+   *                          v6-------v5-------v4
+   *                         /|    |           /|
+   *                        / |    e2         / |
+   *                       /  |              /  |
+   *                      v11 |-e3          v10 |
+   *                     /    |            /    |
+   *                    /-e7  v7          /-e6  v3
+   *                   /      |    e10   /      |
+   *                  /       |    |    /       |-e1
+   *                 v18-------v17-----v16      |
+   *                 |        |        |        |
+   *                 |        v0------v1--------v2--->x
+   *                 |-e11   /   |     |-e9    /
+   *                 |      /    e0    |      /
+   *                 v19   /           v15   /
+   *                 |    v8           |    v9
+   *                 |   /             |   /
+   *                 |  /-e4           |  /-e5
+   *                 | /   e8          | /
+   *                 |/    |           |/
+   *                 v12------v13------v14
+   *                /
+   *               z
+   *
+   * These are encoded in the tables cbVTb and cbETb.
+   */
+  const WlzDVertex3 cbVTb[20] =
+  {
+    /* The coordinates of the verticies of the cube, range [-1.0,+1.0].
+     * The  WlzIVertex3 is defined to be {vtX, vtY. vtZ}, this table depends
+     * on this ordering. */
+    {-1.0, -1.0, -1.0} /* 0 */,
+    { 0.0, -1.0, -1.0} /* 1 */,
+    { 1.0, -1.0, -1.0} /* 2 */,
+    { 1.0,  0.0, -1.0} /* 3 */,
+    { 1.0,  1.0, -1.0} /* 4 */,
+    { 0.0,  1.0, -1.0} /* 5 */,
+    {-1.0,  1.0, -1.0} /* 6 */,
+    {-1.0,  0.0, -1.0} /* 7 */,
+    {-1.0, -1.0,  0.0} /* 8 */,
+    { 1.0, -1.0,  0.0} /* 9 */,
+    { 1.0,  1.0,  0.0} /*10 */,
+    {-1.0,  1.0,  0.0} /*11 */,
+    {-1.0, -1.0,  1.0} /*12 */,
+    { 0.0, -1.0,  1.0} /*13 */,
+    { 1.0, -1.0,  1.0} /*14 */,
+    { 1.0,  0.0,  1.0} /*15 */,
+    { 1.0,  1.0,  1.0} /*16 */,
+    { 0.0,  1.0,  1.0} /*17 */,
+    {-1.0,  1.0,  1.0} /*18 */,
+    {-1.0,  0.0,  1.0} /*19 */
+  };
+  /* The index of the verticies along each edge [0-2] and edge direction
+     (x=0, y=1, z=2) [3]. */
+  const int cbETb[12][4] =
+  {
+    { 0,  1,  2, 0} /*  0 */,
+    { 2,  3,  4, 1} /*  1 */,
+    { 6,  5,  4, 1} /*  2 */,
+    { 0,  7,  6, 0} /*  3 */,
+    { 0,  8, 12, 2} /*  4 */,
+    { 2,  9, 14, 2} /*  5 */,
+    { 4, 10, 16, 2} /*  6 */,
+    { 6, 11, 18, 2} /*  7 */,
+    {12, 13, 14, 0} /*  8 */,
+    {14, 15, 16, 1} /*  9 */,
+    {18, 17, 16, 1} /* 10 */,
+    {12, 19, 18, 0} /* 11 */
+  };
+
+  /* Compute central gradient vector as a unit vector and it's modulus. */
+  aCC.vtX = bufPos.vtX + 1;
+  aCC.vtY = bufPos.vtY + 1;
+  aCC.vtZ = (bufPos.vtZ + 1) % 3;
+  cGV.vtX = *(*(*(xBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX);
+  cGV.vtY = *(*(*(yBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX);
+  cGV.vtZ = *(*(*(zBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX);
+  modCGV = WLZ_VTX_3_LENGTH(cGV);
+  WLZ_VTX_3_SCALE(cGV, cGV, 1.0 / modCGV);
+  /* Clasify intersection using greatest absolute gradient vector component. */
+  aCGV.vtX = fabs(cGV.vtX);
+  aCGV.vtY = fabs(cGV.vtY);
+  aCGV.vtZ = fabs(cGV.vtZ);
+  clsIdx = (aCGV.vtX >= aCGV.vtY) | ((aCGV.vtY >= aCGV.vtZ) << 1) |
+	   ((aCGV.vtZ >= aCGV.vtX) << 2);
+  /* Switch on the clasification index using symetry to compute the
+   * intersection of the central gradient vector with the cubes
+   * faces. */
+  switch(clsIdx)
+  {
+    case 1: /* FALLTHROUGH */
+    case 3:
+    case 7:
+      /* Gradient vector passes through +/- x faces. */
+      for(idF = 0; idF < 2; ++idF)
+      {
+	fS.vtX = 1.0 - (idF * 2.0); 	    /* Face: front +1.0 or back -1.0 */
+	/* Intersection y, z coordinates. */
+	tCG = cGV.vtX * fS.vtX;
+	pFV.vtY = cGV.vtY / tCG;
+	pFV.vtZ = cGV.vtZ / tCG;
+	/* Indicies into the cube array (origin of face quadrant). */
+	oFQ.vtX = (tCG >= 0.0) << 1;
+	oFQ.vtY = pFV.vtY >= 0.0;
+	oFQ.vtZ = pFV.vtZ >= 0.0;
+	aFQ.vtX = bufPos.vtX + oFQ.vtX;
+	aFQ.vtY = bufPos.vtY + oFQ.vtY;
+	aFQ.vtZ = (bufPos.vtZ + oFQ.vtZ) % 3;
+	aFQ1.vtX = aFQ.vtX + 1;
+	aFQ1.vtY = aFQ.vtY + 1;
+	aFQ1.vtZ = (aFQ.vtZ + 1) % 3;
+	/* Interpolation coefficients lI.vtY and lI.vtZ
+	 *
+	 *       +ve X face
+	 *     O---------------O -
+	 *     |               | ^
+	 *     |        pFV    | | (1 - lI.vtY)
+	 *     |         \     | v
+	 *     |          X    | -
+	 *     |               | ^
+	 *     |               | | lI.vtY
+	 *     |           oFQ | |
+	 *     |              \| v                    
+	 *     O---------------O -                    
+	 *     |<-------->|<-->|                    
+	 *        \          \             Y      
+	 *      (1 - lI.vtZ)  \            ^       
+	 *                    lI.vtZ       |             
+	 *                                 |                          
+	 *                          Z<-----O                          
+	 *                                  \     
+	 *                                   \                        
+	 *                                    X                       
+	 *                                                            
+	 * Bevasuse pFV.vtZ is in the range [-1.0, +1.0]  and oFQ.vtZ is in
+	 * the range [0, 1] then compute the interpolation coeficient by:
+	 *   lI.vtZ = (pFV.vtZ + 1.0) - oFQ.vtZ
+	 */
+	lI.vtY = 1.0 + pFV.vtY - oFQ.vtY;
+	lI.vtZ = 1.0 + pFV.vtZ - oFQ.vtZ;
+	lIP[0] = (1.0 - lI.vtY) * (1.0 - lI.vtZ);
+	lIP[1] = lI.vtY * (1.0 - lI.vtZ);
+	lIP[2] = (1.0 - lI.vtY) * lI.vtZ;
+	lIP[3] = lI.vtY * lI.vtZ;
+	/* Interpolate the modulus of the gradient on the face. */
+	tV.vtX = (*(*(*(xBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(xBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[1]) +
+		 (*(*(*(xBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[2]) +
+		 (*(*(*(xBuf + aFQ1.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[3]);
+	tV.vtY = (*(*(*(yBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(yBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[1]) +
+		 (*(*(*(yBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[2]) +
+		 (*(*(*(yBuf + aFQ1.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[3]);
+	tV.vtZ = (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(zBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[1]) +
+		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[2]) +
+		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[3]);
+	gF[idF] = WLZ_VTX_3_LENGTH(tV) * 0.25;
+      }
+      break;
+    case 2: /* FALLTHROUGH */
+    case 6:
+      /* Gradient vector passes through +/- y faces. */
+      for(idF = 0; idF < 2; ++idF)
+      {
+	fS.vtY = 1.0 - (idF * 2.0); 	    /* Face: front +1.0 or back -1.0 */
+	/* Intersection z, x coordinates. */
+	tCG = cGV.vtY * fS.vtY;
+	pFV.vtX = cGV.vtX / tCG;
+	pFV.vtZ = cGV.vtZ / tCG;
+	/* Indicies into the cube array (origin of face quadrant). */
+	oFQ.vtX = pFV.vtX >= 0.0;
+	oFQ.vtY = (tCG >= 0.0) << 1;
+	oFQ.vtZ = pFV.vtZ >= 0.0;
+	aFQ.vtX = bufPos.vtX + oFQ.vtX;
+	aFQ.vtY = bufPos.vtY + oFQ.vtY;
+	aFQ.vtZ = (bufPos.vtZ + oFQ.vtZ) % 3;
+	aFQ1.vtX = aFQ.vtX + 1;
+	aFQ1.vtY = aFQ.vtY + 1;
+	aFQ1.vtZ = (aFQ.vtZ + 1) % 3;
+	/* Interpolation coefficients lI.vtX and lI.vtY. */
+	lI.vtZ = 1.0 + pFV.vtZ - oFQ.vtZ;
+	lI.vtX = 1.0 + pFV.vtX - oFQ.vtX;
+	lIP[0] = (1.0 - lI.vtZ) * (1.0 - lI.vtX);
+	lIP[1] = lI.vtZ * (1.0 - lI.vtX);
+	lIP[2] = (1.0 - lI.vtZ) * lI.vtX;
+	lIP[3] = lI.vtZ * lI.vtX;
+	/* Interpolate the modulus of the gradient on the face. */
+	tV.vtX = (*(*(*(xBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(xBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[1]) +
+		 (*(*(*(xBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[2]) +
+		 (*(*(*(xBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[3]);
+	tV.vtY = (*(*(*(yBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(yBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[1]) +
+		 (*(*(*(yBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[2]) +
+		 (*(*(*(yBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[3]);
+	tV.vtZ = (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[1]) +
+		 (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[2]) +
+		 (*(*(*(zBuf + aFQ1.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[3]);
+	gF[idF] = WLZ_VTX_3_LENGTH(tV) * 0.25;
+      }
+      break;
+    case 4: /* FALLTHROUGH */
+    case 5:
+      /* Gradient vector passes through +/- z faces. */
+      for(idF = 0; idF < 2; ++idF)
+      {
+	fS.vtZ = 1.0 - (idF * 2.0); 	    /* Face: front +1.0 or back -1.0 */
+	/* Intersection x, y coordinates. */
+	tCG = cGV.vtZ * fS.vtZ;
+	pFV.vtX = cGV.vtX / tCG;
+	pFV.vtY = cGV.vtY / tCG;
+	/* Indicies into the cube array (origin of face quadrant). */
+	oFQ.vtX = pFV.vtX >= 0.0;
+	oFQ.vtY = pFV.vtY >= 0.0;
+	oFQ.vtZ = (tCG >= 0.0) << 1;
+	aFQ.vtX = bufPos.vtX + oFQ.vtX;
+	aFQ.vtY = bufPos.vtY + oFQ.vtY;
+	aFQ.vtZ = (bufPos.vtZ + oFQ.vtZ) % 3;
+	aFQ1.vtX = aFQ.vtX + 1;
+	aFQ1.vtY = aFQ.vtY + 1;
+	aFQ1.vtZ = (aFQ.vtZ + 1) % 3;
+	/* Interpolation coefficients lI.vtX and lI.vtY. */
+	lI.vtX = 1.0 + pFV.vtX - oFQ.vtX;
+	lI.vtY = 1.0 + pFV.vtY - oFQ.vtY;
+	lIP[0] = (1.0 - lI.vtX) * (1.0 - lI.vtY);
+	lIP[1] = lI.vtX * (1.0 - lI.vtY);
+	lIP[2] = (1.0 - lI.vtX) * lI.vtY;
+	lIP[3] = (1.0 - lI.vtX) * (1.0 - lI.vtY);
+	/* Interpolate the modulus of the gradient on the face. */
+	tV.vtX = (*(*(*(xBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(xBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[1]) +
+		 (*(*(*(xBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[2]) +
+		 (*(*(*(xBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ1.vtX) * lIP[3]);
+	tV.vtY = (*(*(*(yBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(yBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[1]) +
+		 (*(*(*(yBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[2]) +
+		 (*(*(*(yBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ1.vtX) * lIP[3]);
+	tV.vtZ = (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ.vtX) * lIP[0]) +
+		 (*(*(*(zBuf + aFQ.vtZ) + aFQ.vtY) + aFQ1.vtX) * lIP[1]) +
+		 (*(*(*(zBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ.vtX) * lIP[2]) +
+		 (*(*(*(zBuf + aFQ.vtZ) + aFQ1.vtY) + aFQ1.vtX) * lIP[3]);
+	gF[idF] = WLZ_VTX_3_LENGTH(tV) * 0.25;
+      }
+      break;
+  }
+  /* Test for maximal gradient along the gradient vector. */
+  if((modCGV > gF[0]) && (modCGV > gF[1]))
+  {
+    /* Mark this voxel as having a maximal gradient and then link with
+     * neighbours to form the model. */
+    *(*(*(mBuf + aFQ1.vtZ) + aFQ1.vtY) + aFQ1.vtX) = 1;
+    errNum = WlzContourGrdLink3D(ctr, mBuf, bufPos, cbOrg);
   }
   return(errNum);
 }
@@ -2295,6 +3101,38 @@ static void 	WlzContourTestOutPSLn2D(FILE *fP,
 }
 
 /************************************************************************
+* Function:	WlzContourTestOutVTK
+* Returns:	WlzErrorNum		Woolz error code.
+* Purpose:	Prints out a 3D contour as a VTK polydata file
+*		for testing.
+* Global refs:	-
+* Parameters:	WlzContour *ctr:	Given contour to print out.
+*		FILE *fP:		Output file.
+************************************************************************/
+WlzErrorNum	WlzContourTestOutVTK(WlzContour *ctr, FILE *fP)
+{
+  WlzGMModel	*model;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ctr == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(ctr->type != WLZ_CONTOUR)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((model = ctr->model) != NULL)
+    {
+      errNum = WlzGMModelTestOutVTK(model, fP);
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
 * Function:	WlzContourTestOutPS
 * Returns:	WlzErrorNum		Woolz error code.
 * Purpose:	Prints out a 2D contour as postscript for testing.
@@ -2317,7 +3155,7 @@ WlzErrorNum	WlzContourTestOutPS(WlzContour *ctr, FILE *fP,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(ctr->type != WLZ_CONTOUR_TYPE_2D)
+  else if(ctr->type != WLZ_CONTOUR)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2371,7 +3209,7 @@ int             main(int argc, char *argv[])
   		*outFileStr;
   WlzObject     *inObj = NULL;
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
-  WlzContour	*ctr;
+  WlzContour	*ctr = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   WlzDVertex2	scale,
   		offset;
@@ -2512,7 +3350,7 @@ int             main(int argc, char *argv[])
 	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
       case WLZ_GMMOD_3D:
-        errNum = WlzGMModelTestOutOBJ(ctr->model, fP);
+        errNum = WlzContourTestOutVTK(ctr, fP);
 	break;
       default: 
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2522,9 +3360,17 @@ int             main(int argc, char *argv[])
     {
       ok = 0;
       (void )fprintf(stderr,
-      		     "%s Failed to output contour as postscript (%d).\n",
+      		     "%s Failed to output contour to file (%d).\n",
       		     argv[0], (int )errNum);
     }
+  }
+  if(inObj)
+  {
+    (void )WlzFreeObj(inObj);
+  }
+  if(ctr)
+  {
+    (void )WlzFreeContour(ctr);
   }
   if(fP && strcmp(outFileStr, "-"))
   {

@@ -17,6 +17,9 @@
 #include <float.h>
 #include <Wlz.h>
 
+static int		WlzGeomVtxSortRadialFn(
+			  void *p0,
+			  void *p1);
 
 /************************************************************************
 * Function:	WlzGeomTriangleCircumcentre			
@@ -414,4 +417,65 @@ int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
   pos0.vtY -= pos1.vtY;
   equal = ((pos0.vtX * pos0.vtX) + (pos0.vtY * pos0.vtY)) < tolSq;
   return(equal);
+}
+
+/************************************************************************
+* Function:	WlzGeomVtxSortRadialFn
+* Returns:	int:			Result of comparison.
+* Purpose:	Simple wrapper for WlzGeomCmpAngle().
+* Global refs:	-
+* Parameters:	void *p0:		Ptr to first vertex.
+*		void *p1:		Ptr to second vertex.
+************************************************************************/
+static int	WlzGeomVtxSortRadialFn(void *p0, void *p1)
+{
+  return(WlzGeomCmpAngle(*(WlzDVertex2 *)p0, *(WlzDVertex2 *)p1));
+}
+
+/************************************************************************
+* Function:	WlzGeomVtxSortRadial
+* Returns:	void
+* Purpose:	Sorts the given 3D verticies, which lie in a plane
+*		perpendicular to the radial vector, in order of their
+*		angle the radial vector.
+*		No checks are made of the given parameters validity,
+*		it's assumed that:
+*		  (nV > 0) &&
+*		  (vP != NULL) && (wP != NULL) && (iP != NULL)
+*		  (|rV| > 0) && (rV.(uV = *vP) == 0)
+* Global refs:	-
+* Parameters:	int nV:			Number of 3D verticies.
+*		WlzDVertex3 *vP:	The 3D verticies.
+*		WlzDVertex2 *wP:	Workspace with nV 2D verticies.
+*		WlzDVertex3 rV:		The radial vector.
+************************************************************************/
+void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
+				     WlzDVertex2 *wP, WlzDVertex3 rV)
+{
+  int		idI;
+  double	tD0;
+  WlzDVertex3	uV,
+  		vV;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Compute basis vectors orthogonal to rV and in the plane of the
+   * verticies. */
+  tD0 = 1.0 / WLZ_VTX_3_LENGTH(rV);
+  WLZ_VTX_3_SCALE(rV, rV, tD0);
+  uV = *vP;
+  tD0 = 1.0 / WLZ_VTX_3_LENGTH(uV);
+  WLZ_VTX_3_SCALE(uV, uV, tD0);
+  WLZ_VTX_3_CROSS(vV, rV, uV);
+  /* TODO check I need to scale vV. */
+  tD0 = 1.0 / WLZ_VTX_3_LENGTH(vV);
+  WLZ_VTX_3_SCALE(vV, vV, tD0);
+  /* Compute the projections of the verticies onto the basis vectors. */
+  for(idI = 0; idI < nV; ++idI)
+  {
+    (wP + idI)->vtX = WLZ_VTX_3_DOT(uV, *(vP + idI));
+    (wP + idI)->vtY = WLZ_VTX_3_DOT(vV, *(vP + idI));
+  }
+  /* Sort the vericies. */
+  (void )AlgHeapSort(wP, nV, sizeof(WlzDVertex2), WlzGeomVtxSortRadialFn);
+
 }

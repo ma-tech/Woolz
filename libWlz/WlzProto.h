@@ -1017,7 +1017,7 @@ extern WlzGMShell	*WlzGMVertexCommonShell(
 extern WlzGMShell	*WlzGMVertexGetShell(
 			  WlzGMVertex *eV);
 /* Tests */
-extern WlzErrorNum	WlzGMModelTestOutOBJ(
+extern WlzErrorNum	WlzGMModelTestOutVTK(
 			  WlzGMModel *model,
 			  FILE *fP);
 extern WlzErrorNum	WlzGMModelTestOutPS(
@@ -1025,21 +1025,6 @@ extern WlzErrorNum	WlzGMModelTestOutPS(
 			  WlzDVertex2 offset,
 			  WlzDVertex2 scale,
 			  int nCol);
-extern WlzErrorNum	WlzGMShellTestOutPS(
-			  WlzGMShell *shell,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
-extern WlzErrorNum	WlzGMLoopTTestOutPS(
-			  WlzGMLoopT *loopT,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
-extern WlzErrorNum     WlzGMEdgeTTestOutPS(
-			  WlzGMEdgeT *edgeT,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
 /* Model list management */
 extern void	   	WlzGMVertexTAppend(
 			  WlzGMVertexT *eVT,
@@ -1118,6 +1103,11 @@ extern int             		WlzGeomVtxEqual2D(
 				  WlzDVertex2 pos0,
 				  WlzDVertex2 pos1,
                                   double tolSq);
+extern void			WlzGeomVtxSortRadial(
+				  int nV,
+				  WlzDVertex3 *vP,
+				  WlzDVertex2 *wV,
+				  WlzDVertex3 rV);
 
 /************************************************************************
 * WlzGreyCrossing.c							*

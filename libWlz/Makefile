@@ -346,8 +346,8 @@ endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
 
 # making the tag file
-tags:
-	$(CTAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+tags:			 $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			 $(CTAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)

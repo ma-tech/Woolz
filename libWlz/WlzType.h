@@ -889,7 +889,7 @@ typedef struct _WlzGMModel
 /* Data structures for contours (both 2D and 3D) */
 
 /************************************************************************
-* Types of contour
+* Types of contour TODO make these Woolz object types.
 ************************************************************************/
 typedef enum
 {

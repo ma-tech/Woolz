@@ -17,14 +17,29 @@
 #include <Wlz.h>
 #include <limits.h>
 
-static WlzErrorNum 	WlzGMShellTestOutObj(
+static WlzErrorNum 	WlzGMShellTestOutVTK(
 			  WlzGMShell *shell,
 			  int *vIdxTb,
 			  FILE *fP);
-static WlzErrorNum 	WlzGMLoopTTestOutputOBJ(
+static WlzErrorNum 	WlzGMLoopTTestOutputVTK(
 			  WlzGMLoopT *fLT,
 			  int *vIdxTb,
 			  FILE *fP);
+static WlzErrorNum 	WlzGMShellTestOutPS(
+			  WlzGMShell *shell,
+			  FILE *fP,
+			  WlzDVertex2 offset,
+			  WlzDVertex2 scale);
+static WlzErrorNum	WlzGMLoopTTestOutPS(
+			  WlzGMLoopT *loopT,
+			  FILE *fP,
+			  WlzDVertex2 offset,
+			  WlzDVertex2 scale);
+static WlzErrorNum	WlzGMEdgeTTestOutPS(
+			  WlzGMEdgeT *edgeT,
+			  FILE *fP,
+			  WlzDVertex2 offset,
+			  WlzDVertex2 scale);
 static void		WlzGMTestOutLinePS(
 			  FILE *fP,
 			  WlzDVertex2 pos0,
@@ -947,17 +962,17 @@ WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
 }
 
 /************************************************************************
-* Function:	WlzGMModelTestOutOBJ
+* Function:	WlzGMModelTestOutVTK
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 3D model to the specified file using the
-*		OBJ polydata format.
+*		VTK polydata format.
 *		The model loop flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMModel *model:	Given model.
 *		FILE *fP:		File ptr, may be NULL if
 *					no output required.
 ************************************************************************/
-WlzErrorNum   	WlzGMModelTestOutOBJ(WlzGMModel *model, FILE *fP)
+WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
 {
   int		idB,
 		idS,
@@ -1006,6 +1021,14 @@ WlzErrorNum   	WlzGMModelTestOutOBJ(WlzGMModel *model, FILE *fP)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    /* Output the file header. */
+    (void )fprintf(fP,
+    		   "# vtk DataFile Version 1.0\n"
+    		   "WlzGeoModel test output\n"
+		   "ASCII\n"
+		   "DATASET POLYDATA\n"
+		   "POINTS %d float\n",
+		   model->res.vertex.numElm);
     /* Output the verticies while building the index table. */
     idV = 0;
     vec = model->res.vertex.vec;
@@ -1017,9 +1040,9 @@ WlzErrorNum   	WlzGMModelTestOutOBJ(WlzGMModel *model, FILE *fP)
       {
 	if(vP->idx > 0)
 	{
-	  *(vIdxTb + idV) = vP->idx;
+	  *(vIdxTb + idV) = vP->idx - 1;
 	  (void )WlzGMVertexGetG3D(vP, &vtx);
-	  (void )fprintf(fP, "v %g %g %g\n", vtx.vtX, vtx.vtY, vtx.vtZ);
+	  (void )fprintf(fP, "%g %g %g\n", vtx.vtX, vtx.vtY, vtx.vtZ);
 	}
 	++idV;
 	++vP;
@@ -1027,13 +1050,15 @@ WlzErrorNum   	WlzGMModelTestOutOBJ(WlzGMModel *model, FILE *fP)
     }
     if((tS = fS = model->child) != NULL)
     {
+      (void )fprintf(fP,
+      		     "POLYGONS %d %d\n",
+		     model->res.loop.numElm, 4 * model->res.loop.numElm);
       idS = 1;
       do
       {
 	if((tS->flags & WLZ_GMELEMFLAGS_OUT_0) == 0)
 	{
-	  (void )fprintf(fP, "g %d\n", idS);
-	  errNum = WlzGMShellTestOutObj(tS, vIdxTb, fP);
+	  errNum = WlzGMShellTestOutVTK(tS, vIdxTb, fP);
 	  tS->flags |= WLZ_GMELEMFLAGS_OUT_0;
 	}
 	++idS;
@@ -1049,10 +1074,10 @@ WlzErrorNum   	WlzGMModelTestOutOBJ(WlzGMModel *model, FILE *fP)
 }
 
 /************************************************************************
-* Function:	WlzGMShellTestOutObj
+* Function:	WlzGMShellTestOutVTK
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 3D shell to the specified file using the
-*		OBJ polydata format.
+*		VTK polydata format.
 *		The model loop flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMShell *shell:	Given shell.
@@ -1060,7 +1085,7 @@ WlzErrorNum   	WlzGMModelTestOutOBJ(WlzGMModel *model, FILE *fP)
 *		FILE *fP:		File ptr, may be NULL if
 *					no output required.
 ************************************************************************/
-static WlzErrorNum WlzGMShellTestOutObj(WlzGMShell *shell,
+static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell,
 				        int *vIdxTb, FILE *fP)
 {
   WlzGMLoopT	*tLT;
@@ -1078,7 +1103,7 @@ static WlzErrorNum WlzGMShellTestOutObj(WlzGMShell *shell,
   {
     do
     {
-      errNum = WlzGMLoopTTestOutputOBJ(tLT, vIdxTb, fP);
+      errNum = WlzGMLoopTTestOutputVTK(tLT, vIdxTb, fP);
       tLT = tLT->next;
     } while((errNum == WLZ_ERR_NONE) && (tLT->idx != shell->child->idx));
   }
@@ -1087,10 +1112,10 @@ static WlzErrorNum WlzGMShellTestOutObj(WlzGMShell *shell,
 
 
 /************************************************************************
-* Function:	WlzGMLoopTTestOutputOBJ
+* Function:	WlzGMLoopTTestOutputVTK
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Outputs a 3D loopT to the specified file using the
-*		OBJ polydata format.
+*		VTK polydata format.
 *		The model loop flags are modified by this function.
 * Global refs:	-
 * Parameters:	WlzGMLoopT *fLT:	Given loopT.
@@ -1098,7 +1123,7 @@ static WlzErrorNum WlzGMShellTestOutObj(WlzGMShell *shell,
 *		FILE *fP:		File ptr, may be NULL if
 *					no output required.
 ************************************************************************/
-static WlzErrorNum WlzGMLoopTTestOutputOBJ(WlzGMLoopT *fLT,
+static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT,
 				           int *vIdxTb, FILE *fP)
 {
   WlzGMEdgeT	*tET;
@@ -1153,7 +1178,7 @@ static WlzErrorNum WlzGMLoopTTestOutputOBJ(WlzGMLoopT *fLT,
     {
       /* Output the face enclosed by this loop and mark it as having been
        * output. */
-      (void )fprintf(fP, "f %d %d %d\n",
+      (void )fprintf(fP, "3 %d %d %d\n",
 		     *(vIdxTb + vBuf[0]->idx), *(vIdxTb + vBuf[1]->idx),
 		     *(vIdxTb + vBuf[2]->idx));
       fLT->loop->flags |= WLZ_GMELEMFLAGS_OUT_0;
@@ -1245,8 +1270,8 @@ WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
 *		WlzDVertex2 offset:	Postscript offset.
 *		WlzDVertex2 scale:	Postscript scale.
 ************************************************************************/
-WlzErrorNum   	WlzGMShellTestOutPS(WlzGMShell *shell, FILE *fP,
-				WlzDVertex2 offset, WlzDVertex2 scale)
+static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell, FILE *fP,
+				       WlzDVertex2 offset, WlzDVertex2 scale)
 {
   WlzGMLoopT	*loopT0,
   		*loopT1;
@@ -1289,8 +1314,8 @@ WlzErrorNum   	WlzGMShellTestOutPS(WlzGMShell *shell, FILE *fP,
 *		WlzDVertex2 offset:	Postscript offset.
 *		WlzDVertex2 scale:	Postscript scale.
 ************************************************************************/
-WlzErrorNum   	WlzGMLoopTTestOutPS(WlzGMLoopT *loopT, FILE *fP,
-			            WlzDVertex2 offset, WlzDVertex2 scale)
+static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT, FILE *fP,
+			               WlzDVertex2 offset, WlzDVertex2 scale)
 {
   WlzGMEdgeT	*edgeT0,
   		*edgeT1;
@@ -1330,8 +1355,8 @@ WlzErrorNum   	WlzGMLoopTTestOutPS(WlzGMLoopT *loopT, FILE *fP,
 *		WlzDVertex2 offset:	Postscript offset.
 *		WlzDVertex2 scale:	Postscript scale.
 ************************************************************************/
-WlzErrorNum   	WlzGMEdgeTTestOutPS(WlzGMEdgeT *edgeT, FILE *fP,
-			            WlzDVertex2 offset, WlzDVertex2 scale)
+static WlzErrorNum WlzGMEdgeTTestOutPS(WlzGMEdgeT *edgeT, FILE *fP,
+			               WlzDVertex2 offset, WlzDVertex2 scale)
 {
   WlzDVertex2	pos0,
   		pos1;
