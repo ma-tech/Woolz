@@ -2069,6 +2069,7 @@ void		WlzGMModelDeleteF(WlzGMModel *model, WlzGMFace *dF)
 */
 static void 	WlzGMModelDeleteLT(WlzGMModel *model, WlzGMLoopT *dLT)
 {
+  WlzGMEdge	*tE;
   WlzGMEdgeT	*tET0,
   		*tET1;
 
@@ -2084,7 +2085,12 @@ static void 	WlzGMModelDeleteLT(WlzGMModel *model, WlzGMLoopT *dLT)
       do
       {
 	tET1 = tET1->next;
+	tE = (tET1 == tET1->opp)? tET1->edge: NULL;
 	WlzGMModelDeleteET(model, tET1);
+	if(tE)
+	{
+	  WlzGMModelDeleteE(model, tE);
+	}
       } while(tET1 != tET0);
       WlzGMLoopTUnlink(dLT);
       WlzGMModelFreeLT(model, dLT);

@@ -2056,7 +2056,8 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  int maxItr,
 				  int minSpx,
 				  int brkFlg,
-				  int dbgFlg);
+				  double thrMeanD,
+				  double thrMaxD);
 
 /************************************************************************
 * WlzMeshTransform.c							*

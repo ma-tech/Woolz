@@ -38,10 +38,12 @@ int             main(int argc, char *argv[])
 		dbgFlg = 0,
 		nMatch,
 		maxItr = 200,
-		minSpx = 100,
+		minSpx = 20,
   		option,
   		ok = 1,
 		usage = 0;
+  double	thrMeanD = 1.0,
+  		thrMaxD = 3.0;
   FILE		*fP = NULL;
   char		*inTrFileStr,
   		*outFileStr,
@@ -53,7 +55,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrb:d:D:o:t:i:s:";
+  static char	optList[] = "aghrb:d:D:n:o:t:i:s:x:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -87,6 +89,13 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
+      case 'n':
+        if((sscanf(optarg, "%lg", &thrMeanD) != 1) || (thrMeanD <= 0.0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -102,6 +111,13 @@ int             main(int argc, char *argv[])
 	break;
       case 's':
         if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'x':
+        if((sscanf(optarg, "%lg", &thrMaxD) != 1) || (thrMaxD <= 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -198,7 +214,7 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, dbgFlg > 1);
+			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -286,11 +302,15 @@ int             main(int argc, char *argv[])
       "        0  no debug output.\n"
       "        1  untransformed decomposed source model.\n"
       "        2  transformed decomposed source model.\n"
+      "  -h  Prints this usage information.\n"
+      "  -n  Threshold mean source normal vertex distance for fragment to\n"
+      "      be used in correspondence computation.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"
       "  -i  Maximum number of iterations.\n"
       "  -s  Miimum number of simplicies.\n"
-      "  -h  Prints this usage information.\n"
+      "  -x  Threshold maximum source normal vertex distance for fragment to\n"
+      "      be used in correspondence computation.\n"
       "Reads a pair of Woolz objects, which idealy are contours and then\n"
       "computes a set of correspondence points using an ICP based matching\n"
       "algorithm.\n");

@@ -61,7 +61,9 @@ static WlzErrorNum  		WlzMatchICPCtr(
 				  int *dstNMatch,
 				  WlzVertexP *dstTMatch,
 				  WlzVertexP *dstSMatch,
-				  int brkFlg, int dbgFlg);
+				  int brkFlg,
+				  double  thrMeanD,
+				  double thrMaxD);
 static WlzErrorNum		WlzMatchICPRegShellLst(
 				  AlcKDTTree *tTree,
 				  WlzGMModel *sGM,
@@ -121,6 +123,16 @@ static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  WlzAffineTransform *initTr,
 				  int *dstConv,
 				  WlzErrorNum *dstErr);
+static double			WlzMatchICPMatchStats(
+				  AlcKDTTree *tTree,
+				  WlzMatchICPShell *mS,
+				  WlzVertexType vType,
+				  double *dstMaxD,
+				  WlzErrorNum *dstErr);
+static double			WlzMatchICPMatchStats2D(
+				  AlcKDTTree *tTree,
+				  WlzMatchICPShell *mS,
+				  double *dstMaxD);
 static int			WlzMatchICPGetPoints(
 				  AlcKDTTree *tTree,
 				  WlzMatchICPShell *mS,
@@ -255,15 +267,20 @@ static void			WlzMatchICPShellListElmUnlink(
 *					    connectivity and then near
 *					    there midpoints brkFlg - 1
 *					    times.
-* \param	dbgFlg			Aid debugging by transforming the
-*					(possibly) broken source shells if 
-*					non-zero.
+* \param	thrMeanD		Threshold mean source target 
+*					distance for a registered shell
+*					to be used for correspondence
+*					computation.
+* \param	thrMaxD			Threshold maximum source target 
+*					distance for a registered shell
+*					to be used for correspondence
+*					computation.
 */
 WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 				WlzAffineTransform *initTr,
 				int *dstNMatch, WlzVertexP *dstTMatch,
 				WlzVertexP *dstSMatch, int maxItr, int minSpx,
-				int brkFlg, int dbgFlg)
+				int brkFlg, double thrMeanD, double thrMaxD)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -309,7 +326,7 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 	      errNum = WlzMatchICPCtr(tObj->domain.ctr, sObj->domain.ctr,
 	      			      initTr, maxItr, minSpx,
 				      dstNMatch, dstTMatch, dstSMatch,
-				      brkFlg, dbgFlg);
+				      brkFlg, thrMeanD, thrMaxD);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -365,16 +382,21 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 *					    connectivity and then near
 *					    there midpoints brkFlg - 1
 *					    times.
-* \param	dbgFlg			Aid debugging by transforming the
-*					(possibly) broken source shells if 
-*					non-zero.
+* \param	thrMeanD		Threshold mean source target 
+*					distance for a registered shell
+*					to be used for correspondence
+*					computation.
+* \param	thrMaxD			Threshold maximum source target 
+*					distance for a registered shell
+*					to be used for correspondence
+*					computation.
 */
 static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 				   WlzAffineTransform *initTr,
 				   int maxItr, int minSpx,
 				   int *dstNMatch, WlzVertexP *dstTMatch,
-				   WlzVertexP *dstSMatch,
-				   int brkFlg, int dbgFlg)
+				   WlzVertexP *dstSMatch, int brkFlg,
+				   double  thrMeanD, double thrMaxD)
 {
   int		idS,
 		n0,
@@ -389,6 +411,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		brkIdx,
 		convFlg,
 		nMatch = 0;
+  double	maxD,
+  		meanD;
   int		*vIBuf = NULL;
   double	*wBuf = NULL;
   WlzGMModel	*tGM,
@@ -746,64 +770,81 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       }
     }
   }
-  /* Now have list of broken shells which are registered to the target model.
-   * Find match points on broken shells and target model. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
+  /* Now have list of broken shells which are registered to the target
+   * model. Delete all unregistered and small registered shells and
+   * transform the rest. */
+  if(errNum == WLZ_ERR_NONE)
   {
-    n0 = 0;
-    lElm0 = rSList->head;
-    while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
-    {
-      if(lElm0->mShell.shell && (lElm0->mShell.size > minSpx) &&
-         lElm0->mShell.tr)
-      {
-	n1 = WlzMatchICPGetPoints(tTree, &(lElm0->mShell), vType, tVx,
-				  tNr, sNr, tVBuf, sVBuf, n0, &errNum);
-	n0 += n1;
-      }
-      lElm0 = lElm0->next;
-    }
-    nMatch = n0;
-  }
-  /* This stuff is just for debugging. */
-  if((errNum == WLZ_ERR_NONE) && dbgFlg)
-  {
-    /* Remove unregistered source shells. */
-    if((brkFlg > 2) && (n1 == n0))
+    if(brkFlg > 2)
     {
       lElm0 = bSList->head;
       while(lElm0 != NULL) 
       {
 	WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
+	lElm0->mShell.shell = NULL;
+	(void )WlzFreeAffineTransform(lElm0->mShell.tr);
+	lElm0->mShell.tr = NULL;
+	lElm0->mShell.size = 0;
 	lElm0 = lElm0->next;
       }
     }
-    else if(brkFlg > 1)
-    {
-      WlzMatchICPShellListInsertList(rSList, bSList);
-      bSList->head = bSList->tail = NULL;
-    }
-    /* Transform the registered source shells. */
-    if(brkFlg > 0)
+    if(brkFlg > 1)
     {
       lElm0 = rSList->head;
       while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
       {
-	if(lElm0->mShell.size < minSpx)
+	lElm1 = lElm0->next;
+	if((lElm0->mShell.shell == NULL) || (lElm0->mShell.tr == NULL) ||
+	   (lElm0->mShell.size < minSpx))
 	{
 	  WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
+	  (void )WlzFreeAffineTransform(lElm0->mShell.tr);
+	  AlcFree(lElm0);
 	}
 	else
 	{
 	  WlzAffineTransformGMShell(lElm0->mShell.shell, lElm0->mShell.tr);
 	}
-	lElm0 = lElm0->next;
+	lElm0 = lElm1;
       }
     }
     else
     {
       (void )WlzAffineTransformGMModel(sGM, globTr, 0, &errNum);
     }
+  }
+  /* Filter out all registered shells with a poor match to the target. */
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
+  {
+    lElm0 = rSList->head;
+    while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
+    {
+      lElm1 = lElm0->next;
+      meanD = WlzMatchICPMatchStats(tTree, &(lElm0->mShell), vType, &maxD,
+      				    NULL);
+      if((meanD > thrMeanD) || (maxD > thrMaxD))
+      {
+	WlzMatchICPShellListElmUnlink(rSList , lElm0);
+	WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
+	(void )WlzFreeAffineTransform(lElm0->mShell.tr);
+        AlcFree(lElm0);
+      }
+      lElm0 = lElm1;
+    }
+  }
+  /* Find match points on broken shells and target model. */
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
+  {
+    n0 = 0;
+    lElm0 = rSList->head;
+    while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
+    {
+      n1 = WlzMatchICPGetPoints(tTree, &(lElm0->mShell), vType, tVx,
+				tNr, sNr, tVBuf, sVBuf, n0, &errNum);
+      n0 += n1;
+      lElm0 = lElm0->next;
+    }
+    nMatch = n0;
   }
   /* Free the temporary storage that's been allocated. */
   if((errNum == WLZ_ERR_NONE) && (nMatch > 0))
@@ -1158,6 +1199,127 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
     *dstErr = errNum;
   }
   return(tr);
+}
+
+/*!
+* \return	Mean distance.
+* \ingroup	WlzTransform
+* \brief	Computes some simple statistics to determin the quality of the
+* 		match for the given match shell.
+*		These are the maximum and mean distance (distance is always
+*		+ve) between the verticies of the given match shell and
+*		their nearest neighbours in the target model.
+* \param	tTree			kD-tree populated by the target
+*					verticies.
+* \param	mS			Match shell.
+* \param	vType			Type of verticies.
+* \param	dstMaxD			Destination pointer for maximum
+*					distance.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+static double	WlzMatchICPMatchStats(AlcKDTTree *tTree,
+				      WlzMatchICPShell *mS,
+				      WlzVertexType vType,
+				      double *dstMaxD,
+				      WlzErrorNum *dstErr)
+{
+  double	maxD = DBL_MAX,
+  		meanD = DBL_MAX;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  switch(vType)
+  {
+    case WLZ_VERTEX_D2:
+      meanD = WlzMatchICPMatchStats2D(tTree, mS, &maxD);
+      break;
+    case WLZ_VERTEX_D3: /* FALLTHROUGH */
+    default:
+      errNum = WLZ_ERR_UNIMPLEMENTED;
+      break;
+  }
+  if(dstMaxD)
+  {
+    *dstMaxD = maxD;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(meanD);
+}
+/*!
+* \return	Mean distance.
+* \ingroup	WlzTransform
+* \brief	Computes some simple statistics to determin the quality of the
+* 		match for the given match shell with 2D verticies.
+*		These are the maximum and mean distance (distance is always
+*		+ve) between the verticies of the given match shell and
+*		their nearest neighbours in the target model.
+* \param	tTree			kD-tree populated by the target
+*					verticies.
+* \param	mS			Match shell.
+* \param	dstMaxD			Destination pointer for maximum
+*					distance.
+*/
+static double	WlzMatchICPMatchStats2D(AlcKDTTree *tTree,
+				        WlzMatchICPShell *mS,
+					double *dstMaxD)
+{
+  int		nV = 0;
+  double	dist,
+		sumD = 0,
+		maxD = 0,
+  		meanD = 0;
+  WlzGMLoopT 	*fLT,
+  		*tLT;
+  WlzGMEdgeT	*fET,
+		*tET;
+  AlcKDTNode	*tNode;
+  WlzDVertex2	sV;
+  double	vxD2[2];
+  const double	maxDist = DBL_MAX;
+
+  tLT = fLT = mS->shell->child;
+  do
+  {
+    tET = fET = tLT->edgeT;
+    do
+    {
+      if(tET == tET->edge->edgeT)
+      {
+        (void )WlzGMVertexGetG2D(tET->vertexT->diskT->vertex, &sV);
+	vxD2[0] = sV.vtX;
+	vxD2[1] = sV.vtY;
+	tNode = AlcKDTGetNN(tTree, vxD2, maxDist, &dist, NULL);
+	if(tNode)
+	{
+	  ++nV;
+	  if(dist > maxD)
+	  {
+	    maxD = dist;
+	  }
+	  sumD += dist;
+	}
+      }
+      tET = tET->next;
+    } while(tET != fET);
+    tLT = tLT->next;
+  } while(tLT != fLT);
+  if(nV > 0)
+  {
+    meanD = sumD / nV;
+  }
+  else
+  {
+    maxD = DBL_MAX;
+    meanD = DBL_MAX;
+  }
+  if(dstMaxD)
+  {
+    *dstMaxD = maxD;
+  }
+  return(meanD);
 }
 
 /*!
@@ -2029,6 +2191,8 @@ int             main(int argc, char *argv[])
   		option,
   		ok = 1,
 		usage = 0;
+  double	thrMeanD = 1.0,
+  		thrMaxD = 3.0;
   FILE		*fP = NULL;
   char		*inTrFileStr,
   		*outFileStr,
@@ -2040,7 +2204,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrb:d:D:o:t:i:s:";
+  static char	optList[] = "aghrb:d:D:n:o:t:i:s:x:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -2074,6 +2238,13 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
+      case 'n':
+        if((sscanf(optarg, "%lg", &thrMeanD) != 1) || (thrMeanD <= 0.0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -2089,6 +2260,13 @@ int             main(int argc, char *argv[])
 	break;
       case 's':
         if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'x':
+        if((sscanf(optarg, "%lg", &thrMaxD) != 1) || (thrMaxD <= 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -2185,7 +2363,7 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, dbgFlg > 1);
+			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -2264,7 +2442,7 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       "Usage: %s%s",
       *argv,
-      " [-b#] [-d#] [-D#] [-o#] [-t#] [-i#] [-h]\n"
+      " [-b#] [-d#] [-D#] [-n#] [-o#] [-t#] [-i#] [-h] [-x#]\n"
       "          [<input object 0>] [<input object 1>]\n"
       "Options:\n"
       "  -b  Shell breaking control value.\n"
@@ -2273,11 +2451,15 @@ int             main(int argc, char *argv[])
       "        0  no debug output.\n"
       "        1  untransformed decomposed source model.\n"
       "        2  transformed decomposed source model.\n"
+      "  -h  Prints this usage information.\n"
+      "  -n  Threshold mean source normal vertex distance for fragment to\n"
+      "      be used in correspondence computation.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"
       "  -i  Maximum number of iterations.\n"
       "  -s  Miimum number of simplicies.\n"
-      "  -h  Prints this usage information.\n"
+      "  -x  Threshold maximum source normal vertex distance for fragment to\n"
+      "      be used in correspondence computation.\n"
       "Reads a pair of contours and computes a set of correspondence points"
       "using an ICP based matching algorithm.\n");
   }
