@@ -133,15 +133,15 @@ extern WlzErrorNum 		Wlz3DSectionTransformVtx(
 				  WlzDVertex3 *vtx,
 				  WlzThreeDViewStruct *viewStr);
 extern WlzErrorNum 		Wlz3DSectionTransformVtxR(
-				  WlzDVertex3 *vtx,
-				  WlzDVertex3 *dstVtx,
-				  WlzThreeDViewStruct *viewStr);
+		                  WlzThreeDViewStruct *viewStr,
+				  WlzDVertex3 vtx,
+				  WlzDVertex3 *dstVtx);
 extern WlzErrorNum 		Wlz3DSectionTransformInvVtx(
 				  WlzDVertex3 *vtx,
 				  WlzThreeDViewStruct *viewStr);
 extern WlzErrorNum 		Wlz3DSectionTransformInvVtxR(
                                   WlzThreeDViewStruct *viewStr,
-				  WlzDVertex3 *vtx,
+				  WlzDVertex3 vtx,
 				  WlzDVertex3 *dstVtx);
 extern WlzErrorNum 		Wlz3DSectionIncrementDistance(
 				  WlzThreeDViewStruct *viewStr,

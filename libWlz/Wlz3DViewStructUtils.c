@@ -484,16 +484,16 @@ WlzErrorNum Wlz3DSectionTransformVtx(
 *   Global refs:							*
 ************************************************************************/
 WlzErrorNum Wlz3DSectionTransformVtxR(
-  WlzDVertex3		*vtx,
-  WlzDVertex3		*dstVtx,
-  WlzThreeDViewStruct	*viewStr)
+  WlzThreeDViewStruct	*viewStr,
+  WlzDVertex3		vtx,
+  WlzDVertex3		*dstVtx)
 {
   WlzDVertex3	new;
   WlzErrorNum	errNum;
 
-  new.vtX = vtx->vtX;
-  new.vtY = vtx->vtY;
-  new.vtZ = vtx->vtZ;
+  new.vtX = vtx.vtX;
+  new.vtY = vtx.vtY;
+  new.vtZ = vtx.vtZ;
   errNum = Wlz3DSectionTransformVtx(&new, viewStr);
   dstVtx->vtX = new.vtX;
   dstVtx->vtY = new.vtY;
@@ -543,18 +543,13 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
 ************************************************************************/
 WlzErrorNum Wlz3DSectionTransformInvVtxR(
   WlzThreeDViewStruct	*viewStr,
-  WlzDVertex3		*vtx,
+  WlzDVertex3		vtx,
   WlzDVertex3		*dstVtx)
 {
   WlzDVertex3	new;
   WlzErrorNum	errNum;
 
-  printf("in Wlz3DSectionTransformInvVtxR\n");
-  if( vtx == NULL ){
-	  errNum = WLZ_ERR_PARAM_NULL;
-	  printf("vtx NULL\n");
-  }
-  else if (dstVtx == NULL){
+  if (dstVtx == NULL){
 	  errNum = WLZ_ERR_PARAM_NULL;
 	  printf("dstVtx = NULL\n");
   }
@@ -563,9 +558,9 @@ WlzErrorNum Wlz3DSectionTransformInvVtxR(
 	  printf("viewStr = NULL\n");
   }
   else {
-  	new.vtX = vtx->vtX;
- 	 new.vtY = vtx->vtY;
- 	 new.vtZ = vtx->vtZ;
+  	 new.vtX = vtx.vtX;
+ 	 new.vtY = vtx.vtY;
+ 	 new.vtZ = vtx.vtZ;
  	 errNum = Wlz3DSectionTransformInvVtx(&new, viewStr);
  	 dstVtx->vtX = new.vtX;
  	 dstVtx->vtY = new.vtY;
