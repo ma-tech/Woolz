@@ -25,6 +25,11 @@
 
 typedef	void (*WlzBinaryOperatorFn)(WlzGreyP, WlzGreyP, int);
 
+static WlzErrorNum		WlzImageArithmeticPromoteGTypes(
+				  WlzBinaryOperatorType op,
+			  	  WlzGreyType gType[],
+			  	  int *overwrite);
+
 /*
 * \return 	<void|>
 * \brief	Functions which perform self-expanatory binary operations
@@ -585,6 +590,91 @@ static WlzBinaryOperatorFn WlzBinaryOperatorFnSet(WlzGreyType gType,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzArithmetic
+* \brief	Prompote the given grey types appropriately for the
+*		given operator.
+* \param	op			Given operator.
+* \param	gType			Object grey types with gType[0..1]
+*					being the input grey types of the
+*					images on which the arithmetic is
+*					to be performed and gType[2-3] being
+*					the outputs, with gType[2] the new
+*					objects grey type and gType[3] being
+*					the grey type which is suitable for a
+*					buffer.
+* \param	overwrite		Pointer to interger flag which is
+*					reset if the given value is
+*					inappropriate. See WlzImageArithmetic()
+*					for explaination of values.
+*/
+static WlzErrorNum	WlzImageArithmeticPromoteGTypes(
+			  WlzBinaryOperatorType op,
+			  WlzGreyType gType[],
+			  int *overwrite)
+{
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
+
+  if((gType[0] == WLZ_GREY_DOUBLE) || (gType[1] == WLZ_GREY_DOUBLE))
+  {
+    gType[2] = WLZ_GREY_DOUBLE;
+    gType[3] = WLZ_GREY_DOUBLE;
+  }
+  else if((gType[0] == WLZ_GREY_FLOAT) || (gType[1] == WLZ_GREY_FLOAT))
+  {
+    gType[2] = WLZ_GREY_FLOAT;
+    gType[3] = WLZ_GREY_DOUBLE;
+  }
+  else if((gType[0] == WLZ_GREY_INT) || (gType[1] == WLZ_GREY_INT))
+  {
+    gType[2] = WLZ_GREY_INT;
+    gType[3] = WLZ_GREY_INT;
+  }
+  else if((gType[0] == WLZ_GREY_SHORT) || (gType[1] == WLZ_GREY_SHORT))
+  {
+    gType[2] = WLZ_GREY_SHORT;
+    gType[3] = WLZ_GREY_INT;
+  }
+  else
+  {
+    gType[3] = WLZ_GREY_INT;
+    switch(op)
+    {
+      case WLZ_BO_ADD:		/* FALLTHROGH */
+      case WLZ_BO_SUBTRACT:	/* FALLTHROGH */
+      case WLZ_BO_MULTIPLY:	/* FALLTHROGH */
+      case WLZ_BO_DIVIDE:	/* FALLTHROGH */
+      case WLZ_BO_MAGNITUDE:
+	gType[2] = WLZ_GREY_SHORT;
+	break;
+      case WLZ_BO_MODULUS:	/* FALLTHROGH */
+      case WLZ_BO_EQ:		/* FALLTHROGH */
+      case WLZ_BO_NE:		/* FALLTHROGH */
+      case WLZ_BO_GT:		/* FALLTHROGH */
+      case WLZ_BO_GE:		/* FALLTHROGH */
+      case WLZ_BO_LT:		/* FALLTHROGH */
+      case WLZ_BO_LE:		/* FALLTHROGH */
+      case WLZ_BO_AND:		/* FALLTHROGH */
+      case WLZ_BO_OR:		/* FALLTHROGH */
+      case WLZ_BO_XOR:		/* FALLTHROGH */
+      case WLZ_BO_MAX:		/* FALLTHROGH */
+      case WLZ_BO_MIN:
+	gType[2] = WLZ_GREY_UBYTE;
+	break;
+      default:
+	errNum = WLZ_ERR_BINARY_OPERATOR_TYPE;
+	break;
+    }
+  }
+  if(((*overwrite == 1) && (gType[0] != gType[2])) ||
+     ((*overwrite == 2) && (gType[1] != gType[2])))
+  {
+    *overwrite = 0;    /* Can only overwrite if the grey types are the same */
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
 * \brief	Performs  binary (ie two objects) arithmetic on a pair
 *               of 2D domain objects.
 *               If the overwrite flag is set and the grey values of
@@ -662,58 +752,7 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Promote grey type */
-    if((gType[0] == WLZ_GREY_DOUBLE) || (gType[1] == WLZ_GREY_DOUBLE))
-    {
-      gType[2] = WLZ_GREY_DOUBLE;
-      gType[3] = WLZ_GREY_DOUBLE;
-    }
-    else if((gType[0] == WLZ_GREY_FLOAT) || (gType[1] == WLZ_GREY_FLOAT))
-    {
-      gType[2] = WLZ_GREY_FLOAT;
-      gType[3] = WLZ_GREY_DOUBLE;
-    }
-    else if((gType[0] == WLZ_GREY_INT) || (gType[1] == WLZ_GREY_INT))
-    {
-      gType[2] = WLZ_GREY_INT;
-      gType[3] = WLZ_GREY_INT;
-    }
-    else if((gType[0] == WLZ_GREY_SHORT) || (gType[1] == WLZ_GREY_SHORT))
-    {
-      gType[2] = WLZ_GREY_SHORT;
-      gType[3] = WLZ_GREY_INT;
-    }
-    else
-    {
-      gType[3] = WLZ_GREY_INT;
-      switch(op)
-      {
-	case WLZ_BO_ADD:	/* FALLTHROGH */
-	case WLZ_BO_SUBTRACT:	/* FALLTHROGH */
-	case WLZ_BO_MULTIPLY:	/* FALLTHROGH */
-	case WLZ_BO_DIVIDE:	/* FALLTHROGH */
-	case WLZ_BO_MAGNITUDE:
-          gType[2] = WLZ_GREY_SHORT;
-	  break;
-	case WLZ_BO_MODULUS:	/* FALLTHROGH */
-	case WLZ_BO_EQ:		/* FALLTHROGH */
-	case WLZ_BO_NE:		/* FALLTHROGH */
-	case WLZ_BO_GT:		/* FALLTHROGH */
-	case WLZ_BO_GE:		/* FALLTHROGH */
-	case WLZ_BO_LT:		/* FALLTHROGH */
-	case WLZ_BO_LE:		/* FALLTHROGH */
-	case WLZ_BO_AND:	/* FALLTHROGH */
-	case WLZ_BO_OR:		/* FALLTHROGH */
-	case WLZ_BO_XOR:	/* FALLTHROGH */
-	case WLZ_BO_MAX:	/* FALLTHROGH */
-	case WLZ_BO_MIN:
-          gType[2] = WLZ_GREY_UBYTE;
-	  break;
-	default:
-	  errNum = WLZ_ERR_BINARY_OPERATOR_TYPE;
-	  break;
-      }
-    }
+    errNum = WlzImageArithmeticPromoteGTypes(op, gType, &overwrite);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -735,11 +774,6 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
       buf[1].dbp = &(bgd[2].v.dbv);
     }
     binOpFn(buf[1], buf[0], 1);
-    if(((overwrite == 1) && (gType[0] != gType[2])) ||
-       ((overwrite == 2) && (gType[1] != gType[2])))
-    {
-      overwrite = 0;    /* Can only overwrite if the grey types are the same */
-    }
     switch(overwrite)
     {
       case 0:
@@ -835,31 +869,34 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
 * \return	Woolz error code.
 * \ingroup	WlzArithmetic
 * \brief	Performs arithmetic on a pair of 3D domain objects.
-*		If the overwrite flag is set and the grey values of     *
-*               the object to be overwritten are of the wrong type then *
-*               the returned object has new values as though the        *
-*               overwrite flag was not set.
+*		If the overwrite flag is set and the grey values of
+*               the object to be overwritten are of the wrong type then
+*               the returned object has new values as though the
+*               overwrite flag was not set. A new voxel value table
+*		will be created for obj2.
 * \param	obj0			First object.
 * \param	obj1			Second object.
-* \param	obj2			Intersection of the 1st and 2nd   *
-*                                       objects, but values still to be *
-*                                       filled in.
+* \param	obj2			Intersection of the 1st and 2nd
+*                                       objects, but values still to be
+*                                       filled in. Must not be the same
+*					object as obj0 or obj1 and must
+*					not be null.
 * \param	op			Binary operator.
-* \param	overwrite		Allow the destination object    *
-*                                       to share values with one of     *
-*                                       the given objects if non zero.  *
+* \param	overwrite		Allow the destination object
+*                                       to share values with one of
+*                                       the given objects if non zero.
 *					<ul>
 *					  <li>
-*                                         0: No values shared.          *
+*                                         0: No values shared.
 *					  </li>
 *					  <li>
-*                                         1: Values shared with obj0.   *
+*                                         1: Values shared with obj0.
 *					  </li>
 *					  <li>
-*                                         2: Values shared with obj1.   *
+*                                         2: Values shared with obj1.
 *					  </li>
 *					  <li>
-*                                         < 0 || > 2: Error condition.  *
+*                                         < 0 || > 2: Error condition.
 *					  </li>
 *					</ul>
 */
@@ -869,19 +906,22 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 				        int overwrite)
 {
   int		tI0,
-  		tI1,
 		oIdx,
 		nPlanes,
 		bgdFlag = 0;
   int		pIdx[3],
   		vIdx[3];
+  WlzGreyType	gType[4];
+  WlzObject	*tObj;
   WlzObject	*obj[3],
   		*obj2D[3];
   WlzPixelV	bgd[3];
   WlzPlaneDomain *pDom[3];
   WlzVoxelValues *vVal[3];
+  WlzValues	nullValues;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  nullValues.core = NULL;
   if ((obj0->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN) ||
            (obj1->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN))
   {
@@ -892,7 +932,22 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
-  else
+  /* Get  grey types */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gType[0] = WlzGreyTableTypeToGreyType(obj0->values.core->type,
+					  &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gType[1] = WlzGreyTableTypeToGreyType(obj1->values.core->type,
+					  &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzImageArithmeticPromoteGTypes(op, gType, &overwrite);
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     obj[0] = obj0;
     obj[1] = obj1;
@@ -902,21 +957,25 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   {
     if(obj[2]->type != WLZ_EMPTY_OBJ)
     {
-      pDom[2] = obj[2]->domain.p;
-      vVal[2] = obj[2]->values.vox;
       pIdx[2] = 0;
       vIdx[2] = 0;
       tI0 = obj[2]->domain.p->plane1;
-      tI1 = obj[2]->values.vox->plane1;
-      oIdx = 2;
-      while((oIdx-- > 0) && (errNum == WLZ_ERR_NONE))
+      for(oIdx = 0; (oIdx < 2) && (errNum == WLZ_ERR_NONE); ++oIdx)
       {
-        pDom[oIdx] = obj[oIdx]->domain.p;
+	pDom[oIdx] = obj[oIdx]->domain.p;
 	vVal[oIdx] = obj[oIdx]->values.vox;
-	pIdx[oIdx] = pDom[oIdx]->plane1 - tI0;
-	vIdx[oIdx] = vVal[oIdx]->plane1 - tI1;
+	pIdx[oIdx] = tI0 - pDom[oIdx]->plane1;
+	vIdx[oIdx] = tI0 - vVal[oIdx]->plane1;
 	bgd[oIdx] = WlzGetBackground(obj[oIdx], &errNum);
-        
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	bgd[2] = bgd[0];
+	pDom[2] = obj[2]->domain.p;
+	vVal[2] = obj[2]->values.vox =
+	          WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+				      pDom[2]->plane1, pDom[2]->lastpl,
+				      bgd[2], NULL, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -924,9 +983,30 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	pIdx[2] = 0;
 	while((pIdx[2] < nPlanes) && (errNum == WLZ_ERR_NONE))
 	{
-	  oIdx = 2;
+	  switch(overwrite)
+	  {
+	    case 0: 					/* No values shared. */
+	      tObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+	      			 *(pDom[2]->domains + pIdx[2]),
+				 nullValues, NULL, NULL, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        *(vVal[2]->values + vIdx[2]) = WlzAssignValues(tObj->values,
+							       NULL);
+	      }
+	      WlzFreeObj(tObj);
+	      break;
+	    case 1: 				 /* Values shared with obj0. */
+	      *(vVal[2]->values + vIdx[2]) = WlzAssignValues(
+	        *(vVal[0]->values + vIdx[0]), NULL);
+	      break;
+	    case 2: 				 /* Values shared with obj1. */
+	      *(vVal[2]->values + vIdx[2]) = WlzAssignValues(
+	        *(vVal[1]->values + vIdx[1]), NULL);
+	      break;
+	  }
 	  obj2D[2] = obj2D[1] = obj2D[0] = NULL;
-	  while((oIdx-- > 0) && (errNum == WLZ_ERR_NONE))
+	  for(oIdx = 0; (oIdx < 3) && (errNum == WLZ_ERR_NONE); ++oIdx)
 	  {
 	    obj2D[oIdx] = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 	    			      *(pDom[oIdx]->domains + pIdx[oIdx]),
@@ -976,6 +1056,10 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzSetBackground(obj[2], bgd[2]);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj2->values = obj[2]->values;
   }
   return(errNum);
 }
@@ -1053,19 +1137,18 @@ WlzObject	*WlzImageArithmetic(WlzObject *obj0, WlzObject *obj1,
 	  obj2 = WlzIntersect2(obj0, obj1, &errNum);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    if(obj2->type != WLZ_EMPTY_OBJ)
+	    switch(obj2->type)
 	    {
-	      switch(obj0->type)
-	      {
-		case WLZ_2D_DOMAINOBJ:
-		  errNum =  WlzImageArithmetic2D(obj0, obj1, obj2, op,
-		  				 overwrite);
-		  break;
-		case WLZ_3D_DOMAINOBJ:
-		  errNum = WlzImageArithmetic3D(obj0, obj1, obj2, op,
-		  				overwrite);
-		  break;
-	      }
+	      case WLZ_EMPTY_OBJ:
+		break;
+	      case WLZ_2D_DOMAINOBJ:
+		errNum =  WlzImageArithmetic2D(obj0, obj1, obj2, op,
+					       overwrite);
+		break;
+	      case WLZ_3D_DOMAINOBJ:
+		errNum = WlzImageArithmetic3D(obj0, obj1, obj2, op,
+					      overwrite);
+		break;
 	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)
