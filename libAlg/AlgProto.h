@@ -15,6 +15,9 @@
 *		Human Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 01-02-01 bill Add AlgCrossCorrelate2D(), AlgCrossCorrPeakXY() and
+*		AlgCrossCorrPeakY().
+* 31-01-01 bill	Add AlgBitNextPowerOfTwo().
 * 07-11-00 bill Add AlgShuffleIdx().
 * 08-08-00 bill Add AlgBitNextSet().
 * 12-07-00 bill	Add AlgHeapSort(), AlgHeapSortIdx() and AlgHeapElmSwap().
@@ -42,6 +45,9 @@ extern unsigned long	AlgBitNextNOfM(
 extern int		AlgBitNextSet(
 			  unsigned long msk,
 			  int idC);
+extern int		AlgBitNextPowerOfTwo(
+			  unsigned int *dstP2I,
+			  unsigned int gI);
 /* From AlgComplexUtils.c */
 extern double		AlgCMod(
 			  ComplexD z);
@@ -78,6 +84,27 @@ extern AlgError 	AlgConvolve(
     	   	   	  int sizeArrayDat, 
 			  double *arrayDat,
     			  AlgPadType pad);
+
+/* From AlgCrossCorr.c */
+extern AlgError        	AlgCrossCorrelate2D(
+			  double **data0,
+			  double **data1,
+			  int nX,
+			  int nY);
+extern void            	AlgCrossCorrPeakXY(
+			  int *dstMaxX,
+			  int *dstMaxY,
+			  double *dstMaxVal,
+			  double **data,
+			  int nX,
+			  int nY,
+			  int searchX,
+			  int searchY);
+extern void            	AlgCrossCorrPeakY(
+			  int *dstMaxY,
+			  double *dstMaxVal,
+			  double **data,
+			  int nY);
 
 /* From AlgDebug.c */
 extern AlgError		AlgDbgWrite(
