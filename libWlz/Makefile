@@ -90,6 +90,7 @@ CSOURCES		= \
 			WlzGeoModel.c \
 			WlzGeoModelFilters.c \
 			WlzGeometry.c \
+			WlzGeometryTrackUpAndDown_s.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
 			WlzGreyGradient.c \
