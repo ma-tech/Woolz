@@ -416,8 +416,8 @@ WlzErrorNum WlzInit3DViewStruct(
   CHECK_MIN_MAX_VTX(planedmn->lastkl, planedmn->lastln, planedmn->lastpl);
 
   /* find range of values required, and allocate space for the LUT's */
-  widthp  = viewStr->maxvals.vtX - viewStr->minvals.vtX + 1;
-  heightp = viewStr->maxvals.vtY - viewStr->minvals.vtY + 1;
+  widthp  = viewStr->maxvals.vtX - viewStr->minvals.vtX + 2;
+  heightp = viewStr->maxvals.vtY - viewStr->minvals.vtY + 2;
   AlcDouble1Malloc(&tDP0, 3*widthp + 3*heightp);
   viewStr->freeptr = WlzPushFreePtr(NULL, tDP0, NULL);
   viewStr->xp_to_x = tDP0;

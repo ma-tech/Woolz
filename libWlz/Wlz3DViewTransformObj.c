@@ -120,6 +120,7 @@ WlzObject *Wlz3DViewTransformObj(
 
   /* create the voxel list */
   if( (errNum == WLZ_ERR_NONE) && (dstObj == NULL) ){
+    numVtxs = sizeof(WlzIVertex3) * (area+4);
 
     vertices = AlcMalloc(sizeof(WlzIVertex3) * (area+4));
     numVtxs = 0;
