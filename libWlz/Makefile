@@ -123,6 +123,7 @@ CSOURCES		= \
 			WlzIntervalCount.c \
 			WlzIntervalDomScan.c \
 			WlzIntRescaleObj.c \
+			WlzLBTDomain.c \
 			WlzLabel.c \
 			WlzLabel3d.c \
 			WlzLaplacian.c \
