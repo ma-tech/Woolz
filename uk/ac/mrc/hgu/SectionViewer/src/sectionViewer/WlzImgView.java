@@ -926,9 +926,10 @@ public class WlzImgView extends Component {
      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
 
      drawGreyImage(g);
+     drawOverlay(g);
      drawAnatomy(g);
-     //if (showInterSecLines) drawIntersectionA(g, meanGreyVal);
-if (showInterSecLines) drawIntersection(g);
+     drawIntersection(g);
+     drawFixedPoint(g);
      return _compImage;
    }
 
