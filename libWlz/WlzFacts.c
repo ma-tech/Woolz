@@ -12,6 +12,9 @@
 * Purpose:      Text description (facts) of a Woolz object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 15-08-00 bill	Removed obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
+*		WLZ_POINT_(INT)|(FLOAT). Add WlzObjFactsContour()
+*		and WlzObjFactsGMModel().
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
@@ -29,32 +32,60 @@ typedef struct
   int		fStrInc;
 } WlzObjFactsData;
 
-static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj),
-		WlzObjFactsLinkcount(WlzObjFactsData *fData, int linkcount),
-		WlzObjFactsAppend(WlzObjFactsData *fData,
-				  const char *fmt, ...),
-		WlzObjFactsBackground(WlzObjFactsData *fData,
-				     WlzPixelV bgdV),
-		WlzObjFactsIntervalDom(WlzObjFactsData *fData,
-				       WlzObject *obj, WlzDomain dom),
-		WlzObjFactsValueTab(WlzObjFactsData *fData,
-				    WlzObject *obj, WlzValues val),
-		WlzObjFactsPropList(WlzObjFactsData *fData,
-				    WlzObject *obj,
-				    WlzSimpleProperty *pList),
-		WlzObjFactsPlaneDom(WlzObjFactsData *fData,
-				    WlzObject *obj, WlzDomain dom),
-		WlzObjFactsVoxelTab(WlzObjFactsData *fData,
-				    WlzObject *obj, WlzValues val),
-	        WlzObjFactsAffineTrans(WlzObjFactsData *fData,
-				       WlzAffineTransform *trans),
-		WlzObjFactsPolygon2D(WlzObjFactsData *fData,
-				     WlzPolygonDomain *poly),
-		WlzObjFactsBoundlist(WlzObjFactsData *fData,
-				     WlzBoundList *bList),
-		WlzObjFactsHistogram(WlzObjFactsData *fData,
-				     WlzObject *obj,
-				     WlzHistogramDomain *hist);
+static WlzErrorNum		WlzObjFactsObject(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
+static WlzErrorNum		WlzObjFactsLinkcount(
+				  WlzObjFactsData *fData,
+				  int linkcount);
+static WlzErrorNum		WlzObjFactsAppend(
+				  WlzObjFactsData *fData,
+				  const char *fmt,
+				  ...);
+static WlzErrorNum		WlzObjFactsBackground(
+				  WlzObjFactsData *fData,
+				   WlzPixelV bgdV);
+static WlzErrorNum		WlzObjFactsIntervalDom(
+				  WlzObjFactsData *fData,
+				   WlzObject *obj,
+				   WlzDomain dom);
+static WlzErrorNum		WlzObjFactsValueTab(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzValues val);
+static WlzErrorNum		WlzObjFactsPropList(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzSimpleProperty *pList);
+static WlzErrorNum		WlzObjFactsPlaneDom(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzDomain dom);
+static WlzErrorNum		WlzObjFactsVoxelTab(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzValues val);
+static WlzErrorNum	        WlzObjFactsAffineTrans(
+				  WlzObjFactsData *fData,
+				   WlzAffineTransform *trans);
+static WlzErrorNum		WlzObjFactsPolygon2D(
+				  WlzObjFactsData *fData,
+				  WlzPolygonDomain *poly);
+static WlzErrorNum		WlzObjFactsBoundlist(
+				  WlzObjFactsData *fData,
+				  WlzBoundList *bList);
+static WlzErrorNum		WlzObjFactsHistogram(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzHistogramDomain *hist);
+static WlzErrorNum 		WlzObjFactsContour(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzContour *ctr);
+static WlzErrorNum 		WlzObjFactsGMModel(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzGMModel *model);
 		
 
 /************************************************************************
@@ -239,6 +270,9 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	case WLZ_BOUNDLIST:
 	  errNum = WlzObjFactsBoundlist(fData, obj->domain.b);
 	  break;
+	case WLZ_CONTOUR:
+	  errNum = WlzObjFactsContour(fData, obj, obj->domain.ctr);
+	  break;
 	case WLZ_HISTOGRAM:
 	  errNum = WlzObjFactsHistogram(fData, obj, obj->domain.hist);
 	  break;
@@ -249,10 +283,6 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	case WLZ_CONV_HULL:       /* FALLTHROUGH */
 	case WLZ_3D_POLYGON:      /* FALLTHROUGH */
 	case WLZ_RECTANGLE:       /* FALLTHROUGH */
-	case WLZ_VECTOR_INT:      /* FALLTHROUGH */
-	case WLZ_VECTOR_FLOAT:    /* FALLTHROUGH */
-	case WLZ_POINT_INT:       /* FALLTHROUGH */
-	case WLZ_POINT_FLOAT:     /* FALLTHROUGH */
 	case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
 	case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
 	case WLZ_WARP_TRANS:      /* FALLTHROUGH */
@@ -1035,7 +1065,7 @@ static WlzErrorNum WlzObjFactsBoundlist(WlzObjFactsData *fData,
 }
 
 /************************************************************************
-* Function:	WlzObjFactsBoundlist					*
+* Function:	WlzObjFactsHistogram					*
 * Returns:	WlzErrorNum:		Error number.			*
 * Purpose:	Produces a text description of a histogram domain.	*
 * Global refs:	-							*
@@ -1085,6 +1115,153 @@ static WlzErrorNum WlzObjFactsHistogram(WlzObjFactsData *fData,
     {
       errNum = WlzObjFactsAppend(fData, "Bin size: %g\n",
 				 hist->binSize);
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzObjFactsContour					*
+* Returns:	WlzErrorNum:		Error number.			*
+* Purpose:	Produces a text description of a contour domain.	*
+* Global refs:	-							*
+* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
+*		WlzObject *obj:		Object type, not used.
+*		WlzContour *ctr:	Given contour domain.		*
+************************************************************************/
+static WlzErrorNum WlzObjFactsContour(WlzObjFactsData *fData,
+				      WlzObject *obj,
+				      WlzContour *ctr)
+{
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", ctr->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsGMModel(fData, obj, ctr->model);
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzObjFactsGMModel					*
+* Returns:	WlzErrorNum:		Error number.			*
+* Purpose:	Produces a text description of a geometric model.	*
+* Global refs:	-							*
+* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
+*		WlzObject *obj:		Object type, not used.
+*		WlzGMModel *model:	Given geometric model.		*
+************************************************************************/
+static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
+				      WlzObject *obj,
+				      WlzGMModel *model)
+{
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  if(model == NULL)
+  {
+    (void )WlzObjFactsAppend(fData, "Model NULL.\n");
+  }
+  else
+  {
+    tStr = WlzStringFromGMModelType(model->type, &errNum);
+    if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+    {
+      (void )WlzObjFactsAppend(fData, "Model type invalid.\n");
+    }
+    else
+    {
+      errNum = WlzObjFactsAppend(fData, "Model type: %s.\n", tStr);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	errNum = WlzObjFactsAppend(fData,
+				   "Linkcount: %d.\n", model->linkcount);
+      }
+      if((errNum == WLZ_ERR_NONE) && fData->verbose)
+      {
+        errNum = WlzObjFactsAppend(fData,
+				   "nVertex: %d\n",
+				   model->res.vertex.numElm);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nVertexT: %d\n",
+				     model->res.vertexT.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nVertexG: %d\n",
+				     model->res.vertexG.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nDiskT: %d\n",
+				     model->res.diskT.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nEdge: %d\n",
+				     model->res.edge.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nEdgeT: %d\n",
+				     model->res.edgeT.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nLoop: %d\n",
+				     model->res.loop.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nLoopT: %d\n",
+				     model->res.loopT.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nShell: %d\n",
+				     model->res.shell.numElm);
+	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzObjFactsAppend(fData,
+	  			     "nShellG: %d\n",
+				     model->res.shellG.numElm);
+	}
+      }
     }
   }
   --(fData->indent);
