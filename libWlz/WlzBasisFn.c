@@ -449,7 +449,7 @@ WlzDVertex3 	WlzBasisFnValueMOS3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
     {
       WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
       rad = WLZ_VTX_3_LENGTH(dispVx);
-      phi = WlzBasisFnValueMOSPhiPC(rad, w, v, delta, rv, rw, norm);
+      phi = WlzBasisFnValueMOSPhiPC(rad, v, w, delta, rv, rw, norm);
       newVx.vtX += basisCo->vtX * phi;
       newVx.vtY += basisCo->vtY * phi;
       newVx.vtZ += basisCo->vtZ * phi;
@@ -506,8 +506,6 @@ double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
   count = basisFn->nVtx;
   cPts = basisFn->vertices.d3;
   basisCo = (double *)(basisFn->basis.v);
-  delta = *((double *)(basisFn->param) + 0);
-  tau = *((double *)(basisFn->param) + 1);
   if(basisFn->evalFn)
   {
     while(count-- > 0)
@@ -522,6 +520,8 @@ double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
   }
   else
   {
+    delta = *((double *)(basisFn->param) + 0);
+    tau = *((double *)(basisFn->param) + 1);
     tD0 = 2.0 * tau * delta;
     tD1 = sqrt(1 - (tD0 * tD0));
     tD0 = 2.0 * tau * tau;
@@ -534,7 +534,7 @@ double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
     {
       WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
       rad = WLZ_VTX_3_LENGTH(dispVx);
-      phi = WlzBasisFnValueMOSPhiPC(rad, w, v, delta, rv, rw, norm);
+      phi = WlzBasisFnValueMOSPhiPC(rad, v, w, delta, rv, rw, norm);
       value += *basisCo * phi;
       ++basisCo;
       ++cPts;
@@ -1940,9 +1940,7 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   WlzDVertex3	tV0,
   		tV1,
 		tV2;
-#ifndef WLZ_BASISFN_MOS_NOLUT
   WlzHistogramDomain *evalData = NULL;
-#endif
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	tol = 1.0e-06;
   
@@ -1953,12 +1951,10 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
-#ifndef WLZ_BASISFN_MOS_NOLUT
   if(errNum == WLZ_ERR_NONE)
   {
     evalData = WlzBasisFnScalarMOS3DEvalTb(nPts, cPts, delta, tau, &errNum);
   }
-#endif
   if(errNum == WLZ_ERR_NONE)
   {
     nSys = nPts + 1;
@@ -1991,10 +1987,8 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     basisFn->nPoly = 1;
     basisFn->nBasis = nPts;
     basisFn->nVtx = nPts;
-#ifndef WLZ_BASISFN_MOS_NOLUT
-    basisFn->evalFn = WlzBasisFnScalarMOS3DEvalFn;
+    basisFn->evalFn = WlzBasisFnScalarMOS3DEvalFn; /* Don't set to avoid LUT */
     basisFn->evalData = evalData;
-#endif
     WlzValueCopyDVertexToDVertex3(basisFn->vertices.d3, cPts, nPts);
     *(*(aMx + 0) + 0) = 0.0;
     for(idX = 0; idX < nPts; ++idX)
@@ -2003,11 +1997,9 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
       *(*(aMx + 0) + idX1) = 1.0;
     }
     *(bMx + 0) = 0.0;
-#ifndef WLZ_BASISFN_MOS_NOLUT
-    phi0 = WlzBasisFnValueMOSPhi(0.0, delta, tau);
-#else
-    phi0 = basisFn->evalFn((void *)basisFn, 0.0);
-#endif
+    phi0 = basisFn->evalFn?
+    	   basisFn->evalFn((void *)basisFn, 0.0):
+	   WlzBasisFnValueMOSPhi(0.0, delta, tau);
     for(idY = 0; idY < nPts; ++idY)
     {
       idY1 = idY + 1;
@@ -2020,11 +2012,9 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 	tV1 = *(cPts + idX);
 	WLZ_VTX_3_SUB(tV2, tV1, tV0);
 	rad = WLZ_VTX_3_LENGTH(tV2);
-#ifndef WLZ_BASISFN_MOS_NOLUT
-	tD0 = WlzBasisFnValueMOSPhi(rad, delta, tau);
-#else
-        tD0 = basisFn->evalFn((void *)basisFn, rad);
-#endif
+        tD0 = basisFn->evalFn? 
+	      basisFn->evalFn((void *)basisFn, rad):
+	      WlzBasisFnValueMOSPhi(rad, delta, tau);
 	*(*(aMx + idY1) + idX1) = *(*(aMx + idX1) + idY1) = tD0;
       }
       *(*(aMx + idY1) + idY1) = phi0 + *(alpha + idY);
@@ -2040,7 +2030,7 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
       fclose(fP);
     }
 #endif
-    /* Perform singular value decomposition of matrix A. */
+    /* Solve the design equation. */
 #ifdef WLZ_BASISFN_MOS_SOLVER_SVD
     errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
 #else
@@ -2099,14 +2089,6 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     (void )AlcDouble2Free(vMx);
   }
 #else
-#ifdef WLZ_BASISFNSCALARMOS3DFROMCPTS_DEBUG
-    {
-      FILE	*fP;
-      fP = fopen("DEBUG_xMxBS.num", "w");
-      AlcDouble1WriteAsci(fP, xMx, nSys);
-      fclose(fP);
-    }
-#endif
   if(errNum == WLZ_ERR_NONE)
   {
     *(double *)(basisFn->poly.v) = *xMx;	      /* Only constant used. */
@@ -2176,7 +2158,7 @@ static WlzHistogramDomain *WlzBasisFnScalarMOS3DEvalTb(int nPts,
   WlzDBox3	extentDB;
   WlzHistogramDomain *lut = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double lutStep = 1.0;
+  const double lutStep = 0.1;
 
   extentDB = WlzBoundingBoxVtx3D(nPts, cPts, NULL);
   tV0.vtX = extentDB.xMax - extentDB.xMin;
@@ -2200,7 +2182,7 @@ static WlzHistogramDomain *WlzBasisFnScalarMOS3DEvalTb(int nPts,
     for(idx = 0; idx < lutMax; ++idx)
     {
       *(lut->binValues.dbp + idx) = WlzBasisFnValueMOSPhiPC(idx * lutStep,
-      					w, v, delta, rv, rw, norm);
+      					v, w, delta, rv, rw, norm);
     }
   }
   return(lut);
@@ -2221,34 +2203,40 @@ static double	WlzBasisFnScalarMOS3DEvalFn(void *basisFn, double rad)
   double	delta,
   		tau,
 		radb,
-  		phi;
+  		phi,
+		binSizeR;
   WlzHistogramDomain *lut;
 
   lut = ((WlzBasisFn *)basisFn)->evalData;
+  binSizeR = 1.0 / lut->binSize;
   /* lut->origin == 0.0 */
   if(rad <= DBL_EPSILON)
   {
     phi = *(lut->binValues.dbp);
   }
-  else if(rad > ((lut->nBins - 1) * lut->binSize))
-  {
-    delta = *((double *)(((WlzBasisFn *)basisFn)->param) + 0);
-    tau = *((double *)(((WlzBasisFn *)basisFn)->param) + 1);
-    phi = WlzBasisFnValueMOSPhi(rad, delta, tau);
-  }
   else
   {
-    radb = rad / lut->binSize;
-    idx0 = (int )floor(radb);
-    idx1 = (int )ceil(radb);
-    if(idx0 == idx1)
+    radb = rad * binSizeR;
+    if(radb >= lut->nBins)
     {
-      phi = *(lut->binValues.dbp + idx0);
+      delta = *((double *)(((WlzBasisFn *)basisFn)->param) + 0);
+      tau = *((double *)(((WlzBasisFn *)basisFn)->param) + 1);
+      phi = WlzBasisFnValueMOSPhi(rad, delta, tau);
     }
     else
     {
-      phi = *(lut->binValues.dbp + idx0) * ((double )idx1 - radb) +
-	    *(lut->binValues.dbp + idx1) * (radb - (double )idx0);
+      idx0 = (int )floor(radb);
+      idx1 = (int )ceil(radb);
+      if(idx0 == idx1)
+      {
+	phi = *(lut->binValues.dbp + idx0);
+      }
+      else
+      {
+	/* Use linear interpolation. */
+	phi = (*(lut->binValues.dbp + idx0) * ((double )idx1 - radb) +
+	       *(lut->binValues.dbp + idx1) * (radb - (double )idx0));
+      }
     }
   }
   return(phi);
