@@ -41,7 +41,8 @@ MANPAGES		=
 # List of all directories to be searched before the standard include
 # and lib directories (modify as required).
 DEPENDDIRS		= . \
-			  ..
+			  .. \
+			  ../../libAlc
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -54,10 +55,15 @@ LIBDIRS			= \
 			  $(SYSLIB)
 
 # List of libraries to link (modify as required).
+ifeq 		($(UNIXTYPE), SUNOS5)
+EXTRA_LIBS		= gen \
+			  m
+else
+EXTRA_LIBS		= m
+endif
 LIBRARIES		= bibfile \
 			  Alc \
-			  gen
-
+			  $(EXTRA_LIBS)
 
 # Linker library flags (should not need modifying).
 LDLIBS			= $(LIBRARIES:%=-l%)
