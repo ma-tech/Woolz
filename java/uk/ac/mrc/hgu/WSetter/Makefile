@@ -32,7 +32,7 @@ $(TARGETPATH)/test.class:	$(SOURCEPATH)/test.java
 clean: clobber
 
 clobber:
-	-rm -rf classes/wsetter
+	-rm -rf classes/wsetter *.jar
 
 jarfile: $(OBJECTS)
-	$(JAR) cfm wsetter.jar ./classes/bean.tmp $(TARGETPATH)
+	cd ./classes; $(JAR) cfm ../wsetter.jar bean.tmp wsetter
