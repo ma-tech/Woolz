@@ -102,6 +102,104 @@ WlzErrorNum WlzFreeSimpleProperty(WlzSimpleProperty *prop)
   return errNum;
 }
 
+/*!
+* \return	New name property.
+* \ingroup	WlzProperty
+* \brief	Makes a name property from the given name string which
+*		is copied.
+* \param	name			Given name.
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
+WlzNameProperty	*WlzMakeNameProperty(char *name, WlzErrorNum *dstErr)
+{
+  WlzNameProperty *prop = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(((prop = (WlzNameProperty *)
+  	      AlcCalloc(1, sizeof(WlzNameProperty))) == NULL) ||
+     ((prop->name = AlcStrDup(name)) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+    AlcFree(prop);
+  }
+  else
+  {
+    prop->type = WLZ_PROPERTY_NAME;
+    if((prop->freeptr = AlcFreeStackPush(prop->freeptr, prop->name,
+    					 NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    prop = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(prop);
+}
+
+/*!
+* \return	New grey value property.
+* \ingroup	WlzProperty
+* \brief	Makes a grey value property from the given grey value which
+*		is copied.
+* \param	name			Optional name string, may be NULL.
+* \param	val			Given value.
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
+WlzGreyProperty *WlzMakeGreyProperty(char *name, WlzPixelV val,
+					WlzErrorNum *dstErr)
+{
+  WlzGreyProperty *prop = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((prop = (WlzGreyProperty *)
+  	     AlcCalloc(1, sizeof(WlzGreyProperty))) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    if(name)
+    {
+      if((prop->name = AlcStrDup(name)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+        if((prop->freeptr = AlcFreeStackPush(prop->freeptr, prop->name,
+					     NULL)) == NULL)
+        {
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    prop->type = WLZ_PROPERTY_GREY;
+    prop->value = val;
+  }
+  else if(prop)
+  {
+    AlcFree(prop->name);
+    AlcFree(prop);
+    prop = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(prop);
+}
+
 /* function:     WlzMakeEMAPProperty    */
 /*! 
 * \ingroup      WlzProperty
@@ -378,12 +476,13 @@ WlzErrorNum WlzFreeEMAPProperty(WlzEMAPProperty *prop)
 
 /* function:     WlzGetProperty    */
 /*! 
+* \return       The required property. If the core value is NULL the
+*		requested property is not in the list.
 * \ingroup      WlzProperty
 * \brief        Get a property of a given type from a property list. It
-is assumed that there is only one property of a given type in the list.
+*		is assumed that there is only one property of a given type
+*		in the list.
 *
-* \return       The required property. If the core value is NULL the
- requested property is not in the list.
 * \param    plist	Property list to search
 * \param    type	Property type required
 * \param    dstErr	error return values: WLZ_ERR_NONE,
