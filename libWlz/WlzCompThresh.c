@@ -106,7 +106,7 @@ WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
       case WLZ_COMPTHRESH_DEPTH: /* FALLTHROUGH */
       case WLZ_COMPTHRESH_GRADIENT:
 	hMaxI = WlzHistogramBinMax(hDom);
-	if(hMaxI <= (((hDom->nBins * hDom->binSize) + hDom->origin) / 2))
+	if(hMaxI > (((hDom->nBins * hDom->binSize) + hDom->origin) / 2))
 	{
 	  /* These algorithms only work if the background peak is low. */
 	  errNum = WLZ_ERR_UNIMPLEMENTED;
