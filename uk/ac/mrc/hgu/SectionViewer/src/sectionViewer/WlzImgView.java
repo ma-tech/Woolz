@@ -489,12 +489,16 @@ public class WlzImgView extends Component {
    /**  True if <em>mouse-click anatomy</em> is to be drawn. */
    private boolean _overlay;
 
+   /**  The colour of the mouse-click anatomy overlay */
+   private Color _mcCol;
+
    /**
     *   True if <em>grey-level</em> image
     *   is to be drawn with inverted grey values.
     */
    private boolean _inverted = false;
 
+//...................................
    /**  Required by Tie Point application. */
    private boolean _showInterSecLines = false;
 
@@ -537,6 +541,7 @@ public class WlzImgView extends Component {
       _fixedPointVec = new Vector();
       _axisPointVec = new Vector();
 
+      _mcCol = new Color(255,0,255,125); // default is magenta semi-transparent
    }
 
    //-------------------------------------------------------------
@@ -727,10 +732,10 @@ public class WlzImgView extends Component {
 	       } else {
 		  // colour the overlay part
 		  _oimageData[(idY * _obRec.width) + idX] =
-		     //0 | (255 << 8) | (0 << 16) | (125 << 24); // green
-		     //0 | (255 << 8) | (255 << 16) | (125 << 24); // yellow
-		     //255 | (255 << 8) | (0 << 16) | (125 << 24); // cyan
-		     255 | (0 << 8) | (255 << 16) | (125 << 24); // magenta
+		     (_mcCol.getAlpha() << 24) |
+		     (_mcCol.getRed() << 16) |
+		     (_mcCol.getGreen() << 8) |
+		     (_mcCol.getBlue());
 	       }
 	    } // for
 	 } // for
@@ -1551,7 +1556,7 @@ public class WlzImgView extends Component {
     *   i.e. newGreyVal = 255 - greyVal.
     *   @param state true if inversion is to occur.
     */
-   protected void setInverted(boolean state) {
+   public void setInverted(boolean state) {
       _inverted = state;
    }
 
@@ -1560,7 +1565,7 @@ public class WlzImgView extends Component {
     *   Copies an array of Java Line2D.Double objects to a local Vector.
     *   @param lines the array of Line2D.Double objects.
     */
-   protected void setIntersectionVec(Line2D.Double[] lines) {
+   public void setIntersectionVec(Line2D.Double[] lines) {
 
       if(_intersectionVec == null) {
 	 _intersectionVec = new Vector();
@@ -1582,7 +1587,7 @@ public class WlzImgView extends Component {
     *   Copies an array of Java Color objects to a local Vector.
     *   @param lines the array of Color objects.
     */
-   protected void setInterColVec(Color[] cols) {
+   public void setInterColVec(Color[] cols) {
 
       if((cols == null) || (cols.length == 0)) return;
 
@@ -1670,7 +1675,7 @@ public class WlzImgView extends Component {
     *   Currently the fixed point is indicated by a circle.
     *   @param fpa the x,y coordinates of the fixed point.
     */
-   protected void setFixedPointVec(double[] fpa) {
+   public void setFixedPointVec(double[] fpa) {
 
       if(_debug) System.out.println("setFixedPointVec");
       Line2D.Double line = null;
@@ -1706,7 +1711,7 @@ public class WlzImgView extends Component {
     *   to a local Vector.
     *   @param apa the x,y coordinates of the 2nd fixed point.
     */
-   protected void setAxisPointArr(double[] apa) {
+   public void setAxisPointArr(double[] apa) {
 
       if(apa == null) return;
 
@@ -1731,7 +1736,7 @@ public class WlzImgView extends Component {
     *   Currently the 2nd fixed point is not displayed.
     *   @param fpa the x,y coordinates of the 2nd fixed point.
     */
-   protected void setAxisPointVec(double[] apa) {
+   public void setAxisPointVec(double[] apa) {
 
       if(_debug) System.out.println("setAxisPointVec");
       Line2D.Double line = null;
@@ -1797,7 +1802,7 @@ public class WlzImgView extends Component {
     *   and the origin of the coordinate space for <em>intersection lines</em>.
     *   Should be 0,0.
     */
-   protected void setIntersectionOffsets() {
+   public void setIntersectionOffsets() {
       _ixofs = 0;
       _iyofs = 0;
    }
@@ -1824,7 +1829,7 @@ public class WlzImgView extends Component {
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
-   protected double[] getFixedPointOffsets() {
+   public double[] getFixedPointOffsets() {
       double ret[] = new double[2];
 
       ret[0] = _xofsFP;
@@ -1855,7 +1860,7 @@ public class WlzImgView extends Component {
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
-   protected void setOverlayOffsets() {
+   public void setOverlayOffsets() {
       _oxofs = Math.abs(_oorg.vtX - _org.vtX);
       _oyofs = Math.abs(_oorg.vtY - _org.vtY);
    }
@@ -1867,7 +1872,7 @@ public class WlzImgView extends Component {
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
-   protected void setThresholdOffsets() {
+   public void setThresholdOffsets() {
       _txofs = Math.abs(_torg.vtX - _org.vtX);
       _tyofs = Math.abs(_torg.vtY - _org.vtY);
    }
@@ -1879,7 +1884,7 @@ public class WlzImgView extends Component {
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
-   protected void setAnatomyOffsets() {
+   public void setAnatomyOffsets() {
 
       for(int i=0; i<_num; i++) {
 	 if(_aorg[i] != null) {
@@ -2070,6 +2075,15 @@ public class WlzImgView extends Component {
     */
    public WritableRaster getRaster() {
       return _ras;
+   }
+
+   //-------------------------------------------------------------
+   /**
+    *   Set the colour of mouse-click anatomy
+    *   @param col, the colour of the overlay.
+    */
+   public void setMCCol(Color col) {
+      _mcCol = col;
    }
 
    //-------------------------------------------------------------
