@@ -1,20 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzCentreOfMass.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the centre of mass of Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 29-08-00 bill	Add/rearange code to include contours, geometric
-*		models and transform objects.
-************************************************************************/
+/*!
+* \file         WlzCentreOfMass.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Computes the centre of mass of Woolz objects.
+* \ingroup	WlzFeatures
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
@@ -54,23 +57,20 @@ static WlzDVertex3 		WlzCentreOfMassTrans3D(
 				  double *dstMass,
 				  WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzCentreOfMass2D
-* Returns:	WlzDvertex2:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a Woolz object.
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a Woolz object.
 *		If the given object does not have grey values or the
-*		binary object flag is set (ie non zero) then every
-*		pixel or vertex within the object's domain has the same
-*		mass.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		int binObjFlag:		Binary object flag.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+*		binary object flag is set (ie non zero) then every pixel or
+*		vertex within the object's domain has the same mass.
+* \param	srcObj			Given object.
+* \param	binObjFlag		Binary object flag.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL if not required.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 WlzDVertex2	WlzCentreOfMass2D(WlzObject *srcObj, int binObjFlag,
 				  double *dstMass, WlzErrorNum *dstErr)
 {
@@ -125,23 +125,20 @@ WlzDVertex2	WlzCentreOfMass2D(WlzObject *srcObj, int binObjFlag,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMass3D
-* Returns:	WlzDvertex3:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a Woolz object.
-*		If the given object does not have grey values or the
-*		binary object flag is set (ie non zero) then every
-*		pixel or vertex within the objects domain has the same
-*		mass.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		int binObjFlag:		Binary object flag.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a Woolz object.
+*		If the given object does not have grey values or the binary
+*		object flag is set (ie non zero) then every pixel or vertex
+*		within the objects domain has the same mass.
+* \param	srcObj			Given object.
+* \param	binObjFlag		Binary object flag.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL if not required.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 WlzDVertex3	WlzCentreOfMass3D(WlzObject *srcObj, int binObjFlag,
 				  double *dstMass, WlzErrorNum *dstErr)
 {
@@ -203,29 +200,31 @@ WlzDVertex3	WlzCentreOfMass3D(WlzObject *srcObj, int binObjFlag,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassDom2D
-* Returns:	WlzDvertex2:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a WLZ_2D_DOMAIN_OBJ.
-*		If the object has values and the binary object flag is
-*		not set then the centre of mass is calculated using
-*		the grey level information.
-*		Cx = SUMxSUMy{x*G(x,y)} / SUMxSUMy{G(x,y)}
-*		Cy = SUMxSUMy{y*G(x,y)} / SUMxSUMy{G(x,y)}
-*		Where (Cx,Cy) are the coordinates of the centre of
-*		mass.
-*		If the given object does not have grey values or the
-*		binary object flag is set (ie non zero) then every
-*		pixel within the objects domain has the same mass.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		int binObjFlag:		Binary object flag.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a WLZ_2D_DOMAIN_OBJ.
+*               If the object has values and the binary object flag is
+*               not set then the centre of mass is calculated using
+*               the grey level information.
+*		\f[
+                C_x = \frac{\sum_x{\sum_y{x G(x,y)}}}
+		           {\sum_x{\sum_y{G(x,y)}}} ,
+                C_y = \frac{\sum_x{\sum_y{y G(x,y)}}}
+		           {\sum_x{\sum_y{G(x,y)}}}
+		\f]
+*               Where \f$(C_x,C_y)\f$ are the coordinates of the centre of
+*               mass.
+*               If the given object does not have grey values or the
+*               binary object flag is set (ie non zero) then every
+*               pixel within the objects domain has the same mass.
+* \param	srcObj			Given object.
+* \param	binObjFlag		Binary object flag.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
 				        double *dstMass,
 					WlzErrorNum *dstErr)
@@ -390,30 +389,33 @@ static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassDom3D
-* Returns:	WlzDvertex3:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a WLZ_3D_DOMAIN_OBJ.
-*		If the object has values and the binary object flag is
-*		not set then the centre of mass is calculated using
-*		the grey level information.
-*		Cx = SUMxSUMySUMz{y*G(x,y,z)} / SUMxSUMySUMz{G(x,y,z)}
-*		Cy = SUMxSUMySUMz{x*G(y,y,z)} / SUMxSUMySUMz{G(x,y,z)}
-*		Cz = SUMxSUMySUMz{z*G(x,y,z)} / SUMxSUMySUMz{G(x,y,z)}
-*		Where (Cx,Cy,Cz) are the coordinates of the centre of
-*		mass.
-*		If the given object does not have grey values or the
-*		binary object flag is set (ie non zero) then every
-*		pixel within the objects domain has the same mass.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		int binObjFlag:		Binary object flag.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a WLZ_3D_DOMAIN_OBJ.
+*		If the object has values and the binary object flag is not set
+*		then the centre of mass is calculated using the grey level
+*		information.
+*		\f[
+                C_x = \frac{\sum_x{\sum_y{\sum_z{x G(x,y,z)}}}}
+		           {\sum_x{\sum_y{\sum_z{G(x,y,z)}}}} ,
+                C_y = \frac{\sum_x{\sum_y{\sum_z{y G(x,y,z)}}}}
+		           {\sum_x{\sum_y{\sum_z{G(x,y,z)}}}}
+                C_z = \frac{\sum_x{\sum_y{\sum_z{z G(x,y,z)}}}},
+		           {\sum_x{\sum_y{\sum_z{G(x,y,z)}}}}
+		\f]
+*               Where \f$(C_x,C_y,C_z)\f$ are the coordinates of the centre of
+*               mass.
+*               If the given object does not have grey values or the
+*               binary object flag is set (ie non zero) then every
+*               pixel within the objects domain has the same mass.
+* \param	srcObj			Given object.
+* \param	binObjFlag		Binary object flag.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 static WlzDVertex3 WlzCentreOfMassDom3D(WlzObject *srcObj, int binObjFlag,
 				        double *dstMass, WlzErrorNum *dstErr)
 {
@@ -509,18 +511,16 @@ static WlzDVertex3 WlzCentreOfMassDom3D(WlzObject *srcObj, int binObjFlag,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassCtr2D
-* Returns:	WlzDvertex2:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a contour.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a contour.
+* \param	srcObj			Given object.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 static WlzDVertex2 WlzCentreOfMassCtr2D(WlzObject *srcObj, double *dstMass,
 				        WlzErrorNum *dstErr)
 {
@@ -570,18 +570,16 @@ static WlzDVertex2 WlzCentreOfMassCtr2D(WlzObject *srcObj, double *dstMass,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassCtr3D
-* Returns:	WlzDvertex3:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a contour.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a contour.
+* \param	srcObj			Given object.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 static WlzDVertex3 WlzCentreOfMassCtr3D(WlzObject *srcObj, double *dstMass,
 				        WlzErrorNum *dstErr)
 {
@@ -628,18 +626,16 @@ static WlzDVertex3 WlzCentreOfMassCtr3D(WlzObject *srcObj, double *dstMass,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassGM
-* Returns:	WlzDvertex3:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a geometric model.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a geometric model.
+* \param	model			Given geometric model.
+* \param	dstMass			Destination pointer for mass, may be
+* 					NULL.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 static WlzDVertex3 WlzCentreOfMassGM(WlzGMModel *model, double *dstMass,
 				     WlzErrorNum *dstErr)
 {
@@ -683,20 +679,17 @@ static WlzDVertex3 WlzCentreOfMassGM(WlzGMModel *model, double *dstMass,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassTrans2D
-* Returns:	WlzDvertex2:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a transformed object.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		WlzAffineTransform *trans: Given transform.
-*		int binObjFlag:		Binary object flag.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \brief	Calculates the centre of mass of a transformed object.
+* \param	srcObj			Given object.
+* \param	trans			Given transform.
+* \param	binObjFlag		Binary object flag.
+* \param	dstMass			Destination pointer for mass,
+*					may be NULL.
+* \param	dstErr			Destination pointer for error,
+*					may be NULL.
+*/
 static WlzDVertex2 WlzCentreOfMassTrans2D(WlzObject *srcObj,
 				     WlzAffineTransform *trans,
 				     int binObjFlag,
@@ -723,20 +716,18 @@ static WlzDVertex2 WlzCentreOfMassTrans2D(WlzObject *srcObj,
   return(cMass);
 }
 
-/************************************************************************
-* Function:	WlzCentreOfMassTrans3D
-* Returns:	WlzDvertex3:		Coordinates of center of mass.
-* Purpose:	Calculates the centre of mass of a transformed object.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		WlzAffineTransform *trans: Given transform.
-*		int binObjFlag:		Binary object flag.
-*		double *dstMass:	Destination pointer for mass,
-*					may be NULL if not required.
-*		WlzErrorNum *dstErr:	Destination pointer for error
-*					number, may be NULL if not
-*					required.
-************************************************************************/
+/*!
+* \return	Coordinates of center of mass.
+* \ingroup	WlzFeatures
+* \brief	Calculates the centre of mass of a transformed object.
+* \param	srcObj			Given object.
+* \param	trans			Given transform.
+* \param	binObjFlag		Binary object flag.
+* \param	dstMass			Destination pointer for mass,
+*					may be NULL.
+* \param	dstErr			Destination pointer for error,
+*					may be NULL.
+*/
 static WlzDVertex3 WlzCentreOfMassTrans3D(WlzObject *srcObj,
 				     WlzAffineTransform *trans,
 				     int binObjFlag,
@@ -750,9 +741,7 @@ static WlzDVertex3 WlzCentreOfMassTrans3D(WlzObject *srcObj,
   cMass = WlzCentreOfMass3D(srcObj, binObjFlag, &mass, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    /* TODO Implement 3D Affine transforms!
-     * cMass = WlzAffineTransformVertex3D(trans, cMass, &errNum);
-     */
+    cMass = WlzAffineTransformVertexD3(trans, cMass, &errNum);
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
   if((errNum == WLZ_ERR_NONE) && dstMass)

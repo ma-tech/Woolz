@@ -1,36 +1,34 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzBackground.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to get and set the background value of
-*		Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzBackground.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions to get and set the background value of Woolz objects.
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzSetBackground					*
-*   Date       : Sun Oct 20 22:11:08 1996				*
-*************************************************************************
-*   Synopsis   : Set the backgound value of an image object		*
-*   Returns    : WlzErrorNum:	error return with possible values:	*
-*			WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL, WLZ_ERR_OBJECT_TYPE	*
-*			WLZ_ERR_GREY_TYPE, WLZ_ERR_PLANEDOMAIN_TYPE,	*
-*			WLZ_ERR_VOXELVALUES_TYPE, WLZ_ERR_NONE		*
-*   Parameters : WlzObject	*obj: object to reset the background	*
-*		 WlzPixelV	bgd: required background value		*
-*   Global refs: None							*
-************************************************************************/
-
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	Sets the backgound value of an image object.
+* \param	obj			Given object in which to set the
+*					background value.
+* \param	bgd			Required background value.
+*/
 WlzErrorNum WlzSetBackground(WlzObject	*obj,
 			     WlzPixelV	bgd)
 {
@@ -140,22 +138,14 @@ WlzErrorNum WlzSetBackground(WlzObject	*obj,
   return( errNum );
 }
 
-/************************************************************************
-*   Function   : WlzGetBackground					*
-*   Date       : Fri Nov  8 15:01:06 1996				*
-*************************************************************************
-*   Synopsis   : Return the background value of the given object	*
-*   Returns    : WlzPixelV: the background value, if the returned pixel-*
-*		value type is WLZ_GREY_ERROR then an error has occurred *
-*		and can be obtained using WlzGet Error or by setting an *
-*		error handler. Possible errors are:			*
-*		WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL, WLZ_ERR_VALUES_TYPE,	*
-*		WLZ_ERR_PLANEDOMAIN_TYPE, WLZ_ERR_VOXELVALUES_TYPE,	*
-*		WLZ_ERR_OBJECT_TYPE.					*
-*   Parameters : WlzObject	*obj: the given object			*
-*   Global refs: None							*
-************************************************************************/
-
+/*!
+* \return	The background value. If the returned pixel value type is
+* 		WLZ_GREY_ERROR then an error has occurred.
+* \ingroup	WlzValuesUtils
+* \brief	Gets the background value of the given object.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzPixelV WlzGetBackground(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)

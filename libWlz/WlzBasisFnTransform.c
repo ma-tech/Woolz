@@ -1,20 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzBasisFnTransform.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz functions for computing and applying basis
-*		function transforms.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables.
-************************************************************************/
+/*!
+* \file         WlzBasisFnTransform.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Woolz functions for computing and applying basis function
+* 		transforms.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -55,14 +59,12 @@ static WlzDVertex2 WlzBasisFnDisplacementConf(WlzBasisFnTransform *basis,
 					     WlzDVertex2 srcVx);
 				   
 
-/************************************************************************
-* Function:	WlzBasisFnFreeTransform					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Free's the given basis function transform.		*
-* Global refs:	-							*
-* Parameters:	WlzBasisFnTransform *basis: Given basis function	*
-*					transform.			*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzTransform
+* \brief	Free's the given basis function transform.
+* \param	basis			Given basis function transform.
+*/
 WlzErrorNum	WlzBasisFnFreeTransform(WlzBasisFnTransform *basis)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -86,26 +88,22 @@ WlzErrorNum	WlzBasisFnFreeTransform(WlzBasisFnTransform *basis)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnTrFromCPts					*
-* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
-* Purpose:	Creates a new basis function transform of the given	*
-*		type, which will transform an object with the given	*
-*		source verticies into an object with the given 		*
-*		destination verticies.					*
-* Global refs:	-							*
-* Parameters:	WlzBasisFnType type:	Required basis function type.	*
-*		int order:		Order of polynomial, only 	*
-*					used for WLZ_BASISFN_POLY.	*
-*		int nDPts:		Number of destination control	*
-*					points.				*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		int nSPts:		Number of source control points	*
-*					(must be same as nDPts).	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new basis function transform of the given
+*		type, which will transform an object with the given source
+*		verticies into an object with the given destination verticies.
+* \param	type			Required basis function type.
+* \param	order			Order of polynomial, only used for
+* 					WLZ_BASISFN_POLY.
+* \param	nDPts			Number of destination control points.
+* \param	dPts			Destination control points.
+* \param	nSPts			Number of source control points
+*					(must be same as nDPts).
+* \param	sPts			Source control points.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzBasisFnTransform *WlzBasisFnTrFromCPts(WlzBasisFnType type,
 					  int order,
 					  int nDPts,
@@ -156,16 +154,14 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts(WlzBasisFnType type,
   return(basis);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnSetMesh					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Sets the displacements of the given mesh transform	*
-*		according to the basis function transform.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-*		WlzBasisFnTransform *basis: Given basis function	*
-*					transform.			*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzTransform
+* \brief	Sets the displacements of the given mesh transform according
+* 		to the basis function transform.
+* \param	mesh			Given mesh transform.
+* \param	basis			 Given basis functiontransform.
+*/
 WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
 				  WlzBasisFnTransform *basis)
 {
@@ -236,26 +232,20 @@ WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnTransformObj					*
-* Returns:	WlzObject *:		Transformed object, NULL on	*
-*					error.				*
-* Purpose:	Transforms a woolz object using a the given basis	*
-*		function transform.					*
-*		This function has been written as an example of how	*
-*		to transform an object using a basis function and mesh.	*
-*		In most cases WlzMeshFromObj(), WlzBasisFnSetMesh()	*
-*		and WlzMeshTransformObj() would be called allowing a	*
-*		mesh to be reused.					*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Object to be transformed.	*
-*		WlzBasisFnTransform *mesh: Basis function transform	*
-*					to apply.			*
-*		WlzInterpolationType interp: Level of interpolation to	*
-*					use.				*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Transformed object, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms a woolz object using a the given basis function
+*		transform. This function has been written as an example of how
+*		to transform an object using a basis function and mesh. In most
+*		cases WlzMeshFromObj(), WlzBasisFnSetMesh() and
+*		WlzMeshTransformObj() would be called allowing a mesh to be
+*		reused.
+* \param	srcObj			Object to be transformed.
+* \param	basis			Basis function transform to apply.
+* \param	interp			Level of interpolation to use.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzBasisFnTransformObj(WlzObject *srcObj,
 					WlzBasisFnTransform *basis,
 					WlzInterpolationType interp,
@@ -294,17 +284,15 @@ WlzObject	*WlzBasisFnTransformObj(WlzObject *srcObj,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnTransformVertexD                              *
-* Returns:      WlzDVertex2:             Transformed vertex.             *
-* Purpose:      Transforms the given WlzDVertex2.                        *
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform to	*
-*					apply.				*
-*               WlzDVertex2 srcVx:	Vertex to be transformed.       *
-*               WlzErrorNum *dstErr:    Destination pointer for error   *
-*                                       number, may be NULL.            *
-************************************************************************/
+/*!
+* \return	Transformed vertex.
+* \ingroup	WlzTransform
+* \brief	Transforms the given WlzDVertex2.
+* \param	basis			Basis function transform to apply.
+* \param	srcVx			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 WlzDVertex2	WlzBasisFnTransformVertexD(WlzBasisFnTransform *basis,
 					   WlzDVertex2 srcVx,
 					   WlzErrorNum *dstErr)
@@ -361,17 +349,15 @@ WlzDVertex2	WlzBasisFnTransformVertexD(WlzBasisFnTransform *basis,
   return(dstVx);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnTransformVertexF                              *
-* Returns:      WlzFVertex2:             Transformed vertex.             *
-* Purpose:      Transforms the given WlzFVertex2.                        *
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform to	*
-*					apply.				*
-*               WlzFVertex2 srcVxF:	Vertex to be transformed.       *
-*               WlzErrorNum *dstErr:    Destination pointer for error   *
-*                                       number, may be NULL.            *
-************************************************************************/
+/*!
+* \return	Transformed vertex.
+* \ingroup	WlzTransform
+* \brief	Transforms the given WlzFVertex2.
+* \param	basis			Basis function transform to apply.
+* \param	srcVxF			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 WlzFVertex2	WlzBasisFnTransformVertexF(WlzBasisFnTransform *basis,
 					   WlzFVertex2 srcVxF,
 					   WlzErrorNum *dstErr)
@@ -388,17 +374,15 @@ WlzFVertex2	WlzBasisFnTransformVertexF(WlzBasisFnTransform *basis,
   return(dstVxF);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnTransformVertexI                              *
-* Returns:      WlzIVertex2:             Transformed vertex.             *
-* Purpose:      Transforms the given WlzIVertex2.                        *
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform to	*
-*					apply.				*
-*               WlzIVertex2 srcVxI:	Vertex to be transformed.       *
-*               WlzErrorNum *dstErr:    Destination pointer for error   *
-*                                       number, may be NULL.            *
-************************************************************************/
+/*!
+* \return	Transformed vertex.
+* \ingroup	WlzTransform
+* \brief	Transforms the given WlzIVertex2.
+* \param	basis			Basis function transform to apply.
+* \param	srcVxI			Vertex to be transformed.
+* \param	dstErr			Destination pointer for error, may be
+*					NULL.
+*/
 WlzIVertex2	WlzBasisFnTransformVertexI(WlzBasisFnTransform *basis,
 					   WlzIVertex2 srcVxI,
 					   WlzErrorNum *dstErr)
@@ -415,15 +399,14 @@ WlzIVertex2	WlzBasisFnTransformVertexI(WlzBasisFnTransform *basis,
   return(dstVxI);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnDisplacementPoly                              *
-* Returns:      WlzDVertex2:             Displacement vertex.            *
-* Purpose:      Calculates the displacement for the given vertex using	*
-*		a polynomial basis function.				*
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform.	*
-*               WlzDVertex2 srcVx:	Source vertex.			*
-************************************************************************/
+/*!
+* \return	Displacement vertex.
+* \ingroup	WlzTransform
+* \brief	Calculates the displacement for the given vertex using
+*		a polynomial basis function.
+* \param	basis			Basis function transform.
+* \param	srcVx			Source vertex.
+*/
 static WlzDVertex2 WlzBasisFnDisplacementPoly(WlzBasisFnTransform *basis,
 					     WlzDVertex2 srcVx)
 {
@@ -454,15 +437,14 @@ static WlzDVertex2 WlzBasisFnDisplacementPoly(WlzBasisFnTransform *basis,
   return(dspVx);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnDisplacementGauss				*
-* Returns:      WlzDVertex2:             Displacement vertex.            *
-* Purpose:      Calculates the displacement for the given vertex using	*
-*		a Gaussian basis function.				*
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform.	*
-*               WlzDVertex2 srcVx:	Source vertex.			*
-************************************************************************/
+/*!
+* \return	Displacement vertex.
+* \ingroup	WlzTransform
+* \brief	Calculates the displacement for the given vertex using
+*		a Gaussian basis function.
+* \param	basis			Basis function transform.
+* \param	srcVx			Source vertex.
+*/
 static WlzDVertex2 WlzBasisFnDisplacementGauss(WlzBasisFnTransform *basis,
 					      WlzDVertex2 srcVx)
 {
@@ -496,15 +478,14 @@ static WlzDVertex2 WlzBasisFnDisplacementGauss(WlzBasisFnTransform *basis,
   return(dspVx);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnDisplacementMQ				*
-* Returns:      WlzDVertex2:             Displacement vertex.            *
-* Purpose:      Calculates the displacement for the given vertex using	*
-*		a multiquadric basis function.				*
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform.	*
-*               WlzDVertex2 srcVx:	Source vertex.			*
-************************************************************************/
+/*!
+* \return	Displacement vertex.
+* \ingroup	WlzTransform
+* \brief	Calculates the displacement for the given vertex using
+*		a multiquadric basis function.
+* \param	basis			Basis function transform.
+* \param	srcVx			Source vertex.
+*/
 static WlzDVertex2 WlzBasisFnDisplacementMQ(WlzBasisFnTransform *basis,
 					   WlzDVertex2 srcVx)
 {
@@ -541,15 +522,14 @@ static WlzDVertex2 WlzBasisFnDisplacementMQ(WlzBasisFnTransform *basis,
   return(dspVx);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnDisplacementTPS                               *
-* Returns:      WlzDVertex2:             Displacement vertex.            *
-* Purpose:      Calculates the displacement for the given vertex using	*
-*		a thin plate spline basis function.			*
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform.	*
-*               WlzDVertex2 srcVx:	Source vertex.			*
-************************************************************************/
+/*!
+* \return	Displacement vertex.
+* \ingroup	WlzTransform
+* \brief	Calculates the displacement for the given vertex using
+*		a thin plate spline basis function.
+* \param	basis			Basis function transform.
+* \param	srcVx			Source vertex.
+*/
 static WlzDVertex2 WlzBasisFnDisplacementTPS(WlzBasisFnTransform *basis,
 					    WlzDVertex2 srcVx)
 {
@@ -586,15 +566,14 @@ static WlzDVertex2 WlzBasisFnDisplacementTPS(WlzBasisFnTransform *basis,
   return(dspVx);
 }
 
-/************************************************************************
-* Function:     WlzBasisFnDisplacementConf                              *
-* Returns:      WlzDVertex2:             Displacement vertex.           *
-* Purpose:      Calculates the displacement for the given vertex using	*
-*		a conformal polynomial basis function.			*
-* Global refs:  -                                                       *
-* Parameters:   WlzBasisFnTransform *basis: Basis function transform.	*
-*               WlzDVertex2 srcVx:	Source vertex.			*
-************************************************************************/
+/*!
+* \return	Displacement vertex.
+* \ingroup	WlzTransform
+* \brief	Calculates the displacement for the given vertex using
+*		a conformal polynomial basis function.
+* \param	basis			Basis function transform.
+* \param	srcVx			Source vertex.
+*/
 static WlzDVertex2 WlzBasisFnDisplacementConf(WlzBasisFnTransform *basis,
 					     WlzDVertex2 srcVx)
 {
@@ -624,18 +603,14 @@ static WlzDVertex2 WlzBasisFnDisplacementConf(WlzBasisFnTransform *basis,
   return(dspVx);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnDispRedPoly					*
-* Returns:	WlzDVertex2:		Displacement due to poly.	*
-* Purpose:	Computes the displacement due to the reduced polynomial	*
-*		used by the TPS, MQ and Gauss basis functions.		*
-* Global refs:	-							*
-* Parameters:	int nPts:		Number of control point pairs.	*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Displacement due to reduced polynomial.
+* \ingroup	WlzTransform
+* \brief	Computes the displacement due to the reduced polynomial
+* 		used by the TPS, MQ and Gauss basis functions.
+* \param	poly			Given polynomial coefficients.
+* \param	srcVx			Source vertex.
+*/
 static WlzDVertex2 WlzBasisFnDispRedPoly(WlzDVertex2 *poly, WlzDVertex2 srcVx)
 {
   WlzDVertex2	dspVx;
@@ -651,22 +626,19 @@ static WlzDVertex2 WlzBasisFnDispRedPoly(WlzDVertex2 *poly, WlzDVertex2 srcVx)
   return(dspVx);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnGaussFromCPts					*
-* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
-* Purpose:	Creates a new Gaussian basis function transform,	*
-*		which will transform an object with the given		*
-*		source verticies into an object with the given 		*
-*		destination verticies.					*
-* Global refs:	-							*
-* Parameters:	int nPts:		Number of control point pairs.	*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		double delta:		Normalized delta value in range	*
-*					[> 0.0 , < 1.0 ].		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new Gaussian basis function transform,
+*		which will transform an object with the given source
+*		verticies into an object with the given destination verticies.
+* \param	nPts			Number of control point pairs.
+* \param	dPts			Destination control points.
+* \param	sPts			Source control points.
+* \param	delta			Normalized delta value in range 
+*					[> 0.0 , < 1.0 ].
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzBasisFnTransform *WlzBasisFnGaussFromCPts(int nPts,
 						    WlzDVertex2 *dPts,
 						    WlzDVertex2 *sPts,
@@ -858,21 +830,18 @@ static WlzBasisFnTransform *WlzBasisFnGaussFromCPts(int nPts,
   return(basis);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnPolyFromCPts					*
-* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
-* Purpose:	Creates a new polynomial basis function transform,	*
-*		which will transform an object with the given		*
-*		source verticies into an object with the given 		*
-*		destination verticies.					*
-* Global refs:	-							*
-* Parameters:	int nPts:		Number of control point pairs.	*
-*		int order:		Order of polynomial.		*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new polynomial basis function transform,
+*		which will transform an object with the given source verticies
+*		into an object with the givendestination verticies.
+* \param	nPts			Number of control point pairs.
+* \param	order			Order of polynomial.
+* \param	dPts			Destination control points.
+* \param	sPts			Source control points.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzBasisFnTransform *WlzBasisFnPolyFromCPts(int nPts, int order,
 						   WlzDVertex2 *dPts,
 						   WlzDVertex2 *sPts,
@@ -1035,21 +1004,18 @@ static WlzBasisFnTransform *WlzBasisFnPolyFromCPts(int nPts, int order,
   return(basis);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnConfFromCPts					*
-* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
-* Purpose:	Creates a new conformal basis function transform,	*
-*		which will transform an object with the given		*
-*		source verticies into an object with the given 		*
-*		destination verticies.					*
-* Global refs:	-							*
-* Parameters:	int nPts:		Number of control point pairs.	*
-*		int order:		Order of conformal poly.	*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new conformal basis function transform, which
+*		will transform an object with the given source verticies into
+*		an object with the given destination verticies.
+* \param	nPts			Number of control point pairs.
+* \param	order			Order of conformal poly.
+* \param	dPts			Destination control points.
+* \param	sPts			Source control points.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzBasisFnTransform *WlzBasisFnConfFromCPts(int nPts, int order,
 						   WlzDVertex2 *dPts,
 						   WlzDVertex2 *sPts,
@@ -1199,22 +1165,19 @@ static WlzBasisFnTransform *WlzBasisFnConfFromCPts(int nPts, int order,
   return(basis);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnMQFromCPts					*
-* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
-* Purpose:	Creates a new multiquadric basis function transform,	*
-*		which will transform an object with the given		*
-*		source verticies into an object with the given 		*
-*		destination verticies.					*
-* Global refs:	-							*
-* Parameters:	int nPts:		Number of control point pairs.	*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		double delta:		Normalized delta value in range	*
-*					[> 0.0 , < 1.0 ].		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new multiquadric basis function transform, which will
+*		transform an object with the given source verticies into an
+*		object with the given destination verticies.
+* \param	nPts			Number of control point pairs.
+* \param	dPts			Destination control points.
+* \param	sPts			Source control points.
+* \param	delta			Normalized delta value in range
+*					[> 0.0 , < 1.0 ].
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzBasisFnTransform *WlzBasisFnMQFromCPts(int nPts,
 						 WlzDVertex2 *dPts,
 						 WlzDVertex2 *sPts,
@@ -1407,20 +1370,17 @@ static WlzBasisFnTransform *WlzBasisFnMQFromCPts(int nPts,
   return(basis);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnTPSFromCPts					*
-* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
-* Purpose:	Creates a new thin plate spline basis function		*
-*		transform, which will transform an object with the	*
-*		given source verticies into an object with the given 	*
-*		destination verticies.					*
-* Global refs:	-							*
-* Parameters:	int nPts:		Number of control point pairs.	*
-*		WlzDVertex2 *dPts:	Destination control points.	*
-*		WlzDVertex2 *sPts:	Source control points.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new thin plate spline basis function transform,
+*		which will transform an object with the given source verticies
+*		into an object with the given destination verticies.
+* \param	nPts			Number of control point pairs.
+* \param	dPts			Destination control points.
+* \param	sPts			Source control points.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzBasisFnTransform *WlzBasisFnTPSFromCPts(int nPts,
 						  WlzDVertex2 *dPts,
 						  WlzDVertex2 *sPts,
@@ -1605,19 +1565,16 @@ static WlzBasisFnTransform *WlzBasisFnTPSFromCPts(int nPts,
   return(basis);
 }
 
-/************************************************************************
-* Function:	WlzBasisFnVxExtent					*
-* Returns:	void							*
-* Purpose:	Computes the extent (bounding box) of two vectors	*
-*		of verticies.						*
-* Global refs:	-							*
-* Parameters:	WlzDBox2 *extentDB:	Pointer for the extent of the	*
-*					verticies.			*
-*		WlzDVertex2 *vx0:	First vector of verticies.	*
-*		WlzDVertex2 *vx1:	Second vector of verticies.	*
-*		int nPts:		Number of verticies in each	*
-*					vector.				*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Computes the extent (bounding box) of two vectors of verticies.
+* \param	extentDB		Pointer for the extent of the
+* 					verticies.
+* \param	vx0			First vector of verticies.
+* \param	vx1			Second vector of verticies.
+* \param	nPts			Number of verticies in each vector.
+*/
 static void	WlzBasisFnVxExtent(WlzDBox2 *extentDB,
 				   WlzDVertex2 *vx0, WlzDVertex2 *vx1,
 				   int nPts)
@@ -1663,20 +1620,18 @@ static void	WlzBasisFnVxExtent(WlzDBox2 *extentDB,
   }
 }
 
-/************************************************************************
-* Function:	WlzBasisFnGaussCoeff					*
-* Returns:	void							*
-* Purpose:	Extracts the Gaussian coefficients from the		*
-*		given column vector using the given extent and range	*
-*		for transformation to pixel space.			*
-* Global refs:	-							*
-* Parameters:	WlzBasisFnTransform *basis: Allocated basis function	*
-*					transform to be filled in.	*
-*					verticies.			*
-*		double *vec:		Given column vector.		*
-*		int forX:		True if the coefficients are	*
-*					for the x coordinate.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Extracts the Gaussian coefficients from the given column
+* 		vector using the given extent and range for transformation
+*		to pixel space.
+* \param	basis			Allocated basis function transform to
+* 					be filled in.
+* \param	vec			Given column vector.
+* \param	forX			True if the coefficients are for the x
+* 					coordinate.
+*/
 static void	WlzBasisFnGaussCoeff(WlzBasisFnTransform *basis,
 				     double *vec, int forX)
 {
@@ -1710,23 +1665,20 @@ static void	WlzBasisFnGaussCoeff(WlzBasisFnTransform *basis,
   }
 }
 
-
-/************************************************************************
-* Function:	WlzBasisFnMQCoeff					*
-* Returns:	void							*
-* Purpose:	Extracts the multiquadric coefficients from the		*
-*		given column vector using the given extent and range	*
-*		for transformation to pixel space.			*
-* Global refs:	-							*
-* Parameters:	WlzBasisFnTransform *basis: Allocated basis function	*
-*					transform to be filled in.	*
-*					verticies.			*
-*		double *vec:		Given column vector.		*
-*		WlzDBox2 *extentDB:	Extent of the verticies.	*
-*		double range:		Range of the verticies.		*
-*		int forX:		True if the coefficients are	*
-*					for the x coordinate.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Extracts the multiquadric coefficients from the given
+*		column vector using the given extent and range for
+*		transformation to pixel space.
+* \param	basis			Allocated basis function transform
+*					to be filled in.
+* \param	vec			Given column vector.
+* \param	extentDB		Extent of the verticies.
+* \param	range			Range of the verticies.
+* \param	forX		 	True if the coefficients are for the x
+* 					coordinate.
+*/
 static void	WlzBasisFnMQCoeff(WlzBasisFnTransform *basis,
 				  double *vec, WlzDBox2 *extentDB,
 				  double range, int forX)
@@ -1771,22 +1723,20 @@ static void	WlzBasisFnMQCoeff(WlzBasisFnTransform *basis,
   }
 }
 
-/************************************************************************
-* Function:	WlzBasisFnTPSCoeff					*
-* Returns:	void							*
-* Purpose:	Extracts the thin plate spline coefficients from the	*
-*		given column vector using the given extent and range	*
-*		for transformation to pixel space.			*
-* Global refs:	-							*
-* Parameters:	WlzBasisFnTransform *basis: Allocated basis function	*
-*					transform to be filled in.	*
-*					verticies.			*
-*		double *vec:		Given column vector.		*
-*		WlzDBox2 *extentDB:	Extent of the verticies.	*
-*		double range:		Range of the verticies.		*
-*		int forX:		True if the coefficients are	*
-*					for the x coordinate.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Extracts the thin plate spline coefficients from the given
+*		column vector using the given extent and range for
+*		transformation to pixel space.
+* \param	basis			Allocated basis function transform to
+* 					be filled in.
+* \param	vec			Given column vector.
+* \param	extentDB		Extent of the verticies.
+* \param	range			Range of the verticies.
+* \param	forX			True if the coefficients are for the x
+* 					coordinate.
+*/
 static void	WlzBasisFnTPSCoeff(WlzBasisFnTransform *basis,
 				   double *vec, WlzDBox2 *extentDB,
 				   double range, int forX)

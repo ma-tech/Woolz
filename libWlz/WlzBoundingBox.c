@@ -1,21 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzBoundingBox.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing the bounding box of woolz
-*		objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 15-08-00 bill	Add WlzBoundingBoxContour(). Remove obsolete types:
-*		WLZ_VECTOR_(INT)|(FLOAT) and WLZ_VECTOR_(INT)|FLOAT).
-************************************************************************/
+/*!
+* \file         WlzBoundingBox.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for computing the axis aligned bounding box
+*		of Woolz objects.
+* \ingroup	WlzFeatures
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -34,23 +37,13 @@ static WlzIBox3			WlzBoundingBoxTransObj3D(
 static WlzIBox3 		WlzBoundingBoxContour(
 				  WlzContour *ctr,
 				  WlzErrorNum *dstErr);
-/** 
- * 
- * 
- * @param inObj The given object
- * @param dstErr Destination error pointer, may be NULL.
- * 
- * @return 2D bounding box.
- */
-/************************************************************************
-* Function:	WlzBoundingBox2D					*
-* Returns:	WlzIBox2 *:		2D bounding box.		*
-* Purpose:	Computes the 2D bounding box of the given object.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	The given object.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	2D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 2D axis aligned bounding box of the given object.
+* \param	inObj			The given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzIBox2	WlzBoundingBox2D(WlzObject *inObj, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -69,15 +62,13 @@ WlzIBox2	WlzBoundingBox2D(WlzObject *inObj, WlzErrorNum *dstErr)
   return(bBox2D);
 }
 
-/************************************************************************
-* Function:	WlzBoundingBox3D					*
-* Returns:	WlzIBox3 *:		3D bounding box.		*
-* Purpose:	Computes the 3D bounding box of the given object.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	The given object.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	3D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the given object.
+* \param	inObj			The given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzIBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
 {
   WlzIBox3	bBox3D;
@@ -219,16 +210,15 @@ WlzIBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
   return(bBox3D);
 }
 
-/************************************************************************
-* Function:	WlzBoundingBoxTransObj3D				*
-* Returns:	WlzIBox3 *:		3D bounding box.		*
-* Purpose:	Computes the 3D bounding box of the transformed object.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	Input object.			*
-*		WlzAffineTransform *trans: Given transform.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	3D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the
+*		transformed object.
+* \param	inObj			Input object.
+* \param	trans			Given transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzIBox3	WlzBoundingBoxTransObj3D(WlzObject *inObj,
 					 WlzAffineTransform *trans,
 				         WlzErrorNum *dstErr)
@@ -299,15 +289,14 @@ static WlzIBox3	WlzBoundingBoxTransObj3D(WlzObject *inObj,
   return(bBox3D);
 }
 
-/************************************************************************
-* Function:	WlzBoundingBoxPoly3D					*
-* Returns:	WlzIBox3 *:		3D bounding box.		*
-* Purpose:	Computes the 3D bounding box of the polygon domain.	*
-* Global refs:	-							*
-* Parameters:	WlzPolygonDomain *poly:	The given polygon domain.	*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	3D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the polygon
+* 		domain.
+* \param	poly			The given polygon domain.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzIBox3	WlzBoundingBoxPoly3D(WlzPolygonDomain *poly,
 				     WlzErrorNum *dstErr)
 {
@@ -422,15 +411,14 @@ static WlzIBox3	WlzBoundingBoxPoly3D(WlzPolygonDomain *poly,
   return(bBox3D);
 }
 
-/************************************************************************
-* Function:	WlzBoundingBoxBound3D					*
-* Returns:	WlzIBox3 *:		3D bounding box.		*
-* Purpose:	Computes the 3D bounding box of the boundary list.	*
-* Global refs:	-							*
-* Parameters:	WlzBoundList *bound:	The given boundary list.	*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	3D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the
+*		boundary list.
+* \param	bound			The given boundary list.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzIBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
 				      WlzErrorNum *dstErr)
 {
@@ -474,15 +462,13 @@ static WlzIBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
   return(bBox3D);
 }
 
-/************************************************************************
-* Function:	WlzBoundingBoxContour					*
-* Returns:	WlzIBox3 *:		3D bounding box.		*
-* Purpose:	Computes the 3D bounding box of the contour.		*
-* Global refs:	-							*
-* Parameters:	WlzContour *ctr:	The given contour.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	3D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the contour.
+* \param	ctr			The given boundary list.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzIBox3 WlzBoundingBoxContour(WlzContour *ctr, WlzErrorNum *dstErr)
 {
   WlzGMShell	*shell0,

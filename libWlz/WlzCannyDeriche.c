@@ -1,50 +1,53 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzCannyDeriche.c
-* Date:         May 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A Canny/Deriche edge detection filter.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables.
-************************************************************************/
+/*!
+* \file         WlzCannyDeriche.c
+* \author       Bill Hill
+* \date         May 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	A Canny-Deriche edge detection filter.
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <string.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzCannyDeriche
-* Returns:	WlzObject *:		Edge detected object or NULL
-*					on error.
-* Purpose:	A Canny/Deriche edge detection filter which performs
-*		the following steps
-*		  1. Recursive filter with the Deriche edge
-*		     operator applied in each dimension.
-*		  2. Modulus of gradient image generated.
-*		  3. Non-maximal suppression of the gradient
-*		     image.
-*		  4. Hysteresis threshold of NM suppressed gradient
-*		     image.
-*
-* Global refs:	-
-* Parameters:	WlzObject **dstGObj:	Destination pointer for the
-*					gradient image, may be NULL.
-*		WlzObject *srcObj:	Given domain object with grey
-*					values.
-*		double alpha:		Deriche filter parameter.
-*		double mult:		Filter multiplier.
-*		WlzPixelV pMinGrdV:	Primary hysteresis threshold
-*					value.
-*		WlzPixelV sMinGrdV:	Secondary hysteresis threshold
-*					value.
-************************************************************************/
+/*!
+* \return	Edge detected object or NULL on error.
+* \ingroup	WlzValuesFilters
+* \brief        A Canny-Deriche edge detection filter which performs
+*               the following steps:
+*		<ol>
+		<li>
+		Recursive filter with the Deriche edge operator\n
+	        applied in each dimension.
+		<li>
+		Modulus of gradient image generated.
+		<li>
+		Non-maximal suppression of the gradient image.
+		<li>
+		Hysteresis threshold of NM suppressed gradient\n
+		image.
+		</ol>
+* \param	dstGObj			Destination pointer for the gradient
+* 					image, may be NULL.
+* \param	srcObj			Given domain object with grey values.
+* \param	alpha			Deriche filter parameter.
+* \param	mult			Filter multiplier.
+* \param	pMinGrdV		Primary hysteresis threshold value.
+* \param	sMinGrdV		Secondary hysteresis threshold value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject 	*WlzCannyDeriche(WlzObject **dstGObj, WlzObject *srcObj,
 				 double alpha, double mult,
 				 WlzPixelV pMinGrdV, WlzPixelV sMinGrdV,

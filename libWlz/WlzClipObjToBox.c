@@ -1,44 +1,38 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzClipObjToBox.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for clipping the domain of either 2D or 3D
-*		domain objects so that it lies within a given box.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzClipObjToBox.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for clipping the domain of either 2D or 3D domain
+* 		objects so that they lie within the given axis aligned
+*		biunding box.
+* \ingroup	WlzDomainOps
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzClipObjToBox2D					*
-* Returns:	WlzObject *:		New object with clipped domain	*
-*					or NULL on error.		*
-* Purpose:	Clips the given object's domain so that it does not	*
-*		lie outside the given 2D clip box.			*
-*		Only 2D domain objects and empty objects may be clipped	*
-*		by this function.					*
-*		The following errors may be reported for:		*
-*		WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL,
-*		WLZ_ERR_OBJECT_TYPE, WLZ_ERR_DOMAIN_TYPE,		*
-*		WLZ_ERR_MEM_ALLOC.					*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIBox2 clipBox:	Clip box.			*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	New object with clipped domain or NULL on error.
+* \brief	Clips the given object's domain so that it does not lie outside
+* 		the given 2D axis aliagned clip box. Only 2D domain objects and
+* 		empty objects may be clipped by this function.
+* \param	srcObj			Given source object.
+* \param	clipBox			Clip box.
+* \param	dstErrNum		Destination pointer for error, may be
+* 					NULL.
+*/
 WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
 				   WlzErrorNum *dstErrNum)
 {
@@ -212,23 +206,16 @@ WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzClipObjToBox3D					*
-* Returns:	WlzObject *:		New object with clipped domain	*
-*					or NULL on error.		*
-* Purpose:	Clips the given object's domain so that it does not	*
-*		lie outside the given 3D limit box.			*
-*		This function may be used to clip 2D domain objects,	*
-*		3D domain objects and empty objects.			*
-*		The following errors may be reported: WLZ_ERR_OBJECT_NULL,	*
-*		WLZ_ERR_DOMAIN_NULL, WLZ_ERR_DOMAIN_TYPE and WLZ_ERR_MEM_ALLOC.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIBox3 clipBox:	Clip box.			*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	New object with clipped domain or NULL on error.
+* \ingroup	WlzDomainOps
+* \brief	Clips the given object's domain so that it does not lie outside
+* 		the given 3D axis alaigned clip box.
+* \param	srcObj			Given source object.
+* \param	clipBox			Clip box.
+* \param	dstErrNum		Destination pointer for error, may be
+* 					NULL.
+*/
 WlzObject	*WlzClipObjToBox3D(WlzObject *srcObj, WlzIBox3 clipBox,
 				   WlzErrorNum *dstErrNum)
 {
