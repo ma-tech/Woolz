@@ -1753,7 +1753,7 @@ static AlcDLPList *WlzReadPropertyList(FILE *fp,
     if( dstErr ){
       *dstErr = errNum;
     }
-    return;
+    return NULL;
 
   case (WlzObjectType) 2:
     numProps = getword(fp);

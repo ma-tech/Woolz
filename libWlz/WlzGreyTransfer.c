@@ -27,6 +27,8 @@
 */
 
 #include <stdio.h>
+#include <string.h>
+
 #include <Wlz.h>
 
 static WlzObject *WlzGreyTransfer3d(WlzObject	*obj,

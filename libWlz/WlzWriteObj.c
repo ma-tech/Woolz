@@ -35,6 +35,8 @@
 
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
+
 #include <Wlz.h>
 
 static WlzErrorNum	WlzWriteIntervalDomain(

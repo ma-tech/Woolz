@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
+#include <string.h>
+
 #include <Wlz.h>
 
 static int			WlzAffineTransformIsTranslate2(

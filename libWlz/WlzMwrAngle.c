@@ -36,6 +36,7 @@
  * within them).
  */
 
+static double gap (WlzChord *ch, WlzPolygonDomain *pdom);
 
 /* function:     WlzMwrAngle    */
 /*! 
@@ -52,7 +53,6 @@
 */
 double WlzMwrAngle(WlzObject *cvh, WlzErrorNum *dstErr)
 {
-  static double gap (WlzChord *ch, WlzPolygonDomain *pdom);
   WlzPolygonDomain *pdom;
   WlzChord *chr, *ch;
   WlzConvHullValues *cdom;

@@ -1273,6 +1273,10 @@ extern WlzErrorNum	WlzGMShellGetGBB3D(
 extern WlzErrorNum	WlzGMShellGetGBBV3D(
 			  WlzGMShell *shell,
 			  double *vol);
+extern WlzErrorNum	WlzGMShellGetGBB3D(
+                          WlzGMShell *shell, WlzDBox3 *bBox);
+extern WlzErrorNum	WlzGMShellGetGBB2D(
+                          WlzGMShell *shell, WlzDBox2 *bBox);
 extern WlzErrorNum	WlzGMShellSetGBB2D(
 			  WlzGMShell *shell,
 			  WlzDBox2 bBox);
@@ -1520,6 +1524,14 @@ extern double			WlzGeomEllipseVxDistSq(
 				  WlzDVertex2 centre,
 				  WlzDVertex2 sAx,
 				  WlzDVertex2 gPnt);
+extern int			WlzGeomPlaneTriangleIntersect(
+                                  double a, double b,
+				  double c, double d,
+				  WlzDVertex3 p0,
+				  WlzDVertex3 p1,
+				  WlzDVertex3 p2,
+				  WlzDVertex3 *dstIsn0,
+				  WlzDVertex3 *dstIsn1);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
