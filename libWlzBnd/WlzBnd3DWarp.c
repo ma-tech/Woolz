@@ -1,3 +1,21 @@
+#pragma ident "MRC HGU $Id$"
+/***********************************************************************
+* Project:      Woolz
+* Title:        Wlz.h
+* Date:         March 1999
+* Author:       Guangjie Feng
+* Copyright:	1999 Medical Research Council, UK.
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Purpose:      Main (top-level) Woolz header file which includes all
+*		other header files required by Woolz.
+* $Revision$
+* Maintenance:	Log changes below, with most recent at top of list.
+************************************************************************/
+
+
     #include <WlzBnd.h>
 
 

@@ -34,17 +34,17 @@
 		/************************************************************************
 		* WlzJavaUtils.c							*
 		************************************************************************/
-		extern int 		        WlzBndObjGetType(WlzObject *obj);
-		extern int			WlzBndGetIntervalDomainLine1(WlzObject *obj);
-		extern int			WlzBndGetIntervalDomainLastLn(WlzObject *obj);
-		extern int			WlzBndGetIntervalDomainKol1(WlzObject *obj);
-		extern int			WlzBndGetIntervalDomainLastKl(WlzObject *obj);
-		extern int			WlzBndGetPlaneDomainPlane1(WlzObject *obj);
-		extern int			WlzBndGetPlaneDomainLastPl(WlzObject *obj);
-		extern int			WlzBndGetPlaneDomainLine1(WlzObject *obj);
-		extern int			WlzBndGetPlaneDomainLastLn(WlzObject *obj);
-		extern int			WlzBndGetPlaneDomainKol1(WlzObject *obj);
-		extern int			WlzBndGetPlaneDomainLastKl(WlzObject *obj);
+		extern int WlzBndObjGetType(WlzObject *obj);
+		extern int WlzBndGetIntervalDomainLine1(WlzObject *obj);
+		extern int WlzBndGetIntervalDomainLastLn(WlzObject *obj);
+		extern int WlzBndGetIntervalDomainKol1(WlzObject *obj);
+		extern int WlzBndGetIntervalDomainLastKl(WlzObject *obj);
+		extern int WlzBndGetPlaneDomainPlane1(WlzObject *obj);
+		extern int WlzBndGetPlaneDomainLastPl(WlzObject *obj);
+		extern int WlzBndGetPlaneDomainLine1(WlzObject *obj);
+		extern int WlzBndGetPlaneDomainLastLn(WlzObject *obj);
+		extern int WlzBndGetPlaneDomainKol1(WlzObject *obj);
+		extern int WlzBndGetPlaneDomainLastKl(WlzObject *obj);
 		extern WlzObject *WlzBndSetGreyValues(WlzObject *domainObj, WlzObject *valuesObj,
 								WlzErrorNum *dstErr);
 		extern WlzAffineTransform *WlzBndGetAffineTransform(
@@ -67,5 +67,6 @@
 					  int order, int arraySizeVec0, WlzDVertex3 *arrayVec0,
 					  int arraySizeVec1, WlzDVertex3 *arrayVec1,
 					  WlzErrorNum *dstErr);
-							
+		extern WlzErrorNum WlzSetVoxelSize(WlzObject *obj, double x, double y, double z);
+		
 		#endif	/* !WLZBND_PROTO_H Don't put anything after this line */
