@@ -194,8 +194,8 @@ int		 main(int argc, char *argv[])
     "  -h  Help - print this usage information.\n"
     "  -r  Output bibfile with relative transforms (%s).\n"
     "  -o  Output file name.\n"
-    "By default %s reads from it's standard input and writes to it's\n"
-    "standard output.\n",
+    "By default %s reads from it's standard input and\n"
+    "writes to it's standard output.\n",
     *argv,
     (absMode != 0)? "set": "not set",
     (absMode == 0)? "set": "not set",
