@@ -441,8 +441,8 @@ enum _WlzPolyFillMode
   WLZ_SIMPLE_FILL,	/*! Fill all pixels with winding number > 0 */
   WLZ_EVEN_ODD_FILL,	/*! Fill all pixels with odd winding number */
   WLZ_VERTEX_FILL	/*! Fill all pixels lying under the polyline */
-} 
-typedef _WlzPolyFillMode WlzPolyFillMode;
+};
+typedef enum _WlzPolyFillMode WlzPolyFillMode;
 
 /************************************************************************
 * Standard 3D views.						
