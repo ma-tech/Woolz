@@ -18,17 +18,17 @@
 * Maintenance log with most recent changes at top of list.
 */
 
-/*!
-* \ingroup      Alg
-* \defgroup      AlgMatrix
-* @{
-*/
-
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <float.h>
 #include <Alg.h>
+
+/*!
+* \ingroup   	Alg
+* \defgroup     AlgMatrix
+* @{
+*/
 
 /*!
 * \return       <void>
@@ -208,6 +208,85 @@ void		AlgMatrixCopy(double **aM, double **bM, int nR, int nC)
     {
       *aRowM++ = *bRowM++;
     }
+  }
+}
+
+/*!
+* \return       <void>
+* \brief        Multiplies the given matrix by the given scalar in
+*		place, aM = sv aM.
+* \note		For efficiency the given parameters are not checked.
+* \param        aM 			Supplied matrix for result.
+* \param	sv			Scalar value.
+* \param	nR			Number of rows in matrix aM.
+* \param	nC			Number of columns in matrix aM.
+*/
+void		AlgMatrixScale(double **aM, double sv, int nR, int nC)
+{
+  int		id0,
+  		id1;
+  double 	*aRowM;
+
+  for(id0 = 0; id0 < nR; ++id0)
+  {
+    aRowM = aM[id0];
+    for(id1 = 0; id1 < nC; ++id1)
+    {
+      *aRowM++ *= sv;
+    }
+  }
+}
+
+/*!
+* \return       <void>
+* \brief        Sets the elements of the given square matrix so that it
+*		is a scalar matrix, aM = sv I.
+* \note		For efficiency the given parameters are not checked.
+* \note		This function assumes that the matrix has been allocated
+*		by AlcDouble2Malloc().
+* \param        aM 			Supplied matrix for result.
+* \param	sv			Scalar value.
+* \param	nRC			Number of rows and columns in matrix.
+*/
+void		AlgMatrixScalar(double **aM, double sv, int nRC)
+{
+  int		id0,
+  		nRCSq;
+  double	*aRowM;
+
+  aRowM = aM[0];
+  nRCSq = nRC * nRC;
+  for(id0 = 0; id0 < nRCSq; ++id0)
+  {
+    aRowM[id0] = 0.0;
+  }
+  for(id0 = 0; id0 < nRC; ++id0)
+  {
+    aM[id0][id0] = sv;
+  }
+}
+
+/*!
+* \return       <void>
+* \brief        Sets the elements of the given matrix to zero.
+* \note		For efficiency the given parameters are not checked.
+* \note		This function assumes that the matrix has been allocated
+*		by AlcDouble2Malloc().
+* \param        aM 			Supplied matrix for result.
+* \param	nR			Number of rows in matrix.
+* \param	nC			Number of columns in matrix.
+*/
+void		AlgMatrixZero(double **aM, int nR, int nC)
+{
+  int		id0,
+  		nRC;
+  double	*aRowM;
+
+  aRowM = aM[0];
+  nRC = nR * nR;
+  for(id0 = 0; id0 < nRC; ++id0)
+  {
+    aRowM[id0] = 0.0;
   }
 }
 
