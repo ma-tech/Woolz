@@ -68,14 +68,16 @@ static WlzErrorNum  		WlzMatchICPCtr(
 				  WlzVertexP *dstTMatch,
 				  WlzVertexP *dstSMatch,
 				  int brkFlg,
-				  double  thrMeanD,
-				  double thrMaxD,
+				  double  maxDisp,
+				  double maxAng,
+				  double maxDeform,
     				  int matchImpNN,
 				  double matchImpThr);
 static WlzErrorNum		WlzMatchICPRegShellLst(
 				  AlcKDTTree *tTree,
 				  WlzGMModel *sGM,
 				  WlzMatchICPShellList *sLst,
+				  WlzAffineTransform *globTr,
 				  WlzTransformType trType,
 				  WlzVertexType vType,
 				  int nTV,
@@ -89,6 +91,9 @@ static WlzErrorNum		WlzMatchICPRegShellLst(
 				  WlzVertexP sVBuf,
 				  double *wBuf,
 				  int maxItr,
+				  double maxDisp,
+				  double maxAng,
+				  double maxDeform,
 				  int minSpx,
 				  WlzAffineTransform *initTr);
 static void			WlzMatchICPShellListInsertList(
@@ -115,6 +120,7 @@ static WlzAffineTransform 	*WlzMatchICPRegModel(
 static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  AlcKDTTree *tTree,
 				  WlzGMShell *sS,
+				  WlzAffineTransform *globTr,
 				  WlzTransformType trType,
 				  WlzVertexType vType,
 				  int nTV,
@@ -128,19 +134,12 @@ static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  WlzVertexP sVBuf,
 				  double *wBuf,
 				  int maxItr,
+				  double maxDisp,
+				  double maxAng,
+				  double maxDeform,
 				  WlzAffineTransform *initTr,
 				  int *dstConv,
 				  WlzErrorNum *dstErr);
-static double			WlzMatchICPMatchStats(
-				  AlcKDTTree *tTree,
-				  WlzMatchICPShell *mS,
-				  WlzVertexType vType,
-				  double *dstMaxD,
-				  WlzErrorNum *dstErr);
-static double			WlzMatchICPMatchStats2D(
-				  AlcKDTTree *tTree,
-				  WlzMatchICPShell *mS,
-				  double *dstMaxD);
 static int			WlzMatchICPGetPoints(
 				  AlcKDTTree *tTree,
 				  WlzMatchICPShell *mS,
@@ -161,6 +160,27 @@ static int			WlzMatchICPGetPoints2D(
 				  WlzDVertex2 *tMatch,
 				  WlzDVertex2 *sMatch,
 				  WlzErrorNum *dstErr);
+static int			WlzMatchICPRegCheckConv(
+				  WlzGMShell *shell,
+				  WlzAffineTransform *globTr,
+				  WlzAffineTransform *tr,
+				  double maxDisp,
+				  double maxAng,
+				  double maxDeform);
+static int			WlzMatchICPRegCheckConv2D(
+				  WlzGMShell *shell,
+				  WlzAffineTransform *globTr,
+				  WlzAffineTransform *tr,
+				  double maxDisp,
+				  double maxAng,
+				  double maxDeform);
+static int			WlzMatchICPRegCheckConv3D(
+				  WlzGMShell *shell,
+				  WlzAffineTransform *globTr,
+				  WlzAffineTransform *tr,
+				  double maxDisp,
+				  double maxAng,
+				  double maxDeform);
 static WlzErrorNum		WlzMatchICPBreakShellCon(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
@@ -205,7 +225,7 @@ static WlzErrorNum		WlzMatchICPFilterPts(
 				  WlzAffineTransform *globTr,
 				  int nN,
 				  double impThr);
-static WlzErrorNum 		WlzMatchICPFilterPts2D(
+static WlzErrorNum 		WlzMatchICPFilterPtsDisp2D(
 				  WlzDVertex2 *tVx,
 				  WlzDVertex2 *sVx, int *nVx,
 				  WlzAffineTransform *globTr,
@@ -306,14 +326,21 @@ static void			WlzMatchICPShellListElmUnlink(
 *					    connectivity and then near
 *					    there midpoints brkFlg - 1
 *					    times.
-* \param	thrMeanD		Threshold mean source target 
-*					distance for a registered shell
+* \param	maxDisp			The maximum displacement to the
+* 					geometry of a shell, from the global
+*					affine transformed position for
+*					an acceptable registration.
+*					distance, for a registered shell
 *					to be used for correspondence
 *					computation.
-* \param	thrMaxD			Threshold maximum source target 
-*					distance for a registered shell
-*					to be used for correspondence
-*					computation.
+* \param	maxAng			The maximum angle of rotation of a
+* 					shell geometry with respect to the
+* 					global affine transformed geometry for
+* 					an acceptable registration.
+* \param	maxDeform		The maximum deformation to the geometry
+* 					of a shell, from the global affine
+* 					transformed geometry, for an acceptable
+* 					registration.
 * \param	matchImpNN		Number match points in neighbourhood
 *					when removing implausible match
 *					points, must be \f$> 2\f$.
@@ -326,8 +353,10 @@ static void			WlzMatchICPShellListElmUnlink(
 WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 				WlzAffineTransform *initTr,
 				int *dstNMatch, WlzVertexP *dstTMatch,
-				WlzVertexP *dstSMatch, int maxItr, int minSpx,
-				int brkFlg, double thrMeanD, double thrMaxD,
+				WlzVertexP *dstSMatch, int maxItr,
+				int minSpx, int brkFlg,
+				double maxDisp, double maxAng, 
+				double maxDeform,
 				int matchImpNN, double matchImpThr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -373,8 +402,8 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 	    case WLZ_GMMOD_3D:
 	      errNum = WlzMatchICPCtr(tObj->domain.ctr, sObj->domain.ctr,
 	      			      initTr, maxItr, minSpx,
-				      dstNMatch, dstTMatch, dstSMatch,
-				      brkFlg, thrMeanD, thrMaxD,
+				      dstNMatch, dstTMatch, dstSMatch, brkFlg,
+				      maxDisp, maxAng, maxDeform,
     				      matchImpNN, matchImpThr);
 	      break;
 	    default:
@@ -431,14 +460,19 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 *					    connectivity and then near
 *					    there midpoints brkFlg - 1
 *					    times.
-* \param	thrMeanD		Threshold mean source target 
+* \param	maxDisp			The maximum displacement to the
+* 					geometry of a shell for an acceptable
+* 					registration.
 *					distance for a registered shell
 *					to be used for correspondence
 *					computation.
-* \param	thrMaxD			Threshold maximum source target 
-*					distance for a registered shell
-*					to be used for correspondence
-*					computation.
+* \param	maxAng			The maximum angle of rotation of a
+* 					shell geometry with respect to the
+* 					global affine transformed geometry for
+* 					an acceptable registration.
+* \param	maxDeform		The maximum deformation to the geometry
+* 					of a shell for an acceptable
+* 					registration.
 * \param	matchImpNN		Number match points in neighbourhood
 *					when removing implausible match
 *					points, must be \f$> 2\f$.
@@ -453,7 +487,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 				   int maxItr, int minSpx,
 				   int *dstNMatch, WlzVertexP *dstTMatch,
 				   WlzVertexP *dstSMatch, int brkFlg,
-				   double  thrMeanD, double thrMaxD,
+				   double  maxDisp, double maxAng,
+				   double maxDeform,
     				   int matchImpNN, double matchImpThr)
 {
   int		idS,
@@ -468,7 +503,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		vSz,
 		brkIdx,
 		convFlg,
-		nMatch = 0;
+		nMatch = 0,
+  	 	dbgFlg = 0;
   double	maxD,
   		meanD;
   int		*vIBuf = NULL;
@@ -624,10 +660,11 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     while((errNum == WLZ_ERR_NONE) && (idS < nOSS))
     {
       tTr = WlzAssignAffineTransform(
-            WlzMatchICPRegShell(tTree, sMS->shell, trType, vType,
+            WlzMatchICPRegShell(tTree, sMS->shell, globTr, trType, vType,
 			        nTV, tVx, tNr, nSV, sVx, sNr,
 			        vIBuf, tVBuf, sVBuf, wBuf,
-			        maxItr, globTr, &convFlg, &errNum), NULL);
+			        maxItr, maxDisp, maxAng, maxDeform,
+				globTr, &convFlg, &errNum), NULL);
       if((errNum == WLZ_ERR_NONE) && (convFlg == 1))
       {
 	sMS->tr = tTr;
@@ -637,6 +674,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	/* Whole source shell failed to register with the target model. */
 	sMS->tr = NULL;
 	WlzFreeAffineTransform(tTr);
+	tTr = NULL;
       }
       ++sMS;
       ++idS;
@@ -660,7 +698,12 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     sMS = sMSBuf;
     while((errNum == WLZ_ERR_NONE) && (idS < nOSS))
     {
-      if(sMS->tr != NULL)
+      if(sMS->tr == NULL)
+      {
+	WlzGMModelDeleteS(sGM, sMS->shell);
+	sMS->shell = NULL;
+      }
+      else
       {
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -684,10 +727,10 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	       * the list, registering shells above the size threshold to the
 	       * target model and removing the list elements of any small
 	       * shells or shells that do not register. */
-	      errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList,
+	      errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList, globTr,
 		  trType, vType, nTV, tVx, tNr, nSV, sVx, sNr,
-		  vIBuf, tVBuf, sVBuf, wBuf, maxItr, minSpx,
-		  sMS->tr);
+		  vIBuf, tVBuf, sVBuf, wBuf, maxItr,
+		  maxDisp, maxAng, maxDeform, minSpx, sMS->tr);
 	    }
 	  }
 	}
@@ -695,11 +738,6 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	{
 	  WlzMatchICPShellListInsertList(bSList, vSList);
 	}
-      }
-      else
-      {
-	/* Whole source shell failed to register with the target model. */
-	WlzFreeAffineTransform(tTr);
       }
       ++sMS;
       ++idS;
@@ -776,10 +814,11 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		 * target model and removing the list elements of any small
 		 shells or shells that do not register. */
 		WlzMatchICPShellListElmInsert(vSList, lElm0);
-		errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList,
+		errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList, globTr,
 				    trType, vType,
 				    nTV, tVx, tNr, nSV, sVx, sNr,
-				    vIBuf, tVBuf, sVBuf, wBuf, maxItr, minSpx,
+				    vIBuf, tVBuf, sVBuf, wBuf, maxItr,
+				    maxDisp, maxAng, maxDeform, minSpx,
 				    lElm0->mShell.tr);
 		if(errNum == WLZ_ERR_NONE)
 		{
@@ -833,7 +872,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
    * transform the rest. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(brkFlg > 2)
+    if((dbgFlg == 0) && (brkFlg > 2))
     {
       lElm0 = bSList->head;
       while(lElm0 != NULL) 
@@ -844,6 +883,25 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	lElm0->mShell.tr = NULL;
 	lElm0->mShell.size = 0;
 	lElm0 = lElm0->next;
+      }
+    }
+    if(dbgFlg)
+    {
+      lElm0 = bSList->head;
+      while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
+      {
+	lElm1 = lElm0->next;
+	if((lElm0->mShell.shell == NULL) || (lElm0->mShell.tr == NULL))
+	{
+	  WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
+	  (void )WlzFreeAffineTransform(lElm0->mShell.tr);
+	  AlcFree(lElm0);
+	}
+	else
+	{
+	  WlzAffineTransformGMShell(lElm0->mShell.shell, lElm0->mShell.tr);
+	}
+	lElm0 = lElm1;
       }
     }
     if(brkFlg > 1)
@@ -871,27 +929,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       (void )WlzAffineTransformGMModel(sGM, globTr, 0, &errNum);
     }
   }
-  /* Filter out all registered shells with a poor match to the target. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
-  {
-    lElm0 = rSList->head;
-    while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
-    {
-      lElm1 = lElm0->next;
-      meanD = WlzMatchICPMatchStats(tTree, &(lElm0->mShell), vType, &maxD,
-      				    NULL);
-      if((meanD > thrMeanD) || (maxD > thrMaxD))
-      {
-	WlzMatchICPShellListElmUnlink(rSList , lElm0);
-	WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
-	(void )WlzFreeAffineTransform(lElm0->mShell.tr);
-        AlcFree(lElm0);
-      }
-      lElm0 = lElm1;
-    }
-  }
   /* Find match points on broken shells and target model. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
+  if((errNum == WLZ_ERR_NONE) && (dbgFlg == 0) && (brkFlg > 1))
   {
     n0 = 0;
     lElm0 = rSList->head;
@@ -905,7 +944,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     nMatch = n0;
   }
   /* Filter out poor matches. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1) && (nMatch > 0))
+  if((errNum == WLZ_ERR_NONE) && (dbgFlg == 0) && (brkFlg > 1) && (nMatch > 0))
   {
     errNum = WlzMatchICPFilterPts(vType, tVBuf, sVBuf, &nMatch, globTr,
 				  matchImpNN, matchImpThr);
@@ -990,6 +1029,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 *					and normals.
 * \param	sGM			Source geometric model.
 * \param	sLst			The given list of shells.
+* \param	globTr			Global affine transform.
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
@@ -1008,28 +1048,38 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
 * \param	maxItr			Maximum number of iterations.
+* \param 	maxDisp			Maximum displacement.
+* \param	maxAng			maximum angle (radians).
+* \param	maxDeform		Maximum deformation.
 * \param	minSpx			Minimum number of simplicies within a
 * 					shell.
-* \param	initTr			Initial affine transform, may be NULL.
+* \param	gInitTr			Initial affine transform, may be NULL.
 */
 static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
 				WlzGMModel *sGM,
 				WlzMatchICPShellList *sLst,
+				WlzAffineTransform *globTr,
 				WlzTransformType trType, WlzVertexType vType,
 				int nTV, WlzVertexP tVx, WlzVertexP tNr,
 				int nSV, WlzVertexP sVx, WlzVertexP sNr,
 				int *iBuf, WlzVertexP tVBuf, WlzVertexP sVBuf,
-				double *wBuf, int maxItr, int minSpx,
-				WlzAffineTransform *initTr)
+				double *wBuf, int maxItr, 
+				double maxDisp, double maxAng, 
+				double maxDeform, int minSpx,
+				WlzAffineTransform *gInitTr)
 {
   int		convFlg,
   		remFlg;
   WlzMatchICPShellListElm *lElm0,
   		*lElm1;
-  WlzAffineTransform *tTr;
+  WlzAffineTransform *initTr = NULL,
+  		*tTr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   lElm0 = sLst->head;
+  /* Copy the given initial affine transform as it may well belong to one of
+   * the members of the list. */
+  initTr = WlzAffineTransformCopy(gInitTr, &errNum);
   while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL))
   {
     tTr = NULL;
@@ -1039,12 +1089,18 @@ static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
     {
       tTr = WlzAssignAffineTransform(
 	    WlzMatchICPRegShell(tTree, lElm0->mShell.shell,
-			        trType, vType,
+			        globTr, trType, vType,
 			        nTV, tVx, tNr, nSV, sVx, sNr,
 			        iBuf, tVBuf, sVBuf, wBuf,
-			        maxItr, initTr, &convFlg, &errNum),
+			        maxItr, maxDisp, maxAng, maxDeform,
+				initTr, &convFlg, &errNum),
 	    NULL);
       remFlg = !convFlg;
+      if(errNum == WLZ_ERR_ALG_CONVERGENCE)
+      {
+	/* Convergence flag will trap failures to register. */
+        errNum = WLZ_ERR_NONE;
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -1068,6 +1124,7 @@ static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
       lElm0 = lElm1;
     }
   }
+  (void )WlzFreeAffineTransform(initTr);
   return(errNum);
 }
 
@@ -1182,6 +1239,7 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 *					indicies as the given target verticies
 *					and normals.
 * \param	sS			Source shell.
+* \param	globTr			Global affine transform.
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
@@ -1200,6 +1258,9 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
 * \param	maxItr			Maximum number of iterations.
+* \param	maxDisp			Maximum displacement.
+* \param	maxAng			maximum angle.
+* \param	maxDeform		Maximum deformation.
 * \param	initTr			Initial affine transform, may be NULL.
 * \param	dstConv			Destination pointer for a
 *					convergence flag which is set to
@@ -1209,12 +1270,15 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 *					may be NULL.
 */
 static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
-				WlzGMShell *sS,
+				WlzGMShell *sS, WlzAffineTransform *globTr,
 				WlzTransformType trType, WlzVertexType vType,
 				int nTV, WlzVertexP tVx, WlzVertexP tNr,
 				int nSV, WlzVertexP sVx, WlzVertexP sNr,
-				int *iBuf, WlzVertexP tVBuf, WlzVertexP sVBuf,
+				int *iBuf,
+				WlzVertexP tVBuf, WlzVertexP sVBuf,
 				double *wBuf, int maxItr, 
+				double maxDisp, double maxAng, 
+				double maxDeform,
 				WlzAffineTransform *initTr, int *dstConv,
 				WlzErrorNum *dstErr)
 {
@@ -1255,6 +1319,15 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
   			  nTV, tVx, tNr, nSSV, iBuf, sVx, sNr,
 			  tVBuf, sVBuf, wBuf,
 			  maxItr, initTr, &conv, &errNum);
+  if((errNum == WLZ_ERR_NONE) && conv)
+  {
+    conv = WlzMatchICPRegCheckConv(sS, globTr, tr, maxDisp, maxAng, maxDeform);
+    if(conv == 0)
+    {
+      WlzFreeAffineTransform(tr);
+      tr = NULL;
+    }
+  }
   if(dstConv)
   {
     *dstConv = conv;
@@ -1267,124 +1340,153 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
 }
 
 /*!
-* \return	Mean distance.
-* \ingroup	WlzTransform
-* \brief	Computes some simple statistics to determin the quality of the
-* 		match for the given match shell.
-*		These are the maximum and mean distance (distance is always
-*		+ve) between the verticies of the given match shell and
-*		their nearest neighbours in the target model.
-* \param	tTree			kD-tree populated by the target
-*					verticies.
-* \param	mS			Match shell.
-* \param	vType			Type of verticies.
-* \param	dstMaxD			Destination pointer for maximum
-*					distance.
-* \param	dstErr			Destination error pointer,
-*					may be NULL.
+* \return	Non-zero if transform is within limits.
+* \brief	Check that the transform is within the given limits of
+* 		displacement and change in area to the shells axis
+*		aligned bounding box.
+* \param	sS			Given shell.
+* \param	globTr			Global affine transform.
+* \param	tr			Given affine transform.
+* \param	maxDisp			Maximum displacement.
+* \param	maxAng			Maximum angle.
+* \param	maxDeform		Maximum deformation.
 */
-static double	WlzMatchICPMatchStats(AlcKDTTree *tTree,
-				      WlzMatchICPShell *mS,
-				      WlzVertexType vType,
-				      double *dstMaxD,
-				      WlzErrorNum *dstErr)
+static int	WlzMatchICPRegCheckConv(WlzGMShell *shell,
+				 	WlzAffineTransform *globTr,
+				 	WlzAffineTransform *tr,
+					double maxDisp, double maxAng,
+					double maxDeform)
 {
-  double	maxD = DBL_MAX,
-  		meanD = DBL_MAX;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  
-  switch(vType)
-  {
-    case WLZ_VERTEX_D2:
-      meanD = WlzMatchICPMatchStats2D(tTree, mS, &maxD);
-      break;
-    case WLZ_VERTEX_D3: /* FALLTHROUGH */
-    default:
-      errNum = WLZ_ERR_UNIMPLEMENTED;
-      break;
-  }
-  if(dstMaxD)
-  {
-    *dstMaxD = maxD;
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(meanD);
-}
-/*!
-* \return	Mean distance.
-* \ingroup	WlzTransform
-* \brief	Computes some simple statistics to determin the quality of the
-* 		match for the given match shell with 2D verticies.
-*		These are the maximum and mean distance (distance is always
-*		+ve) between the verticies of the given match shell and
-*		their nearest neighbours in the target model.
-* \param	tTree			kD-tree populated by the target
-*					verticies.
-* \param	mS			Match shell.
-* \param	dstMaxD			Destination pointer for maximum
-*					distance.
-*/
-static double	WlzMatchICPMatchStats2D(AlcKDTTree *tTree,
-				        WlzMatchICPShell *mS,
-					double *dstMaxD)
-{
-  int		nV = 0;
-  double	dist,
-		sumD = 0,
-		maxD = 0,
-  		meanD = 0;
-  WlzGMLoopT 	*fLT,
-  		*tLT;
-  WlzGMEdgeT	*fET,
-		*tET;
-  AlcKDTNode	*tNode;
-  WlzDVertex2	sV;
-  double	vxD2[2];
-  const double	maxDist = DBL_MAX;
+  int 		ok = 0;
 
-  tLT = fLT = mS->shell->child;
-  do
+  switch(WlzAffineTransformDimension(tr, NULL))
   {
-    tET = fET = tLT->edgeT;
-    do
+    case 2:
+      ok = WlzMatchICPRegCheckConv2D(shell, globTr, tr, maxDisp, maxAng,
+      				     maxDeform);
+      break;
+    case 3:
+      ok = WlzMatchICPRegCheckConv3D(shell, globTr, tr, maxDisp, maxAng,
+      				     maxDeform);
+      break;
+  }
+  return(ok);
+}
+
+/*!
+* \return	Non-zero if transform is within limits.
+* \brief	Check that the transform is within the given limits of
+* 		displacement and change in area to the shells axis
+*		aligned 2D bounding box.
+* \param	sS			Given shell.
+* \param	globTr			Global affine transform.
+* \param	tr			Given affine transform.
+* \param	maxDisp			Maximum displacement.
+* \param	maxAng			Maximum angle.
+* \param	maxDeform		Minimum area ratio.
+*/
+static int	WlzMatchICPRegCheckConv2D(WlzGMShell *shell,
+					  WlzAffineTransform *globTr,
+					  WlzAffineTransform *tr,
+					  double maxDisp, double maxAng,
+					  double maxDeform)
+{
+  int		ok = 1;
+  double	tD0,
+  		tD1,
+		param;
+  WlzDVertex2	gV,
+		pV,
+  		s0V,
+		s1V,
+  		tV;
+  WlzDBox2	sBB,
+		gBB,
+  		tBB;
+
+  (void )WlzGMShellGetGBB2D(shell, &sBB);
+  s0V.vtX = sBB.xMin;
+  s0V.vtY = sBB.yMin;
+  /* Compute the displacement and compare against the given maximum. */
+  gV = WlzAffineTransformVertexD2(globTr, s0V, NULL);
+  tV = WlzAffineTransformVertexD2(tr, s0V, NULL);
+  WLZ_VTX_2_SUB(tV, tV, gV);
+  param = WLZ_VTX_2_LENGTH(tV);
+  if(param > maxDisp)
+  {
+    ok = 0;
+  }
+  if(ok)
+  {
+    /* Compute the ratio change in area of the axis aligned bounding box and
+     * compare against the given maximum. */
+    gBB = WlzAffineTransformBBoxD2(globTr, sBB, NULL);
+    tBB = WlzAffineTransformBBoxD2(tr, sBB, NULL);
+    tD0 = (tBB.xMax - tBB.xMin + 1) * (tBB.yMax - tBB.yMin + 1);
+    tD1 = (gBB.xMax - gBB.xMin + 1) * (gBB.yMax - gBB.yMin + 1);
+    param = (tD0 > tD1)? tD1 / tD0: tD0 / tD1;
+    if(param < maxDeform)
     {
-      if(tET == tET->edge->edgeT)
+      ok = 0;
+    }
+  }
+  if(ok)
+  {
+    /* Compute the angle using two vectors defined by the minima and maxima of
+     * the shell geometry, transform the vectors and compare against the given
+     * maximum. */
+    s0V.vtX = sBB.xMin;
+    s0V.vtY = sBB.yMin;
+    s1V.vtX = sBB.xMax;
+    s1V.vtY = sBB.yMax;
+    pV = WlzAffineTransformVertexD2(globTr, s0V, NULL);
+    gV = WlzAffineTransformVertexD2(globTr, s1V, NULL);
+    WLZ_VTX_2_SUB(gV, gV, pV);
+    pV = WlzAffineTransformVertexD2(tr, s0V, NULL);
+    tV = WlzAffineTransformVertexD2(tr, s1V, NULL);
+    WLZ_VTX_2_SUB(tV, tV, pV);
+    /* Find angle from the scalar product of the two vectors. */
+    param = WLZ_VTX_2_DOT(tV, gV);
+    tD0 = WLZ_VTX_2_SQRLEN(gV);
+    tD0 *= WLZ_VTX_2_SQRLEN(tV);
+    if(tD0 < DBL_EPSILON)
+    {
+      ok = 0;
+    }
+    else
+    {
+      param /= sqrt(tD0);
+      if(param < cos(maxAng))
       {
-        (void )WlzGMVertexGetG2D(tET->vertexT->diskT->vertex, &sV);
-	vxD2[0] = sV.vtX;
-	vxD2[1] = sV.vtY;
-	tNode = AlcKDTGetNN(tTree, vxD2, maxDist, &dist, NULL);
-	if(tNode)
-	{
-	  ++nV;
-	  if(dist > maxD)
-	  {
-	    maxD = dist;
-	  }
-	  sumD += dist;
-	}
+	ok = 0;
       }
-      tET = tET->next;
-    } while(tET != fET);
-    tLT = tLT->next;
-  } while(tLT != fLT);
-  if(nV > 0)
-  {
-    meanD = sumD / nV;
+    }
   }
-  else
-  {
-    maxD = DBL_MAX;
-    meanD = DBL_MAX;
-  }
-  if(dstMaxD)
-  {
-    *dstMaxD = maxD;
-  }
-  return(meanD);
+  return(ok);
+}
+
+/*!
+* \return	Non-zero if transform is within limits.
+* \brief	Check that the transform is within the given limits of
+* 		displacement and change in area to the shells axis
+*		aligned 3D bounding box.
+* \param	sS			Given shell.
+* \param	globTr			Global affine transform.
+* \param	tr			Given affine transform.
+* \param	maxDisp			Maximum displacement.
+* \param	maxAng			Maximum angle.
+* \param	maxDeform		Minimum area ratio.
+*/
+static int	WlzMatchICPRegCheckConv3D(WlzGMShell *shell,
+					  WlzAffineTransform *globTr,
+					  WlzAffineTransform *tr,
+					  double maxDisp, double maxAng,
+					  double maxDeform)
+{
+  int		ok = 0;
+
+  /* TODO implement this function. */
+  return(ok);
 }
 
 /*!
@@ -1543,8 +1645,8 @@ static WlzErrorNum WlzMatchICPFilterPts(WlzVertexType vType,
       errNum = WlzMatchICPFilterPtsRmDup2D(tVx.d2, sVx.d2, nVx);
       if(*nVx > 0)
       {
-	errNum = WlzMatchICPFilterPts2D(tVx.d2, sVx.d2, nVx, globTr, nN,
-	    			        impThr);
+	errNum = WlzMatchICPFilterPtsDisp2D(tVx.d2, sVx.d2, nVx, globTr, nN,
+	    			            impThr);
       }
       break;
     case WLZ_VERTEX_D3: /* FALLTHROUGH */
@@ -1560,7 +1662,7 @@ static WlzErrorNum WlzMatchICPFilterPts(WlzVertexType vType,
 * \brief	Filter the matched points to avoid duplicate target
 *		points.
 *		The match points are sorted by target point position,
-*		then scaned through skiping any duplicate target points.
+*		then scanned through skiping any duplicate target points.
 * \param	tVx		Given target matches.
 * \param	sVx		Given source matches.
 * \param	nVxP		Pointer to the number of matches for both
@@ -1575,7 +1677,7 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
   WlzDVertex2	dVx;
   WlzMatchICPTPPair2D *buf = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	delta = 0.5;
+  const double	epsilon = 0.0001;
 
   nVx = *nVxP;
   if((buf = (WlzMatchICPTPPair2D *)
@@ -1604,7 +1706,7 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
     while(idM < nVx)
     {
       WLZ_VTX_2_SUB(dVx, *(tVx + idN), (buf + idM)->tVx);
-      if((fabs(dVx.vtX) > delta) && (fabs(dVx.vtY) > delta))
+      if((fabs(dVx.vtX) > epsilon) || (fabs(dVx.vtY) > epsilon))
       {
 	++idN;
 	*(sVx + idN) = (buf + idM)->sVx;
@@ -1655,10 +1757,10 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
 * \param	impThr		Implausibility threshold which should be
 *				greater than zero.
 */
-static WlzErrorNum WlzMatchICPFilterPts2D(WlzDVertex2 *tVx,
-				          WlzDVertex2 *sVx, int *nVxP,
-				          WlzAffineTransform *globTr,
-					  int nN, double impThr)
+static WlzErrorNum WlzMatchICPFilterPtsDisp2D(WlzDVertex2 *tVx,
+				              WlzDVertex2 *sVx, int *nVxP,
+				              WlzAffineTransform *globTr,
+					      int nN, double impThr)
 {
   int		tI0,
   		tI1,
@@ -1681,6 +1783,10 @@ static WlzErrorNum WlzMatchICPFilterPts2D(WlzDVertex2 *tVx,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   nVx = *nVxP;
+  if(nN > nVx)
+  {
+    nVx = nN;
+  }
   /* Create buffers for the transformed source points/point buffers,
    * implausibly measure, neighbour indicies/rank indicies and neighbour
    * distances. */
@@ -2633,546 +2739,3 @@ static void	WlzMatchICPShellListElmUnlink(WlzMatchICPShellList *list,
     elm->prev = elm->next = NULL;
   }
 }
-
-/* #define WLZ_MATCHICP_TEST 1 */
-
-#if WLZ_MATCHICP_TEST == 1
-/* Test main() for WlzMatchICPObjs().
- * Match input objects, find match points and output decomposed source
- * contour.
- */
-
-extern int	getopt(int argc, char * const *argv, const char *optstring);
-
-extern char	*optarg;
-extern int	optind,
-		opterr,
-		optopt;
-
-int             main(int argc, char *argv[])
-{
-  int           idx,
-		brkFlg = INT_MAX,
-		dbgFlg = 0,
-		nMatch,
-		maxItr = 200,
-		minSpx = 100,
-		matchImpNN = 7,
-  		option,
-  		ok = 1,
-		usage = 0;
-  double	thrMeanD = 1.0,
-  		thrMaxD = 3.0,
-		matchImpThr = 1.5;
-  FILE		*fP = NULL;
-  char		*inTrFileStr,
-  		*outFileStr,
-		*outDbgFileStr;
-  char		*inObjFileStr[2];
-  WlzObject	*inTrObj;
-  WlzObject	*inObj[2];
-  WlzVertexP	matchTP,
-  		matchSP;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char	*errMsg;
-  static char	optList[] = "aghrb:d:D:n:N:o:t:i:I:s:x:";
-  const char	outFileStrDef[] = "-",
-  		inObjFileStrDef[] = "-";
-
-  inTrObj = NULL;
-  inObj[0] = inObj[1] = NULL;
-  outFileStr = (char *)outFileStrDef;
-  outDbgFileStr = NULL;
-  inTrFileStr = NULL;
-  inObjFileStr[0] = inObjFileStr[1] = (char *)inObjFileStrDef;
-  matchTP.v = matchSP.v = NULL;
-  while(ok && ((option = getopt(argc, argv, optList)) != -1))
-  {
-    switch(option)
-    {
-      case 'b':
-        if((sscanf(optarg, "%d", &brkFlg) != 1) || (brkFlg < 0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'd':
-	dbgFlg = 1;
-        outDbgFileStr = optarg;
-	break;
-      case 'D':
-        if((sscanf(optarg, "%d", &dbgFlg) != 1) ||
-	   (dbgFlg < 0) || (dbgFlg > 2))
-        {
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'n':
-        if((sscanf(optarg, "%lg", &thrMeanD) != 1) || (thrMeanD <= 0.0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'N':
-        if((sscanf(optarg, "%d", &matchImpNN) != 1) || (matchImpNN < 1))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'o':
-        outFileStr = optarg;
-	break;
-      case 't':
-        inTrFileStr = optarg;
-	break;
-      case 'i':
-        if((sscanf(optarg, "%d", &maxItr) != 1) || (maxItr <= 0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'I':
-        if((sscanf(optarg, "%g", &matchImpThr) != 1) || (matchImpThr < 0.0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 's':
-        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'x':
-        if((sscanf(optarg, "%lg", &thrMaxD) != 1) || (thrMaxD <= 0.0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'h':
-        usage = 1;
-	ok = 0;
-	break;
-      default:
-        usage = 1;
-	ok = 0;
-	break;
-    }
-  }
-  if(ok)
-  {
-    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-       (outFileStr == NULL) || (*outFileStr == '\0'))
-    {
-      ok = 0;
-      usage = 1;
-    }
-    if(ok && (optind < argc))
-    {
-      if((optind + 2) != argc)
-      {
-        usage = 1;
-	ok = 0;
-      }
-      else
-      {
-        inObjFileStr[0] = *(argv + optind);
-        inObjFileStr[1] = *(argv + optind + 1);
-      }
-    }
-  }
-  if(ok)
-  {
-    idx = 0;
-    while(ok && (idx < 2))
-    {
-      if((inObjFileStr[idx] == NULL) ||
-	  (*inObjFileStr[idx] == '\0') ||
-	  ((fP = (strcmp(inObjFileStr[idx], "-")?
-		  fopen(inObjFileStr[idx], "r"): stdin)) == NULL) ||
-	  ((inObj[idx] = WlzAssignObject(WlzReadObj(fP, &errNum),
-	  				 NULL)) == NULL) ||
-	  (errNum != WLZ_ERR_NONE))
-      {
-	ok = 0;
-	(void )fprintf(stderr,
-		       "%s: failed to read object from file %s\n",
-		       *argv, inObjFileStr[idx]);
-      }
-      if(fP && strcmp(inObjFileStr[idx], "-"))
-      {
-	fclose(fP);
-        fP = NULL;
-      }
-      ++idx;
-    }
-  }
-  if(ok && inTrFileStr && (*inTrFileStr != '\0'))
-  {
-    if(((fP = (strcmp(inTrFileStr, "-")?
-    	       fopen(inTrFileStr, "r"): stdin)) == NULL) ||
-       ((inTrObj = WlzAssignObject(WlzReadObj(fP, &errNum),
-       				   NULL)) == NULL) ||
-       (errNum != WLZ_ERR_NONE))
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s Failed to read the initial affine transform from\n"
-      		     "file %s.\n",
-		     *argv, inTrFileStr);
-    }
-    if(fP && strcmp(inTrFileStr, "-"))
-    {
-      fclose(fP);
-      fP = NULL;
-    }
-    if(inTrObj &&
-       ((inTrObj->type != WLZ_AFFINE_TRANS) || (inTrObj->domain.core == NULL)))
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s: Initial affine transform object invalid type\n",
-		     *argv);
-    }
-  }
-  if(ok)
-  {
-    errNum = WlzMatchICPObjs(inObj[0], inObj[1],
-    			     (inTrObj)? inTrObj->domain.t: NULL,
-			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD,
-			     matchImpNN, matchImpThr);
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s Failed to match contours.\n",
-      		     argv[0]);
-    }
-  }
-  if(ok)
-  {
-    if(outDbgFileStr && (dbgFlg > 0))
-    {
-      errNum = WLZ_ERR_WRITE_EOF;
-      if(((fP = (strcmp(outDbgFileStr, "-")?
-      	        fopen(outDbgFileStr, "w"):
-		stdout)) == NULL))
-      {
-	ok = 0;
-	(void )WlzStringFromErrorNum(errNum, &errMsg);
-	(void )fprintf(stderr,
-		       "%s: failed to open debug object "
-		       "file %s (%s).\n",
-		       *argv, outDbgFileStr, errMsg);
-      }
-      else if((errNum = WlzWriteObj(fP, inObj[1])) != WLZ_ERR_NONE)
-      {
-	ok = 0;
-	(void )WlzStringFromErrorNum(errNum, &errMsg);
-	(void )fprintf(stderr,
-		       "%s: failed to write debug object "
-		       "to file %s (%s).\n",
-		       *argv, outDbgFileStr, errMsg);
-      }
-      if(fP && strcmp(outDbgFileStr, "-"))
-      {
-        (void )fclose(fP);
-      }
-    }
-  }
-  if(ok)
-  {
-    errNum = WLZ_ERR_WRITE_EOF;
-    if(((fP = (strcmp(outFileStr, "-")?
-              fopen(outFileStr, "w"):
-	      stdout)) == NULL))
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr,
-      		     "%s: failed to open correspondences "
-		     "file %s (%s).\n",
-		     *argv, outFileStr, errMsg);
-    }
-    else
-    {
-      /* Output the correspondces: Assumed to be WlzDVertex2. */
-      for(idx = 0; idx <nMatch; ++idx)
-      {
-        fprintf(fP, "%g %g %g %g\n",
-		(matchSP.d2 + idx)->vtX, (matchSP.d2 + idx)->vtY,
-		(matchTP.d2 + idx)->vtX - (matchSP.d2 + idx)->vtX,
-		(matchTP.d2 + idx)->vtY - (matchSP.d2 + idx)->vtY);
-      }
-    }
-    if(fP && strcmp(outFileStr, "-"))
-    {
-      (void )fclose(fP);
-    }
-  }
-  AlcFree(matchTP.v);
-  AlcFree(matchSP.v);
-  (void )WlzFreeObj(inTrObj);
-  (void )WlzFreeObj(inObj[0]);
-  (void )WlzFreeObj(inObj[1]);
-  if(usage)
-  {
-      (void )fprintf(stderr,
-      "Usage: %s%s",
-      *argv,
-      " [-b#] [-d#] [-D#] [-n#] [-o#] [-t#] [-i#] [-h] [-x#]\n"
-      "          [<input object 0>] [<input object 1>]\n"
-      "Options:\n"
-      "  -b  Shell breaking control value.\n"
-      "  -d  Debug output file.\n"
-      "  -D  Debug flag:\n"
-      "        0  no debug output.\n"
-      "        1  untransformed decomposed source model.\n"
-      "        2  transformed decomposed source model.\n"
-      "  -h  Prints this usage information.\n"
-      "  -o  Output file name.\n"
-      "  -t  Initial affine transform.\n"
-      "  -i  Maximum number of iterations.\n"
-      "  -s  Miimum number of simplicies.\n"
-      "  -n  Threshold mean source normal vertex distance for fragment to\n"
-      "      be used in correspondence computation.\n"
-      "  -x  Threshold maximum source normal vertex distance for fragment to\n"
-      "      be used in correspondence computation.\n"
-      "  -I  Implausibility threshold for rejecting implausible\n"
-      "      correspondence points which should be greater than zero,\n"
-      "      although the useful range is probably [0.5-2.5]. Higher\n"
-      "      values allow more implausible matches to be returned.\n"
-      "  -N  Number of matc points in neighbourhood when checking the\n"
-      "	     plausibility of the correspondence points.\n"
-      "Reads a pair of contours and computes a set of correspondence points\n"
-      "using an ICP based matching algorithm. The correspondence points are\n"
-      "ranked by plausibility, with the most plausible first\n");
-  }
-  return(!ok);
-}
-#endif /* WLZ_MATCHICP_TEST == 1 */
-
-#if WLZ_MATCHICP_TEST == 2
-/* Test main() for WlzMatchICPObjs().
- * Decompose the input contour. Each shell of the given contour is
- * decomposed.
- */
-
-extern int	getopt(int argc, char * const *argv, const char *optstring);
-
-extern char	*optarg;
-extern int	optind,
-		opterr,
-		optopt;
-
-int             main(int argc, char *argv[])
-{
-  int           idx,
-  		sCount,
-		maxCrv = 1,
-  		minSpx = 100,
-  		option,
-  		ok = 1,
-		usage = 0;
-  FILE		*fP = NULL;
-  char		*inObjFileStr,
-		*outObjFileStr;
-  WlzObject	*obj = NULL;
-  WlzGMModel 	*model;
-  WlzGMShell 	*shell;
-  WlzGMShell	**allShells;
-  WlzVertexP	sVx,
-  		sNr;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char	*errMsg;
-  static char	optList[] = "hnxo:s:";
-  const char	inObjFileStrDef[] = "-",
-  		outObjFileStrDef[] = "-";
-
-  sVx.v = NULL;
-  sNr.v = NULL;
-  inObjFileStr = (char *)inObjFileStrDef;
-  outObjFileStr = (char *)outObjFileStrDef;
-  while(ok && ((option = getopt(argc, argv, optList)) != -1))
-  {
-    switch(option)
-    {
-      case 'o':
-        outObjFileStr = optarg;
-	break;
-      case 's':
-        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'n':
-        maxCrv = 0;
-	break;
-      case 'x':
-        maxCrv = 1;
-	break;
-      case 'h':
-        usage = 1;
-	ok = 0;
-	break;
-      default:
-        usage = 1;
-	ok = 0;
-	break;
-    }
-  }
-  if(ok)
-  {
-    if(ok && (optind < argc))
-    {
-      if((optind + 1) != argc)
-      {
-        usage = 1;
-	ok = 0;
-      }
-      else
-      {
-        inObjFileStr = *(argv + optind);
-      }
-    }
-  }
-  if(ok)
-  {
-    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-       ((fP = (strcmp(inObjFileStr, "-")?
-	       fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((obj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-       (errNum != WLZ_ERR_NONE))
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-		     "%s: failed to read object from file %s\n",
-		     *argv, inObjFileStr);
-    }
-    if(fP && strcmp(inObjFileStr, "-"))
-    {
-      fclose(fP);
-      fP = NULL;
-    }
-  }
-  if(ok)
-  {
-    if(obj->type != WLZ_CONTOUR)
-    {
-      errNum = WLZ_ERR_OBJECT_TYPE;
-    }
-    else if((obj->domain.core == NULL) ||
-            ((model = obj->domain.ctr->model) == NULL))
-    {
-      errNum = WLZ_ERR_DOMAIN_NULL;
-    }
-    else
-    {
-      sVx = WlzVerticiesFromCtr(obj->domain.ctr, &sNr, NULL, NULL, NULL,
-      				&errNum);
-      if((errNum == WLZ_ERR_NONE) && (sVx.v == NULL))
-      {
-        errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      /* Make an  array of the existing shells. */
-      sCount = 0;
-      if((shell = model->child) != NULL)
-      {
-	do
-	{
-	  ++sCount;
-	  shell = shell->next;
-	} while(shell != model->child);
-      }
-      /* Fill the array and then decompose all the shells. */
-      if(sCount > 0)
-      {
-        if((allShells = (WlzGMShell **)
-		        AlcMalloc(sizeof(WlzGMShell *) * sCount)) == NULL)
-	{
-	  errNum = WLZ_ERR_MEM_ALLOC;
-	}
-	else
-	{ 
-	  idx = 0;
-	  do
-	  {
-	    allShells[idx++] = shell;
-	    shell = shell->next;
-	  } while(shell != model->child);
-	  idx = 0;
-	  while((errNum == WLZ_ERR_NONE) && (idx < sCount))
-	  {
-	    errNum = WlzMatchICPBreakShellLoopTs(model, allShells[idx++], sNr,
-	    				         minSpx, maxCrv);
-	  }
-	  AlcFree(allShells);
-	}
-      }
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s Failed to decompose contour.\n",
-      		     argv[0]);
-    }
-  }
-  if(ok)
-  {
-    if((fP = (strcmp(outObjFileStr, "-")?
-	      fopen(outObjFileStr, "w"): stdout)) == NULL)
-    {
-      ok = 0;
-      errNum = WLZ_ERR_WRITE_EOF;
-      (void )fprintf(stderr, "%s Failed to open output file %s.\n",
-      		     argv[0], outObjFileStr);
-    }
-  }
-  if(ok)
-  {
-    if((errNum = WlzWriteObj(fP, obj)) != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr,
-		     "%s: failed to write objec to file %s (%s).\n",
-		     *argv, outObjFileStr, errMsg);
-    }
-    if(fP && strcmp(outObjFileStr, "-"))
-    {
-      (void )fclose(fP);
-    }
-  }
-  (void )WlzFreeObj(obj);
-  if(usage)
-  {
-      (void )fprintf(stderr,
-      "Usage: %s%s",
-      *argv,
-      "  [-o#] [-s#] [-h] [-n] [-x] [<input object>]\n"
-      "Options:\n"
-      "  -o  Output file name.\n"
-      "  -s  Minimum number of simplicies.\n"
-      "  -h  Prints this usage information.\n"
-      "  -n  Break at minimum curvature.\n"
-      "  -x  Break at maximum curvature.\n"
-      "Reads a contours and then decomposes each of it's shells.\n");
-  }
-  AlcFree(sVx.v);
-  AlcFree(sNr.v);
-  return(!ok);
-}
-#endif /* WLZ_MATCHICP_TEST == 2 */

@@ -43,8 +43,9 @@ int             main(int argc, char *argv[])
   		option,
   		ok = 1,
 		usage = 0;
-  double	thrMeanD = 2.0,
-  		thrMaxD = 3.0,
+  double	maxAng = 30 / (2.0 * ALG_M_PI),
+  		maxDeform = 0.5,
+  		maxDisp = 25.0,
 		matchImpThr = 1.5;
   FILE		*fP = NULL;
   char		*inTrFileStr,
@@ -57,7 +58,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrb:d:D:n:N:o:t:i:I:s:x:";
+  static char	optList[] = "aghrA:b:d:D:F:N:o:t:i:I:s:S:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -91,8 +92,20 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
-      case 'n':
-        if((sscanf(optarg, "%lg", &thrMeanD) != 1) || (thrMeanD <= 0.0))
+      case 'A':
+        if((sscanf(optarg, "%lg", &maxAng) != 1) ||
+	   (maxAng < 0.0) || (maxAng > 180.0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	else
+	{
+	  maxAng *= 1 / (2.0 * ALG_M_PI);
+	}
+	break;
+      case 'F':
+        if((sscanf(optarg, "%lg", &maxDeform) != 1) || (maxDeform < 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -119,7 +132,7 @@ int             main(int argc, char *argv[])
 	}
 	break;
       case 'I':
-        if((sscanf(optarg, "%g", &matchImpThr) != 1) || (matchImpThr < 0.0))
+        if((sscanf(optarg, "%lg", &matchImpThr) != 1) || (matchImpThr < 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -132,8 +145,8 @@ int             main(int argc, char *argv[])
 	  ok = 0;
 	}
 	break;
-      case 'x':
-        if((sscanf(optarg, "%lg", &thrMaxD) != 1) || (thrMaxD <= 0.0))
+      case 'S':
+        if((sscanf(optarg, "%lg", &maxDisp) != 1) || (maxDisp <= 0.0))
 	{
 	  usage = 1;
 	  ok = 0;
@@ -230,7 +243,8 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, thrMeanD, thrMaxD,
+			     maxItr, minSpx, brkFlg,
+			     maxDisp, maxAng, maxDeform,
 			     matchImpNN, matchImpThr);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -323,10 +337,9 @@ int             main(int argc, char *argv[])
       "  -t  Initial affine transform.\n"
       "  -i  Maximum number of iterations.\n"
       "  -s  Miimum number of simplicies.\n"
-      "  -n  Threshold mean source normal vertex distance for fragment to\n"
-      "      be used in correspondence computation.\n"
-      "  -x  Threshold maximum source normal vertex distance for fragment to\n"
-      "      be used in correspondence computation.\n"
+      "  -A  Maximum angle (degrees) from a global transformation.\n"
+      "  -S  Maximum displacement from a global transformed position.\n"
+      "  -F  Maximum deformation from a global transformation.\n"
       "  -I  Implausibility threshold for rejecting implausible\n"
       "      correspondence points which should be greater than zero,\n"
       "      although the useful range is probably [0.5-2.5]. Higher\n"

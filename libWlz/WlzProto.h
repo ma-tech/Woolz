@@ -2061,8 +2061,9 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  int maxItr,
 				  int minSpx,
 				  int brkFlg,
-				  double thrMeanD,
-				  double thrMaxD,
+				  double maxDisp,
+				  double maxAng,
+				  double maxDeform,
 				  int matchImpNN,
 				  double matchImpThr);
 #endif /* WLZ_EXT_BIND */
