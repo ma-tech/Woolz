@@ -59,9 +59,9 @@ DEPENDDIRS              = \
                           ../libAlc \
                           ../libAlg \
                           ../libWlz \
-			../libWlzExtFF \
-			../libbibfile \
-			../libHGUDlpList
+			  ../libWlzExtFF \
+			  ../libbibfile \
+			  ../libhguDlpList
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
