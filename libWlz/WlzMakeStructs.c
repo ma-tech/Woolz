@@ -12,6 +12,9 @@
 * Purpose:      Makes Woolz object types.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 07-12-00 bill Set error flag if invalid grey type in WlzNewValueTb().
+*		Correct order of parameters in calll to AlcCalloc() in
+*		WlzMakeValueTb().
 * 15-08-00 bill	Move WlzMakeContour() from WlzContour.c to here.
 *		Add WLZ_CONTOUR to WlzMakemain().
 * 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
@@ -351,7 +354,7 @@ WlzMakeValueTb(WlzObjectType	type,
   /* allocate space */
   if( errNum == WLZ_ERR_NONE ){
     if( (vtb = (WlzRagRValues *)
-	 AlcCalloc(sizeof(WlzRagRValues) + valuelinespace, 1)) == NULL ){
+	 AlcCalloc(1, sizeof(WlzRagRValues) + valuelinespace)) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
@@ -1239,6 +1242,7 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	break;
 
       default:
+	errNum = WLZ_ERR_GREY_TYPE;
 	break;
       }
 
