@@ -39,8 +39,8 @@ public class SVParent
 
   private String SLASH = System.getProperty("file.separator");
 
-  protected static int defViewW = 550;
-  protected static int defViewH = 450;
+  protected static int defViewW = 450;
+  protected static int defViewH = 550;
 
 //-----------------------------------------------------
   /**
