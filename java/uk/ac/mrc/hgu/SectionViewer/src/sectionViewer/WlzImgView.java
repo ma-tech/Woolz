@@ -1098,7 +1098,7 @@ public class WlzImgView extends Component {
    //-------------------------------------------------------------
    public BufferedImage getComponentBufferedImage(boolean showInterSecLines) {
      _showInterSecLines = showInterSecLines;
-     getComponentBufferedImage();
+     return getComponentBufferedImage();
    }
    //-------------------------------------------------------------
    public BufferedImage getComponentBufferedImage() {
