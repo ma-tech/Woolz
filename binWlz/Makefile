@@ -45,6 +45,7 @@ EXECUTABLES		= \
 			WlzContourSzSelect \
 			WlzConvertPix \
 			WlzConvexPoly \
+			WlzCreateSpecialSE \
 			WlzCutObjToBox \
 			WlzDilation \
 			WlzDiffDomain \
@@ -94,6 +95,8 @@ EXECUTABLES		= \
 			WlzShiftObj \
 			WlzSkeleton \
 			WlzSobel \
+			WlzStructDilation \
+			WlzStructErosion \
 			WlzTransposeObj \
 			WlzTransposePlanes \
 			WlzThreshold \
@@ -124,6 +127,7 @@ CSOURCES		= \
 			WlzContourSzSelect.c \
 			WlzConvertPix.c \
 			WlzConvexPoly.c \
+			WlzCreateSpecialSE.c \
 			WlzCutObjToBox.c \
 			WlzDilation.c \
 			WlzDiffDomain.c \
@@ -175,6 +179,8 @@ CSOURCES		= \
 			WlzShiftObj.c \
 			WlzSkeleton.c \
 			WlzSobel.c \
+			WlzStructDilation.c \
+			WlzStructErosion.c \
 			WlzTransposeObj.c \
 			WlzTransposePlanes.c \
 			WlzThreshold.c \
