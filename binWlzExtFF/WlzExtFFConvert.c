@@ -30,21 +30,33 @@ extern int      optind,
 
 static WlzEffFormat WlzEffStringExtFromFileName(const char *fNameStr)
 {
-  WlzEffFormat	fFmt = WLZEFF_FORMAT_NONE;
-  int		fNameLen;
+  int		len;
+  char		*dot,
+  		*ext,
+		*sep;
+  WlzEffFormat	fmt = WLZEFF_FORMAT_NONE;
 
-  if(fNameStr && ((fNameLen = strlen(fNameStr)) > 4) &&
-     (*(fNameStr + fNameLen - 4) == '.') &&
-     (*(fNameStr + fNameLen - 1) != '/'))
+  if(((len = strlen(fNameStr)) >= 3) &&  /* Minimum of 3 chars. */
+     (*(fNameStr + len - 1) != '/'))     /* Directory not plain file. */
   {
-    fFmt = WlzEffStringExtToFormat(fNameStr + fNameLen - 3);
+    sep = strrchr(fNameStr, '/');
+    if(((dot = strrchr(fNameStr, '.')) != NULL) &&
+       ((sep == NULL) || ((dot - sep) > 1)))
+    {
+      ext = ++dot;
+      if(ext != NULL)
+      {
+        fmt = WlzEffStringExtToFormat(ext);
+      }
+    }
   }
-  return(fFmt);
+  return(fmt);
 }
 
 int             main(int argc, char **argv)
 {
   int		bgdFlag = 0,
+		split = 0,
   		option,
 		ok = 1,
 		usage = 0;
@@ -61,7 +73,7 @@ int             main(int argc, char **argv)
   		bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char    *errMsg;
-  static char	optList[] = "b:f:F:o:x:y:z:h",
+  static char	optList[] = "b:f:F:o:x:y:z:hs",
 		outObjFileStrDef[] = "-",
 		inObjFileStrDef[] = "-";
  
@@ -126,7 +138,10 @@ int             main(int argc, char **argv)
       case 'o':
         outObjFileStr = optarg;
 	break;
-      case 'h':
+      case 's':
+        split = 1;
+	break;
+      case 'h': /* FALLTHROUGH */
       default:
 	usage = 1;
 	ok = 0;
@@ -184,8 +199,8 @@ int             main(int argc, char **argv)
       fStr = inObjFileStr;
     }
     errNum = WLZ_ERR_READ_EOF;
-    if((inObj= WlzAssignObject(WlzEffReadObj(fP, fStr,
-       					     inFmt, &errNum), NULL)) == NULL)
+    if((inObj= WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, split,
+    					     &errNum), NULL)) == NULL)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -272,6 +287,7 @@ int             main(int argc, char **argv)
       "neither of which need be the Woolz data file format.\n"
       "Options are:\n"
       "  -h    Help, prints this usage information.\n"
+      "  -s    Split labeled volumes into domains.\n"
       "  -b#   Set background to vale,\n"
       "  -f#   Input file format.\n"
       "  -F#   Ouput file format.\n"
@@ -282,6 +298,7 @@ int             main(int argc, char **argv)
       "Valid formats are:\n"
       "  Description                 Fmt     Extension\n"
       "  ***********                 ***     *********\n"
+      "  Amira Lattice               am      .am\n"
       "  Microsoft Bitmap            bmp     .bmp\n"
       "  Stanford Density            den     .den\n"
       "  ICS                         ics     .ics/.ids\n"
