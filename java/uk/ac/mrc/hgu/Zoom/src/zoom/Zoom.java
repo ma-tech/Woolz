@@ -105,8 +105,8 @@ public class Zoom extends ZoomGUI {
      if(TToM != null) {
 	textf.removeActionListener(TToM);
      }
-     //TToM = new textToModelAdaptor(textf, _mod1);
-     TToM = new textToModelAdaptor();
+     TToM = new textToModelAdaptor(textf, _mod1);
+     //TToM = new textToModelAdaptor();
      textf.addActionListener(TToM);
 
 //...............................
@@ -114,8 +114,8 @@ public class Zoom extends ZoomGUI {
      if(MToT != null) {
 	_mod1.removeChangeListener(MToT);
      }
-     //MToT = new modelToTextAdaptor(_mod1, textf);
-     MToT = new modelToTextAdaptor();
+     MToT = new modelToTextAdaptor(_mod1, textf);
+    // MToT = new modelToTextAdaptor();
      _mod1.addChangeListener(MToT);
 
 //...............................
@@ -230,11 +230,14 @@ public class Zoom extends ZoomGUI {
     implements ActionListener {
     ZoomModel model;
     JTextField control;
-    Integer VAL;
+    double VAL;
+    String textstr = "";
+    String msg = "the zoom control's text field expects a number\n such as 100 or 100.5";
 
   /**
    * Constructor
    */
+
     public textToModelAdaptor(JTextField cntrl, ZoomModel mdl) {
       model = mdl;
       control = cntrl;
@@ -248,8 +251,23 @@ public class Zoom extends ZoomGUI {
    * @return	void
    */
     public void actionPerformed(ActionEvent e) {
-       VAL = new Integer(textf.getText());
-       _mod1.setValue(VAL.intValue());
+       try {
+          textstr = control.getText();
+          VAL = Double.parseDouble(textstr);
+          model.setValue((int)VAL);
+       }
+       catch(NullPointerException npe) {
+          System.out.println(
+               "null pointer exception in Zoom textToModelAdaptor");
+       }
+       catch(NumberFormatException npe) {
+          control.setText("");
+          JOptionPane.showMessageDialog(null,
+                                        msg,
+                                        "alert",
+                                        JOptionPane.ERROR_MESSAGE);
+       }
+
     }
   } // class textToModelAdaptor
 

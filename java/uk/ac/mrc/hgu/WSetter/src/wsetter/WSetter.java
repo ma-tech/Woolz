@@ -328,6 +328,10 @@ public class WSetter extends WSetterGUI
     implements ActionListener {
     WSetterModel model;
     JTextField control;
+    double VAL;
+    String textstr = "";
+    String msg = "the slider's text field expects a number\n such as 10 or 10.5";
+
   /**
    * Constructor
    */
@@ -336,15 +340,28 @@ public class WSetter extends WSetterGUI
       control = cntrl;
     }
 
-    Double VAL;
   /**
    * Event handler, sets the slider to the value in the text field.
    * @param	ActionEvent e
    * @return	void
    */
     public void actionPerformed(ActionEvent e) {
-       VAL = new Double(control.getText());
-       model.setValue(VAL.doubleValue());
+       try {
+          textstr = control.getText();
+	  VAL = Double.parseDouble(textstr);
+	  model.setValue(VAL);
+       }
+       catch(NullPointerException npe) {
+          System.out.println(
+	       "null pointer exception in WSetter textToModelAdaptor");
+       }
+       catch(NumberFormatException npe) {
+          control.setText("");
+	  JOptionPane.showMessageDialog(null,
+	                                msg,
+					"alert",
+	                                JOptionPane.ERROR_MESSAGE);
+       }
     }
   } // class textToModelAdaptor
 
