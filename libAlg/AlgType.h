@@ -15,6 +15,8 @@
 *		Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 26-01-00 bill	Added AlgPadType.
+* 21-01-00 bill	Added ALG_ERR_CONVERGENCE and AlgDistribution.
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -43,6 +45,22 @@ extern "C" {
 #define ALG_M_SQRT2	(1.4142135623730950488016887242096980785696)
 #define	ALG_M_SQRT1_2	(0.70710678118654752440)
 
+/* Named distribution functions. */
+typedef enum
+{
+  ALG_DISTRIBUTION_NORMAL,
+  ALG_DISTRIBUTION_EXP,   
+  ALG_DISTRIBUTION_POISSON,
+  ALG_DISTRIBUTION_BINOMIAL 
+} AlgDistribution;
+
+typedef enum
+{
+  ALG_PAD_NONE,                    /* No padding, same as padding with zeros */
+  ALG_PAD_ZERO,                                       /* Pad data with zeros */
+  ALG_PAD_END                        /* Pad data with first/last data values */
+} AlgPadType;
+
 /* complex number data type */
 typedef struct {
   double	re;
@@ -58,6 +76,7 @@ typedef enum
   ALG_ERR_MALLOC,				/* Memory allocation failure */
   ALG_ERR_SINGULAR,					  /* Singular matrix */
   ALG_ERR_HOMOGENEOUS,				       /* Homogeneous matrix */
+  ALG_ERR_CONVERGENCE,			              /* Failure to converge */
   ALG_ERR_MAX
 } AlgError;
 

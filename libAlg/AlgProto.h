@@ -15,14 +15,33 @@
 *		Human Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 26-01-00 bill Add AlgConvolve() and AlgMixture().
 ************************************************************************/
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
+/* From AlgComplexUtils.c */
+extern double	AlgCMod(ComplexD z);
+extern double	AlgCArg(ComplexD z);
+extern double	AlgCRe(ComplexD z);
+extern double	AlgCIm(ComplexD z);
+extern ComplexD	AlgCConj(ComplexD z);
+extern ComplexD AlgCAdd(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCSub(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCMult(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCDiv(ComplexD z1, ComplexD z2);
+extern ComplexD AlgCPow(ComplexD z, double pow);
+
 /* From AlgDebug.c */
 extern AlgError	AlgDbgWrite(char *fmt, ...);
+
+/* From AlgConvolve.c */
+extern AlgError AlgConvolve(int sizeArrayCnv, double *arrayCnv,
+    			    int sizeArrayKrn, double *arrayKrn,
+    	   	   	    int sizeArrayDat, double *arrayDat,
+    			    AlgPadType pad);
 
 /* From AlgFourier.c */
 extern void     AlgFourHart1D(double *data, int num, int step, int cThr),
@@ -66,6 +85,12 @@ extern AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
 				   double *wMat, double **vMat,
 				   double *bMat);
 
+/* From AlgMixture.c */
+extern AlgError  AlgMixture(AlgDistribution dbnType, int nDbn, int nCls,
+		    	    double *x, int *freq, double *alpha, double *mean,
+		    	    double *sd, double tol, int nObv, double *dstLL,
+		    	    int *nItn);
+
 /* From AlgPolyLSQ.c */
 extern AlgError        AlgPolynomialLSq(double *xVec, double *yVec,
                                         int vecSz, int polyDeg,
@@ -80,17 +105,6 @@ extern void	*algDbgData;
 extern AlgDbgFn	algDbgOutFn;
 extern AlgError	AlgDbgWrite(char *, ...);
 
-/* from AlgComplexUtils.c */
-extern double	AlgCMod(ComplexD z);
-extern double	AlgCArg(ComplexD z);
-extern double	AlgCRe(ComplexD z);
-extern double	AlgCIm(ComplexD z);
-extern ComplexD	AlgCConj(ComplexD z);
-extern ComplexD AlgCAdd(ComplexD z1, ComplexD z2);
-extern ComplexD AlgCSub(ComplexD z1, ComplexD z2);
-extern ComplexD AlgCMult(ComplexD z1, ComplexD z2);
-extern ComplexD AlgCDiv(ComplexD z1, ComplexD z2);
-extern ComplexD AlgCPow(ComplexD z, double pow);
 
 #ifdef  __cplusplus
 }

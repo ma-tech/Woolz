@@ -28,11 +28,13 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			  AlgComplexUtils.c \
+			  AlgConvolve.c \
 			  AlgDebug.c \
 			  AlgFourier.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLU.c \
 			  AlgMatrixSV.c \
+			  AlgMixture.c \
 			  AlgPolyLSQ.c \
 			  AlgRand.c
 
