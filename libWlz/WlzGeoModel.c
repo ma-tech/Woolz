@@ -9350,7 +9350,6 @@ WlzErrorNum	WlzGMModelConstructSimplex3N(WlzGMModel *model,
 	  break;
 	case 2:
 	  /* Two verticies matched, check for existing edges and shells. */
-	  /* HACK TODO set normals. */
 	  idx0 = matchVtxIdx[matchCode][0];
 	  idx1 = matchVtxIdx[matchCode][1];
 	  idx2 = matchVtxIdx[matchCode][2];
