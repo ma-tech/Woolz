@@ -200,6 +200,14 @@ extern WlzErrorNum Wlz3DViewGetFixedLineAngle(WlzThreeDViewStruct	*vs,
 					      double		*dstVal);
 extern WlzErrorNum Wlz3DViewSetFixedLineAngle(WlzThreeDViewStruct	*vs,
 					      double		val);
+extern WlzErrorNum Wlz3DViewGetMaxvals(WlzThreeDViewStruct	*vs,
+				       double			*dstX,
+				       double			*dstY,
+				       double			*dstZ);
+extern WlzErrorNum Wlz3DViewGetMinvals(WlzThreeDViewStruct	*vs,
+				       double			*dstX,
+				       double			*dstY,
+				       double			*dstZ);
 /************************************************************************
 * Wlz3DViewTransformObj.c						*
 ************************************************************************/

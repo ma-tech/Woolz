@@ -754,7 +754,6 @@ static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
 	  {
 	    (void )WlzAssignDomain(dumDom, &errNum);
 	    dstBound->down = dumDom.b;
-	    dstBound->down->up = dstBound;
 	  }
 	}
       }

@@ -242,13 +242,6 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	    (void )WlzFreePolyDmn(tDom0.poly);
 	  }
 	}
-	if((errNum == WLZ_ERR_NONE) && inDom.b->up)
-	{
-	  tDom0.b = inDom.b->up;
-	  tDom1 = WlzAssignDomain(WlzCopyDomain(WLZ_BOUNDLIST, tDom0,
-	  					&errNum), NULL);
-	  outDom.b->up = tDom1.b;
-	}
 	if((errNum == WLZ_ERR_NONE) && inDom.b->next)
 	{
 	  tDom0.b = inDom.b->next;

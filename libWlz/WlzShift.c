@@ -302,14 +302,6 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 	  }
 	}
 
-	if((errNum == WLZ_ERR_NONE) && inDom.b->up)
-	{
-	  tDom0.b = inDom.b->up;
-	  tDom1 = WlzAssignDomain(WlzShiftDomain(WLZ_BOUNDLIST, tDom0,
-	  					 xShift, yShift, zShift,
-						 &errNum), NULL);
-	  outDom.b->up = tDom1.b;
-	}
 	if((errNum == WLZ_ERR_NONE) && inDom.b->next)
 	{
 	  tDom0.b = inDom.b->next;

@@ -1205,3 +1205,44 @@ WlzErrorNum Wlz3DViewSetFixedLineAngle(
 
   return errNum;
 }
+
+WlzErrorNum Wlz3DViewGetMaxvals(
+  WlzThreeDViewStruct	*vs,
+  double		*dstX,
+  double		*dstY,
+  double		*dstZ)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstX = vs->maxvals.vtX;
+    *dstY = vs->maxvals.vtY;
+    *dstZ = vs->maxvals.vtZ;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum Wlz3DViewGetMinvals(
+  WlzThreeDViewStruct	*vs,
+  double		*dstX,
+  double		*dstY,
+  double		*dstZ)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( vs ){
+    *dstX = vs->minvals.vtX;
+    *dstY = vs->minvals.vtY;
+    *dstZ = vs->minvals.vtZ;
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  return errNum;
+}
+
