@@ -1,28 +1,44 @@
 # JAVAHEAPSIZE = 50m
 
-SOURCEPATH = ./src/zoom
-TARGETPATH = ./classes/zoom
+SOURCEPATH = ./src/zoom/
+TARGETPATH = ./classes/zoom/
 #JAVAC = /opt/java/bin/javac
 JAVAC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javac
 JAR = /opt/java/bin/jar
-JAVACFLAGS = -d classes
 
-OBJECTS = $(TARGETPATH)/ZoomGUI.class \
-          $(TARGETPATH)/Zoom.class \
-          $(TARGETPATH)/ZoomModel.class \
-	  $(TARGETPATH)/LimitListener.class \
-	  $(TARGETPATH)/LimitEvent.class
+SOURCES = \
+          $(SOURCEPATH)LimitEvent.java \
+          $(SOURCEPATH)LimitListener.java \
+          $(SOURCEPATH)ZoomGUI.java \
+          $(SOURCEPATH)ZoomModel.java \
+          $(SOURCEPATH)Zoom.java
 
-all:	$(OBJECTS)
+OBJECTS = \
+          $(TARGETPATH)LimitEvent.class \
+          $(TARGETPATH)LimitListener.class \
+          $(TARGETPATH)ZoomGUI.class \
+          $(TARGETPATH)ZoomModel.class \
+          $(TARGETPATH)Zoom.class
 
-# rule to make classes from .java files
-$(TARGETPATH)%.class:   $(SOURCEPATH)%.java
-	$(JAVAC) $(JAVACFLAGS) $<
+all:		$(OBJECTS) jar
 
-clean: clobber
+classes:	$(OBJECTS)
+
+$(OBJECTS):	$(SOURCES)
+	cd ./src/zoom; gmake all
+	mv $(SOURCEPATH)*.class $(TARGETPATH)
+
+jar: 		$(OBJECTS)
+	cd ./classes;cp -r images zoom;$(JAR) cfm ../zoom.jar bean.tmp zoom
+
+# Use doxygen to make the documentation
+doc:
+	cd src/zoom; doxygen
+
+clean: 		clobber
 
 clobber:
-	-rm -rf classes/zoom/*.class classes/*.class *.jar META-INF
+	-rm -rf *.jar META-INF dox
+	cd src/zoom; rm -rf *.class doxygen.tag
+	cd classes; rm -rf zoom/*.class
 
-jar: $(OBJECTS)
-	cd ./classes;cp -r images zoom;$(JAR) cfm ../zoom.jar bean.tmp zoom
