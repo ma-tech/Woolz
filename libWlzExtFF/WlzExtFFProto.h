@@ -43,6 +43,8 @@ extern WlzErrorNum 		WlzEffWriteObj(
 				  WlzObject *obj,
 				  WlzEffFormat fFmt);
 extern int			WlzEffNumberOfFormats(void);
+
+#ifndef WLZ_EXT_BIND
 /* From WlzExtFFBmp.c */
 extern WlzObject 		*WlzEffReadObjBmp(
 				  const char *gvnFileName,
@@ -255,6 +257,7 @@ extern WlzErrorNum WlzEffBibWriteWarpInputThresholdParamsRecord(
 extern WlzErrorNum WlzEffBibParseWarpInputThresholdParamsRecord(
   BibFileRecord		*bibfileRecord,
   WlzEffBibWarpInputThresholdParamsStruct	*paramStruct);
+#endif /* WLZ_EXT_BIND */
 
 #ifdef  __cplusplus
 }
