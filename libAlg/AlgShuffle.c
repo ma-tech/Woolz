@@ -78,7 +78,7 @@ AlgError	AlgShuffleIdx(int nShuffle, int *shuffle, int seed)
   return(algErr);
 }
 
-#ifdef ALG_SHUFFLE_TEST
+#if (ALG_SHUFFLE_TEST == 1)
 
 extern char	*optarg;
 extern int	optind,
@@ -154,7 +154,137 @@ int		main(int argc, char *argv[])
   }
   return(!ok);
 }
-#endif /* ALG_SHUFFLE_TEST */
+#endif /* ALG_SHUFFLE_TEST == 1 */
+
+#if (ALG_SHUFFLE_TEST == 2)
+
+#define MAX_BUF_LEN	(1000)
+#define DATA_CHUNK_SZ	(10000)
+
+extern char	*optarg;
+extern int	optind,
+		opterr,
+		optopt;
+
+int		main(int argc, char *argv[])
+{
+  int		idx,
+		maxData = 0,
+		nData = 0,
+		seed = 0,
+		option,
+		ok = 1,
+		usage = 0;
+  int		*iData = NULL;
+  char		**sData = NULL;
+  FILE		*fP;
+  char		*inFileStr;
+  char		rec[MAX_BUF_LEN];
+  static char	optList[] = "hs:",
+  		defFileStr[]= "-";
+
+  opterr = 0;
+  inFileStr = defFileStr;
+  while(ok && ((option = getopt(argc, argv, optList)) != -1))
+  {
+    switch(option)
+    {
+      case 's':
+        if(sscanf(optarg, "%d", &seed) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'h': /* FALLTHROUGH */
+      default:
+	usage = 1;
+	ok = 0;
+	break;
+    }
+  }
+  if(ok)
+  {
+    if(optind < argc)
+    {
+      if((optind + 1) != argc)
+      {
+        usage = 1;
+	ok = 0;
+      }
+      else
+      {
+        inFileStr = *(argv + optind);
+      }
+    }
+  }
+  if(ok)
+  {
+    if((fP = (strcmp(inFileStr, "-")?
+    	     fopen(inFileStr, "r"): stdin)) == NULL)
+    {
+      ok = 0;
+      (void )fprintf(stderr, "%s: failed to open %s.\n", *argv, inFileStr);
+      
+    }
+  }
+  idx = 0;
+  while(ok && (fgets(rec, MAX_BUF_LEN, fP) != NULL))
+  {
+    *(rec + MAX_BUF_LEN - 1) = '\0';
+    *(rec + strlen(rec) - 1) = '\0';
+    if(maxData <= idx)
+    {
+      maxData = (maxData)? maxData * 2: DATA_CHUNK_SZ;
+      if((sData = (char **)AlcRealloc(sData,
+				      maxData * sizeof(char *))) == NULL)
+      {
+	ok = 0;
+	(void )fprintf(stderr,
+		       "%s: failed to allocate memory.\n", *argv);
+      }
+    }
+    if(ok)
+    {
+      if((*(sData + idx++) = AlcStrDup(rec)) == NULL)
+      {
+	ok = 0;
+	(void )fprintf(stderr,
+		       "%s: failed to allocate memory.\n", *argv);
+      }
+    }
+  }
+  if(ok)
+  {
+    nData = idx;
+    if((iData = (int *)AlcMalloc(nData * sizeof(int))) == NULL)
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+		     "%s: failed to allocate memory.\n", *argv);
+    }
+  }
+  if(ok)
+  {
+    (void )AlgShuffleIdx(nData, iData, seed);
+    for(idx = 0; idx < nData; ++idx)
+    {
+      (void )printf("%s\n", *(sData + *(iData + idx)));
+    }
+  }
+  if(usage)
+  {
+    (void )fprintf(stderr,
+    		   "Usage: %s [-h] [-s#]\n",
+		   "Randomize or shuffle the input data records.\n"
+		   "Options:\n"
+		   "  -h  Print this usage message.\n"
+		   "  -s  Random number generator seed.\n",
+		   *argv);
+  }
+  return(!ok);
+}
+#endif /* ALG_SHUFFLE_TEST == 2 */
 
 /*!
 * @}
