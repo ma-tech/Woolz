@@ -145,7 +145,7 @@ private Vector valVec = null;
    }
 //====================================================
   /**
-   * Fires an event if the slider value changes.
+   * Fires an event if the model value changes.
    * @param     void
    * @return    void
    */
