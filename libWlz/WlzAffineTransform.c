@@ -13,6 +13,12 @@
 *		applying them to Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 10-10-00 bill	Add WlzAffineTransformContour(),
+*		WlzAffineTransformGMModel(),
+*		WlzAffineTransformBBoxI2(),
+*		WlzAffineTransformBBoxD2(),
+*		WlzAffineTransformBBoxI3() and
+*		WlzAffineTransformBBoxD3().
 * 27-09-00 bill Make modifications for 3D affine transforms.
 *		Add WlzAffineTransformDimension(),
 *               WlzAffineTransformTranslationSet(),
@@ -551,6 +557,162 @@ static WlzBoundList *WlzAffineTransformBoundList(WlzBoundList *srcBound,
   return(dstBound);
 }
 
+/************************************************************************
+* Function:	WlzAffineTransformContour
+* Returns:	WlzContour *:		Transformed contour or
+*					NULL on error.
+* Purpose:	Transforms the given contour.
+* Global refs:	-
+* Parameters:	WlzContour *srcCtr: 	Given contour.
+*		WlzAffineTransform *tr: Given affine transform.
+*		int newModFlg:		Make a new model if non-zero,
+*					otherwise transform the given
+*					model in place.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number.
+************************************************************************/
+WlzContour	*WlzAffineTransformContour(WlzContour *srcCtr,
+					   WlzAffineTransform *tr,
+					   int newModFlg,
+					   WlzErrorNum *dstErr)
+{
+  WlzContour 	*dstCtr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstCtr = WlzMakeContour(&errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstCtr->model = WlzAssignGMModel(
+    		    WlzAffineTransformGMModel(srcCtr->model, tr, newModFlg,
+		    			      &errNum), NULL);
+  }
+  if((errNum != WLZ_ERR_NONE) && dstCtr)
+  {
+    (void )WlzFreeContour(dstCtr);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstCtr);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformGMModel
+* Returns:	WlzGMModel *:		Transformed model or
+*					NULL on error.
+* Purpose:	Transforms the given geometric model.
+* Global refs:	-
+* Parameters:	WlzContour *srcM: 	Given geometric model.
+*		WlzAffineTransform *tr: Given affine transform.
+*		int newModFlg:		Make a new model if non-zero,
+*					otherwise transform the given
+*					model in place.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number.
+************************************************************************/
+WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
+					   WlzAffineTransform *tr,
+					   int newModFlg,
+					   WlzErrorNum *dstErr)
+{
+  int		idx,
+  		cnt;
+  AlcVector	*vec;
+  WlzGMElemP	elmP;
+  WlzGMModel 	*dstM = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcM == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  dstM = (newModFlg)? WlzGMModelCopy(srcM, &errNum):
+  		      WlzAssignGMModel(srcM, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Transform vertex geometries. */
+    idx = 0;
+    vec = dstM->res.vertexG.vec;
+    cnt = dstM->res.vertexG.numIdx;
+    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+    {
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      if(elmP.core && (elmP.core->idx >= 0))
+      {
+        switch(dstM->type)
+	{
+	  case WLZ_GMMOD_2I:
+	    elmP.vertexG2I->vtx = WlzAffineTransformVertexI2(tr,
+	    				elmP.vertexG2I->vtx, &errNum);
+	    break;
+	  case WLZ_GMMOD_2D:
+	    elmP.vertexG2D->vtx = WlzAffineTransformVertexD2(tr,
+	    				elmP.vertexG2D->vtx, &errNum);
+	    break;
+	  case WLZ_GMMOD_3I:
+	    elmP.vertexG3I->vtx = WlzAffineTransformVertexI3(tr,
+	    				elmP.vertexG3I->vtx, &errNum);
+	    break;
+	  case WLZ_GMMOD_3D:
+	    elmP.vertexG3D->vtx = WlzAffineTransformVertexD3(tr,
+	    				elmP.vertexG3D->vtx, &errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+      }
+      ++idx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Transform shell geometries. */
+    idx = 0;
+    vec = dstM->res.shellG.vec;
+    cnt = dstM->res.shellG.numIdx;
+    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+    {
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      if(elmP.core && (elmP.core->idx >= 0))
+      {
+        switch(dstM->type)
+	{
+	  case WLZ_GMMOD_2I:
+	    elmP.shellG2I->bBox = WlzAffineTransformBBoxI2(tr,
+	    				elmP.shellG2I->bBox, &errNum);
+	    break;
+	  case WLZ_GMMOD_2D:
+	    elmP.shellG2D->bBox = WlzAffineTransformBBoxD2(tr,
+	    				elmP.shellG2D->bBox, &errNum);
+	    break;
+	  case WLZ_GMMOD_3I:
+	    elmP.shellG3I->bBox = WlzAffineTransformBBoxI3(tr,
+	    				elmP.shellG3I->bBox, &errNum);
+	    break;
+	  case WLZ_GMMOD_3D:
+	    elmP.shellG3D->bBox = WlzAffineTransformBBoxD3(tr,
+	    				elmP.shellG3D->bBox, &errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+      }
+      ++idx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGMModelRehashVHT(dstM, 0);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstM);
+}
 
 /************************************************************************
 * Function:	WlzAffineTransformValues2
@@ -1936,6 +2098,7 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
         break;
       case WLZ_2D_POLYGON:
       case WLZ_BOUNDLIST:
+      case WLZ_CONTOUR:
       case WLZ_TRANS_OBJ:
 	if(srcObj->domain.core == NULL)
 	{
@@ -1952,6 +2115,10 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	    case WLZ_BOUNDLIST:
 	      dstDom.b = WlzAffineTransformBoundList(srcObj->domain.b,
 						     trans, &errNum);
+	      break;
+	    case WLZ_CONTOUR:
+	      dstDom.ctr = WlzAffineTransformContour(srcObj->domain.ctr,
+	      					     trans, 1, &errNum);
 	      break;
 	    case WLZ_TRANS_OBJ:
 	      dstDom.t = WlzAffineTransformProduct(srcObj->domain.t,
@@ -2375,4 +2542,164 @@ WlzDVertex3	WlzAffineTransformVertexD3(WlzAffineTransform *trans,
     *dstErr = errNum;
   }
   return(dstVtx);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformBBoxI2
+* Returns:	WlzIBox2:		Transformed bounding box.
+* Purpose:	Transforms the given WlzIBox2.
+* Global refs:	-
+* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
+*		WlzIBox2 srcBox:	Bounding box to be transformed.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzIBox2	WlzAffineTransformBBoxI2(WlzAffineTransform *tr,
+				         WlzIBox2 srcBox,
+					 WlzErrorNum *dstErr)
+{
+  WlzIVertex2	tV;
+  WlzIBox2	dstBox;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  tV.vtX = srcBox.xMin;
+  tV.vtY = srcBox.yMin;
+  tV = WlzAffineTransformVertexI2(tr, tV, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstBox.xMin = tV.vtX;
+    dstBox.yMin = tV.vtY;
+    tV.vtX = srcBox.xMax;
+    tV.vtY = srcBox.yMax;
+    tV = WlzAffineTransformVertexI2(tr, tV, &errNum);
+    dstBox.xMax = tV.vtX;
+    dstBox.yMax = tV.vtY;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstBox);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformBBoxD2
+* Returns:	WlzDBox2:		Transformed bounding box.
+* Purpose:	Transforms the given WlzDBox2.
+* Global refs:	-
+* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
+*		WlzDBox2 srcBox:	Bounding box to be transformed.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzDBox2	WlzAffineTransformBBoxD2(WlzAffineTransform *tr,
+				         WlzDBox2 srcBox,
+					 WlzErrorNum *dstErr)
+{
+  WlzDVertex2	tV;
+  WlzDBox2	dstBox;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  tV.vtX = srcBox.xMin;
+  tV.vtY = srcBox.yMin;
+  tV = WlzAffineTransformVertexD2(tr, tV, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstBox.xMin = tV.vtX;
+    dstBox.yMin = tV.vtY;
+    tV.vtX = srcBox.xMax;
+    tV.vtY = srcBox.yMax;
+    tV = WlzAffineTransformVertexD2(tr, tV, &errNum);
+    dstBox.xMax = tV.vtX;
+    dstBox.yMax = tV.vtY;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstBox);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformBBoxI3
+* Returns:	WlzIBox3:		Transformed bounding box.
+* Purpose:	Transforms the given WlzIBox3.
+* Global refs:	-
+* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
+*		WlzIBox3 srcBox:	Bounding box to be transformed.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzIBox3	WlzAffineTransformBBoxI3(WlzAffineTransform *tr,
+				         WlzIBox3 srcBox,
+					 WlzErrorNum *dstErr)
+{
+  WlzIVertex3	tV;
+  WlzIBox3	dstBox;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  tV.vtX = srcBox.xMin;
+  tV.vtY = srcBox.yMin;
+  tV.vtZ = srcBox.zMin;
+  tV = WlzAffineTransformVertexI3(tr, tV, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstBox.xMin = tV.vtX;
+    dstBox.yMin = tV.vtY;
+    dstBox.zMin = tV.vtZ;
+    tV.vtX = srcBox.xMax;
+    tV.vtY = srcBox.yMax;
+    tV.vtZ = srcBox.zMax;
+    tV = WlzAffineTransformVertexI3(tr, tV, &errNum);
+    dstBox.xMax = tV.vtX;
+    dstBox.yMax = tV.vtY;
+    dstBox.zMax = tV.vtZ;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstBox);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformBBoxD3
+* Returns:	WlzDBox3:		Transformed bounding box.
+* Purpose:	Transforms the given WlzDBox3.
+* Global refs:	-
+* Parameters:	WlzAffineTransform *tr: Affine transform to apply.
+*		WlzDBox3 srcBox:	Bounding box to be transformed.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzDBox3	WlzAffineTransformBBoxD3(WlzAffineTransform *tr,
+				         WlzDBox3 srcBox,
+					 WlzErrorNum *dstErr)
+{
+  WlzDVertex3	tV;
+  WlzDBox3	dstBox;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  tV.vtX = srcBox.xMin;
+  tV.vtY = srcBox.yMin;
+  tV.vtZ = srcBox.zMin;
+  tV = WlzAffineTransformVertexD3(tr, tV, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstBox.xMin = tV.vtX;
+    dstBox.yMin = tV.vtY;
+    dstBox.zMin = tV.vtZ;
+    tV.vtX = srcBox.xMax;
+    tV.vtY = srcBox.yMax;
+    tV.vtZ = srcBox.zMax;
+    tV = WlzAffineTransformVertexD3(tr, tV, &errNum);
+    dstBox.xMax = tV.vtX;
+    dstBox.yMax = tV.vtY;
+    dstBox.zMax = tV.vtZ;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstBox);
 }
