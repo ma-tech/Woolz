@@ -49,6 +49,7 @@ CSOURCES		= \
 			  AlgGamma.c \
 			  AlgHeapSort.c \
 			  AlgLinearFit.c \
+			  AlgMatrixCG.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLU.c \
 			  AlgMatrixMath.c \
@@ -61,7 +62,8 @@ CSOURCES		= \
 			  AlgRand.c \
 			  AlgRange.c \
 			  AlgRank.c \
-			  AlgShuffle.c
+			  AlgShuffle.c \
+			  AlgVectorMath.c
 			  
 DLLCSOURCES		= \
 			init.c \
