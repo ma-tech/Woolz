@@ -266,6 +266,7 @@ WlzErrorNum WlzEffWriteObjJpeg(
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr		jerr;
   JSAMPARRAY 	buffer;		/* Output row buffer */
+  int		quality = 100;	/* Output quality. */
   int 		row_stride;	/* physical row width in input buffer */
   int		width, height;
   WlzIntervalWSpace	iwsp;
@@ -372,10 +373,9 @@ WlzErrorNum WlzEffWriteObjJpeg(
 
       /* check for other parameters */
       if( params ){
-	int	quality;
 	sscanf(params, "%d", &quality);
-	jpeg_set_quality(&cinfo, quality, TRUE);
       }
+      jpeg_set_quality(&cinfo, quality, TRUE);
 
       /* JSAMPLEs per row in output buffer */
       row_stride = cinfo.image_width * cinfo.input_components;
