@@ -37,7 +37,7 @@ static void usage(char *proc_str)
 	  "\tfrom the standard input. Pixels outside the domain of the\n"
 	  "\tobject are set to the template value.\n"
 	  "\tOptions are:\n"
-	  "\t  -m#       the template value - default 0\n"
+	  "\t  -t#       the template value - default 0\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n"
 	  "",
