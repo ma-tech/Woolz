@@ -762,9 +762,11 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
     if( errNum == WLZ_ERR_NONE ){
       errNum = WlzInitGreyScan(newobj, &iwsp, &gwsp);
       while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
-	yp = iwsp.linpos - newobj->domain.i->line1;
+/*	yp = iwsp.linpos - newobj->domain.i->line1;*/
+	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
-	  xp = k - newobj->domain.i->kol1;
+/*	  xp = k - newobj->domain.i->kol1;*/
+	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
 	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
 	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
 	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];

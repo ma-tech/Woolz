@@ -188,11 +188,11 @@ WlzObject *WlzEffReadObjJpeg(
 	if( rtnObj = WlzMakeRect(0, height-1, 0, width-1, newpixtype,
 				  wlzData.inp, bckgrnd,
 				  NULL, NULL, &errNum) ){
+	  AlcErrno	errAlcNum;
 	  rtnObj->values.r->freeptr = 
 	    AlcFreeStackPush(rtnObj->values.r->freeptr,
-			     (void *) wlzData.ubp, &alcErr);
-	  if(alcErr != ALC_ER_NONE)
-	  {
+			     (void *) wlzData.ubp, &errAlcNum);
+	  if( errAlcNum != ALC_ER_NONE ){
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	}

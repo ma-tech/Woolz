@@ -299,9 +299,13 @@ WlzObject	*WlzEffReadObjTiff(
     if( obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
 			  newpixtype, wlzData.inp, bckgrnd,
 			  NULL, NULL, &errNum) ){
+      AlcErrno	errAlcNum;
       obj->values.r->freeptr = 
 	    AlcFreeStackPush(obj->values.r->freeptr,
-			     (void *) wlzData.ubp, &errNum);
+			     (void *) wlzData.ubp, &errAlcNum);
+      if( errAlcNum != ALC_ER_NONE ){
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
   }  
 
