@@ -1064,12 +1064,14 @@ extern WlzContour		*WlzContourObj(
 				  WlzContourMethod ctrMtd,
 				  double ctrVal,
 				  double ctrWth,
+				  int nrmFlg,
 				  WlzErrorNum *dstErr);
 extern WlzContour		*WlzContourObjGrd(
 				  WlzObject *srcObj,
 				  double ctrLo,
 				  double ctrHi,
 				  double ctrWth,
+				  int nrmFlg,
 				  WlzErrorNum *dstErr);
 extern WlzContour 		*WlzContourGrdObj2D(
 				  WlzObject *srcObj,
@@ -1078,6 +1080,7 @@ extern WlzContour 		*WlzContourGrdObj2D(
 				  double grdLo,
 				  double grdHi,
 				  double ftrPrm,
+				  int nrmFlg,
 				  WlzErrorNum *dstErr);
 extern WlzContour		*WlzContourRBFBndObj3D(
 				  WlzObject *srcObj,
@@ -1245,7 +1248,7 @@ extern WlzObject		*WlzDilation(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
-* WlzDiistMetric.c							*
+* WlzDistMetric.c							*
 ************************************************************************/
 extern WlzErrorNum     		WlzDistMetricGM(
 				  WlzGMModel *model0, 
@@ -1518,6 +1521,9 @@ extern WlzGMVertexT    *WlzGMModelNewVT(
 extern WlzGMModel	*WlzGMModelCopy(
 			  WlzGMModel *gM,
 			  WlzErrorNum *dstErr);
+extern void		WlzGMModelAddVertexToHT(
+			  WlzGMModel *model,
+			  WlzGMVertex *nV);
 /* Freeing  of geometric modeling elements */
 extern WlzErrorNum	WlzGMModelFree(
 			  WlzGMModel *model);
@@ -1623,9 +1629,17 @@ extern WlzErrorNum	WlzGMShellUpdateGBB2D(
 extern WlzErrorNum	WlzGMVertexSetG3D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex3 pos);
+extern WlzErrorNum	WlzGMVertexSetG3N(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 pos,
+			  WlzDVertex3 nrm);
 extern WlzErrorNum	WlzGMVertexSetG2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMVertexSetG2N(
+			  WlzGMVertex *vertex,
+			  WlzDVertex2 pos,
+			  WlzDVertex2 nrm);
 extern WlzErrorNum	WlzGMShellDndateG2D(
 			  WlzGMShell *shell,
 			  WlzDVertex2 pos);
@@ -1634,6 +1648,14 @@ extern WlzErrorNum	WlzGMShellDndateG3D(
 			  WlzDVertex3 pos);
 extern WlzErrorNum	WlzGMShellComputeGBB(
 			  WlzGMShell *shell);
+extern WlzErrorNum	WlzGMVertexGetG3N(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 *dstPos,
+			  WlzDVertex3 *dstNrm);
+extern WlzErrorNum	WlzGMVertexGetG2N(
+			  WlzGMVertex *vertex,
+			  WlzDVertex2 *dstPos,
+			  WlzDVertex2 *dstNrm);
 extern WlzErrorNum	WlzGMVertexGetG3D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex3 *dstPos);
@@ -1765,6 +1787,9 @@ extern WlzGMResIdxTb	*WlzGMModelResIdx(
 			  WlzErrorNum *dstErr);
 extern void		WlzGMModelResIdxFree(
 			  WlzGMResIdxTb *resIdxTb);
+extern void		WlzGMModelRemVertex(
+			  WlzGMModel *model,
+			  WlzGMVertex *dV);
 extern WlzErrorNum	WlzGMModelRehashVHT(
 			  WlzGMModel *model,
 			  int vHTSz);
@@ -1772,9 +1797,17 @@ extern WlzErrorNum	WlzGMModelRehashVHT(
 extern WlzErrorNum	WlzGMModelConstructSimplex3D(
 			  WlzGMModel *model,
 			  WlzDVertex3 *pos);
+extern WlzErrorNum	WlzGMModelConstructSimplex3N(
+			  WlzGMModel *model,
+			  WlzDVertex3 *pos,
+			  WlzDVertex3 *nrm);
 extern WlzErrorNum	WlzGMModelConstructSimplex2D(
 			  WlzGMModel *model,
 			  WlzDVertex2 *pos);
+extern WlzErrorNum	WlzGMModelConstructSimplex2N(
+			  WlzGMModel *model,
+			  WlzDVertex2 *pos,
+			  WlzDVertex2 *nrm);
 /* Model Features */
 extern int		WlzGMShellSimplexCnt(
 			  WlzGMShell *gShell);
@@ -1904,6 +1937,8 @@ extern int			WlzGeomCmpVtx3D(
 				  WlzDVertex3 pos1,
 				  double tol);
 extern WlzDVertex2		WlzGeomUnitVector2D(
+				  WlzDVertex2 vec);
+extern WlzDVertex2		WlzGeomUnitVector2D2(
 				  WlzDVertex2 pos1,
 				  WlzDVertex2 pos0);
 extern int             		WlzGeomVertexInDiamCircle(
@@ -2544,21 +2579,6 @@ extern WlzErrorNum  		WlzMatchICPCtr(
 				  double matchImpThr,
                                   WlzRegICPUsrWgtFn usrWgtFn,
                                   void *usrWgtData);
-extern WlzErrorNum		WlzMatchICPDomObj2D(
-				  WlzObject *tObj,
-				  WlzObject *sObj,
-				  WlzAffineTransform *initTr,
-				  int maxItr,
-				  int minSpx,
-				  int *dstNMatch,
-				  WlzVertexP *dstTMatch,
-				  WlzVertexP *dstSMatch,
-				  int brkFlg,
-				  double  maxDisp,
-				  double maxAng,
-				  double maxDeform,
-				  int matchImpNN,
-				  double matchImpThr);
 extern double          		WlzMatchICPWeightMatches(
 				  WlzVertexType vType,
 				  WlzAffineTransform *curTr,
@@ -2873,6 +2893,7 @@ extern WlzAffineTransform	*WlzRegICPVertices(
 				  WlzVertexP sNr,
 				  int sCnt,
 				  WlzVertexType vType,
+				  int sgnNrm,
 				  WlzAffineTransform *initTr,
 				  WlzTransformType trType,
 				  int *dstConv,
@@ -2883,6 +2904,7 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 				  AlcKDTTree *tree,
 				  WlzTransformType trType,
 				  WlzVertexType vType,
+				  int sgnNrm,
 				  int nT,
 				  WlzVertexP tVx,
 				  WlzVertexP tNr,
