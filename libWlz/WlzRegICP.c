@@ -27,7 +27,6 @@
 * \todo         -
 * \bug
 */
-
 #include <float.h>
 #include <Wlz.h>
 
