@@ -13,7 +13,9 @@
 *		translations) to Woolz objects, domains and values.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 15-08-00 bill remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
+* 13-12-00 bill Add WlzShiftGMModel() to allow shifting of contours
+*		and GM's.
+* 15-08-00 bill Remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
 *		WLZ_POINT_(INT)|(FLOAT).
 * 08-03-00 bill Fix bug in WlzShiftValues for 3D value table.
 ************************************************************************/
@@ -22,23 +24,30 @@
 #include <string.h>
 #include <Wlz.h>
 
+static WlzGMModel		*WlzShiftGMModel(
+				  WlzGMModel *model,
+				  int xShift,
+				  int yShift,
+				  int zShift,
+				  WlzErrorNum *dstErr);
+
 /************************************************************************
-* Function:	WlzShiftObject						*
-* Returns:	WlzObject *:		Shifted object.			*
-* Purpose:	The external object shift interface function.		*
-*		Shifts a Woolz object in place, cf WlzAffineTransform()	*
-*		which always creates a new object with both a new	*
-*		domain and a new value table.				*
-*		WlzShiftObject always makes a new domain but keeps	*
-*		as much of the given object's value table as possible.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	The given object.		*
-*		int xShift:		Column shift.			*
-*		int yShift:		Line shift.			*
-*		int zShift:		Plane shift (only used for 3D	*
-*					objects).			*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
+* Function:	WlzShiftObject
+* Returns:	WlzObject *:		Shifted object.
+* Purpose:	The external object shift interface function.
+*		Shifts a Woolz object in place, cf WlzAffineTransform()
+*		which always creates a new object with both a new
+*		domain and a new value table.
+*		WlzShiftObject always makes a new domain but keeps
+*		as much of the given object's value table as possible.
+* Global refs:	-
+* Parameters:	WlzObject *inObj:	The given object.
+*		int xShift:		Column shift.
+*		int yShift:		Line shift.
+*		int zShift:		Plane shift (only used for 3D
+*					objects).
+*		WlzErrorNum *dstErr:	Destination error pointer,
+*					may be NULL.
 ************************************************************************/
 WlzObject	*WlzShiftObject(WlzObject *inObj,
 				int xShift, int yShift, int zShift,
@@ -65,7 +74,8 @@ WlzObject	*WlzShiftObject(WlzObject *inObj,
       case WLZ_AFFINE_TRANS: /* FALLTHROUGH */
       case WLZ_PROPERTY_OBJ: /* FALLTHROUGH */
       case WLZ_2D_POLYGON:   /* FALLTHROUGH */
-      case WLZ_BOUNDLIST:
+      case WLZ_BOUNDLIST:    /* FALLTHROUGH */
+      case WLZ_CONTOUR:
 	dom = WlzShiftDomain(inObj->type, inObj->domain,
 			     xShift, yShift, zShift, &errNum);
 	if(inObj->values.core)
@@ -119,19 +129,19 @@ WlzObject	*WlzShiftObject(WlzObject *inObj,
 }
 
 /************************************************************************
-* Function:	WlzShiftDomain						*
-* Returns:	WlzDomain:		Shifted domain, NULL on error.	*
-* Purpose:	Creates a new shifted domain.				*
-* Global refs:	-							*
-* Parameters:	WlzObjectType inObjType: Type of given domain's parent	*
-*					object.				*
-*		WlzDomain inDom:	Domain to be shifted.		*
-*		int xShift:		Column shift.			*
-*		int yShift:		Line shift.			*
-*		int zShift:		Plane shift (only used for 3D	*
-*					objects).			*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
+* Function:	WlzShiftDomain
+* Returns:	WlzDomain:		Shifted domain, NULL on error.
+* Purpose:	Creates a new shifted domain.
+* Global refs:	-
+* Parameters:	WlzObjectType inObjType: Type of given domain's parent
+*					object.
+*		WlzDomain inDom:	Domain to be shifted.
+*		int xShift:		Column shift.
+*		int yShift:		Line shift.
+*		int zShift:		Plane shift (only used for 3D
+*					objects).
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be NULL.
 ************************************************************************/
 WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 			        int xShift, int yShift, int zShift,
@@ -322,6 +332,21 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 	  outDom.core = NULL;
 	}
         break;
+      case WLZ_CONTOUR:
+	outDom.ctr = WlzMakeContour(&errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  outDom.ctr->model = WlzAssignGMModel(
+	  		      WlzShiftGMModel(inDom.ctr->model,
+			      		      xShift, yShift, zShift,
+					      &errNum), NULL);
+	}
+	if((errNum != WLZ_ERR_NONE) && outDom.core)
+	{
+	  (void )WlzFreeContour(outDom.ctr);
+	  outDom.core = NULL;
+	}
+        break;
       case WLZ_HISTOGRAM:
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
@@ -352,22 +377,22 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 }
 
 /************************************************************************
-* Function:	WlzShiftValues						*
-* Returns:	WlzValues:		Shifted values, NULL on error.	*
-* Purpose:	Shifts the given objects values.			*
-* Global refs:	-							*
-* Parameters:	WlzObjectType inObjType: Type of given domain's parent	*
-*					object.				*
-*		WlzValues inVal:	Values to be shifted.		*
-*		WlzDomain inDom:	Domain over which values are	*
-*					defined (parent object's 	*
-*					domain).			*
-*		int xShift:		Column shift.			*
-*		int yShift:		Line shift.			*
-*		int zShift:		Plane shift (only used for 3D	*
-*					objects).			*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
+* Function:	WlzShiftValues
+* Returns:	WlzValues:		Shifted values, NULL on error.
+* Purpose:	Shifts the given objects values.
+* Global refs:	-
+* Parameters:	WlzObjectType inObjType: Type of given domain's parent
+*					object.
+*		WlzValues inVal:	Values to be shifted.
+*		WlzDomain inDom:	Domain over which values are
+*					defined (parent object's
+*					domain).
+*		int xShift:		Column shift.
+*		int yShift:		Line shift.
+*		int zShift:		Plane shift (only used for 3D
+*					objects).
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be NULL.
 ************************************************************************/
 WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 			       WlzDomain inDom,
@@ -578,4 +603,140 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
     *dstErr = errNum;
   }
   return(outVal);
+}
+
+/************************************************************************
+* Function:	WlzShiftGMModel
+* Returns:	WlzGMModel *:		Shifted model or NULL on error.
+* Purpose:	Shifts the given geometric model.
+* Global refs:	-
+* Parameters:	WlzContour *model: 	Given geometric model.
+*		int xShift:		Column shift.
+*		int yShift:		Line shift.
+*		int zShift:		Plane shift (only used for 3D
+*					objects).
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number.
+************************************************************************/
+WlzGMModel	*WlzShiftGMModel(WlzGMModel *model,
+				 int xShift, int yShift, int zShift,
+				 WlzErrorNum *dstErr)
+{
+  int		idx,
+  		cnt;
+  AlcVector	*vec;
+  WlzBoxP	bP;
+  WlzVertexP	vP;
+  WlzGMElemP	elmP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Shift vertex geometries. */
+    idx = 0;
+    vec = model->res.vertexG.vec;
+    cnt = model->res.vertexG.numIdx;
+    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+    {
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      if(elmP.core && (elmP.core->idx >= 0))
+      {
+        switch(model->type)
+	{
+	  case WLZ_GMMOD_2I:
+	    vP.i2 = &(elmP.vertexG2I->vtx);
+	    vP.i2->vtX += xShift;
+	    vP.i2->vtY += yShift;
+	    break;
+	  case WLZ_GMMOD_2D:
+	    vP.d2 = &(elmP.vertexG2D->vtx);
+	    vP.d2->vtX += xShift;
+	    vP.d2->vtY += yShift;
+	    break;
+	  case WLZ_GMMOD_3I:
+	    vP.i3 = &(elmP.vertexG3I->vtx);
+	    vP.i3->vtX += xShift;
+	    vP.i3->vtY += yShift;
+	    vP.i3->vtZ += zShift;
+	    break;
+	  case WLZ_GMMOD_3D:
+	    vP.d3 = &(elmP.vertexG3D->vtx);
+	    vP.d3->vtX += xShift;
+	    vP.d3->vtY += yShift;
+	    vP.d3->vtZ += zShift;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+      }
+      ++idx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Shift shell geometries. */
+    idx = 0;
+    vec = model->res.shellG.vec;
+    cnt = model->res.shellG.numIdx;
+    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+    {
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      if(elmP.core && (elmP.core->idx >= 0))
+      {
+        switch(model->type)
+	{
+	  case WLZ_GMMOD_2I:
+	    bP.i2 = &(elmP.shellG2I->bBox);
+	    bP.i2->xMin += xShift;
+	    bP.i2->yMin += yShift;
+	    bP.i2->xMax += xShift;
+	    bP.i2->yMax += yShift;
+	    break;
+	  case WLZ_GMMOD_2D:
+	    bP.d2 = &(elmP.shellG2D->bBox);
+	    bP.d2->xMin += xShift;
+	    bP.d2->yMin += yShift;
+	    bP.d2->xMax += xShift;
+	    bP.d2->yMax += yShift;
+	    break;
+	  case WLZ_GMMOD_3I:
+	    bP.i3 = &(elmP.shellG3I->bBox);
+	    bP.i3->xMin += xShift;
+	    bP.i3->yMin += yShift;
+	    bP.i3->zMin += zShift;
+	    bP.i3->xMax += xShift;
+	    bP.i3->yMax += yShift;
+	    bP.i3->zMax += zShift;
+	    break;
+	  case WLZ_GMMOD_3D:
+	    bP.d3 = &(elmP.shellG3D->bBox);
+	    bP.d3->xMin += xShift;
+	    bP.d3->yMin += yShift;
+	    bP.d3->zMin += zShift;
+	    bP.d3->xMax += xShift;
+	    bP.d3->yMax += yShift;
+	    bP.d3->zMax += zShift;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+      }
+      ++idx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGMModelRehashVHT(model, 0);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(model);
 }
