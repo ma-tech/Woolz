@@ -252,6 +252,11 @@ extern void            	AlgMatrixSub(
 			  double **cM,
 			  int nR,
 			  int nC);
+extern void            	AlgMatrixScale(
+			  double **aM,
+			  double sv,
+			  int nR,
+			  int nC);
 extern void            	AlgMatrixMul(
 			  double **aM,
 			  double **bM,
