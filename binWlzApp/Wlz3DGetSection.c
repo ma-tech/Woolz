@@ -35,7 +35,7 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]"
 	  " [-b <parameter bibfile>] [-m <mode>] [-s <scale>]"
-	  " [-o <output file>] [-u<ux,uy,uz>]"
+	  " [-o <output file>] [-u<ux,uy,uz>] [-C] [-L] [-N]"
 	  " [<3D object input file>]\n"
 	  "\tGet an arbitrary slice from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
@@ -60,6 +60,9 @@ static void usage(char *proc_str)
 	  "\t  -s<scale>          Scale factor, default - 1.0\n"
 	  "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
 	  "\t			  Default: (0,0,-1)\n"
+	  "\t  -C                 Use classifier interpolation\n"
+	  "\t  -L                 Use linear interpolation\n"
+	  "\t  -N                 Use nearest neighbour interpolation\n"
 	  "\t  -h                 Help - prints this usage message\n"
 	  "",
 	  proc_str);
@@ -73,7 +76,7 @@ int main(int	argc,
   WlzObject	*obj, *nobj;
   FILE		*inFP, *outFP, *bibFP;
   char		*outFile, *bibFile;
-  char 		optList[] = "Aa:b:d:f:m:o:s:u:h";
+  char 		optList[] = "ACLNa:b:d:f:m:o:s:u:h";
   int		option;
   int		iVal;
   int		allFlg=0;
@@ -84,6 +87,7 @@ int main(int	argc,
   WlzDVertex3	up={0.0,0.0,-1.0};
   WlzThreeDViewStruct	*viewStr=NULL;
   WlzThreeDViewMode mode=WLZ_UP_IS_UP_MODE;
+  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
@@ -100,6 +104,18 @@ int main(int	argc,
 
     case 'A':
       allFlg = 1;
+      break;
+
+    case 'C':
+      interp = WLZ_INTERPOLATION_CLASSIFY_1;
+      break;
+
+    case 'L':
+      interp = WLZ_INTERPOLATION_LINEAR;
+      break;
+
+    case 'N':
+      interp = WLZ_INTERPOLATION_NEAREST;
       break;
 
     case 'a':
@@ -277,7 +293,7 @@ int main(int	argc,
 	      i <= WLZ_NINT(viewStr->maxvals.vtZ); i++, j++){
 	    viewStr->dist = i;
 	    WlzInit3DViewStruct(viewStr, obj);
-	    nobj = WlzGetSectionFromObject(obj, viewStr, &errNum);
+	    nobj = WlzGetSectionFromObject(obj, viewStr, interp, &errNum);
 	    if( nobj != NULL){
 	      char	fileBuf[256];
 	      sprintf(fileBuf, "%s%04.4d.wlz", outFile, j);
@@ -293,7 +309,7 @@ int main(int	argc,
 	  }
 	}
 	else {
-	  nobj = WlzGetSectionFromObject(obj, viewStr, &errNum);
+	  nobj = WlzGetSectionFromObject(obj, viewStr, interp, &errNum);
 	  if( nobj != NULL){
 	    WlzWriteObj(outFP, nobj);
 	  }
