@@ -45,6 +45,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "ipl", WLZEFF_FORMAT_IPL,
 			 "tif", WLZEFF_FORMAT_TIFF,
 			 "raw", WLZEFF_FORMAT_RAW,
+			 "am",  WLZEFF_FORMAT_AM,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -77,6 +78,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 			 "IPLab", WLZEFF_FORMAT_IPL,
 			 "Tiff", WLZEFF_FORMAT_TIFF,
 			 "Raw", WLZEFF_FORMAT_RAW,
+			 "Amira Lattice", WLZEFF_FORMAT_AM,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -124,7 +126,9 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*extTiffStr = "tif",
 		*fmtTiffStr = "Tiff",
 		*extRawStr = "raw",
-		*fmtRawStr = "Raw";
+		*fmtRawStr = "Raw",
+		*extAmStr  = "am",
+		*fmtAmStr  = "Amira Lattice";
 
   switch(fileFmt)
   {
@@ -172,6 +176,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
       fmtStr = fmtRawStr;
       extStr = extRawStr;
       break;
+    case WLZEFF_FORMAT_AM:
+      fmtStr = fmtAmStr;
+      extStr = extAmStr;
+      break;
   }
   if(dstExtStr)
   {
@@ -180,25 +188,26 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
   return(fmtStr);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObj						*
-* Returns:	WlzObject:		Woolz object read from file, or	*
-*					NULL on error.			*
-* Purpose:	Reads a woolz object from the the given file names(s)	*
-*		or opened file stream, where the file format is that	*
-*		given as a parameter.					*
-*		The file ICS and PNM formats require a file name, for	*
-*		all other formats either the file name or a file stream	*
-*		pointer may be given.					*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Input file stream.		*
-*		const char *fName:	File name (and path).		*
-*		WlzEffFormat fFmt:	File format.			*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Woolz object read from file, or NULL on error.
+* \ingroup	WlzExtFF
+* \brief	Reads a woolz object from the the given file names(s)
+*		or opened file, where the file format is that given as a
+*		parameter.
+*		The file ICS and PNM formats require a file name, for all
+*		other formats either the file name or a file pointer may be
+*		given.
+* \param	fP			Input file.
+* \param	fName			File name (and path).
+* \param	fFmt			File format.
+* \param	split			If non zero and the file contains a
+*					index labeled image then the image
+*					is split into seperate domains.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
-			       WlzErrorNum *dstErr)
+			       int split, WlzErrorNum *dstErr)
 {
   int		openFileFlag = 0;
   WlzObject	*obj = NULL;
@@ -259,6 +268,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_TIFF:
 	obj = WlzEffReadObjTiff(fName, &errNum);
+	break;
+      case WLZEFF_FORMAT_AM:
+        obj = WlzEffReadObjAm(fP, split, &errNum);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
@@ -349,6 +361,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_TIFF:
 	errNum = WlzEffWriteObjTiff(fName, obj);
+	break;
+      case WLZEFF_FORMAT_AM:
+        errNum = WlzEffWriteObjAm(fP, obj);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
