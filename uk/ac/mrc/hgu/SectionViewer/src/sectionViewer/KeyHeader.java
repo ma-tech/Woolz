@@ -39,7 +39,7 @@ public class KeyHeader extends JPanel{
    protected boolean _is3D;
 
    protected static final int _headerW = 200;
-   protected static final int _headerH = 40;
+   protected static final int _headerH = 30;
 //-------------------------------------------------------------
    /**
     *   Constructor. 
@@ -112,7 +112,7 @@ public class KeyHeader extends JPanel{
       int W1 = 20;
       int W2 = 25;
       int W3 = 30;
-      int H1 = 15;
+      int H1 = 10;
       int H2 = 20;
       int H3 = 35;
       int gap = 1;
@@ -124,9 +124,9 @@ public class KeyHeader extends JPanel{
       this.setBorder(BorderFactory.createEtchedBorder(
                                         EtchedBorder.RAISED));
 //......................................
-      colLabel = new JLabel("Change");
+      colLabel = new JLabel("New");
       colLabel.setFont(_labelFont2);
-      colLabel.setUI( new VLabelUI(false) );
+      //colLabel.setUI( new VLabelUI(false) );
       colLabel.setHorizontalAlignment(JLabel.CENTER);
       colLabel.setVerticalAlignment(JLabel.CENTER);
       scrollLabel = new JLabel("Scroll");
@@ -141,13 +141,14 @@ public class KeyHeader extends JPanel{
       viz2DLabel = new JLabel("2D");
       viz2DLabel.setFont(_labelFont3);
       viz2DLabel.setHorizontalAlignment(JLabel.CENTER);
+      viz2DLabel.setVerticalAlignment(JLabel.BOTTOM);
       viz3DLabel = new JLabel("3D");
       viz3DLabel.setFont(_labelFont3);
       viz3DLabel.setHorizontalAlignment(JLabel.CENTER);
-      //zapLabel = new JLabel("Delete");
-      zapLabel = new JLabel("Remove");
+      viz3DLabel.setVerticalAlignment(JLabel.BOTTOM);
+      zapLabel = new JLabel("Del.");
       zapLabel.setFont(_labelFont2);
-      zapLabel.setUI( new VLabelUI(false) );
+      //zapLabel.setUI( new VLabelUI(false) );
       zapLabel.setHorizontalAlignment(JLabel.CENTER);
       zapLabel.setVerticalAlignment(JLabel.CENTER);
       nameLabel = new JLabel("Full Component Name");
@@ -182,9 +183,9 @@ public class KeyHeader extends JPanel{
        */
       JPanel kPanel00 = new JPanel();
       kPanel00.setLayout(new BorderLayout(gap,gap));
-      kPanel00.setPreferredSize(new Dimension(2*W2,0));
-      kPanel00.setBackground(Color.blue);
+      kPanel00.setPreferredSize(new Dimension(W2+W3+4*gap,0));
       /*
+      kPanel00.setBackground(Color.blue);
       kPanel00.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
       */
@@ -244,7 +245,8 @@ public class KeyHeader extends JPanel{
 
       JPanel colPanel0 = new JPanel();
       colPanel0.setLayout(new BorderLayout(gap,gap));
-      colPanel0.setPreferredSize(new Dimension(W1-4*gap,0));
+      //colPanel0.setBackground(Color.red);
+      colPanel0.setPreferredSize(new Dimension(W2,0));
       colPanel0.add(colLabel);
 
       JPanel txtPanel0 = new JPanel();
@@ -261,7 +263,7 @@ public class KeyHeader extends JPanel{
       navPanel0.add(scrollLabel, BorderLayout.CENTER);
 
       JPanel btnPanel02 = new JPanel();
-      btnPanel02.setPreferredSize(new Dimension(W2,0));
+      btnPanel02.setPreferredSize(new Dimension(W2,H2));
       btnPanel02.setLayout(new BorderLayout(gap,gap));
       /*
       btnPanel02.setBorder(BorderFactory.createEtchedBorder(
@@ -270,7 +272,7 @@ public class KeyHeader extends JPanel{
       btnPanel02.add(viz2DLabel, BorderLayout.CENTER);
 
       JPanel btnPanel03 = new JPanel();
-      btnPanel03.setPreferredSize(new Dimension(W2,0));
+      btnPanel03.setPreferredSize(new Dimension(W2,H2));
       btnPanel03.setLayout(new BorderLayout(gap,gap));
       /*
       btnPanel03.setBorder(BorderFactory.createEtchedBorder(
@@ -289,16 +291,18 @@ public class KeyHeader extends JPanel{
 
       kPanel00.add(colPanel0, BorderLayout.WEST);
       kPanel00.add(navPanel0, BorderLayout.EAST);
-      kPanel01.add(kPanel03, BorderLayout.NORTH);
-      kPanel01.add(kPanel04, BorderLayout.SOUTH);
+      if(_is3D) {
+	 kPanel01.add(kPanel03, BorderLayout.NORTH);
+	 kPanel01.add(kPanel04, BorderLayout.SOUTH);
+      } else {
+	 kPanel01.add(kPanel03, BorderLayout.CENTER);
+      }
       kPanel02.add(kPanel01, BorderLayout.WEST);
       kPanel02.add(btnPanel04, BorderLayout.EAST);
       kPanel03.add(vizLabel, BorderLayout.CENTER);
       if(_is3D) {
 	 kPanel04.add(btnPanel02, BorderLayout.WEST);
 	 kPanel04.add(btnPanel03, BorderLayout.EAST);
-      } else {
-	 kPanel04.add(btnPanel02, BorderLayout.CENTER);
       }
       kPanel0.add(kPanel00, BorderLayout.WEST);
       kPanel0.add(txtPanel0, BorderLayout.CENTER);
