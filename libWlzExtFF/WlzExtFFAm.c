@@ -91,22 +91,23 @@ static WlzErrorNum 		WlzEffAmReadLatticeType(
 				  FILE *fP,
 				  char *buf,
 				  const int bufLen,
-				  WlzEffAmLatType *type);
+				  WlzEffAmLatType *type,
+				  int *unknown);
 static WlzErrorNum 		WlzEffAmReadLatticeLabel(
 				  FILE *fP,
 				  char *buf,
 				  const int bufLen,
+				  int skip,
 				  WlzEffAmHead *head);
 static WlzErrorNum		WlzEffAmReadMaterials(
 				  FILE *fP,
 				  char *buf,
 				  const int bufLen,
 				  WlzEffAmHead *head);
-static WlzErrorNum 		WlzEffAmReadSeeds(
+static WlzErrorNum 		WlzEffAmReadAndSkipValues(
 				  FILE *fP,
 				  char *buf,
-				  const int bufLen,
-				 WlzEffAmHead *head);
+				  const int bufLen);
 static WlzErrorNum 		WlzEffAmReadArray3D(
 				  FILE *fP,
 				  void ***data,
@@ -240,9 +241,11 @@ WlzErrorNum	WlzEffWriteObjAm(FILE *fP, WlzObject *obj)
 */
 static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 {
-  int		labelId,
+  int		skip,
+  		labelId,
   		done = 0;
   long		fRecPos;
+  WlzEffAmDatType latDatType;
   int		tok[8];
   char		tokBuf[WLZ_EFF_AM_REC_MAXC];
   const int	tokBufMax = WLZ_EFF_AM_REC_MAXC;
@@ -404,6 +407,7 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 				   "ImageData", WLZEFF_AM_TOKEN_IMAGEDATA,
 				   "Materials", WLZEFF_AM_TOKEN_MATERIALS,
 				   "Seeds", WLZEFF_AM_TOKEN_SEEDS,
+				   "Limits", WLZEFF_AM_TOKEN_LIMITS,
 				   NULL);
 	      switch(tok[1])
 	      {
@@ -442,7 +446,11 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 		  *tokBuf = '\0';
 		  break;
 		case WLZEFF_AM_TOKEN_SEEDS:
-		  errNum = WlzEffAmReadSeeds(fP, tokBuf, tokBufMax, head);
+		  errNum = WlzEffAmReadAndSkipValues(fP, tokBuf, tokBufMax);
+		  *tokBuf = '\0';
+		  break;
+		case WLZEFF_AM_TOKEN_LIMITS:
+		  errNum = WlzEffAmReadAndSkipValues(fP, tokBuf, tokBufMax);
 		  *tokBuf = '\0';
 		  break;
 		default:
@@ -463,12 +471,16 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzEffAmReadLatticeDatType(fP, tokBuf, tokBufMax,
-	    					&(head->latDatType));
+	    					&latDatType);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzEffAmReadLatticeType(fP, tokBuf, tokBufMax,
-					     &(head->latType));
+					     &(head->latType), &skip);
+	    if(skip == 0)
+	    {
+	      head->latDatType = latDatType;
+	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
@@ -478,7 +490,8 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 	  /* Read lattice label. */
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = WlzEffAmReadLatticeLabel(fP, tokBuf, tokBufMax, head);
+	    errNum = WlzEffAmReadLatticeLabel(fP, tokBuf, tokBufMax, skip,
+	    				      head);
 	  }
 	  break;
 	case WLZEFF_AM_TOKEN_MATERIALS:
@@ -935,29 +948,38 @@ static WlzErrorNum WlzEffAmReadLatticeDatType(FILE *fP, char *buf,
 * \brief	Reads and parses the lattice data type. This is either
 *		"Data" -> WLZEFF_AM_LATTYPE_DATA or
 *		"Labels" -> WLZEFF_AM_LATTYPE_LABELS.
+*		any other lattice types cause the unknown flag to be set.
 * \param	fP			Given file.
 * \param	buf			Buffer for workspace.
 * \param	bufLen			Buffer length.
-* \param	type			Destination pointer for type.
+* \param	dstType			Destination pointer for type.
+* \param	unknown			Destination for unknown flag.
 */
 static WlzErrorNum WlzEffAmReadLatticeType(FILE *fP, char *buf, 
 					const int bufLen,
-					WlzEffAmLatType *type)
+					WlzEffAmLatType *dstType,
+					int *unknown)
 {
+  int		type;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	tokSepWS[] = " \t\n\r\f\v";
 
+  *unknown = 0;
   errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
   if(errNum == WLZ_ERR_NONE)
   {
-    *type = WLZEFF_AM_LATTYPE_NONE;
-    (void )WlzStringMatchValue((int *)type, buf,
+    type = (int )WLZEFF_AM_LATTYPE_NONE;
+    (void )WlzStringMatchValue(&type, buf,
 			       "Data", WLZEFF_AM_LATTYPE_DATA,
 			       "Labels", WLZEFF_AM_LATTYPE_LABELS,
 			       NULL);
-    if(*type == WLZEFF_AM_LATTYPE_NONE)
+    if(type == (int )WLZEFF_AM_LATTYPE_NONE)
     {
-      errNum = WLZ_ERR_READ_INCOMPLETE;
+      *unknown = 1;
+    }
+    else
+    {
+      *dstType = type;
     }
   }
   return(errNum);
@@ -971,34 +993,40 @@ static WlzErrorNum WlzEffAmReadLatticeType(FILE *fP, char *buf,
 * \param	fP			Given file.
 * \param	buf			Buffer for workspace.
 * \param	bufLen			Buffer length.
+* \param	skip			Skip this lattice if non zero,
+*					parsing it but not putting data into
+*					lattice header data structure.
 * \param	head			The Amira lattice header data
 *					structure.
 */
 static WlzErrorNum WlzEffAmReadLatticeLabel(FILE *fP, char *buf, 
-					const int bufLen,
+					const int bufLen, int skip,
 					WlzEffAmHead *head)
 {
   WlzErrorNum	errNum;
   const char	tokSepWS[] = " \t\n\r\f\v";
 
   errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
-  if(errNum == WLZ_ERR_NONE)
+  if(skip == 0)
   {
-    if(sscanf(buf, "@%d(HxByteRLE,%d)", &(head->latLabel),
-	  &(head->latBytes)) == 2)
+    if(errNum == WLZ_ERR_NONE)
     {
-      head->latComp = WLZEFF_AM_LATCOMP_HXBYTERLE;
+      if(sscanf(buf, "@%d(HxByteRLE,%d)", &(head->latLabel),
+	    &(head->latBytes)) == 2)
+      {
+	head->latComp = WLZEFF_AM_LATCOMP_HXBYTERLE;
+      }
+      else if(sscanf(buf, "@%d", &(head->latLabel)) == 1)
+      {
+	head->latComp = WLZEFF_AM_LATCOMP_NONE;
+	head->latBytes = head->latSize.vtX * head->latSize.vtY *
+			 head->latSize.vtZ;
+      }
     }
-    else if(sscanf(buf, "@%d", &(head->latLabel)) == 1)
+    else
     {
-      head->latComp = WLZEFF_AM_LATCOMP_NONE;
-      head->latBytes = head->latSize.vtX * head->latSize.vtY *
-      		       head->latSize.vtZ;
+      errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-  }
-  else
-  {
-    errNum = WLZ_ERR_READ_INCOMPLETE;
   }
   return(errNum);
 }
@@ -1191,26 +1219,13 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzExtFF
-* \brief	Reads the seeds list from the file and throw them away.
-*		The format for seeds list is:
-*		\verbatim
-		  {
-		    Slice0015 {
-		      S0114x0120 2 47 123 6
-		    }
-		    Slice0022 {
-		      S0084x0090 2 0 115 7
-		    }
-		  }
-		\endverbatim
+* \brief	Reads and skips everything between the '{' '}' next pair.
 * \param	fP			Given file.
 * \param	buf			Buffer for workspace.
 * \param	bufLen			Buffer length.
-* \param	head			The Amira lattice header data
-*					structure.
 */
-static WlzErrorNum WlzEffAmReadSeeds(FILE *fP, char *buf, const int bufLen,
-				     WlzEffAmHead *head)
+static WlzErrorNum WlzEffAmReadAndSkipValues(FILE *fP,
+					     char *buf, const int bufLen)
 {
 
   int		idN;
@@ -1218,20 +1233,18 @@ static WlzErrorNum WlzEffAmReadSeeds(FILE *fP, char *buf, const int bufLen,
   WlzErrorNum   errNum;
   const char	tokSepWS[] = " \t\n\r\f\v";
 
+  idN = 1;
   errNum =  WlzEffAmReadAndCheckAToken(fP, tokSepWS, buf, bufLen, "{");
-  if(errNum == WLZ_ERR_NONE)
+  while((errNum == WLZ_ERR_NONE) && (idN > 0))
   {
     errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    while((errNum == WLZ_ERR_NONE) && strcmp(buf, "}"))
+    if(strcmp(buf, "{") == 0)
     {
-      idN = 0;
-      while((errNum == WLZ_ERR_NONE) && (idN++ < 8))
-      {
-        errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
-      }
+      ++idN;
+    }
+    else if(strcmp(buf, "}") == 0)
+    {
+      --idN;
     }
   }
   return(errNum);
