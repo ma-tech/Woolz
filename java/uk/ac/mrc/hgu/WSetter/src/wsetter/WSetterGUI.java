@@ -33,7 +33,7 @@ public class WSetterGUI extends JPanel {
     * The nominal width of the WSetter.
     * This field is required as a work-around for a GUI problem.
     * The width of the WSetter is determined by Java Layout Manager, however
-    * if it is set to say 800 and the window widened >> 800 it doesn't 
+    * if it is set to say 800 and the window widened >> 800 it doesn't
     * draw itself beyond 800? unless you click on it.
     * If it is set to a number > screen resolution, say 2048, everything is OK
     */
@@ -75,7 +75,7 @@ public class WSetterGUI extends JPanel {
    //....................................
 
    /**
-    * 
+    *
     */
    public WSetterGUI() {
       initGUI();
@@ -105,6 +105,7 @@ public class WSetterGUI extends JPanel {
       sliderPanel.add(_slider, BorderLayout.CENTER);
 
       paramLabel.setBackground(internalBgc);
+      paramLabel.setFont(new Font("default", Font.PLAIN, 11));
       paramLabel.setPreferredSize(new Dimension(labelWidth, sliderH));
       paramLabel.setText(sliderLabel);
 
