@@ -1,22 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzCopy.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to make 'deep' copies of Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 15-08-00 bill	Removed obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
-*		WLZ_POINT_(INT)|(FLOAT).
-* 05-06-00 bill Fixed possible bug caused by unset values pointer
-*		in WlzCopyValues().
-************************************************************************/
+/*!
+* \file         WlzCopy.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions to make 'deep' copies of Woolz objects.
+* \ingroup	WlzAllocation
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -28,16 +29,15 @@ WlzValues	WlzCopyValues(WlzObjectType, WlzValues, WlzDomain,
 WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *,
 					 	WlzErrorNum *);
 
-/************************************************************************
-* Function:	WlzCopyObject						*
-* Returns:	WlzObject *:		Copy object.			*
-* Purpose:	The external object copy interface function.		*
-*		Copies a Woolz object and returns the copy.		*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	The given object.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Copy of given object.
+* \ingroup	WlzAllocation
+* \brief	Copies a Woolz object together with it's domain, values
+*		and properties and then returns the copy.
+* \param	inObj			The given object.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
 WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -64,6 +64,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_PROPERTY_OBJ:
       case WLZ_2D_POLYGON:
       case WLZ_BOUNDLIST:
+      case WLZ_CONTOUR:
 	dom = WlzCopyDomain(inObj->type, inObj->domain, &errNum);
 	if(inObj->values.core)
 	{
@@ -85,7 +86,6 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_CONV_HULL:
       case WLZ_3D_WARP_TRANS:
       case WLZ_3D_POLYGON:
-      case WLZ_CONTOUR:
       case WLZ_RECTANGLE:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
@@ -123,17 +123,16 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
   return(outObj);
 }
 
-/************************************************************************
-* Function:	WlzCopyDomain						*
-* Returns:	WlzDomain:		Coppied domain, NULL on error.	*
-* Purpose:	Copies the given objects domain.			*
-* Global refs:	-							*
-* Parameters:	WlzObjectType inObjType: Type of given domain's parent	*
-*					object.				*
-*		WlzDomain inDom:	Domain to be copied.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Copied domain, NULL on error.
+* \ingroup      WlzAllocation
+* \brief	Copies the given objects domain.
+* \param	inObjType		Type of given domain's parent
+*					object.
+* \param	inDom			Domain to be copied.
+* \param	dstErr			Destination error pointer, may
+*					be NULL.
+*/
 WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 			       WlzErrorNum *dstErr)
 {
@@ -262,10 +261,16 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	  outDom.core = NULL;
 	}
         break;
+      case WLZ_CONTOUR:
+	if((outDom.ctr = WlzMakeContour(&errNum)) != NULL)
+	{
+	  outDom.ctr->model = WlzAssignGMModel(
+	  		      WlzGMModelCopy(inDom.ctr->model, &errNum), NULL);
+	}
+        break;
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
-      case WLZ_CONTOUR:
       case WLZ_RECTANGLE:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
@@ -291,20 +296,18 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
   return(outDom);
 }
 
-/************************************************************************
-* Function:	WlzCopyValues						*
-* Returns:	WlzValues:		Coppied values, NULL on error.	*
-* Purpose:	Copies the given objects values.			*
-* Global refs:	-							*
-* Parameters:	WlzObjectType inObjType: Type of given domain's parent	*
-*					object.				*
-*		WlzValues inVal:	Values to be copied.		*
-*		WlzDomain inDom:	Domain over which values are	*
-*					defined (parent object's 	*
-*					domain).			*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Copied values, NULL on error.
+* \ingroup      WlzAllocation
+* \brief	Copies the given values.
+* \param	inObjType		Type of given values parent
+*					object.
+* \param	inVal			Values to be copied.
+* \param	inDom			Domain over which values are
+*					defined (parent object's domain).
+* \param	dstErr			Destination error pointer, may
+*					be NULL.
+*/
 WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 			       WlzDomain inDom, WlzErrorNum *dstErr)
 {
@@ -424,15 +427,14 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
   return(outVal);
 }
 
-/************************************************************************
-* Function:	WlzCopySimpleProperty					*
-* Returns:	WlzSimpleProperty *:	Coppied property list.		*
-* Purpose:	Copies the given property list.				*
-* Global refs:	-							*
-* Parameters:	WlzSimpleProperty *inPLst: Given property list.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Copied property list.
+* \ingroup	WlzAllocation
+* \brief	Copies the given simple property list.
+* \param	inPLst			Given property list.
+* \param	dstErr			Destination error pointer, may
+*					be NULL.
+*/
 WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *inPLst,
 					 WlzErrorNum *dstErr)
 {
@@ -482,4 +484,3 @@ WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *inPLst,
   }
   return(outPLst);
 }
-
