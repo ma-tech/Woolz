@@ -131,6 +131,7 @@ WlzIntersectN(
   /* check all objects are non-empty and have the same type
      Note an empty object is not an error */
   for (i=0; i<n; i++){
+    int size;
     if( objs[i]->type != objs[0]->type ){
       if( objs[i]->type == WLZ_EMPTY_OBJ ){
 	obj = WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, &errNum);
@@ -141,6 +142,30 @@ WlzIntersectN(
       }
       obj = NULL;
       errNum = WLZ_ERR_OBJECT_TYPE;
+      if(wlzErr) {
+	*wlzErr = errNum;
+      }
+      return(obj);
+    }
+
+    /* check for size */
+    if( objs[i]->type == WLZ_2D_DOMAINOBJ ){
+      size = WlzArea(objs[i], &errNum);
+    }
+    else {
+      size = WlzVolume(objs[i], &errNum);
+    }
+    if( errNum == WLZ_ERR_NONE ){
+      if( size == 0 ){
+	obj = WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, &errNum);
+	if(wlzErr) {
+	  *wlzErr = errNum;
+	}
+	return(obj);
+      }
+    }
+    else {
+      obj = NULL;
       if(wlzErr) {
 	*wlzErr = errNum;
       }
