@@ -22,7 +22,7 @@ import wsetter.*;
 import zoom.*;
 import uk.ac.mrc.hgu.Wlz.*;
 
-/**
+/** 
  *   Combined <b>View</b> & <b>Controller</b> class for SectionViewer component.
  */
 public class SectionViewer
@@ -39,7 +39,7 @@ public class SectionViewer
 
   /**
    *   Instance of class that implements SVParent interface.
-   *   <br>SVParent must be implemented by the class responsible for
+   *   <br>SVParent must be implemented by the class responsible for 
    *   creating SectionViewers.
    */
   public Object _parent = null;
@@ -73,44 +73,44 @@ public class SectionViewer
 
   /*  Unused variable.
   private WlzObject _anatomyObj = null; */
-
+  
   /**   Woolz object representing a threshold constraint region */
   private WlzObject _constraintObj = null;
 
   /**   Instance of class responsible for building anatomy menus. */
   private AnatomyBuilder _anatBuilder = null;
 
-  /**
+  /**  
    *   Collection of full pathnames to anatomy components
    *   in the <em>embryo</em> hierarchy.
    */
   private Stack _embFileStack = null;
 
-  /**
+  /**  
    *   Collection of <em>Woolz</em> objects representing anatomy components
    *   in the <em>embryo</em> hierarchy.
    */
   private Stack _embObjStack = null;
 
-  /**
+  /**  
    *   Collection of full pathnames to anatomy components
    *   in the <em>extra-embryonic component</em> hierarchy.
    */
   private Stack _xembFileStack = null;
 
-  /**
+  /**  
    *   Collection of <em>Woolz</em> objects representing anatomy components
    *   in the <em>extra-embryonic component</em> hierarchy.
    */
   private Stack _xembObjStack = null;
 
-  /**
+  /**  
    *   Collection of <em>File</em> objects representing
    *   potential <em>mouse-click anatomy</em> components.
    */
   private Stack _maybeFil = null;
 
-  /**
+  /**  
    *   Collection of <em>Woolz</em> objects representing
    *   potential <em>mouse-click anatomy</em> components.
    */
@@ -142,7 +142,7 @@ public class SectionViewer
   /**   True if <em>threshold constraint</em> is enabled. */
   private boolean _threshConstraint;
 
-  /**
+  /** 
    *   True if <em>fixed point</em> has been selected
    *   from the <em>show</em> menu.
    */
@@ -605,7 +605,7 @@ public class SectionViewer
   /**
    *   Sets <em>max</em> & <em>min</em> limits for <em>distSetter</em>
    *   and sets its current value.
-   *   <br>Must be called at initialisation and whenever the
+   *   <br>Must be called at initialisation and whenever the 
    *   <em>yaw pitch</em> or <e>roll</em> angles are changed.
    *   @param val the value to set the <em>distSetter</em>.
    */
@@ -844,7 +844,7 @@ public class SectionViewer
   //-------------------------------------------------------------
   /*
    *   Checks that the given filename ends with ".wlz".
-   *   <br>Should also check that the parent directory has the
+   *   <br>Should also check that the parent directory has the 
    *   same name as the file.
    *   @param dir not used.
    *   @param fil the filename to check.
@@ -1113,7 +1113,7 @@ public class SectionViewer
 // get interCol array
 //-------------------------------------------------------------
   /**
-   *   Returns an array representing the colour of each line
+   *   Returns an array representing the colour of each line 
    *   in the <em>intersection line</em> array..
    *   @return array of Color objects.
    */
@@ -1479,7 +1479,7 @@ public class SectionViewer
 // remove decimal point and anything past decimal point
 //-------------------------------------------------------------
   /**
-   *   Utility to remove a decimal point and
+   *   Utility to remove a decimal point and 
    *   anything following the decimal point
    *   from the given String.
    *   @param str the String to be trimmed.
@@ -1689,7 +1689,7 @@ public class SectionViewer
 // checkFilename for extension
 //-------------------------------------------------------------
   /**
-   *   Adds the given extension to a filename if it
+   *   Adds the given extension to a filename if it 
    *   doesn't already have it.
    *   <br>Used for jpg and xml files.
    *   @param str the filename.
@@ -1789,7 +1789,7 @@ public class SectionViewer
 // enable or disable fixed point menus depending upon view mode
 //-------------------------------------------------------------
   /**
-   *   Enables or disables <em>Fixed Point</em> menus
+   *   Enables or disables <em>Fixed Point</em> menus 
    *   depending upon the given state.
    *   @param state true if menus are to be enabled.
    */
@@ -1932,7 +1932,7 @@ public class SectionViewer
 // set anatomy text field for menu selected anatomy
 //-------------------------------------------------------------
   /**
-   *   Sets the <em>feedback anatomy text</em> to the current
+   *   Sets the <em>feedback anatomy text</em> to the current 
    *   <em>mouse-click anatomy</em> or "-----" if none.
    *   <br>Called from SVParent2D when <em>Anatomy Key</em> is cleared..
    *   @param str the String to set.
@@ -1976,7 +1976,7 @@ public class SectionViewer
 // reset fixed line
 //-------------------------------------------------------------
   /**
-   *   Sets <em>2nd Fixed Point</em> to the original
+   *   Sets <em>2nd Fixed Point</em> to the original 
    *   <em>Fixed Point</em> and
    *   displays the fixed line if showAP is true.
    *   @param showAP true if fixed line is to be displayed.
@@ -2274,7 +2274,7 @@ public class SectionViewer
    *   then causes <em>_imgV</em> to fire a changeEvent.
    *   <br>Needs to be <em>public</em> as external applications use it.
    */
-  public MouseToFBAdaptor M2FB_1;
+  public MouseToFBAdaptor M2FB_1; 
 
   /**
    *   Event handler which changes
@@ -2298,14 +2298,14 @@ public class SectionViewer
   MouseToThreshConstraintAdaptor M2TC_1;
 
   /**
-   *   Event handler which fires an event if
+   *   Event handler which fires an event if 
    *   the mouse is clicked in a SectionViewer.
    */
   FocusAdaptor FA_1;
 
   // adaptors for grey level
   /**
-   *   Creates new event handlers and registers them with the
+   *   Creates new event handlers and registers them with the 
    *   appropriate event-firing objects.
    *   <br>Any existing event handlers are removed prior to registering
    *   the new ones.
@@ -2431,7 +2431,7 @@ public class SectionViewer
   } //connectAdaptors_1()
 
 //-------------------------------------------------------------
-  /**
+  /** 
    *   Toggles the SectionViewer's ability to fire events.
    *   @param state true if the SectionViewer can fire events.
    */
@@ -2440,7 +2440,7 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
-  /**
+  /** 
    *   Tests the SectionViewer's ability to fire events.
    *   @return true if the SectionViewer can fire events.
    */
@@ -2640,6 +2640,29 @@ public class SectionViewer
      return ret;
   }
 
+//-------------------------------------------------------------
+  /**
+   *   Inverts the grey values of the grey-level image.
+   *   Code was moved from <em>invertButton</em> handler
+   *   so that applications can override this method.
+   */
+  public void invertSection() {
+    // reverses the grey-level image
+    if(!_inverted) {
+       invertButton.setBackground(Color.black);
+       invertButton.setForeground(Color.white);
+       _imgV.setInverted(true);
+    } else {
+       invertButton.setBackground(Color.white);
+       invertButton.setForeground(Color.black);
+       _imgV.setInverted(false);
+    }
+    _inverted = !_inverted;
+    _bigPanel.revalidate();
+    _bigPanel.repaint();
+    
+  }
+
 //==========================================
 // get and set methods
 //==========================================
@@ -2820,7 +2843,7 @@ public class SectionViewer
 // inner classes for event handling
 //-------------------------------------------------------------
   /**
-   *   Event handler for menu selections from
+   *   Event handler for menu selections from 
    *   the <em>file</em> menu.
    */
   public class fileMenuHandler
@@ -2875,7 +2898,7 @@ public class SectionViewer
 
 //---------------------------------------
   /**
-   *   Event handler for menu selections from
+   *   Event handler for menu selections from 
    *   the <em>control</em> menu.
    */
   public class controlMenuHandler
@@ -3079,7 +3102,7 @@ public class SectionViewer
 
 //---------------------------------------
   /**
-   *   Event handler for menu selections from
+   *   Event handler for menu selections from 
    *   the <em>show</em> menu.
    */
   public class showMenuHandler
@@ -3184,7 +3207,7 @@ public class SectionViewer
   } // class showMenuHandler
 //---------------------------------------
   /**
-   *   Event handler for menu selections from
+   *   Event handler for menu selections from 
    *   the <em>help</em> menu.
    */
   public class helpMenuHandler
@@ -3245,7 +3268,7 @@ public class SectionViewer
 
 //---------------------------------------
   /**
-   *   Event handler for menu selections from
+   *   Event handler for menu selections from 
    *   the <em>threshold</em> menu.
    *   <p>Not in use.
    */
@@ -3387,25 +3410,9 @@ public class SectionViewer
     }
 
     public void actionPerformed(ActionEvent e) {
-      invertSection();
+       // reverses the grey-level image
+       invertSection();
     }
-  }
-
-  protected void invertSection(){
-    // reverses the grey-level image
-     if(!_inverted) {
-        invertButton.setBackground(Color.black);
-        invertButton.setForeground(Color.white);
-        _imgV.setInverted(true);
-     } else {
-        invertButton.setBackground(Color.white);
-        invertButton.setForeground(Color.black);
-        _imgV.setInverted(false);
-     }
-     _inverted = !_inverted;
-     _bigPanel.revalidate();
-     _bigPanel.repaint();
-
   }
 
 //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
@@ -3855,9 +3862,9 @@ public class SectionViewer
 //---------------------------------------
   // connect mouse events to display of x-y position
   /**
-   *   Event handler that updates the
+   *   Event handler that updates the 
    *   <em>position</em> feedback text field when
-   *   _imgV fires an event.
+   *   _imgV fires an event. 
    */
   public class WlzImgViewToPosAdaptor
       implements ChangeListener {
@@ -3894,9 +3901,9 @@ public class SectionViewer
 //---------------------------------------
   // connects mouse events to display of grey level value
   /**
-   *   Event handler that updates the
+   *   Event handler that updates the 
    *   <em>grey value</em> feedback text field when
-   *   _imgV fires an event.
+   *   _imgV fires an event. 
    */
   public class WlzImgViewToGreyAdaptor
       implements ChangeListener {
@@ -3920,9 +3927,9 @@ public class SectionViewer
 //---------------------------------------
   // connects mouse events to display of anatomy
   /**
-   *   Event handler that updates the
+   *   Event handler that updates the 
    *   <em>mouse-click anatomy</em> feedback text field when
-   *   _imgV fires an event.
+   *   _imgV fires an event. 
    */
   public class WlzImgViewToAnatAdaptor
       implements ChangeListener {
@@ -4400,7 +4407,7 @@ public class SectionViewer
 //---------------------------------------
   // connects mouse events to fixed point / fixed line setting
   /**
-   *   Event handler which sets the <em>Fixed Point</em> or
+   *   Event handler which sets the <em>Fixed Point</em> or 
    *   <em>2nd Fixed Point</em> when the mouse button is released.
    */
   public class MouseToFPAdaptor
@@ -4504,7 +4511,7 @@ public class SectionViewer
   }
 //---------------------------------------
   /**
-   *   Event handler which sets the <em>Fixed Point</em>
+   *   Event handler which sets the <em>Fixed Point</em> 
    *   to values obtained from a <em>PointEntry</em> dialogue.
    */
   public class FixedPointAdaptor
@@ -4540,7 +4547,7 @@ public class SectionViewer
 
 //-------------------------------------------------------------
   /**
-   *   Event handler which sets the <em>2nd Fixed Point</em>
+   *   Event handler which sets the <em>2nd Fixed Point</em> 
    *   to values obtained from a <em>PointEntry</em> dialogue.
    */
   public class FixedLineAdaptor
@@ -4583,7 +4590,7 @@ public class SectionViewer
 //-------------------------------------------------------------
   // stack
   /**
-   *   Thread which is responsible for copying stacks of Woolz objects
+   *   Thread which is responsible for copying stacks of Woolz objects 
    *   and their filenames from _anatBuilder.
    */
   Runnable rStack = new Runnable() {
