@@ -313,7 +313,7 @@ WlzObject *Wlz3DViewTransformObj(
   /* check for grey-level data */
   if((errNum == WLZ_ERR_NONE) && dstObj &&
      (dstObj->type != WLZ_EMPTY_OBJ) && srcObj->values.core ){
-    WlzPixelV	bckgrnd = WlzGetBackground(srcObj, &errNum);
+    WlzPixelV	bckgrnd;
     WlzObject	*tmpObj;
     WlzValues	tmpValues;
     WlzDVertex3	vtx;
@@ -321,6 +321,8 @@ WlzObject *Wlz3DViewTransformObj(
     WlzObjectType	valueTbType = WlzGreyTableType(WLZ_GREY_TAB_RAGR,
 						       bckgrnd.type, NULL);
     
+    /* explicit intialisation to satisfy strict ANSI on SGI */
+    bckgrnd = WlzGetBackground(srcObj, &errNum);
 
     /* make a voxel table */
     values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,

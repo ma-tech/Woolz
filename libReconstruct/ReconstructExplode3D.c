@@ -79,7 +79,7 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
     {
 #ifdef LINUX2
       if((statBuf.st_mode & (__S_IFDIR|__S_IREAD|__S_IWRITE|__S_IEXEC)) == 0)
-#elif /* LINUX2 */
+#else /* LINUX2 */
       if((statBuf.st_mode & (S_IFDIR | S_IRWXU)) == 0)
 #endif /* LINUX2 */
       {
