@@ -89,7 +89,7 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-DEFINES		= $(THREADS) \
+DEFINES		= $(THREADS) -D__EXTENSIONS__\
 		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
