@@ -23,11 +23,13 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
-			WlzExtFFConvert
+			WlzExtFFConvert \
+			WlzExtFFWlzToXYZ
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
-			WlzExtFFConvert.c
+			WlzExtFFConvert.c \
+			WlzExtFFWlzToXYZ.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -48,7 +50,8 @@ DEPENDDIRS		= \
 			  ../libAlc \
 			  ../libAlg \
 			  ../libWlz \
-			  ../libWlzExtFF
+			  ../libWlzExtFF \
+			../libhguDlpList
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -71,7 +74,7 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		=  WlzExtFF Wlz Alg Alc \
+LIBRARIES		=  WlzExtFF Wlz hguDlpList Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
@@ -92,7 +95,7 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-DEFINES			= 
+DEFINES			= -D$(UNIXTYPE) $(UNIXFLAGS) -D__EXTENSIONS__
 CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES) $(UNIXFLAGS)
 CFLAGS			= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 
