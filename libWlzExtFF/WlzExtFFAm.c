@@ -1555,6 +1555,7 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
   WlzValues	dValues,
   		nullVal;
   WlzErrorNum errNum = WLZ_ERR_NONE;
+  const int	allEmptyAfterFirst = 0;
 
   idx = 0;
   nullDom.core = NULL;
@@ -1570,7 +1571,7 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
   {
     thrV.v.inv = mat->id + 1;
     pList = WlzEffAmMakeMaterialPropList(mat, &errNum);
-    if(empty)
+    if(empty && allEmptyAfterFirst)
     {
       tObj3 = WlzMakeMain(WLZ_EMPTY_OBJ, nullDom, nullVal, pList,
       			  NULL, &errNum);
