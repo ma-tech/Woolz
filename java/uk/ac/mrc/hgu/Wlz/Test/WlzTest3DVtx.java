@@ -89,11 +89,11 @@ public class WlzTest3DVtx
 	obj0.WlzInit3DViewStruct(vs,obj0);
 	
 	/* now set the vertex to be transformed and see what we get */
-	vtx.vtX = 0;
+	/*vtx.vtX = 0;
 	vtx.vtY = 0;
-	vtx.vtZ = 0;
+	vtx.vtZ = 0;*/
 	WlzDVertex3 dstVtx[] = new WlzDVertex3[1];
-	obj0.Wlz3DSectionTransformInvVtxR(vtx, dstVtx, vs);
+	obj0.Wlz3DSectionTransformInvVtxR(vs, vtx, dstVtx);
 	System.out.println("vertex = " + vtx.vtX + " " + vtx.vtY + " " +
 	vtx.vtZ);
 	System.out.println("new vertex = " + dstVtx[0].vtX + " " + dstVtx[0].vtY +
