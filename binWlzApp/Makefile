@@ -23,11 +23,15 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
-			WlzExtractTransform
+			WlzExtractTransform \
+			WlzProductTransform \
+			WlzFixedPlaneAlign
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
-			WlzExtractTransform.c
+			WlzExtractTransform.c \
+			WlzProductTransform.c \
+			WlzFixedPlaneAlign.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -45,6 +49,8 @@ MANPAGES		=
 # and lib directories (modify as required).
 DEPENDDIRS		= \
 			  . \
+			  ../libReconstruct \
+			  ../libhguDlpList \
 			  ../libWlz \
 			  ../libAlg \
 			  ../libbibfile \
@@ -71,7 +77,7 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		=  Wlz Alg bibfile Alc \
+LIBRARIES		=  Reconstruct hguDlpList bibfile Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
@@ -111,7 +117,7 @@ CDEBUG			=
 COPTIMISE		= -O1 -OPT:roundoff=3
 endif
 
-DEFINES			= -DUSE_OSTORE
+DEFINES			= -DUSE_OSTORE -D__EXTENSIONS__
 #DEFINES			= 
 CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES) $(UNIXFLAGS)
 CFLAGS			= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
