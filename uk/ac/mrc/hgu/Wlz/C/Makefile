@@ -21,20 +21,17 @@ include			../../../../../../../../Makefile.conf
 ARCHIVE			= libJWlz.a
 SOARCHIVE		= $(ARCHIVE:%.a=%.so)
 DLLARCHIVE		= $(ARCHIVE:lib%.a=%.dll)
-DLLARCHIVEA		= $(ARCHIVE:%.a=%_dll.a)
-DLLDEF			= $(ARCHIVE:%.a=%.def)
-DLLBASE			= $(ARCHIVE:%.a=%.base)
-DLLEXP			= $(ARCHIVE:%.a=%.exp)
+DLLIMPORTLIB		= $(ARCHIVE:%.a=%.dll.a)
 PROTOTYPES		= 
-DLLENTRY		= dll_entry
-DLLLIBDEPS		= Wlz_dll Alg_dll Alc_dll cygwin kernel32
+DLLLIBDIRS		= $(DEPENDDIRS:%=-L%)
+DLLLIBDEPS		= -lWlz -lAlg -lAlc
+DLLLIBSEXT		= -L. -lg -lkernel32 -lm -lc
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= $(shell ls Wlz*.c)
-DLLCSOURCES		= init.c fixup.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -84,7 +81,6 @@ SUBSYSTEMS		=
 
 # List of all object files required for archive (should not need modifying).
 OBJECTS			= $(CSOURCES:%.c=%.o)
-DLLOBJECTS		= $(DLLCSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
 UNIXFLAGS		= -DUNIX
@@ -94,6 +90,10 @@ DEFINES			= $(THREADS) \
 			  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS			= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
+ifeq ($(UNIXTYPE), CYGWIN)
+CFLAGS			= -mrtd
+endif
+
 ifeq ($(CC), cc)
 SOFLAGS			= -G
 endif
@@ -106,8 +106,7 @@ all:			archive
 
 clean:
 			$(RM) -f $(CSOURCES) *.h *.o *.so $(ARCHIVE) \
-			$(DLLARCHIVE) $(DLLBASE) \
-			$(DLLEXP) $(DLLDEF) *~
+			$(DLLARCHIVE) *.dll.a *~
 
 install_archive:	$(ARCHIVE)
 			$(INSTALL) -o $(OWNER) -m 644 $(ARCHIVE) \
@@ -134,16 +133,13 @@ $(SOARCHIVE):		$(OBJECTS) $(INCLUDES)
 			$(CC) $(SOFLAGS) $(OBJECTS) $(LDFLAGS) $(LDLIBS) \
 			      -o $(SOARCHIVE)
 
-$(DLLARCHIVE):		$(OBJECTS) $(DLLOBJECTS) $(DLLDEF)
-			dllwrap --output-def $(DLLDEF) --add-stdcall-alias \
-			--driver-name $(CC) $(DEPENDDIRS:%=-L%) \
-			-o $(DLLARCHIVE) $(OBJECTS) $(DLLOBJECTS) $(DLLLIBDEPS:%=-l%) \
-			-W1,-e,_$(DLLENTRY)@12 -s
 
-$(DLLDEF):		$(PROTOTYPES) $(OBJECTS) $(DLLOBJECTS)
-			echo "EXPORTS" > $(DLLDEF)
-			nm $(OBJECTS) $(DLLOBJECTS) | \
-			grep '^........ [T] _' | \
-			sed 's/[^_]*_//' >> $(DLLDEF)
-
+$(DLLARCHIVE):		$(OBJECTS)
+			$(CC) -shared -o $(DLLARCHIVE) \
+			-Wl,--out-implib=$(DLLIMPORTLIB) \
+			-Wl,--export-all-symbols \
+			-Wl,--enable-auto-import \
+			-Wl,--whole-archive $(OBJECTS) \
+				$(DLLLIBDIRS) $(DLLLIBDEPS) \
+			-Wl,--no-whole-archive $(DLLLIBSEXT)
 
