@@ -14,6 +14,7 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 01-02-01 bill Fix bug in RecTranFindPeak().
 ************************************************************************/
 #include <Reconstruct.h>
 #include <string.h>
@@ -206,9 +207,9 @@ void		RecTranFindPeak(WlzDVertex2 *shift, double *pValue,
 	xMax = -(xIdx + 1);
 	yMax = -yIdx;
       }
+      ++left;
+      --right;
     }
-    ++left;
-    --right;
   }
   REC_DBG((REC_DBG_LVL_1|REC_DBG_TRAN),
 	  ("RecTranFindPeak 01 %d %d %f\n",
