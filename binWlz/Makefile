@@ -81,6 +81,7 @@ EXECUTABLES		= \
 			WlzGreyStats \
 			WlzGreyTemplate \
 			WlzGreyTransfer \
+			WlzGreyValue \
 	                WlzGreyValueMixing \
 		        WlzHasIntersect \
 			WlzHistogramData \
@@ -93,6 +94,7 @@ EXECUTABLES		= \
 			WlzHistogramRebin \
 			WlzHistogramSmooth \
 			WlzImageArithmetic \
+			WlzInsideDomain \
 			WlzIntRescaleObj \
 			WlzIsEmpty \
 			WlzIntersect \
@@ -110,6 +112,7 @@ EXECUTABLES		= \
 			WlzRBFContourObj \
 			WlzRegisterCCor \
 			WlzRegisterICP \
+			WlzRegisterICPWSD \
 			WlzRGBAConvert \
 			WlzRMSDiff \
 			WlzRsvFilterObj \
@@ -194,6 +197,7 @@ CSOURCES		= \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
 			WlzGreyTransfer.c \
+			WlzGreyValue.c \
 			WlzGreyValueMixing.c \
 			WlzHasIntersect.c \
 			WlzHistogramData.c \
@@ -206,6 +210,7 @@ CSOURCES		= \
 			WlzHistogramRebin.c \
 			WlzHistogramSmooth.c \
 			WlzImageArithmetic.c \
+			WlzInsideDomain.c \
 			WlzIntRescaleObj.c \
 			WlzIsEmpty.c \
 			WlzIntersect.c \
@@ -223,6 +228,7 @@ CSOURCES		= \
 			WlzRBFContourObj.c \
 			WlzRegisterCCor.c \
 			WlzRegisterICP.c \
+			WlzRegisterICPWSD.c \
 			WlzRGBAConvert.c \
 			WlzRMSDiff.c \
 			WlzRsvFilterObj.c \
