@@ -642,14 +642,14 @@ typedef union
 typedef struct _WlzGMCore
 {
   WlzGMElemType type;			/* Any WlzGMElemType */
-  unsigned int	idx;			/* Unique identifier for the type. */
+  int		idx;			/* Unique identifier for the type. */
 } WlzGMCore;
 
 /* Geometric properties of point in 2D integer space */
 typedef struct _WlzGMVertexG2I
 {
   WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G2I */
-  unsigned int	idx;		    	/* Unique identifier for vertex
+  int		idx;		    	/* Unique identifier for vertex
   					 * geometry */
   WlzIVertex2	vtx;			/* Where the point lies in space */
 } WlzGMVertexG2I;
@@ -658,7 +658,7 @@ typedef struct _WlzGMVertexG2I
 typedef struct _WlzGMVertexG2D
 {
   WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G2D */
-  unsigned int	idx;		    	/* Unique identifier for vertex
+  int		idx;		    	/* Unique identifier for vertex
   					 * geometry */
   WlzDVertex2	vtx;			/* Where the point lies in space */
 } WlzGMVertexG2D;
@@ -667,7 +667,7 @@ typedef struct _WlzGMVertexG2D
 typedef struct _WlzGMVertexG3I
 {
   WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G3I */
-  unsigned int	idx;		    	/* Unique identifier for vertex
+  int		idx;		    	/* Unique identifier for vertex
   					 * geometry */
   WlzIVertex3	vtx;			/* Where the point lies in space */
 } WlzGMVertexG3I;
@@ -676,7 +676,7 @@ typedef struct _WlzGMVertexG3I
 typedef struct _WlzGMVertexG3D
 {
   WlzGMElemType type;			/* WLZ_GMELM_VERTEX_G3D */
-  unsigned int	idx;		        /* Unique identifier for vertex
+  int		idx;		        /* Unique identifier for vertex
   				         * geometry */
   WlzDVertex3	vtx;			/* Where the point lies in space */
 } WlzGMVertexG3D;
@@ -697,7 +697,7 @@ typedef union
 typedef struct _WlzGMVertexT
 {
   WlzGMElemType type;			/* WLZ_GMELM_VERTEX_T */
-  unsigned int 	idx; 	    	        /* Unique identifier for vertex
+  int	 	idx; 	    	        /* Unique identifier for vertex
   					 * topology element */
   struct _WlzGMVertexT *next;		/* Next vertexT in disk. */
   struct _WlzGMVertexT *prev;		/* Previous vertexT in disk. */
@@ -711,7 +711,7 @@ typedef struct _WlzGMVertexT
 typedef struct _WlzGMVertex
 {
   WlzGMElemType type; 			/* WLZ_GMELM_VERTEX */
-  unsigned int	idx;			/* Unique identifier for vertex */
+  int		idx;			/* Unique identifier for vertex */
   struct _WlzGMDiskT *diskT;		/* A disk topology element of this
   					 * vertex, others can be found by
 					 * following the diskT's next/prev */
@@ -727,7 +727,7 @@ typedef struct _WlzGMVertex
 typedef struct _WlzGMDiskT
 {
   WlzGMElemType type; 			/* WLZ_GMELM_DISK_T */
-  unsigned int	idx;			/* Unique identifier for vertex */
+  int		idx;			/* Unique identifier for vertex */
   struct _WlzGMDiskT *next;		/* Next diskT of vertex. */
   struct _WlzGMDiskT *prev;		/* Previous diskT of vertex. */
   WlzGMVertex	*vertex;		/* The vertex that this disk cycles
@@ -740,7 +740,7 @@ typedef struct _WlzGMDiskT
 typedef struct _WlzGMEdgeT
 {
   WlzGMElemType type;			/* WLZ_GMELM_EDGE_T */
-  unsigned int	idx;	      		/* Unique identifier for edge topology
+  int		idx;	      		/* Unique identifier for edge topology
    					 * element */
   struct _WlzGMEdgeT *next;		/* Next edgeT in the parent */
   struct _WlzGMEdgeT *prev;		/* Previous edgeT in the parent */
@@ -757,7 +757,7 @@ typedef struct _WlzGMEdgeT
 typedef struct _WlzGMEdge
 {
   WlzGMElemType type;	        	/* WLZ_GMELM_EDGE */
-  unsigned int	idx;		        /* Unique identifier for edge */
+  int		idx;		        /* Unique identifier for edge */
   WlzGMEdgeT	*edgeT;	       		/* An edge topology use */
 } WlzGMEdge;
 
@@ -765,7 +765,7 @@ typedef struct _WlzGMEdge
 typedef struct _WlzGMLoopT
 {
   WlzGMElemType type;			/* WLZ_GMELM_LOOP_T */
-  unsigned int	idx;	      		/* Unique identifier for loop topology
+  int		idx;	      		/* Unique identifier for loop topology
   					 * element */
   struct _WlzGMLoopT *next;		/* Next loopT in the parent */
   struct _WlzGMLoopT *prev;		/* Previous loopT in the parent */
@@ -781,7 +781,7 @@ typedef struct _WlzGMLoopT
 typedef struct _WlzGMLoop
 {
   WlzGMElemType type;			/* WLZ_GMELM_LOOP */
-  unsigned int	idx;			/* Unique identifier for loop */
+  int		idx;			/* Unique identifier for loop */
   WlzGMLoopT 	*loopT;			/* Loop topology */
 } WlzGMLoop;
 
@@ -789,7 +789,7 @@ typedef struct _WlzGMLoop
 typedef struct _WlzGMShellG2I
 {
   WlzGMElemType type;			/* WLZ_GMELM_SHELL_G2I */
-  unsigned int	idx;	     		/* Unique identifier for shell
+  int		idx;	     		/* Unique identifier for shell
   					 * geometry element */
   WlzIBox2	bBox;			/* Bounding box of the shell */
 } WlzGMShellG2I;
@@ -798,7 +798,7 @@ typedef struct _WlzGMShellG2I
 typedef struct _WlzGMShellG2D
 {
   WlzGMElemType type;			/* WLZ_GMELM_SHELL_G2D */
-  unsigned int	idx;	     		/* Unique identifier for shell
+  int		idx;	     		/* Unique identifier for shell
   					 * geometry element */
   WlzDBox2	bBox;			/* Bounding box of the shell */
 } WlzGMShellG2D;
@@ -807,7 +807,7 @@ typedef struct _WlzGMShellG2D
 typedef struct _WlzGMShellG3I
 {
   WlzGMElemType type;			/* WLZ_GMELM_SHELL_G3I */
-  unsigned int	idx;	     		/* Unique identifier for shell
+  int		idx;	     		/* Unique identifier for shell
   					 * geometry element */
   WlzIBox3	bBox;			/* Bounding box of the shell */
 } WlzGMShellG3I;
@@ -816,7 +816,7 @@ typedef struct _WlzGMShellG3I
 typedef struct _WlzGMShellG3D
 {
   WlzGMElemType type;			/* WLZ_GMELM_SHELL_G3D */
-  unsigned int	idx;	     		/* Unique identifier for shell
+  int		idx;	     		/* Unique identifier for shell
   					 * geometry element */
   WlzDBox3	bBox;			/* Bounding box of the shell */
 } WlzGMShellG3D;
@@ -835,7 +835,7 @@ typedef union
 typedef struct _WlzGMShell
 {
   WlzGMElemType type;	      		/* WLZ_GMELM_SHELL */
-  unsigned int	idx;			/* Shell's index */
+  int		idx;			/* Shell's index */
   struct _WlzGMShell *next;		/* Next shell in the parent */
   struct _WlzGMShell *prev;		/* Previous shell in the parent */
   WlzGMShellGU geo;			/* Shell geometry */
