@@ -32,12 +32,26 @@
 #define __EXTENSIONS__
 #endif
 
-#include <stdio.h>
+#ifdef __cplusplus
+using namespace std;
+#else
 #include <stdlib.h>
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
 #include <Alc.h>
 #include <AlgType.h>
 #include <AlgProto.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ! ALG_H */
