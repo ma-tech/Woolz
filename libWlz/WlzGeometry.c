@@ -1148,6 +1148,29 @@ int		WlzGeomCmpVtx2D(WlzDVertex2 pos0, WlzDVertex2 pos1, double tol)
 /*!
 * \return	Unit vector or zero vector if vertices are coincident.
 * \ingroup	WlzGeometry
+* \brief	Computes the unit vector
+*		\f$\frac{1}{|\mathbf{v}|} \mathbf{v}\f$.
+* \param	vec			Given vector, \f$\mathbf{v}\f$.
+*/
+WlzDVertex2	WlzGeomUnitVector2D(WlzDVertex2 vec)
+{
+  double	len;
+
+  if((len = WLZ_VTX_2_LENGTH(vec)) > DBL_EPSILON)
+  {
+    len = 1.0 / len;
+    WLZ_VTX_2_SCALE(vec, vec, len);
+  }
+  else
+  {
+    vec.vtX = vec.vtY = 0.0;
+  }
+  return(vec);
+}
+
+/*!
+* \return	Unit vector or zero vector if vertices are coincident.
+* \ingroup	WlzGeometry
 * \brief	Computes the unit vector with the direction given by
 *		\f$\mathbf{p}_1 - \mathbf{p}_0\f$.
 *		If the two given vertices are coincident then a
@@ -1155,7 +1178,7 @@ int		WlzGeomCmpVtx2D(WlzDVertex2 pos0, WlzDVertex2 pos1, double tol)
 * \param	pos1			Position of vertex, \f$\mathbf{p}_1\f$.
 * \param	pos0			Position of vertex, \f$\mathbf{p}_0\f$.
 */
-WlzDVertex2	WlzGeomUnitVector2D(WlzDVertex2 pos1, WlzDVertex2 pos0)
+WlzDVertex2	WlzGeomUnitVector2D2(WlzDVertex2 pos1, WlzDVertex2 pos0)
 {
   double	len;
   WlzDVertex2	vec;
