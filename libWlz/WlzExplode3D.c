@@ -59,10 +59,10 @@ WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
     errNum = WLZ_ERR_DOMAIN_NULL;
     
   }
-  else if(((srcVal = srcObj->values).core) == NULL)
+/*  else if(((srcVal = srcObj->values).core) == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
-  }
+    }*/
   else if((objCount = srcDom.p->lastpl - srcDom.p->plane1 + 1) > 1)
   {
     if((objVec = (WlzObject **)AlcMalloc((unsigned long )objCount *
@@ -75,10 +75,20 @@ WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
       objIdx = 0;
       while((objIdx < objCount) && (errNum == WLZ_ERR_NONE))
       {
-	*(objVec + objIdx) = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-					 *(srcDom.p->domains + objIdx),
-					 *(srcVal.vox->values + objIdx),
-					 NULL, NULL, &errNum);
+	if(((srcVal = srcObj->values).core) == NULL){
+	  WlzValues values;
+	  values.core = NULL;
+	  *(objVec + objIdx) = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+					   *(srcDom.p->domains + objIdx),
+					   values,
+					   NULL, NULL, &errNum);
+	}
+	else {
+	  *(objVec + objIdx) = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+					   *(srcDom.p->domains + objIdx),
+					   *(srcVal.vox->values + objIdx),
+					   NULL, NULL, &errNum);
+	}
         ++objIdx;
       }
       if(errNum != WLZ_ERR_NONE)

@@ -713,7 +713,7 @@ WlzErrorNum	WlzAffineTransformPrimUpdate(WlzAffineTransform *trans)
 	{
 	  trans->scale = sqrt(s2);
 	  tD2 = (((tD0 * tD0) + (tD1 * tD1)) / s2)  - 4.0;
-	  trans->alpha = (fabs(tD2) > DBL_EPSILON)? sqrt(tD2): 0.0;
+	  trans->alpha = (tD2 > DBL_EPSILON)? sqrt(tD2): 0.0;
 	}
 	else
 	{
