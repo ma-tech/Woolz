@@ -5375,7 +5375,7 @@ WlzGMEdge	*WlzGMVertexCommonEdge(WlzGMVertex *eV0, WlzGMVertex *eV1)
 	  if(e0 == e1)
 	  {
 	      eC = e0;
-	      goto MATCH_FOUND;
+	      goto FOUND;
 	  }
 	  vT0 = vT0->next;
 	} while(vT0 != dT0->vertexT);
@@ -5385,7 +5385,7 @@ WlzGMEdge	*WlzGMVertexCommonEdge(WlzGMVertex *eV0, WlzGMVertex *eV1)
     } while(vT1 != dT1->vertexT);
     dT1 = dT1->next;
   } while(dT1 != eV1->diskT);
-  MATCH_FOUND:
+FOUND:
   return(eC);
 }
 
@@ -5584,13 +5584,13 @@ WlzGMFace	*WlzGMEdgeCommonFace(WlzGMEdge *eE0, WlzGMEdge *eE1)
       if(cET0->parent->face == cET1->parent->face)
       {
         cF = cET0->parent->face;
-	goto MATCH_FOUND;
+	goto FOUND;
       }
       cET1 = cET1->rad;
     } while(cET1 != eE1->edgeT);
     cET0 = cET0->rad;
   } while(cET0 != eE0->edgeT);
-  MATCH_FOUND:
+FOUND:
   return(cF);
 }
 
