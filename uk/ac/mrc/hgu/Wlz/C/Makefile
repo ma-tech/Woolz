@@ -69,7 +69,12 @@ LIBDIRS			= \
 			  $(HGU_LIB_DIR)
 
 # List of libraries to link (modify as required).
+ifeq ($(UNIXTYPE), SUNOS5)
 EXTRA_LIBS		= gen socket nsl m
+endif
+ifeq ($(UNIXTYPE), LINUX2)
+EXTRA_LIBS		= m
+endif
 LIBRARIES		= Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
@@ -89,6 +94,12 @@ DEFINES			= $(THREADS) \
 			  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS			= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
+ifeq ($(CC), cc)
+SOFLAGS			= -G
+endif
+ifeq ($(CC), gcc)
+SOFLAGS			= -shared
+endif
 
 # Default traget which builds everything.
 all:			archive
@@ -120,7 +131,7 @@ $(ARCHIVE):		$(OBJECTS)
 			$(AR) rs $(ARCHIVE) $?
 
 $(SOARCHIVE):		$(OBJECTS) $(INCLUDES)
-			$(CC) -G $(OBJECTS) $(LDFLAGS) $(LDLIBS) \
+			$(CC) $(SOFLAGS) $(OBJECTS) $(LDFLAGS) $(LDLIBS) \
 			      -o $(SOARCHIVE)
 
 $(DLLARCHIVE):		$(OBJECTS) $(DLLOBJECTS) $(DLLDEF)
