@@ -40,12 +40,6 @@ public class AnatKey extends AnatKeyGUI{
     */
    protected  int _indx = 0;
 
-   /**
-    *   The parent of the AnatKey.
-    *   This is the class that implements SVParent interface.
-    */
-   protected  Object _parent = null;
-
 //-------------------------------------------------------------
    /**
     *   Constructs a 2D AnatKey with the default title.
@@ -54,23 +48,23 @@ public class AnatKey extends AnatKeyGUI{
     *   that only 1 instance is constructed. !!!
     */
    public AnatKey() {
-      this("Anatomy Key", false);
+      this(false);
    }
 
 //............................
    /**
-    *   Constructs an AnatKey with the given title
+    *   Constructs an AnatKey with the default title
     *   and 2D / 3D as specified.
     *   It is the responsibility of the parent to ensure
     *   that only 1 instance is constructed. !!!
     */
-   public AnatKey(String title,
-	          boolean is3D) {
+   public AnatKey(boolean is3D) {
 
-      super(title, is3D);
+      super("Anatomy Key", is3D);
       _is3D = is3D;
       _keyEntryVec = new Vector();
    }
+
 //-------------------------------------------------------------
    /**
     *

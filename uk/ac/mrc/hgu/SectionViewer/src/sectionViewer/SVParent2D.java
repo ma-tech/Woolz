@@ -119,8 +119,8 @@ public class SVParent2D implements SVParent {
     _openViews = new Vector();
     /* make sure only 1 AnatKey is created */
     if(_key == null) {
-       //_key = new AnatKey();
-       _key = new AnatKey("My Key", true);
+       _key = new AnatKey();
+       _key.setTitle("Nick's Key");
     }
     _key.pack();
     _key.setVisible(false);
@@ -617,7 +617,7 @@ public class SVParent2D implements SVParent {
    *   Returns the AnatKey.
    *   @return _key.
    */
-  public AnatKey getAnatKey() {
+  public AnatKey getAnatomyKey() {
     return _key;
   }
 
