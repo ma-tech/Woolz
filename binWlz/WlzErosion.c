@@ -38,6 +38,7 @@ static void usage(char *proc_str)
 	  "\t                 6: 6-connected (3D)\n"
 	  "\t                18: 18-connected (3D)\n"
 	  "\t                26: 26-connected (3D)\n"
+	  "\t  -r#       Structuring element radius (default 1)\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
 	  proc_str);
@@ -50,10 +51,11 @@ int main(int	argc,
 
   WlzObject	*obj, *nobj;
   FILE		*inFile;
-  char 		optList[] = "hc:";
+  char 		optList[] = "hc:r:";
   int		option;
   WlzConnectType	connectivity;
   int		conn;
+  int		radius = 1;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* read the argument list and check for an input file */
@@ -94,6 +96,20 @@ int main(int	argc,
       }
       break;
 
+    case 'r':
+      radius = atoi(optarg);
+      if( radius < 1 ){
+	radius = 1;
+	fprintf(stderr, "%s: radius reset to %d\n",
+		argv[0], radius );
+      }
+      else if( radius > 100 ){
+	radius = 100;
+	fprintf(stderr, "%s: radius reset to %d\n",
+		argv[0], radius );
+      }
+      break;
+
     case 'h':
     default:
       usage(argv[0]);
@@ -118,9 +134,34 @@ int main(int	argc,
     {
       case WLZ_2D_DOMAINOBJ:
       case WLZ_3D_DOMAINOBJ:
-	if( (nobj = WlzErosion(obj, connectivity, &errNum)) != NULL ){
-	  errNum = WlzWriteObj(stdout, nobj);
-	  (void) WlzFreeObj(nobj);
+	if( radius > 1 ){
+	  WlzObject	*structElem;
+
+	  if((obj->type == WLZ_2D_DOMAINOBJ) ||
+	     (connectivity == WLZ_8_CONNECTED) ||
+	     (connectivity == WLZ_4_CONNECTED)){
+	    
+	    structElem = WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, radius,
+					     0.0, 0.0, 0.0, &errNum);
+	  }
+	  else {
+	    structElem = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, radius,
+					     0.0, 0.0, 0.0, &errNum);
+	  }
+
+	  if(structElem && (errNum == WLZ_ERR_NONE) &&
+	     (nobj = WlzStructErosion(obj, structElem, &errNum)) ){
+	    errNum = WlzWriteObj(stdout, nobj);
+	    (void) WlzFreeObj(nobj);
+	    (void) WlzFreeObj(structElem);
+	  }
+
+	}
+	else {
+	  if( (nobj = WlzErosion(obj, connectivity, &errNum)) != NULL ){
+	    errNum = WlzWriteObj(stdout, nobj);
+	    (void) WlzFreeObj(nobj);
+	  }
 	}
 	break;
 
