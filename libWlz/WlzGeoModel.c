@@ -13,6 +13,10 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 27-11-00 bill Add shell geometry updates during 2D model creation,
+*		write WlzGMShellMergeG(). Fix bug allowing insertion
+*		of duplicate simplicies in WlzGMModelConstructSimplex2D().
+*		Fix bug in WlzGMModelDeleteS().
 * 21-11-00 bill	Fix shell leak in WlzGMModelJoinL2D().
 * 16-11-00 bill Add WlzGMModelDeleteS().
 * 12-10-00 bill Fix bug counting shells in WlzGMModelConstructSimplex3D().
@@ -26,6 +30,9 @@
 #include <Wlz.h>
 #include <limits.h>
 
+static WlzErrorNum 	WlzGMShellMergeG(
+			  WlzGMShell *shell0,
+			  WlzGMShell *shell1);
 static WlzErrorNum 	WlzGMShellTestOutVTK(
 			  WlzGMShell *shell,
 			  int *vIdxTb,
@@ -1514,9 +1521,11 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 {
   WlzGMVertexT	*tVT;
-  WlzGMEdgeT	*nET,
+  WlzGMEdgeT	*fET,
+  		*nET,
 		*tET;
-  WlzGMLoopT	*nLT,
+  WlzGMLoopT	*fLT,
+  		*nLT,
   		*tLT;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1529,11 +1538,11 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
     /* Unlink the shell. */
     WlzGMShellUnlink(dS);
     /* For each loopT. */
-    tLT = dS->child;
+    fLT = tLT = dS->child;
     do
     {
-      /* Fro each edgeT. */
-      tET = tLT->edgeT;
+      /* For each edgeT. */
+      fET = tET = tLT->edgeT;
       do
       {
 	tVT = tET->vertexT;
@@ -1563,7 +1572,7 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 	  (void )WlzGMModelFreeET(model, tET);
 	}
 	tET = nET;
-      } while(tET->idx >= 0);
+      } while(tET != fET);
       /* Free the loopT and loop. */
       nLT = tLT->next;
       if(tLT->loop->idx >= 0)
@@ -1572,7 +1581,7 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
       }
       (void )WlzGMModelFreeLT(model, tLT);
       tLT = nLT;
-    } while(tLT->idx >= 0);
+    } while(tLT != fLT);
     (void )WlzGMModelFreeS(model, dS);
   }
   return(errNum);
@@ -2928,6 +2937,337 @@ WlzErrorNum	WlzGMShellUpdateGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
 	if(bBox.yMax > shell->geo.sg3D->bBox.yMax)
 	{
 	  shell->geo.sg3D->bBox.yMax = bBox.yMax;
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzGMShellComputeGBB
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Recomputes the shell's geometry by walking through
+*		it's children.
+* Global refs:	-
+* Parameters:	WlzGMShell *shell:	Given shell with geometry to
+*					be set.
+************************************************************************/
+WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
+{
+  int		tI0,
+  		fETIdx,
+  		fLTIdx;
+  double	tD0;
+  WlzGMEdgeT	*tET;
+  WlzGMLoopT	*tLT;
+  WlzGMVertexGU	vGU;
+  WlzGMShellGU	sGU;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((shell == NULL) || ((sGU = shell->geo).core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(shell->child)
+  {
+    switch(sGU.core->type)
+    {
+      case WLZ_GMELM_SHELL_G2I:
+	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
+	sGU.sg2I->bBox.xMin = sGU.sg2I->bBox.xMax = vGU.vg2I->vtx.vtX;
+	sGU.sg2I->bBox.yMin = sGU.sg2I->bBox.yMax = vGU.vg2I->vtx.vtY;
+	/* For each loopT */
+	tLT = shell->child;
+	fLTIdx = tLT->idx;
+	do
+	{
+	  /* For each edgeT */
+	  tET = tLT->edgeT;
+	  fETIdx = tET->idx;
+	  do
+	  {
+	    /* Update the new bounding box. */
+	    vGU = tET->vertexT->diskT->vertex->geo;
+	    if((tI0 = vGU.vg2I->vtx.vtX) < sGU.sg2I->bBox.xMin)
+	    {
+	      sGU.sg2I->bBox.xMin = tI0;
+	    }
+	    else if(tI0 > sGU.sg2I->bBox.xMax)
+	    {
+	      sGU.sg2I->bBox.xMax = tI0;
+	    }
+	    if((tI0 = vGU.vg2I->vtx.vtY) < sGU.sg2I->bBox.yMin)
+	    {
+	      sGU.sg2I->bBox.yMin = tI0;
+	    }
+	    else if(tI0 > sGU.sg2I->bBox.yMax)
+	    {
+	      sGU.sg2I->bBox.yMax = tI0;
+	    }
+	    /* Next edge topology element. */
+	    tET = tET->next;
+	  } while(tET->idx != fETIdx);
+	  tLT = tLT->next;
+	} while(tLT->idx != fLTIdx);
+	break;
+      case WLZ_GMELM_SHELL_G2D:
+	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
+	sGU.sg2D->bBox.xMin = sGU.sg2D->bBox.xMax = vGU.vg2D->vtx.vtX;
+	sGU.sg2D->bBox.yMin = sGU.sg2D->bBox.yMax = vGU.vg2D->vtx.vtY;
+	/* For each loopT */
+	tLT = shell->child;
+	fLTIdx = tLT->idx;
+	do
+	{
+	  /* For each edgeT */
+	  tET = tLT->edgeT;
+	  fETIdx = tET->idx;
+	  do
+	  {
+	    /* Update the new bounding box. */
+	    vGU = tET->vertexT->diskT->vertex->geo;
+	    if((tD0 = vGU.vg2D->vtx.vtX) < sGU.sg2D->bBox.xMin)
+	    {
+	      sGU.sg2D->bBox.xMin = tD0;
+	    }
+	    else if(tD0 > sGU.sg2D->bBox.xMax)
+	    {
+	      sGU.sg2D->bBox.xMax = tD0;
+	    }
+	    if((tD0 = vGU.vg2D->vtx.vtY) < sGU.sg2D->bBox.yMin)
+	    {
+	      sGU.sg2D->bBox.yMin = tD0;
+	    }
+	    else if(tD0 > sGU.sg2D->bBox.yMax)
+	    {
+	      sGU.sg2D->bBox.yMax = tD0;
+	    }
+	    /* Next edge topology element. */
+	    tET = tET->next;
+	  } while(tET->idx != fETIdx);
+	  tLT = tLT->next;
+	} while(tLT->idx != fLTIdx);
+	break;
+      case WLZ_GMELM_SHELL_G3I:
+	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
+	sGU.sg3I->bBox.xMin = sGU.sg3I->bBox.xMax = vGU.vg3I->vtx.vtX;
+	sGU.sg3I->bBox.yMin = sGU.sg3I->bBox.yMax = vGU.vg3I->vtx.vtY;
+	sGU.sg3I->bBox.zMin = sGU.sg3I->bBox.zMax = vGU.vg3I->vtx.vtZ;
+	/* For each loopT */
+	tLT = shell->child;
+	fLTIdx = tLT->idx;
+	do
+	{
+	  /* For each edgeT */
+	  tET = tLT->edgeT;
+	  fETIdx = tET->idx;
+	  do
+	  {
+	    /* Update the new bounding box. */
+	    vGU = tET->vertexT->diskT->vertex->geo;
+	    if((tI0 = vGU.vg3I->vtx.vtX) < sGU.sg3I->bBox.xMin)
+	    {
+	      sGU.sg3I->bBox.xMin = tI0;
+	    }
+	    else if(tI0 > sGU.sg3I->bBox.xMax)
+	    {
+	      sGU.sg3I->bBox.xMax = tI0;
+	    }
+	    if((tI0 = vGU.vg3I->vtx.vtY) < sGU.sg3I->bBox.yMin)
+	    {
+	      sGU.sg3I->bBox.yMin = tI0;
+	    }
+	    else if(tI0 > sGU.sg3I->bBox.yMax)
+	    {
+	      sGU.sg3I->bBox.yMax = tI0;
+	    }
+	    if((tI0 = vGU.vg3I->vtx.vtZ) < sGU.sg3I->bBox.zMin)
+	    {
+	      sGU.sg3I->bBox.zMin = tI0;
+	    }
+	    else if(tI0 > sGU.sg3I->bBox.zMax)
+	    {
+	      sGU.sg3I->bBox.zMax = tI0;
+	    }
+	    /* Next edge topology element. */
+	    tET = tET->next;
+	  } while(tET->idx != fETIdx);
+	  tLT = tLT->next;
+	} while(tLT->idx != fLTIdx);
+	break;
+      case WLZ_GMELM_SHELL_G3D:
+	vGU = shell->child->edgeT->vertexT->diskT->vertex->geo;
+	sGU.sg3D->bBox.xMin = sGU.sg3D->bBox.xMax = vGU.vg3D->vtx.vtX;
+	sGU.sg3D->bBox.yMin = sGU.sg3D->bBox.yMax = vGU.vg3D->vtx.vtY;
+	sGU.sg3D->bBox.zMin = sGU.sg3D->bBox.zMax = vGU.vg3D->vtx.vtZ;
+	/* For each loopT */
+	tLT = shell->child;
+	fLTIdx = tLT->idx;
+	do
+	{
+	  /* For each edgeT */
+	  tET = tLT->edgeT;
+	  fETIdx = tET->idx;
+	  do
+	  {
+	    /* Update the new bounding box. */
+	    vGU = tET->vertexT->diskT->vertex->geo;
+	    if((tD0 = vGU.vg3D->vtx.vtX) < sGU.sg3D->bBox.xMin)
+	    {
+	      sGU.sg3D->bBox.xMin = tD0;
+	    }
+	    else if(tD0 > sGU.sg3D->bBox.xMax)
+	    {
+	      sGU.sg3D->bBox.xMax = tD0;
+	    }
+	    if((tD0 = vGU.vg3D->vtx.vtY) < sGU.sg3D->bBox.yMin)
+	    {
+	      sGU.sg3D->bBox.yMin = tD0;
+	    }
+	    else if(tD0 > sGU.sg3D->bBox.yMax)
+	    {
+	      sGU.sg3D->bBox.yMax = tD0;
+	    }
+	    if((tD0 = vGU.vg3D->vtx.vtZ) < sGU.sg3D->bBox.zMin)
+	    {
+	      sGU.sg3D->bBox.zMin = tD0;
+	    }
+	    else if(tD0 > sGU.sg3D->bBox.zMax)
+	    {
+	      sGU.sg3D->bBox.zMax = tD0;
+	    }
+	    /* Next edge topology element. */
+	    tET = tET->next;
+	  } while(tET->idx != fETIdx);
+	  tLT = tLT->next;
+	} while(tLT->idx != fLTIdx);
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzGMShellMergeG
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Merges the geometries of the two shells so that the
+*		first shell's geometry is set to the union of the
+*		two shell's bounding boxes.
+* Global refs:	-
+* Parameters:	WlzGMShell *shell0:	First shell with geometry to
+*					be both used and set.
+*		WlzGMShell *shell1:	Second shell with geometry to
+*					be used.
+************************************************************************/
+static WlzErrorNum WlzGMShellMergeG(WlzGMShell *shell0, WlzGMShell *shell1)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((shell0 == NULL) || (shell0->geo.core == NULL) ||
+     (shell1 == NULL) || (shell1->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(shell0->geo.core->type != shell1->geo.core->type)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  {
+    switch(shell0->geo.core->type)
+    {
+      case WLZ_GMELM_SHELL_G2I:
+	if(shell1->geo.sg2I->bBox.xMin < shell0->geo.sg2I->bBox.xMin)
+	{
+	  shell0->geo.sg2I->bBox.xMin = shell1->geo.sg2I->bBox.xMin;
+	}
+	if(shell1->geo.sg2I->bBox.yMin < shell0->geo.sg2I->bBox.yMin)
+	{
+	  shell0->geo.sg2I->bBox.yMin = shell1->geo.sg2I->bBox.yMin;
+	}
+	if(shell1->geo.sg2I->bBox.xMax > shell0->geo.sg2I->bBox.xMax)
+	{
+	  shell0->geo.sg2I->bBox.xMax = shell1->geo.sg2I->bBox.xMax;
+	}
+	if(shell1->geo.sg2I->bBox.yMax > shell0->geo.sg2I->bBox.yMax)
+	{
+	  shell0->geo.sg2I->bBox.yMax = shell1->geo.sg2I->bBox.yMax;
+	}
+	break;
+      case WLZ_GMELM_SHELL_G2D:
+	if(shell1->geo.sg2D->bBox.xMin < shell0->geo.sg2D->bBox.xMin)
+	{
+	  shell0->geo.sg2D->bBox.xMin = shell1->geo.sg2D->bBox.xMin;
+	}
+	if(shell1->geo.sg2D->bBox.yMin < shell0->geo.sg2D->bBox.yMin)
+	{
+	  shell0->geo.sg2D->bBox.yMin = shell1->geo.sg2D->bBox.yMin;
+	}
+	if(shell1->geo.sg2D->bBox.xMax > shell0->geo.sg2D->bBox.xMax)
+	{
+	  shell0->geo.sg2D->bBox.xMax = shell1->geo.sg2D->bBox.xMax;
+	}
+	if(shell1->geo.sg2D->bBox.yMax > shell0->geo.sg2D->bBox.yMax)
+	{
+	  shell0->geo.sg2D->bBox.yMax = shell1->geo.sg2D->bBox.yMax;
+	}
+	break;
+      case WLZ_GMELM_SHELL_G3I:
+	if(shell1->geo.sg3I->bBox.xMin < shell0->geo.sg3I->bBox.xMin)
+	{
+	  shell0->geo.sg3I->bBox.xMin = shell1->geo.sg3I->bBox.xMin;
+	}
+	if(shell1->geo.sg3I->bBox.yMin < shell0->geo.sg3I->bBox.yMin)
+	{
+	  shell0->geo.sg3I->bBox.yMin = shell1->geo.sg3I->bBox.yMin;
+	}
+	if(shell1->geo.sg3I->bBox.zMin < shell0->geo.sg3I->bBox.zMin)
+	{
+	  shell0->geo.sg3I->bBox.zMin = shell1->geo.sg3I->bBox.zMin;
+	}
+	if(shell1->geo.sg3I->bBox.xMax > shell0->geo.sg3I->bBox.xMax)
+	{
+	  shell0->geo.sg3I->bBox.xMax = shell1->geo.sg3I->bBox.xMax;
+	}
+	if(shell1->geo.sg3I->bBox.yMax > shell0->geo.sg3I->bBox.yMax)
+	{
+	  shell0->geo.sg3I->bBox.yMax = shell1->geo.sg3I->bBox.yMax;
+	}
+	if(shell1->geo.sg3I->bBox.zMax > shell0->geo.sg3I->bBox.zMax)
+	{
+	  shell0->geo.sg3I->bBox.zMax = shell1->geo.sg3I->bBox.zMax;
+	}
+	break;
+      case WLZ_GMELM_SHELL_G3D:
+	if(shell1->geo.sg3D->bBox.xMin < shell0->geo.sg3D->bBox.xMin)
+	{
+	  shell0->geo.sg3D->bBox.xMin = shell1->geo.sg3D->bBox.xMin;
+	}
+	if(shell1->geo.sg3D->bBox.yMin < shell0->geo.sg3D->bBox.yMin)
+	{
+	  shell0->geo.sg3D->bBox.yMin = shell1->geo.sg3D->bBox.yMin;
+	}
+	if(shell1->geo.sg3D->bBox.zMin < shell0->geo.sg3D->bBox.zMin)
+	{
+	  shell0->geo.sg3D->bBox.zMin = shell1->geo.sg3D->bBox.zMin;
+	}
+	if(shell1->geo.sg3D->bBox.xMax > shell0->geo.sg3D->bBox.xMax)
+	{
+	  shell0->geo.sg3D->bBox.xMax = shell1->geo.sg3D->bBox.xMax;
+	}
+	if(shell1->geo.sg3D->bBox.yMax > shell0->geo.sg3D->bBox.yMax)
+	{
+	  shell0->geo.sg3D->bBox.yMax = shell1->geo.sg3D->bBox.yMax;
+	}
+	if(shell1->geo.sg3D->bBox.zMax > shell0->geo.sg3D->bBox.zMax)
+	{
+	  shell0->geo.sg3D->bBox.zMax = shell1->geo.sg3D->bBox.zMax;
 	}
 	break;
       default:
@@ -4825,7 +5165,7 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   nV0 @@- - - - - - - - - nE0 - - - - - - - -@@ nV1
+*                   nV0 @- - - - - - - - - nE0 - - - - - - - -@ nV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -4843,7 +5183,7 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            nV2
 *
 *                   DT0 = {nVT00, nVT10},
@@ -5000,7 +5340,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   nV0 @@- - - - - - - - - nE0 - - - - - - - -@@ nV1
+*                   nV0 @- - - - - - - - - nE0 - - - - - - - -@ nV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -5018,7 +5358,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV
 *
 *                   DT0 = {nVT00, nVT10},
@@ -5168,7 +5508,7 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - - eE- - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - - eE- - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -5186,7 +5526,7 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            nV
 *
 *                   eDT0 += {nVT00, nVT10}
@@ -5333,7 +5673,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - nE0 - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -5351,7 +5691,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            nV
 *
 *                   nDT0 = {nVT00, nVT10}
@@ -5499,7 +5839,7 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - nE0 - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -5517,7 +5857,7 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            nV
 *
 *                   nDT0 = {nVT00, nVT10}
@@ -5686,7 +6026,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - nE2 - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - nE2 - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -5704,7 +6044,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV2
 *
 *                   nDT0 = {nVT00, nVT10}
@@ -5875,7 +6215,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - nE0 - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -5893,7 +6233,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV2
 *
 *                   nDT0 = {nVT00, nVT10}
@@ -6078,7 +6418,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - nE0 - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -6096,7 +6436,7 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV2
 *
 *                   nDT0 = {nVT00, nVT10}
@@ -6229,7 +6569,7 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - eE  - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - eE  - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -6247,7 +6587,7 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV2 = sV
 *
 *		    nDT = {nVT02, nVT12}
@@ -6389,7 +6729,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 *
 *                           nVT00        nET00
 *                         O ------------------------------->
-*                   eV0 @@- - - - - - - - eE  - - - - - - - - -@@ eV1
+*                   eV0 @- - - - - - - - eE  - - - - - - - - -@ eV1
 *                        \   <--------------------------- O  /
 *                       ^   O nVT10      nET11     nVT11  ^   O nVT01
 *                        \ \ \                           / / /
@@ -6407,7 +6747,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 *                                    \ \ \  |/ / /
 *                               nVT02 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV2 = sV
 *
 *                   nDT = {nVT02, nVT12}
@@ -6555,7 +6895,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 *
 *                           nVT02        nET02
 *                         O ------------------------------->
-*                   eV2 @@- - - - - - - - nE  - - - - - - - - -@@ eV0
+*                   eV2 @- - - - - - - - nE  - - - - - - - - -@ eV0
 *                        \   <--------------------------- O  /
 *                       ^   O nVT12      nET10     nVT10  ^   O nVT00
 *                        \ \ \                           / / /
@@ -6573,7 +6913,7 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 *                                    \ \ \  |/ / /
 *                               nVT12 O   v O   v
 *                                        \   /
-*                                          @@
+*                                          @
 *                                            eV1 
 *
 *                   nLT0 = {nET00, nET01, nET02}
@@ -6720,7 +7060,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 *		   |  / nVT0    / nET0          / nE
 *		   | /         /               /
 *		   | O -----------------------/---->
-*		    @@- - - - - - - - - - - - - - - -@@
+*		    @- - - - - - - - - - - - - - - -@
 *		     <---------------------------- O|
 *		                      /           / |
 *		                nET1 /      nVT1 /  |
@@ -6830,7 +7170,7 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 *		   |   /nVT0    / nET0          /         /eET0
 *		   |  /        /               /         /
 *		   |  O ----------------------/--->   O----
-*		    @@- - - - - - - - - - - - - - - -@@- - - -
+*		    @- - - - - - - - - - - - - - - -@- - - -
 *		     <--------------------------- O |<------
 *		                      /          /  |    \
 *		                nET1 /      nVT1/   |     \eET1
@@ -6899,6 +7239,8 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
     nET1->edge = nE;
     nET1->vertexT = nVT1;
     nET1->parent = eET1->parent;
+    /* Update the shell's geometry. */
+    (void )WlzGMShellUpdateG2D(nET0->parent->parent, nPos);
   }
   return(errNum);
 }
@@ -6919,7 +7261,7 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 *		loop (nL) and a loop topology element (nLT).
 *
 *		      O ------------->     O --------------->
-*		    @@- - - - - - - - - -@@- - - - - - - - - - -@@
+*		    @- - - - - - - - - -@- - - - - - - - - - -@
 *		    |  <------------ O  |  <--------------- O | O
 *		  ^   O        /      ^   O                 ^
 *		  | |    eET0 /       | |  \nVT1            | | |
@@ -6931,7 +7273,7 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 *		  | | |         nVT0 \  | |     / eET1        | |
 *		  |   V               O   V    /            O   V
 *		    |  O ------------>  |  O -------------->  |
-*		    @@- - - - - - - - - -@@- - - - - - - - - - -@@
+*		    @- - - - - - - - - -@- - - - - - - - - - -@
 *		      <-------------- O    <--------------- O
 *
 * Global refs:	-
@@ -7035,7 +7377,7 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
 *	                       nE\          \  \          /eET1
 *	                          \   /nVT0  \  \        /
 *	             O -------->   \ O --------->\   O -------->
-*	          @@- - - - - - - -@@- - - - - - - -@@- - - - - - - -@@
+*	          @- - - - - - - -@- - - - - - - -@- - - - - - - -@
 *	             <-------- O  \  <--------- O    <-------- O
 *	                  /        \       \    \
 *	             eET0/          \eV0    \    \nVT1
@@ -7106,6 +7448,11 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
     {
       dS = NULL;
     }
+    else
+    {
+      /* Merge the two shell's geometries. */
+      (void )WlzGMShellMergeG(eLT->parent, dS);
+    }
     /* Set/update the retained loop by walking around the edge topology
      * elements setting their parents. */
     WlzGMLoopTSetT(eLT);
@@ -7144,6 +7491,12 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
   WlzGMEdgeT	*matchEdgeT[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+#ifdef WLZ_GEOMODEL_DEBUG
+  (void )fprintf(stderr, "%g %g %g %g\n",
+		 (pos + 0)->vtX, (pos + 0)->vtY,
+		 (pos + 1)->vtX, (pos + 1)->vtY);
+  (void )fflush(stderr);
+#endif /* WLZ_GEOMODEL_DEBUG */
   WlzGMModelMatchEdgeTG2D(model, matchEdgeT, pos);
   matchCode = ((matchEdgeT[1] != NULL) << 1) | (matchEdgeT[0] != NULL);
   switch(matchCode)
@@ -7161,22 +7514,27 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
       errNum = WlzGMModelExtendL2D(model, matchEdgeT[1], *(pos + 0));
       break;
     case 3:
-      /* Both verticies already exist within the model so adding another
-       * edge between the two verticies will change the number of loops
-       * and shells. */
-      if(WlzGMEdgeTCommonLoopT(matchEdgeT[0], matchEdgeT[1]) != NULL)
+      /* Both verticies already exist within the model.
+         Don't insert this simplex if it is already in the model. */
+      if(matchEdgeT[0]->edge->idx != matchEdgeT[1]->edge->idx)
       {
-        /* Both of the verticies lie on a common loop then that loop needs
-	 * to be SPLIT by a new edge. */
-	errNum = WlzGMModelConstructSplitL2D(model,
-					      matchEdgeT[0], matchEdgeT[1]);
-      }
-      else
-      {
-        /* The two verticies do NOT share a common loop so loops will be
-         * JOINed by a new edge, destroying a loop.  */
-	errNum = WlzGMModelJoinL2D(model, matchEdgeT[0], matchEdgeT[1]);
-        
+	/* Both verticies already exist within the model so adding another
+	 * edge between the two verticies will change the number of loops
+	 * and shells. */
+	if(WlzGMEdgeTCommonLoopT(matchEdgeT[0], matchEdgeT[1]) != NULL)
+	{
+	  /* Both of the verticies lie on a common loop then that loop needs
+	   * to be SPLIT by a new edge. */
+	  errNum = WlzGMModelConstructSplitL2D(model,
+						matchEdgeT[0], matchEdgeT[1]);
+	}
+	else
+	{
+	  /* The two verticies do NOT share a common loop so loops will be
+	   * JOINed by a new edge, destroying a loop.  */
+	  errNum = WlzGMModelJoinL2D(model, matchEdgeT[0], matchEdgeT[1]);
+	  
+	}
       }
       break;
   }
