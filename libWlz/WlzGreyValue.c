@@ -18,6 +18,7 @@
 * \ingroup	WlzAccess
 * \todo         -
 * \bug          None known.
+* 07-11-01 Rao added WlzGreyValueGetDir()
 */
 #include <stdlib.h>
 #include <Wlz.h>
@@ -1106,3 +1107,57 @@ double		WlzGreyValueGetD(WlzGreyValueWSpace *gVWSp,
   }
   return(val);
 }
+
+/*!
+* \Function:	WlzGreyValueGet3D1					
+* \Returns:	void						
+* \Purpose:	Gets a single grey value/pointer for the given point
+*		from the 3D values and domain in the work space.
+* \Global refs:	-				
+* \Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.
+*		int plane:		Plane coordinate of point.
+*		int line:		Line coordinate of point.
+*		int kol:		Column coordinate of point.
+*		JRao make it                              
+*/
+void	WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
+				   int plane, int line, int kol)
+{
+  int		tI0,
+  		valSet = 0;
+  WlzDomain	*domP;
+  WlzValues	*valP;
+
+  if((plane >= gVWSp->domain.p->plane1) &&
+     (plane <= gVWSp->domain.p->lastpl))
+  {
+    if(gVWSp->plane == plane)
+    {
+      WlzGreyValueGet2D1(gVWSp, line, kol);
+      valSet = 1;
+    }
+    else
+    {
+      tI0 = plane - gVWSp->domain.p->plane1;
+      domP = gVWSp->domain.p->domains + tI0;
+      valP = gVWSp->values.vox->values + tI0;
+      /* check for non-NULL domain and valuetable
+	 pointers until empty obj consistently implemented */
+      /*if(domP && valP)*/
+      if(domP && valP && (*domP).core && (*valP).core)
+      {
+        gVWSp->plane = plane;
+	gVWSp->iDom2D = (*domP).i;
+	gVWSp->values2D = (*valP);
+	gVWSp->gTabType2D = gVWSp->gTabTypes3D[tI0];
+        WlzGreyValueGet2D1(gVWSp, line, kol);
+        valSet = 1;
+      }
+    }
+  }
+  if(valSet == 0)
+  {
+    WlzGreyValueSetBkdP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType, gVWSp->gBkd);
+  }
+}
+
