@@ -6,6 +6,7 @@ CLASSPATH = .:./src
 SOURCEPATH = ./src/wsetter
 TARGETPATH = ./classes/wsetter
 JAVAC = /opt/java/bin/javac
+JAR = /opt/java/bin/jar
 FLAGS = -classpath $(CLASSPATH) -d classes
 
 OBJECTS = $(TARGETPATH)/WSetter.class \
@@ -33,3 +34,5 @@ clean: clobber
 clobber:
 	-rm -rf classes/wsetter
 
+jarfile: $(OBJECTS)
+	$(JAR) cfm wsetter.jar ./classes/bean.tmp $(TARGETPATH)
