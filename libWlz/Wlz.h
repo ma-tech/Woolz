@@ -17,6 +17,11 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdio.h>
 #include <math.h>
 
@@ -29,6 +34,10 @@
 #include <WlzDebug.h>
 #include <WlzProto.h>
 #include <WlzMacro.h>
+
+#ifdef __cplusplus
+}
+#endif
 
 /*!
 * \defgroup    Wlz	Wlz
