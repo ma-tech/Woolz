@@ -658,7 +658,8 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 	  }
 	  else {
 	    (*(ndomains + pnIdx)).core = NULL;
-	    (*(nvalues + pnIdx).core = NULL;
+	    (*(nvalues + pnIdx)).core = NULL;
+	  }
 	  WlzFreeObj(obj1);
 	}
 	#pragma omp critical
