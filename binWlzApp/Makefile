@@ -95,9 +95,9 @@ LIBDIRS			= \
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
-EXTRA_LIBS		= tiff gen socket nsl m
+EXTRA_LIBS		= jpeg tiff gen socket nsl m
 else
-EXTRA_LIBS		= tiff m
+EXTRA_LIBS		= jpeg tiff m
 endif
 
 MOTIFLIBS       	= Xm 
