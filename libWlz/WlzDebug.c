@@ -24,8 +24,8 @@ WlzErrorNum 	WlzDbgWrite(char *, ...),
 
 WlzDbgMask	wlzDbgMask = WLZ_DBG_NONE,
 		wlzDbgObjMask = WLZ_DBG_NONE;
-void		*wlzDbgData = (void *) stderr,
-		*wlzDbgObjData = (void *) stderr;
+void		*wlzDbgData = NULL,
+		*wlzDbgObjData = NULL;
 
 WlzDbgFn	wlzDbgOutFn = WlzDbgWrite;
 WlzDbgObjFn	wlzDbgOutOutFn = WlzDbgObjWrite;

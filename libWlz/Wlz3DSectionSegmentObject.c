@@ -175,7 +175,7 @@ WlzErrorNum Wlz3DSectionSegmentObject(
       /* scan the original object adding/splitting intervals as required */
       nints0 = 0;
       nints1 = 0;
-      WlzInitRasterScan(tmpObj, &iwsp, NULL);
+      WlzInitRasterScan(tmpObj, &iwsp, WLZ_RASTERDIR_ILIC);
       while( (errNum = WlzNextInterval(&iwsp)) == WLZ_ERR_NONE ){
 
 	/* check interval, mark as required */
