@@ -143,7 +143,7 @@ WlzObject *WlzIntRescaleObj(
   if( errNum == WLZ_ERR_NONE){
     if( domain.i->type == WLZ_INTERVALDOMAIN_INTVL )
     {
-      int intvline_offset;
+      int intvline_offset, max_offset;
       WlzIntervalLine *intvline;
 
       num_intvls = WlzIntervalCount(obj->domain.i, NULL);
@@ -151,6 +151,7 @@ WlzObject *WlzIntRescaleObj(
       intvls = (WlzInterval *)AlcMalloc(sizeof(WlzInterval) * num_intvls);
       domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intvls,
       					   NULL);
+      max_offset = obj->domain.i->lastln - obj->domain.i->line1;
 
       for(l=l1; l <= ll; l++)
       {
@@ -158,6 +159,7 @@ WlzObject *WlzIntRescaleObj(
 
 	intvline_offset = (expand?l/scale:l*scale) - obj->domain.i->line1;
 	intvline_offset = WLZ_MAX(intvline_offset, 0);
+	intvline_offset = WLZ_MIN(intvline_offset, max_offset);
 	intvline = obj->domain.i->intvlines + intvline_offset;
 
 	for(i=0; i < intvline->nintvs; i++)
