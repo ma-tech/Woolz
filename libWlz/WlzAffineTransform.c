@@ -2922,6 +2922,98 @@ WlzDVertex3	WlzAffineTransformVertexD3(WlzAffineTransform *trans,
 }
 
 /************************************************************************
+* Function:	WlzAffineTransformNormalD2
+* Returns:	WlzDVertex2:		Transformed vertex.
+* Purpose:	Transforms the given WlzDVertex2 which is a normal.
+* Global refs:	-
+* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
+*		WlzDVertex2 srcNrm:	Normal to be transformed.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzDVertex2	WlzAffineTransformNormalD2(WlzAffineTransform *trans,
+					   WlzDVertex2 srcNrm,
+					   WlzErrorNum *dstErr)
+{
+  WlzDVertex2	dstNrm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(trans == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(WlzAffineTransformDimension(trans, NULL) != 2)
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else
+  {
+    dstNrm.vtX = (trans->mat[0][0] * srcNrm.vtX) +
+		 (trans->mat[0][1] * srcNrm.vtY);
+    dstNrm.vtY = (trans->mat[1][0] * srcNrm.vtX) +
+		 (trans->mat[1][1] * srcNrm.vtY);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstNrm);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformNormalD3
+* Returns:	WlzDVertex3:		Transformed vertex.
+* Purpose:	Transforms the given WlzDVertex3 which is a normal.
+* Global refs:	-
+* Parameters:	WlzAffineTransform *trans: Affine transform to apply.
+*		WlzDVertex3 srcNrm:	Normal to be transformed.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzDVertex3	WlzAffineTransformNormalD3(WlzAffineTransform *trans,
+					   WlzDVertex3 srcNrm,
+					   WlzErrorNum *dstErr)
+{
+  WlzDVertex3	dstNrm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(trans == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(WlzAffineTransformDimension(trans, NULL))
+    {
+      case 2:
+        dstNrm.vtX = (trans->mat[0][0] * srcNrm.vtX) +
+		     (trans->mat[0][1] * srcNrm.vtY);
+        dstNrm.vtY = (trans->mat[1][0] * srcNrm.vtX) +
+		     (trans->mat[1][1] * srcNrm.vtY);
+        break;
+      case 3:
+	dstNrm.vtX = (trans->mat[0][0] * srcNrm.vtX) +
+		     (trans->mat[0][1] * srcNrm.vtY) +
+		     (trans->mat[0][2] * srcNrm.vtZ);
+	dstNrm.vtY = (trans->mat[1][0] * srcNrm.vtX) +
+		     (trans->mat[1][1] * srcNrm.vtY) +
+		     (trans->mat[1][2] * srcNrm.vtZ);
+	dstNrm.vtZ = (trans->mat[2][0] * srcNrm.vtX) +
+		     (trans->mat[2][1] * srcNrm.vtY) +
+		     (trans->mat[2][2] * srcNrm.vtZ);
+        break;
+      default:
+        break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstNrm);
+}
+
+/************************************************************************
 * Function:	WlzAffineTransformBBoxI2
 * Returns:	WlzIBox2:		Transformed bounding box.
 * Purpose:	Transforms the given WlzIBox2.
