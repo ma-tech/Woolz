@@ -13,16 +13,27 @@
 *		objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 15-08-00 bill	Add WlzBoundingBoxContour(). Remove obsolete types:
+*		WLZ_VECTOR_(INT)|(FLOAT) and WLZ_VECTOR_(INT)|FLOAT).
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <Wlz.h>
 
-static WlzIBox3	WlzBoundingBoxBound3D(WlzBoundList *, WlzErrorNum *),
-		WlzBoundingBoxPoly3D(WlzPolygonDomain *, WlzErrorNum *),
-		WlzBoundingBoxTransObj3D(WlzObject *, WlzAffineTransform *,
-				         WlzErrorNum *);
+static WlzIBox3			WlzBoundingBoxBound3D(
+				  WlzBoundList *,
+				  WlzErrorNum *);
+static WlzIBox3			WlzBoundingBoxPoly3D(
+				  WlzPolygonDomain *,
+				  WlzErrorNum *);
+static WlzIBox3			WlzBoundingBoxTransObj3D(
+				  WlzObject *,
+				  WlzAffineTransform *,
+				  WlzErrorNum *);
+static WlzIBox3 		WlzBoundingBoxContour(
+				  WlzContour *ctr,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * Function:	WlzBoundingBox2D					*
@@ -162,6 +173,16 @@ WlzIBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
           bBox3D = WlzBoundingBoxBound3D(inObj->domain.b, &errNum);
 	}
 	break;
+      case WLZ_CONTOUR:
+	if(inObj->domain.ctr == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
+	{
+	  bBox3D = WlzBoundingBoxContour(inObj->domain.ctr, &errNum);
+	}
+        break;
       case WLZ_EMPTY_OBJ:
       case WLZ_AFFINE_TRANS:
       case WLZ_HISTOGRAM:
@@ -170,10 +191,6 @@ WlzIBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_3D_WARP_TRANS:
       case WLZ_3D_POLYGON:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
@@ -448,4 +465,83 @@ static WlzIBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
     *dstErr = errNum;
   }
   return(bBox3D);
+}
+
+/************************************************************************
+* Function:	WlzBoundingBoxContour					*
+* Returns:	WlzIBox3 *:		3D bounding box.		*
+* Purpose:	Computes the 3D bounding box of the contour.		*
+* Global refs:	-							*
+* Parameters:	WlzContour *ctr:	The given contour.		*
+*		WlzErrorNum *dstErr:	Destination error pointer,	*
+*					may be NULL.			*
+************************************************************************/
+static WlzIBox3 WlzBoundingBoxContour(WlzContour *ctr, WlzErrorNum *dstErr)
+{
+  WlzGMShell	*shell0,
+  		*shell1;
+  WlzDBox3	sBox3D,
+  		bBox3D;
+  WlzIBox3	bBox3I;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ctr->model == NULL)
+  {
+    errNum =  WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((shell0 = ctr->model->child) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    /* Find the bounding box of all the GM's shell's bounding boxes. */
+    shell1 = shell0->next;
+    errNum = WlzGMShellGetGBB3D(shell0, &bBox3D);
+    while((errNum == WLZ_ERR_NONE) && (shell1->idx != shell0->idx))
+    {
+      if((errNum = WlzGMShellGetGBB3D(shell0, &sBox3D)) == WLZ_ERR_NONE)
+      {
+	if(sBox3D.xMin < bBox3D.xMin)
+	{
+	  bBox3D.xMin = sBox3D.xMin;
+	}
+	if(sBox3D.yMin < bBox3D.yMin)
+	{
+	  bBox3D.yMin = sBox3D.yMin;
+	}
+	if(sBox3D.zMin < bBox3D.zMin)
+	{
+	  bBox3D.zMin = sBox3D.zMin;
+	}
+	if(sBox3D.xMax < bBox3D.xMax)
+	{
+	  bBox3D.xMax = sBox3D.xMax;
+	}
+	if(sBox3D.yMax < bBox3D.yMax)
+	{
+	  bBox3D.yMax = sBox3D.yMax;
+	}
+	if(sBox3D.zMax < bBox3D.zMax)
+	{
+	  bBox3D.zMax = sBox3D.zMax;
+	}
+        shell1 = shell1->next;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox3I.xMin = (int )floor(bBox3D.xMin);
+    bBox3I.yMin = (int )floor(bBox3D.yMin);
+    bBox3I.zMin = (int )floor(bBox3D.zMin);
+    bBox3I.xMax = (int )ceil(bBox3D.xMax);
+    bBox3I.yMax = (int )ceil(bBox3D.yMax);
+    bBox3I.yMax = (int )ceil(bBox3D.yMax);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox3I);
 }
