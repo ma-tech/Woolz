@@ -121,24 +121,22 @@ public class SectionViewerGUI extends JPanel {
                JRadioButtonMenuItem(controlMenu_2_2str);
   //...................
   String controlMenu_3str = "fixed point";
-  String controlMenu_3_1str = "change using mouse button";
-  String controlMenu_3_2str = "change by entering coordinates";
-  String controlMenu_3_3str = "reset";
+  String controlMenu_3_1str = "change fixed point using mouse button";
+  String controlMenu_3_2str = "change fixed point by entering coordinates";
+  String controlMenu_3_3str = "reset fixed point";
 
   JMenu controlMenu_3 = new JMenu(controlMenu_3str);
   JMenuItem controlMenu_3_1 = new JMenuItem(controlMenu_3_1str);
   JMenuItem controlMenu_3_2 = new JMenuItem(controlMenu_3_2str);
   JMenuItem controlMenu_3_3 = new JMenuItem(controlMenu_3_3str);
   //...................
-  String controlMenu_4str = "rotation axis";
-  String controlMenu_4_1str = "change using mouse button";
-  String controlMenu_4_2str = "change by entering coordinates";
-  String controlMenu_4_3str = "reset";
+  String controlMenu_4str = "axis point";
+  String controlMenu_4_1str = "change axis point using mouse button";
+  String controlMenu_4_2str = "change axis pointby entering coordinates";
+  String controlMenu_4_3str = "reset axis point";
 
   JMenu controlMenu_4 = new JMenu(controlMenu_4str);
-  boolean controlMenu_4_1state = false;
   JMenuItem controlMenu_4_1 = new JMenuItem(controlMenu_4_1str);
-  boolean controlMenu_4_2state = false;
   JMenuItem controlMenu_4_2 = new JMenuItem(controlMenu_4_2str);
   JMenuItem controlMenu_4_3 = new JMenuItem(controlMenu_4_3str);
   //...................
@@ -303,7 +301,6 @@ public class SectionViewerGUI extends JPanel {
     controlMenu.add(controlMenu_3);
     controlMenu.add(controlMenu_4);
     controlMenu.add(controlMenu_5);
-    controlMenu_4.setEnabled(false);
 
     // rotation
     controlMenu_1.add(controlMenu_1_1);
@@ -332,7 +329,7 @@ public class SectionViewerGUI extends JPanel {
     showMenu.add(showMenu_3); // mouse-click anatomy
     showMenu.add(showMenu_4); // fixed point
     showMenu.add(showMenu_5); // rotation axis
-    showMenu_5.setEnabled(false);
+    //showMenu_5.setEnabled(false);
  //...............................
  //...............................
     thresholdMenu.add(thresholdMenu_1);
