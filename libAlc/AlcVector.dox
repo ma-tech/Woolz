@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \brief	Alc vector module.
-* \ingroup	Alc
+* \ingroup	Alc 
 * \defgroup	AlcVector AlcVector
 */
 
