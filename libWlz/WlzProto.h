@@ -3258,12 +3258,14 @@ extern double WlzRGBAPixelValue(
 /************************************************************************
 * WlzRGBAMultiThreshold.c						*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzObject *WlzRGBAMultiThreshold(
   WlzObject	*obj,
   WlzPixelV	lowVal,
   WlzPixelV	highVal,
   UINT		combineMode,
   WlzErrorNum	*dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject *WlzRGBASliceThreshold(
   WlzObject	*obj,
   WlzPixelV	lowVal,
@@ -3283,11 +3285,13 @@ extern WlzObject *WlzRGBAEllipsoidThreshold(
 /************************************************************************
 * WlzCbThreshold.c							*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzObject *WlzCbThreshold(
   WlzObject	*obj,
   WlzThreshCbFn	threshCb,
   void		*clientData,
   WlzErrorNum	*dstErr);
+#endif /* WLZ_EXT_BIND */
 /************************************************************************
 * WlzThreshold.c							*
 ************************************************************************/
