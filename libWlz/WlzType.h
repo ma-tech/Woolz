@@ -1064,27 +1064,6 @@ typedef enum _WlzGMCbReason
 } WlzGMCbReason;
 
 /*!
-* \typedef	WlzGMCbFn
-* \ingroup	WlzGeoModel
-* \brief	A pointer function to a function called when elements of a
-*		Woolz geometric model are either created or deleted.
-*/
-typedef void	(*WlzGMCbFn)(struct _WlzGMModel *, WlzGMElemP ,
-			     WlzGMCbReason, void *);
-
-/*!
-* \struct	_WlzGMCbEntry
-* \ingroup	WlzGeoModel
-* \brief	
-*/
-typedef struct	_WlzGMCbEntry
-{
-  WlzGMCbFn	fn;
-  void		*data;
-  struct _WlzGMCbEntry *next;
-} WlzGMCbEntry;
-
-/*!
 * \struct	_WlzGMResource
 * \ingroup	WlzGeoModel
 * \brief	A resource vector (extensible array) used for allocating
@@ -1110,7 +1089,7 @@ typedef struct _WlzGMResource
 */
 typedef struct _WlzGMShellR
 {
-  WlzGMCbEntry	*callbacks;		/*! Linked list of functions which
+  struct _WlzGMCbEntry	*callbacks;		/*! Linked list of functions which
   					    are called when new elements are
 					    created or existing elements are
 					    destroyed. */
@@ -1149,6 +1128,31 @@ typedef struct _WlzGMModel
   WlzGMVertex	**vertexHT;		/*!< Vertex hash table. */
   WlzGMModelR	res;			/*!< Model resources. */
 } WlzGMModel;
+
+#ifndef WLZ_EXT_BIND
+
+/*!
+* \typedef	WlzGMCbFn
+* \ingroup	WlzGeoModel
+* \brief	A pointer function to a function called when elements of a
+*		Woolz geometric model are either created or deleted.
+*/
+typedef void	(*WlzGMCbFn)(WlzGMModel *, WlzGMElemP ,
+			     WlzGMCbReason, void *);
+
+/*!
+* \struct	_WlzGMCbEntry
+* \ingroup	WlzGeoModel
+* \brief	
+*/
+typedef struct	_WlzGMCbEntry
+{
+  WlzGMCbFn	fn;
+  void		*data;
+  struct _WlzGMCbEntry *next;
+} WlzGMCbEntry;
+
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \struct	_WlzGMResIdx

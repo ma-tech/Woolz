@@ -1615,12 +1615,13 @@ extern WlzErrorNum		WlzGreySetRange(
 /************************************************************************
 * WlzGreySetRangeLut.c							*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzGreySetRangeLut(
 				  WlzObject *obj,
 				  WlzPixelV min,
 				  WlzPixelV max,
 				  WlzPixelP lut);
-
+#endif /* !WLZ_EXT_BIND */
 /************************************************************************
 * WlzGreySetValue.c							*
 ************************************************************************/
