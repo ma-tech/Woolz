@@ -13,7 +13,9 @@
 *		translations) to Woolz objects, domains and values.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 08-03-2000 bill Fix bug in WlzShiftValues for 3D value table.
+* 15-08-00 bill remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
+*		WLZ_POINT_(INT)|(FLOAT).
+* 08-03-00 bill Fix bug in WlzShiftValues for 3D value table.
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
@@ -84,10 +86,6 @@ WlzObject	*WlzShiftObject(WlzObject *inObj,
       case WLZ_3D_WARP_TRANS:
       case WLZ_3D_POLYGON:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
@@ -330,10 +328,6 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
@@ -559,10 +553,6 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
       case WLZ_RECTANGLE:
-      case WLZ_VECTOR_INT:
-      case WLZ_VECTOR_FLOAT:
-      case WLZ_POINT_INT:
-      case WLZ_POINT_FLOAT:
       case WLZ_CONVOLVE_INT:
       case WLZ_CONVOLVE_FLOAT:
       case WLZ_WARP_TRANS:
