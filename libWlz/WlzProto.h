@@ -1872,6 +1872,12 @@ extern WlzObject 		*WlzPolyTo8Polygon(
 				  WlzPolygonDomain *pgdm,
 				  int wrap,
 				  WlzErrorNum *dstErr);
+extern int			WlzPolyCrossings(WlzIVertex2	vtx,
+						 WlzPolygonDomain *pgdm,
+						 WlzErrorNum	  *dstErr);
+extern int			WlzInsidePolyEO(WlzIVertex2	vtx,
+						WlzPolygonDomain  *pgdm,
+						WlzErrorNum	  *dstErr);
 
 /************************************************************************
 * WlzPrinicipalAngle.c
@@ -2519,6 +2525,13 @@ extern WlzErrorNum 		WlzVerifyInterval(
 * WlzVolume.c								*
 ************************************************************************/
 extern int 			WlzVolume(
+				  WlzObject *obj,
+		     		  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzEmpty.c								*
+************************************************************************/
+extern int 			WlzIsEmpty(
 				  WlzObject *obj,
 		     		  WlzErrorNum *dstErr);
 

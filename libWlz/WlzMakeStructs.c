@@ -1470,8 +1470,8 @@ WlzNewIDomain(WlzObjectType outDomType,
 	{
 	  for(line = inDom->line1; line <= inDom->lastln; ++line)
 	  { 
-	    jtvl->ileft = inDom->kol1;
-	    jtvl->iright = inDom->lastkl;
+	    jtvl->ileft = 0;
+	    jtvl->iright = inDom->lastkl - inDom->kol1;
 	    (void )WlzMakeInterval(line, outDom, 1, jtvl);
 	    ++jtvl;
 	  }

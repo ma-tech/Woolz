@@ -286,11 +286,11 @@ WlzErrorNum Wlz3DSectionSegmentObject(
 
   /* free empty objects */
   if( errNum == WLZ_ERR_NONE ){
-    if( WlzVolume(objs[0], NULL) <= 0 ){
+    if( WlzIsEmpty(objs[0], NULL) ){
       WlzFreeObj(objs[0]);
       objs[0] = NULL;
     }
-    if( WlzVolume(objs[1], NULL) <= 0 ){
+    if( WlzIsEmpty(objs[1], NULL) ){
       WlzFreeObj(objs[1]);
       objs[1] = NULL;
     }

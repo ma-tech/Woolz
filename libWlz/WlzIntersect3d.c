@@ -45,11 +45,42 @@ WlzObject *WlzIntersect3d(WlzObject	**objs,
   int 			i, p, np, min_plane, max_plane, emptyFlag;
   WlzErrorNum		errNum = WLZ_ERR_NONE;
 
-  /* all objects have been checked by WlzUnionN therefore do not need
+  /* all objects have been checked by WlzIntersectN therefore do not need
      checking here. This routine should not be used except through
      WlzIntersectN and must not be included in WlzProto.h */
 
-  /* we do need to check the planedomain types however */
+  /* check all objects are non-empty and have the same type
+     Note an empty object is not an error */
+  for (i=0; i<n; i++){
+    if( objs[i]->type != objs[0]->type ){
+      if( objs[i]->type == WLZ_EMPTY_OBJ ){
+	return WlzMakeEmpty(wlzErr);
+      }
+      else {
+	newObj = NULL;
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	if(wlzErr) {
+	  *wlzErr = errNum;
+	}
+	return(newObj);
+      }
+    }
+
+    /* check for size */
+    if( WlzIsEmpty(objs[i], &errNum) ){
+      return WlzMakeEmpty(wlzErr);
+    }
+    else {
+      if( errNum != WLZ_ERR_NONE ){
+	if(wlzErr) {
+	  *wlzErr = errNum;
+	}
+	return NULL;
+      }
+    }
+  }
+
+  /* we do need to check the planedomain types */
   for(i=0; i < n; i++){
     if( objs[i]->domain.p->type != WLZ_PLANEDOMAIN_DOMAIN ){
       if(wlzErr) {
@@ -57,6 +88,16 @@ WlzObject *WlzIntersect3d(WlzObject	**objs,
       }
       return NULL;
     }
+  }
+
+  /* check number */
+  if (n == 1){
+    newObj = WlzMakeMain(objs[0]->type, objs[0]->domain, objs[0]->values,
+			 NULL, NULL, &errNum);
+    if(wlzErr) {
+      *wlzErr = errNum;
+    }
+    return(newObj);
   }
 
   /* find the minimum and maximum plane */
@@ -79,9 +120,7 @@ WlzObject *WlzIntersect3d(WlzObject	**objs,
     }
   }
   if( min_plane > max_plane ){
-    domain.core = NULL;
-    vals.core = NULL;
-    return WlzMakeMain(WLZ_EMPTY_OBJ, domain, vals, NULL, NULL, wlzErr);
+    return WlzMakeEmpty(wlzErr);
   }
 
   /* allocate space for a working object array */

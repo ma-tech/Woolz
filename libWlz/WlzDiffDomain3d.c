@@ -123,7 +123,7 @@ WlzObject *WlzDiffDomain3d(
       /* test for NULL domain in obj1
 	 this will become an error - replaced by WLZ_EMPTY_DOMAIN */
       if( oldpdom1->domains[i].core == NULL ){
-	newpdom->domains[i] = WlzAssignDomain(oldpdom1->domains[i], NULL);
+	newpdom->domains[i].core = NULL;
 	continue;
       }
 
@@ -131,6 +131,15 @@ WlzObject *WlzDiffDomain3d(
       j = p - oldpdom2->plane1;
       o1.domain = oldpdom1->domains[i];
       o2.domain = oldpdom2->domains[j];
+
+      /* test for NULL domain in obj2
+	 this will become an error - replaced by WLZ_EMPTY_DOMAIN */
+      if( oldpdom2->domains[j].core == NULL ){
+	newpdom->domains[i] = 
+	  WlzAssignDomain(WlzCopyDomain(oldpdom1->type, oldpdom1->domains[i],
+					&errNum), NULL);
+	continue;
+      }
 
       /* find difference domain */
       if( obj = WlzDiffDomain( &o1, &o2, &errNum ) ){

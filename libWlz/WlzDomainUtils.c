@@ -479,14 +479,14 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
   lastplane = 0;
   for(p=0, np=0; p < nplanes; p++){
     tempobj.domain.i = pdom->domains[p].i;
-    if( pdom->domains[p].i != NULL && WlzArea(&tempobj, NULL) > 0 ){
+    if( pdom->domains[p].i != NULL && !WlzIsEmpty(&tempobj, NULL) ){
       lastplane = p;
       np++;
     }
   }
   for( p = nplanes - 1, firstplane = p; p >=0; p--){
     tempobj.domain.i = pdom->domains[p].i;
-    if( pdom->domains[p].i != NULL && WlzArea(&tempobj, NULL) > 0  )
+    if( pdom->domains[p].i != NULL && !WlzIsEmpty(&tempobj, NULL)  )
       firstplane = p;
   }
   if( np == NULL ){

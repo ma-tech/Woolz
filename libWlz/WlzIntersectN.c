@@ -68,11 +68,7 @@ WlzIntersectN(
   values.v = NULL;
   if( n < 1 )
   {
-    obj = WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, &errNum);
-    if(wlzErr) {
-      *wlzErr = errNum;
-    }
-    return(obj);
+    return WlzMakeEmpty(wlzErr);
   }
 
   /* array pointer == NULL or any object pointer == NULL is an error */
@@ -96,18 +92,17 @@ WlzIntersectN(
     return(obj);
   }
 
+  /* check type of first object */
   switch( objs[0]->type ){
 
   case WLZ_2D_DOMAINOBJ:
-  case WLZ_3D_DOMAINOBJ:
     break;
 
+  case WLZ_3D_DOMAINOBJ:
+    return WlzIntersect3d(objs, n, uvt, &errNum);
+
   case WLZ_EMPTY_OBJ:
-    obj = WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, &errNum);
-    if(wlzErr) {
-      *wlzErr = errNum;
-    }
-    return(obj);
+    return WlzMakeEmpty(wlzErr);
 
   default:
     obj = NULL;
@@ -119,6 +114,7 @@ WlzIntersectN(
 
   }
 
+  /* check number */
   if (n == 1){
     obj = WlzMakeMain(objs[0]->type, objs[0]->domain, objs[0]->values,
 		      NULL, NULL, &errNum);
@@ -131,55 +127,32 @@ WlzIntersectN(
   /* check all objects are non-empty and have the same type
      Note an empty object is not an error */
   for (i=0; i<n; i++){
-    int size;
     if( objs[i]->type != objs[0]->type ){
       if( objs[i]->type == WLZ_EMPTY_OBJ ){
-	obj = WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, &errNum);
+	return WlzMakeEmpty(wlzErr);
+      }
+      else {
+	obj = NULL;
+	errNum = WLZ_ERR_OBJECT_TYPE;
 	if(wlzErr) {
 	  *wlzErr = errNum;
 	}
 	return(obj);
       }
-      obj = NULL;
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      if(wlzErr) {
-	*wlzErr = errNum;
-      }
-      return(obj);
     }
 
     /* check for size */
-    if( objs[i]->type == WLZ_2D_DOMAINOBJ ){
-      size = WlzArea(objs[i], &errNum);
+    if( WlzIsEmpty(objs[i], &errNum) ){
+      return WlzMakeEmpty(wlzErr);
     }
     else {
-      size = WlzVolume(objs[i], &errNum);
-    }
-    if( errNum == WLZ_ERR_NONE ){
-      if( size == 0 ){
-	obj = WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, &errNum);
+      if( errNum != WLZ_ERR_NONE ){
 	if(wlzErr) {
 	  *wlzErr = errNum;
 	}
-	return(obj);
+	return NULL;
       }
     }
-    else {
-      obj = NULL;
-      if(wlzErr) {
-	*wlzErr = errNum;
-      }
-      return(obj);
-    }
-  }
-
-  /* check for 3D object */
-  if( objs[0]->type == WLZ_3D_DOMAINOBJ ){
-    obj = WlzIntersect3d(objs, n, uvt, &errNum);
-    if(wlzErr) {
-      *wlzErr = errNum;
-    }
-    return(obj);
   }
 
   /*
@@ -208,6 +181,13 @@ WlzIntersectN(
       lastkl = idom->lastkl;
     }
   }
+  if( lastkl < kol1 || lastln < line1 ){
+    obj = WlzMakeEmpty(&errNum);
+    if(wlzErr) {
+      *wlzErr = errNum;
+    }
+    return(obj);
+  }
 
   /*
    * Count the individual intervals so that sufficient space
@@ -228,14 +208,6 @@ WlzIntersectN(
   /*
    * Set up domain, value table structures, and object.
    */
-
-  if( lastkl < kol1 || lastln < line1 ){
-    obj = WlzMakeEmpty(&errNum);
-    if(wlzErr) {
-      *wlzErr = errNum;
-    }
-    return(obj);
-  }
 
   if( (idom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 				    line1, lastln, 0, lastkl-kol1,

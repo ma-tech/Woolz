@@ -19,11 +19,11 @@
 #include <stdlib.h>
 #include <Wlz.h>
 
-/* procedure to calculate if inside the polygon using the
-   even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
+/* procedure to calculate winding number of the polygon with respect
+   the vertexe. Algorithm from "Comp Geom in C" by O'Rourke chap 7
    Assumes integer vertices and that the vertex is not on the
    polyline */
-static int WlzInsidePolyEO(
+int WlzPolyCrossings(
   WlzIVertex2	vtx,
   WlzPolygonDomain	*pgdm,
   WlzErrorNum		*dstErr)
@@ -50,6 +50,28 @@ static int WlzInsidePolyEO(
   if( dstErr ){
     *dstErr = errNum;
   }
+  return crossings;
+}
+
+/* procedure to calculate if inside the polygon using the
+   even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
+   Assumes integer vertices and that the vertex is not on the
+   polyline */
+int WlzInsidePolyEO(
+  WlzIVertex2	vtx,
+  WlzPolygonDomain	*pgdm,
+  WlzErrorNum		*dstErr)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		i, crossings;
+  WlzIVertex2	*vtxs;
+  double	x;
+  
+  crossings = WlzPolyCrossings(vtx, pgdm, &errNum);
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
   if( crossings%2 ){
     return 1;
   }
@@ -57,7 +79,6 @@ static int WlzInsidePolyEO(
     return 0;
   }
 }
-
 
 /* static vertex comparison procedures for qsort */
 static int vtx_compare(

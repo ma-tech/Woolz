@@ -118,10 +118,10 @@ WlzUnionN(int		n,
     }
   }
 
-  /* now discard objects with zero area */
+  /* now discard empty objects */
   if( errNum == WLZ_ERR_NONE ){
     for (i=0; i<n ; i++ ){
-      if ( WlzArea(objs[i], NULL) == 0 ){
+      if( WlzIsEmpty(objs[i], NULL) ){
 	obj = objs[i];
 	for ( j=i; j<n-1 ; j++ ){
 	  objs[j] = objs[j+1];

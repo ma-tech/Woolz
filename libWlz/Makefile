@@ -56,6 +56,7 @@ CSOURCES		= \
 			WlzDilation.c \
 			WlzDomainFill.c \
 			WlzDomainUtils.c \
+			WlzEmpty.c \
 			WlzErosion.c \
 			WlzExplode3D.c \
 			WlzErosion4.c \

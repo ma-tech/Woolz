@@ -138,8 +138,10 @@ WlzObject *WlzDiffDomain(
 					   &errNum)) == NULL ){
       AlcFree((void *) intp);
     }
-    diffdom.i->freeptr = AlcFreeStackPush(diffdom.i->freeptr, (void *)intp,
-    					  NULL);
+    else {
+      diffdom.i->freeptr = AlcFreeStackPush(diffdom.i->freeptr, (void *)intp,
+					    NULL);
+    }
   }
 
   if( errNum == WLZ_ERR_NONE ){

@@ -307,6 +307,7 @@ WlzObject *WlzGetSectionFromObject(
   if( (errNum == WLZ_ERR_NONE) && (voxvals == NULL) ){
     pixval.type = WLZ_GREY_INT;
     pixval.v.inv = 128;
+    newobj = WlzAssignObject(newobj, NULL);
     tmp_obj = WlzThreshold(newobj, pixval, WLZ_THRESH_HIGH, &errNum);
     WlzFreeObj(newobj);
     newobj = tmp_obj;
