@@ -12,6 +12,8 @@
 * Purpose:	Functions for extracting contours from Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 15-12-00 bill Fix offset bug when getting 2D array data in
+*		WlzContourIsoObj3D() and WlzContourGrdObj5D().
 * 21-11-00 bill Fix bugs in 3D gradient contour generation and removed
 *		some unused code.
 * 25-08-00 bill	Fix more bugs causing holes in 3D iso-surface.
@@ -499,8 +501,8 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
       bBox2D = WlzBoundingBox2D(obj2D, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        bufOff.vtX = bBox2D.xMin - bBox3D.xMin;
-        bufOff.vtY = bBox2D.yMin - bBox3D.yMin;
+        bufOff.vtX = bBox2D.xMin;
+        bufOff.vtY = bBox2D.yMin;
         errNum = WlzToArray2D((void ***)&(itvBuf[bufIdx1]), obj2D,
 			      bufSz, bufOff, 0, WLZ_GREY_BIT);
       }
@@ -516,7 +518,7 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 	if(pnIdx > 0)
 	{
 	  klCnt = bBox2D.xMax - bBox2D.xMin; 			  /* NOT + 1 */
-	  lnIdx = bufOff.vtY;
+	  lnIdx = bBox2D.yMin - bBox3D.yMin;
 	  lnCnt = bBox2D.yMax - bBox2D.yMin; 			  /* NOT + 1 */
 	  while(lnIdx < lnCnt)
 	  {
@@ -525,7 +527,7 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 	    tUP1 = *(itvBuf[bufIdx0] + lnIdx + 1);
 	    tUP2 = *(itvBuf[bufIdx1] + lnIdx);
 	    tUP3 = *(itvBuf[bufIdx1] + lnIdx + 1);
-	    klIdx = bufOff.vtX;
+	    klIdx = bBox2D.xMin - bBox3D.xMin;
 	    lastKlIn = (WLZ_BIT_GET(tUP0, klIdx) != 0) &&
 	    	       (WLZ_BIT_GET(tUP1, klIdx) != 0) &&
 		       (WLZ_BIT_GET(tUP2, klIdx) != 0) &&
@@ -1129,8 +1131,8 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	/* Update buffers. */
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  bufOff.vtX = bBox2D.xMin - bBox3D.xMin;
-	  bufOff.vtY = bBox2D.yMin - bBox3D.yMin;
+	  bufOff.vtX = bBox2D.xMin;
+	  bufOff.vtY = bBox2D.yMin;
 	  if((bufOff.vtX < 0) || (bufOff.vtY < 0))
 	  {
 	    errNum = WLZ_ERR_DOMAIN_DATA;
@@ -1175,11 +1177,11 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 	   * elements and add them to the model. */
 	  bufPos.vtZ = bufIdx[0];
           cbOrg.vtZ = bBox3D.zMin + pnIdx - 2;
-	  bufPos.vtY = bufOff.vtY;
+	  bufPos.vtY = bBox2D.yMin - bBox3D.yMin;
 	  cbOrg.vtY = bBox2D.yMin;
 	  while((errNum == WLZ_ERR_NONE) && (cbOrg.vtY < (bBox3D.yMax - 2)))
 	  {
-	    bufPos.vtX = bufOff.vtX;
+	    bufPos.vtX = bBox2D.xMin - bBox3D.xMin;
 	    cbOrg.vtX = bBox2D.xMin;
 	    while((errNum == WLZ_ERR_NONE) && (cbOrg.vtX < (bBox3D.xMax - 2)))
 	    {
