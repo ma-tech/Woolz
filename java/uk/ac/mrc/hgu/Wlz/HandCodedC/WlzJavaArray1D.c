@@ -1,0 +1,815 @@
+/************************************************************************
+* Project:      Java Woolz
+* Title:        WlzJavaArray1D.c
+* Date:         January 1999
+* Purpose:      Functions for 1D array access between java and native
+*		Woolz code.
+*		Many of these functions 'hardcore' Woolz field names
+*		and types, these will need to be maintained.
+* Copyright:	1997 Medical Research Council, UK.
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Maintenance:	Log changes below, with most recent at top of list.
+* @author       Bill Hill (bill@hgu.mrc.ac.uk)
+* @version 	MRC HGU %I%, %G%
+************************************************************************/
+#include <WlzJava.h>
+
+static jlong	WlzJavaArray1DGetPrim(
+				JNIEnv *jEnv,
+				int pKey,
+				jarray jWArray,
+				int wArraySz,
+				jboolean *isCpy);
+static jlong	WlzJavaArray1DGetNonPrim(
+				JNIEnv *jEnv,
+				char *cObjName,
+			        char *jObjName,
+			        char *jniObjName,
+			        int idrCnt, int pKey,
+			        jarray jWArray,
+			        int wArraySz,
+			        jboolean *isCpy);
+
+/************************************************************************
+* Function:	WlzJavaArray1DGet				
+* Returns:	jlong:			The value held in the given 
+*					Java object.		
+* Purpose:	Returns a native 1D array built from the given java 1D
+*		java array.
+* Global refs:	-						
+* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
+*		char *cObjName:		The Java woolz C object class
+*					string.			
+*		char *jObjName:		The Java woolz Java object
+*					class string.		
+*		char *jniObjName:	The Java woolz JNI object
+*					class string.		
+*		int idrCnt:		Indirection count (ie 1 for *,
+*					2 for **, ...).		
+*		int pKey:		Parameter key.		
+*		jarray jWArray:		The Java Woolz array.	
+*		int wArraySz:		The number of elements in the
+*					Java Woolz array.	
+*		jboolean *isCpy:	Destination pointer for JNI
+*					copy flag.		
+************************************************************************/
+jlong 		WlzJavaArray1DGet(
+				JNIEnv *jEnv,
+				char *cObjName,
+				char *jObjName,
+				char *jniObjName,
+				int idrCnt, int pKey,
+				jarray jWArray,
+				int wArraySz,
+				jboolean *isCpy)
+{
+  jlong		rtnVal = 0;
+
+  if(jWArray && (wArraySz > 0))
+  {
+    switch(pKey)
+    {
+      case WLZ_JPM_KEY_BYTE_ARY1:  /* FALLTHROUGH */
+      case WLZ_JPM_KEY_SHORT_ARY1: /* FALLTHROUGH */
+      case WLZ_JPM_KEY_INT_ARY1:   /* FALLTHROUGH */
+      case WLZ_JPM_KEY_LONG_ARY1:  /* FALLTHROUGH */
+      case WLZ_JPM_KEY_FLOAT_ARY1: /* FALLTHROUGH */
+      case WLZ_JPM_KEY_DOUBLE_ARY1:
+	rtnVal = WlzJavaArray1DGetPrim(jEnv, pKey, jWArray, wArraySz, isCpy);
+	break;
+      default:
+	rtnVal = WlzJavaArray1DGetNonPrim(jEnv, cObjName, jObjName, jniObjName,
+					  idrCnt, pKey, jWArray, wArraySz,
+					  isCpy);
+	break;
+    }
+  }
+  return(rtnVal);
+}
+
+/************************************************************************
+* Function:	WlzJavaArray1DGetPrim				
+* Returns:	jlong:			The value held in the given 
+*					Java object.		
+* Purpose:	Returns a native 1D array built from the given java 1D
+*		java array of primative types (byte, short, int,
+*		long, float and double).
+* Global refs:	-						
+* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
+*		int pKey:		Parameter key.		
+*		jarray jWArray:		The Java Woolz array.	
+*		int wArraySz:		The number of elements in the
+*					Java Woolz array.	
+*		jboolean *isCpy:	Destination pointer for JNI
+*					copy flag.		
+************************************************************************/
+static jlong	WlzJavaArray1DGetPrim(
+				JNIEnv *jEnv,
+				int pKey,
+			   	jarray jWArray,
+				int wArraySz,
+			   	jboolean *isCpy)
+{
+  int		idN0;
+  void		*bufJ = NULL,
+  		*bufW = NULL;
+
+  switch(pKey)
+  {
+    case WLZ_JPM_KEY_BYTE_ARY1:
+      if((bufJ = (void *)(*jEnv)->GetByteArrayElements(jEnv,
+      						       (jbyteArray )jWArray,
+						       isCpy)) != NULL)
+      {
+	if((bufW = AlcMalloc(wArraySz * sizeof(jbyte))) != NULL)
+	{
+	  (void )memcpy(bufW, bufJ, wArraySz * sizeof(jbyte));
+	}
+	if(*isCpy)
+	{
+	  (*jEnv)->ReleaseByteArrayElements(jEnv, (jbyteArray )jWArray,
+					    (jbyte *)bufJ, 0);
+	}
+	*isCpy = JNI_TRUE;
+      }
+      break;
+    case WLZ_JPM_KEY_SHORT_ARY1:
+      if((bufJ = (void *)(*jEnv)->GetShortArrayElements(jEnv,
+      						       (jshortArray )jWArray,
+						       isCpy)) != NULL)
+      {
+	if((bufW = AlcMalloc(wArraySz * sizeof(jshort))) != NULL)
+	{
+	  (void )memcpy(bufW, bufJ, wArraySz * sizeof(jshort));
+	}
+	if(*isCpy)
+	{
+	  (*jEnv)->ReleaseShortArrayElements(jEnv, (jshortArray )jWArray,
+					    (jshort *)bufJ, 0);
+	}
+	*isCpy = JNI_TRUE;
+      }
+      break;
+    case WLZ_JPM_KEY_INT_ARY1:
+      if((bufJ = (void *)(*jEnv)->GetIntArrayElements(jEnv,
+      						       (jintArray )jWArray,
+						       isCpy)) != NULL)
+      {
+	if((bufW = AlcMalloc(wArraySz * sizeof(jint))) != NULL)
+	{
+	  (void )memcpy(bufW, bufJ, wArraySz * sizeof(jint));
+	}
+	if(*isCpy)
+	{
+	  (*jEnv)->ReleaseIntArrayElements(jEnv, (jintArray )jWArray,
+					    (jint *)bufJ, 0);
+	}
+	*isCpy = JNI_TRUE;
+      }
+      break;
+    case WLZ_JPM_KEY_LONG_ARY1:
+      if((bufJ = (void *)(*jEnv)->GetLongArrayElements(jEnv,
+      						       (jlongArray )jWArray,
+						       isCpy)) != NULL)
+      {
+        if((bufW = AlcMalloc(wArraySz * sizeof(long))) != NULL)
+	{
+	  for(idN0 = 0; idN0 < wArraySz; ++idN0)
+	  {
+	    *((long *)bufW + idN0) = *((jlong *)bufJ + idN0);
+	  }
+	}
+	if(*isCpy)
+	{
+	  (*jEnv)->ReleaseLongArrayElements(jEnv, (jlongArray )jWArray,
+	  				    (jlong *)bufJ, 0);
+	}
+	*isCpy = JNI_TRUE;
+      }
+      break;
+    case WLZ_JPM_KEY_FLOAT_ARY1:
+      if((bufJ = (void *)(*jEnv)->GetFloatArrayElements(jEnv,
+      						       (jfloatArray )jWArray,
+						       isCpy)) != NULL)
+      {
+	if((bufW = AlcMalloc(wArraySz * sizeof(jfloat))) != NULL)
+	{
+	  (void )memcpy(bufW, bufJ, wArraySz * sizeof(jfloat));
+	}
+	if(*isCpy)
+	{
+	  (*jEnv)->ReleaseFloatArrayElements(jEnv, (jfloatArray )jWArray,
+					    (jfloat *)bufJ, 0);
+	}
+	*isCpy = JNI_TRUE;
+      }
+      break;
+    case WLZ_JPM_KEY_DOUBLE_ARY1:
+      if((bufJ = (void *)(*jEnv)->GetDoubleArrayElements(jEnv,
+      						       (jdoubleArray )jWArray,
+						       isCpy)) != NULL)
+      {
+	if((bufW = AlcMalloc(wArraySz * sizeof(jdouble))) != NULL)
+	{
+	  (void )memcpy(bufW, bufJ, wArraySz * sizeof(jdouble));
+	}
+	if(*isCpy)
+	{
+	  (*jEnv)->ReleaseDoubleArrayElements(jEnv, (jdoubleArray )jWArray,
+					    (jdouble *)bufJ, 0);
+	}
+	*isCpy = JNI_TRUE;
+      }
+      break;
+  }
+  return((jlong )bufW);
+}
+
+/************************************************************************
+* Function:	WlzJavaArray1DGetNonPrim				
+* Returns:	jlong:			The value held in the given 
+*					Java object.		
+* Purpose:	Returns a native 1D array built from the given java 1D
+*		java array of non-primative types.
+* Global refs:	-						
+* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
+*		char *cObjName:		The Java woolz C object class
+*					string.			
+*		char *jObjName:		The Java woolz Java object
+*					class string.		
+*		char *jniObjName:	The Java woolz JNI object
+*					class string.		
+*		int idrCnt:		Indirection count (ie 1 for *,
+*					2 for **, ...).		
+*		int pKey:		Parameter key.		
+*		jarray jWArray:		The Java Woolz array.	
+*		int wArraySz:		The number of elements in the
+*					Java Woolz array.	
+*		jboolean *isCpy:	Destination pointer for JNI
+*					copy flag.		
+************************************************************************/
+static jlong	WlzJavaArray1DGetNonPrim(
+				JNIEnv *jEnv,
+				char *cObjName,
+				char *jObjName,
+				char *jniObjName,
+				int idrCnt,
+				int pKey,
+				jarray jWArray,
+				int wArraySz,
+				jboolean *isCpy)
+{
+  int		tI0,
+  		idN0;
+  jint		arSz;
+  jlong		rtnVal = 0;
+  jfieldID	fldID[8];
+  jvalue	fldVal[2];
+  jclass	jWCls;
+  jobject	jWObj;
+  void		*bufJ = NULL,
+  		*bufW = NULL;
+
+  switch(pKey)
+  {
+    case WLZ_JPM_KEY_WLZ_IVERTEX2_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzIVertex2))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtX", "I");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtY", "I");
+	((WlzIVertex2 *)bufW)->vtX = (*jEnv)->GetIntField(jEnv, jWObj,
+							  fldID[0]);
+	((WlzIVertex2 *)bufW)->vtY = (*jEnv)->GetIntField(jEnv, jWObj,
+							  fldID[1]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzIVertex2 *)bufW + idN0)->vtX = (*jEnv)->GetIntField(jEnv, jWObj, 
+	  							   fldID[0]);
+	  ((WlzIVertex2 *)bufW + idN0)->vtY = (*jEnv)->GetIntField(jEnv, jWObj,
+	  							   fldID[1]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_FVERTEX2_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzFVertex2))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtX", "F");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtY", "F");
+	((WlzFVertex2 *)bufW)->vtX = (*jEnv)->GetFloatField(jEnv, jWObj,
+							    fldID[0]);
+	((WlzFVertex2 *)bufW)->vtY = (*jEnv)->GetFloatField(jEnv, jWObj,
+							    fldID[1]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzFVertex2 *)bufW + idN0)->vtX = (*jEnv)->GetFloatField(jEnv,
+							      jWObj, fldID[0]);
+	  ((WlzFVertex2 *)bufW + idN0)->vtY = (*jEnv)->GetFloatField(jEnv,
+	  						      jWObj, fldID[1]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_DVERTEX2_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzDVertex2))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtX", "D");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "vtY", "D");
+	((WlzDVertex2 *)bufW)->vtX = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							     fldID[0]);
+	((WlzDVertex2 *)bufW)->vtY = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							     fldID[1]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzDVertex2 *)bufW + idN0)->vtX = (*jEnv)->GetDoubleField(jEnv,
+							      jWObj, fldID[0]);
+	  ((WlzDVertex2 *)bufW + idN0)->vtY = (*jEnv)->GetDoubleField(jEnv,
+							      jWObj, fldID[1]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_IBOX2_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzIBox2))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMin", "I");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMin", "I");
+	fldID[2] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMax", "I");
+	fldID[3] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMax", "I");
+	((WlzIBox2 *)bufW)->xMin = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[0]);
+	((WlzIBox2 *)bufW)->yMin = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[1]);
+	((WlzIBox2 *)bufW)->xMax = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[2]);
+	((WlzIBox2 *)bufW)->yMax = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[3]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzIBox2 *)bufW + idN0)->xMin = (*jEnv)->GetIntField(jEnv, jWObj,
+							         fldID[0]);
+	  ((WlzIBox2 *)bufW + idN0)->yMin = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[1]);
+	  ((WlzIBox2 *)bufW + idN0)->xMax = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[2]);
+	  ((WlzIBox2 *)bufW + idN0)->yMax = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[3]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_IBOX3_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzIBox3))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMin", "I");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMin", "I");
+	fldID[2] = (*jEnv)->GetFieldID(jEnv, jWCls, "zMin", "I");
+	fldID[3] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMax", "I");
+	fldID[4] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMax", "I");
+	fldID[5] = (*jEnv)->GetFieldID(jEnv, jWCls, "zMax", "I");
+	((WlzIBox3 *)bufW)->xMin = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[0]);
+	((WlzIBox3 *)bufW)->yMin = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[1]);
+	((WlzIBox3 *)bufW)->zMin = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[2]);
+	((WlzIBox3 *)bufW)->xMax = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[3]);
+	((WlzIBox3 *)bufW)->yMax = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[4]);
+	((WlzIBox3 *)bufW)->zMax = (*jEnv)->GetIntField(jEnv, jWObj,
+						        fldID[5]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzIBox3 *)bufW + idN0)->xMin = (*jEnv)->GetIntField(jEnv, jWObj,
+							         fldID[0]);
+	  ((WlzIBox3 *)bufW + idN0)->yMin = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[1]);
+	  ((WlzIBox3 *)bufW + idN0)->zMin = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[2]);
+	  ((WlzIBox3 *)bufW + idN0)->xMax = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[3]);
+	  ((WlzIBox3 *)bufW + idN0)->yMax = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[4]);
+	  ((WlzIBox3 *)bufW + idN0)->zMax = (*jEnv)->GetIntField(jEnv, jWObj,
+							  	 fldID[5]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_DBOX2_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzDBox2))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMin", "D");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMin", "D");
+	fldID[2] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMax", "D");
+	fldID[3] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMax", "D");
+	((WlzDBox2 *)bufW)->xMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[0]);
+	((WlzDBox2 *)bufW)->yMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[1]);
+	((WlzDBox2 *)bufW)->xMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[2]);
+	((WlzDBox2 *)bufW)->yMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[3]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzDBox2 *)bufW + idN0)->xMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							         fldID[0]);
+	  ((WlzDBox2 *)bufW + idN0)->yMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[1]);
+	  ((WlzDBox2 *)bufW + idN0)->xMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[2]);
+	  ((WlzDBox2 *)bufW + idN0)->yMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[3]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_DBOX3_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzDBox3))) != NULL)
+      {
+	*isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMin", "D");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMin", "D");
+	fldID[2] = (*jEnv)->GetFieldID(jEnv, jWCls, "zMin", "D");
+	fldID[3] = (*jEnv)->GetFieldID(jEnv, jWCls, "xMax", "D");
+	fldID[4] = (*jEnv)->GetFieldID(jEnv, jWCls, "yMax", "D");
+	fldID[5] = (*jEnv)->GetFieldID(jEnv, jWCls, "zMax", "D");
+	((WlzDBox3 *)bufW)->xMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[0]);
+	((WlzDBox3 *)bufW)->yMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[1]);
+	((WlzDBox3 *)bufW)->zMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[2]);
+	((WlzDBox3 *)bufW)->xMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[3]);
+	((WlzDBox3 *)bufW)->yMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[4]);
+	((WlzDBox3 *)bufW)->zMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+						        fldID[5]);
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  ((WlzDBox3 *)bufW + idN0)->xMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							         fldID[0]);
+	  ((WlzDBox3 *)bufW + idN0)->yMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[1]);
+	  ((WlzDBox3 *)bufW + idN0)->zMin = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[2]);
+	  ((WlzDBox3 *)bufW + idN0)->xMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[3]);
+	  ((WlzDBox3 *)bufW + idN0)->yMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[4]);
+	  ((WlzDBox3 *)bufW + idN0)->zMax = (*jEnv)->GetDoubleField(jEnv, jWObj,
+							  	 fldID[5]);
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_PIXELV_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(WlzPixelV))) != NULL)
+      {
+        *isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "type", "I");
+	fldID[1] = (*jEnv)->GetFieldID(jEnv, jWCls, "value", "J");
+	fldVal[0].i = (*jEnv)->GetIntField(jEnv, jWObj, fldID[0]);
+	fldVal[1].j = (*jEnv)->GetLongField(jEnv, jWObj, fldID[1]);
+	((WlzPixelV *)bufW)->type = fldVal[0].i;
+	switch(fldVal[0].i)
+	{
+          case WLZ_GREY_LONG:
+            ((WlzPixelV *)bufW)->v.lnv = fldVal[1].j;
+            break;
+          case WLZ_GREY_INT:
+            ((WlzPixelV *)bufW)->v.inv = fldVal[1].i;
+            break;
+          case WLZ_GREY_SHORT:
+            ((WlzPixelV *)bufW)->v.shv = fldVal[1].s;
+            break;
+          case WLZ_GREY_UBYTE:
+            ((WlzPixelV *)bufW)->v.ubv = fldVal[1].b;
+            break;
+          case WLZ_GREY_FLOAT:
+            ((WlzPixelV *)bufW)->v.flv = fldVal[1].f;
+            break;
+          case WLZ_GREY_DOUBLE:
+            ((WlzPixelV *)bufW)->v.dbv = fldVal[1].d;
+            break;
+	}
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  fldVal[0].i = (*jEnv)->GetIntField(jEnv, jWObj, fldID[0]);
+	  fldVal[1].j = (*jEnv)->GetLongField(jEnv, jWObj, fldID[1]);
+	  ((WlzPixelV *)bufW + idN0)->type = fldVal[0].i;
+	  switch(fldVal[0].i)
+	  { 
+          case WLZ_GREY_LONG:
+            ((WlzPixelV *)bufW + idN0)->v.lnv = fldVal[1].j;
+            break;
+          case WLZ_GREY_INT:
+            ((WlzPixelV *)bufW + idN0)->v.inv = fldVal[1].i;
+            break;
+          case WLZ_GREY_SHORT:
+            ((WlzPixelV *)bufW + idN0)->v.shv = fldVal[1].s;
+            break;
+          case WLZ_GREY_UBYTE:
+            ((WlzPixelV *)bufW + idN0)->v.ubv = fldVal[1].b;
+            break;
+          case WLZ_GREY_FLOAT:
+            ((WlzPixelV *)bufW + idN0)->v.flv = fldVal[1].f;
+            break;
+          case WLZ_GREY_DOUBLE:
+            ((WlzPixelV *)bufW + idN0)->v.dbv = fldVal[1].d;
+            break;
+	  }
+	}
+	(*jEnv)->DeleteLocalRef(jEnv, jWObj);
+      }
+      break;
+    case WLZ_JPM_KEY_WLZ_PTR1_ARY1: /* FALLTHROUGH */
+    case WLZ_JPM_KEY_WLZ_PTR2_ARY1:
+      if((bufW = AlcMalloc(wArraySz * sizeof(void *))) != NULL)
+      {
+        *isCpy = JNI_TRUE;
+	jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, 0);
+	jWCls = (*jEnv)->GetObjectClass(jEnv, jWObj);
+	fldID[0] = (*jEnv)->GetFieldID(jEnv, jWCls, "value", "J");
+	*(void **)bufW = (void *)((*jEnv)->GetLongField(jEnv, jWObj,
+							fldID[0]));
+	for(idN0 = 1; idN0 < wArraySz; ++idN0)
+	{
+	  (*jEnv)->DeleteLocalRef(jEnv, jWObj);
+	  jWObj = (*jEnv)->GetObjectArrayElement(jEnv, jWArray, idN0);
+	  *((void **)bufW + idN0) = (void *)((*jEnv)->GetLongField(jEnv,
+							     jWObj, fldID[0]));
+	}
+      }
+      break;
+    default:
+      break;
+  }
+  rtnVal = (long )bufW;
+  return(rtnVal);
+}
+
+/************************************************************************
+* Function:	WlzJavaArray1DSet				
+* Returns:	void						
+* Purpose:	Sets the given value in a Java object for return to
+*		the Java side of th JNI.			
+* Global refs:	-						
+* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
+*		jobjectArray dstJA:	Destination Java array.	
+*		char *cObjName:		The type of the value to set.
+*               char *jObjName:         The Java woolz Java object     
+*                                       class string.                  
+*               char *jniObjName:       The Java woolz JNI object      
+*                                       class string.                  
+*		int idrCnt:		Indirection count (ie 1 for *,
+*					2 for **, ...).		
+*		int pKey:		Parameter key.		
+*		void *aVal:		C array to set value from.
+*		int aSz:		Size of the 1D array.	
+************************************************************************/
+void		WlzJavaArray1DSet(JNIEnv *jEnv, jobjectArray dstJObj,
+				char *cObjName,
+				char *jObjName,
+				char *jniObjName,
+				int idrCnt, int pKey,
+				void *aVal,
+				int aSz)
+{
+  jobject	newJObj;
+
+  if(aVal && (aSz > 0))
+  {
+    switch(pKey)
+    {
+      case WLZ_JPM_KEY_BYTE_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, "char", "jbyte", "jbyteArray",
+				     2, WLZ_JPM_KEY_BYTE_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_SHORT_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, "short", "jshort", "jshortArray",
+				     2, WLZ_JPM_KEY_LONG_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_INT_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, "int", "jint", "jintArray",
+				     2, WLZ_JPM_KEY_INT_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_LONG_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, "long", "jlong", "jlongArray",
+				     2, WLZ_JPM_KEY_LONG_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_FLOAT_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, "float", "jfloat", "jfloatArray",
+				     2, WLZ_JPM_KEY_FLOAT_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_DOUBLE_PTR1_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, "double", "jdouble", "jdoubleArray",
+				     2, WLZ_JPM_KEY_DOUBLE_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      case WLZ_JPM_KEY_WLZ_PTR2_ARY1:
+	newJObj = WlzJavaArray1DWrap(jEnv, cObjName, jObjName, "jobjectArray",
+				     2, WLZ_JPM_KEY_WLZ_PTR1_ARY1,
+				     aVal, aSz);
+	(*jEnv)->SetObjectArrayElement(jEnv, dstJObj, 0, newJObj);
+	break;
+      default:
+	break;
+    }
+  }
+}
+
+/************************************************************************
+* Function:     WlzJavaArray1DWrap				
+* Returns:      jobject:                New Java object.               
+* Purpose:      Wraps up the given array as a new Java array.	
+* Global refs:  -                                                      
+* Parameters:   JNIEnv *jEnv:           Given JNI environment ptr.     
+*               char *cObjName:         The Java woolz object class    
+*                                       string.                        
+*               char *jObjName:         The Java woolz Java object     
+*                                       class string.                  
+*               char *jniObjName:       The Java woolz JNI object      
+*                                       class string.                  
+*               int idrCnt:             Indirection count (ie 1 for *, 
+*                                       2 for **, ...).                
+*               int pKey:               Parameter key.                 
+*		void *aVal:		C array to set values from.
+*		int aSz:		Size of the 1D array.	
+************************************************************************/
+jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
+				   char *cObjName,
+				   char *jObjName,
+				   char *jniObjName,
+				   int idrCnt, int pKey,
+				   void *aVal,
+				   int aSz)
+{
+  int		isWlzObject,
+  		idN0;
+  char		*jWFqClassName;
+  jclass	jWCls;
+  jmethodID	mtdID;
+  jfieldID	fldID;
+  jobject	tObj0,
+  		rtnJObj = NULL;
+
+#ifdef JWLZ_DEBUG
+  int hack = 1;
+  while(hack)
+  {
+    sleep(2);
+  }
+#endif /* JWLZ_DEBUG */
+  if(aVal && (aSz > 0))
+  {
+    switch(pKey)
+    {
+      case WLZ_JPM_KEY_BYTE_ARY1:
+	if((rtnJObj = (jobject )((*jEnv)->NewByteArray(jEnv, aSz))) != NULL)
+	{
+	  (*jEnv)->SetByteArrayRegion(jEnv, (jbyteArray )rtnJObj, 0, aSz,
+				      aVal);
+	}
+	break;
+      case WLZ_JPM_KEY_SHORT_ARY1:
+	if((rtnJObj = (jobject )((*jEnv)->NewShortArray(jEnv, aSz))) != NULL)
+	{
+	  (*jEnv)->SetShortArrayRegion(jEnv, (jshortArray )rtnJObj, 0, aSz,
+				       aVal);
+	}
+	break;
+      case WLZ_JPM_KEY_INT_ARY1:
+	if((rtnJObj = (jobject )((*jEnv)->NewIntArray(jEnv, aSz))) != NULL)
+	{
+	  (*jEnv)->SetIntArrayRegion(jEnv, (jintArray )rtnJObj, 0, aSz,
+				     aVal);
+	}
+	break;
+      case WLZ_JPM_KEY_LONG_ARY1:
+	if((rtnJObj = (jobject )((*jEnv)->NewLongArray(jEnv, aSz))) != NULL)
+	{
+	  (*jEnv)->SetLongArrayRegion(jEnv, (jlongArray )rtnJObj, 0, aSz,
+				      aVal);
+	}
+	break;
+      case WLZ_JPM_KEY_FLOAT_ARY1:
+	if((rtnJObj = (jobject )((*jEnv)->NewFloatArray(jEnv, aSz))) != NULL)
+	{
+	  (*jEnv)->SetFloatArrayRegion(jEnv, (jfloatArray )rtnJObj, 0, aSz,
+				       aVal);
+	}
+	break;
+      case WLZ_JPM_KEY_DOUBLE_ARY1:
+	if((rtnJObj = (jobject )((*jEnv)->NewDoubleArray(jEnv, aSz))) != NULL)
+	{
+	  (*jEnv)->SetDoubleArrayRegion(jEnv, (jdoubleArray )rtnJObj, 0, aSz,
+					aVal);
+	}
+	break;
+      case WLZ_JPM_KEY_WLZ_PTR1_ARY1:
+	if((jWFqClassName = WlzJavaBuildFQClassName(jObjName)) != NULL)
+	{
+	  jWCls = (*jEnv)->FindClass(jEnv, jWFqClassName);
+	  mtdID = (*jEnv)->GetMethodID(jEnv, jWCls, "<init>", "()V");
+	  fldID = (*jEnv)->GetFieldID(jEnv, jWCls, "value", "J");
+	  rtnJObj = (jobject )(*jEnv)->NewObjectArray(jEnv, aSz, jWCls, NULL);
+	  AlcFree(jWFqClassName);
+	}
+	if(rtnJObj)
+	{
+	  isWlzObject = strcmp(cObjName, "WlzObject") == 0;
+	  for(idN0 = 0; idN0 < aSz; ++idN0)
+	  {
+	    tObj0 = (*jEnv)->NewObject(jEnv, jWCls, mtdID);
+	    if(isWlzObject)
+	    {
+	      (void )WlzAssignObject((WlzObject *)aVal + idN0, NULL);
+	    }
+	    (*jEnv)->SetLongField(jEnv, tObj0, fldID,
+				  (jlong )((WlzObject *)aVal + idN0));
+	    (*jEnv)->SetObjectArrayElement(jEnv, (jobjectArray )rtnJObj,
+					   idN0, tObj0);
+	  }
+	}
+	break;
+      default:
+	break;
+    }
+  }
+  return(rtnJObj);
+}
+
+/************************************************************************
+* Function:	WlzJavaArray1DFree				
+* Returns:	void						
+* Purpose:	Free's a temporary native 1D array.			
+* Global refs:	-						
+* Parameters:	void *aDat:		Array data structure.	
+*		int aSz:		Array size.		
+*		int dSKey:		Data structure identification.
+*		jboolean isCpy:		Copy flag for JNI functions.
+************************************************************************/
+void		WlzJavaArray1DFree(void *aDat, int aSz,
+			      int dSKey, jboolean isCpy)
+{
+  if(isCpy && aDat && (aSz > 0))
+  {
+    AlcFree(aDat);
+  }
+}
