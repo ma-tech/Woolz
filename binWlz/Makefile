@@ -241,7 +241,8 @@ DEPENDDIRS		= \
 			  ../libAlc \
 			  ../libAlg \
 			  ../libbibfile \
-			  ../libWlz
+			  ../libWlz \
+			  ../libWlzIO
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -265,7 +266,7 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		= Wlz bibfile Alg Alc \
+LIBRARIES		= WlzIO Wlz bibfile Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
