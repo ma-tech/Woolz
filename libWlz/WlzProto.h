@@ -2043,6 +2043,7 @@ extern WlzContour		*WlzMakeContour(
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
+#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzMatchICP.c                                                    *
 ************************************************************************/
@@ -2058,6 +2059,7 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  int brkFlg,
 				  double thrMeanD,
 				  double thrMaxD);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzMeshTransform.c							*
