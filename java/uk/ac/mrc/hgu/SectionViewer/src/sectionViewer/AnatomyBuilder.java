@@ -74,7 +74,6 @@ _done = false;
 
 //----------------------------------------------------
   protected void collectWlzFIles(File dir, Stack stack) {
-
      // walk through the directories
      String fullPath = dir.getAbsolutePath();
      String contents[] = null;
