@@ -23,8 +23,8 @@
 #include <stdarg.h>
 #include <Wlz.h>
 
-WlzErrorNum 	WlzDbgWrite(char *, ...),
-		WlzDbgObjWrite(WlzObject *, int);
+WlzErrorNum 	WlzDbgWrite(char *fmt, ...),
+		WlzDbgObjWrite(WlzObject *obj, int freeFlg);
 
 WlzDbgMask	wlzDbgMask = WLZ_DBG_NONE,
 		wlzDbgObjMask = WLZ_DBG_NONE;
