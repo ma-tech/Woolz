@@ -50,6 +50,7 @@ int main(int	argc,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char 		optList[] = "n:h";
   int		option;
+  int		uvt = 1;
     
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -102,6 +103,9 @@ int main(int	argc,
 
     if( obj->type == type ){
       objlist[n++] = obj;
+      if( obj->values.core == NULL ){
+	uvt = 0;
+      }
     } else {
       WlzFreeObj( obj );
     }
@@ -111,7 +115,7 @@ int main(int	argc,
     return( WLZ_ERR_NONE );
   }
 
-  if(((obj1 = WlzIntersectN(n, objlist, 1, &errNum)) != NULL) &&
+  if(((obj1 = WlzIntersectN(n, objlist, uvt, &errNum)) != NULL) &&
      (errNum == WLZ_ERR_NONE)) {
     errNum = WlzWriteObj(stdout, obj1);
   }
