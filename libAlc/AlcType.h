@@ -143,7 +143,7 @@ typedef struct _AlcKDTNode
 
 typedef struct _AlcKDTTree
 {
-   AlcPointType type;			/* Type of tree, ie type of node key */
+   AlcPointType 	type;		/* Type of tree, ie type of node key */
   int			dim;			   /* Dimension of the tree. */
   int			keySz;			  /* sizeof(key) * dimension */
   double		tol; /* Comparision tollerance for double key values */
