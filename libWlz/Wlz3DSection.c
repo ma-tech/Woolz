@@ -18,19 +18,25 @@
 * \todo         -
 * \bug          None known.
 */
+#include <limits.h>
+#include <float.h>
+
 #include <Wlz.h>
 
 static WlzObject 		*WlzGetSectionFrom3DDomObj(
   				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
+				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzGetMaskedSectionFrom3DDomObj(
   				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
+				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
 static WlzContour 		*WlzGetSectionFromCtr(
 				  WlzContour *ctr,
 				  WlzThreeDViewStruct *view,
+				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
 static WlzPixelP 		WlzGetSectionConvertGreyType(
 				  WlzPixelP pixptr,
@@ -57,6 +63,7 @@ static WlzPixelP 		WlzGetSectionConvertGreyType(
 */
 WlzObject 	*WlzGetSectionFromObject(WlzObject *obj,
 					 WlzThreeDViewStruct *view,
+					 WlzInterpolationType	interp,
 					 WlzErrorNum *dstErr)
 {
   WlzObject	*newObj = NULL;
@@ -77,12 +84,12 @@ WlzObject 	*WlzGetSectionFromObject(WlzObject *obj,
     switch(obj->type)
     {
       case WLZ_3D_DOMAINOBJ:
-        newObj = WlzGetSectionFrom3DDomObj(obj, view, &errNum);
+        newObj = WlzGetSectionFrom3DDomObj(obj, view, interp, &errNum);
         break;
       case WLZ_CONTOUR:
 	dom.core = NULL;
 	val.core = NULL;
-        dom.ctr = WlzGetSectionFromCtr(obj->domain.ctr, view, &errNum);
+        dom.ctr = WlzGetSectionFromCtr(obj->domain.ctr, view, interp, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  newObj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL, &errNum);
@@ -125,6 +132,7 @@ WlzObject 	*WlzGetSectionFromObject(WlzObject *obj,
 */
 WlzObject 	*WlzGetMaskedSectionFromObject(WlzObject *obj,
 					       WlzThreeDViewStruct *view,
+					       WlzInterpolationType	interp,
 					       WlzErrorNum *dstErr)
 {
   WlzObject	*newObj = NULL;
@@ -145,12 +153,12 @@ WlzObject 	*WlzGetMaskedSectionFromObject(WlzObject *obj,
     switch(obj->type)
     {
       case WLZ_3D_DOMAINOBJ:
-        newObj = WlzGetMaskedSectionFrom3DDomObj(obj, view, &errNum);
+        newObj = WlzGetMaskedSectionFrom3DDomObj(obj, view, interp, &errNum);
         break;
       case WLZ_CONTOUR:
 	dom.core = NULL;
 	val.core = NULL;
-        dom.ctr = WlzGetSectionFromCtr(obj->domain.ctr, view, &errNum);
+        dom.ctr = WlzGetSectionFromCtr(obj->domain.ctr, view, interp, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  newObj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL, &errNum);
@@ -185,6 +193,7 @@ WlzObject 	*WlzGetMaskedSectionFromObject(WlzObject *obj,
 */
 static WlzContour *WlzGetSectionFromCtr(WlzContour *ctr,
 				        WlzThreeDViewStruct *view,
+					WlzInterpolationType	interp,
 					WlzErrorNum *dstErr)
 {
   WlzGMModel	*newModel = NULL;
@@ -247,6 +256,7 @@ static WlzContour *WlzGetSectionFromCtr(WlzContour *ctr,
 static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
   WlzObject		*obj,
   WlzThreeDViewStruct	*viewStr,
+  WlzInterpolationType	interp,
   WlzErrorNum	*dstErr)
 {
   WlzObject		*newobj, *tmp_obj, *mask;
@@ -261,6 +271,8 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
   WlzGreyWSpace		gwsp, gwsp1;
   WlzFVertex3		vtx;
   int			k, xp, yp, p;
+  WlzDVertex3		tDV0, tDV1;
+  double		tD0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the object */
@@ -317,6 +329,19 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
     errNum = WLZ_ERR_OBJECT_TYPE;
   }
 
+  /* check the interpolation parameter */
+  if( errNum == WLZ_ERR_NONE ){
+    switch( interp ){
+    case WLZ_INTERPOLATION_NEAREST:
+    case WLZ_INTERPOLATION_LINEAR:
+      break;
+
+    default:
+      errNum = WLZ_ERR_INTERPOLATION_TYPE;
+      break;
+    }
+  }
+
   /* create a new rectangular object */
   if( errNum == WLZ_ERR_NONE ){
     domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
@@ -370,13 +395,140 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
 	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
 	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
-	  vtx.vtX = WLZ_NINT(vtx.vtX);
-	  vtx.vtY = WLZ_NINT(vtx.vtY);
-	  vtx.vtZ = WLZ_NINT(vtx.vtZ);
+
+	  /* apply interpolation */
 	  if( voxvals ){
-	    WlzGreyValueGet(gVWSp, vtx.vtZ, vtx.vtY, vtx.vtX);
-	    pixptr.p = *(gVWSp->gPtr);
-	    pixptr.type = gVWSp->gType;
+	    switch( interp ){
+	    case WLZ_INTERPOLATION_NEAREST:
+	      
+	      WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ),
+			      WLZ_NINT(vtx.vtY), WLZ_NINT(vtx.vtX));
+	      pixptr.p = *(gVWSp->gPtr);
+	      pixptr.type = gVWSp->gType;
+	      break;
+
+	    case WLZ_INTERPOLATION_LINEAR:
+	      /* set the background to current value */
+	      WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ),
+				 floor(vtx.vtY), floor(vtx.vtX));
+	      pixptr.p = *(gVWSp->gPtr);
+	      pixptr.type = gVWSp->gType;
+
+	      tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+	      tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+	      tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+	      tDV1.vtX = 1.0 - tDV0.vtX;
+	      tDV1.vtY = 1.0 - tDV0.vtY;
+	      tDV1.vtZ = 1.0 - tDV0.vtZ;
+	      switch(gVWSp->gType)
+	      {
+	      case WLZ_GREY_INT:
+		tD0 = ((gVWSp->gVal[0]).inv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).inv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).inv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).inv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).inv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).inv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).inv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).inv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, INT_MIN, INT_MAX);
+		*(pixptr.p.inp) = WLZ_NINT(tD0);
+		break;
+	      case WLZ_GREY_SHORT:
+		tD0 = ((gVWSp->gVal[0]).shv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).shv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).shv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).shv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).shv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).shv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).shv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).shv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
+		*(pixptr.p.shp) = WLZ_NINT(tD0);
+		break;
+	      case WLZ_GREY_UBYTE:
+		tD0 = ((gVWSp->gVal[0]).ubv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).ubv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).ubv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).ubv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).ubv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).ubv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).ubv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).ubv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, 0, 255);
+		*(pixptr.p.ubp) = WLZ_NINT(tD0);
+		break;
+	      case WLZ_GREY_FLOAT:
+		tD0 = ((gVWSp->gVal[0]).flv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).flv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).flv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).flv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).flv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).flv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).flv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).flv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
+		*(pixptr.p.flp) = tD0;
+		break;
+	      case WLZ_GREY_DOUBLE:
+		tD0 = ((gVWSp->gVal[0]).dbv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).dbv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).dbv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).dbv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).dbv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).dbv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).dbv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).dbv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		*(pixptr.p.dbp) = tD0;
+		break;
+	      default:
+		errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	      }
+	      break;
+	    }
+
+	    /* now copy the value */
 	    if( pixptr.type != grey_type ){
 	      pixptr = WlzGetSectionConvertGreyType(pixptr, grey_type);
 	    }
@@ -404,7 +556,10 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 	    default:
 	      break;
 	    }
-	    if( gVWSp->bkdFlag ){
+
+	    /* set the mask value */
+	    if( WlzInsideDomain(obj, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				WLZ_NINT(vtx.vtX), NULL) ){
 	      *(gwsp1.u_grintptr.ubp) = 0;
 	    }
 	    else {
@@ -413,7 +568,8 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 	    gwsp1.u_grintptr.ubp++;
 	  }
 	  else {
-	    if( WlzInsideDomain(obj, vtx.vtZ, vtx.vtY, vtx.vtX, NULL) ){
+	    if( WlzInsideDomain(obj, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				WLZ_NINT(vtx.vtX), NULL) ){
 	      *(gwsp.u_grintptr.ubp) = 128;
 	    }
 	    else {
@@ -478,6 +634,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 static WlzObject *WlzGetSectionFrom3DDomObj(
   WlzObject		*obj,
   WlzThreeDViewStruct	*viewStr,
+  WlzInterpolationType	interp,
   WlzErrorNum	*dstErr)
 {
   WlzObject		*newobj, *tmp_obj;
@@ -492,6 +649,8 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
   WlzGreyWSpace		gwsp;
   WlzFVertex3		vtx;
   int			k, xp, yp, p;
+  WlzDVertex3		tDV0, tDV1;
+  double		tD0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the object */
@@ -548,6 +707,19 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
     errNum = WLZ_ERR_OBJECT_TYPE;
   }
 
+  /* check the interpolation parameter */
+  if( errNum == WLZ_ERR_NONE ){
+    switch( interp ){
+    case WLZ_INTERPOLATION_NEAREST:
+    case WLZ_INTERPOLATION_LINEAR:
+      break;
+
+    default:
+      errNum = WLZ_ERR_INTERPOLATION_TYPE;
+      break;
+    }
+  }
+
   /* create a new rectangular object */
   if( errNum == WLZ_ERR_NONE ){
     domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
@@ -580,19 +752,145 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
     if( errNum == WLZ_ERR_NONE ){
       errNum = WlzInitGreyScan(newobj, &iwsp, &gwsp);
       while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
-	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
+	yp = iwsp.linpos - newobj->domain.i->line1;
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
-	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+	  xp = k - newobj->domain.i->kol1;
 	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
 	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
 	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
-	  vtx.vtX = WLZ_NINT(vtx.vtX);
-	  vtx.vtY = WLZ_NINT(vtx.vtY);
-	  vtx.vtZ = WLZ_NINT(vtx.vtZ);
+
+	  /* apply interpolation */
 	  if( voxvals ){
-	    WlzGreyValueGet(gVWSp, vtx.vtZ, vtx.vtY, vtx.vtX);
-	    pixptr.p = *(gVWSp->gPtr);
-	    pixptr.type = gVWSp->gType;
+	    switch( interp ){
+	    case WLZ_INTERPOLATION_NEAREST:
+	      
+	      WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ),
+			      WLZ_NINT(vtx.vtY), WLZ_NINT(vtx.vtX));
+	      pixptr.p = *(gVWSp->gPtr);
+	      pixptr.type = gVWSp->gType;
+	      break;
+
+	    case WLZ_INTERPOLATION_LINEAR:
+	      WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ),
+				 floor(vtx.vtY), floor(vtx.vtX));
+	      pixptr.p = *(gVWSp->gPtr);
+	      pixptr.type = gVWSp->gType;
+
+	      tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+	      tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+	      tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+	      tDV1.vtX = 1.0 - tDV0.vtX;
+	      tDV1.vtY = 1.0 - tDV0.vtY;
+	      tDV1.vtZ = 1.0 - tDV0.vtZ;
+	      switch(gVWSp->gType)
+	      {
+	      case WLZ_GREY_INT:
+		tD0 = ((gVWSp->gVal[0]).inv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).inv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).inv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).inv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).inv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).inv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).inv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).inv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, INT_MIN, INT_MAX);
+		*(pixptr.p.inp) = WLZ_NINT(tD0);
+		break;
+	      case WLZ_GREY_SHORT:
+		tD0 = ((gVWSp->gVal[0]).shv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).shv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).shv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).shv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).shv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).shv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).shv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).shv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
+		*(pixptr.p.shp) = WLZ_NINT(tD0);
+		break;
+	      case WLZ_GREY_UBYTE:
+		tD0 = ((gVWSp->gVal[0]).ubv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).ubv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).ubv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).ubv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).ubv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).ubv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).ubv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).ubv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, 0, 255);
+		*(pixptr.p.ubp) = WLZ_NINT(tD0);
+		break;
+	      case WLZ_GREY_FLOAT:
+		tD0 = ((gVWSp->gVal[0]).flv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).flv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).flv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).flv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).flv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).flv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).flv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).flv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
+		*(pixptr.p.flp) = tD0;
+		break;
+	      case WLZ_GREY_DOUBLE:
+		tD0 = ((gVWSp->gVal[0]).dbv *
+		       tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[1]).dbv *
+		   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[2]).dbv *
+		   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[3]).dbv *
+		   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		  ((gVWSp->gVal[4]).dbv *
+		   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[5]).dbv *
+		   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[6]).dbv *
+		   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		  ((gVWSp->gVal[7]).dbv *
+		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		*(pixptr.p.dbp) = tD0;
+		break;
+	      default:
+		errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	      }
+	      break;
+	    }
+
+	    /* now copy the value */
 	    if( pixptr.type != grey_type ){
 	      pixptr = WlzGetSectionConvertGreyType(pixptr, grey_type);
 	    }
@@ -622,7 +920,8 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 	    }
 	  }
 	  else {
-	    if( WlzInsideDomain(obj, vtx.vtZ, vtx.vtY, vtx.vtX, NULL) ){
+	    if( WlzInsideDomain(obj, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				WLZ_NINT(vtx.vtX), NULL) ){
 	      *(gwsp.u_grintptr.ubp) = 128;
 	    }
 	    else {

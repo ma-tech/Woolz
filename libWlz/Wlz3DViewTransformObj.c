@@ -428,6 +428,7 @@ WlzObject *Wlz3DViewTransformObj(
 
 
 WlzObject *Wlz3DViewTransformBitmap(
+  int		sizeBitData,
  UBYTE		*bitData,
  int		width,
  int 		height,

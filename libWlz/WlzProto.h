@@ -65,7 +65,7 @@
 *                 All arrays must either start with 'array' or
 *                 'dstArray', with 'dstArray' being used to identify
 *                 arrays which are allocated within the function being
-*                 called. An array pointer must be followed by it's
+*                 called. An array pointer must be preceded by it's
 *                 size, the type should be int, WlzIVertex2, ... and
 *                 the identifier should be the same as array's but with
 *                 'size' prepended as is the example 'sizeArrayName'.
@@ -111,10 +111,12 @@ extern WlzObject 		*Wlz2DContains(
 extern WlzObject 		*WlzGetSectionFromObject(
 				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
+				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzGetMaskedSectionFromObject(
 				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
+				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -271,7 +273,8 @@ extern WlzObject 		*Wlz3DViewTransformObj(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzErrorNum *dstErr);
 extern WlzObject 		*Wlz3DViewTransformBitmap(
-				  unsigned char *bitData,
+                                  int arraySizeBitData,
+				  unsigned char *arrayBitData,
 				  int width,
 				  int height,
 				  int x_offset,

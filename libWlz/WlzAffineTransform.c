@@ -1289,6 +1289,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
 		      ((gVWSp->gVal[7]).flv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
 		    *(gWSp.u_grintptr.flp)++ = tD0;
 		    break;
 		  case WLZ_GREY_DOUBLE:
@@ -1308,7 +1309,6 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
 		      ((gVWSp->gVal[7]).dbv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
-		    tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
 		    *(gWSp.u_grintptr.dbp)++ = tD0;
 		    break;
 		  default:
