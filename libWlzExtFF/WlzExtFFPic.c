@@ -18,12 +18,6 @@
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-#ifdef SUNOS5
-#ifndef __x86
-extern void swab(const char *, char *, int);
-#endif /* __x86 */
-#endif /* SUNOS5 */
-
 /************************************************************************
 * Function:	WlzEffReadObjPic					*
 * Returns:	WlzObject *:		Object read from file.		*
