@@ -229,14 +229,14 @@ static int putdouble(double d, FILE *fp)
   cout[7] = *cin;
 #endif /* __sparc || __mips */
 #if defined (__x86) || defined (__alpha)
-  cout[3] = *(cin+7);
-  cout[2] = *(cin+6);
-  cout[1] = *(cin+5);
-  cout[0] = *(cin+4);
-  cout[7] = *(cin+3);
-  cout[6] = *(cin+2);
-  cout[5] = *(cin+1);
-  cout[4] = *cin;
+  cout[7] = *(cin+7);
+  cout[6] = *(cin+6);
+  cout[5] = *(cin+5);
+  cout[4] = *(cin+4);
+  cout[3] = *(cin+3);
+  cout[2] = *(cin+2);
+  cout[1] = *(cin+1);
+  cout[0] = *cin;
 #endif /* __x86 || __alpha */
   return( (int) fwrite(&cout[0], sizeof(char), 8, fp) );
 }
