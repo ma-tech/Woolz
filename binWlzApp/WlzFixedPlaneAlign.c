@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
+#include <ieeefp.h>
 
 #include <Wlz.h>
 #include <bibFile.h>
@@ -276,7 +277,7 @@ int main(int	argc,
   /* read the bibfiles */
   if( inFile1 != NULL ){
     secList1 = HGUDlpListCreate(NULL);
-    errFlg = RecFileSecRead(secList1, &numSec1, inFile1, &errMsg);
+    errFlg = RecFileSecListRead(secList1, &numSec1, inFile1, &errMsg);
     if( errFlg == REC_ERR_NONE ){
       transformsObj1 = SecListToTransforms(secList1, 1, &errNum);
     }
@@ -294,7 +295,7 @@ int main(int	argc,
 
   if( inFile2 != NULL ){
     secList2 = HGUDlpListCreate(NULL);
-    errFlg = RecFileSecRead(secList2, &numSec2, inFile2, &errMsg);
+    errFlg = RecFileSecListRead(secList2, &numSec2, inFile2, &errMsg);
     if( errFlg == REC_ERR_NONE ){
       transformsObj2 = SecListToTransforms(secList2, 1, &errNum);
     }
@@ -489,7 +490,7 @@ int main(int	argc,
       transformsObj2->domain.p->domains[i].t;
     listItem2 = HGUDlpListNext(secList2, listItem2);
   }
-  RecFileSecWrite(stdout, secList2, numSec2, &errMsg);
+  RecFileSecListWrite(stdout, secList2, numSec2, &errMsg);
 
   return 0;
 }

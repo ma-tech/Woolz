@@ -25,13 +25,15 @@ ARCHIVE			=
 EXECUTABLES		= \
 			WlzExtractTransform \
 			WlzProductTransform \
-			WlzFixedPlaneAlign
+			WlzFixedPlaneAlign \
+			WlzSizeSelect
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
-			WlzFixedPlaneAlign.c
+			WlzFixedPlaneAlign.c \
+			WlzSizeSelect.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -51,6 +53,7 @@ DEPENDDIRS		= \
 			  . \
 			  ../libReconstruct \
 			  ../libhguDlpList \
+			  ../libWlzExtFF \
 			  ../libWlz \
 			  ../libAlg \
 			  ../libbibfile \
@@ -77,7 +80,7 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		=  Reconstruct hguDlpList bibfile Wlz Alg Alc \
+LIBRARIES		=  Reconstruct hguDlpList bibfile WlzExtFF Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be

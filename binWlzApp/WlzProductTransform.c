@@ -34,6 +34,7 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
+#include <ieeefp.h>
 
 #include <Wlz.h>
 #include <bibFile.h>
@@ -704,7 +705,7 @@ int main(int	argc,
      rewind and read as an MAPaint file */
   if( inFile1 != NULL ){
     secList1 = HGUDlpListCreate(NULL);
-    errFlg = RecFileSecRead(secList1, &numSec1, inFile1, &errMsg);
+    errFlg = RecFileSecListRead(secList1, &numSec1, inFile1, &errMsg);
     if( errFlg == REC_ERR_NONE ){
       transformsObj1 = SecListToTransforms(secList1, trans1RelFlg, &errNum);
     }
@@ -724,7 +725,7 @@ int main(int	argc,
      rewind and read as an MAPaint file */
   if( inFile2 != NULL ){
     secList2 = HGUDlpListCreate(NULL);
-    errFlg = RecFileSecRead(secList2, &numSec2, inFile2, &errMsg);
+    errFlg = RecFileSecListRead(secList2, &numSec2, inFile2, &errMsg);
     if( errFlg == REC_ERR_NONE ){
       transformsObj2 = SecListToTransforms(secList2, trans2RelFlg, &errNum);
     }
@@ -887,7 +888,7 @@ int main(int	argc,
       
       listItem = HGUDlpListNext(secList1, listItem);
     }
-    RecFileSecWrite(stdout, secList1, numSec1, &errMsg);
+    RecFileSecListWrite(stdout, secList1, numSec1, &errMsg);
   }
   else {
     WriteMAPaintRealignTransforms(stdout, transformsObj1, outputRelFlg);
