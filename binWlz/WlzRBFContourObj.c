@@ -40,12 +40,12 @@ int             main(int argc, char **argv)
 		bErosion = 4,
 		bDilation = 4,
 		sDilation = 10,
+  		sFac = 10,
+  		oFac = 10,
   		ok = 1,
 		usage = 0,
 		unitVoxelSz = 0;
-  double	sFrac = 0.1,
-  		oFrac = 0.2,
-		sAlpha = 0.1,
+  double	sAlpha = 0.1,
 		oAlpha = 2.0,
 		delta = 0.1,
 		tau = 0.1;
@@ -90,10 +90,10 @@ int             main(int argc, char **argv)
         usage = sscanf(optarg, "%d", &sDilation) != 1;
 	break;
       case 'f':
-        usage = sscanf(optarg, "%lg", &sFrac) != 1;
+        usage = sscanf(optarg, "%d", &sFac) != 1;
 	break;
       case 'F':
-        usage = sscanf(optarg, "%lg", &oFrac) != 1;
+        usage = sscanf(optarg, "%d", &oFac) != 1;
 	break;
       case 'a':
         usage = sscanf(optarg, "%lg", &sAlpha) != 1;
@@ -166,7 +166,7 @@ int             main(int argc, char **argv)
   if(ok)
   {
     ctrDom.ctr = WlzContourRBFBndObj3D(inObj, bErosion, bDilation, sDilation,
-    				       sFrac, oFrac, sAlpha, oAlpha,
+    				       sFac, oFac, sAlpha, oAlpha,
 				       delta, tau, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -242,8 +242,8 @@ int             main(int argc, char **argv)
     "  -S  Distance for points outside domain surface.\n"
     "  -Z  Distance from domain surface within which to evaluate the\n"
     "      radial basis function.\n"
-    "  -f  Fraction of domain boundary voxels to use as surface points.\n"
-    "  -F  Fraction of interior and extrior points to use.\n"
+    "  -f  Sampling factor for surface points.\n"
+    "  -F  Sampling factor for interior and extrior points.\n"
     "  -a  Surface alpha value, must be greater than zero.\n"
     "  -A  Interior and extrior alpha value, must be greater than zero.\n"
     "  -d  Multiorder spline delta value.\n"
