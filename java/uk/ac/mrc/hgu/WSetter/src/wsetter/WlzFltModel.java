@@ -24,9 +24,19 @@ import wsetter.*;
 import javax.sound.sampled.*;
 import javax.swing.event.*;
 
+/**
+ * Model class for WSetter bean.
+ * <br>Uses the <b>Model View Controller</b> paradigm.
+ * @author Nick Burton
+ * @see WSetter
+ * @see SliderRangeModel
+ */
 public class WlzFltModel extends FloatControl {
 
 //----------------------------------------------------
+  /**
+   * Inner class to identify slider application.
+   */
    static class WlzType extends javax.sound.sampled.FloatControl.Type {
   	public WlzType(String str) {
 	  super(str);
@@ -44,6 +54,9 @@ public class WlzFltModel extends FloatControl {
    static WlzType INT = new WlzType("Int");
 
 //----------------------------------------------------
+  /**
+   * Constructor
+   */
    public WlzFltModel(FloatControl.Type type,
 		      float min,
 		      float max) {
@@ -57,6 +70,11 @@ public class WlzFltModel extends FloatControl {
                              new EventListenerList();
 
   // add a listener to the register
+  /**
+   * Adds a ChangeListener for events fired from this bean.
+   * @param     ChangeListener x
+   * @return    void
+   */
   public void addChangeListener(ChangeListener x) {
     changeListeners.add (ChangeListener.class, x);
 
@@ -65,6 +83,11 @@ public class WlzFltModel extends FloatControl {
   }
 
   // remove a listener from the register
+  /**
+   * Removes a ChangeListener for events fired from this bean.
+   * @param     ChangeListener x
+   * @return    void
+   */
   public void removeChangeListener(ChangeListener x) {
     changeListeners.remove (ChangeListener.class, x);
   }
@@ -72,6 +95,11 @@ public class WlzFltModel extends FloatControl {
 
 //----------------------------------------------------
    // override setValue() so that an event is fired
+  /**
+   * Overrides setValue() to call fireChange() if the slider value changes.
+   * @param     int val
+   * @return    void
+   */
    public void setValue(int val) {
       if(val < super.getMinimum()) val = (int) (super.getMinimum()) + 1;
       if(val > super.getMaximum()) val = (int) (super.getMaximum()) - 1;
@@ -79,6 +107,11 @@ public class WlzFltModel extends FloatControl {
       fireChange();
    }
 
+  /**
+   * Overrides setValue() to call fireChange() if the slider value changes.
+   * @param     float val
+   * @return    void
+   */
    public void setValue(float val) {
       if(val < super.getMinimum()) val = super.getMinimum();
       if(val > super.getMaximum()) val = super.getMaximum();
@@ -87,6 +120,11 @@ public class WlzFltModel extends FloatControl {
    }
 
 //----------------------------------------------------
+  /**
+   * Fires an event if the slider value changes.
+   * @param     void
+   * @return    void
+   */
    protected void fireChange() {
    // Create the event:
    ChangeEvent ce = new ChangeEvent(this);
@@ -115,6 +153,11 @@ public class WlzFltModel extends FloatControl {
    }
    */
 //----------------------------------------------------
+  /**
+   * Prints debugging info for the WSetter.
+   * @param     void
+   * @return    void
+   */
    protected void debug() {
       Float min = new Float(super.getMinimum());
       Float max = new Float(super.getMaximum());
