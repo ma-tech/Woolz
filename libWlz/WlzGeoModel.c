@@ -51,10 +51,6 @@ static void		WlzGMModelMatchEdgeTG2D(
 			  WlzGMModel *model,
 			  WlzGMEdgeT **matchET,
 			  WlzDVertex2 *pos);
-static unsigned int 	WlzGMHashPos2D(
-			  WlzDVertex2 pos);
-static unsigned int 	WlzGMHashPos3D(
-			  WlzDVertex3 pos);
 static double		WlzGMVertexShellDist2(
 			  WlzGMVertex *v0,
 			  WlzGMVertex *v1,
@@ -4048,97 +4044,40 @@ WlzDVertex2	WlzGMVertexCmp2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 }
 
 /*!
-* \return				The sign of the vertex position:
-*					-1, 0 or +1.
+* \return  	The sign of the vertex position: -1, 0 or +1.
 * \ingroup      WlzGeoModel
-* \brief	Compares the coordinates of the given vertex and
-*		3D double precision position to find a signed value
+* \brief        Compares the coordinates of the given vertex and
+*               2D double precision position to find a signed value
 *               for sorting.
-* \param	vertex			Given vertex.
-* \param	pos			Given position.
+* \param        vertex                  Given vertex.
+* \param        pos                     Given position.
 */
-int		WlzGMVertexCmpSign3D(WlzGMVertex *vertex, WlzDVertex3 pos)
+int             WlzGMVertexCmpSign2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 {
-  int		cmp;
-  WlzDVertex3	cmp3D;
+  int           cmp;
+  WlzDVertex2   vPos;
 
-  cmp3D = WlzGMVertexCmp3D(vertex, pos);
-  if(cmp3D.vtZ < -WLZ_GM_TOLERANCE)
-  {
-    cmp = -1;
-  }
-  else if(cmp3D.vtZ > WLZ_GM_TOLERANCE)
-  {
-    cmp = 1;
-  }
-  else
-  {
-    if(cmp3D.vtY < -WLZ_GM_TOLERANCE)
-    {
-      cmp = -1;
-    }
-    else if(cmp3D.vtY > WLZ_GM_TOLERANCE)
-    {
-      cmp = 1;
-    }
-    else
-    {
-      if(cmp3D.vtX < -WLZ_GM_TOLERANCE)
-      {
-	cmp = -1;
-      }
-      else if(cmp3D.vtX > WLZ_GM_TOLERANCE)
-      {
-	cmp = 1;
-      }
-      else
-      {
-	cmp = 0;
-      }
-    }
-  }
+  (void )WlzGMVertexGetG2D(vertex, &vPos);
+  cmp = WlzGeomCmpVtx2D(vPos, pos, WLZ_GM_TOLERANCE);
   return(cmp);
 }
 
 /*!
-* \return				The sign of the vertex position
-*					- the given position: -1, 0 or +1.
+* \return  	The sign of the vertex position: -1, 0 or +1.
 * \ingroup      WlzGeoModel
-* \brief	Compares the coordinates of the given vertex and
-*		2D double precision position to find a signed value
+* \brief        Compares the coordinates of the given vertex and
+*               3D double precision position to find a signed value
 *               for sorting.
-* \param	vertex			Given vertex.
-* \param	pos			Given position.
+* \param        vertex                  Given vertex.
+* \param        pos                     Given position.
 */
-int		WlzGMVertexCmpSign2D(WlzGMVertex *vertex, WlzDVertex2 pos)
+int             WlzGMVertexCmpSign3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 {
-  int		cmp;
-  WlzDVertex2	cmp2D;
+  int           cmp;
+  WlzDVertex3   vPos;
 
-  cmp2D = WlzGMVertexCmp2D(vertex, pos);
-  if(cmp2D.vtY < -WLZ_GM_TOLERANCE)
-  {
-    cmp = -1;
-  }
-  else if(cmp2D.vtY > WLZ_GM_TOLERANCE)
-  {
-    cmp = 1;
-  }
-  else
-  {
-    if(cmp2D.vtX < -WLZ_GM_TOLERANCE)
-    {
-      cmp = -1;
-    }
-    else if(cmp2D.vtX > WLZ_GM_TOLERANCE)
-    {
-      cmp = 1;
-    }
-    else
-    {
-      cmp = 0;
-    }
-  }
+  (void )WlzGMVertexGetG3D(vertex, &vPos);
+  cmp = WlzGeomCmpVtx3D(vPos, pos, WLZ_GM_TOLERANCE);
   return(cmp);
 }
 
@@ -4359,69 +4298,6 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 }
 
 /*!
-* \return				Hash value.
-* \ingroup      WlzGeoModel
-* \brief	Computes a hash value from a given 3D double precision
-*               position.
-* \param	pos			Given position.
-*/
-static unsigned int WlzGMHashPos3D(WlzDVertex3 pos)
-{
-  unsigned int	hashVal;
-  double	fF,
-  		fI;
-  const unsigned int pX = 399989, /* These are just different 6 digit primes */
-  		pY = 599999,
-		pZ = 999983;
-  
-  fF = modf(pos.vtX, &fI);
-  fF = floor(fF / WLZ_GM_TOLERANCE) * WLZ_GM_TOLERANCE;
-  fI *= pX;
-  fF *= pY * pZ;
-  hashVal = ((long long )fI + (long long )fF) & UINT_MAX;
-  fF = modf(pos.vtY, &fI);
-  fF = floor(fF / WLZ_GM_TOLERANCE) * WLZ_GM_TOLERANCE;
-  fI *= pY;
-  fF *= pZ * pX;
-  hashVal ^= ((long long )fI + (long long )fF) & UINT_MAX;
-  fF = modf(pos.vtZ, &fI);
-  fF = floor(fF / WLZ_GM_TOLERANCE) * WLZ_GM_TOLERANCE;
-  fI *= pZ;
-  fF *= pX * pY;
-  hashVal ^= ((long long )fI + (long long )fF) & UINT_MAX;
-  return(hashVal);
-}
-
-/*!
-* \return				Hash value.
-* \ingroup      WlzGeoModel
-* \brief	Computes a hash value from a given 2D double precision
-*               position.
-* \param	pos			Given position.
-*/
-static unsigned int WlzGMHashPos2D(WlzDVertex2 pos)
-{
-  unsigned int	hashVal;
-  double	fF,
-  		fI;
-  const unsigned int pX = 399989, /* These are just different 6 digit primes */
-  		pY = 599999,
-		pZ = 999983;
-  
-  fF = modf(pos.vtX, &fI);
-  fF = floor(fF / WLZ_GM_TOLERANCE) * WLZ_GM_TOLERANCE;
-  fI *= pX;
-  fF *= pY * pZ;
-  hashVal = ((long long )fI + (long long )fF) & UINT_MAX;
-  fF = modf(pos.vtY, &fI);
-  fF = floor(fF / WLZ_GM_TOLERANCE) * WLZ_GM_TOLERANCE;
-  fI *= pY;
-  fF *= pZ * pX;
-  hashVal ^= ((long long )fI + (long long )fF) & UINT_MAX;
-  return(hashVal);
-}
-
-/*!
 * \return				Matched vertex, or NULL if no
 *                                       vertex with the given geometry.
 * \ingroup      WlzGeoModel
@@ -4437,7 +4313,7 @@ WlzGMVertex	*WlzGMModelMatchVertexG3D(WlzGMModel *model, WlzDVertex3 gPos)
   WlzGMVertex	*tV,
   		*mV = NULL;
 
-  hVal = WlzGMHashPos3D(gPos);
+  hVal = WlzGeomHashVtx3D(gPos, WLZ_GM_TOLERANCE);
   if((tV = *(model->vertexHT + (hVal % model->vertexHTSz))) != NULL)
   {
     /* Have found the hash table head, a linked list of vertices with this
@@ -4475,7 +4351,7 @@ WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
   WlzGMVertex	*tV,
   		*mV = NULL;
 
-  hVal = WlzGMHashPos2D(gPos);
+  hVal = WlzGeomHashVtx2D(gPos, WLZ_GM_TOLERANCE);
   if((tV = *(model->vertexHT + (hVal % model->vertexHTSz))) != NULL)
   {
     /* Have found the hash table head, a linked list of vertices with this
@@ -9293,7 +9169,7 @@ static void	WlzGMModelRemVertex(WlzGMModel *model, WlzGMVertex *dV)
 		*pV;
 
   (void )WlzGMVertexGetG3D(dV, &nPos);
-  hVal = WlzGMHashPos3D(nPos);
+  hVal = WlzGeomHashVtx3D(nPos, WLZ_GM_TOLERANCE);
   hdV = model->vertexHT + (hVal % model->vertexHTSz);
   if(*hdV)
   {
@@ -9336,7 +9212,7 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
 		*pV;
 
   (void )WlzGMVertexGetG3D(nV, &nPos);
-  hVal = WlzGMHashPos3D(nPos);
+  hVal = WlzGeomHashVtx3D(nPos, WLZ_GM_TOLERANCE);
   hdV = model->vertexHT + (hVal % model->vertexHTSz);
   if(*hdV == NULL)
   {
