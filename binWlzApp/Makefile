@@ -23,6 +23,9 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
+			Wlz3DGetSection \
+			Wlz3DViewTransformObj \
+			Wlz3DViewTransformBitmap \
 			WlzExtractTransform \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
@@ -38,6 +41,9 @@ SCRIPTS			= \
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			Wlz3DGetSection.c \
+			Wlz3DViewTransformObj.c \
+			Wlz3DViewTransformBitmap.c \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
@@ -70,8 +76,7 @@ DEPENDDIRS		= \
 			  ../libWlz \
 			  ../libAlg \
 			  ../libbibfile \
-			  ../libAlc \
-			  ../../External/Tiff/libtiff
+			  ../libAlc
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -96,8 +101,8 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		=  Reconstruct hguDlpList bibfile \
-			   WlzExtFF Wlz Alg Alc \
+LIBRARIES		=  Reconstruct WlzExtFF hguDlpList bibfile \
+			   Wlz Alg Alc \
 			   $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be

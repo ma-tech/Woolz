@@ -38,8 +38,10 @@
 #include <bibFile.h>
 #include <Reconstruct.h>
 
-/* externals required by getopt  - not in ANSI C standard */
+/* externals required but not in all headers */
 #ifdef __STDC__ /* [ */
+extern int	finite(double);
+
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
 extern int 	optind, opterr, optopt;
