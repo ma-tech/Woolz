@@ -5,8 +5,7 @@ import java.util.*;
 import javax.swing.event.*;
 
 /**
- * Model class for WSetter bean.
- * <br>Uses the <b>Model View Controller</b> paradigm.
+ * Model class for WSetter.
  * @author Nick Burton
  * @see WSetter
  * @see SliderRangeModel
@@ -14,18 +13,6 @@ import javax.swing.event.*;
 public class WSetterModel implements WSetterConstants {
 
 private int _type;
-
-/*
-private int minInt;
-private int maxInt;
-private int intVal;
-private float minFlt;
-private float maxFlt;
-private float fltVal;
-private double minDbl;
-private double maxDbl;
-private double dblVal;
-*/
 
 private double modelMin = 0.0;
 private double modelMax = 1000.0;
@@ -36,7 +23,9 @@ private Vector maxVec = null;
 private Vector valVec = null;
 //----------------------------------------------------
   /**
-   * Constructors
+   * Creates a WSetterModel for the specified numeric data type.
+   * type must be one of the values given by the WSetterConstants Interface.
+   * @see WSetterConstants
    */
    public WSetterModel(int type) {
       _type = type;
@@ -66,14 +55,23 @@ private Vector valVec = null;
 
 //----------------------------------------------------
   /**
-   * @return
+   * Returns the WSetter model value in a Vector.
+   * The Model works with double values.
+   * Depending on the numeric data type specified for the model, the double value is converted to the appropriate wrapper Class and returned in a Vector.
+   * This avoids having duplicate methods for each data type.
+   * @param void
+   * @return Vector containing the model's value
    */
    public Vector getValue() {
       return valVec;
    }
 //----------------------------------------------------
   /**
-   * @return    void
+   * Sets the model's value.
+   * Depending on the numeric data type specified for the model, the double value
+   is converted to the appropriate wrapper Class and stored in a Vector.
+   * @param    double
+   * @return   void
    */
    public void setValue(double val) {
       switch(_type) {
@@ -98,6 +96,13 @@ private Vector valVec = null;
       return minVec;
    }
 //----------------------------------------------------
+   /**
+    * Sets the minimum limit for the Wsetter model.
+    * Depending on the numeric data type specified for the model, the double value
+    is converted to the appropriate wrapper Class and stored in a Vector.
+    * @param    double
+    * @return   void
+    */
    public void setMin(double val) {
       switch(_type) {
          case INTEGER:
@@ -121,6 +126,13 @@ private Vector valVec = null;
       return maxVec;
    }
 //----------------------------------------------------
+   /**
+    * Sets the maximum limit for the Wsetter model.
+    * Depending on the numeric data type specified for the model, the double value
+    is converted to the appropriate wrapper Class and stored in a Vector.
+    * @param    double
+    * @return   void
+    */
    public void setMax(double val) {
       switch(_type) {
          case INTEGER:
@@ -140,6 +152,11 @@ private Vector valVec = null;
       }
    }
 //----------------------------------------------------
+  /**
+   * Returns the numeric data type of this model.
+   * @param     void
+   * @return    int
+   */
    public int getType() {
       return _type;
    }
@@ -195,6 +212,11 @@ private Vector valVec = null;
 
 //----------------------------------------------------
 //----------------------------------------------------
+  /**
+   * Fires a LimitEvent whenever the max/min limit has been changed.
+   * @param     void
+   * @return    void
+   */
   protected synchronized void fireLimitChange() {
      // Create the event:
      LimitEvent le = new LimitEvent(this);

@@ -10,8 +10,8 @@ import javax.swing.event.*;
 import java.io.*;
 
 /**
- * GUI super class for WSetter.
- * <br>Separates out the GUI stuff for tidiness and JBuilder woossies
+ * Super class for WSetter.
+ * <br>Separates out the GUI stuff for JBuilder compatibility
  * @author Nick Burton
  * @see WSetter
  */
@@ -29,21 +29,43 @@ public class WSetterGUI extends JPanel {
    protected JPanel labelPanel = new JPanel();
    protected JLabel paramLabel = new JLabel("", SwingConstants.CENTER);
 
-   /* for some strange reason _width affects the way the slider
-      draws itself. It is not used unless someone calls WSetter.setWidth()
-      If it is set to say 800, and the window widened >> 800 it doesn't 
-      draw itself beyond 800? unless you click on it.
-      If it is set to a number > screen resolution, say 2048, everything is OK
-   */
-   protected int _width = 2048;
+   /**
+    * The nominal width of the WSetter.
+    * This field is required as a work-around for a GUI problem.
+    * The width of the WSetter is determined by Java Layout Manager, however
+    * if it is set to say 800 and the window widened >> 800 it doesn't 
+    * draw itself beyond 800? unless you click on it.
+    * If it is set to a number > screen resolution, say 2048, everything is OK
+    */
+   private int _width = 2048;
+   /**
+    * The height of the WSetter in pixels.
+    */
    protected int _height = 15;
+   /**
+    * The width of the WSetter text field in pixels.
+    */
    protected int textWidth = 50;
+   /**
+    * The width of the WSetter label in pixels.
+    */
    protected int labelWidth = 40;
+   /**
+    */
    protected int pad = 1;
+   /**
+    *
+    */
    protected int _minWidth = 150; // not accessible
    protected int _minHeight = 10; // not accessible
 
+   /**
+    * The background colour of the WSetter text field and label.
+    */
    protected Color bgc = new Color(230, 230, 230);
+   /**
+    * The background colour of the WSetter.
+    */
    protected Color internalBgc = new Color(200, 200, 200); // not accessible
 
    protected String sliderLabel = "";
@@ -53,14 +75,14 @@ public class WSetterGUI extends JPanel {
    //....................................
 
    /**
-    * Constructor
+    * 
     */
    public WSetterGUI() {
       initGUI();
    }
 
    /**
-    * Initialises the GUI
+    * Initialises the WSetter GUI
     * @param	void
     * @return	void
     */

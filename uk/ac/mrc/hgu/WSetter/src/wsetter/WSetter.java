@@ -11,8 +11,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * View / Controller class for slider bean.
- * <br>Uses the <b>Model View Controller</b> paradigm.
+ * View / Controller class for  WSetter.
  * @author Nick Burton
  * @see WSetterModel
  * @see SliderRangeModel
@@ -38,20 +37,29 @@ public class WSetter extends WSetterGUI
    private static int maxTextlen = 6;
 //-------------------------------------------------------------
   /**
-   * Constructor
+   * Creates a WSetter with double values and sliding events enabled.
    */
   public WSetter() {
      this(DOUBLE, true);
   }
 
+  /**
+   * Creates a WSetter with double values and sliding events as specified.
+   */
   public WSetter(boolean sliding) {
      this(DOUBLE, sliding);
   }
 
+  /**
+   * Creates a WSetter with the specified value type and sliding events enabled.
+   */
   public WSetter(int type) {
      this(type, true);
   }
 
+  /**
+   * Creates a WSetter with the specified value type and sliding events.
+   */
   public WSetter(int type, boolean sliding) {
     slidingEvents = sliding;
     _type = type;
@@ -65,7 +73,7 @@ public class WSetter extends WSetterGUI
   }
 //-------------------------------------------------------------
   /**
-   * Allow or inhibit the component's ability to fire events
+   * Allow or inhibit the WSetter component's ability to fire events
    * @param	state	true if the component can fire events
    * @return	void
    */
@@ -76,14 +84,14 @@ public class WSetter extends WSetterGUI
   /**
    * Query the component's ability to fire events
    * @param	void
-   * @return	boolean	true if the component can fire events
+   * @return	boolean	true if the WSetter component can fire events
    */
   public boolean isEnabled() {
      return _enabled;
   }
 //-------------------------------------------------------------
   /**
-   * Initialises the slider model and GUI.
+   * Initialises the WSetter model and GUI.
    * @param	void
    * @return	void
    */
@@ -99,7 +107,7 @@ public class WSetter extends WSetterGUI
   } // initWSetter()
 //-------------------------------------------------------------
   /**
-   * hook up the adaptors 
+   * Hooks up the adaptors after first removing anty existing ones.
    * @param	void
    * @return	void
    */
@@ -262,7 +270,7 @@ public class WSetter extends WSetterGUI
 // CONTROL ADAPTORS
 //---------------------------------------
   /**
-   * Inner class to handle continuous changes in slider position
+   * Handles continuous changes in slider position
    */
   public static class sliderToModelAdaptor_A
     implements ChangeListener {
@@ -272,7 +280,6 @@ public class WSetter extends WSetterGUI
     SliderRangeModel sliderMod;
 
   /**
-   * Constructor
    */
     public sliderToModelAdaptor_A(JSlider cntrl, WSetterModel mdl) {
       model = mdl;
@@ -292,7 +299,7 @@ public class WSetter extends WSetterGUI
 
 //---------------------------------------
   /**
-   * Inner class to handle a step change in slider position
+   * Handles a step change in slider position
    *
    */
   public static class sliderToModelAdaptor_B
@@ -302,7 +309,6 @@ public class WSetter extends WSetterGUI
     SliderRangeModel sliderMod;
 
   /**
-   * Constructor
    */
     public sliderToModelAdaptor_B(JSlider cntrl, WSetterModel mdl) {
       model = mdl;
@@ -312,8 +318,8 @@ public class WSetter extends WSetterGUI
 
   /**
    * Event handler, for use when slider has stopped. 
-   * @param	void
-   * @return	
+   * @param	ChangeEvent e
+   * @return	void
    */
     public void stateChanged(ChangeEvent e) {
       // only do it when the slider isn't moving
@@ -324,6 +330,10 @@ public class WSetter extends WSetterGUI
   } // class sliderToModelAdaptor
 
 //---------------------------------------
+  /**
+   * Updates the WSetter model when a numeric value is entered into the WSetter's text field.
+   *
+   */
   public static class textToModelAdaptor
     implements ActionListener {
     WSetterModel model;
@@ -333,7 +343,6 @@ public class WSetter extends WSetterGUI
     String msg = "the slider's text field expects a number\n such as 10 or 10.5";
 
   /**
-   * Constructor
    */
     public textToModelAdaptor(JTextField cntrl, WSetterModel mdl) {
       model = mdl;
@@ -341,7 +350,7 @@ public class WSetter extends WSetterGUI
     }
 
   /**
-   * Event handler, sets the slider to the value in the text field.
+   * Event handler, sets the model to the value in the text field.
    * @param	ActionEvent e
    * @return	void
    */
@@ -368,6 +377,10 @@ public class WSetter extends WSetterGUI
 //---------------------------------------
 // VIEW ADAPTORS
 //---------------------------------------
+  /**
+   * Updates the slider view of the WSetter when it's model has changed.
+   *
+   */
   public static class modelToSliderAdaptor
     implements ChangeListener {
     WSetterModel model;
@@ -377,7 +390,6 @@ public class WSetter extends WSetterGUI
     int type;
 
   /**
-   * Constructor
    */
     public modelToSliderAdaptor(WSetterModel mdl, JSlider vw) {
       view = vw;
@@ -387,9 +399,9 @@ public class WSetter extends WSetterGUI
     }
 
   /**
-   * Adaptor, changes the <b>view</b> of the slider when the model changes.
-   * @param	void
-   * @return	boolean	true if the component can fire events
+   * Adaptor, updates the slider view of the WSetter when it's model has changed.
+   * @param	ChangeEvent e
+   * @return	void
    */
     public void stateChanged(ChangeEvent e) {
       vec = model.getValue();
@@ -414,6 +426,10 @@ public class WSetter extends WSetterGUI
   } // class modelToSliderAdaptor
 
 //---------------------------------------
+  /**
+   * Updates the text field view of the WSetter when it's model has changed.
+   *
+   */
   public static class modelToTextAdaptor
     implements ChangeListener {
     WSetterModel model;
@@ -422,7 +438,6 @@ public class WSetter extends WSetterGUI
     Vector vec = null;
 
   /**
-   * Constructor
    */
     public modelToTextAdaptor(WSetterModel mdl, JTextField vw) {
       view = vw;
@@ -432,9 +447,9 @@ public class WSetter extends WSetterGUI
 
     String valstr;
   /**
-   * Adaptor, changes the <b>view</b> of the text field when the model changes.
-   * @param	void
-   * @return	boolean	true if the component can fire events
+   * Adaptor, updates the text field view of the WSetter when it's model has changed.
+   * @param	ChangeEvent e
+   * @return	void
    */
     public void stateChanged(ChangeEvent e) {
       vec = model.getValue();
@@ -467,6 +482,10 @@ public class WSetter extends WSetterGUI
 // LIMIT ADAPTORS
 // changes slider when WSetter max/min limits are changed
 //---------------------------------------
+  /**
+   * Updates the WSetter's slider's max/min limits when the WSetter model's limits have changed.
+   *
+   */
   public static class limitToSliderAdaptor
     implements LimitListener {
     WSetterModel model;
@@ -477,7 +496,6 @@ public class WSetter extends WSetterGUI
     int type;
 
   /**
-   * Constructor
    */
     public limitToSliderAdaptor(WSetterModel mdl, JSlider vw) {
       view = vw;
@@ -487,7 +505,7 @@ public class WSetter extends WSetterGUI
     }
 
   /**
-   * Adaptor, changes the max/min of the slider when the model changes.
+   * Adaptor, updates the slider's max/min limits when the WSetter model's limits have changed.
    */
     public void limitChanged(LimitEvent e) {
       maxVec = model.getMax();
@@ -521,20 +539,23 @@ public class WSetter extends WSetterGUI
 //---------------------------------------
   // MODEL ADAPTORS
 //---------------------------------------
+  /**
+   * Fires an event when the WSetter's model has changed.
+   *
+   */
   // allows this bean to fire events
   public static class modelToThisAdaptor
 		implements ChangeListener {
 
     WSetter target;
   /**
-   * Constructor
    */
     public modelToThisAdaptor(WSetter wst) {
       target = wst;
     }
 
   /**
-   * Adaptor, fires an event from the bean when the model changes.
+   * Adaptor, fires an event when the WSetter's model has changed.
    * @param	ChangeEvent e
    * @return	void
    */

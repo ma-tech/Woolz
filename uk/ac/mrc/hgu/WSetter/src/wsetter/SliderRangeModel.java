@@ -9,7 +9,7 @@
 *               2002 Medical Research Council, UK.
 *               All rights reserved.
 *               All rights reserved.
-* \par Address:
+* \par		Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
@@ -26,12 +26,11 @@ import javax.swing.*;
 import javax.swing.event.*;
 
 /**
- * Supporting model class for WSetter bean.
- * <br>Uses the <b>Model View Controller</b> paradigm.
+ *  Model class for WSetter.
  * <p>SliderRangeModel is the model for the JSlider used in WSetter
- * @author Nick Burton
+ * and is based on <a href="http://java.sun.com/docs/books/tutorial/uiswing/overview/example-swing">
+ * ConverterRangeModel.java</a> from Sun's Swing Tutorial.
  * @see WSetter
- * @see WlzFltModel
  */
 public class SliderRangeModel implements BoundedRangeModel {
     protected ChangeEvent changeEvent = null;
@@ -46,7 +45,6 @@ public class SliderRangeModel implements BoundedRangeModel {
     final static boolean DEBUG = false;
 
   /**
-   * Constructor
    */
     public SliderRangeModel() {
     }
@@ -151,6 +149,7 @@ public class SliderRangeModel implements BoundedRangeModel {
 
   /**
    * Initialises the model for the JSlider used in WSetter.
+   * using an int value.
    * @param     int newValue
    * @param     int newExtent
    * @param     int newMin
@@ -173,6 +172,7 @@ public class SliderRangeModel implements BoundedRangeModel {
 
   /**
    * Initialises the model for the JSlider used in WSetter.
+   * using a double value.
    * @param     double newValue
    * @param     int newExtent
    * @param     int newMin
