@@ -27,6 +27,21 @@
 #include <string.h>
 #include <Wlz.h>
 
+/*!
+* \enum		_WlzAffineTransLSqAlg
+* \brief 	Encodes the selected algorithm.
+*/
+enum _WlzAffineTransLSqAlg
+{
+  WLZ_AFFINETRANSLSQ_ALG_WLZ,	/*!< Woolz algorithms for 2D */
+  WLZ_AFFINETRANSLSQ_ALG_SVD,	/*!< Arun's singular value decomposition
+  				 *   algorithm for 3D verticies */
+  WLZ_AFFINETRANSLSQ_ALG_DQ     /*!< Walker's dual quaternion algorithm for
+  				 *   3D verticies with optional normal
+				 *   vectors and weights */
+};
+typedef enum _WlzAffineTransLSqAlg WlzAffineTransLSqAlg;
+
 #define IN_RECORD_MAX	(1024)
 
 extern int      getopt(int argc, char * const *argv, const char *optstring);
@@ -41,52 +56,57 @@ int             main(int argc, char **argv)
   int		option,
 		ok = 1,
 		usage = 0,
-      		vtxCount = 0,
-      		vtxLimit = 0,
+      		inR,
+		inC,
+		iVtx = 0,
+      		nVtx = 0,
+      		nNrm = 0,
 		vtxSz,
 		testFlg = 0,
 		testVtxCount;
+  double	*vWgt = NULL,
+  		*nWgt = NULL;
+  double	**inData = NULL;
   WlzVertexType	vtxType = WLZ_VERTEX_D2;
   WlzObject	*trObj = NULL;
   WlzDomain	trDomain;
   WlzValues	trValues;
   WlzVertexP	vtx0,
   		vtx1,
-		vtxVec0,
-  		vtxVec1;
+		nrm0,
+		nrm1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  FILE		*fP = NULL;
   WlzTransformType trType = WLZ_TRANSFORM_2D_AFFINE;
-  char 		*rec,
-  		*outObjFileStr,
+  WlzAffineTransLSqAlg alg = WLZ_AFFINETRANSLSQ_ALG_WLZ;
+  FILE		*fP = NULL;
+  char 		*outObjFileStr,
   		*inFileStr;
-  char		inRecord[IN_RECORD_MAX];
   const char	*errMsg;
-  static char	optList[] = "o:23Tanrth",
+  static char	optList[] = "A:o:23Tanrth",
 		outObjFileStrDef[] = "-",
   		inFileStrDef[] = "-";
   const WlzDVertex2 testVx2D[4] =
   {
-    {1.0, 1.0},
-    {1.0, 2.0},
-    {2.0, 1.0},
-    {2.0, 2.0}
+    {-100.0, -100.0},
+    {-100.0,  100.0},
+    { 100.0, -100.0},
+    { 100.0,  100.0}
   };
   const WlzDVertex3 testVx3D[8] =
   {
-    {1.0, 1.0, 1.0},
-    {1.0, 1.0, 2.0},
-    {1.0, 2.0, 1.0},
-    {1.0, 2.0, 2.0},
-    {2.0, 1.0, 1.0},
-    {2.0, 1.0, 2.0},
-    {2.0, 2.0, 1.0},
-    {2.0, 2.0, 2.0}
+    {-100.0, -100.0, -100.0},
+    {-100.0, -100.0,  100.0},
+    {-100.0,  100.0, -100.0},
+    {-100.0,  100.0,  100.0},
+    { 100.0, -100.0, -100.0},
+    { 100.0, -100.0,  100.0},
+    { 100.0,  100.0, -100.0},
+    { 100.0,  100.0,  100.0}
   };
 
   opterr = 0;
-  vtxVec0.v = NULL;
-  vtxVec1.v = NULL;
+  vtx0.v = vtx1.v = NULL;
+  nrm0.v = nrm1.v = NULL;
   trDomain.core = NULL;
   trValues.core = NULL;
   outObjFileStr = outObjFileStrDef;
@@ -101,6 +121,17 @@ int             main(int argc, char **argv)
       case '3':
         vtxType = WLZ_VERTEX_D3;
 	break;
+      case 'A':
+	if(WlzStringMatchValue((int *)&alg, optarg,
+			       "WLZ", WLZ_AFFINETRANSLSQ_ALG_WLZ,
+			       "SVD", WLZ_AFFINETRANSLSQ_ALG_SVD,
+			       "DQ",  WLZ_AFFINETRANSLSQ_ALG_DQ,
+			       NULL) == 0)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+        break;
       case 'T':
         testFlg = 1;
 	break;
@@ -170,6 +201,10 @@ int             main(int argc, char **argv)
 	  trType = WLZ_TRANSFORM_3D_TRANS;
 	  break;
       }
+      if(alg == WLZ_AFFINETRANSLSQ_ALG_WLZ)
+      {
+        alg = WLZ_AFFINETRANSLSQ_ALG_SVD;
+      }
     }
   }
   if(ok)
@@ -191,11 +226,9 @@ int             main(int argc, char **argv)
   {
     if(testFlg)
     {
-      vtxLimit = testVtxCount;
-      if(((vtxVec0.v = AlcRealloc(vtxVec0.v,
-				  vtxLimit * vtxSz)) == NULL) ||
-	 ((vtxVec1.v = AlcRealloc(vtxVec1.v,
-				  vtxLimit * vtxSz)) == NULL))
+      nVtx = testVtxCount;
+      if(((vtx0.v = AlcMalloc(nVtx * vtxSz)) == NULL) ||
+	 ((vtx1.v = AlcMalloc(nVtx * vtxSz)) == NULL))
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
@@ -215,28 +248,28 @@ int             main(int argc, char **argv)
       {
 	if(vtxType == WLZ_VERTEX_D2)
 	{
-	  (void )memcpy(vtxVec0.v, testVx2D, vtxLimit * vtxSz);
-	  vtxCount = 0;
-	  while((errNum == WLZ_ERR_NONE) && (vtxCount < vtxLimit))
+	  (void )memcpy(vtx0.v, testVx2D, nVtx * vtxSz);
+	  iVtx = 0;
+	  while((errNum == WLZ_ERR_NONE) && (iVtx < nVtx))
 	  {
-	    *(vtxVec1.d2 + vtxCount) = WlzAffineTransformVertexD2(
+	    *(vtx1.d2 + iVtx) = WlzAffineTransformVertexD2(
 	    					trObj->domain.t,
-						*(vtxVec0.d2 + vtxCount),
+						*(vtx0.d2 + iVtx),
 						&errNum);
-	    ++vtxCount;
+	    ++iVtx;
 	  }
 	}
 	else /* vtxType == WLZ_VERTEX_D2 */
 	{
-	  (void )memcpy(vtxVec0.v, testVx3D, vtxLimit * vtxSz);
-	  vtxCount = 0;
-	  while((errNum == WLZ_ERR_NONE) && (vtxCount < vtxLimit))
+	  (void )memcpy(vtx0.v, testVx3D, nVtx * vtxSz);
+	  iVtx = 0;
+	  while((errNum == WLZ_ERR_NONE) && (iVtx < nVtx))
 	  {
-	    *(vtxVec1.d3 + vtxCount) = WlzAffineTransformVertexD3(
+	    *(vtx1.d3 + iVtx) = WlzAffineTransformVertexD3(
 	    					trObj->domain.t,
-						*(vtxVec0.d3 + vtxCount),
+						*(vtx0.d3 + iVtx),
 						&errNum);
-	    ++vtxCount;
+	    ++iVtx;
 	  }
 	}
       }
@@ -256,125 +289,94 @@ int             main(int argc, char **argv)
     }
     else
     {
-      while((errNum == WLZ_ERR_NONE) &&
-	    (fgets(inRecord, IN_RECORD_MAX - 1, fP) != NULL))
+      if(AlcDouble2ReadAsci(fP, &inData, &inR, &inC) != ALC_ER_NONE)
       {
-	inRecord[IN_RECORD_MAX - 1] = '\0';
-	rec = inRecord;
-	while(*rec && isspace(*rec))
-	{
-	  ++rec;
-	}
-	if(*rec && (*rec != '#'))
-	{
-	  if(vtxCount >= vtxLimit)
-	  {
-	    vtxLimit = (vtxLimit + 1024) * 2;
-	    if(((vtxVec0.v = AlcRealloc(vtxVec0.v,
-					vtxLimit * vtxSz)) == NULL) ||
-	       ((vtxVec1.v = AlcRealloc(vtxVec1.v,
-					vtxLimit * vtxSz)) == NULL))
-	    {
-	      errNum = WLZ_ERR_MEM_ALLOC;
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      if(vtxType == WLZ_VERTEX_D2)
-	      {
-		vtx0.d2 = vtxVec0.d2 + vtxCount;
-		vtx1.d2 = vtxVec1.d2 + vtxCount;
-	      }
-	      else /* vtxType == WLZ_VERTEX_D3 */
-	      {
-		vtx0.d3 = vtxVec0.d3 + vtxCount;
-		vtx1.d3 = vtxVec1.d3 + vtxCount;
-	      }
-	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    if(vtxType == WLZ_VERTEX_D2)
-	    {
-	      if(sscanf(rec, "%lg %lg %lg %lg",
-			&(vtx0.d2->vtX), &(vtx0.d2->vtY),
-			&(vtx1.d2->vtX), &(vtx1.d2->vtY)) != 4)
-	      {
-		errNum = WLZ_ERR_READ_INCOMPLETE;
-	      }
-	      else
-	      {
-		++(vtx0.d2);
-		++(vtx1.d2);
-		++vtxCount;
-	      }
-	    }
-	    else /* vtxType == WLZ_VERTEX_D3 */
-	    {
-	      if(sscanf(rec, "%lg %lg %lg %lg %lg %lg ",
-			&(vtx0.d3->vtX), &(vtx0.d3->vtY),
-			&(vtx0.d3->vtZ), &(vtx1.d3->vtX),
-			&(vtx1.d3->vtY), &(vtx1.d3->vtZ)) != 6)
-	      {
-		errNum = WLZ_ERR_READ_INCOMPLETE;
-	      }
-	      else
-	      {
-		++(vtx0.d3);
-		++(vtx1.d3);
-		++vtxCount;
-	      }
-	    }
-	  }
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  vtxLimit = vtxCount;
-	  if(vtxType == WLZ_VERTEX_D2)
-	  {
-	    vtx0.d2 = vtxVec0.d2;
-	    vtx1.d2 = vtxVec1.d2;
-	    while(vtxCount-- > 0)
-	    {
-	      vtx1.d2->vtX += vtx0.d2->vtX;
-	      vtx1.d2->vtY += vtx0.d2->vtY;
-	      ++(vtx0.d2);
-	      ++(vtx1.d2);
-	    }
-	  }
-	  else /* vtxType == WLZ_VERTEX_D3 */
-	  {
-	    vtx0.d3 = vtxVec0.d3;
-	    vtx1.d3 = vtxVec1.d3;
-	    while(vtxCount-- > 0)
-	    {
-	      vtx1.d3->vtX += vtx0.d3->vtX;
-	      vtx1.d3->vtY += vtx0.d3->vtY;
-	      vtx1.d3->vtZ += vtx0.d3->vtZ;
-	      ++(vtx0.d3);
-	      ++(vtx1.d3);
-	    }
-	  }
-	}
-	else /* errNum != WLZ_ERR_NONE */
-	{
-	  ok = 0;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-			 "%s: failed to read input file %s (%s).\n",
-			 *argv, inFileStr, errMsg);
-	}
+        ok = 0;
+	(void )fprintf(stderr,
+		       "%s: failed to read input file %s.\n",
+		       *argv, inFileStr);
       }
       if(fP && strcmp(inFileStr, "-"))
       {
 	fclose(fP);
       }
+      if(ok)
+      {
+        if(vtxType == WLZ_VERTEX_D2)
+	{
+	  if(inC != 4)
+	  {
+	    ok = 0;
+	    (void )fprintf(stderr,
+		   "%s: invalid format in input file %s, the required\n"
+		   "format is:\n"
+		   "  <vtx x> <vtx y> <disp x> <disp y>\n",
+		   *argv, inFileStr);
+	  }
+	}
+	else
+	{
+	  if(inC != 6)
+	  {
+	    ok = 0;
+	    (void )fprintf(stderr,
+		   "%s: invalid format in input file %s, the required\n"
+		   "format is:\n"
+		   "  <vtx x> <vtx y> <vtx z> <disp x> <disp y> <disp z>\n",
+		   *argv, inFileStr);
+	  }
+	}
+      }
+      if(ok)
+      {
+	nVtx = inR;
+	if(((vtx0.v = AlcMalloc(nVtx * vtxSz)) == NULL) ||
+	   ((vtx1.v = AlcMalloc(nVtx * vtxSz)) == NULL))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	if(vtxType == WLZ_VERTEX_D2)
+	{
+	  for(iVtx = 0; iVtx < nVtx; ++iVtx)
+	  {
+	    (vtx0.d2 + iVtx)->vtX = inData[iVtx][0];
+	    (vtx0.d2 + iVtx)->vtY = inData[iVtx][1];
+	    (vtx1.d2 + iVtx)->vtX = inData[iVtx][0] + inData[iVtx][2];
+	    (vtx1.d2 + iVtx)->vtY = inData[iVtx][1] + inData[iVtx][3];
+	  }
+	}
+	else
+	{
+	  for(iVtx = 0; iVtx < nVtx; ++iVtx)
+	  {
+	    (vtx0.d3 + iVtx)->vtX = inData[iVtx][0];
+	    (vtx0.d3 + iVtx)->vtY = inData[iVtx][1];
+	    (vtx0.d3 + iVtx)->vtZ = inData[iVtx][2];
+	    (vtx1.d3 + iVtx)->vtX = inData[iVtx][0] + inData[iVtx][3];
+	    (vtx1.d3 + iVtx)->vtY = inData[iVtx][1] + inData[iVtx][4];
+	    (vtx1.d3 + iVtx)->vtZ = inData[iVtx][2] + inData[iVtx][5];
+	  }
+	}
+      }
+      AlcDouble2Free(inData);
     }
   }
   if(ok)
   {
-    trDomain.t = WlzAffineTransformLSq(vtxType,  vtxLimit, vtxVec0,
-				       vtxLimit, vtxVec1,
-				       trType, &errNum);
+    switch(alg)
+    {
+      case WLZ_AFFINETRANSLSQ_ALG_WLZ: /* FALLTHROUGH */
+      case WLZ_AFFINETRANSLSQ_ALG_SVD:
+	trDomain.t = WlzAffineTransformLSq(vtxType,  nVtx, vtx0,
+					   nVtx, vtx1, trType, &errNum);
+        break;
+      case WLZ_AFFINETRANSLSQ_ALG_DQ:
+	trDomain.t = WlzAffineTransformLSq2(vtxType,
+					   nVtx, vWgt, vtx0, vtx1,
+					   nNrm, nWgt, nrm0, nrm1,
+					   trType, &errNum);
+        break;
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -384,13 +386,13 @@ int             main(int argc, char **argv)
 		     *argv, errMsg);
     }
   }
-  if(vtxVec0.v)
+  if(vtx0.v)
   {
-    AlcFree(vtxVec0.v);
+    AlcFree(vtx0.v);
   }
-  if(vtxVec1.v)
+  if(vtx1.v)
   {
-    AlcFree(vtxVec1.v);
+    AlcFree(vtx1.v);
   }
   if(ok)
   {
@@ -433,24 +435,21 @@ int             main(int argc, char **argv)
   {
     WlzFreeDomain(trDomain);
   }
-  if(vtxVec0.v)
-  {
-    AlcFree(vtxVec0.v);
-  }
-  if(vtxVec1.v)
-  {
-    AlcFree(vtxVec1.v);
-  }
   if(usage)
   {
     (void )fprintf(stderr,
     "Usage: %s%s",
     *argv,
-    " [-o<out obj>] [-2] [-3] [-a] [-r] [-t]\n"
-    "                             [-h] [<in data>]\n"
+    " [-o<out obj>] [-A<algorithm>]\n"
+    "                             [-2] [-3] [-T] [-a] [-r] [-t] [-h]\n"
+    "                             [<in data>]\n"
     "Options:\n"
     "  -2  Compute a 2D transform, requires verticies in 2D format.\n"
     "  -3  Compute a 3D transform, requires verticies in 3D format.\n"
+    "  -A  Force the algorithm selection, valid algorithms are:\n"
+    "        WLZ  Woolz algorithms for 2D.\n"
+    "        SVD  Arun's singular value decomposition algorithm for 3D.\n"
+    "        DQ   Walker's dual quaternion algorithm for 3D.\n"
     "  -T  Test, probably only useful for debugging.\n"
     "  -o  Output transform object file name.\n"
     "  -a  Compute affine transform.\n"
