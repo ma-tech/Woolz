@@ -2093,7 +2093,7 @@ static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
       vxD.vtY = (yTr[0] * vxP.vtX) + (yTr[1] * vxP.vtY) + yTr[2];
       vxVec->vtX = WLZ_NINT(vxD.vtX);
       vxVec->vtY = WLZ_NINT(vxD.vtY);
-      if(vxCount-- > 0)
+      if(--vxCount > 0)
       {
         ++vxVec;
 	vxP.vtX = vxVec->vtX;
@@ -2257,6 +2257,44 @@ static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
   }
   return(errNum);
 }
+
+/************************************************************************
+* Function:	WlzMeshTransformVxVtx					*
+* Returns:	WlzDVertex2:		transformed vertex.		*
+* Purpose:	Transform the vertex using the given mesh transform.	*
+* Global refs:	-							*
+* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
+*		WlzDVertex2 vtx:	Given double vertex.		*
+*		WlzErrorNum *dstErr:	Error return.			*
+************************************************************************/
+WlzDVertex2 WlzMeshTransformVtx(
+  WlzDVertex2 vtx,
+  WlzMeshTransform *mesh,
+  WlzErrorNum *dstErr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzDVertex2	rtnVtx;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((mesh->nElem < 0) || (mesh->nNodes < 0))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else {
+    rtnVtx = vtx;
+    errNum = WlzMeshTransformVxVecD(mesh, &rtnVtx, 1);
+  }
+
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rtnVtx);
+}
+
 
 /************************************************************************
 * Function:	WlzMeshTransformVxVecD					*

@@ -787,9 +787,9 @@ WlzErrorNum	WlzAffineTransformMatrixSet4X4(WlzAffineTransform *trans,
     switch( trans->type )
     {
       case WLZ_TRANSFORM_2D_AFFINE:
-	for(idx0 = 0; idx0 < 4; ++idx0)
+	for(idx0 = 0; idx0 < 3; ++idx0)
 	{
-	  for(idx1 = 0; idx1 < 4; ++idx1)
+	  for(idx1 = 0; idx1 < 3; ++idx1)
 	  {
 	    trans->mat[idx0][idx1] = matrix[idx0][idx1];
 	  }

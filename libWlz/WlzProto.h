@@ -1607,7 +1607,7 @@ extern WlzObject		*WlzMakeHistogram(
 extern WlzIVertex2		*WlzMakeIVertex(
 				  int nverts,
 				  WlzErrorNum *dstErr);
-				  extern WlzObject *WlzNewGrey(
+extern WlzObject 		*WlzNewGrey(
 				  WlzObject *iobj,
 				  WlzErrorNum *dstErr);
 extern WlzRagRValues		*WlzNewValueTb(
@@ -1652,6 +1652,10 @@ extern WlzObject		*WlzMeshTransformObj(
 				  WlzObject *srcObj,
 				  WlzMeshTransform *mesh,
 				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
+extern WlzDVertex2		WlzMeshTransformVtx(
+				  WlzDVertex2 vtx,
+				  WlzMeshTransform *mesh,
 				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND

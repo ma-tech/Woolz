@@ -151,12 +151,16 @@ WlzObject *WlzUnion3d(int	n,
       /* when np is 1, WlzUnionN does not return a copy. */
       if( newobj != NULL ){
 	if (1 == np)
-	  domains[p - min_plane] = WlzCopyDomain(newobj->type, newobj->domain, NULL);
+	  domains[p - min_plane] = 
+	    WlzAssignDomain(WlzCopyDomain(newobj->type, newobj->domain,
+					  &errNum), NULL);
 	else
 	  domains[p - min_plane] = WlzAssignDomain(newobj->domain, NULL);
 	if( uvt ){
 	  if (1 == np)
-	    values[p - min_plane] = WlzCopyValues(newobj->type, newobj->values, newobj->domain, NULL);
+	    values[p - min_plane] =
+	      WlzAssignValues(WlzCopyValues(newobj->type, newobj->values,
+					    newobj->domain, &errNum), NULL);
 	  else
 	    values[p - min_plane] = WlzAssignValues(newobj->values, NULL);
 	}

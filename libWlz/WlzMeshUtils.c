@@ -863,8 +863,8 @@ WlzErrorNum	WlzMeshSqueeze(WlzMeshTransform *mesh)
     /* Squeeze out zombie nodes and build node table. */
     nId0 = 0;
     nod0 = mesh->nodes;
-    while(((nod0->flags & WLZ_MESH_NODE_FLAGS_ZOMBIE) == 0) &&
-	  (nId0 < mesh->nNodes))
+    while((nId0 < mesh->nNodes) &&
+	  ((nod0->flags & WLZ_MESH_NODE_FLAGS_ZOMBIE) == 0))
     {
       *(tbl + nId0) = nId0;
       ++nId0;
@@ -918,8 +918,8 @@ WlzErrorNum	WlzMeshSqueeze(WlzMeshTransform *mesh)
     /* Squeeze out zombie elements and build element table. */
     elm0 = mesh->elements;
     eId0 = 0;
-    while(((elm0->flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0) &&
-	  (eId0 < mesh->nElem))
+    while((eId0 < mesh->nElem) &&
+	  ((elm0->flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0))
     {
       *(tbl + eId0) = eId0;
       ++eId0;

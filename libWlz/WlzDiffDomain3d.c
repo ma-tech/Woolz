@@ -114,7 +114,9 @@ WlzObject *WlzDiffDomain3d(
 
       /* test for non-overlapping planes and make a copy */
       if( p < oldpdom2->plane1 || p > oldpdom2->lastpl ){
-	newpdom->domains[i] = WlzCopyDomain(oldpdom1->type, oldpdom1->domains[i], NULL);
+	newpdom->domains[i] =
+	  WlzAssignDomain(WlzCopyDomain(oldpdom1->type, oldpdom1->domains[i],
+					&errNum), NULL);
 	continue;
       }
 
