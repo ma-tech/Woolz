@@ -130,7 +130,7 @@ static WlzMeshTransform         *WlzReadMeshTransform2D(
 				  WlzErrorNum *);
 
 #ifdef _OPENMP
-#define getc(S)	getc_unlocked(S)
+//#define getc(S)	getc_unlocked(S)
 #endif
 
 /*!
@@ -140,18 +140,19 @@ static WlzMeshTransform         *WlzReadMeshTransform2D(
 *		from DEC VAX(!) byte order.
 * \param	fp			Input file.
 */
+
 static int 	getword(FILE *fp)
 {
   char cin[4], cout[4];
+ fread(cin,sizeof(char),4,fp);
 
-  fread(cin,sizeof(char),4,fp);
 #if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[3];
   cout[1] = cin[2];
   cout[2] = cin[1];
   cout[3] = cin[0];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined (_WIN32)
   cout[0] = cin[0];
   cout[1] = cin[1];
   cout[2] = cin[2];
@@ -170,17 +171,16 @@ static int 	getword(FILE *fp)
 static int 	getshort(FILE *fp)
 {
   unsigned char cin[2], cout[2];
-
   fread(cin,sizeof(char),2,fp);
+
 #if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[1];
   cout[1] = cin[0];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined (_WIN32)
   cout[0] = cin[0];
   cout[1] = cin[1];
 #endif /* __x86 || __alpha */
-
   return((int) *((short *) &cout[0]));
 }
 
@@ -195,14 +195,15 @@ static float 	getfloat(FILE *fp)
 {
   char cin[4], cout[4];
 
-  fread(cin,sizeof(char),4,fp);
+fread(cin,sizeof(char),4,fp);
+
 #if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[1] - 1;
   cout[1] = cin[0];
   cout[2] = cin[3];
   cout[3] = cin[2];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined (_WIN32)
   cout[3] = cin[1] - 1;
   cout[2] = cin[0];
   cout[1] = cin[3];
@@ -229,8 +230,8 @@ static float 	getfloat(FILE *fp)
 static double 	getdouble(FILE *fp)
 {
   char cin[8], cout[8];
-
   fread(cin,sizeof(char),8,fp);
+
 #if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[7];
   cout[1] = cin[6];
@@ -241,7 +242,7 @@ static double 	getdouble(FILE *fp)
   cout[6] = cin[1];
   cout[7] = cin[0];
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined(_WIN32)
   cout[7] = cin[7];
   cout[6] = cin[6];
   cout[5] = cin[5];
@@ -270,9 +271,18 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   WlzObject 		*obj;
   WlzDomain		domain;
   WlzValues		values;
-
   Wlz3DWarpTrans	*wtrans3d;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
+  char buf[1];
+
+#ifdef _WIN32
+ int result;
+   result = _setmode(_fileno(fp), 0x8000);
+   if( result == -1 ){
+      perror( "Cannot set mode" );
+      errNum = WLZ_ERR_READ_EOF;
+  }
+#endif
 
 #ifdef _OPENMP
   #pragma omp critical
@@ -285,13 +295,12 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   else if( feof(fp) != 0 ){
     errNum = WLZ_ERR_READ_EOF;
   }
-  else {
+  else if (errNum == WLZ_ERR_NONE){
     /* initialise the obj pointer and domain and values unions */
     obj = NULL;
     domain.core = NULL;
     values.core = NULL;
-
-    type = (WlzObjectType) getc(fp);
+	type = (WlzObjectType)getc(fp);
 
     switch( type ){
 
@@ -333,8 +342,8 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	}
 	else {
 	  /* attempt to return a partial object */
-	  /* WlzFreeObj( obj );
-	  obj = NULL; */
+/*	  WlzFreeObj( obj );
+	  obj = NULL;*/
 	}
       }
       break;
@@ -748,7 +757,9 @@ static WlzErrorNum WlzReadPixelV(FILE *fP, WlzPixelV *pV, int nPV)
 
   while((errNum == WLZ_ERR_NONE) && (nPV-- > 0))
   {
+
     pV->type = getc(fP);
+
     errNum = WlzReadGreyV(fP, pV->type, &(pV->v), 1);
     ++pV;
   }
@@ -789,7 +800,8 @@ static WlzErrorNum WlzReadGreyV(FILE *fP, WlzGreyType gType, WlzGreyV *gV,
       while(nGV-- > 0)
       {
         gV->ubv = (UBYTE )(getc(fP));
-	++gV;
+
+		++gV;
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -836,7 +848,7 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fP,
 {
   WlzObjectType		type;
   int			i, l, l1, ll, k1, kl, nints;
-  WlzIntervalDomain	*idmn=NULL;	
+  WlzIntervalDomain	*idmn=NULL;
   WlzIntervalLine 	*ivln;
   WlzInterval 		*itvl0,
   			*itvl;
@@ -845,7 +857,9 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fP,
   /* read the type, currently WriteObj will write '\0' given a
      NULL pointer so we do the same here setting the error to be
      WLZ_ERR_EOO to distinguish it from an EOF error */
-  type = (WlzObjectType) getc(fP);
+
+type = (WlzObjectType) getc(fP);
+
   if( type == (WlzObjectType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -915,7 +929,7 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fP,
 	errNum = WLZ_ERR_READ_INCOMPLETE;
 	break;
       }
-    
+
       for (l=l1; l<=ll; l++) {
 	nints = ivln->nintvs;
 	errNum = WlzMakeInterval(l, idmn, nints, itvl);
@@ -959,6 +973,8 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   type = (WlzObjectType) getc(fp);
+
+
   if( type == (WlzObjectType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -972,12 +988,13 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
   }
 
   if( errNum == WLZ_ERR_NONE ){
-    p1 = getword(fp);
+	p1 = getword(fp);
     pl = getword(fp);
     l1 = getword(fp);
     ll = getword(fp);
     k1 = getword(fp);
     kl = getword(fp);
+
     if (feof(fp) != 0){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
@@ -1113,6 +1130,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   type = (WlzObjectType) getc(fp);
+
   if( type == (WlzObjectType) EOF )
   {
     return WLZ_ERR_READ_INCOMPLETE;
@@ -1133,13 +1151,13 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
   if( obj->domain.core == NULL ){
     return WLZ_ERR_DOMAIN_NULL;
   }
-    
+
   switch( obj->domain.core->type ){
 
   case WLZ_INTERVALDOMAIN_INTVL:
     type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gtype, &errNum);
     break;
-    
+
   case WLZ_INTERVALDOMAIN_RECT:
     type = WlzGreyTableType(WLZ_GREY_TAB_RECT, gtype, &errNum);
     break;
@@ -1152,7 +1170,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
   if( errNum != WLZ_ERR_NONE ){
     return errNum;
   }
-    
+
   l1 = obj->domain.i->line1;
   ll = obj->domain.i->lastln;
   k1 = obj->domain.i->kol1;
@@ -1160,7 +1178,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
   switch (type) {
 
   case WLZ_VALUETABLE_RAGR_INT:
+
     packing = (WlzGreyType) getc(fp);
+
     backgrnd.v.inv = getword(fp);
 
     /* create the value table */
@@ -1204,7 +1224,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 	case WLZ_GREY_UBYTE:
 	  g.inp = v.inp+iwsp.lftpos-kstart;
 	  for (i=0; i<iwsp.colrmn; i++){
-	    *g.inp++ = getc(fp);
+
+		  *g.inp++ = getc(fp);
+
 	  }
 	  break;
 	}
@@ -1226,7 +1248,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     return errNum;
 
   case WLZ_VALUETABLE_RAGR_SHORT:
+
     packing = (WlzGreyType) getc(fp);
+
     backgrnd.v.shv = getword(fp);
 
     /* create the value table */
@@ -1264,7 +1288,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 	case WLZ_GREY_UBYTE:
 	  g.shp = v.shp+iwsp.lftpos-kstart;
 	  for (i=0; i<iwsp.colrmn; i++){
-	    *g.shp++ = getc(fp);
+
+		  *g.shp++ = getc(fp);
+
 	  }
 	  break;
 	}
@@ -1286,7 +1312,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     return errNum;
 
   case WLZ_VALUETABLE_RAGR_UBYTE:
+
     packing = (WlzGreyType) getc(fp);
+
     backgrnd.v.ubv = getword(fp);
 
     /* create the value table */
@@ -1316,7 +1344,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 	}
 	g.ubp = v.ubp+iwsp.lftpos-kstart;
 	for (i=0; i<iwsp.colrmn; i++){
+
 	  *g.ubp++ = getc(fp);
+
 	}
 	if (iwsp.intrmn == 0) {
 	  (void) WlzMakeValueLine(values.v, iwsp.linpos, kstart,
@@ -1336,7 +1366,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     return( WLZ_ERR_NONE );
 
   case WLZ_VALUETABLE_RAGR_FLOAT:
+
     packing = (WlzGreyType) getc(fp);
+
     backgrnd.v.flv = getfloat(fp);
 
     /* create the value table */
@@ -1386,7 +1418,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     return errNum;
 
   case WLZ_VALUETABLE_RAGR_DOUBLE:
+
     packing = (WlzGreyType) getc(fp);
+
     backgrnd.v.dbv = getdouble(fp);
 
     /* create the value table */
@@ -1472,9 +1506,10 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   packing = (WlzGreyType) getc(fp);
+
   if( (idmn = obj->domain.i) == NULL ){
     return( WLZ_ERR_DOMAIN_NULL );
-  }    
+  }
 
   bgd.type = WlzGreyTableTypeToGreyType( type, NULL );
   bgd.v.inv = 0;
@@ -1532,8 +1567,11 @@ short shv = getshort(fp);
 /*fprintf(stderr, "%d\n", shv);*/}
       break;
     case WLZ_GREY_UBYTE:
-      for (i=0 ; i<num ; i++)
+		for (i=0 ; i<num ; i++){
+
 	*values.inp++ = getc(fp);
+
+		}
       break;
     }
     break;
@@ -1545,8 +1583,11 @@ short shv = getshort(fp);
 	*values.shp++ = getshort(fp);
       break;
     case WLZ_GREY_UBYTE:
-      for (i=0 ; i<num ; i++)
+		for (i=0 ; i<num ; i++){
+
 	*values.shp++ = getc(fp);
+
+		}
       break;
     }
     break;
@@ -1580,7 +1621,7 @@ short shv = getshort(fp);
 * \ingroup	WlzIO
 * \brief	Reads a Woolz voxel value table from the input file.
 * \param	fp			Input file.
-* \param	obj			Object defining the domain of the 
+* \param	obj			Object defining the domain of the
 *					grey values.
 */
 static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
@@ -1596,6 +1637,7 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   type = (WlzObjectType) getc(fp);
+
   if( type == (WlzObjectType) EOF ){
     return WLZ_ERR_READ_INCOMPLETE;
   }
@@ -1606,7 +1648,7 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
   if( obj->domain.core == NULL ){
     return WLZ_ERR_DOMAIN_NULL;
   }
-    
+
   planedm = obj->domain.p;
   domains = planedm->domains;
   nplanes = planedm->lastpl - planedm->plane1 + 1;
@@ -1666,7 +1708,7 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
 
   default:
     return WLZ_ERR_VOXELVALUES_TYPE;
-    
+
   }
 
   if( feof(fp) != 0 ){
@@ -1702,7 +1744,9 @@ static WlzProperty WlzReadProperty(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   rtnProp.core = NULL;
+
   type = getc(fp);
+
   switch( type ){
 
   case (WlzObjectType) EOF:
@@ -1727,7 +1771,7 @@ static WlzProperty WlzReadProperty(
     }
 
     /* The size is now correct for the amount of data */
-    if( si > 0 ){  
+    if( si > 0 ){
       fread(rtnProp.simple->prop, si, 1, fp);
     }
     if( feof(fp) != 0 ){
@@ -1746,7 +1790,9 @@ static WlzProperty WlzReadProperty(
     }
 
     /* read the property values */
+
     rtnProp.emap->emapType = getc(fp);
+
     rtnProp.emap->theilerStage = getword(fp);
     fread(rtnProp.emap->modelName, EMAP_PROPERTY_MODELNAME_LENGTH,
 	  1, fp);
@@ -1832,7 +1878,9 @@ static WlzPropertyList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* Find number of properties */
+
   type = getc(fp);
+
   switch(type)
   {
     case (WlzObjectType )EOF:
@@ -1856,7 +1904,7 @@ static WlzPropertyList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
       {
 	/* The size is now correct for the amount of data */
 	if(pSz > 0)
-	{  
+	{
 	  (void )fread(prop.simple->prop, pSz, 1, fp);
 	}
 	if(feof(fp) != 0)
@@ -1940,6 +1988,7 @@ static WlzPolygonDomain *WlzReadPolygon(FILE *fp, WlzErrorNum *dstErr)
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   type = (WlzObjectType) getc(fp);
+
   if( type == (WlzObjectType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -2021,8 +2070,10 @@ static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
     break;
 
     /* dummy type written by WriteBoundList, real type read next */
-  case (WlzObjectType) 1: 
+  case (WlzObjectType) 1:
+
     type = (WlzObjectType) getc(fp);
+
     if( (blist = WlzMakeBoundList(type, 0, NULL, &errNum)) == NULL ){
       break;
     }
@@ -2097,7 +2148,9 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
   int		i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
+
   type = (WlzObjectType) getc(fp);
+
   switch( type ){
 
   case (WlzObjectType) EOF:
@@ -2182,6 +2235,7 @@ static WlzHistogramDomain *WlzReadHistogramDomain(FILE *fp,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   type = (WlzObjectType )getc(fp);
+
   if(type == (WlzObjectType) EOF )
   {
     errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -2320,6 +2374,7 @@ static WlzObject *WlzReadCompoundA(FILE			*fp,
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   otype = (WlzObjectType) getc(fp);
+
   if( otype == (WlzObjectType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -2352,7 +2407,7 @@ static WlzObject *WlzReadCompoundA(FILE			*fp,
   }
   return( (WlzObject *) c );
 }
-	
+
 /*!
 * \return	New affine transform.
 * \ingroup	WlzIO
@@ -2369,6 +2424,7 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   type = (WlzTransformType) getc( fp );
+
   if( type == (WlzTransformType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -2433,13 +2489,14 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   type = (WlzObjectType) getc(fp);
+
   if( type == (WlzObjectType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
   else if( type == WLZ_NULL ){
     errNum = WLZ_ERR_EOO;
   }
-  /* this is a repeat of the same char read by WlzReadObj 
+  /* this is a repeat of the same char read by WlzReadObj
      and therefore is redundant, this can only be different if the file
      is corrupt */
   else if( type != WLZ_WARP_TRANS ){
@@ -2513,7 +2570,9 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
     else {
       eptr = obj->eltlist;
       for(i=0; i<obj->nelts; i++, eptr++){
+
 	eptr->type = (int) getc(fp);
+
 	eptr->n = getword(fp);
 	for(j=0; j<3; j++){
 	  eptr->nodes[j] = getword(fp);
@@ -2697,6 +2756,7 @@ static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
 
 
   cType = getc(fP);
+
   switch(cType)
   {
     case EOF:
@@ -2756,6 +2816,7 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   mType = getc(fP);
+
   switch(mType)
   {
     case EOF: /* FALLTHROUGH */
@@ -2787,6 +2848,7 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
     {
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
+
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2936,7 +2998,7 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
     errNum = WLZ_ERR_EOO;
   }
   */
-  /* this is a repeat of the same char read by WlzReadObj 
+  /* this is a repeat of the same char read by WlzReadObj
      and therefore is redundant, this can only be different if the file
      is corrupt */
      /*
@@ -2950,7 +3012,7 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
-  else 
+  else
   {
     /*
     obj->type = type;
@@ -2989,11 +3051,11 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
         dptr->displacement.vtY =(double) getfloat(fp);
         dptr->displacement.vtZ =(double) getfloat(fp);
     }
-  } 
+  }
 
   /* read elements */
   if( errNum == WLZ_ERR_NONE ){
-    if( (obj->elements = (WlzMeshElem3D *)AlcMalloc(  obj->nElem * 
+    if( (obj->elements = (WlzMeshElem3D *)AlcMalloc(  obj->nElem *
                            sizeof(WlzMeshElem3D))) == NULL )
      {
       AlcFree( (void *) obj->nodes );
@@ -3002,7 +3064,7 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
       obj = NULL;
       errNum = WLZ_ERR_MEM_ALLOC;
      }
-     else 
+     else
      {
      /* read elements */
      eptr = obj->elements;
@@ -3014,7 +3076,7 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
          } */
          /* get the index of this element */
          eptr->idx = getword(fp);
-         /* get nodes indeces */ 
+         /* get nodes indeces */
          for(j = 0; (j < 4) && (errNum == WLZ_ERR_NONE); j++)
          {
            eptr->nodes[j] = getword(fp);
@@ -3028,7 +3090,7 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
          */
        }
      }
-   }  
+   }
   /* check if EOF error has been set */
   if( (errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
     AlcFree( (void *) obj->elements );
@@ -3062,7 +3124,7 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
   WlzMeshNode	*dptr;
   WlzMeshElem	*eptr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObjectType type; 
+  WlzObjectType type;
   WlzMeshTransform   	*obj=NULL;
 
   /* make space for obj */
@@ -3071,11 +3133,11 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
-  else 
-  { 
+  else
+  {
     obj->type = WLZ_TRANSFORM_2D_MESH;
     obj->linkcount = 0;
-    
+
     obj->nElem = getword(fp);
     obj->nNodes = getword(fp);
     if( feof(fp) != 0 )
@@ -3107,11 +3169,11 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
         dptr->displacement.vtX =(double) getfloat(fp);
         dptr->displacement.vtY =(double) getfloat(fp);
       }
-    } 
+    }
 
     /* read elements */
     if( errNum == WLZ_ERR_NONE ){
-      if( (obj->elements = (WlzMeshElem *)AlcMalloc(  obj->nElem * 
+      if( (obj->elements = (WlzMeshElem *)AlcMalloc(  obj->nElem *
                            sizeof(WlzMeshElem))) == NULL )
       {
         AlcFree( (void *) obj->nodes );
@@ -3120,7 +3182,7 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
         obj = NULL;
         errNum = WLZ_ERR_MEM_ALLOC;
       }
-      else 
+      else
       {
         /* read elements */
         eptr = obj->elements;
@@ -3128,13 +3190,13 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
         {
           /* get the index of this element */
           eptr->idx = getword(fp);
-          /* get nodes indeces */ 
+          /* get nodes indeces */
           for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
           {
             eptr->nodes[j] = getword(fp);
           }
           /* output its neighbours */
-         
+
           for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
           {
 	   eptr->neighbours[j] = getword(fp);
@@ -3143,7 +3205,7 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
       }
     }
   }
- 
+
   /* check if EOF error has been set */
   if( (errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
     AlcFree( (void *) obj->elements );

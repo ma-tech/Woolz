@@ -15,17 +15,19 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      WlzProperty
 * \brief        Allocation and freeing routines for woolz properties.
-*               
+*
 * \todo         -
 * \bug          None known
 *
 * Maintenance log with most recent changes at top of list.
 */
 
-#include <pwd.h>
+#ifndef _WIN32
+  #include <pwd.h>
+  #include <unistd.h>
+#endif
 #include <string.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <time.h>
 
 #include <Wlz.h>
@@ -60,7 +62,7 @@ WlzPropertyList	*WlzMakePropertyList(WlzErrorNum *dstErr)
   return(pList);
 }
 
-/*! 
+/*!
 * \return       New simple property.
 * \ingroup      WlzProperty
 * \brief        Allocate space for a WlzSimpleProperty which is a
@@ -103,7 +105,7 @@ WlzSimpleProperty *WlzMakeSimpleProperty(int size, WlzErrorNum *dstErr)
 
 
 /* function:     WlzFreeSimpleProperty    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Free space allocated for a WlzSimpleProperty.
 *
@@ -230,7 +232,7 @@ WlzGreyProperty *WlzMakeGreyProperty(char *name, WlzPixelV val,
 }
 
 /* function:     WlzMakeEMAPProperty    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Make an EMAP property structure.
 *
@@ -260,6 +262,8 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 {
   WlzEMAPProperty	*rtnProp=NULL;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
+
+  #ifndef _WIN32
   struct passwd		*pwdStruct;
 
   /* check the calling parameters */
@@ -279,7 +283,7 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 
   /* allocate space and copy in properties */
   if( errNum == WLZ_ERR_NONE ){
-    if( rtnProp = (WlzEMAPProperty *) 
+    if( rtnProp = (WlzEMAPProperty *)
        AlcCalloc(1, sizeof(WlzEMAPProperty)) ){
       rtnProp->type = WLZ_PROPERTY_EMAP;
       rtnProp->emapType = type;
@@ -332,11 +336,14 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
   if( dstErr ){
     *dstErr = errNum;
   }
+#else
+	errNum = WLZ_ERR_UNIMPLEMENTED;
+#endif
   return rtnProp;
 }
 
 /* function:     WlzChangeEMAPProperty    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Change the values of an EMAP property. Each given
 value will be checked against the current value to see if a change is
@@ -366,7 +373,9 @@ WlzErrorNum WlzChangeEMAPProperty(
   char			*comment)
 {
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-  struct passwd		*pwdStruct;
+
+  #ifndef _WIN32
+   struct passwd		*pwdStruct;
   int			modifiedFlg=0;
 
   /* check the calling parameters */
@@ -440,7 +449,7 @@ WlzErrorNum WlzChangeEMAPProperty(
       else {
 	modifiedFlg = 1;
       }
-      
+
       prop->fileName = AlcStrDup(fileName);
       prop->freeptr = AlcFreeStackPush(prop->freeptr,
 				       prop->fileName,
@@ -455,13 +464,13 @@ WlzErrorNum WlzChangeEMAPProperty(
       else {
 	modifiedFlg = 1;
       }
-      
+
       prop->comment = AlcStrDup(comment);
       prop->freeptr = AlcFreeStackPush(prop->freeptr,
 				       prop->comment,
 				       NULL);
     }
-      
+
     if((errNum == WLZ_ERR_NONE) && modifiedFlg){
       prop->modificationTime = time(NULL);
       pwdStruct = getpwuid(getuid());
@@ -471,11 +480,13 @@ WlzErrorNum WlzChangeEMAPProperty(
     }
   }
 
+#endif
+
   return errNum;
 }
 
 /* function:     WlzFreeEMAPProperty    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Free an EMAP property.
 *
@@ -504,7 +515,7 @@ WlzErrorNum WlzFreeEMAPProperty(WlzEMAPProperty *prop)
 }
 
 /* function:     WlzGetProperty    */
-/*! 
+/*!
 * \return       The required property. If the core value is NULL the
 *		requested property is not in the list.
 * \ingroup      WlzProperty
@@ -554,7 +565,7 @@ WlzProperty WlzGetProperty(
 }
 
 /* function:     WlzRemoveProperty    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Remove, without freeing, a property from a property list.
 This is typiucally used after a call to WlzGetProperty().
@@ -594,7 +605,7 @@ WlzErrorNum WlzRemoveProperty(
 }
 
 /* function:     WlzFreeProperty    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Free a woolz property
 *
@@ -626,7 +637,7 @@ WlzErrorNum WlzFreeProperty(WlzProperty prop)
 }
 
 
-/*! 
+/*!
 * \return       Woolz error code.
 * \ingroup      WlzProperty
 * \brief        Free a complete property list (including the list
@@ -651,7 +662,7 @@ WlzErrorNum 	WlzFreePropertyList(WlzPropertyList *pList)
 
 
 /* function:     WlzFreePropertyListEntry    */
-/*! 
+/*!
 * \ingroup      WlzProperty
 * \brief        Free a property list entry. This is a procedure that
 *		can be passed e.g. to AlcDLPListEntryAppend to enable

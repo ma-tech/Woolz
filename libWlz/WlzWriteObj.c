@@ -156,7 +156,7 @@ static int putword(int i, FILE *fp)
   cout[2] = *(cin+1);
   cout[3] = *(cin+0);
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined (_WIN32)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
   cout[2] = *(cin+2);
@@ -181,7 +181,7 @@ static int putshort(short i, FILE *fp)
   cout[0] = *(cin+1);
   cout[1] = *(cin+0);
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined (_WIN32)
   cout[0] = *(cin+0);
   cout[1] = *(cin+1);
 #endif /* __x86 || __alpha */
@@ -239,7 +239,7 @@ static int putdouble(double d, FILE *fp)
   cout[6] = *(cin+1);
   cout[7] = *cin;
 #endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
+#if defined (__x86) || defined (__alpha) || defined (_WIN32)
   cout[7] = *(cin+7);
   cout[6] = *(cin+6);
   cout[5] = *(cin+5);
@@ -252,7 +252,7 @@ static int putdouble(double d, FILE *fp)
   return( (int) fwrite(&cout[0], sizeof(char), 8, fp) );
 }
 
-/*! 
+/*!
 * \return       Woolz error number code.
 * \ingroup      WlzIO
 * \brief        Top-level procedure for writing an object to a file stream.
@@ -263,6 +263,15 @@ static int putdouble(double d, FILE *fp)
 WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+#ifdef _WIN32
+	int result;
+   result = _setmode(_fileno(fp), 0x8000);
+   if( result == -1 ){
+      perror( "Cannot set mode" );
+      errNum = WLZ_ERR_READ_EOF;
+   }
+#endif
 
 #ifdef _OPENMP
   #pragma omp critical
@@ -283,7 +292,7 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
   {
     errNum = WLZ_ERR_WRITE_EOF;
   }
-  else
+  else if(errNum == WLZ_ERR_NONE)
   {
     switch( obj->type )
     {
@@ -750,7 +759,7 @@ static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
   WlzIntervalLine	*ivln;
   WlzErrorNum		errNum = WLZ_ERR_NONE;
 
-  if(itvl == NULL) 
+  if(itvl == NULL)
   {
     if(putc(0,fp) == EOF)
     {
@@ -763,7 +772,7 @@ static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
        - can't do this it conflicts with read-only access
        to object store */
     /*WlzStandardIntervalDomain(itvl);*/
-    
+
     /* write the type and bounding box */
     if((putc((unsigned int) itvl->type, fp) == EOF) ||
        !putword(itvl->line1, fp) ||
@@ -775,7 +784,7 @@ static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
     }
     else
     {
-      switch(itvl->type) 
+      switch(itvl->type)
       {
 	case WLZ_INTERVALDOMAIN_INTVL:
 	  nlines = itvl->lastln - itvl->line1;
@@ -789,9 +798,9 @@ static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    ivln = itvl->intvlines;
-	    for(i = 0; (i <= nlines) && (errNum == WLZ_ERR_NONE); i++) 
+	    for(i = 0; (i <= nlines) && (errNum == WLZ_ERR_NONE); i++)
 	    {
-	      for(j = 0; (j < ivln->nintvs) && (errNum == WLZ_ERR_NONE); j++) 
+	      for(j = 0; (j < ivln->nintvs) && (errNum == WLZ_ERR_NONE); j++)
 	      {
 		if(!putword(ivln->intvs[j].ileft, fp) ||
 		   !putword(ivln->intvs[j].iright, fp))
@@ -823,7 +832,7 @@ static WlzErrorNum WlzWriteIntervalDomain(FILE *fp, WlzIntervalDomain *itvl)
 */
 static WlzErrorNum WlzWritePlaneDomain(FILE *fp, WlzPlaneDomain *planedm)
 {
-  int		i, 
+  int		i,
   		nplanes;
   float		dummy_float = 0.0;
   WlzDomain	*domains;
@@ -867,7 +876,7 @@ static WlzErrorNum WlzWritePlaneDomain(FILE *fp, WlzPlaneDomain *planedm)
     if(errNum == WLZ_ERR_NONE)
     {
       domains = planedm->domains;
-      switch(planedm->type) 
+      switch(planedm->type)
       {
 	case WLZ_PLANEDOMAIN_DOMAIN:
 	  for(i = 0; (i < nplanes) && (errNum == WLZ_ERR_NONE); i++, domains++)
@@ -931,7 +940,7 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
     {
       errNum = WLZ_ERR_WRITE_EOF;
     }
-  } 
+  }
   else
   {
     switch( property.core->type ){
@@ -967,7 +976,7 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
       else {
-	if(property.emap->fileName && 
+	if(property.emap->fileName &&
 	   (strlen(property.emap->fileName) > 0)){
 	  if(!putword(strlen(property.emap->fileName), fp) ||
 	     !fwrite(property.emap->fileName, strlen(property.emap->fileName),
@@ -1043,7 +1052,7 @@ static WlzErrorNum WlzWritePropertyList(FILE *fp, WlzPropertyList *pList)
     {
       errNum = WLZ_ERR_WRITE_EOF;
     }
-  } 
+  }
   else
   {
     if((putc(2,fp) == EOF) || !putword(AlcDLPListCount(pList->list, NULL), fp))
@@ -1530,7 +1539,7 @@ static WlzErrorNum WlzWriteBoundList(FILE *fp, WlzBoundList *blist)
 
 /*!
 * \return	Woolz error code.
-* \ingroup	WlzIO 
+* \ingroup	WlzIO
 * \brief	Writes a convex hull to the given file.
 * \param	fp			Given file.
 * \param	cnvhull			Convex hull.
@@ -1581,7 +1590,7 @@ static WlzErrorNum      WlzWriteConvexHullValues(
   }
   return(errNum);
 }
-  
+
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
@@ -1759,7 +1768,7 @@ static WlzErrorNum WlzWriteCompoundA(FILE *fp, WlzCompoundArray *c)
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	}
       }
-      else 
+      else
       {
 	errNum = WlzWriteObj(fp, c->o[i]);
       }
@@ -1792,7 +1801,7 @@ static WlzErrorNum WlzWriteAffineTransform(FILE *fp, WlzAffineTransform *trans)
     {
       errNum = WLZ_ERR_WRITE_EOF;
     }
-  } 
+  }
   else
   {
     if(putc((unsigned int) trans->type, fp) == EOF)
@@ -2245,7 +2254,7 @@ WlzErrorNum    WlzWriteMeshTransform3D(
   }
   */
   if(     !putword(obj->nElem,  fp) ||
-	  !putword(obj->nNodes ,fp) ) 
+	  !putword(obj->nNodes ,fp) )
   {
     errNum = WLZ_ERR_WRITE_INCOMPLETE;
   }
@@ -2268,7 +2277,7 @@ WlzErrorNum    WlzWriteMeshTransform3D(
       {
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
-       
+
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2286,7 +2295,7 @@ WlzErrorNum    WlzWriteMeshTransform3D(
       {
         errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
-      /* output nodes indeces */ 
+      /* output nodes indeces */
       for(j = 0; (j < 4) && (errNum == WLZ_ERR_NONE); j++)
       {
 	if (!putword(eptr->nodes[j], fp))
@@ -2312,7 +2321,7 @@ WlzErrorNum    WlzWriteMeshTransform3D(
   {
     dptr = obj->nodes;
     for(i = 0; (i < obj->nNodes) && (errNum == WLZ_ERR_NONE); i++, dptr++)
-    { 
+    {
       if(!putfloat((float) dptr->displacement.vtX, fp) ||
          !putfloat((float) dptr->displacement.vtY, fp) ||
 	 !putfloat((float) dptr->displacement.vtZ, fp))
@@ -2343,7 +2352,7 @@ WlzErrorNum    WlzWriteMeshTransform2D(
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(     !putword(obj->nElem,  fp) ||
-	  !putword(obj->nNodes ,fp) ) 
+	  !putword(obj->nNodes ,fp) )
   {
     errNum = WLZ_ERR_WRITE_INCOMPLETE;
   }
@@ -2355,16 +2364,16 @@ WlzErrorNum    WlzWriteMeshTransform2D(
     {  /* position */
       if(!putfloat((float) dptr->position.vtX, fp) ||
          !putfloat((float) dptr->position.vtY, fp))
-	{      
+	{
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
       /* displacement */
       if(!putfloat((float) dptr->displacement.vtX, fp) ||
          !putfloat((float) dptr->displacement.vtY, fp))
-	 {      
+	 {
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
-       
+
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2378,7 +2387,7 @@ WlzErrorNum    WlzWriteMeshTransform2D(
       {
         errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
-      /* output nodes indeces */ 
+      /* output nodes indeces */
       for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
       {
 	if (!putword(eptr->nodes[j], fp))
@@ -2387,7 +2396,7 @@ WlzErrorNum    WlzWriteMeshTransform2D(
 	}
       }
       /* output its neighbours */
-      
+
       for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
       {
 	if (!putword(eptr->neighbours[j], fp))
@@ -2398,20 +2407,20 @@ WlzErrorNum    WlzWriteMeshTransform2D(
     }
   }
     /* now Write out displacement */
-    
+
   if(errNum == WLZ_ERR_NONE)
   {
     dptr = obj->nodes;
     for(i = 0; (i < obj->nNodes) && (errNum == WLZ_ERR_NONE); i++, dptr++)
-    { 
+    {
       if(!putfloat((float) dptr->displacement.vtX, fp) ||
          !putfloat((float) dptr->displacement.vtY, fp))
-	 {      
+	 {
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
     }
   }
-  
+
   return(errNum);
 }
 
