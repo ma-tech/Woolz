@@ -2,10 +2,12 @@
 
 include ../../../../../../../Makefile.conf
 
+CLASSPATH = .:..:../../../../../../..:../../../WSetter/classes:../../../Zoom/classes
 SOURCEPATH = ./src/sectionViewer/
 TARGETPATH = ./classes/sectionViewer/
 JAVAC = /opt/java/bin/javac
 JAR = /opt/java/bin/jar
+JAVACFLAGS = -classpath $(CLASSPATH)
 
 SOURCES = \
 	  $(SOURCEPATH)SelectableMenu.java \
@@ -21,10 +23,9 @@ SOURCES = \
 	  $(SOURCEPATH)WlzObjModel.java \
 	  $(SOURCEPATH)ViewStructModel.java \
 	  $(SOURCEPATH)SVParent.java \
-	  $(SOURCEPATH)SVParent3D.java \
 	  $(SOURCEPATH)SectionViewerGUI.java \
 	  $(SOURCEPATH)SectionViewer.java \
-	  $(SOURCEPATH)SectionViewer3D.java \
+	  $(SOURCEPATH)SVFileFilter.java \
 	  $(SOURCEPATH)SVUtils.java \
 	  $(SOURCEPATH)SVStatus.java
 
@@ -42,24 +43,23 @@ OBJECTS = \
 	  $(TARGETPATH)WlzObjModel.class \
 	  $(TARGETPATH)ViewStructModel.class \
 	  $(TARGETPATH)SVParent.class \
-	  $(TARGETPATH)SVParent3D.class \
 	  $(TARGETPATH)SectionViewerGUI.class \
 	  $(TARGETPATH)SectionViewer.class \
-	  $(TARGETPATH)SectionViewer3D.class \
+	  $(TARGETPATH)SVFileFilter.class \
 	  $(TARGETPATH)SVUtils.class \
 	  $(TARGETPATH)SVStatus.class
 
 
 
-all:		$(OBJECTS) jar
+all:	classes jar
 
 classes:	$(OBJECTS)
 
 $(OBJECTS):	$(SOURCES)
-	cd $(SOURCEPATH); $(JAVAC) *.java
+	cd $(SOURCEPATH); $(JAVAC) $(JAVACFLAGS) *.java
 	mv $(SOURCEPATH)*.class $(TARGETPATH)
 
-jar:            $(OBJECTS)
+jar:	classes
 	cd classes; $(JAR) cfm ../sectionViewer.jar bean.tmp sectionViewer
 
 # Use doxygen to make the documentation
