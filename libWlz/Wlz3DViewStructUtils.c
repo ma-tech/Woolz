@@ -392,6 +392,7 @@ if( vtx.vtZ > viewStr->maxvals.vtZ )viewStr->maxvals.vtZ = vtx.vtZ;
 #define CHECK_3D_BB_VTX(X,Y) \
 vtx.vtX = X; \
 vtx.vtY = Y; \
+vtx.vtZ = viewStr->dist; \
 Wlz3DSectionTransformInvVtx( &vtx, viewStr ); \
 i = WLZ_NINT(vtx.vtX); \
 tmpPlanedmn.kol1 = WLZ_MIN(tmpPlanedmn.kol1, i); \
@@ -465,6 +466,7 @@ WlzErrorNum WlzInit3DViewStruct(
     (void) setup3DSectionAffineTransform(viewStr);
     vtx.vtX = obj->domain.i->kol1;
     vtx.vtY = obj->domain.i->line1;
+    vtx.vtZ = viewStr->dist;
     Wlz3DSectionTransformInvVtx( &vtx, viewStr );
     tmpPlanedmn.kol1 = WLZ_NINT(vtx.vtX);
     tmpPlanedmn.line1 = WLZ_NINT(vtx.vtY);
@@ -613,7 +615,6 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
   WlzDVertex3		*vtx,
   WlzThreeDViewStruct	*viewStr)
 {
-    double	x, y, z, **r;
     WlzDVertex3		dst;
     WlzAffineTransform	*trans;
     WlzErrorNum		errNum=WLZ_ERR_NONE;
@@ -738,8 +739,8 @@ WlzDVertex2 Wlz3DViewGetIntersectionPoint(
     if( t1 = WlzAffineTransformInverse(v1->trans, &errNum) ){
       if( t2 = WlzAffineTransformInverse(v2->trans, &errNum) ){
 	for(i=0; i < 3; i++){
-	  dp1 += t1->mat[2][i] * t1->mat[2][i];
-	  dp12 += t1->mat[2][i] * t2->mat[2][i];
+	  dp1 += t1->mat[i][2] * t1->mat[i][2];
+	  dp12 += t1->mat[i][2] * t2->mat[i][2];
 	}
 	ap[0][0] = t2->mat[0][0];
 	ap[1][0] = t2->mat[1][0];
