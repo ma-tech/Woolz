@@ -12,6 +12,7 @@
 * Purpose:      Writes a Woolz to a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Allow GM's with no verticies to be written.
 * 02-10-00 bill No longer write primitives in WlzWriteAffineTransform().
 * 14-08-00 bill	Add WLZ_CONTOUR to object types written by WlzWriteObj().
 *		Add WlzWriteContour() and WlzWriteGMModel(). Remove
@@ -1793,13 +1794,8 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Index the verticies. */
-    resIdxTb = WlzGMModelResIdx(model, WLZ_GMELMFLG_VERTEX, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
     /* Check there are verticies! */
-    if(resIdxTb->vertex.idxCnt < 1)
+    if((model->res.vertex.numElm < 0) || (model->res.edge.numElm < 0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
@@ -1817,7 +1813,7 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
       case WLZ_GMMOD_2D:
 	if((putc((unsigned int )(model->type), fP) == EOF) ||
 	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
-	    !putword(resIdxTb->vertex.idxCnt, fP) ||
+	    !putword(model->res.vertex.numElm, fP) ||
 	    !putword(model->res.edge.numElm, fP))
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -1827,7 +1823,7 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
       case WLZ_GMMOD_3D:
 	if((putc((unsigned int )(model->type), fP) == EOF) ||
 	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
-	    !putword(resIdxTb->vertex.idxCnt, fP) ||
+	    !putword(model->res.vertex.numElm, fP) ||
 	    !putword(model->res.loop.numElm, fP))
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -1835,85 +1831,90 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 	break;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (model->res.vertex.numElm > 0))
   {
-    /* Output the vertex geometries. */
-    idI = 0;
-    vec = model->res.vertex.vec;
-    iCnt = model->res.vertex.numIdx;
-    vCnt = 0;
-    while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+      /* Index the verticies. */
+      resIdxTb = WlzGMModelResIdx(model, WLZ_GMELMFLG_VERTEX, &errNum);
+    if(errNum == WLZ_ERR_NONE)
     {
-      eP.vertex = (WlzGMVertex *)AlcVectorItemGet(vec, idI++);
-      if(eP.vertex->idx >= 0)
+      /* Output the vertex geometries. */
+      idI = 0;
+      vec = model->res.vertex.vec;
+      iCnt = model->res.vertex.numIdx;
+      vCnt = 0;
+      while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
       {
-	++vCnt;
-	switch(model->type)
+	eP.vertex = (WlzGMVertex *)AlcVectorItemGet(vec, idI++);
+	if(eP.vertex->idx >= 0)
 	{
-	  case WLZ_GMMOD_2I:
-	    errNum = WlzWriteVertex2I(fP, &(eP.vertex->geo.vg2I->vtx), 1);
-	    break;
-	  case WLZ_GMMOD_2D:
-	    errNum = WlzWriteVertex2D(fP, &(eP.vertex->geo.vg2D->vtx), 1);
-	    break;
-	  case WLZ_GMMOD_3I:
-	    errNum = WlzWriteVertex3I(fP, &(eP.vertex->geo.vg3I->vtx), 1);
-	    break;
-	  case WLZ_GMMOD_3D:
-	    errNum = WlzWriteVertex3D(fP, &(eP.vertex->geo.vg3D->vtx), 1);
-	    break;
+	  ++vCnt;
+	  switch(model->type)
+	  {
+	    case WLZ_GMMOD_2I:
+	      errNum = WlzWriteVertex2I(fP, &(eP.vertex->geo.vg2I->vtx), 1);
+	      break;
+	    case WLZ_GMMOD_2D:
+	      errNum = WlzWriteVertex2D(fP, &(eP.vertex->geo.vg2D->vtx), 1);
+	      break;
+	    case WLZ_GMMOD_3I:
+	      errNum = WlzWriteVertex3I(fP, &(eP.vertex->geo.vg3I->vtx), 1);
+	      break;
+	    case WLZ_GMMOD_3D:
+	      errNum = WlzWriteVertex3D(fP, &(eP.vertex->geo.vg3D->vtx), 1);
+	      break;
+	  }
 	}
       }
     }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Output the vertex indicies of the simplicies. */
-    idI = 0;
-    vCnt = 0;
-    switch(model->type)
+    if(errNum == WLZ_ERR_NONE)
     {
-      case WLZ_GMMOD_2I:
-      case WLZ_GMMOD_2D:
-	vec = model->res.edge.vec;
-	iCnt = model->res.edge.numIdx;
-	while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
-	{
-	  ++vCnt;
-	  eP.edge = (WlzGMEdge *)AlcVectorItemGet(vec, idI++);
-	  if(eP.edge->idx >= 0)
-	  {
-	    tET = eP.edge->edgeT;
-	    bufI[0] = *(resIdxTb->vertex.idxLut +
-	                tET->vertexT->diskT->vertex->idx);
-	    bufI[1] = *(resIdxTb->vertex.idxLut +
-	                tET->opp->vertexT->diskT->vertex->idx);
-	    errNum = WlzWriteInt(fP, bufI, 2);
-	  }
-	}
-        break;
-      case WLZ_GMMOD_3I:
-      case WLZ_GMMOD_3D:
-	vec = model->res.loop.vec;
-	iCnt = model->res.loop.numIdx;
-	while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
-	{
-	  eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI++);
-	  if(eP.loop->idx >= 0)
+      /* Output the vertex indicies of the simplicies. */
+      idI = 0;
+      vCnt = 0;
+      switch(model->type)
+      {
+	case WLZ_GMMOD_2I:
+	case WLZ_GMMOD_2D:
+	  vec = model->res.edge.vec;
+	  iCnt = model->res.edge.numIdx;
+	  while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
 	  {
 	    ++vCnt;
-	    /* Loop IS a triangle, in 3D nothing else is allowed. */
-	    tET = eP.loop->loopT->edgeT;
-	    bufI[0] = *(resIdxTb->vertex.idxLut +
-	    		tET->vertexT->diskT->vertex->idx);
-	    bufI[1] = *(resIdxTb->vertex.idxLut +
-	    		tET->next->vertexT->diskT->vertex->idx);
-	    bufI[2] = *(resIdxTb->vertex.idxLut +
-	    		tET->prev->vertexT->diskT->vertex->idx);
-	    errNum = WlzWriteInt(fP, bufI, 3);
+	    eP.edge = (WlzGMEdge *)AlcVectorItemGet(vec, idI++);
+	    if(eP.edge->idx >= 0)
+	    {
+	      tET = eP.edge->edgeT;
+	      bufI[0] = *(resIdxTb->vertex.idxLut +
+			  tET->vertexT->diskT->vertex->idx);
+	      bufI[1] = *(resIdxTb->vertex.idxLut +
+			  tET->opp->vertexT->diskT->vertex->idx);
+	      errNum = WlzWriteInt(fP, bufI, 2);
+	    }
 	  }
-	}
-        break;
+	  break;
+	case WLZ_GMMOD_3I:
+	case WLZ_GMMOD_3D:
+	  vec = model->res.loop.vec;
+	  iCnt = model->res.loop.numIdx;
+	  while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+	  {
+	    eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI++);
+	    if(eP.loop->idx >= 0)
+	    {
+	      ++vCnt;
+	      /* Loop IS a triangle, in 3D nothing else is allowed. */
+	      tET = eP.loop->loopT->edgeT;
+	      bufI[0] = *(resIdxTb->vertex.idxLut +
+			  tET->vertexT->diskT->vertex->idx);
+	      bufI[1] = *(resIdxTb->vertex.idxLut +
+			  tET->next->vertexT->diskT->vertex->idx);
+	      bufI[2] = *(resIdxTb->vertex.idxLut +
+			  tET->prev->vertexT->diskT->vertex->idx);
+	      errNum = WlzWriteInt(fP, bufI, 3);
+	    }
+	  }
+	  break;
+      }
     }
   }
   if(resIdxTb)
