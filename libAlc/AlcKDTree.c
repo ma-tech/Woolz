@@ -25,6 +25,10 @@ static void			AlcKDTBoundSet(
 				  AlcKDTTree *tree,
 				  AlcKDTNode *node,
 				  int cmp);
+static void			AlcKDTValuesSet(
+				  AlcKDTTree *tree,
+				  AlcPointP key0,
+				  AlcPointP key1);
 static int			AlcKDTNodeValueCompare(
 				  AlcKDTTree *tree,
 				  AlcKDTNode *node,
@@ -34,10 +38,6 @@ static int			AlcKDTNodeIntersectsSphere(
 				  AlcKDTNode *node,
 				  AlcPointP centre,
 				  double radius);
-static double			AlcKDTValuesSet(
-				  AlcKDTTree *tree,
-				  AlcPointP key0,
-				  AlcPointP key1);
 static double			AlcKDTKeyDistSq(
 				  AlcKDTTree *tree,
 				  AlcPointP key0,
@@ -725,6 +725,18 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 *					intersects the given sphere.
 * Purpose:	Computes whether the given node intersects the given
 *		hyper-sphere.
+*		There are 3 algorithms that can be used.
+*		* Always true test, NOT RECOMENDED for anything except
+*		  testing.
+*		* Box intersection test, checks for an intersection
+*		  between the bounding boxes of the node and the
+*		  hyper-sphere. This is is slightly faster in 2D,
+*		  but progressively slower in higher dimensions.
+*		* Hyper-sphere intersection test, checks for an
+*		  intersection between the bounding box of the node
+*		  and the hyper-sphere itself. This is faster than
+*		  the box intersection test in dimensions higher than
+*		  2, with little difference (~10%) in 2D.
 * Global refs:	-
 * Parameters:	AlcKDTTree *tree:	Given tree,
 *		AlcKDTNode *node:	Given node.
@@ -734,12 +746,14 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 ************************************************************************/
 static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 					   AlcPointP centre, double radius)
-/* #define ALC_KDT_EXHAUSTIVE_SEARCH */
-#ifdef ALC_KDT_EXHAUSTIVE_SEARCH
+/* #define ALC_KDT_ALWAYSTRUE_TEST */
+#ifdef ALC_KDT_ALWAYSTRUE_TEST
 {
   return(1);
 }
-#else /* ! ALC_KDT_EXHAUSTIVE_SEARCH */
+#endif /* ALC_KDT_ALWAYSTRUE_TEST */
+/* #define ALC_KDT_BOXINTERSECT_TEST */
+#ifdef ALC_KDT_BOXINTERSECT_TEST
 {
   int  		idx,
 		inSphere = 1;
@@ -756,7 +770,7 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
     }
     while(inSphere && (++idx < tree->dim));
   }
-  else /* ALC_POINTTYPE_DBL */
+  else /* tree->type == ALC_POINTTYPE_DBL */
   {
     do
     {
@@ -767,7 +781,54 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
   }
   return(inSphere);
 }
-#endif /* ALC_KDT_EXHAUSTIVE_SEARCH */
+#endif /* ALC_KDT_BOXINTERSECT_TEST */
+#define ALC_KDT_SPHEREINTERSECT_TEST
+#ifdef ALC_KDT_SPHEREINTERSECT_TEST
+{
+  int  		idx,
+		inSphere = 1;
+  double	tD0,
+  		tD1,
+		radiusSq,
+  		sum;
+
+  /* This code checks for the intersection with the hyper-sphere's
+   * itself and not just it's bounding box. */
+  idx = 0;
+  sum = 0.0;
+  radiusSq = radius * radius;
+  if(tree->type == ALC_POINTTYPE_INT)
+  {
+    do
+    {
+      if((tD0 = (tD1 = *(centre.kI + idx)) - *(node->boundN.kI + idx)) < 0.0)
+      {
+	sum += tD0 * tD0;
+      }
+      else if((tD0 = tD1 - *(node->boundP.kI + idx)) > 0.0)
+      {
+        sum += tD0 * tD0;
+      }
+    } while(++idx < tree->dim);
+  }
+  else /* tree->type == ALC_POINTTYPE_DBL */
+  {
+    do
+    {
+      if((tD0 = (tD1 = *(centre.kD + idx)) - *(node->boundN.kD + idx)) < 0.0)
+      {
+	sum += tD0 * tD0;
+      }
+      else if((tD0 = tD1 - *(node->boundP.kD + idx)) > 0.0)
+      {
+        sum += tD0 * tD0;
+      }
+    } while(++idx < tree->dim);
+  }
+  inSphere = sum <= radiusSq;
+  return(inSphere);
+}
+#endif /* ALC_KDT_SPHEREINTERSECT_TEST */
 
 /************************************************************************
 * Function:	AlcKDTValuesSet
@@ -779,7 +840,7 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 *		AlcPointP val0:		First value.
 *		AlcPointP val1:		Second value.
 ************************************************************************/
-static double	AlcKDTValuesSet(AlcKDTTree *tree,
+static void	AlcKDTValuesSet(AlcKDTTree *tree,
 				AlcPointP val0, AlcPointP val1)
 {
   int		idx;
@@ -857,6 +918,7 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
 ************************************************************************/
 static int	AlcKDTNodeValueCompare(AlcKDTTree *tree, AlcKDTNode *node,
 				       AlcPointP key)
+#ifdef OLD_CODE
 {
   int		jIdx,
   		kIdx,
@@ -908,6 +970,41 @@ static int	AlcKDTNodeValueCompare(AlcKDTTree *tree, AlcKDTNode *node,
   }
   return(cmp);
 }
+#else
+{
+  int		jIdx,
+  		kIdx,
+		cmp = 0;
+  double	diff;
+
+  jIdx = kIdx = 0;
+  if(tree->type == ALC_POINTTYPE_INT)
+  {
+    /* Check node's key doesn't match the given key. */
+    jIdx = kIdx = node->split;
+    do
+    {
+      cmp = *(node->key.kI + jIdx) - *(key.kI + jIdx);
+      jIdx = (jIdx + 1) % tree->dim;
+    } while((cmp == 0) && (jIdx != kIdx));
+  }
+  else /* tree->type == ALC_POINTTYPE_DBL */
+  {
+    /* Check node's key doesn't match the given key. */
+    jIdx = kIdx = node->split;
+    do
+    {
+      diff = *(node->key.kD + jIdx) - *(key.kD + jIdx);
+      if(fabs(diff) > tree->tol)
+      {
+	cmp = (diff > 0)? +1: -1;
+      }
+      jIdx = (jIdx + 1) % tree->dim;
+    } while((cmp == 0) && (jIdx != kIdx));
+  }
+  return(cmp);
+}
+#endif
 
 #ifdef ALC_KDT_TEST
 int		main(int argc, char *argv[])
@@ -979,7 +1076,7 @@ int		main(int argc, char *argv[])
   if((tree = AlcKDTTreeNew(ALC_POINTTYPE_INT, 2, -1.0, 0,
   			   &errNum)) != NULL)
 #else /* ! ALC_KDT_TEST_SMALL */
-  if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, nNodes, -1.0, 0,
+  if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, 2, -1.0, nNodes / 2,
   			   &errNum)) != NULL)
 #endif /* ALC_KDT_TEST_SMALL */
   {
@@ -1000,6 +1097,7 @@ int		main(int argc, char *argv[])
   dat[0] = 30; dat[1] = 65;
   fndNode = AlcKDTGetNN(tree, dat, DBL_MAX, &dist, &errNum);
 #else /* ! ALC_KDT_TEST_SMALL */
+  sumDist = 0.0;
   if(errNum == ALC_ER_NONE)
   {
     idx0 = nNodes / 2;
@@ -1007,11 +1105,16 @@ int		main(int argc, char *argv[])
     {
       dat[0] = data[idx0][0]; dat[1] = data[idx0][1];
       fndNode = AlcKDTGetNN(tree, dat, DBL_MAX, &dist, &errNum);
+      if(fndNode)
+      {
+        sumDist += dist;
+      }
       ++idx0;
     } while((errNum == ALC_ER_NONE) && (idx0 < nNodes));
   }
-#endif /* ALC_KDT_TEST_SMALL */
   system("date");
+  printf("%g\n", sumDist);
+#endif /* ALC_KDT_TEST_SMALL */
   (void )AlcKDTTreeFree(tree);
 #endif /* ALC_KDT_TEST_BRUTEFORCE */
   return(errNum);

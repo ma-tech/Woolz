@@ -12,7 +12,8 @@
 #		library.
 # $Revision$
 # Maintenance:	Log changes below, with most recent at top of list.
-# 01-12-1999 bill Add AlcBlockStack.c
+# 02-11-00 bill Add AlcKDTree.c
+# 01-12-99 bill Add AlcBlockStack.c
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -32,6 +33,7 @@ CSOURCES		= AlcAlloc.c \
 			  AlcDLPList.c \
 			  AlcFreeStack.c \
 			  AlcHashTable.c \
+			  AlcKDTree.c \
 			  AlcString.c \
 			  AlcVector.c
 
