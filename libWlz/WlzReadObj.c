@@ -557,6 +557,18 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
       }
       break;
 
+    case WLZ_PLANEDOMAIN_AFFINE:
+      for (i=0; i< nplanes ; i++, domains++){
+	if( domain.t = WlzReadAffineTransform(fp, &errNum) ){
+	  *domains = WlzAssignDomain(domain, NULL);
+	} else if( errNum == WLZ_ERR_EOO ){
+	  errNum = WLZ_ERR_NONE;
+	} else {
+	  break;
+	}
+      }
+      break ;
+
     case WLZ_PLANEDOMAIN_WARP:
       for (i=0; i< nplanes ; i++, domains++){
 	if( domain.wt = WlzReadWarpTrans(fp, &errNum) ){

@@ -431,6 +431,12 @@ static WlzErrorNum WlzWritePlaneDomain(FILE *fp, WlzPlaneDomain *planedm)
 	    errNum = WlzWriteHistogramDomain(fp, (*domains).hist);
 	  }
 	  break;
+	case WLZ_PLANEDOMAIN_AFFINE:
+	  for(i = 0; (i < nplanes) && (errNum == WLZ_ERR_NONE); i++, domains++)
+	  {
+	    errNum = WlzWriteAffineTransform(fp, (*domains).t);
+	  }
+	  break;
 	case WLZ_PLANEDOMAIN_WARP:
 	  for(i = 0; (i < nplanes) && (errNum == WLZ_ERR_NONE); i++, domains++)
 	  {

@@ -455,6 +455,13 @@ WlzErrorNum WlzFreePlaneDomain(WlzPlaneDomain *planedm)
       }
       break;
 
+    case WLZ_PLANEDOMAIN_AFFINE:
+      while( nplanes-- ){
+	errNum |= WlzFreeAffineTransform((*domains).t);
+	domains++;
+      }
+      break;
+
     default:
       return( WLZ_ERR_PLANEDOMAIN_TYPE );
 
