@@ -30,6 +30,9 @@ EXECUTABLES		= \
 			WlzSizeSelect \
 			WlzObjCompareSpecial_01
 
+SCRIPTS			= \
+			WlzObjCompareSpecial_01.csh
+
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			WlzExtractTransform.c \
@@ -130,7 +133,7 @@ endif
 			$(install_archive)
 
 # Target which installs executables (should not need modifying).
-install_executables:	$(EXECUTABLES)
+install_executables:	$(EXECUTABLES) $(SCRIPTS)
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
