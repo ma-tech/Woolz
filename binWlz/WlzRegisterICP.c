@@ -13,6 +13,7 @@
 *		closest point algorithm.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 21-12-00 bill	Add initial affine transform option.
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,13 +38,15 @@ int             main(int argc, char **argv)
   WlzTransformType trType = WLZ_TRANSFORM_2D_REG;
   WlzDomain	outDom;
   WlzValues	nullVal;
-  WlzObject	*outObj = NULL;
+  WlzObject	*inTrObj = NULL,
+  		*outObj = NULL;
   WlzObject	*inObj[2];
   FILE		*fP = NULL;
-  char 		*outObjFileStr;
+  char 		*inTrObjFileStr = NULL,
+  		*outObjFileStr;
   char  	*inObjFileStr[2];
   const char	*errMsg;
-  static char	optList[] = "o:hrt",
+  static char	optList[] = "i:o:hrt",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -59,6 +62,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'i':
+        inTrObjFileStr = optarg;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -97,6 +103,32 @@ int             main(int argc, char **argv)
     usage = 1;
     ok = 0;
   }
+  if(ok && inTrObjFileStr)
+  {
+    /* Read initial affine transform. */
+    if(((fP = (strcmp(inTrObjFileStr, "-")?
+               fopen(inTrObjFileStr, "r"): stdin)) == NULL) ||
+       ((inTrObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL))
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+	     "%s: failed to read initial affine transform from file %s (%s)\n",
+	     *argv, errMsg);
+    }
+    if(fP && strcmp(inTrObjFileStr, "-"))
+    {
+      fclose(fP);
+    }
+    if(inTrObj &&
+       ((inTrObj->type != WLZ_AFFINE_TRANS) || (inTrObj->domain.core == NULL)))
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+      		     "%s: initial affine transform object invalid type\n",
+		     *argv);
+    }
+  }
   if(ok)
   {
     /* Read objects. */
@@ -108,8 +140,8 @@ int             main(int argc, char **argv)
 	  (*inObjFileStr[idx] == '\0') ||
 	  ((fP = (strcmp(inObjFileStr[idx], "-")?
 		  fopen(inObjFileStr[idx], "r"): stdin)) == NULL) ||
-	  ((inObj[idx]= WlzAssignObject(WlzReadObj(fP,
-	  					   &errNum), NULL)) == NULL))
+	  ((inObj[idx] = WlzAssignObject(WlzReadObj(fP,
+	  					    &errNum), NULL)) == NULL))
       {
 	ok = 0;
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -195,7 +227,8 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    outDom.t = WlzRegICPObjs(inObj[0], inObj[1], trType,
+    outDom.t = WlzRegICPObjs(inObj[0], inObj[1],
+    			     inTrObj? inTrObj->domain.t: NULL, trType,
 			     NULL, NULL, 1000, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -258,8 +291,9 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s%s",
     *argv,
-    " [-o<out obj>] [-t] [-r] [<in obj 0>] [<in obj 1>]\n"
+    " [-i <init tr>] [-o<out obj>] [-t] [-r] [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
+    "  -i  Initial affine transform object.\n"
     "  -o  Output file name for affine transform.\n"
     "  -t  Find the translation only transform.\n"
     "  -r  Find the rigid body (aka registration) transform, default.\n"
