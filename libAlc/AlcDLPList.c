@@ -266,7 +266,7 @@ AlcDLPItem	*AlcDLPItemUnlink(AlcDLPList *list, AlcDLPItem *item,
   {
     if(item == list->head)
     {
-      if(item = item->next)
+      if(item == item->next)
       {
 	nextItem = NULL;
         list->head = NULL;
