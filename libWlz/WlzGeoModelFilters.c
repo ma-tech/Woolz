@@ -51,20 +51,16 @@ WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int minSpx)
   }
   else if((fS = model->child) != NULL)
   {
-    cS = fS->next;
-    while(cS != fS)
+    nS = fS->next;
+    do
     {
-       nS = cS->next;
-       if( WlzGMShellSimplexCnt(cS) < minSpx)
+      cS = nS;
+      nS = nS->next;
+      if(WlzGMShellSimplexCnt(cS) < minSpx)
       {
          WlzGMModelDeleteS(model, cS);
-       }
-      cS = nS;
-    }
-    if( WlzGMShellSimplexCnt(fS) < minSpx)
-    {
-      WlzGMModelDeleteS(model, fS);
-    }
+      }
+    } while(cS != fS);
   }
   return(errNum);
 }
