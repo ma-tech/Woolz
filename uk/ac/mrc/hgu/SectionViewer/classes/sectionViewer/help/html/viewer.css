@@ -1,0 +1,47 @@
+/* style sheet for java woolz viewer help pages */
+
+Body.overview{background-color:#DCDCDC;
+              color:#000077;
+	      font-family:verdana,arial,helvetica,sans-serif}
+	      
+Body.menu{background-color:#DCDFDC;
+              color:#770000;
+	      font-family:verdana,arial,helvetica,sans-serif}
+	      
+Body.control{background-color:#DFDCDC;
+              color:#007700;
+	      font-family:verdana,arial,helvetica,sans-serif}
+	      
+Body{background-color:#DCDFDF;
+     color:black;
+     font-family:verdana,arial,helvetica,sans-serif}
+	      
+H1{color:black;font-family:times}
+H2{color:black;font-family:times}
+H3{color:black;font-family:times}
+
+P.black{color:black;font-family:verdana}
+P.red{color:#770000;font-family:verdana}
+P.green{color:#007700;font-family:verdana}
+P.blue{color:#0000FF;font-family:verdana}
+P.cyan{color:#00FFFF;font-family:verdana}
+P.magenta{color:#FF00FF;font-family:verdana}
+P.yellow{color:#FFFF00;font-family:verdana}
+
+UL.disc{list-style-type:disc}
+UL.circle{list-style-type:circle}
+UL.square{list-style-type::square}
+
+Strong.code{background:#DCDCDC}
+
+Div.code{background:#DCDCDC;color:black;font-family:courier;font-size: 20px}
+Div.topicHead{color:black;font-family:times;font-size: 25px}
+Div.generalText{color:black;font-family:verdana}
+Div.noteText{color:black;font-family:verdana;font-style:italic}
+Div.before{color:green;font-family:courier;font-size: 20px}
+Div.after{color:blue;font-family:courier;font-size: 20px}
+
+BlockQuote.tab{margin-left:50px} 
+BlockQuote.indent{margin-left:2px} 
+
+Span.redBG{background-color:red}
