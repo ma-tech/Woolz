@@ -275,7 +275,7 @@ WlzObject *WlzPolyToObj(
 {
   /* local variables */
   WlzObject		*new_poly, *obj1, *obj2, *obj3, *obj=NULL;
-  WlzObject		**objs;
+  WlzObject		**objs=NULL;
   WlzDomain		domain;
   WlzValues		values;
   WlzIVertex2		*vtxs;
@@ -283,18 +283,50 @@ WlzObject *WlzPolyToObj(
   int			i, j, n, width, height, ignlns;
   int			l1, ll, k1, lk, nints;
   int			num_vtxs, nv;
+  int			wrap;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-/* The following line needed until we resolve an apparent bug in WlzPolyTo8Polygon() */
-  WlzObject *new_poly_preserve;
-  
-  int w = fillMode == WLZ_VERTEX_FILL ? 0 : 1;		/* 03-11-01 ip */
-  /* find a new polygon eight-connected and closed if required*/
-  if( new_poly = WlzPolyTo8Polygon(pgdm, w, &errNum) ){
-    vtxs     = ((WlzPolygonDomain *) new_poly->domain.poly)->vtx;
-    num_vtxs = ((WlzPolygonDomain *) new_poly->domain.poly)->nvertices - w;
+
+  /* input parameter checks */
+  if( pgdm == NULL ){
+    errNum = WLZ_ERR_DOMAIN_NULL;
   }
-/* The following line needed until we resolve an apparent bug in WlzPolyTo8Polygon() */
-  new_poly_preserve = WlzPolyTo8Polygon(pgdm, w, &errNum);
+  else {
+    switch( pgdm->type ){
+    case WLZ_EMPTY_OBJ:
+      return WlzMakeEmpty(dstErr);
+
+    case WLZ_POLYGON_INT:
+    case WLZ_POLYGON_FLOAT:
+    case WLZ_POLYGON_DOUBLE:
+      switch( fillMode ){
+      case WLZ_SIMPLE_FILL:
+      case WLZ_EVEN_ODD_FILL:
+	wrap = 1;
+	break;
+
+      case WLZ_VERTEX_FILL:
+	wrap = 0;
+	break;
+
+      default:
+	errNum = WLZ_ERR_PARAM_DATA;
+	break;
+      }
+      break;
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+    }
+  }
+
+  /* find a new polygon eight-connected and closed if required */
+  if( new_poly = WlzPolyTo8Polygon(pgdm, wrap, &errNum) ){
+    new_poly = WlzAssignObject(new_poly, NULL);
+    vtxs     = new_poly->domain.poly->vtx;
+    num_vtxs = new_poly->domain.poly->nvertices - wrap;
+  }
+
   /* find line and column bounds */
   if( errNum == WLZ_ERR_NONE ){
     l1 = ll = vtxs->vtY;
@@ -321,13 +353,23 @@ WlzObject *WlzPolyToObj(
   }
 
   /* build an object with intervals given by non-polynomial points */
-  if((errNum == WLZ_ERR_NONE) &&
-     (domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-				       l1, ll, k1, lk, &errNum)) ){
-    values.core = NULL;
-    obj1 = WlzAssignObject(WlzMakeMain(WLZ_2D_DOMAINOBJ, domain,
-				       values, NULL, NULL, &errNum), NULL);
-  }
+  if( errNum == WLZ_ERR_NONE ){
+     if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					  l1, ll, k1, lk, &errNum) ){
+       values.core = NULL;
+       if( obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
+			      NULL, &errNum) ){
+	 obj1 = WlzAssignObject(obj1, NULL);
+       }
+       else {
+	 WlzFreeDomain(domain);
+	 WlzFreeObj(new_poly);
+       }
+     }
+     else {
+       WlzFreeObj(new_poly);
+     }
+  }	
 
   /* maximum number of intervals = num_vtxs + height */
   if((errNum == WLZ_ERR_NONE) &&
@@ -338,6 +380,7 @@ WlzObject *WlzPolyToObj(
   }
   else {
     WlzFreeObj(obj1);
+    WlzFreeObj(new_poly);
     errNum = WLZ_ERR_MEM_ALLOC;
   }
 
@@ -367,22 +410,26 @@ WlzObject *WlzPolyToObj(
       }
       vtxs -= n;
 
-      /* count intervals */
-      for(i=1, nints=2; i < n; i++){
-	if( ((vtxs+i)->vtX - (vtxs+i-1)->vtX) > 1 ){
-	  nints++;
-	}
-      }
+      /* set intervals - counts intervals as we go */
       intptr->ileft = 0;
-      intptr++->iright = vtxs++->vtX - 1 - k1;  /* first interval */
+      intptr->iright = vtxs->vtX - 1 - k1;  /* first interval */
+      intptr++;
+      vtxs++;
+      nints = 1;
       for(i=1; i < n; i++, vtxs++){
 	if( (vtxs->vtX - (vtxs-1)->vtX) > 1 ){
 	  intptr->ileft = (vtxs-1)->vtX + 1 - k1;
-	  intptr++->iright = vtxs->vtX - 1 - k1;
+	  intptr->iright = vtxs->vtX - 1 - k1;
+	  intptr++;
+	  nints++;
 	}
       }
+
+      /* last interval */
       intptr->ileft = (vtxs-1)->vtX + 1 - k1;
-      intptr++->iright = lk - k1;			/* last interval */
+      intptr->iright = lk - k1;
+      intptr++;
+      nints++;
       WlzMakeInterval(j, domain.i, nints, intptr-nints);
     }
 
@@ -394,7 +441,10 @@ WlzObject *WlzPolyToObj(
       ignlns = (height < width ? height : width) - 1;
       errNum = WlzLabel(obj1, &n, &objs, 1, ignlns, WLZ_4_CONNECTED);
       if( (errNum == WLZ_ERR_NONE) && n ){
+	/* relies on *objs already being assigned */
 	obj2 = *objs;
+      }
+      if( objs ){
 	AlcFree((void *) objs);
       }
       break;
@@ -402,27 +452,29 @@ WlzObject *WlzPolyToObj(
     case WLZ_EVEN_ODD_FILL:
       ignlns = 0;
       errNum = WlzLabel(obj1, &n, &objs, 1024, ignlns, WLZ_4_CONNECTED);
-      for(i=0; i < n; i++){
-	WlzIVertex2	vtx;
-	vtx.vtX = objs[i]->domain.i->kol1;
-	if( objs[i]->domain.i->type == WLZ_INTERVALDOMAIN_INTVL ){
-	  vtx.vtX += objs[i]->domain.i->intvlines->intvs->ileft;
-	}
-	vtx.vtY = objs[i]->domain.i->line1;
+      if( errNum == WLZ_ERR_NONE ){
+	for(i=0; i < n; i++){
+	  WlzIVertex2	vtx;
+	  vtx.vtX = objs[i]->domain.i->kol1;
+	  if( objs[i]->domain.i->type == WLZ_INTERVALDOMAIN_INTVL ){
+	    vtx.vtX += objs[i]->domain.i->intvlines->intvs->ileft;
+	  }
+	  vtx.vtY = objs[i]->domain.i->line1;
 
-/* The following change needed until we resolve an apparent bug in WlzPolyTo8Polygon() */
-/*		if( WlzInsidePolyEO(vtx, pgdm, &errNum) ){	*/
-	if( WlzInsidePolyEO(vtx, new_poly_preserve->domain.poly, &errNum) ){
-	  /* replace with empty obj */
+	  if( WlzInsidePolyEO(vtx, pgdm, &errNum) ){
+	    /* replace with empty obj */
+	    WlzFreeObj(objs[i]);
+	    objs[i] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
+	  }
+	}
+	obj2 = WlzAssignObject(WlzUnionN(n, objs, 0, &errNum), NULL);
+	for(i=0; i < n; i++){
 	  WlzFreeObj(objs[i]);
-	  objs[i] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
 	}
       }
-      obj2 = WlzAssignObject(WlzUnionN(n, objs, 0, &errNum), NULL);
-      for(i=0; i < n; i++){
-	WlzFreeObj(objs[i]);
+      if( objs ){
+	AlcFree((void *) objs);
       }
-      AlcFree((void *) objs);
       break;
 
     case WLZ_VERTEX_FILL:
@@ -432,38 +484,25 @@ WlzObject *WlzPolyToObj(
       break;
 
     }
+    WlzFreeObj(obj1);
+    WlzFreeObj(new_poly);
   }
 
   /* find residual object */
-  if((errNum == WLZ_ERR_NONE) &&
-     (domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
-				       l1, ll, k1, lk, &errNum)) &&
-     (obj3 = WlzAssignObject(
-       WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
-		   NULL, &errNum), NULL)) ){
-    obj = WlzDiffDomain(obj3, obj2, &errNum);
-  }
-
-  /* clean up and return */
   if( errNum == WLZ_ERR_NONE ){
-    WlzFreeObj( obj1 );
-    WlzFreeObj( obj2 );
-    WlzFreeObj( obj3 );
-    WlzFreeObj( new_poly );
-    if( obj != NULL ){
-      switch( obj->type ){
-
-      case WLZ_2D_DOMAINOBJ:
-	if( obj->domain.core->type == WLZ_INTERVALDOMAIN_INTVL ){
-	  WlzStandardIntervalDomain( obj->domain.i );
-	}
-	break;
-
-      case WLZ_EMPTY_OBJ:
-      default:
-	break;
+    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					 l1, ll, k1, lk, &errNum) ){
+      if( obj3 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
+			     NULL, &errNum) ){
+	obj3 = WlzAssignObject(obj3, NULL);
+	obj = WlzDiffDomain(obj3, obj2, &errNum);
+	WlzFreeObj( obj3 );
+      }
+      else {
+	WlzFreeDomain(domain);
       }
     }
+    WlzFreeObj(obj2);
   }
 
   if( dstErr ){
@@ -478,12 +517,15 @@ WlzObject *WlzPolyToObj(
 * \ingroup      WlzPolyline
 * \brief        Returns the 8-connected, integer vertex polyline corresponding
 to the input polygon. The wrap value (number of overlapping vertices of
-the polygon ends) is preserved. WLZ_POLYGON_FLOAT and WLZ_POLYGON_DOUBLE
-polylines are converted to integer vertices using WlzValueCopyFVertexToIVertex and WlzValueCopyDVertexToIVertex respectively.
+the polygon ends) is included in case this is called to create an
+ 8-connected boundary fro which the wrap needs to be preserved.
+ WLZ_POLYGON_FLOAT and WLZ_POLYGON_DOUBLE
+polylines are converted to integer vertices using 
+WlzValueCopyFVertexToIVertex and WlzValueCopyDVertexToIVertex respectively.
 *
 * \return       8-connected polygon object
 * \param    pgdm	input polygon domain
-* \param    wrap	wrap value of the polygon domain
+* \param    wrap	wrap value of the new polygon domain
 * \param    dstErr	error return
 * \par      Source:
 *               WlzPolyToObj.c
@@ -502,11 +544,12 @@ WlzObject *WlzPolyTo8Polygon(
   void			*freeptr=NULL;
   int			i, j, n, length, k;
   int			x, y, x0, y0, lx, ly;
+  float			del;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the domain and wrap */
   if( pgdm == NULL ){
-    errNum = WLZ_ERR_OBJECT_NULL;
+    errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else if( wrap < 0 ){
     errNum = WLZ_ERR_PARAM_DATA;
@@ -516,32 +559,36 @@ WlzObject *WlzPolyTo8Polygon(
   if( errNum == WLZ_ERR_NONE ){
     domain.core = NULL;
     values.core = NULL;
-    n = pgdm->nvertices;
     switch( pgdm->type ){
 
     case WLZ_EMPTY_OBJ:
-      return WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, dstErr);
+      return WlzMakeEmpty(dstErr);
 
     case WLZ_POLYGON_INT:
+      n = pgdm->nvertices;
       vtxs = pgdm->vtx;
       break;
 
     case WLZ_POLYGON_FLOAT:
-      if( (freeptr = AlcMalloc(sizeof(WlzIVertex2)*n)) == NULL ){
-	errNum = WLZ_ERR_MEM_ALLOC;
-	break;
+      n = pgdm->nvertices;
+      if( freeptr = AlcMalloc(sizeof(WlzIVertex2)*n) ){
+	vtxs = (WlzIVertex2 *) freeptr;
+	WlzValueCopyFVertexToIVertex(vtxs, (WlzFVertex2 *) (pgdm->vtx), n);
       }
-      vtxs = (WlzIVertex2 *) freeptr;
-      WlzValueCopyFVertexToIVertex(vtxs, (WlzFVertex2 *) pgdm->vtx, n);
+      else {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
       break;
 
     case WLZ_POLYGON_DOUBLE:
-      if( (freeptr = AlcMalloc(sizeof(WlzIVertex2)*n)) == NULL ){
-	errNum = WLZ_ERR_MEM_ALLOC;
-	break;
+      n = pgdm->nvertices;
+      if( freeptr = AlcMalloc(sizeof(WlzIVertex2)*n) ){
+	vtxs = (WlzIVertex2 *) freeptr;
+	WlzValueCopyDVertexToIVertex(vtxs, (WlzDVertex2 *) pgdm->vtx, n);
       }
-      vtxs = (WlzIVertex2 *) freeptr;
-      WlzValueCopyDVertexToIVertex(vtxs, (WlzDVertex2 *) pgdm->vtx, n);
+      else {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
       break;
 
     default:
@@ -552,21 +599,22 @@ WlzObject *WlzPolyTo8Polygon(
 
   /* check eight connected length */
   if( errNum == WLZ_ERR_NONE ){
-    x0 = vtxs->vtX;
-    y0 = vtxs->vtY;
-    for(i=1, vtxs++, length=0; i < n; i++, vtxs++){
-      x = vtxs->vtX;
-      y = vtxs->vtY;
+    x0 = vtxs[0].vtX;
+    y0 = vtxs[0].vtY;
+    length = 0;
+    for(i=1; i < n; i++){
+      x = vtxs[i].vtX;
+      y = vtxs[i].vtY;
       lx = abs(x - x0);
       ly = abs(y - y0);
       length += (lx > ly) ? lx : ly;
-      x0 = x; y0 = y;
+      x0 = x;
+      y0 = y;
     }
-    vtxs -= n;
-    x = vtxs->vtX; y = vtxs->vtY;
+    x = vtxs[0].vtX;
+    y = vtxs[0].vtY;
     lx = abs(x - x0); ly = abs(y - y0);
     length += (lx > ly) ? lx : ly;
-    x0 = x; y0 = y;
   }
 
   /* make an eight-connected polyline */
@@ -580,42 +628,47 @@ WlzObject *WlzPolyTo8Polygon(
     }
     else {
       nvtxs = npgdm->vtx;
-      nvtxs->vtX = x;
-      nvtxs->vtY = y;
-      nvtxs++;
+      nvtxs[0] = vtxs[0];
+      x0 = vtxs[0].vtX;
+      y0 = vtxs[0].vtY;
       k=1;
-      for(j=1, vtxs++; j < n; j++, vtxs++){
-	x = vtxs->vtX;
-	y = vtxs->vtY;
+      for(j=1; j < n; j++){
+	x = vtxs[j].vtX;
+	y = vtxs[j].vtY;
 	lx = x - x0;
 	ly = y - y0;
 	length = (abs(lx) > abs(ly)) ? abs(lx) : abs(ly);
-	for(i=1; i <= length; i++, nvtxs++, k++){
-	  nvtxs->vtX = x0 + i * lx / length;
-	  nvtxs->vtY = y0 + i * ly / length;
+	for(i=1; i <= length; i++, k++){
+	  /* this could fail crossing zero - now use NINT RAB */
+	  del = ((float) (i * lx)) / length;
+	  nvtxs[k].vtX = x0 + WLZ_NINT(del);
+	  del = ((float) (i * ly)) / length;
+	  nvtxs[k].vtY = y0 + WLZ_NINT(del);
 	}
 	x0 = x;
 	y0 = y;
       }
-      vtxs -= n;
     }
   }
 
   /* close the polyline */
   if( errNum == WLZ_ERR_NONE ){
     if( wrap > 0 ){
-      x = vtxs->vtX;
-      y = vtxs->vtY;
+      x = vtxs[0].vtX;
+      y = vtxs[0].vtY;
       lx = x - x0;
       ly = y - y0;
       length = (abs(lx) > abs(ly)) ? abs(lx) : abs(ly);
-      for(i=1; i <= length; i++, nvtxs++, k++){
-	nvtxs->vtX = x0 + i * lx / length;
-	nvtxs->vtY = y0 + i * ly / length;
+      for(i=1; i <= length; i++, k++){
+	del = ((float) (i * lx)) / length;
+	nvtxs[k].vtX = x0 + WLZ_NINT(del);
+	del = ((float) (i * ly)) / length;
+	nvtxs[k].vtY = y0 + WLZ_NINT(del);
+
       }
     }
-    for(i=1; i < wrap; i++, nvtxs++, k++){
-      *nvtxs = npgdm->vtx[i];
+    for(i=1; i < wrap; i++, k++){
+      nvtxs[k] = nvtxs[i];
     }
 
     npgdm->nvertices = k;

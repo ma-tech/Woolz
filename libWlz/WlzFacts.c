@@ -357,13 +357,15 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
+	case WLZ_EMPTY_OBJ:
+	  /* no more facts available */
+	  break;
 	case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
 	case WLZ_COMPOUND_LIST_2: /* FALLTHROUGH */
 	case WLZ_PROPERTY_OBJ:    /* FALLTHROUGH */
-	case WLZ_EMPTY_OBJ:       /* FALLTHROUGH */
 	default:
 	  errNum = WlzObjFactsAppend(fData,
-	  		"Facts not implemeented for this object type.\n");
+	  		"Facts not implemented for this object type.\n");
 	  break;
       }
     }

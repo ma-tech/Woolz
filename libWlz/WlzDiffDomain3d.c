@@ -92,12 +92,6 @@ WlzObject *WlzDiffDomain3d(
     else {
       newvdom = NULL;
     }
-    if( errNum == WLZ_ERR_NONE ){
-      domain.p = newpdom;
-      values.vox = newvdom;
-      newobj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
-			   NULL, NULL, &errNum);
-    }
   }
     
   /* find the new domains */
@@ -153,10 +147,10 @@ WlzObject *WlzDiffDomain3d(
 
   if( errNum == WLZ_ERR_NONE ){
     WlzStandardPlaneDomain( newpdom, newvdom );
-  }
-  else if ( newobj ){
-    WlzFreeObj( newobj );
-    newobj = NULL;
+    domain.p = newpdom;
+    values.vox = newvdom;
+    newobj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
+			 NULL, NULL, &errNum);
   }
 
   if( dstErr ){

@@ -27,6 +27,58 @@ static void			WlzBoundObjToPolyFillArray(
 				  WlzPolygonDomain **polyAry,
 				  int *idx);
 
+WlzErrorNum WlzBoundaryToPolyObjArray(
+  WlzObject	*bndObj,
+  int		*dstNumObjs,
+  WlzObject	***dstObjArray)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzDomain	domain;
+  WlzValues	values;
+  WlzObject	*obj, **objs;
+  WlzPolygonDomain	**polyArray;
+  int 		i, numPolys;
+
+  /* check inputs */
+  if( bndObj == NULL ){
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((dstNumObjs == NULL) || (dstObjArray == NULL)){
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else {
+    /* generate array of poly domains */
+    errNum = WlzBoundObjToPolyDomArray(bndObj, &numPolys, &polyArray);
+  }
+
+  /* convert to polygon objects */
+  if( errNum == WLZ_ERR_NONE ){
+    if((objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *)*numPolys)) == NULL){
+      errNum = WLZ_ERR_MEM_ALLOC;
+      for(i=0; i < numPolys; i++){
+	WlzFreePolyDmn(polyArray[i]);
+      }
+      AlcFree(polyArray);
+      numPolys = 0;
+    }
+    else {
+      for(i=0; i < numPolys; i++){
+	domain.poly = polyArray[i];
+	values.core = NULL;
+	obj = WlzMakeMain(WLZ_2D_POLYGON, domain, values,
+			  NULL, NULL, &errNum);
+	objs[i] = WlzAssignObject(obj, NULL);
+	WlzFreePolyDmn(polyArray[i]);
+      }
+      AlcFree(polyArray);
+    }
+  }
+  
+  *dstNumObjs = numPolys;
+  *dstObjArray = objs;
+  return errNum;
+}
+
 /*!
 * \return	Array of polygon domains.
 * \ingroup	WlzBoundary
@@ -191,7 +243,7 @@ static void	WlzBoundObjToPolyFillArray(WlzBoundList *bnd,
   {
     do
     {
-      *(polyAry + *idx) = bnd->poly;
+      *(polyAry + *idx) = WlzAssignPolygonDomain(bnd->poly, NULL);
       ++*idx;
       WlzBoundObjToPolyFillArray(bnd->down, polyAry, idx);
       bnd = bnd->next;

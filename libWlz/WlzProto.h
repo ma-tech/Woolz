@@ -952,6 +952,9 @@ extern WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
 /************************************************************************
 * WlzBoundaryUtils.c							*
 ************************************************************************/
+extern WlzErrorNum WlzBoundaryToPolyObjArray(WlzObject	*bndObj,
+					     int	*dstNumObjs,
+					     WlzObject	***dstObjArray);
 extern WlzErrorNum		WlzBoundObjToPolyDomArray(
 				  WlzObject *bndObj,
 				  int *dstSizeArrayPoly,
