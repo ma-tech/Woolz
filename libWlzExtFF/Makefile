@@ -13,6 +13,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 09-01-01 bill Add target for tags
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -192,6 +193,10 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
+
+# making the tag file
+tags:			 $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			 $(CTAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
