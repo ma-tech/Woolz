@@ -47,6 +47,9 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 16-01-01 bill	Add WlzGeomTriangleNormal() and WlzGMVertexNormal3D().
+* 22-12-00 bill Add initial affine transform parameter to WlzRegICPObjs().
+*		Add normals to WlzVerticiesFromObj().
 * 01-12-00 RAB	Add WlzHasIntersection().
 * 01-12-00 RAB	Add get and set functions for 3D view structure params.
 * 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
@@ -1179,6 +1182,12 @@ extern double		WlzGMVertexDistSq3D(
 extern double		WlzGMVertexDistSq2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern WlzDVertex3	WlzGMVertexNormal3D(
+			  WlzGMModel *model,
+			  WlzGMVertex *gV,
+			  int *sVBufSz,
+			  WlzGMVertex ***sVBuf,
+			  WlzErrorNum *dstErr);
 /* Model access and testing */
 extern WlzErrorNum 	WlzGMModelTypeValid(
 			WlzGMModelType type);
@@ -1308,6 +1317,10 @@ extern void			WlzGeomVtxSortRadial(
 				  WlzDVertex3 *vP,
 				  WlzDVertex2 *wV,
 				  WlzDVertex3 rV);
+extern WlzDVertex3		WlzGeomTriangleNormal(
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1,
+				  WlzDVertex3 v2);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -1998,6 +2011,7 @@ extern WlzObject		*WlzReadObj(
 extern WlzAffineTransform	*WlzRegICPObjs(
 				  WlzObject *tObj,
 				  WlzObject *sObj,
+				  WlzAffineTransform *initTr,
 				  WlzTransformType trType,
 				  int *dstConv,
 				  int *dstItr,
@@ -2637,6 +2651,7 @@ extern WlzErrorNum 		WlzVerifyInterval(
 #ifndef WLZ_EXT_BIND
 extern WlzVertexP		WlzVerticiesFromObj(
 				  WlzObject *obj,
+				  WlzVertexP *dstNr,
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
