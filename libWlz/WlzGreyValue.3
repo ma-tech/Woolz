@@ -1,0 +1,243 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzGreyValue.3
+.\" Date:       July 1997
+.\" Author:     Bill Hill
+.\" Copyright:	1997 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for random access to grey values.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.nh
+.TH "WlzGreyValue" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzGreyValueMakeWSp,
+WlzGreyValueFreeWSp,
+WlzGreyValueGet,
+WlzGreyValueGetCon \- Woolz functions for random access to grey values.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *" "obj" ,
+.in +4m
+.br
+.BI "WlzErrorNum *" "dstErrNum" );
+.in -4m
+.LP
+.BI "void WlzGreyValueFreeWSp(WlzGreyValueWSpace *" "gVWSp" );
+.LP
+.BI "void WlzGreyValueGet(WlzGreyValueWSpace *" "gVWSp" ,
+.in +4m
+.br 
+.BI "double " "plane" ,
+.BI "double " "line" ,
+.BI "double " "kol" );
+.in -4m
+.LP 
+.BI "void WlzGreyValueGetCon(WlzGreyValueWSpace *" "gVWSp" ,
+.in +4m
+.br 
+.BI "double " "plane" ,
+.BI "double " "line" ,
+.BI "double " "kol" );
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+obj^Woolz domain object with grey values.
+dstErrNum^Destination pointer for error number.
+gVWSp^Grey value work space.
+plane^Plane (z) coordinate.
+line^Line (y) coordinate.
+kol^Column (x) coordinate.
+gPtr^Destination pointer for a valid pointer to the grey value
+^at the given coordinate.
+gVal^Destination pointer for the connected grey values about
+^the given coordinate.
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+.LP
+.B WlzGreyValueMakeWSp
+constructs a work space data structure which can be used for
+random access to grey values in a Woolz 2D or 3D domain object.
+No fields in a work space data structure should be written to
+outside of the WlzGreyValue functions (except for gPtr[0-7] and gVal[0-7]).
+The data structure is:
+.in +4m
+.ps -2
+.cs B 24
+.cs I 24
+.cs R 24
+.nf
+
+typedef struct _WlzGreyValueWSpace
+{
+  WlzObjectType objType;        /* Type of object: Always either
+                                   WLZ_2D_DOMAINOBJ or
+                                   WLZ_3D_DOMAINOBJ */
+  WlzDomain     domain;         /* The object's domain */
+  WlzValues     values;         /* The object's values */
+  WlzAffineTransform *invTrans; /* If the object is a WLZ_TRANS_OBJ
+                                   then the inverse transform is
+                                   non\-NULL */
+  WlzIntervalDomain *iDom2D;    /* Current/last plane or 2D object
+                                   domain */
+  WlzValues     values2D;       /* Current/last plane or 2D object
+                                   values */
+  int           plane;          /* Current/last plane position */
+  WlzGreyType   gType;          /* Grey type */
+  WlzObjectType gTabType2D;     /* Current/last plane or 2D grey
+                                   table */
+  WlzGreyV      gBkd;           /* Background grey value, always
+                                   of gType */
+  WlzGreyP      gPtr[8];        /* One, four or eight grey
+                                   pointers */
+  WlzGreyV      gVal[8];        /* One, four or eight grey
+                                   values */
+} WlzGreyValueWSpace;
+
+.fi
+.cs B
+.cs I
+.cs R
+.ps +2
+.in -4m
+.LP
+.B WlzGreyValueFreeWSp
+frees the work space data structure created by
+\fBWlzGreyValueMakeWSp\fR.
+.LP
+.B WlzGreyValueGet
+gets a single grey value and grey pointer for the given
+coordinate.
+.LP
+.B WlzGreyValueGetCon
+gets four (2D) or eight (3D) grey values and grey pointers
+for the given coordinate (\fBp\fRlane, \fBl\fRine, \fBk\fRol):
+.in +4m
+.TS
+tab(^);
+l l l l l.
+gPtr[\fB0\fR]^gVal[\fB0\fR]^(\fBp\fR,^\fBk\fR,^\fBl\fR)
+gPtr[\fB1\fR]^gVal[\fB1\fR]^(\fBp\fR,^\fBk + 1\fR,^\fBl\fR)
+gPtr[\fB2\fR]^gVal[\fB2\fR]^(\fBp\fR,^\fBk\fR,^\fBl + 1\fR)
+gPtr[\fB3\fR]^gVal[\fB3\fR]^(\fBp\fR,^\fBk + 1\fR,^\fBl + 1\fR)
+gPtr[\fB4\fR]^gVal[\fB4\fR]^(\fBp + 1\fR,^\fBk\fR,^\fBl\fR)
+gPtr[\fB5\fR]^gVal[\fB5\fR]^(\fBp + 1\fR,^\fBk + 1\fR,^\fBl\fR)
+gPtr[\fB6\fR]^gVal[\fB6\fR]^(\fBp + 1\fR,^\fBk\fR,^\fBl + 1\fR)
+gPtr[\fB7\fR]^gVal[\fB7\fR]^(\fBp + 1\fR,^\fBk + 1\fR,^\fBl + 1\fR)
+.TE
+.in -4m
+.LP
+In all the above random access functions,
+if the given coordinate lies outside
+of the objects domain,
+then the grey value is set to the background value
+and the grey pointer is set to point the grey value in
+the work space. If the coordinate (\fBp\fR, \fBl\fR, \fBk\fR)
+lies outside the object's domain:
+.in +4m
+.ps -2
+.cs R 24
+.nf
+gPtr[0] == &(gVWSp->gVal[0])
+.fi
+.cs R
+.ps +2
+.in -4m
+
+.SH EXAMPLES
+.LP
+.ps -2
+.cs B 24
+.cs R 24
+.nf
+
+/* Simple example which reads a Woolz 2D domain object with grey
+ * values from the standard input and writes a pgm format image
+ * to the standard output.
+ * \s+2\fBThis is NOT an efficient way to do this!\s-2\fR
+ * Look at WlzCutObjToBox for a more efficient solution.
+ */
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+ 
+int             main(char *argv[], int argc)
+{
+  int           line,
+                kol;
+  WlzObject     *obj = NULL;
+  WlzGreyValueWSpace *gVWSp = NULL;
+  WlzPixelV     pix;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+ 
+  if((obj = WlzAssignObject(WlzReadObj(stdin, &errNum), NULL)) == NULL)
+  {
+    (void )fprintf(stderr,
+                   "%s: failed to read object.\\n",
+                   argv[0]);
+  }
+  else if((obj->type != WLZ_2D_DOMAINOBJ) ||
+          (obj->domain.core == NULL) ||
+          (obj->values.core == NULL))
+  {
+    (void )fprintf(stderr,
+                   "%s: Inappropriate object type.\\n",
+                   argv[0]);
+    errNum = INVALID_OBJECT_TYPE;
+  }
+  else if((gVWSp = WlzGreyValueMakeWSp(obj, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr,
+                   "%s: Failed to make grey value work space.\\n",
+                   argv[0]);
+  }
+  else
+  {
+    pix.type = gVWSp->gType;
+    (void )printf("P2\\n%d %d\\n255\\n",
+                  obj->domain.i->lastkl - obj->domain.i->kol1 + 1,
+                  obj->domain.i->lastln - obj->domain.i->line1 + 1);
+    for(line = obj->domain.i->lastln;
+        line >= obj->domain.i->line1; --line)
+    {
+      for(kol = obj->domain.i->kol1; 
+          kol <= obj->domain.i->lastkl; ++kol)
+      {
+        WlzGreyValueGet(gVWSp, 0, line, kol);
+        pix.v = gVWSp->gVal[0];
+        (void )WlzValueConvertPixel(&pix, pix, WLZ_GREY_UBYTE);
+        (void )printf("%d ", pix.v.ubv);
+      }
+      (void )printf("\\n");
+    }
+    WlzGreyValueFreeWSp(gVWSp);
+  }
+  if(obj)
+  {
+    WlzFreeObj(obj);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.cs B
+.ps +2
+.SH SEE ALSO
+WlzCutObjToBox(3),
+WlzError(3)
+.SH BUGS
+Still to be found.

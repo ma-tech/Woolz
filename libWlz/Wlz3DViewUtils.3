@@ -1,0 +1,219 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      Wlz3DViewUtils.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for handling the 3D view structure.
+.\"		affine transforms.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.TH "Wlz3DViewUtils.3" 3 "Mon Feb 17 09:25:50 1997" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzRead3DViewStruct, WlzWrite3DViewStruct, WlzMake3DViewStruct,
+WlzFree3DViewStruct, WlzInit3DViewStruct, Wlz3DSectionTransformVtx,
+Wlz3DSectionIncrementDistance \- utility routines to handle the 3D view
+structure.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzThreeDViewStruct *WlzRead3DViewStruct(
+  FILE *fp);
+
+WlzErrorNum WlzWrite3DViewStruct(
+  FILE			*fp,
+  WlzThreeDViewStruct	*viewStr);
+
+WlzThreeDViewStruct *WlzMake3DViewStruct(
+  WlzObjectType	type);
+
+WlzErrorNum WlzFree3DViewStruct(
+  WlzThreeDViewStruct *viewStr);
+
+WlzErrorNum WlzInit3DViewStruct(
+  WlzThreeDViewStruct	*viewStr,
+  WlzObject		*obj);
+
+WlzErrorNum Wlz3DSectionTransformVtx(
+  WlzDVertex3		*vtx,
+  WlzThreeDViewStruct	*viewStr);
+
+WlzErrorNum Wlz3DSectionIncrementDistance(
+  WlzThreeDViewStruct	*viewStr,
+  double		incr);
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " fp "		I/O stream pointer."
+.LP
+.BI " " viewStr "	3D view structure."
+.LP
+.BI " " obj "		object pointer."
+.LP
+.BI " " vtx "		vertex pointer."
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+Routines for creating, intialising and manipulating 3D view
+structures. The view structure hold the required parameters to view a
+2D section from a 3D woolz object and when initialised will have a set
+of look-up tables to transform from screen to image coordinates. These
+are defined with respect to a reference object used in the
+intialisation process. To get the required section use
+WlzGetSectionFromObject(3) which will extract the section from the
+given object which does not have to be the same as the reference
+object and could be a binary domain only.
+.LP
+.I WlzRead3DViewStruct,
+read a 3D view structure, this is intended for when the view structure
+can become a first class woolz object but is not yet implemented.
+.I WlzWrite3DViewStruct,
+write a 3D view structure, this is intended for when the view structure
+can become a first class woolz object but is not yet implemented.
+.I WlzMake3DViewStruct,
+allocates space and set default parameters for a 3D view structure. No
+look-up tables are defined until WlzInit3DViewStruct is called with a
+valid reference object.
+.I WlzFree3DViewStruct,
+frees space allocated for a 3D view structure, note the linkcount is
+respected and the reference object freed if necessary.
+.I WlzInit3DViewStruct,
+intialises a 3D view structure with respect to a given object. The
+viewing parameters set in the structure are used in conjunction with
+the given object - which becomes the reference object associated with
+the transform - to define a set of look-up tables which allow rapid
+calculation of the (x,y,z) coordinates corresponding to coordintes
+(x',y') in the section plane. Also defined are the minimum and maximum
+values of (x',y',z') required to cover the reference object. For
+details of the transform see the document "A 3D Paint Program for the
+Mouse Atlas and Gene-Expression Database".
+.I Wlz3DSectionTransformVtx,
+transforms a vertex defined in image coordinates to the section
+coordinate frame defined by the view structure, i.e. this is the
+forward transform to viewing coordinates. It is used mainly determine
+the bounding box in viewing coordintes. The reverse transformation is
+obtained directly from the LUTs in the view structure.
+.I Wlz3DSectionIncrementDistance,
+modifies the transform LUTs as required to increment the distance
+parameter without changing the angles. This is a simple multiply and
+add for 3 of the LUTs and is therefore much quicker than
+re-calculating from scratch.
+
+.SH EXAMPLES
+.LP
+The 3D view structure has a number of parameters to define the pose
+and after initialisation hold a set of LUT's for rapid calculation of
+image coordinates from displayed section coordinates. This structure
+and associated enumerated types are:
+.nf
+.sp
+/********************************************************************
+ * 3D section enumerated types
+ *
+ ********************************************************************/
+typedef enum{
+    X_Y_VIEW,
+    Y_Z_VIEW,
+    Z_X_VIEW,
+    ARBITRARY_VIEW
+} WlzThreeDStdViews;
+
+typedef enum{
+  STATUE_MODE,
+  UP_IS_UP_MODE 
+} WlzThreeDViewMode;
+
+/********************************************************************
+ * 3D section structure
+ *
+ ********************************************************************/
+typedef struct {
+  WlzObjectType	type;
+  int		linkcount;
+  void		*freeptr;
+  int		initialised;
+  WlzDVertex3	fixed;
+  double	theta;
+  double	phi;
+  double	dist;
+  double	scale;
+  WlzThreeDViewMode	view_mode;
+  WlzDVertex3	up;
+  WlzObject	*ref_obj;
+  WlzDVertex3	minvals;
+  WlzDVertex3	maxvals;
+  double	*xp_to_x, *xp_to_y, *xp_to_z;
+  double	*yp_to_x, *yp_to_y, *yp_to_z;
+  double	**rotation;
+} WlzThreeDViewStruct;
+
+.fi
+.LP
+The structure is defined to act as a woolz domain but has not yet been
+included as one of the pointer options of domain union. The only legal
+type is WLZ_3D_VIEW_STRUCT. Theta is the angle of rotation about the
+z-axis and phi the angle between the viewing direction and the
+original z-axis. In nautical terms yaw and pitch. Dist is the
+perpendicular distance from the fixed point to the view plane. Scale
+is ignored.
+
+The view mode determines the angle at which the section is
+displayed on the screen. STATUE_MODE is the default and corresponds to
+"walking around the statue" so that if the view is say from the
+left-hand side then the section will be displayed with the top of the
+statue to the left on the screen. If the viewing angle is from an
+angle of 45 degrees the the top will be towards the top-left of the
+screen. This means that as the viewing angle (theta) is increased the
+section image displayed appears to rotate.
+
+In UP_IS_UP_MODE the projection of the vector up onto the section
+image will be "up" on the screen. This is of course ill-defined if the
+viewing direction is very close to "up".
+
+sample code to extract a section from a 3D grey-level image:
+.nf
+.sp
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+.
+.
+.
+  WlzObject	*obj, *nobj;
+  double	dist, theta, phi;
+  WlzDVertex3	fixed;
+  WlzThreeDViewStruct	*viewStr;
+.
+.
+. - set dist, theta, phi, fixed etc. (angles in degrees)
+.
+  viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT);
+  viewStr->theta = theta * WLZ_M_PI / 180.0;
+  viewStr->phi = phi * WLZ_M_PI / 180.0;
+  viewStr->dist = dist;
+  viewStr->fixed = fixed;
+  WlzInit3DViewStruct(viewStr, obj);
+  nobj = WlzGetSectionFromObject(obj, viewStr);
+  WlzWriteObj(stdout, nobj);
+.
+.
+
+.fi
+
+.SH SEE ALSO
+WlzError(3), WlzGetSectionFromObject(3), 3D Paint Document.
+.SH BUGS
+

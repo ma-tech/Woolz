@@ -1,0 +1,1934 @@
+#ifndef WLZ_PROTO_H
+#define WLZ_PROTO_H
+#pragma ident "MRC HGU $Id$"
+/***********************************************************************
+* Project:      Woolz
+* Title:        WlzProto.h
+* Date:         March 1999
+* Author:       Bill Hill
+* Copyright:	1999 Medical Research Council, UK.
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Purpose:      Defines the Woolz function prototypes.
+*		To allow bindings to other languages (ie Java) to be
+*		automaticly generated from this file, the following
+*		conventions MUST be followed:
+*		* The preprocessor identifier #WLZ_EXT_BIND controls
+*		  whether code is bound.
+*		* All prototypes to be bound must provide both
+*		  parameter types and parameter identifiers.
+*		* If a function returns a WlzErrorNum type it is
+*		  assumed to be the error code.
+*		* If a parameter is used to return the error code then
+*		  it must be declared as 'WlzErrorNum *dstErr' and it
+*		  may be a good idea to make it the last parameter.
+*		* If either a function return type or parameter is
+*		  'char' and it is not a pointer then it is assummed
+*		  to be a byte.
+*		* All Woolz types and functions start with 'Wlz'.
+*		* All enum's are typedef'd.
+*		* All structs are typedef'd.
+*		* If a parameter identifier starts with 'dst' and is
+*		  a pointer then it is assumed to be a destination
+*		  pointer.
+*		* All function return types or parameters of type
+*		  'char *' are assumed to be strings unless the
+*		  parameter identifier starts with 'dst'.
+*		* Arrays: All arrays must either start with 'array' or
+*		  'dstArray', with 'dstArray' being used to identify
+*		  arrays which are allocated within the	function being
+*		  called. An array pointer must be followed by it's
+*		  size, the type should be int, WlzIVertex2, ... and
+*		  the identifier should be the same as array's but with
+*		  'size' prepended as is the example 'sizeArrayName'.
+*		  Array can not be pointers to void and wrappers may
+*		  be needed to avoid this.
+* $Revision$
+* Maintenance:	Log changes below, with most recent at top of list.
+************************************************************************/
+
+#ifdef  __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/************************************************************************
+* Wlz3DSection.c							*
+************************************************************************/
+extern WlzObject 		*WlzGetSectionFromObject(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *viewStr,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* Wlz3DSectionSegmentObject.c						*
+************************************************************************/
+extern WlzErrorNum 		Wlz3DSectionSegmentObject(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *viewStr,
+				  int *dstArraySizeObjs,
+				  WlzObject ***dstArrayObjs);
+
+/************************************************************************
+* Wlz3DViewStructUtils.c						*
+************************************************************************/
+extern WlzThreeDViewStruct 	*WlzRead3DViewStruct(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzWrite3DViewStruct(
+				  FILE *fp,
+				  WlzThreeDViewStruct *viewstr);
+extern WlzThreeDViewStruct 	*WlzMake3DViewStruct(
+				  WlzObjectType type,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzFree3DViewStruct(
+				  WlzThreeDViewStruct *viewStr);
+extern WlzErrorNum 		WlzInit3DViewStruct(
+				  WlzThreeDViewStruct *viewStr,
+				  WlzObject *obj);
+extern WlzErrorNum 		Wlz3DSectionTransformVtx(
+				  WlzDVertex3 *vtx,
+				  WlzThreeDViewStruct *viewStr);
+extern WlzErrorNum 		Wlz3DSectionIncrementDistance(
+				  WlzThreeDViewStruct *viewStr,
+				  double incr);
+extern WlzDVertex2 		Wlz3DViewGetIntersectionPoint(
+				  WlzThreeDViewStruct *vS1,
+				  WlzThreeDViewStruct *vS2,
+				  WlzErrorNum *dstErr);
+extern double 			Wlz3DViewGetIntersectionAngle(
+				  WlzThreeDViewStruct *vS1,
+				  WlzThreeDViewStruct *vS2,
+				  WlzErrorNum *dstErr);
+extern int 			Wlz3DViewGetBoundingBoxIntersection(
+				  WlzThreeDViewStruct *viewStr,
+				  WlzDVertex3 *rtnVtxs,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzAffineTransform.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzAffineTransform	*WlzAffineTransformFromMatrix4X4(
+				  WlzTransformType type,
+				  double **arrayMat,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+extern WlzAffineTransform	*WlzAffineTransformFromMatrix(
+				  WlzTransformType type,
+				  WlzIVertex2 arraySizeMat,
+				  double **arrayMat,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformFromPrim(
+				  WlzTransformType type,
+				  double trX,
+				  double trY,
+				  double trZ,
+				  double trScale,
+				  double trTheta,
+				  double trPhi,
+				  double trAlpha,
+				  double trPsi,
+				  double trXsi,
+				  int trInvert,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformFromSpin(
+				  double spX,
+				  double spY,
+				  double spTheta,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformFromSpinSqueeze(
+				  double spX,
+				  double spY,
+				  double spTheta,
+				  double sqX,
+				  double sqY,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformProduct(
+				  WlzAffineTransform *trans0,
+				  WlzAffineTransform *trans1,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformInverse(
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformCopy(
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
+extern int			WlzAffineTransformIsTranslate(
+				  WlzAffineTransform *trans,
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern int			WlzAffineTransformIsIdentity(
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzAffineTransformObj(
+				  WlzObject *srcObj,
+				  WlzAffineTransform *trans,
+				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
+extern WlzDVertex2     		WlzAffineTransformVertexD(
+				  WlzAffineTransform *trans,
+				  WlzDVertex2 srcVtx,
+				  WlzErrorNum *dstErr);
+extern WlzFVertex2     		WlzAffineTransformVertexF(
+				  WlzAffineTransform *trans,
+				  WlzFVertex2 srcVtx,
+				  WlzErrorNum *dstErr);
+extern WlzIVertex2     		WlzAffineTransformVertexI(
+				  WlzAffineTransform *trans,
+				  WlzIVertex2 srcVtx,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum 		WlzAffineTransformMatrixSet4X4(
+				  WlzAffineTransform *trans,
+				  double **arrayMat);
+#endif /* WLZ_EXT_BIND */
+extern WlzErrorNum 		WlzAffineTransformMatrixSet(
+				  WlzAffineTransform *trans,
+				  WlzIVertex2 arraySizeMat,
+				  double **arrayMat);
+extern WlzErrorNum 		WlzAffineTransformPrimSet(
+				WlzAffineTransform *trans,
+				  double trX,
+				  double trY,
+				  double trZ,
+				  double trScale,
+				  double trTheta,
+				  double trPhi,
+				  double trAlpha,
+				  double trPsi,
+				  double trXsi,
+				  int trInvert);
+extern WlzErrorNum 		WlzAffineTransformMatrixUpdate(
+				  WlzAffineTransform *trans);
+extern WlzErrorNum 		WlzAffineTransformPrimUpdate(
+				  WlzAffineTransform *trans);
+
+/************************************************************************
+* WlzAffineTransformLSq.c						*
+************************************************************************/
+extern WlzAffineTransform 	*WlzAffineTransformLSq(
+				  int arraySizeVec0,
+				  WlzDVertex2 *arrayVec0,
+				  int arraySizeVec1,
+				  WlzDVertex2 *arrayVec1,
+				  WlzTransformType tType, 
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzArea.c								*
+************************************************************************/
+extern int 			WlzArea(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+
+
+/************************************************************************
+* WlzArray.c								*
+************************************************************************/
+extern WlzErrorNum		 WlzToIArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  int ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToSArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  short ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToUArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  unsigned char ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToFArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  float ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToDArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  double ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToIArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  int ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToSArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  short ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToUArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  unsigned char ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToFArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  float ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  int noiseFlag);
+extern WlzErrorNum		 WlzToDArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  double ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  int noiseFlag);
+extern WlzObject		*WlzFromIArray2D(
+				  WlzIVertex2 arraySizeDat,
+				  int **arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromSArray2D(
+				  WlzIVertex2 arraySizeDat,
+				  short **arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromUArray2D(
+				  WlzIVertex2 arraySizeDat,
+				  unsigned char **arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromFArray2D(
+				  WlzIVertex2 arraySizeDat,
+				  float **arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromDArray2D(
+				  WlzIVertex2 arraySizeDat,
+				  double **arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromIArray3D(
+				  WlzIVertex3 arraySizeDat,
+				  int ***arrayDat,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromSArray3D(
+				  WlzIVertex3 arraySizeDat,
+				  short ***arrayDat,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromUArray3D(
+				  WlzIVertex3 arraySizeDat,
+				  unsigned char ***arrayDat,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromFArray3D(
+				  WlzIVertex3 arraySizeDat,
+				  float ***arrayDat,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromDArray3D(
+				  WlzIVertex3 arraySizeDat,
+				  double ***arrayDat,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum 		WlzToArray2D(
+				  void ***dstP,
+				  WlzObject *srcObj,
+				  WlzIVertex2 size,
+				  WlzIVertex2 origin,
+				  int noiseFlg,
+				  WlzGreyType dstGreyType);
+extern WlzErrorNum 		WlzToArray3D(
+				  void ****dstP,
+				  WlzObject *srcObj,
+				  WlzIVertex3 size,
+				  WlzIVertex3 origin,
+				  int noiseFlg,
+				  WlzGreyType dstGreyType);
+extern WlzObject 		*WlzFromArray2D(
+				  void **arrayP,
+				   WlzIVertex2 arraySize,
+				   WlzIVertex2 arrayOrigin,
+				   WlzGreyType dstGreyType,
+				   WlzGreyType srcGreyType,
+				   double valOffset,
+				   double valScale,
+				   int clampFlg,
+				   int noCopyFlg,
+				   WlzErrorNum *dstErr);
+extern WlzObject 		*WlzFromArray3D(
+				  void ***arrayP,
+				 WlzIVertex3 arraySize,
+				 WlzIVertex3 arrayOrigin,
+				 WlzGreyType dstGreyType,
+				 WlzGreyType srcGreyType,
+				 double valOffset,
+				 double valScale,
+				 int clampFlg,
+				 int noCopyFlg,
+				 WlzErrorNum *dstErr);
+extern int 			WlzArrayStats3D(
+				  void ***arrayP,
+				  WlzIVertex3 arraySize,
+				  WlzGreyType greyType,
+				  double *dstMin,
+				  double *dstMax,
+				  double *dstSum,
+				  double *dstSumSq,
+				  double *dstMean,
+				  double *dstStdDev);
+extern int			WlzArrayStats2D(
+				  void **arrayP,
+				  WlzIVertex2 arraySize,
+				  WlzGreyType greyType,
+				  double *dstMin,
+				  double *dstMax,
+				  double *dstSum,
+				  double *dstSumSq,
+				  double *dstMean,
+				  double *dstStdDev);
+extern int			WlzArrayStats1D(
+				  void *arrayP,
+				  int arraySize,
+				  WlzGreyType greyType,
+				  double *dstMin,
+				  double *dstMax,
+				  double *dstSum,
+				  double *dstSumSq,
+				  double *dstMean,
+				  double *dstStdDev);
+#endif /* WLZ_EXT_BIND */
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzAssign.c								*
+************************************************************************/
+extern WlzObject		*WlzAssignObject(
+				  WlzObject *object,
+				  WlzErrorNum *dstErr);
+extern WlzDomain		WlzAssignDomain(
+				  WlzDomain domain,
+				  WlzErrorNum *dstErr);
+extern WlzValues 		WlzAssignValues(
+				  WlzValues values,
+				  WlzErrorNum *dstErr);
+extern WlzSimpleProperty	*WlzAssignProperty(
+				  WlzSimpleProperty *property,
+				  WlzErrorNum *dstErr );
+extern WlzAffineTransform	*WlzAssignAffineTransform(
+				  WlzAffineTransform *,
+				  WlzErrorNum *dstErr);
+extern WlzBoundList 		*WlzAssignBoundList(
+				  WlzBoundList *blist,
+				  WlzErrorNum *dstErr);
+extern WlzPolygonDomain 	*WlzAssignPolygonDomain(
+				  WlzPolygonDomain *poly,
+				  WlzErrorNum *dstErr);
+extern int 			WlzUnlink(
+				  int *,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzBackground.c							*
+************************************************************************/
+extern WlzPixelV 		WlzGetBackground(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzSetBackground(
+				  WlzObject *obj,
+				  WlzPixelV bckgrnd);
+
+/************************************************************************
+* WlzBasisFnTransform.c							*
+************************************************************************/
+extern WlzBasisFnTransform	*WlzBasisFnTrFromCPts(
+				  WlzBasisFnType type,
+				  int order,
+				  int sizeArrayDPts,
+				  WlzDVertex2 *arrayDPts,
+				  int sizeArraySPts,
+				  WlzDVertex2 *arraySPts,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzBasisFnSetMesh(
+				  WlzMeshTransform *mesh,
+				  WlzBasisFnTransform *basis);
+extern WlzErrorNum 		WlzBasisFnFreeTransform(
+				  WlzBasisFnTransform *basis);
+extern WlzObject		*WlzBasisFnTransformObj(
+				  WlzObject *srcObj,
+				  WlzBasisFnTransform *basis,
+				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
+extern WlzIVertex2		WlzBasisFnTransformVertexI(
+				  WlzBasisFnTransform *basis,
+				  WlzIVertex2 srcVxF,
+				  WlzErrorNum *dstErr);
+extern WlzFVertex2		WlzBasisFnTransformVertexF(
+				  WlzBasisFnTransform *basis,
+			          WlzFVertex2 srcVxF,
+				  WlzErrorNum *dstErr);
+extern WlzDVertex2		WlzBasisFnTransformVertexD(
+				  WlzBasisFnTransform *basis,
+			          WlzDVertex2 srcVxF,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzBoundingBox.c							*
+************************************************************************/
+extern WlzIBox2 		WlzBoundingBox2D(
+				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+extern WlzIBox3 		WlzBoundingBox3D(
+				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzBoundToObj.c							*
+************************************************************************/
+extern WlzObject		*WlzBoundToObj(
+				  WlzBoundList *bound,
+				  WlzPolyFillMode fillMode,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBoundaryToObj(
+				  WlzObject *boundary,
+				  WlzPolyFillMode fillMode,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+ * WlzCentreOfMass.c							*
+ ************************************************************************/
+extern WlzDVertex2 		WlzCentreOfMass2D(
+				  WlzObject *srcObj,
+				  int binObjFlg,
+				  double *dstMass,
+				  WlzErrorNum *dstErr);
+extern WlzDVertex3 		WlzCentreOfMass3D(
+				  WlzObject *srcObj,
+				  int binObjFlg,
+				  double *dstMass,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzClipObjToBox.c							*
+************************************************************************/
+extern WlzObject		*WlzClipObjToBox2D(
+				  WlzObject *srcObj,
+				  WlzIBox2 clipBox,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzClipObjToBox3D(
+				  WlzObject *srcObj,
+				  WlzIBox3 clipBox,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzCompThresh.c							*
+************************************************************************/
+extern WlzErrorNum		WlzCompThreshold(
+				  double *dstThrVal,
+				  WlzObject *histObj,
+				  WlzCompThreshType method,
+				  double extraFrac);
+
+/************************************************************************
+* WlzConvertPix.c							*
+************************************************************************/
+extern WlzObject 		*WlzConvertPix(
+				  WlzObject *obj,
+				  WlzGreyType nPixType,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzConvexHull.c							*
+************************************************************************/
+extern WlzObject		*WlzObjToConvexHull(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzObjToConvexPolygon(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzConvolve.c								*
+************************************************************************/
+extern WlzObject		*WlzConvolveObj(
+				  WlzObject *inObj,
+				  WlzConvolution *conv,
+				  int newObjFlg,
+				  WlzErrorNum	*dstErr);
+extern int			WlzConvolveSeqParFn(
+				  WlzSeqParWSpace *spWSpace,
+				  void *spData);
+extern int			WlzConvolutionSum(
+				  WlzConvolution *conv);
+extern int			WlzConvolutionNormalise(
+				  WlzConvolution *conv);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzCopy.c
+************************************************************************/
+extern WlzObject		*WlzCopyObject(
+				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzDomain		WlzCopyDomain(
+				  WlzObjectType inObjType,
+				  WlzDomain inDom,
+				  WlzErrorNum *dstErr);
+extern WlzValues		WlzCopyValues(
+				  WlzObjectType inObjType,
+				  WlzValues inVal,
+				  WlzDomain inDom,
+				  WlzErrorNum *dstErr);
+extern WlzSimpleProperty	*WlzCopySimpleProperty(
+				  WlzSimpleProperty *inPLst,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzCutObjToBox.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzObject 		*WlzCutObjToValBox2D(
+				  WlzObject *srcObj,
+				  WlzIBox2 cutBox,
+				  WlzGreyType rtnGreyType,
+				  void *valP,
+				  int bgdNoise,
+				  double bgdMu,
+				  double bgdSigma,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzCutObjToValBox3D(
+				  WlzObject *srcObj,
+				  WlzIBox3 cutBox,
+				  WlzGreyType rtnGreyType,
+				  void *valP,
+				  int bgdNoise,
+				  double bgdMu,
+				  double bgdSigma,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+extern WlzObject		*WlzCutObjToBox2D(
+				  WlzObject *srcObj,
+				  WlzIBox2 cutBox,
+				  WlzGreyType rtnGreyType,
+				  int bgdNoise,
+				  double bgdMu,
+				  double bgdSigma,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzCutObjToBox3D(
+				  WlzObject *srcObj,
+				  WlzIBox3 cutBox,
+				  WlzGreyType rtnGreyType,
+				  int bgdNoise,
+				  double bgdMu,
+				  double bgdSigma,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzDiffDomain.c							*
+************************************************************************/
+extern WlzObject		*WlzDiffDomain(
+				  WlzObject *obj1,
+				  WlzObject *obj2,
+				  WlzErrorNum *dstErr);
+/************************************************************************
+* WlzDilation.c								*
+************************************************************************/
+extern WlzObject		*WlzDilation(
+				  WlzObject *obj,
+				  WlzConnectType connectivity,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzDomainFill.c							*
+************************************************************************/
+extern WlzObject 		*WlzDomainFill(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzDomainUtils.c							*
+************************************************************************/
+extern WlzErrorNum		WlzStandardPlaneDomain(
+				  WlzPlaneDomain *pdom,
+			 	  WlzVoxelValues *voxtb);
+extern WlzErrorNum		WlzStandardIntervalDomain(
+				  WlzIntervalDomain *idom);
+
+/************************************************************************
+* WlzErosion.c								*
+************************************************************************/
+extern WlzObject		*WlzErosion(
+				  WlzObject *obj,
+				  WlzConnectType connectivity,
+				  WlzErrorNum *dstErr);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzError.c								*
+************************************************************************/
+extern WlzErrorNum 		WlzErrorFromAlg(
+				  AlgError algErr);
+#endif /* !WLZ_EXT_BIND */
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzExplode3D.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzExplode3D(
+				  int *dstArraySizeExpObj,
+				  WlzObject ***dstArrayExpObj,
+				  WlzObject *srcObj);
+#endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzFacts.c								*
+************************************************************************/
+extern WlzErrorNum		WlzObjectFacts(
+				  WlzObject *obj,
+				  FILE *factsFile,
+				  char **dstStr,
+				  int verbose);
+
+/************************************************************************
+* WlzFillBlankPlanes.c							*
+************************************************************************/
+extern WlzErrorNum		WlzFillBlankPlanes(
+				  WlzObject *obj,
+				  int min_domain);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzFreeSpace.c							*
+************************************************************************/
+extern void			*WlzPushFreePtr(
+				  void *stack,
+				  void *data,
+				  WlzErrorNum *dstErr);
+extern void			*WlzPopFreePtr(
+				  void *stack,
+				  void **data,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzFreeFreePtr(
+				  void *stack);
+extern WlzErrorNum		WlzFreeObj(
+				  WlzObject *obj);
+extern WlzErrorNum		WlzFreeDomain(
+				  WlzDomain domain);
+extern WlzErrorNum		WlzFreeIntervalDomain(
+				  WlzIntervalDomain *idom);
+extern WlzErrorNum		WlzFreePlaneDomain(
+				  WlzPlaneDomain *pdom);
+extern WlzErrorNum		WlzFreeValues(
+				  WlzValues values);
+extern WlzErrorNum		WlzFreeValueTb(
+				  WlzRagRValues *vdom);
+extern WlzErrorNum		WlzFreeVoxelValueTb(
+				  WlzVoxelValues *voxtab);
+extern WlzErrorNum		WlzFreePolyDmn(
+				  WlzPolygonDomain *poly);
+extern WlzErrorNum		WlzFreeBoundList(
+				  WlzBoundList *blist);
+extern WlzErrorNum		WlzFreeConvHull(
+				  WlzConvHullValues *convh);
+extern WlzErrorNum		WlzFreeHistogramDomain(
+				  WlzHistogramDomain *hist);
+extern WlzErrorNum		WlzFreeWarpTrans(
+				  WlzWarpTrans *obj);
+extern WlzErrorNum		WlzFreeFMatchObj(
+				  WlzFMatchObj *obj);
+extern WlzErrorNum		WlzFree3DWarpTrans(
+				  Wlz3DWarpTrans *obj);
+#endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzGauss.c								*
+************************************************************************/
+extern WlzObject		*WlzGauss2(
+				  WlzObject *obj,
+				  double wx,
+				  double wy,
+				  int x_deriv,
+				  int y_deriv,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum		Wlz1DConv(
+				  WlzSepTransWSpace *stwspc,
+				  void *params); 
+#endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzGaussNoise.c							*
+************************************************************************/
+extern WlzErrorNum		WlzGaussNoise(
+				  WlzObject *rtnObj,
+				  WlzPixelV tmplVal);
+
+/************************************************************************
+* WlzGeometry.c								*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern int			WlzGeomTriangleCircumcentre(
+				  WlzDVertex2 *dstCcVx,
+				  WlzDVertex2 vx0,
+				  WlzDVertex2 vx1,
+				  WlzDVertex2 vx2);
+#endif /* !WLZ_EXT_BIND */
+extern int			WlzGeomVxInTriangle(
+				  WlzDVertex2 vx0,
+				  WlzDVertex2 vx1,
+			          WlzDVertex2 vx2,
+				  WlzDVertex2 vxP);
+extern int 			WlzGeomInTriangleCircumcircle(
+				  WlzDVertex2 vx0,
+				  WlzDVertex2 vx1,
+			          WlzDVertex2 vx2,
+				  WlzDVertex2 gVx);
+extern double			WlzGeomTriangleSnArea2(
+				  WlzDVertex2 vx0,
+				  WlzDVertex2 vx1,
+				  WlzDVertex2 vx2);
+
+/************************************************************************
+* WlzGreyCrossing.c							*
+************************************************************************/
+extern WlzObject		*WlzGreyCrossing(
+				  WlzObject *inObj,
+				  int newObjFlg,
+				  int cVal,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzGreyDitherObj.c							*
+************************************************************************/
+extern WlzObject 		*WlzGreyDitherObj(WlzObject *o,
+				   unsigned int  destBits,
+				   WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzGreyInvertMinMax.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzGreyInvertMinMax(
+				  WlzObject *obj,
+				  WlzPixelV min,
+				  WlzPixelV max);
+
+/************************************************************************
+* WlzGreyMask.c								*
+************************************************************************/
+extern WlzObject 		*WlzGreyMask(
+				  WlzObject *obj,
+				  WlzObject *mask,
+				  WlzPixelV maskVal,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzGreyModGradient.c							*
+************************************************************************/
+extern WlzObject 		*WlzGreyModGradient(WlzObject *obj,
+				   double width,
+				   WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzGreyNormalise.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzGreyNormalise(
+				  WlzObject *obj);
+
+/************************************************************************
+* WlzGreyRange.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum 		WlzGreyRange(
+				  WlzObject *obj,
+				  WlzPixelV *dstMin,
+				  WlzPixelV *dstMax);
+#endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzGreyScan.c								*
+************************************************************************/
+extern WlzErrorNum 		WlzInitGreyScan(
+				  WlzObject *obj,
+				  WlzIntervalWSpace *iwsp,
+				  WlzGreyWSpace *gwsp);
+extern WlzErrorNum 		WlzInitGreyRasterScan(
+				  WlzObject *obj,
+				  WlzIntervalWSpace *iwsp,
+				  WlzGreyWSpace *gwsp,
+				  WlzRasterDir raster,
+				  int tranpl);
+extern WlzErrorNum 		WlzInitGreyWSpace(
+				  WlzObject *obj,
+				  WlzIntervalWSpace *iwsp,
+				  WlzGreyWSpace *gwsp,
+				  int tranpl);
+extern WlzErrorNum 		WlzNextGreyInterval(
+				  WlzIntervalWSpace *iwsp);
+extern WlzErrorNum 		WlzGreyInterval(
+				  WlzIntervalWSpace *iwsp);
+
+/************************************************************************
+* WlzGreySetRange.c							*
+************************************************************************/
+extern WlzErrorNum		WlzGreySetRange(
+				  WlzObject *obj,
+				  WlzPixelV min,
+				  WlzPixelV max,
+				  WlzPixelV Min,
+				  WlzPixelV Max);
+
+/************************************************************************
+* WlzGreySetValue.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzGreySetValue(
+				  WlzObject *obj,
+				  WlzPixelV tmplVal);
+
+/************************************************************************
+* WlzGreyStats.c							*
+************************************************************************/
+extern int 			WlzGreyStats(
+				  WlzObject *obj,
+				  WlzGreyType *dstGType,
+				  double *dstMin,
+				  double *dstMax,
+				  double *dstSum,
+				  double *dstSumSq,
+				  double *dstMean,
+				  double *dstStdDev,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzGreyTemplate.c							*
+************************************************************************/
+extern WlzObject 		*WlzGreyTemplate(
+				  WlzObject *obj,
+				  WlzObject *tmpl,
+				  WlzPixelV tmplVal,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzGreyValue.c							*
+************************************************************************/
+extern WlzGreyValueWSpace 	*WlzGreyValueMakeWSp(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern void 			WlzGreyValueFreeWSp(
+				  WlzGreyValueWSpace *gVWSp);
+extern void            		WlzGreyValueGet(
+				  WlzGreyValueWSpace *gVWSp,
+				  double plane,
+				  double line,
+				  double kol);
+extern void            		WlzGreyValueGetCon(
+				  WlzGreyValueWSpace *gVWSp,
+				  double plane,
+				  double line,
+				  double kol);
+extern WlzGreyType     		WlzGreyValueGetGreyType(
+				  WlzGreyValueWSpace *gVWSp,
+				  WlzErrorNum *dstErr);
+extern int			WlzGreyValueGetI(
+				  WlzGreyValueWSpace *gVWSp,
+				  double plane,
+				  double line,
+				  double kol);
+extern double			WlzGreyValueGetD(
+				  WlzGreyValueWSpace *gVWSp,
+				  double plane,
+				  double line,
+				  double kol);
+
+/************************************************************************
+ * WlzHistogram.c
+ ************************************************************************/
+extern WlzObject 		*WlzHistogramObj(
+				  WlzObject *srcObj,
+				  int nBins,
+				  double binOrigin,
+				  double binSize,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzHistogramCopy(
+				  WlzObject *srcHistObj,
+				  WlzObjectType rtnType,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzHistogramRebin(
+				  WlzObject *srcHistObj,
+				  WlzObjectType rtnType,
+				  int rtnMaxBins,
+				  int rtnNBins,
+				  double rtnOrigin,
+				  double rtnBinSize,
+				  WlzErrorNum *dstErr);
+extern double 			WlzHistogramBinSum(
+				  WlzHistogramDomain *histDom);
+extern int 			WlzHistogramBinMax(
+				  WlzHistogramDomain *histDom);
+extern WlzErrorNum 		WlzHistogramCummulative(
+				  WlzObject *srcHist);
+extern WlzErrorNum 		WlzHistogramSmooth(
+				  WlzObject *histObj,
+				  int width);
+extern WlzErrorNum 		WlzHistogramNorm(
+				  WlzObject *histObj,
+				  double maxVal);
+extern WlzErrorNum 		WlzHistogramMapValues(
+				  WlzObject *srcObj,
+				  WlzObject *mapHistObj);
+extern WlzErrorNum 		WlzHistogramMatchObj(
+				  WlzObject *srcObj,
+				  WlzObject *targetHist,
+				  int independentPlanes,
+				  int smoothing,
+				  double minDist,
+				  double maxDist);
+extern WlzErrorNum 		WlzHistogramEqualiseObj(
+				  WlzObject *srcObj,
+				  int smoothing);
+
+/************************************************************************
+* WlzImageArithmetic.c							*
+************************************************************************/
+extern WlzObject 		*WlzImageArithmetic(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+			          WlzBinaryOperatorType op,
+			          int overwrite,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzInsideDomain.c							*
+************************************************************************/
+extern int 			WlzInsideDomain(
+				  WlzObject *obj,
+				  double plane,
+				  double line,
+				  double kol,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzIntersect2.c							*
+************************************************************************/
+extern WlzObject 		*WlzIntersect2(
+				  WlzObject *obj1,
+				  WlzObject *obj2,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzIntersectN.c							*
+************************************************************************/
+extern WlzObject 		*WlzIntersectN(
+				  int sizeArrayObjs,
+				  WlzObject **arrayObjs,
+				  int uvt,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzIntervalCount.c							*
+************************************************************************/
+extern int 			WlzIntervalCount(
+				  WlzIntervalDomain *idom,
+			    	  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzIntervalDomScan.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzInitRasterScan(
+				  WlzObject *obj,
+				  WlzIntervalWSpace *iwsp,
+				  WlzRasterDir raster);
+extern WlzErrorNum 		WlzNextInterval(
+				  WlzIntervalWSpace *iwsp);
+extern WlzErrorNum 		WlzNextLine(
+				  WlzIntervalWSpace *iwsp,
+			          int step);
+extern WlzErrorNum 		WlzInitLineScan(
+				  WlzObject *obj,
+				  WlzIntervalWSpace *iwsp,
+				  WlzRasterDir raster,
+				  int scale,
+				  int firstline);
+
+/************************************************************************
+* WlzIntRescaleObj.c							*
+************************************************************************/
+extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
+				  int scale,
+				  int expand,
+				  WlzErrorNum *dstErr);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* "THE BEAST" - WlzLabel.c						*
+************************************************************************/
+extern WlzErrorNum 		WlzLabel(
+				  WlzObject *obj,
+				  int *dstArraySizeObjs,
+				  WlzObject ***dstArrayObjs,
+				  int maxNumObjs,
+				  int ignlns,
+				  WlzConnectType connect);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzLaplacian.c							*
+************************************************************************/
+extern WlzObject       		*WlzLaplacian(
+				  WlzObject *srcObj,
+				  int kSize,
+				  int mkNewObjFlg,
+				  int modFlg,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzLineArea.c								*
+************************************************************************/
+extern int			WlzLineArea(
+				  WlzObject *obj,
+		       		  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzMakeAffineTransform.c						*
+************************************************************************/
+extern WlzAffineTransform 	*WlzMakeAffineTransform(
+				  WlzTransformType type,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum    		WlzFreeAffineTransform(
+				  WlzAffineTransform *trans);
+
+/************************************************************************
+* WlzMakeCompound.c							*
+************************************************************************/
+extern WlzCompoundArray 	*WlzMakeCompoundArray(
+				  WlzObjectType type,
+				  int mode,
+				  int sizeArrayObjs,
+				  WlzObject **arrayObjs,
+				  WlzObjectType otype,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzMakeIntervalValues.c						*
+************************************************************************/
+extern WlzIntervalValues 	*WlzMakeIntervalValues(
+				  WlzObjectType type,
+				  WlzObject *obj,
+				  WlzPixelV bckgrnd,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzMakeProperties.c							*
+************************************************************************/
+extern WlzSimpleProperty	*WlzMakeSimpleProperty(
+				  int size,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzFreeProperty(
+				  WlzSimpleProperty *prop);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+ * WlzMakeStructs.c
+ ************************************************************************/
+extern WlzObject 		*WlzMakeMain(
+				  WlzObjectType type,
+				  WlzDomain domain,
+				  WlzValues values,
+				  WlzSimpleProperty *prop,
+				  WlzObject *assoc,
+				  WlzErrorNum *dstErr);
+extern WlzIntervalDomain	*WlzMakeIntervalDomain(
+				  WlzObjectType type,
+				  int l1,
+				  int ll,
+				  int k1,
+				  int kl,
+				  WlzErrorNum *dstErr);
+
+extern WlzErrorNum		WlzMakeInterval(
+				  int l,
+				  WlzIntervalDomain *idom,
+				  int nints,
+				  WlzInterval *itvl); 
+extern WlzErrorNum		WlzMakeValueLine(
+				  WlzRagRValues *vtb,
+				  int line,
+				  int k1,
+				  int kl,
+				  int *greyptr); 
+extern WlzPlaneDomain		*WlzMakePlaneDomain(
+				  WlzObjectType type,
+				  int p1,
+				  int pl,
+				  int l1,
+				  int ll,
+				  int k1,
+				  int kl,
+				  WlzErrorNum *dstErr);
+extern WlzRagRValues 		*WlzMakeValueTb(
+				  WlzObjectType type,
+				  int l1,
+				  int ll,
+				  int k1,
+				  WlzPixelV bckgrnd,
+				  WlzObject *orig,
+				  WlzErrorNum *dstErr);
+extern WlzRectValues		*WlzMakeRectValueTb(
+				  WlzObjectType type,
+				  int l1,
+				  int ll,
+				  int k1,
+				  int width,
+				  WlzPixelV bckgrnd,
+				  int *greyptr,
+				  WlzErrorNum *dstErr);
+extern WlzVoxelValues		*WlzMakeVoxelValueTb(
+				  WlzObjectType type,
+				  int p1,
+				  int pl,
+				  WlzPixelV bckgrnd,
+				  WlzObject *original,
+				  WlzErrorNum *dstErr);
+extern WlzPolygonDomain		*WlzMakePolyDmn(
+				  WlzObjectType type,
+				  WlzIVertex2 *vtxs,
+				  int nvertices,
+				  int max_nverts,
+				  int copy,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeRect(
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixeltype,
+				  int *greyptr,
+				  WlzPixelV bckgrnd,
+				  WlzSimpleProperty *prop,
+				  WlzObject *assoc_obj,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeEmpty(
+				  WlzErrorNum *dstErr);
+extern WlzBoundList		*WlzMakeBoundList(
+				  WlzObjectType type,
+				  int wrap,
+				  WlzPolygonDomain *poly,
+				  WlzErrorNum *dstErr);
+extern WlzHistogramDomain	*WlzMakeHistogramDomain(
+				  WlzObjectType type,
+				  int maxBins,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeHistogram(
+				  WlzObjectType type,
+				  int maxBins,
+				  WlzErrorNum *dstErr);
+extern WlzIVertex2		*WlzMakeIVertex(
+				  int nverts,
+				  WlzErrorNum *dstErr);
+				  extern WlzObject *WlzNewGrey(
+				  WlzObject *iobj,
+				  WlzErrorNum *dstErr);
+extern WlzRagRValues		*WlzNewValueTb(
+				  WlzObject *obj,
+				  WlzObjectType type,
+				  WlzPixelV bckgrnd,
+				  WlzErrorNum *dstErr);
+extern WlzIntervalDomain	*WlzNewIDomain(
+				  WlzObjectType type,
+				  WlzIntervalDomain *idom,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzMeshTransform.c							*
+************************************************************************/
+extern WlzErrorNum		WlzMeshFreeTransform(
+				  WlzMeshTransform *mesh);
+extern WlzMeshTransform 	*WlzMeshFromObj(
+				  WlzObject *inObj,
+				  WlzMeshGenMethod method,
+				  double minDist, 
+				  double maxDist,
+				  WlzErrorNum *dstErr);
+extern WlzMeshTransform 	*WlzMeshTransformNew(
+				  unsigned int maxElem,
+				  unsigned int maxNode,
+				  WlzErrorNum *dstErr);
+extern WlzMeshTransform 	*WlzMeshTransformAdapt(
+				  WlzMeshTransform *mesh,
+				  double minArea,
+				  WlzErrorNum *dstErr);
+extern WlzMeshTransform 	*WlzMeshTransformCopy(
+				  WlzMeshTransform *mesh,
+			          WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzMeshTransformVerify(
+				  WlzMeshTransform *mesh,
+				  int dispFlg,
+				  int *badElm,
+				  WlzMeshError *dstErrMsk);
+extern WlzObject		*WlzMeshTransformObj(
+				  WlzObject *srcObj,
+				  WlzMeshTransform *mesh,
+				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzMeshUtils.c							*
+************************************************************************/
+extern int			WlzMeshElemNodeIdxFromVx(
+				  WlzMeshTransform *mesh,
+				  WlzMeshElem *elm,
+				  WlzDVertex2 gVx);
+extern int			WlzMeshElemNodeIdxFromNodeIdx(
+				  int *nodes,
+				  int mNodId);
+extern int			WlzMeshElemNbrIdxFromNodes(
+				  WlzMeshElem *elm,
+				  int nodId0,
+				  int nodId1);
+extern int			WlzMeshElemFindVx(
+				  WlzMeshTransform *mesh,
+				  WlzDVertex2 gVx,
+				  int startElm,
+				  int *existsFlg,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzMeshDomainAdd(
+				  WlzMeshTransform *mesh,
+				  WlzObject *obj,
+				  double minDist,
+				  WlzDVertex2 scale);
+extern WlzErrorNum		WlzMeshVxVecAdd(
+				  WlzMeshTransform *mesh,
+				  WlzDVertex2 *vxVec,
+				  int nVx,
+				  double minDistSq,
+				  unsigned int nodeFlgs);
+extern WlzErrorNum		WlzMeshExpand(
+				  WlzMeshTransform *mesh,
+				  int nElem,
+				  int nNodes);
+extern WlzErrorNum		WlzMeshElemVerify(
+				  WlzMeshTransform *mesh,
+				  int dispFlg,
+				  WlzMeshElem *elm,
+				  WlzMeshError *dstErrMsk);
+extern WlzErrorNum		WlzMeshElemSplit(
+				  WlzMeshTransform *mesh,
+				  int sElmIdx);
+extern WlzErrorNum		WlzMeshNodeAdd(
+				  WlzMeshTransform *mesh,
+				  int startElm,
+				  WlzDVertex2 gVx,
+				  unsigned int nodeFlgs);
+extern WlzErrorNum		WlzMeshNodeDelIdx(
+				  WlzMeshTransform *mesh,
+				  int startElm,
+				  int *nodIdx,
+				  int nNod);
+extern WlzErrorNum		WlzMeshSqueeze(
+				  WlzMeshTransform *mesh);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzObjToBoundary.c							*
+************************************************************************/
+extern WlzObject 		*WlzObjToBoundary(
+				  WlzObject *obj,
+				  int wrap,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzPolarSample.c							*
+************************************************************************/
+extern WlzObject 		*WlzPolarSample(
+				  WlzObject *srcObj,
+				  WlzIVertex2 org,
+				  double angleInc,
+				  double distInc,
+				  int nLines,
+				  int outFlg,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzPolyToObj.c							*
+************************************************************************/
+extern WlzObject 		*WlzPolyToObj(
+				  WlzPolygonDomain *pgdm,
+				  WlzPolyFillMode fillMode,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzPolygonToObj(
+				  WlzObject *polygon,
+				  WlzPolyFillMode fillMode,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzPolyTo8Polygon(
+				  WlzPolygonDomain *pgdm,
+				  int wrap,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzPrinicipalAngle.c
+************************************************************************/
+extern double 			WlzPrincipalAngle(
+				  WlzObject *srcObj,
+				  WlzDVertex2 cMass,
+				  int binObjFlg,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzReadObj.c								*
+************************************************************************/
+extern WlzObject		*WlzReadObj(
+				  FILE *fp,
+			          WlzErrorNum *dstErr);
+/************************************************************************
+* WlzSampleObj.c							*
+************************************************************************/
+extern WlzObject 		*WlzSampleObj(
+				  WlzObject *srcObj,
+				  WlzIVertex2 samFac,
+				  WlzSampleFn samFn,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzScalarArithmeticOp.c						*
+************************************************************************/
+extern WlzObject		*WlzScalarAdd(
+				  WlzObject *o1,
+				  WlzPixelV pval,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzScalarSubtract(
+				  WlzObject *o1,
+				  WlzPixelV pval,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzScalarMultiply(
+				  WlzObject *o1,
+				  WlzPixelV pval,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzScalarDivide(
+				  WlzObject *o1,
+				  WlzPixelV pval,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzScalarBinaryOp2(
+				  WlzObject *o1,
+				  WlzPixelV pval,
+				  WlzBinaryOperatorType op,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzScalarBinaryOp.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzScalarBinaryOp(
+				  WlzObject *o1,
+				  WlzPixelV pval,
+				  WlzObject *o3,
+				  WlzBinaryOperatorType op);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzSepTrans.c								*
+************************************************************************/
+typedef WlzErrorNum 		(*WlzIntervalConvFunc)(
+				  WlzSepTransWSpace *stwspc,
+				  void *params);
+extern WlzObject 		*WlzSepTrans(
+				  WlzObject *obj,
+				  WlzIntervalConvFunc x_fun,
+				  void *x_params,
+				  WlzIntervalConvFunc y_fun,
+				  void *y_params,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzSeqPar.c								*
+************************************************************************/
+extern WlzObject 		*WlzSeqPar(
+				  WlzObject *inObj,
+				  int newObjFlg,
+				  int sequentialFlg,
+				  WlzRasterDir rasterDir,
+				  int bdrSz,
+				  int bkgVal,
+				  void *transformData,
+				  int (*transformFn)(WlzSeqParWSpace *, void *),
+				  WlzErrorNum	*dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzShift.c								*
+************************************************************************/
+extern WlzObject		*WlzShiftObject(
+				  WlzObject *inObj,
+				  int xShift,
+				  int yShift,
+				  int zShift,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzDomain	 	WlzShiftDomain(
+				  WlzObjectType inObjType,
+				  WlzDomain inDom,
+				  int xShift,
+				  int yShift,
+				  int zShift,
+				  WlzErrorNum *dstErr);
+extern WlzValues	 	WlzShiftValues(
+				  WlzObjectType inObjType,
+				  WlzValues inVal,
+				  WlzDomain inDom,
+				  int xShift,
+				  int yShift,
+				  int zShift,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzSobel.c								*
+************************************************************************/
+extern WlzObject 		*WlzSobel(
+				  WlzObject *srcObj,
+				  int hFlg,
+				  int vFlg,
+				  WlzErrorNum	*dstErr);
+
+/************************************************************************
+* WlzStdStructElements.c						*
+************************************************************************/
+extern WlzObject 		*WlzMakeSpecialStructElement(
+				  WlzSpecialStructElmType eType,
+				  int elmIndex,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzMakeSinglePixelObject(
+				  WlzObjectType spOType,
+				  int k,
+				  int l,
+				  int p,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzMakeCircleObject(
+				  double radius,
+				  double x,
+				  double y,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzMakeSphereObject(
+				  WlzObjectType sOType,
+				  double radius,
+				  double x,
+				  double y,
+				  double z,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzMakeStdStructElement(
+				  WlzObjectType ssTType,
+				  WlzDistanceType dType,
+				  double radius,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzStringTypes.c							*
+************************************************************************/
+extern const char 		*WlzStringFromObjType(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType 		WlzStringToObjType(
+				  const char *oTypeStr,
+				  WlzErrorNum *dstErr);
+extern const char 		*WlzStringFromObjDomainType(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType 		WlzStringToObjDomainType(
+				  const char *oDomTypeStr,
+				  WlzErrorNum *dstErr);
+extern const char 		*WlzStringFromObjValuesType(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType 		WlzStringToObjValuesType(
+				  const char *oValTypeStr,
+				  WlzErrorNum *dstErr);
+extern const char 		*WlzStringFromGreyType(
+				  WlzGreyType gType,
+				  WlzErrorNum *dstErr);
+extern WlzTransformType 	WlzStringToTransformType(
+				  const char *tStr, 
+				  WlzErrorNum *dstErr);
+extern const char 		*WlzStringFromTransformType(
+				  WlzTransformType tType,
+				  WlzErrorNum *dstErr);
+extern WlzGreyType 		WlzStringToGreyType(
+				  const char *gStr,
+				 WlzErrorNum *dstErr);
+extern const char 		*WlzStringFromErrorNum(
+				  WlzErrorNum gvnErr, 
+			          const char **dstMsgStr);
+extern WlzErrorNum  		WlzStringToErrorNum(
+				  const char *gStr);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzStringUtils.c							*
+************************************************************************/
+extern int 			WlzStringMatchValue(
+				  int *dstValue,
+				  const char *targetStr,
+				  const char *testStr,
+				  ...);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzStructDilation.c							*
+************************************************************************/
+extern WlzObject 		*WlzStructDilation(
+				  WlzObject *obj,
+				  WlzObject *structElm,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzStructErosion.c							*
+************************************************************************/
+extern WlzObject 		*WlzStructErosion(WlzObject *obj,
+				  WlzObject *structElm,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzThreshold.c							*
+************************************************************************/
+extern WlzObject 		*WlzThreshold(
+				  WlzObject *obj,
+				  WlzPixelV threshV,
+				  WlzThresholdType highlow,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzTransposeObj.c							*
+************************************************************************/
+extern WlzObject 		*WlzTransposeObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzUnion2.c								*
+************************************************************************/
+extern WlzObject		*WlzUnion2(
+				  WlzObject *obj1,
+				  WlzObject *obj2,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzUnionN.c
+************************************************************************/
+extern WlzObject 		*WlzUnionN(
+				  int sizeArrayObjs,
+				  WlzObject **arrayObjs,
+				  int uvt,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzValueTableUtils.c							*
+************************************************************************/
+extern WlzObjectType 		WlzGreyTableType(
+				  WlzObjectType table_type,
+				  WlzGreyType grey_type,
+				  WlzErrorNum *dstErr);
+extern WlzGreyType 		WlzGreyTableTypeToGreyType(
+				  WlzObjectType objType,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType 		WlzGreyTableTypeToTableType(
+				  WlzObjectType objType,
+				  WlzErrorNum *dstErr);
+
+#ifndef WLZ_EXT_BIND
+/************************************************************************
+* WlzValueUtils.c							*
+************************************************************************/
+extern void			WlzValueSetInt(
+				  int *vec,
+				  int value,
+				  int count);
+extern void			WlzValueSetShort(
+				  short *vec,
+				  short value,
+				  int count);
+extern void			WlzValueSetUByte(
+				  UBYTE *vec,
+				  UBYTE value,
+				  int count);
+extern void			WlzValueSetFloat(
+				  float *vec,
+				  float value,
+				  int count);
+extern void			WlzValueSetDouble(
+				  double *vec,
+				  double value,
+				  int count);
+extern void			WlzValueSetDVertex(
+				  WlzDVertex2 *vec,
+				  WlzDVertex2 value,
+				  int count);
+extern void			WlzValueSetFVertex(
+				  WlzFVertex2 *vec,
+				  WlzFVertex2 value,
+				  int count);
+extern void			WlzValueSetIVertex(
+				  WlzIVertex2 *vec,
+				  WlzIVertex2 value,
+				  int count);
+extern void			WlzValueSetGrey(
+				  WlzGreyP vec,
+				  int vecOff,
+				  WlzGreyV value,
+				  WlzGreyType gType,
+				  int count);
+extern void			WlzValueClampIntToShort(
+				  int *vec,
+				  int count);
+extern void			WlzValueClampIntToUByte(
+				  int *vec,
+				  int count);
+extern void			WlzValueClampShortToUByte(
+				  short *vec,
+				  int count);
+extern void			WlzValueClampDoubleToInt(
+				  double *vec,
+				  int count);
+extern void			WlzValueClampDoubleToShort(
+				  double *vec,
+				  int count);
+extern void			WlzValueClampDoubleToUByte(
+				  double *vec,
+				  int count);
+extern void			WlzValueClampDoubleToFloat(
+				  double *vec,
+				  int count);
+extern void			WlzValueClampFloatToInt(
+				  float *vec,
+				  int count);
+extern void			WlzValueClampFloatToShort(
+				  float *vec,
+				  int count);
+extern void			WlzValueClampFloatToUByte(
+				  float *vec,
+				  int count);
+extern void			WlzValueMaskIntToShort(
+				  int *vec,
+				  int count);
+extern void			WlzValueMaskIntToUByte(
+				  int *vec,
+				  int count);
+extern void			WlzValueMaskShortToUByte(
+				  short *vec,
+				  int count);
+extern void			WlzValueCopyIntToInt(
+				  int *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueCopyIntToShort(
+				  short *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueCopyIntToUByte(
+				  UBYTE *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueCopyIntToFloat(
+				  float *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueCopyIntToDouble(
+				  double *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueCopyShortToInt(
+				  int *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueCopyShortToShort(
+				  short *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueCopyShortToUByte(
+				  UBYTE *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueCopyShortToFloat(
+				  float *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueCopyShortToDouble(
+				  double *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueCopyUByteToInt(
+				  int *dst,
+				  UBYTE *src,
+				  int count);
+extern void			WlzValueCopyUByteToShort(
+				  short *dst,
+				  UBYTE *src,
+				  int count);
+extern void			WlzValueCopyUByteToUByte(
+				  UBYTE *dst,
+				  UBYTE *src,
+				  int count);
+extern void			WlzValueCopyUByteToFloat(
+				  float *dst,
+				  UBYTE *src,
+				  int count);
+extern void			WlzValueCopyUByteToDouble(
+				  double *dst,
+				  UBYTE *src,
+				  int count);
+extern void			WlzValueCopyFloatToInt(
+				  int *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueCopyFloatToShort(
+				  short *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueCopyFloatToUByte(
+				  UBYTE *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueCopyFloatToFloat(
+				  float *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueCopyFloatToDouble(
+				  double *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueCopyDoubleToInt(
+				  int *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueCopyDoubleToShort(
+				  short *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueCopyDoubleToUByte(
+				  UBYTE *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueCopyDoubleToFloat(
+				  float *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueCopyDoubleToDouble(
+				  double *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueCopyGreyToGrey(
+				  WlzGreyP dst,
+				  int dstOff,
+				  WlzGreyType dstType,
+				  WlzGreyP src,
+				  int srcOff,
+				  WlzGreyType srcType,
+				  int count);
+extern void			WlzValueCopyDVertexToDVertex(
+				  WlzDVertex2 *dst,
+				  WlzDVertex2 *src,
+				  int count);
+extern void			WlzValueCopyDVertexToFVertex(
+				  WlzFVertex2 *dst,
+				  WlzDVertex2 *src,
+				  int count);
+extern void			WlzValueCopyDVertexToIVertex(
+				  WlzIVertex2 *dst,
+				  WlzDVertex2 *src,
+				  int count);
+extern void			WlzValueCopyFVertexToDVertex(
+				  WlzDVertex2 *dst,
+				  WlzFVertex2 *src,
+				  int count);
+extern void			WlzValueCopyFVertexToFVertex(
+				  WlzFVertex2 *dst,
+				  WlzFVertex2 *src,
+				  int count);
+extern void			WlzValueCopyFVertexToIVertex(
+				  WlzIVertex2 *dst,
+				  WlzFVertex2 *src,
+				  int count);
+extern void			WlzValueCopyIVertexToDVertex(
+				  WlzDVertex2 *dst,
+				  WlzIVertex2 *src,
+				  int count);
+extern void			WlzValueCopyIVertexToFVertex(
+				  WlzFVertex2 *dst,
+				  WlzIVertex2 *src,
+				  int count);
+extern void			WlzValueCopyIVertexToIVertex(
+				  WlzIVertex2 *dst,
+				  WlzIVertex2 *src,
+				  int count);
+extern WlzErrorNum 		WlzValueConvertPixel(
+				  WlzPixelV *dstPix,
+				  WlzPixelV srcPix,
+				  WlzGreyType dstType);
+extern int			WlzValueMedianInt(
+				  int *vec,
+				  int count);
+extern double			WlzValueMedianDouble(
+				  double *vec,
+				  int count);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzVerifyObj.c							*
+************************************************************************/
+extern WlzErrorNum 		WlzVerifyObject(
+				  WlzObject *obj,
+				  int fix);
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum 		WlzVerifyIntervalDomain(
+				  WlzDomain dom,
+				  int fix);
+extern WlzErrorNum 		WlzVerifyIntervalLine(
+				  WlzIntervalLine *intvline,
+				  int fix);
+extern WlzErrorNum 		WlzVerifyInterval(
+				  WlzInterval *intv,
+				  int fix);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzVolume.c								*
+************************************************************************/
+extern int 			WlzVolume(
+				  WlzObject *obj,
+		     		  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzWindow.c								*
+************************************************************************/
+extern WlzObject 		*WlzWindow(
+				  WlzObject *srcObj,
+				  WlzWindowFnType winFn,
+				  WlzIVertex2 origin,
+				  WlzIVertex2 radius,
+				  WlzErrorNum	*dstErr);
+extern WlzWindowFnType 		WlzWindowFnValue(
+				  const char *winFnName);
+extern const char 		*WlzWindowFnName(
+				  WlzWindowFnType winFnValue);
+
+/************************************************************************
+* WlzWriteObj.c								*
+************************************************************************/
+extern WlzErrorNum 		WlzWriteObj(
+				  FILE *fp,
+			          WlzObject *obj);
+#ifdef  __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif	/* !WLZ_PROTO_H Don't put anything after this line */

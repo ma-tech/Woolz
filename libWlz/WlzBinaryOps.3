@@ -1,0 +1,109 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzBinaryOps.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Functions for binary set operations on Woolz objects.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH WlzBinaryOps 3 "13th November 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzUnionN, WlzUnion2, WlzIntersectN, WlzIntersect2, WlzDiffDomain \-
+Set and Binary operations on woolz images.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzObject *WlzDiffDomain(WlzObject *obj1,
+                         WlzObject *obj2);
+
+WlzObject *WlzIntersect2(WlzObject *obj1,
+                         WlzObject *obj2)
+
+WlzObject *WlzIntersectN(WlzObject **objs,
+			int        n_objs,
+			int        uvtFlg)
+
+WlzObject *WlzUnion2(WlzObject *obj1,
+		     WlzObject *obj2)
+
+WlzObject *WlzUnionN(WlzObject 	**objs,
+	             int 	n_objs,
+	             int 	uvtFlg)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj1 "          woolz object 1"
+.LP
+.BI " " obj2 "          woolz object 2"
+.LP
+.BI " " objs "          woolz object array"
+.LP
+.BI " " n_objs "        number of objects"
+.LP
+.BI " " uvtFlg "        merge valuetables flag"
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+These procedures perform binary and set operations on woolz domain objects.
+In each case the valuetables are copied or combined appropriately and a NULL
+return indicates an error. All procedures will accept 2D or 3D objects but
+the types of all objects must be the same.
+.LP
+.I WlzDiffDomain,
+calculates the object with domain equal to the set difference between obj1
+and obj2 i.e. the complement of the intersection of obj1 and obj2 in obj1.
+If either obj1 or obj2 is NULL an error is reported. Other errors are:
+NULL_DOMAIN, INVALID_OBJECT_TYPE, MEM_ALLOC_FAILED. If the domain of obj2 is
+a superset of obj1 then an empty object is returned.
+.LP
+.I WlzIntersect2,
+calculate the intersection between two domain objects. This is a
+convenience routine that calls WlzIntersectN but sets uvt=0. The
+objects can be 2D or 3D but must be the same type.
+.LP
+.I WlzIntersectN,
+calculate the intersection between n_objs objects. If uvt is non-zero
+and all valuetables are defined then the returned intersection will
+have grey-values which are the average of the input grey-values. Each
+object in the array must be non-NULL and all of the same type or of
+type WLZ_EMPTY_OBJ. Current implementation can handle
+WLZ_2D_DOMAINOBJ, WLZ_3D_DOMAINOBJ, WLZ_EMPTY_OBJ. WLZ_EMPTY_OBJ is a
+possible return, NULL is returned on error, possible errors
+are: NULL_OBJECT, INVALID_OBJECT_TYPE, MEM_ALLOC_FAILED,
+INVALID_GREY_TYPE, INVALID_PLANEDOMAIN_TYPE.
+.LP
+.I WlzUnion2,
+calculate the union between two domain objects. This is a
+convenience routine that calls WlzUnionN but sets uvt=0. The
+objects can be 2D or 3D but must be the same type.
+.LP
+.I WlzUnionN,
+calculate the union between n_objs objects. If uvt is non-zero
+and all valuetables are defined then the returned union will
+have grey-values which are the average of the input grey-values. Each
+object in the array must be non-NULL and all of the same type or of
+type WLZ_EMPTY_OBJ. Current implementation can handle
+WLZ_2D_DOMAINOBJ, WLZ_3D_DOMAINOBJ, WLZ_EMPTY_OBJ. WLZ_EMPTY_OBJ is a
+possible return, NULL is returned on error, possible errors
+are: NULL_OBJECT, INVALID_OBJECT_TYPE, MEM_ALLOC_FAILED,
+INVALID_GREY_TYPE, INVALID_PLANEDOMAIN_TYPE.
+.LP
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+

@@ -1,0 +1,383 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzArray.3
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions which perform conversion between Woolz
+.\"		2 and 3D domain objects and Alc arrays.
+.\" $Revision
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.nh
+.TH "WlzArray" 3 "%G%" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzToArray2D,
+WlzToArray3D,
+WlzFromArray2D,
+WlzFromArray3D,
+WlzArrayStats3D,
+WlzArrayStats2D,
+WlzArrayStats1D \- Conversion between Woolz domain objects and Alc arrays.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzErrorNum WlzToArray2D(void ***" "dstArrayP" ,
+.in +4m
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex2 " "arraySize" ,
+.br
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.BI "int " "noiseFlag" ,
+.br
+.BI "WlzGreyType " "dstGreyType" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToArray3D(void ****" "dstArrayP" ,
+.in +4m
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "arraySize" ,
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "int " "noiseFlag" ,
+.br
+.BI "WlzGreyType " "dstGreyType" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromArray2D(void **" "srcArrayP" ,
+.in +4m
+.br
+.BI "WlzIVertex2 " "arraySize" ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzGreyType " "dstGreyType" ,
+.BI "WlzGreyType " "srcGreyType" ,
+.br
+.BI "double " "valOffset" ,
+.BI "double " "valScale" ,
+.br
+.BI "int " "clampFlag" ,
+.BI "int " "noCopyFlag" ,
+.br
+.BI "WlzErrorNum " "*dstErrNum" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromArray3D(void ***" "srcArrayP" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySize" ,
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.br
+.BI "WlzGreyType " "dstGreyType" ,
+.BI "WlzGreyType " "srcGreyType" ,
+.br
+.BI "double " "valOffset" ,
+.BI "double " "valScale" ,
+.br
+.BI "int " "clampFlag" ,
+.BI "int " "noCopyFlag" ,
+.br
+.BI "WlzErrorNum " "*dstErrNum" );
+.in -4m
+.LP
+.BI "int WlzArrayStats1D(void *" "srcArrayP" ,
+.in +4m
+.br
+.BI "int " "arraySize" ,
+.BI "WlzGreyType " "greyType" ,
+.br
+.BI "double *" "dstMin" ,
+.BI "double *" "dstMax" ,
+.BI "double *" "dstSum" ,
+.br
+.BI "double *" "dstSumSq" ,
+.BI "double *" "dstMean" ,
+.BI "double *" "dstStdDev"  );
+.in -4m
+.LP
+.BI "int WlzArrayStats2D(void **" "srcArrayP" ,
+.in +4m
+.br
+.BI "WlzIVertex2 " "arraySize" ,
+.BI "WlzGreyType " "greyType" ,
+.br
+.BI "double *" "dstMin" ,
+.BI "double *" "dstMax" ,
+.BI "double *" "dstSum" ,
+.br
+.BI "double *" "dstSumSq" ,
+.BI "double *" "dstMean" ,
+.BI "double *" "dstStdDev"  );
+.in -4m
+.LP
+.BI "int WlzArrayStats3D(void ***" "srcArrayP" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySize" ,
+.BI "WlzGreyType " "greyType" ,
+.br
+.BI "double *" "dstMin" ,
+.BI "double *" "dstMax" ,
+.BI "double *" "dstSum" ,
+.br
+.BI "double *" "dstSumSq" ,
+.BI "double *" "dstMean" ,
+.BI "double *" "dstStdDev"  );
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+dstArrayP^destination pointer for array pointer.
+srcArrayP^source array pointer.
+srcObj^source object pointer.
+arraySize^array dimensions.
+arrayOrigin^origin of array in object coordinates.
+dstGreyType^destination array/object grey type.
+srcGreyType^source array/object grey type.
+noiseFlag^values outside the objects domain are
+^filled with random noise if non\-zero.
+valOffset^grey value offset.
+valScale^grey value scale factor.
+clampFlag^values clamped to destination grey type range if
+^non\-zero
+noCopyFlag^values are \fBnot\fR copied if non\-zero
+dstMin^destination pointer for minimum value in array.
+dstMax^destination pointer for maximum value in array.
+dstSum^destination pointer for sum of values in array.
+dstSumSq^destination pointer for sum of squares of values
+^in array.
+dstMean^destination pointer for mean of values in array.
+dstStdDev^destination pointer for standard deviation of
+^values in array.
+dstErrNum^destination pointer for error number.
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+.LP
+WlzToArray2D and WlzToArray3D extract Alc(3) arrays from Woolz 2D and 3D
+domain objects with grey values.
+If the dereferenced destination pointer is non-NULL pointer
+then it is assumed to be a previously allocated suitable Alc array,
+otherwise an array is allocated.
+The grey values of the object are assumed to be valid for the array
+grey type.
+Values outside the domain of the given object are either filled
+using the objects background value or noise,
+depending on the value of \fInoiseFlag\fR.
+If this flag is non\-zero then random values with 
+a normal distribution having
+the same mean and standard deviation as the given object
+are used.
+Both functions return a woolz error number.
+.LP
+WlzFromArray2D and WlzFromArray3D create woolz 2D and 3D domain objects
+from the given Alc(3) arrays.
+A simple linear transformation of the grey values can be made
+using the valOffset and valScale parameters.
+The transformation is:
+.br
+.nf
+  <dst value> = (<src value> x valScale) + valOffset
+.fi
+.br
+If the clampFlag is set (non\-zero) then the array values are clamped to
+the range of the array grey type.
+If the noCopyFlag flag is set (non\-zero) then a pointer to the array values
+is used for the objects values,
+otherwise memory for the objects values is allocated and they are copied..
+For the noCopyFlag flag  to be valid when set
+both the source and destination grey type must be the same.
+Both functions return the woolz object or NULL on error.
+.LP
+WlzArrayStats1D, WlzArrayStats2D and WlzArrayStats3D
+calculate simple statistics for the given Alc array.
+Any of the destination pointers may be NULL.
+All three functions return the number of data in array
+or zero on error.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+/*
+ * Example using WlzToArray[23]D(), WlzArrayStats[23]D and
+ * WlzFromArray[23]D. A Woolz 2D domain object is read from
+ * the standard input and converted to an Alc array.
+ * The minimum and maximum grey values in the array are computed.
+ * A new Woolz object is created with the grey values inverted
+ * and normalised to the range [0 - 255].
+ * This isn't an efficient way of doing this!
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Alc.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  int           reUseFlag = 0;  /* Non-zero to share grey values */
+  double        arrayScaleVal,
+                arrayOffsetVal,
+                minVal,
+                maxVal;
+  WlzIVertex2    arraySize2D,
+                arrayOrigin2D;
+  WlzIVertex3   arraySize3D,
+                arrayOrigin3D;
+  WlzGreyType   greyType;
+  void          **array2D = NULL;
+  void          ***array3D = NULL;
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((inObj = WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr, "%s: failed to read object.\n",
+                   argv[0]);
+  }
+  else if(((inObj->type != WLZ_2D_DOMAINOBJ) &&
+           (inObj->type != WLZ_3D_DOMAINOBJ)) ||
+          (inObj->domain.core == NULL) ||
+          (inObj->values.core == NULL))
+  {
+    (void )fprintf(stderr, "%s: Inappropriate object type.\n",
+                   argv[0]);
+    errNum = INVALID_OBJECT_TYPE;
+  }
+  else
+  {
+    if(inObj->type == WLZ_2D_DOMAINOBJ)
+    {
+      arrayOrigin2D.vtX = inObj->domain.i->kol1;
+      arrayOrigin2D.vtY = inObj->domain.i->line1;
+      arraySize2D.vtX = inObj->domain.i->lastkl -
+                        inObj->domain.i->kol1 + 1;
+      arraySize2D.vtY = inObj->domain.i->lastln -
+                        inObj->domain.i->line1 + 1;
+      greyType = WlzGreyTableTypeToGreyType(inObj->values.core->type, NULL);
+      if((errNum = WlzToArray2D(&array2D, inObj, arraySize2D,
+                                arrayOrigin2D, 0,
+                                greyType)) != WLZ_ERR_NONE)
+      {
+        (void )fprintf(stderr,
+                       "%s: Failed to create 2D array from object.\n",
+                       argv[0]);
+      }
+      if((errNum == WLZ_ERR_NONE) &&
+         (WlzArrayStats2D(array2D, arraySize2D, greyType,
+                          &minVal, &maxVal, NULL, NULL,
+                          NULL, NULL) <= 0))
+      {
+        (void )fprintf(stderr, "%s: Failed to compute statistics.\n",
+                       *argv);
+        errNum = INVALID_GREY_TYPE;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        arrayScaleVal = maxVal - minVal;
+        if((arrayScaleVal = maxVal - minVal) > 0.5)
+        {
+          arrayScaleVal = -255 / arrayScaleVal;
+        }
+        arrayOffsetVal = 255 - (minVal * arrayScaleVal);
+        outObj = WlzFromArray2D(array2D, arraySize2D, arrayOrigin2D,
+                                greyType, greyType,
+                                arrayOffsetVal, arrayScaleVal,
+                                0, reUseFlag, &errNum);
+        if((outObj == NULL) || (errNum != WLZ_ERR_NONE))
+        {
+          (void )fprintf(stderr,
+                         "%s: Failed to create object from 2D array.\n",
+                         argv[0]);
+        }
+      }
+    }
+    else
+    {
+      arrayOrigin3D.vtX = inObj->domain.p->kol1;
+      arrayOrigin3D.vtY = inObj->domain.p->line1;
+      arrayOrigin3D.vtZ = inObj->domain.p->plane1;
+      arraySize3D.vtX = inObj->domain.p->lastkl - inObj->domain.p->kol1 + 1;
+      arraySize3D.vtY = inObj->domain.p->lastln - inObj->domain.p->line1 + 1;
+      arraySize3D.vtZ = inObj->domain.p->lastpl - inObj->domain.p->plane1 + 1;
+      greyType = WlzGreyTableTypeToGreyType(inObj->values.core->type, NULL);
+      if((errNum = WlzToArray3D(&array3D, inObj, arraySize3D, arrayOrigin3D,
+                                0, greyType)) != WLZ_ERR_NONE)
+      {
+        (void )fprintf(stderr, "%s: Failed to create 3D array from object.\n",
+                       argv[0]);
+      }
+      if((errNum == WLZ_ERR_NONE) &&
+         (WlzArrayStats3D(array3D, arraySize3D, greyType,
+                          &minVal, &maxVal, NULL, NULL,
+                          NULL, NULL) <= 0))
+      {
+        (void )fprintf(stderr, "%s: Failed to compute statistics.\n",
+                       *argv);
+        errNum = INVALID_GREY_TYPE;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        arrayScaleVal = maxVal - minVal;
+        if((arrayScaleVal = maxVal - minVal) > 0.5)
+        {
+          arrayScaleVal = -255 / arrayScaleVal;
+        }
+        arrayOffsetVal = 255 - (minVal * arrayScaleVal);
+        outObj = WlzFromArray3D(array3D, arraySize3D, arrayOrigin3D,
+                                greyType, greyType,
+                                arrayOffsetVal, arrayScaleVal,
+                                0, reUseFlag, &errNum);
+        if((outObj == NULL) || (errNum != WLZ_ERR_NONE))
+        {
+          (void )fprintf(stderr,
+                         "%s: Failed to create object from 3D array.\n",
+                         argv[0]);
+        }
+      }
+    }
+  }
+  if(inObj)
+  {
+    WlzFreeObj(inObj);
+  }
+  if(outObj)
+  {
+    if((errNum = WlzWriteObj(stdout, outObj)) != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr, "%s: Failed to write normalised object.\n",
+                     *argv);
+    }
+    WlzFreeObj(outObj);
+  }
+  if(array2D)
+  {
+    Alc2Free(array2D);
+  }
+  if(array3D)
+  {
+    Alc3Free(array3D);
+  }
+  return(errNum);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+Alc(3), WlzError(3)
+.SH BUGS
+Still to be found.

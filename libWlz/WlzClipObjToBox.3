@@ -1,0 +1,111 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz							"
+.\" Title:      WlzClipObjToBox.3		                      	"
+.\" Date:       March 1997	                                    	"
+.\" Author:     Bill Hill 				    		"
+.\" Copyright:	1997 Medical Research Council, UK.			"
+.\"		All rights reserved.					"
+.\" Address:	MRC Human Genetics Unit,				"
+.\"		Western General Hospital,				"
+.\"		Edinburgh, EH4 2XU, UK.					"
+.\" Version:	%I%							"
+.\" Purpose:    Woolz functions for clipping either a 2D or 3D domain	"
+.\"		objects domain so that it lies within a given box.	"
+.\" Maintenance:Log changes below, with most recent at top of list.	"
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzClipObjToBox" 3 "%G%" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzClipObjToBox2D, WlzClipObjToBox3D \- Create a new object with a new
+domain clipped to fit the given box.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzClipObjToBox2D(WlzObject *" "srcObj" ,
+.ti +10m
+.BI "WlzIBox2 " "clipBox" ,
+.BI "WlzErrorNum *" "dstErrNum" );
+.LP
+.BI "WlzObject *WlzClipObjToBox3D(WlzObject *" "srcObj" ,
+.ti +10m
+.BI "WlzIBox3 " "clipBox" ,
+.BI "WlzErrorNum *" "dstErrNum" );
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer.
+clipBox^given 2 or 3D clipping box.
+dstErrNum^destination pointer for error number, may be null.
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+These functions create new objects with their domain clipped to fit
+the given box.
+.LP
+WlzClipObjToBox2D will only accept WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ objects.
+WlzClipObjToBox3D will accept WLZ_EMPTY_OBJ, WLZ_2D_DOMAINOBJ and
+WLZ_3D_DOMAINOBJ objects.
+Any other object type provokes an error.
+.LP
+The type of the returned object is either WLZ_EMPTY_OBJ if the object's
+domain does not intersect the clipping box,
+or the given object's type.
+On error these functions return a NULL object pointer and may report
+the following errors: NULL_OBJECT,
+NULL_DOMAIN, INVALID_OBJECT_TYPE, INVALID_DOMAIN_TYPE,
+and MEM_ALLOC_FAILED.
+
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+/*
+ * Simple example of using WlzClipObjToBox3D() which clips the object
+ * read from the standard input to a 0-128 cube.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int	        main(char *argv[], int argc)
+{
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzIBox3      box;
+
+  box.xMin = 0;
+  box.xMax = 128;
+  box.yMin = 0;
+  box.yMax = 128;
+  box.zMin = 0;
+  box.zMax = 128;
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr, "%s: Failed to read input object.\n", *argv);
+  }
+  else if((outObj = WlzClipObjToBox3D(inObj, box, &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
+  {
+    (void )fprintf(stderr, "%s: Failed to clip object.\n", *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout, outObj)) != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Failed to write output object.\n", *argv);
+  }
+  return(errNum);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+Still to be found.

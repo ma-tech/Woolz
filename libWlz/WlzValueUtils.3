@@ -1,0 +1,330 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzValueUtils.3
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for setting and copying vectors of
+.\"		simple values.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.nh 0
+.TH "WlzValueUtils" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzValueSetInt, \
+WlzValueSetShort, \
+WlzValueSetUByte, \
+WlzValueSetFloat, \
+WlzValueSetDouble, \
+WlzValueSetGrey, \
+WlzValueSetDVertex, \
+WlzValueSetFVertex, \
+WlzValueSetIVertex, \
+WlzValueClampIntToShort, \
+WlzValueClampIntToUByte, \
+WlzValueClampShortToUByte, \
+WlzValueClampDoubleToInt, \
+WlzValueClampDoubleToShort, \
+WlzValueClampDoubleToUByte, \
+WlzValueClampDoubleToFloat, \
+WlzValueClampFloatToInt, \
+WlzValueClampFloatToShort, \
+WlzValueClampFloatToUByte, \
+WlzValueMaskIntToShort, \
+WlzValueMaskIntToUByte, \
+WlzValueMaskShortToUByte, \
+WlzValueCopyIntToShort, \
+WlzValueCopyIntToUByte, \
+WlzValueCopyIntToFloat, \
+WlzValueCopyIntToDouble, \
+WlzValueCopyShortToInt, \
+WlzValueCopyShortToShort, \
+WlzValueCopyShortToUByte, \
+WlzValueCopyShortToFloat, \
+WlzValueCopyShortToDouble, \
+WlzValueCopyUByteToInt, \
+WlzValueCopyUByteToShort, \
+WlzValueCopyUByteToUByte, \
+WlzValueCopyUByteToFloat, \
+WlzValueCopyUByteToDouble, \
+WlzValueCopyFloatToInt, \
+WlzValueCopyFloatToShort, \
+WlzValueCopyFloatToUByte, \
+WlzValueCopyFloatToFloat, \
+WlzValueCopyFloatToDouble, \
+WlzValueCopyDoubleToInt, \
+WlzValueCopyDoubleToShort, \
+WlzValueCopyDoubleToUByte, \
+WlzValueCopyDoubleToFloat, \
+WlzValueCopyDoubleToDouble, \
+WlzValueCopyGreyToGrey, \
+WlzValueCopyDVertexToDVertex, \
+WlzValueCopyDVertexToFVertex, \
+WlzValueCopyDVertexToIVertex, \
+WlzValueCopyFVertexToDVertex, \
+WlzValueCopyFVertexToFVertex, \
+WlzValueCopyFVertexToIVertex, \
+WlzValueCopyIVertexToDVertex, \
+WlzValueCopyIVertexToFVertex, \
+WlzValueCopyIVertexToIVertex, \
+WlzValueConvertPixel \
+ \- Functions for setting and copying vectors of simple values.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "void WlzValueSetInt(int *" vec ", int " value ,
+.ti +10m
+.BI int " count" );
+.LP
+.BI "void WlzValueSetShort(short *" vec ", short " value ,
+.ti +10m
+.BI int " count" );
+.LP
+.BI "void WlzValueSetUByte(UBYTE *" vec ", UBYTE " value ,
+.ti +10m
+.BI int " count" );
+.LP
+.BI "void WlzValueSetFloat(float *" vec ", float " value ,
+.ti +10m
+.BI int  " count" );
+.LP
+.BI "void WlzValueSetDouble(double *" vec ", double " value ,
+.ti +10m
+.BI int  "count" );
+.LP
+.BI "void WlzValueSetGrey(WlzGreyP " vec ", int " vecOff ,
+.ti +10m
+.BI WlzGreyV " value" ", int " count );
+.LP
+.BI "void WlzValueSetDVertex(WlzDVertex2 *" vec ", WlzDVertex2 " value ,
+.ti +10m
+.BI int " count" );
+.LP
+.BI "void WlzValueSetFVertex(WlzFVertex2 *" vec ", WlzFVertex2 " value , 
+.ti +10m
+.BI int " count" );
+.LP
+.BI "void WlzValueSetIVertex(WlzIVertex2 *" vec ", WlzIVertex2 " value ,
+.ti +10m
+.BI int " count" );
+.sp
+.LP
+.BI "void WlzValueClampIntToShort(int *" vec ", int " count );
+.LP
+.BI "void WlzValueClampIntToUByte(int *" vec ", int " count );
+.LP
+.BI "void WlzValueClampShortToUByte(short *" vec ", int " count );
+.LP
+.BI "void WlzValueClampDoubleToInt(double *" vec ", int " count );
+.LP
+.BI "void WlzValueClampDoubleToShort(double *" vec ", int " count );
+.LP
+.BI "void WlzValueClampDoubleToUByte(double *" vec ", int " count );
+.LP
+.BI "void WlzValueClampDoubleToFloat(double *" vec ", int " count );
+.LP
+.BI "void WlzValueClampFloatToInt(float *" vec ", int " count );
+.LP
+.BI "void WlzValueClampFloatToShort(float *" vec ", int " count );
+.LP
+.BI "void WlzValueClampFloatToUByte(float *" vec ", int " count );
+.LP
+.sp
+.LP
+.BI "void WlzValueMaskIntToShort(int *" vec ", int " count );
+.LP
+.BI "void WlzValueMaskIntToUByte(int *" vec ", int " count) 
+.LP
+.BI "void WlzValueMaskShortToUByte(short *" vec ", int " count );
+.LP
+.sp
+.LP
+.BI "void WlzValueCopyIntToShort(short *" dst ,
+.ti +10m
+.BI " int *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIntToUByte(UBYTE *" dst ,
+.ti +10m
+.BI " int *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIntToFloat(float *" dst ,
+.ti +10m
+.BI " int *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIntToDouble(double *" dst ,
+.ti +10m
+.BI " int *" src ", int " count );
+.LP
+.BI "void WlzValueCopyShortToInt(int *" dst ,
+.ti +10m
+.BI " short *" src ", int " count );
+.LP
+.BI "void WlzValueCopyShortToShort(short *" dst ,
+.ti +10m
+.BI " short *" src ", int " count );
+.LP
+.BI "void WlzValueCopyShortToUByte(UBYTE *" dst ,
+.ti +10m
+.BI " short *" src ", int " count );
+.LP
+.BI "void WlzValueCopyShortToFloat(float *" dst ,
+.ti +10m
+.BI " short *" src ", int " count );
+.LP
+.BI "void WlzValueCopyShortToDouble(double *" dst ,
+.ti +10m
+.BI " short *" src ", int " count );
+.LP
+.BI "void WlzValueCopyUByteToInt(int *" dst ,
+.ti +10m
+.BI " UBYTE *" src ", int " count );
+.LP
+.BI "void WlzValueCopyUByteToShort(short *" dst ,
+.ti +10m
+.BI " UBYTE *" src ", int " count );
+.LP
+.BI "void WlzValueCopyUByteToUByte(UBYTE *" dst ,
+.ti +10m
+.BI " UBYTE *" src ", int " count );
+.LP
+.BI "void WlzValueCopyUByteToFloat(float *" dst ,
+.ti +10m
+.BI " UBYTE *" src ", int " count );
+.LP
+.BI "void WlzValueCopyUByteToDouble(double *" dst ,
+.ti +10m
+.BI " UBYTE *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFloatToInt(int *" dst ,
+.ti +10m
+.BI " float *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFloatToShort(short *" dst ,
+.ti +10m
+.BI " float *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFloatToUByte(UBYTE *" dst ,
+.ti +10m
+.BI " float *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFloatToFloat(float *" dst ,
+.ti +10m
+.BI " float *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFloatToDouble(double *" dst ,
+.ti +10m
+.BI " float *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDoubleToInt(int *" dst ,
+.ti +10m
+.BI " double *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDoubleToShort(short *" dst ,
+.ti +10m
+.BI " double *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDoubleToUByte(UBYTE *" dst ,
+.ti +10m
+.BI " double *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDoubleToFloat(float *" dst ,
+.ti +10m
+.BI " double *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDoubleToDouble(double *" dst ,
+.ti +10m
+.BI " double *" src ", int " count );
+.LP
+.BI "void WlzValueCopyGreyToGrey(WlzGreyP " dst ,
+.ti +10m
+.BI "int " dstOff  ", WlzGreyType " dstType ,
+.ti +10m
+.BI "WlzGreyP " src  ,
+.ti +10m
+.BI "int " srcOff  ", WlzGreyType " srcType ,
+.ti +10m
+.BI "int " count );
+.LP
+.BI "void WlzValueCopyDVertexToDVertex(WlzDVertex2 *" dst ,
+.ti +10m
+.BI " WlzDVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDVertexToFVertex(WlzFVertex2 *" dst ,
+.ti +10m
+.BI " WlzDVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDVertexToIVertex(WlzIVertex2 *" dst ,
+.ti +10m
+.BI " WlzDVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFVertexToDVertex(WlzDVertex2 *" dst ,
+.ti +10m
+.BI " WlzFVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFVertexToFVertex(WlzFVertex2 *" dst ,
+.ti +10m
+.BI " WlzFVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFVertexToIVertex(WlzIVertex2 *" dst ,
+.ti +10m
+.BI " WlzFVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIVertexToDVertex(WlzDVertex2 *" dst ,
+.ti +10m
+.BI " WlzIVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIVertexToFVertex(WlzFVertex2 *" dst ,
+.ti +10m
+.BI " WlzIVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIVertexToIVertex(WlzIVertex2 *" dst ,
+.ti +10m
+.BI " WlzIVertex2 *" src ", int " count );
+.LP
+.BI "WlzErrorNum WlzValueConvertPixel(WlzPixelV *" dstPix ,
+.ti +10m
+.BI "WlzPixelV " srcPix ", WlzGreyType " dstType );
+.LP
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+count^number of vector elements
+dst^destination vector.
+src^source vector.
+vec^vector of values
+value^specific value
+dstPix^destination pixel
+srcPix^source pixel
+dstType^destination grey type
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+WlzValueSet\fI<value\-type>\fR sets the elements of the given vector to a given
+value.
+.LP
+WlzValueClamp\fI<vector\-type>\fRTo\fI<value\-type>\fR clamps a vector of
+\fI<vector\-type>\fR to the limits of \fI<value\-type>\fR.
+.LP
+WlzValueMask\fI<vector\-type>\fRTo\fI<value\-type>\fR masks the elements of
+a vector of \fI<vector\-type>fR to the limits of \fI<value\-type>\fR.
+.LP
+WlzValueCopy\fI<src\-type>\fRTo\fI<dst\-type>\fR copies a vector of
+\fI<src\-type>\fR to a vector of \fI<dst\-type>\fR.
+.LP
+WlzValueConvertPixel converts a single pixel value, clamping the source pixel
+to the destination range.
+.SH SEE ALSO
+\-
+.SH BUGS
+Still to be found.

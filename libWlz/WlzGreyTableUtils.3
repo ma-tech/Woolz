@@ -1,0 +1,53 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzGreyTableUtils.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for to handle and modify grey-tables.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH WlzGreyTableUtils 3 "13th November 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzConvertPix \- miscellaneous procedures to handle and modify grey-tables.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzObject *WlzConvertPix(WlzObject	*obj,
+			 WlzGreyType	newpixtype);
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj "		object to be modified."
+.BI " " newpixtype "	new pixel type
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+.LP
+.I WlzConvertPix,
+convert the pixel type of the object to newpixtype which should be a legal
+grey-type. The grey values are converted and clamped as required to fit within
+the new range. The returned objet will have the same domain but new valuetable.
+Returns NULL on error with possible errors: NULL_OBJECT, NULL_DOMAIN, 
+NULL_VALUETABLE,INVALID_OBJECT_TYPE. 
+.I <etc>
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+

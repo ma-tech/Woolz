@@ -1,0 +1,54 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzTranspose.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions to transpose a woolz object.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzTranspose" 3 "Tue Jul  8 17:23:04 1997" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzTransposeObj \- transpose a woolz object (interchange row/columns).
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzObject *WlzTransposeObj(WlzObject	*obj)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj "		object pointer."
+.LP
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+Transpose a woolz object. This is a 2D transform of a woolz domain,
+boundlist, polyline object or rectangle object. The transpose
+operation is equivalent to a matrix transpose i.e. the row and column
+coordinates are interchanged. For domain objects pixels at coordinate
+(k,l) will be at (l,k) in the new object. For boundlist and polyline
+objects the vtX and vtY values of the vertices are interchanged. In
+rectangle objects the rl and rk arrays are interchanged. Transposing
+an object twice will result in a copy of the original.
+.LP
+.I WlzTransposeObj,
+top-level routine to transpose all object types.
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+

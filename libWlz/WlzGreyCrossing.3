@@ -1,0 +1,199 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzGreyCrossing.3
+.\" Date:       December 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function which computes an image in which the
+.\"		pixel value encodes the direction of grey value
+.\"		transition.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzGreyCrossing" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzGreyCrossing \- Detects grey value crossings.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzGreyCrossing(WlzObject *" "srcObj" ,
+.BI "int " "newObjFlag" ,
+.br
+.in +8m
+.BI "int " "gVal" ,
+.BI "WlzErrorNum *" wlzErr );
+.in -8m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer.
+newObjFlag^flag to create a new object if non\-zero
+gVal^grey value about which to test for grey value
+^crossings
+wlzErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+WlzGreyCrossing uses a 3\fBx\fR3 kernel and WlzSeqPar(3)
+to examine the given object for grey value crossings
+about the given grey value.
+.LP
+Given a 3\fBx\fR3 set of image values:
+.in +4m
+.TS
+tab(^);
+l l l.
+^
+A^B^C
+D^E^F
+G^H^I
+^
+.TE
+.in -4m
+The sums:
+(A \fB+\fR B \fB+\fR C), (G \fB+\fR H \fB+\fR I);
+(B \fB+\fR C \fB+\fR F), (D \fB+\fR G \fB+\fR H);
+(A \fB+\fR D \fB+\fR G), (C \fB+\fR F \fB+\fR I) and
+(A \fB+\fR B \fB+\fR D), (F \fB+\fR H \fB+\fR I)
+are computed about the pixel E.
+If first sum is greater than 3\fBx\fIgVal\fR \fBand\fR
+the second sum is less than 3\fBx\fIgVal\fR \fBand\fR
+the difference is between the sums is greater
+than some small threshold value
+then the crossing is detected.
+.LP
+The output pixel values encode the maximum crossing value:
+.in +4m
+.TS
+tab(^);
+l l.
+^
+0^No crossing detected.
+1^(A \fB+\fR B \fB+\fR C) \fB>\fR (G \fB+\fR H \fB+\fR I)
+2^(B \fB+\fR C \fB+\fR F) \fB>\fR (D \fB+\fR G \fB+\fR H)
+3^(A \fB+\fR D \fB+\fR G) \fB>\fR (C \fB+\fR F \fB+\fR I)
+4^(A \fB+\fR B \fB+\fR D) \fB>\fR (F \fB+\fR H \fB+\fR I)
+^
+.TE
+.in -4m
+.LP
+Only objects with WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ
+types are valid. WLZ_2D_DOMAINOBJ objects must have
+a valid domain and integral (ie WLZ_GREY_INT, WLZ_GREY_SHORT 
+or WLZ_GREY_UBYTE) values.
+.LP
+WlzGreyCrossing(3) can be combined with WlzLaplacian(3) to detect edges in an
+image.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+/*
+ * Simple example of using WlzGreyCrossing() and WlzLaplacian() to detect
+ * edges in an image.
+ */
+
+#include <stdio.h> 
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  WlzPixelV     thrV;
+  WlzObject     *inObj = NULL,
+                *intObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  thrV.type = WLZ_GREY_INT;
+  thrV.v.inv = 1;
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr,
+                   "%s: Failed to read input object.\\n",
+                   *argv);
+  }
+  else if(((intObj = WlzConvertPix(inObj, WLZ_GREY_INT,
+                                &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
+  {
+      (void )fprintf(stderr,
+                     "%s: Failed to convert to WLZ_GREY_INT.\\n",
+                     *argv);
+  }
+  else
+  {
+    (void )WlzLaplacian(intObj, 5, 0, 0, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr,
+                     "%s: Failed to convolve object.\\n",
+                     *argv);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )WlzGreyCrossing(intObj, 0, 0, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr,
+                     "%s: Failed to detect zero crossings.\\n",
+                     *argv);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((outObj = WlzThreshold(intObj, thrV,
+                               WLZ_THRESH_HIGH,
+                               &errNum)) == NULL) ||
+       (errNum != WLZ_ERR_NONE))
+    {
+      (void )fprintf(stderr,
+                     "%s: Failed to threshold.\\n",
+                     *argv);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((errNum = WlzWriteObj(stdout,
+                             outObj)) != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr,
+                     "%s: Failed to write output object.\\n",
+                     *argv);
+    }
+  }
+  if(outObj)
+  {
+    (void )WlzFreeObj(outObj);
+  }
+  if(intObj)
+  {
+    (void )WlzFreeObj(intObj);
+  }
+  if(inObj)
+  {
+    (void )WlzFreeObj(inObj);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzLaplacian(3), WlzSeqPar(3), WlzError(3)
+.SH BUGS
+Still to be found.

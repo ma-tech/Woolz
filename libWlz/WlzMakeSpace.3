@@ -1,0 +1,423 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzMakeSpace.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions to allocate and initialise space
+.\"		for woolz objects.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzMakeSpace" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzMakeBoundList, WlzMakeCompoundArray,
+WlzMakeHistogram, WlzMakeHistogramDomain,
+WlzMakeInterval,
+WlzMakeIntervalDomain, WlzMakeIntervalValues, WlzMakeIVertex
+WlzMakeMain, WlzMakePlaneDomain, WlzMakePolyDmn, 
+WlzMakeRect, WlzMakeRectValueTb, WlzMakeSimpleProperty, 
+WlzMakeTransform, WlzMakeTransObj
+WlzMakeValueLine, WlzMakeValueTb, WlzMakeVoxelValueTb,
+WlzNewGrey, WlzNewIDomain, WlzNewValueTb
+\- procedures to allocate and initialise space for woolz objects.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzBoundList *
+WlzMakeBoundList(WlzObjectType		type,
+		 int			wrap,
+		 WlzPolygonDomain 	*polydom)
+
+WlzCompoundArray *
+WlzMakeCompoundArray(WlzObjectType	type,
+		     int 		copyFlg,
+		     int 		nobj,
+		     WlzObject 		**objlist,
+		     WlzObjectType	otype)
+
+WlzHistogram *
+WlzMakeHistogramDomain(WlzObjectType	type,
+		       int 		npoints)
+
+WlzObject *WlzMakeHistogram(WlzObjectType	type,
+			    int 		npoints)
+
+WlzErrorNum
+WlzMakeInterval(int 			line,
+		WlzIntervalDomain	*idomain,
+		int 			nints,
+		WlzInterval 		*intptr)
+
+WlzIntervalDomain *
+WlzMakeIntervalDomain(WlzObjectType type,
+		      int firstln,
+		      int lastln,
+		      int firstkl,
+		      int lastkl)
+
+WlzIntervalValues *
+WlzMakeIntervalValues(WlzObjectType	type,
+		      WlzObject 	*obj,
+		      WlzPixelV		bckgrnd)
+
+WlzIVertex2 *WlzMakeIVertex(int nverts)
+
+WlzObject *
+WlzMakeMain(WlzObjectType 	type,
+	    WlzDomain 		domain,
+	    WlzValues 		values,
+	    WlzSimpleProperty 	*plist,
+	    WlzObject 		*assoc) 
+
+WlzPlaneDomain *
+WlzMakePlaneDomain(WlzObjectType type,
+		   int firstpl, int lastpl,
+		   int firstln, int lastln,
+		   int firstkl, int lastkl)
+
+WlzPolygonDomain *
+WlzMakePolyDmn(WlzObjectType	type,
+	       WlzIVertex2 	*vertices,
+	       int 		nnerts,
+	       int 		maxverts,
+	       int 		copyFlg)
+
+WlzObject *WlzMakeRect(int 			firstln,
+		       int 			lastln,
+		       int 			firstkl,
+		       int 			lastkl,
+		       WlzGreyType		pixeltype,
+		       int 			*greyptr,
+		       WlzPixelV		bckgrnd,
+		       WlzSimpleProperty	*plist,
+		       WlzObject		*assoc)
+
+WlzRectValues *
+WlzMakeRectValueTb(WlzObjectType	type, 
+		   int 			firstln,
+		   int 			lastln,
+		   int 			firstkl,
+		   int 			width,
+		   WlzPixelV		bckgrnd,
+		   int 			*greyptr)
+
+WlzSimpleProperty *
+WlzMakeSimpleProperty(int size)
+
+WlzTransform *WlzMakeTransform(WlzTransformType type)
+
+WlzTransObj
+*WlzMakeTransObj(WlzObjectType	        type,
+		 WlzObject		*obj,
+		 WlzTransform	        *trans,
+		 WlzSimpleProperty	*prop,
+		 WlzObject		*assoc)
+
+WlzErrorNum 
+WlzMakeValueLine(WlzRagRValues 	*vtb,
+		 int 		line,
+		 int 		firstkl,
+		 int 		lastkl,
+		 int 		*greyptr)
+
+WlzRagRValues *
+WlzMakeValueTb(WlzObjectType	type,
+		int 		firstln,
+		int 		lastln,
+		int		firstkl,
+		WlzPixelV	bckgrnd,
+		WlzObject	*orig)
+
+WlzVoxelValues *
+WlzMakeVoxelValueTb(WlzObjectType	type,
+		    int 		firstpl,
+		    int			lastpl,
+		    WlzPixelV		bckgrnd,
+		    WlzObject 		*orig)
+
+WlzObject *WlzNewGrey(WlzObject *obj)
+
+WlzIntervalDomain *
+WlzNewIDomain(WlzIntervalDomain *idom)
+
+WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
+			     WlzObjectType	type,
+			     WlzPixelV		bckgrnd)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " type "		object, domain or valuetable type."
+.LP
+.BI " " greytype "	grey-value type."
+.LP
+.BI " " obj "           object pointer."
+.LP
+.BI " " domain "        domain union."
+.LP
+.BI " " idomain "       interval domain pointer."
+.LP
+.BI " " values "        values union."
+.LP
+.BI " " vtb "           ragged-rectangle value table pointer."
+.LP
+.BI " " plist "         property list pointer."
+.LP
+.BI " " assoc "         associated object pointers."
+.LP
+.BI " " orig "          pointer to originating object."
+.LP
+.BI " " polydom "       pointer to polygon domain."
+.LP
+.BI " " trans "         pointer to affine transform."
+.LP
+.BI " " copyFlg "       copy flag for copying data."
+.LP
+.BI " " objlist "       object list."
+.LP
+.BI " " nobj "          number of objects in objlist."
+.LP
+.BI " " otype "         required object type in objlist."
+.LP
+.BI " " size "          size of data allocation;
+.LP
+.BI " " firstpl "       first plane of domain/valuetable."
+.LP
+.BI " " lastpl "        last plane of domain/valuetable."
+.LP
+.BI " " firstln "       first line of domain/valuetable."
+.LP
+.BI " " lastln "        last line of domain/valuetable."
+.LP
+.BI " " firstkl "       first column of domain/valuetable."
+.LP
+.BI " " lastkl "        last column of domain/valuetable."
+.LP
+.BI " " width "         width - used in value tables."
+.LP
+.BI " " line "          line coordinate value."
+.LP
+.BI " " bckgrnd "       background value."
+.LP
+.BI " " greyptr "       pointer to array of grey values."
+.LP
+.BI " " nints "         number of intervals in the line."
+.LP
+.BI " " intptr "        intervals pointer."
+.LP
+.BI " " vertices "      vertices array."
+.LP
+.BI " " nverts "        number of vertices in vertices."
+.LP
+.BI " " maxverts "      length of vertices array."
+.LP
+.BI " " wrap "          number of polygon end vertices overlapped."
+.LP
+.BI " " npoints "       number of points to be allocated."
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+Thes procedures allocate space for woolz objects and in general return
+a pointer to the allocated space. A NULL is returned on error. In all
+cases where it applies the linkcount will be set to zero and the
+freeptr set appropriately. In most cases each "WlzMake*" procedure is
+matched by an "WlzFree*" procedure, the exceptions are some of the convenience
+procedures which use a common free function
+.LP
+.I WlzMakeCompoundArray,
+allocates space for a compound object and either points to or copies
+the given object pointers, using \fIWlzAssignObject\fR as required. If
+type = WLZ_COMPOUND_ARR_1 the input objects (if any) are checked to be
+of type \fIotype\fR. Space allocation and copying is controlled by the
+copy flag:
+.br
+copyFlg==1: Allocate empty array space for n objects.
+.br
+copyFlg==2: Array is set to input parameter objlist which must be
+freed with the object - not done automatically therefore this should
+probably be avoided.
+.br
+copyFlg==3: Array is input parameter objlist: allocate space and assign object
+pointers. 
+.LP
+.I WlzMakeIntervalValues,
+Make an  interval-structured  grey-table  which covers  the  domain
+of  obj. Note the type must encode table type WLZ_GREY_TAB_INTL and a
+legal grey-value type.
+.LP
+.I WlzMakeSimpleProperty,
+allocate space for a WlzSimpleProperty with \fIsize\fR bytes allocated
+for the data assumed unstructured. The data space is allocated by a
+separate call to AlcMalloc and is therefore aligned correctly for any
+data type. This structure will be read and written via WlzReadObj and
+WlzWriteObj and is freed by WlzFreeProperty.
+.LP
+.I WlzMakeIntervalDomain,
+allocate space for an interval domain strucutre. If the type is
+WLZ_INTERVALDOMAIN_INTVL space is allocated and initialised for the
+interval lines. Note coordinate bounds are checked. To complete a
+domain use \fIWlzMakeInterval\fR.
+.LP
+.I WlzMakePlaneDomain,
+allocate space for a plane domain structure including space for the
+domain pointers. Note coordinate bounds are checked.
+.LP
+.I WlzMakeMain,
+make a top-level domain-type object, assiging the domain, values,
+property-list and associated object pointers as required. The function
+only applies to object of type: WLZ_2D_DOMAINOBJ, WLZ_3D_DOMAINOBJ,
+WLZ_2D_POLYGON, WLZ_BOUNDLIST, WLZ_CONV_HULL, WLZ_HISTOGRAM,
+WLZ_RECTANGLE, WLZ_AFFINE_TRANS, WLZ_PROPERTY_OBJ, WLZ_EMPTY_OBJ.
+.LP
+.I WlzMakeValueTb,
+make spce for an ragged-rectangle values table allocatinf an
+initialised space for the grey-value lines if required. The typ encode
+the grey-value tape and must a legal type. To complete the table use
+\fIWlzMakeValueLine\fR.
+.LP
+.I WlzMakeVoxelValueTb,
+allocate space for the vosel-table structure including space for the
+valuetable pointers.
+.LP
+.I WlzMakeRectValueTb,
+allocate space for a rectangular value table, attaching values if
+supplied. If the space for the values is to be freed when the object
+is freed then set the \fIfreeptr\fR to \fIpixvals\fR.
+.LP
+.I WlzMakeInterval,
+attaches the /fInints/fR contiguous pairs of interval end points for
+\fIline\fR, pointed to by \fIintptr\fR, to specified \fIdomain \fR
+structure. Note this a procedure used within many nested loops
+therefore ther is no checking on the validity of the arguments, in
+particular the \fIidomain\fR must be properly intialised and the
+\fIline\fR value legal.
+.LP
+.I WlzMakeValueLine,
+in similar fashion to \fIWlzMakeInterval\fR, values are attached to a
+ragged-rectangular values-table. The corresponding value-line is set
+and the grey-pointer attached. The column coordinate are the actual
+range of the grey-values for the object and are converted to offsets
+from the left-hand side of the bounding box of the value table.
+.LP
+.I WlzMakePolyDmn,
+make a 2D polygon domain allocating space for vertices if
+\fIcopyFlg\fR is non-zero. If \fIvertices\fR is non-NULL then the
+values are copied if \fIcopyFlg\fR is non-zero otherwise the pointer
+planted. If \fIvertices\fR is NULL and \fIcopyFlg\fR is non-zero then
+space for \fImaxverts\fR vertices is allocated. Type is one of
+WLZ_POLYGON_INT, WLZ_POLYGON_FLOAT or WLZ_POLYGON_DOUBLE.
+.LP
+.I WlzMakeBoundList,
+makes a boundary-lst structure and attached the polygon domain if
+non-NULL, thi linkcount of the polygon is incremented. \fIwrap\fR is
+the number of overlapping vertices at the end of the polygon and must
+be greater than or equal to zero. The boundary types are
+WLZ_BOUNDLIST_PIECE and WLZ_BOUNDLIST_HOLE for polygons around the
+outside of included pixels or for the polygon denoting a hole in the
+domain respectively. Note the polygon pixels are all within the
+domain.
+.LP
+.I WlzMakeIVertex,
+allocate space for \fInverts\fR integer valued vertex structures not
+intialised.
+.LP
+.I WlzMakeRect,
+makes a top-level object with rectangular domain and value-table,
+setting values if non-NULL. This a convenience procedure calling
+\fIWlzMakeIntervalDomain\fR then \fIWlzMakeRectValueTb\fR then
+\fIWlzMakeMain\fR.
+.LP
+.I WlzMakeHistogramDomain,
+makes a histogram domain strucutre with space for \fInpoints\fR points
+of integer of float type, \fItype\fR can have values
+WLZ_HISTOGRAMDOMAIN_INT or WLZ_HISTOGRAMDOMAIN_FLOAT only.
+.LP
+.I WlzMakeHistogram,
+is a convenience procedure to make a top-level object with a histogram
+domain. Space for \fInpoints\fR points are allocated and \fItype\fR
+can have values WLZ_HISTOGRAMDOMAIN_INT or WLZ_HISTOGRAMDOMAIN_FLOAT
+only.
+.LP
+.I WlzNewGrey,
+makes a new object which has SAME domain and property lists as
+original, DIFFERENT but identical grey table (correct subset where
+appropriate).
+.LP
+.I WlzNewValueTb.
+makes a new grey table of same size and shape as domain of \fIobj\fR
+of type \fItype\fR and with background pixel set to
+\fIbckgrnd\fR. This is particularly useful for attaching an empty grey
+table to the result of operations such as dilation, which return
+interval objects without a grey table. The input object must be of
+type WLZ_2D_DOMAINOBJ and have a non-NULL domain. A WLZ_EMPTY_OBJ will
+provoke and error.
+.LP
+.I WlzNewIDomain,
+makes a copy of an interval domain.
+.LP
+.I WlzMakeTransObj,
+makes a top-level transform object which is the correct way to
+associate a real-world set of coordinates with a digital image
+structure. The object pointer can refer to any object for which it is
+legal to apply the affine transform (see WlzTransform(3)). The type
+is not checked.
+.LP
+.I WlzMakeTransform,
+allocates and initialised a woolz affine transform structure. The
+matrix is now allocated and freed separately from the structure. and
+should always be allocated using \fIWlzMakeTransform\fR and freed
+using \fIWlzFreeTransform\fR.
+
+.SH SPACE CONTROL
+From experience, it seems that we  can  largely  standardise the  way
+in which space is allocated.  The following scheme is proposed.  An
+object with domain and grey-table will consist  of five blocks of
+storage.  Three are allocated by the routines \fIWlzMakeMain\fR,
+\fIWlzMakeIntervalDomain\fR and \fIWlzMakeValueTb\fR.
+.PP
+.I WlzMakeIntervalDomain
+allocates sufficient space for the
+.I WlzIntervalDomain
+and the
+.I intervallines
+(it can do this since the number of lines is specified).
+.I WlzMakeValueTb
+allocates sufficient space for the
+.I valuetable
+and for the
+.I valuelines
+(it can do this since the number of lines is specified).
+.LP
+Then what remains to be considered are the interval endpoints and the
+table of grey-values.  It is proposed that wherever possible each of
+these occupies a contiguous block of store allocated for the purpose.
+To this end, there are structure elements
+.I freeptr
+in the domain and value table structures.  These are set to be
+.I NULL
+by default, but if the storage is allocated according to the proposed
+convention then they should be set to be pointers to the block of
+interval endpoints and the block of grey-values respectively.
+Then storage can be freed from an object by considering just five
+"conventional" blocks of store, and routines for this purpose are
+in module
+.I WlzFreeSpace.c.
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3), WlzFree(3), WlzTransform(3)
+.SH BUGS
+

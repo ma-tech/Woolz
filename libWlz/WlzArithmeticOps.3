@@ -1,0 +1,237 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzArithmeticOps.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz image arithmetic functions.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.TH "WlzArithmeticOps" 3 "Mon Dec  2 13:00:14 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzScalarAdd, WlzScalarSubtract, WlzScalarMultiply, WlzScalarDivide,
+WlzImageAdd, WlzImageSubtract, WlzImageMultiply, WlzImageDivide,
+WlzScalarBinaryOp, WlzScalarBinaryOp2, WlzImageBinaryOp, WlzImageBinaryOp2
+\- grey-level arithmetic and binary operations.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzObject *WlzScalarAdd(
+  WlzObject	*o1,
+  WlzPixelV	pval,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzScalarSubtract(
+  WlzObject	*o1,
+  WlzPixelV	pval,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzScalarMultiply(
+  WlzObject	*o1,
+  WlzPixelV	pval,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzScalarDivide(
+  WlzObject	*o1,
+  WlzPixelV	pval,
+  WlzErrorNum	*wlzErrno)
+
+WlzErrorNum WlzScalarBinaryOp(
+  WlzObject		*o1,
+  WlzPixelV		pval,
+  WlzObject		*o3,
+  WlzBinaryOperatorType op)
+
+WlzObject *WlzScalarBinaryOp2(
+  WlzObject	*o1,
+  WlzPixelV	pval,
+  WlzBinaryOperatorType op,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzImageAdd(
+  WlzObject	*o1,
+  WlzObject	*o2,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzImageSubtract(
+  WlzObject	*o1,
+  WlzObject	*o2,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzImageMultiply(
+  WlzObject	*o1,
+  WlzObject	*o2,
+  WlzErrorNum	*wlzErrno)
+
+WlzObject *WlzImageDivide(
+  WlzObject	*o1,
+  WlzObject	*o2,
+  WlzErrorNum	*wlzErrno)
+
+WlzErrorNum WlzImageBinaryOp(
+  WlzObject		*o1,
+  WlzObject		*o2,
+  WlzObject		*o3,
+  WlzBinaryOperatorType op)
+
+WlzObject *WlzImageBinaryOp2(
+  WlzObject	*o1,
+  WlzObject	*o2,
+  WlzBinaryOperatorType op,
+  WlzErrorNum	*wlzErrno)
+
+
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " o1 "          object pointer of source values."
+.LP
+.BI " " o2 "          object pointer of source values."
+.LP
+.BI " " o3 "          object pointer of source values."
+.LP
+.BI " " pval "        arithmetic value for operation."
+.LP
+.BI " " op "          required operation (enumerated type)."
+.LP
+.BI " " wlzErrno "    return destination for error value."
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+Arithmetic operations on the grey-level values of woolz images. The
+operation either involves a scalar eg multiply each pixel value by a
+constant or involves an image e.g. add the pixel values of two
+images. The scalar arithmetic
+opperations are all in floating point and converted using the default
+ANSI type conversions i.e. rounding down.
+
+All procedures that return an object pointer can be given source images
+with different domains. The returned object will have a domain that is
+the intersection of the given objects (possibly a WLZ_EMPTY_OBJ) and a
+grey-table of the same type as \fIo1\fR except when that is UBYTE in
+which case the returned valuetable will have grey type
+WLZ_GREY_SHORT. When using the divide operation it may be necessary to
+pre-multiply \fIo1\fR in order to get sensible results otherwise on
+average most of the image values will be zero of the grey-type is some
+form of integer type (int, short, UBYTE).
+
+Procedures which return a WlzErrorNum (\fIWlzImageBinaryOp\fR and
+\fIWlzScalarBinaryOp\fR) must be given source and destination objects
+with IDENTICAL domains. These procedures can be used to enable
+overwriting of values but it is the responsibility of the user to
+ensure that the valuetables are legal and of an appropriate type. Any
+type combinations for the grey-tables are permitted but some
+combinations will probably result in loss of information - e.g. a
+destination valuetable of type UBYTE.
+
+Procedures with "Image" in the name compare grey-values from the two
+source images, procedures with "Scalar" in the name compare the
+grey-value from the source image with the given pixel value.
+
+.LP
+All procedures return
+WLL_ERR_NONE on successful completion. An empty object always returns
+WLZ_ERR_NONE. Error returns common to all operations are: NULL_OBJECT,
+INVALID_OBJECT_TYPE, NULL_DOMAIN, BAD_DOMAIN, NULL_VALUETABLE,
+INVALID_GREY_TYPE, INVALID_PLANEDOMAIN_TYPE and
+INVALID_VOXELTABLE_TYPE. 
+.LP
+.I WlzScalarAdd,
+add the pixel value in \fIpval\fR to the grey-values of the source
+object. 
+.LP
+.I WlzScalarSubtract,
+subtract the pixel value in \fIpval\fR from the grey-values of the source
+object. 
+.LP
+.I WlzScalarMultiply,
+multiply the grey-values of the source object by the pixel value in
+\fIpval\fR. 
+.LP
+.I WlzScalarDivide,
+divides the grey-values of the source object by the pixel value in
+\fIpval\fR. 
+.LP
+.I WlzImageAdd,
+adds the grey-values of the source image to the corresponding
+grey-value of the second source image. The operation is only defined
+over the domain of intersection of the two images and the returned
+image has a domain equal to the intersection. The returned grey-value
+type will be the same as source image \fIo1\fR unless that is UBYTE in
+which case the returned grey type is WLZ_GREY_SHORT. Returns NULL on
+error, with the error value returned as \fIwlzErrno\fR if non-NULL.
+.LP
+.I WlzImageSubtract,
+subtracts the grey-values of the second source image from the corresponding
+grey-value of the first source image. Same constraints as \fIWlzImageAdd\fR.
+.LP
+.I WlzImageMultiply,
+multiplies the grey-values of the first source image by the corresponding
+grey-value of the second source image. Same constraints as \fIWlzImageAdd\fR.
+.LP
+.I WlzImageDivide,
+divides the grey-values of the first source image by the corresponding
+grey-value of the second source image. Same constraints as \fIWlzImageAdd\fR.
+.LP
+.I WlzImageBinaryOp,
+will apply any of the defined binary operations between the
+grey-values of \fIo1\fR and \fIo2\fR. The result is put into the
+valuetable of \fIo3\fR. The domains of the three objects must be the
+same and the valuetables may be of any type, the same or
+otherwise. The procedure can be used to provide more control over the
+operation for example to allow overwriting of grey-values to avoid
+allocating memory. It is the responsibility of the user to ensure the
+domains are the same and the valuetables legal and able to store the
+result without loss of information. The currently implemented
+values for the argument \fIop\fR are:
+.nf
+.sp
+  WLZ_ADD                  arithmetic add
+  WLZ_SUBTRACT             arithmetic subtract
+  WLZ_MULTIPLY             arithmetic multiply
+  WLZ_DIVIDE               arithmetic divide
+  WLZ_MODULUS              arithmetic modulus
+  WLZ_EQ                   equal to (both int types or both float types)
+  WLZ_NE                   not equal to (both int types or both float types
+  WLZ_GT                   greater than
+  WLZ_GE                   greater than or equal
+  WLZ_LT                   less than
+  WLZ_LE                   less than or equal
+  WLZ_AND                  bitwise AND (int types only)
+  WLZ_OR                   bitwise inclusive OR (int types only)
+  WLZ_XOR                  bitwise exclusive OR (int types only)
+.fi
+All operations obey the rules defined by ANSI standard C and if
+applied inappropriately will result in garbage. For each operation the
+integer types \fIint\fR, \fIshort\fR and \fIUBYTE\fR values are converted to \fIint\fR and the
+floating point types \fIfloat\fR and \fIdouble\fR are converted to \fIdouble\fR. The
+operation is then performed between these values. Some combinations
+are not defined and will result in the error BAD_BINARY_OPERATOR.
+.LP
+.I WlzImageBinaryOp2,
+A version which takes two woolz objects and returns a new object with
+domain equal to the intersection and valuetable set as above. All the
+ImageAdd, ImageSubtract etc. routines call this function which sets up
+appropriate objects to call
+\fIWlzImageBinaryOp\fR. \fIWlzImageBinaryOp2\fR can accept any of the
+binary operation types above.
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+

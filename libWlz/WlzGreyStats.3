@@ -1,0 +1,112 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzGreyStats.3
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Calculates simple staticsics from Woolz 2D or 3D domain
+.\"		object's grey values.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzGreyStats" 3 "%G%" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzGreyStats \- Calculates area, minimum, maximum, sum, sum of squares and
+the standard deviation of a domain object's grey values.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "int WlzGreyStats(WlzObject *" "srcObj" ,
+.in +4m
+.br
+.BI "WlzGreyType " "dstGType" ,
+.br
+.BI "double *" "dstMin"
+.BI "double *" "dstMax"
+.br
+.BI "double *" "dstSum"
+.BI "double *" "dstSumSq"
+.br 
+.BI "double *" "dstMean"
+.BI "double *" "dstStdDev"
+.br
+.BI "WlzErrorNum *" "wlzErr" ");"
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer
+dstGType^destination pointer for grey type
+dstMin^destination pointer for minimum grey value
+dstMax^destination pointer for maximum grey value
+dstSum^destination pointer for sum of grey values
+dstSumSq^destination pointer for sum of squares of grey values
+dstMean^destination pointer for mean grey value
+dstStdDev^destination pointer for standard deviation of grey values
+wlzErr^destination pointer for error number, may be NULL
+.TE
+Any of the destination pointers may be NULL.
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+WlzGreyStats calculates simple staticsics from Woolz 2D or 3D domain
+object's grey values.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+/*
+ * Simple example of using WlzGreyStats() to caclulate the mean
+ * grey value of an object read from the standard input.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  double	mean;
+  WlzObject     *inObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr, "%s: Failed to read input object.\n", *argv);
+  }
+  else
+  {
+    (void )WlzGreyStats(inObj, NULL, NULL, NULL, NULL, NULL, &mean, NULL,
+                        &errNum);
+    WlzFreeObj(inObj);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )printf("%g\n",
+                    mean);
+    }
+    else
+    {
+      (void )fprintf(stderr,
+                     "%s: Failed to calculate centre of mass.\n",
+                     *argv);
+    }
+  }
+  return(errNum);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzGreyStats(1), WlzError(3)
+.SH BUGS
+Still to be found.

@@ -1,0 +1,92 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzSegment.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for segmentation and thresholding.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzSegment" 3 "Mon Nov 25 12:12:42 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzLabel, WlzThreshold
+\- segment and threshold woolz grey-level and domain objects.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzErrorNum WlzLabel(WlzObject	*obj,
+		     int	*mm,
+		     WlzObject	**objlist,
+		     int	nobj,
+		     int	ignlns,
+		     WlzConnectType connect)
+
+WlzObject *WlzThreshold(WlzObject	*obj,
+			WlzPixelV	threshV,
+			WlzThresholdType highlow)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj "		object pointer."
+.LP
+.BI " " mm "            number of objects return."
+.LP
+.BI " " objlist "       pre-allocated object pointer array."
+.LP
+.BI " " nobj "          length of object pointer aray."
+.LP
+.BI " " ignlns "        size threshold parameter."
+.LP
+.BI " " connect "       connectivity of segmented objects."
+.LP
+.BI " " threshV "       pixel value for grey-level threshold."
+.LP
+.BI " " highlow "       threshold mode flag."
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+Procedures for thresholding grey-level objects and segmenting into
+either 4- or 8- connected regions.
+.LP
+.I WlzLabel,
+segments input object \fIobj\fR into connected components with
+connectivity either WLZ_8_CONNECTED or WLZ_4_CONNECTED.
+\fImm\fR returns the number of resulting objects in array
+\fIobjlist\fR, \fInobj\fR is the maximum number of objects permitted
+in  \fIobjlist\fR. \fIignlns\fR is the output size threshold - objects
+less than ignlns wide or high will be ignored.
+.LP
+Note if the size of \fIobjlist\fR is too small for the number of
+objects found then \fIWlzLabel\fR will return an error and a non-zero
+value for \fImm\fR. This implies the first \fImm\fR objects have been
+assigned in \fIobjlist\fR and can be used and must be freed by the
+calling procedure.
+.LP
+.I WlzThreshold,
+thresholds a 2D or 3D grey-level object at grey value
+\fIthreshV\fR. If \fIhighlow\fR==WLZ_THRESH_HIGH the the object will
+have as domain all pixels with values >= threshold value. If
+\fIhighlow\fR==WLZ_THRESH_LOW the domain is of all pixels with value <
+threshold value. Valid object types are WLZ_2D_DOMAINOBJ,
+WLZ_3D_DOMAINOBJ and WLZ_EMPTY_OBJ (returns a WLZ_EMPTY_OBJ), all
+other types provoke an error and NULL is returned.
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+

@@ -1,0 +1,125 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzGreyScan.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for scaning grey level objects.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzGreyScan" 3 "Thu Nov 14 14:43:27 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzInitGreyScan, WlzInitGreyRasterScan, WlzInitGreyWSpace,
+WlzNextGreyInterval, WlzGreyInterval \- procedures to scan a
+grey-level object.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzErrorNum WlzInitGreyScan(WlzObject		*obj,
+			    WlzIntervalWSpace	*iwsp,
+			    WlzGreyWSpace	*gwsp)
+
+WlzErrorNum WlzInitGreyRasterScan(WlzObject		*obj,
+				  WlzIntervalWSpace	*iwsp,
+				  WlzGreyWSpace		*gwsp,
+				  int			raster,
+			          int			tranplFlg)
+
+WlzErrorNum  WlzInitGreyWSpace(WlzObject		*obj,
+			       WlzIntervalWSpace 	*iwsp,
+			       WlzGreyWSpace		*gwsp,
+			       int 			tranplFlg)
+
+int WlzNextGreyInterval(WlzIntervalWSpace *iwsp)
+
+WlzErrorNum WlzGreyInterval(WlzIntervalWSpace *iwsp)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj "           object pointer."
+.LP
+.BI " " iwsp "          interval workspace pointer."
+.LP
+.BI " " gwsp "          grey-interval workspace pointer."
+.LP
+.BI " " raster "        scanning mode."
+.LP
+.BI " " tranplFlg "     grey-value transplant mode flag."
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+These routines enable transparent access to each of the 2D grey-level
+image types. The images can be scanned interval by interval in any
+direction by calling WlzNextGreyInterval continuously until it returns
+a non-zero value. Whatever the scanning direction the address returned
+for an interval is the interval end of lowest column number
+(left). The default scanning direction from left to right and top to
+bottom is provided by a call to WlzInitGreyScan followed by repeated
+calls to WlzNextGreyInterval. If other scanning directions are
+required or the grey-level transplant mode is needed then use
+WlzInitGreyRasterScan. WlzInitGreyWSpace and WlzGreyInterval are
+really for internal use by these procedures and should be avoided if
+possible.
+.LP
+.I WlzInitGreyScan,
+initialise interval and grey scanning of standard object in standard
+direction  (increasing  line  numbers,  increasing column
+numbers). Interval grey-values are not transplanted. See
+WlzInitGreyRasterScan for more options.
+.LP
+Note that some items in interval  work  space  may  be  left unset if
+domain-type is WLZ_INTERVALDOMAIN_RECT (rectangular domain).
+.LP
+.I WlzInitGreyRasterScan,
+as WlzInitGreyScan, but with choice of raster  direction  and
+transplanting. See WlzInitRasterScan(3) for details of raster
+direction.
+.LP
+Note  that  one  of   four   raster   directions   (up/down,
+right/left)  may  be  specified.   Even if raster is "left", pointers
+are always preset  to  left  end  of  interval.  If "left",  then
+rightmost  interval  in line first, otherwise leftmost interval.
+.LP
+If tranplFlg non-zero, grey values are transplanted  to/from  a buffer
+(WlzGreyP  gwsp->u_grintptr) according to value of gwsp->gvio (0 -
+input from buffer  to  grey  table  only,  1  - output from grey table
+to buffer only, 2 - both).
+.LP
+.I WlzInitGreyWSpace, attaches grey workspace  to  interval  scanning
+workspace.   This routine is used internally by WlzInitGreyScan and
+WlzInitGreyRasterScan.
+.LP
+.I WlzNextGreyInterval, obtains next interval and its grey values, and
+return  previous  interval grey values to grey table if tranplFlg set
+at start of scan and gvio has appropriate  value. See
+WlzInitGreyRasterScan.
+.LP
+Whatever the value of raster, the address  returned  for  an interval
+is the interval end of lowest column number. Function has a  return
+value  of  0  as  each  interval  is returned, and 1 when called
+beyond end of object.
+.LP
+.I WlzGreyInterval,
+handles grey table for an interval.  This must follow  a call to
+WlzNextInterval(3). Except for special purposes, you are recommended
+to use WlzNextGreyInterval instead.
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzNextInterval(3), WlzInitRasterScan(3)
+.SH BUGS
+

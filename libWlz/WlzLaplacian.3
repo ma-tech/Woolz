@@ -1,0 +1,107 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzLaplacian.3
+.\" Date:       December 1997
+.\" Author:     Bill Hill
+.\" Copyright:	1997 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function which implements a Laplacian edge
+.\"		enhancement filter.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzLaplacian" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzLaplacian \- Performs Laplacian edge enhancement.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzLaplacian(WlzObject *" "srcObj" ,
+.BI "int " "kSize" ,
+.BI "int " "newObjFlag" ,
+.BI "int " "modFlag" ,
+.BI "WlzErrorNum *" wlzErr );
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer.
+kSize^convolution kernel size, must be 3, 5 or 7
+newObjFlag^flag to create a new object if non\-zero
+modFlag^flag to take the absolute value if 
+^non\-zero (this is always the case for
+^UBYTE objects)
+wlzErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+WlzLaplacian applies a 3X3, 5X5 or 7X7 Laplacian edge enhancement filter
+to a WLZ_2D_DOMAINOBJ object with integral (int, short or unsigned char)
+grey values.
+Unless
+.I modFlag
+is set the resulting pixel values will be signed (for int or short
+pixel values) or centred around 128 for UBYTE pixel values.
+WlzLaplacian returns a pointer to the convolved object or a NULL
+pointer on error.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+/*
+ * Simple example of using WlzLaplacian() to perform
+ * edge enhancement.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  int           kSz = 3;
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr,
+                   "%s: Failed to read input object.\\n",
+                   *argv);
+  }
+  else if(((outObj = WlzLaplacian(inObj, kSz, 0, 0,
+                                  &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
+    {
+      (void )fprintf(stderr,
+                     "%s: Failed to convolve object.\\n",
+                     *argv);
+    }
+  else if((errNum = WlzWriteObj(stdout,
+                                outObj)) != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr,
+                   "%s: Failed to write output object.\\n",
+                   *argv);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzConvolve(3), WlzSeqPar(3), WlzError(3)
+.SH BUGS
+Still to be found.

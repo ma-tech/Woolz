@@ -1,0 +1,134 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzWindow.3
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Implements a spatial grey value windowing filter.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.nr ~
+.TH "WlzWindow" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzWindow \- Implements a spatial grey value windowing filter.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "typedef enum"
+.br
+.BI "{"
+.ti +2m
+.B WLZ_WINDOWFN_BLACKMAN,
+.ti +2m
+.B WLZ_WINDOWFN_HAMMING,
+.ti +2m
+.B WLZ_WINDOWFN_HANNING,
+.ti +2m
+.B WLZ_WINDOWFN_PARZEN,
+.ti +2m
+.B WLZ_WINDOWFN_RECTANGLE,
+.ti +2m
+.B WLZ_WINDOWFN_WELCH,
+.ti +2m
+.BR "WLZ_WINDOWFN_UNSPECIFIED" "    /* Invalid window type */"
+.br
+.B "} WlzWindowFnType;"
+.LP
+.BI "WlzObject *WlzWindow(WlzObject *" "srcObj" ,
+.ti +4m
+.BI "WlzWindowFnType " "winFn" ,
+.ti +4m
+.BI "WlzIVertex2 " "org" ,
+.BI "WlzIVertex2 " "rad" ,
+.ti +4m
+.BI "WlzErrorNum *" wlzErr);
+.LP
+.BI "const char *WlzWindowFnName(WlzWindowFnType " winFn );
+.LP
+.BI "WlzWindowFnType WlzWindowFnValue(const char *" winFnName );
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer.
+winFn^windowing function value
+winFnName^windowing function name string
+org^window function origin
+rad^window function radius
+wlzErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+.B WlzWindow
+cuts a rectangular region from the given object
+using
+.B WlzCutObjToBox2D(3)
+and then applies the specified 2D data windowing function.
+WlzWindow returns a pointer to a new object or a NULL
+pointer on error.
+.LP
+.B WlzWindowFnName
+returns a pointer to a
+.B const
+name string, given a window function value.
+.LP
+.B WlzWindowFnValue
+returns a window function value (enum), , given a window function name string.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+/*
+ * Simple example of using WlzWindow().
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzIVertex2	center,
+  		radius;
+
+  center.vtX = 128;
+  center.vtY = 128;
+  radius.vtX = 128;
+  radius.vtY = 128;
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr, "%s: Failed to read input object.\n", *argv);
+  }
+  else if((outObj = WlzWindow(inObj, center, radius,
+                              WLZ_WINDOWFN_PARZEN, &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
+  {
+    (void )fprintf(stderr, "%s: Failed to convolve object.\n", *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout, outObj)) != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Failed to write output object.\n", *argv);
+  }
+  return(errNum);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzWindow(1), WlzCutObjToBox2D(3), WlzError(3)
+.SH BUGS
+Still to be found.

@@ -1,0 +1,86 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzDomainUtils.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz utility functions for 2D and 3D domains.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" %W%\\t%G%
+.TH WlzDomainUtils 3 "13th November 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzStandardIntervalDomain, WlzStandardPlaneDomain, WlzIntervalCount,
+WlzLineArea 
+\- utility procedures for 2D and 3D domains.
+.SH SYNOPSIS
+.nf
+.sp
+#include <Wlz.h>
+
+WlzErrorNum WlzStandardIntervalDomain(WlzIntervalDomain *idom)
+
+WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
+				   WlzVoxelValues	*voxtb)
+
+int WlzIntervalCount(WlzIntervalDomain *idom)
+
+int WlzLineArea(WlzObject *obj)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj "           object pointer."
+.LP
+.BI " " idom "		intervaldomain pointer."
+.LP
+.BI " " pdom "		planedomain pointer."
+.LP
+.BI " " voxtb "		matching voxel table to the planedomain".
+.LP
+
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+The WlzStandardIntervalDomain and WlzStandardPlaneDomain routines
+standardise the domains by minimising the bounding box,
+stripping leading and trailing empty lines or domains and freeing any
+associated valuetables. The structures are modified "in place". Both
+procedure return WLZ_ERR_NONE on successful completion.
+.LP
+Other procedures are convenience routines for manipulating domains and
+creating valuetables.
+.LP
+.I WlzStandardIntervalDomain,
+standardise an interval domain possible errors: NULL_DOMAIN.
+.LP
+.I WlzStandardPlaneDomain,
+standardize a plane domain and corresponding voxel-table, possible
+errors: NULL_DOMAIN, BAD_PLANEDOMAIN.
+.LP
+.I WlzIntervalCount,
+return the number of intervals in an interval domain. If the domain is
+rectangular then return the number of lines ie the equivalent number
+of intervals. Returns -1 on error.
+.LP
+.I WlzLineArea,
+calculates the "line-area" of an objects defined as the sum of the
+line segments bounded by the left hand end of the first interval in a
+line and the right hand end of the last interval in that line. This is
+the number of grey-values that will be stored in a conventional
+ragged-rectangular valuetable.
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzError(3)
+.SH BUGS
+

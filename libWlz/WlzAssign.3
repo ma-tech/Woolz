@@ -1,0 +1,77 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzAssign.3
+.\" Date:       March 1999
+.\" Author:     Richard Baldock
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz functions for assigning Woolz objects.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH WlzAssign 3 "11th November 1996" "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzAssignDomain, WlzAssignObject, WlzAssignProperty, WlzAssignValues \-
+Convenience routines to assign structure pointers and check and increment
+the corresponding linkcount.
+.SH SYNOPSIS
+Each of these rountines checks the corresponding structure, if not NULL
+the linkcount is checked, if >=0 the linkcount is incremented and the
+structure pointer (or union) is returned. 
+.nf
+.sp
+#include <Wlz.h>
+
+WlzObject *WlzAssignObject(WlzObject *obj)
+
+WlzDomain WlzAssignDomain(WlzDomain domain)
+
+WlzValues WlzAssignValues(WlzValues values)
+
+WlzSimpleProperty *WlzAssignProperty(WlzSimpleProperty *property)
+
+.fi
+.SH ARGUMENTS
+.LP
+.BI " " obj "		object pointer to be assigned."
+.LP
+.BI " " domain "	domain union to be assigned."
+.LP
+.BI " " values "	values union to be assigned."
+.LP
+.BI " " property "	property pointer to be assigned."
+.LP
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+These routines are for convenience when assigning object pointers and
+increment the linkcount structure members to ensure objects are not freed
+until the last reference is freed. Each procedure will test the object
+pointer and current linkcount value before returning the argument. For
+WlzAssignObject a NULL argument is an error but in the other cases a NULL
+argument is legal. Structures assigned in this way should be freed with
+WlzFreeObj or the appropriate equivalent. Error reports are: NULL_OBJECT,
+LINKCOUNT_FREED_OBJECT.
+.LP
+.I WlzAssignObject,
+assign an object pointer
+.I WlzAssignDomain,
+assign a domain union
+.I WlzAssignValues,
+assign a values union
+.I WlzAssignProperty,
+assign a property pointer
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzFreeSpace, WlzError(3)
+.SH BUGS
+

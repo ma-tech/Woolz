@@ -1,0 +1,134 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz							"
+.\" Title:      WlzPolarSample.3		                      	"
+.\" Date:       March 1999	                                    	"
+.\" Author:     Bill Hill 				    		"
+.\" Copyright:	1999 Medical Research Council, UK.			"
+.\"		All rights reserved.					"
+.\" Address:	MRC Human Genetics Unit,				"
+.\"		Western General Hospital,				"
+.\"		Edinburgh, EH4 2XU, UK.					"
+.\" Purpose:    Woolz function which implements a polar resampling	"
+.\"		filter.							"
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.	"
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzPolarSample" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzPolarSample \- Performs polar resampling.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzPolarSample(WlzObject *" "srcObj" ,
+.in +4m
+.br
+.BI "WlzIVertex2 " "org" ,
+.BI "double " "angleInc" ,
+.BI "double " "distInc" ,
+.br
+.BI "int " "angleSamples" ,
+.BI "int " "outFlag" ,
+.br
+.BI "WlzErrorNum *" wlzErr );
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer.
+org^origin in source object about which to polar resample
+angleInc^angle increment (radians)
+distInc^radial distance increment
+angleSamples^number of angular samples (lines in resampled image)
+outFlag^outer bounding circle of domain used if non\-zero
+wlzErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+WlzPolarSample polar resamples the given woolz object.
+The coordinatate system of the resampled object is related to
+that of the source object as follows:
+.sp 1
+.TS
+center tab(^);
+l c l.
+source object^ =-> ^resampled object
+_
+radial position^^column position
+angular position^^line position
+.TE
+.LP
+All angles are given in radians.
+.LP
+WlzPolarSample returns a pointer to the resampled object or a NULL
+pointer on error.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+/*
+ * Simple example of using WlzPolarSample() to resample an object.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  int		angleSamples;
+  double 	angleInc,
+		distInc;
+  WlzIVertex2	center;
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr, "%s: Failed to read input object.\n",
+                   *argv);
+  }
+  else if((inObj.type != WLZ_2D_DOMAINOBJ) ||
+          (inObj->domain.core == NULL) ||
+	  (inObj->values.core == NULL) ||
+	  (inObj->domain.core->type != WLZ_INTERVALDOMAIN_INTVL))
+  {
+    (void )fprintf(stderr, "%s: Inappropriate object type.\n",
+                   *argv);
+    errNum = INVALID_OBJECT_TYPE;
+  }
+  else
+  {
+    center.vtX = (inObj->domain.i->kol1 + inObj->domain.i->lastkl) / 2;
+    center.vtY = (inObj->domain.i->line1 + inObj->domain.i->lastln) / 2;
+    angleSamples = 512;
+    angleInc = (2.0 * WLZ_M_PI) / angleSamples;
+    distInc = 1.0;
+    if((outObj = WlzPolarSample(inObj, center, angleInc, distInc,
+    				angleSamples, 1, &errNum)) == NULL)
+    {
+      (void )fprintf(stderr, "%s: Failed to polar resample object.\n",
+                     *argv);
+    }
+    else if((errNum = WlzWriteObj(stdout, outObj)) != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr, "%s: Failed to write output object.\n",
+                     *argv);
+    }
+  }
+  return(errNum);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzPolarSample(1), WlzError(3)
+.SH BUGS
+Still to be found.

@@ -1,0 +1,432 @@
+#pragma ident "MRC HGU $Id$"
+/***********************************************************************
+* Project:      Woolz
+* Title:        WlzConvexHull.c
+* Date:         March 1999
+* Author:       Richard Baldock
+* Copyright:	1999 Medical Research Council, UK.
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Purpose:      Functions for computing the convex hull of Woolz
+*		objects.
+* $Revision$
+* Maintenance:	Log changes below, with most recent at top of list.
+************************************************************************/
+#include <stdlib.h>
+#include <math.h>
+#include <Wlz.h>
+
+static WlzConvHullValues *WlzMakeConvexHullValues(WlzObject *cvh,
+						      WlzObject *obj,
+						      WlzErrorNum *dstErr);
+static WlzConvHullValues *WlzMakeConvexHullValues3d(WlzObject *cvh,
+							WlzObject *obj,
+							WlzErrorNum *dstErr);
+
+
+static WlzObject *WlzObjToConvexPolygon3d(WlzObject	*obj,
+					  WlzErrorNum	*dstErr);
+
+
+WlzObject *WlzObjToConvexHull(
+  WlzObject	*obj,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*cvh=NULL;
+  WlzValues	values;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* the convex hull is a polygon domain with values which are
+     a set of chords with pre-calculated parameters which can be used
+     by other procedures */
+  if( cvh = WlzObjToConvexPolygon(obj, &errNum) ){
+    if( values.c = WlzMakeConvexHullValues(cvh, obj, &errNum) ){
+      /* assign values and reset object type which is now
+	 WLZ_CONV_HULL rather than WLZ_2D_POLYGON */
+      cvh->values = WlzAssignValues(values, NULL);
+      if( cvh->type == WLZ_2D_POLYGON ){
+	cvh->type = WLZ_CONV_HULL;
+      }
+      if( cvh->type == WLZ_3D_DOMAINOBJ ){
+	cvh->domain.p->type = WLZ_PLANEDOMAIN_CONV_HULL;
+      }
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return cvh;
+}
+
+/*
+ * construct the minimal convex polygonal cover from interval domain
+ */
+WlzObject *WlzObjToConvexPolygon(
+  WlzObject	*obj,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject 		*cvh=NULL;
+  WlzDomain		domain;
+  WlzValues		values;
+  WlzIVertex2 		*wtx, *w1tx, *w2tx;
+  WlzIntervalWSpace 	iwsp;
+  int 			nhalfway;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+
+  /* check object */
+  if( obj ){
+    switch( obj->type )
+    {
+      
+    case WLZ_2D_DOMAINOBJ:
+      /* check the domain */
+      if( obj->domain.core == NULL ){
+	errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      /* check the planedomain type */
+      if( obj->domain.p ){
+	switch( obj->domain.p->type ){
+	case WLZ_PLANEDOMAIN_DOMAIN:
+	  return WlzObjToConvexPolygon3d(obj, dstErr);
+
+	default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  break;
+	}
+      }
+      else {
+	errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+      break;
+
+    case WLZ_TRANS_OBJ:
+      if((obj->values.core) && 
+	 (values.obj = WlzObjToConvexPolygon(obj->values.obj, &errNum))){
+	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
+			   NULL, NULL, dstErr);
+      }
+      break;
+
+    case WLZ_EMPTY_OBJ:
+      return WlzMakeEmpty(dstErr);
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+    }
+  }
+  else {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+
+  /* now the real algorithm, 2D only, definitely a domain at this point.
+     Make a polygon object with the maximum number of vertices for the
+     convex polygon = (2 * num_lines + 1) the extra is to allow the polygon
+     to be closed i.e. first = last */
+  if( errNum == WLZ_ERR_NONE ){
+    if((domain.poly = WlzMakePolyDmn(WLZ_POLYGON_INT, NULL, 0,
+				      3+2*(obj->domain.i->lastln -
+					   obj->domain.i->line1),
+				      1, &errNum))){
+      values.core = NULL;
+      cvh = WlzMakeMain(WLZ_2D_POLYGON, domain, values, NULL, NULL, &errNum);
+    }
+  }
+  
+  if( errNum == WLZ_ERR_NONE ){
+    wtx = cvh->domain.poly->vtx;
+    /*
+     * proceed down right hand side of object
+     */
+    if( (errNum = WlzInitRasterScan(obj, &iwsp, WLZ_RASTERDIR_ILIC))
+       == WLZ_ERR_NONE ){
+      while((errNum = WlzNextInterval(&iwsp)) == WLZ_ERR_NONE ){
+	/*
+	 * set up first chord
+	 */
+	if (iwsp.linpos == obj->domain.i->line1) {
+	  if (iwsp.nwlpos == 1) {
+	    wtx->vtX = iwsp.lftpos;
+	    wtx->vtY = iwsp.linpos;
+	    wtx++;
+	  }
+	  if (iwsp.intrmn == 0) {
+	    wtx->vtX = iwsp.rgtpos;
+	    wtx->vtY = iwsp.linpos;
+	    wtx++;
+	    cvh->domain.poly->nvertices = 2;
+	    w1tx = wtx-1;
+	    w2tx = wtx-2;
+	  }
+	} else {
+	  /*
+	     * add extra chords, checking concavity condition
+	     */
+	  if (iwsp.intrmn == 0) {
+	    wtx->vtX = iwsp.rgtpos;
+	    wtx->vtY = iwsp.linpos;
+	    cvh->domain.poly->nvertices++;
+	    /*
+	     * Concavity condition (may propagate backwards).
+	     * Also deals satisfactorily with the case that first
+	     * line consists of a single interval, itself a single point.
+	     */
+	    while ((cvh->domain.poly->nvertices >= 3) &&
+		   (wtx->vtY-w2tx->vtY)*(w1tx->vtX-w2tx->vtX) <=
+		   (w1tx->vtY-w2tx->vtY)*(wtx->vtX-w2tx->vtX)) {
+	      w1tx->vtX = wtx->vtX;
+	      w1tx->vtY = wtx->vtY;
+	      wtx--;
+	      w1tx--;
+	      w2tx--;
+	      cvh->domain.poly->nvertices--;
+	    }
+	    wtx++;
+	    w1tx++;
+	    w2tx++;
+	  }
+	}
+      }
+      if( errNum == WLZ_ERR_EOO ){
+	errNum = WLZ_ERR_NONE;
+      }
+    }
+  }
+
+  if( errNum == WLZ_ERR_NONE ){
+    /*
+     * now proceed up left hand side of object
+     */
+    if( (errNum = WlzInitRasterScan(obj, &iwsp, WLZ_RASTERDIR_DLDC))
+       == WLZ_ERR_NONE ){
+      nhalfway = cvh->domain.poly->nvertices + 2;
+      while((errNum = WlzNextInterval(&iwsp)) == WLZ_ERR_NONE ){
+	if (iwsp.intrmn == 0) {
+	  wtx->vtX = iwsp.lftpos;
+	  wtx->vtY = iwsp.linpos;
+	  cvh->domain.poly->nvertices++;
+	  /*
+	   * Concavity condition (may propagate backwards).
+	   * Also deals satisfactorily with the case that last
+	   * line consists of a single interval, itself a single point.
+	   */
+	  while ((cvh->domain.poly->nvertices >= nhalfway) &&
+		 (wtx->vtY-w2tx->vtY)*(w1tx->vtX-w2tx->vtX) <=
+		 (w1tx->vtY-w2tx->vtY)*(wtx->vtX-w2tx->vtX)) {
+	    w1tx->vtX = wtx->vtX;
+	    w1tx->vtY = wtx->vtY;
+	    wtx--;
+	    w1tx--;
+	    w2tx--;
+	    cvh->domain.poly->nvertices--;
+	  }
+	  wtx++;
+	  w1tx++;
+	  w2tx++;
+	}
+      }
+      if( errNum == WLZ_ERR_EOO ){
+	errNum = WLZ_ERR_NONE;
+      }
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return cvh;
+}
+
+
+static WlzObject *WlzObjToConvexPolygon3d(
+  WlzObject	*obj,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*polygon=NULL, *obj1, *obj2;
+  WlzDomain	domain, *domains, *new_domains;
+  WlzValues	values;
+  int		p;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+
+  /* the object and domain have been checked therefore can create the
+     new straight away and fill each plane appropriately */
+  if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_POLYGON,
+				    obj->domain.p->plane1,
+				    obj->domain.p->lastpl,
+				    obj->domain.p->line1,
+				    obj->domain.p->lastln,
+				    obj->domain.p->kol1,
+				    obj->domain.p->lastkl,
+				    &errNum) ){
+    domain.p->voxel_size[0] = obj->domain.p->voxel_size[0];
+    domain.p->voxel_size[1] = obj->domain.p->voxel_size[1];
+    domain.p->voxel_size[2] = obj->domain.p->voxel_size[2];
+    values.core = NULL;
+    polygon = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values, NULL, NULL,
+			  &errNum);
+  }
+
+  if( errNum == WLZ_ERR_NONE ){
+    domains = obj->domain.p->domains;
+    new_domains = domain.p->domains;
+    values.core = NULL;
+    for(p=obj->domain.p->plane1; p <= obj->domain.p->lastpl;
+	p++, domains++, new_domains++){
+      if( (*domains).core ){
+	obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, values,
+			   NULL, NULL, NULL);
+	if( obj2 = WlzObjToConvexPolygon(obj1, &errNum) ){
+	  *new_domains = WlzAssignDomain(obj2->domain, NULL);
+	  WlzFreeObj(obj2);
+	}
+	else {
+	  WlzFreeObj(polygon);
+	  polygon = NULL;
+	  break;
+	}
+	WlzFreeObj(obj1);
+      }
+      else {
+	(*new_domains).core = NULL;
+      }
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return polygon;
+}
+
+
+/*
+ * Fill in parameters of the convex hull into the values table.
+ * Compute line equation parameters of chords plus 8*length
+ */
+static WlzConvHullValues *WlzMakeConvexHullValues(
+  WlzObject *cvh,
+  WlzObject *obj,
+  WlzErrorNum *dstErr)
+{
+  WlzConvHullValues	*cdom=NULL;
+  WlzPolygonDomain	*cvhpdom;
+  WlzChord 		*chord;
+  WlzIVertex2 		*vtx, *wtx;
+  int 		i;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+
+  /* this only gets called if the call to WlzObjToConvexPolygon succeeds
+     therefore no need to check objects except for 3D type */
+  if( cvh->type == WLZ_3D_DOMAINOBJ ){
+    return WlzMakeConvexHullValues3d(cvh, obj, dstErr);
+  }
+
+  cvhpdom = cvh->domain.poly;
+  /*
+   * allocate space
+   */
+  if( cdom = (WlzConvHullValues *)
+     AlcCalloc(1, sizeof(WlzConvHullValues) +
+	       (cvhpdom->nvertices-1) * sizeof(WlzChord)) ){
+    cdom->ch = (WlzChord *)(cdom + 1);
+
+    cdom->type = WLZ_CONVHULL_VALUES;
+    cdom->linkcount = 0;
+    cdom->freeptr = NULL;
+    cdom->original_table.core = NULL;
+    cdom->mdlin = (obj->domain.i->line1 + obj->domain.i->lastln) / 2;
+    cdom->mdkol = (obj->domain.i->kol1 + obj->domain.i->lastkl) / 2;
+    cdom->nchords = cvhpdom->nvertices - 1;
+    cdom->nsigchords = 0;
+
+    chord = cdom->ch;
+    vtx = cvhpdom->vtx;
+    wtx = vtx + 1;
+    for (i=0; i< cdom->nchords; i++) {
+      chord->sig = 0;
+      chord->acon = wtx->vtY - vtx->vtY;
+      chord->bcon = wtx->vtX - vtx->vtX;
+      chord->ccon = (wtx->vtX - cdom->mdkol)*chord->acon -
+	(wtx->vtY - cdom->mdlin)*chord->bcon;
+      chord->cl = 8.0 * sqrt((double)(chord->acon*chord->acon +
+				      chord->bcon*chord->bcon));
+      chord++;
+      vtx++;
+      wtx++;
+    }
+  }
+  else {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return cdom;
+}
+
+static WlzConvHullValues *WlzMakeConvexHullValues3d(
+  WlzObject *cvh,
+  WlzObject *obj,
+  WlzErrorNum *dstErr)
+{
+  WlzValues		rtnvalues, *valuess, values;
+  WlzObject		*obj1, *obj2;
+  WlzDomain		*domains1, *domains2;
+  WlzPixelV		bckgrnd;
+  int			p;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+
+  /* this is only called after a successful call to WlzObjToConvexPolygon
+     therefore the given convex hull object and object have been checked
+     and match */
+  rtnvalues.c = NULL;
+  bckgrnd.type = WLZ_GREY_UBYTE;
+  bckgrnd.v.ubv = 0;
+
+  /* make a voxeltable and calculate the convex hull values for each plane */
+  if( rtnvalues.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_CONV_HULL,
+					  cvh->domain.p->plane1,
+					  cvh->domain.p->lastpl,
+					  bckgrnd, NULL, &errNum) ){
+    domains1 = cvh->domain.p->domains;
+    domains2 = obj->domain.p->domains;
+    valuess = rtnvalues.vox->values;
+    for(p=cvh->domain.p->plane1; p <= cvh->domain.p->lastpl;
+	p++, domains1++, domains2++, valuess++){
+      if( (*domains1).core != NULL ){
+	values.core = NULL;
+	obj1 = WlzMakeMain(WLZ_2D_POLYGON, *domains1, values,
+			   NULL, NULL, NULL);
+	obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains2, values,
+			   NULL, NULL, NULL);
+	if( values.c = WlzMakeConvexHullValues(obj1, obj2, &errNum) ){
+	  *valuess = WlzAssignValues(values, NULL);
+	}
+	else {
+	  WlzFreeObj(obj2);
+	  WlzFreeObj(obj1);
+	  WlzFreeVoxelValueTb(rtnvalues.vox);
+	  rtnvalues.vox = NULL;
+	  break;
+	}
+	WlzFreeObj(obj2);
+	WlzFreeObj(obj1);
+      }
+    }
+  }
+
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnvalues.c;
+}
+

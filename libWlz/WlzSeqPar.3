@@ -1,0 +1,142 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzSeqPar.3
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function which performs sequential or parallel
+.\"		transformations.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzSeqPar" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzSeqPar \- Performs sequential or parallel transformations.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "typedef struct"
+.br
+.BI "{"
+.ti +2m
+.BI "int **" adrptr ;
+.ti +2m
+.BI "int" "kdelta" ;
+.ti +2m
+.BI "int" "ldelta" ;
+.ti +2m
+.BI "int" "brdrsz" ;
+.br
+.BI "} WlzSeqParWSpace" ;
+.LP
+.BI "WlzObject *WlzSeqPar(WlzObject *" "srcObj" ,
+.BI "int " "newObjFlag" ,
+.ti +12m
+.BI "int " "sequentialFlag" ,
+.BI "WlzRasterDir " "rasterDir" ,
+.ti +12m
+.BI "int " "bdrSz" ,
+.BI "int " "bkgVal" ,
+.ti +12m
+.BI "void *" "transformData" ,
+.ti +12m
+.BI "int (*" transformFn ")(WlzSeqParWSpace *, void *), 
+.BL "WlzErrorNum *" wlzErr );"
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^source object pointer.
+newObjFlag^new object or in\-place flag, non\-zero for a new object
+sequentialFlag^sequential or parallel transformation, non\-zero for
+^sequential
+rasterDir^raster direction
+bdrSz^border size, must be integer in range [0\-7], the usual
+^8 immediate neighbours having \fIbdrSz\fR = 1
+bkgVal^the background grey value
+transformData^pointer to data passed on to the transform function
+transformFn^supplied transform function
+adrptr^array of pointers index [-7:7], whose \fIi\fR'th entry gives
+^the address of the point
+^(\fIl\fR + (\fIi\fR * \fIspWSpace\fR->\fIldelta\fR), \fIk\fR),
+^for line \fIl\fR and column \fIk\fR
+kdelta^column increment
+lelta^line increment
+brdrsz^border size
+wlzErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+WlzSeqPar performs a sequential or parallel transformation on a
+WLZ_2D_DOMAINOBJ object with integral (int, short or unsigned char)
+grey values.
+WlzSeqPar returns a pointer to the transformed  object or a NULL
+pointer on error.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+/*
+ * Simple example of using WlzSeqPar() to perform a space
+ * domain 3x3 mean convolution filter (See WlzConvolve(3)).
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzConvolution conv;
+  const int     meanMask[]
+  {
+    1, 1, 1,
+    1, 1, 1,
+    1, 1, 1
+  };
+
+  conv.type = WLZ_CONVOLVE_INT;
+  conv.linkcount = 0;
+  conv.xsize = 3;
+  conv.ysize = 3;
+  conv.cv = meanMask;
+  conv.divscale = 9;
+  sConv.offset = 0;
+  sConv.modflag = 0;
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+    (void )fprintf(stderr, "%s: Failed to read input object.\n", *argv);
+  }
+  else if((outObj = WlzSeqPar(inObj, 1, 0, WLZ_RASTERDIR_ILIC,
+                              1, 0, (void *)&conv,
+                              WlzConvolveSeqParFn, &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
+  {
+    (void )fprintf(stderr, "%s: Failed to convolve object.\n", *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout, outObj)) != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Failed to write output object.\n", *argv);
+  }
+  return(errNum);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzConvolve(3), WlzError(3)
+.SH BUGS
+Still to be found.
