@@ -13,6 +13,7 @@
 *		from the given Woolz domain object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 1999-09-19 bill	Error reporting could cause segfault, fixed bug.
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -138,7 +139,8 @@ int             main(int argc, char **argv)
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
       		     "%s: failed to compute histogram object (%s)\n",
-		     *argv);
+		     *argv,
+		     WlzStringFromErrorNum(errNum, NULL));
     }
   }
   if(ok)
