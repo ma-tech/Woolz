@@ -83,9 +83,6 @@ SUBSYSTEMS		=
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-UNIXFLAGS		= -DUNIX
-COPTIMISE		= -fast -xchip=ultra
-ANSI_CONFORMANCE	=
 DEFINES			= $(THREADS) \
 			  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES)
