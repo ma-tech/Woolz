@@ -2730,6 +2730,9 @@ extern WlzObjectType 		WlzGreyTableTypeToTableType(
 extern WlzGreyType		WlzGreyTypeFromObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+extern WlzDVertex3		WlzVozelSz(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzValueUtils.c							*
