@@ -335,6 +335,7 @@ typedef enum _WlzRasterDir
 */
 typedef enum _WlzTransformType
 {
+  WLZ_TRANSFORM_EMPTY = 0,		/*!< Undefined transform. */
   WLZ_TRANSFORM_2D_AFFINE = 1,		/*!< General 2D affine transform */
   WLZ_TRANSFORM_2D_REG,	      		/*!< 2D affine but only rotation
   					     and translation */
@@ -354,23 +355,6 @@ typedef enum _WlzTransformType
   					     mesh transform */
   WLZ_TRANSFORM_3D_MESH			/*!< 3D tetrahedral mesh transform */
 } WlzTransformType;
-
-/*!
-* \enum         _WlzBasisFnType
-* \ingroup	WlzTransform
-* \brief	The types of basis function for basis function transforms.
-* 		Typedef: ::WlzBasisFnType.
-*/
-typedef enum _WlzBasisFnType
-{
-  WLZ_BASISFN_GAUSS,        		/*!< Gaussian basis function */
-  WLZ_BASISFN_POLY,                     /*!< Polynomial basis function */
-  WLZ_BASISFN_MQ,			/*!< Multiquadric basis function */
-  WLZ_BASISFN_TPS,              	/*!< Thin plate spline basis
-  					     function */
-  WLZ_BASISFN_CONF_POLY			/*!< Conformal polynomial basis
-  					     function */
-} WlzBasisFnType;
 
 /*!
 * \enum		_WlzMeshElemType
@@ -2444,6 +2428,56 @@ typedef struct _WlzRsvFilter
 } WlzRsvFilter;
  
 /************************************************************************
+* Functions
+************************************************************************/
+
+/*!
+* \enum         _WlzFnType
+* \ingroup	WlzFunction
+* \brief	The types of function.
+* 		Typedef: ::WlzFnType.
+*/
+typedef enum _WlzFnType
+{
+  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
+  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
+  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
+  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis
+  					     function */
+  WLZ_FN_BASIS_2DCONF_POLY,		/*!< Conformal polynomial basis
+  					     function */
+  WLZ_FN_COUNT				/*!< Not a function but the number
+  					     of functions. Keep this the
+					     last in the enums! */
+} WlzFnType;
+
+/*!
+* \struct	_WlzBasisFn
+* \ingroup	WlzFunction
+* \brief	A basis function.
+*		Typedef: ::WlzAffineTransformPrim.
+*/
+typedef struct _WlzBasisFn
+{
+  WlzFnType     type;       		/*!< The transform basis function. */
+  int           nPoly;          	/*!< Polynomial order + 1. */
+  int           nBasis;             	/*!< Number of basis function
+  					     coefficients. */
+  int           nVtx;                   /*!< Number of control point
+  					     verticies. */
+  WlzVertexP    poly;          		/*!< Polynomial coefficients. */
+  WlzVertexP    basis;         		/*!< Basis function coefficients. */
+  WlzVertexP    vertices;     		/*!< Control point vertices. */
+  void		*param;			/*!< Other parameters used by the
+  					     basis function, e.g. delta in
+					     the MQ and Gauss basis
+					     functions. Must be allocated
+					     in a single block to allow
+					     the parameters to be freed
+					     by AlcFree(). */
+} WlzBasisFn;
+
+/************************************************************************
 * Transforms
 ************************************************************************/
 /*!
@@ -2528,17 +2562,8 @@ typedef struct _WlzBasisFnTransform
   WlzTransformType type;       		/*!< From WlzCoreDomain. */
   int           linkcount;      	/*!< From WlzCoreDomain. */
   void 		*freeptr;		/*!< From WlzCoreDomain. */
-  WlzBasisFnType basisFn;       	/*!< The transform basis function. */
-  int           nPoly;          	/*!< Polynomial order + 1. */
-  int           nBasis;             	/*!< Number of basis function
-  					     coefficients. */
-  int           nVtx;                   /*!< Number of control point
-  					     verticies. */
-  double	delta;		  	/*!< Used by the MQ and Gauss basis
-  					     functions*/
-  WlzDVertex2    *poly;          	/*!< Polynomial coefficients. */
-  WlzDVertex2    *basis;         	/*!< Basis function coefficients. */
-  WlzDVertex2    *verticies;     	/*!< Control point verticies. */
+  WlzBasisFn	*basisFn;			/*!< The basis function for the
+  					     transform. */
 } WlzBasisFnTransform;
 
 /*!
