@@ -124,7 +124,7 @@ install:		install_includes install_manpages install_archive \
 			install_executables
 
 # Target which installs an archive (should not need modifying).
-install_archive:	$(ARCHIVE) $(SOARCHIVE)
+install_archive:	$(ARCHIVE)
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
