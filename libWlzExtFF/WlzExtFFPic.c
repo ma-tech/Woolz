@@ -19,7 +19,9 @@
 #include <WlzExtFF.h>
 
 #ifdef SUNOS5
+#ifndef __x86
 extern void swab(const void *, void *, size_t);
+#endif /* __x86 */
 #endif /* SUNOS5 */
 
 /************************************************************************

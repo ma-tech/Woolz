@@ -1557,3 +1557,63 @@ static int	RecSecFindItemIndexItFn(HGUDlpList *secList,
   }
   return(notEqual);
 }
+
+/************************************************************************
+* Function:	RecSecNewSectionList				
+* Returns:	RecSectionList *:	New secton list or NULL on error.
+* Purpose:	Creates a new empty section list with default settings.
+* Global refs:	-						
+* Parameters:	RecError *dstErr:	Destination error pointer, may
+*					be NULL.
+************************************************************************/
+RecSectionList	*RecSecNewSectionList(RecError *dstErr)
+{
+  RecSectionList *newSecList = NULL;
+  RecError	errFlag = REC_ERR_NONE;
+
+  if((newSecList = (RecSectionList *)
+  		   AlcCalloc(1, sizeof(RecSectionList))) == NULL)
+  {
+    errFlag = REC_ERR_MALLOC;
+  }
+  else
+  {
+    /* Set fields to default values. */
+    newSecList->list = NULL;
+    newSecList->attributes.trMode = REC_TRMODE_REL;
+    newSecList->attributes.currentItem = NULL;
+    RecSecRecSetDefaults(&(newSecList->reconstruction));
+  }
+  if(dstErr)
+  {
+    *dstErr = errFlag;
+  }
+  return(newSecList);
+}
+
+/************************************************************************
+* Function:	RecSecRecSetDefaults				
+* Returns:	void
+* Purpose:	Sets the reconstruction information to default values.
+* Global refs:	-						
+* Parameters:	RecReconstruction *rec:	Reconstruction information.
+************************************************************************/
+void		RecSecRecSetDefaults(RecReconstruction *rec)
+{
+  if(rec)
+  {
+    rec->obj = NULL;
+    rec->fileName = NULL;
+    rec->fileFormat = WLZEFF_FORMAT_WLZ;
+    rec->gaussFlt = 0;
+    rec->fastSam = 0;
+    rec->intScale = 0;
+    rec->greedy = 0;
+    rec->scale.vtX = 1.0;
+    rec->scale.vtY = 1.0;
+    rec->scale.vtZ = 1.0;
+    rec->matchHst = 0;
+    rec->clipSrc = 0;
+    rec->clipDst = 0;
+  }
+}

@@ -240,10 +240,10 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-CDEBUG			= -g 
-COPTIMISE		= -xchip=ultra -KPIC
-CXXDEBUG		= -g 
-CXXOPTIMISE		= -xchip=ultra -KPIC
+#CDEBUG			= -g 
+#COPTIMISE		= -xchip=ultra -KPIC
+#CXXDEBUG		= -g 
+#CXXOPTIMISE		= -xchip=ultra -KPIC
 
 # un-comment these lines to make a 32-bit library for the IRIX 6
 ifeq ($(UNIXTYPE), IRIX5)

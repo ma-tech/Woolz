@@ -1,33 +1,43 @@
 #pragma ident "MRC HGU $Id$"
 /************************************************************************
 * Project:	Mouse Atlas
-* Title:        ReconstructFileIO.c				
+* Title:        ReconstructFileIO.c
 * Date:         April 1999
-* Author:       Bill Hill                                              
+* Author:       Bill Hill
 * Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for file based I/O for the	
-*		MRC Human Genetics Unit reconstruction library.	
+*		All rights reserved.
+* Address:	MRC Human Genetics Unit,
+*		Western General Hospital,
+*		Edinburgh, EH4 2XU, UK.
+* Purpose:      Provides functions for file based I/O for the
+*		MRC Human Genetics Unit reconstruction library.
 * $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
+* Maintenance:  Log changes below, with most recent at top of list.
 ************************************************************************/
 #include <Reconstruct.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
 
-static RecError RecFileSecHeadRead(int *version, FILE *fP, char **eMsg),
-		RecFileHeadRead(int *version, FILE *fP, char **ident,
-				int versionMin, int versionMax, char **eMsg),
-		RecFileSecBodyRead(HGUDlpList *secList, int *numSec, FILE *fP,
-			  int version, char **eMsg),
-		RecFileIcsFileNames(char **fileBody,
+static RecError	RecFileSecSecListRead(HGUDlpList *secList, int *numSec,
+                                      int version, FILE *fP, char **eMsg);
+static RecError	RecFileSecAtrbRead(RecSectionListAtrb *atrb, int version,
+				   FILE *fP, char **eMsg);
+static RecError  RecFileSecRecRead(RecReconstruction *rec, int version,
+                                   FILE *fP, char **eMsg);
+static RecError RecFileSecIdentRead(int *version, FILE *fP, char **eMsg);
+static RecError RecFileSecIdentWrite(FILE *fP, char **eMsg);
+static RecError RecFileSecCommentsWrite(FILE *fP, char **eMsg);
+static RecError	RecFileSecAtrbWrite(FILE *fP, RecSectionListAtrb *atrb,
+				    char **eMsg);
+static RecError RecFileSecRecWrite(FILE *fP, RecReconstruction *rec,
+                                   char **eMsg);
+static RecError RecFileSecSecListWrite(FILE *fP, HGUDlpList *secList,
+                                       int numSec, char **eMsg);
+static RecError	RecFileIcsFileNames(char **fileBody,
 				    char **icsFileName, char **idsFileName,
-				    char *gvnFileName),
-		RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
+				    char *gvnFileName);
+static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
 					     int *recNum, FILE *fP,
 					     char **eMsg);
 static BibFileField *RecFileTransfToField(WlzAffineTransform *transf);
@@ -51,7 +61,7 @@ typedef enum	       /* Warning: keep consistant with recFileTransfFieldS! */
   REC_FILE_TRANSF_MAX
 } RecFileTransfFields;
 
-static char *recFileTransfFieldS[REC_FILE_TRANSF_MAX] =
+const char *recFileTransfFieldS[REC_FILE_TRANSF_MAX] =
 {
   "TransformType",
   "TransformTx",
@@ -66,85 +76,185 @@ static char *recFileTransfFieldS[REC_FILE_TRANSF_MAX] =
   "TransformInvert"
 };
 
+typedef enum             /* Warning: keep consistant with recFileAtrbValueS! */
+{
+  REC_FILE_SECATRB_MIN = 0,
+  REC_FILE_SECATRB_REL = 0,
+  REC_FILE_SECATRB_ABS,
+  REC_FILE_SECATRB_MAX
+} RecFileSecAtrbValues;
+
+const char *recFileAtrbValueS[REC_FILE_SECATRB_MAX] =
+{
+  "rel",
+  "abs"
+};
+
 /************************************************************************
-* Function:	RecFileSecWrite					
-* Returns:	RecError:		Non zero if read fails.	
-* Purpose:	Write registration sections file.		
+* Function:	RecFileSecListWrite
+* Returns:	RecError:		Non zero if read fails.
+* Purpose:	Write registration sections file.
 * Notes:	Files are written using the restricted bixtex file
-*		syntax of the BibFileIO library.		
-*		Records have the format				
-*		  @Ident					
-*		  {						
-*		    0,						
-*		    Text = {registration section file},		
-*		    Version = {1}				
-*		  }						
-*		  @Comment					
-*		  {						
-*		    0,						
-*		    Text = {...},				
-*		    .						
-*		    .						
-*		    Text = {...}				
-*		  }						
-*		  @Section					
-*		  {						
-*		    <section index>,				
+*		syntax of the BibFileIO library.
+*		File format version 1 records have the format:
+*		  @Ident
+*		  {
+*		    0,
+*		    Text = {registration section file},
+*		    Version = {1}
+*		  }
+*		  @Comment
+*		  {
+*		    0,
+*		    Text = {...},
+*		    .
+*		    .
+*		    Text = {...}
+*		  }
+*		  @Section
+*		  {
+*		    <section index>,
 *		    Iterations = {<iterations to find best match>},
-*		    Correlation = {<correlation value>},	
-*		    File = {<section image data file>},		
-*		    TransformType = {1},			
-*		    TransformTx = {<x>}				
-*		    TransformTy = {<y>}				
-*		    TransformTz = {<z>}				
-*		    TransformScale = {<scale>}			
-*		    TransformTheta = {<theta>}			
-*		    TransformPhi = {<phi>}			
-*		    TransformAlpha = {<alpha>}			
-*		    TransformPsi = {<psi>}			
-*		    TransformXsi = {<xsi>}			
-*		    TransformInvert  = {<invert}		
-*		  }						
-* Global refs:	-						
-* Parameters:	FILE *fP:		Output file stream.	
-*		HGUDlpList *secList:	Sections list.		
-*		int numSec:		Number of sections.	
+*		    Correlation = {<correlation value>},
+*		    File = {<section image data file>},
+*		    TransformType = {1},
+*		    TransformTx = {<x>}
+*		    TransformTy = {<y>}
+*		    TransformTz = {<z>}
+*		    TransformScale = {<scale>}
+*		    TransformTheta = {<theta>}
+*		    TransformPhi = {<phi>}
+*		    TransformAlpha = {<alpha>}
+*		    TransformPsi = {<psi>}
+*		    TransformXsi = {<xsi>}
+*		    TransformInvert  = {<invert}
+*		  }
+*		File format version 2 records have the format:
+*		  @Ident
+*		  {
+*		    0,
+*		    Text = {registration section file},
+*		    Version = {2}
+*		  }
+*		  @Comment
+*		  {
+*		    0,
+*		    Text = {...},
+*		    .
+*		    .
+*		    Text = {...}
+*		  }
+*		  @Attributes
+*		  {
+*		    0,
+*		    TransformMode = {"rel"|"abs"}
+*		  }
+*		  @Reconstruction
+*		  {
+*		    0,
+*		    File = {<complete reconstruction file name string>}
+*		    Format = {<file format extension string>}
+*		    Filter = {0|1}
+*		    FastSampling = {0|1}
+*		    IntScale = {0|1}
+*		    Greedy = {0|1}
+*		    Scale = {<scale x> <scale y> <scale z>}
+*		    MatchHistograms = {0|1}
+*		    MatchSection = {<section index>},
+*		    ClipSrc = {0|1}
+*		    SrcBox = {<x min> <y min> <z min> <x max> <y max> <z max>}
+*		    ClipDst = {0|1}
+*		    DstBox = {<x min> <y min> <z min> <x max> <y max> <z max>}
+*		  }
+*		  @Section
+*		  {
+*		    <section index>,
+*		    Iterations = {<iterations to find best match>},
+*		    Correlation = {<correlation value>},
+*		    File = {<section image data file>},
+*		    TransformType = {1},
+*		    TransformTx = {<x>}
+*		    TransformTy = {<y>}
+*		    TransformTz = {<z>}
+*		    TransformScale = {<scale>}
+*		    TransformTheta = {<theta>}
+*		    TransformPhi = {<phi>}
+*		    TransformAlpha = {<alpha>}
+*		    TransformPsi = {<psi>}
+*		    TransformXsi = {<xsi>}
+*		    TransformInvert  = {<invert}
+*		  }
+* Global refs:	-
+* Parameters:	FILE *fP:		Output file stream.
+*		RecSectionList *secList: Sections list.
+*		int numSec:		Number of sections.
 *		char **eMsg:		Ptr for error message strings.
 ************************************************************************/
-RecError	RecFileSecWrite(FILE *fP, HGUDlpList *secList, int numSec,
-				char **eMsg)
+RecError	RecFileSecListWrite(FILE *fP, RecSectionList *secList,
+				    int numSec, char **eMsg)
 {
-  int		idx;
   RecError	errFlag = REC_ERR_NONE;
-  time_t	tmpTime;
-  char		*tmpS,
-		*idxS = NULL,
-		*itrS = NULL,
-		*corS = NULL,
-		*dateS = NULL,
-		*hostS = NULL,
-		*userS = NULL;
-  RecSection 	*sec;
-  HGUDlpListItem *secItem;
-  BibFileRecord	*record = NULL;
-  BibFileField	*field0 = NULL,
-		*field1 = NULL,
-		*field2 = NULL;
-  char		tmpBuf[256];
-  static char	unknownS[] = "unknown";
 
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecWrite FE 0x%lx 0x%lx %d 0x%lx\n",
+	  ("RecFileSecListWrite FE 0x%lx 0x%lx %d 0x%lx\n",
 	   (unsigned long )fP, (unsigned long )secList,
 	   numSec, (unsigned long )eMsg));
-  if((((field0 = BibFileFieldMakeVa("Text", "registration section file",
-				    "Version", "1",
-				    NULL)) == NULL) ||
-      ((record = BibFileRecordMake("Ident", "0", field0)) == NULL)))
+  if((fP == NULL) || (secList == NULL))
+  {
+    errFlag = REC_ERR_FUNC;
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecIdentWrite(fP, eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecCommentsWrite(fP, eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecAtrbWrite(fP, &(secList->attributes), eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecRecWrite(fP, &(secList->reconstruction), eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecSecListWrite(fP, secList->list, numSec, eMsg);
+  }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
+	  ("RecFileSecListWrite FX %d\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecIdentWrite
+* Returns:	RecError:		Non zero if write fails.
+* Purpose:	Write out file identification.
+* Global refs:	-
+* Parameters:	FILE *fP:		Input file stream.
+*		char **eMsg:		Ptr for error message strings.
+************************************************************************/
+static RecError	RecFileSecIdentWrite(FILE *fP, char **eMsg)
+{
+  BibFileRecord	*record = NULL;
+  BibFileField	*field = NULL;
+  const char	versionS[] = "2";
+  RecError	errFlag = REC_ERR_NONE;
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+          ("RecFileSecIdentWrite FE 0x%lx 0x%lx\n",
+	  (unsigned long )fP, (unsigned long )eMsg));
+  if((((field = BibFileFieldMakeVa("Text", "registration section file",
+				   "Version", versionS,
+				   NULL)) == NULL) ||
+      ((record = BibFileRecordMake("Ident", "0", field)) == NULL)))
   {
     errFlag = REC_ERR_MALLOC;
   }
-  if((errFlag == REC_ERR_NONE) && 
+  if((errFlag == REC_ERR_NONE) &&
      (BibFileRecordWrite(fP, eMsg, record) != BIBFILE_ER_NONE))
   {
     errFlag = REC_ERR_WRITE;
@@ -155,12 +265,42 @@ RecError	RecFileSecWrite(FILE *fP, HGUDlpList *secList, int numSec,
   }
   else
   {
-    BibFileFieldFree(&field0);
+    BibFileFieldFree(&field);
   }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecIdentWrite FX %d\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecCommentsWrite
+* Returns:	RecError:		Non zero if write fails.
+* Purpose:	Write out comments to the given file.
+* Global refs:	-
+* Parameters:	FILE *fP:		Input file stream.
+*		char **eMsg:		Ptr for error message strings.
+************************************************************************/
+static RecError	RecFileSecCommentsWrite(FILE *fP, char **eMsg)
+{
+  time_t	tmpTime;
+  char		*tmpS,
+		*dateS = NULL,
+		*hostS = NULL,
+		*userS = NULL;
+  BibFileRecord	*record = NULL;
+  BibFileField	*field = NULL;
+  char		tmpBuf[256];
+  const char	unknownS[] = "unknown";
+  RecError	errFlag = REC_ERR_NONE;
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+  	  ("RecFileSecListCommentsWrite FE 0x%lx 0x%lx\n",
+	   (unsigned long )fP, (unsigned long )eMsg));
   if(errFlag == REC_ERR_NONE)
   {
     tmpS = getenv("USER");
-    (void )sprintf(tmpBuf, "User: %s", tmpS?tmpS:unknownS);
+    (void )sprintf(tmpBuf, "User: %s", tmpS? tmpS: unknownS);
     if((userS = AlcStrDup(tmpBuf)) == NULL)
     {
       errFlag = REC_ERR_MALLOC;
@@ -187,11 +327,11 @@ RecError	RecFileSecWrite(FILE *fP, HGUDlpList *secList, int numSec,
     }
   }
   if((errFlag == REC_ERR_NONE) &&
-     (((field0 = BibFileFieldMakeVa("Text", userS,
-				    "Text", dateS,
-				    "Text", hostS,
-				    NULL)) == NULL) ||
-       ((record = BibFileRecordMake("Comment", "0", field0)) == NULL)))
+     (((field = BibFileFieldMakeVa("Text", userS,
+				   "Text", dateS,
+				   "Text", hostS,
+				   NULL)) == NULL) ||
+       ((record = BibFileRecordMake("Comment", "0", field)) == NULL)))
   {
       errFlag = REC_ERR_MALLOC;
   }
@@ -217,7 +357,209 @@ RecError	RecFileSecWrite(FILE *fP, HGUDlpList *secList, int numSec,
     BibFileRecordFree(&record);
   }
   else
-    BibFileFieldFree(&field0);
+  {
+    BibFileFieldFree(&field);
+  }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+  	  ("RecFileSecListCommentsWrite FX %d\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecAtrbWrite
+* Returns:	RecError:		Non zero if write fails.
+* Purpose:	Write out the section list attributes.
+* Global refs:	char *recFileAtrbValueS: Attribute strings.
+* Parameters:	FILE *fP:		Input file stream.
+*		RecSectionListAtrb *atrb: Section list attributes.
+*		char **eMsg:		Ptr for error message strings.
+************************************************************************/
+static RecError	RecFileSecAtrbWrite(FILE *fP, RecSectionListAtrb *atrb,
+				   char **eMsg)
+{
+  BibFileRecord	*record = NULL;
+  BibFileField	*field = NULL;
+  const char	*trModeS;
+  RecError	errFlag = REC_ERR_NONE;
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+  	  ("RecFileSecAtrbWrite FE 0x%lx 0x%lx 0x%lx\n",
+	   (unsigned long )fP, (unsigned long )atrb, (unsigned long )eMsg));
+  switch(atrb->trMode)
+  {
+    case REC_TRMODE_REL:
+      trModeS = recFileAtrbValueS[REC_FILE_SECATRB_REL];
+      break;
+    case REC_TRMODE_ABS:
+      trModeS = recFileAtrbValueS[REC_FILE_SECATRB_ABS];
+      break;
+    default:
+      errFlag = REC_ERR_FUNC;
+      break;
+
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    if((((field = BibFileFieldMake("TransformMode", (char *)trModeS,
+    				   NULL)) == NULL) ||
+       ((record = BibFileRecordMake("Attributes", "0", field)) == NULL)))
+    {
+      errFlag = REC_ERR_MALLOC;
+    }
+  }
+  if((errFlag == REC_ERR_NONE) &&
+     (BibFileRecordWrite(fP, eMsg, record) != BIBFILE_ER_NONE))
+  {
+    errFlag = REC_ERR_WRITE;
+  }
+  if(record)
+  {
+    BibFileRecordFree(&record);
+  }
+  else
+  {
+    BibFileFieldFree(&field);
+  }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+          ("RecFileSecAtrbWrite FX %d\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecRecWrite
+* Returns:	RecError:		Non zero if write fails.
+* Purpose:	Write out reconstruction details.
+* Global refs:	-
+* Parameters:	FILE *fP:		Input file stream.
+*		RecReconstruction *rec:	Reconstruction details.
+*		char **eMsg:		Ptr for error message strings.
+************************************************************************/
+static RecError	RecFileSecRecWrite(FILE *fP, RecReconstruction *rec,
+				   char **eMsg)
+{
+  BibFileRecord	*record = NULL;
+  BibFileField	*topField = NULL;
+  const char	*fileNameS,
+  		*fileFormatS;
+  char		scaleS[256],
+  		matchSecS[256],
+  		srcBoxS[256],
+		dstBoxS[256];
+  RecError	errFlag = REC_ERR_NONE;
+  const char	zeroS[] = "0",
+  		oneS[] = "1",
+  		nullS[] = "";
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+  	  ("RecFileSecRecWrite FE 0x%lx 0x%lx 0x%lx\n",
+	   (unsigned long )fP, (unsigned long )rec, (unsigned long )eMsg));
+  fileNameS = (rec->fileName)? rec->fileName: nullS;
+  (void *)WlzEffStringFromFormat(rec->fileFormat, &fileFormatS);
+  if(fileFormatS == NULL)
+  {
+    fileFormatS = nullS;
+  }
+  (void )sprintf(scaleS, "%g %g %g",
+		 rec->scale.vtX, rec->scale.vtY, rec->scale.vtZ);
+  if(rec->matchHst)
+  {
+    (void )sprintf(matchSecS, "%d", rec->matchSec);
+  }
+  else
+  {
+    strcpy(matchSecS, zeroS);
+  }
+  if(rec->clipSrc)
+  {
+    (void )sprintf(srcBoxS, "%g %g %g %g %g %g",
+		   rec->srcBox.xMin, rec->srcBox.yMin, rec->srcBox.zMin,
+		   rec->srcBox.xMax, rec->srcBox.yMax, rec->srcBox.zMax);
+  }
+  else
+  {
+    (void )sprintf(srcBoxS, "0.0 0.0 0.0 0.0 0.0 0.0");
+  }
+  if(rec->clipDst)
+  {
+    (void )sprintf(dstBoxS, "%g %g %g %g %g %g",
+		   rec->dstBox.xMin, rec->dstBox.yMin, rec->dstBox.zMin,
+		   rec->dstBox.xMax, rec->dstBox.yMax, rec->dstBox.zMax);
+  }
+  else
+  {
+    (void )sprintf(dstBoxS, "0.0 0.0 0.0 0.0 0.0 0.0");
+  }
+  if(((topField = BibFileFieldMakeVa(
+			   "File", (char *)fileNameS,
+			   "Format", (char *)fileFormatS,
+			   "Filter", (rec->gaussFlt)? oneS: zeroS,
+			   "FastSampling", (rec->fastSam)? oneS: zeroS,
+			   "IntScale", (rec->intScale)? oneS: zeroS,
+			   "Greedy", (rec->greedy)? oneS: zeroS,
+			   "Scale", scaleS,
+			   "MatchHistograms", (rec->matchHst)? oneS: zeroS,
+			   "MatchSection", matchSecS,
+			   "ClipSrc", (rec->clipSrc)? oneS: zeroS,
+			   "SrcBox", srcBoxS,
+			   "ClipDst", (rec->clipDst)? oneS: zeroS,
+			   "DstBox", dstBoxS,
+			   NULL)) == NULL) ||
+     ((record = BibFileRecordMake("Reconstruction", "0",
+				  topField)) == NULL))
+  {
+    errFlag = REC_ERR_MALLOC;
+  }
+  else if(BibFileRecordWrite(fP, eMsg, record) != BIBFILE_ER_NONE)
+  {
+    errFlag = REC_ERR_WRITE;
+  }
+  if(record)
+  {
+    BibFileRecordFree(&record);
+  }
+  else if(topField)
+  {
+    BibFileFieldFree(&topField);
+  }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+          ("RecFileSecRecWrite FX %d\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecSecListWrite
+* Returns:	RecError:		Non zero if write fails.
+* Purpose:	Write the body of the section list to the given
+*		file.
+* Global refs:	-
+* Parameters:	FILE *fP:		Input file stream.
+*		HGUDlpList *secList:	List of sections to write.
+*		int numSec:		Number of sections to write.
+*		char **eMsg:		Ptr for error message strings.
+************************************************************************/
+static RecError	RecFileSecSecListWrite(FILE *fP, HGUDlpList *secList,
+				       int numSec, char **eMsg)
+{
+  int		idx;
+  char		*idxS = NULL,
+		*itrS = NULL,
+		*corS = NULL;
+  RecSection 	*sec;
+  HGUDlpListItem *secItem;
+  BibFileRecord	*record = NULL;
+  BibFileField	*field0 = NULL,
+		*field1 = NULL,
+		*field2 = NULL;
+  char		tmpBuf[256];
+  RecError	errFlag = REC_ERR_NONE;
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecListBodyWrite FE 0x%lx 0x%lx %d 0x%lx\n",
+	   (unsigned long )fP, (unsigned long )secList,
+	   numSec, (unsigned long )eMsg));
   idx = 0;
   secItem = HGUDlpListHead(secList);
   while((errFlag == REC_ERR_NONE) && (idx < numSec) && secItem &&
@@ -284,17 +626,17 @@ RecError	RecFileSecWrite(FILE *fP, HGUDlpList *secList, int numSec,
     }
     ++idx;
   }
-  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecWrite FX %d\n",
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecListBodyWrite FX %d\n",
 	   errFlag));
   return(errFlag);
 }
 
 /************************************************************************
-* Function:	RecFileSecObjRead				
-* Returns:	RecError:		Non zero if read fails.	
-* Purpose:	Read section image object from file.		
-* Global refs:	-						
+* Function:	RecFileSecObjRead
+* Returns:	RecError:		Non zero if read fails.
+* Purpose:	Read section image object from file.
+* Global refs:	-
 * Parameters:	RecSection *sec:	Section with obj to be read in.
 *		char **eMsg:		Ptr for error message strings.
 ************************************************************************/
@@ -356,10 +698,10 @@ RecError	RecFileSecObjRead(RecSection *sec, char **eMsg)
 }
 
 /************************************************************************
-* Function:	RecFileSecObjFree				
-* Returns:	void						
+* Function:	RecFileSecObjFree
+* Returns:	void
 * Purpose:	Free (ie decrement linkcount) section image object.
-* Global refs:	-						
+* Global refs:	-
 * Parameters:	RecSection *sec:	Section with obj to be read in.
 ************************************************************************/
 void		RecFileSecObjFree(RecSection *sec)
@@ -383,16 +725,16 @@ void		RecFileSecObjFree(RecSection *sec)
 }
 
 /************************************************************************
-* Function:	RecFileSecObjsRead				
-* Returns:	RecError:		Non zero if read fails.	
+* Function:	RecFileSecObjsRead
+* Returns:	RecError:		Non zero if read fails.
 * Purpose:	Read section image objects from files for all sections
-*		with indicies in given range.			
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		int minIdx:		Minimum index of range.	
-*		int maxIdx:		Maximum index of range.	
+*		with indicies in given range.
+* Global refs:	-
+* Parameters:	HGUDlpList *secList:	Given section list.
+*		int minIdx:		Minimum index of range.
+*		int maxIdx:		Maximum index of range.
 *		int allSecFlag:		Flag to read all section's if
-*					non zero.		
+*					non zero.
 *		char **eMsg:		Ptr for error message strings.
 ************************************************************************/
 RecError	RecFileSecObjsRead(HGUDlpList *secList, int minIdx, int maxIdx,
@@ -432,16 +774,16 @@ RecError	RecFileSecObjsRead(HGUDlpList *secList, int minIdx, int maxIdx,
 }
 
 /************************************************************************
-* Function:	RecFileSecObjsFree				
-* Returns:	void						
+* Function:	RecFileSecObjsFree
+* Returns:	void
 * Purpose:	Free section image objects from files for all sections
-*		with indicies in given range.			
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		int minIdx:		Minimum index of range.	
-*		int maxIdx:		Maximum index of range.	
+*		with indicies in given range.
+* Global refs:	-
+* Parameters:	HGUDlpList *secList:	Given section list.
+*		int minIdx:		Minimum index of range.
+*		int maxIdx:		Maximum index of range.
 *		int allSecFlag:		Flag to read all section's if
-*					non zero.		
+*					non zero.
 ************************************************************************/
 void		RecFileSecObjsFree(HGUDlpList *secList, int minIdx, int maxIdx,
 				   int allSecFlag)
@@ -471,43 +813,60 @@ void		RecFileSecObjsFree(HGUDlpList *secList, int minIdx, int maxIdx,
 }
 
 /************************************************************************
-* Function:	RecFileSecRead					
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Reads a bibtex style list of section transform records
-*		from the given file stream. 			
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Section list.		
-*		int *numSec:		Ptr for number of sections in 
-*					the list.		
-*		FILE *fP:		Input file.		
+* Function:	RecFileSecListRead
+* Returns:	RecSectionList		New section list.
+* Purpose:	Reads a bibtex style reconstruction list which contains
+*		both details of how a reconstruction was made and the
+*		list of section transform records.
+* Global refs:	-
+* Parameters:	RecSectionList *secList: Reconstruction section list.
+*		int *numSec:		Ptr for number of sections in
+*					the list.
+*		FILE *fP:		Input file.
+*		RecError *dstErr:	Destination pointer for error.
 *		char **eMsg:		Ptr for any error messages.
 ************************************************************************/
-RecError	RecFileSecRead(HGUDlpList *secList, int *numSec, FILE *fP,
-			       char **eMsg)
+RecError	RecFileSecListRead(RecSectionList *secList,
+				   int *numSec, FILE *fP, char **eMsg)
 {
   int		version;
   RecError	errFlag = REC_ERR_NONE;
 
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecRead FE 0x%lx 0x%lx 0x%lx 0x%lx\n",
+	  ("RecFileSecListRead FE 0x%lx 0x%lx 0x%lx 0x%lx\n",
 	   (unsigned long )secList, (unsigned long )numSec,
 	   (unsigned long )fP, (unsigned long)eMsg));
-  if((secList == NULL) || (numSec == NULL))
+  if((secList == NULL) || (numSec == NULL) || (fP == NULL))
   {
     errFlag = REC_ERR_FUNC;
   }
-  else
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecIdentRead(&version, fP, eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
   {
     *numSec = 0;
-    if(HGUDlpListCount(secList) > 0)   /* Free any existing sections in list */
+    secList->attributes.currentItem = NULL;
+    if((secList->list = HGUDlpListCreate(NULL)) == NULL)
     {
-      HGUDlpListDeleteAll(secList);
+      errFlag = REC_ERR_MALLOC;
     }
-    errFlag = RecFileSecHeadRead(&version, fP, eMsg);
-    if(errFlag == REC_ERR_NONE)
-    {
-      errFlag = RecFileSecBodyRead(secList, numSec, fP, version, eMsg);
-    }
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecAtrbRead(&(secList->attributes), version,
+    				 fP, eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecRecRead(&(secList->reconstruction), version,
+    				fP, eMsg);
+  }
+  if(errFlag == REC_ERR_NONE)
+  {
+    errFlag = RecFileSecSecListRead(secList->list, numSec,
+    				    version, fP, eMsg);
   }
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
 	  ("RecFileSecRead FX %d\n",
@@ -516,23 +875,32 @@ RecError	RecFileSecRead(HGUDlpList *secList, int *numSec, FILE *fP,
 }
 
 /************************************************************************
-* Function:	RecFileSecHeadRead				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Reads the header of a bibtex style list of section
-*		transform records from the given file stream, to verify
-*		that this is infact the expected file type and also to
-*		establish the file version number.		
-* Global refs:	-						
-* Parameters:	int *version:		Ptr for file version number.
-*		FILE *fP:		Input file.		
-*		char **eMsg:		Ptr for any error messages.
+* Function:	RecFileSecIdentRead
+* Returns:	RecError:		Non zero if read fails.
+* Purpose:	Read the file identification to establish that this is
+*		a valid  reconstruction file and that is's version
+*		number is reasonable.
+* Global refs:	-
+* Parameters:	int *version:		Ptr for version number.
+*		FILE *fP:		Input file stream.
+*		char **eMsg:		Ptr for error message strings.
 ************************************************************************/
-static RecError	RecFileSecHeadRead(int *version, FILE *fP, char **eMsg)
+static RecError	RecFileSecIdentRead(int *version, FILE *fP, char **eMsg)
 {
-  int		versionMin = 1,
-		versionMax = 1;
+  BibFileField	*idField,
+		*vField;
+  BibFileRecord	*idRecord = NULL,
+		*lastRecord = NULL;
+  const char	**idWord;
+  char		*bibErrMsg = NULL,
+		*idTok,
+		*tmpPtr;
+  char		errBuf[256];
+  BibFileError	bibErrFlag = BIBFILE_ER_NONE;
   RecError	errFlag = REC_ERR_NONE;
-  static char   *fileIdent[] =
+  const int	versionMin = 1,
+		versionMax = 2;
+  const char   *fileIdent[] =
 		{
 		  "registration",
 		  "section",
@@ -540,49 +908,10 @@ static RecError	RecFileSecHeadRead(int *version, FILE *fP, char **eMsg)
 		  ""
 		};
 
-  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecHeadRead FE 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )version, (unsigned long )fP, (unsigned long)eMsg));
-  errFlag = RecFileHeadRead(version, fP, fileIdent, versionMin, versionMax,
-			    eMsg);
-  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecHeadRead FX %d\n",
-	   errFlag));
-  return(errFlag);
-}
-
-/************************************************************************
-* Function:	RecFileHeadRead					
-* Returns:	RecError:		Non zero if read fails.	
-* Purpose:	Read the file header to establish that this is a valid 
-*		file and its version number.			
-* Global refs:	-						
-* Parameters:	int *version:		Ptr for version number.	
-*		FILE *fP:		Input file stream.	
-*		char **ident:		File identification strings.
-*		char **eMsg:		Ptr for error message strings.
-*		int *version:		Ptr for version number.	
-*		FILE *fP:		Opened file pointer.	
-************************************************************************/
-static RecError	RecFileHeadRead(int *version, FILE *fP, char **ident,
-				int versionMin, int versionMax, char **eMsg)
-{
-  BibFileError	bibErrFlag = BIBFILE_ER_NONE;
-  RecError	errFlag = REC_ERR_NONE;
-  BibFileField	*idField,
-		*vField;
-  BibFileRecord	*idRecord = NULL,
-		*lastRecord = NULL;
-  char		**idWord;
-  char		*bibErrMsg = NULL,
-		*idTok,
-		*tmpPtr;
-  char		errBuf[256];
-
-  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileHeadRead FE 0x%lx 0x%lx 0x%lx %d %d 0x%lx\n",
-	   (unsigned long )version, (unsigned long )fP, (unsigned long )ident,
-	   versionMin, versionMax, (unsigned long )eMsg));
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecIdentRead FE 0x%lx 0x%lx 0x%lx\n",
+	   (unsigned long )version, (unsigned long )fP,
+	   (unsigned long )eMsg));
   while(((bibErrFlag = BibFileRecordRead(&idRecord, &bibErrMsg,
 					 fP)) == BIBFILE_ER_NONE) &&
 	idRecord && idRecord->name && idRecord->id &&
@@ -598,7 +927,7 @@ static RecError	RecFileHeadRead(int *version, FILE *fP, char **ident,
   {
     AlcFree(bibErrMsg);
   }
-  if((bibErrFlag != BIBFILE_ER_NONE) || 
+  if((bibErrFlag != BIBFILE_ER_NONE) ||
      (idRecord == NULL) ||
      (idRecord->name == NULL) || (idRecord->id == NULL) ||
      ((idField = idRecord->field) == NULL) ||
@@ -612,7 +941,7 @@ static RecError	RecFileHeadRead(int *version, FILE *fP, char **ident,
   }
   if(errFlag == REC_ERR_NONE)
   {
-    idWord = ident;
+    idWord = fileIdent;
     tmpPtr = idField->value;
     while((errFlag == REC_ERR_NONE) &&
 	  idWord && *idWord && **idWord &&
@@ -655,28 +984,305 @@ static RecError	RecFileHeadRead(int *version, FILE *fP, char **ident,
   {
     *eMsg = AlcStrDup(errBuf);
   }
-  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileHeadRead FX %d\n",
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecIdentRead FX %d\n",
 	   errFlag));
   return(errFlag);
 }
 
 /************************************************************************
-* Function:	RecFileSecBodyRead				
-* Returns:	RecError:		Non zero on error.	
+* Function:	RecFileSecAtrbRead
+* Returns:	RecError:		Non zero on error.
+* Purpose:	Reads the reconstruct section list attributes.
+* Global refs:	-
+* Parameters:	RecSectionListAtrb *atrb: Section list attributes.
+*		FILE *fP:		Input file.
+*		RecError *dstErr:	Destination pointer for error.
+*		char **eMsg:		Ptr for any error messages.
+************************************************************************/
+static RecError	 RecFileSecAtrbRead(RecSectionListAtrb *atrb, int version,
+				    FILE *fP, char **eMsg)
+{
+
+  BibFileRecord	*atRecord = NULL,
+		*lastRecord = NULL;
+  char		*trModeS = NULL,
+  		*bibErrMsg = NULL;
+  char		errBuf[256];
+  BibFileError	bibErrFlag = BIBFILE_ER_NONE;
+  RecError	errFlag = REC_ERR_NONE;
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+  	  ("RecFileSecAtrbRead FE 0x%lx %d 0x%lx 0x%lx\n",
+	   (unsigned long )atrb, version,
+	   (unsigned long )fP, (unsigned long)eMsg));
+  switch(version)
+  {
+    case 1:
+      atrb->trMode = REC_TRMODE_REL;
+      atrb->currentItem = NULL;
+      break;
+    case 2:
+      atrb->currentItem = NULL;
+      while(((bibErrFlag = BibFileRecordRead(&atRecord, &bibErrMsg,
+					     fP)) == BIBFILE_ER_NONE) &&
+	    atRecord && atRecord->name &&
+	    strcmp(atRecord->name, "Attributes"))
+      {
+	if(lastRecord)
+	{
+	  BibFileRecordFree(&lastRecord);
+	}
+	lastRecord = atRecord;
+      }
+      if(bibErrMsg)
+      {
+	AlcFree(bibErrMsg);
+      }
+      if((bibErrFlag != BIBFILE_ER_NONE) ||
+	 (atRecord == NULL) || (atRecord->name == NULL) ||
+	 (atRecord->field == NULL) ||
+	 ((BibFileFieldParseFmt(atRecord->field,
+	 			&trModeS, "%s", "TransformMode",
+				NULL) == 0)) ||
+	 (trModeS == NULL) ||
+         (WlzStringMatchValue((int *)&(atrb->trMode), trModeS,
+		  recFileAtrbValueS[REC_FILE_SECATRB_REL], REC_TRMODE_REL,
+		  recFileAtrbValueS[REC_FILE_SECATRB_ABS], REC_TRMODE_ABS,
+		  NULL) == 0))
+      {
+	errFlag = REC_ERR_READ;
+	(void )sprintf(errBuf,
+		       "failed to read list attributes.");
+      }
+      if(trModeS)
+      {
+        AlcFree(trModeS);
+      }
+      if(atRecord)
+      {
+	BibFileRecordFree(&atRecord);
+      }
+      REC_DBG((REC_DBG_FILE|REC_DBG_LVL_2),
+      	      ("RecFileSecAtrbRead 01 %d\n",
+	       atrb->trMode));
+      break;
+    default:
+      errFlag = REC_ERR_READ;
+      (void )sprintf(errBuf,
+		     "unsupported file version %d.",
+		     version);
+     break;
+  }
+  if((errFlag != REC_ERR_NONE) && (*eMsg == NULL))
+  {
+    *eMsg = AlcStrDup(errBuf);
+  }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecAtrbRead FX 0x%lx\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecRecRead
+* Returns:	RecError:		Non zero on error.
+* Purpose:	Reads the reconstruct reconstruction information.
+* Global refs:	-
+* Parameters:	RecReconstruction *rec:	Reconstruction information.
+*		FILE *fP:		Input file.
+*		RecError *dstErr:	Destination pointer for error.
+*		char **eMsg:		Ptr for any error messages.
+************************************************************************/
+static RecError	 RecFileSecRecRead(RecReconstruction *rec, int version,
+				   FILE *fP, char **eMsg)
+{
+  BibFileRecord	*rcRecord = NULL,
+  		*lastRecord = NULL;
+  char		*fileS = NULL,
+  		*formatS = NULL,
+		*scaleS = NULL,
+		*srcBoxS = NULL,
+		*dstBoxS = NULL,
+		*bibErrMsg = NULL;
+  char		errBuf[256];
+  RecError	errFlag = REC_ERR_NONE;
+  BibFileError	bibErrFlag = BIBFILE_ER_NONE;
+
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecRecRead FE 0x%lx %d 0x%lx 0x%lx\n",
+	   (unsigned long )rec, version,
+	   (unsigned long )fP, (unsigned long)eMsg));
+  switch(version)
+  {
+    case 1:
+      RecSecRecSetDefaults(rec);
+      break;
+    case 2:
+      RecSecRecSetDefaults(rec);
+      while(((bibErrFlag = BibFileRecordRead(&rcRecord, &bibErrMsg,
+					     fP)) == BIBFILE_ER_NONE) &&
+	    rcRecord && rcRecord->name &&
+	    strcmp(rcRecord->name, "Reconstruction"))
+      {
+	if(lastRecord)
+	{
+	  BibFileRecordFree(&lastRecord);
+	}
+	lastRecord = rcRecord;
+      }
+      if(bibErrMsg)
+      {
+	AlcFree(bibErrMsg);
+      }
+      if(bibErrFlag != BIBFILE_ER_NONE)
+      {
+        errFlag = REC_ERR_READ;
+      }
+      else
+      {
+        if(rcRecord && rcRecord->name && rcRecord->field &&
+	   (BibFileFieldParseFmt(rcRecord->field,
+				 &fileS, "%s", "File",
+				 &formatS, "%s", "Format",
+				 &(rec->gaussFlt), "%d", "Filter",
+				 &(rec->fastSam), "%d", "FastSampling",
+				 &(rec->intScale), "%d", "IntScale",
+				 &(rec->greedy), "%d", "Greedy",
+				 &scaleS, "%s", "Scale",
+				 &(rec->matchHst), "%d", "MatchHistograms",
+				 &(rec->matchSec), "%d", "MatchSection",
+				 &(rec->clipSrc), "%d", "ClipSrc",
+				 &srcBoxS, "%s", "SrcBox",
+				 &(rec->clipDst), "%d", "ClipDst",
+				 &dstBoxS, "%s", "DstBox",
+				 NULL) > 0))
+	{
+	  if(fileS)
+	  {
+	    rec->fileName = fileS;
+	    fileS = NULL;
+	  }
+	  if(formatS)
+	  {
+	    if(errFlag == REC_ERR_NONE)
+	    {
+	      rec->fileFormat = WlzEffStringExtToFormat(formatS);
+	      if(rec->fileFormat == WLZEFF_FORMAT_NONE)
+	      {
+		errFlag = REC_ERR_READ;
+		(void )sprintf(errBuf,
+			       "unsupported reconstruction file format %s.",
+			       formatS);
+	      }
+	    }
+	    AlcFree(formatS);
+	  }
+	  if(scaleS)
+	  {
+	    if(errFlag == REC_ERR_NONE)
+	    {
+	      if(sscanf(scaleS, "%lg %lg %lg",
+			&(rec->scale.vtX), &(rec->scale.vtY),
+			&(rec->scale.vtZ)) != 3)
+	      {
+		errFlag = REC_ERR_READ;
+		(void )sprintf(errBuf,
+			       "failed to parse reconstruction scale.");
+	      }
+	    }
+	    AlcFree(scaleS);
+	  }
+	  if(srcBoxS)
+	  {
+	    if((errFlag == REC_ERR_NONE) && rec->clipSrc)
+	    {
+	      if(sscanf(srcBoxS, "%lg %lg %lg %lg %lg %lg",
+	      		&(rec->srcBox.xMin), &(rec->srcBox.yMin),
+			&(rec->srcBox.zMin), &(rec->srcBox.xMax),
+			&(rec->srcBox.yMax), &(rec->srcBox.zMax)) != 6)
+	      {
+	        errFlag = REC_ERR_READ;
+		(void )sprintf(errBuf,
+			       "failed to parse reconstruction source box.");
+	      }
+	    }
+	    AlcFree(srcBoxS);
+	  }
+	  if(dstBoxS)
+	  {
+	    if((errFlag == REC_ERR_NONE) && rec->clipDst)
+	    {
+	      if(sscanf(dstBoxS, "%lg %lg %lg %lg %lg %lg",
+	      		&(rec->dstBox.xMin), &(rec->dstBox.yMin),
+			&(rec->dstBox.zMin), &(rec->dstBox.xMax),
+			&(rec->dstBox.yMax), &(rec->dstBox.zMax)) != 6)
+	      {
+	        errFlag = REC_ERR_READ;
+		(void )sprintf(errBuf,
+			       "failed to parse reconstruction source box.");
+	      }
+	    }
+	    AlcFree(dstBoxS);
+	  }
+	}
+      }
+      if(rcRecord)
+      {
+	BibFileRecordFree(&rcRecord);
+      }
+      REC_DBG((REC_DBG_FILE|REC_DBG_LVL_2),
+      	      ("RecFileSecRecRead 01 %d 0x%lx %s %d "
+	       "%d %d %d %d "
+	       "{%g %g %g} "
+	       "%d %d "
+	       "%d {%g %g %g %g %g %g} "
+	       "%d {%g %g %g %g %g %g}\n",
+	       errFlag, (unsigned long )(rec->obj),
+	       (rec->fileName)? rec->fileName: "(null)", rec->fileFormat,
+	       rec->gaussFlt, rec->fastSam, rec->intScale, rec->greedy,
+	       rec->scale.vtX, rec->scale.vtY, rec->scale.vtZ,
+	       rec->matchHst, rec->matchSec,
+	       rec->clipSrc, rec->srcBox.xMin, rec->srcBox.yMin,
+	       rec->srcBox.zMin, rec->srcBox.xMax,
+	       rec->srcBox.yMax, rec->srcBox.zMax,
+	       rec->clipDst, rec->dstBox.xMin, rec->dstBox.yMin,
+	       rec->dstBox.zMin, rec->dstBox.xMax,
+	       rec->dstBox.yMax, rec->dstBox.zMax));
+      break;
+    default:
+      errFlag = REC_ERR_READ;
+      (void )sprintf(errBuf,
+		     "unsupported file version %d.",
+		     version);
+     break;
+  }
+  if((errFlag != REC_ERR_NONE) && (*eMsg == NULL))
+  {
+    *eMsg = AlcStrDup(errBuf);
+  }
+  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2),
+	  ("RecFileSecRecRead FX 0x%lx\n",
+	   errFlag));
+  return(errFlag);
+}
+
+/************************************************************************
+* Function:	RecFileSecSecListRead
+* Returns:	RecError:		Non zero on error.
 * Purpose:	Reads the body of a bibtex style list of section
 *		transform records from the given file stream, parsing
 *		parsing them and building a linked list of sections.
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Section list.		
-*		int *numSec:		Ptr for number of sections in 
-*					the list.		
-*		FILE *fP:		Input file.		
-*		int version:		File version number.	
+* Global refs:	-
+* Parameters:	HGUDlpList *secList:	Section list.
+*		int *numSec:		Ptr for number of sections in
+*					the list.
+*		int version:		File version number.
+*		FILE *fP:		Input file.
 *		char **eMsg:		Ptr for any error messages.
 ************************************************************************/
-static RecError	RecFileSecBodyRead(HGUDlpList *secList, int *numSec, FILE *fP,
-			  int version, char **eMsg)
+static RecError	RecFileSecSecListRead(HGUDlpList *secList, int *numSec,
+				      int version, FILE *fP, char **eMsg)
 {
   int		doneFlag = 0,
 		secCount = 0,
@@ -684,69 +1290,74 @@ static RecError	RecFileSecBodyRead(HGUDlpList *secList, int *numSec, FILE *fP,
   RecSection	*sec = NULL;
   RecError	errFlag = REC_ERR_NONE;
   char		errBuf[256];
-  
+
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecBodyRead FE 0x%lx 0x%lx 0x%lx %d 0x%lx\n",
+	  ("RecFileSecSecListRead FE 0x%lx 0x%lx %d 0x%lx 0x%lx\n",
 	   (unsigned long )secList, (unsigned long )numSec,
-	   (unsigned long )fP, version, (unsigned long )eMsg));
+	   version, (unsigned long )fP, (unsigned long )eMsg));
   if((secList == NULL) || (numSec == NULL))
   {
     errFlag = REC_ERR_FUNC;
   }
   if(errFlag == REC_ERR_NONE)
   {
-    if(version != 1)
+    switch(version)
     {
-      errFlag = REC_ERR_READ;
-      (void )sprintf(errBuf,
-		     "version %d section file, only version %d supported.",
-		     version, 1);
+      case 1: /* FALLTHROUGH */
+      case 2:
+	while((errFlag == REC_ERR_NONE) && (doneFlag == 0))
+	{
+	  if((sec = (RecSection *)AlcCalloc(1, sizeof(RecSection))) == NULL)
+	  {
+	    errFlag = REC_ERR_MALLOC;
+	  }
+	  if(errFlag == REC_ERR_NONE)
+	  {
+	    errFlag = RecFileSecRecordReadAndParse(sec, &doneFlag, &recCount,
+						   fP, eMsg);
+	  }
+	  if((errFlag == REC_ERR_NONE) && (doneFlag == 0))
+	  {
+	    ++(sec->linkcount);
+	    if(HGUDlpListAppend(secList, NULL, (void *)sec,
+				(void (*)(void *) )RecSecFree) == NULL)
+	    {
+	      errFlag = REC_ERR_MALLOC; 		 /* May not be true! */
+	    }
+	    else
+	    {
+	      sec = NULL;
+	      ++secCount;
+	    }
+	  }
+	  REC_DBG((REC_DBG_FILE|REC_DBG_LVL_2),
+		  ("RecFileSecSecListRead 01 0x%lx %d %d %d\n",
+		   (unsigned long )sec, secCount, doneFlag, errFlag));
+	}
+	if(((errFlag != REC_ERR_NONE) || doneFlag) && sec)
+	{
+	  RecSecFree(sec);
+	}
+	if((errFlag == REC_ERR_NONE) && (secCount < 2))
+	{
+	  errFlag = REC_ERR_READ;
+	  (void )strcpy(errBuf,
+			"at least two sections required in a section list.");
+	}
+	if(errFlag == REC_ERR_NONE)
+	{
+	  *numSec = secCount;
+	}
+	break;
+      default:
+	errFlag = REC_ERR_READ;
+	(void )sprintf(errBuf,
+		       "unsupported file version %d.",
+		       version, 1);
+        break;
     }
   }
-  while((errFlag == REC_ERR_NONE) && (doneFlag == 0))
-  {
-    if((sec = (RecSection *)AlcCalloc(1, sizeof(RecSection))) == NULL)
-    {
-      errFlag = REC_ERR_MALLOC;
-    }
-    if(errFlag == REC_ERR_NONE)
-    {
-      errFlag = RecFileSecRecordReadAndParse(sec, &doneFlag, &recCount,
-      					     fP, eMsg);
-    }
-    if((errFlag == REC_ERR_NONE) && (doneFlag == 0))
-    {
-      ++(sec->linkcount);
-      if(HGUDlpListAppend(secList, NULL, (void *)sec,
-      			  (void (*)(void *) )RecSecFree) == NULL)
-      {
-        errFlag = REC_ERR_MALLOC; 			 /* May not be true! */
-      }
-      else
-      {
-	sec = NULL;
-        ++secCount;
-      }
-    }
-    REC_DBG((REC_DBG_FILE|REC_DBG_LVL_2),
-	    ("RecFileSecBodyRead 01 0x%lx %d %d %d\n",
-	     (unsigned long )sec, secCount, doneFlag, errFlag));
-  }
-  if(((errFlag != REC_ERR_NONE) || doneFlag) && sec)
-  {
-    RecSecFree(sec);
-  }
-  if((errFlag == REC_ERR_NONE) && (secCount < 2))
-  {
-    errFlag = REC_ERR_READ;
-    (void )strcpy(errBuf,
-		  "at least two sections are required in a section list.");
-  }
-  if(errFlag == REC_ERR_NONE)
-  {
-    *numSec = secCount;
-  }
-  else
+  if(errFlag != REC_ERR_NONE)
   {
     if(*eMsg == NULL)
     {
@@ -754,18 +1365,18 @@ static RecError	RecFileSecBodyRead(HGUDlpList *secList, int *numSec, FILE *fP,
     }
   }
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecFileSecBodyRead FX %d\n",
+	  ("RecFileSecSecListRead FX %d\n",
 	   errFlag));
   return(errFlag);
 }
 
 /************************************************************************
-* Function:	RecFileObjWlzRead				
-* Returns:	RecError:		Non zero on error.	
+* Function:	RecFileObjWlzRead
+* Returns:	RecError:		Non zero on error.
 * Purpose:	Reads a woolz object from the the given file stream.
-* Global refs:	-						
-* Parameters:	FILE *fP:		Output file stream.	
-*		WlzObject **obj:	Given woolz object.	
+* Global refs:	-
+* Parameters:	FILE *fP:		Output file stream.
+*		WlzObject **obj:	Given woolz object.
 ************************************************************************/
 RecError	RecFileObjWlzRead(FILE *fP, WlzObject **obj)
 {
@@ -795,12 +1406,12 @@ RecError	RecFileObjWlzRead(FILE *fP, WlzObject **obj)
 
 
 /************************************************************************
-* Function:	RecFileObjWlzWrite				
-* Returns:	RecError:		Non zero on error.	
+* Function:	RecFileObjWlzWrite
+* Returns:	RecError:		Non zero on error.
 * Purpose:	Writes the given woolz object to the given file stream.
-* Global refs:	-						
-* Parameters:	FILE *fP:		Output file stream.	
-*		WlzObject *obj:		Given woolz object.	
+* Global refs:	-
+* Parameters:	FILE *fP:		Output file stream.
+*		WlzObject *obj:		Given woolz object.
 ************************************************************************/
 RecError	RecFileObjWlzWrite(FILE *fP, WlzObject *obj)
 {
@@ -824,16 +1435,16 @@ RecError	RecFileObjWlzWrite(FILE *fP, WlzObject *obj)
 }
 
 /************************************************************************
-* Function:	RecFileSecRecordReadAndParse			
-* Returns:	RecError		Non zero on error.	
+* Function:	RecFileSecRecordReadAndParse
+* Returns:	RecError		Non zero on error.
 * Purpose:	Reads and parses the next BibFile section record from
 *		the given file stream. The record is parsed into the
-*		given section data structure.			
-* Global refs:	-						
+*		given section data structure.
+* Global refs:	-
 * Parameters:	RecSection *sec:	Given section (allocated).
-*		int *doneFlag:		Non-error, done flag.	
+*		int *doneFlag:		Non-error, done flag.
 *		int *recNum:		Used to count records parsed.
-*		FILE *fP:		Input file stream.	
+*		FILE *fP:		Input file stream.
 *		char **eMsg:		Ptr for any error messages.
 ************************************************************************/
 static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
@@ -851,7 +1462,7 @@ static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
   BibFileRecord	*secRecord = NULL,
   		*lastRecord = NULL;
   char		errBuf[256];
-  static char	intFmt[] = "%d",
+  const char	intFmt[] = "%d",
   		dblFmt[] = "%lf",
 		strFmt[] = "%s";
 
@@ -921,11 +1532,11 @@ static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
       secIter = 0;
       secCor = 0.0;
       (void )BibFileFieldParseFmt(secRecord->field,
-                                  &secIter, intFmt, "Iterations",
-                                  &secCor, dblFmt, "Correlation",
+                                  &secIter, (char *)intFmt, "Iterations",
+                                  &secCor, (char *)dblFmt, "Correlation",
                                   NULL);
       if((BibFileFieldParseFmt(secRecord->field,
-                               &secFile, strFmt, "File",
+                               &secFile, (char *)strFmt, "File",
                                NULL) != 1) ||
          (secFile == NULL) || (*secFile == '\0') ||
          ((secTransf = RecFileFieldToTransf(secRecord->field, 1)) == NULL))
@@ -956,12 +1567,12 @@ static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
 }
 
 /************************************************************************
-* Function:	RecFileTransfToField				
+* Function:	RecFileTransfToField
 * Returns:      BibFileField *:		New field, NULL on error.
 * Purpose:      Creates fields using the bibtex file syntax for the
 *		given transform and allocate storage as required.
 * Global refs:  char *bibFileTransfFieldS: Transform field names.
-* Parameters:   WlzAffineTransform *transf:	Given transform.	
+* Parameters:   WlzAffineTransform *transf:	Given transform.
 ************************************************************************/
 BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
 {
@@ -995,18 +1606,18 @@ BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
     (void )sprintf(tXsiS, "%g", transf->xsi);
     (void )sprintf(tInvertS, "%d", transf->invert);
     field = BibFileFieldMakeVa(
-    			 recFileTransfFieldS[REC_FILE_TRANSF_TYPE], tTypeS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_TX], tTxS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_TY], tTyS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_TZ], tTzS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_SCALE], tScaleS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_THETA], tThetaS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_PHI], tPhiS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_ALPHA], tAlphaS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_PSI], tPsiS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_XSI], tXsiS,
-			 recFileTransfFieldS[REC_FILE_TRANSF_INVERT], tInvertS,
-			 NULL);
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_TYPE], tTypeS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_TX], tTxS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_TY], tTyS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_TZ], tTzS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_SCALE], tScaleS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_THETA], tThetaS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_PHI], tPhiS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_ALPHA], tAlphaS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_PSI], tPsiS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_XSI], tXsiS,
+		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_INVERT], tInvertS,
+		 NULL);
   }
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
 	  ("RecFileTransfToField FX 0x%lx\n",
@@ -1015,18 +1626,18 @@ BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
 }
 
 /************************************************************************
-* Function:	RecFileFieldToTransf				
+* Function:	RecFileFieldToTransf
 * Returns:      WlzAffineTransform:	New transform, NULL on error.
 * Purpose:      Parses bibtex file syntax fields for the transform
 *		fields and allocate storage for the new transform as
-*		required.					
+*		required.
 * Note:		The transform's linkcount is not set by this function.
 * Global refs:  char *bibFileTransfFieldS: Transform field names.
 * Parameters:   BibFileField *field:	Given field which is at the top
 *					of the transform fields to be
-*					parsed.			
-*		int defaultFlg:		Allow default transform fields 
-*					if non zero.		
+*					parsed.
+*		int defaultFlg:		Allow default transform fields
+*					if non zero.
 ************************************************************************/
 WlzAffineTransform	*RecFileFieldToTransf(BibFileField *field,
 					      int defaultFlg)
@@ -1044,7 +1655,7 @@ WlzAffineTransform	*RecFileFieldToTransf(BibFileField *field,
 		tPsi,
 		tXsi;
   WlzAffineTransform	*transf = NULL;
-  static char	intFmt[] = "%d",
+  const char	intFmt[] = "%d",
 		dblFmt[] = "%lf";
 
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -1065,18 +1676,29 @@ WlzAffineTransform	*RecFileFieldToTransf(BibFileField *field,
     tInvert = 0;
   }
   count = BibFileFieldParseFmt(field,
-	     &tType,	intFmt,	recFileTransfFieldS[REC_FILE_TRANSF_TYPE],
-	     &tX,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_TX],
-	     &tY,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_TY],
-	     &tZ,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_TZ],
-	     &tScale,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_SCALE],
-	     &tTheta,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_THETA],
-	     &tPhi,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_PHI],
-	     &tAlpha,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_ALPHA],
-	     &tPsi,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_PSI],
-	     &tXsi,	dblFmt,	recFileTransfFieldS[REC_FILE_TRANSF_XSI],
-	     &tInvert,	intFmt,	recFileTransfFieldS[REC_FILE_TRANSF_INVERT],
-	     NULL);
+			   &tType,   (char *)intFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_TYPE],
+			   &tX,      (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_TX],
+			   &tY,      (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_TY],
+			   &tZ,      (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_TZ],
+			   &tScale,  (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_SCALE],
+			   &tTheta,  (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_THETA],
+			   &tPhi,    (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_PHI],
+			   &tAlpha,  (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_ALPHA],
+			   &tPsi,    (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_PSI],
+			   &tXsi,    (char *)dblFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_XSI],
+			   &tInvert, (char *)intFmt,
+			   (char *)recFileTransfFieldS[REC_FILE_TRANSF_INVERT],
+			   NULL);
    REC_DBG((REC_DBG_FILE|REC_DBG_LVL_2),
    	   ("RecFileFieldToTransf 01 %d %d %f %f %f %f %f %f %f %f %f %d\n",
 	    count, tType, tX, tY, tZ, tScale, tTheta, tPhi, tAlpha, tPsi, tXsi,

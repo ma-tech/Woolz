@@ -52,14 +52,17 @@ extern RecError	RecDbgWrite(char *, ...),
 		RecDbgWlzWrite(WlzObject *, int);
 
 /* From ReconstructExplode3D.c */
-extern RecError	RecExplode3DObjToFile(char *, char *, WlzObject *, char **),
+extern RecError	RecExplode3DObjToFile(char *, char *, WlzObject *,
+				      char *, WlzEffFormat, char **),
 		RecExplode3DFileToFile(char *, char *, char *,
 				       WlzEffFormat, char **);
 /* From ReconstructFileIO.c */
-extern RecError	RecFileSecWrite(FILE *, HGUDlpList *, int, char **),
+extern RecError	RecFileSecListWrite(FILE *, RecSectionList *, int, char **),
+		RecFileSecListRead(RecSectionList *, int *,
+				   FILE *, char **),
+		RecFileSecObjRead(RecSection *, char **),
 		RecFileSecObjRead(RecSection *, char **),
 		RecFileSecObjsRead(HGUDlpList *, int, int, int, char **),
-		RecFileSecRead(HGUDlpList *, int *, FILE *, char **),
 		RecFileObjWlzRead(FILE *, WlzObject **),
 		RecFileObjWlzWrite(FILE *, WlzObject *);
 extern void	RecFileSecObjFree(RecSection *),
@@ -96,7 +99,8 @@ extern int	RecSecIsEmpty(RecSection *);
 extern char	*RecSecToStr(RecSection *, unsigned int, char **);
 extern void	RecSecFree(RecSection *),
 		RecSecListSort(HGUDlpList *, unsigned int),
-		RecSecListIndiciesSet(HGUDlpList *, int, int);
+		RecSecListIndiciesSet(HGUDlpList *, int, int),
+		RecSecRecSetDefaults(RecReconstruction *);
 extern unsigned int RecSecListInvalid(HGUDlpList *, HGUDlpListItem **,
 				    unsigned int);
 extern RecSection *RecSecAssign(RecSection *),
@@ -117,6 +121,7 @@ extern RecError	RecSecListToStrList(char ***, HGUDlpList *, int, char **,
 		RecSecCumTransfClear(HGUDlpList *, HGUDlpListItem *);
 HGUDlpListItem  *RecSecFindItemIndex(HGUDlpList *, HGUDlpListItem *,
 				     int, HGUDlpListDirection);
+RecSectionList  *RecSecNewSectionList(RecError *);
 
 /* From ReconstructTranMatch.c */
 extern RecError	RecTranMatch(WlzDVertex2 *shift, double *value,

@@ -33,10 +33,14 @@
 * Parameters:	char *dstDirStr:	Destination directory.	
 *		char *dstBodyStr:	Destination file body.	
 *		WlzObject *srcObj:	Source 3D woolz	object.	
+*		char *srcFName:		Source file name, may be NULL.
+*		WlzEffFormat srcFFormat: Source file format, may be
+*					WLZEFF_FORMAT_NONE.
 *		char **eMsg:		Ptr for any error messages.
 ************************************************************************/
 RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
-				      WlzObject *srcObj, char **eMsg)
+				      WlzObject *srcObj, char *srcFName,
+				      WlzEffFormat srcFFormat, char **eMsg)
 {
   int		objIdx,
 		planeIdx,
@@ -46,7 +50,7 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
   		*fileTemplateStr = NULL;
   FILE		*fP;
   WlzObject	**objVec = NULL;
-  HGUDlpList	*secList = NULL;
+  RecSectionList *secList = NULL;
   RecError	errFlag = REC_ERR_NONE;
   struct stat	statBuf;
   const char 	*errDirAccessStr = "Failed to access directory",
@@ -58,9 +62,10 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
   const char	*errStr = NULL;
 
   REC_DBG((REC_DBG_3D|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-	  ("RecExplode3DObjToFile FE 0x%lx 0x%lx 0x%lx 0x%lx\n",
+	  ("RecExplode3DObjToFile FE 0x%lx 0x%lx 0x%lx 0x%lx %d 0x%lx\n",
 	   (unsigned long )dstDirStr, (unsigned long )dstBodyStr,
-	   (unsigned long )srcObj, (unsigned long )eMsg));
+	   (unsigned long )srcObj, (unsigned long )srcFName,
+	   srcFFormat, (unsigned long )eMsg));
   if((dstDirStr == NULL) || (strlen(dstDirStr) == 0) ||
      (dstBodyStr == NULL) || (strlen(dstBodyStr) == 0) || 
      (srcObj == NULL) || (srcObj->type != WLZ_3D_DOMAINOBJ) ||
@@ -102,11 +107,17 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
 	    ("RecExplode3DObjToFile 02 %d\n",
 	     (int )errFlag));
   }
-  if(errFlag == REC_ERR_NONE)			      /* Create section list */
+  if(errFlag == REC_ERR_NONE)                       /* Create a section list */
   {
-    if((secList = HGUDlpListCreate(NULL)) == NULL)
+    if(((secList = RecSecNewSectionList(NULL)) == NULL) ||
+       ((secList->list = HGUDlpListCreate(NULL)) == NULL))
     {
       errFlag = REC_ERR_MALLOC;
+    }
+    else
+    {
+      secList->reconstruction.fileName = srcFName;
+      secList->reconstruction.fileFormat = srcFFormat;
     }
     REC_DBG((REC_DBG_3D|REC_DBG_LVL_FN|REC_DBG_LVL_2),
 	    ("RecExplode3DObjToFile 03 %d\n",
@@ -146,7 +157,7 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
       }
       if(errFlag == REC_ERR_NONE)
       {
-        errFlag = RecSecAppendListFromFiles(secList, NULL, &fileStr, 1,
+        errFlag = RecSecAppendListFromFiles(secList->list, NULL, &fileStr, 1,
 					    planeIdx, 1);
         if(errFlag != REC_ERR_NONE)
 	{
@@ -180,7 +191,7 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
       }
       else
       {
-        errFlag = RecFileSecWrite(fP, secList, objVecCount, eMsg);
+	errFlag = RecFileSecListWrite(fP, secList, objVecCount, eMsg);
 	fclose(fP);
       }
     }
@@ -194,7 +205,8 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
     }
     if(secList)
     {
-      HGUDlpListDestroy(secList);
+      HGUDlpListDestroy(secList->list);
+      AlcFree(secList);
     }
     REC_DBG((REC_DBG_3D|REC_DBG_LVL_FN|REC_DBG_LVL_2),
 	    ("RecExplode3DObjToFile 04 %d\n",
@@ -254,7 +266,8 @@ RecError	RecExplode3DFileToFile(char *dstDirStr, char *dstBodyStr,
   {
     if(errFlag == REC_ERR_NONE)
     {
-      errFlag = RecExplode3DObjToFile(dstDirStr, dstBodyStr, srcObj, eMsg);
+      errFlag = RecExplode3DObjToFile(dstDirStr, dstBodyStr, srcObj,
+      				      srcFile, srcFmt, eMsg);
     }
     (void )WlzFreeObj(srcObj);
   }

@@ -344,12 +344,12 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 
       case WLZ_GREY_SHORT:
 	for (i=0; i<iwsp->colrmn; i++)
-	  *g.shp++ = CLAMP (gwsp->u_grintptr.inp[i], SHRT_MIN, SHRT_MAX);
+	  *g.shp++ = WLZ_CLAMP (gwsp->u_grintptr.inp[i], SHRT_MIN, SHRT_MAX);
 	break;
 
       case WLZ_GREY_UBYTE:
 	for (i=0; i<iwsp->colrmn; i++)
-	  *g.ubp++ = CLAMP (gwsp->u_grintptr.inp[i], 0, 255);
+	  *g.ubp++ = WLZ_CLAMP (gwsp->u_grintptr.inp[i], 0, 255);
 	break;
 
       case WLZ_GREY_FLOAT:

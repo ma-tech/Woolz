@@ -120,6 +120,12 @@ typedef enum
   REC_CCFLAG_DATA1VALID	= (1<<1)
 } RecCcFlag;
 
+typedef enum
+{
+  REC_TRMODE_REL,
+  REC_TRMODE_ABS
+} RecTransformMode;
+
 /* Constraints on image size for Fourier transforms */
 #define REC_FOUR_DIMP2_MIN	(3)
 #define REC_FOUR_DIMP2_MAX	(12)
@@ -223,8 +229,33 @@ typedef struct
 
 typedef struct
 {
-  HGUDlpList	*sectionList;
+  RecTransformMode trMode;
   HGUDlpListItem *currentItem;
+} RecSectionListAtrb;
+
+typedef struct
+{
+  WlzObject	*obj;
+  char 		*fileName;
+  WlzEffFormat	fileFormat;
+  int		gaussFlt;
+  int		fastSam;
+  int		intScale;
+  int		greedy;
+  WlzDVertex3	scale;
+  int		matchHst;
+  int		matchSec;
+  int		clipSrc;
+  WlzDBox3	srcBox;
+  int		clipDst;
+  WlzDBox3	dstBox;
+} RecReconstruction;
+
+typedef struct
+{
+  HGUDlpList	*list;
+  RecSectionListAtrb attributes;
+  RecReconstruction reconstruction;
 } RecSectionList;
 
 typedef struct

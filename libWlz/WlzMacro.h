@@ -31,7 +31,7 @@ extern "C" {
 /************************************************************************
 * Pixel value clamping. Used in WlzGreyScan() and WlzConvertPix().	*
 ************************************************************************/
-#define CLAMP(v, min, max) (v<min ? min : v>max ? max : v)
+#define WLZ_CLAMP(v, min, max) (v<min ? min : v>max ? max : v)
 
 /************************************************************************
 * Math constants.							*

@@ -157,9 +157,9 @@ WlzObject *WlzConvertPix(
 	case WLZ_GREY_INT:
 	  *gn.inp++ = g.inv; break;
 	case WLZ_GREY_SHORT:
-	  *gn.shp++ = CLAMP(g.inv, SHRT_MIN, SHRT_MAX); break;
+	  *gn.shp++ = WLZ_CLAMP(g.inv, SHRT_MIN, SHRT_MAX); break;
 	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (CLAMP(g.inv, 0, UCHAR_MAX)); break;
+	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.inv, 0, UCHAR_MAX)); break;
 	case WLZ_GREY_FLOAT:
 	  *gn.flp++ = g.inv; break;
 	case WLZ_GREY_DOUBLE:
@@ -174,7 +174,7 @@ WlzObject *WlzConvertPix(
 	case WLZ_GREY_SHORT:
 	  *gn.shp++ = g.shv; break;
 	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (CLAMP(g.shv, 0, UCHAR_MAX)); break;
+	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.shv, 0, UCHAR_MAX)); break;
 	case WLZ_GREY_FLOAT:
 	  *gn.flp++ = g.shv; break;
 	case WLZ_GREY_DOUBLE:
@@ -200,11 +200,11 @@ WlzObject *WlzConvertPix(
 	g.flv = *go.flp++;
 	switch (newpixtype) {
 	case WLZ_GREY_INT:
-	  *gn.inp++ = CLAMP(g.flv, INT_MIN, INT_MAX); break;
+	  *gn.inp++ = WLZ_CLAMP(g.flv, INT_MIN, INT_MAX); break;
 	case WLZ_GREY_SHORT:
-	  *gn.shp++ = CLAMP(g.flv, SHRT_MIN, SHRT_MAX); break;
+	  *gn.shp++ = WLZ_CLAMP(g.flv, SHRT_MIN, SHRT_MAX); break;
 	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (CLAMP(g.flv, 0, UCHAR_MAX)); break;
+	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.flv, 0, UCHAR_MAX)); break;
 	case WLZ_GREY_FLOAT:
 	  *gn.flp++ = g.flv; break;
 	case WLZ_GREY_DOUBLE:
@@ -215,13 +215,13 @@ WlzObject *WlzConvertPix(
 	g.dbv = *go.dbp++;
 	switch (newpixtype) {
 	case WLZ_GREY_INT:
-	  *gn.inp++ = CLAMP(g.dbv, INT_MIN, INT_MAX); break;
+	  *gn.inp++ = WLZ_CLAMP(g.dbv, INT_MIN, INT_MAX); break;
 	case WLZ_GREY_SHORT:
-	  *gn.shp++ = CLAMP(g.dbv, SHRT_MIN, SHRT_MAX); break;
+	  *gn.shp++ = WLZ_CLAMP(g.dbv, SHRT_MIN, SHRT_MAX); break;
 	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (CLAMP(g.dbv, 0, UCHAR_MAX)); break;
+	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.dbv, 0, UCHAR_MAX)); break;
 	case WLZ_GREY_FLOAT:
-	  *gn.flp++ = CLAMP(g.dbv, FLT_MIN, FLT_MAX); break;
+	  *gn.flp++ = WLZ_CLAMP(g.dbv, FLT_MIN, FLT_MAX); break;
 	case WLZ_GREY_DOUBLE:
 	  *gn.dbp++ = g.dbv; break;
 	}
