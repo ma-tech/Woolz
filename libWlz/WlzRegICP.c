@@ -1039,9 +1039,8 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
   {
     case WLZ_TRANSFORM_2D_REG:
     case WLZ_TRANSFORM_3D_REG:
-      newTr = WlzAffineTransformLSq2(wSp->vType, wSp->nMatch,
+      newTr = WlzAffineTransformLSqSVD(wSp->vType, wSp->nMatch,
       				     wSp->wgtVx, wSp->tSVx, wSp->nNTVx,
-				     0, NULL, nullP, nullP,
 				     trType, &errNum);
       break;
     case WLZ_TRANSFORM_2D_AFFINE:
@@ -1415,10 +1414,9 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	{
 	  case WLZ_TRANSFORM_2D_REG:
 	  case WLZ_TRANSFORM_3D_REG:
-	    newTr = WlzAffineTransformLSq2(vType, idM,
-					   wgtBuf, sVxBuf, tVxBuf,
-					   0, NULL, nullP, nullP,
-					   trType, &errNum);
+	    newTr = WlzAffineTransformLSqSVD(vType, idM,
+					     wgtBuf, sVxBuf, tVxBuf,
+					     trType, &errNum);
 	    break;
 	  case WLZ_TRANSFORM_2D_AFFINE:
 	  case WLZ_TRANSFORM_3D_AFFINE:
