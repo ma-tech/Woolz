@@ -223,28 +223,26 @@ int		WlzGreyStats(WlzObject *srcObj,
 	{
 	  errNum = WLZ_ERR_VALUES_DATA;
 	}
-	else
-	{
-	  srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dummyDom,
-	      		         dummyValues, NULL, NULL, &errNum);
-	  if((srcObj2D == NULL) && (errNum == WLZ_ERR_NONE))
-	  {
-	    errNum = WLZ_ERR_UNSPECIFIED;
-	  }
-	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  planeIdx =  0;
 	  planeCount = srcObj->domain.p->lastpl - srcObj->domain.p->plane1 + 1;
 	  while((errNum == WLZ_ERR_NONE) && (planeCount-- > 0))
 	  {
-	    srcObj2D->domain = *(srcDomains + planeIdx);
-	    srcObj2D->values = *(srcValues + planeIdx);
-	    if(srcObj2D->domain.core && srcObj2D->values.core)
+	    if((*(srcDomains + planeIdx)).core &&
+	       (*(srcValues + planeIdx)).core)
 	    {
-	      area2D = WlzGreyStats2D(srcObj2D, &gType,
-				      &min2D, &max2D, &sum2D, &sumSq2D,
-				      &errNum);
+	      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+	      			     *(srcDomains + planeIdx),
+	      			     *(srcValues + planeIdx),
+				     NULL, NULL, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		area2D = WlzGreyStats2D(srcObj2D, &gType,
+					&min2D, &max2D, &sum2D, &sumSq2D,
+					&errNum);
+	      }
+	      WlzFreeObj(srcObj2D);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		if(area == 0)
@@ -265,10 +263,8 @@ int		WlzGreyStats(WlzObject *srcObj,
 		}
 	      }
 	    }
+	    ++planeIdx;
 	  }
-	  srcObj2D->domain.core = NULL;
-	  srcObj2D->values.core = NULL;
-	  WlzFreeObj(srcObj2D);
 	}
         break;
       default:
