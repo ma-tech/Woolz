@@ -1551,7 +1551,7 @@ WlzErrorNum Wlz3DViewGetMaxvals(
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
- printf("in Wlz3DViewGetMaxvals\n");
+ /* printf("in Wlz3DViewGetMaxvals\n"); */
 	 
   if( vs ){
     *dstX = vs->maxvals.vtX;
