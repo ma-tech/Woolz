@@ -47,15 +47,18 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 2000-03-17 bill Strip out all the WlzEdge functions and add
+* 10-08-00 bill	Modify WlzMakeContour().
+*		Add WlzStringFromGMModelType(), WlzStringToGMModelType()
+*		and WlzAssignGMModel().
+* 17-03-00  bill Strip out all the WlzEdge functions and add
 * 		functions for Woolz geometric models.
-* 2000-02-04 bill Add WlzHistogramFitPeaks().
-* 2000-02-02 bill Added WlzRsvFilterBuffer(), WlzHistogramRsvGauss(),
+* 04-02-00 bill Add WlzHistogramFitPeaks().
+* 02-02-00 bill Added WlzRsvFilterBuffer(), WlzHistogramRsvGauss(),
 *		WlzHistogramRsvFilter() and modified WlzHistogramSmooth().
 *		Add WlzHistogramConvolve() and WlzHistogramCnvGauss().
 *		Add WlzHistogramFindPeaks().
-* 2000-11-29 bill Add all the WlzContour and WlzEdge functions.
-* 2000-08-31 bill Modify array size parameters for JavaWoolz.
+* 29-11-00 bill Add all the WlzContour and WlzEdge functions.
+* 31-08-00 bill Modify array size parameters for JavaWoolz.
 *		Allowed more functions to be bound using JavaWoolz.
 ************************************************************************/
 
@@ -475,6 +478,9 @@ extern WlzBoundList 		*WlzAssignBoundList(
 extern WlzPolygonDomain 	*WlzAssignPolygonDomain(
 				  WlzPolygonDomain *poly,
 				  WlzErrorNum *dstErr);
+extern WlzGMModel		*WlzAssignGMModel(
+				  WlzGMModel *model,
+				  WlzErrorNum *dstErr);
 extern int 			WlzUnlink(
 				  int *linkcount,
 				  WlzErrorNum *dstErr);
@@ -596,17 +602,12 @@ extern WlzErrorNum		WlzCompThreshold(
 /************************************************************************
 * WlzContour.c
 ************************************************************************/
-extern WlzContour		*WlzMakeContour(
-				  WlzContourType ctrType,
-				  WlzErrorNum *dstErr);
 extern WlzContour		*WlzContourObj(
 				  WlzObject *srcObj,
 				  WlzContourMethod ctrMtd,
 				  double ctrVal,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
-extern WlzErrorNum		WlzFreeContour(
-				  WlzContour *ctr);
 
 /************************************************************************
 * WlzConvertPix.c							*
@@ -839,6 +840,8 @@ extern WlzErrorNum		WlzFreeFMatchObj(
 				  WlzFMatchObj *obj);
 extern WlzErrorNum		WlzFree3DWarpTrans(
 				  Wlz3DWarpTrans *obj);
+extern WlzErrorNum		WlzFreeContour(
+				  WlzContour *ctr);
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
@@ -870,6 +873,8 @@ extern WlzErrorNum		WlzGaussNoise(
 /* Creation  of geometric modeling elements */
 extern WlzGMModel	*WlzGMModelNew(
 			  WlzGMModelType modType,
+			  int blkSz,
+			  int vHTSz,
 			  WlzErrorNum *dstErr);
 extern WlzGMShell	*WlzGMModelNewS(
 			  WlzGMModel *model,
@@ -934,6 +939,12 @@ extern WlzGMElemType 	WlzGMModelGetVGeomType(
 extern WlzErrorNum	WlzGMShellSetGBB3D(
 			  WlzGMShell *shell,
 			  WlzDBox3 bBox);
+extern WlzErrorNum	WlzGMShellGetGBB3D(
+			  WlzGMShell *shell,
+			  WlzDBox3 *bBox);
+extern WlzErrorNum	WlzGMShellGetGBBV3D(
+			  WlzGMShell *shell,
+			  double *vol);
 extern WlzErrorNum	WlzGMShellSetGBB2D(
 			  WlzGMShell *shell,
 			  WlzDBox2 bBox);
@@ -1055,9 +1066,18 @@ extern void		WlzGMShellJoinAndUnlink(
 			  WlzGMShell *dShell);
 extern WlzErrorNum	WlzModelMaskFlags(
 			  WlzGMModel *model,
-			  WlzGMElemType eType,
+			  unsigned int eMask,
 			  WlzBinaryOperatorType opp,
 			  unsigned mask);
+extern WlzGMResIdxTb	*WlzGMModelResIdx(
+			  WlzGMModel *model,
+			  unsigned int eMsk,
+			  WlzErrorNum *dstErr);
+extern void		WlzGMModelResIdxFree(
+			  WlzGMResIdxTb *resIdxTb);
+extern WlzErrorNum	WlzGMModelRehashVHT(
+			  WlzGMModel *model,
+			  int vHTSz);
 /* Model construction */
 extern WlzErrorNum	WlzGMModelConstructSimplex3D(
 			  WlzGMModel *model,
@@ -1607,7 +1627,7 @@ extern WlzObject		*WlzMakeHistogram(
 extern WlzIVertex2		*WlzMakeIVertex(
 				  int nverts,
 				  WlzErrorNum *dstErr);
-extern WlzObject 		*WlzNewGrey(
+				  extern WlzObject *WlzNewGrey(
 				  WlzObject *iobj,
 				  WlzErrorNum *dstErr);
 extern WlzRagRValues		*WlzNewValueTb(
@@ -1618,6 +1638,8 @@ extern WlzRagRValues		*WlzNewValueTb(
 extern WlzIntervalDomain	*WlzNewIDomain(
 				  WlzObjectType type,
 				  WlzIntervalDomain *idom,
+				  WlzErrorNum *dstErr);
+extern WlzContour		*WlzMakeContour(
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -1652,10 +1674,6 @@ extern WlzObject		*WlzMeshTransformObj(
 				  WlzObject *srcObj,
 				  WlzMeshTransform *mesh,
 				  WlzInterpolationType interp,
-				  WlzErrorNum *dstErr);
-extern WlzDVertex2		WlzMeshTransformVtx(
-				  WlzDVertex2 vtx,
-				  WlzMeshTransform *mesh,
 				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND
@@ -1979,6 +1997,12 @@ extern WlzTransformType 	WlzStringToTransformType(
 				  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromTransformType(
 				  WlzTransformType tType,
+				  WlzErrorNum *dstErr);
+extern WlzGMModelType		WlzStringToGMModelType(
+				  const char *tStr,
+				  WlzErrorNum *dstErr);
+extern const char		*WlzStringFromGMModelType(
+				  WlzGMModelType mType,
 				  WlzErrorNum *dstErr);
 extern WlzGreyType 		WlzStringToGreyType(
 				  const char *gStr,
