@@ -69,7 +69,6 @@ WlzErrorNum WlzEffBibWrite3DSectionViewParamsRecord(
   /* view mode */
   switch( wlzViewStr->view_mode ){
   case WLZ_UP_IS_UP_MODE:
-  default:
     sprintf(viewModeStr, "up-is-up");
     break;
 
@@ -77,6 +76,7 @@ WlzErrorNum WlzEffBibWrite3DSectionViewParamsRecord(
     sprintf(viewModeStr, "statue");
     break;
 
+  default:
   case WLZ_ZETA_MODE:
     sprintf(viewModeStr, "absolute");
     break;
