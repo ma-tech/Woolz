@@ -20,6 +20,7 @@
 */
 #include <stdlib.h>
 #include <float.h>
+#include <limits.h>
 #include <Wlz.h>
 
 static int		WlzGeomVtxSortRadialFn(
@@ -278,6 +279,7 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
       dstN->vtX = p0.vtX + (sp * (p1.vtX - p0.vtX));
       dstN->vtY = p0.vtY + (sp * (p1.vtY - p0.vtY));
     }
+    intersect = 1;
   }
   return(intersect);
 }
@@ -942,4 +944,221 @@ double		WlzGeomEllipseVxDistSq(WlzDVertex2 centre, WlzDVertex2 sAx,
              (sAxSq.vtX * sAxSq.vtY * (1.0 + grdSq));
   }
   return(dRatSq);
+}
+
+/*!
+* \return	Hash value.
+* \ingroup      WlzGeometry
+* \brief	Computes a hash value from a given 3D double precision
+*               position.
+* \param	pos			Given position.
+* \param	tol			Tolerance, \f$x = x \pm tol\f$.
+*/
+unsigned int	WlzGeomHashVtx3D(WlzDVertex3 pos, double tol)
+{
+  unsigned int	hVal;
+  double	fF,
+  		fI;
+  const unsigned int pX = 399989, /* These are just different 6 digit primes */
+  		pY = 599999,
+		pZ = 999983;
+  
+  fF = modf(pos.vtX, &fI);
+  fF = floor(fF / tol) * tol;
+  fI *= pX;
+  fF *= pY * pZ;
+  hVal = ((long long )fI + (long long )fF) & UINT_MAX;
+  fF = modf(pos.vtY, &fI);
+  fF = floor(fF / tol) * tol;
+  fI *= pY;
+  fF *= pZ * pX;
+  hVal ^= ((long long )fI + (long long )fF) & UINT_MAX;
+  fF = modf(pos.vtZ, &fI);
+  fF = floor(fF / tol) * tol;
+  fI *= pZ;
+  fF *= pX * pY;
+  hVal ^= ((long long )fI + (long long )fF) & UINT_MAX;
+  return(hVal);
+}
+
+/*!
+* \return	Hash value.
+* \ingroup      WlzGeometry
+* \brief	Computes a hash value from a given 2D double precision
+*               position.
+* \param	pos			Given position.
+* \param	tol			Tolerance, \f$x = x \pm tol\f$.
+*/
+unsigned int	WlzGeomHashVtx2D(WlzDVertex2 pos, double tol)
+{
+  unsigned int	hVal;
+  double	fF,
+  		fI;
+  const unsigned int pX = 399989, /* These are just different 6 digit primes */
+  		pY = 599999,
+		pZ = 999983;
+  
+  fF = modf(pos.vtX, &fI);
+  fF = floor(fF / tol) * tol;
+  fI *= pX;
+  fF *= pY * pZ;
+  hVal = ((long long )fI + (long long )fF) & UINT_MAX;
+  fF = modf(pos.vtY, &fI);
+  fF = floor(fF / tol) * tol;
+  fI *= pY;
+  fF *= pZ * pX;
+  hVal ^= ((long long )fI + (long long )fF) & UINT_MAX;
+  return(hVal);
+}
+
+/*!
+* \return	The result of the vertex comparison: -1, 0 or +1.
+* \ingroup      WlzGeometry
+* \brief	Compares the coordinates of the given 3D double precision
+*		vertices to find a signed value for sorting.
+* \param	pos0			First vertex.
+* \param	pos1			Second vertex.
+* \param	tol			Tolerance, \f$x = x \pm tol\f$.
+*/
+int		WlzGeomCmpVtx3D(WlzDVertex3 pos0, WlzDVertex3 pos1, double tol)
+{
+  int		cmp;
+  WlzDVertex3	cmp3D;
+
+  WLZ_VTX_3_SUB(cmp3D, pos0, pos1);
+  if(cmp3D.vtZ < -tol)
+  {
+    cmp = -1;
+  }
+  else if(cmp3D.vtZ > tol)
+  {
+    cmp = 1;
+  }
+  else
+  {
+    if(cmp3D.vtY < -tol)
+    {
+      cmp = -1;
+    }
+    else if(cmp3D.vtY > tol)
+    {
+      cmp = 1;
+    }
+    else
+    {
+      if(cmp3D.vtX < -tol)
+      {
+	cmp = -1;
+      }
+      else if(cmp3D.vtX > tol)
+      {
+	cmp = 1;
+      }
+      else
+      {
+	cmp = 0;
+      }
+    }
+  }
+  return(cmp);
+}
+
+/*!
+* \return	The sign of the vertex comparison: -1, 0 or +1.
+* \ingroup      WlzGeometry
+* \brief	Compares the coordinates of the given 2D double precision
+*		vertices to find a signed value for sorting.
+* \param	pos0			First vertex.
+* \param	pos1			Second vertex.
+* \param	tol			Tolerance, \f$x = x \pm tol\f$.
+*/
+int		WlzGeomCmpVtx2D(WlzDVertex2 pos0, WlzDVertex2 pos1, double tol)
+{
+  int		cmp;
+  WlzDVertex2	cmp2D;
+
+  WLZ_VTX_2_SUB(cmp2D, pos0, pos1);
+  if(cmp2D.vtY < -tol)
+  {
+    cmp = -1;
+  }
+  else if(cmp2D.vtY > tol)
+  {
+    cmp = 1;
+  }
+  else
+  {
+    if(cmp2D.vtX < -tol)
+    {
+      cmp = -1;
+    }
+    else if(cmp2D.vtX > tol)
+    {
+      cmp = 1;
+    }
+    else
+    {
+      cmp = 0;
+    }
+  }
+  return(cmp);
+}
+
+/*!
+* \return	Unit vector or zero vector if vertices are coincident.
+* \ingroup	WlzGeometry
+* \brief	Computes the unit vector with the direction given by
+*		\f$\mathbf{p}_1 - \mathbf{p}_0\f$.
+*		If the two given vertices are coincident then a
+*		zero vector is returned instead of a unit vector.
+* \param	pos1			Position of vertex, \f$\mathbf{p}_1\f$.
+* \param	pos0			Position of vertex, \f$\mathbf{p}_0\f$.
+*/
+WlzDVertex2	WlzGeomUnitVector2D(WlzDVertex2 pos1, WlzDVertex2 pos0)
+{
+  double	len;
+  WlzDVertex2	vec;
+
+  WLZ_VTX_2_SUB(vec, pos1, pos0);
+  if((len = WLZ_VTX_2_LENGTH(vec)) > DBL_EPSILON)
+  {
+    len = 1.0 / len;
+    WLZ_VTX_2_SCALE(vec, vec, len);
+  }
+  else
+  {
+    vec.vtX = vec.vtY = 0.0;
+  }
+  return(vec);
+}
+
+/*!
+* \return	Non-zero if point is inside diametral circle.
+* \ingroup	WlzGeometry
+* \brief	Determines whether a point is inside the diametral circle
+*		of a line segment.
+*		If two vectors \f$\mathbf{v_0}\f$ and \f$\mathbf{v_1}\f$ are
+*		directed from the line segment end points to the point,
+*		then the angle between the vectors is \f$<\f$ \f$90^\circ\f$
+*		if the point is inside the diametral circle, \f$0\f$ if
+*		it lies on the circle and \f$>\f$ \f$90^{\circ}\f$ if it
+*		lies outside the circle. This is easily tested by
+*		\f$\mathbf{v_0} \cdot \mathbf{v_1} < 0\f$.
+* \param	lPos0			Vertex at one end of line segment.
+* \param	lPos1			Vertex at other end of line segment.
+* \param	pos			Position of point.
+*/
+int		WlzGeomVertexInDiamCircle(WlzDVertex2 lPos0, WlzDVertex2 lPos1,
+					  WlzDVertex2 pos)
+{
+  int		inside;
+  double	prod;
+  WlzDVertex2	v0,
+  		v1;
+
+  WLZ_VTX_2_SUB(v0, pos, lPos0);
+  WLZ_VTX_2_SUB(v1, pos, lPos1);
+  prod = WLZ_VTX_2_DOT(v0, v1);
+  inside = prod < 0.0;
+  return(inside);
 }
