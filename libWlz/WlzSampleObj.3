@@ -25,7 +25,7 @@ WlzSampleObj \- Performs sub\-sampling.
 .BI "WlzObject *WlzSampleObj(WlzObject *" "srcObj" ,
 .in +4m
 .br
-.BI "WlzIVertex2 " "samFac" ,
+.BI "WlzIVertex3 " "samFac" ,
 .BI "WlzSampleFn " "samFn" ,
 .br
 .BI "WlzErrorNum *" "wlzErr" );
@@ -76,7 +76,7 @@ int             main(char *argv[], int argc)
 {
   WlzObject     *inObj = NULL,
                 *outObj = NULL;
-  WlzIVertex2    samFac;
+  WlzIVertex3    samFac;
   WlzSampleFn   samFn;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 

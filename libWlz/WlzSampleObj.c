@@ -12,8 +12,10 @@
 * Purpose:      Subsamples an object through a convolution kernel.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables. Fixed enum assignment mismatch.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+* 22-09-00 bill Added code for 3D domain objects and changed WlzSampleObj
+*		parameters.
+* 05-06-00 bill Removed unused variables. Fixed enum assignment mismatch.
+* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
@@ -22,27 +24,82 @@
 
 #define WLZ_SAMPLE_KERNEL_INORM	(0x000100)
 
-static WlzObject *WlzSampleObj2D(WlzObject *, WlzIVertex2,
-				WlzSampleFn, WlzIVertex2, WlzErrorNum *),
-		*WlzSampleObjIDom(WlzObject *, WlzIVertex2, WlzErrorNum *),
-		*WlzSampleObjPoint(WlzObject *, WlzIVertex2, WlzErrorNum *),
-		*WlzSampleObjConvI(WlzObject *, int **, WlzIVertex2, int,
-				WlzIVertex2, WlzErrorNum *),
-		*WlzSampleObjConvD(WlzObject *, double **,
-				WlzIVertex2, WlzIVertex2, WlzErrorNum *),
-	        *WlzSampleObjRankI(WlzObject *, WlzIVertex2, WlzSampleFn,
-				WlzIVertex2, WlzErrorNum *),
-		*WlzSampleObjRankD(WlzObject *, WlzIVertex2, WlzSampleFn,
-				WlzIVertex2, WlzErrorNum *);
-static WlzValues WlzSampleObjConstructRectValues(void **, WlzGreyType,
-				WlzIBox2, WlzPixelV, WlzErrorNum *);
-static int	WlzSampleObjEstMaxIntervals(WlzDomain, int, int,
-			    	WlzIVertex2),
-		WlzSampleObjGaussKernelD(double **, WlzIVertex2, WlzIVertex2),
-		WlzSampleObjGaussKernelI(int **, WlzIVertex2, int *,
-					 WlzIVertex2),
-		WlzSampleObjMeanKernelD(double **, WlzIVertex2),
-		WlzSampleObjMeanKernelI(int **, WlzIVertex2, int *);
+static WlzObject 		*WlzSampleObj2D(
+				  WlzObject *,
+				  WlzIVertex2,
+				  WlzSampleFn,
+				  WlzIVertex2,
+				  WlzErrorNum *);
+static WlzObject 		*WlzSampleObj3D(
+				  WlzObject *srcObj,
+				  WlzIVertex3 samFac,
+			          WlzSampleFn samFn,
+				  WlzIVertex3 kernelSz,
+				  WlzErrorNum *dstErrNum);
+static WlzObject		*WlzSampleObjIDom(
+				  WlzObject *srcObj,
+				  WlzIVertex2 samFac,
+				  WlzErrorNum *dstErrNum);
+static WlzObject 		*WlzSampleObjPoint2D(
+				  WlzObject *srcObj,
+				  WlzIVertex2 samFac,
+				  WlzErrorNum *dstErrNum);
+static WlzObject 		*WlzSampleObjPoint3D(
+				  WlzObject *srcObj,
+				  WlzIVertex3 samFac,
+				  WlzErrorNum *dstErrNum);
+static WlzObject		*WlzSampleObjConvI(
+				  WlzObject *,
+				  int **,
+				  WlzIVertex2,
+				  int,
+				  WlzIVertex2,
+				  WlzErrorNum *);
+static WlzObject		*WlzSampleObjConvD(
+				  WlzObject *,
+				  double **,
+				  WlzIVertex2,
+				  WlzIVertex2,
+				  WlzErrorNum *);
+static WlzObject	        *WlzSampleObjRankI(
+				  WlzObject *,
+				  WlzIVertex2,
+				  WlzSampleFn,
+				  WlzIVertex2,
+				  WlzErrorNum *);
+static WlzObject		*WlzSampleObjRankD(
+				  WlzObject *,
+				  WlzIVertex2,
+				  WlzSampleFn,
+				  WlzIVertex2,
+				  WlzErrorNum *);
+static WlzValues 		WlzSampleObjConstructRectValues(
+				  void **,
+				  WlzGreyType,
+				  WlzIBox2,
+				  WlzPixelV,
+				  WlzErrorNum *);
+static int			WlzSampleObjEstMaxIntervals(
+				  WlzDomain,
+				  int,
+				  int,
+				  WlzIVertex2);
+static int			WlzSampleObjGaussKernelD(
+				  double **,
+				  WlzIVertex2,
+				  WlzIVertex2);
+static int			WlzSampleObjGaussKernelI(
+				  int **,
+				  WlzIVertex2,
+				  int *,
+				  WlzIVertex2);
+static int			WlzSampleObjMeanKernelD(
+				  double **,
+				  WlzIVertex2);
+static int			WlzSampleObjMeanKernelI(
+				  int **,
+				  WlzIVertex2,
+				  int *);
 
 /************************************************************************
 * Function:	WlzSampleObj						*
@@ -51,7 +108,7 @@ static int	WlzSampleObjEstMaxIntervals(WlzDomain, int, int,
 *		factor and sampling method.				*
 * Global refs:	-							*
 * Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
+*		WlzIVertex3 samFac:	Sampling factor for both rows	*
 *					and columns. Every pixel == 1,	*
 *					every other pixel == 2, ....	*
 *		WlzSampleFn samFn:	Sampling method.		*
@@ -59,12 +116,14 @@ static int	WlzSampleObjEstMaxIntervals(WlzDomain, int, int,
 *					number, may be NULL if not	*
 *					required.			*
 ************************************************************************/
-WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex2 samFac,
+WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex3 samFac,
 			      WlzSampleFn samFn,
 			      WlzErrorNum *dstErrNum)
 {
   WlzObject	*dstObj = NULL;
-  WlzIVertex2 	kernelSz;
+  WlzIVertex2 	samFac2,
+  		kernelS2;
+  WlzIVertex3 	kernelS3;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
@@ -91,23 +150,53 @@ WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex2 samFac,
 	dstObj = WlzMakeEmpty(&errNum);
 	break;
       case WLZ_2D_DOMAINOBJ:
-	if(samFac.vtX == 1)
+	samFac2.vtX = samFac.vtX;
+	samFac2.vtY = samFac.vtY;
+	if(samFac2.vtX == 1)
 	{
-	  kernelSz.vtX = 1;
+	  kernelS2.vtX = 1;
 	}
 	else
 	{
-	  kernelSz.vtX = (samFac.vtX % 2)? samFac.vtX + 2: samFac.vtX + 1;
+	  kernelS2.vtX = (samFac2.vtX % 2)? samFac2.vtX + 2: samFac2.vtX + 1;
+	}
+	if(samFac2.vtY == 1)
+	{
+	  kernelS2.vtY = 1;
+	}
+	else
+	{
+	  kernelS2.vtY = (samFac2.vtY % 2)? samFac2.vtY + 2: samFac2.vtY + 1;
+	}
+	dstObj = WlzSampleObj2D(srcObj, samFac2, samFn, kernelS2,
+				   &errNum);
+	break;
+      case WLZ_3D_DOMAINOBJ:
+	if(samFac.vtX == 1)
+	{
+	  kernelS3.vtX = 1;
+	}
+	else
+	{
+	  kernelS3.vtX = (samFac.vtX % 2)? samFac.vtX + 2: samFac.vtX + 1;
 	}
 	if(samFac.vtY == 1)
 	{
-	  kernelSz.vtY = 1;
+	  kernelS3.vtY = 1;
 	}
 	else
 	{
-	  kernelSz.vtY = (samFac.vtY % 2)? samFac.vtY + 2: samFac.vtY + 1;
+	  kernelS3.vtY = (samFac.vtY % 2)? samFac.vtY + 2: samFac.vtY + 1;
 	}
-	dstObj = WlzSampleObj2D(srcObj, samFac, samFn, kernelSz,
+	if(samFac.vtZ == 1)
+	{
+	  kernelS3.vtZ = 1;
+	}
+	else
+	{
+	  kernelS3.vtZ = (samFac.vtZ % 2)? samFac.vtZ + 2: samFac.vtZ + 1;
+	}
+	dstObj = WlzSampleObj3D(srcObj, samFac, samFn, kernelS3,
 				   &errNum);
 	break;
       default:
@@ -173,7 +262,7 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
       else if((samFn ==  WLZ_SAMPLEFN_POINT) ||
 	      ((samFac.vtX == 1) && (samFac.vtY == 1)))
       {
-	dstObj = WlzSampleObjPoint(srcObj, samFac, &errNum);
+	dstObj = WlzSampleObjPoint2D(srcObj, samFac, &errNum);
       }
       else
       {
@@ -254,6 +343,60 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 	    break;
 	}
       }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(dstObj)
+    {
+      WlzFreeObj(dstObj);
+    }
+    dstObj = NULL;
+  }
+  if(dstErrNum)
+  {
+    *dstErrNum = errNum;
+  }
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzSampleObj3D						*
+* Returns:	WlzObject *:		New sampled object.		*
+* Purpose:	Samples the given 3D domain object using the given	*
+*		sampling factor kernel size and sampling method.	*
+* Global refs:	-							*
+* Parameters:	WlzObject *srcObj:	Given source object.		*
+*		WlzIVertex3 samFac:	Sampling factor for both rows	*
+*					and columns. Every pixel == 1,	*
+*					every other pixel == 2, ....	*
+*		WlzSampleFn samFn:	Sampling method.		*
+*		WlzIVertex3 kernelSz:	Size of the convolution kernel.	*
+*		WlzErrorNUm *dstErrNum: Destination pointer for error	*
+*					number, may be NULL if not	*
+*					required.			*
+************************************************************************/
+static WlzObject *WlzSampleObj3D(WlzObject *srcObj, WlzIVertex3 samFac,
+			         WlzSampleFn samFn, WlzIVertex3 kernelSz,
+				 WlzErrorNum *dstErrNum)
+{
+  WlzObject	*dstObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcObj->values.core == NULL)
+  {
+    dstObj = WlzSampleObjPoint3D(srcObj, samFac, &errNum);
+  }
+  else
+  {
+    switch(samFn)
+    {
+      case WLZ_SAMPLEFN_POINT:
+	dstObj = WlzSampleObjPoint3D(srcObj, samFac, &errNum);
+        break;
+      default:
+	errNum = WLZ_ERR_PARAM_DATA;
+        break;
     }
   }
   if(errNum != WLZ_ERR_NONE)
@@ -414,7 +557,171 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjPoint					*
+* Function:	WlzSampleObjPoint3D					*
+* Returns:	WlzObject *:		New sampled object.		*
+* Purpose:	Samples the given object's plane domain only using	*
+*		the given sampling factor.				*
+*		This function assumes it's parameters to be valid.	*
+* Global refs:	-							*
+* Parameters:	WlzObject *srcObj:	Given source object.		*
+*		WlzIVertex2 samFac:	Sampling factor for both rows	*
+*					and columns. Every voxel == 1,	*
+*					every other voxel == 2, ....	*
+*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
+*					number (may be NULL).		*
+************************************************************************/
+static WlzObject *WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
+				      WlzErrorNum *dstErrNum)
+{
+  int		dPlCnt,
+		dPlIdx,
+  		sPlIdx;
+  WlzObject	*tObj0 = NULL,
+		*tObj1 = NULL,
+  		*dstObj = NULL;
+  WlzIVertex2	samFac2;
+  WlzIBox3	srcBox,
+  		dstBox;
+  WlzValues	dumVal,
+  		dstVal,
+  		srcVal;
+  WlzDomain	dstDom,
+  		srcDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstDom.core = NULL;
+  dumVal.core = NULL;
+  dstVal.core = NULL;
+  srcDom = srcObj->domain;
+  srcVal = srcObj->values;
+  if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    samFac2.vtX = samFac.vtX;
+    samFac2.vtY = samFac.vtY;
+    srcBox.xMin = srcDom.p->kol1;
+    srcBox.xMax = srcDom.p->lastkl;
+    srcBox.yMin = srcDom.p->line1;
+    srcBox.yMax = srcDom.p->lastln;
+    srcBox.zMin = srcDom.p->plane1;
+    srcBox.zMax = srcDom.p->lastpl;
+    dstBox.xMin = (srcBox.xMin < 0) ?
+		  (srcBox.xMin  - samFac.vtX + 1) / samFac.vtX :
+		  (srcBox.xMin  + samFac.vtX - 1) / samFac.vtX;
+    dstBox.xMax = srcBox.xMax / samFac.vtX;
+    dstBox.yMin = (srcBox.yMin < 0) ?
+		  (srcBox.yMin - samFac.vtY + 1) / samFac.vtY :
+		  (srcBox.yMin + samFac.vtY - 1) / samFac.vtY;
+    dstBox.yMax = srcBox.yMax / samFac.vtY;
+    dstBox.zMin = (srcBox.zMin < 0) ?
+		  (srcBox.zMin - samFac.vtZ + 1) / samFac.vtZ :
+		  (srcBox.zMin + samFac.vtZ - 1) / samFac.vtZ;
+    dstBox.zMax = srcBox.zMax / samFac.vtZ;
+    dstDom.p = WlzMakePlaneDomain(srcDom.p->type, dstBox.zMin, dstBox.zMax,
+    				  dstBox.yMin, dstBox.yMax,
+				  dstBox.xMin, dstBox.xMax,
+				  &errNum);
+    if(srcVal.core && (srcVal.core->type != WLZ_EMPTY_OBJ))
+    {
+      dstVal.vox = WlzMakeVoxelValueTb(srcObj->values.vox->type,
+      				       dstBox.zMin, dstBox.zMax,
+				       WlzGetBackground(srcObj, NULL),
+				       NULL, &errNum);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sPlIdx = 0;
+    dPlIdx = sPlIdx * samFac.vtZ;
+    dPlCnt = dstBox.zMax - dstBox.zMin + 1;
+    while((errNum == WLZ_ERR_NONE) && (dPlCnt-- > 0))
+    {
+      if(dstVal.vox)
+      {
+	tObj0 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			    *(srcDom.p->domains + sPlIdx),
+			    *(srcVal.vox->values + sPlIdx),
+			    NULL, NULL, &errNum);
+      }
+      else
+      {
+        tObj0 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			    *(srcDom.p->domains + sPlIdx),
+			    dumVal,
+			    NULL, NULL, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if(dstVal.vox)
+	{
+          tObj1 = WlzSampleObjPoint2D(tObj0, samFac2, &errNum);
+	}
+	else
+	{
+          tObj1 = WlzSampleObjIDom(tObj0, samFac2, &errNum);
+	}
+      }
+      if(tObj0)
+      {
+	(void )WlzFreeObj(tObj0);
+	tObj0 = NULL;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        *(dstDom.p->domains + dPlIdx) = tObj1->domain;
+	if(dstVal.vox)
+	{
+	  *(dstVal.vox->values + dPlIdx) = tObj1->values;
+	}
+      }
+      if(tObj1)
+      {
+	tObj1->domain.core = NULL;
+	tObj1->values.core = NULL;
+	(void )WlzFreeObj(tObj1);
+	tObj1 = NULL;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        ++dPlIdx;
+	sPlIdx += samFac.vtZ;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzStandardPlaneDomain(dstDom.p, dstVal.vox);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstDom.p->voxel_size[0] = srcDom.p->voxel_size[0];
+    dstDom.p->voxel_size[1] = srcDom.p->voxel_size[1];
+    dstDom.p->voxel_size[2] = srcDom.p->voxel_size[2];
+    dstObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dstDom, dstVal,
+    		         NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstDom.core = NULL;
+    dstVal.core = NULL;
+  }
+  if(dstDom.core)
+  {
+    (void )WlzFreeDomain(dstDom);
+  }
+  if(dstErrNum)
+  {
+    *dstErrNum = errNum;
+  }
+  return(dstObj);
+}
+
+
+/************************************************************************
+* Function:	WlzSampleObjPoint2D					*
 * Returns:	WlzObject *:		New sampled object.		*
 * Purpose:	Samples the given object using a simple point sampling	*
 *		method and the given sampling factor.			*
@@ -427,8 +734,8 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 *		WlzErrorNum *dstErrNum:	Destination pointer for error	*
 *					number (may be NULL).		*
 ************************************************************************/
-static WlzObject *WlzSampleObjPoint(WlzObject *srcObj, WlzIVertex2 samFac,
-				    WlzErrorNum *dstErrNum)
+static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
+				      WlzErrorNum *dstErrNum)
 {
   int		tI0,
 		itvCount,
