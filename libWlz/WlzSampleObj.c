@@ -41,14 +41,6 @@ static WlzObject		*WlzSampleObjIDom(
 				  WlzObject *srcObj,
 				  WlzIVertex2 samFac,
 				  WlzErrorNum *dstErr);
-static WlzObject 		*WlzSampleObjPoint2D(
-				  WlzObject *srcObj,
-				  WlzIVertex2 samFac,
-				  WlzErrorNum *dstErr);
-static WlzObject 		*WlzSampleObjPoint3D(
-				  WlzObject *srcObj,
-				  WlzIVertex3 samFac,
-				  WlzErrorNum *dstErr);
 static WlzObject		*WlzSampleObjConvI(
 				  WlzObject *,
 				  int **,
@@ -574,8 +566,8 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 * \param	dstErr			Destination pointer for error,
                                         may be NULL.
 */
-static WlzObject *WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
-				      WlzErrorNum *dstErr)
+WlzObject 	*WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
+				     WlzErrorNum *dstErr)
 {
   int		dPlCnt,
 		dPlIdx,
@@ -737,8 +729,8 @@ static WlzObject *WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
 * \param	dstErr			Destination pointer for error,
                                         may be NULL.
 */
-static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
-				      WlzErrorNum *dstErr)
+WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
+				     WlzErrorNum *dstErr)
 {
   int		tI0,
 		itvCount,
