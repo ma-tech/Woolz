@@ -13,6 +13,8 @@
 *		applying them to Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 22-03-01 bill Make changes to allow transforming 3D domain objects,
+*		fix bugs in WlzAffineTransformBBox[ID]3().
 * 25-01-01 bill	Fix WlzAffineTransformBBox[ID][23].
 * 19-01-01 bill Modify WlzAffineTransformIsIdentity().
 * 30-11-00 bill WlzAffineTransformMatrixSet() now sets 3D matricies.
@@ -32,6 +34,7 @@
 *               WlzAffineTransformFromRotation().
 ************************************************************************/
 #include <stdlib.h>
+#include <limits.h>
 #include <float.h>
 #include <Wlz.h>
 
@@ -47,6 +50,10 @@ static WlzObject 		*WlzAffineTransformIntTranslate(
 				  WlzObject *,
 				  WlzAffineTransform *,
 				  WlzErrorNum *);
+static WlzPlaneDomain 		*WlzAffineTransformPDom(
+				  WlzObject *srcObj,
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
 static WlzPolygonDomain 	*WlzAffineTransformPoly2(
 				  WlzPolygonDomain *,
 				  WlzAffineTransform *,
@@ -54,10 +61,14 @@ static WlzPolygonDomain 	*WlzAffineTransformPoly2(
 static WlzBoundList 		*WlzAffineTransformBoundList(WlzBoundList *,
 				  WlzAffineTransform *,
 				  WlzErrorNum *);
-static WlzErrorNum 		WlzAffineTransformValues2(WlzObject *,
-				  WlzObject *,
-				  WlzAffineTransform *,
-				  WlzInterpolationType);
+static WlzErrorNum 		WlzAffineTransformValues2(WlzObject *newObj,
+				  WlzObject *srcObj,
+				  WlzAffineTransform *tr,
+				  WlzInterpolationType interp);
+static WlzErrorNum 		WlzAffineTransformValues3(WlzObject *newObj,
+				  WlzObject *srcObj,
+				  WlzAffineTransform *tr,
+				  WlzInterpolationType interp);
 static WlzErrorNum 		WlzAffineTransformPrimSet2(
 				  WlzAffineTransform *tr,
 				  WlzAffineTransformPrim prim);
@@ -901,6 +912,456 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
     (void )WlzFreeAffineTransform(invTrans);
   }
   return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformValues3
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Creates new value, fills in the values and adds it
+*		to the given new object.
+*		not checked.
+* Global refs:	-
+* Parameters:	WlzObject *newObj:	Partialy transformed object
+*					with a valid domain.
+*		WlzObject *srcObj:	3D domain object which is being
+*					transformed.
+*		WlzAffineTransform *trans: Given affine transform.
+*		WlzInterpolationType interp: Level of interpolation to
+*					use.
+************************************************************************/
+static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
+					     WlzObject *srcObj,
+					     WlzAffineTransform *trans,
+					     WlzInterpolationType interp)
+{
+  int		tI0,
+  		count;
+  double	tD0;
+  WlzIVertex3	idx,
+  		sPos,
+		dPos;
+  WlzDVertex3	tDV0,
+  		tDV1;
+  WlzIBox3	bBox;
+  WlzPixelV	bkdV;
+  WlzValues	tVal,
+  		dstValues,
+  		emptyValues;
+  WlzObject 	*tObj0;
+  WlzGreyWSpace	gWSp;
+  WlzIntervalWSpace iWSp;
+  WlzGreyValueWSpace *gVWSp = NULL;
+  WlzAffineTransform *invTrans = NULL;
+  WlzGreyType	gType;
+  WlzDomain	dom2D;
+  double	tMat[3][3];
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  dstValues.core = NULL;
+  emptyValues.core = NULL;
+  /* Make a new voxel value table. */
+  bkdV = WlzGetBackground(srcObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gType = WlzGreyTypeFromObj(srcObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox = WlzBoundingBox3D(newObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstValues.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					bBox.zMin, bBox.zMax,
+					bkdV, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    newObj->values = WlzAssignValues(dstValues, NULL);
+  }
+  /* Invert the transform. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    invTrans = WlzAffineTransformInverse(trans, &errNum);
+  }
+  /* For each plane in the new object make a new value table and
+   * then fill it in. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gVWSp = WlzGreyValueMakeWSp(srcObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx.vtZ = 0;
+    dPos.vtZ = bBox.zMin;
+    tMat[0][0] = invTrans->mat[0][0];
+    tMat[1][0] = invTrans->mat[1][0];
+    tMat[2][0] = invTrans->mat[2][0];
+    while((errNum == WLZ_ERR_NONE) && (dPos.vtZ <= bBox.zMax))
+    {
+      if(((dom2D = *(newObj->domain.p->domains + idx.vtZ)).core != NULL) &&
+         (dom2D.core->type != WLZ_EMPTY_DOMAIN))
+      {
+	tMat[0][2] = invTrans->mat[0][3] + (invTrans->mat[0][2] * dPos.vtZ);
+	tMat[1][2] = invTrans->mat[1][3] + (invTrans->mat[1][2] * dPos.vtZ);
+	tMat[2][2] = invTrans->mat[2][3] + (invTrans->mat[2][2] * dPos.vtZ);
+	/* Make a 2D domain object for the plane. */
+	tObj0 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+	    *(newObj->domain.p->domains + idx.vtZ),
+	    emptyValues, NULL, NULL, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  tVal.v = WlzNewValueTb(tObj0,
+	  		         WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType,
+				 		  NULL),
+				 bkdV, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  tObj0->values = WlzAssignValues(tVal, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzInitGreyScan(tObj0, &iWSp, &gWSp);
+	}
+	/* Fill in the values of the new 2D object. */
+	while((errNum == WLZ_ERR_NONE) &&
+	    ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+	{
+	  dPos.vtX = iWSp.lftpos;
+	  dPos.vtY = iWSp.linpos;
+	  tMat[0][1] = tMat[0][2] + (invTrans->mat[0][1] * dPos.vtY);
+	  tMat[1][1] = tMat[1][2] + (invTrans->mat[1][1] * dPos.vtY);
+	  tMat[2][1] = tMat[2][2] + (invTrans->mat[2][1] * dPos.vtY);
+	  count = iWSp.rgtpos - iWSp.lftpos + 1;
+	  switch(interp)
+	  {
+	    case WLZ_INTERPOLATION_NEAREST:
+	      while(count-- > 0)
+	      {
+		sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
+		sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
+		sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
+		WlzGreyValueGet(gVWSp, sPos.vtZ, sPos.vtY, sPos.vtX);
+		switch(gWSp.pixeltype)
+		{
+		  case WLZ_GREY_INT:
+		    *(gWSp.u_grintptr.inp)++ = (*(gVWSp->gVal)).inv;
+		    break;
+		  case WLZ_GREY_SHORT:
+		    *(gWSp.u_grintptr.shp)++ = (*(gVWSp->gVal)).shv;
+		    break;
+		  case WLZ_GREY_UBYTE:
+		    *(gWSp.u_grintptr.ubp)++ = (*(gVWSp->gVal)).ubv;
+		    break;
+		  case WLZ_GREY_FLOAT:
+		    *(gWSp.u_grintptr.flp)++ = (*(gVWSp->gVal)).flv;
+		    break;
+		  case WLZ_GREY_DOUBLE:
+		    *(gWSp.u_grintptr.dbp)++ = (*(gVWSp->gVal)).dbv;
+		    break;
+		  default:
+		    errNum = WLZ_ERR_GREY_TYPE;
+		    break;
+		}
+		++(dPos.vtX);
+	      }
+	      break;
+	    case WLZ_INTERPOLATION_LINEAR:
+	      while(count-- > 0)
+	      {
+		sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
+		sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
+		sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
+		WlzGreyValueGet(gVWSp, sPos.vtZ, sPos.vtY, sPos.vtX);
+		tDV0.vtX = sPos.vtX - WLZ_NINT(sPos.vtX - 0.5);
+		tDV0.vtY = sPos.vtY - WLZ_NINT(sPos.vtY - 0.5);
+		tDV0.vtZ = sPos.vtZ - WLZ_NINT(sPos.vtZ - 0.5);
+		tDV1.vtX = 1.0 - tDV0.vtX;
+		tDV1.vtY = 1.0 - tDV0.vtY;
+		tDV1.vtZ = 1.0 - tDV0.vtZ;
+		switch(gWSp.pixeltype)
+		{
+		  case WLZ_GREY_INT:
+		    tD0 = ((gVWSp->gVal[0]).inv *
+			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[1]).inv *
+		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[2]).inv *
+		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[3]).inv *
+		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[4]).inv *
+		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[5]).inv *
+		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[6]).inv *
+		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[7]).inv *
+		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, INT_MIN, INT_MAX);
+		    tI0 = WLZ_NINT(tD0);
+		    *(gWSp.u_grintptr.inp)++ = tI0;
+		    break;
+		  case WLZ_GREY_SHORT:
+		    tD0 = ((gVWSp->gVal[0]).shv *
+			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[1]).shv *
+		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[2]).shv *
+		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[3]).shv *
+		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[4]).shv *
+		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[5]).shv *
+		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[6]).shv *
+		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[7]).shv *
+		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
+		    tI0 = WLZ_NINT(tD0);
+		    *(gWSp.u_grintptr.shp)++ = tI0;
+		    break;
+		  case WLZ_GREY_UBYTE:
+		    tD0 = ((gVWSp->gVal[0]).ubv *
+			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[1]).ubv *
+		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[2]).ubv *
+		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[3]).ubv *
+		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[4]).ubv *
+		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[5]).ubv *
+		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[6]).ubv *
+		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[7]).ubv *
+		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, 0, 255);
+		    tI0 = WLZ_NINT(tD0);
+		    *(gWSp.u_grintptr.ubp)++ = tI0;
+		    break;
+		  case WLZ_GREY_FLOAT:
+		    tD0 = ((gVWSp->gVal[0]).flv *
+			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[1]).flv *
+		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[2]).flv *
+		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[3]).flv *
+		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[4]).flv *
+		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[5]).flv *
+		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[6]).flv *
+		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[7]).flv *
+		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    *(gWSp.u_grintptr.flp)++ = tD0;
+		    break;
+		  case WLZ_GREY_DOUBLE:
+		    tD0 = ((gVWSp->gVal[0]).dbv *
+			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[1]).dbv *
+		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[2]).dbv *
+		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[3]).dbv *
+		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[4]).dbv *
+		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[5]).dbv *
+		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[6]).dbv *
+		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[7]).dbv *
+		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
+		    *(gWSp.u_grintptr.dbp)++ = tD0;
+		    break;
+		  default:
+		    errNum = WLZ_ERR_GREY_TYPE;
+		    break;
+		}
+		++(dPos.vtX);
+	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_INTERPOLATION_TYPE;
+	      break;
+	  }
+	}
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  *(newObj->values.vox->values + idx.vtZ) =
+	    WlzAssignValues(tObj0->values, NULL);
+	}
+	if(tObj0)
+	{
+	  (void )WlzFreeObj(tObj0);
+	}
+      }
+      ++(idx.vtZ);
+      ++(dPos.vtZ);
+    }
+  }
+  if(invTrans)
+  {
+    (void )WlzFreeAffineTransform(invTrans);
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformPDom
+* Returns:	WlzPlaneDomain *:	Transformed plane domain,
+*					NULL on error.
+* Purpose:	Creates a new plane domain which is the transformed
+*		plane domain of the given source object.
+*		The algorithm used by this function isn't very
+*		efficient. It would be better to forward transform
+*		the source objects domain, but that's not easy!
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given source object.
+*		WlzAffineTransform *trans: Given affine transform.
+*		WlzErrorNum *dstErr:	Destination ptr for Woolz error
+*					code, may be NULL.
+************************************************************************/
+static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
+					      WlzAffineTransform *trans,
+					      WlzErrorNum *dstErr)
+{
+  int		insideFlg;
+  WlzIVertex2	pMskOrg,
+  		pMskSz;
+  WlzIVertex3	idx,
+  		sPos,
+  		dPos;
+  WlzIBox3	bBox;
+  UBYTE		*lMsk;
+  UBYTE		**pMsk = NULL;
+  WlzObject	*tObj;
+  WlzPlaneDomain *dstPDom = NULL;
+  WlzAffineTransform *invTrans = NULL;
+  double	tMat[3][3];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Forward trasform the bounding box. */
+  bBox = WlzBoundingBox3D(srcObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox = WlzAffineTransformBBoxI3(trans, bBox, &errNum);
+  }
+  /* Create a plane domain. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstPDom = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+    				 bBox.zMin, bBox.zMax,
+    				 bBox.yMin, bBox.yMax,
+    				 bBox.xMin, bBox.xMax, &errNum);
+  }
+  /* Create a bit mask that's the maximum size of any plane. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pMskOrg.vtX = bBox.xMin;
+    pMskOrg.vtY = bBox.yMin;
+    pMskSz.vtX = bBox.xMax - bBox.xMin + 1;
+    pMskSz.vtY = bBox.yMax - bBox.yMin + 1;
+    if(AlcBit2Malloc(&pMsk, pMskSz.vtY, pMskSz.vtX) != ALC_ER_NONE)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Invert the transform. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    invTrans = WlzAffineTransformInverse(trans, &errNum);
+  }
+  /* For each plane. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx.vtZ = 0;
+    dPos.vtZ = bBox.zMin;
+    tMat[0][0] = invTrans->mat[0][0];
+    tMat[1][0] = invTrans->mat[1][0];
+    tMat[2][0] = invTrans->mat[2][0];
+    while((errNum == WLZ_ERR_NONE) && (dPos.vtZ <= bBox.zMax))
+    {
+      /* Set the plane bit mask. */
+      idx.vtY = 0;
+      dPos.vtY = bBox.yMin;
+      tMat[0][2] = invTrans->mat[0][3] + (invTrans->mat[0][2] * dPos.vtZ);
+      tMat[1][2] = invTrans->mat[1][3] + (invTrans->mat[1][2] * dPos.vtZ);
+      tMat[2][2] = invTrans->mat[2][3] + (invTrans->mat[2][2] * dPos.vtZ);
+      while(dPos.vtY <= bBox.yMax)
+      {
+	idx.vtX = 0;
+	dPos.vtX = bBox.xMin;
+	lMsk = *(pMsk + idx.vtY);
+	tMat[0][1] = tMat[0][2] + (invTrans->mat[0][1] * dPos.vtY);
+	tMat[1][1] = tMat[1][2] + (invTrans->mat[1][1] * dPos.vtY);
+	tMat[2][1] = tMat[2][2] + (invTrans->mat[2][1] * dPos.vtY);
+	while(dPos.vtX <= bBox.xMax)
+	{
+	  sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
+          sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
+          sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
+	  insideFlg = WlzInsideDomain(srcObj, sPos.vtZ, sPos.vtY, sPos.vtX, 
+	  			      NULL) != 0;
+	  *(lMsk + (idx.vtX / 8)) |= insideFlg << (idx.vtX % 8);
+	  ++(idx.vtX);
+	  ++(dPos.vtX);
+	}
+        ++(idx.vtY);
+	++(dPos.vtY);
+      }
+      /* Create a domain from the bit mask. */
+      tObj = WlzFromArray2D((void **)pMsk, pMskSz, pMskOrg, WLZ_GREY_BIT,
+      			    WLZ_GREY_BIT, 0.0, 1.0, 0, 0, &errNum);
+      if(tObj)
+      {
+        *(dstPDom->domains + idx.vtZ) = WlzAssignDomain(tObj->domain, NULL);
+        (void )WlzFreeObj(tObj);
+	tObj = NULL;
+      }
+      ++(idx.vtZ);
+      ++(dPos.vtZ);
+    }
+  }
+  if(invTrans)
+  {
+    (void )WlzFreeAffineTransform(invTrans);
+  }
+  if(pMsk)
+  {
+    Alc2Free((void **)pMsk);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzStandardPlaneDomain(dstPDom, NULL);
+  }
+  else
+  {
+    if(dstPDom)
+    {
+      (void )WlzFreePlaneDomain(dstPDom);
+    }
+    dstPDom = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstPDom);
 }
 
 /************************************************************************
@@ -2195,120 +2656,27 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	{
 	  errNum = WLZ_ERR_DOMAIN_NULL;
 	} 
-	else if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
-	{
-	  errNum = WLZ_ERR_DOMAIN_TYPE;
-	}
 	else if(WlzAffineTransformIsTranslate(trans, srcObj, NULL))
 	{
 	  dstObj = WlzAffineTransformIntTranslate(srcObj, trans, &errNum);
 	}
-	else
+	else if(srcDom.core->type == WLZ_PLANEDOMAIN_DOMAIN)
 	{
-	  /* TODO. This is a kludge. Currently a full 3D transform has not been
-	   * implemented and in this code the transform is applied to each
-	   * plane in turn. If the transform has a z translation set then
-	   * the resultant object is shifted in z - BUT NOT SCALED!!!! 
-	   * In principle the z-transformation associated with 2D transform 
-	   * is meaningless and should have been flagged as an error. Clearly
-	   * it does not contribute to the tranformation matrix. */
-	  dstDom.p = WlzMakePlaneDomain(srcDom.p->type,
-	  				srcDom.p->plane1, srcDom.p->lastpl,
-					srcDom.p->line1, srcDom.p->lastln,
-					srcDom.p->kol1, srcDom.p->lastkl,
-					&errNum);
-	  			 /* Need to fix the line column bounds later */
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    errNum = WlzAffineTransformPrimGet(trans, &prim);
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    dstDom.p->voxel_size[0] = srcDom.p->voxel_size[0];
-	    dstDom.p->voxel_size[1] = srcDom.p->voxel_size[1];
-	    dstDom.p->voxel_size[2] = srcDom.p->voxel_size[2];
-	    if(srcValues.core)
-	    {
-	      dstValues.vox = WlzMakeVoxelValueTb(srcObj->values.vox->type,
-						  srcDom.p->plane1,
-						  srcDom.p->lastpl,
-						  WlzGetBackground(srcObj,
-								   NULL),
-						  NULL, &errNum);
-	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    planeIdx = 0;
-	    planeCount = srcDom.p->lastpl - srcDom.p->plane1 + 1;
-	    while((errNum == WLZ_ERR_NONE) && (planeCount-- > 0))
-	    {
-	      tObj0 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-				  *(srcDom.p->domains + planeIdx),
-				  dumValues, NULL, NULL, &errNum);
-	      if(tObj0->domain.core &&
-		 (tObj0->domain.core->type != WLZ_EMPTY_OBJ))
-	      {
-		if(srcValues.core &&
-		   (srcValues.core->type != WLZ_EMPTY_OBJ))
-		{
-		  tObj0->values = WlzAssignValues(*(srcValues.vox->values +
-						    planeIdx), &errNum);
-		}
-		else
-		{
-		  tObj0->values.core = NULL;
-		}
-		tObj1 = WlzAffineTransformObj(tObj0, trans, interp, &errNum);
-	      }
-	      else
-	      {
-		tObj1 = NULL;
-	      }
-	      if( tObj0 ){
-		(void) WlzFreeObj(tObj0);
-	      }
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-		if(tObj1)
-		{
-		  *(dstDom.p->domains + planeIdx) = tObj1->domain;
-		  if( dstValues.vox ){
-		    *(dstValues.vox->values + planeIdx) = tObj1->values;
-		  }
-		  tObj1->domain.core = NULL;
-		  tObj1->values.core = NULL;
-		  (void )WlzFreeObj(tObj1);
-		  tObj1 = NULL;
-		}
-		else
-		{
-		  (dstDom.p->domains + planeIdx)->core = NULL;
-		  if( dstValues.vox ){
-		    (dstValues.vox->values + planeIdx)->core = NULL;
-		  }
-		}
-	      }
-	      ++planeIdx;
-	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    errNum = WlzStandardPlaneDomain(dstDom.p, dstValues.vox);
-	    if( dstDom.p ){
-	      dstDom.p->plane1 += prim.tz;
-	      dstDom.p->lastpl += prim.tz;
-	    }
-	    if( dstValues.vox ){
-	      dstValues.vox->plane1 += prim.tz;
-	      dstValues.vox->lastpl += prim.tz;
-	    }
-	  }
+	  dstDom.p = WlzAffineTransformPDom(srcObj, trans, &errNum);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    dstObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dstDom, dstValues,
 				 NULL, NULL, &errNum);
 	  }
+	  if((errNum == WLZ_ERR_NONE) && (srcValues.core != NULL))
+	  {
+	    errNum = WlzAffineTransformValues3(dstObj, srcObj, trans,
+	    				       interp);
+	  }
+	}
+	else
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
         break;
       default:
@@ -2692,14 +3060,14 @@ WlzIBox3	WlzAffineTransformBBoxI3(WlzAffineTransform *tr,
   WlzIBox3	dstBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin; tV[0].vtX = srcBox.zMin;
-  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin; tV[1].vtX = srcBox.zMin;
-  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax; tV[2].vtX = srcBox.zMin;
-  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax; tV[3].vtX = srcBox.zMin;
-  tV[4].vtX = srcBox.xMin; tV[4].vtY = srcBox.yMin; tV[4].vtX = srcBox.zMax;
-  tV[5].vtX = srcBox.xMax; tV[5].vtY = srcBox.yMin; tV[5].vtX = srcBox.zMax;
-  tV[6].vtX = srcBox.xMin; tV[6].vtY = srcBox.yMax; tV[6].vtX = srcBox.zMax;
-  tV[7].vtX = srcBox.xMax; tV[7].vtY = srcBox.yMax; tV[7].vtX = srcBox.zMax;
+  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin; tV[0].vtZ = srcBox.zMin;
+  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin; tV[1].vtZ = srcBox.zMin;
+  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax; tV[2].vtZ = srcBox.zMin;
+  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax; tV[3].vtZ = srcBox.zMin;
+  tV[4].vtX = srcBox.xMin; tV[4].vtY = srcBox.yMin; tV[4].vtZ = srcBox.zMax;
+  tV[5].vtX = srcBox.xMax; tV[5].vtY = srcBox.yMin; tV[5].vtZ = srcBox.zMax;
+  tV[6].vtX = srcBox.xMin; tV[6].vtY = srcBox.yMax; tV[6].vtZ = srcBox.zMax;
+  tV[7].vtX = srcBox.xMax; tV[7].vtY = srcBox.yMax; tV[7].vtZ = srcBox.zMax;
   idx = 0;
   while((errNum == WLZ_ERR_NONE) && (idx < 8))
   {
@@ -2765,14 +3133,14 @@ WlzDBox3	WlzAffineTransformBBoxD3(WlzAffineTransform *tr,
   WlzDBox3	dstBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin; tV[0].vtX = srcBox.zMin;
-  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin; tV[1].vtX = srcBox.zMin;
-  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax; tV[2].vtX = srcBox.zMin;
-  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax; tV[3].vtX = srcBox.zMin;
-  tV[4].vtX = srcBox.xMin; tV[4].vtY = srcBox.yMin; tV[4].vtX = srcBox.zMax;
-  tV[5].vtX = srcBox.xMax; tV[5].vtY = srcBox.yMin; tV[5].vtX = srcBox.zMax;
-  tV[6].vtX = srcBox.xMin; tV[6].vtY = srcBox.yMax; tV[6].vtX = srcBox.zMax;
-  tV[7].vtX = srcBox.xMax; tV[7].vtY = srcBox.yMax; tV[7].vtX = srcBox.zMax;
+  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin; tV[0].vtZ = srcBox.zMin;
+  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin; tV[1].vtZ = srcBox.zMin;
+  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax; tV[2].vtZ = srcBox.zMin;
+  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax; tV[3].vtZ = srcBox.zMin;
+  tV[4].vtX = srcBox.xMin; tV[4].vtY = srcBox.yMin; tV[4].vtZ = srcBox.zMax;
+  tV[5].vtX = srcBox.xMax; tV[5].vtY = srcBox.yMin; tV[5].vtZ = srcBox.zMax;
+  tV[6].vtX = srcBox.xMin; tV[6].vtY = srcBox.yMax; tV[6].vtZ = srcBox.zMax;
+  tV[7].vtX = srcBox.xMax; tV[7].vtY = srcBox.yMax; tV[7].vtZ = srcBox.zMax;
   idx = 0;
   while((errNum == WLZ_ERR_NONE) && (idx < 8))
   {
