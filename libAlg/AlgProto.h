@@ -402,6 +402,7 @@ extern void			AlgMatrixZero(
 				  size_t nC);
 extern void			AlgMatrixVectorMul(
 				  double *aV,
+				  AlgMatrixType bType,
 				  double **bM,
 				  double *cV,
 				  size_t nR,
@@ -409,6 +410,7 @@ extern void			AlgMatrixVectorMul(
 
 /* From AlgMatrixCG.c */
 extern AlgError			AlgMatrixCGSolve(
+				  AlgMatrixType aType,
 				  double **aM,
 				  double *xV,
 				  double *bV,
