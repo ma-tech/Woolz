@@ -22,6 +22,10 @@ public class PointEntry extends PointEntryGUI{
     ButtonHandler BH = new ButtonHandler();
     _okButton.addActionListener(BH);
     _cancelButton.addActionListener(BH);
+    TextFieldHandler TFH = new TextFieldHandler();
+    tfX.addActionListener(TFH);
+    tfY.addActionListener(TFH);
+    tfZ.addActionListener(TFH);
     _values = new double[3];
     _values[0] = 0.0;
     _values[1] = 0.0;
@@ -71,6 +75,22 @@ public class PointEntry extends PointEntryGUI{
   }
 
 //-------------------------------------------------------------
+  class TextFieldHandler implements ActionListener {
+
+     public TextFieldHandler() {
+     }
+
+     public void actionPerformed(ActionEvent e) {
+
+	if((e.getSource().equals(tfX)) ||
+	   (e.getSource().equals(tfY)) ||
+	   (e.getSource().equals(tfZ)))  {
+
+	   _okButton.doClick();
+	}
+
+     }
+  }
 //-------------------------------------------------------------
   // event handlers
   class ButtonHandler implements ActionListener {
