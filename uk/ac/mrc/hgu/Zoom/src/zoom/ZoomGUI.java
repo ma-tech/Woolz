@@ -11,8 +11,8 @@ import java.io.*;
 import java.net.*;
 
 /**
- * Super class for Zoom.
- * <br>Separates out the GUI stuff for compatibility with JBuilder.
+ * GUI super class for Zoom.
+ * <br>Separates out the GUI stuff for tidiness and JBuilder woossies
  * @author Nick Burton
  * @see Zoom
  */
@@ -62,7 +62,7 @@ public class ZoomGUI extends JComponent
    //....................................
 
    /**
-    * 
+    * Constructor
     */
    public ZoomGUI() {
       initGUI();
@@ -122,6 +122,7 @@ public class ZoomGUI extends JComponent
       buttonPanel.add(buttonPanelOut, BorderLayout.WEST);
       buttonPanel.add(buttonPanelIn, BorderLayout.EAST);
 
+      paramLabel.setFont(new Font("default", Font.PLAIN, 11));
       paramLabel.setBackground(_internalBgc);
       paramLabel.setPreferredSize(new Dimension(_labelWidth, _buttonH));
       paramLabel.setText(_zoomLabel);
@@ -158,11 +159,11 @@ public class ZoomGUI extends JComponent
    } // initGUI
 
 //.....................................
-// the following are required for setting the Zoom properties
+// the following are required for setting the bean properties
 //.....................................
    public void setLabelWidth(int w) {
       _labelWidth = w;
-      if(labelPanel != null)          
+      if(labelPanel != null)
          labelPanel.setPreferredSize(new Dimension(_labelWidth, _buttonH));
       if(labelTextButtonPanel != null)
          labelTextButtonPanel.setPreferredSize(
@@ -174,7 +175,7 @@ public class ZoomGUI extends JComponent
          textf.setPreferredSize(new Dimension(_textWidth, _buttonH+_pad));
       if(textPanel != null)
          textPanel.setPreferredSize(new Dimension(_textWidth+_pad, _buttonH+_pad));
-      if(labelTextButtonPanel != null) 
+      if(labelTextButtonPanel != null)
          labelTextButtonPanel.setPreferredSize(
                   new Dimension(_labelWidth+_textWidth+(2*_buttonW)+(6*_pad), _buttonH+4*_pad));
    }
