@@ -848,6 +848,8 @@ static WlzAffineTransform  *WlzAffineTransformLSqSVDWgtReg3D(WlzDVertex3 *pos0,
   {
     /* Compute weighted centroids (cen0 and cen1) and a mean of squares of
      * distance * between the weighted vertices. */
+    WLZ_VTX_3_ZERO(cen0);
+    WLZ_VTX_3_ZERO(cen1);
     if(wgt)
     {
       WLZ_VTX_3_SCALE(p0, *pos0, *wgt);
@@ -1127,6 +1129,8 @@ static WlzAffineTransform *WlzAffineTransformLSqSVDWgtReg2D(WlzDVertex2 *pos0,
   {
     /* Compute weighted centroids (cen0 and cen1) and a mean of squares of
      * distance * between the weighted vertices. */
+    WLZ_VTX_2_ZERO(cen0);
+    WLZ_VTX_2_ZERO(cen1);
     if(wgt)
     {
       WLZ_VTX_2_SCALE(p0, *pos0, *wgt);
