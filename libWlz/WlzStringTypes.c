@@ -516,6 +516,66 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 /*!
 * \return	Read only string or NULL on error.
 * \ingroup 	WlzStrings
+* \brief	Finds a string for the given scalar feature type.
+* \param	fType			Given scalar feature type.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+const char	*WlzStringFromScalarFeatureType(WlzScalarFeatureType fType,
+					WlzErrorNum *dstErr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*fTypeStr = NULL;
+
+  switch(fType)
+  {
+    case WLZ_SCALARFEATURE_VALUE:
+      fTypeStr = "WLZ_SCALARFEATURE_VALUE";
+      break;
+    case WLZ_SCALARFEATURE_GRADIENT:
+      fTypeStr = "WLZ_SCALARFEATURE_GRADIENT";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(fTypeStr);
+}
+
+/*!
+* \return	Feature type.
+* \brief	Finds an enumerated type for the given scalar feature type.
+* \param	fTypeStr		Given scalar feature type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+WlzScalarFeatureType WlzStringToScalarFeatureType(const char *fTypeStr,
+					WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzErrorNum	errNum = WLZ_ERR_PARAM_TYPE;
+  WlzScalarFeatureType fType = WLZ_SCALARFEATURE_VALUE;
+
+  if(WlzStringMatchValue(&tI0, fTypeStr,
+  		"WLZ_SCALARFEATURE_VALUE", WLZ_SCALARFEATURE_VALUE,
+		"WLZ_SCALARFEATURE_GRADIENT", WLZ_SCALARFEATURE_GRADIENT,
+		NULL))
+  {
+    fType = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(fType);
+}
+
+/*!
+* \return	Read only string or NULL on error.
+* \ingroup 	WlzStrings
 * \brief	Finds a string for the given property's type.
 * \param	prop			Given property.
 * \param	dstErr			Destination error pointer, may be null.
