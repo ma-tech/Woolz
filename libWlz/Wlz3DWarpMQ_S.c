@@ -3598,7 +3598,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
     fp = NULL;
   }
   /* WlzMeshScanWSpFree(mSnWSp); */
+  /*
   WlzGreyValueFreeWSp(gVWSp);
+  */
   AlcFree(trans);
   return(errNum);
 }
@@ -5385,7 +5387,7 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
   WlzPlaneDomain *dstPDom   = NULL;
   WlzValues	  dstValues;
   WlzValues	  srcValues;
-  WlzObject	  *dstObj = NULL;
+  WlzObject	 *dstObj = NULL;
   WlzErrorNum	  errNum = WLZ_ERR_NONE;
   WlzIBox3        bBox;
   
@@ -5463,7 +5465,7 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 	   }
 	
            /*----------  */
-	   dstDom.p = WlzPDomFromBBox(bBox,&errNum);
+	   dstDom.p = dstPDom;
 	   planeIdx = 0;
 	   planeCount = bBox.zMax  - bBox.zMin + 1;
 	   /* ------------ */
@@ -5578,33 +5580,37 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 	        /*  assinDomain  */
-		 *(dstObj->domain.p->domains + planeIdx) = WlzAssignDomain(dstObj2D->domain, NULL);
+		 *(dstObj->domain.p->domains + planeIdx)   = WlzAssignDomain(dstObj2D->domain, NULL);
                 /* assigin back to the 3D dstObj one layer */
 	        /* printf("planeIndex: %d\n", planeIdx);  */
-		*(dstObj->values.vox->values + planeIdx ) =
-		  WlzAssignValues(dstObj2D->values, NULL); 
+		 *(dstObj->values.vox->values + planeIdx ) = WlzAssignValues(dstObj2D->values, NULL); 
 	      }
+
+	      
               ++planeIdx;
               cutPosition++;
 	   }
 	}
-	dstObj2D->domain.core = NULL;
-	dstObj2D->values.core = NULL;
-	WlzFreeObj(dstObj2D);
- 	
-        /* get domain first we need a function to do this here */
-	/*
-	dstDom.p = ...(srcObj, trans, &errNum); */ 
+	 dstObj2D->domain.core = NULL; 
+	 dstObj2D->values.core = NULL; 
+	 WlzFreeObj(dstObj2D); 
       }
       break;
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
   }
+
+  
   if(dstErr)
   {
     *dstErr = errNum;
   }
+
+
+
+
+
 
   /*  free the memory */
   AlcFree(planepoints);
@@ -5617,7 +5623,6 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
   AlcFree(wmt2D5);
   
   return(dstObj);
-					
 }
 
 /*!
