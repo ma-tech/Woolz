@@ -15,6 +15,7 @@
 *		the MRC HGU memory allocation library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 09-11-00 bill Added AlcKDTTreeFacts().
 * 01-11-00 bill Added AlcKDTree.
 * 02-03-00 bill Added AlcVector and AlcFreeStack.
 * 01-11-99 bill Added AlcDLPList.
@@ -244,6 +245,9 @@ extern AlcKDTNode		*AlcKDTNodeNew(
 extern void			AlcKDTNodeFree(
 				  AlcKDTTree *tree,
 				  AlcKDTNode *node);
+extern int			AlcKDTTreeFacts(
+				  AlcKDTTree *tree,
+				  FILE *fP);
 extern AlcKDTNode		*AlcKDTInsert(
 				  AlcKDTTree *tree,
 				  void *keyVal,

@@ -13,6 +13,7 @@
 *		point binary space partition tree (kD-tree).
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 09-11-00 bill Added AlcKDTTreeFacts().
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +30,13 @@ static void			AlcKDTValuesSet(
 				  AlcKDTTree *tree,
 				  AlcPointP key0,
 				  AlcPointP key1);
+static void			AlcKDTPointFacts(AlcKDTTree *tree,
+				  AlcPointP pnt,
+				  FILE *fP);
+static int			AlcKDTNodeFacts(
+				  AlcKDTTree *tree,
+				  AlcKDTNode *node,
+				  FILE *fP);
 static int			AlcKDTNodeValueCompare(
 				  AlcKDTTree *tree,
 				  AlcKDTNode *node,
@@ -125,6 +133,113 @@ AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
     *dstErr = errNum;
   }
   return(tree);
+}
+
+/************************************************************************
+* Function:     AlcKDTTreeFacts
+* Returns:      int:			Number of nodes.
+* Purpose:      Prints facts about the kD-tree structure to a file.
+* Global refs:  -
+* Parameters:   AlcKDTTree *tree: 	The KD-tree tree
+*		FILE *fP:		Output file stream.
+************************************************************************/
+int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
+{
+  int		nNodes;
+
+  if(tree)
+  {
+    (void )fprintf(fP, "type         %-d\n", tree->type);
+    (void )fprintf(fP, "dim          %-d\n", tree->dim);
+    (void )fprintf(fP, "keySz        %-d\n", tree->keySz);
+    (void )fprintf(fP, "tol          %-g\n", tree->tol);
+    (void )fprintf(fP, "nNodes       %-d\n", tree->nNodes);
+    (void )fprintf(fP, "root         0x-%lx\n",
+    		    (unsigned long )(tree->root));
+    (void )fprintf(fP, "nodeStack    0x%-lx\n",
+    		    (unsigned long)(tree->nodeStack));
+    (void )fprintf(fP, "nodeBlockSz  0x%-lx\n",
+    		    (unsigned long)(tree->nodeBlockSz));
+    (void )fprintf(fP, "freeStack    0x%-lx\n",
+                   (unsigned long)(tree->freeStack));
+    (void )fprintf(fP, "\n");
+    nNodes = AlcKDTNodeFacts(tree, tree->root, fP);
+  }
+  return(nNodes);
+}
+
+/************************************************************************
+* Function:     AlcKDTNodeFacts
+* Returns:      int:			Number of child nodes.
+* Purpose:      Prints facts about the kD-tree node structure to a file.
+* Global refs:  -
+* Parameters:   AlcKDTTree *tree: 	The KD-tree tree.
+*		AlcKDTNode *node:	The KD-tree node.
+*		FILE *fP:		Output file stream.
+************************************************************************/
+static int	AlcKDTNodeFacts(AlcKDTTree *tree, AlcKDTNode *node, FILE *fP)
+{
+  int		nNodes = 0;
+
+  if(node)
+  {
+    nNodes = 1;
+    (void )fprintf(fP, "idx          %-d\n", node->idx);
+    (void )fprintf(fP, "split        %-d\n", node->split);
+    (void )fprintf(fP, "parent       0x%-lx (%d)\n",
+    		    (unsigned long )(node->parent),
+		    (node->parent)? node->parent->idx: -1);
+    (void )fprintf(fP, "childN       0x%-lx (%d)\n",
+    		    (unsigned long )(node->childN),
+		    node->childN? node->childN->idx: -1);
+    (void )fprintf(fP, "childP       0x%-lx (%d)\n",
+    		    (unsigned long )(node->childP),
+		    node->childP? node->childP->idx: -1);
+    (void )fprintf(fP, "key          ");
+    AlcKDTPointFacts(tree, node->key, fP);
+    (void )fprintf(fP, "\n");
+    (void )fprintf(fP, "boundN       ");
+    AlcKDTPointFacts(tree, node->boundN, fP);
+    (void )fprintf(fP, "\n");
+    (void )fprintf(fP, "boundP       ");
+    AlcKDTPointFacts(tree, node->boundP, fP);
+    (void )fprintf(fP, "\n\n");
+    if(node->childN)
+    {
+      nNodes += AlcKDTNodeFacts(tree, node->childN, fP);
+    }
+    if(node->childP)
+    {
+      nNodes += AlcKDTNodeFacts(tree, node->childP, fP);
+    }
+  }
+  return(nNodes);
+}
+
+/************************************************************************
+* Function:     AlcKDTPointFacts
+* Returns:      void
+* Purpose:      Prints facts the given point.
+* Global refs:  -
+* Parameters:   AlcKDTTree *tree: 	The KD-tree tree.
+*		AlcPointP pnt:		Given point.
+*		FILE *fP:		Output file stream.
+************************************************************************/
+static void	AlcKDTPointFacts(AlcKDTTree *tree, AlcPointP pnt, FILE *fP)
+{
+  int		idx;
+
+  for(idx = 0; idx < tree->dim; ++idx)
+  {
+    if(tree->type == ALC_POINTTYPE_INT)
+    {
+      (void )fprintf(fP, "%-d ", *(pnt.kI + idx));
+    }
+    else /* tree->type == ALC_POINTTYPE_DBL */
+    {
+      (void )fprintf(fP, "%-g ", *(pnt.kD + idx));
+    }
+  }
 }
 
 /************************************************************************
@@ -300,8 +415,8 @@ static void	AlcKDTBoundSet(AlcKDTTree *tree, AlcKDTNode *node, int cmp)
     {
       do
       {
-	*(node->boundN.kD + idx) = DBL_MAX;
-	*(node->boundP.kD + idx) = -DBL_MAX; 		   /* DBL_MAX is +ve */
+	*(node->boundN.kD + idx) = -DBL_MAX; 		   /* DBL_MAX is +ve */
+	*(node->boundP.kD + idx) = DBL_MAX;
       }
       while(++idx < tree->dim);
     }
@@ -621,7 +736,8 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
       distSq = AlcKDTKeyDistSq(tree, tstNode0->key, key);
       if(distSq < (minDist * minDist))
       {
-	minDist = sqrt(distSq);
+	nNNode = tstNode0;
+	dist = minDist = sqrt(distSq);
       }
       /* Walk up the tree until either the parent is NULL (at root of tree)
        * or the parent node does not intersect the hyper-sphere with
@@ -635,14 +751,19 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
        * until either the child is NULL (at a leaf) or the child does not
        * intersect the hyper-sphere, updating the nearest neighbour node
        * and distance while walking. */
-      nNNode = AlcKDTNodeGetNN(tree, tstNode0, key, minDist, &dist);
+      tstNode1 = AlcKDTNodeGetNN(tree, tstNode0, key, minDist, &dist);
+      if(tstNode1 && (dist < minDist))
+      {
+	minDist = dist;
+        nNNode = tstNode1;
+      }
     }
   }
   if(dstNNDist)
   {
     if(nNNode != NULL)
     {
-      *dstNNDist = dist;
+      *dstNNDist = minDist;
     }
   }
   if(dstErr)
@@ -815,11 +936,12 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
   {
     do
     {
-      if((tD0 = (tD1 = *(centre.kD + idx)) - *(node->boundN.kD + idx)) < 0.0)
+      if((tD0 = (tD1 = *(centre.kD + idx)) -
+                *(node->boundN.kD + idx)) < tree->tol)
       {
 	sum += tD0 * tD0;
       }
-      else if((tD0 = tD1 - *(node->boundP.kD + idx)) > 0.0)
+      else if((tD0 = tD1 - *(node->boundP.kD + idx)) > -(tree->tol))
       {
         sum += tD0 * tD0;
       }
@@ -1020,8 +1142,13 @@ int		main(int argc, char *argv[])
   AlcErrno	errNum = ALC_ER_NONE;
 #ifdef ALC_KDT_TEST_SMALL
   int		nNodes = 10;
+#ifdef ALC_KDT_TEST_SMALL_INT
   int		dat[2];
   const int	data[10][2] =
+#else /* ! ALC_KDT_TEST_SMALL_INT */
+  double	dat[2];
+  const double	data[10][2] =
+#endif /* ALC_KDT_TEST_SMALL_INT */
   {
     {50, 50}, /* 0/A */
     {10, 70}, /* 1/B */
@@ -1073,8 +1200,13 @@ int		main(int argc, char *argv[])
   printf("%g\n", sumDist);
 #else /* ! ALC_KDT_TEST_BRUTEFORCE */
 #ifdef ALC_KDT_TEST_SMALL
+#ifdef ALC_KDT_TEST_SMALL_INT
   if((tree = AlcKDTTreeNew(ALC_POINTTYPE_INT, 2, -1.0, 0,
   			   &errNum)) != NULL)
+#else /* ! ALC_KDT_TEST_SMALL_INT */
+  if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, 2, -1.0, 0,
+  			   &errNum)) != NULL)
+#endif /* ALC_KDT_TEST_SMALL_INT */
 #else /* ! ALC_KDT_TEST_SMALL */
   if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, 2, -1.0, nNodes / 2,
   			   &errNum)) != NULL)
@@ -1096,6 +1228,8 @@ int		main(int argc, char *argv[])
 #ifdef ALC_KDT_TEST_SMALL
   dat[0] = 30; dat[1] = 65;
   fndNode = AlcKDTGetNN(tree, dat, DBL_MAX, &dist, &errNum);
+  idx0 = AlcKDTTreeFacts(tree, stdout);
+  (void )printf("AlcKDTTreeFacts() found %d nodes.\n", idx0);
 #else /* ! ALC_KDT_TEST_SMALL */
   sumDist = 0.0;
   if(errNum == ALC_ER_NONE)
