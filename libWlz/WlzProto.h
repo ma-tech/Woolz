@@ -1173,6 +1173,15 @@ extern WlzPropertyList		*WlzCopyPropertyList(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzCCor.c
+************************************************************************/
+extern double			WlzCCorS2D(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  int unionFlg,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzCutObjToBox.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
