@@ -29,7 +29,7 @@ extern "C" {
 * \enum 	_AlcErrno
 * \brief	Error codes returned by functions of the
 *		memory allocation and fundamental type library.
-Typedef: ::AlcErrno
+*               Typedef: ::AlcErrno
 */
 typedef enum _AlcErrno
 {
@@ -50,7 +50,7 @@ typedef enum _AlcErrno
 *		of some data type. Useful for efficient memory allocation.
 *		It's not a stack but a doubly linked list of blocks of
 *		data which can be used as a stack, heap, list, ....
-Typedef: ::AlcBlockStack
+*               Typedef: ::AlcBlockStack
 */
 typedef struct _AlcBlockStack
 {
@@ -67,7 +67,7 @@ typedef struct _AlcBlockStack
 * \enum 	_AlcDirection
 * \ingroup	AlcBlockStack
 * \brief	Data structure traversal direction.
-Typedef: ::AlcDirection
+*               Typedef: ::AlcDirection
 */
 typedef enum _AlcDirection
 {
@@ -82,7 +82,7 @@ typedef enum _AlcDirection
 * \struct	_AlcDLPItem
 * \ingroup	AlcDLPList
 * \brief	A doubly linked list item.
-Typedef: ::AlcDLPItem
+*               Typedef: ::AlcDLPItem
 */
 typedef struct _AlcDLPItem
 {
@@ -99,7 +99,7 @@ typedef struct _AlcDLPItem
 * \struct	_AlcDLPList
 * \ingroup	AlcDLPList
 * \brief	A doubly linked list of pointers.
-Typedef: ::AlcDLPList
+*               Typedef: ::AlcDLPList
 */
 typedef struct _AlcDLPList
 {
@@ -111,7 +111,7 @@ typedef struct _AlcDLPList
 * \struct	_AlcHashItem
 * \ingroup	AlcHashTable
 * \brief	A hash table item.
-Typedef: ::AlcHashItem
+*               Typedef: ::AlcHashItem
 */
 typedef struct _AlcHashItem
 {
@@ -129,7 +129,7 @@ typedef struct _AlcHashItem
 * \struct	_AlcHashTable
 * \ingroup	AlcHashTable
 * \brief	A hash table.
-Typedef: ::AlcHashTable
+*               Typedef: ::AlcHashTable
 */
 typedef struct _AlcHashTable
 {
@@ -146,7 +146,7 @@ typedef struct _AlcHashTable
 * \struct	_AlcVector
 * \ingroup      AlcVector
 * \brief	An extensible 1D array.
-Typedef: ::AlcVector
+*               Typedef: ::AlcVector
 */
 typedef struct _AlcVector
 {
@@ -162,7 +162,7 @@ typedef struct _AlcVector
 /*!
 * \enum		_AlcPointType
 * \brief	Type of coordinate point.
-Typedef: ::AlcPointType
+*               Typedef: ::AlcPointType
 */
 
 typedef enum _AlcPointType
@@ -174,7 +174,7 @@ typedef enum _AlcPointType
 /*!
 * \union	_AlcPointP
 * \brief	Pointer to a generic coordinate.
-Typedef: ::AlcPointP
+*               Typedef: ::AlcPointP
 */
 typedef union _AlcPointP
 {
@@ -189,7 +189,7 @@ typedef union _AlcPointP
 * \struct	_AlcKDTNode
 * \ingroup	AlcKDTree
 * \brief	A node in a binary space partition tree (kD-tree).
-Typedef: ::AlcKDTNode
+*               Typedef: ::AlcKDTNode
 */
 typedef struct _AlcKDTNode
 {
@@ -210,7 +210,7 @@ typedef struct _AlcKDTNode
 * \struct	_AlcKDTTree
 * \ingroup	AlcKDTree
 * \brief	A binary space partition tree (kD-tree).
-Typedef: ::AlcKDTTree
+*               Typedef: ::AlcKDTTree
 */
 typedef struct _AlcKDTTree
 {
