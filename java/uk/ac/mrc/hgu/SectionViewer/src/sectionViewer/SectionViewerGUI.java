@@ -30,44 +30,44 @@ public class SectionViewerGUI extends JPanel {
 
   /**   The preferred height of _contentPane. */
   int totalH = 500;
-  
+
   /**   The preferred width of _contentPane. */
   int totalW = 400;
-  
+
   /**   A spacing parameter for elements of the GUI. */
   int bord = 2;
-  
+
   /**   A spacing parameter for elements of the GUI. */
   int pad = 1;
-  
+
   /**   A spacing parameter for elements of the GUI. */
   int hgap = 2;
-  
+
   /**   A spacing parameter for elements of the GUI. */
   int vgap = 2;
-  
+
   //int titleH;
-  /** 
+  /**
    *   Height of the panel containing
    *   <em>pitch yaw roll</em> sliders.
    */
   int pyrH;
-  
+
   /**
    *   Height of the panel containing <em>fixed line</em> sliders.
    */
   int rotH;
-  
+
   /**
    *   Height of the transient panel.
-   *   <br>The transient panel contains the 
+   *   <br>The transient panel contains the
    *   <em>pitch yaw roll</em> and <em>fixed line</em> sliders.
    */
   int transH;
 
   //Font titleFont;
   /**   Font used for the menus. */
-  Font menuFont;
+  protected final Font menuFont = new Font("default", Font.PLAIN, 11);
 
   /**   Font used for feedback text. */
   Font feedbackFont;
@@ -101,64 +101,64 @@ public class SectionViewerGUI extends JPanel {
   /**   MenuBar for SectionViewer menus. */
   public JMenuBar _menubar = new JMenuBar();
 
-  /** 
+  /**
    *   Container for _imageScrollPane.
    *   <br>Added to feedbackImagePanel.
    */
   JPanel imagePanel = new JPanel();
 
-  /** 
+  /**
    *   Container for instance of WlzImgView.
    *   <br>Added to the Viewport of _imageScrollPane.
    *   <br>(The WlzImgView is added in SectionViewer.)
    */
   JPanel _bigPanel = new JPanel();
 
-  /** 
+  /**
    *   Scrollable container for _bigPanel.
    *   <br>Added to imagePanel.
    */
   protected JScrollPane _imageScrollPane = new JScrollPane();
 
-  /** 
+  /**
    *   Container for imagePanel.
    *   <br>Added to permanentPanel.
    */
   JPanel feedbackImagePanel = new JPanel();
 
-  /**  
+  /**
    *    Java component for setting <em>% magnification</em>
    *    of the image displayed on screen.
    */
   Zoom zoomSetter = new Zoom();
 
-  /** 
+  /**
    *   Java component for setting <em>distance</em> from
    *   the <em>fixed point</em>.
    */
   WSetter distSetter = new WSetter();
 
-  /** 
+  /**
    *   Java component for setting <em>pitch</em> angle.
    */
   WSetter pitchSetter = new WSetter();
 
-  /** 
+  /**
    *   Java component for setting <em>yaw</em> angle.
    */
   WSetter yawSetter = new WSetter();
 
-  /** 
+  /**
    *   Java component for setting <em>roll</em> angle.
    */
   WSetter rollSetter = new WSetter();
-  
-  /** 
+
+  /**
    *   Java component for setting <em>fixed line</em> rotation angle.
    */
   WSetter rotSetter = new WSetter();
 
-  /** 
+  /**
    *   Control for inverting the values of the grey-level image on screen.
    *   <br>Added to invertPanel.
    */
@@ -180,7 +180,7 @@ public class SectionViewerGUI extends JPanel {
    */
   JPanel invertPanel = new JPanel();
 
-  /** 
+  /**
    *   Container for zoomControlPanel and <em>distSetter</em>.
    *   <br>Added to permanentPanel.
    */
@@ -482,7 +482,7 @@ public class SectionViewerGUI extends JPanel {
    */
   JPanel feedbackPanel_1a = new JPanel();
 
-  /**  
+  /**
    *   Container for feedbackPanel_1a & valueTextField.
    *   <br>Added to feedbackPanel_3.
    */
@@ -500,8 +500,8 @@ public class SectionViewerGUI extends JPanel {
   JPanel feedbackPanel_6 = new JPanel();
   JPanel feedbackPanel_7 = new JPanel();
   */
-  
-  /**  
+
+  /**
    *   Container for anatomyTextField.
    *   <br>Added to feedbackPanel.
    *   <br>Must to be added to BorderLayout.CENTER to allow for expansion.
@@ -606,6 +606,13 @@ public class SectionViewerGUI extends JPanel {
     transH = pyrH+vgap+rotH;
 
 //----------------------------------------------------------
+    fileMenu.setFont(menuFont);
+    fileMenu_1.setFont(menuFont);
+    fileMenu_2.setFont(menuFont);
+    fileMenu_3.setFont(menuFont);
+    fileMenu_4.setFont(menuFont);
+    fileMenu_5.setFont(menuFont);
+
     fileMenu.add(fileMenu_1);
     fileMenu.addSeparator();
     fileMenu.add(fileMenu_2);
@@ -620,6 +627,25 @@ public class SectionViewerGUI extends JPanel {
     fileMenu_5.setEnabled(true);
  //...............................
  //...............................
+    controlMenu.setFont(menuFont);
+    controlMenu_1.setFont(menuFont);
+    controlMenu_2.setFont(menuFont);
+    controlMenu_3.setFont(menuFont);
+    controlMenu_4.setFont(menuFont);
+    controlMenu_5.setFont(menuFont);
+    controlMenu_1_1.setFont(menuFont);
+    controlMenu_1_2.setFont(menuFont);
+    controlMenu_1_3.setFont(menuFont);
+    controlMenu_2_1.setFont(menuFont);
+    controlMenu_2_2.setFont(menuFont);
+    controlMenu_2_3.setFont(menuFont);
+    controlMenu_3_1.setFont(menuFont);
+    controlMenu_3_2.setFont(menuFont);
+    controlMenu_3_3.setFont(menuFont);
+    controlMenu_4_1.setFont(menuFont);
+    controlMenu_4_2.setFont(menuFont);
+    controlMenu_4_3.setFont(menuFont);
+
     controlMenu.add(controlMenu_1);
     controlMenu.add(controlMenu_2);
     controlMenu.add(controlMenu_3);
@@ -653,6 +679,13 @@ public class SectionViewerGUI extends JPanel {
     controlMenu_4.add(controlMenu_4_3);
  //...............................
  //...............................
+    showMenu.setFont(menuFont);
+    showMenu_1.setFont(menuFont);
+    showMenu_2.setFont(menuFont);
+    showMenu_3.setFont(menuFont);
+    showMenu_4.setFont(menuFont);
+    showMenu_5.setFont(menuFont);
+
     showMenu.add(showMenu_1); // cursor feedback
     showMenu.add(showMenu_2); // intersection of views
     showMenu.add(showMenu_3); // mouse-click anatomy
@@ -661,6 +694,12 @@ public class SectionViewerGUI extends JPanel {
     //showMenu_5.setEnabled(false);
  //...............................
  //...............................
+    thresholdMenu.setFont(menuFont);
+    thresholdMenu_1.setFont(menuFont);
+    thresholdMenu_2.setFont(menuFont);
+    thresholdMenu_3.setFont(menuFont);
+    thresholdMenu_4.setFont(menuFont);
+
     thresholdMenu.add(thresholdMenu_1);
     thresholdMenu.add(thresholdMenu_2);
     thresholdMenu.add(thresholdMenu_3);
@@ -671,6 +710,11 @@ public class SectionViewerGUI extends JPanel {
     thresholdMenu_3.setEnabled(true);
     thresholdMenu_4.setEnabled(true);
  //...............................
+    helpMenu.setFont(menuFont);
+    helpMenu_1.setFont(menuFont);
+    helpMenu_2.setFont(menuFont);
+    helpMenu_3.setFont(menuFont);
+
     helpMenu.add(helpMenu_1);
     helpMenu.add(helpMenu_2);
     helpMenu.add(helpMenu_3);
@@ -689,11 +733,11 @@ public class SectionViewerGUI extends JPanel {
     titleH = titleText.getFontMetrics(titleFont).getHeight() + bord;
     */
     //......................................
-    menuFont = new Font("Helvetica", Font.PLAIN, 12);
+    //menuFont = new Font("default", Font.PLAIN, 11);
     menuH = _menubar.getFontMetrics(menuFont).getHeight() + bord;
     //......................................
-    feedbackFont = new Font("Helvetica", Font.PLAIN, 12);
-    anatomyFont = new Font("Helvetica", Font.ITALIC, 12);
+    feedbackFont = new Font("default", Font.PLAIN, 11);
+    anatomyFont = new Font("default", Font.ITALIC, 11);
     //fbH = titleText.getFontMetrics(feedbackFont).getHeight() + bord;
     fbH = xyzTextField.getFontMetrics(feedbackFont).getHeight() + bord;
     //......................................

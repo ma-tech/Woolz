@@ -69,7 +69,7 @@ public class AnatomyBuilder {
    *   Prevents access to anatomy menus until they have been built.
    */
   public final Object _lock = new Object();
-  private final Font menuFont = new Font("default", Font.PLAIN, 12);
+  private final Font menuFont = new Font("default", Font.PLAIN, 11);
 
   /**
    *   Returns the lock object which prevents access to anatomy menus
