@@ -528,3 +528,4 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
   /* return */
   return( WLZ_ERR_NONE );
 }
+

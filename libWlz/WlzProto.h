@@ -224,7 +224,18 @@ extern WlzErrorNum Wlz3DViewGetMinvals(WlzThreeDViewStruct	*vs,
 extern WlzObject *Wlz3DViewTransformObj(WlzObject		*srcObj,
 					WlzThreeDViewStruct	*viewStr,
 					WlzErrorNum		*dstErr);
-
+  extern WlzObject *Wlz3DViewTransformBitmap(UBYTE		*bitData,
+					     int		width,
+					     int 		height,
+					     int 		x_offset,
+					     int 		y_offset,
+					     double 		x,
+					     double 		y,
+					     double 		z,
+					     double 		theta,
+					     double 		phi,
+					     double 		distance,
+					     WlzErrorNum	*dstErr);
 /************************************************************************
 * WlzAffineTransform.c
 ************************************************************************/
@@ -520,6 +531,11 @@ extern WlzErrorNum		WlzToDArray3D(
 				  WlzIVertex3 origin,
 				  WlzIVertex3 size,
 				  int noiseFlag);
+extern WlzObject		*WlzFromBArray1D(
+				  WlzIVertex2 arraySizeDat,
+				  unsigned char *arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
 extern WlzObject		*WlzFromIArray2D(
 				  WlzIVertex2 arraySizeDat,
 				  int **arrayDat,
@@ -531,6 +547,11 @@ extern WlzObject		*WlzFromSArray2D(
 				  WlzIVertex2 arrayOrigin,
 				  WlzErrorNum *dstErrNum);
 extern WlzObject		*WlzFromUArray2D(
+				  WlzIVertex2 arraySizeDat,
+				  unsigned char **arrayDat,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromBArray2D(
 				  WlzIVertex2 arraySizeDat,
 				  unsigned char **arrayDat,
 				  WlzIVertex2 arrayOrigin,

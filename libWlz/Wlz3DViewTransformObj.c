@@ -411,3 +411,63 @@ WlzObject *Wlz3DViewTransformObj(
   }
   return dstObj;
 }
+
+
+WlzObject *Wlz3DViewTransformBitmap(
+ UBYTE		*bitData,
+ int		width,
+ int 		height,
+ int 		x_offset,
+ int 		y_offset,
+ double 	x,
+ double 	y,
+ double 	z,
+ double 	theta,
+ double 	phi,
+ double 	distance,
+ WlzErrorNum	*dstErr)
+{
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzObject		*rtnObj=NULL;
+  WlzObject		*tmpObj;
+  WlzIVertex2 		arraySizeDat;
+  WlzIVertex2 		arrayOrigin;
+  WlzThreeDViewStruct	*viewStr;
+
+  arraySizeDat.vtX = width;
+  arraySizeDat.vtY = height;
+  arrayOrigin.vtX = x_offset;
+  arrayOrigin.vtY = y_offset;
+
+  if( tmpObj = WlzAssignObject(WlzFromBArray1D(arraySizeDat, bitData,
+					       arrayOrigin, &errNum), NULL) ){
+
+    /* make  and initialise WlzThreeDViewStruct */
+    if( viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum) ){
+      viewStr->fixed.vtX	= x;
+      viewStr->fixed.vtY	= y;
+      viewStr->fixed.vtZ	= z;
+      viewStr->theta 	= theta * WLZ_M_PI / 180.0;
+      viewStr->phi 	= phi * WLZ_M_PI / 180.0;
+      viewStr->dist 	= distance;
+      viewStr->scale 	= 1.0;
+      viewStr->view_mode = WLZ_UP_IS_UP_MODE;
+      viewStr->up.vtX 	= 0.0;
+      viewStr->up.vtY 	= 0.0;
+      viewStr->up.vtZ 	= -1.0;
+      WlzInit3DViewStruct(viewStr, tmpObj);
+
+      /* transform the 2D section to 3D */
+      rtnObj = Wlz3DViewTransformObj(tmpObj, viewStr, &errNum);
+
+      /* clean up */
+      WlzFree3DViewStruct(viewStr);
+    }
+    WlzFreeObj(tmpObj);
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}

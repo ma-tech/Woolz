@@ -34,7 +34,14 @@ static WlzIBox3			WlzBoundingBoxTransObj3D(
 static WlzIBox3 		WlzBoundingBoxContour(
 				  WlzContour *ctr,
 				  WlzErrorNum *dstErr);
-
+/** 
+ * 
+ * 
+ * @param inObj The given object
+ * @param dstErr Destination error pointer, may be NULL.
+ * 
+ * @return 2D bounding box.
+ */
 /************************************************************************
 * Function:	WlzBoundingBox2D					*
 * Returns:	WlzIBox2 *:		2D bounding box.		*

@@ -243,7 +243,8 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   WlzIntervalLine *itvLn;
 
   kol1 = gVWSp->iDom2D->kol1;
-  if((kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+  if((gVWSp->values2D.core) && 
+     (kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
   {
     if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
     {
@@ -365,7 +366,8 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
   gVP = gVWSp->gVal;
   gPP = gVWSp->gPtr;
   WlzGreyValueSetBkdPN(gVP, gPP, gVWSp->gType, gVWSp->gBkd, 4);
-  if(((kol + 1) >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+  if((gVWSp->values2D.core) &&
+     ((kol + 1) >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
   {
     while(pass-- > 0)
     {
@@ -985,13 +987,17 @@ void		WlzGreyValueGetCon(WlzGreyValueWSpace *gVWSp,
     }
     else
     {
+      int ikol, iline, iplane;
+      ikol = (int) ((kol < 0.0) ? kol - 1.0 : kol);
+      iline = (int) ((kol < 0.0) ? line - 1.0 : line);
+      iplane = (int) ((kol < 0.0) ? plane - 1.0 : plane);
       switch(gVWSp->objType)
       {
 	case WLZ_2D_DOMAINOBJ:
-	  WlzGreyValueGet2DCon(gVWSp, line, kol);
+	  WlzGreyValueGet2DCon(gVWSp, iline, ikol);
 	  break;
 	case WLZ_3D_DOMAINOBJ:
-	  WlzGreyValueGet3DCon(gVWSp, plane, line, kol);
+	  WlzGreyValueGet3DCon(gVWSp, iplane, iline, ikol);
 	  break;
 	default:
 	  break;

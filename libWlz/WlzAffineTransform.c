@@ -936,7 +936,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 {
   int		tI0,
   		count;
-  double	tD0;
+  double	tD0, x, y, z;
   WlzIVertex3	idx,
   		sPos,
 		dPos;
@@ -1070,13 +1070,13 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 	    case WLZ_INTERPOLATION_LINEAR:
 	      while(count-- > 0)
 	      {
-		sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
-		sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
-		sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
-		WlzGreyValueGet(gVWSp, sPos.vtZ, sPos.vtY, sPos.vtX);
-		tDV0.vtX = sPos.vtX - WLZ_NINT(sPos.vtX - 0.5);
-		tDV0.vtY = sPos.vtY - WLZ_NINT(sPos.vtY - 0.5);
-		tDV0.vtZ = sPos.vtZ - WLZ_NINT(sPos.vtZ - 0.5);
+		x = tMat[0][1] + (tMat[0][0] * dPos.vtX);
+		y = tMat[1][1] + (tMat[1][0] * dPos.vtX);
+		z = tMat[2][1] + (tMat[2][0] * dPos.vtX);
+		WlzGreyValueGetCon(gVWSp, z, y, x);
+		tDV0.vtX = x - WLZ_NINT(x - 0.5);
+		tDV0.vtY = y - WLZ_NINT(y - 0.5);
+		tDV0.vtZ = z - WLZ_NINT(z - 0.5);
 		tDV1.vtX = 1.0 - tDV0.vtX;
 		tDV1.vtY = 1.0 - tDV0.vtY;
 		tDV1.vtZ = 1.0 - tDV0.vtZ;
