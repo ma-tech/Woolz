@@ -2491,9 +2491,13 @@ typedef struct _WlzBasisFn
 					     in a single block to allow
 					     the parameters to be freed
 					     by AlcFree(). */
+#ifdef WLZ_EXT_BIND
+  void		*evalFn;
+#else
   WlzBasisEvalFn evalFn;		/*!< An alternative basis function
   					     evaluation function that may
 					     be called if non NULL. */
+#endif
   WlzHistogramDomain *evalData;		/*!< Data passed to the alternative
   					     basis function evaluation
 					     function if the function poionter
