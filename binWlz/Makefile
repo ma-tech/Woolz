@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 13-01-04 Rao  add WlzBasisFnTransformVertices.c
 # 23-04-03 Rao  Add WlzGreyValueMixing.c#
 # 28-01-03 Rao  Add WlzGeometryTrackUpAndDown.c
 # 18-09-02 Jianguo add Wlz3DWarpMQ
@@ -36,6 +37,7 @@ EXECUTABLES		= \
 			WlzAffineTransformObj \
 			WlzArea \
 			WlzBasisFnTransformObj \
+			WlzBasisFnTransformVertices \
 			WlzBoundaryToObj \
 			WlzBoundingBox \
 			WlzBuildContour \
@@ -143,6 +145,7 @@ CSOURCES		= \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
 			WlzBasisFnTransformObj.c \
+			WlzBasisFnTransformVertices.c \
 			WlzBoundaryToObj.c \
 			WlzBoundingBox.c \
 			WlzBuildContour.c \
