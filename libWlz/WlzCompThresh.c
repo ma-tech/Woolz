@@ -23,12 +23,144 @@
 #include <float.h>
 #include <Wlz.h>
 
-static double	WlzCompThreshFoot(WlzHistogramDomain *),
-		WlzCompThreshDepth(WlzHistogramDomain *),
-		WlzCompThreshGradient(WlzHistogramDomain *);
-static double	WlzCompThreshLSqFit(WlzGreyP vec, int idx0, int idx1,
-				     WlzObjectType histDomtype,
-				     double *dstSlope);
+static double			WlzCompThreshDepth(
+				  WlzHistogramDomain *hDom);
+static double			WlzCompThreshFoot(
+				  WlzHistogramDomain *hDom);
+static double			WlzCompThreshFracMin(
+				  WlzHistogramDomain *hDom,
+				  double bFrac,
+				  WlzThresholdType *dstThrType);
+static double			WlzCompThreshGradient(
+				  WlzHistogramDomain *hDom);
+static double			WlzCompThreshLSqFit(
+				  WlzGreyP vec,
+				  int idx0,
+				  int idx1,
+				  WlzObjectType histDomtype,
+				  double *dstSlope);
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzThreshold
+* \brief	Computes a threshold value and type using the given
+*		histogram and method.
+* \param	hObj
+* \param	method			Threshold value method.
+* \param	param0			First passed parameter:
+*					<ul>
+*					  <li>
+*					  WLZ_COMPTHRESH_FRACMIN = minimum
+*					  fraction of values which are
+*					  background.
+*					</ul>
+*					Otherwise not used.
+* \param	param1			First passed parameter:
+*					  Not used.
+* \param	extraFrac		Extra fraction to be added or
+*					subtracted from the threshold value.
+* \param	dstTV			Destination pointer for threshold
+*					value, may be NULL.
+* \param	dstTType		Destination pointer for threshold
+*					type, may be NULL.
+*/
+WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
+				   double param0, double param1,
+				   double extraFrac, WlzPixelV *dstTV,
+				   WlzThresholdType *dstTType)
+{
+  int		hMaxI;
+  WlzPixelV	tV;
+  WlzThresholdType tType;
+  WlzHistogramDomain *hDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tV.type = WLZ_GREY_DOUBLE;
+  if(hObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(hObj->type != WLZ_HISTOGRAM)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((hDom = hObj->domain.hist) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((hDom->type != WLZ_HISTOGRAMDOMAIN_INT) &&
+          (hDom->type != WLZ_HISTOGRAMDOMAIN_FLOAT))
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((hDom->nBins < 0) || (hDom->maxBins < 0) ||
+          (hDom->binSize <= DBL_EPSILON))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    switch(method)
+    {
+      case WLZ_COMPTHRESH_FOOT:  /* FALLTHROUGH */
+      case WLZ_COMPTHRESH_DEPTH: /* FALLTHROUGH */
+      case WLZ_COMPTHRESH_GRADIENT:
+	hMaxI = WlzHistogramBinMax(hDom);
+	if(hMaxI <= (((hDom->nBins * hDom->binSize) + hDom->origin) / 2))
+	{
+	  /* These algorithms only work if the background peak is low. */
+	  errNum = WLZ_ERR_UNIMPLEMENTED;
+	}
+	else
+	{
+	  tType = WLZ_THRESH_HIGH;
+	  switch(method)
+	  {
+	    case WLZ_COMPTHRESH_FOOT:
+	      tV.v.dbv = WlzCompThreshFoot(hDom);
+	      break;
+	    case WLZ_COMPTHRESH_DEPTH:
+	      tV.v.dbv = WlzCompThreshDepth(hDom);
+	      break;
+	    case WLZ_COMPTHRESH_GRADIENT:
+	      tV.v.dbv = WlzCompThreshGradient(hDom);
+	      break;
+	  }
+	}
+	break;
+      case WLZ_COMPTHRESH_FRACMIN:
+        tV.v.dbv = WlzCompThreshFracMin(hDom, param0, &tType);
+        break;
+      default:
+        errNum = WLZ_ERR_COMPTHRESH_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(tType == WLZ_THRESH_LOW)
+    {
+      tV.v.dbv -= extraFrac * tV.v.dbv;
+    }
+    else
+    {
+      tV.v.dbv += extraFrac * tV.v.dbv;
+    }
+    if(hDom->type == WLZ_HISTOGRAMDOMAIN_INT)
+    {
+      (void )WlzValueConvertPixel(&tV, tV, WLZ_GREY_INT);
+    }
+    if(dstTV)
+    {
+      *dstTV = tV;
+    }
+    if(dstTType)
+    {
+      *dstTType = tType;
+    }
+  }
+  return(errNum);
+}
 
 /*!
 * \return	Woolz error code.
@@ -50,6 +182,7 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
   double	thrVal;
   WlzHistogramDomain *histDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	minBgdFrac = 0.20;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzCompThreshold FE 0x%lx 0x%lx %d %g\n",
@@ -94,6 +227,9 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
       case WLZ_COMPTHRESH_GRADIENT:
 	thrVal = WlzCompThreshGradient(histDom);
         break;
+      case WLZ_COMPTHRESH_FRACMIN:
+	thrVal = WlzCompThreshFracMin(histDom, minBgdFrac, NULL);
+        break;
       default:
         errNum = WLZ_ERR_COMPTHRESH_TYPE;
 	break;
@@ -108,6 +244,144 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
 	  ("WlzCompThreshold FX %d\n",
 	   (int )errNum));
   return(errNum);
+}
+
+/*!
+* \return	Threshold value.
+* \ingroup 	WlzThreshold
+* \brief	Computes both a threshold value and type using
+*		a fraction and minimum algorithm in which:
+*		<ul>
+*		<li>
+*		  The histogram maximum is found and assumed to
+*		  be background. The position of the maximum in 
+*		  the histogram determines the threshold type.
+*		<li>
+*		  The first minimum in th histogram after the
+*		  given fraction of background values is the
+*		  threshold value.
+*		</ul>
+* \param	hDom			Histogram domain.
+* \param	bFrac			Minimum fraction of values
+*					which are background.
+* \param	dstThrType		Destination pointer for
+*					threshold type, may be NULL.
+*/
+static double	WlzCompThreshFracMin(WlzHistogramDomain *hDom,
+				     double bFrac,
+				     WlzThresholdType *dstThrType)
+{
+  int		idH,
+  		hMaxI;
+  double	hC,
+  		hF,
+		hV0,
+		hV1,
+		thrVal,
+  		hMaxV;
+  WlzThresholdType thrType;
+
+  /* Find histogram maximum. */
+  hMaxI = WlzHistogramBinMax(hDom);
+  hMaxV = (hDom->type == WLZ_HISTOGRAMDOMAIN_INT)?
+	   *(hDom->binValues.inp + hMaxI):
+	   *(hDom->binValues.dbp + hMaxI);
+  hF = WlzHistogramBinSum(hDom);
+  hF *= bFrac;
+  thrType = (hMaxI > (((hDom->nBins * hDom->binSize) + hDom->origin) / 2))?
+          WLZ_THRESH_LOW: WLZ_THRESH_HIGH;
+  if(thrType == WLZ_THRESH_HIGH)
+  {
+    idH = 0;
+    if(hDom->type == WLZ_HISTOGRAMDOMAIN_INT)
+    {
+      hC = *(hDom->binValues.inp + 0);
+      while(hC < hF)
+      {
+	hC += *(hDom->binValues.inp + ++idH);
+      }
+      if(idH < hMaxI)
+      {
+	idH = hMaxI;
+      }
+      hV0 = *(hDom->binValues.inp + idH);
+      while((++idH < hDom->nBins) &&
+            (hV0 > (hV1 = *(hDom->binValues.inp + idH))))
+      {
+        hV0 = hV1;
+      }
+    }
+    else /* hDom->type == WLZ_HISTOGRAMDOMAIN_FLOAT */
+    {
+      hC = *(hDom->binValues.dbp + 0);
+      while(hC < hF)
+      {
+	hC += *(hDom->binValues.dbp + ++idH);
+      }
+      if(idH < hMaxI)
+      {
+	idH = hMaxI;
+      }
+      hV0 = *(hDom->binValues.dbp + idH);
+      while((++idH < hDom->nBins) &&
+            (hV0 > (hV1 = *(hDom->binValues.dbp + idH))))
+      {
+        hV0 = hV1;
+      }
+    }
+    if(idH >= hDom->nBins)
+    {
+      idH = hDom->nBins;
+    }
+  }
+  else /* thrType == WLZ_THRESH_LOW */
+  {
+    idH = hDom->nBins - 1;
+    if(hDom->type == WLZ_HISTOGRAMDOMAIN_INT)
+    {
+      hC = *(hDom->binValues.inp + hDom->nBins - 1);
+      while(hC < hF)
+      {
+	hC += *(hDom->binValues.inp + --idH);
+      }
+      if(idH > hMaxI)
+      {
+	idH = hMaxI;
+      }
+      hV0 = *(hDom->binValues.inp + idH);
+      while((--idH >= 0) && (hV0 > (hV1 = *(hDom->binValues.inp + idH))))
+      {
+        hV0 = hV1;
+      }
+    }
+    else /* hDom->type == WLZ_HISTOGRAMDOMAIN_FLOAT */
+    {
+      hC = *(hDom->binValues.dbp + hDom->nBins - 1);
+      while(hC < hF)
+      {
+	hC += *(hDom->binValues.dbp + --idH);
+      }
+      if(idH > hMaxI)
+      {
+	idH = hMaxI;
+      }
+      hV0 = *(hDom->binValues.dbp + idH);
+      while((--idH >= 0) && (hV0 > (hV1 = *(hDom->binValues.dbp + idH))))
+      {
+        hV0 = hV1;
+      }
+    }
+    if(idH < 0)
+    {
+      idH = 0;
+    }
+  }
+  if(dstThrType)
+  {
+    *dstThrType = thrType;
+  }
+  thrVal = hDom->origin + (idH * hDom->binSize);
+  return(thrVal);
 }
 
 /*!
@@ -551,3 +825,4 @@ static double	WlzCompThreshLSqFit(WlzGreyP vec, int idx0, int idx1,
   }
   return(lsqA);
 }
+
