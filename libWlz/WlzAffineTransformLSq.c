@@ -101,7 +101,7 @@ static WlzAffineTransform 	*WlzAffineTransformLSqDQ2D(
 *		first set of verticies and normals onto the second
 *		set. The vertex and normal weighting factors must
 *		be in the range [0-1].
-* \param	WlzVertexType vtxType:	Type of verticies.
+* \param	vtxType			Type of verticies.
 * \param	nV			Number of verticies.
 * \param	vW			Vertex weights, may be NULL which
 *					implies that all the weights are 1.0.
@@ -1126,19 +1126,16 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 *		algorithm: M.W. Walker  and Shao L. Estimating 3-D
 *		Location Parameters Using Dual Number Quaternions,
 *		CVGIP 54(3), 1991.
-*		Equation 47 from this paper
-*		  \mathbf{A} = {\frac{1}{2}}i
-*			       (\mathbf{C}_3^T
-*			       {(\mathbf{C}_2) + \mathbf{C}_2^T)}^{-1}
-*			       \mathbf{C}_3 -
-*			       \mathbf{C}_1 - \mathbf{C}_^T)
-*		can be simplified to
-*		 \mathbf{A} = {\frac{1}{4\sum{i=1}{n}{\beta_i}}}
-*			      {\mathbf{C}_3^T\mathbf{C}_3} -
-*			      \mathbf{C}_1
-*    		because \mathbf{C}_1 is real and symetric, \mathbf{C}_2
-*		is scalar and \mathbf{C}_3 is anti-symetric.
-* \param	WlzVertexType vtxType:	Type of verticies.
+*		Equation 47 from this paper can be simplified to
+*		\f[
+		 \mathbf{A} = {\frac{1}{4\sum{i=1}{n}{\beta_i}}}
+			      {\mathbf{C}_3^T\mathbf{C}_3} -
+			      \mathbf{C}_1
+		\f]
+*    		because \f$\mathbf{C}_1\f$ is real and symetric,
+*		\f$\mathbf{C}_2\f$ is scalar and \f$\mathbf{C}_3\f$
+*		is anti-symetric.
+* \param	vtxType			Type of verticies.
 * \param	nV			Number of verticies.
 * \param	vW			Vertex weights (Walker's beta),
 *					may be NULL which implies that
@@ -1362,7 +1359,7 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 *		be in the range [0-1].
 *		See WlzAffineTransformLSqDQ3D() from which this
 *		function has been derived.
-* \param	WlzVertexType vtxType:	Type of verticies.
+* \param	vtxType			Type of verticies.
 * \param	nV			Number of verticies.
 * \param	vW			Vertex weights (Walker's beta),
 *					may be NULL which implies that
