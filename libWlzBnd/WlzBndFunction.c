@@ -238,9 +238,8 @@
 		int success = 0;
 		WlzErrorNum   errNum = WLZ_ERR_NONE;
 		
-		//obj->linkcount = 1;
 		errNum = WlzFreeObj(obj) ;
-		//obj = NULL;
+		
 		if (errNum == WLZ_ERR_NONE){
 			success = 1;
 		}
