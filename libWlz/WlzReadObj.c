@@ -12,6 +12,8 @@
 * Purpose:      Reads a Woolz object from a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-12-00 bill Modify WlzReadGMModel() so that it doesn't generate an
+*		error if model has no verticies.
 * 02-10-00 bill No longer read primitives (commented out code left in
 *		place) in WlzReadAffineTransform().
 * 14-08-00 bill	Add WLZ_CONTOUR to object types read by WlzReadObj().
@@ -2455,8 +2457,8 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 		idN,
 		sCnt,
 		encodeMtd,
-  		nVertex,
-		nSimplex,
+  		nVertex = 0,
+		nSimplex = 0,
 		vgElmSz,
 		vHTSz;
   int		bufI[3];
@@ -2508,24 +2510,24 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
     /* Read number of vertex's and simplicies (edges or loops). */
     if((errNum = WlzReadInt(fP, bufI, 2)) == WLZ_ERR_NONE)
     {
-      if((nVertex = bufI[0]) <= 0)
+      if((nVertex = bufI[0]) < 0)
       {
 	errNum = WLZ_ERR_READ_INCOMPLETE;
       }
-      else
+      else if(nVertex > 0)
       {
         nSimplex = bufI[1];
       }
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (nVertex > 0))
   {
     /* Choose an appropriate vertex (matching) hash table size and make a new
      * GM. */
     vHTSz = ((tI0 = nVertex) < 1024)? 1024: tI0;
     model = WlzGMModelNew(mType, 0, vHTSz, &errNum);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (nVertex > 0))
   {
     /* Create a vertex buffer. */
     if((bufVG = AlcMalloc(vgElmSz * nVertex)) == NULL)
@@ -2533,7 +2535,7 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (nVertex > 0))
   {
     /* Read the vertex's into the buffer. */
     switch(mType)
@@ -2552,7 +2554,7 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 	break;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (nVertex > 0))
   {
     /* Read the vertex indicies and build the model. */
     sCnt = 0;
