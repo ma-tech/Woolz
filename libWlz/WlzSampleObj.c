@@ -2553,10 +2553,10 @@ static int	WlzSampleObjGaussKernelD(double **kernel, WlzIVertex2 kernelSz,
 
   if(kernel)
   {
+    min = 0.0;			      /* Just to keep lint/compillers happy. */
     kR = -widFac * ((samFac.vtX * samFac.vtX) + (samFac.vtY * samFac.vtY));
     for(idY = 0; idY < kernelSz.vtY; ++idY)
     {
-      min = -(DBL_MAX);
       kY = idY - (kernelSz.vtY / 2);
       kY *= kY;
       for(idX = 0; idX < kernelSz.vtX; ++idX)
