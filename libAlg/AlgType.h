@@ -31,6 +31,7 @@ extern "C" {
 #define	ALG_MIN(X,Y)	(((X)<=(Y))?(X):(Y))
 #define	ALG_ABS(X)	(((X)>0)?(X):(-(X)))
 #define	ALG_NINT(X)	((int)(((X)<0)?((X)-(0.5)):((X)+(0.5))))
+#define	ALG_SQR(X)	((X)*(X))
 
 
 /* Standard math constants */
