@@ -1137,7 +1137,7 @@ public class WlzC2Java
 	      }
 	      else if(cPmIdent.startsWith("array"))
 	      {
-		  jPmKey = WLZ_JPM_KEY_WLZ_PTR1_ARY1;
+		jPmKey = WLZ_JPM_KEY_WLZ_PTR1_ARY1;
 	      }
 	      else
 	      {
@@ -1662,6 +1662,7 @@ public class WlzC2Java
         case WLZ_JPM_KEY_WLZ_IBOX3_ARY1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX3_PTR1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX3_ARY1:	// FALLTHROUGH
+	case WLZ_JPM_KEY_WLZ_PTR1_ARY1:		// FALLTHROUGH
 	case WLZ_JPM_KEY_WLZ_PTR2:
 	  jPmClass = cType + " []";
 	  jniPmType = "jarray";
@@ -1671,8 +1672,7 @@ public class WlzC2Java
         case WLZ_JPM_KEY_WLZ_DVERTEX2_PTR1_ARY1: // FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IVERTEX3_PTR1_ARY1: // FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_FVERTEX3_PTR1_ARY1: // FALLTHROUGH
-        case WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1: // FALLTHROUGH
-	case WLZ_JPM_KEY_WLZ_PTR1_ARY1:
+        case WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1_ARY1:
 	  jPmClass = cType + " [][]";
 	  jniPmType = "jarray";
 	  break;
