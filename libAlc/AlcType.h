@@ -15,7 +15,8 @@
 *		MRC HGU memory allocation library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 02-03-2K bill Added AlcVector.
+* 01-11-00 bill Added AlcKDTree, AlcKDTNode, AlcPointP and AlcPointType.
+* 02-03-00 bill Added AlcVector.
 * 01-11-99 bill Added AlcDLPList.
 * 01-12-99 bill	Add AlcBlockStack and many comments.
 ************************************************************************/
@@ -108,6 +109,50 @@ typedef struct _AlcVector
 /*
 #define ALC_VECTOR_DATA(V,I) (void*)((char*)(*((V)->blocks+(I)))+(((I)%(V)->blkSz)*(V)->elmSz))
 */
+
+/************************************************************************
+* General purpose coordinate point.
+************************************************************************/
+typedef enum
+{
+  ALC_POINTTYPE_INT,					    /* Integer point */
+  ALC_POINTTYPE_DBL		     		     /* Floating point point */
+} AlcPointType;
+
+typedef union _AlcPointP
+{
+  void			*kV;			     /* Pointer to any point */
+  int			*kI;			 /* Pointer to integer point */
+  double		*kD;		  /* Pointer to floating point point */
+} AlcPointP;
+
+/************************************************************************
+* General purpose binary space partition tree (kD-tree).
+************************************************************************/
+typedef struct _AlcKDTNode
+{
+  int			idx;
+  int			split;			  /* The splitting dimension */
+  struct _AlcKDTNode	*parent;   /* Parent node, NULL if node is tree root */
+  struct _AlcKDTNode	*childN;  /* Child node with -ve comparision result  */
+  struct _AlcKDTNode	*childP;  /* Child node with +ve comparision result  */
+  AlcPointP		key;				 /* Node's key value */
+  AlcPointP		boundN; 	/* Nodes bounding box minimum values */
+  AlcPointP		boundP; 	/* Nodes bounding box maximum values */
+} AlcKDTNode;
+
+typedef struct _AlcKDTTree
+{
+   AlcPointType type;			/* Type of tree, ie type of node key */
+  int			dim;			   /* Dimension of the tree. */
+  int			keySz;			  /* sizeof(key) * dimension */
+  double		tol; /* Comparision tollerance for double key values */
+  int			nNodes; 	      /* Number of nodes in the tree */
+  struct _AlcKDTNode	*root;			   /* Root node of the tree. */
+  struct _AlcKDTNode	*nodeStack;		  /* Nodes available for use */
+  int			nodeBlockSz; /* Number of nodes allocated in a block */
+  AlcBlockStack 	*freeStack;	   /* Stack of allocated node blocks */
+} AlcKDTTree;
 
 #ifdef __cplusplus
 }					       /* Close scope of 'extern "C" */

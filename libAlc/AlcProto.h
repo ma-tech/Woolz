@@ -15,7 +15,8 @@
 *		the MRC HGU memory allocation library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 02-03-2K bill Added AlcVector and AlcFreeStack.
+* 01-11-00 bill Added AlcKDTree.
+* 02-03-00 bill Added AlcVector and AlcFreeStack.
 * 01-11-99 bill Added AlcDLPList.
 * 01-12-99 bill Added AlcBlockStack.
 ************************************************************************/
@@ -223,6 +224,45 @@ extern int			AlcHashItemOrder(
 				  AlcHashTable *hTbl,
 				  AlcHashItem *item0,
 				  AlcHashItem *item1);
+/************************************************************************
+* AlcKDTree.c
+************************************************************************/
+extern AlcKDTTree	       *AlcKDTTreeNew(
+				   AlcPointType type,
+				  int dim,
+				  double tol,
+				  int nNodes,
+				  AlcErrno *dstErr);
+extern AlcErrno 	  	AlcKDTTreeFree(
+				    AlcKDTTree *tree);
+extern AlcKDTNode		*AlcKDTNodeNew(
+				  AlcKDTTree *tree,
+				  AlcKDTNode *parent,
+				  AlcPointP key,
+				  int cmp,
+				  AlcErrno *dstErr);
+extern void			AlcKDTNodeFree(
+				  AlcKDTTree *tree,
+				  AlcKDTNode *node);
+extern AlcKDTNode		*AlcKDTInsert(
+				  AlcKDTTree *tree,
+				  void *keyVal,
+				  AlcKDTNode **dstFndNod,
+				  AlcErrno *dstErr);
+extern AlcKDTNode		*AlcKDTGetMatch(
+				  AlcKDTTree *tree,
+				  void *keyVal,
+				  AlcErrno *dstErr);
+extern AlcKDTNode	        *AlcKDTGetLeaf(
+				  AlcKDTTree *tree,
+				  AlcKDTNode *node,
+				  AlcPointP key);
+extern AlcKDTNode	       *AlcKDTGetNN(
+				  AlcKDTTree *tree,
+				  void *keyVal,
+				  double minDist,
+				  double *dstNNDist,
+				  AlcErrno *dstErr);
 
 /************************************************************************
 * AlcString.c
