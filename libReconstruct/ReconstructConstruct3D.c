@@ -14,6 +14,7 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 15-02-2k bill	Add dither flag for WlzHistogramMatchObj().
 ************************************************************************/
 #include <Reconstruct.h>
 #include <string.h>
@@ -373,7 +374,8 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	  if(matchHistFlg)	
 	  {
 	    errFlag = RecErrorFromWlz(
-	    	      WlzHistogramMatchObj(tObj0, dstHistObj, 0, 0,  0.0, 1.0));
+	    	      WlzHistogramMatchObj(tObj0, dstHistObj, 0, 0,  0.0, 1.0,
+		      			   1));
 	  }
 	}
 	if(errFlag == REC_ERR_NONE)
