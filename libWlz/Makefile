@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 23-01-01 bill Add WlzShadeCorrect.c
 # 28-11-00 bill Add WlzGeoModelFilters.c
 # 06-11-00 bill	Add WlzVerticies.c and WlzRegICP.c
 # 29-11-99 bill	Add WlzContour.c
@@ -120,6 +121,7 @@ CSOURCES		= \
 			WlzScalarBinaryOp.c \
 			WlzSepTrans.c \
 			WlzSeqPar.c \
+			WlzShadeCorrect.c \
 			WlzShift.c \
 			WlzSkeleton.c \
 			WlzSobel.c \
