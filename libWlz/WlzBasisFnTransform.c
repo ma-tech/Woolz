@@ -343,36 +343,503 @@ WlzObject	*WlzBasisFnTransformObj(WlzObject *srcObj,
 					WlzErrorNum *dstErr)
 {
   WlzObject	*dstObj = NULL;
+  WlzDomain	dstDom;
+  WlzValues	dumVal;
   WlzMeshTransform *mesh = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  dumVal.core = NULL;
   if((srcObj == NULL) || (basisTr == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
   else
   {
-    /* TODO: need better mesh generation */
-    mesh = WlzMeshFromObj(srcObj, WLZ_MESH_GENMETHOD_BLOCK, 100.0, 100.0,
-			  &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzBasisFnSetMesh(mesh, basisTr);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    dstObj = WlzMeshTransformObj(srcObj, mesh, interp, &errNum);
-  }
-  if(mesh)
-  {
-    WlzMeshFreeTransform(mesh);
+    switch(srcObj->type)
+    {
+      case WLZ_EMPTY_OBJ:
+        if((dstObj = WlzMakeEmpty(&errNum)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	break;
+      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	/* TODO: need better mesh generation */
+	mesh = WlzMeshFromObj(srcObj, WLZ_MESH_GENMETHOD_BLOCK, 100.0, 100.0,
+	                      &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzBasisFnSetMesh(mesh, basisTr);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dstObj = WlzMeshTransformObj(srcObj, mesh, interp, &errNum);
+	}
+	if(mesh)
+	{
+	  WlzMeshFreeTransform(mesh);
+	}
+        break;
+      case WLZ_2D_POLYGON: /* FALLTHROUGH */
+      case WLZ_BOUNDLIST: /* FALLTHROUGH */
+      case WLZ_CONTOUR:
+	if(srcObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
+	{
+	  switch(srcObj->type)
+	  {
+	    case WLZ_2D_POLYGON:
+	      dstDom.poly = WlzBasisFnTransformPoly2(srcObj->domain.poly,
+	      					     basisTr, 1, &errNum);
+	      break;
+	    case WLZ_BOUNDLIST:
+	      dstDom.b = WlzBasisFnTransformBoundList(srcObj->domain.b,
+	      					      basisTr, 1, &errNum);
+	      break;
+	    case WLZ_CONTOUR:
+	      dstDom.ctr = WlzBasisFnTransformContour(srcObj->domain.ctr,
+	      					      basisTr, 1, &errNum);
+	      break;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if((dstObj = WlzMakeMain(srcObj->type, dstDom, dumVal,
+	  			   NULL, NULL, NULL)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	    (void )WlzFreeDomain(dstDom);
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
   return(dstObj);
+}
+
+/*!
+* \return	Transformed 2D polygon domain, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms a 2D polygon domain using a the given basis function
+*		transform.
+* \param	srcPoly			Polygon domain to be transformed.
+* \param	basisTr			Basis function transform to apply.
+* \param	newPoly			Makes a new polygon domain if non-zero
+*					otherwise the given polygon domain
+*					will be transformed in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
+					   WlzBasisFnTransform *basisTr,
+					   int newPoly,
+					   WlzErrorNum *dstErr)
+{
+  int		idN;
+  WlzVertexP	sVP,
+  		dVP;
+  WlzDVertex2	tD;
+  WlzPolygonDomain *dstPoly = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcPoly == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((srcPoly->type != WLZ_POLYGON_INT) &&
+          (srcPoly->type != WLZ_POLYGON_FLOAT) &&
+          (srcPoly->type != WLZ_POLYGON_DOUBLE))
+  {
+    errNum = WLZ_ERR_POLYGON_TYPE;
+  }
+  else if(newPoly &&
+          ((dstPoly = WlzMakePolygonDomain(srcPoly->type, 0, NULL,
+  					   srcPoly->nvertices, 1,
+					   &errNum)) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    sVP.v = srcPoly->vtx;
+    if(newPoly)
+    {
+      dVP.v = dstPoly->vtx;
+      dstPoly->nvertices = srcPoly->nvertices;
+    }
+    else
+    {
+      dVP.v = srcPoly->vtx;
+    }
+    switch(srcPoly->type)
+    {
+      case WLZ_POLYGON_INT:
+	tD.vtX = sVP.i2->vtX;
+	tD.vtY = sVP.i2->vtY;
+	tD = WlzBasisFnTransformVertexD(basisTr, tD, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dVP.i2->vtX = tD.vtX;
+	  dVP.i2->vtY = tD.vtY;
+	  for(idN = 1; idN < srcPoly->nvertices; ++idN)
+	  {
+	    ++(sVP.i2);
+	    ++(dVP.i2);
+	    tD.vtX = sVP.i2->vtX;
+	    tD.vtY = sVP.i2->vtY;
+	    tD = WlzBasisFnTransformVertexD(basisTr, tD, NULL);
+	    dVP.i2->vtX = tD.vtX;
+	    dVP.i2->vtY = tD.vtY;
+	  }
+	}
+        break;
+      case WLZ_POLYGON_FLOAT:
+	tD.vtX = sVP.f2->vtX;
+	tD.vtY = sVP.f2->vtY;
+	tD = WlzBasisFnTransformVertexD(basisTr, tD, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dVP.f2->vtX = tD.vtX;
+	  dVP.f2->vtY = tD.vtY;
+	  for(idN = 1; idN < srcPoly->nvertices; ++idN)
+	  {
+	    ++(sVP.f2);
+	    ++(dVP.f2);
+	    tD.vtX = sVP.f2->vtX;
+	    tD.vtY = sVP.f2->vtY;
+	    tD = WlzBasisFnTransformVertexD(basisTr, tD, NULL);
+	    dVP.f2->vtX = tD.vtX;
+	    dVP.f2->vtY = tD.vtY;
+	  }
+	}
+        break;
+      case WLZ_POLYGON_DOUBLE:
+	*(dVP.d2) = WlzBasisFnTransformVertexD(basisTr, *(sVP.d2), &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  for(idN = 1; idN < srcPoly->nvertices; ++idN)
+	  {
+	    ++(sVP.d2);
+	    ++(dVP.d2);
+	    *(dVP.d2) = WlzBasisFnTransformVertexD(basisTr, *(sVP.d2), NULL);
+	  }
+	}
+        break;
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )WlzFreePolyDmn(dstPoly);
+      dstPoly = NULL;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstPoly);
+}
+
+/*!
+* \return	Transformed 2D boundary list, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms a 2D boundary list using a the given basis function
+*		transform.
+* \param	srcBnd			Boundary list to be transformed.
+* \param	basisTr			Basis function transform to apply.
+* \param	newBnd			Makes a new bound list if non-zero
+*					otherwise the given bound list
+*					will be transformed in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBoundList *WlzBasisFnTransformBoundList(WlzBoundList *srcBnd,
+					   WlzBasisFnTransform *basisTr,
+					   int newBnd,
+					   WlzErrorNum *dstErr)
+{
+  WlzDomain	tDom;
+  WlzBoundList	*dstBnd = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcBnd == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcBnd->type != WLZ_BOUNDLIST_PIECE)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((newBnd == 0) ||
+          ((dstBnd = (WlzBoundList *)
+                     AlcCalloc(sizeof(WlzBoundList), 1)) == NULL))
+  {
+    if(newBnd)
+    {
+      dstBnd->type = srcBnd->type;
+      dstBnd->wrap = srcBnd->wrap;
+    }
+    else
+    {
+      dstBnd = srcBnd;
+    }
+    /* Transform the polygon */
+    if((dstBnd->poly = WlzBasisFnTransformPoly2(srcBnd->poly, basisTr,
+                                                newBnd, &errNum)) != NULL)
+    {
+      /* Transform next */
+      if(srcBnd->next)
+      {
+        if((tDom.b = WlzBasisFnTransformBoundList(srcBnd->next, basisTr,
+					          newBnd, &errNum)) != NULL)
+        {
+	  if(newBnd)
+	  {
+            (void )WlzAssignDomain(tDom, NULL);
+	  }
+          dstBnd->next = tDom.b;
+        }
+      }
+      /* Transform down */
+      if(srcBnd->down && (errNum == WLZ_ERR_NONE))
+      {
+        if((tDom.b = WlzBasisFnTransformBoundList(srcBnd->down, basisTr,
+                                                  newBnd, &errNum)) != NULL)
+        {
+	  if(newBnd)
+	  {
+            (void )WlzAssignDomain(tDom, NULL);
+	  }
+          dstBnd->down = tDom.b;
+        }
+      }
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      if(newBnd)
+      {
+        (void )WlzFreeBoundList(dstBnd);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstBnd);
+}
+
+/*!
+* \return	Transformed contour, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms a contour using a the given basis function
+*		transform. See WlzBasisFnTransformGMModel().
+* \param	srcCtr			Contour to be transformed.
+* \param	basisTr			Basis function transform to apply.
+* \param	newCtr			Makes a new contour if non-zero
+*					otherwise the given contour will be
+*					transformed in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzContour	*WlzBasisFnTransformContour(WlzContour *srcCtr,
+					    WlzBasisFnTransform *basisTr,
+					    int newCtr,
+					    WlzErrorNum *dstErr)
+{
+  WlzContour	*dstCtr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstCtr = (newCtr)? WlzMakeContour(&errNum): srcCtr;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstCtr->model = WlzBasisFnTransformGMModel(srcCtr->model, basisTr,
+    					       newCtr, &errNum);
+    if(newCtr)
+    {
+      (void )WlzAssignGMModel(dstCtr->model, NULL);
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(newCtr && dstCtr)
+    {
+      (void )WlzFreeContour(dstCtr);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstCtr);
+}
+
+/*!
+* \return	Transformed model, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms a Woolz GMModel using a the given basis function
+*		transform. This function assumes that the transformation
+*		does not change the topology of the model, watch out
+*		that this willnot always be true!
+* \param	srcM			Model to be transformed.
+* \param	basisTr			Basis function transform to apply.
+* \param	newModel		Makes a new model if non-zero
+*					otherwise the given model will be
+*					transformed in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzGMModel	*WlzBasisFnTransformGMModel(WlzGMModel *srcM,
+					    WlzBasisFnTransform *basisTr,
+					    int newModel, WlzErrorNum *dstErr)
+{
+  int		idx,
+  		cnt;
+  WlzDVertex2	tD;
+  AlcVector	*vec;
+  WlzGMElemP	elmP;
+  WlzGMModel	*dstM = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstM = (newModel)? WlzGMModelCopy(srcM, &errNum): srcM;
+  /* Transform vertex geometries. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx = 0;
+    vec = dstM->res.vertexG.vec;
+    cnt = dstM->res.vertexG.numIdx;
+    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+    {
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      if(elmP.core && (elmP.core->idx >= 0))
+      {
+        switch(dstM->type)
+        {
+          case WLZ_GMMOD_2I:
+	    tD.vtX = elmP.vertexG2I->vtx.vtX;
+	    tD.vtY = elmP.vertexG2I->vtx.vtY;
+	    tD = WlzBasisFnTransformVertexD(basisTr, tD, &errNum);
+	    elmP.vertexG2I->vtx.vtX = WLZ_NINT(tD.vtX);
+	    elmP.vertexG2I->vtx.vtY = WLZ_NINT(tD.vtY);
+            break;
+          case WLZ_GMMOD_2D:
+	    elmP.vertexG2D->vtx = WlzBasisFnTransformVertexD(basisTr,
+	    				elmP.vertexG2D->vtx, &errNum);
+            break;
+          case WLZ_GMMOD_2N:
+	    elmP.vertexG2N->nrm = WlzBasisFnTransformNormalD(basisTr,
+					elmP.vertexG2N->vtx,
+					elmP.vertexG2N->nrm,
+					&(elmP.vertexG2N->vtx),
+					&errNum);
+            break;
+          default:
+            errNum = WLZ_ERR_DOMAIN_TYPE;
+            break;
+        }
+      }
+      ++idx;
+    }
+  }
+  /* Compute shell geometries. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx = 0;
+    vec = dstM->res.shell.vec;
+    cnt = dstM->res.shell.numIdx;
+    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+    {
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      if(elmP.core && (elmP.core->idx >= 0))
+      {
+        errNum = WlzGMShellComputeGBB(elmP.shell);
+      }
+      ++idx;
+    }
+  }
+  /* Rehash the vertex location table. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGMModelRehashVHT(dstM, 0);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstM);
+}
+
+/*!
+* \return	Transformed vertex.
+* \ingroup	WlzTransform
+* \brief	Transforms the given vertex and it's normal which is
+*		unit length and directed from the given vertex.
+* \param	basisTr			Basis function transform to apply.
+* \param	srcVx			Given vertex.
+* \param	srcNr			Given normal.
+* \param	dstVx			Destination pointer for the
+*					transformed vertex. Must not
+*					be NULL.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
+WlzDVertex2	WlzBasisFnTransformNormalD(WlzBasisFnTransform *basisTr,
+					   WlzDVertex2 srcVx,
+					   WlzDVertex2 srcNr,
+					   WlzDVertex2 *dstVx,
+					   WlzErrorNum *dstErr)
+{
+  double	len;
+  WlzDVertex2	tVx,
+  		dVx,
+  		dNr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(basisTr == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(basisTr->type != WLZ_TRANSFORM_2D_BASISFN)
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else
+  {
+    dVx = WlzBasisFnTransformVertexD(basisTr, srcVx, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WLZ_VTX_2_ADD(tVx, srcVx, srcNr);
+    tVx = WlzBasisFnTransformVertexD(basisTr, tVx, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WLZ_VTX_2_SUB(tVx, tVx, dVx);
+    len = WLZ_VTX_2_SQRLEN(tVx);
+    if(len > DBL_EPSILON)
+    {
+      len = 1.0 / sqrt(len);
+      WLZ_VTX_2_SCALE(tVx, tVx, len);
+    }
+    else
+    {
+      WLZ_VTX_2_ZERO(tVx);
+      errNum = WLZ_ERR_TRANSFORM_DATA;
+    }
+    dNr = tVx;
+    *dstVx = dVx;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dNr);
 }
 
 /*!
