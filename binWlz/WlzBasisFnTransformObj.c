@@ -39,11 +39,13 @@ int             main(int argc, char **argv)
 		vxLimit = 0,
 		basisFnPolyOrder = 3,
 		debugPSOutput = 0,
-		outTrFlag = 0,
+		outBasisTrFlag = 0,
+		outMeshTrFlag = 0,
+		restrictToBasisFn = 0,
 		ok = 1,
 		usage = 0;
-  double	meshMinDist = 10.0,
-  		meshMaxDist = 100.0;
+  double	meshMinDist = 20.0,
+  		meshMaxDist = 40.0;
   WlzDVertex2	*vx0,
   		*vx1,
 		*vxVec0 = NULL,
@@ -51,9 +53,9 @@ int             main(int argc, char **argv)
   WlzObject	*inObj = NULL,
 		*outObj = NULL;
   WlzMeshTransform *meshTr = NULL;
-  WlzMeshGenMethod meshGenMth = WLZ_MESH_GENMETHOD_BLOCK;
+  WlzMeshGenMethod meshGenMth = WLZ_MESH_GENMETHOD_GRADIENT;
   WlzBasisFnTransform *basisTr = NULL;
-  WlzBasisFnType basisFnType = WLZ_BASISFN_TPS;
+  WlzBasisFnType basisFnType = WLZ_BASISFN_MQ;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   FILE		*fP = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -63,7 +65,7 @@ int             main(int argc, char **argv)
 		*tiePtFileStr = NULL,
   		*outObjFileStr;
   const char    *errMsg;
-  static char	optList[] = "m:o:p:t:M:Y:cghqsyBDGLT",
+  static char	optList[] = "m:o:p:t:M:Y:cghqsyBDGLRTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-",
   		inRecord[IN_RECORD_MAX];
@@ -125,8 +127,14 @@ int             main(int argc, char **argv)
       case 't':
         basisFnTrFileStr = optarg;
         break;
+      case 'R':
+        restrictToBasisFn = 1;
+	break;
       case 'T':
-        outTrFlag = 1;
+        outBasisTrFlag = 1;
+	break;
+      case 'U':
+        outMeshTrFlag = 1;
 	break;
       case 'Y':
         if(sscanf(optarg, "%d", &basisFnPolyOrder) != 1)
@@ -251,75 +259,97 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    basisTr = WlzBasisFnTrFromCPts(basisFnType, basisFnPolyOrder,
-    			           nTiePP, vxVec0,
-				   nTiePP, vxVec1, &errNum);
-    if(errNum != WLZ_ERR_NONE)
+    errNum = WLZ_ERR_READ_EOF;
+    if((inObjFileStr == NULL) ||
+	(*inObjFileStr == '\0') ||
+	((fP = (strcmp(inObjFileStr, "-")?
+		fopen(inObjFileStr, "r"): stdin)) == NULL) ||
+	((inObj= WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+	(errNum != WLZ_ERR_NONE))
     {
       ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-      		     "%s: failed to compute basis function transform (%s).\n",
-		     *argv, errMsg);
+		     "%s: failed to read object from file %s\n",
+		     *argv, inObjFileStr);
+    }
+    if(fP)
+    {
+      if(strcmp(inObjFileStr, "-"))
+      {
+	fclose(fP);
+      }
+      fP = NULL;
     }
   }
   if(ok)
   {
-    if(outTrFlag)
+    if(restrictToBasisFn)
     {
-      errNum = WLZ_ERR_UNSPECIFIED;
+      basisTr = WlzBasisFnTrFromCPts(basisFnType, basisFnPolyOrder,
+	  nTiePP, vxVec0,
+	  nTiePP, vxVec1, &errNum);
+      if(errNum != WLZ_ERR_NONE)
+      {
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		     "%s: failed to compute basis function transform (%s).\n",
+		     *argv, errMsg);
+      }
+    }
+    else /* Use affine and basis functions to define mesh. */
+    {
+      meshTr = WlzMeshTransformFromCPts(inObj, basisFnType, basisFnPolyOrder,
+      				nTiePP, vxVec0, nTiePP, vxVec1,
+				meshGenMth, meshMinDist, meshMaxDist,
+				&errNum);
+    }
+  }
+  if(ok)
+  {
+    if(outMeshTrFlag)
+    {
+      errNum = WLZ_ERR_UNIMPLEMENTED;
+      ok = 0;
+      (void )fprintf(stderr,
+      		     "%s: Writing mesh transforms has not been\n"
+		     "implemented yet\n",
+		     *argv);
+    }
+    else if(outBasisTrFlag)
+    {
+      errNum = WLZ_ERR_UNIMPLEMENTED;
       ok = 0;
       (void )fprintf(stderr,
       		     "%s: Writing basis function transforms has not been\n"
 		     "implemented yet\n",
 		     *argv);
     }
-    else
+    else /* Transform the object and then write it out. */
     {
-      errNum = WLZ_ERR_READ_EOF;
-      if((inObjFileStr == NULL) ||
-         (*inObjFileStr == '\0') ||
-	 ((fP = (strcmp(inObjFileStr, "-")?
-	         fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-         ((inObj= WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-	 (errNum != WLZ_ERR_NONE))
-      {
-        ok = 0;
-	(void )fprintf(stderr,
-		       "%s: failed to read object from file %s\n",
-		       *argv, inObjFileStr);
-      }
-      if(fP)
-      {
-	if(strcmp(inObjFileStr, "-"))
-	{
-	  fclose(fP);
-	}
-	fP = NULL;
-      }
-      if(errNum == WLZ_ERR_NONE)
+      if(restrictToBasisFn)
       {
 	meshTr = WlzMeshFromObj(inObj, meshGenMth, meshMinDist, meshMaxDist,
-				&errNum);
-        if(errNum != WLZ_ERR_NONE)
-	{
-	  ok = 0;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-	  		 "%s: failed to compute a mesh for the object (%s).\n",
-	  		 *argv, errMsg);
-	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	errNum = WlzBasisFnSetMesh(meshTr, basisTr);
+	    &errNum);
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  ok = 0;
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,
-	  		 "%s: failed to set the mesh displacements (%s).\n",
-	  		 *argv, errMsg);
+			 "%s: failed to compute a mesh for the object (%s).\n",
+			 *argv, errMsg);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzBasisFnSetMesh(meshTr, basisTr);
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    ok = 0;
+	    (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+			   "%s: failed to set the mesh displacements (%s).\n",
+			   *argv, errMsg);
+	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -337,14 +367,6 @@ int             main(int argc, char **argv)
 	(void )fprintf(stderr,
 		       "%s: failed to transform object (%s).\n",
 		       *argv, errMsg);
-      }
-      if(meshTr)
-      {
-	(void )WlzMeshFreeTransform(meshTr);
-      }
-      if(basisTr)
-      {
-	(void )WlzBasisFnFreeTransform(basisTr);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -367,6 +389,8 @@ int             main(int argc, char **argv)
       }
     }
   }
+  (void )WlzMeshFreeTransform(meshTr);
+  (void )WlzBasisFnFreeTransform(basisTr);
   if(usage)
   {
     (void )fprintf(stderr,
@@ -385,6 +409,9 @@ int             main(int argc, char **argv)
     "  -L  Use linear interpolation instead of nearest neighbour.\n"
     "  -m  Minimum mesh node separation distance (default 10.0)\n"
     "  -M  Maximum mesh node separation distance (default 100.0)\n"
+    "  -R  Restrict the transformation to only a basis function transform\n"
+    "      instead of the default which uses a least squares affine and\n"
+    "      basis function transform.\n"
     "  -o  Output object file name.\n"
     "  -p  Tie point file.\n"
     "  -t  Basis function transform object.\n"
@@ -396,6 +423,7 @@ int             main(int argc, char **argv)
     "      are given.\n"
     "  -T  Output a basis function transform instead of a transformed\n"
     "      object.\n"
+    "  -U  Output a mesh transform instead of a transformed object.\n"
     "  -y  Use polynomianl basis function if tie points are given.\n"
     "  -Y  Polynomial order for oolynomianl basis function (default 3).\n"
     "Computes and applies Woolz basis function transforms.\n"
