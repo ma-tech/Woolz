@@ -15,8 +15,9 @@
 *		the MRC HGU memory allocation library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 01-11-1999 bill Added AlcDLPList.
-* 01-12-1999 bill Added AlcBlockStack.
+* 02-03-2K bill Added AlcVector and AlcFreeStack.
+* 01-11-99 bill Added AlcDLPList.
+* 01-12-99 bill Added AlcBlockStack.
 ************************************************************************/
 
 #ifdef __cplusplus
@@ -157,6 +158,20 @@ extern AlcErrno			AlcDLPListSort(
 				  int (*entryCompFn)(void *, void *));
 
 /************************************************************************
+* AlcFreeStack.c
+************************************************************************/
+extern void            		*AlcFreeStackPush(
+				  void *prev,
+				  void *data,
+				  AlcErrno *dstErr);
+extern void			*AlcFreeStackPop(
+				  void *prev,
+				  void **dstData,
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcFreeStackFree(
+				  void *stack);
+
+/************************************************************************
 * AlcHashTable.c
 ************************************************************************/
 extern AlcHashTable		*AlcHashTableNew(
@@ -214,6 +229,27 @@ extern int			AlcHashItemOrder(
 ************************************************************************/
 extern char	*AlcStrDup(const char *srcStr);
 
+/************************************************************************
+* AlcVector.c
+************************************************************************/
+extern AlcVector		*AlcVectorNew(
+				  unsigned int elmCnt,
+				  unsigned int elmSz,
+				  unsigned int blkSz,
+                              	  AlcErrno *dstErr);
+extern AlcErrno			AlcVectorFree(
+				  AlcVector *vec);
+extern AlcErrno			AlcVectorExtend(
+				  AlcVector *vec,
+				  unsigned int elmCnt);
+extern void			*AlcVectorItemGet(
+				  AlcVector *vec,
+				  unsigned int idx);
+extern void			*AlcVectorExtendAndGet(
+				  AlcVector *vec,
+				  unsigned int idx);
+extern unsigned int		AlcVectorCount(
+				  AlcVector *vec);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
