@@ -47,6 +47,8 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
+*		add WlzAffineTransformLSq3D and a new WlzAffineTransformLSq.
 * 28-11-00 bill	Add WlzGMShellComputeGBB() and WlzGMFilterRmSmShells().
 * 16-11-00 bill Add WlzGMModelDeleteS().
 * 06-11-00 bill Add WlzVerticiesFromObj() and WlzRegICPObjs().
@@ -321,11 +323,28 @@ extern WlzErrorNum 		WlzAffineTransformPrimSet(
 /************************************************************************
 * WlzAffineTransformLSq.c						*
 ************************************************************************/
-extern WlzAffineTransform 	*WlzAffineTransformLSq(
+#ifndef WLZ_EXT_BIND
+extern WlzAffineTransform	*WlzAffineTransformLSq(
+				  WlzVertexType vtxType,
+				  int arraySizeVec0,
+				  WlzVertexP arrayVec0,
+				  int arraySizeVec1,
+				  WlzVertexP arrayVec1,
+				  WlzTransformType tType,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+extern WlzAffineTransform 	*WlzAffineTransformLSq2D(
 				  int arraySizeVec0,
 				  WlzDVertex2 *arrayVec0,
 				  int arraySizeVec1,
 				  WlzDVertex2 *arrayVec1,
+				  WlzTransformType tType,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSq3D(
+				  int arraySizeVec0,
+				  WlzDVertex3 *arrayVec0,
+				  int arraySizeVec1,
+				  WlzDVertex3 *arrayVec1,
 				  WlzTransformType tType,
 				  WlzErrorNum *dstErr);
 
