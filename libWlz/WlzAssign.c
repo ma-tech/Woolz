@@ -189,6 +189,8 @@ AlcDLPList *WlzAssignPropertyList(
   WlzProperty	property;
   
   if( plist ){
+    /* TODO Need to use a proper property list data structure with a
+     * linkcount. This leaks memeory! */
     rtnList = AlcDLPListNew(&alcErrNum);
     if( alcErrNum == ALC_ER_NONE ){
       item = plist->head;
@@ -199,6 +201,8 @@ AlcDLPList *WlzAssignPropertyList(
 	    switch(property.core->type){
 	    case WLZ_PROPERTY_SIMPLE:
 	    case WLZ_PROPERTY_EMAP:
+	    case WLZ_PROPERTY_NAME:
+	    case WLZ_PROPERTY_GREY:
 	      alcErrNum = AlcDLPListEntryAppend(rtnList, NULL,
 						(void *) property.core,
 						WlzFreePropertyListEntry);
