@@ -2077,9 +2077,11 @@ static WlzErrorNum WlzWriteContour(FILE *fP, WlzContour *ctr)
  		  {
  		    case WLZ_GMMOD_2I
  		    case WLZ_GMMOD_2D
+ 		    case WLZ_GMMOD_2N
  		      nEdge (int)
  		    case WLZ_GMMOD_3I
  		    case WLZ_GMMOD_3D
+ 		    case WLZ_GMMOD_3N
  		      nLoop (int)
  		  }
  		  {
@@ -2087,19 +2089,27 @@ static WlzErrorNum WlzWriteContour(FILE *fP, WlzContour *ctr)
  		      vertexGU.vg2I->vtx (WlzIVertex2, int * 2)
  		    case model->type == WLZ_GMMOD_2D
  		      vertexGU.vg2D->vtx (WlzDVertex2, double * 2)
+ 		    case model->type == WLZ_GMMOD_2N
+ 		      vertexGU.vg2D->vtx (WlzDVertex2, double * 2)
+ 		      vertexGU.vg2D->nrm (WlzDVertex2, double * 2)
  		    case model->type == WLZ_GMMOD_3I
  		      vertexGU.vg3I->vtx (WlzIVertex2, int * 3)
  		    case model->type == WLZ_GMMOD_3D
  		      vertexGU.vg3D->vtx (WlzDVertex2, double * 3)
+ 		    case model->type == WLZ_GMMOD_3N
+ 		      vertexGU.vg3D->vtx (WlzDVertex2, double * 3)
+ 		      vertexGU.vg3D->nrm (WlzDVertex2, double * 3)
  		  } * nVertex
  		  {
  		    case WLZ_GMMOD_2I
  		    case WLZ_GMMOD_2D
+ 		    case WLZ_GMMOD_2N
  		    {
  		      2 vertex indicies
  		    } * nEdge
  		    case WLZ_GMMOD_3I
  		    case WLZ_GMMOD_3D
+ 		    case WLZ_GMMOD_3N
  		    {
  		      3 vertex indicies
  		    } * nLoop
@@ -2133,8 +2143,10 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N: /* FALLTHROUGH */
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2151,7 +2163,8 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
     switch(model->type)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
 	if((putc((unsigned int )(model->type), fP) == EOF) ||
 	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
 	    !putword(model->res.vertex.numElm, fP) ||
@@ -2161,7 +2174,8 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 	}
 	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
 	if((putc((unsigned int )(model->type), fP) == EOF) ||
 	    (putc((unsigned int )encodeMtd, fP) == EOF) ||
 	    !putword(model->res.vertex.numElm, fP) ||
@@ -2197,11 +2211,25 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 	    case WLZ_GMMOD_2D:
 	      errNum = WlzWriteVertex2D(fP, &(eP.vertex->geo.vg2D->vtx), 1);
 	      break;
+	    case WLZ_GMMOD_2N:
+	      errNum = WlzWriteVertex2D(fP, &(eP.vertex->geo.vg2N->vtx), 1);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        errNum = WlzWriteVertex2D(fP, &(eP.vertex->geo.vg2N->nrm), 1);
+	      }
+	      break;
 	    case WLZ_GMMOD_3I:
 	      errNum = WlzWriteVertex3I(fP, &(eP.vertex->geo.vg3I->vtx), 1);
 	      break;
 	    case WLZ_GMMOD_3D:
 	      errNum = WlzWriteVertex3D(fP, &(eP.vertex->geo.vg3D->vtx), 1);
+	      break;
+	    case WLZ_GMMOD_3N:
+	      errNum = WlzWriteVertex3D(fP, &(eP.vertex->geo.vg3N->vtx), 1);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        errNum = WlzWriteVertex3D(fP, &(eP.vertex->geo.vg3N->nrm), 1);
+	      }
 	      break;
 	  }
 	}
@@ -2216,6 +2244,7 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
       {
 	case WLZ_GMMOD_2I:
 	case WLZ_GMMOD_2D:
+	case WLZ_GMMOD_2N:
 	  vec = model->res.edge.vec;
 	  iCnt = model->res.edge.numIdx;
 	  while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
@@ -2235,6 +2264,7 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
 	  break;
 	case WLZ_GMMOD_3I:
 	case WLZ_GMMOD_3D:
+	case WLZ_GMMOD_3N:
 	  vec = model->res.face.vec;
 	  iCnt = model->res.face.numIdx;
 	  while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
