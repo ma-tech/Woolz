@@ -6,21 +6,31 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.io.*;
 
+/**
+ *   Associates a SectionViewer with JFrame.
+ */
 public class SVFrame extends JFrame {
 
    private final boolean _debug = false;
 
+   /**   the SectionViewer that is associated with this SVFrame */
    protected SectionViewer _SV = null;
    JPanel _contentPane;
    JRootPane _rootPane;
 
+   /**   the initial height of the window. */
    int totalH = 500;
+   /**   the initial width of the window. */
    int totalW = 400;
    int pad = 1;
 
    //=========================================================
    // constructor
    //=========================================================
+   /**
+    *   Constructs an SVFrame with the given title.
+    *   @param viewstr
+    */
    public SVFrame(String viewstr) {
 
       super(viewstr);
@@ -40,6 +50,9 @@ public class SVFrame extends JFrame {
    } // constructor
 
    //---------------------------------------------
+   /**
+    *   Builds the SVFrame.
+    */
    private void guiInit() throws Exception {
 
       _contentPane = (JPanel)this.getContentPane();
@@ -51,11 +64,18 @@ public class SVFrame extends JFrame {
    }
 
    //---------------------------------------------
+   /**
+    *   Returns the SectionViewer for this SVFrame.
+    */
    public SectionViewer getSectionViewer() {
       return _SV;
    }
 
    //---------------------------------------------
+   /**
+    *   Sets the SectionViewer for this SVFrame.
+    *   @param sv the SectionViewer to be associated with this SVFrame.
+    */
    public void setSectionViewer(SectionViewer sv) {
       _SV = sv;
       _contentPane.add(_SV, BorderLayout.CENTER);

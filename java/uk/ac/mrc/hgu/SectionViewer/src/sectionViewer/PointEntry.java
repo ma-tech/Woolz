@@ -9,6 +9,9 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import java.io.*;
 
+/**
+ *   Dialogue with fields for x, y, z coordinates.
+ */
 public class PointEntry extends PointEntryGUI{
 //public class PointEntry extends JFrame{
 
@@ -16,6 +19,10 @@ public class PointEntry extends PointEntryGUI{
   private boolean damper = true;
 
 //-------------------------------------------------------------
+  /**
+   *   Creates a PointEntry with the given Title.
+   *   @param str the title of the PointEntry Dialogue.
+   */
   public PointEntry(String str) {
     super(str);
 
@@ -32,15 +39,27 @@ public class PointEntry extends PointEntryGUI{
     _values[2] = 0.0;
   }
 //-------------------------------------------------------------
+  /**
+   *   Returns the x, y, z coordinates.
+   *   @return the x, y, z coordinates.
+   */
   public double[] getValues() {
     return _values;
   }
 //-------------------------------------------------------------
+  /**
+   *   Returns the PointEntry.
+   *   @return a reference to the PointEntry.
+   */
   public PointEntry getThis() {
     return this;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Initialises the PointEntry with the given x, y, z coordinates.
+   *   @param vals an array containing x, y, z coordinates.
+   */
   public void setInitVals(double vals[]) {
     /*
        find out where the decimal point is and set
@@ -75,6 +94,11 @@ public class PointEntry extends PointEntryGUI{
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Event handler for PointEntry dialogue.
+   *   Called if the user presses <return> inside
+   *   one of the PointEntry text fields.
+   */
   class TextFieldHandler implements ActionListener {
 
      public TextFieldHandler() {
@@ -92,7 +116,11 @@ public class PointEntry extends PointEntryGUI{
      }
   }
 //-------------------------------------------------------------
-  // event handlers
+  /**
+   *   Event handler for PointEntry dialogue.
+   *   Called if the user presses the 'OK' or 'Cancel'
+   *   button in the PointEntry.
+   */
   class ButtonHandler implements ActionListener {
 
     String xstr = "";
@@ -130,11 +158,18 @@ public class PointEntry extends PointEntryGUI{
 // handle all _objects that are interested in changes
 //-------------------------------------------------------------
   // keep track of all the listeners to this 'model'
+  /**
+   *   A list of ChangeListeners which are
+   *   listening for events fired from the PointEntry.
+   */
   protected EventListenerList changeListeners =
       new EventListenerList();
 
 //-------------------------------------------------------------
   // add a listener to the register
+  /**
+   *   Adds a ChangeListener to the EventListenerList.
+   */
   public void addChangeListener(ChangeListener x) {
     changeListeners.add (ChangeListener.class, x);
 
@@ -144,11 +179,17 @@ public class PointEntry extends PointEntryGUI{
 
 //-------------------------------------------------------------
   // remove a listener from the register
+  /**
+   *   Removes a ChangeListener from the EventListenerList.
+   */
   public void removeChangeListener(ChangeListener x) {
     changeListeners.remove (ChangeListener.class, x);
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Fires a ChangeEvent from the PointEntry.
+   */
   protected void fireChange() {
     // Create the event:
     ChangeEvent ce = new ChangeEvent(this);

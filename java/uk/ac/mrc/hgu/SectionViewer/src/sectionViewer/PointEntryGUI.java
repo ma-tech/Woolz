@@ -9,6 +9,9 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import java.io.*;
 
+/**
+ *   GUI for the PointEntry class
+ */
 public class PointEntryGUI extends JFrame{
 
   protected JPanel topPanel;
@@ -46,6 +49,10 @@ public class PointEntryGUI extends JFrame{
   protected String _msg = "";
   protected int _gap;
 //-------------------------------------------------------------
+  /**
+   *   Creates a PointEntry GUI with the given title.
+   *   @param msg the title of the PointEntry GUI.
+   */
   public PointEntryGUI(String msg) {
     super("PointEntry");
 
@@ -57,6 +64,9 @@ public class PointEntryGUI extends JFrame{
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Most of the work of building the GUI is done here.
+   */
   public void makeGUI() {
     msgPanel = new JPanel();
     msgPanel.setLayout(new FlowLayout());
@@ -153,11 +163,15 @@ public class PointEntryGUI extends JFrame{
     topPanel.add(controlBox);
   }
 //-------------------------------------------------------------
-
-  // event handlers
-  // will be implemented in the sub class
+  /**
+  *   Abstract Event Handler (to be implemented in PointEntry class).
+  */
   abstract class ButtonHandler implements ActionListener {}
 
+  /**
+  *   Abstract Event Handler (to be implemented in PointEntry class).
+  */
+  abstract class TextFieldHandler implements ActionListener {}
 //-------------------------------------------------------------
 
 } // class PointEntryGUI

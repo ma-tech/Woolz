@@ -12,48 +12,83 @@ import javax.help.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
+/**
+ *   Utility class which manages SectionViewers for an application.
+ *   If an application doesn't use SVParent2D then one of its classes
+ *   <b>must</b> implement SVParent.
+ */
 public class SVParent2D implements SVParent {
 
-  private String _titleText = "";
-  private File selectedGreyFile = null;
+  /**   Directory containing the underlying 3D Woolz object */
+  private String _wlzDir = "";
 
+  /**   Model for the underlying 3D Woolz object. */
   private WlzObjModel _OBJModel = null;
+  
+  /**   Object that will build the anatomy menus. */
   private AnatomyBuilder _anatBuilder = null;
+
+  /**   Object that provides locks for multi-threading synchronization. */
   private SVLocks _Locks = null;
 
+  /**   Collection of currently open SectionViewers. */
   protected Vector _openViews = null;
 
-  private Stack _embTreeStack = null;
-  private Stack _xembTreeStack = null;
-
+  /**   Indicates colour of anatomy components in SectionViewers. */
   protected AnatKey _key = null;
+
+  /**   Array of objects corresponding to rows in the AnatKey. */
   protected AnatomyElement _anatomyArr[];
+
+  /**   Manages events initiated from the AnatKey controls. */
   protected keyToControllerAdaptor K2C_1 = null;
+
+  /**
+   *   The number of rows in the AnatKey.
+   *   This is currently fixed at 6.
+   *   A future release may have an expandable AnatKey.
+   */
   protected int _nAnatRows;
 
+  /**   Java Help Helpset for SectionViewer. */
   private HelpSet _hs = null;
+
+  /**   Java Help HelpBroker for SectionViewer. */
   private HelpBroker _helpBroker = null;
+
+  /**   toggles display of debugging messages */
   private final boolean _debug = false;
 
+  /**   Indicates that the 3D Woolz object has been read in */
   public boolean _OBJModelReady = false;
+
+  /**   Indicates that the anatomy menus have been built */
   public boolean _anatomyBuilt = false;
+
+  /**   Indicates that the Woolz object has been closed */
   public boolean _greyLevelClosed = false;
 
+  /**   The system file separator ('\' or '/') */
   private String SLASH = System.getProperty("file.separator");
 
+  /**   Default width of SectionViewer */
   protected static int defViewW = 450;
+
+  /**   Default height of SectionViewer */
   protected static int defViewH = 550;
 
 //-----------------------------------------------------
-  /**
-   * Purpose:    Constructor
-   **/
+  /**   Creates an SVParent2D. */
   public SVParent2D() {
     _Locks = new SVLocks();
     init2D();
     initHelp();
   }
 
+  /**
+   *   Creates an SVParent2D and opens the given 3D Woolz file.
+   *   @param wlzFile the 3D Woolz file to open.
+   */
   public SVParent2D(File wlzFile) {
     super();
     openGreyLevel(wlzFile);
@@ -61,15 +96,25 @@ public class SVParent2D implements SVParent {
   }
 
 //-----------------------------------------------------
+  /**
+   *   Returns the SVLocks object containing locks required for synchronization.
+   *   @return the instance of SVLocks.
+   */
   public SVLocks getSVLocks() {
      return _Locks;
   }
 //-----------------------------------------------------
+  /**
+   *   Exists so that SectionViewers can determine by Reflection
+   *   if this is an SVParent2D or a sub-class
+   */
   private final void root() {
-     /* only exists so that reflection can determine
-        if this is SVParent2D or a sub-class */
   }
 //-----------------------------------------------------
+  /**
+   *   Initialises the collection of open SectionViewers
+   *   and the AnatKey.
+   */
   protected void init2D() {
     _openViews = new Vector();
     _key = AnatKey.instance();
@@ -89,6 +134,9 @@ public class SVParent2D implements SVParent {
     _key.addActionListener(K2C_1);
   }
 //-----------------------------------------------------
+  /**
+   *   Initialises the Java Help system for SectionViewer.
+   */
   protected void initHelp() {
 
     URL hsURL = null;
@@ -107,6 +155,11 @@ public class SVParent2D implements SVParent {
   }
 
 //-----------------------------------------------------
+  /**
+   *   Factory method for SectionViewers in external windows.
+   *   @param viewstr the initial orientation of the SectionViewer.
+   *   @return SVFrame containing a new SectionViewer of the given orientation.
+   */
   public SVFrame createExternalView(String viewstr) {
 
      SVFrame ret = null;
@@ -123,6 +176,11 @@ public class SVParent2D implements SVParent {
      return ret;
   }
 //-----------------------------------------------------
+  /**
+   *   Factory method for SectionViewers in internal windows.
+   *   @param viewstr the initial orientation of the SectionViewer.
+   *   @return SVFrameInt containing a new SectionViewer of the given orientation.
+   */
   public SVFrameInt createInternalView(String viewstr) {
 
      SVFrameInt ret = null;
@@ -139,15 +197,18 @@ public class SVParent2D implements SVParent {
      return ret;
   }
 //-----------------------------------------------------
+  /**
+   *   Closes the underlying 3D Woolz object.
+   */
   public void reset() {
     closeGreyLevel();
   }
 
 //======================================================
-/**
- * Purpose:
- * @param:     File
- **/
+  /**
+   *   Opens a 3D Woolz object.
+   *   @param imgFile the 3D Woolz file.
+   */
   public void openGreyLevel(File imgFile) {
   
      closeGreyLevel();
@@ -181,7 +242,7 @@ public class SVParent2D implements SVParent {
       int fullLen = filstr.length();
       int namLen = imgFile.getName().length();
       String stagestr = filstr.substring(0, fullLen-namLen-1);
-      _titleText = stagestr;
+      _wlzDir = stagestr;
       // for multithreading
       Thread t = new Thread(rBuildAnatomy);
 
@@ -192,11 +253,14 @@ public class SVParent2D implements SVParent {
   } // openGreyLevel()
 
 //-----------------------------------------------------
+  /**
+   *   Closes the underlying 3D Woolz object.
+   */
   public void closeGreyLevel() {
     if(_debug) System.out.println("closing grey level");
     synchronized(_Locks._svpLock3) {
        _greyLevelClosed = false;
-       _titleText = "no grey level file";
+       //_wlzDir = "no grey level file";
        _OBJModel = null;
        _OBJModelReady = false;
        _anatBuilder = null;
@@ -217,19 +281,31 @@ public class SVParent2D implements SVParent {
   } // closeGreyLevel()
 
 //-----------------------------------------------------
+  /**
+   *   Adds the given SectionViewer to the collection
+   *   of open SectionViewers.
+   *   @param view the SectionViewer to add.
+   */
   public void addView(SectionViewer view) {
     _openViews.add(view);
   }
 
 //-----------------------------------------------------
+  /**
+   *   Removes the given SectionViewer from the collection
+   *   of open SectionViewers.
+   *   @param view the SectionViewer to remove.
+   */
   public void removeView(SectionViewer view) {
     _openViews.remove(view);
   }
 //-----------------------------------------------------
-/**
- * Purpose:    getOBJModel
- * @param:     void
- **/
+  /**
+   *   Returns the Model for the underlying 3D Woolz object.
+   *   This is synchronized so that it can't return until 
+   *   the 3D Woolz object has been read in.
+   *   @return the WlzObjModel for the current 3D Woolz object.
+   */
   public WlzObjModel getOBJModel() {
     synchronized(_Locks._svpLock2) {
        while(!_OBJModelReady) {
@@ -246,24 +322,32 @@ public class SVParent2D implements SVParent {
   }
 
 //-----------------------------------------------------
-/**
- * Purpose:    getAnatomyBuilder
- * @param:     void
- **/
+  /**
+   *   Returns an object used to build anatomy menus.
+   *   @return a new AnatomyBuilder.
+   */
   public AnatomyBuilder getAnatomyBuilder() {
     return _anatBuilder;
   }
 
 //-----------------------------------------------------
-/**
- * Purpose:    getSVTitleText
- * @param:     void
- **/
+  /**
+   *   Obsolete
+   */
   public String getSVTitleText() {
-    return _titleText;
+    //return _wlzDir;
+    return "";
   }
 
 //-----------------------------------------------------
+  /**
+   *   Walks through an anatomy directory hierarchy accumulating 
+   *   3D Woolz files for each available anatomy component.
+   *   @param str the filename of the current directory.
+   *   @param sofar the current collection of anatomy component
+   *   pathnames.
+   *   @return the collection of anatomy component pathnames.
+   */
   public Vector collectWlzFiles(String str, Vector sofar) {
     File currDir = new File(str);
     //Vector cumTotal = new Vector(sofar);
@@ -291,16 +375,18 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Makes the AnatKey visible.
+   */
   public void showAnatKey() {
     if(_key.isShowing()) return;
     _key.setVisible(true);
   }
 
 //-------------------------------------------------------------
-/**
- * Purpose:    clearAnatomy
- * @param:     void
- **/
+  /**
+   *   Returns the AnatKey to its initial empty state.
+   */
   public void clearAnatomy() {
     SectionViewer SV = null;
     int numViews = _openViews.size();
@@ -319,6 +405,11 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Adds the given (atomic) component to the array of anatomy components
+   *   and causes it to be displayed in all open SectionViewers.
+   *   @param str the filename of the anatomy component to add.
+   */
   public void showAnatomy(String str) {
 
     WlzFileInputStream in;
@@ -357,6 +448,11 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Adds the given (high level) component to the array of anatomy components
+   *   and causes it to be displayed in all open SectionViewers.
+   *   @param str the filename of the anatomy component to add.
+   */
   public void showCombinedAnatomy(String str) {
 //    Vector files = null; // String pathname to file or dir
 
@@ -390,10 +486,11 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
-/**
- * Purpose:    combineWlzObjs
- * @param:     Vector
- **/
+  /**
+   *   Combines atomic components into one high level component.
+   *   @param files the collection of atomic component filenames.
+   *   @return the high level WlzObject.
+   */
   public WlzObject combineWlzObjs(Vector files) {
     WlzObject unionObj = null;
     WlzObject obj1 = null;
@@ -441,16 +538,17 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Updates the array of AnatomyElements represented by
+   *   the rows in the AnatKey..
+   *   The AnatKey will be filled from top to bottom
+   *   unless there is a gap where a component has been removed.
+   *   When the AnatKey is full components will be replaced
+   *   starting with those at the top.
+   *   @param obj 3D Woolz object representing an anatomy component.
+   *   @param str the full path name of the anatomy component.
+   */
   public void updateAnatomyArr(WlzObject obj, String str) {
-   /*
-      the array elements will be filled
-      as items of anatomy are selected.
-      If more anatomy items are selected
-      than the length of the array,
-      the first one(s) are overwritten
-
-      a new item occupies the lowest available position
-    */
 
     String descr = str;
     if(obj == null) descr = new String(str+" (not painted)");
@@ -461,6 +559,14 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Checks that the given filename is valid.
+   *   @param dir the directory containing the given file.
+   *   @param fil the full path name of the given file.
+   *   @return true if the given filename ends in '.wlz'
+   *   and the base of the name is the same as the 
+   *   directory that contains it.
+   */
   protected boolean isValidName(String dir, String fil) {
     if(!fil.endsWith(".wlz")) return false;
     int len = fil.length() - 4; // chop off '.wlz'
@@ -472,6 +578,11 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Capitalises the final part of the given filename.
+   *   @param name a full filename.
+   *   @return the given filename with the final part capitalised.
+   */
   protected String capitalise(String name) {
     String endBit = "";
     StringBuffer buf = new StringBuffer(name);
@@ -493,26 +604,47 @@ public class SVParent2D implements SVParent {
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Returns the AnatKey.
+   *   @return the AnatKey.
+   */
   public AnatKey getAnatomyKey() {
     return _key;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Returns the array of objects represented by
+   *   the rows of the AnatKey.
+   *   @return the AnatomyElement array.
+   */
   public AnatomyElement[] getAnatomyArr() {
     return _anatomyArr;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Returns the Java Help Helpset for SectionViewer.
+   *   @return the Java Help Helpset for SectionViewer.
+   */
   public HelpSet getHelpSet() {
     return _hs;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Returns the Java Help Help broker for SectionViewer.
+   *   @return the Java Help Help broker for SectionViewer.
+   */
   public HelpBroker getSVHelpBroker() {
     return _helpBroker;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Returns the collection of currently open SectionViewers.
+   *   @return the _openViews Vector.
+   */
   public Vector getOpenViews() {
     return _openViews;
   }
@@ -521,12 +653,13 @@ public class SVParent2D implements SVParent {
 // Thread stuff
 //===============================================================
 
+  /**   Builds the anatomy menus in a new thread.**/
   Runnable rBuildAnatomy = new Runnable() {
      public void run() {
 
 	try {
 	   _anatBuilder = new AnatomyBuilder();
-	   _anatBuilder.buildAnatomy(new File(_titleText));
+	   _anatBuilder.buildAnatomy(new File(_wlzDir));
 	   synchronized(_Locks._svpLock1) {
 	      _anatomyBuilt = true;
 	      if(_debug) System.out.println("_Locks._svpLock1 notifying");
@@ -543,6 +676,10 @@ public class SVParent2D implements SVParent {
 
 
 //===============================================================
+  /**
+   *   Listens for ActionEvents from an AnatKey and implements the
+   *   appropriate action depending upon the ActionCommand.
+   */
   public class keyToControllerAdaptor implements ActionListener {
 
     int numViews;

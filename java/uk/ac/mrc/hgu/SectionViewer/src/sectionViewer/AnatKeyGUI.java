@@ -10,19 +10,29 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import java.io.*;
 
+/**
+ *   The GUI for AnatKey.
+ */
 public class AnatKeyGUI extends JFrame{
 
+   /**
+    *   The system file separator ("/" or "\").
+    */
    private String SLASH = System.getProperty("file.separator");
 
+   /**
+    *   The initial set of colours for the 6 AnatKey entries.
+    */
    static public int _cols[];
+   /**
+    *   The number of rows in the AnatKey.
+    */
    static protected int _nrows = 6;
-   /*
-      colours are taken from:
-      src/Applications/MAPaint/MAPaintResources.h
-      to be consistent with Editorial Office
-      (note however that red has been moved from #6 to #2
-      and is solid for E.O.)
-   */
+
+   /**
+    *   The set of red, green, blue and transparency values
+    *   which generate the initial colours for the 6 AnatKey entries.
+    */
    static protected int _rgbt[][] = {{128,96,0,125},
                                      {255,0,0,125},
                                      {255,255,0,125},
@@ -30,41 +40,74 @@ public class AnatKeyGUI extends JFrame{
                                      {0,255,0,125},
                                      {0,255,255,125}};
 
+   /**
+    *   The 'Content Pane' of this component
+    */
    private JPanel topPanel = null;
 
+   /** The colour chooser button for row 0 of the AnatKey   */
    static protected JButton colBtn0 = null;
+   /** The colour chooser button for row 1 of the AnatKey   */
    static protected JButton colBtn1 = null;
+   /** The colour chooser button for row 2 of the AnatKey   */
    static protected JButton colBtn2 = null;
+   /** The colour chooser button for row 3 of the AnatKey   */
    static protected JButton colBtn3 = null;
+   /** The colour chooser button for row 4 of the AnatKey   */
    static protected JButton colBtn4 = null;
+   /** The colour chooser button for row 5 of the AnatKey   */
    static protected JButton colBtn5 = null;
 
+   /** The left arrow button for row 0 of the AnatKey   */
    static protected JButton btn00 = null;
+   /** The left arrow button for row 1 of the AnatKey   */
    static protected JButton btn10 = null;
+   /** The left arrow button for row 2 of the AnatKey   */
    static protected JButton btn20 = null;
+   /** The left arrow button for row 3 of the AnatKey   */
    static protected JButton btn30 = null;
+   /** The left arrow button for row 4 of the AnatKey   */
    static protected JButton btn40 = null;
+   /** The left arrow button for row 5 of the AnatKey   */
    static protected JButton btn50 = null;
 
+   /** The right arrow button for row 0 of the AnatKey   */
    static protected JButton btn01 = null;
+   /** The right arrow button for row 1 of the AnatKey   */
    static protected JButton btn11 = null;
+   /** The right arrow button for row 2 of the AnatKey   */
    static protected JButton btn21 = null;
+   /** The right arrow button for row 3 of the AnatKey   */
    static protected JButton btn31 = null;
+   /** The right arrow button for row 4 of the AnatKey   */
    static protected JButton btn41 = null;
+   /** The right arrow button for row 5 of the AnatKey   */
    static protected JButton btn51 = null;
 
+   /** The scrollable text field for row 0 of the AnatKey   */
    static protected ScrollableTextField tf0 = null;
+   /** The scrollable text field for row 1 of the AnatKey   */
    static protected ScrollableTextField tf1 = null;
+   /** The scrollable text field for row 2 of the AnatKey   */
    static protected ScrollableTextField tf2 = null;
+   /** The scrollable text field for row 3 of the AnatKey   */
    static protected ScrollableTextField tf3 = null;
+   /** The scrollable text field for row 4 of the AnatKey   */
    static protected ScrollableTextField tf4 = null;
+   /** The scrollable text field for row 5 of the AnatKey   */
    static protected ScrollableTextField tf5 = null;
 
+   /** The visibility checkbox for row 0 of the AnatKey   */
    static protected JCheckBox cbx0 = null;
+   /** The visibility checkbox for row 1 of the AnatKey   */
    static protected JCheckBox cbx1 = null;
+   /** The visibility checkbox for row 2 of the AnatKey   */
    static protected JCheckBox cbx2 = null;
+   /** The visibility checkbox for row 3 of the AnatKey   */
    static protected JCheckBox cbx3 = null;
+   /** The visibility checkbox for row 4 of the AnatKey   */
    static protected JCheckBox cbx4 = null;
+   /** The visibility checkbox for row 5 of the AnatKey   */
    static protected JCheckBox cbx5 = null;
 
    static protected boolean cbx0State;
@@ -74,34 +117,64 @@ public class AnatKeyGUI extends JFrame{
    static protected boolean cbx4State;
    static protected boolean cbx5State;
 
+   /** The zap button for row 0 of the AnatKey   */
    static protected JButton btn02 = null;
+   /** The zap button for row 1 of the AnatKey   */
    static protected JButton btn12 = null;
+   /** The zap button for row 2 of the AnatKey   */
    static protected JButton btn22 = null;
+   /** The zap button for row 3 of the AnatKey   */
    static protected JButton btn32 = null;
+   /** The zap button for row 4 of the AnatKey   */
    static protected JButton btn42 = null;
+   /** The zap button for row 5 of the AnatKey   */
    static protected JButton btn52 = null;
 
+   /** The 'left arrow' icon for the textfield scroll button  */
    static protected ImageIcon leftIcon = null;
+   /** The 'arrow arrow' icon for the textfield scroll button  */
    static protected ImageIcon rightIcon = null;
+   /** The 'zap' icon (toggles between zap & replace)  */
    static protected ImageIcon zapIcon = null;
+   /** The 'replace' icon (toggles between zap & replace)  */
    static protected ImageIcon replaceIcon = null;
 
+/*
    static protected JToolTip colTip0 = null;
    static protected JToolTip btnTip00 = null;
    static protected JToolTip btnTip01 = null;
    static protected JToolTip btnTip02 = null;
    static protected JToolTip cbxTip0 = null;
+*/
 
+   /** The tool tip for the colour chooser button */
    static protected String colTipText = "choose colour";
+   /** The tool tip for the left arrow button */
    static protected String leftTipText = "start of text";
+   /** The tool tip for the right arrow button */
    static protected String rightTipText = "end of text";
    //static protected String textFieldTipText = "drag mouse to scroll text";
+   /** The tool tip for the visibility checkbox button */
    static protected String visTipText = "toggle visibility";
+   /** The tool tip for the zap button */
    static protected String zapTipText = "remove from key";
 
+   /**
+    *   The background colour of the textfield for the anatomy component name
+    *   when it is currently visible. (Visible means that it will be displayed 
+    *   if the section intersects the component).
+    */
    static Color vis;
+   /**
+    *   The background colour of the textfield for the anatomy component name
+    *   when it is currently not visible. (Visible means that it will not be
+    *   displayed even if the section intersects the component).
+    */
    static Color notvis;
 //-------------------------------------------------------------
+   /**
+    *   Constructor. 
+    */
    protected AnatKeyGUI(String str) {
       super(str);
       setCols();
@@ -116,11 +189,12 @@ public class AnatKeyGUI extends JFrame{
       cbx5State = false;
       makeGUI();
    }
-
+   
 //-------------------------------------------------------------
+   /**
+    *   Initialises the AnatKey with its default colours.
+    */
    protected void setCols() {
-
-      // make initial color scheme consistent with MAPaint etc
 
       _cols = new int[_nrows];
       _cols[0] = (_rgbt[0][2])|
@@ -147,8 +221,13 @@ public class AnatKeyGUI extends JFrame{
                  (_rgbt[5][1]<<8)|
                  (_rgbt[5][0]<<16)|
                  (_rgbt[5][3]<<24);
+
    }
 //-------------------------------------------------------------
+   /**
+    *   Called by the constructor. Most of the work of building the GUI
+    *   is done here.
+    */
    private void makeGUI() {
 
       boolean hasAlpha = false;
@@ -170,13 +249,35 @@ public class AnatKeyGUI extends JFrame{
       vis = new Color(250,250,250);
       notvis = new Color(200,200,200);
 
+      /**
+       *   Top level container for anatomy key.
+       *   <br>Contains kPanel0 -> kPanel5.
+       *   <br>Added to topPanel.
+       */
       JPanel kTopPanel = new JPanel();
       kTopPanel.setLayout(new GridLayout(_nrows,1));
-
+      
 //......................................
-      JPanel kPanel0 = new JPanel(); // 1 row of the key
-      JPanel kPanel00 = new JPanel(); // holds colour panel & arrow button
-      JPanel kPanel01 = new JPanel(); // holds chkbx and remove button
+      /**
+       *   Container for 1 row of the anatomy key.
+       *   <br>Contains kPanel00, txtPanel0, kPanel01.
+       *   <br>Added to kTopPanel.
+       */
+      JPanel kPanel0 = new JPanel();
+
+      /**
+       *   Container for <em>colour chooser</em> and <em>scroll</em> buttons.
+       *   <br>Contains colPanel0, navPanel0.
+       *   <br>Added to kPanel0.
+       */
+      JPanel kPanel00 = new JPanel();
+
+      /**
+       *   Container for <em>visibility</em> and <em>zap</em> controls
+       *   <br>Contains cbxPanel0, btnPanel02.
+       *   <br>Added to kPanel0.
+       */
+      JPanel kPanel01 = new JPanel();
       kPanel0.setLayout(new BorderLayout(gap,gap));
       kPanel00.setLayout(new BoxLayout(kPanel00, BoxLayout.X_AXIS));
       kPanel01.setLayout(new BorderLayout(gap1,gap1));
@@ -585,6 +686,9 @@ public class AnatKeyGUI extends JFrame{
 
 //......................................
 
+   /**
+    *   Attaches tool tip text to the controls in the AnatKey.
+    */
    private void setToolTips() {
 
       colBtn0.setToolTipText(colTipText);
@@ -626,6 +730,9 @@ public class AnatKeyGUI extends JFrame{
 
 //......................................
 
+   /**
+    *   Toggles the tool tip text for the zap key.
+    */
    public void setZapToolTips(int indx, boolean zapped) {
 
       if(zapped) {
@@ -661,12 +768,21 @@ public class AnatKeyGUI extends JFrame{
 //-------------------------------------------------------------
 // inner classes for event handling
 //-------------------------------------------------------------
+   /**
+    *   Abstract event handler for arrow (scroll) buttons.
+    */
    protected abstract class ButtonHandler1 implements ActionListener {
    }
 
+   /**
+    *   Abstract event handler for colour chooser buttons.
+    */
    protected abstract class ButtonHandler2 implements ActionListener {
    }
 
+   /**
+    *   Abstract event handler for visibility checkboxes.
+    */
    protected abstract class ChBoxHandler implements ItemListener {
    }
 

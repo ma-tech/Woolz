@@ -1,9 +1,11 @@
 package sectionViewer;
 import sectionViewer.*;
 
-/*
- * This can't be an interface (=> static final) as multiple
- * Controller progs may want their own locks.
+/**
+ *   Provides various locks for multi-threading synchronization.
+ *   This can't be an interface (=> static final) as multiple
+ *   Controller progs may want their own locks, for example
+ *   tie point and warping applications.
  */
 public class SVLocks {
 
