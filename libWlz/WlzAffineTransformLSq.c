@@ -14,44 +14,125 @@
 *		used to transform one set of verticies to another.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
+*		add WlzAffineTransformLSq3D, WlzAffineTransformLSqReg3D,
+*		WlzAffineTransformLSqTrans3D and a new WlzAffineTransformLSq.
 ************************************************************************/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
-static WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vtxVec0,
-				WlzDVertex2 *vtxVec1, int nVtx,
-				WlzErrorNum *dstErr),
-		*WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
-				WlzDVertex2 *vtxVec1, int nVtx,
-				WlzTransformType trType,
-				WlzErrorNum *dstErr),
-		*WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
-				WlzDVertex2 *vtxVec1, int nVtx,
-				WlzErrorNum *dstErr);
+static WlzAffineTransform 	*WlzAffineTransformLSqTrans3D(
+				  WlzDVertex3 *pos0,
+				  WlzDVertex3 *pos1,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform	*WlzAffineTransformLSqReg3D(
+				  WlzDVertex3 *vtxVec0,
+				  WlzDVertex3 *vtxVec1,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform 	*WlzAffineTransformLSqGen2D(
+				  WlzDVertex2 *vtxVec0,
+				  WlzDVertex2 *vtxVec1,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform	*WlzAffineTransformLSqReg2D(
+				  WlzDVertex2 *vtxVec0,
+				  WlzDVertex2 *vtxVec1,
+				  int nVtx,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
+static WlzAffineTransform	*WlzAffineTransformLSqTrans2D(
+				  WlzDVertex2 *vtxVec0,
+				  WlzDVertex2 *vtxVec1,
+				  int nVtx,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
-* Function:	WlzAffineTransformLSq					*
-* Returns:	WlzAffineTransform:	Computed affine transform, may	*
-*					be NULL on error.		*
-* Purpose:	Computes the Woolz affine transform which gives the	*
-*		best (least squares) fit when used to transform the	*
-*		first set of verticies onto the second.			*
-* Global refs:	-							*
-* Parameters:	int nVtx0:		Number of verticies in first	*
-*					vector.				*
-*		WlzDVertex2 *vtxVec0:	First vector of verticies.	*
-*		int nVtx1:		Number of verticies in second	*
-*					vector (MUST be same as first).	*
-*		WlzDVertex2 *vtxVec1:	Second vector of verticies.	*
-*		WlzTransformType trType: Required transform type.	*
-*		WlzErrorNum *dstErr:	Destination pointer for error	*
-*					number, may be NULL.		*
+* Function:	WlzAffineTransformLSq
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of verticies onto the second.
+* Global refs:	-
+* Parameters:	WlzVertexType vtxType:	Type of verticies.
+*		int nVtx0:		Number of verticies in first
+*					vector.
+*		WlzVertexP vtxVec0:	First vector of verticies.
+*		int nVtx1:		Number of verticies in second
+*					vector (MUST be same as first).
+*		WlzVertexP vtxVec1:	Second vector of verticies.
+*		WlzTransformType trType: Required transform type.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
 ************************************************************************/
-WlzAffineTransform *WlzAffineTransformLSq(int nVtx0, WlzDVertex2 *vtxVec0,
-					  int nVtx1, WlzDVertex2 *vtxVec1,
+WlzAffineTransform *WlzAffineTransformLSq(WlzVertexType vtxType,
+				          int nVtx0, WlzVertexP vtxVec0,
+					  int nVtx1, WlzVertexP vtxVec1,
 					  WlzTransformType trType,
 					  WlzErrorNum *dstErr)
+{
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nVtx0 != nVtx1) || (nVtx0 <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA; 
+  }
+  else if((vtxVec0.v == NULL) || (vtxVec1.v == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    switch(vtxType)
+    {
+      case WLZ_VERTEX_D2:
+	tr = WlzAffineTransformLSq2D(nVtx0, vtxVec0.vD2,
+				     nVtx1, vtxVec1.vD2, 
+				     trType, &errNum);
+	break;
+      case WLZ_VERTEX_D3:
+	tr = WlzAffineTransformLSq3D(nVtx0, vtxVec0.vD3, 
+				     nVtx1, vtxVec1.vD3,
+				     trType, &errNum);
+	break;
+      default:
+	errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformLSq3D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of 3D verticies onto the second.
+* Global refs:	-
+* Parameters:	int nVtx0:		Number of verticies in first
+*					vector.
+*		WlzDVertex3 *vtxVec0:	First vector of verticies.
+*		int nVtx1:		Number of verticies in second
+*					vector (MUST be same as first).
+*		WlzDVertex3 *vtxVec1:	Second vector of verticies.
+*		WlzTransformType trType: Required transform type.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzAffineTransform *WlzAffineTransformLSq3D(int nVtx0, WlzDVertex3 *vtxVec0,
+					    int nVtx1, WlzDVertex3 *vtxVec1,
+					    WlzTransformType trType,
+					    WlzErrorNum *dstErr)
 {
   WlzAffineTransform *trans = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -68,14 +149,78 @@ WlzAffineTransform *WlzAffineTransformLSq(int nVtx0, WlzDVertex2 *vtxVec0,
   {
     switch(trType)
     {
-    case WLZ_TRANSFORM_2D_AFFINE:
-    case WLZ_TRANSFORM_2D_REG:
-    case WLZ_TRANSFORM_2D_NOSHEAR:
-    case WLZ_TRANSFORM_2D_TRANS:
-      break;
-    default:
-      errNum = WLZ_ERR_TRANSFORM_TYPE;
-      break;
+      case WLZ_TRANSFORM_3D_TRANS:
+	trans = WlzAffineTransformLSqTrans3D(vtxVec0, vtxVec1, nVtx0, &errNum);
+	break;
+      case WLZ_TRANSFORM_3D_REG:
+	if(nVtx0 == 1)
+	{
+	  trans = WlzAffineTransformLSqTrans3D(vtxVec0, vtxVec1, nVtx0,
+	  				       &errNum);
+	}
+	else
+	{
+	  trans = WlzAffineTransformLSqReg3D(vtxVec0, vtxVec1, nVtx0, &errNum);
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(trans);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformLSq2D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz affine transform which gives the
+*		best (least squares) fit when used to transform the
+*		first set of 2D verticies onto the second.
+* Global refs:	-
+* Parameters:	int nVtx0:		Number of verticies in first
+*					vector.
+*		WlzDVertex2 *vtxVec0:	First vector of verticies.
+*		int nVtx1:		Number of verticies in second
+*					vector (MUST be same as first).
+*		WlzDVertex2 *vtxVec1:	Second vector of verticies.
+*		WlzTransformType trType: Required transform type.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+WlzAffineTransform *WlzAffineTransformLSq2D(int nVtx0, WlzDVertex2 *vtxVec0,
+					    int nVtx1, WlzDVertex2 *vtxVec1,
+					    WlzTransformType trType,
+					    WlzErrorNum *dstErr)
+{
+  WlzAffineTransform *trans = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nVtx0 != nVtx1) || (nVtx0 <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA; 
+  }
+  else if((vtxVec0 == NULL) || (vtxVec1 == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    switch(trType)
+    {
+      case WLZ_TRANSFORM_2D_AFFINE:
+      case WLZ_TRANSFORM_2D_REG:
+      case WLZ_TRANSFORM_2D_NOSHEAR:
+      case WLZ_TRANSFORM_2D_TRANS:
+	break;
+      default:
+	errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -99,22 +244,219 @@ WlzAffineTransform *WlzAffineTransformLSq(int nVtx0, WlzDVertex2 *vtxVec0,
   {
     *dstErr = errNum;
   }
-  return( trans );
+  return(trans);
 }
 
 /************************************************************************
-* Function:	WlzAffineTransformLSqGen2D				*
-* Returns:	WlzAffineTransform:	Computed affine transform, may	*
-*					be NULL on error.		*
-* Purpose:	Computes the Woolz general 2D affine transform which	*
-*		gives the best (least squares) fit when used to 	*
-*		transform the first set of verticies onto the second.	*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 *vtxVec0:	First vector of verticies.	*
-*		WlzDVertex2 *vtxVec1:	Second vector of verticies.	*
-*		int nVtx:		Number of verticies in vectors.	*
-*		WlzErrorNum *dstErr:	Destination pointer for error	*
-*					number, may be NULL.		*
+* Function:	WlzAffineTransformLSqReg3D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz 3D registration transform which
+*		gives the best (least squares) fit when used to
+*		transform the first set of verticies onto the second.
+*		The transform is constrained to rotation and
+*		translation only.
+*		The algorithm is based on Arun K.S., Huang T.T.
+*		and Blostein S.D. "Least-Squares Fitting of Two 3-D
+*		Point Sets" PAMI 9(5), 698-700, 1987.
+* Global refs:	-
+* Parameters:	WlzDVertex3 *pos0:	First vector of verticies.
+*		WlzDVertex3 *pos1:	Second vector of verticies.
+*		int nVtx:		Number of verticies in vectors.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
+		    		WlzDVertex3 *pos1, int nVtx,
+				WlzErrorNum *dstErr)
+{
+  int		idN,
+  		idK,
+		idR;
+  double	tD0;
+  WlzDVertex3	cen0,
+  		cen1,
+		rel0,
+		rel1;
+  double	*wMx = NULL;
+  double	**hMx = NULL,
+  		**vMx = NULL,
+		**trMx = NULL;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(((wMx = (double *)AlcCalloc(sizeof(double), 3)) == NULL) ||
+     (AlcDouble2Calloc(&hMx, 3, 3) !=  ALC_ER_NONE) ||
+     (AlcDouble2Malloc(&vMx, 3, 3) !=  ALC_ER_NONE) ||
+     (AlcDouble2Malloc(&trMx, 4, 4) !=  ALC_ER_NONE))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute centroids, cen0 and cen1. */
+    cen0 = *pos0;
+    cen1 = *pos1;
+    for(idN = 1; idN < nVtx; ++idN)
+    {
+      WLZ_VTX_3_ADD(cen0, cen0, *(pos0 + idN));
+      WLZ_VTX_3_ADD(cen1, cen1, *(pos1 + idN));
+    }
+    tD0 = 1.0 / nVtx;
+    WLZ_VTX_3_SCALE(cen0, cen0, tD0);
+    WLZ_VTX_3_SCALE(cen1, cen1, tD0);
+    /* Compute the 3x3 matrix hMx, which is the sum of tensor products of the
+     * verticies relative to their centroids. */
+    for(idN = 0; idN < nVtx; ++idN)
+    {
+      WLZ_VTX_3_SUB(rel0, *(pos0 + idN), cen0);
+      WLZ_VTX_3_SUB(rel1, *(pos1 + idN), cen1);
+      hMx[0][0] += rel0.vtX * rel1.vtX;
+      hMx[0][1] += rel0.vtX * rel1.vtY;
+      hMx[0][2] += rel0.vtX * rel1.vtZ;
+      hMx[1][0] += rel0.vtY * rel1.vtX;
+      hMx[1][1] += rel0.vtY * rel1.vtY;
+      hMx[1][2] += rel0.vtY * rel1.vtZ;
+      hMx[2][0] += rel0.vtZ * rel1.vtX;
+      hMx[2][1] += rel0.vtZ * rel1.vtY;
+      hMx[2][2] += rel0.vtZ * rel1.vtZ;
+    }
+    /* Compute the SVD of the 3x3 matrix, hMx = hMx.mMx.vMx. */
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hMx, 3, 3, wMx, vMx));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute 3x3 rotation matrix trMx = vMx.hMx', where hMx' is the transpose
+     * of hMx. */
+    for(idR = 0; idR < 3; ++idR)
+    {
+      for(idK = 0; idK < 3; ++idK)
+      {
+        trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+        		 vMx[idR][1] * hMx[idK][1] + 
+        		 vMx[idR][2] * hMx[idK][2];
+      }
+    }
+    /* Test for degeneracy using the determinant of the rotation matrix. */
+    tD0 = (trMx[0][0] * trMx[1][1] * trMx[2][2]) -
+          (trMx[0][0] * trMx[1][2] * trMx[2][1]) +
+          (trMx[0][1] * trMx[1][2] * trMx[2][0]) -
+          (trMx[0][1] * trMx[1][0] * trMx[2][2]) +
+          (trMx[0][2] * trMx[1][0] * trMx[2][1]) -
+          (trMx[0][2] * trMx[1][1] * trMx[2][0]);
+    if(tD0 < 0.0)
+    {
+      errNum = WLZ_ERR_ALG_SINGULAR;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Fill in other matrix elements. */
+    trMx[3][0] = trMx[3][1] = trMx[3][2] = 0.0;
+    trMx[3][3] = 1.0;
+    /* Compute translation by applying the rotation transform to the first
+     * centroid and subtracting this from the second centroid. */
+    trMx[0][3] = cen1.vtX -
+     		 ((trMx[0][0] * cen0.vtX) + (trMx[0][1] * cen0.vtY) +
+		  (trMx[0][2] * cen0.vtZ));
+    trMx[1][3] = cen1.vtY -
+     		 ((trMx[1][0] * cen0.vtX) + (trMx[1][1] * cen0.vtY) +
+		  (trMx[1][2] * cen0.vtZ));
+    trMx[2][3] = cen1.vtZ -
+     		 ((trMx[2][0] * cen0.vtX) + (trMx[2][1] * cen0.vtY) +
+		  (trMx[2][2] * cen0.vtZ));
+    /* Build affine transform. */
+    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trMx,
+				      &errNum);
+  }
+  /* Clear up on error. */
+  if(wMx)
+  {
+    (void )AlcFree(wMx);
+  }
+  if(hMx)
+  {
+    (void )AlcDouble2Free(hMx);
+  }
+  if(vMx)
+  {
+    (void )AlcDouble2Free(vMx);
+  }
+  if(trMx)
+  {
+    (void )AlcDouble2Free(trMx);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformLSqTrans3D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz 3D registration transform which
+*		gives the best (least squares) fit when used to
+*		transform the first set of verticies onto the second.
+*		The transform is constrained to translation only.
+* Global refs:	-
+* Parameters:	WlzDVertex3 *pos0:	First vector of verticies.
+*		WlzDVertex3 *pos1:	Second vector of verticies.
+*		int nVtx:		Number of verticies in vectors.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
+************************************************************************/
+static WlzAffineTransform *WlzAffineTransformLSqTrans3D(WlzDVertex3 *pos0,
+		    		WlzDVertex3 *pos1, int nVtx,
+				WlzErrorNum *dstErr)
+{
+  int		idN;
+  double	tD0;
+  WlzDVertex3	cen0,
+  		cen1;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Compute centroids, cen0 and cen1. */
+  cen0 = *pos0;
+  cen1 = *pos1;
+  for(idN = 1; idN < nVtx; ++idN)
+  {
+    WLZ_VTX_3_ADD(cen0, cen0, *(pos0 + idN));
+    WLZ_VTX_3_ADD(cen1, cen1, *(pos1 + idN));
+  }
+  tD0 = 1.0 / nVtx;
+  WLZ_VTX_3_SCALE(cen0, cen0, tD0);
+  WLZ_VTX_3_SCALE(cen1, cen1, tD0);
+  /* Build the affine transform which brings the first centroid to the
+   * position of the second. */
+  tr = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_3D_AFFINE,
+					 cen1.vtX - cen0.vtX,
+					 cen1.vtY - cen0.vtY,
+					 cen1.vtZ - cen0.vtZ,
+					 &errNum);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+
+/************************************************************************
+* Function:	WlzAffineTransformLSqGen2D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz general 2D affine transform which
+*		gives the best (least squares) fit when used to
+*		transform the first set of verticies onto the second.
+* Global refs:	-
+* Parameters:	WlzDVertex2 *vtxVec0:	First vector of verticies.
+*		WlzDVertex2 *vtxVec1:	Second vector of verticies.
+*		int nVtx:		Number of verticies in vectors.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
 ************************************************************************/
 static WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vtxVec0,
 				WlzDVertex2 *vtxVec1, int nVtx,
@@ -204,21 +546,21 @@ static WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vtxVec0,
 }
 
 /************************************************************************
-* Function:	WlzAffineTransformLSqReg2D				*
-* Returns:	WlzAffineTransform:	Computed affine transform, may	*
-*					be NULL on error.		*
-* Purpose:	Computes the Woolz 2D registration transform which	*
-*		gives the best (least squares) fit when used to 	*
-*		transform the first set of verticies onto the second.	*
-*		The transform is constrained to rotation and 		*
-*		translation only.					*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 *vtxVec0:	First vector of verticies.	*
-*		WlzDVertex2 *vtxVec1:	Second vector of verticies.	*
-*		int nVtx:		Number of verticies in vectors.	*
-*		WlzTransformType trType: Required transform type.	*
-*		WlzErrorNum *dstErr:	Destination pointer for error	*
-*					number, may be NULL.		*
+* Function:	WlzAffineTransformLSqReg2D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz 2D registration transform which
+*		gives the best (least squares) fit when used to
+*		transform the first set of verticies onto the second.
+*		The transform is constrained to rotation and
+*		translation only.
+* Global refs:	-
+* Parameters:	WlzDVertex2 *vtxVec0:	First vector of verticies.
+*		WlzDVertex2 *vtxVec1:	Second vector of verticies.
+*		int nVtx:		Number of verticies in vectors.
+*		WlzTransformType trType: Required transform type.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
 ************************************************************************/
 static WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
 		    		WlzDVertex2 *vtxVec1, int nVtx,
@@ -311,20 +653,20 @@ static WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
 }
 
 /************************************************************************
-* Function:	WlzAffineTransformLSqTrans2D				*
-* Returns:	WlzAffineTransform:	Computed affine transform, may	*
-*					be NULL on error.		*
-* Purpose:	Computes the Woolz 2D translation transform which	*
-*		gives the best (least squares) fit when used to 	*
-*		transform the first set of verticies onto the second.	*
-*		The transform is constrained to rotation and 		*
-*		translation only.					*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 *vtxVec0:	First vector of verticies.	*
-*		WlzDVertex2 *vtxVec1:	Second vector of verticies.	*
-*		int nVtx:		Number of verticies in vectors.	*
-*		WlzErrorNum *dstErr:	Destination pointer for error	*
-*					number, may be NULL.		*
+* Function:	WlzAffineTransformLSqTrans2D
+* Returns:	WlzAffineTransform:	Computed affine transform, may
+*					be NULL on error.
+* Purpose:	Computes the Woolz 2D translation transform which
+*		gives the best (least squares) fit when used to
+*		transform the first set of verticies onto the second.
+*		The transform is constrained to rotation and
+*		translation only.
+* Global refs:	-
+* Parameters:	WlzDVertex2 *vtxVec0:	First vector of verticies.
+*		WlzDVertex2 *vtxVec1:	Second vector of verticies.
+*		int nVtx:		Number of verticies in vectors.
+*		WlzErrorNum *dstErr:	Destination pointer for error
+*					number, may be NULL.
 ************************************************************************/
 static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 		    		WlzDVertex2 *vtxVec1, int nVtx,
