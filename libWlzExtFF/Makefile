@@ -54,7 +54,8 @@ INCLUDES_PRV		=
 
 # List of all troff sources for manual pages, these should have the appropriate
 # extension (eg cat.1) (modify as required).
-MANPAGES		= 
+MANPAGES		= \
+			WlzExtFF.3
 
 # List of all directories to be searched before the standard include
 # and lib directories (modify as required).
