@@ -115,8 +115,6 @@ AlcCPQQueue	*AlcCPQQueueNew(AlcErrno *dstErr)
 AlcCPQItem	*AlcCPQItemNew(AlcCPQQueue *q, float priority,
 			      void *entry, AlcErrno *dstErr)
 {
-  int		idx,
-  		iCnt;
   AlcCPQItem	*item = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
@@ -159,8 +157,6 @@ AlcCPQItem	*AlcCPQItemNew(AlcCPQQueue *q, float priority,
 */
 AlcErrno	AlcCPQQueueFree(AlcCPQQueue *q)
 {
-  int		idx;
-  AlcCPQItem	*item;
   AlcErrno	errNum = ALC_ER_NONE;
 
   if(q)
@@ -228,8 +224,8 @@ AlcErrno	AlcCPQItemInsert(AlcCPQQueue *q, AlcCPQItem *item)
 
 #ifdef ALC_CPQ_DEBUG
   (void )fprintf(stderr,
-		 "AlcCPQItemInsert() 0x%lx 0x%lx\n",
-		 (unsigned long )q, (unsigned long)item);
+		 "AlcCPQItemInsert() 0x%lx 0x%lx %g\n",
+		 (unsigned long )q, (unsigned long)item, item->priority);
   AlcCPQDebugOut(q);
 #endif /* ALC_CPQ_DEBUG */
   if((q->nItem >= q->nItemIncThr) && (q->resizable != 0))
@@ -285,7 +281,7 @@ AlcCPQItem	*AlcCPQItemUnlink(AlcCPQQueue *q)
 	idN = (idx + 1) % q->nBucket;
 	if((item0 = *(q->buckets + q->bucketBase + idx)) != NULL)
 	{
-	  if(item0->priority > q->bucketMin)
+	  if(item0->priority >= q->bucketMin)
 	  {
 	    idM = idx;
 	    break;
@@ -325,8 +321,8 @@ AlcCPQItem	*AlcCPQItemUnlink(AlcCPQQueue *q)
     {
 #ifdef ALC_CPQ_DEBUG
       (void )fprintf(stderr,
-      		     "AlcCPQItemUnlink() %4d %4d %4d\n",
-		     q->nItem, q->lastIdx, idM);
+      		     "AlcCPQItemUnlink() %g %4d %4d %4d\n",
+		     item0->priority, q->nItem, q->lastIdx, idM);
 #endif /* ALC_CPQ_DEBUG */
       q->lastIdx = idM;
       q->lastPriority = item0->priority;
@@ -397,7 +393,6 @@ static AlcErrno	AlcCPQMoreItems(AlcCPQQueue *q)
 static void	AlcCPQInsertItemInList(AlcCPQQueue *q, int gIdx,
 				      AlcCPQItem *gItem)
 {
-  int		idx;
   AlcCPQItem	*item0,
   		*item1;
   AlcCPQItem	**bucket;
@@ -470,7 +465,6 @@ static AlcCPQItem *AlcCPQUnlinkItemInList(AlcCPQItem **bucket)
 */
 static AlcErrno	AlcCPQQueueIncSize(AlcCPQQueue *q)
 {
-  int		newNBucket;
   AlcErrno	errNum = ALC_ER_NONE;
 
   if(q->resizable)
@@ -533,6 +527,13 @@ static AlcErrno	AlcCPQQueueResize(AlcCPQQueue *q, int incFlag)
   		*oldNextItem;
   AlcErrno	errNum = ALC_ER_NONE;
 
+#ifdef ALC_CPQ_DEBUG
+  (void )fprintf(stderr, "AlcCPQQueueResize() FE\n");
+  if(errNum == ALC_ER_NONE)
+  {
+    AlcCPQDebugOut(q);
+  }
+#endif /* ALC_CPQ_DEBUG */
   oldNBuckets = q->nBucket;
   oldBucketBase = q->bucketBase;
   q->bucketWidth = AlcCPQQueueNewBWidth(q, &errNum);
@@ -588,6 +589,7 @@ static AlcErrno	AlcCPQQueueResize(AlcCPQQueue *q, int incFlag)
   {
     AlcCPQDebugOut(q);
   }
+  (void )fprintf(stderr, "AlcCPQQueueResize() FX\n");
 #endif /* ALC_CPQ_DEBUG */
   return(errNum);
 }
@@ -756,7 +758,7 @@ int		main(int argc, char *argv[])
   {
     for(idI = 0; (errNum == ALC_ER_NONE) && (idI < nItems); ++idI)
     {
-      errNum = AlcCPQEntryInsert(q, priority[idI], NULL, NULL);
+      errNum = AlcCPQEntryInsert(q, priority[idI], NULL);
 #ifdef ALC_CPQ_DEBUG
       if(verbose)
       {
@@ -834,7 +836,7 @@ int		main(int argc, char *argv[])
   		idR;
   long		time0,
   		time1;
-  double	holdTime;
+  double	timeDelta;
   AlcCPQQueue	*q;
   AlcCPQItem	*item;
   float		*priority;
@@ -876,8 +878,28 @@ int		main(int argc, char *argv[])
     time0 = (tp.tv_sec * 1000000) + tp.tv_usec;
     (void )gettimeofday(&tp, NULL);
     time1 = (tp.tv_sec * 1000000) + tp.tv_usec;
-    holdTime = (double )(time1 - time0) / nRepeats;
-    (void )printf("%d %lg\n", idI, holdTime);
+    timeDelta = (double )(time1 - time0) / nRepeats;
+    (void )printf("AlcCPQueue hold time for queue size %d = %lgus\n",
+                  idI, timeDelta);
+  }
+  if(errNum == ALC_ER_NONE)
+  {
+    for(idI = 0; (errNum == ALC_ER_NONE) && (idI < maxItems); ++idI)
+    {
+      errNum = AlcCPQEntryInsert(q, *(priority + idP), NULL);
+    }
+    time0 = (tp.tv_sec * 1000000) + tp.tv_usec;
+    while((item = AlcCPQItemUnlink(q)) != NULL)
+    {
+#ifdef ALC_CPQ_DEBUG
+      AlcCPQDebugOut(q);
+#endif /* ALC_CPQ_DEBUG */
+    }
+    idI = q->nItem;
+    time1 = (tp.tv_sec * 1000000) + tp.tv_usec;
+    timeDelta = (double )(time1 - time0);
+    (void )printf("AlcCPQueue total unlink time for queue size %d = %lgus\n",
+		  idI, timeDelta);
   }
   (void )AlcCPQQueueFree(q);
   if(errNum != ALC_ER_NONE)
