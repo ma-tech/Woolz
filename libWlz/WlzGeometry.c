@@ -12,6 +12,8 @@
 * Purpose:      Provides geometry utility functions.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 26-01-01 bill Fix bug in WlzGeomVtxSortRadial() and change it's
+*		parameters. Also change WlzGeomVtxSortRadialFn().
 * 08-01-01 bill	Add WlzGeomTriangleNormal().
 ************************************************************************/
 #include <stdlib.h>
@@ -20,7 +22,9 @@
 
 static int		WlzGeomVtxSortRadialFn(
 			  void *p0,
-			  void *p1);
+			  int *idxP,
+			  int idx0,
+			  int idx1);
 
 /************************************************************************
 * Function:	WlzGeomTriangleCircumcentre			
@@ -425,12 +429,15 @@ int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
 * Returns:	int:			Result of comparison.
 * Purpose:	Simple wrapper for WlzGeomCmpAngle().
 * Global refs:	-
-* Parameters:	void *p0:		Ptr to first vertex.
-*		void *p1:		Ptr to second vertex.
+* Parameters:	void *p0:		Ptr to verticies.
+*		int *idxP:		Ptr to indicies of verticies.
+*		int idx0:		Index to index of first vertex.
+*		int idx1:  		Index to index of second vertex.
 ************************************************************************/
-static int	WlzGeomVtxSortRadialFn(void *p0, void *p1)
+static int	WlzGeomVtxSortRadialFn(void *p0, int *idxP, int idx0, int idx1)
 {
-  return(WlzGeomCmpAngle(*(WlzDVertex2 *)p0, *(WlzDVertex2 *)p1));
+  return(WlzGeomCmpAngle(*((WlzDVertex2 *)p0 + *(idxP + idx0)),
+  			 *((WlzDVertex2 *)p0 + *(idxP + idx1))));
 }
 
 /************************************************************************
@@ -444,14 +451,19 @@ static int	WlzGeomVtxSortRadialFn(void *p0, void *p1)
 *		  (nV > 0) &&
 *		  (vP != NULL) && (wP != NULL) && (iP != NULL)
 *		  (|rV| > 0) && (rV.(uV = *vP) == 0)
+*		Note that it is the indicies that are sorted NOT the
+*		verticies themselves.
 * Global refs:	-
 * Parameters:	int nV:			Number of 3D verticies.
 *		WlzDVertex3 *vP:	The 3D verticies.
+*		int *idxBuf:		Buffer of nV indicies used
+*					for sorting the verticies.
 *		WlzDVertex2 *wP:	Workspace with nV 2D verticies.
 *		WlzDVertex3 rV:		The radial vector.
 ************************************************************************/
 void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
-				     WlzDVertex2 *wP, WlzDVertex3 rV)
+				     int *idxBuf, WlzDVertex2 *wP,
+				     WlzDVertex3 rV)
 {
   int		idI;
   double	tD0;
@@ -467,17 +479,17 @@ void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
   tD0 = 1.0 / WLZ_VTX_3_LENGTH(uV);
   WLZ_VTX_3_SCALE(uV, uV, tD0);
   WLZ_VTX_3_CROSS(vV, rV, uV);
-  /* TODO check I need to scale vV. */
   tD0 = 1.0 / WLZ_VTX_3_LENGTH(vV);
   WLZ_VTX_3_SCALE(vV, vV, tD0);
   /* Compute the projections of the verticies onto the basis vectors. */
   for(idI = 0; idI < nV; ++idI)
   {
+    *(idxBuf + idI) = idI;
     (wP + idI)->vtX = WLZ_VTX_3_DOT(uV, *(vP + idI));
     (wP + idI)->vtY = WLZ_VTX_3_DOT(vV, *(vP + idI));
   }
   /* Sort the vericies. */
-  (void )AlgHeapSort(wP, nV, sizeof(WlzDVertex2), WlzGeomVtxSortRadialFn);
+  (void )AlgHeapSortIdx(wP, idxBuf, nV, WlzGeomVtxSortRadialFn);
 }
 
 /************************************************************************
