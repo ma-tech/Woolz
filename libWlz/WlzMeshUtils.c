@@ -1,19 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzMeshUtils.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Utility functions for manipulating Woolz mesh
-*		transforms.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzMeshUtils.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Utility functions for manipulating Woolz mesh transforms.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -92,18 +96,16 @@ static WlzErrorNum WlzMeshAddToIntVec(WlzMeshIntVec *, int),
 		WlzMeshEarListRealloc(WlzMeshEarList *, int);
 static WlzMeshEar *WlzMeshEarGetMinPower(WlzMeshEarList *);
 
-/************************************************************************
-* Function:	WlzMeshDomainAdd					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Adds mesh nodes within the domain of the given 2D	*
-*		domain object.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzObject *obj:		Given object with domain.	*
-*		double minDist: 	Minimum distance between mesh	*
-*					nodes.				*
-*		WlzDVertex2 scaleVx:	Object scale factor.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds mesh nodes within the domain of the given 2D domain
+* 		object.
+* \param	mesh			Given mesh transform.
+* \param	obj			Given object with domain.
+* \param	minDist			Minimum distance between mesh nodes.
+* \param	scaleVx			Object scale factor.
+*/
 WlzErrorNum	WlzMeshDomainAdd(WlzMeshTransform *mesh, WlzObject *obj,
 				 double minDist, WlzDVertex2 scaleVx)
 {
@@ -139,19 +141,18 @@ WlzErrorNum	WlzMeshDomainAdd(WlzMeshTransform *mesh, WlzObject *obj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshVxVecAdd						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Adds mesh nodes at the vertices of the given (2D)	*
-*		vertex vector.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzDVertex2 *vxVec:	Given vector of vertices.	*
-*		int nVx:		Number of vertices.		*
-*		double minDistSq:	Square of the minimum distance	*
-*					between mesh nodes.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds mesh nodes at the vertices of the given (2D) vertex
+*		vector.
+* \param	mesh			Given mesh transform.
+* \param	vxVec			Given vector of vertices.
+* \param	nVx			Number of vertices.
+* \param	minDistSq		Square of the minimum distance
+*					between mesh nodes.
+* \param	nodeFlags		Node flags to set (eg source).
+*/
 WlzErrorNum	WlzMeshVxVecAdd(WlzMeshTransform *mesh, WlzDVertex2 *vxVec,
 				int nVx, double minDistSq,
 				unsigned int nodeFlags)
@@ -284,18 +285,17 @@ WlzErrorNum	WlzMeshVxVecAdd(WlzMeshTransform *mesh, WlzDVertex2 *vxVec,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshIDomAdd						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Adds mesh nodes within the interval domain of the	*
-*		given 2D domain object.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzObject *obj:		Given object with domain.	*
-*		double minDistSq:	Square of the minimum distance	*
-*					between mesh nodes.		*
-*		WlzDVertex2 scaleVx:	Object scale factor.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds mesh nodes within the interval domain of the given
+*		2D domain object.
+* \param	mesh			Given mesh transform.
+* \param	obj			Given object with domain.
+* \param	minDistSq		Square of the minimum distance
+*					between mesh nodes.
+* \param	scaleVx			Object scale factor.
+*/
 WlzErrorNum	WlzMeshIDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
 			       double minDistSq, WlzDVertex2 scaleVx)
 {
@@ -442,18 +442,16 @@ WlzErrorNum	WlzMeshIDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshPolyDomAdd					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Adds mesh nodes along the polygon domain of the		*
-*		given 2D domain object.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzObject *obj:		Given object with domain.	*
-*		double minDistSq:	Minimum distance between mesh	*
-*					nodes.				*
-*		WlzDVertex2 scaleVx:	Object scale factor.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds mesh nodes along the polygon domain of the given
+*		2D domain object.
+* \param	mesh			Given mesh transform.
+* \param	obj			Given object with domain.
+* \param	minDist			Minimum distance between mesh nodes.
+* \param	scaleVx			Object scale factor.
+*/
 WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
 				  double minDist, WlzDVertex2 scaleVx)
 {
@@ -595,20 +593,17 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemVerify					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Checks that the given mesh transform is valid.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int dispFlg:		Verify displacements if non-    *
-*					zero.				*
-*		WlzMeshElem *elm:	Element to verify.		*
-*		WlzMeshError *dstErrMsk: Destination pointer to be	*
-*					set with a mesh error after	*
-*					verifying this element, may be	*
-*					NULL.				*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Checks that the given mesh transform is valid.
+* \param	mesh			Given mesh transform.
+* \param	dispFlg			Verify displacements if non-zero.
+* \param	elm			Element to verify.
+* \param	dstErrMsk		Destination pointer to be set with
+*					a mesh error after verifying this
+*					element, may be NULL.
+*/
 WlzErrorNum	WlzMeshElemVerify(WlzMeshTransform *mesh, int dispFlg,
 			          WlzMeshElem *elm, WlzMeshError *dstErrMsk)
 {
@@ -767,18 +762,16 @@ WlzErrorNum	WlzMeshElemVerify(WlzMeshTransform *mesh, int dispFlg,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshExpand						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Expands a mesh to make sure that there are enough mesh	*
-*		elements and nodes available.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int nElem:		Minimum number of mesh elements *
-*					required.			*
-*		int nNodes:		Minimum number of mesh nodes	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Expands a mesh to make sure that there are enough mesh
+*		elements and nodes available.
+* \param	mesh			Given mesh transform.
+* \param	nElem			Minimum number of mesh elements
+* 					required.
+* \param	nNodes			Minimum number of mesh nodes required.
+*/
 WlzErrorNum	WlzMeshExpand(WlzMeshTransform *mesh, int nElem, int nNodes)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -825,14 +818,13 @@ WlzErrorNum	WlzMeshExpand(WlzMeshTransform *mesh, int nElem, int nNodes)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshSqueeze						*
-* Returns:	void							*
-* Purpose:	Squeeze out any zombie nodes and/or elements so that	*
-*		they are available for reuse.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Squeeze out any zombie nodes and/or elements so that they
+*		are available for reuse.
+* \param	mesh			Given mesh transform.
+*/
 WlzErrorNum	WlzMeshSqueeze(WlzMeshTransform *mesh)
 {
   int		eId0,
@@ -976,21 +968,17 @@ WlzErrorNum	WlzMeshSqueeze(WlzMeshTransform *mesh)
   return(errNum);
 }
 
-
-/************************************************************************
-* Function:	WlzMeshElemNodeIdxFromVx				*
-* Returns:	int:			Index to the node in the given	*
-*					element, -1 if the vertex is	*
-*					not a node of the given element	*
-*					or two nodes are coincident at	*
-*					the given vertex.		*
-* Purpose:	Finds which of the given elements nodes are coincident	*
-*		with the given vertex.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Mesh transform. 		*
-*		WlzMeshElem *elm:	Mesh element.			*
-*		WlzDVertex2 gVx: 	Given vertex.			*
-************************************************************************/
+/*!
+* \return	Index to the node in the given element or -1 if the vertex
+*		is not a node of the given element or two nodes are coincident
+*		at the given vertex.
+* \ingroup	WlzTransform
+* \brief	Finds which of the given elements nodes are coincident with
+* 		the given vertex.
+* \param	mesh			Mesh transform.
+* \param	elm			Mesh element.
+* \param	gVx			Given vertex.
+*/
 int		WlzMeshElemNodeIdxFromVx(WlzMeshTransform *mesh,
 					 WlzMeshElem *elm, WlzDVertex2 gVx)
 {
@@ -1029,19 +1017,16 @@ int		WlzMeshElemNodeIdxFromVx(WlzMeshTransform *mesh,
   return(idx);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemNodeIdxFromNodeIdx				*
-* Returns:	int:			Index to the node in the given	*
-*					element, -1 if the vertex is	*
-*					not a node of the given element	*
-*					or two nodes are coincident at	*
-*					the given vertex.		*
-* Purpose:	Finds which of the given ear/element nodes has the	*
-*		given mesh node index.					*
-* Global refs:	-							*
-* Parameters:	int *nodes:		Mesh ear/element nodes.		*
-*		int mNodId: 		Given mesh node index.		*
-************************************************************************/
+/*!
+* \return	Index to the node in the given element or  -1 if the vertex
+*		is not a node of the given element or two nodes are coincident
+*		at the given vertex.
+* \ingroup	WlzTransform
+* \brief	Finds which of the given ear/element nodes has the given
+*		mesh node index.
+* \param	nodes			Mesh ear/element nodes.
+* \param	mNodId			Given mesh node index.
+*/
 int		WlzMeshElemNodeIdxFromNodeIdx(int *nodes, int mNodId)
 {
   int		idx,
@@ -1072,20 +1057,17 @@ int		WlzMeshElemNodeIdxFromNodeIdx(int *nodes, int mNodId)
   return(idx);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemNbrIdxFromNodes				*
-* Returns:	int:			Index to the neighbour of the	*
-*					given element which would (if	*
-*					exists) share given nodes, -1	*
-*					both nodes not shared with the	*
-*					element.			*
-* Purpose:	Finds which neighbour of the given element whould 	*
-*		share the nodes has the given pair of nodes.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshElem *elm:	Mesh element.			*
-*		int nodId0:		First node.			*
-*		int nodId1:		Second node.			*
-************************************************************************/
+/*!
+* \return	Index to the neighbour of the given element which would (if
+* 		exists) share given nodes, or -1 if both nodes not shared with
+* 		the element.
+* \ingroup	WlzTransform
+* \brief	Finds which neighbour of the given element whould share
+*		the nodes has the given pair of nodes.
+* \param	elm			Mesh element.
+* \param	nodId0			First node.
+* \param	nodId1			Second node.
+*/
 int		WlzMeshElemNbrIdxFromNodes(WlzMeshElem *elm,
 					   int nodId0, int nodId1)
 {
@@ -1113,24 +1095,21 @@ int		WlzMeshElemNbrIdxFromNodes(WlzMeshElem *elm,
   return(nbrId);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemFindVx					*
-* Returns:	int:			Element index, negative if	*
-*					not found.			*
-* Purpose:	Searches the mesh for the element which contains the	*
-*		given vertex. It is NOT an error if the vertex is not	*
-*		within the mesh.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzDVertex2 gvnVx:	Given vertex.			*
-*		int startElm:		If >= 0, the index of the	*
-*					element from which to start the *
-*					search. 			*
-*		int *existsFlg: 	Destination ptr for vertex	*
-*					already exists flag.		*
-*		WlzErrorNum *dstErr:	Destination pointer for error	*
-*					number, may be NULL.		*
-************************************************************************/
+/*!
+* \return	Element index, negative if not found.
+* \ingroup	WlzTransform
+* \brief	Searches the mesh for the element which contains the given
+* 		vertex. It is NOT an error if the vertex is not within the
+* 		mesh.
+* \param	mesh			Given mesh transform.
+* \param	gvnVx			Given vertex.
+* \param	startElm		If >= 0, the index of the element from
+* 					which to start the search.
+* \param	existsFlg		Destination ptr for vertex already
+* 					exists flag.
+* \param	dstErr			Destination pointer for error number,
+* 					may be NULL.
+*/
 int		WlzMeshElemFindVx(WlzMeshTransform *mesh, WlzDVertex2 gvnVx,
 				  int startElm, int *existsFlg,
 				  WlzErrorNum *dstErr)
@@ -1176,15 +1155,14 @@ int		WlzMeshElemFindVx(WlzMeshTransform *mesh, WlzDVertex2 gvnVx,
   return(elmId);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemSplit					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Splits the given mesh element by placing a new node	*
-*		at it's circumcentre.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int sElmId:		Index of element to split.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Splits the given mesh element by placing a new node at
+*		it's circumcentre.
+* \param	mesh			Given mesh transform.
+* \param	sElmId			Index of element to split.
+*/
 WlzErrorNum	WlzMeshElemSplit(WlzMeshTransform *mesh, int sElmId)
 {
   int		bndFlg = 0,
@@ -1327,19 +1305,17 @@ WlzErrorNum	WlzMeshElemSplit(WlzMeshTransform *mesh, int sElmId)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshNodeAdd						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Adds a node to the given mesh, the new node must lie	*
-*		inside the existing mesh.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int startElm:		If >= 0, the index of the	*
-*					element from which to start the *
-*					search. 			*
-*		WlzDVertex2 newVx:	New node vertex.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds a node to the given mesh, the new node must lie inside
+*		the existing mesh.
+* \param	mesh			Given mesh transform.
+* \param	startElm		If >= 0, the index of the element
+*					from which to start the search.
+* \param	newVx			New node vertex.
+* \param	nodeFlags		Node flags to set (eg source).
+*/
 WlzErrorNum	WlzMeshNodeAdd(WlzMeshTransform *mesh, int startElm,
 			       WlzDVertex2 newVx, unsigned int nodeFlags)
 {
@@ -1416,20 +1392,17 @@ WlzErrorNum	WlzMeshNodeAdd(WlzMeshTransform *mesh, int startElm,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshNodeDelIdx					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Deletes nodes, specified by their index, from the given	*
-*		mesh.							*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int startElm:		If >= 0, the index of the	*
-*					element from which to start the *
-*					search an element using the	*
-*					node. 				*
-*		int *nodIdP:		Vector of node indicies.	*
-*		int nNod:		Number of indicies in vector.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Deletes nodes, specified by their index, from the given mesh.
+* \param	mesh			Given mesh transform.
+* \param	startElm		If >= 0, the index of the element
+*					from which to start the search an
+*					element using the node.
+* \param	nodIdP			Vector of node indicies.
+* \param	nNod			Number of indicies in vector.
+*/
 WlzErrorNum	WlzMeshNodeDelIdx(WlzMeshTransform *mesh, int startElm,
 			          int *nodIdP, int nNod)
 {
@@ -1477,16 +1450,15 @@ WlzErrorNum	WlzMeshNodeDelIdx(WlzMeshTransform *mesh, int startElm,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshNodeDelInit					*
-* Returns:	void							*
-* Purpose:	Initialize the element vector, node vector and ear list	*
-*		ready for node deletion.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshIntVec *elmVec:	Element vector.			*
-*		WlzMeshIntVec *nodVec:	Node vector.			*
-*		WlzMeshEarList *earList: Ear list.			*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Initialize the element vector, node vector and ear list
+*		ready for node deletion.
+* \param	elmVec			Element vector.
+* \param	nodVec			Node vector.
+* \param	earList			Ear list.
+*/
 static void	WlzMeshNodeDelInit(WlzMeshIntVec *elmVec,
 				   WlzMeshIntVec *nodVec,
 				   WlzMeshEarList *earList)
@@ -1505,16 +1477,15 @@ static void	WlzMeshNodeDelInit(WlzMeshIntVec *elmVec,
   earList->pool = NULL;
 }
 
-/************************************************************************
-* Function:	WlzMeshNodeDelFree					*
-* Returns:	void							*
-* Purpose:	Free storage allocated for the element vector, node	*
-*		vector and ear list after node deletion.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshIntVec *elmVec:	Element vector.			*
-*		WlzMeshIntVec *nodVec:	Node vector.			*
-*		WlzMeshEarList *earList: Ear list.			*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Free storage allocated for the element vector, node vector
+*		and ear list after node deletion.
+* \param	elmVec			Element vector.
+* \param	nodVec			Node vector.
+* \param	earList			Ear list.
+*/
 static void	WlzMeshNodeDelFree(WlzMeshIntVec *elmVec, 
 				   WlzMeshIntVec *nodVec, 
 				   WlzMeshEarList *earList)
@@ -1533,21 +1504,20 @@ static void	WlzMeshNodeDelFree(WlzMeshIntVec *elmVec,
   }
 }
 
-/************************************************************************
-* Function:	WlzMeshNodeDel						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Deletes a node, specified by it's position, from the	*
-*		given mesh.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-* Parameters:	WlzMeshIntVec *elmVec:	Element vector.			*
-*		WlzMeshIntVec *nodVec:	Node vector.			*
-*		WlzMeshEarList *earList: Ear list.			*
-*		int startElm:		Index of the element from which	*
-*					to start the search for an	*
-*					element using the node. 	*
-*		WlzDVertex2 nodVx:	Node position.			*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Deletes a node, specified by it's position, from the
+*		given mesh.
+* \param	mesh			Given mesh transform.
+* \param	elmVec			Element vector.
+* \param	nodVec			Node vector.
+* \param	earList			Ear list.
+* \param	startElm		Index of the element from which to
+*					start the search for an element using
+*					the node.
+* \param	nodVx			Node position.
+*/
 static WlzErrorNum WlzMeshNodeDel(WlzMeshTransform *mesh,
 				  WlzMeshIntVec *elmVec,
 				  WlzMeshIntVec *nodVec, 
@@ -1714,27 +1684,23 @@ static WlzErrorNum WlzMeshNodeDel(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemFindVxWalk					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Searches the mesh for the element which contains the	*
-*		given vertex.						*
-*		Walks from the given element in the direction of the	*
-*		given vertex until the element which encloses the given	*
-*		vertex is found.					*
-*		If the walk oscillates back and forth between two	*
-*		elements then either may be returned as the enclosing	*
-*		element.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzDVertex2 gVx: 	Given vertex.			*
-*		int *elmId:		Source and destination element	*
-*					index pointer.			*
-*		int *foundFlg:		Destination ptr for element	*
-*					found flag.			*
-*		int *existsFlg: 	Destination ptr for node exists *
-*					flag.				*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Searches the mesh for the element which contains the given
+* 		vertex. Walks from the given element in the direction of the
+* 		given vertex until the element which encloses the given vertex
+* 		is found. If the walk oscillates back and forth between two
+* 		elements then either may be returned as the enclosing element.
+* \param	mesh			Given mesh transform.
+* \param	gVx			Given vertex.
+* \param	elmId			Source and destination element index
+*					pointer.
+* \param	foundFlg		Destination pointer for element found
+*					flag.
+* \param	existsFlg		Destination pointer for node exists
+*					flag.
+*/
 static WlzErrorNum WlzMeshElemFindVxWalk(WlzMeshTransform *mesh,
 					 WlzDVertex2 gVx,
 					 int *elmId, int *foundFlg,
@@ -1856,21 +1822,20 @@ static WlzErrorNum WlzMeshElemFindVxWalk(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemFindVxForce					*
-* Returns:	void							*
-* Purpose:	Finds the mesh element which contains the given vertex	*
-*		by brute force. 					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzDVertex2 gVx: 	Given vertex.			*
-*		int *elmId:		Source and destination element	*
-*					index pointer.			*
-*		int *foundFlg:		Destination ptr for element	*
-*					found flag.			*
-*		int *existsFlg: 	Destination ptr for node exists *
-*					flag.				*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Finds the mesh element which contains the given vertex by
+*		brute force.
+* \param	mesh			Given mesh transform.
+* \param	gVx			Given vertex.
+* \param	elmId			Source and destination element index
+*					pointer.
+* \param	foundFlg		Destination pointer for element
+*					found flag.
+* \param	existsFlg		Destination pointer for node exists
+*					flag.
+*/
 static void	 WlzMeshElemFindVxForce(WlzMeshTransform *mesh,
 					  WlzDVertex2 gVx,
 					  int *elmId, int *foundFlg,
@@ -1918,23 +1883,21 @@ static void	 WlzMeshElemFindVxForce(WlzMeshTransform *mesh,
   *foundFlg = fndId != -1;
 }
 
-/************************************************************************
-* Function:	WlzMeshQueConflictElem					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Recursively builds a que of elements in conflict with	*
-*		the given new node vertex, all elements in conflict	*
-*		being marked using a flag. An element is in conflict	*
-*		with a new node vertex if the new node lies within	*
-*		the circumcircle of the element.			*
-* Global refs:	-							*
-* Parameters:	WlzMeshIntVec *eCnfQVec: The mesh element que to build.	*
-*		WlzMeshTransform *mesh: Given mesh transform.		*
-*		int srcElmId:		Index of element which contains *
-*					the vertex.			*
-*		int elmId		Index of element to test and	*
-*					possibly add to the queue.	*
-*		WlzDVertex2 newVx:	New node vertex.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Recursively builds a que of elements in conflict with the
+*		given new node vertex, all elements in conflict being marked
+*		using a flag. An element is in conflict with a new node vertex
+*		if the new node lies within the circumcircle of the element.
+* \param	eCnfQVec		The mesh element que to build.
+* \param	mesh			Given mesh transform.
+* \param	srcElmId		Index of element which contains the
+*					vertex.
+* \param	elmId			Index of element to test and possibly
+*					add to the queue.
+* \param	newVx			New node vertex.
+*/
 static WlzErrorNum WlzMeshQueConflictElem(WlzMeshIntVec *eCnfQVec,
 					  WlzMeshTransform *mesh,
 					  int srcElmId, int elmId,
@@ -1981,18 +1944,15 @@ static WlzErrorNum WlzMeshQueConflictElem(WlzMeshIntVec *eCnfQVec,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemConflict					*
-* Returns:	int:			Non-zero if element is in	*
-*					conflict with the new node	*
-*					vertex. 			*
-* Purpose:	Tests the given element for an in-circumcircle conflict *
-*		with the given new node vertex. 			*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int elmId:		Index of element in mesh.	*
-*		WlzDVertex2 newVx:	New node vertex.		*
-************************************************************************/
+/*!
+* \return	Non-zero if element is in conflict with the new node vertex.
+* \ingroup	WlzTransform
+* \brief	Tests the given element for an in-circumcircle conflict with
+* 		the given new node vertex.
+* \param	mesh			Given mesh transform.
+* \param	elmId			Index of element in mesh.
+* \param	newVx			New node vertex.
+*/
 static int	WlzMeshElemConflict(WlzMeshTransform *mesh, int elmId,
 				    WlzDVertex2 newVx)
 {
@@ -2009,19 +1969,18 @@ static int	WlzMeshElemConflict(WlzMeshTransform *mesh, int elmId,
   return(conflict);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemReplaceN					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Replaces those mesh elements that are queued and	*
-*		flaged as zombies with new mesh elements which include	*
-*		the given new node vertex.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int *eCnfQ:		The mesh element que to build.	*
-*		int qCnt:		Number of elements in queue.	*
-*		WlzDVertex2 newVx:	New node vertex.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Replaces those mesh elements that are queued and flaged as
+* 		zombies with new mesh elements which include the given new
+* 		node vertex.
+* \param	mesh			Given mesh transform.
+* \param	eCnfQ			The mesh element que to build.
+* \param	qCnt			Number of elements in queue.
+* \param	newVx			New node vertex.
+* \param	nodeFlags		Node flags to set (eg source).
+*/
 static WlzErrorNum WlzMeshElemReplaceN(WlzMeshTransform *mesh, int *eCnfQ,
 				       int qCnt, WlzDVertex2 newVx,
 				       unsigned int nodeFlags)
@@ -2039,20 +1998,18 @@ static WlzErrorNum WlzMeshElemReplaceN(WlzMeshTransform *mesh, int *eCnfQ,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemReplace1					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Replaces a single mesh element with 1 element (no	*
-*		action), 2 elements (1 new and 1 recycled) or		*
-*		3 elements (2 new and 1 recycled) using the new node	*
-*		to split the element.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int eId:		Index of the element containing *
-*					the new node vertex.		*
-*		WlzDVertex2 newVx:	New node vertex.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Replaces a single mesh element with 1 element (no action),
+*		2 elements (1 new and 1 recycled) or 3 elements (2 new and 1
+*		recycled) using the new node to split the element.
+* \param	mesh			Given mesh transform.
+* \param	eId			Index of the element containing the
+*					new node vertex.
+* \param	newVx			New node vertex.
+* \param 	nodeFlags		Node flags to set (eg source).
+*/
 static WlzErrorNum WlzMeshElemReplace1(WlzMeshTransform *mesh,
 				       int eId, WlzDVertex2 newVx,
 				       unsigned int nodeFlags)
@@ -2108,18 +2065,16 @@ static WlzErrorNum WlzMeshElemReplace1(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshElemReplace1With1				*
-* Returns:	void							*
-* Purpose:	Replaces a single mesh element with another mesh	*
-*		element.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int eId0:		Index of the element to be	*
-*					replaced in the mesh.		*
-*		int eId1:		Index of the element to replace	*
-*					element with index eId0.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Replaces a single mesh element with another mesh element.
+* \param	mesh			Given mesh transform.
+* \param	eId0			Index of the element to be replaced in
+*					the mesh.
+* \param	eId1			Index of the element to replace
+*					element with index eId0.
+*/
 static void	WlzMeshElemReplace1With1(WlzMeshTransform *mesh,
 					 int eId0, int eId1)
 {
@@ -2156,23 +2111,20 @@ static void	WlzMeshElemReplace1With1(WlzMeshTransform *mesh,
   }
 }
 
-/************************************************************************
-* Function:	WlzMeshElemReplace1With2				*
-* Returns:	void							*
-* Purpose:	Replaces a single mesh element with 2 mesh elements,	*
-*		(1 new and 1 recycled) which include the given new node *
-*		vertex. 						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int eId:		Index of the element containing *
-*					the new node vertex.		*
-*		int nod0:		Which of the existing elements	*
-*					nodes is shared between the	*
-*					two new elements.		*
-*					be invalid.			*
-*		WlzDVertex2 newVx:	New node vertex.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Replaces a single mesh element with 2 mesh elements,
+*		(1 new and 1 recycled) which include the given new node
+*		vertex.
+* \param	mesh			Given mesh transform.
+* \param	eId			Index of the element containing
+*					the new node vertex.
+* \param	nod0			Which of the existing elements nodes is
+* 					shared between the two new elements.
+* \param	newVx			New node vertex.
+* \param	nodeFlags		Node flags to set (eg source).
+*/
 static void	WlzMeshElemReplace1With2(WlzMeshTransform *mesh,
 					 int eId, int nod0,
 					 WlzDVertex2 newVx,
@@ -2244,19 +2196,18 @@ static void	WlzMeshElemReplace1With2(WlzMeshTransform *mesh,
   mesh->nElem = nElem;
 }
 
-/************************************************************************
-* Function:	WlzMeshElemReplace1With3				*
-* Returns:	void							*
-* Purpose:	Replaces a single mesh element with 3 mesh elements,	*
-*		(2 new and 1 recycled) which include the given new node *
-*		vertex. 						*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int eId:		Index of the element containing *
-*					the new node vertex.		*
-*		WlzDVertex2 newVx:	New node vertex.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Replaces a single mesh element with 3 mesh elements,
+*		(2 new and 1 recycled) which include the given new node
+*		vertex.
+* \param	mesh			Given mesh transform.
+* \param	eId			Index of the element containing the
+*					new node vertex.
+* \param	newVx			New node vertex.
+* \param	nodeFlags		Node flags to set (eg source).
+*/
 static void	 WlzMeshElemReplace1With3(WlzMeshTransform *mesh,
 					  int eId, WlzDVertex2 newVx,
 					  unsigned int nodeFlags)
@@ -2365,26 +2316,23 @@ static void	 WlzMeshElemReplace1With3(WlzMeshTransform *mesh,
   mesh->nElem = nElem;
 }
 
-/************************************************************************
-* Function:	WlzMeshElemReplaceNWithN				*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Replaces all queued mesh elements (which always have a	*
-*		convex hull) with elements that use the new node	*
-*		vertex. 						*
-*		This function is only ever called with more than one	*
-*		mesh element enqueued.					*
-*		Computing the number of nodes in the enqueued elements	*
-*		is easy because the region is always convex with all	*
-*		it's nodes on it's boundary. Every triangulation of a	*
-*		polygon with N nodes has N - 2 elements.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int *zElmIdVec:	The vector (queue) of zombie	*
-*					mesh elements to replace.	*
-*		int zElmCnt:		Number of zombie elements.	*
-*		WlzDVertex2 newVx:	New node vertex.		*
-*		unsigned int nodeFlags:	Node flags to set (eg source).	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Replaces all queued mesh elements (which always have a
+*		convex hull) with elements that use the new node vertex.
+*		This function is only ever called with more than one mesh
+*		element enqueued. Computing the number of nodes in the enqueued
+*		elements is easy because the region is always convex with all
+*		it's nodes on it's boundary. Every triangulation of a polygon
+*		with N nodes has N - 2 elements.
+* \param	mesh			Given mesh transform.
+* \param	zElmIdVec		The vector (queue) of zombie mesh
+*					elements to replace.
+* \param	zElmCnt			Number of zombie elements.
+* \param	newVx			New node vertex.
+* \param	 unsignednodeFlags	Node flags to set (eg source).
+*/
 static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
 					    int *zElmIdVec,
 					    int zElmCnt, WlzDVertex2 newVx,
@@ -2473,18 +2421,18 @@ static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
 	wElm->flags |= WLZ_MESH_ELEM_FLAGS_NBR_0;
 	wElm->neighbours[0] = nId;
 	zNElm = mesh->elements + nId;
-	if((zNElm->neighbours[0] == zElm->idx) &&
-	   (zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_0))
+	if(((zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_0) != 0) &&
+	   (zNElm->neighbours[0] == zElm->idx))
 	{
 	  zNElm->neighbours[0] = wElm->idx;
 	}
-	else if((zNElm->neighbours[1] == zElm->idx) &&
-	   (zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_1))
+	else if(((zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_1) != 0) &&
+	        (zNElm->neighbours[1] == zElm->idx))
 	{
 	  zNElm->neighbours[1] = wElm->idx;
 	}
-	else if((zNElm->neighbours[2] == zElm->idx) &&
-	   (zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_2))
+	else if(((zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_2) != 0) &&
+	        (zNElm->neighbours[2] == zElm->idx))
 	{
 	  zNElm->neighbours[2] = wElm->idx;
 	}
@@ -2563,18 +2511,18 @@ static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
 	nId = wElm->neighbours[0];
 	zElm->neighbours[0] = nId;
 	zNElm = mesh->elements + nId;
-	if((zNElm->neighbours[0] == wElm->idx) &&
-	   (zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_0))
+	if(((zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_0) != 0) &&
+	   (zNElm->neighbours[0] == wElm->idx))
 	{
 	  zNElm->neighbours[0] = zElm->idx;
 	}
-	else if((zNElm->neighbours[1] == wElm->idx) &&
-	   (zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_1))
+	else if(((zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_1) != 0) &&
+	        (zNElm->neighbours[1] == wElm->idx))
 	{
 	  zNElm->neighbours[1] = zElm->idx;
 	}
-	else if((zNElm->neighbours[2] == wElm->idx) &&
-	   (zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_2))
+	else if(((zNElm->flags & WLZ_MESH_ELEM_FLAGS_NBR_2) != 0) &&
+	        (zNElm->neighbours[2] == wElm->idx))
 	{
 	  zNElm->neighbours[2] = zElm->idx;
 	}
@@ -2630,28 +2578,25 @@ static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshNodeDelVecBuild					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Builds a vector of the id's of all the mesh elements	*
-*		which include given the node (to be deleted), and a	*
-*		vector to the id's of all the mesh nodes which lie	*
-*		around the perimeter of the polygon formed by the	*
-*		vector of elements.					*
-*		The element and node vectors are in ccw order around	*
-*		the given node.						*
-*		The vector of nodes does not include the given node.	*
-*		All the elements in the vector are marked as zombies 	*
-*		ready for recycling.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshIntVec *elmVec:	Mesh element vector to build.	*
-*		WlzMeshIntVec *nodVec:	Mesh node vector to build.	*
-*		WlzMeshTransform *mesh: Given mesh transform.		*
-*		int dElmId:		Index of an element known to	*
-*					use the given node.		*
-*		int dElmNodId:		Index of node to be deleted	*
-*					within the given element.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Builds a vector of the id's of all the mesh elements
+*		which include given the node (to be deleted), and a vector to
+*		the id's of all the mesh nodes which lie around the perimeter
+*		of the polygon formed by the vector of elements. The element
+*		and node vectors are in ccw order around the given node. The
+*		vector of nodes does not include the given node. All the
+*		elements in the vector are marked as zombies ready for
+*		recycling.
+* \param	elmVec			Mesh element vector to build.
+* \param	nodVec			Mesh node vector to build.
+* \param	mesh			Given mesh transform.
+* \param	dElmId			Index of an element known to use
+*					the given node.
+* \param	dElmNodId		Index of node to be deleted within
+* 					the given element.
+*/
 static WlzErrorNum WlzMeshNodeDelVecBuild(WlzMeshIntVec *elmVec,
 					  WlzMeshIntVec *nodVec,
 					  WlzMeshTransform *mesh,
@@ -2826,16 +2771,14 @@ static WlzErrorNum WlzMeshNodeDelVecBuild(WlzMeshIntVec *elmVec,
   return(errNum);
 }
 
-
-/************************************************************************
-* Function:	WlzMeshAddToIntVec					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Adds an into to a vector of int's expanding the vector 	*
-*		as required.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshIntVec *vec:	Given int vector.		*
-*		int val:		Value to add to vector.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds an into to a vector of int's expanding the vector as
+*		required.
+* \param	vec			Given int vector.
+* \param	val			Value to add to vector.
+*/
 static WlzErrorNum WlzMeshAddToIntVec(WlzMeshIntVec *vec, int val)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2857,15 +2800,14 @@ static WlzErrorNum WlzMeshAddToIntVec(WlzMeshIntVec *vec, int val)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshEarListRealloc					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Realloc's a mesh ear list pool.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshEarList *earList: Given ear list for recycling.	*
-*		int maxEars:		Maximum number of ears that can	*
-*					be used in the stack.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Realloc's a mesh ear list pool.
+* \param	earList			Given ear list for recycling.
+* \param	maxEars			Maximum number of ears that can be
+*					used in the stack.
+*/
 static WlzErrorNum WlzMeshEarListRealloc(WlzMeshEarList *earList,
 					 int maxEars)
 {
@@ -2893,33 +2835,43 @@ static WlzErrorNum WlzMeshEarListRealloc(WlzMeshEarList *earList,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshEarPowerSet					*
-* Returns:	void							*
-* Purpose:	Computes a power for the given ear, where the power is	*
-*		given by:						*
-*           |                                                    |	*
-*           | x0           x1           x2           x3          |	*
-*           | y0           y1           y2           y3          |	*
-*           | x0^2 + y0^2  x1^2 + y1^2  x2^2 + y2^2  xp^2 + yp^2 |	*
-*           | 1            1            1            1           |	*
-*           |                                                    |	*
-*	   ---------------------------------------------------------	*
-*	                     |                    |			*
-*	                     | x0      x1      x2 |			*
-*	                     | y0      y1      y2 |			*
-*	                     | 1       1       1  |			*
-*	                     |                    |			*
-*		Where the given (ccw order) nodes are (x0,y0), (x1,y1)	*
-*		and (x2,y2). The node to be deleted is (xp, yp).	*
-*		In practice this function first checks that the nodes	*
-*		are not co-linear, then that the nodes are CCW and	*
-*		if all ok so far then computes the power.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzMeshEar *ear:	Given mesh ear.			*
-*		int delNodId:		Id of node to be deleted.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Computes a power for the given ear, where the power is
+*		given by:
+*		\f[
+		  \frac
+		  {
+		    \left|
+		    \begin{array}{cccc}
+		      x_o & x_1 & x_2 & x_3 \\
+		      y_0 & y_1 & y_2 & y_3 \\
+		      x_0^2 + y_0^2 & x_1^2 + y_1^2 & x_2^2 + y_2^2 &
+		      x_p^2 + y_p^2 \\
+		      1   & 1   & 1   & 1
+		    \end{array}
+		    \right|
+		  }
+		  {
+		    \left|
+		    \begin{array}{ccc}
+		       x_0 & x_1 & x_2 \\
+		       y_0 & y_1 & y_2 \\
+		       1   & 1   & 1
+		    \end{array}
+		    \right|
+		  }
+		\f]
+*		Where the given (CCW order) nodes are (x0,y0), (x1,y1)
+*		and (x2,y2). The node to be deleted is (xp, yp). In practice
+*		this function first checks that the nodesare not co-linear,
+*		then that the nodes are CCW and if all ok so far then computes
+*		the power.
+* \param	mesh			Given mesh transform.
+* \param	ear			Given mesh ear.
+* \param	delNodId		Id of node to be deleted.
+*/
 static void	WlzMeshEarPowerSet(WlzMeshTransform *mesh, WlzMeshEar *ear,
 				   int delNodId)
 {
@@ -2989,14 +2941,13 @@ static void	WlzMeshEarPowerSet(WlzMeshTransform *mesh, WlzMeshEar *ear,
   }
 }
 
-/************************************************************************
-* Function:	WlzMeshEarGetMinPower					*
-* Returns:	WlzMeshEar *:		Ear with minimum power.		*
-* Purpose:	Searches the input ear list for the ear with the	*
-*		minimum power.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshEarList *earList: Given ear list.		*
-************************************************************************/
+/*!
+* \return	Ear with minimum power.
+* \ingroup	WlzTransform
+* \brief	Searches the input ear list for the ear with the minimum
+*		power.
+* \param	earList			Given ear list.
+*/
 static WlzMeshEar *WlzMeshEarGetMinPower(WlzMeshEarList *earList)
 {
   int		eId0,
@@ -3080,24 +3031,21 @@ static WlzMeshEar *WlzMeshEarGetMinPower(WlzMeshEarList *earList)
   return(minEar);
 }
 
-/************************************************************************
-* Function:	WlzMeshEarsCreate					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Creates a list  of mesh ears from a vector of nodes	*
-*		and the node to be deleted. The list is in the order	*
-*		of given nodes, ie CCW around the node to be deleted.	*
-* Global refs:	-							*
-* Parameters:	WlzMeshEarList *earList: Given ear list for recycling.	*
-*		WlzMeshIntVec *elmVec:	Vector of mesh elements which	*
-*					runs CCW around the node to be	*
-*					deleted.			*
-*		WlzMeshIntVec *nodVec:	Vector of mesh nodes which runs	*
-*					CCW around the enclosing 	*
-*					polygon of the node to be 	*
-*					deleted.			*
-*		WlzMeshTransform *mesh: Given mesh transform.		*
-*		int delNodId:		Index of an node to be deleted.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Creates a list  of mesh ears from a vector of nodes and
+*		the node to be deleted. The list is in the order of given
+*		nodes, ie CCW around the node to be deleted.
+* \param	earList			Given ear list for recycling.
+* \param	elmVec			Vector of mesh elements which runs
+*					CCW around the node to be deleted.
+* \param	nodVec			Vector of mesh nodes which runs
+*					CCW around the enclosing polygon of
+*					the node to be deleted.
+* \param	mesh			Given mesh transform.
+* \param	delNodId		Index of an node to be deleted.
+*/
 static WlzErrorNum WlzMeshEarsCreate(WlzMeshEarList *earList,
 				     WlzMeshIntVec *elmVec,
 				     WlzMeshIntVec *nodVec,
@@ -3150,19 +3098,18 @@ static WlzErrorNum WlzMeshEarsCreate(WlzMeshEarList *earList,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshEarMatchElm					*
-* Returns:	void							*
-* Purpose:	Finds the indicies into the given element vector for	*
-*		the elements which connect to the given ear and sets	*
-*		the ear's neighbours and flags.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		WlzMeshEar *ear:	Ear (with nodes already set).	*
-*		WlzMeshIntVec *elmVec:	Element vector.			*
-*		int *elmVecIdP:		Used to remember element vector	*
-*					index between calls.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Finds the indicies into the given element vector for the
+*		elements which connect to the given ear and sets the ear's
+*		neighbours and flags.
+* \param	mesh			Given mesh transform.
+* \param	ear			Ear (with nodes already set).
+* \param	elmVec			Element vector.
+* \param	elmVecIdP		Used to remember element vector index
+*					between calls.
+*/
 static void	WlzMeshEarMatchElm(WlzMeshTransform *mesh,
 				   WlzMeshEar *ear, WlzMeshIntVec *elmVec,
 				   int *elmVecIdP)
@@ -3222,16 +3169,14 @@ static void	WlzMeshEarMatchElm(WlzMeshTransform *mesh,
   }
 }
 
-/************************************************************************
-* Function:	WlzMeshElemUnlink					*
-* Returns:	void							*
-* Purpose:	Unlinks the element with the given index from it's	*
-*		neighbours in the mesh.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int eId:		Index of element to be		*
-*					unlinked.			*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Unlinks the element with the given index from it's neighbours
+*		in the mesh.
+* \param	mesh			Given mesh transform.
+* \param	eId			Index of element to be unlinked.
+*/
 static void	WlzMeshElemUnlink(WlzMeshTransform *mesh, int eId)
 {
   int		eNId,

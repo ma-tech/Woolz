@@ -2246,9 +2246,25 @@ extern WlzObject		*WlzMeshTransformObj(
 				  WlzMeshTransform *mesh,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
-extern WlzDVertex2 		WlzMeshTransformVtx(WlzDVertex2 vtx,
-						    WlzMeshTransform *mesh,
-						    WlzErrorNum *dstErr);
+extern WlzMeshTransform 	*WlzMeshTransformFromCPts(
+				  WlzObject *obj,
+				  WlzBasisFnType basisFnType,
+				  int polyOrder,
+				  int nDPts,
+				  WlzDVertex2 *dPts,
+				  int nSPts,
+				  WlzDVertex2 *sPts,
+				  WlzMeshGenMethod meshGenMtd,
+				  double meshMinDist,
+				  double meshMaxDist,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzMeshAffineProduct(
+				  WlzMeshTransform *mTr,
+				  WlzAffineTransform *aTr);
+extern WlzDVertex2 		WlzMeshTransformVtx(
+				  WlzDVertex2 vtx,
+				  WlzMeshTransform *mesh,
+				  WlzErrorNum *dstErr);
 extern double 			WlzClassValCon4(
                                   double	*gVals,
 				  double	xOffset,

@@ -1,19 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzMeshTransform.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz functions for computing mesh transforms.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 06-09-1999 bill	Linear interpolation code was crazy.
-************************************************************************/
+/*!
+* \file         WlzMeshTransform.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Woolz functions for computing mesh transforms.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -21,85 +25,159 @@
 #include <float.h>
 #include <Wlz.h>
 
+/*!
+* \struct	_WlzMeshScanDElm
+* \ingroup	WlzTransform
+* \brief	Mesh scanning element.
+*/
 typedef struct _WlzMeshScanDElm
 {
-  int		valid;				        /* Non-zero if valid */
-  double	xTr[3];         /* Affine transform coefficients for columns */
-  double	yTr[3];           /* Affine transform coefficients for lines */
+  int		valid;			/*! Non-zero if valid. */
+  double	xTr[3];         	/*! Affine transform coefficients
+  					    for columns. */
+  double	yTr[3];           	/*! Affine transform coefficients
+  					    for lines. */
 } WlzMeshScanDElm;
 
+/*!
+* \struct	_WlzMeshScanItv
+* \ingroup	WlzTransform
+* \brief	Scan interval within an element.
+*/
 typedef struct _WlzMeshScanItv
 {
-  int		elmIdx;
-  int		line;
-  int		lftI;
-  int		rgtI;
+  int		elmIdx;			/*! Element index. */
+  int		line;			/*! Line of interval. */
+  int		lftI;			/*! Start of interval. */
+  int		rgtI;			/*! End of interval. */
 } WlzMeshScanItv;
 
+/*!
+* \struct	_WlzMeshScanWSp
+* \ingroup	WlzTransform
+* \brief	Mesh scanning workspace.
+*/
 typedef struct _WlzMeshScanWSp
 {
-  WlzMeshTransform *mesh;			       /* the mesh transform */
-  int		nItvs; 			      /* Number of element intervals */
-  WlzMeshScanItv *itvs; /* Element intervals sorted by line then left column */
-  WlzMeshScanDElm *dElm; 		    /* Destination mesh element data */
+  WlzMeshTransform *mesh;		/*! The mesh transform. */
+  int		nItvs; 			/*! Number of element intervals. */
+  WlzMeshScanItv *itvs; 		/*! Element intervals sorted by line
+  					    then left column. */
+  WlzMeshScanDElm *dElm; 		/*! Destination mesh element data. */
 } WlzMeshScanWSp;
 
+/*!
+* \struct
+* \ingroup	WlzTransform
+* \brief	Linked list based polygon data structure.
+*/
 typedef struct	_WlzMeshPolyVx
 {
-  struct _WlzMeshPolyVx *prev;
-  struct _WlzMeshPolyVx *next;
-  int		id;
-  WlzDVertex2	vx;
+  struct _WlzMeshPolyVx *prev;		/*! Next vertex in polygon. */
+  struct _WlzMeshPolyVx *next;		/*! Previous vertex in polygon. */
+  int		id;			/*! Index of the element. */
+  WlzDVertex2	vx;			/*! Vertex position. */
 } WlzMeshPolyVx;
 
 
-static int	WlzMeshItvCmp(const void *, const void *),
-		WlzMeshScanTriElm(WlzMeshScanWSp *, int, int);
-static void	WlzMeshScanWSpFree(WlzMeshScanWSp *);
+static int			WlzMeshItvCmp(
+				  const void *,
+				  const void *),
+				WlzMeshScanTriElm(
+				  WlzMeshScanWSp *,
+				  int,
+				  int);
+static void			WlzMeshScanWSpFree(
+				  WlzMeshScanWSp *);
+static void			WlzMeshAfTrSolve(
+				  double *, 
+				  double *,
+				  double,
+				  WlzDVertex2 *,
+				  WlzDVertex2 *);
+static unsigned int 		WlzMeshTransFillBlockLnNod(
+				  WlzMeshNode *,
+				  WlzInterval *,
+			       	  WlzIVertex2,
+				  unsigned int);
+static WlzErrorNum 		WlzMeshRemoveObjBox(
+				  WlzMeshTransform *),
+				WlzMeshBoundPolyAdd(
+				  WlzMeshTransform *,
+				  WlzObject *,
+				  double,
+				  double),
+				WlzMeshBoundPolyFix(
+				  WlzObject *,
+				  double),
+				WlzMeshScanDElmUpdate(
+				  WlzMeshScanWSp *,
+				  int),
+				WlzMeshLineCvExtrema(
+				  WlzInterval *,
+				  WlzObject *,
+				  unsigned int,
+				  unsigned int),
+				WlzMeshTransFillBlock(
+				  WlzMeshTransform *mesh,
+				  WlzInterval *,
+				  WlzIVertex2,
+				  unsigned int,
+				  unsigned int),
+				WlzMeshTransformVxVecI(
+				  WlzMeshTransform *,
+				  WlzIVertex2 *,
+			  	  int),
+				WlzMeshTransformVxVecF(
+				  WlzMeshTransform *,
+				  WlzFVertex2 *,
+			  	  int),
+				WlzMeshTransformVxVecD(
+				  WlzMeshTransform *,
+				  WlzDVertex2 *,
+			  	  int),
+				WlzMeshTransformValues2D(
+				  WlzObject *,
+				  WlzObject *,
+				  WlzMeshTransform *,
+				  WlzInterpolationType);
+static WlzObject 		*WlzMeshTransformObjPrv(
+				  WlzObject *,
+				  WlzMeshTransform *,
+				  WlzInterpolationType,
+				  WlzErrorNum *);
+static WlzMeshTransform 	*WlzMeshFromObjBlock(
+				  WlzObject *,
+				  unsigned int,
+			          WlzErrorNum *),
+				*WlzMeshFromObjBox(
+				  WlzObject *,
+				  WlzIBox2 *,
+				  int,
+				  WlzErrorNum *),
+        			*WlzMeshFromObjGrad(
+				  WlzObject *,
+				  unsigned int,
+				  unsigned int,
+				  WlzErrorNum *);
+static WlzPolygonDomain		*WlzMeshTransformPoly(
+				  WlzPolygonDomain *,
+			      	  WlzMeshTransform *,
+			      	  WlzErrorNum *);
+static WlzBoundList 		*WlzMeshTransformBoundList(
+				  WlzBoundList *,
+				  WlzMeshTransform *,
+				  WlzErrorNum *);
+static WlzMeshScanWSp 		*WlzMeshScanWSpInit(
+				  WlzMeshTransform *,
+				  WlzErrorNum *);
 
-static void	WlzMeshAfTrSolve(double *, double *, double,
-				WlzDVertex2 *, WlzDVertex2 *);
-static unsigned int WlzMeshTransFillBlockLnNod(WlzMeshNode *, WlzInterval *,
-			       	WlzIVertex2, unsigned int);
-static WlzErrorNum WlzMeshRemoveObjBox(WlzMeshTransform *),
-		WlzMeshBoundPolyAdd(WlzMeshTransform *, WlzObject *,
-				double, double),
-		WlzMeshBoundPolyFix(WlzObject *, double),
-		WlzMeshScanDElmUpdate(WlzMeshScanWSp *, int),
-		WlzMeshLineCvExtrema(WlzInterval *, WlzObject *,
-			        unsigned int, unsigned int),
-		WlzMeshTransFillBlock(WlzMeshTransform *mesh, WlzInterval *,
-				WlzIVertex2, unsigned int, unsigned int),
-		WlzMeshTransformVxVecI(WlzMeshTransform *, WlzIVertex2 *,
-			  	int),
-		WlzMeshTransformVxVecF(WlzMeshTransform *, WlzFVertex2 *,
-			  	int),
-		WlzMeshTransformVxVecD(WlzMeshTransform *, WlzDVertex2 *,
-			  	int),
-		WlzMeshTransformValues2D(WlzObject *, WlzObject *,
-				WlzMeshTransform *, WlzInterpolationType);
-static WlzObject *WlzMeshTransformObjPrv(WlzObject *, WlzMeshTransform *,
-				WlzInterpolationType, WlzErrorNum *);
-static WlzMeshTransform *WlzMeshFromObjBlock(WlzObject *, unsigned int,
-			        WlzErrorNum *),
-		*WlzMeshFromObjBox(WlzObject *, WlzIBox2 *, int, WlzErrorNum *),
-        	*WlzMeshFromObjGrad(WlzObject *, unsigned int, unsigned int,
-				WlzErrorNum *);
-static WlzPolygonDomain	*WlzMeshTransformPoly(WlzPolygonDomain *,
-			      	WlzMeshTransform *,
-			      	WlzErrorNum *);
-static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *,
-				WlzMeshTransform *,
-				WlzErrorNum *);
-static WlzMeshScanWSp *WlzMeshScanWSpInit(WlzMeshTransform *, WlzErrorNum *);
-
-/************************************************************************
-* Function:	WlzMeshFreeTransform					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Free's the given mesh transform.			*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Free's the given mesh transform.
+* \param	mesh			Given mesh transform.
+*/
 WlzErrorNum	WlzMeshFreeTransform(WlzMeshTransform *mesh)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -119,19 +197,15 @@ WlzErrorNum	WlzMeshFreeTransform(WlzMeshTransform *mesh)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformNew					*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Creates a mesh transform data structure with the nodes,	*
-*		elements and displacements allocated and initialized	*
-*		to zero.						*
-* Global refs:	-							*
-* Parameters:	unsigned int nNode:	Number of nodes (and		*
-*					displacements).			*
-		unsigned int nElem:	Number of elements.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Creates a mesh transform data structure with the nodes,
+*		elements and displacements allocated and initialized to zero.
+* \param	nNode			Number of nodes (and displacements).
+* \param	nElem			Number of elements.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzMeshTransform *WlzMeshTransformNew(unsigned int nNode,
 				      unsigned int nElem,
 				      WlzErrorNum *dstErr)
@@ -174,18 +248,16 @@ WlzMeshTransform *WlzMeshTransformNew(unsigned int nNode,
   return(mesh);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformAdapt					*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Adapts the given mesh transform so that each of the 	*
-*		elements in the displaced mesh has an area greater 	*
-*		than the given minimum.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *gMesh: Given mesh transform.		*
-*		double minArea:		Minimum element area.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Adapts the given mesh transform so that each of the
+*		elements in the displaced mesh has an area greater
+*		than the given minimum.
+* \param	gMesh			Given mesh transform.
+* \param	minArea			Minimum element area.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzMeshTransform *WlzMeshTransformAdapt(WlzMeshTransform *gMesh,
 					double minArea, WlzErrorNum *dstErr)
 {
@@ -304,18 +376,14 @@ WlzMeshTransform *WlzMeshTransformAdapt(WlzMeshTransform *gMesh,
   return(nMesh);
 }
 
-
-/************************************************************************
-* Function:	WlzMeshTransformCopy					*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Copies the given mesh transform.			*
-*		The copied mesh will have any zombie elements squeezed	*
-*		out.							*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *gMesh: Given mesh transform.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Copies the given mesh transform. The copied mesh will have any
+*		zombie elements squeezed out.
+* \param	gMesh			Given mesh transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzMeshTransform *WlzMeshTransformCopy(WlzMeshTransform *gMesh,
 				       WlzErrorNum *dstErr)
 {
@@ -351,21 +419,17 @@ WlzMeshTransform *WlzMeshTransformCopy(WlzMeshTransform *gMesh,
   return(nMesh);
 }
 
-/************************************************************************
-* Function:	WlzMeshFromObj						*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Creates a mesh transform for the given object.    	*
-*		All mesh displacements are zero.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	The given object.		*
-*		WlzMeshGenMethod method: Mesh generation method to use.	*
-*		double minDist:		Minimum distance between mesh	*
-*					vertices.			*
-*		double maxDist:		Maximum distance between mesh	*
-*					vertices.			*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Creates a mesh transform for the given object with all mesh
+* 		displacements zero.
+* \param	srcObj			The given object.
+* \param	method			Mesh generation method to use.
+* \param	minDist			Minimum distance between mesh vertices.
+* \param	maxDist			Maximum distance between mesh vertices.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzMeshTransform *WlzMeshFromObj(WlzObject *srcObj, WlzMeshGenMethod method,
 				 double minDist, double maxDist,
 				 WlzErrorNum *dstErr)
@@ -412,20 +476,15 @@ WlzMeshTransform *WlzMeshFromObj(WlzObject *srcObj, WlzMeshGenMethod method,
   return(mesh);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformObj					*
-* Returns:	WlzObject *:		Transformed object, NULL on	*
-*					error.				*
-* Purpose:	Transforms a woolz object using a the given mesh	*
-*		transform.						*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Object to be transformed.	*
-*		WlzMeshTransform *gMesh: Given mesh transform to apply.	*
-*		WlzInterpolationType interp: Level of interpolation to	*
-*					use.				*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Transformed object, NULL on error.
+* \ingroup 	WlzTransform
+* \brief	Transforms a woolz object using a the given mesh transform.
+* \param	srcObj			Object to be transformed.
+* \param	gMesh			Given mesh transform to apply.
+* \param	interp			Level of interpolation.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzMeshTransformObj(WlzObject *srcObj,
 				     WlzMeshTransform *gMesh,
 				     WlzInterpolationType interp,
@@ -467,21 +526,169 @@ WlzObject	*WlzMeshTransformObj(WlzObject *srcObj,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformObjPrv					*
-* Returns:	WlzObject *:		Transformed object, NULL on	*
-*					error.				*
-* Purpose:	Private version of WlzMeshTransformObj() which		*
-*		transforms a woolz object using a the given mesh	*
-*		transform.						*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Object to be transformed.	*
-*		WlzMeshTransform *mesh: Given mesh transform to apply.	*
-*		WlzInterpolationType interp: Level of interpolation to	*
-*					use.				*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Computes a mesh transform for the given object and a
+*		set of control points using both an affine and a basis
+*		function transform to set the mesh displacements.
+* \param	obj			Given object.
+* \param	basisFnType		Required basis function type.
+* \param	polyOrder		Order of polynomial, only used for
+*					WLZ_BASISFN_POLY.
+* \param	nSPts			Number of source control points.
+* \param	sPts			Source control points.
+* \param	nDPts			Number of destination control points.
+* \param	dPts			Destination control points.
+* \param	meshGenMtd		Mesh generation method.
+* \param	meshMinDist		Minimum mesh vertex distance.
+* \param	meshMaxDist		Maximum mesh vertex distance.
+* \param	dstErr			Destination error pointer, may be
+*					NULL.
+*/
+WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
+				WlzBasisFnType basisFnType, int polyOrder,
+				int nSPts, WlzDVertex2 *sPts,
+				int nDPts, WlzDVertex2 *dPts,
+				WlzMeshGenMethod meshGenMtd,
+				double meshMinDist, double meshMaxDist,
+				WlzErrorNum *dstErr)
+{
+  int		idx;
+  WlzDVertex2	tDV0;
+  WlzDVertex2	*dPtsT = NULL;
+  WlzAffineTransform *aTr = NULL,
+  		*aTrI = NULL;
+  WlzBasisFnTransform *bTr = NULL;
+  WlzMeshTransform *mTr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((nDPts <= 0) || (nDPts != nSPts))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if((dPts == NULL) || (sPts == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  /* Compute least squares affine transform from the tie points. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    aTr = WlzAffineTransformLSq2D(nSPts, sPts, nSPts, dPts,
+				  WLZ_TRANSFORM_2D_AFFINE, &errNum);
+  }
+  /* Compute a mesh transform for the given object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mTr = WlzMeshFromObj(obj, meshGenMtd, meshMinDist, meshMaxDist, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nSPts >= 4)
+    {
+      /* Create a new array of destination vertices which have the original
+       * destination transformed by the inverse affine transform. */
+      if((dPtsT = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) *
+	      				   nSPts)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        aTrI = WlzAffineTransformInverse(aTr, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        for(idx = 0; idx < nDPts; ++idx)
+	{
+          dPtsT[idx] = WlzAffineTransformVertexD2(aTrI, dPts[idx], NULL);
+	}
+        bTr = WlzBasisFnTrFromCPts(basisFnType, polyOrder,
+			  	   nSPts, sPts, nSPts, dPtsT, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        /* Set the mesh transform displacements and then apply the affine
+	 * transform. */
+        errNum = WlzBasisFnSetMesh(mTr, bTr);
+      }
+    }
+    /* Apply the affine transform to the mesh transform. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzMeshAffineProduct(mTr, aTr);
+    }
+  }
+  AlcFree(dPtsT);
+  (void )WlzBasisFnFreeTransform(bTr);
+  (void )WlzFreeAffineTransform(aTr);
+  (void )WlzFreeAffineTransform(aTrI);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzMeshFreeTransform(mTr);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mTr);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Computes the product of the given affine and mesh transforms
+*		in place, ie the mesh transform has it's displacements
+* 		overwritten.
+* \param	mTr		Given mesh transform.
+* \param	aTr		Given affine transform.
+*/
+WlzErrorNum WlzMeshAffineProduct(WlzMeshTransform *mTr,
+				 WlzAffineTransform *aTr)
+{
+  int           count;
+  WlzDVertex2   tDV0;
+  WlzMeshNode	*node;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((mTr == NULL) || (aTr == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mTr->nodes == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  /* Loop through nodes, resetting the displacement. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    node = mTr->nodes;
+    count = mTr->nNodes;
+    while(count-- > 0)
+    {
+      WLZ_VTX_2_ADD(tDV0, node->position, node->displacement);
+      tDV0 = WlzAffineTransformVertexD2(aTr, tDV0, &errNum);
+      WLZ_VTX_2_SUB(node->displacement, tDV0, node->position);
+      ++node;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Transformed object, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Private version of WlzMeshTransformObj() which transforms
+*		a woolz object using a the given mesh transform.
+* \param	srcObj			Object to be transformed.
+* \param	mesh			Given mesh transform to apply.
+* \param	interp			Level of interpolation.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzObject *WlzMeshTransformObjPrv(WlzObject *srcObj,
 				     WlzMeshTransform *mesh,
 				     WlzInterpolationType interp,
@@ -579,21 +786,18 @@ static WlzObject *WlzMeshTransformObjPrv(WlzObject *srcObj,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformVerify					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Checks that the given mesh transform is valid.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh: Given mesh transform.		*
-*		int dispFlg:		Verify displacements if non-	*
-*					zero.				*
-*		int *badElm:		Destination ptr for the index	*
-*					of the first bad mesh element.	*
-*		WlzMeshError *dstErrMsk: Destination pointer to be	*
-*					set with a mesh error after	*
-*					verifying this element, may be	*
-*					NULL.				*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup 	WlzTransform
+* \brief	Checks that the given mesh transform is valid.
+* \param	mesh			Given mesh transform.
+* \param	dispFlg			Verify displacements if non-zero.
+* \param	badElm			Destination ptr for the index of the
+* 					first bad mesh element.
+* \param	dstErrMsk		Destination pointer to be set with a
+* 					mesh error after verifying this
+* 					element, may be NULL.
+*/
 WlzErrorNum	WlzMeshTransformVerify(WlzMeshTransform *mesh, int dispFlg,
 				       int *badElm, WlzMeshError *dstErrMsk)
 {
@@ -644,18 +848,15 @@ WlzErrorNum	WlzMeshTransformVerify(WlzMeshTransform *mesh, int dispFlg,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformPoly					*
-* Returns:	WlzObject *:		Transformed polygon domain or	*
-*					NULL on error.			*
-* Purpose:	Transforms the given polygon domain using the given	*
-*		mesh transform.						*
-* Global refs:	-							*
-* Parameters:	WlzPolygonDomain *srcPoly: Given polygon domain.	*
-*		WlzMeshTransform *mesh: Mesh transform to apply.	*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Transformed polygon domain or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms the given polygon domain using the given mesh
+* 		transform.
+* \param	srcPoly			Given polygon domain.
+* \param	mesh			Mesh transform to apply.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzPolygonDomain	*WlzMeshTransformPoly(WlzPolygonDomain *srcPoly,
 					      WlzMeshTransform *mesh,
 					      WlzErrorNum *dstErr)
@@ -699,18 +900,15 @@ static WlzPolygonDomain	*WlzMeshTransformPoly(WlzPolygonDomain *srcPoly,
   return(dstPoly);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformBoundList				*
-* Returns:	WlzBoundList *:		Transformed boundary list or	*
-*					NULL on error.			*
-* Purpose:	Transforms the given boundary list using the given mesh	*
-*		transform.						*
-* Global refs:	-							*
-* Parameters:	WlzBoundList *srcBound: Given boundary list.		*
-*		WlzMeshTransform *mesh: Mesh transform to apply.	*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Transformed boundary list or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms the given boundary list using the given mesh
+*		transform.
+* \param	srcBound		Given boundary list.
+* \param	mesh			Mesh transform to apply.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
 					       WlzMeshTransform *mesh,
 					       WlzErrorNum *dstErr)
@@ -777,17 +975,22 @@ static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
   return(dstBound);
 }
 
-double WlzClassValCon4(
-  double	*g,
-  double	p,
-  double	q)
+/*!
+* \return	Pixel value.
+* \ingroup	WlzTransform
+* \brief	Interpolate pixel value using maximum probability.
+* \param	g			Array of four values at integer
+* 					coordinates.
+* \param	p			Column offset from integer coordinate.
+* \param	q			Line offset from integer coordinate.
+*/
+double 		WlzClassValCon4(double *g, double p, double q)
 {
   double	classVal[4], classProb[4], maxProb;
   int		i, j, nClass;
 
   /* initialise probability matrix */
   for(i=0; i < 4; i++){classProb[i] = 0.0;}
-
   /* determine classes and probabilities */
   nClass = 0;
   for(i=0; i < 4; i++){
@@ -815,7 +1018,6 @@ double WlzClassValCon4(
       break;
     }
   }
-
   /* find max probability */
   maxProb = 0.0;
   for(i=0; i < nClass; i++){
@@ -824,25 +1026,21 @@ double WlzClassValCon4(
       j = i;
     }
   }
-
   return classVal[j];
 }
   
-
-/************************************************************************
-* Function:     WlzMeshTransformValues2D				*
-* Returns:      WlzErrorNum:            Error number.                   *
-* Purpose:      Creates a new value table, fills in the values and      *
-*               adds it to the given new object.                        *
-* Global refs:  -                                                       *
-* Parameters:   WlzObject *dstObj:      Partialy transformed object     *
-*                                       with a valid domain.            *
-*               WlzObject *srcObj:      2D domain object which is being *
-*                                       transformed.                    *
-*               WlzMeshTransform *mesh: Given mesh transform.		*
-*               WlzInterpolationType interp: Level of interpolation to  *
-*                                       use.                            *
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Creates a new value table, fills in the values and adds it to
+* 		the given new object.
+* \param	dstObj			Partialy transformed object with a
+* 					valid domain.
+* \param	srcObj			2D domain object which is being
+*					transformed.
+* \param	mesh			Given mesh transform.
+* \param	interp			Level of interpolation.
+*/
 static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 					    WlzObject *srcObj,
 					    WlzMeshTransform *mesh,
@@ -1106,22 +1304,19 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshFromObjBox					*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Creates a mesh transform for the given object where the	*
-*		mesh has just two elements which enclose the objects	*
-*		bounding box.						*
-*		All mesh displacements are zero.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	The given object.		*
-*		WlzIBox2 *dstBox:	Destination bounding box	*
-*					pointer, may be NULL.		*
-*		int boxDilation:	Dilation of box to be sure of	*
-*					enclosing any possible node.	*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Creates a mesh transform for the given object where the
+*               mesh has just two elements which enclose the objects
+*               bounding box.  All mesh displacements are zero.
+* \param	srcObj			The given object.
+* \param	dstBox			Destination bounding box pointer,
+*					may be NULL.
+* \param	boxDilation		Dilation of box to be sure of enclosing
+* 					any possible node.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzMeshTransform *WlzMeshFromObjBox(WlzObject *srcObj, WlzIBox2 *dstBox,
 					   int boxDilation,
 					   WlzErrorNum *dstErr)
@@ -1214,13 +1409,12 @@ static WlzMeshTransform *WlzMeshFromObjBox(WlzObject *srcObj, WlzIBox2 *dstBox,
   return(mesh);
 }
 
-/************************************************************************
-* Function:     WlzMeshRemoveObjBox					*
-* Returns:      WlzErrorNum:            Error number.                   *
-* Purpose:      Removes the bounding box nodes from the mesh.		*
-* Global refs:  -                                                       *
-* Parameters:   WlzMeshTransform *mesh: Given mesh transform.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Removes the bounding box nodes from the mesh.
+* \param	mesh			Given mesh transform.
+*/
 static WlzErrorNum	WlzMeshRemoveObjBox(WlzMeshTransform *mesh)
 {
   int		nId,
@@ -1248,20 +1442,17 @@ static WlzErrorNum	WlzMeshRemoveObjBox(WlzMeshTransform *mesh)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshBoundPolyAdd					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Adds nodes to the mesh for a bounding convex polygon.	*
-*		The given boundary polygon is modified in place.	*
-*		All mesh displacements are zero.			*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-*		WlzObject *polyObj:	Convec boundary polygon.	*
-*		double minDist:		Minimum distance between mesh	*
-*					nodes.				*
-*		double maxDist:		Maximum distance between mesh	*
-*					nodes.				*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Adds nodes to the mesh for a bounding convex polygon.
+*               The given boundary polygon is modified in place. All
+*		mesh displacements are zero.
+* \param	mesh			Given mesh transform.
+* \param	polyObj			Convex boundary polygon.
+* \param	minDist			Minimum distance between mesh nodes.
+* \param	maxDist			Maximum distance between mesh nodes.
+*/
 static WlzErrorNum WlzMeshBoundPolyAdd(WlzMeshTransform *mesh,
 				       WlzObject *polyObj,
 				       double minDist, double maxDist)
@@ -1277,16 +1468,14 @@ static WlzErrorNum WlzMeshBoundPolyAdd(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshBoundPolyFix					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Fixes a boundary polygon so that it's minimum length	*
-*		side is >= the given miniimum distance.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *polyObj:	Convec boundary polygon.	*
-*		double minDist:		Minimum distance between mesh	*
-*					nodes.				*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Fixes a boundary polygon so that it's minimum length
+*		side is >= the given miniimum distance.
+* \param	polyObj			Convex boundary polygon.
+* \param	minDist			Minimum distance between mesh nodes.
+*/
 static WlzErrorNum WlzMeshBoundPolyFix(WlzObject *polyObj, double minDist)
 {
   int		tstId,
@@ -1469,19 +1658,17 @@ static WlzErrorNum WlzMeshBoundPolyFix(WlzObject *polyObj, double minDist)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshFromObjBlock					*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Creates a mesh transform for the given object where the	*
-*		mesh has a constant node separation.			*
-*		All mesh displacements are zero.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	The given object.		*
-*		unsigned int lDist:	Mesh vertex inter-line and	*
-*					inter-column distance.		*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Creates a mesh transform for the given object where the
+*               mesh has a constant node separation. All mesh displacements
+*               are zero.
+* \param	srcObj			The given object.
+* \param	lDist			Mesh vertex inter-line and 
+*					inter-column distance.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzMeshTransform *WlzMeshFromObjBlock(WlzObject *srcObj,
 					     unsigned int lDist,
 					     WlzErrorNum *dstErr)
@@ -1603,21 +1790,17 @@ static WlzMeshTransform *WlzMeshFromObjBlock(WlzObject *srcObj,
   return(mesh);
 }
 
-/************************************************************************
-* Function:	WlzMeshFromObjGrad					*
-* Returns:	WlzMeshTransform *:	New mesh transform.		*
-* Purpose:	Creates a mesh transform for the given object where the	*
-*		mesh vertices are placed with a higher density where	*
-*		the given object's gradient is highest.			*
-*		All mesh displacements are zero.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	The given object.		*
-*		WlzMeshGenMethod method: Mesh generation method to use.	*
-*		unsigned int minDist:	Minimum distance between mesh	*
-*					vertices.			*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	New mesh transform.
+* \ingroup	WlzTransform
+* \brief	Creates a mesh transform for the given object where the
+*               mesh vertices are placed with a higher density where the given
+*               object's gradient is highest. All mesh displacements are zero.
+* \param	srcObj			The given object.
+* \param	minDist			Minimum distance between mesh vertices.
+* \param	maxDist			Maximum distance between mesh vertices.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzMeshTransform *WlzMeshFromObjGrad(WlzObject *srcObj,
 				            unsigned int minDist,
 				            unsigned int maxDist,
@@ -1803,18 +1986,17 @@ static WlzMeshTransform *WlzMeshFromObjGrad(WlzObject *srcObj,
   return(mesh);
 }
 
-/************************************************************************
-* Function:	WlzMeshLineCvExtrema					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Calculates the block mesh line extrema for the given	*
-*		(convex) object.					*
-* Global refs:	-							*
-* Parameters:	WlzInterval *lnItvs:	Vector of intervals to be set	*
-*					to block line extrema.		*
-*		WlzObject *cvObj:	The given object.		*
-*		unsigned int lDist:	Distance between block lines.	*
-*		unsigned int nLines	Number of block lines.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Calculates the block mesh line extrema for the given (convex)
+* 		object.
+* \param	lnItvs			Vector of intervals to be set to block
+* 					line extrema.
+* \param	cvObj			The given object.
+* \param	lDist			Distance between block lines.
+* \param	nLines			Number of block lines.
+*/
 static WlzErrorNum WlzMeshLineCvExtrema(WlzInterval *lnItvs,
 					WlzObject *cvObj,
 				        unsigned int lDist,
@@ -1924,18 +2106,17 @@ static WlzErrorNum WlzMeshLineCvExtrema(WlzInterval *lnItvs,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransFillBlock					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Calculates the mesh transform (already allocated)	*
-*		using the given block mesh line interval extrema.	*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Mesh transform to fill.		*
-*		WlzInterval *lnItvs:	Vector of block line intervals.	*
-*		WlzIVertex2 org:		Origin used by intervals.	*
-*		unsigned int lDist:	Distance between block lines.	*
-*		unsigned int nLines	Number of block lines.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Calculates the mesh transform (already allocated) using the
+* 		given block mesh line interval extrema.
+* \param	mesh			Mesh transform to fill.
+* \param	lnItvs			Vector of block line intervals.
+* \param	org			Origin used by intervals.
+* \param	lDist			Distance between block lines.
+* \param	nLines			Number of block lines.
+*/
 static WlzErrorNum WlzMeshTransFillBlock(WlzMeshTransform *mesh,
 				         WlzInterval *lnItvs,
 					 WlzIVertex2 org,
@@ -2069,17 +2250,16 @@ static WlzErrorNum WlzMeshTransFillBlock(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransFillBlockLnNod				*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Calculates the mesh transform node vertices for a	*
-*		single line between extrema of the interval.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshNode *nod:	Ptr to first node available.	*
-*		WlzInterval *lnItv:	The line interval.		*
-*		WlzInterval org:	Origin used by this interval.	*
-*		unsigned int lDist:	Distance between blocks.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Calculates the mesh transform node vertices for a single
+*		line between extrema of the interval.
+* \param	nod			Ptr to first node available.
+* \param	lnItv			The line interval.
+* \param	org			Origin used by this interval.
+* \param	lDist			Distance between blocks.
+*/
 static unsigned int WlzMeshTransFillBlockLnNod(WlzMeshNode *nod,
 					       WlzInterval *lnItv,
 					       WlzIVertex2 org,
@@ -2106,18 +2286,17 @@ static unsigned int WlzMeshTransFillBlockLnNod(WlzMeshNode *nod,
   return(nNod);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformVxVecI					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Transforms the vertices in the given integer vertex	*
-*		vector in place and using the given mesh transform.	*
-*		It is an error if any vertex is not in the mesh or if	*
-*		the signed area of any mesh element is <= zero.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-*		WlzIVertex2 *vxVec:	Given integer vertex vector.	*
-*		int vxCount:		Number of vertices.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Transforms the vertices in the given integer vertex
+*               vector in place and using the given mesh transform. It is an
+*               error if any vertex is not in the mesh or if the signed area
+*               of any mesh element is <= zero.
+* \param	mesh			Given mesh transform.
+* \param	vxVec			Given integer vertex vector.
+* \param	vxCount			Number of vertices.
+*/
 static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
 					  WlzIVertex2 *vxVec,
 					  int vxCount)
@@ -2239,18 +2418,17 @@ static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformVxVecF					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Transforms the vertices in the given double vertex	*
-*		vector, in place and using the given mesh transform.	*
-*		It is an error if any vertex is not in the mesh or if	*
-*		the signed area of any mesh element is <= zero.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-*		WlzFVertex2 *vxVec:	Given double vertex vector.	*
-*		int vxCount:		Number of vertices.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Transforms the vertices in the given double vertex vector, in
+* 		place and using the given mesh transform.  It is an error if
+* 		any vertex is not in the mesh or if the signed area of any
+* 		mesh element is <= zero.
+* \param	mesh			Given mesh transform.
+* \param	vxVec			Given double vertex vector.
+* \param	vxCount			Number of vertices.
+*/
 static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
 					  WlzFVertex2 *vxVec,
 					  int vxCount)
@@ -2367,19 +2545,16 @@ static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshTransformVxVtx					*
-* Returns:	WlzDVertex2:		transformed vertex.		*
-* Purpose:	Transform the vertex using the given mesh transform.	*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-*		WlzDVertex2 vtx:	Given double vertex.		*
-*		WlzErrorNum *dstErr:	Error return.			*
-************************************************************************/
-WlzDVertex2 WlzMeshTransformVtx(
-  WlzDVertex2 vtx,
-  WlzMeshTransform *mesh,
-  WlzErrorNum *dstErr)
+/*!
+* \return	Ttransformed vertex.
+* \ingroup	WlzTransform
+* \brief	Transform the vertex using the given mesh transform.
+* \param	vtx			Given double vertex.
+* \param	mesh			Given mesh transform.
+* \param	dstErr			Error return.
+*/
+WlzDVertex2 WlzMeshTransformVtx(WlzDVertex2 vtx, WlzMeshTransform *mesh,
+  				WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzDVertex2	rtnVtx;
@@ -2405,18 +2580,17 @@ WlzDVertex2 WlzMeshTransformVtx(
 }
 
 
-/************************************************************************
-* Function:	WlzMeshTransformVxVecD					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Transforms the vertices in the given double vertex	*
-*		vector, in place and using the given mesh transform.	*
-*		It is an error if any vertex is not in the mesh or if	*
-*		the signed area of any mesh element is <= zero.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Given mesh transform.		*
-*		WlzDVertex2 *vxVec:	Given double vertex vector.	*
-*		int vxCount:		Number of vertices.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Transforms the vertices in the given double vertex vector,
+*		in place and using the given mesh transform. It is an error if
+*		any vertex is not in the mesh or if the signed area of any mesh
+*		element is <= zero.
+* \param	mesh			Given mesh transform.
+* \param	vxVec			Given double vertex vector.
+* \param	vxCount			Number of vertices.
+*/
 static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
 					  WlzDVertex2 *vxVec,
 					  int vxCount)
@@ -2531,23 +2705,20 @@ static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshAfTrSolve					*
-* Returns:	void							*
-* Purpose:	Solve's a system of linear equations for the	 	*
-*		coefficients of a 2D affine transform from the source	*
-*		triangle to the destination triangle.			*
-*		Because we know that the area of the triangle is NOT	*
-*		zero and that we have a small system, Cramer's rule	*
-*		is used.						*
-* Global refs:	-							*
-* Parameters:	double *xTr:		Transform coordinates for x.	*
-*		double *yTr:		Transform coordinates for y.	*
-*		double dd:		Twice the area of the source	*
-*					triangle.			*
-*		WlzDVertex2 *sVx:	Source triangle vertices.	*
-*		WlzDVertex2 *dVx:	Destination triangle vertices.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Solve's a system of linear equations for the coefficients
+*		of a 2D affine transform from the source triangle to the
+*		destination triangle. Because we know that the area of the
+*		triangle is NOT zero and that we have a small system, Cramer's
+*		rule is used.
+* \param	xTr			Transform coordinates for x.
+* \param	yTr			Transform coordinates for y.
+* \param	dd			Twice the area of the source triangle.
+* \param	sVx			Source triangle vertices.
+* \param	dVx			Destination triangle vertices.
+*/
 static void	WlzMeshAfTrSolve(double *xTr, double *yTr, double dd,
 				 WlzDVertex2 *sVx, WlzDVertex2 *dVx)
 {
@@ -2578,15 +2749,14 @@ static void	WlzMeshAfTrSolve(double *xTr, double *yTr, double dd,
   *(yTr + 2) = ((dy0 * tD0) + (dy1 * tD1) + (dy2 * tD2)) * dd;
 }
 
-/************************************************************************
-* Function:	WlzMeshScanDElmUpdate					*
-* Returns:	WlzErrorNum:		Error code.			*
-* Purpose:	Updates the destination mesh element data for the 	*
-*		given element index.					*
-* Global refs:	-							*
-* Parameters:	WlzMeshScanWSp *mSnWSp:	Mesh scan workspace.		*
-*		int eIdx:		Element index.			*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Updates the destination mesh element data for the given
+* 		element index.
+* \param	mSnWSp			Mesh scan workspace.
+* \param	eIdx			Element index.
+*/
 static WlzErrorNum WlzMeshScanDElmUpdate(WlzMeshScanWSp *mSnWSp, int eIdx)
 {
   int		nodCnt;
@@ -2629,14 +2799,13 @@ static WlzErrorNum WlzMeshScanDElmUpdate(WlzMeshScanWSp *mSnWSp, int eIdx)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzMeshScanWSpInit					*
-* Returns:	WlzMeshScanWSp  *:	New mesh scan workspace.	*
-* Purpose:	Allocate and initialise a mesh scan workspace.		*
-* Global refs:	-							*
-* Parameters:	WlzMeshTransform *mesh:	Mesh transform.			*
-*		WlzErrorNum *dstErr:	Destination error pointer.	*
-************************************************************************/
+/*!
+* \return	New mesh scan workspace.
+* \ingroup	WlzTransform
+* \brief	Allocate and initialise a mesh scan workspace.
+* \param	mesh			Mesh transform.
+* \param	dstErr			Destination error pointer.
+*/
 static WlzMeshScanWSp *WlzMeshScanWSpInit(WlzMeshTransform *mesh,
 				    	  WlzErrorNum *dstErr)
 {
@@ -2731,13 +2900,12 @@ static WlzMeshScanWSp *WlzMeshScanWSpInit(WlzMeshTransform *mesh,
   return(meshSnWSp);
 }
 
-/************************************************************************
-* Function:	WlzMeshScanWSpFree					*
-* Returns:	void							*
-* Purpose:	Free's a mesh scan workspace.				*
-* Global refs:	-							*
-* Parameters:	WlzMeshScanWSp *mSnWSp:	Mesh scan workspace.		*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzTransform
+* \brief	Free's a mesh scan workspace.
+* \param	mSnWSp			Mesh scan workspace.
+*/
 static void	WlzMeshScanWSpFree(WlzMeshScanWSp *mSnWSp)
 {
   if(mSnWSp)
@@ -2754,17 +2922,14 @@ static void	WlzMeshScanWSpFree(WlzMeshScanWSp *mSnWSp)
   }
 }
 
-/************************************************************************
-* Function:	WlzMeshScanTriElm					*
-* Returns:	int:			Number of intervals added	*
-*					from the given mesh element.	*
-* Purpose:	Scans a single triangular mesh element into mesh 	*
-*		intervals.						*
-* Global refs:	-							*
-* Parameters:	WlzMeshScanWSp *mSnWSp:	Mesh scan workspace.		*
-*		int eIdx:		Element index.			*
-*		int iIdx:		Mesh element interval index.	*
-************************************************************************/
+/*!
+* \return	Number of intervals added from the given mesh element.
+* \ingroup	WlzTransform
+* \brief	Scans a single triangular mesh element into mesh intervals.
+* \param	mSnWSp			Mesh scan workspace.
+* \param	eIdx			Element index.
+* \param	iIdx			Mesh element interval index.
+*/
 static int	WlzMeshScanTriElm(WlzMeshScanWSp *mSnWSp, int eIdx, int iIdx)
 {
   int		count,
@@ -2890,17 +3055,14 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp *mSnWSp, int eIdx, int iIdx)
   return(iCnt);
 }
 
-/************************************************************************
-* Function:	WlzMeshItvCmp						*
-* Returns:	int:			Sorting value for qsort.	*
-* Purpose:	Callback function for qsort(3) to sort mesh element	*
-*		intervals by line and then left left column.		*
-* Global refs:	-							*
-* Parameters:	const void *cmp0:	Used to pass first mesh 	*
-*					interval.			*
-*		const void *cmp1:	Used to pass second mesh	*
-*					interval.			*
-************************************************************************/
+/*!
+* \return	Sorting value for qsort.
+* \ingroup	WlzTransform
+* \brief	Callback function for qsort(3) to sort mesh element
+*		intervals by line and then left left column.
+* \param	cmp0			Used to pass first mesh interval.
+* \param	cmp1			Used to pass second mesh interval.
+*/
 static int	WlzMeshItvCmp(const void *cmp0, const void *cmp1)
 {
   int		rtn;
