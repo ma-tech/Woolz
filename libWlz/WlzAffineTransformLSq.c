@@ -14,6 +14,8 @@
 *		used to transform one set of verticies to another.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-12-00 bill In WlzAffineTransformLSqReg3D add code for degenerate
+*		solutions.
 * 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
 *		add WlzAffineTransformLSq3D, WlzAffineTransformLSqReg3D,
 *		WlzAffineTransformLSqTrans3D and a new WlzAffineTransformLSq.
@@ -270,7 +272,8 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 		    		WlzDVertex3 *pos1, int nVtx,
 				WlzErrorNum *dstErr)
 {
-  int		idN,
+  int		tI0,
+  		idN,
   		idK,
 		idR;
   double	tD0;
@@ -346,7 +349,54 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
           (trMx[0][2] * trMx[1][1] * trMx[2][0]);
     if(tD0 < 0.0)
     {
-      errNum = WLZ_ERR_ALG_SINGULAR;
+      /* Are source verticies (rel0) coplanar? They are iff one of the 3
+       * singular values of hMx in wMx is zero. If the source verticies
+       * are not coplanar, the the solution of the SVD is correct. */
+      tI0 = ((fabs(*(wMx + 2)) >= DBL_EPSILON) << 2) |
+            ((fabs(*(wMx + 1)) >= DBL_EPSILON) << 1) |
+            (fabs(*(wMx + 2)) >= DBL_EPSILON);
+      switch(tI0)
+      {
+	case 0:
+	  /* Source verticies are not coplanar or colinear. The SVD gives the
+	   * correct solution. */
+	  break;
+        case 1:
+	case 2:
+	case 4:
+	  /* Source verticies are coplanar, but not colinear. There is a
+	   * unique reflection as well as a unique rotation. The SVD
+	   * may give either BUT in this case it has found the reflection
+	   * so need to recompute for the rotation.
+	   * If the singular values of wMx are w0 > w1 > w2 = 0, then
+	   *
+	   *              t        t        t
+	   *   hMx = w u v  + w u v  + 0.u v 
+	   *          0 0 0    1 1 1      2 2
+	   *
+	   * where ui and vi are the columns of the matricies hMx and vMx
+	   * respectively (hMx is used for both H and U).
+	   * So to get the rotation rather than the reflection we recalculate
+	   * the transform matrix with v2 = -v2.
+	   */
+	  for(idR = 0; idR < 3; ++idR)
+	  {
+	    for(idK = 0; idK < 3; ++idK)
+	    {
+	      trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+			       vMx[idR][1] * hMx[idK][1] -
+			       vMx[idR][2] * hMx[idK][2];
+	    }
+	  }
+	  break;
+	case 3:
+	case 5:
+	case 6:
+	  /* Source verticies are colinear and there exists an infinity of
+	   * solutions! */
+	  errNum = WLZ_ERR_ALG_SINGULAR;
+	  break;
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
