@@ -29,6 +29,9 @@
 #include <WlzExtFF.h>
 #include <string.h>
 
+/* TODO remove this #define makeing this the only code available. */
+#define WLZ_MATCHICPPLANE_OWNCB
+
 static FILE			*WlzMatchICPPlaneSecParFile(
 				  FILE *lFP,
 				  int multi,
@@ -134,11 +137,13 @@ int             main(int argc, char *argv[])
   WlzVertexP	matchRP,
   		matchSP;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
+  WlzMatchICPWeightCbData cbData;
   WlzAffineTransformPrim inTrPrim;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		fileNameBuf[FILENAME_MAX];
   const char	*errMsg;
   static char	optList[] = "dhvVo:r:Yt:x:y:a:s:ef:g:k:u:i:p:A:S:F:m:n:c:NL";
+  const int	nScatter = 5;
   const char	nullStr[] = "<NULL>",
   		inFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
@@ -712,11 +717,25 @@ int             main(int argc, char *argv[])
     }
     if(ok && (noMatching == 0))
     {
+#ifdef WLZ_MATCHICPPLANE_OWNCB
+      /* Set up weighting function callback data. */
+      cbData.tGM = refCObj2D->domain.ctr->model;
+      cbData.sGM = srcCObj2D->domain.ctr->model;
+      cbData.maxDisp = maxDisp;
+      cbData.nScatter = nScatter;
+      errNum = WlzMatchICPCtr(refCObj2D->domain.ctr, srcCObj2D->domain.ctr,
+			      NULL, maxItr, minSpx,
+			      &nMatch, &matchRP, &matchSP, decompLimit,
+			      maxDisp, maxAng, maxDeform,
+			      matchImpNN, matchImpThr,
+			      WlzMatchICPWeightMatches, &cbData);
+#else
       errNum = WlzMatchICPObjs(refCObj2D, srcCObj2D, NULL,
-	  &nMatch, &matchRP, &matchSP,
-	  maxItr, minSpx, decompLimit,
-	  maxDisp, maxAng, maxDeform,
-	  matchImpNN, matchImpThr);
+			       &nMatch, &matchRP, &matchSP,
+			       maxItr, minSpx, decompLimit,
+			       maxDisp, maxAng, maxDeform,
+			       matchImpNN, matchImpThr);
+#endif
       if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;
