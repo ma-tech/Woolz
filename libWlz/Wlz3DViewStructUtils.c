@@ -292,7 +292,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
   /* build the transform matrix */
   rotation[3][3] = 1.0;
   for(i=0; i < 3; i++){
-    rotation[i][3] = 1.0;
+    rotation[i][3] = 0.0;
     rotation[3][i] = 0.0;
   }
   tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE,
