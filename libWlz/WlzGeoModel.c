@@ -4391,10 +4391,13 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
   nET->prev->next = nET;
 }
 
-/************************************************************************
+/*!
 * \return				<void>
 * \ingroup      WlzGeoModel
 * \brief	Inserts the given new edge topology element into a
+*		radially sorted cyclic list of edge topology element's.
+*
+*       	Inserts the given new edge topology element into a
 *		radially sorted cyclic list of edge topology element's.
 *		In 2D the radial edgeT is always the edgeT itself and
 *		this function should not be called.
@@ -5204,6 +5207,11 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 *		topological elements) and adds them to the model. Given
 *		3 3D double precision points which are known not to
 *		be in the model.
+* 
+*   	        Constructs a new shell, face, loop and 3 edges (with
+*		topological elements) and adds them to the model. Given
+*		3 3D double precision points which are known not to
+*		be in the model.
 *		None of the verticies already exists within the shell.
 *		Need to create a new shell (nShell) with: 1 loop (nL),
 *		2 loop topology element (nLT0, nLT1), 3 edges (*nE),
@@ -5377,6 +5385,9 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding a:
 *		loop, 3 edges and 2 verticies (with topological elements).
+*
+*       	Extends an existing shell within the model by adding a:
+*		loop, 3 edges and 2 verticies (with topological elements).
 *		The 2 given 3D double precision points which are known
 *		not to be in the model.
 *		Need to create: 1 loop (nL), 2 loop topology elements
@@ -5546,6 +5557,9 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding a:
 *		loop, 2 edges and 1 vertex (with topological elements).
+*
+*       	Extends an existing shell within the model by adding a:
+*		loop, 2 edges and 1 vertex (with topological elements).
 *		The given 3D double precision point is known not to be
 *		in the model.
 *		Need to create: 1 loop (nL), 2 loop topology elements
@@ -5710,6 +5724,9 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding a:
 *		loop, 3 edges and 1 vertex (with topological elements).
+* 
+*        	Extends an existing shell within the model by adding a:
+*		loop, 3 edges and 1 vertex (with topological elements).
 *		Both the given 3D double precision points are known not
 *		to be in the model.
 *		Need to create: 1 loop (nL), 2 loop topology elements
@@ -5873,6 +5890,9 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins two existing shells within the model by adding:
+*		1 loop, 3 edges and 1 vertex (with topological elements).
+*
+*		Joins two existing shells within the model by adding:
 *		1 loop, 3 edges and 1 vertex (with topological elements).
 *		Both the given 3D double precision points are known not
 *		to be in the model.
@@ -6062,6 +6082,9 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 * \ingroup      WlzGeoModel
 * \brief	Joins three existing shells within the model by adding:
 *		1 loop and 3 edges (with topological elements).
+*
+*		Joins three existing shells within the model by adding:
+*		1 loop and 3 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
@@ -6249,6 +6272,9 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins two existing shells within the model by adding:
+*		1 loop and 3 edges (with topological elements).
+*
+*		Joins two existing shells within the model by adding:
 *		1 loop and 3 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
@@ -6453,6 +6479,9 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding:
 *		1 loop and 3 edges (with topological elements).
+*
+*		Extends an existing shell within the model by adding:
+*		1 loop and 3 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
@@ -6602,6 +6631,9 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends an existing shell within the model by adding:
+*		1 loop and 2 edges (with topological elements).
+*
+*		Extends an existing shell within the model by adding:
 *		1 loop and 2 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
@@ -6760,6 +6792,9 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Joins two existing shells within the model by adding:
+*		1 loop and 2 edges (with topological elements).
+*
+*		Joins two existing shells within the model by adding:
 *		1 loop and 2 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
@@ -6927,6 +6962,9 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Extends a shell within the model by adding:
+*		1 loop and 1 edge (with topological elements).
+* 
+*		Extends a shell within the model by adding:
 *		1 loop and 1 edge (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 1 edge (nE), 6 edge topology elements
@@ -7104,9 +7142,12 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Constructs a new shell, loop and edge (with topological
-*		elements) and adds them to the model. Given a pair
-*		of 2D double precision edge end points which are known
-*		not to be in the model.
+*		elements) and adds them to the model.
+*
+*		Constructs a new shell, loop and edge (with topological
+*		elements) and adds them to the model.
+*		Given a pair of 2D double precision edge end points which
+*		are known not to be in the model.
 *		Neither of the verticies already exists within the shell.
 *		Need to create a new shell with: 1 loop (nL), 1 loop
 *		topology element (nLT), 1 edge (nE) 2 edge
@@ -7212,10 +7253,14 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Constructs a new edge (with topological elements) and
-*		adds them to the model. Given an existing edge topology
-*		element at one end of the new edge and a 2D double
-*		precision end points at the other end of the new edge,
-*		where the new end point is known not to be in the model.
+*		adds them to the model.
+*
+*		Constructs a new edge (with topological elements) and
+*		adds them to the model.
+*		Given an existing edge topology element at one end
+*		of the new edge and a 2D double precision end points
+*		at the other end of the new edge, where the new end
+*		point is known not to be in the model.
 *		Only one vertex already exists within the model so no new
 *		shell or loop is required, instead an existing loop is
 *		extended using: 1 edge (nE), 2 edge topology elements
@@ -7306,7 +7351,10 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
-* \brief	First of all checks that the edge segment doesn't
+* \brief	Splits a loop by adding a new edge.
+*
+*		Splits a loop by adding a new edge.
+*		First of all checks that the edge segment doesn't
 *		already exist! If it doesn't then a new edge is
 *		constructed which splits and existing loop
 *		within the model. Given the loop topology element
@@ -7416,6 +7464,9 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Constructs a new edge which joins two (different)
+*		existing loops within the model.
+*
+*		brief	Constructs a new edge which joins two (different)
 *		existing loops within the model.
 *		Join two loops within two possibly different shells by
 *		adding a new edge between the two matched verticies.
