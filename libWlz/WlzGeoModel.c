@@ -13,6 +13,7 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 12-10-00 bill Fix bug counting shells in WlzGMModelConstructSimplex3D().
 * 10-10-00 bill Add WlzGMModelCopy().
 * 25-08-00 bill Fix bugs in 3D model construction. Remove element's
 *		data and flags.
@@ -127,6 +128,8 @@ static void             WlzGMLoopTSetT(
 static void             WlzGMModelAddVertex(
                           WlzGMModel *model,
                           WlzGMVertex *nV);
+static void		WlzGMElmMarkFree(
+			  int *idxP);
 
 /* Creation  of geometric modeling elements */
 
@@ -1224,6 +1227,22 @@ WlzErrorNum	WlzGMModelFree(WlzGMModel *model)
 }
 
 /************************************************************************
+* Function:	WlzGMElmMarkFree
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Marks an element as free by setting it's index to
+*		a -ve value, the actual choice of value aids debugging.
+* Global refs:	-
+* Parameters:	int *idxP:		Pointer to elements index.
+************************************************************************/
+static void	WlzGMElmMarkFree(int *idxP)
+{
+  if(*idxP >= 0)
+  {
+    *idxP = -(*idxP + 1);
+  }
+}
+
+/************************************************************************
 * Function:	WlzGMModelFreeS
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose:	Marks a shell and it's geometry as invalid and suitable
@@ -1248,10 +1267,10 @@ WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
   {
     /* Can't really free the loop so just mark it and it's geometry element
      * as invalid by making the indicies < 0. */
-    shell->idx = -1;
+    WlzGMElmMarkFree(&(shell->idx));
     if(shell->geo.core != NULL)
     {
-      shell->geo.core->idx = -1;
+      WlzGMElmMarkFree(&(shell->geo.core->idx));
       --(model->res.shellG.numElm);
     }
     --(model->res.shell.numElm);
@@ -1283,7 +1302,7 @@ WlzErrorNum	WlzGMModelFreeL(WlzGMModel *model, WlzGMLoop *loop)
   {
     /* Can't really free the loop so just mark it as invalid by making
      * the indicies < 0. */
-    loop->idx = -1;
+    WlzGMElmMarkFree(&(loop->idx));
     --(model->res.loop.numElm);
   }
   return(errNum);
@@ -1314,7 +1333,7 @@ WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
   {
     /* Can't really free the loopT so just mark it as invalid by making
      * the index < 0. */
-    loopT->idx = -1;
+    WlzGMElmMarkFree(&(loopT->idx));
     --(model->res.loopT.numElm);
   }
   return(errNum);
@@ -1345,7 +1364,7 @@ WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
   {
     /* Can't really free the diskT so just mark it as invalid by making
      * the index < 0. */
-    diskT->idx = -1;
+    WlzGMElmMarkFree(&(diskT->idx));
     --(model->res.diskT.numElm);
   }
   return(errNum);
@@ -1375,7 +1394,7 @@ WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
   {
     /* Can't really free the edge so just mark it as invalid by making
      * the indicies < 0. */
-    edge->idx = -1;
+    WlzGMElmMarkFree(&(edge->idx));
     --(model->res.edge.numElm);
   }
   return(errNum);
@@ -1406,7 +1425,7 @@ WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
   {
     /* Can't really free the edgeT so just mark it as invalid by making
      * the index < 0. */
-    edgeT->idx = -1;
+    WlzGMElmMarkFree(&(edgeT->idx));
     --(model->res.edgeT.numElm);
   }
   return(errNum);
@@ -1437,10 +1456,10 @@ WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
   {
     /* Can't really free the vertex so just mark it and it's geometry element
      * as invalid by making the indicies < 0. */
-    vertex->idx = -1;
+    WlzGMElmMarkFree(&(vertex->idx));
     if(vertex->geo.core != NULL)
     {
-      vertex->geo.core->idx = -1;
+      WlzGMElmMarkFree(&(vertex->geo.core->idx));
       --(model->res.vertexG.numElm);
     }
     --(model->res.vertex.numElm);
@@ -1473,7 +1492,7 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
   {
     /* Can't really free the vertexT so just mark it as invalid by making
      * the index < 0. */
-    vertexT->idx = -1;
+    WlzGMElmMarkFree(&(vertexT->idx));
     --(model->res.vertexT.numElm);
   }
   return(errNum);
@@ -7195,8 +7214,21 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 						matchV[2])) != NULL) +
 		((cE[2] = WlzGMVertexCommonEdge(matchV[2],
 						matchV[0])) != NULL);
-      shellCnt = 3 - ((WlzGMVertexCommonShell(matchV[0], matchV[1]) != NULL) +
-      	              (WlzGMVertexCommonShell(matchV[1], matchV[2]) != NULL));
+      idx0 = (WlzGMVertexGetShell(matchV[0]))->idx;
+      idx1 = (WlzGMVertexGetShell(matchV[1]))->idx;
+      idx2 = (WlzGMVertexGetShell(matchV[2]))->idx;
+      if((idx0 != idx1) && (idx1 != idx2) && (idx2 != idx0))
+      {
+        shellCnt = 3;
+      }
+      else if((idx0 == idx1) && (idx1 == idx2) && (idx2 == idx0))
+      {
+        shellCnt = 1;
+      }
+      else
+      {
+        shellCnt = 2;
+      }
       switch(edgeCnt)
       {
         case 0:
