@@ -92,6 +92,7 @@ CSOURCES		= \
 			WlzGaussNoise.c \
 			WlzGeoModel.c \
 			WlzGeoModelFilters.c \
+			WlzGeoModelStats.c \
 			WlzGeometry.c \
 			WlzGeometryTrackUpAndDown_s.c \
 			WlzGreyCrossing.c \
