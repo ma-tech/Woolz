@@ -45,6 +45,12 @@ static void	WlzBasisFnVxExtent(WlzDBox2 *, WlzDVertex2 *, WlzDVertex2 *,
 				WlzDBox2 *, double, int),
 		WlzBasisFnTPSCoeff(WlzBasisFnTransform *, double *,
 				WlzDBox2 *, double, int);
+static WlzBasisFnTransform *WlzBasisFnConfFromCPts(int nPts, int order,
+						   WlzDVertex2 *dPts,
+						   WlzDVertex2 *sPts,
+						   WlzErrorNum *dstErr);
+static WlzDVertex2 WlzBasisFnDisplacementConf(WlzBasisFnTransform *basis,
+					     WlzDVertex2 srcVx);
 				   
 
 /************************************************************************
@@ -133,6 +139,9 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts(WlzBasisFnType type,
       case WLZ_BASISFN_TPS:
 	basis = WlzBasisFnTPSFromCPts(nDPts, dPts, sPts, &errNum);
 	break;
+      case WLZ_BASISFN_CONF_POLY:
+	basis = WlzBasisFnConfFromCPts(nDPts, order, dPts, sPts, &errNum);
+	break;
       default:
 	 errNum = WLZ_ERR_TRANSFORM_TYPE;
 	 break;
@@ -206,6 +215,14 @@ WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
 	{
 	  nod->displacement = WlzBasisFnDisplacementTPS(basis,
 							nod->position);
+	  ++nod;
+	}
+	break;
+    case WLZ_BASISFN_CONF_POLY:
+	while(nodCnt-- > 0)
+	{
+	  nod->displacement = WlzBasisFnDisplacementConf(basis,
+							 nod->position);
 	  ++nod;
 	}
 	break;
@@ -322,6 +339,11 @@ WlzDVertex2	WlzBasisFnTransformVertexD(WlzBasisFnTransform *basis,
 	break;
       case WLZ_BASISFN_TPS:
 	dstVx = WlzBasisFnDisplacementTPS(basis, srcVx);
+	dstVx.vtX += srcVx.vtX;
+	dstVx.vtY += srcVx.vtY;
+	break;
+      case WLZ_BASISFN_CONF_POLY:
+	dstVx = WlzBasisFnDisplacementConf(basis, srcVx);
 	dstVx.vtX += srcVx.vtX;
 	dstVx.vtY += srcVx.vtY;
 	break;
@@ -559,6 +581,45 @@ static WlzDVertex2 WlzBasisFnDisplacementTPS(WlzBasisFnTransform *basis,
   polyVx = WlzBasisFnDispRedPoly(basis->poly, srcVx);
   dspVx.vtX = (dspVx.vtX / 2) + polyVx.vtX;
   dspVx.vtY = (dspVx.vtY / 2) + polyVx.vtY;
+  return(dspVx);
+}
+
+/************************************************************************
+* Function:     WlzBasisFnDisplacementConf                              *
+* Returns:      WlzDVertex2:             Displacement vertex.           *
+* Purpose:      Calculates the displacement for the given vertex using	*
+*		a conformal polynomial basis function.			*
+* Global refs:  -                                                       *
+* Parameters:   WlzBasisFnTransform *basis: Basis function transform.	*
+*               WlzDVertex2 srcVx:	Source vertex.			*
+************************************************************************/
+static WlzDVertex2 WlzBasisFnDisplacementConf(WlzBasisFnTransform *basis,
+					     WlzDVertex2 srcVx)
+{
+  int		i;
+  ComplexD	z, w, powW, a, b;
+  WlzDVertex2	dspVx;
+  WlzDVertex2	*polyP;
+
+  polyP = basis->poly;
+  w.re = srcVx.vtX;
+  w.im = srcVx.vtY;
+  z.re = polyP[0].vtX;
+  z.im = polyP[0].vtY;
+  powW.re = 1.0;
+  powW.im = 0.0;
+
+  for(i=1; i <= basis->nPoly; i++){
+    powW = AlgCMult(powW, w);
+    a.re = polyP[i].vtX;
+    a.im = polyP[i].vtY;
+    b = AlgCMult(a, powW);
+    z.re += b.re;
+    z.im += b.im;
+  }
+  dspVx.vtX = z.re;
+  dspVx.vtY = z.im;
+
   return(dspVx);
 }
 
@@ -937,6 +998,171 @@ static WlzBasisFnTransform *WlzBasisFnPolyFromCPts(int nPts, int order,
     for(idN = 0; idN < nCoef; ++idN)
     {
       (basis->poly + idN)->vtY = *(bMx + idN);
+    }
+  }
+  if(bMx)
+  {
+    AlcFree(bMx);
+  }
+  if(wMx)
+  {
+    AlcFree(wMx);
+  }
+  if(aMx)
+  {
+    (void )AlcDouble2Free(aMx);
+  }
+  if(vMx)
+  {
+    (void )AlcDouble2Free(vMx);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(basis)
+    {
+      if(basis->poly)
+      {
+	AlcFree(basis->poly);
+      }
+      AlcFree(basis);
+      }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(basis);
+}
+
+/************************************************************************
+* Function:	WlzBasisFnConfFromCPts					*
+* Returns:	WlzBasisFnTransform *:	New basis function transform.	*
+* Purpose:	Creates a new conformal basis function transform,	*
+*		which will transform an object with the given		*
+*		source verticies into an object with the given 		*
+*		destination verticies.					*
+* Global refs:	-							*
+* Parameters:	int nPts:		Number of control point pairs.	*
+*		int order:		Order of conformal poly.	*
+*		WlzDVertex2 *dPts:	Destination control points.	*
+*		WlzDVertex2 *sPts:	Source control points.		*
+*		WlzErrorNum *dstErr:	Destination error pointer,	*
+*					may be NULL.			*
+************************************************************************/
+static WlzBasisFnTransform *WlzBasisFnConfFromCPts(int nPts, int order,
+						   WlzDVertex2 *dPts,
+						   WlzDVertex2 *sPts,
+						   WlzErrorNum *dstErr)
+{
+  int  		idM,
+  		idN,
+		idX,
+  		idY,
+		nCoef;
+  double	thresh,
+  		wMax;
+  double	*bMx = NULL,
+  		*wMx = NULL;
+  double	**aMx = NULL,
+  		**vMx = NULL;
+  WlzDVertex2	powVx,
+  		sVx;
+  ComplexD	z, zPow;
+  WlzBasisFnTransform *basis = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	tol = 1.0e-06;
+
+  if((order < 0) || (nPts <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if((basis = (WlzBasisFnTransform *)
+	           AlcCalloc(sizeof(WlzBasisFnTransform), 1)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    basis->type = WLZ_TRANSFORM_2D_BASISFN;
+    basis->linkcount = 0;
+    basis->freeptr = NULL;
+    basis->basisFn = WLZ_BASISFN_CONF_POLY;
+    basis->nPoly = order;
+    basis->nBasis = 0;
+    basis->nVtx = 0;
+    basis->delta = 0.0;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nCoef = (order + 1) + (order + 1);
+    if(((wMx = (double *)AlcCalloc(sizeof(double), nCoef)) == NULL) ||
+       ((bMx = (double *)AlcMalloc(sizeof(double) * 2 * nPts)) == NULL) ||
+       (AlcDouble2Malloc(&vMx, 2*nPts, nCoef) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&aMx, 2*nPts, nCoef) !=  ALC_ER_NONE) ||
+       ((basis->poly = (WlzDVertex2 *)
+		       AlcMalloc(sizeof(WlzDVertex2) * nCoef)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Fill matrix A. */
+    for(idM = 0; idM < nPts; ++idM)
+    {
+      sVx = *(sPts + idM);
+      z.re = sVx.vtX;
+      z.im = sVx.vtY;
+      zPow.re = 1.0;
+      zPow.im = 0.0;
+      for(idY = 0, idX = basis->nPoly + 1; idY <= basis->nPoly; ++idY, idX++)
+      {
+	aMx[idM][idY] = zPow.re;
+	aMx[idM][idX] = -zPow.im;
+	aMx[idM + nPts][idY] = zPow.im;
+	aMx[idM + nPts][idX] = zPow.re;
+	zPow = AlgCMult(zPow, z);
+      }
+   }
+    /* Perform singular value decomposition of matrix A. */
+    errNum= WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nPts, nCoef, wMx, vMx));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Edit the singular values. */
+    wMax = 0.0;
+    for(idN = 0; idN < nCoef; ++idN)
+    {
+      if(*(wMx + idN) > wMax)
+      {
+	wMax = *(wMx + idN);
+      }
+    }
+    thresh = tol * wMax;
+    for(idN = 0; idN < nCoef; ++idN)
+    {
+      if(*(wMx + idN) < thresh)
+      {
+	*(wMx + idN) = 0.0;
+      }
+    }
+    /* Fill matrix b for x coordinate */
+    for(idM = 0; idM < nPts; ++idM)
+    {
+      *(bMx + idM) = (sPts + idM)->vtX - (dPts + idM)->vtX;
+      *(bMx + idM + nPts) = (sPts + idM)->vtY - (dPts + idM)->vtY;
+    }
+    /* Solve for conformal polynomial coefficients. */
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nPts, nCoef, wMx, vMx,
+    					        bMx));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Copy out the conformal polynomial coefficients */
+    for(idN = 0; idN < (order + 1); ++idN)
+    {
+      (basis->poly + idN)->vtX = *(bMx + idN);
+      (basis->poly + idN)->vtY = *(bMx + idN + order + 1);
     }
   }
   if(bMx)

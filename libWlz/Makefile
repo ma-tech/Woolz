@@ -239,10 +239,10 @@ INCLUDES_ALL		= $(sort $(INCLUDES_PUB) $(INCLUDES_PRV))
 OBJECTS			= $(CSOURCES:%.c=%.o)
 
 # Basic flags for controlling compilation (modify as required).
-#CDEBUG		= -g -DDEBUG 
-#COPTIMISE	= -xchip=ultra -KPIC
-#CXXDEBUG	= -g -DDEBUG
-#CXXOPTIMISE	= -xchip=ultra -KPIC
+CDEBUG		= -g -DDEBUG 
+COPTIMISE	= -xchip=ultra -KPIC
+CXXDEBUG	= -g -DDEBUG
+CXXOPTIMISE	= -xchip=ultra -KPIC
 DEFINES		= $(THREADS) \
 		  -D$(UNIXTYPE) $(UNIXFLAGS) -DHGUHOME=\"$(HGUHOME)\"
 CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
@@ -333,8 +333,7 @@ endif
 
 # making the tag file
 tags:
-	$(RM) TAGS
-	$(ETAGS) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+	$(ETAGS) -f $(ETAGSFILE) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)

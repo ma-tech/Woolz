@@ -228,7 +228,8 @@ typedef enum
   WLZ_BASISFN_GAUSS,                              /* Gaussian basis function */
   WLZ_BASISFN_POLY,                             /* Polynomial basis function */
   WLZ_BASISFN_MQ,			      /* Multiquadric basis function */
-  WLZ_BASISFN_TPS                        /* Thin plate spline basis function */
+  WLZ_BASISFN_TPS,                       /* Thin plate spline basis function */
+  WLZ_BASISFN_CONF_POLY		      /* conformal polynomial basis function */
 } WlzBasisFnType;
 
 /************************************************************************
