@@ -130,12 +130,17 @@ WlzErrorNum WlzLabel3d(
       if( values ){
 	value = values[i];
       }
-      if( tobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, value,
-			     NULL, NULL, &errNum) ){
+      if((domain.core != NULL) && (value.core != NULL) &&
+         ((tobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, value,
+			      NULL, NULL, &errNum)) != NULL)){
 	tobj = WlzAssignObject(tobj, NULL);
 	errNum = WlzLabel(tobj, &narray[i], &objarray[i], nobj,
 			    ignlns, connect);
 	WlzFreeObj(tobj);
+      }
+      else
+      {
+        narray[i] = 0;
       }
     }
   }
