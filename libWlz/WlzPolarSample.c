@@ -82,7 +82,7 @@ static int	WlzPolarSampleMaxOf4I(int val1, int val2, int val3, int val4)
 * Notes:	The linkcount of the returned object is not set.	*
 * Global refs:	-							*
 * Parameters:	WlzObject *srcObj:	Given woolz object.		*
-*		WlzIVertex2 org:		Origin in given object about	*
+*		WlzIVertex2 org:	Origin in given object about	*
 *					which to polar resample.	*
 *		double angleInc:	Angle increment (radians).	*
 *		double distInc:		Radial distance increment.	*
