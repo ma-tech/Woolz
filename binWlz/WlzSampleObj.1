@@ -22,9 +22,11 @@ WlzSampleObj \- Sub-samples Woolz 2D domain objects objects.
 .BI "WlzSampleObj [ -o" "<output object file>" "]"
 .in +4m
 .br
-.BI  "[-x" "<horizontal sampling factor>" "]"
+.BI  "[-x" "<column sampling factor>" "]"
 .br
-.BI  "[-y" "<vertical sampling factor>" "]"
+.BI  "[-y" "<line sampling factor>" "]"
+.br
+.BI  "[-z" "<plane sampling factor>" "]"
 .br
 .BI  "[-a]"
 .BI  "[-e]"
@@ -40,8 +42,9 @@ WlzSampleObj \- Sub-samples Woolz 2D domain objects objects.
 tab(^);
 lb l.
 \-o^output object file name.
-\-x^horizontal sub\-sampling factor.
-\-y^vertical sub\-sampling factor.
+\-x^column sub\-sampling factor.
+\-y^line sub\-sampling factor.
+\-y^plane sub\-sampling factor.
 \-a^maximum value convolution kernel.
 \-e^median value convolution kernel.
 \-i^minimum value convolution kernel.

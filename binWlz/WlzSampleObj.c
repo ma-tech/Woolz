@@ -13,6 +13,8 @@
 *		the given object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 22-09-00 bill Make changes fro 3D sampling and free objects to allow
+*		checking for memory leaks.
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +34,7 @@ int             main(int argc, char **argv)
   int		option,
   		ok = 1,
 		usage = 0;
-  WlzIVertex2	samFac;
+  WlzIVertex3	samFac;
   WlzSampleFn	samFn;
   char		*outObjFileStr,
   		*inObjFileStr;
@@ -41,12 +43,13 @@ int             main(int argc, char **argv)
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
   const char	*errMsg;
-  static char	optList[] = "o:x:y:aegipmh",
+  static char	optList[] = "o:x:y:z:aegipmh",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
   samFac.vtX = 1;
   samFac.vtY = 1;
+  samFac.vtZ = 1;
   samFn = WLZ_SAMPLEFN_POINT;
   opterr = 0;
   inObjFileStr = inObjFileStrDef;
@@ -86,6 +89,13 @@ int             main(int argc, char **argv)
 	break;
       case 'y':
         if(sscanf(optarg, "%d", &(samFac.vtY)) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'z':
+        if(sscanf(optarg, "%d", &(samFac.vtZ)) != 1)
 	{
 	  usage = 1;
 	  ok = 0;
@@ -166,31 +176,40 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
   }
+  if(inObj)
+  {
+    (void )WlzFreeObj(inObj);
+  }
+  if(outObj)
+  {
+    (void )WlzFreeObj(outObj);
+  }
   if(usage)
   {
-    fprintf(stderr,
-	    "Usage: "
-	    "%s [-x#] [-y#] [-k#] [-l#] [-g] [-m] [-p] [-h] [<in object>]\n"
-	    "Sub-samples a woolz interval domain object with grey values.\n"
-	    "Options are:\n"
-	    "  -x#   Sampling factor for rows (set to %d).\n"
-	    "  -y#   Sampling factor for columns (set to %d).\n"
-	    "  -o#   Output object file name.\n"
-	    "  -a    Use max sampling kernel (%sset).\n"
-	    "  -e    Use median sampling kernel (%sset).\n"
-	    "  -i    Use min sampling kernel (%sset).\n"
-	    "  -g    Use gaussian sampling kernel (%sset).\n"
-	    "  -m    Use mean sampling kernel (%sset).\n"
-	    "  -p    Use point sampling (%sset).\n"
-	    "  -h    Display this usage information.\n",
-	    *argv,
-	    samFac.vtX, samFac.vtY,
-	    (samFn == WLZ_SAMPLEFN_MAX) ? "" : "not ",
-	    (samFn == WLZ_SAMPLEFN_MEDIAN) ? "" : "not ",
-	    (samFn == WLZ_SAMPLEFN_MIN) ? "" : "not ",
-	    (samFn == WLZ_SAMPLEFN_GAUSS) ? "" : "not ",
-	    (samFn == WLZ_SAMPLEFN_MEAN) ? "" : "not ",
-	    (samFn == WLZ_SAMPLEFN_POINT) ? "" : "not ");
+    (void )fprintf(stderr,
+    "Usage: "
+    "%s [-x#] [-y#] [-z#] [-k#] [-l#] [-g] [-m] [-p] [-h] [<in object>]\n"
+    "Sub-samples a woolz interval domain object with grey values.\n"
+    "Options are:\n"
+    "  -x#   Sampling factor for rows (set to %d).\n"
+    "  -y#   Sampling factor for columns (set to %d).\n"
+    "  -z#   Sampling factor for planes (set to %d).\n"
+    "  -o#   Output object file name.\n"
+    "  -a    Use max sampling kernel (%sset).\n"
+    "  -e    Use median sampling kernel (%sset).\n"
+    "  -i    Use min sampling kernel (%sset).\n"
+    "  -g    Use gaussian sampling kernel (%sset).\n"
+    "  -m    Use mean sampling kernel (%sset).\n"
+    "  -p    Use point sampling (%sset).\n"
+    "  -h    Display this usage information.\n",
+    *argv,
+    samFac.vtX, samFac.vtY, samFac.vtZ,
+    (samFn == WLZ_SAMPLEFN_MAX) ? "" : "not ",
+    (samFn == WLZ_SAMPLEFN_MEDIAN) ? "" : "not ",
+    (samFn == WLZ_SAMPLEFN_MIN) ? "" : "not ",
+    (samFn == WLZ_SAMPLEFN_GAUSS) ? "" : "not ",
+    (samFn == WLZ_SAMPLEFN_MEAN) ? "" : "not ",
+    (samFn == WLZ_SAMPLEFN_POINT) ? "" : "not ");
   }
   return(!ok);
 }
