@@ -68,7 +68,12 @@ static void			WlzVerticiesNorm2(
 				  int cnt,
 				  WlzObjectType type);
 static WlzDVertex2 		WlzVerticiesNormPair2(
-				  WlzDVertex2 *vtx);
+				  WlzDVertex2 v0,
+				  WlzDVertex2 v1);
+static WlzDVertex2 		WlzVerticiesNormTriple2(
+				  WlzDVertex2 v0,
+				  WlzDVertex2 v1,
+				  WlzDVertex2 v2);
 
 /************************************************************************
 * Function:	WlzVerticiesFromObj
@@ -363,13 +368,15 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
   WlzVertexType	type;
   WlzVertexP    vData;
   WlzGMVertex	*cV;
-  WlzGMVertexT	*cVT;
+  WlzGMEdgeT	*cET;
+  WlzGMVertexT	*cVT,
+  		*nVT,
+		*pVT;
   AlcVector	*vec;
   WlzDVertex2	*vNorm = NULL;
   WlzGMVertex	*nV[2];
   WlzVertexP	tVP[3];
-  WlzDVertex2	nrmV[2],
-  		segV[3];
+  WlzDVertex2	segV[3];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   vData.v = NULL;
@@ -418,19 +425,40 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 	if(vNorm)
 	{
 	  cVT = cV->diskT->vertexT;
-	  if((cVT == cVT->next) || (cVT->prev != cVT->next))
+	  cET = cVT->parent;
+	  if((cET == NULL) || (cVT->prev != cVT->next))
 	  {
 	    /* Vertex is either an isolated vertex or used by more than
 	     * two edges. Normal undefined. */
 	    (vNorm + idx)->vtX = 0.0;
 	    (vNorm + idx)->vtY = 0.0;
 	  }
+	  else if((nV[0] = cET->prev->vertexT->diskT->vertex) ==
+	          (nV[1] = cET->next->vertexT->diskT->vertex))
+	  {
+	    /* Vertex is on the end of a contour segment. */
+	    if(model->type == WLZ_GMMOD_2I)
+	    { 
+	      tVP[0].i2 = &(nV[0]->geo.vg2I->vtx);
+	      tVP[1].i2 = &(cV->geo.vg2I->vtx);
+	      segV[0].vtX = tVP[0].i2->vtX;
+	      segV[0].vtY = tVP[0].i2->vtY;
+	      segV[1].vtX = tVP[1].i2->vtX;
+	      segV[1].vtY = tVP[1].i2->vtY;
+	    }
+	    else /* model->type == WLZ_GMMOD_2D */
+	    {
+	      tVP[0].d2 = &(nV[0]->geo.vg2D->vtx);
+	      tVP[1].d2 = &(cV->geo.vg2D->vtx);
+	      segV[0] = *(tVP[0].d2);
+	      segV[1] = *(tVP[1].d2);
+	    }
+	    *(vNorm + idx) = WlzVerticiesNormPair2(segV[0], segV[1]);
+	  }
 	  else
 	  {
 	    /* Vertex is used by two edges. Find the other two verticies
 	     * that are used by these two edges. */
-	    nV[0] = cVT->prev->diskT->vertex;
-	    nV[1] = cVT->next->diskT->vertex;
 	    if(model->type == WLZ_GMMOD_2I)
 	    { 
 	      tVP[0].i2 = &(nV[0]->geo.vg2I->vtx);
@@ -452,10 +480,8 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 	      segV[1] = *(tVP[1].d2);
 	      segV[2] = *(tVP[2].d2);
 	    }
-	    nrmV[0] = WlzVerticiesNormPair2(segV);
-	    nrmV[1] = WlzVerticiesNormPair2(segV + 1);
-	    (vNorm + idx)->vtX = (nrmV[0].vtX + nrmV[1].vtX) / 2.0;
-	    (vNorm + idx)->vtY = (nrmV[0].vtY + nrmV[1].vtY) / 2.0;
+	    *(vNorm + idx) = WlzVerticiesNormTriple2(segV[0], segV[1],
+	    					     segV[2]);
 	  }
 	}
       }
@@ -782,8 +808,7 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
   int		idx,
   		idx1;
   WlzVertexType vType;
-  WlzDVertex2	nrmV[2],
-  		segV[2];
+  WlzDVertex2	segV[3];
 
   switch(cnt)
   {
@@ -812,15 +837,13 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 	  segV[1] = *(vtx.d2 + 1);
 	  break;
       }
-      *nrm = WlzVerticiesNormPair2(segV);
+      *nrm = WlzVerticiesNormPair2(segV[0], segV[1]);
       break;
     default:
       /* There are more than two verticies.
-       * Normals are computed for a vertex by averaging the normals
-       * of the line segments previous to and after the vertex. The
-       * resulting normal's length is 1.0. */
+       * Normals are computed using WlzVerticiesNormTriple2(). */
       idx = 0;
-      idx1 = 1;
+      idx1 = 2;
       switch(pType)
       {
 	case WLZ_POLYGON_INT:
@@ -828,61 +851,62 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 	  segV[0].vtY = (vtx.i2 + cnt - 1)->vtY; 
 	  segV[1].vtX = (vtx.i2 + 0)->vtX;
 	  segV[1].vtY = (vtx.i2 + 0)->vtY;
+	  segV[2].vtX = (vtx.i2 + 1)->vtX;
+	  segV[2].vtY = (vtx.i2 + 1)->vtY;
 	  break;
 	case WLZ_POLYGON_FLOAT:
 	  segV[0].vtX = (vtx.f2 + cnt - 1)->vtX; 
 	  segV[0].vtY = (vtx.f2 + cnt - 1)->vtY; 
 	  segV[1].vtX = (vtx.f2 + 0)->vtX;
 	  segV[1].vtY = (vtx.f2 + 0)->vtY;
+	  segV[2].vtX = (vtx.f2 + 1)->vtX;
+	  segV[2].vtY = (vtx.f2 + 1)->vtY;
 	  break;
 	case WLZ_POLYGON_DOUBLE:
 	  segV[0] = *(vtx.d2 + cnt - 1);
 	  segV[1] = *(vtx.d2 + 0);
+	  segV[2] = *(vtx.d2 + 1);
 	  break;
       }
-      nrmV[1] = WlzVerticiesNormPair2(segV);
+      *(nrm + 0) = WlzVerticiesNormTriple2(segV[0], segV[1], segV[2]);
       while(idx1 < cnt)
       {
         segV[0] = segV[1];
-	nrmV[0] = nrmV[1];
+        segV[1] = segV[2];
 	switch(pType)
 	{
 	  case WLZ_POLYGON_INT:
-	    segV[1].vtX = (vtx.i2 + idx1)->vtX;
-	    segV[1].vtY = (vtx.i2 + idx1)->vtY;
+	    segV[2].vtX = (vtx.i2 + idx1)->vtX;
+	    segV[2].vtY = (vtx.i2 + idx1)->vtY;
 	    break;
 	  case WLZ_POLYGON_FLOAT:
-	    segV[1].vtX = (vtx.f2 + idx1)->vtX;
-	    segV[1].vtY = (vtx.f2 + idx1)->vtY;
+	    segV[2].vtX = (vtx.f2 + idx1)->vtX;
+	    segV[2].vtY = (vtx.f2 + idx1)->vtY;
 	    break;
 	  case WLZ_POLYGON_DOUBLE:
-	    segV[1] = *(vtx.d2 + idx1);
+	    segV[2] = *(vtx.d2 + idx1);
 	    break;
 	}
-	nrmV[1] = WlzVerticiesNormPair2(segV);
-	(nrm + idx)->vtX = (nrmV[0].vtX +  nrmV[1].vtX) / 2.0;
-	(nrm + idx)->vtY = (nrmV[0].vtY +  nrmV[1].vtY) / 2.0;
-        idx = idx1++;
+	*(nrm + ++idx) = WlzVerticiesNormTriple2(segV[0], segV[1], segV[2]);
+        ++idx1;
       }
       segV[0] = segV[1];
-      nrmV[0] = nrmV[1];
+      segV[1] = segV[2];
       switch(pType)
       {
 	case WLZ_POLYGON_INT:
-	  segV[1].vtX = (vtx.i2 + 0)->vtX;
-	  segV[1].vtY = (vtx.i2 + 0)->vtY;
+	  segV[2].vtX = (vtx.i2 + 0)->vtX;
+	  segV[2].vtY = (vtx.i2 + 0)->vtY;
 	  break;
 	case WLZ_POLYGON_FLOAT:
-	  segV[1].vtX = (vtx.f2 + 0)->vtX;
-	  segV[1].vtY = (vtx.f2 + 0)->vtY;
+	  segV[2].vtX = (vtx.f2 + 0)->vtX;
+	  segV[2].vtY = (vtx.f2 + 0)->vtY;
 	  break;
 	case WLZ_POLYGON_DOUBLE:
-	  segV[1] = *(vtx.d2 + 0);
+	  segV[2] = *(vtx.d2 + 0);
 	  break;
       }
-      nrmV[1] = WlzVerticiesNormPair2(segV);
-      (nrm + idx)->vtX = (nrmV[0].vtX +  nrmV[1].vtX) / 2.0;
-      (nrm + idx)->vtY = (nrmV[0].vtY +  nrmV[1].vtY) / 2.0;
+      *(nrm + ++idx) = WlzVerticiesNormTriple2(segV[0], segV[1], segV[2]);
       break;
   }
 }
@@ -898,20 +922,23 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 *		If the two verticies are coincident then the normal
 *		vector is set to {0, 0}.
 *		With two non-coincident verticies the normal vector is
-*		computed using the relationships g.n = 0 and |n|^2 = 1.
-*		Giving nx = 1/sqrt(1 + (gx/gy)^2), ny = -nx gx/gy.
+*		computed using the relationships g.n = 0 and \|n\|^2 = 1.
+*		Giving:
+*		  nx = \frac{1}{\sqrt(1 + (gx/gy)^2)},
+*		  ny = -nx\frac{gx}{gy).
 *		There is no need for any type checking in this function
 *		because it is static and all types have been checked.
 * Global refs:	-
-* Parameters:	WlzDVertex2 *vtx:	The given pair of verticies.
+* Parameters:	WlzDVertex2 v0:		First of the given pair.
+*		WlzDVertex2 v1:		Second of the given pair.
 ************************************************************************/
-static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 *vtx)
+static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
 {
   WlzDVertex2	tV0,
   		tV1,
 		nrm;
 
-  WLZ_VTX_2_SUB(tV0, *(vtx + 1), *(vtx + 0));
+  WLZ_VTX_2_SUB(tV0, v1, v0);
   tV1.vtX = tV0.vtX * tV0.vtX;
   tV1.vtY = tV0.vtY * tV0.vtY; 
   if(tV1.vtY < DBL_EPSILON)
@@ -935,6 +962,71 @@ static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 *vtx)
   {
     nrm.vtX = 1.0 / sqrt(1.0 + (tV1.vtX / tV1.vtY));
     nrm.vtY = -((tV0.vtX) * nrm.vtX) / tV0.vtY;
+  }
+  return(nrm);
+}
+
+/************************************************************************
+* Function:	WlzVerticiesNormTriple2
+* Returns:	void
+* Purpose:	Computes the normal (n) at a vertex. This is chosen to
+*		be the mean of normals of the two line segments which the
+*  		vertex is common to. This normal also bisects the two
+*		angles of the line segments at the vertex.
+*		Considering the three given verticies (A,B and C) to
+*		form a triangle ABC, a line which bisects the angles
+*		at B from some point D on the line segment CA to B.
+*		The point D is given by:
+*		  p_D = p_A + (p_C - p_A)\frac{\|p_A - p_B\|}
+*					      {\|p_B - p_C\|}
+*		So the normal n is given by:
+*		  n = \frac{(p_B - p_D)}{\|p_B - p_D\|}
+*		unless \|p_B - p_D\| < \epsilon in which case
+*		WlzVerticiesNormPair2() is used to compute the normal
+*		from A and C.
+* Global refs:	-
+* Parameters:	WlzDVertex2 v0:		First of the given triple (A).
+*		WlzDVertex2 v1:		Second of the given triple (B).
+*		WlzDVertex2 v2:		Trird of the given triple (C).
+************************************************************************/
+static WlzDVertex2 WlzVerticiesNormTriple2(WlzDVertex2 v0, WlzDVertex2 v1,
+					   WlzDVertex2 v2)
+{
+  double	tD0,
+  		tD1;
+  WlzDVertex2	tV0,
+  		tV1,
+		nrm;
+
+  WLZ_VTX_2_SUB(tV0, v0, v1);
+  tD0 = WLZ_VTX_2_SQRLEN(tV0);
+  WLZ_VTX_2_SUB(tV0, v1, v2);
+  tD1 = WLZ_VTX_2_SQRLEN(tV0);
+  if(tD0 < DBL_EPSILON)
+  {
+    nrm = WlzVerticiesNormPair2(v1, v2);
+  }
+  else if(tD1 < DBL_EPSILON)
+  {
+    nrm = WlzVerticiesNormPair2(v0, v1);
+  }
+  else
+  {
+    tD0 /= tD0 + tD1;
+    WLZ_VTX_2_SUB(tV0, v2, v0);
+    WLZ_VTX_2_SCALE(tV1, tV0, tD0);
+    WLZ_VTX_2_ADD(tV0, tV1, v0);
+    WLZ_VTX_2_SUB(tV1, v1, tV0);
+    tD0 = WLZ_VTX_2_LENGTH(tV1);
+    if(tD0 < DBL_EPSILON)
+    {
+      nrm = WlzVerticiesNormPair2(v0, v2);
+    }
+    else
+    {
+      tD1 = 1.0 / tD0;
+      WLZ_VTX_2_SCALE(nrm, tV1, tD1);
+    }
   }
   return(nrm);
 }

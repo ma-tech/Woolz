@@ -141,7 +141,6 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
   WlzObject	*gObj[2];
   WlzVertexP	nData[2],
   		vData[2];
-  WlzVertexP 	rGrd;
   WlzDVertex2	tDV2;
   WlzDVertex3	tDV3;
   WlzGMVertex	*mVtx;
@@ -171,10 +170,9 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
   for(idN = 0; idN < 2; ++idN)
   {
     cObj = NULL;
-    rGrd.v = NULL;
     if(errNum == WLZ_ERR_NONE)
     {
-      rDom.ctr = WlzContourObjGrd(gObj[idN], &rGrd, ctrLo, ctrHi, ctrWth,
+      rDom.ctr = WlzContourObjGrd(gObj[idN], NULL, ctrLo, ctrHi, ctrWth,
 				  &errNum);
     }
     if(errNum == WLZ_ERR_NONE)
@@ -193,73 +191,12 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
       }
     }
 #endif /* WLZ_REGICP_DEBUG */
-    /* Get an array of position verticies from the model. */
+    /* Get an array of position verticies and normals from the model,
+     * don't use the gradient normals because they are eratic. */
     if(errNum == WLZ_ERR_NONE)
     {
-      vData[idN] = WlzVerticiesFromObj(cObj, NULL, vCnt + idN, &vType,
+      vData[idN] = WlzVerticiesFromObj(cObj, nData + idN, vCnt + idN, &vType,
 				       &errNum);
-    }
-    /* Copy normals to an array consistent with the position verticies. */
-    if(errNum == WLZ_ERR_NONE)
-    {
-      model = rDom.ctr->model;
-      switch(vType)
-      {
-	case WLZ_VERTEX_D2:
-	  if((nData[idN].d2 = (WlzDVertex2 *)
-			  AlcCalloc(vCnt[idN], sizeof(WlzDVertex2))) == NULL)
-	  {
-	    errNum = WLZ_ERR_MEM_ALLOC;
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    for(idM = 0; idM < vCnt[idN]; ++idM)
-	    {
-	      mVtx = WlzGMModelMatchVertexG2D(model, *(vData[idN].d2 + idM));
-	      /* Make normal unit length. */
-	      tDV2 = *(rGrd.d2 + mVtx->idx);
-	      tD0 = WLZ_VTX_2_LENGTH(tDV2);
-	      if(tD0 > DBL_EPSILON)
-	      {
-		tD0 = 1.0 / tD0;
-	        WLZ_VTX_2_SCALE(tDV2, tDV2, tD0);
-	      }
-	      *(nData[idN].d2 + idM) = tDV2;
-	    }
-	  }
-	  AlcFree(rGrd.d2);
-	  break;
-	case WLZ_VERTEX_D3:
-	  if((nData[idN].d3 = (WlzDVertex3 *)
-			    AlcCalloc(vCnt[idN], sizeof(WlzDVertex3))) == NULL)
-	  {
-	    errNum = WLZ_ERR_MEM_ALLOC;
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    for(idM = 0; idM < vCnt[idN]; ++idM)
-	    {
-	      mVtx = WlzGMModelMatchVertexG3D(model,
-	      				      *(vData[idN].d3 + idM));
-	      /* Make normal unit length. */
-	      tDV3 = *(rGrd.d3 + mVtx->idx);
-	      tD0 = WLZ_VTX_3_LENGTH(tDV3);
-	      if(tD0 > DBL_EPSILON)
-	      {
-	        tD0 = 1.0 / tD0;
-		WLZ_VTX_3_SCALE(tDV3, tDV3, tD0);
-	      }
-	      *(nData[idN].d3 + idM) = *(rGrd.d3 + mVtx->idx);
-	    }
-	  }
-	  AlcFree(rGrd.d3);
-	  break;
-	default:
-	  errNum = WLZ_ERR_DOMAIN_TYPE; /* Should never occur, unless contours
-					 * with integer verticies are
-					 * implemented. */
-	  break;
-      }
     }
     (void )WlzFreeObj(cObj);
 #ifdef WLZ_REGICP_DEBUG
@@ -634,8 +571,8 @@ WlzAffineTransform	*WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
   wSp.tSVx.v = NULL;
   wSp.tSNr.v = NULL;
   wSp.nNTVx.v = NULL;
-  wSp.kVx = 0.8;
-  wSp.kNr = 0.2;
+  wSp.kVx = 0.5;
+  wSp.kNr = 0.5;
   wSp.wgtVx = NULL;
   wSp.wgtNr = NULL;
   wSp.tr = NULL;
@@ -711,8 +648,6 @@ WlzAffineTransform	*WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* TODO: Compute some initial transform based on the centroid of the
-     * target verticies. */
     /* Iterate to find the registration transform. */
     conv = 0;
     do
@@ -1260,6 +1195,31 @@ int             main(int argc, char *argv[])
       	case WLZ_3D_DOMAINOBJ:
 	  trType = WLZ_TRANSFORM_3D_REG;
 	  break;
+	case WLZ_CONTOUR:
+	  if((inObj[0]->domain.core == NULL) ||
+	     (inObj[0]->domain.ctr->model == NULL))
+	  {
+	    errNum = WLZ_ERR_DOMAIN_NULL;
+	  }
+	  else
+	  {
+	    switch(inObj[0]->domain.ctr->model->type)
+	    {
+	      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+	      case WLZ_GMMOD_2D:
+	        trType = WLZ_TRANSFORM_2D_REG;
+		break;
+	      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+	      case WLZ_GMMOD_3D:
+	        trType = WLZ_TRANSFORM_3D_REG;
+		break;
+	      default:
+		errNum = WLZ_ERR_DOMAIN_TYPE;
+		ok = 0;
+		break;
+	    }
+	  }
+	  break;
         default:
 	  errNum = WLZ_ERR_OBJECT_TYPE;
 	  ok = 0;
@@ -1278,7 +1238,7 @@ int             main(int argc, char *argv[])
     else
     {
       outDom.t = WlzRegICPObjs(inObj[0], inObj[1], NULL,
-			       trType, NULL, NULL, 1000, &errNum);
+			       trType, NULL, NULL, 100, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
