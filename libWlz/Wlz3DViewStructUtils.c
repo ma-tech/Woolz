@@ -253,32 +253,29 @@ static WlzErrorNum setup_3DSectionRotationMatrix(
 static void setupTransformLuts(
   WlzThreeDViewStruct	*viewStr)
 {
-  int		xp, yp;
+  int		xp, yp, i;
 
-  for(xp=(int) viewStr->minvals.vtX;
-      xp <= (int) viewStr->maxvals.vtX; xp++){
-    viewStr->xp_to_x[xp - (int) viewStr->minvals.vtX] =
+  for(xp= WLZ_NINT(viewStr->minvals.vtX), i=0;
+      xp <= WLZ_NINT(viewStr->maxvals.vtX); xp++, i++){
+    viewStr->xp_to_x[i] =
       (viewStr->rotation[0][0] * xp +
        viewStr->fixed.vtX +
        viewStr->rotation[2][0] * viewStr->dist);
-    viewStr->xp_to_y[xp - (int) viewStr->minvals.vtX] =
+    viewStr->xp_to_y[i] =
       (viewStr->rotation[0][1] * xp +
        viewStr->fixed.vtY +
        viewStr->rotation[2][1] * viewStr->dist);
-    viewStr->xp_to_z[xp - (int) viewStr->minvals.vtX] =
+    viewStr->xp_to_z[i] =
       (viewStr->rotation[0][2] * xp +
        viewStr->fixed.vtZ +
        viewStr->rotation[2][2] * viewStr->dist);
   }
 
-  for(yp=(int) viewStr->minvals.vtY;
-      yp <= (int) viewStr->maxvals.vtY; yp++){
-    viewStr->yp_to_x[yp - (int) viewStr->minvals.vtY] =
-      viewStr->rotation[1][0] * yp;
-    viewStr->yp_to_y[yp - (int) viewStr->minvals.vtY] =
-      viewStr->rotation[1][1] * yp;
-    viewStr->yp_to_z[yp - (int) viewStr->minvals.vtY] =
-      viewStr->rotation[1][2] * yp;
+  for(yp= WLZ_NINT(viewStr->minvals.vtY), i=0;
+      yp <= WLZ_NINT(viewStr->maxvals.vtY); yp++, i++){
+    viewStr->yp_to_x[i] = viewStr->rotation[1][0] * yp;
+    viewStr->yp_to_y[i] = viewStr->rotation[1][1] * yp;
+    viewStr->yp_to_z[i] = viewStr->rotation[1][2] * yp;
   }
 
   return;
@@ -335,7 +332,8 @@ WlzErrorNum WlzInit3DViewStruct(
   double		*tDP0;
   WlzPlaneDomain	*planedmn, tmpPlanedmn;
   WlzDVertex3		vtx;
-  unsigned int		widthp, heightp, i;
+  unsigned int		widthp, heightp;
+  int			i;
   WlzErrorNum		dstErr;
   
 
@@ -416,8 +414,10 @@ WlzErrorNum WlzInit3DViewStruct(
   CHECK_MIN_MAX_VTX(planedmn->lastkl, planedmn->lastln, planedmn->lastpl);
 
   /* find range of values required, and allocate space for the LUT's */
-  widthp  = viewStr->maxvals.vtX - viewStr->minvals.vtX + 2;
-  heightp = viewStr->maxvals.vtY - viewStr->minvals.vtY + 2;
+  widthp  = WLZ_NINT(viewStr->maxvals.vtX) -
+    WLZ_NINT(viewStr->minvals.vtX) + 1;
+  heightp = WLZ_NINT(viewStr->maxvals.vtY) -
+    WLZ_NINT(viewStr->minvals.vtY) + 1;
   AlcDouble1Malloc(&tDP0, 3*widthp + 3*heightp);
   viewStr->freeptr = WlzPushFreePtr(NULL, tDP0, NULL);
   viewStr->xp_to_x = tDP0;
@@ -521,8 +521,8 @@ WlzErrorNum Wlz3DSectionIncrementDistance(
 {
   int		xp;
 
-  for(xp=0; xp <= (int) viewStr->maxvals.vtX -
-	(int) viewStr->minvals.vtX; xp++){
+  for(xp=0; xp <=  WLZ_NINT(viewStr->maxvals.vtX) -
+	 WLZ_NINT(viewStr->minvals.vtX); xp++){
     viewStr->xp_to_x[xp] += viewStr->rotation[2][0] * incr;
     viewStr->xp_to_y[xp] += viewStr->rotation[2][1] * incr;
     viewStr->xp_to_z[xp] += viewStr->rotation[2][2] * incr;

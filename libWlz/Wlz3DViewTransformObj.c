@@ -355,7 +355,8 @@ WlzObject *Wlz3DViewTransformObj(
 	  vtx.vtY = iwsp.linpos;
 	  vtx.vtZ = p;
 	  Wlz3DSectionTransformVtx(&vtx, viewStr);
-	  WlzGreyValueGet(gVWSp, 0.0, vtx.vtY, vtx.vtX);
+	  WlzGreyValueGet(gVWSp, 0.0,
+			  WLZ_NINT(vtx.vtY), WLZ_NINT(vtx.vtX));
 	  switch( gwsp.pixeltype ){
 	  case WLZ_GREY_LONG:
 	    *(gwsp.u_grintptr.lnp+i) = gVWSp->gVal[0].lnv;

@@ -212,10 +212,10 @@ WlzObject *WlzGetSectionFromObject(
   /* create a new rectangular object */
   if( errNum == WLZ_ERR_NONE ){
     domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
-				     (int) viewStr->minvals.vtY,
-				     (int) viewStr->maxvals.vtY,
-				     (int) viewStr->minvals.vtX,
-				     (int) viewStr->maxvals.vtX,
+				     WLZ_NINT(viewStr->minvals.vtY),
+				     WLZ_NINT(viewStr->maxvals.vtY),
+				     WLZ_NINT(viewStr->minvals.vtX),
+				     WLZ_NINT(viewStr->maxvals.vtX),
 				     &errNum);
   }
   if( errNum == WLZ_ERR_NONE ){
@@ -238,9 +238,9 @@ WlzObject *WlzGetSectionFromObject(
     if( gVWSp = WlzGreyValueMakeWSp(obj, &errNum) ){
       errNum = WlzInitGreyScan(newobj, &iwsp, &gwsp);
       while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
-	yp = iwsp.linpos - (int) viewStr->minvals.vtY;
+	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
-	  xp = k - viewStr->minvals.vtX;
+	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
 	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
 	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
 	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
