@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 23-03-01 bill Add WlzGreyTypeFromObj().
 * 14-03-01 bill Add WlzRasterObj().
 * 01-02-01 bill Add WlzRegCCorObjs().
 * 26-01-01 bill Change parameters of WlzGeomVtxSortRadial().
@@ -2353,7 +2354,9 @@ extern WlzGreyType 		WlzGreyTableTypeToGreyType(
 extern WlzObjectType 		WlzGreyTableTypeToTableType(
 				  WlzObjectType objType,
 				  WlzErrorNum *dstErr);
-
+extern WlzGreyType		WlzGreyTypeFromObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzValueUtils.c							*
