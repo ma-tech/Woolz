@@ -170,6 +170,10 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
 
+# making the tag file
+tags:
+	$(ETAGS) -f $(ETAGSFILE) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
