@@ -126,7 +126,8 @@ EXECUTABLES		= \
 			WlzUnion \
 			WlzVerifyObj \
 			WlzVolume \
-			WlzWindow
+			WlzWindow \
+			Wlz3DWarpMQ
 
 #			WlzAutoTrackUpDown
 
