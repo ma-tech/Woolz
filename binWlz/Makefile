@@ -64,6 +64,7 @@ EXECUTABLES		= \
 			WlzDiffDomain \
 			WlzDilation \
 			WlzDistanceMetric \
+			WlzDistanceTransform \
 			WlzDomain \
 			WlzDomainFill \
 			WlzErosion \
@@ -181,6 +182,7 @@ CSOURCES		= \
 			WlzDiffDomain.c \
 			WlzDilation.c \
 			WlzDistanceMetric.c \
+			WlzDistanceTransform.c \
 			WlzDomain.c \
 			WlzDomainFill.c \
 			AlgDPSearch.c \
