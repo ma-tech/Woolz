@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 26-01-01 bill Change parameters of WlzGeomVtxSortRadial().
 * 23-01-01 bill Add WlzShadeCorrect().
 * 16-01-01 bill	Add WlzGeomTriangleNormal() and WlzGMVertexNormal3D().
 * 22-12-00 bill Add initial affine transform parameter to WlzRegICPObjs().
@@ -1316,6 +1317,7 @@ extern int             		WlzGeomVtxEqual2D(
 extern void			WlzGeomVtxSortRadial(
 				  int nV,
 				  WlzDVertex3 *vP,
+				  int *idxBuf,
 				  WlzDVertex2 *wV,
 				  WlzDVertex3 rV);
 extern WlzDVertex3		WlzGeomTriangleNormal(
