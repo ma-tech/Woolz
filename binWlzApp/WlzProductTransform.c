@@ -42,6 +42,8 @@
 
 #include <Reconstruct.h>
 
+extern int finite(double dsrc);
+
 /* externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
 extern int      getopt(int argc, char * const *argv, const char *optstring);
