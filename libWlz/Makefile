@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 06-11-20 bill	Add WlzVerticies.c and WlzRegICP.c
 # 29-11-99 bill	Add WlzContour.c
 #########################################################################
 
@@ -109,6 +110,7 @@ CSOURCES		= \
 			WlzPolyToObj.c \
 			WlzPrinicipalAngle.c \
 			WlzReadObj.c \
+			WlzRegICP.c \
 			WlzRsvFilter.c \
 			WlzSampleObj.c \
 			WlzScalarArithmeticOp.c \
@@ -131,6 +133,7 @@ CSOURCES		= \
 			WlzValueTableUtils.c \
 			WlzValueUtils.c \
 			WlzVerifyObj.c \
+			WlzVerticies.c \
 			WlzVolume.c \
 			WlzWindow.c \
 			WlzWriteObj.c 
