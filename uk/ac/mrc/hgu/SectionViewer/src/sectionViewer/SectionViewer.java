@@ -43,7 +43,7 @@ public class SectionViewer
   public WlzImgView _imgV = null;
 
   private int _FPBounce = 0; // stops initial false event from PointEntry
-  private int _RABounce = 0;
+  private int _APBounce = 0;
 
   private WlzObject _anatomyObj = null;
   private WlzObject _constraintObj = null; // wlz obj from thresh constraint
@@ -63,7 +63,9 @@ public class SectionViewer
   private boolean _thresholding;
   private boolean _threshConstraint;
   private boolean _fixedPoint = false;
+  private boolean _axisPoint = false;
   private boolean _setFixedPoint = false;
+  private boolean _setAxisPoint = false;
   private boolean _showStdCntrls = false;
   private boolean _showUsrCntrls = false;
   private boolean _showIntersection = false;
@@ -90,15 +92,6 @@ public class SectionViewer
     if (_debug) System.out.println("enter SectionViewer");
 
     _parent = parent;
-    /*
-    try {
-      Method M1 = _parent.getClass().getDeclaredMethod("root", null);
-    }
-    catch (NoSuchMethodException ne) {
-      // System.out.println("SVParent sub-classed");
-      _parentIsRoot = false;
-    }
-    */
 
     _anatomy = false;
     _thresholding = false;
@@ -206,7 +199,6 @@ public class SectionViewer
       }
     }
     resetFeedbackText();
-
 
     if (_debug)
       System.out.println("exit SectionViewer");
@@ -997,6 +989,52 @@ public class SectionViewer
     }
   }
 
+//-------------------------
+  protected void doShowAxisPoint() {
+
+     double dist[] = new double[1];
+     double pt3d[] = new double[3];
+
+     int intersect = -1;
+
+     if (_imgV == null)
+	return;
+     if (!_axisPoint)
+	return;
+
+     _VSModel.getDist(dist);
+     /* 
+      * assumes that rotation axis will be set in the same plane
+      * as the fixed point
+      */
+     if(dist[0] == 0.0) {
+     
+	pt3d = _VSModel.getAxisPoint();
+	double vals[] = _OBJModel.get2DPoint(
+	      pt3d,
+	      _VSModel.getViewStruct());
+	try {
+	   intersect = WlzObject.WlzInsideDomain(_OBJModel.getSection(),
+		 vals[2],
+		 vals[1],
+		 vals[0]);
+	}
+	catch (WlzException e) {
+	   System.out.println("doShowAxisPoint");
+	   System.out.println(e.getMessage());
+	}
+
+	if (intersect != 0) { // axis point is in section
+	   _imgV.setAxisPointVec(vals);
+	   vals = null;
+	   pt3d = null;
+	}
+     }
+     else {
+	removeAxisPoint();
+     }
+  }
+
 //-------------------------------------------------------------
 // remove overlay
 //-------------------------------------------------------------
@@ -1044,6 +1082,15 @@ public class SectionViewer
 //-------------------------------------------------------------
   protected void removeFixedPoint() {
     _imgV.enableFixedPoint(false);
+    _imgV.repaint();
+  }
+
+//-------------------------------------------------------------
+// remove axisPoint
+//-------------------------------------------------------------
+  protected void removeAxisPoint() {
+    _imgV.enableAxisPoint(false);
+    _imgV.enableAxis(false);
     _imgV.repaint();
   }
 
@@ -1392,6 +1439,28 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
+// reset axis point
+//-------------------------------------------------------------
+  public void resetAxisPoint(boolean showAP) {
+
+    double vals[] = null;
+
+    // reset axis point
+    vals = _VSModel.getInitialFixedPoint();
+    _VSModel.setAxisPoint(vals);
+    vals = null;
+    if (showAP) {
+      Runnable apClick = new Runnable() {
+        public void run() {
+          if (!showMenu_5state)
+            showMenu_5.doClick();
+        }
+      };
+      SwingUtilities.invokeLater(apClick);
+    }
+  }
+
+//-------------------------------------------------------------
 // reset user interface controls
 //-------------------------------------------------------------
   protected void resetGUI() {
@@ -1455,6 +1524,7 @@ public class SectionViewer
     disableAnatomy();
     resetFeedbackText();
     resetFixedPoint(false);
+    resetAxisPoint(false);
     setSVEnabled(true);
 
     if (_debug)
@@ -1620,8 +1690,8 @@ public class SectionViewer
   WlzImgViewToPosAdaptor WI2P_1;
   WlzImgViewToGreyAdaptor WI2G_1;
   WlzImgViewToAnatAdaptor WI2A_1;
-  WlzImgViewToFPAdaptor WI2FP_1;
   MouseToFBAdaptor M2FB_1;
+  MouseToFPAdaptor M2FP_1;
   MouseToThresholdAdaptor M2T_1;
   MouseToThreshConstraintAdaptor M2TC_1;
   FocusAdaptor FA_1;
@@ -1693,11 +1763,6 @@ public class SectionViewer
                                          anatomyTextField);
     _imgV.addChangeListener(WI2A_1);
     //...............................
-    if (WI2FP_1 != null)
-      _imgV.removeChangeListener(WI2FP_1);
-    WI2FP_1 = new WlzImgViewToFPAdaptor(_imgV, _OBJModel, _VSModel);
-    _imgV.addChangeListener(WI2FP_1);
-    //...............................
     if (M2FB_1 != null) {
       _imgV.removeMouseListener(M2FB_1);
       _imgV.removeMouseMotionListener(M2FB_1);
@@ -1705,6 +1770,14 @@ public class SectionViewer
     M2FB_1 = new MouseToFBAdaptor(_imgV);
     _imgV.addMouseListener(M2FB_1);
     _imgV.addMouseMotionListener(M2FB_1);
+    //...............................
+    if (M2FP_1 != null) {
+      _imgV.removeMouseListener(M2FP_1);
+      _imgV.removeMouseMotionListener(M2FP_1);
+    }
+    M2FP_1 = new MouseToFPAdaptor(_imgV, _OBJModel, _VSModel);
+    _imgV.addMouseListener(M2FP_1);
+    _imgV.addMouseMotionListener(M2FP_1);
     //...............................
     if (M2T_1 != null) {
       _imgV.removeMouseListener(M2T_1);
@@ -1935,8 +2008,7 @@ public class SectionViewer
           }
           controlMenu_1_2state = src.isSelected();
         }
-      }
-      // view mode ------------------------------
+      } // view mode ------------------------------
       else if (e.getActionCommand().equals(controlMenu_2_1str)) {
         // up is up mode => roll is fixed
         setViewMode(controlMenu_2_1str);
@@ -1953,12 +2025,29 @@ public class SectionViewer
       }
       // fixed point ------------------------------
       else if (e.getActionCommand().equals(controlMenu_3_1str)) {
-        // change using mouse
-        _setFixedPoint = true;
-        setCursor(xhairCursor);
+	 // change using mouse
+	 _setAxisPoint = false;
+	 _setFixedPoint = true;
+	 setCursor(xhairCursor);
+	 Runnable fpClick = new Runnable() {
+	    public void run() {
+	       if (!showMenu_4state) {
+		  showMenu_4.doClick();
+	       }
+	    }
+	 };
+	 SwingUtilities.invokeLater(fpClick);
       }
       else if (e.getActionCommand().equals(controlMenu_3_2str)) {
         // change by typing coordinates
+	 Runnable fpClick = new Runnable() {
+	    public void run() {
+	       if (!showMenu_4state) {
+		  showMenu_4.doClick();
+	       }
+	    }
+	 };
+	 SwingUtilities.invokeLater(fpClick);
         _VSModel.getFixedPoint(xa, ya, za);
         vals = new double[3];
         vals[0] = xa[0];
@@ -1978,14 +2067,48 @@ public class SectionViewer
         resetFixedPoint(true);
       }
       // rotation axis ------------------------------
+      else if (e.getActionCommand().equals(controlMenu_4_1str)) {
+	 // change using mouse
+	 _setFixedPoint = false;
+	 _setAxisPoint = true;
+	 setCursor(xhairCursor);
+	 Runnable fpClick = new Runnable() {
+	    public void run() {
+	       if (!showMenu_4state) {
+		  showMenu_4.doClick();
+	       }
+	    }
+	 };
+	 SwingUtilities.invokeLater(fpClick);
+	 Runnable apClick = new Runnable() {
+	    public void run() {
+	       if (!showMenu_5state) {
+		  showMenu_5.doClick();
+	       }
+	    }
+	 };
+	 SwingUtilities.invokeLater(apClick);
+      }
       else if (e.getActionCommand().equals(controlMenu_4_2str)) {
         // change by typing coordinates
-        _VSModel.getFixedPoint(xa, ya, za);
-        vals = new double[3];
-        vals[0] = xa[0];
-        vals[1] = ya[0];
-        vals[2] = za[0];
-        _RABounce = 0;
+	 Runnable fpClick = new Runnable() {
+	    public void run() {
+	       if (!showMenu_4state) {
+		  showMenu_4.doClick();
+	       }
+	    }
+	 };
+	 SwingUtilities.invokeLater(fpClick);
+	 Runnable apClick = new Runnable() {
+	    public void run() {
+	       if (!showMenu_5state) {
+		  showMenu_5.doClick();
+	       }
+	    }
+	 };
+	 SwingUtilities.invokeLater(apClick);
+        vals = _VSModel.getAxisPoint();
+        _APBounce = 0;
         pe = new PointEntry("Rotation Axis Coordinates");
         pe.setSize(250, 250);
         pe.pack();
@@ -1993,6 +2116,11 @@ public class SectionViewer
         pe.setInitVals(vals);
         pe.addChangeListener(new RotationAxisAdaptor(pe));
         vals = null;
+      }
+      else if (e.getActionCommand().equals(controlMenu_4_3str)) {
+        // reset 
+        resetAxisPoint(true);
+        _VSModel.fireChange();
       }
       // reset ------------------------------
       else if (e.getActionCommand() == controlMenu_5str) {
@@ -2085,13 +2213,18 @@ public class SectionViewer
           showMenu_4state = src.isSelected();
         }
       }
-      // rotation axis ------------------------------
+      // axis point ------------------------------
       else if (e.getActionCommand().equals(showMenu_5str)) {
         src = (JCheckBoxMenuItem) e.getSource();
         if (src.isSelected() != showMenu_5state) {
           if (src.isSelected()) {
+            _axisPoint = true;
+            doShowAxisPoint();
+            _imgV.repaint();
           }
           else {
+            _axisPoint = false;
+            removeAxisPoint();
           }
           showMenu_5state = src.isSelected();
         }
@@ -2530,6 +2663,7 @@ public class SectionViewer
       }
 //-------------------------
       doShowFixedPoint();
+      doShowAxisPoint();
 //-------------------------
       // draw the anatomy components
       try {
@@ -2762,55 +2896,6 @@ public class SectionViewer
       }
       IMGmodel.repaint();
     }
-  }
-
-//---------------------------------------
-  // connect mouse events to setting of fixed point
-  public class WlzImgViewToFPAdaptor
-      implements ChangeListener {
-
-    WlzImgView ImgModel;
-    WlzObjModel ObjModel;
-    ViewStructModel VSModel;
-    WlzThreeDViewStruct VS;
-    Point pos;
-    //double pt3d[];
-    Vector distVec = null;
-    double FP3DOrig[] = null;
-    double FP3D[] = null;
-
-    public WlzImgViewToFPAdaptor(WlzImgView mdl1,
-                                 WlzObjModel mdl2,
-                                 ViewStructModel mdl3) {
-      ImgModel = mdl1;
-      ObjModel = mdl2;
-      VSModel = mdl3;
-      VS = VSModel.getViewStruct();
-      FP3DOrig = VSModel.getInitialFixedPoint();
-    }
-
-    public void stateChanged(ChangeEvent e) {
-      if (!_setFixedPoint)
-        return;
-      pos = ImgModel.getPos();
-      FP3D = ObjModel.get3DPoint(pos, VS);
-
-      VSModel.setFixedPoint(FP3D[0],
-                            FP3D[1],
-                            FP3D[2]);
-
-      setDistLimits(0.0);
-      _setFixedPoint = false;
-      setCursor(defCursor);
-      Runnable fpClick = new Runnable() {
-        public void run() {
-          if (!showMenu_4state)
-            showMenu_4.doClick();
-        }
-      };
-      SwingUtilities.invokeLater(fpClick);
-    }
-
   }
 
 //---------------------------------------
@@ -3186,6 +3271,89 @@ public class SectionViewer
   }
 
 //---------------------------------------
+  // connects mouse events to fixed and axis point setting
+  public class MouseToFPAdaptor
+      implements MouseListener, MouseMotionListener {
+
+    double mag;
+
+    WlzImgView ImgModel;
+    WlzObjModel ObjModel;
+    ViewStructModel VSModel;
+    WlzThreeDViewStruct VS;
+    Point pos;
+    double FP3D[] = null;
+    double FP2D[] = null;
+
+    public MouseToFPAdaptor(WlzImgView mdl1,
+                            WlzObjModel mdl2,
+                            ViewStructModel mdl3) {
+
+      ImgModel = mdl1;
+      ObjModel = mdl2;
+      VSModel = mdl3;
+      VS = VSModel.getViewStruct();
+    }
+
+    public void mouseExited(MouseEvent e) {
+    }
+
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    public void mousePressed(MouseEvent e) {
+      if (!_setFixedPoint && !_setAxisPoint) return;
+      pos = ImgModel.getPos();
+      FP3D = ObjModel.get3DPoint(pos, VS);
+      FP2D = ObjModel.get2DPoint(FP3D, VS);
+      if(_setFixedPoint) {
+	 _imgV.setFixedPointVec(FP2D);
+      } else if(_setAxisPoint) {
+	 _imgV.setAxisPointVec(FP2D);
+      }
+    }
+
+    public void mouseReleased(MouseEvent e) {
+      if (!_setFixedPoint && !_setAxisPoint) return;
+      pos = ImgModel.getPos();
+      FP3D = ObjModel.get3DPoint(pos, VS);
+
+      if(_setFixedPoint) {
+	 VSModel.setFixedPoint(FP3D[0],
+			       FP3D[1],
+			       FP3D[2]);
+	 _setFixedPoint = false;
+      } else if(_setAxisPoint) {
+	 VSModel.setAxisPoint(FP3D);
+	 _setAxisPoint = false;
+      }
+
+      setDistLimits(0.0);
+      setCursor(defCursor);
+    }
+
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    public void mouseMoved(MouseEvent e) {
+    }
+
+    public void mouseDragged(MouseEvent e) {
+      if (!_setFixedPoint && !_setAxisPoint) return;
+      pos = ImgModel.getPos();
+      FP3D = ObjModel.get3DPoint(pos, VS);
+      FP2D = ObjModel.get2DPoint(FP3D, VS);
+
+      if(_setFixedPoint) {
+	 _imgV.setFixedPointVec(FP2D);
+      } else if(_setAxisPoint) {
+	 _imgV.setAxisPointVec(FP2D);
+      }
+
+    }
+  }
+
+//---------------------------------------
   public class FixedPointAdaptor
       implements ChangeListener {
 
@@ -3229,10 +3397,23 @@ public class SectionViewer
     }
 
     public void stateChanged(ChangeEvent e) {
+      if (_APBounce > 0) {
+        vals = _pe.getValues();
+        _VSModel.setAxisPoint(vals);
+        setDistLimits(0.0);
+        Runnable apClick = new Runnable() {
+          public void run() {
+            if (!showMenu_5state)
+              showMenu_5.doClick();
+          }
+        };
+        SwingUtilities.invokeLater(apClick);
+      }
+      else {
+        _APBounce++;
+      }
     }
   }
-
-//-------------------------------------------------------------
 
 //=============================================================
 //-------------------------------------------------------------

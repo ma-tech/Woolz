@@ -51,6 +51,8 @@ public class WlzImgView extends Component {
    private double _yofsTC;
    private double _xofsFP;
    private double _yofsFP;
+   private double _xofsAP;
+   private double _yofsAP;
 
    private String _objStats;
    private int _greyVal;
@@ -85,15 +87,19 @@ public class WlzImgView extends Component {
    private GeneralPath _threshConstraintPath = null;
    private int _npts = 0;
    private int _num;
-   private int _fpr = 10; // fixed point indicator radius
+   private int _fpr = 4; // fixed point indicator radius
+   private int _apr = 4; // axis point indicator radius
 
    private boolean _viz[]; // visibility of anatomy objects
 
    private Vector _intersectionVec = null;
    private Vector _interColVec = null;
    private Vector _fixedPointVec = null;
+   private Vector _axisPointVec = null;
 
    private boolean _fixedPoint;
+   private boolean _axisPoint;
+   private boolean _axis;
    private boolean _intersection;
    private boolean _anatomy;
    private boolean _threshold;
@@ -110,6 +116,8 @@ public class WlzImgView extends Component {
    public WlzImgView() {
 
       _fixedPoint = false;
+      _axisPoint = false;
+      _axis = false;
       _intersection = false;
       _anatomy = false;
       _threshold = false;
@@ -150,6 +158,7 @@ public class WlzImgView extends Component {
       _interColVec = new Vector();
       _interColVec.add(Color.red);
       _fixedPointVec = new Vector();
+      _axisPointVec = new Vector();
 
    }
 
@@ -589,6 +598,8 @@ public class WlzImgView extends Component {
       drawAnatomy(g2);
       drawIntersection(g2);
       drawFixedPoint(g2);
+      drawAxisPoint(g2);
+      drawAxis(g2);
       // temporarily disabled ... don't remove
       drawThreshold(g2);
       drawThreshConstraint(g2);
@@ -681,7 +692,7 @@ public class WlzImgView extends Component {
       Color colOrig = g2.getColor();
       Line2D.Double line = null;
 
-      g2.setColor(Color.pink);
+      g2.setColor(Color.green);
       g2.translate(_xofsFP, _yofsFP);
       for(int i=0; i<num; i++) {
 	 line = (Line2D.Double)_fixedPointVec.elementAt(i);
@@ -699,6 +710,67 @@ public class WlzImgView extends Component {
       g2.setColor(colOrig);
    }
 
+   //-------------------------------------------------------------
+   public void drawAxisPoint(Graphics2D g2) {
+
+      // draw a cross centred on axis point
+      if(_axisPoint == false) return;
+      int num = _axisPointVec.size();
+      //System.out.println("_axisPoint vec: size = "+num);
+      if(num == 0) return;
+
+      Color colOrig = g2.getColor();
+      Line2D.Double line = null;
+
+      g2.setColor(Color.cyan);
+      g2.translate(_xofsAP, _yofsAP);
+      for(int i=0; i<num; i++) {
+	 line = (Line2D.Double)_axisPointVec.elementAt(i);
+	 g2.drawLine((int)line.getX1(),
+	       (int)line.getY1(),
+	       (int)line.getX2(),
+	       (int)line.getY2());
+	 if(i == 0) {
+	    int x = (int)line.getX1() - _apr;
+	    int y = (int)line.getY1() - _apr;
+	    g2.drawOval(x,y,2*_apr,2*_apr);
+	 }
+      }
+      g2.translate(-_xofsAP, -_yofsAP);
+      g2.setColor(colOrig);
+   }
+
+   //-------------------------------------------------------------
+   public void drawAxis(Graphics2D g2) {
+
+      // draw a line between fixed point and axis point
+      if(_axis == false) return;
+      if((_fixedPointVec == null) || (_fixedPointVec.size() == 0)) return;
+      if((_axisPointVec == null) || (_axisPointVec.size() == 0)) return;
+
+      Color colOrig = g2.getColor();
+      Line2D.Double line = null;
+
+      g2.setColor(Color.cyan);
+      g2.translate(_xofsAP, _yofsAP);
+
+      line = (Line2D.Double)_axisPointVec.elementAt(0);
+      int x1 = (int)line.getX1();
+      int y1 = (int)line.getY1();
+
+      line = (Line2D.Double)_axisPointVec.elementAt(1);
+
+      line = (Line2D.Double)_fixedPointVec.elementAt(0);
+      int x2 = (int)line.getX1();
+      int y2 = (int)line.getY1();
+
+      line = (Line2D.Double)_fixedPointVec.elementAt(1);
+
+      g2.drawLine(x1,y1,x2,y2);
+
+      g2.translate(-_xofsAP, -_yofsAP);
+      g2.setColor(colOrig);
+   }
 
    //-------------------------------------------------------------
    public void drawThreshConstraint(Graphics2D g2) {
@@ -717,6 +789,16 @@ public class WlzImgView extends Component {
    //-------------------------------------------------------------
    public void enableFixedPoint(boolean state) {
       _fixedPoint = state;
+   }
+
+   //-------------------------------------------------------------
+   public void enableAxisPoint(boolean state) {
+      _axisPoint = state;
+   }
+
+   //-------------------------------------------------------------
+   public void enableAxis(boolean state) {
+      _axis = state;
    }
 
    //-------------------------------------------------------------
@@ -868,6 +950,46 @@ public class WlzImgView extends Component {
    }
 
    //-------------------------------------------------------------
+   protected void setAxisPointVec(double[] apa) {
+
+      if(_debug) System.out.println("setAxisPointVec");
+      Line2D.Double line = null;
+
+      if((apa == null) || (apa.length != 3)) return;
+
+      if(_axisPointVec == null) {
+	 _axisPointVec = new Vector();
+      } else {
+	 _axisPointVec.clear();
+      }
+
+      line = new Line2D.Double(apa[0], apa[1], apa[0]+_apr, apa[1]);
+      _axisPointVec.add(line);
+      if(_debug == true) {
+	 System.out.print(String.valueOf(line.getX1())+", ");
+	 System.out.println(String.valueOf(line.getY1())+", ");
+      }
+      line = new Line2D.Double(apa[0], apa[1], apa[0], apa[1]-_apr);
+      _axisPointVec.add(line);
+      line = new Line2D.Double(apa[0], apa[1], apa[0]-_apr, apa[1]);
+      _axisPointVec.add(line);
+      line = new Line2D.Double(apa[0], apa[1], apa[0], apa[1]+_apr);
+      _axisPointVec.add(line);
+
+      setAxisPointOffsets();
+      _axisPoint = true;
+      _axis = true;
+   }
+
+   //-------------------------------------------------------------
+   public void printLine(Line2D.Double line) {
+      System.out.println(Double.toString(line.getX1())+", "+
+                         Double.toString(line.getY1())+", "+
+			 Double.toString(line.getX2())+", "+
+			 Double.toString(line.getY2()));
+   }
+
+   //-------------------------------------------------------------
    public void setGreyLevelOffsets() {
 
       _xofsGL = 0;
@@ -886,6 +1008,23 @@ public class WlzImgView extends Component {
 
       _xofsFP = X - _bBox.xMax;
       _yofsFP = Y - _bBox.yMax;
+   }
+   //-------------------------------------------------------------
+   protected double[] getFixedPointOffsets() {
+      double ret[] = new double[2];
+
+      ret[0] = _xofsFP;
+      ret[1] = _yofsFP;
+
+      return ret;
+   }
+   //-------------------------------------------------------------
+   public void setAxisPointOffsets() {
+      double X = Math.abs((_bBox.xMax - _bBox.xMin));
+      double Y = Math.abs((_bBox.yMax - _bBox.yMin));
+
+      _xofsAP = X - _bBox.xMax;
+      _yofsAP = Y - _bBox.yMax;
    }
    //-------------------------------------------------------------
    protected void setOverlayOffsets() {

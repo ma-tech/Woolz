@@ -37,6 +37,7 @@ public class ViewStructModel implements WlzObjectType {
    WlzThreeDViewStruct _VS = null;
 
    double _fpInitial[] = null;
+   double _axisPoint[] = null;
 
    int iValArray[];
 
@@ -46,6 +47,7 @@ public class ViewStructModel implements WlzObjectType {
    double dValArray3[];
 
    private final boolean _debug = false;
+   private boolean _axisDefined = false;
 
 //----------------------------------------------
 // constructors
@@ -90,9 +92,19 @@ public class ViewStructModel implements WlzObjectType {
       WlzIBox3 bBox3 = _objModel.getBBox();
 
       _fpInitial = new double[3];
+      _axisPoint = new double[3];
+
       _fpInitial[0] = bBox3.xMin+(bBox3.xMax-bBox3.xMin)/2.0;
       _fpInitial[1] = bBox3.yMin+(bBox3.yMax-bBox3.yMin)/2.0;
       _fpInitial[2] = bBox3.zMin+(bBox3.zMax-bBox3.zMin)/2.0;
+
+      // set the rotation axis end point = fixed point initially
+      try {
+	 System.arraycopy(_fpInitial,0,_axisPoint,0,3);
+      }
+      catch (Exception e1) {
+	System.err.println(e1);
+      }
 
       try {
 	 _obj.Wlz3DViewSetViewMode(_VS, WlzThreeDViewMode.WLZ_UP_IS_UP_MODE);
@@ -104,9 +116,9 @@ public class ViewStructModel implements WlzObjectType {
 	 _obj.WlzInit3DViewStruct(_VS,_obj);
 	 /* adapters not in place yet so don't do fireChange() */
       }
-      catch (WlzException e) {
+      catch (WlzException e2) {
 	System.err.println("setInitialViewStruct");
-	System.err.println(e);
+	System.err.println(e2);
       }
       if(_debug) System.out.println("exit setInitialViewStruct()");
    }
@@ -217,6 +229,15 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   public void setAxisPoint(double[] axisPnt) {
+     try {
+       System.arraycopy(axisPnt,0,_axisPoint,0,3);
+     } catch (Exception e) {
+       System.err.println(e);
+     }
+   }
+
+//----------------------------------------------
    public void getPhi(double[] phi) {
      try {
        _obj.Wlz3DViewGetPhi(_VS, phi);
@@ -294,6 +315,10 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   public double[] getAxisPoint() {
+      return _axisPoint;
+   }
+//----------------------------------------------
    public String getViewMode() {
       String ret = "";
       iValArray[0] = 0;
@@ -324,6 +349,16 @@ public class ViewStructModel implements WlzObjectType {
 //----------------------------------------------
    public WlzThreeDViewStruct getViewStruct() {
       return _VS;
+   }
+
+//----------------------------------------------
+   public void printArray(double[] arr) {
+      int len = arr.length;
+
+      for(int i=0; i<len; i++) {
+         System.out.println("element "+i+" = "+arr[i]);
+      }
+
    }
 
 //----------------------------------------------
