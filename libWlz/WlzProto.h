@@ -2857,6 +2857,13 @@ extern WlzVertexP		WlzVerticiesFromObj(
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
+extern WlzVertexP               WlzVerticiesFromCtr(
+                                  WlzContour *ctr,
+                                  WlzVertexP *dstNr,
+                                  int **dstVId,
+                                  int *dstCnt,
+                                  WlzVertexType *dstType,
+                                  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 
