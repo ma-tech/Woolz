@@ -13,6 +13,7 @@
 *		applying them to Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 25-01-01 bill	Fix WlzAffineTransformBBox[ID][23].
 * 19-01-01 bill Modify WlzAffineTransformIsIdentity().
 * 30-11-00 bill WlzAffineTransformMatrixSet() now sets 3D matricies.
 * 10-10-00 bill	Add WlzAffineTransformContour(),
@@ -2567,22 +2568,44 @@ WlzIBox2	WlzAffineTransformBBoxI2(WlzAffineTransform *tr,
 				         WlzIBox2 srcBox,
 					 WlzErrorNum *dstErr)
 {
-  WlzIVertex2	tV;
+  int		idx;
+  WlzIVertex2	tV[4];
   WlzIBox2	dstBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  tV.vtX = srcBox.xMin;
-  tV.vtY = srcBox.yMin;
-  tV = WlzAffineTransformVertexI2(tr, tV, &errNum);
+  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin;
+  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin;
+  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax;
+  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax;
+  idx = 0;
+  while((errNum == WLZ_ERR_NONE) && (idx < 4))
+  {
+    tV[idx] = WlzAffineTransformVertexI2(tr, tV[idx], &errNum);
+    ++idx;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstBox.xMin = tV.vtX;
-    dstBox.yMin = tV.vtY;
-    tV.vtX = srcBox.xMax;
-    tV.vtY = srcBox.yMax;
-    tV = WlzAffineTransformVertexI2(tr, tV, &errNum);
-    dstBox.xMax = tV.vtX;
-    dstBox.yMax = tV.vtY;
+    dstBox.xMin = dstBox.xMax = tV[0].vtX;
+    dstBox.yMin = dstBox.yMax = tV[0].vtY;
+    for(idx = 1; idx < 4; ++idx)
+    {
+      if(tV[idx].vtX < dstBox.xMin)
+      {
+	dstBox.xMin = tV[idx].vtX;
+      }
+      else if(tV[idx].vtX > dstBox.xMax)
+      {
+        dstBox.xMax = tV[idx].vtX;
+      }
+      if(tV[idx].vtY < dstBox.yMin)
+      {
+	dstBox.yMin = tV[idx].vtY;
+      }
+      else if(tV[idx].vtY > dstBox.yMax)
+      {
+        dstBox.yMax = tV[idx].vtY;
+      }
+    }
   }
   if(dstErr)
   {
@@ -2605,22 +2628,44 @@ WlzDBox2	WlzAffineTransformBBoxD2(WlzAffineTransform *tr,
 				         WlzDBox2 srcBox,
 					 WlzErrorNum *dstErr)
 {
-  WlzDVertex2	tV;
+  int		idx;
+  WlzDVertex2	tV[4];
   WlzDBox2	dstBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  tV.vtX = srcBox.xMin;
-  tV.vtY = srcBox.yMin;
-  tV = WlzAffineTransformVertexD2(tr, tV, &errNum);
+  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin;
+  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin;
+  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax;
+  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax;
+  idx = 0;
+  while((errNum == WLZ_ERR_NONE) && (idx < 4))
+  {
+    tV[idx] = WlzAffineTransformVertexD2(tr, tV[idx], &errNum);
+    ++idx;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstBox.xMin = tV.vtX;
-    dstBox.yMin = tV.vtY;
-    tV.vtX = srcBox.xMax;
-    tV.vtY = srcBox.yMax;
-    tV = WlzAffineTransformVertexD2(tr, tV, &errNum);
-    dstBox.xMax = tV.vtX;
-    dstBox.yMax = tV.vtY;
+    dstBox.xMin = dstBox.xMax = tV[0].vtX;
+    dstBox.yMin = dstBox.yMax = tV[0].vtY;
+    for(idx = 1; idx < 4; ++idx)
+    {
+      if(tV[idx].vtX < dstBox.xMin)
+      {
+	dstBox.xMin = tV[idx].vtX;
+      }
+      else if(tV[idx].vtX > dstBox.xMax)
+      {
+        dstBox.xMax = tV[idx].vtX;
+      }
+      if(tV[idx].vtY < dstBox.yMin)
+      {
+	dstBox.yMin = tV[idx].vtY;
+      }
+      else if(tV[idx].vtY > dstBox.yMax)
+      {
+        dstBox.yMax = tV[idx].vtY;
+      }
+    }
   }
   if(dstErr)
   {
@@ -2643,26 +2688,57 @@ WlzIBox3	WlzAffineTransformBBoxI3(WlzAffineTransform *tr,
 				         WlzIBox3 srcBox,
 					 WlzErrorNum *dstErr)
 {
-  WlzIVertex3	tV;
+  int		idx;
+  WlzIVertex3	tV[8];
   WlzIBox3	dstBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  tV.vtX = srcBox.xMin;
-  tV.vtY = srcBox.yMin;
-  tV.vtZ = srcBox.zMin;
-  tV = WlzAffineTransformVertexI3(tr, tV, &errNum);
+  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin; tV[0].vtX = srcBox.zMin;
+  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin; tV[1].vtX = srcBox.zMin;
+  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax; tV[2].vtX = srcBox.zMin;
+  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax; tV[3].vtX = srcBox.zMin;
+  tV[4].vtX = srcBox.xMin; tV[4].vtY = srcBox.yMin; tV[4].vtX = srcBox.zMax;
+  tV[5].vtX = srcBox.xMax; tV[5].vtY = srcBox.yMin; tV[5].vtX = srcBox.zMax;
+  tV[6].vtX = srcBox.xMin; tV[6].vtY = srcBox.yMax; tV[6].vtX = srcBox.zMax;
+  tV[7].vtX = srcBox.xMax; tV[7].vtY = srcBox.yMax; tV[7].vtX = srcBox.zMax;
+  idx = 0;
+  while((errNum == WLZ_ERR_NONE) && (idx < 8))
+  {
+    tV[idx] = WlzAffineTransformVertexI3(tr, tV[idx], &errNum);
+    ++idx;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstBox.xMin = tV.vtX;
-    dstBox.yMin = tV.vtY;
-    dstBox.zMin = tV.vtZ;
-    tV.vtX = srcBox.xMax;
-    tV.vtY = srcBox.yMax;
-    tV.vtZ = srcBox.zMax;
-    tV = WlzAffineTransformVertexI3(tr, tV, &errNum);
-    dstBox.xMax = tV.vtX;
-    dstBox.yMax = tV.vtY;
-    dstBox.zMax = tV.vtZ;
+    dstBox.xMin = dstBox.xMax = tV[0].vtX;
+    dstBox.yMin = dstBox.yMax = tV[0].vtY;
+    dstBox.zMin = dstBox.zMax = tV[0].vtZ;
+    for(idx = 1; idx < 8; ++idx)
+    {
+      if(tV[idx].vtX < dstBox.xMin)
+      {
+	dstBox.xMin = tV[idx].vtX;
+      }
+      else if(tV[idx].vtX > dstBox.xMax)
+      {
+        dstBox.xMax = tV[idx].vtX;
+      }
+      if(tV[idx].vtY < dstBox.yMin)
+      {
+	dstBox.yMin = tV[idx].vtY;
+      }
+      else if(tV[idx].vtY > dstBox.yMax)
+      {
+        dstBox.yMax = tV[idx].vtY;
+      }
+      if(tV[idx].vtZ < dstBox.zMin)
+      {
+	dstBox.zMin = tV[idx].vtZ;
+      }
+      else if(tV[idx].vtZ > dstBox.zMax)
+      {
+        dstBox.zMax = tV[idx].vtZ;
+      }
+    }
   }
   if(dstErr)
   {
@@ -2685,26 +2761,57 @@ WlzDBox3	WlzAffineTransformBBoxD3(WlzAffineTransform *tr,
 				         WlzDBox3 srcBox,
 					 WlzErrorNum *dstErr)
 {
-  WlzDVertex3	tV;
+  int		idx;
+  WlzDVertex3	tV[8];
   WlzDBox3	dstBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  tV.vtX = srcBox.xMin;
-  tV.vtY = srcBox.yMin;
-  tV.vtZ = srcBox.zMin;
-  tV = WlzAffineTransformVertexD3(tr, tV, &errNum);
+  tV[0].vtX = srcBox.xMin; tV[0].vtY = srcBox.yMin; tV[0].vtX = srcBox.zMin;
+  tV[1].vtX = srcBox.xMax; tV[1].vtY = srcBox.yMin; tV[1].vtX = srcBox.zMin;
+  tV[2].vtX = srcBox.xMin; tV[2].vtY = srcBox.yMax; tV[2].vtX = srcBox.zMin;
+  tV[3].vtX = srcBox.xMax; tV[3].vtY = srcBox.yMax; tV[3].vtX = srcBox.zMin;
+  tV[4].vtX = srcBox.xMin; tV[4].vtY = srcBox.yMin; tV[4].vtX = srcBox.zMax;
+  tV[5].vtX = srcBox.xMax; tV[5].vtY = srcBox.yMin; tV[5].vtX = srcBox.zMax;
+  tV[6].vtX = srcBox.xMin; tV[6].vtY = srcBox.yMax; tV[6].vtX = srcBox.zMax;
+  tV[7].vtX = srcBox.xMax; tV[7].vtY = srcBox.yMax; tV[7].vtX = srcBox.zMax;
+  idx = 0;
+  while((errNum == WLZ_ERR_NONE) && (idx < 8))
+  {
+    tV[idx] = WlzAffineTransformVertexD3(tr, tV[idx], &errNum);
+    ++idx;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstBox.xMin = tV.vtX;
-    dstBox.yMin = tV.vtY;
-    dstBox.zMin = tV.vtZ;
-    tV.vtX = srcBox.xMax;
-    tV.vtY = srcBox.yMax;
-    tV.vtZ = srcBox.zMax;
-    tV = WlzAffineTransformVertexD3(tr, tV, &errNum);
-    dstBox.xMax = tV.vtX;
-    dstBox.yMax = tV.vtY;
-    dstBox.zMax = tV.vtZ;
+    dstBox.xMin = dstBox.xMax = tV[0].vtX;
+    dstBox.yMin = dstBox.yMax = tV[0].vtY;
+    dstBox.zMin = dstBox.zMax = tV[0].vtZ;
+    for(idx = 1; idx < 8; ++idx)
+    {
+      if(tV[idx].vtX < dstBox.xMin)
+      {
+	dstBox.xMin = tV[idx].vtX;
+      }
+      else if(tV[idx].vtX > dstBox.xMax)
+      {
+        dstBox.xMax = tV[idx].vtX;
+      }
+      if(tV[idx].vtY < dstBox.yMin)
+      {
+	dstBox.yMin = tV[idx].vtY;
+      }
+      else if(tV[idx].vtY > dstBox.yMax)
+      {
+        dstBox.yMax = tV[idx].vtY;
+      }
+      if(tV[idx].vtZ < dstBox.zMin)
+      {
+	dstBox.zMin = tV[idx].vtZ;
+      }
+      else if(tV[idx].vtZ > dstBox.zMax)
+      {
+        dstBox.zMax = tV[idx].vtZ;
+      }
+    }
   }
   if(dstErr)
   {
