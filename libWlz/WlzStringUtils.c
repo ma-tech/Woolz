@@ -49,24 +49,27 @@ int		WlzStringMatchValue(int *datum,
 	  ("WlzStringMatchValue FE 0x%lx 0x%lx 0x%lx...\n",
 	   (unsigned long )datum, (unsigned long )targetStr,
 	   (unsigned long)testStr));
-  va_start(ap, testStr);
-  while(testStr)
+  if(targetStr)
   {
-    testVal = va_arg(ap, int);
-    WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_3),
-	    ("WlzStringMatchValue 01 0x%lx>%s< %d\n",
-	     (unsigned long )testStr, (testStr)?(testStr):"(null)", testVal));
-    if(!matchedFlag)
+    va_start(ap, testStr);
+    while(testStr)
     {
-      matchedFlag = !strncmp(targetStr, testStr, strlen(testStr));
-      if(matchedFlag)
+      testVal = va_arg(ap, int);
+      WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_3),
+	      ("WlzStringMatchValue 01 0x%lx>%s< %d\n",
+	       (unsigned long )testStr, (testStr)?(testStr):"(null)", testVal));
+      if(!matchedFlag)
       {
-	*datum = testVal;
+	matchedFlag = !strncmp(targetStr, testStr, strlen(testStr));
+	if(matchedFlag)
+	{
+	  *datum = testVal;
+	}
       }
+      testStr = va_arg(ap, char *);
     }
-    testStr = va_arg(ap, char *);
+    va_end(ap);
   }
-  va_end(ap);
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_3),
 	  ("WlzStringMatchValue FX %d\n",
 	   matchedFlag));
@@ -103,7 +106,7 @@ int		WlzValueMatchString(char **datum,
     {
       if( targetVal == testVal ){
 	matchedFlag = 1;
-	*datum = testStr;
+	*datum = (char *)testStr;
       }
     }
     testStr = va_arg(ap, char *);
