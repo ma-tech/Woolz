@@ -48,12 +48,13 @@ DEPENDDIRS		= \
 			../libAlc \
 			../libAlg \
 			../libbibfile \
-			../libWlz
+			../libWlz \
+			../libWlzExtFF
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
 			  $(DEPENDDIRS)/  \
-			  $(HGU_INC_DIR)/include
+			  $(HGU_INC_DIR)
 
 # List of library search paths (modify as required).
 LIBDIR			=

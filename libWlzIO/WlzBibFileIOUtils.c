@@ -36,12 +36,14 @@ record using the bibFile library.
 *
 * \return       woolz error number
 * \param    fp	FILE pointer opened for writing
+* \param    recordName	record name
 * \param    wlzViewStr	woolz 3D view structure
 * \par      Source:
 *                WlzBibFileIOUtils.c
 */
 WlzErrorNum write_Wlz3DSectionViewParams_Record(
   FILE			*fp,
+  char			*recordName,
   WlzThreeDViewStruct	*wlzViewStr)
 {
   char	fixedPointStr[64];
@@ -85,7 +87,7 @@ WlzErrorNum write_Wlz3DSectionViewParams_Record(
 
   /* create the bibfile record */
   bibfileRecord = 
-    BibFileRecordMake("Wlz3DSectionViewParams", "0",
+    BibFileRecordMake(recordName, "0",
 		      BibFileFieldMakeVa("FixedPoint",	fixedPointStr,
 					 "Distance",	distanceStr,
 					 "Pitch",	pitchStr,
@@ -210,6 +212,7 @@ Note this does not write the warp transformation itself.
 *
 * \return       woolz error number
 * \param    fp	FILE pointer opened for writing
+* \param    recordName	record name
 * \param    basisFnType	interpolation or basis function type
 * \param    meshMthd	method used to define the mesh
 * \param    meshMinDst	mesh minimum distance
@@ -219,6 +222,7 @@ Note this does not write the warp transformation itself.
 */
 WlzErrorNum write_WlzWarpTransformParams_Record(
   FILE			*fp,
+  char			*recordName,
   WlzBasisFnType	basisFnType,
   WlzMeshGenMethod	meshMthd,
   int			meshMinDst,
@@ -273,7 +277,7 @@ WlzErrorNum write_WlzWarpTransformParams_Record(
 
   /* create the bibfile record */
   bibfileRecord = 
-    BibFileRecordMake("WlzWarpTransformParams", "0",
+    BibFileRecordMake(recordName, "0",
 		      BibFileFieldMakeVa("BasisFnType",		basisFnTypeStr,
 					 "MeshGenMethod",	meshMthdStr,
 					 "MeshMinDist",		meshMinDstStr,
@@ -385,6 +389,7 @@ WlzErrorNum parse_WlzWarpTransformParams_Record(
 *
 * \return       Woolz error number
 * \param    fp	FILE pointer opened for writing
+* \param    recordName	record name
 * \param    index	index of the given tie points
 * \param    dstVtx	destination vertex
 * \param    srcVtx	source vertex
@@ -393,6 +398,7 @@ WlzErrorNum parse_WlzWarpTransformParams_Record(
 */
 WlzErrorNum write_WlzTiePointVtxs_Record(
   FILE		*fp,
+  char		*recordName,
   int		index,
   WlzDVertex3	dstVtx,
   WlzDVertex3	srcVtx)
@@ -413,7 +419,7 @@ WlzErrorNum write_WlzTiePointVtxs_Record(
 
   /* create the bibfile record */
   bibfileRecord = 
-    BibFileRecordMake("WlzTiePointVtxs", "0",
+    BibFileRecordMake(recordName, "0",
 		      BibFileFieldMakeVa("Index",	indexStr,
 					 "DstVtx",	dstVtxStr,
 					 "SrcVtx",	srcVtxStr,
@@ -476,6 +482,265 @@ WlzErrorNum parse_WlzTiePointVtxs_Record(
        (void *) &(srcVtx->vtZ), "%*lg ,%*lg ,%lg", "SrcVtx",
        NULL);
     if( numParsedFields < 7 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  return errNum;
+}
+
+/* function:     write_File_Record    */
+/*! 
+* \ingroup      WlzIO
+* \brief        Write a bibfile record to record the file name and file type.
+*
+* \return       woolz error number
+* \param    fp	FILE pointer
+* \param    recordName	record name
+* \param    fileName	file name to be recorded
+* \param    fileType	file type e.g. image format
+* \par      Source:
+*                WlzBibFileIOUtils.c
+*/
+WlzErrorNum write_File_Record(
+  FILE		*fp,
+  char		*recordName,
+  char		*fileName,
+  WlzEffFormat	fileType)
+{
+  BibFileRecord	*bibfileRecord;
+  BibFileError	bibFileErr;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  const char	*fileTypeStr;
+
+  if( strlen(fileName) > 511 ){
+    return WLZ_ERR_PARAM_DATA;
+  }
+
+  /* create the bibfile record */
+  fileTypeStr = WlzEffStringFromFormat(fileType, NULL);
+  bibfileRecord = 
+    BibFileRecordMake(recordName, "0",
+		      BibFileFieldMakeVa("File", fileName,
+					 "Type", fileTypeStr,
+					 NULL));
+
+  /* write the bibfile and release resources */
+  bibFileErr = BibFileRecordWrite(fp, NULL, bibfileRecord);
+  BibFileRecordFree(&bibfileRecord);
+
+  /* check the bibfile write error */
+  if( bibFileErr != BIBFILE_ER_NONE ){
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+  }
+
+  return errNum;
+}
+
+/* function:     parse_File_Record    */
+/*! 
+* \ingroup      WlzIO
+* \brief        Parse a bibfile record for a filename and type.
+*
+* \return       woolz error
+* \param    bibfileRecord	bibfile record as read in by libbibFile
+* \param    index	index return
+* \param    dstFileName	file name return
+* \param    dstFileType	file type return
+* \par      Source:
+*                WlzBibFileIOUtils.c
+*/
+WlzErrorNum parse_File_Record(
+  BibFileRecord		*bibfileRecord,
+  int			*index,
+  char			**dstFileName,
+  WlzEffFormat		*dstFileType)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		numParsedFields=0;
+  char		fileNameBuf[512];
+  char		fileTypeBuf[32];
+  BibFileField	*bibfileField;
+
+  /* check inputs */
+  if((bibfileRecord == NULL) ||
+     (*dstFileName == NULL) ||
+     (dstFileType == NULL)){
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  /* parse the record */
+  if( errNum == WLZ_ERR_NONE ){
+    numParsedFields = BibFileFieldParseFmt
+      (bibfileRecord->field,
+       (void *) &(fileNameBuf[0]), "%s", "File",
+       (void *) &(fileTypeBuf[0]), "%s", "Type",
+       NULL);
+    if( numParsedFields < 2 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  /* doesn't read the strings correctly - ask Bill */
+  if( errNum == WLZ_ERR_NONE ){
+    bibfileField = bibfileRecord->field;
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+    numParsedFields = 0;
+    while( bibfileField ){
+      if( strncmp(bibfileField->name, "File", 4) == 0 ){
+	strcpy(fileNameBuf, bibfileField->value);
+	numParsedFields++;
+      }
+      if( strncmp(bibfileField->name, "Type", 4) == 0 ){
+	strcpy(fileTypeBuf, bibfileField->value);
+	numParsedFields++;
+      }
+      bibfileField = bibfileField->next;
+    }
+    if( numParsedFields < 2 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+
+  *dstFileName = strdup(fileNameBuf);
+  *dstFileType = WlzEffStringToFormat(fileTypeBuf);
+  
+  return errNum;
+}
+  
+/* function:     write_MAPaintWarpInputSegmentationParams_Record    */
+/*! 
+* \ingroup      WlzIO
+* \brief        Write a warp segmentation parameter record i.e. the image
+ processing operations and paramters for extracting the gene-expression domain.
+*
+* \return       woolz error
+* \param    fp	FILE pointer opened for writing
+* \param    recordName	bibfile record name
+* \param    normFlg	normalisation flag
+* \param    histoFlg	histogram equalise flag
+* \param    shadeFlg	shade correct flag
+* \param    gaussFlg	gauss smoothing flag
+* \param    width	gauss smoothing width parameter
+* \param    threshLow	ow threshold value
+* \param    threshHigh	high threshold value
+* \par      Source:
+*                WlzBibFileIOUtils.c
+*/
+WlzErrorNum write_MAPaintWarpInputSegmentationParams_Record(
+  FILE		*fp,
+  char		*recordName,
+  int		normFlg,
+  int		histoFlg,
+  int		shadeFlg,
+  int		gaussFlg,
+  double	width,
+  int		threshLow,
+  int	 	threshHigh)
+{
+  char	normStr[8];
+  char	histoStr[8];
+  char	shadeStr[8];
+  char	gaussStr[8];
+  char	widthStr[16];
+  char	threshLowStr[16];
+  char	threshHighStr[16];
+  BibFileRecord	*bibfileRecord;
+  BibFileError	bibFileErr;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* generate strings for the bibfile entry */
+  sprintf(normStr, "%d", normFlg);
+  sprintf(histoStr, "%d", histoFlg);
+  sprintf(shadeStr, "%d", shadeFlg);
+  sprintf(gaussStr, "%d", gaussFlg);
+  sprintf(widthStr, "%f", width);
+  sprintf(threshLowStr, "%d", threshLow);
+  sprintf(threshHighStr, "%d", threshHigh);
+
+ /* create the bibfile record */
+  bibfileRecord = 
+    BibFileRecordMake(recordName, "0",
+		      BibFileFieldMakeVa("Normalise",	normStr,
+					 "HistoEqualise",histoStr,
+					 "ShadeCorrect",shadeStr,
+					 "GaussSmooth",	gaussStr,
+					 "GaussWidth",	widthStr,
+					 "ThreshLow",	threshLowStr,
+					 "ThreshHigh",	threshHighStr,
+					 NULL));
+
+  /* write the bibfile and release resources */
+  bibFileErr = BibFileRecordWrite(fp, NULL, bibfileRecord);
+  BibFileRecordFree(&bibfileRecord);
+
+  /* check the bibfile write error */
+  if( bibFileErr != BIBFILE_ER_NONE ){
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+  }
+
+  return errNum;
+}
+
+/* function:     parse_MAPaintWarpInputSegmentationParams_Record    */
+/*! 
+* \ingroup      WlzIO
+* \brief        Parse the bibfile record for a MAPaintWarpInputSegmentationParams
+record.
+*
+* \return       woolz error
+* \param    bibfileRecord	bibfile record as read by libbibFile
+* \param    normFlg	normalisation flag
+* \param    histoFlg	histogram equalise flag
+* \param    shadeFlg	shade correct flag
+* \param    gaussFlg	gauss smoothing flag
+* \param    width	gauss smoothing width
+* \param    threshLow	low threshold value
+* \param    threshHigh	high threshold value
+* \par      Source:
+*                WlzBibFileIOUtils.c
+*/
+WlzErrorNum parse_MAPaintWarpInputSegmentationParams_Record(
+  BibFileRecord		*bibfileRecord,
+  int			*normFlg,
+  int			*histoFlg,
+  int			*shadeFlg,
+  int			*gaussFlg,
+  double		*width,
+  int			*threshLow,
+  int	 		*threshHigh)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  char		basisFnTypeStr[32];
+  char		meshMthdStr[32];
+  int		numParsedFields=0;
+
+  /* check inputs */
+  if((bibfileRecord == NULL) ||
+     (normFlg == NULL) ||
+     (histoFlg == NULL) ||
+     (shadeFlg == NULL) ||
+     (gaussFlg == NULL) ||
+     (width == NULL) ||
+     (threshLow == NULL) ||
+     (threshHigh == NULL) ){
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  /* parse the record */
+  if( errNum == WLZ_ERR_NONE ){
+    numParsedFields = BibFileFieldParseFmt
+      (bibfileRecord->field,
+       (void *) normFlg, "%d", "Normalise",
+       (void *) histoFlg, "%d", "HistoEqualise",
+       (void *) shadeFlg, "%d", "ShadeCorrect",
+       (void *) gaussFlg, "%d", "GaussSmooth",
+       (void *) width, "%lg", "GaussWidth",
+       (void *) threshLow, "%d", "ThreshLow",
+       (void *) threshHigh, "%d", "ThreshHigh",
+       NULL);
+    if( numParsedFields < 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
   }
