@@ -12,8 +12,10 @@
 * Purpose:      Functions to free objects and their data.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Fixed non-matching enum assignment in WlzFreeDomain().
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+* 15-08-00 bill Remove obsolete types: WLZ_POINT_(INT)|(FLOAT).
+*		Add WLZ_CONTOUR and WlzFreeContour().
+* 05-06-00 bill Fixed non-matching enum assignment in WlzFreeDomain().
+* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
@@ -117,6 +119,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       errNum = WlzFreeBoundList(obj->domain.b);
       break;
 
+    case WLZ_CONTOUR:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+      	      ("WlzFreeObj 06 0x%lx WLZ_CONTOUR 0x%lx\n",
+	       (unsigned long )obj, (unsigned long )(obj->domain.ctr)));
+      errNum = WlzFreeContour(obj->domain.ctr);
+      break;
+
     case WLZ_CONV_HULL:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj 07 0x%lx WLZ_CONV_HULL 0x%lx 0x%lx\n",
@@ -141,18 +150,6 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       	      ("WlzFreeObj 09 0x%lx WLZ_RECTANGLE 0x%lx\n",
 	       (unsigned long )obj, (unsigned long )(obj->domain.r)));
       errNum = WlzFreeDomain(obj->domain);
-      break;
-
-    case WLZ_POINT_INT:
-      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 10 0x%lx WLZ_POINT_INT\n",
-	       (unsigned long )obj));
-      break;
-
-    case WLZ_POINT_FLOAT:
-      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 11 0x%lx WLZ_POINT_INT\n",
-	       (unsigned long )obj));
       break;
 
     case WLZ_AFFINE_TRANS:
@@ -583,3 +580,37 @@ WlzErrorNum	WlzFree3DWarpTrans(Wlz3DWarpTrans *obj)
   }
   return(errNum);
 }
+
+/************************************************************************
+* Function:	WlzFreeContour
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Free's a WlzContour data structure.
+* Global refs:	-
+* Parameters:	WlzContour *ctr:	Given contour to free.
+************************************************************************/
+WlzErrorNum	WlzFreeContour(WlzContour *ctr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ctr == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(ctr->type != WLZ_CONTOUR)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    if(WlzUnlink(&(ctr->linkcount), &errNum))
+    {
+      if(ctr->model)
+      {
+        (void )WlzGMModelFree(ctr->model);
+      }
+      AlcFree((void *)ctr);
+    }
+  }
+  return(errNum);
+}
+
