@@ -46,6 +46,7 @@ EXECUTABLES		= \
 			WlzClipObjToBox \
 			WlzCompThresh \
 			WlzCompound \
+			WlzConstruct3D \
 			WlzContourFlipOrient \
 			WlzContourFromPoints \
 			WlzContourGeomFilter \
@@ -143,6 +144,7 @@ CSOURCES		= \
 			WlzClipObjToBox.c \
 			WlzCompound.c \
 			WlzCompThresh.c \
+			WlzConstruct3D.c \
 			WlzContourFlipOrient.c \
 			WlzContourFromPoints.c \
 			WlzContourGeomFilter.c \
