@@ -58,29 +58,6 @@ typedef struct _WlzMatchICPTPPair2D
   WlzDVertex2	tVx;
 } WlzMatchICPTPPair2D;
 
-typedef struct _WlzMatchICPWeightCbData
-{
-  WlzGMModel	*tGM;
-  WlzGMModel	*sGM;
-  int		nScatter;
-  double 	maxDisp;
-} WlzMatchICPWeightCbData;
-
-static WlzErrorNum  		WlzMatchICPCtr(
-				  WlzContour *tCtr,
-				  WlzContour *sCtr,
-				  WlzAffineTransform *initTr,
-				  int maxItr,
-				  int minSpx,
-				  int *dstNMatch,
-				  WlzVertexP *dstTMatch,
-				  WlzVertexP *dstSMatch,
-				  int brkFlg,
-				  double  maxDisp,
-				  double maxAng,
-				  double maxDeform,
-    				  int matchImpNN,
-				  double matchImpThr);
 static WlzErrorNum		WlzMatchICPRegShellLst(
 				  AlcKDTTree *tTree,
 				  WlzGMModel *tGM,
@@ -104,7 +81,9 @@ static WlzErrorNum		WlzMatchICPRegShellLst(
 				  double maxAng,
 				  double maxDeform,
 				  int minSpx,
-				  WlzAffineTransform *initTr);
+				  WlzAffineTransform *initTr,
+				  WlzRegICPUsrWgtFn usrWgtFn,
+				  void *usrWgtData);
 static void			WlzMatchICPShellListInsertList(
 				  WlzMatchICPShellList *list0,
 				  WlzMatchICPShellList *list1);
@@ -125,6 +104,8 @@ static WlzAffineTransform 	*WlzMatchICPRegModel(
 				  int maxItr,
 				  WlzAffineTransform *initTr,
 				  int *dstConv,
+				  WlzRegICPUsrWgtFn usrWgtFn,
+				  void *usrWgtData,
 				  WlzErrorNum *dstErr);
 static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  AlcKDTTree *tTree,
@@ -149,6 +130,8 @@ static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  double maxDeform,
 				  WlzAffineTransform *initTr,
 				  int *dstConv,
+				  WlzRegICPUsrWgtFn usrWgtFn,
+				  void *usrWgtData,
 				  WlzErrorNum *dstErr);
 static int			WlzMatchICPGetPoints(
 				  AlcKDTTree *tTree,
@@ -270,15 +253,6 @@ static int			WlzMatchICPDblSortFnD(
 				  int *idx,
 				  int id0,
 				  int id1);
-static double			WlzMatchICPWeightMatches(
-				  WlzVertexType vType,
-				  WlzAffineTransform *curTr,
-				  AlcKDTTree *tree,
-				  WlzVertexP tVx,
-				  WlzVertexP sVx,
-				  WlzVertex tMVx,
-				  WlzVertex sMVx,
-				  void *data);
 static double			WlzMatchICPWeightMatches2D(
 				  WlzAffineTransform *curTr,
 				  AlcKDTTree *tree,
@@ -401,7 +375,9 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 				double maxDeform,
 				int matchImpNN, double matchImpThr)
 {
+  WlzMatchICPWeightCbData cbData;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	nScatter = 5;
 
   if((tObj == NULL) | (sObj == NULL))
   {
@@ -442,11 +418,17 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 	    case WLZ_GMMOD_2D: /* FALLTHROUGH */
 	    case WLZ_GMMOD_3I: /* FALLTHROUGH */
 	    case WLZ_GMMOD_3D:
+	      /* Set up weighting function callback data. */
+	      cbData.tGM = tObj->domain.ctr->model;
+	      cbData.sGM = sObj->domain.ctr->model;
+	      cbData.maxDisp = maxDisp;
+	      cbData.nScatter = nScatter;
 	      errNum = WlzMatchICPCtr(tObj->domain.ctr, sObj->domain.ctr,
 	      			      initTr, maxItr, minSpx,
 				      dstNMatch, dstTMatch, dstSMatch, brkFlg,
 				      maxDisp, maxAng, maxDeform,
-    				      matchImpNN, matchImpThr);
+    				      matchImpNN, matchImpThr,
+				      WlzMatchICPWeightMatches, &cbData);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -523,15 +505,18 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 *					is probably \f$[0.5-2.5]\f$. Higher
 *					values allow more implausible matches
 *					to be returned.
+* \param	usrWgtFn		User supplied weighting function.
+* \param	usrWgtData		User supplied weighting data.
 */
-static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
-				   WlzAffineTransform *initTr,
-				   int maxItr, int minSpx,
-				   int *dstNMatch, WlzVertexP *dstTMatch,
-				   WlzVertexP *dstSMatch, int brkFlg,
-				   double  maxDisp, double maxAng,
-				   double maxDeform,
-    				   int matchImpNN, double matchImpThr)
+WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
+			       WlzAffineTransform *initTr,
+			       int maxItr, int minSpx,
+			       int *dstNMatch, WlzVertexP *dstTMatch,
+			       WlzVertexP *dstSMatch, int brkFlg,
+			       double  maxDisp, double maxAng,
+			       double maxDeform,
+			       int matchImpNN, double matchImpThr,
+			       WlzRegICPUsrWgtFn usrWgtFn, void *usrWgtData)
 {
   int		idS,
 		n0,
@@ -672,7 +657,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     globTr = WlzAssignAffineTransform(
     	     WlzMatchICPRegModel(tTree, trType, vType, nTV, tVx, tNr,
 				 nSV, sVx, sNr, vIBuf, tVBuf, sVBuf, wBuf,
-				 maxItr, initTr, &convFlg, &errNum), NULL);
+				 maxItr, initTr, &convFlg,
+				 NULL, NULL, &errNum), NULL);
     if((errNum == WLZ_ERR_NONE) && (convFlg == 0))
     {
       errNum = WLZ_ERR_ALG_CONVERGENCE;
@@ -706,7 +692,9 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 			        nTV, tVx, tNr, nSV, sVx, sNr,
 			        vIBuf, tVBuf, sVBuf, wBuf,
 			        maxItr, maxDisp, maxAng, maxDeform,
-				globTr, &convFlg, &errNum), NULL);
+				globTr, &convFlg,
+				usrWgtFn, usrWgtData,
+				&errNum), NULL);
       if((errNum == WLZ_ERR_NONE) && (convFlg == 1))
       {
 	sMS->tr = tTr;
@@ -772,7 +760,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	      errNum = WlzMatchICPRegShellLst(tTree, tGM, sGM, vSList, globTr,
 		  trType, vType, nTV, tVx, tNr, nSV, sVx, sNr,
 		  vIBuf, tVBuf, sVBuf, wBuf, maxItr,
-		  maxDisp, maxAng, maxDeform, minSpx, sMS->tr);
+		  maxDisp, maxAng, maxDeform, minSpx, sMS->tr,
+		  usrWgtFn, usrWgtData);
 	    }
 	  }
 	}
@@ -861,7 +850,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 				    nTV, tVx, tNr, nSV, sVx, sNr,
 				    vIBuf, tVBuf, sVBuf, wBuf, maxItr,
 				    maxDisp, maxAng, maxDeform, minSpx,
-				    lElm0->mShell.tr);
+				    lElm0->mShell.tr,
+				    usrWgtFn, usrWgtData);
 		if(errNum == WLZ_ERR_NONE)
 		{
 		  /* Merge the new list with the existing broken shell list
@@ -1057,7 +1047,61 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 }
 
 /*!
-* \return				Error code.
+* \return	Weight value in the range [0.0-1.0].
+* \ingroup      WlzTransform
+* \brief	Compute an the weighting for the matched pair of
+* 		verticies.
+*		This function is called from WlzRegICPTreeAndVertices().
+* \param	vType			Type of vertices.
+* \param	curTr			Current affine transform.
+* \param	tree			Given kD-tree populated by the
+*					target vertices such that the nodes of
+*					the tree have the sameindicies as the
+*					given target vertices.
+* \param	tVx			The source vertices.
+* \param	tVx			The target vertices.
+* \param	tMVx			The matched target vertex.
+* \param	sMVx			The matched source vertex.
+* \param	wVx			Distance weight.
+* \param	wNr			Normal weight.
+* \param	data			Data used to pass the geometric models.
+*/
+double		WlzMatchICPWeightMatches(WlzVertexType vType,
+					 WlzAffineTransform *curTr,
+					 AlcKDTTree *tree,
+					 WlzVertexP tVx, WlzVertexP sVx,
+					 WlzVertex tMVx, WlzVertex sMVx,
+					 double wVx, double wNr,
+					 void *data)
+{
+   double	wgt = 0.0;
+   WlzMatchICPWeightCbData *cbData;
+
+   if(data)
+   {
+     cbData = (WlzMatchICPWeightCbData *)data;
+     switch(vType)
+     {
+       case WLZ_VERTEX_D2:
+         wgt = WlzMatchICPWeightMatches2D(curTr, tree, tVx.d2, sVx.d2,
+					  tMVx.d2, sMVx.d2,
+					  cbData->tGM, cbData->sGM,
+					  cbData->maxDisp, cbData->nScatter);
+	 break;
+       case WLZ_VERTEX_D3:
+         wgt = WlzMatchICPWeightMatches3D(curTr, tree, tVx.d3, sVx.d3,
+	 				  tMVx.d3, sMVx.d3,
+					  cbData->tGM, cbData->sGM,
+					  cbData->maxDisp, cbData->nScatter);
+	 break;
+     }
+     wgt *= wVx * wNr;
+   }
+   return(wgt);
+}
+
+/*!
+* \return	Error code.
 * \ingroup	WlzTransform
 * \brief	Pass through the given shell list, computing and setting
 *		shell sizes within the list, registering shells all
@@ -1097,6 +1141,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 * \param	minSpx			Minimum number of simplicies within a
 * 					shell.
 * \param	gInitTr			Initial affine transform, may be NULL.
+* \param	usrWgtFn		User supplied weighting function.
+* \param	usrWgtData		User supplied weighting data.
 */
 static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
 				WlzGMModel *tGM,
@@ -1110,7 +1156,8 @@ static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
 				double *wBuf, int maxItr, 
 				double maxDisp, double maxAng, 
 				double maxDeform, int minSpx,
-				WlzAffineTransform *gInitTr)
+				WlzAffineTransform *gInitTr,
+				WlzRegICPUsrWgtFn usrWgtFn, void *usrWgtData)
 {
   int		convFlg,
   		remFlg;
@@ -1137,7 +1184,9 @@ static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
 			        nTV, tVx, tNr, nSV, sVx, sNr,
 			        iBuf, tVBuf, sVBuf, wBuf,
 			        maxItr, maxDisp, maxAng, maxDeform,
-				initTr, &convFlg, &errNum),
+				initTr, &convFlg,
+				usrWgtFn, usrWgtData,
+				&errNum),
 	    NULL);
       remFlg = !convFlg;
       if(errNum == WLZ_ERR_ALG_CONVERGENCE)
@@ -1234,6 +1283,8 @@ static void	WlzMatchICPShellListInsertList(WlzMatchICPShellList *list0,
 *					convergence flag which is set to
 *					a non zero value if the registration
 *					converges.
+* \param	usrWgtFn		User supplied weighting function.
+* \param	usrWgtData		User supplied weighting data.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
@@ -1244,6 +1295,7 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 				int *iBuf, WlzVertexP tVBuf, WlzVertexP sVBuf,
 				double *wBuf, int maxItr, 
 				WlzAffineTransform *initTr, int *dstConv,
+				WlzRegICPUsrWgtFn usrWgtFn, void *usrWgtData,
 				WlzErrorNum *dstErr)
 {
   int		idV,
@@ -1258,7 +1310,7 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
   tr = WlzRegICPTreeAndVertices(tTree, trType, vType,
   			     nTV, tVx, tNr, nSV, iBuf, sVx, sNr,
 			     tVBuf, sVBuf, wBuf, maxItr, initTr,
-			     &conv, NULL, NULL, &errNum);
+			     &conv, usrWgtFn, usrWgtData, &errNum);
   if(dstConv)
   {
     *dstConv = conv;
@@ -1311,6 +1363,8 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 *					convergence flag which is set to
 *					a non zero value if the registration
 *					converges.
+* \param	usrWgtFn		User supplied weighting function.
+* \param	usrWgtData		User supplied weighting data.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
@@ -1326,6 +1380,7 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
 				double maxDisp, double maxAng, 
 				double maxDeform,
 				WlzAffineTransform *initTr, int *dstConv,
+				WlzRegICPUsrWgtFn usrWgtFn, void *usrWgtData,
 				WlzErrorNum *dstErr)
 {
   int		nSSV,
@@ -1338,9 +1393,7 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
   WlzGMLoopT	*cLT,
   		*fLT;
   WlzAffineTransform *tr = NULL;
-  WlzMatchICPWeightCbData cbData;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	nScatter = 5;
 
   /* Find the indicies of the source shell's vertices. */
   nSSV = 0;
@@ -1363,16 +1416,11 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
   } while(cLT != fLT);
   /* Register the source shell's vertices with the target model using the
    * existing kD-tree. */
-  cbData.tGM = tGM;
-  cbData.sGM = sS->parent;
-  cbData.maxDisp = maxDisp;
-  cbData.nScatter = nScatter;
   tr = WlzRegICPTreeAndVertices(tTree, trType, vType,
   			  nTV, tVx, tNr, nSSV, iBuf, sVx, sNr,
 			  tVBuf, sVBuf, wBuf,
 			  maxItr, initTr, &conv,
-			  WlzMatchICPWeightMatches,
-			  &cbData,
+			  usrWgtFn, usrWgtData,
 			  &errNum);
   if((errNum == WLZ_ERR_NONE) && conv)
   {
@@ -2498,56 +2546,6 @@ static WlzErrorNum WlzMatchICPRemoveVertices(WlzMatchICPCbData *cbData,
     ++idD;
   }
   return(errNum);
-}
-
-/*!
-* \return	Weight value in the range [0.0-1.0].
-* \ingroup      WlzTransform
-* \brief	Compute an additional weighting for the matched pair of
-* 		verticies.
-*		This function is called from WlzRegICPTreeAndVertices().
-* \param	vType			Type of vertices.
-* \param	curTr			Current affine transform.
-* \param	tree			Given kD-tree populated by the
-*					target vertices such that the nodes of
-*					the tree have the sameindicies as the
-*					given target vertices.
-* \param	tVx			The source vertices.
-* \param	tVx			The target vertices.
-* \param	tMVx			The matched target vertex.
-* \param	sMVx			The matched source vertex.
-* \param	data			Data used to pass the geometric models.
-*/
-static double	WlzMatchICPWeightMatches(WlzVertexType vType,
-					 WlzAffineTransform *curTr,
-					 AlcKDTTree *tree,
-					 WlzVertexP tVx, WlzVertexP sVx,
-					 WlzVertex tMVx, WlzVertex sMVx,
-					 void *data)
-{
-   double	wgt = 0.0;
-   WlzMatchICPWeightCbData *cbData;
-
-   if(data)
-   {
-     cbData = (WlzMatchICPWeightCbData *)data;
-     switch(vType)
-     {
-       case WLZ_VERTEX_D2:
-         wgt = WlzMatchICPWeightMatches2D(curTr, tree, tVx.d2, sVx.d2,
-					  tMVx.d2, sMVx.d2,
-					  cbData->tGM, cbData->sGM,
-					  cbData->maxDisp, cbData->nScatter);
-	 break;
-       case WLZ_VERTEX_D3:
-         wgt = WlzMatchICPWeightMatches3D(curTr, tree, tVx.d3, sVx.d3,
-	 				  tMVx.d3, sMVx.d3,
-					  cbData->tGM, cbData->sGM,
-					  cbData->maxDisp, cbData->nScatter);
-	 break;
-     }
-   }
-   return(wgt);
 }
 
 /*!
