@@ -134,7 +134,7 @@ static WlzMeshTransform         *WlzReadMeshTransform2D(
 				  WlzErrorNum *);
 
 #ifdef _OPENMP
-//#define getc(S)	getc_unlocked(S)
+#define getc(S)	getc_unlocked(S)
 #endif
 
 /*!

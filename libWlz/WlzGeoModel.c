@@ -8635,9 +8635,6 @@ static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model,
 /*!
 * \return	Woolz error code.
 * \ingroup      WlzGeoModel
-
-/*!
-* \return				Woolz error code.
 * \brief	Constructs a new shell, edge (with topological
 *		elements) and adds them to the model.
 *
