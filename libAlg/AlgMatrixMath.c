@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Functions for basic arithmatic with matricies.
+* \ingroup      AlgMatrix
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
@@ -25,13 +26,8 @@
 #include <Alg.h>
 
 /*!
-* \ingroup   	Alg
-* \defgroup     AlgMatrix
-* @{
-*/
-
-/*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Computes the sum of two matricies and returns
 *		the result in a third supplied matrix:
 *		\f[
@@ -41,6 +37,7 @@
 *		nR, nC. It is safe to supply the same matrix as any
 *		combination of aM, bM and cM.
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			First matrix in the sum,
@@ -51,9 +48,9 @@
 * \param	nC			Number of columns in matricies.
 */
 void		AlgMatrixAdd(double **aM, double **bM, double **cM,
-			     int nR, int nC)
+			     size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
   double	*aRowM,
   		*bRowM,
@@ -73,6 +70,7 @@ void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Subtracts on matrix from another and returns the
 *		result in a third supplied matrix:
 *		\f[
@@ -82,6 +80,7 @@ void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 *		matricies must be nR, nC. It is safe to supply
 *		the same matrix as any combination of aM, bM and cM.
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			First matrix in the subtraction,
@@ -92,9 +91,9 @@ void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 * \param	nC			Number of columns in matricies.
 */
 void		AlgMatrixSub(double **aM, double **bM, double **cM,
-			     int nR, int nC)
+			     size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
   double	*aRowM,
   		*bRowM,
@@ -114,6 +113,7 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Computes the product of two matricies and returns
 *		the result in a third supplied matrix:
 *               \f[
@@ -121,6 +121,7 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
 		\f]
 *		The dimensions of the result matrix (aM) must be cR, bC.
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$
 * \param        bM 			First matrix in the product,
@@ -132,9 +133,9 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
 * \param	cC			Number of columns in matrix cM.
 */
 void		AlgMatrixMul(double **aM, double **bM, double **cM,
-			     int bR, int bC, int cC)
+			     size_t bR, size_t bC, size_t cC)
 {
-  int		id0,
+  size_t	id0,
   		id1,
 		id2;
   double	tD0;
@@ -156,16 +157,18 @@ void		AlgMatrixMul(double **aM, double **bM, double **cM,
 }
 
 /*!
-* \return       			The trace of the matrix.
+* \return       The trace of the matrix.
+* \ingroup      AlgMatrix
 * \brief        Computes the trace of the given matrix.
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix.
 * \param	nRC			Number of rows and columns in
 *					the (square) matrix aM.
 */
-double		AlgMatrixTrace(double **aM, int nRC)
+double		AlgMatrixTrace(double **aM, size_t nRC)
 {
-  int		id0;
+  size_t	id0;
   double	trace = 0.0;
 
   for(id0 = 0; id0 < nRC; ++id0)
@@ -177,6 +180,7 @@ double		AlgMatrixTrace(double **aM, int nRC)
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Computes the transpose of the given matrix:
 *		\f[
 		\mathbf{A} = \mathbf{B^T}
@@ -184,6 +188,7 @@ double		AlgMatrixTrace(double **aM, int nRC)
 *		aM = transpose(bM). The dimensions of the result
 *		matrix (aM) must be aR == bC, aC == bR.
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			Matrix to transpose,
@@ -191,9 +196,10 @@ double		AlgMatrixTrace(double **aM, int nRC)
 * \param	bR			Number of rows in matrix bM.
 * \param	bC			Number of columns in matrix bM.
 */
-void		AlgMatrixTranspose(double **aM, double **bM, int bR, int bC)
+void		AlgMatrixTranspose(double **aM, double **bM,
+				   size_t bR, size_t bC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
 
   for(id0 = 0; id0 < bR; ++id0)
@@ -207,21 +213,24 @@ void		AlgMatrixTranspose(double **aM, double **bM, int bR, int bC)
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Copies the values of the matrix bM to the result
 *		matric aM:
 *		\f[
 		\mathbf{A} = \mathbf{B}
 		\f]
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			Matrix to copy, \f$\mathbf{B}\f$.
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
-void		AlgMatrixCopy(double **aM, double **bM, int nR, int nC)
+void		AlgMatrixCopy(double **aM, double **bM,
+			      size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
   double	*aRowM,
   		*bRowM;
@@ -239,11 +248,13 @@ void		AlgMatrixCopy(double **aM, double **bM, int nR, int nC)
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Multiplies the given matrix by the given scalar:
 *		\f[
 		\mathbf{A} = s \mathbf{B}
 		\f]
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			Given matrix to scale,
@@ -253,9 +264,9 @@ void		AlgMatrixCopy(double **aM, double **bM, int nR, int nC)
 * \param	nC			Number of columns in matrix aM.
 */
 void		AlgMatrixScale(double **aM, double **bM, double sv,
-			       int nR, int nC)
+			       size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
   double 	*aRowM,
   		*bRowM;
@@ -273,6 +284,7 @@ void		AlgMatrixScale(double **aM, double **bM, double sv,
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Multiplies the a matrix by a scalar and then adds
 *		another matrix:
 *		\f[
@@ -280,6 +292,7 @@ void		AlgMatrixScale(double **aM, double **bM, double sv,
 		\f]
 *		All the matrices must have the same dimensions.
 * \note		For efficiency the given parameters are not checked.
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			Given matrix to scale,
@@ -290,9 +303,9 @@ void		AlgMatrixScale(double **aM, double **bM, double sv,
 * \param	nC			Number of columns in each matrix.
 */
 void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
-				  double sv, int nR, int nC)
+				  double sv, size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
   double 	*aRowM,
   		*bRowM,
@@ -312,6 +325,7 @@ void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Sets the elements of the given square matrix so that it
 *		is a scalar matrix:
 *		\f[
@@ -325,9 +339,9 @@ void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
 * \param	sv			Scalar value, \f$s\f$.
 * \param	nRC			Number of rows and columns in matrix.
 */
-void		AlgMatrixScalar(double **aM, double sv, int nRC)
+void		AlgMatrixScalar(double **aM, double sv, size_t nRC)
 {
-  int		id0;
+  size_t	id0;
 
   (void )memset(*aM, 0, nRC * nRC);
   for(id0 = 0; id0 < nRC; ++id0)
@@ -338,6 +352,7 @@ void		AlgMatrixScalar(double **aM, double sv, int nRC)
 
 /*!
 * \return       <void>
+* \ingroup      AlgMatrix
 * \brief        Sets the elements of the given matrix to zero.
 * \note		For efficiency the given parameters are not checked.
 *		\f[
@@ -345,13 +360,14 @@ void		AlgMatrixScalar(double **aM, double sv, int nRC)
 		\f]
 * \note		This function assumes that the matrix has been allocated
 *		by AlcDouble2Malloc().
+* \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result.
 * \param	nR			Number of rows in matrix.
 * \param	nC			Number of columns in matrix.
 */
-void		AlgMatrixZero(double **aM, int nR, int nC)
+void		AlgMatrixZero(double **aM, size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		nRC;
   double	*aRowM;
 
@@ -360,13 +376,15 @@ void		AlgMatrixZero(double **aM, int nR, int nC)
 
 /*!
 * \return
+* \ingroup      AlgMatrix
 * \brief	Multiplies the matrix \f$\mathbf{B}\f$ by the vector
 *		\f$\mathbf{c}\f$:
 *		\f[
 		\mathbf{a} = \mathbf{B} \mathbf{c}
 		\f]
-*		This function assumes that the matrix has been allocated
+* \note		This function assumes that the matrix has been allocated
 *		by AlcDouble2Malloc().
+* \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
@@ -375,9 +393,9 @@ void		AlgMatrixZero(double **aM, int nR, int nC)
 * 					\f$mathbf{c}\f$.
 */
 void 		AlgMatrixVectorMul(double *aV, double **bM, double *cV,
-				   int nR, int nC)
+				   size_t nR, size_t nC)
 {
-  int		id0,
+  size_t	id0,
   		id1;
   double	tD0;
   double	*bRow,
@@ -395,7 +413,3 @@ void 		AlgMatrixVectorMul(double *aV, double **bM, double *cV,
     aV[id0] = tD0;
   }
 }
-
-/*!
-* @}
-*/

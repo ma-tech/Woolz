@@ -14,22 +14,19 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions for computing the range of values
 *		within a given array.
+* \ingroup      AlgRange
 * \todo         -
 * \bug          None known.
 */
 
-/*!
-* \ingroup      Alg
-* \defgroup     AlgRange
-* @{
-*/
 
 #include <Alg.h>
 #include <math.h>
 #include <float.h>
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgRange
 * \brief	Computes the range of the given data, ie it's minimum
 *		and maximum values.
 * \param	datASz			Number of elements in given data
@@ -85,7 +82,8 @@ AlgError	AlgRange1D(int datASz, double *datA,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgRange
 * \brief	Computes the range of the given indexed data, ie it's
 *		minimum and maximum values.
 * \param	datA			Data array to examine for minimum
@@ -260,7 +258,3 @@ int		main(int argc, char **argv)
 }
 
 #endif /* ALG_RANGE_TEST */
-
-/*!
-* @}
-*/

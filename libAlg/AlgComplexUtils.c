@@ -13,14 +13,9 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides basic complex number utilities.
+* \ingroup     	AlgComplex
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgComplex
-* @{
 */
 
 #include <stdio.h>
@@ -29,104 +24,169 @@
 
 #include <Alg.h>
 
-double	AlgCMod(
-  ComplexD z)
+/*!
+* \return	Square of modulus.
+* \ingroup	AlgComplex
+* \brief	Computes the square of the modulus of the given complex value.
+* \param	z			Given complex value.
+*/
+double		AlgCModSq(ComplexD z)
 {
   double result;
 
   result = z.re * z.re + z.im * z.im;
-  if( result > 0.0 ){
-    result = sqrt( result );
-  }
 
-  return result;
+  return(result);
 }
 
-double	AlgCArg(
-  ComplexD z)
+/*!
+* \return	Modulus.
+* \ingroup	AlgComplex
+* \brief	Computes the modulus of the given complex value.
+* \param	z			Given complex value.
+*/
+double		AlgCMod(ComplexD z)
+{
+  double result;
+
+  result = z.re * z.re + z.im * z.im;
+  result = (result > 0.0)? sqrt(result): 0.0;
+
+  return(result);
+}
+
+/*!
+* \return	Argument.
+* \ingroup	AlgComplex
+* \brief	Computes the argument of the given complex value.
+* \param	z			Given complex value.
+*/
+double		AlgCArg(ComplexD z)
 {
   double result;
 
   result = atan2(z.im, z.re);
 
-  return result;
+  return(result);
 }
 
-double	AlgCRe(
-  ComplexD z)
+/*!
+* \return	Real component.
+* \ingroup	AlgComplex
+* \brief	Returns the real component of the given complex value.
+* \param	z			Given complex value.
+*/
+double		AlgCRe(ComplexD z)
 {
-  return z.re;
+  return(z.re);
 }
 
-double	AlgCIm(
-  ComplexD z)
+/*!
+* \return	Imaginary component.
+* \ingroup	AlgComplex
+* \brief	Returns the imaginary component of the given complex value.
+* \param	z			Given complex value.
+*/
+double		AlgCIm(ComplexD z)
 {
-  return z.im;
+  return(z.im);
 }
 
-ComplexD AlgCConj(
-  ComplexD z)
+/*!
+* \return	Complex conjugate.
+* \ingroup	AlgComplex
+* \brief	Returns the complex conjugate of the given complex value.
+* \param	z			Given complex value.
+*/
+ComplexD 	AlgCConj(ComplexD z)
 {
   ComplexD result;
 
   result.re = z.re;
   result.im = -z.im;
 
-  return result;
+  return(result);
 }
 
-ComplexD AlgCAdd(
-  ComplexD z1,
-  ComplexD z2)
+/*!
+* \return	Sum.
+* \ingroup	AlgComplex
+* \brief	Computes the sum of the two given complex values.
+* \param	z			Given complex value.
+*/
+ComplexD 	AlgCAdd(ComplexD z1, ComplexD z2)
 {
   ComplexD result;
 
   result.re = z1.re + z2.re;
   result.im = z1.im + z2.im;
 
-  return result;
+  return(result);
 }
 
-ComplexD AlgCSub(
-  ComplexD z1,
-  ComplexD z2)
+/*!
+* \return	Difference.
+* \ingroup	AlgComplex
+* \brief	Subtracts the second complex value from the first.
+* \param	z1			First complex value.
+* \param	z2			Second complex value.
+*/
+ComplexD 	AlgCSub(ComplexD z1, ComplexD z2)
 {
   ComplexD result;
 
   result.re = z1.re - z2.re;
   result.im = z1.im - z2.im;
 
-  return result;
+  return(result);
 }
 
-ComplexD AlgCMult(
-  ComplexD z1,
-  ComplexD z2)
+/*!
+* \return	Product.
+* \ingroup	AlgComplex
+* \brief	Multiplies the second complex value with the first.
+* \param	z1			First complex value.
+* \param	z2			Second complex value.
+*/
+ComplexD 	AlgCMult(ComplexD z1, ComplexD z2)
 {
   ComplexD result;
 
   result.re = z1.re * z2.re - z1.im * z2.im;
   result.im = z1.re * z2.im + z1.im * z2.re;
 
-  return result;
+  return(result);
 }
 
-ComplexD AlgCDiv(
-  ComplexD z1,
-  ComplexD z2)
+/*!
+* \return	Ratio.
+* \ingroup	AlgComplex
+* \brief	Divides the first complex value by the second.
+* \param	z1			First complex value.
+* \param	z2			Second complex value.
+*/
+ComplexD 	AlgCDiv(ComplexD z1, ComplexD z2)
 {
-  ComplexD result;
+  double	modSq;
+  ComplexD 	result;
 
+  modSq = AlgCModSq(z2);
   result = AlgCMult(z1, AlgCConj(z2));
-  result.re /= AlgCMod(z2);
-  result.im /= AlgCMod(z2);
+  result.re /= modSq;
+  result.im /= modSq;
 
-  return result;
+  return(result);
 }
 
-ComplexD AlgCPow(
-  ComplexD z, 
-  double y)
+/*!
+* \return	Power.
+* \ingroup	AlgComplex
+* \brief	Pomputes the value of the given complex value to the
+*		power of the given real value.
+* \param	z			Given complex value.
+* \param	y			Given real value.
+*/
+ComplexD 	AlgCPow(ComplexD z, double y)
 {
   ComplexD result;
   double a, b;
@@ -140,9 +200,5 @@ ComplexD AlgCPow(
   result.re = b * cos(a);
   result.im = b * sin(a);
 
-  return result;
+  return(result);
 }
-
-/*!
-* @}
-*/

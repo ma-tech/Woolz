@@ -17,15 +17,9 @@
 *		selection from an array of values. This is the
 *		general case of mimimum, median and maximum value
 *		rank selection.
-*		
+* \ingroup	AlgRank
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgRank
-* @{
 */
 
 #include <stdio.h>
@@ -41,6 +35,7 @@ static void			AlgRankElmCopy(void *elm0,
 				  unsigned int elmSz);
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Performs the minimum of sorting on an array of integers 
 *		such that the n'th value in the array has rank n. That
 *		is all values before the n'th are less than or equal to
@@ -105,6 +100,7 @@ void		AlgRankSelectI(int *elm, int nElm, int rank)
 
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Performs the minimum of sorting on an array of unsigned 
 *		bytes such that the n'th value in the array has rank n. That
 *		is all values before the n'th are less than or equal to
@@ -169,6 +165,7 @@ void		AlgRankSelectUB(unsigned char *elm, int nElm, int rank)
 
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Performs the minimum of sorting on an array of shorts 
 *		such that the n'th value in the array has rank n. That
 *		is all values before the n'th are less than or equal to
@@ -233,6 +230,7 @@ void		AlgRankSelectS(short *elm, int nElm, int rank)
 
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Performs the minimum of sorting on an array of floats 
 *		such that the n'th value in the array has rank n. That
 *		is all values before the n'th are less than or equal to
@@ -297,6 +295,7 @@ void		AlgRankSelectF(float *elm, int nElm, int rank)
 
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Performs the minimum of sorting on an array of doubles 
 *		such that the n'th value in the array has rank n. That
 *		is all values before the n'th are less than or equal to
@@ -361,6 +360,7 @@ void		AlgRankSelectD(double *elm, int nElm, int rank)
 
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Performs the minimum of sorting on an array of values
 *		such that the n'th value in the array has rank n. That
 *		is all values before the n'th are less than or equal to
@@ -436,6 +436,7 @@ void		AlgRankSelectV(void *elm, int nElm, unsigned int elmSz,
 
 /*!
 * \return	<void>
+* \ingroup	AlgRank
 * \brief	Swaps to elements given their pointers and size.
 * \param	elm0			Pointer to the first element.
 * \param	elm1			Pointer to the second element.
@@ -458,7 +459,8 @@ static void	AlgRankElmSwap(void *elm0, void *elm1, unsigned int elmSz)
 }
 
 /*!
-* \return
+* \return	<void>
+* \ingroup	AlgRank
 * \brief	Copies a single value.
 * \param	elm0			Pointer to the element to be set.
 * \param	elm1			Pointer to the element with value.
@@ -618,7 +620,3 @@ int		main(int argc, char *argv[])
   return(!okFlg);
 }
 #endif /* ALG_RANK_TEST */
-
-/*!
-* @}
-*/

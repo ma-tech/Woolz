@@ -15,14 +15,9 @@
 * \brief        Provides a function for computing the maximum liklihood
 *               parameters of a mixture of distributions which fit the
 *               given data.
+* \ingroup     AlgMixture
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgMixture
-* @{
 */
 
 #include <Alg.h>
@@ -36,7 +31,8 @@
 #endif /* CYGWIN || DARWIN */
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup     AlgMixture
 * \brief	Computes the maximum liklihood estimate of the
 *		parameters of a mixture of normal distributions which
 *		best fit the give frequencies. These parameters are the
@@ -276,7 +272,8 @@ AlgError	AlgMixtureMLG(int nDbn, int nCls,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup     AlgMixture
 * \brief	Synthesise a mixture of normal distributions.
 * \param	nCls			Number of classes in the
 *					frequency distribution.
@@ -467,9 +464,3 @@ int		main(int argc, char **argv)
   }
 }
 #endif /* ALG_MIXTURE_TEST */
-
-
-/*!
-* @}
-*/
-

@@ -26,7 +26,7 @@
 
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x, where A is a
 *		square matrix.
@@ -80,7 +80,7 @@ AlgError	AlgMatrixLUSolve(double **aMat, int aSz,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Calculates the inverse of a square matrix.
 * \param	aMat			Given matrix A.
@@ -138,7 +138,7 @@ AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Calculates the determinant of a matrix. The matrix is
 *		overwitten with its LU decomposition on exit.
@@ -187,7 +187,7 @@ AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Replaces the given matrix with the LU decomposition
 *		of a row-wise permutation of itself.
@@ -345,7 +345,7 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the set of of linear equations A.x = b where
 *		A is input as its LU decomposition determined with

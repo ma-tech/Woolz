@@ -13,14 +13,9 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions which produce pseudo-random values.
+* \ingroup	AlgRand
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgRand
-* @{
 */
 
 #include <Alg.h>
@@ -33,6 +28,7 @@
 
 /*!
 * \return	<void>
+* \ingroup	AlgRand
 * \brief	Seeds the pseudo-random number generators.
 * \param	 seed			Given seed value.
 */
@@ -42,7 +38,8 @@ void		AlgRandSeed(long seed)
 }
 
 /*!
-* \return				Pseudo-random value.
+* \return	Pseudo-random value.
+* \ingroup	AlgRand
 * \brief	Produces a pseudo-random value from a uniform
 *		distribution over the interval [0.0, 1.0].
 * \param	<void>
@@ -56,7 +53,8 @@ double		AlgRandUniform(void)
 }
 
 /*!
-* \return				Pseudo-random value.
+* \return	Pseudo-random value.
+* \ingroup	AlgRand
 * \brief	Produces a pseudo-random value from a normal
 *		distribution over the interval [-1.0, 1.0].
 * \param	mu			Mean of distribution.
@@ -73,7 +71,3 @@ double		AlgRandNormal(double mu, double sigma)
   value = ((value - 6.0) * sigma) + mu;
   return(value);
 }
-
-/*!
-* @}
-*/

@@ -25,7 +25,7 @@ static double	AlgMatrixSVPythag(double, double);
 
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x, where A is a
 *		matrix with at least as many columns as rows.
@@ -109,7 +109,7 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Performs singular value decomposition of the given
 *		matrix (A) and computes two additional matricies
@@ -567,7 +567,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the set of of linear equations A.x = b where
 *		A is input as its singular value decomposition in
@@ -656,7 +656,7 @@ AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
 }
 
 /*!
-* \return				Square root of sum of squares.
+* \return	Square root of sum of squares.
 * \ingroup      AlgMatrix
 * \brief	Computes sqrt(size0^2 + size1^2) without underflow or
 *		overflow.

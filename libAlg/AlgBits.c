@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides bit fiddling functions.
+* \ingroup	AlgBits
 * \todo         -
 * \bug          None known.
 */
@@ -22,13 +23,8 @@
 #include <float.h>
 
 /*!
-* \ingroup	Alg
-* \defgroup	AlgBits
-* @{
-*/
-
-/*!
-* \return				Number of bits set.
+* \return	Number of bits set.
+* \ingroup	AlgBits
 * \brief	Counts the number of bits set in the given mask.
 * \param        gMsk			Given bit mask.
 */
@@ -45,7 +41,8 @@ int		AlgBitSetCount(unsigned long gMsk)
 }
 
 /*!
-* \return				Number of bits set.
+* \return	Number of bits set.
+* \ingroup	AlgBits
 * \brief	Counts the number of bits set in the given mask
 *		and sets the first elements of the given bit position
 *		array.
@@ -70,8 +67,8 @@ int		AlgBitSetPositions(int *posA, unsigned long gMsk)
 }
 
 /*!
-* \return				Next bit mask for n bits, or
-*					zero on error.
+* \return	Next bit mask for n bits, or zero on error.
+* \ingroup	AlgBits
 * \brief	Computes a bit mask which has n bits set and is <=
 *		maxMsk, the new bit mask is the next after the given
 *		current mask.
@@ -154,9 +151,9 @@ unsigned long	AlgBitNextNOfM(unsigned long curMsk, int n, int m)
 }
 
 /*!
-* \return				Index of the next bit set in
-*					the given mask, will be -ve if
-*					no next bit set.
+* \return	Index of the next bit set in the given mask, will be -ve if
+*		no next bit set.
+* \ingroup	AlgBits
 * \brief	Computes the index of the next bit set in the given mask
 *		using the index to the current bit as the start index.
 *		maxMsk, the new bit mask is the next after the given
@@ -187,9 +184,9 @@ int		AlgBitNextSet(unsigned long msk, int idC)
 }
 
 /*!
-* \return				Index of the single bit that
-*					should be set for an unsigned
-*					integer that's >= the given int.
+* \return	Index of the single bit that should be set for an unsigned
+*		integer that's >= the given int.
+* \ingroup	AlgBits
 * \brief	Computes the next integer that is >= the given integer
 *		and has only a single bit set.
 * \param	dstP2I			Destination ptr for integer
@@ -213,7 +210,3 @@ int		AlgBitNextPowerOfTwo(unsigned int *dstP2I, unsigned int gI)
   }
   return(pI);
 }
-
-/*!
-* @}
-*/

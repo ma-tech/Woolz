@@ -13,21 +13,18 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions for convolving data arrays.
+* \ingroup     AlgConvolve
 * \todo         -
 * \bug          None known.
 */
 
-/*!
-* \ingroup      Alg
-* \defgroup     AlgConvolve
-* @{
-*/
 
 #include <Alg.h>
 #include <float.h>
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgConvolve
 * \brief	Convolves 1D kernel and data arrays, cnv = krn * data.
 *		The return convolution array must not be aliased to
 *		either the kernel or data arrays.
@@ -199,7 +196,3 @@ int		main(int argc, char *argv[])
   errCode = AlgConvolve(25, cnv, 5, krn, 25, dat, pad);
 }
 #endif /* ALGCONVOLVE_TEST0 */
-
-/*!
-* @}
-*/

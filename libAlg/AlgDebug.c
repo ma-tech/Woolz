@@ -13,14 +13,9 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides debug output.
+* \ingroup	AlgDebug
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgDebug
-* @{
 */
 
 #include <Alg.h>
@@ -33,8 +28,8 @@ void		*algDbgData = NULL;
 AlgDbgFn	algDbgOutFn = AlgDbgWrite;
 
 /*!
-* \return				Non zero if fails to output
-*					given message.
+* \return	Non zero if fails to output given message.
+* \ingroup	AlgDebug
 * \brief	Writes out the given debug message to the debug file.
 * \note		Uses global void *algDbgData to hold debug output file.
 * \param	fmt:			Format for printing message.

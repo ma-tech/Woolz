@@ -1,0 +1,22 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlgGamma.dox
+* \author       Bill Hill
+* \date         March 2003
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Alg gamma function algorithms.
+* \ingroup	Alg
+* \defgroup	AlgGamma
+* \todo         -
+* \bug          None known.
+*/
+

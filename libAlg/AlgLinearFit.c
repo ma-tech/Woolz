@@ -14,14 +14,9 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions for fitting linear models to data,
 *		ie linear regression.
+* \ingroup      AlgFit
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgLinearFit
-* @{
 */
 
 #include <Alg.h>
@@ -29,7 +24,8 @@
 #include <float.h>
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgFit
 * \brief	Computes the least squares best fit straight line
 *		(y = a + bx) through the given data, ie linear
 *		regression.
@@ -142,7 +138,8 @@ AlgError	AlgLinearFit1D(int datSz, double *datXA, double *datYA,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgFit
 * \brief	Computes the least squares best fit straight line
 *		(y = a + bx) through the given data, ie linear
 *		regression.
@@ -381,7 +378,3 @@ int		main(int argc, char **argv)
 }
 
 #endif /* ALG_LINEARFIT_TEST */
-
-/*!
-* @}
-*/

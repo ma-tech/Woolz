@@ -16,8 +16,7 @@
 *		real symmetric tridiagonal matrix using implicit shifts.
 * \ingroup      AlgMatrix
 * \bug          None known.
-* \note
-* Maintenance log with most recent changes at top of list.
+* \todo
 */
 
 #include <stdio.h>
@@ -26,7 +25,7 @@
 #include <Alg.h>
 
 /*!
-* \return       	                  Error code.
+* \return       Error code.
 * \ingroup      AlgMatrix
 * \brief        Determines the eigenvalues and eigenvectors of a
 *		real symmetric tridiagonal matrix using the QL

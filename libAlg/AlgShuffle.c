@@ -13,14 +13,9 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Functions for randomly permuting data.
+* \ingroup	AlgRand
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgShuffle
-* @{
 */
 
 #include <stdio.h>
@@ -35,7 +30,8 @@
 #endif /* CYGWIN || DARWIN */
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgRand
 * \brief	Inserts indicies into the given array which can be used
 *		to shuffle data.
 *		The permuted indicies are in the range [0-(nShuffle-1)]
@@ -285,7 +281,3 @@ int		main(int argc, char *argv[])
   return(!ok);
 }
 #endif /* ALG_SHUFFLE_TEST == 2 */
-
-/*!
-* @}
-*/

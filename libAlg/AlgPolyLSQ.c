@@ -14,20 +14,16 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Provides functions for fitting a polynomial using
 *		least squares.
+* \ingroup      AlgFit
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgPolyLSQ
-* @{
 */
 
 #include <Alg.h>
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup      AlgFit
 * \brief	Attempts to fit a polynomial to the given data using
 *		a least squares approach.
 * \param	xVec			Data vector x of size vecSz.
@@ -146,7 +142,3 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
 	   (int )errCode));
   return(errCode);
 }
-
-/*!
-* @}
-*/

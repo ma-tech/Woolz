@@ -13,14 +13,9 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Functions for computing gamma and incomplete gamma functions.
+* \ingroup     AlgGamma
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgGamma
-* @{
 */
 
 #include <Alg.h>
@@ -31,7 +26,8 @@ static double	AlgGammaCF(double a, double x, AlgError *dstErr);
 static double	AlgGammaS(double a, double x, AlgError *dstErr);
 
 /*!
-* \return				Log of gamma function value.
+* \return	Log of gamma function value.
+* \ingroup	AlgGamma
 * \brief	Computes the log gamma function log(Gamma(x)), ie
 *		exp(AlgGammaLog(n + 1)) = n!.
 *		This function is based on the function gammln():
@@ -80,7 +76,8 @@ double		AlgGammaLog(double x, AlgError *dstErr)
 }
 
 /*!
-* \return				Incomplete gamma function value.
+* \return	Incomplete gamma function value.
+* \ingroup     AlgGamma
 * \brief	Computes the incomplete gamma function P(a,x), which
 *		has the limiting values P(a,0) = 0, P(a, oo) = 1..
 *		This function is based on the function gammp():
@@ -120,7 +117,8 @@ double		AlgGammaP(double a, double x, AlgError *dstErr)
 }
 
 /*!
-* \return				Incomplete gamma function value.
+* \return	Incomplete gamma function value.
+* \ingroup     AlgGamma
 * \brief	Computes the incomplete gamma function P(a,x), using
 *		a series method.
 *		This function is based on the function gser():
@@ -180,7 +178,8 @@ double		AlgGammaS(double a, double x, AlgError *dstErr)
 }
 
 /*!
-* \return				Incomplete gamma function value.
+* \return	Incomplete gamma function value.
+* \ingroup     AlgGamma
 * \brief	Computes the incomplete gamma function P(a,x) using
 *		continued fractions.
 *		This function is based on the function gcf():
@@ -317,7 +316,3 @@ int		main(int argc, char **argv)
 }
 
 #endif /* ALG_GAMMA_TEST */
-
-/*!
-* @}
-*/

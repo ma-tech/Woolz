@@ -24,7 +24,7 @@
 #include <float.h>
 
 /*!
-* \return				Error code.
+* \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x by Gaussian
 *		elimination with partial pivoting. Matrix A is the

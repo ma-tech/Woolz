@@ -16,8 +16,7 @@
 *		real symmetric matrix.
 * \ingroup      AlgMatrix
 * \bug          None known.
-* \note
-* Maintenance log with most recent changes at top of list.
+* \todo
 */
 
 #include <stdio.h>
@@ -33,7 +32,7 @@ static void			AlgMatrixRSEigenSort(
 				  int reqEV);
 
 /*!
-* \return       	                  Error code.
+* \return       Error code.
 * \ingroup      AlgMatrix
 * \brief        Determines the eigenvalues and eigenvectors of a
 *		real symmetric matrix by calling AlgMatrixRSTDiag()
@@ -86,7 +85,7 @@ AlgError	AlgMatrixRSEigen(double **aM, int aSz, double *vM, int reqEV)
 }
 
 /*!
-* \return       	                  <void>
+* \return       <void>
 * \ingroup      AlgMatrix
 * \brief	Sorts the eigenvectors and eigenvalues into descending
 * 		eigenvalue order. Because AlgMatrixRSTDiag() runs in

@@ -13,6 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Frequency domain cross correlation functions.
+* \defgroup     AlgCorr
 * \todo         -
 * \bug          None known.
 */
@@ -20,14 +21,10 @@
 #include <math.h>
 #include <float.h>
 
-/*!
-* \ingroup      Alg
-* \defgroup     AlgCrossCorr
-* @{
-*/
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	AlgCorr
 * \brief	Cross correlates the given 2D double arrays leaving
 *		the result in the first of the two arrays.
 *		The cross correlation data are un-normalized.
@@ -141,6 +138,7 @@ AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
 
 /*!
 * \return	<void>
+* \ingroup	AlgCorr
 * \brief	Find the maximum correlation value in the given two
 *		dimensional array. Because the correlation data are 
 *		stored in wrap-around order and the maximum is known
@@ -362,7 +360,3 @@ int		main(int argc, char *argv[])
   return(0);
 }
 #endif /* ALG_CROSSCORR_TEST */
-
-/*!
-* @}
-*/

@@ -14,6 +14,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief	Basic vector arithmatic
+* \ingroup      AlgVector
 * \todo         -
 * \bug          None known.
 */
@@ -25,12 +26,6 @@
 #include <Alg.h>
 
 /*!
-* \ingroup      Alg
-* \defgroup     AlgVector
-* @{
-*/
-
-/*!
 * \return	Norm of the vector.
 * \ingroup	AlgVector
 * \brief	Computes the norm of the given vector \f$\mathbf{a}\f$
@@ -38,10 +33,12 @@
 *		\f[
 		  \|\mathbf{a}\| = \sqrt{\mathbf{a} \cdot \mathbf{a}}.
 		\f]
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
 * \param	aV			Given vector \f$\mathbf{a}\f$,
 * \param	n			Number of elements in \f$\mathbf{a}\f$.
 */
-double		AlgVectorNorm(double *aV, int n)
+double		AlgVectorNorm(double *aV, size_t n)
 {
   double 	norm;
 
@@ -61,14 +58,16 @@ double		AlgVectorNorm(double *aV, int n)
 *		\f[
 		  \mathbf{a} \cdot \mathbf{b} = \sum_{i = 0}^{n - 1}{a_i b_i}
 		\f]
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
 * \param	aV			Vector \f$\mathbf{a}\f$.
 * \param	bV			Vector \f$\mathbf{b}\f$.
 * \param	n			Number of elements in each of
 *					the vectors.
 */
-double		AlgVectorDot(double *aV, double *bV, int n)
+double		AlgVectorDot(double *aV, double *bV, size_t n)
 {
-  int		id0;
+  size_t	id0;
   double	dot = 0.0;
 
   for(id0 = 0; id0 < n; ++id0)
@@ -83,15 +82,17 @@ double		AlgVectorDot(double *aV, double *bV, int n)
 * \ingroup	AlgVector
 * \brief	Adds vector \f$\mathbf{b}\f$ to vector \f$\mathbf{c}\f$.
 *		Computes \f$a_i = b_i + c_i, \forall i \in [0 \ldots n - 1]\f$.
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
 * \param	aV			Vector \f$\mathbf{a}\f$.
 * \param	bV			Vector \f$\mathbf{b}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
 * \param	n			Number of elements in each of
 * 					the vectors.
 */
-void		AlgVectorAdd(double *aV, double *bV, double *cV, int n)
+void		AlgVectorAdd(double *aV, double *bV, double *cV, size_t n)
 {
-  int		id0;
+  size_t	id0;
 
   for(id0 = 0; id0 < n; ++id0)
   {
@@ -104,15 +105,17 @@ void		AlgVectorAdd(double *aV, double *bV, double *cV, int n)
 * \ingroup	AlgVector
 * \brief	Subtracts vector \f$\mathbf{c}\f$ from vector \f$\mathbf{b}\f$.
 *		Computes \f$a_i = b_i - c_i, \forall i \in [0 \ldots n - 1]\f$.
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
 * \param	aV			Vector \f$\mathbf{a}\f$.
 * \param	bV			Vector \f$\mathbf{b}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
 * \param	n			Number of elements in each of
 * 					the vectors.
 */
-void		AlgVectorSub(double *aV, double *bV, double *cV, int n)
+void		AlgVectorSub(double *aV, double *bV, double *cV, size_t n)
 {
-  int		id0;
+  size_t	id0;
 
   for(id0 = 0; id0 < n; ++id0)
   {
@@ -125,14 +128,16 @@ void		AlgVectorSub(double *aV, double *bV, double *cV, int n)
 * \ingroup	AlgVector
 * \brief	Copies one vector \f$\mathbf{b}\f$ to vector \f$\mathbf{a}\f$.
 *		\f$a_i = b_i, \forall i \in [0 \ldots n - 1]\f$.
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
 * \param	aV			Vector \f$\mathbf{a}\f$.
 * \param	bV			Vector \f$\mathbf{b}\f$.
 * \param	n			Number of elements in each of
 * 					the vectors.
 */
-void		AlgVectorCopy(double *aV, double *bV, int n)
+void		AlgVectorCopy(double *aV, double *bV, size_t n)
 {
-  int		id0;
+  size_t	id0;
 
   memcpy(aV, bV, sizeof(double) * n);
 }
@@ -142,6 +147,8 @@ void		AlgVectorCopy(double *aV, double *bV, int n)
 * \brief	Scales a vector \f$\mathbf{b}\f$ and then adds vector
 * 		\f$\mathbf{c}\f$.
 *		Computes \f$a_i = b_i s + c_i, \forall i \in [0\ldots n - 1]\f$.
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
 * \param	aV			Vector \f$\mathbf{a}\f$.
 * \param	bV			Vector \f$\mathbf{b}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
@@ -150,16 +157,12 @@ void		AlgVectorCopy(double *aV, double *bV, int n)
 *					the vectors.
 */
 void		AlgVectorScaleAdd(double *aV, double *bV, double *cV,
-				  double s, int n)
+				  double s, size_t n)
 {
-  int		id0;
+  size_t	id0;
 
   for(id0 = 0; id0 < n; ++id0)
   {
     *aV++ = (*bV++ * s) + *cV++;
   }
 }
-
-/*!
-* @}
-*/

@@ -42,14 +42,9 @@
 *		the number of concurrent threads available as a
 *		parameter, this can be 0 or 1 if multi-threading is not
 *		required.
+* \ingroup      AlgFourier
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \ingroup      Alg
-* \defgroup     AlgFourier
-* @{
 */
 
 #include <Alg.h>
@@ -140,28 +135,47 @@ struct _AlgFourArgs4
 typedef struct _AlgFourArgs4  AlgFourArgs4;
 #endif /* ALG_THREADS_USED */
 
-static void	AlgFourRepXY1D(double **real, double **imag,
-			       double *reBuf, double *imBuf,
-			       int numData, int stepData,
-			       int repX, int repY,
-			       AlgFourDirection dir, int cThr),
-		AlgFourRepXYReal1D(double **data,
-				   double *reBuf, double *imBuf,
-				   int numData, int stepData,
-				   int repX, int repY,
-				   AlgFourDirection dir, int cThr);
+static void			AlgFourRepXY1D(
+				  double **real,
+				  double **imag,
+				  double *reBuf,
+				  double *imBuf,
+				  int numData,
+				  int stepData,
+				  int repX,
+				  int repY,
+			          AlgFourDirection dir,
+				  int cThr);
+static void			AlgFourRepXYReal1D(
+				  double **data,
+				  double *reBuf,
+				  double *imBuf,
+				  int numData,
+				  int stepData,
+				 int repX,
+				 int repY,
+				 AlgFourDirection dir,
+				 int cThr);
 #ifdef ALG_THREADS_USED
-static void	*AlgFourThrHart1D(AlgFourArgs1 *args),
-		*AlgFourThrReal1D(AlgFourArgs1 *args),
-		*AlgFourThrRealInv1D(AlgFourArgs1 *args),
-		*AlgFourThr1D(AlgFourArgs2 *args),
-		*AlgFourThrInv1D(AlgFourArgs2 *args),
-		*AlgFourThrRepXYReal1D(AlgFourArgs3 *args),
-		*AlgFourThrRepXY1D(AlgFourArgs4 *args);
+static void			*AlgFourThrHart1D(
+				  AlgFourArgs1 *args);
+static void			*AlgFourThrReal1D(
+				  AlgFourArgs1 *args);
+static void			*AlgFourThrRealInv1D(
+				  AlgFourArgs1 *args);
+static void			*AlgFourThr1D(
+				  AlgFourArgs2 *args);
+static void			*AlgFourThrInv1D(
+				  AlgFourArgs2 *args);
+static void			*AlgFourThrRepXYReal1D(
+				  AlgFourArgs3 *args);
+static void			*AlgFourThrRepXY1D(
+				  AlgFourArgs4 *args);
 #endif /* ALG_THREADS_USED */
 
 /*!
 * \return	<void>
+* \ingroup      AlgFourier
 * \brief	Computes the Hartley transform of the given one
 *		dimensional data, and does it in place.
 * \param	data		Given data.
@@ -683,7 +697,8 @@ void		AlgFourHart1D(double *data, int num, int step, int cThr)
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return	Always NULL.
+* \ingroup      AlgFourier
 * \brief	Simple wrapper for AlgFourHart1D(), used for thread
 *		creation.
 * \param	args			Parameter list.
@@ -783,7 +798,7 @@ void		AlgFour1D(double *real, double *imag, int num, int step,
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return	Always NULL.
 * \brief	Simple wrapper for AlgFour1D(), used for thread
 *		creation.
 * \param	args			Parameter list.
@@ -884,7 +899,7 @@ void		AlgFourInv1D(double *real, double *imag, int num, int step,
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return	Always NULL.
 * \brief	Simple wrapper for AlgFourInv1D(), used for thread
 *		creation.
 * \param	args			Parameter list.
@@ -1133,7 +1148,7 @@ static void	AlgFourRepXY1D(double **real, double **imag,
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return	Always NULL.
 * \brief	Simple wrapper for AlgFourRepXY1D(), used for thread
 *		creation.
 * \param	args			Parameter list.
@@ -1202,7 +1217,7 @@ void		AlgFourReal1D(double *real, int num, int step, int cThr)
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return       Always NULL.
 * \brief	Simple wrapper for AlgFourReal1D(), used for thread
 *		creation.
 * \param	args			Parameter list.
@@ -1269,7 +1284,7 @@ void		AlgFourRealInv1D(double *real, int num, int step, int cThr)
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return	Always NULL.
 * \brief	Simple wrapper for AlgFourRealInv1D(), used for thread
 *		creation.
 * \param	args			Parameter list.
@@ -1559,7 +1574,7 @@ static void	AlgFourRepXYReal1D(double **data, double *reBuf, double *imBuf,
 
 #ifdef ALG_THREADS_USED
 /*!
-* \return				Always NULL.
+* \return	Always NULL.
 * \brief	Simple wrapper for AlgFourRepXYReal1D(), used for
 *		thread creation.
 * \param	args			Parameter list.
@@ -1717,8 +1732,3 @@ void		AlgFourRealInv2D(double **real,double *reBuf, double *imBuf,
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFourRealInv2D FX\n"));
 }
-
-/*!
-* @}
-*/
-

@@ -43,7 +43,7 @@ static void			AlgMatrixCGDebug(
 #endif /* ALG_MATRIXCG_DEBUG */
 
 /*!
-* \return
+* \return	Error code.
 * \ingroup	AlgMatrix
 * \brief	Conjugate Gradient iterative method with preconditioning
 *		for the solution of linear systems with the form
@@ -80,8 +80,9 @@ static void			AlgMatrixCGDebug(
 
 */
 AlgError	AlgMatrixCGSolve(double **aM, double *xV, double *bV,
-				 double **wM, int n,
-		       void (*pFn)(void *, double **, double *, double *, int),
+				 double **wM, size_t n,
+		     		 void (*pFn)(void *, double **,
+				 	     double *, double *, size_t),
 				 void *pDat, double tol, int maxItr,
 				 double *dstTol, int *dstItr)
 {
