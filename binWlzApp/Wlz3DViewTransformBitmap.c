@@ -271,7 +271,8 @@ int main(int	argc,
   }
 
   /* read bitmap data and section if possible */
-  if( obj = Wlz3DViewTransformBitmap(bitData, width, height,
+  if( obj = Wlz3DViewTransformBitmap((width / 8) * height, bitData,
+  				     width, height,
 				     xOffset, yOffset,
 				     fixed.vtX, fixed.vtY, fixed.vtZ,
 				     theta, phi, dist, &errNum) ){
