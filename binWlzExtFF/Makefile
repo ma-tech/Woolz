@@ -25,13 +25,15 @@ ARCHIVE			=
 EXECUTABLES		= \
 			WlzExtFFContourObj \
 			WlzExtFFConvert \
-			WlzExtFFWlzToXYZ
+			WlzExtFFWlzToXYZ \
+			WlzTiff2Wlz
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			WlzExtFFContourObj.c \
 			WlzExtFFConvert.c \
-			WlzExtFFWlzToXYZ.c
+			WlzExtFFWlzToXYZ.c \
+			WlzTiff2Wlz.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -58,17 +60,19 @@ DEPENDDIRS		= \
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
 			  $(DEPENDDIRS) \
-			  $(HGU_INC_DIR)
+			  $(HGU_INC_DIR) \
+			  /opt/local/include
 
 # List of library search paths (modify as required).
 LIBDIRS			= \
 			  $(DEPENDDIRS) \
 			  $(HGU_LIB_DIR) \
+			  /opt/local/lib \
 			  $(SYSLIB)
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
-EXTRA_LIBS		= gen socket nsl m
+EXTRA_LIBS		= tiff gen socket nsl m
 else
 EXTRA_LIBS		= m
 endif

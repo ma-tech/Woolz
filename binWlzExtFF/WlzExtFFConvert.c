@@ -291,6 +291,7 @@ int             main(int argc, char **argv)
       "  Sunvision VFF               vff     .vff\n"
       "  Visualization Toolkit VTK   vtk     .vtk\n"
       "  IPLab                       ipl     .ipl\n"
+      "  Tiff                        tif     .tif\n"
       "  MRC HGU Woolz               wlz     .wlz\n",
       "Simple example:\n  ",
       *argv,
@@ -306,7 +307,9 @@ int             main(int argc, char **argv)
       "By default objects are read from the standard input and written to\n"
       "the standard output.\n"
       "File formats which use more than one file can not be read or written\n"
-      "using the standard input or standard output.\n");
+      "using the standard input or standard output.\n"
+      "The Tiff file format must be read/written from/to a file i.e. not\n"
+      "from/to stdin or stdout\n");
     }
   }
   return(!ok);
