@@ -82,8 +82,7 @@ int             main(int argc, char **argv)
 	break;
     }
   }
-  if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-     (outObjFileExtStr && (outObjFileBodyStr == NULL)))
+  if((inObjFileStr == NULL) || (*inObjFileStr == '\0'))
   {
     ok = 0;
     usage = 1;
