@@ -91,6 +91,24 @@ static WlzErrorNum 		WlzRegICPCheckVerticies(
 				  WlzVertexType *vType);
 static WlzErrorNum 		WlzRegICPBuildTree(
 				  WlzRegICPWSp *wSp);
+static WlzAffineTransform 	*WlzRegICPTreeAndVerticiesSimple(
+				  AlcKDTTree *tree,
+				  WlzTransformType trType,
+				  WlzVertexType vType,
+				  int nT,
+				  WlzVertexP tVx,
+				  WlzVertexP tNr,
+				  int nS,
+				  int *sIdx,
+				  WlzVertexP sVx,
+				  WlzVertexP sNr,
+				  WlzVertexP tVxBuf,
+				  WlzVertexP sVxBuf,
+				  double *wgtBuf,
+				  int maxItr,
+				  WlzAffineTransform *initTr,
+				  int *dstConv,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \ingroup	WlzTransform
@@ -266,9 +284,9 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return				Affine transform which brings
 *					the two objects into register.
+* \ingroup	WlzTransform
 * \brief	Registers the two given objects using the iterative
 * 		closest point algorithm. An affine transform is
 *		computed, which when applied to the source object
@@ -368,8 +386,8 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return				Woolz error code.
+* \ingroup	WlzTransform
 * \brief	Checks the two sets of verticies and promotes the
 *		vertex type to double (2 or 3D) if not already double
 *		verticies.
@@ -508,10 +526,10 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return				Affine transform which brings
 *					the two sets of verticies into
 *					register.
+* \ingroup	WlzTransform
 * \brief	Registers the two given sets of verticies using the
 *		iterative closest point algorithm. An affine transform
 *		is computed, which when applied to the source verticies
@@ -716,8 +734,8 @@ WlzAffineTransform	*WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return				Woolz error code
+* \ingroup	WlzTransform
 * \brief	Allocates and populates a k-D tree from the given verticies.
 * 		The verticies are either WlzDVertex2 orWlzDVertex3
 * \param	wSp			ICP registration workspace.
@@ -733,9 +751,9 @@ static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return				Nonzero if the iteration has
 * 					converged.
+* \ingroup	WlzTransform
 * \brief	The iterative loop of the ICP, which iterates to find the
 * 		registration transform.
 * \param	wSp			ICP registration workspace.
@@ -771,8 +789,8 @@ static int	WlzRegICPItr(WlzRegICPWSp *wSp,
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return       <void>
+* \ingroup	WlzTransform
 * \brief        Transforms the source verticies and normals using the
 *               current affine transform.
 * \param        wSp                     ICP registration workspace.
@@ -816,8 +834,8 @@ static void     WlzRegICPTrans(WlzRegICPWSp *wSp)
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return	<void>
+* \ingroup	WlzTransform
 * \brief	Finds nearest neighbour matches in the target tree for
 *		the source verticies, sets the nearest neighbour
 *		indicies and permutes the NN ordered target verticies in
@@ -863,8 +881,8 @@ static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
 }
 
 /*!
-* \ingroup	WlzTransform
 * \return	<void>
+* \ingroup	WlzTransform
 * \brief	Weights the matched verticies by combining weightings
 *		for the vertex position and normal matches.
 *		  
@@ -935,8 +953,8 @@ static void	WlzRegICPWeight(WlzRegICPWSp *wSp)
 #endif /* WLZ_REGICP_SAMEWEIGHT */
 
 /*!
-* \ingroup	WlzTransform
 * \return		 		Woolz error code.
+* \ingroup	WlzTransform
 * \brief	Computes an affine transform from matched verticies
 *		and the weights.
 * \param	wSp			ICP registration workspace.
@@ -1079,7 +1097,299 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
   return(errNum);
 }
 
-/* #define WLZ_REGICP_TEST */
+/*!
+* \return				Affine transform found.
+* \ingroup	WlzTransform
+* \brief	Registers the given verticies using the already built
+*		kD-tree and the given buffers.
+*		This function will attempt to find a rigid body registration
+*		before attempting a general affine registration.
+* \param	tree			Given kD-tree populated by the
+*					target verticies such that the
+*					nodes of the tree have the same
+*					indicies as the given target verticies
+*					and normals.
+* \param	trType			The required type of transform,
+*					must be either WLZ_TRANSFORM_2D_REG,
+*					or WLZ_TRANSFORM_2D_AFFINE.
+* \param	nT			Number of target verticies.
+* \param	tVx			The target verticies.
+* \param	tNr			The target normals.
+* \param        nS			Number of source verticies.
+*		sIdx			Indicies of the source
+*					vertices/normals.
+* \param        sVx 			The source verticies.
+* \param	sNr			The source normals.
+* \param	tVxBuf			A buffer with room for at least
+*					nS verticies.
+*		sVxBuf			A buffer with room for at least
+*					nS verticies.
+* \param	wgtBuf			A buffer with room for at least
+*					nS doubles.
+* \param	maxItr			Maximum number of iterations.
+* \param	initTr			Initial affine transform.
+* \param	dstConv			Destination pointer for a
+*					convergence flag which is set to
+*					a non zero value if the registration
+*					converges.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+WlzAffineTransform *WlzRegICPTreeAndVerticies(AlcKDTTree *tree,
+				WlzTransformType trType, WlzVertexType vType,
+				int nT, WlzVertexP tVx, WlzVertexP tNr,
+				int nS, int *sIdx,
+				WlzVertexP sVx, WlzVertexP sNr,
+				WlzVertexP tVxBuf, WlzVertexP sVxBuf,
+				double *wgtBuf, int maxItr,
+				WlzAffineTransform *initTr, int *dstConv,
+				WlzErrorNum *dstErr)
+{
+  int		conv = 0;
+  WlzTransformType trType0;
+  WlzAffineTransform *newTr0,
+  		*newTr1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(trType)
+  {
+    case WLZ_TRANSFORM_2D_REG: /* FALLTHROUGH */
+    case WLZ_TRANSFORM_2D_AFFINE:
+      trType0 = WLZ_TRANSFORM_2D_REG;
+      break;
+    case WLZ_TRANSFORM_3D_REG: /* FALLTHROUGH */
+    case WLZ_TRANSFORM_3D_AFFINE:
+      trType0 = WLZ_TRANSFORM_3D_REG;
+      break;
+    default:
+      errNum = WLZ_ERR_TRANSFORM_TYPE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    newTr0 = WlzRegICPTreeAndVerticiesSimple(tree, trType0, vType, nT, tVx, tNr,
+					 nS, sIdx, sVx, sNr,
+					 tVxBuf, sVxBuf, wgtBuf,
+					 maxItr, initTr,
+					 &conv, &errNum);
+  }
+  if((errNum == WLZ_ERR_NONE) && conv)
+  {
+    if(trType0 == trType)
+    {
+      newTr1 = newTr0;
+    }
+    else
+    {
+      newTr1 = WlzRegICPTreeAndVerticiesSimple(tree, trType, vType,
+					   nT, tVx, tNr,
+					   nS, sIdx, sVx, sNr,
+					   tVxBuf, sVxBuf, wgtBuf,
+					   maxItr, newTr0,
+					   &conv, &errNum);
+      WlzFreeAffineTransform(newTr0);
+    }
+  }
+  if(dstConv)
+  {
+    *dstConv = conv;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(newTr1);
+}
+
+/*!
+* \return				Affine transform found.
+* \ingroup	WlzTransform
+* \brief	Registers the given verticies using the already built
+*		kD-tree and the given buffers. Unlike
+*		WlzRegICPTreeAndVerticiesSimple() this function does not
+*		attempt a registration transform before an affine
+*		transform.
+* \param	tree			Given kD-tree populated by the
+*					target verticies such that the
+*					nodes of the tree have the same
+*					indicies as the given target verticies
+*					and normals.
+* \param	trType			The required type of transform,
+*					must be either WLZ_TRANSFORM_2D_REG,
+*					or WLZ_TRANSFORM_2D_AFFINE.
+* \param	nT			Number of target verticies.
+* \param	tVx			The target verticies.
+* \param	tNr			The target normals.
+* \param        nS			Number of source verticies.
+*		sIdx			Indicies of the source
+*					vertices/normals.
+* \param        sVx 			The source verticies.
+* \param	sNr			The source normals.
+* \param	tVxBuf			A buffer with room for at least
+*					nS verticies.
+*		sVxBuf			A buffer with room for at least
+*					nS verticies.
+* \param	wgtBuf			A buffer with room for at least
+*					nS doubles.
+* \param	maxItr			Maximum number of iterations.
+* \param	initTr			Initial affine transform.
+* \param	dstConv			Destination pointer for a
+*					convergence flag which is set to
+*					a non zero value if the registration
+*					converges.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+static WlzAffineTransform *WlzRegICPTreeAndVerticiesSimple(AlcKDTTree *tree,
+				WlzTransformType trType, WlzVertexType vType,
+				int nT, WlzVertexP tVx, WlzVertexP tNr,
+				int nS, int *sIdx,
+				WlzVertexP sVx, WlzVertexP sNr,
+				WlzVertexP tVxBuf, WlzVertexP sVxBuf,
+				double *wgtBuf, int maxItr,
+				WlzAffineTransform *initTr, int *dstConv,
+				WlzErrorNum *dstErr)
+{
+  int		idS,
+  		idM,
+		idV,
+		itr = 0,
+		conv = 0;
+  AlcKDTNode	*tNode;
+  WlzAffineTransform *tmpTr,
+  		*curTr = NULL,
+  		*newTr = NULL;
+  WlzVertexP	nullP;
+  WlzVertex	sV,
+  		tV,
+		sN,
+		tN;
+  double	tD0,
+  		prvMaxDist,
+  		curMaxDist,
+		prvSumDist,
+		curSumDist,
+		dist,
+  		wNr,
+		wVx;
+  double	vxD[3];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const		kNr = 0.7,
+  		kVx = 0.3,
+		convThr = 0.001;
+ 
+  nullP.v = NULL;
+  curTr = (initTr == NULL)?
+  	  WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum):
+	  WlzAffineTransformCopy(initTr, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    curMaxDist = DBL_MAX;
+    curSumDist = 0.0;
+    do
+    {
+      /* Populate the buffers with verticies using nearest neighbours and
+       * computing the weights. */
+      prvMaxDist = curMaxDist;
+      prvSumDist = curSumDist;
+      curSumDist = 0.0;
+      curMaxDist = 0.0;
+      idS = idM = 0; 
+      for(idS = 0; idS < nS; ++idS)
+      {
+	idV = *(sIdx + idS);
+	if(vType == WLZ_VERTEX_D2)
+	{
+	  sV.d2 = WlzAffineTransformVertexD2(curTr, *(sVx.d2 + idV), NULL);
+	  sN.d2 = WlzAffineTransformNormalD2(curTr, *(sNr.d2 + idV), NULL);
+	  *(sVxBuf.d2 + idM) = sV.d2;
+	  vxD[0] = sV.d2.vtX;
+	  vxD[1] = sV.d2.vtY;
+	}
+	else /* vType == WLZ_VERTEX_D3 */
+	{
+	  sV.d3 = WlzAffineTransformVertexD3(curTr, *(sVx.d3 + idV), NULL);
+	  sN.d3 = WlzAffineTransformNormalD3(curTr, *(sNr.d3 + idV), NULL);
+	  *(sVxBuf.d3 + idM) = sV.d3;
+	  vxD[0] = sV.d3.vtX;
+	  vxD[1] = sV.d3.vtY;
+	  vxD[2] = sV.d3.vtZ;
+	}
+	if((tNode = AlcKDTGetNN(tree, vxD, DBL_MAX, &dist, NULL)) != NULL)
+	{
+	  curSumDist += dist;
+	  if(dist > curMaxDist)
+	  {
+	    curMaxDist = dist;
+	  }
+	  if(vType == WLZ_VERTEX_D2)
+	  {
+	    tV.d2 = *(tVx.d2 + tNode->idx);
+	    tN.d2 = *(tNr.d2 + tNode->idx);
+	    wNr = WLZ_VTX_2_DOT(sN.d2, tN.d2);
+	    *(tVxBuf.d2 + idM) = tV.d2;
+	  }
+	  else /* vType == WLZ_VERTEX_D3 */
+	  {
+	    tV.d3 = *(tVx.d3 + tNode->idx);
+	    tN.d3 = *(tNr.d3 + tNode->idx);
+	    wNr = WLZ_VTX_3_DOT(sN.d3, tN.d3);
+	    *(tVxBuf.d3 + idM) = tV.d3;
+	  }
+	  tD0 = prvMaxDist - dist;
+	  wVx = (tD0 > 0.0)? tD0 / prvMaxDist: 0.0;
+	  wVx = (1.0 - kVx) + (kVx * wVx);
+	  wNr = (1.0 - kNr) + (kNr * wNr * wNr);
+	  *(wgtBuf + idM) = wVx * wNr;
+	  ++idM;
+	}
+      }
+      conv = (curSumDist < 1.0) ||
+             (((prvSumDist - curSumDist) / prvSumDist) < convThr);
+      /* Compute the transform. */
+      switch(trType)
+      {
+	case WLZ_TRANSFORM_2D_REG:
+	case WLZ_TRANSFORM_3D_REG:
+	  newTr = WlzAffineTransformLSq2(vType, idM,
+					 wgtBuf, sVxBuf, tVxBuf,
+					 0, NULL, nullP, nullP,
+					 trType, &errNum);
+	  break;
+	case WLZ_TRANSFORM_2D_AFFINE:
+	case WLZ_TRANSFORM_3D_AFFINE:
+	  newTr = WlzAffineTransformLSqWgt(vType, idM,
+					   wgtBuf, sVxBuf, tVxBuf,
+					   trType, &errNum);
+	  break;
+	default:
+	  errNum = WLZ_ERR_TRANSFORM_TYPE;
+	  break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	tmpTr = WlzAffineTransformProduct(curTr, newTr, &errNum);
+	WlzFreeAffineTransform(curTr);
+	curTr = tmpTr;
+      }
+    } while((errNum == WLZ_ERR_NONE) && (itr++ < maxItr) && (conv == 0));
+  }
+  if(errNum == WLZ_ERR_ALG_SINGULAR)
+  {
+    errNum = WLZ_ERR_NONE;
+    conv = 0;
+  }
+  if(dstConv)
+  {
+    *dstConv = conv;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(curTr);
+}
+
 #ifdef WLZ_REGICP_TEST
 
 /* Test main() for WlzRegICPObjs(). */

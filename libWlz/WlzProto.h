@@ -221,24 +221,45 @@ extern WlzErrorNum Wlz3DViewGetMinvals(WlzThreeDViewStruct	*vs,
 				       double			*dstX,
 				       double			*dstY,
 				       double			*dstZ);
+extern void 			Wlz3DViewGetPlaneEqn(
+				  WlzThreeDViewStruct *view,
+				  double *dstA,
+				  double *dstB,
+				  double *dstC,
+				  double *dstD);
+extern int             		Wlz3DViewIntersectAABB3D(
+				  WlzThreeDViewStruct *view,
+                                  WlzDBox3 box);
+
+/************************************************************************
+* WlzGetSectionFromGMModel.c
+************************************************************************/
+extern WlzGMModel		*WlzGetSectionFromGMModel(
+				  WlzGMModel *gModel,
+				  WlzThreeDViewStruct *view,
+				  WlzErrorNum *dstErr);
+
 /************************************************************************
 * Wlz3DViewTransformObj.c						*
 ************************************************************************/
-extern WlzObject *Wlz3DViewTransformObj(WlzObject		*srcObj,
-					WlzThreeDViewStruct	*viewStr,
-					WlzErrorNum		*dstErr);
-extern WlzObject *Wlz3DViewTransformBitmap(unsigned char	*bitData,
-					   int		width,
-					   int 		height,
-					   int 		x_offset,
-					   int 		y_offset,
-					   double      	x,
-					   double      	y,
-					   double      	z,
-					   double      	theta,
-					   double      	phi,
-					   double      	distance,
-					   WlzErrorNum	*dstErr);
+extern WlzObject 		*Wlz3DViewTransformObj(
+				  WlzObject *srcObj,
+				  WlzThreeDViewStruct *viewStr,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*Wlz3DViewTransformBitmap(
+				  unsigned char *bitData,
+				  int width,
+				  int height,
+				  int x_offset,
+				  int y_offset,
+				  double x,
+				  double y,
+				  double z,
+				  double theta,
+				  double phi,
+				  double distance,
+				  WlzErrorNum *dstErr);
+
 /************************************************************************
 * WlzAffineTransform.c
 ************************************************************************/
@@ -378,6 +399,9 @@ extern WlzGMModel      		*WlzAffineTransformGMModel(
 				  WlzAffineTransform *tr,
 				  int newModFlg,
 				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzAffineTransformGMShell(
+				  WlzGMShell *shell,
+				  WlzAffineTransform *tr);
 #ifndef WLZ_EXT_BIND
 extern WlzErrorNum	     	WlzAffineTransformPrimGet(
 				  WlzAffineTransform *tr,
@@ -1267,6 +1291,12 @@ extern WlzErrorNum	WlzGMVertexSetG3D(
 extern WlzErrorNum	WlzGMVertexSetG2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMShellDndateG2D(
+			  WlzGMShell *shell,
+			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMShellDndateG3D(
+			  WlzGMShell *shell,
+			  WlzDVertex3 pos);
 extern WlzErrorNum	WlzGMShellComputeGBB(
 			  WlzGMShell *shell);
 extern WlzErrorNum	WlzGMVertexGetG3D(
@@ -1299,9 +1329,28 @@ extern WlzDVertex3	WlzGMVertexNormal3D(
 			  int *sVBufSz,
 			  WlzGMVertex ***sVBuf,
 			  WlzErrorNum *dstErr);
+extern WlzGMVertex 	*WlzGMModelLoopTMaxMinCurv2D(
+			  WlzGMLoopT *gLT,
+			  int minLen,
+			  int lnLen,
+			  WlzBinaryOperatorType mOrM,
+			  double *dstAlg);
 /* Model access and testing */
 extern WlzErrorNum 	WlzGMModelTypeValid(
 			WlzGMModelType type);
+extern int		WlzGMModelGetDimension(
+			  WlzGMModel *model,
+			  WlzErrorNum *dstErr);
+/* Topology validity checks (useful for debugging) */
+extern WlzErrorNum	WlzGMVerifyModel(
+			  WlzGMModel *model,
+			  WlzGMElemP *dstElmP);
+extern WlzErrorNum	WlzGMVerifyShell(
+			  WlzGMShell *shell,
+			  WlzGMElemP *dstElmP);
+extern WlzErrorNum	WlzGMVerifyLoopT(
+			  WlzGMLoopT *loopT,
+			  WlzGMElemP *dstElmP);
 /* Topology query */
 extern WlzGMEdge	**WlzGMModelFindNMEdges(
 			  WlzGMModel *model,
@@ -1433,6 +1482,29 @@ extern WlzDVertex3		WlzGeomTriangleNormal(
 				  WlzDVertex3 v0,
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2);
+extern int			WlzGeomPlaneAABBIntersect(
+				  double a,
+				  double b,
+				  double c,
+				  double d,
+				  WlzDBox3 box);
+extern int			WlzGeomPlaneLineIntersect(
+				  double a,
+				  double b,
+				  double c,
+				  double d,
+				  WlzDVertex3 p0,
+				  WlzDVertex3 p1,
+				  WlzDVertex3 *dstIsn);
+extern double   		WlzGeomAngleBetweenLines(
+				  int sizeArrayL,
+				  double *arrayL,
+				  int sizeArrayU,
+				  double *arrayU,
+				  int sizeArrayPos,
+				  WlzDVertex2 *arrayPos,
+				  int *dstConincident);
+
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -2226,6 +2298,24 @@ extern WlzAffineTransform	*WlzRegICPVerticies(
 				  int *dstItr,
 				  int maxItr,
 				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzRegICPTreeAndVerticies(
+				  AlcKDTTree *tree,
+				  WlzTransformType trType,
+				  WlzVertexType vType,
+				  int nT,
+				  WlzVertexP tVx,
+				  WlzVertexP tNr,
+				  int nS,
+				  int *sIdx,
+				  WlzVertexP sVx,
+				  WlzVertexP sNr,
+				  WlzVertexP tVxBuf,
+				  WlzVertexP sVxBuf,
+				  double *wgtBuf,
+				  int maxItr,
+				  WlzAffineTransform *initTr,
+				  int *dstConv,
+				  WlzErrorNum *dstErr); 
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************

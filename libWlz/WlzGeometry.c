@@ -1,22 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGeometry.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Provides geometry utility functions.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 30-01-01 bill Fix crazy octant calculation in WlzGeomCmpAngle().
-* 26-01-01 bill Fix bug in WlzGeomVtxSortRadial() and change it's
-*		parameters. Also change WlzGeomVtxSortRadialFn().
-* 08-01-01 bill	Add WlzGeomTriangleNormal().
-************************************************************************/
+/*!
+* \file         WlzGeometry.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup 	WlzGeometry
+* \brief	Geometric utility functions.
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
@@ -27,32 +28,38 @@ static int		WlzGeomVtxSortRadialFn(
 			  int idx0,
 			  int idx1);
 
-/************************************************************************
-* Function:	WlzGeomTriangleCircumcentre			
-* Returns:	int:			Zero if the circumcentre of the
-*					triangle lies at infinity,
-*					else non-zero.		
-* Purpose:	Computes the circumcentre of the given triangle.
-*		Given a triangle (a0, a1), (b0, b1), (c0, c1) then the
-*		circumcentre (p0, 1) is given by:		
-*		  p0 = (a0^2*b1 - a0^2*c1 - b1^2*a1 + c1^2*a1 +	
-*		        b0^2*c1	+ a1^2*b1 + c0^2*a1 - c1^2*b1 -	
-*		        c0^2*b1 - b0^2*a1 + b1^2*c1 - a1^2*c1) / D
-*		  p1 = (a0^2*c0 + a1^2*c0 + b0^2*a0 - b0^2*c0 +	
-*		        b1^2*a0 - b1^2*c0 - a0^2*b0 - a1^2*b0 -	
-*		        c0^2*a0 + c0^2b0 - c1^2*a0 + c1^2*b0) / D
+/*!
+* \return				Zero if the circumcentre of the
+*					triangle lies at infinity, else
+*					non-zero.
+* \ingroup	WlzGeometry
+* \brief	Computes the circumcentre of the given triangle.
+*
+*		Given a triangle \f$(a_0, a_1), (b_0, b_1), (c_0, c_1)\f$
+*		then the circumcentre \f$(p_0, p_1)\f$ is given by:		
+*		  \f[
+		  p0 = (a_0^2 b_1 - a_0^2 c_1 - b_1^2 a_1 + c_1^2 a_1 +	
+ 		        b_0^2 c_1	+ a_1^2 b_1 + c_0^2 a_1 - c_1^2 b_1 -	
+ 		        c_0^2 b_1 - b_0^2 a_1 + b_1^2 c_1 - a_1^2 c_1) / D
+*		  \f]
+*		  \f[
+ 		  p1 = (a_0^2 c_0 + a_1^2 c_0 + b_0^2 a_0 - b_0^2 c_0 +	
+ 		        b_1^2 a_0 - b_1^2 c_0 - a_0^2 b_0 - a_1^2 b_0 -	
+ 		        c_0^2 a_0 + c_0^2 b_0 - c_1^2 a_0 + c_1^2 b_0) / D
+*		  \f]
 *		Where:						
-*		  D = 2 * (a1*c0 + b1*a0 - b1*c0 - a1*b0 -	
-*			   c1*a0 + c1*b0)			
+*		  \f[
+ 		  D = 2 (a_1 c_0 + b_1 a_0 - b_1 c_0 - a_1 b_0 -	
+ 			 c_1 a_0 + c_1 b_0)			
+*		  \f]
 *		This is taken from J. O'Rourke: Computational Geometry
 *		in C, p201.					
-* Global refs:	-						
-* Parameters:	WlzDVertex2 *ccVx:	Destination ptr for the	
-*					circumcentre.		
-*		WlzDVertex2 vx0:	First vertex of triangle.
-*		WlzDVertex2 vx1:	Second vertex of triangle.
-*		WlzDVertex2 vx2:	Third vertex of triangle.
-************************************************************************/
+* \param	ccVx			Destination pointer for the
+*					circumcentre.
+* \param	vx0			First vertex of triangle.
+* \param	vx1			Second vertex of triangle.
+* \param	vx2			Third vertex of triangle.
+*/
 int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 					    WlzDVertex2 vx0,
 					    WlzDVertex2 vx1,
@@ -94,26 +101,24 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
   return(finite);
 }
 
-/************************************************************************
-* Function:	WlzGeomVxInTriangle				
-* Returns:	int:			Non-zero if vertex is inside
-*					the triangle.		
-* Purpose:	Test's to set if the given vertex lies within the given
-*		triangle using a barycentric coordinates test.	
-*		If a triangle has vertices p0, p1, p2, then any point
+/*!
+* \return				Non-zero if vertex is inside the
+* 					triangle.
+* \ingroup	WlzGeometry
+* \brief	Test's to set if the given vertex lies within the given
+*		triangle using a barycentric coordinates test.
+*
+*		If a triangle has vertices \f$p_0, p_1, p_2\f$, then any point
 *		in the plane containing the triangle can be represented
-*		by:						
-* 		  p = alpha*p0 + beta*p2 + gamma*p3		
-*		subject to the constraint:			
-*		  alpha + beta + gamma = 1			
-*		If p is inside the triangle at least one of alpha, beta
-*		and gamma is -ve.				
-* Global refs:	-						
-* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
-*		WlzDVertex2 vx1:	Second vertex of triangle.
-*		WlzDVertex2 vx2:	Third vertex of triangle.
-*		WlzDVertex2 vxP:	Given vertex.		
-************************************************************************/
+*		by: \f[p = \alpha*p_0 + \beta*p_2 + \gamma*p_3\f]
+*		subject to the constraint: \f[\alpha + \beta + \gamma = 1\f]
+*		If \f$p\f$ is inside the triangle at least one of 
+*		\f$alpha\f$, \f$beta\f$ and \f$gamma\f$ is -ve.
+* \param	vx0			First vertex of triangle.
+* \param	vx1			Second vertex of triangle.
+* \param	vx2			Third vertex of triangle.
+* \param	vxP			Given vertex.
+*/
 int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				     WlzDVertex2 vx2, WlzDVertex2 vxP)
 {
@@ -161,20 +166,21 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
   return(isInside);
 }
 
-/************************************************************************
-* Function:	WlzGeomTriangleSnArea2				
-* Returns:	double:			Twice the signed area of the
-*					given triangle.		
-* Purpose:	Computes twice the signed area of the given triangle.
+/*!
+* \return				Twice the signed area of the given
+* 					triangle.
+* \ingroup	WlzGeometry
+* \brief	Computes twice the signed area of the given triangle.
+*
+*		Computes twice the signed area of the given triangle.
 *		The determinant is NOT computed with:
-*		  (x0 - x1)(y1 - y2) - (y0 - y1)(x1 - x2)
-*		instead the factorized form is used because it is
-*		more robust numericaly.
-* Global refs:	-						
-* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
-*		WlzDVertex2 vx1:	Second vertex of triangle.
-*		WlzDVertex2 vx2:	Third vertex of triangle.
-************************************************************************/
+*		\f[(x_0 - x_1)(y_1 - y_2) - (y_0 - y_1)(x_1 - x_2)\f]
+*		instead the factorized form is used because it is more robust
+*		numericaly.
+* \param	vx0			First vertex of triangle.
+* \param	vx1			Second vertex of triangle.
+* \param	vx2			Third vertex of triangle.
+*/
 double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				       WlzDVertex2 vx2)
 {
@@ -186,17 +192,17 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
   return(area2);
 }
 
-/************************************************************************
-* Function:	WlzGeomInTriangleCircumcircle			
-* Returns:	int:			Non zero if there's a conflict.
-* Purpose:	Tests to see if the given vertex is inside the	
-*		circumcircle of the given triangle.		
-* Global refs:	-						
-* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
-*		WlzDVertex2 vx1:	Second vertex of triangle.
-*		WlzDVertex2 vx2:	Third vertex of triangle.
-*		WlzDVertex2 gVx:	Given vertex to test.	
-************************************************************************/
+/*!
+* \return				Non zero if the given vertex is inside
+* 					the circumcircle of the given triangle.
+* \ingroup      WlzGeometry
+* \brief	Tests to see if the given vertex is inside the circumcircle of
+* 		the given triangle.
+* \param	vx0			First vertex of triangle.
+* \param	vx1			Second vertex of triangle.
+* \param	vx2			Third vertex of triangle.
+* \param	gVx			Given vertex to test.
+*/
 int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 					      WlzDVertex2 vx2, WlzDVertex2 gVx)
 {
@@ -233,21 +239,21 @@ int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
   return(conflict);
 }
 
-/************************************************************************
-* Function:	WlzGeomLineSegmentsIntersect			
-* Returns:	int:			Non zero if line segments
-*					intersect.
-* Purpose:	Tests to see if the two given line segments intersect.
-*		This is taken from J. O'Rourke: Computational Geometry
-*		in C, p250.					
-* Global refs:	-						
-* Parameters:	WlzDVertex2 p0:		1st vertex of 1st line segment.
-*		WlzDVertex2 p1:		2nd vertex 1st line segment.
-*		WlzDVertex2 q0:		1st vertex of 2nd line segment.
-*		WlzDVertex2 q1:		2nd vertex of 2nd line segment.
-*		WlzDVertex2 *dstN	Destination ptr for intersection
+/*!
+* \return				Non zero if line segments intersect.
+* \ingroup	WlzGeometry
+* \brief	Tests to see if the two given line segments intersect.
+*
+*		Tests to see if the two given line segments intersect.
+*               This is taken from J. O'Rourke: Computational Geometry
+*               in C, p250.
+* \param	p0			1st vertex of 1st line segment.
+* \param	p1			2nd vertex 1st line segment.
+* \param	q0			1st vertex of 2nd line segment.
+* \param	q1			2nd vertex of 2nd line segment.
+* \param	dstN			Destination ptr for intersection
 *					vertex, may be NULL.
-************************************************************************/
+*/
 int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
 					     WlzDVertex2 q0, WlzDVertex2 q1,
 					     WlzDVertex2 *dstN)
@@ -279,18 +285,20 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
   return(intersect);
 }
 
-/************************************************************************
-* Function:	WlzGeomCmpAngle
-* Returns:	int:			Result of comparison: -ve, 0
-*					or +ve. Only the sign is
-*					meaningful.
-* Purpose:	Given two end connected 2D line segments: (p0, O) and
-*		(p1, O), compares the CCW angle of the segments,
-*		where O is the origin (0,0).
-* Global refs:	-
-* Parameters:	WlzDVertex2 p0:		1st segment endpoint vertex.
-*		WlzDVertex2 p1:		2nd segment endpoint vertex.
-************************************************************************/
+/*!
+* \return				Result of comparison: -ve, 0
+*                                       or +ve. Only the sign is
+*                                       meaningful.
+* \ingroup	WlzGeometry
+* \brief	Given two end connected 2D line segments this function
+*		compares the CCW angle of the segments.
+*
+*		Given two end connected 2D line segments: \f$(p_0, O)\f$ and
+*               \f$(p_1, O)\f$, compares the CCW angle of the segments,
+*               where \f$O\f$ is the origin \f$(0, 0)\f$.
+* \param	p0			1st segment endpoint vertex.
+* \param	p1			2nd segment endpoint vertex.
+*/
 int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
 {
   int		i0,
@@ -409,17 +417,16 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
   return(cmp);
 }
 
-/************************************************************************
-* Function:	WlzGeomVtxEqual2D
-* Returns:	int:			1 if node positions are equal,
-*					else 0.
-* Purpose:	Checks to see if two verticies are the same
-*		within some tollerance.
-* Global refs:	-
-* Parameters:	WlzDVertex2 pos0:	First node position.
-*		WlzDVertex2 pos1:	Second node position.
-*		double tolSq:		Square of tollerance value.
-************************************************************************/
+/*!
+* \return				1 if node positions are equal,
+*                                       else 0.
+* \ingroup	WlzGeometry
+* \brief	Checks to see if two verticies are the same
+*               within some tollerance.
+* \param	pos0			First node position.
+* \param	pos1			Second node position.
+* \param	tolSq			Square of tollerance value.
+*/
 int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
 				  double tolSq)
 {
@@ -431,43 +438,45 @@ int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
   return(equal);
 }
 
-/************************************************************************
-* Function:	WlzGeomVtxSortRadialFn
-* Returns:	int:			Result of comparison.
-* Purpose:	Simple wrapper for WlzGeomCmpAngle().
-* Global refs:	-
-* Parameters:	void *p0:		Ptr to verticies.
-*		int *idxP:		Ptr to indicies of verticies.
-*		int idx0:		Index to index of first vertex.
-*		int idx1:  		Index to index of second vertex.
-************************************************************************/
+/*!
+* \return				Result of comparison.
+* \ingroup	WlzGeometry
+* \brief	Simple wrapper for WlzGeomCmpAngle().
+* \param	p0			Ptr to verticies.
+* \param	idxP			Ptr to indicies of verticies.
+* \param	idx0			Index to index of first vertex.
+* \param	idx1			Index to index of second vertex.
+*/
 static int	WlzGeomVtxSortRadialFn(void *p0, int *idxP, int idx0, int idx1)
 {
   return(WlzGeomCmpAngle(*((WlzDVertex2 *)p0 + *(idxP + idx0)),
   			 *((WlzDVertex2 *)p0 + *(idxP + idx1))));
 }
 
-/************************************************************************
-* Function:	WlzGeomVtxSortRadial
-* Returns:	void
-* Purpose:	Sorts the given 3D verticies, which lie in a plane
-*		perpendicular to the radial vector, in order of their
-*		angle the radial vector.
-*		No checks are made of the given parameters validity,
-*		it's assumed that:
-*		  (nV > 0) &&
-*		  (vP != NULL) && (wP != NULL) && (iP != NULL)
-*		  (|rV| > 0) && (rV.(uV = *vP) == 0)
-*		Note that it is the indicies that are sorted NOT the
-*		verticies themselves.
-* Global refs:	-
-* Parameters:	int nV:			Number of 3D verticies.
-*		WlzDVertex3 *vP:	The 3D verticies.
-*		int *idxBuf:		Buffer of nV indicies used
-*					for sorting the verticies.
-*		WlzDVertex2 *wP:	Workspace with nV 2D verticies.
-*		WlzDVertex3 rV:		The radial vector.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzGeometry
+* \brief	Sorts the given 3D verticies, which lie in a plane
+*               perpendicular to the radial vector, in order of their
+*               angle the radial vector.
+*
+*		Sorts the given 3D verticies, which lie in a plane
+*               perpendicular to the radial vector, in order of their
+*               angle the radial vector.
+*               No checks are made of the given parameters validity,
+*               it's assumed that:
+*                 (nV > 0) &&
+*                 (vP != NULL) && (wP != NULL) && (iP != NULL)
+*                 (|rV| > 0) && (rV.(uV = *vP) == 0)
+*               Note that it is the indicies that are sorted NOT the
+*               verticies themselves.
+* \param	nV			Number of 3D verticies.
+* \param	vP			The 3D verticies.
+* \param	idxBuf			Buffer of nV indicies used
+*                                       for sorting the verticies.
+* \param	wP			Workspace with nV 2D verticies.
+* \param	rV			The radial vector.
+*/
 void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
 				     int *idxBuf, WlzDVertex2 *wP,
 				     WlzDVertex3 rV)
@@ -499,24 +508,15 @@ void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
   (void )AlgHeapSortIdx(wP, idxBuf, nV, WlzGeomVtxSortRadialFn);
 }
 
-/************************************************************************
-* Function:	WlzGeomTriangleNormal
-* Returns:	WlzDVertex3:		Normal vector.
-* Purpose:	Computes the unit normal vector perpendicular to the
-*		triangle v0, v1, v2.
-*
-*                            v2 @  ^ nrm    
-*                              / \/        
-*                             /  /\       
-*                            /  /  \     
-*                           /       \   
-*                       v0 @---------@ v1
-*                                       
-* Global refs:	-
-* Parameters:	WlzDVertex3 v0:		First vertex of triangle.
-*		WlzDVertex3 v1:		Second vertex of triangle.
-*		WlzDVertex3 v2:		Third vertex of triangle.
-************************************************************************/
+/*!
+* \return
+* \ingroup	WlzGeometry
+* \brief	Computes the unit normal vector perpendicular to the
+*               triangle \f$v_0, v_1, v_2\f$.
+* \param	v0			First vertex of triangle.
+* \param	v1			Second vertex of triangle.
+* \param	v2			Third vertex of triangle.
+*/
 WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
 				      WlzDVertex3 v2)
 {
@@ -539,3 +539,434 @@ WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
   }
   return(nrm);
 }
+
+/*!
+* \return
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the plane defined by the
+*		equation: \f$ax + by + cz + d = 0\f$ and the given axis
+*		aligned bounding box.
+* \param	a			Plane X parameter.
+* \param	b			Plane Y parameter.
+* \param	c			Plane Z parameter.
+* \param	d			Other plane parameter.
+* \param	box			Axis aligned bounding box.
+*/
+int		WlzGeomPlaneAABBIntersect(double a, double b,
+					  double c, double d,
+					  WlzDBox3 box)
+{
+
+  int           idI,
+                maxP,
+                intersect = 0;
+  double        iVal;
+  double        aP[3];
+  WlzDVertex3   bV[4];
+
+  /* Check for approximate direction of the plane. */
+  aP[0] = fabs(a); aP[1] = fabs(b); aP[2] = fabs(c);
+  if(aP[0] > aP[1])
+  {
+    maxP = (aP[0] > aP[2])? 0: 2;
+  }
+  else
+  {
+    maxP = (aP[1] > aP[2])? 1: 2;
+  }
+  if(aP[maxP] > DBL_EPSILON)
+  {
+    /* Get the verticies of the bounding box and check for an intersection
+     * between four edges (not parallel to the plane) and the plane. */
+    switch(maxP)
+    {
+      case 0:
+	idI = 0;
+        bV[0].vtX = -(box.xMin * a);     /* -ve implies inverted comparison. */
+        bV[1].vtX = -(box.xMax * a);
+        bV[0].vtY = bV[3].vtY = box.yMin;
+        bV[0].vtZ = bV[1].vtZ = box.zMin;
+        bV[1].vtY = bV[2].vtY = box.yMax;
+        bV[2].vtZ = bV[3].vtZ = box.zMax;
+        do
+        {
+          iVal = (b * bV[idI].vtY) + (c * bV[idI].vtZ) + d;
+          intersect = (iVal <= bV[0].vtX) && (iVal >= bV[1].vtX);
+        }
+        while((intersect == 0) && (++idI < 4));
+        break;
+      case 1:
+	idI = 0;
+        bV[0].vtY = -(box.yMin * b);
+        bV[1].vtY = -(box.yMax * b);
+        bV[0].vtZ = bV[3].vtZ = box.zMin;
+        bV[0].vtX = bV[1].vtX = box.xMin;
+        bV[1].vtZ = bV[2].vtZ = box.zMax;
+        bV[2].vtX = bV[3].vtX = box.xMax;
+        do
+        {
+          iVal = (c * bV[idI].vtZ) + (a * bV[idI].vtX) + d;
+          intersect = (iVal <= bV[0].vtY) && (iVal >= bV[1].vtY);
+        }
+        while((intersect == 0) && (++idI < 4));
+        break;
+      case 2:
+	idI = 0;
+        bV[0].vtZ = -(box.zMin * c);
+        bV[1].vtZ = -(box.zMax * c);
+        bV[0].vtX = bV[3].vtX = box.xMin;
+        bV[0].vtY = bV[1].vtY = box.yMin;
+        bV[1].vtX = bV[2].vtX = box.xMax;
+        bV[2].vtY = bV[3].vtY = box.yMax;
+        do
+        {
+          iVal = (a * bV[idI].vtX) + (b * bV[idI].vtY) + d;
+          intersect = (iVal <= bV[0].vtZ) && (iVal >= bV[1].vtZ);
+        }
+        while((intersect == 0) && (++idI < 4));
+        break;
+    }
+  }
+  return(intersect);
+}
+
+/*!
+* \return				0 if the plane and line do not
+* 					intersect, 1 if the line segment
+*					intersects the plane at a single
+*					point or 2 if the line segment is
+*					wholly on the plane.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the plane defined by the
+*		equation: \f$ax + by + cz + d = 0\f$ and the line segment
+*		with end points \f$p_0\f$ and \f$p_1\f$.
+* \param	a			Plane X parameter.
+* \param	b			Plane Y parameter.
+* \param	c			Plane Z parameter.
+* \param	d			Other plane parameter.
+* \param	p0			First end point of the line segment.
+* \param	p1			Second end point of the line segment.
+* \param	dstIsn			Destination pointer for point of
+*					intersection, may be NULL.
+*/
+int		WlzGeomPlaneLineIntersect(double a, double b,
+					  double c, double d,
+					  WlzDVertex3 p0,
+					  WlzDVertex3 p1,
+					  WlzDVertex3 *dstIsn)
+{
+  int		intersect = 0;
+  double	tD0,
+  		tD1,
+		tD2;
+  
+  tD0 = (a * p0.vtX) + (b * p0.vtY) + (c * p0.vtZ) + d;
+  if(fabs(tD0) < DBL_EPSILON)
+  {
+    /* The first line segment end point lies on the plane if the second end
+     * point also lies on the plane then there is no unique intersection
+     * point. */
+    tD1 = (a * p1.vtX) + (b * p1.vtY) + (c * p1.vtZ) + d;
+    if(fabs(tD1) < DBL_EPSILON)
+    {
+      intersect = 2;
+    }
+    else
+    {
+      intersect = 1;
+      if(dstIsn)
+      {
+        *dstIsn = p0;
+      }
+    }
+  }
+  else
+  {
+    tD1 = (a * (p0.vtX - p1.vtX)) + (b * (p0.vtY - p1.vtY)) +
+	  (c * (p0.vtZ - p1.vtZ));
+    if(fabs(tD1) > DBL_EPSILON)
+    {
+      /* The line segment does not have zero length and the plane equation is
+       * valid. */
+      tD2 = tD0 / tD1;
+      if((tD2 >= 0.0) && (tD2 <= 1.0))
+      {
+        intersect = 1;
+	if(dstIsn)
+	{
+	  dstIsn->vtX = p0.vtX + (tD2 * (p1.vtX - p0.vtX));
+	  dstIsn->vtY = p0.vtY + (tD2 * (p1.vtY - p0.vtY));
+	  dstIsn->vtZ = p0.vtZ + (tD2 * (p1.vtZ - p0.vtZ));
+	}
+      }
+    }
+  }
+  return(intersect);
+}
+
+/*!
+* \return				An intersection code:
+*					  - 0 if the plane and triangle do
+* 					    not intersect;
+*					  - 1 if a single vertex of the
+*					    triangle is on the plane;
+*					  - 2 if a single edge or a line
+*					    through the triangle is on the
+*					    plane;
+*					  - 3 if the triangle is wholly on
+*					    the plane.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between a plane and a triangle.
+*
+*		Tests for an intersection between the plane defined by the
+*		equation: \f$ax + by + cz + d = 0\f$ and the triangle
+*		with end verticies \f$p_0\f$, \f$p_1\f$ and \f$p_2\f$.
+*		If the destination pointers for the intersection points
+*		are not NULL and the intersection code is 1 then the single
+*		point of intersection is returned in dstIsn0. If the
+*		destination pointers are not NULL and the intersection code
+*		is either 1 or 2 then the twther the single intersection
+*		point is returned in dstIsn0 or the two intersection points
+*		are returned in dstIsn0 and dstIsn1.
+* \param	a			Plane X parameter.
+* \param	b			Plane Y parameter.
+* \param	c			Plane Z parameter.
+* \param	d			Other plane parameter.
+* \param	p0			First triangle vertex.
+* \param	p1			Second triangle vertex.
+* \param	p2			Third triangle vertex.
+* \param	dstIsn0			Destination pointer for first point
+*					of intersection, may be NULL.
+* \param	dstIsn1			Destination pointer for second point
+*					of intersection, may be NULL.
+*/
+int		WlzGeomPlaneTriangleIntersect(double a, double b,
+					      double c, double d,
+					      WlzDVertex3 p0,
+					      WlzDVertex3 p1,
+					      WlzDVertex3 p2,
+					      WlzDVertex3 *dstIsn0,
+					      WlzDVertex3 *dstIsn1)
+{
+  int		iCode,
+  		valFlg,
+  		intersect = 0;
+  double	tD0,
+  		tD1;
+  WlzDVertex3	tDV0,
+  		tDV1;
+  WlzDVertex3	isn0,
+  		isn1;
+  int		isnFlg[3];
+  WlzDVertex3	isnVal[3];
+
+  valFlg = dstIsn0 && dstIsn1;
+  isnFlg[0] = WlzGeomPlaneLineIntersect(a, b, c, d, p0, p1, isnVal + 0);
+  isnFlg[1] = WlzGeomPlaneLineIntersect(a, b, c, d, p1, p2, isnVal + 1);
+  isnFlg[2] = WlzGeomPlaneLineIntersect(a, b, c, d, p2, p0, isnVal + 2);
+  iCode = (isnFlg[2] * 100) + (isnFlg[1] * 10) + isnFlg[0];
+  switch(iCode)
+  {
+    case 000:
+      intersect = 0;
+      break;
+    case 001:
+      intersect = 1;
+      isn0 = isnVal[0];
+      break;
+    case 010:
+      intersect = 1;
+      isn0 = isnVal[1];
+      break;
+    case 100:
+      intersect = 1;
+      isn0 = isnVal[2];
+      break;
+    case 002:
+    case 012:
+    case 102:
+    case 112:
+      intersect = 2;
+      isn0 = p0;
+      isn1 = p1;
+      break;
+    case 020:
+    case 021:
+    case 120:
+    case 121:
+      intersect = 2;
+      isn0 = p1;
+      isn1 = p2;
+      break;
+    case 200:
+    case 201:
+    case 210:
+    case 211:
+      intersect = 2;
+      isn0 = p2;
+      isn1 = p0;
+      break;
+    case 022:
+    case 122:
+    case 202:
+    case 212:
+    case 220:
+    case 221:
+    case 222:
+      intersect = 3;
+      break;
+    case 011:
+      WLZ_VTX_3_SUB(tDV0, isnVal[1], isnVal[0]);
+      tD0 = WLZ_VTX_3_SQRLEN(tDV0);
+      if(tD0 < DBL_EPSILON)
+      {
+	intersect = 1;
+	isn0 = p1;
+      }
+      else
+      {
+	intersect = 2;
+	isn0 = isnVal[0];
+	isn1 = isnVal[1];
+      }
+      break;
+    case 101:
+      WLZ_VTX_3_SUB(tDV0, isnVal[2], isnVal[0]);
+      tD0 = WLZ_VTX_3_SQRLEN(tDV0);
+      if(tD0 < DBL_EPSILON)
+      {
+	intersect = 1;
+	isn0 = p0;
+      }
+      else
+      {
+	intersect = 2;
+	isn0 = isnVal[2];
+	isn1 = isnVal[0];
+      }
+      break;
+    case 110:
+      WLZ_VTX_3_SUB(tDV0, isnVal[1], isnVal[2]);
+      tD0 = WLZ_VTX_3_SQRLEN(tDV0);
+      if(tD0 < DBL_EPSILON)
+      {
+	intersect = 1;
+	isn0 = p2;
+      }
+      else
+      {
+	intersect = 2;
+	isn0 = isnVal[1];
+	isn1 = isnVal[2];
+      }
+      break;
+    case 111:
+      WLZ_VTX_3_SUB(tDV0, isnVal[1], isnVal[0]);
+      tD0 = WLZ_VTX_3_SQRLEN(tDV0);
+      WLZ_VTX_3_SUB(tDV1, isnVal[2], isnVal[1]);
+      tD1 = WLZ_VTX_3_SQRLEN(tDV1);
+      if((tD0 > DBL_EPSILON) && (tD1 > DBL_EPSILON))
+      {
+	intersect = 3;
+      }
+      else
+      {
+	intersect = 2;
+	if(tD0 < DBL_EPSILON)
+	{
+	  isn0 = p1;
+	  isn1 = p2;
+	}
+	else
+	{
+	  isn0 = p0;
+	  isn1 = p1;
+	}
+      }
+      break;
+  }
+  if(valFlg)
+  {
+    *dstIsn0 = isn0;
+    *dstIsn1 = isn1;
+  }
+  return(intersect);
+}
+
+/*!
+* \return                               Cosine of the angle between the line
+*                                       segments.
+* \ingroup	WlzGeometry
+* \brief        Given the numerators (lU) and denominators (lL) for a
+*               pair of line gradients, together with three vertex positions:
+*		pos[1] the position of the vertex common to both line segments,
+*		pos[0] near the other one end of the first line segment and
+*		pos[2] near the other one end of the second line segment.
+*		The cosine of the angle between the line segmants is computed.
+* \param        nL			Number of denominator values, MUST
+*					be 2.
+* \param 	lL                      Gradient denominators.
+* \param        nU			Number of numerator values, MUST be 2.
+* \param        lU                      Gradient numerators.
+*		nGPos			Number of vertex positions, MUST be 3.
+* \param        gPos                    Vertex positions.
+* \param        dstConincident          Destination pointer, set non zero
+*                                       if verticies are coincident.
+*/
+double   WlzGeomAngleBetweenLines(int nL, double *lL,
+				  int nU, double *lU,
+				  int nGPos, WlzDVertex2 *gPos,
+				  int *dstConincident)
+{
+  int           idN;
+  double        tD0,
+                tD1,
+                tD2,
+                tD3,
+                cosAng = 0.0;
+  WlzDVertex2   cPos,
+                tPos;
+  WlzDVertex2   pos[2];
+
+  if((nL == 2) && lL && (nU == 2) && lU && (nGPos == 3) && gPos)
+  {
+    cPos = *(gPos + 1);
+    for(idN = 0; idN < 2; ++idN)
+    {
+      tPos = *(gPos + (idN * 2));
+      if((lU[idN] * lU[idN]) > (lL[idN] * lL[idN]))
+      {
+	pos[idN].vtX = ((lL[idN] / lU[idN]) * (tPos.vtY - cPos.vtY)) +
+		       cPos.vtX;
+	pos[idN].vtY = tPos.vtY;
+      }
+      else
+      {
+	pos[idN].vtX = tPos.vtX;
+	pos[idN].vtY = ((lU[idN] / lL[idN]) * (tPos.vtX - cPos.vtX)) +
+	               cPos.vtY;
+      }
+    }
+    WLZ_VTX_2_SUB(tPos, pos[0], cPos);
+    tD0 = WLZ_VTX_2_SQRLEN(tPos);
+    WLZ_VTX_2_SUB(tPos, pos[1], cPos);
+    tD1 = WLZ_VTX_2_SQRLEN(tPos);
+    WLZ_VTX_2_SUB(tPos, pos[0], pos[1]);
+    tD2 = WLZ_VTX_2_SQRLEN(tPos);
+    if(((tD0 * tD0) < DBL_EPSILON) ||
+	((tD1 * tD1) < DBL_EPSILON) ||
+	((tD2 * tD2) < DBL_EPSILON))
+    {
+      *dstConincident = 1;
+    }
+    else
+    {
+      *dstConincident = 0;
+      tD3 = tD0 * tD1;
+      tD3 = 2.0 * sqrt(tD3);
+      cosAng = (tD0 + tD1 - tD2) / tD3;
+    }
+  }
+  return(cosAng);
+}
+

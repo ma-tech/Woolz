@@ -33,165 +33,42 @@ static WlzErrorNum		WlzGMFilterRmSmShells3(
 * \ingroup      WlzGeoModel
 * \brief	Removes small shells from the given geometric model.
 * \param	model			Given model.
-* \param	maxElm			Maximum number of elements
-*                                       (edges in a 2D model or loops
+* \param	minSpx			Minimum number of simplicies
+*                                       (edges in a 2D model or faces
 *                                       in a 3D model) in a shell
-*                                       for it to be a small shell.
+*                                       for it to stay in the model.
 */
-WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int maxElm)
+WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int minSpx)
 {
+  int		sSz;
+  WlzGMShell	*cS,
+  		*fS,
+		*nS;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(model == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(model->child)
+  else if((fS = model->child) != NULL)
   {
-    switch(model->type)
+    cS = fS->next;
+    while(cS != fS)
     {
-      case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
-        errNum = WlzGMFilterRmSmShells2(model, maxElm);
-	break;
-      case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
-        errNum = WlzGMFilterRmSmShells3(model, maxElm);
-	break;
-      default:
-        errNum = WLZ_ERR_DOMAIN_TYPE;
-	break;
+       nS = cS->next;
+       if( WlzGMShellSimplexCnt(cS) < minSpx)
+      {
+         WlzGMModelDeleteS(model, cS);
+       }
+      cS = nS;
+    }
+    if( WlzGMShellSimplexCnt(fS) < minSpx)
+    {
+      WlzGMModelDeleteS(model, fS);
     }
   }
   return(errNum);
 }
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Removes small shells from the given 2D geometric model.
-* \param	model			Given model.
-* \param	maxElm			Maximum number of elements
-*                                       (edges) in a shell for it to
-*                                       be a small shell.
-*/
-static WlzErrorNum WlzGMFilterRmSmShells2(WlzGMModel *model, int maxElm)
-{
-  int		eCnt;
-  WlzGMEdgeT	*fET,
-  		*tET;
-  WlzGMLoopT	*fLT,
-  		*tLT;
-  WlzGMShell	*lS,
-		*nS,
-		*tS;
-  char		*eFlg = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((eFlg = (char *)AlcCalloc(model->res.edge.numIdx, sizeof(char))) == NULL)
-  {
-    errNum == WLZ_ERR_MEM_ALLOC;
-  }
-  if((errNum == WLZ_ERR_NONE) && ((tS = model->child) != NULL))
-  {
-    /* For each shell. */
-    lS = tS;
-    nS = tS->next;
-    do
-    {
-      eCnt = 0;
-      tS = nS;
-      nS = nS->next;
-      tLT = fLT = tS->child;
-      /* For each loopT. */
-      do
-      {
-	/* For each loopT count the number of edges. */
-	tET = fET = tLT->edgeT;
-	do
-	{
-	  if(*(eFlg + tET->edge->idx) == 0)
-	  {
-	    ++eCnt;
-	    *(eFlg + tET->edge->idx) = 1; 		/* Mark edge visited */
-	  }
-	  tET = tET->next;
-	} while((tET != fET) && (eCnt <= maxElm));
-	tLT = tLT->next;
-      } while((tLT != fLT) && (eCnt <= maxElm));
-      if(eCnt < maxElm)
-      {
-        /* This is a small shell, so delete it from the model. */
-	WlzGMModelDeleteS(model, tS);
-      }
-    } while(model->child && (tS != lS));
-  }
-  if(eFlg)
-  {
-    AlcFree(eFlg);
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzGeoModel
-* \brief	Removes small shells from the given 3D geometric model.
-* \param	model			Given model.
-* \param	maxElm			Maximum number of elements
-*                                       (loops) in a shell for it to
-*                                       be a small shell.
-*/
-static WlzErrorNum WlzGMFilterRmSmShells3(WlzGMModel *model, int maxElm)
-{
-  int		lCnt;
-  WlzGMLoopT	*fLT,
-  		*tLT;
-  WlzGMShell	*lS,
-		*nS,
-		*tS;
-  char		*fFlg = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((fFlg = (char *)AlcCalloc(model->res.face.numIdx, sizeof(char))) == NULL)
-  {
-    errNum == WLZ_ERR_MEM_ALLOC;
-  }
-  if((errNum == WLZ_ERR_NONE) && ((tS = model->child) != NULL))
-  {
-    /* For each shell. */
-    lS = tS;
-    nS = tS->next;
-    do
-    {
-      lCnt = 0;
-      tS = nS;
-      nS = nS->next;
-      fLT = tLT = tS->child;
-      /* For each loopT. */
-      do
-      {
-	if(*(fFlg + tLT->face->idx) == 0)
-	{
-	  ++lCnt;
-	  *(fFlg + tLT->face->idx) = 1;
-	}
-	tLT = tLT->next;
-      } while((tLT != fLT) && (lCnt <= maxElm));
-      if(lCnt < maxElm)
-      {
-        /* This is a small shell, so delete it from the model. */
-	WlzGMModelDeleteS(model, tS);
-      }
-    } while(model->child && (tS->idx != lS->idx));
-  }
-  if(fFlg)
-  {
-    AlcFree(fFlg);
-  }
-  return(errNum);
-}
-
 
 /* #define WLZ_GMFILTER_TEST */
 #ifdef WLZ_GMFILTER_TEST

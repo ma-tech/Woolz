@@ -42,6 +42,7 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			Wlz3DSection.c \
+			Wlz3DSectionFromGeoModel.c \
 			Wlz3DSectionSegmentObject.c \
 			Wlz3DViewStructUtils.c \
 			Wlz3DViewTransformObj.c \
@@ -119,6 +120,7 @@ CSOURCES		= \
 			WlzMakeStructs.c \
 			WlzMeshTransform.c \
 			WlzMeshUtils.c \
+			WlzMatchICP.c \
 			WlzNMSuppress.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c  \

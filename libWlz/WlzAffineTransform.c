@@ -704,6 +704,112 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 
 /*!
 * \ingroup	WlzTransform
+* \return				Woolz error code.
+* \brief	Transforms the shell's geometry as well as the geometries
+*		of the verticies in the shell. All the transformations are
+*		done in place.
+* \param	shell			Given shell.
+* \param	tr			Given affine transform.
+*/
+WlzErrorNum 	WlzAffineTransformGMShell(WlzGMShell *shell,
+					  WlzAffineTransform *tr)
+{
+  int		dim;
+  WlzGMVertex	*v0;
+  WlzGMVertexT	*vT0;
+  WlzGMEdgeT	*eT0;
+  WlzGMLoopT	*lT0;
+  WlzGMModel	*model;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Check the model. */
+  if((model = shell->parent) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    dim = WlzGMModelGetDimension(model, &errNum);
+  }
+  /* Check transform type and validity w.r.t. the model type. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(tr->type)
+    {
+      case WLZ_TRANSFORM_2D_AFFINE: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_REG:    /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_TRANS:  /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_NOSHEAR:
+	if(dim != 2)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+        break;
+      case WLZ_TRANSFORM_3D_AFFINE: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_REG:    /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_TRANS:  /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_NOSHEAR:
+	if(dim != 3)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* For each loop topology element of the shell. */
+    if((lT0 = shell->child) != NULL)
+    {
+      do
+      {
+	/* For each edge topology element of the loop topology element. */
+        if((eT0 = lT0->edgeT) != 0)
+	{
+	  do
+	  {
+	    /* If the vertex topology element has a unique reference to the
+	     * vertex. */
+	    vT0 = eT0->vertexT;
+	    v0 = vT0->diskT->vertex;
+	    /* Transform the vertex. */
+	    if(vT0 == v0->diskT->vertexT)
+	    {
+	      switch(model->type)
+	      {
+	        case WLZ_GMMOD_2I:
+		  v0->geo.vg2I->vtx = WlzAffineTransformVertexI2(tr,
+				v0->geo.vg2I->vtx, NULL);
+	          break;
+	        case WLZ_GMMOD_2D:
+		  v0->geo.vg2D->vtx = WlzAffineTransformVertexD2(tr,
+				v0->geo.vg2D->vtx, NULL);
+	          break;
+	        case WLZ_GMMOD_3I:
+		  v0->geo.vg3I->vtx = WlzAffineTransformVertexI3(tr,
+				v0->geo.vg3I->vtx, NULL);
+	          break;
+	        case WLZ_GMMOD_3D:
+		  v0->geo.vg3D->vtx = WlzAffineTransformVertexD3(tr,
+				v0->geo.vg3D->vtx, NULL);
+	          break;
+	      }
+	    }
+	    eT0 = eT0->next;
+	  } while(eT0 != lT0->edgeT);
+	}
+        lT0 = lT0->next;
+      } while(lT0 != shell->child);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Creates a new value table, fills in the values and
 *		adds it to the given new object.

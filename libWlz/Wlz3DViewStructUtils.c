@@ -1,35 +1,35 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        Wlz3DViewStructUtils.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Utility functions associated with 3D views.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         Wlz3DViewStructUtils.c
+* \author       Richard Baldock, Bill Hill
+* \date         October 2001
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Utility functions associated with 3D views.
+* \ingroup      WlzSectionTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzRead3DViewStruct					*
-*   Date       : Tue Feb  4 12:19:59 1997				*
-*************************************************************************
-*   Synopsis   : Read the 3D section structure from disc.		*
-*   Returns    : WlzThreeDViewStruct *: structure from disc		*
-*		returns NULL on error.					*
-*   Parameters : FILE *fp: input file pointer.				*
-*   Global refs: None							*
-************************************************************************/
+/*!
+* \return				The 3D view or NULL on error.
+* \ingroup      WlzSectionTransform
+* \brief	Reads a 3D section structure from a file.
+* \param	fp			Input file pointer.
+* \param	dstErr			Destination pointer for an error
+*					code, may be NULL.
+*/
 WlzThreeDViewStruct *WlzRead3DViewStruct(
   FILE		*fp,
   WlzErrorNum	*dstErr)
@@ -40,16 +40,13 @@ WlzThreeDViewStruct *WlzRead3DViewStruct(
   return NULL;
 }
 
-/************************************************************************
-*   Function   : WlzWrite3DViewStruct					*
-*   Date       : Tue Feb  4 12:26:02 1997				*
-*************************************************************************
-*   Synopsis   : Write the 3D section structure to disc			*
-*   Returns    : WlzErrorNum: error condition				*
-*   Parameters : FILE *fp: destination output stream,			*
-*		WlzThreeDViewStruct *viewstr: structure to be written	*
-*   Global refs: None							*
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Writes a 3D section structure to a file.
+* \param	fp			Output file pointer.
+* \param	viewstr			Given view.
+*/
 WlzErrorNum WlzWrite3DViewStruct(
   FILE			*fp,
   WlzThreeDViewStruct	*viewstr)
@@ -57,18 +54,16 @@ WlzErrorNum WlzWrite3DViewStruct(
   return WLZ_ERR_UNSPECIFIED ;
 }
 
-/************************************************************************
-*   Function   : WlzMake3DViewStruct   					*
-*   Date       : Tue Feb  4 12:31:56 1997				*
-*************************************************************************
-*   Synopsis   :Allocate space and intialise a 3DViewAStruct. None of	*
-*		the transform LUTs or rotation matrix are allocated	*
-*   Returns    :WlzThreeDViewStruct *: the allocated structure, NULL on	*
-*		error.							*
-*   Parameters :int type: domain type, currently zero only - to be 	*
-*		defined							*
-*   Global refs:None							*
-************************************************************************/
+/*!
+* \return				A new view.
+* \ingroup      WlzSectionTransform
+* \brief	Allocates and intialises a 3D view. Nether of the transform
+*		look up tables or the rotation matrix are allocated.
+* \param	type			Only WLZ_3D_VIEW_STRUCT is
+*					currently allowed.
+* \param	dstErr			Destination pointer for an error
+*					code, may be NULL.
+*/
 WlzThreeDViewStruct *WlzMake3DViewStruct(
   WlzObjectType	type,
   WlzErrorNum	*dstErr)
@@ -124,15 +119,12 @@ WlzThreeDViewStruct *WlzMake3DViewStruct(
   return viewStr ;
 }
 
-/************************************************************************
-*   Function   : WlzFree3DViewStruct					*
-*   Date       : Tue Feb  4 12:55:21 1997				*
-*************************************************************************
-*   Synopsis   :free space allocated for a 3D view structure		*
-*   Returns    :WlzErrNum: possible errors - 				*
-*   Parameters :WlzThreeDViewStruct *viewStr: structure to be freed	*
-*   Global refs:None							*
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Frees a view.
+* \param	viewStr			Given view to free.
+*/
 WlzErrorNum WlzFree3DViewStruct(
   WlzThreeDViewStruct *viewStr)
 {
@@ -164,6 +156,16 @@ WlzErrorNum WlzFree3DViewStruct(
   return errNum;
 }
 
+/*!
+* \return
+* \ingroup      WlzSectionTransform
+* \brief	Sets up a rotation matrix from the given Euler
+* 		angles.
+* \param	rotation		3x3 rotation matrix.
+* \param	xsi			Rotation about the z-axis.
+* \param	eta			Rotation about the new y-axis.
+* \param	zeta			Rotation about the new z-axis.
+*/
 static void setupEulerRotationMatrix(
   double	**rotation,
   double	xsi,
@@ -187,7 +189,13 @@ static void setupEulerRotationMatrix(
   return;
 }
 
-static WlzErrorNum setup_3DSectionRotationMatrix(
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets up the rotation matrix of the given view.
+* \param	viewStr			Given view.
+*/
+static WlzErrorNum setup3DSectionRotationMatrix(
   WlzThreeDViewStruct	*viewStr)
 {
   double xsi, eta, zeta;
@@ -253,6 +261,12 @@ static WlzErrorNum setup_3DSectionRotationMatrix(
   return WLZ_ERR_NONE;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets up the transformation look up tables of the given view.
+* \param	viewStr			Given view.
+*/
 static void setupTransformLuts(
   WlzThreeDViewStruct	*viewStr)
 {
@@ -311,23 +325,22 @@ tmpPlanedmn.lastpl = WLZ_MAX(tmpPlanedmn.lastpl, i);
 
 
 
-/************************************************************************
-*   Function   : WlzInit3DViewStruct					*
-*   Date       : Tue Feb  4 16:32:21 1997				*
-*************************************************************************
-*   Synopsis   :Initialise a 3D view structure wrt a the given view	*
-*		parameters and 3D object. Initialisation involves	*
-*		calculating the bounds of the section, setting up luts	*
-*		to calculate the section image, setting up the rotation	*
-*		matrix and attaching the object as the reference object	*
-*		for this view. This structure can be reused for simple	*
-*		changes of the view parameter "dist" but otherwise must *
-*		be reinitialised.					*
-*   Returns    :WlzErrNum: 0 if successful				*
-*   Parameters :WlzThreeDViewStruct *viewStr: structure to be intialised*
-*		WlzObject *obj: 3D woolz object to be sectioned		*
-*   Global refs:None							*
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Initialises a 3D view with respect to the given view parameters
+*		and a 3D object.
+*
+*		Initialises a 3D view with respect to the given view parameters
+*		and a 3D object. Initialisation involves calculating the bounds
+*		of the section, setting up the look up tables to calculate the
+*		section image, setting up the rotation matrix and attaching the
+*		object as the reference object for this view. This view
+*		structure can be reused for simple changes of the view
+*		parameter "dist" but otherwise must be re-initialised.
+* \param	viewStr			View to be intialised.
+* \param	obj			The 3D object to be sectioned.
+*/
 WlzErrorNum WlzInit3DViewStruct(
   WlzThreeDViewStruct	*viewStr,
   WlzObject		*obj)
@@ -356,7 +369,7 @@ WlzErrorNum WlzInit3DViewStruct(
     }
 
     /* set the rotation matrix */
-    (void) setup_3DSectionRotationMatrix(viewStr);
+    (void) setup3DSectionRotationMatrix(viewStr);
     break;
 
   case WLZ_2D_DOMAINOBJ:	/* assume this is the section */
@@ -364,7 +377,7 @@ WlzErrorNum WlzInit3DViewStruct(
       return WLZ_ERR_DOMAIN_TYPE;
     }
     /* get the 3D bounding box */
-    (void) setup_3DSectionRotationMatrix(viewStr);
+    (void) setup3DSectionRotationMatrix(viewStr);
     vtx.vtX = obj->domain.i->kol1;
     vtx.vtY = obj->domain.i->line1;
     Wlz3DSectionTransformInvVtx( &vtx, viewStr );
@@ -445,16 +458,14 @@ WlzErrorNum WlzInit3DViewStruct(
   return WLZ_ERR_NONE;
 }
 
-/************************************************************************
-*   Function   : Wlz3DSectionTransformVtx				*
-*   Date       : Thu Feb  6 11:03:13 1997				*
-*************************************************************************
-*   Synopsis   :Transform a 3D vertex using the section transform, note	*
-*		the vertex values are overwritten.			*
-*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return
+* \ingroup      WlzSectionTransform
+* \brief	Transforms a 3D vertex using the section transform
+*		overwriting the vertex values.
+* \param	vtx			Given vertex, values are overwritten.
+* \param	viewStr			Given view.
+*/
 WlzErrorNum Wlz3DSectionTransformVtx(
   WlzDVertex3		*vtx,
   WlzThreeDViewStruct	*viewStr)
@@ -472,17 +483,15 @@ WlzErrorNum Wlz3DSectionTransformVtx(
     return WLZ_ERR_NONE;
 }
 
-/************************************************************************
-*   Function   : Wlz3DSectionTransformVtxR				*
-*   Date       : Thu Feb  6 11:03:13 1997				*
-*************************************************************************
-*   Synopsis   :Transform a 3D vertex using the section transform, This *
-*		is a wrapper routine to provide a destination vertex	*
-*		for JWlz						*
-*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Transforms a 3D vertex using the section transform.
+* \param	viewStr			Given view.
+* \param	vtx			Vertex to be transformed.
+* \param	dstVtx			destination pointer for the transformed
+* 					vertex.
+*/
 WlzErrorNum Wlz3DSectionTransformVtxR(
   WlzThreeDViewStruct	*viewStr,
   WlzDVertex3		vtx,
@@ -502,16 +511,15 @@ WlzErrorNum Wlz3DSectionTransformVtxR(
   return errNum;
 }
 
-/************************************************************************
-*   Function   : Wlz3DSectionTransformInvVtx				*
-*   Date       : Thu Feb  6 11:03:13 1997				*
-*************************************************************************
-*   Synopsis   :inverse Transform a 3D vertex using the section		*
-*		transform, note the vertex values are overwritten.	*
-*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Inverse transforms a 3D vertex using the section transform,
+*		overwriting the vertex values.
+* \param	vtx			Given 3D vertex, values are
+* 					overwritten.
+* \param	viewStr			Given view.
+*/
 WlzErrorNum Wlz3DSectionTransformInvVtx(
   WlzDVertex3		*vtx,
   WlzThreeDViewStruct	*viewStr)
@@ -530,17 +538,15 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
     return WLZ_ERR_NONE;
 }
 
-/************************************************************************
-*   Function   : Wlz3DSectionTransformInvVtxR				*
-*   Date       : Thu Feb  6 11:03:13 1997				*
-*************************************************************************
-*   Synopsis   :Transform a 3D vertex using the section transform, This *
-*		is a wrapper routine to provide a destination vertex	*
-*		for JWlz						*
-*   Returns    :WlzErrorNum: fails if the viewStr or vertex is NULL	*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Inverse transforms a 3D vertex using the section transform.
+* \param	viewStr			Given view.
+* \param	vtx			Vertex to be transformed.
+* \param	dstVtx			Destination pointer for the transformed
+* 					vertex.
+*/
 WlzErrorNum Wlz3DSectionTransformInvVtxR(
   WlzThreeDViewStruct	*viewStr,
   WlzDVertex3		vtx,
@@ -570,24 +576,20 @@ WlzErrorNum Wlz3DSectionTransformInvVtxR(
   return errNum;
 }
 
-/************************************************************************
-*   Function   : Wlz3DSectionIncrementDistance				*
-*   Date       : Thu Feb  6 14:25:04 1997				*
-*************************************************************************
-*   Synopsis   :Increment the distance parameter of a 3D view struct	*
-*		resetting the LUT's as required. This is provided	*
-*		because changing the distance does not require 		*
-*		the rotation matrix and all the LUT's only a single	*
-*		multiply and add per LUT entry instead of 2 multiplies	*
-*		and three adds plus all the y LUTS and the rotation	*
-*		matrix (many trig calculations).			*
-*   Returns    :WlzErrorNum: currently does no checking therefore	*
-*		returns WLZ_ERR_NONE or crashes!			*
-*   Parameters :WlzThreeDViewStruct	*viewStr: view structure to 	*
-*	       		increment					*
-*		double			incr: distance increment.	*
-*   Global refs:None.							*
-************************************************************************/
+/*!
+* \return				Always returns WLZ_ERR_NONE because
+*					this fuction does no error checking!
+* \ingroup      WlzSectionTransform
+* \brief	Increments the distance parameter of a 3D view resetting the
+* 		look up tables as required. This is provided because changing
+* 		the distance does not require the rotation matrix and all the
+* 		look up tables only a single multiply and add per look up
+* 		table entry instead of 2 multiplies and three adds plus all the
+* 		y look up tables and the rotation matrix with many trigonometry
+*		calculations.
+* \param	viewStr			Given view.
+* \param	incr			The increment distance.
+*/
 WlzErrorNum Wlz3DSectionIncrementDistance(
   WlzThreeDViewStruct	*viewStr,
   double		incr)
@@ -606,19 +608,19 @@ WlzErrorNum Wlz3DSectionIncrementDistance(
   return WLZ_ERR_NONE;
 }
 
-/************************************************************************
-*   Function   : Wlz3DViewGetIntersectionPoint				*
-*   Date       : Thu Jan 22 18:46:31 1998				*
-*************************************************************************
-*   Synopsis   :Find a point on the line of intersection of two 3D	*
-*	   	views. The point is returned in the coordinate system	*
-*		of the first view. This procedure, with			*
-*		Wlz3DViewGetIntersectionAngle is useful for finding the	*
-*		line of intersection within one of the planes.		*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return				The point of intersection.
+* \ingroup      WlzSectionTransform
+* \brief	Finds a point on the line of intersection of two 3D views. The
+* 		point is returned in the coordinate system of the first view.
+*		This function together with Wlz3DViewGetIntersectionAngle() is
+*		useful for finding the line of intersection within one of the
+*		planes.
+* \param	v1			First view.
+* \param	v2			Second view.
+* \param	dstErr			Destination pointer for an error
+*					code, may be NULL.
+*/
 WlzDVertex2 Wlz3DViewGetIntersectionPoint(
   WlzThreeDViewStruct *v1,
   WlzThreeDViewStruct *v2,
@@ -678,15 +680,15 @@ WlzDVertex2 Wlz3DViewGetIntersectionPoint(
   return rtnVtx;
 }
 
-/************************************************************************
-*   Function   : Wlz3DViewGetIntersectionAngle				*
-*   Date       : Thu Jan 22 18:47:20 1998				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
+/*!
+* \return				The angle of intersection in radians.
+* \ingroup      WlzSectionTransform
+* \brief	Finds the angle of the ine of intersection of two views.
+* \param	v1			First view.
+* \param	v2			Second view.
+* \param	dstErr			Destination pointer for an error
+*					code, may be NULL.
+*/
 double Wlz3DViewGetIntersectionAngle(
   WlzThreeDViewStruct *v1,
   WlzThreeDViewStruct *v2,
@@ -731,20 +733,17 @@ double Wlz3DViewGetIntersectionAngle(
   return rtnAngle;
 }
 
-/************************************************************************
-*   Function   : Wlz3DViewGetBoundingBoxIntersection			*
-*   Date       : Wed Feb 25 07:16:54 1998				*
-*************************************************************************
-*   Synopsis   :get the vertices of intersection between a section and	*
-*		the bounding box of the reference object. The vertices	*
-*		are returned in order to be used for display etc.	*
-*   Returns    :int: number of vertices 				*
-*   Parameters :WlzThreeDViewStruct: the 3D view structure		*
-*		WlzDVertex3:	an array of 12 vertices to return values*
-*		WlzErrorNum:	return error value.			*
-*   Global refs:none.							*
-************************************************************************/
-
+/*!
+* \return				The number of vertices.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the vertices of intersection between a section and the
+* 		bounding box of the reference object. The vertices
+*		are returned in order to be used for display etc..
+* \param	viewStr			The section view.
+* \param	rtnVtxs			Array of 12 vertices to return values.
+* \param	dstErr			Destination pointer for an error code,
+* 					may be NULL.
+*/
 int Wlz3DViewGetBoundingBoxIntersection(
   WlzThreeDViewStruct	*viewStr,
   WlzDVertex3		*rtnVtxs,
@@ -771,12 +770,7 @@ int Wlz3DViewGetBoundingBoxIntersection(
   }
 
   /* calculate the plane parameters */
-  a[0] = sin(viewStr->phi) * cos(viewStr->theta);
-  a[1] = sin(viewStr->phi) * sin(viewStr->theta);
-  a[2] = cos(viewStr->phi);
-  a[3] = -(a[0] * (viewStr->fixed.vtX + a[0]*viewStr->dist) +
-	   a[1] * (viewStr->fixed.vtY + a[1]*viewStr->dist) +
-	   a[2] * (viewStr->fixed.vtZ + a[2]*viewStr->dist));
+  Wlz3DViewGetPlaneEqn(viewStr, a + 0, a + 1, a + 2, a + 3);
 
   /* set up an array of lines (2 vertices each) */
   x1 = viewStr->ref_obj->domain.p->kol1;
@@ -909,16 +903,18 @@ int Wlz3DViewGetBoundingBoxIntersection(
   return numVtxs;
 }
 
-/************************************************************************
-*   Function   : Wlz3DViewGetFixed					*
-*   Date       : Fri Dec  1 08:33:41 2000				*
-*************************************************************************
-*   Synopsis   : Get and set functions for the 3D view structure	*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the fixed point coordinates from a 3D view.
+* \param	vs			Given view.
+* \param	dstX			Destination pointer for the fixed
+*					point X coordinate.
+* \param	dstY			Destination pointer for the fixed
+*					point Y coordinate.
+* \param	dstZ			Destination pointer for the fixed
+*					point Z coordinate.
+*/
 WlzErrorNum Wlz3DViewGetFixed(
   WlzThreeDViewStruct	*vs,
   double		*dstX,
@@ -939,6 +935,15 @@ WlzErrorNum Wlz3DViewGetFixed(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the fixed point coordinates in a 3D view.
+* \param	vs			Given view.
+* \param	x			Fixed point X coordinate.
+* \param	y			Fixed point Y coordinate.
+* \param	z			Fixed point Z coordinate.
+*/
 WlzErrorNum Wlz3DViewSetFixed(
   WlzThreeDViewStruct	*vs,
   double		x,
@@ -960,6 +965,13 @@ WlzErrorNum Wlz3DViewSetFixed(
 }
 
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the angle theta from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for theta.
+*/
 WlzErrorNum Wlz3DViewGetTheta(
   WlzThreeDViewStruct	*vs,
   double		*dstVal)
@@ -976,6 +988,13 @@ WlzErrorNum Wlz3DViewGetTheta(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the angle theta from the 3D view.
+* \param	vs			Given view.
+* \param	val			Value of theta.
+*/
 WlzErrorNum Wlz3DViewSetTheta(
   WlzThreeDViewStruct	*vs,
   double		val)
@@ -992,6 +1011,13 @@ WlzErrorNum Wlz3DViewSetTheta(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the angle phi from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for phi.
+*/
 WlzErrorNum Wlz3DViewGetPhi(
   WlzThreeDViewStruct	*vs,
   double		*dstVal)
@@ -1008,6 +1034,13 @@ WlzErrorNum Wlz3DViewGetPhi(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the angle phi from the 3D view.
+* \param	vs			Given view.
+* \param	val			Value of phi.
+*/
 WlzErrorNum Wlz3DViewSetPhi(
   WlzThreeDViewStruct	*vs,
   double		val)
@@ -1024,6 +1057,13 @@ WlzErrorNum Wlz3DViewSetPhi(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the angle zeta from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for zeta.
+*/
 WlzErrorNum Wlz3DViewGetZeta(
   WlzThreeDViewStruct	*vs,
   double		*dstVal)
@@ -1040,6 +1080,13 @@ WlzErrorNum Wlz3DViewGetZeta(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the angle zeta from the 3D view.
+* \param	vs			Given view.
+* \param	val			Value of zeta.
+*/
 WlzErrorNum Wlz3DViewSetZeta(
   WlzThreeDViewStruct	*vs,
   double		val)
@@ -1056,6 +1103,14 @@ WlzErrorNum Wlz3DViewSetZeta(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the increment distance from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for the
+*					increment distance.
+*/
 WlzErrorNum Wlz3DViewGetDist(
   WlzThreeDViewStruct	*vs,
   double		*dstVal)
@@ -1072,6 +1127,13 @@ WlzErrorNum Wlz3DViewGetDist(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the increment distance in the 3D view.
+* \param	vs			Given view.
+* \param	val			Value of the increment distance.
+*/
 WlzErrorNum Wlz3DViewSetDist(
   WlzThreeDViewStruct	*vs,
   double		val)
@@ -1088,6 +1150,14 @@ WlzErrorNum Wlz3DViewSetDist(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the scale from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for the
+*					scale.
+*/
 WlzErrorNum Wlz3DViewGetScale(
   WlzThreeDViewStruct	*vs,
   double		*dstVal)
@@ -1104,6 +1174,13 @@ WlzErrorNum Wlz3DViewGetScale(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the scale in the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Value of the scale.
+*/
 WlzErrorNum Wlz3DViewSetScale(
   WlzThreeDViewStruct	*vs,
   double		val)
@@ -1120,6 +1197,14 @@ WlzErrorNum Wlz3DViewSetScale(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the view mode from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for the
+*					view mode.
+*/
 WlzErrorNum Wlz3DViewGetViewMode(
   WlzThreeDViewStruct	*vs,
   WlzThreeDViewMode	*dstVal)
@@ -1136,6 +1221,13 @@ WlzErrorNum Wlz3DViewGetViewMode(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the view mode in the 3D view.
+* \param	vs			Given view.
+* \param	val			Value of the view mode.
+*/
 WlzErrorNum Wlz3DViewSetViewMode(
   WlzThreeDViewStruct	*vs,
   WlzThreeDViewMode	val)
@@ -1164,6 +1256,18 @@ WlzErrorNum Wlz3DViewSetViewMode(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the up vector from the 3D view.
+* \param	vs			Given view.
+* \param	dstX			Destination pointer for the
+*					X coordinate of the up vector.
+* \param	dstY			Destination pointer for the
+*					Y coordinate of the up vector.
+* \param	dstZ			Destination pointer for the
+*					Z coordinate of the up vector.
+*/
 WlzErrorNum Wlz3DViewGetUp(
   WlzThreeDViewStruct	*vs,
   double		*dstX,
@@ -1184,6 +1288,15 @@ WlzErrorNum Wlz3DViewGetUp(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the up vector in the 3D view.
+* \param	vs			Given view.
+* \param	x			X coordinate of the up vector.
+* \param	y			Y coordinate of the up vector.
+* \param	z			Z coordinate of the up vector.
+*/
 WlzErrorNum Wlz3DViewSetUp(
   WlzThreeDViewStruct	*vs,
   double		x,
@@ -1204,6 +1317,22 @@ WlzErrorNum Wlz3DViewSetUp(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the coordinates of the second fixed point from the
+*		3D view.
+* \param	vs			Given view.
+* \param	dstX			Destination pointer for the
+*					X coordinate of the second fixed
+*					point.
+* \param	dstY			Destination pointer for the
+*					Y coordinate of the second fixed
+*					point.
+* \param	dstZ			Destination pointer for the
+*					Z coordinate of the second fixed
+*					point.
+*/
 WlzErrorNum Wlz3DViewGetFixed2(
   WlzThreeDViewStruct	*vs,
   double		*dstX,
@@ -1224,6 +1353,19 @@ WlzErrorNum Wlz3DViewGetFixed2(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the coordinates of the second fixed point in the
+*		3D view.
+* \param	vs			Given view.
+* \param	x			X coordinate of the second fixed
+*					point.
+* \param	y			Y coordinate of the second fixed
+*					point.
+* \param	z			Z coordinate of the second fixed
+*					point.
+*/
 WlzErrorNum Wlz3DViewSetFixed2(
   WlzThreeDViewStruct	*vs,
   double		x,
@@ -1244,6 +1386,14 @@ WlzErrorNum Wlz3DViewSetFixed2(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the fixed line angle from the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			Destination pointer for the fixed
+*					line angle.
+*/
 WlzErrorNum Wlz3DViewGetFixedLineAngle(
   WlzThreeDViewStruct	*vs,
   double		*dstVal)
@@ -1260,6 +1410,13 @@ WlzErrorNum Wlz3DViewGetFixedLineAngle(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Sets the fixed line angle in the 3D view.
+* \param	vs			Given view.
+* \param	dstVal			The fixed line angle.
+*/
 WlzErrorNum Wlz3DViewSetFixedLineAngle(
   WlzThreeDViewStruct	*vs,
   double		val)
@@ -1276,6 +1433,18 @@ WlzErrorNum Wlz3DViewSetFixedLineAngle(
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the section maximum values from the 3D view.
+* \param	vs			Given view.
+* \param	dstX			Destination pointer for the
+*					X section maximum coordinate.
+* \param	dstY			Destination pointer for the
+*					Y section maximum coordinate.
+* \param	dstZ			Destination pointer for the
+*					Z section maximum coordinate.
+*/
 WlzErrorNum Wlz3DViewGetMaxvals(
   WlzThreeDViewStruct	*vs,
   double		*dstX,
@@ -1290,16 +1459,28 @@ WlzErrorNum Wlz3DViewGetMaxvals(
     *dstX = vs->maxvals.vtX;
     *dstY = vs->maxvals.vtY;
     *dstZ = vs->maxvals.vtZ;
-    printf("(x,y,z) = (%f,%f,%f)\n", *dstX, *dstY, *dstZ);
+    /* printf("(x,y,z) = (%f,%f,%f)\n", *dstX, *dstY, *dstZ); */
   }
   else {
     errNum = WLZ_ERR_PARAM_NULL;
-    printf("Wlz3DViewGetMaxvals: NULL viewStruct\n");
+    /* printf("Wlz3DViewGetMaxvals: NULL viewStruct\n"); */
   }
 
   return errNum;
 }
 
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzSectionTransform
+* \brief	Gets the section minimum values from the 3D view.
+* \param	vs			Given view.
+* \param	dstX			Destination pointer for the
+*					X section maximum coordinate.
+* \param	dstY			Destination pointer for the
+*					Y section maximum coordinate.
+* \param	dstZ			Destination pointer for the
+*					Z section maximum coordinate.
+*/
 WlzErrorNum Wlz3DViewGetMinvals(
   WlzThreeDViewStruct	*vs,
   double		*dstX,
@@ -1308,7 +1489,7 @@ WlzErrorNum Wlz3DViewGetMinvals(
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
- printf("in Wlz3DViewGetMinvals\n");
+  /* printf("in Wlz3DViewGetMinvals\n"); */
  	
    if( vs ){
     *dstX = vs->minvals.vtX;
@@ -1322,3 +1503,66 @@ WlzErrorNum Wlz3DViewGetMinvals(
   return errNum;
 }
 
+/*!
+* \return	<void>
+* \brief	Computes the parameters of the equation of the plane
+*		defined by the given 3D view.
+*
+*		Computes the parameters of the equation of the plane
+*		\f[ax + by + cz + d = 0\f] defined by the given 3D view.
+*		None of the destination pointers may be NULL and the
+*		3D view is assumed valid although only its theta, phi
+*		distance increment and fixed point are used.
+* \param	view			Given view.
+* \param	dstA			Destination pointer for the
+*					X parameter.
+* \param	dstB			Destination pointer for the
+*					Y parameter.
+* \param	dstC			Destination pointer for the
+*					Z parameter.
+* \param	dstD			Destination pointer for the
+*					other parameter.
+*/
+void		Wlz3DViewGetPlaneEqn(WlzThreeDViewStruct *view,
+				     double *dstA, double *dstB,
+				     double *dstC, double *dstD)
+{
+  double	a,
+  		b,
+		c,
+		d,
+		sPhi;
+
+  sPhi = sin(view->phi);
+  a = sPhi * cos(view->theta);
+  b = sPhi * sin(view->theta);
+  c = cos(view->phi);
+  d = -(a * (view->fixed.vtX + (a * view->dist)) +
+	b * (view->fixed.vtY + (b * view->dist)) +
+	c * (view->fixed.vtZ + (c * view->dist)));
+  *dstA = a;
+  *dstB = b;
+  *dstC = c;
+  *dstD = d;
+}
+
+/*!
+* \return				Non zero if there is an intersection
+*					otherwise zero.
+* \brief	Tests for an intersection between the plane defined by the
+* 		given 3D view and the given axis aligned bounding box (AABB).
+* \param	view			Given view which defines a plane.
+* \param	box			Given axis aligned bounding box.
+*/
+int		Wlz3DViewIntersectAABB(WlzThreeDViewStruct *view,
+				       WlzDBox3 box)
+{
+  int		intersect = 0;
+  double	p[4];
+
+  /* Compute the eqn of the plane. */
+  Wlz3DViewGetPlaneEqn(view, p + 0, p + 1, p + 2, p + 3);
+  /* Check for intersection. */
+  intersect = WlzGeomPlaneAABBIntersect(p[0], p[1], p[2], p[3], box);
+  return(intersect);
+}

@@ -1,142 +1,172 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        Wlz3DSection.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for cutting 2D sections from 3D objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         Wlz3DSection.c
+* \author       Richard Baldock, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for cutting 2D sections from 3D objects.
+* \ingroup	WlzSectionTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 
-static WlzGreyV		val;
-static WlzPixelP	pix;
+static WlzObject 		*WlzGetSectionFrom3DDomObj(
+  				  WlzObject *obj,
+				  WlzThreeDViewStruct *viewStr,
+				  WlzErrorNum *dstErr);
+static WlzContour 		*WlzGetSectionFromCtr(
+				  WlzContour *ctr,
+				  WlzThreeDViewStruct *view,
+				  WlzErrorNum *dstErr);
+static WlzPixelP 		WlzGetSectionConvertGreyType(
+				  WlzPixelP pixptr,
+				  WlzGreyType grey_type);
 
-static WlzPixelP convert_grey_type(
-  WlzPixelP	pixptr,
-  WlzGreyType	grey_type)
+
+/*!
+* \return				A new 2D object cut from the given
+*					3D object.
+* \ingroup	WlzSectionTransform
+* \brief	Cuts the 2D object which lies on the plane specified by
+*		the given view structure from the given 3D object.
+*		If the given object is a 3D domain object with grey values
+*		then a new 2D object is created with the same grey-type
+*		as the given object. Only grey values within the area
+*		defined by the view structure reference object are
+*		extracted.
+* \param	obj			Given 3D object.
+* \param	view			The given view structure.
+* \param	dstErr			Destination pointer for error
+*					code, may be NULL.
+*/
+WlzObject 	*WlzGetSectionFromObject(WlzObject *obj,
+					 WlzThreeDViewStruct *view,
+					 WlzErrorNum *dstErr)
 {
-  pix.type = grey_type;
-  pix.p.inp = &(val.inv);
+  WlzObject	*newObj = NULL;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  switch( pixptr.type ){
-  case WLZ_GREY_INT:
-    switch( grey_type ){
-    case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.inp);
-      return pix;
-    case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.inp);
-      return pix;
-    case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.inp);
-      return pix;
-    case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.inp);
-      return pix;
-    case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.inp);
-      return pix;
-    }
-  case WLZ_GREY_SHORT:
-    switch( grey_type ){
-    case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.shp);
-      return pix;
-    case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.shp);
-      return pix;
-    case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.shp);
-      return pix;
-    case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.shp);
-      return pix;
-    case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.shp);
-      return pix;
-    }
-  case WLZ_GREY_UBYTE:
-    switch( grey_type ){
-    case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.ubp);
-      return pix;
-    case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.ubp);
-      return pix;
-    case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.ubp);
-      return pix;
-    case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.ubp);
-      return pix;
-    case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.ubp);
-      return pix;
-    }
-  case WLZ_GREY_FLOAT:
-    switch( grey_type ){
-    case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.flp);
-      return pix;
-    case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.flp);
-      return pix;
-    case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.flp);
-      return pix;
-    case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.flp);
-      return pix;
-    case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.flp);
-      return pix;
-    }
-  case WLZ_GREY_DOUBLE:
-    switch( grey_type ){
-    case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.dbp);
-      return pix;
-    case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.dbp);
-      return pix;
-    case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.dbp);
-      return pix;
-    case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.dbp);
-      return pix;
-    case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.dbp);
-      return pix;
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(obj->type)
+    {
+      case WLZ_3D_DOMAINOBJ:
+        newObj = WlzGetSectionFrom3DDomObj(obj, view, &errNum);
+        break;
+      case WLZ_CONTOUR:
+	dom.core = NULL;
+	val.core = NULL;
+        dom.ctr = WlzGetSectionFromCtr(obj->domain.ctr, view, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  newObj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL, &errNum);
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    WlzFreeContour(dom.ctr);
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
     }
   }
-  return(pix);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(newObj);
 }
 
-/************************************************************************
-*   Function   : WlzGetSectionFromObject				*
-*   Date       : Thu Feb  6 15:20:23 1997				*
-*************************************************************************
-*   Synopsis   :Return a 2D object of the same grey-type as the given	*
-*		object corresponding to the planar section defined by	*
-*		the given view structure. Only an area defined by the	*
-*		view-structure reference object is filled. Currently	*
-*		binary images are handled by filling an array and      	*
-*		thresholding.						*
-*   Returns    :WlzObject *: the section as a woolz 2D object		*
-*   Parameters :WlzObject           *obj: source object			*
-*		WlzThreeDViewStruct *viewStr: structure defining the	*
-*			section.					*
-*   Global refs:None.							*
-************************************************************************/
-WlzObject *WlzGetSectionFromObject(
+/*!
+* \return				A new 2D contour cut from the given
+*					3D contour.
+* \ingroup	WlzSectionTransform
+* \brief	Cuts the 2D contour which lies on the plane specified by
+*		the given view structure from the given 3D contour.
+* \param	ctr			Given contour.
+* \param	view			The given view structure.
+* \param	dstErr			Destination pointer for error
+*					code, may be NULL.
+*/
+static WlzContour *WlzGetSectionFromCtr(WlzContour *ctr,
+				        WlzThreeDViewStruct *view,
+					WlzErrorNum *dstErr)
+{
+  WlzGMModel	*newModel = NULL;
+  WlzContour	*newCtr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ctr->model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(ctr->model->type)
+    {
+      case WLZ_GMMOD_3I:
+      case WLZ_GMMOD_3D:
+	newModel = WlzGetSectionFromGMModel(ctr->model, view, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  newCtr = WlzMakeContour(&errNum);
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    (void )WlzGMModelFree(newModel);
+	  }
+	  else
+	  {
+	    newCtr->model = newModel;
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(newCtr);
+}
+
+/*!
+* \return				The section as a new 2D woolz object.
+* \ingroup	WlzSectionTransform
+* \brief	Cuts a 2D object of the same grey-type as the given
+*		object corresponding to the planar section defined by the given
+*		view structure. Only an area defined by the view-structure
+*		reference object is filled. Currently binary images are handled
+*		by filling an array and thresholding.
+* \param	obj			Given 3D object.
+* \param	viewStr			The given view structure.
+* \param	dstErr			Destination pointer for error
+*					code, may be NULL.
+*/
+static WlzObject *WlzGetSectionFrom3DDomObj(
   WlzObject		*obj,
   WlzThreeDViewStruct	*viewStr,
   WlzErrorNum	*dstErr)
@@ -255,7 +285,7 @@ WlzObject *WlzGetSectionFromObject(
 	    pixptr.p = *(gVWSp->gPtr);
 	    pixptr.type = gVWSp->gType;
 	    if( pixptr.type != grey_type ){
-	      pixptr = convert_grey_type(pixptr, grey_type);
+	      pixptr = WlzGetSectionConvertGreyType(pixptr, grey_type);
 	    }
 	    switch( grey_type ){
 	    case WLZ_GREY_INT:
@@ -317,4 +347,115 @@ WlzObject *WlzGetSectionFromObject(
     *dstErr = errNum;
   }
   return newobj;
+}
+
+/*!
+* \return				Converted pixel.
+* \brief	Convert the type of the given pixel.
+* \param	pixptr			Given pixel.
+* \param	grey_type		Required grey type.
+*/
+static WlzPixelP WlzGetSectionConvertGreyType(
+  WlzPixelP	pixptr,
+  WlzGreyType	grey_type)
+{
+  WlzGreyV	val;
+  WlzPixelP	pix;
+
+  pix.type = grey_type;
+  pix.p.inp = &(val.inv);
+
+  switch( pixptr.type ){
+  case WLZ_GREY_INT:
+    switch( grey_type ){
+    case WLZ_GREY_INT:
+      val.inv = *(pixptr.p.inp);
+      return pix;
+    case WLZ_GREY_SHORT:
+      val.shv = *(pixptr.p.inp);
+      return pix;
+    case WLZ_GREY_UBYTE:
+      val.ubv = (UBYTE) *(pixptr.p.inp);
+      return pix;
+    case WLZ_GREY_FLOAT:
+      val.flv = *(pixptr.p.inp);
+      return pix;
+    case WLZ_GREY_DOUBLE:
+      val.dbv = *(pixptr.p.inp);
+      return pix;
+    }
+  case WLZ_GREY_SHORT:
+    switch( grey_type ){
+    case WLZ_GREY_INT:
+      val.inv = *(pixptr.p.shp);
+      return pix;
+    case WLZ_GREY_SHORT:
+      val.shv = *(pixptr.p.shp);
+      return pix;
+    case WLZ_GREY_UBYTE:
+      val.ubv = (UBYTE) *(pixptr.p.shp);
+      return pix;
+    case WLZ_GREY_FLOAT:
+      val.flv = *(pixptr.p.shp);
+      return pix;
+    case WLZ_GREY_DOUBLE:
+      val.dbv = *(pixptr.p.shp);
+      return pix;
+    }
+  case WLZ_GREY_UBYTE:
+    switch( grey_type ){
+    case WLZ_GREY_INT:
+      val.inv = *(pixptr.p.ubp);
+      return pix;
+    case WLZ_GREY_SHORT:
+      val.shv = *(pixptr.p.ubp);
+      return pix;
+    case WLZ_GREY_UBYTE:
+      val.ubv = (UBYTE) *(pixptr.p.ubp);
+      return pix;
+    case WLZ_GREY_FLOAT:
+      val.flv = *(pixptr.p.ubp);
+      return pix;
+    case WLZ_GREY_DOUBLE:
+      val.dbv = *(pixptr.p.ubp);
+      return pix;
+    }
+  case WLZ_GREY_FLOAT:
+    switch( grey_type ){
+    case WLZ_GREY_INT:
+      val.inv = *(pixptr.p.flp);
+      return pix;
+    case WLZ_GREY_SHORT:
+      val.shv = *(pixptr.p.flp);
+      return pix;
+    case WLZ_GREY_UBYTE:
+      val.ubv = (UBYTE) *(pixptr.p.flp);
+      return pix;
+    case WLZ_GREY_FLOAT:
+      val.flv = *(pixptr.p.flp);
+      return pix;
+    case WLZ_GREY_DOUBLE:
+      val.dbv = *(pixptr.p.flp);
+      return pix;
+    }
+  case WLZ_GREY_DOUBLE:
+    switch( grey_type ){
+    case WLZ_GREY_INT:
+      val.inv = *(pixptr.p.dbp);
+      return pix;
+    case WLZ_GREY_SHORT:
+      val.shv = *(pixptr.p.dbp);
+      return pix;
+    case WLZ_GREY_UBYTE:
+      val.ubv = (UBYTE) *(pixptr.p.dbp);
+      return pix;
+    case WLZ_GREY_FLOAT:
+      val.flv = *(pixptr.p.dbp);
+      return pix;
+    case WLZ_GREY_DOUBLE:
+      val.dbv = *(pixptr.p.dbp);
+      return pix;
+    }
+  }
+  return(pix);
 }

@@ -764,7 +764,7 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       break;
     case WLZ_ERR_OBJECT_NULL:
       errStr = "WLZ_ERR_OBJECT_NULL",
-      msgStr = "Null object";
+      msgStr = "NULL object";
       break;
     case WLZ_ERR_OBJECT_TYPE:
       errStr = "WLZ_ERR_OBJECT_TYPE",
@@ -776,7 +776,7 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       break;
     case WLZ_ERR_DOMAIN_NULL :
       errStr = "WLZ_ERR_DOMAIN_NULL ",
-      msgStr = "Null domain";
+      msgStr = "NULL domain";
       break;
     case WLZ_ERR_DOMAIN_TYPE:
       errStr = "WLZ_ERR_DOMAIN_TYPE",
@@ -788,7 +788,7 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       break;
     case WLZ_ERR_VALUES_NULL:
       errStr = "WLZ_ERR_VALUES_NULL",
-      msgStr = "Null values";
+      msgStr = "NULL values";
       break;
     case WLZ_ERR_VALUES_TYPE:
       errStr = "WLZ_ERR_VALUES_TYPE",
@@ -800,11 +800,23 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       break;
     case WLZ_ERR_PROPERTY_NULL:
       errStr = "WLZ_ERR_PROPERTY_NULL",
-      msgStr = "Null property";
+      msgStr = "NULL property";
+      break;
+    case WLZ_ERR_GMELM_NULL:
+      errStr = "WLZ_ERR_GMELM_NULL",
+      msgStr = "Geometric model element NULL";
+      break;
+    case WLZ_ERR_GMELM_TYPE:
+      errStr = "WLZ_ERR_GMELM_TYPE",
+      msgStr = "Geometric model element type";
+      break;
+    case WLZ_ERR_GMELM_DATA:
+      errStr = "WLZ_ERR_GMELM_DATA",
+      msgStr = "Geometric model element data";
       break;
     case WLZ_ERR_PARAM_NULL:
       errStr = "WLZ_ERR_PARAM_NULL",
-      msgStr = "Null parameter";
+      msgStr = "NULL parameter";
       break;
     case WLZ_ERR_PARAM_TYPE:
       errStr = "WLZ_ERR_PARAM_TYPE",
@@ -852,7 +864,7 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       break;
     case WLZ_ERR_INTERVALDOMAIN_NULL:
       errStr = "WLZ_ERR_INTERVALDOMAIN_NULL",
-      msgStr = "Null intervaldomain";
+      msgStr = "NULL intervaldomain";
       break;
     case WLZ_ERR_INTERVALDOMAIN_TYPE:
       errStr = "WLZ_ERR_INTERVALDOMAIN_TYPE",
@@ -860,11 +872,11 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       break;
     case WLZ_ERR_INTERVALLINE_NULL:
       errStr = "WLZ_ERR_INTERVALLINE_NULL",
-      msgStr = "Null intervalline";
+      msgStr = "NULL intervalline";
       break;
     case WLZ_ERR_INTERVAL_NULL:
       errStr = "WLZ_ERR_INTERVAL_NULL",
-      msgStr = "Null interval";
+      msgStr = "NULL interval";
       break;
     case WLZ_ERR_INTERVAL_DATA:
       errStr = "WLZ_ERR_INTERVAL_DATA",
@@ -922,10 +934,6 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       errStr = "WLZ_ERR_INTERPOLATION_TYPE",
       msgStr = "Invalid interpolation type";
       break;
-    case WLZ_ERR_POINT_TYPE:
-      errStr = "WLZ_ERR_POINT_TYPE",
-      msgStr = "Invalid point type";
-      break;
     case WLZ_ERR_POLYGON_TYPE:
       errStr = "WLZ_ERR_POLYGON_TYPE",
       msgStr = "Invalid polygon type";
@@ -933,10 +941,6 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
     case WLZ_ERR_RASTERDIR_TYPE:
       errStr = "WLZ_ERR_RASTERDIR_TYPE",
       msgStr = "Invalid raster direction type";
-      break;
-    case WLZ_ERR_VECTOR_TYPE:
-      errStr = "WLZ_ERR_VECTOR_TYPE",
-      msgStr = "Invalid vector type";
       break;
     case WLZ_ERR_LINKCOUNT_DATA:
       errStr = "WLZ_ERR_LINKCOUNT_DATA",
@@ -1025,6 +1029,9 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_VALUES_TYPE", WLZ_ERR_VALUES_TYPE,
 	      "WLZ_ERR_VALUES_DATA", WLZ_ERR_VALUES_DATA,
 	      "WLZ_ERR_PROPERTY_NULL", WLZ_ERR_PROPERTY_NULL,
+	      "WLZ_ERR_GMELM_NULL", WLZ_ERR_GMELM_NULL,
+	      "WLZ_ERR_GMELM_TYPE", WLZ_ERR_GMELM_TYPE,
+	      "WLZ_ERR_GMELM_DATA", WLZ_ERR_GMELM_DATA,
 	      "WLZ_ERR_PARAM_NULL", WLZ_ERR_PARAM_NULL,
 	      "WLZ_ERR_PARAM_TYPE", WLZ_ERR_PARAM_TYPE,
 	      "WLZ_ERR_PARAM_DATA", WLZ_ERR_PARAM_DATA,
@@ -1055,10 +1062,8 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_COMPTHRESH_TYPE", WLZ_ERR_COMPTHRESH_TYPE,
 	      "WLZ_ERR_CONNECTIVITY_TYPE", WLZ_ERR_CONNECTIVITY_TYPE,
 	      "WLZ_ERR_INTERPOLATION_TYPE", WLZ_ERR_INTERPOLATION_TYPE,
-	      "WLZ_ERR_POINT_TYPE", WLZ_ERR_POINT_TYPE,
 	      "WLZ_ERR_POLYGON_TYPE", WLZ_ERR_POLYGON_TYPE,
 	      "WLZ_ERR_RASTERDIR_TYPE", WLZ_ERR_RASTERDIR_TYPE,
-	      "WLZ_ERR_VECTOR_TYPE", WLZ_ERR_VECTOR_TYPE,
 	      "WLZ_ERR_LINKCOUNT_DATA", WLZ_ERR_LINKCOUNT_DATA,
 	      "WLZ_ERR_MEM_ALLOC", WLZ_ERR_MEM_ALLOC,
 	      "WLZ_ERR_MEM_FREE", WLZ_ERR_MEM_FREE,

@@ -16,19 +16,34 @@
 *		These can be either planar graphs or 3D surfaces, with
 *		the surfaces being either manifold or non-manifold.
 * \ingroup      WlzGeoModel
-* \todo         - The element deletion functions are only partly written
-*		  and only partly work for 2D models.
-*		- Radial edges are not checked for in WlzGMModelDeleteS().
+* \todo
+* 		\li The element deletion functions are only partly written
+*		and only partly work for 2D models.
+*		\li Radial edges are not checked for in WlzGMModelDeleteS().
+*		\li Unlinking edge topology elements using WlzGMEdgeTUnlink()
+*		may not be valid if edge topology elements aren't unlinked
+*		in pairs for terminal edge elements.
+*		\li 3D simplex construction is not complete. If all three
+*		verticies and all three edges are within the model, need to
+*		check if the three verticies are in a common loop and then if
+*		ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
+*		vertexT's.
+*		\li WlzGMLoopTFindShell() code for loopTs connected by a
+*		vertex not implemented yet.
 * \bug          None known.
 */
 #include <Wlz.h>
+#include <float.h>
 #include <limits.h>
 
 static WlzGMShell 	*WlzGMLoopTFindShell(
 			  WlzGMLoopT *gLT);
-static WlzErrorNum 	WlzGMShellMergeG(
+static void	 	WlzGMShellMergeG(
 			  WlzGMShell *shell0,
 			  WlzGMShell *shell1);
+static void	 	WlzGMShellMergeT(
+			  WlzGMShell *s0,
+			  WlzGMShell *s1);
 static WlzErrorNum 	WlzGMModelDeleteE2D(
 			  WlzGMModel *model,
 			  WlzGMEdge *dE);
@@ -122,6 +137,7 @@ static void 		WlzGMModelDeleteLT(
 
 /*!
 * \return				Woolz error code.
+* \ingroup      WlzGeoModel
 * \brief	Add a resource allocation callback to the models resources.
 * \param	model			The model.
 * \param	fn			The callback function.
@@ -153,6 +169,7 @@ WlzErrorNum	WlzGMModelAddResCb(WlzGMModel *model, WlzGMCbFn fn,
 
 /*!
 * \return	<void>
+* \ingroup      WlzGeoModel
 * \brief	Removes a resource allocation callback from the models
 *		resources. Both the callback function and callback data
 *		must have the same values as when the callback was added
@@ -193,6 +210,7 @@ void		WlzGMModelRemResCb(WlzGMModel *model, WlzGMCbFn fn,
 
 /*!
 * \return	<void>
+* \ingroup      WlzGeoModel
 * \brief	Calls all resource allocation callbacks passing on the
 *		given model, element and reason along with the data from
 *		the callback entry.
@@ -219,6 +237,7 @@ static void	WlzGMModelCallResCb(WlzGMModel *model, WlzGMElemP elm,
 /*!
 * \return				New empty model.
 * \ingroup      WlzGeoModel
+* \ingroup      WlzGeoModel
 * \brief	Creates an empty non-manifold geometry model.
 * \param	modType			Type of model to create.
 * \param	blkSz			Resource block size, used for
@@ -233,42 +252,48 @@ static void	WlzGMModelCallResCb(WlzGMModel *model, WlzGMElemP elm,
 WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
 			       int blkSz, int vHTSz, WlzErrorNum *dstErr)
 {
+  int		dim = 0;
   WlzGMModel	*model = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   unsigned int	vertexGSz,
 		shellGSz;
   const unsigned int defBlkSz = 1024;
-  const unsigned int defVHTSz = 1024 * 1024;
+  const unsigned int defVHTSz2D = 16 * 1024,
+  		     defVHTSz3D = 1024 * 1024;
 
   if(blkSz <= 0)
   {
     blkSz = defBlkSz;
   }
-  if(vHTSz <= 0)
-  {
-    vHTSz = defVHTSz;
-  }
   switch(modType)
   {
     case WLZ_GMMOD_2I:
+      dim = 2;
       vertexGSz = sizeof(WlzGMVertexG2I);
       shellGSz = sizeof(WlzGMShellG2I);
       break;
     case WLZ_GMMOD_2D:
+      dim = 2;
       vertexGSz = sizeof(WlzGMVertexG2D);
       shellGSz = sizeof(WlzGMShellG2D);
       break;
     case WLZ_GMMOD_3I:
+      dim = 3;
       vertexGSz = sizeof(WlzGMVertexG3I);
       shellGSz = sizeof(WlzGMShellG3I);
       break;
     case WLZ_GMMOD_3D:
+      dim = 3;
       vertexGSz = sizeof(WlzGMVertexG3D);
       shellGSz = sizeof(WlzGMShellG3D);
       break;
     default:
       errNum = WLZ_ERR_DOMAIN_TYPE;
       break;
+  }
+  if((errNum == WLZ_ERR_NONE) && (vHTSz <= 0))
+  {
+    vHTSz = (dim == 3)? defVHTSz3D: defVHTSz2D;
   }
   /* Create the new model. All elements of the model including it's
    * resources are set to zero. */
@@ -730,7 +755,8 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
 */
 WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 {
-  int		gIdx,
+  int		dim,
+  		gIdx,
   		nIdx,
   		nBkSz,
 		nHTSz;
@@ -747,6 +773,10 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else
+  {
+    dim = WlzGMModelGetDimension(gM, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     /* Make a new model. */
     if((nBkSz = gM->res.vertex.numElm / 16) < minBkSz)
@@ -1052,7 +1082,7 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
       ++gIdx;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (dim == 3))
   {
     /* Copy faces */
     gIdx = 0;
@@ -1115,10 +1145,17 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	  		      AlcVectorExtendAndGet(nM->res.loopT.vec,
 					       *(resIdxTb->loopT.idxLut +
 						 gElmP.loopT->opp->idx));
-	  nElmP.loopT->face = (WlzGMFace *)
-	  		      AlcVectorExtendAndGet(nM->res.face.vec,
-					       *(resIdxTb->face.idxLut +
-						 gElmP.loopT->face->idx));
+	  if(dim == 2)
+	  {
+	    nElmP.loopT->face = NULL;
+	  }
+	  else
+	  {
+	    nElmP.loopT->face = (WlzGMFace *)
+				AlcVectorExtendAndGet(nM->res.face.vec,
+						 *(resIdxTb->face.idxLut +
+						   gElmP.loopT->face->idx));
+	  }
 	  nElmP.loopT->edgeT = (WlzGMEdgeT *)
 	  		      AlcVectorExtendAndGet(nM->res.edgeT.vec,
 					       *(resIdxTb->edgeT.idxLut +
@@ -1130,7 +1167,7 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	  if((nElmP.loopT->next == NULL) ||
 	     (nElmP.loopT->prev == NULL) ||
 	     (nElmP.loopT->opp == NULL) ||
-	     (nElmP.loopT->face == NULL) ||
+	     ((dim != 2) && (nElmP.loopT->face == NULL)) ||
 	     (nElmP.loopT->edgeT == NULL) ||
 	     (nElmP.loopT->parent == NULL))
 	  {
@@ -1337,7 +1374,7 @@ WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (shell->idx >= 0))
   {
     elm.shell = shell;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1374,7 +1411,7 @@ WlzErrorNum	WlzGMModelFreeF(WlzGMModel *model, WlzGMFace *face)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (face->idx >= 0))
   {
     elm.face = face;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1407,7 +1444,7 @@ WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (loopT->idx >= 0))
   {
     elm.loopT = loopT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1440,7 +1477,7 @@ WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (diskT->idx >= 0))
   {
     elm.diskT = diskT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1472,7 +1509,7 @@ WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (edge->idx >= 0))
   {
     elm.edge = edge;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1505,7 +1542,7 @@ WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (edgeT->idx >= 0))
   {
     elm.edgeT = edgeT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1538,7 +1575,7 @@ WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (vertex->idx >= 0))
   {
     elm.vertex = vertex;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1576,7 +1613,7 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
   {
     errNum = WlzGMModelTypeValid(model->type);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (vertexT->idx >= 0))
   {
     elm.vertexT = vertexT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_FREE);
@@ -1600,64 +1637,65 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 */
 void		WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 {
-  WlzGMVertexT	*tVT;
-  WlzGMEdgeT	*fET,
-  		*nET,
-		*tET;
+  WlzGMVertexT	*cVT;
+  WlzGMEdgeT	*cET,
+		*fET,
+		*nET,
+		*nRET,
+		*rET;
   WlzGMLoopT	*fLT,
-  		*nLT,
-  		*tLT;
+		*nLT,
+		*cLT;
 
   if(model && dS && (dS->idx >= 0))
   {
-    /* Unlink the shell. */
     WlzGMShellUnlink(dS);
-    /* For each loopT. */
-    fLT = tLT = dS->child;
-    do
+    if(((cLT = fLT = dS->child) != NULL) && (fLT->idx >= 0))
     {
-      /* TODO need to check for radial edges! */
-      /* For each edgeT. */
-      fET = tET = tLT->edgeT;
-      do
+      do  /* For each loopT. */
       {
-	tVT = tET->vertexT;
-	if(tVT->diskT->vertex->idx >= 0)
+	nLT = cLT->next;
+	rET = fET = cLT->edgeT;
+	do /* For each radial edgeT. */
 	{
-	  (void )WlzGMModelFreeV(model, tVT->diskT->vertex);
+	  cET = rET;
+	  nRET = rET->rad;
+	  do /* For each next edgeT. */
+	  {
+	    nET = cET->next;
+	    cVT = cET->vertexT;
+	    if(cVT->diskT->vertex->idx >= 0)
+	    {
+	      (void )WlzGMModelFreeV(model,  cVT->diskT->vertex);
+	    }
+	    if(cVT->diskT->idx >= 0)
+	    {
+	      (void )WlzGMModelFreeDT(model,  cVT->diskT);
+	    }
+	    if(cVT->idx >= 0)
+	    {
+	      (void )WlzGMModelFreeVT(model, cVT);
+	    }
+	    if(cET->edge->idx >= 0)
+	    {
+	      (void )WlzGMModelFreeE(model, cET->edge);
+	    }
+	    if(cET->idx >= 0)
+	    {
+	      (void )WlzGMModelFreeET(model, cET);
+	    }
+	    cET = nET;
+	  } while(cET != rET);
+	  rET = nRET;
+	} while(rET != fET);
+	if(cLT->face && (cLT->face->idx >= 0))
+	{
+	  (void )WlzGMModelFreeF(model, cLT->face);
 	}
-	if(tVT->diskT->idx >= 0)
-	{
-	  (void )WlzGMModelFreeDT(model, tVT->diskT);
-	}
-	if(tVT->idx >= 0)
-	{
-	  (void )WlzGMModelFreeVT(model, tVT);
-	}
-	if(tET->rad->idx >= 0)
-	{
-	  (void )WlzGMModelFreeET(model, tET->rad);
-	}
-	if(tET->edge->idx >= 0)
-	{
-	  (void )WlzGMModelFreeE(model, tET->edge);
-        }
-	nET = tET->next;
-	if(tET->idx >= 0)
-	{
-	  (void )WlzGMModelFreeET(model, tET);
-	}
-	tET = nET;
-      } while(tET != fET);
-      /* Free the loopT and face. */
-      nLT = tLT->next;
-      if(tLT->face->idx >= 0)
-      {
-        (void )WlzGMModelFreeF(model, tLT->face);
-      }
-      (void )WlzGMModelFreeLT(model, tLT);
-      tLT = nLT;
-    } while(tLT != fLT);
+	(void )WlzGMModelFreeLT(model, cLT);
+	cLT = nLT;
+      } while(cLT != fLT);
+    }
     (void )WlzGMModelFreeS(model, dS);
   }
 }
@@ -1692,6 +1730,10 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
   WlzGMDiskT	*tDT0,
   		*tDT1;
   WlzGMEdge	**edgeCol = NULL;
+  WlzGMShell	*pS;
+  WlzVertex	vG;
+  WlzBox	tB,
+  		pSG;
   const int	eStp = 16;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1714,7 +1756,7 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
 	tVT1 = tVT1->next;
 	if(eCnt >= eMax)
 	{
-	  eMax = eMax? eStp: eMax * 2;
+	  eMax = (eMax == 0)? eStp: eMax * 2;
 	  if((edgeCol = (WlzGMEdge **)AlcRealloc(edgeCol,
 					sizeof(WlzGMEdge *) * eMax)) == NULL)
 	  {
@@ -1727,6 +1769,31 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
 	}
       } while((errNum == WLZ_ERR_NONE) && (tVT1 != tVT0));
     } while((errNum == WLZ_ERR_NONE) && (tDT1 != tDT0));
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* If the vertex lies close to the shell's bounding box then update
+       * the shell's geometry. */
+      pS = dV->diskT->vertexT->parent->parent->parent;
+      switch(model->type)
+      {
+	case WLZ_GMMOD_2I: /* FALLTHROUGH */
+	case WLZ_GMMOD_2D:
+	  if((errNum = WlzGMVertexGetG2D(dV, &(vG.d2))) == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzGMShellDndateG2D(pS, vG.d2);
+	  }
+	  break;
+	case WLZ_GMMOD_3I: /* FALLTHROUGH */
+	case WLZ_GMMOD_3D:
+	  if((errNum = WlzGMVertexGetG3D(dV, &(vG.d3))) == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzGMShellDndateG3D(pS, vG.d3);
+	  }
+	  break;
+        default:
+	  break;
+      }
+    }
     if(errNum == WLZ_ERR_NONE)
     {
       if(eCnt == 0)
@@ -1743,10 +1810,6 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
 	  errNum = WlzGMModelDeleteE(model, *(edgeCol + --eCnt));
 	}
       }
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      /* TODO Update the shell's geometry. */
     }
     if(edgeCol)
     {
@@ -1773,11 +1836,11 @@ WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
 
   switch(model->type)
   {
-    case WLZ_GMMOD_2I:
+    case WLZ_GMMOD_2I: /* FALLTHROUGH */
     case WLZ_GMMOD_2D:
       errNum = WlzGMModelDeleteE2D(model, dE);
       break;
-    case WLZ_GMMOD_3I:
+    case WLZ_GMMOD_3I: /* FALLTHROUGH */
     case WLZ_GMMOD_3D:
       errNum = WlzGMModelDeleteE2D(model, dE);
       break;
@@ -1801,12 +1864,14 @@ WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
 */
 static WlzErrorNum WlzGMModelDeleteE2D(WlzGMModel *model, WlzGMEdge *dE)
 {
-  int		termEdgFlg;
+  int		singleLTFlg,    /* Non zero if a single loopT is to be split */
+  		termEFlg;         /* Non zero if the edge is a terminal edge */
   WlzGMEdgeT	*tET0,
-  		*tET1,
+		*tET1,
 		*tET2,
 		*tET3,
-		*tET4;
+		*cET0,
+		*cET1;
   WlzGMShell	*eS,
   		*nS = NULL;
   WlzGMFace	*nF = NULL;
@@ -1833,84 +1898,110 @@ static WlzErrorNum WlzGMModelDeleteE2D(WlzGMModel *model, WlzGMEdge *dE)
     else
     {
       /* Delete all edge topology elements that lie along the edge. */
-      tET1 = tET0;
-      do
+      tET0 = tET0;
+      tET0 = tET0->rad;
+      /* By deleting an edge we can either split and existing loopT or
+       * joint 2 existing loopT's. */
+      tET1 = tET0->opp;
+      tET2 = tET0->next;
+      tET3 = tET1->next;
+      singleLTFlg = tET0->parent == tET1->parent;
+      termEFlg = ((tET1 == tET0->next) << 1) | (tET0 == tET1->next);
+      /* Choose edge topology elements which can be used to set the topology
+       * of the loopT topology element(s) after deleting the edge topology
+       * elements. */
+      if(singleLTFlg)
       {
-        tET1 = tET1->rad;
-	/* By deleting an edge we can either split and existing loopT or
-	 * joint 2 existing loopT's. */
-	tET2 = tET1->opp;
-	tET3 = tET1->next;
-	tET4 = tET2->next;
-	termEdgFlg = (tET2 == tET1->next) || (tET1 == tET2->next);
-	WlzGMModelDeleteET(model, tET1);
-	WlzGMModelDeleteET(model, tET2);
-	if(tET3->parent == tET4->parent) /* A single loopT has been split */
+	switch(termEFlg)
 	{
-	  /* Update the loop topology elements. */
-	  WlzGMLoopTSetT(tET3->parent); /* TODO: Not needed? */
-	  /* Either one loopT has been split into two, or a terminal
-	   * edge has been removed. */
-	  /* If a terminal edge has been removed then there is no change
-	   * to the loopT/shell. But if the loopT has been split
-	   * into two, creating a new loopT. Possibley
-	   * also create a new shell too. */
-	  if(!termEdgFlg)
+	  case 0:
+	    cET0 = tET2;
+	    cET1 = tET3;
+	    break;
+	  case 1:
+	    cET0 = tET2;
+	    cET1 = NULL;
+	    break;
+	  case 2:
+	    cET0 = tET3;
+	    cET1 = NULL;
+	    break;
+	}
+      }
+      else
+      {
+	cET0 = tET2;
+	cET1 = NULL;
+      }
+      /* Delete the edge topology elements. */
+      WlzGMModelDeleteET(model, tET0);
+      WlzGMModelDeleteET(model, tET1);
+      if(singleLTFlg)
+      {
+	/* Update the loop topology elements. */
+	cET0->parent->edgeT = cET0;
+	WlzGMLoopTSetT(cET0->parent);
+	/* Either one loopT has been split into two, or a terminal
+	 * edge has been removed. */
+	/* If a terminal edge has been removed then there is no change
+	 * to the loopT/shell. But if the loopT has been split
+	 * into two, creating a new loopT. Possibley
+	 * also create a new shell too. */
+	if(termEFlg == 0)
+	{
+	  nLT = WlzGMModelNewLT(model, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    nLT = WlzGMModelNewLT(model, &errNum);
-	    if(errNum == WLZ_ERR_NONE)
+	    if(tET2->parent->face)
 	    {
-	      if(tET3->parent->face)
+	      nF = WlzGMModelNewF(model, &errNum);
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    /* Set the parent field in all the edgeTs to be the new loopT. */
+	    nLT->next = nLT->prev = nLT->opp = nLT;
+	    nLT->face = nF;
+	    nLT->edgeT = cET1;
+	    nLT->parent = tET2->parent->parent;
+	    WlzGMLoopTSetT(nLT);
+	    /* Look to see if the loopT has edgeT elements which have
+	     * opposite elements in a different loopT. */
+	    if((eS = WlzGMLoopTFindShell(nLT)) != NULL)
+	    {
+	      nLT->parent = eS;
+	    }
+	    else
+	    {
+	      /* Need to create a new shell. */
+	      if((nS = WlzGMModelNewS(model, &errNum)) != NULL)
 	      {
-	        nF = WlzGMModelNewF(model, &errNum);
+		WlzGMShellAppend(tET2->parent->parent, nS);
+		nS->child = nLT;
+		nS->parent = model;
+		nLT->parent = nS;
+		errNum = WlzGMShellComputeGBB(nS);
 	      }
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      /* Set the parent field in all the edgeTs to be the new loopT. */
-	      nLT->next = nLT->prev = nLT->opp = nLT;
-	      nLT->face = nF;
-	      nLT->edgeT = tET4;
-	      nLT->parent = tET3->parent->parent;
-	      WlzGMLoopTSetT(nLT);
-	      /* Look to see if the loopT has edgeT elements which have
-	       * opposite elements in a different loopT. */
-              if((eS = WlzGMLoopTFindShell(nLT)) != NULL)
-	      {
-	        nLT->parent = eS;
-	      }
-	      else
-	      {
-	        /* Need to create a new shell. */
-		if((nS = WlzGMModelNewS(model, &errNum)) != NULL)
-		{
-		  WlzGMShellAppend(tET3->parent->parent, nS);
-		  nS->child = nLT;
-		  nS->parent = model;
-		  nLT->parent = nS;
-		  errNum = WlzGMShellComputeGBB(nS);
-		}
-	      }
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-	        errNum = WlzGMShellComputeGBB(tET3->parent->parent);
-	      }
+	      errNum = WlzGMShellComputeGBB(tET2->parent->parent);
 	    }
 	  }
 	}
-	else				/* Two loopTs have been joined. */
+      }
+      else				/* Two loopTs have been joined. */
+      {
+	/* Unlink and free the unused face and loopT. */
+	WlzGMLoopTUnlink(tET3->parent);
+	if(tET3->parent->face && (tET3->parent == tET3->parent->opp))
 	{
-	  /* Unlink and free the unused face and loopT. */
-	  WlzGMLoopTUnlink(tET4->parent);
-	  if(tET4->parent->face && (tET4->parent == tET4->parent->opp))
-	  {
-	    WlzGMModelFreeF(model, tET4->parent->face);
-	  }
-	  WlzGMModelFreeLT(model, tET4->parent);
-	  /* Update the loop topology elements. */
-	  WlzGMLoopTSetT(tET3->parent);
+	  WlzGMModelFreeF(model, tET3->parent->face);
 	}
-      } while(tET1 != tET0);
+	WlzGMModelFreeLT(model, tET3->parent);
+	/* Update the loop topology elements. */
+	WlzGMLoopTSetT(cET0->parent);
+      }
       (void )WlzGMModelFreeE(model, dE);
     }
   }
@@ -1973,6 +2064,7 @@ void		WlzGMModelDeleteF(WlzGMModel *model, WlzGMFace *dF)
 
 /*!
 * \return
+* \ingroup      WlzGeoModel
 * \brief	Deletes a loop topology element along with all edge
 *		topology elements which depend on it.
 *		If the loop topology element's shell depends solely
@@ -2007,6 +2099,7 @@ static void 	WlzGMModelDeleteLT(WlzGMModel *model, WlzGMLoopT *dLT)
 
 /*!
 * \return
+* \ingroup      WlzGeoModel
 * \brief	Deletes an edge topology element and all the elements which
 * 		depend on it. All elements which depend on the edge topology
 * 		element are unlinked and then freed. No parent of the edge
@@ -2047,6 +2140,36 @@ static void	WlzGMModelDeleteET(WlzGMModel *model, WlzGMEdgeT *dET)
 }
 
 /* Model access and testing. */
+
+/*!
+* \return				The model's dimension, either 2 or 3.
+* \ingroup      WlzGeoModel
+* \brief	Gets the models dimension from the model's type.
+* \param	model			The model.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+int	 	WlzGMModelGetDimension(WlzGMModel *model, WlzErrorNum *dstErr)
+{
+  int		dim = 0;
+
+  switch(model->type)
+  {
+    case WLZ_GMMOD_2I:
+    case WLZ_GMMOD_2D:
+      dim = 2;
+      break;
+    case WLZ_GMMOD_3I:
+    case WLZ_GMMOD_3D:
+      dim = 3;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = (dim == 0)? WLZ_ERR_DOMAIN_TYPE: WLZ_ERR_NONE;
+  }
+  return(dim);
+}
 
 /*!
 * \return				Woolz error code.
@@ -2600,11 +2723,11 @@ WlzErrorNum	WlzGMShellUpdateG3D(WlzGMShell *shell, WlzDVertex3 pos)
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
-* \brief	Updates a shell's geometry using the given double
+* \brief	Updates a shell's geometry using the new given double
 *               precision position.
 * \param	shell			Given shell with geometry to
 *                                       be set.
-* \param	pos			Given position.
+* \param	pos			Given new position.
 */
 WlzErrorNum	WlzGMShellUpdateG2D(WlzGMShell *shell, WlzDVertex2 pos)
 {
@@ -2926,6 +3049,117 @@ WlzErrorNum	WlzGMShellUpdateGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
+* \brief	Updates the shell's geometry for the removed vertex
+*		with the given position.
+* \param	shell			Given shell with geometry.
+* \param	pos			The removed vertex position.
+*/
+WlzErrorNum	WlzGMShellDndateG2D(WlzGMShell *shell, WlzDVertex2 pos)
+{
+  double	tD0;
+  int		recompFlg[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((shell == NULL) || (shell->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(shell->geo.core->type)
+    {
+      case WLZ_GMELM_SHELL_G2I:
+	recompFlg[0] = (pos.vtX == shell->geo.sg2I->bBox.xMin) ||
+		       (pos.vtX == shell->geo.sg2I->bBox.xMax) ||
+		       (pos.vtY == shell->geo.sg2I->bBox.yMin) ||
+		       (pos.vtY == shell->geo.sg2I->bBox.yMax);
+	break;
+      case WLZ_GMELM_SHELL_G2D:
+	tD0 = pos.vtX - shell->geo.sg2D->bBox.xMin;
+	recompFlg[0] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtX - shell->geo.sg2D->bBox.xMax;
+	recompFlg[1] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg2D->bBox.yMin;
+	recompFlg[2] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg2D->bBox.yMax;
+	recompFlg[3] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	recompFlg[0] = recompFlg[0] || recompFlg[1] ||
+		       recompFlg[2] || recompFlg[3];
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && recompFlg[0])
+  {
+    errNum = WlzGMShellComputeGBB(shell);
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Updates the shell's geometry for the removed vertex
+*		with the given position.
+* \param	shell			Given shell with geometry.
+* \param	pos			The removed vertex position.
+*/
+WlzErrorNum	WlzGMShellDndateG3D(WlzGMShell *shell, WlzDVertex3 pos)
+{
+  double	tD0;
+  int		recompFlg[6];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((shell == NULL) || (shell->geo.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(shell->geo.core->type)
+    {
+      case WLZ_GMELM_SHELL_G3I:
+	recompFlg[0] = (pos.vtX == shell->geo.sg3I->bBox.xMin) ||
+		       (pos.vtX == shell->geo.sg3I->bBox.xMax) ||
+		       (pos.vtY == shell->geo.sg3I->bBox.yMin) ||
+		       (pos.vtY == shell->geo.sg3I->bBox.yMax) ||
+		       (pos.vtZ == shell->geo.sg3I->bBox.zMin) ||
+		       (pos.vtZ == shell->geo.sg3I->bBox.zMax);
+	break;
+      case WLZ_GMELM_SHELL_G3D:
+	tD0 = pos.vtX - shell->geo.sg3D->bBox.xMin;
+	recompFlg[0] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtX - shell->geo.sg3D->bBox.xMax;
+	recompFlg[1] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg3D->bBox.yMin;
+	recompFlg[2] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg3D->bBox.yMax;
+	recompFlg[3] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtZ - shell->geo.sg3D->bBox.zMin;
+	recompFlg[4] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtZ - shell->geo.sg3D->bBox.zMax;
+	recompFlg[5] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	recompFlg[0] = recompFlg[0] || recompFlg[1] ||
+		       recompFlg[2] || recompFlg[3] ||
+		       recompFlg[4] || recompFlg[5] ;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && recompFlg[0])
+  {
+    errNum = WlzGMShellComputeGBB(shell);
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
 * \brief	Recomputes the shell's geometry by walking through
 *               it's children.
 * \param	shell			Given shell with geometry to
@@ -3130,126 +3364,110 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 }
 
 /*!
-* \return				Woolz error code.
+* \return				<void>
 * \ingroup      WlzGeoModel
 * \brief	Merges the geometries of the two shells so that the
 *               first shell's geometry is set to the union of the
 *               two shell's bounding boxes.
-* \param	shell0			First shell with geometry to
+*		Both shells are assumed valid.
+* \param	s0			First shell with geometry to
 *                                       be both used and set.
-* \param	shell1			Second shell with geometry to
+* \param	s1			Second shell with geometry to
 *                                       be used.
 */
-static WlzErrorNum WlzGMShellMergeG(WlzGMShell *shell0, WlzGMShell *shell1)
+static void	WlzGMShellMergeG(WlzGMShell *s0, WlzGMShell *s1)
 {
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((shell0 == NULL) || (shell0->geo.core == NULL) ||
-     (shell1 == NULL) || (shell1->geo.core == NULL))
+  switch(s0->geo.core->type)
   {
-    errNum = WLZ_ERR_DOMAIN_NULL;
+    case WLZ_GMELM_SHELL_G2I:
+      if(s1->geo.sg2I->bBox.xMin < s0->geo.sg2I->bBox.xMin)
+      {
+	s0->geo.sg2I->bBox.xMin = s1->geo.sg2I->bBox.xMin;
+      }
+      if(s1->geo.sg2I->bBox.yMin < s0->geo.sg2I->bBox.yMin)
+      {
+	s0->geo.sg2I->bBox.yMin = s1->geo.sg2I->bBox.yMin;
+      }
+      if(s1->geo.sg2I->bBox.xMax > s0->geo.sg2I->bBox.xMax)
+      {
+	s0->geo.sg2I->bBox.xMax = s1->geo.sg2I->bBox.xMax;
+      }
+      if(s1->geo.sg2I->bBox.yMax > s0->geo.sg2I->bBox.yMax)
+      {
+	s0->geo.sg2I->bBox.yMax = s1->geo.sg2I->bBox.yMax;
+      }
+      break;
+    case WLZ_GMELM_SHELL_G2D:
+      if(s1->geo.sg2D->bBox.xMin < s0->geo.sg2D->bBox.xMin)
+      {
+	s0->geo.sg2D->bBox.xMin = s1->geo.sg2D->bBox.xMin;
+      }
+      if(s1->geo.sg2D->bBox.yMin < s0->geo.sg2D->bBox.yMin)
+      {
+	s0->geo.sg2D->bBox.yMin = s1->geo.sg2D->bBox.yMin;
+      }
+      if(s1->geo.sg2D->bBox.xMax > s0->geo.sg2D->bBox.xMax)
+      {
+	s0->geo.sg2D->bBox.xMax = s1->geo.sg2D->bBox.xMax;
+      }
+      if(s1->geo.sg2D->bBox.yMax > s0->geo.sg2D->bBox.yMax)
+      {
+	s0->geo.sg2D->bBox.yMax = s1->geo.sg2D->bBox.yMax;
+      }
+      break;
+    case WLZ_GMELM_SHELL_G3I:
+      if(s1->geo.sg3I->bBox.xMin < s0->geo.sg3I->bBox.xMin)
+      {
+	s0->geo.sg3I->bBox.xMin = s1->geo.sg3I->bBox.xMin;
+      }
+      if(s1->geo.sg3I->bBox.yMin < s0->geo.sg3I->bBox.yMin)
+      {
+	s0->geo.sg3I->bBox.yMin = s1->geo.sg3I->bBox.yMin;
+      }
+      if(s1->geo.sg3I->bBox.zMin < s0->geo.sg3I->bBox.zMin)
+      {
+	s0->geo.sg3I->bBox.zMin = s1->geo.sg3I->bBox.zMin;
+      }
+      if(s1->geo.sg3I->bBox.xMax > s0->geo.sg3I->bBox.xMax)
+      {
+	s0->geo.sg3I->bBox.xMax = s1->geo.sg3I->bBox.xMax;
+      }
+      if(s1->geo.sg3I->bBox.yMax > s0->geo.sg3I->bBox.yMax)
+      {
+	s0->geo.sg3I->bBox.yMax = s1->geo.sg3I->bBox.yMax;
+      }
+      if(s1->geo.sg3I->bBox.zMax > s0->geo.sg3I->bBox.zMax)
+      {
+	s0->geo.sg3I->bBox.zMax = s1->geo.sg3I->bBox.zMax;
+      }
+      break;
+    case WLZ_GMELM_SHELL_G3D:
+      if(s1->geo.sg3D->bBox.xMin < s0->geo.sg3D->bBox.xMin)
+      {
+	s0->geo.sg3D->bBox.xMin = s1->geo.sg3D->bBox.xMin;
+      }
+      if(s1->geo.sg3D->bBox.yMin < s0->geo.sg3D->bBox.yMin)
+      {
+	s0->geo.sg3D->bBox.yMin = s1->geo.sg3D->bBox.yMin;
+      }
+      if(s1->geo.sg3D->bBox.zMin < s0->geo.sg3D->bBox.zMin)
+      {
+	s0->geo.sg3D->bBox.zMin = s1->geo.sg3D->bBox.zMin;
+      }
+      if(s1->geo.sg3D->bBox.xMax > s0->geo.sg3D->bBox.xMax)
+      {
+	s0->geo.sg3D->bBox.xMax = s1->geo.sg3D->bBox.xMax;
+      }
+      if(s1->geo.sg3D->bBox.yMax > s0->geo.sg3D->bBox.yMax)
+      {
+	s0->geo.sg3D->bBox.yMax = s1->geo.sg3D->bBox.yMax;
+      }
+      if(s1->geo.sg3D->bBox.zMax > s0->geo.sg3D->bBox.zMax)
+      {
+	s0->geo.sg3D->bBox.zMax = s1->geo.sg3D->bBox.zMax;
+      }
+      break;
   }
-  else if(shell0->geo.core->type != shell1->geo.core->type)
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
-  }
-  {
-    switch(shell0->geo.core->type)
-    {
-      case WLZ_GMELM_SHELL_G2I:
-	if(shell1->geo.sg2I->bBox.xMin < shell0->geo.sg2I->bBox.xMin)
-	{
-	  shell0->geo.sg2I->bBox.xMin = shell1->geo.sg2I->bBox.xMin;
-	}
-	if(shell1->geo.sg2I->bBox.yMin < shell0->geo.sg2I->bBox.yMin)
-	{
-	  shell0->geo.sg2I->bBox.yMin = shell1->geo.sg2I->bBox.yMin;
-	}
-	if(shell1->geo.sg2I->bBox.xMax > shell0->geo.sg2I->bBox.xMax)
-	{
-	  shell0->geo.sg2I->bBox.xMax = shell1->geo.sg2I->bBox.xMax;
-	}
-	if(shell1->geo.sg2I->bBox.yMax > shell0->geo.sg2I->bBox.yMax)
-	{
-	  shell0->geo.sg2I->bBox.yMax = shell1->geo.sg2I->bBox.yMax;
-	}
-	break;
-      case WLZ_GMELM_SHELL_G2D:
-	if(shell1->geo.sg2D->bBox.xMin < shell0->geo.sg2D->bBox.xMin)
-	{
-	  shell0->geo.sg2D->bBox.xMin = shell1->geo.sg2D->bBox.xMin;
-	}
-	if(shell1->geo.sg2D->bBox.yMin < shell0->geo.sg2D->bBox.yMin)
-	{
-	  shell0->geo.sg2D->bBox.yMin = shell1->geo.sg2D->bBox.yMin;
-	}
-	if(shell1->geo.sg2D->bBox.xMax > shell0->geo.sg2D->bBox.xMax)
-	{
-	  shell0->geo.sg2D->bBox.xMax = shell1->geo.sg2D->bBox.xMax;
-	}
-	if(shell1->geo.sg2D->bBox.yMax > shell0->geo.sg2D->bBox.yMax)
-	{
-	  shell0->geo.sg2D->bBox.yMax = shell1->geo.sg2D->bBox.yMax;
-	}
-	break;
-      case WLZ_GMELM_SHELL_G3I:
-	if(shell1->geo.sg3I->bBox.xMin < shell0->geo.sg3I->bBox.xMin)
-	{
-	  shell0->geo.sg3I->bBox.xMin = shell1->geo.sg3I->bBox.xMin;
-	}
-	if(shell1->geo.sg3I->bBox.yMin < shell0->geo.sg3I->bBox.yMin)
-	{
-	  shell0->geo.sg3I->bBox.yMin = shell1->geo.sg3I->bBox.yMin;
-	}
-	if(shell1->geo.sg3I->bBox.zMin < shell0->geo.sg3I->bBox.zMin)
-	{
-	  shell0->geo.sg3I->bBox.zMin = shell1->geo.sg3I->bBox.zMin;
-	}
-	if(shell1->geo.sg3I->bBox.xMax > shell0->geo.sg3I->bBox.xMax)
-	{
-	  shell0->geo.sg3I->bBox.xMax = shell1->geo.sg3I->bBox.xMax;
-	}
-	if(shell1->geo.sg3I->bBox.yMax > shell0->geo.sg3I->bBox.yMax)
-	{
-	  shell0->geo.sg3I->bBox.yMax = shell1->geo.sg3I->bBox.yMax;
-	}
-	if(shell1->geo.sg3I->bBox.zMax > shell0->geo.sg3I->bBox.zMax)
-	{
-	  shell0->geo.sg3I->bBox.zMax = shell1->geo.sg3I->bBox.zMax;
-	}
-	break;
-      case WLZ_GMELM_SHELL_G3D:
-	if(shell1->geo.sg3D->bBox.xMin < shell0->geo.sg3D->bBox.xMin)
-	{
-	  shell0->geo.sg3D->bBox.xMin = shell1->geo.sg3D->bBox.xMin;
-	}
-	if(shell1->geo.sg3D->bBox.yMin < shell0->geo.sg3D->bBox.yMin)
-	{
-	  shell0->geo.sg3D->bBox.yMin = shell1->geo.sg3D->bBox.yMin;
-	}
-	if(shell1->geo.sg3D->bBox.zMin < shell0->geo.sg3D->bBox.zMin)
-	{
-	  shell0->geo.sg3D->bBox.zMin = shell1->geo.sg3D->bBox.zMin;
-	}
-	if(shell1->geo.sg3D->bBox.xMax > shell0->geo.sg3D->bBox.xMax)
-	{
-	  shell0->geo.sg3D->bBox.xMax = shell1->geo.sg3D->bBox.xMax;
-	}
-	if(shell1->geo.sg3D->bBox.yMax > shell0->geo.sg3D->bBox.yMax)
-	{
-	  shell0->geo.sg3D->bBox.yMax = shell1->geo.sg3D->bBox.yMax;
-	}
-	if(shell1->geo.sg3D->bBox.zMax > shell0->geo.sg3D->bBox.zMax)
-	{
-	  shell0->geo.sg3D->bBox.zMax = shell1->geo.sg3D->bBox.zMax;
-	}
-	break;
-      default:
-        errNum = WLZ_ERR_DOMAIN_TYPE;
-	break;
-    }
-  }
-  return(errNum);
 }
 
 /*!
@@ -3539,7 +3757,7 @@ WlzErrorNum	WlzGMVertexGetG2D(WlzGMVertex *vertex, WlzDVertex2 *dstPos)
 }
 
 /*!
-* \return				Position of vertex - given
+* \return				Position of vertex \f$-\f$ given
 *					position.
 * \ingroup      WlzGeoModel
 * \brief	Compares the position of the given vertex with the
@@ -3583,7 +3801,7 @@ WlzDVertex3	WlzGMVertexCmp3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 }
 
 /*!
-* \return                               Position of vertex - given
+* \return                               Position of vertex \f$-\f$ given
 *                                       position.
 * \ingroup      WlzGeoModel
 * \brief        Compares the position of the given vertex with the
@@ -3938,6 +4156,244 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 }
 
 /*!
+* \return				Vertex with high curvature or
+*					NULL if none found.
+* \brief	Searches for the vertex with the highest  or lowest
+*		curvature in the given loopT.
+*		The curvature at each vertex is found by fitting lines
+*		to the vertex and a small number of the preceding and
+*		proceding verticies. Giving two line gradients \f$a_0\f$
+*		and \f$a_1\f$. Two line segments are then computed
+*		which pass through the common vertex \f$v_2\f$ and
+*		near the verticies \f$v_0\f$ and \f$v_1\f$ for the line
+*		segments with gradients \f$a_0\f$ and \f$a_1\f$
+*		respectively. The verticies furthest from \f$v_2\f$:
+*		\f$v_0\f$ and \f$v_1\f$ are then projected onto these
+*		line segments giving \f${v_0}'\f$ and \f${v_1}'\f$:
+                \f[
+ 		  {v_i}' = \left\{
+ 			   \begin{array}{ll}
+ 			     (v_{ix}, a_i(v_{ix} - v_{2x}) + v_{2y}) &
+ 			       a_i^2 < 1 \\
+ 			     (a_i^{-1}(v_{iy} - v_{2y}) + v_{2x}, v_{iy}) &
+ 			       a_i^2 > 1 \\
+ 			   \end{array}
+ 			   \right.
+ 		\f]
+* 		Then using the cosine theorem the cosine of the angle
+* 		is given by
+  		 \f[ 
+ 		  \cos{\theta} = \frac{{|{v_0}' - v_2|}^2 +
+ 		                       {|{v_1}' - v_2|}^2 -
+ 		                       {|{v_0}' - {v_1}'|}^2}
+ 		                      {2{|{v_0}' - v_2|}{|{v_1}' - v_2|}}
+ 		\f]
+* 		The search is made using \f$\cos{\theta}\f$ (because
+* 		\f$\cos{\theta} = \cos{(2\pi - \theta)}\f$) with the
+* 		search being for the maximum or minimum value of
+*		\f$\cos{\theta}\f$.
+* \param	gLT			Given loop topology element to
+*					search.
+*		minLen			Required minimum distance from an
+*					end point. Only used if the loop
+*					topology element is the only loop
+*					topology element of it's shell.
+*		lnLen			Length for fitted line segment.
+*		mOrM			Determines whether the search is for
+*					the minimum or maximum curvature,
+*					only WLZ_MIN and WLZ_MAX are valid.
+*		dstAlg			Destination pointer for the maximum
+*					or minimum angle (returned in
+*					radians), may be NULL.
+*/
+WlzGMVertex 	*WlzGMModelLoopTMaxMinCurv2D(WlzGMLoopT *gLT,
+					     int minLen, int lnLen,
+					     WlzBinaryOperatorType mOrM,
+					     double *dstAlg)
+{
+  int		idN,
+  		idP,
+		mFlg,
+		coincident,
+		okFlg = 0;
+  double	tD0,
+  		tD1,
+		cosAng,
+  		mCosAng;
+  double	lU[2],
+		lL[2],
+  		sX[2],
+  		sY[2],
+		sXX[2],
+		sXY[2];
+  WlzGMEdgeT	*fET,
+		*lET,
+  		*tET;
+  WlzGMEdgeT	*cET[3];
+  WlzDVertex2	cPos,
+  		pPos;
+  WlzDVertex2	pos[3];
+  WlzGMVertex	*mV;
+
+  if(gLT && (minLen >= lnLen))
+  {
+    switch(mOrM)
+    {
+      case WLZ_MAX:
+        mFlg = 1;
+        okFlg = 1;
+        break;
+      case WLZ_MIN:
+        mFlg = 0;
+        okFlg = 1;
+	break;
+      default:
+	okFlg = 0;
+        break;
+    }
+  }
+  if(okFlg)
+  {
+    tET = gLT->edgeT;
+    if(gLT == gLT->next)
+    {
+      /* The given loop topology element is the only one in the shell, find
+       * it's end point. */
+      while((tET->prev != tET->opp) && ((tET = tET->next) != gLT->edgeT));
+      /* Skip the first minLen - lnLen edge topology elements to find the
+       * start vertex. */
+      idN = minLen - lnLen;
+      while((tET->next != tET->opp) && (idN-- > 0) &&
+            ((tET = tET->next) != gLT->edgeT));
+      if(tET->next == tET->opp)
+      {
+        okFlg = 0;
+      }
+      else
+      {
+	fET = tET;
+	/* Find the other end point. */
+	while((tET->next != tET->opp) && ((tET = tET->next) != gLT->edgeT));
+	/* Go back lnLen edge topology elements to find the end vertex. */
+	idN = minLen;
+	while((idN-- > 0) && ((tET = tET->prev) != fET));
+	if(tET == fET)
+	{
+	  okFlg = 0;
+	}
+	else
+	{
+	  lET = tET;
+	}
+      }
+    }
+    else
+    {
+      fET = tET;
+      lET = tET;
+    }
+  }
+  if(okFlg)
+  {
+    cET[0] = fET;
+    (void )WlzGMVertexGetG2D(tET->vertexT->diskT->vertex, pos + 0);
+    /* Initialize the regression sums and find the initial cosine of the angle
+     * between the lines. */
+    idN = 0;
+    while(okFlg && (idN < 2))
+    {
+      idP = 0;
+      sX[idN] = sY[idN] = sXX[idN] = sXY[idN] = 0.0;
+      tET = (idN == 0)? fET: cET[1];
+      do
+      {
+	(void )WlzGMVertexGetG2D(tET->vertexT->diskT->vertex, &cPos);
+	sX[idN] += cPos.vtX;
+	sY[idN] += cPos.vtY;
+	sXX[idN] += cPos.vtX * cPos.vtX;
+	sXY[idN] += cPos.vtX * cPos.vtY;
+	tET = tET->next;
+      } while((++idP < lnLen) && (tET != fET));
+      if(idP < lnLen)
+      {
+        okFlg = 0;
+      }
+      else
+      {
+	cET[idN + 1] = tET->prev;
+	pos[idN + 1] = cPos;
+	lU[idN] = (lnLen * sXY[idN]) - (sX[idN] * sY[idN]);
+	lL[idN] = (lnLen * sXX[idN]) - (sX[idN] * sX[idN]);
+      }
+      ++idN;
+    }
+  }
+  if(okFlg)
+  {
+    mV = cET[1]->vertexT->diskT->vertex;
+    mCosAng = cosAng = WlzGeomAngleBetweenLines(2, lL, 2, lU, 3, pos,
+    					        &coincident);
+    /* Now find the maximum cosine of angle (minimum angle) between the lines
+     * for the rest of the verticies. */
+    do
+    {
+      cET[0] = cET[0]->next;
+      cET[1] = cET[1]->next;
+      cET[2] = cET[2]->next;
+      for(idN = 0; idN < 2; ++idN)
+      {
+	pPos = pos[idN];
+        (void )WlzGMVertexGetG2D(cET[idN + 1]->vertexT->diskT->vertex,
+				 &cPos);
+        sX[idN] += cPos.vtX - pPos.vtX;
+	sY[idN] += cPos.vtY - pPos.vtY;
+	sXX[idN] += (cPos.vtX * cPos.vtX) - (pPos.vtX * pPos.vtX);
+	sXY[idN] += (cPos.vtX * cPos.vtY) - (pPos.vtX * pPos.vtY);
+	lU[idN] = (lnLen * sXY[idN]) - (sX[idN] * sY[idN]);
+	lL[idN] = (lnLen * sXX[idN]) - (sX[idN] * sX[idN]);
+	(void )WlzGMVertexGetG2D(cET[idN]->vertexT->diskT->vertex, &pPos);
+	pos[idN] = pPos;
+      }
+      pos[2] = cPos;
+      cosAng = WlzGeomAngleBetweenLines(2, lL, 2, lU, 3, pos,
+      				        &coincident);
+      if(coincident == 0)
+      {
+	if(mFlg)
+	{
+	  if(cosAng > mCosAng)
+	  {
+	    mV = cET[1]->vertexT->diskT->vertex;
+	    mCosAng = cosAng;
+	  }
+	}
+	else
+	{
+	  if(cosAng < mCosAng)
+	  {
+	    mV = cET[1]->vertexT->diskT->vertex;
+	    mCosAng = cosAng;
+	  }
+	}
+      }
+    } while((cET[2] != lET));
+    if(dstAlg)
+    {
+      if(mCosAng < -1.0 + DBL_EPSILON)
+      {
+        mCosAng = -1.0 + DBL_EPSILON;
+      }
+      else if(mCosAng > 1.0 - DBL_EPSILON)
+      {
+        mCosAng = 1.0 - DBL_EPSILON;
+      }
+      *dstAlg = acos(mCosAng);
+    }
+  }
+  return(mV);
+}
+
+/*!
 * \return				Hash value.
 * \ingroup      WlzGeoModel
 * \brief	Computes a hash value from a given 3D double precision
@@ -4076,7 +4532,239 @@ WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
   return(mV);
 }
 
-/* Topology query */
+/* Topology update, access and checking. */
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Verifies the given model. If the invalid element destination
+*		pointer is given then it MAY be set to point to an invalid
+*		element of the model.
+*		This function was written as an aid to debugging.
+* \param	model			Given model.
+* \param	dstElmP			Destination pointer for an
+*					invalid element pointermay be NULL.
+*/
+WlzErrorNum	WlzGMVerifyModel(WlzGMModel *model, WlzGMElemP *dstElmP)
+{
+  int		maxS;
+  WlzGMShell	*cS,
+  		*fS;
+  WlzGMElemP	elmP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  elmP.core = NULL;
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    errNum = WlzGMModelTypeValid(model->type);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((fS = model->child) != NULL)
+    {
+      if(fS->type != WLZ_GMELM_SHELL)
+      {
+	elmP.shell = fS;
+        errNum = WLZ_ERR_GMELM_TYPE;
+      }
+      else
+      {
+	cS = fS;
+	maxS = model->res.shell.numElm;
+	do
+	{
+	  if(cS == NULL)
+	  {
+	    errNum = WLZ_ERR_GMELM_NULL;
+	  }
+	  else
+	  {
+	    errNum = WlzGMVerifyShell(cS, &elmP);
+	    cS = cS->next;
+	  }
+	} while((errNum == WLZ_ERR_NONE) && (cS != fS) && (maxS-- > 0));
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if(cS != fS)
+	  {
+	    elmP.shell = cS;
+	    errNum = WLZ_ERR_GMELM_DATA;
+	  }
+	}
+      }
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && dstElmP)
+  {
+    dstElmP->core = elmP.core;
+  }
+  return(errNum);
+}
+
+/*!
+* \return
+* \ingroup      WlzGeoModel
+* \brief	Verifies the given shell. If the invalid element destination
+*               pointer is given then it MAY be set to point to an invalid
+*               element of the model.
+*               This function was written as an aid to debugging.
+* \param	shell			Given shell.
+* \param	dstElmP			Destination pointer for an
+*					invalid element pointer, may be NULL.
+*/
+WlzErrorNum	WlzGMVerifyShell(WlzGMShell *shell, WlzGMElemP *dstElmP)
+{
+  int		maxLT;
+  WlzGMLoopT	*cLT,
+  		*fLT;
+  WlzGMElemP	elmP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  elmP.core = NULL;
+  if(shell == NULL)
+  {
+    errNum = WLZ_ERR_GMELM_NULL;
+  }
+  else if(shell->type != WLZ_GMELM_SHELL)
+  {
+    elmP.shell = shell;
+    errNum = WLZ_ERR_GMELM_TYPE;
+  }
+  else if(shell->parent == NULL)
+  {
+    elmP.shell = shell;
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(shell->idx < 0)
+  {
+    elmP.shell = shell;
+    errNum = WLZ_ERR_GMELM_DATA;
+  }
+  else if((fLT = shell->child) == NULL)
+  {
+    errNum = WLZ_ERR_GMELM_NULL;
+  }
+  else
+  {
+    cLT = fLT;
+    maxLT = shell->parent->res.loopT.numElm;
+    do
+    {
+      if(cLT == NULL)
+      {
+        errNum = WLZ_ERR_GMELM_NULL;
+      }
+      else
+      {
+        errNum = WlzGMVerifyLoopT(cLT, &elmP);
+	cLT = cLT->next;
+      }
+    } while((errNum == WLZ_ERR_NONE) && (cLT != fLT) && (maxLT-- > 0));
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(cLT != fLT)
+      {
+        elmP.loopT = cLT;
+	errNum = WLZ_ERR_GMELM_DATA;
+      }
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && dstElmP)
+  {
+    dstElmP->core = elmP.core;
+  }
+  return(errNum);
+}
+
+/*!
+* \return
+* \ingroup      WlzGeoModel
+* \brief	Verifies the given loop topology element. If the invalid
+*		element destination pointer is given then it MAY be set
+*		to point to an invalid element of the model.
+*               This function was written as an aid to debugging.
+* \param	loopT			Given loop topology element.
+* \param	dstElmP			Destination pointer for an
+*					invalid element pointer, may be NULL.
+*/
+WlzErrorNum	WlzGMVerifyLoopT(WlzGMLoopT *loopT, WlzGMElemP *dstElmP)
+{
+  int		maxET;
+  WlzGMEdgeT	*cET,
+  		*fET;
+  WlzGMElemP	elmP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  elmP.core = NULL;
+  if((loopT == NULL) || (loopT->parent == NULL))
+  {
+    errNum = WLZ_ERR_GMELM_NULL;
+  }
+  else if(loopT->parent->parent == NULL)
+  {
+    elmP.shell = loopT->parent;
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(loopT->type != WLZ_GMELM_LOOP_T)
+  {
+    elmP.loopT = loopT;
+    errNum = WLZ_ERR_GMELM_TYPE;
+  }
+  else if(loopT->parent->type != WLZ_GMELM_SHELL)
+  {
+    elmP.shell = loopT->parent;
+    errNum = WLZ_ERR_GMELM_TYPE;
+  }
+  else if(loopT->idx < 0)
+  {
+    elmP.loopT = loopT;
+    errNum = WLZ_ERR_GMELM_DATA;
+  }
+  else if((fET = loopT->edgeT) == NULL)
+  {
+    errNum = WLZ_ERR_GMELM_NULL;
+  }
+  else
+  {
+    cET = fET;
+    maxET = loopT->parent->parent->res.edgeT.numElm;
+    do
+    {
+      if((cET == NULL) ||
+	 (cET->next == NULL) || (cET->prev == NULL) || (cET->opp == NULL) ||
+	 (cET->rad == NULL) || (cET->edge == NULL) || (cET->vertexT == NULL))
+      {
+	elmP.edgeT = cET;
+	errNum = WLZ_ERR_GMELM_NULL;
+      }
+      else if(cET->idx < 0)
+      {
+        elmP.edgeT = cET;
+	errNum = WLZ_ERR_GMELM_DATA;
+      }
+      else
+      {
+	cET = cET->next;
+      }
+    } while((errNum == WLZ_ERR_NONE) && (cET != fET) && (maxET-- > 0));
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(cET != fET)
+      {
+        elmP.edgeT = cET;
+	errNum = WLZ_ERR_GMELM_DATA;
+      }
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && dstElmP)
+  {
+    dstElmP->core = elmP.core;
+  }
+  return(errNum);
+}
 
 /*!
 * \return				Ptr to an array of non-manifold
@@ -4313,6 +5001,32 @@ WlzGMVertex	*WlzGMEdgeCommonVertex(WlzGMEdge *eE0, WlzGMEdge *eE1)
     cV = tV;
   }
   return(cV);
+}
+
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Merges the topologies of the two shells so that the
+*               first shell 'absorbs' the second shell.
+*		Both shells are assumed valid.
+* \param	s0			First shell which will absorb the
+*					loop topology elements of the second
+*					shell.
+* \param	s1			Second shell which will give it's
+*					loop topology elements to the first.
+*/
+static void	WlzGMShellMergeT(WlzGMShell *s0, WlzGMShell *s1)
+{
+  WlzGMLoopT	*lt0,
+  		*lt1;
+
+  lt0 = s0->child;
+  while((lt1 = s1->child) != NULL)
+  {
+    WlzGMLoopTUnlink(lt1);
+    WlzGMLoopTAppend(lt0, lt1);
+    lt1->parent = s0;
+  }
 }
 
 /* Model list management */
@@ -4587,15 +5301,16 @@ void	   	WlzGMLoopTAppend(WlzGMLoopT *eLT, WlzGMLoopT *nLT)
 */
 void		WlzGMLoopTUnlink(WlzGMLoopT *dLT)
 {
-  dLT->prev->next = dLT->next;
-  dLT->next->prev = dLT->prev;
-  if(dLT == dLT->next)
+  WlzGMLoopT	*pLT,
+  		*nLT;
+
+  pLT = dLT->prev;
+  nLT = dLT->next;
+  pLT->next = dLT->next;
+  nLT->prev = dLT->prev;
+  if(dLT->parent->child == dLT)
   {
-    dLT->next = dLT->prev = NULL;
-  }
-  if(dLT == dLT->parent->child)
-  {
-    dLT->parent->child = dLT->next;
+    dLT->parent->child = (dLT == nLT)? NULL: nLT;
   }
 }
 
@@ -4623,6 +5338,7 @@ void		WlzGMEdgeTUnlink(WlzGMEdgeT *dET)
   else
   {
     /* No longer have an opposite edgeT as it's already been unlinked. */
+    /* TODO: Fix this code, it doesn't always work! */
     pET = dET->prev;
     while((cET = pET->opp->prev) != dET->prev)
     {
@@ -4651,24 +5367,27 @@ void		WlzGMEdgeTUnlink(WlzGMEdgeT *dET)
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given vertex topology element from a doubly
 *               linked list of vertex topology element's, knowing that
-*               it is not NULL. If this is the only vertex topology
-*		element in parent the parent's list of vertex topology
-*		elements is set to NULL. Other elements which point
-*		to this vertex topology element are not modified.
+*               it is not NULL. Since the parent of a vertex topology
+*		element is always an edge topology element and an
+*		edge topology element only ever uses a single vertex
+*		topology element, set the parent's vertex topology
+*		element pointer to NULL.
 * \param	dVT			Vertex topology element to be
 *                                       unlinked.
 */
 void		WlzGMVertexTUnlink(WlzGMVertexT *dVT)
 {
-  dVT->prev->next = dVT->next;  
-  dVT->next->prev = dVT->prev;
-  if(dVT == dVT->next)
+  WlzGMVertexT	*pVT,
+  		*nVT;
+
+  pVT = dVT->prev;
+  nVT = dVT->next;
+  pVT->next = dVT->next;  
+  nVT->prev = dVT->prev;
+  dVT->parent->vertexT = NULL;
+  if(dVT->diskT->vertexT == dVT)
   {
-    dVT->next = dVT->prev = NULL;
-  }
-  if(dVT == dVT->parent->vertexT)
-  {
-    dVT->parent->vertexT = dVT->next;
+    dVT->diskT->vertexT = (dVT == nVT)? NULL: nVT;
   }
 }
 
@@ -4686,15 +5405,16 @@ void		WlzGMVertexTUnlink(WlzGMVertexT *dVT)
 */
 void		WlzGMDiskTUnlink(WlzGMDiskT *dDT)
 {
-  dDT->prev->next = dDT->next;
-  dDT->next->prev = dDT->prev;
-  if(dDT == dDT->next)
+  WlzGMDiskT	*pDT,
+  		*nDT;
+
+  pDT = dDT->prev;
+  nDT = dDT->next;
+  pDT->next = dDT->next;
+  nDT->prev = dDT->prev;
+  if(dDT->vertex->diskT == dDT)
   {
-    dDT->next = dDT->prev = NULL;
-  }
-  if(dDT == dDT->vertex->diskT)
-  {
-    dDT->vertex->diskT = dDT->next;
+    dDT->vertex->diskT = (dDT == nDT)? NULL: nDT;
   }
 }
 
@@ -4727,64 +5447,42 @@ void	   	WlzGMShellAppend(WlzGMShell *eS, WlzGMShell *nS)
 */
 void		WlzGMShellUnlink(WlzGMShell *dS)
 {
-  if(dS->idx == dS->parent->child->idx)
+  if(dS == dS->parent->child)
   {
     /* Change child held by parent model */
-    if(dS->idx == dS->next->idx)
+    if(dS == dS->next)
     {
       /* The model only has one shell and this is it. */
-      dS->parent = NULL;
+      dS->parent->child = NULL;
     }
     else
     {
       dS->parent->child = dS->next;
     }
   }
-  if(dS->next != NULL)
-  {
-    /* Unlink the shell from the doubly linked list of shells. */
-    dS->prev->next = dS->next;
-    dS->next->prev = dS->prev;
-  }
+  /* Unlink the shell from the doubly linked list of shells. */
+  dS->prev->next = dS->next;
+  dS->next->prev = dS->prev;
 }
 
 /*!
 * \return				<void>
 * \ingroup      WlzGeoModel
 * \brief	Joins the shell to be unlinked onto the shell that's to
-*               be extended and then unlinks (deletes) it.
+*               be extended and then unlinks (but does not free) it.
+*		Both shells must be valid.
 * \param	eShell			Shell to be extended.
 * \param	dShell			Shell to be joined and then
 *                                       unlinked.
 */
 void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
 {
-  WlzGMLoopT	*eLT,
-  		*dLT,
-		*tLT;
-  WlzDBox3	bBox;
-
-  if(eShell && dShell &&
-     ((eLT = eShell->child) != NULL) && ((dLT = dShell->child) != NULL))
-  {
-    /* Update extended shells geometry. */
-    (void )WlzGMShellGetGBB3D(dShell, &bBox);
-    (void )WlzGMShellUpdateGBB3D(eShell, bBox);
-    /* Update extended shells topology. */
-    tLT = dLT;
-    do
-    {
-      tLT->parent = eShell;
-      tLT = tLT->next;
-    } while(tLT->idx != dLT->idx);
-    tLT = eLT->prev;
-    tLT->next = dLT;
-    eLT->prev = dLT->prev;
-    tLT->next->prev = tLT;
-    eLT->prev->next = eLT;
-    /* Unlink the now childless shell. */
-    WlzGMShellUnlink(dShell);
-  }
+  /* Update extended shell's geometry. */
+  WlzGMShellMergeG(eShell, dShell);
+  /* Update extended shell's topology. */
+  WlzGMShellMergeT(eShell, dShell);
+  /* Unlink the now childless shell. */
+  WlzGMShellUnlink(dShell);
 }
 
 /*!
@@ -4819,20 +5517,7 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
   }
   else
   {
-    switch(model->type)
-    {
-      case WLZ_GMMOD_2I:
-      case WLZ_GMMOD_2D:
-        dim = 2;
-	break;
-      case WLZ_GMMOD_3I:
-      case WLZ_GMMOD_3D:
-	dim = 3;
-        break;
-      default:
-        errNum = WLZ_ERR_DOMAIN_TYPE;
-	break;
-    }
+    dim = WlzGMModelGetDimension(model, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -4910,15 +5595,18 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  if((errNum == WLZ_ERR_NONE) && (eMsk & WLZ_GMELMFLG_FACE) && (dim == 3))
+  if((errNum == WLZ_ERR_NONE) && (eMsk & WLZ_GMELMFLG_FACE))
   {
     eMskTst &= ~(WLZ_GMELMFLG_FACE);
-    vec = model->res.face.vec;
-    resIdxTb->face.idxCnt = model->res.face.numIdx;
-    if((resIdxTb->face.idxLut = (int *)
-	    	AlcCalloc(resIdxTb->face.idxCnt, sizeof(int))) == NULL)
+    if(dim == 3)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
+      vec = model->res.face.vec;
+      resIdxTb->face.idxCnt = model->res.face.numIdx;
+      if((resIdxTb->face.idxLut = (int *)
+	    AlcCalloc(resIdxTb->face.idxCnt, sizeof(int))) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
   }
   if((errNum == WLZ_ERR_NONE) && (eMsk & WLZ_GMELMFLG_LOOP_T))
@@ -7657,8 +8345,9 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
     }
     else
     {
-      /* Merge the two shell's geometries. */
-      (void )WlzGMShellMergeG(eLT->parent, dS);
+      /* Merge the two shell's geometries and topologies. */
+      WlzGMShellMergeG(eLT->parent, dS);
+      WlzGMShellMergeT(eLT->parent, dS);
     }
     /* Set/update the retained loop topology element by walking around the
      * edge topology  elements setting their parents. */
@@ -7721,7 +8410,8 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
     case 3:
       /* Both verticies already exist within the model.
          Don't insert this simplex if it is already in the model. */
-      if(matchEdgeT[0]->edge->idx != matchEdgeT[1]->edge->idx)
+      if((matchEdgeT[0]->edge != matchEdgeT[1]->edge) &&
+         (matchEdgeT[0]->prev->edge != matchEdgeT[1]->prev->edge))
       {
 	/* Both verticies already exist within the model so adding another
 	 * edge between the two verticies will change the number of loops
@@ -7967,6 +8657,7 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 /*!
 * \return				The parent shell or NULL if no
 *					parent shell was found.
+* \ingroup      WlzGeoModel
 * \brief	Walks around a loop topology element looking for another
 *		loop topology element connected to the given one. If
 *		such a loop topology element exists this function returns
@@ -8100,9 +8791,9 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
 * \brief	Attempts to find verticies which match the two given
 *               double precision positions.
 *               The linking/matching workspace makes the matching much
-*               more efficient, but it's only valid if the verticies
-*               are maintained with indicies which increase with 
-*               increasing row, column.
+*               quite efficient, but it relies on the verticies being
+*               maintained in a hash table which has indicies which
+*		increase with increasing row and then increasing column.
 * \param	model			Model with resources.
 * \param	matchET			Array for return of matched
 *                                       edge topology element pointers.
@@ -8115,13 +8806,13 @@ static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
 {
   int		idD;
   double	tD0,
-  		tD1,
-		trX,
-		trY,
+		len,
 		trCos,
 		trSin,
 		trScale;
-  WlzDVertex2	tPosB,
+  WlzDVertex2	tr,
+		rPos,
+  		tPosB,
   		tPosN,
 		mPos,
   		oPos,
@@ -8151,7 +8842,7 @@ static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
     {
       vertexT = vertex->diskT->vertexT;
       eTS = vertexT->parent;
-      if(vertexT->idx == vertexT->next->idx)
+      if(vertexT == vertexT->next)
       {
 	/* The simple case just one edge uses this vertex. */
 	*(matchET + idD) = eTS;
@@ -8168,42 +8859,47 @@ static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
 	 * line segment from the matched vertex at mPos to the new vertex at
 	 * oPos onto the x-axis and oriented from the origin.
 	 * The transform is of the form:
-	 *   x' = scale * (x*cos(theta) - y*sin(theta) + dx)
-	 *   y' = scale * (x*sin(theta) + y*cos(theta) + dy) */
-	tD0 = mPos.vtX - oPos.vtX;
-	tD1 = mPos.vtY - oPos.vtY;
-	trScale = (tD0 * tD0) + (tD1 * tD1);
-	if(trScale > tol)
+	 *   {p_x}' = p_x - m_x
+	 *   {p_y}' = p_y - m_y
+	 *   {p_x}'' = {p_x}'\cos(\theta) - {p_y}'\sin(\theta)
+	 *   {p_y}'' = {p_x}'\sin(\theta) + {p_y}'\cos(\theta)
+	 *   \sin(\theta) = \frac{{o_x}'}{|o'|}
+	 *   \cos(\theta) = \frac{{o_y}'}{|o'|}
+	 */
+	tr.vtX = mPos.vtX;
+	tr.vtY = mPos.vtY;
+	rPos.vtX = oPos.vtX - tr.vtX;
+	rPos.vtY = oPos.vtY - tr.vtY;
+	tD0 = (rPos.vtX * rPos.vtX) + (rPos.vtY * rPos.vtY);
+	if(tD0 > tol)
 	{
-	  trScale = 1.0 / sqrt(trScale);
-	  trCos = (oPos.vtX - mPos.vtX);
-	  trSin = (mPos.vtY - oPos.vtY);
-	  trX = (mPos.vtX * mPos.vtX) + (mPos.vtY * mPos.vtY) -
-		(mPos.vtX * oPos.vtX) - (mPos.vtY * oPos.vtY);
-	  trY = (mPos.vtX * oPos.vtY) - (mPos.vtY * oPos.vtX);
+	  /* Compute the transform rotation elements. */
+	  len = sqrt(tD0);
+	  trCos = rPos.vtX / len;
+	  trSin = rPos.vtY / len;
 	  /* Search for next edge by walking around the matched vertex CCW,
 	   * using the vertex topology elements, comparing the relative
-	   * polar angles of the line segments between the verticies.
+	   * angles of the line segments between the verticies.
 	   * The next edge topology element is the one with the smallest
 	   * CCW polar angle relative to the new, as yet unmade, edge. */
 	  eTB = eTS;	  /* Initialize the search, best (eTB) = start (eTS) */
-	  (void )WlzGMVertexGetG2D(eTB->vertexT->diskT->vertex, &tPos);
-	  tPosB.vtX = trScale *
-		      ((tPos.vtX * trCos) - (tPos.vtY * trSin) + trX);
-	  tPosB.vtY = trScale *
-		      ((tPos.vtX * trSin) - (tPos.vtY * trCos) + trY);
+	  (void )WlzGMVertexGetG2D(eTB->opp->vertexT->diskT->vertex, &tPos);
+	  rPos.vtX = tPos.vtX - tr.vtX;
+	  rPos.vtY = tPos.vtY - tr.vtY;
+	  tPosB.vtX =  (rPos.vtX * trCos) + (rPos.vtY * trSin);
+	  tPosB.vtY = -(rPos.vtX * trSin) + (rPos.vtY * trCos);
 	  /* Find next edge topology element (eTN) directed from the vertex.
 	   * Because the edge topology elements are unordered need to
 	   * search them all. */
 	  eTN = eTB->opp->next;
 	  /* For each edge topology element directed away from the vertex */
-	  while(eTS->idx != eTN->idx)
+	  while(eTS != eTN)
 	  {
-	    (void )WlzGMVertexGetG2D(eTN->vertexT->diskT->vertex, &tPos);
-	    tPosN.vtX = trScale *
-			((tPos.vtX * trCos) - (tPos.vtY * trSin) + trX);
-	    tPosN.vtY = trScale *
-			((tPos.vtX * trSin) - (tPos.vtY * trCos) + trY);
+	    (void )WlzGMVertexGetG2D(eTN->opp->vertexT->diskT->vertex, &tPos);
+	    rPos.vtX = tPos.vtX - tr.vtX;
+	    rPos.vtY = tPos.vtY - tr.vtY;
+	    tPosN.vtX =  (rPos.vtX * trCos) + (rPos.vtY * trSin);
+	    tPosN.vtY = -(rPos.vtX * trSin) + (rPos.vtY * trCos);
 	    /* Compare the best and next transformed vertex positions */
 	    eTL = eTN;
 	    if(WlzGeomCmpAngle(tPosN, tPosB) > 0)
@@ -8233,35 +8929,37 @@ static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
 */
 int		WlzGMShellSimplexCnt(WlzGMShell *shell)
 {
-  int		cnt = 0;
+  int		dim,
+  		cnt = 0;
   WlzGMEdgeT	*cET,
   		*fET;
   WlzGMLoopT	*cLT,
   		*fLT;
   WlzGMModel	*model;
 
-  if(((model = shell->parent) != NULL) && (shell != NULL))
+  if(((model = shell->parent) != NULL) &&
+     ((dim = WlzGMModelGetDimension(model, NULL)) != 0) &&
+     (shell != NULL))
   {
     if((cLT = fLT = shell->child) != NULL)
     {
       do
       {
-	if((model->type == WLZ_GMMOD_2I) || (model->type == WLZ_GMMOD_2D))
+	if(dim == 2)
 	{
 	  cET = fET = cLT->edgeT;
 	  do
 	  {
-	   ++cnt;
-	   cET = cET->next;
+	    cnt += cET->edge->edgeT == cET;
+	    cET = cET->next;
 	  } while(cET != fET);
 	}
-	else /* model->type == WLZ_GMMOD_3I || model->type == WLZ_GMMOD_3D */
+	else /* dim == 3 */
 	{
-	  ++cnt;
+	  cnt += cLT->face->loopT == cLT;
 	}
 	cLT = cLT->next;
       } while(cLT != fLT);
-      cnt /= 2;
     }
   }
   return(cnt);

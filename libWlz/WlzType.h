@@ -1054,6 +1054,7 @@ typedef struct _WlzGMShell
 * \enum		_WlzGMCbReason
 * \ingroup	WlzGeoModel
 * \brief	The reason a callback function is called.
+*		Typedef: ::WlzGMCbReason.
 */
 typedef enum _WlzGMCbReason
 {
