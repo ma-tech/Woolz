@@ -577,7 +577,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 *		Numerical Recipies function svbksb().
 * \param	uMat			Given matrix U.
 * \param	nM 			Number of rows in matrix U and
-* \param				number of elements in matrix B.
+*       				number of elements in matrix B.
 * \param	nN 			Number of columns in matricies
 *					U and V, also the number of
 *					elements in matricies W and x.

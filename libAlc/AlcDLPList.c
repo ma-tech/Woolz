@@ -133,12 +133,12 @@ AlcErrno	AlcDLPListFree(AlcDLPList *list)
 * \brief	Inserts the given entry into the list before the given
 *		item.
 * \param	list 			The list data structure.
-*		AlcDLPItem *insBefore:	Given item that entry is to
+* \param	insBefore:		Given item that entry is to
 *					be inserted before, if NULL
 *					then the item is inserted at
 *					the head of the list.
-*		void *entry:		New list entry.
-*		void (*freeFn)(void *)): Function that will be called
+* \param	entry:			New list entry.
+* \param	freeFn 			Function that will be called
 *					(if not NULL) to free the entry
 *					should the item be deleted.
 */
@@ -429,7 +429,7 @@ AlcErrno	AlcDLPItemFree(AlcDLPItem *item)
 * \ingroup	AlcDLPList
 * \brief	Sorts the entire list using the given entry comparison
 *		function.
-* \param	AlcDLPList *list:	The list data structure.
+* \param	list:			The list data structure.
 * \param	entryCompFn 		Given entry
 *					comparison function which must
 *					return  an integer less than,

@@ -69,7 +69,7 @@ static AlcKDTNode 		*AlcKDTNodeGetNN(
 * \return     	KD-tree data structure, or NULL on error.
 * \ingroup	AlcKDTree
 * \brief        Creates a KD-tree data structure.
-* \param        AlcPointType type:	Type of tree node key.
+* \param        type			Type of tree node key.
 * \param	dim			Dimension of tree (must be >= 1).
 * \param	tol			Tollerance for key comparision,
 *					only used if the tree has floating
@@ -637,7 +637,7 @@ AlcKDTNode	*AlcKDTGetMatch(AlcKDTTree *tree,  void *keyVal,
 *		progressing downwards in the tree.
 * \param     	tree			Given tree,
 * \param	node			Node to search from.
-* \param	keyVal			Key values which must be
+* \param	key			Key values which must be
 *					consistent with the tree's node
 *					key type and dimension.
 */

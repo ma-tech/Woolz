@@ -112,7 +112,8 @@ ComplexD 	AlgCConj(ComplexD z)
 * \return	Sum.
 * \ingroup	AlgComplex
 * \brief	Computes the sum of the two given complex values.
-* \param	z			Given complex value.
+* \param	z1			First complex value.
+* \param	z2			Second complex value.
 */
 ComplexD 	AlgCAdd(ComplexD z1, ComplexD z2)
 {

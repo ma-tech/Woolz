@@ -69,7 +69,9 @@ static void			AlgMatrixCGDebug(
 * \param	wM			Matrix with dimensions [4, n].
 * \param	n			The dimension of the matrix and
 *					vectors \f$n\f$.
-* \param	pcon			Preconditioning function.
+* \param	pFn			Preconditioning function.
+* \param	pDat			Data to be passed to preconditioning
+* 					function.
 * \param	tol			Tolerance required, \f$\delta\f$.
 * \param	maxItr			The maximum number of itterations.
 * \param	dstTol			Destination pointer for the residual

@@ -1604,7 +1604,7 @@ static void	*AlgFourThrRepXYReal1D(AlgFourArgs3 *args)
 *					may be NULL or a buffer region
 *					suitable for a single column.
 * \param	numX			Number of data in each row.
-* \param	numX			Number of data in each column.
+* \param	numY			Number of data in each column.
 * \param	cThr			Concurrent threads available,
 *					if cThr <= 1 then no threads
 *					will be created.
@@ -1641,7 +1641,7 @@ void		AlgFour2D(double **real, double **imag,
 *					may be NULL or a buffer region
 *					suitable for a single column.
 * \param	numX			Number of data in each row.
-* \param	numX			Number of data in each column.
+* \param	numY			Number of data in each column.
 * \param	cThr			Concurrent threads available,
 *					if cThr <= 1 then no threads
 *					will be created.
@@ -1677,7 +1677,7 @@ void		AlgFourInv2D(double **real, double **imag,
 *					may be NULL or a buffer region
 *					suitable for a single column.
 * \param	numX			Number of data in each row.
-* \param	numX			Number of data in each column.
+* \param	numY			Number of data in each column.
 * \param	cThr			Concurrent threads available,
 *					if cThr <= 1 then no threads
 *					will be created.
@@ -1713,7 +1713,7 @@ void		AlgFourReal2D(double **real, double *reBuf, double *imBuf,
 *					may be NULL or a buffer region
 *					suitable for a single column.
 * \param	numX			Number of data in each row.
-* \param	numX			Number of data in each column.
+* \param	numY			Number of data in each column.
 * \param	cThr			Concurrent threads available,
 *					if cThr <= 1 then no threads
 *					will be created.

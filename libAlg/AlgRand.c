@@ -42,7 +42,6 @@ void		AlgRandSeed(long seed)
 * \ingroup	AlgRand
 * \brief	Produces a pseudo-random value from a uniform
 *		distribution over the interval [0.0, 1.0].
-* \param	<void>
 */
 double		AlgRandUniform(void)
 {

@@ -50,7 +50,7 @@
 * \param	samOrg			Position of first sample (origin).
 * \param	samItv			Sample interval.
 * \param	freq			Given frequency samples.
-*		alpha			Estimates of nDbn alpha values,
+* \param	alpha			Estimates of nDbn alpha values,
 *					both given and returned.
 *				 	Alpha values must be in the
 *					range (0,1].

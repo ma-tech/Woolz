@@ -193,8 +193,6 @@ AlcErrno	AlcHashTableEntryInsert(AlcHashTable *hTbl, void *key,
 * \param	hTbl			The hash table data structure.
 * \param	rItem			Item to be removed.
 * \param	freeItem		Free item if non-zero.
-* \param	dstErr			Destination pointer for error
-*					code, may be NULL.
 */
 AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
 				  int freeItem)
