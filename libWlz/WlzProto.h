@@ -3559,6 +3559,20 @@ extern WlzObject *WlzRGBAEllipsoidThreshold(
   double	eccentricity,
   WlzErrorNum	*dstErr);
 /************************************************************************
+* WlzRGBAGreyStats.c							*
+************************************************************************/
+extern int WlzRGBAGreyStats(
+  WlzObject	*srcObj,
+  WlzRGBAColorSpace	colSpc,
+  WlzGreyType	*dstGType,
+  double 	*dstMin,
+  double 	*dstMax,
+  double 	*dstSum,
+  double 	*dstSumSq,
+  double 	*dstMean,
+  double 	*dstStdDev,
+  WlzErrorNum 	*dstErr);
+/************************************************************************
 * WlzCbThreshold.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND

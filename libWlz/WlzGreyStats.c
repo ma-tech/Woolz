@@ -55,6 +55,7 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
 		max,
 		sum = 0.0,
 		sumSq = 0.0;
+  UINT		rgbVal;
   WlzGreyType	gType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
@@ -84,8 +85,10 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
 	  case WLZ_GREY_DOUBLE:
 	    gVal = *(gPix.dbp)++;
 	    break;
-	  case WLZ_GREY_RGBA: /* RGBA - to be done RAB */
-	    gVal = *(gPix.rgbp)++;
+	  case WLZ_GREY_RGBA: /* RGBA - make this the modulus
+			         For RGB stats call WlzRGBAGreyStats() */
+	    rgbVal = *(gPix.rgbp)++;
+	    gVal = WLZ_RGBA_MODULUS(rgbVal);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_GREY_TYPE;

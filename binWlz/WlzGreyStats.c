@@ -33,6 +33,7 @@ int             main(int argc, char **argv)
   		option,
 		ok = 1,
 		verbose = 0,
+                colFlg = 0,
 		usage = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
@@ -43,11 +44,17 @@ int             main(int argc, char **argv)
 		sumSq,
 		mean,
 		stdDev;
+  double	minA[4],
+  		maxA[4],
+		sumA[4],
+		sumSqA[4],
+		meanA[4],
+		stdDevA[4];
   WlzGreyType	gType;
   char 		*outFileStr,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "o:vh",
+  static char	optList[] = "co:vh",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -58,17 +65,20 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
-      case 'o':
-        outFileStr = optarg;
-	break;
-      case 'v':
-        verbose = 1;
-	break;
-      case 'h':
-      default:
-        usage = 1;
-	ok = 0;
-	break;
+    case 'c':
+      colFlg = 1;
+      break;
+    case 'o':
+      outFileStr = optarg;
+      break;
+    case 'v':
+      verbose = 1;
+      break;
+    case 'h':
+    default:
+      usage = 1;
+      ok = 0;
+      break;
     }
   }
   if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
@@ -112,8 +122,15 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    area = WlzGreyStats(inObj, &gType, &min, &max, &sum, &sumSq, &mean,
-    		        &stdDev, &errNum);
+    if( colFlg ){
+      area = WlzRGBAGreyStats(inObj, WLZ_RGBA_SPACE_RGB, &gType,	
+			      minA, maxA, sumA, sumSqA, meanA,
+			      stdDevA, &errNum);
+    }
+    else {
+      area = WlzGreyStats(inObj, &gType, &min, &max, &sum, &sumSq, &mean,
+			  &stdDev, &errNum);
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -137,25 +154,62 @@ int             main(int argc, char **argv)
     }
     else
     {
-      if(verbose)
-      {
-        (void )fprintf(fP,
-		       "area        % 14d\n"
-		       "grey type   % 14s\n"
-		       "min         % 14g\n"
-		       "max         % 14g\n"
-		       "sum         % 14g\n"
-		       "sum sq      % 14g\n"
-		       "mean        % 14g\n"
-		       "std dev     % 14g\n",
-		       area, WlzStringFromGreyType(gType, NULL),
-		       min, max, sum, sumSq, mean, stdDev);
+      if( colFlg ){
+	if(verbose)
+	{
+	  (void )fprintf(fP,
+			 "area        %d\n"
+			 "grey type   %s\n"
+			 "min         (%g, %g, %g, %g)\n"
+			 "max         (%g, %g, %g, %g)\n"
+			 "sum         (%g, %g, %g, %g)\n"
+			 "sum sq      (%g, %g, %g, %g)\n"
+			 "mean        (%g, %g, %g, %g)\n"
+			 "std dev     (%g, %g, %g, %g)\n",
+			 area, WlzStringFromGreyType(gType, NULL),
+			 minA[0], minA[1], minA[2], minA[3],
+			 maxA[0], maxA[1], maxA[2], maxA[3],
+			 sumA[0], sumA[1], sumA[2], sumA[3],
+			 sumSqA[0], sumSqA[1], sumSqA[2], sumSqA[3],
+			 meanA[0], meanA[1], meanA[2], meanA[3],
+			 stdDevA[0], stdDevA[1], stdDevA[2], stdDevA[3]);
+	}
+	else
+	{
+	  (void )fprintf(fP,
+			 "%d %s (%g,%g,%g,%g) (%g %g %g %g)\n"
+			 "(%g,%g,%g,%g) (%g %g %g %g)\n"
+			 "(%g,%g,%g,%g) (%g %g %g %g)\n",
+			 area, WlzStringFromGreyType(gType, NULL),
+			 minA[0], minA[1], minA[2], minA[3],
+			 maxA[0], maxA[1], maxA[2], maxA[3],
+			 sumA[0], sumA[1], sumA[2], sumA[3],
+			 sumSqA[0], sumSqA[1], sumSqA[2], sumSqA[3],
+			 meanA[0], meanA[1], meanA[2], meanA[3],
+			 stdDevA[0], stdDevA[1], stdDevA[2], stdDevA[3]);
+	}
       }
-      else
-      {
-      (void )fprintf(fP, "%d %s %g %g %g %g %g\n",
-      		     area, WlzStringFromGreyType(gType, NULL),
-		     min, max, sum, sumSq, mean, stdDev);
+      else {
+	if(verbose)
+	{
+	  (void )fprintf(fP,
+			 "area        % 14d\n"
+			 "grey type   % 14s\n"
+			 "min         % 14g\n"
+			 "max         % 14g\n"
+			 "sum         % 14g\n"
+			 "sum sq      % 14g\n"
+			 "mean        % 14g\n"
+			 "std dev     % 14g\n",
+			 area, WlzStringFromGreyType(gType, NULL),
+			 min, max, sum, sumSq, mean, stdDev);
+	}
+	else
+	{
+	  (void )fprintf(fP, "%d %s %g %g %g %g %g %g\n",
+			 area, WlzStringFromGreyType(gType, NULL),
+			 min, max, sum, sumSq, mean, stdDev);
+	}
       }
     }
     if(fP && strcmp(outFileStr, "-"))
@@ -170,6 +224,7 @@ int             main(int argc, char **argv)
     *argv,
     " [-o<out file>] [-v] [-h] [<in object>]\n"
     "Options:\n"
+    "  -c  Colour stats if RGB, otherwise modulus stats calculated\n"
     "  -o  Output file name.\n"
     "  -v  Verbose output flag.\n"
     "  -h  Help, prints this usage message.\n"

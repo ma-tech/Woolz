@@ -113,16 +113,16 @@ WlzObject	*WlzShadeCorrectBFDF(
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(srcObj->type != shdObj->type)
-  {
-    errNum = WLZ_ERR_OBJECT_TYPE;
-  }
   else
   {
     switch(srcObj->type)
     {
     case WLZ_2D_DOMAINOBJ:
-      if( shdDFObj ){
+      if(shdObj->type != srcObj->type)
+      {
+	errNum = WLZ_ERR_OBJECT_TYPE;
+      }
+      else if( shdDFObj ){
 	if( WlzGreyTypeFromObj(srcObj, &errNum) == WLZ_GREY_RGBA ){
 	  obj1 = WlzRGBAImageArithmetic(srcObj, shdDFObj, WLZ_BO_SUBTRACT,
 					0, &errNum);
@@ -154,9 +154,27 @@ WlzObject	*WlzShadeCorrectBFDF(
 	}
 	else {
 	  for(i=0; (i < inCobj->n) && (errNum == WLZ_ERR_NONE); i++){
-	    outArray[i] = WlzShadeCorrectBFDF(inCobj->o[i],
-					      shdObj, shdDFObj,
-					      nrmVal, inPlace, &errNum);
+	    /* allow special behaviour of a non-compound shade image
+	       to be used for each object in a compound but must align */
+	    switch( shdObj->type ){
+	    case WLZ_2D_DOMAINOBJ:
+	    case WLZ_3D_DOMAINOBJ:
+	      outArray[i] = WlzShadeCorrectBFDF(inCobj->o[i],
+						shdObj, shdDFObj,
+						nrmVal, inPlace, &errNum);
+	      break;
+
+	    case WLZ_COMPOUND_ARR_1:
+	    case WLZ_COMPOUND_ARR_2:
+	      outArray[i] =
+		WlzShadeCorrectBFDF(inCobj->o[i],
+				    ((WlzCompoundArray *) shdObj)->o[i],
+				    shdDFObj?
+				    ((WlzCompoundArray *) shdDFObj)->o[i]:NULL,
+				    nrmVal, inPlace, &errNum);
+	      break;
+	    }
+	      
 	  }
 	  if( errNum == WLZ_ERR_NONE ){
 	    outCobj = WlzMakeCompoundArray(srcObj->type, 3, inCobj->n,
@@ -182,14 +200,14 @@ WlzObject	*WlzShadeCorrectBFDF(
       break;
 
     case WLZ_TRANS_OBJ:
-      if( (rtnObj =
-	   WlzShadeCorrectBFDF(srcObj->values.obj, shdObj, shdDFObj,
-			       nrmVal, inPlace, &errNum)) == NULL ){
-	break;
+      if(rtnObj =
+	 WlzShadeCorrectBFDF(srcObj->values.obj, shdObj, shdDFObj,
+			     nrmVal, inPlace, &errNum) ){
+	values.obj = rtnObj;
+	return WlzMakeMain(WLZ_TRANS_OBJ, srcObj->domain, values,
+			   NULL, NULL, dstErr);
       }
-      values.obj = rtnObj;
-      return WlzMakeMain(WLZ_TRANS_OBJ, srcObj->domain, values,
-			 NULL, NULL, dstErr);
+      break;
 
     case WLZ_EMPTY_OBJ:
       return WlzMakeEmpty(dstErr);

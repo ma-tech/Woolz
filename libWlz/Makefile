@@ -154,6 +154,7 @@ CSOURCES		= \
 			WlzRegCCor.c \
 			WlzRegICP.c \
 			WlzRGBAConvert.c \
+			WlzRGBAGreyStats.c \
 			WlzRGBAImageArithmetic.c \
 			WlzRGBARange.c \
 			WlzRGBAPixelUtils.c \

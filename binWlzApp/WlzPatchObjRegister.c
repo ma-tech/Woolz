@@ -39,6 +39,7 @@ extern char     *optarg;
 
 static WlzIVertex2	defMaxShift;
 static double		matchPercent=10.0;
+static int		verboseFlg=0;
 
 static void usage(char *proc_str)
 {
@@ -638,6 +639,53 @@ WlzObject *WlzGreyScale(
   return rtnObj;
 }
 
+WlzObject *WlzRGBAGreyScale(
+  WlzObject	*obj,
+  double	*scale,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*rtnObj=NULL, *objs[4];
+  WlzCompoundArray	*cmpnd, *rtnCmpnd;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		i;
+
+  /* check objects */
+  if( obj == NULL ){
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if( WlzGreyTypeFromObj(obj, &errNum) != WLZ_GREY_RGBA ){
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else {
+    switch( obj->type ){
+    case WLZ_2D_DOMAINOBJ:	/* only flavour for now */
+      if( cmpnd = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB, &errNum) ){
+	/* apply re-scaling to each channel */
+	for(i=0; i < 3; i++){
+	  objs[i] = WlzGreyScale(cmpnd->o[i], scale[i], &errNum);
+	}
+	objs[3] = cmpnd->o[3];
+	rtnCmpnd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 3, 4, &(objs[0]),
+					objs[0]->type, &errNum);
+	rtnObj = WlzCompoundToRGBA(rtnCmpnd, WLZ_RGBA_SPACE_RGB,
+				   0, &errNum);
+	WlzFreeObj((WlzObject *) rtnCmpnd);
+      }
+      break;
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}
+
+
 double WlzGreyMeanDifference(
   WlzObject	*obj1,
   WlzObject	*obj2,
@@ -925,7 +973,7 @@ WlzObject *WlzPatchTreeToObject(
 {
   WlzObject	*rtnObj;
   WlzObject	*obj1, *objs[2];
-  int		i;
+  int		i, j;
 
   /* get the patch children adding as required */
   objs[0] = WlzAssignObject(WlzMakeMain(patchTree->obj->type,
@@ -939,25 +987,50 @@ WlzObject *WlzPatchTreeToObject(
 
     /* reset the grey values if necessary  - approximate as a shift */
     if( alignGreysFlg ){
-      WlzObject 	*obj2;
-      double 		min1, max1, sum1, sumSq1, mean1, stdDev1;
-      double 		min2, max2, sum2, sumSq2, mean2, stdDev2;
-      WlzGreyType	gType;
+      if( WlzGreyTypeFromObj(obj1, NULL) == WLZ_GREY_RGBA ){
+	WlzObject 	*obj2;
+	double 		min1[4], max1[4], sum1[4], sumSq1[4], mean1[4], stdDev1[4];
+	double 		min2[4], max2[4], sum2[4], sumSq2[4], mean2[4], stdDev2[4];
+	WlzGreyType	gType;
 
-      if( obj2 = WlzIntersect2(obj1, objs[0], NULL) ){
-	obj2->values.core = obj1->values.core;
-	WlzGreyStats(obj2, &gType, &min1, &max1,
-		     &sum1, &sumSq1, &mean1, &stdDev1, NULL);
-	obj2->values.core = objs[0]->values.core;
-	WlzGreyStats(obj2, &gType, &min2, &max2,
-		     &sum2, &sumSq2, &mean2, &stdDev2, NULL);
-	obj2->values.core = NULL;
-	WlzFreeObj(obj2);
-	obj2 = WlzAssignObject(WlzGreyScale(objs[0], mean1 / mean2, NULL), NULL);
-	WlzFreeObj(objs[0]);
-	objs[0] = obj2;
+	if( obj2 = WlzIntersect2(obj1, objs[0], NULL) ){
+	  obj2->values.core = obj1->values.core;
+	  WlzRGBAGreyStats(obj2, WLZ_RGBA_SPACE_RGB, &gType, min1, max1,
+			   sum1, sumSq1, mean1, stdDev1, NULL);
+	  obj2->values.core = objs[0]->values.core;
+	  WlzRGBAGreyStats(obj2, WLZ_RGBA_SPACE_RGB, &gType, min2, max2,
+			   sum2, sumSq2, mean2, stdDev2, NULL);
+	  obj2->values.core = NULL;
+	  WlzFreeObj(obj2);
+	  for(j=0; j < 3; j++){
+	    mean1[j] /= mean2[j];
+	  }
+	  obj2 = WlzAssignObject
+	    (WlzRGBAGreyScale(objs[0], mean1, NULL), NULL);
+	  WlzFreeObj(objs[0]);
+	  objs[0] = obj2;
+	}
       }
-      
+      else {
+	WlzObject 	*obj2;
+	double 		min1, max1, sum1, sumSq1, mean1, stdDev1;
+	double 		min2, max2, sum2, sumSq2, mean2, stdDev2;
+	WlzGreyType	gType;
+
+	if( obj2 = WlzIntersect2(obj1, objs[0], NULL) ){
+	  obj2->values.core = obj1->values.core;
+	  WlzGreyStats(obj2, &gType, &min1, &max1,
+		       &sum1, &sumSq1, &mean1, &stdDev1, NULL);
+	  obj2->values.core = objs[0]->values.core;
+	  WlzGreyStats(obj2, &gType, &min2, &max2,
+		       &sum2, &sumSq2, &mean2, &stdDev2, NULL);
+	  obj2->values.core = NULL;
+	  WlzFreeObj(obj2);
+	  obj2 = WlzAssignObject(WlzGreyScale(objs[0], mean1 / mean2, NULL), NULL);
+	  WlzFreeObj(objs[0]);
+	  objs[0] = obj2;
+	}
+      }
     }
 
     WlzFreeObj(obj1);
@@ -996,6 +1069,35 @@ int WlzPatchHitBuffers(
 }
   
      
+
+WlzErrorNum WlzPrintPatchTree(
+  WlzPatchTree	*patchTree,
+  FILE		*fp,
+  int		depth)
+{
+  int	i;
+  char	*depthStr;
+
+  /* set depth string */
+  depthStr = (char *) AlcMalloc(sizeof(char) * (depth + 2)*2);
+  depthStr[0] = '\0';
+  for(i=0; i < depth; i++){
+    sprintf(depthStr, "%s  ", depthStr);
+  }
+
+  /* print this node detail */
+  fprintf(fp,
+	  "%sObject Index: %d, depth: %d, children: %d, cost: %f\n",
+	  depthStr, patchTree->index, patchTree->depth,
+	  patchTree->nchildren, patchTree->cost);
+  
+  /* print children facts */
+  for(i=0; i < patchTree->nchildren; i++){
+    WlzPrintPatchTree(patchTree->children[i], fp, depth+1);
+  }
+
+  return WLZ_ERR_NONE;
+}
 
 WlzErrorNum WlzPatchFacts(
   WlzPatchTree	*patchTree,
@@ -1045,7 +1147,6 @@ int main(int	argc,
   FILE		*inFile;
   char 		optList[] = "bdgGhvp:t:T:";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		i, startIndx, depth;
   int		alignGreysFlg=1;
@@ -1107,7 +1208,7 @@ int main(int	argc,
       case 1:
 	defMaxShift.vtY = defMaxShift.vtX;
 	break;
-
+ 
       case 2:
 	break;
 
@@ -1132,12 +1233,33 @@ int main(int	argc,
     }
   }
 
+  /* verbose output - parameter summary */
+  if( verboseFlg ){
+    fprintf(stderr,
+	    "%s: search - %s, align pixel-values - %s, threshold - %s\n"
+	    "\tmatch percentage - %.1f, max shift - (%d,%d)\n",
+	    argv[0], breadthFirstFlg?"breadth first":"depth first",
+	    alignGreysFlg?"True":"False", threshFlg?"True":"False",
+	    matchPercent, defMaxShift.vtX, defMaxShift.vtY);
+  }
+
   inFile = stdin;
   if( optind < argc ){
     if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return WLZ_ERR_UNSPECIFIED;
+    }
+  }
+
+  /* verbose output */
+  if( verboseFlg ){
+    if( inFile == stdin ){
+      fprintf(stderr, "%s: patch object read from stdin\n", argv[0]);
+    }
+    else {
+      fprintf(stderr, "%s: patch object read from %s\n", argv[0],
+	      *(argv+optind));
     }
   }
 
@@ -1166,6 +1288,9 @@ int main(int	argc,
 	    objs[i] = 
 	      WlzAssignObject(WlzThreshold(cobj->o[i], threshV,
 					   WLZ_THRESH_HIGH, NULL), NULL);
+	    if( verboseFlg ){
+	      fprintf(stderr, "%s: object index %d thresholded\n", argv[0], i);
+	    }
 	  }
 	  else {
 	    objs[i] = 
@@ -1208,6 +1333,10 @@ int main(int	argc,
 	    startIndx = i;
 	  }
 	}
+	if( verboseFlg ){
+	  fprintf(stderr, "%s: object index %d at top of patch tree\n",
+		 argv[0], startIndx);
+	}
 
 	if( breadthFirstFlg ){
 	  /* generate the patch tree - breadth first search */
@@ -1228,12 +1357,18 @@ int main(int	argc,
 	  WlzFreeObj(obj1);
 	}
 
+	/* verbose output */
+	if( verboseFlg ){
+	  WlzPrintPatchTree(patchTree, stderr, 0);
+	}     
+
 	/* calculate the offsets */
-	if( 0 ){
-	  errNum = WlzRegisterPatchTreeDF(patchTree);
+	/* don't know why depth-first was disabled - put back for now RAB */
+	if( breadthFirstFlg ){
+	  errNum = WlzRegisterPatchTreeBF(patchTree);
 	}
 	else {
-	  errNum = WlzRegisterPatchTreeBF(patchTree);
+	  errNum = WlzRegisterPatchTreeDF(patchTree);
 	}
 
 	/* check if hit the buffers */

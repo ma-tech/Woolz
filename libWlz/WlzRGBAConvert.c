@@ -408,10 +408,10 @@ WlzObject *WlzCompoundToRGBA(
     while((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
       WlzPixelV	pix;
 
-      pix.type = gwsp.pixeltype;
       for(j = iwsp.lftpos; j <= iwsp.rgtpos; j++){
 	for(i=0; i < 3; i++){
 	  WlzGreyValueGet(gValWSpc[i], 0, iwsp.linpos, j);
+	  pix.type = gValWSpc[i]->gType;
 	  pix.v = gValWSpc[i]->gVal[0];
 	  WlzValueConvertPixel(&pix, pix, WLZ_GREY_UBYTE);
 	  b[i] = pix.v.ubv;

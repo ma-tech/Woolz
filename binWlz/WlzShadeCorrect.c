@@ -39,8 +39,8 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s -b <bright-field image> -d <dark-field image>"
-	  "-h -v [<input file>]\n"
+	  "Usage:\t%s -b <bright-field image> -d <dark-field image> "
+	  "-p -h -v [<input file>]\n"
 	  "\tApply a shade correction to the input objects. The shade\n"
 	  "\tcorrection using the bright-field and dark-field images\n"
 	  "\tassumes intensity images and calculates a normalised\n"
@@ -48,6 +48,7 @@ static void usage(char *proc_str)
 	  "\tOptions are:\n" 
 	  "\t  -b <file> Bright-field image - REQUIRED\n"
 	  "\t  -d <file> Dark-field image - optional\n"
+	  "\t  -p        Patch image, shade images shifted to correct each patch\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
 	  "",
@@ -58,11 +59,15 @@ static void usage(char *proc_str)
 int main(int	argc,
 	 char	**argv)
 {
-  char 		optList[] = "b:d:hv";
+  char 		optList[] = "b:d:phv";
   int		option;
   int		verboseFlg=0;
+  int		patchFlg=0;
+  int		i, xShift, yShift, zShift;
   FILE		*fp;
   WlzObject	*inObj=NULL, *outObj, *bfObj=NULL, *dfObj=NULL;
+  WlzObject	**outObjs, *obj1, *obj2;
+  WlzCompoundArray	*cObj;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* read the argument list and check for an input file */
@@ -95,6 +100,10 @@ int main(int	argc,
 	fclose(fp);
 	break;
       }
+      break;
+
+    case 'p':
+      patchFlg = 1;
       break;
 
     case 'v':
@@ -135,9 +144,59 @@ int main(int	argc,
 
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
+      if( outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
+				       255.0, 0, &errNum) ){
+	WlzWriteObj(stdout, outObj);
+	WlzFreeObj(outObj);
+      }
+      else {
+	fprintf(stderr, "%s: shade correction failed\n", argv[0]);
+	return errNum;
+      }
+      break;
+
     case WLZ_COMPOUND_ARR_1:
     case WLZ_COMPOUND_ARR_2:
-      if( outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
+      if( patchFlg ){
+	/* shade correct each patch, shifting the shade image
+	   as required */
+	cObj = (WlzCompoundArray *) inObj;
+	if( outObjs = AlcMalloc(sizeof(WlzObject *) * cObj->n) ){
+	  for(i=0; (i < cObj->n) && (errNum == WLZ_ERR_NONE); i++){
+	    /* could test for 3D here */
+	    xShift = cObj->o[i]->domain.i->kol1 - bfObj->domain.i->kol1;
+	    yShift = cObj->o[i]->domain.i->line1 - bfObj->domain.i->line1;
+	    zShift = 0;
+	    obj1 = WlzShiftObject(bfObj, xShift, yShift, zShift,
+				  &errNum);
+	    if( dfObj ){
+	      obj2 = WlzShiftObject(dfObj, xShift, yShift, zShift,
+				    &errNum);
+	    }
+	    else {
+	      obj2 = NULL;
+	    }
+	    outObjs[i] = WlzShadeCorrectBFDF(cObj->o[i], obj1, obj2,
+					     255.0, 0, &errNum);
+	    WlzFreeObj(obj1);
+	    if( obj2 ){
+	      WlzFreeObj(obj2);
+	    }
+	  }
+	  if( outObj = (WlzObject *)
+	     WlzMakeCompoundArray(cObj->type, 3, cObj->n,
+				  &(outObjs[0]), cObj->o[0]->type,
+				  &errNum) ){
+	    WlzWriteObj(stdout, outObj);
+	    WlzFreeObj(outObj);
+	    AlcFree(outObjs);
+	  }
+	}
+	else {
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      else if( outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
 				       255.0, 0, &errNum) ){
 	WlzWriteObj(stdout, outObj);
 	WlzFreeObj(outObj);

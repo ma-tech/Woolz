@@ -473,13 +473,22 @@ WlzObject	*WlzEffReadObjTiff(
 	  WlzFreeObj(tmpObj);
 	}
 	else {
+	  /* if it is an image-type error then it is probably some
+	   proprietory information. If there is only one plane
+	  then convert to 2D but still return incomplete read */
+	  if((errNum == WLZ_ERR_IMAGE_TYPE) && (p == 1)){
+	    tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains[0],
+				 valuess[0], NULL, NULL, NULL);
+	    WlzFreeObj(obj);
+	    obj = tmpObj;
+	  }
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	  break;
 	}
       }
     }
 
-    /* should standardise here */
+    /* should standardise here (if 3D) */
   }
   else {
     obj = WlzExtFFReadTiffDirObj(tif, 0, &errNum);
