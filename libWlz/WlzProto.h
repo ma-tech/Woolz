@@ -955,6 +955,18 @@ extern WlzIBox3        		WlzBoundingBox3DTo3I(
 				  WlzDBox3 bBox3D);
 extern WlzDBox3        		WlzBoundingBox3ITo3D(
 				  WlzIBox3 bBox3I);
+extern WlzIBox2			WlzBoundingBoxUnion2I(
+				  WlzIBox2 box0,
+				  WlzIBox2 box1);
+extern WlzDBox2			WlzBoundingBoxUnion2D(
+				  WlzDBox2 box0,
+				  WlzDBox2 box1);
+extern WlzIBox3			WlzBoundingBoxUnion3I(
+				  WlzIBox3 box0,
+				  WlzIBox3 box1);
+extern WlzDBox3			WlzBoundingBoxUnion3D(
+				  WlzDBox3 box0,
+				  WlzDBox3 box1);
 
 /************************************************************************
 * WlzBoundToObj.c							*
@@ -1030,8 +1042,21 @@ extern WlzContour		*WlzContourObjGrd(
 				  double ctrHi,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
+extern WlzContour		*WlzContourRBFBndObj3D(
+				  WlzObject *srcObj,
+				  int bErosion,
+				  int bDilation,
+				  int sDilation,
+				  double sFrac,
+				  double oFrac,
+				  double sAlpha,
+				  double oAlpha,
+				  double delta,
+				  double tau,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzContour		*WlzContourFromPoints(
+				  WlzObject *dObj,
 				  WlzVertexType vtxType,
 				  int nSPts,
 				  WlzVertexP sPts,
@@ -1046,8 +1071,6 @@ extern WlzContour		*WlzContourFromPoints(
 				  double oAlpha,
 				  double delta,
 				  double tau,
-				  int inPln,
-				  int plnIdx,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -2312,6 +2335,11 @@ extern WlzVoxelValues		*WlzMakeVoxelValueTb(
 				  WlzPixelV bckgrnd,
 				  WlzObject *original,
 				  WlzErrorNum *dstErr);
+extern WlzVoxelValues		*WlzNewValuesVox(
+				  WlzObject *sObj,
+				  WlzObjectType gTType,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzMakeRect(
 				  int line1,
 				  int lastln,
@@ -2329,6 +2357,18 @@ extern WlzBoundList		*WlzMakeBoundList(
 				  WlzObjectType type,
 				  int wrap,
 				  WlzPolygonDomain *poly,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeCuboid(
+				  int plane1,
+				  int lastpl,
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixType,
+				  WlzPixelV bgdV,
+				  WlzPropertyList *plist,
+				  WlzObject *assocObj,
 				  WlzErrorNum *dstErr);
 extern WlzHistogramDomain	*WlzMakeHistogramDomain(
 				  WlzObjectType type,
@@ -3392,6 +3432,8 @@ extern int			WlzValueMedianInt(
 extern double			WlzValueMedianDouble(
 				  double *vec,
 				  int count);
+extern size_t 			WlzValueSize(
+				  WlzGreyType gType);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -3422,6 +3464,29 @@ extern WlzVertexP		WlzVerticesFromObj(
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
+extern WlzVertexP		WlzVerticesFromObjBnd(
+				  WlzObject *obj,
+				  int *dstCnt,
+				  WlzVertexType *dstType,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+extern WlzErrorNum		WlzVerticesFromObjBnd2I(
+				  WlzObject *obj,
+				  int *dstSizeArrayVtx,
+				  WlzIVertex2 **dstArrayVtx);
+extern WlzErrorNum		WlzVerticesFromObjBnd3I(
+				  WlzObject *obj,
+				  int *dstSizeArrayVtx,
+				  WlzIVertex3 **dstArrayVtx);
+extern WlzErrorNum		WlzVerticesFromObj2I(
+				  WlzObject *obj,
+				  int *dstSizeArrayVtx,
+				  WlzIVertex2 **dstArrayVtx);
+extern WlzErrorNum		WlzVerticesFromObj3I(
+				  WlzObject *obj,
+				  int *dstSizeArrayVtx,
+				  WlzIVertex3 **dstArrayVtx);
+#ifndef WLZ_EXT_BIND
 extern WlzVertexP		WlzDVerticesFromGM(
 				  WlzGMModel *model,
 				  int *dstCnt,
