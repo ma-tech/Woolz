@@ -403,9 +403,13 @@ int             main(int argc, char **argv)
     switch(alg)
     {
       case WLZ_AFFINETRANSLSQ_ALG_WLZ: /* FALLTHROUGH */
+	trDomain.t = WlzAffineTransformLSqWgt(vtxType,
+					      nVtx, vWgt, vtx0, vtx1,
+					      trType, &errNum);
+	break;
       case WLZ_AFFINETRANSLSQ_ALG_SVD:
-	trDomain.t = WlzAffineTransformLSq(vtxType,  nVtx, vtx0,
-					   nVtx, vtx1, trType, &errNum);
+	trDomain.t = WlzAffineTransformLSqSVD(vtxType,  nVtx, vWgt,
+					   vtx0, vtx1, trType, &errNum);
         break;
       case WLZ_AFFINETRANSLSQ_ALG_DQ:
 	trDomain.t = WlzAffineTransformLSq2(vtxType,
