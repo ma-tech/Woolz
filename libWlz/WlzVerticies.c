@@ -1,21 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzVerticies.c
-* Date:         November 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for extracting verticies from objects
-*		represented by verticies, eg WLZ_2D_POLYGON.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 22-12-00 bill Add normals.
-* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
-************************************************************************/
+/*!
+* \file         WlzVerticies.c
+* \author       Bill Hill
+* \date         November 2000
+* \version      $Id$
+* \note
+*               Copyright:
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par  Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Functions for extracting verticies from objects represented
+*		by verticies, eg polylines, boundlists and contours.
+* \ingroup      WlzFeatures
+* \todo
+* \bug
+*/
+
 #include <float.h>
 #include <Wlz.h>
 
@@ -71,26 +74,25 @@ static WlzDVertex2 		WlzVerticiesNormTriple2(
 				  WlzDVertex2 v1,
 				  WlzDVertex2 v2);
 
-/************************************************************************
-* Function:	WlzVerticiesFromObj
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer which it fills with the verticies
+/*!
+* \ingroup      WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer which it fills with the verticies
 *		from the given object. The object must be one of the
 *		types that is represented by verticies, eg
-*		WLZ_2D_POLYGON.
-* Global refs:	-
-* Parameters:	WlzObject *obj:		Given polygon domain object.
-*		WlzVertexP *dstNr:	Destination ptr for normals.
+*		polylines, boundlists and contours.
+* \param	obj			Given polygon domain object.
+* \param	dstNr			Destination ptr for normals.
 *					The normals will always be
 *					either WlzDVertex2 or
 *					WlzDVertex3. May be NULL.
-*		int *dstCnt:		Destination ptr for the number
+* \param	dstCnt			Destination ptr for the number
 *					of verticies. Can NOT be NULL.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies. Can NOT be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 WlzVertexP	WlzVerticiesFromObj(WlzObject *obj, WlzVertexP *dstNr,
 				    int *dstCnt, WlzVertexType *dstType, 
 				    WlzErrorNum *dstErr)
@@ -132,22 +134,21 @@ WlzVertexP	WlzVerticiesFromObj(WlzObject *obj, WlzVertexP *dstNr,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesFromPoly2
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer which it fills with the verticies
+/*!
+* \ingroup      WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer which it fills with the verticies
 *		from a 3D polygon domain.
-* Global refs:	-
-* Parameters:	WlzPolygonDomain *poly:	Given polygon domain.
-*		WlzVertexP *dstNr:	Destination ptr for normals,
+* \param	poly			Given polygon domain.
+* \param	dstNr			Destination ptr for normals,
 *					may be NULL.
-*		int *dstCnt:		Destination ptr for the number
+* \param	dstCnt			Destination ptr for the number
 *					of verticies.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 static WlzVertexP WlzVerticiesFromPoly2(WlzPolygonDomain *poly,
 				        WlzVertexP *dstNr, int *dstCnt,
 					WlzVertexType *dstType,
@@ -212,22 +213,21 @@ static WlzVertexP WlzVerticiesFromPoly2(WlzPolygonDomain *poly,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesFromBound
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer which it fills with the verticies
+/*!
+* \ingroup      WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer which it fills with the verticies
 *		from a boundary domain.
-* Global refs:	-
-* Parameters:	WlzBoundList *bound:	Given boundary domain.
-*		WlzVertexP *dstNr:	Destination ptr for normals,
+* \param	bound			Given boundary domain.
+* \param	dstNr			Destination ptr for normals,
 *					may be NULL.
-*		int *dstCnt:		Destination ptr for the number
+* \param	dstCnt			Destination ptr for the number
 *					of verticies.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 static WlzVertexP WlzVerticiesFromBound(WlzBoundList *bound,
 				        WlzVertexP *dstNr, int *dstCnt,
 					WlzVertexType *dstType,
@@ -285,24 +285,23 @@ static WlzVertexP WlzVerticiesFromBound(WlzBoundList *bound,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesFromCtr
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer which it fills with the verticies
-*		from a convex hull.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour.
-*		WlzVertexP *dstNr:	Destination ptr for normals,
+/*!
+* \ingroup	WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer which it fills with the verticies
+*		from a contour.
+* \param	ctr			Given contour.
+* \param	dstNr			Destination ptr for normals,
 *					may be NULL.
-*		int **dstVId:		Destination ptr for the GM
+* \param	dstVId			Destination ptr for the GM
 *					vertex indicies, may be NULL.
-*		int *dstCnt:		Destination ptr for the number
+* \param	dstCnt			Destination ptr for the number
 *					of verticies.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 WlzVertexP 	WlzVerticiesFromCtr(WlzContour *ctr,
 				    WlzVertexP *dstNr, int **dstVId,
 				    int *dstCnt, WlzVertexType *dstType,
@@ -338,24 +337,23 @@ WlzVertexP 	WlzVerticiesFromCtr(WlzContour *ctr,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesFromGM2
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer which it fills with the verticies
+/*!
+* \ingroup	WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer which it fills with the verticies
 *		from a 2D GM.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		WlzVertexP *dstNr:	Destination ptr for normals,
+* \param	model			Given model.
+* \param	dstNr			Destination ptr for normals,
 *					may be NULL.
-*		int *dstVId:		Destination ptr for the GM
+* \param	dstVId			Destination ptr for the GM
 *					vertex indicies, may be NULL.
-*		int *dstCnt:		Destination ptr for the number
+* \param	dstCnt			Destination ptr for the number
 *					of verticies.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 				      WlzVertexP *dstNr, int **dstVId,
 				      int *dstCnt, WlzVertexType *dstType,
@@ -524,24 +522,23 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesFromGM3
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer which it fills with the verticies
+/*!
+* \ingroup WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer which it fills with the verticies
 *		from a 3D GM.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		WlzVertexP *dstNr:	Destination ptr for normals,
+* \param	model			Given model.
+* \param	dstNr			Destination ptr for normals,
 *					may be NULL.
-*		int *dstVId:		Destination ptr for the GM
+* \param	dstVId			Destination ptr for the GM
 *					vertex indicies, may be NULL.
-*		int *dstCnt:		Destination ptr for the number
+* \param	dstCnt			Destination ptr for the number
 *					of verticies.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
 				      WlzVertexP *dstNr, int **dstVId,
 				      int *dstCnt, WlzVertexType *dstType,
@@ -662,14 +659,13 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesCntBound
-* Returns:	int:			Number of verticies in boundary.
-* Purpose:	Counts the number of verticies in the polygon domains
+/*!
+* \ingroup 	WlzFeatures
+* \return				Number of verticies in boundary.
+* \brief	Counts the number of verticies in the polygon domains
 *		of the boundary. This is a recursive function.
-* Global refs:	-
-* Parameters:	WlzBoundList *bound:	Given boundary domain.
-************************************************************************/
+*  \param	bound			Given boundary domain.
+*/
 static int	WlzVerticiesCntBound(WlzBoundList *bound)
 {
   int		cnt;
@@ -679,19 +675,18 @@ static int	WlzVerticiesCntBound(WlzBoundList *bound)
   return(cnt);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesCpBound
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Copies verticies from the boundaries polygon domain
+/*!
+* \ingroup 	WlzFeatures
+* \return				Woolz error code.
+* \brief	Copies verticies from the boundaries polygon domain
 *		to the buffer.
-* Global refs:	-
-* Parameters:	WlzVertexP vData:	Given buffer.
-*		WlzDVertex2 *vNorm:	Given buffer for normals, may
+* \param	vData			Given buffer.
+* \param	vNorm			Given buffer for normals, may
 *					be NULL.
-*		WlzVertexType vType:	Type of verticies.
-*		int *off:		Ptr to offset into buffer.
-*		WlzBoundList *bound:	Given boundary domain.
-************************************************************************/
+* \param	vType			Type of verticies.
+* \param	off			Ptr to offset into buffer.
+* \param	bound			Given boundary domain.
+*/
 static WlzErrorNum WlzVerticiesCpBound(WlzVertexP vData, WlzDVertex2 *vNorm,
 				       WlzVertexType vType,
 				       int *off, WlzBoundList *bound)
@@ -765,20 +760,19 @@ static WlzErrorNum WlzVerticiesCpBound(WlzVertexP vData, WlzDVertex2 *vNorm,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesAlcPoly
-* Returns:	WlzVertexP:		Allocated verticies.
-* Purpose:	Allocates a buffer for copting the verticies of a
+/*!
+* \ingroup 	WlzFeatures
+* \return				Allocated verticies.
+* \brief	Allocates a buffer for copting the verticies of a
 *		polygon domain.
-* Global refs:	-
-* Parameters:	WlzObjectType polyType:	Type of polygon domain.
-*		int cnt:		Number of verticies to allocate
+* \param	polyType		Type of polygon domain.
+* \param	cnt			Number of verticies to allocate
 *					room for.
-*		WlzVertexType *dstType:	Destination ptr for the type
+* \param	dstType			Destination ptr for the type
 *					of verticies.
-*		WlzErrorNum *dstErr:	Destination error pointer,
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 static WlzVertexP WlzVerticiesAlcPoly(WlzObjectType polyType, int cnt,
 				      WlzVertexType *dstType,
 				      WlzErrorNum *dstErr)
@@ -825,21 +819,20 @@ static WlzVertexP WlzVerticiesAlcPoly(WlzObjectType polyType, int cnt,
   return(vData);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesNorm2
-* Returns:	void
-* Purpose:	Computes the normals of the given verticies which are
+/*!
+* \ingroup	WlzFeatures
+* \return	<void>
+* \brief	Computes the normals of the given verticies which are
 *		assumed to lie in a 2D polygon.
 *		The normals all have +ve x components. 
 *		There is no need for any type checking in this function
 *		because it is static and all types have been checked.
-* Global refs:	-
-* Parameters:	WlzDVertex2 *nrm:	Buffer for the normals.
-*		WlzVertexP vtx:		The given verticies.
-*		int cnt:		The number of verticies (and
+* \param	nrm			Buffer for the normals.
+* \param	vtx			The given verticies.
+*		cnt			The number of verticies (and
 *					normals).
-*		WlzObjectType pType:	Polygon type.
-************************************************************************/
+* \param	pType			Polygon type.
+*/
 static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 				  WlzObjectType pType)
 {
@@ -949,10 +942,10 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
   }
 }
 
-/************************************************************************
-* Function:	WlzVerticiesNormPair2
-* Returns:	void
-* Purpose:	Computes the normal (n) to a segment (g) between the
+/*!
+* \ingroup	WlzFeatures
+* \return	<void>
+* \brief	Computes the normal (n) to a segment (g) between the
 *		given pair of verticies. There are clearly two solutions
 *		to the problem of finding a normal to a line segment,
 *		but this function always finds the normal vector with a
@@ -962,14 +955,13 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 *		With two non-coincident verticies the normal vector is
 *		computed using the relationships g.n = 0 and \|n\|^2 = 1.
 *		Giving:
-*		  nx = \frac{1}{\sqrt(1 + (gx/gy)^2)},
-*		  ny = -nx\frac{gx}{gy).
+*		\f$ nx = \frac{1}{\sqrt(1+(gx/gy)^2)} \f$ ,
+*		\f$ ny = -nx\frac{gx}{gy} \f$
 *		There is no need for any type checking in this function
 *		because it is static and all types have been checked.
-* Global refs:	-
-* Parameters:	WlzDVertex2 v0:		First of the given pair.
-*		WlzDVertex2 v1:		Second of the given pair.
-************************************************************************/
+* \param	v0			First of the given pair.
+* \param	v1			Second of the given pair.
+*/
 static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
 {
   WlzDVertex2	tV0,
@@ -1004,10 +996,9 @@ static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
   return(nrm);
 }
 
-/************************************************************************
-* Function:	WlzVerticiesNormTriple2
-* Returns:	void
-* Purpose:	Computes the normal (n) at a vertex. This is chosen to
+/*!
+* \return				Normal vector.
+* \brief	Computes the normal (n) at a vertex. This is chosen to
 *		be the mean of normals of the two line segments which the
 *  		vertex is common to. This normal also bisects the two
 *		angles of the line segments at the vertex.
@@ -1015,18 +1006,17 @@ static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
 *		form a triangle ABC, a line which bisects the angles
 *		at B from some point D on the line segment CA to B.
 *		The point D is given by:
-*		  p_D = p_A + (p_C - p_A)\frac{\|p_A - p_B\|}
-*					      {\|p_B - p_C\|}
+*		\f$ p_D = p_A + (p_C - p_A)
+                                \frac{\|p_A - p_B\|}{\|p_B - p_C\|} \f$
 *		So the normal n is given by:
-*		  n = \frac{(p_B - p_D)}{\|p_B - p_D\|}
-*		unless \|p_B - p_D\| < \epsilon in which case
+*		\f$ n = \frac{(p_B - p_D)}{\|p_B - p_D\|} \f$
+*		unless \f$ \|p_B - p_D\| < \epsilon \f$ in which case
 *		WlzVerticiesNormPair2() is used to compute the normal
 *		from A and C.
-* Global refs:	-
-* Parameters:	WlzDVertex2 v0:		First of the given triple (A).
-*		WlzDVertex2 v1:		Second of the given triple (B).
-*		WlzDVertex2 v2:		Trird of the given triple (C).
-************************************************************************/
+* \param	v0			First of the given triple (A).
+* \param	v1			Second of the given triple (B).
+* \param	v2			Third of the given triple (C).
+*/
 static WlzDVertex2 WlzVerticiesNormTriple2(WlzDVertex2 v0, WlzDVertex2 v1,
 					   WlzDVertex2 v2)
 {
