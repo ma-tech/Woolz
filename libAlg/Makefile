@@ -135,8 +135,8 @@ endif
 
 # Target which installs everything after it has been built (should not need
 # modifying).
-install:		install_includes install_manpages install_archive \
-			install_executables
+install:		install_includes install_archive install_executables \
+			install_documentation
 
 # Target which installs an archive (should not need modifying).
 install_archive:	$(ARCHIVE)
@@ -160,21 +160,30 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the manual pages in the appropriate directories,
-# watch out for the tabs in the sed regexp's (should not need modifying).
-install_manpages:	$(MANPAGES)
+# Target which installs the documentation in the appropriate directories,
+# (should not need modifying).
+install_documentation:  documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			$(install_manpages)
+			$(install_www)
 
-# Target for compressed tar files suitable for distribution (should not need
-# modifying).
-tar:			$(TARSOURCES) clobber allsources
-ifneq ($(strip $(TARSOURCES)),)
-			$(TAR) $(TARFLAGS) $(TARFILE) $(TARSOURCES)
-			$(COMPRESS) $(TARFILE)
+# Target which installs the man pages in the appropriate directories,
+# (should not need modifying).
+install_manpages:       documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
 endif
+			install_manpages
+
+# Target which installs the html pages in the appropriate directories,
+# (should not need modifying).
+install_www:            documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			install_www
 
 # Target for the archive (library), just a dependency (should not need
 # modifying).
