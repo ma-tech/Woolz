@@ -1796,6 +1796,20 @@ static WlzErrorNum WlzGMModelDeleteE2D(WlzGMModel *model, WlzGMEdge *dE)
       errNum = WlzGMModelDeleteE2D2V2L(model, dE);
       break;
   }
+#define WLZ_GM_DEBUG_DELETE_E_2D /* HACK */
+#ifdef WLZ_GM_DEBUG_DELETE_E_2D
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzGMElemP elmP;
+
+    errNum = WlzGMVerifyModel(model, &elmP);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr, "WlzGMModelDeleteE2D error!\n");
+      abort();
+    }
+  }
+#endif
   return(errNum);
 }
 
@@ -2045,7 +2059,7 @@ static WlzErrorNum WlzGMModelDeleteE2D2V1L(WlzGMModel *model, WlzGMEdge *dE)
     nS->parent = model;
     nS->next = nS->prev = nS;
     WlzGMShellAppend(cS, nS);
-    WlzGMLoopTSetT(nLT); /* TODO Check this fn. */
+    WlzGMLoopTSetT(nLT);
     WlzGMModelFreeE(model, dE);
     WlzGMModelFreeET(model, tET0);
     WlzGMModelFreeET(model, tET1);
@@ -4691,6 +4705,11 @@ WlzErrorNum	WlzGMVerifyModel(WlzGMModel *model, WlzGMElemP *dstElmP)
 	  {
 	    errNum = WLZ_ERR_GMELM_NULL;
 	  }
+	  else if(cS->parent != model)
+	  {
+	    elmP.shell = cS;
+	    errNum = WLZ_ERR_GMELM_DATA;
+	  }
 	  else
 	  {
 	    errNum = WlzGMVerifyShell(cS, &elmP);
@@ -4776,6 +4795,11 @@ WlzErrorNum	WlzGMVerifyShell(WlzGMShell *shell, WlzGMElemP *dstElmP)
       if(cLT == NULL)
       {
         errNum = WLZ_ERR_GMELM_NULL;
+      }
+      else if(cLT->parent != shell)
+      {
+	elmP.loopT = cLT;
+	errNum = WLZ_ERR_GMELM_DATA;
       }
       else
       {
@@ -4874,6 +4898,8 @@ WlzErrorNum	WlzGMVerifyLoopT(WlzGMLoopT *loopT, WlzGMElemP *dstElmP)
 	errNum = WLZ_ERR_GMELM_NULL;
       }
       else if((cET->idx < 0) ||
+	      (cET->parent != loopT) ||
+	      (cET->parent->parent != cET->opp->parent->parent) ||
               (cET->next->idx < 0) || (cET->prev->idx < 0) || 
               (cET->opp->idx < 0) || (cET->rad->idx < 0) ||
               (cET->edge->idx < 0) || (cET->vertexT->idx < 0) ||
@@ -8850,12 +8876,12 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
   WlzGMEdgeT	*matchEdgeT[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-#ifdef WLZ_GEOMODEL_DEBUG
+#ifdef WLZ_GM_DEBUG_CONSTRUCT_SPX_2D
   (void )fprintf(stderr, "%g %g %g %g\n",
 		 (pos + 0)->vtX, (pos + 0)->vtY,
 		 (pos + 1)->vtX, (pos + 1)->vtY);
   (void )fflush(stderr);
-#endif /* WLZ_GEOMODEL_DEBUG */
+#endif
   WlzGMModelMatchEdgeTG2D(model, matchEdgeT, pos);
   matchCode = ((matchEdgeT[1] != NULL) << 1) | (matchEdgeT[0] != NULL);
   switch(matchCode)
@@ -9146,18 +9172,17 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 */
 static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 {
-  WlzGMShell	*gS;
   WlzGMEdgeT	*fET,
   		*tET;
   
   if(gLT && ((tET = fET = gLT->edgeT) != NULL))
   {
     /* Set each of the edgeT's to have the given loopT as it's parent. */
-    gS = gLT->parent;
     do
     {
       tET->parent = gLT;
-    } while((tET = tET->next) != fET);
+      tET = tET->next;
+    } while(tET != fET);
     WlzGMLoopTSetAdjT(gLT, gLT->parent);
   }
 }
@@ -9175,7 +9200,6 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 */
 static void	WlzGMShellSetT(WlzGMShell *gS)
 {
-  /* TODO Check this fn. */
   if(gS && (gS->child != NULL))
   {
     WlzGMLoopTSetAdjT(gS->child, gS);
@@ -9199,7 +9223,6 @@ static void	WlzGMLoopTSetAdjT(WlzGMLoopT *gLT, WlzGMShell *gS)
   WlzGMEdgeT	*cET,
   		*fET;
 
-  /* TODO Check this fn. */
   if(gLT->parent != gS)
   {
     WlzGMLoopTUnlink(gLT);
@@ -9209,7 +9232,7 @@ static void	WlzGMLoopTSetAdjT(WlzGMLoopT *gLT, WlzGMShell *gS)
   cET = fET = gLT->edgeT;
   do
   {
-    cLT = cET->parent;
+    cLT = cET->opp->parent;
     if(cLT->parent != gS)
     {
       WlzGMLoopTSetAdjT(cLT, gS);
