@@ -61,6 +61,7 @@ EXECUTABLES		= \
 			WlzGreySetValue \
 			WlzGreyStats \
 			WlzGreyTemplate \
+			WlzHasIntersect \
 			WlzHistogramData \
 			WlzHistogramEqualiseObj \
 			WlzHistogramFindPeaks \
@@ -71,6 +72,7 @@ EXECUTABLES		= \
 			WlzHistogramRebin \
 			WlzHistogramSmooth \
 			WlzImageArithmetic \
+			WlzIsEmpty \
 			WlzIntersect \
 			WlzLabel \
 			WlzLaplacian \
@@ -137,6 +139,7 @@ CSOURCES		= \
 			WlzGreySetValue.c \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
+			WlzHasIntersect.c \
 			WlzHistogramData.c \
 			WlzHistogramEqualiseObj.c \
 			WlzHistogramFindPeaks.c \
@@ -147,6 +150,7 @@ CSOURCES		= \
 			WlzHistogramRebin.c \
 			WlzHistogramSmooth.c \
 			WlzImageArithmetic.c \
+			WlzIsEmpty.c \
 			WlzIntersect.c \
 			WlzLabel.c \
 			WlzLaplacian.c \

@@ -114,7 +114,6 @@ int main(int	argc,
   if(((obj1 = WlzIntersectN(n, objlist, 1, &errNum)) != NULL) &&
      (errNum == WLZ_ERR_NONE)) {
     errNum = WlzWriteObj(stdout, obj1);
-    fprintf(stderr, "volume = %d\n", WlzVolume(obj1, NULL));
   }
   if(errNum != WLZ_ERR_NONE)
   {
