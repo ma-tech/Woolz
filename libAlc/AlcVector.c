@@ -12,6 +12,7 @@
 * Purpose:      A general purpose 1D vector (extensible array).
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 20-07-00 bill	Fixed leak in AlcVectorFree().
 * 04-06-2000 bill Fixed loop bug in AlcVectorExtend().
 ************************************************************************/
 #include <stdio.h>
@@ -71,7 +72,7 @@ AlcVector	*AlcVectorNew(unsigned int elmCnt, unsigned int elmSz,
   if(errNum == ALC_ER_NONE)
   {
     /* Push block base pointer onto the free stack. */
-    nVec->freeStack = AlcFreeStackPush(NULL, *(nVec->blocks), &errNum);
+    nVec->freeStack = AlcFreeStackPush(NULL, data, &errNum);
   }
   if(errNum == ALC_ER_NONE)
   {
