@@ -24,7 +24,8 @@ DLLARCHIVE		= $(ARCHIVE:lib%.a=%.dll)
 DLLIMPORTLIB		= $(ARCHIVE:%.a=%.dll.a)
 PROTOTYPES		= 
 DLLLIBDIRS		= $(DEPENDDIRS:%=-L%)
-DLLLIBDEPS		= -lWlzBnd -lWlz -lAlg -lAlc
+DLLLIBDEPS		= -lWlzBnd -lWlzExtFF -lbibfile -lWlz -lAlg -lAlc \
+                          -ljpeg -ltiff
 DLLLIBSEXT		= -L. -lg -lkernel32 -lm -lc
 
 # Names of executables to be built (modify as required).
@@ -52,6 +53,8 @@ DEPENDDIRS		= \
 			  ../../../../../../../libAlc \
 			  ../../../../../../../libAlg \
 			  ../../../../../../../libWlz \
+			  ../../../../../../../libbibfile \
+			  ../../../../../../../libWlzExtFF \
 			  ../../../../../../../libWlzBnd
 
 # List of all header file directories to be searched (modify as required).
@@ -68,12 +71,12 @@ LIBDIRS			= \
 
 # List of libraries to link (modify as required).
 ifeq ($(UNIXTYPE), SUNOS5)
-EXTRA_LIBS		= gen socket nsl m
+EXTRA_LIBS		= jpeg tiff gen socket nsl m
 endif
 ifeq ($(UNIXTYPE), LINUX2)
-EXTRA_LIBS		= m
+EXTRA_LIBS		= jpeg tiff m
 endif
-LIBRARIES		= WlzBnd Wlz Alg Alc \
+LIBRARIES		= WlzBnd WlzExtFF bibfile Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
