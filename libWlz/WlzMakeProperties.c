@@ -514,9 +514,6 @@ WlzErrorNum WlzFreePropertyList(
   if( plist ){
     AlcDLPListFree(plist);
   }
-  else {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
 
   return errNum;
 }

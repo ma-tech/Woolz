@@ -266,8 +266,13 @@ WlzMakeMain(WlzObjectType 	type,
 	obj->values = WlzAssignValues(values, &errNum);
       }
       /* property lists now more complicated  */
-      if( (errNum == WLZ_ERR_NONE) && (plist != NULL) ){
-	obj->plist = WlzAssignPropertyList(plist, &errNum);
+      if( errNum == WLZ_ERR_NONE ){
+	if( plist ){
+	  obj->plist = WlzAssignPropertyList(plist, &errNum);
+	}
+	else {
+	  obj->plist = NULL;
+	}
       }
       if( errNum == WLZ_ERR_NONE ){
 	obj->assoc = WlzAssignObject(assoc, &errNum);
