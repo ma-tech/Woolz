@@ -27,7 +27,8 @@ JAVASOURCES		= \
 			  WlzArrayViewer.java \
 			  WlzViewer.java \
 			  WlzTest3DVtx.java \
-			  WlzLabelTest.java
+			  WlzLabelTest.java \
+			  WlzBndGreyInvert.java
 
 CLASSPATH		= .:../../../../../..
 ifeq ($(UNIXTYPE), CYGWIN)

@@ -17,7 +17,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
-#include <Wlz.h>
+#include <WlzBnd.h>
 #include <jni.h>
 #include <WlzJavaArray1D.h>
 #include <WlzJavaArray2D.h>
