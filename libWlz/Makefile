@@ -133,6 +133,7 @@ CSOURCES		= \
 			WlzPolySmooth.c \
 			WlzPolyToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRank.c \
 			WlzRaster.c \
 			WlzReadObj.c \
 			WlzRegCCor.c \

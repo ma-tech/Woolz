@@ -2261,6 +2261,14 @@ extern double 			WlzPrincipalAngle(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzRank.c
+************************************************************************/
+extern WlzErrorNum		WlzRankFilter(
+				  WlzObject *gObj,
+				  int fSz,
+				  double rank);
+
+/************************************************************************
 * WlzRaster.c
 ************************************************************************/
 extern WlzObject		*WlzRasterObj(
