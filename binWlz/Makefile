@@ -12,7 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
-#
+# 23-04-03 Rao  Add WlzGreyValueMixing.c#
 # 28-01-03 Rao  Add WlzGeometryTrackUpAndDown.c
 # 18-09-02 Jianguo add Wlz3DWarpMQ
 # 14-03-01 bill Add WlzRasterObj.
@@ -77,7 +77,8 @@ EXECUTABLES		= \
 			WlzGreyStats \
 			WlzGreyTemplate \
 			WlzGreyTransfer \
-			WlzHasIntersect \
+	                WlzGreyValueMixing \
+		        WlzHasIntersect \
 			WlzHistogramData \
 			WlzHistogramEqualiseObj \
 			WlzHistogramFindPeaks \
@@ -177,6 +178,7 @@ CSOURCES		= \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
 			WlzGreyTransfer.c \
+			WlzGreyValueMixing.c \
 			WlzHasIntersect.c \
 			WlzHistogramData.c \
 			WlzHistogramEqualiseObj.c \
