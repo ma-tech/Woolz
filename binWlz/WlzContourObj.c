@@ -44,7 +44,7 @@ int             main(int argc, char **argv)
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "ghio:v:w:";
+  static char	optList[] = "bghio:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -57,6 +57,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'b':
+        ctrMtd = WLZ_CONTOUR_MTD_BND;
+	break;
       case 'g':
         ctrMtd = WLZ_CONTOUR_MTD_GRD;
 	break;
@@ -204,6 +207,7 @@ int             main(int argc, char **argv)
       "Options:\n"
       "  -h  Prints this usage information.\n"
       "  -o  Output object file name.\n"
+      "  -b  Compute object boundary contours.\n"
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
       "  -v  Contour iso-value or minimum gradient.\n"

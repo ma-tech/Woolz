@@ -1,31 +1,22 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:	Woolz
-* Title:	WlzContour.c
-* Date: 	September 1999
-* Author:	Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
+/*!
+* \file		WlzContour.c
+* \author	Bill Hill
+* \date 	September 1999
+* \version	$Id$
+* \note		Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*		MRC Human Genetics Unit,
 *		Western General Hospital,
 *		Edinburgh, EH4 2XU, UK.
-* Purpose:	Functions for extracting contours from Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 15-12-00 bill Fix offset bug when getting 2D array data in
-*		WlzContourIsoObj3D() and WlzContourGrdObj5D().
-* 21-11-00 bill Fix bugs in 3D gradient contour generation and removed
-*		some unused code.
-* 25-08-00 bill	Fix more bugs causing holes in 3D iso-surface.
-* 22-08-00 bill	Fix a bug causing holes in 3D iso-surface.
-* 15-08-00 bill	Move WlzFreeContour to WlzFreeSpace.c and WlzMakeContour
-*		to WlzMakeStructs.c.
-* 10-08-00 bill Add WlzContourGrdObj3D() and modify WlzMakeContour().
-* 05-06-00 bill Add 3D isosurface generation. Removed unused variables.
-* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+* \brief	Functions for extracting contours from Woolz objects.
+* \ingroup	WlzContour
+* \todo		Parameter grdHi is unused in WlzContourGrdObj2D() and
+*		WlzContourGrdObj3D().
+* \bug		None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <string.h>
@@ -35,61 +26,70 @@
 
 /* #define WLZ_CONTOUR_DEBUG */
 
-/************************************************************************
-* WlzContourTriIsn2D: Classification of intersection of line segment
-* with a triangle.
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzContourTriIsn2D
+* \ingroup	WlzContour
+* \brief	Classification of the intersection of a line segment
+* 		with a triangle.
+*		Typedef: ::WlzContourTriIsn2D.
+*/
+typedef enum _WlzContourTriIsn2D
 {
-  WLZ_CONTOUR_TIC2D_NONE,                             /*No intersection */
-  WLZ_CONTOUR_TIC2D_V1V0,                             /* Vertex 1 - vertex 0 */
-  WLZ_CONTOUR_TIC2D_V0V2,                             /* Vertex 0 - vertex 2 */
-  WLZ_CONTOUR_TIC2D_V2V1,                             /* Vertex 2 - vertex 1 */
-  WLZ_CONTOUR_TIC2D_V1S02,                            /* Vertex 1 - side 0-2 */
-  WLZ_CONTOUR_TIC2D_V0S21,                            /* Vertex 0 - side 2-1 */
-  WLZ_CONTOUR_TIC2D_V2S10,                            /* Vertex 2 - side 1-0 */
-  WLZ_CONTOUR_TIC2D_S10S02,                           /* Side 1-0 - side 0-2 */
-  WLZ_CONTOUR_TIC2D_S02S21,                           /* Side 0-2 - side 2-1 */
-  WLZ_CONTOUR_TIC2D_S21S10                            /* Side 2-1 - side 1-0 */
+  WLZ_CONTOUR_TIC2D_NONE,            	/*!< No intersection */
+  WLZ_CONTOUR_TIC2D_V1V0,               /*!< Vertex 1 - vertex 0 */
+  WLZ_CONTOUR_TIC2D_V0V2,               /*!< Vertex 0 - vertex 2 */
+  WLZ_CONTOUR_TIC2D_V2V1,               /*!< Vertex 2 - vertex 1 */
+  WLZ_CONTOUR_TIC2D_V1S02,              /*!< Vertex 1 - side 0-2 */
+  WLZ_CONTOUR_TIC2D_V0S21,              /*!< Vertex 0 - side 2-1 */
+  WLZ_CONTOUR_TIC2D_V2S10,              /*!< Vertex 2 - side 1-0 */
+  WLZ_CONTOUR_TIC2D_S10S02,             /*!< Side 1-0 - side 0-2 */
+  WLZ_CONTOUR_TIC2D_S02S21,             /*!< Side 0-2 - side 2-1 */
+  WLZ_CONTOUR_TIC2D_S21S10              /*!< Side 2-1 - side 1-0 */
 } WlzContourTriIsn2D;
 
-/************************************************************************
-* WlzContourTetIsn3D: Classification of intersection of plane with a
-* tetradedron.
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzContourTetIsn3D
+* \ingroup	WlzContour
+* \brief	Classification of the intersection of a plane
+* 		with a tetradedron.
+*		Typedef: ::WlzContourT
+*/
+typedef enum _WlzContourTetIsn3D
 {
-  WLZ_CONTOUR_TIC3D_NONE,               /*No intersection */
-  WLZ_CONTOUR_TIC3D_V0S12S13,		/* Vertex 0, side 1-2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V0S12S23,		/* Vertex 0, side 1-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V0S13S23,		/* Vertex 0, side 1-3, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V0V1S23,		/* Vertex 0, vertex 1, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V0V1V2,		/* Vertex 0, vertex 1, vertex 2 */
-  WLZ_CONTOUR_TIC3D_V0V1V3,		/* Vertex 0, vertex 2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V0V2S13,		/* Vertex 0, vertex 2, vertex 3 */
-  WLZ_CONTOUR_TIC3D_V0V2V3,		/* Vertex 0, vertex 2, vertex 3 */
-  WLZ_CONTOUR_TIC3D_V0V3S12,		/* Vertex 0, side 0-2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V1S02S03,		/* Vertex 1, side 0-2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V1S02S23,		/* Vertex 1, side 0-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V1S03S23,		/* Vertex 1, side 0-3, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V1V2S03,		/* Vertex 1, vertex 2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V1V2V3,		/* Vertex 1, vertex 2, vertex 3 */
-  WLZ_CONTOUR_TIC3D_V1V3S02,		/* Vertex 1, vertex 3, side 0-2 */
-  WLZ_CONTOUR_TIC3D_V2S01S02,		/* Vertex 2, side 0-1, side 0-2 */
-  WLZ_CONTOUR_TIC3D_V2S01S03,		/* Vertex 2, side 0-1, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V2S01S13,		/* Vertex 2, side 0-1, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V2S03S13,		/* Vertex 2, side 0-3, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V2V3S01,		/* Vertex 2, vertex 3, side 0-1 */
-  WLZ_CONTOUR_TIC3D_V3S01S02,		/* Vertex 3, side 0-1, side 0-2 */
-  WLZ_CONTOUR_TIC3D_V3S01S12,		/* Vertex 3, side 0-1, side 1-2 */
-  WLZ_CONTOUR_TIC3D_V3S02S12,		/* Vertex 3, side 0-2, side 1-2 */
-  WLZ_CONTOUR_TIC3D_S01S02S03,		/* Side 0-1, side 0-2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_S01S02S13S23,  /* Side 0-1, side 0-2, side 1-3, side 2-3 */
-  WLZ_CONTOUR_TIC3D_S01S03S12S23,  /* Side 0-1, side 0-3, side 1-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_S01S12S13,		/* Side 0-1, side 1-2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_S02S03S12S13,  /* Side 0-2, side 0-3, side 1-2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_S02S12S23,		/* Side 0-2, side 1-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_S03S13S23		/* Side 0-3, side 1-3, side 2-3 */
+  WLZ_CONTOUR_TIC3D_NONE,               /*!< No intersection */
+  WLZ_CONTOUR_TIC3D_V0S12S13,		/*!< Vertex 0, side 1-2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V0S12S23,		/*!< Vertex 0, side 1-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V0S13S23,		/*!< Vertex 0, side 1-3, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V0V1S23,		/*!< Vertex 0, vertex 1, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V0V1V2,		/*!< Vertex 0, vertex 1, vertex 2 */
+  WLZ_CONTOUR_TIC3D_V0V1V3,		/*!< Vertex 0, vertex 2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V0V2S13,		/*!< Vertex 0, vertex 2, vertex 3 */
+  WLZ_CONTOUR_TIC3D_V0V2V3,		/*!< Vertex 0, vertex 2, vertex 3 */
+  WLZ_CONTOUR_TIC3D_V0V3S12,		/*!< Vertex 0, side 0-2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V1S02S03,		/*!< Vertex 1, side 0-2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V1S02S23,		/*!< Vertex 1, side 0-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V1S03S23,		/*!< Vertex 1, side 0-3, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V1V2S03,		/*!< Vertex 1, vertex 2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V1V2V3,		/*!< Vertex 1, vertex 2, vertex 3 */
+  WLZ_CONTOUR_TIC3D_V1V3S02,		/*!< Vertex 1, vertex 3, side 0-2 */
+  WLZ_CONTOUR_TIC3D_V2S01S02,		/*!< Vertex 2, side 0-1, side 0-2 */
+  WLZ_CONTOUR_TIC3D_V2S01S03,		/*!< Vertex 2, side 0-1, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V2S01S13,		/*!< Vertex 2, side 0-1, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V2S03S13,		/*!< Vertex 2, side 0-3, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V2V3S01,		/*!< Vertex 2, vertex 3, side 0-1 */
+  WLZ_CONTOUR_TIC3D_V3S01S02,		/*!< Vertex 3, side 0-1, side 0-2 */
+  WLZ_CONTOUR_TIC3D_V3S01S12,		/*!< Vertex 3, side 0-1, side 1-2 */
+  WLZ_CONTOUR_TIC3D_V3S02S12,		/*!< Vertex 3, side 0-2, side 1-2 */
+  WLZ_CONTOUR_TIC3D_S01S02S03,		/*!< Side 0-1, side 0-2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_S01S02S13S23,  	/*!< Side 0-1, side 0-2, side 1-3,
+  					     side 2-3 */
+  WLZ_CONTOUR_TIC3D_S01S03S12S23,  	/*!< Side 0-1, side 0-3, side 1-2,
+  					     side 2-3 */
+  WLZ_CONTOUR_TIC3D_S01S12S13,		/*!< Side 0-1, side 1-2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_S02S03S12S13,  	/*!< Side 0-2, side 0-3, side 1-2,
+  					     side 1-3 */
+  WLZ_CONTOUR_TIC3D_S02S12S23,		/*!< Side 0-2, side 1-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_S03S13S23		/*!< Side 0-3, side 1-3, side 2-3 */
 } WlzContourTetIsn3D;
 
 static WlzContour	*WlzContourIsoObj2D(
@@ -114,6 +114,12 @@ static WlzContour 	*WlzContourGrdObj3D(
 			  double grdHi,
 			  double ftrPrm,
 			  WlzErrorNum *dstErr);
+static WlzContour 	*WlzContourBndObj2D(
+			  WlzObject *obj,
+			  WlzErrorNum *dstErr);
+static WlzContour 	*WlzContourBndObj3D(
+			  WlzObject *obj,
+			  WlzErrorNum *dstErr);
 static WlzDVertex2	WlzContourItpTriSide(
 			  double valOrg,
 			  double valDst,
@@ -124,6 +130,32 @@ static WlzDVertex3 	WlzContourItpTetSide(
 			  double valDst,
 			  WlzDVertex3 posOrg,
 			  WlzDVertex3 posDst);
+static WlzErrorNum	WlzContourBndLine2D(
+			  WlzContour *ctr,
+			  int line0,
+			  UBYTE **itvBuf,
+			  int bufLnIdx,
+			  int bufOrg,
+			  int bufSz);
+static WlzErrorNum 	WlzContourBndPlane3D(
+			  WlzContour *ctr,
+			  int plane0,
+			  UBYTE ***itvBuf,
+			  int bufPnIdx,
+			  WlzIVertex2 bufOrg,
+			  WlzIVertex2 bufSz);
+static WlzErrorNum	WlzContourBndEmptyLine2D(
+			  WlzContour *ctr,
+			  int line0,
+			  UBYTE *itvBuf,
+			  int bufOrg,
+			  int bufSz);
+static WlzErrorNum 	WlzContourBndEmptyPlane3D(
+			  WlzContour *ctr,
+			  int plane0,
+			  UBYTE **itvBuf,
+			  WlzIVertex2 bufOrg,
+			  WlzIVertex2 bufSz);
 static WlzErrorNum	WlzContourIsoCube2D(
 			  WlzContour *ctr,
 			  double isoVal,
@@ -175,34 +207,33 @@ static WlzErrorNum	WlzContourGrdLink3D(
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
 
-/************************************************************************
-* Function:	WlzContourObjGrd
-* Returns:	WlzContour:		Contour, or NULL on error.
-* Purpose:	Creates a contour (list of connected edges or surface
-*		patches) from a Woolz object with values using a
-*		maximal gradient algorithm and retains the
-*		gradient vectors. The gradient vectors are only valid
-*		for valid vertex indicies and do not have unit length.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object from which to
-*					compute the contours.
-*		WlzVertexP *dstGrd:	Destination pointer for the
-*					gradients, which are indexed
-*					by the contour's GM vertex
-*					indicies. The gradients are
-*					always either 2D or 3D double
-*					verticies. They are only valid
-*					for valid vertex indicies.
-*					May be NULL if normals are not
-*					required.
-*		double ctrLo:		Lower maximal gradient
-*					threshold value.
-*		double ctrHi:		Higher maximal gradient
-*					threshold value.
-*		double ctrWth:		Contour filter width.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Contour, or NULL on error.
+* \ingroup	WlzContour
+* \brief	Creates a contour (list of connected edges or surface
+*               patches) from a Woolz object with values using a
+*               maximal gradient algorithm and retains the
+*               gradient vectors. The gradient vectors are only valid
+*               for valid vertex indicies and do not have unit length.
+* \param	srcObj			Given object from which to
+*                                       compute the contours.
+* \param	dstGrd			Destination pointer for the
+*                                       gradients, which are indexed
+*                                       by the contour's GM vertex
+*                                       indicies. The gradients are
+*                                       always either 2D or 3D double
+*                                       verticies. They are only valid
+*                                       for valid vertex indicies.
+*                                       May be NULL if normals are not
+*                                       required.
+* \param	ctrLo			Lower maximal gradient
+*                                       threshold value.
+* \param	ctrHi			Higher maximal gradient
+*                                       threshold value.
+* \param	ctrWth			Contour filter width.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
 				  WlzVertexP *dstGrd,
 				  double ctrLo, double ctrHi, double ctrWth,
@@ -249,31 +280,30 @@ WlzContour	*WlzContourObjGrd(WlzObject *srcObj,
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzContourObj
-* Returns:	WlzContour:		Contour, or NULL on error.
-* Purpose:	Creates a contour (list of connected edges or surface
-*		patches) from a Woolz object's values.
-*		The source object should either a 2D or 3D domain
-*		object with values. This is the top level contour
-*		generation function which calls the appropriate
-*		function for the given contour type (dimension) and 
-*		generation method.
-*		The given contour value is taken to be the iso-value
-*		for iso-value contours and the minimum gradient
-*		threshold value for maximal gradient contours.
-*		The contour width parameter is only used for maximal
-*		gradient contours where it is used to generate a
-*		recursive Deriche filter (see WlzRsvFilter).
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object from which to
-*					compute the contours.
-*		WlzContourMethod ctrMtd: Contour generation method.
-*		double ctrVal:		Contour value.
-*		double ctrWth:		Contour filter width.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Contour, or NULL on error.
+* \ingroup	WlzContour
+* \brief	Creates a contour (list of connected edges or surface
+*               patches) from a Woolz object's values.
+*               The source object should either a 2D or 3D domain
+*               object with values. This is the top level contour
+*               generation function which calls the appropriate
+*               function for the given contour type (dimension) and 
+*               generation method.
+*               The given contour value is taken to be the iso-value
+*               for iso-value contours and the minimum gradient
+*               threshold value for maximal gradient contours.
+*               The contour width parameter is only used for maximal
+*               gradient contours where it is used to generate a
+*               recursive Deriche filter, see WlzRsvFilter().
+* \param	srcObj			Given object from which to
+*                                       compute the contours.
+* \param	ctrMtd			Contour generation method.
+* \param	ctrVal			Contour value.
+* \param	ctrWth			Contour filter width.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 			       double ctrVal, double ctrWth,
 			       WlzErrorNum *dstErr)
@@ -289,10 +319,6 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(srcObj->values.core == NULL)
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
   else
   {
     switch(srcObj->type)
@@ -306,6 +332,9 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	  case WLZ_CONTOUR_MTD_GRD:
 	    ctr = WlzContourGrdObj2D(srcObj, NULL,
 	    			     ctrVal, ctrVal, ctrWth, &errNum);
+	    break;
+	  case WLZ_CONTOUR_MTD_BND:
+	    ctr = WlzContourBndObj2D(srcObj, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -321,6 +350,9 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	  case WLZ_CONTOUR_MTD_GRD:
 	    ctr = WlzContourGrdObj3D(srcObj, NULL,
 	    			     ctrVal, ctrVal, ctrWth, &errNum);
+	    break;
+	  case WLZ_CONTOUR_MTD_BND:
+	    ctr = WlzContourBndObj3D(srcObj, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -339,18 +371,17 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzContourIsoObj2D
-* Returns:	WlzContour:		Contour, or NULL on error.
-* Purpose:	Creates an iso-value contour (list of edges) from a 2D
-*		Woolz object's values.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object from which to
-*					compute the contours.
-*		double isoVal:		Iso-value.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Contour, or NULL on error.
+* \ingroup	WlzContour.
+* \brief	Creates an iso-value contour (list of edges) from a 2D
+*               Woolz object's values.
+* \param	srcObj			Given object from which to
+*                                       compute the contours.
+* \param	isoVal			Iso-value.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 				      WlzErrorNum *dstErr)
 {
@@ -370,11 +401,18 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   WlzGreyWSpace	srcGWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Create contour. */
-  if((ctr = WlzMakeContour(&errNum)) != NULL)
+  if(srcObj->values.core == NULL)
   {
-    ctr->model = WlzAssignGMModel(
-    		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  /* Create contour. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      ctr->model = WlzAssignGMModel(
+	  WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+    }
   }
   /* Make buffers. */
   if(errNum == WLZ_ERR_NONE)
@@ -481,18 +519,16 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzContourIsoObj3D
-* Returns:	WlzContour:		Contour , or NULL on error.
-* Purpose:	Creates an iso-value contour (list of surface patches)
-*		from a 3D Woolz object's values.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object from which to
-*					compute the contours.
-*		double isoVal:		Iso-value.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Contour , or NULL on error.
+* \brief	Creates an iso-value contour (list of surface patches)
+*               from a 3D Woolz object's values.
+* \param	srcObj			Given object from which to
+*                                       compute the contours.
+* \param	isoVal			The iso-value.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 				      WlzErrorNum *dstErr)
 {
@@ -534,7 +570,8 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if(srcObj->values.vox->values == NULL)
+  else if((srcObj->values.core == NULL) ||
+          (srcObj->values.vox->values == NULL))
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
@@ -671,35 +708,40 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzContourGrdObj2D
-* Returns:	WlzContour:		Contour , or NULL on error.
-* Purpose:	Creates an maximal gradient contour (list of edges)
-*		from a 2D Woolz object's values.
-*		Direction of gradient is encoded as:
-*                 +------+------+
-*		  |\   2 | 1   /|
-*		  |  \   |   /  |
-*		  | 3  \ | /  0 |
-*                 +------+------+
-*		  | 4  / | \  7 |
-*		  |  /   |   \  |
-*		  |/   5 | 6   \|
-*                 +------+------+
+/*!
+* \return				Contour , or NULL on error.
+* \ingroup	WlzContour
+* \brief	Creates an maximal gradient contour (list of edges)
+*               from a 2D Woolz object's values.
 *
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object from which to
-*					compute the contours.
-*		WlzDVertex2 **dstGrd:	Destination pointer for gradients,
-*					may be NULL.
-*		double grdLo:		Lower threshold for modulus of
-*					gradient.
-*		double grdHi:		Upper threshold for modulus of
-*					gradient. TODO Use grdHi!
-*		double ftrPrm:		Filter width parameter.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+*		Creates an maximal gradient contour (list of edges)
+*               from a 2D Woolz object's values.
+*               Direction of gradient is encoded as:
+* \verbatim
+ 
+                  +------+------+
+                  |\   2 | 1   /|
+                  |  \   |   /  |
+                  | 3  \ | /  0 |
+                  +------+------+
+                  | 4  / | \  7 |
+                  |  /   |   \  |
+                  |/   5 | 6   \|
+                  +------+------+
+ 
+\endverbatim
+* \param	srcObj			Given object from which to
+*                                       compute the contours.
+* \param	dstGrd			Destination pointer for gradients,
+*                                       may be NULL.
+* \param	grdLo			Lower threshold for modulus of
+*                                       gradient.
+* \param	grdHi			Upper threshold for modulus of
+*                                       gradient. TODO Use grdHi!
+* \param	ftrPrm			Filter width parameter.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj, WlzDVertex2 **dstGrd,
 				      double grdLo, double grdHi,
 				      double ftrPrm, WlzErrorNum *dstErr)
@@ -755,11 +797,18 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj, WlzDVertex2 **dstGrd,
   const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
   const unsigned int grdBlkSz = 1000;       /* Any reasoonable size would do */
 
-  /* Create a new contour. */
-  if((ctr = WlzMakeContour(&errNum)) != NULL)
+  if(srcObj->values.core == NULL)
   {
-    ctr->model = WlzAssignGMModel(
-    		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  /* Create a new contour. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      ctr->model = WlzAssignGMModel(
+	  WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+    }
   }
   if((errNum == WLZ_ERR_NONE) && dstGrd)
   {
@@ -1090,24 +1139,23 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj, WlzDVertex2 **dstGrd,
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzContourGrdObj3D
-* Returns:	WlzContour:		Contour or NULL on error.
-* Purpose:	Creates an maximal gradient contour (list of surface 
-*		patches) from a 3D Woolz object's values.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object from which to
-*					compute the contours.
-*		WlzDVertex3 **dstGrd:	Destination pointer for gradients,
-*					may be NULL.
-*		double grdLo:		Lower threshold for modulus of
-*					gradient.
-*		double grdHi:		Upper threshold for modulus of
-*					gradient. TODO use grdHi!
-*		double ftrPrm:		Filter width parameter.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Contour or NULL on error.
+* \ingroup	WlzContour
+* \brief	Creates an maximal gradient contour (list of surface 
+*               patches) from a 3D Woolz object's values.
+* \param	srcObj			Given object from which to
+*                                       compute the contours.
+* \param	dstGrd			Destination pointer for gradients,
+*                                       may be NULL.
+* \param	grdLo			Lower threshold for modulus of
+*                                       gradient.
+* \param	grdHi			Upper threshold for modulus of
+*                                       gradient. TODO use grdHi!
+* \param	ftrPrm			Filter width parameter.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj, WlzDVertex3 **dstGrd,
 				      double grdLo, double grdHi,
 				      double ftrPrm, WlzErrorNum *dstErr)
@@ -1161,7 +1209,11 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj, WlzDVertex3 **dstGrd,
   xBuf[0] = xBuf[1] = xBuf[2] = NULL;
   yBuf[0] = yBuf[1] = yBuf[2] = NULL;
   zBuf[0] = zBuf[1] = zBuf[2] = NULL;
-  if((srcDom = srcObj->domain).core == NULL)
+  if(srcObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((srcDom = srcObj->domain).core == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
@@ -1510,34 +1562,290 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj, WlzDVertex3 **dstGrd,
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzContourGrdLink3D
-* Returns:	WlzErrorNum		Woolz error code.
-* Purpose:	Computes edge simplicies(s) linking the voxel at the
-*		centre of a 2x3x3 neighbourhood to it's neighbours.
+/*!
+* \return				Woolz contour or NULL on error.
+* \brief	Computes a 2D contour from the boundary of the given objects
+*		domain.
+* \param	obj			The given object.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  int		idX,
+  		bufSz,
+		bufOrg,
+		bufLnIdx,
+		itvBufWidth,
+		lastLn;
+  WlzDomain	srcDom;
+  int		square[4];
+  UBYTE		*itvBuf[2] = {NULL, NULL};
+  WlzContour 	*ctr = NULL;
+  WlzIVertex2	sqOrg;
+  WlzIntervalWSpace srcIWSp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Create contour. */
+  if((ctr = WlzMakeContour(&errNum)) != NULL)
+  {
+    ctr->model = WlzAssignGMModel(
+    		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
+  }
+  /* Make buffers. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    srcDom = obj->domain;
+    bufOrg = srcDom.i->kol1 - 1;
+    bufSz = srcDom.i->lastkl - srcDom.i->kol1 + 3;
+    itvBufWidth = (bufSz + 7) / 8;    /* No of bytes in interval buffer line */
+    if((AlcBit1Calloc(&(itvBuf[0]), bufSz) != ALC_ER_NONE) ||
+       (AlcBit1Calloc(&(itvBuf[1]), bufSz) != ALC_ER_NONE))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Work down through the object. */
+  if((errNum = WlzInitRasterScan(obj, &srcIWSp,
+  			         WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE)
+  {
+    bufLnIdx = 0;
+    lastLn = srcDom.i->line1 - 1;
+    while((errNum == WLZ_ERR_NONE) &&
+    	  ((errNum = WlzNextInterval(&srcIWSp)) == WLZ_ERR_NONE))
+    {
+      /* Update the interval buffer bit masks. */
+      if(srcIWSp.nwlpos > 0)
+      {
+        bufLnIdx = !bufLnIdx;
+        if(srcIWSp.nwlpos > 1)
+	{
+	  errNum = WlzContourBndEmptyLine2D(ctr, lastLn,
+	  				    itvBuf[bufLnIdx], bufOrg, bufSz);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    WlzValueSetUByte(itvBuf[!bufLnIdx], 0, itvBufWidth);
+	  }
+	}
+	WlzValueSetUByte(itvBuf[bufLnIdx], 0, itvBufWidth);
+        lastLn = srcIWSp.linpos - 1;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzBitLnSetItv(itvBuf[bufLnIdx], srcIWSp.lftpos - bufOrg,
+		       srcIWSp.rgtpos - bufOrg, bufSz);
+	/* Compute the values at the corners of squares along the interval,
+	 * where the values are set to 0 if the picel is outside the domain
+	 * and 1 if it is inside. Squares (2D square) are marched along the
+	 * interval on the current and previous lines. */
+	if(srcIWSp.intrmn == 0)
+	{
+	  errNum = WlzContourBndLine2D(ctr, lastLn,
+	  			       itvBuf, bufLnIdx, bufOrg, bufSz);
+	  lastLn = srcIWSp.linpos;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzContourBndEmptyLine2D(ctr, lastLn,
+      					itvBuf[bufLnIdx], bufOrg, bufSz);
+    }
+  }
+  /* Tidy up on error. */
+  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
+  {
+    (void )WlzFreeContour(ctr);
+    ctr = NULL;
+  }
+  /* Free buffers. */
+  for(idX = 0; idX < 2; ++idX)
+  {
+    if(itvBuf[idX])
+    {
+      AlcFree(itvBuf[idX]);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return				Woolz contour or NULL on error.
+* \brief	Computes a 3D contour from the boundary of the given objects
+*		domain.
+* \param	obj			The given object.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+static WlzContour *WlzContourBndObj3D(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  int		pnIdx,
+		pnCnt,
+  		bufPnIdx,
+		lastPn,
+		bufSzBytes;
+  WlzObject	*obj2D = NULL;
+  WlzValues	dummyValues;
+  WlzDomain	dummyDom,
+  		dom;
+  WlzIVertex2	bufSz2D,
+		bufOrg2D,
+		objOrg2D;
+  WlzIBox3	bBox3D;
+  UBYTE		**itvBuf[2] = {NULL, NULL};
+  WlzContour 	*ctr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dummyDom.core = NULL;
+  dummyValues.core = NULL;
+  if((dom = obj->domain).core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(dom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create contour. */
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      ctr->model = WlzAssignGMModel(
+      		   WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum), NULL);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox3D = WlzBoundingBox3D(obj, &errNum);
+  }
+  /* Make buffers. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bufOrg2D.vtX = bBox3D.xMin - 1;
+    bufOrg2D.vtY = bBox3D.yMin - 1;
+    bufSz2D.vtX = bBox3D.xMax - bBox3D.xMin + 3;
+    bufSz2D.vtY = bBox3D.yMax - bBox3D.yMin + 3;
+    bufSzBytes = (bufSz2D.vtX + 7) / 8;
+    bufSzBytes *= bufSz2D.vtY;
+    if((AlcBit2Calloc(&(itvBuf[0]),
+    		      bufSz2D.vtY, bufSz2D.vtX) != ALC_ER_NONE) ||
+       (AlcBit2Calloc(&(itvBuf[1]),
+       		      bufSz2D.vtY, bufSz2D.vtX) != ALC_ER_NONE))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Sweep down through the object using a pair of plane buffers. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dummyDom, dummyValues,
+			NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pnIdx = 0;
+    bufPnIdx = 0;
+    lastPn = obj->domain.p->plane1 - 1;
+    pnCnt = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
+    while((errNum == WLZ_ERR_NONE) && (pnCnt-- > 0))
+    {
+      bufPnIdx = pnIdx % 2;
+      obj2D->domain = *(obj->domain.p->domains + pnIdx);
+      if((obj2D->domain.core == NULL) ||
+         (obj2D->domain.core->type == WLZ_EMPTY_DOMAIN))
+      {
+        (void )memset(*(itvBuf[bufPnIdx]), 0, bufSzBytes);
+	errNum = WlzContourBndEmptyPlane3D(ctr, lastPn, itvBuf[!bufPnIdx],
+	                                   bufOrg2D, bufSz2D);
+      }
+      else
+      {
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzToArray2D((void ***)&(itvBuf[bufPnIdx]), obj2D,
+	      bufSz2D, bufOrg2D, 0, WLZ_GREY_BIT);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzContourBndPlane3D(ctr, lastPn, itvBuf, bufPnIdx,
+	      bufOrg2D, bufSz2D);
+	}
+      }
+      ++lastPn;
+      ++pnIdx;
+    }
+    obj2D->domain = dummyDom;
+    (void )WlzFreeObj(obj2D);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzContourBndEmptyPlane3D(ctr, lastPn, itvBuf[!bufPnIdx],
+					 bufOrg2D, bufSz2D);
+    }
+  }
+  /* Tidy up on error. */
+  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
+  {
+    (void )WlzFreeContour(ctr);
+    ctr = NULL;
+  }
+  /* Free buffers. */
+  for(pnIdx = 0; pnIdx < 2; ++pnIdx)
+  {
+    if(itvBuf[pnIdx])
+    {
+      Alc2Free((void **)itvBuf[pnIdx]);
+    }
+  }
+  /* Set error code. */
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return				Woolz error code.
+* \brief	Computes edge simplicies(s) linking the voxel at the
+*               centre of a 2x3x3 neighbourhood to it's neighbours.
 *
-*                z=0 +---+---+---+
-*                    | 9 | 5 |10 |
-*                    +---+---+---+    z=1 +---+---+                  
-*                    | 6 | 2 | 7 |        | 0 | C |                         
-*                 y  +---+---+---+        +---+---+---+
-*                 ^  |11 | 8 |12 |        | 3 | 1 | 4 |           
-*                 |  +---+---+---+        +---+---+---+           
-*                 --->x                                   
-* Global refs:	-
-* Parameters:	WlzContour *ctr: 	Contour being built.
-*		int *dstLnkFlg:		Destination pointer for flag
-*					set to non-zero value if pixel
-*					linked. Must NOT be NULL.
-*		UBYTE ***mBuf:		Buffers containing non-zero
-*					values for maximal gradient
-*					voxels.
-*		int *bufIdx:		Z offsets into the buffers.
-*		WlzIVertex3 bufPos:	Offset into the buffer for the
-*					neighbourhoods origin.
-*		WlzIVertex3 pos:	Absolute position of the 
-*					neighbourhoods origin.
-************************************************************************/
+*		Computes edge simplicies(s) linking the voxel at the
+*               centre of a 2x3x3 neighbourhood to it's neighbours.
+* \verbatim
+ 
+                   z=0 +---+---+---+
+                       | 9 | 5 |10 |
+                       +---+---+---+    z=1 +---+---+                  
+                       | 6 | 2 | 7 |        | 0 | C |                         
+                  y      +---+---+---+        +---+---+---+
+                  ^    |11 | 8 |12 |        | 3 | 1 | 4 |           
+                  |    +---+---+---+        +---+---+---+           
+                  |    
+                  o----->x
+ 
+\endverbatim
+* \param	ctr			Contour being built.
+* \param	dstLnkFlg		Destination pointer for flag
+*                                       set to non-zero value if pixel
+*                                       linked. Must NOT be NULL.
+* \param	mBuf			Buffers containing non-zero
+*                                       values for maximal gradient
+*                                       voxels.
+* \param	bufIdx			Z offsets into the buffers.
+* \param	bufPos			Offset into the buffer for the
+*                                       neighbourhoods origin.
+* \param	cbOrg			Absolute position of the 
+*                                       neighbourhoods origin.
+*/
 static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, int *dstLnkFlg,
 					    UBYTE ***mBuf,
 					    int *bufIdx, WlzIVertex3 bufPos,
@@ -1643,37 +1951,44 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, int *dstLnkFlg,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourGrdLink2D
-* Returns:	WlzErrorNum		Woolz error code.
-* Purpose:	Computes edge segment(s) linking the pixel at the
-*		centre of a 3x3 neighbourhood to 4 and 8 connected
-*		pixels in the neighbourhood.
-*		First search for 4 connected neighbours of the
-*		central pixel, then search for any 8 connected neighbours
-*		which are themselves not 4 connected to any of the
-*		4 connected neighbours already found.
-*		Indicies of the neighbours of C are:
-*		    +    +    +    +
-*		    +----+----+----+    lines
-*		    + 0  + C  + 2  +    ^
-*		    +----+----+----+    |
-*		    + 3  + 1  + 4  +    |
-*		    +----+----+----+    +---> cols
-* Global refs:	-
-* Parameters:	WlzContour *ctr: 	Contour being built.
-*		int *dstLnkFlg:		Destination pointer for flag
-*					set to non-zero value if pixel
-*					linked. Must NOT be NULL.
-*		UBYTE **grdDBuf:	Buffers containing gradient
-*					direction codes for maximal
-*					gradient pixels.
-*		WlzIVertex2 org:	Origin of the object.
-*		int lnOff:		Offset from origin to central
-*					pixel line.
-*		int lnIdx[]:		Line indicies.
-*		int klOff:		Column offset of first column.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup	WlzContour
+* \brief	Computes edge segment(s) linking the pixel at the
+*               centre of a 3x3 neighbourhood to 4 and 8 connected
+*               pixels in the neighbourhood.
+*
+*		Computes edge segment(s) linking the pixel at the
+*               centre of a 3x3 neighbourhood to 4 and 8 connected
+*               pixels in the neighbourhood.
+*               First search for 4 connected neighbours of the
+*               central pixel, then search for any 8 connected neighbours
+*               which are themselves not 4 connected to any of the
+*               4 connected neighbours already found.
+*               Indicies of the neighbours of C are:
+* \verbatim
+ 
+                    +    +    +    +
+                    +----+----+----+    lines
+                    + 0  + C  + 2  +    ^
+                    +----+----+----+    |
+                    + 3  + 1  + 4  +    |
+                    +----+----+----+    o----> cols
+ 
+\endverbatim
+* \param	ctr			Contour being built.
+* \param	dstLnkFlg		Destination pointer for flag
+*                                       set to non-zero value if pixel
+*                                       linked. Must NOT be NULL.
+* \param	grdDBuf			Buffers containing gradient
+*                                       direction codes for maximal
+*                                       gradient pixels.
+* \param	org			Origin of the object.
+* \param	lnOff			Offset from origin to central
+*                                       pixel line.
+* \param	lnIdx[]			Line indicies.
+* \param	klOff			Column offset of first column.
+*/
 static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg, 
 				       UBYTE **grdDBuf, WlzIVertex2 org,
 				       int lnOff, int lnIdx[], int klOff)
@@ -1736,57 +2051,300 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, int *dstLnkFlg,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourIsoCube2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Computes iso-value contour segments for the given
-*		square, creates edge and node elements and inserts
-*		them into the contour data structure.
-*		From the 4 data values at the corners (1,..4) of
-*		the square and a linearly interpolated value at it's
-*		centre (0), the square is divided into 4 triangles
-*		(0,...3).
+/*!
+* \return				Woolz error code.
+* \brief	Computes the iso-value contour segments by marching a square
+* 		along the pair of given lines.
+* \param	ctr			Given contour, which is being built.
+* \param	line0			The line on which the origin of
+*					each square lies.
+* \param	itvBuf			Two bit buffers for the lines.
+* \param	bufLnIdx		Index of the greater of the two lines.
+* \param	bufOrg			Bit buffer origin.
+* \param	bufSz			Bit buffer size in bits.
+*/
+static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, int line0,
+				       UBYTE **itvBuf, int bufLnIdx,
+				       int bufOrg, int bufSz)
+{
+  int		idX,
+		sqCnt;
+  WlzDVertex2	sqOrg;
+  int		vLnI0[2],
+  		vLnI1[2];
+  double	vLnD0[2],
+  		vLnD1[2];
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double  isoVal = 1.0;
+
+  idX = 0;
+  sqOrg.vtY = line0;
+  vLnI0[1] = vLnI1[1] = 0;
+  while((errNum == WLZ_ERR_NONE) && (idX++ < bufSz))
+  {
+    sqCnt =  vLnI0[0] = vLnI0[1];
+    sqCnt += vLnI0[1] = (WLZ_BIT_GET(itvBuf[!bufLnIdx], idX)) != 0;
+    sqCnt += vLnI1[0] = vLnI1[1];
+    sqCnt += vLnI1[1] = (WLZ_BIT_GET(itvBuf[bufLnIdx], idX)) != 0;
+    if(sqCnt && (sqCnt < 4))
+    {
+      vLnD0[0] = vLnI0[0];
+      vLnD0[1] = vLnI0[1];
+      vLnD1[0] = vLnI1[0];
+      vLnD1[1] = vLnI1[1];
+      sqOrg.vtX = bufOrg + idX - 1;
+      errNum = WlzContourIsoCube2D(ctr, isoVal, vLnD0, vLnD1, sqOrg);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return
+* \brief	Computes the iso-value contour elements by marching a cube
+*               along the pair of given planes.
+* \param	ctr			Given contour, which is being built.
+* \param	plane0			The plane on which the origin of
+*					each cube lies.
+* \param	itvBu			Two bit buffers for the planes.
+* \param	bufPnIdx		Index of the greater of the two planes.
+* \param	bufOrg			Bit buffer origin.
+* \param	bufSz			Bit buffer size in bits.
+*/
+static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, int plane0,
+				        UBYTE ***itvBuf, int bufPnIdx,
+				        WlzIVertex2 bufOrg, WlzIVertex2 bufSz)
+{
+  int		idX,
+  		idY,
+		cbCnt;
+  UBYTE		*tPn0Ln0,
+  		*tPn0Ln1,
+		*tPn1Ln0,
+		*tPn1Ln1;
+  int		iPn0Ln0[2],
+  		iPn0Ln1[2],
+		iPn1Ln0[2],
+		iPn1Ln1[2];
+  double	dPn0Ln0[2],
+  		dPn0Ln1[2],
+		dPn1Ln0[2],
+		dPn1Ln1[2];
+  WlzDVertex3	cbOrg;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double	isoVal = 1.0;
+
+  idY = 0;
+  cbOrg.vtZ = plane0;
+  while((idY < (bufSz.vtY - 1)) && (errNum == WLZ_ERR_NONE))
+  {
+    idX = 0;
+    cbOrg.vtY = bufOrg.vtY + idY;
+    tPn0Ln0 = *(itvBuf[!bufPnIdx] + idY);
+    tPn0Ln1 = *(itvBuf[!bufPnIdx] + idY + 1);
+    tPn1Ln0 = *(itvBuf[bufPnIdx] + idY);
+    tPn1Ln1 = *(itvBuf[bufPnIdx] + idY + 1);
+    iPn0Ln0[1] = (WLZ_BIT_GET(tPn0Ln0, idX)) != 0;
+    iPn0Ln1[1] = (WLZ_BIT_GET(tPn0Ln1, idX)) != 0;
+    iPn1Ln0[1] = (WLZ_BIT_GET(tPn1Ln0, idX)) != 0;
+    iPn1Ln1[1] = (WLZ_BIT_GET(tPn1Ln1, idX)) != 0;
+    while((idX < (bufSz.vtX - 1)) && (errNum == WLZ_ERR_NONE))
+    {
+      cbOrg.vtX = bufOrg.vtX + idX++;
+      cbCnt = iPn0Ln0[0] = iPn0Ln0[1];
+      cbCnt += iPn0Ln1[0] = iPn0Ln1[1];
+      cbCnt += iPn1Ln0[0] = iPn1Ln0[1];
+      cbCnt += iPn1Ln1[0] = iPn1Ln1[1];
+      cbCnt += iPn0Ln0[1] = (WLZ_BIT_GET(tPn0Ln0, idX)) != 0;
+      cbCnt += iPn0Ln1[1] = (WLZ_BIT_GET(tPn0Ln1, idX)) != 0;
+      cbCnt += iPn1Ln0[1] = (WLZ_BIT_GET(tPn1Ln0, idX)) != 0;
+      cbCnt += iPn1Ln1[1] = (WLZ_BIT_GET(tPn1Ln1, idX)) != 0;
+      if(cbCnt && (cbCnt < 8))
+      {
+	dPn0Ln0[0] = iPn0Ln0[0];
+	dPn0Ln0[1] = iPn0Ln0[1];
+	dPn0Ln1[0] = iPn0Ln1[0];
+	dPn0Ln1[1] = iPn0Ln1[1];
+	dPn1Ln0[0] = iPn1Ln0[0];
+	dPn1Ln0[1] = iPn1Ln0[1];
+	dPn1Ln1[0] = iPn1Ln1[0];
+	dPn1Ln1[1] = iPn1Ln1[1];
+        errNum = WlzContourIsoCube3D6T(ctr, isoVal,
+				       dPn0Ln0, dPn0Ln1, dPn1Ln0, dPn1Ln1,
+				       cbOrg);
+      }
+    }
+    ++idY;
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \brief	Computes the iso-value contour segments by marching a square
+*		along the given line and a later empty line.
+* \param	ctr			Given contour, which is being built.
+* \param	line0			The line on which the origin of
+*					each square lies.
+* \param	itvBuf			The bit buffer for the line.
+* \param	bufOrg			Bit buffer origin.
+* \param	bufSz			Bit buffer size in bits.
+*/
+static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, int line0,
+					    UBYTE *itvBuf,
+					    int bufOrg, int bufSz)
+{
+  int		idX,
+  		idS;
+  WlzDVertex2	sqOrg;
+  int		vLnI0[2],
+  		vLnI1[2];
+  double	vLnD0[2],
+  		vLnD1[2];
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double  isoVal = 1.0;
+
+  idS = idX = 0;
+  sqOrg.vtY = line0 - 1;
+  vLnI1[1] = 0;
+  vLnD0[0] = vLnD0[1] = vLnD1[0] = vLnD1[1] = 0.0;
+  while((errNum == WLZ_ERR_NONE) && (idX++ < bufSz))
+  {
+    vLnI1[!idS] = (WLZ_BIT_GET(itvBuf, idX)) != 0;
+    if(vLnI1[idS] || vLnI1[!idS])
+    {
+      vLnD1[0] = vLnI1[idS];
+      vLnD1[1] = vLnI1[!idS];
+      sqOrg.vtX = bufOrg + idX - 1;
+      errNum = WlzContourIsoCube2D(ctr, isoVal, vLnD0, vLnD1, sqOrg);
+    }
+    idS = !idS;
+  }
+  return(errNum);
+}
+
+/*!
+* \return
+* \brief	Computes the iso-value contour elements by marching a cube
+*               along the pair of given plane and a later empty plane.
+* \param	ctr			Given contour, which is being built.
+* \param	plane0			The plane on which the origin of
+*					each cube lies.
+* \param	itvBu			Bit buffers for the plane.
+* \param	bufOrg			Bit buffer origin.
+* \param	bufSz			Bit buffer size in bits.
+*/
+static WlzErrorNum WlzContourBndEmptyPlane3D(WlzContour *ctr, int plane0,
+					UBYTE **itvBuf,
+					WlzIVertex2 bufOrg, WlzIVertex2 bufSz)
+{
+  int		idX,
+  		idY,
+		cbCnt;
+  UBYTE		*tPn0Ln0,
+  		*tPn0Ln1;
+  int		iPn0Ln0[2],
+  		iPn0Ln1[2];
+  double	dPn0Ln0[2],
+  		dPn0Ln1[2],
+		dPn1Ln0[2],
+		dPn1Ln1[2];
+  WlzDVertex3	cbOrg;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double	isoVal = 1.0;
+
+  idY = 0;
+  dPn1Ln0[0] = 0.0;
+  dPn1Ln0[1] = 0.0;
+  dPn1Ln1[0] = 0.0;
+  dPn1Ln1[1] = 0.0;
+  cbOrg.vtZ = plane0;
+  while((idY < (bufSz.vtY - 1)) && (errNum == WLZ_ERR_NONE))
+  {
+    idX = 0;
+    cbOrg.vtY = bufOrg.vtY + idY;
+    tPn0Ln0 = *(itvBuf + idY);
+    tPn0Ln1 = *(itvBuf + idY + 1);
+    iPn0Ln0[1] = (WLZ_BIT_GET(tPn0Ln0, idX)) != 0;
+    iPn0Ln1[1] = (WLZ_BIT_GET(tPn0Ln1, idX)) != 0;
+    while((idX < (bufSz.vtX - 1)) && (errNum == WLZ_ERR_NONE))
+    {
+      cbOrg.vtX = bufOrg.vtX + idX++;
+      cbCnt = iPn0Ln0[0] = iPn0Ln0[1];
+      cbCnt += iPn0Ln1[0] = iPn0Ln1[1];
+      cbCnt += iPn0Ln0[1] = (WLZ_BIT_GET(tPn0Ln0, idX)) != 0;
+      cbCnt += iPn0Ln1[1] = (WLZ_BIT_GET(tPn0Ln1, idX)) != 0;
+      if(cbCnt)
+      {
+	dPn0Ln0[0] = iPn0Ln0[0];
+	dPn0Ln0[1] = iPn0Ln0[1];
+	dPn0Ln1[0] = iPn0Ln1[0];
+	dPn0Ln1[1] = iPn0Ln1[1];
+        errNum = WlzContourIsoCube3D6T(ctr, isoVal,
+				       dPn0Ln0, dPn0Ln1, dPn1Ln0, dPn1Ln1,
+				       cbOrg);
+      }
+      ++idX;
+    }
+    ++idY;
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup	WlzContour
+* \brief	Computes iso-value contour segments for the given
+*		square.
 *
-*                 4-------------------3
-*                 | \               / |
-*                 |   \     2     /   |
-*                 |     \       /     |
-*                 |       \   /       |
-*                 |   3     0    1 <------ triangle index
-*                 |       /   \       |
-*                 |     /       \     |
-*                 |   /     0     \   |
-*                 | /               \ |
-*                 1-------------------2 <- square node index
-*
-*                           0 <----------- triangle node index
-*                         /   \        
-*                       /       \      
-*                     /           \    
-*                   /               \  
-*                 1-------------------2
-*       
-* 		Each triangle is classified by generating a above/on/
-*		below code for each of it's verticies (above = 2,
-*		on 1, below 0) and using these codes to index a
-*		look up table.
-*		To avoid tests for duplicate edge segments in other
-*		parts of the code it is done here.
-*		This function is based on Paul Bourke's CONREC.F
-*		contouring subroutine, Paul Bourke. CONREC A Contouring
-*		Subroutine. BYTE, July 1997.
-* Global refs:	-
-* Parameters:	WlzContour *ctr: 	Contour being built.
-*		double isoVal:		Iso-value to use.
-*		double *vLn0:		Ptr to 2 data values at
-*					y = yPos and x = xPos,
-*					xpos + 1.
-*		double *vLn1:		Ptr to 2 data values at
-*					y = yPos + 1 and x = xPos,
-*					xpos + 1..
-*		WlzDVertex2 sqOrg:	The square's origin.
-*		int *vtxSearchIdx:	Last line vertex search index.
-************************************************************************/
+*		Computes iso-value contour segments for the given
+*               square, creates edge and node elements and inserts
+*               them into the contour data structure.
+*               From the 4 data values at the corners (1,..4) of
+*               the square and a linearly interpolated value at it's
+*               centre (0), the square is divided into 4 triangles
+*               (0,...3).
+* \verbatim
+
+                  4-------------------3
+                  | \               / |
+                  |   \     2     /   |
+                  |     \       /     |
+                  |       \   /       |
+                  |   3     0    1 <------ triangle index
+                  |       /   \       |
+                  |     /       \     |
+                  |   /     0     \   |
+                  | /               \ |
+                  1-------------------2 <- square node index
+ 
+                            0 <----------- triangle node index
+                          /   \        
+                        /       \      
+                      /           \    
+                    /               \  
+                  1-------------------2
+
+\endverbatim
+*               Each triangle is classified by generating a above/on/
+*               below code for each of it's verticies (above = 2,
+*               on 1, below 0) and using these codes to index a
+*               look up table.
+*               To avoid tests for duplicate edge segments in other
+*               parts of the code it is done here.
+*               This function is based on Paul Bourke's CONREC.F
+*               contouring subroutine, Paul Bourke. CONREC A Contouring
+*               Subroutine. BYTE, July 1997.
+* \param	ctr			Contour being built.
+* \param	isoVal			Iso-value to use.
+* \param	vLn0			Ptr to 2 data values at
+*                                       y = yPos and x = xPos,
+*                                       xpos + 1.
+* \param	vLn1			Ptr to 2 data values at
+*                                       y = yPos + 1 and x = xPos,
+*                                       xpos + 1.
+* \param	sqOrg			The square's origin.
+*/
 static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 				       double isoVal,
 				       double *vLn0, double *vLn1,
@@ -1993,10 +2551,12 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourIsoCube3D24
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose: 	Checks to see if all above the cube's vertex values are
+/*!
+* \return				Woolz error code.
+* \ingroup	WlzContour
+* \brief	Iso-value contours the given cube.
+*
+*		Checks to see if all above the cube's vertex values are
 *		either above or below the iso-value. If they are then
 *		there's no intersection between the iso-surface and the
 *		cube. If there is a possible intersection then the cube
@@ -2007,94 +2567,98 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 *		the cube and interpolated values at it's centre *0,
 *		and the centres of the cubes faces (9,...,14) the cube
 *		is divided into 24 tetrahedra (0,...,23).
-*                                                                      
-*                          @8----------------@7                        
-*                         /|                /|                        
-*                        / |               / |                         
-*                       /  |              /  |                         
-*                      /   |    +14      /   |                         
-*                     /    |        +12 /    |                         
-*                    /     |           /     |                         
-*                   /      |          /      |                         
-*                  /       |         /       |                         
-*                 @5----------------@6       |                         
-*                 |    +13 |   *0   |    +11 |                         
-*                 |        @4-------|--------@3                                 
-*                 |       /         |       /                                 
-*                 |      /          |      /                                  
-*                 |     /           |     /                                  
-*                 |    /    +10 +9  |    /                                  
-*                 |   /             |   /                                  
-*                 |  /              |  /                                  
-*                 | /               | /                                  
-*                 |/                |/                                  
-*                 @1----------------@2                                 
-*
-*		The tetrahedra are are assigned the following indicies:
-*
-*		  tetradedron index  	cube vertex indicies
-*		   0       		0,  1, 2,  9
-*		   1       		0,  2, 3,  9
-*		   2       		0,  3, 4,  9
-*		   3       		0,  4, 1,  9
-*		   4        		0,  1, 2, 10
-*		   5        		0,  2, 6, 10
-*		   6        		0,  6, 5, 10
-*		   7        		0,  5, 1, 10
-*		   8        		0,  2, 3, 11
-*		   9        		0,  3, 7, 11
-*		  10        		0,  7, 6, 11
-*		  11       		0,  6, 2, 11
-*		  12       		0,  3, 4, 12
-*		  13       		0,  4, 8, 12
-*		  14       		0,  8, 7, 12
-*		  15       		0,  7, 3, 12
-*		  16       		0,  4, 1, 13
-*		  17       		0,  1, 5, 13
-*		  18       		0,  5, 8, 13
-*		  19       		0,  8, 4, 13
-*		  20       		0,  5, 6, 14
-*		  21       		0,  6, 7, 14
-*		  22       		0,  7, 8, 14
-*		  23       		0,  8, 5, 14
-*
+* \verbatim
+
+                           @8----------------@7                        
+                          /|                /|                        
+                         / |               / |                         
+                        /  |              /  |                         
+                       /   |    +14      /   |                         
+                      /    |        +12 /    |                         
+                     /     |           /     |                         
+                    /      |          /      |                         
+                   /       |         /       |                         
+                  @5----------------@6       |                         
+                  |    +13 |   *0   |    +11 |                         
+                  |        @4-------|--------@3                                 
+                  |       /         |       /                                 
+                  |      /          |      /                                  
+                  |     /           |     /                                  
+                  |    /    +10 +9  |    /                                  
+                  |   /             |   /                                  
+                  |  /              |  /                                  
+                  | /               | /                                  
+                  |/                |/                                  
+                  @1----------------@2                                 
+ 
+\endverbatim
+* 		The tetrahedra are are assigned the following indicies:
+* \verbatim
+ 
+ 		  tetradedron index  	cube vertex indicies
+ 		   0       		0,  1, 2,  9
+ 		   1       		0,  2, 3,  9
+ 		   2       		0,  3, 4,  9
+ 		   3       		0,  4, 1,  9
+ 		   4        		0,  1, 2, 10
+ 		   5        		0,  2, 6, 10
+ 		   6        		0,  6, 5, 10
+ 		   7        		0,  5, 1, 10
+ 		   8        		0,  2, 3, 11
+ 		   9        		0,  3, 7, 11
+ 		  10        		0,  7, 6, 11
+ 		  11       		0,  6, 2, 11
+ 		  12       		0,  3, 4, 12
+ 		  13       		0,  4, 8, 12
+ 		  14       		0,  8, 7, 12
+ 		  15       		0,  7, 3, 12
+ 		  16       		0,  4, 1, 13
+ 		  17       		0,  1, 5, 13
+ 		  18       		0,  5, 8, 13
+ 		  19       		0,  8, 4, 13
+ 		  20       		0,  5, 6, 14
+ 		  21       		0,  6, 7, 14
+ 		  22       		0,  7, 8, 14
+ 		  23       		0,  8, 5, 14
+\endverbatim 
 *		The values at these vertices are passed onto
 *		WlzContourIsoTet3D() using the following indicies:
-*		
-*                          +3
-*                         /|\                                              
-*                        / | \                                             
-*                       /  |  \                                            
-*                      /   |   \                                           
-*                     /    |    \                                          
-*                    /     |     \                                         
-*                   /      *0     \                                        
-*                  /    ,/    \,   \                                       
-*                 / / '          `\ \                                      
-*                 @1-----------------@2
-*
+* \vertices
+
+                           +3
+                          /|\                                              
+                         / | \                                             
+                        /  |  \                                            
+                       /   |   \                                           
+                      /    |    \                                          
+                     /     |     \                                         
+                    /      *0     \                                        
+                   /    ,/    \,   \                                       
+                  / / '          `\ \                                      
+                  @1-----------------@2
+ 
+\endverbatim
 *		The tetrahedra verticies are assigned using a look up table
 *		in which tetrahedron vertex 0 is always vertex 0 of the cube,
 *		tetrahedron vertex 3 is always the cube face vertex
 *		(9, 10, 11, 12, 13, 14) and the tetrahedron verticies
 *		1 and 2 are cube edge verticies.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Contour being built.
-*		double isoVal:		Iso-value to use.
-*		double *vPn0Ln0:	Ptr to 2 data values at
-*					z = zPos, y = yPos and
-*					x = xPos, xpos + 1.
-*		double *vPn0Ln1:	Ptr to 2 data values at
-*					z = zPos, y = yPos + 1 and
-*					x = xPos, xpos + 1.
-*		double *vPn1Ln0:	Ptr to 2 data values at
-*					z = zPos + 1, y = yPos and
-*					x = xPos, xpos + 1.
-*		double *vPn1Ln1:	Ptr to 2 data values at
-*					z = zPos + 1, y = yPos + 1 and
-*					x = xPos, xpos + 1.
-*		WlzDVertex3 cbOrg:	The cube's origin.
-************************************************************************/
+* \param	ctr			Contour being built.
+* \param	isoVal			Iso-value to use.
+* \param	vPn0Ln0			Ptr to 2 data values at
+*                                       z = zPos, y = yPos and
+*                                       x = xPos, xpos + 1.
+* \param	vPn0Ln1			Ptr to 2 data values at
+*                                       z = zPos, y = yPos + 1 and
+*                                       x = xPos, xpos + 1.
+* \param	vPn1Ln0			Ptr to 2 data values at
+*                                       z = zPos + 1, y = yPos and
+*                                       x = xPos, xpos + 1.
+* \param	vPn1Ln1			Ptr to 2 data values at
+*                                       z = zPos + 1, y = yPos + 1 and
+*                                       x = xPos, xpos + 1.
+* \param	cbOrg			The cube's origin.
+*/
 static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 				double isoVal,
 				double *vPn0Ln0, double *vPn0Ln1,
@@ -2191,37 +2755,40 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourGrdCube3D
-* Returns:	WlzErrorNum		Woolz error code.
-* Purpose:	Computes maximal gradient surface simplicies within a
-*		3x3x3 cube.
-*		  * Compute central gradient vector's direction (cGV).
-*		  * Interpolate gradient at intersection of gradient
-*		    vector with the cube's faces.
-*		  * If modulus of gradient is greater than the modulus
-*		    of the interpolated gradients at the cubes faces.
-*		  *   Add position of central voxel to the maximal
-*		      gradient voxels buffer.
-*		  *   Link maximal gradient voxels forming new
-*		      surface elements in the model.
-*		The modulus of the central gradient is known to be
-*		non-zero.
-*		The buffer position wrt z is always modulo 3.
-* Global refs:	-
-* Parameters:	WlzContour *ctr: 	Contour being built.
-*		int *dstLnkFlg:		Destination pointer for flag
-*					set to non-zero value if pixel
-*					linked. Must NOT be NULL.
-*		UBYTE ***mBuf:		Buffer with maximal voxels
-*					marked non-zero.
-*		double ***zBuf:		Z gradients.
-*		double ***yBuf:		Y gradients.
-*		double ***xBuf:		X gradients.
-*		int *bufIdx:		Z indicies for the buffers.
-*		WlzIVertex3 bufPos:	Index into buffers.
-*		WlzIVertex3 cbOrg:	Origin of the cube.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup	WlzContour
+* \brief	Computes maximal gradient surface simplicies within a
+*               3x3x3 cube.
+*
+*		The maximal gradient surface simplicies within a 3x3x3 cube
+*		are computed by the following steps:
+*                 - Compute central gradient vector's direction (cGV).
+*                 - Interpolate gradient at intersection of gradient
+*                   vector with the cube's faces.
+*                 - If modulus of gradient is greater than the modulus
+*                   of the interpolated gradients at the cubes faces.
+*                   - Add position of central voxel to the maximal
+*                     gradient voxels buffer.
+*                   - Link maximal gradient voxels forming new
+*                     surface elements in the model.
+*
+*               The modulus of the central gradient is known to be
+*               non-zero.
+*               The buffer position wrt z is always modulo 3.
+* \param	ctr			Contour being built.
+* \param	dstLnkFlg		Destination pointer for flag
+*                                       set to non-zero value if pixel
+*                                       linked. Must NOT be NULL.
+* \param	mBuf			Buffer with maximal voxels
+*                                       marked non-zero.
+* \param	zBuf			Z gradients.
+* \param	yBuf			Y gradients.
+* \param	xBuf			X gradients.
+* \param	bufIdx			Z indicies for the buffers.
+* \param	bufPos			Index into buffers.
+* \param	cbOrg			Origin of the cube.
+*/
 static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, int *dstLnkFlg,
 				       UBYTE ***mBuf,
 				       double ***zBuf, double ***yBuf,
@@ -2450,66 +3017,72 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, int *dstLnkFlg,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourIsoCube3D6T
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose: 	Checks to see if all above the cube's vertex values are
+/*!
+* \return				Woolz error code.
+* \ingroup	WlzContour
+* \brief	Splits the given cube into six tetrahedra and then generates
+*		iso-surface elements for each of these.
+*
+*		Checks to see if all above the cube's vertex values are
 *		either above or below the iso-value. If they are then
 *		there's no intersection between the iso-surface and the
 *		cube. If there is a possible intersection then the cube
 *		is split into 6 tetrahedra and each tetrahedra is
 *		passed to WlzContourIsoTet3D().
 *		With the 8 data values at the verticies @[0-7] the
-*		cube is split into 6 tetrahedra.
-*                                                                      
-*                          @7----------------@6                        
-*                         /|                /|                        
-*                        / |               / |                         
-*                       /  |              /  |                         
-*                      /   |             /   |                         
-*                     /    |            /    |                         
-*                    /     |           /     |                         
-*                   /      |          /      |                         
-*                  /       |         /       |                         
-*                 @4----------------@5       |                         
-*                 |        |        |        |                         
-*                 |        @3-------|--------@2                                 
-*                 |       /         |       /                                 
-*                 |      /          |      /                                  
-*                 |     /           |     /                                  
-*                 |    /            |    /                                  
-*                 |   /             |   /                                  
-*                 |  /              |  /                                  
-*                 | /               | /                                  
-*                 |/                |/                                  
-*                 @0----------------@1                                 
-*
+*		cube is split into 6 tetrahedra:
+* \verbatim
+                                                                       
+                           @7----------------@6                        
+                          /|                /|                        
+                         / |               / |                         
+                        /  |              /  |                         
+                       /   |             /   |                         
+                      /    |            /    |                         
+                     /     |           /     |                         
+                    /      |          /      |                         
+                   /       |         /       |                         
+                  @4----------------@5       |                         
+                  |        |        |        |                         
+                  |        @3-------|--------@2                                 
+                  |       /         |       /                                 
+                  |      /          |      /                                  
+                  |     /           |     /                                  
+                  |    /            |    /                                  
+                  |   /             |   /                                  
+                  |  /              |  /                                  
+                  | /               | /                                  
+                  |/                |/                                  
+                  @0----------------@1                                 
+ 
 *		The tetrahedra are are assigned the following indicies:
-*
-*		  tetradedron index  	cube vertex indicies
-*		   0       		0, 1, 3, 5
-*		   1       		1, 2, 3, 5
-*		   2       		2, 3, 5, 6
-*		   3       		3, 5, 6, 7
-*		   4        		3, 4, 5, 7
-*		   5        		0, 3, 4, 5
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Contour being built.
-*		double isoVal:		Iso-value to use.
-*		double *vPn0Ln0:	Ptr to 2 data values at
-*					z = zPos, y = yPos and
-*					x = xPos, xpos + 1.
-*		double *vPn0Ln1:	Ptr to 2 data values at
-*					z = zPos, y = yPos + 1 and
-*					x = xPos, xpos + 1.
-*		double *vPn1Ln0:	Ptr to 2 data values at
-*					z = zPos + 1, y = yPos and
-*					x = xPos, xpos + 1.
-*		double *vPn1Ln1:	Ptr to 2 data values at
-*					z = zPos + 1, y = yPos + 1 and
-*					x = xPos, xpos + 1.
-*		WlzDVertex3 cbOrg:	The cube's origin.
-************************************************************************/
+* \verbatim
+
+		tetradedron index  	cube vertex indicies
+ 		   0       		0, 1, 3, 5
+ 		   1       		1, 2, 3, 5
+ 		   2       		2, 3, 5, 6
+ 		   3       		3, 5, 6, 7
+ 		   4        		3, 4, 5, 7
+ 		   5        		0, 3, 4, 5
+
+\endverbatim
+* \param	ctr			Contour being built.
+* \param	isoVal			Iso-value to use.
+* \param	vPn0Ln0			Ptr to 2 data values at
+*                                       z = zPos, y = yPos and
+*                                       x = xPos, xpos + 1.
+* \param	vPn0Ln1			Ptr to 2 data values at
+*                                       z = zPos, y = yPos + 1 and
+*                                       x = xPos, xpos + 1.
+* \param	vPn1Ln0			Ptr to 2 data values at
+*                                       z = zPos + 1, y = yPos and
+*                                       x = xPos, xpos + 1.
+* \param	vPn1Ln1			Ptr to 2 data values at
+*                                       z = zPos + 1, y = yPos + 1 and
+*                                       x = xPos, xpos + 1.
+* \param	cbOrg			The cube's origin.
+*/
 static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
 				double isoVal,
 				double *vPn0Ln0, double *vPn0Ln1,
@@ -2580,20 +3153,19 @@ static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourIsoTet3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose: 	Computes the intersection of the given tetrahedron
-*		with the isovalue surface. Creates new 3D simplicies
-*		for the contour.
-* Global refs:	-
-* Parameters:	WlzContourWSp *ctr:	Contour being built.
-*		double *tVal:		Values wrt the iso-value at the
-*					verticies of the tetrahedron.
-*		WlzDVertex3 *tPos:	Positions of the tetrahedron
-*					verticies wrt the cube's origin.
-*		WlzDVertex3 cbOrg:	The cube's origin.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup	WlzContour
+* \brief	Computes the intersection of the given tetrahedron
+*               with the isovalue surface. Creates new 3D simplicies
+*               for the contour.
+* \param	ctr			Contour being built.
+* \param	tVal			Values wrt the iso-value at the
+*                                       verticies of the tetrahedron.
+* \param	tPos			Positions of the tetrahedron
+*                                       verticies wrt the cube's origin.
+* \param	cbOrg			The cube's origin.
+*/
 static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
 				      double *tVal,
 				      WlzDVertex3 *tPos,
@@ -3094,18 +3666,17 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzContourIntpTriSide
-* Returns:	WlzDVertex2:		Position of intersection with
-*					side.
-* Purpose:	Calculates the position of the intersection of a
-*		line with the zero height plane in 2D space.
-* Global refs:	-
-* Parameters:	double valOrg:		Height at line origin.
-*		double valDst:		Height at line destination.
-*		WlzDVertex2 posOrg:	Line origin.
-*		WlzDVertex2 posDst:	Line destination.
-************************************************************************/
+/*!
+* \return				Position of intersection with
+*                                       side.
+* \ingroup	WlzContour
+* \brief	Calculates the position of the intersection of a
+*               line with the zero height plane in 2D space.
+* \param	valOrg			Height at line origin.
+* \param	valDst			Height at line destination.
+* \param	posOrg			Line origin.
+* \param	posDst			Line destination.
+*/
 static WlzDVertex2 WlzContourItpTriSide(double valOrg, double valDst,
 				        WlzDVertex2 posOrg, WlzDVertex2 posDst)
 {
@@ -3118,18 +3689,17 @@ static WlzDVertex2 WlzContourItpTriSide(double valOrg, double valDst,
   return(itp);
 }
 
-/************************************************************************
-* Function:	WlzContourIntpTetSide
-* Returns:	WlzDVertex3:		Position of intersection with
-*					side.
-* Purpose:	Calculates the position of the intersection of a
-*		line with the zero height plane in 3D space.
-* Global refs:	-
-* Parameters:	double valOrg:		Height at line origin.
-*		double valDst:		Height at line destination.
-*		WlzDVertex3 posOrg:	Line origin.
-*		WlzDVertex3 posDst:	Line destination.
-************************************************************************/
+/*!
+* \return				Position of intersection with
+*                                       side.
+* \ingroup      WlzContour
+* \brief	Calculates the position of the intersection of a
+*               line with the zero height plane in 3D space.
+* \param	valOrg			Height at line origin.
+* \param	valDst			Height at line destination.
+* \param	posOrg			Line origin.
+* \param	posDst			Line destination.
+*/
 static WlzDVertex3 WlzContourItpTetSide(double valOrg, double valDst,
 				        WlzDVertex3 posOrg, WlzDVertex3 posDst)
 {

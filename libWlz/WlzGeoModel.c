@@ -18,6 +18,7 @@
 * \ingroup      WlzGeoModel
 * \todo         - The element deletion functions are only partly written
 *		  and only partly work for 2D models.
+*		- Radial edges are not checked for in WlzGMModelDeleteS().
 * \bug          None known.
 */
 #include <Wlz.h>
@@ -28,39 +29,12 @@ static WlzGMShell 	*WlzGMLoopTFindShell(
 static WlzErrorNum 	WlzGMShellMergeG(
 			  WlzGMShell *shell0,
 			  WlzGMShell *shell1);
-static WlzErrorNum 	WlzGMShellTestOutVTK(
-			  WlzGMShell *shell,
-			  int *vIdxTb,
-			  char *lFlg,
-			  FILE *fP);
-static WlzErrorNum 	WlzGMLoopTTestOutputVTK(
-			  WlzGMLoopT *fLT,
-			  int *vIdxTb,
-			  FILE *fP);
-static WlzErrorNum 	WlzGMShellTestOutPS(
-			  WlzGMShell *shell,
-			  char *lFlg,
-			  char *eFlg,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
-static WlzErrorNum	WlzGMLoopTTestOutPS(
-			  WlzGMLoopT *loopT,
-			  char *eFlg,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
-static WlzErrorNum	WlzGMEdgeTTestOutPS(
-			  WlzGMEdgeT *edgeT,
-			  FILE *fP,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
-static void		WlzGMTestOutLinePS(
-			  FILE *fP,
-			  WlzDVertex2 pos0,
-			  WlzDVertex2 pos1,
-			  WlzDVertex2 offset,
-			  WlzDVertex2 scale);
+static WlzErrorNum 	WlzGMModelDeleteE2D(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelDeleteE3D(
+			  WlzGMModel *model,
+			  WlzGMEdge *dE);
 static unsigned int 	WlzGMHashPos2D(
 			  WlzDVertex2 pos);
 static unsigned int 	WlzGMHashPos3D(
@@ -495,11 +469,6 @@ WlzGMLoopT	*WlzGMModelNewLT(WlzGMModel *model, WlzErrorNum *dstErr)
     elm.loopT = loopT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
-  /* Clear up on error */
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzGMModelFreeLT(model, loopT);
-  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -559,7 +528,7 @@ WlzGMDiskT     *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
 /*!
 * \return				New edge.
 * \ingroup      WlzGeoModel
-* \brief	Creates a new edge and an edge geometry element.
+* \brief	Creates a new edge.
 *               The edge geometry element only has it's index set
 *               to a meaningful value.
 * \param	model			Model with resources.
@@ -594,11 +563,6 @@ WlzGMEdge      *WlzGMModelNewE(WlzGMModel *model, WlzErrorNum *dstErr)
     edge->idx = (model->res.edge.numIdx)++;
     elm.edge = edge;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
-  }
-  /* Clear up on error */
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzGMModelFreeE(model, edge);
   }
   if(dstErr)
   {
@@ -643,11 +607,6 @@ WlzGMEdgeT     *WlzGMModelNewET(WlzGMModel *model, WlzErrorNum *dstErr)
     edgeT->idx = (resET->numIdx)++;
     elm.edgeT = edgeT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
-  }
-  /* Clear up on error */
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzGMModelFreeET(model, edgeT);
   }
   if(dstErr)
   {
@@ -752,11 +711,6 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
     elm.vertexT = vertexT;
     WlzGMModelCallResCb(model, elm, WLZ_GMCB_NEW);
   }
-  /* Clear up on error */
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzGMModelFreeVT(model, vertexT);
-  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -767,8 +721,9 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
 /*!
 * \return				New copy of the given model.
 * \ingroup      WlzGeoModel
-* \brief	Copies the given model. All unused elements are squeezed
-*		out.
+* \brief	Copies the given model.
+*		Because all unused elements are squeezed out, the indicies of
+*		the elements may not be equal in the two models.
 * \param	gM			Given model.
 * \param	dstErr			Destination error pointer, may
 *					be null.
@@ -1661,6 +1616,7 @@ void		WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
     fLT = tLT = dS->child;
     do
     {
+      /* TODO need to check for radial edges! */
       /* For each edgeT. */
       fET = tET = tLT->edgeT;
       do
@@ -1719,7 +1675,7 @@ void		WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 *		which use the vertex and then delete all edges in the
 *		collection. If there are no edges (in the collection) then
 *		just unlink and free the vertex.
-*		The geometry of the existing and possible new shells may
+*		TODO The geometries of the existing and new shells will
 *		not be correct after deleting a vertex using this function
 *		and this should be taken care of by the calling function.
 *		TODO This only works for 2D models I need to extend it to
@@ -1745,40 +1701,32 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
      * will have been chosen to be some small value that's > than the the
      * number of edges incident with most verticies and the edge collection
      * won't need reallocating. */
-    eCnt = 0;
-    eMax = eStp;
-    if((edgeCol = (WlzGMEdge **)AlcMalloc(sizeof(WlzGMEdge *) * eMax)) == NULL)
+    eCnt = eMax = 0;
+    /* Build a collection of all the edges that will be destroyed by deleting
+     * the vertex. */
+    tDT1 = tDT0 = dV->diskT;
+    do
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      /* Build a collection of all the edges that will be destroyed by deleting
-       * the vertex. */
-      tDT1 = tDT0 = dV->diskT;
+      tDT1 = tDT1->next;
+      tVT1 = tVT0 = tDT1->vertexT;
       do
       {
-	tDT1 = tDT1->next;
-	tVT1 = tVT0 = tDT1->vertexT;
-	do
+	tVT1 = tVT1->next;
+	if(eCnt >= eMax)
 	{
-	  tVT1 = tVT1->next;
-	  if(eCnt >= eMax)
+	  eMax = eMax? eStp: eMax * 2;
+	  if((edgeCol = (WlzGMEdge **)AlcRealloc(edgeCol,
+					sizeof(WlzGMEdge *) * eMax)) == NULL)
 	  {
-	    eMax += eStp;
-	    if((edgeCol = (WlzGMEdge **)AlcRealloc(edgeCol,
-					  sizeof(WlzGMEdge *) * eMax)) == NULL)
-	    {
-	      errNum = WLZ_ERR_MEM_ALLOC;
-	    }
+	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    *(edgeCol + eCnt++) = tVT1->parent->edge;
-	  }
-	} while((errNum == WLZ_ERR_NONE) && (tVT1 != tVT0));
-      } while((errNum == WLZ_ERR_NONE) && (tDT1 != tDT0));
-    }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  *(edgeCol + eCnt++) = tVT1->parent->edge;
+	}
+      } while((errNum == WLZ_ERR_NONE) && (tVT1 != tVT0));
+    } while((errNum == WLZ_ERR_NONE) && (tDT1 != tDT0));
     if(errNum == WLZ_ERR_NONE)
     {
       if(eCnt == 0)
@@ -1812,12 +1760,38 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
 * \return				Woolz error code.
 * \ingroup      WlzGeoModel
 * \brief	Deletes an edge along with all the elements which depend
-*		on it. All elements which depend on the edge are unlinked
-*		and then freed. If the edge's parents depend solely on the
-*		edge then they free'd too.
+*		on it. See WlzGMModelDeleteE2D() and WlzGMModelDeleteE3D().
 *		Because many of the operations on Woolz geometric model
 *		are only implemented for models containing simplicies this
 *		function should be used with care for 3D models.
+* \param	model			Model with resources.
+* \param	dE			The edge to delete.
+*/
+WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(model->type)
+  {
+    case WLZ_GMMOD_2I:
+    case WLZ_GMMOD_2D:
+      errNum = WlzGMModelDeleteE2D(model, dE);
+      break;
+    case WLZ_GMMOD_3I:
+    case WLZ_GMMOD_3D:
+      errNum = WlzGMModelDeleteE2D(model, dE);
+      break;
+  }
+  return(errNum);
+}
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Deletes an edge along with all the elements which depend
+*		on it. All elements which depend on the edge are unlinked
+*		and then freed. If the edge's parents depend solely on the
+*		edge then they free'd too.
 *		The basic algorithm used is: Check to see if the edge is the
 *		only edge in a loop lopology element, if so then delete the
 *		loop topology element, otherwise delete all elements which
@@ -1825,7 +1799,7 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
 * \param	model			Model with resources.
 * \param	dE			The edge to delete.
 */
-WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
+static WlzErrorNum WlzGMModelDeleteE2D(WlzGMModel *model, WlzGMEdge *dE)
 {
   int		termEdgFlg;
   WlzGMEdgeT	*tET0,
@@ -1942,6 +1916,23 @@ WlzErrorNum	WlzGMModelDeleteE(WlzGMModel *model, WlzGMEdge *dE)
   }
   return(errNum);
 }
+
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Deletes an edge along with all the elements which depend
+*		on it in a 3D model.
+* \param	model			Model with resources.
+* \param	dE			The edge to delete.
+*/
+static WlzErrorNum WlzGMModelDeleteE3D(WlzGMModel *model, WlzGMEdge *dE)
+{
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  /* TODO */
+  return(errNum);
+}
+
 
 
 /*!
@@ -3263,8 +3254,8 @@ static WlzErrorNum WlzGMShellMergeG(WlzGMShell *shell0, WlzGMShell *shell1)
 
 /*!
 * \return				Non zero if point inside shell's
-* \ingroup      WlzGeoModel
 *                                       bounding box.
+* \ingroup      WlzGeoModel
 * \brief	Checks to see if the given double precision position
 *               is within the shell's bounding box.
 * \param	shell			Given shell with geometry to
@@ -3316,8 +3307,8 @@ int		WlzGMShellGInBB3D(WlzGMShell *shell, WlzDVertex3 pos)
 
 /*!
 * \return				Non zero if point inside shell's
-* \ingroup      WlzGeoModel
 *                                       bounding box.
+* \ingroup      WlzGeoModel
 * \brief	Checks to see if the given double precision position
 *               is within the shell's bounding box.
 * \param	shell			Given shell with geometry to
@@ -3549,8 +3540,8 @@ WlzErrorNum	WlzGMVertexGetG2D(WlzGMVertex *vertex, WlzDVertex2 *dstPos)
 
 /*!
 * \return				Position of vertex - given
-* \ingroup      WlzGeoModel
 *					position.
+* \ingroup      WlzGeoModel
 * \brief	Compares the position of the given vertex with the
 *		given 3D double precision position.
 * \param	vertex			Given vertex.
@@ -3593,8 +3584,8 @@ WlzDVertex3	WlzGMVertexCmp3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 
 /*!
 * \return                               Position of vertex - given
-* \ingroup      WlzGeoModel
 *                                       position.
+* \ingroup      WlzGeoModel
 * \brief        Compares the position of the given vertex with the
 *               given 2D double precision position.
 * \param        vertex                  Given vertex.
@@ -3634,9 +3625,9 @@ WlzDVertex2	WlzGMVertexCmp2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 }
 
 /*!
-* \return				The sign of the vertex position
+* \return				The sign of the vertex position:
+*					-1, 0 or +1.
 * \ingroup      WlzGeoModel
-*					- the given position: -1, 0 or +1.
 * \brief	Compares the coordinates of the given vertex and
 *		3D double precision position to find a signed value
 *               for sorting.
@@ -3688,8 +3679,8 @@ int		WlzGMVertexCmpSign3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 
 /*!
 * \return				The sign of the vertex position
-* \ingroup      WlzGeoModel
 *					- the given position: -1, 0 or +1.
+* \ingroup      WlzGeoModel
 * \brief	Compares the coordinates of the given vertex and
 *		2D double precision position to find a signed value
 *               for sorting.
@@ -3730,8 +3721,8 @@ int		WlzGMVertexCmpSign2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 
 /*!
 * \return				Square of distance, -1.0 on
-* \ingroup      WlzGeoModel
 *                                       error.
+* \ingroup      WlzGeoModel
 * \brief	Calculates the square of the Euclidean distance
 *               between the given vertex and the given 3D double
 *               precision position.
@@ -3901,8 +3892,8 @@ WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
 
 /*!
 * \return				Square of distance, -1.0 on
-* \ingroup      WlzGeoModel
 *                                       error.
+* \ingroup      WlzGeoModel
 * \brief	Calculates the square of the Euclidean distance
 *               between the given vertex and the given 2D double
 *               precision position.
@@ -4011,8 +4002,8 @@ static unsigned int WlzGMHashPos2D(WlzDVertex2 pos)
 
 /*!
 * \return				Matched vertex, or NULL if no
-* \ingroup      WlzGeoModel
 *                                       vertex with the given geometry.
+* \ingroup      WlzGeoModel
 * \brief	Attempts to find a vertex which matches the given
 *               double precision 3D position.
 * \param	model			Model with resources.
@@ -4049,8 +4040,8 @@ WlzGMVertex	*WlzGMModelMatchVertexG3D(WlzGMModel *model, WlzDVertex3 gPos)
 
 /*!
 * \return				Matched vertex, or NULL if no
-* \ingroup      WlzGeoModel
 *                                       vertex with the given geometry.
+* \ingroup      WlzGeoModel
 * \brief	Attempts to find a vertex which matches the given
 *               double precision 2D position.
 * \param	model			Model with resources.
@@ -4089,9 +4080,9 @@ WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
 
 /*!
 * \return				Ptr to an array of non-manifold
-* \ingroup      WlzGeoModel
 *                                       edge ptrs, NULL if none exist or
 *                                       on error.
+* \ingroup      WlzGeoModel
 * \brief	Finds a loop topology element in common for the two
 *               edge topology elements.
 * \param	model			The given model.
@@ -4188,8 +4179,8 @@ WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
 
 /*!
 * \return				Common loop topology element,
-* \ingroup      WlzGeoModel
 *                                       NULL if it doesn't exist.
+* \ingroup      WlzGeoModel
 * \brief	Finds a loop topology element in common for the two
 *               edge topology elements.
 * \param	eT0			First edge topology element.
@@ -4208,8 +4199,8 @@ WlzGMLoopT	*WlzGMEdgeTCommonLoopT(WlzGMEdgeT *eT0, WlzGMEdgeT *eT1)
 
 /*!
 * \return				Common edge, NULL if it doesn't
-* \ingroup      WlzGeoModel
                                         exist.
+* \ingroup      WlzGeoModel
 * \brief	Finds the edge common to the two given verticies.
 * \param	eV0			First vertex element.
 * \param	eV1			Second vertex element.
@@ -4241,8 +4232,8 @@ WlzGMEdge	*WlzGMVertexCommonEdge(WlzGMVertex *eV0, WlzGMVertex *eV1)
 
 /*!
 * \return				Common shell, NULL if it doesn't
-* \ingroup      WlzGeoModel
                                         exist.
+* \ingroup      WlzGeoModel
 * \brief	Finds the shell common to the two given verticies.
 * \param	eV0			First vertex element.
 * \param	eV1			Second vertex element.
@@ -4298,8 +4289,8 @@ WlzGMShell	*WlzGMEdgeGetShell(WlzGMEdge *eE)
 
 /*!
 * \return				The common vertex, NULL if it
-* \ingroup      WlzGeoModel
 *                                       doesn't exist.
+* \ingroup      WlzGeoModel
 * \brief	Finds the common vertex of the two given edges.
 * \param	eE0			First edge element.
 * \param	eE1			Second edge element.
@@ -4798,8 +4789,8 @@ void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
 
 /*!
 * \return				New resource index table, NULL
-* \ingroup      WlzGeoModel
 *                                       on error.
+* \ingroup      WlzGeoModel
 * \brief	Makes an index look up table data structure for the
 *               given model.
 * \param	model			The model with the vertex

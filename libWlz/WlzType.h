@@ -212,6 +212,7 @@ typedef enum
 * \enum		_WlzTransformType
 * \ingroup	WlzTransform
 * \brief	Types of spatial transformation.
+*		Typedef: ::WlzTransformType.
 */
 typedef enum _WlzTransformType
 {
@@ -239,6 +240,7 @@ typedef enum _WlzTransformType
 * \enum         _WlzBasisFnType
 * \ingroup	WlzTransform
 * \brief	The types of basis function for basis function transforms.
+* 		Typedef: ::WlzBasisFnType.
 */
 typedef enum _WlzBasisFnType
 {
@@ -255,6 +257,7 @@ typedef enum _WlzBasisFnType
 * \enum		_WlzMeshElemType
 * \ingroup	WlzTransform
 * \brief	Mesh transform element types.
+*		Typedef: ::WlzMeshElemType.
 */
 typedef enum _WlzMeshElemType
 {
@@ -267,6 +270,7 @@ typedef enum _WlzMeshElemType
 * \enum		_WlzMeshElemFlags
 * \ingroup	WlzTransform
 * \brief	Mesh transform element flag bit masks.
+*		Typedef: ::WlzMeshElemFlags.
 */
 typedef enum _WlzMeshElemFlags
 {
@@ -282,6 +286,7 @@ typedef enum _WlzMeshElemFlags
 * \enum		_WlzMeshNodeFlags
 * \ingroup	WlzTransform
 * \brief	Mesh transform node flag masks.
+*		Typedef: ::WlzMeshNodeFlags.
 */
 typedef enum _WlzMeshNodeFlags
 {
@@ -298,6 +303,7 @@ typedef enum _WlzMeshNodeFlags
 * \enum		_WlzMeshGenMethod
 * \ingroup	WlzTransform
 * \brief	Mesh generation methods.
+*		Typedef: ::WlzMeshGenMethod.
 */
 typedef enum _WlzMeshGenMethod
 {
@@ -311,6 +317,7 @@ typedef enum _WlzMeshGenMethod
 * \enum		_WlzMeshError
 * \ingroup	WlzTransform
 * \brief	Mesh error bit masks.
+*		Typedef: ::WlzMeshError.
 */
 typedef enum _WlzMeshError
 {
@@ -1181,21 +1188,33 @@ typedef struct _WlzGMResIdxTb
 * Data structures for contours (both 2D and 3D).
 ************************************************************************/
 
-/* Contour generation methods. */
-typedef enum
+/*!
+* \enum		_WlzContourMethod
+* \ingroup	WlzContour
+* \brief	Contour generation methods.
+		Typedef: ::WlzContourMethod
+*/
+typedef enum _WlzContourMethod
 {
-  WLZ_CONTOUR_MTD_ISO,                                          /* Iso-value */
-  WLZ_CONTOUR_MTD_GRD                              /* Maximum gradient value */
+  WLZ_CONTOUR_MTD_ISO,                  /*!< Iso-value. */
+  WLZ_CONTOUR_MTD_GRD,            	/*!< Maximum gradient value. */
+  WLZ_CONTOUR_MTD_BND			/*!< Object boundary. */
 } WlzContourMethod;
 
-/* WlzContour: A single contour (polyline or surface) represented by
- * a Woolz geometric model. */
+/*!
+* \struct	_WlzContour
+* \ingroup	WlzContour
+*		A collection of 2D polylines or 3D surface elements
+*		represented by a Woolz geometric model.
+*		Typedef: ::WlzContour.
+*/
 typedef struct _WlzContour
 {
-  WlzObjectType type;                                                /* CORE */
-  int           linkcount;                                           /* CORE */
-  void          *freeptr;                                            /* CORE */
-  WlzGMModel	*model;
+  WlzObjectType type;                   /*! WLZ_CONTOUR. */
+  int		linkcount;		/*!< Core. */
+  void		*freeptr;		/*!< Core. */
+  WlzGMModel	*model;			/*!< The Woolz geometric model
+  					     defining the contour. */
 } WlzContour;
 
 /************************************************************************
