@@ -7,6 +7,8 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.io.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
@@ -19,57 +21,55 @@ import uk.ac.mrc.hgu.Wlz.*;
 public class AnatKey extends AnatKeyGUI{
 
    /**
-    *   The one and only instance of AnatKey.
+    *   The one and only instance of AnatKey (per parent).
     */
-   protected static AnatKey _instance = null;
+   protected AnatKey _instance = null;
 
    /**
     *   The collection of rows in the AnatKey.
     */
-   protected  static Vector _keyEntryVec = null;
+   protected  Vector _keyEntryVec = null;
 
    /**
     *   The number of rows in the AnatKey.
     */
-   protected  static int _nrows = 0;
+   protected  int _nrows = 0;
 
    /**
     *   A unique index number for KeyElements.
     */
-   protected  static int _indx = 0;
-//-------------------------------------------------------------
-   // private constructor for singleton pattern
-   /**
-    *   Called by AnatKey.instance(). This constructor is private in 
-    *   accordance with the 'singleton' pattern
-    */
-   private AnatKey(String str, boolean is3D) {
-      super(str, is3D);
-      _keyEntryVec = new Vector();
-      //setResizable(false);
-      setResizable(true);
-   }
-   
-//-------------------------------------------------------------
-   // makes sure only 1 instance of the class is created
-   /**
-    *   Calls the (private) constructor.
-    *   This is the only way to make an instance of AnatKey.
-    */
-   public static AnatKey instance() {
-      return instance(false);
-   }
+   protected  int _indx = 0;
 
    /**
-    *   Calls the (private) constructor.
-    *   This is the only way to make an instance of AnatKey.
+    *   The parent of the AnatKey.
+    *   This is the class that implements SVParent interface.
     */
-   public static AnatKey instance(boolean is3D) {
-      if(_instance == null) {
-	 _is3D = is3D;
-         _instance = new AnatKey("anatomy key", _is3D);
-      }
-      return _instance;
+   protected  Object _parent = null;
+
+//-------------------------------------------------------------
+   /**
+    *   Constructs a 2D AnatKey with the default title.
+    *   Only 1 instance is allowed per parent.
+    *   It is the responsibility of the parent to ensure
+    *   that only 1 instance is constructed. !!!
+    */
+   public AnatKey() {
+      this("Anatomy Key", false);
+   }
+
+//............................
+   /**
+    *   Constructs an AnatKey with the given title
+    *   and 2D / 3D as specified.
+    *   It is the responsibility of the parent to ensure
+    *   that only 1 instance is constructed. !!!
+    */
+   public AnatKey(String title,
+	          boolean is3D) {
+
+      super(title, is3D);
+      _is3D = is3D;
+      _keyEntryVec = new Vector();
    }
 //-------------------------------------------------------------
    /**
@@ -116,7 +116,7 @@ public class AnatKey extends AnatKeyGUI{
     *   Returns the number of rows in the anatomy key.
     *   @return The int number of rows in the key.
     */
-   public static int getNRows() {
+   public int getNRows() {
       return _nrows;
    }
 
@@ -182,7 +182,7 @@ public class AnatKey extends AnatKeyGUI{
     *   @param indx the index.
     *   @return a new Color object.
     */
-   public static Color getColor(int indx){
+   public Color getColor(int indx){
 
       Color col = null;
       KeyEntry row = null;
@@ -224,7 +224,7 @@ public class AnatKey extends AnatKeyGUI{
     *   @param indx a unique index for each keyEntry.
     *   @return the KeyEntry with the specified indx.
     */
-   public static KeyEntry getRow(int indx) {
+   public KeyEntry getRow(int indx) {
 
       int i = -1;
       int size = _keyEntryVec.size();
