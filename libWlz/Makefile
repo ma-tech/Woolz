@@ -90,7 +90,6 @@ CSOURCES		= \
 			WlzGeoModel.c \
 			WlzGeoModelFilters.c \
 			WlzGeometry.c \
-			WlzGeometryTrackUpAndDown_s.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
 			WlzGreyGradient.c \
@@ -231,7 +230,6 @@ MANPAGES		= \
 			WlzFileIO.3 \
 			WlzFree.3 \
 			WlzGetSectionFromObject.3 \
-			WlzGeometryTrackUpAndDown_s.3 \
 			WlzGreyCrossing.3 \
 			WlzGreyFunctions.3 \
 			WlzGreyGradient.3 \
