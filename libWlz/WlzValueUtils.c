@@ -1726,6 +1726,7 @@ void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
   {
     dst->vtX = WLZ_NINT(src->vtX);
     dst->vtY = WLZ_NINT(src->vtY);
+    dst->vtZ = WLZ_NINT(src->vtZ);
     ++dst;
     ++src;
   }
@@ -1748,6 +1749,7 @@ void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
   {
     dst->vtX = WLZ_NINT(src->vtX);
     dst->vtY = WLZ_NINT(src->vtY);
+    dst->vtZ = WLZ_NINT(src->vtZ);
     ++dst;
     ++src;
   }
@@ -1770,6 +1772,7 @@ void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
   {
     dst->vtX = src->vtX;
     dst->vtY = src->vtY;
+    dst->vtZ = src->vtZ;
     ++dst;
     ++src;
   }
@@ -1808,6 +1811,7 @@ void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
   {
     dst->vtX = WLZ_NINT(src->vtX);
     dst->vtY = WLZ_NINT(src->vtY);
+    dst->vtZ = WLZ_NINT(src->vtZ);
     ++dst;
     ++src;
   }
@@ -1830,6 +1834,7 @@ void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
   {
     dst->vtX = src->vtX;
     dst->vtY = src->vtY;
+    dst->vtZ = src->vtZ;
     ++dst;
     ++src;
   }
@@ -1852,6 +1857,7 @@ void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
   {
     dst->vtX = src->vtX;
     dst->vtY = src->vtY;
+    dst->vtZ = src->vtZ;
     ++dst;
     ++src;
   }
@@ -2292,4 +2298,44 @@ double		WlzValueMedianDouble(double *values, int nVal)
     medVal = *(values + 1);
   }
   return(medVal);
+}
+
+/*!
+* \return	Size of the given grey type.
+* \ingroup	WlzValueUtils
+* \brief	Computes the size of the given grey type.
+* \param	gType			Given grey type.
+*/
+size_t		WlzValueSize(WlzGreyType gType)
+{
+  size_t	gSz = 0;
+
+  switch(gType)
+  {
+    case WLZ_GREY_LONG:
+      gSz = sizeof(long);
+      break;
+    case WLZ_GREY_INT:
+      gSz = sizeof(int);
+      break;
+    case WLZ_GREY_SHORT:
+      gSz = sizeof(short);
+      break;
+    case WLZ_GREY_UBYTE:
+      gSz = sizeof(UBYTE);
+      break;
+    case WLZ_GREY_FLOAT:
+      gSz = sizeof(float);
+      break;
+    case WLZ_GREY_DOUBLE:
+      gSz = sizeof(double);
+      break;
+    case WLZ_GREY_BIT:
+      gSz = sizeof(UBYTE);
+      break;
+    case WLZ_GREY_RGBA:
+      gSz = sizeof(unsigned int);
+      break;
+  }
+  return(gSz);
 }
