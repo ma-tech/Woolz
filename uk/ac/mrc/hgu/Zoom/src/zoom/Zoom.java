@@ -11,8 +11,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * View / Controller class for zoom control bean.
- * <br>Uses the <b>Model View Controller</b> paradigm.
+ * View / Controller class for Zoom.
  * @author Nick Burton
  * @see ZoomModel
  */
@@ -33,9 +32,8 @@ public class Zoom extends ZoomGUI {
    private static int maxTextlen = 6;
 //-------------------------------------------------------------
   /**
-   * Constructor
+   * Creates a Zoom with event firing initially disabled.
    */
-
   public Zoom() {
     _enabled = false;
     try {
@@ -47,8 +45,8 @@ public class Zoom extends ZoomGUI {
   }
 //-------------------------------------------------------------
   /**
-   * Allow or inhibit the component's ability to fire events
-   * @param	state	true if the component can fire events
+   * Sets the Zoom's ability to fire events.
+   * @param	boolean state; if true the Zoom can fire events
    * @return	void
    */
   public void setEnabled(boolean state) {
@@ -56,16 +54,16 @@ public class Zoom extends ZoomGUI {
   }
 //-------------------------------------------------------------
   /**
-   * Query the component's ability to fire events
+   * Queries the Zoom's ability to fire events.
    * @param	void
-   * @return	boolean	true if the component can fire events
+   * @return	boolean	true if the Zoom can fire events
    */
   public boolean isEnabled() {
      return _enabled;
   }
 //-------------------------------------------------------------
   /**
-   * Initialises the model and GUI.
+   * Initialises the Zoom's model and GUI.
    * @param	void
    * @return	void
    */
@@ -78,7 +76,7 @@ public class Zoom extends ZoomGUI {
   } // initZoom()
 //-------------------------------------------------------------
   /**
-   * hook up the adaptors 
+   * Hooks up the event adaptors after removing any existing ones.
    * @param	void
    * @return	void
    */
@@ -129,7 +127,7 @@ public class Zoom extends ZoomGUI {
   } // setModel
 
 //===========================================
-// accessor methods for the bean properties etc
+// accessor methods for the Zoom properties etc
 //===========================================
    public int getValue() {
       return _mod1.getValue();
@@ -185,6 +183,9 @@ public class Zoom extends ZoomGUI {
 
 // CONTROL ADAPTORS
 //---------------------------------------
+/**
+ * Increments the Zoom's model when the + button is pressed
+ */
   public class buttonToModelAdaptor_A
     implements MouseListener {
 
@@ -205,6 +206,9 @@ public class Zoom extends ZoomGUI {
   } // class buttonToModelAdaptor_A
 
 //---------------------------------------
+/**
+ * Decrements the Zoom's model when the - button is pressed
+ */
   public class buttonToModelAdaptor_B
     implements MouseListener {
 
@@ -226,120 +230,136 @@ public class Zoom extends ZoomGUI {
   } // class buttonToModelAdaptor_B
 
 //---------------------------------------
-  public class textToModelAdaptor
-    implements ActionListener {
-    ZoomModel model;
-    JTextField control;
-    double VAL;
-    String textstr = "";
-    String msg = "the zoom control's text field expects a number\n such as 100 or 100.5";
-
   /**
-   * Constructor
+   * Modifies the Zoom's model when a numeric value has been entered in the Zoom's text field.
    */
+  public class textToModelAdaptor implements ActionListener {
+     ZoomModel model;
+     JTextField control;
+     double VAL;
+     String textstr = "";
+     String msg = "the zoom control's text field expects a number\n such as 100 or 100.5";
 
-    public textToModelAdaptor(JTextField cntrl, ZoomModel mdl) {
-      model = mdl;
-      control = cntrl;
-    }
+     /**
+      * Creates a textToModelAdaptor with the specified model and text field.
+      * @param JTextField cntrl; the Zoom's text field
+      * @param ZoomModel mdl; the Zoom's model
+      */
+     public textToModelAdaptor(JTextField cntrl, ZoomModel mdl) {
+	model = mdl;
+	control = cntrl;
+     }
 
-    public textToModelAdaptor() {
-    }
+     /**
+      * 
+      */
+     public textToModelAdaptor() {
+     }
 
-  /**
-   * @param	ActionEvent e
-   * @return	void
-   */
-    public void actionPerformed(ActionEvent e) {
-       try {
-          textstr = control.getText();
-          VAL = Double.parseDouble(textstr);
-          model.setValue((int)VAL);
-       }
-       catch(NullPointerException npe) {
-          System.out.println(
-               "null pointer exception in Zoom textToModelAdaptor");
-       }
-       catch(NumberFormatException npe) {
-          control.setText("");
-          JOptionPane.showMessageDialog(null,
-                                        msg,
-                                        "alert",
-                                        JOptionPane.ERROR_MESSAGE);
-       }
+     /**
+      * @param	ActionEvent e
+      * @return	void
+      */
+     public void actionPerformed(ActionEvent e) {
+	try {
+	   textstr = control.getText();
+	   VAL = Double.parseDouble(textstr);
+	   model.setValue((int)VAL);
+	}
+	catch(NullPointerException npe) {
+	   System.out.println(
+		 "null pointer exception in Zoom textToModelAdaptor");
+	}
+	catch(NumberFormatException npe) {
+	   control.setText("");
+	   JOptionPane.showMessageDialog(null,
+		 msg,
+		 "alert",
+		 JOptionPane.ERROR_MESSAGE);
+	}
 
-    }
+     }
   } // class textToModelAdaptor
 
 //---------------------------------------
 // VIEW ADAPTORS
 //---------------------------------------
-  public class modelToTextAdaptor
-    implements ChangeListener {
-    ZoomModel model;
-    JTextField view;
-    String valstr;
-
   /**
-   * Constructor
+   * Updates the text field view of the Zoom when the Zoom's model has changed.
    */
-    public modelToTextAdaptor(ZoomModel mdl, JTextField vw) {
-      view = vw;
-      model = mdl;
-    }
+  public class modelToTextAdaptor implements ChangeListener {
+     ZoomModel model;
+     JTextField view;
+     String valstr;
 
-    public modelToTextAdaptor() {
-    }
+     /**
+      * Creates a modelToTextAdaptor with the specified model and text field.
+      * @param ZoomModel mdl; the Zoom's model
+      * @param JTextField vw; the Zoom's text field
+      */
+     public modelToTextAdaptor(ZoomModel mdl, JTextField vw) {
+	view = vw;
+	model = mdl;
+     }
 
-  /**
-   * Adaptor, changes the <b>view</b> of the text field when the model changes.
-   * @param	void
-   * @return	boolean	true if the component can fire events
-   */
-    public void stateChanged(ChangeEvent e) {
-      valstr = Integer.toString(_mod1.getValue());
+     /**
+      * 
+      */
+     public modelToTextAdaptor() {
+     }
 
-      if(valstr.length() > maxTextlen) {
-	 textf.setText(valstr.substring(0,maxTextlen));
-      } else {
-	 textf.setText(valstr);
-      }
-    }
+     /**
+      * Changes the text field when the model changes.
+      * @param	ChangeEvent e
+      * @return	void
+      */
+     public void stateChanged(ChangeEvent e) {
+	valstr = Integer.toString(_mod1.getValue());
+
+	if(valstr.length() > maxTextlen) {
+	   textf.setText(valstr.substring(0,maxTextlen));
+	} else {
+	   textf.setText(valstr);
+	}
+     }
   } // class modelToTextAdaptor
 
 
 //---------------------------------------
   // MODEL ADAPTORS
 //---------------------------------------
-  // allows this bean to fire events
-  public class modelToThisAdaptor
-		implements ChangeListener {
-
+  // allows this Zoom to fire events
   /**
-   * Constructor
+   * Fires an event when the Zoom's model changes.
    */
-    public modelToThisAdaptor() {
-    }
+  public class modelToThisAdaptor implements ChangeListener {
 
-  /**
-   * Adaptor, fires an event from the bean when the model changes.
-   * @param	ChangeEvent e
-   * @return	void
-   */
-    public void stateChanged(ChangeEvent e) {
-      fireChange();
-    }
+     /**
+      * 
+      */
+     public modelToThisAdaptor() {
+     }
+
+     /**
+      * Fires an event from the Zoom when the model changes.
+      * @param	ChangeEvent e
+      * @return	void
+      */
+     public void stateChanged(ChangeEvent e) {
+	fireChange();
+     }
   } // class modelToThisAdaptor
 
 //===========================================
 // fire events and manage listeners
 //===========================================
-  // keep track of all the changeListeners to this model
-  protected EventListenerList changeListeners =
-     new EventListenerList();
+  /**
+   * List of all changeListeners registered with this Zoom.
+   */
+  protected EventListenerList changeListeners = new EventListenerList();
 
   /**
-   * Adds a ChangeListener for events fired from this bean.
+   * Adds a ChangeListener for events fired from this Zoom.
    * @param	ChangeListener x
    * @return	void
    */
@@ -347,11 +367,14 @@ public class Zoom extends ZoomGUI {
      changeListeners.add (ChangeListener.class, x);
 
      // bring it up to date with current state
+     /**
+      * 
+      */
      x.stateChanged(new ChangeEvent(this));
   }
 
   /**
-   * Removes a ChangeListener for events fired from this bean.
+   * Removes a ChangeListener for events fired from this Zoom.
    * @param	ChangeListener x
    * @return	void
    */
@@ -360,7 +383,7 @@ public class Zoom extends ZoomGUI {
   }
 
   /**
-   * Fires an event if the zoom model changes.
+   * Fires an event from the Zoom.
    * @param	void
    * @return	void
    */
