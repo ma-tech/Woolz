@@ -1358,6 +1358,10 @@ extern WlzErrorNum	WlzGMModelConstructSimplex3D(
 extern WlzErrorNum	WlzGMModelConstructSimplex2D(
 			  WlzGMModel *model,
 			  WlzDVertex2 *pos);
+/* Model Features */
+extern int		WlzGMShellSimplexCnt(
+			  WlzGMShell *gShell);
+
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************

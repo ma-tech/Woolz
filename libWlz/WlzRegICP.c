@@ -33,6 +33,7 @@
 
 /*!
 * \struct	_WlzRegICPWSp
+* \ingroup      WlzTransform
 * \brief	A workspace data structure for use in the ICP functions.
 */
 struct _WlzRegICPWSp
