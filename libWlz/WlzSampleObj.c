@@ -12,6 +12,8 @@
 * Purpose:      Subsamples an object through a convolution kernel.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 24-01-01 bill Fix bug in WlzSampleObjEstIntervals() for rectangular
+*		domains.
 * 12-01-01 bill Modify code within WlzSampleObjEstIntervals() and
 *		let the sampling functions get more intervals as
 *		required.
@@ -2841,7 +2843,7 @@ static int	WlzSampleObjEstIntervals(WlzDomain srcDom,
 	}
 	break;
       case WLZ_INTERVALDOMAIN_RECT:
-	itvCount = ((lastLn - line) /  samFac.vtY) + samFac.vtY + 1;
+	itvCount = ((lastLn - line1) /  samFac.vtY) + samFac.vtY + 1;
         break;
     }
   }
