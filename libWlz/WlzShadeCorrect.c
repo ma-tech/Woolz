@@ -12,8 +12,9 @@
 * Purpose:	Function to perform shade correction.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 09-03-01 bill Fixed grey pointers in WlzShadeCorrect2DG().
 * 08-03-01 bill	Added clamp to ubyte and short values in
-*		WlzShadeCorrect2DG()
+*		WlzShadeCorrect2DG().
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -246,7 +247,7 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    while(iCnt-- > 0)
 	    {
 	      tD0 = (*(srcPix.inp)++ * nrmVal) / (*(shdPix.inp)++ + 1.0);
-	      *(rtnPix.ubp)++ = WLZ_NINT(tD0);
+	      *(rtnPix.inp)++ = WLZ_NINT(tD0);
 	    }
 	    break;
 	  case WLZ_GREY_SHORT:
@@ -254,7 +255,7 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    {
 	      tD0 = (*(srcPix.shp)++ * nrmVal) / (*(shdPix.shp)++ + 1.0);
 	      tI0 = WLZ_NINT(tD0);
-	      *(rtnPix.inp)++ = WLZ_CLAMP(tI0, SHRT_MIN, SHRT_MAX);
+	      *(rtnPix.shp)++ = WLZ_CLAMP(tI0, SHRT_MIN, SHRT_MAX);
 	    }
 	    break;
 	  case WLZ_GREY_UBYTE:
@@ -262,7 +263,7 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    {
 	      tD0 = (*(srcPix.ubp)++ * nrmVal) / (*(shdPix.ubp)++ + 1.0);
 	      tI0 = WLZ_NINT(tD0);
-	      *(rtnPix.inp)++ = WLZ_CLAMP(tI0, 0, 255);
+	      *(rtnPix.ubp)++ = WLZ_CLAMP(tI0, 0, 255);
 	    }
 	    break;
 	  case WLZ_GREY_FLOAT:
