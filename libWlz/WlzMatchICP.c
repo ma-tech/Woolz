@@ -711,7 +711,7 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	     			 nTV, tVx, tNr, nSV, sVx, sNr,
 				 vIBuf, tVBuf, sVBuf, wBuf,
 				 maxItr, initTr, &convFlg,
-				 NULL, NULL, &errNum), NULL);
+				 usrWgtFn, usrWgtData, &errNum), NULL);
     if((errNum == WLZ_ERR_NONE) && (convFlg == 0))
     {
       errNum = WLZ_ERR_ALG_CONVERGENCE;
@@ -936,7 +936,9 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
         (void )WlzAffineTransformGMShell(sMS->shell, sMS->tr);
       }
       n0 += n1;
-      AlcFree(sMS);
+      WlzFreeAffineTransform(sMS->tr);
+      sMS->tr = NULL;
+      qTop->entry = NULL;
       AlcCPQItemFree(sMSQueue, qTop);
 
     }
@@ -999,6 +1001,8 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   AlcFree(sVx.v);
   AlcFree(sNr.v);
   WlzFreeAffineTransform(globTr);
+  (void )AlcKDTTreeFree(tTree);
+
   return(errNum);
 }
 
