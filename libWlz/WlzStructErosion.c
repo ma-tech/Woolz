@@ -1,21 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzStructErosion.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Performs erosion using a structuring element.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzStructErosion.c
+* \author       Bill Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Performs erosion using a structuring element.
+* \ingroup 	WlzMorphologyOps
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -23,42 +25,45 @@
    and probably should be calculated for each object */
 #define WLZ_STRUCT_ERODE_MAXLNITV 50
 
-static int intersecitvs(WlzIntervalLine 	*itva,
-			WlzIntervalLine		*itvb,
-			int			n,
-			WlzInterval 		*jp,
-			WlzInterval		*aa,
-			WlzInterval		*bb,
-			WlzInterval		*cc);
+static int 			intersecitvs(
+				  WlzIntervalLine *itva,
+				  WlzIntervalLine *itvb,
+				  int n,
+				  WlzInterval *jp,
+				  WlzInterval *aa,
+				  WlzInterval *bb,
+				  WlzInterval *cc);
 
-static int line_struct_shrink(WlzIntervalLine	*itvl,
-			      WlzInterval	*jntl,
-			      WlzInterval	*ll);
+static int 			line_struct_shrink(
+				  WlzIntervalLine *itvl,
+				  WlzInterval *jntl,
+				  WlzInterval *ll);
 
-static int arr_arr_intersec(WlzInterval		*aa,
-			    int			m,
-			    WlzInterval		*bb,
-			    int			n,
-			    WlzInterval		*cc);
+static int 			arr_arr_intersec(
+				  WlzInterval *aa,
+				  int m,
+				  WlzInterval *bb,
+				  int n,
+				  WlzInterval *cc);
 
-static int intl_to_intl(WlzInterval	*intl,
-			WlzInterval	*jntl,
-			int		n);
+static int 			intl_to_intl(
+				  WlzInterval *intl,
+				  WlzInterval *jntl,
+				  int n);
 
-static WlzObject *WlzStructErosion3d(WlzObject 	*obj,
-				     WlzObject	*structElm,
-				     WlzErrorNum	*dstErr);
+static WlzObject 		*WlzStructErosion3d(
+				  WlzObject *obj,
+				  WlzObject *structElm,
+				  WlzErrorNum *dstErr);
 
-/************************************************************************
-*   Function   : WlzStructErosion					*
-*   Date       : Mon Nov  3 07:37:32 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
+/*!
+* \return	New object or NULL on error.
+* \ingroup 	WlzMorphologyOps
+* \brief	Performs erosion using a structuring element.
+* \param	obj			Given object to be eroded.
+* \param	structElm		Structuring element.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzStructErosion(
   WlzObject 	*obj,
   WlzObject	*structElm,
@@ -264,16 +269,17 @@ WlzObject *WlzStructErosion(
   return rtnObj;
 }
 
-/************************************************************************
-*   Function   : intersecitvs						*
-*   Date       : Mon Nov  3 07:37:16 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
+/*!
+* \return
+* \ingroup 	WlzMorphologyOpsitva
+* \brief	
+* \param	itvb
+* \param	n
+* \param	jp
+* \param	aa
+* \param	bb
+* \param	cc
+*/
 static int intersecitvs(
   WlzIntervalLine 	*itva,
   WlzIntervalLine	*itvb,
@@ -329,21 +335,15 @@ static int intersecitvs(
   return(m);
 }
 
-/************************************************************************
-*   Function   : line_struct_shrink					*
-*   Date       : Mon Nov  3 07:37:03 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
-/*
- * an interval line itvl shrinks by a factor (length of jntl)
- * and translates according to the position of jntl
- */
-
+/*!
+* \return
+* \ingroup      WlzMorphologyOps
+* \brief	An interval line itvl shrinks by a factor (length of jntl) and
+* 		translates according to the position of jntl.
+* \param	itvl
+* \param	jntl
+* \param	ll
+*/
 static int line_struct_shrink(
   WlzIntervalLine	*itvl,
   WlzInterval		*jntl,
@@ -367,24 +367,16 @@ static int line_struct_shrink(
   return((int)(ll - ptr));
 }
 
-/************************************************************************
-*   Function   : arr_arr_intersec					*
-*   Date       : Mon Nov  3 07:36:47 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
-/*
- * Find the intersection intervals between two lines.
- * One set of m intervals is in aa.
- * The other n intervals is in bb.
- * Length is the result number of individual intervals
- * in array cc.
- */
-
+/*!
+* \return	Number of intervals in intersection.
+* \ingroup	WlzMorphologyOps
+* \brief	Find the intersection intervals between two lines.
+* \param	aa			One set of intervals.
+* \param	m			Number of intervals in aa.
+* \param	bb			Other set of intervals.
+* \param	n			Number of intervals in bb.
+* \param	cc			Buffer for intervals.
+*/
 static int arr_arr_intersec(
   WlzInterval	*aa,
   int		m,
@@ -418,9 +410,15 @@ static int arr_arr_intersec(
   }
   return((int)(cc-tmp));
 }
-/*
- * assign the value of intl to jntl
- */
+
+/*!
+* \return	Zero.
+* \ingroup 	WlzMorphologyOps
+* \brief	Assigns the value of intl to jntl.
+* \param	intl			First array of intervals.
+* \param	jntl			Second array of intervals.
+* \param	n			Number of intervals.
+*/
 static int intl_to_intl(
   WlzInterval	*intl,
   WlzInterval	*jntl,
@@ -436,16 +434,14 @@ static int intl_to_intl(
   return( 0 );
 }
 
-/************************************************************************
-*   Function   : WlzStructErosion3d					*
-*   Date       : Mon Nov  3 07:36:28 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
+/*!
+* \return	New object or NULL on error.
+* \ingroup 	WlzMorphologyOps
+* \brief	Performs structur
+* \param	obj			Given object to be eroded.
+* \param	structElm		Structuring element.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzObject *WlzStructErosion3d(
   WlzObject 	*obj,
   WlzObject	*structElm,

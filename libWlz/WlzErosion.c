@@ -1,75 +1,62 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzErosion.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Morphological erosion of a woolz domain.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzErosion.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Morphological erosion of a woolz domain.
+* \ingroup	WlzMorphologyOps
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
 #define MAXLNITV 100
 
-static int line_int_int(WlzIntervalLine *inta,
-			WlzIntervalLine *intb,
-			WlzInterval *buff);
-static int line_intv_arr(WlzIntervalLine *itvl,
-			 WlzInterval *buff,
-			 int n,
-			 WlzInterval *tmp);
-static int intv_intv(WlzInterval *inta,
-		     WlzInterval *intb,
-		     WlzInterval *buff);
-static int intv_arr(WlzInterval *intl,
-		    WlzInterval *buff,
-		    WlzInterval *tmp);
+static int 			line_int_int(
+				  WlzIntervalLine *inta,
+				  WlzIntervalLine *intb,
+				  WlzInterval *buff);
+static int 			line_intv_arr(
+				  WlzIntervalLine *itvl,
+			 	  WlzInterval *buff,
+			 	  int n,
+			 	  WlzInterval *tmp);
+static int 			intv_intv(WlzInterval *inta,
+		     		  WlzInterval *intb,
+		     		  WlzInterval *buff);
+static int 			intv_arr(WlzInterval *intl,
+		    		  WlzInterval *buff,
+		    		  WlzInterval *tmp);
 
-extern WlzObject *WlzErosion4(WlzObject *obj,
-			      WlzErrorNum	*wlzErr);
+extern WlzObject 		*WlzErosion4(WlzObject *obj,
+			      	  WlzErrorNum *wlzErr);
 
-static WlzObject *WlzErosion3d(WlzObject *obj,
-			       WlzConnectType 	connectivity,
-			       WlzErrorNum	*wlzErr);
+static WlzObject 		*WlzErosion3d(WlzObject *obj,
+			          WlzConnectType  connectivity,
+			       	  WlzErrorNum *wlzErr);
 
-/************************************************************************
-*   Function   : WlzErosion						*
-*   Date       : Mon Jul  7 11:24:59 1997				*
-*************************************************************************
-*   Synopsis   : Calculate the morphological erosion of a woolz object	*
-*		with structuring element defined by the connectivity.	*
-*		Only simple structuring elements are considered, for	*
-*		arbitrary structuring elements use WlzStructErosion().	*
-*   Returns    : WlzObject *: eroded object with NULL value table, Null	*
-*		on error. Possible errors:WLZ_ERR_OBJECT_NULL, WLZ_ERR_INT_DATA,	*
-*		WLZ_ERR_DOMAIN_NULL, WLZ_ERR_OBJECT_TYPE, WLZ_ERR_DOMAIN_TYPE,	*
-*		WLZ_ERR_MEM_ALLOC.					*
-*   Parameters :WlzObject *obj: object to be eroded, must be a 2D or 3D	*
-*			domain object (including a WlzTransObj)		*
-*		WlzConnectType 	connectivity: connectivity one of:	*
-*			WLZ_4_CONNECTED: 4-connected pixels for 2D	*
-*			      	4-connected pixels in each plane for 3D	*
-*			WLZ_8_CONNECTED: 8-connected pixels for 2D	*
-*				8-connected pixels in each plane for 3D	*
-*			WLZ_6_CONNECTED: 4-connected pixels for 2D	*
-*				6-connected pixels for 3D		*
-*			WLZ_18_CONNECTED: 8-connected pixels for 2D	*
-*				18-connected pixels for 3D		*
-*			WLZ_26_CONNECTED: 8-connected pixels for 2D	*
-*				26-connected pixels for 3D		*
-*   Global refs:None.							*
-************************************************************************/
-
+/*!
+* \return	Eroded object or without values or NULL on error.
+* \ingroup 	WlzMorphologyOps
+* \brief	Calculates the morphological erosion of a woolz object
+*		with a structuring element defined by the connectivity.
+* \param	obj			Object to be eroded, must be a 2D
+*					or 3D domain object (including a
+*					WlzTransObj).
+* \param	connectivity		Type of connectivity.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzErosion(
   WlzObject		*obj,
   WlzConnectType 	connectivity,
@@ -336,14 +323,14 @@ WlzObject *WlzErosion(
   return erosobj;
 }
 
-/*
- * find the intersection intervals between two lines
- * one set of intervals is pointed out by intva
- * the other intervals is piinted out by intvb
- * length is the result number of intersection intervals
- * in array l and r
- */
-
+/*!
+* \return	Number of intervals in the intersection.
+* \ingroup	WlzMorphologyOps
+* \brief	Finds the number of intersection intervals between two lines.
+* \param	inta			Set of intervals on one line.
+* \param	intb			Set of intervals on other line.
+* \param	buff			Inverval buffer.
+*/
 static int line_int_int(WlzIntervalLine *inta,
 			WlzIntervalLine *intb,
 			WlzInterval *buff)
@@ -382,14 +369,18 @@ static int line_int_int(WlzIntervalLine *inta,
   return(i);
 }
 
-/*
- * find the intersection intervals between tow lines
- * one set of intervals is pointed out by itvl
- * the other n intervals is in array left and right
- * length is the result number of intersection intervals
- * in array l and r
- */
-
+/*!
+* \return	Number of intersection intervals.
+* \ingroup	WlzMorphologyOps
+* \brief	Finds the intersection intervals between two lines.
+*		One set of intervals is pointed out by itvl the other n
+*		intervals is in array left and right length is the result
+*		number of intersection intervals in array l and r.
+* \param	itvl
+* \param	buff
+* \param	n
+* \param	tmp
+*/
 static int line_intv_arr(WlzIntervalLine *itvl,
 			 WlzInterval *buff,
 			 int n,
@@ -423,13 +414,18 @@ static int line_intv_arr(WlzIntervalLine *itvl,
   return(i);
 }
 
-/*
- * find intersection of two intervals
- * return -1: inta is in far left, there is no intersection point
- * return 2: intb is in far right, there is no intersection point
- * 	  0: there is an intersection and intb at the right of inta
- * 	  1: there is an intersection and inta at the right of intb
- */
+/*!
+* \return	<ul>
+*		<li> -1: inta is in far left, there is no intersection point
+* 	  	<li> 0: there is an intersection and intb at the right of inta
+* 	  	<li> 1: there is an intersection and inta at the right of intb
+* 		<li> 2: intb is in far right, there is no intersection point
+*		</ul>
+* \brief	Finds the intersection of two intervals.
+* \param	inta			First interval.
+* \param	intb			Second interval.
+* \param	buff			Interval buffer.
+*/
 static int intv_intv(WlzInterval *inta,
 		     WlzInterval *intb,
 		     WlzInterval *buff)
@@ -472,18 +468,15 @@ static int intv_arr(WlzInterval *intl,
     return(1);
   }
 }
-/************************************************************************
-*   Function   : WlzErosion3d						*
-*   Date       : Mon Jul  7 11:39:55 1997				*
-*************************************************************************
-*   Synopsis   :static function for 3D domain objects. Only called from	*
-*		WlzErosion.						*
-*   Returns    :WlzObject *: eroded 3D object				*
-*   Parameters :WlzObject 	*obj: object to be eroded		*
-*		WlzConnectType 	connectivity: connectivity		*
-*   Global refs:None.							*
-************************************************************************/
 
+/*!
+* \return	Eroded object or NULL on error.
+* \ingroup	WlzMorphologyOps
+* \brief	Erosion of 3D objects. Only called from WlzErosion().
+* \param	obj			Object to be eroded.
+* \param	connectivity		Required connectivity.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzObject *WlzErosion3d(
   WlzObject 		*obj,
   WlzConnectType 	connectivity,
