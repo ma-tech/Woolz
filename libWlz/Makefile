@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 23-04-03 Rao  Add WlzGreyValueMixing_s.c
 # 28-01-03 Rao  Add WlzGeometryTrackUpAndDown_s.c
 # 18-01-02 Rao  Add Wlz3DWarpMQ_S.c
 # 14-03-01 bill Add WlzRaster.c
@@ -106,6 +107,7 @@ CSOURCES		= \
 			WlzGreyTemplate.c \
 			WlzGreyTransfer.c \
 			WlzGreyValue.c \
+			WlzGreyValueMixing_s.c \
 			WlzHasIntersect.c \
 			WlzHistogram.c \
 			WlzHyThreshold.c \
