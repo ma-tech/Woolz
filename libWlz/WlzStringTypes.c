@@ -13,6 +13,7 @@
 *		and a string representation.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 14-03-01 bill Add WLZ_ERR_UNIMPLEMENTED.
 * 15-08-00 bill	Remove obsolete types WLZ_VECTOR_(INT)|(FLOAT) and
 *		WLZ_POINT_(INT)|(FLOAT). Add WLZ_CONTOUR and the geometric
 *		model types.
@@ -981,6 +982,10 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       errStr = "WLZ_ERR_ALG_CONVERGENCE",
       msgStr = "Numerical algorithm failed to converge";
       break;
+    case WLZ_ERR_UNIMPLEMENTED:
+      errStr = "WLZ_ERR_UNIMPLEMENTED",
+      msgStr = "Unimplemented feature";
+      break;
     default:	/* FALLTHROUGH */
     case WLZ_ERR_UNSPECIFIED:
       errStr = "WLZ_ERR_UNSPECIFIED",
@@ -1065,6 +1070,7 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_ALG_SINGULAR", WLZ_ERR_ALG_SINGULAR,
 	      "WLZ_ERR_ALG_HOMOGENEOUS", WLZ_ERR_ALG_HOMOGENEOUS,
 	      "WLZ_ERR_ALG_CONVERGENCE", WLZ_ERR_ALG_CONVERGENCE,
+	      "WLZ_ERR_UNIMPLEMENTED", WLZ_ERR_UNIMPLEMENTED,
 	      "WLZ_ERR_UNSPECIFIED", WLZ_ERR_UNSPECIFIED,
 	      NULL))
   {
