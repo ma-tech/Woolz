@@ -139,6 +139,18 @@ int             main(int argc, char **argv)
       objVecCount = cmpObj->n;
       break;
 
+    case WLZ_BOUNDLIST:
+      if((errNum = WlzBoundaryToPolyObjArray(inObj, &objVecCount, &objVec)) !=
+	 WLZ_ERR_NONE)
+      {
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s: failed to explode object (%s)\n",
+		       *argv, errMsg);
+      }
+      break;
+
     default:
       if((errNum = WlzExplode3D(&objVecCount, &objVec, inObj)) !=
 	 WLZ_ERR_NONE)
@@ -246,7 +258,8 @@ int             main(int argc, char **argv)
     "      with names then the numerical index will still be used.\n"
     "  -h  Help, prints this usage message.\n"
     "Explodes the input 3D Woolz domain object into 2D domain objects or\n"
-    "explodes an input compound object into its constituent objects.\n"
+    "explodes an input compound object into its constituent objects or\n"
+    "explodes the input boundary object into its constituent polylines.\n"
     "An output file extension can only be given if an output file body is\n"
     "also given.\n"
     "Objects are read from stdin and written to stdout unless the filenames\n"

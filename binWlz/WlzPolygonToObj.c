@@ -33,9 +33,15 @@ static void usage(char *proc_str)
 	  "\tConvert a 2D or 3D polygon woolz object\n"
 	  "\tto the corresponding domain object\n"
 	  "\tOptions are:\n"
+	  "\t  -t#       Polygon fill-mode:\n"
+	  "\t            # = %d: simple fill (default)\n"
+	  "\t                %d: even-odd fill\n"
+	  "\t                %d: vertex-fill\n"
 	  "\t  -h        Help - prints this usage message\n"
+	  "\t  -v        Verbose operation\n"
 	  "",
-	  proc_str);
+	  proc_str, WLZ_SIMPLE_FILL, WLZ_EVEN_ODD_FILL,
+	  WLZ_VERTEX_FILL);
   return;
 }
  
@@ -45,13 +51,34 @@ int main(int	argc,
 
   WlzObject	*obj, *nobj;
   FILE		*inFile;
-  char 		optList[] = "h";
+  char 		optList[] = "f:hv";
   int		option;
+  int		verboseFlg=0;
+  WlzPolyFillMode	fillMode=WLZ_SIMPLE_FILL;
     
   /* read the argument list and check for an input file */
   opterr = 0;
   if( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'f':
+      switch( fillMode = (WlzPolyFillMode) atoi(optarg) ){
+      case WLZ_SIMPLE_FILL:
+      case WLZ_EVEN_ODD_FILL:
+      case WLZ_VERTEX_FILL:
+	break;
+
+      default:
+	fprintf(stderr, "%s: grey typefill-mode = %d is invalid\n",
+		argv[0], fillMode);
+        usage(argv[0]);
+        return 1;
+      }
+      break;
+
+    case 'v':
+      verboseFlg = 1;
+      break;
 
     case 'h':
     default:
