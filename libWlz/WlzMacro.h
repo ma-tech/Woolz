@@ -211,6 +211,17 @@ extern "C" {
 #define WLZ_VTX_3_LENGTH(U) \
 		(sqrt(WLZ_VTX_3_SQRLEN(U)))
 
+/* WLZ_VTX_2_ZERO: Set vector to zero. */
+#define WLZ_VTX_2_ZERO(U) \
+		(U).vtX = 0, \
+		(U).vtY = 0
+
+/* WLZ_VTX_2_ZERO: Set vector to zero. */
+#define WLZ_VTX_3_ZERO(U) \
+		(U).vtX = 0, \
+		(U).vtY = 0, \
+		(U).vtZ = 0
+
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
