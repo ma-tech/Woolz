@@ -1,38 +1,35 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzStringTypes.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for converting between Woolz data types
-*		and a string representation.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 14-03-01 bill Add WLZ_ERR_UNIMPLEMENTED.
-* 15-08-00 bill	Remove obsolete types WLZ_VECTOR_(INT)|(FLOAT) and
-*		WLZ_POINT_(INT)|(FLOAT). Add WLZ_CONTOUR and the geometric
-*		model types.
-* 28-01-00 bill Add ALG_ERR_CONVERGENCE.
-************************************************************************/
+/*!
+* \file         WlzStringTypes.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for converting between Woolz data types and
+*		string representations (names) of the types.
+* \ingroup 	WlzStrings
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzStringFromObjType				
-* Returns:	const char*:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given object's type.	
-* Global refs:	-						
-* Parameters:	WlzObject *obj:		Given object.		
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Read only string or NULL on error.
+* \ingroup 	WlzStrings
+* \brief	Finds a string for the given object's type.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 const char	*WlzStringFromObjType(WlzObject *obj,
 				      WlzErrorNum *dstErr)
 {
@@ -45,81 +42,7 @@ const char	*WlzStringFromObjType(WlzObject *obj,
   }
   else
   {
-    switch(obj->type)
-    {
-      case WLZ_2D_DOMAINOBJ:
-        oTypeStr = "WLZ_2D_DOMAINOBJ";
-	break;
-      case WLZ_3D_DOMAINOBJ:
-        oTypeStr = "WLZ_3D_DOMAINOBJ";
-	break;
-      case WLZ_TRANS_OBJ:
-        oTypeStr = "WLZ_TRANS_OBJ";
-	break;
-      case WLZ_3D_WARP_TRANS:
-        oTypeStr = "WLZ_3D_WARP_TRANS";
-	break;
-      case WLZ_2D_POLYGON:
-        oTypeStr = "WLZ_2D_POLYGON";
-	break;
-      case WLZ_BOUNDLIST:
-        oTypeStr = "WLZ_BOUNDLIST";
-	break;
-      case WLZ_CONV_HULL:
-        oTypeStr = "WLZ_CONV_HULL";
-	break;
-      case WLZ_HISTOGRAM:
-        oTypeStr = "WLZ_HISTOGRAM";
-	break;
-      case WLZ_3D_POLYGON:
-        oTypeStr = "WLZ_3D_POLYGON";
-	break;
-      case WLZ_CONTOUR:
-        oTypeStr = "WLZ_CONTOUR";
-	break;
-      case WLZ_RECTANGLE:
-        oTypeStr = "WLZ_RECTANGLE";
-	break;
-      case WLZ_CONVOLVE_INT:
-        oTypeStr = "WLZ_CONVOLVE_INT";
-	break;
-      case WLZ_CONVOLVE_FLOAT:
-        oTypeStr = "WLZ_CONVOLVE_FLOAT";
-	break;
-      case WLZ_AFFINE_TRANS:
-        oTypeStr = "WLZ_AFFINE_TRANS";
-	break;
-      case WLZ_WARP_TRANS:
-        oTypeStr = "WLZ_WARP_TRANS";
-	break;
-      case WLZ_FMATCHOBJ:
-        oTypeStr = "WLZ_FMATCHOBJ";
-	break;
-      case WLZ_TEXT:
-        oTypeStr = "WLZ_TEXT";
-	break;
-      case WLZ_COMPOUND_ARR_1:
-        oTypeStr = "WLZ_COMPOUND_ARR_1";
-	break;
-      case WLZ_COMPOUND_ARR_2:
-        oTypeStr = "WLZ_COMPOUND_ARR_2";
-	break;
-      case WLZ_COMPOUND_LIST_1:
-        oTypeStr = "WLZ_COMPOUND_LIST_1";
-	break;
-      case WLZ_COMPOUND_LIST_2:
-        oTypeStr = "WLZ_COMPOUND_LIST_2";
-	break;
-      case WLZ_PROPERTY_OBJ:
-        oTypeStr = "WLZ_PROPERTY_OBJ";
-	break;
-      case WLZ_EMPTY_OBJ:
-        oTypeStr = "WLZ_EMPTY_OBJ";
-	break;
-      default:
-        errNum = WLZ_ERR_OBJECT_TYPE;
-	break;
-    }
+    oTypeStr = WlzStringFromObjTypeValue(obj->type, &errNum);
   }
   if(dstErr)
   {
@@ -128,17 +51,108 @@ const char	*WlzStringFromObjType(WlzObject *obj,
   return(oTypeStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToObjType				
-* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL
-*					on error.		
-* Purpose:	Finds an enumerated type for the given object type
-*		string.						
-* Global refs:	-						
-* Parameters:	const char *oTypeStr:	Given object type string.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Read only string or NULL on error.
+* \ingroup	WlzStrings
+* \brief	Finds a string for the given object type.
+* \param	objType			Given object type.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
+					WlzErrorNum *dstErr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*oTypeStr = NULL;
+
+  switch(objType)
+  {
+    case WLZ_2D_DOMAINOBJ:
+      oTypeStr = "WLZ_2D_DOMAINOBJ";
+      break;
+    case WLZ_3D_DOMAINOBJ:
+      oTypeStr = "WLZ_3D_DOMAINOBJ";
+      break;
+    case WLZ_TRANS_OBJ:
+      oTypeStr = "WLZ_TRANS_OBJ";
+      break;
+    case WLZ_3D_WARP_TRANS:
+      oTypeStr = "WLZ_3D_WARP_TRANS";
+      break;
+    case WLZ_2D_POLYGON:
+      oTypeStr = "WLZ_2D_POLYGON";
+      break;
+    case WLZ_BOUNDLIST:
+      oTypeStr = "WLZ_BOUNDLIST";
+      break;
+    case WLZ_CONV_HULL:
+      oTypeStr = "WLZ_CONV_HULL";
+      break;
+    case WLZ_HISTOGRAM:
+      oTypeStr = "WLZ_HISTOGRAM";
+      break;
+    case WLZ_3D_POLYGON:
+      oTypeStr = "WLZ_3D_POLYGON";
+      break;
+    case WLZ_CONTOUR:
+      oTypeStr = "WLZ_CONTOUR";
+      break;
+    case WLZ_RECTANGLE:
+      oTypeStr = "WLZ_RECTANGLE";
+      break;
+    case WLZ_CONVOLVE_INT:
+      oTypeStr = "WLZ_CONVOLVE_INT";
+      break;
+    case WLZ_CONVOLVE_FLOAT:
+      oTypeStr = "WLZ_CONVOLVE_FLOAT";
+      break;
+    case WLZ_AFFINE_TRANS:
+      oTypeStr = "WLZ_AFFINE_TRANS";
+      break;
+    case WLZ_WARP_TRANS:
+      oTypeStr = "WLZ_WARP_TRANS";
+      break;
+    case WLZ_FMATCHOBJ:
+      oTypeStr = "WLZ_FMATCHOBJ";
+      break;
+    case WLZ_TEXT:
+      oTypeStr = "WLZ_TEXT";
+      break;
+    case WLZ_COMPOUND_ARR_1:
+      oTypeStr = "WLZ_COMPOUND_ARR_1";
+      break;
+    case WLZ_COMPOUND_ARR_2:
+      oTypeStr = "WLZ_COMPOUND_ARR_2";
+      break;
+    case WLZ_COMPOUND_LIST_1:
+      oTypeStr = "WLZ_COMPOUND_LIST_1";
+      break;
+    case WLZ_COMPOUND_LIST_2:
+      oTypeStr = "WLZ_COMPOUND_LIST_2";
+      break;
+    case WLZ_PROPERTY_OBJ:
+      oTypeStr = "WLZ_PROPERTY_OBJ";
+      break;
+    case WLZ_EMPTY_OBJ:
+      oTypeStr = "WLZ_EMPTY_OBJ";
+      break;
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(oTypeStr);
+}
+
+/*!
+* \return	Woolz object type or WLZ_NULL on error.
+* \ingroup	WlzStrings
+* \brief	Finds an enumerated type for the given object type string.
+* \param	oTypeStr		Given object type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 				   WlzErrorNum *dstErr)
 {
@@ -182,16 +196,13 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
   return(oType);
 }
 
-/************************************************************************
-* Function:	WlzStringFromObjDomainType			
-* Returns:	const char*:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given object's domain type.
-* Global refs:	-						
-* Parameters:	WlzObject *obj:		Given object.		
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup	WlzStrings
+* \brief	Finds a string for the given object's domain type.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 const char	*WlzStringFromObjDomainType(WlzObject *obj,
 					    WlzErrorNum *dstErr)
 {
@@ -349,18 +360,14 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
   return(oDomTypeStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToObjDomainType			
-* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL
-*					on error.		
-* Purpose:	Finds an enumerated type for the given object domain
-*		type string.					
-* Global refs:	-						
-* Parameters:	const char *oDomTypeStr:Given object domain type
-*					string.			
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Woolz object type or WLZ_NULL on error.
+* \ingroup	WlzStrings
+* \brief	Finds an enumerated type for the given object domain
+* 		type string.
+* \param	oDomTypeStr		Given object domain type string.	
+* \param	dstErr			Destination error pointer, may be null.
+*/
 WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 				         WlzErrorNum *dstErr)
 {
@@ -402,16 +409,13 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
   return(oDomType);
 }
 
-/************************************************************************
-* Function:	WlzStringFromObjValuesType			
-* Returns:	const char*:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given object's values type.
-* Global refs:	-						
-* Parameters:	WlzObject *obj:		Given object.		
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given object's values type.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 {
   WlzObjectType	valType;
@@ -477,18 +481,14 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
   return(oValTypeStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToObjValuesType			
-* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL
-*					on error.		
-* Purpose:	Finds an enumerated type for the given object values
-*		type string.					
-* Global refs:	-						
-* Parameters:	const char *oValTypeStr:Given object values type
-*					string.			
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Woolz object type or WLZ_NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given object values type
+*		string.
+* \param	oValTypeStr		Given object values type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 				         WlzErrorNum *dstErr)
 {
@@ -513,16 +513,169 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
   return(oValType);
 }
 
-/************************************************************************
-* Function:	WlzStringFromTransformType			
-* Returns:	const char*:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given transform type.	
-* Global refs:	-						
-* Parameters:	WlzTransformType tType:	Given transform type.	
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Read only string or NULL on error.
+* \ingroup 	WlzStrings
+* \brief	Finds a string for the given property's type.
+* \param	prop			Given property.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+const char	*WlzStringFromPropertyType(WlzProperty prop,
+				      WlzErrorNum *dstErr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*pTypeStr = NULL;
+
+  if(prop.core == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(prop.core->type)
+    {
+      case WLZ_PROPERTY_SIMPLE:
+        pTypeStr = "WLZ_PROPERTY_SIMPLE";
+	break;
+      case WLZ_PROPERTY_EMAP:
+        pTypeStr = "WLZ_PROPERTY_EMAP";
+	break;
+      case WLZ_PROPERTY_NAME:
+        pTypeStr = "WLZ_PROPERTY_NAME";
+	break;
+      case WLZ_PROPERTY_GREY:
+        pTypeStr = "WLZ_PROPERTY_GREY";
+	break;
+      default:
+        errNum = WLZ_ERR_PROPERTY_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pTypeStr);
+}
+
+/*!
+* \return	Woolz property type which will be WLZ_NULL if no matching
+*		type is found..
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given property
+*               type string.
+* \param	pStr			Given property type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+WlzObjectType WlzStringToPropertyType(const char *pStr, WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzObjectType	pType = WLZ_NULL;
+  WlzErrorNum	errNum = WLZ_ERR_PROPERTY_TYPE;
+
+  if(WlzStringMatchValue(&tI0, pStr,
+  		         "WLZ_PROPERTY_SIMPLE", WLZ_PROPERTY_SIMPLE,
+			 "WLZ_PROPERTY_EMAP", WLZ_PROPERTY_EMAP,
+			 "WLZ_PROPERTY_NAME", WLZ_PROPERTY_NAME,
+			 "WLZ_PROPERTY_GREY", WLZ_PROPERTY_GREY,
+			 NULL))
+  {
+    pType = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pType);
+}
+
+
+/*!
+* \return	Read only string or NULL on error.
+* \ingroup 	WlzStrings
+* \brief	Finds a string for the given EMAP property's type.
+* \param	eProp			Given EMAP property.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+const char	*WlzStringFromEMAPPropertyType(WlzEMAPProperty *eProp,
+				      	WlzErrorNum *dstErr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*pTypeStr = NULL;
+
+  if(eProp == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(eProp->type)
+    {
+      case WLZ_EMAP_PROPERTY_GREY_MODEL:
+        pTypeStr = "WLZ_EMAP_PROPERTY_GREY_MODEL";
+	break;
+      case WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN:
+        pTypeStr = "WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN";
+	break;
+      case WLZ_EMAP_PROPERTY_OTHER_DOMAIN:
+        pTypeStr = "WLZ_EMAP_PROPERTY_OTHER_DOMAIN";
+	break;
+      case WLZ_EMAP_PROPERTY_DUMMY:
+        pTypeStr = "WLZ_EMAP_PROPERTY_DUMMY";
+	break;
+      default:
+        errNum = WLZ_ERR_PROPERTY_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pTypeStr);
+}
+
+/*!
+* \return	EMAP property type which will be WLZ_EMAP_PROPERTY_DUMMY
+*		if no matching type is found..
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given EMAP property
+*               type string.
+* \param	pStr			Given property type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+WlzEMAPPropertyType WlzStringToEMAPPropertyType(const char *pStr,
+					WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzObjectType	pType = WLZ_EMAP_PROPERTY_DUMMY;
+  WlzErrorNum	errNum = WLZ_ERR_PROPERTY_TYPE;
+
+  if(WlzStringMatchValue(&tI0, pStr,
+       "WLZ_EMAP_PROPERTY_GREY_MODEL", WLZ_EMAP_PROPERTY_GREY_MODEL,
+       "WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN", WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN,
+       "WLZ_EMAP_PROPERTY_OTHER_DOMAIN", WLZ_EMAP_PROPERTY_OTHER_DOMAIN,
+       "WLZ_EMAP_PROPERTY_DUMMY", WLZ_EMAP_PROPERTY_DUMMY,
+       NULL))
+  {
+    pType = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pType);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given transform type.
+* \param	tType			Given transform type.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 const char	*WlzStringFromTransformType(WlzTransformType tType,
 				            WlzErrorNum *dstErr)
 {
@@ -548,16 +701,14 @@ const char	*WlzStringFromTransformType(WlzTransformType tType,
   return(tStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToTransformType			
-* Returns:	WlzTransformType: 	Woolz transform type.	
-* Purpose:	Finds an enumerated type for the given transform
-*		type string.					
-* Global refs:	-						
-* Parameters:	const char *tStr:	Given transform type string.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Woolz transform type.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given transform
+*               type string.
+* \param	tStr			Given transform type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 WlzTransformType WlzStringToTransformType(const char *tStr,
 				          WlzErrorNum *dstErr)
 {
@@ -580,16 +731,14 @@ WlzTransformType WlzStringToTransformType(const char *tStr,
   return(tType);
 }
 
-/************************************************************************
-* Function:	WlzStringFromGMModelType			
-* Returns:	const char*:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given transform type.	
-* Global refs:	-						
-* Parameters:	WlzGMModelType mType:	Given model type.	
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given transform type.
+* \param	mType			Given model type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 const char	*WlzStringFromGMModelType(WlzGMModelType mType,
 				          WlzErrorNum *dstErr)
 {
@@ -621,16 +770,14 @@ const char	*WlzStringFromGMModelType(WlzGMModelType mType,
   return(tStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToGMModelType			
-* Returns:	WlzGMModelType: 	Woolz GM model type.	
-* Purpose:	Finds an enumerated type for the given GM model
-*		type string.					
-* Global refs:	-						
-* Parameters:	const char *tStr:	Given GM Model type string.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Woolz GM model type.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given GM model type string.
+* \param	tStr			Given GM Model type string.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMModelType	WlzStringToGMModelType(const char *tStr,
 					WlzErrorNum *dstErr)
 {
@@ -655,16 +802,14 @@ WlzGMModelType	WlzStringToGMModelType(const char *tStr,
   return(mType);
 }
 
-/************************************************************************
-* Function:	WlzStringFromGreyType				
-* Returns:	const char*:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given grey type.		
-* Global refs:	-						
-* Parameters:	WlzGreyType gType:	Given grey type.	
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given grey type.
+* \param	gType			Given grey type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 const char	*WlzStringFromGreyType(WlzGreyType gType,
 				       WlzErrorNum *dstErr)
 {
@@ -688,6 +833,9 @@ const char	*WlzStringFromGreyType(WlzGreyType gType,
     case WLZ_GREY_DOUBLE:
       gStr = "WLZ_GREY_DOUBLE";
       break;
+    case WLZ_GREY_RGBA:
+      gStr = "WLZ_GREY_RGBA";
+      break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
       break;
@@ -699,17 +847,15 @@ const char	*WlzStringFromGreyType(WlzGreyType gType,
   return(gStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToGreyType				
-* Returns:	WlzGreyType:		Woolz grey type or	
-*					WLZ_GREY_ERROR on error.
-* Purpose:	Finds an enumerated type for the given grey type
-*		string.						
-* Global refs:	-						
-* Parameters:	const char *gStr:	Given grey type string.	
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.		
-************************************************************************/
+/*!
+* \return	Woolz grey type or WLZ_GREY_ERROR on error.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given grey type
+*               string.
+* \param	gStr			Given grey type string.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGreyType	WlzStringToGreyType(const char *gStr,
 				    WlzErrorNum *dstErr)
 {
@@ -723,6 +869,7 @@ WlzGreyType	WlzStringToGreyType(const char *gStr,
 			 "WLZ_GREY_UBYTE", WLZ_GREY_UBYTE,
 			 "WLZ_GREY_FLOAT", WLZ_GREY_FLOAT,
 			 "WLZ_GREY_DOUBLE", WLZ_GREY_DOUBLE,
+			 "WLZ_GREY_RGBA", WLZ_GREY_RGBA,
 			 NULL))
   {
     gType = tI0;
@@ -735,17 +882,14 @@ WlzGreyType	WlzStringToGreyType(const char *gStr,
   return(gType);
 }
 
-/************************************************************************
-* Function:	WlzStringFromErrorNum				
-* Returns:	const char *:		Pointer to read only string or
-*					NULL on error.		
-* Purpose:	Finds a string for the given error.		
-* Global refs:	-						
-* Parameters:	WlzErrorNum wlzErr:	Given error.		
-*		const char **dstMsgStr:	Destination pointer for a
-*					'meaningful' message string,
-*					may be NULL.		
-************************************************************************/
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given error.
+* \param	wlzErr			Given error code.
+* \param	dstMsgStr		Destination pointer for a 'meaningful'
+*					message string, may be NULL.
+*/
 const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
 				       const char **dstMsgStr)
 {
@@ -1015,14 +1159,12 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
   return(errStr);
 }
 
-/************************************************************************
-* Function:	WlzStringToErrorNum				
-* Returns:	WlzErrorNum:		Matched error number.	
-* Purpose:	Finds an error number for the given error number
-*		string.						
-* Global refs:	-						
-* Parameters:	const char *errStr:	Given error number string.
-************************************************************************/
+/*!
+* \return	Matched error number.
+* \ingroup      WlzStrings
+* \brief	Finds an error number for the given error number string.
+* \param	errStr			Given error number string.
+*/
 WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 {
   int		tI0;
