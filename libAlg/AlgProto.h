@@ -350,7 +350,12 @@ extern AlgError		AlgMatrixLUBackSub(
 			  int aSz,
 			  int *idxVec,
 			  double *bMat);
-
+extern void		AlgMatrixVectorMul(
+			  double *aV,
+			  double **bM,
+			  double *cV,
+			  int nR,
+			  int nC);
 /* From AlgMatrixMath.c */
 extern void		AlgMatrixAdd(
 			  double **aM,
@@ -366,6 +371,14 @@ extern void            	AlgMatrixSub(
 			  int nC);
 extern void            	AlgMatrixScale(
 			  double **aM,
+			  double **bM,
+			  double sv,
+			  int nR,
+			  int nC);
+extern void		AlgMatrixScaleAdd(
+			  double **aM,
+			  double **bM,
+			  double **cM,
 			  double sv,
 			  int nR,
 			  int nC);
@@ -387,6 +400,10 @@ extern void            	AlgMatrixTranspose(
 extern void            	AlgMatrixCopy(
 			  double **aM,
 			  double **bM,
+			  int nR,
+			  int nC);
+extern void		AlgMatrixZero(
+			  double **aM,
 			  int nR,
 			  int nC);
 
@@ -518,6 +535,37 @@ extern AlgError		AlgShuffleIdx(
 			  int nShuffle,
 			  int *shuffle,
 			  int seed);
+
+/* From AlgVectorMath.c */
+extern double		AlgVectorNorm(
+			  double *aV,
+			  int n);
+extern double          	AlgVectorDot(
+			  double *aV,
+			  double *bV,
+			  int n);
+extern void            	AlgVectorAdd(
+			  double *aV,
+			  double *bV,
+			  double *cV,
+			  int n);
+extern void            	AlgVectorSub(
+			  double *aV,
+			  double *bV,
+			  double *cV,
+			  int n);
+extern void            	AlgVectorCopy(
+			  double *aV,
+			  double *bV,
+			  int n);
+extern void            	AlgVectorScaleAdd(
+			  double *aV,
+			  double *bV,
+			  double *cV,
+			  double s,
+			  int n);
+
+
 /* Debugging */
 extern AlgDbgMask 	algDbgMask;
 extern void		*algDbgData;
