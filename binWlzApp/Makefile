@@ -26,6 +26,7 @@ EXECUTABLES		= \
 			WlzExtractTransform \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
+			WlzPatchObjRegister \
 			WlzSizeSelect
 
 # List of all 'C' source files (modify as required).
@@ -33,6 +34,7 @@ CSOURCES		= \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
+			WlzPatchObjRegister.c \
 			WlzSizeSelect.c
 
 # List of all header files that are available outside of either this archive
