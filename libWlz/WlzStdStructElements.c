@@ -13,6 +13,7 @@
 *		in 2D and 3D.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 19-09-01 jrao Add WlzMakeRectangleObject() and WlzMakeCuboidObject().
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -628,6 +629,76 @@ WlzObject *WlzMakeCircleObject(
   return rtnObj;
 }
 
+
+/* added by J. Rao 19-09-2001 */
+WlzObject *WlzMakeRectangleObject(
+  double	radiusX,
+  double        radiusY,
+  double	x,
+  double	y,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzDomain	domain;
+  WlzValues	values;
+  WlzInterval	*intvlPtr;
+  int		line1, lastln, kol1, lastkl, width, idelta;
+  int		l;
+  double	delta;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* only error checked for is a negative radius */
+  if( (radiusX < 0.0) || (radiusY < 0.0) ){
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if( (radiusX < 0.5) || (radiusY < 0.5) ){
+    rtnObj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ,
+				      WLZ_NINT(x), WLZ_NINT(y), 0,
+				      &errNum);
+  }
+  else {
+    line1 = WLZ_NINT(y-radiusY);
+    lastln = WLZ_NINT(y+radiusY);
+    kol1 = WLZ_NINT(x-radiusX);
+    lastkl = WLZ_NINT(x+radiusX);
+    width = lastkl - kol1 + 1;
+    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					 line1, lastln, kol1, lastkl,
+					 &errNum) ){
+      if( intvlPtr = (WlzInterval *) AlcCalloc((lastln - line1 + 1),
+					       sizeof(WlzInterval)) ){
+	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr,
+					     (void *)intvlPtr, NULL);
+	for(l=line1; l <= lastln; l++, intvlPtr++){
+	  idelta = (int) radiusX;
+	  intvlPtr->ileft = width/2 - idelta;
+	  intvlPtr->iright = width/2 + idelta;
+	  WlzMakeInterval(l, domain.i, 1, intvlPtr);
+	}
+	WlzStandardIntervalDomain(domain.i);
+	values.core = NULL;
+	if( (rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
+				  NULL, NULL, &errNum)) == NULL ){
+	  WlzFreeIntervalDomain(domain.i);
+	}
+      }
+      else {
+	errNum = WLZ_ERR_MEM_ALLOC;
+	WlzFreeIntervalDomain(domain.i);
+      }
+    }
+  }
+    
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}
+
+
+
+
 WlzObject *WlzMakeSphereObject(
   WlzObjectType	oType,
   double	radius,
@@ -706,6 +777,87 @@ WlzObject *WlzMakeSphereObject(
   }
   return rtnObj;
 }
+
+
+
+/* Added by J. Rao 19-09-2001 */
+WlzObject *WlzMakeCuboidObject(
+  WlzObjectType	oType,
+  double	radiusX,
+  double	radiusY,
+  double	radiusZ,
+  double	x,
+  double	y,
+  double	z,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzObject	*obj1;
+  WlzDomain	domain, *domains;
+  WlzValues	values;
+  double	tmpRadius;
+  int		p, plane1, lastpl;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* check the radius - the only error is if it is negative */
+  if( (radiusX < 0.0) || (radiusY < 0.0 ) || (radiusZ < 0.0 ) ){
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else {
+    /* check type - 2D domain implies circular object */
+    switch( oType ){
+    case WLZ_2D_DOMAINOBJ:
+      return WlzMakeRectangleObject(radiusX, radiusY, x, y, &errNum);
+
+    case WLZ_3D_DOMAINOBJ:
+      plane1 = WLZ_NINT(z-radiusZ);
+      lastpl = WLZ_NINT(z+radiusZ);
+      if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+					plane1, lastpl,
+					WLZ_NINT(y-radiusY),
+					WLZ_NINT(y+radiusY),
+					WLZ_NINT(x-radiusX),
+					WLZ_NINT(x+radiusX),
+					&errNum) ){
+	values.core = NULL;
+	if( (rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
+				  NULL, NULL, &errNum)) == NULL ){
+	  WlzFreePlaneDomain(domain.p);
+	  break;
+	}
+	domains = domain.p->domains;
+	for(p=plane1; p <= lastpl; p++, domains++){
+	  if( obj1 = WlzMakeRectangleObject(radiusX,radiusY, x, y, &errNum) ){
+	    *domains = WlzAssignDomain(obj1->domain, NULL);
+	    WlzFreeObj(obj1);
+	  }
+	  else {
+	    WlzFreeObj(rtnObj);
+	    rtnObj = NULL;
+	    break;
+	  }
+	}
+      }
+      break;
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  if( rtnObj ){
+    WlzStandardPlaneDomain(rtnObj->domain.p, NULL);
+  }
+  return rtnObj;
+}
+
+
+
+
 
 
 WlzObject *WlzMakeStdStructElement(
