@@ -32,6 +32,7 @@ EXECUTABLES		= \
 			WlzPatchObjRegister \
 			WlzRawToWlz \
 			WlzSizeSelect \
+			WlzSplitImage \
 			WlzObjCompareSpecial_01 \
 			WlzVtxToObj \
 			WlzFixDomains \
@@ -53,6 +54,7 @@ CSOURCES		= \
 			WlzPatchObjRegister.c \
 			WlzRawToWlz.c \
 			WlzSizeSelect.c \
+			WlzSplitImage.c \
 			WlzObjCompareSpecial_01.c \
 			WlzVtxToObj.c \
 			WlzFixDomains.c \
