@@ -37,6 +37,7 @@ EXECUTABLES		= \
 			WlzBuildContour \
 			WlzCannyDeriche \
 			WlzCentreOfMass \
+			WlzChangeEMAPProperty \
 			WlzClipObjToBox \
 			WlzCompThresh \
 			WlzCompound \
@@ -97,6 +98,7 @@ EXECUTABLES		= \
 			WlzShiftObj \
 			WlzSkeleton \
 			WlzSobel \
+			WlzStripProperties \
 			WlzStructDilation \
 			WlzStructErosion \
 			WlzTransposeObj \
@@ -122,6 +124,7 @@ CSOURCES		= \
 			WlzBuildContour.c \
 			WlzCannyDeriche.c \
 			WlzCentreOfMass.c \
+			WlzChangeEMAPProperty.c \
 			WlzClipObjToBox.c \
 			WlzCompound.c \
 			WlzCompThresh.c \
@@ -184,6 +187,7 @@ CSOURCES		= \
 			WlzShiftObj.c \
 			WlzSkeleton.c \
 			WlzSobel.c \
+			WlzStripProperties.c \
 			WlzStructDilation.c \
 			WlzStructErosion.c \
 			WlzTransposeObj.c \
