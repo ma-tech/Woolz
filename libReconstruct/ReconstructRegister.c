@@ -14,6 +14,7 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 08-12-00 bill Change WlzAffineTransformLSq() to WlzAffineTransformLSq2D().
 * 04-10-00 bill Changes following removal of primitives from 
 *               WlzAffinetransform.
 * 26-09-00 bill Change WlzSampleObj parameters.
@@ -770,6 +771,10 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 		 (tppVec + tppIdx)->second.vtX,
 		 (tppVec + tppIdx)->second.vtY));
       }
+      if((newTr = WlzAffineTransformLSq2D(tppCount, vtxVec1,
+					  tppCount, vtxVec0,
+					  WLZ_TRANSFORM_2D_REG,
+					  &wlzErr)) == NULL)
       if((newTr = WlzAffineTransformLSq2D(tppCount, vtxVec1,
       					tppCount, vtxVec0,
       				        WLZ_TRANSFORM_2D_REG,
