@@ -13,6 +13,7 @@
 *		and from the '.ics'/'.ids' data format.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* GFeng add more delimited to the token.
 ************************************************************************/
 #include <string.h>
 
@@ -112,6 +113,15 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
     {
       errNum = WLZ_ERR_READ_EOF;
     }
+
+	  #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -379,7 +389,16 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
      (header.format == WLZEFF_ICS_TKN_INT) &&
      idsFileName && ((fP = fopen(idsFileName, "r")) != NULL))
   {
-    dataCount = size.vtX * size.vtY * size.vtZ;
+      #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
+  dataCount = size.vtX * size.vtY * size.vtZ;
     switch(bits)
     {
       case 8:
@@ -550,6 +569,15 @@ WlzErrorNum	WlzEffWriteObjIcs(const char *gvnFileName, WlzObject *obj)
       }
       else
       {
+		    #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
 	if((tCP0 = strrchr(fileName, '/')) == NULL)
 	{
 	  tCP0 = fileName;
@@ -587,6 +615,15 @@ WlzErrorNum	WlzEffWriteObjIcs(const char *gvnFileName, WlzObject *obj)
     }
     else
     {
+		  #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
       tI0 = size.vtX * size.vtY * size.vtZ;
       if(fwrite(**data, sizeof(unsigned char), tI0, fP) != tI0)
       {

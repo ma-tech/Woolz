@@ -15,6 +15,7 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 * 16-06-2000 bill Fixed freeing unallocated memory bug in
 *		WlzEffReadObjStack3D.
+* GFeng add more delimited to the token.
 ************************************************************************/
  #include <ctype.h>
 #include <string.h>
@@ -69,6 +70,15 @@ WlzObject	*WlzEffReadObjStack(const char *gvnFileName, WlzEffFormat fFmt,
     }
     else
     {
+		  #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
       obj = WlzEffReadObjStack2D(fP, fFmt, &errNum);
     }
     if(fP)
@@ -303,7 +313,16 @@ static WlzErrorNum WlzEffWriteObjStack3D(const char *fPathStr,
     }
     else
     {
-      if(fprintf(fP, "%s%s%s%s%s\n"
+        #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
+		if(fprintf(fP, "%s%s%s%s%s\n"
                  "%s%s%d %d %d\n"
 		 "%s%s%d %d %d\n"
 		 "%s%s%g %g %g\n"
@@ -533,6 +552,15 @@ static WlzObject *WlzEffReadObjStack3D(const char *gvnFileName,
       }
       else
       {
+		    #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
         errNum = WlzEffHeadParseStackCtr(&header, fP);
       }
     }
@@ -581,6 +609,14 @@ static WlzObject *WlzEffReadObjStack3D(const char *gvnFileName,
 	  }
 	  else
 	  {
+		    #ifdef _WIN32
+  if (fP2D != NULL){
+	if(_setmode(_fileno(fP2D), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
 	    errNum = WlzEffReadObjStackData2D(fP2D, fFmt, &imgSz2D,
 					      (data + planeOff));
 	    fclose(fP2D);

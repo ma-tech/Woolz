@@ -13,6 +13,7 @@
 *		and from the portable anymap '.pnm' data format.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* GFeng add more delimited to the token.
 ************************************************************************/
  #include <ctype.h>
 #include <string.h>
@@ -101,7 +102,17 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
   }
   else
   {
-    if((obj == NULL) || (obj->values.core == NULL))
+
+  #ifdef _WIN32
+	if (fP != NULL){
+		if(_setmode(_fileno(fP), 0x8000) == -1)
+		{
+			errNum = WLZ_ERR_READ_EOF;
+		}
+	}
+	#endif
+
+	if((obj == NULL) || (obj->values.core == NULL))
     {
       (void )memset(data, (unsigned int )bgd, imgSz.vtX * imgSz.vtY);
     }
@@ -152,6 +163,8 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
 	  (iHead.biClrUsed * 4);
     fHead.bfSize = tI0 + rleSz;
     fHead.bfOffBits = tI0;
+	
+#ifndef _WIN32
     WlzEffBmpSwap4((void *)&(fHead.bfSize));
     WlzEffBmpSwap4((void *)&(fHead.bfOffBits));
     WlzEffBmpSwap4((void *)&(iHead.biSize));
@@ -165,6 +178,12 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
     WlzEffBmpSwap4((void *)&(iHead.biYPelsPerMeter));
     WlzEffBmpSwap4((void *)&(iHead.biClrUsed));
     WlzEffBmpSwap4((void *)&(iHead.biClrImportant));
+#else
+	WlzEffBmpSwap2((void *)&(fHead.bfType));
+	WlzEffBmpSwap2((void *)&(fHead.bfReserved1));
+	WlzEffBmpSwap2((void *)&(fHead.bfReserved2));
+#endif 
+	
     if((fwrite(&(fHead.bfType), sizeof(WLZEFF_BMP_UINT),
     	       1, fP) != 1) ||
        (fwrite(&(fHead.bfSize), sizeof(WLZEFF_BMP_DWORD),

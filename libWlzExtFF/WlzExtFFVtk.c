@@ -501,7 +501,7 @@ static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
     else
     {
       buf[255] = '\0';
-      valS = strtok(buf, " \t\n");
+      valS = strtok(buf, " \t\n\r\f\v");
       if((valS == NULL) ||
          (WlzStringMatchValue(&valI, valS,
       			      "ASCII", WLZEFF_VTK_DATATYPE_ASCII,
@@ -526,14 +526,14 @@ static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
     else
     {
       buf[255] = '\0';
-      valS = strtok(buf, " \t\n");
+      valS = strtok(buf, " \t\n\r\f\v");
       if((valS == NULL) || strcmp(valS, "DATASET"))
       {
         errNum = WLZ_ERR_READ_INCOMPLETE;
       }
       else
       {
-        valS = strtok(NULL, " \t\n");
+        valS = strtok(NULL, " \t\n\r\f\v");
 	if((valS == NULL) ||
 	   (WlzStringMatchValue(&valI, valS,
 	    	"STRUCTURED_POINTS", WLZEFF_VTK_TYPE_STRUCTURED_POINTS,
@@ -621,7 +621,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		sumPoints,
 		endOfData,
 		vHTSz;
-  char		*valS;
+  char *valS;
   WlzGMModel	*model = NULL;
   WlzObject	*obj = NULL;
   WlzEffVtkPolyDataType prim;
@@ -651,7 +651,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
       else
       {
 	buf[255] = '\0';
-	valS = strtok(buf, " \t\n");
+	valS = strtok(buf, " \t\n\r\f\v");
       }
       if(valS)
       {
@@ -663,7 +663,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		"TRIANGLE_STRIPS", WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS,
 		NULL) == 0))
 	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  //errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
 	else
 	{
@@ -671,7 +671,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	  switch(prim)
 	  {
 	    case WLZEFF_VTK_POLYDATATYPE_POINTS:
-	      valS = strtok(NULL, " \t\n");
+	      valS = strtok(NULL, " \t\n\r\f\v");
 	      if((valS == NULL) || (sscanf(valS, "%d", &nPoints) != 1) ||
 		 (nPoints <= 0))
 	      {
@@ -679,7 +679,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      else
 	      {
-	        valS = strtok(NULL, " \t\n");
+		  valS = strtok(NULL, " \t\n\r\f\v");
 		if((valS == NULL) || strcmp(valS, "float"))
 		{
 		  errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -726,7 +726,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		valS = strtok(NULL, " \t\n");
+		valS = strtok(NULL, " \t\n\r\f\v");
 		if((valS == NULL) || (sscanf(valS, "%d", &nPoly) != 1) ||
 		   (nPoly < 0))
 		{
@@ -735,7 +735,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        valS = strtok(NULL, " \t\n");
+	        valS = strtok(NULL, " \t\n\r\f\v");
 		if((valS == NULL) || (sscanf(valS, "%d", &valI) != 1) ||
 		   (valI < 0) || ((valI / nPoly) != 4))
 	        {
@@ -793,7 +793,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		valS = strtok(NULL, " \t\n");
+		valS = strtok(NULL, " \t\n\r\f\v");
 		if((valS == NULL) || (sscanf(valS, "%d", &nLine) != 1) ||
 		   (nLine < 0))
 		{
@@ -802,7 +802,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        valS = strtok(NULL, " \t\n");
+	        valS = strtok(NULL, " \t\n\r\f\v");
 		if((valS == NULL) || (sscanf(valS, "%d", &valI) != 1) ||
 		   (valI < 0) || ((valI / nLine) != 3))
 	        {

@@ -13,6 +13,7 @@
 *		and from the portable anymap '.pnm' data format.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* GFeng add more delimited to the token.
 ************************************************************************/
  #include <ctype.h>
 #include <string.h>
@@ -89,6 +90,15 @@ WlzErrorNum 	WlzEffWriteObjPnm2D(const char *fNameStr, WlzObject *obj,
   }
   else
   {
+	    #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
     if((obj == NULL) || (obj->values.core == NULL))
     {
       (void )memset(data, (unsigned int )bgd, imgSz.vtX * imgSz.vtY);

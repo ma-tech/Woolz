@@ -13,6 +13,7 @@
 *		and from external data formats.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* GFeng add preprocess tag _win32
 ************************************************************************/
 #include <Wlz.h>
 #include <WlzExtFF.h>
@@ -226,6 +227,15 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
   WlzObject	*obj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  #ifdef _WIN32
+  if (fP != NULL){
+	if(_setmode(_fileno(fP), 0x8000) == -1)
+	{
+		errNum = WLZ_ERR_READ_EOF;
+	}
+  }
+  #endif
+
   if((fP == NULL) && (fName == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
@@ -341,6 +351,16 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
       }
     }
   }
+
+  #ifdef _WIN32
+  if (fP != NULL){
+	 if(_setmode(_fileno(fP), 0x8000) == -1)
+	  {
+	  errNum = WLZ_ERR_READ_EOF;
+	 }
+  }
+  #endif
+
   if(errNum == WLZ_ERR_NONE)
   {
     switch(fFmt)

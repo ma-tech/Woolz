@@ -18,6 +18,7 @@
 * \ingroup	WlzExtFF
 * \todo         -
 * \bug          None known.
+* \GFeng add more delimited to the token.
 */
 #include <ctype.h>
 #include <string.h>
@@ -26,7 +27,7 @@
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-#define WLZ_EFF_AM_REC_MAXC	(1000)
+#define WLZ_EFF_AM_REC_MAXC	(1024)
 #define WLZ_EFF_AM_LABEL_MAXC	(32)
 
 static WlzEffAmHead 		*WlzEffAmNewHead(
@@ -245,9 +246,9 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
   int		tok[8];
   char		tokBuf[WLZ_EFF_AM_REC_MAXC];
   const int	tokBufMax = WLZ_EFF_AM_REC_MAXC;
-  const char   	tokSepWS[] = " \t\n",
-  	   	tokSepWSC[] = " \t\n,",
-		tokSepWSQ[] = " \t\n\"";
+  const char   	tokSepWS[] = " \t\n\r\f\v",
+  	   	tokSepWSC[] = " \t\n,\r\f\v",
+		tokSepWSQ[] = " \t\n\"\r\f\v";
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Read identifier, data format and version numbers. */
@@ -694,7 +695,7 @@ static WlzErrorNum WlzEffAmSeekLabel(FILE *fP, int gLabel)
   char		buf[WLZ_EFF_AM_LABEL_MAXC];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	bufMax = WLZ_EFF_AM_LABEL_MAXC;
-  const char   	tokSepWS[] = " \t\n";
+  const char   	tokSepWS[] = " \t\n\r\f\v";
 
   do
   {
@@ -758,7 +759,7 @@ static WlzErrorNum WlzEffAmReadBBox(FILE *fP, char *buf, const int bufLen,
 				    WlzDBox3 *bBox)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char   tokSepWS[] = " \t\n,";
+  const char   tokSepWS[] = " \t\n,\r\f\v";
 
   errNum = WlzEffAmReadAValD(fP, tokSepWS, buf, bufLen, &(bBox->xMin));
   if(errNum == WLZ_ERR_NONE)
@@ -848,7 +849,7 @@ static WlzErrorNum WlzEffAmSkipEOL(FILE *fP)
 static WlzErrorNum WlzEffAmCheckContent(FILE *fP, char *buf, const int bufLen)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char	tokSepWS[] = " \t\n",
+  const char	tokSepWS[] = " \t\n\r\f\v",
   		tokSepDQ[] = "\"";
 
   errNum = WlzEffAmSkip(fP, tokSepWS);
@@ -872,7 +873,7 @@ static WlzErrorNum WlzEffAmReadCoordType(FILE *fP, char *buf, const int bufLen,
 					 WlzEffAmCoordType *type)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char	tokSepWS[] = " \t\n",
+  const char	tokSepWS[] = " \t\n\r\f\v",
   		tokSepDQ[] = "\"";
 
   errNum = WlzEffAmSkip(fP, tokSepWS);
@@ -910,7 +911,7 @@ static WlzErrorNum WlzEffAmReadLatticeDatType(FILE *fP, char *buf,
 					WlzEffAmDatType *type)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char	tokSepWS[] = " \t\n";
+  const char	tokSepWS[] = " \t\n\r\f\v";
 
   errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
   if(errNum == WLZ_ERR_NONE)
@@ -944,7 +945,7 @@ static WlzErrorNum WlzEffAmReadLatticeType(FILE *fP, char *buf,
 					WlzEffAmLatType *type)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const char	tokSepWS[] = " \t\n";
+  const char	tokSepWS[] = " \t\n\r\f\v";
 
   errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
   if(errNum == WLZ_ERR_NONE)
@@ -978,7 +979,7 @@ static WlzErrorNum WlzEffAmReadLatticeLabel(FILE *fP, char *buf,
 					WlzEffAmHead *head)
 {
   WlzErrorNum	errNum;
-  const char	tokSepWS[] = " \t\n";
+  const char	tokSepWS[] = " \t\n\r\f\v";
 
   errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
   if(errNum == WLZ_ERR_NONE)
@@ -1053,10 +1054,10 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
   		*newMat = NULL;
   WlzErrorNum   errNum;
   const char	tokSepDQ[] = "\"",
-  		tokSepWS[] = " \t\n",
-            	tokSepWSC[] = " \t\n,",
-            	tokSepWSCQ[] = " \t\n,\"",
-            	tokSepWSQ[] = " \t\n\"";
+  		tokSepWS[] = " \t\n\r\f\v",
+            	tokSepWSC[] = " \t\n,\r\f\v",
+            	tokSepWSCQ[] = " \t\n,\"\r\f\v",
+            	tokSepWSQ[] = " \t\n\"\r\f\v";
 
   errNum =  WlzEffAmReadAndCheckAToken(fP, tokSepWS, buf, bufLen, "{");
   if(errNum == WLZ_ERR_NONE)
@@ -1215,7 +1216,7 @@ static WlzErrorNum WlzEffAmReadSeeds(FILE *fP, char *buf, const int bufLen,
   int		idN;
   WlzEffAmToken	tok;
   WlzErrorNum   errNum;
-  const char	tokSepWS[] = " \t\n";
+  const char	tokSepWS[] = " \t\n\r\f\v";
 
   errNum =  WlzEffAmReadAndCheckAToken(fP, tokSepWS, buf, bufLen, "{");
   if(errNum == WLZ_ERR_NONE)

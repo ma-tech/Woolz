@@ -58,9 +58,13 @@ typedef enum _WlzEffFormat
 #define WLZEFF_BMP_CMP_DELTA		(2)
 
 typedef unsigned char	WLZEFF_BMP_BYTE;
+
 typedef short		WLZEFF_BMP_WORD;
+
 typedef	unsigned short	WLZEFF_BMP_UINT;
+
 typedef int		WLZEFF_BMP_DWORD;
+
 typedef int		WLZEFF_BMP_LONG;
 
 typedef struct _WlzEffBmpFileHead
