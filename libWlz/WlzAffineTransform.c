@@ -640,6 +640,12 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 	    elmP.vertexG2D->vtx = WlzAffineTransformVertexD2(tr,
 	    				elmP.vertexG2D->vtx, &errNum);
 	    break;
+	  case WLZ_GMMOD_2N:
+	    elmP.vertexG2N->vtx = WlzAffineTransformVertexD2(tr,
+	    				elmP.vertexG2N->vtx, &errNum);
+	    elmP.vertexG2N->nrm = WlzAffineTransformNormalD2(tr,
+	    				elmP.vertexG2N->nrm, &errNum);
+	    break;
 	  case WLZ_GMMOD_3I:
 	    elmP.vertexG3I->vtx = WlzAffineTransformVertexI3(tr,
 	    				elmP.vertexG3I->vtx, &errNum);
@@ -647,6 +653,12 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 	  case WLZ_GMMOD_3D:
 	    elmP.vertexG3D->vtx = WlzAffineTransformVertexD3(tr,
 	    				elmP.vertexG3D->vtx, &errNum);
+	    break;
+	  case WLZ_GMMOD_3N:
+	    elmP.vertexG3N->vtx = WlzAffineTransformVertexD3(tr,
+	    				elmP.vertexG3N->vtx, &errNum);
+	    elmP.vertexG3N->nrm = WlzAffineTransformNormalD3(tr,
+	    				elmP.vertexG3N->nrm, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -673,7 +685,8 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 	    elmP.shellG2I->bBox = WlzAffineTransformBBoxI2(tr,
 	    				elmP.shellG2I->bBox, &errNum);
 	    break;
-	  case WLZ_GMMOD_2D:
+	  case WLZ_GMMOD_2D: /* FALLTHROUGH */
+	  case WLZ_GMMOD_2N:
 	    elmP.shellG2D->bBox = WlzAffineTransformBBoxD2(tr,
 	    				elmP.shellG2D->bBox, &errNum);
 	    break;
@@ -681,7 +694,8 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 	    elmP.shellG3I->bBox = WlzAffineTransformBBoxI3(tr,
 	    				elmP.shellG3I->bBox, &errNum);
 	    break;
-	  case WLZ_GMMOD_3D:
+	  case WLZ_GMMOD_3D: /* FALLTHROUGH */
+	  case WLZ_GMMOD_3N:
 	    elmP.shellG3D->bBox = WlzAffineTransformBBoxD3(tr,
 	    				elmP.shellG3D->bBox, &errNum);
 	    break;
@@ -780,6 +794,7 @@ WlzErrorNum 	WlzAffineTransformGMShell(WlzGMShell *shell,
 	    /* Transform the vertex. */
 	    if(vT0 == v0->diskT->vertexT)
 	    {
+	      WlzGMModelRemVertex(model, v0);
 	      switch(model->type)
 	      {
 	        case WLZ_GMMOD_2I:
@@ -790,6 +805,12 @@ WlzErrorNum 	WlzAffineTransformGMShell(WlzGMShell *shell,
 		  v0->geo.vg2D->vtx = WlzAffineTransformVertexD2(tr,
 				v0->geo.vg2D->vtx, NULL);
 	          break;
+		case WLZ_GMMOD_2N:
+		  v0->geo.vg2N->vtx = WlzAffineTransformVertexD2(tr,
+					      v0->geo.vg2N->vtx, &errNum);
+		  v0->geo.vg2N->nrm = WlzAffineTransformNormalD2(tr,
+					      v0->geo.vg2N->nrm, &errNum);
+		  break;
 	        case WLZ_GMMOD_3I:
 		  v0->geo.vg3I->vtx = WlzAffineTransformVertexI3(tr,
 				v0->geo.vg3I->vtx, NULL);
@@ -798,13 +819,51 @@ WlzErrorNum 	WlzAffineTransformGMShell(WlzGMShell *shell,
 		  v0->geo.vg3D->vtx = WlzAffineTransformVertexD3(tr,
 				v0->geo.vg3D->vtx, NULL);
 	          break;
+		case WLZ_GMMOD_3N:
+		  v0->geo.vg3N->vtx = WlzAffineTransformVertexD3(tr,
+					      v0->geo.vg3N->vtx, &errNum);
+		  v0->geo.vg3N->nrm = WlzAffineTransformNormalD3(tr,
+					      v0->geo.vg3N->nrm, &errNum);
+		  break;
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		WlzGMModelAddVertexToHT(model, v0);
 	      }
 	    }
 	    eT0 = eT0->next;
-	  } while(eT0 != lT0->edgeT);
+	  } while((errNum == WLZ_ERR_NONE) && (eT0 != lT0->edgeT));
 	}
         lT0 = lT0->next;
-      } while(lT0 != shell->child);
+      } while((errNum == WLZ_ERR_NONE) && (lT0 != shell->child));
+    }
+  }
+  /* Transform shell geometry. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I:
+	shell->geo.sg2I->bBox = WlzAffineTransformBBoxI2(tr,
+				    shell->geo.sg2I->bBox, &errNum);
+	break;
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
+	shell->geo.sg2D->bBox = WlzAffineTransformBBoxD2(tr,
+				    shell->geo.sg2D->bBox, &errNum);
+	break;
+      case WLZ_GMMOD_3I:
+	shell->geo.sg3I->bBox = WlzAffineTransformBBoxI3(tr,
+				    shell->geo.sg3I->bBox, &errNum);
+	break;
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
+	shell->geo.sg3D->bBox = WlzAffineTransformBBoxD3(tr,
+				    shell->geo.sg3D->bBox, &errNum);
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
     }
   }
   return(errNum);
