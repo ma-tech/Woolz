@@ -295,8 +295,45 @@ unsigned int	AlcVectorCount(AlcVector *vec)
 }
 
 /*!
+* \return	<void>
+* \brief	Copies elements from the vector into a 1 dimensional
+*		array.
+* \param	vec		 	Given vector.
+* \param	fIdx	 		Index of the first element in the
+*					vector to copy.
+* \param	lIdx	 		Index of the last element in the
+*					vector to copy.
+* \param	aM			The 1 dimensional array.
+*/
+void		AlcVectorSetArray1D(AlcVector *vec, int fIdx, int lIdx,
+				    void *aM)
+{
+  int		aIdx,
+		fVIdx,
+		lVIdx,
+  		fVBlkIdx,
+		lVBlkIdx;
+
+  aIdx = 0;
+  fVBlkIdx = fIdx / vec->blkSz;
+  lVBlkIdx = lIdx / vec->blkSz;
+  fVIdx = fIdx % vec->blkSz;
+  while(fVBlkIdx <= lVBlkIdx)
+  {
+    lVIdx = (fVBlkIdx == lVBlkIdx)? lIdx % vec->blkSz: vec->blkSz - 1;
+    (void )memcpy((void *)((char *)aM + (aIdx * vec->elmSz)),
+		  (void *)((char *)(*(vec->blocks + fVBlkIdx)) + 
+			   (fVIdx * vec->elmSz)),
+		  (lVIdx - fVIdx + 1) * vec->elmSz);
+    aIdx += lVIdx - fVIdx + 1;
+    fVIdx = 0;
+    ++fVBlkIdx;
+  }
+}
+
+/*!
 * \return		 		Array of copied elements.
-* \brief	Creates a 1 dimensional array which contains copies
+* \brief	Creates a 1 dimensional array which contains a copy
 *		of the vectors elements.
 * \param	vec		 	Given vector.
 * \param	fIdx	 		Index of the first element in the
@@ -308,15 +345,15 @@ unsigned int	AlcVectorCount(AlcVector *vec)
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-void		*AlcVectorToArray(AlcVector *vec, int fIdx, int lIdx,
-				  AlcErrno *dstErr)
+void		*AlcVectorToArray1D(AlcVector *vec, int fIdx, int lIdx,
+				    AlcErrno *dstErr)
 {
   int		aIdx,
 		fVIdx,
 		lVIdx,
   		fVBlkIdx,
 		lVBlkIdx;
-  void		*array = NULL;
+  void		*aM = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
   if(vec == NULL)
@@ -327,33 +364,83 @@ void		*AlcVectorToArray(AlcVector *vec, int fIdx, int lIdx,
   {
     errNum = ALC_ER_PARAM;
   }
-  else if((array = AlcCalloc(lIdx - fIdx + 1, vec->elmSz)) == NULL)
+  else if((aM = AlcCalloc(lIdx - fIdx + 1, vec->elmSz)) == NULL)
   {
     errNum = ALC_ER_ALLOC;
   }
   else
   {
-    aIdx = 0;
-    fVBlkIdx = fIdx / vec->blkSz;
-    lVBlkIdx = lIdx / vec->blkSz;
-    fVIdx = fIdx % vec->blkSz;
-    while(fVBlkIdx <= lVBlkIdx)
+    AlcVectorSetArray1D(vec, fIdx, lIdx, aM);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(aM);
+}
+
+/*!
+* \return		 		Array of copied elements.
+* \brief	Creates a 2 dimensional array which contains a copy
+*		of the vectors elements.
+* \param	vec		 	Given vector.
+* \param	fIdx	 		Index of the first element in the
+*					vector to copy, becomes the first
+*					element of the array.
+* \param	lIdx	 		Index of the last element in the
+*					vector to copy, becomes the last
+*					element of the array.
+* \param	nR			Number of rows (1D arrays).
+* \param	nC			Number of columns (elements in each
+*					1D array).
+* \param	dstErr			Destination pointer for error
+*					code, may be NULL.
+*/
+void		**AlcVectorToArray2D(AlcVector *vec, int fIdx, int lIdx,
+				     int nR, int nC,
+				     AlcErrno *dstErr)
+{
+  int		iR,
+  		nRC;
+  void		**aM = NULL;
+  
+  AlcErrno	errNum = ALC_ER_NONE;
+
+  if(vec == NULL)
+  {
+    errNum = ALC_ER_NULLPTR;
+  }
+  else if((fIdx < 0) || (lIdx < fIdx) || (nR < 1) || (nC < 1) ||
+          ((nRC = nR * nC) != lIdx - fIdx + 1))
+  {
+    errNum = ALC_ER_PARAM;
+  }
+  else if(((aM = (void **)AlcCalloc(nR, sizeof(void *))) ==  NULL) ||
+          ((*aM = (void *)AlcMalloc(sizeof(char) * nRC * vec->elmSz)) == NULL))
+  {
+    errNum = ALC_ER_PARAM;
+  }
+  else
+  {
+    for(iR = 0; iR < nR; ++iR)
     {
-      lVIdx = (fVBlkIdx == lVBlkIdx)? lIdx % vec->blkSz: vec->blkSz - 1;
-      (void )memcpy((void *)((char *)array + (aIdx * vec->elmSz)),
-      		    (void *)((char *)(*(vec->blocks + fVBlkIdx)) + 
-		             (fVIdx * vec->elmSz)),
-    		    (lVIdx - fVIdx + 1) * vec->elmSz);
-      aIdx += lVIdx - fVIdx + 1;
-      fVIdx = 0;
-      ++fVBlkIdx;
+      AlcVectorSetArray1D(vec, fIdx + (iR * nC), fIdx + ((iR + 1) * nC) - 1,
+      			  *(aM + iR));
+    }
+  }
+  if(errNum != ALC_ER_NONE)
+  {
+    if(aM)
+    {
+      AlcFree(*aM);
+      AlcFree(aM);
     }
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(array);
+  return(aM);
 }
 
 /*!

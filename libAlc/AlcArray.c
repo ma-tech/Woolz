@@ -22,6 +22,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <Alc.h>
 #include <AlcTemplates.h>
 
@@ -750,6 +751,84 @@ AlcErrno	AlcFloat3Free(float ***dest)
 AlcErrno	AlcDouble3Free(double ***dest)
 {
   ALC_TEMPLATE_F3D(dest, "AlcDouble3Free")
+}
+
+/*!
+* \return		 		Error code.
+* \brief	Reads a 2D double array from the given numeric ASCI file.
+*		Fields in the file must be white space saperated and
+*		records must be on separate lines. The number of fields
+*		per record must be the same for all records.
+* \param	fP:			File pointer.
+* \param	dstA 			Destination pointer for the new
+*					array.
+* \param	dstMElem		Destination pointer for the number of
+*					1D arrays (number of records).
+* \param	dstNElem		Destination pointer for the number of
+*					elements in each 1D array (number of
+*					fields per record).
+*/
+AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
+				   int *dstMElem, int *dstNElem)
+{
+  int		iF,
+		nR = 0,
+  		nF = 0,
+		nV = 0;
+  double	*dP0;
+  double	**aM = NULL;
+  char		*parseS,
+  		*tokS;
+  const int	vecCnt = 1024; 		/* Initial number of elements in
+  					 * the vector */
+  const int	maxRecLen = 8192; 	/* Maximum number of chars in an
+  					 * input record */
+  char		recS[8192 /* = maxRecLen */];
+  AlcVector	*vec = NULL;
+  AlcErrno	errNum = ALC_ER_NONE;
+
+  vec = AlcVectorNew(vecCnt, sizeof(double), vecCnt, &errNum);
+  while((errNum == ALC_ER_NONE) && (fgets(recS, maxRecLen, fP) != NULL))
+  {
+    iF = 0;
+    parseS = recS;
+    while((errNum == ALC_ER_NONE) &&
+          ((tokS = strtok(parseS, " \t")) != NULL) && *tokS)
+    {
+      parseS = NULL;
+      if((dP0 = (double *)AlcVectorExtendAndGet(vec, nV)) == NULL)
+      {
+        errNum = ALC_ER_ALLOC;
+      }
+      else if(sscanf(tokS, "%lg", dP0) != 1)
+      {
+        errNum = ALC_ER_READ;
+      }
+      else
+      {
+        ++iF;
+	++nV;
+      }
+    }
+    if(errNum == ALC_ER_NONE)
+    {
+      if(nR == 0)
+      {
+	 nF = iF;
+      }
+      else if(iF != nF)
+      {
+	errNum = ALC_ER_READ;
+      }
+      ++nR;
+    }
+  }
+  if(errNum == ALC_ER_NONE)
+  {
+    aM = (double **)AlcVectorToArray2D(vec, 0, nV - 1, nR, nF, &errNum);
+  }
+  (void )AlcVectorFree(vec);
+  return(errNum);
 }
 
 /*!

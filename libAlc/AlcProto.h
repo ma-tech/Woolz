@@ -28,10 +28,16 @@ extern "C" {
 /************************************************************************
 * AlcAlloc.c
 ************************************************************************/
-extern void	*AlcCalloc(int, int),
-		*AlcMalloc(int),
-		*AlcRealloc(void *, int);
-extern void	AlcFree(void *);
+extern void			*AlcCalloc(
+				  int elCount,
+				  int elSize);
+extern void			*AlcMalloc(
+				  int byteCount);
+extern void			*AlcRealloc(
+				  void *givendata,
+				  int byteCount);
+extern void			AlcFree(
+				  void *data);
 
 /************************************************************************
 * AlcArray.c
@@ -95,6 +101,11 @@ extern AlcErrno	AlcBit1Calloc(unsigned char **, int),
 		AlcInt3Free(int ***),
 		AlcFloat3Free(float ***),
 		AlcDouble3Free(double ***);
+extern AlcErrno			AlcDouble2ReadAsci(
+				  FILE *fP,
+				  double ***dstA,
+				  int *dstMElem,
+				  int *dstNElem);
 
 /************************************************************************
 * AlcBlockStack.c
@@ -294,10 +305,22 @@ extern void			*AlcVectorExtendAndGet(
 				  unsigned int idx);
 extern unsigned int		AlcVectorCount(
 				  AlcVector *vec);
-extern void			*AlcVectorToArray(
+extern void			AlcVectorSetArray1D(
 				  AlcVector *vec,
 				  int fIdx,
 				  int lIdx,
+				  void *aM);
+extern void			*AlcVectorToArray1D(
+				  AlcVector *vec,
+				  int fIdx,
+				  int lIdx,
+				  AlcErrno *dstErr);
+void				**AlcVectorToArray2D(
+				  AlcVector *vec,
+				  int fIdx,
+				  int lIdx,
+				  int nR,
+				  int nC,
 				  AlcErrno *dstErr);
 #ifdef __cplusplus
 }

@@ -36,7 +36,9 @@ enum _AlcErrno
   ALC_ER_ALLOC,			/*!< Memory allocation error */
   ALC_ER_NULLPTR,		/*!< Null pointer detected */
   ALC_ER_NUMELEM,		/*!< Inappropriate number of elements */
-  ALC_ER_PARAM			/*!< Inappropriate function paramerter */
+  ALC_ER_PARAM,			/*!< Inappropriate function paramerter */
+  ALC_ER_READ,			/*!< File read failure */
+  ALC_ER_WRITE			/*!< File write failure */
 };
 typedef enum _AlcErrno AlcErrno;
 
