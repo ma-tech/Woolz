@@ -16,17 +16,22 @@
 *		transposed. This is used in the WlzSepTrans procedure.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 15-08-00 bill remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
+*		WLZ_POINT_(INT)|(FLOAT).
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
 
-static WlzObject *WlzTransposeRectObj(WlzObject *obj,
-				      WlzErrorNum *dstErr);
-static WlzBoundList *WlzTransposeBound(WlzBoundList	*blist,
-				       WlzErrorNum *dstErr);
-static WlzPolygonDomain *WlzTransposePolygon(WlzPolygonDomain *poly,
-					     WlzErrorNum *dstErr);
+static WlzObject 		*WlzTransposeRectObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+static WlzBoundList 		*WlzTransposeBound(
+				  WlzBoundList *blist,
+				   WlzErrorNum *dstErr);
+static WlzPolygonDomain 	*WlzTransposePolygon(
+				  WlzPolygonDomain *poly,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 *   Function   : WlzTransposeObj					*
@@ -164,10 +169,6 @@ WlzObject *WlzTransposeObj(
     case WLZ_EMPTY_OBJ:
       return WlzMakeEmpty(dstErr);
 
-    case WLZ_VECTOR_INT:
-    case WLZ_VECTOR_FLOAT:
-    case WLZ_POINT_INT:
-    case WLZ_POINT_FLOAT:
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
