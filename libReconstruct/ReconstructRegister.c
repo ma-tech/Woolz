@@ -770,7 +770,7 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 		 (tppVec + tppIdx)->second.vtX,
 		 (tppVec + tppIdx)->second.vtY));
       }
-      if((newTr = WlzAffineTransformLSq(tppCount, vtxVec1,
+      if((newTr = WlzAffineTransformLSq2D(tppCount, vtxVec1,
       					tppCount, vtxVec0,
       				        WLZ_TRANSFORM_2D_REG,
 					&wlzErr)) == NULL)
