@@ -17,7 +17,7 @@
 *		radialy symetric functions.
 * \ingroup	WlzFunction
 * \todo         -
-*
+*  28/01/04 jianguo fixed the bug in WlzBasisFnValueMQ2D()
 *  19/02/03 Jianguo add       WlzBasisFnMQ3DFromCPts();
 *  19/02/03 Jianguo add       WlzBasisFnValueMQ3D();
 *  19/02/03 Jianguo add       WlzBasisFnValueRedPoly3D();
@@ -224,7 +224,6 @@ WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     tD0 = srcVx.vtX - cPts->vtX;
     tD1 = srcVx.vtY - cPts->vtY;
     tD0 = (tD0 * tD0) + (tD1 * tD1);
-    if(tD0 > DBL_EPSILON)
     {
       tD0 = sqrt(tD0 + delta);
       newVx.vtX += basisCo->vtX * tD0;
