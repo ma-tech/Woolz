@@ -188,6 +188,16 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
+    /* if the output format is tiff then a file name must be
+       given */
+    if((outFmt == WLZEFF_FORMAT_TIFF) && !strcmp(outObjFileStr, "-"))
+    {
+      usage = 1;
+      ok = 0;
+    }
+  }
+  if(ok)
+  {
     if(strcmp(inObjFileStr, "-") == 0)
     {
       fP = stdin;
@@ -276,57 +286,67 @@ int             main(int argc, char **argv)
   {
     if(usage)
     {
-      (void )fprintf(stderr,
-      "Usage: %s%s%s%s%s%s%s%s",
-      *argv,
-      " [-h] [-b<background>]\n"
-      "        [-f<input format>] [-F<output format>]\n"
-      "        [-x<x size>] [-y<y size>] [-z<z size>]\n"
-      "        [-o<output file>] [<input file>)]\n"
-      "Converts image objects between one file format and another,\n"
-      "neither of which need be the Woolz data file format.\n"
-      "Options are:\n"
-      "  -h    Help, prints this usage information.\n"
-      "  -s    Split labeled volumes into domains.\n"
-      "  -b#   Set background to vale,\n"
-      "  -f#   Input file format.\n"
-      "  -F#   Ouput file format.\n"
-      "  -o#   Output file name.\n"
-      "  -x#   X voxel/pixel size.\n"
-      "  -y#   Y voxel/pixel size.\n"
-      "  -z#   Z voxel/pixel size.\n"
-      "Valid formats are:\n"
-      "  Description                 Fmt     Extension\n"
-      "  ***********                 ***     *********\n"
-      "  Amira Lattice               am      .am\n"
-      "  Microsoft Bitmap            bmp     .bmp\n"
-      "  Stanford Density            den     .den\n"
-      "  ICS                         ics     .ics/.ids\n"
-      "  PNM                         pnm     .pgm\n"
-      "  BioRad Confocal             pic     .pic\n"
-      "  SLC                         slc     .slc\n"
-      "  Sunvision VFF               vff     .vff\n"
-      "  Visualization Toolkit VTK   vtk     .vtk\n"
-      "  IPLab                       ipl     .ipl\n"
-      "  Tiff                        tif     .tif\n"
-      "  MRC HGU Woolz               wlz     .wlz\n",
-      "Simple example:\n  ",
-      *argv,
-      " -f wlz -F slc <in.wlz >out.slc\n"
-      "  Converts the Woolz object in.wlz to an SLC data file out.slx\n",
-      "More complex example:\n  ",
-      *argv,
-      " -f den -F pnm -o out.pgm in.den\n"
-      "  Converts the Stanford density file in.den to a series of PGM files\n"
-      "  each with a name of the form out000001.pgm where the number\n"
-      "  encodes the image plane and a control file which specifies the\n"
-      "  volume origin, size and voxel dimensions.\n"
-      "By default objects are read from the standard input and written to\n"
-      "the standard output.\n"
-      "File formats which use more than one file can not be read or written\n"
-      "using the standard input or standard output.\n"
-      "The Tiff file format must be read/written from/to a file i.e. not\n"
-      "from/to stdin or stdout\n");
+      (void )fprintf(
+	stderr,
+	"Usage: %s%s%s%s%s%s%s%s\n",
+	*argv,
+	" [-h] [-b<background>]\n"
+	"        [-f<input format>] [-F<output format>]\n"
+	"        [-x<x size>] [-y<y size>] [-z<z size>]\n"
+	"        [-o<output file>] [<input file>)]\n"
+	"Converts image objects between one file format and another,\n"
+	"neither of which need be the Woolz data file format.\n"
+	"Options are:\n"
+	"  -h    Help, prints this usage information.\n"
+	"  -s    Split labeled volumes into domains.\n"
+	"  -b#   Set background to vale,\n"
+	"  -f#   Input file format.\n"
+	"  -F#   Ouput file format.\n"
+	"  -o#   Output file name.\n"
+	"  -x#   X voxel/pixel size.\n"
+	"  -y#   Y voxel/pixel size.\n"
+	"  -z#   Z voxel/pixel size.\n"
+	"Valid formats are:\n"
+	"  Description                 Fmt     Extension\n"
+	"  ***********                 ***     *********\n"
+	"  Amira Lattice               am      .am\n"
+	"  Microsoft Bitmap            bmp     .bmp\n"
+	"  Stanford Density            den     .den\n"
+	"  ICS                         ics     .ics/.ids\n"
+	"  PNM                         pnm     .pgm\n"
+	"  BioRad Confocal             pic     .pic\n"
+	"  SLC                         slc     .slc\n"
+	"  Sunvision VFF               vff     .vff\n"
+	"  Visualization Toolkit VTK   vtk     .vtk\n"
+	"  IPLab                       ipl     .ipl\n"
+	"  Tiff                        tif     .tif\n"
+	"  Jpeg                        jpg     .jpg\n"
+	"  MRC HGU Woolz               wlz     .wlz\n",
+	"Simple example:\n  ",
+	*argv,
+	" -f wlz -F slc <in.wlz >out.slc\n"
+	"  Converts the Woolz object in.wlz to an SLC data file out.slx\n",
+	"More complex example:\n  ",
+	*argv,
+	" -f den -F pnm -o out.pgm in.den\n"
+	"  Converts the Stanford density file in.den to a series of PGM files\n"
+	"  each with a name of the form out000001.pgm where the number\n"
+	"  encodes the image plane and a control file which specifies the\n"
+	"  volume origin, size and voxel dimensions.\n"
+	"By default objects are read from the standard input and written to\n"
+	"the standard output.\n"
+	"File formats which use more than one file can not be read or written\n"
+	"using the standard input or standard output.\n"
+	"The Tiff file format must be read/written from/to a file i.e. not\n"
+	"from/to stdin or stdout\n"
+	"Note not all formats can retain position information i.e. they can\n"
+	"only keep the size of the bounding box. In these formats the\n"
+	"size of the bounding box is maintained but the position is set to\n"
+	"(0,0). This implies that conversion back to woolz will, in general,\n"
+	"result in a shifted image, i.e. registration is lost. Most 3D\n"
+	"formats encode this data, of the 2D formats only woolz can retain\n",
+	"all offsets, tiff can only encode positive offsets.\n"
+	);
     }
   }
   return(!ok);

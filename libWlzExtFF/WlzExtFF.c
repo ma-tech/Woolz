@@ -329,7 +329,7 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
   else if(fP == NULL)
   {
     if((fFmt != WLZEFF_FORMAT_ICS) && (fFmt != WLZEFF_FORMAT_PNM) &&
-       (fFmt != WLZEFF_FORMAT_BMP))
+       (fFmt != WLZEFF_FORMAT_BMP) && (fFmt != WLZEFF_FORMAT_TIFF))
     {
       if((fP = fopen(fName, "wb")) == NULL)
       {

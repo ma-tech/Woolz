@@ -31,30 +31,20 @@
 
 #define	CVT(x)		(((x) * 255) / ((1L<<16)-1))
 
-/************************************************************************
-* Function:	WlzEffReadObjTiff					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given file using	 	*
-*		the TIFF format. 					*
-* Global refs:	-							*
-* Parameters:	const char *tiffFileName: Given file name.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
-WlzObject	*WlzEffReadObjTiff(
-  const char 	*tiffFileName,
-  WlzErrorNum 	*dstErr)
+static WlzObject *WlzExtFFReadTiffDirObj(
+  TIFF 		*tif, 
+  int		dir,
+  WlzErrorNum	*dstErr)
 {
   WlzObject	*obj=NULL;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  TIFF 		*tif=NULL;
   short		bitspersample;
   short		samplesperpixel;
   short		photometric;
   unsigned short *Map=NULL;
   unsigned short *redcolormap, *bluecolormap, *greencolormap;
   unsigned char red[256], green[256], blue[256];
-  int		width, height, depth, numcolors;
+  int		width, height, numPlanes, depth, numcolors;
   int		wlzDepth;
   WlzGreyType	newpixtype;
   WlzPixelV	bckgrnd;
@@ -65,17 +55,13 @@ WlzObject	*WlzEffReadObjTiff(
   unsigned char *inp;
   WlzGreyP	wlzData;
 
-  if((tiffFileName == NULL) || (*tiffFileName == '\0'))
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else if( (tif = TIFFOpen(tiffFileName, "r")) == NULL )
-  {
-    errNum = WLZ_ERR_READ_EOF;
-  }
+  /* don't need to check tif file pointer since already checked
+     but do need to set the directory */
+  TIFFSetDirectory(tif, dir);
 
   if(errNum == WLZ_ERR_NONE)
   {
+    /* determine depth and pixel type */
     TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
     TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
     switch( samplesperpixel ){
@@ -198,7 +184,6 @@ WlzObject	*WlzEffReadObjTiff(
       inp = buf;
       switch (photometric) {
       case PHOTOMETRIC_RGB:
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
 	if (samplesperpixel == 4){
 	  for (col = 0; col < width; col++, offset++) {
 	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
@@ -213,23 +198,6 @@ WlzObject	*WlzEffReadObjTiff(
 	    inp += 3;	/* skip to next values */
 	  }
 	}
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-	if (samplesperpixel == 4){
-	  for (col = 0; col < width; col++, offset++) {
-	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
-			      inp[3], inp[2], inp[1], inp[0]);
-	    inp += 4;	/* skip to next values */
-	  }
-	}
-	else {
-	  for (col = 0; col < width; col++, offset++) {
-	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
-			      inp[2], inp[1], inp[0], 0xff);
-	    inp += 3;	/* skip to next values */
-	  }
-	}
-#endif /* __x86 || __alpha */
 	break;
 
       case PHOTOMETRIC_MINISWHITE:
@@ -281,21 +249,16 @@ WlzObject	*WlzEffReadObjTiff(
     }
   }
 
+  /* I don't think we should multiply with the resolution here - RAB */
   if( errNum == WLZ_ERR_NONE ){
     if( TIFFGetField(tif, TIFFTAG_XPOSITION, &xPosition) != 1 ){
       xPosition = 0.0;
     }
-    if( TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xResolution) != 1 ){
-      xResolution = 1.0;
-    }
     if( TIFFGetField(tif, TIFFTAG_YPOSITION, &yPosition) != 1 ){
       yPosition = 0.0;
     }
-    if( TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yResolution) != 1 ){
-      yResolution = 1.0;
-    }
-    colMin = WLZ_NINT(xPosition*xResolution);
-    rowMin = WLZ_NINT(yPosition*yResolution);
+    colMin = WLZ_NINT(xPosition);
+    rowMin = WLZ_NINT(yPosition);
     if( obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
 			  newpixtype, wlzData.inp, bckgrnd,
 			  NULL, NULL, &errNum) ){
@@ -315,6 +278,118 @@ WlzObject	*WlzEffReadObjTiff(
   if( Map ){
     AlcFree( Map );
   }
+  
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return obj;
+}
+
+
+/************************************************************************
+* Function:	WlzEffReadObjTiff					*
+* Returns:	WlzObject *:		Object read from file.		*
+* Purpose:	Reads a Woolz object from the given file using	 	*
+*		the TIFF format. 					*
+* Global refs:	-							*
+* Parameters:	const char *tiffFileName: Given file name.		*
+* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
+*					may be NULL.			*
+************************************************************************/
+WlzObject	*WlzEffReadObjTiff(
+  const char 	*tiffFileName,
+  WlzErrorNum 	*dstErr)
+{
+  WlzObject	*obj=NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  TIFF 		*tif=NULL;
+  int		p, numPlanes;
+
+  if((tiffFileName == NULL) || (*tiffFileName == '\0'))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if( (tif = TIFFOpen(tiffFileName, "r")) == NULL )
+  {
+    errNum = WLZ_ERR_READ_EOF;
+  }
+
+  /* check for a tiff-stack.
+     Not quite sure what a TIFF directory is - one day read the manual,
+     but this is the way tiffsplit works and seems to assume that each
+     directory is a seperate image which we take as a seperate plane.
+     This could also of course be a patched object so maybe we should
+     allow a compound object return option.
+  */
+  numPlanes = TIFFNumberOfDirectories(tif);
+  if( numPlanes > 1 ){
+    WlzObject	*tmpObj;
+    WlzDomain	domain, *domains;
+    WlzValues	values, *valuess;
+    WlzPixelV 	bckgrnd;
+
+    /* use width, height and position of first object for the plane-domain
+       standardise later */
+    if( tmpObj = WlzExtFFReadTiffDirObj(tif, 0, &errNum) ){
+
+      /* build the planedomain and voxelvaluetable */
+      if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+					0, numPlanes - 1,
+					tmpObj->domain.i->line1,
+					tmpObj->domain.i->lastln,
+					tmpObj->domain.i->kol1,
+					tmpObj->domain.i->lastkl,
+					&errNum) ){
+	bckgrnd = WlzGetBackground(tmpObj, &errNum);
+	if( values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					     0, numPlanes - 1,
+					     bckgrnd, NULL,
+					     &errNum) ){
+	  domains = domain.p->domains;
+	  domains[0] = WlzAssignDomain(tmpObj->domain, NULL);
+	  valuess = values.vox->values;
+	  valuess[0] = WlzAssignValues(tmpObj->values, NULL);
+	  if((obj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
+				NULL, NULL, &errNum)) == NULL){
+	    WlzFreeValues(values);
+	    WlzFreeDomain(domain);
+	  }
+	}
+	else{
+	  WlzFreeDomain(domain);
+	}
+      }
+      WlzFreeObj(tmpObj);
+    }
+
+    /* put in voxel size  - have to assume plane separation of 1.0 */
+    if( errNum == WLZ_ERR_NONE ){
+      TIFFGetField(tif, TIFFTAG_XRESOLUTION, &(domain.p->voxel_size[0]));
+      TIFFGetField(tif, TIFFTAG_YRESOLUTION, &(domain.p->voxel_size[1]));
+    }
+
+    /* now put in remaining planes */
+    if( errNum == WLZ_ERR_NONE ){
+      for(p=1; p < numPlanes; p++){
+	if( tmpObj = WlzExtFFReadTiffDirObj(tif, p, &errNum) ){
+	  domains[p] = WlzAssignDomain(tmpObj->domain, NULL);
+	  valuess[p] = WlzAssignValues(tmpObj->values, NULL);
+	  WlzFreeObj(tmpObj);
+	}
+	else {
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+
+    /* should standardise here */
+  }
+  else {
+    obj = WlzExtFFReadTiffDirObj(tif, 0, &errNum);
+  }
+
   if( tif ){
     TIFFClose( tif );
   }
@@ -326,20 +401,11 @@ WlzObject	*WlzEffReadObjTiff(
   return obj;
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjTiff					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given file 	*
-*		using the TIFF format. 					*
-* Global refs:	-							*
-* Parameters:	const char *tiffFileName: Given file name with .tif,	*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
-WlzErrorNum WlzEffWriteObjTiff(
-  const char *tiffFileName,
-  WlzObject *obj)
+static WlzErrorNum WlzEffWriteTiffDirObj(
+  TIFF		*out,
+  WlzObject	*obj,
+  int		dir)
 {
-  TIFF 		*out;
   WlzObject	*rectObj=NULL;
   int		width, height;
   float		xPosition, yPosition, xResolution, yResolution;
@@ -348,101 +414,91 @@ WlzErrorNum WlzEffWriteObjTiff(
   unsigned char	*buf=NULL;
   int		i, j;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzIBox2	cutBox;
+  WlzPixelV	minP, maxP;
+  WlzGreyType gType;
 
-  if((tiffFileName == NULL) || (*tiffFileName == '\0'))
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else if(obj == NULL)
-  {
-    errNum = WLZ_ERR_OBJECT_NULL;
-  }
-  else if(obj->domain.core == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(obj->values.core == NULL)
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
-  else if( obj->type != WLZ_2D_DOMAINOBJ )
-  {
-    errNum = WLZ_ERR_OBJECT_TYPE;
-  }
-  else
-  {
-    if( (out = TIFFOpen(tiffFileName, "w")) == NULL ){
-      errNum = WLZ_ERR_FILE_OPEN;
-    }
-  }
+  /* no checks since called only from WlzEffWriteObjTiff*/
+  cutBox.xMin = obj->domain.i->kol1;
+  cutBox.yMin = obj->domain.i->line1;
+  cutBox.xMax = obj->domain.i->lastkl;
+  cutBox.yMax = obj->domain.i->lastln;
+  gType = WlzGreyTypeFromObj(obj, &errNum);
 
-  if(errNum == WLZ_ERR_NONE)
-  {
-    WlzIBox2	cutBox;
-    WlzGreyType gType;
+  if((errNum == WLZ_ERR_NONE) &&
+     (rectObj = WlzCutObjToBox2D(obj, cutBox, gType,
+				 0, 0.0, 0.0, &errNum)) ){
 
-    cutBox.xMin = obj->domain.i->kol1;
-    cutBox.yMin = obj->domain.i->line1;
-    cutBox.xMax = obj->domain.i->lastkl;
-    cutBox.yMax = obj->domain.i->lastln;
-    gType = WlzGreyTypeFromObj(obj, &errNum);
-    if((errNum == WLZ_ERR_NONE) &&
-       (rectObj = WlzCutObjToBox2D(obj, cutBox, gType, 0, 0.0, 0.0, &errNum)) ){
+    /* output image size parameters */
+    width = rectObj->domain.i->lastkl - rectObj->domain.i->kol1 + 1;
+    height = rectObj->domain.i->lastln - rectObj->domain.i->line1 + 1;
+    xPosition = WLZ_MAX(rectObj->domain.i->kol1, 0);
+    yPosition = WLZ_MAX(rectObj->domain.i->line1, 0);
+    xResolution = 1.0;
+    yResolution = 1.0;
+    TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32) width);
+    TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32) height);
+    TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+    TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+    TIFFSetField(out, TIFFTAG_XPOSITION, xPosition);
+    TIFFSetField(out, TIFFTAG_YPOSITION, yPosition);
+    TIFFSetField(out, TIFFTAG_XRESOLUTION, xResolution);
+    TIFFSetField(out, TIFFTAG_YRESOLUTION, yResolution);
 
-      /* output image size parameters */
-      width = rectObj->domain.i->lastkl - rectObj->domain.i->kol1 + 1;
-      height = rectObj->domain.i->lastln - rectObj->domain.i->line1 + 1;
-      xPosition = rectObj->domain.i->kol1;
-      yPosition = rectObj->domain.i->line1;
-      xResolution = 1.0;
-      yResolution = 1.0;
-      TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32) width);
-      TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32) height);
-      TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
-      TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
-      TIFFSetField(out, TIFFTAG_XPOSITION, xPosition);
-      TIFFSetField(out, TIFFTAG_YPOSITION, yPosition);
-      TIFFSetField(out, TIFFTAG_XRESOLUTION, xResolution);
-      TIFFSetField(out, TIFFTAG_YRESOLUTION, yResolution);
-
-      /* out put pixel type, no compression for now */
-      switch( gType ){
-      case WLZ_GREY_SHORT:
-	TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
-	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
-	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 16);
-	break;
-
-      case WLZ_GREY_UBYTE:
-	TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
-	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
-	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
-	break;
-
-      case WLZ_GREY_RGBA:
-	TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
-	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 4);
-	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
-	break;
-
-      case WLZ_GREY_LONG:
-      case WLZ_GREY_INT:
-      case WLZ_GREY_FLOAT:
-      case WLZ_GREY_DOUBLE:
-      case WLZ_GREY_BIT:
-      default:
-	errNum = WLZ_ERR_FILE_FORMAT;
-	break;
+    /* out put pixel type, no compression for now */
+    switch( gType ){
+    case WLZ_GREY_INT:
+      /* check if it can fit into a short and fall through
+	 should really be done externally */
+      if( WlzGreyRange(obj, &minP, &maxP) == WLZ_ERR_NONE ){
+	if((minP.v.inv < 0) || (maxP.v.inv > (1<<15))){
+	  errNum = WLZ_ERR_FILE_FORMAT;
+	  break;
+	}
       }
-      TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+    case WLZ_GREY_SHORT:
+      TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+      TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
+      TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 16);
+      break;
 
-      /* write the data line by line */
+    case WLZ_GREY_UBYTE:
+      TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+      TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
+      TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
+      break;
+
+    case WLZ_GREY_RGBA:
+      TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+      TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 4);
+      TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
+      break;
+
+    case WLZ_GREY_LONG:
+    case WLZ_GREY_FLOAT:
+    case WLZ_GREY_DOUBLE:
+    case WLZ_GREY_BIT:
+    default:
+      errNum = WLZ_ERR_FILE_FORMAT;
+      break;
+    }
+    TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+
+    /* write the data line by line */
+    if( errNum == WLZ_ERR_NONE ){
       if( (buf = (unsigned char *)AlcMalloc(TIFFScanlineSize(out))) == NULL ){
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
-      else if((errNum = WlzInitGreyScan(rectObj, &iwsp, &gwsp)) == WLZ_ERR_NONE){
+      else if((errNum = WlzInitGreyScan(rectObj, &iwsp, &gwsp))
+	      == WLZ_ERR_NONE){
 	while((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
 	  switch( gType ){
+	  case WLZ_GREY_INT:
+	    for(i=0, j=0; i < width; i++){
+	      buf[j++] = ((gwsp.u_grintptr.inp[i]) & 0xff00) >> 8;
+	      buf[j++] = (gwsp.u_grintptr.inp[i]) & 0xff;
+	    }
+	    break;
 	  case WLZ_GREY_SHORT:
 	    for(i=0, j=0; i < width; i++){
 	      buf[j++] = ((gwsp.u_grintptr.shp[i]) & 0xff00) >> 8;
@@ -464,7 +520,7 @@ WlzErrorNum WlzEffWriteObjTiff(
 	    break;
 	  }
 
-	  if( TIFFWriteScanline(out, buf, iwsp.linpos, 0) < 0 ){
+	  if( TIFFWriteScanline(out, buf, iwsp.linpos-iwsp.linbot, 0) < 0 ){
 	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	    break;
 	  }
@@ -472,10 +528,124 @@ WlzErrorNum WlzEffWriteObjTiff(
 	if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
 	}
+	TIFFWriteDirectory( out );
 	AlcFree(buf);
       }
+    }
 
-      WlzFreeObj(rectObj);
+    WlzFreeObj(rectObj);
+  }
+
+  return errNum;
+}
+
+/************************************************************************
+ * Function:	WlzEffWriteObjTiff					*
+ * Returns:	WlzErrorNum		Woolz error number.		*
+ * Purpose:	Writes the given Woolz object to the given file 	*
+ *		using the TIFF format. 					*
+* Global refs:	-							*
+* Parameters:	const char *tiffFileName: Given file name with .tif,	*
+*		WlzObject *obj:		Given woolz object.		*
+************************************************************************/
+WlzErrorNum WlzEffWriteObjTiff(
+  const char *tiffFileName,
+  WlzObject *obj)
+{
+  TIFF 		*out;
+  WlzObject	*tmpObj;
+  WlzDomain	*domains;
+  WlzValues	*valuess;
+  int		p;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((tiffFileName == NULL) || (*tiffFileName == '\0'))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch( obj->type ){
+    case WLZ_2D_DOMAINOBJ:
+      if( (out = TIFFOpen(tiffFileName, "w")) == NULL ){
+	errNum = WLZ_ERR_FILE_OPEN;
+      }
+      else {
+	errNum = WlzEffWriteTiffDirObj(out, obj, 0);
+      }
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      /* check data types */
+      switch( obj->domain.p->type ){
+      case WLZ_PLANEDOMAIN_DOMAIN:
+	switch( obj->values.vox->type ){
+	case WLZ_VOXELVALUETABLE_GREY:
+	  /* OK 3D grey-level voxel image */
+	  if( (out = TIFFOpen(tiffFileName, "w")) == NULL ){
+	    errNum = WLZ_ERR_FILE_OPEN;
+	  }
+	  else {
+	    /* should shift so that all planes are positive or zero
+	       offset */
+	    domains = obj->domain.p->domains;
+	    valuess = obj->values.vox->values;
+	    tmpObj = NULL;
+	    for(p=0; p < (obj->domain.p->lastpl - obj->domain.p->plane1 + 1) &&
+		  (errNum == WLZ_ERR_NONE);
+		p++){
+	      if( domains[p].core && valuess[p].core ){
+		if( tmpObj ){
+		  WlzFreeObj(tmpObj);
+		  tmpObj = NULL;
+		}
+		if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+					 domains[p], valuess[p],
+					 NULL, NULL, &errNum) ){
+		  errNum = WlzEffWriteTiffDirObj(out, tmpObj, p);
+		}
+	      }
+	      else {
+		if( tmpObj ){
+		  WlzGreySetValue(tmpObj, WlzGetBackground(tmpObj, NULL));
+		  errNum = WlzEffWriteTiffDirObj(out, tmpObj, p);
+		}
+	      }
+	    }
+	  }
+	  break;
+
+	default:
+	  errNum = WLZ_ERR_VALUES_TYPE;
+	  break;
+	}
+	break;
+
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+      }
+      break;
+
+    case WLZ_COMPOUND_ARR_1:
+    case WLZ_COMPOUND_ARR_2:
+      /* should be able to do these as tiff stacks */
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
   }
 
