@@ -48,6 +48,18 @@ typedef enum _WlzContourTriIsn2D
   WLZ_CONTOUR_TIC2D_S21S10              /*!< Side 2-1 - side 1-0 */
 } WlzContourTriIsn2D;
 
+/*!
+* \enum		_WlzContourBndSamMethod
+* \ingroup	WlzContour
+* \brief	Boudary point sampling methods.
+		Typedef: ::WlzContourBndSamMethod.
+*/
+typedef enum _WlzContourBndSamMethod
+{
+  WLZ_CONTOUR_BNDPTS_REGULAR,
+  WLZ_CONTOUR_BNDPTS_RANDOM
+} WlzContourBndSamMethod;
+
 static WlzContour	*WlzContourIsoObj2D(
 			  WlzObject *srcObj,
 			  double isoVal,
@@ -102,6 +114,22 @@ static WlzDVertex3 	WlzContourItpTetSide(
 			  double valDst,
 			  WlzDVertex3 posOrg,
 			  WlzDVertex3 posDst);
+static WlzIVertex3 	*WlzContourBndPts(
+			  WlzObject *obj,
+			  WlzContourBndSamMethod sMtd,
+			  int sFac,
+			  int *dstNPts,
+			  WlzErrorNum *dstErr);
+static WlzIVertex3 	*WlzContourBndPtsSamRnd(
+			  WlzObject *obj,
+			  int sFac,
+			  int *dstNPts,
+			  WlzErrorNum *dstErr);
+static WlzIVertex3 	*WlzContourBndPtsSamReg(
+			  WlzObject *obj,
+			  int sFac,
+			  int *dstNPts,
+			  WlzErrorNum *dstErr);
 static WlzErrorNum	WlzContourScaleModelVoxSz(
 			  WlzGMModel *model,
 			  WlzPlaneDomain *pDom);
@@ -345,8 +373,8 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourBndObj3D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_RBFBND:
-	    ctr = WlzContourRBFBndObj3D(srcObj, 2, 2, 10,
-	    				0.10, 0.2, 1.0, 2.0, 0.1, 0.1,
+	    ctr = WlzContourRBFBndObj3D(srcObj, 2, 2, 10, 10, 10,
+	    			        1.0, 2.0, 0.1, 0.1,
 	    				&errNum);
 	    break;
 	  default:
@@ -564,6 +592,21 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
     WlzValueSetDouble(dist + nSPts, -iDist, nIPts);
     WlzValueSetDouble(alpha + nSPts + nIPts, oAlpha, nOPts);
     WlzValueSetDouble(dist + nSPts + nIPts, oDist, nOPts);
+#ifdef WLZ_CONTOURFROMPOINTS_DEBUG
+    {
+      int idx;
+      FILE *fP;
+
+      fP = fopen("DEBUG_pts.num", "w");
+      for(idx = 0; idx < nCPts; ++idx)
+      {
+        (void )fprintf(fP, "%g %g %g %g %g\n",
+	               (cPts + idx)->vtX, (cPts + idx)->vtY, (cPts + idx)->vtZ,
+		       *(dist + idx), *(alpha + idx));
+      }
+      fclose(fP);
+    }
+#endif
     basisFn = WlzBasisFnScalarMOS3DFromCPts(nCPts, cPts, dist, alpha,
     					bFnParam, &errNum);
   }
@@ -576,41 +619,47 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
     valP = dVal->values;
 #ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
     (void )fprintf(stderr,
-    		   "WlzContourFromPoints3D: plane1 %d, lastpl %d\n",
-    		   dDom->plane1, dDom->lastpl);
+    		   "WlzContourFromPoints3D: %d %d %d %d %d %d\n",
+    		   dDom->kol1, dDom->line1, dDom->plane1,
+		   dDom->lastkl, dDom->lastln, dDom->lastpl);
 #endif
     dPos.vtZ = dDom->plane1;
     while((errNum == WLZ_ERR_NONE) && (dPos.vtZ <= dDom->lastpl))
     {
-#ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
-    (void )fprintf(stderr, "WlzContourFromPoints3D: plane %g\n", dPos.vtZ);
-#endif
       if((*domP).core)
       {
+#ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
+	(void )fprintf(stderr,
+		       "WlzContourFromPoints3D: plane %g (%d %d %d %d)\n",
+		       dPos.vtZ,
+		       (*domP).i->kol1, (*domP).i->line1,
+		       (*domP).i->lastkl, (*domP).i->lastln);
+#endif
 	dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domP, *valP, 
-			     NULL, NULL, &errNum);
+	    NULL, NULL, &errNum);
+
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzInitGreyScan(dObj2D, &iWSp, &gWSp);
 	}
 	while((errNum == WLZ_ERR_NONE) &&
-	      ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+	    ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
 	{
 	  tGP = gWSp.u_grintptr;
 	  dPos.vtY = iWSp.linpos;
 	  switch(gWSp.pixeltype)
 	  {
 	    case WLZ_GREY_FLOAT:
-	      for(dPos.vtX = iWSp.lftpos; dPos.vtX <= iWSp.rgtpos;
-	          ++(dPos.vtX))
+	      for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
 	      {
+		dPos.vtX = klIdx;
 		*(tGP.flp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
 	      }
 	      break;
 	    case WLZ_GREY_DOUBLE:
-	      for(dPos.vtX = iWSp.lftpos; dPos.vtX <= iWSp.rgtpos;
-	          ++(dPos.vtX))
+	      for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
 	      {
+		dPos.vtX = klIdx;
 		*(tGP.dbp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
 	      }
 	      break;
@@ -623,21 +672,9 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
 	{
 	  errNum = WLZ_ERR_NONE;
 	}
-#ifdef WLZ_CONTOURFROMPOINTS_DEBUG
-  if(fabs(dPos.vtZ - 25.0) < DBL_EPSILON)
-  {
-    FILE *fP;
-    
-    if((fP = fopen("DEBUG_2D.wlz", "w")) != NULL)
-    {
-      (void )WlzWriteObj(fP, dObj2D);
-      (void )fclose(fP);
-    }
-  }
-#endif
 	WlzFreeObj(dObj2D);
       }
-      ++(dPos.vtZ);
+      dPos.vtZ += 1.0;
       ++domP;
       ++valP;
     }
@@ -962,8 +999,8 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
       bBox2D = WlzBoundingBox2I(obj2D, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        bufOff.vtX = bBox2D.xMin;
-        bufOff.vtY = bBox2D.yMin;
+        bufOff.vtX = bBox3D.xMin;
+        bufOff.vtY = bBox3D.yMin;
         errNum = WlzToArray2D((void ***)&(itvBuf[bufIdx1]), obj2D,
 			      bufSz, bufOff, 0, WLZ_GREY_BIT);
       }
@@ -1883,10 +1920,9 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 * \param	sDilation		Object boundary dilation for
 *					distance object used in surface
 *					extraction.
-* \param	sFrac			Fraction of surface points to use.
-* \param	oFrac			Fraction of the interior and exterior
-*					points to use for the
-*					interior and exterior points.
+* \param	sFac			Sampling factor for surface points.
+* \param	oFac			Sampling factor for interior and
+*					exterior points.
 * \param	sAlpha			Degree of approximation for the
 *					surface boundary points. The
 *					multi-order spline \f$\alpha\f$
@@ -1904,7 +1940,7 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 */
 WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
 				int bErosion, int bDilation, int sDilation,
-				double sFrac, double oFrac,
+				int sFac, int oFac,
 				double sAlpha, double oAlpha,
 				double delta, double tau,
 				WlzErrorNum *dstErr)
@@ -1914,12 +1950,10 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
 		nEPts,
   		nSPts,
 		nTPts;
-  int		*tBuf = NULL;
   WlzObjectType	gTType;
   WlzVertexP	dPts,
   		ePts,
 		sPts;
-  WlzIVertex3	*tPts = NULL;
   WlzObject	*dObj = NULL,
   		*eObj = NULL,
 		*sObj = NULL,
@@ -1930,6 +1964,7 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
   WlzVertexP	vP;
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const WlzContourBndSamMethod sMtd = WLZ_CONTOUR_BNDPTS_RANDOM;
 
   dPts.v = ePts.v = sPts.v = NULL;
   if(gObj == NULL)
@@ -1973,104 +2008,33 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
   }
   WlzFreeObj(sObj); sObj = NULL;
 #ifdef WLZ_CONTOURFROMPOINTS_DEBUG
-    if(errNum == WLZ_ERR_NONE)
-    {
-      FILE *fP;
-      fP = fopen("DEBUG_dObj.wlz", "w");
-      (void )WlzWriteObj(fP, dObj);
-      fclose(fP);
-      fP = fopen("DEBUG_eObj.wlz", "w");
-      (void )WlzWriteObj(fP, eObj);
-      fclose(fP);
-    }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    FILE *fP;
+    fP = fopen("DEBUG_dObj.wlz", "w");
+    (void )WlzWriteObj(fP, dObj);
+    fclose(fP);
+    fP = fopen("DEBUG_eObj.wlz", "w");
+    (void )WlzWriteObj(fP, eObj);
+    fclose(fP);
+  }
 #endif
-  /* Extract boundary points from the given; dilated and eroded objects. */
+  /* Extract boundary points from the given, dilated and eroded objects. */
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzVerticesFromObjBnd3I(dObj, &nDPts, &(dPts.i3));
+    dPts.i3 = WlzContourBndPts(dObj, sMtd, oFac, &nDPts, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzVerticesFromObjBnd3I(eObj, &nEPts, &(ePts.i3));
+    ePts.i3 = WlzContourBndPts(eObj, sMtd, oFac, &nEPts, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzVerticesFromObjBnd3I(gObj, &nSPts, &(sPts.i3));
+    sPts.i3 = WlzContourBndPts(gObj, sMtd, sFac, &nSPts, &errNum);
   }
   /* Free dilated and eroded boundary objects. */
   (void )WlzFreeObj(dObj); dObj = NULL;
   (void )WlzFreeObj(eObj);
-  /* Sample the boundary points and release storage. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    nTPts = ALG_MAX(nDPts, nEPts);
-    nTPts = ALG_MAX(nTPts, nSPts);
-    if(((tBuf = (int *)AlcMalloc(nTPts * sizeof(int))) == NULL) ||
-       ((tPts = (WlzIVertex3 *)
-       		AlcMalloc(nTPts * sizeof(WlzIVertex3))) == NULL))
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    (void )AlgShuffleIdx(nSPts, tBuf, 0);
-    if((nSPts = (int )ceil(nSPts * sFrac)) <= 0)
-    {
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-    else
-    {
-      for(idx = 0; idx < nSPts; ++idx)
-      {
-	*(tPts + idx) = *(sPts.i3 + *(tBuf + idx));
-      }
-      WlzValueCopyIVertexToIVertex3(sPts.i3, tPts, nSPts);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    (void )AlgShuffleIdx(nDPts, tBuf, 0);
-    if((nDPts = (int )ceil(nDPts * oFrac)) <= 0)
-    {
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-    else
-    {
-      for(idx = 0; idx < nDPts; ++idx)
-      {
-        *(tPts + idx) = *(dPts.i3 + *(tBuf + idx));
-      }
-      WlzValueCopyIVertexToIVertex3(dPts.i3, tPts, nDPts);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    (void )AlgShuffleIdx(nEPts, tBuf, 0);
-    if((nEPts = (int )ceil(nEPts * oFrac)) <= 0)
-    {
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-    else
-    {
-      for(idx = 0; idx < nEPts; ++idx)
-      {
-        *(tPts + idx) = *(ePts.i3 + *(tBuf + idx));
-      }
-      WlzValueCopyIVertexToIVertex3(ePts.i3, tPts, nEPts);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(((sPts.v = AlcRealloc(sPts.v, nSPts * sizeof(WlzIVertex3))) == NULL) ||
-       ((dPts.v = AlcRealloc(dPts.v, nDPts * sizeof(WlzIVertex3))) == NULL) ||
-       ((ePts.v = AlcRealloc(ePts.v, nEPts * sizeof(WlzIVertex3))) == NULL))
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  AlcFree(tBuf); tBuf = NULL;
-  AlcFree(tPts);  tPts = NULL;
 #ifdef WLZ_CONTOUR_DEBUG_RBF
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2163,6 +2127,167 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
     *dstErr = errNum;
   }
   return(ctr);
+}
+
+/*!
+* \return	Boundary points.
+* \brief	Compute 3D boundary points of the given objects domain
+*		using the given scale factor.
+* \param	obj			Given object with domain.
+* \param	sFac			Given scale factor.
+* \param	dstNPts			Destination pointer for the number
+*					of boundary points, must NOT be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzIVertex3 *WlzContourBndPts(WlzObject *obj,
+					WlzContourBndSamMethod sMtd, int sFac,
+					int *dstNPts, WlzErrorNum *dstErr)
+{
+  WlzIVertex3	*pts = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(sMtd)
+  {
+    case WLZ_CONTOUR_BNDPTS_RANDOM:
+      pts = WlzContourBndPtsSamRnd(obj, sFac, dstNPts, &errNum);
+      break;
+    case WLZ_CONTOUR_BNDPTS_REGULAR:
+      pts = WlzContourBndPtsSamReg(obj, sFac, dstNPts, &errNum);
+      break;
+    default:
+      errNum = WLZ_ERR_UNIMPLEMENTED;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pts);
+}
+
+/*!
+* \return	Boundary points.
+* \brief	Compute 3D boundary points of the given objects domain
+*		using random sampling.
+* \param	obj			Given object with domain.
+* \param	sFac			Given scale factor.
+* \param	dstNPts			Destination pointer for the number
+*					of boundary points, must NOT be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzIVertex3 *WlzContourBndPtsSamRnd(WlzObject *obj, int sFac,
+					int *dstNPts, WlzErrorNum *dstErr)
+{
+  int		idx,
+  		nPts = 0,
+		nAllPts = 0;
+  int		*shfIdx = NULL;
+  WlzIVertex3	*pts = NULL,
+  		*allPts = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(sFac < 1)
+  {
+    sFac = 1;
+  }
+  errNum = WlzVerticesFromObjBnd3I(obj, &nAllPts, &allPts);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nPts = nAllPts / sFac;
+    if((nPts == 0) && (nAllPts != 0))
+    {
+      nPts = 1;
+    }
+    if(((shfIdx = (int *)AlcMalloc(nAllPts * sizeof(int))) == NULL) ||
+       ((pts = (WlzIVertex3 *)AlcMalloc(nPts * sizeof(WlzIVertex3))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )AlgShuffleIdx(nAllPts, shfIdx, 0);
+    for(idx = 0; idx < nPts; ++idx)
+    {
+      *(pts + idx) = *(allPts + *(shfIdx + idx));
+    }
+    *dstNPts = nPts;
+  }
+  AlcFree(shfIdx);
+  AlcFree(allPts);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pts);
+}
+
+/*!
+* \return	Boundary points.
+* \brief	Compute 3D boundary points of the given objects domain
+*		using regular sampling with the given scale factor followed
+*		by dithering.
+* \param	obj			Given object with domain.
+* \param	sFac			Given scale factor.
+* \param	dstNPts			Destination pointer for the number
+*					of boundary points, must NOT be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzIVertex3 *WlzContourBndPtsSamReg(WlzObject *obj, int sFac,
+					int *dstNPts, WlzErrorNum *dstErr)
+{
+  int		idx,
+  		nPts = 0;
+  double	dithOffD,
+  		dithSclD,
+  		sFacD;
+  WlzIVertex3	ptI,
+  		sFacI3;
+  WlzDVertex3	ptD;
+  WlzIVertex3	*pts = NULL;
+  WlzObject	*tObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((sFacD = fabs(sFac)) < 1.0)
+  {
+    sFacD = 1.0;
+  }
+  if((sFacD = pow(sFacD, 0.333333)) < 1.0)
+  {
+    sFacD = 1.0;
+  }
+  sFac = ALG_NINT(sFacD);
+  sFacD = sFacI3.vtX = sFacI3.vtY = sFacI3.vtZ = sFac;
+  tObj = WlzSampleObjPoint3D(obj, sFacI3, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzVerticesFromObjBnd3I(tObj, &nPts, &pts);
+  }
+  (void )WlzFreeObj(tObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(sFac > 1)
+    {
+      dithOffD = 0.5 - (10 * DBL_EPSILON);
+      dithSclD = 1.0 - (20.0 * DBL_EPSILON);
+      for(idx = 0; idx < nPts; ++idx)
+      {
+	ptD.vtX = (pts + idx)->vtX + (dithSclD * AlgRandUniform()) + dithOffD;
+	ptD.vtY = (pts + idx)->vtY + (dithSclD * AlgRandUniform()) + dithOffD;
+	ptD.vtZ = (pts + idx)->vtZ + (dithSclD * AlgRandUniform()) + dithOffD;
+	WLZ_VTX_3_SCALE(ptD, ptD, sFacD);
+	(pts + idx)->vtX = ALG_NINT(ptD.vtX);
+	(pts + idx)->vtY = ALG_NINT(ptD.vtY);
+	(pts + idx)->vtZ = ALG_NINT(ptD.vtZ);
+      }
+    }
+    *dstNPts = nPts;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pts);
 }
 
 /*!
