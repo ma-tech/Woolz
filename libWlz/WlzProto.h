@@ -1071,6 +1071,14 @@ extern WlzContour		*WlzContourObjGrd(
 				  double ctrHi,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
+extern WlzContour 		*WlzContourGrdObj2D(
+				  WlzObject *srcObj,
+				  WlzObject *gXObj,
+				  WlzObject *gYObj,
+				  double grdLo,
+				  double grdHi,
+				  double ftrPrm,
+				  WlzErrorNum *dstErr);
 extern WlzContour		*WlzContourRBFBndObj3D(
 				  WlzObject *srcObj,
 				  int bErosion,
@@ -1787,7 +1795,8 @@ extern WlzErrorNum		WlzGMFilterGeomLP(
 				  double kSB,
 				  double dPB,
 				  double dSB,
-				  int maxItr);
+				  int maxItr,
+				  int nonMan);
 extern WlzErrorNum     		WlzGMFilterGeomLPParam(
 				  double *dstLambda,
 				  double *dstMu,
@@ -1800,7 +1809,8 @@ extern WlzErrorNum     		WlzGMFilterGeomLPLM(
 				  WlzGMModel *model,
 				  double lambda,
 				  double mu,
-				  int nItr);
+				  int nItr,
+				  int nonMan);
 
 /************************************************************************
 * WlzGeometry.c								*
@@ -1826,6 +1836,10 @@ extern double			WlzGeomTriangleSnArea2(
 				  WlzDVertex2 vx0,
 				  WlzDVertex2 vx1,
 				  WlzDVertex2 vx2);
+extern double			WlzGeomTriangleArea2Sq3(
+				  WlzDVertex3 vx0,
+				  WlzDVertex3 vx1,
+				  WlzDVertex3 vx2);
 extern int			WlzGeomLineSegmentsIntersect(
 				  WlzDVertex2 p0,
 				  WlzDVertex2 p1,
@@ -2530,6 +2544,21 @@ extern WlzErrorNum  		WlzMatchICPCtr(
 				  double matchImpThr,
                                   WlzRegICPUsrWgtFn usrWgtFn,
                                   void *usrWgtData);
+extern WlzErrorNum		WlzMatchICPDomObj2D(
+				  WlzObject *tObj,
+				  WlzObject *sObj,
+				  WlzAffineTransform *initTr,
+				  int maxItr,
+				  int minSpx,
+				  int *dstNMatch,
+				  WlzVertexP *dstTMatch,
+				  WlzVertexP *dstSMatch,
+				  int brkFlg,
+				  double  maxDisp,
+				  double maxAng,
+				  double maxDeform,
+				  int matchImpNN,
+				  double matchImpThr);
 extern double          		WlzMatchICPWeightMatches(
 				  WlzVertexType vType,
 				  WlzAffineTransform *curTr,
