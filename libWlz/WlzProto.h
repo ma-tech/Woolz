@@ -3041,6 +3041,13 @@ extern const char 		*WlzWindowFnName(
 extern WlzErrorNum 		WlzWriteObj(
 				  FILE *fp,
 			          WlzObject *obj);
+/************************************************************************
+* WlzMwrAngle.c								*
+************************************************************************/
+extern double WlzMwrAngle(WlzObject *cvh,
+			  WlzErrorNum *dstErr);
+
+
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */

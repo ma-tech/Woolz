@@ -123,6 +123,7 @@ CSOURCES		= \
 			WlzMeshTransform.c \
 			WlzMeshUtils.c \
 			WlzMatchICP.c \
+			WlzMwrAngle.c \
 			WlzNMSuppress.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c  \

@@ -19,6 +19,11 @@
 * \bug          None known
 * \ingroup      WlzPolyline
 *
+* Maintenance:	Log changes below, with most recent at top of list.
+* 03-11-01 ip	Do not close polygon in WLZ_VERTEX_FILL mode
+* 15-01-02 JP	Work around an apparent bug in WlzPolyTo8Polygon() as used by
+*				WlzPolyToObj(). 
+*
 */
 
 #include <stdlib.h>
@@ -48,11 +53,16 @@ int WlzPolyCrossings(
   int		i, crossings;
   WlzIVertex2	*vtxs;
   double	x;
+  WlzIVertex2 vtxs1, vtxs2;
   
   /* run round polyline checking crossings */
   vtxs = pgdm->vtx;
   crossings = 0;
   for(i=0; i < pgdm->nvertices - 1; i++){
+    vtxs1.vtX = vtxs[i].vtX;
+    vtxs1.vtY = vtxs[i].vtY;
+    vtxs2.vtX = vtxs[i+1].vtX;
+    vtxs2.vtY = vtxs[i+1].vtY;
     if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
        ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
       x = (vtx.vtY - vtxs[i].vtY) * (vtxs[i+1].vtX - vtxs[i].vtX) /
@@ -276,13 +286,17 @@ WlzObject *WlzPolyToObj(
   int			l1, ll, k1, lk, nints;
   int			num_vtxs, nv;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-
-  /* find a new polygon eight-connected and closed */
-  if( new_poly = WlzPolyTo8Polygon(pgdm, 1, &errNum) ){
+/* The following line needed until we resolve an apparent bug in WlzPolyTo8Polygon() */
+  WlzObject *new_poly_preserve;
+  
+  int w = fillMode == WLZ_VERTEX_FILL ? 0 : 1;		/* 03-11-01 ip */
+  /* find a new polygon eight-connected and closed if required*/
+  if( new_poly = WlzPolyTo8Polygon(pgdm, w, &errNum) ){
     vtxs     = ((WlzPolygonDomain *) new_poly->domain.poly)->vtx;
-    num_vtxs = ((WlzPolygonDomain *) new_poly->domain.poly)->nvertices - 1;
+    num_vtxs = ((WlzPolygonDomain *) new_poly->domain.poly)->nvertices - w;
   }
-
+/* The following line needed until we resolve an apparent bug in WlzPolyTo8Polygon() */
+  new_poly_preserve = WlzPolyTo8Polygon(pgdm, w, &errNum);
   /* find line and column bounds */
   if( errNum == WLZ_ERR_NONE ){
     l1 = ll = vtxs->vtY;
@@ -320,7 +334,7 @@ WlzObject *WlzPolyToObj(
   /* maximum number of intervals = num_vtxs + height */
   if((errNum == WLZ_ERR_NONE) &&
      (intptr = (WlzInterval *)
-       AlcMalloc(sizeof(WlzInterval)*(num_vtxs + height + 1))) ){
+      AlcMalloc(sizeof(WlzInterval)*(num_vtxs + height + 1))) ){
     domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intptr,
     				         NULL);
   }
@@ -347,6 +361,7 @@ WlzObject *WlzPolyToObj(
   if( errNum == WLZ_ERR_NONE ){
     for(j=l1+1, nv=0; j < ll; j++){
       n = 0;
+      /* note the following relies on correct sorting of the vertices */
       while( (vtxs->vtY == j) && (nv < num_vtxs) ){
 	n++;		 /* count vertices on line */
 	nv++;
@@ -396,7 +411,10 @@ WlzObject *WlzPolyToObj(
 	  vtx.vtX += objs[i]->domain.i->intvlines->intvs->ileft;
 	}
 	vtx.vtY = objs[i]->domain.i->line1;
-	if( WlzInsidePolyEO(vtx, pgdm, &errNum) ){
+
+/* The following change needed until we resolve an apparent bug in WlzPolyTo8Polygon() */
+/*		if( WlzInsidePolyEO(vtx, pgdm, &errNum) ){	*/
+	if( WlzInsidePolyEO(vtx, new_poly_preserve->domain.poly, &errNum) ){
 	  /* replace with empty obj */
 	  WlzFreeObj(objs[i]);
 	  objs[i] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
@@ -496,7 +514,7 @@ WlzObject *WlzPolyTo8Polygon(
     errNum = WLZ_ERR_PARAM_DATA;
   }
 
-  /* check type nad copy non-integer vertices */
+  /* check type and copy non-integer vertices */
   if( errNum == WLZ_ERR_NONE ){
     domain.core = NULL;
     values.core = NULL;
