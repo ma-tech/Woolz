@@ -11,6 +11,8 @@ TARGETPATH = ./classes/sectionViewer/
 JAVAC = /opt/java/bin/javac
 JAR = /opt/java/bin/jar
 JAVACFLAGS = -classpath $(CLASSPATH)
+JAVADOC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javadoc
+JAVADOCFLAGS = -sourcepath ./src -d docs
 
 SOURCES = \
 	  $(SOURCEPATH)SelectableMenu.java \
@@ -70,13 +72,17 @@ jar:	classes
 	cd classes; $(JAR) cfm ../sectionViewer.jar bean.tmp sectionViewer
 
 # Use doxygen to make the documentation
-doc:
+dox:
 	cd $(SOURCEPATH); doxygen
+
+# Use javadoc to make the documentation
+javadocs:
+	$(JAVADOC) $(JAVADOCFLAGS) sectionViewer
 
 clean: clobber
 
 clobber:
-	-rm -rf *.jar META-INF dox
+	-rm -rf *.jar META-INF dox docs
 	cd $(SOURCEPATH); rm -rf *.class doxygen.tag
 	cd $(TARGETPATH); rm -rf *.class
 
