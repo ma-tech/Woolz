@@ -33,6 +33,8 @@ extern "C"
 #include <Alc.h>
 #include <Alg.h>
 #include <Wlz.h>
+#include <bibFile.h>
+#include <WlzExtFF.h>
 #include <WlzBndType.h>
 #include <WlzBndProto.h>
 
