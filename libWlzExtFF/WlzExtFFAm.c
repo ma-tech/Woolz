@@ -1055,6 +1055,7 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
   const char	tokSepDQ[] = "\"",
   		tokSepWS[] = " \t\n",
             	tokSepWSC[] = " \t\n,",
+            	tokSepWSCQ[] = " \t\n,\"",
             	tokSepWSQ[] = " \t\n\"";
 
   errNum =  WlzEffAmReadAndCheckAToken(fP, tokSepWS, buf, bufLen, "{");
@@ -1140,7 +1141,7 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        errNum = WlzEffAmSkip(fP, tokSepWSQ);
+	        errNum = WlzEffAmSkip(fP, tokSepWSCQ);
 	      }
 	      if((errNum == WLZ_ERR_NONE) &&
 	      	 ((newMat->name = AlcStrDup(buf)) == NULL))
@@ -1599,16 +1600,21 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	tObj3 = WlzMakeMain(WLZ_3D_DOMAINOBJ, tObj2->domain,
-			    dValues, pList, NULL, &errNum);
+        if(WlzIsEmpty(tObj1, &errNum) || WlzIsEmpty(tObj2, &errNum))
+	{
+	  empty = 1;
+	  tObj3 = WlzMakeMain(WLZ_EMPTY_OBJ, nullDom, nullVal, pList,
+	                      NULL, &errNum);
+	}
+	else
+	{
+	  tObj3 = WlzMakeMain(WLZ_3D_DOMAINOBJ, tObj2->domain,
+			      dValues, pList, NULL, &errNum);
+	}
       }
       (void )WlzFreeObj(tObj2); tObj2 = NULL;
       (void )WlzFreeObj(tObj0);
       tObj0 = tObj1;
-      if(errNum == WLZ_ERR_NONE)
-      {
-	empty = WlzIsEmpty(tObj0, &errNum);
-      }
       tObj1 = NULL;
     }
     if(errNum == WLZ_ERR_NONE)
@@ -1618,7 +1624,7 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
     ++idx;
     mat = mat->next;
   }
-  (void )WlzFreeObj(tObj1);
+  (void )WlzFreeObj(tObj0);
   if(dstErr)
   {
     *dstErr = errNum;
