@@ -39,7 +39,8 @@ CSOURCES		= \
 			WlzExtFFStack.c \
 			WlzExtFFVff.c \
 			WlzExtFFVtk.c \
-			WlzExtFFTiff.c
+			WlzExtFFTiff.c \
+			WlzExtFFBibUtils.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).

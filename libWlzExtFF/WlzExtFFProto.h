@@ -1,5 +1,5 @@
-#ifndef WLZEXTFFPROTO_H
-#define WLZEXTFFPROTO_H
+#ifndef WLZEXTFF_PROTO_H
+#define WLZEXTFF_PROTO_H
 #pragma ident "MRC HGU $Id$"
 /***********************************************************************
 * Project:      Woolz
@@ -24,86 +24,210 @@ extern "C" {
 
 
 /* From WlzExtFF.c */
-WlzEffFormat	WlzEffStringToFormat(const char *fmtStr);
-WlzEffFormat    WlzEffStringExtToFormat(const char *extStr);
-const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
+extern WlzEffFormat WlzEffStringToFormat(
+				const char *fmtStr);
+extern WlzEffFormat WlzEffStringExtToFormat(
+				const char *extStr);
+extern const char *WlzEffStringFromFormat(
+				WlzEffFormat fileFmt,
 				const char **dstExtStr);
-WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
-			       WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
-			       WlzEffFormat fFmt);
-
+extern WlzObject *WlzEffReadObj(
+				FILE *fP,
+				const char *fName,
+				WlzEffFormat fFmt,
+			        WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObj(
+				FILE *fP,
+				const char *fName,
+				WlzObject *obj,
+				WlzEffFormat fFmt);
 /* From WlzExtFFBmp.c */
-WlzObject 	*WlzEffReadObjBmp(const char *gvnFileName,
+extern WlzObject *WlzEffReadObjBmp(
+				const char *gvnFileName,
 				WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffReadObjBmpData2D(FILE *fP, WlzIVertex2 *imgSz,
-				unsigned char ***data),
-		WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
-				WlzIVertex2 imgSz, WlzIVertex2 imgOrg,
-				unsigned char *data, unsigned char bgd),
-		WlzEffWriteObjBmp(const char *gvnFileName, 
+extern WlzErrorNum WlzEffReadObjBmpData2D(
+				FILE *fP,
+				WlzIVertex2 *imgSz,
+				unsigned char ***data);
+extern WlzErrorNum WlzEffWriteObjBmp2D(
+				const char *fNameStr,
+				WlzObject *obj,
+				WlzIVertex2 imgSz,
+				WlzIVertex2 imgOrg,
+				unsigned char *data,
+				unsigned char bgd);
+extern WlzErrorNum WlzEffWriteObjBmp(
+				const char *gvnFileName,
 				WlzObject *obj);
 /* From WlzExtFFDen.c */
-WlzObject	*WlzEffReadObjDen(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjDen(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjDen(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjDen(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFIcs.c */
-WlzErrorNum	WlzEffWriteObjIcs(const char *gvnFileName, WlzObject *obj);
-WlzErrorNum	WlzEffIcsFileNames(char **fileBody,
+extern WlzErrorNum WlzEffWriteObjIcs(
+				const char *gvnFileName,
+				WlzObject *obj);
+extern WlzErrorNum WlzEffIcsFileNames(
+				char **fileBody,
 				char **icsFileName,
 				char **idsFileName,
 				const char *gvnFileName);
-WlzObject	*WlzEffReadObjIcs(const char *gvnFileName,
+extern WlzObject *WlzEffReadObjIcs(
+				const char *gvnFileName,
 				WlzErrorNum *dstErr);
 
 /* From WlzExtFFPic.c */
-WlzObject 	*WlzEffReadObjPic(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjPic(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjPic(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjPic(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFPnm.c */
-WlzObject 	*WlzEffReadObjPnm(const char *gvnFileName,
+extern WlzObject *WlzEffReadObjPnm(
+				const char *gvnFileName,
 				WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffReadObjPnmData2D(FILE *fP, WlzIVertex2 *imgSz,
-				unsigned char ***data),
-		WlzEffWriteObjPnm2D(const char *fNameStr, WlzObject *obj,
-				WlzIVertex2 imgSz, WlzIVertex2 imgOrg,
-				unsigned char *data, unsigned char bgd),
-		WlzEffWriteObjPnm(const char *gvnFileName, 
+extern WlzErrorNum WlzEffReadObjPnmData2D(
+				FILE *fP,
+				WlzIVertex2 *imgSz,
+				unsigned char ***data);
+extern WlzErrorNum WlzEffWriteObjPnm2D(
+				const char *fNameStr,
+				WlzObject *obj,
+				WlzIVertex2 imgSz,
+				WlzIVertex2 imgOrg,
+				unsigned char *data,
+				unsigned char bgd);
+extern WlzErrorNum WlzEffWriteObjPnm(
+				const char *gvnFileName,
 				WlzObject *obj);
 
 /* From WlzExtFFSlc.c */
-WlzObject	*WlzEffReadObjSlc(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjSlc(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjSlc(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjSlc(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFVff.c */
-WlzObject	*WlzEffReadObjVff(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjVff(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjVff(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjVff(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFVtk.c */
-WlzObject	*WlzEffReadObjVtk(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjVtk(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjVtk(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFSlc.c */
-WlzObject	*WlzEffReadObjSlc(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjSlc(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjSlc(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjSlc(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFStack.c */
-WlzObject	*WlzEffReadObjStack(const char *gvnFileName, WlzEffFormat fFmt,
+extern WlzObject *WlzEffReadObjStack(
+				const char *gvnFileName,
+				WlzEffFormat fFmt,
 				WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjStack(const char *gvnFileName, WlzEffFormat fFmt,
+extern WlzErrorNum WlzEffWriteObjStack(
+				const char *gvnFileName,
+				WlzEffFormat fFmt,
 				WlzObject *obj);
 
 /* From WlzExtFFIPL.c */
-WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr);
-WlzErrorNum	WlzEffWriteObjIPL(FILE *fP, WlzObject *obj);
+extern WlzObject *WlzEffReadObjIPL(
+				FILE *fP,
+				WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjIPL(
+				FILE *fP,
+				WlzObject *obj);
 
 /* From WlzExtFFTiff.c */
-WlzErrorNum	WlzEffWriteObjTiff(const char *tiffFileName, WlzObject *obj);
-WlzObject	*WlzEffReadObjTiff(const char *tiffFileName,
-				   WlzErrorNum *dstErr);
+extern WlzErrorNum WlzEffWriteObjTiff(
+				const char *tiffFileName,
+				WlzObject *obj);
+extern WlzObject *WlzEffReadObjTiff(
+				const char *tiffFileName,
+				WlzErrorNum *dstErr);
+/* From	WlzExtFFBibUtils.c */
+extern WlzErrorNum WlzEffBibWrite3DSectionViewParamsRecord(
+				FILE *fp,
+				char *recordName,
+				WlzThreeDViewStruct *wlzViewStr);
+extern WlzErrorNum WlzEffBibParse3DSectionViewParamsRecord(
+				BibFileRecord *bibfileRecord,
+				WlzThreeDViewStruct *wlzViewStr);
+extern WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
+				FILE *fp,
+				char *recordName,
+				WlzBasisFnType basisFnType,
+				WlzMeshGenMethod meshMthd,
+				int meshMinDst,
+				int meshMaxDst);
+extern WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
+				BibFileRecord *bibfileRecord,
+				WlzBasisFnType *basisFnType,
+				WlzMeshGenMethod *meshMthd,
+				int *meshMinDst,
+				int *meshMaxDst);
+extern WlzErrorNum WlzEffBibWriteTiePointVtxsRecord(
+				FILE *fp,
+				char *recordName,
+				int index,
+				WlzDVertex3 dstVtx,
+				WlzDVertex3 srcVtx);
+extern WlzErrorNum WlzEffBibParseTiePointVtxsRecord(
+				BibFileRecord *bibfileRecord,
+				int *index,
+				WlzDVertex3 *dstVtx,
+				WlzDVertex3 *srcVtx);
+extern WlzErrorNum WlzEffBibWriteFileRecord(
+				FILE *fp,
+				char *recordName,
+				char *fileName,
+				WlzEffFormat fileType);
+extern WlzErrorNum WlzEffBibParseFileRecord(
+				BibFileRecord *bibfileRecord,
+				int *index,
+				char **dstFileName,
+				WlzEffFormat *dstFileType);
+extern WlzErrorNum WlzEffBibWriteWarpInputSegmentationParamsRecord(
+				FILE *fp,
+				char *recordName,
+				int normFlg,
+				int histoFlg,
+				int shadeFlg,
+				int gaussFlg,
+				double width,
+				int threshLow,
+				int threshHigh);
+extern WlzErrorNum WlzEffBibParseWarpInputSegmentationParamsRecord(
+				BibFileRecord *bibfileRecord,
+				int *normFlg,
+				int *histoFlg,
+				int *shadeFlg,
+				int *gaussFlg,
+				double *width,
+				int *threshLow,
+				int *threshHigh);
 
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* ! WLZEXTFFPROTO_H */
+#endif /* ! WLZEXTFF_PROTO_H */

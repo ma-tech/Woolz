@@ -16,6 +16,8 @@
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
+#include <Wlz.h>
+#include <bibFile.h>
 #include <WlzExtFFType.h>
 #include <WlzExtFFProto.h>
 
