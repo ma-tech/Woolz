@@ -120,7 +120,7 @@ public class SVParent2D implements SVParent {
     /* make sure only 1 AnatKey is created */
     if(_key == null) {
        _key = new AnatKey();
-       _key.setTitle("Nick's Key");
+       _key.setTitle("Anatomy Key");
     }
     _key.pack();
     _key.setVisible(false);

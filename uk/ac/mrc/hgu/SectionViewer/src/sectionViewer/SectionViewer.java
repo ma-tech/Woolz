@@ -87,9 +87,19 @@ public class SectionViewer
 
   /**  
    *   Collection of full pathnames to anatomy components
+   */
+  private Stack _anaFileStack = null;
+
+  /**  
+   *   Collection of full pathnames to anatomy components
    *   in the <em>embryo</em> hierarchy.
    */
   private Stack _embFileStack = null;
+
+  /**  
+   *   Collection of <em>Woolz</em> objects representing anatomy components
+   */
+  private Stack _anaObjStack = null;
 
   /**  
    *   Collection of <em>Woolz</em> objects representing anatomy components
@@ -499,10 +509,14 @@ public class SectionViewer
       _imageScrollPane.validate();
       _imgV = null;
       _anatBuilder = null;
+      _anaFileStack = null;
+      _anaObjStack = null;
+      /*
       _embFileStack = null;
       _xembFileStack = null;
       _embObjStack = null;
       _xembObjStack = null;
+      */
       resetFeedbackText();
     }
 
@@ -611,10 +625,14 @@ public class SectionViewer
     if (WI2G_1 != null)
       _imgV.removeChangeListener(WI2G_1);
     _imgV = null;
+    _anaFileStack = null;
+    _anaObjStack = null;
+    /*
     _embFileStack = null;
     _xembFileStack = null;
     _embObjStack = null;
     _xembObjStack = null;
+    */
     _OBJModel = null;
   } // closeView()
 
@@ -774,6 +792,26 @@ public class SectionViewer
     String ret = "";
     int i = 0;
 
+    //look through anatomy components
+    if (_anaFileStack != null) {
+      int len = _anaFileStack.size();
+      for (i = 0; i < len; i++) {
+        try {
+          obj = (WlzObject) _anaObjStack.elementAt(i);
+          if (WlzObject.WlzInsideDomain(obj, plane, line, kol) != 0) {
+            thisFile = (File) _anaFileStack.elementAt(i);
+            _maybeFil.push(thisFile);
+            _maybeObj.push(obj);
+          }
+        }
+        catch (WlzException e) {
+          System.out.println("WlzException #1");
+          System.out.println(e.getMessage());
+        }
+      }
+    }
+
+/*
     //look through embryo components
     if (_embFileStack != null) {
       int len = _embFileStack.size();
@@ -811,6 +849,7 @@ public class SectionViewer
         }
       }
     }
+*/
 
     int indx = 0;
     int len = _maybeObj.size();
@@ -4682,10 +4721,14 @@ public class SectionViewer
         try {
           //System.out.println("stack thread working");
           if (_anatBuilder != null) {
+            _anaFileStack = (Stack) _anatBuilder.getAnaFileStack().clone();
+            _anaObjStack = (Stack) _anatBuilder.getAnaObjStack().clone();
+	    /*
             _embFileStack = (Stack) _anatBuilder.getEmbFileStack().clone();
             _xembFileStack = (Stack) _anatBuilder.getXEmbFileStack().clone();
             _embObjStack = (Stack) _anatBuilder.getEmbObjStack().clone();
             _xembObjStack = (Stack) _anatBuilder.getXEmbObjStack().clone();
+	    */
             showMenu_3.setEnabled(true);
           }
           //System.out.println("stack thread finished");
