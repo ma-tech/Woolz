@@ -61,17 +61,18 @@ public class SectionViewer
 
   private boolean _anatomy; // for mouse click anatomy
   private boolean _thresholding;
-  private boolean _fixedLineRotation;
+  protected boolean _fixedLineRotation;
   private boolean _threshConstraint;
   protected boolean _fixedPoint = false;
-  private boolean _axisPoint = false;
+  protected boolean _axisPoint = false;
   private boolean _setFixedPoint = false;
-  private boolean _setAxisPoint = false;
+  protected boolean _setAxisPoint = false;
   private boolean _showStdCntrls = false;
   private boolean _showUsrCntrls = false;
   private boolean _showIntersection = false;
   private boolean _openingView = false;
   private boolean _inverted = false;
+  protected boolean _drawfixLine = false;
 
   fileMenuHandler handler_1 = null;
   controlMenuHandler handler_2 = null;
@@ -1001,7 +1002,7 @@ public class SectionViewer
 
 //-------------------------
   protected void doShowFixedLine() {
-
+_drawfixLine = true;
      double dist[] = new double[1];
      double pt3d[] = new double[3];
 
@@ -1013,7 +1014,7 @@ public class SectionViewer
         return;
 
      _VSModel.getDist(dist);
-     /* 
+     /*
       * assumes that fixed line will be set in the same plane
       * as the fixed point
       */
@@ -1932,7 +1933,7 @@ public class SectionViewer
      double arg = 0.0;
      double angle = 0.0;
 
-     double x = 0.0; 
+     double x = 0.0;
      double y = 0.0;
      double z = 0.0;
      double s = 0.0;
@@ -1984,9 +1985,9 @@ public class SectionViewer
 
      trans = _VSModel.getInverseTransform();
 
-     transMatrix = _VSModel.getTransMatrix(trans); 
+     transMatrix = _VSModel.getTransMatrix(trans);
      /*
-     if(transMatrix[0] != null){ 
+     if(transMatrix[0] != null){
         System.out.println(" got transform matrix");
 	//printMatrix(transMatrix[0]);
      } else {
@@ -2525,8 +2526,8 @@ public class SectionViewer
           if (src.isSelected()) {
             _axisPoint = true;
             doShowFixedLine();
-      revalidate();
-      _bigPanel.repaint();
+            revalidate();
+            _bigPanel.repaint();
             //_imgV.repaint();
           }
           else {
