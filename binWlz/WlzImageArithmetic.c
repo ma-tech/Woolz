@@ -51,7 +51,7 @@ int             main(int argc, char **argv)
   WlzPixelV	gMin[3],
   		gMax[3];
   const char	*errMsg;
-  static char	optList[] = "o:adlmsnNh",
+  static char	optList[] = "o:adglmsnNh",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -73,6 +73,9 @@ int             main(int argc, char **argv)
 	break;
       case 'd':
         operator = WLZ_DIVIDE;
+	break;
+      case 'g':
+      	operator = WLZ_MAGNITUDE;
 	break;
       case 'l':
         operator = WLZ_MODULUS;
@@ -316,6 +319,7 @@ int             main(int argc, char **argv)
     "  -o  Output file name.\n"
     "  -a  Add the object's grey values.\n"
     "  -d  Divide the grey values of the 1st object by those of the 2nd.\n"
+    "  -g  Vector magnitude of horizontal and vertical component objects\n"
     "  -l  Compute the modulus of the grey values of the 1st object wrt\n"
     "      those of the 2nd.\n"
     "  -m  Multiply the object's grey values.\n"
