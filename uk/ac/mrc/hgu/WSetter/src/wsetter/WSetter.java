@@ -41,10 +41,19 @@ public class WSetter extends WSetterGUI
    * Constructor
    */
   public WSetter() {
-     this(DOUBLE);
+     this(DOUBLE, true);
+  }
+
+  public WSetter(boolean sliding) {
+     this(DOUBLE, sliding);
   }
 
   public WSetter(int type) {
+     this(type, true);
+  }
+
+  public WSetter(int type, boolean sliding) {
+    slidingEvents = sliding;
     _type = type;
     _enabled = false;
     try {
@@ -226,9 +235,12 @@ public class WSetter extends WSetterGUI
       bgc = col;
       initGUI();
    }
+   /*
    public  void setSlidingEvents(boolean bool) {
       slidingEvents = bool;
+      setModel();
    }
+   */
    public void setSliderLabel(String labl) {
       sliderLabel = labl;
       initGUI();
@@ -301,7 +313,7 @@ public class WSetter extends WSetterGUI
   /**
    * Event handler, for use when slider has stopped. 
    * @param	void
-   * @return	boolean	true if the component can fire events
+   * @return	
    */
     public void stateChanged(ChangeEvent e) {
       // only do it when the slider isn't moving
