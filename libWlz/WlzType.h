@@ -14,7 +14,7 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      Wlz
+* \ingroup      WlzType
 * \brief        Defines the Woolz types. These are enumerations and
 *		structures which have been typedef'd.
 * \bug          None known.
@@ -26,176 +26,267 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/************************************************************************
-* UBYTE: An 8 bit unsigned integer.
-* UINT: 32-bit unsigned integer	- assumes int is 4-bytes
-************************************************************************/
+/*!
+* \typedef	UBYTE
+* \ingroup	WlzType
+* \brief	An eight bit unsigned integer.
+*/
 typedef unsigned char UBYTE;
+/*!
+* \typedef	UINT
+* \ingroup	WlzType
+* \brief        A 32 bit unsigned integer.
+*/
 typedef unsigned int  UINT;
 
-/************************************************************************
-* WlzGreyType: The valid grey value types.			
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzGreyType
+* \ingroup	WlzType
+* \brief	The valid grey value types.
+*		Typedef: ::WlzGreyType.
+*/
+typedef enum _WlzGreyType
 {
-  WLZ_GREY_LONG			= 0,
-  WLZ_GREY_INT			= 1,
-  WLZ_GREY_SHORT		= 2,
-  WLZ_GREY_UBYTE		= 3,
-  WLZ_GREY_FLOAT		= 4,
-  WLZ_GREY_DOUBLE		= 5,
-  WLZ_GREY_BIT			= 6,
-  WLZ_GREY_RGBA			= 7,
-  /**********************************************************************
-  * WLZ_GREY_ERROR is not a grey type. It is an invalid grey type!
-  * Keep it the last enumerator!				
-  **********************************************************************/
-  WLZ_GREY_ERROR
+  WLZ_GREY_LONG			= 0,	/*!< Signed long integer. */
+  WLZ_GREY_INT			= 1,	/*!< Signed integer. */
+  WLZ_GREY_SHORT		= 2,	/*!< Signed short. */
+  WLZ_GREY_UBYTE		= 3,	/*!< Unsigned byte. */
+  WLZ_GREY_FLOAT		= 4,	/*!< Single precision floating
+  					    point. */
+  WLZ_GREY_DOUBLE		= 5,	/*!< Double precision floating
+  					    point. */
+  WLZ_GREY_BIT			= 6,	/*!< Single bit. */
+  WLZ_GREY_RGBA			= 7,	/*!< Eight bit red, green, blue and
+  					    alpha components packed into an
+					    unsigned 32 bit integer, with:
+					    v = r|(g<<8)|(b<<16)|(a<<24),
+					    where r, g, b and a are the
+					    unsigned byte red, green, blue
+					    and alpha components of the
+					    value. */
+  WLZ_GREY_ERROR			/*!< An invalid grey type used to
+  					    return error conditions.
+					    Always the last enumerator! */
 } WlzGreyType;
 
-/************************************************************************
-* WlzObjectType: The (top-level) Woolz object types.		
-* Many of the integer enumeration values are required for historical
-* reasons but should never be used explicitly.			
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzObjectType
+* \ingroup	WlzType
+* \brief	The Woolz object types.
+*		Many of the integer enumeration values are required for
+*		historical reasons but, with the execption of WLZ_NULL,
+*		the numerical value should never be used explicitly.
+*
+*		The base grey table types are used to form explicit
+*		grey table types which include the grey type. The functions
+*		for extracting and synthesising these types should be
+*		used: These are WlzGreyTableType(),
+*		WlzGreyTableTypeToGreyType() and
+*		WlzGreyTableTypeToTableType().
+*		Typedef: ::WlzObjectType.
+*/
+typedef enum _WlzObjectType
 {
-  WLZ_NULL			= 0,
-  WLZ_2D_DOMAINOBJ		= 1,
-  WLZ_3D_DOMAINOBJ		= 2,
-  WLZ_TRANS_OBJ			= 3,
-  WLZ_3D_WARP_TRANS		= 4,
-  WLZ_2D_POLYGON		= 10,
-  WLZ_BOUNDLIST			= 11,
-  WLZ_CONV_HULL			= 12,
-  WLZ_HISTOGRAM			= 13,
-  WLZ_3D_POLYGON		= 14,
-  WLZ_CONTOUR			= 15,
-  WLZ_RECTANGLE			= 20,
-  WLZ_CONVOLVE_INT		= 50,
-  WLZ_CONVOLVE_FLOAT		= 51,
-  WLZ_AFFINE_TRANS		= 63,
-  WLZ_WARP_TRANS		= 64,
-  WLZ_FMATCHOBJ			= 65,
-  WLZ_TEXT			= 70,
-  WLZ_COMPOUND_ARR_1		= 80,
-  WLZ_COMPOUND_ARR_2		= 81,
-  WLZ_COMPOUND_LIST_1		= 82,
-  WLZ_COMPOUND_LIST_2		= 83,
   /**********************************************************************
-  * WLZ_PROPERTY_OBJ: An object with only a property list.	
+  * Top level Woolz object types.
   **********************************************************************/
-  WLZ_PROPERTY_OBJ		= 110,
+  WLZ_NULL			= 0,	/*!< The NULL object is an invalid
+  					     object used to return an error
+					     condition. */
+  WLZ_2D_DOMAINOBJ		= 1,	/*!< 2D spatial domain object. */
+  WLZ_3D_DOMAINOBJ		= 2,	/*!< 3D spatial domain object. */
+  WLZ_TRANS_OBJ			= 3,	/*!< Object in which the domain is
+  					     a transformation and the values
+					     are an object. */
+  WLZ_3D_WARP_TRANS		= 4,	/*!< 3D finite element warp
+  					     transformation. */
+  WLZ_2D_POLYGON		= 10,	/*!< 2D polygon. */
+  WLZ_BOUNDLIST			= 11,	/*!< Boundary tree. */
+  WLZ_CONV_HULL			= 12,	/*!< Convex hull. */
+  WLZ_HISTOGRAM			= 13,	/*!< Histogram. */
+  WLZ_3D_POLYGON		= 14,	/*!< 3D polygon. */
+  WLZ_CONTOUR			= 15,	/*!< Contour in either 2D or 3D. */
+  WLZ_RECTANGLE			= 20,	/*!< Rectangle. */
+  WLZ_CONVOLVE_INT		= 50,	/*!< Integer convolution. */
+  WLZ_CONVOLVE_FLOAT		= 51,	/*!< Floating point convolution. */
+  WLZ_AFFINE_TRANS		= 63,	/*!< Affine transform, either 2D or
+  					    3D. */
+  WLZ_WARP_TRANS		= 64,	/*!< A finite element warp
+  					     transformation. */
+  WLZ_FMATCHOBJ			= 65,	/*!< Matched features for finite
+  					     element warps. */
+  WLZ_TEXT			= 70,	/*!< Simple ascii text. */
+  WLZ_COMPOUND_ARR_1		= 80,	/*!< Compound array of objects
+  					     with same type. */
+  WLZ_COMPOUND_ARR_2		= 81,	/*!< Compound array of objects
+  					     with differnt type. */
+  WLZ_COMPOUND_LIST_1		= 82,	/*!< Linked list of objects
+  					     with same type. */
+  WLZ_COMPOUND_LIST_2		= 83,	/*!< Linked list of objects
+  					     with different type. */
+  WLZ_PROPERTY_OBJ		= 110,	/*!< An object which only has a
+  					     property list. */
+  WLZ_EMPTY_OBJ			= 127,	/*!< Empty object: An object which
+  					     occupies no space and has no
+					     values. */
+  WLZ_EMPTY_DOMAIN,			/*!< Empty domain: A domain which
+  					     occupies no space. */
+  WLZ_EMPTY_VALUES,			/*!< Empty values: A values which
+  					     has no values! */
   /**********************************************************************
-  * WLZ_EMPTY_OBJ, WLZ_EMPTY_DOMAIN, WLZ_EMPTY_VALUES: Empty entities.
+  * Plane domain types.
   **********************************************************************/
-  WLZ_EMPTY_OBJ			= 127,
-  WLZ_EMPTY_DOMAIN,
-  WLZ_EMPTY_VALUES,
+  WLZ_INTERVALDOMAIN_INTVL	= 1,	/*!< Spatial domain defined by
+  					     a collection of intervals. */
+  WLZ_INTERVALDOMAIN_RECT	= 2,	/*!< Spatial domain defined by an
+  					     axis aligned rectangle. */
+  WLZ_PLANEDOMAIN_DOMAIN	= WLZ_2D_DOMAINOBJ, /*!< 3D spatial domain
+  					     composed of 2D spatial domains. */
+  WLZ_PLANEDOMAIN_POLYGON	= WLZ_2D_POLYGON, /*!< 3D polygon domain
+  					     composed of 2D polygon domains. */
+  WLZ_PLANEDOMAIN_BOUNDLIST	= WLZ_BOUNDLIST, /*!< 3D boundary domain
+  					     composed of 2D boundary
+					     domains. */
+  WLZ_PLANEDOMAIN_CONV_HULL	= WLZ_CONV_HULL, /*!< 3D convex hull
+  					     composed of 2D convex hulls. */
+  WLZ_PLANEDOMAIN_HISTOGRAM	= WLZ_HISTOGRAM, /*!< 3D histogram domain
+  					     composed of 2D histogram
+					     domains. */
+  WLZ_PLANEDOMAIN_AFFINE	= WLZ_AFFINE_TRANS, /*!< 3D affine domain
+  					     composed of 2D affine transform
+					     domains. */
+  WLZ_PLANEDOMAIN_WARP		= WLZ_WARP_TRANS, /*!< 3D warp domain
+  					     composed of 2D warp domains. */
   /**********************************************************************
-  * WLZ_INTERVALDOMAIN_INTVL, WLZ_INTERVALDOMAIN_RECT: Interval and
-  * rectangular interval domain types.				
+  * Value table types.
   **********************************************************************/
-  WLZ_INTERVALDOMAIN_INTVL	= 1,
-  WLZ_INTERVALDOMAIN_RECT	= 2,
-  /**********************************************************************
-  * Planedomain types.						
-  **********************************************************************/
-  WLZ_PLANEDOMAIN_DOMAIN	= WLZ_2D_DOMAINOBJ,
-  WLZ_PLANEDOMAIN_POLYGON	= WLZ_2D_POLYGON,
-  WLZ_PLANEDOMAIN_BOUNDLIST	= WLZ_BOUNDLIST,
-  WLZ_PLANEDOMAIN_CONV_HULL	= WLZ_CONV_HULL,
-  WLZ_PLANEDOMAIN_HISTOGRAM	= WLZ_HISTOGRAM,
-  WLZ_PLANEDOMAIN_AFFINE	= WLZ_AFFINE_TRANS,
-  WLZ_PLANEDOMAIN_WARP		= WLZ_WARP_TRANS,
-  /**********************************************************************
-  * Value table types. A value table type encodes both the type of
-  * table and the type of grey value it contains.		
-  * There are functions provided for extracting and synthesising these
-  * types which should be used outside of this header file.	
-  * WLZ_GREY_TAB_RAGR: Ragged rectangle grey value table types.	
-  * WLZ_GREY_TAB_RECT: Ragged rectangular grey value table types.
-  * WLZ_GREY_TAB_INTL: Interval grey value table types.		
-  * WLZ_FEAT_TAB_RAGR: Ragged-rectangle feature valuetable types.
-  * WLZ_FEATVALUETABLE_RECT: Rectangular feature value table types.
-  **********************************************************************/
-  WLZ_GREY_TAB_RAGR		= 0,
-  WLZ_GREY_TAB_RECT		= 1,
-  WLZ_GREY_TAB_INTL		= 2,
-  WLZ_FEAT_TAB_RAGR		= 5,
-  WLZ_FEAT_TAB_RECT 		= 6,
+  WLZ_GREY_TAB_RAGR		= 0,	/*!< Base ragged rectangle grey value
+  					     table. */
+  WLZ_GREY_TAB_RECT		= 1,	/*!< Base rectangular grey value
+  					     table. */
+  WLZ_GREY_TAB_INTL		= 2,	/*!< Base interval grey value table. */
+  WLZ_FEAT_TAB_RAGR		= 5,	/*!< Base ragged rectangle feature
+  					     table. */
+  WLZ_FEAT_TAB_RECT 		= 6,	/*!< Base rectangular feature table. */
   WLZ_VALUETABLE_RAGR_INT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_INT),
+  					/*!< Ragged rectangle int value
+					     table. */
   WLZ_VALUETABLE_RAGR_SHORT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_SHORT),
+  					/*!< Ragged rectangle short value
+					     table. */
   WLZ_VALUETABLE_RAGR_UBYTE	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_UBYTE),
+  					/*!< Ragged rectangle unsigned byte
+					     value table. */
   WLZ_VALUETABLE_RAGR_FLOAT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_FLOAT),
+  					/*!< Ragged rectangle single precision
+					     floating point value table. */
   WLZ_VALUETABLE_RAGR_DOUBLE	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_DOUBLE),
+  					/*!< Ragged rectangle double precision
+					     floating point value table. */
   WLZ_VALUETABLE_RAGR_BIT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_BIT),
+  					/*!< Ragged rectangle single bit (packed
+					     in unsigned bytes) value table. */
   WLZ_VALUETABLE_RAGR_RGBA	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_RGBA),
+  					/*!< Ragged rectangle red, green, blue,
+					     alpha value table. */
   WLZ_VALUETABLE_RECT_INT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_INT),
+  					/*!< Rectangular int value
+					     table. */
   WLZ_VALUETABLE_RECT_SHORT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_SHORT),
+  					/*!< Rectangular short value
+					     table. */
   WLZ_VALUETABLE_RECT_UBYTE	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_UBYTE),
+  					/*!< Rectangular unsigned byte value
+					     table. */
   WLZ_VALUETABLE_RECT_FLOAT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_FLOAT),
+  					/*!< Rectangular single precision
+					     floating point value table. */
   WLZ_VALUETABLE_RECT_DOUBLE	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_DOUBLE),
+  					/*!< Rectangular double precision
+					     floating point value table. */
   WLZ_VALUETABLE_RECT_BIT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_BIT),
+  					/*!< Rectangular single bit (packed in
+					     unsigned bytes) value table. */
   WLZ_VALUETABLE_RECT_RGBA	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_RGBA),
+  					/*!< Rectangular red, green, blue,
+					     alpha value table.  */ 
   WLZ_VALUETABLE_INTL_INT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_INT),
+  					/*!< Interval coded int value
+					     table. */
   WLZ_VALUETABLE_INTL_SHORT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_SHORT),
+  					/*!< Interval coded short value
+					     table. */
   WLZ_VALUETABLE_INTL_UBYTE	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_UBYTE),
+  					/*!< Interval coded unsigned byte value
+					     table. */
   WLZ_VALUETABLE_INTL_FLOAT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_FLOAT),
+  					/*!< Interval coded single precision
+					     floating point value table. */
   WLZ_VALUETABLE_INTL_DOUBLE	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_DOUBLE),
+  					/*!< Interval coded double precision
+					     floating point value table. */
   WLZ_VALUETABLE_INTL_BIT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_BIT),
+  					/*!< Interval coded single bit (packed
+					     unsigned bytes) value table. */
   WLZ_VALUETABLE_INTL_RGBA	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_RGBA),
-  WLZ_FEATVALUETABLE_RAGR	= 50,
-  WLZ_FEATVALUETABLE_RECT	= 60,
-  /**********************************************************************
-  * Voxel value table types.					
-  **********************************************************************/
-  WLZ_VOXELVALUETABLE_GREY	= 1,
-  WLZ_VOXELVALUETABLE_CONV_HULL,
+  					/*!< Interval coded red, green, blue,
+					     alpha value table.  */
+  WLZ_FEATVALUETABLE_RAGR	= 50,	/*!< Ragged rectangle features
+  					     value table. */
+  WLZ_FEATVALUETABLE_RECT	= 60,	/*!< Rectangular features
+  					     value table. */
+  WLZ_VOXELVALUETABLE_GREY	= 1,	/*!< Grey value voxel value table. */
+  WLZ_VOXELVALUETABLE_CONV_HULL,	/*!< Convex hull voxel value table. */
   /**********************************************************************
   * Polygon domain types.					
   **********************************************************************/
-  WLZ_POLYGON_INT		= 1,
-  WLZ_POLYGON_FLOAT		= 2,
-  WLZ_POLYGON_DOUBLE		= 3,
+  WLZ_POLYGON_INT		= 1,	/*!< Integer polygon domain. */
+  WLZ_POLYGON_FLOAT		= 2,	/*!< Single precision floating point
+  					     polygon domain. */
+  WLZ_POLYGON_DOUBLE		= 3,	/*!< Double precision floating point
+  					     polygon domain. */
   /**********************************************************************
   * Boundary list types.					
   **********************************************************************/
-  WLZ_BOUNDLIST_PIECE		= 0,
-  WLZ_BOUNDLIST_HOLE		= 1,
+  WLZ_BOUNDLIST_PIECE		= 0,	/*!< Piece contains foreground. */
+  WLZ_BOUNDLIST_HOLE		= 1,	/*!< Piece contains background. */
   /**********************************************************************
   * Convex hull types.						
   **********************************************************************/
-  WLZ_CONVHULL_VALUES		= 1,
+  WLZ_CONVHULL_VALUES		= 1,	/*!< Convex hull values. */
   /**********************************************************************
   * Histogram domain types. WLZ_HISTOGRAMDOMAIN_OLD_INT and	
   * WLZ_HISTOGRAMDOMAIN_OLD_FLOAT exist only to allow old files to be
   * read, they should not be used anywhere else.		
   **********************************************************************/
-  WLZ_HISTOGRAMDOMAIN_OLD_INT	= 1,
-  WLZ_HISTOGRAMDOMAIN_OLD_FLOAT	= 2,
-  WLZ_HISTOGRAMDOMAIN_INT	= 3,
-  WLZ_HISTOGRAMDOMAIN_FLOAT	= 4,
+  WLZ_HISTOGRAMDOMAIN_OLD_INT	= 1,	/*!< Historical compatability. */
+  WLZ_HISTOGRAMDOMAIN_OLD_FLOAT	= 2,	/*!< Historical compatability. */
+  WLZ_HISTOGRAMDOMAIN_INT	= 3,	/*!< Integer histogram domain. */
+  WLZ_HISTOGRAMDOMAIN_FLOAT	= 4,	/*!< Floating point histogram
+  					     domain. */
   /**********************************************************************
   * Rectangle object domain types.				
   **********************************************************************/
-  WLZ_RECTANGLE_DOMAIN_INT	= 1,
-  WLZ_RECTANGLE_DOMAIN_FLOAT	= 2,
+  WLZ_RECTANGLE_DOMAIN_INT	= 1,	/*!< Integer rectangle domain. */
+  WLZ_RECTANGLE_DOMAIN_FLOAT	= 2,	/*!< Floating point rectangle
+  					     domain. */
   /**********************************************************************
   * Property list types.					
   **********************************************************************/
-  WLZ_PROPERTY_SIMPLE		= 180,
-  WLZ_PROPERTY_EMAP		= 181,
+  WLZ_PROPERTY_SIMPLE		= 180,	/*!< Simple property. */
+  WLZ_PROPERTY_EMAP		= 181,	/*!< EMAP property. */
+  WLZ_PROPERTY_NAME		= 182,	/*!< Ascii name property. */
+  WLZ_PROPERTY_GREY		= 183,	/*!< Grey value property. */
   /**********************************************************************
   * 3D view structure types.					
   **********************************************************************/
-  WLZ_3D_VIEW_STRUCT		= 160,
-  /* leave this last in the list */
+  WLZ_3D_VIEW_STRUCT		= 160,	/*!< 3D view structure. */
   /**********************************************************************
   * WLZ_DUMMY_ENTRY is not an object type.			
   * Keep it the last enumerator!				
   **********************************************************************/
-  WLZ_DUMMY_ENTRY
+  WLZ_DUMMY_ENTRY			/*!< Not a Woolz object type.
+  					     Keep it the last enumerator! */
 } WlzObjectType;
 
 
@@ -203,8 +294,7 @@ typedef enum
 * \enum		_WlzEMAPPropertyType
 * \ingroup      WlzProperty
 * \brief        Sub types of EMAP properties
-* \par      Source:
-*                WlzType.h
+*		Typedef: ::WlzEMAPPropertyType.
 */
 typedef enum _WlzEMAPPropertyType
 {
@@ -214,15 +304,22 @@ typedef enum _WlzEMAPPropertyType
   WLZ_EMAP_PROPERTY_DUMMY		/*!< Dummy property */
 } WlzEMAPPropertyType;
 
-/************************************************************************
-*  Raster scan directions as used by WlzGreyScan().		
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzRasterDir
+* \ingroup	WlzAccess
+* \brief	Raster scan directions as used by WlzGreyScan().
+*		Typedef: ::WlzRasterDir.
+*/
+typedef enum _WlzRasterDir
 {
-  WLZ_RASTERDIR_ILIC  = 0,	/* Increasing lines, increasing columns */
-  WLZ_RASTERDIR_ILDC  = 1,	/* Increasing lines, decreasing columns */
-  WLZ_RASTERDIR_DLIC  = 2,	/* Decreasing lines, increasing columns */
-  WLZ_RASTERDIR_DLDC  = 3	/* Decreasing lines, decreasing columns */
+  WLZ_RASTERDIR_ILIC  = 0,		/*!< Increasing lines, increasing
+  					     columns */
+  WLZ_RASTERDIR_ILDC  = 1,		/*!< Increasing lines, decreasing
+  					     columns */
+  WLZ_RASTERDIR_DLIC  = 2,		/*!< Decreasing lines, increasing
+  					     columns */
+  WLZ_RASTERDIR_DLDC  = 3		/*!< Decreasing lines, decreasing
+  					     columns */
 } WlzRasterDir;
 
 /*!
@@ -350,10 +447,13 @@ typedef enum _WlzMeshError
   WLZ_MESH_ERR_NELEM_ZOMBIE	= (1<<8)  /*!< Neighbour is a zombie */
 } WlzMeshError;
 
-/************************************************************************
-* Connectivity.							
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzConnectType
+* \ingroup	WlzType
+* \brief	Connectivity in a 2D or 3D digital space.
+*		Typedef: ::WlzConnectType.
+*/
+typedef enum _WlzConnectType
 {
   WLZ_0_CONNECTED		= 0,
   WLZ_8_CONNECTED,
@@ -363,10 +463,13 @@ typedef enum
   WLZ_26_CONNECTED
 } WlzConnectType;
 
-/************************************************************************
-* Distance metrics.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzDistanceType
+* \ingroup	WlzType
+* \brief	Distance metrics in a 2D or 3D digital space.
+*		Typedef: ::WlzDistanceType.
+*/
+typedef enum _WlzDistanceType
 {
   WLZ_8_DISTANCE		= WLZ_8_CONNECTED,
   WLZ_4_DISTANCE		= WLZ_4_CONNECTED,
@@ -377,10 +480,13 @@ typedef enum
   WLZ_EUCLIDEAN_DISTANCE
 } WlzDistanceType;
 
-/************************************************************************
-* Special structure elements.					
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzSpecialStructElmType
+* \ingroup	WlzMorphologyOps
+* \brief	Special structuring elements for morphological operations.
+*		Typedef: ::WlzSpecialStructElmType.
+*/
+typedef enum _WlzSpecialStructElmType
 {
   WLZ_SPEC_STRUCT_ELM_H4,
   WLZ_SPEC_STRUCT_ELM_EX4,
@@ -394,10 +500,13 @@ typedef enum
   WLZ_SPEC_STRUCT_ELM_V2
 } WlzSpecialStructElmType;
 
-/************************************************************************
-*  Binary operators.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzBinaryOperatorType
+* \ingroup	WlzArithmetic
+* \brief	 Binary operators.						
+*		Typedef: ::WlzBinaryOperatorType.
+*/
+typedef enum _WlzBinaryOperatorType
 {
   WLZ_BO_ADD		= 0,
   WLZ_BO_SUBTRACT,
@@ -424,7 +533,7 @@ typedef enum
 * \brief	Automatic threshold computation methods.			
 *  		The histogram may need to be smoothed for these algorithms
 *		to work.
-		Typedef: ::WlzCompThreshType
+		Typedef: ::WlzCompThreshType.
 */
 typedef enum _WlzCompThreshType
 {
@@ -448,24 +557,24 @@ typedef enum _WlzCompThreshType
 			 * either side. */
 } WlzCompThreshType;
 
-/************************************************************************
-* Interpolation methods.					
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzInterpolationType
+* \ingroup	WlzType
+* \brief	Interpolation methods.
+*		Typedef: ::WlzInterpolationType.
+*/
+typedef enum _WlzInterpolationType
 {
-  WLZ_INTERPOLATION_NEAREST     = 0,
-  WLZ_INTERPOLATION_LINEAR,
-  WLZ_INTERPOLATION_CLASSIFY_1
+  WLZ_INTERPOLATION_NEAREST     = 0,	/*!< Nearest neighbour. */
+  WLZ_INTERPOLATION_LINEAR,		/*!< Linear or tri-linear. */
+  WLZ_INTERPOLATION_CLASSIFY_1		/*!< Classification by probability. */
 } WlzInterpolationType;
 
-/************************************************************************
-* Threshold value selection.					
-************************************************************************/
 /*!
 * \enum		_WlzThresholdType
 * \ingroup	WlzThreshold
 * \brief	Threshold value selection.
-* 		Type: ::WlzThresholdType
+* 		Typedef: ::WlzThresholdType.
 */
 typedef enum _WlzThresholdType
 {
@@ -477,7 +586,7 @@ typedef enum _WlzThresholdType
 * \enum		_WlzPolyFillMode	
 * \ingroup	WlzPolyline
 * \brief	Polygon fill modes.
-*		Type: ::WlzPolyFillMode
+*		Typedef: ::WlzPolyFillMode.
 */
 typedef enum _WlzPolyFillMode
 {
@@ -490,7 +599,7 @@ typedef enum _WlzPolyFillMode
 * \enum		_WlzGreyTransformType	
 * \ingroup	WlzTransform
 * \brief	Grey-level transform types.
-*		Type: ::WlzGreyTransformType
+*		Typedef: ::WlzGreyTransformType.
 */
 typedef enum _WlzGreyTransformType {
   WLZ_GREYTRANSFORMTYPE_LINEAR,		/*!< linear interpolation */
@@ -499,10 +608,13 @@ typedef enum _WlzGreyTransformType {
   WLZ_GREYTRANSFORMTYPE_SIGMOID		/*!< sigmoid function */
 } WlzGreyTransformType;
 
-/************************************************************************
-* Standard 3D views.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzThreeDStdViews
+* \ingroup	WlzSectionTransform
+* \brief	Standard 3D views.
+		Typedef: ::WlzThreeDStdViews.
+*/
+typedef enum _WlzThreeDStdViews
 {
   WLZ_X_Y_VIEW,
   WLZ_Y_Z_VIEW,
@@ -510,105 +622,206 @@ typedef enum
   WLZ_ARBITRARY_VIEW
 } WlzThreeDStdViews;
 
-/************************************************************************
-* 3D viewing modes.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzThreeDViewMode
+* \ingroup	WlzSectionTransform
+* \brief	3D viewing modes which determine the angle at which the plane
+*		is cut through a 3D volume.
+*		Typedef: ::WlzThreeDViewMode.
+*/
+typedef enum _WlzThreeDViewMode
 {
-  WLZ_STATUE_MODE,
-  WLZ_UP_IS_UP_MODE,
+  WLZ_STATUE_MODE,			/*!< Corresponds to "walking around a
+  					     statue" so that if the view is say
+					     from the left-hand side then the
+					     section will have the top of the
+					     statue to the left. */
+  WLZ_UP_IS_UP_MODE,			/*!< The projection of the vector up
+  					     onto the section image will be
+					     "up". This is ill-defined if the
+					     viewing direction is very close to
+					     "up". */
   WLZ_FIXED_LINE_MODE,
   WLZ_ZERO_ZETA_MODE,
   WLZ_ZETA_MODE
 } WlzThreeDViewMode;
 
-/************************************************************************
-* Window functions.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzWindowFnType
+* \ingroup	WlzValuesFilters
+* \brief	Types of window functions.
+*		Window functions are used to weight the grey values of Woolz
+*		domain objects according to the spatial distribution.
+*		Typedef: WlzWindowFnType.
+*
+*               The window functions are defined as:
+*                 \f[
+                    blackman(r,R) = 0.42 +
+                                    0.50 \cos{(\frac{2.00 \pi r}{R - 1.00})} +
+                                    0.08 \cos{(\frac{4.00 \pi r}{R - 1.00})}
+                  \f]
+                  \f[
+                    hamming(r,R) = 0.54 +
+                                   0.46 \cos{(\frac{2.00 \pi r}{R - 1.00})}
+                  \f]
+                  \f[
+                    hanning(r,R) = 0.50 +
+                                   0.50 \cos{(\frac{2.00 \pi r}{R - 1.00})}
+                  \f]
+                  \f[
+                    parzen(r,R) = 1.00 - 
+                                  |frac{2.00 r - (R - 1.00)}{R + 1.00}|
+                  \f]
+                  \f[
+                    welch(r,R) = 1.00 -
+                                 {(\frac{2.00 r - (R - 1.00)}{R + 1.00})}^2
+                  \f]
+                  \f[
+                    rectangle(r,R) = \left\{
+                                     \begin{array}{ll}
+                                     1.00 & |r_x| \leq R, |r_y| \leq R \\
+                                     0.00 & |r_x| > R, |r_y| > R
+                                     \end{array}
+                                     \right.
+                  \f]
+*               Where \f$R\f$ is the window radius and \f$r\f$ the radial
+*               distance from the centre of the window.
+*/
+typedef enum _WlzWindowFnType
 {
-  WLZ_WINDOWFN_NONE,
-  WLZ_WINDOWFN_BLACKMAN,
-  WLZ_WINDOWFN_HAMMING,
+  WLZ_WINDOWFN_NONE,			/*!< No window function. */
+  WLZ_WINDOWFN_BLACKMAN,		/*!< Blackman window. */
+  WLZ_WINDOWFN_HAMMING,			/*!< Hanning window. */
   WLZ_WINDOWFN_HANNING,
-  WLZ_WINDOWFN_PARZEN,
-  WLZ_WINDOWFN_RECTANGLE,
-  WLZ_WINDOWFN_WELCH,
-  /**********************************************************************
-  * WLZ_WINDOWFN_UNSPECIFIED is not a window function, it is an error
-  * Keep it the last in the enumeration.			
-  **********************************************************************/
-  WLZ_WINDOWFN_UNSPECIFIED
+  WLZ_WINDOWFN_PARZEN,			/*!< Parzen window. */
+  WLZ_WINDOWFN_RECTANGLE,		/*!< Rectangular window. */
+  WLZ_WINDOWFN_WELCH,			/*!< Welch window. */
+  WLZ_WINDOWFN_UNSPECIFIED		/*!< Not a window function also has
+  					     a value equal to the number of
+					     window functions defined because
+					     it is the last in the enum. */
 } WlzWindowFnType;
 
-/************************************************************************
-* Sampling functions.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzSampleFn
+* \ingroup	WlzTransform
+* \brief	Sampling functions.						
+* 		Typedef: ::WlzSampleFn.
+*/
+typedef enum _WlzSampleFn
 {
-  WLZ_SAMPLEFN_NONE, 				     /* No sampling function */
-  WLZ_SAMPLEFN_POINT,				 	   /* Point sampling */
-  WLZ_SAMPLEFN_MEAN,				/* Mean value sample of data */
-  WLZ_SAMPLEFN_GAUSS,	                 /* Gaussian weighted sample of data */
-  WLZ_SAMPLEFN_MIN,				   /* Minimum value sampling */
-  WLZ_SAMPLEFN_MAX,				   /* Maximum value sampling */
-  WLZ_SAMPLEFN_MEDIAN				    /* Median value sampling */
+  WLZ_SAMPLEFN_NONE, 			/*!< No sampling function */
+  WLZ_SAMPLEFN_POINT,			/*!< Point sampling */
+  WLZ_SAMPLEFN_MEAN,			/*!< Mean value sample of data */
+  WLZ_SAMPLEFN_GAUSS,	                /*!< Gaussian weighted sample of data */
+  WLZ_SAMPLEFN_MIN,			/*!< Minimum value sampling */
+  WLZ_SAMPLEFN_MAX,			/*!< Maximum value sampling */
+  WLZ_SAMPLEFN_MEDIAN			/*!< Median value sampling */
 } WlzSampleFn;
 
-/************************************************************************
-* Vertices 							
-************************************************************************/
-typedef struct
+/*!
+* \enum		_WlzVertexType
+* \ingroup	WlzType
+* \brief	2D and 3D vertex types.
+*		Typedef: ::WlzVertexType.
+*/
+typedef enum _WlzVertexType
+{
+  WLZ_VERTEX_I2		= 1,		/*!< 2D integer vertex. */
+  WLZ_VERTEX_F2,			/*!< 2D single precision floating
+  					     point vertex. */
+  WLZ_VERTEX_D2,			/*!< 2D double precision floating
+  					     point vertex. */
+  WLZ_VERTEX_I3,			/*!< 3D integer vertex. */
+  WLZ_VERTEX_F3,			/*!< 3D single precision floating
+  					     point vertex. */
+  WLZ_VERTEX_D3				/*!< 3D double precision floating
+  					     point vertex. */
+} WlzVertexType;
+
+/*!
+* \struct	_WlzIVertex2
+* \ingroup	WlzType
+* \brief	2D integer vertex.
+* 		Typedef: ::WlzIVertex2.
+*/
+typedef struct _WlzIVertex2
 {
   int   	vtY;
   int   	vtX;
 } WlzIVertex2;
 
-typedef struct
+/*!
+* \struct	_WlzFVertex2
+* \ingroup	WlzType
+* \brief	2D single precision float point vertex.
+* 		Typedef: ::WlzFVertex2.
+*/
+typedef struct _WlzFVertex2
 {
   float 	vtY;
   float 	vtX;
 } WlzFVertex2;
 
-typedef struct
+/*!
+* \struct	_WlzDVertex2
+* \ingroup	WlzType
+* \brief	2D double precision float point vertex.
+* 		Typedef: ::WlzDVertex2.
+*/
+typedef struct _WlzDVertex2
 {
   double 	vtY;
   double 	vtX;
 } WlzDVertex2;
 
 
-typedef struct
+/*!
+* \struct	_WlzIVertex3
+* \ingroup	WlzType
+* \brief	3D integer vertex.
+* 		Typedef: ::WlzIVertex3.
+*/
+typedef struct _WlzIVertex3
 {
   int		vtX;
   int		vtY;
   int		vtZ;
 } WlzIVertex3;
 
-typedef struct
+/*!
+* \struct       _WlzFVertex3
+* \ingroup	WlzType
+* \brief	3D single precision float point vertex.
+*               Typedef: ::WlzFVertex3.
+*/
+typedef struct _WlzFVertex3
 {
   float		vtX;
   float		vtY;
   float		vtZ;
 } WlzFVertex3;
 
-typedef struct
+/*!
+* \struct       _WlzDVertex3
+* \ingroup	WlzType
+* \brief	3D double precision float point vertex.
+*               Typedef: ::WlzDVertex3.
+*/
+typedef struct _WlzDVertex3
 {
   double	vtX;
   double	vtY;
   double	vtZ;
 } WlzDVertex3;
 
-typedef enum
-{
-  WLZ_VERTEX_I2		= 1,
-  WLZ_VERTEX_F2,
-  WLZ_VERTEX_D2,
-  WLZ_VERTEX_I3,
-  WLZ_VERTEX_F3,
-  WLZ_VERTEX_D3
-} WlzVertexType;
-
-typedef union
+/*!
+* \union	_WlzVertexP
+* \ingroup	WlzType
+* \brief	Union of vertex pointers.
+*		Typedef: ::WlzVertexP.
+*/
+typedef union _WlzVertexP
 {
   void		*v;
   WlzIVertex2	*i2;
@@ -619,7 +832,13 @@ typedef union
   WlzDVertex3	*d3;
 } WlzVertexP;
 
-typedef union
+/*!
+* \union	_WlzVertex
+* \ingroup	WlzType
+* \brief	Union of vertex values.
+*		Typedef: ::WlzVertexV.
+*/
+typedef union _WlzVertex
 {
   WlzIVertex2	i2;
   WlzFVertex2	f2;
@@ -629,10 +848,13 @@ typedef union
   WlzDVertex3	d3;
 } WlzVertex;
 
-/************************************************************************
-* Bounding boxes.						
-************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzIBox2
+* \ingroup	WlzType
+* \brief	2D integer axis aligned rectangle (box).
+* 		Typedef: ::WlzIBox2.
+*/
+typedef struct _WlzIBox2
 {
   int		xMin;
   int		yMin;
@@ -640,7 +862,14 @@ typedef struct
   int		yMax;
 } WlzIBox2;
 
-typedef struct
+/*!
+* \struct       _WlzDBox2
+* \ingroup	WlzType
+* \brief	2D double precision floating point axis aligned rectangle
+* 		(box).
+*		Typedef: ::WlzDBox2.
+*/
+typedef struct _WlzDBox2
 {
   double	xMin;
   double	yMin;
@@ -648,7 +877,13 @@ typedef struct
   double	yMax;
 } WlzDBox2;
 
-typedef struct
+/*!
+* \struct	_WlzIBox3
+* \ingroup	WlzType
+* \brief	3D integer axis aligned cubiod (box).
+*		Typedef: ::WlzIBox3.
+*/
+typedef struct _WlzIBox3
 {
   int		xMin;
   int		yMin;
@@ -658,7 +893,13 @@ typedef struct
   int		zMax;
 } WlzIBox3;
 
-typedef struct
+/*!
+* \struct	_WlzDBox3
+* \ingroup	WlzType
+* \brief	3D double precision floating point axis aligned cubiod (box).
+*		Typedef: ::WlzDBox3.
+*/
+typedef struct _WlzDBox3
 {
   double	xMin;
   double	yMin;
@@ -668,7 +909,13 @@ typedef struct
   double	zMax;
 } WlzDBox3;
 
-typedef union
+/*!
+* \union	_WlzBoxP
+* \ingroup	WlzType
+* \brief	Union of axis aligned box pointers.
+* 		Typedef: ::WlzBoxP.
+*/
+typedef union _WlzBoxP
 {
   void		*v;
   WlzIBox2	*i2;
@@ -677,7 +924,13 @@ typedef union
   WlzDBox3	*d3;
 } WlzBoxP;
 
-typedef union
+/*!
+* \union	_WlzBox
+* \ingroup	WlzType
+* \brief	Union of axis aligned boxes.
+*		Typedef: ::WlzBox.
+*/
+typedef union _WlzBox
 {
   WlzIBox2	i2;
   WlzDBox2	d2;
@@ -686,9 +939,83 @@ typedef union
 } WlzBox;
 
 /************************************************************************
+* Grey values.
+************************************************************************/
+/*!
+* \union	_WlzGreyP
+* \ingroup	WlzType
+* \brief	A union of pointers to grey values.
+*		Typedef: ::WlzGreyP.
+*/
+typedef union _WlzGreyP
+{
+  long *lnp;
+  int  *inp;
+  short *shp;
+  UBYTE *ubp;
+  float *flp;
+  double *dbp;
+  UINT *rgbp;
+} WlzGreyP;
+
+/*!
+* \union	_WlzGreyV
+* \ingroup	WlzType
+* \brief	A union of grey values.
+*		Typedef: ::WlzGreyV.
+*/
+typedef union _WlzGreyV
+{
+  long lnv;
+  int inv;
+  short shv;
+  UBYTE ubv;
+  float flv;
+  double dbv;
+  UINT rgbv;
+} WlzGreyV;
+
+/*!
+* \struct	_WlzPixelV
+* \ingroup	WlzType
+* \brief	A typed grey value.
+*		Typedef: ::WlzPixelV.
+*/
+typedef struct _WlzPixelV
+{
+  WlzGreyType	type;			/*!< Type of grey value. */
+  WlzGreyV	v;			/*!< The grey value. */
+} WlzPixelV;
+
+/*!
+* \struct	_WlzPixelP
+* \ingroup	WlzType
+* \brief	A typed grey value pointer.
+*		Typedef: ::WlzPixelP.
+*/
+typedef struct _WlzPixelP
+{
+  WlzGreyType	type;			/*!< Type of grey value. */
+  WlzGreyP	p;			/*!< Pointer to the grey value(s). */
+} WlzPixelP;
+
+
+/************************************************************************
 * Data structures for geometric models.
 ************************************************************************/
+
+/*!
+* \def		WLZ_GM_TOLERANCE
+* \ingroup	WlzGeoModel
+* \brief	Tolerance for geometric queries in geometric models.
+*/
 #define	WLZ_GM_TOLERANCE	(1.0e-06)
+
+/*!
+* \def		WLZ_GM_TOLERANCE_SQ
+* \ingroup	WlzGeoModel
+* \brief	Square of tolerance for geometric queries in geometric models.
+*/
 #define	WLZ_GM_TOLERANCE_SQ	(WLZ_GM_TOLERANCE * WLZ_GM_TOLERANCE)
 
 /*!
@@ -736,7 +1063,7 @@ typedef enum _WlzGMElemType
 * \enum 	_WlzGMElemTypeFlags
 * \ingroup	WlzGeoModel
 * \brief	Bit masks for the types of geometric model elements.
-*               Typedef: ::WlzGMElemTypeFlags
+*               Typedef: ::WlzGMElemTypeFlags.
 */
 typedef enum _WlzGMElemTypeFlags
 {
@@ -757,7 +1084,7 @@ typedef enum _WlzGMElemTypeFlags
 * \ingroup	WlzGeoModel
 * \brief	A union of pointers to all the valid geometric model
 *		elements.
-*		Typedef: ::WlzGMElemP
+*		Typedef: ::WlzGMElemP.
 */
 typedef union _WlzGMElemP
 {
@@ -1000,7 +1327,7 @@ typedef struct _WlzGMLoopT
 * \struct	_WlzGMFace
 * \ingroup	WlzGeoModel
 * \brief	A circuit of edges.
-*		Typedef: ::WlzGMFace
+*		Typedef: ::WlzGMFace.
 */
 typedef struct _WlzGMFace
 {
@@ -1145,7 +1472,7 @@ typedef struct _WlzGMResource
 */
 typedef struct _WlzGMShellR
 {
-  struct _WlzGMCbEntry	*callbacks;		/*! Linked list of functions which
+  struct _WlzGMCbEntry	*callbacks;		/*!< Linked list of functions which
   					    are called when new elements are
 					    created or existing elements are
 					    destroyed. */
@@ -1212,6 +1539,7 @@ typedef struct	_WlzGMCbEntry
 
 /*!
 * \struct	_WlzGMResIdx
+* \ingroup	WlzGeoModel
 * \brief	A resource index look up table (::WlzGMResIdxTb).
 *		The array of indicies is a look up table from the indicies of a
 *		GM to contigous indicies suitable for copying or outputing a
@@ -1224,7 +1552,7 @@ typedef struct _WlzGMResIdx
   int           *idxLut;        	/*!< Index look up table. */
 } WlzGMResIdx;
 
-/*
+/*!
 * \struct	_WlzGMResIdxTb
 * \ingroup	WlzGeoModel
 * \brief	Resource look up tables for all geometric elements in
@@ -1253,7 +1581,7 @@ typedef struct _WlzGMResIdxTb
 * \enum		_WlzContourMethod
 * \ingroup	WlzContour
 * \brief	Contour generation methods.
-		Typedef: ::WlzContourMethod
+		Typedef: ::WlzContourMethod.
 */
 typedef enum _WlzContourMethod
 {
@@ -1271,17 +1599,20 @@ typedef enum _WlzContourMethod
 */
 typedef struct _WlzContour
 {
-  WlzObjectType type;                   /*! WLZ_CONTOUR. */
+  WlzObjectType type;                   /*!< WLZ_CONTOUR. */
   int		linkcount;		/*!< Core. */
   void		*freeptr;		/*!< Core. */
   WlzGMModel	*model;			/*!< The Woolz geometric model
   					     defining the contour. */
 } WlzContour;
 
-/************************************************************************
-* Woolz values union.						
-************************************************************************/
-typedef union
+/*!
+* \union	_WlzValues
+* \ingroup	WlzType
+* \brief	The union of Woolz values.
+*		Typedef: ::WlzValues.
+*/
+typedef union _WlzValues
 {
   struct _WlzCoreValues     *core;
   struct _WlzRagRValues     *v;
@@ -1294,10 +1625,13 @@ typedef union
   struct _WlzRectFeatValues *rfv;
 } WlzValues;
 
-/************************************************************************
-* Woolz domain union.						
-************************************************************************/
-typedef union
+/*!
+* \union	_WlzDomain
+* \ingroup	WlzType
+* \brief	The union of Woolz domains.
+*		Typedef: ::_WlzDomain.
+*/
+typedef union _WlzDomain
 {
   struct _WlzCoreDomain      *core;
   struct _WlzIntervalDomain  *i;
@@ -1317,6 +1651,7 @@ typedef union
 * \ingroup	WlzProperty
 * \brief	Core property with sufficient to data to provide the type
 *		and enough to allow the property to be freed.
+*		Typedef: ::WlzCoreProperty.
 */
 typedef struct _WlzCoreProperty
 {
@@ -1331,6 +1666,7 @@ typedef struct _WlzCoreProperty
 * \brief	A simple property to hold arbitrary length string data.
 *		Read and writing then coercing to a structure with
 *		numerical values will not be portable.
+*		Typedef: ::WlzSimpleProperty.
 */
 typedef struct _WlzSimpleProperty
 {
@@ -1342,16 +1678,35 @@ typedef struct _WlzSimpleProperty
 } WlzSimpleProperty;
 
 /*!
+* \def		EMAP_PROPERTY_MODELNAME_LENGTH
+* \ingroup	WlzProperty
+* \brief	Maximum length of the model name in an EMAP property.
+*/
+#define EMAP_PROPERTY_MODELNAME_LENGTH	32
+
+/*!
+* \def		EMAP_PROPERTY_VERSION_LENGTH
+* \ingroup	WlzProperty
+* \brief	Maximum length of the version string in an EMAP property.
+*/
+#define EMAP_PROPERTY_VERSION_LENGTH	16
+
+/*!
+* \def		EMAP_PROPERTY_AUTHORNAME_LENGTH
+* \ingroup	WlzProperty
+* \brief	Maximum length of the author strings in an EMAP property.
+*/
+#define	EMAP_PROPERTY_AUTHORNAME_LENGTH 64
+
+/*!
 * \struct	_WlzEMAPProperty
 * \ingroup	WlzProperty
 * \brief	A property to hold EMAP information to attach to
 *		the reference models, anatomy and GE domains. MAPaint
 *		and atlas tools will propogate the information as 
 *		required.
+*		Typedef: ::WlzEMAPProperty.
 */
-#define EMAP_PROPERTY_MODELNAME_LENGTH	32
-#define EMAP_PROPERTY_VERSION_LENGTH	16
-#define	EMAP_PROPERTY_AUTHORNAME_LENGTH 64
 typedef struct _WlzEMAPProperty
 {
   WlzObjectType		type;				/*!< Type */
@@ -1367,469 +1722,726 @@ typedef struct _WlzEMAPProperty
   char			creationMachineName[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Original creation machine name - useful for location */
   long			modificationTime;		/*!< Modification time */
   char			modificationAuthor[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Modification author */
-  char			*comment;			/*!< Text comment string */
+  char			*comment;			/*!< Text comment
+  							     string. */
 } WlzEMAPProperty;
+
+/*!
+* \struct	_WlzNameProperty
+* \ingroup	WlzProperty
+* \brief	A simple null terminated ASCII string for the object's
+* 		name.
+*		Typedef: ::WlzNameProperty.
+*/
+typedef struct _WlzNameProperty
+{
+  WlzObjectType		type;			/*!< Type. */
+  int			linkcount;		/*!< linkcount. */
+  void			*freeptr;		/*!< Free pointer. */
+  char			*name;			/*!< A simple ASCII name
+						     string. */
+} WlzNameProperty;
+
+/*!
+* \struct	_WlzGreyProperty
+* \ingroup	WlzProperty
+* \brief	A single grey value, which for example might represent
+*		the preferred display colour of a binary domain.
+*		Typedef: ::WlzGreyProperty.
+*/
+typedef struct _WlzGreyProperty
+{
+  WlzObjectType		type;			/*!< Type. */
+  int			linkcount;		/*!< linkcount. */
+  void			*freeptr;		/*!< Free pointer. */
+  char			*name;			/*!< An associated name
+  						     string which conveys
+						     the meaning of the 
+						     value. May be NULL */
+  struct _WlzPixelV	value;			/*!< The pixel value which
+  						     both encodes the grey type
+						     and it's value. */
+} WlzGreyProperty;
 
 /*!
 * \union	_WlzProperty
 * \ingroup	WlzProperty
 * \brief	A union of pointers for properties.
+*		Typedef: WlzProperty.
 */
 typedef union _WlzProperty
 {
   struct _WlzCoreProperty	*core;
   struct _WlzSimpleProperty	*simple;
   struct _WlzEMAPProperty	*emap;
+  struct _WlzNameProperty	*name;
+  struct _WlzGreyProperty	*greyV;
 } WlzProperty;
 
 /************************************************************************
-* WlzObject: The Woolz object.					
+* The Woolz objects.
 ************************************************************************/
+/*!
+* \struct	_WlzCoreObject
+* \ingroup	WlzType
+* \brief	The core Woolz object type which can be used to determine
+*		the type of a Woolz object. 
+*		Typedef: ::WlzCoreObject.
+*/
+typedef struct _WlzCoreObject
+{
+  WlzObjectType	type;			/*!< The Woolz object type. */
+  int		linkcount;		/*!< The link count: A counter
+  					     for the number of references to
+					     the object, which should only be
+					     accessed through WlzUnlink(),
+					     WlzAssignObject() and
+					     WlzFreeObj(). */
+} WlzCoreObject;
+
+/*!
+* \struct	_WlzObject
+* \ingroup	WlzType
+* \brief	The Woolz object.
+*		Typedef: ::WlzObject.
+*/
 typedef struct _WlzObject
 {
-  WlzObjectType      type;
-  int                linkcount;
-  WlzDomain          domain;
-  WlzValues          values;
-  AlcDLPList	     *plist;
-  struct _WlzObject  *assoc;
+  WlzObjectType      type;		/*!< From WlzCoreObject. */
+  int                linkcount;		/*!< From WlzCoreObject. */
+  WlzDomain          domain;		/*!< The objects domain: It's
+					     spatial extent or
+  					     geometric properties. */
+  WlzValues          values;		/*! The values defined within
+  					    the object's domain. */
+  AlcDLPList	     *plist;		/*! A linked list of properties
+  					    of the object. */
+  struct _WlzObject  *assoc;		/*! An object which is
+  					    assosciated with this object. */
 } WlzObject;
 
+/*!
+* \struct	_WlzCompoundArray
+* \ingroup	WlzType
+* \brief	A compound object implemented as either an array or
+*		a linked list of other objects. There is a distinction between
+*		an compound of the same type (e.g. resulting from a labelling)
+*		and a compound of different types (e.g. resulting from a range
+*		of image processes from a single original object).
+*		Typedef: ::WlzCompoundArray.
+*/
+typedef struct _WlzCompoundArray
+{
+  WlzObjectType type;			/*!< From WlzCoreObject. */
+  int           linkcount;		/*!< From WlzCoreObject. */
+  WlzObjectType otype;		       	/*!< The permitted type if
+  					    constrained. */
+  int           n;		 	/*!< The maximum number of objects
+  					     (array length). */
+  WlzObject     **o;			/*!< The list of Woolz object
+  					     pointers. */
+  AlcDLPList    *p;			/*!< A linked list of properties of
+  					     the object. */
+  WlzObject     *assoc;
+} WlzCompoundArray;
+
 /************************************************************************
-* WlzCoreDomain: All Woolz domains must have all the fields of the core
-* domain, in the same order and before any others.		
+* Domains.
 ************************************************************************/
+/*!
+* \struct	_WlzCoreDomain
+* \ingroup	WlzType
+* \brief	The core domain: All Woolz domains have all the fields
+*		of the core domain in the same order and before any
+*		others, so allowing a domain to be assigned, freed
+*		and have it's type established.
+		Typedef: ::WlzCoreDomain.
+*/
 typedef struct _WlzCoreDomain
 {
-  WlzObjectType   type;
-  int             linkcount;
-  void            *freeptr;
+  WlzObjectType   type;				/*!< The type of domain. */
+  int             linkcount;			/*!< The link count: A counter
+  						     for the number of
+						     references to the domain,
+						     which should only be
+						     accessed through
+						     WlzUnlink(),
+						     WlzAssignDomain() and
+						     WlzFreeDomain(). */
+  void            *freeptr;			/*!< A stack with pointers
+  						     that can be freed by
+						     AlcFreeStackFree(). */
 } WlzCoreDomain;
 
-/************************************************************************
-* WlzPlaneDomain: A 3D domain.					
-************************************************************************/
+/*!
+* \struct	_WlzIntervalDomain
+* \ingroup	WlzType
+* \brief	A 2D domain defining an arbitrary  region of space in 2D.
+*		The domain may be of type WLZ_INTERVALDOMAIN_INTVL or
+*		WLZ_INTERVALDOMAIN_RECT. If the domain is of type
+*		WLZ_INTERVALDOMAIN_RECT then the intvlines field is
+*		not used. For WLZ_INTERVALDOMAIN_INTVL domains the
+*		intervals in a line must be contiguous.
+*		Typedef: ::WlzIntervalDomain.
+*/
+typedef struct _WlzIntervalDomain
+{
+  WlzObjectType     type;			/*!< From WlzCoreDomain. */
+  int               linkcount;			/*!< From WlzCoreDomain. */
+  void              *freeptr;			/*!< From WlzCoreDomain. */
+  int               line1;			/*!< First line coordinate. */
+  int               lastln;			/*!< Last line coordinate. */
+  int               kol1;			/*!< First column
+  						     coordinate. */
+  int               lastkl;			/*!< Last column coordinate. */
+  struct _WlzIntervalLine *intvlines;   	/*!< Array of interval line
+  						     structures. */
+} WlzIntervalDomain;
 
+/*!
+* \struct	_WlzPlaneDomain
+* \ingroup	WlzType
+* \brief	A 3D domain defining an arbitrary  region of space in 3D.
+*		The 3D plane domain composed of plane-wise array of 2D domains.
+*		Typedef: ::WlzPlaneDomain.
+*/
 typedef struct _WlzPlaneDomain
 {
-  WlzObjectType     type;					     /* CORE */
-  int               linkcount;					     /* CORE */
-  void              *freeptr;					     /* CORE */
-  int               plane1;     		   /* First plane coordinate */
-  int               lastpl;     		    /* Last plane coordinate */
-  int               line1;      		    /* First line coordinate */
-  int               lastln;			     /* Last line coordinate */
-  int               kol1;       	    /* First column  line coordinate */
-  int               lastkl;     	     /* Last column  line coordinate */
-  WlzDomain 	    *domains;       /* Array of pointers to interval domains */
-  float 	    voxel_size[3];      /* Array of nominal voxel dimensions */
+  WlzObjectType     type;			/*!< From WlzCoreDomain. */
+  int               linkcount;			/*!< From WlzCoreDomain. */
+  void              *freeptr;			/*!< From WlzCoreDomain. */
+  int               plane1;     		/*!< First plane coordinate. */
+  int               lastpl;     		/*!< Last plane coordinate. */
+  int               line1;      		/*!< First line coordinate. */
+  int               lastln;			/*!< Last line coordinate. */
+  int               kol1;       	    	/*!< First column line
+  						     coordinate. */
+  int               lastkl;     	     	/*!< Last column  line
+  						     coordinate. */
+  WlzDomain 	    *domains;       		/*!< Array of pointers to
+  						     2D domains. */
+  float 	    voxel_size[3];      	/*!< Array of nominal voxel
+  						     dimensions. */
 } WlzPlaneDomain;
 
 
 /************************************************************************
-* WlzIntervalDomain: 2D interval domain.			
-* The intervals in a line must be contiguous.			
+* Intervals.						
 ************************************************************************/
-typedef struct _WlzIntervalDomain
-{
-  WlzObjectType     type;					     /* CORE */
-  int               linkcount;					     /* CORE */
-  void              *freeptr;					     /* CORE */
-  int               line1;			    /* First line coordinate */
-  int               lastln;			     /* Last line coordinate */
-  int               kol1;			  /* First column coordinate */
-  int               lastkl;			   /* Last column coordinate */
-  struct _WlzIntervalLine *intvlines;   /* Array of interval line structures */
-} WlzIntervalDomain;
-
-/************************************************************************
-* A line of intervals.						
-************************************************************************/
+/*!
+* \struct	_WlzIntervalLine
+* \ingroup	WlzType
+* \brief	A line of intervals.
+*		Typedef: ::WlzIntervalLine.
+*/
 typedef struct _WlzIntervalLine
 {
-  int                  nintvs;
-  struct _WlzInterval *intvs;
+  int                  nintvs;		/*!< Number of intervals on line. */
+  struct _WlzInterval *intvs;		/*!< Array of intervals. */
 } WlzIntervalLine;
 
-/************************************************************************
-*  A single interval.						
-************************************************************************/
+/*!
+* \struct	_WlzInterval
+* \ingroup	WlzType
+* \brief	A single interval.
+*		Typedef: ::WlzInterval.
+*/
 typedef struct _WlzInterval
 {
-  int ileft;
-  int iright;
+  int ileft;				/*!< Left most pixel of interval. */
+  int iright;				/*!< Right most pixel of interval. */
 } WlzInterval;
 
-/************************************************************************
-* Dynamic interval pool, for building interval domains.
-************************************************************************/
+/*!
+* \struct	_WlzDynItvPool
+* \ingroup	WlzType
+* \brief	Dynamic interval pool, for building interval domains.
+* 		Typedef: ::WlzDynItvPool.
+*/
 typedef struct _WlzDynItvPool
 {
-  WlzInterval	*itvBlock;
-  int		itvsInBlock;
-  int		offset;
+  WlzInterval	*itvBlock;		/*!< Array of intervals. */
+  int		itvsInBlock;	        /*!< Number of intervals in array. */
+  int		offset;			/*!< Offset into array for next
+  					     available interval. */
 } WlzDynItvPool;
 
 /************************************************************************
-* A union of pointers to grey values.				
+* Grey value tables.
 ************************************************************************/
-typedef union
-{
-  long *lnp;
-  int  *inp;
-  short *shp;
-  UBYTE *ubp;
-  float *flp;
-  double *dbp;
-  UINT *rgbp;
-} WlzGreyP;
 
-/************************************************************************
-* A union of grey values.					
-************************************************************************/
-typedef union
-{
-  long lnv;
-  int inv;
-  short shv;
-  UBYTE ubv;
-  float flv;
-  double dbv;
-  UINT rgbv;
-} WlzGreyV;
-
-/************************************************************************
-* WlzPixelV, WlzPixelP: Pixel Structures for single typed values 
-* eg background.						
-************************************************************************/
-typedef struct
-{
-  WlzGreyType	type;
-  WlzGreyV	v;
-} WlzPixelV;
-
-typedef struct
-{
-  WlzGreyType	type;
-  WlzGreyP	p;
-} WlzPixelP;
-
-/************************************************************************
-* Structure of grey values in a line .				
-************************************************************************/
-typedef struct
-{
-  int      vkol1;					/* Relative left end */
-  int      vlastkl;				       /* Relative right end */
-  WlzGreyP values;					  /* Array of values */
-} WlzValueLine;
-
-/************************************************************************
-* WlzCoreValues: All Woolz value tables must have all the fields of 
-* the core values, in the same order and before any others.	
-************************************************************************/
+/*!
+* \struct	_WlzCoreValues
+* \ingroup	WlzType
+* \brief	All Woolz value tables must have all the fields of the
+*		core values, in the same order and before any others,
+*		so allowing a values to be assigned, freed and have it's
+*		type established.
+*		Typedef: ::WlzCoreValues.
+*/
 typedef struct _WlzCoreValues
 {
   WlzObjectType type;	
   int       linkcount;	
 } WlzCoreValues;
 
-/************************************************************************
-* Ragged rectangle value table. The type encodes both the type of
-* value table and the type of grey value.			
-************************************************************************/
+/*!
+* \struct	_WlzValueLine
+* \ingroup	WlzType
+* \brief	Grey values along a line.
+*		Typedef: ::WlzValueLine.
+*/
+typedef struct _WlzValueLine
+{
+  int      vkol1;			/*!< Relative left end. */
+  int      vlastkl;			/*!< Relative right end. */
+  WlzGreyP values;		  	/*!< Array of values. */
+} WlzValueLine;
+
+/*!
+* \struct	_WlzRagRValues
+* \ingroup	WlzType
+* \brief	The ragged rectangle values table.
+*		The type encodes both the type of value table and the type of
+*		grey value.
+*		Typedef: ::WlzRagRValues.
+*/
 typedef struct _WlzRagRValues
 {
-  WlzObjectType type;						     /* CORE */
-  int       linkcount;						     /* CORE */
-  void      *freeptr;
-  WlzValues original_table; 		   /* If != NULL, valuetable which owns
-				              the raw values we are using */
-  int       line1;					       /* First line */
-  int       lastln;					        /* Last line */
-  int       kol1;					     /* First column */
-  int       width;						    /* Width */
-  WlzPixelV bckgrnd;		/* Background value for points not in object */
-  WlzValueLine *vtblines;	      /* Array of grey table line structures */
+  WlzObjectType type;			/*!< From WlzCoreValues. */
+  int       linkcount;			/*!< From WlzCoreValues. */
+  void      *freeptr;			/*!< From WlzCoreValues. */
+  WlzValues original_table; 		/*!< If non-NULL, the values table
+  					     which owns the raw values we
+					     are using. */
+  int       line1;			/*!< First line. */
+  int       lastln;			/*!< Last line. */
+  int       kol1;			/*!< First column. */
+  int       width;			/*!< Width. */
+  WlzPixelV bckgrnd;			/*!< Background value for pixels not
+  					     in object. */
+  WlzValueLine *vtblines;	      	/*!< Array of value table line
+  					     structures. */
 } WlzRagRValues;
 
-/************************************************************************
-* Rectangular values table. The type encodes both the type of	
-* value table and the type of grey value.			
-************************************************************************/
+/*!
+* \struct	_WlzRectValues
+* \ingroup	WlzType
+* \brief	The rectangle values table.
+*		The type encodes both the type of value table and the type of
+*		grey value.
+*		Typedef: ::WlzRectValues.
+*/
 typedef struct _WlzRectValues
 {
-  WlzObjectType type;						     /* CORE */
-  int 		linkcount;					     /* CORE */
-  void 		*freeptr;
-  WlzValues 	original_table; 	   /* If != NULL, valuetable which owns
-  					      the raw values we are using */
-  int 		line1;					       /* First line */
-  int 		lastln;						/* Last line */
-  int 		kol1;					     /* First column */
-  int 		width;						    /* Width */
-  WlzPixelV 	bckgrnd; 	/* Background value for points not in object */
-  WlzGreyP 	values;			       /* Contiguous array of values */
+  WlzObjectType type;			/*!< From WlzCoreValues. */
+  int 		linkcount;		/*!< From WlzCoreValues. */
+  void 		*freeptr;		/*!< From WlzCoreValues. */
+  WlzValues 	original_table; 	/*!< If non-NULL, the values table
+  					     which owns the raw values we
+					     are using. */
+  int 		line1;			/*!< First line. */
+  int 		lastln;			/*!< Last line. */
+  int 		kol1;			/*!< First column. */
+  int 		width;			/*!< Width. */
+  WlzPixelV 	bckgrnd; 		/*!< Background value for points
+   					     not in object. */
+  WlzGreyP 	values;			/*!< Contiguous array of values. */
 } WlzRectValues;
 
-/************************************************************************
-* One line's worth of grey-intervals 				
-************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzValueIntervalLine
+* \ingroup	WlzType
+* \brief	One line's worth of grey value intervals.
+*		Typedef: ::WlzValueIntervalLine.
+*/
+typedef struct _WlzValueIntervalLine
 {
-  int           nintvs;				 /* Number of grey-intervals */
-  WlzValueLine *vtbint;				/* Pointer to grey intervals */
+  int           nintvs;			/*!< Number of grey value intervals. */
+  WlzValueLine *vtbint;			/*!< Pointer to grey value
+  					     intervals. */
 } WlzValueIntervalLine;
 
-/************************************************************************
-* Interval-structured value table. The type encodes both the type of
-* value table and the type of grey value.			
-************************************************************************/
+/*!
+* \struct	_WlzIntervalValues
+* \ingroup	WlzType
+* \brief	An interval structured value table.
+*		The type encodes both the type of value table and the type of
+*		grey value.
+*               Typedef: ::WlzIntervalValues.
+*/
 typedef struct _WlzIntervalValues
 {
-  WlzObjectType type;						     /* CORE */
-  int      	linkcount;      				     /* CORE */
-  void    	*freeptr;
-  WlzValues 	original_table;		   /* If != NULL, valuetable which owns
-  					      the raw values we are using */
-  int   	line1;	      				       /* First line */
-  int    	lastln;	      					/* Last line */
-  int     	kol1;	      				     /* First column */
-  int      	width;	      					    /* Width */
-  WlzPixelV 	bckgrnd;        /* Background value for points not in object */
-  WlzValueIntervalLine *vil;   /* Pointers to structures of grey table lines */
+  WlzObjectType type;			/*!< From WlzCoreValues. */
+  int      	linkcount;      	/*!< From WlzCoreValues. */
+  void    	*freeptr;		/*!< From WlzCoreValues. */
+  WlzValues 	original_table;		/*!< If non-NULL, the values table
+   					     which owns the raw values we
+  					     are using. */
+  int   	line1;	      		/*!< First line. */
+  int    	lastln;	      		/*!< Last line. */
+  int     	kol1;	      		/*!< First column. */
+  int      	width;	      		/*!< Width. */
+  WlzPixelV 	bckgrnd;        	/*!< Background value for points
+  					     not in object. */
+  WlzValueIntervalLine *vil;   		/*!< Pointers to structures of grey
+  					     table lines. */
 } WlzIntervalValues;
 
-/************************************************************************
-* Voxel value table.						
-************************************************************************/
+/*!
+* \struct	_WlzVoxelValues
+* \ingroup	WlzType
+* \brief	Voxel value table.
+*		Typedef: ::WlzVoxelValues.
+*/
 typedef struct _WlzVoxelValues
 {
-  WlzObjectType	type;						     /* CORE */
-  int           linkcount;					     /* CORE */
-  void*         freeptr;
-  WlzValues 	original_table;		   /* If != NULL, valuetable which owns
-  					      the raw values we are using */
-  int           plane1;					      /* First plane */
-  int           lastpl;					       /* Last plane */
-  WlzPixelV     bckgrnd;	/* Background value for points not in object */
-  WlzValues     *values;   		/* Array of pointers to value tables */
+  WlzObjectType	type;			/*!< From WlzCoreValues. */
+  int           linkcount;		/*!< From WlzCoreValues. */
+  void*         freeptr;		/*!< From WlzCoreValues. */
+  WlzValues 	original_table;		/*!< If non-NULL, the values table
+  					     which owns the raw values we
+					     are using. */
+  int           plane1;			/*!< First plane. */
+  int           lastpl;			/*!< Last plane. */
+  WlzPixelV     bckgrnd;		/*!< Background value for points
+  					     not in object. */
+  WlzValues     *values;   		/*!< Array of pointers to value
+  					     tables. */
 } WlzVoxelValues;
 
 /************************************************************************
-* 2D Polygon domain.						
+* Polygon domains.						
 ************************************************************************/
 /*!
-* \struct	WlzPolygonDomain
+* \struct	_WlzPolygonDomain
 * \ingroup	WlzPolyline
 * \brief	A 2D polyline domain with possible types:WLZ_POLYGON_INT, 
-WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
+*		WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
+*		Typedef: ::WlzPolygonDomain.
 */
 typedef struct _WlzPolygonDomain
 {
-  WlzObjectType type;			/*!< From the core domain */
-  int linkcount;			/*!< From the core domain */
-  void *freeptr;			/*!< From the core domain */
-  int nvertices;	/*!< Number of verticies */
-  int maxvertices;	/*!< Maximum number of verticies (space allocated). */
-  WlzIVertex2 *vtx; /*!< Array of verticies, may need casting according to type */
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int linkcount;			/*!< From WlzCoreDomain. */
+  void *freeptr;			/*!< From WlzCoreDomain. */
+  int nvertices;			/*!< Number of verticies. */
+  int maxvertices;			/*!< The maximum number of verticies
+  					     for which space has been
+					     allocated. */
+  WlzIVertex2 *vtx; 			/*!< Array of verticies.
+  					     This may need casting according
+					     to the type field. */
 } WlzPolygonDomain;
 
-/************************************************************************
-* 3D Polygon domain.						
-************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzPolygonDomain3
+* \ingroup	WlzPolyline
+* \brief	A 2D polyline domain with possible types:WLZ_POLYGON_INT, 
+*		WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
+*		Typedef: ::WlzPolygonDomain.
+*/
+typedef struct _WlzPolygonDomain3
 {
-  WlzObjectType type;						     /* CORE */
-  int 	linkcount;						     /* CORE */
-  void *freeptr;						     /* CORE */
-  int nvertices;				      /* Number of verticies */
-  int maxvertices;	   /* Maximum number of verticies (space allocated). */
-  WlzIVertex2 *vtx; /* Array of verticies, may need casting according to type */
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int 	linkcount;			/*!< From WlzCoreDomain. */
+  void *freeptr;			/*!< From WlzCoreDomain. */
+  int nvertices;			/*!< Number of verticies. */
+  int maxvertices;	   		/*!< The maximum number of verticies
+  					     for which space has been
+					     allocated. */
+  WlzIVertex2 *vtx; 			/*!< Array of verticies.
+  					     This may need casting according
+					     to the type field. */
 } WlzPolygonDomain3;
 
 /************************************************************************
 * Boundary list.						
 ************************************************************************/
+/*!
+* \struct	_WlzBoundList
+* \ingroup	WlzBoundary
+* \brief	A complete list of a set of boundaries which is encoded
+*		in tree form.
+*/
 typedef struct _WlzBoundList
 {
-  WlzObjectType type;						     /* CORE */
-  int linkcount;						     /* CORE */
-  void *freeptr;						     /* CORE */
-  struct _WlzBoundList *up;		 /* The containing hole or piece, NULL
-				   	    if the universal hole (very top) */
-  struct _WlzBoundList *next;		/* Next hole or piece at same level and
-				   	   lying within same piece or hole,
-					   NULL if no more at this level */
-  struct _WlzBoundList *down;		/* First enclosed structure, NULL if
-  				           none */
-  int wrap;				/* Wrap number - number of points of
-				   	   boundary included both at start and
-					   end of polygon representation */
-  WlzPolygonDomain *poly;	       /* Polygon representation of boundary */
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int linkcount;			/*!< From WlzCoreDomain. */
+  void *freeptr;			/*!< From WlzCoreDomain. */
+  struct _WlzBoundList *up;		/*!< The containing hole or piece,
+				   	     NULL if the universal hole
+					     (very top). */
+  struct _WlzBoundList *next;		/*!< Next hole or piece at same level
+  					     and lying within same piece or
+					     hole, NULL if no more at this
+					     level. */
+  struct _WlzBoundList *down;		/*!< First enclosed structure, NULL if
+  				             none. */
+  int wrap;				/*!< Wrap number: The number of points
+  					     of boundary included both at
+					     start and end of polygon
+					     representation. */
+  WlzPolygonDomain *poly;	       /*!< The polygon representation of
+  					    this boundary. */
 } WlzBoundList;
 
 
 /************************************************************************
 * Chord and convex hull parameters.				
-* The chord equation is: ccon = (acon * x) - (bcon * y).	
 ************************************************************************/
+/*!
+* \struct	_WlzChord
+* \ingroup	WlzConvexHull
+* \brief	A cord described by the equation:
+*		\f[
+		  c = a x - b y
+		\f]
+*		Typedef: ::WlzChord.
+*/
 typedef struct _WlzChord 
 {
-  int sig;			     /* Non-zero if judged to be significant */
-  int acon;			 		  /* Chord equation paramter */
-  int bcon;			    		  /* Chord equation paramter */
-  int ccon;					  /* Chord equation paramter */
-  double cl;					         /* Chord length, x8 */
-  int bl;			   /* Line number of bay bottom or bulge top */
-  int bk;	                 /* Column number of bay bottom or bulge top */
-  int barea;					    /* Bay or bulge area, *8 */
-  int bd;			/* Bay maximum depth or bulge max height, *8 */
+  int sig;			     	/*!< Non-zero if judged to be
+  					     significant. */
+  int acon;			 	/*!< Chord equation paramter,
+  					     \f$a\f$. */
+  int bcon;			    	/*!< Chord equation paramter,
+  					     \f$b\f$. */
+  int ccon;				/*!< Chord equation paramter,
+  					     \f$c\f$. */
+  double cl;				/*!< Eight \f$\times\f$ chord
+  					     length. */
+  int bl;			   	/*!< Line number of bay bottom or
+  					     bulge top. */
+  int bk;	                 	/*!, Column number of bay bottom or
+  					     bulge top. */
+  int barea;				/*!< Eight \f$\times\f$ bay or
+  					     bulge area. */
+  int bd;				/*!< Eight \f$\times\f$ bay maximum
+  					     depth or bulge max height. */
 } WlzChord;
 
+/*!
+* \struct	_WlzConvHullValues
+* \ingroup	WlzConvexHull
+* \brief	A 2D convex hull.
+* 		Typedef: ::WlzConvHullValues.
+*/
 typedef struct _WlzConvHullValues
 {
-  WlzObjectType type;						     /* CORE */
-  int           linkcount;					     /* CORE */
-  void		*freeptr;					     /* CORE */
-  WlzValues original_table; 	           /* If != NULL, valuetable which owns
-				   	      the raw values we are using */
-  int           nchords;				 /* Number of chords */
-  int           nsigchords;		     /* Number of significant chords */
-  int           mdlin;		  /* Mid-line of enclosed originating object */
-  int           mdkol;		/* Mid-column of enclosed originating object */
+  WlzObjectType type;			/*!< From WlzCoreValues. */
+  int           linkcount;		/*!< From WlzCoreValues. */
+  void		*freeptr;		/*!< From WlzCoreValues. */
+  WlzValues original_table; 	        /*!< If non-NULL, valuetable which
+  					     owns the raw values we are
+					     using. */
+  int           nchords;		/*!< Number of chords. */
+  int           nsigchords;		/*!< Number of significant chords. */
+  int           mdlin;		  	/*!< Mid-line of enclosed
+  					     originating object. */
+  int           mdkol;			/*!< Mid-column of enclosed
+  					     originating object. */
   WlzChord      *ch;
 } WlzConvHullValues;
 
 /************************************************************************
-* Histogram domain.						
+* Histograms.						
 ***********************************************************************/
+/*!
+* \struct	_WlzHistogramDomain
+* \ingroup	WlzHistogram
+* \brief	Histograms are Woolz domains and not values as might be
+*		expected.
+*		Typedef: ::WlzHistogramDomain.
+*/
 typedef struct _WlzHistogramDomain
 {
-  WlzObjectType	type; 			/* WLZ_HISTOGRAMDOMAIN_(INT)|(FLOAT) */
-  int		linkcount; 	      /* Number of times data structure used */
-  void		*freeptr; /* Points to (void *)values, used by WlzFreeDomain */
-  int		maxBins;	       /* Number of histogram bins allocated */
-  int		nBins;			    /* Number of histogram bins used */
-  double	origin; 	 /* Lowest grey value of first histogram bin */
-  double	binSize; 	       /* Grey value range for histogram bin */
-  WlzGreyP	binValues; /* Histogram values: int for WLZ_HISTOGRAMDOMAIN_INT
-  			      or double for WLZ_HISTOGRAMDOMAIN_FLOAT */
+  WlzObjectType	type; 			/*!< From WlzCoreDomain. */
+  int		linkcount; 	      	/*!< From WlzCoreDomain. */
+  void		*freeptr; 		/*!< From WlzCoreDomain. */
+  int		maxBins;	       	/*!< Number of histogram bins
+  					     allocated. */
+  int		nBins;			/*!< Number of histogram bins used. */
+  double	origin; 	 	/*!< Lowest grey value of first
+  					     histogram bin. */
+  double	binSize; 	        /*!< Grey value range for a histogram
+  					    bin. */
+  WlzGreyP	binValues; 		/*!< Histogram values:
+  					     Int for WLZ_HISTOGRAMDOMAIN_INT or
+  			      		     Double for
+					     WLZ_HISTOGRAMDOMAIN_FLOAT. */
 } WlzHistogramDomain;
 
-typedef enum
+/*!
+* \enum		_WlzHistFeature
+* \ingroup      WlzHistogram
+* \brief	Features of histograms.
+*		Typedef: ::WlzHistFeature.
+*/
+typedef enum _WlzHistFeature
 {
-  WLZ_HIST_FEATURE_NONE     = (0),
-  WLZ_HIST_FEATURE_PEAK	    = (1<<0),                      /* Histogram peak */
-  WLZ_HIST_FEATURE_TROUGH   = (1<<1)           	         /* Histogram trough */
+  WLZ_HIST_FEATURE_NONE     = (0),	/*!< No feature. */
+  WLZ_HIST_FEATURE_PEAK	    = (1<<0),   /*!< Histogram peak. */
+  WLZ_HIST_FEATURE_TROUGH   = (1<<1)	/*!< Histogram trough. */
 } WlzHistFeature;
 
 /************************************************************************
 * Rectangle domains.						
-* Side from (l[0],k[0]) to (l[1],k[1]) is a long side. 		
-* The vertices are cyclic.					
 ************************************************************************/
+/*!
+* \struct	_WlzRect
+* \ingroup	WlzFeatures
+* \brief	An integer rectangle domain.
+*		Side from (l[0],k[0]) to (l[1],k[1]) is a long side.
+*		The vertices are cyclic.
+*		Typedef: ::WlzIRect.
+*/
 typedef struct  _WlzRect
 {
-  WlzObjectType type;						     /* CORE */
-  int linkcount;						     /* CORE */
-  void *freeptr;						     /* CORE */
-  int irk[4];					/* Column vertex coordinates */
-  int irl[4];					  /* Line vertex coordinates */
-  float rangle;			 /* Angle of long side to vertical (radians) */
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int linkcount;			/*!< From WlzCoreDomain. */
+  void *freeptr;			/*!< From WlzCoreDomain. */
+  int irk[4];				/*!< Column vertex coordinates. */
+  int irl[4];				/*!< Line vertex coordinates. */
+  float rangle;			 	/*!< Angle of long side to
+  					     vertical (radians). */
 } WlzIRect;
 
+/*!
+* \struct	_WlzFRect
+* \ingroup	WlzFeatures
+* \brief	A single precision floating point rectangle domain.
+*		Side from (l[0],k[0]) to (l[1],k[1]) is a long side.
+*		The vertices are cyclic.
+*		Typedef: ::WlzFRect.
+*/
 typedef struct _WlzFRect
 {
-  WlzObjectType type;						     /* CORE */
-  int linkcount;						     /* CORE */
-  void *freeptr;						     /* CORE */
-  float frk[4];					/* Column vertex coordinates */
-  float frl[4];					  /* Line vertex coordinates */
-  float rangle;			 /* Angle of long side to vertical (radians) */
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int linkcount;			/*!< From WlzCoreDomain. */
+  void *freeptr;			/*!< From WlzCoreDomain. */
+  float frk[4];				/*!< Column vertex coordinates. */
+  float frl[4];				/*!< Line vertex coordinates. */
+  float rangle;			 	/*!< Angle of long side to vertical
+  					     (radians). */
 } WlzFRect;
 
 /************************************************************************
-* Convolution mask.						
-* To reduce computational cost at the expense of data storage the
-* complete convolution must be specified even if highly symmetrical.
+* Convolution and other value filters.
 ************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzConvolution
+* \ingroup	WlzValuesFilters
+* \brief	A 2D space domain convolution mask.
+*		To reduce computational cost at the expense of data storage
+*		the complete convolution is used even if highly symmetrical.
+*		Typedef: ::WlzConvolution.
+*/
+typedef struct	_WlzConvolution
 {
-  WlzObjectType type;
-  int linkcount;
-  int xsize, ysize;			       /* Size of mask (must be odd) */
-  int *cv;			      /* Size*size convolution mask elements */
-  int divscale;   	     /* Divide by this after forming the convolution */
-  int offset;     				 /* ... then add this offset */
-  int modflag;		    /* ... and take the modulus if this is non-zero. */
+  WlzObjectType type;			/*!< Identifies a convolution mask. */
+  int linkcount;			/*!< Reference count. */
+  int xsize, ysize;			/*!< Size of mask which must be odd. */
+  int *cv;			      	/*!< The convolution mask with
+  					     size\f$\times\f$size elements. */
+  int divscale;   	     		/*!< Scale factor by which the
+  					     convolution  is divided. */
+  int offset;				/*!< Offset which is added to the
+  					     scaled convolution. */
+  int modflag;		    		/*!< If non-zero the absolute value
+  					     of the scaled, offset convolution
+					     is used. */
 } WlzConvolution;
 
-/************************************************************************
-* Recursive filter actions.
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzRsvFilterActionMask
+* \ingroup	WlzValuesFilters
+* \brief	The action to be performed by a recursive filter.
+*		These values are bit masks which may be combined.
+*		Typedef: ::WlzRsvFilterActionMask.
+*/
+typedef enum _WlzRsvFilterActionMask
 {
-  WLZ_RSVFILTER_ACTION_NONE     = (0),
-  WLZ_RSVFILTER_ACTION_X        = (1<<0),              /* Filter along lines */
-  WLZ_RSVFILTER_ACTION_Y        = (1<<1),           /*Filter through columns */
-  WLZ_RSVFILTER_ACTION_Z        = (1<<2)            /* Filter through planes */
+  WLZ_RSVFILTER_ACTION_NONE     = (0),	/*!< No filtering. */
+  WLZ_RSVFILTER_ACTION_X        = (1<<0), /*!< Filter along lines. */
+  WLZ_RSVFILTER_ACTION_Y        = (1<<1), /*!< Filter through columns. */
+  WLZ_RSVFILTER_ACTION_Z        = (1<<2)  /*!< Filter through planes. */
 } WlzRsvFilterActionMask;
 
-/************************************************************************
-* Recursive filter names that can be used to define a recursive filter
-* along with a filter parameter (eg sigma for Gaussian).
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzRsvFilterName
+* \ingroup	WlzValuesFilters
+* \brief	Recursive filter types that can be used to define a recursive
+* 		filter along with a filter parameter (eg sigma for Gaussian).
+*		Typedef: ::WlzRsvFilterName.
+*/
+typedef enum _WlzRsvFilterName
 {
-  WLZ_RSVFILTER_NAME_NONE,            /* No name, application defined filter */
-  WLZ_RSVFILTER_NAME_DERICHE_0,              /* Deriche's smoothing operator */
-  WLZ_RSVFILTER_NAME_DERICHE_1,                   /* Deriche's edge operator */
-  WLZ_RSVFILTER_NAME_DERICHE_2,               /* Deriche's 2nd edge operator */
-  WLZ_RSVFILTER_NAME_GAUSS_0,                                    /* Gaussian */
-  WLZ_RSVFILTER_NAME_GAUSS_1,                /* First derivative of Gaussian */
-  WLZ_RSVFILTER_NAME_GAUSS_2                /* Second derivative of Gaussian */
+  WLZ_RSVFILTER_NAME_NONE,      	/*!< No name, application defined
+  					     filter. */
+  WLZ_RSVFILTER_NAME_DERICHE_0,         /*!< Deriche's smoothing operator. */
+  WLZ_RSVFILTER_NAME_DERICHE_1,         /*!< Deriche's edge operator. */
+  WLZ_RSVFILTER_NAME_DERICHE_2,         /*!< Deriche's 2nd edge operator. */
+  WLZ_RSVFILTER_NAME_GAUSS_0,           /*!< Gaussian. */
+  WLZ_RSVFILTER_NAME_GAUSS_1,           /*!< First derivative of Gaussian. */
+  WLZ_RSVFILTER_NAME_GAUSS_2            /*!< Second derivative of Gaussian. */
 } WlzRsvFilterName;
 
-/************************************************************************
-* Recursive filter parameters.
-* The parameters a0, a1, a2, a3, b0, b1 and c define a recursive
-* filter, where
-*   y+(i) = a0 x(i + 0) + a1 x(i - 1) - b0 y+(i - 1) - b1 y+(i - 2)
-*   y-(i) = a2 x(i + 1) + a3 x(i + 2) - b0 y-(i + 1) - b1 y-(i + 2)
-*   y(i) = c(y+(i) + y-(i))
-************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzRsvFilter
+* \ingroup	WlzValuesFilters
+* \brief	The parameters
+*		\f$a_j\f$, \f$b_j\f$ and \f$c\f$ with \f$j\in[0\cdots2]\f$
+*		which define a recursive filter:
+*		\f[
+		  y^{+}[i] = a_0 x[i + 0] + a_1 x[i - 1] -
+		             b_0 y^{+}[i - 1] - b_1 y^{+}[i - 2]
+		\f]
+*		\f[
+		  y^{-}[i] = a_2 x[i + 1] + a_3 x[i + 2] -
+		             b_0 y^{-}[i + 1] - b_1 y^{-}[i + 2]
+		\f]
+*		\f[
+		  y[i] = c (y^{+}[i] + y^{-}[i])
+		\f]
+*		Typedef: ::WlzRsvFilter.
+*/ 
+typedef struct _WlzRsvFilter
 {
-  WlzRsvFilterName	name;				  /* The filter name */
-  double		a[4];		       /* Feed forward coefficients. */
-  double		b[2];		          /* Feed back coefficients. */
-  double		c;			 /* Normalization parameter. */
+  WlzRsvFilterName	name;		/*!< The filter name. */
+  double		a[4];		/*!< Feed forward coefficients. */
+  double		b[2];		/*!< Feed back coefficients. */
+  double		c;		/*!< Normalization parameter. */
 } WlzRsvFilter;
  
+/************************************************************************
+* Transforms
+************************************************************************/
 /*!
 * \union	_WlzTransform
 * \ingroup	WlzTransform
 * \brief	A union of all valid transforms.
+*		Typedef: ::WlzTransform.
 */
 typedef union _WlzTransform
 {
   struct _WlzCoreTransform *core;	/*!< Core transform. */
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
-  struct _WlzMeshTransform *mesh;	/* Ant mesh transform. */
+  struct _WlzMeshTransform *mesh;	/*!< Any mesh transform. */
 } WlzTransform;
 
 /*!
 * \struct	_WlzCoreTransform
 * \ingroup	WlzTransform
 * \brief	The core transform, with members common to all transforms.
+*		Typedef: ::WlzCoreTransform.
 */
 typedef struct _WlzCoreTransform
 {
-  WlzTransformType type;       		/*!< From the core domain. */
-  int           linkcount;      	/*!< From the core domain. */
-  void 		*freeptr;		/*!< From the core domain. */
+  WlzTransformType type;       		/*!< From WlzCoreDomain. */
+  int           linkcount;      	/*!< From WlzCoreDomain. */
+  void 		*freeptr;		/*!< From WlzCoreDomain. */
 } WlzCoreTransform;
 
 /*!
@@ -1839,12 +2451,13 @@ typedef struct _WlzCoreTransform
 *		The homogeneous matrix (mat) is always allocated as a 4x4
 *		AlcDouble2Alloc style array. It is used as a 3x3
 *		matrix for 2D and as a 4x4 matrix for 3D affine transforms. 
+*		Typedef: ::WlzAffineTransform.
 */
 typedef struct _WlzAffineTransform
 {
-  WlzTransformType type;       		/*!< From the core domain. */
-  int           linkcount;      	/*!< From the core domain. */
-  void 		*freeptr;		/*!< From the core domain. */
+  WlzTransformType type;       		/*!< From WlzCoreDomain. */
+  int           linkcount;      	/*!< From WlzCoreDomain. */
+  void 		*freeptr;		/*!< From WlzCoreDomain. */
   double        **mat;			/*!< A 4x4 homogeneous matrix which is
   					     used as a 3x3 matrix for 2D
 					     transforms and as a 4x4 matrix for
@@ -1855,20 +2468,21 @@ typedef struct _WlzAffineTransform
 * \struct	_WlzAffineTransformPrim
 * \ingroup	WlzTransform
 * \brief	Affine tranform primitives.
+*		Typedef: ::WlzAffineTransformPrim.
 */
 typedef struct _WlzAffineTransformPrim
 {
-  double        tx,             	/*!< X translation */
-		ty,             	/*!< Y translation */
-		tz,             	/*!< Z translation */
-		scale,          	/*!< Scale transformation */
-		theta,          	/*!< Rotation about z-axis */
-		phi,            	/*!< Rotation about y-axis */
-		alpha,          	/*!< Shear strength */
-		psi,            	/*!< Shear angle in x-y plane */
-		xsi;			/*!< 3D shear angle */
+  double        tx,             	/*!< X translation. */
+		ty,             	/*!< Y translation. */
+		tz,             	/*!< Z translation. */
+		scale,          	/*!< Scale transformation. */
+		theta,          	/*!< Rotation about z-axis. */
+		phi,            	/*!< Rotation about y-axis. */
+		alpha,          	/*!< Shear strength. */
+		psi,            	/*!< Shear angle in x-y plane. */
+		xsi;			/*!< 3D shear angle. */
   int           invert;                 /*!< Non-zero if reflection about
-  					     the y-axis */
+  					     the y-axis. */
 } WlzAffineTransformPrim;
 
 /*!
@@ -1876,37 +2490,39 @@ typedef struct _WlzAffineTransformPrim
 * \ingroup	WlzTransform
 * \brief	A basis function transform.
 * 		The delta is used by the MQ and Gauss basis functions:
-*		For the MQ basis fn delta = R^2, and for the Gaussian basis fn
-*		delta = 1/s^2.
+*		For the MQ basis function delta = \f$R^2\f$,
+*		and for the Gaussian basis function delta = \f$1/s^2\f$.
+*		Typedef: ::WlzBasisFnTransform.
 */
 typedef struct _WlzBasisFnTransform
 {
-  WlzTransformType type;       		/*!< From the core domain. */
-  int           linkcount;      	/*!< From the core domain. */
-  void 		*freeptr;		/*!< From the core domain. */
-  WlzBasisFnType basisFn;       	/*!< The transform basis function */
-  int           nPoly;          	/*!< Polynomial order + 1 */
+  WlzTransformType type;       		/*!< From WlzCoreDomain. */
+  int           linkcount;      	/*!< From WlzCoreDomain. */
+  void 		*freeptr;		/*!< From WlzCoreDomain. */
+  WlzBasisFnType basisFn;       	/*!< The transform basis function. */
+  int           nPoly;          	/*!< Polynomial order + 1. */
   int           nBasis;             	/*!< Number of basis function
-  					     coefficients */
+  					     coefficients. */
   int           nVtx;                   /*!< Number of control point
-  					     verticies */
+  					     verticies. */
   double	delta;		  	/*!< Used by the MQ and Gauss basis
   					     functions*/
-  WlzDVertex2    *poly;          	/*!< Polynomial coefficients */
-  WlzDVertex2    *basis;         	/*!< Basis function coefficients */
-  WlzDVertex2    *verticies;     	/*!< Control point verticies */
+  WlzDVertex2    *poly;          	/*!< Polynomial coefficients. */
+  WlzDVertex2    *basis;         	/*!< Basis function coefficients. */
+  WlzDVertex2    *verticies;     	/*!< Control point verticies. */
 } WlzBasisFnTransform;
 
 /*!
 * \struct	_WlzMeshNode
 * \ingroup	WlzTransform
 * \brief	Defines a node within a mesh transform.
+*		Typedef: ::WlzMeshNode.
 */
 typedef struct  _WlzMeshNode
 {
-  unsigned int	flags;			/*!< Mesh node flags */
-  WlzDVertex2	position;		/*!< Node position */
-  WlzDVertex2	displacement;		/*!< Node displacement */
+  unsigned int	flags;			/*!< Mesh node flags. */
+  WlzDVertex2	position;		/*!< Node position. */
+  WlzDVertex2	displacement;		/*!< Node displacement. */
 } WlzMeshNode;
 
 /*!
@@ -1916,38 +2532,41 @@ typedef struct  _WlzMeshNode
 * 		The nodes and neighbours are indexed such that:		
 * 		Neighbour 0 shares nodes 1 and 2, neighbour 1 shares nodes 2
 *		and 0 and neighbour 2 shares nodes 0 and 1. All the nodes
-*		are stored in counter clockwise (CCW) order.				
+*		are stored in counter clockwise (CCW) order.
+*		Typedef: ::WlzMeshElem.
 */
 typedef struct _WlzMeshElem
 {
-  WlzMeshElemType type;         	/*!< Type of mesh element */
-  int           idx;            	/*!< Index of this element */
-  unsigned int  flags;          	/*!< Mesh element flags */
-  int           nodes[3];       	/*!< Node indicies (CCW order) */
+  WlzMeshElemType type;         	/*!< Type of mesh element. */
+  int           idx;            	/*!< Index of this element. */
+  unsigned int  flags;          	/*!< Mesh element flags. */
+  int           nodes[3];       	/*!< Node indicies (CCW order). */
   int           neighbours[3];          /*!< Indicies of neighbouring
-  					     elements */
+  					     elements. */
   double        strainU[3];             /*!< Constants of strain energy
-  					     function: */
-  double        strainA[3];
+  					     function. */
+  double        strainA[3];		/*!< Constants of strain energy
+  					     function. */
 } WlzMeshElem;
 
 /*!
 * \struct	_WlzMeshTransform
 * \ingroup	WlzTransform
-* \brief	Defines a mesh transform.
+* \brief	A mesh transform.
+*		Typedef: ::WlzMeshElem.
 */
 typedef struct _WlzMeshTransform
 {
-  WlzTransformType type;       		/*!< From the core domain. */
-  int           linkcount;      	/*!< From the core domain. */
-  void 		*freeptr;		/*!< From the core domain. */
-  int           nElem;          	/*!< Number of elements */
-  int           nNodes;         	/*!< Number of vertex nodes */
-  int           maxElem;        	/*!< Space allocated for elements */
+  WlzTransformType type;       		/*!< From WlzCoreDomain. */
+  int           linkcount;      	/*!< From WlzCoreDomain. */
+  void 		*freeptr;		/*!< From WlzCoreDomain. */
+  int           nElem;          	/*!< Number of elements. */
+  int           nNodes;         	/*!< Number of vertex nodes. */
+  int           maxElem;        	/*!< Space allocated for elements. */
   int           maxNodes;       	/*!< Space allocated for vertex 
-  					     nodes */
-  WlzMeshElem   *elements;      	/*!< Mesh elements */
-  WlzMeshNode	*nodes;			/*!< Mesh nodes */
+  					     nodes. */
+  WlzMeshElem   *elements;      	/*!< Mesh elements. */
+  WlzMeshNode	*nodes;			/*!< Mesh nodes. */
 } WlzMeshTransform;
 
 /************************************************************************
@@ -1970,7 +2589,13 @@ typedef double	(*WlzRegICPUsrWgtFn)(WlzVertexType,
 /************************************************************************
 * Sequential/local transformation workspace structure.		
 ************************************************************************/
-typedef struct 
+/*!
+* \struct	_WlzSeqParWSpace
+* \ingroup	WlzValuesFilters
+* \brief	
+*		Typedef: ::WlzSeqParWSpace.
+*/
+typedef struct _WlzSeqParWSpace
 {
   int **adrptr;
   int kdelta;
@@ -1978,14 +2603,26 @@ typedef struct
   int brdrsz;
 } WlzSeqParWSpace;
 
-typedef struct
+/*!
+* \struct	_Wlz1DConvMask
+* \ingroup	WlzValuesFilters
+* \brief
+*		Typedef: ::Wlz1DConvMask.
+*/
+typedef struct _Wlz1DConvMask
 {
   int mask_size;
   int *mask_values;
   int norm_factor;
 } Wlz1DConvMask;
 
-typedef struct
+/*!
+* \struct	_WlzSepTransWSpace
+* \ingroup	WlzValuesFilters
+* \brief
+*		Typedef: ::WlzSepTransWSpace.
+*/
+typedef struct _WlzSepTransWSpace
 {
   WlzPixelP	inbuf;
   WlzPixelP	outbuf;
@@ -1996,113 +2633,151 @@ typedef struct
 /************************************************************************
 * Standard workspace structure for interval objects.		
 ************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzIntervalWSpace
+* \ingroup	WlzAccess
+* \brief	The standard workspace structure for interval objects.
+*		Typedef: ::WlzIntervalWSpace.
+*/
+typedef struct _WlzIntervalWSpace
 {
-  WlzObject *objaddr;				       /* The current object */
-  int dmntype;						      /* Domain type */
-  int lineraster;			    /* Line scan direction as follows:
-					        1 increasing rows
-					       -1 decreasing rows */
-  int colraster;			  /* Column scan direction as follows:
-					      1 increasing columns
-					     -1 decreasing columns */
-  WlzIntervalDomain *intdmn;		    /* Pointer to interval structure */
-  WlzIntervalLine *intvln;	     /* Pointer to current line of intervals */
-  WlzInterval	*intpos;	     /* Pointer to current interval - in the
-  				        case of WLZ_INTERVALDOMAIN_RECT this
-					is set up to point to the column bounds
-					in the interval domain structure */
-  int colpos;						  /* Column position */
-  int colrmn;						/* Columns remaining */
-  int linbot;						       /* First line */
-  int linpos;						    /* Line position */
-  int linrmn;						 /* Lines rnemaining */
-  int intrmn;				      /* Intervals remaining in line */
-  int lftpos;					     /* Left end of interval */
-  int rgtpos;					    /* Right end of interval */
-  int nwlpos;	  /* Non-zero if new line, counts line increment since the last
-  		     interval */
-  struct _WlzGreyWSpace *gryptr;	  /* Pointer to grey table workspace */
+  WlzObject *objaddr;			/*!< The current object. */
+  int dmntype;				/*!< Domain type. */
+  int lineraster;			/*!< Line scan direction as follows:
+  					     <ul>
+					       <li>
+						1 increasing rows.
+					       </li>
+					       <li>
+						-1 decreasing rows.
+					       </li>
+					     </ul> */
+  int colraster;			/*!< Column scan direction as follows:
+  					     <ul>
+					       <li>
+						1 increasing columns.
+					       </li>
+					       <li>
+						-1 decreasing columns.
+					       </li>
+					     </ul> */
+  WlzIntervalDomain *intdmn;		/*!< Pointer to interval structure. */
+  WlzIntervalLine *intvln;	        /*!< Pointer to current line of
+  					     intervals. */
+  WlzInterval	*intpos;	        /*!< Pointer to current interval - 
+  					     in the case of
+					     WLZ_INTERVALDOMAIN_RECT this
+					     is set up to point to the column
+					     bounds in the interval domain
+					     structure. */
+  int colpos;				/*!< Column position. */
+  int colrmn;				/*!< Columns remaining. */
+  int linbot;				/*!< First line. */
+  int linpos;				/*!< Line position. */
+  int linrmn;				/*!< Lines remaining. */
+  int intrmn;				/*!< Intervals remaining in line. */
+  int lftpos;				/*!< Left end of interval. */
+  int rgtpos;				/*!< Right end of interval. */
+  int nwlpos;	  			/*!< Non-zero if new line, counts
+  					     line increment since the last
+  		     			     interval. */
+  struct _WlzGreyWSpace *gryptr;	/*!< Pointer to grey value table
+  					     workspace. */
 } WlzIntervalWSpace;
 
 /************************************************************************
-* Standard workspace for grey-table manipulations 		
+* Standard workspace for grey value table manipulations 		
 ************************************************************************/
+/*!
+* \struct	_WlzGreyWSpace
+* \ingroup      WlzAccess
+* \brief	The standard workspace for grey value table manipulations.
+*		Typedef: ::WlzGreyWSpace.
+*/
 typedef struct _WlzGreyWSpace
 {
-  int gvio;				 /* Grey value i/o switch :
-					    0 = input to object only
-					    1 = output from object only
+  int gvio;				/*!< Grey value I/O switch:
+  					     <ul>
+					       <li>
+					       0 = input to object only
+					       </li>
+					       <li>
+					       1 = output from object only
+					       </li>
+					     </ul>
 					    Only relevant if tranpl set, as all
 					    grey-tables are unpacked. */
-  int tranpl;				 /* If non-zero, transplant values to a
-					    buffer whose address is u_grintptr.
-					    Direction of transplant in gvio */
-  WlzGreyType pixeltype;					/* Grey type */
-  WlzObjectType gdomaintype;				/* Value table type. */
-  WlzValues gtable;					 /* Grey value table */
-  WlzValueLine *gline;	       /* Pointer to current grey table line pointer */
-  WlzIntervalWSpace *intptr;	      /* Pointer to interval table workspace */
-  WlzGreyP u_grintptr;	    /* Pointer to interval grey table. Always points to
-  			       lowest order column, whatever the value of
-			       raster */
+  int tranpl;				/*!< If non-zero, transplant values
+  					     to a buffer whose address is
+					     u_grintptr. Direction of
+					     transplant in gvio. */
+  WlzGreyType pixeltype;		/*!< Grey type. */
+  WlzObjectType gdomaintype;		/*!< Value table type. */
+  WlzValues gtable;			/*!< Grey value table. */
+  WlzValueLine *gline;	       		/*!< Pointer to current grey table
+  					     line pointer. */
+  WlzIntervalWSpace *intptr;	      	/*!< Pointer to interval table
+  					     workspace. */
+  WlzGreyP u_grintptr;	    		/*!< Pointer to interval grey table.
+  					     Always points to lowest order
+					     column, whatever the value of
+					     raster. */
 } WlzGreyWSpace;
 
-/********************************************************************
- * Workspace for random access grey value manipulations
- ********************************************************************/
+/*!
+* \struct	_WlzGreyValueWSpace
+* \ingroup	WlzAccess
+* \brief	Workspace for random access grey value manipulations.
+*		Typedef: ::WlzGreyValueWSpace.
+*/
 typedef struct _WlzGreyValueWSpace
 {
-  WlzObjectType objType;          /* Type of object: Either WLZ_2D_DOMAINOBJ or
-                                     WLZ_3D_DOMAINOBJ */
-  WlzDomain     domain;         		      /* The object's domain */
-  WlzValues     values;         		      /* The object's values */
-  WlzObjectType	*gTabTypes3D;	/* efficiency hack while value types are
-				   computed */
-  WlzAffineTransform *invTrans;        /* If the object is a WLZ_TRANS_OBJ then
-                                   	  the inverse transform is set */
-  WlzIntervalDomain *iDom2D;       /* Current/last plane or 2D object domain */
-  WlzValues     values2D;          /* Current/last plane or 2D object values */
-  int           plane;                        /* Current/last plane position */
-  WlzGreyType   gType;          			        /* Grey type */
-  WlzObjectType gTabType2D;           /* Current/last plane or 2D grey table */
-  WlzGreyV      gBkd;              /* Background grey value, always of gType */
-  WlzGreyP      gPtr[8];        	 /* One, four or eight grey pointers */
-  WlzGreyV      gVal[8];        	   /* One, four or eight grey values */
-  int		bkdFlag;	  /* flag set to 1 if background used else 0 */
+  WlzObjectType objType;          	/*!< Type of object, either
+  					     WLZ_2D_DOMAINOBJ or
+                                             WLZ_3D_DOMAINOBJ. */
+  WlzDomain     domain;         	/*!< The object's domain. */
+  WlzValues     values;         	/*!< The object's values. */
+  WlzObjectType	*gTabTypes3D;		/*!< Cache for efficiency with 2D
+  					     value types. */
+  WlzAffineTransform *invTrans;        	/*!< If the object is a WLZ_TRANS_OBJ
+					     then used to cache the inverse
+					     transform. */
+  WlzIntervalDomain *iDom2D;       	/*!< Current/last plane or 2D object
+  					     domain. */
+  WlzValues     values2D;          	/*!< Current/last plane or 2D object
+  					     values. */
+  int           plane;                  /*!< Current/last plane position. */
+  WlzGreyType   gType;          	/*!< Grey type. */
+  WlzObjectType gTabType2D;           	/*!< Current/last plane or 2D grey
+  					     table. */
+  WlzGreyV      gBkd;              	/*!< Background grey value, always
+  					     of gType. */
+  WlzGreyP      gPtr[8];        	/*!< One, four or eight grey
+  					     pointers. */
+  WlzGreyV      gVal[8];        	/*!< One, four or eight grey
+  					     values. */
+  int		bkdFlag;	  	/*!< Flag set to 1 if background used
+  					     else 0. */
 } WlzGreyValueWSpace;
-
-/************************************************************************
-* Compound objects: implemented as either ARRAYS or LINKED LISTS of
-* other objects.  There is a distinction between an compound of the 
-* same type (e.g. resulting from a labelling) and a compound of	
-* different types (e.g. resulting from a range of image processes from
-* a single original object).					
-************************************************************************/
-typedef struct 
-{
-  WlzObjectType type;
-  int           linkcount;
-  WlzObjectType otype;		       /* The permitted type if constrained. */
-  int           n;		 /* Maximum number of objects (array length) */
-  WlzObject     **o;			/* The list of woolz object pointers */
-  AlcDLPList    *p;			     /* A non-specific property list */
-  WlzObject     *assoc;
-} WlzCompoundArray;
-
 
 /************************************************************************
 * Finite Element and Warping structures.			
 ************************************************************************/
 
-typedef enum
+/*!
+* \enum		_WlzElementType
+* \ingroup	WlzTransform
+* \brief	The types of elements in a finite element warp mesh.
+*		Typedef: ::WlzElementType.
+*/
+typedef enum _WlzElementType
 {
-    WLZ_LINEAR_RECT 		= 11,
-    WLZ_INCOMPRESSIBLE_RECT,
-    WLZ_COMPRESSIBLE_RECT,
-    WLZ_LINEAR_TRI 		= 21,
-    WLZ_INCOMPRESSIBLE_TRI,
-    WLZ_COMPRESSIBLE_TRI
+    WLZ_LINEAR_RECT 		= 11,	/*!< Linear and rectangular. */
+    WLZ_INCOMPRESSIBLE_RECT,		/*!< Incompessible and rectangular. */
+    WLZ_COMPRESSIBLE_RECT,		/*!< Compressible and rectangular. */
+    WLZ_LINEAR_TRI 		= 21,	/*!< Linear and triangular. */
+    WLZ_INCOMPRESSIBLE_TRI,		/*!< Incompessible and triangular. */
+    WLZ_COMPRESSIBLE_TRI		/*!< Compressible and triangular. */
 } WlzElementType;
 
 
@@ -2113,45 +2788,70 @@ typedef enum
 #define WLZ_RECTANGULAR 1
 #define WLZ_TRIANGULAR 2
 
+/*!
+* \struct	_WlzTElement
+* \ingroup	WlzTransform
+* \brief	Triangular finite element warping mesh element.
+*		Typedef: ::WlzTElement.
+*/
 typedef struct _WlzTElement
 {
-    WlzElementType type;	/* type of element (linear, compressible,
-				   incompressible) */
-    int n;			/* global element number */
-    int nodes[3];		/* global node numbers - in anti-clockwise
-    				   order! */
-    float u[3];			/* E = u[0] if type linear */
-    float a[3];			/* mu = a[0] if type linear */
+    WlzElementType type;	/*!< Type of element (linear, compressible,
+				     incompressible). */
+    int n;			/*!< Global element number. */
+    int nodes[3];		/*!< Global node numbers - in anti-clockwise
+    				     order! */
+    float u[3];			/*!< E = u[0] if type linear. */
+    float a[3];			/*!< \f$\mu\f$ = a[0] if type linear. */
 } WlzTElement;
 
+/*!
+* \struct       _WlzRElement
+* \ingroup	WlzTransform
+* \brief        Rectangular finite element warping mesh element.
+*		Typedef: ::WlzRElement.
+*/
 typedef struct _WlzRElement
 {
-    WlzElementType type;	/* type of element (linear, compressible,
-				   incompressible) */
-    int n;			/* global element number */
-    int nodes[4];		/* global node numbers - in anti-clockwise
-    				   order! */
-    float u[3];			/* E = u[0] if type linear */
-    float a[3];			/* mu = a[0] if type linear */
+    WlzElementType type;	/*!< Type of element (linear, compressible,
+				     incompressible). */
+    int n;			/*!< Global element number. */
+    int nodes[4];		/*!< Global node numbers - in anti-clockwise
+    				     order! */
+    float u[3];			/*!< E = u[0] if type linear. */
+    float a[3];			/*!< \f$\mu\f$ = a[0] if type linear. */
 } WlzRElement;
 
+/*!
+* \struct	_WlzWarpTrans
+* \ingroup	WlzTransform
+* \brief	Finite element warp transformation.
+* 		Typedef: ::WlzWarpTrans.
+*/
 typedef struct _WlzWarpTrans
 {
-    int type;			/* WLZ_WARP_TRANS */
-    int linkcount;
-    int nelts;			/* number of elements */
-    int nodes;			/* number of nodes */
-    WlzDVertex2 *ncoords; 	/* array of nodal coordinates */
-    WlzTElement *eltlist;	/* list of elements */
-    WlzDVertex2 *displacements;	/* array of nodal displacements */
-    float imdisp;		/* max displacement in warped image */
-    float iterdisp;		/* max displacement during last iteration */
+  int type;			/*!< From WlzCoreDomain. */
+  int linkcount;		/*!< From WlzCoreDomain. */
+  int nelts;			/*!< Number of elements */
+  int nodes;			/*!< Number of nodes. */
+  WlzDVertex2 *ncoords; 	/*!< Array of nodal coordinates. */
+  WlzTElement *eltlist;		/*!< List of elements. */
+  WlzDVertex2 *displacements;	/*!< Array of nodal displacements. */
+  float imdisp;			/*!< Max displacement in warped image. */
+  float iterdisp;		/*!< Max displacement during last iteration. */
 } WlzWarpTrans;
 
 /************************************************************************
-* Feature matching structures.					
+* Feature matching structures for finite element warping.
 ************************************************************************/
-typedef enum
+
+/*!
+* \enum		_WlzMatchType
+* \ingroup	WlzRegistration
+* \brief	Finite element warping match types.
+* 		Typedef: ::WlzMatchType.
+*/
+typedef enum _WlzMatchType
 {
     WLZ_DISCARD_POINT 	= -1,
     WLZ_NODE_ATTACH   	= 0,
@@ -2160,108 +2860,172 @@ typedef enum
 
 #define WLZ_MAX_NODAL_DEGREE 20
 
-typedef struct
+/*!
+* \struct	_WlzFeatureVector
+* \ingroup	WlzRegistration
+* \brief	Finite element warping feature vector.
+*		Typedef: ::WlzFeatureVector.
+*/
+typedef struct _WlzFeatureVector
 {
-    int direction;
-    float magnitude;
-    float mean1;
-    float mean2;
-    float std1;
-    float std2;
+  int direction;
+  float magnitude;
+  float mean1;
+  float mean2;
+  float std1;
+  float std2;
 } WlzFeatureVector;
 
 
-typedef struct
+/*!
+* \struct	_WlzFeatValueLine
+* \ingroup	WlzRegistration
+* \brief	A line of finite element warping feature vectors.
+*		Typedef: ::WlzFeatValueLine.
+*/
+typedef struct _WlzFeatValueLine
 {
-    int	 vkol1;				/* left end */
-    int	 vlastkl;			/* right end */
-    WlzFeatureVector *values;		/* array of values */
+  int	 vkol1;				/*!< Left end. */
+  int	 vlastkl;			/*!< Right end. */
+  WlzFeatureVector *values;		/*!< Array of feature vector values. */
 } WlzFeatValueLine;
 
 
-typedef struct _WlzFeatValues	/* ragged rectangular featurevalue table */
+/*!
+* \struct	_WlzFeatValues
+* \ingroup      WlzRegistration
+* \brief	A ragged rectangular feature value table.
+*		Typedef: ::WlzFeatValues.
+*/
+typedef struct _WlzFeatValue
 {
-  WlzObjectType 	type;	/* should be 50 */
-  int		 	linkcount;
-  void 			*freeptr;
-  WlzValues 	original_table; 	/* If != NULL, valuetable which owns
-				   	   the raw values we are using */
-  int		       	line1;
-  int			lastln;
-  int			kol1;
-  int			width;
-  WlzFeatureVector 	backgrnd;
-  WlzFeatValueLine 	*vtblines;
+  WlzObjectType type;			/*!< From WlzCoreValues. */
+  int		linkcount;		/*!< From WlzCoreValues. */
+  void 		*freeptr;		/*!< From WlzCoreValues. */
+  WlzValues 	original_table; 	/*!< If non-NULL, the values table
+  					     which owns the raw values we
+					     are using. */
+  int       	line1;			/*!< First line. */
+  int       	lastln;			/*!< Last line. */
+  int       	kol1;			/*!< First column. */
+  int       	width;			/*!< Width. */
+  WlzFeatureVector backgrnd;		/*!< Background value for feature
+  					     vectors not in object. */
+  WlzFeatValueLine *vtblines;	      	/*!< Array of feature value table line
+  					     structures. */
 } WlzFeatValues;
     
 
-typedef struct	_WlzRectFeatValues	/* rectangular */
+/*!
+* \struct	_WlzRectFeatValues
+* \ingroup	WlzRegistration
+* \brief	A rectangular feature value table.
+*		Typedef: ::WlzRectFeatValues.
+*/
+typedef struct	_WlzRectFeatValues
 {
-  WlzObjectType	type;			/* should be 60 */
-  int			linkcount;
-  void		*freeptr;
-  WlzValues original_table; 		/* If != NULL, valuetable which owns
-				   	   the raw values we are using */
-  int			line1;
-  int			lastln;
-  int			kol1;
-  int			width;
-  WlzFeatureVector 	backgrnd;
-  WlzFeatureVector 	*values;
+  WlzObjectType	type;			/*!< From WlzCoreValues. */
+  int		linkcount;		/*!< From WlzCoreValues. */
+  void		*freeptr;		/*!< From WlzCoreValues. */
+  WlzValues 	original_table;		/*!< If non-NULL, the values table
+  					     which owns the raw values we
+					     are using. */
+  int		line1;			/*!< First line. */
+  int		lastln;			/*!< Last line. */
+  int		kol1;			/*!< First column. */
+  int		width;			/*!< Width. */
+  WlzFeatureVector backgrnd;		/*!< Background value for feature
+  				             vectors not in object. */
+  WlzFeatureVector *values;		/*!< Contiguous array of feature
+  					     vector values. */
 } WlzRectFeatValues;
     
 
+/*!
+* \struct	_WlzFMatchPoint
+* \ingroup	WlzRegistration
+* \brief	Finite element warping feature match point.
+* 		Typedef: ::WlzFMatchPoint.
+*/
 typedef struct _WlzFMatchPoint
 {
-    WlzMatchType type;
-    int node;			/* node or element to which point attached */
-    WlzFVertex2 ptcoords;	/* coordinate of interesting point */
-    int elements[WLZ_MAX_NODAL_DEGREE];   /* list of elements in which to
-					      search for point */
-    WlzFeatureVector *features;	/* pointer to features of point */
+  WlzMatchType	type;			/*!< Match type. */
+  int 		node;			/*!< Node or element to which point
+  					     attached. */
+  WlzFVertex2 	ptcoords;		/*!< Coordinate of interesting
+  					     point. */
+  int 		elements[WLZ_MAX_NODAL_DEGREE]; /*!< Array of elements in
+  					    which to search for point. */
+  WlzFeatureVector *features;		/*!< Pointer to features of point. */
 } WlzFMatchPoint;
 
+/*!
+* \struct	_WlzFMatchObj
+* \ingroup	WlzRegistration
+* \brief	A finite element warping feature match, interesting points
+*		object.
+* 		Typedef: ::WlzFMatchObj.
+*/
 typedef struct _WlzFMatchObj
 {
-    WlzObjectType type;	/* WLZ_FMATCHOBJ */
-    int linkcount;
-    int nopts;			/* number of interesting points */
-    WlzFMatchPoint *matchpts;	/* list of interesting points */
+  WlzObjectType	type;			/*!< From WlzCoreObject. */
+  int		linkcount;		/*!< From WlzCoreObject. */
+  int 		nopts;			/*!< Number of interesting points. */
+  WlzFMatchPoint *matchpts;		/*!< Array of interesting points. */
 } WlzFMatchObj;
 
+/*!
+* \struct	_Wlz3DWarpTrans
+* \ingroup	WlzRegistration
+* \brief	A plane-wise 3D finite element warping transform.
+*		Typedef: ::Wlz3DWarpTrans.
+*/
 typedef struct _Wlz3DWarpTrans
 {
-  WlzObjectType		type;			/* WLZ_3D_WARP_TRANS */
-  int			linkcount;
-  WlzPlaneDomain 	*pdom;
-  WlzFMatchObj 		**intptdoms; /* array of pointers to interesting point
-					 lists */
-  int 			iteration;
-  int 			currentplane;
-  float 		maxdisp;
-  AlcDLPList    	*plist;
-  WlzObject 		*assoc;
+  WlzObjectType	type;			/*!< From WlzCoreObject. */
+  int		linkcount;		/*!< From WlzCoreObject. */
+  WlzPlaneDomain *pdom;			/*!< Plane domain. */
+  WlzFMatchObj 	**intptdoms; 		/*!< Array of pointers to interesting
+  					     point objects. */
+  int 		iteration;		/*!< Current iteration. */
+  int 		currentplane;		/*!< Current plane. */
+  float 	maxdisp;		/*!< Maximum displacement. */
+  AlcDLPList    *plist;			/*!< Property list. */
+  WlzObject 	*assoc;			/*!< Associated object. */
 } Wlz3DWarpTrans;
 
 /************************************************************************
 * 3D section structure.						
 ************************************************************************/
+/*!
+* \struct	_WlzThreeDViewStruct
+* \ingroup	WlzSectionTransform
+* \brief	Defines a planar section through a 3D volume.
+*		Typedef: ::WlzThreeDViewStruct.
+*/
 typedef struct _WlzThreeDViewStruct
 {
-  WlzObjectType	type;
-  int		linkcount;
-  void		*freeptr;
-  int		initialised;
-  WlzDVertex3	fixed;
-  double	theta;
-  double	phi;
-  double	zeta;
-  double	dist;
+  WlzObjectType	type;			/*!< Identifies the 3D view data
+  					     structure: WLZ_3D_VIEW_STRUCT. */
+  int		linkcount;		/*!< Core. */
+  void		*freeptr;		/*!< Core. */
+  int		initialised;		/*!< Non zero if the 3D view structure
+  					     has been initialized. */
+  WlzDVertex3	fixed;			/*!< Fixed point. */
+  double	theta;			/*!< Angle of rotation about the z-axis
+  					     (radians). */
+  double	phi;			/*!< Angle between the viewing
+  					     direction and the original
+					     z-axis (radians). */
+  double	zeta;			
+  double	dist;			/*!< Perpendicular distance from the
+  					     fixed point to the view plane. */
   double	scale;
-  WlzThreeDViewMode	view_mode;
-  WlzDVertex3	up;
-  WlzDVertex3	fixed_2;
-  double	fixed_line_angle;
+  WlzThreeDViewMode view_mode;		/*!< Determines the angle at which the
+  					     section cut. */
+  WlzDVertex3	up;			/*!< Up vector. */
+  WlzDVertex3	fixed_2;		/*!< Second fixed point. */
+  double	fixed_line_angle;	/*!< Angle of fixed line. */
   WlzObject	*ref_obj;
   WlzDVertex3	minvals;
   WlzDVertex3	maxvals;
