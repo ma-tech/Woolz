@@ -28,7 +28,8 @@ EXECUTABLES		= \
 			WlzFixedPlaneAlign \
 			WlzPatchObjRegister \
 			WlzSizeSelect \
-			WlzObjCompareSpecial_01
+			WlzObjCompareSpecial_01 \
+			WlzVtxToObj
 
 SCRIPTS			= \
 			WlzObjCompareSpecial_01.csh
@@ -40,7 +41,8 @@ CSOURCES		= \
 			WlzFixedPlaneAlign.c \
 			WlzPatchObjRegister.c \
 			WlzSizeSelect.c \
-			WlzObjCompareSpecial_01.c
+			WlzObjCompareSpecial_01.c \
+			WlzVtxToObj.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
