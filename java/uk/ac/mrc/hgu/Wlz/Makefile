@@ -23,7 +23,7 @@ JAVACFLAGS		= -classpath $(CLASSPATH)
 JAVA_PACKAGE		= uk.ac.mrc.hgu.Wlz
 JARFILE			= Wlz.jar
 
-all:			binding archive classes
+all:			binding archive classes jar
 
 clean:
 			$(RM) *.java *.class
@@ -64,7 +64,7 @@ install_jar:		$(JARFILE)
 
 $(JARFILE):		WlzObject.class
 			cd ../../../../..; \
-			jar -cvf $(JARFILE) uk/ac/mrc/hgu/Wlz/*.class
+			jar cf $(JARFILE) uk/ac/mrc/hgu/Wlz/*.class
 
 classes:		WlzObject.class
 
@@ -79,3 +79,5 @@ WlzObject.java:
 			  $(CPP) -C -I. HandCodedJava/$$J | \
 			  grep -v '^#' >$$J ; \
 			done
+jar:
+			cd ../../../../..;gmake clean jar
