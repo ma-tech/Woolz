@@ -542,9 +542,9 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
 *   Global refs:							*
 ************************************************************************/
 WlzErrorNum Wlz3DSectionTransformInvVtxR(
+  WlzThreeDViewStruct	*viewStr,
   WlzDVertex3		*vtx,
-  WlzDVertex3		*dstVtx,
-  WlzThreeDViewStruct	*viewStr)
+  WlzDVertex3		*dstVtx)
 {
   WlzDVertex3	new;
   WlzErrorNum	errNum;

@@ -140,9 +140,9 @@ extern WlzErrorNum 		Wlz3DSectionTransformInvVtx(
 				  WlzDVertex3 *vtx,
 				  WlzThreeDViewStruct *viewStr);
 extern WlzErrorNum 		Wlz3DSectionTransformInvVtxR(
+                                  WlzThreeDViewStruct *viewStr,
 				  WlzDVertex3 *vtx,
-				  WlzDVertex3 *dstVtx,
-				  WlzThreeDViewStruct *viewStr);
+				  WlzDVertex3 *dstVtx);
 extern WlzErrorNum 		Wlz3DSectionIncrementDistance(
 				  WlzThreeDViewStruct *viewStr,
 				  double incr);
