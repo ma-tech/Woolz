@@ -15,7 +15,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief	Functions for creating and manipulating linear binary
 *		tree domains.
-* \ingroup
+* \ingroup	WlzDomainOps
 * \todo         -
 * \bug          None known.
 */
@@ -149,7 +149,7 @@ WlzErrorNum	WlzFreeLBTDomain2D(WlzLBTDomain2D *lDom)
 
 /*!
 * \return	New 2D linear binary tree domain.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Creates a new 2D linear binary tree domain from the given
 *		domain.
 * \param	dom			Given domain, which must be 2D.
@@ -188,7 +188,7 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromDomain(WlzDomain dom, WlzErrorNum *dstErr)
 
 /*!
 * \return	New 2D interval domain.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Creates a new interval domain from the given 2D linear
 * 		binary tree domain.
 * \param	lDom			Given 2D linear binary tree domain.
@@ -269,7 +269,7 @@ WlzIntervalDomain *WlzLBTDomainToIDomain(WlzLBTDomain2D *lDom,
 
 /*!
 * \return 	Woolz interval domain or NULL on error.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Allocates and computes an interval domain from the given
 *		table of partial intervals. The given partial intervals
 *               must fit within the given domain bounding box.
@@ -372,7 +372,7 @@ WlzIntervalDomain *WlzIDomainFromPItv2D(int line1, int lastln,
 
 /*!
 * \return	New 2D linear binary tree domain.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Creates a new 2D linear binary tree domain from the given
 *		interval domain.
 * \todo		There are two possible algorithms here:
@@ -485,7 +485,7 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
 
 /*!
 * \return	Woolz error code.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Balances the given LBT domain so that the neighbouring
 *		nodes of each node are either of the same size or differ
 *		in size by a ratio of 2:1.
@@ -664,7 +664,7 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 
 /*!
 * \return	New object with node indices or NULL on error.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Creates a new 2D domain object with integer values 
 *		which are the indices of the nodes containing the
 *		pixels of the domain.
@@ -758,8 +758,221 @@ WlzObject	*WlzLBTMakeNodeIndexObj2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzDomainOps
+* \brief	Sets all index values in an existing LBT node
+*		index object.
+* \param	lDom
+* \param	iObj
+*/
+WlzErrorNum	WlzLBTIndexObjSetAllNodes2D(WlzLBTDomain2D *lDom,
+				        WlzObject *iObj)
+{
+  int		idN;
+  WlzPixelV	bgdV;
+  WlzGreyValueWSpace *iGVWSp = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bgdV.v.inv = -1;
+  iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < lDom->nNodes; ++idN)
+    {
+      WlzLBTSetNodeIndexObj2D(lDom, iGVWSp, idN);
+    }
+    (void )WlzSetBackground(iObj, bgdV);
+  }
+  WlzGreyValueFreeWSp(iGVWSp);
+  return(errNum);
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Classifies the given LBT node by it's connectivity and
+*		returns it's class and the counter-clockwise rotation
+*		of the basic class pattern in multiples of 90 degrees.
+* \param	lDom			Linear binary tree domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of the LBT node.
+* \param	dstCls			Destination pointer for the class.
+* \param	dstRot			Destination pointer for the rotation.
+*/
+void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
+				     WlzGreyValueWSpace *iGVWSp,
+				     int idN, WlzLBTNodeClass2D *dstCls,
+				     int *dstRot)
+{
+  int		idM,
+		nNbr,
+		nSz;
+  unsigned	msk;
+  WlzIBox2	nBB;
+  const WlzDirection dirTab[4] = {
+				  WLZ_DIRECTION_IC,
+				  WLZ_DIRECTION_IL,
+				  WLZ_DIRECTION_DC,
+				  WLZ_DIRECTION_DL
+			 	};
+  const int	 rotTab[16] = {
+				0, 		/*  0  o-o
+						       | |
+						       o-o */
+				3,		/*  1  o-o
+						       | o
+						       o-o */
+				0,		/*  2  ooo
+						       | |
+						       o-o */
+				0,		/*  3  ooo
+						       | o
+						       o-o */
+				1,		/*  4  o-o
+						       o |
+						       o-o */
+				3,		/*  5  o-o
+						       o o
+						       o-o */
+				1,		/*  6  ooo
+						       o |
+						       o-o */
+				1,		/*  7  ooo
+						       o o
+						       o-o */
+				2,		/*  8  o-o
+						       | |
+						       ooo */
+				3,		/*  9  o-o
+						       | o
+						       ooo */
+				0,		/* 10  ooo
+						       | |
+						       ooo */
+				0,		/* 11  ooo
+						       | o
+						       ooo */
+				2,		/* 12  o-o
+						       o |
+						       ooo */
+				3,		/* 13  o-o
+						       o o
+						       ooo */
+				2,		/* 14  ooo
+						       o |
+						       ooo */
+				0};		/* 15  ooo
+						       o o
+						       ooo */
+  const WlzLBTNodeClass2D clsTab[16] = {
+				0, 		/*  0  o-o
+						       | |
+						       o-o */
+				1,		/*  1  o-o
+						       | o
+						       o-o */
+				1,		/*  2  ooo
+						       | |
+						       o-o */
+				2,		/*  3  ooo
+						       | o
+						       o-o */
+				1,		/*  4  o-o
+						       o |
+						       o-o */
+				3,		/*  5  o-o
+						       o o
+						       o-o */
+				2,		/*  6  ooo
+						       o |
+						       o-o */
+				4,		/*  7  ooo
+						       o o
+						       o-o */
+				1,		/*  8  o-o
+						       | |
+						       ooo */
+				2,		/*  9  o-o
+						       | o
+						       ooo */
+				3,		/* 10  ooo
+						       | |
+						       ooo */
+				4,		/* 11  ooo
+						       | o
+						       ooo */
+				2,		/* 12  o-o
+						       o |
+						       ooo */
+				4,		/* 13  o-o
+						       o o
+						       ooo */
+				4,		/* 14  ooo
+						       o |
+						       ooo */
+				5};		/* 15  ooo
+						       o o
+						       ooo */
+
+
+  nSz = WlzLBTNodeSz2D(lDom->nodes + idN);
+  if(nSz == 1)
+  {
+    *dstRot = 0;
+    *dstCls = 0;
+  }
+  else
+  {
+    WlzLBTKeyToBox2I((lDom->nodes + idN)->keys, &nBB);
+    /* WLZ_DIRECTION_IC */
+    WlzGreyValueGet(iGVWSp, 0, nBB.yMin, nBB.xMax + 1);
+    idM = iGVWSp->gVal[0].inv;
+    if(idM < 0)
+    {
+      WlzGreyValueGet(iGVWSp, 0, nBB.yMax, nBB.xMax + 1);
+      idM = iGVWSp->gVal[0].inv;
+    }
+    nNbr = (idM >= 0) && (WlzLBTNodeSz2D(lDom->nodes + idM) < nSz);
+    msk = nNbr;
+    /* WLZ_DIRECTION_IL */
+    WlzGreyValueGet(iGVWSp, 0, nBB.yMax + 1, nBB.xMin);
+    idM = iGVWSp->gVal[0].inv;
+    if(idM < 0)
+    {
+      WlzGreyValueGet(iGVWSp, 0, nBB.yMax + 1, nBB.xMax);
+      idM = iGVWSp->gVal[0].inv;
+    }
+    nNbr = (idM >= 0) && (WlzLBTNodeSz2D(lDom->nodes + idM) < nSz);
+    msk |= nNbr << 1;
+    /* WLZ_DIRECTION_DC */
+    WlzGreyValueGet(iGVWSp, 0, nBB.yMin, nBB.xMin - 1);
+    idM = iGVWSp->gVal[0].inv;
+    if(idM < 0)
+    {
+      WlzGreyValueGet(iGVWSp, 0, nBB.yMax, nBB.xMin - 1);
+      idM = iGVWSp->gVal[0].inv;
+    }
+    nNbr = (idM >= 0) && (WlzLBTNodeSz2D(lDom->nodes + idM) < nSz);
+    msk |= nNbr << 2;
+    /* WLZ_DIRECTION_DL */
+    WlzGreyValueGet(iGVWSp, 0, nBB.yMin - 1, nBB.xMin);
+    idM = iGVWSp->gVal[0].inv;
+    if(idM < 0)
+    {
+      WlzGreyValueGet(iGVWSp, 0, nBB.yMin - 1, nBB.xMax);
+      idM = iGVWSp->gVal[0].inv;
+    }
+    nNbr = (idM >= 0) && (WlzLBTNodeSz2D(lDom->nodes + idM) < nSz);
+    msk |= nNbr << 3;
+    /* Look up the class and rotation. */
+    *dstCls = clsTab[msk];
+    *dstRot = rotTab[msk];
+  }
+}
+
+/*!
 * \return	Returns signed comparison for AlgQSort().
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Compares to partial intervals.
 * \param	vc			Unused client data.
 * \param	v0			First partial interval.
@@ -783,7 +996,7 @@ static int	WlzPartialItv2DCmpFn(const void *vc,
 
 /*!
 * \return	result of comparison.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Compares to int's for the hash table.
 * \param	datum0			Pointer to first int.
 * \param	datum1			Pointer to second int.
@@ -798,7 +1011,7 @@ static int	WlzLBTIdxCmpFn(void *datum0, void *datum1)
 
 /*!
 * \return	Hash value.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Simple hash function for hashing node index.
 * \param	datum
 */
@@ -814,7 +1027,7 @@ static unsigned WlzLBTIdxHashFn(void *datum)
 
 /*!
 * \return	Woolz error code.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Inserts a node's index into the pripority queue using the
 *		size as the priority. The hash table is used to ensure that
 *		nodes are only in the priority queue once.
@@ -842,7 +1055,7 @@ static WlzErrorNum WlzLBTQueueInsert(AlcCPQQueue *pQ, AlcHashTable *hT,
 
 /*!
 * \return	Index of top priority node or -1 if queue empty.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Unlinks the top priority queue entry and removes it from
 *		the hash table.
 * \param	pQ			Priority queue.
@@ -868,7 +1081,7 @@ static int	WlzLBTQueueUnlink(AlcCPQQueue *pQ, AlcHashTable *hT)
 
 /*!
 * \return	void
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Sets values within a nodes bounding box in an index
 *		object. All parameters are assumed valid.
 * \param	lDom			Given LBT domain.
@@ -898,7 +1111,7 @@ static void	WlzLBTSetNodeIndexObj2D(WlzLBTDomain2D *lDom,
 /*!
 * \return	Log of the size of the smallest neighbouring node or
 		-ve if there is no neighbour.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Finds the size of the smallest neighbouring node.
 * \param	lDom			Given LBT domain.
 * \param	iGVWSp			Grey workspace for index object.
@@ -933,7 +1146,7 @@ static int	WlzLBTMinLogSzEdgeNbrIdx2D(WlzLBTDomain2D *lDom,
 /*!
 * \return	Log of the size of the smallest neighbouring node or
 		-ve if there is no neighbour.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Finds the size of the smallest neighbouring node in the
 *		given direction.
 * \param	lDom			Given LBT domain.
@@ -1007,8 +1220,68 @@ static int	WlzLBTMinLogSzEdgeDirNbrIdx2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Number of neighbours in given direction.
+* \ingroup	WlzDomainOps
+* \brief	Counts the number of neighbours of the given node in
+*		the given direction.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+* \param	dir			Given direction.
+*/
+int		WlzLBTCountNodNbrDir2D(WlzLBTDomain2D *lDom,
+				       WlzGreyValueWSpace *iGVWSp,
+				       int idN, WlzDirection dir)
+{
+  int		id0,
+  		id1,
+		pX,
+  		pY,
+		nCnt = 0;
+  WlzLBTNode2D	*nod;
+  WlzIBox2	nBB;
+
+  nod = lDom->nodes + idN;
+  WlzLBTKeyToBox2I(nod->keys, &nBB);
+  switch(dir)
+  {
+    case WLZ_DIRECTION_IC: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DC:
+      pX = (dir == WLZ_DIRECTION_IC)? nBB.xMax + 1: nBB.xMin - 1;
+      pY = nBB.yMin;
+      WlzGreyValueGet(iGVWSp, 0, pY, pX);
+      id0 = iGVWSp->gVal[0].inv;
+      nCnt = id0 >= 0;
+      while(++pY <= nBB.yMax)
+      {
+	WlzGreyValueGet(iGVWSp, 0, pY, pX);
+        id1 = iGVWSp->gVal[0].inv;
+	nCnt += id0 != id1;
+	id0 = id1;
+      }
+      break;
+    case WLZ_DIRECTION_IL: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DL:
+      pX = nBB.xMin;
+      pY = (dir == WLZ_DIRECTION_IL)? nBB.yMax + 1: nBB.yMin - 1;
+      WlzGreyValueGet(iGVWSp, 0, pY, pX);
+      id0 = iGVWSp->gVal[0].inv;
+      nCnt = id0 >= 0;
+      while(++pX <= nBB.xMax)
+      {
+	WlzGreyValueGet(iGVWSp, 0, pY, pX);
+        id1 = iGVWSp->gVal[0].inv;
+	nCnt += id0 != id1;
+	id0 = id1;
+      }
+      break;
+  }
+  return(nCnt);
+}
+
+/*!
 * \return	Index of maximum sized neighbour or -ve if no neighbour.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Finds a maximum sized neighbour in the given direction
 *		then returns it's index and size.
 * \param	lDom			Given LBT domain.
@@ -1090,7 +1363,7 @@ static int	WlzLBTMaxLogSzEdgeDirNbrIdx2D(WlzLBTDomain2D *lDom,
 
 /*!
 * \return	Node size: 0 on error else 1, 2, 4, ....
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Computes the size of a 2D linear binary tree node.
 * \param	nod			Given node.
 */
@@ -1114,7 +1387,7 @@ int		WlzLBTNodeSz2D(WlzLBTNode2D *nod)
 
 /*!
 * \return	Node size: -1 on error else 0, 1, 2, ....
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Computes the log (base 2) of the size of a 2D linear binary
 *		tree node.
 * \param	nod			Given node.
@@ -1232,7 +1505,7 @@ int		WlzLBTNodeIdxFromKeys2D(WlzLBTDomain2D *lDom, int idN,
 
 /*!
 * \return	void
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Sets the value of the LBT key for the given position,
 *		where the position is relative to the first line and
 *		column of the domain.
@@ -1253,7 +1526,7 @@ void		WlzLBTPosToKey2D(WlzIVertex2 pos, unsigned *keys)
 
 /*!
 * \return	void
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Gets an array of WLZ_LBTDOMAIN_MAXDIGITS location digits
 *		from the given keys.
 * \param	keys			Keys to be read.
@@ -1283,7 +1556,7 @@ void		WlzLBTGetKeyDigits2D(unsigned *keys, UBYTE *digits)
 
 /*!
 * \return	void
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Sets position (relative to the first line and column of the
 * 		domain) which corresponds to the given LBT key.
 * \param	key			Keys in line, column and term order.
@@ -1297,7 +1570,7 @@ void		WlzLBTKeyToPos2I(unsigned *key, WlzIVertex2 *pos)
 
 /*!
 * \return	void
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Sets bounding box which corresponds to the given LBT key.
 * \param	key			Keys in line, column and term order.
 * \param	box			Position to be set.
@@ -1324,7 +1597,7 @@ void		WlzLBTKeyToBox2I(unsigned *key, WlzIBox2 *box)
 
 /*!
 * \return	Sort value - less than, equal to, or greater than zero.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Sorts the keys into accending order by node value.
 * \param	ptrC			Used to pass the domain pointer.
 * \param	ptr0			Used to pass first node.
@@ -1402,7 +1675,7 @@ static int	WlzLBTDomain2DNodeCmpFn(const void *ptrC,
 
 /*!
 * \return	void
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Condenses the sorted 2D LBT domain's nodes.
 * 		Runs through the nodes looking for keys in which the key
 *		values differ only in less significant digits and the
@@ -1562,7 +1835,7 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom)
 
 /*!
 * \return	Woolz error code.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Outputs the nodes of the LBT ask text for testing.
 * \param	fP		Output file.
 * \param	lDom		The LBT domain to output.
@@ -1619,7 +1892,7 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzLBTDomain2D *lDom)
 
 /*!
 * \return	Woolz error code.
-* \ingroup	DomainOps
+* \ingroup	WlzDomainOps
 * \brief	Outputs the nodes of the LBT as VTK polydata for testing.
 * \param	fP		Output file.
 * \param	lDom		The LBT domain to output.
