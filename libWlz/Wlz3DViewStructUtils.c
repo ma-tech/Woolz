@@ -110,6 +110,7 @@ WlzThreeDViewStruct *WlzMake3DViewStruct(
     viewStr->voxelSize[1] = 1.0;
     viewStr->voxelSize[2] = 1.0;
     viewStr->voxelRescaleFlg = 0;
+    viewStr->interp = WLZ_INTERPOLATION_NEAREST;
     viewStr->view_mode	= WLZ_STATUE_MODE;
     viewStr->up.vtX 	= 0.0;
     viewStr->up.vtY 	= 0.0;
@@ -213,7 +214,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
   double **rotation;
   WlzAffineTransform	*tmpTrans, *tr, *tf, *ts;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int i;
+  int i, j;
 
   /* check pointer */
   if( viewStr == NULL ){
@@ -296,7 +297,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
   }
   tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE,
 				    rotation, &errNum);
-  AlcDouble2Free(rotation);
+
   tf = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_3D_AFFINE,
 					 -viewStr->fixed.vtX,
 					 -viewStr->fixed.vtY,
@@ -305,7 +306,18 @@ static WlzErrorNum setup3DSectionAffineTransform(
 
   /* check for rescaling */
   if( viewStr->voxelRescaleFlg ){
-    /* define re-scaling affine transform */ 
+    /* define re-scaling affine transform */
+    for(i=0; i < 4; i++){
+      for(j=0; j < 4; j++){
+	rotation[i][j] = 0.0;
+      }
+    }
+    for(i=0; i < 3; i++){
+      rotation[i][i] = viewStr->voxelSize[i];
+    }
+    rotation[3][3] = 1.0;
+    ts = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE,
+				      rotation, &errNum);
   }
   else {
     ts = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_3D_AFFINE,
@@ -322,6 +334,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
   /* assign to the transform */
   WlzAffineTransformMatrixSet(viewStr->trans, tmpTrans->mat);
   WlzFreeAffineTransform(tmpTrans);
+  AlcDouble2Free(rotation);
 
   return WLZ_ERR_NONE;
 }

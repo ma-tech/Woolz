@@ -3185,6 +3185,7 @@ typedef struct _WlzThreeDViewStruct
   double	scale;			/*!< Overall scale parameter */
   double	voxelSize[3];		/*!< Voxel rescaling if required */
   int		voxelRescaleFlg;	/*!< Use voxel rescaling if set */
+  WlzInterpolationType interp;		/*!< use pixel interpolation */
   WlzThreeDViewMode view_mode;		/*!< Determines the angle at which the
   					     section cut. */
   WlzDVertex3	up;			/*!< Up vector. */
