@@ -297,7 +297,6 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces. 
 
-#INPUT                  = libWlz libAlc libAlg libWlzExt libbibfile libDlpList
 INPUT                  = CoreBin.dox binWlz binWlzExtFF binWlzApp
 
 # If the value of the INPUT tag contains directories, you can use the 

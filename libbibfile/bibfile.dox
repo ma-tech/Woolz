@@ -1,14 +1,14 @@
 #pragma ident "MRC HGU $Id$"
 
 /*!
-* \defgroup	bibfile   bibfile
+* \defgroup	bibfile   libbibfile
 * \brief Convenience procedures for reading and writing "bibtex" style
  text files for record-formatted data. 
 * \ref libbibfilepage "libbibfile" for more detail. 
 */
 
 /*!
-* \file         WlzExtFF.dox
+* \file         bibfile.dox
 * \author       Bill Hill
 * \date         November 2002
 * \version      $Id$
@@ -26,13 +26,13 @@
 */
 
 /*!
-* \page libwlzextpage Woolz External Format Conversion Library
+* \page libbibfilepage Woolz Bibtex Style I/O
 * \section intro Introduction
-The woolz image processing libary uses its own special internal format,
- not widely used elsewhere. This library provides conversion functions to
- relevant alternative formats which and assocaited API so that they can be
- read and written directly from woolz code.
-\section structure Woolz Structures
+For many applications there is a requirement for structured text to capture
+ state, configuration and as data records. This has been implmented using
+ the Bibtex style of records and fields. Support for reading and writing
+ this type of data is provided by the bibfile library.
+\section structure Bibfile Structures
 \section usage Example Usage
 \section standards Coding Conventions
 */

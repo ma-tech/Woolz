@@ -237,9 +237,7 @@ extern WlzErrorNum 		WlzEffBibWriteWarpInputSegmentationParamsRecord(
 				  int histoFlg,
 				  int shadeFlg,
 				  int gaussFlg,
-				  double width,
-				  int threshLow,
-				  int threshHigh);
+				  double width);
 extern WlzErrorNum 		WlzEffBibParseWarpInputSegmentationParamsRecord(
 				  BibFileRecord *bibfileRecord,
 				  int *normFlg,
@@ -249,6 +247,14 @@ extern WlzErrorNum 		WlzEffBibParseWarpInputSegmentationParamsRecord(
 				  double *width,
 				  int *threshLow,
 				  int *threshHigh);
+extern WlzErrorNum WlzEffBibWriteWarpInputThresholdParamsRecord(
+  FILE		*fp,
+  char		*recordName,
+  WlzEffBibWarpInputThresholdParamsStruct *paramStruct);
+
+extern WlzErrorNum WlzEffBibParseWarpInputThresholdParamsRecord(
+  BibFileRecord		*bibfileRecord,
+  WlzEffBibWarpInputThresholdParamsStruct	*paramStruct);
 
 #ifdef  __cplusplus
 }

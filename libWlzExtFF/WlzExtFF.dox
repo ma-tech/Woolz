@@ -4,7 +4,7 @@
 * \defgroup	WlzExtFF   libWlzExt
 * \brief Types data structures and functions for reading and writing
  external file formats to and from Woolz objects. See the
-* \ref libwlzextpage "libWlz" for more detail. All procedures are
+* \ref libwlzextpage "libWlzExt" for more detail. All procedures are
  detailed under different module headings.
 */
 

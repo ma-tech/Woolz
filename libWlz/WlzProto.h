@@ -3244,6 +3244,11 @@ extern int 			WlzStringMatchValue(
 				  const char *targetStr,
 				  const char *testStr,
 				  ...);
+extern int 			WlzValueMatchString(
+				  char **dstStr,
+				  int	targetVal,
+				  const char *testStr,
+				  ...);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -3266,6 +3271,7 @@ extern WlzObject 		*WlzStructErosion(WlzObject *obj,
 ************************************************************************/
 extern WlzCompoundArray		*WlzRGBAToCompound(
                                    WlzObject	*obj,
+				   WlzRGBAColorSpace	colSpc,
 				   WlzErrorNum	*dstErr);
 
 extern WlzObject		*WlzRGBAToModulus(

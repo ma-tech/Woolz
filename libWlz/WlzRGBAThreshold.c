@@ -76,7 +76,7 @@ WlzObject *WlzRGBAMultiThreshold(
       }
       else {
 	/* create compound object */
-	if( cobj = WlzRGBAToCompound(obj, &errNum) ){
+	if( cobj = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB, &errNum) ){
 	  cobj = (WlzCompoundArray *) WlzAssignObject((WlzObject *) cobj,
 						      &errNum);
 	}

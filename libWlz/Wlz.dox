@@ -5,10 +5,32 @@ of woolz. See the \ref libwlzpage "libWlz" for more detail. All procedures are
  detailed under different module headings.
 */
 
-/*! \page libwlzpage Woolz Image Processing Library
-* \section intro Introduction
-The woolz image processing library was developed for the purpose of
- microscope slide scanning.
+/*! \page libwlzpage Woolz Image Processing Library 
+* \section intro Introduction 
+The woolz image processing library was developed for the
+purpose of microscope slide scanning. It is unique in the way in which
+the image strutures and file format define the notion of "domain",
+i.e. the spatial extent, which can be an arbitrary disconnected
+collection of pixel/voxels, is maintained independently of the values
+associated with each pixel or voxel location. This provides a very
+compact representation of image data, even without compression, and a
+very efficient mechanism set (union, intersection etc.), morphological
+(dilation, erosion etc.) and other binary operations (e.g. distance,
+skeleton). It also provides for efficient memory usage because a
+single representation of the image pixel values can be utilised
+(pointed at in C structure terms) by any number of independent
+domains. A good example is the segmentation of an image. Each
+independent segment or labelled region will have its own domain but
+can share the same values array, thereby avoiding copying and
+duplication, gaining both in processing time and memory usage. In
+addition to pixel or "grey-level" images, woolz also includes many
+other image related data structures, e.g. vertices, polylines,
+boundaries, histograms and complex 2D and 3D model strucutures (lines
+and surfaces).
+
+The domains are coded using an interval notation akin to run-length
+encoding. Each domain  has a bounding box
+
 \section structure Woolz Structures
 \section usage Example Usage
 \section standards Coding Conventions

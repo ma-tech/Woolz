@@ -713,7 +713,7 @@ WlzErrorNum WlzEffBibParseFileRecord(
 * \param    shadeFlg	shade correct flag
 * \param    gaussFlg	gauss smoothing flag
 * \param    width	gauss smoothing width parameter
-* \param    threshLow	ow threshold value
+* \param    threshLow	low threshold value
 * \param    threshHigh	high threshold value
 * \par      Source:
 *                WlzExtFFBibUtils.c
@@ -725,17 +725,13 @@ WlzErrorNum WlzEffBibWriteWarpInputSegmentationParamsRecord(
   int		histoFlg,
   int		shadeFlg,
   int		gaussFlg,
-  double	width,
-  int		threshLow,
-  int	 	threshHigh)
+  double	width)
 {
   char	normStr[8];
   char	histoStr[8];
   char	shadeStr[8];
   char	gaussStr[8];
   char	widthStr[16];
-  char	threshLowStr[16];
-  char	threshHighStr[16];
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -746,8 +742,6 @@ WlzErrorNum WlzEffBibWriteWarpInputSegmentationParamsRecord(
   sprintf(shadeStr, "%d", shadeFlg);
   sprintf(gaussStr, "%d", gaussFlg);
   sprintf(widthStr, "%f", width);
-  sprintf(threshLowStr, "%d", threshLow);
-  sprintf(threshHighStr, "%d", threshHigh);
 
  /* create the bibfile record */
   bibfileRecord = 
@@ -757,8 +751,6 @@ WlzErrorNum WlzEffBibWriteWarpInputSegmentationParamsRecord(
 					 "ShadeCorrect",shadeStr,
 					 "GaussSmooth",	gaussStr,
 					 "GaussWidth",	widthStr,
-					 "ThreshLow",	threshLowStr,
-					 "ThreshHigh",	threshHighStr,
 					 NULL));
 
   /* write the bibfile and release resources */
@@ -818,6 +810,9 @@ WlzErrorNum WlzEffBibParseWarpInputSegmentationParamsRecord(
 
   /* parse the record */
   if( errNum == WLZ_ERR_NONE ){
+    /* note parse format preserves defaults,
+       no need for error if incomplete  - can be ignored
+       at the higher level */
     numParsedFields = BibFileFieldParseFmt
       (bibfileRecord->field,
        (void *) normFlg, "%d", "Normalise",
@@ -828,7 +823,254 @@ WlzErrorNum WlzEffBibParseWarpInputSegmentationParamsRecord(
        (void *) threshLow, "%d", "ThreshLow",
        (void *) threshHigh, "%d", "ThreshHigh",
        NULL);
-    if( numParsedFields < 4 ){
+    if( numParsedFields < 7 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  return errNum;
+}
+
+WlzErrorNum WlzEffBibWriteWarpInputThresholdParamsRecord(
+  FILE		*fp,
+  char		*recordName,
+  WlzEffBibWarpInputThresholdParamsStruct	*paramStruct)
+{
+  char	typeStr[16];
+  char	spaceStr[8];
+  char	channelStr[16];
+  char	rangeLowStr[8];
+  char	rangeHighStr[8];
+  char	rangeRGBLowStr[32];
+  char	rangeRGBHighStr[32];
+  char	combinationStr[8];
+  char	lowRGBPointStr[32];
+  char	highRGBPointStr[32];
+  char	eccentricityStr[16];
+  char	globalFlgStr[8];
+  char	globalVtxStr[64];
+  char	incrFlgStr[8];
+  char	pickFlgStr[8];
+  char	distanceFlgStr[8];
+  char	*str;
+  BibFileRecord	*bibfileRecord;
+  BibFileError	bibFileErr;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* generate strings for the bibfile entry */
+  /* threshold type */
+  if(WlzValueMatchString(&str, paramStruct->thresholdType,
+			 "none", WLZ_RGBA_THRESH_NONE,
+			 "single", WLZ_RGBA_THRESH_SINGLE,
+			 "multi", WLZ_RGBA_THRESH_MULTI,
+			 "plane", WLZ_RGBA_THRESH_PLANE,
+			 "slice", WLZ_RGBA_THRESH_SLICE,
+			 "box", WLZ_RGBA_THRESH_BOX,
+			 "sphere", WLZ_RGBA_THRESH_SPHERE,
+			 NULL)){
+    sprintf(typeStr, "%s", str);
+  }
+  else {
+    sprintf(typeStr, "%s", "none");
+  }
+
+  /* colour space */
+  if(WlzValueMatchString(&str, paramStruct->threshRGBSpace,
+			 "grey", WLZ_RGBA_SPACE_GREY,
+			 "RGB", WLZ_RGBA_SPACE_RGB,
+			 "HSB", WLZ_RGBA_SPACE_HSB,
+			 "CMY", WLZ_RGBA_SPACE_CMY,
+			 NULL)){
+    sprintf(spaceStr, "%s", str);
+  }
+  else {
+    sprintf(spaceStr, "%s", "RGB");
+  }
+
+  /* colour channel */
+  if(WlzValueMatchString(&str, paramStruct->threshColorChannel,
+			 "grey", WLZ_RGBA_CHANNEL_GREY,
+			 "red", WLZ_RGBA_CHANNEL_RED,
+			 "green", WLZ_RGBA_CHANNEL_GREEN,
+			 "blue", WLZ_RGBA_CHANNEL_BLUE,
+			 "hue", WLZ_RGBA_CHANNEL_HUE,
+			 "saturation", WLZ_RGBA_CHANNEL_SATURATION,
+			 "brightness", WLZ_RGBA_CHANNEL_BRIGHTNESS,
+			 "cyan", WLZ_RGBA_CHANNEL_CYAN,
+			 "magenta", WLZ_RGBA_CHANNEL_MAGENTA,
+			 "yellow", WLZ_RGBA_CHANNEL_YELLOW,
+			 NULL)){
+    sprintf(channelStr, "%s", str);
+  }
+  else {
+    sprintf(channelStr, "%s", "grey");
+  }
+
+  sprintf(rangeLowStr, "%d", paramStruct->threshRangeLow);
+  sprintf(rangeHighStr, "%d", paramStruct->threshRangeHigh);
+  sprintf(rangeRGBLowStr, "%d, %d, %d",
+	  paramStruct->threshRangeRGBLow[0],
+	  paramStruct->threshRangeRGBLow[1],
+	  paramStruct->threshRangeRGBLow[2]);
+  sprintf(rangeRGBHighStr, "%d, %d, %d",
+	  paramStruct->threshRangeRGBHigh[0],
+	  paramStruct->threshRangeRGBHigh[1],
+	  paramStruct->threshRangeRGBHigh[2]);
+  sprintf(combinationStr, "0x%x", paramStruct->threshRGBCombination);
+  sprintf(lowRGBPointStr, "0x%x", paramStruct->lowRGBPoint.v.rgbv);
+  sprintf(highRGBPointStr, "0x%x", paramStruct->highRGBPoint.v.rgbv);
+  sprintf(eccentricityStr, "%f", paramStruct->colorEllipseEcc);
+  sprintf(globalFlgStr, "%d", paramStruct->globalThreshFlg?1:0);
+  sprintf(globalVtxStr, "%d, %d",
+	  paramStruct->globalThreshVtx.vtX,
+	  paramStruct->globalThreshVtx.vtY);
+  sprintf(incrFlgStr, "%d", paramStruct->incrThreshFlg?1:0);
+  sprintf(pickFlgStr, "%d", paramStruct->pickThreshFlg?1:0);
+  sprintf(distanceFlgStr, "%d", paramStruct->distanceThreshFlg?1:0);
+
+ /* create the bibfile record */
+  bibfileRecord = 
+    BibFileRecordMake(recordName, "0",
+		      BibFileFieldMakeVa("ThresholdType", typeStr,
+					 "ColorSpace", spaceStr,
+					 "ColorChannel", channelStr,
+					 "RangeLow", rangeLowStr,
+					 "RangeHigh", rangeHighStr,
+					 "RangeRGBLow", rangeRGBLowStr,
+					 "RangeRGBHigh", rangeRGBHighStr,
+					 "ColorCombination", combinationStr,
+					 "LowRGBPoint", lowRGBPointStr,
+					 "HighRGBPoint", highRGBPointStr,
+					 "Eccentricity", eccentricityStr,
+					 "GlobalMode", globalFlgStr,
+					 "LocalModeVertex", globalVtxStr,
+					 "IncrementalMode", incrFlgStr,
+					 "EndPointPickMode", pickFlgStr,
+					 "DistanceMode", distanceFlgStr,
+					 NULL));
+
+  /* write the bibfile and release resources */
+  bibFileErr = BibFileRecordWrite(fp, NULL, bibfileRecord);
+  BibFileRecordFree(&bibfileRecord);
+
+  /* check the bibfile write error */
+  if( bibFileErr != BIBFILE_ER_NONE ){
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+  }
+
+  return errNum;
+}
+
+WlzErrorNum WlzEffBibParseWarpInputThresholdParamsRecord(
+  BibFileRecord		*bibfileRecord,
+  WlzEffBibWarpInputThresholdParamsStruct	*paramStruct)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		numParsedFields=0, enumVal;
+  BibFileField	*bibfileField;
+
+  /* check inputs */
+  if((bibfileRecord == NULL) ||
+     (paramStruct == NULL) ){
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  /* parse the record */
+  if( errNum == WLZ_ERR_NONE ){
+    /* note parse format preserves defaults,*/
+    numParsedFields = BibFileFieldParseFmt
+      (bibfileRecord->field,
+       (void *) &(paramStruct->threshRangeLow), "%d", "RangeLow",
+       (void *) &(paramStruct->threshRangeHigh), "%d", "RangeHigh",
+       (void *) &(paramStruct->threshRangeRGBLow[0]),
+       "%d,%*d,%*d", "RangeRGBLow",
+       (void *) &(paramStruct->threshRangeRGBLow[1]),
+       "%*d,%d,%*d", "RangeRGBLow",
+       (void *) &(paramStruct->threshRangeRGBLow[2]),
+       "%*d,%*d,%d", "RangeRGBLow",
+       (void *) &(paramStruct->threshRangeRGBHigh[0]),
+       "%d,%*d,%*d", "RangeRGBHigh",
+       (void *) &(paramStruct->threshRangeRGBHigh[1]),
+       "%*d,%d,%*d", "RangeRGBHigh",
+       (void *) &(paramStruct->threshRangeRGBHigh[2]),
+       "%*d,%*d,%d", "RangeRGBHigh",
+       (void *) &(paramStruct->threshRGBCombination), "0x%x", "ColorCombination",
+       (void *) &(paramStruct->lowRGBPoint.v.rgbv), "0x%x", "LowRGBPoint",
+       (void *) &(paramStruct->highRGBPoint.v.rgbv), "0x%x", "HighRGBPoint",
+       (void *) &(paramStruct->colorEllipseEcc), "%f", "Eccentricity",
+       (void *) &(paramStruct->globalThreshFlg), "%d", "GlobalMode",
+       (void *) &(paramStruct->globalThreshVtx.vtX), "%d,%*d", "LocalModeVertex",
+       (void *) &(paramStruct->globalThreshVtx.vtY), "%*d,%d", "LocalModeVertex",
+       (void *) &(paramStruct->incrThreshFlg), "%d", "IncrementalMode",
+       (void *) &(paramStruct->pickThreshFlg), "%d", "EndPointPickMode",
+       (void *) &(paramStruct->distanceThreshFlg), "%d", "DistanceMode",
+       NULL);
+    if( numParsedFields < 18 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  if( (errNum == WLZ_ERR_NONE) || (errNum == WLZ_ERR_READ_INCOMPLETE) ){
+    bibfileField = bibfileRecord->field;
+    numParsedFields = 0;
+    while( bibfileField ){
+      if( strncmp(bibfileField->name, "ThresholdType", 13) == 0 ){
+	if(WlzStringMatchValue(&enumVal, bibfileField->value,
+			       "none", WLZ_RGBA_THRESH_NONE,
+			       "single", WLZ_RGBA_THRESH_SINGLE,
+			       "multi", WLZ_RGBA_THRESH_MULTI,
+			       "plane", WLZ_RGBA_THRESH_PLANE,
+			       "slice", WLZ_RGBA_THRESH_SLICE,
+			       "box", WLZ_RGBA_THRESH_BOX,
+			       "sphere", WLZ_RGBA_THRESH_SPHERE,
+			       NULL)){
+	  paramStruct->thresholdType = enumVal;
+	}
+	else {
+	  paramStruct->thresholdType = WLZ_RGBA_THRESH_NONE;
+	}
+	numParsedFields++;
+      }
+
+      if( strncmp(bibfileField->name, "ColorSpace", 10) == 0 ){
+	if(WlzStringMatchValue(&enumVal, bibfileField->value,
+			       "grey", WLZ_RGBA_SPACE_GREY,
+			       "RGB", WLZ_RGBA_SPACE_RGB,
+			       "HSB", WLZ_RGBA_SPACE_HSB,
+			       "CMY", WLZ_RGBA_SPACE_CMY,
+			       NULL)){
+	  paramStruct->threshRGBSpace = enumVal;
+	}
+	else {
+	  paramStruct->threshRGBSpace = WLZ_RGBA_SPACE_RGB;;
+	}
+	numParsedFields++;
+      }
+
+      if( strncmp(bibfileField->name, "ColorChannel", 12) == 0 ){
+	if(WlzStringMatchValue(&enumVal, bibfileField->value,
+			       "grey", WLZ_RGBA_CHANNEL_GREY,
+			       "red", WLZ_RGBA_CHANNEL_RED,
+			       "green", WLZ_RGBA_CHANNEL_GREEN,
+			       "blue", WLZ_RGBA_CHANNEL_BLUE,
+			       "hue", WLZ_RGBA_CHANNEL_HUE,
+			       "saturation", WLZ_RGBA_CHANNEL_SATURATION,
+			       "brightness", WLZ_RGBA_CHANNEL_BRIGHTNESS,
+			       "cyan", WLZ_RGBA_CHANNEL_CYAN,
+			       "magenta", WLZ_RGBA_CHANNEL_MAGENTA,
+			       "yellow", WLZ_RGBA_CHANNEL_YELLOW,
+			       NULL)){
+	  paramStruct->threshColorChannel = enumVal;
+	}
+	else {
+	  paramStruct->threshColorChannel = WLZ_RGBA_CHANNEL_GREY;
+	}
+	numParsedFields++;
+      }
+
+      bibfileField = bibfileField->next;
+    }
+    if( numParsedFields < 3 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
   }

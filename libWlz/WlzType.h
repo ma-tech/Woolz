@@ -608,7 +608,8 @@ typedef enum _WlzRGBAColorSpace
 {
   WLZ_RGBA_SPACE_GREY,
   WLZ_RGBA_SPACE_RGB,
-  WLZ_RGBA_SPACE_HSB
+  WLZ_RGBA_SPACE_HSB,
+  WLZ_RGBA_SPACE_CMY
 } WlzRGBAColorSpace;
 
 /*!
@@ -625,7 +626,11 @@ typedef enum _WlzRGBAColorChannel
   WLZ_RGBA_CHANNEL_BLUE,
   WLZ_RGBA_CHANNEL_HUE,
   WLZ_RGBA_CHANNEL_SATURATION,
-  WLZ_RGBA_CHANNEL_BRIGHTNESS
+  WLZ_RGBA_CHANNEL_BRIGHTNESS,
+  WLZ_RGBA_CHANNEL_CYAN,
+  WLZ_RGBA_CHANNEL_MAGENTA,
+  WLZ_RGBA_CHANNEL_YELLOW,
+  WLZ_RGBA_CHANNEL_DUMMY
 } WlzRGBAColorChannel;
 
 /*!
@@ -1736,7 +1741,7 @@ typedef union _WlzValues
 * \union	_WlzDomain
 * \ingroup	WlzType
 * \brief	The union of Woolz domains.
-*		Typedef: ::_WlzDomain.
+*		Typedef: ::WlzDomain.
 */
 typedef union _WlzDomain
 {

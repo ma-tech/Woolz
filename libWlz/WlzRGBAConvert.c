@@ -27,11 +27,60 @@
 /* static functions defined later */
 static WlzCompoundArray *WlzRGBAToCompound3D(
   WlzObject	*obj,
+  WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr);
 
 static WlzObject *WlzRGBAToModulus3D(
   WlzObject	*obj,
   WlzErrorNum	*dstErr);
+
+static void WlzRGBAConvertRGBToHSV_UBYTENormalised(
+  int		*col)
+{
+  int	h, s, b;
+  int	max, min;
+
+  /* algorithm from Foley, van Dam, Feiner, Hughes,
+     Computer Graphics. Modified so each value is in the range
+     [0,255]. If saturation is zero thgen the hue is undefined
+     and in this case set to zero */
+  max = WLZ_MAX(col[0],col[1]);
+  max = WLZ_MAX(max, col[2]);
+  min = WLZ_MIN(col[0],col[1]);
+  min = WLZ_MIN(min, col[2]);
+
+  b = max;
+  if( max > 0 ){
+    s = (max - min) * 255 / max;
+  }
+  else {
+    s = 0;
+  }
+  if( s == 0 ){
+    h = 0;
+  }
+  else {
+    if( col[0] == max ){
+      h = (col[1] - col[2]) * 42.5 / (max - min);
+    }
+    else if( col[1] == max ){
+      h = 85 + (col[2] - col[0]) * 42.5 / (max - min);
+    }
+    else if( col[2] == max ){
+      h = 170 + (col[0] - col[1]) * 42.5 / (max - min);
+    }
+    if( h < 0 ){
+      h += 255;
+    }
+  }
+  col[0] = h;
+  col[1] = s;
+  col[2] = b;
+
+  return;
+}
+
+
 
 /* function:     WlzRGBAToCompound    */
 /*! 
@@ -48,6 +97,7 @@ static WlzObject *WlzRGBAToModulus3D(
 */
 WlzCompoundArray *WlzRGBAToCompound(
   WlzObject	*obj,
+  WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr)
 {
   WlzCompoundArray	*cobj=NULL;
@@ -84,7 +134,7 @@ WlzCompoundArray *WlzRGBAToCompound(
       else if( WlzGreyTypeFromObj(obj, &errNum) != WLZ_GREY_RGBA ){
 	errNum = WLZ_ERR_VALUES_TYPE;
       }
-      return WlzRGBAToCompound3D(obj, dstErr);
+      return WlzRGBAToCompound3D(obj, colSpc, dstErr);
 
     case WLZ_TRANS_OBJ:
       /* not difficult, do it later */
@@ -106,6 +156,20 @@ WlzCompoundArray *WlzRGBAToCompound(
   }
   else {
     errNum = WLZ_ERR_OBJECT_NULL;
+  }
+
+  /* check colour space */
+  if( errNum == WLZ_ERR_NONE ){
+    switch( colSpc ){
+    case WLZ_RGBA_SPACE_RGB:
+    case WLZ_RGBA_SPACE_HSB:
+    case WLZ_RGBA_SPACE_CMY:
+      break;
+
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+    }
   }
 
   /* create compound object return */
@@ -153,6 +217,7 @@ WlzCompoundArray *WlzRGBAToCompound(
     WlzIntervalWSpace	iwsp0, iwsp[4];
     WlzGreyWSpace	gwsp0, gwsp[4];
     int			i, j, k;
+    int			a, col[3];
 
     errNum = WlzInitGreyScan(obj, &iwsp0, &gwsp0);
     for(i=0; i < 4; i++){
@@ -163,12 +228,49 @@ WlzCompoundArray *WlzRGBAToCompound(
       for(i=0; i < 4; i++){
 	errNum = WlzNextGreyInterval(&(iwsp[i]));
       }
-      for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
-	    gwsp0.u_grintptr.rgbp++){
-	*(gwsp[0].u_grintptr.ubp++) = WLZ_RGBA_RED_GET(*(gwsp0.u_grintptr.rgbp));
-	*(gwsp[1].u_grintptr.ubp++) = WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
-	*(gwsp[2].u_grintptr.ubp++) = WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
-	*(gwsp[3].u_grintptr.ubp++) = WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
+      switch( colSpc ){
+      case WLZ_RGBA_SPACE_RGB:
+	for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
+	      gwsp0.u_grintptr.rgbp++){
+	  *(gwsp[0].u_grintptr.ubp++) =
+	    WLZ_RGBA_RED_GET(*(gwsp0.u_grintptr.rgbp));
+	  *(gwsp[1].u_grintptr.ubp++) =
+	    WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
+	  *(gwsp[2].u_grintptr.ubp++) =
+	    WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
+	  *(gwsp[3].u_grintptr.ubp++) =
+	    WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
+	}
+	break;
+      
+      case WLZ_RGBA_SPACE_HSB: /* each normalised to [0,255] */
+	for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
+	      gwsp0.u_grintptr.rgbp++){
+	  col[0] = WLZ_RGBA_RED_GET(*(gwsp0.u_grintptr.rgbp));
+	  col[1] = WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
+	  col[2] = WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
+	  a = WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
+	  WlzRGBAConvertRGBToHSV_UBYTENormalised(col);
+	  *(gwsp[0].u_grintptr.ubp++) = col[0];
+	  *(gwsp[1].u_grintptr.ubp++) = col[1];
+	  *(gwsp[2].u_grintptr.ubp++) = col[2];
+	  *(gwsp[3].u_grintptr.ubp++) = a;
+	    }
+	break;
+      
+      case WLZ_RGBA_SPACE_CMY:
+	for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
+	      gwsp0.u_grintptr.rgbp++){
+	  col[0] = WLZ_RGBA_RED_GET(*(gwsp0.u_grintptr.rgbp));
+	  col[1] = WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
+	  col[2] = WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
+	  a = WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
+	  *(gwsp[0].u_grintptr.ubp++) = (col[1] + col[2]) / 2;
+	  *(gwsp[1].u_grintptr.ubp++) = (col[2] + col[0]) / 2;
+	  *(gwsp[2].u_grintptr.ubp++) = (col[0] + col[1]) / 2;
+	  *(gwsp[3].u_grintptr.ubp++) = a;
+	    }
+	break;
       }
     }
     if( errNum == WLZ_ERR_EOO ){
@@ -185,6 +287,7 @@ WlzCompoundArray *WlzRGBAToCompound(
 
 static WlzCompoundArray *WlzRGBAToCompound3D(
   WlzObject	*obj,
+  WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr)
 {
   WlzCompoundArray	*cobj=NULL;

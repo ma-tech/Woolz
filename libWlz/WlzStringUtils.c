@@ -72,3 +72,42 @@ int		WlzStringMatchValue(int *datum,
 	   matchedFlag));
   return(matchedFlag);
 }
+
+/*!
+* \return	Zero if no match found.
+* \ingroup	WlzStrings
+* \brief	Given a destination pointer, a value, and a null terminated
+*		list of string, enum pairs. The values are matched and the
+*		first match is used to fill in the destination with the matched
+*		enum's string.
+* \param	datum			Pointer to string for return.
+* \param	targetVal		Value to match.
+* \param	testStr			First string of the list.
+* \param	 ...			NULL terminated varargs list of
+*					strings (char *) and enum (int)
+*					pairs.
+*/
+int		WlzValueMatchString(char **datum,
+				    int targetVal, const char *testStr,
+				    ...)
+{
+  va_list	ap;
+  int		matchedFlag = 0,
+		testVal;
+
+  va_start(ap, testStr);
+  while(testStr)
+  {
+    testVal = va_arg(ap, int);
+    if(!matchedFlag)
+    {
+      if( targetVal == testVal ){
+	matchedFlag = 1;
+	*datum = testStr;
+      }
+    }
+    testStr = va_arg(ap, char *);
+  }
+  va_end(ap);
+  return(matchedFlag);
+}

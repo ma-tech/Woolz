@@ -36,10 +36,26 @@ Woolz has been generated over many years at the Medical Research Council
  non-profit use. For commercial use of the software please contact
  matech@hgu.mrc.ac.uk.
 
-The libraries are organised
+The libraries are organised to hierarchically and need to be linked
+ accordingly. The dependencies are:
+\li libAlc - none, system library libc
+\li libAlg - libAlc, system library libm
+\li libbibfile - libAlc
+\li libhguDlpList - libAlc
+\li libWlz - libAlg
+\li libWlzExtFF - libWlz, libbibfile, external libraries libtiff and libjpeg
 
 \section install Usage
 \section install Installation
+The source code and/or compiled versions of the libraries can be
+ downloaded from the Mouse Atlas Web site
+ (http://genex.hgu.mrc.ac.uk/Resources). The installation instructions
+ are provided as a "readme.txt" which requires the selection of a path
+ (e.g. /opt/MouseAtlas) as the root of all Mouse Atlas software. The code
+ is then installed in standard Unix fashion in src, share, lib, bin and
+ so on. If the default path for the woolz root directory is used then the
+ software should build and run without modification.
+
 \section history Software Development History
 The woolz software libraries have grown over many years for many image
  processing purposes since the 1970s. The initial development by 

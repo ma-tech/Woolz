@@ -534,6 +534,28 @@ typedef struct _WlzEffAmHead
   char			*imageData;	/*! Associated image file. */
 } WlzEffAmHead;
 
+/* bibfile I/O record structures */
+typedef struct _WlzEffBibWarpInputThresholdParamsStruct
+{
+  WlzRGBAThresholdType	thresholdType;	/*! Threshold type - single, multi etc. */
+  WlzRGBAColorSpace	threshRGBSpace;	/*! Colour space */
+  WlzRGBAColorChannel	threshColorChannel; /*! Colour channel */
+  int		threshRangeLow;		/*! Single channel low threshold value */
+  int		threshRangeHigh;	/*! Single channel high threshold value */
+  int		threshRangeRGBLow[3];	/*! Multi channel low threshold value */
+  int		threshRangeRGBHigh[3];	/*! Multi channel high threshold value */
+  UINT		threshRGBCombination;	/*! Colour combination logic mask */
+  WlzPixelV	lowRGBPoint;	/*! Low-point for slice/box/ball threshold */
+  WlzPixelV	highRGBPoint;	/*! High-point for slice/box/ball threshold */
+  double	colorEllipseEcc;	/*! Ball eccentricity */
+  int		globalThreshFlg;	/*! Global thresholding flag */
+  WlzIVertex2	globalThreshVtx;	/*! Global threshold vertex */
+  int		incrThreshFlg;		/*! Incremental threshold flag */
+  int		pickThreshFlg; 		/*! Pick mode (endpoint values) flag */
+  int		distanceThreshFlg;	/*! Distance mode flag */
+
+} WlzEffBibWarpInputThresholdParamsStruct;
+
 
 #ifdef  __cplusplus
 }
