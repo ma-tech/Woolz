@@ -281,7 +281,7 @@ WlzGreyType	WlzGreyTypeFromObj(WlzObject *obj, WlzErrorNum *dstErr)
       break;
 
     case WLZ_3D_DOMAINOBJ:
-      pIdx = 1;
+      pIdx = 0;
       firstDomFlg = 1;
       pCnt = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
       while((errNum == WLZ_ERR_NONE) && (pIdx < pCnt))
