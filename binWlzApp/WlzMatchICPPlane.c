@@ -30,9 +30,10 @@
 #include <WlzExtFF.h>
 #include <string.h>
 
-/* TODO remove this #define makeing this the only code available. */
-#define WLZ_MATCHICPPLANE_OWNCB
-
+static int			WlzMatchICPPlaneParseDPair(
+				  char *arg,
+				  double *val0,
+				  double *val1);
 static FILE			*WlzMatchICPPlaneSecParFile(
 				  FILE *lFP,
 				  int multi,
@@ -54,20 +55,26 @@ static WlzErrorNum		WlzMatchICPPlaneWriteSecParam(
 				  WlzEffFormat refObjFileType,
 				  char *srcObjFileStr,
 				  WlzEffFormat srcObjFileType,
-			      	  WlzAffineTransform *srcTr,
 				  int nMatch,
 				  WlzDVertex2 *tieRP,
 				  WlzDVertex2 *tieSP,
 				  WlzDVertex2 *refObj2DOrg);
 static WlzObject 		*WlzMatchICPPlaneCreateContourObj(
 				  WlzObject *gObj,
+				  int binFlg,
+				  WlzThresholdType thrType,
+				  double thrVal,
 				  int medianSz,
 				  double smooth,
-				  WlzAffineTransform *tr,
 				  double cThr,
 				  int minSpx,
 				  int debug,
 				  char *objDbgFileName,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzMatchICPPlaneGetSection(
+				  WlzObject *gRefObj,
+				  WlzThreeDViewStruct *view,
+				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
 
 extern int	getopt(int argc, char * const *argv, const char *optstring);
@@ -84,8 +91,10 @@ int             main(int argc, char **argv)
 		debug = 0,
 		usage = 0,
 		verbose = 0,
-		verboseObj = 0,
+		verboseDat = 0,
+		idx0,
 		index,
+		binFlg = 0,
   		nMatch = 0,
 		useCOfM = 0,
 		maxItr = 200,
@@ -98,15 +107,19 @@ int             main(int argc, char **argv)
 		refMedianSz = 0,
 		srcMedianSz = 0,
 		multipleFiles = 0;
-  double	maxAng = 30 * (ALG_M_PI / 180.0),
+  double	tD0,
+  		tD1,
+		delta = 0.01,	
+  		maxAng = 30 * (ALG_M_PI / 180.0),
   		maxDeform = 0.5,
   		maxDisp = 20.0,
 		refCThr = 20.0,
 		srcCThr = 20.0,
+		refThr = 254.0,
+		srcThr = 254.0,
 		matchImpThr = 2.5,
 		refSmooth = 3.0,
 		srcSmooth = 3.0;
-  double	parseDbl[2];
   FILE		*vFP,
   		*lFP = NULL,
   		*fP = NULL;
@@ -118,6 +131,7 @@ int             main(int argc, char **argv)
   char		*parseStr[2];
   char		*refObjFileStr = NULL,
   		*srcObjFileStr = NULL;
+  WlzThresholdType thrType = WLZ_THRESH_LOW;
   WlzEffFormat	refObjFileType = WLZEFF_FORMAT_WLZ,
   		srcObjFileType = WLZEFF_FORMAT_WLZ;
   WlzObject	*tObj0 = NULL,
@@ -132,9 +146,8 @@ int             main(int argc, char **argv)
   		srcCOfM,
 		refObj2DOrg;
   WlzAffineTransform *tTr0,
-		*cOfMTr = NULL,
   		*inTr = NULL,
-  		*invTr = NULL;
+		*inPTr = NULL;
   WlzThreeDViewStruct *view = NULL;
   WlzVertexP	matchRP,
   		matchSP;
@@ -144,7 +157,8 @@ int             main(int argc, char **argv)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		fileNameBuf[FILENAME_MAX];
   const char	*errMsg;
-  static char	optList[] = "dhvVo:r:Yt:x:y:a:s:efg:k:u:i:p:A:S:F:P:m:n:c:NL";
+  static char	optList[] =
+                "dhvVo:r:Yt:x:y:a:s:efg:k:u:b:B:i:p:A:E:S:F:P:m:n:c:NL";
   const int	nScatter = 5;
   const char	nullStr[] = "<NULL>",
   		inFileStrDef[] = "-",
@@ -154,6 +168,7 @@ int             main(int argc, char **argv)
   inFileStr = (char *)inFileStrDef;
   outFileBaseStr = (char *)outFileStrDef;
   (void )memset(&inTrPrim, 0, sizeof(WlzAffineTransformPrim));
+  inTrPrim.scale = 1.0;
   while((usage == 0) && ok &&
         ((option = getopt(argc, argv, optList)) != -1))
   {
@@ -169,7 +184,7 @@ int             main(int argc, char **argv)
         verbose = 1;
 	break;
       case 'V':
-        verboseObj = 1;
+        verboseDat = 1;
 	break;
       case 'o':
         outFileBaseStr = optarg;
@@ -222,60 +237,28 @@ int             main(int argc, char **argv)
       case 'f':
         removeRefOrg = 0;
 	break;
-      case 'g': /* FALLTHROUGH */
-      case 'k': /* FALLTHROUGH */
+      case 'b':
+	binFlg = 1;
+        thrType = WLZ_THRESH_LOW;
+        usage = WlzMatchICPPlaneParseDPair(optarg, &refThr, &srcThr) != 3;
+	break;
+      case 'B':
+	binFlg = 1;
+        thrType = WLZ_THRESH_HIGH;
+        usage = WlzMatchICPPlaneParseDPair(optarg, &refThr, &srcThr) != 3;
+	break;
+      case 'g':
+        usage = WlzMatchICPPlaneParseDPair(optarg, &refCThr, &srcCThr) != 3;
+	break;
+      case 'k':
+        usage = WlzMatchICPPlaneParseDPair(optarg, &tD0, &tD1) != 3;
+	refMedianSz = WLZ_NINT(tD0);
+	srcMedianSz = WLZ_NINT(tD1);
+	break;
       case 'u':
-        /* Parse <ref value>,<src value> with both optional. */
-	if(optarg)
-	{
-          while(*optarg && isspace(*optarg))
-          {
-            ++optarg;
-          }
-          if(*optarg == ',')
-          {
-            parseStr[0] = NULL;
-            parseStr[1] = strtok(optarg, ",");
-          }
-          else
-          {
-            parseStr[0] = strtok(optarg, ",");
-            parseStr[1] = strtok(NULL, ",");
-          }
-          if((parseStr[0] == NULL) && (parseStr[1] == NULL))
-          {
-            usage = 1;
-          }
-          else
-          {
-	    if((parseStr[0] &&
-	        (sscanf(parseStr[0], "%lg", parseDbl + 0) != 1)) ||
-	       (parseStr[1] &&
-	        (sscanf(parseStr[1], "%lg", parseDbl + 1) != 1)))
-	    {
-	      usage = 1;
-	    }
-          }
-	  if(usage == 0)
-	  {
-	    switch(option)
-	    {
-	      case 'g':
-	        refCThr = parseDbl[0];
-	        srcCThr = parseDbl[1];
-		break;
-	      case 'k':
-	        refMedianSz = WLZ_NINT(parseDbl[0]);
-	        srcMedianSz = WLZ_NINT(parseDbl[1]);
-		break;
-	      case 'u':
-	        refSmooth = parseDbl[0];
-	        srcSmooth = parseDbl[1];
-		break;
-	    }
-	  }
-        }
-        break;
+        usage = WlzMatchICPPlaneParseDPair(optarg,
+					   &refSmooth, &srcSmooth) != 3;
+	break;
       case 'i':
         if((sscanf(optarg, "%d", &maxItr) != 1) || (maxItr <= 0))
 	{
@@ -305,6 +288,11 @@ int             main(int argc, char **argv)
 	  maxAng *= ALG_M_PI / 180;
 	}
 	break;
+      case 'E':
+        if((sscanf(optarg, "%lg", &delta) != 1) || (delta < 0.0))
+	{
+	  usage = 1;
+	}
       case 'F':
         if((sscanf(optarg, "%lg", &maxDeform) != 1) || (maxDeform < 0.0))
 	{
@@ -378,7 +366,7 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr, "  ok = %d\n", ok);
     (void )fprintf(stderr, "  debug = %d\n", debug);
     (void )fprintf(stderr, "  verbose = %d\n", verbose);
-    (void )fprintf(stderr, "  verboseObj = %d\n", verboseObj);
+    (void )fprintf(stderr, "  verboseDat = %d\n", verboseDat);
     (void )fprintf(stderr, "  outFileBaseStr = %s\n",
 		   outFileBaseStr? outFileBaseStr: nullStr);
     (void )fprintf(stderr, "  refObjFileStr = %s\n",
@@ -393,12 +381,18 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr, "  inTrPrim.scale = %g\n", inTrPrim.scale);
     (void )fprintf(stderr, "  useCOfM = %d\n", useCOfM);
     (void )fprintf(stderr, "  removeRefOrg = %d\n", removeRefOrg);
+    (void )fprintf(stderr, "  binFlg = %d\n", binFlg);
+    (void )fprintf(stderr, "  thrType = %s\n",
+	    (thrType == WLZ_THRESH_LOW)? "WLZ_THRESH_LOW": "WLZ_THRESH_HIGH");
+    (void )fprintf(stderr, "  refThr = %g\n", refThr);
+    (void )fprintf(stderr, "  srcThr = %g\n", srcThr);
     (void )fprintf(stderr, "  refCThr = %g\n", refCThr);
     (void )fprintf(stderr, "  srcCThr = %g\n", srcCThr);
     (void )fprintf(stderr, "  refMedianSz = %g\n", refMedianSz);
     (void )fprintf(stderr, "  srcMedianSz = %g\n", srcMedianSz);
     (void )fprintf(stderr, "  refSmooth = %g\n", refSmooth);
     (void )fprintf(stderr, "  srcSmooth = %g\n", srcSmooth);
+    (void )fprintf(stderr, "  delta = %g\n", delta);
     (void )fprintf(stderr, "  maxItr = %d\n", maxItr);
     (void )fprintf(stderr, "  minSpx = %d\n", minSpx);
     (void )fprintf(stderr, "  maxAng = %g (Radians)\n", maxAng);
@@ -454,7 +448,6 @@ int             main(int argc, char **argv)
         (void )fprintf(stderr, "Affine transform inTr = \n");
 	(void )AlcDouble2WriteAsci(stderr, inTr->mat, 3, 3);
       }
-      invTr = WlzAffineTransformInverse(inTr, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -463,14 +456,6 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       		     "%s: Failed to set initial affine transform (%s).\n",
 		     *argv, errMsg);
-    }
-    else
-    {
-      if(verbose)
-      {
-        (void )fprintf(stderr, "Affine transform invTr = \n");
-	(void )AlcDouble2WriteAsci(stderr, invTr->mat, 3, 3);
-      }
     }
   }
   /* If the reference file name was given on the command line then it use it
@@ -510,16 +495,17 @@ int             main(int argc, char **argv)
 	refObjFileStr? NULL: &refObjFileStr, &refObjFileType,
 	refObj3D? NULL: &refObj3D,
 	&srcObjFileStr, &srcObjFileType, &srcObj2D);
+    /* Note: srcObj2D assigned in WlzMatchICPPlaneReadSecParam(). */
     if(errNum == WLZ_ERR_NONE)
     {
-      if(verboseObj)
+      if(verboseDat)
       {
 	if(verbose)
 	{
 	  (void )fprintf(stderr,
-			 "Writting srcObj2DOrg to dbg-srcObj2DOrg.wlz.\n");
+			 "Writing srcObj2D to dbg-srcObj2D.wlz.\n");
 	}
-	if((vFP = fopen("dbg-srcObj2DOrg.wlz", "w")) != NULL)
+	if((vFP = fopen("dbg-srcObj2D.wlz", "w")) != NULL)
 	{
 	  (void )WlzWriteObj(vFP, srcObj2D);
 	  (void )fclose(vFP);
@@ -543,20 +529,22 @@ int             main(int argc, char **argv)
     /* Create the section object. */
     if(ok)
     {
-      refObj2D = WlzGetSectionFromObject(refObj3D, view, interp, &errNum);
+      refObj2D = WlzAssignObject(
+      		 WlzMatchICPPlaneGetSection(refObj3D, view, interp,
+		 		            &errNum), NULL);
       if((errNum == WLZ_ERR_NONE) && (refObj2D != NULL) &&
 	  (refObj2D->type = WLZ_2D_DOMAINOBJ) && (refObj2D->domain.core))
       {
 	refObj2DOrg.vtX = refObj2D->domain.i->kol1;
 	refObj2DOrg.vtY = refObj2D->domain.i->line1;
-	if(verboseObj)
+	if(verboseDat)
 	{
 	  if(verbose)
 	  {
 	    (void )fprintf(stderr,
-			   "Writting refObj2DOrg to dbg-refObj2DOrg.wlz.\n");
+			   "Writing refObj2D to dbg-refObj2D.wlz.\n");
 	  }
-	  if((vFP = fopen("dbg-refObj2DOrg.wlz", "w")) != NULL)
+	  if((vFP = fopen("dbg-refObj2D.wlz", "w")) != NULL)
 	  {
 	    (void )WlzWriteObj(vFP, refObj2D);
 	    (void )fclose(vFP);
@@ -575,16 +563,20 @@ int             main(int argc, char **argv)
     /* Create the contour objects. */
     if(ok)
     {
-      refCObj2D = WlzMatchICPPlaneCreateContourObj(refObj2D, refMedianSz,
-	  refSmooth, NULL, refCThr, minSpx, debug,
-	  verboseObj? "dbg-refObj2D.wlz": NULL,
-	  &errNum);
+      refCObj2D = WlzMatchICPPlaneCreateContourObj(refObj2D,
+				binFlg, thrType, refThr,
+      				refMedianSz, refSmooth,
+				refCThr, minSpx, debug,
+				verboseDat? "dbg-refObj2D.wlz": NULL,
+				&errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-	srcCObj2D = WlzMatchICPPlaneCreateContourObj(srcObj2D, srcMedianSz,
-	    srcSmooth, inTr, srcCThr, minSpx, debug,
-	    verboseObj? "dbg-srcObj2D.wlz": NULL,
-	    &errNum);
+	srcCObj2D = WlzMatchICPPlaneCreateContourObj(srcObj2D,
+				binFlg, thrType, srcThr,
+				srcMedianSz, srcSmooth,
+				srcCThr, minSpx, debug,
+				verboseDat? "dbg-srcObj2D.wlz": NULL,
+				&errNum);
       }
       if(errNum != WLZ_ERR_NONE)
       {
@@ -594,74 +586,71 @@ int             main(int argc, char **argv)
 		       argv[0], errMsg);
       }
     }
-    /* Compute translation using centre of mass if required. Then modify
-     * the initial and inverse transforms. */
-    if(ok && useCOfM)
+    /* Compute translation using centre of mass if required. Then create
+     * modified initial and inverse transforms for this plane. */
+    if(ok)
     {
-      if(verbose)
-      {
-        (void )fprintf(stderr,
-        "Using centre of mass to refine initial affine transform.\n");
-      }
-      refCOfM = WlzCentreOfMass2D(refCObj2D, 0, NULL, &errNum);
-      if(errNum == WLZ_ERR_NONE)
-      {
-        srcCOfM = WlzCentreOfMass2D(srcCObj2D, 0, NULL, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
+      if(useCOfM)
       {
 	if(verbose)
 	{
 	  (void )fprintf(stderr,
-	  "centres of mass are: refCOfM = {%g,%g}, srcCOfM = {%g,%g}.\n",
-	  refCOfM.vtX, refCOfM.vtY, srcCOfM.vtX, srcCOfM.vtY);
+	  "Using centre of mass to refine initial affine transform.\n");
 	}
-	WLZ_VTX_2_SUB(tDV0, refCOfM, srcCOfM);
-	cOfMTr = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_2D_AFFINE,
-						   tDV0.vtX, tDV0.vtY, 0.0,
-						   &errNum);
+	refCOfM = WlzCentreOfMass2D(refCObj2D, 0, NULL, &errNum);
+	tObj0 = NULL;
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  tObj0 = WlzAssignObject(
+		  WlzAffineTransformObj(srcCObj2D, inTr,
+					WLZ_INTERPOLATION_NEAREST,
+					&errNum), NULL);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  srcCOfM = WlzCentreOfMass2D(tObj0, 0, NULL, &errNum);
+	}
+	(void )WlzFreeObj(tObj0);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if(verbose)
+	  {
+	    (void )fprintf(stderr,
+	    "centres of mass are: refCOfM = {%g,%g}, srcCOfM = {%g,%g}.\n",
+	    refCOfM.vtX, refCOfM.vtY, srcCOfM.vtX, srcCOfM.vtY);
+	  }
+	  inPTr = WlzAffineTransformCopy(inTr, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  WLZ_VTX_2_SUB(tDV0, refCOfM, srcCOfM);
+	  inPTr->mat[0][2] += tDV0.vtX;
+	  inPTr->mat[1][2] += tDV0.vtY;
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  ok = 0;
+	  (void )WlzStringFromErrorNum(errNum, &errMsg);
+	  (void )fprintf(stderr,
+	  "%s Failed to modify transform using centre of mass (%s).\n",
+			 argv[0], errMsg);
+	}
       }
       if(errNum == WLZ_ERR_NONE)
       {
 	if(verbose)
 	{
-	  (void )fprintf(stderr, "Affine transform cOfMTr = \n");
-	  (void )AlcDouble2WriteAsci(stderr, cOfMTr->mat, 3, 3);
+	  (void )fprintf(stderr, "Affine transform inPTr = ");
+	  if(inPTr)
+	  {
+	    (void )fprintf(stderr, "\n");
+	    (void )AlcDouble2WriteAsci(stderr, inPTr->mat, 3, 3);
+	  }
+	  else
+	  {
+	    (void )fprintf(stderr, "Identity\n");
+	  }
 	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	/* Transform the source model using the centre of mass offset. */
-        (void )WlzAffineTransformGMModel(srcCObj2D->domain.ctr->model,
-					 cOfMTr, 0, &errNum);
-      }
-      /* Now modify the inverse transform. */
-      if(errNum == WLZ_ERR_NONE)
-      {
-        /* Invert the centre of mass offset transform. No need to call
-	 * a function just invert the translation matrix elements. */
-	cOfMTr->mat[0][2] = -(cOfMTr->mat[0][2]);
-	cOfMTr->mat[1][2] = -(cOfMTr->mat[1][2]);
-	/* ... and modify the inverse transform. */
-	tTr0 = WlzAffineTransformProduct(cOfMTr, invTr, &errNum);
-	(void )WlzFreeAffineTransform(invTr);
-	invTr = tTr0;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	if(verbose)
-	{
-	  (void )fprintf(stderr, "Affine transform invTr = \n");
-	  (void )AlcDouble2WriteAsci(stderr, invTr->mat, 3, 3);
-	}
-      }
-      if(errNum != WLZ_ERR_NONE)
-      {
-        ok = 0;
-	(void )WlzStringFromErrorNum(errNum, &errMsg);
-	(void )fprintf(stderr,
-	"%s Failed to modify transforms using centre of mass (%s).\n",
-		       argv[0], errMsg);
       }
     }
     if(ok && ctrFileBaseStr)
@@ -674,22 +663,14 @@ int             main(int argc, char **argv)
       {
         sprintf(fileNameBuf, "%s_ctr_ref.wlz", ctrFileBaseStr);
       }
-      if((fP = fopen(fileNameBuf, "w")) == NULL)
+      errNum = WLZ_ERR_FILE_OPEN;
+      ok = (fP = fopen(fileNameBuf, "w")) != NULL;
+      if(ok)
       {
-	ok = 0;
-	(void )fprintf(stderr, "%s Failed to open contour file %s\n",
-		       argv[0], fileNameBuf);
+	ok = (errNum = WlzWriteObj(fP, refCObj2D)) == WLZ_ERR_NONE;
       }
-      else
+      if(fP)
       {
-	if((errNum = WlzWriteObj(fP, refCObj2D)) != WLZ_ERR_NONE)
-	{
-	  ok = 0;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-	  		 "%s Failed to write contour to file %s (%s)\n",
-			 argv[0], fileNameBuf, errMsg);
-	}
 	(void )fclose(fP);
 	fP = NULL;
       }
@@ -703,48 +684,69 @@ int             main(int argc, char **argv)
 	{
 	  sprintf(fileNameBuf, "%s_ctr_src.wlz", ctrFileBaseStr);
 	}
-	if((fP = fopen(fileNameBuf, "w")) == NULL)
+	ok = (fP = fopen(fileNameBuf, "w")) != NULL;
+      }
+      if(ok)
+      {
+	ok = (errNum = WlzWriteObj(fP, srcCObj2D)) == WLZ_ERR_NONE;
+      }
+      if(fP)
+      {
+	(void )fclose(fP);
+	fP = NULL;
+      }
+      tObj0 = NULL;
+      if(ok)
+      {
+        tObj0 = WlzAffineTransformObj(srcCObj2D, inPTr,
+				      WLZ_INTERPOLATION_NEAREST, &errNum);
+        ok = errNum == WLZ_ERR_NONE;
+      }
+      if(ok)
+      {
+        if(multipleFiles)
 	{
-	  ok = 0;
-	  (void )fprintf(stderr, "%s Failed to open contour file %s\n",
-			 argv[0], fileNameBuf);
+	  sprintf(fileNameBuf, "%s_%06d_ctr_itrsrc.wlz", ctrFileBaseStr,
+	  	  index);
 	}
 	else
 	{
-	  if((errNum = WlzWriteObj(fP, srcCObj2D)) != WLZ_ERR_NONE)
-	  {
-	    ok = 0;
-	    (void )WlzStringFromErrorNum(errNum, &errMsg);
-	    (void )fprintf(stderr,
-	    		   "%s Failed to write contour to file %s (%s)\n",
-			   argv[0], fileNameBuf, errMsg);
-	  }
-	  (void )fclose(fP);
-	  fP = NULL;
+	  sprintf(fileNameBuf, "%s_ctr_itrsrc.wlz", ctrFileBaseStr);
 	}
+	ok = (fP = fopen(fileNameBuf, "w")) != NULL;
+      }
+      if(ok)
+      {
+	ok = (errNum = WlzWriteObj(fP, tObj0)) == WLZ_ERR_NONE;
+      }
+      (void )WlzFreeObj(tObj0);
+      if(fP)
+      {
+        (void )fclose(fP);
+	fP = NULL;
+      }
+      if(!ok)
+      {
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s Failed to write contour to file %s (%s)\n",
+		       argv[0], fileNameBuf, errMsg);
       }
     }
     if(ok && (noMatching == 0))
     {
-#ifdef WLZ_MATCHICPPLANE_OWNCB
       /* Set up weighting function callback data. */
       cbData.tGM = refCObj2D->domain.ctr->model;
       cbData.sGM = srcCObj2D->domain.ctr->model;
       cbData.maxDisp = maxDisp;
       cbData.nScatter = nScatter;
       errNum = WlzMatchICPCtr(refCObj2D->domain.ctr, srcCObj2D->domain.ctr,
-			      NULL, maxItr, minSpx, minSegSpx,
+			      inPTr, maxItr, minSpx, minSegSpx,
 			      &nMatch, &matchRP, &matchSP, decompLimit,
 			      maxDisp, maxAng, maxDeform,
 			      matchImpNN, matchImpThr,
-			      WlzMatchICPWeightMatches, &cbData);
-#else
-      errNum = WlzMatchICPObjs(refCObj2D, srcCObj2D, NULL,
-			       &nMatch, &matchRP, &matchSP,
-			       maxItr, minSpx, minSegSpx, decompLimit,
-			       maxDisp, maxAng, maxDeform,
-			       matchImpNN, matchImpThr);
-#endif
+			      WlzMatchICPWeightMatches, &cbData,
+			      delta);
       if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;
@@ -753,6 +755,26 @@ int             main(int argc, char **argv)
 		       "%s Failed to compute tie-points from contours (%s).\n",
 		       argv[0], errMsg);
       }
+    }
+    if(ok && verboseDat)
+    {
+	if(verbose)
+	{
+	  (void )fprintf(stderr,
+			 "Writing tie points to dbg-tiepoints.num.\n");
+	}
+	if((vFP = fopen("dbg-tiepoints.num", "w")) != NULL)
+	{
+	  for(idx0 = 0; idx0 < nMatch; ++ idx0)
+	  {
+	    (void )fprintf(vFP, "%g %g %g %g\n",
+		       (matchSP.d2 + idx0)->vtX,
+		       (matchSP.d2 + idx0)->vtY,
+		       (matchRP.d2 + idx0)->vtX - (matchSP.d2 + idx0)->vtX,
+		       (matchRP.d2 + idx0)->vtY - (matchSP.d2 + idx0)->vtY);
+	  }
+	  (void )fclose(vFP);
+	}
     }
     if(ok && ctrFileBaseStr)
     {
@@ -806,10 +828,13 @@ int             main(int argc, char **argv)
     }
     if(ok)
     {
+      if(verbose)
+      {
+	(void )fprintf(stderr, "Writing section parameters.\n");
+      }
       errNum = WlzMatchICPPlaneWriteSecParam(fP, view,
 	  refObjFileStr, refObjFileType,
 	  srcObjFileStr, srcObjFileType,
-	  invTr,
 	  nMatch, matchRP.d2, matchSP.d2,
 	  removeRefOrg? &refObj2DOrg: NULL);
       if(fP && strcmp(outFileBaseStr, "-"))
@@ -826,6 +851,7 @@ int             main(int argc, char **argv)
 	argv[0], fileNameBuf, errMsg);
       }
     }
+    WlzFreeAffineTransform(inPTr); inPTr = NULL;
     ++index;
   }
   (void )WlzFree3DViewStruct(view);
@@ -834,8 +860,6 @@ int             main(int argc, char **argv)
   AlcFree(matchRP.v);
   AlcFree(matchSP.v);
   (void )WlzFreeAffineTransform(inTr);
-  (void )WlzFreeAffineTransform(invTr);
-  (void )WlzFreeAffineTransform(cOfMTr);
   (void )WlzFreeObj(refObj3D);
   (void )WlzFreeObj(refObj2D);
   (void )WlzFreeObj(srcObj2D);
@@ -849,21 +873,24 @@ int             main(int argc, char **argv)
       " [-h] [-d] [-v] [-V]\n"
       "          [-o<output file base>] [-r <reference file>] [-Y]\n" 
       "          [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
-      "          [-g#,#] [-k#,#] [-u#,#]\n"
+      "          [-g#,#] [-k#,#] [-u#,#] [-b #] [-B #]\n"
       "          [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
       "          [-c<contour file base>] [-N] [-L]\n"
       "          [<section parameters file>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
       "  -d  Perform extra tests to aid debuging.\n"
+      "  -E  Tolerance in mean registration metric value.\n"
       "  -v  Be verbose, lots of text output to the standard error output!\n"
-      "  -V  Be verbose with Woolz objects, objects written file name names\n"
+      "  -V  Be verbose with Woolz objects and data, with file name names\n"
       "      prefixed by dbg-.\n"
       "  -o  Output file base.\n"
       "  -r  Reference file.\n"
       "  -Y  The section parameters file is a list of section parameters\n"
       "      files, one per line.\n"
-      "  -e  Use centres of mass of geometric models to compute translation.\n"
+      "  -e  Use centres of mass of geometric models to compute translation,\n"
+      "      with this translaton being applied after the optional initial\n"
+      "      affine transform.\n"
       "  -t  Initial affine transform (if given all initial affine\n"
       "      transform primitives are ignored).\n"
       "  -x  Initial horizontal translation.\n"
@@ -873,11 +900,17 @@ int             main(int argc, char **argv)
       "  -g  Maximal gradient contour thresholds, with the format:\n"
       "      <ref threshold>,<src threshold>, either may be omitted.\n"
       "  -k  Median filter size, with the format:\n"
-      "      <ref size>, <src size>, either may be omitted.\n"
+      "      <ref size>,<src size>, either may be omitted.\n"
       "  -u  Gaussian smoothing factors, with the format:\n"
       "      <ref smooth>,<src smooth>, either may be omitted.\n"
+      "  -b  Low threshold values used to produce binary mask images for\n"
+      "      matching instead of the grey valued images, with objects\n"
+      "      having values at or below the given thresholds.\n"
+      "  -B  High threshold values used to produce binary mask images for\n"
+      "      matching instead of the grey valued images, with objects\n"
+      "      having values above the given thresholds.\n"
       "  -f  Keep the reference offset in the reference tie-points (MAPaint\n"
-      "      doesn't do this.\n"
+      "      doesn't do this).\n"
       "  -i  Maximum number of iterations.\n"
       "  -p  Minimum number of simplices per shell.\n"
       "  -P  Minimum number of simplices per matched shell segment, with a\n"
@@ -897,9 +930,9 @@ int             main(int argc, char **argv)
       "  -N  Don't compute the tie-points.\n"
       "  -L  Use linear interpolation (instead of nearest neighbour) when\n"
       "      cuting sections.\n"
-      "  Reads a 3D reference object and a MAPaint section parameters file.\n"
-      "Computes tie-points and then writes a new MAPaint section parameters\n"
-      "file which includes the tie-points.\n"
+      "  Reads either a 2D or 3D reference object and an MAPaint section\n"
+      "parameters file. Computes tie-points and then writes a new MAPaint\n"
+      "section parameters file which includes the tie-points.\n"
       "  An initial affine transform is computed from the (optional) initial\n"
       "translation, rotation and scale parameters. A centre of mass can be\n"
       "computed to improve the initial translation estimates. If a centre of\n"
@@ -1032,10 +1065,6 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
 * \param	refObjFileType		Reference object file type.
 * \param	srcObjFileStr		Source object file name.
 * \param	srcObjFileType		Source object file type.
-* \param	srcTr			Affine transform with which to
-* 					transform the source tie-points
-*					before output, NULL is equivalent to
-*					the identity transform.
 * \param	nMatch			Number of tie-points.
 * \param	tieRP			Reference object tie-points.
 * \param	tieSP			Source object tie-points.
@@ -1046,7 +1075,7 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
 			      WlzThreeDViewStruct *view,
 			      char *refObjFileStr, WlzEffFormat refObjFileType,
 			      char *srcObjFileStr, WlzEffFormat srcObjFileType,
-			      WlzAffineTransform *srcTr, int nMatch,
+			      int nMatch,
 			      WlzDVertex2 *tieRP, WlzDVertex2 *tieSP,
 			      WlzDVertex2 *refObj2DOrg)
 {
@@ -1178,16 +1207,15 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
   srcVx.vtZ = 0.0;
   while((errNum == WLZ_ERR_NONE) && (idx < nMatch))
   {
-    refVx.vtX = (tieRP + idx)->vtX;
-    refVx.vtY = (tieRP + idx)->vtY;
+    refVx.vtX = (tieRP + idx)->vtX - view->fixed.vtX;
+    refVx.vtY = (tieRP + idx)->vtY - view->fixed.vtY;
     if(refObj2DOrg)
     {
       refVx.vtX -= refObj2DOrg->vtX;
       refVx.vtY -= refObj2DOrg->vtY;
     }
-    tVx = WlzAffineTransformVertexD2(srcTr, *(tieSP + idx), &errNum);
-    srcVx.vtX = tVx.vtX;
-    srcVx.vtY = tVx.vtY;
+    srcVx.vtX = (tieSP + idx)->vtX;
+    srcVx.vtY = (tieSP + idx)->vtY;
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzEffBibWriteTiePointVtxsRecord(fP, "WlzTiePointVtxs", idx,
@@ -1203,9 +1231,12 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
 * \brief	Create a contour object from a 2D domain object with values,
 *		together with a set of parameters.
 * \param	gObj			Given 2D domain object.
+* \param	binFlg			Generate contours from binary
+*					(thresholded) image.
+* \param	thrType			Threshold type.
+* \param	thrVal			Threshold value.
 * \param	medianSz		Median filter size if > 0.
 * \param	smooth			Gaussian smoothing value.
-* \param	tr			Initial affine transform.
 * \param	cThr			Contour threshold value.
 * \param	minSpx			Minimum number of simplicies per shell.
 * \param	objDbgFileName		If non-null used as the name of a
@@ -1214,33 +1245,51 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
 * \param	dstErr			Destination ptr for error, may be NULL.
 */
 static WlzObject *WlzMatchICPPlaneCreateContourObj(WlzObject *gObj,
+					int binFlg, WlzThresholdType thrType,
+					double thrVal,
 					int medianSz, double smooth,
-					WlzAffineTransform *tr,
 					double cThr, int minSpx,
 					int debug, char *objDbgFileName,
 					WlzErrorNum *dstErr)
 {
   WlzObject	*tObj0 = NULL,
-  		*tObj1 = NULL,
 		*cObj = NULL;
   WlzDomain	tDom;
   WlzValues	tVal;
   FILE		*dFP = NULL;
+  WlzPixelV	thrV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const		nrmFlg = 1;
 
   tVal.core = NULL;
+  if(binFlg)
+  {
+    thrV.type = WLZ_GREY_DOUBLE;
+    thrV.v.dbv = thrVal;
+    tObj0 = WlzThreshold(gObj, thrV, thrType, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      thrV.v.dbv = 0.0;
+      errNum = WlzGreySetValue(gObj, thrV);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      thrV.v.dbv = 255.0;
+      errNum = WlzGreySetValue(tObj0, thrV);
+    }
+    (void )WlzFreeObj(tObj0);
+    tObj0 = NULL;
+  }
   if(medianSz > 0)
   {
     errNum = WlzRankFilter(gObj, medianSz, 0.5);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(tr)
+    if(smooth > DBL_EPSILON)
     {
       tObj0 = WlzAssignObject(
-      	      WlzAffineTransformObj(gObj, tr, WLZ_INTERPOLATION_NEAREST,
-	                            &errNum), NULL);
+	      WlzGauss2(gObj, smooth, smooth, 0, 0, &errNum), NULL);
     }
     else
     {
@@ -1249,24 +1298,18 @@ static WlzObject *WlzMatchICPPlaneCreateContourObj(WlzObject *gObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    tObj1 = WlzAssignObject(
-	    WlzGauss2(tObj0, smooth, smooth, 0, 0, &errNum), NULL);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
     if(objDbgFileName)
     {
       if((dFP = fopen(objDbgFileName, "w")) != NULL)
       {
-	(void )WlzWriteObj(dFP, tObj1);
+	(void )WlzWriteObj(dFP, tObj0);
 	(void )fclose(dFP);
       }
     }
-    tDom.ctr = WlzContourObj(tObj1, WLZ_CONTOUR_MTD_GRD, cThr, 1.0, nrmFlg,
+    tDom.ctr = WlzContourObj(tObj0, WLZ_CONTOUR_MTD_GRD, cThr, 1.0, nrmFlg,
 			     &errNum);
   }
   WlzFreeObj(tObj0);
-  WlzFreeObj(tObj1);
   if(errNum == WLZ_ERR_NONE)
   {
     cObj = WlzMakeMain(WLZ_CONTOUR, tDom, tVal, NULL, NULL, &errNum);
@@ -1338,4 +1381,119 @@ static FILE	*WlzMatchICPPlaneSecParFile(FILE *lFP, int multi, int index,
     fP = index? NULL: lFP;
   }
   return(fP);
+}
+
+/*!
+* \return	2D reference section cut from the reference object.
+* \brief	Cuts a 2D reference section from the given reference object
+*		which may either be a 2D or 3D object. If the given object
+*		is 2D then it i shifted to respect the given 3D view structures
+*		fixed point.
+* \param	gRefObj			Given reference object.
+* \param	view			Given 3D view data structure.
+* \param	interp			Required interpolation.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzMatchICPPlaneGetSection(WlzObject *gRefObj,
+				WlzThreeDViewStruct *view,
+				WlzInterpolationType interp,
+				WlzErrorNum *dstErr)
+{
+  WlzObject	*refObj2D = NULL;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  if(gRefObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(gRefObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	tr = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_2D_AFFINE,
+				-(view->fixed.vtX), -(view->fixed.vtY), 0.0,
+				&errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+          refObj2D = WlzAffineTransformObj(gRefObj, tr, interp, &errNum);
+	}
+	(void )WlzFreeAffineTransform(tr);
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        refObj2D = WlzGetSectionFromObject(gRefObj, view, interp, &errNum);
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(refObj2D);
+}
+
+/*!
+* \return	Status of parsing indicated by:
+*		  -1 if a parsing error occured,
+*		   0 if neither value set,
+*		   1 if just the first value set,
+*		   2 if just  the second value set
+*		   and 3 if both values set.
+* \brief	Parses the given string for a comma seperated pair of
+*		double values, each of which may be missing.
+* \param	arg			Given string to parse.
+* \param	dstVal0			First destination pointer.
+* \param	dstVal1			Second destination pointer.
+*/
+static int	WlzMatchICPPlaneParseDPair(char *arg,
+				           double *val0, double *val1)
+{
+  int		stat = 0;
+  char		*parseStr[2];
+
+  if(arg)
+  {
+    while(*arg && isspace(*arg))
+    {
+      ++arg;
+    }
+    if(*arg == ',')
+    {
+      parseStr[0] = NULL;
+      parseStr[1] = strtok(arg, ",");
+    }
+    else
+    {
+      parseStr[0] = strtok(arg, ",");
+      parseStr[1] = strtok(NULL, ",");
+    }
+    if(parseStr[0])
+    {
+      if(sscanf(parseStr[0], "%lg", val0) == 1)
+      {
+        stat = 1;
+      }
+      else
+      {
+        stat = -1;
+	parseStr[1] = NULL;
+      }
+    }
+    if(parseStr[1])
+    {
+      if(sscanf(parseStr[1], "%lg", val1) == 1)
+      {
+        stat += 2;
+      }
+      else
+      {
+        stat = -1;
+      }
+    }
+  }
+  return(stat);
 }
