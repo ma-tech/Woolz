@@ -21,16 +21,16 @@
 * \ingroup	Wlz
 * \defgroup	WlzTransform
 * Woolz transforms are Woolz domains 
-* that define either 2D or 3D spatial transformations.
+* that define either 2D or 3D spatial transformation.
 *
 * An affine transform is a transformation
-* which preserves lines and parralelism of lines
-* but not lengths or the angles between non parrallel lines.
+* which preserves lines and the parralelism of lines,
+* but not the lengths or the angles between (non parrallel) lines.
 * The affine transform can be defined by a homogeneous matrix, which for
 * 2D transforms is a 3x3 matrix and for 3D transforms is a 4x4 matrix.
 * However in a Woolz affine transform the homogeneous matrix is
-* always a 4x4 matrix, with only the first 3 rows and columns used
-* if it is a 2D transform.
+* always a allocated as a 4x4 matrix, with only the first 3 rows and
+* columns used for a 2D transform.
 *
 * A mesh transform defines an approximate topology preseving transformation
 * within the region covered by the mesh. The mesh itself consists of
@@ -41,10 +41,9 @@
 * the basis function transforms. In 2D a mesh transform is defined by
 * a triangular mesh, in 3D it is defined by a tetrahedral mesh.
 *
-* A basis function transform is a spatial transformation that is the
-* sum of a set of component transforms. With each component
-* transform defined by node and some set of parameters which
-* specify the displacement of points distant from the node
-* with the displacements having radial symmetry. 
+* A basis function transform is the sum of a set of radialy symetric
+* component transforms. With each component transform defined by node
+* and some set of parameters which specify the displacement of points
+* distant from the node, the displacements having radial symmetry. 
 */
 
