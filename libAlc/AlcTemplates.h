@@ -43,7 +43,7 @@ extern "C" {
     alcErrno = ALC_ER_NULLPTR; \
   else if((M) < 1) \
     alcErrno = ALC_ER_NUMELEM; \
-  else if((*(D) = (T *)AlcCalloc((M), sizeof(T))) == NULL) \
+  else if((*(D) = (T*)AlcCalloc((M), sizeof(T))) == NULL) \
     alcErrno = ALC_ER_ALLOC; \
   if(alcErrno != ALC_ER_NONE) \
   { \
@@ -69,7 +69,7 @@ extern "C" {
     alcErrno = ALC_ER_NULLPTR; \
   else if((M) < 1) \
     alcErrno = ALC_ER_NUMELEM; \
-  else if((*(D) = (T *)AlcMalloc((M) * sizeof(T))) == NULL) \
+  else if((*(D) = (T*)AlcMalloc((M) * sizeof(T))) == NULL) \
     alcErrno = ALC_ER_ALLOC; \
   if(alcErrno != ALC_ER_NONE) \
   { \
@@ -100,8 +100,8 @@ extern "C" {
     alcErrno = ALC_ER_NULLPTR; \
   else if(((M) < 1) || ((N) < 1)) \
     alcErrno = ALC_ER_NUMELEM; \
-  else if(((dump0 = (T *)AlcCalloc((M) * (N), sizeof(T))) == NULL) || \
-          ((dump1 = (T **)AlcMalloc((M) * sizeof(T *))) == NULL)) \
+  else if(((dump0 = (T*)AlcCalloc((M) * (N), sizeof(T))) == NULL) || \
+          ((dump1 = (T**)AlcMalloc((M) * sizeof(T*))) == NULL)) \
     alcErrno = ALC_ER_ALLOC; \
   if(alcErrno == ALC_ER_NONE) \
   { \
@@ -145,8 +145,8 @@ extern "C" {
     alcErrno = ALC_ER_NULLPTR; \
   else if(((M) < 1) || ((N) < 1)) \
     alcErrno = ALC_ER_NUMELEM; \
-  else if(((dump0 = (T *)AlcMalloc((M) * (N) * sizeof(T))) == NULL) || \
-          ((dump1 = (T **)AlcMalloc((M) * sizeof(T *))) == NULL)) \
+  else if(((dump0 = (T*)AlcMalloc((M) * (N) * sizeof(T))) == NULL) || \
+          ((dump1 = (T**)AlcMalloc((M) * sizeof(T*))) == NULL)) \
     alcErrno = ALC_ER_ALLOC; \
   if(alcErrno == ALC_ER_NONE) \
   { \
@@ -199,8 +199,8 @@ extern "C" {
   else \
   { \
     totElm = ((N) * ((N) + 1)) / 2; \
-    if(((dump0 = (T *)AlcCalloc(totElm, sizeof(T))) == NULL) || \
-        ((dump1 = (T **)AlcMalloc((N) * sizeof(T *))) == NULL)) \
+    if(((dump0 = (T*)AlcCalloc(totElm, sizeof(T))) == NULL) || \
+        ((dump1 = (T**)AlcMalloc((N) * sizeof(T*))) == NULL)) \
     { \
       alcErrno = ALC_ER_ALLOC; \
     } \
@@ -257,8 +257,8 @@ extern "C" {
   else \
   { \
     totElm = ((N) * ((N) + 1)) / 2; \
-    if(((dump0 = (T *)AlcMalloc(totElm * sizeof(T))) == NULL) || \
-        ((dump1 = (T **)AlcMalloc((N) * sizeof(T *))) == NULL)) \
+    if(((dump0 = (T*)AlcMalloc(totElm * sizeof(T))) == NULL) || \
+        ((dump1 = (T**)AlcMalloc((N) * sizeof(T*))) == NULL)) \
     { \
       alcErrno = ALC_ER_ALLOC; \
     } \
@@ -333,9 +333,9 @@ extern "C" {
     alcErrno = ALC_ER_NULLPTR; \
   else if(((M) < 1) || ((N) < 1) || ((O) < 1)) \
     alcErrno = ALC_ER_NUMELEM; \
-  else if(((dump0 = (T *)AlcCalloc((M) * (N) * (O), sizeof(T))) == NULL) || \
-          ((dump1 = (T **)AlcMalloc((M) * (N) * sizeof(T *))) == NULL) || \
-          ((dump2 = (T ***)AlcMalloc((M) * sizeof(T **))) == NULL)) \
+  else if(((dump0 = (T*)AlcCalloc((M) * (N) * (O), sizeof(T))) == NULL) || \
+          ((dump1 = (T**)AlcMalloc((M) * (N) * sizeof(T*))) == NULL) || \
+          ((dump2 = (T***)AlcMalloc((M) * sizeof(T**))) == NULL)) \
     alcErrno = ALC_ER_ALLOC; \
   if(alcErrno == ALC_ER_NONE) \
   { \
@@ -389,9 +389,9 @@ extern "C" {
     alcErrno = ALC_ER_NULLPTR; \
   else if(((M) < 1) || ((N) < 1) || ((O) < 1)) \
     alcErrno = ALC_ER_NUMELEM; \
-  else if(((dump0 = (T *)AlcMalloc((M) * (N) * (O) * sizeof(T))) == NULL) || \
-          ((dump1 = (T **)AlcMalloc((M) * (N) * sizeof(T *))) == NULL) || \
-          ((dump2 = (T ***)AlcMalloc((M) * sizeof(T **))) == NULL)) \
+  else if(((dump0 = (T*)AlcMalloc((M) * (N) * (O) * sizeof(T))) == NULL) || \
+          ((dump1 = (T**)AlcMalloc((M) * (N) * sizeof(T*))) == NULL) || \
+          ((dump2 = (T***)AlcMalloc((M) * sizeof(T**))) == NULL)) \
     alcErrno = ALC_ER_ALLOC; \
   if(alcErrno == ALC_ER_NONE) \
   { \

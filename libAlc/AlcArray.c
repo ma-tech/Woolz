@@ -27,7 +27,6 @@
 #include <Alc.h>
 #include <AlcTemplates.h>
 
-
 /*!
 * \return	Error code.
 * \ingroup	AlcArray
@@ -41,6 +40,43 @@
 AlcErrno	AlcBit1Calloc(unsigned char **dest, size_t mElem)
 {
   return(AlcUnchar1Calloc(dest, (mElem + 7) / 8));
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 1 dimensional zero'd array of pointers to void.
+* \note		Should be free'd using AlcFree().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	mElem 	 		Number of elements in array.
+*/
+AlcErrno	AlcPtr1Calloc(void ***dest, size_t mElem)
+{
+  AlcErrno	alcErrno = ALC_ER_NONE;
+  
+  /* Template doesn't work for pointer types. */
+  if((dest) == NULL)
+  {
+    alcErrno = ALC_ER_NULLPTR;
+  }
+  else if(mElem < 1)
+  {
+    alcErrno = ALC_ER_NUMELEM;
+  }
+  else if((*(dest) = (void **)AlcCalloc(mElem, sizeof(void *))) == NULL)
+  {
+    alcErrno = ALC_ER_ALLOC;
+  }
+  if(alcErrno != ALC_ER_NONE)
+  {
+    if(dest)
+    {
+      *(dest) = NULL;
+    }
+  }
+  return(alcErrno);
 }
 
 /*!
@@ -151,6 +187,44 @@ AlcErrno	AlcBit1Malloc(unsigned char **dest, size_t mElem)
 /*!
 * \return	Error code.
 * \ingroup	AlcArray
+* \brief	Allocates a 1 dimensional non-zero'd array of pointers
+*		to void.
+* \note		Should be free'd using AlcFree().
+* \note		Array size is limited only by address space.
+* \param	dest 		 	Destination for allocated array
+*					pointer.
+* \param	mElem 	 		Number of elements in array.
+*/
+AlcErrno	AlcPtr1Malloc(void ***dest, size_t mElem)
+{
+  AlcErrno	alcErrno = ALC_ER_NONE;
+  
+  /* Template doesn't work for pointer types. */
+  if(dest == NULL)
+  {
+    alcErrno = ALC_ER_NULLPTR;
+  }
+  else if(mElem < 1)
+  {
+    alcErrno = ALC_ER_NUMELEM;
+  }
+  else if((*dest = (void **)AlcMalloc(mElem * sizeof(void *))) == NULL)
+  {
+    alcErrno = ALC_ER_ALLOC;
+  }
+  if(alcErrno != ALC_ER_NONE)
+  {
+    if(dest)
+    {
+      *dest = NULL;
+    }
+  }
+  return(alcErrno);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 1 dimensional non-zero'd array of chars.
 * \note		Should be free'd using AlcFree().
 * \note		Array size is limited only by address space.
@@ -254,6 +328,67 @@ AlcErrno	AlcBit2Calloc(unsigned char ***dest,
 			      size_t mElem, size_t nElem)
 {
   return(AlcUnchar2Calloc(dest, mElem, (nElem + 7) / 8));
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd array of pointers to void.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 	 		Destination for allocated array
+*					pointer.
+* \param	mElem 	 		Number of 1D arrays.
+* \param	nElem 	 		Number of elements in each 1D
+*					array.
+*/
+AlcErrno	AlcPtr2Calloc(void ****dest, size_t mElem, size_t nElem)
+{
+  size_t	index;
+  void		**dump0 = NULL;
+  void		***dump1 = NULL;
+  AlcErrno	alcErrno = ALC_ER_NONE;
+ 
+  /* Template doesn't work for pointer types. */
+  if(dest == NULL)
+  {
+    alcErrno = ALC_ER_NULLPTR;
+  }
+  else if((mElem < 1) || (nElem < 1))
+  {
+    alcErrno = ALC_ER_NUMELEM;
+  }
+  else if(((dump0 = (void **)AlcCalloc(mElem * nElem,
+  				       sizeof(void *))) == NULL) ||
+          ((dump1 = (void ***)AlcMalloc(mElem * sizeof(void **))) == NULL))
+  {
+    alcErrno = ALC_ER_ALLOC;
+  }
+  if(alcErrno == ALC_ER_NONE)
+  {
+    *dest = dump1;
+    for(index = 0; index < mElem; ++index)
+    {
+      (*dest)[index] = dump0;
+      dump0 += nElem;
+    }
+  }
+  else
+  {
+    if(dest)
+    {
+      *dest = NULL;
+    }
+    if(dump0)
+    {
+      AlcFree(dump0);
+    }
+    if(dump1)
+    {
+      AlcFree(dump1);
+    }
+  }
+  return(alcErrno);
 }
 
 /*!
@@ -375,6 +510,68 @@ AlcErrno	AlcBit2Malloc(unsigned char ***dest,
 			      size_t mElem, size_t nElem)
 {
   return(AlcUnchar2Malloc(dest, mElem, (nElem + 7) / 8));
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd array of pointers
+*		to void.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 		 	Destination for allocated array
+*					pointer.
+* \param	mElem 	 		Number of 1D arrays.
+* \param	nElem 	 		Number of elements in each 1D
+*					array.
+*/
+AlcErrno	AlcPtr2Malloc(void ****dest, size_t mElem, size_t nElem)
+{
+  size_t	index;
+  void 		**dump0 = NULL;
+  void   	***dump1 = NULL;
+  AlcErrno	alcErrno = ALC_ER_NONE;
+ 
+  /* Template doesn't work for pointer types. */
+  if(dest == NULL)
+  {
+    alcErrno = ALC_ER_NULLPTR;
+  }
+  else if((mElem < 1) || (nElem < 1))
+  {
+    alcErrno = ALC_ER_NUMELEM;
+  }
+  else if(((dump0 = (void **)AlcMalloc(mElem * nElem *
+  				       sizeof(void *))) == NULL) ||
+          ((dump1 = (void ***)AlcMalloc(mElem * sizeof(void **))) == NULL))
+  {
+    alcErrno = ALC_ER_ALLOC;
+  }
+  if(alcErrno == ALC_ER_NONE)
+  {
+    *dest = dump1;
+    for(index = 0; index < mElem; ++index)
+    {
+      (*dest)[index] = dump0;
+      dump0 += nElem;
+    }
+  }
+  else
+  {
+    if(dest)
+    {
+      *dest = NULL;
+    }
+    if(dump0)
+    {
+      AlcFree(dump0);
+    }
+    if(dump1)
+    {
+      AlcFree(dump1);
+    }
+  }
+  return(alcErrno);
 }
 
 /*!
@@ -757,6 +954,72 @@ AlcErrno	AlcBit3Calloc(unsigned char ****dest,
 /*!
 * \return	Error code.
 * \ingroup	AlcArray
+* \brief	Allocates a 3 dimensional array of pointers to void.
+* \note		Should be free'd using Alc3Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	mElem 	 		Number of 2D arrays.
+* \param	nElem 	 		Number of 1D arrays.
+* \param	oElem 	 		Number of elements in each 1D
+*					array.
+*/
+AlcErrno	AlcPtr3Calloc(void *****dest, size_t mElem, size_t nElem,
+			       size_t oElem)
+{
+  size_t	index0,
+  		index1;
+  void		**dump0 = NULL,
+  		***dump1 = NULL,
+		****dump2 = NULL;
+  AlcErrno	alcErrno = ALC_ER_NONE;
+
+  if((dest) == NULL)
+  {
+    alcErrno = ALC_ER_NULLPTR;
+  }
+  else if((mElem < 1) || (nElem < 1) || (oElem < 1))
+  {
+    alcErrno = ALC_ER_NUMELEM;
+  }
+  else if(((dump0 = (void **)AlcCalloc(mElem * nElem * oElem,
+  				       sizeof(void *))) == NULL) ||
+          ((dump1 = (void ***)AlcMalloc(mElem * nElem *
+	                                sizeof(void **))) == NULL) ||
+          ((dump2 = (void ****)AlcMalloc(mElem * sizeof(void ***))) == NULL))
+  {
+    alcErrno = ALC_ER_ALLOC;
+  }
+  if(alcErrno == ALC_ER_NONE)
+  {
+    *(dest) = dump2;
+    for(index0 = 0; index0 < mElem; ++index0)
+    {
+      for(index1=0; index1 < nElem; ++index1)
+      {
+	dump1[index1] = dump0;
+	dump0 += oElem;
+      }
+      (*(dest))[index0] = dump1;
+      dump1 += nElem;
+    }
+  }
+  else
+  {
+    if(dest)
+    {
+      *(dest) = NULL;
+    }
+    AlcFree(dump2);
+    AlcFree(dump1);
+    AlcFree(dump0);
+  }
+  return(alcErrno);
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
 * \brief	Allocates a 3 dimensional array of chars.
 * \note		Should be free'd using Alc3Free().
 * \note		Array size is limited only by address space.
@@ -883,6 +1146,73 @@ AlcErrno	AlcBit3Malloc(unsigned char ****dest,
 			      size_t mElem, size_t nElem, size_t oElem)
 {
   return(AlcUnchar3Malloc(dest, mElem, nElem, (oElem + 7) / 8));
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 3 dimensional non-zero'd array of pointers
+*		to void.
+* \note		Should be free'd using Alc3Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	mElem 	 		Number of 2D arrays.
+* \param	nElem 	 		Number of 1D arrays.
+* \param	oElem 	 		Number of elements in each 1D
+*					array.
+*/
+AlcErrno	AlcPtr3Malloc(void *****dest, size_t mElem, size_t nElem,
+			       size_t oElem)
+{
+  size_t	index0,
+  		index1;
+  void 		**dump0 = NULL,
+  		***dump1 = NULL,
+		****dump2 = NULL;
+  AlcErrno	alcErrno = ALC_ER_NONE;
+
+  if(dest == NULL)
+  {
+    alcErrno = ALC_ER_NULLPTR;
+  }
+  else if((mElem < 1) || (nElem < 1) || (oElem < 1))
+  {
+    alcErrno = ALC_ER_NUMELEM;
+  }
+  else if(((dump0 = (void **)AlcMalloc(mElem * nElem * oElem *
+  				       sizeof(void *))) == NULL) ||
+          ((dump1 = (void ***)AlcMalloc(mElem * nElem *
+	                                sizeof(void **))) == NULL) ||
+          ((dump2 = (void ****)AlcMalloc(mElem * sizeof(void ***))) == NULL))
+  {
+    alcErrno = ALC_ER_ALLOC;
+  }
+  if(alcErrno == ALC_ER_NONE)
+  {
+    *dest = dump2;
+    for(index0 = 0; index0 < mElem; ++index0)
+    {
+      for(index1=0; index1 < nElem; ++index1)
+      {
+	dump1[index1] = dump0;
+	dump0 += oElem;
+      }
+      (*dest)[index0] = dump1;
+      dump1 += nElem;
+    }
+  }
+  else
+  {
+    if(dest)
+    {
+      *dest = NULL;
+    }
+    AlcFree(dump2);
+    AlcFree(dump1);
+    AlcFree(dump0);
+  }
+  return(alcErrno); 
 }
 
 /*!
