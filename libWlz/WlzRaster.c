@@ -81,7 +81,7 @@ WlzObject 	*WlzRasterObj(WlzObject *gObj, WlzErrorNum *dstErr)
         dObj = WlzMakeEmpty(&errNum);
 	break;
       case WLZ_CONTOUR:
-	bBox = WlzBoundingBox3D(gObj, &errNum);
+	bBox = WlzBoundingBox3I(gObj, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  dObj = WlzRasterCtr(gObj->domain.ctr, bBox, &errNum);

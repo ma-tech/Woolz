@@ -192,7 +192,7 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
     cObj = NULL;
     if(errNum == WLZ_ERR_NONE)
     {
-      rDom.ctr = WlzContourObjGrd(gObj[idN], NULL, ctrLo, ctrHi, ctrWth,
+      rDom.ctr = WlzContourObjGrd(gObj[idN], ctrLo, ctrHi, ctrWth,
 				  &errNum);
     }
     if(errNum == WLZ_ERR_NONE)

@@ -2747,7 +2747,7 @@ main(int argc, char *argv[])
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    bBox = WlzBoundingBox2D(inObj, &errNum);
+    bBox = WlzBoundingBox2I(inObj, &errNum);
   }
   if(errNum != WLZ_ERR_NONE)
   {

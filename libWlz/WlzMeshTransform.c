@@ -1148,7 +1148,7 @@ static WlzMeshTransform *WlzMeshFromObjBox(WlzObject *srcObj, WlzIBox2 *dstBox,
   }
   else
   {
-    box = WlzBoundingBox2D(srcObj, &errNum);
+    box = WlzBoundingBox2I(srcObj, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {

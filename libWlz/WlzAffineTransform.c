@@ -197,7 +197,7 @@ static int	WlzAffineTransformIsTranslate2(WlzAffineTransform *tr,
     {
       /* Given an object: Check for integer translation within the bounding
        * box of the given object. */
-      box = WlzBoundingBox2D(obj, &errNum);
+      box = WlzBoundingBox2I(obj, &errNum);
       tstV[0].vtX = box.xMin; tstV[0].vtY = box.yMin;
       tstV[1].vtX = box.xMin; tstV[1].vtY = box.yMax;
       tstV[2].vtX = box.xMax; tstV[2].vtY = box.yMin;
@@ -276,7 +276,7 @@ static int	WlzAffineTransformIsTranslate3(WlzAffineTransform *tr,
     {
       /* Given an object: Check for integer translation within the bounding
        * box of the given object. */
-      box = WlzBoundingBox3D(obj, &errNum);
+      box = WlzBoundingBox3I(obj, &errNum);
       tstV[0].vtX = box.xMin; tstV[0].vtY = box.yMin; tstV[0].vtZ = box.zMin;
       tstV[1].vtX = box.xMax; tstV[1].vtY = box.yMin; tstV[1].vtZ = box.zMin;
       tstV[2].vtX = box.xMin; tstV[2].vtY = box.yMax; tstV[2].vtZ = box.zMin;
@@ -1094,7 +1094,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    bBox = WlzBoundingBox3D(newObj, &errNum);
+    bBox = WlzBoundingBox3I(newObj, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1382,7 +1382,7 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Forward trasform the bounding box. */
-  bBox = WlzBoundingBox3D(srcObj, &errNum);
+  bBox = WlzBoundingBox3I(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     bBox = WlzAffineTransformBBoxI3(trans, bBox, &errNum);

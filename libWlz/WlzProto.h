@@ -815,12 +815,26 @@ extern WlzDVertex2		WlzBasisFnTransformVertexD(
 /************************************************************************
 * WlzBoundingBox.c							*
 ************************************************************************/
-extern WlzIBox2 		WlzBoundingBox2D(
+extern WlzIBox2 		WlzBoundingBox2I(
 				  WlzObject *inObj,
 				  WlzErrorNum *dstErr);
-extern WlzIBox3 		WlzBoundingBox3D(
+extern WlzDBox2 		WlzBoundingBox2D(
 				  WlzObject *inObj,
 				  WlzErrorNum *dstErr);
+extern WlzIBox3 		WlzBoundingBox3I(
+				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+extern WlzDBox3 		WlzBoundingBox3D(
+				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+extern WlzIBox2        		WlzBoundingBox2DTo2I(
+				  WlzDBox2 bBox2D);
+extern WlzDBox2        		WlzBoundingBox2ITo2D(
+				  WlzIBox2 bBox2I);
+extern WlzIBox3        		WlzBoundingBox3DTo3I(
+				  WlzDBox3 bBox3D);
+extern WlzDBox3        		WlzBoundingBox3ITo3D(
+				  WlzIBox3 bBox3I);
 
 /************************************************************************
 * WlzBoundToObj.c							*
@@ -890,15 +904,12 @@ extern WlzContour		*WlzContourObj(
 				  double ctrVal,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
-#ifndef WLZ_EXT_BIND
 extern WlzContour		*WlzContourObjGrd(
 				  WlzObject *srcObj,
-				  WlzVertexP *dstGrd,
 				  double ctrLo,
 				  double ctrHi,
 				  double ctrWth,
 				  WlzErrorNum *dstErr);
-#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzConvertPix.c							*

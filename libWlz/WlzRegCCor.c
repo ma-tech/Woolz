@@ -217,10 +217,10 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
   zeroBgd.v.inv = 0;
   gV[0].type = gV[1].type = gV[2].type = gV[3].type = WLZ_GREY_DOUBLE;
   /* Compute the number of x4 subsampling operations to use. */
-  sBox = WlzBoundingBox2D(sObj, &errNum);
+  sBox = WlzBoundingBox2I(sObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    tBox = WlzBoundingBox2D(tObj, &errNum);
+    tBox = WlzBoundingBox2I(tObj, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -615,7 +615,7 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
     oIdx = 0;
     while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      oBox[oIdx] = WlzBoundingBox2D(oObj[oIdx], &errNum);
+      oBox[oIdx] = WlzBoundingBox2I(oObj[oIdx], &errNum);
       ++oIdx;
     }
   }
@@ -849,7 +849,7 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
     oIdx = 0;
     while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      oBox[oIdx] = WlzBoundingBox2D(pObj[oIdx], &errNum);
+      oBox[oIdx] = WlzBoundingBox2I(pObj[oIdx], &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
 	winOrg.vtX = (oBox[oIdx].xMax + oBox[oIdx].xMin) / 2;
@@ -886,7 +886,7 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
     oIdx = 0;
     while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      oBox[oIdx] = WlzBoundingBox2D(wObj[oIdx], &errNum);
+      oBox[oIdx] = WlzBoundingBox2I(wObj[oIdx], &errNum);
       ++oIdx;
     }
   }
