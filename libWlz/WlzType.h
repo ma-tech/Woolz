@@ -725,6 +725,17 @@ typedef enum _WlzSampleFn
 } WlzSampleFn;
 
 /*!
+* \enum		_WlzScalarFeatureType
+* \ingroup	WlzFeatures
+* \brief	Scalar features of objects.
+*/
+typedef enum _WlzScalarFeatureType
+{
+  WLZ_SCALARFEATURE_VALUE,		/*!< Grey value. */
+  WLZ_SCALARFEATURE_GRADIENT		/*!< Gradient of grey values. */
+} WlzScalarFeatureType;
+
+/*!
 * \enum		_WlzVertexType
 * \ingroup	WlzType
 * \brief	2D and 3D vertex types.
