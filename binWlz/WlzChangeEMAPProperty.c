@@ -103,7 +103,17 @@ int main(int	argc,
     switch( option ){
 
     case 'c':
+#ifdef BSD 
+      if( sscanf(optarg, "%d/%d/%d", &(tm.tm_mday), &(tm.tm_mon), &(tm.tm_year)) == 3 ){
+	tm.tm_sec = 0;
+	tm.tm_min = 0;
+	tm.tm_hour = 0;
+	if( tm.tm_year > 1900 ){
+	  tm.tm_year -= 1900;
+	}
+#else 
       if( strptime(optarg, "%d/%m/%Y", &tm) ){
+#endif /* BSD */ 
 	creationTime = mktime(&tm);
 	cTimeFlg = 1;
       }
@@ -126,7 +136,17 @@ int main(int	argc,
       break;
 
     case 'm':
+#ifdef BSD 
+      if( sscanf(optarg, "%d/%d/%d", &(tm.tm_mday), &(tm.tm_mon), &(tm.tm_year)) == 3 ){
+	tm.tm_sec = 0;
+	tm.tm_min = 0;
+	tm.tm_hour = 0;
+	if( tm.tm_year > 1900 ){
+	  tm.tm_year -= 1900;
+	}
+#else 
       if( strptime(optarg, "%d/%m/%Y", &tm) ){
+#endif /* BSD */ 
 	modificationTime = mktime(&tm);
 	mTimeFlg = 1;
       }
