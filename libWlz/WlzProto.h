@@ -3494,6 +3494,8 @@ extern WlzErrorNum		WlzSplitObj(
 				  WlzObject *ppObj,
 				  int bWidth,
 				  double bgdFrac,
+				  double sigma,
+				  WlzCompThreshType compThrMethod,
 				  int nReqComp,
 				  int *dstSizeArrayComp,
 				  WlzObject ***dstArrayComp);

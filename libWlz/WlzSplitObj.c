@@ -50,14 +50,20 @@ static int			WlzSplitObjSortSzFn(
 * \param	bgdFrac			Minimum fraction of values which are
 * 					background values, with range
 *					[0.0+ - 1.0-].
+* \param	sigma			Histogram smoothing parameter used
+*					by WlzHistogramCnvGauss().
+* \param	compThrMethod		Method for computing threshold, used
+*					in call to WlzCompThresholdVT().
 * \param	nReqComp		Number of required components.
 * \param	dstNComp		Destination pointer for the number of
 *					components extracted, must not be NULL.
 * \param	dstComp			Destination pointer for the extracted
 *					components, must not be NULL.
 */
-WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj, int bWidth,
-			      double bgdFrac, int nReqComp, int *dstNComp,
+WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
+			      int bWidth, double bgdFrac, double sigma,
+			      WlzCompThreshType compThrMethod,
+			      int nReqComp, int *dstNComp,
 			      WlzObject ***dstComp)
 {
   int		tI,
@@ -73,7 +79,6 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj, int bWidth,
   WlzConnectType lCon;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	maxComp = 1024;
-  const double	sigma = 3.0;
 
   split.nLComp = 0;
   split.compI = NULL;
@@ -131,8 +136,8 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj, int bWidth,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCompThresholdVT(hObj, WLZ_COMPTHRESH_FRACMIN, bgdFrac, 0.0,
-    			        0.05, &tV, &tType);
+    errNum = WlzCompThresholdVT(hObj, compThrMethod, bgdFrac, 0.0,
+    			        0.0, &tV, &tType);
   }
   (void )WlzFreeObj(hObj); hObj = NULL;
   /* Threshold object. */
