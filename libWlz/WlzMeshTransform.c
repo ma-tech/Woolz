@@ -751,7 +751,7 @@ static WlzObject *WlzMeshTransformObjPrv(WlzObject *srcObj,
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  dstObj = WlzBoundToObj(tObj1->domain.b,
-				 WLZ_EVEN_ODD_FILL, &errNum);
+				 WLZ_SIMPLE_FILL, &errNum);
 	  WlzFreeObj(tObj1);
 	  tObj1 = NULL;
 	}
