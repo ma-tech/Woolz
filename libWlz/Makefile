@@ -144,8 +144,10 @@ CSOURCES		= \
 			WlzRegICP.c \
 			WlzRsvFilter.c \
 			WlzSampleObj.c \
+			WlzSampleValuesAndCoords.c \
 			WlzScalarArithmeticOp.c \
 			WlzScalarBinaryOp.c \
+			WlzScalarFeatures.c \
 			WlzSepTrans.c \
 			WlzSeqPar.c \
 			WlzShadeCorrect.c \
