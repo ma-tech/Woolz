@@ -101,6 +101,11 @@ static WlzErrorNum		WlzEffAmReadMaterials(
 				  char *buf,
 				  const int bufLen,
 				  WlzEffAmHead *head);
+static WlzErrorNum 		WlzEffAmReadSeeds(
+				  FILE *fP,
+				  char *buf,
+				  const int bufLen,
+				 WlzEffAmHead *head);
 static WlzErrorNum 		WlzEffAmReadArray3D(
 				  FILE *fP,
 				  void ***data,
@@ -397,6 +402,7 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 				   "CoordType", WLZEFF_AM_TOKEN_COORDTYPE,
 				   "ImageData", WLZEFF_AM_TOKEN_IMAGEDATA,
 				   "Materials", WLZEFF_AM_TOKEN_MATERIALS,
+				   "Seeds", WLZEFF_AM_TOKEN_SEEDS,
 				   NULL);
 	      switch(tok[1])
 	      {
@@ -432,6 +438,10 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 		      errNum = WLZ_ERR_MEM_ALLOC;
 		    }
 		  }
+		  *tokBuf = '\0';
+		  break;
+		case WLZEFF_AM_TOKEN_SEEDS:
+		  errNum = WlzEffAmReadSeeds(fP, tokBuf, tokBufMax, head);
 		  *tokBuf = '\0';
 		  break;
 		default:
@@ -1015,12 +1025,14 @@ static WlzErrorNum WlzEffAmReadLatticeLabel(FILE *fP, char *buf,
 		      Id 4,
 		      Color 0.2 0.8 0.4
 		    }
+		    Ventricles
 		  }
 		\endverbatim
 *		Dispite id's being given in the file they are ignored and
 *		the id's are given values from 0, incrementing by 1 with
 *		each material parsed.
-*		The default colour is 0.0 0.0 0.0.
+*		The default colour is 0.0 0.0 0.0 for the first material
+*		and 1.0 1.0 1.0 for all others.
 *		This function has been written to parse either of these
 *		materials formats, to generate a materials list in the
 *		header data structure.
@@ -1040,7 +1052,8 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
   WlzEffAmMaterial *lastMat = NULL,
   		*newMat = NULL;
   WlzErrorNum   errNum;
-  const char	tokSepWS[] = " \t\n",
+  const char	tokSepDQ[] = "\"",
+  		tokSepWS[] = " \t\n",
             	tokSepWSC[] = " \t\n,",
             	tokSepWSQ[] = " \t\n\"";
 
@@ -1059,6 +1072,10 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
       {
         errNum = WLZ_ERR_MEM_ALLOC;
       }
+      else if(head->matCount > 0)
+      {
+        newMat->color[0] = newMat->color[1] = newMat->color[2] = 1.0;
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -1074,11 +1091,11 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
 	}
       }
     }
-    if((errNum == WLZ_ERR_NONE) && (strcmp(buf, "{")))
+    if((errNum == WLZ_ERR_NONE) && strcmp(buf, "{") && strcmp(buf, "}"))
     {
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    if(errNum == WLZ_ERR_NONE)
+    if((errNum == WLZ_ERR_NONE) && strcmp(buf, "}"))
     {
       do
       {
@@ -1116,7 +1133,11 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
 	      }
 	      break;
 	    case WLZEFF_AM_TOKEN_NAME:
-	      errNum = WlzEffAmReadAToken(fP, tokSepWSQ, buf, bufLen);
+	      errNum = WlzEffAmSkip(fP, tokSepWS);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        errNum = WlzEffAmReadAToken(fP, tokSepDQ, buf, bufLen);
+	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 	        errNum = WlzEffAmSkip(fP, tokSepWSQ);
@@ -1152,7 +1173,7 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
       lastMat = newMat;
       newMat = NULL;
     }
-    if(errNum == WLZ_ERR_NONE)
+    if((errNum == WLZ_ERR_NONE) && strcmp(buf, "}"))
     {
       errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
     }
@@ -1161,6 +1182,55 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
   {
     AlcFree(newMat->name);
     AlcFree(newMat);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Reads the seeds list from the file and throw them away.
+*		The format for seeds list is:
+*		\verbatim
+		  {
+		    Slice0015 {
+		      S0114x0120 2 47 123 6
+		    }
+		    Slice0022 {
+		      S0084x0090 2 0 115 7
+		    }
+		  }
+		\endverbatim
+* \param	fP			Given file.
+* \param	buf			Buffer for workspace.
+* \param	bufLen			Buffer length.
+* \param	head			The Amira lattice header data
+*					structure.
+*/
+static WlzErrorNum WlzEffAmReadSeeds(FILE *fP, char *buf, const int bufLen,
+				     WlzEffAmHead *head)
+{
+
+  int		idN;
+  WlzEffAmToken	tok;
+  WlzErrorNum   errNum;
+  const char	tokSepWS[] = " \t\n";
+
+  errNum =  WlzEffAmReadAndCheckAToken(fP, tokSepWS, buf, bufLen, "{");
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    while((errNum == WLZ_ERR_NONE) && strcmp(buf, "}"))
+    {
+      idN = 0;
+      while((errNum == WLZ_ERR_NONE) && (idN++ < 8))
+      {
+        errNum = WlzEffAmReadAToken(fP, tokSepWS, buf, bufLen);
+      }
+    }
   }
   return(errNum);
 }
@@ -1469,7 +1539,8 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
 					WlzEffAmHead *head,
 					WlzErrorNum *dstErr)
 {
-  int		idx;
+  int		idx,
+  		empty = 0;
   WlzPixelV	thrV;
   WlzObject	*tObj0 = NULL,
   		*tObj1 = NULL,
@@ -1478,10 +1549,14 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
   WlzEffAmMaterial *mat;
   WlzPropertyList *pList = NULL;
   WlzCompoundArray *aObj = NULL;
-  WlzValues	dValues;
+  WlzDomain	nullDom;
+  WlzValues	dValues,
+  		nullVal;
   WlzErrorNum errNum = WLZ_ERR_NONE;
 
   idx = 0;
+  nullDom.core = NULL;
+  nullVal.core = NULL;
   dValues.core = NULL;
   mat = head->materials;
   thrV.type = WLZ_GREY_INT;
@@ -1493,41 +1568,54 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
   {
     thrV.v.inv = mat->id + 1;
     pList = WlzEffAmMakeMaterialPropList(mat, &errNum);
-    if(errNum == WLZ_ERR_NONE)
+    if(empty)
     {
-      if(idx == 0)
+      tObj3 = WlzMakeMain(WLZ_EMPTY_OBJ, nullDom, nullVal, pList,
+      			  NULL, &errNum);
+      
+    }
+    else
+    {
+      if(errNum == WLZ_ERR_NONE)
       {
-        tObj1 = WlzAssignObject(
-		WlzThreshold(gObj, thrV, WLZ_THRESH_HIGH, &errNum), NULL);
-	if(errNum == WLZ_ERR_NONE)
+	if(idx == 0)
 	{
-	  tObj2 = WlzDiffDomain(gObj, tObj1, &errNum);
+	  tObj1 = WlzAssignObject(
+		  WlzThreshold(gObj, thrV, WLZ_THRESH_HIGH, &errNum), NULL);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    tObj2 = WlzDiffDomain(gObj, tObj1, &errNum);
+	  }
+	}
+	else
+	{
+	  tObj1 = WlzAssignObject(
+		  WlzThreshold(tObj0, thrV, WLZ_THRESH_HIGH, &errNum), NULL);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    tObj2 = WlzDiffDomain(tObj0, tObj1, &errNum);
+	  }
 	}
       }
-      else
+      if(errNum == WLZ_ERR_NONE)
       {
-        tObj1 = WlzAssignObject(
-		WlzThreshold(tObj0, thrV, WLZ_THRESH_HIGH, &errNum), NULL);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  tObj2 = WlzDiffDomain(tObj0, tObj1, &errNum);
-	}
+	tObj3 = WlzMakeMain(WLZ_3D_DOMAINOBJ, tObj2->domain,
+			    dValues, pList, NULL, &errNum);
       }
+      (void )WlzFreeObj(tObj2); tObj2 = NULL;
+      (void )WlzFreeObj(tObj0);
+      tObj0 = tObj1;
+      if(errNum == WLZ_ERR_NONE)
+      {
+	empty = WlzIsEmpty(tObj0, &errNum);
+      }
+      tObj1 = NULL;
     }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      tObj3 = WlzMakeMain(WLZ_3D_DOMAINOBJ, tObj2->domain,
-			  dValues, pList, NULL, &errNum);
-    }
-    (void )WlzFreeObj(tObj2); tObj2 = NULL;
     if(errNum == WLZ_ERR_NONE)
     {
       aObj->o[idx] = WlzAssignObject(tObj3, NULL);
     }
     ++idx;
-    (void )WlzFreeObj(tObj0);
-    tObj0 = tObj1;
-    tObj1 = NULL;
     mat = mat->next;
   }
   (void )WlzFreeObj(tObj1);
