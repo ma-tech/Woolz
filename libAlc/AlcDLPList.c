@@ -552,7 +552,7 @@ static void	AlcDLPListSortPv(AlcDLPItem *low, AlcDLPItem *high,
 }
 
 /*!
-* \return:	Number of items in list. This is always >= 0.
+* \return	Number of items in list. This is always >= 0.
 * \ingroup	AlcDLPList
 * \brief	Returns the number of items in the list.
 * \param	list 			The list data structure.
