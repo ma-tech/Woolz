@@ -1062,7 +1062,7 @@ int		WlzMeshElemNodeIdxFromNodeIdx(int *nodes, int mNodId)
 * 		exists) share given nodes, or -1 if both nodes not shared with
 * 		the element.
 * \ingroup	WlzTransform
-* \brief	Finds which neighbour of the given element whould share
+* \brief	Finds which neighbour of the given element would share
 *		the nodes has the given pair of nodes.
 * \param	elm			Mesh element.
 * \param	nodId0			First node.
