@@ -14,6 +14,8 @@
 * Purpose:      C pre-processor directives, eg macros.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 13-03-01 bill Added WLZ_SIGN(), WLZ_VTX_2_SIGN(), WLZ_VTX_3_SIGN(),
+		WLZ_VTX_2_ABS() and WLZ_VTX_3_ABS().
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -27,6 +29,7 @@ extern "C" {
 #define	WLZ_MIN(X,Y)	(((X)<=(Y))?(X):(Y))
 #define	WLZ_ABS(X)	(((X)>0)?(X):(-(X)))
 #define	WLZ_NINT(X)	((int)(((X)<0)?((X)-(0.5)):((X)+(0.5))))
+#define	WLZ_SIGN(X)	(((X)<0)?-1:((X)>0)?1:0)
 
 /************************************************************************
 * Pixel value clamping. Used in WlzGreyScan() and WlzConvertPix().	*
@@ -69,7 +72,25 @@ extern "C" {
 /************************************************************************
 * Vertex macros.							*
 ************************************************************************/
-/* WLZ_VTX_2_SET: Set Wlz[DFI]Vertex */
+/* WLZ_VTX_2_ABS: Absolute value of a Wlz[DFI]Vertex2 */
+#define WLZ_VTX_2_ABS(A,X) \
+		(A).vtX = WLZ_ABS((X).vtX), \
+		(A).vtY = WLZ_ABS((X).vtY)
+/* WLZ_VTX_3_ABS: Absolute value of a Wlz[DFI]Vertex3 */
+#define WLZ_VTX_3_ABS(A,X) \
+		(A).vtX = WLZ_ABS((X).vtX), \
+		(A).vtY = WLZ_ABS((X).vtY), \
+		(A).vtZ = WLZ_ABS((X).vtZ)
+/* WLZ_VTX_2_SIGN: Sign of a Wlz[DFI]Vertex2 */
+#define WLZ_VTX_2_SIGN(S,X) \
+		(S).vtX = WLZ_SIGN((X).vtX), \
+		(S).vtY = WLZ_SIGN((X).vtY)
+/* WLZ_VTX_3_SIGN: Sign of a Wlz[DFI]Vertex3 */
+#define WLZ_VTX_3_SIGN(S,X) \
+		(S).vtX = WLZ_SIGN((X).vtX), \
+		(S).vtY = WLZ_SIGN((X).vtY), \
+		(S).vtZ = WLZ_SIGN((X).vtZ)
+/* WLZ_VTX_2_SET: Set Wlz[DFI]Vertex2 */
 #define WLZ_VTX_2_SET(U,X,Y) \
 		(U).vtX = (X), \
 		(U).vtY = (Y)
@@ -80,7 +101,7 @@ extern "C" {
 		(U).vtY = (Y), \
 		(U).vtZ = (Z)
 
-/* WLZ_VTX_2_ADD: Add two Wlz[DFI]Vertex's */
+/* WLZ_VTX_2_ADD: Add two Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_ADD(U,V,W) \
 		(U).vtX = (V).vtX + (W).vtX, \
 		(U).vtY = (V).vtY + (W).vtY
@@ -91,7 +112,7 @@ extern "C" {
 		(U).vtY = (V).vtY + (W).vtY, \
 		(U).vtZ = (V).vtZ + (W).vtZ
 
-/* WLZ_VTX_2_ADD: Add three Wlz[DFI]Vertex's */
+/* WLZ_VTX_2_ADD: Add three Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_ADD3(U,V,W,X) \
 		(U).vtX = (V).vtX + (W).vtX + (X).vtX, \
 		(U).vtY = (V).vtY + (W).vtY + (X).vtY
@@ -102,7 +123,7 @@ extern "C" {
 		(U).vtY = (V).vtY + (W).vtY + (X).vtY, \
 		(U).vtZ = (V).vtZ + (W).vtZ + (X).vtZ
 
-/* WLZ_VTX_2_SUB: Subtract two Wlz[DFI]Vertex's */
+/* WLZ_VTX_2_SUB: Subtract two Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_SUB(U,V,W) \
 		(U).vtX = (V).vtX - (W).vtX, \
 		(U).vtY = (V).vtY - (W).vtY
@@ -113,7 +134,7 @@ extern "C" {
 		(U).vtY = (V).vtY - (W).vtY, \
 		(U).vtZ = (V).vtZ - (W).vtZ
 
-/* WLZ_VTX_2_SCALE: Scale a Wlz[DFI]Vertex */
+/* WLZ_VTX_2_SCALE: Scale a Wlz[DFI]Vertex2 */
 #define WLZ_VTX_2_SCALE(U,V,C) \
 		(U).vtX = (V).vtX * (C), \
 		(U).vtY = (V).vtY * (C)
@@ -124,7 +145,7 @@ extern "C" {
 		(U).vtY = (V).vtY * (C), \
 		(U).vtZ = (V).vtZ * (C)
 
-/* WLZ_VTX_2_DOT: Dot (scalar) product of two Wlz[DFI]Vertex's */
+/* WLZ_VTX_2_DOT: Dot (scalar) product of two Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_DOT(V,W) \
 		((V).vtX * ((W).vtX) + \
 		((V).vtY *  (W).vtY))
@@ -141,7 +162,7 @@ extern "C" {
 		(U).vtY = ((V).vtZ * (W).vtX) - ((W).vtZ * (V).vtX), \
 		(U).vtZ = ((V).vtX * (W).vtY) - ((W).vtX * (V).vtY)
 
-/* WLZ_VTX_2_LENGTH: Square of length of a Wlz[DFI]Vertex */
+/* WLZ_VTX_2_LENGTH: Square of length of a Wlz[DFI]Vertex2 */
 #define WLZ_VTX_2_SQRLEN(U) \
 		(((U).vtX * (U).vtX) + \
 		 ((U).vtY * (U).vtY))
@@ -152,7 +173,7 @@ extern "C" {
 		 ((U).vtY * (U).vtY) + \
 		 ((U).vtZ * (U).vtZ))
 
-/* WLZ_VTX_2_LENGTH: Length of a Wlz[DFI]Vertex */
+/* WLZ_VTX_2_LENGTH: Length of a Wlz[DFI]Vertex2 */
 #define WLZ_VTX_2_LENGTH(U) \
 		(sqrt(WLZ_VTX_2_SQRLEN(U)))
 
