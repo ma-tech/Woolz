@@ -79,7 +79,7 @@ int		WlzGMModelSpxStats(WlzGMModel *model,
       case WLZ_GMMOD_2D:
       case WLZ_GMMOD_2N:
         vec = model->res.edge.vec;
-	while(cnt < model->res.edgeT.numIdx)
+	while(cnt < model->res.edge.numIdx)
 	{
 	  edge = (WlzGMEdge *)AlcVectorItemGet(vec, cnt);
 	  if(edge && (edge->idx >= 0))
