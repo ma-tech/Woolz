@@ -4,14 +4,16 @@ import zoom.*;
 import java.util.EventObject;
 
 /**
- * Event class for Zoom bean.
+ * Event class for Zoom.
+ * Created when Zoom model's limits are changed.
  * @author Nick Burton
+ * @see ZoomModel Zoom
  */
 public class LimitEvent extends EventObject {
 
 //----------------------------------------------------
   /**
-   * Constructor
+   * 
    */
    public LimitEvent(Object source) {
       super(source);

@@ -11,8 +11,8 @@ import java.io.*;
 import java.net.*;
 
 /**
- * GUI super class for Zoom.
- * <br>Separates out the GUI stuff for tidiness and JBuilder woossies
+ * Super class for Zoom.
+ * <br>Separates out the GUI stuff for compatibility with JBuilder.
  * @author Nick Burton
  * @see Zoom
  */
@@ -62,7 +62,7 @@ public class ZoomGUI extends JComponent
    //....................................
 
    /**
-    * Constructor
+    * 
     */
    public ZoomGUI() {
       initGUI();
@@ -158,7 +158,7 @@ public class ZoomGUI extends JComponent
    } // initGUI
 
 //.....................................
-// the following are required for setting the bean properties
+// the following are required for setting the Zoom properties
 //.....................................
    public void setLabelWidth(int w) {
       _labelWidth = w;
