@@ -701,15 +701,15 @@ static WlzDBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
     {
       bBox3D.zMin = tBox3D.zMin;
     }
-    if(tBox3D.xMax < bBox3D.xMax)
+    if(tBox3D.xMax > bBox3D.xMax)
     {
       bBox3D.xMax = tBox3D.xMax;
     }
-    if(tBox3D.yMax < bBox3D.yMax)
+    if(tBox3D.yMax > bBox3D.yMax)
     {
       bBox3D.yMax = tBox3D.yMax;
     }
-    if(tBox3D.zMax < bBox3D.zMax)
+    if(tBox3D.zMax > bBox3D.zMax)
     {
       bBox3D.zMax = tBox3D.zMax;
     }
@@ -751,7 +751,7 @@ static WlzDBox3 WlzBoundingBoxContour3D(WlzContour *ctr, WlzErrorNum *dstErr)
     errNum = WlzGMShellGetGBB3D(shell0, &bBox3D);
     while((errNum == WLZ_ERR_NONE) && (shell1->idx != shell0->idx))
     {
-      if((errNum = WlzGMShellGetGBB3D(shell0, &sBox3D)) == WLZ_ERR_NONE)
+      if((errNum = WlzGMShellGetGBB3D(shell1, &sBox3D)) == WLZ_ERR_NONE)
       {
 	if(sBox3D.xMin < bBox3D.xMin)
 	{
@@ -765,15 +765,15 @@ static WlzDBox3 WlzBoundingBoxContour3D(WlzContour *ctr, WlzErrorNum *dstErr)
 	{
 	  bBox3D.zMin = sBox3D.zMin;
 	}
-	if(sBox3D.xMax < bBox3D.xMax)
+	if(sBox3D.xMax > bBox3D.xMax)
 	{
 	  bBox3D.xMax = sBox3D.xMax;
 	}
-	if(sBox3D.yMax < bBox3D.yMax)
+	if(sBox3D.yMax > bBox3D.yMax)
 	{
 	  bBox3D.yMax = sBox3D.yMax;
 	}
-	if(sBox3D.zMax < bBox3D.zMax)
+	if(sBox3D.zMax > bBox3D.zMax)
 	{
 	  bBox3D.zMax = sBox3D.zMax;
 	}
