@@ -77,6 +77,9 @@ public class WlzObjModel implements WlzObjectType {
       }
    }
 
+   public void setWlzObj(WlzObject object){
+     this._obj = object;
+   }
 //----------------------------------------------
    public void setWlzObj(File imgFile) {
 
@@ -123,7 +126,7 @@ public class WlzObjModel implements WlzObjectType {
 	      WlzInterpolationType.WLZ_INTERPOLATION_NEAREST);
 
 	 if(ret != null) {
-	    
+
 	 }
       }
       catch (WlzException e) {
