@@ -29,7 +29,6 @@ PROTOTYPES		=
 DLLENTRY		= dll_entry
 DLLLIBDEPS		= Wlz_dll Alg_dll Alc_dll cygwin kernel32
 
-
 # Names of executables to be built (modify as required).
 EXECUTABLES		=
 
@@ -99,9 +98,17 @@ clean:
 			$(DLLARCHIVE) $(DLLBASE) \
 			$(DLLEXP) $(DLLDEF) *~
 
-install_archive:	$(SOARCHIVE)
+install_archive:	$(ARCHIVE)
+			$(INSTALL) -o $(OWNER) -m 644 $(ARCHIVE) \
+			$(HGU_LIB_DIR)
+
+install_soarchive:	$(SOARCHIVE)
 			$(INSTALL) -o $(OWNER) -m 644 $(SOARCHIVE) \
-				   $(HGU_LIB_DIR)
+			$(HGU_LIB_DIR)
+			
+install_dll:		$(DLLARCHIVE)
+			$(INSTALL) -o $(OWNER) -m 755 $(DLLARCHIVE) \
+			$(HGU_BIN_DIR)
 
 archive:		$(ARCHIVE)
 
