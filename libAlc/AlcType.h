@@ -29,8 +29,9 @@ extern "C" {
 * \enum 	_AlcErrno
 * \brief	Error codes returned by functions of the
 *		memory allocation and fundamental type library.
+Typedef: ::AlcErrno
 */
-enum _AlcErrno
+typedef enum _AlcErrno
 {
   ALC_ER_NONE = 0,		/*!< Noe error */
   ALC_ER_ALLOC,			/*!< Memory allocation error */
@@ -39,8 +40,7 @@ enum _AlcErrno
   ALC_ER_PARAM,			/*!< Inappropriate function paramerter */
   ALC_ER_READ,			/*!< File read failure */
   ALC_ER_WRITE			/*!< File write failure */
-};
-typedef enum _AlcErrno AlcErrno;
+} AlcErrno;
 
 
 /*!
@@ -50,8 +50,9 @@ typedef enum _AlcErrno AlcErrno;
 *		of some data type. Useful for efficient memory allocation.
 *		It's not a stack but a doubly linked list of blocks of
 *		data which can be used as a stack, heap, list, ....
+Typedef: ::AlcBlockStack
 */
-struct _AlcBlockStack
+typedef struct _AlcBlockStack
 {
   int           elmCnt;		/*!< Number of elements used in block */
   int           maxElm;  	/*!< Number of elements space allocated for
@@ -60,30 +61,30 @@ struct _AlcBlockStack
   struct _AlcBlockStack *prev;  /*!< Previous block up in stack */
   struct _AlcBlockStack *next;  /*!< Next block down, remember it's a
   				     doubly linked list not a stack! */
-};
-typedef struct _AlcBlockStack AlcBlockStack;
+} AlcBlockStack;
 
 /*!
 * \enum 	_AlcDirection
 * \ingroup	AlcBlockStack
 * \brief	Data structure traversal direction.
+Typedef: ::AlcDirection
 */
-enum _AlcDirection
+typedef enum _AlcDirection
 {
   ALC_DIRECTION_FWD,	        /*!< Towards end of a data structure,
   				     eg the tail of a list */
   ALC_DIRECTION_REV		/*!< Towards begining of a data structure,
   				     eg the head of a list */
-};
-typedef enum _AlcDirection AlcDirection;
+} AlcDirection;
 
 
 /*!
 * \struct	_AlcDLPItem
 * \ingroup	AlcDLPList
 * \brief	A doubly linked list item.
+Typedef: ::AlcDLPItem
 */
-struct _AlcDLPItem
+typedef struct _AlcDLPItem
 {
   void          (*freeFn)(void *); /*!< Function to free list item, may be
   					NULL */
@@ -92,27 +93,27 @@ struct _AlcDLPItem
   				     tail of the list*/
   struct _AlcDLPItem *prev;     /*!< The previous item in the list, towards
   				     the head of the list */
-};
-typedef  struct _AlcDLPItem AlcDLPItem;
+} AlcDLPItem;
 
 /*!
 * \struct	_AlcDLPList
 * \ingroup	AlcDLPList
 * \brief	A doubly linked list of pointers.
+Typedef: ::AlcDLPList
 */
-struct _AlcDLPList
+typedef struct _AlcDLPList
 {
   AlcDLPItem *head;	    	/*!< The head of the list */
-};
-typedef struct _AlcDLPList AlcDLPList;
+} AlcDLPList;
 
 
 /*!
 * \struct	_AlcHashItem
 * \ingroup	AlcHashTable
 * \brief	A hash table item.
+Typedef: ::AlcHashItem
 */
-struct _AlcHashItem
+typedef struct _AlcHashItem
 {
   void		(*freeFn)(void *); /*!< Function to free the hash item, may
   					be NULL */
@@ -122,23 +123,22 @@ struct _AlcHashItem
   				     NULL if this is the last item */
   struct _AlcHashItem *prev; 	/*!< Previous item in the hash tables linked
   				     list, NULL if this is thefirst item */
-};
-typedef struct _AlcHashItem AlcHashItem;
+} AlcHashItem;
 
 /*!
 * \struct	_AlcHashTable
 * \ingroup	AlcHashTable
 * \brief	A hash table.
+Typedef: ::AlcHashTable
 */
-struct _AlcHashTable
+typedef struct _AlcHashTable
 {
   int		(*keyCmp)(void *, void *); /*!< Key comparison function */
   unsigned	(*hashFn)(void *);         /*!< The hashing function */
   int		tableSz;		   /*!< Number of list slots in the
   						hash table */
   AlcHashItem	**table;		   /*!< Table of lists */
-};
-typedef struct _AlcHashTable AlcHashTable;
+} AlcHashTable;
 
 
 
@@ -146,8 +146,9 @@ typedef struct _AlcHashTable AlcHashTable;
 * \struct	_AlcVector
 * \ingroup      AlcVector
 * \brief	An extensible 1D array.
+Typedef: ::AlcVector
 */
-struct _AlcVector
+typedef struct _AlcVector
 {
   unsigned int	elmSz;		/*!< Size of elements of the vector */
   unsigned int	blkCnt;		/*!< Number of block pointers */
@@ -156,41 +157,41 @@ struct _AlcVector
   				     changed once vector has been created! */
   void		*freeStack;	/*!< Free stack */
   void		**blocks;	/*!< Data blocks */
-};
-typedef struct _AlcVector AlcVector;
+} AlcVector;
 
 /*!
 * \enum		_AlcPointType
 * \brief	Type of coordinate point.
+Typedef: ::AlcPointType
 */
 
-enum _AlcPointType
+typedef enum _AlcPointType
 {
   ALC_POINTTYPE_INT,	    	/*!< Integer point */
   ALC_POINTTYPE_DBL		/*!< Double precision floating point point */
-};
-typedef enum _AlcPointType AlcPointType;
+} AlcPointType;
 
 /*!
 * \union	_AlcPointP
 * \brief	Pointer to a generic coordinate.
+Typedef: ::AlcPointP
 */
-union _AlcPointP
+typedef union _AlcPointP
 {
   void		*kV;   		/*!< Pointer to any point */
   int		*kI;		/*!< Pointer to an integer point */
   double	*kD;	     	/*!< Pointer to a double precision floating
   				     point point */
-};
-typedef union _AlcPointP AlcPointP;
+} AlcPointP;
 
 
 /*!
 * \struct	_AlcKDTNode
 * \ingroup	AlcKDTree
 * \brief	A node in a binary space partition tree (kD-tree).
+Typedef: ::AlcKDTNode
 */
-struct _AlcKDTNode
+typedef struct _AlcKDTNode
 {
   int		idx;		/*!< Index or identifier for the node */
   int		split;  	/*!< The splitting dimension */
@@ -203,15 +204,15 @@ struct _AlcKDTNode
   				     values */
   AlcPointP	boundP; 	/*!< Coordinate of the maximum bounding box
   				     values */
-};
-typedef struct _AlcKDTNode AlcKDTNode;
+} AlcKDTNode;
 
 /*!
 * \struct	_AlcKDTTree
 * \ingroup	AlcKDTree
 * \brief	A binary space partition tree (kD-tree).
+Typedef: ::AlcKDTTree
 */
-struct _AlcKDTTree
+typedef struct _AlcKDTTree
 {
    AlcPointType	type;		/*!< The type of tree, ie the type of node
    				     key */
@@ -224,8 +225,7 @@ struct _AlcKDTTree
   struct _AlcKDTNode *nodeStack; /*!< Stack of nodes available for use */
   int		nodeBlockSz; 	/*!< Number of nodes allocated in a block */
   AlcBlockStack *freeStack;	/*!< Stack of allocated node blocks */
-};
-typedef struct _AlcKDTTree AlcKDTTree;
+} AlcKDTTree;
 
 #ifdef __cplusplus
 }					       /* Close scope of 'extern "C" */
