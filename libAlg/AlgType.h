@@ -16,7 +16,6 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      Alg
 * \brief        Type definitions for the MRC HGU numerical algorithm
-* 		Typedef: ::
 *               library.
 * \todo         -
 * \bug          None known.
