@@ -26,6 +26,7 @@ EXECUTABLES		= \
 			Wlz3DGetSection \
 			Wlz3DViewTransformObj \
 			Wlz3DViewTransformBitmap \
+			WlzBibTransAbsRel \
 			WlzExtractTransform \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
@@ -48,6 +49,7 @@ CSOURCES		= \
 			Wlz3DGetSection.c \
 			Wlz3DViewTransformObj.c \
 			Wlz3DViewTransformBitmap.c \
+			WlzExtractTransform.c \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
