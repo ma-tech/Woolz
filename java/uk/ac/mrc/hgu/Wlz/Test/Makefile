@@ -23,6 +23,7 @@ JAVASOURCES		= \
 			  WlzBoundingBoxIntersection.java \
 			  WlzDitherViewer.java \
 			  WlzFacts.java \
+			  WlzExtFFFacts.java \
 			  WlzGetBackground.java \
 			  WlzGreyStats.java \
 			  WlzArrayViewer.java \
