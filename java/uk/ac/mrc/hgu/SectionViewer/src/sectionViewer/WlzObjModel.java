@@ -205,7 +205,7 @@ public class WlzObjModel implements WlzObjectType {
 	 obj1 = WlzObject.WlzIntersect2(obj,constraint);
 	 /* WLZ_EMPTY_OBJ = 127 */
 	 if(obj1 != null) {
-	    ret = WlzObject.WlzSetGreyValues(obj1, obj);
+	    ret = WlzObject.WlzBndSetGreyValues(obj1, obj);
 	 } else {
 	    System.err.println("constrain ... obj1 == null");
 	 }
