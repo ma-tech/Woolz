@@ -473,7 +473,7 @@ public class ViewStructModel implements WlzObjectType {
      WlzAffineTransform trans = null;
 
      try {
-       trans = _obj.WlzGetAffineTransform(_VS);
+       trans = _obj.WlzBndGetAffineTransform(_VS);
        if(trans == null) return null;
        ret = _obj.WlzAffineTransformInverse(trans);
      } catch (Exception e) {
@@ -499,7 +499,7 @@ public class ViewStructModel implements WlzObjectType {
      size[0] = null;
 
      try {
-        _obj.WlzGetTransformMatrix(size, mat, trans);
+        _obj.WlzBndGetTransformMatrix(size, mat, trans);
      }
      catch(WlzException e) {
         System.out.println("WlzErr getting transform matrix");

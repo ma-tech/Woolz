@@ -61,18 +61,18 @@ public class SectionViewer
 
   private boolean _anatomy; // for mouse click anatomy
   private boolean _thresholding;
-  protected boolean _fixedLineRotation;
+  private boolean _fixedLineRotation;
   private boolean _threshConstraint;
   protected boolean _fixedPoint = false;
-  protected boolean _axisPoint = false;
+  private boolean _axisPoint = false;
   private boolean _setFixedPoint = false;
-  protected boolean _setAxisPoint = false;
+  private boolean _setAxisPoint = false;
   private boolean _showStdCntrls = false;
   private boolean _showUsrCntrls = false;
   private boolean _showIntersection = false;
   private boolean _openingView = false;
   private boolean _inverted = false;
-  protected boolean _drawfixLine = false;
+  public boolean _drawfixLine = false; /* for tie point application */
 
   fileMenuHandler handler_1 = null;
   controlMenuHandler handler_2 = null;
@@ -665,7 +665,7 @@ public class SectionViewer
             arr[i].getObj(),
             _VSModel.getViewStruct());
         if (obj2D[i] != null) {
-          if (WlzObject.WlzObjGetType(obj2D[i]) ==
+          if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
               WlzObjectType.WLZ_EMPTY_OBJ) {
             obj2D[i] = null;
           }
@@ -1002,11 +1002,13 @@ public class SectionViewer
 
 //-------------------------
   protected void doShowFixedLine() {
-_drawfixLine = true;
+
      double dist[] = new double[1];
      double pt3d[] = new double[3];
 
      int intersect = -1;
+
+     _drawfixLine = true;
 
      if (_imgV == null)
         return;
@@ -1014,7 +1016,7 @@ _drawfixLine = true;
         return;
 
      _VSModel.getDist(dist);
-     /*
+     /* 
       * assumes that fixed line will be set in the same plane
       * as the fixed point
       */
@@ -1933,7 +1935,7 @@ _drawfixLine = true;
      double arg = 0.0;
      double angle = 0.0;
 
-     double x = 0.0;
+     double x = 0.0; 
      double y = 0.0;
      double z = 0.0;
      double s = 0.0;
@@ -1985,9 +1987,9 @@ _drawfixLine = true;
 
      trans = _VSModel.getInverseTransform();
 
-     transMatrix = _VSModel.getTransMatrix(trans);
+     transMatrix = _VSModel.getTransMatrix(trans); 
      /*
-     if(transMatrix[0] != null){
+     if(transMatrix[0] != null){ 
         System.out.println(" got transform matrix");
 	//printMatrix(transMatrix[0]);
      } else {
@@ -2526,8 +2528,8 @@ _drawfixLine = true;
           if (src.isSelected()) {
             _axisPoint = true;
             doShowFixedLine();
-            revalidate();
-            _bigPanel.repaint();
+      revalidate();
+      _bigPanel.repaint();
             //_imgV.repaint();
           }
           else {
@@ -3102,7 +3104,7 @@ _drawfixLine = true;
                   arr[i].getObj(),
                   VS);
               if (obj2D[i] != null) {
-                if (WlzObject.WlzObjGetType(obj2D[i]) ==
+                if (WlzObject.WlzBndObjGetType(obj2D[i]) ==
                     WlzObjectType.WLZ_EMPTY_OBJ) {
                   obj2D[i] = null;
                 }
