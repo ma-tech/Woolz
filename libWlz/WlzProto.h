@@ -1965,6 +1965,9 @@ extern int			WlzGetPlaneDomainLine1(WlzObject *obj);
 extern int			WlzGetPlaneDomainLastLn(WlzObject *obj);
 extern int			WlzGetPlaneDomainKol1(WlzObject *obj);
 extern int			WlzGetPlaneDomainLastKl(WlzObject *obj);
+extern WlzObject	       *WlzSetGreyValues(WlzObject *domainObj,
+						WlzObject *valuesObj,
+						WlzErrorNum *dstErr);
 
 /************************************************************************
 * "THE BEAST" - WlzLabel.c						*
