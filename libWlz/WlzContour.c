@@ -183,7 +183,8 @@ static WlzErrorNum	WlzContourGrdLink3D(
 * Purpose:	Creates a contour (list of connected edges or surface
 *		patches) from a Woolz object with values using a
 *		maximal gradient algorithm and retains the
-*		gradient vectors.
+*		gradient vectors. The gradient vectors are only valid
+*		for valid vertex indicies and do not have unit length.
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
