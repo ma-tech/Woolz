@@ -44,6 +44,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "wlz", WLZEFF_FORMAT_WLZ,
 			 "ipl", WLZEFF_FORMAT_IPL,
 			 "tif", WLZEFF_FORMAT_TIFF,
+			 "raw", WLZEFF_FORMAT_RAW,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -75,6 +76,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 			 "Woolz", WLZEFF_FORMAT_WLZ,
 			 "IPLab", WLZEFF_FORMAT_IPL,
 			 "Tiff", WLZEFF_FORMAT_TIFF,
+			 "Raw", WLZEFF_FORMAT_RAW,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -120,7 +122,9 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*extIPLStr = "ipl",
 		*fmtIPLStr = "IPLab",
 		*extTiffStr = "tif",
-		*fmtTiffStr = "Tiff";
+		*fmtTiffStr = "Tiff",
+		*extRawStr = "raw",
+		*fmtRawStr = "Raw";
 
   switch(fileFmt)
   {
@@ -163,6 +167,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_IPL:
       fmtStr = fmtIPLStr;
       extStr = extIPLStr;
+      break;
+    case WLZEFF_FORMAT_RAW:
+      fmtStr = fmtRawStr;
+      extStr = extRawStr;
       break;
   }
   if(dstExtStr)

@@ -94,9 +94,9 @@ WlzObject	*WlzEffReadObjTiff(
       }
       else {
 	depth = 16;
-	wlzDepth = sizeof(short);
-	newpixtype = WLZ_GREY_SHORT;
-	bckgrnd.v.shv = 0;
+	wlzDepth = sizeof(int);
+	newpixtype = WLZ_GREY_INT;
+	bckgrnd.v.inv = 0;
       }
       break;
 
@@ -243,7 +243,7 @@ WlzObject	*WlzEffReadObjTiff(
 	  break;
 	case 16:
 	  for (col = 0; col < width; col++, offset++){
-	    wlzData.shp[offset] = (inp[0]<<8) | (inp[1]);
+	    wlzData.inp[offset] = (inp[0]<<8) | (inp[1]);
 	    inp += 2;
 	  }
 	  break;
