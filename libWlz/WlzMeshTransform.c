@@ -1523,7 +1523,7 @@ static WlzMeshTransform *WlzMeshFromObjGrad(WlzObject *srcObj,
 		*thrObjMin = NULL,
 		*thrObjMax = NULL;
   WlzMeshTransform *mesh = NULL;
-  WlzIVertex2	ssSzMin,
+  WlzIVertex3	ssSzMin,
   		ssSzMax;
   WlzDVertex2	scale;
   WlzPixelV	minV,

@@ -1827,7 +1827,7 @@ extern WlzObject		*WlzRsvFilterObj(
 ************************************************************************/
 extern WlzObject 		*WlzSampleObj(
 				  WlzObject *srcObj,
-				  WlzIVertex2 samFac,
+				  WlzIVertex3 samFac,
 				  WlzSampleFn samFn,
 				  WlzErrorNum *dstErr);
 
