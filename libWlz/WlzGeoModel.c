@@ -1792,7 +1792,6 @@ static WlzErrorNum WlzGMModelDeleteE2D(WlzGMModel *model, WlzGMEdge *dE)
       errNum = WlzGMModelDeleteE2D2V2L(model, dE);
       break;
   }
-#define WLZ_GM_DEBUG_DELETE_E_2D /* HACK */
 #ifdef WLZ_GM_DEBUG_DELETE_E_2D
   if(errNum == WLZ_ERR_NONE)
   {
@@ -8870,138 +8869,142 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
     {0, 1, 2}, /* 7 */
   };
 
-  for(idx0 = 0; idx0 < 3; ++idx0)
+  if(WlzGeomTriangleArea2Sq3(*(pos + 0), *(pos + 1),
+                             *(pos + 2)) > WLZ_GM_TOLERANCE_SQ)
   {
-    matchV[idx0] = WlzGMModelMatchVertexG3D(model, *(pos + idx0));
-  }
-  matchCode = ((matchV[2] != NULL) << 2) |
-  	      ((matchV[1] != NULL) << 1) | (matchV[0] != NULL);
-  switch(bitCntTb[matchCode])
-  {
-    case 0:
-      /* No verticies matched, construct a new shell. */
-      errNum = WlzGMModelConstructNewS3D(model, &nF,  pos);
-      break;
-    case 1:
-      /* Single vertex matched, extend existing shell. */
-      idx0 = matchVtxIdx[matchCode][0];
-      idx1 = matchVtxIdx[matchCode][1];
-      idx2 = matchVtxIdx[matchCode][2];
-      errNum = WlzGMModelExtend1V0E1S3D(model, &nF,  matchV[idx0],
-				        *(pos + idx1), *(pos + idx2));
-      break;
-    case 2:
-      /* Two verticies matched, check for existing edges and shells. */
-      idx0 = matchVtxIdx[matchCode][0];
-      idx1 = matchVtxIdx[matchCode][1];
-      idx2 = matchVtxIdx[matchCode][2];
-      if(WlzGMVertexCommonShell(matchV[idx0], matchV[idx1]) != NULL)
-      {
-        if((cE[0] = WlzGMVertexCommonEdge(matchV[idx0],
-				          matchV[idx1])) != NULL)
+    for(idx0 = 0; idx0 < 3; ++idx0)
+    {
+      matchV[idx0] = WlzGMModelMatchVertexG3D(model, *(pos + idx0));
+    }
+    matchCode = ((matchV[2] != NULL) << 2) |
+		((matchV[1] != NULL) << 1) | (matchV[0] != NULL);
+    switch(bitCntTb[matchCode])
+    {
+      case 0:
+	/* No verticies matched, construct a new shell. */
+	errNum = WlzGMModelConstructNewS3D(model, &nF,  pos);
+	break;
+      case 1:
+	/* Single vertex matched, extend existing shell. */
+	idx0 = matchVtxIdx[matchCode][0];
+	idx1 = matchVtxIdx[matchCode][1];
+	idx2 = matchVtxIdx[matchCode][2];
+	errNum = WlzGMModelExtend1V0E1S3D(model, &nF,  matchV[idx0],
+					  *(pos + idx1), *(pos + idx2));
+	break;
+      case 2:
+	/* Two verticies matched, check for existing edges and shells. */
+	idx0 = matchVtxIdx[matchCode][0];
+	idx1 = matchVtxIdx[matchCode][1];
+	idx2 = matchVtxIdx[matchCode][2];
+	if(WlzGMVertexCommonShell(matchV[idx0], matchV[idx1]) != NULL)
 	{
-	  /* Matched 2 verticies connected by an edge. */
-	  errNum = WlzGMModelExtend2V1E1S3D(model, &nF, cE[0], *(pos + idx2));
-	}
-	else
-	{
-	  /* Matched 2 verticies in same shell but not connected by an edge. */
-	  errNum = WlzGMModelExtend2V0E1S3D(model, &nF,
-	  				    matchV[idx0], matchV[idx1],
-					    *(pos + idx2));
-	}
-      }
-      else
-      {
-	/* Matched 2 verticies in different shells. */
-	errNum = WlzGMModelJoin2V0E0S3D(model, &nF, matchV[idx0], matchV[idx1],
-					*(pos + idx2));
-      }
-      break;
-    case 3:
-      /* Three verticies matched, count existing edges and shells which use
-       * these verticies. */
-      edgeCnt = ((cE[0] = WlzGMVertexCommonEdge(matchV[0],
-      						matchV[1])) != NULL) +
-		((cE[1] = WlzGMVertexCommonEdge(matchV[1],
-						matchV[2])) != NULL) +
-		((cE[2] = WlzGMVertexCommonEdge(matchV[2],
-						matchV[0])) != NULL);
-      idx0 = (WlzGMVertexGetShell(matchV[0]))->idx;
-      idx1 = (WlzGMVertexGetShell(matchV[1]))->idx;
-      idx2 = (WlzGMVertexGetShell(matchV[2]))->idx;
-      if((idx0 != idx1) && (idx1 != idx2) && (idx2 != idx0))
-      {
-        shellCnt = 3;
-      }
-      else if((idx0 == idx1) && (idx1 == idx2) && (idx2 == idx0))
-      {
-        shellCnt = 1;
-      }
-      else
-      {
-        shellCnt = 2;
-      }
-      switch(edgeCnt)
-      {
-        case 0:
-	  switch(shellCnt)
+	  if((cE[0] = WlzGMVertexCommonEdge(matchV[idx0],
+					    matchV[idx1])) != NULL)
 	  {
-	    case 1:
-	      /* All 3 matched verticies share the same shell but there
-	       * are no common edges between the 3 verticies. */
-	      errNum = WlzGMModelExtend3V0E1S3D(model, &nF, matchV);
-	      break;
-	    case 2: /* 3V0E2S */
-	      /* Two of the 3 matched verticies share the same shell but
-	       * there is no common edge between any of the matched
-	       * verticies. */
-	      errNum = WlzGMModelJoin3V0E2S3D(model, &nF, matchV);
-	      break;
-	    case 3: /* 3V0E3S */
-	      /* All 3 verticies are in different shells and there are
-	       * no common edges between any of the matched verticies. */
-	      errNum = WlzGMModelJoin3V0E3S3D(model, &nF, matchV);
-	      break;
-	  }
-	  break;
-	case 1:
-	  idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
-	  	 ((cE[2] != NULL) << 2);
-	  idx0 = firstCtgBitTb[idx2];
-	  idx1 = (idx0 + 2) % 3;
-	  if(shellCnt == 1)
-	  {
-	    /* Two of the 3 matched verticies are connected by a single edge,
-	     * all of the 3 are in a single shell. */
-	     errNum = WlzGMModelExtend3V1E1S3D(model, &nF,
-	     				       cE[idx0], matchV[idx1]);
+	    /* Matched 2 verticies connected by an edge. */
+	    errNum = WlzGMModelExtend2V1E1S3D(model, &nF, cE[0], *(pos + idx2));
 	  }
 	  else
 	  {
-	    /* Two of the 3 matched verticies are connected by a single edge,
-	     * the other vertex is in a different shell. */
-	     errNum = WlzGMModelJoin3V1E2S3D(model, &nF,
-	     				     cE[idx0], matchV[idx1]);
+	    /* Matched 2 verticies in same shell but not connected by an edge. */
+	    errNum = WlzGMModelExtend2V0E1S3D(model, &nF,
+					      matchV[idx0], matchV[idx1],
+					      *(pos + idx2));
 	  }
-	  break;
-	case 2:
-	  /* All 3 verticies share the same shell, and two pairs of verticies
-	   * are connected by edges. */
-	  idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
-	  	 ((cE[2] != NULL) << 2);
-	  idx0 = firstCtgBitTb[idx2];
-	  idx1 = (idx0 + 1) % 3;
-	  errNum = WlzGMModelExtend3V2E1S3D(model, &nF, cE[idx0], cE[idx1]);
-	  break;
-	case 3:
-          /* All three verticies and all three edges are within the model,
-	   * need to check if the three verticies are in a common loop and then
-	   * if ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
-	   * vertexT's. */
-	  errNum = WlzGMModelExtend3V3E1S3D(model, &nF, cE);
-	  break;
-      }
+	}
+	else
+	{
+	  /* Matched 2 verticies in different shells. */
+	  errNum = WlzGMModelJoin2V0E0S3D(model, &nF, matchV[idx0], matchV[idx1],
+					  *(pos + idx2));
+	}
+	break;
+      case 3:
+	/* Three verticies matched, count existing edges and shells which use
+	 * these verticies. */
+	edgeCnt = ((cE[0] = WlzGMVertexCommonEdge(matchV[0],
+						  matchV[1])) != NULL) +
+		  ((cE[1] = WlzGMVertexCommonEdge(matchV[1],
+						  matchV[2])) != NULL) +
+		  ((cE[2] = WlzGMVertexCommonEdge(matchV[2],
+						  matchV[0])) != NULL);
+	idx0 = (WlzGMVertexGetShell(matchV[0]))->idx;
+	idx1 = (WlzGMVertexGetShell(matchV[1]))->idx;
+	idx2 = (WlzGMVertexGetShell(matchV[2]))->idx;
+	if((idx0 != idx1) && (idx1 != idx2) && (idx2 != idx0))
+	{
+	  shellCnt = 3;
+	}
+	else if((idx0 == idx1) && (idx1 == idx2) && (idx2 == idx0))
+	{
+	  shellCnt = 1;
+	}
+	else
+	{
+	  shellCnt = 2;
+	}
+	switch(edgeCnt)
+	{
+	  case 0:
+	    switch(shellCnt)
+	    {
+	      case 1:
+		/* All 3 matched verticies share the same shell but there
+		 * are no common edges between the 3 verticies. */
+		errNum = WlzGMModelExtend3V0E1S3D(model, &nF, matchV);
+		break;
+	      case 2: /* 3V0E2S */
+		/* Two of the 3 matched verticies share the same shell but
+		 * there is no common edge between any of the matched
+		 * verticies. */
+		errNum = WlzGMModelJoin3V0E2S3D(model, &nF, matchV);
+		break;
+	      case 3: /* 3V0E3S */
+		/* All 3 verticies are in different shells and there are
+		 * no common edges between any of the matched verticies. */
+		errNum = WlzGMModelJoin3V0E3S3D(model, &nF, matchV);
+		break;
+	    }
+	    break;
+	  case 1:
+	    idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
+		   ((cE[2] != NULL) << 2);
+	    idx0 = firstCtgBitTb[idx2];
+	    idx1 = (idx0 + 2) % 3;
+	    if(shellCnt == 1)
+	    {
+	      /* Two of the 3 matched verticies are connected by a single edge,
+	       * all of the 3 are in a single shell. */
+	       errNum = WlzGMModelExtend3V1E1S3D(model, &nF,
+						 cE[idx0], matchV[idx1]);
+	    }
+	    else
+	    {
+	      /* Two of the 3 matched verticies are connected by a single edge,
+	       * the other vertex is in a different shell. */
+	       errNum = WlzGMModelJoin3V1E2S3D(model, &nF,
+					       cE[idx0], matchV[idx1]);
+	    }
+	    break;
+	  case 2:
+	    /* All 3 verticies share the same shell, and two pairs of verticies
+	     * are connected by edges. */
+	    idx2 = (cE[0] != NULL) | ((cE[1] != NULL) << 1) |
+		   ((cE[2] != NULL) << 2);
+	    idx0 = firstCtgBitTb[idx2];
+	    idx1 = (idx0 + 1) % 3;
+	    errNum = WlzGMModelExtend3V2E1S3D(model, &nF, cE[idx0], cE[idx1]);
+	    break;
+	  case 3:
+	    /* All three verticies and all three edges are within the model,
+	     * need to check if the three verticies are in a common loop and then
+	     * if ther're not add a new loop, 2 loopT's, 6 edgeT's and 6
+	     * vertexT's. */
+	    errNum = WlzGMModelExtend3V3E1S3D(model, &nF, cE);
+	    break;
+	}
+    }
   }
   /* Make sure that the order of the vertices are as given for the child
    * loopT of the new face. */
