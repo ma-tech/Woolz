@@ -120,7 +120,6 @@ CSOURCES		= \
 			WlzIntervalCount.c \
 			WlzIntervalDomScan.c \
 			WlzIntRescaleObj.c \
-			WlzJavaUtils.c \
 			WlzLabel.c \
 			WlzLabel3d.c \
 			WlzLaplacian.c \
