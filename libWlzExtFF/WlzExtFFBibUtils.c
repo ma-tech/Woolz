@@ -448,6 +448,7 @@ WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
 * \param    index	index of the given tie points
 * \param    dstVtx	destination vertex
 * \param    srcVtx	source vertex
+* \param    relativeFlg	Non-zero for relative bib coordinates.
 * \par      Source:
 *                WlzExtFFBibUtils.c
 */
@@ -505,6 +506,7 @@ WlzErrorNum WlzEffBibWriteTiePointVtxsRecord(
 * \param    index	return for tie-point pair index within list
 * \param    dstVtx	return for destination vertex
 * \param    srcVtx	return for source vertex
+* \param    relativeFlg return for relative coordinates, non-zero if relative
 * \par      Source:
 *                WlzExtFFBibUtils.c
 */

@@ -1117,7 +1117,7 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzEffBibWriteTiePointVtxsRecord(fP, "WlzTiePointVtxs", idx,
-	  refVx, srcVx);
+	  refVx, srcVx, 0);
     }
     ++idx;
   }
