@@ -61,6 +61,7 @@ public class SectionViewer
 
   private boolean _anatomy; // for mouse click anatomy
   private boolean _thresholding;
+  private boolean _fixedLineRotation;
   private boolean _threshConstraint;
   protected boolean _fixedPoint = false;
   private boolean _axisPoint = false;
@@ -98,6 +99,7 @@ public class SectionViewer
     _anatomy = false;
     _thresholding = false;
     _threshConstraint = false;
+    _fixedLineRotation = false;
 
     setCursor(defCursor);
     addFeedback();
@@ -117,8 +119,10 @@ public class SectionViewer
 
     controlMenu_1_1.addActionListener(handler_2);
     controlMenu_1_2.addActionListener(handler_2);
+    controlMenu_1_3.addActionListener(handler_2);
     controlMenu_2_1.addActionListener(handler_2);
     controlMenu_2_2.addActionListener(handler_2);
+    controlMenu_2_3.addActionListener(handler_2);
     controlMenu_3_1.addActionListener(handler_2);
     controlMenu_3_2.addActionListener(handler_2);
     controlMenu_3_3.addActionListener(handler_2);
@@ -148,6 +152,13 @@ public class SectionViewer
     invertHandler = new invertButtonHandler();
     invertButton.addActionListener(invertHandler);
 
+    zoomSetter.setEnabled(true);
+    distSetter.setEnabled(true);
+    pitchSetter.setEnabled(true);
+    yawSetter.setEnabled(true);
+    rollSetter.setEnabled(true);
+    rotSetter.setEnabled(true);
+
     viewType = viewstr.substring(0, 2);
     if (viewType.equals("XY")) {
       if (pitchSetter != null) {
@@ -157,14 +168,7 @@ public class SectionViewer
         yawSetter.setValue(0.0);
       }
       if (rollSetter != null) {
-        if (rollSetter.isSliderEnabled() == true) {
-          rollSetter.setValue(0.0);
-        }
-        else {
-          rollSetter.setSliderEnabled(true);
-          rollSetter.setValue(0.0);
-          rollSetter.setSliderEnabled(false);
-        }
+        rollSetter.setValue(0.0);
       }
     }
     else if (viewType.equals("YZ")) {
@@ -175,14 +179,7 @@ public class SectionViewer
         yawSetter.setValue(0.0);
       }
       if (rollSetter != null) {
-        if (rollSetter.isSliderEnabled() == true) {
-          rollSetter.setValue(90.0);
-        }
-        else {
-          rollSetter.setSliderEnabled(true);
-          rollSetter.setValue(90.0);
-          rollSetter.setSliderEnabled(false);
-        }
+        rollSetter.setValue(90.0);
       }
     }
     else if (viewType.equals("ZX")) {
@@ -193,15 +190,13 @@ public class SectionViewer
         yawSetter.setValue(90.0);
       }
       if (rollSetter != null) {
-        if (rollSetter.isSliderEnabled() == true) {
-          rollSetter.setValue(90.0);
-        }
-        else {
-          rollSetter.setSliderEnabled(true);
-          rollSetter.setValue(90.0);
-          rollSetter.setSliderEnabled(false);
-        }
+        rollSetter.setValue(90.0);
       }
+    }
+    rollSetter.setSliderEnabled(false);
+    if (rotSetter != null) {
+      rotSetter.setValue(0.0);
+      rotSetter.setSliderEnabled(false);
     }
     resetFeedbackText();
 
@@ -413,13 +408,23 @@ public class SectionViewer
     double min = 0.0;
     double max = 0.0;
 
+    boolean state = false;
+    boolean sliderState = false;
+
     results = _OBJModel.getMaxMin(_VSModel.getViewStruct());
     min = results[5];
     max = results[2];
 
+    sliderState = distSetter.isSliderEnabled();
+    state = distSetter.isEnabled();
+
+    distSetter.setEnabled(false);
+    distSetter.setSliderEnabled(true);
     distSetter.setMin(min);
     distSetter.setMax(max);
     distSetter.setValue(val);
+    distSetter.setEnabled(state);
+    distSetter.setSliderEnabled(sliderState);
   }
 
 //-------------------------------------------------------------
@@ -772,7 +777,10 @@ public class SectionViewer
 	   * work-around for bug in Wlz
 	   */
 	  WlzDVertex2 vtx2 = adjustedIntersectionPoint(vtx);
-
+          /*
+          xp = vtx.vtX;
+          yp = vtx.vtY;
+	  */
           xp = vtx2.vtX;
           yp = vtx2.vtY;
           xp += xTotal/2.0;
@@ -810,6 +818,7 @@ public class SectionViewer
           intersectionArr[j] = new Line2D.Double(x0, y0, x1, y1);
 	  if(_debug) printIntersection(intersectionArr[j], j);
 	  j++;
+          vtx2 = null;
 	}
       }
       vs2 = null;
@@ -991,7 +1000,7 @@ public class SectionViewer
   }
 
 //-------------------------
-  protected void doShowAxisPoint() {
+  protected void doShowFixedLine() {
 
      double dist[] = new double[1];
      double pt3d[] = new double[3];
@@ -999,40 +1008,40 @@ public class SectionViewer
      int intersect = -1;
 
      if (_imgV == null)
-	return;
+        return;
      if (!_axisPoint)
-	return;
+        return;
 
      _VSModel.getDist(dist);
-     /*
-      * assumes that rotation axis will be set in the same plane
+     /* 
+      * assumes that fixed line will be set in the same plane
       * as the fixed point
       */
      if(dist[0] == 0.0) {
 
-	pt3d = _VSModel.getAxisPoint();
-	double vals[] = _OBJModel.get2DPoint(
-	      pt3d,
-	      _VSModel.getViewStruct());
-	try {
-	   intersect = WlzObject.WlzInsideDomain(_OBJModel.getSection(),
-		 vals[2],
-		 vals[1],
-		 vals[0]);
-	}
-	catch (WlzException e) {
-	   System.out.println("doShowAxisPoint");
-	   System.out.println(e.getMessage());
-	}
+        pt3d = _VSModel.getAxisPoint();
+        double vals[] = _OBJModel.get2DPoint(
+              pt3d,
+              _VSModel.getViewStruct());
+        try {
+           intersect = WlzObject.WlzInsideDomain(_OBJModel.getSection(),
+                 vals[2],
+                 vals[1],
+                 vals[0]);
+        }
+        catch (WlzException e) {
+           System.out.println("doShowFixedLine");
+           System.out.println(e.getMessage());
+        }
 
-	if (intersect != 0) { // axis point is in section
-	   _imgV.setAxisPointVec(vals);
-	   vals = null;
-	   pt3d = null;
-	}
+        if (intersect != 0) { // axis point is in section
+           _imgV.setAxisPointArr(vals);
+           vals = null;
+           pt3d = null;
+        }
      }
      else {
-	removeAxisPoint();
+        removeAxisPoint();
      }
   }
 
@@ -1129,7 +1138,9 @@ public class SectionViewer
       default:
         break;
     }
-    String viewTitle = pitch + " | " + yaw + " | " + roll;
+    String viewTitle = trimString(pitch) + " | " +
+                       trimString(yaw) + " | " +
+                       trimString(roll);
     try {
       Method M1 = null;
       M1 = _frame.getClass().getMethod(
@@ -1148,6 +1159,30 @@ public class SectionViewer
       System.out.println(ae.getMessage());
     }
 
+  }
+
+//-------------------------------------------------------------
+// remove decimal point and anything past decimal point
+//-------------------------------------------------------------
+  protected String trimString(String str) {
+
+     String ret = "";
+     StringBuffer strBuf = new StringBuffer(str);
+     int indx = strBuf.indexOf(".");
+
+     if(indx == -1) return str;
+
+     try {
+        if(strBuf.length() >= indx+1) {
+           ret = strBuf.substring(0, indx+2);
+        } else {
+           ret = strBuf.substring(0, indx);
+        }
+     }
+     catch(StringIndexOutOfBoundsException e) {
+     }
+
+     return ret;
   }
 
 //-------------------------------------------------------------
@@ -1332,17 +1367,78 @@ public class SectionViewer
 // set view mode
 //-------------------------------------------------------------
   public void setViewMode(String mode) {
-    if (_VSModel != null) {
-      _VSModel.setViewMode(mode);
-      if (mode.equals("absolute") == true) {
-        controlMenu_2_2.setSelected(true);
-        rollSetter.setSliderEnabled(true);
-      }
-      else {
-        controlMenu_2_1.setSelected(true);
-        rollSetter.setSliderEnabled(false);
-      }
-    }
+     if (_VSModel != null) {
+
+        double[] zeta = null;
+        double roll = 0.0;
+
+        if (mode.equals("up is up")) {
+           _fixedLineRotation = false;
+           resetFixedLine(false);
+	   _VSModel.setViewMode(mode);
+           controlMenu_2_1.setSelected(true);
+	   enableFPMenus(true);
+           yawSetter.setSliderEnabled(true);
+           yawSetter.setEnabled(true);
+           pitchSetter.setSliderEnabled(true);
+           pitchSetter.setEnabled(true);
+           rollSetter.setSliderEnabled(true);
+	   zeta = new double[1];
+	   _VSModel.getZeta(zeta);
+	   roll = zeta[0] * 180.0 / Math.PI;
+           rollSetter.setValue(roll);
+           rollSetter.setSliderEnabled(false);
+           rotSetter.setEnabled(false);
+           rotSetter.setSliderEnabled(true);
+           rotSetter.setValue(0.0);
+           rotSetter.setSliderEnabled(false);
+        }
+        else if (mode.equals("absolute")) {
+           _fixedLineRotation = false;
+           resetFixedLine(false);
+	   _VSModel.setViewMode(mode);
+           controlMenu_2_2.setSelected(true);
+	   enableFPMenus(true);
+           yawSetter.setSliderEnabled(true);
+           yawSetter.setEnabled(true);
+           pitchSetter.setSliderEnabled(true);
+           pitchSetter.setEnabled(true);
+           rollSetter.setSliderEnabled(true);
+           rollSetter.setEnabled(true);
+           rotSetter.setEnabled(false);
+           rotSetter.setSliderEnabled(true);
+           rotSetter.setValue(0.0);
+           rotSetter.setSliderEnabled(false);
+        }
+        else if(mode.equals("fixed line")) {
+           _fixedLineRotation = true;
+           controlMenu_2_3.setEnabled(true);
+           controlMenu_2_3.setSelected(true);
+           controlMenu_2_3.setEnabled(false);
+	   enableFPMenus(false);
+           yawSetter.setSliderEnabled(false);
+           yawSetter.setEnabled(false);
+           pitchSetter.setSliderEnabled(false);
+           pitchSetter.setEnabled(false);
+           rollSetter.setSliderEnabled(false);
+           rollSetter.setEnabled(false);
+           rotSetter.setSliderEnabled(true);
+           rotSetter.setEnabled(true);
+	   _VSModel.setViewMode(mode);
+        }
+     }
+  }
+
+//-------------------------------------------------------------
+// enable or disable fixed point menus depending upon view mode
+//-------------------------------------------------------------
+  private void enableFPMenus(boolean state) {
+     controlMenu_3_1.setEnabled(state);
+     controlMenu_3_2.setEnabled(state);
+     controlMenu_3_3.setEnabled(state);
+     controlMenu_4_1.setEnabled(state);
+     controlMenu_4_2.setEnabled(state);
+     controlMenu_4_3.setEnabled(state);
   }
 
 //-------------------------------------------------------------
@@ -1442,25 +1538,28 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
-// reset axis point
+// reset fixed line
 //-------------------------------------------------------------
-  public void resetAxisPoint(boolean showAP) {
+  public void resetFixedLine(boolean showAP) {
 
-    double vals[] = null;
+     double vals[] = null;
+     final boolean show = showAP; // required for use in inner class
 
-    // reset axis point
-    vals = _VSModel.getInitialFixedPoint();
-    _VSModel.setAxisPoint(vals);
-    vals = null;
-    if (showAP) {
-      Runnable apClick = new Runnable() {
-        public void run() {
-          if (!showMenu_5state)
-            showMenu_5.doClick();
-        }
-      };
-      SwingUtilities.invokeLater(apClick);
-    }
+     // reset fixed line
+     vals = _VSModel.getFixedPoint();
+     _VSModel.setAxisPoint(vals[0],
+	   vals[1],
+	   vals[2]);
+     vals = null;
+     Runnable apClick = new Runnable() {
+	public void run() {
+	   if ((!showMenu_5state && show) ||
+		 (showMenu_5state && !show)) {
+	      showMenu_5.doClick();
+	   }
+	}
+     };
+     SwingUtilities.invokeLater(apClick);
   }
 
 //-------------------------------------------------------------
@@ -1481,45 +1580,30 @@ public class SectionViewer
     if (viewType.equals("XY")) {
       pitchSetter.setValue(0.0);
       yawSetter.setValue(0.0);
-      if (rollSetter.isSliderEnabled()) {
-        rollSetter.setValue(0.0);
-      }
-      else {
-        rollSetter.setSliderEnabled(true);
-        rollSetter.setValue(0.0);
-        rollSetter.setSliderEnabled(false);
-      }
+      rollSetter.setValue(0.0);
     }
     else if (viewType.equals("YZ")) {
       pitchSetter.setValue(90.0);
       yawSetter.setValue(0.0);
-      if (rollSetter.isSliderEnabled()) {
-        rollSetter.setValue(90.0);
-      }
-      else {
-        rollSetter.setSliderEnabled(true);
-        rollSetter.setValue(90.0);
-        rollSetter.setSliderEnabled(false);
-      }
+      rollSetter.setValue(90.0);
     }
     else if (viewType.equals("ZX")) {
       pitchSetter.setValue(90.0);
       yawSetter.setValue(90.0);
-      if (rollSetter.isSliderEnabled()) {
-        rollSetter.setValue(90.0);
-      }
-      else {
-        rollSetter.setSliderEnabled(true);
-        rollSetter.setValue(90.0);
-        rollSetter.setSliderEnabled(false);
-      }
+      rollSetter.setValue(90.0);
     }
     else {
       System.out.println("unknown view type in resetGUI(): " + viewType);
     }
     distSetter.setValue(0.0);
     zoomSetter.setValue(100);
-    setViewMode("up_is_up");
+    rotSetter.setValue(0.0);
+    distSetter.setSliderEnabled(true);
+    pitchSetter.setSliderEnabled(true);
+    yawSetter.setSliderEnabled(true);
+    rollSetter.setSliderEnabled(false);
+    rotSetter.setSliderEnabled(false);
+    setViewMode("up is up");
     removeThreshold();
     removeThreshConstraint();
     enableThresholding(false);
@@ -1527,7 +1611,7 @@ public class SectionViewer
     disableAnatomy();
     resetFeedbackText();
     resetFixedPoint(false);
-    resetAxisPoint(false);
+    resetFixedLine(false);
     setSVEnabled(true);
 
     if (_debug)
@@ -1689,6 +1773,7 @@ public class SectionViewer
   WSetterToPitchAdaptor W2P_1;
   WSetterToYawAdaptor W2Y_1;
   WSetterToRollAdaptor W2R_1;
+  WSetterToFixedRotAdaptor W2FR_1;
   ViewStructModelToViewAdaptor WOM2V_1;
   WlzImgViewToPosAdaptor WI2P_1;
   WlzImgViewToGreyAdaptor WI2G_1;
@@ -1740,6 +1825,11 @@ public class SectionViewer
       rollSetter.removeChangeListener(W2R_1);
     W2R_1 = new WSetterToRollAdaptor(rollSetter, _VSModel, _OBJModel);
     rollSetter.addChangeListener(W2R_1);
+    //...............................
+    if (W2FR_1 != null)
+      rotSetter.removeChangeListener(W2FR_1);
+    W2FR_1 = new WSetterToFixedRotAdaptor(rotSetter, _VSModel, _OBJModel);
+    rotSetter.addChangeListener(W2FR_1);
     //...............................
     // View adaptors
     //...............................
@@ -1815,12 +1905,175 @@ public class SectionViewer
       System.out.println("exit connectAdaptors_1");
   } //connectAdaptors_1()
 
+//-------------------------------------------------------------
   protected void setSVEnabled(boolean state) {
     _enabled = state;
   }
 
+//-------------------------------------------------------------
   protected boolean isSVEnabled() {
     return _enabled;
+  }
+
+//-------------------------------------------------------------
+  protected void setFixedLineParams() {
+    /*
+     * get the coords of fixed point and fixed line in 2D
+     * calculate fixed line angle in 2D and set View Struct.
+     * calculate vectors norm2 and norm3
+     * (see viewFixedPointUtils.c fixed_2_cb())
+     */
+
+     double fp3D[];
+     double ap3D[];
+     double fp2D[];
+     double ap2D[];
+
+     double arg = 0.0;
+     double angle = 0.0;
+
+     double x = 0.0; 
+     double y = 0.0;
+     double z = 0.0;
+     double s = 0.0;
+
+     WlzThreeDViewStruct VS = _VSModel.getViewStruct();
+     WlzAffineTransform trans = null;
+
+     double transMatrix[][][] = new double[1][][];
+     transMatrix[0] = null;
+
+     fp3D = _VSModel.getFixedPoint();
+     ap3D = _VSModel.getAxisPoint();
+
+     /*
+     System.out.println("fixed point 3D = ");
+     printDoubleArray(fp3D);
+     System.out.println("axis point 3D = ");
+     printDoubleArray(ap3D);
+     */
+
+     fp2D = _OBJModel.get2DPoint(fp3D, VS);
+     ap2D = _OBJModel.get2DPoint(ap3D, VS);
+
+     /*
+     System.out.println("fixed point 2D = ");
+     printDoubleArray(fp2D);
+     System.out.println("axis point 2D = ");
+     printDoubleArray(ap2D);
+     */
+
+     angle = Math.atan2(ap2D[1]-fp2D[1], ap2D[0]-fp2D[0]);
+     //System.out.println("angle (degs) = "+angle*180.0/Math.PI);
+
+     _VSModel.setFixedLineAngle(angle);
+
+     /* define the 2 orthogonal axes
+        first the normalised direction vector between the fixed points */
+     x = ap3D[0] - fp3D[0];
+     y = ap3D[1] - fp3D[1];
+     z = ap3D[2] - fp3D[2];
+     s = Math.sqrt((double) x*x + y*y + z*z + 0.00001);
+     if( s <= .001 ){
+       x = 1.0;
+       y = 0.0;
+       z = 0.0;
+     } else {
+       x /= s; y /= s; z /= s;
+     }
+
+     trans = _VSModel.getInverseTransform();
+
+     transMatrix = _VSModel.getTransMatrix(trans); 
+     /*
+     if(transMatrix[0] != null){ 
+        System.out.println(" got transform matrix");
+	//printMatrix(transMatrix[0]);
+     } else {
+        System.out.println("transMatrix[0] == null");
+     }
+     */
+
+     double mat02 = transMatrix[0][0][2];
+     double mat12 = transMatrix[0][1][2];
+     double mat22 = transMatrix[0][2][2];
+
+     _VSModel.setNorm2(mat02, mat12, mat22);
+     _VSModel.setNorm3(y*mat22 - z*mat12,
+                       z*mat02 - x*mat22,
+		       x*mat12 - y*mat02);
+
+     /*
+     System.out.println("SectionViewer.setFixedLineParams:");
+     System.out.println("norm2");
+     printDoubleArray(_VSModel.getNorm2());
+     System.out.println("norm3");
+     printDoubleArray(_VSModel.getNorm3());
+     */
+
+  }
+
+//-------------------------------------------------------------
+  private void printDoubleArray(double[] pnt) {
+     System.out.println("x = "+Double.toString(pnt[0]));
+     System.out.println("y = "+Double.toString(pnt[1]));
+     System.out.println("z = "+Double.toString(pnt[2]));
+     System.out.println("---------------");
+  }
+//-------------------------------------------------------------
+  private void printMatrix(double[][] mtrx) {
+     System.out.println("00 = "+Double.toString(mtrx[0][0]));
+     System.out.println("01 = "+Double.toString(mtrx[0][1]));
+     System.out.println("02 = "+Double.toString(mtrx[0][2]));
+     System.out.println("10 = "+Double.toString(mtrx[1][0]));
+     System.out.println("11 = "+Double.toString(mtrx[1][1]));
+     System.out.println("12 = "+Double.toString(mtrx[1][2]));
+     System.out.println("20 = "+Double.toString(mtrx[2][0]));
+     System.out.println("21 = "+Double.toString(mtrx[2][1]));
+     System.out.println("22 = "+Double.toString(mtrx[2][2]));
+     System.out.println("---------------");
+  }
+
+//-------------------------------------------------------------
+  private void clipPoint3D(double[] pnt) {
+
+     WlzIBox3 bBox = null;
+     bBox = _OBJModel.getBBox();
+
+     if(bBox == null) return;
+
+     pnt[0] = pnt[0] < bBox.xMin ? bBox.xMin : pnt[0];
+     pnt[0] = pnt[0] > bBox.xMax ? bBox.xMax : pnt[0];
+     pnt[1] = pnt[1] < bBox.yMin ? bBox.yMin : pnt[1];
+     pnt[1] = pnt[1] > bBox.yMax ? bBox.yMax : pnt[1];
+     pnt[2] = pnt[2] < bBox.zMin ? bBox.zMin : pnt[2];
+     pnt[2] = pnt[2] > bBox.zMax ? bBox.zMax : pnt[2];
+
+  }
+
+//-------------------------------------------------------------
+  /* checks that dist = 0.0 when setting fixed line */
+  private boolean checkDist() {
+     boolean ret = false;
+     double[] dArr = null;
+     String message = "";
+     int reply = 0;
+
+     dArr = new double[1];
+
+     _VSModel.getDist(dArr);
+     if(dArr[0] == 0.0) {
+        ret = true;
+     } else {
+        message = "the fixed line end-point must be in the same plane as the fixed point (with dist = 0.0)\nIf you want the fixed line to be in this plane please change the fixed point first.";
+	JOptionPane.showMessageDialog(
+	     null,
+	     message,
+	     "setting fixed line",
+	     JOptionPane.INFORMATION_MESSAGE);
+     }
+
+     return ret;
   }
 
 //==========================================
@@ -1878,7 +2131,7 @@ public class SectionViewer
    }
 
    public void setRoll(double val) {
-      /* roll should not be adjusted if view mode is 'up_is_up' */
+      /* roll should not be adjustable if view mode is 'up_is_up' */
       if((rollSetter != null)&&(controlMenu_2_2.isSelected())) {
          rollSetter.setValue(val);
       }
@@ -2007,13 +2260,15 @@ public class SectionViewer
         // see yaw pitch roll controls
         src = (JCheckBoxMenuItem) e.getSource();
         if (src.isSelected() != controlMenu_1_1state) {
-          if (src.isSelected() == true) {
+          if (src.isSelected()) {
             addStandardControls();
             _showStdCntrls = true;
           }
           else {
             removeStandardControls();
             _showStdCntrls = false;
+            controlMenu_1_3state = false;
+            controlMenu_1_3.setSelected(false);
           }
           controlMenu_1_1state = src.isSelected();
         }
@@ -2022,30 +2277,57 @@ public class SectionViewer
         // see user defined rotation controls
         src = (JCheckBoxMenuItem) e.getSource();
         if (src.isSelected() != controlMenu_1_2state) {
-          if (src.isSelected() == true) {
+          if (src.isSelected()) {
             addUserControls();
             _showUsrCntrls = true;
           }
           else {
             removeUserControls();
             _showUsrCntrls = false;
+            controlMenu_1_3state = false;
+            controlMenu_1_3.setSelected(false);
           }
           controlMenu_1_2state = src.isSelected();
+        }
+      }
+      else if (e.getActionCommand().equals(controlMenu_1_3str)) {
+        // see all rotation controls
+        src = (JCheckBoxMenuItem) e.getSource();
+        if (src.isSelected() != controlMenu_1_3state) {
+          if (src.isSelected()) {
+	    addStandardControls();
+	    _showStdCntrls = true;
+            controlMenu_1_1state = true;
+            controlMenu_1_1.setSelected(true);
+	    addUserControls();
+	    _showUsrCntrls = true;
+            controlMenu_1_2state = true;
+            controlMenu_1_2.setSelected(true);
+          }
+          else {
+            removeStandardControls();
+            _showStdCntrls = false;
+            controlMenu_1_1state = false;
+            controlMenu_1_1.setSelected(false);
+            removeUserControls();
+            _showUsrCntrls = false;
+            controlMenu_1_2state = false;
+            controlMenu_1_2.setSelected(false);
+          }
+          controlMenu_1_3state = src.isSelected();
         }
       } // view mode ------------------------------
       else if (e.getActionCommand().equals(controlMenu_2_1str)) {
         // up is up mode => roll is fixed
         setViewMode(controlMenu_2_1str);
-        rollSetter.setSliderEnabled(true);
-        if (viewType.equals("XY")) {
-	   rollSetter.setValue(0.0);
-        } else {
-	   rollSetter.setValue(90.0);
-        }
-        rollSetter.setSliderEnabled(false);
       }
       else if (e.getActionCommand().equals(controlMenu_2_2str)) {
         setViewMode(controlMenu_2_2str);
+      }
+      else if (e.getActionCommand().equals(controlMenu_2_3str)) {
+        /* this should be disabled normally
+	   fixed line mode is set by the program */
+        setViewMode(controlMenu_2_3str);
       }
       // fixed point ------------------------------
       else if (e.getActionCommand().equals(controlMenu_3_1str)) {
@@ -2090,20 +2372,13 @@ public class SectionViewer
         // reset
         resetFixedPoint(true);
       }
-      // rotation axis ------------------------------
+      // fixed line ------------------------------
       else if (e.getActionCommand().equals(controlMenu_4_1str)) {
 	 // change using mouse
+         if(!checkDist()) return; // check that dist = 0
 	 _setFixedPoint = false;
 	 _setAxisPoint = true;
 	 setCursor(xhairCursor);
-	 Runnable fpClick = new Runnable() {
-	    public void run() {
-	       if (!showMenu_4state) {
-		  showMenu_4.doClick();
-	       }
-	    }
-	 };
-	 SwingUtilities.invokeLater(fpClick);
 	 Runnable apClick = new Runnable() {
 	    public void run() {
 	       if (!showMenu_5state) {
@@ -2115,35 +2390,41 @@ public class SectionViewer
       }
       else if (e.getActionCommand().equals(controlMenu_4_2str)) {
         // change by typing coordinates
-	 Runnable fpClick = new Runnable() {
-	    public void run() {
-	       if (!showMenu_4state) {
-		  showMenu_4.doClick();
-	       }
-	    }
-	 };
-	 SwingUtilities.invokeLater(fpClick);
-	 Runnable apClick = new Runnable() {
-	    public void run() {
-	       if (!showMenu_5state) {
-		  showMenu_5.doClick();
-	       }
-	    }
-	 };
-	 SwingUtilities.invokeLater(apClick);
+	boolean fpShowing = _fixedPoint;
+	_fixedPoint = true;
+	doShowFixedPoint();
+	_fixedPoint = fpShowing;
+	/*
+	Runnable fpClick = new Runnable() {
+	   public void run() {
+	      if (!showMenu_4state) {
+	         showMenu_4.doClick();
+	      }
+	   }
+	};
+	SwingUtilities.invokeLater(fpClick);
+	*/
+	Runnable apClick = new Runnable() {
+	   public void run() {
+	      if (!showMenu_5state) {
+	         showMenu_5.doClick();
+	      }
+	   }
+	};
+	SwingUtilities.invokeLater(apClick);
         vals = _VSModel.getAxisPoint();
         _APBounce = 0;
-        pe = new PointEntry("Rotation Axis Coordinates");
+        pe = new PointEntry("Fixed Line Coordinates");
         pe.setSize(250, 250);
         pe.pack();
         pe.setVisible(true);
         pe.setInitVals(vals);
-        pe.addChangeListener(new RotationAxisAdaptor(pe));
+        pe.addChangeListener(new FixedLineAdaptor(pe));
         vals = null;
       }
       else if (e.getActionCommand().equals(controlMenu_4_3str)) {
-        // reset
-        resetAxisPoint(true);
+        // reset fixed line
+        resetFixedLine(false);
         _VSModel.fireChange();
       }
       // reset ------------------------------
@@ -2237,14 +2518,16 @@ public class SectionViewer
           showMenu_4state = src.isSelected();
         }
       }
-      // axis point ------------------------------
+      // fixed line ------------------------------
       else if (e.getActionCommand().equals(showMenu_5str)) {
         src = (JCheckBoxMenuItem) e.getSource();
         if (src.isSelected() != showMenu_5state) {
           if (src.isSelected()) {
             _axisPoint = true;
-            doShowAxisPoint();
-            _imgV.repaint();
+            doShowFixedLine();
+      revalidate();
+      _bigPanel.repaint();
+            //_imgV.repaint();
           }
           else {
             _axisPoint = false;
@@ -2319,7 +2602,6 @@ public class SectionViewer
     /* the options are not part of a button group as they
        are not mutually exclusive */
     JCheckBoxMenuItem src;
-    JOptionPane jop;
     String message;
     int reply;
 
@@ -2457,6 +2739,7 @@ public class SectionViewer
        _inverted = !_inverted;
        _bigPanel.revalidate();
        _bigPanel.repaint();
+
     }
   }
 
@@ -2501,6 +2784,10 @@ public class SectionViewer
           break;
       }
       VSmodel.setDist(val);
+      if((val != 0.0) &&
+         !VSmodel.getViewMode().equals("WLZ_FIXED_LINE_MODE")) {
+         setViewMode(controlMenu_2_1str); // up is up
+      }
     }
   }
 
@@ -2524,28 +2811,33 @@ public class SectionViewer
     }
 
     public void stateChanged(ChangeEvent e) {
-      vec = control.getValue();
-      switch (control.getType()) {
-        case INTEGER:
-          Integer iVal = (Integer) vec.elementAt(0);
-          val = (double) iVal.intValue();
-          break;
-        case FLOAT:
-          Float fVal = (Float) vec.elementAt(0);
-          val = (double) fVal.floatValue();
-          break;
-        case DOUBLE:
-          Double dVal = (Double) vec.elementAt(0);
-          val = dVal.doubleValue();
-          break;
-        default:
-          break;
-      }
-      VSmodel.setPhiDeg(val);
-      if (!control.isAdjusting()) {
-        VSmodel.getDist(valArr);
-        setDistLimits(valArr[0]);
-      }
+       vec = control.getValue();
+       switch (control.getType()) {
+	  case INTEGER:
+	     Integer iVal = (Integer) vec.elementAt(0);
+	     val = (double) iVal.intValue();
+	     break;
+	  case FLOAT:
+	     Float fVal = (Float) vec.elementAt(0);
+	     val = (double) fVal.floatValue();
+	     break;
+	  case DOUBLE:
+	     Double dVal = (Double) vec.elementAt(0);
+	     val = dVal.doubleValue();
+	     break;
+	  default:
+	     break;
+       }
+       VSmodel.setPhiDeg(val);
+       VSmodel.getZeta(valArr);
+       val = (180.0 / Math.PI) * valArr[0];
+       rollSetter.setSliderEnabled(true);
+       rollSetter.setValue(val);
+       rollSetter.setSliderEnabled(false);
+       if (!control.isAdjusting()) {
+	  VSmodel.getDist(valArr);
+	  setDistLimits(valArr[0]);
+       }
     }
   }
 
@@ -2640,6 +2932,74 @@ public class SectionViewer
       }
     }
   }
+//---------------------------------------
+  // change fixed line rotation using WSetter control
+  public class WSetterToFixedRotAdaptor
+     implements ChangeListener {
+
+        WSetter control;
+        ViewStructModel VSmodel;
+        WlzObjModel OBJmodel;
+        double valArr[] = new double[1];
+        Vector vec = null;
+        double val;
+
+        public WSetterToFixedRotAdaptor(WSetter cntrl, ViewStructModel mdl1,
+              WlzObjModel mdl2) {
+           VSmodel = mdl1;
+           OBJmodel = mdl2;
+           control = cntrl;
+        }
+
+        public void stateChanged(ChangeEvent e) {
+           if(!_fixedLineRotation) return;
+           vec = control.getValue();
+           switch (control.getType()) {
+              case INTEGER:
+                 Integer iVal = (Integer) vec.elementAt(0);
+                 val = (double) iVal.intValue();
+                 break;
+              case FLOAT:
+                 Float fVal = (Float) vec.elementAt(0);
+                 val = (double) fVal.floatValue();
+                 break;
+              case DOUBLE:
+                 Double dVal = (Double) vec.elementAt(0);
+                 val = dVal.doubleValue();
+                 break;
+              default:
+                 break;
+           }
+
+           VSmodel.setPsiDeg(val);
+
+           /* adjust the Yaw Pitch and Roll sliders */
+           //if (!control.isAdjusting()) {
+              VSmodel.getTheta(valArr);
+              double dangle = (180.0 / Math.PI) * valArr[0];
+              yawSetter.setSliderEnabled(true);
+              yawSetter.setValue(dangle);
+              yawSetter.setSliderEnabled(false);
+
+              VSmodel.getPhi(valArr);
+              dangle = (180.0 / Math.PI) * valArr[0];
+              pitchSetter.setSliderEnabled(true);
+              pitchSetter.setValue(dangle);
+              pitchSetter.setSliderEnabled(false);
+
+              VSmodel.getZeta(valArr);
+              dangle = (180.0 / Math.PI) * valArr[0];
+              rollSetter.setSliderEnabled(true);
+              rollSetter.setValue(dangle);
+              rollSetter.setSliderEnabled(false);
+
+              VSmodel.getDist(valArr);
+              setDistLimits(valArr[0]);
+           //}
+        }
+     }
+
+
 
 //---------------------------------------
 // View ADAPTORS
@@ -2710,7 +3070,7 @@ public class SectionViewer
       }
 //-------------------------
       doShowFixedPoint();
-      doShowAxisPoint();
+      doShowFixedLine();
 //-------------------------
       // draw the anatomy components
       try {
@@ -3318,12 +3678,11 @@ public class SectionViewer
   }
 
 //---------------------------------------
-  // connects mouse events to fixed and axis point setting
+  // connects mouse events to fixed point / fixed line setting
   public class MouseToFPAdaptor
       implements MouseListener, MouseMotionListener {
 
     double mag;
-
     WlzImgView ImgModel;
     WlzObjModel ObjModel;
     ViewStructModel VSModel;
@@ -3331,6 +3690,7 @@ public class SectionViewer
     Point pos;
     double FP3D[] = null;
     double FP2D[] = null;
+    boolean fpShowing = false;
 
     public MouseToFPAdaptor(WlzImgView mdl1,
                             WlzObjModel mdl2,
@@ -3346,24 +3706,34 @@ public class SectionViewer
     }
 
     public void mouseEntered(MouseEvent e) {
+      if (!_setFixedPoint && !_setAxisPoint) return;
+      fpShowing = _fixedPoint;
+      _fixedPoint = true;
+      doShowFixedPoint();
+      _fixedPoint = fpShowing;
     }
 
     public void mousePressed(MouseEvent e) {
       if (!_setFixedPoint && !_setAxisPoint) return;
       pos = ImgModel.getPos();
       FP3D = ObjModel.get3DPoint(pos, VS);
+      // restrict point to inside image
+      clipPoint3D(FP3D);
       FP2D = ObjModel.get2DPoint(FP3D, VS);
       if(_setFixedPoint) {
 	 _imgV.setFixedPointVec(FP2D);
       } else if(_setAxisPoint) {
-	 _imgV.setAxisPointVec(FP2D);
+	 _imgV.setAxisPointArr(FP2D);
       }
     }
 
     public void mouseReleased(MouseEvent e) {
+
       if (!_setFixedPoint && !_setAxisPoint) return;
       pos = ImgModel.getPos();
       FP3D = ObjModel.get3DPoint(pos, VS);
+      // restrict point to inside image
+      clipPoint3D(FP3D);
 
       if(_setFixedPoint) {
 	 VSModel.setFixedPoint(FP3D[0],
@@ -3371,8 +3741,15 @@ public class SectionViewer
 			       FP3D[2]);
 	 _setFixedPoint = false;
       } else if(_setAxisPoint) {
-	 VSModel.setAxisPoint(FP3D);
+	 VSModel.setAxisPoint(FP3D[0],
+	                      FP3D[1],
+			      FP3D[2]);
+	 setFixedLineParams();
+	 setViewMode("fixed line");
 	 _setAxisPoint = false;
+	 if(!fpShowing) {
+	    removeFixedPoint();
+	 }
       }
 
       setDistLimits(0.0);
@@ -3389,17 +3766,18 @@ public class SectionViewer
       if (!_setFixedPoint && !_setAxisPoint) return;
       pos = ImgModel.getPos();
       FP3D = ObjModel.get3DPoint(pos, VS);
+      // restrict point to inside image bounding box
+      clipPoint3D(FP3D);
       FP2D = ObjModel.get2DPoint(FP3D, VS);
 
       if(_setFixedPoint) {
 	 _imgV.setFixedPointVec(FP2D);
       } else if(_setAxisPoint) {
-	 _imgV.setAxisPointVec(FP2D);
+	 _imgV.setAxisPointArr(FP2D);
       }
 
     }
   }
-
 //---------------------------------------
   public class FixedPointAdaptor
       implements ChangeListener {
@@ -3433,28 +3811,30 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
-  public class RotationAxisAdaptor
+  public class FixedLineAdaptor
       implements ChangeListener {
 
     double vals[];
     PointEntry _pe;
 
-    public RotationAxisAdaptor(PointEntry pe) {
+    public FixedLineAdaptor(PointEntry pe) {
       _pe = pe;
     }
 
     public void stateChanged(ChangeEvent e) {
       if (_APBounce > 0) {
         vals = _pe.getValues();
-        _VSModel.setAxisPoint(vals);
+        _VSModel.setAxisPoint(vals[0],
+                             vals[1],
+                             vals[2]);
+
+        setFixedLineParams();
+        setViewMode("fixed line");
+        _setAxisPoint = false;
+        if(!_fixedPoint) {
+           removeFixedPoint();
+        }
         setDistLimits(0.0);
-        Runnable apClick = new Runnable() {
-          public void run() {
-            if (!showMenu_5state)
-              showMenu_5.doClick();
-          }
-        };
-        SwingUtilities.invokeLater(apClick);
       }
       else {
         _APBounce++;
