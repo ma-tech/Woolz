@@ -14,6 +14,8 @@
 *		used to transform one set of verticies to another.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 17-01-01 bill Add code to check for coincidence of verticies in
+*		WlzAffineTransformLSqReg3D().
 * 13-12-00 bill Change members of WlzVertex and WlzVertexP.
 * 05-12-00 bill In WlzAffineTransformLSqReg3D add code for degenerate
 *		solutions.
@@ -277,7 +279,8 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
   		idN,
   		idK,
 		idR;
-  double	tD0;
+  double	tD0,
+  		meanSqD;
   WlzDVertex3	cen0,
   		cen1,
 		rel0,
@@ -288,6 +291,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 		**trMx = NULL;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	tol = 1.0E-06;
 
   if(((wMx = (double *)AlcCalloc(sizeof(double), 3)) == NULL) ||
      (AlcDouble2Calloc(&hMx, 3, 3) !=  ALC_ER_NONE) ||
@@ -298,144 +302,157 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Compute centroids, cen0 and cen1. */
+    /* Compute centroids (cen0 and cen1) and a mean of squares of distance
+     * between the verticies. */
+    meanSqD = 0.0;
     cen0 = *pos0;
     cen1 = *pos1;
     for(idN = 1; idN < nVtx; ++idN)
     {
       WLZ_VTX_3_ADD(cen0, cen0, *(pos0 + idN));
       WLZ_VTX_3_ADD(cen1, cen1, *(pos1 + idN));
+      WLZ_VTX_3_SUB(rel0, *(pos0 + idN), *(pos1 + idN));
+      meanSqD += WLZ_VTX_3_DOT(rel0, rel0);
     }
     tD0 = 1.0 / nVtx;
-    WLZ_VTX_3_SCALE(cen0, cen0, tD0);
-    WLZ_VTX_3_SCALE(cen1, cen1, tD0);
-    /* Compute the 3x3 matrix hMx, which is the sum of tensor products of the
-     * verticies relative to their centroids. */
-    for(idN = 0; idN < nVtx; ++idN)
+    meanSqD *= tD0;
+    if(meanSqD < tol)
     {
-      WLZ_VTX_3_SUB(rel0, *(pos0 + idN), cen0);
-      WLZ_VTX_3_SUB(rel1, *(pos1 + idN), cen1);
-      hMx[0][0] += rel0.vtX * rel1.vtX;
-      hMx[0][1] += rel0.vtX * rel1.vtY;
-      hMx[0][2] += rel0.vtX * rel1.vtZ;
-      hMx[1][0] += rel0.vtY * rel1.vtX;
-      hMx[1][1] += rel0.vtY * rel1.vtY;
-      hMx[1][2] += rel0.vtY * rel1.vtZ;
-      hMx[2][0] += rel0.vtZ * rel1.vtX;
-      hMx[2][1] += rel0.vtZ * rel1.vtY;
-      hMx[2][2] += rel0.vtZ * rel1.vtZ;
+      /* The verticies coincide, make an identity transform. */
+      tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
     }
-    /* Compute the SVD of the 3x3 matrix, hMx = hMx.mMx.vMx. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hMx, 3, 3, wMx, vMx));
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Compute 3x3 rotation matrix trMx = vMx.hMx', where hMx' is the transpose
-     * of hMx. */
-    for(idR = 0; idR < 3; ++idR)
+    else
     {
-      for(idK = 0; idK < 3; ++idK)
+      WLZ_VTX_3_SCALE(cen0, cen0, tD0);
+      WLZ_VTX_3_SCALE(cen1, cen1, tD0);
+      /* Compute the 3x3 matrix hMx, which is the sum of tensor products of
+       * the verticies relative to their centroids. */
+      for(idN = 0; idN < nVtx; ++idN)
       {
-        trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
-        		 vMx[idR][1] * hMx[idK][1] + 
-        		 vMx[idR][2] * hMx[idK][2];
+	WLZ_VTX_3_SUB(rel0, *(pos0 + idN), cen0);
+	WLZ_VTX_3_SUB(rel1, *(pos1 + idN), cen1);
+	hMx[0][0] += rel0.vtX * rel1.vtX;
+	hMx[0][1] += rel0.vtX * rel1.vtY;
+	hMx[0][2] += rel0.vtX * rel1.vtZ;
+	hMx[1][0] += rel0.vtY * rel1.vtX;
+	hMx[1][1] += rel0.vtY * rel1.vtY;
+	hMx[1][2] += rel0.vtY * rel1.vtZ;
+	hMx[2][0] += rel0.vtZ * rel1.vtX;
+	hMx[2][1] += rel0.vtZ * rel1.vtY;
+	hMx[2][2] += rel0.vtZ * rel1.vtZ;
       }
-    }
-    /* Test for degeneracy using the determinant of the rotation matrix. */
-    tD0 = (trMx[0][0] * trMx[1][1] * trMx[2][2]) -
-          (trMx[0][0] * trMx[1][2] * trMx[2][1]) +
-          (trMx[0][1] * trMx[1][2] * trMx[2][0]) -
-          (trMx[0][1] * trMx[1][0] * trMx[2][2]) +
-          (trMx[0][2] * trMx[1][0] * trMx[2][1]) -
-          (trMx[0][2] * trMx[1][1] * trMx[2][0]);
-    if(tD0 < 0.0)
-    {
-      /* Are source verticies (rel0) coplanar? They are iff one of the 3
-       * singular values of hMx in wMx is zero. If the source verticies
-       * are not coplanar, the the solution of the SVD is correct. */
-      tI0 = ((fabs(*(wMx + 2)) >= DBL_EPSILON) << 2) |
-            ((fabs(*(wMx + 1)) >= DBL_EPSILON) << 1) |
-            (fabs(*(wMx + 2)) >= DBL_EPSILON);
-      switch(tI0)
+      /* Compute the SVD of the 3x3 matrix, hMx = hMx.mMx.vMx. */
+      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hMx, 3, 3, wMx, vMx));
+      if(errNum == WLZ_ERR_NONE)
       {
-	case 0:
-	  /* Source verticies are not coplanar or colinear. The SVD gives the
-	   * correct solution. */
-	  break;
-        case 1:
-	case 2:
-	case 4:
-	  /* Source verticies are coplanar, but not colinear. There is a
-	   * unique reflection as well as a unique rotation. The SVD
-	   * may give either BUT in this case it has found the reflection
-	   * so need to recompute for the rotation.
-	   * If the singular values of wMx are w0 > w1 > w2 = 0, then
-	   *
-	   *              t        t        t
-	   *   hMx = w u v  + w u v  + 0.u v 
-	   *          0 0 0    1 1 1      2 2
-	   *
-	   * where ui and vi are the columns of the matricies hMx and vMx
-	   * respectively (hMx is used for both H and U).
-	   * So to get the rotation rather than the reflection we recalculate
-	   * the transform matrix with v2 = -v2.
-	   */
-	  for(idR = 0; idR < 3; ++idR)
+	/* Compute 3x3 rotation matrix trMx = vMx.hMx', where hMx' is the
+	 * transpose of hMx. */
+	for(idR = 0; idR < 3; ++idR)
+	{
+	  for(idK = 0; idK < 3; ++idK)
 	  {
-	    for(idK = 0; idK < 3; ++idK)
-	    {
-	      trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
-			       vMx[idR][1] * hMx[idK][1] -
-			       vMx[idR][2] * hMx[idK][2];
-	    }
+	    trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+	      vMx[idR][1] * hMx[idK][1] + 
+	      vMx[idR][2] * hMx[idK][2];
 	  }
-	  break;
-	case 3:
-	case 5:
-	case 6:
-	  /* Source verticies are colinear and there exists an infinity of
-	   * solutions! */
-	  errNum = WLZ_ERR_ALG_SINGULAR;
-	  break;
+	}
+	/* Test for degeneracy using the determinant of the rotation matrix. */
+	tD0 = (trMx[0][0] * trMx[1][1] * trMx[2][2]) -
+	  (trMx[0][0] * trMx[1][2] * trMx[2][1]) +
+	  (trMx[0][1] * trMx[1][2] * trMx[2][0]) -
+	  (trMx[0][1] * trMx[1][0] * trMx[2][2]) +
+	  (trMx[0][2] * trMx[1][0] * trMx[2][1]) -
+	  (trMx[0][2] * trMx[1][1] * trMx[2][0]);
+	if(tD0 < 0.0)
+	{
+	  /* Are source verticies (rel0) coplanar? They are iff one of the 3
+	   * singular values of hMx in wMx is zero. If the source verticies
+	   * are not coplanar, the the solution of the SVD is correct. */
+	  tI0 = ((fabs(*(wMx + 2)) >= DBL_EPSILON) << 2) |
+	    ((fabs(*(wMx + 1)) >= DBL_EPSILON) << 1) |
+	    (fabs(*(wMx + 2)) >= DBL_EPSILON);
+	  switch(tI0)
+	  {
+	    case 0:
+	      /* Source verticies are not coplanar or colinear. The SVD gives the
+	       * correct solution. */
+	      break;
+	    case 1:
+	    case 2:
+	    case 4:
+	      /* Source verticies are coplanar, but not colinear. There is a
+	       * unique reflection as well as a unique rotation. The SVD
+	       * may give either BUT in this case it has found the reflection
+	       * so need to recompute for the rotation.
+	       * If the singular values of wMx are w0 > w1 > w2 = 0, then
+	       *
+	       *              t        t        t
+	       *   hMx = w u v  + w u v  + 0.u v 
+	       *          0 0 0    1 1 1      2 2
+	       *
+	       * where ui and vi are the columns of the matricies hMx and vMx
+	       * respectively (hMx is used for both H and U).
+	       * So to get the rotation rather than the reflection we recalculate
+	       * the transform matrix with v2 = -v2.
+	       */
+	      for(idR = 0; idR < 3; ++idR)
+	      {
+		for(idK = 0; idK < 3; ++idK)
+		{
+		  trMx[idR][idK] = vMx[idR][0] * hMx[idK][0] + 
+		    vMx[idR][1] * hMx[idK][1] -
+		    vMx[idR][2] * hMx[idK][2];
+		}
+	      }
+	      break;
+	    case 3:
+	    case 5:
+	    case 6:
+	      /* Source verticies are colinear and there exists an infinity of
+	       * solutions! */
+	      errNum = WLZ_ERR_ALG_SINGULAR;
+	      break;
+	  }
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Fill in other matrix elements. */
+	trMx[3][0] = trMx[3][1] = trMx[3][2] = 0.0;
+	trMx[3][3] = 1.0;
+	/* Compute translation by applying the rotation transform to the first
+	 * centroid and subtracting this from the second centroid. */
+	trMx[0][3] = cen1.vtX -
+	  ((trMx[0][0] * cen0.vtX) + (trMx[0][1] * cen0.vtY) +
+	   (trMx[0][2] * cen0.vtZ));
+	trMx[1][3] = cen1.vtY -
+	  ((trMx[1][0] * cen0.vtX) + (trMx[1][1] * cen0.vtY) +
+	   (trMx[1][2] * cen0.vtZ));
+	trMx[2][3] = cen1.vtZ -
+	  ((trMx[2][0] * cen0.vtX) + (trMx[2][1] * cen0.vtY) +
+	   (trMx[2][2] * cen0.vtZ));
+	/* Build affine transform. */
+	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trMx,
+	    &errNum);
+      }
+      /* Clear up on error. */
+      if(wMx)
+      {
+	(void )AlcFree(wMx);
+      }
+      if(hMx)
+      {
+	(void )AlcDouble2Free(hMx);
+      }
+      if(vMx)
+      {
+	(void )AlcDouble2Free(vMx);
+      }
+      if(trMx)
+      {
+	(void )AlcDouble2Free(trMx);
       }
     }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Fill in other matrix elements. */
-    trMx[3][0] = trMx[3][1] = trMx[3][2] = 0.0;
-    trMx[3][3] = 1.0;
-    /* Compute translation by applying the rotation transform to the first
-     * centroid and subtracting this from the second centroid. */
-    trMx[0][3] = cen1.vtX -
-     		 ((trMx[0][0] * cen0.vtX) + (trMx[0][1] * cen0.vtY) +
-		  (trMx[0][2] * cen0.vtZ));
-    trMx[1][3] = cen1.vtY -
-     		 ((trMx[1][0] * cen0.vtX) + (trMx[1][1] * cen0.vtY) +
-		  (trMx[1][2] * cen0.vtZ));
-    trMx[2][3] = cen1.vtZ -
-     		 ((trMx[2][0] * cen0.vtX) + (trMx[2][1] * cen0.vtY) +
-		  (trMx[2][2] * cen0.vtZ));
-    /* Build affine transform. */
-    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trMx,
-				      &errNum);
-  }
-  /* Clear up on error. */
-  if(wMx)
-  {
-    (void )AlcFree(wMx);
-  }
-  if(hMx)
-  {
-    (void )AlcDouble2Free(hMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
-  if(trMx)
-  {
-    (void )AlcDouble2Free(trMx);
   }
   if(dstErr)
   {
