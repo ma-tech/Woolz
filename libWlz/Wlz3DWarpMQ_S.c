@@ -3213,7 +3213,8 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
    /* here we should change something  */
    if(wmt2D5->nElem > 1 )
    {
-     printf("cutPosition:  %d\n", cutPosition );
+     /*printf("cutPosition:  %d\n", cutPosition );
+     */
      /* exclude the one points cut and the case when all cut area is less than one: */
      /* printf("SingleCut?  %d  noAreaLarger?  %d\n", WlzIsSinglePointCutMesh(wmt2D5),  WlzNoAreaGreaterThanOne(wmt2D5) ); */
      if( !WlzIsSinglePointCutMesh(wmt2D5) && !WlzNoAreaGreaterThanOne(wmt2D5) )
