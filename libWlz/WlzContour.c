@@ -19,6 +19,7 @@
 */
 #include <stdio.h>
 #include <float.h>
+#include <limits.h>
 #include <string.h>
 #include <Wlz.h>
 
@@ -46,51 +47,6 @@ typedef enum _WlzContourTriIsn2D
   WLZ_CONTOUR_TIC2D_S02S21,             /*!< Side 0-2 - side 2-1 */
   WLZ_CONTOUR_TIC2D_S21S10              /*!< Side 2-1 - side 1-0 */
 } WlzContourTriIsn2D;
-
-/*!
-* \enum		_WlzContourTetIsn3D
-* \ingroup	WlzContour
-* \brief	Classification of the intersection of a plane
-* 		with a tetradedron.
-*		Typedef: ::WlzContourT
-*/
-typedef enum _WlzContourTetIsn3D
-{
-  WLZ_CONTOUR_TIC3D_NONE,               /*!< No intersection */
-  WLZ_CONTOUR_TIC3D_V0S12S13,		/*!< Vertex 0, side 1-2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V0S12S23,		/*!< Vertex 0, side 1-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V0S13S23,		/*!< Vertex 0, side 1-3, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V0V1S23,		/*!< Vertex 0, vertex 1, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V0V1V2,		/*!< Vertex 0, vertex 1, vertex 2 */
-  WLZ_CONTOUR_TIC3D_V0V1V3,		/*!< Vertex 0, vertex 2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V0V2S13,		/*!< Vertex 0, vertex 2, vertex 3 */
-  WLZ_CONTOUR_TIC3D_V0V2V3,		/*!< Vertex 0, vertex 2, vertex 3 */
-  WLZ_CONTOUR_TIC3D_V0V3S12,		/*!< Vertex 0, side 0-2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V1S02S03,		/*!< Vertex 1, side 0-2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V1S02S23,		/*!< Vertex 1, side 0-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V1S03S23,		/*!< Vertex 1, side 0-3, side 2-3 */
-  WLZ_CONTOUR_TIC3D_V1V2S03,		/*!< Vertex 1, vertex 2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V1V2V3,		/*!< Vertex 1, vertex 2, vertex 3 */
-  WLZ_CONTOUR_TIC3D_V1V3S02,		/*!< Vertex 1, vertex 3, side 0-2 */
-  WLZ_CONTOUR_TIC3D_V2S01S02,		/*!< Vertex 2, side 0-1, side 0-2 */
-  WLZ_CONTOUR_TIC3D_V2S01S03,		/*!< Vertex 2, side 0-1, side 0-3 */
-  WLZ_CONTOUR_TIC3D_V2S01S13,		/*!< Vertex 2, side 0-1, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V2S03S13,		/*!< Vertex 2, side 0-3, side 1-3 */
-  WLZ_CONTOUR_TIC3D_V2V3S01,		/*!< Vertex 2, vertex 3, side 0-1 */
-  WLZ_CONTOUR_TIC3D_V3S01S02,		/*!< Vertex 3, side 0-1, side 0-2 */
-  WLZ_CONTOUR_TIC3D_V3S01S12,		/*!< Vertex 3, side 0-1, side 1-2 */
-  WLZ_CONTOUR_TIC3D_V3S02S12,		/*!< Vertex 3, side 0-2, side 1-2 */
-  WLZ_CONTOUR_TIC3D_S01S02S03,		/*!< Side 0-1, side 0-2, side 0-3 */
-  WLZ_CONTOUR_TIC3D_S01S02S13S23,  	/*!< Side 0-1, side 0-2, side 1-3,
-  					     side 2-3 */
-  WLZ_CONTOUR_TIC3D_S01S03S12S23,  	/*!< Side 0-1, side 0-3, side 1-2,
-  					     side 2-3 */
-  WLZ_CONTOUR_TIC3D_S01S12S13,		/*!< Side 0-1, side 1-2, side 1-3 */
-  WLZ_CONTOUR_TIC3D_S02S03S12S13,  	/*!< Side 0-2, side 0-3, side 1-2,
-  					     side 1-3 */
-  WLZ_CONTOUR_TIC3D_S02S12S23,		/*!< Side 0-2, side 1-2, side 2-3 */
-  WLZ_CONTOUR_TIC3D_S03S13S23		/*!< Side 0-3, side 1-3, side 2-3 */
-} WlzContourTetIsn3D;
 
 static WlzContour	*WlzContourIsoObj2D(
 			  WlzObject *srcObj,
@@ -120,21 +76,21 @@ static WlzContour 	*WlzContourBndObj3D(
 			  double ctrVal,
 			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourFromPoints3D(
+			  WlzObject *dObj,
+			  WlzVertexType vtxType,
 			  int nSPts,
-			  WlzDVertex3 *sPts,
+			  WlzVertexP sPts,
 			  double sAlpha,
 			  int nIPts,
-			  WlzDVertex3 *iPts,
+			  WlzVertexP iPts,
 			  double iDist,
 			  double iAlpha,
 			  int nOPts,
-			  WlzDVertex3 *oPts,
+			  WlzVertexP oPts,
 			  double oDist,
 			  double oAlpha,
 			  double delta,
 			  double tau,
-			  int inPln,
-			  int plnIdx,
 			  WlzErrorNum *dstErr);
 static WlzDVertex2	WlzContourItpTriSide(
 			  double valOrg,
@@ -388,6 +344,11 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    }
 	    ctr = WlzContourBndObj3D(srcObj, ctrVal, &errNum);
 	    break;
+	  case WLZ_CONTOUR_MTD_RBFBND:
+	    ctr = WlzContourRBFBndObj3D(srcObj, 2, 2, 10,
+	    				0.10, 0.2, 1.0, 2.0, 0.1, 0.1,
+	    				&errNum);
+	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
 	    break;
@@ -413,7 +374,11 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 *		This is done by approximating (or interpolating) the
 *		distance function for the curve using multi order spline
 *		radial basis functions. The contour is then computed from the
-*		zero level set of the radial basis functions.
+*		zero level set of the radial basis functions within the
+*		given distance object.
+* \param	dObj			Object with double values, within
+*					which the distance function will be
+*					evaluated.
 * \param	vtxType			Type of all vertices.
 * \param	nSPts			Number of on surface points.
 * \param	sPts			Positions of the on surface points.
@@ -432,14 +397,11 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 * 					smoothness parameter.
 * \param	tau			Multiorder spline \f$\tau\f$
 *					smoothness parameter.
-* \param	inPln			Find contour in plane, only used if
-*					vertices are 3D.
-* \param	plnIdx			Plane definition, currently the XY
-*					plane with the given Z coordinate.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
-WlzContour	*WlzContourFromPoints(WlzVertexType vtxType,
+WlzContour	*WlzContourFromPoints(WlzObject *dObj,
+				      WlzVertexType vtxType,
 				      int nSPts, WlzVertexP sPts,
 				      double sAlpha,
 				      int nIPts, WlzVertexP iPts,
@@ -447,17 +409,27 @@ WlzContour	*WlzContourFromPoints(WlzVertexType vtxType,
 				      int nOPts, WlzVertexP oPts,
 				      double oDist, double oAlpha,
 				      double delta, double tau,
-				      int inPln,
-				      int plnIdx,
 				      WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((nSPts <= 0) || (sPts.v == NULL) ||
-     (nIPts <= 0) || (iPts.v == NULL) ||
-     (nOPts <= 0) || (oPts.v == NULL) ||
-     (delta < 0) || (tau < 0))
+  if(dObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(dObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(dObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if((nSPts <= 0) || (sPts.v == NULL) ||
+	  (nIPts <= 0) || (iPts.v == NULL) ||
+	  (nOPts <= 0) || (oPts.v == NULL) ||
+	  (delta < 0) || (tau < 0))
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
@@ -465,11 +437,14 @@ WlzContour	*WlzContourFromPoints(WlzVertexType vtxType,
   {
     switch(vtxType)
     {
+      case WLZ_VERTEX_I3:
+      case WLZ_VERTEX_F3:
       case WLZ_VERTEX_D3:
-	ctr = WlzContourFromPoints3D(nSPts, sPts.d3, sAlpha,
-	    nIPts, iPts.d3, iDist, iAlpha,
-	    nOPts, oPts.d3, oDist, oAlpha,
-	    delta, tau, inPln, plnIdx, &errNum);
+	ctr = WlzContourFromPoints3D(dObj, vtxType,
+				     nSPts, sPts, sAlpha,
+				     nIPts, iPts, iDist, iAlpha,
+				     nOPts, oPts, oDist, oAlpha,
+				     delta, tau, &errNum);
 	break;
       default:
 	errNum = WLZ_ERR_PARAM_TYPE;
@@ -491,8 +466,14 @@ WlzContour	*WlzContourFromPoints(WlzVertexType vtxType,
 *		This is done by approximating (or interpolating) the
 *		distance function for the surface using multi order spline
 *		radial basis functions. The contour is then computed from the
-*		zero level set of the radial basis functions.
+*		zero level set of the radial basis functions within the given
+*		distance object.
 *		All parameters are assumed valid.
+* \param	dObj			3D object with double values, within
+*					which the distance function will be
+*					evaluated.
+* \param	vtxType			Type of all vertices, MUST be 3I, 3F
+*					or 3D.
 * \param	nSPts			Number of on surface points.
 * \param	sPts			Positions of the on surface points.
 * \param	sAlpha			Alpha value for the on surface points.
@@ -510,42 +491,34 @@ WlzContour	*WlzContourFromPoints(WlzVertexType vtxType,
 * 					smoothness parameter.
 * \param	tau			Multiorder spline \f$\tau\f$
 *					smoothness parameter.
-* \param	inPln			Find contour in plane, only used if
-*					vertices are 3D.
-* \param	plnIdx			Plane definition, currently the XY
-*					plane with the given Z coordinate.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
-static WlzContour *WlzContourFromPoints3D(int nSPts, WlzDVertex3 *sPts,
-					double sAlpha,
-					int nIPts, WlzDVertex3 *iPts,
-					double iDist, double iAlpha,
-					int nOPts, WlzDVertex3 *oPts,
-					double oDist, double oAlpha,
-					double delta, double tau,
-					int inPln, int plnIdx,
-					WlzErrorNum *dstErr)
+static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
+		       WlzVertexType vtxType,
+		       int nSPts, WlzVertexP sPts, double sAlpha,
+		       int nIPts, WlzVertexP iPts, double iDist, double iAlpha,
+		       int nOPts, WlzVertexP oPts, double oDist, double oAlpha,
+		       double delta, double tau, WlzErrorNum *dstErr)
 {
   int		tI0,
+		klIdx,
   		nCPts;
   double	*alpha = NULL,
   		*dist = NULL;
-  WlzObject	*dObj = NULL;
   WlzDVertex3	*cPts = NULL;
   WlzContour	*ctr = NULL;
   WlzBasisFn	*basisFn = NULL;
-  double	**dVal2D = NULL;
-  double	***dVal3D = NULL;
-  WlzIVertex2	dOrg2D,
-  		dSz2D;
-  WlzIVertex3	dIx,
-		dOrg3D,
-  		dSz3D;
-  WlzDVertex3	dVx;
-  WlzDBox3	dBBoxD;
-  WlzIBox3	dBBoxI;
+  WlzDVertex3	dPos;
+  WlzDomain	*domP;
+  WlzValues	*valP;
+  WlzVoxelValues *dVal;
+  WlzPlaneDomain *dDom;
+  WlzObject	*dObj2D;
   double	bFnParam[2];
+  WlzGreyP	tGP;
+  WlzGreyWSpace	gWSp;
+  WlzIntervalWSpace iWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   bFnParam[0] = delta;
@@ -561,102 +534,112 @@ static WlzContour *WlzContourFromPoints3D(int nSPts, WlzDVertex3 *sPts,
   /* Compute multiorder spline basis function. */
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzValueCopyDVertexToDVertex3(cPts, sPts, nSPts);
+    switch(vtxType)
+    {
+      case WLZ_VERTEX_I3:
+	WlzValueCopyIVertexToDVertex3(cPts, sPts.i3, nSPts);
+	WlzValueCopyIVertexToDVertex3(cPts + nSPts, iPts.i3, nIPts);
+	WlzValueCopyIVertexToDVertex3(cPts + nSPts + nIPts, oPts.i3, nOPts);
+	break;
+      case WLZ_VERTEX_F3:
+	WlzValueCopyFVertexToDVertex3(cPts, sPts.f3, nSPts);
+	WlzValueCopyFVertexToDVertex3(cPts + nSPts, iPts.f3, nIPts);
+	WlzValueCopyFVertexToDVertex3(cPts + nSPts + nIPts, oPts.f3, nOPts);
+	break;
+      case WLZ_VERTEX_D3:
+	WlzValueCopyDVertexToDVertex3(cPts, sPts.d3, nSPts);
+	WlzValueCopyDVertexToDVertex3(cPts + nSPts, iPts.d3, nIPts);
+	WlzValueCopyDVertexToDVertex3(cPts + nSPts + nIPts, oPts.d3, nOPts);
+	break;
+      default:
+        errNum = WLZ_ERR_PARAM_DATA;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     WlzValueSetDouble(alpha, sAlpha, nSPts);
     WlzValueSetDouble(dist, 0.0, nSPts);
-    WlzValueCopyDVertexToDVertex3(cPts + nSPts, iPts, nIPts);
     WlzValueSetDouble(alpha + nSPts, iAlpha, nIPts);
     WlzValueSetDouble(dist + nSPts, -iDist, nIPts);
-    WlzValueCopyDVertexToDVertex3(cPts + nSPts + nIPts, oPts, nOPts);
     WlzValueSetDouble(alpha + nSPts + nIPts, oAlpha, nOPts);
     WlzValueSetDouble(dist + nSPts + nIPts, oDist, nOPts);
     basisFn = WlzBasisFnScalarMOS3DFromCPts(nCPts, cPts, dist, alpha,
     					bFnParam, &errNum);
   }
-  /* Create a WLZ_GREY_DOUBLE valued distance object with a domain which
-   * encloses all the given points. */
+  /* Evaluate the multiorder spline within the distance object. */
   if(errNum == WLZ_ERR_NONE)
   {
-    dBBoxD = WlzBoundingBoxVtx3D(nCPts, cPts, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    dBBoxI = WlzBoundingBox3DTo3I(dBBoxD);
-    if(((dSz3D.vtX = dBBoxI.xMax - dBBoxI.xMin + 1) < 1) ||
-       ((dSz3D.vtY = dBBoxI.yMax - dBBoxI.yMin + 1) < 1) ||
-       ((dSz3D.vtZ = dBBoxI.zMax - dBBoxI.zMin + 1) < 1))
+    dDom = dObj->domain.p;
+    domP = dDom->domains;
+    dVal = dObj->values.vox;
+    valP = dVal->values;
+#ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
+    (void )fprintf(stderr,
+    		   "WlzContourFromPoints3D: plane1 %d, lastpl %d\n",
+    		   dDom->plane1, dDom->lastpl);
+#endif
+    dPos.vtZ = dDom->plane1;
+    while((errNum == WLZ_ERR_NONE) && (dPos.vtZ <= dDom->lastpl))
     {
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(inPln)
-    {
-      dSz2D.vtX = dSz3D.vtX;
-      dSz2D.vtY = dSz3D.vtY;
-      if(AlcDouble2Malloc(&dVal2D, dSz2D.vtY, dSz2D.vtX) != ALC_ER_NONE)
+#ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
+    (void )fprintf(stderr, "WlzContourFromPoints3D: plane %g\n", dPos.vtZ);
+#endif
+      if((*domP).core)
       {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	dVx.vtZ = plnIdx;
-	for(dIx.vtY = 0; dIx.vtY < dSz2D.vtY; ++(dIx.vtY))
+	dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domP, *valP, 
+			     NULL, NULL, &errNum);
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  dVx.vtY = dBBoxI.yMin + dIx.vtY;
-	  for(dIx.vtX = 0; dIx.vtX < dSz2D.vtX; ++(dIx.vtX))
+	  errNum = WlzInitGreyScan(dObj2D, &iWSp, &gWSp);
+	}
+	while((errNum == WLZ_ERR_NONE) &&
+	      ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+	{
+	  tGP = gWSp.u_grintptr;
+	  dPos.vtY = iWSp.linpos;
+	  switch(gWSp.pixeltype)
 	  {
-	    dVx.vtX = dBBoxI.xMin + dIx.vtX;
-	    *(*(dVal2D + dIx.vtY) + dIx.vtX) =
-				  WlzBasisFnValueScalarMOS3D(basisFn, dVx);
+	    case WLZ_GREY_FLOAT:
+	      for(dPos.vtX = iWSp.lftpos; dPos.vtX <= iWSp.rgtpos;
+	          ++(dPos.vtX))
+	      {
+		*(tGP.flp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
+	      }
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      for(dPos.vtX = iWSp.lftpos; dPos.vtX <= iWSp.rgtpos;
+	          ++(dPos.vtX))
+	      {
+		*(tGP.dbp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
+	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
 	  }
 	}
-	dOrg2D.vtX = dBBoxI.xMin;
-	dOrg2D.vtY = dBBoxI.yMin;
-	dObj = WlzFromArray2D((void **)dVal2D, dSz2D, dOrg2D,
-			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
-			      0.0, 1.0, 0, 1, &errNum);
-	if(dObj)
+	if(errNum == WLZ_ERR_EOO)
 	{
-	  *dVal2D = NULL;
+	  errNum = WLZ_ERR_NONE;
 	}
-      }
-    }
-    else
+#ifdef WLZ_CONTOURFROMPOINTS_DEBUG
+  if(fabs(dPos.vtZ - 25.0) < DBL_EPSILON)
+  {
+    FILE *fP;
+    
+    if((fP = fopen("DEBUG_2D.wlz", "w")) != NULL)
     {
-      if(AlcDouble3Malloc(&dVal3D,
-      			  dSz3D.vtZ, dSz3D.vtY, dSz3D.vtX) != ALC_ER_NONE)
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
+      (void )WlzWriteObj(fP, dObj2D);
+      (void )fclose(fP);
+    }
+  }
+#endif
+	WlzFreeObj(dObj2D);
       }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	for(dIx.vtZ = 0; dIx.vtZ < dSz3D.vtZ; ++(dIx.vtZ))
-	{
-	  dVx.vtZ = dBBoxI.zMin + dIx.vtZ;
-	  for(dIx.vtY = 0; dIx.vtY < dSz3D.vtY; ++(dIx.vtY))
-	  {
-	    dVx.vtY = dBBoxI.yMin + dIx.vtY;
-	    for(dIx.vtX = 0; dIx.vtX < dSz3D.vtX; ++(dIx.vtX))
-	    {
-	      dVx.vtX = dBBoxI.xMin + dIx.vtX;
-	      *(*(*(dVal3D + dIx.vtZ) + dIx.vtY) + dIx.vtX) =
-				    WlzBasisFnValueScalarMOS3D(basisFn, dVx);
-	    }
-	  }
-	}
-	dOrg3D.vtX = dBBoxI.xMin;
-	dOrg3D.vtY = dBBoxI.yMin;
-	dOrg3D.vtZ = dBBoxI.zMin;
-	dObj = WlzFromArray3D((void ***)dVal3D, dSz3D, dOrg3D,
-			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
-			      0.0, 1.0, 0, 1, &errNum);
-	if(dObj)
-	{
-	  **dVal3D = NULL;
-	}
-      }
+      ++(dPos.vtZ);
+      ++domP;
+      ++valP;
     }
 #ifdef WLZ_CONTOURFROMPOINTS_DEBUG
     if(errNum == WLZ_ERR_NONE)
@@ -671,15 +654,25 @@ static WlzContour *WlzContourFromPoints3D(int nSPts, WlzDVertex3 *sPts,
   /* Compute the zero valued surface through the distance object. */
   if(errNum == WLZ_ERR_NONE)
   {
-    ctr = WlzContourObj(dObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, &errNum);
+    if(dDom->plane1 == dDom->lastpl)
+    {
+      dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+      			   *(dDom->domains + 0), *(dVal->values + 0), 
+			   NULL, NULL, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        ctr = WlzContourObj(dObj2D, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, &errNum);
+      }
+    }
+    else
+    {
+      ctr = WlzContourObj(dObj, WLZ_CONTOUR_MTD_ISO, 0.0, 1.0, &errNum);
+    }
   }
-  (void )Alc2Free((void **)dVal2D);
-  (void )Alc3Free((void ***)dVal3D);
   AlcFree(cPts);
   AlcFree(alpha);
   AlcFree(dist);
   WlzBasisFnFree(basisFn);
-  (void )WlzFreeObj(dObj);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1868,6 +1861,303 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
   (void )WlzFreeObj(cObj);
   (void )WlzFreeObj(dObj);
   (void )WlzFreeObj(sObj);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return	Woolz contour or NULL on error.
+* \ingroup	WlzContour
+* \brief	Computes a 3D contour from the boundary of the given objects
+*		domain by extracting the zero level set of an approximate
+*		signed distance function computed using a multi-order
+*		spline radial basis function.
+* \param	gObj			The given object.
+* \param	bErosion		Object boundary erosion for
+*					interior points.
+* \param	bDilation		Object boundary dilation for
+*					exterior points.
+* \param	sDilation		Object boundary dilation for
+*					distance object used in surface
+*					extraction.
+* \param	sFrac			Fraction of surface points to use.
+* \param	oFrac			Fraction of the interior and exterior
+*					points to use for the
+*					interior and exterior points.
+* \param	sAlpha			Degree of approximation for the
+*					surface boundary points. The
+*					multi-order spline \f$\alpha\f$
+*					parameter.
+* \param	oAlpha			Degree of approximation for the
+*					interior and exterior points.
+*					The multi-order spline \f$\alpha\f$
+*					parameter.
+* \param	delta			Multi-order spline \f$\delta\f$
+*					parameter.
+* \param	tau			Multi-order spline \f$tau\f$
+*					parameter.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
+				int bErosion, int bDilation, int sDilation,
+				double sFrac, double oFrac,
+				double sAlpha, double oAlpha,
+				double delta, double tau,
+				WlzErrorNum *dstErr)
+{
+  int		idx,
+  		nDPts,
+		nEPts,
+  		nSPts,
+		nTPts;
+  int		*tBuf = NULL;
+  WlzObjectType	gTType;
+  WlzVertexP	dPts,
+  		ePts,
+		sPts;
+  WlzIVertex3	*tPts = NULL;
+  WlzObject	*dObj = NULL,
+  		*eObj = NULL,
+		*sObj = NULL,
+		*tObj0 = NULL,
+		*tObj1 = NULL;
+  WlzContour 	*ctr = NULL;
+  WlzValues	tVal;
+  WlzVertexP	vP;
+  WlzPixelV	bgdV;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dPts.v = ePts.v = sPts.v = NULL;
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(gObj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(gObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((bErosion < 1) | (bDilation < 1))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  /* Dilate and erode the given object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sObj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, bDilation, 0.0, 0.0, 0.0,
+				&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dObj = WlzStructDilation(gObj, sObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(bErosion != bDilation)
+    {
+      (void )WlzFreeObj(sObj);
+      sObj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, bErosion, 0.0, 0.0, 0.0,
+      				 &errNum);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    eObj = WlzStructErosion(gObj, sObj, &errNum);
+  }
+  WlzFreeObj(sObj); sObj = NULL;
+#ifdef WLZ_CONTOURFROMPOINTS_DEBUG
+    if(errNum == WLZ_ERR_NONE)
+    {
+      FILE *fP;
+      fP = fopen("DEBUG_dObj.wlz", "w");
+      (void )WlzWriteObj(fP, dObj);
+      fclose(fP);
+      fP = fopen("DEBUG_eObj.wlz", "w");
+      (void )WlzWriteObj(fP, eObj);
+      fclose(fP);
+    }
+#endif
+  /* Extract boundary points from the given; dilated and eroded objects. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzVerticesFromObjBnd3I(dObj, &nDPts, &(dPts.i3));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzVerticesFromObjBnd3I(eObj, &nEPts, &(ePts.i3));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzVerticesFromObjBnd3I(gObj, &nSPts, &(sPts.i3));
+  }
+  /* Free dilated and eroded boundary objects. */
+  (void )WlzFreeObj(dObj); dObj = NULL;
+  (void )WlzFreeObj(eObj);
+  /* Sample the boundary points and release storage. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nTPts = ALG_MAX(nDPts, nEPts);
+    nTPts = ALG_MAX(nTPts, nSPts);
+    if(((tBuf = (int *)AlcMalloc(nTPts * sizeof(int))) == NULL) ||
+       ((tPts = (WlzIVertex3 *)
+       		AlcMalloc(nTPts * sizeof(WlzIVertex3))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )AlgShuffleIdx(nSPts, tBuf, 0);
+    if((nSPts = (int )ceil(nSPts * sFrac)) <= 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      for(idx = 0; idx < nSPts; ++idx)
+      {
+	*(tPts + idx) = *(sPts.i3 + *(tBuf + idx));
+      }
+      WlzValueCopyIVertexToIVertex3(sPts.i3, tPts, nSPts);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )AlgShuffleIdx(nDPts, tBuf, 0);
+    if((nDPts = (int )ceil(nDPts * oFrac)) <= 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      for(idx = 0; idx < nDPts; ++idx)
+      {
+        *(tPts + idx) = *(dPts.i3 + *(tBuf + idx));
+      }
+      WlzValueCopyIVertexToIVertex3(dPts.i3, tPts, nDPts);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )AlgShuffleIdx(nEPts, tBuf, 0);
+    if((nEPts = (int )ceil(nEPts * oFrac)) <= 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      for(idx = 0; idx < nEPts; ++idx)
+      {
+        *(tPts + idx) = *(ePts.i3 + *(tBuf + idx));
+      }
+      WlzValueCopyIVertexToIVertex3(ePts.i3, tPts, nEPts);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((sPts.v = AlcRealloc(sPts.v, nSPts * sizeof(WlzIVertex3))) == NULL) ||
+       ((dPts.v = AlcRealloc(dPts.v, nDPts * sizeof(WlzIVertex3))) == NULL) ||
+       ((ePts.v = AlcRealloc(ePts.v, nEPts * sizeof(WlzIVertex3))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  AlcFree(tBuf); tBuf = NULL;
+  AlcFree(tPts);  tPts = NULL;
+#ifdef WLZ_CONTOUR_DEBUG_RBF
+  if(errNum == WLZ_ERR_NONE)
+  {
+    FILE	*fP;
+    WlzIVertex3	*pP;
+
+    pP = sPts.i3;
+    if((fP = fopen("DEBUG_sPts.num", "w")) != NULL)
+    {
+      for(idx = 0; idx < nSPts; ++idx, ++pP)
+      {
+	(void )fprintf(fP, "%d %d %d\n", pP->vtX, pP->vtY, pP->vtZ);
+      }
+      (void )fclose(fP);
+    }
+    pP = dPts.i3;
+    if((fP = fopen("DEBUG_dPts.num", "w")) != NULL)
+    {
+      for(idx = 0; idx < nDPts; ++idx, ++pP)
+      {
+	(void )fprintf(fP, "%d %d %d\n", pP->vtX, pP->vtY, pP->vtZ);
+      }
+      (void )fclose(fP);
+    }
+    pP = ePts.i3;
+    if((fP = fopen("DEBUG_ePts.num", "w")) != NULL)
+    {
+      for(idx = 0; idx < nEPts; ++idx, ++pP)
+      {
+	(void )fprintf(fP, "%d %d %d\n", pP->vtX, pP->vtY, pP->vtZ);
+      }
+      (void )fclose(fP);
+    }
+  }
+#endif
+  /* Create distance object which is the boundary dilated by some given
+   * radius. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tObj0 = WlzErosion(gObj, WLZ_6_CONNECTED, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tObj1 = WlzDiffDomain(gObj, tObj0, &errNum);
+  }
+  (void )WlzFreeObj(tObj0); tObj0 = NULL;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sObj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, sDilation, 0.0, 0.0, 0.0,
+				&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tObj0 = WlzStructDilation(tObj1, sObj, &errNum);
+  }
+  (void )WlzFreeObj(tObj1); tObj1 = NULL;
+  (void )WlzFreeObj(sObj);  sObj = NULL;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bgdV.type = WLZ_GREY_FLOAT;
+    bgdV.v.flv = FLT_MAX;
+    gTType = WlzGreyTableType(WLZ_GREY_TAB_INTL, WLZ_GREY_FLOAT, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tVal.vox = WlzNewValuesVox(tObj0, gTType, bgdV, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, tObj0->domain, tVal,
+    		       NULL, NULL, &errNum);
+  }
+  (void )WlzFreeObj(tObj0); tObj0 = NULL;
+  /* Compute the boundary contour from the sampled points. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    ctr = WlzContourFromPoints(dObj, WLZ_VERTEX_I3,
+    			       nSPts, sPts, sAlpha,
+			       nEPts, ePts, bErosion, oAlpha,
+			       nDPts, dPts, bDilation, oAlpha,
+			       delta, tau, &errNum);
+  }
+  /* Free remaining storage. */
+  (void )WlzFreeObj(dObj);
+  AlcFree(sPts.v);
+  AlcFree(ePts.v);
+  AlcFree(dPts.v);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -3486,6 +3776,10 @@ static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
 		 (cVal[7] > WLZ_CTR_TOLERANCE)));
   if(intersect)
   {
+#ifdef WLZ_CONTOUR_DEBUG
+    (void )fprintf(stderr, "cbOrg = {%g, %g, %g}\n",
+    	           cbOrg.vtX, cbOrg.vtY, cbOrg.vtZ);
+#endif /* WLZ_CONTOUR_DEBUG */
     tIdx = 0;
     while((errNum == WLZ_ERR_NONE) && (tIdx < 6))
     {
@@ -3508,6 +3802,8 @@ static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
 * \brief	Computes the intersection of the given tetrahedron
 *               with the isovalue surface. Creates new 3D simplicies
 *               for the contour.
+*		The triangle vertices are always ordered such that
+*		when viewed from the +ve side they are in CCW order.
 * \param	ctr			Contour being built.
 * \param	tVal			Values wrt the iso-value at the
 *                                       verticies of the tetrahedron.
@@ -3521,369 +3817,181 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
 				      WlzDVertex3 cbOrg)
 {
   int		idx,
+		iCode,
   		isnCnt;
   double	tD0,
   		tD1;
   WlzDVertex3	*tVP0;
   WlzDVertex3	tV0;
-  WlzContourTetIsn3D iCode;
-  int		lev[4];     /* Rel. tetra node level: above 2, on 1, below 0 */
+  int		lev[4];     /* Rel. tetra node value: 2 -> +, 1 -> 0, 0 -> - */
   WlzDVertex3	sIsn[3],
   		tIsn[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const WlzContourTetIsn3D iCodeTab[3][3][3][3] = /* Intersection code table */
-  {
-    {
-      {
-	{
-	  /* 0000 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0001 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0002 */ WLZ_CONTOUR_TIC3D_S01S02S03
-	},
-	{
-	  /* 0010 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0011 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0012 */ WLZ_CONTOUR_TIC3D_V1S02S03
-	},
-	{
-	  /* 0020 */ WLZ_CONTOUR_TIC3D_S01S12S13,
-	  /* 0021 */ WLZ_CONTOUR_TIC3D_V0S12S13,
-	  /* 0022 */ WLZ_CONTOUR_TIC3D_S02S03S12S13
-	}
-      },
-      {
-	{
-	  /* 0100 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0101 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0102 */ WLZ_CONTOUR_TIC3D_V2S01S03
-	},
-	{
-	  /* 0110 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 0111 */ WLZ_CONTOUR_TIC3D_V0V1V2,
-	  /* 0112 */ WLZ_CONTOUR_TIC3D_V1V2S03
-	},
-	{
-	  /* 0120 */ WLZ_CONTOUR_TIC3D_V2S01S13,
-	  /* 0121 */ WLZ_CONTOUR_TIC3D_V0V2S13,
-	  /* 0122 */ WLZ_CONTOUR_TIC3D_V2S03S13
-	}
-      },
-      {
-	{
-	  /* 0200 */ WLZ_CONTOUR_TIC3D_S02S12S23,
-	  /* 0201 */ WLZ_CONTOUR_TIC3D_V0S12S23,
-	  /* 0202 */ WLZ_CONTOUR_TIC3D_S01S03S12S23
-	},
-	{
-	  /* 0210 */ WLZ_CONTOUR_TIC3D_V1S02S23,
-	  /* 0211 */ WLZ_CONTOUR_TIC3D_V0V1S23,
-	  /* 0212 */ WLZ_CONTOUR_TIC3D_V1S03S23
-	},
-	{
-	  /* 0220 */ WLZ_CONTOUR_TIC3D_S01S02S13S23,
-	  /* 0221 */ WLZ_CONTOUR_TIC3D_V0S13S23,
-	  /* 0222 */ WLZ_CONTOUR_TIC3D_S03S13S23
-	}
-      }
-    },
-    {
-      {
-	{
-	  /* 1000 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1001 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1002 */ WLZ_CONTOUR_TIC3D_V3S01S02
-	},
-	{
-	  /* 1010 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1011 */ WLZ_CONTOUR_TIC3D_V0V1V3,
-	  /* 1012 */ WLZ_CONTOUR_TIC3D_V1V3S02
-	},
-	{
-	  /* 1020 */ WLZ_CONTOUR_TIC3D_V3S01S12,
-	  /* 1021 */ WLZ_CONTOUR_TIC3D_V0V3S12,
-	  /* 1022 */ WLZ_CONTOUR_TIC3D_V3S02S12
-	}
-      },
-      {
-	{
-	  /* 1100 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1101 */ WLZ_CONTOUR_TIC3D_V0V2V3,
-	  /* 1102 */ WLZ_CONTOUR_TIC3D_V2V3S01
-	},
-	{
-	  /* 1110 */ WLZ_CONTOUR_TIC3D_V1V2V3,
-	  /* 1111 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1112 */ WLZ_CONTOUR_TIC3D_V1V2V3
-	},
-	{
-	  /* 1120 */ WLZ_CONTOUR_TIC3D_V2V3S01,
-	  /* 1121 */ WLZ_CONTOUR_TIC3D_V0V2V3,
-	  /* 1122 */ WLZ_CONTOUR_TIC3D_NONE
-	}
-      },
-      {
-	{
-	  /* 1200 */ WLZ_CONTOUR_TIC3D_V3S02S12,
-	  /* 1201 */ WLZ_CONTOUR_TIC3D_V0V3S12,
-	  /* 1202 */ WLZ_CONTOUR_TIC3D_V3S01S12
-	},
-	{
-	  /* 1210 */ WLZ_CONTOUR_TIC3D_V1V3S02,
-	  /* 1211 */ WLZ_CONTOUR_TIC3D_V0V1V3,
-	  /* 1212 */ WLZ_CONTOUR_TIC3D_NONE
-	},
-	{
-	  /* 1220 */ WLZ_CONTOUR_TIC3D_V3S01S02,
-	  /* 1221 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 1222 */ WLZ_CONTOUR_TIC3D_NONE
-	}
-      }
-    },
-    {
-      {
-	{
-	  /* 2000 */ WLZ_CONTOUR_TIC3D_S03S13S23,
-	  /* 2001 */ WLZ_CONTOUR_TIC3D_V0S13S23,
-	  /* 2002 */ WLZ_CONTOUR_TIC3D_S01S02S13S23
-	},
-	{
-	  /* 2010 */ WLZ_CONTOUR_TIC3D_V1S03S23,
-	  /* 2011 */ WLZ_CONTOUR_TIC3D_V0V1S23,
-	  /* 2012 */ WLZ_CONTOUR_TIC3D_V1S02S23
-	},
-	{
-	  /* 2020 */ WLZ_CONTOUR_TIC3D_S01S03S12S23,
-	  /* 2021 */ WLZ_CONTOUR_TIC3D_V0S12S23,
-	  /* 2022 */ WLZ_CONTOUR_TIC3D_S02S12S23
-	}
-      },
-      {
-	{
-	  /* 2100 */ WLZ_CONTOUR_TIC3D_V2S03S13,
-	  /* 2101 */ WLZ_CONTOUR_TIC3D_V0V2S13,
-	  /* 2102 */ WLZ_CONTOUR_TIC3D_V2S01S13
-	},
-	{
-	  /* 2110 */ WLZ_CONTOUR_TIC3D_V1V2S03,
-	  /* 2111 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 2112 */ WLZ_CONTOUR_TIC3D_NONE
-	},
-	{
-	  /* 2120 */ WLZ_CONTOUR_TIC3D_V2S01S03,
-	  /* 2121 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 2122 */ WLZ_CONTOUR_TIC3D_NONE
-	}
-      },
-      {
-	{
-	  /* 2200 */ WLZ_CONTOUR_TIC3D_S02S03S12S13,
-	  /* 2201 */ WLZ_CONTOUR_TIC3D_V0S12S13,
-	  /* 2202 */ WLZ_CONTOUR_TIC3D_S01S12S13
-	},
-	{
-	  /* 2210 */ WLZ_CONTOUR_TIC3D_V1S02S03,
-	  /* 2211 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 2212 */ WLZ_CONTOUR_TIC3D_NONE
-	},
-	{
-	  /* 2220 */ WLZ_CONTOUR_TIC3D_S01S02S03,
-	  /* 2221 */ WLZ_CONTOUR_TIC3D_NONE,
-	  /* 2222 */ WLZ_CONTOUR_TIC3D_NONE
-	}
-      }
-    }
-  };
 
   for(idx = 0; idx < 4; ++idx)
   {
     lev[idx] = (tVal[idx] >= DBL_EPSILON) + (tVal[idx] > -(DBL_EPSILON));
   }
-  iCode = iCodeTab[lev[3]][lev[2]][lev[1]][lev[0]];
+  isnCnt = 0;
+  iCode = (lev[3] * 1000) + (lev[2] * 100) + (lev[1] * 10) + lev[0];
   switch(iCode)
   {
-    case WLZ_CONTOUR_TIC3D_V0S12S13:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
-					 *(tPos + 1), *(tPos + 2));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
+    case    0: /* No intersection */
       break;
-    case WLZ_CONTOUR_TIC3D_V0S12S23:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
-					 *(tPos + 1), *(tPos + 2));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
-					 *(tPos + 2), *(tPos + 3));
+    case    1: /* No intersection */
       break;
-    case WLZ_CONTOUR_TIC3D_V0S13S23:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
-					 *(tPos + 2), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V0V1S23:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = *(tPos + 1);
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
-					 *(tPos + 2), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V0V1V2:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = *(tPos + 1);
-      *(tIsn + 2) = *(tPos + 2);
-      break;
-    case WLZ_CONTOUR_TIC3D_V0V1V3:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = *(tPos + 1);
-      *(tIsn + 2) = *(tPos + 3);
-      break;
-    case WLZ_CONTOUR_TIC3D_V0V2S13:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = *(tPos + 2);
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V0V2V3:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = *(tPos + 2);
-      *(tIsn + 2) = *(tPos + 3);
-      break;
-    case WLZ_CONTOUR_TIC3D_V0V3S12:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 0);
-      *(tIsn + 1) = *(tPos + 3);
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
-					 *(tPos + 1), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_V1S02S03:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 1);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
-					 *(tPos + 0), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V1S02S23:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 1);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
-					 *(tPos + 2), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V1S03S23:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 1);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
-					 *(tPos + 0), *(tPos + 3));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
-					 *(tPos + 2), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V1V2S03:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 1);
-      *(tIsn + 1) = *(tPos + 2);
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
-					 *(tPos + 0), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V1V2V3:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 1);
-      *(tIsn + 1) = *(tPos + 2);
-      *(tIsn + 2) = *(tPos + 3);
-      break;
-    case WLZ_CONTOUR_TIC3D_V1V3S02:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 1);
-      *(tIsn + 1) = *(tPos + 3);
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_V2S01S02:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 2);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_V2S01S03:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 2);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
-					 *(tPos + 0), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V2S01S13:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 2);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V2S03S13:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 2);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
-					 *(tPos + 0), *(tPos + 3));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
-      break;
-    case WLZ_CONTOUR_TIC3D_V2V3S01:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 2);
-      *(tIsn + 1) = *(tPos + 3);
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
-      break;
-    case WLZ_CONTOUR_TIC3D_V3S01S02:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 3);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_V3S01S12:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 3);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
-					 *(tPos + 1), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_V3S02S12:
-      isnCnt = 3;
-      *(tIsn + 0) = *(tPos + 3);
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
-					 *(tPos + 1), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_S01S02S03:
+    case    2: /* S01S03S02 */
       isnCnt = 3;
       *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
 					 *(tPos + 0), *(tPos + 1));
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
 					 *(tPos + 0), *(tPos + 2));
+      break;
+    case   10: /* No intersection */
+      break;
+    case   11: /* No intersection */
+      break;
+    case   12: /* V1S03S02 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case   20: /* S01S12S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case   21: /* V0S12S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case   22: /* S02S12S13S03 */
+      isnCnt = 4;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case  100: /* No intersection. */
+      break;
+    case  101: /* No intersection. */
+      break;
+    case  102: /* V2S01S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
       *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
 					 *(tPos + 0), *(tPos + 3));
       break;
-    case WLZ_CONTOUR_TIC3D_S01S02S13S23:
+    case  110: /* No intersection. */
+      break;
+    case  111: /* V1V0V2 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 0);
+      *(tIsn + 2) = *(tPos + 2);
+      break;
+    case  112: /* V2V1S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case  120: /* V2S13S01 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case  121: /* V0V2S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case  122: /* V2S13S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case  200: /* S02S23S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case  201: /* V0S23S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case  202: /* S01S03S23S12 */
       isnCnt = 4;
-      /* Take care with ordering as later assume ordered verticies when
-       * spliting quadrilateral: S01,S02,S23,S13. */
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case  210: /* V1S02S23 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case  211: /* V1V0S23 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 0);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case  212: /* V1S03S23 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case  220: /* S01S02S23S13 */
+      isnCnt = 4;
       *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
 					 *(tPos + 0), *(tPos + 1));
       *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
@@ -3893,10 +4001,221 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
       *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
 					 *(tPos + 1), *(tPos + 3));
       break;
-    case WLZ_CONTOUR_TIC3D_S01S03S12S23:
+    case  221: /* V0S23S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case  222: /* S03S23S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case 1000: /* No intersection */
+      break;
+    case 1001: /* No intersection */
+      break;
+    case 1002: /* V3S02S01 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case 1010: /* No intersection */
+      break;
+    case 1011: /* V0V1V3 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case 1012: /* V1V3S02 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case 1020: /* V3S01S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case 1021: /* V3V0S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = *(tPos + 0);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case 1022: /* V3S02S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+      break;
+    case 1100: /* No intersection */
+      break;
+    case 1101: /* V0V3V2 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = *(tPos + 2);
+      break;
+    case 1102: /* V3V2S01 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case 1110: /* V1V2V3 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case 1111: /* No intersection */
+      break;
+    case 1112: /* V2V1V3 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case 1120: /* V2V3S01 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case 1121: /* V0V2V3 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case 1122: /* No intersection */
+      break;
+    case 1200: /* V3S12S02 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case 1201: /* V0V3S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case 1202: /* V3S12S01 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case 1210: /* V3V1S02 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case 1211: /* V0V3V1 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = *(tPos + 1);
+      break;
+    case 1212: /* No intersection */
+      break;
+    case 1220: /* V3S01S02 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case 1221: /* No intersection */
+      break;
+    case 1222: /* No intersection */
+      break;
+    case 2000: /* S03S13S23 */
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case 2001: /* V0S13S23 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case 2002: /* S01S13S23S02 */
       isnCnt = 4;
-      /* Take care with ordering as later assume ordered verticies when
-       * spliting quadrilateral: S01,S12,S23,S03. */
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case 2010: /* V1S23S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case 2011: /* V0V1S23 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case 2012: /* V1S23S02 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case 2020: /* S01S12S23S03 */
+      isnCnt = 4;
       *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
 					 *(tPos + 0), *(tPos + 1));
       *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
@@ -3906,29 +4225,15 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
       *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
 					 *(tPos + 0), *(tPos + 3));
       break;
-    case WLZ_CONTOUR_TIC3D_S01S12S13:
+    case 2021: /* V0S12S23 */
       isnCnt = 3;
-      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
-					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 0) = *(tPos + 0);
       *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
 					 *(tPos + 1), *(tPos + 2));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
       break;
-    case WLZ_CONTOUR_TIC3D_S02S03S12S13:
-      isnCnt = 4;
-      /* Take care with ordering as later assume ordered verticies when
-       * spliting quadrilateral: S03,S13,S12,S02. */
-      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
-					 *(tPos + 0), *(tPos + 3));
-      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
-					 *(tPos + 1), *(tPos + 3));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
-					 *(tPos + 1), *(tPos + 2));
-      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
-					 *(tPos + 0), *(tPos + 2));
-      break;
-    case WLZ_CONTOUR_TIC3D_S02S12S23:
+    case 2022: /* S02S12S23 */
       isnCnt = 3;
       *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
 					 *(tPos + 0), *(tPos + 2));
@@ -3937,17 +4242,108 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
       *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
 					 *(tPos + 2), *(tPos + 3));
       break;
-    case WLZ_CONTOUR_TIC3D_S03S13S23:
+    case 2100: /* V2S03S13 */
       isnCnt = 3;
-      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
 					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case 2101: /* V2V0S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = *(tPos + 0);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case 2102: /* V2S01S13 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case 2110: /* V1V2S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case 2111: /* V0V1V2 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = *(tPos + 2);
+      break;
+    case 2112: /* No intersection */
+      break;
+    case 2120: /* V2S03S01 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case 2121: /* No intersection */
+      break;
+    case 2122: /* No intersection */
+      break;
+    case 2200: /* S02S03S13S12 */
+      isnCnt = 4;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case 2201: /* V0S13S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
       *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
 					 *(tPos + 1), *(tPos + 3));
-      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
-					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
       break;
-    default:
-      isnCnt = 0;
+    case 2202: /* S01S13S12 */
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case 2210: /* V1S02S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case 2211: /* No intersection */
+      break;
+    case 2212: /* No intersection */
+      break;
+    case 2220: /* S01S02S03 */
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case 2221: /* No intersection */
+      break;
+    case 2222: /* No intersection */
       break;
   }
   if(isnCnt > 0)
@@ -3996,7 +4392,7 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
     }
 #ifdef WLZ_CONTOUR_DEBUG
     (void )fprintf(stderr,
-		   "# %d I%d #%g %g %g,%g %g %g,%g %g %g\n",
+		   "TI %d I%04d %g %g %g , %g %g %g , %g %g %g\n",
 		   isnCnt, iCode,
 		   tIsn[0].vtX, tIsn[0].vtY, tIsn[0].vtZ,
 		   tIsn[1].vtX, tIsn[1].vtY, tIsn[1].vtZ,
@@ -4004,7 +4400,7 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
     if(isnCnt == 4)
     {
       (void )fprintf(stderr,
-		     "# %d I%d #%g %g %g,%g %g %g,%g %g %g\n",
+		     "TI %d I%04d %g %g %g , %g %g %g , %g %g %g\n",
 		     isnCnt, iCode,
 		     sIsn[0].vtX, sIsn[0].vtY, sIsn[0].vtZ,
 		     sIsn[1].vtX, sIsn[1].vtY, sIsn[1].vtZ,
