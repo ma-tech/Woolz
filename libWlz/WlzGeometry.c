@@ -12,6 +12,7 @@
 * Purpose:      Provides geometry utility functions.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 08-01-01 bill	Add WlzGeomTriangleNormal().
 ************************************************************************/
 #include <stdlib.h>
 #include <float.h>
@@ -477,5 +478,45 @@ void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
   }
   /* Sort the vericies. */
   (void )AlgHeapSort(wP, nV, sizeof(WlzDVertex2), WlzGeomVtxSortRadialFn);
+}
 
+/************************************************************************
+* Function:	WlzGeomTriangleNormal
+* Returns:	WlzDVertex3:		Normal vector.
+* Purpose:	Computes the unit normal vector perpendicular to the
+*		triangle v0, v1, v2.
+*
+*                            v2 @  ^ nrm    
+*                              / \/        
+*                             /  /\       
+*                            /  /  \     
+*                           /       \   
+*                       v0 @---------@ v1
+*                                       
+* Global refs:	-
+* Parameters:	WlzDVertex3 v0:		First vertex of triangle.
+*		WlzDVertex3 v1:		Second vertex of triangle.
+*		WlzDVertex3 v2:		Third vertex of triangle.
+************************************************************************/
+WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
+				      WlzDVertex3 v2)
+{
+  double	len;
+  WlzDVertex3	nrm;
+
+  WLZ_VTX_3_SUB(v1, v1, v0); 
+  WLZ_VTX_3_SUB(v2, v2, v0); 
+  WLZ_VTX_3_CROSS(nrm, v1, v2);
+  len = WLZ_VTX_3_LENGTH(nrm);
+  if(len > DBL_EPSILON)
+  {
+    WLZ_VTX_3_SCALE(nrm, nrm, 1.0 / len);
+  }
+  else
+  {
+    nrm.vtX = 0.0;
+    nrm.vtY = 0.0;
+    nrm.vtZ = 0.0;
+  }
+  return(nrm);
 }
