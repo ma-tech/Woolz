@@ -14,6 +14,8 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 04-10-00 bill Changes following removal of primitives from 
+*               WlzAffinetransform.
 * 26-09-00 bill Change WlzSampleObj parameters.
 ************************************************************************/
 #include <Reconstruct.h>
@@ -88,6 +90,7 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
   RecError	errFlag = REC_ERR_NONE;
   double	theta[2];
   RecState	states[2];
+  WlzAffineTransformPrim prim;
   RecPPControl	newPP;
 
   REC_DBG((REC_DBG_REG|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -239,7 +242,7 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
 	    (dstTrans == NULL) || (*dstTrans == NULL))
     {
       states[approach].transform = WlzAssignAffineTransform(
-			    WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+      		WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
       				  	0.0, 0.0, 0.0,
 					1.0, 0.0, 0.0,
 					0.0, 0.0, 0.0,
@@ -255,14 +258,17 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
       if(ppCtrl->method & REC_PP_SAMPLE)
       {
 	tTr = *dstTrans;
-	states[approach].transform = WlzAssignAffineTransform(
-			    WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					tTr->tx / samFac.vtX,
-				     	tTr->ty / samFac.vtY,
-				     	0.0,
-					1.0, tTr->theta, 0.0,
-					0.0, 0.0, 0.0,
-					0, &wlzErr), NULL);
+	if((wlzErr = WlzAffineTransformPrimGet(tTr, &prim)) == WLZ_ERR_NONE)
+	{
+	  states[approach].transform = WlzAssignAffineTransform(
+		  WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					  prim.tx / samFac.vtX,
+					  prim.ty / samFac.vtY,
+					  0.0,
+					  1.0, prim.theta, 0.0,
+					  0.0, 0.0, 0.0,
+					  0, &wlzErr), NULL);
+	}
         errFlag = RecErrorFromWlz(wlzErr);
       }
       else
@@ -404,15 +410,18 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
       if(ppCtrl->method & REC_PP_SAMPLE)
       {
 	tTr = states[approach].transform;
-	*dstTrans = WlzAssignAffineTransform(
-		    WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-		    		       tTr->tx * samFac.vtX,
-				       tTr->ty * samFac.vtY,
-				       0.0,
-				       1.0, tTr->theta, 0.0,
-				       0.0, 0.0, 0.0,
-				       0, &wlzErr), NULL);
-	(void )WlzFreeAffineTransform(states[approach].transform);
+	if((wlzErr = WlzAffineTransformPrimGet(tTr, &prim)) == WLZ_ERR_NONE)
+	{
+	  *dstTrans = WlzAssignAffineTransform(
+		      WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					    prim.tx * samFac.vtX,
+					    prim.ty * samFac.vtY,
+					    0.0,
+					    1.0, prim.theta, 0.0,
+					    0.0, 0.0, 0.0,
+					    0, &wlzErr), NULL);
+	  (void )WlzFreeAffineTransform(states[approach].transform);
+	}
 	errFlag = RecErrorFromWlz(wlzErr);
       }
       else
@@ -490,12 +499,12 @@ static RecError	RecRegPrincipal(WlzAffineTransform **transf,
   			            (double )(cMass0.vtY), angle, &wlzErr);
   if(wlzErr == WLZ_ERR_NONE)
   {
-    tTr1 = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-    				     cMass0.vtX - cMass1.vtX,
-			             cMass0.vtY - cMass1.vtY, 0.0,
-				     1.0, 0.0, 0.0,
-				     0.0, 0.0, 0.0,
-				     0, &wlzErr);
+    tTr1 = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+    				        cMass0.vtX - cMass1.vtX,
+			                cMass0.vtY - cMass1.vtY, 0.0,
+				        1.0, 0.0, 0.0,
+				        0.0, 0.0, 0.0,
+				        0, &wlzErr);
   }
   if(wlzErr == WLZ_ERR_NONE)
   {
@@ -640,11 +649,11 @@ static RecError	RecRegTranslate(WlzAffineTransform **transf,
 	  ("RecRegTranslate FE 0x%lx 0x%lx {%f %f} 0x%lx\n",
 	   (unsigned long )transf, (unsigned long )transfObj,
 	   trans.vtX, trans.vtY, (unsigned long )secObj));
-  tTransf0 = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-  					trans.vtX, trans.vtY, 0.0,
-					1.0, 0.0, 0.0,
-					0.0, 0.0, 0.0,
-					0, &wlzErr);
+  tTransf0 = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+  					   trans.vtX, trans.vtY, 0.0,
+					   1.0, 0.0, 0.0,
+					   0.0, 0.0, 0.0,
+					   0, &wlzErr);
   if(wlzErr == WLZ_ERR_NONE)
   {
     if((tTransf1 = *transf) != NULL)
@@ -727,6 +736,7 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 		roiSz;
   WlzErrorNum	wlzErr = WLZ_ERR_NONE;
   RecError	errFlag = REC_ERR_NONE;
+  WlzAffineTransformPrim prim;
   RecPPControl	ppCtrl;
 
   REC_DBG((REC_DBG_REG|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -769,9 +779,10 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
       }
       else
       {
+	(void )WlzAffineTransformPrimGet(newTr, &prim);
 	REC_DBG((REC_DBG_REG|REC_DBG_LVL_1),
 	 	("RecRegisterTiePoints 02 %g %g %g\n",
-		 newTr->tx, newTr->ty, newTr->theta));
+		 prim.tx, prim.ty, prim.theta));
 	if(dstED || dstCC)
 	{
 	  sumCC = 0.0;
@@ -792,8 +803,8 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 	  tppIdx = 0;
 	  while((tppIdx < tppCount) && (errFlag == REC_ERR_NONE))
 	  {
-	    trVtx = WlzAffineTransformVertexD(newTr, (tppVec + tppIdx)->second,
-					      &wlzErr);
+	    trVtx = WlzAffineTransformVertexD2(newTr, (tppVec + tppIdx)->second,
+					       &wlzErr);
 	    if(wlzErr == WLZ_ERR_NONE)
 	    {
 	      if(dstED)

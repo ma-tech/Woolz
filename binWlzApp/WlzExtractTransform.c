@@ -13,6 +13,8 @@
 *		bibfile.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 04-10-00 bill Changes following removal of primitives from 
+*		WlzAffinetransform.
 ************************************************************************/
 
 #include <stdio.h>
@@ -71,6 +73,7 @@ int main(int	argc,
   BibFileError	bibFileErr=BIBFILE_ER_NONE;
   int		outputOpt=2;
   int		absoluteFlg=0;
+  WlzAffineTransformPrim prim;
   WlzAffineTransform	*inTrans, *outTrans, *tmpTrans;
   WlzAffineTransform	*reconTrans;
   WlzObject	*outObj;
@@ -132,9 +135,10 @@ int main(int	argc,
 
   /* create the first transform */
   inTrans = NULL;
-  outTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					0.0, 0.0, 0.0, 1.0,
-					0.0, 0.0, 0.0, 0.0, 0.0, 0, NULL);
+  outTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					   0.0, 0.0, 0.0, 1.0,
+					   0.0, 0.0, 0.0, 0.0, 0.0, 0,
+					   NULL);
   reconTrans = NULL;
 
   /* read bibfile records until the filename matches */
@@ -153,9 +157,10 @@ int main(int	argc,
 	 NULL);
 
       /* make the transform for this record */
-      inTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					   tx, ty, 0.0, 1.0,
-					   theta, 0.0, 0.0, 0.0, 0.0, 0, NULL);
+      inTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					      tx, ty, 0.0, 1.0,
+					      theta, 0.0, 0.0, 0.0, 0.0,
+					      0, NULL);
 
       /* if absolute concatenate the transforms */
       if( absoluteFlg ){
@@ -188,10 +193,10 @@ int main(int	argc,
 	 NULL);
 
       /* make the transform for this record */
-      reconTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					      0.0, 0.0, 0.0, scaleX,
-					      theta, 0.0, 0.0, 0.0,
-					      0.0, 0, NULL);
+      reconTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+						 0.0, 0.0, 0.0, scaleX,
+						 theta, 0.0, 0.0, 0.0,
+						 0.0, 0, NULL);
     }
     BibFileRecordFree(&bibfileRecord);
     bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, inFile);
@@ -208,8 +213,12 @@ int main(int	argc,
     switch( outputOpt ){
     default:
     case 2:
-      fprintf(stdout, " -R -x%g -y%g -a%g -s%g", outTrans->tx, outTrans->ty,
-	      outTrans->theta, outTrans->scale);
+      errNum = WlzAffineTransformPrimGet(outTrans, &prim);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	fprintf(stdout, " -R -x%g -y%g -a%g -s%g", prim.tx, prim.ty,
+		prim.theta, prim.scale);
+      }
       break;
 
     case 1:
@@ -221,11 +230,15 @@ int main(int	argc,
       break;
 
     case 0:
-      fprintf(stdout,
-	      "Translation = (%f, %f)\n"
-	      "Rotation = %g\n"
-	      "Scale = %g\n",
-	      outTrans->tx, outTrans->ty, outTrans->theta, outTrans->scale);
+      errNum = WlzAffineTransformPrimGet(outTrans, &prim);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	fprintf(stdout,
+		"Translation = (%f, %f)\n"
+		"Rotation = %g\n"
+		"Scale = %g\n",
+		prim.tx, prim.ty, prim.theta, prim.scale);
+      }
       break;
     }
   }

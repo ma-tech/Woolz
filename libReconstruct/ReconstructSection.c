@@ -14,6 +14,8 @@
 *		reconstruction library.				
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 04-10-00 bill Changes following removal of primitives from 
+*               WlzAffinetransform.
 ************************************************************************/
 #include <Reconstruct.h>
 #include <string.h>
@@ -105,7 +107,7 @@ RecSection	*RecSecDup(RecSection *sec)
        ((newSec->imageFile = AlcStrDup(sec->imageFile)) != NULL) &&
        sec->transform &&
        ((newSec->transform = WlzAssignAffineTransform(
-			 WlzAffineTransformFromMatrix4X4(sec->transform->type,
+			 WlzAffineTransformFromMatrix(sec->transform->type,
        					      sec->transform->mat, &wlzErr),
 					      NULL)) != NULL) &&
        (wlzErr == WLZ_ERR_NONE))
@@ -175,10 +177,10 @@ RecSection	*RecSecMake(int index, int iterations, double correlation,
   }
   if(newImageFile && (transform == NULL))
   {
-    newTransform = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-    					      0.0, 0.0, 0.0,
-					      1.0, 0.0, 0.0,
-					      0.0, 0.0, 0.0, 0, &wlzErr);
+    newTransform = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+    					         0.0, 0.0, 0.0,
+					         1.0, 0.0, 0.0,
+					         0.0, 0.0, 0.0, 0, &wlzErr);
   }
   if(newImageFile && (newTransform || transform) && (wlzErr == WLZ_ERR_NONE))
   {
@@ -443,6 +445,7 @@ char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
   		filePathLen,
   		strIdx;
   char		*secStr = NULL;
+  WlzAffineTransformPrim prim;
   char		strBuf[1024]; 	   /* This must be big enough for any string */
 
   REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -488,64 +491,65 @@ char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
 		     sec->imageFile);	 	 /* Dynamic string precision */
       strIdx = strlen(strBuf);
     }
+    (void )WlzAffineTransformPrimGet(sec->transform, &prim);
     if(reqFields & REC_SECMSK_TRANSF_TX)
     {
       (void )sprintf(strBuf + strIdx, ", Tx % 12.8g",
-		     sec->transform->tx);
+		     prim.tx);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_TY)
     {
       (void )sprintf(strBuf + strIdx, ", Ty % 12.8g",
-		     sec->transform->ty);
+		     prim.ty);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_TZ)
     {
       (void )sprintf(strBuf + strIdx, ", Tz % 12.8g",
-		     sec->transform->tz);
+		     prim.tz);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_SCALE)
     {
       (void )sprintf(strBuf + strIdx, ", Tscale % 12.8g",
-		     sec->transform->scale);
+		     prim.scale);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_THETA)
     {
       (void )sprintf(strBuf + strIdx, ", Ttheta % 12.8g",
-		     sec->transform->theta);
+		     prim.theta);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_PHI)
     {
       (void )sprintf(strBuf + strIdx, ", Tphi % 12.8g",
-		     sec->transform->phi);
+		     prim.phi);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_ALPHA)
     {
       (void )sprintf(strBuf + strIdx, ", Talpha % 12.8g",
-		     sec->transform->alpha);
+		     prim.alpha);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_PSI)
     {
       (void )sprintf(strBuf + strIdx, ", Tpsi % 12.8g",
-		     sec->transform->psi);
+		     prim.psi);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_XSI)
     {
       (void )sprintf(strBuf + strIdx, ", Txsi % 12.8g",
-		     sec->transform->xsi);
+		     prim.xsi);
       strIdx = strlen(strBuf);
     }
     if(reqFields & REC_SECMSK_TRANSF_INVERT)
     {
       (void )sprintf(strBuf + strIdx, ", Tinvert %d",
-		     (sec->transform->invert)? 1: 0);
+		     (prim.invert)? 1: 0);
       strIdx = strlen(strBuf);
     }
     REC_DBG((REC_DBG_SEC|REC_DBG_LVL_2),
@@ -557,7 +561,7 @@ char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
     }
   }
   REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_1),
-          ("RecSecToStr FX 0x%lx\n",
+          ("RecSecToStr FX %s\n",
 	   (secStr)? (secStr): ("null")));
   return(secStr);
 }
@@ -984,6 +988,8 @@ static int	RecSecSortFnTransf(void *entry0, void *entry1,
 		*sec1;
   WlzAffineTransform	*transf0,
   		*transf1;
+  WlzAffineTransformPrim prim0,
+  		prim1;
 
   if(entry0 && entry1)
   {
@@ -993,37 +999,39 @@ static int	RecSecSortFnTransf(void *entry0, void *entry1,
     transf1 = sec1->transform;
     if(transf0 && transf1)
     {
+      (void )WlzAffineTransformPrimGet(transf0, &prim0);
+      (void )WlzAffineTransformPrimGet(transf1, &prim1);
       switch(mask)
       {
         case REC_SECMSK_TRANSF_TX:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->tx, transf0->tx);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.tx, prim0.tx);
 	  break;
 	case REC_SECMSK_TRANSF_TY:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->ty, transf0->ty);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.ty, prim0.ty);
 	  break;
 	case REC_SECMSK_TRANSF_TZ:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->tz, transf0->tz);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.tz, prim0.tz);
 	  break;
 	case REC_SECMSK_TRANSF_SCALE:
-	  tI0 = transf1->scale - transf0->scale;
+	  tI0 = prim1.scale - prim0.scale;
 	  break;
 	case REC_SECMSK_TRANSF_THETA:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->theta, transf0->theta);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.theta, prim0.theta);
 	  break;
 	case REC_SECMSK_TRANSF_PHI:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->phi, transf0->phi);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.phi, prim0.phi);
 	  break;
 	case REC_SECMSK_TRANSF_ALPHA:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->alpha, transf0->alpha);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.alpha, prim0.alpha);
 	  break;
 	case REC_SECMSK_TRANSF_PSI:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->psi, transf0->psi);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.psi, prim0.psi);
 	  break;
 	case REC_SECMSK_TRANSF_XSI:
-          tI0 = RecSecSortFnSignCmpDbl(transf1->xsi, transf0->xsi);
+          tI0 = RecSecSortFnSignCmpDbl(prim1.xsi, prim0.xsi);
 	  break;
 	case REC_SECMSK_TRANSF_INVERT:
-	  tI0 = transf1->invert - transf0->invert;
+	  tI0 = prim1.invert - prim0.invert;
 	  break;
       }
     }
@@ -1410,6 +1418,7 @@ static int	RecSecCumTransfSetItFn(HGUDlpList *secList,
   WlzAffineTransform	*cumTransf = NULL;
   RecSection	*curSec,
   		*prevSec;
+  WlzAffineTransformPrim prim;
 
   REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_2),
           ("RecSecCumTransfSetItFn FE 0x%lx 0x%lx 0x%lx\n",
@@ -1462,19 +1471,20 @@ static int	RecSecCumTransfSetItFn(HGUDlpList *secList,
 	       (unsigned long )cumTransf));
       if(cumTransf)
       {
+	(void )WlzAffineTransformPrimGet(cumTransf, &prim);
 	REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_3),
 		("RecSecCumTransfSetItFn 02 %d %g %g %g %g %g %g %g %g %g %d\n",
 		 cumTransf->type,
-		 cumTransf->tx,
-		 cumTransf->ty,
-		 cumTransf->tz,
-		 cumTransf->scale,
-		 cumTransf->theta,
-		 cumTransf->phi,
-		 cumTransf->alpha,
-		 cumTransf->psi,
-		 cumTransf->xsi,
-		 cumTransf->invert));
+		 prim.tx,
+		 prim.ty,
+		 prim.tz,
+		 prim.scale,
+		 prim.theta,
+		 prim.phi,
+		 prim.alpha,
+		 prim.psi,
+		 prim.xsi,
+		 prim.invert));
 	if(secItem != stopItem)
 	{
 	  iterate = 1;

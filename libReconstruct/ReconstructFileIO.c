@@ -13,6 +13,8 @@
 *		MRC Human Genetics Unit reconstruction library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 04-10-00 bill Changes following removal of primitives from 
+*               WlzAffinetransform.
 ************************************************************************/
 #include <Reconstruct.h>
 #include <stdarg.h>
@@ -1577,6 +1579,7 @@ static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
 BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
 {
   BibFileField	*field = NULL;
+  WlzAffineTransformPrim prim;
   char 		tTypeS[32],
 		tTxS[32],
 		tTyS[32],
@@ -1594,17 +1597,18 @@ BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
 	   (unsigned long )transf));
   if(transf)
   {
+    (void )WlzAffineTransformPrimGet(transf, &prim);
     (void )sprintf(tTypeS, "%d", transf->type);
-    (void )sprintf(tTxS, "%g", transf->tx);
-    (void )sprintf(tTyS, "%g", transf->ty);
-    (void )sprintf(tTzS, "%g", transf->tz);
-    (void )sprintf(tScaleS, "%g", transf->scale);
-    (void )sprintf(tThetaS, "%g", transf->theta);
-    (void )sprintf(tPhiS, "%g", transf->phi);
-    (void )sprintf(tAlphaS, "%g", transf->alpha);
-    (void )sprintf(tPsiS, "%g", transf->psi);
-    (void )sprintf(tXsiS, "%g", transf->xsi);
-    (void )sprintf(tInvertS, "%d", transf->invert);
+    (void )sprintf(tTxS, "%g", prim.tx);
+    (void )sprintf(tTyS, "%g", prim.ty);
+    (void )sprintf(tTzS, "%g", prim.tz);
+    (void )sprintf(tScaleS, "%g", prim.scale);
+    (void )sprintf(tThetaS, "%g", prim.theta);
+    (void )sprintf(tPhiS, "%g", prim.phi);
+    (void )sprintf(tAlphaS, "%g", prim.alpha);
+    (void )sprintf(tPsiS, "%g", prim.psi);
+    (void )sprintf(tXsiS, "%g", prim.xsi);
+    (void )sprintf(tInvertS, "%d", prim.invert);
     field = BibFileFieldMakeVa(
 		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_TYPE], tTypeS,
 		 (char *)recFileTransfFieldS[REC_FILE_TRANSF_TX], tTxS,
@@ -1706,7 +1710,7 @@ WlzAffineTransform	*RecFileFieldToTransf(BibFileField *field,
    if((defaultFlg || (count == REC_FILE_TRANSF_MAX)) &&
       (tType == WLZ_TRANSFORM_2D_AFFINE))
    {
-     transf = WlzAffineTransformFromPrim(tType, tX, tY, 0.0,
+     transf = WlzAffineTransformFromPrimVal(tType, tX, tY, 0.0,
      					 tScale, tTheta, tPhi,
 					 tAlpha, tPsi, tXsi,
 					 tInvert,

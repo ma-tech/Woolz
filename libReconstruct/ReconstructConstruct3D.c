@@ -14,6 +14,8 @@
 *		Genetics Unit reconstruction library.		
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.    
+* 04-10-00 bill Changes following removal of primitives from 
+*               WlzAffinetransform.
 * 26-09-00 bill Change WlzSampleObj parameters.
 * 15-02-00 bill	Add dither flag for WlzHistogramMatchObj().
 ************************************************************************/
@@ -90,6 +92,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 		*dstHistObj = NULL;
   WlzDomain	*doms;
   WlzValues 	*vals;
+  WlzAffineTransformPrim prim;
   WlzAffineTransform *scaleTr = NULL,
   		*tTr0 = NULL,
 		*tTr1 = NULL;
@@ -267,10 +270,10 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	}
       }
       affineScaleFlg = 1;
-      scaleTr = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-      					   0.0, 0.0, 0.0,
-					   scale.vtX, 0.0, 0.0,
-					   0.0, 0.0, 0.0, 0, &wlzErr);
+      scaleTr = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					      0.0, 0.0, 0.0,
+					      scale.vtX, 0.0, 0.0,
+					      0.0, 0.0, 0.0, 0, &wlzErr);
     }
   }
   if(errFlag == REC_ERR_NONE)
@@ -285,10 +288,10 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
     if(errFlag == REC_ERR_NONE)
     {
       tTr0 = WlzAssignAffineTransform(
-	     WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					0.0, 0.0, 0.0,
-					1.0, 0.0, 0.0,
-					0.0, 0.0, 0.0, 0, &wlzErr), NULL);
+	     WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					   0.0, 0.0, 0.0,
+					   1.0, 0.0, 0.0,
+					   0.0, 0.0, 0.0, 0, &wlzErr), NULL);
       errFlag = RecErrorFromWlz(wlzErr);
     }
   }
@@ -310,15 +313,24 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	    if((confLimit < DBL_EPSILON) ||
 	       (sec->correl < confLimit))	  /* Use identity transform? */
 	    {
-	      REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
-		      ("RecConstruct3DObj 01 0x%lx %d 0x%lx %g %g %g %g\n",
-		       (unsigned long )sec,
-		       (sec)? sec->index: 0,
-		       (unsigned long )(sec->transform),
-		       (sec->transform)? (sec->transform)->tx: 0.0,
-		       (sec->transform)? (sec->transform)->ty: 0.0,
-		       (sec->transform)? (sec->transform)->scale: 1.0,
-		       (sec->transform)? (sec->transform)->theta: 0.0));
+	      if(sec->transform)
+	      {
+		(void )WlzAffineTransformPrimGet(sec->transform, &prim);
+		REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
+			("RecConstruct3DObj 01 0x%lx %d 0x%lx %g %g %g %g\n",
+			 (unsigned long )sec,
+			 sec->index,
+			 (unsigned long )(sec->transform),
+			 prim.tx,
+			 prim.ty,
+			 prim.scale,
+			 prim.theta));
+	      }
+	      else
+	      {
+		REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
+			("RecConstruct3DObj 01 0x%0\n"));
+	      }
 	      tTr1 = WlzAssignAffineTransform(
 	      	     WlzAffineTransformProduct(sec->transform, tTr0,
 		     			       &wlzErr), NULL);
@@ -331,13 +343,19 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	      tTr1 = tTr0;
 	      tTr0 = NULL;
 	    }
-	    REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
-		    ("RecConstruct3DObj 02 0x%lx %g %g %g %g\n",
-		     (unsigned long )tTr1,
-		     (tTr1)? tTr1->tx: 0.0,
-		     (tTr1)? tTr1->ty: 0.0,
-		     (tTr1)? tTr1->scale: 1.0,
-		     (tTr1)? tTr1->theta: 0.0));
+	    if(tTr1)
+	    {
+	      (void )WlzAffineTransformPrimGet(sec->transform, &prim);
+	      REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
+		      ("RecConstruct3DObj 02 0x%lx %g %g %g %g\n",
+		       (unsigned long )tTr1,
+		       prim.tx, prim.ty, prim.scale, prim.theta));
+	    }
+	    else
+	    {
+	      REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
+	      	      ("RecConstruct3DObj 02 0x0\n"));
+	    }
 	  }
 	}
 	if(errFlag == REC_ERR_NONE)	        /* Set transform for scaling */
@@ -352,13 +370,19 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	  {
 	    tTr0 = WlzAssignAffineTransform(tTr1, NULL);
 	  }
-	  REC_DBG((REC_DBG_3D|REC_DBG_LVL_3),
-		  ("RecConstruct3DObj 03 0x%lx %g %g %g %g\n",
-		   (unsigned long )tTr1,
-		   (tTr0)? tTr0->tx: 0.0,
-		   (tTr0)? tTr0->ty: 0.0,
-		   (tTr0)? tTr0->scale: 1.0,
-		   (tTr0)? tTr0->theta: 0.0));
+	  if(tTr0)
+	  {
+	    (void )WlzAffineTransformPrimGet(tTr0, &prim);
+	    REC_DBG((REC_DBG_3D|REC_DBG_LVL_3),
+		    ("RecConstruct3DObj 03 0x%lx %g %g %g %g\n",
+		     (unsigned long )tTr0,
+		     prim.tx, prim.ty, prim.scale, prim.theta));
+	  }
+	  else
+	  {
+	    REC_DBG((REC_DBG_3D|REC_DBG_LVL_2),
+		    ("RecConstruct3DObj 03 0x0\n"));
+	  }
 	}
 	/* Pre-process section object (ie prior to transformation) */
 	if(errFlag == REC_ERR_NONE)

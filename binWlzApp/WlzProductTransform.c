@@ -24,6 +24,8 @@
 *		input trabsforms. If 3D go by plane number.		*
 *************************************************************************
 *   Maintenance :  date - name - comments (Last changes at the top)	*
+* 04-10-00 bill Changes following removal of primitives from 
+*               WlzAffinetransform.
 ************************************************************************/
 
 #include <stdio.h>
@@ -88,41 +90,47 @@ static void usage(char *proc_str)
 void checkTrans(
   WlzAffineTransform *trans)
 {
+  WlzAffineTransformPrim prim;
   double	tol = 1.0e-6;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if( trans == NULL ){
     return;
   }
+  errNum = WlzAffineTransformPrimGet(trans, &prim);
 
-  if( !finite(trans->tx) || (fabs(trans->tx) <= tol) ){
-    trans->tx = 0.0;
-  }
-  if( !finite(trans->ty) || (fabs(trans->ty) <= tol) ){
-    trans->ty = 0.0;
-  }
-  if( !finite(trans->tz) || (fabs(trans->tz) <= tol) ){
-    trans->tz = 0.0;
-  }
-  if( !finite(trans->scale) || (fabs(trans->scale - 1.0) <= tol) ){
-    trans->scale = 1.0;
-  }
-  if( !finite(trans->theta) || (fabs(trans->theta) <= tol) ){
-    trans->theta = 0.0;
-  }
-  if( !finite(trans->phi) || (fabs(trans->phi) <= tol) ){
-    trans->phi = 0.0;
-  }
-  if( !finite(trans->alpha) || (fabs(trans->alpha) <= tol) ){
-    trans->alpha = 0.0;
-  }
-  if( !finite(trans->psi) || (fabs(trans->psi) <= tol) ){
-    trans->psi = 0.0;
-  }
-  if( !finite(trans->xsi) || (fabs(trans->xsi) <= tol) ){
-    trans->xsi = 0.0;
-  }
+  if(errNum  == WLZ_ERR_NONE)
+  {
+    if( !finite(prim.tx) || (fabs(prim.tx) <= tol) ){
+      prim.tx = 0.0;
+    }
+    if( !finite(prim.ty) || (fabs(prim.ty) <= tol) ){
+      prim.ty = 0.0;
+    }
+    if( !finite(prim.tz) || (fabs(prim.tz) <= tol) ){
+      prim.tz = 0.0;
+    }
+    if( !finite(prim.scale) || (fabs(prim.scale - 1.0) <= tol) ){
+      prim.scale = 1.0;
+    }
+    if( !finite(prim.theta) || (fabs(prim.theta) <= tol) ){
+      prim.theta = 0.0;
+    }
+    if( !finite(prim.phi) || (fabs(prim.phi) <= tol) ){
+      prim.phi = 0.0;
+    }
+    if( !finite(prim.alpha) || (fabs(prim.alpha) <= tol) ){
+      prim.alpha = 0.0;
+    }
+    if( !finite(prim.psi) || (fabs(prim.psi) <= tol) ){
+      prim.psi = 0.0;
+    }
+    if( !finite(prim.xsi) || (fabs(prim.xsi) <= tol) ){
+      prim.xsi = 0.0;
+    }
 
-  WlzAffineTransformMatrixUpdate(trans);
+    errNum = WlzAffineTransformPrimSet(trans, prim);
+  }
   return;
 }
 
@@ -151,11 +159,11 @@ WlzObject *SecListToTransforms(
   }
 
   /* define the reconstruct transform */
-  recTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					0.0, 0.0, 0.0,
-					secList->reconstruction.scale.vtX,
-					0.0, 0.0, 0.0, 0.0,
-					0.0, 0, NULL);
+  recTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					   0.0, 0.0, 0.0,
+					   secList->reconstruction.scale.vtX,
+					   0.0, 0.0, 0.0, 0.0,
+					   0.0, 0, NULL);
 
   /* create the transforms object */
   listItem = HGUDlpListHead(secList->list);
@@ -183,10 +191,10 @@ WlzObject *SecListToTransforms(
     if( relFlg ){
       if( sec->cumTransform == NULL ){
 	rtnObj->domain.p->domains[i].t =
-	  WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-				     0.0, 0.0, 0.0, 1.0,
-				     0.0, 0.0, 0.0, 0.0,
-				     0.0, 0, NULL);
+	  WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+				        0.0, 0.0, 0.0, 1.0,
+				        0.0, 0.0, 0.0, 0.0,
+				        0.0, 0, NULL);
       }
       else {
 	rtnObj->domain.p->domains[i].t =
@@ -334,7 +342,7 @@ WlzObject *ReadMAPaintRealignTransforms(
 	     NULL);
 
 	  /* make the transform for this record */
-	  inTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+	  inTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 					       tx, ty, 0.0, 1.0,
 					       theta, 0.0, 0.0, 0.0,
 					       0.0, 0, NULL);
@@ -370,6 +378,7 @@ WlzErrorNum WriteMAPaintRealignTransforms(
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int			i, p;
+  WlzAffineTransformPrim prim;
   BibFileRecord	*record = NULL;
   BibFileField	*field0 = NULL,
 		*field1 = NULL,
@@ -455,7 +464,8 @@ WlzErrorNum WriteMAPaintRealignTransforms(
   /* now the section records */
   if( transformsObj ){
     for(p=transformsObj->domain.p->plane1, i=0;
-	p <= transformsObj->domain.p->lastpl; p++, i++){
+	(p <= transformsObj->domain.p->lastpl) && (errNum == WLZ_ERR_NONE);
+	p++, i++){
       WlzAffineTransform  *transf=transformsObj->domain.p->domains[i].t;
       if( transf == NULL ){
 	continue;
@@ -463,34 +473,38 @@ WlzErrorNum WriteMAPaintRealignTransforms(
       sprintf(tmpBuf, "%d", p);
       idxS = AlcStrDup(tmpBuf);
 
-      (void )sprintf(tTypeS, "%d", transf->type);
-      (void )sprintf(tTxS, "%g", transf->tx);
-      (void )sprintf(tTyS, "%g", transf->ty);
-      (void )sprintf(tTzS, "%g", transf->tz);
-      (void )sprintf(tScaleS, "%g", transf->scale);
-      (void )sprintf(tThetaS, "%g", transf->theta);
-      (void )sprintf(tPhiS, "%g", transf->phi);
-      (void )sprintf(tAlphaS, "%g", transf->alpha);
-      (void )sprintf(tPsiS, "%g", transf->psi);
-      (void )sprintf(tXsiS, "%g", transf->xsi);
-      (void )sprintf(tInvertS, "%d", transf->invert);
-      field0 = BibFileFieldMakeVa(
-	"TransformType", tTypeS,
-	"TransformTx", tTxS,
-	"TransformTy", tTyS,
-	"TransformTz", tTzS,
-	"TransformScale", tScaleS,
-	"TransformTheta", tThetaS,
-	"TransformPhi", tPhiS,
-	"TransformAlpha", tAlphaS,
-	"TransformPsi", tPsiS,
-	"TransformXsi", tXsiS,
-	"TransformInvert", tInvertS,
-	NULL);
+      errNum = WlzAffineTransformPrimGet(transf, &prim);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	(void )sprintf(tTypeS, "%d", transf->type);
+	(void )sprintf(tTxS, "%g", prim.tx);
+	(void )sprintf(tTyS, "%g", prim.ty);
+	(void )sprintf(tTzS, "%g", prim.tz);
+	(void )sprintf(tScaleS, "%g", prim.scale);
+	(void )sprintf(tThetaS, "%g", prim.theta);
+	(void )sprintf(tPhiS, "%g", prim.phi);
+	(void )sprintf(tAlphaS, "%g", prim.alpha);
+	(void )sprintf(tPsiS, "%g", prim.psi);
+	(void )sprintf(tXsiS, "%g", prim.xsi);
+	(void )sprintf(tInvertS, "%d", prim.invert);
+	field0 = BibFileFieldMakeVa(
+	  "TransformType", tTypeS,
+	  "TransformTx", tTxS,
+	  "TransformTy", tTyS,
+	  "TransformTz", tTzS,
+	  "TransformScale", tScaleS,
+	  "TransformTheta", tThetaS,
+	  "TransformPhi", tPhiS,
+	  "TransformAlpha", tAlphaS,
+	  "TransformPsi", tPsiS,
+	  "TransformXsi", tXsiS,
+	  "TransformInvert", tInvertS,
+	  NULL);
 
-      record = BibFileRecordMake("Section", idxS, field0);
-      BibFileRecordWrite(fp, &eMsg, record);
-      BibFileRecordFree(&record);
+	record = BibFileRecordMake("Section", idxS, field0);
+	BibFileRecordWrite(fp, &eMsg, record);
+	BibFileRecordFree(&record);
+      }
       AlcFree(idxS);
     }
   }
@@ -681,13 +695,13 @@ int main(int	argc,
 
   /* create the command line transform */
   if( threeDFlg ){
-    cmdLineTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_3D_AFFINE,
+    cmdLineTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_3D_AFFINE,
 					      tx, ty, tz, scale, theta, phi,
 					      alpha, psi, xsi,
 					      invertFlg, &errNum);
   }
   else {
-     cmdLineTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+     cmdLineTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 					      tx, ty, tz, scale, theta, phi,
 					      alpha, psi, xsi,
 					      invertFlg, &errNum);
@@ -821,7 +835,7 @@ int main(int	argc,
      then take out the reconstruct transform */
   if( secList1 ){
     /* take out the reconstruct transform first */
-    reconTrans = WlzAffineTransformFromPrim
+    reconTrans = WlzAffineTransformFromPrimVal
       (WLZ_TRANSFORM_2D_AFFINE, 0.0, 0.0, 0.0,
        1.0 / secList1->reconstruction.scale.vtX,
        0.0, 0.0, 0.0, 0.0, 0.0, 0, NULL);
@@ -859,7 +873,7 @@ int main(int	argc,
 	  if( strncmp(sec->imageFile, "empty", 5) == 0 ){
 	    WlzFreeAffineTransform(transformsObj1->domain.p->domains[i].t);
 	    transformsObj1->domain.p->domains[i].t =
-	      WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+	      WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 					 0.0, 0.0, 0.0, 1.0,
 					 0.0, 0.0, 0.0, 0.0,
 					 0.0, 0, NULL);
@@ -947,7 +961,7 @@ int main(int	argc,
       /* check for NULL transform */
       if( transformsObj1->domain.p->domains[i].t == NULL ){
 	transformsObj1->domain.p->domains[i].t =
-	  WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
+	  WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 				     0.0, 0.0, 0.0, 1.0,
 				     0.0, 0.0, 0.0, 0.0,
 				     0.0, 0, NULL);

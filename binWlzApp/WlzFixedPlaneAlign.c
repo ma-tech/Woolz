@@ -73,41 +73,45 @@ static void usage(char *proc_str)
 void checkTrans(
   WlzAffineTransform *trans)
 {
+  WlzAffineTransformPrim prim;
   double	tol = 1.0e-6;
 
   if( trans == NULL ){
     return;
   }
-
-  if( !finite(trans->tx) || (fabs(trans->tx) <= tol) ){
-    trans->tx = 0.0;
-  }
-  if( !finite(trans->ty) || (fabs(trans->ty) <= tol) ){
-    trans->ty = 0.0;
-  }
-  if( !finite(trans->tz) || (fabs(trans->tz) <= tol) ){
-    trans->tz = 0.0;
-  }
-  if( !finite(trans->scale) || (fabs(trans->scale - 1.0) <= tol) ){
-    trans->scale = 1.0;
-  }
-  if( !finite(trans->theta) || (fabs(trans->theta) <= tol) ){
-    trans->theta = 0.0;
-  }
-  if( !finite(trans->phi) || (fabs(trans->phi) <= tol) ){
-    trans->phi = 0.0;
-  }
-  if( !finite(trans->alpha) || (fabs(trans->alpha) <= tol) ){
-    trans->alpha = 0.0;
-  }
-  if( !finite(trans->psi) || (fabs(trans->psi) <= tol) ){
-    trans->psi = 0.0;
-  }
-  if( !finite(trans->xsi) || (fabs(trans->xsi) <= tol) ){
-    trans->xsi = 0.0;
+  if(WlzAffineTransformPrimGet(trans, &prim) != WLZ_ERR_NONE){
+    return;
   }
 
-  WlzAffineTransformMatrixUpdate(trans);
+  if( !finite(prim.tx) || (fabs(prim.tx) <= tol) ){
+    prim.tx = 0.0;
+  }
+  if( !finite(prim.ty) || (fabs(prim.ty) <= tol) ){
+    prim.ty = 0.0;
+  }
+  if( !finite(prim.tz) || (fabs(prim.tz) <= tol) ){
+    prim.tz = 0.0;
+  }
+  if( !finite(prim.scale) || (fabs(prim.scale - 1.0) <= tol) ){
+    prim.scale = 1.0;
+  }
+  if( !finite(prim.theta) || (fabs(prim.theta) <= tol) ){
+    prim.theta = 0.0;
+  }
+  if( !finite(prim.phi) || (fabs(prim.phi) <= tol) ){
+    prim.phi = 0.0;
+  }
+  if( !finite(prim.alpha) || (fabs(prim.alpha) <= tol) ){
+    prim.alpha = 0.0;
+  }
+  if( !finite(prim.psi) || (fabs(prim.psi) <= tol) ){
+    prim.psi = 0.0;
+  }
+  if( !finite(prim.xsi) || (fabs(prim.xsi) <= tol) ){
+    prim.xsi = 0.0;
+  }
+
+  WlzAffineTransformPrimSet(trans, prim);
   return;
 }
 
@@ -135,11 +139,11 @@ WlzObject *SecListToTransforms(
   }
 
   /* define the reconstruct transform */
-  recTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					0.0, 0.0, 0.0,
-					secList->reconstruction.scale.vtX,
-					0.0, 0.0, 0.0, 0.0,
-					0.0, 0, NULL);
+  recTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					   0.0, 0.0, 0.0,
+					   secList->reconstruction.scale.vtX,
+					   0.0, 0.0, 0.0, 0.0,
+					   0.0, 0, NULL);
 
   /* create the transforms object */
   listItem = HGUDlpListHead(secList->list);
@@ -167,10 +171,10 @@ WlzObject *SecListToTransforms(
     if( relFlg ){
       if( sec->cumTransform == NULL ){
 	rtnObj->domain.p->domains[i].t =
-	  WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-				     0.0, 0.0, 0.0, 1.0,
-				     0.0, 0.0, 0.0, 0.0,
-				     0.0, 0, NULL);
+	  WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+				        0.0, 0.0, 0.0, 1.0,
+				        0.0, 0.0, 0.0, 0.0,
+				        0.0, 0, NULL);
       }
       else {
 	rtnObj->domain.p->domains[i].t =
@@ -225,6 +229,7 @@ int main(int	argc,
   double	tx, txPrev, txPost;
   double	ty, tyPrev, tyPost;
   double	theta, thetaPrev, thetaPost;
+  WlzAffineTransformPrim prevPrim, postPrim;
 
   /* parse the command line */
   opterr = 0;
@@ -427,20 +432,26 @@ int main(int	argc,
 	tmpTrans = transformsObj1->domain.p->domains[iPost].t;
       }
       else {
-	txPrev = transformsObj1->domain.p->domains[iPrev].t->tx;
-	txPost = transformsObj1->domain.p->domains[iPost].t->tx;
-	tyPrev = transformsObj1->domain.p->domains[iPrev].t->ty;
-	tyPost = transformsObj1->domain.p->domains[iPost].t->ty;
-	thetaPrev = transformsObj1->domain.p->domains[iPrev].t->theta;
-	thetaPost = transformsObj1->domain.p->domains[iPost].t->theta;
+	(void)
+	WlzAffineTransformPrimGet(transformsObj1->domain.p->domains[iPrev].t,
+				   &prevPrim);
+	(void )
+	WlzAffineTransformPrimGet(transformsObj1->domain.p->domains[iPost].t,
+				   &postPrim);
+	txPrev = prevPrim.tx;
+	txPost = postPrim.tx;
+	tyPrev = prevPrim.ty;
+	tyPost = postPrim.ty;
+	thetaPrev = prevPrim.theta;
+	thetaPost = postPrim.theta;
 	tx = ((pPost-p) * txPrev + (p-pPrev) * txPost) / (pPost-pPrev);
 	ty = ((pPost-p) * tyPrev + (p-pPrev) * tyPost) / (pPost-pPrev);
 	theta = ((pPost-p) * thetaPrev + (p-pPrev) * thetaPost) /
 	  (pPost-pPrev);
-	tmpTrans = WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-					      tx, ty, 0.0, 1.0,
-					      theta, 0.0, 0.0, 0.0,
-					      0.0, 0, NULL);
+	tmpTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+					         tx, ty, 0.0, 1.0,
+					         theta, 0.0, 0.0, 0.0,
+					         0.0, 0, NULL);
       }
       newTrans =
 	WlzAffineTransformProduct(transformsObj2->domain.p->domains[ip].t,
@@ -456,10 +467,9 @@ int main(int	argc,
   /*  take out the reconstruct transform */
   if( secList2 ){
     /* take out the reconstruct transform first */
-    reconTrans = WlzAffineTransformFromPrim
-      (WLZ_TRANSFORM_2D_AFFINE, 0.0, 0.0, 0.0,
-       1.0 / secList2->reconstruction.scale.vtX,
-       0.0, 0.0, 0.0, 0.0, 0.0, 0, NULL);
+    reconTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+	      0.0, 0.0, 0.0, 1.0 / secList2->reconstruction.scale.vtX,
+	      0.0, 0.0, 0.0, 0.0, 0.0, 0, NULL);
     listItem2 = HGUDlpListHead(secList2->list);
     while( listItem2 ){
       sec2 = (RecSection *) HGUDlpListEntryGet(secList2->list, listItem2);
@@ -489,10 +499,10 @@ int main(int	argc,
       if( strncmp(sec2->imageFile, "empty", 5) == 0 ){
 	WlzFreeAffineTransform(transformsObj2->domain.p->domains[i].t);
 	transformsObj2->domain.p->domains[i].t =
-	  WlzAffineTransformFromPrim(WLZ_TRANSFORM_2D_AFFINE,
-				     0.0, 0.0, 0.0, 1.0,
-				     0.0, 0.0, 0.0, 0.0,
-				     0.0, 0, NULL);
+	  WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
+				        0.0, 0.0, 0.0, 1.0,
+				        0.0, 0.0, 0.0, 0.0,
+				        0.0, 0, NULL);
       }
       else {
 	/* walk backwards to previous non-empty section */
