@@ -64,8 +64,7 @@ DEPENDDIRS		= \
 			  . \
 			  ../libAlc \
 			  ../libAlg \
-			  ../libWlz \
-			  ../../External/Tiff/libtiff
+			  ../libWlz
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \

@@ -66,21 +66,21 @@ main(argc, argv)
   int         depth,
     numcolors;
   TIFF 	*tif;
-  u_char 	*inp;
-  u_char	*outp;
+  unsigned char	*inp;
+  unsigned char	*outp;
   int 	col,
     i;
   long 	row;
   short     *Map = NULL;
-  u_char     *buf;
+  unsigned char     *buf;
   short	bitspersample;
   short	samplesperpixel;
   short	photometric;
-  u_short    *redcolormap,
+  unsigned short    *redcolormap,
     *bluecolormap,
     *greencolormap;
 
-  u_char      red[256],
+  unsigned char      red[256],
     green[256],
     blue[256];
   char 		optList[] = "hv";
@@ -219,9 +219,9 @@ main(argc, argv)
       TIFFGetField(tif, TIFFTAG_COLORMAP,
 		   &redcolormap, &greencolormap, &bluecolormap);
       for (i = 0; i < numcolors; i++) {
-	red[i] = (u_char) CVT(redcolormap[i]);
-	green[i] = (u_char) CVT(greencolormap[i]);
-	blue[i] = (u_char) CVT(bluecolormap[i]);
+	red[i] = (unsigned char) CVT(redcolormap[i]);
+	green[i] = (unsigned char) CVT(greencolormap[i]);
+	blue[i] = (unsigned char) CVT(bluecolormap[i]);
       }
       break;
     case PHOTOMETRIC_MASK:
@@ -235,7 +235,7 @@ main(argc, argv)
   if( verboseFlg ){
     fprintf(stderr, "%s: ScanlineSize = %d\n", argv[0], TIFFScanlineSize(tif));
   }
-  buf = (u_char *) AlcMalloc(TIFFScanlineSize(tif));
+  buf = (unsigned char *) AlcMalloc(TIFFScanlineSize(tif));
   if (buf == NULL)
     fprintf(stderr, "%s: can't allocate memory for scanline buffer...\n", argv[0]);
 

@@ -610,7 +610,7 @@ WlzErrorNum WlzEffBibParseFileRecord(
       errNum = WLZ_ERR_NONE;
     }
   }
-  *dstFileName = strdup(fileNameBuf);
+  *dstFileName = AlcStrDup(fileNameBuf);
   *dstFileType = WlzEffStringToFormat(fileTypeBuf);
   return errNum;
 }

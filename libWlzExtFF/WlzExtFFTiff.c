@@ -21,6 +21,7 @@
 * Maintenance log with most recent changes at top of list.
 */
 
+#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 
@@ -51,8 +52,8 @@ WlzObject	*WlzEffReadObjTiff(
   short		samplesperpixel;
   short		photometric;
   short     	*Map=NULL;
-  u_short    	*redcolormap, *bluecolormap, *greencolormap;
-  u_char      	red[256], green[256], blue[256];
+  unsigned short *redcolormap, *bluecolormap, *greencolormap;
+  unsigned char red[256], green[256], blue[256];
   int		width, height, depth, numcolors;
   int		wlzDepth;
   WlzGreyType	newpixtype;
@@ -60,8 +61,8 @@ WlzObject	*WlzEffReadObjTiff(
   int		i, row, col, offset;
   float		xPosition, yPosition, xResolution, yResolution;
   int		colMin, rowMin;
-  u_char	*buf=NULL;
-  u_char 	*inp;
+  unsigned char	*buf=NULL;
+  unsigned char *inp;
   WlzGreyP	wlzData;
 
   if((tiffFileName == NULL) || (*tiffFileName == '\0'))
@@ -160,9 +161,9 @@ WlzObject	*WlzEffReadObjTiff(
 	TIFFGetField(tif, TIFFTAG_COLORMAP,
 		     &redcolormap, &greencolormap, &bluecolormap);
 	for (i = 0; i < numcolors; i++) {
-	  red[i] = (u_char) CVT(redcolormap[i]);
-	  green[i] = (u_char) CVT(greencolormap[i]);
-	  blue[i] = (u_char) CVT(bluecolormap[i]);
+	  red[i] = (unsigned char) CVT(redcolormap[i]);
+	  green[i] = (unsigned char) CVT(greencolormap[i]);
+	  blue[i] = (unsigned char) CVT(bluecolormap[i]);
 	}
 	break;
 
@@ -176,7 +177,7 @@ WlzObject	*WlzEffReadObjTiff(
 
   if(errNum == WLZ_ERR_NONE)
   {
-    if( (buf = (u_char *) AlcMalloc(TIFFScanlineSize(tif))) == NULL ){
+    if( (buf = (unsigned char *) AlcMalloc(TIFFScanlineSize(tif))) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
@@ -318,7 +319,7 @@ WlzErrorNum WlzEffWriteObjTiff(
   float		xPosition, yPosition, xResolution, yResolution;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
-  u_char	*buf=NULL;
+  unsigned char	*buf=NULL;
   int		i, j;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -410,7 +411,7 @@ WlzErrorNum WlzEffWriteObjTiff(
       TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
 
       /* write the data line by line */
-      if( (buf = (u_char *) AlcMalloc(TIFFScanlineSize(out))) == NULL ){
+      if( (buf = (unsigned char *)AlcMalloc(TIFFScanlineSize(out))) == NULL ){
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
       else if((errNum = WlzInitGreyScan(rectObj, &iwsp, &gwsp)) == WLZ_ERR_NONE){
