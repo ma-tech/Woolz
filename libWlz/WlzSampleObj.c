@@ -12,6 +12,9 @@
 * Purpose:      Subsamples an object through a convolution kernel.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 12-01-01 bill Modify code within WlzSampleObjEstIntervals() and
+*		let the sampling functions get more intervals as
+*		required.
 * 22-09-00 bill Added code for 3D domain objects and changed WlzSampleObj
 *		parameters.
 * 05-06-00 bill Removed unused variables. Fixed enum assignment mismatch.
@@ -79,7 +82,7 @@ static WlzValues 		WlzSampleObjConstructRectValues(
 				  WlzIBox2,
 				  WlzPixelV,
 				  WlzErrorNum *);
-static int			WlzSampleObjEstMaxIntervals(
+static int			WlzSampleObjEstIntervals(
 				  WlzDomain,
 				  int,
 				  int,
@@ -100,21 +103,27 @@ static int			WlzSampleObjMeanKernelI(
 				  int **,
 				  WlzIVertex2,
 				  int *);
+static WlzErrorNum 		WlzSampleObjMoreIntervals(
+				  WlzDomain dstDom,
+				  int *delItvCount,
+				  int itvCount,
+				  WlzInterval **dstItv0,
+				  WlzInterval **dstItv1);
 
 /************************************************************************
-* Function:	WlzSampleObj						*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object using the given sampling	*
-*		factor and sampling method.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex3 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzSampleFn samFn:	Sampling method.		*
-*		WlzErrorNUm *dstErrNum: Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
+* Function:	WlzSampleObj					
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object using the given sampling
+*		factor and sampling method.			
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex3 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzSampleFn samFn:	Sampling method.	
+*		WlzErrorNUm *dstErrNum: Destination pointer for error
+*					number, may be NULL if not
+*					required.		
 ************************************************************************/
 WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex3 samFac,
 			      WlzSampleFn samFn,
@@ -215,20 +224,20 @@ WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex3 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObj2D						*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given 2D domain object using the given	*
-*		sampling factor kernel size and sampling method.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzSampleFn samFn:	Sampling method.		*
-*		WlzIVertex2 kernelSz:	Size of the convolution kernel.	*
-*		WlzErrorNUm *dstErrNum: Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
+* Function:	WlzSampleObj2D					
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given 2D domain object using the given
+*		sampling factor kernel size and sampling method.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzSampleFn samFn:	Sampling method.	
+*		WlzIVertex2 kernelSz:	Size of the convolution kernel.
+*		WlzErrorNUm *dstErrNum: Destination pointer for error
+*					number, may be NULL if not
+*					required.		
 ************************************************************************/
 static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 			         WlzSampleFn samFn, WlzIVertex2 kernelSz,
@@ -361,20 +370,20 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObj3D						*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given 3D domain object using the given	*
-*		sampling factor kernel size and sampling method.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex3 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzSampleFn samFn:	Sampling method.		*
-*		WlzIVertex3 kernelSz:	Size of the convolution kernel.	*
-*		WlzErrorNUm *dstErrNum: Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
+* Function:	WlzSampleObj3D					
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given 3D domain object using the given
+*		sampling factor kernel size and sampling method.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex3 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzSampleFn samFn:	Sampling method.	
+*		WlzIVertex3 kernelSz:	Size of the convolution kernel.
+*		WlzErrorNUm *dstErrNum: Destination pointer for error
+*					number, may be NULL if not
+*					required.		
 ************************************************************************/
 static WlzObject *WlzSampleObj3D(WlzObject *srcObj, WlzIVertex3 samFac,
 			         WlzSampleFn samFn, WlzIVertex3 kernelSz,
@@ -415,24 +424,26 @@ static WlzObject *WlzSampleObj3D(WlzObject *srcObj, WlzIVertex3 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjIDom					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object's interval domain only using	*
-*		the given sampling factor.				*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjIDom				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object's interval domain only using
+*		the given sampling factor.			
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 				   WlzErrorNum *dstErrNum)
 {
-  int		itvCount,
+  int		idx,
+  		itvCount,
 		totItvCount,
+		delItvCount,
   		maxItvCount,
 		dstLinePos,
 		dstInvLeftPos,
@@ -466,12 +477,12 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
   dstBox.yMax = srcBox.yMax / samFac.vtY;
   if(errNum == WLZ_ERR_NONE)
   {
-    if((maxItvCount = WlzSampleObjEstMaxIntervals(srcDom, 
-						  dstBox.yMin * samFac.vtY,
-						  dstBox.yMax * samFac.vtY,
-						  samFac)) > 0)
+    if((delItvCount = WlzSampleObjEstIntervals(srcDom, 
+					       dstBox.yMin * samFac.vtY,
+					       dstBox.yMax * samFac.vtY,
+					       samFac)) > 0)
     {
-      if(((dstItv0 = (WlzInterval *)AlcMalloc((unsigned long )maxItvCount *
+      if(((dstItv0 = (WlzInterval *)AlcMalloc(delItvCount *
       					      sizeof(WlzInterval))) == NULL) ||
          ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 	 				    dstBox.yMin, dstBox.yMax,
@@ -490,6 +501,7 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
+	maxItvCount = delItvCount;
         dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
 					     &alcErr);
         if(alcErr != ALC_ER_NONE)
@@ -527,7 +539,11 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 	  totItvCount += ++itvCount;
 	  if(totItvCount >= maxItvCount)
 	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    errNum = WlzSampleObjMoreIntervals(dstDom,
+	    				       &delItvCount, itvCount,
+					       &dstItv0, &dstItv1);
+	    totItvCount = itvCount;
+	    maxItvCount = delItvCount;
 	  }
 	}
 	if((errNum == WLZ_ERR_NONE) && (itvCount > 0) && (srcIWsp.intrmn == 0))
@@ -557,18 +573,18 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjPoint3D					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object's plane domain only using	*
-*		the given sampling factor.				*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every voxel == 1,	*
-*					every other voxel == 2, ....	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjPoint3D				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object's plane domain only using
+*		the given sampling factor.			
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every voxel == 1,
+*					every other voxel == 2, ....
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
 				      WlzErrorNum *dstErrNum)
@@ -721,24 +737,25 @@ static WlzObject *WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
 
 
 /************************************************************************
-* Function:	WlzSampleObjPoint2D					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object using a simple point sampling	*
-*		method and the given sampling factor.			*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjPoint2D				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object using a simple point sampling
+*		method and the given sampling factor.		
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 				      WlzErrorNum *dstErrNum)
 {
   int		tI0,
 		itvCount,
+		delItvCount,
 		totItvCount,
   		maxItvCount,
 		dstWidth,
@@ -796,12 +813,12 @@ static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((maxItvCount = WlzSampleObjEstMaxIntervals(srcDom, 
-						  dstBox.yMin * samFac.vtY,
-						  dstBox.yMax * samFac.vtY,
-						  samFac)) > 0)
+    if((delItvCount = WlzSampleObjEstIntervals(srcDom, 
+					       dstBox.yMin * samFac.vtY,
+					       dstBox.yMax * samFac.vtY,
+					       samFac)) > 0)
     {
-      if(((dstItv0 = (WlzInterval *)AlcMalloc((unsigned long )maxItvCount *
+      if(((dstItv0 = (WlzInterval *)AlcMalloc(delItvCount *
       					      sizeof(WlzInterval))) == NULL) ||
          ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 	 				    dstBox.yMin, dstBox.yMax,
@@ -820,6 +837,7 @@ static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
+	maxItvCount = delItvCount;
         dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
 					     &alcErr);
         if(alcErr != ALC_ER_NONE)
@@ -860,9 +878,13 @@ static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 	  totItvCount += ++itvCount;
 	  if(totItvCount >= maxItvCount)
 	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    errNum = WlzSampleObjMoreIntervals(dstDom,
+	    				       &delItvCount, itvCount,
+					       &dstItv0, &dstItv1);
+	    totItvCount = itvCount;
+	    maxItvCount = delItvCount;
 	  }
-	  else
+	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    switch(greyType)
 	    {
@@ -950,23 +972,23 @@ static WlzObject *WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjConvI					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object using the given integer	*
-*		convolution kernel and the given sampling factor.	*
-*		The domain of the the new object is smaller than the	*
-*		source because of the convolution.			*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		int **kernel:		Integer convolution kernel.	*
-*		WlzIVertex2 kernelSz:	Size of the convolution kernel.	*
-*		int kernelSum:		Kernel sum for normalization.	*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjConvI				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object using the given integer
+*		convolution kernel and the given sampling factor.
+*		The domain of the the new object is smaller than the
+*		source because of the convolution.		
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		int **kernel:		Integer convolution kernel.
+*		WlzIVertex2 kernelSz:	Size of the convolution kernel.
+*		int kernelSum:		Kernel sum for normalization.
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 				    WlzIVertex2 kernelSz, int kernelSum,
@@ -980,6 +1002,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		bufBase,
 		bufIwspFlag,
 		itvCount,
+		delItvCount,
 		totItvCount,
   		maxItvCount,
   		srcWidth,
@@ -1038,13 +1061,13 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((maxItvCount = WlzSampleObjEstMaxIntervals(srcDom, 
-						  dstBox.yMin * samFac.vtY,
-						  dstBox.yMax * samFac.vtY,
-						  samFac)) > 0)
+    if((delItvCount = WlzSampleObjEstIntervals(srcDom, 
+					       dstBox.yMin * samFac.vtY,
+					       dstBox.yMax * samFac.vtY,
+					       samFac)) > 0)
     {
-      if(((dstItvBase = (WlzInterval *)AlcMalloc((unsigned long )maxItvCount *
-      					       sizeof(WlzInterval))) == NULL) ||
+      if(((dstItvBase = (WlzInterval *)AlcMalloc(delItvCount *
+      					      sizeof(WlzInterval))) == NULL) ||
          ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 	 				    dstBox.yMin, dstBox.yMax,
 					    dstBox.xMin,
@@ -1062,6 +1085,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
       }
       else
       {
+	maxItvCount = delItvCount;
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
 					     &alcErr);
@@ -1142,9 +1166,13 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 	totItvCount += ++itvCount;
 	if(totItvCount >= maxItvCount)
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  errNum = WlzSampleObjMoreIntervals(dstDom,
+	  				     &delItvCount, itvCount,
+					     &dstItv0, &dstItv1);
+	  totItvCount = itvCount;
+	  maxItvCount = delItvCount;
 	}
-	else
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  bufPos.vtY = srcIWsp.linpos - (kernelSz.vtY / 2);
 	  for(idY = 0; idY < kernelSz.vtY; ++idY)    /* Check and update buf */
@@ -1301,22 +1329,22 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjConvD					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object using the given double		*
-*		convolution kernel and the given sampling factor.	*
-*		The domain of the the new object is smaller than the	*
-*		source because of the convolution.			*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		double **kernel:	Double convolution kernel.	*
-*		WlzIVertex2 kernelSz:	Size of the convolution kernel.	*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjConvD				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object using the given double	
+*		convolution kernel and the given sampling factor.
+*		The domain of the the new object is smaller than the
+*		source because of the convolution.		
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		double **kernel:	Double convolution kernel.
+*		WlzIVertex2 kernelSz:	Size of the convolution kernel.
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 				    WlzIVertex2 kernelSz, WlzIVertex2 samFac,
@@ -1330,6 +1358,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 		bufBase,
 		bufIwspFlag,
 		itvCount,
+		delItvCount,
 		totItvCount,
   		maxItvCount,
   		srcWidth,
@@ -1390,13 +1419,13 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((maxItvCount = WlzSampleObjEstMaxIntervals(srcDom, 
-						  dstBox.yMin * samFac.vtY,
-						  dstBox.yMax * samFac.vtY,
-						  samFac)) > 0)
+    if((delItvCount = WlzSampleObjEstIntervals(srcDom, 
+					       dstBox.yMin * samFac.vtY,
+					       dstBox.yMax * samFac.vtY,
+					       samFac)) > 0)
     {
-      if(((dstItvBase = (WlzInterval *)AlcMalloc((unsigned long )maxItvCount *
-      					       sizeof(WlzInterval))) == NULL) ||
+      if(((dstItvBase = (WlzInterval *)AlcMalloc(delItvCount *
+					      sizeof(WlzInterval))) == NULL) ||
          ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 	 				    dstBox.yMin, dstBox.yMax,
 					    dstBox.xMin,
@@ -1414,6 +1443,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
       }
       else
       {
+	maxItvCount = delItvCount;
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
 					     &alcErr);
@@ -1494,8 +1524,13 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 	totItvCount += ++itvCount;
 	if(totItvCount >= maxItvCount)
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  errNum = WlzSampleObjMoreIntervals(dstDom,
+	  				     &delItvCount, itvCount,
+					     &dstItv0, &dstItv1);
+	  totItvCount = itvCount;
+	  maxItvCount = delItvCount;
 	}
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  bufPos.vtY = srcIWsp.linpos - (kernelSz.vtY / 2);
 	  for(idY = 0; idY < kernelSz.vtY; ++idY) /* Check and update buffer */
@@ -1633,21 +1668,21 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjRankI					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object using the given (rank) 	*
-*		sampling method and sampling factor.			*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzSampleFn samFn:	Rank sampling method, eg min,	*
-*					max, median,....		*
-*		WlzIVertex2 kernelSz:	Size of the convolution kernel.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjRankI				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object using the given (rank) 
+*		sampling method and sampling factor.		
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzSampleFn samFn:	Rank sampling method, eg min,
+*					max, median,....	
+*		WlzIVertex2 kernelSz:	Size of the convolution kernel.
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 				    WlzSampleFn samFn, WlzIVertex2 kernelSz,
@@ -1663,6 +1698,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		bufIwspFlag,
 		bufMedianSz,
 		itvCount,
+		delItvCount,
 		totItvCount,
   		maxItvCount,
   		srcWidth,
@@ -1723,13 +1759,13 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((maxItvCount = WlzSampleObjEstMaxIntervals(srcDom, 
-						  dstBox.yMin * samFac.vtY,
-						  dstBox.yMax * samFac.vtY,
-						  samFac)) > 0)
+    if((delItvCount = WlzSampleObjEstIntervals(srcDom, 
+					       dstBox.yMin * samFac.vtY,
+					       dstBox.yMax * samFac.vtY,
+					       samFac)) > 0)
     {
-      if(((dstItvBase = (WlzInterval *)AlcMalloc((unsigned long )maxItvCount *
-      					       sizeof(WlzInterval))) == NULL) ||
+      if(((dstItvBase = (WlzInterval *)AlcMalloc(delItvCount *
+					      sizeof(WlzInterval))) == NULL) ||
          ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 	 				    dstBox.yMin, dstBox.yMax,
 					    dstBox.xMin,
@@ -1747,6 +1783,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
+	maxItvCount = delItvCount;
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
 					     &alcErr);
@@ -1836,8 +1873,13 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	totItvCount += ++itvCount;
 	if(totItvCount >= maxItvCount)
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  errNum = WlzSampleObjMoreIntervals(dstDom,
+	  				     &delItvCount, itvCount,
+					     &dstItv0, &dstItv1);
+	  totItvCount = itvCount;
+	  maxItvCount = delItvCount;
 	}
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  bufPos.vtY = srcIWsp.linpos - (kernelSz.vtY / 2);
 	  for(idY = 0; idY < kernelSz.vtY; ++idY) /* Check and update buffer */
@@ -2059,21 +2101,21 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjRankD					*
-* Returns:	WlzObject *:		New sampled object.		*
-* Purpose:	Samples the given object using the given (rank) 	*
-*		sampling method and sampling factor.			*
-*		This function assumes it's parameters to be valid.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIVertex2 samFac:	Sampling factor for both rows	*
-*					and columns. Every pixel == 1,	*
-*					every other pixel == 2, ....	*
-*		WlzSampleFn samFn:	Rank sampling method, eg min,	*
-*					max, median,....		*
-*		WlzIVertex2 kernelSz:	Size of the convolution kernel.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number (may be NULL).		*
+* Function:	WlzSampleObjRankD				
+* Returns:	WlzObject *:		New sampled object.	
+* Purpose:	Samples the given object using the given (rank) 
+*		sampling method and sampling factor.		
+*		This function assumes it's parameters to be valid.
+* Global refs:	-						
+* Parameters:	WlzObject *srcObj:	Given source object.	
+*		WlzIVertex2 samFac:	Sampling factor for both rows
+*					and columns. Every pixel == 1,
+*					every other pixel == 2, ....
+*		WlzSampleFn samFn:	Rank sampling method, eg min,
+*					max, median,....	
+*		WlzIVertex2 kernelSz:	Size of the convolution kernel.
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number (may be NULL).	
 ************************************************************************/
 static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 				    WlzSampleFn samFn, WlzIVertex2 kernelSz,
@@ -2089,6 +2131,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 		bufIwspFlag,
 		bufMedianSz,
 		itvCount,
+		delItvCount,
 		totItvCount,
   		maxItvCount,
   		srcWidth,
@@ -2151,12 +2194,12 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((maxItvCount = WlzSampleObjEstMaxIntervals(srcDom, 
-						  dstBox.yMin * samFac.vtY,
-						  dstBox.yMax * samFac.vtY,
-						  samFac)) > 0)
+    if((delItvCount = WlzSampleObjEstIntervals(srcDom, 
+					       dstBox.yMin * samFac.vtY,
+					       dstBox.yMax * samFac.vtY,
+					       samFac)) > 0)
     {
-      if(((dstItvBase = (WlzInterval *)AlcMalloc((unsigned long )maxItvCount *
+      if(((dstItvBase = (WlzInterval *)AlcMalloc(delItvCount *
       					       sizeof(WlzInterval))) == NULL) ||
          ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 	 				    dstBox.yMin, dstBox.yMax,
@@ -2175,6 +2218,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
       }
       else
       {
+	maxItvCount = delItvCount;
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
 					     &alcErr);
@@ -2261,8 +2305,13 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	totItvCount += ++itvCount;
 	if(totItvCount >= maxItvCount)
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  errNum = WlzSampleObjMoreIntervals(dstDom,
+	  				     &delItvCount, itvCount,
+					     &dstItv0, &dstItv1);
+	  totItvCount = itvCount;
+	  maxItvCount = delItvCount;
 	}
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  bufPos.vtY = srcIWsp.linpos - (kernelSz.vtY / 2);
 	  for(idY = 0; idY < kernelSz.vtY; ++idY) /* Check and update buffer */
@@ -2474,15 +2523,15 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjGaussKernelD				*
-* Returns:	int:			Non zero if kernel computed ok.	*
-* Purpose:	Computes a (double) floating point gaussian convolution	*
-*		kernel for WlzSampleObj().				*
-* Global refs:	-							*
-* Parameters:	int **kernel:		Space for kernel allocated with	*
-*					AlcDouble2Malloc().		*
-*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).	*
-*		WlzIVertex2 samFac:	Sampling factor (2, 3, 4, ...).	*
+* Function:	WlzSampleObjGaussKernelD			
+* Returns:	int:			Non zero if kernel computed ok.
+* Purpose:	Computes a (double) floating point gaussian convolution
+*		kernel for WlzSampleObj().			
+* Global refs:	-						
+* Parameters:	int **kernel:		Space for kernel allocated with
+*					AlcDouble2Malloc().	
+*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).
+*		WlzIVertex2 samFac:	Sampling factor (2, 3, 4, ...).
 ************************************************************************/
 static int	WlzSampleObjGaussKernelD(double **kernel, WlzIVertex2 kernelSz,
 				         WlzIVertex2 samFac)
@@ -2532,17 +2581,17 @@ static int	WlzSampleObjGaussKernelD(double **kernel, WlzIVertex2 kernelSz,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjGaussKernelI				*
-* Returns:	int:			Non zero if kernel computed ok.	*
-* Purpose:	Computes an integral gaussian convolution kernel for	*
-*		WlzSampleObj().						*
-* Global refs:	-							*
-* Parameters:	int **kernel:		Space for kernel allocated with	*
-*					AlcInt2Malloc().		*
-*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).	*
-*		int *kernelSum:		Destination pointer for kernel 	*
-*					sum.				*
-*		WlzIVertex2 samFac:	Sampling factor (2, 3, 4, ...).	*
+* Function:	WlzSampleObjGaussKernelI			
+* Returns:	int:			Non zero if kernel computed ok.
+* Purpose:	Computes an integral gaussian convolution kernel for
+*		WlzSampleObj().					
+* Global refs:	-						
+* Parameters:	int **kernel:		Space for kernel allocated with
+*					AlcInt2Malloc().	
+*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).
+*		int *kernelSum:		Destination pointer for kernel 
+*					sum.			
+*		WlzIVertex2 samFac:	Sampling factor (2, 3, 4, ...).
 ************************************************************************/
 static int	WlzSampleObjGaussKernelI(int **kernel, WlzIVertex2 kernelSz,
 				         int *kernelSum, WlzIVertex2 samFac)
@@ -2577,14 +2626,14 @@ static int	WlzSampleObjGaussKernelI(int **kernel, WlzIVertex2 kernelSz,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjMeanKernelD					*
-* Returns:	int:			Non zero if kernel computed ok.	*
-* Purpose:	Computes a (double) floating point mean convolution	*
-*		kernel for WlzSampleObj().				*
-* Global refs:	-							*
-* Parameters:	double **kernel:	Space for kernel allocated with	*
-*					AlcDouble2Malloc().		*
-*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).	*
+* Function:	WlzSampleObjMeanKernelD				
+* Returns:	int:			Non zero if kernel computed ok.
+* Purpose:	Computes a (double) floating point mean convolution
+*		kernel for WlzSampleObj().			
+* Global refs:	-						
+* Parameters:	double **kernel:	Space for kernel allocated with
+*					AlcDouble2Malloc().	
+*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).
 ************************************************************************/
 static int	WlzSampleObjMeanKernelD(double **kernel, WlzIVertex2 kernelSz)
 {
@@ -2606,16 +2655,16 @@ static int	WlzSampleObjMeanKernelD(double **kernel, WlzIVertex2 kernelSz)
 }
 
 /************************************************************************
-* Function:	WlzSampleObjMeanKernelI					*
-* Returns:	int:			Non zero if kernel computed ok.	*
-* Purpose:	Computes an integral mean convolution kernel for	*
-*		WlzSampleObj().						*
-* Global refs:	-							*
-* Parameters:	int **kernel:		Space for kernel allocated with	*
-*					AlcInt2Malloc().		*
-*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).	*
-*		int *kernelSum:		Destination pointer for kernel 	*
-*					sum.				*
+* Function:	WlzSampleObjMeanKernelI				
+* Returns:	int:			Non zero if kernel computed ok.
+* Purpose:	Computes an integral mean convolution kernel for
+*		WlzSampleObj().					
+* Global refs:	-						
+* Parameters:	int **kernel:		Space for kernel allocated with
+*					AlcInt2Malloc().	
+*		WlzIVertex2 kernelSz:	Kernel size (3, 5, 7, ...).
+*		int *kernelSum:		Destination pointer for kernel 
+*					sum.			
 ************************************************************************/
 static int	WlzSampleObjMeanKernelI(int **kernel, WlzIVertex2 kernelSz,
 					int *kernelSum)
@@ -2639,20 +2688,20 @@ static int	WlzSampleObjMeanKernelI(int **kernel, WlzIVertex2 kernelSz,
 }
 
 /************************************************************************
-* Function:     WlzSampleObjConstructRectValues				*
-* Returns:      WlzValues :         	New value table (rectangular). 	*
-* Purpose:      Constructs a new (rectangular) value table with grey	*
-*		values allocated but not set.			        *
-* Global refs:  -							*
-* Parameters:   void **dstValues:       Destination pointer for grey	*
-*                                       values.				*
-*               WlzGreyType greyType:   Grey type.			*
-*               WlzIBox2 rBox:           Box encoding the rectangle	*
-*                                       verticies.			*
-*		WlzPixelV bgdPix:	Background value.		*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
+* Function:     WlzSampleObjConstructRectValues			
+* Returns:      WlzValues :         	New value table (rectangular). 
+* Purpose:      Constructs a new (rectangular) value table with grey
+*		values allocated but not set.			       
+* Global refs:  -						
+* Parameters:   void **dstValues:       Destination pointer for grey
+*                                       values.			
+*               WlzGreyType greyType:   Grey type.		
+*               WlzIBox2 rBox:           Box encoding the rectangle
+*                                       verticies.		
+*		WlzPixelV bgdPix:	Background value.	
+*		WlzErrorNum *dstErrNum:	Destination pointer for error
+*					number, may be NULL if not
+*					required.		
 ************************************************************************/
 static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
 						  WlzGreyType greyType,
@@ -2757,54 +2806,100 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
 }
 
 /************************************************************************
-* Function:	WlzSampleObjEstMaxIntervals				*
-* Returns:	int:			Number of intervals.		*
-* Purpose:	Estimates the maximum number of intervals required	*
-*		for the interval domain of a subsampled object.  	*
-*		The number returned may be much bigger than required.	*
-* Global refs:	-							*
-* Parameters:	WlzDomain srcDom:	Source objects domain.		*
-*		int line1:		First line.			*
-*		int lastLn:		Last line.			*
-*		WlzIVertex2 samFac:	Sampling factor.		*
+* Function:	WlzSampleObjEstIntervals			
+* Returns:	int:			Number of intervals.	
+* Purpose:	Estimates the maximum number of intervals required
+*		for the interval domain of a subsampled object.  
+*		The number returned may be <, = or > the number of
+*		intervals actualy required.			
+* Global refs:	-						
+* Parameters:	WlzDomain srcDom:	Source objects domain.	
+*		int line1:		First line.		
+*		int lastLn:		Last line.		
+*		WlzIVertex2 samFac:	Sampling factor.	
 ************************************************************************/
-static int	WlzSampleObjEstMaxIntervals(WlzDomain srcDom,
+static int	WlzSampleObjEstIntervals(WlzDomain srcDom,
 					    int line1, int lastLn,
 					    WlzIVertex2 samFac)
 {
-    int		srcLine,
-    		srcLastLine,
+    int		line,
 		itvCount = 0;
 
   if(srcDom.core &&
      ((srcDom.core->type == WLZ_INTERVALDOMAIN_INTVL) ||
       (srcDom.core->type == WLZ_INTERVALDOMAIN_RECT)) &&
-     (samFac.vtX > 0) && (samFac.vtY > 0))
+     (samFac.vtX > 0) && (samFac.vtY > 0) && (line1 <= lastLn))
   {
-    line1 -= samFac.vtY;
-    lastLn += samFac.vtY;
-    srcLine = WLZ_MAX(srcDom.i->line1, line1);
-    srcLastLine = WLZ_MIN(srcDom.i->lastln, lastLn);
     switch(srcDom.i->type)
     {
       case WLZ_INTERVALDOMAIN_INTVL:
-	if(srcLine <= srcLastLine)
+        line = line1;
+	while(line <= lastLn)
 	{
-	  while(srcLine <= srcLastLine)
-	  {
-	    itvCount += (srcDom.i->intvlines + srcLine -
-	    		 srcDom.i->line1)->nintvs;
-	    ++srcLine;
-	  }
-	  itvCount += ((srcLastLine - srcLine) /  samFac.vtY) + samFac.vtY + 1;
+	  itvCount += (srcDom.i->intvlines + line - srcDom.i->line1)->nintvs;
+	  line += samFac.vtY;
 	}
-        break;
+	break;
       case WLZ_INTERVALDOMAIN_RECT:
-	itvCount = ((srcLastLine - srcLine) /  samFac.vtY) + samFac.vtY + 1;
+	itvCount = ((lastLn - line) /  samFac.vtY) + samFac.vtY + 1;
         break;
     }
   }
   return(itvCount);
+}
+
+/************************************************************************
+* Function:	WlzSampleObjMoreIntervals			
+* Returns:	WlzErrorNum:		Error code.
+* Purpose:	Gets more intervals for the sampling functions.
+* Global refs:	-						
+* Parameters:	WlzDomain dstDom:	Destination domain.
+*		int *delItvCount:	Estimate of the number of
+*					intervals to allocate.
+*		int itvCount:		Number of intervals not yet
+*					committed to the domain.
+*		WlzInterval **dstItv0:	First uncommitted interval.
+*		WlzInterval **dstItv1:	Next uncommitted interval.
+************************************************************************/
+static WlzErrorNum WlzSampleObjMoreIntervals(WlzDomain dstDom,
+					     int *delItvCount, int itvCount,
+  					     WlzInterval **dstItv0,
+  					     WlzInterval **dstItv1)
+{
+  int		idx;
+  WlzInterval	*newItv;
+  AlcErrno	alcErr = ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(*delItvCount < itvCount)
+  {
+    *delItvCount += itvCount;
+  }
+  if((newItv = (WlzInterval *)AlcMalloc(*delItvCount *
+  				        sizeof(WlzInterval))) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
+					 (void *)newItv, &alcErr);
+    if(alcErr != ALC_ER_NONE)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Copy existing uncommitted intervals. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idx = 0; idx < itvCount; ++idx)
+    {
+      *(newItv + idx) = *(*dstItv0 + idx);
+    }
+    *dstItv0 = newItv;
+    *dstItv1 = *dstItv0 + itvCount;
+  }
+  return(errNum);
 }
 
 #undef WLZ_SAMPLE_KERNEL_INORM
