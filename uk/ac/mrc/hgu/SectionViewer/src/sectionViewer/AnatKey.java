@@ -21,59 +21,33 @@ public class AnatKey extends AnatKeyGUI{
    /**
     *   The one and only instance of AnatKey.
     */
-   static protected  AnatKey _instance = null;
+   protected static AnatKey _instance = null;
+
+   /**
+    *   The collection of rows in the AnatKey.
+    */
+   protected  static Vector _keyEntryVec = null;
 
    /**
     *   The number of rows in the AnatKey.
     */
-   static protected  final int _nrows = 6;
+   protected  static int _nrows = 0;
+
+   /**
+    *   A unique index number for KeyElements.
+    */
+   protected  static int _indx = 0;
 //-------------------------------------------------------------
    // private constructor for singleton pattern
    /**
     *   Called by AnatKey.instance(). This constructor is private in 
     *   accordance with the 'singleton' pattern
     */
-   private AnatKey(String str) {
-      super(str);
-
-      ButtonHandler1 buttonH1 = new ButtonHandler1();
-      btn00.addActionListener(buttonH1);
-      btn10.addActionListener(buttonH1);
-      btn20.addActionListener(buttonH1);
-      btn30.addActionListener(buttonH1);
-      btn40.addActionListener(buttonH1);
-      btn50.addActionListener(buttonH1);
-      btn01.addActionListener(buttonH1);
-      btn11.addActionListener(buttonH1);
-      btn21.addActionListener(buttonH1);
-      btn31.addActionListener(buttonH1);
-      btn41.addActionListener(buttonH1);
-      btn51.addActionListener(buttonH1);
-
-      ButtonHandler2 buttonH2 = new ButtonHandler2();
-      btn02.addActionListener(buttonH2);
-      btn12.addActionListener(buttonH2);
-      btn22.addActionListener(buttonH2);
-      btn32.addActionListener(buttonH2);
-      btn42.addActionListener(buttonH2);
-      btn52.addActionListener(buttonH2);
-
-      ButtonHandler3 buttonH3 = new ButtonHandler3();
-      colBtn0.addActionListener(buttonH3);
-      colBtn1.addActionListener(buttonH3);
-      colBtn2.addActionListener(buttonH3);
-      colBtn3.addActionListener(buttonH3);
-      colBtn4.addActionListener(buttonH3);
-      colBtn5.addActionListener(buttonH3);
-
-      ChBoxHandler cbxH = new ChBoxHandler();
-      cbx0.addItemListener(cbxH);
-      cbx1.addItemListener(cbxH);
-      cbx2.addItemListener(cbxH);
-      cbx3.addItemListener(cbxH);
-      cbx4.addItemListener(cbxH);
-      cbx5.addItemListener(cbxH);
-
+   private AnatKey(String str, boolean is3D) {
+      super(str, is3D);
+      _keyEntryVec = new Vector();
+      //setResizable(false);
+      setResizable(true);
    }
    
 //-------------------------------------------------------------
@@ -82,215 +56,96 @@ public class AnatKey extends AnatKeyGUI{
     *   Calls the (private) constructor.
     *   This is the only way to make an instance of AnatKey.
     */
-   static public AnatKey instance() {
+   public static AnatKey instance() {
+      return instance(false);
+   }
+
+   /**
+    *   Calls the (private) constructor.
+    *   This is the only way to make an instance of AnatKey.
+    */
+   public static AnatKey instance(boolean is3D) {
       if(_instance == null) {
-         _instance = new AnatKey("anatomy key");
+	 _is3D = is3D;
+         _instance = new AnatKey("anatomy key", _is3D);
       }
       return _instance;
    }
 //-------------------------------------------------------------
    /**
-    *   Returns the number of rows in the anatomy key.
-    *   @return The int number of rows in the key (currently 6).
+    *
     */
-   public int getNRows() {
+   public void addRow(String txt) {
+
+      Dimension currDim = null;
+      currDim = this.getSize(null);
+      this.setSize(new Dimension(currDim.width,
+                                 currDim.height + KeyEntry.getH() + 2));
+      KeyEntry row = new KeyEntry(_indx, _is3D);
+      _keyEntryVec.add(row);
+      _nrows++;
+      row.setText(txt);
+      row.setCol(nextCol());
+      kTopPanel.add(row);
+      this.invalidate();
+      this.validate();
+   }
+//-------------------------------------------------------------
+   /**
+    *
+    */
+   public void removeRow(int indx) {
+
+      Dimension currDim = null;
+      currDim = this.getSize(null);
+      this.setSize(new Dimension(currDim.width,
+                                 currDim.height - KeyEntry.getH() - 2));
+      /* find row with approprite indx from _keyEntryVec */
+      KeyEntry row = getRow(indx);
+      _keyEntryVec.remove(row);
+      kTopPanel.remove(row);
+      this.invalidate();
+      this.validate();
+      _nrows--;
+      if(_nrows == 0) {
+	 this.setSize(new Dimension(currDim.width, _emptyH));
+      }
+   }
+//-------------------------------------------------------------
+   /**
+    *   Returns the number of rows in the anatomy key.
+    *   @return The int number of rows in the key.
+    */
+   public static int getNRows() {
       return _nrows;
    }
+
 //-------------------------------------------------------------
    /**
-    *   Sets the anatomy component name for a single entry in the AnatKey.
-    *   @param str the full name of the anatomy component.
-    *   @param indx the position of the anatomy component in the table.
-    *   There are 6 rows in the table, indx goes from 0 to 5.
+    *   Sets the visibility of a KeyEntry to the given state.
+    *   @param indx the index of the KeyEntry to be made visible.
+    *   @param str the full name of the corresponding anatomy component.
+    *   @param viz true if the KeyEntry is to be visible.
     */
-   public static void setText(String str, int indx) {
+   public void setEntryVisible(int indx, boolean viz) {
 
-      switch (indx) {
-	 case 0:
-	    tf0.setText(str);
-	    break;
-	 case 1:
-	    tf1.setText(str);
-	    break;
-	 case 2:
-	    tf2.setText(str);
-	    break;
-	 case 3:
-	    tf3.setText(str);
-	    break;
-	 case 4:
-	    tf4.setText(str);
-	    break;
-	 case 5:
-	    tf5.setText(str);
-	    break;
-	 default:
-	    break;
-      } // switch
+      KeyEntry row = this.getRow(indx);
+      row.setEntryVisible(viz);
+
    }
 
 //-------------------------------------------------------------
    /**
-    *   Sets the anatomy component name for all entries in the AnatKey.
-    *   @param strArr an array of the full names of
-    *   all 6 anatomy components.
+    *   Sets the initial colour of the anatomy component
+    *   to 1 of 6 distinct colours.
+    *   @return the next colour.
     */
-   public static void setText(String[] strArr) {
-      tf0.setText(strArr[0]);
-      tf1.setText(strArr[1]);
-      tf2.setText(strArr[2]);
-      tf3.setText(strArr[3]);
-      tf4.setText(strArr[4]);
-      tf5.setText(strArr[5]);
-   }
+   public Color nextCol() {
 
-//-------------------------------------------------------------
-   /**
-    *   Removes the anatomy component from the AnatKey.
-    *   Changes the 'zap' button icon to a bent arrow.
-    *   @param indx the position of the anatomy component to be removed.
-    *   @param str not used.
-    */
-   public static void setEntryRemoved(int indx, String str) {
-
-      switch(indx) {
-      case 0:
-	 tf0.setText("");
-	 tf0.setBackground(notvis);
-	 btn02.setIcon(replaceIcon);
-         break;
-      case 1:
-	 tf1.setText("");
-	 tf1.setBackground(notvis);
-	 btn12.setIcon(replaceIcon);
-         break;
-      case 2:
-	 tf2.setText("");
-	 tf2.setBackground(notvis);
-	 btn22.setIcon(replaceIcon);
-         break;
-      case 3:
-	 tf3.setText("");
-	 tf3.setBackground(notvis);
-	 btn32.setIcon(replaceIcon);
-         break;
-      case 4:
-	 tf4.setText("");
-	 tf4.setBackground(notvis);
-	 btn42.setIcon(replaceIcon);
-         break;
-      case 5:
-	 tf5.setText("");
-	 tf5.setBackground(notvis);
-	 btn52.setIcon(replaceIcon);
-         break;
-      default:
-         break;
-      }
-   }
-
-//-------------------------------------------------------------
-   /**
-    *   Sets the visibility of the anatomy component
-    *   at 'indx' to true.
-    *   @param indx the position of the anatomy component
-    *   to be made visible.
-    *   @param str the full name of the anatomy component.
-    */
-   public static void setEntryVisible(int indx, String str) {
-
-      switch(indx) {
-      case 0:
-         tf0.setText(str);
-         tf0.setBackground(vis);
-	 cbx0.setSelected(true);
-	 btn02.setIcon(zapIcon);
-         break;
-      case 1:
-         tf1.setText(str);
-         tf1.setBackground(vis);
-	 cbx1.setSelected(true);
-	 btn12.setIcon(zapIcon);
-         break;
-      case 2:
-         tf2.setText(str);
-         tf2.setBackground(vis);
-	 cbx2.setSelected(true);
-	 btn22.setIcon(zapIcon);
-         break;
-      case 3:
-         tf3.setText(str);
-         tf3.setBackground(vis);
-	 cbx3.setSelected(true);
-	 btn32.setIcon(zapIcon);
-         break;
-      case 4:
-         tf4.setText(str);
-         tf4.setBackground(vis);
-	 cbx4.setSelected(true);
-	 btn42.setIcon(zapIcon);
-         break;
-      case 5:
-         tf5.setText(str);
-         tf5.setBackground(vis);
-	 cbx5.setSelected(true);
-	 btn52.setIcon(zapIcon);
-         break;
-      default:
-         break;
-      }
-   }
-
-//-------------------------------------------------------------
-   /**
-    *   Sets the visibility of the anatomy component
-    *   at 'indx' to false.
-    *   @param indx the position of the anatomy component
-    *   to be made invisible.
-    *   @param str the full name of the anatomy component.
-    */
-   public static void setEntryInvisible(int indx, String str) {
-
-      switch(indx) {
-      case 0:
-         tf0.setText(str);
-         tf0.setBackground(notvis);
-	 cbx0.setSelected(false);
-	 btn02.setIcon(zapIcon);
-         break;
-      case 1:
-         tf1.setText(str);
-         tf1.setBackground(notvis);
-	 cbx1.setSelected(false);
-	 btn12.setIcon(zapIcon);
-         break;
-      case 2:
-         tf2.setText(str);
-         tf2.setBackground(notvis);
-	 cbx2.setSelected(false);
-	 btn22.setIcon(zapIcon);
-         break;
-      case 3:
-         tf3.setText(str);
-         tf3.setBackground(notvis);
-	 cbx3.setSelected(false);
-	 btn32.setIcon(zapIcon);
-         break;
-      case 4:
-         tf4.setText(str);
-         tf4.setBackground(notvis);
-	 cbx4.setSelected(false);
-	 btn42.setIcon(zapIcon);
-         break;
-      case 5:
-         tf5.setText(str);
-         tf5.setBackground(notvis);
-	 cbx5.setSelected(false);
-	 btn52.setIcon(zapIcon);
-         break;
-      default:
-         break;
-      }
+      int i = (_ncols + _indx -1) % _ncols;
+      return new Color(_rgbt[i][0],
+                       _rgbt[i][1],
+                       _rgbt[i][2]);
    }
 
 //-------------------------------------------------------------
@@ -303,288 +158,92 @@ public class AnatKey extends AnatKeyGUI{
     *   @param indx the position (i.e. the row number in the AnatKey)
     *   of the anatomy component whose colour is being changed.
     */
-   public static void setCol(Color col, int indx) {
+   public void setCol(int indx) {
 
-      _cols[indx] = col.getBlue() |
-                    col.getGreen() << 8 |
-		    col.getRed() << 16 |
-		    col.getAlpha() << 24;
+      Color col = null;
+      KeyEntry row = null;
 
-      switch(indx) {
-      case 0:
-         colBtn0.setBackground(new Color(_cols[indx]));
-	 break;
-      case 1:
-         colBtn1.setBackground(new Color(_cols[indx]));
-	 break;
-      case 2:
-         colBtn2.setBackground(new Color(_cols[indx]));
-	 break;
-      case 3:
-         colBtn3.setBackground(new Color(_cols[indx]));
-	 break;
-      case 4:
-         colBtn4.setBackground(new Color(_cols[indx]));
-	 break;
-      case 5:
-         colBtn5.setBackground(new Color(_cols[indx]));
-	 break;
-      default:
-         break;
-      } // switch
+      row = getRow(indx);
+
+      if(row != null) {
+	 col = JColorChooser.showDialog(null,
+		     "choose colour for anatomy component",
+		     row.getCol());
+
+	 row.setCol(col);
+      }
+
    }
 
 //-------------------------------------------------------------
    /**
     *   Returns the colour of an anatomy component at
     *   the given index in the Anatomy Key.
-    *   @param index the index.
+    *   @param indx the index.
     *   @return a new Color object.
     */
-   public Color getColor(int index){
-     return new Color(_cols[index], true);
+   public static Color getColor(int indx){
+
+      Color col = null;
+      KeyEntry row = null;
+
+      row = getRow(indx);
+      if(row != null) {
+	col = row.getCol();
+      }
+
+      return col;
    }
 
 //-------------------------------------------------------------
    /**
     *   Resets the AnatKey to its empty state.
     */
-   public static void reset() {
+   public void reset() {
 
-      tf0.setText("");
-      tf0.setBackground(notvis);
-      cbx0.setSelected(false);
-      btn02.setIcon(null);
+      int num = _keyEntryVec.size();
+      int indxs[] = new int[num];
+      KeyEntry row = null;
 
-      tf1.setText("");
-      tf1.setBackground(notvis);
-      cbx1.setSelected(false);
-      btn12.setIcon(null);
+      /* first get the collection of index numbers */
+      for(int i = 0; i<num; i++) {
+         row = (KeyEntry)_keyEntryVec.elementAt(i);
+	 indxs[i] = row.getIndx();
+      }
+      row = null;
 
-      tf2.setText("");
-      tf2.setBackground(notvis);
-      cbx2.setSelected(false);
-      btn22.setIcon(null);
-
-      tf3.setText("");
-      tf3.setBackground(notvis);
-      cbx3.setSelected(false);
-      btn32.setIcon(null);
-
-      tf4.setText("");
-      tf4.setBackground(notvis);
-      cbx4.setSelected(false);
-      btn42.setIcon(null);
-
-      tf5.setText("");
-      tf5.setBackground(notvis);
-      cbx5.setSelected(false);
-      btn52.setIcon(null);
+      /* then remove each row */
+      for(int j = 0; j<num; j++) {
+         removeRow(indxs[j]);
+      }
    }
 
 //-------------------------------------------------------------
    /**
-    *   Updates the AnatKey with new / modified data.
-    *   Array entries may be null.
-    *   @param arr an array of AnatomyElements.
-    *   @see sectionViewer.AnatomyElement
+    *   Returns the keyEntry with the specified indx.
+    *   @param indx a unique index for each keyEntry.
+    *   @return the KeyEntry with the specified indx.
     */
-   public static void update(AnatomyElement[] arr) {
+   public static KeyEntry getRow(int indx) {
 
-      AnatomyElement el = null;
-
-      for(int i=0; i<_nrows; i++) {
-         el = arr[i];
-         if(el != null) {
-	    if(el.isRemoved()) {
-	       setEntryRemoved(i, el.getDescription());
-	    } else {
-	       if(el.isVisible()) {
-		  setEntryVisible(i, el.getDescription());
-	       } else {
-		  setEntryInvisible(i, el.getDescription());
-	       }
-	    }
-	 }
-      } // for
+      Enumeration rows = _keyEntryVec.elements();
+      KeyEntry row = null;
+      while (rows.hasMoreElements()) {
+         row = (KeyEntry)rows.nextElement();
+         if(row.getIndx() == indx) break;
+      }
+      return row;
    }
 
 //-------------------------------------------------------------
-// inner classes for event handling
-//-------------------------------------------------------------
    /**
-    *   Event handler for the arrow (scroll) buttons for the textfield
-    *   in each row of the AnatKey.
-    *   These scroll the anatomy name in the text field
-    *   fully left or right.
+    *   Increments the unique index and returns the new value.
+    *   @return _indx.
     */
-   public class ButtonHandler1 implements ActionListener {
-
-      /*
-         not sure how to calculate width of text in pixels
-         as I can't seem to get the font from the JTextField
-         hence END = a big number !!
-      */
-      final int START = 0;
-      final int END = 4000;
-
-      public ButtonHandler1() {
-      }
-
-      public void actionPerformed(ActionEvent e) {
-         if(e.getSource() == btn00) {
-	    tf0.setScrollOffset(START); // got to start of text
-         } else if(e.getSource() == btn01) {
-            tf0.setScrollOffset(END); // go to end of text
-         } else if(e.getSource() == btn10) {
-            tf1.setScrollOffset(START);
-         } else if(e.getSource() == btn11) {
-            tf1.setScrollOffset(END);
-         } else if(e.getSource() == btn20) {
-            tf2.setScrollOffset(START);
-         } else if(e.getSource() == btn21) {
-            tf2.setScrollOffset(END);
-         } else if(e.getSource() == btn30) {
-            tf3.setScrollOffset(START);
-         } else if(e.getSource() == btn31) {
-            tf3.setScrollOffset(END);
-         } else if(e.getSource() == btn40) {
-            tf4.setScrollOffset(START);
-         } else if(e.getSource() == btn41) {
-            tf4.setScrollOffset(END);
-         } else if(e.getSource() == btn50) {
-            tf5.setScrollOffset(START);
-         } else if(e.getSource() == btn51) {
-            tf5.setScrollOffset(END);
-         }
-      }
-
-   } // inner class ButtonHandler1
-
-//-------------------------------------------------------------
-   /**
-    *   Event handler for the zap button.
-    *   This concatenates "zap" with the relevant index (row) number
-    *   of the component as the parameter for a 'fireAction' command.
-    *   An application  will implement an ActionListener to listen for
-    *   these events and manage the updates required on the AnatKey.
-    */
-   public class ButtonHandler2 implements ActionListener {
-
-      String cmd1 = "zap";
-
-      public ButtonHandler2() {
-      }
-
-      public void actionPerformed(ActionEvent e) {
-         if(e.getSource() == btn02) {
-	    fireAction(new String(cmd1+"0"));
-         } else if(e.getSource() == btn12) {
-	    fireAction(new String(cmd1+"1"));
-         } else if(e.getSource() == btn22) {
-	    fireAction(new String(cmd1+"2"));
-         } else if(e.getSource() == btn32) {
-	    fireAction(new String(cmd1+"3"));
-         } else if(e.getSource() == btn42) {
-	    fireAction(new String(cmd1+"4"));
-         } else if(e.getSource() == btn52) {
-	    fireAction(new String(cmd1+"5"));
-         }
-      }
-
-   } // inner class ButtonHandler2
-
-//-------------------------------------------------------------
-   /**
-    *   Event handler for the colour chooser button.
-    *   This concatenates "colour" with the relevant index (row) number
-    *   of the component as the parameter for a 'fireAction' command.
-    *   An application  will implement an ActionListener to listen for
-    *   these events and manage the updates required on the AnatKey.
-    */
-   public class ButtonHandler3 implements ActionListener {
-
-      String cmd1 = "colour";
-
-      public ButtonHandler3() {
-      }
-
-      public void actionPerformed(ActionEvent e) {
-         if(e.getSource() == colBtn0) {
-	    fireAction(new String(cmd1+"0"));
-         } else if(e.getSource() == colBtn1) {
-	    fireAction(new String(cmd1+"1"));
-         } else if(e.getSource() == colBtn2) {
-	    fireAction(new String(cmd1+"2"));
-         } else if(e.getSource() == colBtn3) {
-	    fireAction(new String(cmd1+"3"));
-         } else if(e.getSource() == colBtn4) {
-	    fireAction(new String(cmd1+"4"));
-         } else if(e.getSource() == colBtn5) {
-	    fireAction(new String(cmd1+"5"));
-         }
-      }
-
-   } // inner class ButtonHandler3
-
-//-------------------------------------------------------------
-   /**
-    *   Event handler for the visibility checkbox.
-    *   This concatenates "makeVisible" (or makeInvisible) with
-    *   the relevant index (row) number of the component as the
-    *   parameter for a 'fireAction' command.
-    *   An application  will implement an ActionListener to listen for
-    *   these events and manage the updates required on the AnatKey.
-    */
-   public class ChBoxHandler implements ItemListener {
-
-      String cmd1 = "makeVisible";
-      String cmd2 = "makeInvisible";
-
-      public ChBoxHandler() {
-      }
-
-      public void itemStateChanged(ItemEvent e) {
-	 if(e.getSource() == cbx0) {
-	    if(e.getStateChange() == ItemEvent.SELECTED) {
-	       fireAction(new String(cmd1+"0"));
-	    } else {
-	       fireAction(new String(cmd2+"0"));
-	    }
-         } else if(e.getSource() == cbx1) {
-	    if(e.getStateChange() == ItemEvent.SELECTED) {
-	       fireAction(new String(cmd1+"1"));
-	    } else {
-	       fireAction(new String(cmd2+"1"));
-	    }
-         } else if(e.getSource() == cbx2) {
-	    if(e.getStateChange() == ItemEvent.SELECTED) {
-	       fireAction(new String(cmd1+"2"));
-	    } else {
-	       fireAction(new String(cmd2+"2"));
-	    }
-         } else if(e.getSource() == cbx3) {
-	    if(e.getStateChange() == ItemEvent.SELECTED) {
-	       fireAction(new String(cmd1+"3"));
-	    } else {
-	       fireAction(new String(cmd2+"3"));
-	    }
-         } else if(e.getSource() == cbx4) {
-	    if(e.getStateChange() == ItemEvent.SELECTED) {
-	       fireAction(new String(cmd1+"4"));
-	    } else {
-	       fireAction(new String(cmd2+"4"));
-	    }
-         } else if(e.getSource() == cbx5) {
-	    if(e.getStateChange() == ItemEvent.SELECTED) {
-	       fireAction(new String(cmd1+"5"));
-	    } else {
-	       fireAction(new String(cmd2+"5"));
-	    }
-         }
-      }
-
-   } // inner class chBoxHandler
+   public int nextIndx() {
+      _indx++;
+      return _indx;
+   }
 
 //-------------------------------------------------------------
 // handle all objects that are interested in changes
@@ -595,8 +254,10 @@ public class AnatKey extends AnatKeyGUI{
     *   A list of ActionListeners which are
     *   listening for events fired from the AnatKey.
     */
+/*
    protected EventListenerList actionListeners =
                              new EventListenerList();
+*/
 
   // add a listener to the register
    /**
@@ -604,9 +265,11 @@ public class AnatKey extends AnatKeyGUI{
     *   with the EventListenerList.
     *   @param x an Event handler implementing ActionListener
     */
+/*
   public void addActionListener(ActionListener x) {
     actionListeners.add (ActionListener.class, x);
   }
+*/
 
 
   // remove a listener from the register
@@ -615,14 +278,17 @@ public class AnatKey extends AnatKeyGUI{
     *   from the EventListenerList
     *   @param x an Event handler implementing ActionListener
     */
+/*
   public void removeActionListener(ActionListener x) {
     actionListeners.remove (ActionListener.class, x);
   }
+*/
 
    /**
     *   Fires an ActionEvent with the given Action Command.
     *   This allows an event handler to choose the appropriate action.
     */
+/*
    protected void fireAction(String cmd) {
    // Create the event:
    ActionEvent ae = new ActionEvent(this,
@@ -641,13 +307,15 @@ public class AnatKey extends AnatKeyGUI{
      }
    }
   } // fireAction
+*/
 
 //-------------------------------------------------------------
 
    /**
     *   For testing only.
     */
-  public static void main(String argv[]) {
+/*
+  public void main(String argv[]) {
 
 	AnatKey _key;
 
@@ -657,5 +325,6 @@ public class AnatKey extends AnatKeyGUI{
 	_key.setVisible(true);
 
   }
+*/
 
 } // class AnatKey
