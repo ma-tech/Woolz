@@ -355,8 +355,4 @@ WlzObjToBoundary:	WlzObjToBoundary.o
 purify:
 
 $(OBJECTS):		%.o: %.c $(INCLUDES_ALL) 
-ifeq ($(UNIXTYPE), SUNOS5)
-			$(CC) -v  -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
-else
 			$(CC) -c -o $@ $(CPPFLAGS) $(CFLAGS) $<
-endif
