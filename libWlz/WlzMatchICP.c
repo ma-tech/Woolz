@@ -64,6 +64,7 @@ static WlzErrorNum  		WlzMatchICPCtr(
 				  int brkFlg, int dbgFlg);
 static WlzErrorNum		WlzMatchICPRegShellLst(
 				  AlcKDTTree *tTree,
+				  WlzGMModel *sGM,
 				  WlzMatchICPShellList *sLst,
 				  WlzTransformType trType,
 				  WlzVertexType vType,
@@ -583,32 +584,27 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  if(vSList->head == NULL)
+	  if((lElm0 = WlzMatchICPShellListElmNew()) == NULL)
 	  {
-	    /* Shell had no high connectivity verticies and was not broken,
-	     * so create a list with just the unbroken shell in it. */
-	    if((lElm0 = WlzMatchICPShellListElmNew()) == NULL)
-	    {
-	      errNum = WLZ_ERR_MEM_ALLOC;
-	    }
-	    else
-	    {
-	      WlzMatchICPShellListElmInsert(vSList, lElm0);
-	      lElm0->mShell.size = sMS->size;
-	      lElm0->mShell.shell = sMS->shell;
-	      lElm0->mShell.tr = WlzAssignAffineTransform(sMS->tr, NULL);
-	    }
+	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  else
 	  {
-	    /* Shell contained high connectivity verticies, so pass through
-	     * the list, registering shells above the size threshold to the
-	     * target model and removing the list elements of any small
-	     * shells or shells that do not register. */
-	    errNum = WlzMatchICPRegShellLst(tTree, vSList,
-		trType, vType, nTV, tVx, tNr, nSV, sVx, sNr,
-		vIBuf, tVBuf, sVBuf, wBuf, maxItr, minSpx,
-		sMS->tr);
+	    lElm0->mShell.size = sMS->size;
+	    lElm0->mShell.shell = sMS->shell;
+	    lElm0->mShell.tr = WlzAssignAffineTransform(sMS->tr, NULL);
+	    WlzMatchICPShellListElmInsert(vSList, lElm0);
+	    if(vSList->head->next != NULL)
+	    {
+	      /* Shell contained high connectivity verticies, so pass through
+	       * the list, registering shells above the size threshold to the
+	       * target model and removing the list elements of any small
+	       * shells or shells that do not register. */
+	      errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList,
+		  trType, vType, nTV, tVx, tNr, nSV, sVx, sNr,
+		  vIBuf, tVBuf, sVBuf, wBuf, maxItr, minSpx,
+		  sMS->tr);
+	    }
 	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
@@ -696,7 +692,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		 * target model and removing the list elements of any small
 		 shells or shells that do not register. */
 		WlzMatchICPShellListElmInsert(vSList, lElm0);
-		errNum = WlzMatchICPRegShellLst(tTree, vSList, trType, vType,
+		errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList,
+				    trType, vType,
 				    nTV, tVx, tNr, nSV, sVx, sNr,
 				    vIBuf, tVBuf, sVBuf, wBuf, maxItr, minSpx,
 				    lElm0->mShell.tr);
@@ -886,6 +883,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 *					nodes of the tree have the same
 *					indicies as the given target verticies
 *					and normals.
+* \param	sGM			Source geometric model.
 * \param	sLst			The given list of shells.
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
@@ -910,6 +908,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 * \param	initTr			Initial affine transform, may be NULL.
 */
 static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
+				WlzGMModel *sGM,
 				WlzMatchICPShellList *sLst,
 				WlzTransformType trType, WlzVertexType vType,
 				int nTV, WlzVertexP tVx, WlzVertexP tNr,
@@ -951,6 +950,7 @@ static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
 	 * register with the target model: Remove the element from
 	 * the list. */
 	WlzMatchICPShellListElmUnlink(sLst, lElm0);
+	WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
 	WlzMatchICPShellListElmFree(lElm0);
 	WlzFreeAffineTransform(tTr);
       }
@@ -1809,7 +1809,8 @@ static int	WlzMatchICPShellSzCmp(const void *val0, const void *val1)
 static void	WlzMatchICPShellCb(WlzGMModel *model, WlzGMElemP elm,
 			           WlzGMCbReason reason, void *data)
 {
-  WlzMatchICPShellListElm *nLElm;
+  WlzMatchICPShellListElm *tLElm,
+  			  *nLElm;
   WlzMatchICPCbData *nSCb;
 
   if(elm.core && (elm.core->type == WLZ_GMELM_SHELL))
@@ -1830,6 +1831,20 @@ static void	WlzMatchICPShellCb(WlzGMModel *model, WlzGMElemP elm,
     }
     else
     {
+      /* Check that the shell that's about to be deleted isn't in the list
+       * that's being built. If it is then remove it before it's deleted. */
+      tLElm = nSCb->list->head;
+      while(tLElm)
+      {
+        nLElm = tLElm->next;
+	if(elm.shell == tLElm->mShell.shell)
+	{
+	  /* Need to remove the list entry before the shell is deleted. */
+          WlzMatchICPShellListElmUnlink(nSCb->list, tLElm);
+	  WlzMatchICPShellListElmFree(tLElm);
+	}
+	tLElm = nLElm;
+      }
       ++(nSCb->nFS);
     }
   }
