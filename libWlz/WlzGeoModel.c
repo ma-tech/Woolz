@@ -1,34 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzGeoModel.c
-* Date:         February 2000
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Basic operators for handling both manifold and
-*		non-manifold geometric models (GM) within Woolz.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 16-01-01 bill Add WlzGMVertexNormal3D().
-* 12-12-00 bill	Fixed linked list bug in WlzGMModelAddVertex().
-* 27-11-00 bill Add shell geometry updates during 2D model creation,
-*		write WlzGMShellMergeG(). Fix bug allowing insertion
-*		of duplicate simplicies in WlzGMModelConstructSimplex2D().
-*		Fix bug in WlzGMModelDeleteS().
-* 21-11-00 bill	Fix shell leak in WlzGMModelJoinL2D().
-* 16-11-00 bill Add WlzGMModelDeleteS().
-* 12-10-00 bill Fix bug counting shells in WlzGMModelConstructSimplex3D().
-* 10-10-00 bill Add WlzGMModelCopy().
-* 25-08-00 bill Fix bugs in 3D model construction. Remove element's
-*		data and flags.
-* 10-08-00 bill Do some optimization so that when joining shells, the
-*		shell who's geometry has the greatest bounding box
-*		volume is retained.
-************************************************************************/
+/*!
+* \file		WlzGeoModel.c
+* \author	Bill Hill
+* \date		February 2000
+* \version	$Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Basic operators for manipulating Woolz geometric models.
+*		These can be either planar graphs or 3D surfaces, with
+*		the surfaces being either manifold or non-manifold.
+* \ingroup      WlzGeoModel
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 #include <limits.h>
 
@@ -144,21 +134,20 @@ static void		WlzGMElmMarkFree(
 
 /* Creation  of geometric modeling elements */
 
-/************************************************************************
-* Function:	WlzGMModelNew
-* Returns:	WlzGMModel *:		New empty model.
-* Purpose:	Creates an empty non-manifold geometry model.
-* Global refs:	-
-* Parameters:	WlzGMModelType modType:	Type of model to create.
-*		int blkSz:		Resource block size, used for
+/*!
+* \return				New empty model.
+* \ingroup      WlzGeoModel
+* \brief	Creates an empty non-manifold geometry model.
+* \param	modType			Type of model to create.
+* \param	blkSz			Resource block size, used for
 *					allocating storage for model
 *					elements. A default size is
 *					used if <= 0.
-*		int vHTSz:		Vertex matching hash table size,
-*					A default size is used if <= 0.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+* \param	vHTSz			Vertex matching hash table size,
+*                                       A default size is used if <= 0.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
 			       int blkSz, int vHTSz, WlzErrorNum *dstErr)
 {
@@ -259,16 +248,15 @@ WlzGMModel	*WlzGMModelNew(WlzGMModelType modType,
   return(model);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewS
-* Returns:	WlzGMShell *:		New empty shell.
-* Purpose:	Creates an empty shell with a shell geometry element
-*		for the model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The geometric model.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New empty shell.
+* \ingroup      WlzGeoModel
+* \brief	Creates an empty shell with a shell geometry element
+*               for the model.
+* \param	model			The geometric model.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMShell	*WlzGMModelNewS(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resS,
@@ -315,17 +303,16 @@ WlzGMShell	*WlzGMModelNewS(WlzGMModel *model, WlzErrorNum *dstErr)
   return(shell);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewL
-* Returns:	WlzGMLoop *:		New loop.
-* Purpose:	Creates an empty loop with a loop geometry element.
-*		The loop geometry element only has it's index set
-*		to a meaningful value.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Parent model.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New loop.
+* \ingroup      WlzGeoModel
+* \brief	Creates an empty loop with a loop geometry element.
+*               The loop geometry element only has it's index set
+*               to a meaningful value.
+* \param	model			Parent model.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMLoop	*WlzGMModelNewL(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resL;
@@ -359,15 +346,14 @@ WlzGMLoop	*WlzGMModelNewL(WlzGMModel *model, WlzErrorNum *dstErr)
   return(loop);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewLT
-* Returns:	WlzGMLoopT *:		New loop.
-* Purpose:	Creates a loop topology element.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Parent model.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
+/*!
+* \return				New loop.
+* \ingroup      WlzGeoModel
+* \brief	Creates a loop topology element.
+* \param	model			Parent model.
+* \param	dstErr			Destination error pointer, may
 *					be null.
-************************************************************************/
+*/
 WlzGMLoopT	*WlzGMModelNewLT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resLT;
@@ -406,15 +392,14 @@ WlzGMLoopT	*WlzGMModelNewLT(WlzGMModel *model, WlzErrorNum *dstErr)
   return(loopT);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewDT
-* Returns:	WlzGMDiskT:		New disk topology element.
-* Purpose:	Creates a new disk topology element.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzErrorNum *dstErr: 	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New disk topology element.
+* \ingroup      WlzGeoModel
+* \brief	Creates a new disk topology element.
+* \param	model			Model with resources.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMDiskT     *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resDT;
@@ -453,17 +438,16 @@ WlzGMDiskT     *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
   return(diskT);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewE
-* Returns:	WlzGMEdge:		New edge.
-* Purpose:	Creates a new edge and an edge geometry element.
-*		The edge geometry element only has it's index set
-*		to a meaningful value.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzErrorNum *dstErr: 	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New edge.
+* \ingroup      WlzGeoModel
+* \brief	Creates a new edge and an edge geometry element.
+*               The edge geometry element only has it's index set
+*               to a meaningful value.
+* \param	model			Model with resources.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMEdge      *WlzGMModelNewE(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resE;
@@ -502,15 +486,14 @@ WlzGMEdge      *WlzGMModelNewE(WlzGMModel *model, WlzErrorNum *dstErr)
   return(edge);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewET
-* Returns:	WlzGMEdgeT:		New edge topology element.
-* Purpose:	Creates a new edge topology element.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzErrorNum *dstErr: 	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New edge topology element.
+* \ingroup      WlzGeoModel
+* \brief	Creates a new edge topology element.
+* \param	model			Model with resources.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMEdgeT     *WlzGMModelNewET(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resET;
@@ -549,17 +532,16 @@ WlzGMEdgeT     *WlzGMModelNewET(WlzGMModel *model, WlzErrorNum *dstErr)
   return(edgeT);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewV
-* Returns:	WlzGMVertex:		New vertex.
-* Purpose:	Creates a new vertex and a vertex geometry element.
-*		The vertex geometry element only has it's index set
-*		to a meaningful value.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzErrorNum *dstErr: 	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New vertex.
+* \ingroup      WlzGeoModel
+* \brief	Creates a new vertex and a vertex geometry element.
+*               The vertex geometry element only has it's index set
+*               to a meaningful value.
+* \param	model			Model with resources.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMVertex      *WlzGMModelNewV(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resV,
@@ -606,15 +588,14 @@ WlzGMVertex      *WlzGMModelNewV(WlzGMModel *model, WlzErrorNum *dstErr)
   return(vertex);
 }
 
-/************************************************************************
-* Function:	WlzGMModelNewVT
-* Returns:	WlzGMVertexT:		New vertex topology element.
-* Purpose:	Creates a new vertex topology element.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzErrorNum *dstErr: 	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New vertex topology element.
+* \ingroup      WlzGeoModel
+* \brief	Creates a new vertex topology element.
+* \param	model			Model with resources.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resVT;
@@ -653,16 +634,15 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
   return(vertexT);
 }
 
-/************************************************************************
-* Function:     WlzGMModelCopy
-* Returns:      WlzGMModel *:		New copy of the given model.
-* Purpose:	Copies the given model. All unused elements are squeezed
+/*!
+* \return				New copy of the given model.
+* \ingroup      WlzGeoModel
+* \brief	Copies the given model. All unused elements are squeezed
 *		out.
-* Global refs:	-
-* Parameters:	WlzGMModel *gM:	Given model.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
+* \param	gM			Given model.
+* \param	dstErr			Destination error pointer, may
 *					be null.
-************************************************************************/
+*/
 WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 {
   int		gIdx,
@@ -1197,13 +1177,12 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 
 /* Freeing  of geometric modeling elements */
 
-/************************************************************************
-* Function:	WlzGMModelFree
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Free's a geometric model and it's elements.
-* Global refs:	-
-* Parameters:	WlzGMModel *shell:	The shell to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Free's a geometric model and it's elements.
+* \param	model			The shell to free.
+*/
 WlzErrorNum	WlzGMModelFree(WlzGMModel *model)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1237,14 +1216,13 @@ WlzErrorNum	WlzGMModelFree(WlzGMModel *model)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMElmMarkFree
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks an element as free by setting it's index to
-*		a -ve value, the actual choice of value aids debugging.
-* Global refs:	-
-* Parameters:	int *idxP:		Pointer to elements index.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks an element as free by setting it's index to
+*               a -ve value, the actual choice of value aids debugging.
+* \param	idxP			Pointer to elements index.
+*/
 static void	WlzGMElmMarkFree(int *idxP)
 {
   if(*idxP >= 0)
@@ -1253,15 +1231,14 @@ static void	WlzGMElmMarkFree(int *idxP)
   }
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeS
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks a shell and it's geometry as invalid and suitable
-*		for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMShell *shell:	Shell to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks a shell and it's geometry as invalid and suitable
+*               for reclaiming.
+* \param	model			Model with resources.
+* \param	shell			Shell to free.
+*/
 WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1289,14 +1266,13 @@ WlzErrorNum	WlzGMModelFreeS(WlzGMModel *model, WlzGMShell *shell)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeL
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks a loop as invalid and suitable for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMLoop *loop:	Loop to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks a loop as invalid and suitable for reclaiming.
+* \param	model			Model with resources.
+* \param	loop			Loop to free.
+*/
 WlzErrorNum	WlzGMModelFreeL(WlzGMModel *model, WlzGMLoop *loop)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1319,15 +1295,14 @@ WlzErrorNum	WlzGMModelFreeL(WlzGMModel *model, WlzGMLoop *loop)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeLT
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks a loop topology as invalid and suitable
-*		for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMLoopT *loopT:	LoopT to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks a loop topology as invalid and suitable
+*               for reclaiming.
+* \param	model			Model with resources.
+* \param	loopT			LoopT to free.
+*/
 WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1350,15 +1325,14 @@ WlzErrorNum	WlzGMModelFreeLT(WlzGMModel *model, WlzGMLoopT *loopT)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeDT
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks an disk topology as invalid and suitable
-*		for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMDiskT *diskT:	DiskT to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks an disk topology as invalid and suitable
+*               for reclaiming.
+* \param	model			Model with resources.
+* \param	diskT			DiskT to free.
+*/
 WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1381,14 +1355,13 @@ WlzErrorNum	WlzGMModelFreeDT(WlzGMModel *model, WlzGMDiskT *diskT)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeE
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks an edge as invalid and suitable for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMEdge *edge:	Edge to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks an edge as invalid and suitable for reclaiming.
+* \param	model			Model with resources.
+* \param	edge			Edge to free.
+*/
 WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1411,15 +1384,14 @@ WlzErrorNum	WlzGMModelFreeE(WlzGMModel *model, WlzGMEdge *edge)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeET
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks an edge topology as invalid and suitable
-*		for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMEdgeT *edgeT:	EdgeT to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks an edge topology as invalid and suitable for
+*		reclaiming.
+* \param	model			Model with resources.
+* \param	edgeT			EdgeT to free.
+*/
 WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1442,15 +1414,14 @@ WlzErrorNum	WlzGMModelFreeET(WlzGMModel *model, WlzGMEdgeT *edgeT)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeV
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks a vertex and it's geometry as invalid and suitable
-*		for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMVertex *vertex:	Vertex to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks a vertex and it's geometry as invalid and suitable
+*               for reclaiming.
+* \param	model			Model with resources.
+* \param	vertex			Vertex to free.
+*/
 WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1478,15 +1449,14 @@ WlzErrorNum	WlzGMModelFreeV(WlzGMModel *model, WlzGMVertex *vertex)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelFreeVT
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Marks a vertex topology as invalid and suitable
-*		for reclaiming.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMVertexT *vertexT:	VertexT to free.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Marks a vertex topology as invalid and suitable for
+*		reclaiming.
+* \param	model			Model with resources.
+* \param	vertexT			VertexT to free.
+*/
 WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1511,15 +1481,14 @@ WlzErrorNum	WlzGMModelFreeVT(WlzGMModel *model, WlzGMVertexT *vertexT)
 
 /* Deletion of geometric modeling elements along with children */
 
-/************************************************************************
-* Function:	WlzGMModelDeleteS
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Deletes a shell by unlinking it and then freeing it and
-*		all it's children.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMShell *dS:		Shell to delete.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Deletes a shell by unlinking it and then freeing it and
+*               all it's children.
+* \param	model			Model with resources.
+* \param	dS			Shell to delete.
+*/
 WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 {
   WlzGMVertexT	*tVT;
@@ -1591,13 +1560,12 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 
 /* Model access and testing. */
 
-/************************************************************************
-* Function:	WlzGMModelTypeValid
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Checks the model type is valid.
-* Global refs:	-
-* Parameters:	WlzGMModelType type:	Model type to check.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Checks the model type is valid.
+* \param	type			Model type to check.
+*/
 WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1616,16 +1584,19 @@ WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelTestOutVTK
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 3D model to the specified file using the
-*		VTK polydata format.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		FILE *fP:		File ptr, may be NULL if
-*					no output required.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 3D model to the specified file using the
+*               VTK polydata format. This should not be in libWlz
+*		because it writes to a non-Woolz file format, but
+*		it is here because it is invaluable for testing!
+*		With no file pointer given the model elements
+*		are still traversed but with no output.
+* \param	model			Given model.
+* \param	fP			File ptr, may be NULL if
+*                                       no output required.
+*/
 WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
 {
   int		idI,
@@ -1724,18 +1695,17 @@ WlzErrorNum   	WlzGMModelTestOutVTK(WlzGMModel *model, FILE *fP)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellTestOutVTK
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 3D shell to the specified file using the
-*		VTK polydata format.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell.
-*		int *vIdxTb:		Vertex index table.
-*		char *lFlg:		Loop flags.
-*		FILE *fP:		File ptr, may be NULL if
-*					no output required.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 3D shell to the specified file using the
+*		VTK polydata format. See WlzGMModelTestOutVTK().
+* \param	shell			Given shell.
+* \param	vIdxTb			Vertex index table.
+* \param	lFlg			Loop flags.
+* \param	fP			File ptr, may be NULL if
+*                                       no output required.
+*/
 static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell, int *vIdxTb,
 					char *lFlg, FILE *fP)
 {
@@ -1765,18 +1735,16 @@ static WlzErrorNum WlzGMShellTestOutVTK(WlzGMShell *shell, int *vIdxTb,
   return(errNum);
 }
 
-
-/************************************************************************
-* Function:	WlzGMLoopTTestOutputVTK
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 3D loopT to the specified file using the
-*		VTK polydata format.
-* Global refs:	-
-* Parameters:	WlzGMLoopT *fLT:	Given loopT.
-*		int *vIdxTb:		Vertex index table.
-*		FILE *fP:		File ptr, may be NULL if
-*					no output required.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 3D loopT to the specified file using the
+*               VTK polydata format. See WlzGMModelTestOutVTK().
+* \param	fLT			Given loopT.
+* \param	vIdxTb			Vertex index table.
+* \param	fP			File ptr, may be NULL if
+*                                       no output required.
+*/
 static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT, int *vIdxTb,
 					   FILE *fP)
 {
@@ -1843,22 +1811,24 @@ static WlzErrorNum WlzGMLoopTTestOutputVTK(WlzGMLoopT *fLT, int *vIdxTb,
   return(errNum);
 }
 
-
-/************************************************************************
-* Function:	WlzGMModelTestOutPS
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 2D model to the specified file as Postscript.
-*		To make shell identification easier Postscript colors
-*		can be cycled.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		FILE *fP:		File ptr, may be NULL if
-*					no output required.
-*		WlzDVertex2 offset:	Postscript offset.
-*		WlzDVertex2 scale:	Postscript scale.
-*		int nCol:		Number of colours to cycle
-*					through.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 2D model to the specified file as Postscript.
+*               To make shell identification easier Postscript colors
+*               can be cycled. This should not be in libWlz
+*		because it writes to a non-Woolz file format, but
+*		it is here because it is invaluable for testing!
+*		With no file pointer given the model elements
+*		are still traversed but with no output.
+* \param	model			Given model.
+* \param	fP			File ptr, may be NULL if
+*                                       no output required.
+* \param	offset			Postscript offset.
+* \param	scale			Postscript scale.
+* \param	nCol			Number of colours to cycle
+*                                       through.
+*/
 WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
 				    WlzDVertex2 offset, WlzDVertex2 scale,
 				    int nCol)
@@ -1932,19 +1902,19 @@ WlzErrorNum   	WlzGMModelTestOutPS(WlzGMModel *model, FILE *fP,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellTestOutPS
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 2D shell to the specified file as Postscript.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell.
-*		char *lFlg:		Loop flags.
-*		char *eFlg:		Edge flags.
-*		FILE *fP:		Output file ptr, may be NULL if
-*					no output required.
-*		WlzDVertex2 offset:	Postscript offset.
-*		WlzDVertex2 scale:	Postscript scale.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 2D shell to the specified file as Postscript.
+*		See WlzGMModelTestOutPS().
+* \param	shell			Given shell.
+* \param	lFlg			Loop flags.
+* \param	eFlg			Edge flags.
+* \param	fP			Output file ptr, may be NULL if
+*                                       no output required.
+* \param	offset			Postscript offset.
+* \param	scale			Postscript scale.
+*/
 static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell,
 				       char *lFlg, char *eFlg,
 				       FILE *fP,
@@ -1979,19 +1949,18 @@ static WlzErrorNum WlzGMShellTestOutPS(WlzGMShell *shell,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMLoopTTestOutPS
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 2D loop topology element to the specified
-*		file as Postscript.
-* Global refs:	-
-* Parameters:	WlzGMLoopT *loopT:	Given loop topology element.
-*		char *eFlg:		Edge flags.
-*		FILE *fP:		Output file ptr, may be NULL if
-*					no output required.
-*		WlzDVertex2 offset:	Postscript offset.
-*		WlzDVertex2 scale:	Postscript scale.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 2D loop topology element to the specified
+*               file as Postscript. See WlzGMModelTestOutPS().
+* \param	loopT			Given loop topology element.
+* \param	eFlg			Edge flags.
+* \param	fP			Output file ptr, may be NULL if
+*                                       no output required.
+* \param	offset			Postscript offset.
+* \param	scale			Postscript scale.
+*/
 static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT,
 				       char *eFlg, FILE *fP,
 			               WlzDVertex2 offset, WlzDVertex2 scale)
@@ -2021,18 +1990,17 @@ static WlzErrorNum WlzGMLoopTTestOutPS(WlzGMLoopT *loopT,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMEdgeTTestOutPS
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Outputs a 2D edge topology element to the specified
-*		file as Postscript.
-* Global refs:	-
-* Parameters:	WlzGMEdgeT *edgeT:	Given edge topology element.
-*		FILE *fP:		Output file ptr, may be NULL if
-*					no output required.
-*		WlzDVertex2 offset:	Postscript offset.
-*		WlzDVertex2 scale:	Postscript scale.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 2D edge topology element to the specified
+*               file as Postscript. See WlzGMModelTestOutPS().
+* \param	edgeT			Given edge topology element.
+* \param	fP			Output file ptr, may be NULL if
+*                                       no output required.
+* \param	offset			Postscript offset.
+* \param	scale			Postscript scale.
+*/
 static WlzErrorNum WlzGMEdgeTTestOutPS(WlzGMEdgeT *edgeT, FILE *fP,
 			               WlzDVertex2 offset, WlzDVertex2 scale)
 {
@@ -2061,14 +2029,20 @@ static WlzErrorNum WlzGMEdgeTTestOutPS(WlzGMEdgeT *edgeT, FILE *fP,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMTestOutLinePS
-* Returns:	void
-* Purpose:	Outputs a 2D line segment, as defined by two endpoint
-*		coordinates, to  the specifiedfile as Postscript.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file ptr.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Outputs a 2D line segment, as defined by two endpoint
+*               coordinates, to  the specifiedfile as Postscript.
+*		See WlzGMModelTestOutPS().
+* \param	fP			Output file ptr.
+* \param	pos0			Position of vertex at start of
+*					the line segment.
+* \param	pos1			Position of vertex at end of
+*					the line segment.
+* \param	offset			Postscript offset.
+* \param	scale			Postscript scale.
+*/
 static void	WlzGMTestOutLinePS(FILE *fP,
 				   WlzDVertex2 pos0, WlzDVertex2 pos1,
 				   WlzDVertex2 offset, WlzDVertex2 scale)
@@ -2087,13 +2061,12 @@ static void	WlzGMTestOutLinePS(FILE *fP,
 
 /* Geometry access, update and testing */
 
-/************************************************************************
-* Function:	WlzGMModelGetSGeomType
-* Returns:	WlzGMElemType:		Shell's geometry type.
-* Purpose:	Gets the shell's geometry type from the model's type.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model.
-************************************************************************/
+/*!
+* \return				Shell's geometry type.
+* \ingroup      WlzGeoModel
+* \brief	Gets the shell's geometry type from the model's type.
+* \param	model			The model.
+*/
 WlzGMElemType 	WlzGMModelGetSGeomType(WlzGMModel *model)
 {
   WlzGMElemType	sGType;
@@ -2116,13 +2089,12 @@ WlzGMElemType 	WlzGMModelGetSGeomType(WlzGMModel *model)
   return(sGType);
 }
 
-/************************************************************************
-* Function:	WlzGMModelGetVGeomType
-* Returns:	WlzGMElemType:		Shell's geometry type.
-* Purpose:	Gets the verticies geometry type from the model's type.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model.
-************************************************************************/
+/*!
+* \return				Shell's geometry type.
+* \ingroup      WlzGeoModel
+* \brief	Gets the verticies geometry type from the model's type.
+* \param	model			The model.
+*/
 WlzGMElemType 	WlzGMModelGetVGeomType(WlzGMModel *model)
 {
   WlzGMElemType	vGType;
@@ -2145,17 +2117,16 @@ WlzGMElemType 	WlzGMModelGetVGeomType(WlzGMModel *model)
   return(vGType);
 }
 
-/************************************************************************
-* Function:	WlzGMShellGetGBB3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Gets a shell's geometry using the given destination
-*		pointer to a double precision bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox3 *bBox:		Given destination pointer to a
-*					double precision bounding box.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets a shell's geometry using the given destination
+*               pointer to a double precision bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	bBox			Given destination pointer to a
+*                                       double precision bounding box.
+*/
 WlzErrorNum	WlzGMShellGetGBB3D(WlzGMShell *shell, WlzDBox3 *bBox)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2207,16 +2178,15 @@ WlzErrorNum	WlzGMShellGetGBB3D(WlzGMShell *shell, WlzDBox3 *bBox)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellGetGBBV3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Gets the volume of the shell's geometry's bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox3 *bBox:		Given destination pointer for
-*					the volume.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets the volume of the shell's geometry's bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	vol			Given destination pointer for
+*                                       the volume.
+*/
 WlzErrorNum	WlzGMShellGetGBBV3D(WlzGMShell *shell, double *vol)
 {
   WlzDBox3	bBox;
@@ -2234,17 +2204,16 @@ WlzErrorNum	WlzGMShellGetGBBV3D(WlzGMShell *shell, double *vol)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellGetGBB2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Gets a shell's geometry using the given destination
-*		pointer to a double precision bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox2 *bBox:		Given destination pointer to a
-*					double precision bounding box.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets a shell's geometry using the given destination
+*               pointer to a double precision bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	bBox			Given destination pointer to a
+*                                       double precision bounding box.
+*/
 WlzErrorNum	WlzGMShellGetGBB2D(WlzGMShell *shell, WlzDBox2 *bBox)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2290,17 +2259,16 @@ WlzErrorNum	WlzGMShellGetGBB2D(WlzGMShell *shell, WlzDBox2 *bBox)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellSetGBB3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Sets a shell's geometry using the given double
-*		precision bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox3 bBox:		Given double precision bounding
-*					box.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a shell's geometry using the given double
+*               precision bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	bBox			Given double precision bounding
+*                                       box.
+*/
 WlzErrorNum	WlzGMShellSetGBB3D(WlzGMShell *shell, WlzDBox3 bBox)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2344,17 +2312,16 @@ WlzErrorNum	WlzGMShellSetGBB3D(WlzGMShell *shell, WlzDBox3 bBox)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellSetGBB2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Sets a shell's geometry using the given double
-*		precision bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox2 bBox:		Given double precision bounding
-*					box.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a shell's geometry using the given double
+*               precision bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	bBox			Given double precision bounding
+*                                       box.
+*/
 WlzErrorNum	WlzGMShellSetGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2400,17 +2367,16 @@ WlzErrorNum	WlzGMShellSetGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellSetG3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Sets a shell's geometry using the pair of double
-*		precision points.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		int nPnt:		Number of points.
-*		WlzDVertex3 *pos:	Array of points.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a shell's geometry using the pair of double
+*               precision points.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	nPnt			Number of points.
+* \param	pos			Array of points.
+*/
 WlzErrorNum	WlzGMShellSetG3D(WlzGMShell *shell,
 				 int nPnt, WlzDVertex3 *pos)
 {
@@ -2455,17 +2421,16 @@ WlzErrorNum	WlzGMShellSetG3D(WlzGMShell *shell,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellSetG2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Sets a shell's geometry using the pair of double
-*		precision points.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		int nPnt:		Number of points.
-*		WlzDVertex2 *pos:	Array of points.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a shell's geometry using the pair of double
+*               precision points.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	nPnt			Number of points.
+* \param	pos			Array of points.
+*/
 WlzErrorNum	WlzGMShellSetG2D(WlzGMShell *shell,
 				 int nPnt, WlzDVertex2 *pos)
 {
@@ -2501,16 +2466,15 @@ WlzErrorNum	WlzGMShellSetG2D(WlzGMShell *shell,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellUpdateG3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Updates a shell's geometry using the given double
-*		precision position.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDVertex3 pos:	Given position.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Updates a shell's geometry using the given double
+*               precision position.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	pos			Given position.
+*/
 WlzErrorNum	WlzGMShellUpdateG3D(WlzGMShell *shell, WlzDVertex3 pos)
 {
   int		tI0;
@@ -2620,16 +2584,15 @@ WlzErrorNum	WlzGMShellUpdateG3D(WlzGMShell *shell, WlzDVertex3 pos)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellUpdateG2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Updates a shell's geometry using the given double
-*		precision position.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDVertex2 pos:	Given position.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Updates a shell's geometry using the given double
+*               precision position.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	pos			Given position.
+*/
 WlzErrorNum	WlzGMShellUpdateG2D(WlzGMShell *shell, WlzDVertex2 pos)
 {
   int		tI0;
@@ -2723,18 +2686,17 @@ WlzErrorNum	WlzGMShellUpdateG2D(WlzGMShell *shell, WlzDVertex2 pos)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellUpdateGBB3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Updates a shell's geometry using the given double
-*		precision position bounding box. The updated geometry
-*		is the union of the existing geometry and the given
-*		bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox3 bBox:		Given bounding box.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Updates a shell's geometry using the given double
+*               precision position bounding box. The updated geometry
+*               is the union of the existing geometry and the given
+*               bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	bBox			Given bounding box.
+*/
 WlzErrorNum	WlzGMShellUpdateGBB3D(WlzGMShell *shell, WlzDBox3 bBox)
 {
   int		tI0;
@@ -2844,18 +2806,17 @@ WlzErrorNum	WlzGMShellUpdateGBB3D(WlzGMShell *shell, WlzDBox3 bBox)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellUpdateGBB2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Updates a shell's geometry using the given double
-*		precision position bounding box. The updated geometry
-*		is the union of the existing geometry and the given
-*		bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDBox2 bBox:		Given bounding box.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Updates a shell's geometry using the given double
+*               precision position bounding box. The updated geometry
+*               is the union of the existing geometry and the given
+*               bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	bBox			Given bounding box.
+*/
 WlzErrorNum	WlzGMShellUpdateGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
 {
   int		tI0;
@@ -2949,15 +2910,14 @@ WlzErrorNum	WlzGMShellUpdateGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellComputeGBB
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Recomputes the shell's geometry by walking through
-*		it's children.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Recomputes the shell's geometry by walking through
+*               it's children.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+*/
 WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 {
   int		tI0,
@@ -3156,18 +3116,17 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellMergeG
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Merges the geometries of the two shells so that the
-*		first shell's geometry is set to the union of the
-*		two shell's bounding boxes.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell0:	First shell with geometry to
-*					be both used and set.
-*		WlzGMShell *shell1:	Second shell with geometry to
-*					be used.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Merges the geometries of the two shells so that the
+*               first shell's geometry is set to the union of the
+*               two shell's bounding boxes.
+* \param	shell0			First shell with geometry to
+*                                       be both used and set.
+* \param	shell1			Second shell with geometry to
+*                                       be used.
+*/
 static WlzErrorNum WlzGMShellMergeG(WlzGMShell *shell0, WlzGMShell *shell1)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3280,17 +3239,16 @@ static WlzErrorNum WlzGMShellMergeG(WlzGMShell *shell0, WlzGMShell *shell1)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMShellGInBB3D
-* Returns:	int:			Non zero if point inside shell's
-*					bounding box.
-* Purpose:	Checks to see if the given double precision position
-*		is within the shell's bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDVertex3 pos:	Given double precision position.
-************************************************************************/
+/*!
+* \return				Non zero if point inside shell's
+* \ingroup      WlzGeoModel
+*                                       bounding box.
+* \brief	Checks to see if the given double precision position
+*               is within the shell's bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	pos			Given double precision position.
+*/
 int		WlzGMShellGInBB3D(WlzGMShell *shell, WlzDVertex3 pos)
 {
   int		inside = 0;
@@ -3334,17 +3292,16 @@ int		WlzGMShellGInBB3D(WlzGMShell *shell, WlzDVertex3 pos)
   return(inside);
 }
 
-/************************************************************************
-* Function:	WlzGMShellGInBB2D
-* Returns:	int:			Non zero if point inside shell's
-*					bounding box.
-* Purpose:	Checks to see if the given double precision position
-*		is within the shell's bounding box.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Given shell with geometry to
-*					be set.
-*		WlzDVertex2 pos:	Given double precision position.
-************************************************************************/
+/*!
+* \return				Non zero if point inside shell's
+* \ingroup      WlzGeoModel
+*                                       bounding box.
+* \brief	Checks to see if the given double precision position
+*               is within the shell's bounding box.
+* \param	shell			Given shell with geometry to
+*                                       be set.
+* \param	pos			Given double precision position.
+*/
 int		WlzGMShellGInBB2D(WlzGMShell *shell, WlzDVertex2 pos)
 {
   int		inside = 0;
@@ -3384,16 +3341,15 @@ int		WlzGMShellGInBB2D(WlzGMShell *shell, WlzDVertex2 pos)
   return(inside);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexSetG3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Sets a veticies geometry using the given double
-*		precision position.
-* Global refs:	-
-* Parameters:	WlzGMVertex *vertex:	Given vertex with geometry to
-*					be set.
-*		WlzDVertex3 pos:	Given position.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a veticies geometry using the given double
+*               precision position.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	pos			Given position.
+*/
 WlzErrorNum	WlzGMVertexSetG3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3430,16 +3386,15 @@ WlzErrorNum	WlzGMVertexSetG3D(WlzGMVertex *vertex, WlzDVertex3 pos)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexSetG2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Sets a veticies geometry using the given double
-*		precision position.
-* Global refs:	-
-* Parameters:	WlzGMVertex *vertex:	Given vertex with geometry to
-*					be set.
-*		WlzDVertex2 pos:	Given position.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Sets a veticies geometry using the given double
+*               precision position.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	pos			Given position.
+*/
 WlzErrorNum	WlzGMVertexSetG2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3477,17 +3432,16 @@ WlzErrorNum	WlzGMVertexSetG2D(WlzGMVertex *vertex, WlzDVertex2 pos)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexGetG3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Gets a veticies geometry into the given double
-*		precision position destination pointer.
-* Global refs:	-
-* Parameters:	WlzGMVertex *vertex:	Given vertex with geometry to
-*					be set.
-*		WlzDVertex3 *dstPos:	Given position destination
-*					pointer, may NOT be NULL.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets a veticies geometry into the given double
+*               precision position destination pointer.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	dstPos			Given position destination
+*                                       pointer, may NOT be NULL.
+*/
 WlzErrorNum	WlzGMVertexGetG3D(WlzGMVertex *vertex, WlzDVertex3 *dstPos)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3526,17 +3480,16 @@ WlzErrorNum	WlzGMVertexGetG3D(WlzGMVertex *vertex, WlzDVertex3 *dstPos)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexGetG2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Gets a veticies geometry into the given double
-*		precision position destination pointer.
-* Global refs:	-
-* Parameters:	WlzGMVertex *vertex:	Given vertex with geometry to
-*					be set.
-*		WlzDVertex2 *dstPos:	Given position destination
-*					pointer, may NOT be NULL.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Gets a veticies geometry into the given double
+*               precision position destination pointer.
+* \param	vertex			Given vertex with geometry to
+*                                       be set.
+* \param	dstPos			Given position destination
+*                                       pointer, may NOT be NULL.
+*/
 WlzErrorNum	WlzGMVertexGetG2D(WlzGMVertex *vertex, WlzDVertex2 *dstPos)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3572,16 +3525,15 @@ WlzErrorNum	WlzGMVertexGetG2D(WlzGMVertex *vertex, WlzDVertex2 *dstPos)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexCmp3D
-* Returns:	WlzDVertex3:			{vertex x|y|z - given
-						  x|y|z}.
-* Purpose:	Compares column coordinates of the given vertex and
-*		3D double precision position.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Shell with resources.
-*		WlzGMVertex *vertex:	Vertex to free.
-************************************************************************/
+/*!
+* \return				Position of vertex - given
+* \ingroup      WlzGeoModel
+*					position.
+* \brief	Compares the position of the given vertex with the
+*		given 3D double precision position.
+* \param	vertex			Given vertex.
+* \param	pos			Given position.
+*/
 WlzDVertex3	WlzGMVertexCmp3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 {
   WlzDVertex3	cmp;
@@ -3617,16 +3569,15 @@ WlzDVertex3	WlzGMVertexCmp3D(WlzGMVertex *vertex, WlzDVertex3 pos)
   return(cmp);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexCmp2D
-* Returns:	WlzDVertex2:			{vertex x|y - given
-						  x|y}.
-* Purpose:	Compares column coordinates of the given vertex and
-*		2D double precision position.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Shell with resources.
-*		WlzGMVertex *vertex:	Vertex to free.
-************************************************************************/
+/*!
+* \return                               Position of vertex - given
+* \ingroup      WlzGeoModel
+*                                       position.
+* \brief        Compares the position of the given vertex with the
+*               given 2D double precision position.
+* \param        vertex                  Given vertex.
+* \param        pos                     Given position.
+*/
 WlzDVertex2	WlzGMVertexCmp2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 {
   WlzDVertex2	cmp;
@@ -3660,17 +3611,16 @@ WlzDVertex2	WlzGMVertexCmp2D(WlzGMVertex *vertex, WlzDVertex2 pos)
   return(cmp);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexCmpSign3D
-* Returns:	int:			Signed value for sorting.
-						  x|y|z}.
-* Purpose:	Compares column coordinates of the given vertex and
+/*!
+* \return				The sign of the vertex position
+* \ingroup      WlzGeoModel
+*					- the given position: -1, 0 or +1.
+* \brief	Compares the coordinates of the given vertex and
 *		3D double precision position to find a signed value
-*		for sorting.
-* Global refs:	-
-* Parameters:	WlzGMVertex *vertex:	Vertex to free.
-*		WlzDVertex3 pos:	3D double precision position.
-************************************************************************/
+*               for sorting.
+* \param	vertex			Given vertex.
+* \param	pos			Given position.
+*/
 int		WlzGMVertexCmpSign3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 {
   int		cmp;
@@ -3714,17 +3664,16 @@ int		WlzGMVertexCmpSign3D(WlzGMVertex *vertex, WlzDVertex3 pos)
   return(cmp);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexCmpSign2D
-* Returns:	int:			Signed value for sorting.
-						  x|y|z}.
-* Purpose:	Compares column coordinates of the given vertex and
+/*!
+* \return				The sign of the vertex position
+* \ingroup      WlzGeoModel
+*					- the given position: -1, 0 or +1.
+* \brief	Compares the coordinates of the given vertex and
 *		2D double precision position to find a signed value
-*		for sorting.
-* Global refs:	-
-* Parameters:	WlzGMVertex *vertex:	Vertex to free.
-*		WlzDVertex2 pos:	2D double precision position.
-************************************************************************/
+*               for sorting.
+* \param	vertex			Given vertex.
+* \param	pos			Given position.
+*/
 int		WlzGMVertexCmpSign2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 {
   int		cmp;
@@ -3757,17 +3706,16 @@ int		WlzGMVertexCmpSign2D(WlzGMVertex *vertex, WlzDVertex2 pos)
   return(cmp);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexDistSq2D
-* Returns:	double:			Square of distance, -1.0 on
-*					error.
-* Purpose:	Calculates the square of the Euclidean distance
-*		between the given vertex and the given 3D double
-*		precision position.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Shell with resources.
-*		WlzGMVertex *vertex:	Vertex to free.
-************************************************************************/
+/*!
+* \return				Square of distance, -1.0 on
+* \ingroup      WlzGeoModel
+*                                       error.
+* \brief	Calculates the square of the Euclidean distance
+*               between the given vertex and the given 3D double
+*               precision position.
+* \param	vertex			Given vertex.
+* \param	pos			Given position.
+*/
 double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 {
   double	tD0,
@@ -3808,29 +3756,28 @@ double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
   return(dstSq);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexNormal3D
-* Returns:	WlzDVertex3		Value of normal.
-* Purpose:	Computes the value of the normal at the given vertex
-*		which lies within the given model.
-*		This function requires a buffer in which to store the
-*		verticies found on the loops surrounding the given
-*		vertex. For efficiency this can/should be reused
-*		between calls of this function.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The given model.
-*		WlzGMVertex *gV:	Given vertex in the model
-*		int *sVBufSz:		Ptr to the number WlzGMVertex's
-*					that can be held in *sVBuf.
-*		WlzGMVertex ***sVBuf:	Ptr to an allocated buffer for
-*					verticies, may NOT be NULL
-*					although the buffer it points
-*					to may be. The buffer should
-*					be free'd using AlcFree when
-*					it is no longer needed.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Value of normal.
+* \ingroup      WlzGeoModel
+* \brief	Computes the value of the normal at the given vertex
+*               which lies within the given model.
+*               This function requires a buffer in which to store the
+*               verticies found on the loops surrounding the given
+*               vertex. For efficiency this can/should be reused
+*               between calls of this function.
+* \param	model			The given model.
+* \param	gV			Given vertex in the model.
+* \param	sVBufSz			Ptr to the number WlzGMVertex's
+*                                       that can be held in *sVBuf.
+* \param	sVBuf			Ptr to an allocated buffer for
+*                                       verticies, may NOT be NULL
+*                                       although the buffer it points
+*                                       to may be. The buffer should
+*                                       be free'd using AlcFree when
+*                                       it is no longer needed.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
 				    int *sVBufSz, WlzGMVertex ***sVBuf,
 				    WlzErrorNum *dstErr)
@@ -3930,17 +3877,16 @@ WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
   return(nrm);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexDistSq2D
-* Returns:	double:			Square of distance, -1.0 on
-*					error.
-* Purpose:	Calculates the square of the Euclidean distance
-*		between the given vertex and the given 2D double
-*		precision position.
-* Global refs:	-
-* Parameters:	WlzGMShell *shell:	Shell with resources.
-*		WlzGMVertex *vertex:	Vertex to free.
-************************************************************************/
+/*!
+* \return				Square of distance, -1.0 on
+* \ingroup      WlzGeoModel
+*                                       error.
+* \brief	Calculates the square of the Euclidean distance
+*               between the given vertex and the given 2D double
+*               precision position.
+* \param	vertex			Given vertex.
+* \param	pos			Given position.
+*/
 double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
 {
   double	tD0,
@@ -3978,14 +3924,13 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
   return(dstSq);
 }
 
-/************************************************************************
-* Function:	WlzGMHashPos3D
-* Returns:	unsigned int:		Hash value.
-* Purpose:	Computes a hash value from a given 3D double precision
-*		position.
-* Global refs:	-
-* Parameters:	WlzDVertex3 pos:	Given position.
-************************************************************************/
+/*!
+* \return				Hash value.
+* \ingroup      WlzGeoModel
+* \brief	Computes a hash value from a given 3D double precision
+*               position.
+* \param	pos			Given position.
+*/
 static unsigned int WlzGMHashPos3D(WlzDVertex3 pos)
 {
   unsigned int	hashVal;
@@ -4013,14 +3958,13 @@ static unsigned int WlzGMHashPos3D(WlzDVertex3 pos)
   return(hashVal);
 }
 
-/************************************************************************
-* Function:	WlzGMHashPos2D
-* Returns:	unsigned int:		Hash value.
-* Purpose:	Computes a hash value from a given 2D double precision
-*		position.
-* Global refs:	-
-* Parameters:	WlzDVertex2 pos:	Given position.
-************************************************************************/
+/*!
+* \return				Hash value.
+* \ingroup      WlzGeoModel
+* \brief	Computes a hash value from a given 2D double precision
+*               position.
+* \param	pos			Given position.
+*/
 static unsigned int WlzGMHashPos2D(WlzDVertex2 pos)
 {
   unsigned int	hashVal;
@@ -4043,16 +3987,15 @@ static unsigned int WlzGMHashPos2D(WlzDVertex2 pos)
   return(hashVal);
 }
 
-/************************************************************************
-* Function:	WlzGMModelMatchVertexG3D
-* Returns:	WlzGMVertex *:		Matched vertex, or NULL if no
-*					vertex with the given geometry.
-* Purpose:	Attempts to find a vertex which matches the given
-*		double precision 3D position.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzDVertex3 *pos:	Position to match.
-************************************************************************/
+/*!
+* \return				Matched vertex, or NULL if no
+* \ingroup      WlzGeoModel
+*                                       vertex with the given geometry.
+* \brief	Attempts to find a vertex which matches the given
+*               double precision 3D position.
+* \param	model			Model with resources.
+* \param	gPos			Position to match.
+*/
 WlzGMVertex	*WlzGMModelMatchVertexG3D(WlzGMModel *model, WlzDVertex3 gPos)
 {
   int		cmp;
@@ -4082,16 +4025,15 @@ WlzGMVertex	*WlzGMModelMatchVertexG3D(WlzGMModel *model, WlzDVertex3 gPos)
   return(mV);
 }
 
-/************************************************************************
-* Function:	WlzGMModelMatchVertexG2D
-* Returns:	WlzGMVertex *:		Matched vertex, or NULL if no
-*					vertex with the given geometry.
-* Purpose:	Attempts to find a vertex which matches the given
-*		double precision 2D position.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzDVertex2 *pos:	Position to match.
-************************************************************************/
+/*!
+* \return				Matched vertex, or NULL if no
+* \ingroup      WlzGeoModel
+*                                       vertex with the given geometry.
+* \brief	Attempts to find a vertex which matches the given
+*               double precision 2D position.
+* \param	model			Model with resources.
+* \param	gPos			Position to match.
+*/
 WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
 {
   int		cmp;
@@ -4123,20 +4065,19 @@ WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
 
 /* Topology query */
 
-/************************************************************************
-* Function:	WlzGMModelFindNMEdges
-* Returns:	WlzGMEdge *:		Ptr to an array of non-manifold
-*					edge ptrs, NULL if none exist or
-*					on error.
-* Purpose:	Finds a loop topology element in common for the two
-*		edge topology elements.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The given model.
-*		int *dstNMCnt:		Destination pointer for number
-*					of non-manifold edges found.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				Ptr to an array of non-manifold
+* \ingroup      WlzGeoModel
+*                                       edge ptrs, NULL if none exist or
+*                                       on error.
+* \brief	Finds a loop topology element in common for the two
+*               edge topology elements.
+* \param	model			The given model.
+* \param	dstNMCnt		Destination pointer for number
+*                                       of non-manifold edges found.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
 				        WlzErrorNum *dstErr)
 {
@@ -4223,16 +4164,15 @@ WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
   return(nmE);
 }
 
-/************************************************************************
-* Function:	WlzGMEdgeTCommonLoopT
-* Returns:	WlzGMLoopT:		Common loop topology element,
-*					NULL if it doesn't exist.
-* Purpose:	Finds a loop topology element in common for the two
-*		edge topology elements.
-* Global refs:	-
-* Parameters:	WlzGMEdgeT *eT0:	First edge topology element.
-*		WlzGMEdgeT *eT1:	Second edge topology element.
-************************************************************************/
+/*!
+* \return				Common loop topology element,
+* \ingroup      WlzGeoModel
+*                                       NULL if it doesn't exist.
+* \brief	Finds a loop topology element in common for the two
+*               edge topology elements.
+* \param	eT0			First edge topology element.
+* \param	eT1			Second edge topology element.
+*/
 WlzGMLoopT	*WlzGMEdgeTCommonLoopT(WlzGMEdgeT *eT0, WlzGMEdgeT *eT1)
 {
   WlzGMLoopT	*loopT = NULL;
@@ -4244,15 +4184,14 @@ WlzGMLoopT	*WlzGMEdgeTCommonLoopT(WlzGMEdgeT *eT0, WlzGMEdgeT *eT1)
   return(loopT);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexCommonEdge
-* Returns:	WlzGMEdge:		Common edge, NULL if it doesn't
-					exist.
-* Purpose:	Finds the edge common to the two given verticies.
-* Global refs:	-
-* Parameters:	WlzGMVertex *eV0:	First vertex element.
-*		WlzGMVertex *eV1:	Second vertex element.
-************************************************************************/
+/*!
+* \return				Common edge, NULL if it doesn't
+* \ingroup      WlzGeoModel
+                                        exist.
+* \brief	Finds the edge common to the two given verticies.
+* \param	eV0			First vertex element.
+* \param	eV1			Second vertex element.
+*/
 WlzGMEdge	*WlzGMVertexCommonEdge(WlzGMVertex *eV0, WlzGMVertex *eV1)
 {
   WlzGMVertexT	*vT0,
@@ -4278,15 +4217,14 @@ WlzGMEdge	*WlzGMVertexCommonEdge(WlzGMVertex *eV0, WlzGMVertex *eV1)
   return(edge);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexCommonShell
-* Returns:	WlzGMShell:		Common shell, NULL if it doesn't
-					exist.
-* Purpose:	Finds the shell common to the two given verticies.
-* Global refs:	-
-* Parameters:	WlzGMVertex *eV0:	First vertex element.
-*		WlzGMVertex *eV1:	Second vertex element.
-************************************************************************/
+/*!
+* \return				Common shell, NULL if it doesn't
+* \ingroup      WlzGeoModel
+                                        exist.
+* \brief	Finds the shell common to the two given verticies.
+* \param	eV0			First vertex element.
+* \param	eV1			Second vertex element.
+*/
 WlzGMShell	*WlzGMVertexCommonShell(WlzGMVertex *eV0, WlzGMVertex *eV1)
 {
   WlzGMShell	*s0,
@@ -4302,13 +4240,12 @@ WlzGMShell	*WlzGMVertexCommonShell(WlzGMVertex *eV0, WlzGMVertex *eV1)
   return(shell);
 }
 
-/************************************************************************
-* Function:	WlzGMVertexGetShell
-* Returns:	WlzGMShell:		The parent shell.
-* Purpose:	Finds the parent shell of the given vertex.
-* Global refs:	-
-* Parameters:	WlzGMVertex *eV:	Given vertex element.
-************************************************************************/
+/*!
+* \return				The parent shell.
+* \ingroup      WlzGeoModel
+* \brief	Finds the parent shell of the given vertex.
+* \param	eV			Given vertex element.
+*/
 WlzGMShell	*WlzGMVertexGetShell(WlzGMVertex *eV)
 {
   WlzGMShell	*pS = NULL;
@@ -4320,13 +4257,12 @@ WlzGMShell	*WlzGMVertexGetShell(WlzGMVertex *eV)
   return(pS);
 }
 
-/************************************************************************
-* Function:	WlzGMEdgeGetShell
-* Returns:	WlzGMShell:		The parent shell.
-* Purpose:	Finds the parent shell of the given edge.
-* Global refs:	-
-* Parameters:	WlzGMEdge *eE:		Given edge element.
-************************************************************************/
+/*!
+* \return				The parent shell.
+* \ingroup      WlzGeoModel
+* \brief	Finds the parent shell of the given edge.
+* \param	eE			Given edge element.
+*/
 WlzGMShell	*WlzGMEdgeGetShell(WlzGMEdge *eE)
 {
   WlzGMShell	*pS = NULL;
@@ -4338,15 +4274,14 @@ WlzGMShell	*WlzGMEdgeGetShell(WlzGMEdge *eE)
   return(pS);
 }
 
-/************************************************************************
-* Function:	WlzGMEdgeCommonVertex
-* Returns:	WlzGMVertex:		The common vertex, NULL if it
-*					doesn't exist.
-* Purpose:	Finds the common vertex of the two given edges.
-* Global refs:	-
-* Parameters:	WlzGMEdge *eE0:		First edge element.
-*		WlzGMEdge *eE1:		Second edge element.
-************************************************************************/
+/*!
+* \return				The common vertex, NULL if it
+* \ingroup      WlzGeoModel
+*                                       doesn't exist.
+* \brief	Finds the common vertex of the two given edges.
+* \param	eE0			First edge element.
+* \param	eE1			Second edge element.
+*/
 WlzGMVertex	*WlzGMEdgeCommonVertex(WlzGMEdge *eE0, WlzGMEdge *eE1)
 {
   WlzGMVertex	*tV,
@@ -4369,21 +4304,20 @@ WlzGMVertex	*WlzGMEdgeCommonVertex(WlzGMEdge *eE0, WlzGMEdge *eE1)
 
 /* Model list management */
 
-/************************************************************************
-* Function:	WlzGMVertexTAppend
-* Returns:	void
-* Purpose:	Append new vertex topology element onto a doubly
-*		linked list of vertex topology element's, knowing that
-*		neither is NULL.
-*		Vertex topology elements are maintained in an unordered
-*		doubly linked list.
-* Global refs:	-
-* Parameters:	WlzGMVertexT *eVT:	Existing vertexT in list of
-*					vertexT's.
-*		WlzGMVertexT *nVT:	New vertex topology element to
-*					append to list after existing
-*					element.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Append new vertex topology element onto a doubly
+*               linked list of vertex topology element's, knowing that
+*               neither is NULL.
+*               Vertex topology elements are maintained in an unordered
+*               doubly linked list.
+* \param	eVT			Existing vertexT in list of
+*                                       vertexT's.
+* \param	nVT			New vertex topology element to
+*                                       append to list after existing
+*                                       element.
+*/
 void	   	WlzGMVertexTAppend(WlzGMVertexT *eVT, WlzGMVertexT *nVT)
 {
   nVT->next = eVT->next;
@@ -4392,20 +4326,19 @@ void	   	WlzGMVertexTAppend(WlzGMVertexT *eVT, WlzGMVertexT *nVT)
   nVT->prev->next = nVT;
 }
 
-/************************************************************************
-* Function:	WlzGMDiskTAppend
-* Returns:	void
-* Purpose:	Append new edge topology onto a doubly linked list
-*		of disk topology element's, knowing that neither is NULL.
-*		Disk topology elements are maintained in an unordered
-*		doubly linked list.
-* Global refs:	-
-* Parameters:	WlzGMDiskT *eDT:	Existing disk topology element in
-*					list.
-*		WlzGMDiskT *nDT:	New disk topology element to
-*					append to list after existing
-*					element.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Append new edge topology onto a doubly linked list
+*               of disk topology element's, knowing that neither is NULL.
+*               Disk topology elements are maintained in an unordered
+*               doubly linked list.
+* \param	eDT			Existing disk topology element in
+*                                       list.
+* \param	nDT			New disk topology element to
+*                                       append to list after existing
+*                                       element.
+*/
 void	   	WlzGMDiskTAppend(WlzGMDiskT *eDT, WlzGMDiskT *nDT)
 {
   nDT->next = eDT->next;
@@ -4414,21 +4347,20 @@ void	   	WlzGMDiskTAppend(WlzGMDiskT *eDT, WlzGMDiskT *nDT)
   nDT->prev->next = nDT;
 }
 
-/************************************************************************
-* Function:	WlzGMEdgeTAppend
-* Returns:	void
-* Purpose:	Append new edge topology onto a doubly linked list
-*		of edge topology element's, knowing that neither is NULL.
-*		Edge topology elements are maintained in an ordered
-*		doubly linked list, CCW around the inside of loops and
-*		CW around the outside of 2D loops.
-* Global refs:	-
-* Parameters:	WlzGMEdgeT *eET:	Existing edge topology element in
-*					list.
-*		WlzGMEdgeT *nET:	New edge topology element to
-*					append to list after existing
-*					element.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Append new edge topology onto a doubly linked list
+*               of edge topology element's, knowing that neither is NULL.
+*               Edge topology elements are maintained in an ordered
+*               doubly linked list, CCW around the inside of loops and
+*               CW around the outside of 2D loops.
+* \param	eET			Existing edge topology element in
+*                                       list.
+* \param	nET			New edge topology element to
+*                                       append to list after existing
+*                                       element.
+*/
 void	   	WlzGMEdgeTAppend(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 {
   nET->next = eET->next;
@@ -4437,21 +4369,20 @@ void	   	WlzGMEdgeTAppend(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
   nET->prev->next = nET;
 }
 
-/************************************************************************
-* Function:	WlzGMEdgeTInsert
-* Returns:	void
-* Purpose:	Insert new edge topology into a doubly linked list
-*		of edge topology element's, knowing that neither is NULL.
-*		Edge topology elements are maintained in an ordered
-*		doubly linked list, CCW around the inside of loops and
-*		CW around the outside of 2D loops.
-* Global refs:	-
-* Parameters:	WlzGMEdgeT *eET:	Existing edge topology element in
-*					list.
-*		WlzGMEdgeT *nET:	New edge topology element to
-*					insert in list before existing
-*					element.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Insert new edge topology into a doubly linked list
+*               of edge topology element's, knowing that neither is NULL.
+*               Edge topology elements are maintained in an ordered
+*               doubly linked list, CCW around the inside of loops and
+*               CW around the outside of 2D loops.
+* \param	eET			Existing edge topology element in
+*                                       list.
+* \param	nET			New edge topology element to
+*                                       insert in list before existing
+*                                       element.
+*/
 void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 {
   nET->next = eET;
@@ -4461,9 +4392,9 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 }
 
 /************************************************************************
-* Function:	WlzGMEdgeTInsertRadial
-* Returns:	void
-* Purpose:	Insert the given new edge topology element into a
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Inserts the given new edge topology element into a
 *		radially sorted cyclic list of edge topology element's.
 *		In 2D the radial edgeT is always the edgeT itself and
 *		this function should not be called.
@@ -4471,7 +4402,7 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 *		topology element to the given edge topology element
 *		who's off edge vertex is the next CCW off edge vertex
 *		when viewed along the edge.
-*                                                                 
+* \verbatim
 *                                      O <-                       
 *                                     /    \                      
 *                                    /      \ Next radial edge    
@@ -4480,55 +4411,52 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 *                                 X----------O                    
 *                           Given edge into    Off edge vertex
 *                           screen/page        of new simplex
+* \endverbatim
 *                                                                 
 *		Given a directed edge which forms part of a loop in
 *		a new triangle simplex. Define points around the
 *		the simplex:
-*                                                                 
-*                         O p1                                     
-*                       ^ |\                                      
-*                       | | \                                     
-*                       | |  \                                    
-*                       | |   \                                   
-*                       | |    \                                  
-*                   nET | |     O p2                               
-*                       | |    /                                  
-*                       | |   /                                   
-*                       | |  /                                    
-*                       | | /                                     
-*                       | |/                                      
-*                         O p0                                    
-*
+* \verbatim
+*                                O p1                                     
+*                              ^ |\                                      
+*                              | | \                                     
+*                              | |  \                                    
+*                              | |   \                                   
+*                              | |    \                                  
+*                          nET | |     O p2                               
+*                              | |    /                                  
+*                              | |   /                                   
+*                              | |  /                                    
+*                              | | /                                     
+*                              | |/                                      
+*                                O p0                                    
+* \endverbatim
 * 		To find the next CCW simplex.
 *		Find the normal vector:
-*		  n0 = (p0 - p1) / |p0 - p1|
+*		  \f[ n_0 = \frac{(p_0 - p_1)}{|p_0 - p_1|} \f]
 *		Find the normal vector perpendicular to the new
 *		(triangular) simplex:
-*		        n0 x (p2 - p0)
-*		  n1 = ----------------
-*		       |n0 x (p2 - p0)|
-*		Find the normalized vector perpendicular to n0 and n1:
-*		  n2 = n0 x n1
-*		Because n1 and n2 are perpendicular axes in the plane
-*		perpendicular to p1 - p0 we can compute the angle of
-*		any vector projected onto the plane as:
-*		             -1 / vi . n2 \
-*		  theta = tan  | --------- |, 0 <= theta <= 2PI
-*			        \ vi . n1 /
+*		  \f[ n_1 = \frac{n_0(p_2 - p_0)}{|n_0(p_2 - p_0)}\f]
+*		Find the normalized vector perpendicular to \f$n_0\f$
+*		and \f$n_1\f$:
+*		  \f[n_2 = n_0 n_1 \f]
+*		Because \f$n_1\f$ and \f$n_2\f$ are perpendicular axes
+*		in the plane perpendicular to \f$p_1 - p_0\f$ we can
+*		compute the angle of any vector projected onto the
+*		plane as:
+* \f[ \theta = \tan^{-1}{\frac{v_i n_2}{v_i n_1}}, 0 \leq \theta \leq 2\pi \f]
 *		where
-*		  vi = p2i - p0
-*		and p2i are the p2 verticies on the candidate loop/face.
+*		  \f[v_i = p_{2i} - p_0\f]
+*		and \f$p_{2i}\f$ are the \f$p_2\f$ verticies on the
+*		candidate loop/face.
 *		Use the projections to find the previous radial edge,
 *		then insert the edge in the cyclic radial list.
-* Global refs:	-
-* Parameters:	WlzGMEdgeT *eET:	Existing edge topology element in
-*					list. which MUST have all it's
-*					fields set EXCEPT for the radial
-*					edge link.
-*		WlzGMEdgeT *nET:	New edge topology element to
-*					insert in list before existing
-*					element.
-************************************************************************/
+* \param	nET 			New edge topology element to
+*					insert in list. The new edge 
+*					topology element MUST have all
+*					it's fields set EXCEPT for the
+*					radial edge link.
+*/
 void	   	WlzGMEdgeTInsertRadial(WlzGMEdgeT *nET)
 {
   double	tD0;
@@ -4608,20 +4536,19 @@ void	   	WlzGMEdgeTInsertRadial(WlzGMEdgeT *nET)
   pET->rad = nET;
 }
 
-/************************************************************************
-* Function:	WlzGMLoopTAppend
-* Returns:	void
-* Purpose:	Append new loop topology onto a doubly linked list
-*		of loop topology element's, knowing that neither is NULL.
-*		Loop topology elements are maintained in an unordered
-*		doubly linked list.
-* Global refs:	-
-* Parameters:	WlzGMLoopT *eLT:	Existing loop topology element in
-*					list.
-*		WlzGMLoopT *nLT:	New loop topology element to
-*					append to list after existing
-*					element.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Append new loop topology onto a doubly linked list
+*               of loop topology element's, knowing that neither is NULL.
+*               Loop topology elements are maintained in an unordered
+*               doubly linked list.
+* \param	eLT			Existing loop topology element in
+*                                       list.
+* \param	nLT			New loop topology element to
+*                                       append to list after existing
+*                                       element.
+*/
 void	   	WlzGMLoopTAppend(WlzGMLoopT *eLT, WlzGMLoopT *nLT)
 {
   nLT->next = eLT->next;
@@ -4630,17 +4557,16 @@ void	   	WlzGMLoopTAppend(WlzGMLoopT *eLT, WlzGMLoopT *nLT)
   nLT->prev->next = nLT;
 }
 
-/************************************************************************
-* Function:	WlzGMLoopTUnlink
-* Returns:	void
-* Purpose:	Unlinks the given loop topology element from a doubly
-*		linked list of loop topology element's, knowing that
-*		it is not NULL. If this is the only loopT in parent
-*		the parent's list of loopT's is set to NULL.
-* Global refs:	-
-* Parameters:	WlzGMLoopT *dLT:	Loop topology element to be
-*					unlinked.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Unlinks the given loop topology element from a doubly
+*               linked list of loop topology element's, knowing that
+*               it is not NULL. If this is the only loopT in parent
+*               the parent's list of loopT's is set to NULL.
+* \param	dLT			Loop topology element to be
+*                                       unlinked.
+*/
 void		WlzGMLoopTUnlink(WlzGMLoopT *dLT)
 {
   dLT->prev->next = dLT->next;
@@ -4655,18 +4581,17 @@ void		WlzGMLoopTUnlink(WlzGMLoopT *dLT)
   }
 }
 
-/************************************************************************
-* Function:	WlzGMShellAppend
-* Returns:	void
-* Purpose:	Append new shell onto a doubly linked list of
-*		shells, knowing that neither is NULL.
-*		A model's shells are maintained in an unordered
-*		doubly linked list.
-* Global refs:	-
-* Parameters:	WlzGMShell *eS:		Existing shell in list of shells.
-*		WlzGMShell *nS:		New shell to append to list
-*					after existing shell.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Append new shell onto a doubly linked list of
+*               shells, knowing that neither is NULL.
+*               A model's shells are maintained in an unordered
+*               doubly linked list.
+* \param	eS			Existing shell in list of shells.
+* \param	nS			New shell to append to list
+*                                       after existing shell.
+*/
 void	   	WlzGMShellAppend(WlzGMShell *eS, WlzGMShell *nS)
 {
   nS->next = eS->next;
@@ -4675,15 +4600,14 @@ void	   	WlzGMShellAppend(WlzGMShell *eS, WlzGMShell *nS)
   nS->prev->next = nS;
 }
 
-/************************************************************************
-* Function:	WlzGMShellUnlink
-* Returns:	void
-* Purpose:	Unlinks the given shell from a doubly linked list of
-*		shells kept by the model, knowing that the given shell
-*		ptr is not NULL.
-* Global refs:	-
-* Parameters:	WlzGMShell *dS:		Shell to be unlinked.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Unlinks the given shell from a doubly linked list of
+*               shells kept by the model, knowing that the given shell
+*               ptr is not NULL.
+* \param	dS			Shell to be unlinked.
+*/
 void		WlzGMShellUnlink(WlzGMShell *dS)
 {
   if(dS->idx == dS->parent->child->idx)
@@ -4708,16 +4632,15 @@ void		WlzGMShellUnlink(WlzGMShell *dS)
   dS->next = dS->prev = NULL;
 }
 
-/************************************************************************
-* Function:	WlzGMShellJoinAndUnlink
-* Returns:	void
-* Purpose:	Joins the shell to be unlinked onto the shell that's to
-*		be extended and then unlinks (deletes) it.
-* Global refs:	-
-* Parameters:	WlzGMShell *eS:		Shell to be extended.
-*		WlzGMShell *dS:		Shell to be joined and then
-*					unlinked.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Joins the shell to be unlinked onto the shell that's to
+*               be extended and then unlinks (deletes) it.
+* \param	eShell			Shell to be extended.
+* \param	dShell			Shell to be joined and then
+*                                       unlinked.
+*/
 void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
 {
   WlzGMLoopT	*eLT,
@@ -4748,20 +4671,19 @@ void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
   }
 }
 
-/************************************************************************
-* Function:	WlzGMModelResIdx
-* Returns:	WlzGMResIdxTb *:	New resource index table, NULL
-*					on error.
-* Purpose:	Makes an index look up table data structure for the
-*		given model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model with the vertex
-*					resources.
-*		unsigned int eMsk:	Element mask with bits set for
-*					elemet resources to index.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return				New resource index table, NULL
+* \ingroup      WlzGeoModel
+*                                       on error.
+* \brief	Makes an index look up table data structure for the
+*               given model.
+* \param	model			The model with the vertex
+*                                       resources.
+* \param	eMsk			Element mask with bits set for
+*                                       elemet resources to index.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 				  WlzErrorNum *dstErr)
 {
@@ -5161,13 +5083,12 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
   return(resIdxTb);
 }
 
-/************************************************************************
-* Function:	WlzGMModelResIdxFree
-* Returns:	void
-* Purpose:	Frees a GM index look up table data structure.
-* Global refs:	-
-* Parameters:	WlzGMResIdxTb *resIdxTb: Given index lut data structure.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Frees a GM index look up table data structure.
+* \param	resIdxTb		Given index lut data structure.
+*/
 void		WlzGMModelResIdxFree(WlzGMResIdxTb *resIdxTb)
 {
   if(resIdxTb)
@@ -5211,15 +5132,14 @@ void		WlzGMModelResIdxFree(WlzGMResIdxTb *resIdxTb)
   }
 }
 
-/************************************************************************
-* Function:	WlzGMModelRehashVHT
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Rehash the vertex matching hash table.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model.
-*		int vHTSz:		New vertex matching hash table
-*					size, no change if <= 0.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Rehash the vertex matching hash table.
+* \param	model			The model.
+* \param	vHTSz			New vertex matching hash table
+*                                       size, no change if <= 0.
+*/
 WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 {
   int		idV,
@@ -5277,10 +5197,10 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 
 /* Model construction */
 
-/************************************************************************
-* Function:	WlzGMModelConstructNewS3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Constructs a new shell, face, loop and 3 edges (with
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a new shell, face, loop and 3 edges (with
 *		topological elements) and adds them to the model. Given
 *		3 3D double precision points which are known not to
 *		be in the model.
@@ -5291,7 +5211,7 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 *		topology elements *(nDT), 3 verticies (*nV) with
 *		geometry (*pos) and 6 vertex topology elements
 *		(*nVT0, *nVT1).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   nV0 @- - - - - - - - - nE0 - - - - - - - -@ nV1
@@ -5320,12 +5240,11 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 *                   DT2 = {nVT02, nVT12},
 *                   LT0 = {nET00, nET01, nET02},
 *                   LT1 = {nET10, nET11, nET12}
-*
+* \endverbatim
 *                                                                      
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzDVertex3 *pos:	Positions of the 3 points.
-************************************************************************/
+* \param	model			The model to add the segment to.
+* \param	pos			Positions of the 3 points.
+*/
 static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 					     WlzDVertex3 *pos)
 {
@@ -5453,10 +5372,10 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtend1V0E1S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Extends an existing shell within the model by adding a:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Extends an existing shell within the model by adding a:
 *		loop, 3 edges and 2 verticies (with topological elements).
 *		The 2 given 3D double precision points which are known
 *		not to be in the model.
@@ -5466,7 +5385,7 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 *		(nDT[0,1,2]), 2 verticies (nV[0,1]) with geometry
 *		(pos0, pos1) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   nV0 @- - - - - - - - - nE0 - - - - - - - -@ nV1
@@ -5496,12 +5415,12 @@ static WlzErrorNum WlzGMModelConstructNewS3D(WlzGMModel *model,
 *                   LT0 = {nET00, nET01, nET02},
 *                   LT1 = {nET10, nET11, nET12}
 *
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMVertex *eV:	Shared vertex.
-*		WlzDVertex3 pos0:	Position of the first point.
-*		WlzDVertex3 pos1:	Position of the second point.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eV			Shared vertex.
+* \param	pos0			Position of the first point.
+* \param	pos1			Position of the second point.
+*/
 static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 					    WlzDVertex3 pos0, WlzDVertex3 pos1)
 {
@@ -5622,10 +5541,10 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtend2V1E1S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Extends an existing shell within the model by adding a:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Extends an existing shell within the model by adding a:
 *		loop, 2 edges and 1 vertex (with topological elements).
 *		The given 3D double precision point is known not to be
 *		in the model.
@@ -5663,12 +5582,11 @@ static WlzErrorNum WlzGMModelExtend1V0E1S3D(WlzGMModel *model, WlzGMVertex *eV,
 *                   nDT = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdge *eE:		Shared edge.
-*		WlzDVertex3 nPos:	Position of new vertex.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eE			Shared edge.
+* \param	nPos			Position of new vertex.
+*/
 static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 					    WlzDVertex3 nPos)
 {
@@ -5787,10 +5705,10 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtend2V0E1S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Extends an existing shell within the model by adding a:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Extends an existing shell within the model by adding a:
 *		loop, 3 edges and 1 vertex (with topological elements).
 *		Both the given 3D double precision points are known not
 *		to be in the model.
@@ -5799,7 +5717,7 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]), 1 vertex (nV) with geometry (pos0) and
 *		6 vertex topology elements (nVT[0,1,2] and nVT1[0,1,2]).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
@@ -5828,13 +5746,12 @@ static WlzErrorNum WlzGMModelExtend2V1E1S3D(WlzGMModel *model, WlzGMEdge *eE,
 *		    nDT2 = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMVertex *eV0:	First shared vertex.
-*		WlzGMVertex *eV1:	Second shared vertex.
-*		WlzDVertex3 nPos:	Position of new vertex.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eV0			First shared vertex.
+* \param	eV1			Second shared vertex.
+* \param	nPos			Position of new vertex.
+*/
 static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 					    WlzGMVertex *eV0, WlzGMVertex *eV1,
 					    WlzDVertex3 nPos)
@@ -5952,10 +5869,10 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelJoin2V0E0S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Joins two existing shells within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Joins two existing shells within the model by adding:
 *		1 loop, 3 edges and 1 vertex (with topological elements).
 *		Both the given 3D double precision points are known not
 *		to be in the model.
@@ -5965,7 +5882,7 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 *		(nDT[0,1,2]), 1 vertex (nV) with geometry (pos0) and
 *		6 vertex topology elements (nVT[0,1,2] and nVT1[0,1,2]).
 *		Need to delete 1 shell (dShell).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
@@ -5994,13 +5911,12 @@ static WlzErrorNum WlzGMModelExtend2V0E1S3D(WlzGMModel *model,
 *		    nDT2 = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMVertex *eV0:	First shared vertex.
-*		WlzGMVertex *eV1:	Second shared vertex.
-*		WlzDVertex3 nPos:	Position of new vertex.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eV0			First shared vertex.
+* \param	eV1			Second shared vertex.
+* \param	nPos			Position of new vertex.
+*/
 static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 					  WlzGMVertex *eV0, WlzGMVertex *eV1,
 					  WlzDVertex3 nPos)
@@ -6141,10 +6057,10 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelJoin3V0E3S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Joins three existing shells within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Joins three existing shells within the model by adding:
 *		1 loop and 3 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
@@ -6152,7 +6068,7 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
 *		Need to delete 2 shells (dShell[0,1]).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - nE2 - - - - - - - - -@ eV1
@@ -6181,11 +6097,10 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
 *		    nDT2 = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMVertex *gEV:	The three given shared verticies.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	gEV			The three given shared verticies.
+*/
 static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 {
   int		idx,
@@ -6330,10 +6245,10 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelJoin3V0E2S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Joins two existing shells within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Joins two existing shells within the model by adding:
 *		1 loop and 3 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
@@ -6341,7 +6256,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
 *		Need to delete 1 shell (dShell).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
@@ -6370,11 +6285,10 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model, WlzGMVertex **gEV)
 *		    nDT2 = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMVertex *eV:	The three given shared verticies.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eV			The three given shared verticies.
+*/
 static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 {
   int		idx,
@@ -6534,17 +6448,17 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtend3V0E1S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Extends an existing shell within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Extends an existing shell within the model by adding:
 *		1 loop and 3 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 3 edges (nE[0,1,2]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - nE0 - - - - - - - - -@ eV1
@@ -6573,11 +6487,10 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
 *		    nDT2 = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMVertex *eV:	Thre three shared vertex.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eV			The three shared vertex.
+*/
 static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 					    WlzGMVertex **eV)
 {
@@ -6685,17 +6598,17 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtend3V1E1S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Extends an existing shell within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Extends an existing shell within the model by adding:
 *		1 loop and 2 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]), 3 disk topology element
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - eE  - - - - - - - - -@ eV1
@@ -6722,13 +6635,12 @@ static WlzErrorNum WlzGMModelExtend3V0E1S3D(WlzGMModel *model,
 *		    nDT = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdge *eE:		The shared edge.
-*		WlzGMVertex *sV:	The shared vertex (not on the
-*					shared edge).
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eE			The shared edge.
+* \param	sV			The shared vertex (not on the
+*                                       shared edge).
+*/
 static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 					    WlzGMEdge *eE, WlzGMVertex *sV)
 {
@@ -6844,10 +6756,10 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelJoin3V1E2S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Joins two existing shells within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Joins two existing shells within the model by adding:
 *		1 loop and 2 edges (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 2 edges (nE[0,1]), 6 edge topology elements
@@ -6855,7 +6767,7 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 *		(nDT[0,1,2]) and 6 vertex topology elements (nVT[0,1,2]
 *		and nVT1[0,1,2]).
 *		Need to delete 1 shell (dShell).
-*
+* \verbatim
 *                           nVT00        nET00
 *                         O ------------------------------->
 *                   eV0 @- - - - - - - - eE  - - - - - - - - -@ eV1
@@ -6882,13 +6794,12 @@ static WlzErrorNum WlzGMModelExtend3V1E1S3D(WlzGMModel *model,
 *                   nDT = {nVT02, nVT12}
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdge *eE:		The shared edge.
-*		WlzGMVertex *sV:	The shared vertex (not on the
-*					shared edge).
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eE			The shared edge.
+* \param	sV			The shared vertex (not on the
+*                                       shared edge).
+*/
 static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 				          WlzGMEdge *eE, WlzGMVertex *sV)
 {
@@ -7012,16 +6923,16 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtend3V2E1S3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Extends a shell within the model by adding:
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Extends a shell within the model by adding:
 *		1 loop and 1 edge (with topological elements).
 *		Need to create: 1 loop (nL), 2 loop topology elements
 *		(nLT[0,1]), 1 edge (nE), 6 edge topology elements
 *		(nET0[0,1,2], nET1[0,1,2]) and 6 vertex topology elements
 *		(nVT[0,1,2] and nVT1[0,1,2]).
-*
+* \endverbatim
 *                           nVT02        nET02
 *                         O ------------------------------->
 *                   eV2 @- - - - - - - - nE  - - - - - - - - -@ eV0
@@ -7047,11 +6958,11 @@ static WlzErrorNum WlzGMModelJoin3V1E2S3D(WlzGMModel *model,
 *
 *                   nLT0 = {nET00, nET01, nET02}
 *                   nLT1 = {nET10, nET11, nET12}
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdge *eE:		The shared edges.
-************************************************************************/
+* \endverbatim
+* \param	model			The model.
+* \param	eE0			First shared edge.
+* \param	eE1			Second shared edge.
+*/
 static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 					    WlzGMEdge *eE0, WlzGMEdge *eE1)
 {
@@ -7189,10 +7100,10 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 }
 
 
-/************************************************************************
-* Function:	WlzGMModelConstructNewS2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Constructs a new shell, loop and edge (with topological
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a new shell, loop and edge (with topological
 *		elements) and adds them to the model. Given a pair
 *		of 2D double precision edge end points which are known
 *		not to be in the model.
@@ -7202,7 +7113,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 *		topology elements (nET[0,1]), 2 disk topology elements,
 *		(nDT[0,1]), 2 verticies (nV[0,1] with geometry
 *		pos[0,1]) and 2 vertex topology elements (nVT[0,1]).
-*
+* \verbatim
 *		     / nV0
 *		    /
 *		   |  / nVT0    / nET0          / nE
@@ -7214,11 +7125,10 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
 *		                nET1 /      nVT1 /  |
 *		                                    /
 *		                               nV1 /
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzDVertex2 *pos:	Ptr to 1st then 2nd point.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	pos			Ptr to 1st then 2nd point.
+*/
 static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 					     WlzDVertex2 *pos)
 {
@@ -7298,10 +7208,10 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelExtendL2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Constructs a new edge (with topological elements) and
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a new edge (with topological elements) and
 *		adds them to the model. Given an existing edge topology
 *		element at one end of the new edge and a 2D double
 *		precision end points at the other end of the new edge,
@@ -7312,7 +7222,7 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 *		(nET0, nET1), 1 disk topology element (nDT), 1 vertex
 *		(nV0 with geometry (nPos) and 2 vertex topology elements
 *		(nVT0, nVT1).
-*
+* \verbatim
 *		    / nV0                    nE
 *		   /                             /
 *		   |   /nVT0    / nET0          /         /eET0
@@ -7324,13 +7234,13 @@ static WlzErrorNum WlzGMModelConstructNewS2D(WlzGMModel *model,
 *		                nET1 /      nVT1/   |     \eET1
 *		                                   /
 *		                               nV1/
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdgeT *eET0:	Next edge topology element for the
-*					new edge topology element directed
-*					away from the new end point.
-*		WlzDVertex2 nPos:	The new end point.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eET0			Next edge topology element for the
+*                                       new edge topology element directed
+*                                       away from the new end point.
+* \param	nPos			The new end point.
+*/
 static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 				       WlzDVertex2 nPos)
 {
@@ -7393,10 +7303,10 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelConstructSplitL2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	First of all checks that the edge segment doesn't
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	First of all checks that the edge segment doesn't
 *		already exist! If it doesn't then a new edge is
 *		constructed which splits and existing loop
 *		within the model. Given the loop topology element
@@ -7407,7 +7317,7 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 *		Create: 1 edge (nE), 2 edge topology elements (nET0,
 *		nET1), 2 vertex topology elements (nVT0, nVT1), a
 *		loop (nL) and a loop topology element (nLT).
-*
+* \verbatim
 *		      O ------------->     O --------------->
 *		    @- - - - - - - - - -@- - - - - - - - - - -@
 *		    |  <------------ O  |  <--------------- O | O
@@ -7423,14 +7333,13 @@ static WlzErrorNum WlzGMModelExtendL2D(WlzGMModel *model, WlzGMEdgeT *eET0,
 *		    |  O ------------>  |  O -------------->  |
 *		    @- - - - - - - - - -@- - - - - - - - - - -@
 *		      <-------------- O    <--------------- O
-*
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdgeT *eET0:	Next edge topology element for the
-*					first end point.
-*		WlzGMEdgeT *eET1:	Next edge topology element for the
-*					other end point.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eET0			Next edge topology element for the
+*                                       first end point.
+* \param	eET1			Next edge topology element for the
+*                                       other end point.
+*/
 static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
 					       WlzGMEdgeT *eET0,
 					       WlzGMEdgeT *eET1)
@@ -7503,10 +7412,10 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelJoinL2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Constructs a new edge which joins two (different)
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a new edge which joins two (different)
 *		existing loops within the model.
 *		Join two loops within two possibly different shells by
 *		adding a new edge between the two matched verticies.
@@ -7518,7 +7427,7 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
 *		pair of verticies within the same shell but NOT within
 *		a common loop. Check for this disallowed case and return
 *		an error if it's found.
-*
+* \verbatim
 *	                                 eV1\
 *	                                     \
 *	                               nET0\  \
@@ -7531,13 +7440,13 @@ static WlzErrorNum WlzGMModelConstructSplitL2D(WlzGMModel *model,
 *	             eET0/          \eV0    \    \nVT1
 *	                                     \
 *	                                      \nET1
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzGMEdgeT *eET0:	Next edge topology element for the
-*					first end point.
-*		WlzGMEdgeT *eET1:	Next edge topology element for the
-*					other end point.
-************************************************************************/
+* \endverbatim
+* \param	model			The model to add the segment to.
+* \param	eET0			Next edge topology element for the
+*                                       first end point.
+* \param	eET1			Next edge topology element for the
+*                                       other end point.
+*/
 static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
 				     WlzGMEdgeT *eET0, WlzGMEdgeT *eET1)
 {
@@ -7619,19 +7528,18 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelConstructSimplex2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Constructs a 2D simplex (edge) defined by two double
-*		precision end points. Either of the two points may
-*		already exist within the model.
-*		See WlzGMShellMatchVtxG2D() for the meaning of the
-*		backwards, forwards and distance search parameters.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzDVertex2 *pos:	Pointer to first then second
-*					positions.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a 2D simplex (edge) defined by two double
+*               precision end points. Either of the two points may
+*               already exist within the model.
+*               See WlzGMShellMatchVtxG2D() for the meaning of the
+*               backwards, forwards and distance search parameters.
+* \param	model			The model to add the segment to.
+* \param	pos			Pointer to first then second
+*                                       positions.
+*/
 WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
 					     WlzDVertex2 *pos)
 {
@@ -7689,16 +7597,15 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMModelConstructSimplex3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Constructs a 3D simplex (triangle) defined by three
-*		double precision verticies, any of which may already
-*		exist within the model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model to add the segment to.
-*		WlzDVertex3 *pos:	Pointer to triangle verticies,
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a 3D simplex (triangle) defined by three
+*               double precision verticies, any of which may already
+*               exist within the model.
+* \param	model			The model to add the segment to.
+* \param	pos			Pointer to triangle verticies.
+*/
 WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 				       	     WlzDVertex3 *pos)
 {
@@ -7880,14 +7787,13 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMLoopTSetT
-* Returns:	void
-* Purpose:	Walks around a loop topology element's child edge
-*		topology elements setting their parent.
-* Global refs:	-
-* Parameters:	WlzGMLoopT *gLT:	The loop topology element.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Walks around a loop topology element's child edge
+*               topology elements setting their parent.
+* \param	gLT			The loop topology element.
+*/
 static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 {
   WlzGMEdgeT	*fET,
@@ -7902,16 +7808,15 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
   }
 }
 
-/************************************************************************
-* Function:	WlzGMModelAddVertex
-* Returns:	void
-* Purpose:	Adds a new vertex into the models vertex hash table.
-*		The verticies geometry must have been set.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	The model.
-*		WlzGMVertex *nV:	New vertex to insert into the
-*					models hash table.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Adds a new vertex into the models vertex hash table.
+*               The verticies geometry must have been set.
+* \param	model			The model.
+* \param	nV			New vertex to insert into the
+*                                       models hash table.
+*/
 static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
 {
   WlzDVertex3	nPos;
@@ -7957,22 +7862,21 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
   }
 }
 
-/************************************************************************
-* Function:	WlzGMModelMatchEdgeTG2D
-* Returns:	void
-* Purpose:	Attempts to find verticies which match the two given
-*		double precision positions.
-*		The linking/matching workspace makes the matching much
-*		more efficient, but it's only valid if the verticies
-*		are maintained with indicies which increase with 
-*		increasing row,column.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Model with resources.
-*		WlzGMEdgeT **matchET:	Array for return of matched
-*					edge topology element pointers.
-*		WlzDVertex2 *pos:	Pointer to first then second
-*					positions.
-************************************************************************/
+/*!
+* \return				<void>
+* \ingroup      WlzGeoModel
+* \brief	Attempts to find verticies which match the two given
+*               double precision positions.
+*               The linking/matching workspace makes the matching much
+*               more efficient, but it's only valid if the verticies
+*               are maintained with indicies which increase with 
+*               increasing row, column.
+* \param	model			Model with resources.
+* \param	matchET			Array for return of matched
+*                                       edge topology element pointers.
+* \param	pos			Pointer to first then second
+*                                       positions.
+*/
 static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
 					WlzGMEdgeT **matchET,
 				        WlzDVertex2 *pos)
@@ -8083,4 +7987,50 @@ static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
       }
     }
   }
+}
+
+/* Model Features */
+
+/*!
+* \return				Number of simplicies in given shell.
+* \ingroup      WlzGeoModel
+* \brief	Counts the number of simplicies in the given shell.
+*               For 2D models the simplicies are edges and for 3D models
+*               they are loops.
+* \param	shell			The given shell.
+*/
+int		WlzGMShellSimplexCnt(WlzGMShell *shell)
+{
+  int		cnt = 0;
+  WlzGMEdgeT	*cET,
+  		*fET;
+  WlzGMLoopT	*cLT,
+  		*fLT;
+  WlzGMModel	*model;
+
+  if(((model = shell->parent) != NULL) && (shell != NULL))
+  {
+    if((cLT = fLT = shell->child) != NULL)
+    {
+      do
+      {
+	if((model->type == WLZ_GMMOD_2I) || (model->type == WLZ_GMMOD_2D))
+	{
+	  cET = fET = cLT->edgeT;
+	  do
+	  {
+	   ++cnt;
+	   cET = cET->next;
+	  } while(cET != fET);
+	}
+	else /* model->type == WLZ_GMMOD_3I || model->type == WLZ_GMMOD_3D */
+	{
+	  ++cnt;
+	}
+	cLT = cLT->next;
+      } while(cLT != fLT);
+      cnt /= 2;
+    }
+  }
+  return(cnt);
 }

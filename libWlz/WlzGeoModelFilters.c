@@ -1,18 +1,23 @@
-#pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzGeoModelFilters.c
-* Date:         November 2000
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Filters for Woolz geometric models (GM's).
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#pragma ident "MRC HGU $Id$
+/*!
+* \file         WlzGeoModelFilters.c
+* \author       Bill Hill
+* \date         November 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Filters for Woolz geometric models (GM's).
+* \ingroup      WlzGeoModel
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 #include <limits.h>
 
@@ -23,17 +28,16 @@ static WlzErrorNum		WlzGMFilterRmSmShells3(
 				  WlzGMModel *model,
 				  int maxElm);
 
-/************************************************************************
-* Function:	WlzGMFilterRmSmShells
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Removes small shells from the given geometric model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		int maxElm:		Maximum number of elements
-*					(edges in a 2D model or loops
-*					in a 3D model) in a shell
-*					for it to be a small shell.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Removes small shells from the given geometric model.
+* \param	model			Given model.
+* \param	maxElm			Maximum number of elements
+*                                       (edges in a 2D model or loops
+*                                       in a 3D model) in a shell
+*                                       for it to be a small shell.
+*/
 WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int maxElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -62,16 +66,15 @@ WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int maxElm)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMFilterRmSmShells2
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Removes small shells from the given 2D geometric model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		int maxElm:		Maximum number of elements
-*					(edges) in a shell for it to
-*					be a small shell.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Removes small shells from the given 2D geometric model.
+* \param	model			Given model.
+* \param	maxElm			Maximum number of elements
+*                                       (edges) in a shell for it to
+*                                       be a small shell.
+*/
 static WlzErrorNum WlzGMFilterRmSmShells2(WlzGMModel *model, int maxElm)
 {
   int		fETIdx,
@@ -145,16 +148,15 @@ static WlzErrorNum WlzGMFilterRmSmShells2(WlzGMModel *model, int maxElm)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzGMFilterRmSmShells3
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Removes small shells from the given 3D geometric model.
-* Global refs:	-
-* Parameters:	WlzGMModel *model:	Given model.
-*		int maxElm:		Maximum number of elements
-*					(loops) in a shell for it to
-*					be a small shell.
-************************************************************************/
+/*!
+* \return				Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Removes small shells from the given 3D geometric model.
+* \param	model			Given model.
+* \param	maxElm			Maximum number of elements
+*                                       (loops) in a shell for it to
+*                                       be a small shell.
+*/
 static WlzErrorNum WlzGMFilterRmSmShells3(WlzGMModel *model, int maxElm)
 {
   int		fLTIdx,
