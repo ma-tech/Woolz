@@ -277,7 +277,7 @@ void		AlgMatrixScale(double **aM, double **bM, double sv,
     bRowM = bM[id0];
     for(id1 = 0; id1 < nC; ++id1)
     {
-      *aRowM++ *= *bRowM++ * sv;
+      *aRowM++ = *bRowM++ * sv;
     }
   }
 }
