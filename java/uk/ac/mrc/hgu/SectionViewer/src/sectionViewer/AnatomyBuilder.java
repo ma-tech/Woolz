@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.util.*;
 import java.io.*;
 import java.awt.Font;
+import java.awt.Component;
 import uk.ac.mrc.hgu.Wlz.*;
 
 /**
@@ -13,6 +14,11 @@ import uk.ac.mrc.hgu.Wlz.*;
  *   Multi-threading is used.
  */
 public class AnatomyBuilder {
+
+  /**
+   *   Anatomy component file names
+   */
+  private volatile Stack _anaFileStack = null;
 
   /**
    *   Anatomy component file names in the
@@ -25,6 +31,11 @@ public class AnatomyBuilder {
    *   'extra_embryonic_component' hierarchy
    */
   private volatile Stack _xembFileStack = null;
+
+  /**
+   *   Anatomy component Woolz objects
+   */
+  private volatile Stack _anaObjStack = null;
 
   /**
    *   Anatomy component Woolz objects in the
@@ -48,6 +59,11 @@ public class AnatomyBuilder {
    *   System file separator ('/' or '\')
    */
   private String SLASH = System.getProperty("file.separator");
+
+  /**
+   *   Menu for anatomy components.
+   */
+  SelectableMenu _anaMenu = null;
 
   /**
    *   Menu for anatomy components from the 'embryo' hierarchy.
@@ -85,14 +101,20 @@ public class AnatomyBuilder {
    *   Default constructor
    */
   public AnatomyBuilder() {
+     _anaFileStack = new Stack();
      _embFileStack = new Stack();
      _xembFileStack = new Stack();
+     _anaObjStack = new Stack();
      _embObjStack = new Stack();
      _xembObjStack = new Stack();
+     _anaMenu = new SelectableMenu("Anatomy");
+     _anaMenu.setFont(menuFont);
+     /*
      _embMenu = new SelectableMenu("embryo");
      _embMenu.setFont(menuFont);
      _xembMenu = new SelectableMenu("extra_embryonic_component");
      _xembMenu.setFont(menuFont);
+     */
      _done = false;
   }
 
@@ -108,8 +130,10 @@ public class AnatomyBuilder {
   public void buildAnatomy(File stageDir) {
      _done = false;
      File anaDir = null;
+     /*
      File embDir = null;
      File xembDir = null;
+     */
      Stack fileStack = new Stack();
 
      if(!stageDir.isAbsolute()) return;
@@ -120,8 +144,10 @@ public class AnatomyBuilder {
 
 	_pathLengthToAnatomy = anaDir.getAbsolutePath().length() + 1;
 
+        /*
 	embDir = new File(anaDir.getAbsolutePath() + SLASH + "embryo");
 	xembDir = new File(anaDir.getAbsolutePath() + SLASH + "extraembryonic_component");
+	*/
 
 	/* operations now combined in the 1 walk through
 	collectWlzFiles(embDir, _embFileStack);
@@ -131,10 +157,14 @@ public class AnatomyBuilder {
 	buildMenu(embDir, _embMenu);
 	buildMenu(xembDir, _xembMenu);
 	*/
+	buildMenu(anaDir, _anaMenu, _anaFileStack);
+	makeObjStack(); // embryonic
+	/*
 	buildMenu(embDir, _embMenu, _embFileStack);
 	buildMenu(xembDir, _xembMenu, _xembFileStack);
 	makeObjStack(0); // embryonic
 	makeObjStack(1); // extra-embryonic
+	*/
 	_done = true;
 	//printAnatomy();
 	_lock.notifyAll();
@@ -173,6 +203,44 @@ public class AnatomyBuilder {
 	}
      }
   } // collectWlzFiles()
+
+//----------------------------------------------------
+  /**
+   *   Makes a Stack of Woolz Objects from anatomy component filenames.
+   */
+  protected void makeObjStack() {
+
+     File thisFile = null;
+     WlzObject obj = null;
+     WlzFileInputStream in = null;
+
+     Stack fstack = null;
+     Stack ostack = null;
+
+     int len = 0;
+
+     fstack = _anaFileStack;
+     ostack = _anaObjStack;
+
+     len = fstack.size();
+
+     try {
+	for (int i=0; i<len; i++) {
+	   thisFile = (File)fstack.elementAt(i);
+	   in = new WlzFileInputStream(thisFile.getAbsolutePath());
+	   obj = WlzObject.WlzReadObj(in);
+	   ostack.push(obj);
+	}
+     }
+     catch (WlzException e) {
+        System.out.println("makeObjStack");
+	System.out.println(e.getMessage());
+     }
+     catch (IOException e) {
+	System.out.println(e.getMessage());
+     }
+
+  } // makeObjStack()
 
 //----------------------------------------------------
   /**
@@ -341,6 +409,24 @@ public class AnatomyBuilder {
 
 //----------------------------------------------------
   /**
+   *    Adds the top sub-elements to a menu
+   */
+  public void addSubElements(SelectableMenu menu) {
+     
+     JMenuItem item = null;
+
+     int nitems = _anaMenu.getItemCount();
+
+     System.out.println("# of menu items = "+nitems);
+
+     for(int i=0; i<nitems; i++) {
+        item = _anaMenu.getItem(i);
+	System.out.println("menu item = "+item.getText());
+     }
+
+  }
+//----------------------------------------------------
+  /**
    *    Utility test function
    */
   public void printAnatomy() {
@@ -363,11 +449,14 @@ public class AnatomyBuilder {
   }
 
 //----------------------------------------------------
+  public Stack getAnaFileStack() { return _anaFileStack; }
   public Stack getEmbFileStack() { return _embFileStack; }
   public Stack getXEmbFileStack() { return _xembFileStack; }
+  public Stack getAnaObjStack() { return _anaObjStack; }
   public Stack getEmbObjStack() { return _embObjStack; }
   public Stack getXEmbObjStack() { return _xembObjStack; }
 
+  public SelectableMenu getAnaMenu() { return _anaMenu; }
   public SelectableMenu getEmbMenu() { return _embMenu; }
   public SelectableMenu getXEmbMenu() { return _xembMenu; }
 

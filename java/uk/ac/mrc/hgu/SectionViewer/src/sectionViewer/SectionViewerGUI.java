@@ -65,15 +65,14 @@ public class SectionViewerGUI extends JPanel {
    */
   int transH;
 
-  //Font titleFont;
   /**   Font used for the menus. */
   protected final Font menuFont = new Font("default", Font.PLAIN, 11);
 
   /**   Font used for feedback text. */
-  Font feedbackFont;
+  protected final Font feedbackFont = new Font("default", Font.PLAIN, 11);
 
   /**   Font used for <em>mouse-click anatomy</em> feedback text. */
-  Font anatomyFont;
+  protected final Font anatomyFont = new Font("default", Font.ITALIC, 11);
 
 /* obsolete
   JPanel titlePanel = new JPanel();
@@ -231,17 +230,17 @@ public class SectionViewerGUI extends JPanel {
 
   //-------------------------------
   /**   file menu name */
-  String fileMenuStr = "file";
+  String fileMenuStr = "File";
   /**   file sub-menu name */
-  String fileMenu_1str = "save image";
+  String fileMenu_1str = "Save image";
   /**   file sub-menu name */
-  String fileMenu_2str = "save view settings";
+  String fileMenu_2str = "Save view settings";
   /**   file sub-menu name */
-  String fileMenu_3str = "load view settings from xml";
+  String fileMenu_3str = "Load view settings from xml";
   /**   file sub-menu name */
-  String fileMenu_4str = "load view settings from bib";
+  String fileMenu_4str = "Load view settings from bib";
   /**   file sub-menu name */
-  String fileMenu_5str = "close view";
+  String fileMenu_5str = "Close view";
 
   /**   file menu */
   JMenu fileMenu = new JMenu(fileMenuStr);
@@ -258,19 +257,19 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem fileMenu_5 = new JMenuItem(fileMenu_5str);
   //-------------------------------
   /**   control menu name */
-  String controlMenuStr = "control";
+  String controlMenuStr = "Control";
 
   /**   control menu */
   JMenu controlMenu = new JMenu(controlMenuStr);
   //...................
   /**   control sub-menu name */
-  String controlMenu_1str = "rotation";
+  String controlMenu_1str = "Rotation";
   /**   control sub-menu name */
-  String controlMenu_1_1str = "yaw pitch roll";
+  String controlMenu_1_1str = "Yaw pitch roll";
   /**   control sub-menu name */
-  String controlMenu_1_2str = "fixed_line";
+  String controlMenu_1_2str = "Fixed_line";
   /**   control sub-menu name */
-  String controlMenu_1_3str = "all";
+  String controlMenu_1_3str = "All";
 
   /**   control sub-menu */
   JMenu controlMenu_1 = new JMenu(controlMenu_1str);
@@ -294,13 +293,13 @@ public class SectionViewerGUI extends JPanel {
 	                         controlMenu_1_3state);
   //...................
   /**   control sub-menu name */
-  String controlMenu_2str = "view mode";
+  String controlMenu_2str = "View mode";
   /**   control sub-sub-menu name */
-  String controlMenu_2_1str = "up is up";
+  String controlMenu_2_1str = "Up is up";
   /**   control sub-sub-menu name */
-  String controlMenu_2_2str = "absolute";
+  String controlMenu_2_2str = "Absolute";
   /**   control sub-sub-menu name */
-  String controlMenu_2_3str = "fixed line";
+  String controlMenu_2_3str = "Fixed line";
 
   /**   control sub-menu */
   JMenu controlMenu_2 = new JMenu(controlMenu_2str);
@@ -320,13 +319,13 @@ public class SectionViewerGUI extends JPanel {
                JRadioButtonMenuItem(controlMenu_2_3str);
   //...................
   /**   control sub-menu name */
-  String controlMenu_3str = "fixed point";
+  String controlMenu_3str = "Fixed point";
   /**   control sub-sub-menu name */
-  String controlMenu_3_1str = "change fixed point using mouse button";
+  String controlMenu_3_1str = "Change fixed point using mouse button";
   /**   control sub-sub-menu name */
-  String controlMenu_3_2str = "change fixed point by entering coordinates";
+  String controlMenu_3_2str = "Change fixed point by entering coordinates";
   /**   control sub-sub-menu name */
-  String controlMenu_3_3str = "reset fixed point";
+  String controlMenu_3_3str = "Reset fixed point";
 
   /**   control sub-menu */
   JMenu controlMenu_3 = new JMenu(controlMenu_3str);
@@ -338,13 +337,13 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem controlMenu_3_3 = new JMenuItem(controlMenu_3_3str);
   //...................
   /**   control sub-menu name */
-  String controlMenu_4str = "fixed line end-point";
+  String controlMenu_4str = "Fixed line end-point";
   /**   control sub-sub-menu name */
-  String controlMenu_4_1str = "change fixed line using mouse button";
+  String controlMenu_4_1str = "Change fixed line using mouse button";
   /**   control sub-sub-menu name */
-  String controlMenu_4_2str = "change fixed line by entering coordinates";
+  String controlMenu_4_2str = "Change fixed line by entering coordinates";
   /**   control sub-sub-menu name */
-  String controlMenu_4_3str = "reset fixed line";
+  String controlMenu_4_3str = "Reset fixed line";
 
   /**   control sub-menu */
   JMenu controlMenu_4 = new JMenu(controlMenu_4str);
@@ -356,17 +355,17 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem controlMenu_4_3 = new JMenuItem(controlMenu_4_3str);
   //...................
   /**   control sub-menu name */
-  String controlMenu_5str = "reset controls";
+  String controlMenu_5str = "Reset controls";
   /**   control sub-menu */
   JMenuItem controlMenu_5 = new JMenuItem(controlMenu_5str);
   //-------------------------------
   /**   show menu name */
-  String showMenuStr = "show";
+  String showMenuStr = "Show";
   /**   show menu */
   JMenu showMenu = new JMenu(showMenuStr);
 
   /**   show sub-menu name */
-  String showMenu_1str = "cursor feedback";
+  String showMenu_1str = "Cursor feedback";
   /**   true if checkBox selected */
   boolean showMenu_1state = true;
   /**   show sub-menu */
@@ -375,7 +374,7 @@ public class SectionViewerGUI extends JPanel {
                                  showMenu_1state);
 
   /**   show sub-menu name */
-  String showMenu_2str = "intersection of views";
+  String showMenu_2str = "Intersection of views";
   /**   true if checkbox selected */
   boolean showMenu_2state = false;
   /**   show sub-menu */
@@ -384,7 +383,7 @@ public class SectionViewerGUI extends JPanel {
                                  showMenu_2state);
 
   /**   show sub-menu name */
-  String showMenu_3str = "mouse-click anatomy";
+  String showMenu_3str = "Mouse-click anatomy";
   /**   true if checkbox selected */
   boolean showMenu_3state = false;
   /**   show sub-menu */
@@ -393,7 +392,7 @@ public class SectionViewerGUI extends JPanel {
                                  showMenu_3state);
 
   /**   show sub-menu name */
-  String showMenu_4str = "fixed point";
+  String showMenu_4str = "Fixed point";
   /**   true if checkbox selected */
   boolean showMenu_4state = false;
   /**   show sub-menu */
@@ -402,7 +401,7 @@ public class SectionViewerGUI extends JPanel {
                                  showMenu_4state);
 
   /**   show sub-menu name */
-  String showMenu_5str = "fixed line";
+  String showMenu_5str = "Fixed line";
   /**   true if checkbox selected */
   boolean showMenu_5state = false;
   /**   show sub-menu */
@@ -412,15 +411,15 @@ public class SectionViewerGUI extends JPanel {
   //-------------------------------
   // not used at present, but don't delete
   /**   threshold menu name */
-  String thresholdMenuStr = "threshold";
+  String thresholdMenuStr = "Threshold";
   /**   threshold sub-menu name */
-  String thresholdMenu_1str = "enable constraint definition";
+  String thresholdMenu_1str = "Enable constraint definition";
   /**   threshold sub-menu name */
-  String thresholdMenu_2str = "enable thresholding";
+  String thresholdMenu_2str = "Enable thresholding";
   /**   threshold sub-menu name */
-  String thresholdMenu_3str = "show threshold constraint";
+  String thresholdMenu_3str = "Show threshold constraint";
   /**   threshold sub-menu name */
-  String thresholdMenu_4str = "remove threshold constraint";
+  String thresholdMenu_4str = "Remove threshold constraint";
 
   /**   true if checkbox selected */
   boolean thresholdMenu_1state = false;
@@ -445,13 +444,13 @@ public class SectionViewerGUI extends JPanel {
 
   //-------------------------------
   /**   help menu name */
-  String helpMenuStr = "help";
+  String helpMenuStr = "Help";
   /**   help sub-menu name */
-  String helpMenu_1str = "contents";
+  String helpMenu_1str = "Contents";
   /**   help sub-menu name */
-  String helpMenu_2str = "index";
+  String helpMenu_2str = "Index";
   /**   help sub-menu name */
-  String helpMenu_3str = "search";
+  String helpMenu_3str = "Search";
   /**   help sub-menu */
   JMenuItem helpMenu_1 = new JMenuItem(helpMenu_1str);
   /**   help sub-menu */
@@ -736,8 +735,6 @@ public class SectionViewerGUI extends JPanel {
     //menuFont = new Font("default", Font.PLAIN, 11);
     menuH = _menubar.getFontMetrics(menuFont).getHeight() + bord;
     //......................................
-    feedbackFont = new Font("default", Font.PLAIN, 11);
-    anatomyFont = new Font("default", Font.ITALIC, 11);
     //fbH = titleText.getFontMetrics(feedbackFont).getHeight() + bord;
     fbH = xyzTextField.getFontMetrics(feedbackFont).getHeight() + bord;
     //......................................

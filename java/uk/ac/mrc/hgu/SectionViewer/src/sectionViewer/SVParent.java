@@ -7,7 +7,7 @@ import javax.help.*;
 
 /**
  *   <b>Must</b> be implemented by any application that uses SectionViewer components.
- *   It is implemented by the utility class SVParent.
+ *   It is implemented by the utility class SVParent2D.
  *   Alternatively it may be implemented by the main application class
  *   as in JWlzViewer.
  *   @see sectionViewer.SVParent2D
