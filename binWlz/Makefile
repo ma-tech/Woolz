@@ -269,8 +269,11 @@ UNIXFLAGS		= -DUNIX  -DSYSV -DSVR4
 endif	
 
 ifeq 		($(UNIXTYPE), IRIX646)
-CDEBUG			= 
-COPTIMISE		= -O1 -OPT:roundoff=3
+ANSI_CONFORMANCE	= -xansi -fullwarn
+CC			= cc -32
+COPTIMISE		= -mips2 -O1
+SYSLIB			= /usr/lib
+UNIXFLAGS		= -DUNIX  -DSYSV -DSVR4 
 endif
 
 DEFINES			= -DUSE_OSTORE
