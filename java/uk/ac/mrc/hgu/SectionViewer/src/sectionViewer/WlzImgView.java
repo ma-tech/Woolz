@@ -34,28 +34,28 @@ public class WlzImgView extends Component {
     */
    private WlzIBox2 _bBox = null;
 
-   /** 
+   /**
     *   Origin of a 2D section through a grey-level Woolz object.
     *   It is Xmin,Ymin of the 2D bounding box and is
     *   not necessarily 0,0.
     */
    private WlzIVertex2 _org = null;
 
-   /** 
+   /**
     *   Origin of a 2D section through a Woolz object,
     *   the result of a <em>mouse-click anatomy</em> operation,
     *   in the same space as the grey-level section.
     */
    private WlzIVertex2 _oorg = null;
 
-   /** 
+   /**
     *   Origin of a 2D Woolz object,
     *   the result of a thresholding operation on a grey-level section,
     *   in the same space as the grey-level section.
     */
    private WlzIVertex2 _torg = null;
 
-   /** 
+   /**
     *   Origin of a 2D section through a Woolz object,
     *   the result of an <em>anatomy menu</em> selection,
     *   in the same space as the grey-level section.
@@ -68,35 +68,35 @@ public class WlzImgView extends Component {
     */
    private WlzGreyValueWSpace _gVWSp = null;
 
-   /** 
-    *   Java2D data structure for a 2D grey-level image. 
+   /**
+    *   Java2D data structure for a 2D grey-level image.
     *   Represents the grey-level image that is drawn to screen.
     */
    private BufferedImage _bufImage = null;
 
-   /** 
-    *   Java2D data structure for an inverted 2D grey-level image. 
+   /**
+    *   Java2D data structure for an inverted 2D grey-level image.
     *   The same as _bufImage with all grey values inverted
-    *   using: val = 255 - val. 
+    *   using: val = 255 - val.
     */
    private BufferedImage _invBufImage = null;
 
-   /** 
-    *   Java2D data structure for a 2D monochrome image (magenta), 
+   /**
+    *   Java2D data structure for a 2D monochrome image (magenta),
     *   representing the <em>mouse-click anatomy</em> image
     *   that is drawn to screen.
     */
    private BufferedImage _obufImage = null;
 
-   /** 
-    *   Java2D data structure for a 2D monochrome image, 
+   /**
+    *   Java2D data structure for a 2D monochrome image,
     *   representing the <em>threshold</em> image
     *   that is drawn to screen.
     */
    private BufferedImage _tbufImage = null;
 
-   /** 
-    *   Java2D data structure for a 2D monochrome image, 
+   /**
+    *   Java2D data structure for a 2D monochrome image,
     *   representing the <em>anatomy from menu</em> image
     *   that is drawn to screen.
     */
@@ -106,105 +106,105 @@ public class WlzImgView extends Component {
    private double _mag;
 
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>intersection lines</em>.
     */
    private double _ixofs;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>intersection lines</em>.
     */
    private double _iyofs;
-   
+
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>mouse-click anatomy</em> image.
     */
    private double _oxofs;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>mouse-click anatomy</em> image.
     */
    private double _oyofs;
-   
+
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>threshold</em> image.
     */
    private double _txofs;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>threshold</em> image.
     */
    private double _tyofs;
-   
+
    /**
-    *   Array of X coordinates for screen offset of 
+    *   Array of X coordinates for screen offset of
     *   all of the <em>anatomy from menu</em> images.
     */
    private double _axofs[] = null;
-   
+
    /**
-    *   Array of Y coordinates for screen offset of 
+    *   Array of Y coordinates for screen offset of
     *   all of the <em>anatomy from menu</em> images.
     */
    private double _ayofs[] = null;
-   
+
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>grey-level</em> image.
     */
    private double _xofsGL;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>grey-level</em> image.
     */
    private double _yofsGL;
-   
+
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>threshold constraint</em>.
     */
    private double _xofsTC;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>threshold constraint</em>.
     */
    private double _yofsTC;
-   
+
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>fixed point</em>.
     */
    private double _xofsFP;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>fixed point</em>.
     */
    private double _yofsFP;
-   
+
    /**
-    *   X coordinate of screen offset for 
+    *   X coordinate of screen offset for
     *   <em>fixed line</em>.
     */
    private double _xofsAP;
-   
+
    /**
-    *   Y coordinate of screen offset for 
+    *   Y coordinate of screen offset for
     *   <em>fixed line</em>.
     */
    private double _yofsAP;
-   
+
 
    /**
     *   String representation of x,y coordinates and grey-level value
-    *   at last mouse click / drag. 
+    *   at last mouse click / drag.
     *   This is in the same space as the grey-level section,
     *   (not necessarily the same as the screen coordinates).
     */
@@ -214,7 +214,7 @@ public class WlzImgView extends Component {
    private int _greyVal;
 
    /**
-    *   x,y coordinates at last mouse click / drag. 
+    *   x,y coordinates at last mouse click / drag.
     *   This is in the same space as the grey-level section,
     *   (not necessarily the same as the screen coordinates).
     */
@@ -321,7 +321,7 @@ public class WlzImgView extends Component {
    private DataBuffer _tdataBuf = null;
 
    /**
-    *   Java2D data structure containing 
+    *   Java2D data structure containing
     *   int data arrays used to construct the
     *   WritableRasters for all <em>anatomy from menu</em> images.
     */
@@ -330,28 +330,28 @@ public class WlzImgView extends Component {
    /**
     *   Java2D data structure containing a
     *   model which knows how to retrieve pixel samples
-    *   from a <em>grey-level</em> DataBuffer. 
+    *   from a <em>grey-level</em> DataBuffer.
     */
    private SinglePixelPackedSampleModel _sppsm = null;
 
    /**
     *   Java2D data structure containing a
     *   model which knows how to retrieve pixel samples
-    *   from a <em>mouse-click anatomy</em> DataBuffer. 
+    *   from a <em>mouse-click anatomy</em> DataBuffer.
     */
    private SinglePixelPackedSampleModel _osppsm = null;
 
    /**
     *   Java2D data structure containing a
     *   model which knows how to retrieve pixel samples
-    *   from a <em>threshold</em> DataBuffer. 
+    *   from a <em>threshold</em> DataBuffer.
     */
    private SinglePixelPackedSampleModel _tsppsm = null;
 
    /**
     *   Java2D data structure containing
     *   models which know how to retrieve pixel samples
-    *   from all the <em>anatomy from menu</em> DataBuffers. 
+    *   from all the <em>anatomy from menu</em> DataBuffers.
     */
    private SinglePixelPackedSampleModel _asppsm[] = null;
 
@@ -372,31 +372,31 @@ public class WlzImgView extends Component {
    /**
     *   Array containing data derived from a Woolz object for
     *   a <em>grey-level</em> image.
-    */   
+    */
    private int _imageData[] = null;
 
    /**
     *   Array containing data derived from a Woolz object for
     *   an <em>inverted grey-level</em> image.
-    */   
+    */
    private int _invImageData[] = null;
 
    /**
     *   Array containing data derived from a Woolz object for
     *   a <em>mouse-click anatomy</em> image.
-    */   
+    */
    private int _oimageData[] = null;
 
    /**
     *   Array containing data derived from a Woolz object for
     *   a <em>threshold</em> image.
-    */   
+    */
    private int _timageData[] = null;
 
    /**
     *   Array containing data derived from Woolz objects for
     *   all <em>anatomy from menu</em> images.
-    */   
+    */
    private int _aimageData[][] = null;
 
 
@@ -415,12 +415,12 @@ public class WlzImgView extends Component {
     */
    private int _num;
 
-   /** 
+   /**
     *   Radius of the circle which denotes the <em>fixed point</em>.
     */
    private int _fpr = 2; // fixed point indicator radius
 
-   /** 
+   /**
     *   Radius of the circle which denotes the <em>2nd fixed point</em>.
     *   Obsolete.
     */
@@ -489,7 +489,7 @@ public class WlzImgView extends Component {
    /**  True if <em>mouse-click anatomy</em> is to be drawn. */
    private boolean _overlay;
 
-   /** 
+   /**
     *   True if <em>grey-level</em> image
     *   is to be drawn with inverted grey values.
     */
@@ -627,7 +627,7 @@ public class WlzImgView extends Component {
    /**
     *   Generates a Java2D BufferedImage from the
     *   <em>32 bit single pixel packed int</em> array
-    *   created by setWlzObj().      
+    *   created by setWlzObj().
     *   <ul>
     *   <li>Creates a Java2D DataBuffer from the array and
     *   the 2D bounding box dimensions.</li>
@@ -748,7 +748,7 @@ public class WlzImgView extends Component {
    /**
     *   Generates a Java2D BufferedImage from the
     *   <em>32 bit single pixel packed int</em> array
-    *   created by setOverlayObj().      
+    *   created by setOverlayObj().
     *   <ul>
     *   <li>Creates a Java2D DataBuffer from the array and
     *   the anatomy object's bounding box dimensions.</li>
@@ -867,7 +867,7 @@ public class WlzImgView extends Component {
    /**
     *   Generates a Java2D BufferedImage from the
     *   <em>32 bit single pixel packed int</em> array
-    *   created by setThresholdObj().      
+    *   created by setThresholdObj().
     *   <ul>
     *   <li>Creates a Java2D DataBuffer from the array and
     *   the threshold object's bounding box dimensions.</li>
@@ -1019,7 +1019,7 @@ public class WlzImgView extends Component {
    /**
     *   Generates a Java2D BufferedImage from a
     *   <em>32 bit single pixel packed int</em> array
-    *   created by setAnatomyObj().      
+    *   created by setAnatomyObj().
     *   <ul>
     *   <li>Creates a Java2D DataBuffer from the array and
     *   the anatomy object's bounding box dimensions.</li>
@@ -1030,7 +1030,7 @@ public class WlzImgView extends Component {
     *   <li>Creates a BufferedImage using the DirectColorModel,
     *   from setWlzObj(), and the above WritableRaster.</li>
     *   </ul>
-    *   @param indx index into the collection of 
+    *   @param indx index into the collection of
     *   <em>32 bit single pixel packed int</em> arrays.
     */
    public void makeBufAImage(int indx) {
@@ -1109,7 +1109,7 @@ public class WlzImgView extends Component {
    //-------------------------------------------------------------
    // makes a GeneralPath from Vector of Floats
    /**
-    *   Creates a Java2d GeneralPath representing 
+    *   Creates a Java2d GeneralPath representing
     *   a polygonal region in which to threshold.
     *   @param xPoints Collection of x coordinates of points
     *   defining the polygonal constraint region.
@@ -1189,6 +1189,7 @@ public class WlzImgView extends Component {
       drawThreshConstraint(g2);
       //--------------------------------------
       drawTiePoint(g2);
+      drawWrapedTiePoint(g2);
    }
 
    //-------------------------------------------------------------
@@ -1425,7 +1426,7 @@ public class WlzImgView extends Component {
 
    //-------------------------------------------------------------
    /**
-    *   Toggles display of the <em>fixed point</em> representation. 
+    *   Toggles display of the <em>fixed point</em> representation.
     */
    public void enableFixedPoint(boolean state) {
       _fixedPoint = state;
@@ -1433,7 +1434,7 @@ public class WlzImgView extends Component {
 
    //-------------------------------------------------------------
    /**
-    *   Toggles display of the <em>2nd fixed point</em> representation. 
+    *   Toggles display of the <em>2nd fixed point</em> representation.
     *   Obsolete.
     */
    public void enableAxisPoint(boolean state) {
@@ -1442,7 +1443,7 @@ public class WlzImgView extends Component {
 
    //-------------------------------------------------------------
    /**
-    *   Toggles display of the <em>fixed line</em>. 
+    *   Toggles display of the <em>fixed line</em>.
     */
    public void enableAxis(boolean state) {
       _axis = state;
@@ -1467,7 +1468,7 @@ public class WlzImgView extends Component {
 
    //-------------------------------------------------------------
    /**
-    *   Toggles display of the <em>threshold constraint</em>. 
+    *   Toggles display of the <em>threshold constraint</em>.
     */
    public void enableThreshConstraint(boolean state) {
       _threshConstraint = state;
@@ -1556,7 +1557,7 @@ public class WlzImgView extends Component {
 
    //-------------------------------------------------------------
    /**
-    *   Copies an array of Java Line2D.Double objects to a local Vector.   
+    *   Copies an array of Java Line2D.Double objects to a local Vector.
     *   @param lines the array of Line2D.Double objects.
     */
    protected void setIntersectionVec(Line2D.Double[] lines) {
@@ -1578,7 +1579,7 @@ public class WlzImgView extends Component {
 
    //-------------------------------------------------------------
    /**
-    *   Copies an array of Java Color objects to a local Vector.   
+    *   Copies an array of Java Color objects to a local Vector.
     *   @param lines the array of Color objects.
     */
    protected void setInterColVec(Color[] cols) {
@@ -1616,6 +1617,29 @@ public class WlzImgView extends Component {
      g.translate(-_xofsFP, -_yofsFP);
    }
 
+   private Vector itsP = null;
+   void drawWrapedTiePoint(Graphics2D g){
+     if (null == itsP) return;
+
+     Color orgColor = g.getColor();
+     g.translate(_xofsFP, _yofsFP);
+     g.scale(1/_mag, 1/_mag);
+     g.setColor(Color.orange);
+     Point[] p = new Point[itsP.size()];
+     for (int i = 0; i < p.length; i++){
+       p[i] = (Point) itsP.get(i);
+       g.fillOval((int)(_mag*p[i].x) - 1, (int)(_mag*p[i].y) - 1, 2, 2);
+     }
+     for (int i = 0; i < p.length; i+=2){
+       g.drawLine((int)(_mag*p[i].x),(int)(_mag*p[i].y),
+                  (int)(_mag*p[i+1].x),(int)(_mag*p[i+1].y));
+     }
+
+     g.scale(_mag, _mag);
+     g.setColor(orgColor);
+     g.translate(-_xofsFP, -_yofsFP);
+   }
+
    //-------------------------------------------------------------
    /**
     *   Required by Tie Point application.
@@ -1626,6 +1650,12 @@ public class WlzImgView extends Component {
      setFixedPointOffsets();
    }
 
+
+   public void setWrapedTiePoint(Vector itsP){
+     this.itsP = itsP;
+     setFixedPointOffsets();
+     this.repaint();
+   }
    //-------------------------------------------------------------
    /**
     *   Required by Tie Point application.
@@ -1637,7 +1667,7 @@ public class WlzImgView extends Component {
    /**
     *   Generates a local collection of Java Line2D.Double objects
     *   to indicate <em>fixed point</em> position as a cross.
-    *   Currently the fixed point is indicated by a circle.   
+    *   Currently the fixed point is indicated by a circle.
     *   @param fpa the x,y coordinates of the fixed point.
     */
    protected void setFixedPointVec(double[] fpa) {
@@ -1673,7 +1703,7 @@ public class WlzImgView extends Component {
    //-------------------------------------------------------------
    /**
     *   Copies the coordinates of the <em>2nd fixed point</em>
-    *   to a local Vector.   
+    *   to a local Vector.
     *   @param apa the x,y coordinates of the 2nd fixed point.
     */
    protected void setAxisPointArr(double[] apa) {
@@ -1698,7 +1728,7 @@ public class WlzImgView extends Component {
    /**
     *   Generates a local collection of Java Line2D.Double objects
     *   to indicate <em>2nd fixed point</em> position as a cross.
-    *   Currently the 2nd fixed point is not displayed.   
+    *   Currently the 2nd fixed point is not displayed.
     *   @param fpa the x,y coordinates of the 2nd fixed point.
     */
    protected void setAxisPointVec(double[] apa) {
@@ -1750,8 +1780,8 @@ public class WlzImgView extends Component {
     *   Sets the offset between the origin of the graphics display (screen)
     *   and the origin of the BufferedImage representing a
     *   <em>grey-level section</em>.
-    *   Note: this is not the same as the offset between the 
-    *   <em>grey-level section's</em> bounding box and the screen because the 
+    *   Note: this is not the same as the offset between the
+    *   <em>grey-level section's</em> bounding box and the screen because the
     *   raster representing the <em>grey-level section</em> is filled from
     *   0,0.
     */
@@ -1775,7 +1805,7 @@ public class WlzImgView extends Component {
    /**
     *   Sets the offset between the origin of the graphics display (screen)
     *   and the <em>fixed point</em>.
-    *   The <em>fixed point</em> is given in the coordinate space of a 
+    *   The <em>fixed point</em> is given in the coordinate space of a
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
@@ -1790,7 +1820,7 @@ public class WlzImgView extends Component {
    /**
     *   Returns the offset between the origin of the graphics display (screen)
     *   and the <em>fixed point</em>.
-    *   The <em>fixed point</em> is given in the coordinate space of a 
+    *   The <em>fixed point</em> is given in the coordinate space of a
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
@@ -1806,7 +1836,7 @@ public class WlzImgView extends Component {
    /**
     *   Sets the offset between the origin of the graphics display (screen)
     *   and the <em>2nd fixed point</em>.
-    *   The <em>2nd fixed point</em> is given in the coordinate space of a 
+    *   The <em>2nd fixed point</em> is given in the coordinate space of a
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
@@ -1821,7 +1851,7 @@ public class WlzImgView extends Component {
    /**
     *   Sets the offset between the origin of the graphics display (screen)
     *   and <em>mouse-click anatomy</em>.
-    *   <em>Mouse-click anatomy</em> is in the coordinate space of a 
+    *   <em>Mouse-click anatomy</em> is in the coordinate space of a
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
@@ -1833,7 +1863,7 @@ public class WlzImgView extends Component {
    /**
     *   Sets the offset between the origin of the graphics display (screen)
     *   and a <em>threshold</em> region.
-    *   A <em>threshold</em> region is in the coordinate space of a 
+    *   A <em>threshold</em> region is in the coordinate space of a
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
@@ -1845,7 +1875,7 @@ public class WlzImgView extends Component {
    /**
     *   Sets offsets between the origin of the graphics display (screen)
     *   and all the <em>anatomy from menu</em> components.
-    *   <em>Anatomy from menu</em> regions are in the coordinate space of a 
+    *   <em>Anatomy from menu</em> regions are in the coordinate space of a
     *   <em>grey-level section</em> and therefore needs to be offset
     *   when displayed on screen.
     */
