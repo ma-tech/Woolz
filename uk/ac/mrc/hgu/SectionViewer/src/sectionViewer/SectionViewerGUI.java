@@ -831,6 +831,7 @@ public class SectionViewerGUI extends JPanel {
 
     _imageScrollPane.getViewport().add(_bigPanel, BorderLayout.CENTER);
     _imageScrollPane.getViewport().setScrollMode(JViewport.BLIT_SCROLL_MODE);
+    _imageScrollPane.setWheelScrollingEnabled(true);
 
     imagePanel.setLayout(new BorderLayout(hgap, vgap));
     imagePanel.setBorder(BorderFactory.createCompoundBorder(

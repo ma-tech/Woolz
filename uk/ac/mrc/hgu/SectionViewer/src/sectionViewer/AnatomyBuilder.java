@@ -195,6 +195,9 @@ public class AnatomyBuilder {
      if(!dir.isDirectory()) return;
 
      contents = dir.list();
+     List l = Arrays.asList(contents);
+     Collections.sort(l);
+     contents = (String[])l.toArray();
 
      int len = contents.length;
 
@@ -316,6 +319,11 @@ public class AnatomyBuilder {
 
      contents = dir.list();
 
+     contents = dir.list();
+     List l = Arrays.asList(contents);
+     Collections.sort(l);
+     contents = (String[])l.toArray();
+
      int len = contents.length;
 
      for (int i=0; i<len; i++) {
@@ -361,6 +369,11 @@ public class AnatomyBuilder {
      if(!dir.isDirectory()) return;
 
      contents = dir.list();
+
+     contents = dir.list();
+     List l = Arrays.asList(contents);
+     Collections.sort(l);
+     contents = (String[])l.toArray();
 
      int len = contents.length;
 
@@ -419,7 +432,7 @@ public class AnatomyBuilder {
    *    Adds the top sub-elements to a menu
    */
   public void addSubElements(SelectableMenu menu) {
-     
+
      JMenuItem item = null;
 
      int nitems = _anaMenu.getItemCount();
