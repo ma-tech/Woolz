@@ -4,6 +4,7 @@ import sectionViewer.*;
 import javax.swing.*;
 import java.util.*;
 import java.io.*;
+import java.awt.Font;
 import uk.ac.mrc.hgu.Wlz.*;
 
 /**
@@ -24,7 +25,7 @@ public class AnatomyBuilder {
    *   'extra_embryonic_component' hierarchy
    */
   private volatile Stack _xembFileStack = null;
-  
+
   /**
    *   Anatomy component Woolz objects in the
    *   'embryo' hierarchy
@@ -68,11 +69,12 @@ public class AnatomyBuilder {
    *   Prevents access to anatomy menus until they have been built.
    */
   public final Object _lock = new Object();
+  private final Font menuFont = new Font("default", Font.PLAIN, 12);
 
   /**
    *   Returns the lock object which prevents access to anatomy menus
    *   until they have been built.
-   *   @return _lock 
+   *   @return _lock
    */
   public Object getLock() {
      return _lock;
@@ -88,7 +90,9 @@ public class AnatomyBuilder {
      _embObjStack = new Stack();
      _xembObjStack = new Stack();
      _embMenu = new SelectableMenu("embryo");
+     _embMenu.setFont(menuFont);
      _xembMenu = new SelectableMenu("extra_embryonic_component");
+     _xembMenu.setFont(menuFont);
      _done = false;
   }
 
@@ -97,7 +101,7 @@ public class AnatomyBuilder {
 //-------------------------------------------------------------
   /**
    *   Organises building of anatomy menus.
-   *   @param stageDir is the full name of the top-level directory for 
+   *   @param stageDir is the full name of the top-level directory for
    *   a structure containing anatomy components. For example with mouse embryos
    *   this would be the top level directory for a Theiler stage, such as ts14.
    */
@@ -289,7 +293,8 @@ public class AnatomyBuilder {
 	thisFile = new File(fullPath + SLASH + contents[i]);
 	if (thisFile.isDirectory()) {
 	   SelectableMenu subMenu = new SelectableMenu(thisFile.getName());
-	   subMenu.setActionCommand(fullPath + SLASH + contents[i]);
+           subMenu.setFont(menuFont);
+           subMenu.setActionCommand(fullPath + SLASH + contents[i]);
 	   menu.add(subMenu);
 
 	   int newlen = thisFile.list().length;
@@ -302,6 +307,7 @@ public class AnatomyBuilder {
 
 	      JMenuItem item = new JMenuItem(
 	               leafMod(thisFile.getName()));
+                item.setFont(menuFont);
 	      item.setActionCommand(fullPath + SLASH + contents[i]);
 	      menu.add(item, 0);
 
