@@ -125,6 +125,9 @@ WlzVertexP	WlzVerticiesFromObj(WlzObject *obj, WlzVertexP *dstNr,
 	vData = WlzVerticiesFromCtr(obj->domain.ctr, dstNr, NULL,
 				    dstCnt, dstType, &errNum);
 	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
     }
   }
   if(dstErr)
@@ -361,20 +364,17 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 {
   int		idx,
   		cnt,
-		nIdx,
 		vIdx;
   int		*vId = NULL;
   WlzVertexType	type;
   WlzVertexP    vData;
   WlzGMVertex	*cV;
   WlzGMEdgeT	*cET;
-  WlzGMVertexT	*cVT,
-  		*nVT,
-		*pVT;
+  WlzGMVertexT	*cVT;
   AlcVector	*vec;
   WlzDVertex2	*vNorm = NULL;
-  WlzGMVertex	*nV[2];
-  WlzVertexP	tVP[3];
+  WlzGMVertex	*nV[4];
+  WlzVertexP	tVP[5];
   WlzDVertex2	segV[3];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -446,13 +446,13 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 	    (vNorm + idx)->vtX = 0.0;
 	    (vNorm + idx)->vtY = 0.0;
 	  }
-	  else if((nV[0] = cET->prev->vertexT->diskT->vertex) ==
-	          (nV[1] = cET->next->vertexT->diskT->vertex))
+	  else if((nV[1] = cET->prev->vertexT->diskT->vertex) ==
+	          (nV[2] = cET->next->vertexT->diskT->vertex))
 	  {
 	    /* Vertex is on the end of a contour segment. */
 	    if(model->type == WLZ_GMMOD_2I)
 	    { 
-	      tVP[0].i2 = &(nV[0]->geo.vg2I->vtx);
+	      tVP[0].i2 = &(nV[1]->geo.vg2I->vtx);
 	      tVP[1].i2 = &(cV->geo.vg2I->vtx);
 	      segV[0].vtX = tVP[0].i2->vtX;
 	      segV[0].vtY = tVP[0].i2->vtY;
@@ -461,7 +461,7 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 	    }
 	    else /* model->type == WLZ_GMMOD_2D */
 	    {
-	      tVP[0].d2 = &(nV[0]->geo.vg2D->vtx);
+	      tVP[0].d2 = &(nV[1]->geo.vg2D->vtx);
 	      tVP[1].d2 = &(cV->geo.vg2D->vtx);
 	      segV[0] = *(tVP[0].d2);
 	      segV[1] = *(tVP[1].d2);
@@ -470,28 +470,49 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 	  }
 	  else
 	  {
+	    nV[0] = cET->prev->prev->vertexT->diskT->vertex;
+	    nV[3] = cET->next->next->vertexT->diskT->vertex;
 	    /* Vertex is used by two edges. Find the other two verticies
 	     * that are used by these two edges. */
 	    if(model->type == WLZ_GMMOD_2I)
 	    { 
 	      tVP[0].i2 = &(nV[0]->geo.vg2I->vtx);
-	      tVP[1].i2 = &(cV->geo.vg2I->vtx);
-	      tVP[2].i2 = &(nV[1]->geo.vg2I->vtx);
-	      segV[0].vtX = tVP[0].i2->vtX;
-	      segV[0].vtY = tVP[0].i2->vtY;
-	      segV[1].vtX = tVP[1].i2->vtX;
-	      segV[1].vtY = tVP[1].i2->vtY;
-	      segV[2].vtX = tVP[2].i2->vtX;
-	      segV[2].vtY = tVP[2].i2->vtY;
+	      tVP[1].i2 = &(nV[1]->geo.vg2I->vtx);
+	      tVP[2].i2 = &(cV->geo.vg2I->vtx);
+	      tVP[3].i2 = &(nV[2]->geo.vg2I->vtx);
+	      tVP[4].i2 = &(nV[3]->geo.vg2I->vtx);
+	      segV[0].vtX = (tVP[0].i2->vtX + (2 * tVP[1].i2->vtX) +
+	                     tVP[2].i2->vtX) / 4;
+	      segV[0].vtY = (tVP[0].i2->vtY + (2 * tVP[1].i2->vtY) +
+	                     tVP[2].i2->vtY) / 4;
+	      segV[1].vtX = (tVP[1].i2->vtX + (2 * tVP[2].i2->vtX) +
+	                     tVP[3].i2->vtX) / 4;
+	      segV[1].vtY = (tVP[1].i2->vtY + (2 * tVP[2].i2->vtY) +
+	                     tVP[3].i2->vtY) / 4;
+	      segV[2].vtX = (tVP[2].i2->vtX + (2 * tVP[3].i2->vtX) +
+	                     tVP[4].i2->vtX) / 4;
+	      segV[2].vtY = (tVP[2].i2->vtY + (2 * tVP[3].i2->vtY) +
+	                     tVP[4].i2->vtY) / 4;
 	    }
 	    else /* model->type == WLZ_GMMOD_2D */
 	    {
 	      tVP[0].d2 = &(nV[0]->geo.vg2D->vtx);
-	      tVP[1].d2 = &(cV->geo.vg2D->vtx);
-	      tVP[2].d2 = &(nV[1]->geo.vg2D->vtx);
-	      segV[0] = *(tVP[0].d2);
-	      segV[1] = *(tVP[1].d2);
-	      segV[2] = *(tVP[2].d2);
+	      tVP[1].d2 = &(nV[1]->geo.vg2D->vtx);
+	      tVP[2].d2 = &(cV->geo.vg2D->vtx);
+	      tVP[3].d2 = &(nV[2]->geo.vg2D->vtx);
+	      tVP[4].d2 = &(nV[3]->geo.vg2D->vtx);
+	      segV[0].vtX = (tVP[0].d2->vtX + (2.0 * tVP[1].d2->vtX) +
+	                     tVP[2].d2->vtX) * 0.25;
+	      segV[0].vtY = (tVP[0].d2->vtY + (2.0 * tVP[1].d2->vtY) +
+	                     tVP[2].d2->vtY) * 0.25;
+	      segV[1].vtX = (tVP[1].d2->vtX + (2.0 * tVP[2].d2->vtX) +
+	                     tVP[3].d2->vtX) * 0.25;
+	      segV[1].vtY = (tVP[1].d2->vtY + (2.0 * tVP[2].d2->vtY) +
+	                     tVP[3].d2->vtY) * 0.25;
+	      segV[2].vtX = (tVP[2].d2->vtX + (2.0 * tVP[3].d2->vtX) +
+	                     tVP[4].d2->vtX) * 0.25;
+	      segV[2].vtY = (tVP[2].d2->vtY + (2.0 * tVP[3].d2->vtY) +
+	                     tVP[4].d2->vtY) * 0.25;
 	    }
 	    *(vNorm + idx) = WlzVerticiesNormTriple2(segV[0], segV[1],
 	    					     segV[2]);
@@ -502,8 +523,14 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    *dstCnt = cnt;
-    *dstType = type;
+    if(dstCnt)
+    {
+      *dstCnt = cnt;
+    }
+    if(dstType)
+    {
+      *dstType = type;
+    }
     if(dstNr)
     {
       (*dstNr).d2 = vNorm;
@@ -549,25 +576,15 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
 {
   int		vIdx,
 		vecIdx,
-		sIdx,
-		sCnt,
 		sMax = 0,
-  		vCnt,
-		manifold;
-  double	tD0;
+  		vCnt;
   int		*vId = NULL;
   AlcVector	*vec;
   WlzVertexType	type;
   WlzVertexP    vData;
   WlzGMVertex	*cV;
   WlzGMVertex	**sVBuf = NULL;
-  WlzGMVertexT	*vT0,
-  		*vT1;
-  WlzGMEdgeT	*eT1;
   WlzDVertex3	*vNorm = NULL;
-  WlzDVertex3	sVG[3];
-  WlzDVertex3	cNrm,
-  		sNrm;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   vData.v = NULL;
@@ -612,7 +629,6 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
   {
     for(vIdx = 0; vIdx < vCnt; ++vIdx)
     {
-      manifold = 1;
       cV = (WlzGMVertex *)AlcVectorItemGet(vec, vecIdx++);
       if(cV->idx >= 0)
       {
@@ -841,7 +857,6 @@ static void	WlzVerticiesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 {
   int		idx,
   		idx1;
-  WlzVertexType vType;
   WlzDVertex2	segV[3];
 
   switch(cnt)
@@ -1003,61 +1018,76 @@ static WlzDVertex2 WlzVerticiesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
 * \ingroup      WlzFeatures
 * \return				Normal vector.
 * \brief	Computes the normal (n) at a vertex. This is chosen to
-*		be the mean of normals of the two line segments which the
-*  		vertex is common to. This normal also bisects the two
-*		angles of the line segments at the vertex.
-*		Considering the three given verticies (A,B and C) to
-*		form a triangle ABC, a line which bisects the angles
-*		at B from some point D on the line segment CA to B.
-*		The point D is given by:
-*		\f$ p_D = p_A + (p_C - p_A)
-                                \frac{\|p_A - p_B\|}{\|p_B - p_C\|} \f$
-*		So the normal n is given by:
-*		\f$ n = \frac{(p_B - p_D)}{\|p_B - p_D\|} \f$
-*		unless \f$ \|p_B - p_D\| < \epsilon \f$ in which case
-*		WlzVerticiesNormPair2() is used to compute the normal
-*		from A and C.
-* \param	v0			First of the given triple (A).
-* \param	v1			Second of the given triple (B).
-* \param	v2			Third of the given triple (C).
+*		be the unit vector which bisects the angle which two
+*		line segments make at the vertex.
+*
+*		Given two line segments specified by three verticies
+*		\f$A\f$, \f$B\f$ and \f$C\f$, with a common vertex
+*		\f$B\f$. Find a pair of points \f$A'\f$ and \f$C'\f$
+*		on line segments \f$B \rightarrow A\f$ and
+*		\f$B \rightarrow C\f$ such that they have unit distance
+*		from \f$B\f$ and are in the directions of \f$A\f$ and
+*		\f$C\f$.  Next find the midpoint of the two verticies
+*		\f$A'\f$ and \f$C'\f$, call this point \f$D\f$.
+*		Lastly find the unit vector directed from \f$B\f$ towards
+*		\f$D\f$.
+*		If all three verticies are coincident a zero vector is
+*		retuned.
+* \param	vA			First vertex.
+* \param	vB			Second vertex, common to both line
+*					segments.
+* \param	vC			Third vertex.
 */
-static WlzDVertex2 WlzVerticiesNormTriple2(WlzDVertex2 v0, WlzDVertex2 v1,
-					   WlzDVertex2 v2)
+static WlzDVertex2 WlzVerticiesNormTriple2(WlzDVertex2 vA, WlzDVertex2 vB,
+					   WlzDVertex2 vC)
 {
-  double	tD0,
-  		tD1;
+  double	tD0;
   WlzDVertex2	tV0,
-  		tV1,
+		tV1,
+		tV2,
+		tV3,
+  		vAU,
+  		vCU,
+		vD,
 		nrm;
 
-  WLZ_VTX_2_SUB(tV0, v0, v1);
-  tD0 = WLZ_VTX_2_SQRLEN(tV0);
-  WLZ_VTX_2_SUB(tV0, v1, v2);
-  tD1 = WLZ_VTX_2_SQRLEN(tV0);
-  if(tD0 < DBL_EPSILON)
+  WLZ_VTX_2_SUB(tV0, vA, vB);
+  WLZ_VTX_2_SUB(tV1, vC, vB);
+  tV2.vtX = tV0.vtX * tV0.vtX; tV2.vtY = tV0.vtY * tV0.vtY;
+  tV3.vtX = tV1.vtX * tV1.vtX; tV3.vtY = tV1.vtY * tV1.vtY;
+  if((tV2.vtX < DBL_EPSILON) && (tV2.vtY < DBL_EPSILON))
   {
-    nrm = WlzVerticiesNormPair2(v1, v2);
+    nrm = WlzVerticiesNormPair2(vB, vC);
   }
-  else if(tD1 < DBL_EPSILON)
+  else if((tV3.vtX < DBL_EPSILON) && (tV3.vtY < DBL_EPSILON))
   {
-    nrm = WlzVerticiesNormPair2(v0, v1);
+    nrm = WlzVerticiesNormPair2(vB, vA);
   }
   else
   {
-    tD0 /= tD0 + tD1;
-    WLZ_VTX_2_SUB(tV0, v2, v0);
-    WLZ_VTX_2_SCALE(tV1, tV0, tD0);
-    WLZ_VTX_2_ADD(tV0, tV1, v0);
-    WLZ_VTX_2_SUB(tV1, v1, tV0);
-    tD0 = WLZ_VTX_2_LENGTH(tV1);
-    if(tD0 < DBL_EPSILON)
+    /* Check for colinearity and coincidence of all three verticies by
+     * computing the area of the triangle ABC. */
+    tD0 = WlzGeomTriangleSnArea2(vA, vB, vC);
+    if((tD0 * tD0) < (DBL_EPSILON))
     {
-      nrm = WlzVerticiesNormPair2(v0, v2);
+      nrm = WlzVerticiesNormPair2(vB, vC);
     }
     else
     {
-      tD1 = 1.0 / tD0;
-      WLZ_VTX_2_SCALE(nrm, tV1, tD1);
+      /* Compute the positions of A' and C' */
+      tD0 = 1.0 / sqrt(tV2.vtX + tV2.vtY);
+      WLZ_VTX_2_SCALE(vAU, tV0, tD0);
+      WLZ_VTX_2_ADD(vAU, vAU, vB);
+      tD0 = 1.0 / sqrt(tV3.vtX + tV3.vtY);
+      WLZ_VTX_2_SCALE(vCU, tV1, tD0);
+      WLZ_VTX_2_ADD(vCU, vCU, vB);
+      /* Find D, the midpoint between A' and C' */
+      WLZ_VTX_2_ADD(vD, vAU, vCU);
+      WLZ_VTX_2_SCALE(vD, vD, 0.5);
+      /* Compute the unit normal vector. */
+      WLZ_VTX_2_SUB(nrm, vD, vB);
+      tD0 = 1.0 / (WLZ_VTX_2_LENGTH(nrm));
+      WLZ_VTX_2_SCALE(nrm, nrm, tD0);
     }
   }
   return(nrm);
@@ -1084,8 +1114,6 @@ AlcKDTTree	*WlzVerticiesBuildTree(WlzVertexType vType, int nV,
   int		idx,
 		sIdx,
   		treeDim;
-  int		*shuffle = NULL;
-  int		datI[3];
   double	datD[3];
   AlcKDTTree	*tree;
   AlcKDTNode	*node;
@@ -1168,3 +1196,150 @@ AlcKDTTree	*WlzVerticiesBuildTree(WlzVertexType vType, int nV,
   return(tree);
 }
 
+/* #define WLZ_VERTICIES_TEST 1 */
+#if WLZ_VERTICIES_TEST == 1
+/* Test main() for WlzVerticiesFromObj().
+ * The input object has it's verticies extracted by WlzVerticiesFromObj().
+ * The verticies and normals are then written to the standard output,
+ * one vertex normal pair per line. The order of the verticies is undefined.
+ */
+
+extern int	getopt(int argc, char * const *argv, const char *optstring);
+
+extern char	*optarg;
+extern int	optind,
+		opterr,
+		optopt;
+
+int             main(int argc, char *argv[])
+{
+  int           idV,
+  		vCount,
+  		option,
+  		ok = 1,
+		usage = 0;
+  FILE		*fP = NULL;
+  char		*inObjFileStr,
+		*outDatFileStr;
+  WlzObject	*obj = NULL;
+  WlzVertexP	oVx,
+  		oNr;
+  WlzVertexType vType; 
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*errMsg;
+  static char	optList[] = "ho:";
+  const char	inObjFileStrDef[] = "-",
+  		outDatFileStrDef[] = "-";
+
+  oVx.v = NULL;
+  oNr.v = NULL;
+  inObjFileStr = (char *)inObjFileStrDef;
+  outDatFileStr = (char *)outDatFileStrDef;
+  while(ok && ((option = getopt(argc, argv, optList)) != -1))
+  {
+    switch(option)
+    {
+      case 'o':
+        outDatFileStr = optarg;
+	break;
+      case 'h':
+        usage = 1;
+	ok = 0;
+	break;
+      default:
+        usage = 1;
+	ok = 0;
+	break;
+    }
+  }
+  if(ok)
+  {
+    if(ok && (optind < argc))
+    {
+      if((optind + 1) != argc)
+      {
+        usage = 1;
+	ok = 0;
+      }
+      else
+      {
+        inObjFileStr = *(argv + optind);
+      }
+    }
+  }
+  if(ok)
+  {
+    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
+       ((fP = (strcmp(inObjFileStr, "-")?
+	       fopen(inObjFileStr, "r"): stdin)) == NULL) ||
+       ((obj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+       (errNum != WLZ_ERR_NONE))
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+		     "%s: failed to read object from file %s\n",
+		     *argv, inObjFileStr);
+    }
+    if(fP && strcmp(inObjFileStr, "-"))
+    {
+      fclose(fP);
+      fP = NULL;
+    }
+  }
+  if(ok)
+  {
+    oVx = WlzVerticiesFromObj(obj, &oNr, &vCount, &vType, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+		     "%s: Failed to get verticies from object\n",
+		     *argv);
+    }
+  }
+  if(ok)
+  {
+    if((fP = (strcmp(outDatFileStr, "-")?
+	      fopen(outDatFileStr, "w"): stdout)) == NULL)
+    {
+      ok = 0;
+      errNum = WLZ_ERR_WRITE_EOF;
+      (void )fprintf(stderr, "%s Failed to open output file %s.\n",
+      		     argv[0], outDatFileStr);
+    }
+  }
+  if(ok)
+  {
+    switch(vType)
+    {
+      case WLZ_VERTEX_D2:
+	for(idV = 0; idV < vCount; ++idV)
+	{
+	  (void )fprintf(fP, "%g %g 0.0 %g %g 0.0\n",
+	                 (oVx.d2 + idV)->vtX, (oVx.d2 + idV)->vtY,
+	                 (oNr.d2 + idV)->vtX, (oNr.d2 + idV)->vtY);
+	}
+	break;
+    }
+    if(fP && strcmp(outDatFileStr, "-"))
+    {
+      (void )fclose(fP);
+    }
+  }
+  (void )WlzFreeObj(obj);
+  AlcFree(oVx.v);
+  AlcFree(oNr.v);
+  if(usage)
+  {
+      (void )fprintf(stderr,
+      "Usage: %s%s",
+      *argv,
+      "  [-o#] [-h] [<input object>]\n"
+      "Options:\n"
+      "  -o  Output file name.\n"
+      "  -h  Prints this usage information.\n"
+      "Reads an object and prints out the verticies derived from it.\n");
+  }
+  return(!ok);
+}
+#endif /* WLZ_VERTICIES_TEST == 1 */

@@ -32,7 +32,6 @@ WlzErrorNum WlzGreySetRangeLut(
   WlzPixelV	max,
   WlzPixelP	lut)
 {
-  double		factor;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
   WlzGreyP		gptr;

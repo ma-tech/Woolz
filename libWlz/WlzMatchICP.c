@@ -22,6 +22,7 @@
 #include <limits.h>
 #include <float.h>
 #include <Wlz.h>
+#include <strings.h>
 
 typedef struct _WlzMatchICPShell
 {
@@ -124,19 +125,20 @@ static int			WlzMatchICPGetPoints(
 				  WlzMatchICPShell *mS,
 				  WlzVertexType vType,
 				  WlzVertexP tVx,
-				  int minSpx,
+				  WlzVertexP tNr,
+				  WlzVertexP sNr,
 				  WlzVertexP tMatch,
 				  WlzVertexP sMatch,
+				  int offset,
 				  WlzErrorNum *dstErr);
 static int			WlzMatchICPGetPoints2D(
 				  AlcKDTTree *tTree,
 				  WlzMatchICPShell *mS,
-				  WlzVertexP tVx,
-				  int minSpx,
-				  WlzVertexP tMatch,
-				  WlzVertexP sMatch);
-static WlzGMVertex 		*WlzMatchICPShellMidV2D(
-				  WlzGMShell *sS);
+				  WlzDVertex2 *tVx,
+				  WlzDVertex2 *tNr,
+				  WlzDVertex2 *sNr,
+				  WlzDVertex2 *tMatch,
+				  WlzDVertex2 *sMatch);
 static WlzErrorNum		WlzMatchICPBreakShellCon(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
@@ -151,22 +153,34 @@ static WlzErrorNum		WlzMatchICPBreakShellMid(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
 				  WlzMatchICPShell *sMS,
+				  WlzVertexP sNr,
 				  int *iBuf,
 				  int minSpx);
-static WlzErrorNum 		WlzMatchICPBreakShellMid2D(
-				  WlzMatchICPCbData *cbData,
-				  WlzGMModel *sGM,
-				  WlzMatchICPShell *sMS,
-				  int *iBuf,
-				  int minSpx);
-static WlzErrorNum		WlzMatchICPBreakShellLop(
+static WlzErrorNum		WlzMatchICPBreakShellLoopTs(
 				  WlzGMModel *sGM,
 				  WlzGMShell *sS,
-				  int minSpx);
+				  WlzVertexP sNr,
+				  int minSpx,
+				  int maxFlg);
 static WlzErrorNum		WlzMatchICPBreakShellLop2D(
 				  WlzGMModel *sGM,
 				  WlzGMShell *sS,
+				  WlzDVertex2 *sNr,
+				  int minSpx,
+				  int maxFlg);
+static WlzErrorNum 		WlzMatchICPBreakShellCur2D(
+				  WlzMatchICPCbData *cbData,
+				  WlzGMModel *sGM,
+				  WlzMatchICPShell *sMS,
+				  WlzDVertex2 *sNr,
+				  int *iBuf,
 				  int minSpx);
+static WlzGMVertex 		*WlzMatchICPLoopTMaxMinCurv2D(
+				  WlzGMLoopT *gLT,
+				  WlzDVertex2 *gNr,
+				  int minEdg,
+				  int maxFlg,
+				  double *dstAngle);
 static WlzErrorNum 		WlzMatchICPRemoveVerticies(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
@@ -226,13 +240,20 @@ static void			WlzMatchICPShellListElmUnlink(
 * \param	brkFlg			Controls the breaking of the source
 *					shells. Possible values are:
 *					  - 0
-*					    Source shells are never broken.
+*					    Whole model registration, source
+*					    shells are never broken.
 *					  - 1
+*					    Whole source shells are
+*					    registered to the target model.
+*					    Source shells are never broken.
+*					  - 2
 *					    Source shells are only ever
 *					    broken by connectivity.
-*					  - 2
+*					  - > 2
 *					    Source shells are broken by
-*					    connectivity and size.
+*					    connectivity and then near
+*					    there midpoints brkFlg - 1
+*					    times.
 * \param	dbgFlg			Aid debugging by transforming the
 *					(possibly) broken source shells if 
 *					non-zero.
@@ -329,13 +350,20 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 * \param	brkFlg			Controls the breaking of the source
 *					shells. Possible values are:
 *					  - 0
-*					    Source shells are never broken.
+*					    Whole model registration, source
+*					    shells are never broken.
 *					  - 1
+*					    Whole source shells are
+*					    registered to the target model.
+*					    Source shells are never broken.
+*					  - 2
 *					    Source shells are only ever
 *					    broken by connectivity.
-*					  - 2
+*					  - > 2
 *					    Source shells are broken by
-*					    connectivity and size.
+*					    connectivity and then near
+*					    there midpoints brkFlg - 1
+*					    times.
 * \param	dbgFlg			Aid debugging by transforming the
 *					(possibly) broken source shells if 
 *					non-zero.
@@ -359,7 +387,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		vSz,
 		brkIdx,
 		convFlg,
-		nMatch;
+		nMatch = 0;
   int		*vIBuf = NULL;
   double	*wBuf = NULL;
   WlzGMModel	*tGM,
@@ -381,8 +409,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   		*sMSBuf = NULL;
   WlzMatchICPShellListElm *lElm0,
   		*lElm1;
-  WlzMatchICPShellList *cSList,
-  		*bSList = NULL,
+  WlzMatchICPShellList *bSList = NULL,
 		*rSList = NULL,
 		*vSList = NULL;
   WlzMatchICPCbData cbData;
@@ -448,7 +475,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     nOSS = sGM->res.shell.numElm;
     maxTVI = tGM->res.vertex.numIdx;
     maxSVI = sGM->res.vertex.numIdx;
-    maxVI = WLZ_MAX(sGM->res.vertex.numIdx, tGM->res.vertex.numIdx);
+    maxVI = WLZ_MAX(maxSVI, maxTVI);
     if(((vIBuf = (int *)AlcMalloc(maxVI * sizeof(int))) == NULL) ||
        ((tVBuf.v = AlcMalloc(maxVI * vSz)) == NULL) ||
        ((sVBuf.v = AlcMalloc(maxVI * vSz)) == NULL) ||
@@ -484,7 +511,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     globTr = WlzAssignAffineTransform(
     	     WlzMatchICPRegModel(tTree, trType, vType, nTV, tVx, tNr,
 				 nSV, sVx, sNr, vIBuf, tVBuf, sVBuf, wBuf,
-				 maxItr, NULL, &convFlg, &errNum), NULL);
+				 maxItr, initTr, &convFlg, &errNum), NULL);
     if((errNum == WLZ_ERR_NONE) && (convFlg == 0))
     {
       errNum = WLZ_ERR_ALG_CONVERGENCE;
@@ -493,7 +520,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   /* Get the source shells and their sizes. Then sort by size, the sort is
    * currently a debuging aid but may be used in future for constraining the
    * matching of small shells. */
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 0))
   {
     sMS = sMSBuf;
     cSS = sGM->child;
@@ -533,8 +560,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   /* Remove all high connectivity verticies from the shells and then
    * register each of the child shells, with size above the threshold
    * to the target model. The list of new shells is built in  a list:
-   * This is bSList if brkFlg > 1 or rSList if brkFlg == 1. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg >= 1))
+   * This is bSList if brkFlg > 2 or rSList if brkFlg == 2. */
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
   {
     cbData.nNS = cbData.nFS = 0;
     cbData.errNum = WLZ_ERR_NONE;
@@ -542,7 +569,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     errNum = WlzGMModelAddResCb(sGM, (WlzGMCbFn )WlzMatchICPShellCb,
 				&cbData);
   }
-  if((errNum == WLZ_ERR_NONE) && (brkFlg >= 1))
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
   {
     idS = 0;
     sMS = sMSBuf;
@@ -602,7 +629,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   }
   /* Make sure that all simplex topology elements are connected through
    * next/prev. There's no need to re-register the shell. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg >= 1))
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
   {
     lElm0 = bSList->head;
     while(lElm0 && (errNum == WLZ_ERR_NONE))
@@ -610,14 +637,14 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       cSS = lElm0->mShell.shell;
       if(cSS->child != cSS->child->next)
       {
-        errNum = WlzMatchICPBreakShellLop(sGM, cSS, minSpx);
+        errNum = WlzMatchICPBreakShellLoopTs(sGM, cSS, sNr, minSpx, 0);
       }
       lElm0 = lElm0->next;
     }
   }
   /* Now have a list of shells each of which has: Greater than the threshold
-   * number of simplicies, is registered to the target model and has no
-   * regions of high connectivity.
+   * number of simplicies, is affine registered to the target model and has
+   * no regions of high connectivity.
    * Repeatedly sweep through the broken shell list (bSList) further breaking
    * the shells. When a shell has less than the treshold number of simplicies
    * or it fails to register with the target model then it is removed
@@ -626,7 +653,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
    * boundary then it is added to the resgistered shell list (rSList). */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(brkFlg > 1)
+    if(brkFlg > 2)
     {
       if(errNum == WLZ_ERR_NONE)
       {
@@ -636,7 +663,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       if(errNum == WLZ_ERR_NONE)
       {
 	n0 = -1;
-	brkIdx = 0;
+	brkIdx = 2;
 	do
 	{
 	  n1 = n0;
@@ -652,7 +679,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	    cbData.errNum = WLZ_ERR_NONE;
 	    cbData.list = vSList;
 	    errNum = WlzMatchICPBreakShellMid(&cbData, sGM, &(lElm0->mShell),
-					      vIBuf, minSpx);
+					      sNr, vIBuf, minSpx);
 	    n0 += cbData.nNS;
 	    if(errNum == WLZ_ERR_NONE)
 	    {
@@ -689,27 +716,55 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	WlzGMModelRemResCb(sGM, WlzMatchICPShellCb, &cbData);
       }
     }
-    else
+    else if(brkFlg > 0)
     {
-      WlzMatchICPShellListInsertList(rSList, bSList);
-      bSList = NULL;
+      if(brkFlg == 1)
+      {
+	idS = 0;
+	sMS = sMSBuf;
+	while((errNum == WLZ_ERR_NONE) && (idS < nOSS))
+	{
+	  if(sMS->tr)
+	  {
+	    if((lElm0 = WlzMatchICPShellListElmNew()) == NULL)
+	    {
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
+	    else
+	    {
+	      WlzMatchICPShellListElmInsert(bSList, lElm0);
+	      lElm0->mShell.size = sMS->size;
+	      lElm0->mShell.shell = sMS->shell;
+	      lElm0->mShell.tr = WlzAssignAffineTransform(sMS->tr, NULL);
+	    }
+	  }
+	  ++sMS;
+	  ++idS;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzMatchICPShellListInsertList(rSList, bSList);
+	bSList = NULL;
+      }
     }
   }
   /* Now have list of broken shells which are registered to the target model.
    * Find match points on broken shells and target model. */
-  if((errNum == WLZ_ERR_NONE) && (brkFlg >= 1))
+  if((errNum == WLZ_ERR_NONE) && (brkFlg > 1))
   {
     n0 = 0;
     lElm0 = rSList->head;
     while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
     {
-      n1 = WlzMatchICPGetPoints(tTree, &(lElm0->mShell), vType, tVx, minSpx,
-      				tVBuf, sVBuf, &errNum);
-      if(errNum == WLZ_ERR_NONE)
+      if(lElm0->mShell.shell && (lElm0->mShell.size > minSpx) &&
+         lElm0->mShell.tr)
       {
-	lElm0 = lElm0->next;
+	n1 = WlzMatchICPGetPoints(tTree, &(lElm0->mShell), vType, tVx,
+				  tNr, sNr, tVBuf, sVBuf, n0, &errNum);
 	n0 += n1;
       }
+      lElm0 = lElm0->next;
     }
     nMatch = n0;
   }
@@ -717,7 +772,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   if((errNum == WLZ_ERR_NONE) && dbgFlg)
   {
     /* Remove unregistered source shells. */
-    if((brkFlg > 1) && (n1 == n0))
+    if((brkFlg > 2) && (n1 == n0))
     {
       lElm0 = bSList->head;
       while(lElm0 != NULL) 
@@ -726,23 +781,31 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	lElm0 = lElm0->next;
       }
     }
-    else
+    else if(brkFlg > 1)
     {
       WlzMatchICPShellListInsertList(rSList, bSList);
+      bSList->head = bSList->tail = NULL;
     }
     /* Transform the registered source shells. */
-    lElm0 = rSList->head;
-    while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
+    if(brkFlg > 0)
     {
-      if(lElm0->mShell.size < minSpx)
+      lElm0 = rSList->head;
+      while((errNum == WLZ_ERR_NONE) && (lElm0 != NULL)) 
       {
-        WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
+	if(lElm0->mShell.size < minSpx)
+	{
+	  WlzGMModelDeleteS(sGM, lElm0->mShell.shell);
+	}
+	else
+	{
+	  WlzAffineTransformGMShell(lElm0->mShell.shell, lElm0->mShell.tr);
+	}
+	lElm0 = lElm0->next;
       }
-      else
-      {
-        WlzAffineTransformGMShell(lElm0->mShell.shell, lElm0->mShell.tr);
-      }
-      lElm0 = lElm0->next;
+    }
+    else
+    {
+      (void )WlzAffineTransformGMModel(sGM, globTr, 0, &errNum);
     }
   }
   /* Free the temporary storage that's been allocated. */
@@ -1102,29 +1165,26 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
 * \ingroup	WlzTransform
 * \brief	Computes matching points from the broken source shells
 *		and their affine transforms.
-*		All the shells with sizes above the minimum size will 
-*		consist a single loop without braches. For each such
-*		source shell this function seeks the nearest neighbour
-*		in the target k-D tree to the shells mid-point.
 * \param	tTree			kD-tree populated by the target
 *					verticies.
 * \param	mS			Match shell.
 * \param	vType			Type of vertices.
 * \param	tVx			Target vertex geometries.
-* \param	minSpx			Minimum number of simplicies within a
-* 					shell.
+* \param 	tNr			Target normals.
+* \param 	sNr			Source normals.
 * \param	tMatch			Allocated space for the target
 *					match verticies.
 * \param	sMatch			Allocated space for the source
 *					match verticies.
+* \param	offset			Offset into tMatch and smatch.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
 static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
-				     WlzVertexType vType,
-				     WlzVertexP tVx, int minSpx,
+				     WlzVertexType vType, WlzVertexP tVx,
+				     WlzVertexP tNr, WlzVertexP sNr,
 				     WlzVertexP tMatch, WlzVertexP sMatch,
-				     WlzErrorNum *dstErr)
+				     int offset, WlzErrorNum *dstErr)
 {
   int		nMatch = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1132,7 +1192,8 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
   switch(vType)
   {
     case WLZ_VERTEX_D2:
-      nMatch = WlzMatchICPGetPoints2D(tTree, mS, tVx, minSpx, tMatch, sMatch);
+      nMatch = WlzMatchICPGetPoints2D(tTree, mS, tVx.d2, tNr.d2, sNr.d2,
+      				      tMatch.d2 + offset, sMatch.d2 + offset);
       break;
     case WLZ_VERTEX_D3: /* FALLTHROUGH */
     default:
@@ -1151,27 +1212,29 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 * \ingroup	WlzTransform
 * \brief	Computes matching points from the broken source shell
 *		it's assosiated affine transform and the target kD-tree.
-* 		Finds the 2D vertex at the given shell's midpoint, apply the
-*		affine transform associated with the shell in the match
-*		shell data structure to the verticies geometry, find the
+* 		Finds the 2D vertex at the given shell's midpoint, applies
+*		the affine transform associated with the shell in the match
+*		shell data structure to the verticies geometry then finds the
 *		closest point in the target model to the transformed vertex
 *		using the target kD-tree.
 * \param	tTree			kD-tree populated by the target
 *					verticies.
 * \param	mS			Match shell.
 * \param	tVx			Target vertex geometries.
-* \param	minSpx			Minimum number of simplicies within a
-* 					shell.
+* \param 	tNr			Target normals.
+* \param 	sNr			Source normals.
 * \param	tMatch			Allocated space for the target
-*					match verticies.
+*					match vertex.
 * \param	sMatch			Allocated space for the source
-*					match verticies.
+*					match vertex.
 */
 static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
-				       WlzVertexP tVx, int minSpx,
-				       WlzVertexP tMatch, WlzVertexP sMatch)
+				       WlzDVertex2 *tVx, 
+				       WlzDVertex2 *tNr, WlzDVertex2 *sNr,
+				       WlzDVertex2 *tMatch, WlzDVertex2 *sMatch)
 {
   int		nMatch = 0;
+  WlzGMShell	*sS;
   WlzGMVertex	*cV;
   WlzDVertex2	sV,
 		tV,
@@ -1179,12 +1242,13 @@ static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
   double	cDist;
   double	vxD2[2];
   AlcKDTNode	*tNode;
+  const int	minSpx = 5; /* Avoid end regions of shells. */
   const double	maxDist = 5.0; /* TODO There's some experimentation to be
   				* done in choosing the value. */
 
-  if(mS->shell && mS->tr && (mS->size > minSpx))
+  if(mS && ((sS = mS->shell) != NULL) && (sS->child == sS->child->next))
   {
-    cV = WlzMatchICPShellMidV2D(mS->shell);
+    cV = WlzMatchICPLoopTMaxMinCurv2D(sS->child, sNr, minSpx, 1, NULL);
     (void )WlzGMVertexGetG2D(cV, &sV);
     tSV = WlzAffineTransformVertexD2(mS->tr, sV, NULL);
     vxD2[0] = tSV.vtX;
@@ -1192,68 +1256,13 @@ static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
     tNode = AlcKDTGetNN(tTree, vxD2, maxDist, &cDist, NULL);
     if(tNode && (cDist <= maxDist))
     {
-      tV = *(tVx.d2 + tNode->idx);
-      *(sMatch.d2 + nMatch) = sV;
-      *(tMatch.d2 + nMatch) = tV;
-      ++nMatch;
+      tV = *(tVx + tNode->idx);
+      *(sMatch) = sV;
+      *(tMatch) = tV;
+      nMatch = 1;
     }
   }
   return(nMatch);
-}
-
-/*!
-* \return				Vertex with at the midpoint of
-*					the shell.
-* \ingroup	WlzTransform
-* \brief	Searches for a vertex at the midpoint of the given
-*		shell. In a 2D model the midpoint only has meaning if
-*		the shell has a single loopT, ie the shell is a single
-*		line which does not have it's ends joined.
-
-* \param	sS			Given shell to search.
-*/
-static WlzGMVertex *WlzMatchICPShellMidV2D(WlzGMShell *sS)
-{
-  int		cnt,
-  		len;
-  WlzGMEdgeT	*cET,
-  		*fET;
-  WlzGMVertex	*hV = NULL;
-  WlzGMLoopT	*sLT;
-
-  if(sS && (sS->child == sS->child->next))
-  {
-    sLT = sS->child;
-    cET = fET = sLT->edgeT;
-    /* Find an end of the shell's line segment. This is either an edge topology
-     * element which is itself opposite to it's next element or the first
-     * edge topology element if the shell has a closed loop.. */
-    do
-    {
-      cET = cET->next;
-    } while((cET != fET) && (cET->opp != cET->next));
-    /* Find the other end of the line, counting the line's length in terms
-     * of it's edge topology element. */
-    len = 0;
-    fET = cET = cET->next;
-    do
-    {
-      ++len;
-      cET = cET->next;
-    } while((cET != fET) && (cET->opp != cET->next));
-    /* From the first end of the line, move half way towards the other end
-     * just found. The mid vertex is then the vertex at the origin of the
-     * current edge topology element. */
-    cnt = 0;
-    len /= 2;
-    cET = fET;
-    while(cnt++ < len)
-    {
-      cET = cET->next;
-    }
-    hV = cET->vertexT->diskT->vertex;
-  }
-  return(hV);
 }
 
 /*!
@@ -1366,6 +1375,7 @@ static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
 *					the list of new shells is being built.
 * \param	sGM			Source model.
 * \param	sMS			The match shell.
+* \param	sNr			The source shell normals.
 * \param	iBuf			Buffer containing the indicies of
 *					verticies to be removed from the
 *					model.
@@ -1374,7 +1384,7 @@ static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
 */
 static WlzErrorNum	WlzMatchICPBreakShellMid(WlzMatchICPCbData *cbData,
 				WlzGMModel *sGM, WlzMatchICPShell *sMS,
-				int *iBuf, int minSpx)
+				WlzVertexP sNr, int *iBuf, int minSpx)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1386,7 +1396,8 @@ static WlzErrorNum	WlzMatchICPBreakShellMid(WlzMatchICPCbData *cbData,
        * a closed loop so this needs to be broken into a simple non-cyclic
        * chain of edge segments before it can be broken by removing low
        * curvature verticies. */
-      errNum = WlzMatchICPBreakShellMid2D(cbData, sGM, sMS, iBuf, minSpx);
+      errNum = WlzMatchICPBreakShellCur2D(cbData, sGM, sMS, sNr.d2,
+      					  iBuf, minSpx);
       break;
     case WLZ_GMMOD_3I: /* FALLTHROUGH */
     case WLZ_GMMOD_3D:
@@ -1407,11 +1418,15 @@ static WlzErrorNum	WlzMatchICPBreakShellMid(WlzMatchICPCbData *cbData,
 *		opp pointer for connectivity.
 * \param	sGM			Source model.
 * \param	sS			Given shell.
+* \param	sNr			Source normals.
 * \param	minSpx			Minimum number of simplicies to
 *					leave in a shell.
+* \param	maxFlg			Search is for maximum curvature
+*					if non-zero.
 */
-static WlzErrorNum	WlzMatchICPBreakShellLop(WlzGMModel *sGM,
-					WlzGMShell *sS, int minSpx)
+static WlzErrorNum	WlzMatchICPBreakShellLoopTs(WlzGMModel *sGM,
+					WlzGMShell *sS, WlzVertexP sNr,
+					int minSpx, int maxFlg)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1419,7 +1434,7 @@ static WlzErrorNum	WlzMatchICPBreakShellLop(WlzGMModel *sGM,
   {
     case WLZ_GMMOD_2I: /* FALLTHROUGH */
     case WLZ_GMMOD_2D:
-      errNum = WlzMatchICPBreakShellLop2D(sGM, sS, minSpx);
+      errNum = WlzMatchICPBreakShellLop2D(sGM, sS, sNr.d2, minSpx, maxFlg);
       break;
     case WLZ_GMMOD_3I: /* FALLTHROUGH */
     case WLZ_GMMOD_3D:
@@ -1444,20 +1459,22 @@ static WlzErrorNum	WlzMatchICPBreakShellLop(WlzGMModel *sGM,
 *		curvature vertex.
 * \param	sGM			Source model.
 * \param	sS			Given shell.
+* \param	sNr			Source normals.
 * \param	minSpx			Minimum number of simplicies to
 *					leave in a shell.
+* \param	maxFlg			Search is for maximum curvature
+*					if non-zero.
 */
 static WlzErrorNum	WlzMatchICPBreakShellLop2D(WlzGMModel *sGM,
-					WlzGMShell *sS, int minSpx)
+					WlzGMShell *sS, WlzDVertex2 *sNr,
+					int minSpx, int maxFlg)
 {
-  int 		lnLen;
   WlzGMVertex	*sV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Find the vertex which is at the point of the lowest curvature in a loop
    * topology element of the shell. */
-  lnLen = (minSpx > 9)? 9: (minSpx + 1) / 2;
-  sV = WlzGMModelLoopTMaxMinCurv2D(sS->child, lnLen, lnLen, WLZ_MIN, NULL);
+  sV = WlzMatchICPLoopTMaxMinCurv2D(sS->child, sNr, minSpx, maxFlg, NULL);
   errNum = WlzGMModelDeleteV(sGM, sV);
   return(errNum);
 }
@@ -1473,6 +1490,7 @@ static WlzErrorNum	WlzMatchICPBreakShellLop2D(WlzGMModel *sGM,
 * \param	sGM			Source model.
 * \param	sMS			The match shell with pointers to the
 *					shell and it's number of simplicies.
+* \param	sNr			Source normals.
 * \param	iBuf			Buffer containing the indicies of
 *					verticies to be removed from the
 *					model.
@@ -1481,38 +1499,30 @@ static WlzErrorNum	WlzMatchICPBreakShellLop2D(WlzGMModel *sGM,
 */
 static WlzErrorNum WlzMatchICPBreakShellCur2D(WlzMatchICPCbData *cbData,
 				WlzGMModel *sGM, WlzMatchICPShell *sMS,
-				int *iBuf, int minSpx)
+				WlzDVertex2 *sNr, int *iBuf, int minSpx)
 {
-  int		idD,
-  		minSpx2;
-  double	angle;
+  int		idD;
   WlzGMVertex	*sV;
   WlzGMLoopT	*sLT;
   WlzGMShell	*sS;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int 	lnLen = 7;
-  const double	thrAngle = (3.0 * WLZ_M_PI) / 5.0;
 
-  /* Find all verticies at which the curvature is localy minimal
-   * for each shell with a size above the threshold. */
+  /* Find the vertex which has the minimum weighted curvature,
+   * where the weighting is biased towards the centre of an open
+   * edge chain. */
   idD = 0;
   sS = sMS->shell;
-  minSpx2 = (minSpx + 2) * 2;
-  if(sMS->size > minSpx2)
+  sLT = sS->child;
+  do
   {
-    sLT = sS->child;
-    do
+    if((sMS->size > (minSpx + 1) * 2) &&
+       ((sV = WlzMatchICPLoopTMaxMinCurv2D(sLT, sNr, minSpx,
+       				           0, NULL)) != NULL))
     {
-      if(((sV = WlzGMModelLoopTMaxMinCurv2D(sLT, minSpx + 1,
-					    lnLen, WLZ_MIN,
-					    &angle)) != NULL) &&
-	 (angle > thrAngle))
-      {
-	*(iBuf + idD++) = sV->idx;
-      }
-      sLT = sLT->next;
-    } while(sLT != sS->child);
-  }
+      *(iBuf + idD++) = sV->idx;
+    }
+    sLT = sLT->next;
+  } while(sLT != sS->child);
   if(idD > 0)
   {
     errNum = WlzMatchICPRemoveVerticies(cbData, sGM, iBuf, idD);
@@ -1521,50 +1531,205 @@ static WlzErrorNum WlzMatchICPBreakShellCur2D(WlzMatchICPCbData *cbData,
 }
 
 /*!
-* \return				Error code.
-* \ingroup	WlzTransform
-* \brief	Break the shell at it's mid point.
-* \param	cbData			Callback data structure in which
-*					the list of new shells is being built.
-* \param	sGM			Source model.
-* \param	sMS			The match shell with pointers to the
-*					shell and it's number of simplicies.
-* \param	iBuf			Buffer containing the indicies of
-*					verticies to be removed from the
-*					model.
-* \param	minSpx			Minimum number of simplicies to
-*					leave in a shell.
+* \return				Vertex at point of weighted
+*					minimum or maximum curvature.
+* \brief	Given a loop topology element and an array of normals
+*		for the verticies of the loop topology element. Finds
+*		the vertex at the point of maximum or minimum curvature
+*		weighted towards the centre of the loop.
+* 		The actual curvature is computed using the given
+*		normals, with two consecutive vertecies
+*		\f$mathbf{v_0}\f$ and \f$\mathbf{v_1}\f$ having normals 
+*		\f$mathbf{n_0}\f$ and \f$\mathbf{n_1}\f$, their
+*		curvature is given by:
+*		  \f[c = \frac{1}{2}{(1 + cos\theta)}\f]
+*		where:
+*		  \f[cos\theta = \frac{\mathbf{n_0} \cdot \mathbf{n_1}}
+                                      {|\mathbf{n_0}| |\mathbf{n_1}|}\f]
+*		Because the normals are all unit normals this simplifies
+*		to:
+*		\f[cos\theta = \mathbf{n_0} \cdot \mathbf{n_1}\f]
+*		For maximum curvature look for low values of \f$cos\theta)\f$
+*		and for minimum curvature look for high values.
+*		The weighting towards the centre of an open chain is
+*		done using a simple quadratic:
+*		  \f[w(x) = 4\frac{x}{l}(1 - frac{x}{l})\f]
+* \param	gLT			Given loop topology element.
+* \param	gNr			Given vertex normals.
+* \param	minEdg			Minimum number of edges to
+*					skip at the terminal ends of an
+*					loop topology element that is
+*					an open edge chain.
+* \param	maxFlg			Search is for maximum curvature
+*					if non-zero.
+* \param	dstAngle		Destination pointer for maximum
+*					of minimum angle found.
 */
-static WlzErrorNum WlzMatchICPBreakShellMid2D(WlzMatchICPCbData *cbData,
-				WlzGMModel *sGM, WlzMatchICPShell *sMS,
-				int *iBuf, int minSpx)
+static WlzGMVertex *WlzMatchICPLoopTMaxMinCurv2D(WlzGMLoopT *gLT,
+					WlzDVertex2 *gNr, int minEdg,
+                                        int maxFlg, double *dstAngle)
 {
-  int		idD,
-  		minSpx2;
-  double	angle;
-  WlzGMVertex	*sV;
-  WlzGMLoopT	*sLT;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int 	lnLen = 7;
-  const double	thrAngle = (3.0 * WLZ_M_PI) / 5.0;
+  int		idN,
+  		idP,
+		len = 0,
+		wxFlg,
+		okFlg = 1;
+  double	tD0,
+		wx,
+		wA,
+		wB,
+		wC,
+		cur,
+		mSgn,
+		mCur,
+  		cosAng;
+  WlzGMEdgeT	*fET,
+		*lET,
+  		*tET0,
+		*tET1,
+		*mET,
+		*nET,
+		*pET;
+  WlzGMVertex	*mV = NULL;
+  WlzDVertex2	n0,
+  		n1;
 
-  /* Find all verticies at which the curvature is localy minimal
-   * for each shell with a size above the threshold. */
-  /* TODO Use curvature here too */
-  idD = 0;
-  minSpx2 = (minSpx + 2) * 2;
-  if(sMS->size > minSpx2)
+
+  /* Find the first and last edge topology elements between which to search
+   * for the vertex at the centre of a maximum or minimum curvature region. */
+  if(gLT != gLT->next)
   {
-    if((sV = WlzMatchICPShellMidV2D(sMS->shell)) != NULL)
+    wxFlg = 0;           /* Don't use weighting if the edge chain is closed. */
+    fET = gLT->edgeT;
+    /* Count the edge topology elements. */
+    tET0 = fET;
+    while(((nET = tET0->next) != tET0->opp) && (nET != fET))
     {
-      *(iBuf + idD++) = sV->idx;
+      ++len;
+      tET0 = nET;
+    }
+    if(len <= (2 * minEdg))
+    {
+      okFlg = 0;
     }
   }
-  if(idD > 0)
+  else
   {
-    errNum = WlzMatchICPRemoveVerticies(cbData, sGM, iBuf, idD);
+    wxFlg = 1; 		       /* Use weighting if the edge chain is closed. */
+    /* The given loop topology element is the only one in the shell, find
+     * it's end point. */
+    tET0 = gLT->edgeT;
+    while(((pET = tET0->prev) != tET0->opp) && (pET != gLT->edgeT))
+    {
+      tET0 = pET;
+    }
+    /* Go forwards minEdg edge topology elements to find the first
+     * edge topology element. */
+    idN = minEdg;
+    while(((nET = tET0->next) != tET0->opp) && (idN-- > 0))
+    {
+      tET0 = nET;
+    }
+    if(idN == 0)
+    {
+      okFlg = 0;
+    }
+    else
+    {
+      fET = tET0;
+      /* Find the other end point, counting the edge topology elements while
+       * traveling. */
+      while(((nET = tET0->next) != tET0->opp) && (nET != pET))
+      {
+	++len;
+	tET0 = nET;
+      }
+      if(nET == pET)
+      {
+	okFlg = 0;
+      }
+    }
   }
-  return(errNum);
+  if(okFlg)
+  {
+    /* Go back minEdg edge topology elements to find the last edge topology
+     * element. */
+    len -= minEdg;
+    idN = minEdg;
+    while(((pET = tET0->prev) != fET) && (idN-- > 0))
+    {
+      tET0 = pET;
+    }
+    if(idN == 0)
+    {
+      okFlg = 0;
+    }
+  }
+  if(okFlg)
+  {
+    lET = tET0;
+  }
+  /* Having found the first and last edge topology elements between which to
+   * search, now do the search for the vertex at the point of minimal or
+   * maximal curvature. With the curvature defined by cur = mSgn * cosAng
+   * and mSgn = 1.0 for maximal curvature and -1.0 for minimal curvature.
+   * A quadratic weighting function is used (when the contour is an open
+   * edge chain). This has the form \f$ w(x) = ax^2 + bx + c \f$, with
+   * \f$ a = -0.4/N^2, b = 0.4/ N, c = 0.9 \f$.
+   */
+  if(okFlg)
+  {
+    mSgn = maxFlg? -1.0: 1.0;
+    wA = (mSgn * -0.10) / (len  * len);
+    wB = (mSgn * 0.10) / len;
+    wC = 0.90;
+    idN = 0;
+    mCur = -2.0;
+    tET1 = mET = fET;
+    n1 = *(gNr + tET1->vertexT->diskT->vertex->idx);
+    while((nET = tET1->next) != lET)
+    {
+      tET0 = tET1;
+      n0 = n1;
+      tET1 = nET;
+      n1 = *(gNr + tET1->vertexT->diskT->vertex->idx);
+      cosAng = fabs(WLZ_VTX_2_DOT(n0, n1));
+      cur = mSgn * cosAng;
+      if(wxFlg)
+      {
+	wx = (wA * idN * idN) + (wB * idN) + wC;
+	cur *= wx;
+      }
+      if(cur > mCur)
+      {
+	mCur = cur;
+	mET = tET0;
+      }
+      ++idN;
+    }
+    /* Having found the maximal or minimal curvature, now compute the
+     * angle. */
+    mV = mET->vertexT->diskT->vertex;
+    n0 = *(gNr + mV->idx);
+    n1 = *(gNr + mET->next->vertexT->diskT->vertex->idx);
+    cosAng = WLZ_VTX_2_DOT(n0, n1);
+    if(dstAngle)
+    {
+      if(cosAng < -1.0)
+      {
+        *dstAngle = ALG_M_PI;
+      }
+      else if(cosAng > 1.0)
+      {
+        *dstAngle = 0.0;
+      }
+      else
+      {
+        *dstAngle = acos(cosAng);
+      }
+    }
+  }
+  return(mV);
 }
 
 /*!
@@ -1613,7 +1778,9 @@ static WlzErrorNum WlzMatchICPRemoveVerticies(WlzMatchICPCbData *cbData,
 /*!
 * \return				Comparison value.
 * \ingroup	WlzTransform
-* \brief	Compare match shell sizes for qsort.
+* \brief	Compare match shell sizes for qsort. Sorted shells will
+*		have the largest shells first and the smallest shells
+*		last.
 * \param	val0			Used to pass first match shell.
 * \param	val1			Used to pass second match shell.
 */
@@ -1621,7 +1788,7 @@ static int	WlzMatchICPShellSzCmp(const void *val0, const void *val1)
 {
   int 		cmp;
 
-  cmp = ((WlzMatchICPShell *)val0)->size - ((WlzMatchICPShell *)val1)->size;
+  cmp = ((WlzMatchICPShell *)val1)->size - ((WlzMatchICPShell *)val0)->size;
   return(cmp);
 }
 
@@ -1821,8 +1988,13 @@ static void	WlzMatchICPShellListElmUnlink(WlzMatchICPShellList *list,
   }
 }
 
-#ifdef WLZ_MATCHICP_TEST
-/* Test main() for WlzMatchICPObjs(). */
+/* #define WLZ_MATCHICP_TEST 1 */
+
+#if WLZ_MATCHICP_TEST == 1
+/* Test main() for WlzMatchICPObjs().
+ * Match input objects, find match points and output decomposed source
+ * contour.
+ */
 
 extern int	getopt(int argc, char * const *argv, const char *optstring);
 
@@ -1853,7 +2025,7 @@ int             main(int argc, char *argv[])
   		matchSP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "aghrb:d:o:t:i:s:";
+  static char	optList[] = "aghrb:d:D:o:t:i:s:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -1878,6 +2050,14 @@ int             main(int argc, char *argv[])
       case 'd':
 	dbgFlg = 1;
         outDbgFileStr = optarg;
+	break;
+      case 'D':
+        if((sscanf(optarg, "%d", &dbgFlg) != 1) ||
+	   (dbgFlg < 0) || (dbgFlg > 2))
+        {
+	  usage = 1;
+	  ok = 0;
+	}
 	break;
       case 'o':
         outFileStr = optarg;
@@ -1990,7 +2170,7 @@ int             main(int argc, char *argv[])
     errNum = WlzMatchICPObjs(inObj[0], inObj[1],
     			     (inTrObj)? inTrObj->domain.t: NULL,
 			     &nMatch, &matchTP, &matchSP,
-			     maxItr, minSpx, brkFlg, dbgFlg);
+			     maxItr, minSpx, brkFlg, dbgFlg > 1);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -2000,7 +2180,7 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-    if(outDbgFileStr)
+    if(outDbgFileStr && (dbgFlg > 0))
     {
       errNum = WLZ_ERR_WRITE_EOF;
       if(((fP = (strcmp(outDbgFileStr, "-")?
@@ -2069,11 +2249,15 @@ int             main(int argc, char *argv[])
       (void )fprintf(stderr,
       "Usage: %s%s",
       *argv,
-      " [-b#] [-d#] [-o#] [-t#] [-i#] [-h]\n"
+      " [-b#] [-d#] [-D#] [-o#] [-t#] [-i#] [-h]\n"
       "          [<input object 0>] [<input object 1>]\n"
       "Options:\n"
       "  -b  Shell breaking control value.\n"
       "  -d  Debug output file.\n"
+      "  -D  Debug flag:\n"
+      "        0  no debug output.\n"
+      "        1  untransformed decomposed source model.\n"
+      "        2  transformed decomposed source model.\n"
       "  -o  Output file name.\n"
       "  -t  Initial affine transform.\n"
       "  -i  Maximum number of iterations.\n"
@@ -2084,4 +2268,221 @@ int             main(int argc, char *argv[])
   }
   return(!ok);
 }
-#endif /* WLZ_MATCHICP_TEST */
+#endif /* WLZ_MATCHICP_TEST == 1 */
+
+#if WLZ_MATCHICP_TEST == 2
+/* Test main() for WlzMatchICPObjs().
+ * Decompose the input contour. Each shell of the given contour is
+ * decomposed.
+ */
+
+extern int	getopt(int argc, char * const *argv, const char *optstring);
+
+extern char	*optarg;
+extern int	optind,
+		opterr,
+		optopt;
+
+int             main(int argc, char *argv[])
+{
+  int           idx,
+  		sCount,
+		maxCrv = 1,
+  		minSpx = 100,
+  		option,
+  		ok = 1,
+		usage = 0;
+  FILE		*fP = NULL;
+  char		*inObjFileStr,
+		*outObjFileStr;
+  WlzObject	*obj = NULL;
+  WlzGMModel 	*model;
+  WlzGMShell 	*shell;
+  WlzGMShell	**allShells;
+  WlzVertexP	sVx,
+  		sNr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*errMsg;
+  static char	optList[] = "hnxo:s:";
+  const char	inObjFileStrDef[] = "-",
+  		outObjFileStrDef[] = "-";
+
+  sVx.v = NULL;
+  sNr.v = NULL;
+  inObjFileStr = (char *)inObjFileStrDef;
+  outObjFileStr = (char *)outObjFileStrDef;
+  while(ok && ((option = getopt(argc, argv, optList)) != -1))
+  {
+    switch(option)
+    {
+      case 'o':
+        outObjFileStr = optarg;
+	break;
+      case 's':
+        if((sscanf(optarg, "%d", &minSpx) != 1) || (minSpx <= 0))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'n':
+        maxCrv = 0;
+	break;
+      case 'x':
+        maxCrv = 1;
+	break;
+      case 'h':
+        usage = 1;
+	ok = 0;
+	break;
+      default:
+        usage = 1;
+	ok = 0;
+	break;
+    }
+  }
+  if(ok)
+  {
+    if(ok && (optind < argc))
+    {
+      if((optind + 1) != argc)
+      {
+        usage = 1;
+	ok = 0;
+      }
+      else
+      {
+        inObjFileStr = *(argv + optind);
+      }
+    }
+  }
+  if(ok)
+  {
+    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
+       ((fP = (strcmp(inObjFileStr, "-")?
+	       fopen(inObjFileStr, "r"): stdin)) == NULL) ||
+       ((obj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+       (errNum != WLZ_ERR_NONE))
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+		     "%s: failed to read object from file %s\n",
+		     *argv, inObjFileStr);
+    }
+    if(fP && strcmp(inObjFileStr, "-"))
+    {
+      fclose(fP);
+      fP = NULL;
+    }
+  }
+  if(ok)
+  {
+    if(obj->type != WLZ_CONTOUR)
+    {
+      errNum = WLZ_ERR_OBJECT_TYPE;
+    }
+    else if((obj->domain.core == NULL) ||
+            ((model = obj->domain.ctr->model) == NULL))
+    {
+      errNum = WLZ_ERR_DOMAIN_NULL;
+    }
+    else
+    {
+      sVx = WlzVerticiesFromCtr(obj->domain.ctr, &sNr, NULL, NULL, NULL,
+      				&errNum);
+      if((errNum == WLZ_ERR_NONE) && (sVx.v == NULL))
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* Make an  array of the existing shells. */
+      sCount = 0;
+      if((shell = model->child) != NULL)
+      {
+	do
+	{
+	  ++sCount;
+	  shell = shell->next;
+	} while(shell != model->child);
+      }
+      /* Fill the array and then decompose all the shells. */
+      if(sCount > 0)
+      {
+        if((allShells = (WlzGMShell **)
+		        AlcMalloc(sizeof(WlzGMShell *) * sCount)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{ 
+	  idx = 0;
+	  do
+	  {
+	    allShells[idx++] = shell;
+	    shell = shell->next;
+	  } while(shell != model->child);
+	  idx = 0;
+	  while((errNum == WLZ_ERR_NONE) && (idx < sCount))
+	  {
+	    errNum = WlzMatchICPBreakShellLoopTs(model, allShells[idx++], sNr,
+	    				         minSpx, maxCrv);
+	  }
+	  AlcFree(allShells);
+	}
+      }
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )fprintf(stderr, "%s Failed to decompose contour.\n",
+      		     argv[0]);
+    }
+  }
+  if(ok)
+  {
+    if((fP = (strcmp(outObjFileStr, "-")?
+	      fopen(outObjFileStr, "w"): stdout)) == NULL)
+    {
+      ok = 0;
+      errNum = WLZ_ERR_WRITE_EOF;
+      (void )fprintf(stderr, "%s Failed to open output file %s.\n",
+      		     argv[0], outObjFileStr);
+    }
+  }
+  if(ok)
+  {
+    if((errNum = WlzWriteObj(fP, obj)) != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+		     "%s: failed to write objec to file %s (%s).\n",
+		     *argv, outObjFileStr, errMsg);
+    }
+    if(fP && strcmp(outObjFileStr, "-"))
+    {
+      (void )fclose(fP);
+    }
+  }
+  (void )WlzFreeObj(obj);
+  if(usage)
+  {
+      (void )fprintf(stderr,
+      "Usage: %s%s",
+      *argv,
+      "  [-o#] [-s#] [-h] [-n] [-x] [<input object>]\n"
+      "Options:\n"
+      "  -o  Output file name.\n"
+      "  -s  Minimum number of simplicies.\n"
+      "  -h  Prints this usage information.\n"
+      "  -n  Break at minimum curvature.\n"
+      "  -x  Break at maximum curvature.\n"
+      "Reads a contours and then decomposes each of it's shells.\n");
+  }
+  AlcFree(sVx.v);
+  AlcFree(sNr.v);
+  return(!ok);
+}
+#endif /* WLZ_MATCHICP_TEST == 2 */

@@ -408,6 +408,7 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   outVal.core = NULL;
+  nullVal.core = NULL;
   if(inVal.core == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;

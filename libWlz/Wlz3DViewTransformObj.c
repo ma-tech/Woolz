@@ -81,7 +81,7 @@ WlzObject *Wlz3DViewTransformObj(
   AlcErrno		alcErr = ALC_ER_NONE;
   WlzObject		*dstObj=NULL;
   int			area;
-  int			i, j, k, p, xp, yp, line;
+  int			i, k, p, xp, yp, line;
   int			plane1, lastpl, line1, lastln, kol1, lastkl;
   WlzIVertex3		*vertices;
   int			numVtxs, vtxIdx;

@@ -132,7 +132,7 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
     {
       if(objH && objV)
       {
-	dstObj = WlzImageArithmetic(objV, objH, WLZ_ADD, 1, &errNum);
+	dstObj = WlzImageArithmetic(objV, objH, WLZ_BO_ADD, 1, &errNum);
 	(void )WlzFreeObj(objV);
 	objV = NULL;
 	(void )WlzFreeObj(objH);

@@ -71,7 +71,6 @@ WlzPolygonDomain *WlzPolySmooth(
   WlzErrorNum		*dstErr)
 {
   WlzPolygonDomain	*rtnPoly=NULL, *tmp1Poly, *tmp2Poly;
-  WlzObject		*tmp8Polygon;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
   WlzFVertex2		*fVtxs;
   WlzDVertex2		*dVtxs;

@@ -181,6 +181,7 @@ WlzErrorNum	WlzMeshVxVecAdd(WlzMeshTransform *mesh, WlzDVertex2 *vxVec,
   eCnfQVec.size = 0;
   eCnfQVec.minSize = 8;
   eCnfQVec.mulSize = 2;
+  lastVx.vtX = lastVx.vtY = 0; 			 /* Just to keep lint happy. */
   while((errNum == WLZ_ERR_NONE) && (vxCnt-- > 0))
   {
     if(firstVxFlg)

@@ -25,7 +25,7 @@ WlzErrorNum Wlz3DSectionSegmentObject(
   WlzObject		***rtnObjs)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  WlzObject	*tmpObj, *obj0, *obj1, **objs;
+  WlzObject	*tmpObj, **objs;
   WlzDomain	domain;
   WlzValues	values;
   WlzIntervalDomain	*idom0, *idom1;
@@ -34,7 +34,7 @@ WlzErrorNum Wlz3DSectionSegmentObject(
   WlzIntervalWSpace	iwsp;
   WlzDVertex3	vtxL, vtxR;
   double	fdelta;
-  int		i, j, p, pp;
+  int		p, pp;
   int		delta;
 
   /* check the object */

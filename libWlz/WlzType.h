@@ -380,25 +380,26 @@ typedef enum
 /************************************************************************
 *  Binary operators.						
 ************************************************************************/
+/* TODO HACK WLZ_BO_MIN is multiply defined change these to WLZ_BO_* */
 typedef enum
 {
-  WLZ_ADD		= 0,
-  WLZ_SUBTRACT,
-  WLZ_MULTIPLY,
-  WLZ_DIVIDE,
-  WLZ_MODULUS,
-  WLZ_EQ,
-  WLZ_NE,
-  WLZ_GT,
-  WLZ_GE,
-  WLZ_LT,
-  WLZ_LE,
-  WLZ_AND,
-  WLZ_OR,
-  WLZ_XOR,
-  WLZ_MAX,
-  WLZ_MIN,
-  WLZ_MAGNITUDE
+  WLZ_BO_ADD		= 0,
+  WLZ_BO_SUBTRACT,
+  WLZ_BO_MULTIPLY,
+  WLZ_BO_DIVIDE,
+  WLZ_BO_MODULUS,
+  WLZ_BO_EQ,
+  WLZ_BO_NE,
+  WLZ_BO_GT,
+  WLZ_BO_GE,
+  WLZ_BO_LT,
+  WLZ_BO_LE,
+  WLZ_BO_AND,
+  WLZ_BO_OR,
+  WLZ_BO_XOR,
+  WLZ_BO_MAX,
+  WLZ_BO_MIN,
+  WLZ_BO_MAGNITUDE
 } WlzBinaryOperatorType;
 
 /************************************************************************

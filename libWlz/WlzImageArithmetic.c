@@ -520,55 +520,55 @@ static WlzBinaryOperatorFn WlzBinaryOperatorFnSet(WlzGreyType gType,
   {
     switch(op)
     {
-      case WLZ_ADD:
+      case WLZ_BO_ADD:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufAddI: WlzBufAddD;
 	break;
-      case WLZ_SUBTRACT:
+      case WLZ_BO_SUBTRACT:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufSubI: WlzBufSubD;
 	break;
-      case WLZ_MULTIPLY:
+      case WLZ_BO_MULTIPLY:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufMulI: WlzBufMulD;
 	break;
-      case WLZ_DIVIDE:
+      case WLZ_BO_DIVIDE:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufDivI: WlzBufDivD;
 	break;
-      case WLZ_MODULUS:
+      case WLZ_BO_MODULUS:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufModI: WlzBufModD;
 	break;
-      case WLZ_EQ:
+      case WLZ_BO_EQ:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufEQI: WlzBufEQD;
 	break;
-      case WLZ_NE:
+      case WLZ_BO_NE:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufNEI: WlzBufNED;
 	break;
-      case WLZ_GT:
+      case WLZ_BO_GT:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufGTI: WlzBufGTD;
 	break;
-      case WLZ_GE:
+      case WLZ_BO_GE:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufGEI: WlzBufGTD;
 	break;
-      case WLZ_LT:
+      case WLZ_BO_LT:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufLTI: WlzBufLTD;
 	break;
-      case WLZ_LE:
+      case WLZ_BO_LE:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufLEI: WlzBufLTD;
 	break;
-      case WLZ_AND:
+      case WLZ_BO_AND:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufAndI: WlzBufAndD;
 	break;
-      case WLZ_OR:
+      case WLZ_BO_OR:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufOrI: WlzBufOrD;
 	break;
-      case WLZ_XOR:
+      case WLZ_BO_XOR:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufXOrI: WlzBufXOrD;
 	break;
-      case WLZ_MAX:
+      case WLZ_BO_MAX:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufMaxI: WlzBufMaxD;
 	break;
-      case WLZ_MIN:
+      case WLZ_BO_MIN:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufMinI: WlzBufMinD;
 	break;
-      case WLZ_MAGNITUDE:
+      case WLZ_BO_MAGNITUDE:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufMagI: WlzBufMagD;
 	break;
       default:
@@ -681,25 +681,25 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
       gType[3] = WLZ_GREY_INT;
       switch(op)
       {
-	case WLZ_ADD:		/* FALLTHROGH */
-	case WLZ_SUBTRACT:	/* FALLTHROGH */
-	case WLZ_MULTIPLY:	/* FALLTHROGH */
-	case WLZ_DIVIDE:	/* FALLTHROGH */
-	case WLZ_MAGNITUDE:
+	case WLZ_BO_ADD:	/* FALLTHROGH */
+	case WLZ_BO_SUBTRACT:	/* FALLTHROGH */
+	case WLZ_BO_MULTIPLY:	/* FALLTHROGH */
+	case WLZ_BO_DIVIDE:	/* FALLTHROGH */
+	case WLZ_BO_MAGNITUDE:
           gType[2] = WLZ_GREY_SHORT;
 	  break;
-	case WLZ_MODULUS:	/* FALLTHROGH */
-	case WLZ_EQ:		/* FALLTHROGH */
-	case WLZ_NE:		/* FALLTHROGH */
-	case WLZ_GT:		/* FALLTHROGH */
-	case WLZ_GE:		/* FALLTHROGH */
-	case WLZ_LT:		/* FALLTHROGH */
-	case WLZ_LE:		/* FALLTHROGH */
-	case WLZ_AND:		/* FALLTHROGH */
-	case WLZ_OR:		/* FALLTHROGH */
-	case WLZ_XOR:		/* FALLTHROGH */
-	case WLZ_MAX:		/* FALLTHROGH */
-	case WLZ_MIN:
+	case WLZ_BO_MODULUS:	/* FALLTHROGH */
+	case WLZ_BO_EQ:		/* FALLTHROGH */
+	case WLZ_BO_NE:		/* FALLTHROGH */
+	case WLZ_BO_GT:		/* FALLTHROGH */
+	case WLZ_BO_GE:		/* FALLTHROGH */
+	case WLZ_BO_LT:		/* FALLTHROGH */
+	case WLZ_BO_LE:		/* FALLTHROGH */
+	case WLZ_BO_AND:	/* FALLTHROGH */
+	case WLZ_BO_OR:		/* FALLTHROGH */
+	case WLZ_BO_XOR:	/* FALLTHROGH */
+	case WLZ_BO_MAX:	/* FALLTHROGH */
+	case WLZ_BO_MIN:
           gType[2] = WLZ_GREY_UBYTE;
 	  break;
 	default:

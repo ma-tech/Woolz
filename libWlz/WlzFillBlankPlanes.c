@@ -24,7 +24,6 @@ WlzErrorNum WlzFillBlankPlanes(
 {
   WlzObject		*fill_obj, *obj1, *obj2;
   WlzPlaneDomain	*planedmn;
-  WlzVoxelValues	*voxtab;
   WlzDomain		domain, *domains;
   WlzValues		values, *valuess;
   WlzObjectType		valTbType;

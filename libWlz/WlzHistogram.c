@@ -2019,8 +2019,7 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
 				     int *dstNumAlpha, double **dstAlpha,
 				     double *dstLL)
 {
-  int		tI0,
-  		idx,
+  int		idx,
   		binCnt,
   		pkCnt,
 		fitNI;

@@ -35,6 +35,7 @@
 #include <Wlz.h>
 #include <float.h>
 #include <limits.h>
+#include <string.h>
 
 static WlzGMShell 	*WlzGMLoopTFindShell(
 			  WlzGMLoopT *gLT);
@@ -236,7 +237,6 @@ static void	WlzGMModelCallResCb(WlzGMModel *model, WlzGMElemP elm,
 
 /*!
 * \return				New empty model.
-* \ingroup      WlzGeoModel
 * \ingroup      WlzGeoModel
 * \brief	Creates an empty non-manifold geometry model.
 * \param	modType			Type of model to create.
@@ -1732,8 +1732,6 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
   WlzGMEdge	**edgeCol = NULL;
   WlzGMShell	*pS;
   WlzVertex	vG;
-  WlzBox	tB,
-  		pSG;
   const int	eStp = 16;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2038,10 +2036,7 @@ static WlzErrorNum WlzGMModelDeleteE3D(WlzGMModel *model, WlzGMEdge *dE)
 */
 void		WlzGMModelDeleteF(WlzGMModel *model, WlzGMFace *dF)
 {
-  WlzGMEdgeT	*tET0,
-  		*tET1;
-  WlzGMLoopT	*tLT0,
-  		*tLT1;
+  WlzGMLoopT	*tLT0;
 
   if(model && dF && (dF->idx >- 0))
   {
@@ -4103,7 +4098,7 @@ WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
   }
   if(dstErr)
   {
-    *dstErr == errNum;
+    *dstErr = errNum;
   }
   return(nrm);
 }
@@ -4153,244 +4148,6 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
     }
   }
   return(dstSq);
-}
-
-/*!
-* \return				Vertex with high curvature or
-*					NULL if none found.
-* \brief	Searches for the vertex with the highest  or lowest
-*		curvature in the given loopT.
-*		The curvature at each vertex is found by fitting lines
-*		to the vertex and a small number of the preceding and
-*		proceding verticies. Giving two line gradients \f$a_0\f$
-*		and \f$a_1\f$. Two line segments are then computed
-*		which pass through the common vertex \f$v_2\f$ and
-*		near the verticies \f$v_0\f$ and \f$v_1\f$ for the line
-*		segments with gradients \f$a_0\f$ and \f$a_1\f$
-*		respectively. The verticies furthest from \f$v_2\f$:
-*		\f$v_0\f$ and \f$v_1\f$ are then projected onto these
-*		line segments giving \f${v_0}'\f$ and \f${v_1}'\f$:
-                \f[
- 		  {v_i}' = \left\{
- 			   \begin{array}{ll}
- 			     (v_{ix}, a_i(v_{ix} - v_{2x}) + v_{2y}) &
- 			       a_i^2 < 1 \\
- 			     (a_i^{-1}(v_{iy} - v_{2y}) + v_{2x}, v_{iy}) &
- 			       a_i^2 > 1 \\
- 			   \end{array}
- 			   \right.
- 		\f]
-* 		Then using the cosine theorem the cosine of the angle
-* 		is given by
-  		 \f[ 
- 		  \cos{\theta} = \frac{{|{v_0}' - v_2|}^2 +
- 		                       {|{v_1}' - v_2|}^2 -
- 		                       {|{v_0}' - {v_1}'|}^2}
- 		                      {2{|{v_0}' - v_2|}{|{v_1}' - v_2|}}
- 		\f]
-* 		The search is made using \f$\cos{\theta}\f$ (because
-* 		\f$\cos{\theta} = \cos{(2\pi - \theta)}\f$) with the
-* 		search being for the maximum or minimum value of
-*		\f$\cos{\theta}\f$.
-* \param	gLT			Given loop topology element to
-*					search.
-*		minLen			Required minimum distance from an
-*					end point. Only used if the loop
-*					topology element is the only loop
-*					topology element of it's shell.
-*		lnLen			Length for fitted line segment.
-*		mOrM			Determines whether the search is for
-*					the minimum or maximum curvature,
-*					only WLZ_MIN and WLZ_MAX are valid.
-*		dstAlg			Destination pointer for the maximum
-*					or minimum angle (returned in
-*					radians), may be NULL.
-*/
-WlzGMVertex 	*WlzGMModelLoopTMaxMinCurv2D(WlzGMLoopT *gLT,
-					     int minLen, int lnLen,
-					     WlzBinaryOperatorType mOrM,
-					     double *dstAlg)
-{
-  int		idN,
-  		idP,
-		mFlg,
-		coincident,
-		okFlg = 0;
-  double	tD0,
-  		tD1,
-		cosAng,
-  		mCosAng;
-  double	lU[2],
-		lL[2],
-  		sX[2],
-  		sY[2],
-		sXX[2],
-		sXY[2];
-  WlzGMEdgeT	*fET,
-		*lET,
-  		*tET;
-  WlzGMEdgeT	*cET[3];
-  WlzDVertex2	cPos,
-  		pPos;
-  WlzDVertex2	pos[3];
-  WlzGMVertex	*mV;
-
-  if(gLT && (minLen >= lnLen))
-  {
-    switch(mOrM)
-    {
-      case WLZ_MAX:
-        mFlg = 1;
-        okFlg = 1;
-        break;
-      case WLZ_MIN:
-        mFlg = 0;
-        okFlg = 1;
-	break;
-      default:
-	okFlg = 0;
-        break;
-    }
-  }
-  if(okFlg)
-  {
-    tET = gLT->edgeT;
-    if(gLT == gLT->next)
-    {
-      /* The given loop topology element is the only one in the shell, find
-       * it's end point. */
-      while((tET->prev != tET->opp) && ((tET = tET->next) != gLT->edgeT));
-      /* Skip the first minLen - lnLen edge topology elements to find the
-       * start vertex. */
-      idN = minLen - lnLen;
-      while((tET->next != tET->opp) && (idN-- > 0) &&
-            ((tET = tET->next) != gLT->edgeT));
-      if(tET->next == tET->opp)
-      {
-        okFlg = 0;
-      }
-      else
-      {
-	fET = tET;
-	/* Find the other end point. */
-	while((tET->next != tET->opp) && ((tET = tET->next) != gLT->edgeT));
-	/* Go back lnLen edge topology elements to find the end vertex. */
-	idN = minLen;
-	while((idN-- > 0) && ((tET = tET->prev) != fET));
-	if(tET == fET)
-	{
-	  okFlg = 0;
-	}
-	else
-	{
-	  lET = tET;
-	}
-      }
-    }
-    else
-    {
-      fET = tET;
-      lET = tET;
-    }
-  }
-  if(okFlg)
-  {
-    cET[0] = fET;
-    (void )WlzGMVertexGetG2D(tET->vertexT->diskT->vertex, pos + 0);
-    /* Initialize the regression sums and find the initial cosine of the angle
-     * between the lines. */
-    idN = 0;
-    while(okFlg && (idN < 2))
-    {
-      idP = 0;
-      sX[idN] = sY[idN] = sXX[idN] = sXY[idN] = 0.0;
-      tET = (idN == 0)? fET: cET[1];
-      do
-      {
-	(void )WlzGMVertexGetG2D(tET->vertexT->diskT->vertex, &cPos);
-	sX[idN] += cPos.vtX;
-	sY[idN] += cPos.vtY;
-	sXX[idN] += cPos.vtX * cPos.vtX;
-	sXY[idN] += cPos.vtX * cPos.vtY;
-	tET = tET->next;
-      } while((++idP < lnLen) && (tET != fET));
-      if(idP < lnLen)
-      {
-        okFlg = 0;
-      }
-      else
-      {
-	cET[idN + 1] = tET->prev;
-	pos[idN + 1] = cPos;
-	lU[idN] = (lnLen * sXY[idN]) - (sX[idN] * sY[idN]);
-	lL[idN] = (lnLen * sXX[idN]) - (sX[idN] * sX[idN]);
-      }
-      ++idN;
-    }
-  }
-  if(okFlg)
-  {
-    mV = cET[1]->vertexT->diskT->vertex;
-    mCosAng = cosAng = WlzGeomAngleBetweenLines(2, lL, 2, lU, 3, pos,
-    					        &coincident);
-    /* Now find the maximum cosine of angle (minimum angle) between the lines
-     * for the rest of the verticies. */
-    do
-    {
-      cET[0] = cET[0]->next;
-      cET[1] = cET[1]->next;
-      cET[2] = cET[2]->next;
-      for(idN = 0; idN < 2; ++idN)
-      {
-	pPos = pos[idN];
-        (void )WlzGMVertexGetG2D(cET[idN + 1]->vertexT->diskT->vertex,
-				 &cPos);
-        sX[idN] += cPos.vtX - pPos.vtX;
-	sY[idN] += cPos.vtY - pPos.vtY;
-	sXX[idN] += (cPos.vtX * cPos.vtX) - (pPos.vtX * pPos.vtX);
-	sXY[idN] += (cPos.vtX * cPos.vtY) - (pPos.vtX * pPos.vtY);
-	lU[idN] = (lnLen * sXY[idN]) - (sX[idN] * sY[idN]);
-	lL[idN] = (lnLen * sXX[idN]) - (sX[idN] * sX[idN]);
-	(void )WlzGMVertexGetG2D(cET[idN]->vertexT->diskT->vertex, &pPos);
-	pos[idN] = pPos;
-      }
-      pos[2] = cPos;
-      cosAng = WlzGeomAngleBetweenLines(2, lL, 2, lU, 3, pos,
-      				        &coincident);
-      if(coincident == 0)
-      {
-	if(mFlg)
-	{
-	  if(cosAng > mCosAng)
-	  {
-	    mV = cET[1]->vertexT->diskT->vertex;
-	    mCosAng = cosAng;
-	  }
-	}
-	else
-	{
-	  if(cosAng < mCosAng)
-	  {
-	    mV = cET[1]->vertexT->diskT->vertex;
-	    mCosAng = cosAng;
-	  }
-	}
-      }
-    } while((cET[2] != lET));
-    if(dstAlg)
-    {
-      if(mCosAng < -1.0 + DBL_EPSILON)
-      {
-        mCosAng = -1.0 + DBL_EPSILON;
-      }
-      else if(mCosAng > 1.0 - DBL_EPSILON)
-      {
-        mCosAng = 1.0 - DBL_EPSILON;
-      }
-      *dstAlg = acos(mCosAng);
-    }
-  }
-  return(mV);
 }
 
 /*!
@@ -7128,7 +6885,6 @@ static WlzErrorNum WlzGMModelJoin3V0E2S3D(WlzGMModel *model, WlzGMVertex **eV)
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
   WlzGMDiskT	*nDT[3];
-  WlzGMVertex   *ev[3];
   WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -8808,8 +8564,7 @@ static void	WlzGMModelMatchEdgeTG2D(WlzGMModel *model,
   double	tD0,
 		len,
 		trCos,
-		trSin,
-		trScale;
+		trSin;
   WlzDVertex2	tr,
 		rPos,
   		tPosB,

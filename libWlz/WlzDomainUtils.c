@@ -238,7 +238,6 @@ WlzErrorNum 	WlzDynItvLnFromBitLn(WlzIntervalDomain *iDom,
 WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
 			     int line, int iLft, int iLen)
 {
-  int		lnOff;
   WlzInterval	*itv;
   WlzIntervalLine *itvLn;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;

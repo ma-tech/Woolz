@@ -1579,10 +1579,8 @@ static WlzContour *WlzContourBndObj2D(WlzObject *obj, WlzErrorNum *dstErr)
 		itvBufWidth,
 		lastLn;
   WlzDomain	srcDom;
-  int		square[4];
   UBYTE		*itvBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
-  WlzIVertex2	sqOrg;
   WlzIntervalWSpace srcIWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1697,8 +1695,7 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, WlzErrorNum *dstErr)
   WlzDomain	dummyDom,
   		dom;
   WlzIVertex2	bufSz2D,
-		bufOrg2D,
-		objOrg2D;
+		bufOrg2D;
   WlzIBox3	bBox3D;
   UBYTE		**itvBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
@@ -2197,8 +2194,7 @@ static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, int line0,
   int		idX,
   		idS;
   WlzDVertex2	sqOrg;
-  int		vLnI0[2],
-  		vLnI1[2];
+  int		vLnI1[2];
   double	vLnD0[2],
   		vLnD1[2];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -2798,8 +2794,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, int *dstLnkFlg,
 {
   int		idF,
   		clsIdx;
-  double	tD0,
-		modCGV,
+  double	modCGV,
 		tCG;
   WlzIVertex3	aFQ,
 		aFQ1,
@@ -3119,22 +3114,22 @@ static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
   cVal[7] = *(vPn1Ln1 + 0) - isoVal;
   /* Test to se if there is an intersection between this cube and the
    * iso-surface. */
-  intersect = !(((cVal[1] < -(WLZ_CTR_TOLERANCE)) &&
+  intersect = !(((cVal[0] < -(WLZ_CTR_TOLERANCE)) &&
+		 (cVal[1] > WLZ_CTR_TOLERANCE) &&
                  (cVal[2] < -(WLZ_CTR_TOLERANCE)) &&
 		 (cVal[3] < -(WLZ_CTR_TOLERANCE)) &&
 		 (cVal[4] < -(WLZ_CTR_TOLERANCE)) &&
 		 (cVal[5] < -(WLZ_CTR_TOLERANCE)) &&
 		 (cVal[6] < -(WLZ_CTR_TOLERANCE)) &&
-		 (cVal[7] < -(WLZ_CTR_TOLERANCE)) &&
-		 (cVal[8] < -(WLZ_CTR_TOLERANCE))) || 
-	        ((cVal[1] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[7] < -(WLZ_CTR_TOLERANCE))) || 
+	        ((cVal[0] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[1] > WLZ_CTR_TOLERANCE) &&
 		 (cVal[2] > WLZ_CTR_TOLERANCE) &&
 	 	 (cVal[3] > WLZ_CTR_TOLERANCE) &&
 		 (cVal[4] > WLZ_CTR_TOLERANCE) &&
 		 (cVal[5] > WLZ_CTR_TOLERANCE) &&
 		 (cVal[6] > WLZ_CTR_TOLERANCE) &&
-		 (cVal[7] > WLZ_CTR_TOLERANCE) &&
-		 (cVal[8] > WLZ_CTR_TOLERANCE)));
+		 (cVal[7] > WLZ_CTR_TOLERANCE)));
   if(intersect)
   {
     tIdx = 0;

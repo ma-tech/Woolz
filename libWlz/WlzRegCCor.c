@@ -181,8 +181,7 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
 					    int *dstConv, double *dstCCor,
 					    WlzErrorNum *dstErr)
 {
-  int		tI0,
-  		tI1,
+  int		tI1,
 		samIdx,
   		nSam,
 		conv;
@@ -190,12 +189,9 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
   		rot0,
 		rot1,
 		sMaxRot;
-  WlzGreyType	gType;
   WlzPixelV	gV[4];
   WlzIVertex2	tIV0,
-  		tIV1,
-		winRad,
-		winOrg;
+  		tIV1;
   WlzIVertex3	samFacV;
   WlzDVertex2	tran0,
   		tran1,

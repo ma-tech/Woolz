@@ -516,7 +516,7 @@ static WlzObject *WlzStructDilation3d(
   WlzObject	**objList;
   WlzDomain	domain, *domains, *domains1, *domains2;
   WlzValues	values;
-  int		i, j, p, plane1, lastpl, nStructPlanes;
+  int		i, p, plane1, lastpl, nStructPlanes;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* the object is definitely 3D but the domain needs checking */

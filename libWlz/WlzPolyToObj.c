@@ -101,9 +101,7 @@ int WlzInsidePolyEO(
   WlzErrorNum		*dstErr)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		i, crossings;
-  WlzIVertex2	*vtxs;
-  double	x;
+  int		crossings;
   
   crossings = WlzPolyCrossings(vtx, pgdm, &errNum);
 

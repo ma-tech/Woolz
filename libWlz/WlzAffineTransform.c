@@ -1601,9 +1601,7 @@ static WlzErrorNum WlzAffineTransformPrimSet2(WlzAffineTransform *tr,
 static WlzErrorNum WlzAffineTransformPrimSet3(WlzAffineTransform *tr,
 					      WlzAffineTransformPrim prim)
 {
-  double	cx,
-		sx,
-		cy,
+  double	cy,
 		sy,
 		cz,
   		sz;
@@ -2498,8 +2496,6 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
 {
   int		dim;
   WlzAffineTransform *invTr = NULL;
-  double	*matrix[4];
-  double	buffer[16];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
@@ -2546,7 +2542,6 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
 {
   int           dim,
   		isIdentity = 0;
-  double        tD0;
   double        **mat;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const double	delta = 1.0e-06;
@@ -2633,17 +2628,13 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 				       WlzInterpolationType interp,
 				       WlzErrorNum *dstErr)
 {
-  int		planeCount,
-  		planeIdx;
   WlzDomain	srcDom,
   		dstDom;
   WlzValues	srcValues,
-  		dumValues,
   		dstValues;
   WlzObject	*tObj0,
   		*tObj1,
 		*dstObj = NULL;
-  WlzAffineTransformPrim prim;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
@@ -2657,7 +2648,6 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
   else
   {
     dstDom.core = NULL;
-    dumValues.core = NULL;
     dstValues.core = NULL;
     srcValues.core = NULL;
     switch(srcObj->type)

@@ -25,6 +25,7 @@
 *		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
 #include <stdlib.h>
+#include <float.h>
 #include <Wlz.h>
 
 #define WLZ_SAMPLE_KERNEL_INORM	(0x000100)
@@ -2383,6 +2384,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	    switch(samFn)
 	    {
 	      case WLZ_SAMPLEFN_MIN:
+		tD0 = DBL_MAX;
 		for(idY = 0; idY < kernelSz.vtY; ++idY)
 		{
 		  idB = (bufBase + (bufPos.vtY)++) % kernelSz.vtY;
@@ -2554,6 +2556,7 @@ static int	WlzSampleObjGaussKernelD(double **kernel, WlzIVertex2 kernelSz,
     kR = -widFac * ((samFac.vtX * samFac.vtX) + (samFac.vtY * samFac.vtY));
     for(idY = 0; idY < kernelSz.vtY; ++idY)
     {
+      min = -(DBL_MAX);
       kY = idY - (kernelSz.vtY / 2);
       kY *= kY;
       for(idX = 0; idX < kernelSz.vtX; ++idX)

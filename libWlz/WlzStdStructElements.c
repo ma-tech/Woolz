@@ -412,7 +412,6 @@ static WlzObject *WlzSpecial_e2(WlzErrorNum *dstErr)  /*-*/
 static WlzObject *WlzSpecial_v2(WlzErrorNum *dstErr)  /*-*/
 {
   WlzObject	*obj1, *obj2, *obj=NULL;
-  WlzInterval	*intl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   if( obj1 = WlzSpecial_a3(1, &errNum) ){

@@ -40,7 +40,6 @@ static WlzErrorNum		WlzGMFilterRmSmShells3(
 */
 WlzErrorNum	WlzGMFilterRmSmShells(WlzGMModel *model, int minSpx)
 {
-  int		sSz;
   WlzGMShell	*cS,
   		*fS,
 		*nS;

@@ -1163,8 +1163,7 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 					WlzDVertex3 *n1, WlzDVertex3 *n0,
 					WlzErrorNum *dstErr)
 {
-  int		id0,
-  		id1;
+  int		id0;
   double	wt,
 		sumVW,
 		t0D,
@@ -1388,8 +1387,7 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
 					WlzDVertex2 *n1, WlzDVertex2 *n0,
 					WlzErrorNum *dstErr)
 {
-  int		id0,
-  		id1;
+  int		id0;
   double	wt,
 		sumVW,
 		t0D,

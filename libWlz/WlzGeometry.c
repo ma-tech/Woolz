@@ -485,7 +485,6 @@ void		WlzGeomVtxSortRadial(int nV, WlzDVertex3 *vP,
   double	tD0;
   WlzDVertex3	uV,
   		vV;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Compute basis vectors orthogonal to rV and in the plane of the
    * verticies. */
@@ -892,81 +891,3 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
   }
   return(intersect);
 }
-
-/*!
-* \return                               Cosine of the angle between the line
-*                                       segments.
-* \ingroup	WlzGeometry
-* \brief        Given the numerators (lU) and denominators (lL) for a
-*               pair of line gradients, together with three vertex positions:
-*		pos[1] the position of the vertex common to both line segments,
-*		pos[0] near the other one end of the first line segment and
-*		pos[2] near the other one end of the second line segment.
-*		The cosine of the angle between the line segmants is computed.
-* \param        nL			Number of denominator values, MUST
-*					be 2.
-* \param 	lL                      Gradient denominators.
-* \param        nU			Number of numerator values, MUST be 2.
-* \param        lU                      Gradient numerators.
-*		nGPos			Number of vertex positions, MUST be 3.
-* \param        gPos                    Vertex positions.
-* \param        dstConincident          Destination pointer, set non zero
-*                                       if verticies are coincident.
-*/
-double   WlzGeomAngleBetweenLines(int nL, double *lL,
-				  int nU, double *lU,
-				  int nGPos, WlzDVertex2 *gPos,
-				  int *dstConincident)
-{
-  int           idN;
-  double        tD0,
-                tD1,
-                tD2,
-                tD3,
-                cosAng = 0.0;
-  WlzDVertex2   cPos,
-                tPos;
-  WlzDVertex2   pos[2];
-
-  if((nL == 2) && lL && (nU == 2) && lU && (nGPos == 3) && gPos)
-  {
-    cPos = *(gPos + 1);
-    for(idN = 0; idN < 2; ++idN)
-    {
-      tPos = *(gPos + (idN * 2));
-      if((lU[idN] * lU[idN]) > (lL[idN] * lL[idN]))
-      {
-	pos[idN].vtX = ((lL[idN] / lU[idN]) * (tPos.vtY - cPos.vtY)) +
-		       cPos.vtX;
-	pos[idN].vtY = tPos.vtY;
-      }
-      else
-      {
-	pos[idN].vtX = tPos.vtX;
-	pos[idN].vtY = ((lU[idN] / lL[idN]) * (tPos.vtX - cPos.vtX)) +
-	               cPos.vtY;
-      }
-    }
-    WLZ_VTX_2_SUB(tPos, pos[0], cPos);
-    tD0 = WLZ_VTX_2_SQRLEN(tPos);
-    WLZ_VTX_2_SUB(tPos, pos[1], cPos);
-    tD1 = WLZ_VTX_2_SQRLEN(tPos);
-    WLZ_VTX_2_SUB(tPos, pos[0], pos[1]);
-    tD2 = WLZ_VTX_2_SQRLEN(tPos);
-    if(((tD0 * tD0) < DBL_EPSILON) ||
-	((tD1 * tD1) < DBL_EPSILON) ||
-	((tD2 * tD2) < DBL_EPSILON))
-    {
-      *dstConincident = 1;
-    }
-    else
-    {
-      *dstConincident = 0;
-      tD3 = tD0 * tD1;
-      tD3 = 2.0 * sqrt(tD3);
-      cosAng = (tD0 + tD1 - tD2) / tD3;
-    }
-  }
-  return(cosAng);
-}
-

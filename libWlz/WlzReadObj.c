@@ -2406,7 +2406,6 @@ static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
 {
   WlzObjectType cType;
   WlzContour	*ctr = NULL;
-  WlzGMModel	*model = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
 
@@ -2464,7 +2463,6 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
   int		bufI[3];
   void		*bufVG = NULL;
   WlzGMModelType mType;
-  WlzGMElemP	eP;
   WlzGMModel	*model = NULL;
   WlzIVertex2	tIV2;
   WlzIVertex3	tIV3;

@@ -1794,14 +1794,6 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Check there are verticies! */
-    if((model->res.vertex.numElm < 0) || (model->res.edge.numElm < 0))
-    {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
     /* Output model type and file encoding method, followed by the number of
      * verticies and the number of simplicies. Currently the file encoding
      * method is just output as '0', but in future new encoding methods

@@ -538,8 +538,7 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
   int		idN,
   		idX,
   		idY,
-		idZ,
-		plane0;
+		idZ;
   WlzDVertex2	vtx2;
   WlzDVertex3	vtx3;
   WlzGreyP	gPtr[8];
@@ -570,7 +569,6 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
       break;
     case WLZ_3D_DOMAINOBJ:
       idN = 0;
-      plane0 = plane;
       for(idZ = 0; idZ < 2; ++idZ)
       {
 	for(idY = 0; idY < 2; ++idY)

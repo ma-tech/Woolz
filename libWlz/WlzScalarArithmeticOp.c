@@ -222,26 +222,26 @@ WlzObject *WlzScalarAdd(
   WlzPixelV	pval,
   WlzErrorNum	*dstErr)
 {
-  return WlzScalarBinaryOp2(o1, pval, WLZ_ADD, dstErr);
+  return WlzScalarBinaryOp2(o1, pval, WLZ_BO_ADD, dstErr);
 }
 WlzObject *WlzScalarSubtract(
   WlzObject	*o1,
   WlzPixelV	pval,
   WlzErrorNum	*dstErr)
 {
-  return WlzScalarBinaryOp2(o1, pval, WLZ_SUBTRACT, dstErr);
+  return WlzScalarBinaryOp2(o1, pval, WLZ_BO_SUBTRACT, dstErr);
 }
 WlzObject *WlzScalarMultiply(
   WlzObject	*o1,
   WlzPixelV	pval,
   WlzErrorNum	*dstErr)
 {
-  return WlzScalarBinaryOp2(o1, pval, WLZ_MULTIPLY, dstErr);
+  return WlzScalarBinaryOp2(o1, pval, WLZ_BO_MULTIPLY, dstErr);
 }
 WlzObject *WlzScalarDivide(
   WlzObject	*o1,
   WlzPixelV	pval,
   WlzErrorNum	*dstErr)
 {
-  return WlzScalarBinaryOp2(o1, pval, WLZ_DIVIDE, dstErr);
+  return WlzScalarBinaryOp2(o1, pval, WLZ_BO_DIVIDE, dstErr);
 }

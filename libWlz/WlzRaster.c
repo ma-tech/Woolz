@@ -116,7 +116,6 @@ static WlzObject *WlzRasterCtr(WlzContour *ctr,
 {
   WlzObject	*dObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzIBox3	bBox3;
 
   if(ctr->model == NULL)
   {
@@ -249,7 +248,7 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
   				sizeof(char))) == NULL) ||
      (AlcBit3Calloc(&dAry, sz.vtZ, sz.vtY, sz.vtX) != ALC_ER_NONE))
   {
-    errNum == WLZ_ERR_MEM_ALLOC;
+    errNum = WLZ_ERR_MEM_ALLOC;
   }
   if(errNum == WLZ_ERR_NONE)
   {

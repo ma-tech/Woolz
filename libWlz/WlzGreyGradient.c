@@ -526,7 +526,7 @@ static WlzObject *WlzGreyGradient2D(WlzObject **dstGrdY, WlzObject **dstGrdX,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstObj = WlzImageArithmetic(grdY, grdX, WLZ_MAGNITUDE, 0, &errNum);
+    dstObj = WlzImageArithmetic(grdY, grdX, WLZ_BO_MAGNITUDE, 0, &errNum);
   }
   if(dstGrdX && (errNum == WLZ_ERR_NONE))
   {

@@ -1502,15 +1502,6 @@ extern int			WlzGeomPlaneLineIntersect(
 				  WlzDVertex3 p0,
 				  WlzDVertex3 p1,
 				  WlzDVertex3 *dstIsn);
-extern double   		WlzGeomAngleBetweenLines(
-				  int sizeArrayL,
-				  double *arrayL,
-				  int sizeArrayU,
-				  double *arrayU,
-				  int sizeArrayPos,
-				  WlzDVertex2 *arrayPos,
-				  int *dstConincident);
-
 
 /************************************************************************
 * WlzGreyCrossing.c							*

@@ -403,6 +403,8 @@ WlzErrorNum WlzLabel(WlzObject	*obj,
 	  link1 = link1->l_link;
 	  ofl = (int) link1->l_u.line;
 	  link1 = alprec->l_u.u_link;
+	  mkl = 0; /* Just to keep lint happy. */
+	  mxkl = 0; /* Just to keep lint happy. */
 	  nints = 0;
 	  for (jjj=ofl; jjj<=oll; jjj++) {
 	    link1 = link1->l_link;

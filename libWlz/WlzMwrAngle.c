@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzMwrangle.c
+* \file         WlzMwrAngle.c
 * \author       Jim Piper.
 * \date         Fri Feb  8 13:12:02 2002
 * \version      MRC HGU $Id$
