@@ -54,10 +54,12 @@ static void		WlzGMModelMatchEdgeTG2D(
 static double		WlzGMVertexShellDist2(
 			  WlzGMVertex *v0,
 			  WlzGMVertex *v1,
+			  double maxDist,
 			  WlzErrorNum *dstErr);
 static double		WlzGMVertexShellDist2CommonLT(
 			  WlzGMVertexT *gVT0,
-			  WlzGMVertexT *gVt1);
+			  WlzGMVertexT *gVt1,
+			  double maxDist);
 static WlzErrorNum 	WlzGMModelDeleteE3D(
 			  WlzGMModel *model,
 			  WlzGMEdge *dE);
@@ -76,6 +78,12 @@ static WlzErrorNum 	WlzGMModelDeleteE2D2V1L(
 static WlzErrorNum 	WlzGMModelDeleteE2D2V2L(
 			  WlzGMModel *model,
 			  WlzGMEdge *dE);
+static WlzErrorNum 	WlzGMModelConstructS2(
+			  WlzGMModel *cM,
+			  WlzGMShell *gS);
+static WlzErrorNum 	WlzGMModelConstructS3(
+			  WlzGMModel *cM,
+			  WlzGMShell *gS);
 static WlzErrorNum      WlzGMModelConstructNewS3D(
                           WlzGMModel *model,
 			  WlzGMFace **dstNF,
@@ -784,6 +792,40 @@ WlzGMVertexT      *WlzGMModelNewVT(WlzGMModel *model, WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(vertexT);
+}
+
+/*!
+* \return	New model.
+* \ingroup      WlzGeoModel
+* \brief	Creates a new model from the given shell. The new model
+*		contains a copy of the given shell.
+* \param	gS			Given shell.
+* \param	dstErr			Destination error pointer, may
+*					be null.
+*/
+WlzGMModel	*WlzGMModelNewFromS(WlzGMShell *gS, WlzErrorNum *dstErr)
+{
+  WlzGMModel	*gM,
+  		*nM = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((gS == NULL) || ((gM = gS->parent) == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nM = WlzGMModelNew(gM->type, 0, 0, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGMModelConstructS(nM, gS);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nM);
 }
 
 /*!
@@ -4702,11 +4744,12 @@ WlzGMVertex	*WlzGMModelMatchVertexG2D(WlzGMModel *model, WlzDVertex2 gPos)
 *		in different shells.
 * \param	v0			First vertex.
 * \param	v1			Second vertex.
+* \param	maxDist			Maximum search distance.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
 double		WlzGMVertexShellDist(WlzGMVertex *v0, WlzGMVertex *v1,
-				     WlzErrorNum *dstErr)
+				     double maxDist, WlzErrorNum *dstErr)
 {
   int 		dim;
   double	dist = -1.0;
@@ -4725,7 +4768,7 @@ double		WlzGMVertexShellDist(WlzGMVertex *v0, WlzGMVertex *v1,
       switch(dim)
       {
         case 2:
-	  dist = WlzGMVertexShellDist2(v0, v1, &errNum);
+	  dist = WlzGMVertexShellDist2(v0, v1, maxDist, &errNum);
 	  break;
 	default:
 	  errNum = WLZ_ERR_UNIMPLEMENTED;
@@ -4749,11 +4792,12 @@ double		WlzGMVertexShellDist(WlzGMVertex *v0, WlzGMVertex *v1,
 *		model.
 * \param	v0			First vertex.
 * \param	v1			Second vertex.
+* \param	maxDist			Maximum search distance.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
 static double	WlzGMVertexShellDist2(WlzGMVertex *v0, WlzGMVertex *v1,
-				      WlzErrorNum *dstErr)
+				      double maxDist, WlzErrorNum *dstErr)
 {
   double	dist = DBL_MAX;
   WlzGMVertexT	*vT0,
@@ -4785,7 +4829,7 @@ static double	WlzGMVertexShellDist2(WlzGMVertex *v0, WlzGMVertex *v1,
   } while((vT0 != fVT0) && (lT0 != lT1));
   if(lT0 == lT1)
   {
-    dist = WlzGMVertexShellDist2CommonLT(vT0, vT1);
+    dist = WlzGMVertexShellDist2CommonLT(vT0, vT1, maxDist);
   }
   else
   {
@@ -4810,10 +4854,14 @@ static double	WlzGMVertexShellDist2(WlzGMVertex *v0, WlzGMVertex *v1,
 *		loop topology element a 2D model.
 * \param	gVT0			First vertex topology element.
 * \param	gVT1			Second vertex topology element.
+* \param	maxDist			Maximum search distance.
 */
 static double	WlzGMVertexShellDist2CommonLT(WlzGMVertexT *gVT0,
-					      WlzGMVertexT *gVT1)
+					      WlzGMVertexT *gVT1,
+					      double maxDist)
 {
+  int		maxN = 0,
+  		maxP = 0;
   double	dist = 0.0,
   		distN = 0.0,
   		distP = 0.0;
@@ -4834,20 +4882,28 @@ static double	WlzGMVertexShellDist2CommonLT(WlzGMVertexT *gVT0,
     posP[1] = posN[1];
     do
     {
-      posN[0] = posN[1];
-      posP[0] = posP[1];
-      eTN = eTN->next;
-      eTP = eTP->prev;
-      vTN = eTN->vertexT;
-      vTP = eTP->vertexT;
-      (void )WlzGMVertexGetG2D(vTN->diskT->vertex, posN + 1);
-      (void )WlzGMVertexGetG2D(vTP->diskT->vertex, posP + 1);
-      WLZ_VTX_2_SUB(diff, posN[0], posN[1]);
-      distN += WLZ_VTX_2_LENGTH(diff);
-      WLZ_VTX_2_SUB(diff, posP[0], posP[1]);
-      distP += WLZ_VTX_2_LENGTH(diff);
-    } while((vTN != gVT1) && (vTP != gVT1));
-    dist = (vTN == gVT1)? distN: distP;
+      if(maxN == 0)
+      {
+	posN[0] = posN[1];
+	eTN = eTN->next;
+	vTN = eTN->vertexT;
+	(void )WlzGMVertexGetG2D(vTN->diskT->vertex, posN + 1);
+	WLZ_VTX_2_SUB(diff, posN[0], posN[1]);
+	distN += WLZ_VTX_2_LENGTH(diff);
+	maxN = distN >= maxDist;
+      }
+      if(maxP == 0)
+      {
+	posP[0] = posP[1];
+	eTP = eTP->prev;
+	vTP = eTP->vertexT;
+	(void )WlzGMVertexGetG2D(vTP->diskT->vertex, posP + 1);
+	WLZ_VTX_2_SUB(diff, posP[0], posP[1]);
+	distP += WLZ_VTX_2_LENGTH(diff);
+	maxP = distP >= maxDist;
+      }
+    } while((vTN != gVT1) && (vTP != gVT1) && ((maxN == 0) || (maxP == 0)));
+    dist = (distN > distP)? distP: distN;
   }
   return(dist);
 }
@@ -6570,6 +6626,123 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 }
 
 /* Model construction */
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a copy of the given shell in the current
+*		model. The curent model must be of the same type as
+*		the parent of the given shell and all the usual
+*		construction restrictions apply, see
+*		WlzGMModelConstructSimplex2D().
+* \param	cM			Current model.
+* \param	gS			Given shell.
+*/
+WlzErrorNum	WlzGMModelConstructS(WlzGMModel *cM, WlzGMShell *gS)
+{
+  int		dim;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((cM == NULL) || (gS == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dim = WlzGMModelGetDimension(gS->parent, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(cM->type != gS->parent->type)
+    {
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(dim == 2)
+    {
+      errNum = WlzGMModelConstructS2(cM, gS);
+    }
+    else /* dim == 3 */
+    {
+      errNum = WlzGMModelConstructS3(cM, gS);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a copy of the given shell in the current
+*		2 dimensional model. All parameters known to be valid.
+* \param	cM			Current model.
+* \param	gS			Given shell.
+*/
+static WlzErrorNum WlzGMModelConstructS2(WlzGMModel *cM, WlzGMShell *gS)
+{
+  WlzGMVertex	*tV;
+  WlzGMEdgeT	*fET,
+  		*tET;
+  WlzGMLoopT	*fLT,
+  		*tLT;
+  WlzDVertex2	pos[2],
+  		nrm[2];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gS->child)
+  {
+    tLT = fLT = gS->child;
+    do
+    {
+      tET = fET = tLT->edgeT;
+      tV = tET->vertexT->diskT->vertex;
+      if(cM->type == WLZ_GMMOD_2N)
+      {
+	(void )WlzGMVertexGetG2N(tV, pos + 1, nrm + 1);
+      }
+      else
+      {
+        (void )WlzGMVertexGetG2D(tV, pos + 1);
+      }
+      do
+      {
+        tET = tET->next;
+	tV = tET->vertexT->diskT->vertex;
+	pos[0] = pos[1];
+	if(cM->type == WLZ_GMMOD_2N)
+	{
+	  nrm[0] = nrm[1];
+	  (void )WlzGMVertexGetG2N(tV, pos + 1, nrm + 1);
+	  errNum = WlzGMModelConstructSimplex2N(cM, pos, nrm);
+	}
+	else
+	{
+	  (void )WlzGMVertexGetG2D(tV, pos + 1);
+	  errNum = WlzGMModelConstructSimplex2D(cM, pos);
+	}
+      } while ((errNum == WLZ_ERR_NONE) && (tET != fET));
+      tLT = tLT->next;
+    } while ((errNum == WLZ_ERR_NONE) && (tLT != fLT));
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzGeoModel
+* \brief	Constructs a copy of the given shell in the current
+*		3 dimensional model. All parameters known to be valid.
+* \param	cM			Current model.
+* \param	gS			Given shell.
+*/
+static WlzErrorNum WlzGMModelConstructS3(WlzGMModel *cM, WlzGMShell *gS)
+{
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  return(errNum);
+}
 
 /*!
 * \return				Woolz error code.
@@ -9069,7 +9242,8 @@ static WlzErrorNum WlzGMModelJoinL2D(WlzGMModel *model,
 * \ingroup      WlzGeoModel
 * \brief	Constructs a 2D simplex (edge) defined by two double
 *               precision end points. Either of the two points may
-*               already exist within the model.
+*               already exist within the model and the simplex must
+*		not intersect any existing simplex in the model.
 *               See WlzGMShellMatchVtxG2D() for the meaning of the
 *               backwards, forwards and distance search parameters.
 * \param	model			The model to add the segment to.
@@ -9090,7 +9264,9 @@ WlzErrorNum	WlzGMModelConstructSimplex2D(WlzGMModel *model,
 * \ingroup      WlzGeoModel
 * \brief	Constructs a 2D simplex (edge) defined by two double
 *               precision end points with normal components. Either
-*		of the two points may already exist within the model.
+*		of the two points may already exist within the model
+*		and the simplex must not intersect any existing simplex
+*		in the model.
 *               See WlzGMShellMatchVtxG2D() for the meaning of the
 *               backwards, forwards and distance search parameters.
 * \param	model			The model to add the segment to.
