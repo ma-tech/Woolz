@@ -39,6 +39,7 @@ int             main(int argc, char **argv)
   		ok = 1,
 		usage = 0,
 		flip = 0,
+		nrm = 0,
 		nItr = 10,
 		nonMan = 0,
 		unitVoxelSz = 0,
@@ -62,7 +63,7 @@ int             main(int argc, char **argv)
   const double	filterDPB = 0.25,
   		filterDSB = 0.10;
   const char	*errMsgStr;
-  static char	optList[] = "bghilFNUo:p:s:n:v:w:";
+  static char	optList[] = "bghilmFNUo:p:s:n:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -90,6 +91,9 @@ int             main(int argc, char **argv)
 	break;
       case 'l':
         flip = 1;
+	break;
+      case 'm':
+        nrm = 1;
 	break;
       case 'o':
         outFileStr = optarg;
@@ -197,7 +201,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    ctrDom.ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, &errNum);
+    ctrDom.ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, nrm, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -311,9 +315,10 @@ int             main(int argc, char **argv)
       "  -F  Use geometry filter.\n"
       "  -N  Allow non manifold vertices to be filtered.\n"
       "  -U  Use unit voxel size.\n"
+      "  -m  Generate normals (if possible).\n"
+      "  -n  Geometry filter itterations.\n"
       "  -p  Geometry filter low band value.\n"
       "  -s  Geometry filter stop band value.\n"
-      "  -n  Geometry filter itterations.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
       "Computes a contour object from the given Woolz object and saves it\n"
