@@ -32,6 +32,7 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
+			WlzAffineTransformDiff \
 			WlzAffineTransformLSq \
 			WlzAffineTransformVertices \
 			WlzAffineTransformObj \
@@ -45,6 +46,7 @@ EXECUTABLES		= \
 			WlzCentreOfMass \
 			WlzChangeEMAPProperty \
 			WlzClipObjToBox \
+			WlzClosestVertices \
 			WlzCompThresh \
 			WlzCompound \
 			WlzConstruct3D \
@@ -124,6 +126,7 @@ EXECUTABLES		= \
 			WlzShadeCorrect \
 			WlzShiftObj \
 			WlzSkeleton \
+			WlzSnapFitObjs \
 			WlzSobel \
 			WlzStripProperties \
 			WlzStructDilation \
@@ -146,6 +149,7 @@ EXECUTABLES		= \
 CSOURCES		= \
 			Wlz3DWarpMQ.c \
 			MADomainTest.c \
+			WlzAffineTransformDiff.c \
 			WlzAffineTransformLSq.c \
 			WlzAffineTransformVertices.c \
 			WlzAffineTransformObj.c \
@@ -159,6 +163,7 @@ CSOURCES		= \
 			WlzCentreOfMass.c \
 			WlzChangeEMAPProperty.c \
 			WlzClipObjToBox.c \
+			WlzClosestVertices.c \
 			WlzCompound.c \
 			WlzCompThresh.c \
 			WlzConstruct3D.c \
@@ -240,6 +245,7 @@ CSOURCES		= \
 			WlzShadeCorrect.c \
 			WlzShiftObj.c \
 			WlzSkeleton.c \
+			WlzSnapFitObjs.c \
 			WlzSobel.c \
 			WlzStripProperties.c \
 			WlzStructDilation.c \
