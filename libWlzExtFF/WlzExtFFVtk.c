@@ -13,6 +13,7 @@
 *		and from the VTK '.vtk' data format.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 02-05-01 bill	Add 2D line segment output in WlzEffWriteGMModelVtk().
 * 10-01-01 bill Add WlzEffHeadReadVtk(), WlzEffReadCtrVtk(),
 *		WlzEffReadGMVtk() nad WlzEffReadImgVtk().
 * 16-08-00 bill	Add WlzEffWriteCtrVtk() and WlzEffWriteGMModelVtk().
@@ -270,7 +271,8 @@ static WlzErrorNum WlzEffWriteCtrVtk(FILE *fP, WlzContour *ctr)
 static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 {
 
-  int		idI,
+  int		dim,
+  		idI,
   		iCnt;
   int		bufI[3];
   AlcVector	*vec;
@@ -291,8 +293,11 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D: /* FALLTHROUGH */
+        dim = 2;
+	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
       case WLZ_GMMOD_3D:
+	dim = 3;
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -341,12 +346,32 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Output the vertex indicies of the simplicies. */
+    /* Output the vertex indicies of the simplicies in the order that they
+     * are found in the model resouces. */
     switch(model->type)
     {
       case WLZ_GMMOD_2I:
       case WLZ_GMMOD_2D:
-	/* TODO Not sure how to output a 2D model for VTK. */
+	(void )fprintf(fP,
+		        "LINES %d %d\n",
+			model->res.edge.numElm, 3 * model->res.edge.numElm);
+	idI = 0;
+	vec = model->res.edge.vec;
+	iCnt = model->res.edge.numIdx;
+	while(iCnt-- > 0)
+	{
+	  eP.edge = (WlzGMEdge *)AlcVectorItemGet(vec, idI++);
+	  if(eP.edge->idx >= 0)
+	  {
+	    tET = eP.edge->edgeT;
+	    bufI[0] = *(resIdxTb->vertex.idxLut +
+	    		tET->vertexT->diskT->vertex->idx);
+	    bufI[1] = *(resIdxTb->vertex.idxLut +
+	    		tET->opp->vertexT->diskT->vertex->idx);
+	    (void )fprintf(fP, "2 %d %d\n",
+	    		   bufI[0], bufI[1]);
+	  }
+	}
         break;
       case WLZ_GMMOD_3I:
       case WLZ_GMMOD_3D:
@@ -356,7 +381,7 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 	idI = 0;
 	vec = model->res.loop.vec;
 	iCnt = model->res.loop.numIdx;
-	while((errNum == WLZ_ERR_NONE) && (iCnt-- > 0))
+	while(iCnt-- > 0)
 	{
 	  eP.loop = (WlzGMLoop *)AlcVectorItemGet(vec, idI++);
 	  if(eP.loop->idx >= 0)
