@@ -62,7 +62,7 @@ static WlzErrorNum 		WlzObjFactsProperty(
 static WlzErrorNum		WlzObjFactsPropList(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
-				  AlcDLPList *pList);
+				  WlzPropertyList *pList);
 static WlzErrorNum		WlzObjFactsPlaneDom(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
@@ -345,7 +345,7 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = WlzObjFactsPropList(fData, obj, objCA->p);
+	    errNum = WlzObjFactsPropList(fData, obj, objCA->plist);
 	  }
 	  break;
 	case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
@@ -871,12 +871,12 @@ static WlzErrorNum WlzObjFactsProperty(WlzObjFactsData *fData,
 */
 static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
 				       WlzObject *obj,
-				       AlcDLPList *pList)
+				       WlzPropertyList *pList)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   ++(fData->indent);
-  if(pList == NULL)
+  if((pList == NULL) || (pList->list == NULL))
   {
     (void )WlzObjFactsAppend(fData, "Property list NULL.\n");
   }
@@ -884,7 +884,7 @@ static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
   {
     AlcDLPItem	*item;
     (void )WlzObjFactsAppend(fData, "Property list:\n");
-    item = pList->head;
+    item = pList->list->head;
     do {
       WlzProperty	property;
       if( item ){
@@ -894,7 +894,7 @@ static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
 	}
 	item = item->next;
       }
-    } while( item != pList->head );
+    } while(item != pList->list->head);
   }
   --(fData->indent);
   return(errNum);

@@ -226,20 +226,20 @@ int main(int	argc,
     case WLZ_PROPERTY_OBJ:
       /* get the EMAP property, if absent add one */
       if( obj->plist == NULL ){
-	obj->plist = AlcDLPListNew(NULL);
+	obj->plist = WlzMakePropertyList(NULL);
       }
       if( obj->plist ){
-	property = WlzGetProperty(obj->plist, WLZ_PROPERTY_EMAP, NULL);
+	property = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_EMAP, NULL);
 	if( property.core == NULL ){
 	  property.emap = WlzMakeEMAPProperty(WLZ_EMAP_PROPERTY_GREY_MODEL,
 					      1, NULL, NULL, NULL, NULL, NULL);
 	  WlzAssignProperty(property, NULL);
-	  AlcDLPListEntryAppend(obj->plist, NULL, (void *) property.emap,
+	  AlcDLPListEntryAppend(obj->plist->list, NULL, (void *) property.emap,
 				WlzFreePropertyListEntry);
 	}
       }
       if( removeFlg ){
-	WlzRemoveProperty(obj->plist, property);
+	WlzRemoveProperty(obj->plist->list, property);
       }
       else {
 	if( !emapTypeFlg ){

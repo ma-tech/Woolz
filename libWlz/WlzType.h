@@ -271,16 +271,21 @@ typedef enum _WlzObjectType
   WLZ_RECTANGLE_DOMAIN_FLOAT	= 2,	/*!< Floating point rectangle
   					     domain. */
   /**********************************************************************
+  * 3D view structure types.					
+  **********************************************************************/
+  WLZ_3D_VIEW_STRUCT		= 160,	/*!< 3D view structure. */
+  /**********************************************************************
   * Property list types.					
+  **********************************************************************/
+  WLZ_PROPERTYLIST		= 170,	/*! A property list which contains
+  					    a linked list of properties. */
+  /**********************************************************************
+  * Property types.					
   **********************************************************************/
   WLZ_PROPERTY_SIMPLE		= 180,	/*!< Simple property. */
   WLZ_PROPERTY_EMAP		= 181,	/*!< EMAP property. */
   WLZ_PROPERTY_NAME		= 182,	/*!< Ascii name property. */
   WLZ_PROPERTY_GREY		= 183,	/*!< Grey value property. */
-  /**********************************************************************
-  * 3D view structure types.					
-  **********************************************************************/
-  WLZ_3D_VIEW_STRUCT		= 160,	/*!< 3D view structure. */
   /**********************************************************************
   * WLZ_DUMMY_ENTRY is not an object type.			
   * Keep it the last enumerator!				
@@ -1647,6 +1652,19 @@ typedef union _WlzDomain
 } WlzDomain;
 
 /*!
+* \struct	_WlzPropertyList
+* \ingroup	WlzProperty
+* \brief	A property list which has a type, link count and a
+*		linked list of properties.
+*/
+typedef struct	_WlzPropertyList
+{
+  WlzObjectType	type;
+  int		linkcount;
+  AlcDLPList	*list;
+} WlzPropertyList;
+
+/*!
 * \struct	_WlzCoreProperty
 * \ingroup	WlzProperty
 * \brief	Core property with sufficient to data to provide the type
@@ -1814,8 +1832,8 @@ typedef struct _WlzObject
   					     geometric properties. */
   WlzValues          values;		/*! The values defined within
   					    the object's domain. */
-  AlcDLPList	     *plist;		/*! A linked list of properties
-  					    of the object. */
+  WlzPropertyList    *plist;		/*! A list of the object's
+  					    properties. */
   struct _WlzObject  *assoc;		/*! An object which is
   					    assosciated with this object. */
 } WlzObject;
@@ -1840,8 +1858,8 @@ typedef struct _WlzCompoundArray
   					     (array length). */
   WlzObject     **o;			/*!< The list of Woolz object
   					     pointers. */
-  AlcDLPList    *p;			/*!< A linked list of properties of
-  					     the object. */
+  WlzPropertyList *plist;		/*! A list of the object's
+  					    properties.  */
   WlzObject     *assoc;
 } WlzCompoundArray;
 
@@ -2990,7 +3008,8 @@ typedef struct _Wlz3DWarpTrans
   int 		iteration;		/*!< Current iteration. */
   int 		currentplane;		/*!< Current plane. */
   float 	maxdisp;		/*!< Maximum displacement. */
-  AlcDLPList    *plist;			/*!< Property list. */
+  WlzPropertyList *plist;		/*!< A list of the object's
+  					     properties. */
   WlzObject 	*assoc;			/*!< Associated object. */
 } Wlz3DWarpTrans;
 

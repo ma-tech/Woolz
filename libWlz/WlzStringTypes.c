@@ -649,7 +649,7 @@ WlzEMAPPropertyType WlzStringToEMAPPropertyType(const char *pStr,
 					WlzErrorNum *dstErr)
 {
   int		tI0;
-  WlzObjectType	pType = WLZ_EMAP_PROPERTY_DUMMY;
+  WlzEMAPPropertyType	pType = WLZ_EMAP_PROPERTY_DUMMY;
   WlzErrorNum	errNum = WLZ_ERR_PROPERTY_TYPE;
 
   if(WlzStringMatchValue(&tI0, pStr,

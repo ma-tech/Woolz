@@ -232,7 +232,7 @@ WlzObject *
 WlzMakeMain(WlzObjectType 	type,
 	    WlzDomain 		domain,
 	    WlzValues 		values,
-	    AlcDLPList	 	*plist,
+	    WlzPropertyList 	*plist,
 	    WlzObject 		*assoc,
 	    WlzErrorNum 	*dstErr)
 {
@@ -897,7 +897,7 @@ WlzObject *WlzMakeRect(int 			line1,
 		       WlzGreyType		pixeltype,
 		       int 			*grey_values,
 		       WlzPixelV		backgrnd,
-		       AlcDLPList		*plist,
+		       WlzPropertyList		*plist,
 		       WlzObject		*assoc_obj,
 		       WlzErrorNum		*dstErr)
 {

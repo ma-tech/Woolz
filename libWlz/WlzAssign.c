@@ -140,8 +140,8 @@ WlzValues 	WlzAssignValues(WlzValues values, WlzErrorNum	*dstErr)
 }
 
 /*!
-* \return	Given property list with incremented linkcount or NULL on
-* 		error.
+* \return	Given property with incremented linkcount or the core
+*		property set to NULL on error.
 * \ingroup	WlzAllocation
 * \brief	Assign a property by incrementing it's linkcount.
 * \param	property		Given property.
@@ -178,46 +178,29 @@ WlzProperty WlzAssignProperty(WlzProperty property, WlzErrorNum *dstErr)
   return rtnProp;
 }
 
-AlcDLPList *WlzAssignPropertyList(
-  AlcDLPList	*plist,
-  WlzErrorNum *dstErr)
+/*!
+* \return	Property list with incremented link count or NULL on error.
+* \brief	Assigned a Woolz property list, incrementing the link count
+		or the number of times the property list is used.
+* \param	plist			Given property list.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPropertyList *WlzAssignPropertyList(WlzPropertyList *pList,
+				       WlzErrorNum *dstErr)
 {
-  AlcDLPList	*rtnList=NULL;
-  AlcErrno	alcErrNum;
+  WlzPropertyList *rtnPList = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcDLPItem	*item, *newItem;
-  WlzProperty	property;
-  
-  if( plist ){
-    /* TODO Need to use a proper property list data structure with a
-     * linkcount. This leaks memeory! */
-    rtnList = AlcDLPListNew(&alcErrNum);
-    if( alcErrNum == ALC_ER_NONE ){
-      item = plist->head;
-      do {
-	if( item ){
-	  if( property.core = (WlzCoreProperty *) item->entry ){
-	    (void) WlzAssignProperty(property, &errNum);
-	    switch(property.core->type){
-	    case WLZ_PROPERTY_SIMPLE:
-	    case WLZ_PROPERTY_EMAP:
-	    case WLZ_PROPERTY_NAME:
-	    case WLZ_PROPERTY_GREY:
-	      alcErrNum = AlcDLPListEntryAppend(rtnList, NULL,
-						(void *) property.core,
-						WlzFreePropertyListEntry);
-	      break;
 
-	    default:
-	      break;
-	    }
-	  }
-	  item = item->next;
-	}
-      } while( (alcErrNum == ALC_ER_NONE) && (item != plist->head) );
+  if(pList)
+  {
+    if(pList->linkcount < 0)
+    {
+      errNum = WLZ_ERR_LINKCOUNT_DATA;
     }
-    if( alcErrNum != ALC_ER_NONE ){
-      errNum = WLZ_ERR_MEM_ALLOC;
+    else
+    {
+      rtnPList = pList;
+      pList->linkcount++;
     }
   }
 #ifdef WLZ_NO_NULL
@@ -226,15 +209,12 @@ AlcDLPList *WlzAssignPropertyList(
     errNum = WLZ_ERR_PROPERTY_NULL;
   }
 #endif /* WLZ_NO_NULL */
-
-
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return rtnList;
+  return(rtnPList);
 }
-
 
 /*!
 * \return	Given affine transform with incremented linkcount or NULL on

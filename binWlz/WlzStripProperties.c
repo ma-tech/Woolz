@@ -101,9 +101,9 @@ int main(int	argc,
 
     case WLZ_COMPOUND_ARR_1:
     case WLZ_COMPOUND_ARR_2:
-      if( ((WlzCompoundArray *) obj)->p ){
-	WlzFreePropertyList(((WlzCompoundArray *) obj)->p);
-	((WlzCompoundArray *) obj)->p = NULL;
+      if(((WlzCompoundArray *)obj)->plist){
+	WlzFreePropertyList(((WlzCompoundArray *)obj)->plist);
+	((WlzCompoundArray *)obj)->plist = NULL;
       }
       break;
 

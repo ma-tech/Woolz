@@ -34,7 +34,7 @@ static WlzErrorNum   	WlzWritePlaneDomain(
 		    	  WlzPlaneDomain *planedm);
 static WlzErrorNum	WlzWritePropertyList(
 			  FILE *fp,
-			  AlcDLPList *plist);
+			  WlzPropertyList *pList);
 static WlzErrorNum	WlzWriteProperty(
 			  FILE *fp,
 			  WlzProperty property);
@@ -1008,45 +1008,49 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
 * \ingroup	WlzIO
 * \brief	Writes a property list to the given file.
 * \param	fp			Given file.
-* \param	plist			Property list.
+* \param	pList			Property list.
 */
-static WlzErrorNum WlzWritePropertyList(
-  FILE *fp,
-  AlcDLPList	*plist)
+static WlzErrorNum WlzWritePropertyList(FILE *fp, WlzPropertyList *pList)
 {
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
   AlcDLPItem	*item;
   WlzProperty	property;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((plist == NULL) || (AlcDLPListCount(plist, NULL) < 1)){
+  if((pList == NULL) || (pList->list == NULL) ||
+     (AlcDLPListCount(pList->list, NULL) < 1))
+   {
     if(putc(0,fp) == EOF)
     {
       errNum = WLZ_ERR_WRITE_EOF;
     }
   } 
-  else {
-    if((putc(2,fp) == EOF) ||
-       !putword(AlcDLPListCount(plist, NULL), fp))
+  else
+  {
+    if((putc(2,fp) == EOF) || !putword(AlcDLPListCount(pList->list, NULL), fp))
     {
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
-    else {
-      item = plist->head;
-      do {
-	if( item ){
-	  if( item->entry != NULL ){
-	    property.core = (WlzCoreProperty *) item->entry;
+    else
+    {
+      item = pList->list->head;
+      do
+      {
+	if(item)
+	{
+	  if(item->entry != NULL)
+	  {
+	    property.core = (WlzCoreProperty *)(item->entry);
 	    errNum = WlzWriteProperty(fp, property);
 	  }
-	  else {
+	  else
+	  {
 	    putc(0,fp);
 	  }
 	  item = item->next;
 	}
-      } while((errNum == WLZ_ERR_NONE) && (item != plist->head));
+      } while((errNum == WLZ_ERR_NONE) && (item != pList->list->head));
     }
   }
-
   return errNum;
 }
 
@@ -1743,7 +1747,7 @@ static WlzErrorNum WlzWriteCompoundA(FILE *fp, WlzCompoundArray *c)
   }
   if( errNum == WLZ_ERR_NONE )
   {
-    errNum = WlzWritePropertyList(fp, c->p);
+    errNum = WlzWritePropertyList(fp, c->plist);
   }
   return(errNum);
 }

@@ -41,7 +41,7 @@ static WlzErrorNum		WlzReadVoxelValues(
 static WlzProperty	 	WlzReadProperty(
 				  FILE *fp,
 				  WlzErrorNum *);
-static AlcDLPList	 	*WlzReadPropertyList(
+static WlzPropertyList	 	*WlzReadPropertyList(
 				  FILE *fp,
 				  WlzErrorNum *);
 static WlzPolygonDomain 	*WlzReadPolygon(
@@ -1763,6 +1763,7 @@ static WlzProperty WlzReadProperty(
     if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
     {
       rtnProp.name = WlzMakeNameProperty(name, &errNum);
+      AlcFree(name);
     }
     break;
   case WLZ_PROPERTY_GREY:
@@ -1772,10 +1773,7 @@ static WlzProperty WlzReadProperty(
       {
 	rtnProp.greyV = WlzMakeGreyProperty(name, pV, &errNum);
       }
-      else
-      {
-        AlcFree(name);
-      }
+      AlcFree(name);
     }
     break;
   }
@@ -1793,108 +1791,105 @@ static WlzProperty WlzReadProperty(
 * \param	fp			input file.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static AlcDLPList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
+static WlzPropertyList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
 {
-  WlzObjectType		type;
-  AlcDLPList		*pl=NULL;
-  WlzProperty		property;
-  int 			si, numProps=0;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
-  AlcErrno	alcErrNum=ALC_ER_NONE;
+  int 		pSz,
+  		numProps = 0;
+  WlzObjectType	type;
+  WlzProperty	prop;
+  WlzPropertyList *pList = NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  /* find number of properties */
+  /* Find number of properties */
   type = getc(fp);
-  switch( type ){
-
-  case (WlzObjectType) EOF:
-    errNum = WLZ_ERR_READ_INCOMPLETE;
-    break;
-
-  case WLZ_NULL:
-    errNum = WLZ_ERR_EOO;
-    break;
-
-  case (WlzObjectType) 1: /* for backward compatibility this
-			     corresponds to the old format
-			     for a simple property so convert
-			     here to a property list */
-    /* read size  - old format had a funny size definition */
-    si = getword(fp) - sizeof(int);
-    if( feof(fp) != 0 || si < 0 ){
+  switch(type)
+  {
+    case (WlzObjectType )EOF:
       errNum = WLZ_ERR_READ_INCOMPLETE;
       break;
-    }
-
-    /* create property with space for the data */
-    if( (property.simple = WlzMakeSimpleProperty(si, &errNum)) == NULL ){
+    case WLZ_NULL:
+      errNum = WLZ_ERR_EOO;
       break;
-    }
-
-    /* The size is now correct for the amount of data */
-    if( si > 0 ){  
-      fread(property.simple->prop, si, 1, fp);
-    }
-    if( feof(fp) != 0 ){
-      WlzFreeSimpleProperty( property.simple );
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-
-    /* create a property list of the new sort and return */
-    pl = AlcDLPListNew(&alcErrNum);
-    if( alcErrNum == ALC_ER_NONE ){
-      alcErrNum = AlcDLPListEntryAppend(pl, NULL,
-				    (void *) property.core,
-				    WlzFreePropertyListEntry);
-    }
-    if( alcErrNum != ALC_ER_NONE ){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      if( pl ){
-	AlcFree((void *) pl);
-	pl = NULL;
+    case (WlzObjectType )1:
+      /* For backward compatibility this corresponds to the old format
+       * for a simple property so convert here to a property list. */
+      /* Read size: Old format had a funny size definition. */
+      pSz = getword(fp) - sizeof(int);
+      if((feof(fp) != 0) || (pSz < 0))
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
       }
-    }
-    if( dstErr ){
-      *dstErr = errNum;
-    }
-    return NULL;
-
-  case (WlzObjectType) 2:
-    numProps = getword(fp);
-    if( feof(fp) != 0 || numProps < 0 ){
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    break;
-
-  default:
-    errNum = WLZ_ERR_PROPERTY_TYPE;
-    break;
+      /* Create property with space for the data */
+      if((prop.simple = WlzMakeSimpleProperty(pSz, &errNum)) != NULL)
+      {
+	/* The size is now correct for the amount of data */
+	if(pSz > 0)
+	{  
+	  (void )fread(prop.simple->prop, pSz, 1, fp);
+	}
+	if(feof(fp) != 0)
+	{
+	  WlzFreeSimpleProperty(prop.simple);
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  prop.core = NULL;
+	}
+      }
+      /* Create a list with the simple property as it's only item. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	(void )WlzAssignProperty(prop, NULL);
+	if(((pList = WlzMakePropertyList(NULL)) == NULL) ||
+	    (AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
+				   WlzFreePropertyListEntry) != ALC_ER_NONE))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	  (void )WlzFreePropertyList(pList);
+	  pList = NULL;
+	}
+      }
+      break;
+    case (WlzObjectType )2:
+      /* The new style property list. */
+      numProps = getword(fp);
+      if((feof(fp) != 0) || (numProps < 0))
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      /* Make a property list without any items. */
+      if((errNum == WLZ_ERR_NONE) && (numProps > 0))
+      {
+	if((pList = WlzMakePropertyList(NULL)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      /* Now read each property in turn and append it to the list. */
+      while((errNum == WLZ_ERR_NONE) && (numProps-- > 0))
+      {
+	prop = WlzReadProperty(fp, &errNum);
+	if(prop.core)
+	{
+	  (void )WlzAssignProperty(prop, NULL);
+	  if(AlcDLPListEntryAppend(pList->list, NULL, (void *)prop.core,
+				   WlzFreePropertyListEntry) != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	    (void )WlzFreePropertyList(pList);
+	    pList = NULL;
+	  }
+	}
+      }
+      break;
+    default:
+      errNum = WLZ_ERR_PROPERTY_TYPE;
+      break;
   }
-
-  /* now read each property */
-  if((errNum == WLZ_ERR_NONE) && (numProps > 0)){
-    pl = AlcDLPListNew(&alcErrNum);
-    while((alcErrNum == ALC_ER_NONE) && (numProps > 0) ){
-      property = WlzReadProperty(fp, &errNum);
-      if( property.core ){
-	alcErrNum = AlcDLPListEntryAppend(pl, NULL,
-				      (void *) property.core,
-				      WlzFreePropertyListEntry);
-      }
-      numProps--;
-    }
-    if( alcErrNum != ALC_ER_NONE ){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      if( pl ){
-	AlcFree((void *) pl);
-	pl = NULL;
-      }
-    }
-  }
-
-  if( dstErr ){
+  if(dstErr)
+  {
     *dstErr = errNum;
   }
-  return pl;
+  return(pList);
 }
 
 /*!
@@ -2313,7 +2308,7 @@ static WlzObject *WlzReadCompoundA(FILE			*fp,
       c->o[i] = WlzAssignObject(WlzReadObj(fp, &errNum), NULL);
     }
     if( errNum == WLZ_ERR_NONE ){
-      c->p = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL), NULL);
+      c->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL), NULL);
     }
     else {
       WlzFreeObj((WlzObject *) c);

@@ -168,10 +168,10 @@ int             main(int argc, char **argv)
       {
 	if(useProps && obj->plist)
 	{
-	  prop = WlzGetProperty(obj->plist, WLZ_PROPERTY_NAME, NULL);
+	  prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_NAME, NULL);
 	  if(prop.core == NULL)
 	  {
-	    prop = WlzGetProperty(obj->plist, WLZ_PROPERTY_GREY, NULL);
+	    prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_GREY, NULL);
 	  }
 	  if(prop.core)
 	  {

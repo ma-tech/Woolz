@@ -124,7 +124,7 @@ static WlzCompoundArray 	*WlzEffAmSplitLabelObj(
 				  WlzObject *gObj,
 				  WlzEffAmHead *head,
 				  WlzErrorNum *dstErr);
-static AlcDLPList 		*WlzEffAmMakeMaterialPropList(
+static WlzPropertyList 		*WlzEffAmMakeMaterialPropList(
 				  WlzEffAmMaterial *mat,
 				  WlzErrorNum *dstErr);
 
@@ -1476,7 +1476,7 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
 		*tObj2,
 		*tObj3;
   WlzEffAmMaterial *mat;
-  AlcDLPList	*pList = NULL;
+  WlzPropertyList *pList = NULL;
   WlzCompoundArray *aObj = NULL;
   WlzValues	dValues;
   WlzErrorNum errNum = WLZ_ERR_NONE;
@@ -1549,14 +1549,14 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
 * \param	dstErr			Destination pointer for error number,
 *					may be NULL.
 */
-static AlcDLPList *WlzEffAmMakeMaterialPropList(WlzEffAmMaterial *mat,
+static WlzPropertyList *WlzEffAmMakeMaterialPropList(WlzEffAmMaterial *mat,
 					WlzErrorNum *dstErr)
 {
   int		idx;
   unsigned int	tI0;
   WlzProperty	prop;
   WlzPixelV	pix;
-  AlcDLPList	*pList = NULL;
+  WlzPropertyList *pList = NULL;
   WlzErrorNum errNum = WLZ_ERR_NONE;
 
   pix.v.rgbv = 0;
@@ -1576,7 +1576,7 @@ static AlcDLPList *WlzEffAmMakeMaterialPropList(WlzEffAmMaterial *mat,
     }
     pix.v.rgbv |= tI0 << idx;
   }
-  if((pList = AlcDLPListNew(NULL)) == NULL)
+  if((pList = WlzMakePropertyList(NULL)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
@@ -1586,7 +1586,7 @@ static AlcDLPList *WlzEffAmMakeMaterialPropList(WlzEffAmMaterial *mat,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(AlcDLPListEntryAppend(pList, NULL, (void *)(prop.core),
+    if(AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
 			     WlzFreePropertyListEntry) != ALC_ER_NONE)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -1599,7 +1599,7 @@ static AlcDLPList *WlzEffAmMakeMaterialPropList(WlzEffAmMaterial *mat,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(AlcDLPListEntryAppend(pList, NULL, (void *)(prop.core),
+    if(AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
 			     WlzFreePropertyListEntry) != ALC_ER_NONE)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -1607,7 +1607,7 @@ static AlcDLPList *WlzEffAmMakeMaterialPropList(WlzEffAmMaterial *mat,
   }
   if((errNum != WLZ_ERR_NONE) && pList)
   {
-    (void )AlcDLPListFree(pList);
+    (void )WlzFreePropertyList(pList);
     pList = NULL;
   }
   if(dstErr)

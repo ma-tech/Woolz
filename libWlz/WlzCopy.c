@@ -42,7 +42,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
   WlzDomain	dom;
   WlzValues	val;
   WlzObject	*outObj = NULL;
-  AlcDLPList    *pLst = NULL;
+  WlzPropertyList *pLst = NULL;
 
   dom.core = NULL;
   val.core = NULL;
@@ -431,23 +431,32 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 * \return	Copied property list.
 * \ingroup	WlzAllocation
 * \brief	Copies the given property list.
+*
+*		A new property list is created with a zero link count
+*		and a linked list for the properties. Each property of
+*		given list is then copied and assigned to the new list.
+*		The order of the properties in the new list is the same
+*		as that in the given list, although a property that
+*		occurs more than once in the given list will have many
+*		copies created.
 * \param	gList			Given property list.
 * \param	dstErr			Destination error pointer, may
 *					be NULL.
 */
-AlcDLPList	*WlzCopyPropertyList(AlcDLPList *gList, WlzErrorNum *dstErr)
+WlzPropertyList	*WlzCopyPropertyList(WlzPropertyList *gList,
+					WlzErrorNum *dstErr)
 {
-  AlcDLPList	*nList = NULL;
+  WlzPropertyList *nList = NULL;
   AlcDLPItem	*gItem;
   WlzProperty	gProp,
   		nProp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((nList = AlcDLPListNew(NULL)) == NULL)
+  if((nList = WlzMakePropertyList(NULL)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
-  else if((gItem = gList->head) != NULL)
+  else if((gItem = gList->list->head) != NULL)
   {
     do
     {
@@ -484,16 +493,19 @@ AlcDLPList	*WlzCopyPropertyList(AlcDLPList *gList, WlzErrorNum *dstErr)
 	    break;
 	}
       }
-      if((errNum == WLZ_ERR_NONE) &&
-         (AlcDLPListEntryAppend(nList, NULL, (void *)(nProp.core),
-	 			WlzFreePropertyListEntry) != ALC_ER_NONE))
+      if(errNum == WLZ_ERR_NONE)
       {
-        errNum = WLZ_ERR_MEM_ALLOC;
+	(void )WlzAssignProperty(nProp, NULL);
+	if(AlcDLPListEntryAppend(nList->list, NULL, (void *)(nProp.core),
+	 			 WlzFreePropertyListEntry) != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	gItem = gItem->next;
       }
-      gItem = gItem->next;
-    } while((errNum == WLZ_ERR_NONE) && (gItem != gList->head));
+    } while((errNum == WLZ_ERR_NONE) && (gItem != gList->list->head));
   }
-  if((errNum != WLZ_ERR_NONE) && nList)
+  if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzFreePropertyList(nList);
     nList = NULL;

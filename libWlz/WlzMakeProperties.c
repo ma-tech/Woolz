@@ -30,46 +30,75 @@
 
 #include <Wlz.h>
 
-/* function:     WlzMakeSimpleProperty    */
-/*! 
-* \ingroup      WlzProperty
-* \brief        Allocate space for a WlzSimpleProperty which is a
-structure with size bytes allocated for data.
-*
-* \return       WlzSimpleProperty *
-* \param    size	Size of space allocated for the property.
-* \param    dstErr	error return values: WLZ_ERR_NONE, WLZ_ERR_MEM_ALLOC.
-* \par      Source:
-*                WlzMakeProperties.c
+/*!
+* \return	New property list.
+* \ingroup	WlzProperty
+* \brief	Makes a new property list with a zero link count and a
+*		linked list that has no items.
+* \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzSimpleProperty *
-WlzMakeSimpleProperty(int size, WlzErrorNum *dstErr)
+WlzPropertyList	*WlzMakePropertyList(WlzErrorNum *dstErr)
 {
-  WlzSimpleProperty	*p=NULL;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzPropertyList *pList = NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( (p = (WlzSimpleProperty *)
-       AlcCalloc(1,sizeof(WlzSimpleProperty))) == NULL ){
+  if((pList = (WlzPropertyList *)
+  	      AlcCalloc(1, sizeof(WlzPropertyList))) == NULL)
+  {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
-  else {
+  else
+  {
+    pList->type = WLZ_PROPERTYLIST;
+    if((pList->list = AlcDLPListNew(NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+      AlcFree(pList);
+      pList = NULL;
+    }
+  }
+  return(pList);
+}
+
+/*! 
+* \return       New simple property.
+* \ingroup      WlzProperty
+* \brief        Allocate space for a WlzSimpleProperty which is a
+*		structure with size bytes allocated for data.
+* \param    	size			Size of space allocated for the
+*					property.
+* \param    	dstErr			Destination error pointer, may be NULL.
+*/
+WlzSimpleProperty *WlzMakeSimpleProperty(int size, WlzErrorNum *dstErr)
+{
+  WlzSimpleProperty *p = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((p = (WlzSimpleProperty *)
+       	  AlcCalloc(1,sizeof(WlzSimpleProperty))) == NULL )
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
     p->type = WLZ_PROPERTY_SIMPLE;
     p->linkcount = 0;
     p->size = size;
-
-    if( (p->prop = AlcMalloc(size)) == NULL ){
-      AlcFree( p );
+    if((p->prop = AlcMalloc(size)) == NULL)
+    {
+      AlcFree(p);
       errNum = WLZ_ERR_MEM_ALLOC;
     }
-    else {
+    else
+    {
       p->freeptr = AlcFreeStackPush(p->freeptr, p->prop, NULL);
     }
   }
-
-  if( dstErr ){
+  if(dstErr)
+  {
     *dstErr = errNum;
   }
-  return( p );
+  return(p);
 }
 
 
@@ -597,28 +626,27 @@ WlzErrorNum WlzFreeProperty(WlzProperty prop)
 }
 
 
-/* function:     WlzFreePropertyList    */
 /*! 
+* \return       Woolz error code.
 * \ingroup      WlzProperty
 * \brief        Free a complete property list (including the list
-structure itself).
-*
-* \return       woolz error values: WLZ_ERR_NONE, WLZ_ERR_PARAM_NULL.
-* \param    plist	Property list to be freed
-* \par      Source:
-*                WlzMakeProperties.c
+*		structure itself).
+* \param    	pList			Property list to be freed.
 */
-WlzErrorNum WlzFreePropertyList(
-  AlcDLPList	*plist)
+WlzErrorNum 	WlzFreePropertyList(WlzPropertyList *pList)
 {
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
   AlcDLPItem	item;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if( plist ){
-    AlcDLPListFree(plist);
+  if(pList)
+  {
+    if((WlzUnlink(&(pList->linkcount), &errNum)) && pList->list)
+    {
+      (void )AlcDLPListFree(pList->list);
+      AlcFree(pList);
+    }
   }
-
-  return errNum;
+  return(errNum);
 }
 
 
@@ -626,10 +654,9 @@ WlzErrorNum WlzFreePropertyList(
 /*! 
 * \ingroup      WlzProperty
 * \brief        Free a property list entry. This is a procedure that
-can be passed e.g. to AlcDLPListEntryAppend to enable automatic freeing of
-properties held on a property list.
-*
-* \param    prop	property to be freed
+*		can be passed e.g. to AlcDLPListEntryAppend to enable
+*		automatic freeing of properties held on a property list.
+* \param    	prop			Property to be freed.
 * \par      Source:
 *                WlzMakeProperties.c
 */
@@ -648,9 +675,8 @@ void WlzFreePropertyListEntry(void *prop)
     if( core->freeptr != NULL ){
       alcErrNum = AlcFreeStackFree(core->freeptr);
     }
-    AlcFree( (void *) prop );
+    AlcFree((void *)prop);
   }
 
   return;
 }
-

@@ -743,8 +743,8 @@ extern WlzValues 		WlzAssignValues(
 extern WlzProperty		WlzAssignProperty(
 				  WlzProperty property,
 				  WlzErrorNum *dstErr );
-extern AlcDLPList               *WlzAssignPropertyList(
-                                  AlcDLPList	*plist,
+extern WlzPropertyList          *WlzAssignPropertyList(
+                                  WlzPropertyList *plist,
                                   WlzErrorNum *dstErr);
 extern WlzAffineTransform	*WlzAssignAffineTransform(
 				  WlzAffineTransform *,
@@ -981,8 +981,8 @@ extern WlzValues		WlzCopyValues(
 				  WlzValues inVal,
 				  WlzDomain inDom,
 				  WlzErrorNum *dstErr);
-extern AlcDLPList		*WlzCopyPropertyList(
-				  AlcDLPList *gList,
+extern WlzPropertyList		*WlzCopyPropertyList(
+				  WlzPropertyList *gList,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -2027,6 +2027,8 @@ extern WlzIntervalValues 	*WlzMakeIntervalValues(
 /************************************************************************
 * WlzMakeProperties.c							*
 ************************************************************************/
+extern WlzPropertyList		*WlzMakePropertyList(
+				  WlzErrorNum *dstErr);
 extern WlzSimpleProperty	*WlzMakeSimpleProperty(
 				  int size,
 				  WlzErrorNum *dstErr);
@@ -2058,7 +2060,7 @@ extern WlzErrorNum              WlzChangeEMAPProperty(
 extern WlzErrorNum		WlzFreeEMAPProperty(
 				  WlzEMAPProperty *prop);
 extern WlzErrorNum		WlzFreeProperty(WlzProperty prop);
-extern WlzErrorNum		WlzFreePropertyList(AlcDLPList	*plist);
+extern WlzErrorNum		WlzFreePropertyList(WlzPropertyList *plist);
 extern void			WlzFreePropertyListEntry(void *prop);
 extern WlzProperty 		WlzGetProperty(
                                   AlcDLPList		*plist,
@@ -2084,7 +2086,7 @@ extern WlzObject 		*WlzMakeMain(
 				  WlzObjectType type,
 				  WlzDomain domain,
 				  WlzValues values,
-				  AlcDLPList *prop,
+				  WlzPropertyList *prop,
 				  WlzObject *assoc,
 				  WlzErrorNum *dstErr);
 extern WlzIntervalDomain	*WlzMakeIntervalDomain(
@@ -2147,7 +2149,7 @@ extern WlzObject		*WlzMakeRect(
 				  WlzGreyType pixeltype,
 				  int *greyptr,
 				  WlzPixelV bckgrnd,
-				  AlcDLPList *plist,
+				  WlzPropertyList *plist,
 				  WlzObject *assoc_obj,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzMakeEmpty(
