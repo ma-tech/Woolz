@@ -1,26 +1,27 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzAffineTransformLSq.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes an affine transform from a list of verticies
+/*!
+* \file         WlzAffineTransformLSq.c
+* \author       Bill Hill
+* \date         June 2004
+* \version      $Id$
+* \note
+*               Copyright
+*               2004 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Computes an affine transform from a list of vertices
 *		and vertex displacements in the 2D format
 *		  <vtx x> <vtx y> <delta x> <delta y>
 *		or the 3D format
 *		  <vtx x> <vtx y> <vtx z> <delta x> <delta y> <delta z>
 *		Comment lines start with a '#' character.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 13-12-00 bill Change members of WlzVertex and WlzVertexP.
-* 30-11-00 bill Make changes for 3D least squares affine transforms
-*		and add test code.
-************************************************************************/
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -31,16 +32,15 @@
 * \enum		_WlzAffineTransLSqAlg
 * \brief 	Encodes the selected algorithm.
 */
-enum _WlzAffineTransLSqAlg
+typedef enum _WlzAffineTransLSqAlg
 {
-  WLZ_AFFINETRANSLSQ_ALG_WLZ,	/*!< Woolz algorithms for 2D */
-  WLZ_AFFINETRANSLSQ_ALG_SVD,	/*!< Arun's singular value decomposition
-  				 *   algorithm for 3D verticies */
-  WLZ_AFFINETRANSLSQ_ALG_DQ     /*!< Walker's dual quaternion algorithm for
-  				 *   2D or 3D verticies with optional normal
-				 *   vectors and weights */
-};
-typedef enum _WlzAffineTransLSqAlg WlzAffineTransLSqAlg;
+  WLZ_AFFINETRANSLSQ_ALG_DEFAULT,	/*!< Algorithm default. */
+  WLZ_AFFINETRANSLSQ_ALG_WLZ,	 	/*!< Woolz algorithm for 2D */
+  WLZ_AFFINETRANSLSQ_ALG_DQ     	/*!< Walker's dual quaternion
+  					 *   algorithm 2D or 3D rigid body
+					 *   with optional normal vectors
+					 *   and weights */
+} WlzAffineTransLSqAlg;
 
 #define IN_RECORD_MAX	(1024)
 
@@ -60,8 +60,8 @@ int             main(int argc, char **argv)
       		inR,
 		inC,
 		iVtx = 0,
-      		nVtx = 0,
-      		nNrm = 0,
+      		nV = 0,
+      		nN = 0,
 		vtxSz,
 		testFlg = 0,
 		testVtxCount;
@@ -72,17 +72,17 @@ int             main(int argc, char **argv)
   WlzObject	*trObj = NULL;
   WlzDomain	trDomain;
   WlzValues	trValues;
-  WlzVertexP	vtx0,
-  		vtx1,
-		nrm0,
-		nrm1;
+  WlzVertexP	vS,
+  		vT,
+		nS,
+		nT;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzTransformType trType = WLZ_TRANSFORM_2D_AFFINE;
-  WlzAffineTransLSqAlg alg = WLZ_AFFINETRANSLSQ_ALG_WLZ;
+  WlzAffineTransLSqAlg alg = WLZ_AFFINETRANSLSQ_ALG_DEFAULT;
   FILE		*fP = NULL;
-  char 		*outObjFileStr,
-  		*inFileStr,
-		*wgtFileStr;
+  char 		*outObjFileStr = NULL,
+  		*inFileStr = NULL,
+		*wgtFileStr = NULL;
   const char	*errMsg;
   static char	optList[] = "A:o:w:23Tanrth",
 		outObjFileStrDef[] = "-",
@@ -107,8 +107,8 @@ int             main(int argc, char **argv)
   };
 
   opterr = 0;
-  vtx0.v = vtx1.v = NULL;
-  nrm0.v = nrm1.v = NULL;
+  vS.v = vT.v = NULL;
+  nS.v = nT.v = NULL;
   trDomain.core = NULL;
   trValues.core = NULL;
   outObjFileStr = outObjFileStrDef;
@@ -126,7 +126,6 @@ int             main(int argc, char **argv)
       case 'A':
 	if(WlzStringMatchValue((int *)&alg, optarg,
 			       "WLZ", WLZ_AFFINETRANSLSQ_ALG_WLZ,
-			       "SVD", WLZ_AFFINETRANSLSQ_ALG_SVD,
 			       "DQ",  WLZ_AFFINETRANSLSQ_ALG_DQ,
 			       NULL) == 0)
 	{
@@ -206,10 +205,6 @@ int             main(int argc, char **argv)
 	  trType = WLZ_TRANSFORM_3D_TRANS;
 	  break;
       }
-      if(alg == WLZ_AFFINETRANSLSQ_ALG_WLZ)
-      {
-        alg = WLZ_AFFINETRANSLSQ_ALG_SVD;
-      }
     }
   }
   if(ok)
@@ -231,9 +226,9 @@ int             main(int argc, char **argv)
   {
     if(testFlg)
     {
-      nVtx = testVtxCount;
-      if(((vtx0.v = AlcMalloc(nVtx * vtxSz)) == NULL) ||
-	 ((vtx1.v = AlcMalloc(nVtx * vtxSz)) == NULL))
+      nV = testVtxCount;
+      if(((vS.v = AlcMalloc(nV * vtxSz)) == NULL) ||
+	 ((vT.v = AlcMalloc(nV * vtxSz)) == NULL))
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
@@ -253,26 +248,26 @@ int             main(int argc, char **argv)
       {
 	if(vtxType == WLZ_VERTEX_D2)
 	{
-	  (void )memcpy(vtx0.v, testVx2D, nVtx * vtxSz);
+	  (void )memcpy(vS.v, testVx2D, nV * vtxSz);
 	  iVtx = 0;
-	  while((errNum == WLZ_ERR_NONE) && (iVtx < nVtx))
+	  while((errNum == WLZ_ERR_NONE) && (iVtx < nV))
 	  {
-	    *(vtx1.d2 + iVtx) = WlzAffineTransformVertexD2(
+	    *(vT.d2 + iVtx) = WlzAffineTransformVertexD2(
 	    					trObj->domain.t,
-						*(vtx0.d2 + iVtx),
+						*(vS.d2 + iVtx),
 						&errNum);
 	    ++iVtx;
 	  }
 	}
 	else /* vtxType == WLZ_VERTEX_D2 */
 	{
-	  (void )memcpy(vtx0.v, testVx3D, nVtx * vtxSz);
+	  (void )memcpy(vS.v, testVx3D, nV * vtxSz);
 	  iVtx = 0;
-	  while((errNum == WLZ_ERR_NONE) && (iVtx < nVtx))
+	  while((errNum == WLZ_ERR_NONE) && (iVtx < nV))
 	  {
-	    *(vtx1.d3 + iVtx) = WlzAffineTransformVertexD3(
+	    *(vT.d3 + iVtx) = WlzAffineTransformVertexD3(
 	    					trObj->domain.t,
-						*(vtx0.d3 + iVtx),
+						*(vS.d3 + iVtx),
 						&errNum);
 	    ++iVtx;
 	  }
@@ -334,32 +329,32 @@ int             main(int argc, char **argv)
       }
       if(ok)
       {
-	nVtx = inR;
-	if(((vtx0.v = AlcMalloc(nVtx * vtxSz)) == NULL) ||
-	   ((vtx1.v = AlcMalloc(nVtx * vtxSz)) == NULL))
+	nV = inR;
+	if(((vS.v = AlcMalloc(nV * vtxSz)) == NULL) ||
+	   ((vT.v = AlcMalloc(nV * vtxSz)) == NULL))
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
 	if(vtxType == WLZ_VERTEX_D2)
 	{
-	  for(iVtx = 0; iVtx < nVtx; ++iVtx)
+	  for(iVtx = 0; iVtx < nV; ++iVtx)
 	  {
-	    (vtx0.d2 + iVtx)->vtX = inData[iVtx][0];
-	    (vtx0.d2 + iVtx)->vtY = inData[iVtx][1];
-	    (vtx1.d2 + iVtx)->vtX = inData[iVtx][0] + inData[iVtx][2];
-	    (vtx1.d2 + iVtx)->vtY = inData[iVtx][1] + inData[iVtx][3];
+	    (vS.d2 + iVtx)->vtX = inData[iVtx][0];
+	    (vS.d2 + iVtx)->vtY = inData[iVtx][1];
+	    (vT.d2 + iVtx)->vtX = inData[iVtx][0] + inData[iVtx][2];
+	    (vT.d2 + iVtx)->vtY = inData[iVtx][1] + inData[iVtx][3];
 	  }
 	}
 	else
 	{
-	  for(iVtx = 0; iVtx < nVtx; ++iVtx)
+	  for(iVtx = 0; iVtx < nV; ++iVtx)
 	  {
-	    (vtx0.d3 + iVtx)->vtX = inData[iVtx][0];
-	    (vtx0.d3 + iVtx)->vtY = inData[iVtx][1];
-	    (vtx0.d3 + iVtx)->vtZ = inData[iVtx][2];
-	    (vtx1.d3 + iVtx)->vtX = inData[iVtx][0] + inData[iVtx][3];
-	    (vtx1.d3 + iVtx)->vtY = inData[iVtx][1] + inData[iVtx][4];
-	    (vtx1.d3 + iVtx)->vtZ = inData[iVtx][2] + inData[iVtx][5];
+	    (vS.d3 + iVtx)->vtX = inData[iVtx][0];
+	    (vS.d3 + iVtx)->vtY = inData[iVtx][1];
+	    (vS.d3 + iVtx)->vtZ = inData[iVtx][2];
+	    (vT.d3 + iVtx)->vtX = inData[iVtx][0] + inData[iVtx][3];
+	    (vT.d3 + iVtx)->vtY = inData[iVtx][1] + inData[iVtx][4];
+	    (vT.d3 + iVtx)->vtZ = inData[iVtx][2] + inData[iVtx][5];
 	  }
 	}
       }
@@ -383,7 +378,7 @@ int             main(int argc, char **argv)
 	if(ok)
 	{
 	  if((AlcDouble1ReadAsci(fP, &vWgt, &tI0) != ALC_ER_NONE) ||
-	     (tI0 < nVtx))
+	     (tI0 < nV))
 	  {
 	    ok = 0;
 	    (void )fprintf(stderr,
@@ -402,20 +397,34 @@ int             main(int argc, char **argv)
   {
     switch(alg)
     {
-      case WLZ_AFFINETRANSLSQ_ALG_WLZ: /* FALLTHROUGH */
-	trDomain.t = WlzAffineTransformLSqWgt(vtxType,
-					      nVtx, vWgt, vtx0, vtx1,
-					      trType, &errNum);
+      case WLZ_AFFINETRANSLSQ_ALG_DEFAULT:
+	trDomain.t = WlzAffineTransformLSq(vtxType,
+					   nV, vT, nV, vS, nV, vWgt,
+					   trType, &errNum);
 	break;
-      case WLZ_AFFINETRANSLSQ_ALG_SVD:
-	trDomain.t = WlzAffineTransformLSqSVD(vtxType,  nVtx, vWgt,
-					   vtx0, vtx1, trType, &errNum);
+      case WLZ_AFFINETRANSLSQ_ALG_WLZ:
+	trDomain.t = WlzAffineTransformLSqRegWlz2D(vT.d2, vS.d2, nV,
+					           &errNum);
         break;
       case WLZ_AFFINETRANSLSQ_ALG_DQ:
-	trDomain.t = WlzAffineTransformLSq2(vtxType,
-					   nVtx, vWgt, vtx0, vtx1,
-					   nNrm, nWgt, nrm0, nrm1,
-					   trType, &errNum);
+	switch(vtxType)
+	{
+	  case WLZ_VERTEX_D2:
+	    trDomain.t = WlzAffineTransformLSqDQ2D(
+	    				 nV, vWgt, vT.d2, vS.d2,
+					 nN, nWgt, nT.d2, nS.d2,
+					 &errNum);
+	    break;
+	  case WLZ_VERTEX_D3:
+	    trDomain.t = WlzAffineTransformLSqDQ3D(
+	    				 nV, vWgt, vT.d3, vS.d3,
+					 nN, nWgt, nT.d3, nS.d3,
+					 &errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_PARAM_TYPE;
+	    break;
+	}
         break;
     }
     if(errNum != WLZ_ERR_NONE)
@@ -427,13 +436,13 @@ int             main(int argc, char **argv)
 		     *argv, errMsg);
     }
   }
-  if(vtx0.v)
+  if(vS.v)
   {
-    AlcFree(vtx0.v);
+    AlcFree(vS.v);
   }
-  if(vtx1.v)
+  if(vT.v)
   {
-    AlcFree(vtx1.v);
+    AlcFree(vT.v);
   }
   if(vWgt)
   {
@@ -492,9 +501,9 @@ int             main(int argc, char **argv)
     "  -2  Compute a 2D transform, requires verticies in 2D format.\n"
     "  -3  Compute a 3D transform, requires verticies in 3D format.\n"
     "  -A  Force the algorithm selection, valid algorithms are:\n"
-    "        WLZ  Woolz algorithms for 2D.\n"
-    "        SVD  Arun's singular value decomposition algorithm for 3D.\n"
-    "        DQ   Walker's dual quaternion algorithm for 3D.\n"
+    "        WLZ  Woolz algorithm for 2D rigid body.\n"
+    "        DQ   Walker's dual quaternion algorithm for 2D and 3D\n"
+    "             rigid body.\n"
     "  -T  Test, probably only useful for debugging.\n"
     "  -o  Output transform object file name.\n"
     "  -a  Compute affine transform.\n"
