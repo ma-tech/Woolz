@@ -573,7 +573,7 @@ WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
   /* Compute least squares affine transform from the tie points. */
   if(errNum == WLZ_ERR_NONE)
   {
-    aTr = WlzAffineTransformLSq2D(nSPts, sPts, nSPts, dPts,
+    aTr = WlzAffineTransformLSq2D(nSPts, dPts, nSPts, sPts, 0, NULL,
 				  WLZ_TRANSFORM_2D_AFFINE, &errNum);
   }
   /* Compute a mesh transform for the given object. */
