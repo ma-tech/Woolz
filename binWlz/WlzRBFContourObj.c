@@ -48,7 +48,8 @@ int             main(int argc, char **argv)
   double	sAlpha = 0.1,
 		oAlpha = 2.0,
 		delta = 0.1,
-		tau = 0.1;
+		tau = 0.1,
+		samFac = 1.0;
   FILE		*fP = NULL;
   char		*inObjFileStr,
   		*outFileStr;
@@ -58,7 +59,7 @@ int             main(int argc, char **argv)
   WlzValues	dumVal;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "o:s:S:Z:f:F:a:A:d:t:hU";
+  static char	optList[] = "o:s:S:Z:f:F:a:A:d:t:M:hU";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -106,6 +107,9 @@ int             main(int argc, char **argv)
 	break;
       case 't':
         usage = sscanf(optarg, "%lg", &tau) != 1;
+	break;
+      case 'M':
+        usage = sscanf(optarg, "%lg", &samFac) != 1;
 	break;
       default:
         usage = 1;
@@ -167,7 +171,7 @@ int             main(int argc, char **argv)
   {
     ctrDom.ctr = WlzContourRBFBndObj3D(inObj, bErosion, bDilation, sDilation,
     				       sFac, oFac, sAlpha, oAlpha,
-				       delta, tau, &errNum);
+				       delta, tau, samFac, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -234,7 +238,7 @@ int             main(int argc, char **argv)
     "Usage: %s%sExample: %s%s",
     *argv,
     " [-o<output object>] [-h] [-o] [-s#] [-S#] [-Z#] [-f#] [-F#]\n"
-    "        [-a#] [-A#] [-d#] [-t#] [-U] [<input object>]\n"
+    "        [-a#] [-A#] [-d#] [-t#] [-M#] [-U] [<input object>]\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"
     "  -o  Output object file name.\n"
@@ -248,6 +252,8 @@ int             main(int argc, char **argv)
     "  -A  Interior and extrior alpha value, must be greater than zero.\n"
     "  -d  Multiorder spline delta value.\n"
     "  -t  Multiorder spline tau value.\n"
+    "  -M  Distance object sampling factor (can be used to reduce the\n"
+    "      number of surface facets.)\n"
     "  -U  Use unit voxel size.\n"
     "Computes a contour from a Woolz domain by using radial basis\n"
     "function to approximate the signed distance to the boundary of\n"

@@ -57,7 +57,8 @@ int             main(int argc, char **argv)
 		iAlpha,
 		oAlpha,
 		iDist,
-		oDist;
+		oDist,
+		samFac = 1.0;
   WlzObject 	*dObj = NULL;
   WlzBox	bBox0,
   		bBox1;
@@ -76,7 +77,7 @@ int             main(int argc, char **argv)
   		*oFileStr,
 		*outObjFileStr;
   const char    *errMsg;
-  static char	optList[] = "h23o:S:I:O:a:b:c:d:e:D:T:X:",
+  static char	optList[] = "h23o:S:I:O:a:b:c:d:e:D:M:T:X:",
 		defFileStr[] = "-";
 
   bgdV.type = WLZ_GREY_DOUBLE;
@@ -140,6 +141,12 @@ int             main(int argc, char **argv)
 	break;
       case 'D':
         if(sscanf(optarg, "%lg", &delta) != 1)
+	{
+	  usage = 1;
+	}
+	break;
+      case 'M':
+        if(sscanf(optarg, "%lg", &samFac) != 1)
 	{
 	  usage = 1;
 	}
@@ -343,7 +350,7 @@ int             main(int argc, char **argv)
 					  nSPts, sPts, sAlpha,
 					  nIPts, iPts, iDist, iAlpha,
 					  nOPts, oPts, oDist, oAlpha,
-					  delta, tau,
+					  delta, tau, samFac,
 					  &errNum);
 	WlzFreeObj(dObj);
 	break;
@@ -424,7 +431,8 @@ int             main(int argc, char **argv)
     "WlzContourFromPoints [-h] [-2] [-3] [-o<out object>]\n"
     "                     [-S<surface points file>]\n"
     "                     [-I<inside points file>] [-O<outside points file>]\n"
-    "                     [-a#] [-b#] [-c#] [-d#] [-e#] [-D#] [-T#] [-X#]\n"
+    "                     [-a#] [-b#] [-c#] [-d#] [-e#] [-D#] [-M#] [-T#]\n"
+    "                     [-X#]\n"
     "Options:\n"
     "  -h  Print this usage message.\n"
     "  -2  Points are 2D and contour is a curve in 2D.\n"
@@ -439,6 +447,8 @@ int             main(int argc, char **argv)
     "  -d  Inside points distance value.\n"
     "  -e  Outside points distance value.\n"
     "  -D  Delta multiorder spline soothing value.\n"
+    "  -M  Distance object sampling factor (can be used to reduce the\n"
+    "      number of surface facets.)\n"
     "  -T  Tau multiorder spline soothing value.\n"
     "  -X  Plane for 2D contour from 3D point sets.\n"
     "Computes a contour from three point sets: inside; outside and on a\n"
