@@ -86,6 +86,7 @@ EXECUTABLES		= \
 			WlzPolarSample \
 			WlzPolygonToObj \
 			WlzPrinicipalAngle \
+			WlzRankObj \
 			WlzRasterObj \
 			WlzRegisterICP \
 			WlzRsvFilterObj \
@@ -167,10 +168,12 @@ CSOURCES		= \
 			WlzIntersect.c \
 			WlzLabel.c \
 			WlzLaplacian.c \
+			WlzMatchICPObj.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c \
 			WlzPolygonToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRankObj.c \
 			WlzRasterObj.c \
 			WlzRegisterICP.c \
 			WlzRsvFilterObj.c \
