@@ -215,11 +215,11 @@ WlzErrorNum WlzLabel(WlzObject	*obj,
     return WLZ_ERR_INT_DATA;
 
   case WLZ_8_CONNECTED:
-    jdqt = WLZ_8_CONNECTED;
+    jdqt = 0;
     break;
 
   case WLZ_4_CONNECTED:
-    jdqt = WLZ_4_CONNECTED;
+    jdqt = 1;
     break;
 
   }
@@ -301,7 +301,7 @@ WlzErrorNum WlzLabel(WlzObject	*obj,
       rtprec = precal->a_int.iright +2 ;
 
       /* test whether last interval in preceeding line dealt with */
-      if (precal > prlast || rtcrn <= lftprc+(int) jdqt) { 
+      if (precal > prlast || rtcrn <= lftprc+(int )jdqt) { 
 	/* is interval in current line already allocated */
 	if (!alloc) { 
 	  /* start a new object and allocate this interval to it */
@@ -319,7 +319,7 @@ WlzErrorNum WlzLabel(WlzObject	*obj,
 	alloc = NULL;
       }
       else {
-	if (rtprec > lftcrn+ (int) jdqt) { 
+	if (rtprec > lftcrn+ (int )jdqt) { 
 	  /* case of overlapping intervals: */
 	  /* is intvl in current line already allocated ? */
 	  if (!alloc) { 
