@@ -56,8 +56,9 @@ EXECUTABLES		= \
 			WlzConvexPoly \
 			WlzCreateSpecialSE \
 			WlzCutObjToBox \
-			WlzDilation \
 			WlzDiffDomain \
+			WlzDilation \
+			WlzDistanceMetric \
 			WlzDomain \
 			WlzDomainFill \
 			WlzErosion \
@@ -100,6 +101,7 @@ EXECUTABLES		= \
 			WlzPolarSample \
 			WlzPolygonToObj \
 			WlzPrinicipalAngle \
+			WlzRandomAffineTransform \
 			WlzRankObj \
 			WlzRasterObj \
 			WlzRBFContourObj \
@@ -116,6 +118,7 @@ EXECUTABLES		= \
 			WlzStripProperties \
 			WlzStructDilation \
 			WlzStructErosion \
+			WlzTransformProduct \
 			WlzTransposeObj \
 			WlzTransposePlanes \
 			WlzThreshold \
@@ -156,8 +159,9 @@ CSOURCES		= \
 			WlzConvexPoly.c \
 			WlzCreateSpecialSE.c \
 			WlzCutObjToBox.c \
-			WlzDilation.c \
 			WlzDiffDomain.c \
+			WlzDilation.c \
+			WlzDistanceMetric.c \
 			WlzDomain.c \
 			WlzDomainFill.c \
 			AlgDPSearch.c \
@@ -202,6 +206,7 @@ CSOURCES		= \
 			WlzPolarSample.c \
 			WlzPolygonToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRandomAffineTransform.c \
 			WlzRankObj.c \
 			WlzRasterObj.c \
 			WlzRBFContourObj.c \
@@ -218,6 +223,7 @@ CSOURCES		= \
 			WlzStripProperties.c \
 			WlzStructDilation.c \
 			WlzStructErosion.c \
+			WlzTransformProduct.c \
 			WlzTransposeObj.c \
 			WlzTransposePlanes.c \
 			WlzThreshold.c \
