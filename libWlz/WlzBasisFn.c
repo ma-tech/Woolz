@@ -1968,7 +1968,7 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 	(AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
 #else
         (AlcDouble2Malloc(&wMx, 4, nSys) !=  ALC_ER_NONE) ||
-	((xMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+	((xMx = (double *)AlcCalloc(nSys, sizeof(double))) == NULL) ||
 #endif
 	((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
 	(AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
