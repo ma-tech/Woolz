@@ -312,7 +312,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s%s",
+    "Usage: %s%sExample: %s%s",
     *argv,
     " [-i <init tr>] [-o<out obj>] [-t] [-r]\n"
     "                      [<in obj 0>] [<in obj 1>]\n"
