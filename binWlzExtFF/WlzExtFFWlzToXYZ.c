@@ -401,7 +401,7 @@ int main(int	argc,
   vtxs[4] = vtxs[0];
   cntrItem = (ContourItem *) AlcCalloc(1, sizeof(ContourItem));
   cntrItem->poly = WlzAssignPolygonDomain(
-    WlzMakePolyDmn(WLZ_POLYGON_INT, vtxs, 5, 5, 1, &errNum), NULL);
+    WlzMakePolygonDomain(WLZ_POLYGON_INT, 5, vtxs, 5, 1, &errNum), NULL);
   cntrItem->index = -1;
   cntrList = HGUDlpListCreate(NULL);
   (void) HGUDlpListInsert(cntrList, NULL, cntrItem, freeContourItem);
