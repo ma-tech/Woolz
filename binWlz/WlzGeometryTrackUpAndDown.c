@@ -21,8 +21,8 @@
 #include <time.h>
 #include <Wlz.h>
 
-//#include <MAPaint.h>
-//#include <MAWarp.h>
+/* #include <MAPaint.h> */
+/* #include <MAWarp.h> */
 
 /* externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
@@ -63,6 +63,7 @@ int main(int	argc,
   FILE	       *outFile = NULL;   /* used to read Woolz object */
   int           i,j,k, m, l1;
   int           startShell = -10, endShell = -15, startSection = -10, endSection = -15;
+  int           startLoop  = -10, endLoop  = -15;
   int           downOrUp = 0;
   int		option;
   int           numChar, numChar1, TotalN;
@@ -76,17 +77,19 @@ int main(int	argc,
   int           sectionLength_N       = 40;
   int           subSubSectionLength_L = sectionLength_N /2;
   int           numberOfSampleP_k     =  2;
+  int           numOfTrackUpOrDown    =  5;
+  int           startTrackingFile     =  5;
   int           iloop=1, test=0;
+  double        DisForInOut = 15, DisForInOutGuid = 15;
   double	zConst                   = 0.;
   double        mass = 0.0;
+  double        minDis = 10.;
   char          under ='_';
   char          ctemp;
   char         *inFileStr, *inFileStr3, *outFileStr;
   unsigned char        **TwoDImageFilesNameList;
-  char         *StandContourFileName, *ToBeTrackedContourFileName;
   char         *ContourFilesNameList;
   char         *surfacePointFileName, *surfaceInPointFileName, *surfaceOutPointFileName;
-  char         *Wlz2DFileName;
   char         *cstr;
   const char   *errMsg;
   WlzDVertex3          *SurfacePatchPoints;
@@ -94,11 +97,10 @@ int main(int	argc,
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;  /* Use the nearest neighbour */
   WlzThreeDViewStruct *wlzViewStr, *wlzViewStr1, *wlzViewStrInter;
   AlcErrno             alcErr = ALC_ER_NONE;
-  WlzObject           *WObjS, *WObjTrack, *WObj2D;
   WlzObjectType        wtp = WLZ_3D_DOMAINOBJ;
 
   /* read the argument list and check for an input file */
-  static char	optList[] = "S:s:w:t:N:n:o:O:i:l:L:j:J:a:A:b:B:c:h",
+  static char	optList[] = "s:t:n:o:O:i:l:L:j:J:a:A:b:B:c:d:e:E:f:F:g:G:h",
 
   opterr = 0;
  
@@ -112,17 +114,43 @@ int main(int	argc,
         case 'L':
 	     ContourFilesNameList       = optarg;
 	     break;
-        case 'S':
-	     StandContourFileName       = optarg;
-	     break;
-        case 'N':
-	     ToBeTrackedContourFileName = optarg;
-	     break;
-        case 'w':
-	     Wlz2DFileName = optarg;
-	     break;
         case 't':
 	 if(sscanf(optarg, "%d", &downOrUp) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+        case 'd':
+	 if(sscanf(optarg, "%lg", &minDis) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'f':
+	 if(sscanf(optarg, "%lg", &DisForInOut) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'F':
+	 if(sscanf(optarg, "%lg", &DisForInOutGuid) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'g':
+	 if(sscanf(optarg, "%d", &numOfTrackUpOrDown) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'G':
+	 if(sscanf(optarg, "%d", &startTrackingFile) != 1)
 	     {
 	       printf("read error");
 	       exit(1);
@@ -163,16 +191,16 @@ int main(int	argc,
 	       exit(1);
 	     }
 	     break;
-        case 'o':
+       case 'o':
 	     outFileStr = optarg;
 	     break;
-        case 's':
+       case 's':
 	     surfacePointFileName = optarg;
 	     break;
-        case 'i':
+       case 'i':
 	     surfaceInPointFileName = optarg;
 	     break;
-        case 'O':
+       case 'O':
 	     surfaceOutPointFileName = optarg;
 	     break;
        case 'a':
@@ -202,6 +230,19 @@ int main(int	argc,
 	       printf("read error");
 	       exit(1);
 	     }
+       case 'e':
+	 if(sscanf(optarg, "%d", &startLoop) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
+	     break;
+       case 'E':
+	 if(sscanf(optarg, "%d", &endLoop) != 1)
+	     {
+	       printf("read error");
+	       exit(1);
+	     }
 	     break;
 	     
         default:
@@ -209,9 +250,7 @@ int main(int	argc,
       }
   }
 
-  
-  
-  // allocate memory for the file name list
+  /*  allocate memory for the file name list */
   alcErr = AlcUnchar2Calloc(&TwoDImageFilesNameList, 50, 120);
   if(alcErr != ALC_ER_NONE)
   {
@@ -230,83 +269,43 @@ int main(int	argc,
   while(!feof(inFile))
   {
         fscanf(inFile, "%s", *(TwoDImageFilesNameList + i ));
-	printf("%s\n", *(TwoDImageFilesNameList + i ) );
+	/*  printf("%s\n", *(TwoDImageFilesNameList + i ) ); */
 	i++;
   }
   fclose(inFile); 
   inFile = NULL;
   numOf2DWlzFiles = i-1;
-  printf("n of files = %d\n", numOf2DWlzFiles);
-  //exit(0);
 
 
+  if( 2 * numOfTrackUpOrDown + 1 > numOf2DWlzFiles)
+  {
+      printf("there are not enough 2D image files to track.\n");
+      exit(0);
 
-  /* Read the standard contour Wlz file */
-  //printf("Read standarded contour Wlz first\n");
-    i = 0;
-    if((inFile = fopen(StandContourFileName, "r")) == NULL )
-    {
-        printf("cannot open the standard contour Wlz file .\n");
-        exit(1);
-    }
-    
-    if( !(WObjS = WlzReadObj(inFile, &errNum) ) )
-    {
-       printf("input Woolz Object Error.\n");
-       fclose(inFile); 
-       exit(1);
-    }
-     fclose(inFile); 
-     inFile = NULL;
+  }
 
-  /* Read the contour Wlz file to be tracked */
-  //printf("Read the contour Wlz file to be tracked\n");
-    if((inFile = fopen(ToBeTrackedContourFileName, "r")) == NULL )
-    {
-        printf("cannot open the contour Wlz file to be tracked.\n");
-        exit(1);
-    }
-    
-    if( !(WObjTrack = WlzReadObj(inFile, &errNum) ) )
-    {
-       printf("input Woolz Object Error.\n");
-       fclose(inFile); 
-       exit(1);
-    }
-     fclose(inFile); 
-     inFile = NULL;
-
- 
-  /* Read the wlz file corresponding to standard contour Wlz */
-  //printf("Read the Wlz file \n");
-    if((inFile = fopen(Wlz2DFileName, "r")) == NULL )
-    {
-        printf("cannot open the  Wlz file \n");
-        exit(1);
-    }
-    
-    if( !(WObj2D = WlzReadObj(inFile, &errNum) ) )
-    {
-       printf("input Woolz Object Error.\n");
-       fclose(inFile); 
-       exit(1);
-    }
-     fclose(inFile); 
-     inFile = NULL;
-
+  if( ( startTrackingFile - numOfTrackUpOrDown >0 )  ||
+      ( startTrackingFile + numOfTrackUpOrDown) >  numOf2DWlzFiles )
+      {
+        printf("there are not enough 2D image files to track if we use the file as a start.\n");
+        exit(0);
+      }
     /* ---- output for test ---- */
+    /*
     if(test  &&  ( errNum == WLZ_ERR_NONE ) )
     {
       outPutSectionsForTest(WObjS, WObj2D, outFile, outFileStr, iloop, &errNum);
-      //outPutSectionsForTest(WObjTrack, WObj2D, outFile, outFileStr, iloop, &errNum);
      }
-
+    */
     /*---------- extract contour and track down or up  to get the surface patch ----------- */
     if( (!test)  && ( errNum == WLZ_ERR_NONE ) )
     {
-      SurfacePatchPoints = WlzGeometryTrackUpAndDown_s( WObjS,     
-                                                        WObjTrack, 
+      SurfacePatchPoints = WlzGeometryTrackUpAndDown_s(      
 							numP_in_Z,
+                                                        startTrackingFile,
+							numOfTrackUpOrDown,
+							DisForInOutGuid,
+                                                        DisForInOut,
                                                         TwoDImageFilesNameList,
                                                         numOf2DWlzFiles,
                                                         downOrUp,  
@@ -320,12 +319,10 @@ int main(int	argc,
 							endShell,
 							startSection,
 							endSection,
+							minDis,
 						       &errNum );
     }
 
-   AlcFree(WObjS);
-   AlcFree(WObj2D);
-   AlcFree(WObjTrack);
    Alc2Free( (void **)TwoDImageFilesNameList);
 
   return ( 0 );
@@ -361,7 +358,6 @@ static void usage(char *proc_str)
 	  "\t                     \n"
 	  "\t  -s        input name of a data file which used to output surface points\n"
 	  "\t                     \n"
-	  "\t  -w        input name of a Woolz file which will be used to output pictures\n"
 	  "\t  -t        input number to decide track down or up\n"
 	  "\t                     t = 0 track down(default) \n"
 	  "\t                     t = 1 track up \n"
@@ -373,12 +369,22 @@ static void usage(char *proc_str)
 	  "\t                        and their distance to the  the surface\n"
 	  "\t                                                        \n"
 	  "\t  -n        input number of pixels for z-direction of vtk contour\n"
+	  "\t  -d        input maximum distance in number of pixels allowed to be tracked \n"
+	  "\t                     default is 10                                   \n"
+	  "\t  -f        input  distance in number of pixels for in and out points \n"
+	  "\t                     default is 15  "   
+	  "\t  -F        input  distance in number of pixels for in and out points  guid\n"
+	  "\t                     default is 15  "   
+	  "\t  -g        input  number of files to tack up or down\n"
+	  "\t                     default is 5  "   
+	  "\t  -G        input  start tracking file number (counting from  0)\n"
+	  "\t                     default is 5  "   
 	  "\t  -j        input number of pixels to be sampled in the length of segmented line see J option\n"
 	  "\t                     default is 2                                   \n"
 	  "\t  -J        input length to be used to segment the line in unit of number of pixels\n"
 	  "\t                     default is 40                                   \n"
 	  "\t  -c        input length to be used to sample the data in unit of number of pixels\n"
-	  "\t                     default is 40                                   \n"
+	  "\t                     default is 30                                   \n"
 	  "\t  -l        input number of lth loop for output \n"
 	  "\t  -a        input the start shell number (not index ) for tracking\n"
 	  "\t  -A        input the end   shell number (not index ) for tracking\n"
@@ -468,7 +474,7 @@ static void  outPutSectionsForTest(
           kt = 0;
           for(jy= bBoxT.yMin; jy< bBoxT.yMax; jy++)
           {
-	      // GetGreyValue(gVWSp, 0, jy, ix, &intensity, &errNum);
+	      /*  GetGreyValue(gVWSp, 0, jy, ix, &intensity, &errNum); */
 	      intensity = 255;
 	      FillGreyValue(gVWSp, 0, jy, ix, intensity, &wErrN);
 	      
@@ -477,7 +483,7 @@ static void  outPutSectionsForTest(
 
    }
 
-  // visualize the data:
+  /*  visualize the data: */
   if( wErrN == WLZ_ERR_NONE)
   {
     iloop = 1;
@@ -510,7 +516,7 @@ static void  outPutSectionsForTest(
 		 printf("%lg    %lg\n",cET->opp->vertexT->diskT->vertex->geo.vg2D->vtx.vtX, \
 		                       cET->opp->vertexT->diskT->vertex->geo.vg2D->vtx.vtY );
 				       */
-		//if(kt%3 == iloop)
+		/* if(kt%3 == iloop) */
 		{
 		 ix = (int) cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtX;
 		 jy = (int) cET->vertexT->diskT->vertex->geo.vg2D->vtx.vtY;
