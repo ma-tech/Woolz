@@ -59,10 +59,12 @@ public class SectionViewerGUI extends JPanel {
   WSetter rollSetter = new WSetter();
   WSetter rotSetter = new WSetter();
 
+  JButton invertButton = null;
   JPanel zoomPanel = new JPanel();
 
   JPanel zoomControlPanel = new JPanel();
   JPanel spacerPanel_R = new JPanel();
+  JPanel invertPanel = new JPanel();
   JPanel basicControlPanel = new JPanel();
   JPanel pitchYawRollPanel = new JPanel();
   JPanel pitchyawControlPanel = new JPanel();
@@ -274,6 +276,8 @@ public class SectionViewerGUI extends JPanel {
     int imgH = 200;
     int fbimgH;
     int distH = 25;
+    int invertH = 20;
+    int invertW = 20;
 
     int permH;
     //......................................
@@ -501,6 +505,13 @@ public class SectionViewerGUI extends JPanel {
     zoomSetter.setValue(100);
     zoomSetter.setInc(50);
 
+    invertButton = new JButton();
+    invertButton.setPreferredSize(new Dimension(invertW, invertH));
+    invertButton.setBackground(Color.white);
+    invertButton.setForeground(Color.black);
+    invertPanel.setLayout(new BorderLayout(hgap, vgap));
+    invertPanel.add(invertButton, BorderLayout.EAST);
+
     distSetter.setBgc(new Color(255, 255, 230));
     distSetter.setLabelWidth(60);
     distSetter.setTextWidth(40);
@@ -509,13 +520,14 @@ public class SectionViewerGUI extends JPanel {
     zoomControlPanel.setLayout(new BorderLayout(hgap, vgap));
     zoomControlPanel.add(zoomSetter, BorderLayout.WEST);
     zoomControlPanel.add(spacerPanel_R, BorderLayout.CENTER);
+    zoomControlPanel.add(invertPanel, BorderLayout.EAST);
 
     basicControlPanel.setPreferredSize(new Dimension(totalW, 2*distH));
     basicControlPanel.setLayout(new BorderLayout(hgap, vgap));
     basicControlPanel.setBorder(BorderFactory.createCompoundBorder(
                  BorderFactory.createEmptyBorder(3,1,3,1),
 		             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
-    basicControlPanel.add(zoomSetter, BorderLayout.NORTH);
+    basicControlPanel.add(zoomControlPanel, BorderLayout.NORTH);
     basicControlPanel.add(distSetter, BorderLayout.SOUTH);
 
     pitchSetter.setBgc(new Color(255, 230, 230));
@@ -625,6 +637,9 @@ public class SectionViewerGUI extends JPanel {
   }
 //---------------------------------------
   public abstract class planeColChooser implements ActionListener {
+  }
+//---------------------------------------
+  public abstract class invertButtonHandler implements ActionListener {
   }
 
 } // class SectionViewer

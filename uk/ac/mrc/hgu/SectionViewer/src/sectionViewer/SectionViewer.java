@@ -70,6 +70,7 @@ public class SectionViewer
   private boolean _showUsrCntrls = false;
   private boolean _showIntersection = false;
   private boolean _openingView = false;
+  private boolean _inverted = false;
 
   fileMenuHandler handler_1 = null;
   controlMenuHandler handler_2 = null;
@@ -78,7 +79,8 @@ public class SectionViewer
   // temporarily disabled ... don't remove
   thresholdMenuHandler handler_5 = null;
   //--------------------------------------
-  public planeColChooser colourHandler = null;;
+  public planeColChooser colourHandler = null;
+  public invertButtonHandler invertHandler = null;
 
   private String SLASH = System.getProperty("file.separator");
 
@@ -142,6 +144,9 @@ public class SectionViewer
 
     colourHandler = new planeColChooser();
     secColorClt.addActionListener(colourHandler);
+
+    invertHandler = new invertButtonHandler();
+    invertButton.addActionListener(invertHandler);
 
     viewType = viewstr.substring(0, 2);
     if (viewType.equals("XY")) {
@@ -2429,6 +2434,29 @@ public class SectionViewer
         secColorClt.setBackground(c);
         updateIntersections();
       }
+    }
+  }
+
+//---------------------------------------
+  public class invertButtonHandler implements ActionListener {
+
+    public invertButtonHandler() {
+    }
+
+    public void actionPerformed(ActionEvent e) {
+       // reverses the grey-level image
+       if(!_inverted) {
+          invertButton.setBackground(Color.black);
+          invertButton.setForeground(Color.white);
+          _imgV.setInverted(true);
+       } else {
+          invertButton.setBackground(Color.white);
+          invertButton.setForeground(Color.black);
+          _imgV.setInverted(false);
+       }
+       _inverted = !_inverted;
+       _bigPanel.revalidate();
+       _bigPanel.repaint();
     }
   }
 

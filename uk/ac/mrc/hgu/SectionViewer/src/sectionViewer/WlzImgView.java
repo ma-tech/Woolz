@@ -32,6 +32,7 @@ public class WlzImgView extends Component {
    private WlzIVertex2 _aorg[] = null;
    private WlzGreyValueWSpace _gVWSp = null;
    private BufferedImage _bufImage = null;
+   private BufferedImage _invBufImage = null;
    private BufferedImage _obufImage = null;
    private BufferedImage _tbufImage = null;
    private BufferedImage _abufImage[] = null;
@@ -66,10 +67,12 @@ public class WlzImgView extends Component {
 
    private DirectColorModel _dcm = null;
    private WritableRaster _ras = null;
+   private WritableRaster _invRas = null;
    private WritableRaster _oras = null;
    private WritableRaster _tras = null;
    private WritableRaster _aras[] = null;
    private DataBuffer _dataBuf = null;
+   private DataBuffer _invDataBuf = null;
    private DataBuffer _odataBuf = null;
    private DataBuffer _tdataBuf = null;
    private DataBuffer _adataBuf[] = null;
@@ -80,6 +83,7 @@ public class WlzImgView extends Component {
    private int _nbits = 32;
    private int _masks[] = {0xff0000, 0xff00, 0xff, 0xff000000}; // (R G B alpha)
    private int _imageData[] = null;
+   private int _invImageData[] = null;
    private int _oimageData[] = null;
    private int _timageData[] = null;
    private int _aimageData[][] = null;
@@ -106,6 +110,7 @@ public class WlzImgView extends Component {
    private boolean _threshConstraint;
    private boolean _overlay;
    private boolean _showInterSecLines = false;
+   private boolean _inverted = false;
 
    private boolean _tiepoint = true;
    private Vector tps = null;
@@ -197,6 +202,7 @@ public class WlzImgView extends Component {
       //System.out.println(_dcm.toString());
 
       _imageData = new int[_bRec.width * _bRec.height];
+      _invImageData = new int[_bRec.width * _bRec.height];
       byte dstArrayDat[][][] = new byte[1][][] ;
       dstArrayDat[0] = null;
       WlzIVertex2 size = new WlzIVertex2(_bBox.xMax - _bBox.xMin + 1,
@@ -218,6 +224,10 @@ public class WlzImgView extends Component {
 	    // and set alpha (255 => opaque)
 	    _imageData[(idY * _bRec.width) + idX] =
 	       ii | (ii << 8) | (ii << 16) | (255 << 24);
+            // make the inverted data
+            ii = 255 - ii;
+            _invImageData[(idY * _bRec.width) + idX] =
+               ii | (ii << 8) | (ii << 16) | (255 << 24);
 	 } // for
       } // for
 
@@ -232,6 +242,9 @@ public class WlzImgView extends Component {
       if(_dataBuf == null) {
 	 System.out.println("_dataBuf is null");
       }
+      // make the inverted one
+      _invDataBuf = new DataBufferInt(_invImageData,
+            _bRec.width * _bRec.height);
 
       _sppsm = new SinglePixelPackedSampleModel(
 	    DataBuffer.TYPE_INT,
@@ -242,9 +255,14 @@ public class WlzImgView extends Component {
       _ras = Raster.createWritableRaster(_sppsm,
 	    _dataBuf,
 	    null);
+      // make the inverted one
+      _invRas = Raster.createWritableRaster(_sppsm,
+            _invDataBuf,
+            null);
 
       try {
 	 _bufImage = new BufferedImage(_dcm, _ras, false, null);
+	 _invBufImage = new BufferedImage(_dcm, _invRas, false, null);
       }
       catch(IllegalArgumentException e) {
 	 System.out.println(e.getMessage());
@@ -611,7 +629,11 @@ public class WlzImgView extends Component {
    public void drawGreyImage(Graphics2D g2) {
       if(_bufImage != null) {
 	 g2.translate(_xofsGL, _yofsGL);
-	 g2.drawImage(_bufImage, 0, 0, null);
+         if(_inverted) {
+            g2.drawImage(_invBufImage, 0, 0, null);
+         } else {
+            g2.drawImage(_bufImage, 0, 0, null);
+         }
 	 g2.translate(-_xofsGL, -_yofsGL);
       }
    }
@@ -854,6 +876,11 @@ public class WlzImgView extends Component {
    //-------------------------------------------------------------
    public Point getOffSet(){
      return new Point(_bBox.xMin, _bBox.yMin);
+   }
+
+   //-------------------------------------------------------------
+   protected void setInverted(boolean state) {
+      _inverted = state;
    }
 
    //-------------------------------------------------------------
