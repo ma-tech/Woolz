@@ -532,7 +532,8 @@ int             main(int argc, char **argv)
     *argv,
     " [-o<output object>] [-L] [-M] [-N] [-P] [-R]\n"
     "        [-h] [-i] [-3] [-x#] [-y#] [-z#] [-s#]"
-    "[-t#] [-T#] [-a#] [-b#] [-u#] [-v#] [-w#]\n"
+    "[-t<input transform file>] [-T<output transform file>]"
+    " [-a#] [-b#] [-u#] [-v#] [-w#]\n"
     "        [<input object>]\n" 
     "Options:\n"
     "  -2  2D transform (default).\n"
