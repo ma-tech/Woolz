@@ -24,7 +24,7 @@ DLLARCHIVE		= $(ARCHIVE:%.a=cyg%.dll)
 DLLIMPORTLIB		= $(ARCHIVE:%.a=%.dll.a)
 PROTOTYPES		= WlzProto.h
 DLLLIBDIRS		= $(DEPENDDIRS:%=-L%)
-DLLLIBDEPS		= -lWlz -lAlg -lAlc
+DLLLIBDEPS		= -lWlzExtFF -lbibfile -lWlz -lAlg -lAlc
 # DLLLIBSEXT		= -L. -lg -lm -lc
 DLLLIBSEXT		= 
 
@@ -68,7 +68,9 @@ DEPENDDIRS		= \
 			  . \
 			  ../libAlc \
 			  ../libAlg \
-			  ../libWlz
+			  ../libWlz \
+			  ../libbibfile \
+			  ../libWlzExtFF \
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -91,7 +93,7 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		=  WlzBnd Wlz Alg Alc \
+LIBRARIES		=  WlzBnd WlzExtFF bibfile Wlz Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
