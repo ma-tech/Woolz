@@ -14,9 +14,12 @@ import zoom.*;
 
 // import hguUntil.*;
 
-public class SectionViewerGUI extends JPanel {
+public class SectionViewerGUI extends JFrame {
 
   private final boolean _debug = false;
+
+  JPanel _contentPane;
+  JRootPane _rootPane;
 
   // these need to be visible outside of guiInit()
   int totalH = 500;
@@ -36,8 +39,6 @@ public class SectionViewerGUI extends JPanel {
   Font menuFont;
   Font feedbackFont;
   Font anatomyFont;
-
-  JPanel topPanel = new JPanel();
 
   JPanel titlePanel = new JPanel();
   JPanel titlePanel_1 = new JPanel();
@@ -258,6 +259,9 @@ public class SectionViewerGUI extends JPanel {
   private void guiInit() throws Exception {
 
     if(_debug) System.out.println("enter guiInit");
+
+    _contentPane = (JPanel)this.getContentPane();
+    _rootPane = this.getRootPane();
 
     // constants to define GUI shape
     int menuH;
@@ -592,22 +596,13 @@ public class SectionViewerGUI extends JPanel {
     transientPanel.setMinimumSize(new Dimension(totalW, pad));
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    topPanel.setLayout(new BorderLayout());
-    topPanel.setPreferredSize(new Dimension(totalW+pad, totalH+pad));
-    topPanel.setMinimumSize(new Dimension(totalW+pad, totalH+pad));
-    topPanel.add(permanentPanel, BorderLayout.CENTER);
-    topPanel.add(transientPanel, BorderLayout.SOUTH);
+    _contentPane.setLayout(new BorderLayout());
+    _contentPane.setPreferredSize(new Dimension(totalW+pad, totalH+pad));
+    _contentPane.setMinimumSize(new Dimension(totalW+pad, totalH+pad));
+    _contentPane.add(permanentPanel, BorderLayout.CENTER);
+    _contentPane.add(transientPanel, BorderLayout.SOUTH);
 
     //----------------------------------------------------------
-    this.setLayout(new BorderLayout());
-    this.add(topPanel, BorderLayout.CENTER);
-    this.setPreferredSize(new Dimension(totalW+pad, totalH+pad));
-    this.setBorder(BorderFactory.createCompoundBorder(
-             BorderFactory.createEmptyBorder(3,1,3,1),
-             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
-    this.setVisible(true);
-    //----------------------------------------------------------
-
     if(_debug) System.out.println("exit guiInit");
   } // guiInit()
 

@@ -101,81 +101,21 @@ public class SVParent
   }
 
 //-----------------------------------------------------
+  public SectionViewer createExternalView(String viewstr) {
+
+     SectionViewer ret = null;
+
+     ret = new SectionViewer(viewstr, this);
+
+     if(ret != null) {
+        System.out.println("made SectionViewer "+ret);
+        addView(ret);
+     }
+     return ret;
+  }
+//-----------------------------------------------------
   public void reset() {
     closeGreyLevel();
-  }
-
-//-----------------------------------------------------
-  public JFrame createExternalView(String viewStr) {
-     return createExternalView(viewStr,
-		       defViewW,
-		       defViewH,
-		       true);
-  }
-
-//-----------------------------------------------------
-  public JFrame createExternalView(String viewStr,
-                                  int W,
-				  int H,
-				  boolean visible) {
-
-    JFrame extFr = null;
-    JPanel pan1 = null;
-    SectionViewer SV = null;
-
-    pan1 = new JPanel();
-    pan1.setLayout(new BorderLayout());
-
-    extFr = new JFrame("view");
-    extFr.setContentPane(pan1);
-
-    SV = new SectionViewer(viewStr, extFr, this);
-    if(SV != null) {
-       addView(SV);
-       SV.openView();
-       pan1.add(SV, BorderLayout.CENTER);
-       extFr.pack();
-       extFr.setVisible(visible);
-    }
-
-    return extFr;
-  }
-
-//-----------------------------------------------------
-  public JInternalFrame createInternalView(String viewStr) {
-     return createInternalView(viewStr,
-		       defViewW,
-		       defViewH,
-		       true);
-  }
-
-//-----------------------------------------------------
-  public JInternalFrame createInternalView(String viewStr,
-                                  int W,
-				  int H,
-				  boolean visible) {
-
-    JInternalFrame intFr = null;
-
-    JPanel pan1 = null;
-    SectionViewer SV = null;
-
-    pan1 = new JPanel();
-    pan1.setLayout(new BorderLayout());
-
-    intFr = new JInternalFrame("view", true, true, true, true);
-    intFr.setContentPane(pan1);
-
-    SV = new SectionViewer(viewStr, intFr, this);
-    if(SV != null) {
-       addView(SV);
-       SV.openView();
-       pan1.add(SV, BorderLayout.CENTER);
-       intFr.setSize(new Dimension(W, H));
-       intFr.setVisible(true);
-    }
-
-    return intFr;
   }
 
 //======================================================

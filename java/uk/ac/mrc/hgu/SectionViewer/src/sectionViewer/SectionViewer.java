@@ -1,7 +1,6 @@
 package sectionViewer;
 
 import sectionViewer.*;
-// import hguUntil.*;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -35,7 +34,6 @@ public class SectionViewer
   protected boolean _parentIsRoot = true;
 
   /* parent class must implement the Utils interface */
-  protected Container _frame = null;
   protected Object _parent = null;
 
   protected Cursor xhairCursor = new Cursor(Cursor.CROSSHAIR_CURSOR);
@@ -86,52 +84,12 @@ public class SectionViewer
   //=========================================================
   // constructor
   //=========================================================
-  public SectionViewer(String viewstr, Container frame, Object parent) {
+  public SectionViewer(String viewstr, Object parent) {
 
     if (_debug) System.out.println("enter SectionViewer");
 
-    _frame = frame;
-    ExtFrameActivationHandler activationHandler1 = new ExtFrameActivationHandler();
-    IntFrameActivationHandler activationHandler2 = new IntFrameActivationHandler();
-
-    try {
-      Method M1 = _frame.getClass().getDeclaredMethod(
-            "setTitle",
-            new Class[]{viewstr.getClass( )});
-      M1.invoke(_frame, new Object[] {viewstr});
-    }
-    catch (NoSuchMethodException ne) {
-    }
-    catch (IllegalAccessException iae) {
-    }
-    catch (InvocationTargetException ite) {
-    }
-
-    try {
-      Method M1 = _frame.getClass().getMethod(
-            "addWindowListener",
-            new Class[]{activationHandler1.getClass().getInterfaces()[0]});
-      M1.invoke(_frame, new Object[] {activationHandler1});
-    }
-    catch (NoSuchMethodException ne) {
-    }
-    catch (IllegalAccessException iae) {
-    }
-    catch (InvocationTargetException ite) {
-    }
-
-    try {
-      Method M1 = _frame.getClass().getDeclaredMethod(
-            "addInternalFrameListener",
-            new Class[]{activationHandler2.getClass().getInterfaces()[0]});
-      M1.invoke(_frame, new Object[] {activationHandler2});
-    }
-    catch (NoSuchMethodException ne) {
-    }
-    catch (IllegalAccessException iae) {
-    }
-    catch (InvocationTargetException ite) {
-    }
+    FrameActivationHandler activationHandler = new FrameActivationHandler();
+    this.addWindowListener(activationHandler);
 
     _parent = parent;
     try {
@@ -148,11 +106,6 @@ public class SectionViewer
 
     setCursor(defCursor);
     addFeedback();
-
-/*
-    intersectionAdaptor IA = new intersectionAdaptor(this);
-    this.addChangeListener(IA);
-*/
 
     // instantiate the event handlers
     handler_1 = new fileMenuHandler();
@@ -273,9 +226,7 @@ public class SectionViewer
     transientPanel.setPreferredSize(dim);
     transientPanel.setMinimumSize(dim);
     transientPanel.add(pitchYawRollPanel, BorderLayout.NORTH);
-    //_rootPane.validate();
-    revalidate();
-    repaint();
+    _rootPane.validate();
   }
 
   protected void removeStandardControls() {
@@ -290,9 +241,7 @@ public class SectionViewer
     transientPanel.setMinimumSize(dim);
     transientPanel.remove(pitchYawRollPanel);
     transientPanel.repaint();
-    //_rootPane.validate();
-    revalidate();
-    repaint();
+    _rootPane.validate();
   }
 
   //...............................
@@ -308,9 +257,7 @@ public class SectionViewer
     transientPanel.setPreferredSize(dim);
     transientPanel.setMinimumSize(dim);
     transientPanel.add(userDefinedRotPanel, BorderLayout.SOUTH);
-    //_rootPane.validate();
-    revalidate();
-    repaint();
+    _rootPane.validate();
   }
 
   protected void removeUserControls() {
@@ -325,26 +272,20 @@ public class SectionViewer
     transientPanel.setMinimumSize(dim);
     transientPanel.remove(userDefinedRotPanel);
     transientPanel.repaint();
-    //_rootPane.validate();
-    revalidate();
-    repaint();
+    _rootPane.validate();
   }
 
   //...............................
 
   protected void addFeedback() {
     feedbackImagePanel.add(feedbackPanel, BorderLayout.NORTH);
-    //_rootPane.validate();
-    revalidate();
-    repaint();
+    _rootPane.validate();
   }
 
   protected void removeFeedback() {
     feedbackImagePanel.remove(feedbackPanel);
     feedbackImagePanel.repaint();
-    //_rootPane.validate();
-    revalidate();
-    repaint();
+    _rootPane.validate();
   }
 
 //-------------------------------------------------------------
@@ -501,7 +442,7 @@ public class SectionViewer
 //-------------------------------------------------------------
 // set the title text
 //-------------------------------------------------------------
-  protected void setTitleText(String title) {
+  public void setTitleText(String title) {
     titleText.setText(title);
   }
 
@@ -1169,18 +1110,7 @@ public class SectionViewer
         break;
     }
     String viewTitle = pitch + " | " + yaw + " | " + roll;
-    try {
-      Method M1 = _frame.getClass().getMethod(
-            "setTitle",
-            new Class[]{viewTitle.getClass( )});
-      M1.invoke(_frame, new Object[] {viewTitle});
-    }
-    catch (NoSuchMethodException ne) {
-    }
-    catch (IllegalAccessException iae) {
-    }
-    catch (InvocationTargetException ite) {
-    }
+    this.setTitle(viewTitle);
 
   }
 
@@ -1613,8 +1543,6 @@ public class SectionViewer
 // close
 //-------------------------------------------------------------
   protected void close() {
-    Object params[] = {this};
-    Vector openViews = null;
     try {
       Method M1 = null;
       if (_parentIsRoot) {
@@ -1641,17 +1569,7 @@ public class SectionViewer
     }
     closeView();
     updateIntersections();
-    try {
-      Method M1 = _frame.getClass().getMethod(
-            "dispose", null);
-      M1.invoke(_frame, null);
-    }
-    catch (NoSuchMethodException ne) {
-    }
-    catch (IllegalAccessException iae) {
-    }
-    catch (InvocationTargetException ite) {
-    }
+    this.dispose();
   }
 
 //-------------------------------------------------------------
@@ -2657,9 +2575,9 @@ public class SectionViewer
           (int) (imgSize.height * mag + 10));
       setViewTitle();
       _bigPanel.setPreferredSize(newSize);
-      //_rootPane.validate();
-      revalidate();
-      _bigPanel.repaint();
+      _rootPane.validate();
+      //revalidate();
+      //_bigPanel.repaint();
 
       updateIntersections();
 
@@ -3215,10 +3133,10 @@ public class SectionViewer
 
 //---------------------------------------
   // notifies window activation events
-  public class ExtFrameActivationHandler
+  public class FrameActivationHandler
       implements WindowListener {
 
-    public ExtFrameActivationHandler() {
+    public FrameActivationHandler() {
     }
 
     public void windowActivated(WindowEvent e) {
