@@ -2539,7 +2539,6 @@ static double	WlzMatchICPWeightMatches(WlzVertexType vType,
 					  cbData->tGM, cbData->sGM,
 					  cbData->maxDisp, cbData->nScatter);
 	 break;
-	 break;
        case WLZ_VERTEX_D3:
          wgt = WlzMatchICPWeightMatches3D(curTr, tree, tVx.d3, sVx.d3,
 	 				  tMVx.d3, sMVx.d3,
@@ -2548,6 +2547,7 @@ static double	WlzMatchICPWeightMatches(WlzVertexType vType,
 	 break;
      }
    }
+   return(wgt);
 }
 
 /*!
