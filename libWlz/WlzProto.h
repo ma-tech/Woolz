@@ -363,6 +363,11 @@ extern int			WlzAffineTransformIsTranslate(
 extern int			WlzAffineTransformIsIdentity(
 				  WlzAffineTransform *trans,
 				  WlzErrorNum *dstErr);
+extern int			WlzAffineTransformIsIdentityTol(
+				  WlzAffineTransform *trans,
+				  double tolTn,
+				  double tolTx,
+				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzAffineTransformObj(
 				  WlzObject *srcObj,
 				  WlzAffineTransform *trans,
@@ -473,58 +478,96 @@ extern WlzErrorNum 		WlzAffineTransformPrimSet(
 /************************************************************************
 * WlzAffineTransformLSq.c						*
 ************************************************************************/
+extern WlzAffineTransform 	*WlzAffineTransformLSq(
+				  WlzVertexType vType,
+				  int sizeArrayVT,
+				  WlzVertexP arrayVT,
+				  int sizeArrayVS,
+				  WlzVertexP arrayVS,
+				  int sizeArrayVW,
+				  double *arrayVW,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSq2D(
+				  int sizeArrayVT,
+				  WlzDVertex2 *arrayVT,
+				  int sizeArrayVS,
+				  WlzDVertex2 *arrayVS,
+				  int sizeArrayVW,
+				  double *arrayVW,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
+WlzAffineTransform 		*WlzAffineTransformLSq3D(
+				  int sizeArrayVT,
+				  WlzDVertex3 *arrayVT,
+				  int sizeArrayVS,
+				  WlzDVertex3 *arrayVS,
+				  int sizeArrayVW,
+				  double *arrayVW,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
-extern WlzAffineTransform	*WlzAffineTransformLSqWgt(
-				  WlzVertexType vtxType,
+extern WlzAffineTransform 	*WlzAffineTransformLSqTrans2D(
+				  WlzDVertex2 *vT,
+				  WlzDVertex2 *vS,
+				  double *vW,
+				  int nV,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform  	*WlzAffineTransformLSqTrans3D(
+				  WlzDVertex3 *vT,
+				  WlzDVertex3 *vS,
+				  double *vW,
+				  int nV, WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSqGen2D(
+				  WlzDVertex2 *vT,
+				  WlzDVertex2 *vS,
+				  double *vW,
+				  int nV,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSqGen3D(
+				  WlzDVertex3 *vT,
+				  WlzDVertex3 *vS,
+				  double *vW,
+				  int nV,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSqReg2D(
+				  WlzDVertex2 *vT,
+				  WlzDVertex2 *vS,
+				  double *vW,
 				  int nVtx,
-				  double *wgt,
-				  WlzVertexP vtxVec0,
-				  WlzVertexP vtxVec1,
-				  WlzTransformType trType,
 				  WlzErrorNum *dstErr);
-extern WlzAffineTransform	*WlzAffineTransformLSqSVD(
-				  WlzVertexType vtxType,
+extern WlzAffineTransform  	*WlzAffineTransformLSqReg3D(
+				  WlzDVertex3 *vT,
+				  WlzDVertex3 *vS,
+				  double *vW,
+				  int nV,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSqRegWlz2D(
+				  WlzDVertex2 *vT,
+				  WlzDVertex2 *vS,
+				  int nV,
+				  WlzErrorNum *dstErr);
+extern WlzAffineTransform 	*WlzAffineTransformLSqDQ2D(
 				  int nV,
 				  double *vW,
-				  WlzVertexP v0,
-				  WlzVertexP v1,
-				  WlzTransformType trType,
-				  WlzErrorNum *dstErr);
-extern WlzAffineTransform 	*WlzAffineTransformLSq2(
-				  WlzVertexType vtxType,
-				  int nV,
-				  double *vW,
-				  WlzVertexP v0,
-				  WlzVertexP v1,
+				  WlzDVertex2 *vT,
+				  WlzDVertex2 *vS,
 				  int nN,
 				  double *nW,
-				  WlzVertexP n0,
-				  WlzVertexP n1,
-				  WlzTransformType trType,
+				  WlzDVertex2 *nT,
+				  WlzDVertex2 *nS,
 				  WlzErrorNum *dstErr);
-extern WlzAffineTransform	*WlzAffineTransformLSq(
-				  WlzVertexType vtxType,
-				  int arraySizeVec0,
-				  WlzVertexP arrayVec0,
-				  int arraySizeVec1,
-				  WlzVertexP arrayVec1,
-				  WlzTransformType tType,
+extern WlzAffineTransform 	*WlzAffineTransformLSqDQ3D(
+				  int nV,
+				  double *vW,
+				  WlzDVertex3 *vT,
+				  WlzDVertex3 *vS,
+				  int nN,
+				  double *nW,
+				  WlzDVertex3 *nT,
+				  WlzDVertex3 *nS,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
-extern WlzAffineTransform 	*WlzAffineTransformLSq2D(
-				  int arraySizeVec0,
-				  WlzDVertex2 *arrayVec0,
-				  int arraySizeVec1,
-				  WlzDVertex2 *arrayVec1,
-				  WlzTransformType tType,
-				  WlzErrorNum *dstErr);
-extern WlzAffineTransform 	*WlzAffineTransformLSq3D(
-				  int arraySizeVec0,
-				  WlzDVertex3 *arrayVec0,
-				  int arraySizeVec1,
-				  WlzDVertex3 *arrayVec1,
-				  WlzTransformType tType,
-				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzArea.c								*
@@ -919,7 +962,8 @@ extern WlzContour 		*WlzBasisFnTransformContour(
 				  WlzErrorNum *dstErr);
 extern WlzGMModel		*WlzBasisFnTransformGMModel(WlzGMModel *srcM,
 				  WlzBasisFnTransform *basisTr,
-				  int newModel, WlzErrorNum *dstErr);
+				  int newModel,
+				  WlzErrorNum *dstErr);
 extern WlzIVertex2		WlzBasisFnTransformVertexI(
 				  WlzBasisFnTransform *basisTr,
 				  WlzIVertex2 srcVxF,
@@ -1555,6 +1599,9 @@ extern WlzGMVertex     *WlzGMModelNewV(
 extern WlzGMVertexT    *WlzGMModelNewVT(
 			  WlzGMModel *model,
 			  WlzErrorNum *dstErr);
+extern WlzGMModel	*WlzGMModelNewFromS(
+			  WlzGMShell *gS,
+			  WlzErrorNum *dstErr);
 extern WlzGMModel	*WlzGMModelCopy(
 			  WlzGMModel *gM,
 			  WlzErrorNum *dstErr);
@@ -1720,6 +1767,7 @@ extern double		WlzGMVertexDistSq2D(
 extern double		WlzGMVertexShellDist(
 			  WlzGMVertex *v0,
 			  WlzGMVertex *v1,
+			  double maxDist,
 			  WlzErrorNum *dstErr);
 extern WlzDVertex3	WlzGMVertexNormal3D(
 			  WlzGMModel *model,
@@ -1831,6 +1879,9 @@ extern WlzErrorNum	WlzGMModelRehashVHT(
 			  WlzGMModel *model,
 			  int vHTSz);
 /* Model construction */
+extern WlzErrorNum	WlzGMModelConstructS(
+			  WlzGMModel *cM,
+			  WlzGMShell *gS);
 extern WlzErrorNum	WlzGMModelConstructSimplex3D(
 			  WlzGMModel *model,
 			  WlzDVertex3 *pos);
@@ -2612,7 +2663,8 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  double maxAng,
 				  double maxDeform,
 				  int matchImpNN,
-				  double matchImpThr);
+				  double matchImpThr,
+				  double delta);
 extern WlzErrorNum  		WlzMatchICPCtr(
 				  WlzContour *tCtr,
 				  WlzContour *sCtr,
@@ -2630,7 +2682,8 @@ extern WlzErrorNum  		WlzMatchICPCtr(
                                   int matchImpNN,
 				  double matchImpThr,
                                   WlzRegICPUsrWgtFn usrWgtFn,
-                                  void *usrWgtData);
+                                  void *usrWgtData,
+				  double delta);
 extern double          		WlzMatchICPWeightMatches(
 				  WlzVertexType vType,
 				  WlzAffineTransform *curTr,
@@ -2915,6 +2968,40 @@ extern WlzAffineTransform 	*WlzRegCCorObjs(
 /************************************************************************
 * WlzRegICP.c
 ************************************************************************/
+extern WlzObject       		*WlzRegICPObjWSD2D(WlzObject *tObj,
+				  WlzObject *sObj,
+				  WlzAffineTransform *initTr,
+				  double xMin,
+				  double xMax,
+				  double xStep,
+				  double yMin,
+				  double yMax,
+				  double yStep,
+				  double rMin,
+				  double rMax,
+				  double rStep,
+				  double minDistWgt,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzRegICPVerticesWSD2D(WlzVertexP tVx,
+				  WlzVertexP tNr,
+				  int tCnt,
+				  WlzVertexP sVx,
+				  WlzVertexP sNr,
+				  int sCnt,
+				  WlzVertexType vType,
+				  int sgnNrm,
+				  WlzAffineTransform *initTr,
+				  double xMin,
+				  double xMax,
+				  double xStep,
+				  double yMin,
+				  double yMax,
+				  double yStep,
+				  double rMin,
+				  double rMax,
+				  double rStep,
+				  double minDistWgt,
+				  WlzErrorNum *dstErr);
 extern WlzAffineTransform	*WlzRegICPObjs(
 				  WlzObject *tObj,
 				  WlzObject *sObj,
@@ -2923,6 +3010,8 @@ extern WlzAffineTransform	*WlzRegICPObjs(
 				  int *dstConv,
 				  int *dstItr,
 				  int maxItr,
+				  double delta,
+				  double minDistWgt,
 				  WlzErrorNum *dstErr);
 extern WlzAffineTransform	*WlzRegICPObjsGrd(
 				  WlzObject *tObj,
@@ -2935,6 +3024,8 @@ extern WlzAffineTransform	*WlzRegICPObjsGrd(
 				  int *dstConv,
 				  int *dstItr,
 				  int maxItr,
+				  double delta,
+				  double minDistWgt,
 				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzAffineTransform	*WlzRegICPVertices(
@@ -2951,6 +3042,8 @@ extern WlzAffineTransform	*WlzRegICPVertices(
 				  int *dstConv,
 				  int *dstItr,
 				  int maxItr,
+				  double delta,
+				  double minDistWgt,
 				  WlzErrorNum *dstErr);
 extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 				  AlcKDTTree *tree,
@@ -2972,6 +3065,8 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 				  int *dstConv,
 				  WlzRegICPUsrWgtFn usrWgtFn,
 				  void *usrWgtData,
+				  double delta,
+				  double minDistWgt,
 				  WlzErrorNum *dstErr); 
 #endif /* WLZ_EXT_BIND */
 
