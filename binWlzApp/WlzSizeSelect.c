@@ -18,7 +18,7 @@
 *   Author Name :  Richard Baldock					*
 *   Author Login:  richard@hgu.mrc.ac.uk				*
 *   Date        :  Mon Jul  5 08:42:53 1999				*
-*   $Revision$								*
+*   $Revision$							*
 *   $Name$								*
 *   Synopsis    :  Select domains from an object on the basis of area. The   *
 *		   filter can select foreground (blobs) or background (holes)*
