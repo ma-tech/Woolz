@@ -20,7 +20,7 @@
 
 #ifdef SUNOS5
 #ifndef __x86
-extern void swab(const void *, void *, size_t);
+extern void swab(const char *, char *, int);
 #endif /* __x86 */
 #endif /* SUNOS5 */
 
