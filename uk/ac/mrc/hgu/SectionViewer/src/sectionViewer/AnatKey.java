@@ -10,12 +10,29 @@ import java.io.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
+/**
+ *   A table which indicates the colour of anatomy components in SectionViewers.
+ *   AnatKey has controls to allow the colour to be changed
+ *   and the component visibility to be toggled off / on.
+ *   AnatKey is a singleton class.
+ */
 public class AnatKey extends AnatKeyGUI{
 
+   /**
+    *   The one and only instance of AnatKey.
+    */
    static protected  AnatKey _instance = null;
+
+   /**
+    *   The number of rows in the AnatKey.
+    */
    static protected  final int _nrows = 6;
 //-------------------------------------------------------------
    // private constructor for singleton pattern
+   /**
+    *   Called by AnatKey.instance(). This constructor is private in 
+    *   accordance with the 'singleton' pattern
+    */
    private AnatKey(String str) {
       super(str);
 
@@ -58,9 +75,13 @@ public class AnatKey extends AnatKeyGUI{
       cbx5.addItemListener(cbxH);
 
    }
-
+   
 //-------------------------------------------------------------
    // makes sure only 1 instance of the class is created
+   /**
+    *   Calls the (private) constructor.
+    *   This is the only way to make an instance of AnatKey.
+    */
    static public AnatKey instance() {
       if(_instance == null) {
          _instance = new AnatKey("anatomy key");
@@ -68,10 +89,20 @@ public class AnatKey extends AnatKeyGUI{
       return _instance;
    }
 //-------------------------------------------------------------
+   /**
+    *   Returns the number of rows in the anatomy key.
+    *   @return The int number of rows in the key (currently 6).
+    */
    public int getNRows() {
       return _nrows;
    }
 //-------------------------------------------------------------
+   /**
+    *   Sets the anatomy component name for a single entry in the AnatKey.
+    *   @param str the full name of the anatomy component.
+    *   @param indx the position of the anatomy component in the table.
+    *   There are 6 rows in the table, indx goes from 0 to 5.
+    */
    public static void setText(String str, int indx) {
 
       switch (indx) {
@@ -99,6 +130,11 @@ public class AnatKey extends AnatKeyGUI{
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Sets the anatomy component name for all entries in the AnatKey.
+    *   @param strArr an array of the full names of
+    *   all 6 anatomy components.
+    */
    public static void setText(String[] strArr) {
       tf0.setText(strArr[0]);
       tf1.setText(strArr[1]);
@@ -109,6 +145,12 @@ public class AnatKey extends AnatKeyGUI{
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Removes the anatomy component from the AnatKey.
+    *   Changes the 'zap' button icon to a bent arrow.
+    *   @param indx the position of the anatomy component to be removed.
+    *   @param str not used.
+    */
    public static void setEntryRemoved(int indx, String str) {
 
       switch(indx) {
@@ -148,6 +190,13 @@ public class AnatKey extends AnatKeyGUI{
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Sets the visibility of the anatomy component
+    *   at 'indx' to true.
+    *   @param indx the position of the anatomy component
+    *   to be made visible.
+    *   @param str the full name of the anatomy component.
+    */
    public static void setEntryVisible(int indx, String str) {
 
       switch(indx) {
@@ -193,6 +242,13 @@ public class AnatKey extends AnatKeyGUI{
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Sets the visibility of the anatomy component
+    *   at 'indx' to false.
+    *   @param indx the position of the anatomy component
+    *   to be made invisible.
+    *   @param str the full name of the anatomy component.
+    */
    public static void setEntryInvisible(int indx, String str) {
 
       switch(indx) {
@@ -238,6 +294,15 @@ public class AnatKey extends AnatKeyGUI{
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Sets the colour of the anatomy component
+    *   to that returned by a standard color chooser dialog.
+    *   The color chooser dialog is opened by clicking on the 
+    *   Colour chooser button in the AnatKey.
+    *   @param col the new colour of the anatomy component.
+    *   @param indx the position (i.e. the row number in the AnatKey)
+    *   of the anatomy component whose colour is being changed.
+    */
    public static void setCol(Color col, int indx) {
 
       _cols[indx] = col.getBlue() |
@@ -269,11 +334,21 @@ public class AnatKey extends AnatKeyGUI{
       } // switch
    }
 
+//-------------------------------------------------------------
+   /**
+    *   Returns the colour of an anatomy component at
+    *   the given index in the Anatomy Key.
+    *   @param index the index.
+    *   @return a new Color object.
+    */
    public Color getColor(int index){
      return new Color(_cols[index], true);
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Resets the AnatKey to its empty state.
+    */
    public static void reset() {
 
       tf0.setText("");
@@ -308,6 +383,12 @@ public class AnatKey extends AnatKeyGUI{
    }
 
 //-------------------------------------------------------------
+   /**
+    *   Updates the AnatKey with new / modified data.
+    *   Array entries may be null.
+    *   @param arr an array of AnatomyElements.
+    *   @see sectionViewer.AnatomyElement
+    */
    public static void update(AnatomyElement[] arr) {
 
       AnatomyElement el = null;
@@ -331,6 +412,12 @@ public class AnatKey extends AnatKeyGUI{
 //-------------------------------------------------------------
 // inner classes for event handling
 //-------------------------------------------------------------
+   /**
+    *   Event handler for the arrow (scroll) buttons for the textfield
+    *   in each row of the AnatKey.
+    *   These scroll the anatomy name in the text field
+    *   fully left or right.
+    */
    public class ButtonHandler1 implements ActionListener {
 
       /*
@@ -375,6 +462,13 @@ public class AnatKey extends AnatKeyGUI{
    } // inner class ButtonHandler1
 
 //-------------------------------------------------------------
+   /**
+    *   Event handler for the zap button.
+    *   This concatenates "zap" with the relevant index (row) number
+    *   of the component as the parameter for a 'fireAction' command.
+    *   An application  will implement an ActionListener to listen for
+    *   these events and manage the updates required on the AnatKey.
+    */
    public class ButtonHandler2 implements ActionListener {
 
       String cmd1 = "zap";
@@ -401,6 +495,13 @@ public class AnatKey extends AnatKeyGUI{
    } // inner class ButtonHandler2
 
 //-------------------------------------------------------------
+   /**
+    *   Event handler for the colour chooser button.
+    *   This concatenates "colour" with the relevant index (row) number
+    *   of the component as the parameter for a 'fireAction' command.
+    *   An application  will implement an ActionListener to listen for
+    *   these events and manage the updates required on the AnatKey.
+    */
    public class ButtonHandler3 implements ActionListener {
 
       String cmd1 = "colour";
@@ -427,6 +528,14 @@ public class AnatKey extends AnatKeyGUI{
    } // inner class ButtonHandler3
 
 //-------------------------------------------------------------
+   /**
+    *   Event handler for the visibility checkbox.
+    *   This concatenates "makeVisible" (or makeInvisible) with
+    *   the relevant index (row) number of the component as the
+    *   parameter for a 'fireAction' command.
+    *   An application  will implement an ActionListener to listen for
+    *   these events and manage the updates required on the AnatKey.
+    */
    public class ChBoxHandler implements ItemListener {
 
       String cmd1 = "makeVisible";
@@ -482,20 +591,38 @@ public class AnatKey extends AnatKeyGUI{
 //-------------------------------------------------------------
 
    // keep track of all the listeners to this model
+   /**
+    *   A list of ActionListeners which are
+    *   listening for events fired from the AnatKey.
+    */
    protected EventListenerList actionListeners =
                              new EventListenerList();
 
   // add a listener to the register
+   /**
+    *   Registers an ActionListener
+    *   with the EventListenerList.
+    *   @param x an Event handler implementing ActionListener
+    */
   public void addActionListener(ActionListener x) {
     actionListeners.add (ActionListener.class, x);
   }
 
 
   // remove a listener from the register
+   /**
+    *   Removes a previously registered ActionListener
+    *   from the EventListenerList
+    *   @param x an Event handler implementing ActionListener
+    */
   public void removeActionListener(ActionListener x) {
     actionListeners.remove (ActionListener.class, x);
   }
 
+   /**
+    *   Fires an ActionEvent with the given Action Command.
+    *   This allows an event handler to choose the appropriate action.
+    */
    protected void fireAction(String cmd) {
    // Create the event:
    ActionEvent ae = new ActionEvent(this,
@@ -517,6 +644,9 @@ public class AnatKey extends AnatKeyGUI{
 
 //-------------------------------------------------------------
 
+   /**
+    *   For testing only.
+    */
   public static void main(String argv[]) {
 
 	AnatKey _key;

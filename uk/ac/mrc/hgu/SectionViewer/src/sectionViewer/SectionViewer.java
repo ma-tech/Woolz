@@ -22,75 +22,248 @@ import wsetter.*;
 import zoom.*;
 import uk.ac.mrc.hgu.Wlz.*;
 
+/** 
+ *   Combined <b>View</b> & <b>Controller</b> class for SectionViewer component.
+ */
 public class SectionViewer
     extends SectionViewerGUI
     implements Serializable, WlzObjectType, WSetterConstants {
 
+  /**  Toggle for display of debugging information. */
   private final boolean _debug = false;
 
-  // allows SectionViewer to fire events when true
+  /**  True if SectionViewer can fire events */
   private boolean _enabled = true;
+
   //protected boolean _parentIsRoot = true;
 
-  /* parent class must implement the SVParent interface */
+  /**
+   *   Instance of class that implements SVParent interface.
+   *   <br>SVParent must be implemented by the class responsible for 
+   *   creating SectionViewers.
+   */
   public Object _parent = null;
 
+  /**   Cursor used for operations within a grey-level image. */
   protected Cursor xhairCursor = new Cursor(Cursor.CROSSHAIR_CURSOR);
+
+  /**   The default cursor shape. */
   protected Cursor defCursor = Cursor.getDefaultCursor();
 
+  /**   Model that encapsulates Woolz object data. */
   protected WlzObjModel _OBJModel = null; // grey level
+
+  /**   Model that encapsulates View Structure data. */
   protected ViewStructModel _VSModel = null;
+
+  /**   Instance of class responsible for drawing the screen image. */
   public WlzImgView _imgV = null;
 
+  /**
+   *   Prevents multiple events from fixed point
+   *   <em>PointEntry</em> dialogue.
+   */
   private int _FPBounce = 0; // stops initial false event from PointEntry
+
+  /**
+   *   Prevents multiple events from 2nd fixed point
+   *   <em>PointEntry</em> dialogue.
+   */
   private int _APBounce = 0;
 
-  private WlzObject _anatomyObj = null;
-  private WlzObject _constraintObj = null; // wlz obj from thresh constraint
+  /*  Unused variable.
+  private WlzObject _anatomyObj = null; */
+  
+  /**   Woolz object representing a threshold constraint region */
+  private WlzObject _constraintObj = null;
 
+  /**   Instance of class responsible for building anatomy menus. */
   private AnatomyBuilder _anatBuilder = null;
+
+  /**  
+   *   Collection of full pathnames to anatomy components
+   *   in the <em>embryo</em> hierarchy.
+   */
   private Stack _embFileStack = null;
+
+  /**  
+   *   Collection of <em>Woolz</em> objects representing anatomy components
+   *   in the <em>embryo</em> hierarchy.
+   */
   private Stack _embObjStack = null;
+
+  /**  
+   *   Collection of full pathnames to anatomy components
+   *   in the <em>extra-embryonic component</em> hierarchy.
+   */
   private Stack _xembFileStack = null;
+
+  /**  
+   *   Collection of <em>Woolz</em> objects representing anatomy components
+   *   in the <em>extra-embryonic component</em> hierarchy.
+   */
   private Stack _xembObjStack = null;
+
+  /**  
+   *   Collection of <em>File</em> objects representing
+   *   potential <em>mouse-click anatomy</em> components.
+   */
   private Stack _maybeFil = null;
+
+  /**  
+   *   Collection of <em>Woolz</em> objects representing
+   *   potential <em>mouse-click anatomy</em> components.
+   */
   private Stack _maybeObj = null;
 
+  /**
+   *   Description of initial SectionViewer orientation.
+   *   <br>Possible descriptions are:
+   *   <ul>
+   *      <li>XY,  (corresponds to Pitch = 0, Yaw = 0, Roll = 0)</li>
+   *      <li>YZ,  (corresponds to Pitch = 90, Yaw = 0, Roll = 90)</li>
+   *      <li>ZX,  (corresponds to Pitch = 90, Yaw = 90, Roll = 90)</li>
+   *   </ul>
+   */
   protected String viewType;
+
+  /**   Full pathname of <em>mouse-click anatomy</em> component. */
   protected String _anatomyStr;
 
+  /**   True if <em>mouse-click anatomy</em> is enabled. */
   private boolean _anatomy; // for mouse click anatomy
-  private boolean _thresholding;
-  private boolean _fixedLineRotation;
-  private boolean _threshConstraint;
-  protected boolean _fixedPoint = false;
-  private boolean _axisPoint = false;
-  private boolean _setFixedPoint = false;
-  private boolean _setAxisPoint = false;
-  private boolean _showStdCntrls = false;
-  private boolean _showUsrCntrls = false;
-  private boolean _showIntersection = false;
-  private boolean _openingView = false;
-  private boolean _inverted = false;
-  public boolean _drawfixLine = false; /* for tie point application */
 
+  /**   True if <em>thresholding</em> is enabled. */
+  private boolean _thresholding;
+
+  /**   True if <em>fixed line rotation</em> is enabled. */
+  private boolean _fixedLineRotation;
+
+  /**   True if <em>threshold constraint</em> is enabled. */
+  private boolean _threshConstraint;
+
+  /** 
+   *   True if <em>fixed point</em> has been selected
+   *   from the <em>show</em> menu.
+   */
+  protected boolean _fixedPoint = false;
+
+  /**
+   *   True if <em>fixed line</em> has been selected
+   *   from the <em>show</em> menu.
+   */
+  private boolean _axisPoint = false;
+
+  /**
+   *   True if <em>change fixed point using mouse button</em>
+   *   has been selected from the
+   *   <em>control / fixed point</em> menu.
+   */
+  private boolean _setFixedPoint = false;
+
+  /**
+   *   True if <em>change fixed line using mouse button</em>
+   *   has been selected from the
+   *   <em>control / fixed line end-point</em> menu.
+   */
+  private boolean _setAxisPoint = false;
+
+  /**
+   *   True if <em>yaw pitch roll</em>
+   *   has been selected from the
+   *   <em>control / rotation</em> menu.
+   */
+  private boolean _showStdCntrls = false;
+
+  /**
+   *   True if <em>fixed line</em>
+   *   has been selected from the
+   *   <em>control / rotation</em> menu.
+   */
+  private boolean _showUsrCntrls = false;
+
+  /**
+   *   True if <em>intersection lines</em> has been selected
+   *   from the <em>show</em> menu.
+   */
+  private boolean _showIntersection = false;
+
+  /**
+   *   True if <em>openView()</em> has been called
+   *   but has not completed.
+   */
+  private boolean _openingView = false;
+
+  /**
+   *   Flag toggled when the <em>invert button</em> is pressed.
+   *   <br>If true the grey-level image has its grey values inverted.
+   */
+  private boolean _inverted = false;
+
+  /**   flag required by <em>tie point</em> application. */
+  public boolean _drawfixLine = false;
+
+  /**
+   *   Event handler for <em>file</em> menu selections.
+   */
   fileMenuHandler handler_1 = null;
+
+  /**
+   *   Event handler for <em>control</em> menu selections.
+   */
   controlMenuHandler handler_2 = null;
+
+  /**
+   *   Event handler for <em>show</em> menu selections.
+   */
   showMenuHandler handler_3 = null;
+
+  /**
+   *   Event handler for <em>help</em> menu selections.
+   */
   helpMenuHandler handler_4 = null;
+
   // temporarily disabled ... don't remove
+  /**
+   *   Event handler for <em>threshold</em> menu selections.
+   *   <p>Not in use.
+   */
   thresholdMenuHandler handler_5 = null;
+
   //--------------------------------------
+
+  /**
+   *   Event handler for <em>secColorClt</em>
+   *   (colourChooser button) control.
+   */
   public planeColChooser colourHandler = null;
+
+  /**
+   *   Event handler for <em>invertButton</em> control.
+   */
   public invertButtonHandler invertHandler = null;
 
+  /**   System file separator ("/" or "\"). */
   private String SLASH = System.getProperty("file.separator");
 
+  /**
+   *   Container for SectionViewer component.
+   *   <br>JFrame for external components.
+   *   <br>JInternalFrame for internal components.
+   */
   protected Container _frame = null;
 
   //=========================================================
   // constructor
   //=========================================================
+
+  /**
+   *   Constructs a SectionViewer with the given
+   *   initial orientation and parent.
+   *   @param viewstr the initial orientation.
+   *   @param parent instance of the class that created this SectionViewer.
+   *   <br>parent (<b>Must</b> implement <em>SVParent</em> interface.)
+   */
   public SectionViewer(String viewstr, Object parent) {
 
     if (_debug) System.out.println("enter SectionViewer");
@@ -208,6 +381,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // methods for adding / removing panels from the gui
 //-------------------------------------------------------------
+  /**
+   *   Makes <em>yaw pitch</em> and <em>roll</em> controls visible.
+   */
   protected void addStandardControls() {
     Dimension dim;
     if (_showUsrCntrls) {
@@ -223,6 +399,9 @@ public class SectionViewer
     _bigPanel.repaint();
   }
 
+  /**
+   *   Makes <em>yaw pitch</em> and <em>roll</em> controls invisible.
+   */
   protected void removeStandardControls() {
     Dimension dim;
     if (_showUsrCntrls) {
@@ -241,6 +420,9 @@ public class SectionViewer
 
   //...............................
 
+  /**
+   *   Makes <em>fixed line</em> control visible.
+   */
   protected void addUserControls() {
     Dimension dim;
     if (_showStdCntrls) {
@@ -257,6 +439,9 @@ public class SectionViewer
 
   }
 
+  /**
+   *   Makes <em>fixed line</em> control invisible.
+   */
   protected void removeUserControls() {
     Dimension dim;
     if (_showStdCntrls) {
@@ -275,12 +460,18 @@ public class SectionViewer
 
   //...............................
 
+  /**
+   *   Makes <em>cursor feedback</em> panels visible.
+   */
   protected void addFeedback() {
     feedbackImagePanel.add(feedbackPanel, BorderLayout.NORTH);
     revalidate();
     _bigPanel.repaint();
   }
 
+  /**
+   *   Makes <em>cursor feedback</em> panels invisible.
+   */
   protected void removeFeedback() {
     feedbackImagePanel.remove(feedbackPanel);
     feedbackImagePanel.repaint();
@@ -291,6 +482,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // methods for opening / closing views
 //-------------------------------------------------------------
+  /**
+   *   Initialises a SectionViewer.
+   */
   public void openView() {
 
     if (_imgV != null) {
@@ -339,6 +533,7 @@ public class SectionViewer
     connectAdaptors_1();
     // set WSetters according to which view is set
     resetGUI();
+    /*
     try {
       Method M1 = null;
       M1 = _parent.getClass().getMethod("getSVTitleText", null);
@@ -355,6 +550,7 @@ public class SectionViewer
       System.out.println(ae.getMessage());
     }
     //setTitleText(_parent.getTitleText());
+    */
     setViewTitle();
     try {
       Method M1 = null;
@@ -385,6 +581,9 @@ public class SectionViewer
   } // openView()
 
 //---------------------------------------
+  /**
+   *   Tidies up when a SectionViewer is closed.
+   */
   protected void closeView() {
     if (WI2P_1 != null)
       _imgV.removeChangeListener(WI2P_1);
@@ -403,6 +602,13 @@ public class SectionViewer
 // (needs to be done when grey level file is opened &
 // after every angle change)
 //-------------------------------------------------------------
+  /**
+   *   Sets <em>max</em> & <em>min</em> limits for <em>distSetter</em>
+   *   and sets its current value.
+   *   <br>Must be called at initialisation and whenever the 
+   *   <em>yaw pitch</em> or <e>roll</em> angles are changed.
+   *   @param val the value to set the <em>distSetter</em>.
+   */
   protected void setDistLimits(double val) {
 
     double results[];
@@ -431,13 +637,23 @@ public class SectionViewer
 //-------------------------------------------------------------
 // set the title text
 //-------------------------------------------------------------
+/*
   public void setTitleText(String title) {
     titleText.setText(title);
   }
+*/
 
 //-------------------------------------------------------------
 // re-set Feedback text
 //-------------------------------------------------------------
+  /**
+   *   Clears the text fields associated with <em>cursor feedback</em>.
+   *   <ul>
+   *   <li>position (x,y,z)</li>
+   *   <li>grey value</li>
+   *   <li>mouse-click anatomy pathname</li>
+   *   </ul>
+   */
   protected void resetFeedbackText() {
     resetPosGreyText();
     resetAnatomyText();
@@ -446,6 +662,10 @@ public class SectionViewer
 //-------------------------------------------------------------
 // re-set pos & grey text
 //-------------------------------------------------------------
+  /**
+   *   Clears the feedback text fields associated with
+   *   <em>position</em> & <em>grey value</em>.
+   */
   protected void resetPosGreyText() {
     xyzTextField.setText("-----");
     valueTextField.setText("-");
@@ -454,6 +674,10 @@ public class SectionViewer
 //-------------------------------------------------------------
 // re-set anatomy text
 //-------------------------------------------------------------
+  /**
+   *   Clears the feedback text fields associated with
+   *   <em>mouse-click anatomy.</em>
+   */
   protected void resetAnatomyText() {
     anatomyTextField.setText("-----");
   }
@@ -461,6 +685,15 @@ public class SectionViewer
 //-------------------------------------------------------------
 // print model info
 //-------------------------------------------------------------
+  /**
+   *   Debugging utility.
+   *   <br>Displays information relating to the underlying models.
+   *   <ul>
+   *   <li>Woolz Facts</li>
+   *   <li>3D Bounding Box</li>
+   *   <li>View Structure</li>
+   *   </ul>
+   */
   protected void printModelInfo() {
     if (_OBJModel != null) {
       _OBJModel.printFacts();
@@ -474,6 +707,13 @@ public class SectionViewer
 //-------------------------------------------------------------
 // print Woolz Facts
 //---------------------------------------
+  /**
+   *   Debugging utility.
+   *   <br>Displays information relating to the given Woolz object.
+   *   <ul>
+   *   <li>Woolz Facts</li>
+   *   </ul>
+   */
   public void printFacts(WlzObject obj) {
     System.out.println("WLZ FACTS");
     String facts[] = {
@@ -492,6 +732,13 @@ public class SectionViewer
 //-------------------------------------------------------------
 // get anatomy at mouse click
 //-------------------------------------------------------------
+  /**
+   *   Returns the full name to the anatomy component (if any)
+   *   at the most recent mouse click / drag.
+   *   @param pt3d the position of the most recent mouse click / drag
+   *   in the coordinate space of the 3D Woolz object.
+   *   @return the full name to the anatomy component, or "".
+   */
   protected String getAnatomyAt(double[] pt3d) {
 
     _maybeFil = new Stack();
@@ -595,6 +842,13 @@ public class SectionViewer
   }
 
   //-------------------------------------------------------------
+  /*
+   *   Checks that the given filename ends with ".wlz".
+   *   <br>Should also check that the parent directory has the 
+   *   same name as the file.
+   *   @param dir not used.
+   *   @param fil the filename to check.
+   *   @return true if the filename ends with ".wlz".
   protected boolean isValidName(String dir, String fil) {
     if (fil.endsWith(".wlz")) {
       return true;
@@ -603,8 +857,14 @@ public class SectionViewer
       return false;
     }
   }
+  */
 
   //-------------------------------------------------------------
+  /**
+   *   Capitalises the final part of the given filename.
+   *   @param name the filename.
+   *   @return the filename with the final part capitalised.
+   */
   protected String capitalise(String name) {
 
     String endBit = "";
@@ -630,6 +890,10 @@ public class SectionViewer
 //-------------------------------------------------------------
 // show anatomy selected from menu
 //-------------------------------------------------------------
+  /**
+   *   Gets an array of anatomy components from <em>_parent</em> and
+   *   calls anatomyFromMenu(AnatomyElement[] arr).
+   */
   public void anatomyFromMenu() {
 
     AnatomyElement anatArr[] = null;
@@ -653,6 +917,12 @@ public class SectionViewer
     }
   }
 
+  /**
+   *   Gets a section through each of the given 3D anatomy components
+   *   using the current View Structure
+   *   then calls _imgV.setAnatomyObj().
+   *   @param arr the array of 3D anatomy components.
+   */
   public void anatomyFromMenu(AnatomyElement[] arr) {
     int num = AnatKey._nrows;
     WlzObject obj2D[] = new WlzObject[num];
@@ -691,6 +961,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // get intersection array
 //-------------------------------------------------------------
+  /**
+   *   Returns an array of lines representing the intersection
+   *   of this SectionViewer with other open SectionViewers.
+   *   @return the intersection lines.
+   */
   protected Line2D.Double[] getIntersectionArr() {
 
     Line2D.Double intersectionArr[] = null;
@@ -746,8 +1021,6 @@ public class SectionViewer
       WlzObject.Wlz3DViewGetMinvals(vs1, xmin, ymin, zarr);
       xTotal = xmax[0] - xmin[0];
       yTotal = ymax[0] - ymin[0];
-
-      //printMaxMin(xmin[0],ymin[0],xmax[0],ymax[0]);
 
     }
     catch (WlzException e0) {
@@ -839,6 +1112,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // get interCol array
 //-------------------------------------------------------------
+  /**
+   *   Returns an array representing the colour of each line 
+   *   in the <em>intersection line</em> array..
+   *   @return array of Color objects.
+   */
   protected Color[] getInterColArr() {
 
     Color colarr[] = null;
@@ -875,6 +1153,10 @@ public class SectionViewer
   }
 
 //-------------------------
+  /**
+   *   Updates _imgV with
+   *   the current intersection line and colour arrays.
+   */
   protected void doIntersection() {
     if (_imgV == null) return;
     if (_showIntersection) {
@@ -885,6 +1167,10 @@ public class SectionViewer
   }
 
 //-------------------------
+  /**
+   *   Gets the collection of open SectionViewers from _parent
+   *   and calls <em>doIntersection()</em> for each one.
+   */
   protected void updateIntersections() {
 
     SectionViewer SV = null;
@@ -912,6 +1198,14 @@ public class SectionViewer
     }
   }
 //-------------------------
+  /**
+   *   Debugging utility.
+   *   <br>Prints out the coordinates
+   *   of a given <em>intersection line</em> and its
+   *   index in the <em>intersection array</em>.
+   *   @param line the intersection line.
+   *   @param indx array index for this intersection line.
+   */
   protected void printIntersection(Line2D.Double line, int indx) {
 
      String x1Str;
@@ -932,24 +1226,10 @@ public class SectionViewer
   }
 
 //-------------------------
-  protected void printMaxMin(double x1, double y1, double x2, double y2) {
-
-     String x1Str;
-     String y1Str;
-     String x2Str;
-     String y2Str;
-
-     x1Str = Double.toString(x1);
-     y1Str = Double.toString(y1);
-     x2Str = Double.toString(x2);
-     y2Str = Double.toString(y2);
-
-     System.out.print("x range: "+x1+","+x2);
-     System.out.println("y range: "+y1+","+y2);
-
-  }
-
-//-------------------------
+  /**
+   *   Updates _imgV with the coordinates of the fixed point
+   *   if it should be visible in the current section.
+   */
   protected void doShowFixedPoint() {
 
     double xa[] = new double[1];
@@ -1001,6 +1281,10 @@ public class SectionViewer
   }
 
 //-------------------------
+  /**
+   *   Updates _imgV with the coordinates of the 2nd fixed point
+   *   if the fixed line should be visible in the current section.
+   */
   protected void doShowFixedLine() {
 
      double dist[] = new double[1];
@@ -1051,6 +1335,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove overlay
 //-------------------------------------------------------------
+  /**
+   *   Causes <em>mouse-click anatomy</em> to be cleared from screen.
+   */
   protected void removeOverlay() {
     _imgV.clearOverlay();
     _maybeObj = null;
@@ -1061,6 +1348,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove intersection
 //-------------------------------------------------------------
+  /**
+   *   Causes <em>intersection lines</em> to be cleared from screen.
+   */
   protected void removeIntersection() {
     _imgV.clearIntersection();
     _imgV.repaint();
@@ -1069,6 +1359,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove threshold
 //-------------------------------------------------------------
+  /**
+   *   Causes the <em>thresholded</em> region to be cleared from screen.
+   */
   protected void removeThreshold() {
     _imgV.clearThreshold();
     _imgV.repaint();
@@ -1077,6 +1370,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove anatomy
 //-------------------------------------------------------------
+  /**
+   *   Causes <em>anatomy from menu</em> to be cleared from screen.
+   */
   public void removeAnatomy() {
     _imgV.clearAnatomy();
     _imgV.repaint();
@@ -1085,6 +1381,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove threshConstraint
 //-------------------------------------------------------------
+  /**
+   *   Causes <em>threshold constraint</em> contour to be cleared from screen.
+   */
   protected void removeThreshConstraint() {
     _imgV.clearThreshConstraint();
     _imgV.repaint();
@@ -1093,6 +1392,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove fixedPoint
 //-------------------------------------------------------------
+  /**
+   *   Causes the <em>fixed point</em> to be cleared from screen.
+   */
   protected void removeFixedPoint() {
     _imgV.enableFixedPoint(false);
     _imgV.repaint();
@@ -1101,6 +1403,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove axisPoint
 //-------------------------------------------------------------
+  /**
+   *   Causes the <em>2nd fixed point</em> to be cleared from screen.
+   *   <p>Obsolete.
+   *   <br>(The 2nd fixed point doesn't get displayed now.)
+   */
   protected void removeAxisPoint() {
     _imgV.enableAxisPoint(false);
     _imgV.enableAxis(false);
@@ -1110,6 +1417,10 @@ public class SectionViewer
 //-------------------------------------------------------------
 // set view title
 //-------------------------------------------------------------
+  /**
+   *   Updates the SectionViewer title with
+   *   the current values of <em>pitch yaw</em> & <em>roll</em>.
+   */
   protected void setViewTitle() {
     // assume all sliders are the same type (double etc)
     int type = pitchSetter.getType();
@@ -1167,6 +1478,13 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove decimal point and anything past decimal point
 //-------------------------------------------------------------
+  /**
+   *   Utility to remove a decimal point and 
+   *   anything following the decimal point
+   *   from the given String.
+   *   @param str the String to be trimmed.
+   *   @return the trimmed String.
+   */
   protected String trimString(String str) {
 
      String ret = "";
@@ -1191,6 +1509,10 @@ public class SectionViewer
 //-------------------------------------------------------------
 // save image as jpeg
 //-------------------------------------------------------------
+  /**
+   *   Saves the composite screen image to a jpg file.
+   *   @param str filename for the jpg image.
+   */
   protected void saveImage(String str) {
     File fil = new File(str);
     BufferedImage img = null;
@@ -1218,6 +1540,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // save view settings
 //-------------------------------------------------------------
+  /**
+   *   Saves the current <em>ViewStruct</em> and zoom setting to an xml file.
+   *   <br>The xml file may be read back in using <em>loadViewFromXML</em>
+   *   @param str filename for the xml data.
+   */
   protected void saveViewAsXML(String fil) {
 
     String tab = "   ";
@@ -1326,6 +1653,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // load view settings
 //-------------------------------------------------------------
+  /**
+   *   Loads <em>ViewStruct</em> and zoom setting from an xml file.
+   *   <br>This causes a previously saved section to be displayed.
+   *   @param str filename for the xml data.
+   */
   protected void loadViewFromXML(File fil) {
 
     ParseXML parser = new ParseXML(this);
@@ -1341,14 +1673,30 @@ public class SectionViewer
 //-------------------------------------------------------------
 // convert from (slider) zoom factor to mag
 //-------------------------------------------------------------
+  /**
+   *   Converts from <em>zoom factor</em> to
+   *   <em>% magnification</em>.
+   *   <br>Zoom factor is displayed on the zoom control whereas
+   *   % magnification is used by the program.
+   *   @param zf the current zoom factor.
+   *   @return % magnification.
+   */
   protected double zf2mag(double zf) {
-    //return (zf < 0.0) ? 1.0 + 0.001 * zf : 1.0 + 0.01 * zf;
     return zf/100.0;
   }
 
 //-------------------------------------------------------------
 // checkFilename for extension
 //-------------------------------------------------------------
+  /**
+   *   Adds the given extension to a filename if it 
+   *   doesn't already have it.
+   *   <br>Used for jpg and xml files.
+   *   @param str the filename.
+   *   @param ext the required filename extension,
+   *   (not including .).
+   *   @return the filename with extension.
+   */
   protected String checkFilename(String str, String ext) {
 
     StringBuffer strbuf;
@@ -1369,6 +1717,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // set view mode
 //-------------------------------------------------------------
+  /**
+   *   Sets the <em>View Structure</em> with the given
+   *   view mode and initialises the rotation sliders accordingly.
+   *   @param mode the view mode to set.
+   */
   public void setViewMode(String mode) {
      if (_VSModel != null) {
 
@@ -1435,6 +1788,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // enable or disable fixed point menus depending upon view mode
 //-------------------------------------------------------------
+  /**
+   *   Enables or disables <em>Fixed Point</em> menus 
+   *   depending upon the given state.
+   *   @param state true if menus are to be enabled.
+   */
   private void enableFPMenus(boolean state) {
      controlMenu_3_1.setEnabled(state);
      controlMenu_3_2.setEnabled(state);
@@ -1447,38 +1805,74 @@ public class SectionViewer
 //-------------------------------------------------------------
 // get view structure model etc
 //-------------------------------------------------------------
+  /**
+   *   Returns the current <em>ViewStructModel</em>.
+   *   @return _VSModel.
+   */
   public ViewStructModel getViewStructModel() {
     return _VSModel;
   }
 
+  /**
+   *   Returns the current <em>WlzObjModel</em>.
+   *   @return _OBJModel.
+   */
   protected WlzObjModel getWlzObjModel() {
     return _OBJModel;
   }
 
+  /**
+   *   Returns the current <em>WlzImgView</em>.
+   *   @return _imgV.
+   */
   protected WlzImgView getImageView() {
     return _imgV;
   }
 
+  /**
+   *   Returns the <em>zoom</em> control.
+   *   @return zoomSetter.
+   */
   protected Zoom getZoomSetter() {
     return zoomSetter;
   }
 
+  /**
+   *   Returns the <em>dist</em> control.
+   *   @return distSetter.
+   */
   protected WSetter getDistSetter() {
     return distSetter;
   }
 
+  /**
+   *   Returns the <em>yaw</em> control.
+   *   @return yawSetter.
+   */
   protected WSetter getYawSetter() {
     return yawSetter;
   }
 
+  /**
+   *   Returns the <em>pitch</em> control.
+   *   @return pitchSetter.
+   */
   protected WSetter getPitchSetter() {
     return pitchSetter;
   }
 
+  /**
+   *   Returns the <em>roll</em> control.
+   *   @return rollSetter.
+   */
   protected WSetter getRollSetter() {
     return rollSetter;
   }
 
+  /**
+   *   Returns the <em>colour chooser</em> control.
+   *   @return secColorClt.
+   */
   protected JButton getSecColorClt() {
     return secColorClt;
   }
@@ -1486,11 +1880,30 @@ public class SectionViewer
 //-------------------------------------------------------------
 // enable / disable thresholding & threshConstraint
 //-------------------------------------------------------------
+  /**
+   *   Toggles <em>threshold</em> mode on or off.
+   *   <br>When in thresholdmode, pressing the mouse button
+   *   over the grey level image will use the current grey value
+   *   as the mid-point of the threshold range.
+   *   <br>Subsequent dragging of the mouse to the right or left will
+   *   increase or decrease the threshold window respectively.
+   *   <p>Not in use.
+   *   @param state true if thresholding is enabled.
+   */
   protected void enableThresholding(boolean state) {
     _thresholding = state;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Toggles <em>threshold constraint</em> mode on or off.
+   *   <br>When in threshold constraint mode, pressing and dragging the mouse
+   *   over the grey-level image will draw a contour.
+   *   When the mouse button is released the contour automatically closes.
+   *   <br>The constraint region is the inside of the closed contour.
+   *   <p>Not in use.
+   *   @param state true if threshold constraint is enabled.
+   */
   protected void enableThreshConstraint(boolean state) {
     _threshConstraint = state;
     if (state) {
@@ -1501,10 +1914,16 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Disables <em>mouse-click anatomy</em> mode.
+   */
   protected void disableAnatomy() {
     _anatomy = false;
   }
 
+  /**
+   *   Enables <em>mouse-click anatomy</em> mode.
+   */
   protected void enableAnatomy() {
     _anatomy = true;
   }
@@ -1512,6 +1931,14 @@ public class SectionViewer
 //-------------------------------------------------------------
 // set anatomy text field for menu selected anatomy
 //-------------------------------------------------------------
+  /**
+   *   Sets the <em>feedback anatomy text</em> to the current 
+   *   <em>mouse-click anatomy</em> or "-----" if none.
+   *   <br>Called from SVParent2D when <em>Anatomy Key</em> is cleared..
+   *   @param str the String to set.
+   *   <p>Note: It might be better to get rid of str as SVParent2D just
+   *   sets it to SectionViewer._anatomyStr.
+   */
   public void setAnatomyText(String str) {
     resetAnatomyText();
     anatomyTextField.setText(str);
@@ -1520,6 +1947,11 @@ public class SectionViewer
 //-------------------------------------------------------------
 // reset fixed point
 //-------------------------------------------------------------
+  /**
+   *   Sets <em>Fixed Point</em> to its default value and
+   *   displays it if showFP is true.
+   *   @param showFP true if fixed point is to be displayed.
+   */
   public void resetFixedPoint(boolean showFP) {
 
     double vals[] = null;
@@ -1543,6 +1975,12 @@ public class SectionViewer
 //-------------------------------------------------------------
 // reset fixed line
 //-------------------------------------------------------------
+  /**
+   *   Sets <em>2nd Fixed Point</em> to the original 
+   *   <em>Fixed Point</em> and
+   *   displays the fixed line if showAP is true.
+   *   @param showAP true if fixed line is to be displayed.
+   */
   public void resetFixedLine(boolean showAP) {
 
      double vals[] = null;
@@ -1568,6 +2006,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // reset user interface controls
 //-------------------------------------------------------------
+  /**
+   *   Sets the SectionViewer controls to default values.
+   */
   protected void resetGUI() {
     if (_debug)
       System.out.println("enter resetGUI");
@@ -1624,6 +2065,12 @@ public class SectionViewer
 //-------------------------------------------------------------
 // constraint to Wlz
 //-------------------------------------------------------------
+  /**
+   *   Converts the region defined by a <em>threshold constraint</em>
+   *   to a Woolz object.
+   *   <br>This is required for constrained thresholding.
+   *   @param bbox2 the 2D bounding box of the current section.
+   */
   protected void constraintToWlz(WlzIBox2 bbox2) {
 
     GeneralPath GP = null;
@@ -1690,6 +2137,9 @@ public class SectionViewer
 //-------------------------------------------------------------
 // close
 //-------------------------------------------------------------
+  /**
+   *   closes a SectionViewer.
+   */
   protected void close() {
     try {
       Method M1 = null;
@@ -1730,11 +2180,13 @@ public class SectionViewer
     }
   }
 
-  /*
-   * work-around for bug in Wlz
-   * Wlz3DViewGetIntersectionPoint gives a shifted answer
-   * if the fixed point is changed. This causes intersection lines
-   * to jump in the view with the changed fixed point
+  /**
+   *   Work-around for bug in Wlz.
+   *   <br>Wlz3DViewGetIntersectionPoint gives a shifted answer
+   *   if the fixed point is changed. This causes intersection lines
+   *   to jump in the view with the changed fixed point
+   *   @param vtx the intersection point returned by Woolz.
+   *   @return the modified intersection point.
    */
   private WlzDVertex2 adjustedIntersectionPoint(WlzDVertex2 vtx) {
 
@@ -1771,23 +2223,93 @@ public class SectionViewer
 //-------------------------------------------------------------
 // connect up the adaptors
 //-------------------------------------------------------------
+  /** Event handler for the <em>zoom</em> control. */
   ZoomToZoomAdaptor Z2Z_1;
+
+  /** Event handler for the <em>dist</em> control. */
   WSetterToDistAdaptor W2D_1;
+
+  /** Event handler for the <em>pitch</em> control. */
   WSetterToPitchAdaptor W2P_1;
+
+  /** Event handler for the <em>yaw</em> control. */
   WSetterToYawAdaptor W2Y_1;
+
+  /** Event handler for the <em>roll</em> control. */
   WSetterToRollAdaptor W2R_1;
+
+  /** Event handler for the <em>fixed line</em> control. */
   WSetterToFixedRotAdaptor W2FR_1;
+
+  /**
+   *   Event handler which changes the section
+   *   when the <em>View Structure</em> changes.
+   */
   ViewStructModelToViewAdaptor WOM2V_1;
+
+  /**
+   *   Event handler which changes
+   *   <em>position</em> feedback
+   *   when <em>_imgV</em> fires an event.
+   */
   WlzImgViewToPosAdaptor WI2P_1;
+
+  /**
+   *   Event handler which changes
+   *   <em>grey value</em> feedback
+   *   when <em>_imgV</em> fires an event.
+   */
   WlzImgViewToGreyAdaptor WI2G_1;
+
+  /**
+   *   Event handler which changes
+   *   <em>mouse-click anatomy</em> feedback
+   *   when <em>_imgV</em> fires an event.
+   */
   WlzImgViewToAnatAdaptor WI2A_1;
-  public MouseToFBAdaptor M2FB_1; // GFeng needs access from external package
+
+  /**
+   *   Event handler that updates <em>_imgV</em> with
+   *   the current cursor position in the 2D grey-level image,
+   *   then causes <em>_imgV</em> to fire a changeEvent.
+   *   <br>Needs to be <em>public</em> as external applications use it.
+   */
+  public MouseToFBAdaptor M2FB_1; 
+
+  /**
+   *   Event handler which changes
+   *   <em>fixed point</em> according to cursor position
+   *   in grey-level image.
+   */
   MouseToFPAdaptor M2FP_1;
+
+  /**
+   *   Event handler which generates a
+   *   <em>threshold</em> region according to
+   *   cursor position & movement in grey-level image.
+   */
   MouseToThresholdAdaptor M2T_1;
+
+  /**
+   *   Event handler which generates a
+   *   <em>threshold constraint</em> contour according to
+   *   cursor position & movement in grey-level image.
+   */
   MouseToThreshConstraintAdaptor M2TC_1;
+
+  /**
+   *   Event handler which fires an event if 
+   *   the mouse is clicked in a SectionViewer.
+   */
   FocusAdaptor FA_1;
 
   // adaptors for grey level
+  /**
+   *   Creates new event handlers and registers them with the 
+   *   appropriate event-firing objects.
+   *   <br>Any existing event handlers are removed prior to registering
+   *   the new ones.
+   */
   protected void connectAdaptors_1() {
     if (_debug)
       System.out.println("enter connectAdaptors_1");
@@ -1909,16 +2431,33 @@ public class SectionViewer
   } //connectAdaptors_1()
 
 //-------------------------------------------------------------
+  /** 
+   *   Toggles the SectionViewer's ability to fire events.
+   *   @param state true if the SectionViewer can fire events.
+   */
   protected void setSVEnabled(boolean state) {
     _enabled = state;
   }
 
 //-------------------------------------------------------------
+  /** 
+   *   Tests the SectionViewer's ability to fire events.
+   *   @return true if the SectionViewer can fire events.
+   */
   protected boolean isSVEnabled() {
     return _enabled;
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Calculates various parameters required for
+   *   <em>fixed line view mode</em> and sets them in _VSModel.
+   *   <ul>
+   *      <li>fixed line angle</li>
+   *      <li>_norm2</li>
+   *      <li>_norm3</li>
+   *   </ul>
+   */
   protected void setFixedLineParams() {
     /*
      * get the coords of fixed point and fixed line in 2D
@@ -2017,6 +2556,11 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Debugging utility.
+   *   <br>Prints a 3 element array representing a point in 3D space.
+   *   @param pnt the 3 element array.
+   */
   private void printDoubleArray(double[] pnt) {
      System.out.println("x = "+Double.toString(pnt[0]));
      System.out.println("y = "+Double.toString(pnt[1]));
@@ -2024,6 +2568,11 @@ public class SectionViewer
      System.out.println("---------------");
   }
 //-------------------------------------------------------------
+  /**
+   *   Debugging utility.
+   *   <br>Prints a 3x3 matrix representing rotation.
+   *   @param mtrx a 3x3 matrix.
+   */
   private void printMatrix(double[][] mtrx) {
      System.out.println("00 = "+Double.toString(mtrx[0][0]));
      System.out.println("01 = "+Double.toString(mtrx[0][1]));
@@ -2038,6 +2587,12 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Constrains <em>Fixed Point</em> and <em>2nd Fixed Point</em>
+   *   to be within the 3D bounding box.
+   *   @param pnt a 3 element array representing the position of the cursor
+   *   when setting <em>Fixed Point</em> or <em>2nd Fixed Point</em>.
+   */
   private void clipPoint3D(double[] pnt) {
 
      WlzIBox3 bBox = null;
@@ -2056,6 +2611,12 @@ public class SectionViewer
 
 //-------------------------------------------------------------
   /* checks that dist = 0.0 when setting fixed line */
+  /**
+   *   True if the <em>Fixed Point</em> and <em>2nd Fixed Point</em>
+   *   are in the same plane when <em>2nd Fixed Point</em>
+   *   is being changed.
+   *   @return true or false.
+   */
   private boolean checkDist() {
      boolean ret = false;
      double[] dArr = null;
@@ -2083,6 +2644,10 @@ public class SectionViewer
 // get and set methods
 //==========================================
 
+   /**
+    *   Returns the current value of the <em>dist</em> control.
+    *   @return the current value of the <em>dist</em> control.
+    */
    public double getDist() {
       double ret = 0;
       if(distSetter != null) {
@@ -2091,12 +2656,20 @@ public class SectionViewer
       return ret;
    }
 
+   /**
+    *   Sets the <em>dist</em> control with the given value.
+    *   @param val the new value.
+    */
    public void setDist(double val) {
       if(distSetter != null) {
          distSetter.setValue(val);
       }
    }
 //......................................
+   /**
+    *   Returns the current value of the <em>pitch</em> control.
+    *   @return the current value of the <em>pitch</em> control.
+    */
    public double getPitch() {
       double ret = 0;
       if(pitchSetter != null) {
@@ -2105,12 +2678,20 @@ public class SectionViewer
       return ret;
    }
 
+   /**
+    *   Sets the <em>pitch</em> control with the given value.
+    *   @param val the new value.
+    */
    public void setPitch(double val) {
       if(pitchSetter != null) {
          pitchSetter.setValue(val);
       }
    }
 //......................................
+   /**
+    *   Returns the current value of the <em>yaw</em> control.
+    *   @return the current value of the <em>yaw</em> control.
+    */
    public double getYaw() {
       double ret = 0;
       if(yawSetter != null) {
@@ -2119,12 +2700,20 @@ public class SectionViewer
       return ret;
    }
 
+   /**
+    *   Sets the <em>yaw</em> control with the given value.
+    *   @param val the new value.
+    */
    public void setYaw(double val) {
       if(yawSetter != null) {
          yawSetter.setValue(val);
       }
    }
 //......................................
+   /**
+    *   Returns the current value of the <em>roll</em> control.
+    *   @return the current value of the <em>roll</em> control.
+    */
    public double getRoll() {
       double ret = 0;
       if(rollSetter != null) {
@@ -2133,6 +2722,10 @@ public class SectionViewer
       return ret;
    }
 
+   /**
+    *   Sets the <em>roll</em> control with the given value.
+    *   @param val the new value.
+    */
    public void setRoll(double val) {
       /* roll should not be adjustable if view mode is 'up_is_up' */
       if((rollSetter != null)&&(controlMenu_2_2.isSelected())) {
@@ -2140,6 +2733,10 @@ public class SectionViewer
       }
    }
 //......................................
+   /**
+    *   Returns the current value of the <em>zoom</em> control.
+    *   @return the current value of the <em>zoom</em> control.
+    */
    public int getZoom() {
       int ret = 0;
       if(zoomSetter != null) {
@@ -2148,37 +2745,69 @@ public class SectionViewer
       return ret;
    }
 
+   /**
+    *   Sets the <em>zoom</em> control with the given value.
+    *   @param val the new value.
+    */
    public void setZoom(int val) {
       if(zoomSetter != null) {
          zoomSetter.setValue(val);
       }
    }
 //......................................
+   /**
+    *   Returns the current contents of the
+    *   <em>mouse-click anatomy</em> text field.
+    *   @return _anatomyStr.
+    */
    public String getAnatomyStr() {
       return _anatomyStr;
    }
 
 //......................................
+   /**
+    *   Returns the top level container of the SectionViewer.
+    *   @return _contentPane.
+    */
    public JPanel getContentPane() {
       return _contentPane;
    }
 
 //......................................
+   /**
+    *   Returns the current contents of the
+    *   <em>position feedback</em> text field.
+    *   @return xyzTextField.
+    */
    public JTextField getXyzTextField() {
       return xyzTextField;
    }
 
 //......................................
+   /**
+    *   Returns the SectionViewer's JScrollPane.
+    *   @return _imageScrollPane.
+    */
    public JScrollPane getImageScrollPane() {
       return _imageScrollPane;
    }
 
 //......................................
+   /**
+    *   Returns the object that contains the SectionViewer.
+    *   <br>This will be either a JFrame or a JInternalFrame.
+    *   @return _frame.
+    */
   public Container getFrame() {
     return _frame;
   }
 
 //......................................
+   /**
+    *   Sets the object that contains the SectionViewer.
+    *   <br>This will be either a JFrame or a JInternalFrame.
+    *   @param frame the object that contains the SectionViewer.
+    */
   public void setFrame(Container frame) {
     _frame = frame;
   }
@@ -2190,6 +2819,10 @@ public class SectionViewer
 //-------------------------------------------------------------
 // inner classes for event handling
 //-------------------------------------------------------------
+  /**
+   *   Event handler for menu selections from 
+   *   the <em>file</em> menu.
+   */
   public class fileMenuHandler
       implements ActionListener {
 
@@ -2241,6 +2874,10 @@ public class SectionViewer
   } // class fileMenuHandler
 
 //---------------------------------------
+  /**
+   *   Event handler for menu selections from 
+   *   the <em>control</em> menu.
+   */
   public class controlMenuHandler
       implements ActionListener {
 
@@ -2441,6 +3078,10 @@ public class SectionViewer
   } // class controlMenuHandler
 
 //---------------------------------------
+  /**
+   *   Event handler for menu selections from 
+   *   the <em>show</em> menu.
+   */
   public class showMenuHandler
       implements ActionListener {
 
@@ -2542,6 +3183,10 @@ public class SectionViewer
     }
   } // class showMenuHandler
 //---------------------------------------
+  /**
+   *   Event handler for menu selections from 
+   *   the <em>help</em> menu.
+   */
   public class helpMenuHandler
       implements ActionListener {
 
@@ -2599,6 +3244,11 @@ public class SectionViewer
   } // class helpMenuHandler
 
 //---------------------------------------
+  /**
+   *   Event handler for menu selections from 
+   *   the <em>threshold</em> menu.
+   *   <p>Not in use.
+   */
   public class thresholdMenuHandler
       implements ActionListener {
 
@@ -2707,6 +3357,10 @@ public class SectionViewer
   } // class thresholdMenuHandler
 
 //---------------------------------------
+  /**
+   *   Event handler for
+   *   the <em>colour chooser</em> button.
+   */
   public class planeColChooser
       implements ActionListener {
 
@@ -2723,30 +3377,30 @@ public class SectionViewer
   }
 
 //---------------------------------------
+  /**
+   *   Event handler for
+   *   the <em>invert</em> button.
+   */
   public class invertButtonHandler implements ActionListener {
 
     public invertButtonHandler() {
     }
 
     public void actionPerformed(ActionEvent e) {
-      invertSection();
+       // reverses the grey-level image
+       if(!_inverted) {
+          invertButton.setBackground(Color.black);
+          invertButton.setForeground(Color.white);
+          _imgV.setInverted(true);
+       } else {
+          invertButton.setBackground(Color.white);
+          invertButton.setForeground(Color.black);
+          _imgV.setInverted(false);
+       }
+       _inverted = !_inverted;
+       _bigPanel.revalidate();
+       _bigPanel.repaint();
     }
-  }
-
-  protected void invertSection(){
-    // reverses the grey-level image
-      if(!_inverted) {
-         invertButton.setBackground(Color.black);
-         invertButton.setForeground(Color.white);
-         _imgV.setInverted(true);
-      } else {
-         invertButton.setBackground(Color.white);
-         invertButton.setForeground(Color.black);
-         _imgV.setInverted(false);
-      }
-      _inverted = !_inverted;
-      _bigPanel.revalidate();
-      _bigPanel.repaint();
   }
 
 //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
@@ -2754,6 +3408,9 @@ public class SectionViewer
 // Control ADAPTORS, wsetter to wlz object
 //---------------------------------------
   // change 'distance' using WSetter control
+  /**
+   *   Event handler for the <em>dist</em> slider control.
+   */
   public class WSetterToDistAdaptor
       implements ChangeListener {
 
@@ -2799,6 +3456,9 @@ public class SectionViewer
 
 //---------------------------------------
   // change 'pitch' using WSetter control
+  /**
+   *   Event handler for the <em>pitch</em> slider control.
+   */
   public class WSetterToPitchAdaptor
       implements ChangeListener {
 
@@ -2849,6 +3509,9 @@ public class SectionViewer
 
 //---------------------------------------
   // change 'yaw' using WSetter control
+  /**
+   *   Event handler for the <em>yaw</em> slider control.
+   */
   public class WSetterToYawAdaptor
       implements ChangeListener {
 
@@ -2895,6 +3558,9 @@ public class SectionViewer
 
 //---------------------------------------
   // change 'roll' using WSetter control
+  /**
+   *   Event handler for the <em>roll</em> slider control.
+   */
   public class WSetterToRollAdaptor
       implements ChangeListener {
 
@@ -2940,6 +3606,9 @@ public class SectionViewer
   }
 //---------------------------------------
   // change fixed line rotation using WSetter control
+  /**
+   *   Event handler for the <em>fixed line</em> slider control.
+   */
   public class WSetterToFixedRotAdaptor
      implements ChangeListener {
 
@@ -3011,6 +3680,10 @@ public class SectionViewer
 // View ADAPTORS
 //---------------------------------------
   // change the displayed section when the view structure changes
+  /**
+   *   Event handler that changes the current section when
+   *   any aspect of the <em>View Structure</em> changes.
+   */
   public class ViewStructModelToViewAdaptor
       implements ChangeListener {
 
@@ -3176,6 +3849,11 @@ public class SectionViewer
 
 //---------------------------------------
   // connect mouse events to display of x-y position
+  /**
+   *   Event handler that updates the 
+   *   <em>position</em> feedback text field when
+   *   _imgV fires an event. 
+   */
   public class WlzImgViewToPosAdaptor
       implements ChangeListener {
 
@@ -3210,6 +3888,11 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse events to display of grey level value
+  /**
+   *   Event handler that updates the 
+   *   <em>grey value</em> feedback text field when
+   *   _imgV fires an event. 
+   */
   public class WlzImgViewToGreyAdaptor
       implements ChangeListener {
 
@@ -3231,6 +3914,11 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse events to display of anatomy
+  /**
+   *   Event handler that updates the 
+   *   <em>mouse-click anatomy</em> feedback text field when
+   *   _imgV fires an event. 
+   */
   public class WlzImgViewToAnatAdaptor
       implements ChangeListener {
 
@@ -3313,6 +4001,10 @@ public class SectionViewer
 
 //---------------------------------------
   // change 'zoom' using Zoom control
+  /**
+   *   Event handler for
+   *   the <em>zoom</em> control.
+   */
   public class ZoomToZoomAdaptor
       implements ChangeListener {
 
@@ -3357,6 +4049,11 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse events to feedback display
+  /**
+   *   Event handler that updates <em>_imgV</em> with
+   *   the current cursor position in the 2D grey-level image,
+   *   then causes <em>_imgV</em> to fire a changeEvent.
+   */
   public class MouseToFBAdaptor
       implements MouseListener, MouseMotionListener {
 
@@ -3410,6 +4107,11 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse events to thresholding
+  /**
+   *   Event handler that <em>thresholds</em> a region of
+   *   the 2D grey-level image centred on an initial mouse press
+   *   and controlled by the amount of mouse drag left or right.
+   */
   public class MouseToThresholdAdaptor
       implements MouseListener, MouseMotionListener {
 
@@ -3550,6 +4252,11 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse events to threshConstraint
+  /**
+   *   Event handler that draws a <em>threshold constraint</em>
+   *   contour, starting at an initial mouse press, finishing when
+   *   the mouse is released and defined by the intervening mouse drag.
+   */
   public class MouseToThreshConstraintAdaptor
       implements MouseListener, MouseMotionListener {
 
@@ -3598,8 +4305,6 @@ public class SectionViewer
           view.updateStats(xorg, yorg);
           view.clearThreshConstraint();
           view.enableThreshConstraint(true);
-          view.setThreshConstraintOffsets(bbox2.xMin,
-                                          bbox2.yMin);
           xpts.add(new Float(xorg));
           ypts.add(new Float(yorg));
           view.repaint();
@@ -3653,6 +4358,10 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse entered events to focus notification
+  /**
+   *   Event handler which fires an ActionEvent
+   *   when the mouse is clicked inside a SectionViewer.
+   */
   public class FocusAdaptor
       implements MouseListener {
 
@@ -3685,6 +4394,10 @@ public class SectionViewer
 
 //---------------------------------------
   // connects mouse events to fixed point / fixed line setting
+  /**
+   *   Event handler which sets the <em>Fixed Point</em> or 
+   *   <em>2nd Fixed Point</em> when the mouse button is released.
+   */
   public class MouseToFPAdaptor
       implements MouseListener, MouseMotionListener {
 
@@ -3785,6 +4498,10 @@ public class SectionViewer
     }
   }
 //---------------------------------------
+  /**
+   *   Event handler which sets the <em>Fixed Point</em> 
+   *   to values obtained from a <em>PointEntry</em> dialogue.
+   */
   public class FixedPointAdaptor
       implements ChangeListener {
 
@@ -3817,6 +4534,10 @@ public class SectionViewer
   }
 
 //-------------------------------------------------------------
+  /**
+   *   Event handler which sets the <em>2nd Fixed Point</em> 
+   *   to values obtained from a <em>PointEntry</em> dialogue.
+   */
   public class FixedLineAdaptor
       implements ChangeListener {
 
@@ -3853,9 +4574,13 @@ public class SectionViewer
 // thread stuff
 //-------------------------------------------------------------
 
-  Object _lock = new Object();
+  //Object _lock = new Object();
 //-------------------------------------------------------------
   // stack
+  /**
+   *   Thread which is responsible for copying stacks of Woolz objects 
+   *   and their filenames from _anatBuilder.
+   */
   Runnable rStack = new Runnable() {
     public void run() {
       //System.out.println("stack thread started ");
@@ -3898,11 +4623,18 @@ public class SectionViewer
 // handle all _objects that are interested in changes
 //-------------------------------------------------------------
   // keep track of all the listeners to this 'model'
+  /**
+   *   A list of ChangeListeners which are
+   *   listening for events fired from the SectionViewer.
+   */
   protected EventListenerList changeListeners =
       new EventListenerList();
 
 //-------------------------------------------------------------
   // add a listener to the register
+  /**
+   *   Adds a ChangeListener to the EventListenerList.
+   */
   public void addChangeListener(ChangeListener x) {
     changeListeners.add(ChangeListener.class, x);
 
@@ -3912,14 +4644,26 @@ public class SectionViewer
 
 //-------------------------------------------------------------
   // remove a listener from the register
+  /**
+   *   Removes a ChangeListener from the EventListenerList.
+   */
   public void removeChangeListener(ChangeListener x) {
     changeListeners.remove(ChangeListener.class, x);
   }
 
 //-------------------------------------------------------------
+  /**   An event that will be fired from SectionViewer. */
   private ChangeEvent ce;
+
+  /**  A local copy of the list of ChangeListeners. */
   private Object[] listeners;
+
+  /**  One of the list of Change Listeners. */
   private ChangeListener cl;
+
+  /**
+   *   Fires a ChangeEvent from the SectionViewer.
+   */
   protected void fireChange() {
     if (_enabled == true) {
       //System.out.println("firing an event from SectionViewer");
@@ -3946,24 +4690,41 @@ public class SectionViewer
 
 //-------------------------------------------------------------
   // keep track of all the listeners to this 'model'
+  /**
+   *   A list of ActionListeners which are
+   *   listening for events fired from the SectionViewer.
+   */
   protected EventListenerList actionListeners =
       new EventListenerList();
 
 //-------------------------------------------------------------
   // add a listener to the register
+  /**
+   *   Adds an ActionListener to the EventListenerList.
+   */
   public void addActionListener(ActionListener x) {
     actionListeners.add(ActionListener.class, x);
   }
 
 //-------------------------------------------------------------
   // remove a listener from the register
+  /**
+   *   Removes an ActionListener from the EventListenerList.
+   */
   public void removeActionListener(ActionListener x) {
     actionListeners.remove(ActionListener.class, x);
   }
 
 //-------------------------------------------------------------
+  /**  A local copy of the list of ActionListeners. */
   private Object[] listeners2;
+
+  /**  One of the list of Action Listeners. */
   private ActionListener al;
+
+  /**
+   *   Fires an ActionEvent from the SectionViewer.
+   */
   protected void fireEvent(ActionEvent event) {
     // Get the listener list
     listeners2 = actionListeners.getListenerList();

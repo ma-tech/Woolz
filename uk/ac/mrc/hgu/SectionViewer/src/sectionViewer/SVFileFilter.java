@@ -4,12 +4,22 @@ import sectionViewer.*;
 import java.io.File;
 import javax.swing.filechooser.*;
 
+/**
+ *   File filter which accepts .jpg or .jpeg files
+ */
 public class SVFileFilter extends FileFilter {
 
-
+   /**
+    *   Default constructor
+    */
    public SVFileFilter() {
    }
 
+   /**
+    *   Tests a File type
+    *   @param fil the File to be tested
+    *   @return true if the file is a .jpg .jpeg or a directory.
+    */
    public boolean accept(File fil) {
 
       boolean ret = false;
@@ -30,8 +40,11 @@ public class SVFileFilter extends FileFilter {
       return ret;
    }
 
+   /**
+    *   Returns a String description of acceptable File type(s).
+    *   @return String description of acceptable File type(s).
+    */
    public String getDescription() {
-
       return "jpg, jpeg";
    }
 

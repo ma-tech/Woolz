@@ -8,10 +8,12 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.help.*;
 
-/*
-   based on comp.lang.java.programmer newsgroup reply from
-   Richard Trahan (rtrahan@monmouth.com) 2001-05-01
-*/
+/**
+ *   Utility class to determine the full path name of the directory containing 
+ *   the Java Help files. 
+ *   Based on comp.lang.java.programmer newsgroup reply from
+ *   Richard Trahan (rtrahan@monmouth.com) 2001-05-01
+ */
 public class HelpUtils {
 
     /** Returns the full path name of the directory from which the
@@ -20,8 +22,8 @@ public class HelpUtils {
      * data of the class. Use this when you want to open files which
      * cannot have package names, like .bmp, .gif, .txt, etc. Be sure
      * this class is in the same directory as those files.
-     * @return The full path, like d:\com\rockyboat\xutils. Note
-     * that the correct platform-dependent file separator will be used
+     * @return The full path.
+     * Note that the correct platform-dependent file separator will be used
      * (\ on Win32, / on unix, etc.), and that the path does not end 
      * with the separator character.
      * @param obj The calling class whose full path origin is to be
@@ -52,12 +54,18 @@ public class HelpUtils {
         return s;
     }
 
-    /*
-     Assumes that the help system is in the package directory 
-     of the class that is calling it
-     ie. calling class is in  package MyPackage
-         help files are in directory MyPackage/helpDir
-    */
+    /**
+     *   Returns the helpset URL even if it is packaged in a jar file.
+     *   Assumes that the help system is in the package directory 
+     *   of the class that is calling it
+     *   ie. calling class is in  package MyPackage
+     *   help files are in directory MyPackage/helpDir
+     *   @return The help set URL
+     *   @param obj The instance of Dummy which is in the same directory 
+     *   as the help system.
+     *   @param helpsetPath the location of the .hs file
+     *   ("help/ViewerHelp.hs").
+     */
     public static URL getHelpSetURL(Object obj,
 				    String helpsetPath)
 		            throws MalformedURLException {

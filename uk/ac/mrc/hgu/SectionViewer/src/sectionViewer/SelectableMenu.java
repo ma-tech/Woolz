@@ -7,18 +7,36 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.io.*;
 
+/**
+ *   Allows sub-menus to be selected.
+ *   This is done with the right mouse button (or SHIFT + mouse button).
+ */
 public class SelectableMenu extends JMenu {
 
    ActionEvent event;
    String modifiersStr;
 
+   /**
+    *   Constructs a new SelectableMenu with no text.
+    */
    public SelectableMenu() {
       super();
    }
+
+   /**
+    *   Constructs a new SelectableMenu with the given text.
+    *   @param str the menu text
+    */
    public SelectableMenu(String str) {
       super(str);
    }
 
+   /**
+    *   Overrides JMenuElement.processMouseEvent().
+    *   @param e the mouse event.
+    *   @param path the MenuElement path array.
+    *   @param man the MenuSelectionManager.
+    */
    public void processMouseEvent (MouseEvent e,
                                   MenuElement[] path,
 				  MenuSelectionManager man) {
@@ -53,23 +71,40 @@ public class SelectableMenu extends JMenu {
 
 //-------------------------------------------------------------
 //-------------------------------------------------------------
-   // keep track of all the listeners to this 'model'
+   // keep track of all the listeners to this model
+   /**
+    *   A list of ActionListeners which are
+    *   listening for events fired from the SelectableMenu.
+    */
    protected EventListenerList actionListeners =
                              new EventListenerList();
 
 //-------------------------------------------------------------
   // add a listener to the register
+   /**
+    *   Registers an ActionListener
+    *   with the EventListenerList.
+    *   @param x an Event handler implementing ActionListener
+    */
   public void addActionListener(ActionListener x) {
     actionListeners.add (ActionListener.class, x);
   }
 
 //-------------------------------------------------------------
   // remove a listener from the register
+   /**
+    *   Removes a previously registered ActionListener
+    *   from the EventListenerList
+    *   @param x an Event handler implementing ActionListener
+    */
   public void removeActionListener(ActionListener x) {
     actionListeners.remove (ActionListener.class, x);
   }
 
 //-------------------------------------------------------------
+   /**
+    *   Fires an ActionEvent from the SelectableMenu.
+    */
    protected void fireEvent() {
    // Get the listener list
    Object[] listeners =

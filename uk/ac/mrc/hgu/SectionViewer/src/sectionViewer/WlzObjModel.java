@@ -30,25 +30,60 @@ import uk.ac.mrc.hgu.Wlz.*;
 //-------------------------------------------------------------
 // 'model' class for wlz objects
 //-------------------------------------------------------------
+
+/**
+ *   <b>Model</b> class for SectionViewer component.
+ *   <br>Encapsulates data for 3D Woolz Objects.
+ */
 public class WlzObjModel implements WlzObjectType {
 
+   /**
+    *   File containing a 3D Woolz object.
+    */
    File imgFile;
 
+   /**
+    *   Stream used to read a 3D Woolz object.
+    */
    WlzFileStream in = null;
+
+   /**
+    *   3D Woolz object
+    */
    WlzObject _obj = null;
+
+   /**
+    *   2D section through a 3D Woolz object.
+    */
    WlzObject _sectObj = null;
+   
+   /**
+    *   Bounding box of a 3D Woolz object.
+    */
    WlzIBox3 _bBox3 = null;
 
+
+   /**
+    *   Flag to control content of debugging output.
+    */
    int manyFacts;
 
 //----------------------------------------------
 // constructors
 //----------------------------------------------
+   /**
+    *   Constructs a WlzObjModel given a Woolz filename;
+    *   @param     imgStr the Woolz object filename.
+    */
    public WlzObjModel(String imgStr) {
       manyFacts = 0;
       setWlzObj(imgStr);
    }
 
+   /**
+    *   Constructs a WlzObjModel given a Woolz File;
+    *   @param     imgFile the Woolz object File.
+    */
    public WlzObjModel(File imgFile) {
       manyFacts = 0;
       setWlzObj(imgFile);
@@ -57,6 +92,9 @@ public class WlzObjModel implements WlzObjectType {
 //----------------------------------------------
 // finalizer
 //----------------------------------------------
+   /**
+    *   Closes WlzFileStream at destruction of the WlzObjModel.
+    */
    protected void finalize() {
      try {
 	if (in != null) in.close();
@@ -66,6 +104,10 @@ public class WlzObjModel implements WlzObjectType {
      }
    }
 //----------------------------------------------
+   /**
+    *   Reads in a 3D Woolz object from the given file.
+    *   @param imgFileStr Filename of Woolz object to be read in
+    */
    public void setWlzObj(String imgFileStr) {
       try {
 	 imgFile = new File(imgFileStr);
@@ -77,10 +119,11 @@ public class WlzObjModel implements WlzObjectType {
       }
    }
 
-   public void setWlzObj(WlzObject object){
-     this._obj = object;
-   }
 //----------------------------------------------
+   /**
+    *   Reads in a 3D Woolz object from the given File.
+    *   @param imgFileStr File of Woolz object to be read in
+    */
    public void setWlzObj(File imgFile) {
 
       try {
@@ -98,6 +141,20 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Sets _obj to be the given 3D Woolz object.
+    *   @param object Woolz object.
+    */
+   public void setWlzObj(WlzObject object){
+     _obj = object;
+   }
+
+//----------------------------------------------
+   /**
+    *   Returns a 2D section through the current grey-level 3D Woolz Object.
+    *   @param VS View Structure defining the section.
+    *   @return The section.
+    */
    public WlzObject makeSection(WlzThreeDViewStruct VS) {
 
       try {
@@ -116,6 +173,12 @@ public class WlzObjModel implements WlzObjectType {
    } // makeSection()
 
 //----------------------------------------------
+   /**
+    *   Returns a 2D section through the given 3D Woolz Object.
+    *   @param VS View Structure defining the section.
+    *   @param  obj Woolz object through which to cut a section.
+    *   @return The section.
+    */
    public WlzObject makeSection(WlzObject obj, WlzThreeDViewStruct VS) {
 
       WlzObject ret = null;
@@ -126,7 +189,7 @@ public class WlzObjModel implements WlzObjectType {
 	      WlzInterpolationType.WLZ_INTERPOLATION_NEAREST);
 
 	 if(ret != null) {
-
+	    
 	 }
       }
       catch (WlzException e) {
@@ -138,6 +201,14 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Returns a thresholded region of a 2D Woolz object.
+    *   @param  obj Woolz object to be thresholded.
+    *   @param  val threshold (grey) value.
+    *   @param  highLow flag which determines if thresholding is to be
+    *   above or below <em>val</em>.
+    *   @return The result of the threshold operation.
+    */
    public WlzObject threshold(WlzObject obj, int val, int highLow) {
 
       //System.out.println("threshold value = "+val);
@@ -155,6 +226,16 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Returns a smoothed version of a Woolz object.
+    *   Used in thresholding operations.
+    *   @param  obj Woolz object to be smoothed.
+    *   @param wx
+    *   @param wy
+    *   @param x_deriv
+    *   @param y_deriv
+    *   @return the smoothed Woolz object.
+    */
    public WlzObject smooth(WlzObject obj,
                            double wx,
 			   double wy,
@@ -174,6 +255,13 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Returns the region of a 2D Woolz object which intersects
+    *   a given 2D constraint.
+    *   @param obj the Woolz object to be constrained.
+    *   @param constraint threshold constraint region.
+    *   @return the intersecting region.
+    */
    public WlzObject constrain(WlzObject obj,
                            WlzObject constraint) {
 
@@ -222,6 +310,14 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Returns the Woolz object from the given array 
+    *   that contains the given x,y point.
+    *   @param objArray Collection of 2D Woolz objects in a plane.
+    *   @param x x coord of test point.
+    *   @param y y coord of test point.
+    *   @return the containing object.
+    */
    private WlzObject contains(WlzObject[] objArray,
 				     double x,
 		                     double y) {
@@ -253,6 +349,14 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   takes a 2D Woolz object, decomposes it and returns the region
+    *   containing the given point(x,y). 
+    *   @param obj the composite Woolz object.
+    *   @param x x coord of contained point
+    *   @param y y coord of contained point
+    *   @return the decomposed region that contains point(x,y).
+    */
    public WlzObject select(WlzObject obj,
                            double x,
 		           double y) {
@@ -299,6 +403,16 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Calculates the intersection of a section with
+    *   the bounding box specified by the given View Structure.
+    *   <em><b>Obsolete</b></em>.
+    *   @param viewStr the current View Structure.
+    *   @param dstSizeArrayVtxs size of intersection point array.
+    *   @param dstArrayVtxs array containing the intersection points.
+    *   @return the number of intersection points. Should be 12 unless 
+    *   an error has occurred.
+    */
    public int Wlz3DViewGetBoundingBoxIntersectionA (
                    WlzThreeDViewStruct viewStr,
                    int [] dstSizeArrayVtxs,
@@ -314,21 +428,40 @@ public class WlzObjModel implements WlzObjectType {
       return ret;
    }
 //----------------------------------------------
+   /**
+    *   Returns the current grey-level section.
+    *   @return the current grey-level section.
+    */
    public WlzObject getSection() {
       return _sectObj;
    }
 
 //----------------------------------------------
+   /**
+    *   Returns the current grey-level 3D Woolz object.
+    *   @return the current grey-level 3D Woolz object.
+    */
    public WlzObject getThreeDObj() {
       return _obj;
    }
 
 //----------------------------------------------
+   /**
+    *   Returns the bounding box for the current grey-level 3D Woolz object.
+    *   @return the bounding box for the current grey-level 3D Woolz object.
+    */
    public WlzIBox3 getBBox() {
       return _bBox3;
    }
 
 //----------------------------------------------
+   /**
+    *   Returns the point in 3D Woolz object space
+    *   corresponding to a point in the 2D space of the current section.
+    *   @param pt the 2D point.
+    *   @param VS the current View Structure.
+    *   @return the 3D point.
+    */
    public double[] get3DPoint(Point pt, WlzThreeDViewStruct VS) {
 
       double ret[] = new double[3];
@@ -363,6 +496,15 @@ public class WlzObjModel implements WlzObjectType {
       return ret;
    }
 //----------------------------------------------
+   /**
+    *   Returns the point in the 2D space of the current section
+    *   corresponding to a point in the 3D Woolz object space.
+    *   @param pt3D the 3D point.
+    *   @param VS the current View Structure.
+    *   @return the 2D point.
+    *   Note that this is a 3 element array, the x & y coordinates 
+    *   corresponding to elements 0 & 1 respectively.
+    */
    public double[] get2DPoint(double pt3D[], WlzThreeDViewStruct VS) {
 
       double ret[] = new double[3];
@@ -389,6 +531,15 @@ public class WlzObjModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   /**
+    *   Returns the max and min x,y,z coordinates of
+    *   the bounding box for the current 3D Woolz object.
+    *   @param VS the current View Structure.
+    *   @return the max & min x,y,z values in a 6 element array.
+    *   Elements 0,1,2 correspond to min x,y,z respectively.
+    *   Elements 3,4,5 correspond to max x,y,z respectively.
+    *   
+    */
    public double[] getMaxMin(WlzThreeDViewStruct VS) {
 
       double ret[] = new double[6];
@@ -425,6 +576,10 @@ public class WlzObjModel implements WlzObjectType {
       return ret;
    }
 //----------------------------------------------
+   /**
+    *   Displays pertinent details
+    *   of the current grey-level 3D Woolz object.
+    */
    public void printFacts() {
 
       System.out.println("WLZ FACTS");
@@ -446,11 +601,21 @@ public class WlzObjModel implements WlzObjectType {
    } // printFacts()
 
 //----------------------------------------------
+   /**
+    *   Displays the coordinates of the
+    *   bounding box for the current 3D grey-level object.
+    */
    public void printBoundingBox() {
       printBoundingBox3(_bBox3);
    }
 
 //----------------------------------------------
+   /**
+    *   Displays the coordinates of the
+    *   bounding box for the given 3D Woolz object.
+    *   @param box the bounding box whose coordinates are
+    *   to be displayed.
+    */
    public void printBoundingBox3(WlzIBox3 box) {
       System.out.println("BOUNDING BOX");
       try {
@@ -469,6 +634,12 @@ public class WlzObjModel implements WlzObjectType {
    } // printBoundingBox()
 
 //----------------------------------------------
+   /**
+    *   Displays the coordinates of the
+    *   bounding box for the given 2D Woolz object.
+    *   @param box the bounding box whose coordinates are
+    *   to be displayed.
+    */
    public void printBoundingBox2(WlzIBox2 box) {
       System.out.println("BOUNDING BOX");
       try {
@@ -488,11 +659,16 @@ public class WlzObjModel implements WlzObjectType {
 // handle all objects that are interested in changes
 //-------------------------------------------------------------
 
-   // keep track of all the listeners to this model
+   /**
+    *   A list of ChangeListeners which are
+    *   listening for events fired from the WlzObjModel.
+    */
    protected EventListenerList changeListeners =
       new EventListenerList();
 
-   // add a listener to the register
+   /**
+    *   Adds a ChangeListener to the EventListenerList.
+    */
    public void addChangeListener(ChangeListener x) {
       changeListeners.add (ChangeListener.class, x);
 
@@ -500,15 +676,23 @@ public class WlzObjModel implements WlzObjectType {
       x.stateChanged(new ChangeEvent(this));
    }
 
-   // remove a listener from the register
+   /**
+    *   Removes a ChangeListener from the EventListenerList.
+    */
    public void removeChangeListener(ChangeListener x) {
       changeListeners.remove (ChangeListener.class, x);
    }
 
+   /**   An event that will be fired from WlzObjModel */
    private ChangeEvent ce;
+   /**  A local copy of the list of ChangeListeners */
    private Object[] listeners;
+   /**  One of the list of Change Listeners */
    private ChangeListener cl;
 
+   /**
+    *   Fires a ChangeEvent from the WlzObjModel.
+    */
    protected void fireChange() {
       // Create the event:
       ce = new ChangeEvent(this);
@@ -525,4 +709,4 @@ public class WlzObjModel implements WlzObjectType {
    } // fireChange
 
 //-------------------------------------------------------------
-} // class ViewStruct
+} // class WlzObjModel

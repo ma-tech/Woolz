@@ -12,239 +12,542 @@ import java.util.*;
 import wsetter.*;
 import zoom.*;
 
+/**
+ *   GUI for the SectionViewer.
+ */
 public class SectionViewerGUI extends JPanel {
 
+  /** Toggles output of debugging messages. */
   private final boolean _debug = false;
 
+  /**
+   *   Top level container for SectionViewer GUI.
+   *   <br>Contains permanentPanel and transientPanel.
+   */
   protected JPanel _contentPane;
 
   // these need to be visible outside of guiInit()
+
+  /**   The preferred height of _contentPane. */
   int totalH = 500;
+  
+  /**   The preferred width of _contentPane. */
   int totalW = 400;
-  int minW = 350;
-  int minH = 300;
+  
+  /**   A spacing parameter for elements of the GUI. */
   int bord = 2;
+  
+  /**   A spacing parameter for elements of the GUI. */
   int pad = 1;
+  
+  /**   A spacing parameter for elements of the GUI. */
   int hgap = 2;
+  
+  /**   A spacing parameter for elements of the GUI. */
   int vgap = 2;
-  int titleH;
+  
+  //int titleH;
+  /** 
+   *   Height of the panel containing
+   *   <em>pitch yaw roll</em> sliders.
+   */
   int pyrH;
+  
+  /**
+   *   Height of the panel containing <em>fixed line</em> sliders.
+   */
   int rotH;
+  
+  /**
+   *   Height of the transient panel.
+   *   <br>The transient panel contains the 
+   *   <em>pitch yaw roll</em> and <em>fixed line</em> sliders.
+   */
   int transH;
 
-  Font titleFont;
+  //Font titleFont;
+  /**   Font used for the menus. */
   Font menuFont;
+
+  /**   Font used for feedback text. */
   Font feedbackFont;
+
+  /**   Font used for <em>mouse-click anatomy</em> feedback text. */
   Font anatomyFont;
 
+/* obsolete
   JPanel titlePanel = new JPanel();
   JPanel titlePanel_1 = new JPanel();
   JPanel titlePanel_2 = new JPanel();
   JPanel titlePanel_3 = new JPanel();
+*/
 
-  ScrollableTextField titleText = new ScrollableTextField();
-  JPanel menuPanel = new JPanel();
+  //ScrollableTextField titleText = new ScrollableTextField();
+
+  // no longer contains title text field
+  /**
+   *   Outer container for menus.
+   *   <br>titleMenuPanel used to contain a text field
+   *   but this has been removed.
+   */
   JPanel titleMenuPanel = new JPanel();
 
-  JPanel feedbackPanel = new JPanel();
+  /**   Middle container for menus. */
+  JPanel menuPanel = new JPanel();
+
+  /**   Inner container for menus. */
+  JPanel menuPanel_2 = new JPanel();
+
+  /**   MenuBar for SectionViewer menus. */
+  public JMenuBar _menubar = new JMenuBar();
+
+  /** 
+   *   Container for _imageScrollPane.
+   *   <br>Added to feedbackImagePanel.
+   */
   JPanel imagePanel = new JPanel();
+
+  /** 
+   *   Container for instance of WlzImgView.
+   *   <br>Added to the Viewport of _imageScrollPane.
+   *   <br>(The WlzImgView is added in SectionViewer.)
+   */
   JPanel _bigPanel = new JPanel();
+
+  /** 
+   *   Scrollable container for _bigPanel.
+   *   <br>Added to imagePanel.
+   */
   protected JScrollPane _imageScrollPane = new JScrollPane();
+
+  /** 
+   *   Container for imagePanel.
+   *   <br>Added to permanentPanel.
+   */
   JPanel feedbackImagePanel = new JPanel();
 
+  /**  
+   *    Java component for setting <em>% magnification</em>
+   *    of the image displayed on screen.
+   */
   Zoom zoomSetter = new Zoom();
+
+  /** 
+   *   Java component for setting <em>distance</em> from
+   *   the <em>fixed point</em>.
+   */
   WSetter distSetter = new WSetter();
+
+  /** 
+   *   Java component for setting <em>pitch</em> angle.
+   */
   WSetter pitchSetter = new WSetter();
+
+  /** 
+   *   Java component for setting <em>yaw</em> angle.
+   */
   WSetter yawSetter = new WSetter();
+
+  /** 
+   *   Java component for setting <em>roll</em> angle.
+   */
   WSetter rollSetter = new WSetter();
+  
+  /** 
+   *   Java component for setting <em>fixed line</em> rotation angle.
+   */
   WSetter rotSetter = new WSetter();
 
+  /** 
+   *   Control for inverting the values of the grey-level image on screen.
+   *   <br>Added to invertPanel.
+   */
   JButton invertButton = null;
-  JPanel zoomPanel = new JPanel();
 
+  /**
+   *   Container for <em>zoomSetter</em> component, spacerPanel_R
+   *   & invertPanel.
+   *   <br>Added to basicControlPanel.
+   */
   JPanel zoomControlPanel = new JPanel();
+
+  /**  Spacer for <em>zoomSetter</em> and <em>invert</em> controls.  */
   JPanel spacerPanel_R = new JPanel();
+
+  /**
+   *   Container for invertButton.
+   *   <br>Added to zoomControlPanel.
+   */
   JPanel invertPanel = new JPanel();
+
+  /** 
+   *   Container for zoomControlPanel and <em>distSetter</em>.
+   *   <br>Added to permanentPanel.
+   */
   JPanel basicControlPanel = new JPanel();
+
+  /**
+   *   Container for pitchyawControlPanel & rollControlPanel.
+   *   <br>Added to / removed from transientPanel by SectionViewer.
+   */
   JPanel pitchYawRollPanel = new JPanel();
+
+  /**
+   *   Container for <em>pitchSetter</em> & <em>yawSetter</em>.
+   *   <br>Added to pitchYawRollPanel.
+   */
   JPanel pitchyawControlPanel = new JPanel();
+
+  /**
+   *   Container for <em>rollSetter</em>.
+   *   <br>Added to pitchYawRollPanel.
+   */
   JPanel rollControlPanel = new JPanel();
 
-  JPanel fixedPointControlPanel = new JPanel();
+  /**
+   *   Container for <em>rotSetter</em>.
+   *   <br>Added to / removed from transientPanel by SectionViewer.
+   */
   JPanel userDefinedRotPanel = new JPanel();
-  JPanel fixedPointUserRotPanel = new JPanel();
 
-  JPanel menuPanel_2 = new JPanel();
-  public JMenuBar _menubar = new JMenuBar();
+  /*
+  JPanel fixedPointControlPanel = new JPanel();
+  JPanel fixedPointUserRotPanel = new JPanel();
+  */
+
   //...................
 
+  /**
+   *   Container for feedbackImagePanel and basicControlPanel.
+   *   <br>Added to _contentPane
+   */
   JPanel permanentPanel = new JPanel();
+
+  /**
+   *   Container for  pitchYawRollPanel & userDefinedRotPanel.
+   *   <br>Added to / removed from _contentPane by SectionViewer.
+   */
   JPanel transientPanel = new JPanel();
 
   //-------------------------------
+  /**   file menu name */
   String fileMenuStr = "file";
+  /**   file sub-menu name */
   String fileMenu_1str = "save image";
+  /**   file sub-menu name */
   String fileMenu_2str = "save view settings";
+  /**   file sub-menu name */
   String fileMenu_3str = "load view settings";
+  /**   file sub-menu name */
   String fileMenu_4str = "close view";
 
+  /**   file menu */
   JMenu fileMenu = new JMenu(fileMenuStr);
+
+  /**   file sub-menu */
   JMenuItem fileMenu_1 = new JMenuItem(fileMenu_1str);
+  /**   file sub-menu */
   JMenuItem fileMenu_2 = new JMenuItem(fileMenu_2str);
+  /**   file sub-menu */
   JMenuItem fileMenu_3 = new JMenuItem(fileMenu_3str);
+  /**   file sub-menu */
   JMenuItem fileMenu_4 = new JMenuItem(fileMenu_4str);
   //-------------------------------
+  /**   control menu name */
   String controlMenuStr = "control";
+
+  /**   control menu */
   JMenu controlMenu = new JMenu(controlMenuStr);
   //...................
+  /**   control sub-menu name */
   String controlMenu_1str = "rotation";
+  /**   control sub-menu name */
   String controlMenu_1_1str = "yaw pitch roll";
+  /**   control sub-menu name */
   String controlMenu_1_2str = "fixed_line";
+  /**   control sub-menu name */
   String controlMenu_1_3str = "all";
 
+  /**   control sub-menu */
   JMenu controlMenu_1 = new JMenu(controlMenu_1str);
+  /**   true if checkBox selected */
   boolean controlMenu_1_1state = false;
+  /**   control sub-sub-menu */
   JCheckBoxMenuItem controlMenu_1_1 = new
                JCheckBoxMenuItem(controlMenu_1_1str,
 	                         controlMenu_1_1state);
+  /**   true if checkBox selected */
   boolean controlMenu_1_2state = false;
+  /**   control sub-sub-menu */
   JCheckBoxMenuItem controlMenu_1_2 = new
                JCheckBoxMenuItem(controlMenu_1_2str,
 	                         controlMenu_1_2state);
+  /**   true if checkBox selected */
   boolean controlMenu_1_3state = false;
+  /**   control sub-sub-menu */
   JCheckBoxMenuItem controlMenu_1_3 = new
                JCheckBoxMenuItem(controlMenu_1_3str,
 	                         controlMenu_1_3state);
   //...................
+  /**   control sub-menu name */
   String controlMenu_2str = "view mode";
+  /**   control sub-sub-menu name */
   String controlMenu_2_1str = "up is up";
+  /**   control sub-sub-menu name */
   String controlMenu_2_2str = "absolute";
+  /**   control sub-sub-menu name */
   String controlMenu_2_3str = "fixed line";
 
+  /**   control sub-menu */
   JMenu controlMenu_2 = new JMenu(controlMenu_2str);
+  /**
+   *   Mutually exclusive radioButton group.
+   *   <br>Contains controlMenu_2_1 controlMenu_2_2 controlMenu_2_3.
+   */
   ButtonGroup viewModeGroup = new ButtonGroup();
+  /**   control sub-sub-menu */
   JRadioButtonMenuItem controlMenu_2_1 = new
                JRadioButtonMenuItem(controlMenu_2_1str);
+  /**   control sub-sub-menu */
   JRadioButtonMenuItem controlMenu_2_2 = new
                JRadioButtonMenuItem(controlMenu_2_2str);
+  /**   control sub-sub-menu */
   JRadioButtonMenuItem controlMenu_2_3 = new
                JRadioButtonMenuItem(controlMenu_2_3str);
   //...................
+  /**   control sub-menu name */
   String controlMenu_3str = "fixed point";
+  /**   control sub-sub-menu name */
   String controlMenu_3_1str = "change fixed point using mouse button";
+  /**   control sub-sub-menu name */
   String controlMenu_3_2str = "change fixed point by entering coordinates";
+  /**   control sub-sub-menu name */
   String controlMenu_3_3str = "reset fixed point";
 
+  /**   control sub-menu */
   JMenu controlMenu_3 = new JMenu(controlMenu_3str);
+  /**   control sub-sub-menu */
   JMenuItem controlMenu_3_1 = new JMenuItem(controlMenu_3_1str);
+  /**   control sub-sub-menu */
   JMenuItem controlMenu_3_2 = new JMenuItem(controlMenu_3_2str);
+  /**   control sub-sub-menu */
   JMenuItem controlMenu_3_3 = new JMenuItem(controlMenu_3_3str);
   //...................
+  /**   control sub-menu name */
   String controlMenu_4str = "fixed line end-point";
+  /**   control sub-sub-menu name */
   String controlMenu_4_1str = "change fixed line using mouse button";
+  /**   control sub-sub-menu name */
   String controlMenu_4_2str = "change fixed line by entering coordinates";
+  /**   control sub-sub-menu name */
   String controlMenu_4_3str = "reset fixed line";
 
+  /**   control sub-menu */
   JMenu controlMenu_4 = new JMenu(controlMenu_4str);
+  /**   control sub-sub-menu */
   JMenuItem controlMenu_4_1 = new JMenuItem(controlMenu_4_1str);
+  /**   control sub-sub-menu */
   JMenuItem controlMenu_4_2 = new JMenuItem(controlMenu_4_2str);
+  /**   control sub-sub-menu */
   JMenuItem controlMenu_4_3 = new JMenuItem(controlMenu_4_3str);
   //...................
+  /**   control sub-menu name */
   String controlMenu_5str = "reset controls";
+  /**   control sub-menu */
   JMenuItem controlMenu_5 = new JMenuItem(controlMenu_5str);
   //-------------------------------
+  /**   show menu name */
   String showMenuStr = "show";
+  /**   show menu */
   JMenu showMenu = new JMenu(showMenuStr);
 
+  /**   show sub-menu name */
   String showMenu_1str = "cursor feedback";
+  /**   true if checkBox selected */
   boolean showMenu_1state = true;
+  /**   show sub-menu */
   JCheckBoxMenuItem showMenu_1 = new
                JCheckBoxMenuItem(showMenu_1str,
                                  showMenu_1state);
 
+  /**   show sub-menu name */
   String showMenu_2str = "intersection of views";
+  /**   true if checkbox selected */
   boolean showMenu_2state = false;
+  /**   show sub-menu */
   JCheckBoxMenuItem showMenu_2 = new
                JCheckBoxMenuItem(showMenu_2str,
                                  showMenu_2state);
 
+  /**   show sub-menu name */
   String showMenu_3str = "mouse-click anatomy";
+  /**   true if checkbox selected */
   boolean showMenu_3state = false;
+  /**   show sub-menu */
   JCheckBoxMenuItem showMenu_3 = new
                JCheckBoxMenuItem(showMenu_3str,
                                  showMenu_3state);
 
+  /**   show sub-menu name */
   String showMenu_4str = "fixed point";
+  /**   true if checkbox selected */
   boolean showMenu_4state = false;
+  /**   show sub-menu */
   JCheckBoxMenuItem showMenu_4 = new
                JCheckBoxMenuItem(showMenu_4str,
                                  showMenu_4state);
 
+  /**   show sub-menu name */
   String showMenu_5str = "fixed line";
+  /**   true if checkbox selected */
   boolean showMenu_5state = false;
+  /**   show sub-menu */
   JCheckBoxMenuItem showMenu_5 = new
                JCheckBoxMenuItem(showMenu_5str,
                                  showMenu_5state);
   //-------------------------------
   // not used at present, but don't delete
+  /**   threshold menu name */
   String thresholdMenuStr = "threshold";
+  /**   threshold sub-menu name */
   String thresholdMenu_1str = "enable constraint definition";
+  /**   threshold sub-menu name */
   String thresholdMenu_2str = "enable thresholding";
+  /**   threshold sub-menu name */
   String thresholdMenu_3str = "show threshold constraint";
+  /**   threshold sub-menu name */
   String thresholdMenu_4str = "remove threshold constraint";
 
+  /**   true if checkbox selected */
   boolean thresholdMenu_1state = false;
+  /**   true if checkbox selected */
   boolean thresholdMenu_2state = false;
+  /**   true if checkbox selected */
   boolean thresholdMenu_3state = false;
+
+  /**   threshold menu */
   JMenu thresholdMenu = new JMenu(thresholdMenuStr);
+  /**   threshold sub-menu */
   JCheckBoxMenuItem thresholdMenu_1 = new
                JCheckBoxMenuItem(thresholdMenu_1str, thresholdMenu_1state);
+  /**   threshold sub-menu */
   JCheckBoxMenuItem thresholdMenu_2 = new
                JCheckBoxMenuItem(thresholdMenu_2str, thresholdMenu_2state);
+  /**   threshold sub-menu */
   JCheckBoxMenuItem thresholdMenu_3 = new
                JCheckBoxMenuItem(thresholdMenu_3str, thresholdMenu_3state);
+  /**   threshold sub-menu */
   JMenuItem thresholdMenu_4 = new JMenuItem(thresholdMenu_4str);
 
   //-------------------------------
+  /**   help menu name */
   String helpMenuStr = "help";
+  /**   help sub-menu name */
   String helpMenu_1str = "contents";
+  /**   help sub-menu name */
   String helpMenu_2str = "index";
+  /**   help sub-menu name */
   String helpMenu_3str = "search";
+  /**   help sub-menu */
   JMenuItem helpMenu_1 = new JMenuItem(helpMenu_1str);
+  /**   help sub-menu */
   JMenuItem helpMenu_2 = new JMenuItem(helpMenu_2str);
+  /**   help sub-menu */
   JMenuItem helpMenu_3 = new JMenuItem(helpMenu_3str);
 
+  /**   help menu */
   public JMenu helpMenu = new JMenu(helpMenuStr);
   //-------------------------------
   //-------------------------------
+  /**
+   *   Container for feedbackPanel_3, fbAnatPanel & secColorClt.
+   *   <br>Added to / Removed from feedbackImagePanel by SectionViewer.
+   */
+  JPanel feedbackPanel = new JPanel();
+
+  /**
+   *   Container for xyzTextField.
+   *   <br>Added to feedbackPanel_3.
+   */
   JPanel feedbackPanel_1 = new JPanel();
+
+  /**
+   *   Spacer between <em>positional</em>
+   *   & <em>grey value</em> feedback.
+   *   <br>Added to feedbackPanel_2.
+   */
   JPanel feedbackPanel_1a = new JPanel();
+
+  /**  
+   *   Container for feedbackPanel_1a & valueTextField.
+   *   <br>Added to feedbackPanel_3.
+   */
   JPanel feedbackPanel_2 = new JPanel();
+
+  /**
+   *   Container for feedbackPanel_1 & feedbackPanel_2.
+   *   <br>Added to feedbackPanel.
+   */
   JPanel feedbackPanel_3 = new JPanel();
+
+  /*  Unused Containers.
   JPanel feedbackPanel_4 = new JPanel();
   JPanel feedbackPanel_5 = new JPanel();
   JPanel feedbackPanel_6 = new JPanel();
   JPanel feedbackPanel_7 = new JPanel();
+  */
+  
+  /**  
+   *   Container for anatomyTextField.
+   *   <br>Added to feedbackPanel.
+   *   <br>Must to be added to BorderLayout.CENTER to allow for expansion.
+   */
   JPanel fbAnatPanel = new JPanel();
 
+  /**
+   *   Display for <em>positional (x,y,z)</em> feedback text.
+   */
   protected JTextField xyzTextField = new JTextField();
+
+  /**   Display for <em>grey value</em> at cursor. */
   JTextField valueTextField = new JTextField();
+
+  /**   Display for name of <em>mouse-click anatomy</em> at cursor. */
   ScrollableTextField anatomyTextField = new ScrollableTextField();
 
+  /* unused variables
   String titleString = "Ref:";
-
   Color titleCol = new Color(200, 220, 220);
+  */
+
+  /**   Background colour for feedback text fields. */
   Color fbCol = new Color(220, 220, 200);
 
+  /**
+   *   Initiates colour chooser dialogue for SectionViewer.
+   *   <br>Added to feedbackPanel.
+   */
   public JButton secColorClt = new JButton("");
 
+  /**
+   *   Indicator for the number of open SectionViewers.
+   *   <br>Used to assign a colour to a newly opened SectionViewer.
+   */
   public static int nSV = 0;
 
+  /**
+   *   List of colours to be assigned initially to SectionViewers.
+   *   The list is repeated if required.
+   */
   private Color[] planeColor = new Color[] {Color.red, Color.yellow,
       Color.blue, Color.pink, Color.green, Color.cyan};
+
   //=========================================================
   // constructor
   //=========================================================
+  /**
+   *   Constructs the GUI for a SectionViewer.
+   */
   public SectionViewerGUI() {
 
     if(_debug == true) System.out.println("enter SectionViewerGUI");
@@ -261,6 +564,9 @@ public class SectionViewerGUI extends JPanel {
   }
 
 //========================================
+  /**
+   *   Most of the work of constucting the GUI is done here..
+   */
   private void guiInit() throws Exception {
 
     if(_debug) System.out.println("enter guiInit");
@@ -372,15 +678,18 @@ public class SectionViewerGUI extends JPanel {
     //_menubar.add(thresholdMenu);
     _menubar.add(helpMenu);
     //----------------------------------------------------------
+    /*
     titleFont = new Font("Helvetica", Font.PLAIN, 12);
     titleH = titleText.getFontMetrics(titleFont).getHeight() + bord;
+    */
     //......................................
     menuFont = new Font("Helvetica", Font.PLAIN, 12);
     menuH = _menubar.getFontMetrics(menuFont).getHeight() + bord;
     //......................................
     feedbackFont = new Font("Helvetica", Font.PLAIN, 12);
     anatomyFont = new Font("Helvetica", Font.ITALIC, 12);
-    fbH = titleText.getFontMetrics(feedbackFont).getHeight() + bord;
+    //fbH = titleText.getFontMetrics(feedbackFont).getHeight() + bord;
+    fbH = xyzTextField.getFontMetrics(feedbackFont).getHeight() + bord;
     //......................................
     xyzH = fbH+2*bord;
     valH = fbH+2*bord;
@@ -389,12 +698,14 @@ public class SectionViewerGUI extends JPanel {
     permH = menuH+vgap+fbimgH+vgap+distH;
     //----------------------------------------------------------
 
+    /*
     titleText.setEditable(false);
     titleText.setHorizontalAlignment(JTextField.CENTER);
     titleText.setPreferredSize(new Dimension(30,titleH));
     titleText.setFont(titleFont);
     titleText.setText("no grey level file");
     titleText.setBackground(titleCol);
+    */
 
     xyzTextField.setFont(feedbackFont);
     xyzTextField.setEditable(false);
@@ -408,6 +719,7 @@ public class SectionViewerGUI extends JPanel {
     anatomyTextField.setEditable(false);
     anatomyTextField.setBackground(fbCol);
 
+/*  obsolete
     titlePanel_1.setPreferredSize(new Dimension(50,titleH+4*bord));
     titlePanel_1.setLayout(new BorderLayout(hgap, vgap));
     titlePanel_1.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
@@ -421,6 +733,7 @@ public class SectionViewerGUI extends JPanel {
     titlePanel.add(titlePanel_1, BorderLayout.CENTER);
     titlePanel.add(titlePanel_2, BorderLayout.WEST);
     titlePanel.add(titlePanel_3, BorderLayout.EAST);
+*/
     //...............................
 
     _menubar.setPreferredSize(new Dimension(0,menuH+2*bord));
@@ -474,7 +787,8 @@ public class SectionViewerGUI extends JPanel {
     //...............................
 
     // set up the colour chooser button
-    secColorClt.setPreferredSize(new Dimension(titleH, titleH));
+    //secColorClt.setPreferredSize(new Dimension(titleH, titleH));
+    secColorClt.setPreferredSize(new Dimension(fbH, fbH));
     secColorClt.setBorder(null);
     secColorClt.setFocusPainted(false);
     try {
@@ -631,28 +945,36 @@ public class SectionViewerGUI extends JPanel {
 //-------------------------------------------------------------
 // inner classes for event handling
 //-------------------------------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class fileMenuHandler implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class controlMenuHandler implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class modeMenuHandler implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class fixedPointMenuHandler implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class thresholdMenuHandler implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class helpMenuHandler implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class planeColChooser implements ActionListener {
   }
 //---------------------------------------
+  /**  Declaration for fileMenuHandler. */
   public abstract class invertButtonHandler implements ActionListener {
   }
 
-} // class SectionViewer
+} // class SectionViewerGUI

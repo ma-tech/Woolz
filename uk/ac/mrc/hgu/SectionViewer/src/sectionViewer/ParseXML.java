@@ -10,6 +10,9 @@ import java.util.*;
 import java.io.*;
 
 
+/**
+ *   Reads View Structure information from a previously saved .xml file.
+ */
 public class ParseXML extends DefaultHandler {
 
     boolean OK;
@@ -22,6 +25,11 @@ public class ParseXML extends DefaultHandler {
     SectionViewer _SV = null;
 
     //public ParseXML(ViewStructModel VSM) {
+    /**
+     *   Constructs a ParseXML object for the given SectionViewer.
+     *   @param SV the SectionViewer that will use the information 
+     *   read in from the .xml file.
+     */
     public ParseXML(SectionViewer SV) {
        OK = false;
        _sval = "";
@@ -32,12 +40,16 @@ public class ParseXML extends DefaultHandler {
        _SV = SV;
     }
 
-    // Parser calls this once at the beginning of a document
+    /**
+     *   Parser calls this once at the beginning of a document.
+     */
     public void startDocument() throws SAXException {
         //System.out.println("starting document");
     }
 
-    // Parser calls this for each element in a document
+    /**
+     *   Parser calls this for each element in a document.
+     */
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
         throws SAXException
@@ -49,14 +61,18 @@ public class ParseXML extends DefaultHandler {
        }
     }
 
-    // Parser calls this for each element in a document
+    /**
+     *   Parser calls this for each element in a document.
+     */
     public void characters(char[] buf, int start, int len)
         throws SAXException
     {
        _sval = new String(buf,start,len);
     }
 
-    // Parser calls this for each element in a document
+    /**
+     *   Parser calls this for each element in a document.
+     */
     public void endElement(String namespaceURI, String localName,
                              String qName)
         throws SAXException
@@ -97,11 +113,18 @@ public class ParseXML extends DefaultHandler {
        }
     }
 
-    // Parser calls this once after parsing a document
+    /**
+     *   Parser calls this once after parsing a document.
+     */
     public void endDocument() throws SAXException {
         //System.out.println("ending document");
     }
 
+    /**
+     *   Converts a numeric string to a float.
+     *   @param str the numeric string to convert.
+     *   @return a float.
+     */
     protected float convert(String str) {
        float ret;
        ret = new Float(str).floatValue();
@@ -123,6 +146,9 @@ public class ParseXML extends DefaultHandler {
         return path;
     }
 
+    /**
+     * Convert from a filename to a file URL.
+     */
     protected static String convertToFileURL(File file) {
 	String path = "";
 	try {
@@ -134,10 +160,17 @@ public class ParseXML extends DefaultHandler {
         return path;
     }
 
+    /**
+     *   Wrapper for doParse(File filename).
+     */
     public void doParse(String filename) throws Exception {
        doParse(new File(filename));
     }
 
+    /**
+     *   Parses the xml file.
+     *   @param filename the File to parse.
+     */
     public void doParse(File filename) throws Exception {
 
        //_SV.getDistSetter().setValue(100.0f); // works !!
@@ -170,7 +203,9 @@ public class ParseXML extends DefaultHandler {
         xmlReader.parse(convertToFileURL(filename));
     }
 
-    // Error handler to report errors and warnings
+    /**
+     *   Error handler to report errors and warnings
+     */
     private static class MyErrorHandler implements ErrorHandler {
         /** Error handler output goes here */
         private PrintStream out;
