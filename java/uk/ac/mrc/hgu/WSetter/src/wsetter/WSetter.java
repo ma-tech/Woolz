@@ -8,40 +8,44 @@ import javax.swing.border.*;
 import java.awt.event.*;
 import javax.swing.event.*;
 import java.io.*;
+import java.util.*;
 
 /**
  * View / Controller class for slider bean.
  * <br>Uses the <b>Model View Controller</b> paradigm.
  * @author Nick Burton
- * @see WlzFltModel
+ * @see WSetterModel
  * @see SliderRangeModel
  */
 public class WSetter extends WSetterGUI
-                     implements Serializable {
+                     implements WSetterConstants, Serializable {
 
    private boolean _enabled;
 //-------------------------------------------------------------
-   public WlzFltModel mod1;
-   public SliderRangeModel sliderModel;
+   public WSetterModel mod1 = null;
+   public SliderRangeModel sliderModel = null;
 
    protected sliderToModelAdaptor_A SToM_A = null;
    protected sliderToModelAdaptor_B SToM_B = null;
    protected textToModelAdaptor TToM = null;
    protected modelToTextAdaptor MToT = null;
    protected modelToSliderAdaptor MToS = null;
+   protected limitToSliderAdaptor LToS = null;
    protected modelToThisAdaptor MToThis = null;
    // model properties
-   private boolean floatingPoint = true; // if false => int
    private boolean slidingEvents = true;
-   private WlzFltModel.WlzType modelType = WlzFltModel.FLOAT;
-   private float modelMin = 0.0f;
-   private float modelMax = 1000.0f;
-   private float modelInitVal = 0.0f;
+   private int _type;
+   private static int maxTextlen = 6;
 //-------------------------------------------------------------
   /**
    * Constructor
    */
   public WSetter() {
+     this(DOUBLE);
+  }
+
+  public WSetter(int type) {
+    _type = type;
     _enabled = false;
     try {
       initWSetter();
@@ -76,28 +80,21 @@ public class WSetter extends WSetterGUI
    */
   private void initWSetter() throws Exception {
 
+    // the model for the slider
     sliderModel = new SliderRangeModel();
     _slider.setModel(sliderModel);
+    // the main WSetter model
+    mod1 = new WSetterModel (_type);
     setModel();
 
   } // initWSetter()
 //-------------------------------------------------------------
-  // if the programmer wants to change model max & min
-  // we need to set up the adaptors again
   /**
-   * Resets the model to new max and min values.
+   * hook up the adaptors 
    * @param	void
    * @return	void
    */
   protected void setModel() {
-
-     // the main model
-     mod1 = null;
-     mod1 = new WlzFltModel (modelType,
-			     modelMin,
-			     modelMax);
-
-     mod1.setValue(modelInitVal);
 
      //-----------------------------------------
      // hook the adapters in place
@@ -124,7 +121,7 @@ public class WSetter extends WSetterGUI
      }
      TToM = new textToModelAdaptor(textf, mod1);
      textf.addActionListener(TToM);
-
+//...............................
      // VIEW ADAPTORS
      if(MToT != null) {
 	mod1.removeChangeListener(MToT);
@@ -137,7 +134,14 @@ public class WSetter extends WSetterGUI
      }
      MToS = new modelToSliderAdaptor(mod1, _slider);
      mod1.addChangeListener(MToS);
-
+//...............................
+     // LIMIT ADAPTORS
+     if(LToS != null) {
+	mod1.removeLimitListener(LToS);
+     }
+     LToS = new limitToSliderAdaptor(mod1, _slider);
+     mod1.addLimitListener(LToS);
+//...............................
      // MODEL ADAPTORS
      if(MToThis != null) {
 	mod1.removeChangeListener(MToThis);
@@ -148,11 +152,21 @@ public class WSetter extends WSetterGUI
 
   } // setModel
 
+  public int getType() {
+     return mod1.getType();
+  }
+
 //===========================================
 // accessor methods for the bean properties etc
 //===========================================
-   public float getValue() {
+   public Vector getValue() {
       return mod1.getValue();
+   }
+   public Vector getMin() {
+      return mod1.getMin();
+   }
+   public Vector getMax() {
+      return mod1.getMax();
    }
 //.....................................
    public int getWidth() {
@@ -170,29 +184,24 @@ public class WSetter extends WSetterGUI
    public Color getBgc() {
       return bgc;
    }
-   public boolean getFloatingPoint() {
-      return floatingPoint;
-   }
    public boolean getSlidingEvents() {
       return slidingEvents;
    }
    public String getSliderLabel() {
       return sliderLabel;
    }
+   public boolean isAdjusting() {
+      return _slider.getValueIsAdjusting();
+   }
 //.....................................
-   public float getModelMin() {
-      return modelMin;
-   }
-   public float getModelMax() {
-      return modelMax;
-   }
-   public float getModelInitVal() {
-      return modelInitVal;
-   }
-
-//.....................................
-   public void setValue(float val) {
+   public void setValue(double val) {
       mod1.setValue(val);
+   }
+   public void setMin(double val) {
+      mod1.setMin(val);
+   }
+   public void setMax(double val) {
+      mod1.setMax(val);
    }
 //.....................................
    public void setWidth(int w) {
@@ -217,30 +226,12 @@ public class WSetter extends WSetterGUI
       bgc = col;
       initGUI();
    }
-   public  void setFloatingPoint(boolean bool) {
-      floatingPoint = bool;
-   }
    public  void setSlidingEvents(boolean bool) {
       slidingEvents = bool;
    }
    public void setSliderLabel(String labl) {
       sliderLabel = labl;
       initGUI();
-   }
-//.....................................
-   public void setModelMin(float mmin) {
-      modelMin = mmin;
-      setModel();
-      sliderModel.setMinimum((int)mod1.getMinimum());
-   }
-   public void setModelMax(float mmax) {
-      modelMax = mmax;
-      setModel();
-      sliderModel.setMaximum((int)mod1.getMaximum());
-   }
-   public void setModelInitVal(float minit) {
-      modelInitVal = minit;
-      setModel();
    }
 //.....................................
    public void setSliderEnabled(boolean bool) {
@@ -264,26 +255,26 @@ public class WSetter extends WSetterGUI
   public static class sliderToModelAdaptor_A
     implements ChangeListener {
 
-    WlzFltModel model;
+    WSetterModel model;
     JSlider control;
     SliderRangeModel sliderMod;
 
   /**
    * Constructor
    */
-    public sliderToModelAdaptor_A(JSlider cntrl, WlzFltModel mdl) {
+    public sliderToModelAdaptor_A(JSlider cntrl, WSetterModel mdl) {
       model = mdl;
       control = cntrl;
+      sliderMod = (SliderRangeModel) control.getModel();
     }
 
   /**
-   * Event handler, for use when slider has stopped.
+   * Event handler, for use when slider is moving.
    * @param	ChangeEvent e
    * @return	void
    */
     public void stateChanged(ChangeEvent e) {
-      sliderMod = (SliderRangeModel) control.getModel();
-      model.setValue((float)(sliderMod.getDoubleValue()));
+      model.setValue(sliderMod.getDoubleValue());
     }
   } // class sliderToModelAdaptor
 
@@ -294,29 +285,28 @@ public class WSetter extends WSetterGUI
    */
   public static class sliderToModelAdaptor_B
     implements ChangeListener {
-    WlzFltModel model;
+    WSetterModel model;
     JSlider control;
     SliderRangeModel sliderMod;
 
   /**
    * Constructor
    */
-    public sliderToModelAdaptor_B(JSlider cntrl, WlzFltModel mdl) {
+    public sliderToModelAdaptor_B(JSlider cntrl, WSetterModel mdl) {
       model = mdl;
       control = cntrl;
+      sliderMod = (SliderRangeModel) control.getModel();
     }
 
   /**
-   * Event handler, for use when slider has is moving. 
+   * Event handler, for use when slider has stopped. 
    * @param	void
    * @return	boolean	true if the component can fire events
    */
     public void stateChanged(ChangeEvent e) {
       // only do it when the slider isn't moving
       if (!control.getValueIsAdjusting()) {
-	 // get the model
-	 sliderMod = (SliderRangeModel) control.getModel();
-	 model.setValue((float)(sliderMod.getDoubleValue()));
+	 model.setValue(sliderMod.getDoubleValue());
       }
     }
   } // class sliderToModelAdaptor
@@ -324,27 +314,25 @@ public class WSetter extends WSetterGUI
 //---------------------------------------
   public static class textToModelAdaptor
     implements ActionListener {
-    WlzFltModel model;
+    WSetterModel model;
     JTextField control;
   /**
    * Constructor
    */
-    public textToModelAdaptor(JTextField cntrl, WlzFltModel mdl) {
+    public textToModelAdaptor(JTextField cntrl, WSetterModel mdl) {
       model = mdl;
       control = cntrl;
     }
 
-    float val = 0.0f;
-    Float VAL;
+    Double VAL;
   /**
    * Event handler, sets the slider to the value in the text field.
    * @param	ActionEvent e
    * @return	void
    */
     public void actionPerformed(ActionEvent e) {
-       VAL = new Float(control.getText());
-       val = VAL.floatValue();
-       model.setValue(val);
+       VAL = new Double(control.getText());
+       model.setValue(VAL.doubleValue());
     }
   } // class textToModelAdaptor
 
@@ -353,16 +341,20 @@ public class WSetter extends WSetterGUI
 //---------------------------------------
   public static class modelToSliderAdaptor
     implements ChangeListener {
-    WlzFltModel model;
+    WSetterModel model;
     JSlider view;
     SliderRangeModel sliderMod;
+    Vector vec = null;
+    int type;
 
   /**
    * Constructor
    */
-    public modelToSliderAdaptor(WlzFltModel mdl, JSlider vw) {
+    public modelToSliderAdaptor(WSetterModel mdl, JSlider vw) {
       view = vw;
       model = mdl;
+      sliderMod = (SliderRangeModel)view.getModel();
+      type = model.getType();
     }
 
   /**
@@ -371,9 +363,23 @@ public class WSetter extends WSetterGUI
    * @return	boolean	true if the component can fire events
    */
     public void stateChanged(ChangeEvent e) {
-      // get the slider's model
-      sliderMod = (SliderRangeModel)view.getModel();
-      sliderMod.setDoubleValue((double)model.getValue());
+      vec = model.getValue();
+      switch(type) {
+         case INTEGER:
+	    Integer iVal = (Integer)vec.elementAt(0);
+	    sliderMod.setDoubleValue((double)iVal.intValue());
+	    break;
+         case FLOAT:
+	    Float fVal = (Float)vec.elementAt(0);
+	    sliderMod.setDoubleValue((double)fVal.floatValue());
+	    break;
+         case DOUBLE:
+	    Double dVal = (Double)vec.elementAt(0);
+	    sliderMod.setDoubleValue(dVal.doubleValue());
+	    break;
+	 default:
+	    break;
+      }
       view.revalidate();
     }
   } // class modelToSliderAdaptor
@@ -381,27 +387,107 @@ public class WSetter extends WSetterGUI
 //---------------------------------------
   public static class modelToTextAdaptor
     implements ChangeListener {
-    WlzFltModel model;
+    WSetterModel model;
     JTextField view;
+    int type;
+    Vector vec = null;
+
   /**
    * Constructor
    */
-    public modelToTextAdaptor(WlzFltModel mdl, JTextField vw) {
+    public modelToTextAdaptor(WSetterModel mdl, JTextField vw) {
       view = vw;
       model = mdl;
+      type = model.getType();
     }
 
-    Float flote;
+    String valstr;
   /**
    * Adaptor, changes the <b>view</b> of the text field when the model changes.
    * @param	void
    * @return	boolean	true if the component can fire events
    */
     public void stateChanged(ChangeEvent e) {
-      flote = new Float(model.getValue());
-      view.setText(flote.toString());
+      vec = model.getValue();
+      switch(type) {
+         case INTEGER:
+	    Integer iVal = (Integer)vec.elementAt(0);
+	    valstr = (iVal.toString());
+	    break;
+         case FLOAT:
+	    Float fVal = (Float)vec.elementAt(0);
+	    valstr = (fVal.toString());
+	    break;
+         case DOUBLE:
+	    Double dVal = (Double)vec.elementAt(0);
+	    valstr = (dVal.toString());
+	    break;
+	 default:
+	    break;
+      }
+
+      if(valstr.length() > maxTextlen) {
+	 view.setText(valstr.substring(0,maxTextlen));
+      } else {
+	 view.setText(valstr);
+      }
     }
   } // class modelToTextAdaptor
+
+//---------------------------------------
+// LIMIT ADAPTORS
+// changes slider when WSetter max/min limits are changed
+//---------------------------------------
+  public static class limitToSliderAdaptor
+    implements LimitListener {
+    WSetterModel model;
+    JSlider view;
+    SliderRangeModel sliderMod;
+    Vector maxVec = null;
+    Vector minVec = null;
+    int type;
+
+  /**
+   * Constructor
+   */
+    public limitToSliderAdaptor(WSetterModel mdl, JSlider vw) {
+      view = vw;
+      model = mdl;
+      sliderMod = (SliderRangeModel)view.getModel();
+      type = model.getType();
+    }
+
+  /**
+   * Adaptor, changes the max/min of the slider when the model changes.
+   */
+    public void limitChanged(LimitEvent e) {
+      maxVec = model.getMax();
+      minVec = model.getMin();
+      switch(type) {
+         case INTEGER:
+	    Integer imaxVal = (Integer)maxVec.elementAt(0);
+	    Integer iminVal = (Integer)minVec.elementAt(0);
+	    sliderMod.setMaximum(imaxVal.intValue());
+	    sliderMod.setMinimum(iminVal.intValue());
+	    break;
+         case FLOAT:
+	    Float fmaxVal = (Float)maxVec.elementAt(0);
+	    Float fminVal = (Float)minVec.elementAt(0);
+	    sliderMod.setMaximum((int)(fmaxVal.floatValue()));
+	    sliderMod.setMinimum((int)(fminVal.floatValue()));
+	    break;
+         case DOUBLE:
+	    Double dmaxVal = (Double)maxVec.elementAt(0);
+	    Double dminVal = (Double)minVec.elementAt(0);
+	    sliderMod.setMaximum((int)(dmaxVal.intValue()));
+	    sliderMod.setMinimum((int)(dminVal.intValue()));
+	    break;
+	 default:
+	    break;
+      }
+      view.revalidate();
+    }
+  } // class limitToSliderAdaptor
 
 //---------------------------------------
   // MODEL ADAPTORS
@@ -431,7 +517,7 @@ public class WSetter extends WSetterGUI
 //===========================================
 // fire events and manage listeners
 //===========================================
-  // keep track of all the listeners to this model
+  // keep track of all the changeListeners to this model
   protected EventListenerList changeListeners =
      new EventListenerList();
 
@@ -479,4 +565,5 @@ public class WSetter extends WSetterGUI
 	}
      }
   } // fireChange
+
 } // class WSetter
