@@ -117,12 +117,11 @@ WlzObject *WlzIntersectN(
     return WlzMakeEmpty(dstErr);
 
   default:
-    obj = NULL;
     errNum = WLZ_ERR_OBJECT_TYPE;
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
 
   }
 
@@ -144,12 +143,11 @@ WlzObject *WlzIntersectN(
 	return WlzMakeEmpty(dstErr);
       }
       else {
-	obj = NULL;
 	errNum = WLZ_ERR_OBJECT_TYPE;
 	if(dstErr) {
 	  *dstErr = errNum;
 	}
-	return(obj);
+	return NULL;
       }
     }
 
@@ -194,11 +192,7 @@ WlzObject *WlzIntersectN(
     }
   }
   if( lastkl < kol1 || lastln < line1 ){
-    obj = WlzMakeEmpty(&errNum);
-    if(dstErr) {
-      *dstErr = errNum;
-    }
-    return(obj);
+    return WlzMakeEmpty(dstErr);
   }
 
   /*
@@ -210,11 +204,10 @@ WlzObject *WlzIntersectN(
     inttot += WlzIntervalCount(objs[i]->domain.i, &errNum);
   }
   if(errNum != WLZ_ERR_NONE) {
-    obj = NULL;
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
 
   /*
@@ -224,16 +217,19 @@ WlzObject *WlzIntersectN(
   if( (idom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 				    line1, lastln, 0, lastkl-kol1,
 				    &errNum)) == NULL ){
-    obj = NULL;
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
   if( (itvl = (WlzInterval *)
        AlcMalloc (inttot * sizeof(WlzInterval))) == NULL ){
     WlzFreeIntervalDomain(idom);
-    return( NULL );
+    errNum = WLZ_ERR_MEM_ALLOC;
+    if(dstErr) {
+      *dstErr = errNum;
+    }
+    return NULL;
   }
 
   idom->freeptr = AlcFreeStackPush(idom->freeptr, (void *)itvl, NULL);
@@ -248,7 +244,7 @@ WlzObject *WlzIntersectN(
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
 
   /*
@@ -258,11 +254,10 @@ WlzObject *WlzIntersectN(
        AlcMalloc(n * sizeof(WlzIntervalWSpace))) == NULL ){
     WlzFreeObj( obj );
     errNum = WLZ_ERR_MEM_ALLOC;
-    obj = NULL;
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
   biwsp = iwsp;
   tiwsp = biwsp + n;
@@ -281,11 +276,10 @@ WlzObject *WlzIntersectN(
   }
   if(errNum != WLZ_ERR_NONE) {
     WlzFreeObj( obj );
-    obj = NULL;
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
 
   l = lwas;
@@ -383,11 +377,10 @@ WlzObject *WlzIntersectN(
 firstfinished:
   if(errNum != WLZ_ERR_NONE) {
     WlzFreeObj(obj);
-    obj = NULL;
     if(dstErr) {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
 
   errNum = WlzMakeInterval(lwas,idom,nints,jtvl);
@@ -398,12 +391,11 @@ firstfinished:
   {
     WlzFreeObj(obj);
     AlcFree((void *) biwsp);
-    obj = NULL;
     if(dstErr)
     {
       *dstErr = errNum;
     }
-    return(obj);
+    return NULL;
   }
 
   /*
@@ -413,6 +405,25 @@ firstfinished:
    */
   (void )WlzStandardIntervalDomain(idom);
 
+  /* check for error or empty */
+  nints = WlzIntervalCount(idom, &errNum);
+  if( nints < 0 ){
+    /* error */
+    WlzFreeObj(obj);
+    AlcFree((void *) biwsp);
+    if(dstErr)
+    {
+      *dstErr = errNum;
+    }
+    return NULL;
+  }
+  else if( nints == 0 ){
+    /* empty object */
+    WlzFreeObj(obj);
+    AlcFree((void *) biwsp);
+    return WlzMakeEmpty(dstErr);
+  }
+
   if (uvt != 0) {
     WlzGreyType	grey_type;
     if( (gwsp = (WlzGreyWSpace *)
@@ -420,12 +431,11 @@ firstfinished:
       WlzFreeObj(obj);
       AlcFree((void *) biwsp);
       errNum = WLZ_ERR_MEM_ALLOC;
-      obj = NULL;
       if(dstErr)
       {
         *dstErr = errNum;
       }
-      return(obj);
+      return NULL;
     }
 
     /* construct an empty "ragged-rectangle" (type 1  or 2) greytable
@@ -443,24 +453,22 @@ firstfinished:
       WlzFreeObj( obj );
       AlcFree((void *) gwsp);
       AlcFree((void *) biwsp);
-      obj = NULL;
       if(dstErr)
       {
         *dstErr = errNum;
       }
-      return(obj);
+      return NULL;
     }
     obj->values = WlzAssignValues(values, &errNum);
     if(errNum != WLZ_ERR_NONE) {
       WlzFreeObj( obj );
       AlcFree((void *) gwsp);
       AlcFree((void *) biwsp);
-      obj = NULL;
       if(dstErr)
       { 
 	*dstErr = errNum;
       }
-      return(obj);
+      return NULL;
     }
 	
     /*
@@ -482,11 +490,10 @@ firstfinished:
       WlzFreeObj( obj );
       AlcFree((void *) gwsp);
       AlcFree((void *) biwsp);
-      obj = NULL;
       if(dstErr) {
         *dstErr = errNum;
       }
-      return(obj);
+      return NULL;
     }
 
     while (WlzNextGreyInterval(&niwsp) == WLZ_ERR_NONE) {
@@ -603,8 +610,9 @@ firstfinished:
     AlcFree((void *) gwsp);
   }
   AlcFree((void *) biwsp);
+
   if(dstErr) {
     *dstErr = errNum;
   }
-  return(obj);
+  return obj;
 }
