@@ -372,6 +372,35 @@ extern AlgError		AlgRangeIdx1D(
 			  double *dstMin,
 			  double *dstMax);
 
+/* From AlgRank.c */
+extern void 		AlgRankSelectI(
+			  int *elm,
+			  int nElm,
+			  int rank);
+extern void            	AlgRankSelectUB(
+			  unsigned char *elm,
+			  int nElm,
+			  int rank);
+extern void            	AlgRankSelectS(
+			  short *elm,
+			  int nElm,
+			  int rank);
+extern void            	AlgRankSelectF(
+			  float *elm,
+			  int nElm,
+			  int rank);
+extern void            	AlgRankSelectD(
+			  double *elm,
+			  int nElm,
+			  int rank);
+extern void            	AlgRankSelectV(
+			  void *elm,
+			  int nElm,
+			  unsigned int elmSz,
+			  int rank,
+			  void *buf,
+			  int (*compFn)(void *, void *));
+
 /* From AlgShuffle.c */
 extern AlgError		AlgShuffleIdx(
 			  int nShuffle,

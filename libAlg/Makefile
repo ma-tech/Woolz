@@ -60,6 +60,7 @@ CSOURCES		= \
 			  AlgPolyLSQ.c \
 			  AlgRand.c \
 			  AlgRange.c \
+			  AlgRank.c \
 			  AlgShuffle.c
 			  
 DLLCSOURCES		= \
