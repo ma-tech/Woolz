@@ -64,12 +64,7 @@ static void			WlzAffineTransformPrimGet2(
 				  WlzAffineTransformPrim *prim);
 
 /*!
-* \ingroup	Wlz
-* \defgroup	WlzAffineTransform
-* @{
-*/
-
-/*!
+* \ingroup	WlzTransform
 * \return				2 or 3 for a 2D or 3D affine
 *					transform, 0 on error.
 * \brief	Computes the dimension of the given affine transform.
@@ -116,6 +111,7 @@ int		WlzAffineTransformDimension(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Non-zero if translation.
 * \brief	Tests whether the given affine transform is a simple
 *		integer translation.
@@ -158,6 +154,7 @@ int		WlzAffineTransformIsTranslate(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Non-zero if translation.
 * \brief	Tests wether the given 2D affine transform is a simple
 *		integer translation.
@@ -233,6 +230,7 @@ static int	WlzAffineTransformIsTranslate2(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Non-zero if translation.
 * \brief	Tests wether the given 3D affine transform is a simple
 *		integer translation.
@@ -326,6 +324,7 @@ static int	WlzAffineTransformIsTranslate3(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Translated object or NULL on
 *					error.
 * \brief	Translates the given 2D domain object with an integral
@@ -373,6 +372,7 @@ static WlzObject *WlzAffineTransformIntTranslate(WlzObject *srcObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return			     	Transformed polygon domain or
 *                                    	NULL on error.
 * \brief      	Transforms the given polygon domain.
@@ -478,6 +478,7 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed boundary list or
 *					NULL on error.
 * \brief	Transforms the given boundary list.
@@ -546,6 +547,7 @@ static WlzBoundList *WlzAffineTransformBoundList(WlzBoundList *srcBound,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed contour or
 *					NULL on error.
 * \brief	Transforms the given contour.
@@ -584,6 +586,7 @@ WlzContour	*WlzAffineTransformContour(WlzContour *srcCtr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed model or
 *					NULL on error.
 * \brief	Transforms the given geometric model.
@@ -699,6 +702,7 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Creates a new value table, fills in the values and
 *		adds it to the given new object.
@@ -884,6 +888,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Creates new value, fills in the values and adds it
 *		to the given new object.
@@ -1189,6 +1194,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed plane domain,
 *					NULL on error.
 * \brief	Creates a new plane domain which is the transformed
@@ -1330,6 +1336,7 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
@@ -1369,6 +1376,7 @@ WlzErrorNum	WlzAffineTransformPrimSet(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
@@ -1425,6 +1433,7 @@ static WlzErrorNum WlzAffineTransformPrimSet2(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
@@ -1485,6 +1494,7 @@ static WlzErrorNum WlzAffineTransformPrimSet3(WlzAffineTransform *tr,
 
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform's matrix from the given
 *		translations.
@@ -1531,6 +1541,7 @@ WlzErrorNum	WlzAffineTransformTranslationSet(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform,
 *					NULL on error.
 * \brief	Constructs a new affine transform from the given 
@@ -1567,6 +1578,7 @@ WlzAffineTransform *WlzAffineTransformFromTranslation(WlzTransformType type,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform's matrix from the given
 *		scales.
@@ -1617,6 +1629,7 @@ WlzErrorNum	WlzAffineTransformScaleSet(WlzAffineTransform *tr,
 
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform,
 *					NULL on error.
 * \brief	Constructs a new affine transform from the given 
@@ -1653,6 +1666,7 @@ WlzAffineTransform *WlzAffineTransformFromScale(WlzTransformType type,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform's matrix from the given
 *		rotations. Although the 3 rotations contain redundant
@@ -1717,6 +1731,7 @@ WlzErrorNum	WlzAffineTransformRotationSet(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform,
 *					NULL on error.
 * \brief	Constructs a new affine transform from the given 
@@ -1754,6 +1769,7 @@ WlzAffineTransform *WlzAffineTransformFromRotation(WlzTransformType type,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Gets the given 2D transform's primitives from it's
 *		matrix.
@@ -1795,6 +1811,7 @@ WlzErrorNum	WlzAffineTransformPrimGet(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return	<void>
 * \brief	Gets the given 2D transform's primitives from it's
 *		matrix.
@@ -1869,6 +1886,7 @@ static void	WlzAffineTransformPrimGet2(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Error number.
 * \brief	Sets the given transform from the given matrix.
 * \param	trans			Given affine transform.
@@ -1927,6 +1945,7 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Sets a 2D affine transform from the given primitives.
@@ -1990,6 +2009,7 @@ WlzErrorNum	WlzAffineTransformPrimValSet(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Makes a new affine transform of the given type and
@@ -2036,6 +2056,7 @@ WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType type,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Makes a new affine transform from the given primitive
@@ -2092,6 +2113,7 @@ WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType type,
   return(newTr);
 }
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Makes a new 2D affine transform from the given spin
@@ -2131,6 +2153,7 @@ WlzAffineTransform *WlzAffineTransformFromSpin(double spX, double spY,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Makes a new 2D affine transform from the given spin
@@ -2188,6 +2211,7 @@ WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double spX, double spY,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Copies the given affine transform.
@@ -2223,6 +2247,7 @@ WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Computes the product of the two given affine
@@ -2307,6 +2332,7 @@ WlzAffineTransform *WlzAffineTransformProduct(WlzAffineTransform *tr0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Computes the inverse of the given affine transform.
@@ -2353,6 +2379,7 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return		                Non-zero if the given transform
 *                                       is an identity transform.
 * \brief      	Checks whether the given transform is an identity
@@ -2436,6 +2463,7 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed object, NULL on
 *					error.
 * \brief	Applies the given affine transform to the given Woolz
@@ -2615,6 +2643,7 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzIVertex2.
 * \param	trans			Affine transform to apply.
@@ -2646,6 +2675,7 @@ WlzIVertex2	WlzAffineTransformVertexI2(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzIVertex3.
 * \param	trans			Affine transform to apply.
@@ -2679,6 +2709,7 @@ WlzIVertex3	WlzAffineTransformVertexI3(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzFVertex2.
 * \param	trans			Affine transform to apply.
@@ -2710,6 +2741,7 @@ WlzFVertex2	WlzAffineTransformVertexF2(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzFVertex3.
 * \param	trans			Affine transform to apply.
@@ -2743,6 +2775,7 @@ WlzFVertex3	WlzAffineTransformVertexF3(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzDVertex2.
 * \param	trans			Affine transform to apply.
@@ -2780,6 +2813,7 @@ WlzDVertex2	WlzAffineTransformVertexD2(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzDVertex3.
 * \param	trans			Affine transform to apply.
@@ -2831,6 +2865,7 @@ WlzDVertex3	WlzAffineTransformVertexD3(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzDVertex2 which is a normal.
 * \param	trans			Affine transform to apply.
@@ -2868,6 +2903,7 @@ WlzDVertex2	WlzAffineTransformNormalD2(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed vertex.
 * \brief	Transforms the given WlzDVertex3 which is a normal.
 * \param	trans			Affine transform to apply.
@@ -2919,6 +2955,7 @@ WlzDVertex3	WlzAffineTransformNormalD3(WlzAffineTransform *trans,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed bounding box.
 * \brief	Transforms the given WlzIBox2.
 * \param	tr			Affine transform to apply.
@@ -2977,6 +3014,7 @@ WlzIBox2	WlzAffineTransformBBoxI2(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed bounding box.
 * \brief	Transforms the given WlzDBox2.
 * \param	tr			Affine transform to apply.
@@ -3035,6 +3073,7 @@ WlzDBox2	WlzAffineTransformBBoxD2(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed bounding box.
 * \brief	Transforms the given WlzIBox3.
 * \param	tr			Affine transform to apply.
@@ -3106,6 +3145,7 @@ WlzIBox3	WlzAffineTransformBBoxI3(WlzAffineTransform *tr,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Transformed bounding box.
 * \brief	Transforms the given WlzDBox3.
 * \param	tr			Affine transform to apply.
@@ -3175,8 +3215,3 @@ WlzDBox3	WlzAffineTransformBBoxD3(WlzAffineTransform *tr,
   }
   return(dstBox);
 }
-
-/*!
-* @}
-*/
-

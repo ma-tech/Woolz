@@ -24,11 +24,6 @@
 #include <float.h>
 #include <Wlz.h>
 
-/*!
-* \ingroup	WlzAffineTransform
-* @{
-*/
-
 static WlzAffineTransform 	*WlzAffineTransformLSqTrans3D(
 				  WlzDVertex3 *pos0,
 				  WlzDVertex3 *pos1,
@@ -77,6 +72,7 @@ static WlzAffineTransform 	*WlzAffineTransformLSqDQ2D(
 				  WlzErrorNum *dstErr);
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
@@ -147,6 +143,7 @@ WlzAffineTransform *WlzAffineTransformLSq2(WlzVertexType vtxType,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
@@ -206,6 +203,7 @@ WlzAffineTransform *WlzAffineTransformLSq(WlzVertexType vtxType,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
@@ -268,6 +266,7 @@ WlzAffineTransform *WlzAffineTransformLSq3D(int nVtx0, WlzDVertex3 *vtxVec0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
@@ -338,6 +337,7 @@ WlzAffineTransform *WlzAffineTransformLSq2D(int nVtx0, WlzDVertex2 *vtxVec0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz 3D registration transform which
@@ -545,6 +545,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz 3D registration transform which
@@ -594,6 +595,7 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans3D(WlzDVertex3 *pos0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz general 2D affine transform which
@@ -693,6 +695,7 @@ static WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vtxVec0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz 2D registration transform which
@@ -798,6 +801,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz 2D translation transform which
@@ -841,6 +845,7 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
@@ -1079,6 +1084,7 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 }
 
 /*!
+* \ingroup	WlzTransform
 * \return				Computed affine transform, may
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
@@ -1265,8 +1271,3 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
   }
   return(trans);
 }
-
-/*!
-* @}
-*/
-
