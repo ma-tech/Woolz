@@ -81,75 +81,106 @@ public class SectionViewerGUI extends JPanel {
   JPanel permanentPanel = new JPanel();
   JPanel transientPanel = new JPanel();
 
-  //...................
+  //-------------------------------
   String fileMenuStr = "file";
   String fileMenu_1str = "save image";
   String fileMenu_2str = "save view settings";
   String fileMenu_3str = "load view settings";
   String fileMenu_4str = "close view";
-  String fileMenu_5str = "save anatomy image";
 
   JMenu fileMenu = new JMenu(fileMenuStr);
   JMenuItem fileMenu_1 = new JMenuItem(fileMenu_1str);
   JMenuItem fileMenu_2 = new JMenuItem(fileMenu_2str);
   JMenuItem fileMenu_3 = new JMenuItem(fileMenu_3str);
   JMenuItem fileMenu_4 = new JMenuItem(fileMenu_4str);
-  JMenuItem fileMenu_5 = new JMenuItem(fileMenu_5str);
-  //...................
-
+  //-------------------------------
   String controlMenuStr = "control";
-  String controlMenu_1str = "show rotation controls";
-  String controlMenu_2str = "show user-defined rotation control";
-  String controlMenu_3str = "reset controls";
-
-  String viewMenuStr = "view";
-  String viewMenu_1str = "show cursor feedback";
-  String viewMenu_2str = "show intersection of views";
-  String viewMenu_3str = "enable 'mouse-click' anatomy";
-
   JMenu controlMenu = new JMenu(controlMenuStr);
-  boolean controlMenu_1state = false;
-  JCheckBoxMenuItem controlMenu_1 = new
-               JCheckBoxMenuItem(controlMenu_1str,
-	                         controlMenu_1state);
-  boolean controlMenu_2state = false;
-  JCheckBoxMenuItem controlMenu_2 = new
-               JCheckBoxMenuItem(controlMenu_2str,
-	                         controlMenu_2state);
-
-  JMenuItem controlMenu_3 = new JMenuItem(controlMenu_3str);
-
-  JMenu viewMenu = new JMenu(viewMenuStr);
-  boolean viewMenu_1state = true;
-  JCheckBoxMenuItem viewMenu_1 = new
-               JCheckBoxMenuItem(viewMenu_1str,
-                                 viewMenu_1state);
-
-  boolean viewMenu_2state = false;
-  JCheckBoxMenuItem viewMenu_2 = new
-               JCheckBoxMenuItem(viewMenu_2str,
-                                 viewMenu_2state);
-
-  boolean viewMenu_3state = false;
-  JCheckBoxMenuItem viewMenu_3 = new
-               JCheckBoxMenuItem(viewMenu_3str,
-                                 viewMenu_3state);
-
-
   //...................
-  String viewModeMenuStr = "view_mode";
-  String viewModeMenu_1str = "up_is_up";
-  String viewModeMenu_2str = "absolute";
-  //String viewModeMenu_3str = "help";
+  String controlMenu_1str = "rotation";
+  String controlMenu_1_1str = "yaw pitch roll";
+  String controlMenu_1_2str = "user-defined";
 
-  JMenu viewModeMenu = new JMenu(viewModeMenuStr);
+  JMenu controlMenu_1 = new JMenu(controlMenu_1str);
+  boolean controlMenu_1_1state = false;
+  JCheckBoxMenuItem controlMenu_1_1 = new
+               JCheckBoxMenuItem(controlMenu_1_1str,
+	                         controlMenu_1_1state);
+  boolean controlMenu_1_2state = false;
+  JCheckBoxMenuItem controlMenu_1_2 = new
+               JCheckBoxMenuItem(controlMenu_1_2str,
+	                         controlMenu_1_2state);
+  //...................
+  String controlMenu_2str = "view mode";
+  String controlMenu_2_1str = "up is up";
+  String controlMenu_2_2str = "absolute";
+
+  JMenu controlMenu_2 = new JMenu(controlMenu_2str);
   ButtonGroup viewModeGroup = new ButtonGroup();
-  JRadioButtonMenuItem viewModeMenu_1 = new
-               JRadioButtonMenuItem(viewModeMenu_1str);
-  JRadioButtonMenuItem viewModeMenu_2 = new
-               JRadioButtonMenuItem(viewModeMenu_2str);
-  //JMenuItem viewModeMenu_3 = new JMenuItem(viewModeMenu_3str);
+  JRadioButtonMenuItem controlMenu_2_1 = new
+               JRadioButtonMenuItem(controlMenu_2_1str);
+  JRadioButtonMenuItem controlMenu_2_2 = new
+               JRadioButtonMenuItem(controlMenu_2_2str);
   //...................
+  String controlMenu_3str = "fixed point";
+  String controlMenu_3_1str = "change using mouse button";
+  String controlMenu_3_2str = "change by entering coordinates";
+  String controlMenu_3_3str = "reset";
+
+  JMenu controlMenu_3 = new JMenu(controlMenu_3str);
+  JMenuItem controlMenu_3_1 = new JMenuItem(controlMenu_3_1str);
+  JMenuItem controlMenu_3_2 = new JMenuItem(controlMenu_3_2str);
+  JMenuItem controlMenu_3_3 = new JMenuItem(controlMenu_3_3str);
+  //...................
+  String controlMenu_4str = "rotation axis";
+  String controlMenu_4_1str = "change using mouse button";
+  String controlMenu_4_2str = "change by entering coordinates";
+  String controlMenu_4_3str = "reset";
+
+  JMenu controlMenu_4 = new JMenu(controlMenu_4str);
+  boolean controlMenu_4_1state = false;
+  JMenuItem controlMenu_4_1 = new JMenuItem(controlMenu_4_1str);
+  boolean controlMenu_4_2state = false;
+  JMenuItem controlMenu_4_2 = new JMenuItem(controlMenu_4_2str);
+  JMenuItem controlMenu_4_3 = new JMenuItem(controlMenu_4_3str);
+  //...................
+  String controlMenu_5str = "reset controls";
+  JMenuItem controlMenu_5 = new JMenuItem(controlMenu_5str);
+  //-------------------------------
+  String showMenuStr = "show";
+  JMenu showMenu = new JMenu(showMenuStr);
+
+  String showMenu_1str = "cursor feedback";
+  boolean showMenu_1state = true;
+  JCheckBoxMenuItem showMenu_1 = new
+               JCheckBoxMenuItem(showMenu_1str,
+                                 showMenu_1state);
+
+  String showMenu_2str = "intersection of views";
+  boolean showMenu_2state = false;
+  JCheckBoxMenuItem showMenu_2 = new
+               JCheckBoxMenuItem(showMenu_2str,
+                                 showMenu_2state);
+
+  String showMenu_3str = "mouse-click anatomy";
+  boolean showMenu_3state = false;
+  JCheckBoxMenuItem showMenu_3 = new
+               JCheckBoxMenuItem(showMenu_3str,
+                                 showMenu_3state);
+
+  String showMenu_4str = "fixed point";
+  boolean showMenu_4state = false;
+  JCheckBoxMenuItem showMenu_4 = new
+               JCheckBoxMenuItem(showMenu_4str,
+                                 showMenu_4state);
+
+  String showMenu_5str = "rotation axis";
+  boolean showMenu_5state = false;
+  JCheckBoxMenuItem showMenu_5 = new
+               JCheckBoxMenuItem(showMenu_5str,
+                                 showMenu_5state);
+  //-------------------------------
+  // not used at present, but don't delete
   String thresholdMenuStr = "threshold";
   String thresholdMenu_1str = "enable constraint definition";
   String thresholdMenu_2str = "enable thresholding";
@@ -167,36 +198,8 @@ public class SectionViewerGUI extends JPanel {
   JCheckBoxMenuItem thresholdMenu_3 = new
                JCheckBoxMenuItem(thresholdMenu_3str, thresholdMenu_3state);
   JMenuItem thresholdMenu_4 = new JMenuItem(thresholdMenu_4str);
-  //...................
-  String fixedPointMenuStr = "fixed_point";
-  String fixedPointMenu_1str = "change fixed point";
-  String fixedPointMenu_1_1str = "using left mouse button";
-  String fixedPointMenu_1_2str = "typing coordinates";
-  String fixedPointMenu_2str = "reset fixed point";
-  String fixedPointMenu_3str = "show fixed point";
-  String fixedPointMenu_4str = "define rotation axis";
-  String fixedPointMenu_4_1str = "using left mouse button";
-  String fixedPointMenu_4_2str = "typing coordinates";
-  String fixedPointMenu_5str = "display rotation axis";
-  //String fixedPointMenu_6str = "help";
 
-  JMenu fixedPointMenu = new JMenu(fixedPointMenuStr);
-  boolean fixedPointMenu_3state = false;
-  JMenu fixedPointMenu_1 = new JMenu(fixedPointMenu_1str);
-  JMenuItem fixedPointMenu_1_1 = new JMenuItem(fixedPointMenu_1_1str);
-  JMenuItem fixedPointMenu_1_2 = new JMenuItem(fixedPointMenu_1_2str);
-  JMenuItem fixedPointMenu_2 = new JMenuItem(fixedPointMenu_2str);
-  JCheckBoxMenuItem fixedPointMenu_3 = new
-               JCheckBoxMenuItem(fixedPointMenu_3str,
-	                         fixedPointMenu_3state);
-  JMenu fixedPointMenu_4 = new JMenu(fixedPointMenu_4str);
-  JMenuItem fixedPointMenu_4_1 = new JMenuItem(fixedPointMenu_4_1str);
-  JMenuItem fixedPointMenu_4_2 = new JMenuItem(fixedPointMenu_4_2str);
-  JCheckBoxMenuItem fixedPointMenu_5 = new
-               JCheckBoxMenuItem(fixedPointMenu_5str, true);
-  //JMenuItem fixedPointMenu_6 = new JMenuItem(fixedPointMenu_6str);
-  //...................
-
+  //-------------------------------
   String helpMenuStr = "help";
   String helpMenu_1str = "contents";
   String helpMenu_2str = "index";
@@ -206,7 +209,8 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem helpMenu_3 = new JMenuItem(helpMenu_3str);
 
   JMenu helpMenu = new JMenu(helpMenuStr);
-  //...................
+  //-------------------------------
+  //-------------------------------
   JPanel feedbackPanel_1 = new JPanel();
   JPanel feedbackPanel_1a = new JPanel();
   JPanel feedbackPanel_2 = new JPanel();
@@ -283,7 +287,6 @@ public class SectionViewerGUI extends JPanel {
 
 //----------------------------------------------------------
     fileMenu.add(fileMenu_1);
-    fileMenu.add(fileMenu_5);
     fileMenu.addSeparator();
     fileMenu.add(fileMenu_2);
     fileMenu.add(fileMenu_3);
@@ -294,46 +297,43 @@ public class SectionViewerGUI extends JPanel {
     fileMenu_3.setEnabled(true);
     fileMenu_4.setEnabled(true);
  //...............................
+ //...............................
     controlMenu.add(controlMenu_1);
     controlMenu.add(controlMenu_2);
     controlMenu.add(controlMenu_3);
-    controlMenu.addSeparator();
+    controlMenu.add(controlMenu_4);
+    controlMenu.add(controlMenu_5);
+    controlMenu_4.setEnabled(false);
 
-    viewMenu.add(viewMenu_1);
-    viewMenu.add(viewMenu_2);
-    viewMenu.add(viewMenu_3);
-    viewMenu_3.setEnabled(false);
+    // rotation
+    controlMenu_1.add(controlMenu_1_1);
+    controlMenu_1.add(controlMenu_1_2);
 
-    controlMenu.add(viewModeMenu_1);
-    controlMenu.add(viewModeMenu_2);
-    controlMenu.addSeparator();
+    // view mode
+    controlMenu_2.add(controlMenu_2_1);
+    controlMenu_2.add(controlMenu_2_2);
+    viewModeGroup.add(controlMenu_2_1);
+    viewModeGroup.add(controlMenu_2_2);
+    controlMenu_2_1.setSelected(true);
 
+    // fixed point
+    controlMenu_3.add(controlMenu_3_1);
+    controlMenu_3.add(controlMenu_3_2);
+    controlMenu_3.add(controlMenu_3_3);
+
+    // rotation axis
+    controlMenu_4.add(controlMenu_4_1);
+    controlMenu_4.add(controlMenu_4_2);
+    controlMenu_4.add(controlMenu_4_3);
  //...............................
-    viewModeGroup.add(viewModeMenu_1);
-    viewModeGroup.add(viewModeMenu_2);
-    viewModeMenu_1.setSelected(true);
-
-    controlMenu.add(fixedPointMenu_1);
-    controlMenu.add(fixedPointMenu_2);
-    controlMenu.add(fixedPointMenu_3);
-    controlMenu.addSeparator();
-    controlMenu.add(fixedPointMenu_4);
-    controlMenu.add(fixedPointMenu_5);
-
  //...............................
-    fixedPointMenu_1.add(fixedPointMenu_1_1);
-    fixedPointMenu_1.add(fixedPointMenu_1_2);
-    fixedPointMenu_4.add(fixedPointMenu_4_1);
-    fixedPointMenu_4.add(fixedPointMenu_4_2);
-    fixedPointMenu.setEnabled(true);
-    fixedPointMenu_1_1.setEnabled(true);
-    fixedPointMenu_1_2.setEnabled(true);
-    fixedPointMenu_2.setEnabled(true);
-    fixedPointMenu_3.setEnabled(true);
-    fixedPointMenu_4.setEnabled(false);
-    fixedPointMenu_4_1.setEnabled(false);
-    fixedPointMenu_4_2.setEnabled(false);
-    fixedPointMenu_5.setEnabled(false);
+    showMenu.add(showMenu_1); // cursor feedback
+    showMenu.add(showMenu_2); // intersection of views
+    showMenu.add(showMenu_3); // mouse-click anatomy
+    showMenu.add(showMenu_4); // fixed point
+    showMenu.add(showMenu_5); // rotation axis
+    showMenu_5.setEnabled(false);
+ //...............................
  //...............................
     thresholdMenu.add(thresholdMenu_1);
     thresholdMenu.add(thresholdMenu_2);
@@ -354,7 +354,7 @@ public class SectionViewerGUI extends JPanel {
     //----------------------------------------------------------
     _menubar.add(fileMenu);
     _menubar.add(controlMenu);
-    _menubar.add(viewMenu);
+    _menubar.add(showMenu);
     //_menubar.add(thresholdMenu);
     _menubar.add(helpMenu);
     //----------------------------------------------------------
