@@ -12,6 +12,7 @@
 * Purpose:      Woolz filter which finds histogram peak positions.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-04-2k bill Add peak and/or trough feature selection.
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,14 +37,16 @@ int             main(int argc, char **argv)
   double	sigma = 1.0,
   		thresh = 1.0;
   int		*pkPos = NULL;
+  WlzHistFeature feat = WLZ_HIST_FEATURE_PEAK;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
   WlzHistogramDomain *histDom;
   WlzObject	*inObj = NULL;
-  char 		*outDatFileStr,
+  char 		*argStr0,
+  		*outDatFileStr,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "o:s:t:h",
+  static char	optList[] = "f:o:s:t:h",
 		outDatFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -57,6 +60,37 @@ int             main(int argc, char **argv)
       case 'o':
         outDatFileStr = optarg;
 	break;
+      case 'f':
+	feat = WLZ_HIST_FEATURE_NONE;
+	if((argStr0 = strtok(optarg, ", \t")) == NULL)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	else
+	{
+	  while(ok && argStr0)
+	  {
+	    if(strcmp(argStr0, "p") == 0)
+	    {
+	      feat |= WLZ_HIST_FEATURE_PEAK;
+	    }
+	    else if(strcmp(argStr0, "t") == 0)
+	    {
+	      feat |= WLZ_HIST_FEATURE_TROUGH;
+	    }
+	    else
+	    {
+	      usage = 1;
+	      ok = 0;
+	    }
+	    if(ok)
+	    {
+	      argStr0 = strtok(NULL, ", \t");
+	    }
+	  }
+	}
+        break;
       case 's':
 	if(sscanf(optarg, "%lg", &sigma) != 1)
 	{
@@ -129,7 +163,7 @@ int             main(int argc, char **argv)
   if(ok)
   {
     errNum = WlzHistogramFindPeaks(inObj, sigma, thresh,
-    				   &pkCnt, &pkPos);
+    				   &pkCnt, &pkPos, feat);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -175,9 +209,10 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-o<out file>] [-s#] [-t#] [<in object>]\n"
+    " [-h] [-o<out file>] [-f #] [-s#] [-t#] [<in object>]\n"
     "Options:\n"
     "  -o  Output data file name.\n"
+    "  -f  Features to find, either p (peak), t (trough) or p,t (both).\n"
     "  -s  Gaussian sigma (standard deviation).\n"
     "  -t  Threshold value for peak height.\n",
     "  -h  Help, prints this usage message.\n"
