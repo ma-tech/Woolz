@@ -389,7 +389,8 @@ typedef enum _WlzMeshElemFlags
   WLZ_MESH_ELEM_FLAGS_NBR_1     = (1<<1), /*!< Neighbour on side 1 exists */
   WLZ_MESH_ELEM_FLAGS_NBR_2     = (1<<2), /*!< Neighbour on side 2 exists */
   WLZ_MESH_ELEM_FLAGS_ZOMBIE	= (1<<3), /*!< Dead, awaiting replacement */
-  WLZ_MESH_ELEM_FLAGS_REFINE	= (1<<4)  /*!< Available for refinement */
+  WLZ_MESH_ELEM_FLAGS_REFINE	= (1<<4), /*!< Available for refinement */
+  WLZ_MESH_ELEM_FLAGS_OUTSIDE	= (1<<5)  /*!< Outside object's domain */
 } WlzMeshElemFlags;
 
 /*!
@@ -2767,7 +2768,8 @@ typedef struct _WlzMeshTransform2D5
 
 
 /************************************************************************
-* User weighting function for ICP based registration.
+* User weighting functions and callback data structures for ICP based
+* registration and matching.
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
 /*!
@@ -2780,7 +2782,23 @@ typedef double	(*WlzRegICPUsrWgtFn)(WlzVertexType,
 			     WlzAffineTransform *,
 			     AlcKDTTree *,
 			     WlzVertexP, WlzVertexP, WlzVertex, WlzVertex,
-			     void *);
+			     double, double, void *);
+
+/*!
+* \typedef	WlzMatchICPWeightCbData
+* \ingroup	WlzTransform
+* \brief	A data structure for wieghting vertex matches within
+* 		WlzMatchICPWeightMatches().
+*		Typedef: ::WlzMatchICPWeightCbData.
+*/
+typedef struct _WlzMatchICPWeightCbData
+{
+  WlzGMModel	*tGM;
+  WlzGMModel	*sGM;
+  int		nScatter;
+  double 	maxDisp;
+} WlzMatchICPWeightCbData;
+
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
