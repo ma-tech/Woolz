@@ -13,6 +13,9 @@
 *		and a string representation.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 15-08-00 bill	Remove obsolete types WLZ_VECTOR_(INT)|(FLOAT) and
+*		WLZ_POINT_(INT)|(FLOAT). Add WLZ_CONTOUR and the geometric
+*		model types.
 * 28-01-00 bill Add ALG_ERR_CONVERGENCE.
 ************************************************************************/
 #include <stdlib.h>
@@ -26,7 +29,7 @@
 * Purpose:	Finds a string for the given object's type.	
 * Global refs:	-						
 * Parameters:	WlzObject *obj:		Given object.		
-*		WlzErrorNum *dstErr:	destination error pointer, may
+*		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.		
 ************************************************************************/
 const char	*WlzStringFromObjType(WlzObject *obj,
@@ -70,20 +73,11 @@ const char	*WlzStringFromObjType(WlzObject *obj,
       case WLZ_3D_POLYGON:
         oTypeStr = "WLZ_3D_POLYGON";
 	break;
+      case WLZ_CONTOUR:
+        oTypeStr = "WLZ_CONTOUR";
+	break;
       case WLZ_RECTANGLE:
         oTypeStr = "WLZ_RECTANGLE";
-	break;
-      case WLZ_VECTOR_INT:
-        oTypeStr = "WLZ_VECTOR_INT";
-	break;
-      case WLZ_VECTOR_FLOAT:
-        oTypeStr = "WLZ_VECTOR_FLOAT";
-	break;
-      case WLZ_POINT_INT:
-        oTypeStr = "WLZ_POINT_INT";
-	break;
-      case WLZ_POINT_FLOAT:
-        oTypeStr = "WLZ_POINT_FLOAT";
 	break;
       case WLZ_CONVOLVE_INT:
         oTypeStr = "WLZ_CONVOLVE_INT";
@@ -159,13 +153,10 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_2D_POLYGON", WLZ_2D_POLYGON,
 		"WLZ_BOUNDLIST", WLZ_BOUNDLIST,
 		"WLZ_CONV_HULL", WLZ_CONV_HULL,
+		"WLZ_CONTOUR", WLZ_CONTOUR,
 		"WLZ_HISTOGRAM", WLZ_HISTOGRAM,
 		"WLZ_3D_POLYGON", WLZ_3D_POLYGON,
 		"WLZ_RECTANGLE", WLZ_RECTANGLE,
-		"WLZ_VECTOR_INT", WLZ_VECTOR_INT,
-		"WLZ_VECTOR_FLOAT", WLZ_VECTOR_FLOAT,
-		"WLZ_POINT_INT", WLZ_POINT_INT,
-		"WLZ_POINT_FLOAT", WLZ_POINT_FLOAT,
 		"WLZ_CONVOLVE_INT", WLZ_CONVOLVE_INT,
 		"WLZ_CONVOLVE_FLOAT", WLZ_CONVOLVE_FLOAT,
 		"WLZ_AFFINE_TRANS", WLZ_AFFINE_TRANS,
@@ -197,7 +188,7 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 * Purpose:	Finds a string for the given object's domain type.
 * Global refs:	-						
 * Parameters:	WlzObject *obj:		Given object.		
-*		WlzErrorNum *dstErr:	destination error pointer, may
+*		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.		
 ************************************************************************/
 const char	*WlzStringFromObjDomainType(WlzObject *obj,
@@ -314,6 +305,9 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
 	    break;
 	}
         break;
+      case WLZ_CONTOUR:
+        oDomTypeStr = "WLZ_CONTOUR";
+	break;
       case WLZ_HISTOGRAM:
 	switch(obj->domain.core->type)
 	{
@@ -390,6 +384,7 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 		"WLZ_POLYGON_DOUBLE", WLZ_POLYGON_DOUBLE,
 		"WLZ_BOUNDLIST_PIECE", WLZ_BOUNDLIST_PIECE,
 		"WLZ_BOUNDLIST_HOLE", WLZ_BOUNDLIST_HOLE,
+		"WLZ_CONTOUR", WLZ_CONTOUR,
 		"WLZ_HISTOGRAMDOMAIN_INT", WLZ_HISTOGRAMDOMAIN_INT,
 		"WLZ_HISTOGRAMDOMAIN_FLOAT", WLZ_HISTOGRAMDOMAIN_FLOAT,
 		"WLZ_RECTANGLE_DOMAIN_INT", WLZ_RECTANGLE_DOMAIN_INT,
@@ -413,7 +408,7 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 * Purpose:	Finds a string for the given object's values type.
 * Global refs:	-						
 * Parameters:	WlzObject *obj:		Given object.		
-*		WlzErrorNum *dstErr:	destination error pointer, may
+*		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.		
 ************************************************************************/
 const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
@@ -524,7 +519,7 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 * Purpose:	Finds a string for the given transform type.	
 * Global refs:	-						
 * Parameters:	WlzTransformType tType:	Given transform type.	
-*		WlzErrorNum *dstErr:	destination error pointer, may
+*		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.		
 ************************************************************************/
 const char	*WlzStringFromTransformType(WlzTransformType tType,
@@ -585,13 +580,88 @@ WlzTransformType WlzStringToTransformType(const char *tStr,
 }
 
 /************************************************************************
+* Function:	WlzStringFromGMModelType			
+* Returns:	const char*:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given transform type.	
+* Global refs:	-						
+* Parameters:	WlzGMModelType mType:	Given model type.	
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
+************************************************************************/
+const char	*WlzStringFromGMModelType(WlzGMModelType mType,
+				          WlzErrorNum *dstErr)
+{
+  const char	*tStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(mType)
+  {
+    case WLZ_GMMOD_2I:
+      tStr = "WLZ_GMMOD_2I";
+      break;
+    case WLZ_GMMOD_2D:
+      tStr = "WLZ_GMMOD_2D";
+      break;
+    case WLZ_GMMOD_3I:
+      tStr = "WLZ_GMMOD_3I";
+      break;
+    case WLZ_GMMOD_3D:
+      tStr = "WLZ_GMMOD_3D";
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tStr);
+}
+
+/************************************************************************
+* Function:	WlzStringToGMModelType			
+* Returns:	WlzGMModelType: 	Woolz GM model type.	
+* Purpose:	Finds an enumerated type for the given GM model
+*		type string.					
+* Global refs:	-						
+* Parameters:	const char *tStr:	Given GM Model type string.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
+************************************************************************/
+WlzGMModelType	WlzStringToGMModelType(const char *tStr,
+					WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzTransformType	tType = WLZ_GMMOD_2I;
+  WlzErrorNum	errNum = WLZ_ERR_DOMAIN_TYPE;
+
+  if(WlzStringMatchValue(&tI0, tStr,
+			 "WLZ_GMMOD_2I", WLZ_GMMOD_2I,
+			 "WLZ_GMMOD_2D", WLZ_GMMOD_2D,
+			 "WLZ_GMMOD_3I", WLZ_GMMOD_3I,
+			 "WLZ_GMMOD_3D", WLZ_GMMOD_3D,
+			 NULL))
+  {
+    tType = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tType);
+}
+
+/************************************************************************
 * Function:	WlzStringFromGreyType				
 * Returns:	const char*:		Pointer to read only string or
 *					NULL on error.		
 * Purpose:	Finds a string for the given grey type.		
 * Global refs:	-						
 * Parameters:	WlzGreyType gType:	Given grey type.	
-*		WlzErrorNum *dstErr:	destination error pointer, may
+*		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.		
 ************************************************************************/
 const char	*WlzStringFromGreyType(WlzGreyType gType,
