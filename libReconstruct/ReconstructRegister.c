@@ -771,14 +771,11 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 		 (tppVec + tppIdx)->second.vtX,
 		 (tppVec + tppIdx)->second.vtY));
       }
-      if((newTr = WlzAffineTransformLSq2D(tppCount, vtxVec1,
-					  tppCount, vtxVec0,
+      if((newTr = WlzAffineTransformLSq2D(tppCount, vtxVec0,
+					  tppCount, vtxVec1,
+					  0, NULL,
 					  WLZ_TRANSFORM_2D_REG,
 					  &wlzErr)) == NULL)
-      if((newTr = WlzAffineTransformLSq2D(tppCount, vtxVec1,
-      					tppCount, vtxVec0,
-      				        WLZ_TRANSFORM_2D_REG,
-					&wlzErr)) == NULL)
       {
         errFlag = RecErrorFromWlz(wlzErr);
       }
