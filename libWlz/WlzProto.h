@@ -1653,6 +1653,14 @@ extern WlzObject 		*WlzGreyTemplate(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzGreyTransfer.c							*
+************************************************************************/
+extern WlzObject 		*WlzGreyTransfer(
+				  WlzObject *obj,
+				  WlzObject *tmpl,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzGreyValue.c							*
 ************************************************************************/
 extern WlzGreyValueWSpace 	*WlzGreyValueMakeWSp(

@@ -98,6 +98,7 @@ CSOURCES		= \
 			WlzGreySetValue.c \
 			WlzGreyStats.c \
 			WlzGreyTemplate.c \
+			WlzGreyTransfer.c \
 			WlzGreyValue.c \
 			WlzHasIntersect.c \
 			WlzHistogram.c \
