@@ -1034,7 +1034,7 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 				       trType, &errNum);
       break;
     default:
-      errNum = WLZ_ERR_DOMAIN_TYPE;
+      errNum = WLZ_ERR_TRANSFORM_TYPE;
       break;
   }
   if(errNum == WLZ_ERR_NONE)
