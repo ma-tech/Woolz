@@ -1394,14 +1394,13 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	    {
 	      sV.d3 = WlzAffineTransformVertexD3(invTr, sTV.d3, NULL);
 	    }
-	    wUs = (*usrWgtFn)(vType, curTr, tree, tVx, sVx, tV, sV,
-	    		      usrWgtData);
+	    *(wgtBuf + idS) = (*usrWgtFn)(vType, curTr, tree, tVx, sVx,
+	    				  tV, sV, wVx, wNr, usrWgtData);
 	  }
 	  else
 	  {
-	    wUs = 1.0;
+	    *(wgtBuf + idS) = wVx * wNr;
 	  }
-	  *(wgtBuf + idS) = wVx * wNr * wUs;
 	}
 	/* Compute the transform. */
 	switch(trType)
