@@ -15,6 +15,7 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 
+#include <AlcType.h>
 #include <WlzType.h>
 #include <WlzError.h>
 #include <WlzProto.h>

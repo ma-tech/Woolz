@@ -91,4 +91,4 @@ archive:		$(SOARCHIVE)
 
 $(SOARCHIVE):		$(OBJECTS) $(INCLUDES)
 			$(CC) -G $(OBJECTS) $(LDFLAGS) $(LDLIBS) \
-			      -lC -o $(SOARCHIVE)
+			      -o $(SOARCHIVE)
