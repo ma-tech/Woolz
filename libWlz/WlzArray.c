@@ -122,13 +122,16 @@ WlzErrorNum WlzToIArray2D(WlzIVertex2 *dstSizeArrayDat, int ***dstArrayDat,
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
+  if(dstArrayDat == NULL)
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
-    *dstSizeArrayDat = size;
+    if(dstSizeArrayDat)
+    {
+      *dstSizeArrayDat = size;
+    }
     errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
     			  size, origin,
 			  noiseFlag, WLZ_GREY_INT);
