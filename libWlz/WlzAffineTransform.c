@@ -13,6 +13,7 @@
 *		applying them to Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 30-11-00 bill WlzAffineTransformMatrixSet() now sets 3D matricies.
 * 10-10-00 bill	Add WlzAffineTransformContour(),
 *		WlzAffineTransformGMModel(),
 *		WlzAffineTransformBBoxI2(),
@@ -1503,7 +1504,13 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
 	}
 	break;
       case WLZ_TRANSFORM_3D_AFFINE:
-        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	for(idx0 = 0; idx0 < 4; ++idx0)
+	{
+	  for(idx1 = 0; idx1 < 4; ++idx1)
+	  {
+	    trans->mat[idx0][idx1] = matrix[idx0][idx1];
+	  }
+	}
 	break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
