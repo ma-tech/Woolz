@@ -822,6 +822,17 @@ extern WlzDVertex2		WlzBasisFnTransformVertexD(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzBoundaryUtils.c							*
+************************************************************************/
+extern WlzErrorNum		WlzBoundObjToPolyDomArray(
+				  WlzObject *bndObj,
+				  int *dstSizeArrayPoly,
+				  WlzPolygonDomain ***dstArrayPoly);
+extern int			WlzBoundPolyCount(
+				  WlzBoundList *bnd,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzBoundingBox.c							*
 ************************************************************************/
 extern WlzIBox2 		WlzBoundingBox2I(
@@ -1055,6 +1066,8 @@ extern WlzObject 		*WlzDomainFill(
 /************************************************************************
 * WlzDomainUtils.c							*
 ************************************************************************/
+extern WlzObjectType		WlzDomainType(
+				  WlzDomain dom);
 extern void			WlzBitLnSetItv(
 				  UBYTE *bitLn,
 				  int iLft,

@@ -54,6 +54,7 @@ CSOURCES		= \
                         WlzAssign.c \
 			WlzBackground.c \
 			WlzBasisFnTransform.c \
+			WlzBoundaryUtils.c \
 			WlzBoundingBox.c \
 			WlzBoundToObj.c \
 			WlzCannyDeriche.c \
@@ -133,6 +134,7 @@ CSOURCES		= \
 			WlzPolyReverse.c \
 			WlzPolySmooth.c \
 			WlzPolyToObj.c \
+			WlzPolyUtils.c \
 			WlzPrinicipalAngle.c \
 			WlzRank.c \
 			WlzRaster.c \

@@ -1,37 +1,55 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDomainUtils.c
-* Date:         March 1999
-* Author:       Richard Baldock, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Utility functions for Woolz domains.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Fixed enum assignment mismatch.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzDomainUtils.c
+* \author       Bill Hill, Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Utility functions for Woolz domains.
+* \ingroup	WlzDomainOps
+* \todo         -
+* \bug          None known.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzBitLnSetItv
-* Returns:	void
-* Purpose:	Sets bits in the given byte packed bit line which are
-*		within the given interval;
-* Global refs:	-
-* Parameters:	UBYTE *bitLnP:		The bit line pointer.
-*		int iLft:		Left coordinate of interval.
-*		int iRgt:		Right coordinate of interval.
-*		int size:		Number of bits in the bit line.
-************************************************************************/
+/*!
+* \return	The type of the domain, WLZ_NULL if the domain is NULL.
+* \ingroup	WlzDomainOps
+* \brief	Gets the type of the given domain.
+* \param	dom			Given domain.
+*/
+WlzObjectType	WlzDomainType(WlzDomain dom)
+{
+  WlzObjectType	type = WLZ_NULL;
+
+  if(dom.core)
+  {
+    type = dom.core->type;
+  }
+  return(type);
+}
+
+/*!
+* \return	<void>
+* \ingroup	WlzDomainOps
+* \brief	Sets bits in the given byte packed bit line which are within
+* 		the given interval.
+* \param	bitLnP			The bit line pointer.
+* \param	iLft			Left coordinate of interval.
+* \param	iRgt			Right coordinate of interval.
+* \param	size			Number of bits in the bit line.
+*/
 void		WlzBitLnSetItv(UBYTE *bitLnP, int iLft, int iRgt, int size)
 {
   int		bitIdx,
@@ -96,21 +114,20 @@ void		WlzBitLnSetItv(UBYTE *bitLnP, int iLft, int iRgt, int size)
   }
 }
 
-/************************************************************************
-* Function:	WlzDynItvLnFromBitLn					
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Adds an interval line to a interval domain given
-*		an allocated interval domain a byte packed bitmask
-*		for the interval line and a pool of available
-*		intervals.
-* Global refs:	-						
-* Parameters:	WlzIntervalDomain *iDom: Given interval domain.
-*		UBYTE *bitLn:		Byte packed bitmap for line.
-*		int line:		The line coordinate.
-*		int width:		Width of the line, ie number
-*					of valid bits in bitmask.
-*		WlzDynItvPool iPool:	Interval pool.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDomainOps
+* \brief	Adds an interval line to a interval domain given
+*               an allocated interval domain a byte packed bitmask
+*               for the interval line and a pool of available
+*               intervals.
+* \param	iDom			Given interval domain.
+* \param	bitLn			Byte packed bitmap for line.
+* \param	line			The line coordinate.
+* \param	width			Width of the line, ie number of valid
+* 					bits in bitmask.
+* \param	iPool			Interval pool.
+*/
 WlzErrorNum 	WlzDynItvLnFromBitLn(WlzIntervalDomain *iDom,
 				     UBYTE *bitLn, int line, int width,
 				     WlzDynItvPool *iPool)
@@ -221,20 +238,18 @@ WlzErrorNum 	WlzDynItvLnFromBitLn(WlzIntervalDomain *iDom,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzDynItvAdd					
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Adds an interval to a interval domain given
-*		an allocated interval domain, a pool of available
-*		intervals, the line, the intervals left most column
-*		and the intertvals width.
-* Global refs:	-						
-* Parameters:	WlzIntervalDomain *iDom: Given interval domain.
-*		WlzDynItvPool iPool:	Interval pool.
-*		int line:		The line.
-*		int iLft:		Left most column of interval.
-*		int iLen:		Width of the interval.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDomainOps
+* \brief	Adds an interval to a interval domain given an allocated
+* 		interval domain, a pool of available intervals, the line, the
+* 		intervals left most column and the intertvals width.
+* \param	iDom			Given interval domain.
+* \param	iPool			Interval pool.
+* \param	line			The line.
+* \param	iLft			Left most column of interval.
+* \param	iLen			Width of the interval.
+*/
 WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
 			     int line, int iLft, int iLen)
 {
@@ -318,21 +333,14 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
   return(errNum);
 }
 
-
-
-/************************************************************************
-*   Function   : WlzStandardIntervalDomain				*
-*   Date       : Mon Oct 21 18:38:20 1996				*
-*************************************************************************
-*   Synopsis   :standardise an interval domain - minimal bounding box,	*
-*		strip leading and trailing empty lines. The domain	*
-*		is modified "in place".					*
-*   Returns    :WlzErrorNum: error return values: WLZ_ERR_NONE,		*
-*		WLZ_ERR_DOMAIN_NULL						*
-*   Parameters :WlzIntervalDomain *idom: the domain to be standardised	*
-*   Global refs:None							*
-************************************************************************/
-
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDomainOps
+* \brief	Standardises an interval domain by ensuring that it
+*		has a minaimal bounding box, striping away empty lines
+*		as required. The domain is modified "in place".
+* \param	idom			The given interval domain.
+*/
 WlzErrorNum WlzStandardIntervalDomain(WlzIntervalDomain *idom)
 {
   WlzIntervalLine	*itvl;
@@ -397,23 +405,16 @@ WlzErrorNum WlzStandardIntervalDomain(WlzIntervalDomain *idom)
   return( WLZ_ERR_NONE );
 }
 
-/************************************************************************
-*   Function   : WlzStandardPlaneDomain					*
-*   Date       : Mon Oct 21 17:40:00 1996				*
-*************************************************************************
-*   Synopsis   :Standardize a plane domain and corresponding voxel-table*
-*		(voxel-tables must have exactly matching valuetables)	*
-*		by stripping leading and trailing NULL domains and	*
-*		standardising each domain in turn. The bounding box is	*
-*		reset to be minimal.					*
-*   Returns    :WlzErrorNum: error return values: WLZ_ERR_DOMAIN_NULL,		*
-*		WLZ_ERR_NONE, WLZ_ERR_PLANEDOMAIN_DATA. 				*
-*   Parameters :WlzPlaneDomain 	*pdom: the planedomain must be non-NULL	*
-*		WlzVoxelValues	*voxtb: corresponding voxel table - may	*
-*		br NULL.						*
-*   Global refs:None.							*
-************************************************************************/
-
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDomainOps
+* \brief	Standardizes a plane domain and corresponding voxel-table
+* 		(voxel-tables must have exactly matching valuetables) by
+* 		stripping leading and trailing NULL domains and standardising
+* 		each domain in turn. The bounding box is reset to be minimal.
+* \param	pdom			Given plane domain, must NOT be NULL..
+* \param	voxtb			Corresponding voxel table, maybe NULL.
+*/
 WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
 				   WlzVoxelValues	*voxtb)
 {
@@ -527,4 +528,3 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
   /* return */
   return( WLZ_ERR_NONE );
 }
-
