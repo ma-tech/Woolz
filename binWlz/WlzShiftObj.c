@@ -132,7 +132,7 @@ int             main(int argc, char **argv)
   {
     if(sftToOrg)
     {
-      bBox = WlzBoundingBox3D(inObj, &errNum);
+      bBox = WlzBoundingBox3I(inObj, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
         trX = -(bBox.xMin);

@@ -36,7 +36,7 @@ int             main(int argc, char **argv)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
   WlzObject	*inObj = NULL;
-  WlzIBox3	bBox;
+  WlzDBox3	bBox;
   char 		*outFileStr,
   		*inObjFileStr;
   static char	optList[] = "o:h",
@@ -121,7 +121,7 @@ int             main(int argc, char **argv)
     }
     else
     {
-      (void )fprintf(fP, "%d %d %d %d %d %d\n",
+      (void )fprintf(fP, "%g %g %g %g %g %g\n",
       		     bBox.xMin, bBox.yMin, bBox.zMin,
 		     bBox.xMax, bBox.yMax, bBox.zMax);
     }
