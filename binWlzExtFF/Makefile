@@ -57,6 +57,7 @@ DEPENDDIRS		= \
 			  ../libbibfile \
 			  ../libWlzExtFF \
 			../libhguDlpList \
+			../../External/Jpeg/jpeg-6b \
 			../../External/Tiff/tiff-v3.5.7/libtiff
 
 # List of all header file directories to be searched (modify as required).
