@@ -793,7 +793,7 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
     iF = 0;
     parseS = recS;
     while((errNum == ALC_ER_NONE) &&
-          ((tokS = strtok(parseS, " \t")) != NULL) && *tokS)
+          ((tokS = strtok(parseS, " \t\n")) != NULL) && *tokS)
     {
       parseS = NULL;
       if((dP0 = (double *)AlcVectorExtendAndGet(vec, nV)) == NULL)
@@ -810,7 +810,7 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
 	++nV;
       }
     }
-    if(errNum == ALC_ER_NONE)
+    if((errNum == ALC_ER_NONE) && (iF > 0))
     {
       if(nR == 0)
       {
