@@ -58,7 +58,10 @@ DEPENDDIRS              = \
                           . \
                           ../libAlc \
                           ../libAlg \
-                          ../libWlz
+                          ../libWlz \
+			../libWlzExtFF \
+			../libbibfile \
+			../libHGUDlpList
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -172,7 +175,8 @@ endif
 
 # Targets to create archives, dependencies and rules (modify as required).
 $(ARCHIVE):		$(OBJECTS)
-			$(AR) rs $(ARCHIVE) $?
+			$(AR) r $(ARCHIVE) $?
+			$(RANLIB) $(ARCHIVE)
 
 # Targets to create executables, just a dependencies (modify as required).
 

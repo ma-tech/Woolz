@@ -431,6 +431,7 @@ endif
 # Targets to create archives, dependencies and rules (modify as required).
 $(ARCHIVE):		$(OBJECTS)
 			$(AR) r $(ARCHIVE) $?
+			$(RANLIB) $(ARCHIVE)
 
 $(SOARCHIVE):		$(OBJECTS)
 			$(CC) -G $(OBJECTS) -lC -o $(SOARCHIVE)

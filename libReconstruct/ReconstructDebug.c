@@ -17,6 +17,12 @@
 #include <Reconstruct.h>
 #include <unistd.h>
 
+
+#ifdef DARWIN
+#define flockfile(file)
+#define funlockfile(file)
+#endif /* DARWIN */
+
 RecDbgMask	recDbgMask = REC_DBG_NONE,
 		recDbgWlzMask = REC_DBG_NONE;
 void		*recDbgData = NULL,

@@ -168,6 +168,7 @@ endif
 # Targets to create archives, dependencies and rules (modify as required).
 $(ARCHIVE):		$(OBJECTS)
 			$(AR) r $(ARCHIVE) $?
+			$(RANLIB) $(ARCHIVE)
 
 # Targets to create executables, just a dependencies (modify as required).
 
