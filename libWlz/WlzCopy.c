@@ -23,14 +23,9 @@
 #include <string.h>
 #include <Wlz.h>
 
-WlzDomain	WlzCopyDomain(WlzObjectType, WlzDomain, WlzErrorNum *);
-WlzValues	WlzCopyValues(WlzObjectType, WlzValues, WlzDomain,
-			       WlzErrorNum *);
-WlzProperty WlzCopyProperty(WlzProperty, WlzErrorNum *);
-WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *,
-					 	WlzErrorNum *);
-WlzEMAPProperty *WlzCopyEMAPProperty(WlzEMAPProperty *,
-					 	WlzErrorNum *);
+static WlzSimpleProperty  	*WlzCopySimpleProperty(
+				  WlzSimpleProperty *PList,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	Copy of given object.
@@ -76,8 +71,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	}
 	if((errNum == WLZ_ERR_NONE) && inObj->plist)
 	{
-	  /* now go through property list */
-	  /*pLst = WlzCopyPropertyList(inObj->plist, &errNum);*/
+	  pLst = WlzCopyPropertyList(inObj->plist, &errNum);
         }
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -225,15 +219,17 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	}
 	break;
       case WLZ_2D_POLYGON:
-        outDom.poly = WlzMakePolyDmn(inDom.poly->type, inDom.poly->vtx,
+        outDom.poly = WlzMakePolygonDomain(inDom.poly->type,
 				     inDom.poly->nvertices,
+				     inDom.poly->vtx,
 				     inDom.poly->maxvertices,
 				     1, &errNum);
         break;
       case WLZ_BOUNDLIST:
 	tDom0.poly = (inDom.b->poly)?
-		     WlzMakePolyDmn(inDom.b->poly->type, inDom.b->poly->vtx,
+		     WlzMakePolygonDomain(inDom.b->poly->type,
 		     		    inDom.b->poly->nvertices,
+		     		    inDom.b->poly->vtx,
 				    inDom.b->poly->maxvertices,
 				    1, &errNum): NULL;
 	if(errNum == WLZ_ERR_NONE)
@@ -434,12 +430,90 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 /*!
 * \return	Copied property list.
 * \ingroup	WlzAllocation
-* \brief	Copies the given simple property list.
+* \brief	Copies the given property list.
+* \param	gList			Given property list.
+* \param	dstErr			Destination error pointer, may
+*					be NULL.
+*/
+AlcDLPList	*WlzCopyPropertyList(AlcDLPList *gList, WlzErrorNum *dstErr)
+{
+  AlcDLPList	*nList = NULL;
+  AlcDLPItem	*gItem;
+  WlzProperty	gProp,
+  		nProp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nList = AlcDLPListNew(NULL)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else if((gItem = gList->head) != NULL)
+  {
+    do
+    {
+      if(gItem->entry == NULL)
+      {
+        errNum = WLZ_ERR_PROPERTY_NULL;
+      }
+      else
+      {
+	gProp.core = (WlzCoreProperty *)(gItem->entry);
+        switch(gProp.core->type)
+	{
+	  case WLZ_PROPERTY_SIMPLE:
+	    nProp.simple = WlzCopySimpleProperty(gProp.simple, &errNum);
+	    break;
+	  case WLZ_PROPERTY_EMAP:
+	    nProp.emap = WlzMakeEMAPProperty(gProp.emap->emapType,
+	    				gProp.emap->theilerStage,
+					gProp.emap->modelName,
+					gProp.emap->version,
+					gProp.emap->fileName,
+					gProp.emap->comment,
+  					&errNum);
+	    break;
+	  case WLZ_PROPERTY_NAME:
+	    nProp.name = WlzMakeNameProperty(gProp.name->name, &errNum);
+	    break;
+	  case WLZ_PROPERTY_GREY:
+	    nProp.greyV = WlzMakeGreyProperty(gProp.greyV->name,
+	    				       gProp.greyV->value, &errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_PROPERTY_TYPE;
+	    break;
+	}
+      }
+      if((errNum == WLZ_ERR_NONE) &&
+         (AlcDLPListEntryAppend(nList, NULL, (void *)(nProp.core),
+	 			WlzFreePropertyListEntry) != ALC_ER_NONE))
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      gItem = gItem->next;
+    } while((errNum == WLZ_ERR_NONE) && (gItem != gList->head));
+  }
+  if((errNum != WLZ_ERR_NONE) && nList)
+  {
+    (void )WlzFreePropertyList(nList);
+    nList = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nList);
+}
+
+/*!
+* \return	Copied simple property.
+* \ingroup	WlzAllocation
+* \brief	Copies the given simple property.
 * \param	inPLst			Given property list.
 * \param	dstErr			Destination error pointer, may
 *					be NULL.
 */
-WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *inPLst,
+static WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *inPLst,
 					 WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
