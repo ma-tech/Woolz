@@ -12,7 +12,8 @@ import javax.help.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
-public class SVParent implements SVUtils {
+public class SVParent
+          implements SVUtils, Serializable {
   private String _titleText = "";
   private File selectedGreyFile = null;
 
@@ -38,8 +39,8 @@ public class SVParent implements SVUtils {
 
   private String SLASH = System.getProperty("file.separator");
 
-  protected static int defViewW = 400;
-  protected static int defViewH = 400;
+  protected static int defViewW = 550;
+  protected static int defViewH = 450;
 
 //-----------------------------------------------------
   /**
@@ -165,8 +166,7 @@ public class SVParent implements SVUtils {
        addView(SV);
        SV.openView();
        pan1.add(SV, BorderLayout.CENTER);
-       //intFr.pack();
-       intFr.setPreferredSize(new Dimension(W, H));
+       intFr.setSize(new Dimension(W, H));
        intFr.setVisible(true);
     }
 
