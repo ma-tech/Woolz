@@ -18,6 +18,7 @@
 include			../../../../../../../../Makefile.conf
 
 JAVASOURCES		= \
+			  WlzAffineTransformLSq.java \
 			  WlzBoundingBox.java \
 			  WlzBoundingBoxIntersection.java \
 			  WlzDitherViewer.java \
