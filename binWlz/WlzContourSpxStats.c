@@ -160,7 +160,7 @@ int             main(int argc, char **argv)
     }
     if(ok)
     {
-      nSpx = WlzGMModelSpxStats(inObj->domain.ctr->model,
+      nSpx = WlzGMModelSpxStats(model,
 				&min, &max, &sum, &sumSq, &mean, &stdDev,
 				&errNum);
     }
