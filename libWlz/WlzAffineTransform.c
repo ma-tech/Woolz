@@ -2513,9 +2513,9 @@ WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *tr,
 * \return				New affine transform, or NULL
 *					on error.
 * \brief	Computes the product of the two given affine
-*		transforms.
-* \param	tr0			First affine transform.
-* \param	tr1			Second affine transform.
+*		transforms \f$T_1 T_0\f$.
+* \param	tr0			First affine transform \f$T_0\f$.
+* \param	tr1			Second affine transform \f$T_1\f$.
 * \param	dstErr			Destination pointer for error
 *					number.
 */
@@ -2643,7 +2643,9 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
 * \return		                Non-zero if the given transform
 *                                       is an identity transform.
 * \brief      	Checks whether the given transform is an identity
-*               transform.
+*               transform. This function is equivalent to
+*		WlzAffineTransformIsIdentityTol() with a tolerances of
+*		1.0e-06.
 * \param	trans			Given affine transform.
 * \param        dstErr			Destination pointer for error
 *                                       number.
@@ -2651,15 +2653,47 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
 int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
 					     WlzErrorNum *dstErr)
 {
+  int           isIdentity = 0;
+  const double	tol = 1.0e-06;
+
+  WLZ_DBG((WLZ_DBG_LVL_1),
+	  ("WlzAffineTransformIsIdentity FE 0x%lx 0x%lx\n",
+	   (unsigned long )trans, (unsigned long )dstErr));
+
+  isIdentity = WlzAffineTransformIsIdentityTol(trans, tol, tol, dstErr);
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzAffineTransformIsIdentity FX %d\n",
+	   isIdentity));
+  return(isIdentity);
+}
+ 
+
+/*!
+* \ingroup	WlzTransform
+* \return		                Non-zero if the given transform
+*                                       is an identity transform.
+* \brief      	Checks whether the given transform is an identity
+*               transform using the given tolerance. If any of the
+*		transform parameters deviates from those an identity
+*		transform my more than +/- the given tolerance the
+*		transform is not considered an identity transform.
+* \param	trans			Given affine transform.
+* \param	tolTn			Given tollerance for all elements
+*					except translation.
+* \param	tolTx			Given tollerance for translation.
+* \param        dstErr			Destination pointer for error
+*                                       number.
+*/
+int		WlzAffineTransformIsIdentityTol(WlzAffineTransform *trans,
+					        double tolTn,
+					        double tolTx,
+					        WlzErrorNum *dstErr)
+{
   int           dim,
   		isIdentity = 0;
   double        **mat;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
-  const double	delta = 1.0e-06;
  
-  WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformIsIdentity FE 0x%lx 0x%lx\n",
-	   (unsigned long )trans, (unsigned long )dstErr));
   if(trans == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -2671,36 +2705,36 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
     switch(dim)
     {
       case 2:
-	if((fabs(mat[0][0] - 1.0) <= delta) &&
-	   (fabs(mat[0][1]) <= delta) &&
-	   (fabs(mat[0][2]) <= delta) &&
-	   (fabs(mat[1][0]) <= delta) &&
-	   (fabs(mat[1][1] - 1.0) <= delta) &&
-	   (fabs(mat[1][2]) <= delta) &&
-	   (fabs(mat[2][0]) <= delta) &&
-	   (fabs(mat[2][1]) <= delta) &&
-	   (fabs(mat[2][2] - 1.0) <= delta)) 
+	if((fabs(mat[0][0] - 1.0) <= tolTn) &&
+	   (fabs(mat[0][1]) <= tolTn) &&
+	   (fabs(mat[0][2]) <= tolTx) &&
+	   (fabs(mat[1][0]) <= tolTn) &&
+	   (fabs(mat[1][1] - 1.0) <= tolTn) &&
+	   (fabs(mat[1][2]) <= tolTx) &&
+	   (fabs(mat[2][0]) <= tolTn) &&
+	   (fabs(mat[2][1]) <= tolTn) &&
+	   (fabs(mat[2][2] - 1.0) <= tolTn)) 
 	{
 	  isIdentity = 1;
 	}
         break;
       case 3:
-	if((fabs(mat[0][0] - 1.0) <= delta) &&
-	   (fabs(mat[0][1]) <= delta) &&
-	   (fabs(mat[0][2]) <= delta) &&
-	   (fabs(mat[0][3]) <= delta) &&
-	   (fabs(mat[1][0]) <= delta) &&
-	   (fabs(mat[1][1] - 1.0) <= delta) &&
-	   (fabs(mat[1][2]) <= delta) &&
-	   (fabs(mat[1][3]) <= delta) &&
-	   (fabs(mat[2][0]) <= delta) &&
-	   (fabs(mat[2][1]) <= delta) &&
-	   (fabs(mat[2][2] - 1.0) <= delta) &&
-	   (fabs(mat[2][3]) <= delta) &&
-	   (fabs(mat[3][0]) <= delta) &&
-	   (fabs(mat[3][1]) <= delta) &&
-	   (fabs(mat[3][2]) <= delta) &&
-	   (fabs(mat[3][3] - 1.0) <= delta))
+	if((fabs(mat[0][0] - 1.0) <= tolTn) &&
+	   (fabs(mat[0][1]) <= tolTn) &&
+	   (fabs(mat[0][2]) <= tolTn) &&
+	   (fabs(mat[0][3]) <= tolTx) &&
+	   (fabs(mat[1][0]) <= tolTn) &&
+	   (fabs(mat[1][1] - 1.0) <= tolTn) &&
+	   (fabs(mat[1][2]) <= tolTn) &&
+	   (fabs(mat[1][3]) <= tolTx) &&
+	   (fabs(mat[2][0]) <= tolTn) &&
+	   (fabs(mat[2][1]) <= tolTn) &&
+	   (fabs(mat[2][2] - 1.0) <= tolTn) &&
+	   (fabs(mat[2][3]) <= tolTx) &&
+	   (fabs(mat[3][0]) <= tolTn) &&
+	   (fabs(mat[3][1]) <= tolTn) &&
+	   (fabs(mat[3][2]) <= tolTn) &&
+	   (fabs(mat[3][3] - 1.0) <= tolTn))
 	{
 	  isIdentity = 1;
 	}
@@ -2715,9 +2749,6 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
   {
     *dstErr = errNum;
   }
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformIsIdentity FX %d\n",
-	   isIdentity));
   return(isIdentity);
 }
 
