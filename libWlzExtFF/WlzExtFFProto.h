@@ -176,12 +176,14 @@ extern WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
 				FILE *fp,
 				char *recordName,
 				WlzBasisFnType basisFnType,
+				WlzTransformType affineType,
 				WlzMeshGenMethod meshMthd,
 				int meshMinDst,
 				int meshMaxDst);
 extern WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
 				BibFileRecord *bibfileRecord,
 				WlzBasisFnType *basisFnType,
+				WlzTransformType *affineType,
 				WlzMeshGenMethod *meshMthd,
 				int *meshMinDst,
 				int *meshMaxDst);
@@ -190,12 +192,14 @@ extern WlzErrorNum WlzEffBibWriteTiePointVtxsRecord(
 				char *recordName,
 				int index,
 				WlzDVertex3 dstVtx,
-				WlzDVertex3 srcVtx);
+				WlzDVertex3 srcVtx,
+				int	relativeFlg);
 extern WlzErrorNum WlzEffBibParseTiePointVtxsRecord(
 				BibFileRecord *bibfileRecord,
 				int *index,
 				WlzDVertex3 *dstVtx,
-				WlzDVertex3 *srcVtx);
+				WlzDVertex3 *srcVtx,
+				int	*relativeFlg);
 extern WlzErrorNum WlzEffBibWriteFileRecord(
 				FILE *fp,
 				char *recordName,

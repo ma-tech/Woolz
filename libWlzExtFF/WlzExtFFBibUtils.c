@@ -217,11 +217,13 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
   FILE			*fp,
   char			*recordName,
   WlzBasisFnType	basisFnType,
+  WlzTransformType	affineType,
   WlzMeshGenMethod	meshMthd,
   int			meshMinDst,
   int	 		meshMaxDst)
 {
   char	basisFnTypeStr[32];
+  char	affineTypeStr[32];
   char	meshMthdStr[32];
   char	meshMinDstStr[16];
   char	meshMaxDstStr[16];
@@ -257,6 +259,21 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
     break;
   }
 
+  switch( affineType ){
+  case WLZ_TRANSFORM_2D_NOSHEAR:
+  default:
+    sprintf(affineTypeStr, "No-shear");
+    break;
+
+  case WLZ_TRANSFORM_2D_REG:
+    sprintf(affineTypeStr, "Rigid");
+    break;
+
+  case WLZ_TRANSFORM_2D_AFFINE:
+    sprintf(affineTypeStr, "Affine");
+    break;
+  }
+
   switch( meshMthd ){
   case WLZ_MESH_GENMETHOD_BLOCK:
   default:
@@ -272,6 +289,7 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
   bibfileRecord = 
     BibFileRecordMake(recordName, "0",
 		      BibFileFieldMakeVa("BasisFnType",		basisFnTypeStr,
+					 "AffineType",		affineTypeStr,
 					 "MeshGenMethod",	meshMthdStr,
 					 "MeshMinDist",		meshMinDstStr,
 					 "MeshMaxDist",		meshMaxDstStr,
@@ -305,12 +323,14 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
 WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
   BibFileRecord		*bibfileRecord,
   WlzBasisFnType	*basisFnType,
+  WlzTransformType	*affineType,
   WlzMeshGenMethod	*meshMthd,
   int			*meshMinDst,
   int	 		*meshMaxDst)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   char		basisFnTypeStr[32];
+  char		affineTypeStr[32];
   char		meshMthdStr[32];
   int		numParsedFields=0;
   BibFileField	*bibfileField;
@@ -318,6 +338,7 @@ WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
   /* check inputs */
   if((bibfileRecord == NULL) ||
      (basisFnType == NULL) ||
+     (affineType == NULL) ||
      (meshMthd == NULL) ||
      (meshMinDst == NULL) ||
      (meshMaxDst == NULL) ){
@@ -339,6 +360,7 @@ WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
   }
 
   /* doesn't read the strings correctly - ask Bill */
+  strcpy(affineTypeStr, "");
   if( errNum == WLZ_ERR_NONE ){
     bibfileField = bibfileRecord->field;
     errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -346,6 +368,10 @@ WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
     while( bibfileField ){
       if( strncmp(bibfileField->name, "BasisFnType", 11) == 0 ){
 	strcpy(basisFnTypeStr, bibfileField->value);
+	numParsedFields++;
+      }
+      if( strncmp(bibfileField->name, "AffineType", 10) == 0 ){
+	strcpy(affineTypeStr, bibfileField->value);
 	numParsedFields++;
       }
       if( strncmp(bibfileField->name, "MeshGenMethod", 13) == 0 ){
@@ -384,6 +410,21 @@ WlzErrorNum WlzEffBibParseWarpTransformParamsRecord(
   }
 
   if( errNum == WLZ_ERR_NONE ){
+    if( strncmp(affineTypeStr, "No-shear", 8) == 0 ){
+      *affineType = WLZ_TRANSFORM_2D_NOSHEAR;
+    }
+    else if( strncmp(affineTypeStr, "Rigid", 5) == 0 ){
+      *affineType = WLZ_TRANSFORM_2D_REG;
+    }
+    else if( strncmp(affineTypeStr, "Affine", 6) == 0 ){
+      *affineType = WLZ_TRANSFORM_2D_AFFINE;
+    }
+    else {
+      *affineType = WLZ_TRANSFORM_2D_NOSHEAR;
+    }
+  }
+
+  if( errNum == WLZ_ERR_NONE ){
     if( strncmp(meshMthdStr, "Block", 5) == 0 ){
       *meshMthd = WLZ_MESH_GENMETHOD_BLOCK;
     }
@@ -415,7 +456,8 @@ WlzErrorNum WlzEffBibWriteTiePointVtxsRecord(
   char		*recordName,
   int		index,
   WlzDVertex3	dstVtx,
-  WlzDVertex3	srcVtx)
+  WlzDVertex3	srcVtx,
+  int		relativeFlg)
 {
   char	indexStr[16];
   char	dstVtxStr[64];
@@ -435,6 +477,8 @@ WlzErrorNum WlzEffBibWriteTiePointVtxsRecord(
   bibfileRecord = 
     BibFileRecordMake(recordName, "0",
 		      BibFileFieldMakeVa("Index",	indexStr,
+					 "Relative",   
+					 relativeFlg?"True":"False",
 					 "DstVtx",	dstVtxStr,
 					 "SrcVtx",	srcVtxStr,
 					 NULL));
@@ -468,10 +512,13 @@ WlzErrorNum WlzEffBibParseTiePointVtxsRecord(
   BibFileRecord		*bibfileRecord,
   int		*index,
   WlzDVertex3	*dstVtx,
-  WlzDVertex3	*srcVtx)
+  WlzDVertex3	*srcVtx,
+  int		*relativeFlg)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		numParsedFields=0;
+  int		relFlg=1;
+  BibFileField	*bibfileField;
 
   /* check inputs */
   if((bibfileRecord == NULL) ||
@@ -495,6 +542,28 @@ WlzErrorNum WlzEffBibParseTiePointVtxsRecord(
        NULL);
     if( numParsedFields < 7 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+
+  /* get the relative flag explicitly in case
+     since old records may not contain a flag in which
+     case relativeFlg = 1 is assumed */
+  if( errNum == WLZ_ERR_NONE ){
+    bibfileField = bibfileRecord->field;
+    while( bibfileField ){
+      if( strncmp(bibfileField->name, "Relative", 8) == 0 ){
+	if( strncmp(bibfileField->value, "True", 4) == 0 ){
+	  relFlg = 1;
+	}
+	else {
+	  relFlg = 0;
+	}
+	break;
+      }
+      bibfileField = bibfileField->next;
+    }
+    if( relativeFlg ){
+      *relativeFlg = relFlg;
     }
   }
 
