@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 01-02-01 bill Add WlzRegCCorObjs().
 * 26-01-01 bill Change parameters of WlzGeomVtxSortRadial().
 * 23-01-01 bill Add WlzShadeCorrect().
 * 16-01-01 bill	Add WlzGeomTriangleNormal() and WlzGMVertexNormal3D().
@@ -2006,6 +2007,22 @@ extern double 			WlzPrincipalAngle(
 extern WlzObject		*WlzReadObj(
 				  FILE *fp,
 			          WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzRegCCor.c
+************************************************************************/
+extern WlzAffineTransform 	*WlzRegCCorObjs(
+				  WlzObject *tObj,
+				  WlzObject *sObj,
+				  WlzAffineTransform *initTr,
+				  WlzTransformType trType,
+				  WlzDVertex2 maxTran,
+				  double maxRot,
+				  int maxItr,
+				  int *dstConv,
+				  double *dstCCor,
+				  WlzErrorNum *dstErr);
+
 /************************************************************************
 * WlzRegICP.c
 ************************************************************************/
