@@ -649,12 +649,14 @@ WlzVertexP 	WlzVerticesFromGM(WlzGMModel *model,
     switch(model->type)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
 	vData = WlzVerticesFromGM2(model, dstNr, dstVId, dstCnt, dstType,
 				    &errNum);
         break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
 	vData = WlzVerticesFromGM3(model, dstNr, dstVId, dstCnt, dstType,
 				    &errNum);
         break;
@@ -698,12 +700,14 @@ WlzVertexP 	WlzDVerticesFromGM(WlzGMModel *model,
     switch(model->type)
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
 	*dstType = WLZ_VERTEX_D2;
 	vData.d2 = WlzDVerticesFromGM2(model, dstCnt, &errNum);
         break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
 	*dstType = WLZ_VERTEX_D3;
 	vData.d3 = WlzDVerticesFromGM3(model, dstCnt, &errNum);
         break;
@@ -907,7 +911,8 @@ static WlzVertexP WlzVerticesFromGM2(WlzGMModel *model,
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
       break;
-    case WLZ_GMMOD_2D:
+    case WLZ_GMMOD_2D: /* FALLTHROUGH */
+    case WLZ_GMMOD_2N:
       type = WLZ_VERTEX_D2;
       if((vData.v = AlcMalloc(sizeof(WlzDVertex2) * cnt)) == NULL)
       {
@@ -947,91 +952,100 @@ static WlzVertexP WlzVerticesFromGM2(WlzGMModel *model,
 	{
 	  *(vData.i2 + idx) = cV->geo.vg2I->vtx;
 	}
-	else /* model->type == WLZ_GMMOD_2D */
+	else /* model->type == WLZ_GMMOD_2D  || WLZ_GMMOD_2N */
 	{
 	  *(vData.d2 + idx) = cV->geo.vg2D->vtx;
 	}
 	if(vNorm)
 	{
-	  cVT = cV->diskT->vertexT;
-	  cET = cVT->parent;
-	  if((cET == NULL) || (cVT->prev != cVT->next))
+	  if(cV->geo.core->type == WLZ_GMELM_VERTEX_G2N)
 	  {
-	    /* Vertex is either an isolated vertex or used by more than
-	     * two edges. Normal undefined. */
-	    (vNorm + idx)->vtX = 0.0;
-	    (vNorm + idx)->vtY = 0.0;
-	  }
-	  else if((nV[1] = cET->prev->vertexT->diskT->vertex) ==
-	          (nV[2] = cET->next->vertexT->diskT->vertex))
-	  {
-	    /* Vertex is on the end of a contour segment. */
-	    if(model->type == WLZ_GMMOD_2I)
-	    { 
-	      tVP[0].i2 = &(nV[1]->geo.vg2I->vtx);
-	      tVP[1].i2 = &(cV->geo.vg2I->vtx);
-	      segV[0].vtX = tVP[0].i2->vtX;
-	      segV[0].vtY = tVP[0].i2->vtY;
-	      segV[1].vtX = tVP[1].i2->vtX;
-	      segV[1].vtY = tVP[1].i2->vtY;
-	    }
-	    else /* model->type == WLZ_GMMOD_2D */
-	    {
-	      tVP[0].d2 = &(nV[1]->geo.vg2D->vtx);
-	      tVP[1].d2 = &(cV->geo.vg2D->vtx);
-	      segV[0] = *(tVP[0].d2);
-	      segV[1] = *(tVP[1].d2);
-	    }
-	    *(vNorm + idx) = WlzVerticesNormPair2(segV[0], segV[1]);
+	    /* Use vertex normal from geometric model. */
+	    *(vNorm + idx) = cV->geo.vg2N->nrm;
 	  }
 	  else
 	  {
-	    nV[0] = cET->prev->prev->vertexT->diskT->vertex;
-	    nV[3] = cET->next->next->vertexT->diskT->vertex;
-	    /* Vertex is used by two edges. Find the other two vertices
-	     * that are used by these two edges. */
-	    if(model->type == WLZ_GMMOD_2I)
-	    { 
-	      tVP[0].i2 = &(nV[0]->geo.vg2I->vtx);
-	      tVP[1].i2 = &(nV[1]->geo.vg2I->vtx);
-	      tVP[2].i2 = &(cV->geo.vg2I->vtx);
-	      tVP[3].i2 = &(nV[2]->geo.vg2I->vtx);
-	      tVP[4].i2 = &(nV[3]->geo.vg2I->vtx);
-	      segV[0].vtX = (tVP[0].i2->vtX + (2 * tVP[1].i2->vtX) +
-	                     tVP[2].i2->vtX) / 4;
-	      segV[0].vtY = (tVP[0].i2->vtY + (2 * tVP[1].i2->vtY) +
-	                     tVP[2].i2->vtY) / 4;
-	      segV[1].vtX = (tVP[1].i2->vtX + (2 * tVP[2].i2->vtX) +
-	                     tVP[3].i2->vtX) / 4;
-	      segV[1].vtY = (tVP[1].i2->vtY + (2 * tVP[2].i2->vtY) +
-	                     tVP[3].i2->vtY) / 4;
-	      segV[2].vtX = (tVP[2].i2->vtX + (2 * tVP[3].i2->vtX) +
-	                     tVP[4].i2->vtX) / 4;
-	      segV[2].vtY = (tVP[2].i2->vtY + (2 * tVP[3].i2->vtY) +
-	                     tVP[4].i2->vtY) / 4;
-	    }
-	    else /* model->type == WLZ_GMMOD_2D */
+	    /* Model does not contain vertex normal so compute it. */
+	    cVT = cV->diskT->vertexT;
+	    cET = cVT->parent;
+	    if((cET == NULL) || (cVT->prev != cVT->next))
 	    {
-	      tVP[0].d2 = &(nV[0]->geo.vg2D->vtx);
-	      tVP[1].d2 = &(nV[1]->geo.vg2D->vtx);
-	      tVP[2].d2 = &(cV->geo.vg2D->vtx);
-	      tVP[3].d2 = &(nV[2]->geo.vg2D->vtx);
-	      tVP[4].d2 = &(nV[3]->geo.vg2D->vtx);
-	      segV[0].vtX = (tVP[0].d2->vtX + (2.0 * tVP[1].d2->vtX) +
-	                     tVP[2].d2->vtX) * 0.25;
-	      segV[0].vtY = (tVP[0].d2->vtY + (2.0 * tVP[1].d2->vtY) +
-	                     tVP[2].d2->vtY) * 0.25;
-	      segV[1].vtX = (tVP[1].d2->vtX + (2.0 * tVP[2].d2->vtX) +
-	                     tVP[3].d2->vtX) * 0.25;
-	      segV[1].vtY = (tVP[1].d2->vtY + (2.0 * tVP[2].d2->vtY) +
-	                     tVP[3].d2->vtY) * 0.25;
-	      segV[2].vtX = (tVP[2].d2->vtX + (2.0 * tVP[3].d2->vtX) +
-	                     tVP[4].d2->vtX) * 0.25;
-	      segV[2].vtY = (tVP[2].d2->vtY + (2.0 * tVP[3].d2->vtY) +
-	                     tVP[4].d2->vtY) * 0.25;
+	      /* Vertex is either an isolated vertex or used by more than
+	       * two edges. Normal undefined. */
+	      (vNorm + idx)->vtX = 0.0;
+	      (vNorm + idx)->vtY = 0.0;
 	    }
-	    *(vNorm + idx) = WlzVerticesNormTriple2(segV[0], segV[1],
-	    					     segV[2]);
+	    else if((nV[1] = cET->prev->vertexT->diskT->vertex) ==
+		    (nV[2] = cET->next->vertexT->diskT->vertex))
+	    {
+	      /* Vertex is on the end of a contour segment. */
+	      if(model->type == WLZ_GMMOD_2I)
+	      { 
+		tVP[0].i2 = &(nV[1]->geo.vg2I->vtx);
+		tVP[1].i2 = &(cV->geo.vg2I->vtx);
+		segV[0].vtX = tVP[0].i2->vtX;
+		segV[0].vtY = tVP[0].i2->vtY;
+		segV[1].vtX = tVP[1].i2->vtX;
+		segV[1].vtY = tVP[1].i2->vtY;
+	      }
+	      else /* model->type == WLZ_GMMOD_2D  || WLZ_GMMOD_2N */
+	      {
+		tVP[0].d2 = &(nV[1]->geo.vg2D->vtx);
+		tVP[1].d2 = &(cV->geo.vg2D->vtx);
+		segV[0] = *(tVP[0].d2);
+		segV[1] = *(tVP[1].d2);
+	      }
+	      *(vNorm + idx) = WlzVerticesNormPair2(segV[0], segV[1]);
+	    }
+	    else
+	    {
+	      nV[0] = cET->prev->prev->vertexT->diskT->vertex;
+	      nV[3] = cET->next->next->vertexT->diskT->vertex;
+	      /* Vertex is used by two edges. Find the other two vertices
+	       * that are used by these two edges. */
+	      if(model->type == WLZ_GMMOD_2I)
+	      { 
+		tVP[0].i2 = &(nV[0]->geo.vg2I->vtx);
+		tVP[1].i2 = &(nV[1]->geo.vg2I->vtx);
+		tVP[2].i2 = &(cV->geo.vg2I->vtx);
+		tVP[3].i2 = &(nV[2]->geo.vg2I->vtx);
+		tVP[4].i2 = &(nV[3]->geo.vg2I->vtx);
+		segV[0].vtX = (tVP[0].i2->vtX + (2 * tVP[1].i2->vtX) +
+			       tVP[2].i2->vtX) / 4;
+		segV[0].vtY = (tVP[0].i2->vtY + (2 * tVP[1].i2->vtY) +
+			       tVP[2].i2->vtY) / 4;
+		segV[1].vtX = (tVP[1].i2->vtX + (2 * tVP[2].i2->vtX) +
+			       tVP[3].i2->vtX) / 4;
+		segV[1].vtY = (tVP[1].i2->vtY + (2 * tVP[2].i2->vtY) +
+			       tVP[3].i2->vtY) / 4;
+		segV[2].vtX = (tVP[2].i2->vtX + (2 * tVP[3].i2->vtX) +
+			       tVP[4].i2->vtX) / 4;
+		segV[2].vtY = (tVP[2].i2->vtY + (2 * tVP[3].i2->vtY) +
+			       tVP[4].i2->vtY) / 4;
+	      }
+	      else /* model->type == WLZ_GMMOD_2D  || WLZ_GMMOD_2N */
+	      {
+		tVP[0].d2 = &(nV[0]->geo.vg2D->vtx);
+		tVP[1].d2 = &(nV[1]->geo.vg2D->vtx);
+		tVP[2].d2 = &(cV->geo.vg2D->vtx);
+		tVP[3].d2 = &(nV[2]->geo.vg2D->vtx);
+		tVP[4].d2 = &(nV[3]->geo.vg2D->vtx);
+		segV[0].vtX = (tVP[0].d2->vtX + (2.0 * tVP[1].d2->vtX) +
+			       tVP[2].d2->vtX) * 0.25;
+		segV[0].vtY = (tVP[0].d2->vtY + (2.0 * tVP[1].d2->vtY) +
+			       tVP[2].d2->vtY) * 0.25;
+		segV[1].vtX = (tVP[1].d2->vtX + (2.0 * tVP[2].d2->vtX) +
+			       tVP[3].d2->vtX) * 0.25;
+		segV[1].vtY = (tVP[1].d2->vtY + (2.0 * tVP[2].d2->vtY) +
+			       tVP[3].d2->vtY) * 0.25;
+		segV[2].vtX = (tVP[2].d2->vtX + (2.0 * tVP[3].d2->vtX) +
+			       tVP[4].d2->vtX) * 0.25;
+		segV[2].vtY = (tVP[2].d2->vtY + (2.0 * tVP[3].d2->vtY) +
+			       tVP[4].d2->vtY) * 0.25;
+	      }
+	      *(vNorm + idx) = WlzVerticesNormTriple2(segV[0], segV[1],
+						       segV[2]);
+	    }
 	  }
 	}
       }
@@ -1073,6 +1087,7 @@ static WlzVertexP WlzVerticesFromGM2(WlzGMModel *model,
 * \ingroup 	WlzFeatures
 * \brief	Allocates a buffer which it fills with the vertices
 *		from a 3D GM.
+* \todo		Use geometric model normals if they exist.
 * \param	model			Given model.
 * \param	dstNr			Destination ptr for normals,
 *					may be NULL.
@@ -1103,6 +1118,7 @@ static WlzVertexP WlzVerticesFromGM3(WlzGMModel *model,
   WlzDVertex3	*vNorm = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
+  /* TODO use geometric model normals if they exist. */
   vData.v = NULL;
   vecIdx = 0;
   vCnt = model->res.vertex.numElm;
@@ -1115,7 +1131,7 @@ static WlzVertexP WlzVerticesFromGM3(WlzGMModel *model,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  else /* model->type == WLZ_GMMOD_3D */
+  else /* model->type == WLZ_GMMOD_3D || WLZ_GMMOD_3N */
   {
     type = WLZ_VERTEX_D3;
     if((vData.v = AlcMalloc(sizeof(WlzDVertex3) * vCnt)) == NULL)
@@ -1156,7 +1172,7 @@ static WlzVertexP WlzVerticesFromGM3(WlzGMModel *model,
 	{
 	  *(vData.i3 + vIdx) = cV->geo.vg3I->vtx;
 	}
-	else /* model->type == WLZ_GMMOD_3D */
+	else /* model->type == WLZ_GMMOD_3D || WLZ_GMMOD_3N */
 	{
 	  *(vData.d3 + vIdx) = cV->geo.vg3D->vtx;
 	}
