@@ -17,8 +17,8 @@
 *************************************************************************
 *   Author Name :  Richard Baldock					*
 *   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Fri Jan  5 10:05:47 2001				*
-*   $Revision$								*
+*   Date        :  Fri Jan  5 10:05:47 2001    				*
+*   $Revision$			       				*
 *   $Name$								*
 *   Synopsis    : 							*
 *************************************************************************
@@ -268,7 +268,7 @@ int main(int	argc,
   /* open the raw-data file and read the data */
   inFile = stdin;
   if( optind < argc ){
-    if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
+    if( (inFile = fopen(*(argv+optind), "rb")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;

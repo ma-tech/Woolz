@@ -18,7 +18,7 @@
 *   Author Name :  Richard Baldock					*
 *   Author Login:  richard@hgu.mrc.ac.uk				*
 *   Date        :  Thu Sep 20 08:36:53 2001				*
-*   $Revision$								*
+*   $Revision$			       				*
 *   $Name$								*
 *   Synopsis    : 							*
 *************************************************************************
