@@ -22,6 +22,8 @@
 *		    13(2):119-152, 1994.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 22-12-00 bill Add initial affine transform parameter. Add normals.
+*		Modify convergence test.
 * 13-12-00 bill Change members of WlzVertex and WlzVertexP.
 * 06-12-00 bill Remove special case fn WlzRegICPCompTransform2D() and
 *		integrate code for both 2D and 3D into
@@ -38,26 +40,26 @@ typedef struct _WlzRegICPWSp
   int		nT;
   int		nS;
   WlzVertexP	tVx;
+  WlzVertexP	tNr;
   WlzVertexP 	sVx;
+  WlzVertexP 	sNr;
   WlzVertexType vType;
   AlcKDTTree	*tTree;
   int		*sNN;
   double	*dist;
+  double	*cost;
   int		*rank;
   int		nMatch;
   WlzVertexP	tMatchVx;
   WlzVertexP 	sMatchVx;
   double	sumDistCrnt;
   double	sumDistLast;
-  WlzVertex	tCentroid;
   WlzAffineTransform *tr;
 } WlzRegICPWSp;
 
 static void			WlzRegICPFindNN(
 				  WlzRegICPWSp *wSp);
 static void			WlzRegICPRankMatch(
-				  WlzRegICPWSp *wSp);
-static int 			WlzRegICPConvTest(
 				  WlzRegICPWSp *wSp);
 static int			WlzRegICPRankCmpFnD(
 				  void *data,
@@ -66,17 +68,21 @@ static int			WlzRegICPRankCmpFnD(
 				  int id1);
 static WlzErrorNum		WlzRegICPCompTransform(
 				  WlzRegICPWSp *wSp,
-				  WlzTransformType trType);
+				  WlzTransformType trType,
+				  int *dstConv);
 static WlzErrorNum 		WlzRegICPCheckVerticies(
 				  WlzVertexP *vData,
 				  int *vCnt,
 				  WlzVertexType *vType);
 static WlzAffineTransform 	*WlzRegICPVerticies(
 				  WlzVertexP tVx,
+				  WlzVertexP tNr,
 				  int tCnt,
 				  WlzVertexP sVx,
+				  WlzVertexP sNr,
 				  int sCnt,
 				  WlzVertexType vType,
+				  WlzAffineTransform *initTr,
 				  WlzTransformType trType,
 				  int *dstConv,
 				  int *dstItr,
@@ -101,6 +107,10 @@ static WlzVertex 		WlzRegICPCompCentroid(
 * Parameters:	WlzObject *tObj:	The target object.
 *		WlzObject *sObj:	The source object to be
 *					registered with target object.
+*		WlzAffineTransform *initTr: Initial affine transform
+*					to be applied to the source
+*					object prior to using the ICP
+*					algorithm. May be NULL.
 *		WlzTransformType trType: Required transform type.
 *		int *dstConv:		Destination ptr for the
 *					convergence flag (non zero
@@ -114,6 +124,7 @@ static WlzVertex 		WlzRegICPCompCentroid(
 *					may be NULL.
 ************************************************************************/
 WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
+				  WlzAffineTransform *initTr,
 				  WlzTransformType trType,
 				  int *dstConv, int *dstItr, int maxItr,
 				  WlzErrorNum *dstErr)
@@ -124,10 +135,12 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
   int		vCnt[2];
   WlzVertexType	vType[2];
   WlzObject	*objs[2];
-  WlzVertexP	vData[2];
+  WlzVertexP	nData[2],
+  		vData[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzAffineTransform *regTr = NULL;
 
+  nData[0].v = nData[1].v = NULL;
   vData[0].v = vData[1].v = NULL;
   objs[0] = tObj; objs[1] = sObj;
   if((tObj == NULL) || (sObj == NULL))
@@ -139,8 +152,8 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
     idx = 0;
     while((errNum == WLZ_ERR_NONE) && (idx < 2))
     {
-      vData[idx] = WlzVerticiesFromObj(objs[idx], vCnt + idx, vType + idx,
-      				       &errNum);
+      vData[idx] = WlzVerticiesFromObj(objs[idx], nData + idx, vCnt + idx,
+      				       vType + idx, &errNum);
       ++idx;
     }
   }
@@ -151,8 +164,9 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-     regTr = WlzRegICPVerticies(vData[0], vCnt[0],
-     			        vData[1], vCnt[1], vType[0],
+     regTr = WlzRegICPVerticies(vData[0], nData[0], vCnt[0],
+     				vData[1], nData[1], vCnt[1],
+     				vType[0], initTr,
 				trType, &conv, &itr, maxItr, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -171,6 +185,10 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
     if(vData[idx].v)
     {
       AlcFree(vData[idx].v);
+    }
+    if(nData[idx].v)
+    {
+      AlcFree(nData[idx].v);
     }
   }
   if(dstErr)
@@ -330,14 +348,20 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 *		iterative closest point algorithm. An affine transform
 *		is computed, which when applied to the source verticies
 *		takes it into register with the target verticies.
-*		The verticies are known to be either WlzDVertex2 or
-*		WlzDVertex3.
+*		The verticies and their normals are known to be either
+*		WlzDVertex2 or WlzDVertex3.
 * Global refs:	-
 * Parameters:	WlzVertexP tVx:		Target verticies.
+*		WlzVertexP tNr:		Target normals, may be NULL.
 *		int tCnt:		Number of target verticies.
 *		WlzVertexP sVx:		Source verticies.
+*		WlzVertexP sNr:		Source normals, may be NULL.
 *		int sCnt:		Number of source verticies.
 *		WlzVertexType vType:	Type of the verticies.
+*		WlzAffineTransform *initTr: Initial affine transform
+*					to be applied to the source
+*					object prior to using the ICP
+*					algorithm. May be NULL.
 *		WlzTransformType trType: Required transform type.
 *		int *dstConv:		Destination ptr for the
 *					convergence flag (non zero
@@ -350,9 +374,12 @@ static WlzErrorNum WlzRegICPCheckVerticies(WlzVertexP *vData, int *vCnt,
 *		WlzErrorNum *dstErr:	Destination error pointer,
 *					may be NULL.
 ************************************************************************/
-static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
-					      WlzVertexP sVx, int sCnt,
+static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, WlzVertexP tNr,
+					      int tCnt,
+					      WlzVertexP sVx, WlzVertexP sNr,
+					      int sCnt,
 					      WlzVertexType vType,
+					      WlzAffineTransform *initTr,
 					      WlzTransformType trType,
 					      int *dstConv, int *dstItr,
 					      int maxItr,
@@ -364,7 +391,6 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
   WlzAffineTransform *regTr = NULL;
   WlzRegICPWSp	wSp;
   AlcKDTTree	*tTree = NULL;
-  double	*dist = NULL;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
   /* Setup workspace. */
@@ -373,11 +399,14 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
   wSp.nT = tCnt;
   wSp.vType = vType;
   wSp.tVx = tVx;
+  wSp.tNr = tNr;
   wSp.nS = sCnt;
   wSp.sVx = sVx;
+  wSp.sNr = sNr;
   wSp.tTree = NULL;
   wSp.sNN = NULL;
   wSp.dist = NULL;
+  wSp.cost = NULL;
   wSp.rank = NULL;
   wSp.tMatchVx.v = wSp.sMatchVx.v = NULL;
   wSp.tr = NULL;
@@ -385,9 +414,28 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
   maxCnt = WLZ_MAX(tCnt, sCnt);
   if(((wSp.sNN = (int *)AlcMalloc(sizeof(int) * maxCnt)) == NULL) ||
      ((wSp.rank = (int *)AlcMalloc(sizeof(int) * maxCnt)) == NULL) ||
-     ((wSp.dist = (double *)AlcMalloc(sizeof(double) * maxCnt)) == NULL))
+     ((wSp.dist = (double *)AlcMalloc(sizeof(double) * maxCnt)) == NULL) ||
+     ((wSp.cost = (double *)AlcMalloc(sizeof(double) * maxCnt)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(initTr)
+    {
+      wSp.tr = WlzAffineTransformCopy(initTr, &errNum);
+    }
+    else
+    {
+      if(vType == WLZ_VERTEX_D2)
+      {
+	wSp.tr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
+      }
+      else /* vType == WLZ_VERTEX_D3 */
+      {
+        wSp.tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
+      }
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -414,24 +462,12 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(vType == WLZ_VERTEX_D2)
-    {
-      wSp.tr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
-    }
-    else /* vType == WLZ_VERTEX_D3 */
-    {
-      wSp.tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
     /* Build k-D tree for the target verticies. */
     errNum = WlzRegICPBuildTree(&wSp);
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Compute the centroid of the target verticies. */
-    wSp.tCentroid = WlzRegICPCompCentroid(wSp.vType, wSp.tVx, wSp.nT);
     /* Iterate to find the registration transform. */
     conv = 0;
     do
@@ -442,14 +478,9 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
       /* Rank matched points. */
       WlzRegICPRankMatch(&wSp);
       /* Check for convergence. */
-      if((conv = WlzRegICPConvTest(&wSp)) == 0)
-      {
-        /* Compute registration transform. */
-        errNum = WlzRegICPCompTransform(&wSp, trType);
-        ++(wSp.itr);
-      }
-    } while((errNum == WLZ_ERR_NONE) && (conv == 0) &&
-            ((maxItr == 0) || (wSp.itr < maxItr)));
+      /* Compute registration transform and check for convergence. */
+      errNum = WlzRegICPCompTransform(&wSp, trType, &conv);
+    } while((errNum == WLZ_ERR_NONE) && (wSp.itr++ < maxItr) && (conv == 0));
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -469,6 +500,10 @@ static WlzAffineTransform *WlzRegICPVerticies(WlzVertexP tVx, int tCnt,
   if(wSp.dist)
   {
     AlcFree(wSp.dist);
+  }
+  if(wSp.cost)
+  {
+    AlcFree(wSp.cost);
   }
   if(wSp.rank)
   {
@@ -596,7 +631,6 @@ static WlzErrorNum WlzRegICPBuildTree(WlzRegICPWSp *wSp)
 static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
 {
   int		idx;
-  double	dist;
   WlzDVertex2	tVD2;
   WlzDVertex3	tVD3;
   double	datD[3];
@@ -628,7 +662,18 @@ static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
 * Function:	WlzRegICPRankMatch
 * Returns:	void
 *					quality threshold.
-* Purpose:	Ranks matched verticies.
+* Purpose:	Ranks matched verticies by cost. The cost of a match
+*		is given by
+*		  cM = kD.mD + kN.mN
+*		and
+*		  cM - the cost of the match.
+*		  kD - constant for distance cost.
+*		  mD - distance between matched verticies / median
+*		       of distance between matched verticies.
+*		  kN - constant for normal product cost.
+*		  mN - 1.0 - scalar product of the normals of the
+*		       matched verticies.
+*		  
 * Global refs:	-
 * Parameters:	WlzRegICPWSp *wSp:	ICP registration workspace.
 ************************************************************************/
@@ -637,10 +682,16 @@ static void	WlzRegICPRankMatch(WlzRegICPWSp *wSp)
   int		idx,
   		idxL,
 		idxH;
-  double	diff,
-  		maxDist;
-  WlzVertex	sCentroid;
+  double	mD,
+		mN,
+  		diff,
+  		mDist;
   WlzDVertex3	dist;
+  WlzVertex	sV,
+  		tV;
+  const double	kD = 0.5,
+  		kN = 0.5,
+		maxCost = 1.0;
 
   /* Initialize the rank array. */
   for(idx = 0; idx < wSp->nS; ++idx)
@@ -650,41 +701,75 @@ static void	WlzRegICPRankMatch(WlzRegICPWSp *wSp)
   /* Permute the rank array according to distance. */
   (void )AlgHeapSortIdx(wSp->dist, wSp->rank, wSp->nS, 
   			WlzRegICPRankCmpFnD);
-  /* Find the distance between the centroids of the two sets of verticies. */
-  sCentroid = WlzRegICPCompCentroid(wSp->vType, wSp->sVx, wSp->nS);
-  if(wSp->vType == WLZ_VERTEX_D2)
+  /* Find the median of the distances between the matched verticies. */
+  mDist = *(wSp->dist + *(wSp->rank + (wSp->nS / 2)));
+  if(mDist < 1.0)
   {
-    dist.vtX = wSp->tCentroid.d2.vtX - sCentroid.d2.vtX;
-    dist.vtY = wSp->tCentroid.d2.vtY - sCentroid.d2.vtY;
-    maxDist = 2.0 * sqrt((dist.vtX * dist.vtX) + (dist.vtY * dist.vtY) + 1.0);
+    mDist = 1.0;
   }
-  else /* wSp->vType == WLZ_VERTEX_D3 */
+  /* Re-initialize the rank array. */
+  for(idx = 0; idx < wSp->nS; ++idx)
   {
-    dist.vtX = wSp->tCentroid.d3.vtX - sCentroid.d3.vtX;
-    dist.vtY = wSp->tCentroid.d3.vtY - sCentroid.d3.vtY;
-    dist.vtZ = wSp->tCentroid.d3.vtZ - sCentroid.d3.vtZ;
-    maxDist = 2.0 * sqrt((dist.vtX * dist.vtX) + (dist.vtY * dist.vtY) +
-                         (dist.vtZ * dist.vtZ) + 1.0);
+    *(wSp->rank + idx) = idx;
   }
-  /* Find the number of matches with a distance less than the maxDist
-   * distance. Use a binary search for efficiency. */
+  /* Compute costs. */
+  if(wSp->sNr.v && wSp->tNr.v)
+  {
+    /* Use normals as they exist. */
+    if(wSp->vType == WLZ_VERTEX_D2)
+    {
+      for(idx = 0; idx < wSp->nS; ++idx)
+      {
+	mD = *(wSp->dist + idx) / mDist;
+	sV.d2 = *(wSp->sNr.d2 + idx);
+	tV.d2 = *(wSp->tNr.d2 + *(wSp->sNN + idx));
+	mN = WLZ_VTX_2_DOT(sV.d2, tV.d2);
+	*(wSp->cost + idx) = (kD * mD) + (kN * mN);
+      }
+    }
+    else /* wSp->vType == WLZ_VERTEX_D3 */
+    {
+      for(idx = 0; idx < wSp->nS; ++idx)
+      {
+	mD = *(wSp->dist + idx) / mDist;
+	sV.d3 = *(wSp->sNr.d3 + idx);
+	tV.d3 = *(wSp->tNr.d3 + *(wSp->sNN + idx));
+	mN = WLZ_VTX_2_DOT(sV.d3, tV.d3);
+	*(wSp->cost + idx) = (kD * mD) + (kN * mN);
+      }
+    }
+  }
+  else
+  {
+    /* No normals. */
+    for(idx = 0; idx < wSp->nS; ++idx)
+    {
+      mD = *(wSp->dist + idx) / mDist;
+      *(wSp->cost + idx) = (kD * mD) + kN;
+    }
+  }
+  /* Permute the rank array according to cost. */
+  (void )AlgHeapSortIdx(wSp->cost, wSp->rank, wSp->nS,
+  			WlzRegICPRankCmpFnD);
+  /* Find the number of matches with a cost less than the maxCost, using
+   * binary search for efficiency. */
   idxL = 0;
   idxH = wSp->nS - 1;
   do
   {
     idx = (idxH + idxL) / 2;
-    if((diff = (*(wSp->dist + *(wSp->rank + idx)) -
-               maxDist)) < -(DBL_EPSILON))
+    if((diff = (*(wSp->cost + *(wSp->rank + idx)) -
+               maxCost)) < -(DBL_EPSILON))
     {
       idxL = idx;
     }
-    else if(diff > DBL_EPSILON)
+    else
     {
       idxH = idx;
     }
   }
-  while((idxH - idxL) > 1);
-  wSp->nMatch = idxH;
+  while(diff && ((idxH - idxL) > 1));
+  wSp->nMatch = idxH + 1;
 }
 
 /************************************************************************
@@ -692,7 +777,8 @@ static void	WlzRegICPRankMatch(WlzRegICPWSp *wSp)
 * Returns:	int:			+ve,0 or -ve.
 * Purpose:	Compares indexed double values and returns a signed
 *		integer for sorting using AlgHeapSortIdx().
-*		Values are sorted s.t. smaller distances come first.
+*		The indicies to the values are sorted s.t. smaller
+*		values come first.
 * Global refs:	-
 * Parameters:	void *data:		Used to pass the array of double
 *					data.
@@ -703,25 +789,44 @@ static void	WlzRegICPRankMatch(WlzRegICPWSp *wSp)
 ************************************************************************/
 static int	WlzRegICPRankCmpFnD(void *data, int *idx, int id0, int id1)
 {
-  int		cmp;
+  double	*valP,
+  		cmpD;
+  int		cmpI = 0;
 
-  cmp = *((double *)data + *(idx + id0)) - *((double *)data + *(idx + id1));
-  return(cmp);
+  valP = (double *)data;
+  cmpD = *(valP + *(idx + id0)) - *(valP + *(idx + id1));
+  if(cmpD < 0.0)
+  {
+    cmpI = -1;
+  }
+  else if(cmpD > 0.0)
+  {
+    cmpI = +1;
+  }
+  return(cmpI);
 }
 
 /************************************************************************
 * Function:	WlzRegICPCompTransform
 * Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Computes an affine transform from matched verticies.
+* Purpose:	Computes an affine transform from matched verticies
+*		and sets a convergence flag.
 * Global refs:	-
 * Parameters:	WlzRegICPWSp *wSp:	ICP registration workspace.
 *		WlzTransformType trType: Required transform type.
+*		int dstConv:		Dst ptr for convergence flag,
+*					non-zero if converged ie the
+*					current affine transform is an
+*					identity transform. May NOT be
+*					NULL.
 ************************************************************************/
 static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
-				          WlzTransformType trType)
+				          WlzTransformType trType,
+					  int *dstConv)
 {
   int		idx,
-  		rIdx;
+  		rIdx,
+		conv = 0;
   WlzAffineTransform *curTr = NULL,
   		 *newTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -733,7 +838,8 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
     {
       rIdx = *(wSp->rank + idx);
       *(wSp->tMatchVx.d2 + idx) = *(wSp->tVx.d2 + rIdx);
-      *(wSp->sMatchVx.d2 + idx) = *(wSp->sVx.d2 + rIdx);
+      *(wSp->sMatchVx.d2 + idx) = WlzAffineTransformVertexD2(wSp->tr,
+      						*(wSp->sVx.d2 + rIdx), NULL);
     }
     /* Compute the affine transform. */
     newTr = WlzAffineTransformLSq2D(wSp->nMatch, wSp->sMatchVx.d2,
@@ -747,7 +853,8 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
     {
       rIdx = *(wSp->rank + idx);
       *(wSp->tMatchVx.d3 + idx) = *(wSp->tVx.d3 + rIdx);
-      *(wSp->sMatchVx.d3 + idx) = *(wSp->sVx.d3 + rIdx);
+      *(wSp->sMatchVx.d3 + idx) = WlzAffineTransformVertexD3(wSp->tr,
+      				     		*(wSp->sVx.d3 + rIdx), NULL);
     }
     /* Compute the affine transform. */
     newTr = WlzAffineTransformLSq3D(wSp->nMatch, wSp->sMatchVx.d3,
@@ -756,19 +863,39 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(wSp->tr)
+    conv = WlzAffineTransformIsIdentity(newTr, NULL);
+    if(wSp->tr == NULL)
+    {
+      wSp->tr = newTr;
+      newTr = NULL;
+    }
+    else if(conv == 0)
     {
       curTr = WlzAffineTransformProduct(wSp->tr, newTr, &errNum);
       WlzFreeAffineTransform(wSp->tr);
       wSp->tr = curTr;
       curTr = NULL;
     }
-    else
-    {
-      wSp->tr = newTr;
-      newTr = NULL;
-    }
+#ifdef WLZ_REGICP_DEBUG
+      (void )fprintf(stderr, "WlzRegICP conv = %d\n", conv);
+      (void )fprintf(stderr, "WlzRegICP wSp->itr %d\n", wSp->itr);
+      (void )fprintf(stderr, "WlzRegICP wSp->tr\n");
+      (void )fprintf(stderr, "mat: %-10g %-10g %-10g %-10g\n",
+		      wSp->tr->mat[0][0], wSp->tr->mat[0][1],
+		      wSp->tr->mat[0][2], wSp->tr->mat[0][3]);
+      (void )fprintf(stderr, "     %-10g %-10g %-10g %-10g\n",
+		      wSp->tr->mat[1][0], wSp->tr->mat[1][1],
+		      wSp->tr->mat[1][2], wSp->tr->mat[1][3]);
+      (void )fprintf(stderr, "     %-10g %-10g %-10g %-10g\n",
+		      wSp->tr->mat[2][0], wSp->tr->mat[2][1],
+		      wSp->tr->mat[2][2], wSp->tr->mat[2][3]);
+      (void )fprintf(stderr, "     %-10g %-10g %-10g %-10g\n",
+		      wSp->tr->mat[3][0], wSp->tr->mat[3][1],
+		      wSp->tr->mat[3][2], wSp->tr->mat[3][3]);
+      (void )fprintf(stderr, "\n");
+#endif /* WLZ_REGICP_DEBUG */
   }
+  *dstConv = conv;
   if(curTr)
   {
     WlzFreeAffineTransform(curTr);
@@ -778,83 +905,6 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
     WlzFreeAffineTransform(newTr);
   }
   return(errNum);
-}
-
-/************************************************************************
-* Function:	WlzRegICPConvTest
-* Returns:	int:			Non-zero if convergence has
-*					been achieved.
-* Purpose:	Tests for convergence of the ICP registration
-*		algorithm.
-* Global refs:	-
-* Parameters:	WlzRegICPWSp *wSp:	ICP registration workspace.
-************************************************************************/
-static int 	WlzRegICPConvTest(WlzRegICPWSp *wSp)
-{
-  int		conv = 0;
-  const double	thresh = 1.0;
-
-  if(((wSp->sumDistCrnt / wSp->nS) < thresh) ||
-     (wSp->sumDistLast < wSp->sumDistCrnt))
-  {
-    conv = 1;
-  }
-  else if(wSp->itr > 1)
-  {
-    /* TODO need a better convergence test! */
-    if((wSp->sumDistLast - wSp->sumDistCrnt) / wSp->nS < thresh) 
-    {
-      conv = 1;
-    }
-  }
-  return(conv);
-}
-
-
-/************************************************************************
-* Function:	WlzRegICPCompCentroid
-* Returns:	WlzVertex:		Centroid of verticies.
-* Purpose:	Computes the centroid of the given verticies.
-* Global refs:	-
-* Parameters:	WlzVertexType vType:	Type of vertex, always either
-*					WLZ_VERTEX_D2 or WLZ_VERTEX_D3.
-*		WlzVertexP vxP:		Array of verticies.
-*		int nVx:		Number of verticies.
-************************************************************************/
-static WlzVertex WlzRegICPCompCentroid(WlzVertexType vType, WlzVertexP vxP,
-				       int nVx)
-{
-  int		idx;
-  WlzVertex	cVx;
-
-  if(vType == WLZ_VERTEX_D2)
-  {
-    cVx.d2.vtX = vxP.d2->vtX;
-    cVx.d2.vtY = vxP.d2->vtY;
-    for(idx = 1; idx < nVx; ++idx)
-    {
-      cVx.d2.vtX += (vxP.d2 + idx)->vtX;
-      cVx.d2.vtY += (vxP.d2 + idx)->vtY;
-    }
-    cVx.d2.vtX /= nVx;
-    cVx.d2.vtY /= nVx;
-  }
-  else /* vType == WLZ_VERTEX_D3 */
-  {
-    cVx.d3.vtX = vxP.d3->vtX;
-    cVx.d3.vtY = vxP.d3->vtY;
-    cVx.d3.vtZ = vxP.d3->vtZ;
-    for(idx = 1; idx < nVx; ++idx)
-    {
-      cVx.d3.vtX += (vxP.d3 + idx)->vtX;
-      cVx.d3.vtY += (vxP.d3 + idx)->vtY;
-      cVx.d3.vtZ += (vxP.d3 + idx)->vtZ;
-    }
-    cVx.d3.vtX /= nVx;
-    cVx.d3.vtY /= nVx;
-    cVx.d3.vtZ /= nVx;
-  }
-  return(cVx);
 }
 
 /* #define WLZ_REGICP_TEST */
