@@ -45,12 +45,13 @@ int             main(int argc, char *argv[])
   		len,
   		option,
 		fileNum,
-		bWidth = 20,
+		bWidth = 50,
 		nComp = 2,
 		useDirs = 0,
   		ok = 1,
 		usage = 0,
 		verbose = 0;
+  double	sigma = 5.0;
   char		*dot,
   		*ext,
   		*sep,
@@ -68,7 +69,7 @@ int             main(int argc, char *argv[])
   struct stat	statBuf;
   char		pathBuf[FILENAME_MAX];
   const char	*errMsg;
-  static char	optList[] = "dhvb:f:F:n:",
+  static char	optList[] = "dhvb:f:F:n:s:",
   		defPathDir[] = ".",
 		defDirPFx[] = "";
   const double	bgdFrac = 0.20;
@@ -112,6 +113,12 @@ int             main(int argc, char *argv[])
 	  usage = 1;
 	}
 	break;
+      case 's':
+        if(sscanf(optarg, "%lg", &sigma) != 1)
+	{
+	  usage = 1;
+	}
+        break;
       default:
         usage = 1;
 	break;
@@ -256,8 +263,16 @@ int             main(int argc, char *argv[])
   /* Split image. */
   if(ok)
   {
-    errNum = WlzSplitObj(inObj, ppObj, bWidth, bgdFrac, nComp,
+    errNum = WlzSplitObj(inObj, ppObj, bWidth, bgdFrac,
+    			 sigma, WLZ_COMPTHRESH_GRADIENT, nComp,
     			 &nComp, &compObj);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr, "%s: failed to split image (%s)\n",
+		     *argv, errMsg);
+    }
   }
   /* Sort the objects into left -> right order. */
   if(ok)
@@ -363,7 +378,7 @@ int             main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-b#] [-d] [-h] [-f#] [-F#] [-n#] [-v]\n"
+    "Usage: %s [-b#] [-d] [-h] [-f#] [-F#] [-n#] [-s#] [-v]\n"
     "       <path to image file>\n"
     "Splits the given image into component images, with a border region\n"
     "around each one and the components being numbered 1, 2, .... The\n"
@@ -380,9 +395,10 @@ int             main(int argc, char *argv[])
     "  -h  Help - prints this usage masseage.\n"
     "  -f  Input image format, default is to use the input file extension.\n"
     "  -F  Output image format, default is same as input.\n"
-    "  -n  Number of component images to extract, default 2.\n"
+    "  -n  Number of component images to extract, value %d.\n"
+    "  -s  Histogram smoothing parameter, value %g.\n"
     "  -v  Be verbose, probably only useful for debugging.\n",
-    argv[0]);
+    argv[0], nComp, sigma);
   }
   return(!ok);
 }
