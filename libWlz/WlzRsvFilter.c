@@ -16,6 +16,7 @@
 *		WLZ_RSVFILTER_TEST_3D. See code below.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 07-12-00 bill Fix more purify URM's and FMR's.
 * 20-07-00 bill Fixed purify UMR's (uninitialized memory reads) in
 *		WlzRsvFilterFilterBufYF() and WlzRsvFilterFilterBufZF().
 * 05-07-00 bill Fixed bug in WlzRsvFilterFreeFilter().
@@ -942,7 +943,7 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
   if(errNum == WLZ_ERR_NONE)
   {
     dstObj= WlzMakeMain(srcObj->type, srcDom, dstVal, srcObj->plist,
-			srcObj, &errNum);
+			NULL, &errNum);
   }
   /* Make the working buffers. */
   if(errNum == WLZ_ERR_NONE)
@@ -1117,7 +1118,7 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
   if(errNum == WLZ_ERR_NONE)
   {
     dstObj= WlzMakeMain(srcObj->type, srcDom, dstVal, srcObj->plist,
-			srcObj, &errNum);
+			NULL, &errNum);
   }
   /* Make the buffers. */
   if(errNum == WLZ_ERR_NONE)
@@ -1290,14 +1291,18 @@ static WlzObject *WlzRsvFilterObj3DXY(WlzObject *srcObj, WlzRsvFilter *ftr,
   while((errNum == WLZ_ERR_NONE) &&
         (nPlanes-- > 0))
   {
+    srcObj2D = NULL;
+    dstObj2D = NULL;
     if(srcDom2D->core)
     {
       dstObj2D = NULL;
-      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *srcDom2D++, *srcVal2D++,
-			     NULL, NULL, &errNum);
+      srcObj2D = WlzAssignObject(
+      		 WlzMakeMain(WLZ_2D_DOMAINOBJ, *srcDom2D++, *srcVal2D++,
+			     NULL, NULL, &errNum), NULL);
       if(errNum == WLZ_ERR_NONE)
       {
-	dstObj2D = WlzRsvFilterObj(srcObj2D, ftr, actionMsk, &errNum);
+	dstObj2D = WlzAssignObject(
+		   WlzRsvFilterObj(srcObj2D, ftr, actionMsk, &errNum), NULL);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -1517,7 +1522,7 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
       if(errNum == WLZ_ERR_NONE)
       {
 	dstObj= WlzMakeMain(srcObj->type, srcDom, dstVal, srcObj->plist,
-			    srcObj, &errNum);
+			    NULL, &errNum);
       }
       /* Work down and then back up through the object's planes. */
       if(errNum == WLZ_ERR_NONE)
