@@ -15,11 +15,16 @@
 *		primatives, enumerations and structures.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 2000-05-01 bill Add WlzHistFeature.
-* 2000-03-17 bill Strip out all the WlzEdge and WlzVertex code
+* 14-08-00 bill	Remove WLZ_CONTOUR_LIST object type. Add contour to
+*		the domain union. Remove WLZ_VECTOR_(FLOAT|INT),
+*		WLZ_POINT_(FLOAT|INT), WLZ_DISP_FRAME,
+*		WLZ_DISP_GRID, WLZ_DISP_FRAMEX, Wlz[IF]Vector
+*		and Wlz[IF]Point.
+* 01-05-00 bill Add WlzHistFeature.
+* 17-03-00 bill Strip out all the WlzEdge and WlzVertex code
 *		and replace with new code for Woolz geometric models.
-* 1999-11-29 bill Add WlzEdge, WlzNode, WlzContour and all the related types.
-* 1999-09-09 bill Add WLZ_CONTOUR and WLZ_CONTOUR_LIST to the 
+* 29-11-99 bill Add WlzEdge, WlzNode, WlzContour and all the related types.
+* 09-09-99 bill Add WLZ_CONTOUR and WLZ_CONTOUR_LIST to the 
 *		WlzObjectType enum.
 ************************************************************************/
 
@@ -72,17 +77,9 @@ typedef enum
   WLZ_HISTOGRAM			= 13,
   WLZ_3D_POLYGON		= 14,
   WLZ_CONTOUR			= 15,
-  WLZ_CONTOUR_LIST		= 16,
   WLZ_RECTANGLE			= 20,
-  WLZ_VECTOR_INT		= 30,
-  WLZ_VECTOR_FLOAT		= 31,
-  WLZ_POINT_INT			= 40,
-  WLZ_POINT_FLOAT		= 41,
   WLZ_CONVOLVE_INT		= 50,
   WLZ_CONVOLVE_FLOAT		= 51,
-  WLZ_DISP_FRAME		= 60,
-  WLZ_DISP_GRID			= 61,
-  WLZ_DISP_FRAMEX		= 62,
   WLZ_AFFINE_TRANS		= 63,
   WLZ_WARP_TRANS		= 64,
   WLZ_FMATCHOBJ			= 65,
@@ -566,15 +563,16 @@ typedef struct
   double	zMax;
 } WlzDBox3;
 
-/* Data structures for geometric models */
-
-#define	WLZ_GM_TOLERANCE	(1.0e-06)
+/************************************************************************
+* Data structures for geometric models.
+************************************************************************/
+#define	WLZ_GM_TOLERANCE	(1.0e-04)
 #define	WLZ_GM_TOLERANCE_SQ	(WLZ_GM_TOLERANCE * WLZ_GM_TOLERANCE)
 
 /* Type identifiers for GM models */
 typedef enum
 {
-  WLZ_GMMOD_2I,
+  WLZ_GMMOD_2I = 1,
   WLZ_GMMOD_2D,
   WLZ_GMMOD_3I,
   WLZ_GMMOD_3D
@@ -583,7 +581,7 @@ typedef enum
 /* Type identifiers for GM elements */
 typedef enum
 {
-  WLZ_GMELM_VERTEX,
+  WLZ_GMELM_VERTEX = 0,
   WLZ_GMELM_VERTEX_G2I,
   WLZ_GMELM_VERTEX_G2D,
   WLZ_GMELM_VERTEX_G3I,
@@ -600,6 +598,21 @@ typedef enum
   WLZ_GMELM_SHELL_G3I,
   WLZ_GMELM_SHELL_G3D
 } WlzGMElemType;
+
+/* Type flags for GM elements */
+typedef enum
+{
+  WLZ_GMELMFLG_VERTEX =	    (1 << 0),
+  WLZ_GMELMFLG_VERTEX_G =   (1 << 1),
+  WLZ_GMELMFLG_VERTEX_T =   (1 << 2),
+  WLZ_GMELMFLG_DISK_T =     (1 << 3),
+  WLZ_GMELMFLG_EDGE =       (1 << 4),
+  WLZ_GMELMFLG_EDGE_T =     (1 << 5),
+  WLZ_GMELMFLG_LOOP =       (1 << 6),
+  WLZ_GMELMFLG_LOOP_T =     (1 << 7),
+  WLZ_GMELMFLG_SHELL =      (1 << 8),
+  WLZ_GMELMFLG_SHELL_G =    (1 << 9)
+} WlzGMElemTypeFlags;
 
 /* Geometric model element flags. */
 typedef enum
@@ -852,7 +865,9 @@ typedef struct _WlzGMShell
 typedef struct _WlzGMResource
 {
   unsigned int  numElm;			/* Number of element type in model. */
-  unsigned int	nxtIdx;			/* Index for next element. */
+  unsigned int	numIdx;			/* Number of elements/indicies which
+   					 * have been pulled from the vector,
+  					 * ie idx < numIdx for all idx. */
   AlcVector	*vec;			/* Vector of elements. */
 } WlzGMResource;
 
@@ -867,9 +882,8 @@ typedef struct _WlzGMShellR
   WlzGMResource edgeT;		        /* Edge topology element elements */
   WlzGMResource loop;			/* Loop elements */
   WlzGMResource loopT;		        /* Loop topology element elements */
-  WlzGMResource loopG;		       	/* Loop geometry elements */
-  WlzGMResource	 shell;			/* Shell elements */
-  WlzGMResource	 shellG;		/* Shell geometry elements */
+  WlzGMResource	shell;			/* Shell elements */
+  WlzGMResource	shellG;			/* Shell geometry elements */
 } WlzGMModelR;
 
 typedef struct _WlzGMModel
@@ -886,30 +900,43 @@ typedef struct _WlzGMModel
   WlzGMModelR	res;			/* Model resources */
 } WlzGMModel;
 
-/* Data structures for contours (both 2D and 3D) */
-
-/************************************************************************
-* Types of contour TODO make these Woolz object types.
-************************************************************************/
-typedef enum
+/* A resource table which holds the number of the number of valid resource
+ * indicies along with an arra of indicies. The array of indicies is a
+ * look up table from the indicies of a GM to contigous indicies suitable
+ * for copying or outputing a resource vector without holes. */
+typedef struct _WlzGMResIdx
 {
-  WLZ_CONTOUR_TYPE_2D,
-  WLZ_CONTOUR_TYPE_3D
-} WlzContourType;
+  int           idxCnt;         	/* Number of indicies in lut */
+  int           *idxLut;        	/* Index look up table */
+} WlzGMResIdx;
+
+typedef struct _WlzGMResIdxTb
+{
+  WlzGMResIdx   vertex;
+  WlzGMResIdx   vertexT;
+  WlzGMResIdx   vertexG;
+  WlzGMResIdx   diskT;
+  WlzGMResIdx   edge;
+  WlzGMResIdx   edgeT;
+  WlzGMResIdx   loop;
+  WlzGMResIdx   loopT;
+  WlzGMResIdx   shell;
+  WlzGMResIdx   shellG;
+} WlzGMResIdxTb;
 
 /************************************************************************
-* Contour generation methods.
+* Data structures for contours (both 2D and 3D).
 ************************************************************************/
+
+/* Contour generation methods. */
 typedef enum
 {
   WLZ_CONTOUR_MTD_ISO,                                          /* Iso-value */
   WLZ_CONTOUR_MTD_GRD                              /* Maximum gradient value */
 } WlzContourMethod;
 
-/************************************************************************
-* WlzContour: A single contour (polyline or surface) represented by
-* a Woolz geometric model.
-************************************************************************/
+/* WlzContour: A single contour (polyline or surface) represented by
+ * a Woolz geometric model. */
 typedef struct _WlzContour
 {
   WlzObjectType type;                                                /* CORE */
@@ -948,7 +975,8 @@ typedef union
   struct _WlzRect	     *r;
   struct _WlzFRect           *fr;
   struct _WlzAffineTransform *t;
-  struct _WlzWarpTrans    *wt;
+  struct _WlzWarpTrans       *wt;
+  struct _WlzContour 	     *ctr;
 } WlzDomain;
 
 /************************************************************************
@@ -1323,53 +1351,6 @@ typedef struct _WlzFRect
   float frl[4];					  /* Line vertex coordinates */
   float rangle;			 /* Angle of long side to vertical (radians) */
 } WlzFRect;
-
-/************************************************************************
-* Vectors.							
-************************************************************************/
-typedef struct 
-{
-  WlzObjectType type;
-  int linkcount;
-  int k1;
-  int l1;
-  int k2;
-  int l2;
-  int style;
-} WlzIVector;
-
-typedef struct
-{
-  WlzObjectType type;
-  int linkcount;
-  float k1;
-  float l1;
-  float k2;
-  float l2;
-  int style;
-} WlzFVector;
-
-/************************************************************************
-* Points.							
-************************************************************************/
-typedef struct
-{
-  WlzObjectType type;
-  int linkcount;
-  int k;
-  int l;
-  int style;
-} WlzIPoint;
-
-typedef struct
-{
-  WlzObjectType type;
-  int linkcount;
-  float k;
-  float l;
-  int style;
-} WlzFPoint;
-
 
 /************************************************************************
 * Convolution mask.						
