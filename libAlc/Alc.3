@@ -35,6 +35,9 @@ Alc \- functions for dynamically allocating storage.
 .LP
 .BI "char *AlcStrDup(const char *" src );
 .LP
+.BI "AlcErrno AlcBit1Calloc(unsigned char *" dest ,
+.BI "int " "mElem" );
+.LP
 .BI "AlcErrno AlcChar1Calloc(char *" dest ,
 .BI "int " "mElem" );
 .LP
@@ -51,6 +54,9 @@ Alc \- functions for dynamically allocating storage.
 .BI "int " "mElem" );
 .LP
 .BI "AlcErrno AlcDouble1Calloc(double **" dest ,
+.BI "int " "mElem" );
+.LP
+.BI "AlcErrno AlcBit1Malloc(unsigned char **" dest ,
 .BI "int " "mElem" );
 .LP
 .BI "AlcErrno AlcChar1Malloc(char **" dest ,
@@ -70,6 +76,10 @@ Alc \- functions for dynamically allocating storage.
 .LP
 .BI "AlcErrno AlcDouble1Malloc(double **" dest ,
 .BI "int " "mElem" );
+.LP
+.BI "AlcErrno AlcBit2Calloc(unsigned char ***" dest ,
+.BI "int " "mElem" ,
+.BI "int " "nElem" );
 .LP
 .BI "AlcErrno AlcChar2Calloc(char ***" dest ,
 .BI "int " "mElem" ,
@@ -92,6 +102,10 @@ Alc \- functions for dynamically allocating storage.
 .BI "int " "nElem" );
 .LP
 .BI "AlcErrno AlcDouble2Calloc(double ***" dest ,
+.BI "int " "mElem" ,
+.BI "int " "nElem" );
+.LP
+.BI "AlcErrno AlcBit2Malloc(unsigned char ***" dest ,
 .BI "int " "mElem" ,
 .BI "int " "nElem" );
 .LP
@@ -119,6 +133,11 @@ Alc \- functions for dynamically allocating storage.
 .BI "int " "mElem" ,
 .BI "int " "nElem" );
 .LP
+.BI "AlcErrno AlcBit3Calloc(unsigned char ****" dest ,
+.BI "int " "mElem" ,
+.BI "int " "nElem" ,
+.BI "int " "oElem" );
+.LP
 .BI "AlcErrno AlcChar3Calloc(char ****" dest ,
 .BI "int " "mElem" ,
 .BI "int " "nElem" ,
@@ -145,6 +164,11 @@ Alc \- functions for dynamically allocating storage.
 .BI "int " "oElem" );
 .LP
 .BI "AlcErrno AlcDouble3Calloc(double ****" dest ,
+.BI "int " "mElem" ,
+.BI "int " "nElem" ,
+.BI "int " "oElem" );
+.LP
+.BI "AlcErrno AlcBit3Malloc(unsigned char ****" dest ,
 .BI "int " "mElem" ,
 .BI "int " "nElem" ,
 .BI "int " "oElem" );
@@ -179,29 +203,33 @@ Alc \- functions for dynamically allocating storage.
 .BI "int " "nElem" ,
 .BI "int " "oElem" );
 .LP
-.BI "AlcErrno Alc2Free(void *" dump );
+.BI "AlcErrno Alc2Free(void **" dump );
 .LP
-.BI "AlcErrno AlcChar2Free(char *" dump );
+.BI "AlcErrno AlcBit2Free(unsigned char **" dump );
 .LP
-.BI "AlcErrno AlcUnchar2Free(unsigned char *" dump );
+.BI "AlcErrno AlcChar2Free(char **" dump );
 .LP
-.BI "AlcErrno AlcShort2Free(short *" dump );
+.BI "AlcErrno AlcUnchar2Free(unsigned char **" dump );
 .LP
-.BI "AlcErrno AlcFloat2Free(float *" dump );
+.BI "AlcErrno AlcShort2Free(short **" dump );
 .LP
-.BI "AlcErrno AlcDouble2Free(double *" dump );
+.BI "AlcErrno AlcFloat2Free(float **" dump );
 .LP
-.BI "AlcErrno Alc3Free(void *" dump );
+.BI "AlcErrno AlcDouble2Free(double **" dump );
 .LP
-.BI "AlcErrno AlcChar3Free(char *" dump );
+.BI "AlcErrno Alc3Free(void ***" dump );
 .LP
-.BI "AlcErrno AlcUnchar3Free(unsigned char *" dump );
+.BI "AlcErrno AlcBit3Free(unsigned char ***" dump );
 .LP
-.BI "AlcErrno AlcShort3Free(short *" dump );
+.BI "AlcErrno AlcChar3Free(char ***" dump );
 .LP
-.BI "AlcErrno AlcFloat3Free(float *" dump );
+.BI "AlcErrno AlcUnchar3Free(unsigned char ***" dump );
 .LP
-.BI "AlcErrno AlcDouble3Free(double *" dump );
+.BI "AlcErrno AlcShort3Free(short ***" dump );
+.LP
+.BI "AlcErrno AlcFloat3Free(float ***" dump );
+.LP
+.BI "AlcErrno AlcDouble3Free(double ***" dump );
 .SH MT-LEVEL
 .LP
 Unsafe

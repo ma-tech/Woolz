@@ -35,6 +35,11 @@
 *					pointer.			*
 *		int mElem:		Number of elements in array.	*
 ************************************************************************/
+AlcErrno	AlcBit1Calloc(unsigned char **dest, int mElem)
+{
+  return(AlcUnchar1Calloc(dest, (mElem + 7) / 8));
+}
+
 AlcErrno	AlcChar1Calloc(char **dest, int mElem)
 ALC_TEMPLATE_C1D(dest, char, mElem, "AlcChar1Calloc")
 
@@ -68,6 +73,11 @@ ALC_TEMPLATE_C1D(dest, double, mElem, "AlcDouble1Calloc")
 *					pointer.			*
 *		int mElem:		Number of elements in array.	*
 ************************************************************************/
+AlcErrno	AlcBit1Malloc(unsigned char **dest, int mElem)
+{
+  return(AlcUnchar1Malloc(dest, (mElem + 7) / 8));
+}
+
 AlcErrno	AlcChar1Malloc(char **dest, int mElem)
 ALC_TEMPLATE_M1D(dest, char, mElem, "AlcChar1Malloc")
 
@@ -104,6 +114,11 @@ ALC_TEMPLATE_M1D(dest, double, mElem, "AlcDouble1Malloc")
 *		int nElem:		Number of elements in each 1D	*
 *					array.				*
 ************************************************************************/
+AlcErrno	AlcBit2Calloc(unsigned char ***dest, int mElem, int nElem)
+{
+  return(AlcUnchar2Calloc(dest, mElem, (nElem + 7) / 8));
+}
+
 AlcErrno	AlcChar2Calloc(char ***dest, int mElem, int nElem)
 ALC_TEMPLATE_C2D(dest, char, mElem, nElem, "AlcChar2Calloc")
 
@@ -140,6 +155,11 @@ ALC_TEMPLATE_C2D(dest, double, mElem, nElem, "AlcDouble2Calloc")
 *		int nElem:		Number of elements in each 1D	*
 *					array.				*
 ************************************************************************/
+AlcErrno	AlcBit2Malloc(unsigned char ***dest, int mElem, int nElem)
+{
+  return(AlcUnchar2Malloc(dest, mElem, (nElem + 7) / 8));
+}
+
 AlcErrno	AlcChar2Malloc(char ***dest, int mElem, int nElem)
 ALC_TEMPLATE_M2D(dest, char, mElem, nElem, "AlcChar2Malloc")
 
@@ -172,6 +192,11 @@ ALC_TEMPLATE_M2D(dest, double, mElem, nElem, "AlcDouble2Malloc")
 ************************************************************************/
 AlcErrno	Alc2Free(void **dest)
 ALC_TEMPLATE_F2D(dest, "Alc2Free")
+
+AlcErrno	AlcBit2Free(unsigned char **dest)
+{
+  return(AlcUnchar2Free(dest));
+}
 
 AlcErrno	AlcChar2Free(char **dest)
 ALC_TEMPLATE_F2D(dest, "AlcChar2Free")
@@ -210,6 +235,12 @@ ALC_TEMPLATE_F2D(dest, "AlcDouble2Free")
 *		int oElem:		Number of elements in each 1D	*
 *					array.				*
 ************************************************************************/
+AlcErrno	AlcBit3Calloc(unsigned char ****dest,
+			      int mElem, int nElem, int oElem)
+{
+  return(AlcUnchar3Calloc(dest, mElem, nElem, (oElem + 7) / 8));
+}
+
 AlcErrno	AlcChar3Calloc(char ****dest, int mElem, int nElem,
 			      int oElem)
 ALC_TEMPLATE_C3D(dest, char, mElem, nElem, oElem, "AlcChar3Calloc")
@@ -252,6 +283,12 @@ ALC_TEMPLATE_C3D(dest, double, mElem, nElem, oElem, "AlcDouble3Calloc")
 *		int oElem:		Number of elements in each 1D	*
 *					array.				*
 ************************************************************************/
+AlcErrno	AlcBit3Malloc(unsigned char ****dest,
+			      int mElem, int nElem, int oElem)
+{
+  return(AlcUnchar3Malloc(dest, mElem, nElem, (oElem + 7) / 8));
+}
+
 AlcErrno	AlcChar3Malloc(char ****dest, int mElem, int nElem,
 			       int oElem)
 ALC_TEMPLATE_M3D(dest, char, mElem, nElem, oElem, "AlcChar3Malloc")
@@ -290,6 +327,11 @@ ALC_TEMPLATE_M3D(dest, double, mElem, nElem, oElem, "AlcDouble3Malloc")
 ************************************************************************/
 AlcErrno	Alc3Free(void ***dest)
 ALC_TEMPLATE_F3D(dest, "Alc3Free")
+
+AlcErrno	AlcBit3Free(unsigned char ***dest)
+{
+  return(AlcUnchar3Free(dest));
+}
 
 AlcErrno	AlcChar3Free(char ***dest)
 ALC_TEMPLATE_F3D(dest, "AlcChar3Free")

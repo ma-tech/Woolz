@@ -9,7 +9,7 @@
 * Address:	MRC Human Genetics Unit,
 *		Western General Hospital,
 *		Edinburgh, EH4 2XU, UK.
-* Purpose:      Recursice filters for Woolz, these are also known as
+* Purpose:      Recursive filters for Woolz, these are also known as
 *		Deriche and infinite impulse responce (IIR) filters.
 *		The recursive filter code can be tested by defining
 *		WLZ_RSVFILTER_TEST_1D, WLZ_RSVFILTER_TEST_2D or
@@ -25,21 +25,27 @@
 /* #define WLZ_RSVFILTER_TEST_2D */
 /* #define WLZ_RSVFILTER_TEST_3D */
 
-#define WLZ_RSVFILTER_IFAC	(1<<10)     /* Fixed point arithmetic factor */
-
-
+static WlzObject *WlzRsvFilterObj2DX(WlzObject *, WlzRsvFilter *,
+				     WlzErrorNum *);
+static WlzObject *WlzRsvFilterObj2DY(WlzObject *, WlzRsvFilter *,
+				     WlzErrorNum *);
+static WlzObject *WlzRsvFilterObj3DXY(WlzObject *, WlzRsvFilter *,
+			              int, WlzErrorNum *);
+static WlzObject *WlzRsvFilterObj3DZ(WlzObject *, WlzRsvFilter *,
+				     WlzErrorNum *);
 static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *,
 				      double *, double *, double *,
-				      int);
-static void	WlzRsvFilterFilterBufXI(WlzRsvFilter *,
-				      int *, int *, int *,
 				      int);
 static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *,
 				      double **, double **, UBYTE **,
 				      WlzIVertex2, int, int);
-static void	WlzRsvFilterFilterBufYI(WlzRsvFilter *,
-				      int **, int **, UBYTE **,
-				      WlzIVertex2, int, int);
+static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
+				 	double ***wrkBuf,
+					double ***srcBuf,
+					UBYTE ***itvBuf,
+					WlzIVertex3 bufPos,
+					int itvLen,
+					int goingUp);
 
 /************************************************************************
 * Function:	WlzRsvFilterFreeFilter
@@ -195,6 +201,616 @@ WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName name,
 }
 
 /************************************************************************
+* Function:	WlzRsvFilterObj
+* Returns:	WlzObject:		The filtered object, or NULL on
+*					error.
+* Purpose:	Applies a recursive filter to the given object.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given object.
+*		WlzRsvFilter *ftr:	Recursive filter.
+*		int actionMsk:		Action mask.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.
+************************************************************************/
+WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
+			         int actionMsk, WlzErrorNum *dstErr)
+{
+  WlzValues	tVal;
+  WlzObject	*xObj = NULL,
+		*yObj = NULL,
+		*xyObj = NULL,
+		*zObj = NULL,
+  		*dstObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((srcObj == NULL) || (ftr == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(srcObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(srcObj->type)
+    {
+      case WLZ_EMPTY_OBJ:
+        dstObj = WlzMakeEmpty(&errNum);
+	break;
+      case WLZ_2D_DOMAINOBJ:
+	if((actionMsk & (WLZ_RSVFILTER_ACTION_X |
+			 WLZ_RSVFILTER_ACTION_Y)) != 0)
+	{
+	  /* Filter in each required direction. */
+	  if((actionMsk & WLZ_RSVFILTER_ACTION_X) != 0)
+	  {
+	    xObj = WlzRsvFilterObj2DX(srcObj, ftr, &errNum);
+	  }
+	  if((errNum == WLZ_ERR_NONE) &&
+	     ((actionMsk & WLZ_RSVFILTER_ACTION_Y) != 0))
+	  {
+	    yObj = WlzRsvFilterObj2DY((xObj)? xObj: srcObj,
+	    		              ftr, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if(yObj)
+	    {
+	      dstObj = yObj;
+	      yObj = NULL;
+	    }
+	    else if(xObj)
+	    {
+	      dstObj = xObj;
+	      xObj = NULL;
+	    }
+	  }
+	  if(xObj)
+	  {
+	    WlzFreeObj(xObj);
+	  }
+	  if(yObj)
+	  {
+	    WlzFreeObj(yObj);
+	  }
+	}
+	else
+	{
+	  /* No filtering required. */
+	  dstObj = WlzNewGrey(srcObj, &errNum);
+	}
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	if((actionMsk & (WLZ_RSVFILTER_ACTION_X | WLZ_RSVFILTER_ACTION_Y |
+			  WLZ_RSVFILTER_ACTION_Z)) != 0)
+	{
+	  if((actionMsk & (WLZ_RSVFILTER_ACTION_X | 
+	  		   WLZ_RSVFILTER_ACTION_Y)) != 0)
+	  {
+	    xyObj = WlzRsvFilterObj3DXY(srcObj, ftr, actionMsk,
+	    				&errNum);
+	  }
+	  if((errNum == WLZ_ERR_NONE) && 
+	     ((actionMsk & WLZ_RSVFILTER_ACTION_Z) != 0))
+	  {
+	    zObj = WlzRsvFilterObj3DZ((xyObj)? xyObj: srcObj, ftr, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if(zObj)
+	    {
+	      dstObj = zObj;
+	      zObj = NULL;
+	    }
+	    else if(xyObj)
+	    {
+	      dstObj = xyObj;
+	      xyObj = NULL;
+	    }
+	  }
+	  if(xyObj)
+	  {
+	    WlzFreeObj(xyObj);
+	  }
+	  if(zObj)
+	  {
+	    WlzFreeObj(zObj);
+	  }
+	}
+	else
+	{
+	  /* No filtering required. */
+	  tVal = WlzCopyValues(srcObj->type, srcObj->values, srcObj->domain,
+	  		       &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    dstObj= WlzMakeMain(srcObj->type, srcObj->domain, tVal,
+	    			NULL, NULL, &errNum);
+	  }
+	}
+        break;
+      default:
+        WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzRsvFilterFilterBufXF
+* Returns:	void
+* Purpose:	Filters the given single line data buffer using an
+*		IIR filter defined by the filter coefficients and
+*		double precision arithmetic.
+*		Before optimization this and all the other IIR filter
+*		code looks like:
+*		  for(i = 2; i < dataSz; ++i)
+*		  {
+*		    buf0[i] =   (a0 * data[i + 0]) + (a1 * data[i - 1])
+*			      - (b0 * buf0[i - 1]) - (b1 * buf0[i - 2]);
+*		  }
+*		  for(i = dataSz - 3; i >= 0; --i)
+*		  {
+*		    buf1[i] =   (a2 * data[i + 1]) + (a3 * data[i + 2])
+*			      - (b0 * buf1[i + 1]) - (b1 * buf1[i + 2]);
+*		  }
+*		  for(i = 0; i < dataSz; ++i)
+*		  {
+*		    data[i] =  c * (buf0[i] + buf1[i]);
+*		  }
+* Global refs:	-
+* Parameters:	WlzRsvFilter *ftr:	The filter.
+*		double *data:		The line of data to be filtered.
+*		double *buf0:		Buffer with at least dataSz
+*					elements.
+*		double *buf1:		Buffer with at least dataSz
+*					elements.
+*		int dataSz:		Number of data.
+************************************************************************/
+static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *ftr, double *data,
+				      double *buf0, double *buf1,
+				      int dataSz)
+{
+  int		cnt;
+  double	a0,
+  		a1,
+		a2,
+		a3,
+		b0,
+		b1,
+		c,
+		d0,
+		d1,
+		d2,
+		f1,
+		f2;
+  double	*dP,
+  		*fP0,
+		*fP1;
+
+  a0 = ftr->a[0];
+  a1 = ftr->a[1];
+  a2 = ftr->a[2];
+  a3 = ftr->a[3];
+  b0 = ftr->b[0];
+  b1 = ftr->b[1];
+  c = ftr->c;
+  dP = data;
+  fP0 = buf0;
+  d0 = d1 = *dP;
+  *fP0 = f1 = f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
+  cnt = dataSz;
+  while(--cnt > 0)
+  {
+    d1 = d0;
+    d0 = *++dP;
+    f2 = f1;
+    f1 = *fP0;
+    *++fP0 = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
+  }
+  dP = data + dataSz - 1;
+  fP1 = buf1 + dataSz - 1;
+  d2 = d1 = *dP;
+  *fP1 = f1 = f2 = ((a2 + a3) * d1) / (b0 + b1 + 1);
+  cnt = dataSz;
+  while(--cnt > 0)
+  {
+    d1 = d2;
+    d2 = *dP--;
+    f1 = f2;
+    f2 = *fP1;
+    *--fP1 = (a2 * d2) + (a3 * d1) - (b0 * f2) - (b1 * f1);
+  }
+  dP = data;
+  fP0 = buf0; 
+  fP1 = buf1;
+  cnt = dataSz;
+  while(cnt-- > 0)
+  {
+    *dP++ = c * (*fP0++ + *fP1++);
+  }
+}
+
+/************************************************************************
+* Function:	WlzRsvFilterFilterBufYF
+* Returns:	void
+* Purpose:	Filters a single interval using a vertical IIR filter
+*		defined by the filter coefficients and double precision
+*		arithmetic.
+*		See the double precision horizontal function for
+*		simple code.
+* Global refs:	-
+* Parameters:	WlzRsvFilter *ftr:	The filter.
+*		double **wrkBuf:	Working buffer.
+*		double **srcBuf:	Source buffer.
+*		UBYTE **itvBuf:		Within interval bit buffer.
+*		WlzIVertex2 bufPos:	Position within the buffer.
+*		int itvLen:		Interval length.
+*		int goingUp:		Non-zero if going up through
+*					the lines (ie raster direction
+*					is WLZ_RASTERDIR_DLIC).
+************************************************************************/
+static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
+				      double **wrkBuf, double **srcBuf,
+				      UBYTE **itvBuf,
+				      WlzIVertex2 bufPos, int itvLen,
+				      int goingUp)
+{
+  int		cnt0,
+		cnt1,
+		kol,
+		in1,
+		iBM,
+		iBO,
+		iBS,
+  		idL0,
+		idL1,
+		idL2;
+  double	a0,
+  		a1,
+		a2,
+		a3,
+		b0,
+		b1,
+		c,
+		d0,
+		d1,
+		d2,
+		f0,
+		f1,
+		f2;
+  UBYTE		*iBP1,
+  		*iBP2,
+  		*iP1,
+  		*iP2;
+  double	*dP0,
+  		*dP1,
+		*dP2,
+		*fP0,
+		*fP1,
+		*fP2;
+
+  if(goingUp)
+  {
+    idL0 = (bufPos.vtY + 3 + 0) % 3;
+    idL1 = (bufPos.vtY + 3 + 1) % 3;
+    idL2 = (bufPos.vtY + 3 + 2) % 3;
+    a2 = ftr->a[2];
+    a3 = ftr->a[3];
+  }
+  else
+  {
+    idL0 = (bufPos.vtY + 3 - 0) % 3;
+    idL1 = (bufPos.vtY + 3 - 1) % 3;
+    idL2 = (bufPos.vtY + 3 - 2) % 3;
+    a0 = ftr->a[0];
+    a1 = ftr->a[1];
+  }
+  b0 = ftr->b[0];
+  b1 = ftr->b[1];
+  c = ftr->c;
+  kol = bufPos.vtX;
+  iP1 = *(itvBuf + idL1);
+  iP2 = *(itvBuf + idL2);
+  dP0 = *(srcBuf + idL0) + kol;
+  fP0 = *(wrkBuf + idL0) + kol;
+  dP1 = *(srcBuf + idL1) + kol;
+  fP1 = *(wrkBuf + idL1) + kol;
+  dP2 = *(srcBuf + idL2) + kol;
+  fP2 = *(wrkBuf + idL2) + kol;
+  cnt0 = itvLen;
+  if(goingUp)
+  {
+    while(cnt0 > 0)
+    {
+      iBO = kol >> 3;
+      iBS = kol & 7;
+      iBP1 = iP1 + iBO;
+      iBP2 = iP2 + iBO;
+      if((iBS == 0) && ((*iBP1 & *iBP2) == 0xff) && (cnt0 >= 8))
+      {
+	cnt1 = 8;
+	while(cnt1-- > 0)
+	{
+	  f0 = *fP0;
+	  *fP0 = (a2 * *dP1++) + (a3 * *dP2++) - (b0 * *fP1++) - (b1 * *fP2);
+	  *fP2++ = c * (f0 + *fP0++);
+	}
+	kol += 8;
+	cnt0 -= 8;
+      }
+      else
+      {
+	/* These data may be read from uninitialized memory if they lie
+	 * outside an interval. BUT if they lie outside an interval
+	 * their values will not be used.  */
+	d0 = *dP0++;
+	d1 = *dP1++;
+	d2 = *dP2++;
+	f0 = *fP0;
+	f1 = *fP1++;
+	f2 = *fP2;
+	iBM = 1 << iBS;
+	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	{
+	  d2 = d0;
+	  f2 = ((a2 * a3) * d2) / (b0 + b1 + 1);
+	  if(in1 == 0)
+	  {
+	    d1 = d0;
+	    f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
+	  }
+	}
+	*fP0 = (a2 * d1) + (a3 * d2) - (b0 * f1) - (b1 * f2);
+	*fP2++ = c * (f0 + *fP0++);
+	--cnt0;
+	++kol; 
+      }
+    }
+  }
+  else
+  {
+    while(cnt0 > 0)
+    {
+      iBO = kol >> 3;
+      iBS = kol & 7;
+      iBP1 = iP1 + iBO;
+      iBP2 = iP2 + iBO; 
+      if((iBS == 0) && ((*iBP1 & *iBP2) == 0xff) && (cnt0 >= 8))
+      {
+        cnt1 = 8;
+	while(cnt1-- > 0)
+	{
+	  *fP0++ = (a0 * *dP0++) + (a1 * *dP1++) -
+	  	   (b0 * *fP1++) - (b1 * *fP2++);
+	}
+	kol += 8;
+	cnt0 -= 8;
+      }
+      else
+      {
+	/* These data may be read from uninitialized memory if they lie
+	 * outside an interval. BUT if they lie outside an interval
+	 * their values will not be used.  */
+	d0 = *dP0++;
+	d1 = *dP1++;
+	f1 = *fP1++;
+	f2 = *fP2++;
+	iBM = 1 << iBS;
+	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	{
+	  f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
+	  if(in1)
+	  {
+	    d1 = d0;
+	    f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
+	  }
+	}
+	*fP0++ = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
+	--cnt0;
+	++kol;
+      }
+    }
+  }
+}
+
+/************************************************************************
+* Function:	WlzRsvFilterFilterBufZF
+* Returns:	void
+* Purpose:	Filters a single interval using a vertical IIR filter
+*		defined by the filter coefficients and double precision
+*		arithmetic.
+*		See the double precision horizontal function for
+*		simple code.
+* Global refs:	-
+* Parameters:	WlzRsvFilter *ftr:	The filter.
+*		double ***wrkBuf:	Working buffer.
+*		double ***srcBuf:	Source buffer.
+*		UBYTE ***itvBuf:	Within interval bit buffer.
+*		WlzIVertex3 bufPos:	Position within the buffer.
+*		int itvLen:		Interval length.
+*		int goingUp:		Non-zero if going up through
+*					the planes.
+************************************************************************/
+static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
+				 	double ***wrkBuf,
+					double ***srcBuf,
+					UBYTE ***itvBuf,
+					WlzIVertex3 bufPos,
+					int itvLen,
+					int goingUp)
+{
+  int		cnt0,
+		cnt1,
+		kol,
+		lin,
+		in1,
+		iBM,
+		iBO,
+		iBS,
+  		idP0,
+		idP1,
+		idP2;
+  double	a0,
+  		a1,
+		a2,
+		a3,
+		b0,
+		b1,
+		c,
+		d0,
+		d1,
+		d2,
+		f0,
+		f1,
+		f2;
+  UBYTE		*iBP1,
+  		*iBP2,
+  		*iP1,
+  		*iP2;
+  double	*dP0,
+  		*dP1,
+		*dP2,
+		*fP0,
+		*fP1,
+		*fP2;
+
+  if(goingUp)
+  {
+    idP0 = (bufPos.vtZ + 3 + 0) % 3;
+    idP1 = (bufPos.vtZ + 3 + 1) % 3;
+    idP2 = (bufPos.vtZ + 3 + 2) % 3;
+    a2 = ftr->a[2];
+    a3 = ftr->a[3];
+  }
+  else
+  {
+    idP0 = (bufPos.vtZ + 3 - 0) % 3;
+    idP1 = (bufPos.vtZ + 3 - 1) % 3;
+    idP2 = (bufPos.vtZ + 3 - 2) % 3;
+    a0 = ftr->a[0];
+    a1 = ftr->a[1];
+  }
+  b0 = ftr->b[0];
+  b1 = ftr->b[1];
+  c = ftr->c;
+  kol = bufPos.vtX;
+  lin = bufPos.vtY;
+  iP1 = *(*(itvBuf + idP1) + lin);
+  iP2 = *(*(itvBuf + idP2) + lin);
+  dP0 = *(*(srcBuf + idP0) + lin) + kol;
+  fP0 = *(*(wrkBuf + idP0) + lin) + kol;
+  dP1 = *(*(srcBuf + idP1) + lin) + kol;
+  fP1 = *(*(wrkBuf + idP1) + lin) + kol;
+  dP2 = *(*(srcBuf + idP2) + lin) + kol;
+  fP2 = *(*(wrkBuf + idP2) + lin) + kol;
+  cnt0 = itvLen;
+  if(goingUp)
+  {
+    while(cnt0 > 0)
+    {
+      iBO = kol >> 3;
+      iBS = kol & 7;
+      iBP1 = iP1 + iBO;
+      iBP2 = iP2 + iBO;
+      if((iBS == 0) && ((*iBP1 & *iBP2) == 0xff) && (cnt0 >= 8))
+      {
+	cnt1 = 8;
+	while(cnt1-- > 0)
+	{
+	  f0 = *fP0;
+	  *fP0 = (a2 * *dP1++) + (a3 * *dP2++) - (b0 * *fP1++) - (b1 * *fP2);
+	  *fP2++ = c * (f0 + *fP0++);
+	}
+	kol += 8;
+	cnt0 -= 8;
+      }
+      else
+      {
+	/* These data may be read from uninitialized memory if they lie
+	 * outside an interval. BUT if they lie outside an interval
+	 * their values will not be used.  */
+	d0 = *dP0++;
+	d1 = *dP1++;
+	d2 = *dP2++;
+	f0 = *fP0;
+	f1 = *fP1++;
+	f2 = *fP2;
+	iBM = 1 << iBS;
+	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	{
+	  d2 = d0;
+	  f2 = ((a2 * a3) * d2) / (b0 + b1 + 1);
+	  if(in1 == 0)
+	  {
+	    d1 = d0;
+	    f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
+	  }
+	}
+	*fP0 = (a2 * d1) + (a3 * d2) - (b0 * f1) - (b1 * f2);
+	*fP2++ = c * (f0 + *fP0++);
+	--cnt0;
+	++kol; 
+      }
+    }
+  }
+  else
+  {
+    while(cnt0 > 0)
+    {
+      iBO = kol >> 3;
+      iBS = kol & 7;
+      iBP1 = iP1 + iBO;
+      iBP2 = iP2 + iBO; 
+      if((iBS == 0) && ((*iBP1 & *iBP2) == 0xff) && (cnt0 >= 8))
+      {
+        cnt1 = 8;
+	while(cnt1-- > 0)
+	{
+	  *fP0++ = (a0 * *dP0++) + (a1 * *dP1++) -
+	  	   (b0 * *fP1++) - (b1 * *fP2++);
+	}
+	kol += 8;
+	cnt0 -= 8;
+      }
+      else
+      {
+	/* These data may be read from uninitialized memory if they lie
+	 * outside an interval. BUT if they lie outside an interval
+	 * their values will not be used.  */
+	d0 = *dP0++;
+	d1 = *dP1++;
+	f1 = *fP1++;
+	f2 = *fP2++;
+	iBM = 1 << iBS;
+	if(((in1 = *iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
+	{
+	  f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
+	  if(in1)
+	  {
+	    d1 = d0;
+	    f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
+	  }
+	}
+	*fP0++ = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
+	--cnt0;
+	++kol;
+      }
+    }
+  }
+}
+
+/************************************************************************
 * Function:	WlzRsvFilterObj2DX
 * Returns:	WlzObject:		The filtered object, or NULL on
 *					error.
@@ -207,15 +823,13 @@ WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName name,
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given 2D domain object.
 *		WlzRsvFilter *ftr:	Recursive filter.
-*		int useFP:		Use floating point if non-zero.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
-				   int useFP, WlzErrorNum *dstErr)
+				     WlzErrorNum *dstErr)
 {
   int		bufSz,
-  		bufItemSz,
 		bufSpace,
 		itvLen;
   WlzGreyType	bufType,
@@ -292,8 +906,7 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
   if(errNum == WLZ_ERR_NONE)
   {
     bufSz = srcDom.i->lastkl - srcDom.i->kol1 + 1;
-    bufItemSz = useFP? sizeof(double): sizeof(int);
-    bufSpace = bufItemSz * bufSz;
+    bufSpace = sizeof(double) * bufSz;
     if(((datBuf = AlcMalloc(bufSpace)) == NULL) ||
        ((lnBuf0 = AlcMalloc(bufSpace)) == NULL) ||
        ((lnBuf1 = AlcMalloc(bufSpace)) ==  NULL))
@@ -304,16 +917,8 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
   /* Work down through the object from the first line to last. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(useFP)
-    {
-      bufType = WLZ_GREY_DOUBLE;
-      bufGP.dbp = (double *)datBuf;
-    }
-    else
-    {
-      bufType = WLZ_GREY_INT;
-      bufGP.inp = (int *)datBuf;
-    }
+    bufType = WLZ_GREY_DOUBLE;
+    bufGP.dbp = (double *)datBuf;
     if(((errNum = WlzInitGreyRasterScan(srcObj, &srcIWSp, &srcGWSp,
     					WLZ_RASTERDIR_ILIC,
 					0)) == WLZ_ERR_NONE) &&
@@ -331,18 +936,9 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
 			       srcGWSp.u_grintptr, 0, srcGWSp.pixeltype,
 			       itvLen);
 	/* Apply filter. */
-	if(useFP)
-	{
-	  WlzRsvFilterFilterBufXF(ftr, (double *)datBuf,
-	  		        (double *)lnBuf0, (double *)lnBuf1,
+	WlzRsvFilterFilterBufXF(ftr, (double *)datBuf,
+			        (double *)lnBuf0, (double *)lnBuf1,
 				itvLen);
-	}
-	else
-	{
-	  WlzRsvFilterFilterBufXI(ftr, (int *)datBuf,
-	  			(int *)lnBuf0, (int *)lnBuf1,
-				itvLen);
-	}
 	/* Clamp data from buffer into the dst interval. */
 	WlzValueClampGreyIntoGrey(dstGWSp.u_grintptr, 0, dstGWSp.pixeltype,
 			          bufGP, 0, bufType, itvLen);
@@ -382,215 +978,30 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
 }
 
 /************************************************************************
-* Function:	WlzRsvFilterFilterBufXF
-* Returns:	void
-* Purpose:	Filters the given single line data buffer using an
-*		IIR filter defined by the filter coefficients and
-*		double precision arithmetic.
-*		Before optimization this and all the other IIR filter
-*		code looks like:
-*		  for(i = 2; i < dataSz; ++i)
-*		  {
-*		    buf0[i] =   (a0 * data[i + 0]) + (a1 * data[i - 1])
-*			      - (b0 * buf0[i - 1]) - (b1 * buf0[i - 2]);
-*		  }
-*		  for(i = dataSz - 3; i >= 0; --i)
-*		  {
-*		    buf1[i] =   (a2 * data[i + 1]) + (a3 * data[i + 2])
-*			      - (b0 * buf1[i + 1]) - (b1 * buf1[i + 2]);
-*		  }
-*		  for(i = 0; i < dataSz; ++i)
-*		  {
-*		    data[i] =  c * (buf0[i] + buf1[i]);
-*		  }
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		double *data:		The line of data to be filtered.
-*		double *buf0:		Buffer with at least dataSz
-*					elements.
-*		double *buf1:		Buffer with at least dataSz
-*					elements.
-*		int dataSz:		Number of data.
-************************************************************************/
-static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *ftr, double *data,
-				      double *buf0, double *buf1,
-				      int dataSz)
-{
-  int		cnt;
-  double	a0,
-  		a1,
-		b0,
-		b1,
-		c,
-		d0,
-		d1,
-		f1,
-		f2;
-  double	*dP,
-  		*fP0,
-		*fP1;
-
-  if(dataSz > 2)
-  {
-    a0 = ftr->a[0];
-    a1 = ftr->a[1];
-    b0 = ftr->b[0];
-    b1 = ftr->b[1];
-    dP = data;
-    fP0 = buf0;
-    d1 = d0 = *dP;
-    f2 = (a0 + a1) * d0;
-    f1 = f2 * (1.0 - b0);
-    cnt = dataSz;
-    while(cnt-- > 0)
-    {
-      *fP0 = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
-      d1 = d0;
-      d0 = *++dP;
-      f2 = f1;
-      f1 = *fP0++;
-    }
-    a0 = ftr->a[2];
-    a1 = ftr->a[3];
-    dP = data + dataSz - 1;
-    fP1 = buf1 + dataSz - 1;
-    d1 = d0 = *dP;
-    f1 = (a0 + a1) * d0;
-    *fP1 = f1 * (1.0 - b0);
-    cnt = dataSz;
-    while(--cnt > 0)
-    {
-      f2 = f1;
-      f1 = *fP1--;
-      *fP1 = (a0 * d0) + (a1 * d1) - (b0 * f1) - (b1 * f2);
-      d1 = d0;
-      d0 = *--dP;
-    }
-    c = ftr->c;
-    dP = data;
-    fP0 = buf0;
-    fP1 = buf1;
-    cnt = dataSz; 
-    while(cnt-- > 0)
-    {
-      *dP++ = c * (*fP0++ + *fP1++);
-    }
-  }
-}
-
-/************************************************************************
-* Function:	WlzRsvFilterFilterBufXI
-* Returns:	void
-* Purpose:	Filters the given single line data buffer using an
-*		IIR filter defined by the filter coefficients and
-*		fixed point arithmetic.
-*		See the double precision function for simple code.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		int *data:		The line of data to be filtered.
-*		int *buf0:		Buffer with at least dataSz
-*					elements.
-*		int *buf1:		Buffer with at least dataSz
-*					elements.
-*		int dataSz:		Number of data.
-************************************************************************/
-static void	WlzRsvFilterFilterBufXI(WlzRsvFilter *ftr, int *data,
-				      int *buf0, int *buf1,
-				      int dataSz)
-{
-
-  int		cnt;
-  int		a0,
-  		a1,
-		b0,
-		b1,
-		c,
-		d0,
-		d1,
-		f1,
-		f2;
-  int		*dP,
-  		*fP0,
-		*fP1;
-
-  if(dataSz > 2)
-  {
-    a0 = ftr->a[0] * WLZ_RSVFILTER_IFAC;
-    a1 = ftr->a[1] * WLZ_RSVFILTER_IFAC;
-    b0 = ftr->b[0] * WLZ_RSVFILTER_IFAC;
-    b1 = ftr->b[1] * WLZ_RSVFILTER_IFAC;
-    dP = data;
-    fP0 = buf0;
-    d1 = d0 = *dP;
-    f2 = ((a0 + a1) * d0) / WLZ_RSVFILTER_IFAC;
-    f1 = f2  - ((b0 * f2) / WLZ_RSVFILTER_IFAC);
-    cnt = dataSz;
-    while(cnt-- > 0)
-    {
-      *fP0 = ((a0 * d0) / WLZ_RSVFILTER_IFAC) +
-             ((a1 * d1) / WLZ_RSVFILTER_IFAC) -
-	     ((b0 * f1) / WLZ_RSVFILTER_IFAC) -
-	     ((b1 * f2) / WLZ_RSVFILTER_IFAC);
-      d1 = d0;
-      d0 = *++dP;
-      f2 = f1;
-      f1 = *fP0++;
-    }
-    a0 = ftr->a[2] * WLZ_RSVFILTER_IFAC;
-    a1 = ftr->a[3] * WLZ_RSVFILTER_IFAC;
-    dP = data + dataSz - 1;
-    fP1 = buf1 + dataSz - 1;
-    d1 = d0 = *dP;
-    f1 = ((a0 + a1) * d0) / WLZ_RSVFILTER_IFAC;
-    *fP1 = (f1 * (WLZ_RSVFILTER_IFAC - b0)) / WLZ_RSVFILTER_IFAC;
-    cnt = dataSz;
-    while(--cnt > 0)
-    {
-      f2 = f1;
-      f1 = *fP1--;
-      *fP1 = ((a0 * d0) / WLZ_RSVFILTER_IFAC) +
-      	     ((a1 * d1) / WLZ_RSVFILTER_IFAC) -
-	     ((b0 * f1) / WLZ_RSVFILTER_IFAC) -
-	     ((b1 * f2) / WLZ_RSVFILTER_IFAC);
-      d1 = d0;
-      d0 = *--dP;
-    }
-    c = ftr->c * WLZ_RSVFILTER_IFAC;
-    dP = data;
-    fP0 = buf0;
-    fP1 = buf1;
-    cnt = dataSz; 
-    while(cnt-- > 0)
-    {
-      *dP++ = (c * (*fP0++ + *fP1++)) / WLZ_RSVFILTER_IFAC;
-    }
-  }
-}
-
-/************************************************************************
 * Function:	WlzRsvFilterObj2DY
 * Returns:	WlzObject:		The filtered object, or NULL on
 *					error.
-* Purpose:	Applies a recursive filter through the columns of the
-*		given 2D domain object with grey values using either
-*		double precision floating point arithmetic or fixed
-*		point arithmetic.
+* Purpose:	Applies a recursive filter through the rows and columns
+*		of the given 2D domain object with grey values using
+*		either double precision floating point arithmetic or
+*		fixed point arithmetic.
 *		It is assumed that the object type has already been
 *		checked, the domain and values are non-null.
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given 2D domain object.
 *		WlzRsvFilter *ftr:	Recursive filter.
-*		int useFP:		Use floating point if non-zero.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
-				   int useFP, WlzErrorNum *dstErr)
+			             WlzErrorNum *dstErr)
 {
   int		idD,
   		idN,
 		bufLnIdx,
-  		itvLen;
+		dstLnIdx,
+  		itvLen,
+		itvBufWidth;
   WlzRasterDir	rasDir;
   WlzGreyType	bufType,
   		srcGType,
@@ -671,46 +1082,33 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
   {
     bufSz.vtX = srcDom.i->lastkl - srcDom.i->kol1 + 1;
     bufSz.vtY = 3;
-    if(AlcUnchar2Malloc(&itvBuf, bufSz.vtY, bufSz.vtX) != ALC_ER_NONE)
+    if(AlcBit2Malloc(&itvBuf, bufSz.vtY, bufSz.vtX) != ALC_ER_NONE)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(useFP)
+    bufType = WLZ_GREY_DOUBLE;
+    if((AlcDouble2Malloc((double ***)&srcBuf,
+			 bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
+       (AlcDouble2Malloc((double ***)&wrkBuf,
+			 bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
     {
-      bufType = WLZ_GREY_DOUBLE;
-      if((AlcDouble2Malloc((double ***)&srcBuf,
-      			   bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
-         (AlcDouble2Malloc((double ***)&wrkBuf,
-	 		   bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
-    else
-    {
-      bufType = WLZ_GREY_INT;
-      if((AlcInt2Malloc((int ***)&srcBuf,
-      	       		bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
-         (AlcInt2Malloc((int ***)&wrkBuf,
-	 	        bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   /* Work down and then back up through the object. */
   if(errNum == WLZ_ERR_NONE)
   {
     idD = 0;
+    itvBufWidth = (bufSz.vtX + 7) / 8;
     while((errNum == WLZ_ERR_NONE) && (idD < 2))
     {
       /* Initialise buffers. */
       for(idN = 0; idN < 3; ++idN)
       {
-	WlzValueSetUByte(*(itvBuf + idN), 0, bufSz.vtX);
+	WlzValueSetUByte(*(itvBuf + idN), 0, itvBufWidth);
       }
       rasDir = (idD == 0)? WLZ_RASTERDIR_ILIC: WLZ_RASTERDIR_DLIC;
       if(((errNum = WlzInitGreyRasterScan(srcObj, &srcIWSp, &srcGWSp, rasDir,
@@ -732,21 +1130,16 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
 	    {
 	      bufPos.vtY = srcIWSp.linpos - srcDom.i->line1 - idN;
 	      bufLnIdx = (3 + bufPos.vtY) % 3;
-	      WlzValueSetUByte(*(itvBuf + bufLnIdx), 0, bufSz.vtX);
+	      WlzValueSetUByte(*(itvBuf + bufLnIdx), 0, itvBufWidth);
 	    }
+	    dstLnIdx = (bufPos.vtY + 3 + ((idD)? 2: - 2)) % 3;
 	  }
 	  /* Copy interval to buffer. */
-	  if(useFP)
-	  {
-	    srcBufGP.dbp = *((double **)srcBuf + bufLnIdx);
-	    wrkBufGP.dbp = *((double **)wrkBuf + bufLnIdx);
-	  }
-	  else
-	  {
-	    srcBufGP.inp = *((int **)srcBuf + bufLnIdx);
-	    wrkBufGP.inp = *((int **)wrkBuf + bufLnIdx);
-	  }
-	  WlzValueSetUByte(*(itvBuf + bufLnIdx) + bufPos.vtX, 1, itvLen);
+	  srcBufGP.dbp = *((double **)srcBuf + bufLnIdx);
+	  wrkBufGP.dbp = *((double **)wrkBuf + bufLnIdx);
+	  dstBufGP.dbp = *((double **)wrkBuf + dstLnIdx);
+	  WlzBitLnSetItv(*(itvBuf + bufLnIdx),
+	  		 bufPos.vtX, bufPos.vtX + itvLen - 1, bufSz.vtX);
 	  WlzValueCopyGreyToGrey(srcBufGP, bufPos.vtX, bufType,
 				 srcGWSp.u_grintptr, 0, srcGWSp.pixeltype,
 				 itvLen);
@@ -757,22 +1150,8 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
 				   itvLen);
 	  }
 	  /* Apply filter to this interval. */
-	  if(useFP)
-	  {
-	    wrkBufGP.dbp = *((double **)wrkBuf + bufLnIdx);
-	    dstBufGP.inp = *((int **)wrkBuf + ((bufPos.vtY + 2) % 3));
-	    WlzRsvFilterFilterBufYF(ftr, (double **)wrkBuf, (double **)srcBuf,
-				  itvBuf, bufPos, itvLen,
-				  idD);
-	  }
-	  else
-	  {
-	    wrkBufGP.inp = *((int **)wrkBuf + bufLnIdx);
-	    dstBufGP.inp = *((int **)wrkBuf + ((bufPos.vtY + 2) % 3));
-	    WlzRsvFilterFilterBufYI(ftr, (int **)wrkBuf, (int **)srcBuf,
-				  itvBuf, bufPos, itvLen,
-				  idD);
-	  }
+	  WlzRsvFilterFilterBufYF(ftr, (double **)wrkBuf, (double **)srcBuf,
+				itvBuf, bufPos, itvLen, idD);
 	  /* Clamp data buffer into the dst interval. */
 	  if(rasDir == WLZ_RASTERDIR_ILIC)
 	  {
@@ -821,251 +1200,16 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
 }
 
 /************************************************************************
-* Function:	WlzRsvFilterFilterBufYF
-* Returns:	void
-* Purpose:	Filters a single interval using a vertical IIR filter
-*		defined by the filter coefficients and double precision
-*		arithmetic.
-*		See the double precision horizontal function for
-*		simple code.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		double **wrkBuf:	Working buffer.
-*		double **srcBuf:	Source buffer.
-*		UBYTE **itvBuf:		Within interval buffer.
-*		WlzIVertex2 bufPos:	Position within the buffer.
-*		int itvLen:		Interval length.
-*		int goingUp:		Non-zero if going up through
-*					the lines.
-************************************************************************/
-static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
-				      double **wrkBuf, double **srcBuf,
-				      UBYTE **itvBuf,
-				      WlzIVertex2 bufPos, int itvLen,
-				      int goingUp)
-{
-  int		cnt,
-  		idL0,
-		idL1,
-		idL2;
-  double	a0,
-  		a1,
-		a2,
-		a3,
-		b0,
-		b1,
-		c,
-		tD0;
-  UBYTE		*iP1,
-  		*iP2;
-  double	*dP0,
-  		*dP1,
-		*dP2,
-		*fP0,
-		*fP1,
-		*fP2;
-
-  if(itvLen > 1)
-  {
-    if(goingUp)
-    {
-      idL0 = (bufPos.vtY + 0) % 3;
-      idL1 = (bufPos.vtY + 1) % 3;
-      idL2 = (bufPos.vtY + 2) % 3;
-      a0 = ftr->a[2];
-      a1 = ftr->a[3];
-    }
-    else
-    {
-      idL0 = (bufPos.vtY + 3 - 0) % 3;
-      idL1 = (bufPos.vtY + 3 - 1) % 3;
-      idL2 = (bufPos.vtY + 3 - 2) % 3;
-      a0 = ftr->a[0];
-      a1 = ftr->a[1];
-    }
-    b0 = ftr->b[0];
-    b1 = ftr->b[1];
-    c = ftr->c;
-    iP1 = *(itvBuf + idL1) + bufPos.vtX;
-    iP2 = *(itvBuf + idL2) + bufPos.vtX;
-    dP0 = *(srcBuf + idL0) + bufPos.vtX;
-    fP0 = *(wrkBuf + idL0) + bufPos.vtX;
-    dP1 = *(srcBuf + idL1) + bufPos.vtX;
-    fP1 = *(wrkBuf + idL1) + bufPos.vtX;
-    dP2 = *(srcBuf + idL2) + bufPos.vtX;
-    fP2 = *(wrkBuf + idL2) + bufPos.vtX;
-    cnt = itvLen;
-    while(cnt-- > 0)
-    {
-      if(*iP1 == 0)
-      {
-	if(goingUp)
-	{
-	  *dP2 = *dP0;
-	}
-	*dP1 = *dP0;
-	*fP1 = (a0 + a1) * *dP0;
-	*fP2 = *fP1 * (1.0 - b0);
-      }
-      else
-      {
-	if(*iP2 == 0)
-	{
-	  if(goingUp)
-	  {
-	    *dP2 = *dP1;
-	  }
-	  *fP2 = *fP1 * (1.0 - b0);
-	}
-      }
-      if(goingUp)
-      {
-
-        tD0 = *fP0;
-	*fP0 = (a0 * *dP1) + (a1 * *dP2) - (b0 * *fP1) - (b1 * *fP2);
-	*fP2 = c * (tD0 + *fP0);
-      }
-      else
-      {
-	*fP0 =   (a0 * *dP0) + (a1 * *dP1) - (b0 * *fP1) - (b1 * *fP2);
-      }
-      ++iP1; ++iP2;
-      ++dP0; ++fP0;
-      ++dP1; ++fP1;
-      ++dP2; ++fP2;
-    }
-  }
-}
-
-/************************************************************************
-* Function:	WlzRsvFilterFilterBufYI
-* Returns:	void
-* Purpose:	Filters a single interval using a vertical IIR filter
-*		defined by the filter coefficients and double precision
-*		arithmetic.
-*		See the double precision horizontal function for
-*		simple code.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		int **wrkBuf:		Working buffer.
-*		int **srcBuf:		Source buffer.
-*		UBYTE **itvBuf:		Within interval buffer.
-*		WlzIVertex2 bufPos:	Position within the buffer.
-*		int itvLen:		Interval length.
-*		int goingUp:		Non-zero if going up through
-*					the lines.
-************************************************************************/
-static void	WlzRsvFilterFilterBufYI(WlzRsvFilter *ftr,
-				      int **wrkBuf, int **srcBuf,
-				      UBYTE **itvBuf,
-				      WlzIVertex2 bufPos, int itvLen,
-				      int goingUp)
-{
-  int		cnt,
-  		idL0,
-		idL1,
-		idL2;
-  int		a0,
-  		a1,
-		a2,
-		a3,
-		b0,
-		b1,
-		c,
-		tI0;
-  UBYTE		*iP1,
-  		*iP2;
-  int		*dP0,
-  		*dP1,
-		*dP2,
-		*fP0,
-		*fP1,
-		*fP2;
-
-  if(itvLen > 1)
-  {
-    if(goingUp)
-    {
-      idL0 = (bufPos.vtY + 0) % 3;
-      idL1 = (bufPos.vtY + 1) % 3;
-      idL2 = (bufPos.vtY + 2) % 3;
-      a0 = ftr->a[2] * WLZ_RSVFILTER_IFAC;
-      a1 = ftr->a[3] * WLZ_RSVFILTER_IFAC;
-    }
-    else
-    {
-      idL0 = (bufPos.vtY + 3 - 0) % 3;
-      idL1 = (bufPos.vtY + 3 - 1) % 3;
-      idL2 = (bufPos.vtY + 3 - 2) % 3;
-      a0 = ftr->a[0] * WLZ_RSVFILTER_IFAC;
-      a1 = ftr->a[1] * WLZ_RSVFILTER_IFAC;
-    }
-    b0 = ftr->b[0] * WLZ_RSVFILTER_IFAC;
-    b1 = ftr->b[1] * WLZ_RSVFILTER_IFAC;
-    c = ftr->c * WLZ_RSVFILTER_IFAC;
-    iP1 = *(itvBuf + idL1) + bufPos.vtX;
-    iP2 = *(itvBuf + idL2) + bufPos.vtX;
-    dP0 = *(srcBuf + idL0) + bufPos.vtX;
-    fP0 = *(wrkBuf + idL0) + bufPos.vtX;
-    dP1 = *(srcBuf + idL1) + bufPos.vtX;
-    fP1 = *(wrkBuf + idL1) + bufPos.vtX;
-    dP2 = *(srcBuf + idL2) + bufPos.vtX;
-    fP2 = *(wrkBuf + idL2) + bufPos.vtX;
-    cnt = itvLen;
-    while(cnt-- > 0)
-    {
-      if(*iP1 == 0)
-      {
-	if(goingUp)
-	{
-	  *dP2 = *dP0;
-	}
-	*dP1 = *dP0;
-
-	*fP1 = ((a0 + a1) * *dP0) / WLZ_RSVFILTER_IFAC;
-	*fP2 = (*fP1 * (1.0 - b0)) / WLZ_RSVFILTER_IFAC;
-      }
-      else
-      {
-	if(*iP2 == 0)
-	{
-	  if(goingUp)
-	  {
-	    *dP2 = *dP1;
-	  }
-	  *fP2 = (*fP1 * (1.0 - b0)) / WLZ_RSVFILTER_IFAC;
-	}
-      }
-      if(goingUp)
-      {
-
-        tI0 = *fP0;
-	*fP0 =   ((a0 * *dP1) / WLZ_RSVFILTER_IFAC)
-	       + ((a1 * *dP2) / WLZ_RSVFILTER_IFAC)
-	       - ((b0 * *fP1) / WLZ_RSVFILTER_IFAC)
-	       - ((b1 * *fP2) / WLZ_RSVFILTER_IFAC);
-	*fP2 = (c * (tI0 + *fP0)) / WLZ_RSVFILTER_IFAC;
-      }
-      else
-      {
-	*fP0 =   ((a0 * *dP0) / WLZ_RSVFILTER_IFAC)
-	       + ((a1 * *dP1) / WLZ_RSVFILTER_IFAC)
-	       - ((b0 * *fP1) / WLZ_RSVFILTER_IFAC)
-	       - ((b1 * *fP2) / WLZ_RSVFILTER_IFAC);
-      }
-      ++iP1; ++iP2;
-      ++dP0; ++fP0;
-      ++dP1; ++fP1;
-      ++dP2; ++fP2;
-    }
-  }
-}
-
-/************************************************************************
-* Function:	WlzRsvFilterObj
+* Function:	WlzRsvFilterObj3DXY
 * Returns:	WlzObject:		The filtered object, or NULL on
 *					error.
-* Purpose:	Applies a recursive filter to the given object.
+* Purpose:	Applies a recursive filter along the lines and/or
+*		through the columns of the given 3D domain
+*		object with grey values using either double
+*		precision floating point arithmetic or fixed
+*		point arithmetic.
+*		It is assumed that the object type has already been
+*		checked, the domain and values are non-null.
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Given object.
 *		WlzRsvFilter *ftr:	Recursive filter.
@@ -1073,84 +1217,413 @@ static void	WlzRsvFilterFilterBufYI(WlzRsvFilter *ftr,
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
-WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
-			         int actionMsk, int useFP,
-				 WlzErrorNum *dstErr)
+static WlzObject *WlzRsvFilterObj3DXY(WlzObject *srcObj, WlzRsvFilter *ftr,
+			              int actionMsk, WlzErrorNum *dstErr)
 {
-  WlzObject	*xObj = NULL,
-		*yObj = NULL,
-		*zObj = NULL,
-  		*dstObj = NULL;
+  int		nPlanes;
+  WlzObject	*srcObj2D,
+  		*dstObj2D,
+		*dstObj = NULL;
+  WlzDomain 	*srcDom2D;
+  WlzValues	*srcVal2D,
+  		*dstVal2D;
+  WlzDomain	srcDom;
+  WlzValues	dstVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((srcObj == NULL) || (ftr == NULL))
+  dstVal.core = NULL;
+  srcDom = srcObj->domain;
+  srcDom2D = srcDom.p->domains;
+  srcVal2D = srcObj->values.vox->values;
+  nPlanes = srcDom.p->lastpl - srcDom.p->plane1 + 1;
+  dstVal.vox = WlzMakeVoxelValueTb(srcObj->values.vox->type,
+				   srcDom.p->plane1, srcDom.p->lastpl,
+				   WlzGetBackground(srcObj, NULL),
+				   NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WLZ_ERR_OBJECT_NULL;
+    dstVal2D = dstVal.vox->values;
+    dstObj = WlzMakeMain(srcObj->type, srcDom, dstVal, NULL, NULL, &errNum);
   }
-  else if(srcObj->domain.core == NULL)
+  while((errNum == WLZ_ERR_NONE) &&
+        (nPlanes-- > 0))
   {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(srcObj->values.core == NULL)
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
-  else
-  {
-    switch(srcObj->type)
+    if(srcDom2D->core)
     {
-      case WLZ_EMPTY_OBJ:
-        dstObj = WlzMakeEmpty(&errNum);
-	break;
-      case WLZ_2D_DOMAINOBJ:
-	/* Filter in each required direction. */
-	if((errNum == WLZ_ERR_NONE) &&
-	   ((actionMsk & WLZ_RSVFILTER_ACTION_X) != 0))
-	{
-	  xObj = WlzRsvFilterObj2DX(srcObj, ftr, useFP, &errNum);
-	}
-	if((errNum == WLZ_ERR_NONE) &&
-	   ((actionMsk & WLZ_RSVFILTER_ACTION_Y) != 0))
-	{
-	  if(xObj)
-	  {
-	    yObj = WlzRsvFilterObj2DY(xObj, ftr, useFP, &errNum);
-	  }
-	  else
-	  {
-	    yObj = WlzRsvFilterObj2DY(srcObj, ftr, useFP, &errNum);
-	  }
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  if(yObj)
-	  {
-	    dstObj = yObj;
-	    yObj = NULL;
-	  }
-	  else if(xObj)
-	  {
-	    dstObj = xObj;
-	    xObj = NULL;
-	  }
-	}
-	if(xObj)
-	{
-	  WlzFreeObj(xObj);
-	}
-	if(yObj)
-	{
-	  WlzFreeObj(yObj);
-	}
-        break;
-      case WLZ_3D_DOMAINOBJ:
-	/* TODO No 3D objects yet. */
-        WLZ_ERR_OBJECT_TYPE;
-        break;
-      default:
-        WLZ_ERR_OBJECT_TYPE;
-	break;
+      dstObj2D = NULL;
+      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *srcDom2D++, *srcVal2D++,
+			     NULL, NULL, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	dstObj2D = WlzRsvFilterObj(srcObj2D, ftr, actionMsk, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	*dstVal2D = WlzAssignValues(dstObj2D->values, NULL);
+      }
+      if(srcObj2D)
+      {
+        WlzFreeObj(srcObj2D);
+      }
+      if(dstObj2D)
+      {
+        WlzFreeObj(dstObj2D);
+      }
     }
+    else
+    {
+      dstVal2D->core = NULL;
+    }
+    ++dstVal2D;
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(dstObj)
+    {
+      WlzFreeObj(dstObj);
+    }
+    else if(dstVal.core)
+    {
+      WlzFreeVoxelValueTb(dstVal.vox);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzRsvFilterObj3DZ
+* Returns:	WlzObject:		The filtered object, or NULL on
+*					error.
+* Purpose:	Applies a recursive filter through the planes of the
+*		given 3D domain object with grey values using either
+*		double precision floating point arithmetic or fixed
+*		point arithmetic.
+*		It is assumed that the object type has already been
+*		checked, the domain and values are non-null.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given object.
+*		WlzRsvFilter *ftr:	Recursive filter.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.
+************************************************************************/
+static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
+				     WlzErrorNum *dstErr)
+{
+  int		tI0,
+  		idD,
+		idN,
+  		idP,
+		idLstP,
+		itvLen,
+		dstPnIdx,
+		bufPlIdx,
+  		nPlanes,
+		itvBufArea;
+  WlzIVertex3	bufPos,
+  		bufSz;
+  WlzDomain	srcDom;
+  WlzValues	tVal0,
+  		srcVal,
+		dstVal;
+  WlzObjectType	dstValTbType2D;
+  WlzGreyType	tmpGType,
+		bufType,
+  		srcGType,
+  		dstGType;
+  WlzGreyP	dstBufGP,
+  		srcBufGP,
+  		wrkBufGP;
+  void		***srcBuf = NULL,
+  		***wrkBuf = NULL;
+  void		**srcBuf2D,
+		**dstBuf2D,
+  		**wrkBuf2D;
+  UBYTE		***itvBuf = NULL;
+  UBYTE		**itvBuf2D;
+  WlzDomain	*srcDom2D;
+  WlzValues	*srcVal2D,
+  		*dstVal2D;
+  WlzObject	*tObj2D0,
+  		*srcObj2D,
+  		*dstObj2D,
+		*dstObj = NULL;
+  WlzPixelV	bgdPix;
+  WlzIntervalWSpace srcIWSp,
+  		dstIWSp;
+  WlzGreyWSpace srcGWSp,
+  		dstGWSp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Gather information about the source object. */
+  if((srcDom = srcObj->domain).core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((srcVal = srcObj->values).core->type != WLZ_VOXELVALUETABLE_GREY)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bgdPix = WlzGetBackground(srcObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Find grey type, checking all planes have same grey type. */
+    srcDom2D = srcDom.p->domains;
+    srcVal2D = srcVal.vox->values;
+    nPlanes = srcDom.p->lastpl - srcDom.p->plane1 + 1;
+    if(nPlanes > 0)
+    {
+      idP = 0;
+      srcGType = WLZ_GREY_ERROR;
+      while((errNum == WLZ_ERR_NONE) && (idP < nPlanes))
+      {
+	if(srcDom2D->core && srcVal2D->core)
+	{
+	  tmpGType = WlzGreyTableTypeToGreyType(srcVal2D->core->type, NULL);
+	  if(srcGType == WLZ_GREY_ERROR)
+	  {
+	    srcGType = tmpGType;
+	  }
+	  else if(srcGType != tmpGType)
+	  {
+	    errNum = WLZ_ERR_GREY_TYPE;
+	  }
+	}
+	++srcDom2D;
+	++srcVal2D;
+        ++idP;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nPlanes < 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if(nPlanes == 0)
+    {
+      dstObj = WlzCopyObject(srcObj, &errNum);
+    }
+    else
+    {
+      /* Promote grey type for destination object. */
+      switch(srcGType)
+      {
+	case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+	case WLZ_GREY_SHORT:
+	  dstGType = WLZ_GREY_SHORT;
+	  break;
+	case WLZ_GREY_INT:
+	  dstGType = WLZ_GREY_INT;
+	  break;
+	case WLZ_GREY_FLOAT:
+	  dstGType = WLZ_GREY_FLOAT;
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  dstGType = WLZ_GREY_DOUBLE;
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        dstValTbType2D = WlzGreyTableType(WLZ_GREY_TAB_RAGR, dstGType,
+					  &errNum);
+
+      }
+      /* Make buffers. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	bufSz.vtX = srcDom.p->lastkl - srcDom.p->kol1 + 1;
+	bufSz.vtY = srcDom.p->lastln - srcDom.p->line1 + 1;
+	bufSz.vtZ = 3;
+	tI0 = (bufSz.vtX + 7) / 8;
+	itvBufArea = tI0 * bufSz.vtY;
+	if(AlcBit3Malloc(&itvBuf, bufSz.vtZ, bufSz.vtY,
+			 bufSz.vtX) != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	bufType = WLZ_GREY_DOUBLE;
+	if((AlcDouble3Malloc((double ****)&srcBuf,
+			     bufSz.vtZ, bufSz.vtY,
+			     bufSz.vtX) != ALC_ER_NONE) ||
+	   (AlcDouble3Malloc((double ****)&wrkBuf,
+			     bufSz.vtZ, bufSz.vtY,
+			     bufSz.vtX) != ALC_ER_NONE))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      /* Make destination object with it's own voxel value table but with a
+       * shared domain. The 2D values are created/added later. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	dstVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					 srcDom.p->plane1, srcDom.p->lastpl,
+					 bgdPix, NULL, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	dstObj= WlzMakeMain(srcObj->type, srcDom, dstVal, srcObj->plist,
+			    srcObj, &errNum);
+      }
+      /* Work down and then back up through the object's planes. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	idD = 0;
+	idLstP = 0;
+	while((errNum == WLZ_ERR_NONE) && (idD < 2))
+	{
+	  /* Initialise buffers. */
+	  for(idN = 0; idN < 3; ++idN)
+	  {
+	    WlzValueSetUByte(**(itvBuf + idN), 0, itvBufArea);
+	  }
+	  idP = 0;
+	  bufPos.vtZ = (idD == 0)? 0: nPlanes - 1;
+	  while((errNum == WLZ_ERR_NONE) && (idP < nPlanes))
+	  {
+	    bufPlIdx = (bufPos.vtZ + 3 + 0) % 3;
+	    dstPnIdx = (bufPos.vtZ + 3 + 2) % 3;
+	    srcDom2D = srcDom.p->domains + bufPos.vtZ;
+	    srcVal2D = srcVal.vox->values + bufPos.vtZ;
+	    dstVal2D = dstVal.vox->values + bufPos.vtZ;
+	    itvBuf2D = *(itvBuf + bufPlIdx);
+	    srcBuf2D = *(srcBuf + bufPlIdx); 
+	    wrkBuf2D = *(wrkBuf + bufPlIdx);
+	    dstBuf2D = *(wrkBuf + dstPnIdx);
+	    /* Clear this plane's interval buffer bit mask. */
+	    WlzValueSetUByte(*itvBuf2D, 0, itvBufArea);
+	    /* Process non-empty planes. */
+	    if(srcDom2D->core)
+	    {
+	      /* Make a 2D object from current source plane. */
+	      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *srcDom2D, *srcVal2D,
+				     NULL, NULL, &errNum);
+	      if((errNum == WLZ_ERR_NONE) && (idD == 0))
+	      {
+		/* If first pass through object (going down through planes)
+		 * then make a new 2D value table. */
+		tVal0.v  = WlzNewValueTb(srcObj2D, dstValTbType2D,
+					 bgdPix, &errNum);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  *dstVal2D = WlzAssignValues(tVal0, NULL);
+		}
+	      }
+	      /* Make a 2D object from destination plane. */
+	      dstObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *srcDom2D, *dstVal2D,
+				     NULL, NULL, &errNum);
+	      /* Process each interval of this plane. */
+	      if(((errNum = WlzInitGreyScan(srcObj2D, &srcIWSp,
+	      				    &srcGWSp)) == WLZ_ERR_NONE) &&
+	         ((errNum = WlzInitGreyScan(dstObj2D, &dstIWSp,
+	      				    &dstGWSp)) == WLZ_ERR_NONE))
+	      {
+		while((errNum == WLZ_ERR_NONE) &&
+		      ((errNum = WlzNextGreyInterval(
+		      			&srcIWSp)) == WLZ_ERR_NONE) &&
+		      ((errNum = WlzNextGreyInterval(
+		      			&dstIWSp)) == WLZ_ERR_NONE))
+		{
+		  itvLen = srcIWSp.rgtpos - srcIWSp.lftpos + 1;
+		  bufPos.vtX = srcIWSp.lftpos - srcDom.p->kol1;
+		  bufPos.vtY = srcIWSp.linpos - srcDom.p->line1;
+		  /* Copy interval to buffer. */
+		  srcBufGP.dbp = *((double **)srcBuf2D + bufPos.vtY);
+		  wrkBufGP.dbp = *((double **)wrkBuf2D + bufPos.vtY);
+		  dstBufGP.dbp = *((double **)dstBuf2D + bufPos.vtY);
+		  WlzBitLnSetItv(*(itvBuf2D + bufPos.vtY),
+		  		 bufPos.vtX, bufPos.vtX + itvLen - 1,
+				 bufSz.vtX);
+		  WlzValueCopyGreyToGrey(srcBufGP, bufPos.vtX, bufType,
+		  			 srcGWSp.u_grintptr, 0,
+					 srcGWSp.pixeltype,
+					 itvLen);
+		  if(idD)
+		  {
+		    WlzValueCopyGreyToGrey(wrkBufGP, bufPos.vtX, bufType,
+					   dstGWSp.u_grintptr, 0,
+					   dstGWSp.pixeltype,
+					   itvLen);
+		  }
+		  /* Apply filter to this interval. */
+		  WlzRsvFilterFilterBufZF(ftr, (double ***)wrkBuf,
+					  (double ***)srcBuf, itvBuf,
+					  bufPos, itvLen, idD);
+		  /* Clamp data buffer back into the destination plane. */
+		  if(idD == 0)
+		  {
+		    WlzValueClampGreyIntoGrey(dstGWSp.u_grintptr, 0,
+					      dstGWSp.pixeltype,
+					      wrkBufGP, bufPos.vtX, bufType,
+					      itvLen);
+		  }
+		  else
+		  {
+		    WlzValueClampGreyIntoGrey(dstGWSp.u_grintptr, 0,
+					      dstGWSp.pixeltype,
+					      dstBufGP, bufPos.vtX, bufType,
+					      itvLen);
+		  }
+		}
+		if(errNum == WLZ_ERR_EOO)
+		{
+		  errNum = WLZ_ERR_NONE;
+		}
+	      }
+	      if(srcObj2D)
+	      {
+	        WlzFreeObj(srcObj2D);
+	      }
+	      if(dstObj2D)
+	      {
+	        WlzFreeObj(dstObj2D);
+	      }
+	    }
+	    ++idP;
+	    bufPos.vtZ -= (idD * 2) - 1; /* ++ for idD == 0, -- for idD == 1 */
+	  }
+	  ++idD;
+	}
+      }
+    }
+  }
+  if(itvBuf)
+  {
+    Alc3Free((void ***)itvBuf);
+  }
+  if(srcBuf)
+  {
+    Alc3Free(srcBuf);
+  }
+  if(wrkBuf)
+  {
+    Alc3Free(wrkBuf);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(dstObj)
+    {
+      (void )WlzFreeObj(dstObj);
+    }
+    else if(dstVal.core)
+    {
+      WlzFreeVoxelValueTb(dstVal.vox);
+    }
+    dstObj = NULL;
   }
   if(dstErr)
   {
@@ -1279,7 +1752,6 @@ int		main(int argc, char *argv[])
 		      WLZ_RSVFILTER_ACTION_Z,
 #endif /* WLZ_RSVFILTER_TEST_3D */
 #endif /* WLZ_RSVFILTER_TEST_2D */
-		useFP = 1,
   		option,
   		usage = 0,
 		order = 1,
@@ -1287,7 +1759,7 @@ int		main(int argc, char *argv[])
   double	param = 1.0;
   WlzRsvFilterName name = WLZ_RSVFILTER_NAME_DERICHE_1;
   WlzRsvFilter *dFtr = NULL;
-  static char  optList[] = "dgfinp:r:";
+  static char  optList[] = "dgnp:r:";
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
@@ -1305,12 +1777,6 @@ int		main(int argc, char *argv[])
 	break;
       case 'n':
         dir = WLZ_RSVFILTER_ACTION_NONE;
-	break;
-      case 'f':
-        useFP = 1;
-	break;
-      case 'i':
-        useFP = 0;
 	break;
       case 'p':
 	if(sscanf(optarg, "%lg", &param) != 1)
@@ -1369,8 +1835,7 @@ int		main(int argc, char *argv[])
     if(ok)
     {
       if(((outObj = WlzAssignObject(WlzRsvFilterObj(inObj, dFtr,
-				    dir, useFP,
-				    &errNum), NULL)) == NULL) ||
+				    dir, &errNum), NULL)) == NULL) ||
 	 (errNum != WLZ_ERR_NONE))
       {
         ok = 0;
@@ -1392,11 +1857,9 @@ int		main(int argc, char *argv[])
   else if(usage)
   {
     ok = 1;
-    fprintf(stderr, "Usage: %s [-f] [-i] [-d] [-g] [-n] [-p#] [-r#]\n"
+    fprintf(stderr, "Usage: %s [-d] [-g] [-n] [-p#] [-r#]\n"
     	    "Test for woolz deriche filter.\n"
 	    "Options are:\n"
-	    "  -f  Use floating point arithmetic\n"
-	    "  -i  Use integer arithmetic\n"
 	    "  -n  No filter\n"
 	    "  -d  Deriche filter\n"
 	    "  -g  Gaussian filter\n"

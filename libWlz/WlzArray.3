@@ -18,9 +18,33 @@
 .nh
 .TH "WlzArray" 3 "%G%" "MRC HGU Woolz" "Woolz Procedure Library"
 .SH NAME
+WlzToBArray2D,
+WlzToIArray2D,
+WlzToSArray2D,
+WlzToUArray2D,
+WlzToFArray2D,
+WlzToDArray2D,
 WlzToArray2D,
+WlzToBArray3D,
+WlzToIArray3D,
+WlzToSArray3D,
+WlzToUArray3D,
+WlzToFArray3D,
+WlzToDArray3D,
 WlzToArray3D,
+WlzFromBArray2D,
+WlzFromIArray2D,
+WlzFromSArray2D,
+WlzFromUArray2D,
+WlzFromFArray2D,
+WlzFromDArray2D,
 WlzFromArray2D,
+WlzFromBArray3D,
+WlzFromIArray3D,
+WlzFromSArray3D,
+WlzFromUArray3D,
+WlzFromFArray3D,
+WlzFromDArray3D,
 WlzFromArray3D,
 WlzArrayStats3D,
 WlzArrayStats2D,
@@ -28,6 +52,60 @@ WlzArrayStats1D \- Conversion between Woolz domain objects and Alc arrays.
 .SH SYNOPSIS
 .LP
 .B #include <Wlz.h>
+.LP
+.BI "WlzErrorNum WlzToBArray2D(WlzIVertex2 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "UBYTE ***" "dstArrayDat" ,
+.BI "WlzObject *" "srcObj" ,
+.br
+.BI "WlzIVertex2 " "origin" ,
+.BI "int " "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToIArray2D(WlzIVertex2 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "int ***" "dstArrayDat" ,
+.BI "WlzObject *" "srcObj" ,
+.br
+.BI "WlzIVertex2 " "origin" ,
+.BI "int " "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToSArray2D(WlzIVertex2 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "short ***" "dstArrayDat" ,
+.BI "WlzObject *" "srcObj" ,
+.br
+.BI "WlzIVertex2 " "origin" ,
+.BI "int " "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToUArray2D(WlzIVertex2 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "UBYTE ***" "dstArrayDat" ,
+.BI "WlzObject *" "srcObj" ,
+.br
+.BI "WlzIVertex2 " "origin" ,
+.BI "int " "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToFArray2D(WlzIVertex2 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "float ***" "dstArrayDat" ,
+.BI "WlzObject *" "srcObj" ,
+.br
+.BI "WlzIVertex2 " "origin" ,
+.BI "int " "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToDArray2D(WlzIVertex2 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "double ***" "dstArrayDat" ,
+.BI "WlzObject *" "srcObj" ,
+.br
+.BI "WlzIVertex2 " "origin" ,
+.BI "int " "noiseFlag" );
+.in -4m
 .LP
 .BI "WlzErrorNum WlzToArray2D(void ***" "dstArrayP" ,
 .in +4m
@@ -41,6 +119,72 @@ WlzArrayStats1D \- Conversion between Woolz domain objects and Alc arrays.
 .BI "WlzGreyType " "dstGreyType" );
 .in -4m
 .LP
+.BI "WlzErrorNum WlzToBArray3D(WlzIVertex3 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "WlzIVertex3 *" "dstSizeArrayDat" ,
+.BI "UBYTE ****" "dstArrayDat" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "origin" ,
+.br
+.BI "int" "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToIArray3D(WlzIVertex3 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "WlzIVertex3 *" "dstSizeArrayDat" ,
+.BI "int ****" "dstArrayDat" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "origin" ,
+.br
+.BI "int" "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToSArray3D(WlzIVertex3 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "WlzIVertex3 *" "dstSizeArrayDat" ,
+.BI "short ****" "dstArrayDat" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "origin" ,
+.br
+.BI "int" "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToUArray3D(WlzIVertex3 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "WlzIVertex3 *" "dstSizeArrayDat" ,
+.BI "UBYTE ****" "dstArrayDat" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "origin" ,
+.br
+.BI "int" "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToFArray3D(WlzIVertex3 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "WlzIVertex3 *" "dstSizeArrayDat" ,
+.BI "float ****" "dstArrayDat" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "origin" ,
+.br
+.BI "int" "noiseFlag" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzToDArray3D(WlzIVertex3 *" "dstSizeArrayDat" ,
+.in +4m
+.BI "WlzIVertex3 *" "dstSizeArrayDat" ,
+.BI "double ****" "dstArrayDat" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzIVertex3 " "origin" ,
+.br
+.BI "int" "noiseFlag" );
+.in -4m
+.LP
 .BI "WlzErrorNum WlzToArray3D(void ****" "dstArrayP" ,
 .in +4m
 .br
@@ -51,6 +195,60 @@ WlzArrayStats1D \- Conversion between Woolz domain objects and Alc arrays.
 .BI "int " "noiseFlag" ,
 .br
 .BI "WlzGreyType " "dstGreyType" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromBArray2D(WlzIVertex2 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "UBYTE **" arrayDat ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromIArray2D(WlzIVertex2 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "int **" arrayDat ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromSArray2D(WlzIVertex2 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "short **" arrayDat ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromUArray2D(WlzIVertex2 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "UBYTE **" arrayDat ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromFArray2D(WlzIVertex2 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "float **" arrayDat ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromDArray2D(WlzIVertex2 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "double **" arrayDat ,
+.BI "WlzIVertex2 " "arrayOrigin" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
 .in -4m
 .LP
 .BI "WlzObject *WlzFromArray2D(void **" "srcArrayP" ,
@@ -69,6 +267,66 @@ WlzArrayStats1D \- Conversion between Woolz domain objects and Alc arrays.
 .BI "int " "noCopyFlag" ,
 .br
 .BI "WlzErrorNum " "*dstErrNum" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromBArray3D(WlzIVertex3 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySizeDat" ,
+.BI "UBYTE ***" "arrayDat"
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromIArray3D(WlzIVertex3 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySizeDat" ,
+.BI "int ***" "arrayDat"
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromSArray3D(WlzIVertex3 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySizeDat" ,
+.BI "short ***" "arrayDat"
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromUArray3D(WlzIVertex3 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySizeDat" ,
+.BI "UBYTE ***" "arrayDat"
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromFArray3D(WlzIVertex3 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySizeDat" ,
+.BI "float ***" "arrayDat"
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzObject *WlzFromDArray3D(WlzIVertex3 " "arraySizeDat" ,
+.in +4m
+.br
+.BI "WlzIVertex3 " "arraySizeDat" ,
+.BI "double ***" "arrayDat"
+.br
+.BI "WlzIVertex3 " "arrayOrigin" ,
+.BI "WlzErrorNum *" "dstErr" );
 .in -4m
 .LP
 .BI "WlzObject *WlzFromArray3D(void ***" "srcArrayP" ,
@@ -137,9 +395,15 @@ WlzArrayStats1D \- Conversion between Woolz domain objects and Alc arrays.
 .TS
 tab(^);
 lI l.
-dstArrayP^destination pointer for array pointer.
-srcArrayP^source array pointer.
+dstArrayDat^destination array pointer in type specific
+^functions.
+arrayDat^array pointer in type specific functions.
+dstArrayP^destination pointer for any array pointer.
+srcArrayP^any source array pointer.
 srcObj^source object pointer.
+dstSizeArrayDat^source and destination pointer for
+^array dimensions in type specific functions.
+arraySizeDat^array dimensions in type specific functions.
 arraySize^array dimensions.
 arrayOrigin^origin of array in object coordinates.
 dstGreyType^destination array/object grey type.
@@ -167,7 +431,11 @@ Safe
 .SH DESCRIPTION
 .LP
 WlzToArray2D and WlzToArray3D extract Alc(3) arrays from Woolz 2D and 3D
-domain objects with grey values.
+domain objects.
+Only bit arrays can be created from objects which have no grey values,
+likewise,
+bit arrays are the only arrays that can be created from objects
+which have no grey values.
 If the dereferenced destination pointer is non-NULL pointer
 then it is assumed to be a previously allocated suitable Alc array,
 otherwise an array is allocated.
@@ -200,6 +468,20 @@ otherwise memory for the objects values is allocated and they are copied..
 For the noCopyFlag flag  to be valid when set
 both the source and destination grey type must be the same.
 Both functions return the woolz object or NULL on error.
+.LP
+The type specific functions:
+WlzToBArray2D, WlzToIArray2D, WlzToSArray2D,
+WlzToUArray2D, WlzToFArray2D, WlzToDArray2D,
+WlzToBArray3D, WlzToIArray3D, WlzToSArray3D,
+WlzToUArray3D, WlzToFArray3D, WlzToDArray3D,
+WlzFromBArray2D, WlzFromIArray2D, WlzFromSArray2D,
+WlzFromUArray2D, WlzFromFArray2D, WlzFromDArray2D,
+WlzFromBArray3D, WlzFromIArray3D, WlzFromSArray3D,
+WlzFromUArray3D, WlzFromFArray3D and WlzFromDArray3D
+have been written as wrappers to the functions:
+WlzToArray2D, WlzToArray3D, WlzFromArray2D, and WlzFromArray3D.
+The letters B,I,S,U,F and D denote the specific
+(bit, int, short, unsigned byte, float and double) grey types.
 .LP
 WlzArrayStats1D, WlzArrayStats2D and WlzArrayStats3D
 calculate simple statistics for the given Alc array.

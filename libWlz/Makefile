@@ -156,6 +156,7 @@ MANPAGES		= \
 			WlzBackground.3 \
 			WlzBinaryOps.3 \
 			WlzBoundingBox.3 \
+			WlzCannyDeriche.3 \
 			WlzCentreOfMass.3 \
 			WlzClipObjToBox.3 \
 			WlzConvolve.3 \
@@ -170,21 +171,25 @@ MANPAGES		= \
 			WlzGetSectionFromObject.3 \
 			WlzGreyCrossing.3 \
 			WlzGreyFunctions.3 \
+			WlzGreyGradient.3 \
 			WlzGreyRange.3 \
 			WlzGreyScan.3 \
 			WlzGreyStats.3 \
 			WlzGreyTableUtils.3 \
 			WlzGreyValue.3 \
 			WlzHistogram.3 \
+			WlzHyThreshold.3 \
 			WlzInsideDomain.3 \
 			WlzIntervalScan.3 \
 			WlzLaplacian.3 \
 			WlzMakeSpace.3 \
 			WlzMorphologicalOps.3 \
 			WlzMorphometry.3 \
+			WlzNMSuppress.3 \
 			WlzObjectFacts.3 \
 			WlzPolarSample.3 \
 			WlzPrinicipalAngle.3 \
+			WlzRsvFilter.3 \
 			WlzSampleObj.3 \
 			WlzSegment.3 \
 			WlzSeqPar.3 \

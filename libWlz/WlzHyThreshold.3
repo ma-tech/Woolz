@@ -1,0 +1,125 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzHyThreshold.3
+.\" Date:       July 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function which applies a hysteresis threshold.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzHyThreshold" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzHyThreshold \- Applies a hysteresis threshold.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzHyThreshold(WlzObject *" srcObj ,
+.in +4m
+.BI "WlzPixelV "pMinGrdV" ,
+.BI "WlzPixelV "sMinGrdV" ,
+.br
+.BI "WlzThresholdType " "hilo" ,
+.BI "WlzConnectType " "con" ,
+.br
+.BI "WlzErrorNum *" dstErr );
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+srcObj^given object to be thresholded.
+pMinGrdV^primary hysteresis threshold value.
+sMinGrdV^secondary hysteresis threshold value.
+hilo^threshold for above or below values.
+con^connectivity to examine for hysteresis.
+dstErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+Applies a hysteresis threshold to the given object, which must be a domain
+object with grey values.
+Values are in the domain of the hysteresis threshold'd
+object if they are above/below the primary threshold
+or above/below the secondary threshold and connected
+to values above/below the primary threshold.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+/*
+ * Simple example of using WlzHyThreshold.
+ * The thresholded object contains all grey values
+ * above min1V and those above min0V which are
+ * 8-connected to those above min1V.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzPixelV     min0V,
+                min1V;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  min0V.type = WLZ_GREY_INT;
+  min0V.v.inv = 8;
+  min1V.type = WLZ_GREY_INT;
+  min1V.v.inv = 32;
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to read input object.\\n",
+                  *argv);
+  }
+  else if(((outObj = WlzHyThreshold(inObj, min0V, min1V,
+  				    WLZ_THRESH_HIGH,
+				    WLZ_8_CONNECTED,
+				    &errNum)) == NULL) ||
+          (errNum != WLZ_ERR_NONE))
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to perrorm edge detection.\\n",
+                  *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout,
+                            outObj)) != WLZ_ERR_NONE)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to write output object.\\n",
+                  *argv);
+  }
+  if(outObj)
+  {
+   (void )WlzFreeObj(outObj);
+  }
+  if(inObj)
+  {
+   (void )WlzFreeObj(inObj);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzGreyGradient(3), WlzSuppress(3), WlzRsvFilter(3),
+WlzHyThreshold(3), WlzError(3)
+.SH BUGS
+Still to be found.

@@ -1,0 +1,96 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzNMSuppress.3
+.\" Date:       July 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function for non-maximal supression.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzNMSuppress" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzNMSuppress \- Computes the maximal domain and gradient direction.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzNMSuppress(WlzObject **" grdM ,
+.in +4m
+.BI "WlzObject **" "grdZ" ,
+.BI "WlzObject **" "grdY" ,
+.BI "WlzObject **" "grdX" ,
+.br
+.BI "WlzPixelV " "minThrV" ,
+.BI "WlzErrorNum *" dstErr );
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+grdM^gradient magnitude.
+grdZ^partial derivative through planes.
+grdY^partial derivative through lines.
+grdX^partial derivative through columns.
+minThrV^minimum gradient value to consider.
+dstErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+Computes the maximal domain using a Canny-like non-maximal suppression
+algorithm. The object returned has a 
+non-maximaly suppressed domain and it's values
+encode the gradient direction.
+For 2D domain objects,
+the direction is encoded as an integer,
+starting from the +ve x-axis counter clockwise in eight steps
+with a mask of 0x80, ie directions values are in the
+range 128
+.EQ
+->
+.EN
+128 + 7.
+.ps -2
+.cs R 24
+.nf
+
+                  ^ Y axis (downwards when displayed)
+                  |
+       +----------+---------+
+       | \\        |        /|
+       |  \\128 + 5|128 + 6/ |
+       |   \\      |      /  |
+       |    \\     |     /   |
+       |     \\    |    /    |
+       |      \\   |   /     |
+       |       \\  |  /      |
+       |128 + 4 \\ | /128 + 7|
+       |         \\|/        |
+       +----------O---------+--> X axis
+       |         /|\\        |
+       |128 + 3 / | \\128 + 0|
+       |       /  |  \\      |
+       |      /   |   \\     |
+       |     /    |    \\    |
+       |    /     |     \\   |
+       |   /      |      \\  |
+       |  /128 + 2|128 + 1\\ |
+       | /        |        \\|
+       +----------+---------+
+
+.fi
+.cs R
+.ps +2
+.SH EXAMPLES
+.SH SEE ALSO
+WlzGreyGradient(3), WlzRsvFilter(3), WlzCannyDeriche(3), WlzError(3)
+.SH BUGS
+Still to be found.

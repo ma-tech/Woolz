@@ -1,0 +1,134 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzGreyGradient.3
+.\" Date:       July 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function which computes a new grey valued object
+.\"		where the grey values are the magnitude of the
+.\"		gradient of the gray values in the given object.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzGreyGradient" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzGreyGradient \- Computes a grey gradient object.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzGreyGradient(WlzObject **" dstGrdZ ,
+.in +4m
+.BI "WlzObject **" "dstGrdY" ,
+.BI "WlzObject **" "dstGrdX" ,
+.br
+.BI "WlzObject *" "srcObj" ,
+.BI "WlzRsvFilter *" flt ,
+.br
+.BI "WlzErrorNum *" dstErr );
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+dstGrdZ^destination pointer for the gradient
+^(partial derivative) through planes, may be NULL.
+dstGrdY^destination pointer for the gradient
+^(partial derivative) through lines, may be NULL.
+dstGrdX^destination pointer for the gradient
+^(partial derivative) through columns, may be NULL.
+srcObj^source object pointer.
+flt^recursive filter to use.
+dstErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+Computes the magnitude of the gradient of the gray values in the
+given Woolz domain object.
+.LP
+If the destination pointers for the partial derivative images are
+non-null then they are assumed to be valid, and are used to return
+the partial derivative images. If the given images is not a 3D
+domain object then the plane-wise derivative destination pointer
+is never set.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+/*
+* Simple example of using WlzGreyGradient().
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  WlzRsvFilter  *ftr = NULL;
+  WlzObject     *inObj = NULL,
+               *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to read input object.\\n",
+                  *argv);
+  }
+  else if(((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
+                                        1.0, &errNum)) == NULL) ||
+         (errNum != WLZ_ERR_NONE))
+  {
+     (void )fprintf(stderr,
+                    "%s: Failed to create filter.\\n",
+                    *argv);
+  }
+  else if(((outObj = WlzGreyGradient(NULL, NULL, NULL,
+                              inObj, ftr,
+                              &errNum)) == NULL) ||
+      (errNum != WLZ_ERR_NONE))
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to compute gradient.\\n",
+                  *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout,
+                            outObj)) != WLZ_ERR_NONE)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to write output obje24ct.\\n",
+                  *argv);
+  }
+  if(ftr)
+  {
+    WlzRsvFilterFreeFilter(ftr);
+  }
+  if(outObj)
+  {
+   (void )WlzFreeObj(outObj);
+  }
+  if(inObj)
+  {
+   (void )WlzFreeObj(inObj);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzRsvFilter(3), WlzCannyDeriche(3), WlzError(3)
+.SH BUGS
+Still to be found.

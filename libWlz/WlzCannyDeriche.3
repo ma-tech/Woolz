@@ -1,0 +1,132 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzCannyDeriche.3
+.\" Date:       July 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz function for Canny/Deriche edge detection.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzCannyDeriche" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzCannyDeriche \- Performs Canny/Deriche edge detection.
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.BI "WlzObject *WlzCannyDeriche(WlzObject **" dstGObj ,
+.in +4m
+.BI "WlzObject **" "srcObj" ,
+.BI "double " "alpha" ,
+.BI "double " "mult" ,
+.br
+.BI "WlzPixelV "pMinGrdV" ,
+.BI "WlzPixelV "sMinGrdV" ,
+.br
+.BI "WlzErrorNum *" dstErr );
+.in -4m
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+dstGObj^destination pointer for gradient magnitude,
+^may be NULL.
+srcObj^given object
+alpha^Deriche filter parameter.
+mult^Filter multiplier.
+pMinGrdV^primary hysteresis threshold value.
+sMinGrdV^secondary hysteresis threshold value.
+dstErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+Performs Canny/Deriche edge detection by the following steps:
+.in +2m
+1. A recursive first derivative Deriche filter is applied in
+each dimension.
+.br
+2. The magnitude of gradient image is calculated.
+.br
+3. Non-maximal suppression is perform on the magnitude ofgradient image.
+.br
+4. A hysteresis threshold is applied to the Non-maximally suppressed image.
+.in -2m
+The returned object is the non-maximally suppressed edge
+direction object
+from WlzNMSuppress(3).
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+/*
+ * Simple example of using WlzRsvFilter() to Gaussian smooth a 2D
+ * or 3D domain object with grey values.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+  WlzObject     *inObj = NULL,
+                *outObj = NULL;
+  WlzPixelV     min0,
+                min1;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  min0.type = WLZ_GREY_INT;
+  min0.v.inv = 8;
+  min1.type = WLZ_GREY_INT;
+  min1.v.inv = 32;
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to read input object.\\n",
+                  *argv);
+  }
+  else if(((outObj = WlzCannyDeriche(NULL, inObj, 1.0,
+                              1.0, min0, min1, &errNum)) == NULL) ||
+      (errNum != WLZ_ERR_NONE))
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to perrorm edge detection.\\n",
+                  *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout,
+                            outObj)) != WLZ_ERR_NONE)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to write output object.\\n",
+                  *argv);
+  }
+  if(outObj)
+  {
+   (void )WlzFreeObj(outObj);
+  }
+  if(inObj)
+  {
+   (void )WlzFreeObj(inObj);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzGreyGradient(3), WlzSuppress(3), WlzRsvFilter(3),
+WlzHyThreshold(3), WlzError(3)
+.SH BUGS
+Still to be found.

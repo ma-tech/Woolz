@@ -15,7 +15,7 @@
 *		maximaly suppressed domain and the values are the
 *		encoded gradient direction. The direction is encoding
 *		is from the +ve x-axis counter clockwise in eight steps
-*		with a mask of 0x10, ie directions values are in the
+*		with a mask of 0x80, ie directions values are in the
 *		range 128 -> 128 + 7.
 *
 *			     ^ Y axis (downwards when displayed)
@@ -49,24 +49,14 @@
 #include <string.h>
 #include <Wlz.h>
 
-typedef struct _WlzNMSuppressItvPool
-{
-  WlzInterval	*itvBlock;
-  int		itvsInBlock;
-  int		offset;
-} WlzNMSuppressItvPool;
-
-static WlzErrorNum WlzNMSuppressAddItv(WlzIntervalDomain *,
-				       WlzNMSuppressItvPool *,
-				       int, int, int);
 static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *,
 				       int **, int *, int *,
-				       WlzNMSuppressItvPool *,
+				       WlzDynItvPool *,
 				       UBYTE *, int,
 				       WlzIVertex2, WlzIVertex2, int);
 static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *,
 				       double **, double *, double *,
-				       WlzNMSuppressItvPool *,
+				       WlzDynItvPool *,
 				       UBYTE *, int,
 				       WlzIVertex2, WlzIVertex2, double);
 static WlzObject *WlzNMSuppress2D(WlzObject *, WlzObject *, WlzObject *,
@@ -74,75 +64,6 @@ static WlzObject *WlzNMSuppress2D(WlzObject *, WlzObject *, WlzObject *,
 static WlzObject *WlzNMSuppress3D(WlzObject *, WlzObject *,
 			          WlzObject *, WlzObject *,
 				  WlzPixelV, WlzErrorNum *);
-
-/************************************************************************
-* Function:	WlzNMSuppressAddItv
-* Returns:	WlzErrorNum		Woolz error code.
-* Purpose:	Adds an interval to the given interval domain.
-* Global refs:	-
-* Parameters:	WlzIntervalDomain *iDom: Given interval domain.
-*		WlzNMSuppressItvPool *iPool: Pool of available intervals.
-*		int line:		Line on which to append interval.
-*		int iLft:		Start of interval.
-*		int iLen:		Length of interval.
-************************************************************************/
-static WlzErrorNum WlzNMSuppressAddItv(WlzIntervalDomain *iDom,
-				       WlzNMSuppressItvPool *iPool,
-				       int line, int iLft, int iLen)
-{
-  int		lnOff;
-  WlzInterval	*itv;
-  WlzIntervalLine *itvLn;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(iDom->intvlines->nintvs == 0)           /* Initialize at first interval */
-  {
-    iDom->line1 = line;
-    iDom->kol1 = iDom->lastkl = 0; 	          /* Set column bounds later */
-  }
-  iDom->lastln = line;
-  itvLn = iDom->intvlines + line - iDom->line1;
-  if((iPool->itvBlock == NULL) || (iPool->itvsInBlock - iPool->offset - 1) < 1)
-  {
-    iPool->offset = 0;
-    if((iPool->itvBlock = AlcMalloc(iPool->itvsInBlock *
-    				   sizeof(WlzInterval))) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      iDom->freeptr = WlzPushFreePtr(iDom->freeptr, (void *)(iPool->itvBlock),
-					&errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      if(itvLn->nintvs > 0)
-      {
-        (void )memcpy((void *)(iPool->itvBlock), (void *)(itvLn->intvs),
-		      itvLn->nintvs * sizeof(WlzInterval));
-      }
-      itvLn->intvs = iPool->itvBlock;
-      iPool->offset = itvLn->nintvs;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(itvLn->intvs == NULL)
-    {
-      itvLn->intvs = (WlzInterval *)(iPool->itvBlock) + iPool->offset;
-    }
-    if(itvLn->intvs)
-    {
-      itv = itvLn->intvs + itvLn->nintvs;
-      itv->ileft = iLft;
-      itv->iright = iLft + iLen - 1;
-      ++(itvLn->nintvs);
-      ++(iPool->offset);
-    }
-  }
-  return(errNum);
-}
 
 /************************************************************************
 * Function:	WlzNMSuppress2DBufI
@@ -157,7 +78,7 @@ static WlzErrorNum WlzNMSuppressAddItv(WlzIntervalDomain *iDom,
 *					buffer.
 *		int *grdXBuf:		Integer horizontal grey gradient
 *					buffer.
-*		WlzNMSuppressItvPool *iPool: Interval pool.
+*		WlzDynItvPool *iPool:   Interval pool.
 *		UBYTE *dstBuf:		Buffer for direction values.
 *		int dstLen:		Buffer (given interval) length.
 *		WlzIVertex2 dstPos:	Position of start of buffer wrt
@@ -169,7 +90,7 @@ static WlzErrorNum WlzNMSuppressAddItv(WlzIntervalDomain *iDom,
 static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 				       int **grdMBuf, int *grdYBuf,
 				       int *grdXBuf,
-				       WlzNMSuppressItvPool *iPool,
+				       WlzDynItvPool *iPool,
 				       UBYTE *dstBuf, int dstLen,
 				       WlzIVertex2 dstPos, WlzIVertex2 orgPos,
 				       int minGM)
@@ -302,8 +223,8 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
     }
     if((itvLen > 0) && ((cnt == 0) || (maximal == 0)))
     {
-      errNum = WlzNMSuppressAddItv(dstIDom, iPool, dstPos.vtY + orgPos.vtY,
-      				   itvLft + orgPos.vtX, itvLen);
+      errNum = WlzDynItvAdd(dstIDom, iPool, dstPos.vtY + orgPos.vtY,
+			    itvLft + orgPos.vtX, itvLen);
       itvLen = 0;
     }
     ++grdMBufPrv;
@@ -327,7 +248,7 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 *					buffer.
 *		int *grdXBuf:		Double horizontal grey gradient
 *					buffer.
-*		WlzNMSuppressItvPool *iPool: Interval pool.
+*		WlzDynItvPool *iPool:	Interval pool.
 *		UBYTE *dstBuf:		Buffer for direction values.
 *		int dstLen:		Buffer (given interval) length.
 *		WlzIVertex2 dstPos:	Position of start of buffer wrt
@@ -339,7 +260,7 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
 				       double **grdMBuf, double *grdYBuf,
 				       double *grdXBuf,
-				       WlzNMSuppressItvPool *iPool,
+				       WlzDynItvPool *iPool,
 				       UBYTE *dstBuf, int dstLen,
 				       WlzIVertex2 dstPos, WlzIVertex2 orgPos,
 				       double minGM)
@@ -463,8 +384,8 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
     }
     if((itvLen > 0) && ((cnt == 0) || (maximal == 0)))
     {
-      errNum = WlzNMSuppressAddItv(dstIDom, iPool, dstPos.vtY + orgPos.vtY,
-      				   itvLft + orgPos.vtX, itvLen);
+      errNum = WlzDynItvAdd(dstIDom, iPool, dstPos.vtY + orgPos.vtY,
+			    itvLft + orgPos.vtX, itvLen);
       itvLen = 0;
     }
     ++grdMBufPrv;
@@ -524,7 +445,7 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
   WlzGreyP	grdMBufGP,
   		grdYBufGP,
 		grdXBufGP;
-  WlzNMSuppressItvPool pool;
+  WlzDynItvPool pool;
   WlzObject	*dstObj = NULL,
   		*tmpObj = NULL;
   void 		*grdYBuf = NULL,

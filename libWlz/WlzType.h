@@ -37,6 +37,7 @@ typedef enum
   WLZ_GREY_UBYTE		= 3,
   WLZ_GREY_FLOAT		= 4,
   WLZ_GREY_DOUBLE		= 5,
+  WLZ_GREY_BIT			= 6,
   /**********************************************************************
   * WLZ_GREY_ERROR is not a grey type. It is an invalid grey type!
   * Keep it the last enumerator!				
@@ -670,6 +671,16 @@ typedef struct _WlzInterval
   int ileft;
   int iright;
 } WlzInterval;
+
+/************************************************************************
+* Dynamic interval pool, for building interval domains.
+************************************************************************/
+typedef struct _WlzDynItvPool
+{
+  WlzInterval	*itvBlock;
+  int		itvsInBlock;
+  int		offset;
+} WlzDynItvPool;
 
 /************************************************************************
 * A union of pointers to grey values.				

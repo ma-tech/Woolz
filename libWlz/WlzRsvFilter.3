@@ -1,0 +1,242 @@
+'\" te
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzRsvFilter.3
+.\" Date:       July 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz recursive filter functions and data structures.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.EQ
+delim $$
+.EN
+.TH "WlzRsvFilter" 3 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzRsvFilter \- recursive filters..
+.SH SYNOPSIS
+.LP
+.B #include <Wlz.h>
+.LP
+.ps -2
+.cs R 24
+.nf
+typedef enum
+{
+  WLZ_RSVFILTER_ACTION_NONE     = (0),
+  WLZ_RSVFILTER_ACTION_X        = (1<<0),
+  WLZ_RSVFILTER_ACTION_Y        = (1<<1),
+  WLZ_RSVFILTER_ACTION_Z        = (1<<2)
+} WlzRsvFilterActionMask;
+
+typedef enum
+{
+  WLZ_RSVFILTER_NAME_NONE,
+  WLZ_RSVFILTER_NAME_DERICHE_0,
+  WLZ_RSVFILTER_NAME_DERICHE_1,
+  WLZ_RSVFILTER_NAME_DERICHE_2,
+  WLZ_RSVFILTER_NAME_GAUSS_0,
+  WLZ_RSVFILTER_NAME_GAUSS_1,
+  WLZ_RSVFILTER_NAME_GAUSS_2
+} WlzRsvFilterName;
+
+typedef struct
+{
+  WlzRsvFilterName      name;
+  double                a[4];
+  double                b[2];
+  double                c;
+} WlzRsvFilter;
+
+.fi
+.cs R
+.ps +2
+.LP
+.BI "WlzObject *WlzRsvFilterObj(WlzObject *" "srcObj" ,
+.in +4m
+.BI "WlzRsvFilter *" "ftr" ,
+.BI "int " "actionMsk" ,
+.br
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName " name ,
+.in +4m
+.BI "double " "prm" ,
+.BI "WlzErrorNum *" "dstErr" );
+.in -4m
+.LP
+.BI "void WlzRsvFilterFreeFilter(WlzRsvFilter *" "ftr" );
+.SH ARGUMENTS
+.TS
+tab(^);
+lI l.
+name^name of filter.
+prm^filter parameter which is alpha for Deriche's
+^or sigma for Gaussian operators.
+srcObj^given object.
+ftr^recursive filter.
+actionMsk^action mask specifying direction(s) in which
+^to apply the filter.
+dstErr^destination error code pointer, may be NULL
+.TE
+.SH MT-LEVEL
+.LP
+Safe
+.SH DESCRIPTION
+Recursive or infinite impulse response filters have two distinct advantages
+when compared with finite impulse response filters as implemented in
+WlzGauss() and WlzConvolve(), generally they require fewer
+arithmetic operations and they require fewer data to be held per output datum.
+For example on a 300MHz Ultra 10 filtering a 865$x$552 2D domain object
+with int grey values and 9897 intervals,
+the following execution times were measured:
+.in +4m
+.TS
+tab(^);
+l l.
+Woolz Filter^Execution time (s)
+WlzRsvFilterObj(1)^0.3
+WlzLaplacian(1)^0.8
+WlzGauss(1)^16.5
+.TE
+.in -4m
+.LP
+.B WlzRsvFilterMakeFilter
+constructs a recursive filter, given a filter name and parameter.
+Filters can be defined for the
+zeroth, first and second order derivatives of the 
+Deriche and (approximate) Gaussian 
+operators by name.
+.in +4m
+.TS
+tab(^);
+lI l.
+WLZ_RSVFILTER_NAME_DERICHE_0^$d (x) = {beta sub 0}(1 + alpha|x|){e sup {-alpha|x|}}$
+WLZ_RSVFILTER_NAME_DERICHE_1^$d prime (x) = {beta sub 1}{alpha sup 2}|x|){e sup {-alpha|x|}}$
+WLZ_RSVFILTER_NAME_DERICHE_2^$d prime prime (x) = {beta sub 2}{alpha sup 2}(1 - alpha|x|){e sup {-alpha|x|}}$
+WLZ_RSVFILTER_NAME_GAUSS_0^ $g (x) = {beta sub 0}(cos({omega sub 0}x) + {gamma sub 0}sin({omega sub 0}x){e sup {-alpha|x|}}$
+WLZ_RSVFILTER_NAME_GAUSS_1^$g prime (x) = {beta sub 1}(cos({omega sub 1}x) + {gamma sub 1}sin({omega sub 1}x){e sup {-alpha|x|}}$
+WLZ_RSVFILTER_NAME_GAUSS_2^$g prime prime (x) = {beta sub 2}(cos({omega sub 2}x) + {gamma sub 2}sin({omega sub 2}x){e sup {-alpha|x|}}$
+.TE
+.in -4m
+If the given name is
+.I WLZ_RSVFILTER_NAME_NONE
+or it is not one of the defined names
+the calling function should set the filter parameters
+.IR "a" ", " "b" " and " "c" "."
+.LP
+.B WlzRsvFilterFreeFilter
+free's the given recursive filter.
+.LP
+.B WlzRsvFilterObj
+applies the given filter to the given domain object.
+.LP
+These functions and data structures allow second order infinite impulse
+response filters to be defined and applied to two and three dimension
+Woolz domain objects with grey values.
+The filters may be applied through the columns (x), lines (y) or
+planes (z) of grey values, either separately or sequentially,
+with the action mask specifying the direction(s) in which the filter is
+applied.  An action mask in which only a single direction is specified
+will allow separate filtering (eg for a magnitude
+of gradient filter). Where more than one direction is specified in the
+direction mask the filter is applied in column, line, plane order as
+appropriate (eg for a gaussian smmothing filter).
+A filter is defined by seven parameters
+${a sub 0}, {a sub 1}, {a sub 2}, {a sub 3}$ ${b sub 0}, {b sub 1}$ and $c$.
+With input $x sub i$, then in one dimension
+the filter calculates the output $y sub i$ using
+.in +4m
+.br
+$y+ sub i = {a sub 0} x sub {i + 0} + {a sub 1} x sub {i - 1} - {b sub 0} y+ sub {i - 1} - {b sub 1} y+ sub {i - 2}$
+.br
+$y- sub i = {a sub 2} x sub {i + 1} + {a sub 3} x sub {i + 2} - {b sub 0} y- sub {i + 1} - {b sub 1} y- sub {i + 2}$
+.br
+$y sub i = c (y+ sub {i} + y- sub {i})$
+.in -4m
+.br
+The objects grey values are considered to continue outside of it's domain
+with the first or last values encountered.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+/*
+ * Simple example of using WlzRsvFilter() to Gaussian smooth a 2D
+ * or 3D domain object with grey values.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <Wlz.h>
+
+int             main(char *argv[], int argc)
+{
+int             dir = WLZ_RSVFILTER_ACTION_X |
+                      WLZ_RSVFILTER_ACTION_Y |
+                      WLZ_RSVFILTER_ACTION_Z;
+  WlzRsvFilter  *ftr = NULL;
+  WlzObject     *inObj = NULL,
+               *outObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((inObj= WlzReadObj(stdin, &errNum)) == NULL)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to read input object.\\n",
+                  *argv);
+  }
+  else if(((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_GAUSS_0,
+                                        1.0, &errNum)) == NULL) ||
+         (errNum != WLZ_ERR_NONE))
+  {
+     (void )fprintf(stderr,
+                    "%s: Failed to create filter.\\n",
+                    *argv);
+  }
+  else if(((outObj = WlzRsvFilter(inObj, ftr,
+                              dir, &errNum)) == NULL) ||
+      (errNum != WLZ_ERR_NONE))
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to filter object.\\n",
+                  *argv);
+  }
+  else if((errNum = WlzWriteObj(stdout,
+                            outObj)) != WLZ_ERR_NONE)
+  {
+   (void )fprintf(stderr,
+                  "%s: Failed to write output object.\\n",
+                  *argv);
+  }
+  if(ftr)
+  {
+    WlzRsvFilterFreeFilter(ftr);
+  }
+  if(outObj)
+  {
+   (void )WlzFreeObj(outObj);
+  }
+  if(inObj)
+  {
+   (void )WlzFreeObj(inObj);
+  }
+  return(errNum);
+}
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzGreyCradient(3), WlzCannyDeriche(3), WlzError(3)
+.SH BUGS
+Still to be found.

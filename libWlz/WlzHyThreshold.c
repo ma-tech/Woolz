@@ -27,7 +27,6 @@
 *		object if they are above/below the primary threshold
 *		or above/below the secondary threshold and connected
 *		to values above/below the primary threshold.
-*		hilo se
 *		
 * Global refs:	-
 * Parameters:	WlzObject *srcObj:	Object to be thresholded.

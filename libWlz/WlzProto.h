@@ -671,6 +671,23 @@ extern WlzObject 		*WlzDomainFill(
 /************************************************************************
 * WlzDomainUtils.c							*
 ************************************************************************/
+extern void			WlzBitLnSetItv(
+				  UBYTE *bitLn,
+				  int iLft,
+				  int iRgt,
+				  int size);
+extern WlzErrorNum		WlzDynItvAdd(
+				  WlzIntervalDomain *iDom,
+				  WlzDynItvPool *iPool,
+				  int line,
+				  int iLft,
+				  int iLen);
+extern WlzErrorNum		WlzDynItvLnFromBitLn(
+				  WlzIntervalDomain *iDom,
+				  UBYTE *bitLn,
+				  int line,
+				  int width,
+				  WlzDynItvPool *iPool);
 extern WlzErrorNum		WlzStandardPlaneDomain(
 				  WlzPlaneDomain *pdom,
 			 	  WlzVoxelValues *voxtb);
@@ -1449,7 +1466,6 @@ extern WlzObject		*WlzRsvFilterObj(
 				  WlzObject *srcObj,
 				  WlzRsvFilter *ftr,
 				  int actionMsk,
-				  int useFP,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************

@@ -9,7 +9,7 @@
 * Address:	MRC Human Genetics Unit,
 *		Western General Hospital,
 *		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for conversion between woolz domain objects
+* Purpose:      Functions for conversion between Woolz domain objects
 *		and arrays.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
@@ -19,24 +19,80 @@
 #include <float.h>
 #include <Wlz.h>
 
+/* #define WLZ_ARRAY_TEST */
+
+static WlzErrorNum WlzToArrayBit2D(UBYTE ***dstP, WlzObject *srcObj,
+				   WlzIVertex2 size, WlzIVertex2 origin);
+static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
+				   WlzIVertex3 size, WlzIVertex3 origin);
+static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
+				    WlzIVertex2 size, WlzIVertex2 origin,
+				    int noiseFlag, WlzGreyType dstGreyType);
+static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
+				    WlzIVertex3 size, WlzIVertex3 origin,
+				    int noiseFlag, WlzGreyType dstGreyType);
+static WlzObject *WlzFromArrayBit2D(UBYTE**arrayP,
+				    WlzIVertex2 arraySize,
+				    WlzIVertex2 arrayOrigin,
+				    WlzErrorNum *dstErr);
+static WlzObject *WlzFromArrayGrey2D(void **arrayP,
+				     WlzIVertex2 arraySize,
+				     WlzIVertex2 arrayOrigin,
+				     WlzGreyType dstGreyType,
+				     WlzGreyType srcGreyType,
+				     double valOffset, double valScale,
+				     int clampFlag, int noCopyFlag,
+				     WlzErrorNum *dstErr);
+static WlzObject *WlzFromArrayBit3D(UBYTE ***arrayP,
+				    WlzIVertex3 arraySize,
+				    WlzIVertex3 arrayOrigin,
+				    WlzErrorNum *dstErr);
+static WlzObject *WlzFromArrayGrey3D(void ***arrayP,
+				     WlzIVertex3 arraySize,
+				     WlzIVertex3 arrayOrigin,
+				     WlzGreyType dstGreyType,
+				     WlzGreyType srcGreyType,
+				     double valOffset, double valScale,
+				     int clampFlag, int noCopyFlag,
+				     WlzErrorNum *dstErr);
+
 /************************************************************************
-* Function:	WlzTo[ISUFD]Array2D					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Extracts an int, short, UBYTE, float or double Alc	*
-*		array from any Woolz 2D domain object.			*
-* Global refs:	-							*
-* Parameters:	WlzIVertex2 *dstSizeArrayDat: Source and destination	*
-*					pointer for array size.		*
-*		<TYPE> ***dstArrayDat:	Destination pointer for array	*
-*					of type: int, short, UBYTE,	*
-*					float or long.			*
-*		WlzObject *srcObj:	Given woolz object.		*
-*		WlzIVertex2 origin:	Array origin wrt given object.	*
-*		int noiseFlag:		Fill background with random 	*
-*					noise with the same mean and	*
-*					std. dev. as the given object	*
-*					if non-zero.			*
+* Function:	WlzTo[BISUFD]Array2D				
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts a bit, int, short, UBYTE, float or double Alc
+*		array from any Woolz 2D domain object.		
+* Global refs:	-						
+* Parameters:	WlzIVertex2 *dstSizeArrayDat: Source and destination
+*					pointer for array size.	
+*		<TYPE> ***dstArrayDat:	Destination pointer for array
+*					of type: int, short, UBYTE,
+*					float or long.		
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex2 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
 ************************************************************************/
+WlzErrorNum WlzToBArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
+			  WlzObject *srcObj, WlzIVertex2 origin,
+			  int noiseFlag)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
+    			  *dstSizeArrayDat, origin,
+			  noiseFlag, WLZ_GREY_BIT);
+  }
+  return(errNum);
+}
+
 WlzErrorNum WlzToIArray2D(WlzIVertex2 *dstSizeArrayDat, int ***dstArrayDat,
 			  WlzObject *srcObj, WlzIVertex2 origin,
 			  int noiseFlag)
@@ -133,27 +189,187 @@ WlzErrorNum WlzToDArray2D(WlzIVertex2 *dstSizeArrayDat, double ***dstArrayDat,
 }
 
 /************************************************************************
-* Function:	WlzToArray2D						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Extracts an Alc array from any Woolz 2D domain object.	*
-*		If the destination pointer points to a non-NULL 	*
-*		pointer then it is assumed to be a suitable Alc array.	*
-*		The data are assumed to be within the valid range.	*
-* Global refs:	-							*
-* Parameters:	void ***dstP:		Destination pointer (assumed 	*
-*					valid if *dstP is non-NULL).	*
-*		WlzObject *srcObj:	Given woolz object.		*
-*		WlzIVertex2 size:	Size of the array.		*
-*		WlzIVertex2 origin:	Array origin wrt given object.	*
-*		int noiseFlag:		Fill background with random 	*
-*					noise with the same mean and	*
-*					std. dev. as the given object	*
-*					if non-zero.			*
-*		WlzGreyType dstGreyType: Destination array data type.	*
+* Function:	WlzToArray2D					
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts an Alc array from any Woolz 2D domain object.
+*		If the destination pointer points to a non-NULL 
+*		pointer then it is assumed to be a suitable Alc array.
+*		The data are assumed to be within the valid range.
+* Global refs:	-						
+* Parameters:	void ***dstP:		Destination pointer (assumed 
+*					valid if *dstP is non-NULL).
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex2 size:	Size of the array.	
+*		WlzIVertex2 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
+*		WlzGreyType dstGreyType: Destination array data type.
 ************************************************************************/
 WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
 			     WlzIVertex2 size, WlzIVertex2 origin,
 			     int noiseFlag, WlzGreyType dstGreyType)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+  	  ("WlzToArray2D FE 0x%lx  0x%lx {%d %d} {%d %d} %d %d\n",
+	   (unsigned long )dstP, (unsigned long )srcObj,
+	   size.vtX, size.vtY, origin.vtX, origin.vtY,
+	   noiseFlag, (int )dstGreyType));
+  if(dstP == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(srcObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(srcObj->type != WLZ_2D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(srcObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(dstGreyType)
+    {
+      case WLZ_GREY_BIT:
+	errNum = WlzToArrayBit2D((UBYTE ***)dstP,  srcObj, size, origin);
+	break;
+      case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE:
+	errNum = WlzToArrayGrey2D(dstP,  srcObj, size, origin,
+				  noiseFlag, dstGreyType);
+	break;
+      deafult:
+	WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzToArray2D FX %d\n",
+	   errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzToArrayBit2D				
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts an Alc bit array from any Woolz 2D domain
+*		object's domain.
+*		If the destination pointer points to a non-NULL 
+*		pointer then it is assumed to be a suitable Alc array.
+* Global refs:	-						
+* Parameters:	UBYTE ***dstP:		Destination pointer (assumed 
+*					valid if *dstP is non-NULL).
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex2 size:	Size of the array.	
+*		WlzIVertex2 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
+*		WlzGreyType dstGreyType: Destination array data type.
+************************************************************************/
+static WlzErrorNum WlzToArrayBit2D(UBYTE ***dstP, WlzObject *srcObj,
+				   WlzIVertex2 size, WlzIVertex2 origin)
+{
+  int		ivY,
+		lstY,
+		bytWidth;
+  UBYTE		*bitLnP;
+  WlzIntervalWSpace iWSp;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzToArrayBit2D FE 0x%lx  0x%lx {%d %d} {%d %d}\n",
+	   (unsigned long )dstP, (unsigned long )srcObj,
+	   size.vtX, size.vtY, origin.vtX, origin.vtY));
+
+  if(*dstP == NULL)
+  {
+    if(AlcBit2Malloc(dstP, size.vtY, size.vtX) != ALC_ER_NONE)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzInitRasterScan(srcObj, &iWSp, WLZ_RASTERDIR_ILIC);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    lstY = -1;
+    bytWidth = (size.vtX + 7) / 8;
+    while((errNum == WLZ_ERR_NONE) &&
+    	  ((errNum = WlzNextInterval(&iWSp)) == WLZ_ERR_NONE))
+    {
+      if((ivY = iWSp.linpos - origin.vtY) >= 0)
+      {
+        if(ivY >= size.vtY)
+	{
+	  errNum = WLZ_ERR_EOO;
+	}
+	else
+	{
+	  while(lstY < ivY)
+	  {
+	    /* Clear lines from last to this one. */
+	    bitLnP = *(*dstP + ++lstY);
+	    (void )memset(bitLnP, 0, bytWidth);
+	  }
+	  WlzBitLnSetItv(bitLnP,
+	  		iWSp.lftpos - origin.vtX, iWSp.rgtpos - origin.vtX,
+			size.vtX);
+        }
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      /* Clear lines from last to end of array. */
+      while(++lstY < size.vtY)
+      {
+        (void )memset(*(*dstP + lstY), 0, bytWidth);
+      }
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+	  ("WlzToArrayBit2D FX %d\n",
+	   errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzToArrayGrey2D				
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts an Alc array from any Woolz 2D domain object.
+*		If the destination pointer points to a non-NULL 
+*		pointer then it is assumed to be a suitable Alc array.
+*		The data are assumed to be within the valid range.
+* Global refs:	-						
+* Parameters:	void ***dstP:		Destination pointer (assumed 
+*					valid if *dstP is non-NULL).
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex2 size:	Size of the array.	
+*		WlzIVertex2 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
+*		WlzGreyType dstGreyType: Destination array data type.
+************************************************************************/
+static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
+				    WlzIVertex2 size, WlzIVertex2 origin,
+				    int noiseFlag, WlzGreyType dstGreyType)
 {
   int		idY;
   double	noiseMu = 0.0,
@@ -165,49 +381,45 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
   WlzIBox2	cutBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzToArray2D FE 0x%lx  0x%lx {%d %d} {%d %d} %d %d\n",
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzToArrayGrey2D FE 0x%lx  0x%lx {%d %d} {%d %d} %d %d\n",
 	   (unsigned long )dstP, (unsigned long )srcObj,
 	   size.vtX, size.vtY, origin.vtX, origin.vtY,
 	   noiseFlag, (int )dstGreyType));
   gValP.inp = NULL;
-  if(dstP == NULL)
+  cutBox.xMin = origin.vtX;
+  cutBox.yMin = origin.vtY;
+  cutBox.xMax = origin.vtX + size.vtX - 1;
+  cutBox.yMax = origin.vtY + size.vtY - 1;
+  if(noiseFlag)
   {
-    errNum = WLZ_ERR_PARAM_DATA;
+    (void )WlzGreyStats(srcObj, NULL, NULL, NULL, NULL, NULL,
+			&noiseMu, &noiseSigma, &errNum);
+			  
   }
-  else
+  if(errNum == WLZ_ERR_NONE)
   {
-    cutBox.xMin = origin.vtX;
-    cutBox.yMin = origin.vtY;
-    cutBox.xMax = origin.vtX + size.vtX - 1;
-    cutBox.yMax = origin.vtY + size.vtY - 1;
-    if(noiseFlag)
+    if((cutObj = WlzCutObjToValBox2D(srcObj, cutBox, dstGreyType,
+				     (*dstP)? **dstP: NULL,
+				     noiseFlag, noiseMu, noiseSigma,
+				     &errNum)) != NULL)
     {
-      (void )WlzGreyStats(srcObj, NULL, NULL, NULL, NULL, NULL,
-      			  &noiseMu, &noiseSigma, &errNum);
-      			    
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      if((cutObj = WlzCutObjToValBox2D(srcObj, cutBox, dstGreyType,
-				       (*dstP)? **dstP: NULL,
-				       noiseFlag, noiseMu, noiseSigma,
-				       &errNum)) != NULL)
+      if(errNum == WLZ_ERR_NONE)
       {
-	if(errNum == WLZ_ERR_NONE)
+	if(cutObj->type == WLZ_2D_DOMAINOBJ)
 	{
-	  if(cutObj->type == WLZ_2D_DOMAINOBJ)
-	  {
-	    cutObj->values.r->freeptr = WlzPopFreePtr(
-	    				     cutObj->values.r->freeptr,
-					     &tVP0, NULL);
-	    gValP.inp = (int *)tVP0;
-	    cutObj->values.r->values.inp = NULL;
-	  }
+	  cutObj->values.r->freeptr = WlzPopFreePtr(
+					   cutObj->values.r->freeptr,
+					   &tVP0, NULL);
+	  gValP.inp = (int *)tVP0;
+	  cutObj->values.r->values.inp = NULL;
 	}
-	WlzFreeObj(cutObj);
       }
+      WlzFreeObj(cutObj);
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     if(*dstP == NULL)
     {
       if(gValP.inp)
@@ -273,30 +485,48 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
       AlcFree(valPP);
     }
   }
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzToArray2D FX %d\n",
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+	  ("WlzToArrayGrey2D FX %d\n",
 	   errNum));
   return(errNum);
 }
 
 /************************************************************************
-* Function:	WlzTo[ISUFD]Array3D					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Extracts an int, short, UBYTE, float or double Alc	*
-*		array from any Woolz 3D domain object.			*
-* Global refs:	-							*
-* Parameters:	WlzIVertex3 *dstSizeArrayDat: Source and destination	*
-*					pointer for array size.		*
-*		<TYPE> ****dstArrayDat:	Destination pointer for array	*
-*					of type: int, short, UBYTE,	*
-*					float or long.			*
-*		WlzObject *srcObj:	Given woolz object.		*
-*		WlzIVertex3 origin:	Array origin wrt given object.	*
-*		int noiseFlag:		Fill background with random 	*
-*					noise with the same mean and	*
-*					std. dev. as the given object	*
-*					if non-zero.			*
+* Function:	WlzTo[BISUFD]Array3D				
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts a bit, int, short, UBYTE, float or double Alc
+*		array from any Woolz 3D domain object.		
+* Global refs:	-						
+* Parameters:	WlzIVertex3 *dstSizeArrayDat: Source and destination
+*					pointer for array size.	
+*		<TYPE> ****dstArrayDat:	Destination pointer for array
+*					of type: int, short, UBYTE,
+*					float or long.		
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex3 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
 ************************************************************************/
+WlzErrorNum WlzToBArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
+			  WlzObject *srcObj, WlzIVertex3 origin,
+			  int noiseFlag)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dstSizeArrayDat == NULL) || (dstArrayDat == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, *dstSizeArrayDat,
+    			  origin, noiseFlag, WLZ_GREY_BIT);
+  }
+  return(errNum);
+}
+
 WlzErrorNum WlzToIArray3D(WlzIVertex3 *dstSizeArrayDat, int ****dstArrayDat,
 			  WlzObject *srcObj, WlzIVertex3 origin,
 			  int noiseFlag)
@@ -388,27 +618,195 @@ WlzErrorNum WlzToDArray3D(WlzIVertex3 *dstSizeArrayDat, double ****dstArrayDat,
 }
 
 /************************************************************************
-* Function:	WlzToArray3D						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Extracts an Alc array from any Woolz 3D domain object.	*
-*		If the destination pointer points to a non-NULL 	*
-*		pointer then it is assumed to be a suitable Alc array.	*
-*		The data are assumed to be within the valid range.	*
-* Global refs:	-							*
-* Parameters:	void ****dstP:		Destination pointer (assumed 	*
-*					valid if *dstP is non-NULL).	*
-*		WlzObject *srcObj:	Given woolz object.		*
-*		WlzIVertex3 size:	Size of the array.		*
-*		WlzIVertex3 origin:	Array origin wrt given object.	*
-*		int noiseFlag:		Fill background with random 	*
-*					noise with the same mean and	*
-*					std. dev. as the given object	*
-*					if non-zero.			*
-*		WlzGreyType dstGreyType: Destination array data type.	*
+* Function:	WlzToArray3D					
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts an Alc array from any Woolz 3D domain object.
+*		If the destination pointer points to a non-NULL 
+*		pointer then it is assumed to be a suitable Alc array.
+*		The data are assumed to be within the valid range.
+* Global refs:	-						
+* Parameters:	void ****dstP:		Destination pointer (assumed 
+*					valid if *dstP is non-NULL).
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex3 size:	Size of the array.	
+*		WlzIVertex3 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
+*		WlzGreyType dstGreyType: Destination array data type.
 ************************************************************************/
 WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
 			     WlzIVertex3 size, WlzIVertex3 origin,
 			     int noiseFlag, WlzGreyType dstGreyType)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+  	  ("WlzToArray3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d} %d %d\n",
+	   (unsigned long )dstP, (unsigned long )srcObj,
+	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ,
+	   noiseFlag, (int )dstGreyType));
+  if(dstP == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(srcObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(srcObj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(srcObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(dstGreyType)
+    {
+      case WLZ_GREY_BIT:
+	errNum = WlzToArrayBit3D((UBYTE ****)dstP,  srcObj, size, origin);
+	break;
+      case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE:
+	errNum = WlzToArrayGrey3D(dstP,  srcObj, size, origin,
+				  noiseFlag, dstGreyType);
+	break;
+      deafult:
+	WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzToArray3D FX %d\n",
+	   errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzToArrayBit3D				
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts an Alc bit array from any Woolz 3D domain
+*		object's domain.
+*		If the destination pointer points to a non-NULL 
+*		pointer then it is assumed to be a suitable Alc array.
+* Global refs:	-						
+* Parameters:	UBYTE ****dstP:		Destination pointer (assumed 
+*					valid if *dstP is non-NULL).
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex3 size:	Size of the array.	
+*		WlzIVertex3 origin:	Array origin wrt given object.
+************************************************************************/
+static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
+				   WlzIVertex3 size, WlzIVertex3 origin)
+{
+  int		plnIdx,
+  		plnCnt,
+		plnSz;
+  WlzDomain	*srcDomains;
+  UBYTE		***dstP2D;
+  WlzIVertex2	size2D,
+  		origin2D;
+  WlzDomain	srcDom,
+  		dumDom;
+  WlzValues	dumVal;
+  WlzObject	*srcObj2D;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzToArrayBit3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d}\n",
+	   (unsigned long )dstP, (unsigned long )srcObj,
+	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ));
+
+  if((srcDom = srcObj->domain).core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((srcDomains = srcDom.p->domains) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(*dstP == NULL)
+    {
+      if(AlcBit3Malloc(dstP, size.vtZ, size.vtY, size.vtX) != ALC_ER_NONE)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dumDom.core = NULL;
+    dumVal.core = NULL;
+    srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dumDom, dumVal,
+    			   NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size2D.vtX = size.vtX;
+    size2D.vtY = size.vtY;
+    origin2D.vtX = origin.vtX;
+    origin2D.vtY = origin.vtY;
+    plnIdx =  0;
+    plnSz = (size.vtY * size.vtX + 7) / 8;
+    plnCnt = srcDom.p->lastpl - srcDom.p->plane1 + 1;
+    while((errNum == WLZ_ERR_NONE) && (plnCnt-- > 0))
+    {
+      dstP2D = (*dstP + plnIdx);
+      srcObj2D->domain = *(srcDomains + plnIdx);
+      if(srcObj2D->domain.core == NULL)
+      {
+        (void )memset(**dstP2D, 0, plnSz);
+      }
+      else
+      {
+        errNum = WlzToArrayBit2D(dstP2D, srcObj2D, size2D, origin2D);
+      }
+      ++plnIdx;
+    }
+  }
+  srcObj2D->domain = dumDom;
+  WlzFreeObj(srcObj2D);
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+	  ("WlzToArrayBit3D FX %d\n",
+	   errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzToArrayGrey3D					
+* Returns:	WlzErrorNum:		Error number.		
+* Purpose:	Extracts an Alc array from any Woolz 3D domain object.
+*		If the destination pointer points to a non-NULL 
+*		pointer then it is assumed to be a suitable Alc array.
+*		The data are assumed to be within the valid range.
+* Global refs:	-						
+* Parameters:	void ****dstP:		Destination pointer (assumed 
+*					valid if *dstP is non-NULL).
+*		WlzObject *srcObj:	Given Woolz object.	
+*		WlzIVertex3 size:	Size of the array.	
+*		WlzIVertex3 origin:	Array origin wrt given object.
+*		int noiseFlag:		Fill background with random 
+*					noise with the same mean and
+*					std. dev. as the given object
+*					if non-zero.		
+*		WlzGreyType dstGreyType: Destination array data type.
+************************************************************************/
+static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
+				    WlzIVertex3 size, WlzIVertex3 origin,
+				    int noiseFlag, WlzGreyType dstGreyType)
 {
   int		idY,
 		idZ;
@@ -422,128 +820,121 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
   WlzIBox3	cutBox;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzToArray3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d} %d %d\n",
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzToArrayGrey3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d} %d %d\n",
 	   (unsigned long )dstP, (unsigned long )srcObj,
 	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ,
 	   noiseFlag, (int )dstGreyType));
   gValP.inp = NULL;
-  if(dstP == NULL)
+  cutBox.xMin = origin.vtX;
+  cutBox.yMin = origin.vtY;
+  cutBox.zMin = origin.vtZ;
+  cutBox.xMax = origin.vtX + size.vtX - 1;
+  cutBox.yMax = origin.vtY + size.vtY - 1;
+  cutBox.zMax = origin.vtZ + size.vtZ - 1;
+  if(noiseFlag)
   {
-    errNum = WLZ_ERR_PARAM_DATA;
+    (void )WlzGreyStats(srcObj, NULL, NULL, NULL, NULL, NULL,
+			&noiseMu, &noiseSigma, &errNum);
+			  
   }
-  else
+  if(errNum == WLZ_ERR_NONE)
   {
-    cutBox.xMin = origin.vtX;
-    cutBox.yMin = origin.vtY;
-    cutBox.zMin = origin.vtZ;
-    cutBox.xMax = origin.vtX + size.vtX - 1;
-    cutBox.yMax = origin.vtY + size.vtY - 1;
-    cutBox.zMax = origin.vtZ + size.vtZ - 1;
-    if(noiseFlag)
+    if((cutObj = WlzCutObjToValBox3D(srcObj, cutBox, dstGreyType,
+				     (*dstP)? (***dstP): NULL,
+				     noiseFlag, noiseMu, noiseSigma,
+				     &errNum)) != NULL)
     {
-      (void )WlzGreyStats(srcObj, NULL, NULL, NULL, NULL, NULL,
-      			  &noiseMu, &noiseSigma, &errNum);
-      			    
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      if((cutObj = WlzCutObjToValBox3D(srcObj, cutBox, dstGreyType,
-				       (*dstP)? (***dstP): NULL,
-				       noiseFlag, noiseMu, noiseSigma,
-				       &errNum)) != NULL)
+      if(errNum == WLZ_ERR_NONE)
       {
-	if(errNum == WLZ_ERR_NONE)
+	if(cutObj->type == WLZ_3D_DOMAINOBJ)
 	{
-	  if(cutObj->type == WLZ_3D_DOMAINOBJ)
-	  {
-	    cutObj->values.vox->freeptr = WlzPopFreePtr(
-	    					cutObj->values.vox->freeptr,
-						&tVP0, NULL);
-	    gValP.inp = (int *)tVP0;
-	  }
+	  cutObj->values.vox->freeptr = WlzPopFreePtr(
+					      cutObj->values.vox->freeptr,
+					      &tVP0, NULL);
+	  gValP.inp = (int *)tVP0;
 	}
-	WlzFreeObj(cutObj);
       }
+      WlzFreeObj(cutObj);
     }
-    if(*dstP == NULL)
+  }
+  if(*dstP == NULL)
+  {
+    if(gValP.inp)
     {
-      if(gValP.inp)
+      if(((valPP = (void **)AlcMalloc((unsigned long )(size.vtZ * size.vtY *
+				      sizeof(void *)))) == NULL) ||
+	 ((valPPP = (void ***)AlcMalloc((unsigned long )(size.vtZ *
+					sizeof(void **)))) == NULL))
       {
-	if(((valPP = (void **)AlcMalloc((unsigned long )(size.vtZ * size.vtY *
-			                sizeof(void *)))) == NULL) ||
-	   ((valPPP = (void ***)AlcMalloc((unsigned long )(size.vtZ *
-	   				  sizeof(void **)))) == NULL))
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	switch(dstGreyType)
 	{
-	  errNum = WLZ_ERR_MEM_ALLOC;
+	  case WLZ_GREY_INT:
+	    for(idZ = 0; idZ < size.vtZ; ++idZ)
+	    {
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.inp;
+		gValP.inp += size.vtX;
+	      }
+	      *(valPPP + idZ) = valPP;
+	      valPP += size.vtY;
+	    }
+	    break;
+	  case WLZ_GREY_SHORT:
+	    for(idZ = 0; idZ < size.vtZ; ++idZ)
+	    {
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.shp;
+		gValP.shp += size.vtX;
+	      }
+	      *(valPPP + idZ) = valPP;
+	      valPP += size.vtY;
+	    }
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    for(idZ = 0; idZ < size.vtZ; ++idZ)
+	    {
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.ubp;
+		gValP.ubp += size.vtX;
+	      }
+	      *(valPPP + idZ) = valPP;
+	      valPP += size.vtY;
+	    }
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    for(idZ = 0; idZ < size.vtZ; ++idZ)
+	    {
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.flp;
+		gValP.flp += size.vtX;
+	      }
+	      *(valPPP + idZ) = valPP;
+	      valPP += size.vtY;
+	    }
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    for(idZ = 0; idZ < size.vtZ; ++idZ)
+	    {
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.dbp;
+		gValP.dbp += size.vtX;
+	      }
+	      *(valPPP + idZ) = valPP;
+	      valPP += size.vtY;
+	    }
+	    break;
 	}
-	else
-	{
-	  switch(dstGreyType)
-	  {
-	    case WLZ_GREY_INT:
-	      for(idZ = 0; idZ < size.vtZ; ++idZ)
-	      {
-		for(idY = 0; idY < size.vtY; ++idY)
-		{
-		  *(valPP + idY) = gValP.inp;
-		  gValP.inp += size.vtX;
-		}
-		*(valPPP + idZ) = valPP;
-		valPP += size.vtY;
-	      }
-	      break;
-	    case WLZ_GREY_SHORT:
-	      for(idZ = 0; idZ < size.vtZ; ++idZ)
-	      {
-		for(idY = 0; idY < size.vtY; ++idY)
-		{
-		  *(valPP + idY) = gValP.shp;
-		  gValP.shp += size.vtX;
-		}
-		*(valPPP + idZ) = valPP;
-		valPP += size.vtY;
-	      }
-	      break;
-	    case WLZ_GREY_UBYTE:
-	      for(idZ = 0; idZ < size.vtZ; ++idZ)
-	      {
-		for(idY = 0; idY < size.vtY; ++idY)
-		{
-		  *(valPP + idY) = gValP.ubp;
-		  gValP.ubp += size.vtX;
-		}
-		*(valPPP + idZ) = valPP;
-		valPP += size.vtY;
-	      }
-	      break;
-	    case WLZ_GREY_FLOAT:
-	      for(idZ = 0; idZ < size.vtZ; ++idZ)
-	      {
-		for(idY = 0; idY < size.vtY; ++idY)
-		{
-		  *(valPP + idY) = gValP.flp;
-		  gValP.flp += size.vtX;
-		}
-		*(valPPP + idZ) = valPP;
-		valPP += size.vtY;
-	      }
-	      break;
-	    case WLZ_GREY_DOUBLE:
-	      for(idZ = 0; idZ < size.vtZ; ++idZ)
-	      {
-		for(idY = 0; idY < size.vtY; ++idY)
-		{
-		  *(valPP + idY) = gValP.dbp;
-		  gValP.dbp += size.vtX;
-		}
-		*(valPPP + idZ) = valPP;
-		valPP += size.vtY;
-	      }
-	      break;
-	  }
-	  *dstP = valPPP;
-	}
+	*dstP = valPPP;
       }
     }
   }
@@ -562,36 +953,36 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
       AlcFree(valPPP);
     }
   }
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzToArray3D FX %d\n",
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+	  ("WlzToArrayGrey3D FX %d\n",
 	   errNum));
   return(errNum);
 }
 
 /************************************************************************
-* Function:	WlzArrayTxRectValues					*
-* Returns:	void							*
-* Purpose:	Transforms and/or clamps a rectangle of data values	*
-*		using a given buffer.					*
-* Global refs:	-							*
-* Parameters:	WlzGreyP dstValP:	Destination grey pointer.	*
-*		WlzGreyP srcValP:	Source grey pointer.		*
-*		double *bufP:		Buffer with space for at least	*
-*					row of double grey values.	*
-*		WlzIVertex2 rectSize:	The size of the destination and	*
-*					source, also the row size for	*
-*					the buffer.			*
-*		int dstOffset:		Offset from destination ptr.	*
-*		int srcOffset:		Offset from source ptr.		*
-*		WlzGreyType dstGreyType: Destination grey type.		*
-*		WlzGreyType srcGreyType: Source grey type.		*
-*		double valOffset:	Offset added to each value.	*
-*		double valScale:	Scale factor by which each	*
-*					value is multiplied before	*
-*					adding the offset.		*
-*		int clampFlag:		Values are clamped to the 	*
-*					destination type range if the	*
-*					clamp flag is non-zero.		*
+* Function:	WlzArrayTxRectValues				
+* Returns:	void						
+* Purpose:	Transforms and/or clamps a rectangle of data values
+*		using a given buffer.				
+* Global refs:	-						
+* Parameters:	WlzGreyP dstValP:	Destination grey pointer.
+*		WlzGreyP srcValP:	Source grey pointer.	
+*		double *bufP:		Buffer with space for at least
+*					row of double grey values.
+*		WlzIVertex2 rectSize:	The size of the destination and
+*					source, also the row size for
+*					the buffer.		
+*		int dstOffset:		Offset from destination ptr.
+*		int srcOffset:		Offset from source ptr.	
+*		WlzGreyType dstGreyType: Destination grey type.	
+*		WlzGreyType srcGreyType: Source grey type.	
+*		double valOffset:	Offset added to each value.
+*		double valScale:	Scale factor by which each
+*					value is multiplied before
+*					adding the offset.	
+*		int clampFlag:		Values are clamped to the 
+*					destination type range if the
+*					clamp flag is non-zero.	
 ************************************************************************/
 static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 				     double *bufP,
@@ -652,103 +1043,298 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 }
 
 /************************************************************************
-* Function:	WlzFrom[ISUFD]Array2D					*
-* Returns:	WlzObject *:		New woolz object.		*
-* Purpose:	Creates a woolz 2D domain object from the given Alc	*
-*		array.							*
-* Global refs:	-							*
-* Parameters:	WlzIVertex2 arraySizeDat: Dimensions of the array.	*
-*		<TYPE> **arrayDat:	Given Alc array of type: int,	*
-*					short, UBYTE, float or double.	*
-*		WlzIVertex2 arrayOrigin: Array origin wrt given object.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error 	*
-*					number, may be NULL.		*
+* Function:	WlzFrom[BISUFD]Array2D				
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 2D domain object from the given Alc
+*		array.						
+* Global refs:	-						
+* Parameters:	WlzIVertex2 arraySizeDat: Dimensions of the array.
+*		<TYPE> **arrayDat:	Given Alc array of type: int,
+*					short, UBYTE, float or double.
+*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
 ************************************************************************/
+WlzObject	*WlzFromBArray2D(WlzIVertex2 arraySizeDat,
+				 UBYTE **arrayDat,
+				 WlzIVertex2 arrayOrigin,
+				 WlzErrorNum *dstErr)
+{
+  return(WlzFromArray2D((void **)arrayDat, arraySizeDat, arrayOrigin,
+  	                WLZ_GREY_BIT, WLZ_GREY_BIT, 0.0, 1.0,
+	                0, 0, dstErr));
+}
+
 WlzObject	*WlzFromIArray2D(WlzIVertex2 arraySizeDat,
 				 int **arrayDat,
 				 WlzIVertex2 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray2D((void **)arrayDat, arraySizeDat, arrayOrigin,
 			WLZ_GREY_INT, WLZ_GREY_INT, 0.0, 1.0,
-			0, 0, dstErrNum));
+			0, 0, dstErr));
 }
 
 WlzObject	*WlzFromSArray2D(WlzIVertex2 arraySizeDat,
 				 short **arrayDat,
 				 WlzIVertex2 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray2D((void **)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_SHORT, WLZ_GREY_SHORT, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromUArray2D(WlzIVertex2 arraySizeDat,
 				 UBYTE **arrayDat,
 				 WlzIVertex2 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray2D((void **)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_UBYTE, WLZ_GREY_UBYTE, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromFArray2D(WlzIVertex2 arraySizeDat,
 				 float **arrayDat,
 				 WlzIVertex2 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray2D((void **)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_FLOAT, WLZ_GREY_FLOAT, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromDArray2D(WlzIVertex2 arraySizeDat,
 				 double **arrayDat,
 				 WlzIVertex2 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray2D((void **)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 /************************************************************************
-* Function:	WlzFromArray2D						*
-* Returns:	WlzObject *:		New woolz object.		*
-* Purpose:	Creates a woolz 2D domain object from the given Alc	*
-*		array.							*
-*		The data are assumed to be within the valid range.	*
-*		If the noCopyFlag is set (non-zero) then the array data	*
-*		space is used for the onjects values without copying.	*
-*		For this to be valid both the source and destination	*
-*		grey type must be the same.				*
-* Global refs:	-							*
-* Parameters:	void **arrayP:		Given Alc array.		*
-*		WlzIVertex2 arraySize:	Dimensions of the array.	*
-*		WlzIVertex2 arrayOrigin:	Array origin wrt given object.	*
-*		WlzGreyType dstGreyType: Destination object grey type.	*
-*		WlzGreyType srcGreyType: Array data type.		*
-*		double valOffset:	Offset added to each value.	*
-*		double valScale:	Scale factor by which each	*
-*					value is multiplied before	*
-*					adding the offset.		*
-*		int clampFlag:		Values are clamped to the 	*
-*					destination type range if the	*
-*					clamp flag is non-zero.		*
-*		int noCopyFlag:		Use the array data for the	*
-*					woolz object values in-place.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error 	*
-*					number, may be NULL.		*
+* Function:	WlzFromArray2D					
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 2D domain object from the given Alc
+*		array.						
+*		The data are assumed to be within the valid range.
+*		If the noCopyFlag is set (non-zero) then the array data
+*		space is used for the onjects values without copying.
+*		For this to be valid both the source and destination
+*		grey type must be the same.			
+* Global refs:	-						
+* Parameters:	void **arrayP:		Given Alc array.	
+*		WlzIVertex2 arraySize:	Dimensions of the array.
+*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
+*		WlzGreyType dstGreyType: Destination object grey type.
+*		WlzGreyType srcGreyType: Array data type.	
+*		double valOffset:	Offset added to each value.
+*		double valScale:	Scale factor by which each
+*					value is multiplied before
+*					adding the offset.	
+*		int clampFlag:		Values are clamped to the 
+*					destination type range if the
+*					clamp flag is non-zero.	
+*		int noCopyFlag:		Use the array data for the
+*					Woolz object values in-place.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
 ************************************************************************/
 WlzObject	*WlzFromArray2D(void **arrayP,
-				WlzIVertex2 arraySize, WlzIVertex2 arrayOrigin,
+				WlzIVertex2 arraySize,
+				WlzIVertex2 arrayOrigin,
 				WlzGreyType dstGreyType,
 				WlzGreyType srcGreyType,
 				double valOffset, double valScale,
 				int clampFlag, int noCopyFlag,
-				WlzErrorNum *dstErrNum)
+				WlzErrorNum *dstErr)
+{
+  WlzObject	*dstObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+  	  ("WlzFromArray2D FE 0x%lx  {%d %d} {%d %d} "
+	   "%d %d %g %g %d %d 0x%lx\n",
+	   (unsigned long )arrayP,
+	   arraySize.vtX, arraySize.vtY, arrayOrigin.vtX, arrayOrigin.vtY,
+	   (int )dstGreyType, (int )srcGreyType,
+	   valOffset, valScale,
+	   clampFlag, noCopyFlag, (unsigned long )dstErr));
+  if((arrayP == NULL) || (*arrayP == NULL) ||
+     (arraySize.vtX <= 0) || (arraySize.vtY <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(dstGreyType)
+    {
+      case WLZ_GREY_BIT:
+        dstObj = WlzFromArrayBit2D((UBYTE **)arrayP,
+				   arraySize, arrayOrigin, &errNum);
+	break;
+      case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE:
+	dstObj = WlzFromArrayGrey2D(arrayP,
+				    arraySize, arrayOrigin,
+				    dstGreyType, srcGreyType,
+				    valOffset, valScale,
+				    clampFlag, noCopyFlag,
+				    &errNum);
+	break;
+      deafult:
+	WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+          ("WlzFromArray2D FX 0x%lx\n",
+	   (unsigned long )dstObj));
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzFromArray2D					
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 2D domain object with domain,
+*		but no values from the given Alc bitmap array.
+* Global refs:	-						
+* Parameters:	UBYTE **arrayP:		Given Alc array.	
+*		WlzIVertex2 arraySize:	Dimensions of the array.
+*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
+*		WlzGreyType dstGreyType: Destination object grey type.
+*		WlzGreyType srcGreyType: Array data type.	
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
+************************************************************************/
+static WlzObject *WlzFromArrayBit2D(UBYTE **arrayP,
+				    WlzIVertex2 arraySize,
+				    WlzIVertex2 arrayOrigin,
+				    WlzErrorNum *dstErr)
+{
+  int		idX,
+  		idY;
+  WlzObject	*dstObj = NULL;
+  WlzDynItvPool	iPool;
+  WlzDomain	dstDom;
+  WlzValues	dstVal;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	ivPoolMin = 1024,
+  		ivPoolTune = 32;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+          ("0x%lx {%d %d} {%d %d} 0x%lx\n",
+  	   (unsigned long )arrayP,
+	   arraySize.vtX, arraySize.vtY, arrayOrigin.vtX, arrayOrigin.vtY,
+	   (unsigned long )dstErr));
+  dstDom.core = NULL;
+  dstDom.core = NULL;
+  dstVal.core = NULL;
+  iPool.itvBlock = NULL;
+  /* Set number of intervals to be allocated in each block, Any number greater
+   * than 1/2 line width would do, but the more allocations the less efficient
+   * the code and too large a block could waste memory. The magic number
+   * for ivPoolTune was found by running this code on some domains that
+   * I had and keeping the number of mallocs to around 2 or 3. Search
+   * on WLZ_DYNITV_TUNE_MALLOC. */
+  iPool.itvsInBlock = ivPoolMin + arraySize.vtX +
+  		      (arraySize.vtX * arraySize.vtY / ivPoolTune);
+  dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+  				   arrayOrigin.vtY,
+				   arrayOrigin.vtY + arraySize.vtY - 1,
+				   arrayOrigin.vtX,
+				   arrayOrigin.vtX + arraySize.vtX - 1,
+				   &errNum);
+  idY = 0;
+  while((errNum == WLZ_ERR_NONE) && (idY < arraySize.vtY))
+  {
+    errNum = WlzDynItvLnFromBitLn(dstDom.i, *(arrayP + idY),
+    				  arrayOrigin.vtY + idY,
+				  arraySize.vtX, &iPool);
+    ++idY;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzStandardIntervalDomain(dstDom.i);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((dstDom.i->line1 == dstDom.i->lastln) &&
+       (dstDom.i->kol1 == dstDom.i->lastkl) &&
+       ((dstDom.i->intvlines == NULL) ||
+        (dstDom.i->intvlines->nintvs == 0)))
+    {
+      dstObj = WlzMakeEmpty(&errNum);
+      (void )WlzFreeIntervalDomain(dstDom.i);
+      dstDom.core = NULL;
+    }
+    else
+    {
+      /* Copy the domain just incase some Woolz functions expect all intervals
+       * to be contiguous. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstVal, NULL, NULL,
+			     &errNum);
+      }
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && (dstDom.core != NULL))
+  {
+    (void )WlzFreeIntervalDomain(dstDom.i);
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzFromArrayBit2D FX 0x%lx\n",
+	  (unsigned long )dstObj));
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzFromArrayGrey2D					
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 2D domain object from the given Alc
+*		array.						
+*		The data are assumed to be within the valid range.
+*		If the noCopyFlag is set (non-zero) then the array data
+*		space is used for the onjects values without copying.
+*		For this to be valid both the source and destination
+*		grey type must be the same.			
+* Global refs:	-						
+* Parameters:	void **arrayP:		Given Alc array.	
+*		WlzIVertex2 arraySize:	Dimensions of the array.
+*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
+*		WlzGreyType dstGreyType: Destination object grey type.
+*		WlzGreyType srcGreyType: Array data type.	
+*		double valOffset:	Offset added to each value.
+*		double valScale:	Scale factor by which each
+*					value is multiplied before
+*					adding the offset.	
+*		int clampFlag:		Values are clamped to the 
+*					destination type range if the
+*					clamp flag is non-zero.	
+*		int noCopyFlag:		Use the array data for the
+*					Woolz object values in-place.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
+************************************************************************/
+static WlzObject *WlzFromArrayGrey2D(void **arrayP,
+				     WlzIVertex2 arraySize,
+				     WlzIVertex2 arrayOrigin,
+				     WlzGreyType dstGreyType,
+				     WlzGreyType srcGreyType,
+				     double valOffset, double valScale,
+				     int clampFlag, int noCopyFlag,
+				     WlzErrorNum *dstErr)
 {
   int		txFlag = 0;
   unsigned long tUL0;
@@ -759,45 +1345,37 @@ WlzObject	*WlzFromArray2D(void **arrayP,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   WlzObject	*dstObj = NULL;
 
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzFromArray2D FE 0x%lx  {%d %d} {%d %d} "
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzFromArrayGrey2D FE 0x%lx  {%d %d} {%d %d} "
 	   "%d %d %g %g %d %d 0x%lx\n",
 	   (unsigned long )arrayP,
 	   arraySize.vtX, arraySize.vtY, arrayOrigin.vtX, arrayOrigin.vtY,
 	   (int )dstGreyType, (int )srcGreyType,
 	   valOffset, valScale,
-	   clampFlag, noCopyFlag, (unsigned long )dstErrNum));
+	   clampFlag, noCopyFlag, (unsigned long )dstErr));
   dstValP.inp = NULL;
   dstBkgPix.type = dstGreyType;
   (void )memset(&(dstBkgPix.v), 0, sizeof(WlzGreyV));
-  if((arrayP == NULL) || (*arrayP == NULL) ||
-     (arraySize.vtX <= 0) || (arraySize.vtY <= 0))
+  switch(srcGreyType)
   {
-    errNum = WLZ_ERR_PARAM_DATA;
-  }
-  else
-  {
-    switch(srcGreyType)
-    {
-      case WLZ_GREY_INT:
-        srcValP.inp = *(int **)arrayP;
-	break;
-      case WLZ_GREY_SHORT:
-        srcValP.shp = *(short **)arrayP;
-	break;
-      case WLZ_GREY_UBYTE:
-        srcValP.ubp = *(UBYTE **)arrayP;
-	break;
-      case WLZ_GREY_FLOAT:
-        srcValP.flp = *(float **)arrayP;
-	break;
-      case WLZ_GREY_DOUBLE:
-        srcValP.dbp = *(double **)arrayP;
-	break;
-      default:
-	errNum = WLZ_ERR_GREY_TYPE;
-	break;
-    }
+    case WLZ_GREY_INT:
+      srcValP.inp = *(int **)arrayP;
+      break;
+    case WLZ_GREY_SHORT:
+      srcValP.shp = *(short **)arrayP;
+      break;
+    case WLZ_GREY_UBYTE:
+      srcValP.ubp = *(UBYTE **)arrayP;
+      break;
+    case WLZ_GREY_FLOAT:
+      srcValP.flp = *(float **)arrayP;
+      break;
+    case WLZ_GREY_DOUBLE:
+      srcValP.dbp = *(double **)arrayP;
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -922,102 +1500,112 @@ WlzObject	*WlzFromArray2D(void **arrayP,
     }
     dstObj = NULL;
   }
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-          ("WlzFromArray2D FX 0x%lx\n",
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+          ("WlzFromArrayGrey2D FX 0x%lx\n",
 	   (unsigned long )dstObj));
   return(dstObj);
 }
 
 /************************************************************************
-* Function:	WlzFrom[ISUFD]Array3D					*
-* Returns:	WlzObject *:		New woolz object.		*
-* Purpose:	Creates a woolz 3D domain object from the given Alc	*
-*		array.							*
-* Global refs:	-							*
-* Parameters:	WlzIVertex3 arraySizeDat: Dimensions of the array.	*
-*		<TYPE> **arrayDat:	Given Alc array of type: int,	*
-*					short, UBYTE, float or double.	*
-*		WlzIVertex3 arrayOrigin: Array origin wrt given object.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error 	*
-*					number, may be NULL.		*
+* Function:	WlzFrom[BISUFD]Array3D				
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 3D domain object from the given Alc
+*		array.						
+* Global refs:	-						
+* Parameters:	WlzIVertex3 arraySizeDat: Dimensions of the array.
+*		<TYPE> **arrayDat:	Given Alc array of type: int,
+*					short, UBYTE, float or double.
+*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
 ************************************************************************/
+WlzObject	*WlzFromBArray3D(WlzIVertex3 arraySizeDat,
+				 UBYTE ***arrayDat,
+				 WlzIVertex3 arrayOrigin,
+				 WlzErrorNum *dstErr)
+{
+  return(WlzFromArray3D((void ***)arrayDat, arraySizeDat, arrayOrigin,
+  	                WLZ_GREY_BIT, WLZ_GREY_BIT, 0.0, 1.0,
+	                0, 0, dstErr));
+}
+
 WlzObject	*WlzFromIArray3D(WlzIVertex3 arraySizeDat,
 				 int ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray3D((void ***)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_INT, WLZ_GREY_INT, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromSArray3D(WlzIVertex3 arraySizeDat,
 				 short ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray3D((void ***)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_SHORT, WLZ_GREY_SHORT, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromUArray3D(WlzIVertex3 arraySizeDat,
 				 UBYTE ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray3D((void ***)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_UBYTE, WLZ_GREY_UBYTE, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromFArray3D(WlzIVertex3 arraySizeDat,
 				 float ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray3D((void ***)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_FLOAT, WLZ_GREY_FLOAT, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 WlzObject	*WlzFromDArray3D(WlzIVertex3 arraySizeDat,
 				 double ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
-				 WlzErrorNum *dstErrNum)
+				 WlzErrorNum *dstErr)
 {
   return(WlzFromArray3D((void ***)arrayDat, arraySizeDat, arrayOrigin,
   	                WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE, 0.0, 1.0,
-	                0, 0, dstErrNum));
+	                0, 0, dstErr));
 }
 
 /************************************************************************
-* Function:	WlzFromArray3D						*
-* Returns:	WlzObject *:		New woolz object.		*
-* Purpose:	Creates a woolz 3D domain object from the given Alc	*
-*		array.							*
-*		The data are assumed to be within the valid range.	*
-*		If the noCopyFlag is set (non-zero) then the array data	*
-*		space is used for the onjects values without copying.	*
-*		For this to be valid both the source and destination	*
-*		grey type must be the same.				*
-* Global refs:	-							*
-* Parameters:	void ***arrayP:		Given Alc array.		*
-*		WlzIVertex3 arraySize:	Dimensions of the array.	*
-*		WlzIVertex3 arrayOrigin: Array origin wrt given object.	*
-*		WlzGreyType dstGreyType: Destination object grey type.	*
-*		WlzGreyType srcGreyType: Array data type.		*
-*		double valOffset:	Offset added to each value.	*
-*		double valScale:	Scale factor by which each	*
-*					value is multiplied before	*
-*					adding the offset.		*
-*		int clampFlag:		Values are clamped to the 	*
-*					destination type range if the	*
-*					clamp flag is non-zero.		*
-*		int noCopyFlag:		Use the array data for the	*
-*					woolz object values in-place.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error 	*
-*					number, may be NULL.		*
+* Function:	WlzFromArray3D					
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 3D domain object from the given Alc
+*		array.						
+*		The data are assumed to be within the valid range.
+*		If the noCopyFlag is set (non-zero) then the array data
+*		space is used for the onjects values without copying.
+*		For this to be valid both the source and destination
+*		grey type must be the same.			
+* Global refs:	-						
+* Parameters:	void ***arrayP:		Given Alc array.	
+*		WlzIVertex3 arraySize:	Dimensions of the array.
+*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
+*		WlzGreyType dstGreyType: Destination object grey type.
+*		WlzGreyType srcGreyType: Array data type.	
+*		double valOffset:	Offset added to each value.
+*		double valScale:	Scale factor by which each
+*					value is multiplied before
+*					adding the offset.	
+*		int clampFlag:		Values are clamped to the 
+*					destination type range if the
+*					clamp flag is non-zero.	
+*		int noCopyFlag:		Use the array data for the
+*					Woolz object values in-place.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
 ************************************************************************/
 WlzObject	*WlzFromArray3D(void ***arrayP,
 				WlzIVertex3 arraySize, WlzIVertex3 arrayOrigin,
@@ -1025,7 +1613,198 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
 				WlzGreyType srcGreyType,
 				double valOffset, double valScale,
 				int clampFlag, int noCopyFlag,
-				WlzErrorNum *dstErrNum)
+				WlzErrorNum *dstErr)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzObject	*dstObj = NULL;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+  	  ("WlzFromArray3D FE 0x%lx  {%d %d %d} {%d %d %d} "
+	   "%d %d %g %g %d %d 0x%lx\n",
+	   (unsigned long )arrayP,
+	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
+	   arrayOrigin.vtX, arrayOrigin.vtY, arrayOrigin.vtZ,
+	   (int )dstGreyType, (int )srcGreyType,
+	   valOffset, valScale,
+	   clampFlag, noCopyFlag, (unsigned long )dstErr));
+
+  if((arrayP == NULL) || (*arrayP == NULL) || (**arrayP == NULL) ||
+     (arraySize.vtX <= 0) || (arraySize.vtY <= 0) || (arraySize.vtZ <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    if(srcGreyType == WLZ_GREY_BIT)
+    {
+      if(dstGreyType != WLZ_GREY_BIT)
+      {
+	errNum = WLZ_ERR_GREY_TYPE;
+      }
+      else
+      {
+	dstObj = WlzFromArrayBit3D((UBYTE ***)arrayP, arraySize, arrayOrigin,
+				   &errNum);
+      }
+    }
+    else
+    {
+      dstObj = WlzFromArrayGrey3D(arrayP, arraySize, arrayOrigin,
+				  dstGreyType, srcGreyType,
+				  valOffset, valScale,
+				  clampFlag, noCopyFlag, &errNum);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+          ("WlzFromArray3D FX 0x%lx\n",
+	   (unsigned long )dstObj));
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzFromArrayGrey3D					
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 3D domain object without grey values
+*		from the given Alc byte packed bit array.			
+* Global refs:	-						
+* Parameters:	UBYTE ***arrayP:	Given Alc array.	
+*		WlzIVertex3 arraySize:	Dimensions of the array.
+*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
+************************************************************************/
+static WlzObject *WlzFromArrayBit3D(UBYTE ***arrayP,
+				    WlzIVertex3 arraySize,
+				    WlzIVertex3 arrayOrigin,
+				    WlzErrorNum *dstErr)
+{
+  int		plnIdx,
+  		plnCnt;
+  WlzDomain	dstDom;
+  WlzValues	dstVal;
+  WlzIVertex2	size2D,
+  		origin2D;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  WlzObject	*obj2D,
+  		*dstObj = NULL;
+
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzFromArrayBit3D FE 0x%lx  {%d %d %d} {%d %d %d} 0x%lx\n",
+	   (unsigned long )arrayP,
+	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
+	   arrayOrigin.vtX, arrayOrigin.vtY, arrayOrigin.vtZ,
+	   (unsigned long )dstErr));
+  dstDom.core = NULL;
+  dstVal.core = NULL;
+  dstDom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+  				arrayOrigin.vtZ,
+				arrayOrigin.vtZ + arraySize.vtZ - 1,
+				arrayOrigin.vtY,
+				arrayOrigin.vtY + arraySize.vtY - 1,
+				arrayOrigin.vtX, 
+				arrayOrigin.vtX + arraySize.vtX - 1,
+				&errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size2D.vtX = arraySize.vtX;
+    size2D.vtY = arraySize.vtY;
+    origin2D.vtX = arrayOrigin.vtX;
+    origin2D.vtY = arrayOrigin.vtY;
+    plnIdx =  0;
+    plnCnt = arraySize.vtZ;
+    while((errNum == WLZ_ERR_NONE) && (plnCnt-- > 0))
+    {
+      obj2D = WlzFromArrayBit2D(*(arrayP + plnIdx), size2D, origin2D,
+      				&errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	switch(obj2D->type)
+	{
+	  case WLZ_2D_DOMAINOBJ:
+            *(dstDom.p->domains + plnIdx) = WlzAssignDomain(obj2D->domain,
+	    						    NULL);
+	    break;
+	  case WLZ_EMPTY_OBJ:
+	    (dstDom.p->domains + plnIdx)->core = NULL;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_OBJECT_TYPE;
+	    break;
+	}
+      }
+      if(obj2D)
+      {
+        WlzFreeObj(obj2D);
+      }
+      ++plnIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzStandardPlaneDomain(dstDom.p, NULL);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dstDom, dstVal,
+    			 NULL, NULL, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(dstDom.core)
+    {
+      (void )WlzFreePlaneDomain(dstDom.p);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+          ("WlzFromArrayBit3D FX 0x%lx\n",
+	   (unsigned long )dstObj));
+  return(dstObj);
+}
+
+/************************************************************************
+* Function:	WlzFromArrayGrey3D					
+* Returns:	WlzObject *:		New Woolz object.	
+* Purpose:	Creates a Woolz 3D domain object from the given Alc
+*		array.						
+*		The data are assumed to be within the valid range.
+*		If the noCopyFlag is set (non-zero) then the array data
+*		space is used for the onjects values without copying.
+*		For this to be valid both the source and destination
+*		grey type must be the same.			
+* Global refs:	-						
+* Parameters:	void ***arrayP:		Given Alc array.	
+*		WlzIVertex3 arraySize:	Dimensions of the array.
+*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
+*		WlzGreyType dstGreyType: Destination object grey type.
+*		WlzGreyType srcGreyType: Array data type.	
+*		double valOffset:	Offset added to each value.
+*		double valScale:	Scale factor by which each
+*					value is multiplied before
+*					adding the offset.	
+*		int clampFlag:		Values are clamped to the 
+*					destination type range if the
+*					clamp flag is non-zero.	
+*		int noCopyFlag:		Use the array data for the
+*					Woolz object values in-place.
+*		WlzErrorNum *dstErr:	Destination pointer for error 
+*					number, may be NULL.	
+************************************************************************/
+static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
+					    WlzIVertex3 arraySize,
+					    WlzIVertex3 arrayOrigin,
+					    WlzGreyType dstGreyType,
+					    WlzGreyType srcGreyType,
+					    double valOffset, double valScale,
+					    int clampFlag, int noCopyFlag,
+					    WlzErrorNum *dstErr)
 {
   int		tI0,
   		planeCount,
@@ -1046,15 +1825,15 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   WlzObject	*dstObj = NULL;
 
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzFromArray3D FE 0x%lx  {%d %d %d} {%d %d %d} "
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+  	  ("WlzFromArrayGrey3D FE 0x%lx  {%d %d %d} {%d %d %d} "
 	   "%d %d %g %g %d %d 0x%lx\n",
 	   (unsigned long )arrayP,
 	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
 	   arrayOrigin.vtX, arrayOrigin.vtY, arrayOrigin.vtZ,
 	   (int )dstGreyType, (int )srcGreyType,
 	   valOffset, valScale,
-	   clampFlag, noCopyFlag, (unsigned long )dstErrNum));
+	   clampFlag, noCopyFlag, (unsigned long )dstErr));
   dstDom.core = NULL;
   dstValues.core = NULL;
   dstValP.inp = NULL;
@@ -1062,34 +1841,26 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
   (void )memset(&(dstBkgPix.v), 0, sizeof(WlzGreyV));
   arraySize2D.vtX = arraySize.vtX;
   arraySize2D.vtY = arraySize.vtY;
-  if((arrayP == NULL) || (*arrayP == NULL) || (**arrayP == NULL) ||
-     (arraySize.vtX <= 0) || (arraySize.vtY <= 0) || (arraySize.vtZ <= 0))
+  switch(srcGreyType)
   {
-    errNum = WLZ_ERR_PARAM_DATA;
-  }
-  else
-  {
-    switch(srcGreyType)
-    {
-      case WLZ_GREY_INT:
-        srcValP.inp = **(int ***)arrayP;
-	break;
-      case WLZ_GREY_SHORT:
-        srcValP.shp = **(short ***)arrayP;
-	break;
-      case WLZ_GREY_UBYTE:
-        srcValP.ubp = **(UBYTE ***)arrayP;
-	break;
-      case WLZ_GREY_FLOAT:
-        srcValP.flp = **(float ***)arrayP;
-	break;
-      case WLZ_GREY_DOUBLE:
-        srcValP.dbp = **(double ***)arrayP;
-	break;
-      default:
-	errNum = WLZ_ERR_GREY_TYPE;
-	break;
-    }
+    case WLZ_GREY_INT:
+      srcValP.inp = **(int ***)arrayP;
+      break;
+    case WLZ_GREY_SHORT:
+      srcValP.shp = **(short ***)arrayP;
+      break;
+    case WLZ_GREY_UBYTE:
+      srcValP.ubp = **(UBYTE ***)arrayP;
+      break;
+    case WLZ_GREY_FLOAT:
+      srcValP.flp = **(float ***)arrayP;
+      break;
+    case WLZ_GREY_DOUBLE:
+      srcValP.dbp = **(double ***)arrayP;
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1293,32 +2064,36 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
       AlcFree(dstValP.inp);
     }
   }
-  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-          ("WlzFromArray2D FX 0x%lx\n",
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
+          ("WlzFromArrayGrey3D FX 0x%lx\n",
 	   (unsigned long )dstObj));
   return(dstObj);
 }
 
 /************************************************************************
-* Function:	WlzArrayStats3D						*
-* Returns:	int:			Number of data in array.	*
-* Purpose:	Calculates simple statistics for the given Alc array.	*
-* Global refs:	-							*
-* Parameters:	void ***arrayP:		Given 3D Alc array.		*
-*		WlzIVertex3 arraySize:	Dimensions of the array.	*
-*		WlzGreyType greyType:	Array data type.		*
-*		double *dstMin:		Destination ptr for minimum	*
-*					value, may be NULL.		*
-*		double *dstMax:		Destination ptr for maximum	*
-*					value, may be NULL.		*
-*		double *dstSum:		Destination ptr for sum of	*
-*					values, may be NULL.		*
-*		double *dstSumSq:	Destination ptr for sum of	*
-*					squares of values, may be NULL.	*
-*		double *dstMean:	Destination ptr for mean of	*
-*					values, may be NULL.		*
-*		double *dstStdDev:	Destination ptr for std. dev. 	*
-*					of values, may be NULL.		*
+* Function:	WlzArrayStats3D					
+* Returns:	int:			Number of data in array.
+* Purpose:	Calculates simple statistics for the given Alc array.
+* Global refs:	-						
+* Parameters:	void ***arrayP:		Given 3D Alc array.	
+*		WlzIVertex3 arraySize:	Dimensions of the array.
+*		WlzGreyType greyType:	Array data type.	
+*		double *dstMin:		Destination ptr for minimum
+*					value, may be NULL.	
+*		double *dstMax:		Destination ptr for maximum
+*					value, may be NULL.	
+*		double *dstSum:		Destination ptr for sum of
+*					values, may be NULL.	
+*		double *dstSumSq:	Destination ptr for sum of
+*					squares of values, may be NULL.
+*		double *dstMean:	Destination ptr for mean of
+*					values, may be NULL.	
+*		double *dstStdDev:	Destination ptr for std. dev. 
+*					of values, may be NULL.	
 ************************************************************************/
 int		WlzArrayStats3D(void ***arrayP,
 				WlzIVertex3 arraySize,
@@ -1525,25 +2300,25 @@ int		WlzArrayStats3D(void ***arrayP,
 }
 
 /************************************************************************
-* Function:	WlzArrayStats2D						*
-* Returns:	int:			Number of data in array.	*
-* Purpose:	Calculates simple statistics for the given Alc array.	*
-* Global refs:	-							*
-* Parameters:	void **arrayP:		Given 2D Alc array.		*
-*		WlzIVertex2 arraySize:	Dimensions of the array.	*
-*		WlzGreyType greyType:	Array data type.		*
-*		double *dstMin:		Destination ptr for minimum	*
-*					value, may be NULL.		*
-*		double *dstMax:		Destination ptr for maximum	*
-*					value, may be NULL.		*
-*		double *dstSum:		Destination ptr for sum of	*
-*					values, may be NULL.		*
-*		double *dstSumSq:	Destination ptr for sum of	*
-*					squares of values, may be NULL.	*
-*		double *dstMean:	Destination ptr for mean of	*
-*					values, may be NULL.		*
-*		double *dstStdDev:	Destination ptr for std. dev. 	*
-*					of values, may be NULL.		*
+* Function:	WlzArrayStats2D					
+* Returns:	int:			Number of data in array.
+* Purpose:	Calculates simple statistics for the given Alc array.
+* Global refs:	-						
+* Parameters:	void **arrayP:		Given 2D Alc array.	
+*		WlzIVertex2 arraySize:	Dimensions of the array.
+*		WlzGreyType greyType:	Array data type.	
+*		double *dstMin:		Destination ptr for minimum
+*					value, may be NULL.	
+*		double *dstMax:		Destination ptr for maximum
+*					value, may be NULL.	
+*		double *dstSum:		Destination ptr for sum of
+*					values, may be NULL.	
+*		double *dstSumSq:	Destination ptr for sum of
+*					squares of values, may be NULL.
+*		double *dstMean:	Destination ptr for mean of
+*					values, may be NULL.	
+*		double *dstStdDev:	Destination ptr for std. dev. 
+*					of values, may be NULL.	
 ************************************************************************/
 int		WlzArrayStats2D(void **arrayP,
 				WlzIVertex2 arraySize,
@@ -1575,25 +2350,25 @@ int		WlzArrayStats2D(void **arrayP,
 }
 
 /************************************************************************
-* Function:	WlzArrayStats1D						*
-* Returns:	int:			Number of data in array.	*
-* Purpose:	Calculates simple statistics for the given Alc array.	*
-* Global refs:	-							*
-* Parameters:	void *arrayP:		Given 1D Alc array.		*
-*		int arraySize:		Dimension of the array.		*
-*		WlzGreyType greyType:	Array data type.		*
-*		double *dstMin:		Destination ptr for minimum	*
-*					value, may be NULL.		*
-*		double *dstMax:		Destination ptr for maximum	*
-*					value, may be NULL.		*
-*		double *dstSum:		Destination ptr for sum of	*
-*					values, may be NULL.		*
-*		double *dstSumSq:	Destination ptr for sum of	*
-*					squares of values, may be NULL.	*
-*		double *dstMean:	Destination ptr for mean of	*
-*					values, may be NULL.		*
-*		double *dstStdDev:	Destination ptr for std. dev. 	*
-*					of values, may be NULL.		*
+* Function:	WlzArrayStats1D					
+* Returns:	int:			Number of data in array.
+* Purpose:	Calculates simple statistics for the given Alc array.
+* Global refs:	-						
+* Parameters:	void *arrayP:		Given 1D Alc array.	
+*		int arraySize:		Dimension of the array.	
+*		WlzGreyType greyType:	Array data type.	
+*		double *dstMin:		Destination ptr for minimum
+*					value, may be NULL.	
+*		double *dstMax:		Destination ptr for maximum
+*					value, may be NULL.	
+*		double *dstSum:		Destination ptr for sum of
+*					values, may be NULL.	
+*		double *dstSumSq:	Destination ptr for sum of
+*					squares of values, may be NULL.
+*		double *dstMean:	Destination ptr for mean of
+*					values, may be NULL.	
+*		double *dstStdDev:	Destination ptr for std. dev. 
+*					of values, may be NULL.	
 ************************************************************************/
 int		WlzArrayStats1D(void *arrayP,
 				int arraySize,
@@ -1623,3 +2398,75 @@ int		WlzArrayStats1D(void *arrayP,
   return(arrayCount);
 }
 
+#ifdef WLZ_ARRAY_TEST
+main(int argc, char *argv[])
+{
+  WlzObject	*inObj= NULL,
+  		*outObj = NULL;
+  UBYTE		**array = NULL;
+  WlzIVertex2	org,
+  		size;
+  WlzIBox2	bBox;
+  FILE		*fP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  fP = fopen("in.wlz", "r");
+  inObj = WlzReadObj(fP, &errNum);
+  fclose(fP);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Error failed to read(%s)\n",
+    		   argv[0], WlzStringFromErrorNum(errNum, NULL));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox = WlzBoundingBox2D(inObj, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Error failed to find bounding box(%s)\n",
+    		   argv[0], WlzStringFromErrorNum(errNum, NULL));
+    exit(errNum);
+  }
+  else
+  {
+    org.vtX = bBox.xMin;
+    org.vtY = bBox.yMin;
+    size.vtX = bBox.xMax - bBox.xMin + 1;
+    size.vtY = bBox.yMax - bBox.yMin + 1;
+    errNum = WlzToArray2D((void ***)&array, inObj, size, org, 0,
+			  WLZ_GREY_BIT);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Error failed to make bit array(%s)\n",
+    		   argv[0], WlzStringFromErrorNum(errNum, NULL));
+    exit(errNum);
+  }
+  else
+  {
+    outObj = WlzFromArray2D((void **)array, size, org,
+			  WLZ_GREY_BIT, WLZ_GREY_BIT, 0.0, 1.0,
+			  0, 0, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Error failed to make Woolz object (%s)\n",
+    		   argv[0], WlzStringFromErrorNum(errNum, NULL));
+    exit(errNum);
+  }
+  else
+  {
+    fP = fopen("out.wlz", "w");
+    errNum = WlzWriteObj(fP, outObj);
+    fclose(fP);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr, "%s: Error failed to write Woolz object(%s)\n",
+    		   argv[0], WlzStringFromErrorNum(errNum, NULL));
+    exit(errNum);
+  }
+  return(0);
+}
+#endif /* WLZ_ARRAY_TEST */

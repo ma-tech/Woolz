@@ -3,7 +3,7 @@
 * Project:      Woolz
 * Title:        WlzDomainUtils.c
 * Date:         March 1999
-* Author:       Richard Baldock
+* Author:       Richard Baldock, Bill Hill
 * Copyright:	1999 Medical Research Council, UK.
 *		All rights reserved.
 * Address:	MRC Human Genetics Unit,
@@ -15,6 +15,301 @@
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
+
+/************************************************************************
+* Function:	WlzBitLnSetItv
+* Returns:	void
+* Purpose:	Sets bits in the given byte packed bit line which are
+*		within the given interval;
+* Global refs:	-
+* Parameters:	UBYTE *bitLnP:		The bit line pointer.
+*		int iLft:		Left coordinate of interval.
+*		int iRgt:		Right coordinate of interval.
+*		int size:		Number of bits in the bit line.
+************************************************************************/
+void		WlzBitLnSetItv(UBYTE *bitLnP, int iLft, int iRgt, int size)
+{
+  int		bitIdx,
+  		bitCnt,
+		bytIdx,
+		bytCnt,
+		mskIdx,
+		mskCnt;
+  UBYTE		*bytP;
+  const UBYTE	bitMsk[9] = 
+  {
+    0x00, 
+    0x01,
+    0x03,
+    0x07,
+    0x0f,
+    0x1f,
+    0x3f,
+    0x7f,
+    0xff
+  };
+
+  if((iLft < size) && (iRgt >= 0))
+  {
+    if(iLft < 0)
+    {
+      iLft = 0;
+    }
+    if(iRgt >= size)
+    {
+      iRgt = size - 1;
+    }
+    /* Set bits in this interval. */
+    bitIdx = iLft;
+    bitCnt = iRgt - iLft + 1;
+    bytIdx = bitIdx >> 3;
+    mskIdx = bitIdx & 7;
+    mskCnt = bitCnt;
+    if(mskCnt > 8)
+    {
+      mskCnt = 8;
+    }
+    bytP = bitLnP + bytIdx;
+    /* Set bits in first byte. */
+    *bytP++ |= 0xff & (bitMsk[mskCnt] << mskIdx);
+    bitCnt -= 8 - mskIdx;
+    if(bitCnt > 0)
+    {
+      /* Set bits in all mid interval bytes. */
+      bytCnt = bitCnt >> 3;
+      while(bytCnt-- > 0)
+      {
+	*bytP++ = 0xff;
+      }
+      /* Set bits in trailing byte. */
+      bitCnt &= 7;
+      if(bitCnt)
+      {
+	*bytP |= bitMsk[bitCnt];
+      }
+    }
+  }
+}
+
+/************************************************************************
+* Function:	WlzDynItvLnFromBitLn					
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Adds an interval line to a interval domain given
+*		an allocated interval domain a byte packed bitmask
+*		for the interval line and a pool of available
+*		intervals.
+* Global refs:	-						
+* Parameters:	WlzIntervalDomain *iDom: Given interval domain.
+*		UBYTE *bitLn:		Byte packed bitmap for line.
+*		int line:		The line coordinate.
+*		int width:		Width of the line, ie number
+*					of valid bits in bitmask.
+*		WlzDynItvPool iPool:	Interval pool.
+************************************************************************/
+WlzErrorNum 	WlzDynItvLnFromBitLn(WlzIntervalDomain *iDom,
+				     UBYTE *bitLn, int line, int width,
+				     WlzDynItvPool *iPool)
+{
+  int		iLft = 0,
+  		iLen = 0,
+		inDomFlg,
+		bitIdx,
+		bitMsk,
+		bitIdxWas;
+  UBYTE		*bytP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(iDom == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(iDom->type != WLZ_INTERVALDOMAIN_INTVL)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((iPool == NULL) || (bitLn == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    bitMsk = 1;
+    bitIdx = 0;
+    inDomFlg = 0;
+    bytP = bitLn;
+    while((errNum == WLZ_ERR_NONE) && (bitIdx < width))
+    {
+      if(*bytP == 0)
+      {
+	if(inDomFlg)
+	{
+	  errNum = WlzDynItvAdd(iDom, iPool, line, iLft, iLen);
+	  inDomFlg = 0;
+	  iLen = 0;
+	}
+	do
+	{
+	  ++bytP;
+	  bitIdx += 8;
+	}
+	while((*bytP == 0) && (bitIdx < width));
+	if(bitIdx > width)
+	{
+	  bitIdx = width;
+	}
+      }
+      else if(*bytP == 0xff)
+      {
+	bitIdxWas = bitIdx;
+	if(inDomFlg == 0)
+	{
+	  inDomFlg = 1;
+	  iLft = bitIdx;
+	}
+        do
+	{
+	  ++bytP;
+	  bitIdx += 8;
+	}
+	while((*bytP == 0xff) && (bitIdx < width));
+	if(bitIdx > width)
+	{
+	  bitIdx = width;
+	}
+	iLen += bitIdx - bitIdxWas;
+      }
+      else
+      {
+	if(inDomFlg)
+	{
+	  if((inDomFlg = *bytP & bitMsk) != 0)
+	  {
+	    ++iLen;
+	  }
+	  else
+	  {
+	    errNum = WlzDynItvAdd(iDom, iPool, line, iLft, iLen);
+	    iLen = 0;
+	  }
+	}
+	else
+	{
+	  if((inDomFlg = *bytP & bitMsk) != 0)
+	  {
+	    iLft = bitIdx;
+	    iLen = 1;
+	  }
+	}
+	if((bitMsk = bitMsk << 1) > (1<<7))
+	{
+	  bitMsk = 1;
+	  ++bytP;
+	}
+	++bitIdx;
+      }
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && inDomFlg)
+  {
+    errNum = WlzDynItvAdd(iDom, iPool, line, iLft, iLen);
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzDynItvAdd					
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Adds an interval to a interval domain given
+*		an allocated interval domain, a pool of available
+*		intervals, the line, the intervals left most column
+*		and the intertvals width.
+* Global refs:	-						
+* Parameters:	WlzIntervalDomain *iDom: Given interval domain.
+*		WlzDynItvPool iPool:	Interval pool.
+*		int line:		The line.
+*		int iLft:		Left most column of interval.
+*		int iLen:		Width of the interval.
+************************************************************************/
+WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
+			     int line, int iLft, int iLen)
+{
+  int		lnOff;
+  WlzInterval	*itv;
+  WlzIntervalLine *itvLn;
+  WlzErrorNum errNum = WLZ_ERR_NONE;
+#ifdef WLZ_DYNITV_TUNE_MALLOC
+  static int 	tuneMalloc = 0;
+#endif /* WLZ_DYNITV_TUNE_MALLOC */
+
+  if(iDom == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(iDom->type != WLZ_INTERVALDOMAIN_INTVL)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(line < iDom->line1)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(iPool == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    iDom->lastln = line;
+    itvLn = iDom->intvlines + line - iDom->line1;
+    if((iPool->itvBlock == NULL) ||
+       (iPool->itvsInBlock - iPool->offset - 1) < 1)
+    {
+#ifdef WLZ_DYNITV_TUNE_MALLOC
+      (void )fprintf(stderr, "WlzDynItvAdd(tuneMalloc): %d\n", ++tuneMalloc);
+#endif /* WLZ_DYNITV_TUNE_MALLOC */
+      iPool->offset = 0;
+      if((iPool->itvBlock = AlcMalloc(iPool->itvsInBlock *
+				     sizeof(WlzInterval))) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	iDom->freeptr = WlzPushFreePtr(iDom->freeptr,
+				       (void *)(iPool->itvBlock),
+				       &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if(itvLn->nintvs > 0)
+	{
+	  (void )memcpy((void *)(iPool->itvBlock), (void *)(itvLn->intvs),
+			itvLn->nintvs * sizeof(WlzInterval));
+	}
+	itvLn->intvs = iPool->itvBlock;
+	iPool->offset = itvLn->nintvs;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(itvLn->intvs == NULL)
+    {
+      itvLn->intvs = (WlzInterval *)(iPool->itvBlock) + iPool->offset;
+    }
+    if(itvLn->intvs)
+    {
+      itv = itvLn->intvs + itvLn->nintvs;
+      itv->ileft = iLft;
+      itv->iright = iLft + iLen - 1;
+      ++(itvLn->nintvs);
+      ++(iPool->offset);
+    }
+  }
+  return(errNum);
+}
+
+
 
 /************************************************************************
 *   Function   : WlzStandardIntervalDomain				*

@@ -33,7 +33,6 @@ int             main(int argc, char **argv)
 		ok = 1,
 		usage = 0,
 		order = 0,
-		useFP = 1,
 		useA = 0,
 		useB = 0,
 		useC = 0,
@@ -54,7 +53,7 @@ int             main(int argc, char **argv)
   char 		*outFileStr,
   		*inObjFileStr,
 		*actStr;
-  static char	optList[] = "ho:a:b:c:Pngdfip:r:t:",
+  static char	optList[] = "ho:a:b:c:Pngdp:r:t:",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -102,17 +101,12 @@ int             main(int argc, char **argv)
 	  usage = 1;
 	  ok = 0;
 	}
+	break;
       case 'g':
         ftrName = WLZ_RSVFILTER_NAME_GAUSS_0;
 	break;
       case 'd':
         ftrName = WLZ_RSVFILTER_NAME_DERICHE_0;
-	break;
-      case 'f':
-        useFP = 1;
-	break;
-      case 'i':
-        useFP = 0;
 	break;
       case 'P':
         printFtrPrm = 1;
@@ -310,7 +304,7 @@ int             main(int argc, char **argv)
       if(ok)
       {
         if(((outObj = WlzAssignObject(WlzRsvFilterObj(inObj, ftr,
-						  actMsk, useFP,
+						  actMsk,
 						  &errNum), NULL)) == NULL) ||
 	   (errNum != WLZ_ERR_NONE))
 
@@ -357,7 +351,7 @@ int             main(int argc, char **argv)
     "Usage: %s%sExample: %s%s",
     *argv,
     " [-o<output object>] [-h] [-o] [-a#,#,#,#] [-b#,#] [-c#]\n"
-    "        [-P] [-n] [-g] [-d] [-f] [-i] [-p#] [-r#] [-t#]\n"
+    "        [-P] [-n] [-g] [-d] [-p#] [-r#] [-t#]\n"
     "        [<input object>]\n"
     "Options:\n"
     "  -h  Prints this usage information\n"
@@ -369,8 +363,6 @@ int             main(int argc, char **argv)
     "  -n  Dont filter object.\n"
     "  -g  Use approximate Gaussian filter.\n"
     "  -d  Use Deriche filter.\n"
-    "  -f  Use floating point arithmetic.\n"
-    "  -i  Use integer (fixed point) arithmetic.\n"
     "  -p  Filter parameter for Gaussian (sigma) and Deriche (alpha) filters\n"
     "  -r  Order of derivative for Gaussian and Deriche filters [0-2].\n"
     "  -t  Filter directions, eg x filter along lines and x,y filter\n"

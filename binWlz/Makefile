@@ -47,6 +47,7 @@ EXECUTABLES		= \
 			WlzGauss \
 			WlzGaussNoise \
 			WlzGreyCrossing \
+			WlzGreyGradient \
 			WlzGreyInvert \
 			WlzGreyMask \
 			WlzGreyNormalise \
@@ -116,6 +117,7 @@ CSOURCES		= \
 			WlzGauss.c \
 			WlzGaussNoise.c \
 			WlzGreyCrossing.c \
+			WlzGreyGradient.c \
 			WlzGreyInvert.c \
 			WlzGreyMask.c \
 			WlzGreyNormalise.c \
