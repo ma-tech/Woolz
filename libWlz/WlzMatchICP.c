@@ -572,7 +572,8 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   AlcCPQItem	*qTop;
   WlzMatchICPCbData cbData;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const		trSrcFlg = 1;
+  const		trSrcFlg = 0; 	/* This needs to be 0 for valid tie point
+  				 * output. */
 
   tVBuf.v = sVBuf.v = NULL;
   tVx.v = tNr.v = sVx.v = sNr.v = NULL;
@@ -1667,21 +1668,14 @@ static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
     /* cV = WlzMatchICPLoopTMid(sS->child); */
     if(cV)
     {
-      (void )WlzGMVertexGetG2D(cV, &tSV);
+      (void )WlzGMVertexGetG2D(cV, &sV);
+      tSV = WlzAffineTransformVertexD2(mS->tr, sV, NULL);
       vxD2[0] = tSV.vtX;
       vxD2[1] = tSV.vtY;
       tNode = AlcKDTGetNN(tTree, vxD2, DBL_MAX, &cDist, NULL);
       if(tNode)
       {
 	tV = *(tVx + tNode->idx);
-	/* Invert the transform for this shell to get the untransformed
-	 * position of the source shell vertex. */
-	iTr = WlzAffineTransformInverse(mS->tr, &errNum);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  sV = WlzAffineTransformVertexD2(iTr, tSV, NULL);
-	}
-	(void )WlzFreeAffineTransform(iTr);
 	*(sMatch) = sV;
 	*(tMatch) = tV;
 	nMatch = 1;
