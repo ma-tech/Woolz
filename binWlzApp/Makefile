@@ -30,7 +30,8 @@ EXECUTABLES		= \
 			WlzRawToWlz \
 			WlzSizeSelect \
 			WlzObjCompareSpecial_01 \
-			WlzVtxToObj
+			WlzVtxToObj \
+			WlzFixDomains
 
 SCRIPTS			= \
 			WlzObjCompareSpecial_01.csh
@@ -44,7 +45,8 @@ CSOURCES		= \
 			WlzRawToWlz.c \
 			WlzSizeSelect.c \
 			WlzObjCompareSpecial_01.c \
-			WlzVtxToObj.c
+			WlzVtxToObj.c \
+			WlzFixDomains.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -73,17 +75,19 @@ DEPENDDIRS		= \
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
 			  $(DEPENDDIRS) \
-			  $(HGU_INC_DIR)
+			  $(HGU_INC_DIR) \
+			  /opt/local/include
 
 # List of library search paths (modify as required).
 LIBDIRS			= \
 			  $(DEPENDDIRS) \
 			  $(HGU_LIB_DIR) \
+			  /opt/local/lib \
 			  $(SYSLIB)
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
-EXTRA_LIBS		= gen socket nsl m
+EXTRA_LIBS		= tiff gen socket nsl m
 else
 EXTRA_LIBS		= m
 endif
