@@ -1896,7 +1896,7 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 		phi0,
 		thresh,
 		delta,
-		tau,
+		tau;
   double	*bMx = NULL;
 #ifdef WLZ_BASISFN_MOS_SOLVER_SVD
   double	wMax;
