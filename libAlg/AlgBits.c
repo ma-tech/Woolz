@@ -13,6 +13,7 @@
 *		Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 31-01-01 bill	Add AlgBitNextPowerOfTwo().
 * 08-08-00 bill Add AlgBitNextSet().
 ************************************************************************/
 #include <Alg.h>
@@ -184,4 +185,34 @@ int		AlgBitNextSet(unsigned long msk, int idC)
     idN = idC;
   }
   return(idN);
+}
+
+/************************************************************************
+* Function:	AlgBitNextPowerOfTwo
+* Returns:	int:			Index of the single bit that
+*					should be set for an unsigned
+*					integer that's >= the given int.
+* Purpose:	Computes the next integer that is >= the given integer
+*		and has only a single bit set.
+* Global refs:	-
+* Parameters:	unsigned int *dstP2I:		Destination ptr for integer
+*					that's >= the given integer
+*					and is a power of two.
+*		unsigned int gI:	Given integer.
+************************************************************************/
+int		AlgBitNextPowerOfTwo(unsigned int *dstP2I, unsigned int gI)
+{
+  unsigned int	pI = 0,
+  		nI = 1;
+
+  while((nI < gI) && (pI < 31))
+  {
+    nI <<= 1;
+    ++pI;
+  }
+  if(dstP2I)
+  {
+    *dstP2I = nI;
+  }
+  return(pI);
 }
