@@ -314,7 +314,8 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s%s",
     *argv,
-    " [-i <init tr>] [-o<out obj>] [-t] [-r] [<in obj 0>] [<in obj 1>]\n"
+    " [-i <init tr>] [-o<out obj>] [-t] [-r]\n"
+    "                      [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
     "  -i  Initial affine transform object.\n"
     "  -o  Output file name for affine transform.\n"
@@ -328,12 +329,11 @@ int             main(int argc, char **argv)
     "or polygons.\n"
     "The input objects are read from stdin and values are written to stdout\n"
     "unless the filenames are given.\n",
-    "cat in0.wlz | \\\n             ",
     *argv,
-    " -o out.wlz -a - in1.wlz\n"
+    " -o out-tr.wlz -a in0.wlz in1.wlz\n"
     "An affine transform is found by registering in1.wlz to in0.wlz using\n"
-    "an ICP algorithm. The affine transform is then written to out.wlz.\n"
-    "obj2.wlz.\n");
+    "an ICP algorithm to find the lest affine transform (in a least squares\n"
+    "sense). The affine transform is then written to out-tr.wlz.\n");
   }
   return(!ok);
 }
