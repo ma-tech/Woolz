@@ -12,7 +12,15 @@
 * Purpose:      Reads a Woolz object from a file.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
+* 14-08-00 bill	Add WLZ_CONTOUR to object types read by WlzReadObj().
+*		Add WlzReadContour() and WlzReadGMModel(). Remove
+*		obolete object types:WLZ_VECTOR_(FLOAT|INT),
+*		WLZ_POINT_(FLOAT|INT), WLZ_DISP_FRAME,
+*		WLZ_DISP_GRID, WLZ_DISP_FRAMEX, Wlz[IF]Vector and
+*		and Wlz[IF]Point.
+*		Add functions WlzReadInt(), WlzReadVertex[23][DI](),
+*		WlzReadBox[23][DI]().
+* 03-03-20 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
 ************************************************************************/
@@ -24,44 +32,95 @@
 /* prototypes of static procedures defined below
  */
 
-static WlzIntervalDomain 	*WlzReadIntervalDomain(FILE *fp,
-						       WlzErrorNum *);
-static WlzPlaneDomain 		*WlzReadPlaneDomain(FILE *fp,
-						    WlzErrorNum *);
-static WlzErrorNum		WlzReadGreyValues(FILE *fp,
-						  WlzObject *obj);
-static WlzErrorNum		WlzReadRectVtb(FILE 		*fp,
-					       WlzObject 	*obj,
-					       WlzObjectType type);
-static WlzErrorNum		WlzReadVoxelValues(FILE      *fp,
-						   WlzObject *obj);
-static WlzSimpleProperty 	*WlzReadPropertyList(FILE *fp,
-						     WlzErrorNum *);
-static WlzPolygonDomain 	*WlzReadPolygon(FILE *fp,
-						WlzErrorNum *);
-static WlzBoundList 		*WlzReadBoundList(FILE *fp,
-						  WlzErrorNum *);
-static WlzIRect 			*WlzReadRect(FILE *fp,
-					     WlzErrorNum *);
-static WlzObject 		*WlzReadVector(FILE		*fp,
-					       WlzObjectType	type,
-					       WlzErrorNum *);
-static WlzObject 		*WlzReadPoint(FILE		*fp,
-					      WlzObjectType	type,
-					      WlzErrorNum *);
-static WlzHistogramDomain 	*WlzReadHistogramDomain(FILE *fp,
-							WlzErrorNum *);
-static WlzObject 		*WlzReadCompoundA(FILE		*fp,
-						  WlzObjectType	type,
-						  WlzErrorNum *);
-static WlzAffineTransform 	*WlzReadAffineTransform(FILE *fp,
-							WlzErrorNum *);
-static WlzWarpTrans 		*WlzReadWarpTrans(FILE *fp,
-						  WlzErrorNum *);
-static WlzFMatchObj 		*WlzReadFMatchObj(FILE *fp,
-						  WlzErrorNum *);
-static Wlz3DWarpTrans 		*WlzRead3DWarpTrans(FILE *fp,
-						    WlzErrorNum *);
+static WlzIntervalDomain 	*WlzReadIntervalDomain(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzPlaneDomain 		*WlzReadPlaneDomain(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzErrorNum		WlzReadGreyValues(
+				  FILE *fp,
+				  WlzObject *obj);
+static WlzErrorNum		WlzReadRectVtb(
+				  FILE *fp,
+				  WlzObject *obj,
+				  WlzObjectType type);
+static WlzErrorNum		WlzReadVoxelValues(
+				  FILE *fp,
+				  WlzObject *obj);
+static WlzSimpleProperty 	*WlzReadPropertyList(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzPolygonDomain 	*WlzReadPolygon(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzBoundList 		*WlzReadBoundList(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzIRect 		*WlzReadRect(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzHistogramDomain 	*WlzReadHistogramDomain(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzObject 		*WlzReadCompoundA(
+				  FILE *fp,
+				  WlzObjectType type,
+				  WlzErrorNum *);
+static WlzAffineTransform 	*WlzReadAffineTransform(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzWarpTrans 		*WlzReadWarpTrans(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzFMatchObj 		*WlzReadFMatchObj(
+				  FILE *fp,
+				  WlzErrorNum *);
+static Wlz3DWarpTrans 		*WlzRead3DWarpTrans(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzGMModel 		*WlzReadGMModel(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+static WlzContour 		*WlzReadContour(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzReadInt(
+				  FILE *fP,
+				  int *iP,
+				  int nI);
+static WlzErrorNum 		WlzReadVertex2D(
+				  FILE *fP,
+				  WlzDVertex2 *vP,
+				  int nV);
+static WlzErrorNum 		WlzReadVertex2I(
+				  FILE *fP,
+				  WlzIVertex2 *vP,
+				  int nV);
+static WlzErrorNum 		WlzReadVertex3I(
+				  FILE *fP,
+				  WlzIVertex3 *vP,
+				  int nV);
+static WlzErrorNum 		WlzReadVertex3D(
+				  FILE *fP,
+				  WlzDVertex3 *vP,
+				  int nV);
+static WlzErrorNum 		WlzReadBox2I(
+				  FILE *fP,
+				  WlzIBox2 *bP,
+				  int nB);
+static WlzErrorNum 		WlzReadBox2D(
+				  FILE *fP,
+				  WlzDBox2 *bP,
+				  int nB);
+static WlzErrorNum 		WlzReadBox3I(
+				  FILE *fP,
+				  WlzIBox3 *bP,
+				  int nB);
+static WlzErrorNum 		WlzReadBox3D(
+				  FILE *fP,
+				  WlzDBox3 *bP,
+				  int nB);
 
 /* a set of functions to convert from VAX to SUN byte ordering
    in the future these should be replaced by calls using XDR procedures
@@ -308,20 +367,16 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       }
       break;
 
-    case WLZ_RECTANGLE:
-      if( domain.r = WlzReadRect(fp, &errNum) ){
+    case WLZ_CONTOUR:
+      if( domain.ctr = WlzReadContour(fp, &errNum) ){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
 
-    case WLZ_VECTOR_INT:
-    case WLZ_VECTOR_FLOAT:
-      obj = (WlzObject *) WlzReadVector(fp, type, &errNum);
-      break;
-
-    case WLZ_POINT_INT:
-    case WLZ_POINT_FLOAT:
-      obj = (WlzObject *) WlzReadPoint(fp, type, &errNum);
+    case WLZ_RECTANGLE:
+      if( domain.r = WlzReadRect(fp, &errNum) ){
+	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      }
       break;
 
     case WLZ_AFFINE_TRANS:
@@ -353,9 +408,6 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
     case WLZ_3D_POLYGON:
     case WLZ_CONVOLVE_INT:
     case WLZ_CONVOLVE_FLOAT:
-    case WLZ_DISP_FRAME:
-    case WLZ_DISP_GRID:
-    case WLZ_DISP_FRAMEX:
     case WLZ_TEXT:
     case WLZ_COMPOUND_LIST_1:
     case WLZ_COMPOUND_LIST_2:
@@ -369,6 +421,270 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(obj);
+}
+
+/************************************************************************
+* Function:	WlzReadInt
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 4 byte integers the given file stream into a
+*		buffer of native ints (which must have room for at
+*		least nI ints).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		int *iP:		Buffer for ints.
+*		int nI:			Number of ints.
+************************************************************************/
+static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  {
+    *iP++ = getword(fP);
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadVertex2I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 2D integer verticies from the given file
+*		stream into a buffer (which must have room for
+*		at least nV verticies).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIVertex2 *vP:	Buffer for 2D integer verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzReadVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    vP->vtY = getword(fP);
+    vP->vtX = getword(fP);
+    ++vP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadVertex2D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 2D double verticies from the given file
+*		stream into a buffer (which must have room for
+*		at least nV verticies).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDVertex2 *vP:	Buffer for 2D integer verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzReadVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    vP->vtY = getdouble(fP);
+    vP->vtX = getdouble(fP);
+    ++vP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadVertex3I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 3D integer verticies from the given file
+*		stream into a buffer (which must have room for
+*		at least nV verticies).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIVertex3 *vP:	Buffer for 3D integer verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzReadVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    vP->vtX = getword(fP);
+    vP->vtY = getword(fP);
+    vP->vtZ = getword(fP);
+    ++vP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadVertex3D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 3D integer verticies from the given file
+*		stream into a buffer (which must have room for
+*		at least nV verticies).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDVertex3 *vP:	Buffer for 3D integer verticies.
+*		int nV:			Number of verticies.
+************************************************************************/
+static WlzErrorNum WlzReadVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nV-- > 0))
+  {
+    vP->vtX = getdouble(fP);
+    vP->vtY = getdouble(fP);
+    vP->vtZ = getdouble(fP);
+    ++vP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadBox2I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 2D integer boxes from the given file stream
+*		into a buffer (which must have room for at least
+*		nB bounding boxes).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIBox2 *bP:		Ptr to 2D integer box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzReadBox2I(FILE *fP, WlzIBox2 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    bP->xMin = getword(fP);
+    bP->yMin = getword(fP);
+    bP->xMax = getword(fP);
+    bP->yMax = getword(fP);
+    ++bP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadBox2D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 2D double boxes from the given file stream
+*		into a buffer (which must have room for at least
+*		nB bounding boxes).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDBox2 *bP:		Ptr to 2D integer box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzReadBox2D(FILE *fP, WlzDBox2 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    bP->xMin = getdouble(fP);
+    bP->yMin = getdouble(fP);
+    bP->xMax = getdouble(fP);
+    bP->yMax = getdouble(fP);
+    ++bP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadBox3I
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 3D integer boxes from the given file stream
+*		into a buffer (which must have room for at least
+*		nB bounding boxes).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzIBox3 *bP:		Ptr to 3D integer box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzReadBox3I(FILE *fP, WlzIBox3 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    bP->xMin = getword(fP);
+    bP->yMin = getword(fP);
+    bP->zMin = getword(fP);
+    bP->xMax = getword(fP);
+    bP->yMax = getword(fP);
+    bP->zMax = getword(fP);
+    ++bP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzReadBox3D
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Read's 3D double boxes from the given file stream
+*		into a buffer (which must have room for at least
+*		nB bounding boxes).
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzDBox3 *bP:		Ptr to 3D integer box.
+*		int nB:			Number of bounding boxes.
+************************************************************************/
+static WlzErrorNum WlzReadBox3D(FILE *fP, WlzDBox3 *bP, int nB)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nB-- > 0))
+  {
+    bP->xMin = getdouble(fP);
+    bP->yMin = getdouble(fP);
+    bP->zMin = getdouble(fP);
+    bP->xMax = getdouble(fP);
+    bP->yMax = getdouble(fP);
+    bP->zMax = getdouble(fP);
+    ++bP;
+  }
+  if(feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
 }
 
 /************************************************************************
@@ -1545,141 +1861,6 @@ static WlzIRect *WlzReadRect(FILE *fp,
 }
 
 /************************************************************************
-*   Function   : WlzReadVector						*
-*   Synopsis   : reads a woolz vector from the given input stream	*
-*   Returns    : WlzObject *:						*
-*   Parameters : FILE *fp:	input stream				*
-*		 WlzObjectType type: object type read by WlzReadObj	*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzObject *WlzReadVector(FILE		*fp,
-				WlzObjectType	type,
-				WlzErrorNum	*dstErr)
-{
-  WlzIVector 	*iv=NULL;
-  WlzFVector 	*fv;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-
-  switch( type ){
-
-  case WLZ_VECTOR_INT:
-    if( (iv = (WlzIVector *) AlcMalloc (sizeof(WlzIVector))) == NULL){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      break;
-    }
-    iv->type = type;
-    iv->k1 = getword(fp);
-    iv->l1 = getword(fp);
-    iv->k2 = getword(fp);
-    iv->l2 = getword(fp);
-    iv->style = getword(fp);
-    if( feof(fp) != 0 ){
-      AlcFree( (void *) iv );
-      iv = NULL;
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    break;
-
-  case WLZ_VECTOR_FLOAT:
-    if( (fv = (WlzFVector *) AlcMalloc (sizeof(WlzFVector))) == NULL){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      break;
-    }
-    fv->type = type;
-    fv->k1 = getfloat(fp);
-    fv->l1 = getfloat(fp);
-    fv->k2 = getfloat(fp);
-    fv->l2 = getfloat(fp);
-    fv->style = getword(fp);
-    if( feof(fp) != 0 ){
-      AlcFree( (void *) fv );
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    break;
-
-  default:
-    /* should never get here because the type is checked
-       by WlzReadObj */
-    errNum = WLZ_ERR_OBJECT_TYPE;
-    break;
-  }
-
-  if( dstErr ){
-    *dstErr = errNum;
-  }
-  return (WlzObject *) iv;
-}
-
-/************************************************************************
-*   Function   : WlzReadPoint						*
-*   Synopsis   : reads a woolz point from the given input stream	*
-*   Returns    : WlzObject *:						*
-*   Parameters : FILE *fp:	input stream				*
-*		 WlzObjectType type: object type read by WlzReadObj	*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzObject *WlzReadPoint(FILE		*fp,
-			       WlzObjectType	type,
-			       WlzErrorNum	*dstErr)
-{
-  WlzIPoint 	*iv=NULL;
-  WlzFPoint 	*fv;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-
-  switch( type ){
-
-  case WLZ_POINT_INT:
-    if( (iv = (WlzIPoint *) AlcMalloc (sizeof(WlzIPoint))) == NULL){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      break;
-    }
-    iv->type = type;
-    iv->linkcount = 0;
-    iv->k = getword(fp);
-    iv->l = getword(fp);
-    iv->style = getword(fp);
-    if( feof(fp) != 0 ){
-      AlcFree( (void *) iv );
-      iv = NULL;
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-      break;
-    }
-    break;
-
-  case WLZ_POINT_FLOAT:
-    if( (fv = (WlzFPoint *) AlcMalloc (sizeof(WlzFPoint))) == NULL){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      break;
-    }
-    fv->type = type;
-    fv->linkcount = 0;
-    fv->k = getfloat(fp);
-    fv->l = getfloat(fp);
-    fv->style = getword(fp);
-    if( feof(fp) != 0 ){
-      AlcFree( (void *) fv );
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-      break;
-    }
-    iv = (WlzIPoint *) fv;
-    break;
-
-  default:
-    /* should never get here because the type is checked
-       by WlzReadObj */
-    errNum = WLZ_ERR_OBJECT_TYPE;
-    break;
-  }
-
-  if( dstErr ){
-    *dstErr = errNum;
-  }
-  return (WlzObject *) iv;
-}
-
-/************************************************************************
 *   Function   : WlzReadHistogramDomain					*
 *   Synopsis   : reads a woolz histogram domain				*
 *   Returns    : WlzHistogramDomain *:					*
@@ -2203,4 +2384,232 @@ static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp,
     *dstErr = errNum;
   }
   return(obj);
+}
+
+/************************************************************************
+* Function:	WlzReadContour
+* Returns:	WlzContour *:		Woolz contour domain.
+* Purpose:	Read's a WlzContour from a file stream.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzErrorNum *dstErr:	Destination ptr for error code,
+*					may be NULL.
+************************************************************************/
+static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
+{
+  WlzObjectType cType;
+  WlzContour	*ctr = NULL;
+  WlzGMModel	*model = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+
+  cType = getc(fP);
+  switch(cType)
+  {
+    case EOF:
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+      break;
+    case WLZ_NULL:
+      errNum = WLZ_ERR_EOO;
+      break;
+    case WLZ_CONTOUR:
+      if((ctr = WlzMakeContour(&errNum)) != NULL)
+      {
+        ctr->model = WlzAssignGMModel(WlzReadGMModel(fP, &errNum), NULL);
+        if(errNum != WLZ_ERR_NONE)
+	{
+	  WlzFreeContour(ctr);
+	  ctr = NULL;
+	}
+      }
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/************************************************************************
+* Function:	WlzReadGMModel
+* Returns:	WlzGMModel *:		Woolz contour domain.
+* Purpose:	Read's a WlzGMModel from a file stream.
+*		see  WlzWriteGMModel() for the file format.
+* Global refs:	-
+* Parameters:	FILE *fP:		Given file stream.
+*		WlzErrorNum *dstErr:	Destination ptr for error code,
+*					may be NULL.
+************************************************************************/
+static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
+{
+  int		tI0,
+		idN,
+		sCnt,
+		encodeMtd,
+  		nVertex,
+		nSimplex,
+		vgElmSz,
+		vHTSz;
+  int		bufI[3];
+  void		*bufVG = NULL;
+  WlzGMModelType mType;
+  WlzGMElemP	eP;
+  WlzGMModel	*model = NULL;
+  WlzIVertex2	tIV2;
+  WlzIVertex3	tIV3;
+  WlzDVertex2	pos2D[2];
+  WlzDVertex3	pos3D[3];
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  mType = getc(fP);
+  switch(mType)
+  {
+    case EOF: /* FALLTHROUGH */
+    case WLZ_NULL:
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+      break;
+    case WLZ_GMMOD_2I:
+      vgElmSz = sizeof(WlzIVertex2);
+      break;
+    case WLZ_GMMOD_2D:
+      vgElmSz = sizeof(WlzDVertex2);
+      break;
+    case WLZ_GMMOD_3I:
+      vgElmSz = sizeof(WlzIVertex3);
+      break;
+    case WLZ_GMMOD_3D:
+      vgElmSz = sizeof(WlzDVertex3);
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Read the file encoding method, currently this is just a 'placeholder'
+     * but in the future new encoding methods may be used, for example strips
+     * of simplicies may be used to reduce the file size. */
+    if((encodeMtd = getc(fP)) == EOF)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Read number of vertex's and simplicies (edges or loops). */
+    if((errNum = WlzReadInt(fP, bufI, 2)) == WLZ_ERR_NONE)
+    {
+      if((nVertex = bufI[0]) <= 0)
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      else
+      {
+        nSimplex = bufI[1];
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Choose an appropriate vertex (matching) hash table size and make a new
+     * GM. */
+    vHTSz = ((tI0 = nVertex) < 1024)? 1024: tI0;
+    model = WlzGMModelNew(mType, 0, vHTSz, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Create a vertex buffer. */
+    if((bufVG = AlcMalloc(vgElmSz * nVertex)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Read the vertex's into the buffer. */
+    switch(mType)
+    {
+      case WLZ_GMMOD_2I:
+	errNum = WlzReadVertex2I(fP, (WlzIVertex2 *)bufVG, nVertex);
+	break;
+      case WLZ_GMMOD_2D:
+	errNum = WlzReadVertex2D(fP, (WlzDVertex2 *)bufVG, nVertex);
+	break;
+      case WLZ_GMMOD_3I:
+	errNum = WlzReadVertex3I(fP, (WlzIVertex3 *)bufVG, nVertex);
+	break;
+      case WLZ_GMMOD_3D:
+	errNum = WlzReadVertex3D(fP, (WlzDVertex3 *)bufVG, nVertex);
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Read the vertex indicies and build the model. */
+    sCnt = 0;
+    while((errNum == WLZ_ERR_NONE) && (sCnt++ < nSimplex))
+    {
+      switch(mType)
+      {
+	case WLZ_GMMOD_2I:
+	  if((errNum = WlzReadInt(fP, bufI, 2)) == WLZ_ERR_NONE)
+	  {
+	    for(idN = 0; idN < 2; ++idN)
+	    {
+	      tIV2 = *(((WlzIVertex2 *)bufVG) + bufI[idN]);
+	      pos2D[idN].vtX = tIV2.vtX;
+	      pos2D[idN].vtY = tIV2.vtY;
+	    }
+	    errNum = WlzGMModelConstructSimplex2D(model, pos2D);
+	  }
+	  break;
+	case WLZ_GMMOD_2D:
+	  if((errNum = WlzReadInt(fP, bufI, 2)) == WLZ_ERR_NONE)
+	  {
+	    for(idN = 0; idN < 2; ++idN)
+	    {
+	      pos2D[idN] = *(((WlzDVertex2 *)bufVG) + bufI[idN]);
+	    }
+	    errNum = WlzGMModelConstructSimplex2D(model, pos2D);
+	  }
+	  break;
+	case WLZ_GMMOD_3I:
+	  if((errNum = WlzReadInt(fP, bufI, 3)) == WLZ_ERR_NONE)
+	  {
+	    for(idN = 0; idN < 3; ++idN)
+	    {
+	      tIV3 = *(((WlzIVertex3 *)bufVG) + bufI[idN]);
+	      pos3D[idN].vtX = tIV3.vtX;
+	      pos3D[idN].vtY = tIV3.vtY;
+	      pos3D[idN].vtY = tIV3.vtZ;
+	    }
+	    errNum = WlzGMModelConstructSimplex3D(model, pos3D);
+	  }
+	  break;
+	case WLZ_GMMOD_3D:
+	  if((errNum = WlzReadInt(fP, bufI, 3)) == WLZ_ERR_NONE)
+	  {
+	    for(idN = 0; idN < 3; ++idN)
+	    {
+	      pos3D[idN] = *(((WlzDVertex3 *)bufVG) + bufI[idN]);
+	    }
+	    errNum = WlzGMModelConstructSimplex3D(model, pos3D);
+	  }
+	  break;
+      }
+    }
+  }
+  if(bufVG)
+  {
+    AlcFree(bufVG);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(model);
 }
