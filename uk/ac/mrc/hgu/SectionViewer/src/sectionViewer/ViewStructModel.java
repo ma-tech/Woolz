@@ -267,6 +267,28 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+    public double[] getFixedPoint() {
+      double[] x = new double[1];
+      double[] y = new double[1];
+      double[] z = new double[1];
+      double[] fp = new double[3];
+   
+      try {
+        _obj.Wlz3DViewGetFixed(_VS, x, y, z);
+      }
+      catch (WlzException e) {
+        System.err.println("getFixedPoint");
+        System.err.println(e);
+      }
+   
+      fp[0] = x[0];
+      fp[1] = y[0];
+      fp[2] = z[0];
+
+      return fp;
+    }
+
+//----------------------------------------------
    public double[] getInitialFixedPoint() {
       return _fpInitial;
    }

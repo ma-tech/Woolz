@@ -101,6 +101,10 @@ public class WlzImgView extends Component {
    private boolean _overlay;
    private boolean showInterSecLines = false;
 
+   private boolean _tiepoint = true;
+   private Vector tps = null;
+   private Vector tpsCol = null;
+
    //-------------------------------------------------------------
    // constructor
    public WlzImgView() {
@@ -589,6 +593,7 @@ public class WlzImgView extends Component {
       drawThreshold(g2);
       drawThreshConstraint(g2);
       //--------------------------------------
+      drawTiePoint(g2);
    }
 
    //-------------------------------------------------------------
@@ -765,6 +770,11 @@ public class WlzImgView extends Component {
    } // updateStats
 
    //-------------------------------------------------------------
+   public Point getOffSet(){
+     return new Point(_bBox.xMin, _bBox.yMin);
+   }
+
+   //-------------------------------------------------------------
    protected void setIntersectionVec(Line2D.Double[] lines) {
 
       if(_intersectionVec == null) {
@@ -797,6 +807,35 @@ public class WlzImgView extends Component {
       }
    }
 
+   //-------------------------------------------------------------
+   void drawTiePoint(Graphics2D g){
+     if (!_tiepoint) return;
+     if (null == tps) return;
+
+     Color orgColor = g.getColor();
+     g.translate(_xofsFP, _yofsFP);
+     g.scale(1/_mag, 1/_mag);
+     for (int i = 0; i < tps.size(); i++){
+       Point p = (Point) tps.get(i);
+       g.setColor((Color)tpsCol.get(i));
+       g.fillOval((int)_mag*p.x - 4, (int)_mag*p.y - 4, 8, 8);
+     }
+     g.scale(_mag, _mag);
+     g.setColor(orgColor);
+     g.translate(-_xofsFP, -_yofsFP);
+   }
+
+   //-------------------------------------------------------------
+   public void setTiePoint(Vector tps, Vector tpsCol){
+     this.tps = tps;
+     this.tpsCol = tpsCol;
+     setFixedPointOffsets();
+   }
+
+   //-------------------------------------------------------------
+   public void enableTiePoint(boolean state) {
+         _tiepoint = state;
+   }
    //-------------------------------------------------------------
    protected void setFixedPointVec(double[] fpa) {
 
