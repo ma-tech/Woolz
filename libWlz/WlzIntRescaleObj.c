@@ -12,6 +12,9 @@
 * Purpose:      Rescale a Woolz object using an integral scale.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 22-01-2003 Elizabeth Guest Fixed the scanning of the table so that it works
+*               with non-zero k1. Replaced k with k+iwsp.lftpos where kp is
+*               calculated.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -201,10 +204,10 @@ WlzObject *WlzIntRescaleObj(
 				 backgrnd, &errNum) ){
 
       rtnObj->values = WlzAssignValues(values, NULL);
-
+      
       /* fill in the grey-values */
       WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
-      gVWSp = WlzGreyValueMakeWSp(obj, NULL);
+      gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
       gtype = WlzGreyTableTypeToGreyType(obj->values.v->type, NULL);
       while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE )
       {
@@ -213,7 +216,7 @@ WlzObject *WlzIntRescaleObj(
 
 	for( k=0; k <= (iwsp.rgtpos - iwsp.lftpos); k++ )
 	{
-	  int	kp = expand ? k/scale : k*scale;
+	  int	kp = expand ? (k+iwsp.lftpos)/scale : (k+iwsp.lftpos)*scale;
 
 	  WlzGreyValueGet(gVWSp, 0, (double) lp, (double) kp);
 
