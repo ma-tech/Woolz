@@ -15,7 +15,7 @@
 #########################################################################
 
 # Include the configuration makefile (modify as required).
-include			../Makefile.conf
+include			../../Makefile.conf
 
 # Name of archive (library) to be built (modify as required).
 ARCHIVE			= libWlz.a
