@@ -219,7 +219,7 @@ int             main(int argc, char **argv)
    fP = NULL;
    nOfV = i;
 
-    // read the vertices:
+    /* read the vertices: */
     vtxSz =  sizeof(WlzDVertex3);
     if(  (  vtx0.v = AlcMalloc(nOfV * vtxSz)   ) == NULL  ) 
       {
@@ -522,7 +522,7 @@ int             main(int argc, char **argv)
   if(ok )
   {
       trDom.t = trans;
-      // transform the vertices
+      /* transform the vertices */
       i = 0;
       while((errNum == WLZ_ERR_NONE) && (i < nOfV))
       {
