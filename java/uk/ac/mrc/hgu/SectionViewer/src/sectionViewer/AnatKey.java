@@ -164,7 +164,9 @@ public class AnatKey extends AnatKeyGUI{
 		     "choose colour for anatomy component",
 		     row.getCol());
 
-	 row.setCol(col);
+	 if(col != null) {
+	    row.setCol(col);
+	 }
       }
 
    }
