@@ -30,6 +30,7 @@ public class SVParent
   protected keyToControllerAdaptor K2C_1 = null;
   protected int _nAnatRows;
 
+  private HelpSet _hs = null;
   private HelpBroker _helpBroker = null;
   private final boolean debug = false;
 
@@ -84,17 +85,18 @@ public class SVParent
 //-----------------------------------------------------
   protected void initHelp() {
 
+    URL hsURL = null;
+    Dummy dummy = new Dummy();
+
     try {
-      URL hsURL = HelpSet.findHelpSet(null, 
-                                      "sectionViewer"+SLASH+
-                                      "help"+SLASH+ 
-                                      "ViewerHelp.hs");
-      HelpSet hs = new HelpSet(null, hsURL);
-      _helpBroker = hs.createHelpBroker();
+      hsURL = HelpUtils.getHelpSetURL(dummy,"help/ViewerHelp.hs");
+      _hs = new HelpSet(null, hsURL);
+      _helpBroker = _hs.createHelpBroker();
       _helpBroker.initPresentation();
       _helpBroker.setDisplayed(false);
     } catch(Exception ex) {
       System.out.println(ex.getMessage());
+      System.out.println("error initialising help");
     }
   }
 
@@ -536,9 +538,13 @@ public class SVParent
   }
 
 //-------------------------------------------------------------
+  public HelpSet getHelpSet() {
+    return _hs;
+  }
+
+//-------------------------------------------------------------
   public HelpBroker getHelpBroker() {
     return _helpBroker;
-    //return (HelpBroker) null;
   }
 
 //-------------------------------------------------------------
