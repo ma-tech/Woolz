@@ -41,22 +41,22 @@ public class KeyEntry extends KeyEntryGUI{
       super(is3D);
 
       ButtonHandler0 buttonH0 = new ButtonHandler0();
-      colBtn0.addActionListener(buttonH0);
+      colBtn.addActionListener(buttonH0);
 
       ButtonHandler1 buttonH1 = new ButtonHandler1();
-      btn00.addActionListener(buttonH1);
-      btn01.addActionListener(buttonH1);
+      leftBtn.addActionListener(buttonH1);
+      rightBtn.addActionListener(buttonH1);
 
       ButtonHandler2 buttonH2 = new ButtonHandler2();
-      btn02.addActionListener(buttonH2);
+      vis2DBtn.addActionListener(buttonH2);
 
       if(is3D) {
 	 ButtonHandler3 buttonH3 = new ButtonHandler3();
-	 btn03.addActionListener(buttonH3);
+	 vis3DBtn.addActionListener(buttonH3);
       }
 
       ButtonHandler4 buttonH4 = new ButtonHandler4();
-      btn04.addActionListener(buttonH4);
+      zapBtn.addActionListener(buttonH4);
 
       _indx = indx;
 
@@ -70,7 +70,7 @@ public class KeyEntry extends KeyEntryGUI{
    public void setText(String str) {
 
       _txt = str;
-      tf0.setText(_txt);
+      textF.setText(_txt);
    }
 
 //-------------------------------------------------------------
@@ -90,11 +90,11 @@ public class KeyEntry extends KeyEntryGUI{
     */
    public void setEntryVisible(boolean viz) {
 
-      tf0.setText(getTxt());
+      textF.setText(getTxt());
       if(viz) {
-	 tf0.setBackground(_vizCol);
+	 textF.setBackground(_vizCol);
       } else {
-         tf0.setBackground(_notVizCol);
+         textF.setBackground(_notVizCol);
       }
    }
 
@@ -109,7 +109,7 @@ public class KeyEntry extends KeyEntryGUI{
    public void setCol(Color col) {
 
       _col = col;
-      colBtn0.setBackground(_col);
+      colBtn.setBackground(_col);
    }
 
 //-------------------------------------------------------------
@@ -129,9 +129,9 @@ public class KeyEntry extends KeyEntryGUI{
     */
    public void reset() {
 
-      tf0.setText("");
-      tf0.setBackground(_notVizCol);
-      btn02.setIcon(null);
+      textF.setText("");
+      textF.setBackground(_notVizCol);
+      vis2DBtn.setIcon(null);
    }
 
 //-------------------------------------------------------------
@@ -169,9 +169,9 @@ public class KeyEntry extends KeyEntryGUI{
     */
    protected void set3DVisIcon(boolean visible) {
       if(visible) {
-         btn03.setIcon(viz3DIcon);
+         vis3DBtn.setIcon(viz3DIcon);
       } else {
-         btn03.setIcon(notViz3DIcon);
+         vis3DBtn.setIcon(notViz3DIcon);
       }
       _visible3D = visible;
    }
@@ -192,7 +192,7 @@ public class KeyEntry extends KeyEntryGUI{
       }
 
       public void actionPerformed(ActionEvent e) {
-         if(e.getSource() == colBtn0) {
+         if(e.getSource() == colBtn) {
 	    fireAction(new String("colour" + _indx));
          }
       }
@@ -219,10 +219,10 @@ public class KeyEntry extends KeyEntryGUI{
       }
 
       public void actionPerformed(ActionEvent e) {
-         if(e.getSource() == btn00) {
-	    tf0.setScrollOffset(START); // got to start of text
-         } else if(e.getSource() == btn01) {
-            tf0.setScrollOffset(END); // go to end of text
+         if(e.getSource() == leftBtn) {
+	    textF.setScrollOffset(START); // got to start of text
+         } else if(e.getSource() == rightBtn) {
+            textF.setScrollOffset(END); // go to end of text
          }
       }
 
@@ -243,15 +243,15 @@ public class KeyEntry extends KeyEntryGUI{
       }
 
       public void actionPerformed(ActionEvent e) {
-	 if(e.getSource() == btn02) {
+	 if(e.getSource() == vis2DBtn) {
 	    if(!_visible) {
 	       if(vizIcon != null) {
-	            btn02.setIcon(vizIcon);
+	            vis2DBtn.setIcon(vizIcon);
                }
 	       fireAction(new String("makeVisible" + _indx));
 	    } else {
 	       if(notVizIcon != null) {
-	            btn02.setIcon(notVizIcon);
+	            vis2DBtn.setIcon(notVizIcon);
                }
 	       fireAction(new String("makeInvisible" + _indx));
 	    }
@@ -276,15 +276,15 @@ public class KeyEntry extends KeyEntryGUI{
       }
 
       public void actionPerformed(ActionEvent e) {
-	 if(e.getSource() == btn03) {
+	 if(e.getSource() == vis3DBtn) {
 	    if(!_visible3D) {
 	       if(viz3DIcon != null) {
-	            btn03.setIcon(viz3DIcon);
+	            vis3DBtn.setIcon(viz3DIcon);
                }
 	       fireAction(new String("showThreeDAnat" + _indx));
 	    } else {
 	       if(notViz3DIcon != null) {
-	            btn03.setIcon(notViz3DIcon);
+	            vis3DBtn.setIcon(notViz3DIcon);
                }
 	       fireAction(new String("hideThreeDAnat" + _indx));
 	    }
@@ -308,7 +308,7 @@ public class KeyEntry extends KeyEntryGUI{
       }
 
       public void actionPerformed(ActionEvent e) {
-         if(e.getSource() == btn04) {
+         if(e.getSource() == zapBtn) {
 	    fireAction(new String("zap" + _indx));
          }
       }
