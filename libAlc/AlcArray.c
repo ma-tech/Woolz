@@ -483,6 +483,214 @@ AlcErrno	AlcDouble2Malloc(double ***dest, size_t mElem, size_t nElem)
 /*!
 * \return	Error code.
 * \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd symetric array of chars
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymChar2Calloc(char ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_C2D(dest, char, nElem, "AlcSymChar2Calloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd symetric array of
+*		unsigned chars in which only the lower triangle of
+*		elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymUnchar2Calloc(unsigned char ***dest, size_t nElem)
+{
+  return(AlcSymChar2Calloc((char ***)dest, nElem));
+}
+
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd symetric array of shorts
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymShort2Calloc(short ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_C2D(dest, short, nElem, "AlcSymShort2Calloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd symetric array of ints
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymInt2Calloc(int ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_C2D(dest, int, nElem, "AlcSymInt2Calloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd symetric array of floats
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymFloat2Calloc(float ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_C2D(dest, float, nElem, "AlcSymFloat2Calloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional zero'd symetric array of doubles
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymDouble2Calloc(double ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_C2D(dest, double, nElem, "AlcSymDouble2Calloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd symetric array of chars
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymChar2Malloc(char ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_M2D(dest, char, nElem, "AlcSymChar2Malloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd symetric array of
+*		unsigned chars in which only the lower triangle of
+*		elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymUnchar2Malloc(unsigned char ***dest, size_t nElem)
+{
+  return(AlcSymChar2Malloc((char ***)dest, nElem));
+}
+
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd symetric array of shorts
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymShort2Malloc(short ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_M2D(dest, short, nElem, "AlcSymShort2Malloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd symetric array of ints
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymInt2Malloc(int ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_M2D(dest, int, nElem, "AlcSymInt2Malloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd symetric array of floats
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymFloat2Malloc(float ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_M2D(dest, float, nElem, "AlcSymFloat2Malloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
+* \brief	Allocates a 2 dimensional non-zero'd symetric array of doubles
+*		in which only the lower triangle of elements are stored.
+* \note		Should be free'd using Alc2Free().
+* \note		Array size is limited only by address space.
+* \param	dest 			Destination for allocated array
+*					pointer.
+* \param	nElem 	 		Number of row or column elements in
+*					the symetric array.
+*/
+AlcErrno	AlcSymDouble2Malloc(double ***dest, size_t nElem)
+{
+  ALC_TEMPLATE_SYM_M2D(dest, double, nElem, "AlcSymDouble2Malloc")
+}
+
+/*!
+* \return	Error code.
+* \ingroup	AlcArray
 * \brief	Free's a 2 dimensional array allocated by one of the
 *		2 dimensional array allocation functions.
 * \param	dat 			 Ptr with array to be free'd.
