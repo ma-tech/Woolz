@@ -1897,11 +1897,16 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 		thresh,
 		delta,
 		tau,
-		wMax;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bMx = NULL;
+#ifdef WLZ_BASISFN_MOS_SOLVER_SVD
+  double	wMax;
+  double  	*wMx = NULL;
+  double  	**vMx = NULL;
+#else
+  double  	**wMx = NULL;
+  double	*xMx = NULL;
+#endif
+  double	**aMx = NULL;
   WlzBasisFn	*basisFn = NULL;
   WlzDVertex3	tV0,
   		tV1,
@@ -1921,9 +1926,15 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     nSys = nPts + 1;
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-	((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+    if(
+#ifdef WLZ_BASISFN_MOS_SOLVER_SVD
+        ((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
 	(AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
+#else
+        (AlcDouble2Malloc(&wMx, 4, nSys) !=  ALC_ER_NONE) ||
+	((xMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+#endif
+	((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
 	(AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
 	((basisFn = (WlzBasisFn *)
 	  AlcCalloc(sizeof(WlzBasisFn), 1)) == NULL) ||
@@ -1982,8 +1993,15 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     }
 #endif
     /* Perform singular value decomposition of matrix A. */
+#ifdef WLZ_BASISFN_MOS_SOLVER_SVD
     errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+#else
+    errNum = WlzErrorFromAlg(
+    	     AlgMatrixCGSolve(aMx, xMx, bMx, wMx, nSys, NULL, NULL, 0.000001,
+	                      1000, NULL, NULL));
+#endif
   }
+#ifdef WLZ_BASISFN_MOS_SOLVER_SVD
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
@@ -2024,21 +2042,48 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
       *((double *)(basisFn->basis.v) + idY) = *(bMx + idY1);
     }
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
   if(wMx)
   {
     AlcFree(wMx);
   }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
   if(vMx)
   {
     (void )AlcDouble2Free(vMx);
+  }
+#else
+#ifdef WLZ_BASISFNSCALARMOS3DFROMCPTS_DEBUG
+    {
+      FILE	*fP;
+      fP = fopen("DEBUG_xMxBS.num", "w");
+      AlcDouble1WriteAsci(fP, xMx, nSys);
+      fclose(fP);
+    }
+#endif
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *(double *)(basisFn->poly.v) = *xMx;	      /* Only constant used. */
+    for(idY = 0; idY < nPts; ++idY)
+    {
+      idY1 = idY + 1;
+      *((double *)(basisFn->basis.v) + idY) = *(xMx + idY1);
+    }
+  }
+  if(xMx)
+  {
+    AlcFree(xMx);
+  }
+  if(wMx)
+  {
+    (void )AlcDouble2Free(wMx);
+  }
+#endif
+  if(bMx)
+  {
+    AlcFree(bMx);
+  }
+  if(aMx)
+  {
+    (void )AlcDouble2Free(aMx);
   }
   if(errNum != WLZ_ERR_NONE)
   {
