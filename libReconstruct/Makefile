@@ -173,6 +173,10 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
 
+# Making the tag file
+tags:			 $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			 $(CTAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+
 # Targets to create archives, dependencies and rules (modify as required).
 $(ARCHIVE):		$(OBJECTS)
 			$(AR) r $(ARCHIVE) $?
