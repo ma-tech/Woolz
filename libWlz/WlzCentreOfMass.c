@@ -24,8 +24,8 @@
 *		If the object has values and the binary object flag is	*
 *		not set then the centre of mass is calculated using	*
 *		the grey level information.				*
-*		Cx = SUMxSUMy{y*G(x,y)} / SUMxSUMy{G(x,y)}		*
-*		Cy = SUMxSUMy{x*G(x,y)} / SUMxSUMy{G(x,y)}		*
+*		Cx = SUMxSUMy{x*G(x,y)} / SUMxSUMy{G(x,y)}		*
+*		Cy = SUMxSUMy{y*G(x,y)} / SUMxSUMy{G(x,y)}		*
 *		Where (Cx,Cy) are the coordinates of the centre of	*
 *		mass.							*
 *		If the given object does not have grey values or the	*
