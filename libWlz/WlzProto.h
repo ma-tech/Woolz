@@ -47,6 +47,12 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 10-10-00 bill Add WlzAffineTransformContour(),
+*               WlzAffineTransformGMModel(),
+*               WlzAffineTransformBBoxI2(),
+*               WlzAffineTransformBBoxD2(),
+*               WlzAffineTransformBBoxI3() and
+*               WlzAffineTransformBBoxD3().
 * 28-09-00 bill	Add WlzAffineTransformDimension(),
 * 		WlzAffineTransformTranslationSet(),
 *		WlzAffineTransformFromTranslation(),
@@ -239,6 +245,32 @@ extern WlzIVertex3     		WlzAffineTransformVertexI3(
 				  WlzAffineTransform *trans,
 				  WlzIVertex3 srcVtx,
 				  WlzErrorNum *dstErr);
+extern WlzIBox2        		WlzAffineTransformBBoxI2(
+				  WlzAffineTransform *tr,
+				  WlzIBox2 srcBox,
+				  WlzErrorNum *dstErr);
+extern WlzDBox2        		WlzAffineTransformBBoxD2(
+				  WlzAffineTransform *tr,
+				  WlzDBox2 srcBox,
+				  WlzErrorNum *dstErr);
+extern WlzIBox3        		WlzAffineTransformBBoxI3(
+				  WlzAffineTransform *tr,
+				  WlzIBox3 srcBox,
+				  WlzErrorNum *dstErr);
+extern WlzDBox3        		WlzAffineTransformBBoxD3(
+				  WlzAffineTransform *tr,
+				  WlzDBox3 srcBox,
+				  WlzErrorNum *dstErr);
+extern WlzContour      		*WlzAffineTransformContour(
+				  WlzContour *srcCtr,
+				  WlzAffineTransform *tr,
+				  int newModFlg,
+				  WlzErrorNum *dstErr);
+extern WlzGMModel      		*WlzAffineTransformGMModel(
+				  WlzGMModel *srcM,
+				  WlzAffineTransform *tr,
+				  int newModFlg,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum	     	WlzAffineTransformPrimGet(
 				  WlzAffineTransform *tr,
 				  WlzAffineTransformPrim *prim);
@@ -286,7 +318,7 @@ extern WlzAffineTransform 	*WlzAffineTransformLSq(
 				  WlzDVertex2 *arrayVec0,
 				  int arraySizeVec1,
 				  WlzDVertex2 *arrayVec1,
-				  WlzTransformType tType, 
+				  WlzTransformType tType,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -948,6 +980,9 @@ extern WlzGMVertex     *WlzGMModelNewV(
 extern WlzGMVertexT    *WlzGMModelNewVT(
 			  WlzGMModel *model,
 			  WlzErrorNum *dstErr);
+extern WlzGMModel	*WlzGMModelCopy(
+			  WlzGMModel *gM,
+			  WlzErrorNum *dstErr);
 /* Freeing  of geometric modeling elements */
 extern WlzErrorNum	WlzGMModelFree(
 			  WlzGMModel *model);
@@ -1087,7 +1122,8 @@ extern WlzErrorNum	WlzGMModelTestOutVTK(
 			  WlzGMModel *model,
 			  FILE *fP);
 extern WlzErrorNum	WlzGMModelTestOutPS(
-			  WlzGMModel *model, FILE *fP,
+			  WlzGMModel *model,
+			  FILE *fP,
 			  WlzDVertex2 offset,
 			  WlzDVertex2 scale,
 			  int nCol);
@@ -1704,7 +1740,7 @@ extern WlzErrorNum		WlzMeshFreeTransform(
 extern WlzMeshTransform 	*WlzMeshFromObj(
 				  WlzObject *inObj,
 				  WlzMeshGenMethod method,
-				  double minDist, 
+				  double minDist,
 				  double maxDist,
 				  WlzErrorNum *dstErr);
 extern WlzMeshTransform 	*WlzMeshTransformNew(
@@ -1979,9 +2015,11 @@ extern WlzValues	 	WlzShiftValues(
 /************************************************************************
 * WlzSkeleton.c								*
 ************************************************************************/
-extern WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
-				     WlzConnectType minCon,
-				     WlzErrorNum *dstErr);
+extern WlzObject 		*WlzSkeleton(
+				  WlzObject *srcObj,
+				  int smoothpasses,
+				  WlzConnectType minCon,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzSobel.c								*
@@ -2048,7 +2086,7 @@ extern const char 		*WlzStringFromGreyType(
 				  WlzGreyType gType,
 				  WlzErrorNum *dstErr);
 extern WlzTransformType 	WlzStringToTransformType(
-				  const char *tStr, 
+				  const char *tStr,
 				  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromTransformType(
 				  WlzTransformType tType,
@@ -2063,7 +2101,7 @@ extern WlzGreyType 		WlzStringToGreyType(
 				  const char *gStr,
 				 WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromErrorNum(
-				  WlzErrorNum gvnErr, 
+				  WlzErrorNum gvnErr,
 			          const char **dstMsgStr);
 extern WlzErrorNum  		WlzStringToErrorNum(
 				  const char *gStr);
