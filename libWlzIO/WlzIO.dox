@@ -31,6 +31,6 @@ for IO to bibtex style records using the bibFile library. In future this could
 include all woolz IO functions.
 
 \section usage Usage
-Source should include the file WlzIO.h, binaries should be linked with libWlzIO.a.
+Source should include the file WlzIO.h, binaries should be linked with libWlzIO.a and libbibFile.a.
 
 */
