@@ -22,7 +22,9 @@ WlzHistogramObj,
 WlzHistogramCopy,
 WlzHistogramCummulative,
 WlzHistogramDistance,
-WlzHistogramEqualiseObj
+WlzHistogramEqualiseObj,
+WlzHistogramFindPeaks,
+WlzHistogramFitPeaks,
 WlzHistogramMapValues,
 WlzHistogramMatchObj,
 WlzHistogramNorm,
@@ -61,13 +63,46 @@ apply histograms.
 .BI "WlzErrorNum WlzHistogramEqualiseObj(WlzObject *" "srcObj" ,
 .in +4m
 .br
-.BI "int " "smoothing" );
+.BI "int " "smoothing" ,
+.BI "int " "dither" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzHistogramFindPeaks(WlzObject *" "histObj" ,
+.in +4m
+.br 
+.BI "double " "sigma" ,
+.BI "double " "thresh" ,
+.br 
+.BI "int *" "dstPeaksSz" ,
+.BI "int **" "dstPeaks" );
+.in -4m
+.LP
+.BI "WlzErrorNum WlzHistogramFitPeaks(WlzObject *" "histObj" ,
+.in +4m
+.br 
+.BI "int " "numDbn" ,
+.BI "double " "sigma" ,
+.br 
+.BI "double " "thresh" ,
+.BI "double " "tol" ,
+.br 
+.BI "int *" "dstNumMu" ,
+.BI "double **" "dstMu" ,
+.br 
+.BI "int *" "dstNumSigma" ,
+.BI "double **" "dstSigma" ,
+.br 
+.BI "int *" "dstNumAlpha" ,
+.BI "double **" "dstAlpha" ,
+.br 
+.BI "double *" "dstLL" );
 .in -4m
 .LP
 .BI "WlzErrorNum WlzHistogramMapValues(WlzObject *" "srcObj" ,
 .in +4m
 .br
-.BI "WlzObject *" "mapHistObj" );
+.BI "WlzObject *" "mapHistObj" ,
+.BI "int " "dither" );
 .in -4m
 .LP
 .BI "WlzErrorNum WlzHistogramMatchObj(WlzObject *" "srcObj" ,
@@ -79,7 +114,8 @@ apply histograms.
 .BI "int " "smoothing" ,
 .BI "double " "minDist" , 
 .br
-.BI "double " "maxDist" );
+.BI "double " "maxDist" ,
+.BI "int " "dither" );
 .in -4m
 .LP
 .BI "WlzErrorNum WlzHistogramNorm(WlzObject *" histObj ,
@@ -111,11 +147,21 @@ apply histograms.
 tab(^);
 lI l.
 binSize^histogram bin width.
+dither^dither values when mapping.
+dstAlpha^destination pointer for alpha values.
 dstErrNum^destination pointer for error number.
 dstHistType^type for new histogram domain.
-histObj^histogram object.
+dstLL^destination pointer for log liklihood.
+dstMu^destination pointer for mean values.
+dstNumAlpha^destination pointer for number of alpha values.
+dstNumMu^destination pointer for number of mean values.
+dstNumSigma^destination pointer for number of sigma values.
+dstPeaks^destination pointer for peak positions.
+dstPeaksSz^destination pointer for number of peaks found.
+dstSigma^destination pointer for sigma values.
 histObj0^first histogram object.
 histObj1^second histogram object.
+histObj^histogram object.
 independentPlanes^independent planes flag.
 mapHistObj^histogram object for mapping grey values.
 maxBins^number of histogram bins allocated.
@@ -124,9 +170,12 @@ maxVal^maximum value after normalisation.
 minDist^minimum distance.
 nBins^number of histogram bins.
 origin^lowest grey value in first histogram bin.
+sigma^Gaussian sigma value.
 smoothing^parameter for Gaussian smoothing of histogram.
 srcHistObj^source histogram object.
 srcObj^source domain object.
+thresh^threshold (minimum bin count) value for peaks.
+tol^tollerance value.
 .TE
 .SH MT-LEVEL
 .LP
@@ -182,11 +231,29 @@ to produce a smoothed copy of the given histogram object
 before histogram equalisation.
 The given histogram object is not modified.
 .LP
+.B WlzHistogramFindPeaks
+finds the peaks of the given histogram.
+Peaks are found by searching through the 1st derivative (h') of the histogram
+bin values (h). For a peak
+.br
+.in +2m
+(h'[i - 1] > 0) && (h'[i + 1] < 0) && (h[i] > thresh).
+.in -2m
+.LP
+.B WlzHistogramFitPeaks
+fits the given Woolz histogram object's histogram
+bin values using a mixture of Gaussian distributions.
+The method of guessing the peak positions depends on the parameter numDbn.
+If (numDbn > 0) guess numDbn equally spaced Gaussians, else use the function
+WlzHistogramFindPeaks(3).
+After the initial guess AlgMixture(3) is used to find the maximum liklihood
+mixture of Gaussian distributions which best fit the histogram.
+.LP
 .B WlzHistogramMapValues
 uses the given mapping histogram,
 which must have integral (\fBWLZ_HISTOGRAMDOMAIN_INT\fR) bins,
 to remap the grey values of the given 2D or 3D domain object.
-The mapping histogram \fMUST\fR have integral bin values
+The mapping histogram \fBMUST\fR have integral bin values
 and bins appropriate for all domain object grey values,
 because the histogram bin values are used as a look\-up table
 indexed by grey value - histogram offset.

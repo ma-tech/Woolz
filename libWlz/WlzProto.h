@@ -47,8 +47,13 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 04-02-2k bill Add WlzHistogramFitPeaks().
+* 02-02-2k bill Added WlzRsvFilterBuffer(), WlzHistogramRsvGauss(),
+*		WlzHistogramRsvFilter() and modified WlzHistogramSmooth().
+*		Add WlzHistogramConvolve() and WlzHistogramCnvGauss().
+*		Add WlzHistogramFindPeaks().
 * 29-11-99 bill	Add all the WlzContour and WlzEdge functions.
-* 31-08-99 bill	Modified array size parameters for JavaWoolz.
+* 31-08-99 bill	Modify array size parameters for JavaWoolz.
 *		Allowed more functions to be bound using JavaWoolz.
 ************************************************************************/
 
@@ -1092,25 +1097,64 @@ extern int 			WlzHistogramBinMax(
 				  WlzHistogramDomain *histDom);
 extern WlzErrorNum 		WlzHistogramCummulative(
 				  WlzObject *srcHist);
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum		WlzHistogramConvolve(
+				  WlzObject *histObj,
+				  int krnSz,
+				  double *krn);
+#endif /* WLZ_EXT_BIND */
+extern WlzErrorNum		WlzHistogramCnvGauss(
+				  WlzObject *histObj,
+				  double sigma,
+				  int deriv);
+extern WlzErrorNum		WlzHistogramRsvGauss(
+				  WlzObject *histObj,
+				  double sigma,
+				  int deriv);
+extern WlzErrorNum		WlzHistogramRsvFilter(
+				  WlzObject *histObj,
+				  WlzRsvFilter *flt);
 extern WlzErrorNum 		WlzHistogramSmooth(
 				  WlzObject *histObj,
 				  int width);
+extern WlzErrorNum		WlzHistogramFindPeaks(
+				  WlzObject *histObj,
+				  double sigma,
+				  double thresh,
+				  int *dstSizeArrayPk,
+				  int **dstArrayPk);
+extern WlzErrorNum		WlzHistogramFitPeaks(
+				  WlzObject *histObj,
+				  int numDbn,
+				  double smooth,
+				  double thresh,
+				  double tol,
+				  int *dstSizeArrayMu,
+				  double **dstArrayMu,
+				  int *dstSizeArraySigma,
+				  double **dstArraySigma,
+				  int *dstSizeArrayAlpha,
+				  double **dstArrayAlpha,
+				  double *dstLL);
 extern WlzErrorNum 		WlzHistogramNorm(
 				  WlzObject *histObj,
 				  double maxVal);
 extern WlzErrorNum 		WlzHistogramMapValues(
 				  WlzObject *srcObj,
-				  WlzObject *mapHistObj);
+				  WlzObject *mapHistObj,
+				  int dither);
 extern WlzErrorNum 		WlzHistogramMatchObj(
 				  WlzObject *srcObj,
 				  WlzObject *targetHist,
 				  int independentPlanes,
 				  int smoothing,
 				  double minDist,
-				  double maxDist);
+				  double maxDist,
+				  int dither);
 extern WlzErrorNum 		WlzHistogramEqualiseObj(
 				  WlzObject *srcObj,
-				  int smoothing);
+				  int smoothing,
+				  int dither);
 
 /************************************************************************
 * WlzHyThreshold.c							*
@@ -1531,6 +1575,14 @@ extern WlzObject		*WlzReadObj(
 /************************************************************************
 * WlzRsvFilter.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum		WlzRsvFilterBuffer(
+				  WlzRsvFilter *ftr,
+				  double *datBuf,
+				  double *tmpBuf0,
+				  double *tmpBuf1,
+				  int bufSz);
+#endif /* WLZ_EXT_BIND */
 extern void			WlzRsvFilterFreeFilter(
 				  WlzRsvFilter *ftr);
 extern WlzRsvFilter		*WlzRsvFilterMakeFilter(

@@ -16,8 +16,8 @@
 *		WLZ_RSVFILTER_TEST_3D. See code below.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
-* 06-09-1999 bill	Object type error was not returned from
-*			WlzRsvFilterObj().
+* 02-02-2k bill	Added WlzRsvFilterBuffer().
+* 06-09-99 bill Object type error was not returned from WlzRsvFilterObj().
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -441,6 +441,40 @@ static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *ftr, double *data,
   {
     *dP++ = c * (*fP0++ + *fP1++);
   }
+}
+
+/************************************************************************
+* Function:	WlzRsvFilterFilterBufXF
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Filters a given buffer using an IIR filter defined by
+*		the filter coefficients.
+* Global refs:	-
+* Parameters:	WlzRsvFilter *ftr:	The filter.
+*		double *datBuf:		The data buffer to be filtered
+*					with bufSz elements.
+*		double *tmpBuf0:	Temporary buffer with at least
+*					dataSz elements.
+*		double *tmpBuf1:	Temporary buffer with at least
+*					dataSz elements.
+*		int bufSz:		Number of data in buffer.
+************************************************************************/
+WlzErrorNum	WlzRsvFilterBuffer(WlzRsvFilter *ftr, double *datBuf,
+				   double *tmpBuf0, double *tmpBuf1,
+				   int bufSz)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((ftr == NULL) ||
+     (datBuf == NULL) || (tmpBuf0 == NULL) || (tmpBuf1 == NULL) ||
+     (bufSz <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    WlzRsvFilterFilterBufXF(ftr, datBuf, tmpBuf0, tmpBuf1, bufSz);
+  }
+  return(errNum);
 }
 
 /************************************************************************

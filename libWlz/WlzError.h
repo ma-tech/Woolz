@@ -14,6 +14,7 @@
 * Purpose:      Defines the Woolz error numbers.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-01-00 bill Add ALG_ERR_CONVERGENCE.
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -84,6 +85,7 @@ typedef enum
   WLZ_ERR_ALG,
   WLZ_ERR_ALG_SINGULAR,
   WLZ_ERR_ALG_HOMOGENEOUS,
+  WLZ_ERR_ALG_CONVERGENCE,
   WLZ_ERR_UNSPECIFIED,
   /**********************************************************************
   * WLZ_ERR_COUNT is not an error number. It is the number of errors.	*

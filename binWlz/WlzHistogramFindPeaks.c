@@ -1,18 +1,15 @@
 #pragma ident "MRC HGU $Id$"
 /***********************************************************************
 * Project:      Woolz
-* Title:        WlzHistogramEqualiseObj.c
-* Date:         March 1999
+* Title:        WlzHistogramGauss.c
+* Date:         February 2000
 * Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
+* Copyright:	2000 Medical Research Council, UK.
 *		All rights reserved.
 * Address:	MRC Human Genetics Unit,
 *		Western General Hospital,
 *		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which modifies the grey values of the
-*		given Woolz domain object so that the histogram of
-*		the modified object's grey values approximate a uniform
-*		histogram, ie histogram equalisation.
+* Purpose:      Woolz filter which finds histogram peak positions.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
@@ -31,41 +28,48 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		option,
-  		dither = 0,
-		smoothing = 0,
+  int		idx,
+  		option,
+		pkCnt = 0,
 		ok = 1,
 		usage = 0;
+  double	sigma = 1.0,
+  		thresh = 1.0;
+  int		*pkPos = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
-  WlzObject	*inObj = NULL,
-		*outObj = NULL;
-  char 		*outObjFileStr,
+  WlzHistogramDomain *histDom;
+  WlzObject	*inObj = NULL;
+  char 		*outDatFileStr,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "Ds:o:h",
-		outObjFileStrDef[] = "-",
+  static char	optList[] = "o:s:t:h",
+		outDatFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
   opterr = 0;
+  outDatFileStr = outDatFileStrDef;
   inObjFileStr = inObjFileStrDef;
-  outObjFileStr = outObjFileStrDef;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
     {
-      case 'D':
-	dither = 1;
-        break;
+      case 'o':
+        outDatFileStr = optarg;
+	break;
       case 's':
-        if(sscanf(optarg, "%d", &smoothing) != 1)
+	if(sscanf(optarg, "%lg", &sigma) != 1)
 	{
 	  usage = 1;
 	  ok = 0;
 	}
 	break;
-      case 'o':
-        outObjFileStr = optarg;
+      case 't':
+	if(sscanf(optarg, "%lg", &thresh) != 1)
+	{
+	  usage = 1;
+	  ok = 0;
+	}
 	break;
       case 'h':
       default:
@@ -75,7 +79,7 @@ int             main(int argc, char **argv)
     }
   }
   if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-     (outObjFileStr == NULL) || (*outObjFileStr == '\0'))
+     (outDatFileStr == NULL) || (*outDatFileStr == '\0'))
   {
     ok = 0;
     usage = 1;
@@ -114,41 +118,50 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if((inObj->type != WLZ_2D_DOMAINOBJ) && (inObj->type != WLZ_3D_DOMAINOBJ))
+    if(inObj->type != WLZ_HISTOGRAM)
     {
       ok = 0;
       (void )fprintf(stderr,
-		 "%s: input object read from file %s is not a domain object\n",
+      		     "%s: input object read from file %s not a histogram\n",
 		     *argv, inObjFileStr);
     }
   }
   if(ok)
   {
-    outObj = WlzAssignObject(inObj, NULL);
-    if((errNum = WlzHistogramEqualiseObj(outObj, smoothing,
-    				         dither)) != WLZ_ERR_NONE)
+    errNum = WlzHistogramFindPeaks(inObj, sigma, thresh,
+    				   &pkCnt, &pkPos);
+    if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-      		     "%s: failed to histogram equalise object (%s).\n",
+      		     "%s: failed to find histogram peaks (%s).\n",
 		     *argv, errMsg);
     }
   }
   if(ok)
   {
-    errNum = WLZ_ERR_WRITE_EOF;
-    if(((fP = (strcmp(outObjFileStr, "-")?  fopen(outObjFileStr, "w"):
-	      				    stdout)) == NULL) ||
-       ((errNum = WlzWriteObj(fP, outObj)) != WLZ_ERR_NONE))
+    if(pkCnt > 0)
     {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr,
-		     "%s: failed to write output object (%s).\n",
-		     *argv, errMsg);
+      if((fP = (strcmp(outDatFileStr, "-")?
+               fopen(outDatFileStr, "w"): stdout)) == NULL)
+      {
+        ok = 0;
+	(void )fprintf(stderr,
+		       "%s: failed to write output data\n",
+		       *argv);
+      }
+      else
+      {
+	histDom = inObj->domain.hist;
+	for(idx = 0; idx < pkCnt; ++idx)
+	{
+	  fprintf(fP, "%8g\n",
+		  histDom->origin + (*(pkPos + idx) * histDom->binSize));
+	}
+      }
     }
-    if(fP && strcmp(outObjFileStr, "-"))
+    if(fP && strcmp(outDatFileStr, "-"))
     {
       fclose(fP);
     }
@@ -157,32 +170,24 @@ int             main(int argc, char **argv)
   {
     WlzFreeObj(inObj);
   }
-  if(outObj)
-  {
-    WlzFreeObj(outObj);
-  }
   if(usage)
   {
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-D] [-s#] [-o<output object>] [<input object>]\n"
+    " [-h] [-o<out file>] [-s#] [-t#] [<in object>]\n"
     "Options:\n"
-    "  -D  Dither pixel values when mapping.\n"
-    "  -s  Input object histogram smoothing.\n"
-    "  -o  Output object/data file name.\n"
+    "  -o  Output data file name.\n"
+    "  -s  Gaussian sigma (standard deviation).\n"
+    "  -t  Threshold value for peak height.\n",
     "  -h  Help, prints this usage message.\n"
-    "Histogram equalises the given Woolz domain object so that the\n"
-    "histogram of the modified object's grey values approximates\n"
-    "a uniform histogram.\n"
-    "The smoothing parameter is a gaussian convolution half height full\n"
-    "width specified in histogram bins.\n"
+    "Finds the positions of histogram peaks.\n"
     "Objects/data are read from stdin and written to stdout unless the\n"
     "filenames are given.\n",
     *argv,
-    " myobj.wlz -o equalised.wlz\n"
-    "The input Woolz domain object is read from myobj.wlz, histogram\n"
-    "equalised and written to the file equalised.wlz\n");
+    " -s2 -t 10 myhist.wlz\n"
+    "The input Woolz histogram object is read from myhist.wlz and peak\n"
+    "positions are written th the standard output.\n");
   }
   return(!ok);
 }

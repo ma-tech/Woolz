@@ -12,6 +12,8 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 07-02-2k bill	Add WlzHistogramFitPeaks.
+# 02-02-2k bill	Add WlzHistogramFindPeaks and WlzHistogramGauss.
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -59,6 +61,9 @@ EXECUTABLES		= \
 			WlzGreyTemplate \
 			WlzHistogramData \
 			WlzHistogramEqualiseObj \
+			WlzHistogramFindPeaks \
+			WlzHistogramFitPeaks \
+			WlzHistogramGauss \
 			WlzHistogramMatchObj \
 			WlzHistogramObj \
 			WlzHistogramRebin \
@@ -130,6 +135,9 @@ CSOURCES		= \
 			WlzGreyTemplate.c \
 			WlzHistogramData.c \
 			WlzHistogramEqualiseObj.c \
+			WlzHistogramFindPeaks.c \
+			WlzHistogramFitPeaks.c \
+			WlzHistogramGauss.c \
 			WlzHistogramMatchObj.c \
 			WlzHistogramObj.c \
 			WlzHistogramRebin.c \

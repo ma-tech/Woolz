@@ -33,6 +33,7 @@ int             main(int argc, char **argv)
 {
   int		idx,
   		option,
+		dither = 0,
 		smoothingSrcHist = 0,
 		smoothingTargetHist = 0,
 		independentFlag = 0,
@@ -49,7 +50,7 @@ int             main(int argc, char **argv)
   		*inObjFileStr;
   const char	*errMsg;
   char		*distStr[2];
-  static char	optList[] = "m:s:t:o:id:h",
+  static char	optList[] = "Dm:s:t:o:id:h",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -63,6 +64,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'D':
+        dither = 1;
+	break;
       case 'm':
         matchObjFileStr = optarg;
 	break;
@@ -224,7 +228,8 @@ int             main(int argc, char **argv)
     outObj = WlzAssignObject(inObj, NULL);
     if((errNum = WlzHistogramMatchObj(outObj, matchObj,
     				      independentFlag, smoothingSrcHist,
-    				      distVal[0], distVal[1])) != WLZ_ERR_NONE)
+    				      distVal[0], distVal[1],
+				      dither)) != WLZ_ERR_NONE)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -269,8 +274,10 @@ int             main(int argc, char **argv)
     "Usage: %s%sExample: %s%s",
     *argv,
     " -m <histogram object> [-h] [-o<output object>]\n"
-    "                              [-i] [-s#] [-t#] [-d#,#] [<input object>]\n"
+    "                              [-D] [-i] [-s#] [-t#] [-d#,#]\n"
+    "                              [<input object>]\n"
     "Options:\n"
+    "  -D  Dither pixel values when mapping.\n"
     "  -m  Histogram object to match domain objects values to.\n"
     "  -s  Input object histogram smoothing.\n"
     "  -t  Target histogram smoothing.\n"

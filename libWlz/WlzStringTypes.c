@@ -13,20 +13,21 @@
 *		and a string representation.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-01-00 bill Add ALG_ERR_CONVERGENCE.
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
 
 /************************************************************************
-* Function:	WlzStringFromObjType					*
-* Returns:	const char*:		Pointer to read only string or	*
-*					NULL on error.			*
-* Purpose:	Finds a string for the given object's type.		*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given object.			*
-*		WlzErrorNum *dstErr:	destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringFromObjType				
+* Returns:	const char*:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given object's type.	
+* Global refs:	-						
+* Parameters:	WlzObject *obj:		Given object.		
+*		WlzErrorNum *dstErr:	destination error pointer, may
+*					be null.		
 ************************************************************************/
 const char	*WlzStringFromObjType(WlzObject *obj,
 				      WlzErrorNum *dstErr)
@@ -133,15 +134,15 @@ const char	*WlzStringFromObjType(WlzObject *obj,
 }
 
 /************************************************************************
-* Function:	WlzStringToObjType					*
-* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL	*
-*					on error.			*
-* Purpose:	Finds an enumerated type for the given object type	*
-*		string.							*
-* Global refs:	-							*
-* Parameters:	const char *oTypeStr:	Given object type string.	*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringToObjType				
+* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL
+*					on error.		
+* Purpose:	Finds an enumerated type for the given object type
+*		string.						
+* Global refs:	-						
+* Parameters:	const char *oTypeStr:	Given object type string.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
 ************************************************************************/
 WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 				   WlzErrorNum *dstErr)
@@ -190,14 +191,14 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 }
 
 /************************************************************************
-* Function:	WlzStringFromObjDomainType				*
-* Returns:	const char*:		Pointer to read only string or	*
-*					NULL on error.			*
-* Purpose:	Finds a string for the given object's domain type.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given object.			*
-*		WlzErrorNum *dstErr:	destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringFromObjDomainType			
+* Returns:	const char*:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given object's domain type.
+* Global refs:	-						
+* Parameters:	WlzObject *obj:		Given object.		
+*		WlzErrorNum *dstErr:	destination error pointer, may
+*					be null.		
 ************************************************************************/
 const char	*WlzStringFromObjDomainType(WlzObject *obj,
 					    WlzErrorNum *dstErr)
@@ -354,16 +355,16 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
 }
 
 /************************************************************************
-* Function:	WlzStringToObjDomainType				*
-* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL	*
-*					on error.			*
-* Purpose:	Finds an enumerated type for the given object domain	*
-*		type string.						*
-* Global refs:	-							*
-* Parameters:	const char *oDomTypeStr:Given object domain type	*
-*					string.				*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringToObjDomainType			
+* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL
+*					on error.		
+* Purpose:	Finds an enumerated type for the given object domain
+*		type string.					
+* Global refs:	-						
+* Parameters:	const char *oDomTypeStr:Given object domain type
+*					string.			
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
 ************************************************************************/
 WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 				         WlzErrorNum *dstErr)
@@ -406,14 +407,14 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 }
 
 /************************************************************************
-* Function:	WlzStringFromObjValuesType				*
-* Returns:	const char*:		Pointer to read only string or	*
-*					NULL on error.			*
-* Purpose:	Finds a string for the given object's values type.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given object.			*
-*		WlzErrorNum *dstErr:	destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringFromObjValuesType			
+* Returns:	const char*:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given object's values type.
+* Global refs:	-						
+* Parameters:	WlzObject *obj:		Given object.		
+*		WlzErrorNum *dstErr:	destination error pointer, may
+*					be null.		
 ************************************************************************/
 const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 {
@@ -481,16 +482,16 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 }
 
 /************************************************************************
-* Function:	WlzStringToObjValuesType				*
-* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL	*
-*					on error.			*
-* Purpose:	Finds an enumerated type for the given object values	*
-*		type string.						*
-* Global refs:	-							*
-* Parameters:	const char *oValTypeStr:Given object values type	*
-*					string.				*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringToObjValuesType			
+* Returns:	WlzObjectType:		Woolz object type or WLZ_NULL
+*					on error.		
+* Purpose:	Finds an enumerated type for the given object values
+*		type string.					
+* Global refs:	-						
+* Parameters:	const char *oValTypeStr:Given object values type
+*					string.			
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
 ************************************************************************/
 WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 				         WlzErrorNum *dstErr)
@@ -517,14 +518,14 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 }
 
 /************************************************************************
-* Function:	WlzStringFromTransformType				*
-* Returns:	const char*:		Pointer to read only string or	*
-*					NULL on error.			*
-* Purpose:	Finds a string for the given transform type.		*
-* Global refs:	-							*
-* Parameters:	WlzTransformType tType:	Given transform type.		*
-*		WlzErrorNum *dstErr:	destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringFromTransformType			
+* Returns:	const char*:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given transform type.	
+* Global refs:	-						
+* Parameters:	WlzTransformType tType:	Given transform type.	
+*		WlzErrorNum *dstErr:	destination error pointer, may
+*					be null.		
 ************************************************************************/
 const char	*WlzStringFromTransformType(WlzTransformType tType,
 				            WlzErrorNum *dstErr)
@@ -552,14 +553,14 @@ const char	*WlzStringFromTransformType(WlzTransformType tType,
 }
 
 /************************************************************************
-* Function:	WlzStringToTransformType				*
-* Returns:	WlzTransformType: 	Woolz transform type.		*
-* Purpose:	Finds an enumerated type for the given transform	*
-*		type string.						*
-* Global refs:	-							*
-* Parameters:	const char *tStr:	Given transform type string.	*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringToTransformType			
+* Returns:	WlzTransformType: 	Woolz transform type.	
+* Purpose:	Finds an enumerated type for the given transform
+*		type string.					
+* Global refs:	-						
+* Parameters:	const char *tStr:	Given transform type string.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
 ************************************************************************/
 WlzTransformType WlzStringToTransformType(const char *tStr,
 				          WlzErrorNum *dstErr)
@@ -584,14 +585,14 @@ WlzTransformType WlzStringToTransformType(const char *tStr,
 }
 
 /************************************************************************
-* Function:	WlzStringFromGreyType					*
-* Returns:	const char*:		Pointer to read only string or	*
-*					NULL on error.			*
-* Purpose:	Finds a string for the given grey type.			*
-* Global refs:	-							*
-* Parameters:	WlzGreyType gType:	Given grey type.		*
-*		WlzErrorNum *dstErr:	destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringFromGreyType				
+* Returns:	const char*:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given grey type.		
+* Global refs:	-						
+* Parameters:	WlzGreyType gType:	Given grey type.	
+*		WlzErrorNum *dstErr:	destination error pointer, may
+*					be null.		
 ************************************************************************/
 const char	*WlzStringFromGreyType(WlzGreyType gType,
 				       WlzErrorNum *dstErr)
@@ -628,15 +629,15 @@ const char	*WlzStringFromGreyType(WlzGreyType gType,
 }
 
 /************************************************************************
-* Function:	WlzStringToGreyType					*
-* Returns:	WlzGreyType:		Woolz grey type or		*
-*					WLZ_GREY_ERROR on error.	*
-* Purpose:	Finds an enumerated type for the given grey type	*
-*		string.							*
-* Global refs:	-							*
-* Parameters:	const char *gStr:	Given grey type string.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be null.			*
+* Function:	WlzStringToGreyType				
+* Returns:	WlzGreyType:		Woolz grey type or	
+*					WLZ_GREY_ERROR on error.
+* Purpose:	Finds an enumerated type for the given grey type
+*		string.						
+* Global refs:	-						
+* Parameters:	const char *gStr:	Given grey type string.	
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.		
 ************************************************************************/
 WlzGreyType	WlzStringToGreyType(const char *gStr,
 				    WlzErrorNum *dstErr)
@@ -664,15 +665,15 @@ WlzGreyType	WlzStringToGreyType(const char *gStr,
 }
 
 /************************************************************************
-* Function:	WlzStringFromErrorNum					*
-* Returns:	const char *:		Pointer to read only string or	*
-*					NULL on error.			*
-* Purpose:	Finds a string for the given error.			*
-* Global refs:	-							*
-* Parameters:	WlzErrorNum wlzErr:	Given error.			*
-*		const char **dstMsgStr:	Destination pointer for a	*
-*					'meaningful' message string,	*
-*					may be NULL.			*
+* Function:	WlzStringFromErrorNum				
+* Returns:	const char *:		Pointer to read only string or
+*					NULL on error.		
+* Purpose:	Finds a string for the given error.		
+* Global refs:	-						
+* Parameters:	WlzErrorNum wlzErr:	Given error.		
+*		const char **dstMsgStr:	Destination pointer for a
+*					'meaningful' message string,
+*					may be NULL.		
 ************************************************************************/
 const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
 				       const char **dstMsgStr)
@@ -906,6 +907,10 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
       errStr = "WLZ_ERR_ALG_HOMOGENEOUS",
       msgStr = "Numerical algorithm homogeneous matrix";
       break;
+    case WLZ_ERR_ALG_CONVERGENCE:
+      errStr = "WLZ_ERR_ALG_CONVERGENCE",
+      msgStr = "Numerical algorithm failed to converge";
+      break;
     default:	/* FALLTHROUGH */
     case WLZ_ERR_UNSPECIFIED:
       errStr = "WLZ_ERR_UNSPECIFIED",
@@ -920,12 +925,12 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
 }
 
 /************************************************************************
-* Function:	WlzStringToErrorNum					*
-* Returns:	WlzErrorNum:		Matched error number.		*
-* Purpose:	Finds an error number for the given error number	*
-*		string.							*
-* Global refs:	-							*
-* Parameters:	const char *errStr:	Given error number string.	*
+* Function:	WlzStringToErrorNum				
+* Returns:	WlzErrorNum:		Matched error number.	
+* Purpose:	Finds an error number for the given error number
+*		string.						
+* Global refs:	-						
+* Parameters:	const char *errStr:	Given error number string.
 ************************************************************************/
 WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 {
@@ -989,6 +994,7 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_ALG", WLZ_ERR_ALG,
 	      "WLZ_ERR_ALG_SINGULAR", WLZ_ERR_ALG_SINGULAR,
 	      "WLZ_ERR_ALG_HOMOGENEOUS", WLZ_ERR_ALG_HOMOGENEOUS,
+	      "WLZ_ERR_ALG_CONVERGENCE", WLZ_ERR_ALG_CONVERGENCE,
 	      "WLZ_ERR_UNSPECIFIED", WLZ_ERR_UNSPECIFIED,
 	      NULL))
   {

@@ -12,6 +12,7 @@
 * Purpose:      Computes the volume of a Woolz domain object.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-02-2k bill Fix null pointer reference bug in WlzVolume().
 ************************************************************************/
 #include <Wlz.h>
 
@@ -61,7 +62,7 @@ int		WlzVolume(WlzObject *obj, WlzErrorNum *wlzErr)
     return 0;
 
   default:
-    if(*wlzErr)
+    if(wlzErr)
     {
       *wlzErr = WLZ_ERR_OBJECT_TYPE;
     }

@@ -12,17 +12,18 @@
 * Purpose:      Error related functions for the Woolz library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 28-01-00 bill	Add ALG_ERR_CONVERGENCE.
 ************************************************************************/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
 /************************************************************************
-* Function:	WlzErrorFromAlg						*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Converts an Alg error code to a Woolz error code.	*
-* Global refs:	-							*
-* Parameters:	AlgError algErr:	Given Alg error code.		*
+* Function:	WlzErrorFromAlg
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose:	Converts an Alg error code to a Woolz error code.
+* Global refs:	-
+* Parameters:	AlgError algErr:	Given Alg error code.
 ************************************************************************/
 WlzErrorNum	WlzErrorFromAlg(AlgError algErr)
 {
@@ -44,6 +45,9 @@ WlzErrorNum	WlzErrorFromAlg(AlgError algErr)
       break;
     case ALG_ERR_HOMOGENEOUS:
       wlzErr = WLZ_ERR_ALG_HOMOGENEOUS;
+      break;
+    case ALG_ERR_CONVERGENCE:
+      wlzErr = WLZ_ERR_ALG_CONVERGENCE;
       break;
   }
   return(wlzErr);

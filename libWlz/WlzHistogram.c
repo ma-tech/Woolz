@@ -13,23 +13,28 @@
 *		histogram objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 04-02-2k bill	Add WlzHistogramFitPeaks().
+* 02-02-2k bill	Add WlzHistogramRsvGauss(), WlzHistogramRsvFilter(),
+*		WlzHistogramConvolve(), WlzHistogramCnvGauss() and
+*		WlzHistogramFindPeaks().
+*		Modify WlzHistogramSmooth() to use WlzHistogramRsvGauss().
 ************************************************************************/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
 /************************************************************************
-* Function:	WlzHistogramCheckDomainAndValues			*
-* Returns:	WlzErrorNum :		Error number.			*
-* Purpose:	Checks the given objects domain and values if either is	*
-*		NULL the appropriate error code is returned. Also finds	*
-*		the grey type from the given object.			*
-*		Because this is a static function the object pointer	*
-*		doesn't need to be checked.				*
-* Global refs:	-							*
-* Parameters:	WlzGreyType *greyType:	Destination pointer for grey	*
-*					type.				*
-*		WlzObject *srcObj:	Given source object.		*
+* Function:	WlzHistogramCheckDomainAndValues
+* Returns:	WlzErrorNum :		Error number.
+* Purpose:	Checks the given objects domain and values if either is
+*		NULL the appropriate error code is returned. Also finds
+*		the grey type from the given object.
+*		Because this is a static function the object pointer
+*		doesn't need to be checked.
+* Global refs:	-
+* Parameters:	WlzGreyType *greyType:	Destination pointer for grey
+*					type.
+*		WlzObject *srcObj:	Given source object.
 ************************************************************************/
 static WlzErrorNum WlzHistogramCheckDomainAndValues(WlzGreyType *greyType,
 						    WlzObject *srcObj)
@@ -96,11 +101,11 @@ static WlzErrorNum WlzHistogramCheckDomainAndValues(WlzGreyType *greyType,
 }
 
 /************************************************************************
-* Function:	WlzHistogramCheckHistObj				*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Checks the given histogram object for basic validity.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *histObj:	Given histogram object.		*
+* Function:	WlzHistogramCheckHistObj
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Checks the given histogram object for basic validity.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
 ************************************************************************/
 static WlzErrorNum WlzHistogramCheckHistObj(WlzObject *histObj)
 {
@@ -133,18 +138,18 @@ static WlzErrorNum WlzHistogramCheckHistObj(WlzObject *histObj)
 }
 
 /************************************************************************
-* Function:	WlzHistogramAddIntBins					*
-* Returns:	void							*
-* Purpose:	Adds the bins of the second histogram domain to those	*
-*		of the first. Both histogram domains are assumed to	*
-*		be the same except for the bin values.			*
-*		Because this is a static function the object pointer	*
-*		doesn't need to be checked.				*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *dstHistDom:	Destination histogram	*
-*					domain.				*
-*		WlzHistogramDomain *srcHistDom: Source histogram	*
-*					domain.				*
+* Function:	WlzHistogramAddIntBins
+* Returns:	void
+* Purpose:	Adds the bins of the second histogram domain to those
+*		of the first. Both histogram domains are assumed to
+*		be the same except for the bin values.
+*		Because this is a static function the object pointer
+*		doesn't need to be checked.
+* Global refs:	-
+* Parameters:	WlzHistogramDomain *dstHistDom:	Destination histogram
+*					domain.
+*		WlzHistogramDomain *srcHistDom: Source histogram
+*					domain.
 ************************************************************************/
 static void	WlzHistogramAddIntBins(WlzHistogramDomain *dstHistDom,
 				       WlzHistogramDomain *srcHistDom)
@@ -163,16 +168,16 @@ static void	WlzHistogramAddIntBins(WlzHistogramDomain *dstHistDom,
 }
 
 /************************************************************************
-* Function:	WlzHistogramCompute2D					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Computes the histogram occupancies of the histogram	*
-*		bins for the given histogram domain and 2D domain	*
-*		object.							*
-*		Because this is a static function there's no need to	*
-*		check the parameters.					*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom: Histogram domain.		*
-*		WlzObject *srcObj:	Source 2D domain object.	*
+* Function:	WlzHistogramCompute2D
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Computes the histogram occupancies of the histogram
+*		bins for the given histogram domain and 2D domain
+*		object.
+*		Because this is a static function there's no need to
+*		check the parameters.
+* Global refs:	-
+* Parameters:	WlzHistogramDomain *histDom: Histogram domain.
+*		WlzObject *srcObj:	Source 2D domain object.
 ************************************************************************/
 static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 					 WlzObject *srcObj)
@@ -325,25 +330,25 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 
 
 /************************************************************************
-* Function:	WlzHistogramReBinUbyte					*
-* Returns:	void							*
-* Purpose:	Recomputes the given histogram domain for the required	*
-*		number of bins, origin and bin size.			*
-*		This function will only be called for a histogram	*
-*		computed from UBYTE grey values with the range [0-255]	*
-*		with histDom->maxBins == 256. Also the given histograms	*
-*		binSize is known to be 1.0 and it's origin is known to	*
-*		be 0.0.							*
-*		Because this is a static function there's no need to	*
-*		check the parameters.					*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom: Histogram domain.		*
-*		int nBins:		Required number of histogram 	*
-*					bins.				*
-*		double origin:		Required lowest grey value in	*
-*					first histogram bin.		*
-*		double binSize:		Required grey value range for	*
-*					each histogram bin.		*
+* Function:	WlzHistogramReBinUbyte
+* Returns:	void
+* Purpose:	Recomputes the given histogram domain for the required
+*		number of bins, origin and bin size.
+*		This function will only be called for a histogram
+*		computed from UBYTE grey values with the range [0-255]
+*		with histDom->maxBins == 256. Also the given histograms
+*		binSize is known to be 1.0 and it's origin is known to
+*		be 0.0.
+*		Because this is a static function there's no need to
+*		check the parameters.
+* Global refs:	-
+* Parameters:	WlzHistogramDomain *histDom: Histogram domain.
+*		int nBins:		Required number of histogram
+*					bins.
+*		double origin:		Required lowest grey value in
+*					first histogram bin.
+*		double binSize:		Required grey value range for
+*					each histogram bin.
 ************************************************************************/
 static void	WlzHistogramReBinUbyte(WlzHistogramDomain *histDom,
 				       int nBins,
@@ -403,25 +408,29 @@ static void	WlzHistogramReBinUbyte(WlzHistogramDomain *histDom,
 }
 
 /************************************************************************
-* Function:	WlzHistogramMatchPlane					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Modifies the grey values of the given Woolz 2D domain	*
-*		object so that the resulting object's histogram	(given)	*
-*		matches the target histogram.				*
-*		Because this is a static function there's no need to	*
-*		check the parameters.					*
-*		Both the source and target histogram are known to have	*
-*		the same binSize = 1.0, the same number	bins and	*
-*		integral type.						*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given 2D domain object.		*
-*		WlzHistogramDomain *tgtHD: Target cumulative histogram.	*
-*		WlzHistogramDomain *srcHD: Source object cumulative	*
-*					histogram.			*
+* Function:	WlzHistogramMatchPlane
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Modifies the grey values of the given Woolz 2D domain
+*		object so that the resulting object's histogram	(given)
+*		matches the target histogram.
+*		Because this is a static function there's no need to
+*		check the parameters.
+*		Both the source and target histogram are known to have
+*		the same binSize = 1.0, the same number	bins and
+*		integral type.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given 2D domain object.
+*		WlzHistogramDomain *tgtHD: Target cumulative histogram.
+*		WlzHistogramDomain *srcHD: Source object cumulative
+*					histogram.
+*		int dither:		If non zero then dither mapped
+*					values to avoid generating a
+*					histogram with a comb appearence.
 ************************************************************************/
 static WlzErrorNum WlzHistogramMatchPlane(WlzObject *srcObj,
 					  WlzHistogramDomain *tgtHD,
-					  WlzHistogramDomain *srcHD)
+					  WlzHistogramDomain *srcHD,
+					  int dither)
 {
   int		mapIdx,
   		tgtIdx;
@@ -468,7 +477,7 @@ static WlzErrorNum WlzHistogramMatchPlane(WlzObject *srcObj,
       *(mapping + mapIdx) = *(mapping + mapIdx - 1);
     }
     /* Use mapping histogram to map each grey value */
-    errNum = WlzHistogramMapValues(srcObj, mapHistObj);
+    errNum = WlzHistogramMapValues(srcObj, mapHistObj, dither);
   }
   if(mapHistObj)
   {
@@ -478,29 +487,104 @@ static WlzErrorNum WlzHistogramMatchPlane(WlzObject *srcObj,
 }
 
 /************************************************************************
-* Function:	WlzHistogramObj						*
-* Returns:	WlzObject *:		New woolz object with histogram	*
-*					domain.				*
-* Purpose:	Creates a woolz histogram object (with an int histogram	*
-*		domain) using the given 2D or 3D woolz domain object	*
-*		and histogram parameters.				*
-*		If the requested number of bins is zero then the	*
-*		number of bins, the origin and the bin size will be	*
-*		computed as follows:					*
-*		  nBins = ceil(max(g) - min(g) + 1.0)			*
-*		  binOrigin = min(g)					*
-*		  binSize = 1.0						*
-*		Where min(g) and max(g) are the minimum and maximum	*
-*		grey values in the source object.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		int nBins:		Required number of histogram 	*
-*					bins.				*
-*		double binOrigin:	Lowest grey value in first 	*
-*					histogram bin.			*
-*		double binSize:		Grey value range for each	*
-*					histogram bin.			*
-*		WlzErrorNum *dstErrNum:	Destination error pointer.	*
+* Function:	WlzHistogramMapValuesDitherI
+* Returns:	int:			Mapped pixel value.
+* Purpose:	Computes a pixel value from the given mapping and map
+*		index, dithering the mapped value so that it has a
+*		uniform probability of falling anywhere between the
+*		midpoints of the previous - current and next - current
+*		mapping values.
+* Global refs:	-
+* Parameters:	int *mapping:		Simple integer look up table.
+*		int mapIdx:		Index into the look up table.
+*		int nBins:		Number of look up table entries.
+************************************************************************/
+static int	WlzHistogramMapValuesDitherI(int *mapping, int mapIdx,
+					     int nBins)
+{
+  int		mapP,
+  		mapC,
+		mapN,
+		mappedVal;
+  double	mapRnd,
+  		mapRngP,
+		mapRngN;
+
+  mapC = *(mapping + mapIdx);
+  mapP = (mapIdx > 0)? *(mapping + mapIdx - 1): mapC;
+  mapN = (mapIdx < nBins - 1)?  *(mapping + mapIdx + 1): mapC;
+  if((mapP >= (mapC - 1)) && (mapN <= (mapC + 1)))
+  {
+    mappedVal = mapC;
+  }
+  else
+  {
+    mapRngP = (double )(mapC - mapP) * 0.5;
+    mapRngN = (double )(mapN - mapC) * 0.5;
+    mapRnd = (AlgRandUniform() * (mapRngP + mapRngN)) - mapRngP;
+    mappedVal = mapC + WLZ_NINT(mapRnd);
+  }
+  return(mappedVal);
+}
+
+/************************************************************************
+* Function:	WlzHistogramMapValuesDitherD
+* Returns:	double:			Mapped pixel value.
+* Purpose:	Computes a pixel value from the given mapping and map
+*		index, dithering the mapped value so that it has a
+*		uniform probability of falling anywhere between the
+*		midpoints of the previous - current and next - current
+*		mapping values.
+* Global refs:	-
+* Parameters:	int *mapping:		Simple integer look up table.
+*		int mapIdx:		Index into the look up table.
+*		int nBins:		Number of look up table entries.
+************************************************************************/
+static double	WlzHistogramMapValuesDitherD(int *mapping, int mapIdx,
+					     int nBins)
+{
+  double	mapP,
+  		mapC,
+		mapN,
+		mapRnd,
+  		mapRngP,
+		mapRngN,
+		mappedVal;
+
+  mapC = *(mapping + mapIdx);
+  mapP = (mapIdx > 0)? *(mapping + mapIdx - 1): mapC;
+  mapN = (mapIdx < nBins - 1)?  *(mapping + mapIdx + 1): mapC;
+  mapRngP = (double )(mapC - mapP) * 0.5;
+  mapRngN = (double )(mapN - mapC) * 0.5;
+  mapRnd = (AlgRandUniform() * (mapRngP + mapRngN)) - mapRngP;
+  mappedVal = mapC + mapRnd;
+  return(mappedVal);
+}
+
+/************************************************************************
+* Function:	WlzHistogramObj
+* Returns:	WlzObject *:		New woolz object with histogram
+*					domain.
+* Purpose:	Creates a woolz histogram object (with an int histogram
+*		domain) using the given 2D or 3D woolz domain object
+*		and histogram parameters.
+*		If the requested number of bins is zero then the
+*		number of bins, the origin and the bin size will be
+*		computed as follows:
+*		  nBins = ceil(max(g) - min(g) + 1.0)
+*		  binOrigin = min(g)
+*		  binSize = 1.0
+*		Where min(g) and max(g) are the minimum and maximum
+*		grey values in the source object.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given source object.
+*		int nBins:		Required number of histogram
+*					bins.
+*		double binOrigin:	Lowest grey value in first
+*					histogram bin.
+*		double binSize:		Grey value range for each
+*					histogram bin.
+*		WlzErrorNum *dstErrNum:	Destination error pointer.
 ************************************************************************/
 WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 				 double binOrigin, double binSize,
@@ -761,17 +845,17 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 }
 
 /************************************************************************
-* Function:	WlzHistogramCopy					*
-* Returns:	WlzObject:		Copied Woolz histogram object	*
-*					or NULL on error.		*
-* Purpose:	Copies the given Woolz histogram object to a new one of	*
-*		the required type.					*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcHistObj:	Given histogram object.		*
-*		WlzObjectType dstType:	Required type of histogram 	*
-*					domain values.			*
-*		WlzErrorNum *dstErrNum:	Destination error pointer,	*
-*					may be NULL.			*
+* Function:	WlzHistogramCopy
+* Returns:	WlzObject:		Copied Woolz histogram object
+*					or NULL on error.
+* Purpose:	Copies the given Woolz histogram object to a new one of
+*		the required type.
+* Global refs:	-
+* Parameters:	WlzObject *srcHistObj:	Given histogram object.
+*		WlzObjectType dstType:	Required type of histogram
+*					domain values.
+*		WlzErrorNum *dstErrNum:	Destination error pointer,
+*					may be NULL.
 ************************************************************************/
 WlzObject	*WlzHistogramCopy(WlzObject *srcHistObj,
 				  WlzObjectType dstType,
@@ -819,24 +903,24 @@ WlzObject	*WlzHistogramCopy(WlzObject *srcHistObj,
 }
 
 /************************************************************************
-* Function:	WlzHistogramRebin					*
-* Returns:	WlzObject:		Copied Woolz histogram object	*
-*					or NULL on error.		*
-* Purpose:	Re-bins the given Woolz histogram object to a new one	*
-*		of the required type, number of bins, origin and bin	*
-*		size.							*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcHistObj:	Given histogram object.		*
-*		WlzObjectType dstType:	Required type of histogram 	*
-*					domain values.			*
-*		int dstMaxBins:		Total number of bins to be	*
-*					allocated.			*
-*		int dstNBins:		Number of bins to be used in	*
-*					new histogram.			*
-*		double dstOrigin:	New histogram origin.		*
-*		double dstBinSize:	New histogram bin size.		*
-*		WlzErrorNum *dstErrNum:	Destination error pointer,	*
-*					may be NULL.			*
+* Function:	WlzHistogramRebin
+* Returns:	WlzObject:		Copied Woolz histogram object
+*					or NULL on error.
+* Purpose:	Re-bins the given Woolz histogram object to a new one
+*		of the required type, number of bins, origin and bin
+*		size.
+* Global refs:	-
+* Parameters:	WlzObject *srcHistObj:	Given histogram object.
+*		WlzObjectType dstType:	Required type of histogram
+*					domain values.
+*		int dstMaxBins:		Total number of bins to be
+*					allocated.
+*		int dstNBins:		Number of bins to be used in
+*					new histogram.
+*		double dstOrigin:	New histogram origin.
+*		double dstBinSize:	New histogram bin size.
+*		WlzErrorNum *dstErrNum:	Destination error pointer,
+*					may be NULL.
 ************************************************************************/
 WlzObject	*WlzHistogramRebin(WlzObject *srcHistObj,
 				   WlzObjectType dstType,
@@ -939,131 +1023,422 @@ WlzObject	*WlzHistogramRebin(WlzObject *srcHistObj,
 }
 
 /************************************************************************
-* Function:	WlzHistogramSmooth					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Low pass filters the given Woolz histogram object's	*
-*		histogram bin values by convolving them with a Gaussian	*
-*		kernel in the space domain. The kernel is symetric,	*
-*		normalised to a central value of 1.0, and has width	*
-*		3 times the given filter width.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *histObj:	Given histogram object.		*
-*		int width:		Gaussian kernel half height	*
-*					full width.			*
+* Function:	WlzHistogramRsvFilter
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Applies an IIR filter to the histogram object'c bin
+*		values.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		WlzRsvFilter *flt:	IIR filter.
+************************************************************************/
+WlzErrorNum     WlzHistogramRsvFilter(WlzObject *histObj, WlzRsvFilter *flt)
+{
+  double	*datBuf = NULL,
+  		*tmpBuf0 = NULL,
+  		*tmpBuf1 = NULL;
+  WlzHistogramDomain *histDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_1),
+	  ("WlzHistogramRsvFilter FE 0x%lx 0x%lx\n",
+	   (unsigned long )histObj, (unsigned long )flt));
+  if(flt == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    errNum = WlzHistogramCheckHistObj(histObj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    histDom = histObj->domain.hist;
+    if(((datBuf  = (double *)AlcMalloc(sizeof(double) * 
+    				       histDom->nBins)) == NULL) ||
+       ((tmpBuf0  = (double *)AlcMalloc(sizeof(double) * 
+    				        histDom->nBins)) == NULL) ||
+       ((tmpBuf1  = (double *)AlcMalloc(sizeof(double) * 
+    				        histDom->nBins)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(histDom->type == WLZ_HISTOGRAMDOMAIN_INT)
+    {
+      WlzValueCopyIntToDouble(datBuf, histDom->binValues.inp,
+			      histDom->nBins);
+    }
+    else
+    {
+      WlzValueCopyDoubleToDouble(datBuf, histDom->binValues.dbp,
+				 histDom->nBins);
+    }
+    errNum = WlzRsvFilterBuffer(flt, datBuf, tmpBuf0, tmpBuf1,
+				histDom->nBins);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(histDom->type == WLZ_HISTOGRAMDOMAIN_INT)
+    {
+      WlzValueCopyDoubleToInt(histDom->binValues.inp, datBuf,
+      			      histDom->nBins);
+    }
+    else
+    {
+      WlzValueCopyDoubleToDouble(histDom->binValues.dbp, datBuf,
+      				 histDom->nBins);
+    }
+  }
+  /* Free up the buffers. */
+  if(datBuf)
+  {
+    AlcFree(datBuf);
+  }
+  if(tmpBuf0)
+  {
+    AlcFree(tmpBuf0);
+  }
+  if(tmpBuf1)
+  {
+    AlcFree(tmpBuf1);
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzHistogramRsvFilter FX %d\n",
+	   (int )errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzHistogramConvolve
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Convolves the given Woolz histogram object's histogram
+*		bin values with the given convolution kernel.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		int krnSz:		Kernel size, must be odd.
+*		double *krn:		The convolution kernel
+************************************************************************/
+WlzErrorNum     WlzHistogramConvolve(WlzObject *histObj,
+				     int krnSz, double *krn)
+{
+  double	*cnvBuf = NULL,
+  		*datBuf = NULL;
+  WlzHistogramDomain *histDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlgError 	algErr = ALG_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_1),
+	  ("WlzHistogramConvolve FE 0x%lx %d 0x%lx\n",
+	   (unsigned long )histObj, krnSz, (unsigned long )krn));
+  if(((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE) &&
+     ((histDom = histObj->domain.hist)->nBins > 0))
+  {
+    if((krnSz < 1) || ((krnSz % 2) != 1))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    /* Allocate buffer(s). */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if((cnvBuf = (double *)AlcMalloc(sizeof(double) *
+				       histDom->nBins)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else if(histDom->type ==  WLZ_HISTOGRAMDOMAIN_INT)
+      {
+	if((datBuf = (double *)AlcMalloc(sizeof(double) *
+	 				 histDom->nBins)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* Fill the histogram bin data buffer if int histogram bins and convolve
+       * histogram bin values with the kernel. */
+      if(histDom->type == WLZ_HISTOGRAMDOMAIN_INT)
+      {
+	WlzValueCopyIntToDouble(datBuf, histDom->binValues.inp,
+				histDom->nBins);
+        algErr = AlgConvolve(histDom->nBins, cnvBuf, 
+			     krnSz, krn,
+			     histDom->nBins, datBuf,
+			     ALG_PAD_END);
+        if(algErr == ALG_ERR_NONE)
+	{
+	  WlzValueCopyDoubleToInt(histDom->binValues.inp, cnvBuf,
+			          histDom->nBins);
+	}
+	else
+	{
+	  errNum = WlzErrorFromAlg(algErr);
+	}
+      }
+      else
+      {
+        algErr = AlgConvolve(histDom->nBins, cnvBuf,
+			     histDom->nBins, histDom->binValues.dbp,
+			     krnSz, krn, ALG_PAD_END);
+        if(algErr == ALG_ERR_NONE)
+	{
+	  WlzValueCopyDoubleToDouble(histDom->binValues.dbp, cnvBuf,
+	  			 histDom->nBins);
+	}
+	else
+	{
+	  errNum = WlzErrorFromAlg(algErr);
+	}
+      }
+    }
+    /* Free up the buffers. */
+    if(cnvBuf)
+    {
+      AlcFree(cnvBuf);
+    }
+    if(datBuf)
+    {
+      AlcFree(datBuf);
+    }
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzHistogramConvolve FX %d\n",
+	   (int )errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzHistogramCnvGauss
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Convolves the given Woolz histogram object's histogram
+*		bin values with a Gaussian, 1st derivative of Gaussian
+*		or 2nd derivative of Gaussian convolution kernel.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		double sigma:		Sigma value of the Gaussian
+*					which is scaled within this
+*					function to account for the
+*					histogram bin size.
+*		int deriv:		Derivative must be in range
+*					[0-2].
+************************************************************************/
+WlzErrorNum	WlzHistogramCnvGauss(WlzObject *histObj,
+				     double sigma, int deriv)
+{
+  int		krnCnt,
+  		krnSz,
+  		krnSz2;
+  double	tD0,
+  		tD1,
+		tD2,
+  		sigma2,
+		norm;
+  double	*kP0,
+  		*kP1,
+		*krnBuf = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_1),
+	  ("WlzHistogramCnvGauss FE 0x%lx %g %d\n",
+	   (unsigned long )histObj, sigma, deriv));
+  if((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE)
+  {
+    if((sigma < DBL_EPSILON) || (deriv < 0) || (deriv > 2))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  /* Compute the required kernel size and allocate the kernel. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Scale the given sigma value to reflect the histogram bin size. */
+    sigma /= histObj->domain.hist->binSize;
+    if(sigma < (1.0 + DBL_EPSILON))
+    {
+      krnSz2 = 1;
+    }
+    else
+    {
+      krnSz2 = (int )ceil(sigma) * (1 + deriv);
+    }
+    krnSz = (krnSz2 * 2) + 1;
+    if((krnBuf = (double *)AlcMalloc(sizeof(double) * krnSz)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    /* Don't worry about constants because renormalise kernel anyway. */
+    norm = 0.0;
+    sigma2 = 1.0 / (2.0 * sigma * sigma);
+    switch(deriv)
+    {
+      case 0:
+	kP0 = krnBuf;
+        kP1 = krnBuf + krnSz - 1;
+	krnCnt = krnSz2;
+	while(krnCnt > 0)
+	{
+	  norm += *kP1-- = *kP0++ = exp(-(krnCnt * krnCnt * sigma2));
+	  --krnCnt;
+	}
+	*(krnBuf + krnSz2) = 1.0;
+	norm = 1.0 / ((norm * 2.0) + 1.0);
+	break;
+      case 1:
+	kP0 = krnBuf;
+	kP1 = krnBuf + krnSz - 1;
+	krnCnt = krnSz2;
+	while(krnCnt > 0)
+	{
+	  tD1 = exp(-(krnCnt * krnCnt * sigma2));
+	  norm += *kP0++ =  krnCnt * tD1;
+	  *kP1-- =  -krnCnt * tD1;
+	  --krnCnt;
+	}
+	*(krnBuf + krnSz2) = 0.0;
+	norm = 1.0 / (norm * 2.0);
+        break;
+      case 2:
+	kP0 = krnBuf;
+	kP1 = krnBuf + krnSz - 1;
+	krnCnt = krnSz2;
+	while(krnCnt > 0)
+	{
+	  tD0 = krnCnt * krnCnt;
+	  tD1 = exp(-(tD0 * sigma2));
+	  tD2 = ((tD0 * sigma2 * 2.0) - 1.0) *tD1;
+	  norm += *kP1-- = *kP0++ =  tD2;
+	  --krnCnt;
+	}
+	*(krnBuf + krnSz2) = -1.0;
+	norm = 1.0 / ((norm * 2.0) - 1.0);
+        break;
+    }
+    kP0 = krnBuf;
+    krnCnt = krnSz;
+    while(krnCnt-- > 0)
+    {
+      *kP0++ *= norm;
+    }
+/* #define WLZ_HISTOGRAM_DEBUG_CNVGAUSS */
+#ifdef WLZ_HISTOGRAM_DEBUG_CNVGAUSS
+    for(krnCnt = 0; krnCnt < krnSz; ++krnCnt)
+    {
+      printf("%d %g\n", krnCnt - krnSz2, *(krnBuf + krnCnt));
+    }
+    exit(0);
+#endif /* WLZ_HISTOGRAM_DEBUG_CNVGAUSS */
+  }
+  /* Set the kernel values and do the convolution. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzHistogramConvolve(histObj, krnSz, krnBuf);
+  }
+  /* Free up the kernel. */
+  if(krnBuf)
+  {
+    AlcFree(krnBuf);
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzHistogramCnvGauss FX %d\n",
+	   (int )errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzHistogramRsvGauss
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Uses an IIR filter to convolves the given Woolz
+*		histogram object's bin values with a Gaussian, 1st
+*		derivative of Gaussian or 2nd derivative of Gaussian.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		double sigma:		Sigma value of the Gaussian
+*					which is scaled within this
+*					function to account for the
+*					histogram bin size.
+*		int deriv:		Derivative must be in range
+*					[0-2].
+************************************************************************/
+WlzErrorNum	WlzHistogramRsvGauss(WlzObject *histObj, double sigma,
+				     int deriv)
+{
+  WlzRsvFilter *ftr = NULL;
+  WlzRsvFilterName ftrName;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  WLZ_DBG((WLZ_DBG_LVL_1),
+	  ("WlzHistogramRsvGauss FE 0x%lx %g %d\n",
+	   (unsigned long )histObj, sigma, deriv));
+  if((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE)
+  {
+    if(sigma < DBL_EPSILON)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      switch(deriv)
+      {
+        case 0:
+	  ftrName = WLZ_RSVFILTER_NAME_GAUSS_0;
+	  break;
+	case 1:
+	  ftrName = WLZ_RSVFILTER_NAME_GAUSS_1;
+	  break;
+	case 2:
+	  ftrName = WLZ_RSVFILTER_NAME_GAUSS_2;
+	  break;
+	default:
+	  errNum = WLZ_ERR_PARAM_DATA;
+	  break;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    ftr = WlzRsvFilterMakeFilter(ftrName, sigma, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzHistogramRsvFilter(histObj, ftr);
+  }
+  /* Free up the filter. */
+  if(ftr)
+  {
+    WlzRsvFilterFreeFilter(ftr);
+  }
+  WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
+	  ("WlzHistogramRsvGauss FX %d\n",
+	   (int )errNum));
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzHistogramSmooth
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Low pass filters the given Woolz histogram object's
+*		histogram bin values by convolving them in the space
+*		domain with a Gaussian kernel of the given half height
+*		full width.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		int width:		Gaussian kernel half height
+*					full width.
 ************************************************************************/
 WlzErrorNum	WlzHistogramSmooth(WlzObject *histObj, int width)
 {
-  int		idx0,
-		count0,
-		count1,
-		bufWidth,
-  		kernelWidth;
-  double	tD0,
-  		tD1,
-		kernalNormFac,
-		leftVal,
-  		rightVal;
-  double	*tDP0,
-		*kernP,
-  		*bufLeftP,
-		*bufRightP,
-  		*buffer = NULL,
-  		*kernel = NULL;
   const double sigmaFromWidth = 0.424660900; 	      /* 1/(2 * sqrt(ln(4))) */
-  WlzHistogramDomain *histDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzHistogramSmooth FE 0x%lx %d\n",
 	   (unsigned long )histObj, width));
-  if(((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE) &&
-     ((histDom = histObj->domain.hist)->nBins > 0))
+  if(width > 0)
   {
-    if(width < 0)
-    {
-      width = -(width);
-    }
-    if(width > 0)
-    {
-      kernelWidth = (3 * width) / 2;
-      bufWidth = (2 * kernelWidth) + histDom->nBins;
-      if(((kernel = (double *)AlcMalloc(sizeof(double) *
-      				        kernelWidth)) == NULL) ||
-	 ((buffer = (double *)AlcMalloc(sizeof(double) *
-	 				bufWidth)) == NULL))
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-      else
-      {
-	/* Compute the kernel */
-	idx0 = 0;
-	tD0 = width * sigmaFromWidth;
-	tD0 = 1.0 / ((tD0 * tD0) * -2.0);
-	tDP0 = kernel;
-	kernalNormFac = 0.0;
-	while(idx0 < kernelWidth)
-	{
-	  ++idx0;    /* Pre-increment because central value (1.0) not stored */
-	  tD1 = exp(idx0 * idx0 * tD0);
-	  kernalNormFac += tD1;
-	  *tDP0++ = tD1;
-	}
-	kernalNormFac = 1.0 / (1.0 + (2.0 * kernalNormFac));
-	/* Fill the histogram bin buffer */
-	if(histDom->type == WLZ_HISTOGRAMDOMAIN_INT)
-	{
-	  leftVal = *(histDom->binValues.inp);
-	  rightVal = *(histDom->binValues.inp + histDom->nBins - 1);
-	  WlzValueCopyIntToDouble(buffer + kernelWidth,
-	  			  histDom->binValues.inp, histDom->nBins);
-	}
-	else
-	{
-	  leftVal = *(histDom->binValues.dbp);
-	  rightVal = *(histDom->binValues.dbp + histDom->nBins - 1);
-	  WlzValueCopyDoubleToDouble(buffer + kernelWidth,
-	  			     histDom->binValues.dbp, histDom->nBins);
-	}
-	WlzValueSetDouble(buffer, leftVal, kernelWidth);
-	WlzValueSetDouble(buffer + histDom->nBins + kernelWidth,
-			  rightVal, kernelWidth);
-	/* Convolve histogram bin values with the kernel */
-	idx0 = 0;
-	count0 = histDom->nBins;
-	while(count0-- > 0)
-	{
-	  kernP = kernel + kernelWidth - 1;
-	  bufLeftP = buffer + idx0;
-	  bufRightP = bufLeftP + (2 * kernelWidth);
-	  count1 = kernelWidth;
-	  tD0 = 0.0;
-	  while(count1-- > 0)
-	  {
-	    tD0 += (*bufLeftP++ * *kernP) + (*bufRightP-- * *kernP);
-	    --kernP;
-	  }
-	  tD0 = (tD0 + *bufLeftP) * kernalNormFac;
-	  if(histDom->type == WLZ_HISTOGRAMDOMAIN_INT)
-	  {
-	    *(histDom->binValues.inp + idx0) = WLZ_NINT(tD0);
-	  }
-	  else
-	  {
-	    *(histDom->binValues.dbp + idx0) = tD0;
-	  }
-	  ++idx0;
-	}
-      }
-      if(kernel)
-      {
-        AlcFree(kernel);
-      }
-      if(buffer)
-      {
-        AlcFree(buffer);
-      }
-    }
+    errNum = WlzHistogramRsvGauss(histObj, sigmaFromWidth * width, 0);
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzHistogramSmooth FX %d\n",
@@ -1072,12 +1447,12 @@ WlzErrorNum	WlzHistogramSmooth(WlzObject *histObj, int width)
 }
 
 /************************************************************************
-* Function:	WlzHistogramCummulative					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Modifies the given histogram so that its values are	*
-*		cummulative.						*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcHist:	Given histogram object.		*
+* Function:	WlzHistogramCummulative
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Modifies the given histogram so that its values are
+*		cummulative.
+* Global refs:	-
+* Parameters:	WlzObject *srcHist:	Given histogram object.
 ************************************************************************/
 WlzErrorNum	WlzHistogramCummulative(WlzObject *srcHist)
 {
@@ -1122,19 +1497,23 @@ WlzErrorNum	WlzHistogramCummulative(WlzObject *srcHist)
 }
 
 /************************************************************************
-* Function:	WlzHistogramMapValues					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Uses the given mapping histogram with integral bin	*
-*		values to remap the grey values of the given 2D or	*
-*		3D domain object.					*
-*		The mapping histogram MUST have integral bin values	*
-*		and bins appropriate for all domain object values.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given 2D or 3D domain object.	*
-*		WlzObject *mapHistObj:	Mapping histogram.		*
+* Function:	WlzHistogramMapValues
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Uses the given mapping histogram with integral bin
+*		values to remap the grey values of the given 2D or
+*		3D domain object.
+*		The mapping histogram MUST have integral bin values
+*		and bins appropriate for all domain object values.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given 2D or 3D domain object.
+*		WlzObject *mapHistObj:	Mapping histogram.
+*		int dither:		If non zero then dither mapped
+*					values to avoid generating a
+*					histogram with a comb appearence.
 ************************************************************************/
 WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
-				      WlzObject *mapHistObj)
+				      WlzObject *mapHistObj,
+				      int dither)
 {
   int		tI0,
 		ivCount,
@@ -1154,8 +1533,9 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramMapValues FE 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj, (unsigned long )mapHistObj));
+	  ("WlzHistogramMapValues FE 0x%lx 0x%lx %d\n",
+	   (unsigned long )srcObj, (unsigned long )mapHistObj,
+	   dither));
   if(((errNum = WlzHistogramCheckDomainAndValues(&greyType,
 						 srcObj)) == WLZ_ERR_NONE) &&
      ((errNum = WlzHistogramCheckHistObj(mapHistObj)) == WLZ_ERR_NONE))
@@ -1175,7 +1555,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
       case WLZ_EMPTY_OBJ:
         break;
       case WLZ_TRANS_OBJ:
-	errNum = WlzHistogramMapValues(srcObj->values.obj, mapHistObj);
+	errNum = WlzHistogramMapValues(srcObj->values.obj, mapHistObj, dither);
         break;
       case WLZ_3D_DOMAINOBJ:
 	dummyDom.core = NULL;
@@ -1198,7 +1578,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	    if((srcObj2D->values.core) &&
 	       (srcObj2D->values.core->type != WLZ_EMPTY_OBJ))
 	    {
-		errNum = WlzHistogramMapValues(srcObj2D, mapHistObj);
+		errNum = WlzHistogramMapValues(srcObj2D, mapHistObj, dither);
 	    }
 	    ++planeIdx;
 	  }
@@ -1211,8 +1591,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	if((errNum = WlzInitGreyScan(srcObj, &iWSp, &gWSp)) == WLZ_ERR_NONE)
 	{
           mapping = mapHistDom->binValues.inp;
-	  originI = floor(mapHistDom->origin);
 	  originD = mapHistDom->origin;
+	  originI = floor(originD);
 	  while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
 	  {
 	    ivCount = iWSp.rgtpos - iWSp.lftpos + 1;
@@ -1220,77 +1600,143 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	    {
 	      case WLZ_GREY_INT:
 		objPix.inp = gWSp.u_grintptr.inp;
-		if(originI)
+		if(dither == 0)
 		{
-		  while(ivCount-- > 0)
+		  if(originI)
 		  {
-		    *(objPix.inp) = *(mapping + *(objPix.inp) - originI);
-		    ++(objPix.inp);
+		    while(ivCount-- > 0)
+		    {
+		      *(objPix.inp) = *(mapping + *(objPix.inp) - originI);
+		      ++(objPix.inp);
+		    }
+		  }
+		  else
+		  {
+		    while(ivCount-- > 0)
+		    {
+		      *(objPix.inp) = *(mapping + *(objPix.inp));
+		      ++(objPix.inp);
+		    }
 		  }
 		}
 		else
 		{
 		  while(ivCount-- > 0)
 		  {
-		    *(objPix.inp) = *(mapping + *(objPix.inp));
+		    *(objPix.inp) = WlzHistogramMapValuesDitherI(mapping,
+		    			*(objPix.inp) - originI,
+					mapHistDom->nBins);
 		    ++(objPix.inp);
 		  }
+
 		}
 		break;
 	      case WLZ_GREY_SHORT:
 		objPix.shp = gWSp.u_grintptr.shp;
-		if(originI)
+		if(dither == 0)
 		{
-		  while(ivCount-- > 0)
+		  if(originI)
 		  {
-		    *(objPix.shp) = *(mapping + *(objPix.shp) - originI);
-		    ++(objPix.shp);
+		    while(ivCount-- > 0)
+		    {
+		      *(objPix.shp) = *(mapping + *(objPix.shp) - originI);
+		      ++(objPix.shp);
+		    }
+		  }
+		  else
+		  {
+		    while(ivCount-- > 0)
+		    {
+		      *(objPix.shp) = *(mapping + *(objPix.shp));
+		      ++(objPix.shp);
+		    }
 		  }
 		}
 		else
 		{
 		  while(ivCount-- > 0)
 		  {
-		    *(objPix.shp) = *(mapping + *(objPix.shp));
+		    *(objPix.shp) = WlzHistogramMapValuesDitherI(mapping,
+		    			*(objPix.shp) - originI,
+					mapHistDom->nBins);
 		    ++(objPix.shp);
 		  }
 		}
 		break;
 	      case WLZ_GREY_UBYTE:
 		objPix.ubp = gWSp.u_grintptr.ubp;
-		if(originI)
+		if(dither == 0)
 		{
-		  while(ivCount-- > 0)
+		  if(originI)
 		  {
-		    *(objPix.ubp) = *(mapping + *(objPix.ubp) - originI);
-		    ++(objPix.ubp);
+		    while(ivCount-- > 0)
+		    {
+		      *(objPix.ubp) = *(mapping + *(objPix.ubp) - originI);
+		      ++(objPix.ubp);
+		    }
+		  }
+		  else
+		  {
+		    while(ivCount-- > 0)
+		    {
+		      *(objPix.ubp) = *(mapping + *(objPix.ubp));
+		      ++(objPix.ubp);
+		    }
 		  }
 		}
 		else
 		{
 		  while(ivCount-- > 0)
 		  {
-		    *(objPix.ubp) = *(mapping + *(objPix.ubp));
+		    *(objPix.ubp) = WlzHistogramMapValuesDitherI(mapping,
+		    			*(objPix.ubp) - originI,
+					mapHistDom->nBins);
 		    ++(objPix.ubp);
 		  }
 		}
 		break;
 	      case WLZ_GREY_FLOAT:
 		objPix.flp = gWSp.u_grintptr.flp;
-		while(ivCount-- > 0)
+		if(dither == 0)
 		{
-		  tI0 = floor(*(objPix.flp) - originD);
-		  *(objPix.flp) = *(mapping + tI0);
-		  ++(objPix.flp);
+		  while(ivCount-- > 0)
+		  {
+		    tI0 = floor(*(objPix.flp) - originD);
+		    *(objPix.flp) = *(mapping + tI0);
+		    ++(objPix.flp);
+		  }
+		}
+		else
+		{
+		  while(ivCount-- > 0)
+		  {
+		    *(objPix.flp) = WlzHistogramMapValuesDitherD(mapping,
+		    			(int )(floor(*(objPix.flp) - originD)),
+					mapHistDom->nBins);
+		    ++(objPix.flp);
+		  }
 		}
 		break;
 	      case WLZ_GREY_DOUBLE:
 		objPix.dbp = gWSp.u_grintptr.dbp;
-		while(ivCount-- > 0)
+		if(dither == 0)
 		{
-		  tI0 = floor(*(objPix.dbp) - originD);
-		  *(objPix.dbp) = *(mapping + tI0);
-		  ++(objPix.dbp);
+		  while(ivCount-- > 0)
+		  {
+		    tI0 = floor(*(objPix.dbp) - originD);
+		    *(objPix.dbp) = *(mapping + tI0);
+		    ++(objPix.dbp);
+		  }
+		}
+		else
+		{
+		  while(ivCount-- > 0)
+		  {
+		    *(objPix.dbp) = WlzHistogramMapValuesDitherD(mapping,
+		    			(int )(floor(*(objPix.flp) - originD)),
+					mapHistDom->nBins);
+		    ++(objPix.dbp);
+		  }
 		}
 		break;
 	    }
@@ -1310,16 +1756,376 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 }
 
 /************************************************************************
-* Function:	WlzHistogramNorm					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Normalise the given Woolz histogram object's histogram	*
-*		bin values to the given range [0-maxVal]. If the given	*
-*		maximum value is 0.0 then the histogram bin values are	*
-*		normalised so that maxVal is equal to the number of	*
-*		bins.							*
-* Global refs:	-							*
-* Parameters:	WlzObject *histObj:	Given histogram object.		*
-*		double maxVal:		Given maximum value.		*
+* Function:	WlzHistogramFindPeaks
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Find the peaks of the given histogram.
+*		Peaks are found by searching through the 1st derivative
+*		(h') of the histogram bin values (h). For a peak
+*		  (h'[i - 1] > 0) && (h'[i + 1] < 0) &&
+*		  (h[i] > thresh).
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		double sigma:		Gaussian sigma smooth histogram
+*					and compute 1st derivative.
+*		double thresh:		Minimum (smoothed) histogram
+*					value at peak.
+*		int *dstPeaksSz:	Destination ptr for the number
+*					of peaks found.
+*		int **dstPeaks:		Destination ptr for the array of
+*					peak positions (indicies into
+*					the histogram bin values). May
+*					have *dstPeaks == NULL on return
+*					if *dstPeaksSz == 0.
+************************************************************************/
+WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
+				      double sigma, double thresh,
+				      int *dstPeaksSz, int **dstPeaks)
+{
+  int		binIdx,
+  		binCnt,
+		binLst,
+  		pkIdx,
+  		pkMax,
+		threshI;
+  int		*dIC,
+  		*dIN,
+		*sIC,
+		*pkDat = NULL;
+  double	*dDC,
+  		*dDN,
+		*sDC;
+  WlzObject 	*sHist = NULL,
+  		*dHist = NULL;
+  WlzHistogramDomain *histDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	minSep = 2; 		          /* Minimum peak separation */
+  
+  if((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE)
+  {
+    if((dstPeaksSz == NULL) || (dstPeaks == NULL))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if((histDom = histObj->domain.hist)->nBins > 2)
+  {
+    /* Copy the given histogram and then compute the smoothed and
+     * derivative histograms using these copies. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      sHist = WlzCopyObject(histObj, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      dHist = WlzCopyObject(histObj, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzHistogramCnvGauss(sHist, sigma, 0);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzHistogramCnvGauss(dHist, sigma, 1);
+    }
+    /* Allocate a peak array. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      pkMax = histDom->nBins / 2;
+      if((pkDat = (int *)AlcMalloc(sizeof(int) * pkMax)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    /* Search through the histogram bins for peaks. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      pkIdx = 0;
+      binLst = -1;
+      binIdx = 0;
+      binCnt = histDom->nBins - 1;
+      switch(histDom->type)
+      {
+        case WLZ_HISTOGRAMDOMAIN_INT:
+	  threshI = (int )ceil(thresh);
+	  dIC = dHist->domain.hist->binValues.inp;
+	  dIN = dIC + 1;
+	  sIC = sHist->domain.hist->binValues.inp;
+	  while(binIdx < binCnt)
+	  {
+	    if(((binIdx - binLst) > minSep) &&
+	       (*dIC <= 0) && (*dIN > 0) && (*sIC > threshI))
+	    {
+	      binLst = (abs(*dIC) < abs(*dIN))? binIdx: binIdx + 1;
+	      *(pkDat + pkIdx++) = binLst;
+	    }
+	    ++dIC; ++dIN; ++sIC;
+	    ++binIdx;
+	  }
+	  break;
+        case WLZ_HISTOGRAMDOMAIN_FLOAT:
+	  dDC = dHist->domain.hist->binValues.dbp;
+	  dDN = dDC + 1;
+	  sDC = sHist->domain.hist->binValues.dbp;
+	  while(binIdx < binCnt)
+	  {
+	    if(((binIdx - binLst) > minSep) &&
+	       (*dDC <= -(DBL_EPSILON)) && (*dDN > DBL_EPSILON) &&
+	       (*sDC > thresh))
+	    {
+	      binLst = (abs(*dDC) < abs(*dDN))? binIdx: binIdx + 1;
+	      *(pkDat + pkIdx++) = binLst;
+	    }
+	    ++dDC; ++dDN; ++sDC;
+	    ++binIdx;
+	  }
+	  break;
+      }
+      if(pkIdx == 0)
+      {
+        AlcFree(pkDat);
+	pkDat = NULL;
+      }
+      *dstPeaksSz = pkIdx;
+      *dstPeaks = pkDat;
+    }
+    if(sHist)
+    {
+      WlzFreeObj(sHist);
+    }
+    if(dHist)
+    {
+      WlzFreeObj(dHist);
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzHistogramFitPeaks
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Fit the given Woolz histogram object's histogram
+*		bin values using a mixture of Gaussian distributions.
+*		First guess at peak positions, the method of guessing
+*		depends on the parameter numDbn. If (numDbn > 0) guess
+*		numDbn equally spaced Gaussians, else use the function
+*		WlzHistogramFindPeaks().
+*		After initial guess use the function AlgMixture() to find
+*		the maximum liklihood mixture of Gaussian distributions
+*		which best fit the histogram
+*		  h(x) = \sum_{i=0}^k \alpha_i g_i(x)
+*		where
+*		   \sum_{i=0}^k \alpha_i = 1.0
+*		  g_i(x) are the gaussians defined by standard deviation
+*		  sigma_i and mean mu_i.
+*
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		int numDbn:		If greater than zero the number
+*					of Gaussians to fit. If less
+*					than or equal to zero then the
+*					Gaussians are fitted to peaks
+*					found by WlzHistogramFindPeaks().
+*		double smooth:		Gaussian sigma smooth histogram
+*					and compute 1st derivative.
+*		double thresh:		Mimimum bin count for a peak.
+*		double tol:		Log-likihood tolerance value
+*					for terminating the iteration.
+*		int *dstNumMu:		Destination ptr for the number
+*					of Gaussian mean values.
+*		double **dstMu:		Destination ptr for the Gaussian
+*					mean values.
+*		int *dstNumSigma:	Destination ptr for the number
+*					of Gaussian sigma values.
+*		double **dstSigma:	Destination ptr for the Gaussian
+*					sigma values.
+*		int *dstNumAlpha:	Destination ptr for the number
+*					of Gaussian alpha values.
+*		double **dstAlpha:	Destination ptr for the Gaussian
+*					alpha values.
+*		double *dstLL:		Destination ptr for the 
+*					log-liklihood, may be NULL.
+************************************************************************/
+WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
+				     double smooth, double thresh, double tol,
+				     int *dstNumMu, double **dstMu,
+				     int *dstNumSigma, double **dstSigma,
+				     int *dstNumAlpha, double **dstAlpha,
+				     double *dstLL)
+{
+  int		tI0,
+  		idx,
+  		binCnt,
+  		pkCnt,
+		fitObs,
+		fitNI;
+  double	fitLL;
+  int		*pkIdx = NULL,
+  		*pkFreq = NULL;
+  double	*pkPos = NULL,
+  		*pkApha = NULL,
+		*pkMu = NULL,
+		*pkSigma = NULL;
+  WlzHistogramDomain *histDom;
+  AlgError 	algErr = ALG_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dstNumMu == NULL) || (dstMu == NULL) ||
+     (dstNumSigma == NULL) || (dstSigma == NULL) ||
+     (dstNumAlpha == NULL) || (dstAlpha == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    errNum = WlzHistogramCheckHistObj(histObj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    histDom = histObj->domain.hist;
+    if(histDom->nBins < 3)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(numDbn > 0)
+    {
+      if(numDbn > (histDom->nBins / 3))
+      {
+        errNum = WLZ_ERR_PARAM_DATA;
+      }
+      else
+      {
+	pkCnt = numDbn;
+	if((pkIdx = (int *)AlcMalloc(sizeof(int) * pkCnt)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  for(idx = 0; idx < numDbn; ++idx)
+	  {
+	    *(pkIdx + idx) = (histDom->nBins * (idx + 1)) / (numDbn + 1);
+	  }
+	}
+      }
+    }
+    else
+    {
+      errNum = WlzHistogramFindPeaks(histObj, smooth, thresh,
+  				     &pkCnt, &pkIdx);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    binCnt = histDom->nBins;
+    if(((pkPos = (double *)AlcMalloc(sizeof(double) * binCnt)) == NULL) ||
+       ((pkFreq = (int *)AlcMalloc(sizeof(int) * binCnt)) == NULL) ||
+       ((pkApha = (double *)AlcMalloc(sizeof(double) * pkCnt)) == NULL) ||
+       ((pkMu = (double *)AlcMalloc(sizeof(double) * pkCnt)) == NULL) ||
+       ((pkSigma = (double *)AlcMalloc(sizeof(double) * pkCnt)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Fill in distribution parameters. */
+    for(idx = 0; idx < binCnt; ++idx)
+    {
+      *(pkPos + idx) = histDom->origin + (idx * histDom->binSize);
+    }
+    fitObs = 0;
+    switch(histDom->type)
+    {
+      case WLZ_HISTOGRAMDOMAIN_INT:
+	for(idx = 0; idx < binCnt; ++idx)
+	{
+	  tI0 = *(histDom->binValues.inp + idx);
+	  fitObs += tI0;
+	  *(pkFreq + idx) = tI0;
+	  
+	}
+	break;
+      case WLZ_HISTOGRAMDOMAIN_FLOAT:
+	for(idx = 0; idx < binCnt; ++idx)
+	{
+	  tI0 = WLZ_NINT(*(histDom->binValues.dbp + idx));
+	  fitObs += tI0;
+	  *(pkFreq + idx) = tI0;
+	}
+        break;
+    }
+    for(idx = 0; idx < pkCnt; ++idx)
+    {
+      *(pkMu + idx) = *(pkPos + *(pkIdx + idx));
+      *(pkSigma + idx) = smooth * 2.0;
+      *(pkApha + idx) = 1.0 / pkCnt;
+    }
+  }
+  if(pkIdx)
+  {
+    AlcFree(pkIdx);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Fit mixture of Gaussians to the histogram. */
+    algErr = AlgMixture(ALG_DISTRIBUTION_NORMAL, pkCnt, binCnt,
+    			pkPos, pkFreq, pkApha, pkMu, pkSigma,
+			tol, fitObs, &fitLL, &fitNI);
+    errNum = WlzErrorFromAlg(algErr);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *dstNumMu = pkCnt;
+    *dstMu = pkMu;
+    *dstNumSigma = pkCnt;
+    *dstSigma = pkSigma;
+    *dstNumAlpha = pkCnt;
+    *dstAlpha = pkApha;
+    if(dstLL)
+    {
+      *dstLL = fitLL;
+    }
+  }
+  else
+  {
+    if(pkApha)
+    {
+      AlcFree(pkApha);
+    }
+    if(pkMu)
+    {
+      AlcFree(pkMu);
+    }
+    if(pkSigma)
+    {
+      AlcFree(pkSigma);
+    }
+  }
+  if(pkPos)
+  {
+    AlcFree(pkPos);
+  }
+  if(pkFreq)
+  {
+    AlcFree(pkFreq);
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzHistogramNorm
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Normalise the given Woolz histogram object's histogram
+*		bin values to the given range [0-maxVal]. If the given
+*		maximum value is 0.0 then the histogram bin values are
+*		normalised so that maxVal is equal to the number of
+*		bins.
+* Global refs:	-
+* Parameters:	WlzObject *histObj:	Given histogram object.
+*		double maxVal:		Given maximum value.
 ************************************************************************/
 WlzErrorNum	WlzHistogramNorm(WlzObject *histObj, double maxVal)
 {
@@ -1392,11 +2198,11 @@ WlzErrorNum	WlzHistogramNorm(WlzObject *histObj, double maxVal)
 }
 
 /************************************************************************
-* Function:	WlzHistogramBinSum					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Computes the sum of the histogram domain's bin values.	*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom:	Given histogram domain.	*
+* Function:	WlzHistogramBinSum
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Computes the sum of the histogram domain's bin values.
+* Global refs:	-
+* Parameters:	WlzHistogramDomain *histDom:	Given histogram domain.
 ************************************************************************/
 double		WlzHistogramBinSum(WlzHistogramDomain *histDom)
 {
@@ -1428,12 +2234,12 @@ double		WlzHistogramBinSum(WlzHistogramDomain *histDom)
 }
 
 /************************************************************************
-* Function:	WlzHistogramBinMax					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Finds the bin of the histogram domain which has the	*
-*		greatest occupancy.					*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom:	Given histogram domain.	*
+* Function:	WlzHistogramBinMax
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Finds the bin of the histogram domain which has the
+*		greatest occupancy.
+* Global refs:	-
+* Parameters:	WlzHistogramDomain *histDom:	Given histogram domain.
 ************************************************************************/
 int		WlzHistogramBinMax(WlzHistogramDomain *histDom)
 {
@@ -1477,19 +2283,19 @@ int		WlzHistogramBinMax(WlzHistogramDomain *histDom)
 }
 
 /************************************************************************
-* Function:	WlzHistogramDistance					*
-* Returns:	double:			Histogram histance measure,	*
-*					range [0.0 - 1.0].		*
-* Purpose:	Calculates a distance measure for comparing two		*
-*		histograms. The histogram distance is in the range 	*
-*		[0.0 - 1.0] with 1.0 being a perfect match between	*
-*		histograms.						*
-*		The given histograms are not modified.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *histObj0:	First histogram object.		*
-*		WlzObject *histObj1:	Second histogram object.	*
-*		WlzErrorNum *dstErrNum:	Destination error pointer,	*
-*					may be NULL.			*
+* Function:	WlzHistogramDistance
+* Returns:	double:			Histogram histance measure,
+*					range [0.0 - 1.0].
+* Purpose:	Calculates a distance measure for comparing two
+*		histograms. The histogram distance is in the range
+*		[0.0 - 1.0] with 1.0 being a perfect match between
+*		histograms.
+*		The given histograms are not modified.
+* Global refs:	-
+* Parameters:	WlzObject *histObj0:	First histogram object.
+*		WlzObject *histObj1:	Second histogram object.
+*		WlzErrorNum *dstErrNum:	Destination error pointer,
+*					may be NULL.
 ************************************************************************/
 double		WlzHistogramDistance(WlzObject *histObj0,
 				     WlzObject *histObj1,
@@ -1613,44 +2419,48 @@ double		WlzHistogramDistance(WlzObject *histObj0,
 }
 
 /************************************************************************
-* Function:	WlzHistogramMatchObj					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Modifies the grey values of the given Woolz 2D or 3D	*
-*		domain object so that the resulting object's histogram	*
-*		matches the target histogram object.			*
-*		If the given domain object is a 3D object and the	*
-*		independentPlanes flag is set then each of the 3D	*
-*		object's planes is matched independently.		*
-*		A domain object or plane will only be matched to the	*
-*		given histogram if the distance between it's histogram	*
-*		and the given histogram is within the given distance	*
-*		range.							*
-*		If the specified smoothing is non-zero then the source	*
-*		objects histogram is smoothed by WlzHistogramSmooth().	*
-*		The histogram distance is in the range [0.0 - 1.0] with	*
-*		1.0 being a perfect match between histograms. If the 	*
-*		given minimum distance is <= 0.0 and the maximum	*
-*		distance is >= 1.0 then matching will always be done.	*
-*		The given histogram is not modified.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given domain object.		*
-*		WlzObject *targetHist:	Target histogram object.	*
-*		int independentPlanes:	If srcObj is a 3D domain object	*
-*					and independentPlanes is set	*
-*					(non-zero) then the domain 	*
-*					objects planes are matched 	*
-*					independently.			*
-*		int smoothing:		Gaussian smoothing of the	*
-*					source object histogram before	*
-*					matching.			*
-*		double minDist:		Minimum distance between the	*
-*					histograms.			*
-*		double maxDist:		Maximum distance between the	*
-*					histograms.			*
+* Function:	WlzHistogramMatchObj
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Modifies the grey values of the given Woolz 2D or 3D
+*		domain object so that the resulting object's histogram
+*		matches the target histogram object.
+*		If the given domain object is a 3D object and the
+*		independentPlanes flag is set then each of the 3D
+*		object's planes is matched independently.
+*		A domain object or plane will only be matched to the
+*		given histogram if the distance between it's histogram
+*		and the given histogram is within the given distance
+*		range.
+*		If the specified smoothing is non-zero then the source
+*		objects histogram is smoothed by WlzHistogramSmooth().
+*		The histogram distance is in the range [0.0 - 1.0] with
+*		1.0 being a perfect match between histograms. If the
+*		given minimum distance is <= 0.0 and the maximum
+*		distance is >= 1.0 then matching will always be done.
+*		The given histogram is not modified.
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given domain object.
+*		WlzObject *targetHist:	Target histogram object.
+*		int independentPlanes:	If srcObj is a 3D domain object
+*					and independentPlanes is set
+*					(non-zero) then the domain
+*					objects planes are matched
+*					independently.
+*		int smoothing:		Gaussian smoothing of the
+*					source object histogram before
+*					matching.
+*		double minDist:		Minimum distance between the
+*					histograms.
+*		double maxDist:		Maximum distance between the
+*					histograms.
+*		int dither:		If non zero then dither mapped
+*					values to avoid generating a
+*					histogram with a comb appearence.
 ************************************************************************/
 WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 				     int independentPlanes, int smoothing,
-				     double minDist, double maxDist)
+				     double minDist, double maxDist,
+				     int dither)
 {
   int		tI0,
   		planeIdx,
@@ -1668,9 +2478,9 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramMatchObj FE 0x%lx 0x%lx %d %g %g\n",
+	  ("WlzHistogramMatchObj FE 0x%lx 0x%lx %d %g %g %d\n",
 	   (unsigned long )srcObj, (unsigned long )targetHist,
-	   independentPlanes, minDist, maxDist));
+	   independentPlanes, minDist, maxDist, dither));
   if(((errNum = WlzHistogramCheckDomainAndValues(&greyType,
 						srcObj)) == WLZ_ERR_NONE) &&
      ((errNum = WlzHistogramCheckHistObj(targetHist)) == WLZ_ERR_NONE) &&
@@ -1697,7 +2507,7 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
       case WLZ_TRANS_OBJ:
 	errNum = WlzHistogramMatchObj(srcObj->values.obj, targetHist,
 				      independentPlanes, smoothing,
-				      minDist, maxDist);
+				      minDist, maxDist, dither);
         break;
       case WLZ_2D_DOMAINOBJ:
 	histDom = targetHistNew->domain.hist;
@@ -1736,7 +2546,7 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 	    (void )WlzHistogramCummulative(targetHistNew);
 	    (void )WlzHistogramCummulative(srcObjHist);
 	    errNum = WlzHistogramMatchPlane(srcObj, histDom,
-	    				    srcObjHist->domain.hist);
+	    				    srcObjHist->domain.hist, dither);
 	  }
 	}
         break;
@@ -1855,7 +2665,8 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 		}
 		errNum = WlzHistogramMatchPlane(srcObj2D,
 						targetHistCum->domain.hist,
-						srcObjHist->domain.hist);
+						srcObjHist->domain.hist,
+						dither);
 	      }
 	    }
 	    ++planeIdx;
@@ -1890,19 +2701,23 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 
 
 /************************************************************************
-* Function:	WlzHistogramEqualiseObj					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Modifies the grey values of the given Woolz 2D or 3D	*
-*		domain object so that the resulting object's histogram	*
-*		approximates a uniform histogram.			*
-*		If the specified smoothing is non-zero then the objects	*
-*		histogram is smoothed by WlzHistogramSmooth().		*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given domain object.		*
-*		int smoothing:		Gaussian smoothing of the	*
-*					histogram before equalisation.	*
+* Function:	WlzHistogramEqualiseObj
+* Returns:	WlzErrorNum:		Error number.
+* Purpose:	Modifies the grey values of the given Woolz 2D or 3D
+*		domain object so that the resulting object's histogram
+*		approximates a uniform histogram.
+*		If the specified smoothing is non-zero then the objects
+*		histogram is smoothed by WlzHistogramSmooth().
+* Global refs:	-
+* Parameters:	WlzObject *srcObj:	Given domain object.
+*		int smoothing:		Gaussian smoothing of the
+*					histogram before equalisation.
+*		int dither:		If non zero then dither mapped
+*					values to avoid generating a
+*					histogram with a comb appearence.
 ************************************************************************/
-WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing)
+WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
+					int dither)
 {
   int		tI0,
   		count;
@@ -1915,8 +2730,8 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramEqualiseObj FE 0x%lx %d\n",
-	   (unsigned long )srcObj, smoothing));
+	  ("WlzHistogramEqualiseObj FE 0x%lx %d %d\n",
+	   (unsigned long )srcObj, smoothing, dither));
   if((errNum = WlzHistogramCheckDomainAndValues(&greyType,
 						srcObj)) == WLZ_ERR_NONE)
   {
@@ -1925,7 +2740,8 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing)
       case WLZ_EMPTY_OBJ:
         break;
       case WLZ_TRANS_OBJ:
-	errNum = WlzHistogramEqualiseObj(srcObj->values.obj, smoothing);
+	errNum = WlzHistogramEqualiseObj(srcObj->values.obj, smoothing,
+					 dither);
         break;
       case WLZ_2D_DOMAINOBJ:
       case WLZ_3D_DOMAINOBJ:
@@ -1947,7 +2763,7 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing)
 	    tI0 = *map * normFac;
 	    *map++ = WLZ_NINT(tI0);
 	  }
-          errNum = WlzHistogramMapValues(srcObj, histObj);
+          errNum = WlzHistogramMapValues(srcObj, histObj, dither);
 	}
         break;
       default:
@@ -1956,7 +2772,7 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing)
     }
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzHistogramMatchObj FX %d\n",
+	  ("WlzHistogramEqualiseObj FX %d\n",
 	   (int )errNum));
   return(errNum);
 }
