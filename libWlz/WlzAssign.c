@@ -12,6 +12,7 @@
 * Purpose:      Assignemnt of Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 16-08-00 bill	Add WlzAssignGMModel().
 ************************************************************************/
 #include <Wlz.h>
 
@@ -299,6 +300,40 @@ WlzPolygonDomain *WlzAssignPolygonDomain(
     *dstErr = errNum;
   }
   return rtnPoly;
+}
+
+/************************************************************************
+* Function:	WlzAssignGMModel
+* Returns:	WlzGMModel *:			The given model.
+* Purpose:	Assigns a geometric model by incrementing it's
+*		linkcount.
+* Global refs:	-
+* Parameters:	WlzGMModel *model:	Given geometric model.
+*		WlzErrorNum   *dstErr:	Destination error ptr, may be
+*					NULL.
+************************************************************************/
+WlzGMModel 	*WlzAssignGMModel(WlzGMModel *model, WlzErrorNum *dstErr)
+{
+  WlzGMModel	*rtnModel = NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if(model)
+  {
+    if(model->linkcount < 0)
+    {
+      errNum = WLZ_ERR_LINKCOUNT_DATA;
+    }
+    else
+    {
+      rtnModel = model;
+      ++(model->linkcount);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rtnModel);
 }
 
 
