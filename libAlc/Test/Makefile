@@ -23,11 +23,13 @@ SOARCHIVE		=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= AlcDLPListTest \
-			  AlcHashTableTest
+			  AlcHashTableTest \
+			  AlcVectorTest
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= AlcDLPListTest.c \
-			  AlcHashTableTest.c
+			  AlcHashTableTest.c \
+			  AlcVectorTest.c
 
 
 # List of all header files that are available outside of either this archive
