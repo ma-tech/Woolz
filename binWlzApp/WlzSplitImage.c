@@ -241,11 +241,13 @@ int             main(int argc, char *argv[])
     {
       if(WlzGreyTypeFromObj(inObj, NULL) == WLZ_GREY_RGBA)
       {
-        ppObj = WlzRGBAToModulus(inObj, &errNum);
+        ppObj = WlzAssignObject(
+	        WlzRGBAToModulus(inObj, &errNum), NULL);
       }
       else
       {
-        ppObj = WlzCopyObject(inObj, &errNum);
+        ppObj = WlzAssignObject(
+		WlzCopyObject(inObj, &errNum), NULL);
       }
     }
     if(errNum == WLZ_ERR_NONE)
@@ -368,12 +370,13 @@ int             main(int argc, char *argv[])
   AlcFree(orderTb);
   (void )WlzFreeObj(inObj);
   (void )WlzFreeObj(ppObj);
-  if(compObj && (nComp > 0))
+  if(compObj)
   {
     for(idC = 0; idC < nComp; ++idC)
     {
       (void )WlzFreeObj(*(compObj + idC));
     }
+    AlcFree(compObj);
   }
   if(usage)
   {

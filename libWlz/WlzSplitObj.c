@@ -128,7 +128,8 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
   /* Compute threshold value and type from histogram. */
   if(errNum == WLZ_ERR_NONE)
   {
-    hObj = WlzHistogramObj(ppObj, 256, 0.0, 1.0, &errNum);
+    hObj = WlzAssignObject(
+    	   WlzHistogramObj(ppObj, 256, 0.0, 1.0, &errNum), NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -143,7 +144,8 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
   /* Threshold object. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tObj = WlzThreshold(ppObj, tV, tType, &errNum);
+    tObj = WlzAssignObject(
+     	   WlzThreshold(ppObj, tV, tType, &errNum), NULL);
   }
   /* Label to get connected components. */
   if(errNum == WLZ_ERR_NONE)
@@ -182,7 +184,7 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
     AlgQSort(split.compI, split.nLComp, sizeof(int), &split,
     	     WlzSplitObjSortSzFn);
     /* Allocate array for cliped component objects. */
-    if((comp = (WlzObject **)AlcMalloc(sizeof(WlzObject *) *
+    if((comp = (WlzObject **)AlcCalloc(sizeof(WlzObject *),
     				       split.nLComp)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
