@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 14-03-01 bill Add WlzRasterObj.
 # 08-03-01 bill Add WlzContourSzSelect.
 # 06-12-00 bill Add WlzRegisterICP.
 # 16-08-00 bill Add WlzContourObj.
@@ -83,6 +84,7 @@ EXECUTABLES		= \
 			WlzPolarSample \
 			WlzPolygonToObj \
 			WlzPrinicipalAngle \
+			WlzRasterObj \
 			WlzRegisterICP \
 			WlzRsvFilterObj \
 			WlzSampleObj \
@@ -163,6 +165,7 @@ CSOURCES		= \
 			WlzPolarSample.c \
 			WlzPolygonToObj.c \
 			WlzPrinicipalAngle.c \
+			WlzRasterObj.c \
 			WlzRegisterICP.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
