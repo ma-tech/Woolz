@@ -31,21 +31,17 @@ static WlzVertexP 		WlzVerticiesFromBound(
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
-static WlzVertexP 		WlzVerticiesFromCtr(
-				  WlzContour *ctr,
-				  WlzVertexP *dstNr,
-				  int *dstCnt,
-				  WlzVertexType *dstType,
-				  WlzErrorNum *dstErr);
 static WlzVertexP 		WlzVerticiesFromGM2(
 				  WlzGMModel *model,
 				  WlzVertexP *dstNr,
+				  int **dstVId,
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
 static WlzVertexP 		WlzVerticiesFromGM3(
 				  WlzGMModel *model,
 				  WlzVertexP *dstNr,
+				  int **dstVId,
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
@@ -124,7 +120,7 @@ WlzVertexP	WlzVerticiesFromObj(WlzObject *obj, WlzVertexP *dstNr,
 				      dstCnt, dstType, &errNum);
 	break;
       case WLZ_CONTOUR:
-	vData = WlzVerticiesFromCtr(obj->domain.ctr, dstNr,
+	vData = WlzVerticiesFromCtr(obj->domain.ctr, dstNr, NULL,
 				    dstCnt, dstType, &errNum);
 	break;
     }
@@ -298,6 +294,8 @@ static WlzVertexP WlzVerticiesFromBound(WlzBoundList *bound,
 * Parameters:	WlzContour *ctr:	Given contour.
 *		WlzVertexP *dstNr:	Destination ptr for normals,
 *					may be NULL.
+*		int **dstVId:		Destination ptr for the GM
+*					vertex indicies, may be NULL.
 *		int *dstCnt:		Destination ptr for the number
 *					of verticies.
 *		WlzVertexType *dstType:	Destination ptr for the type
@@ -305,10 +303,10 @@ static WlzVertexP WlzVerticiesFromBound(WlzBoundList *bound,
 *		WlzErrorNum *dstErr:	Destination error pointer,
 *					may be NULL.
 ************************************************************************/
-static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr,
-				      WlzVertexP *dstNr, int *dstCnt,
-				      WlzVertexType *dstType,
-				      WlzErrorNum *dstErr)
+WlzVertexP 	WlzVerticiesFromCtr(WlzContour *ctr,
+				    WlzVertexP *dstNr, int **dstVId,
+				    int *dstCnt, WlzVertexType *dstType,
+				    WlzErrorNum *dstErr)
 {
   WlzVertexP    vData;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -320,12 +318,12 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr,
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D:
-	vData = WlzVerticiesFromGM2(ctr->model, dstNr, dstCnt, dstType,
+	vData = WlzVerticiesFromGM2(ctr->model, dstNr, dstVId, dstCnt, dstType,
 				    &errNum);
         break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
       case WLZ_GMMOD_3D:
-	vData = WlzVerticiesFromGM3(ctr->model, dstNr, dstCnt, dstType,
+	vData = WlzVerticiesFromGM3(ctr->model, dstNr, dstVId, dstCnt, dstType,
 				    &errNum);
         break;
       default:
@@ -349,6 +347,8 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr,
 * Parameters:	WlzGMModel *model:	Given model.
 *		WlzVertexP *dstNr:	Destination ptr for normals,
 *					may be NULL.
+*		int *dstVId:		Destination ptr for the GM
+*					vertex indicies, may be NULL.
 *		int *dstCnt:		Destination ptr for the number
 *					of verticies.
 *		WlzVertexType *dstType:	Destination ptr for the type
@@ -357,14 +357,15 @@ static WlzVertexP WlzVerticiesFromCtr(WlzContour *ctr,
 *					may be NULL.
 ************************************************************************/
 static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
-				      WlzVertexP *dstNr, int *dstCnt,
-				      WlzVertexType *dstType,
+				      WlzVertexP *dstNr, int **dstVId,
+				      int *dstCnt, WlzVertexType *dstType,
 				      WlzErrorNum *dstErr)
 {
   int		idx,
   		cnt,
 		nIdx,
 		vIdx;
+  int		*vId = NULL;
   WlzVertexType	type;
   WlzVertexP    vData;
   WlzGMVertex	*cV;
@@ -400,11 +401,21 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
       }
       break;
   }
-  if((errNum == WLZ_ERR_NONE) && dstNr)
+  if(errNum == WLZ_ERR_NONE)
   {
-    if((vNorm = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * cnt)) == NULL)
+    if(dstNr)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
+      if((vNorm = (WlzDVertex2 *)AlcMalloc(sizeof(WlzDVertex2) * cnt)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if((errNum == WLZ_ERR_NONE) && dstVId)
+    {
+      if((vId = (int *)AlcMalloc(sizeof(int) * cnt)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -414,6 +425,7 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
       cV = (WlzGMVertex *)AlcVectorItemGet(vec, vIdx++);
       if(cV->idx >= 0)
       {
+	*(vId + idx) = cV->idx;
 	if(model->type == WLZ_GMMOD_2I)
 	{
 	  *(vData.i2 + idx) = cV->geo.vg2I->vtx;
@@ -495,6 +507,15 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
     {
       (*dstNr).d2 = vNorm;
     }
+    if(dstVId)
+    {
+      *dstVId = vId;
+    }
+  }
+  else
+  {
+    AlcFree(vNorm);
+    AlcFree(vId);
   }
   if(dstErr)
   {
@@ -512,6 +533,8 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 * Parameters:	WlzGMModel *model:	Given model.
 *		WlzVertexP *dstNr:	Destination ptr for normals,
 *					may be NULL.
+*		int *dstVId:		Destination ptr for the GM
+*					vertex indicies, may be NULL.
 *		int *dstCnt:		Destination ptr for the number
 *					of verticies.
 *		WlzVertexType *dstType:	Destination ptr for the type
@@ -520,8 +543,8 @@ static WlzVertexP WlzVerticiesFromGM2(WlzGMModel *model,
 *					may be NULL.
 ************************************************************************/
 static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
-				      WlzVertexP *dstNr, int *dstCnt,
-				      WlzVertexType *dstType,
+				      WlzVertexP *dstNr, int **dstVId,
+				      int *dstCnt, WlzVertexType *dstType,
 				      WlzErrorNum *dstErr)
 {
   int		vIdx,
@@ -532,6 +555,7 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
   		vCnt,
 		manifold;
   double	tD0;
+  int		*vId = NULL;
   AlcVector	*vec;
   WlzVertexType	type;
   WlzVertexP    vData;
@@ -566,11 +590,22 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  if((errNum == WLZ_ERR_NONE) && dstNr)
+  if(errNum == WLZ_ERR_NONE)
   {
-    if((vNorm = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) * vCnt)) == NULL)
+    if(dstNr)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
+      if((vNorm = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
+      					   vCnt)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if((errNum == WLZ_ERR_NONE) && dstVId)
+    {
+      if((vId = (int *)AlcMalloc(sizeof(int) * vCnt)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -581,6 +616,7 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
       cV = (WlzGMVertex *)AlcVectorItemGet(vec, vecIdx++);
       if(cV->idx >= 0)
       {
+	*(vId + vIdx) = cV->idx;
 	if(model->type == WLZ_GMMOD_3I)
 	{
 	  *(vData.i3 + vIdx) = cV->geo.vg3I->vtx;
@@ -609,13 +645,15 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
     {
       (*dstNr).d3 = vNorm;
     }
+    if(dstVId)
+    {
+      (*dstVId) = vId;
+    }
   }
   else
   {
-    if(vNorm)
-    {
-      AlcFree(vNorm);
-    }
+    AlcFree(vNorm);
+    AlcFree(vId);
   }
   if(dstErr)
   {
