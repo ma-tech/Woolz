@@ -37,13 +37,6 @@ WlzObject *Wlz2DContains(WlzObject *obj,
 
    WlzErrorNum  errNum=WLZ_ERR_NONE;
    WlzConnectType connectivity = WLZ_8_CONNECTED;
-   /* int hack = 1; */ /* for debugging with workshop */
-   int hack = 0;
-
-   while(hack)
-   {
-     sleep(1);
-   }
 
    /*
    fprintf(stderr, "entering Wlz2DContains %f,%f\n", x,y);
@@ -60,7 +53,7 @@ WlzObject *Wlz2DContains(WlzObject *obj,
                         maxNobjs,
                         0,
                         connectivity);
-   } // if
+   }
    /*
    fprintf(stderr, "got array of %d objects\n", nobjs);
    fflush(stderr);
