@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /************************************************************************
 * Project:      Mouse Atlas
-* Title:        AlgBits.c
+* Title:        AlgCrossCor.c
 * Date:         January 2001
 * Author:       Bill Hill
 * Copyright:	2001 Medical Research Council, UK.
