@@ -2499,9 +2499,14 @@ extern WlzDVertex2 		WlzMeshTransformVtx(
 				  WlzMeshTransform *mesh,
 				  WlzErrorNum *dstErr);
 extern double 			WlzClassValCon4(
-                                  double	*gVals,
-				  double	xOffset,
-				  double	yOffset);
+                                  double *gVals,
+				  double xOffset,
+				  double yOffset);
+extern WlzMeshTransform  	*WlzMeshFromObjBox(
+				  WlzObject *srcObj,
+				  WlzIBox2 *dstBox,
+				  int boxDilation,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 #ifndef WLZ_EXT_BIND
