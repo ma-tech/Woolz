@@ -13,14 +13,24 @@ import java.io.*;
 public class WSetter extends JPanel
                      implements Serializable {
 
+  private boolean _enabled;
 
   public WSetter() {
+    _enabled = false;
     try {
-      jbInit();
+      WSInit();
     }
     catch(Exception e) {
       e.printStackTrace();
     }
+  }
+
+  public void setEnabled(boolean state) {
+     _enabled = state;
+  }
+
+  public boolean isEnabled() {
+     return _enabled;
   }
 
 // adapters for MVC model
@@ -130,11 +140,12 @@ public class WSetter extends JPanel
 //---------------------------------------
   // allows this bean to fire events
   public static class modelToThisAdaptor
-    implements ChangeListener {
-    WlzFltModel source;
+		implements ChangeListener {
+    //WlzFltModel source;
     WSetter target;
-    public modelToThisAdaptor(WlzFltModel mdl1, WSetter wst) {
-      source = mdl1;
+    //public modelToThisAdaptor(WlzFltModel mdl1, WSetter wst) {
+    public modelToThisAdaptor(WSetter wst) {
+      //source = mdl1;
       target = wst;
     }
 
@@ -158,14 +169,14 @@ public class WSetter extends JPanel
   JLabel paramLabel = new JLabel("", SwingConstants.CENTER);
 //*******************************************
 //===========================================
-  private void jbInit() throws Exception {
+  private void WSInit() throws Exception {
 
     sliderModel = new SliderRangeModel();
     _slider.setModel(sliderModel);
     setGUI();
     setModel();
 
-  } // jbInit()
+  } // WSInit()
 //===========================================
 
   protected void setGUI() {
@@ -273,47 +284,50 @@ public class WSetter extends JPanel
      if(MToThis != null) {
 	mod1.removeChangeListener(MToThis);
      }
-     MToThis = new modelToThisAdaptor(mod1, this);
+     //MToThis = new modelToThisAdaptor(mod1, this);
+     MToThis = new modelToThisAdaptor(this);
      mod1.addChangeListener(MToThis);
 
   } // setModel
 
-//-------------------------------------------------------------
+  //-------------------------------------------------------------
   // we need to generate change events
   // whenever the WlzFltModel changes
 
-   // keep track of all the listeners to this model
-   protected EventListenerList changeListeners =
-                             new EventListenerList();
+  // keep track of all the listeners to this model
+  protected EventListenerList changeListeners =
+     new EventListenerList();
 
   // add a listener to the register
   public void addChangeListener(ChangeListener x) {
-    changeListeners.add (ChangeListener.class, x);
+     changeListeners.add (ChangeListener.class, x);
 
-    // bring it up to date with current state
-    x.stateChanged(new ChangeEvent(this));
+     // bring it up to date with current state
+     x.stateChanged(new ChangeEvent(this));
   }
 
   // remove a listener from the register
   public void removeChangeListener(ChangeListener x) {
-    changeListeners.remove (ChangeListener.class, x);
+     changeListeners.remove (ChangeListener.class, x);
   }
 
-   protected void fireChange() {
-   // Create the event:
-   ChangeEvent ce = new ChangeEvent(this);
-   // Get the listener list
-   Object[] listeners =
-     changeListeners.getListenerList();
-   // Process the listeners last to first
-   // List is in pairs, Class and instance
-   for (int i
-     = listeners.length-2; i >= 0; i -= 2) {
-     if (listeners[i] == ChangeListener.class) {
-        ChangeListener cl = (ChangeListener)listeners[i+1];
-        cl.stateChanged(ce);
+  protected void fireChange() {
+     if(_enabled == true) {
+	// Create the event:
+	ChangeEvent ce = new ChangeEvent(this);
+	// Get the listener list
+	Object[] listeners =
+	   changeListeners.getListenerList();
+	// Process the listeners last to first
+	// List is in pairs, Class and instance
+	for (int i
+	      = listeners.length-2; i >= 0; i -= 2) {
+	   if (listeners[i] == ChangeListener.class) {
+	      ChangeListener cl = (ChangeListener)listeners[i+1];
+	      cl.stateChanged(ce);
+	   }
+	}
      }
-   }
   } // fireChange
 
 //-------------------------------------------------------------
@@ -410,8 +424,12 @@ public class WSetter extends JPanel
       setModel();
    }
 //.....................................
-   public void setEnabled(boolean bool) {
+   public void setSliderEnabled(boolean bool) {
       _slider.setEnabled(bool);
+   }
+
+   public boolean isSliderEnabled() {
+      return _slider.isEnabled();
    }
 
    //public void setModelType(WlzFltMdl.WlzType WlzFltMdl.WlzType.FLOAT)
