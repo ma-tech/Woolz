@@ -19,18 +19,19 @@ include			../../../../../../../../Makefile.conf
 
 JAVASOURCES		= \
 			  WlzAffineTransformLSq.java \
-			  WlzBoundingBox.java \
+			  WlzArrayViewer.java \
+			  WlzBndGreyInvert.java \
 			  WlzBoundingBoxIntersection.java \
+			  WlzBoundingBox.java \
+			  WlzConstruct3D.java \
 			  WlzDitherViewer.java \
-			  WlzFacts.java \
 			  WlzExtFFFacts.java \
+			  WlzFacts.java \
 			  WlzGetBackground.java \
 			  WlzGreyStats.java \
-			  WlzArrayViewer.java \
-			  WlzViewer.java \
-			  WlzTest3DVtx.java \
 			  WlzLabelTest.java \
-			  WlzBndGreyInvert.java
+			  WlzTest3DVtx.java \
+			  WlzViewer.java
 
 CLASSPATH		= .:../../../../../..
 ifeq ($(UNIXTYPE), CYGWIN)
