@@ -23,6 +23,7 @@ ARCHIVE			=
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
 			Wlz3DGetSection \
+			Wlz3DViewTransformObj \
 			WlzAffineTransformLSq \
 			WlzAffineTransformObj \
 			WlzArea \
@@ -76,6 +77,7 @@ EXECUTABLES		= \
 			WlzSetBackground \
 			WlzSetVoxelSize \
 			WlzShiftObj \
+			WlzSkeleton.c \
 			WlzSobel \
 			WlzTransposeObj \
 			WlzThreshold \
@@ -197,6 +199,7 @@ DEPENDDIRS		= \
 			  . \
 			  ../libAlc \
 			  ../libAlg \
+			  ../libbibfile \
 			  ../libWlz
 
 # List of all header file directories to be searched (modify as required).
@@ -221,7 +224,7 @@ endif
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		= Wlz Alg Alc \
+LIBRARIES		= Wlz bibfile Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be

@@ -81,7 +81,7 @@ int main(int	argc,
       if((errNum = WlzWriteObj(stdout, obj)) != WLZ_ERR_NONE) {
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-	               "%s: error when writting verified object (%s).\n",
+	               "%s: error when writing verified object (%s).\n",
 		       argv[0], errMsg);
       }
     }
