@@ -78,6 +78,7 @@ CSOURCES		= \
 			WlzDiffDomain3d.c \
 			WlzDilation.c \
 			WlzDistMetric.c \
+			WlzDistTransform.c \
 			WlzDomainFill.c \
 			WlzDomainUtils.c \
 			WlzEmpty.c \
@@ -172,6 +173,7 @@ CSOURCES		= \
 			WlzSkeleton.c \
 			WlzSnapFit.c \
 			WlzSobel.c \
+			WlzSplitObj.c \
 			WlzStdStructElements.c \
 			WlzStringTypes.c \
 			WlzStringUtils.c \
