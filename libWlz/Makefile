@@ -41,6 +41,7 @@ EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			Wlz2DContains.c \
 			Wlz3DSection.c \
 			Wlz3DSectionFromGeoModel.c \
 			Wlz3DSectionSegmentObject.c \
