@@ -64,7 +64,7 @@ public class AnatKeyGUI extends JFrame {
    /**
     *   The empty height of the anatomy key.
     */
-   protected final int _emptyH = 75;
+   protected final int _emptyH = 65;
 
    protected static boolean _is3D;
 //-------------------------------------------------------------

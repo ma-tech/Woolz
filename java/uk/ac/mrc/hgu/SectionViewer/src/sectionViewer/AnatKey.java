@@ -100,7 +100,7 @@ public class AnatKey extends AnatKeyGUI{
       currDim = this.getSize(null);
       this.setSize(new Dimension(currDim.width,
                                  currDim.height - KeyEntry.getH() - 2));
-      /* find row with approprite indx from _keyEntryVec */
+      /* find row with appropriate indx from _keyEntryVec */
       KeyEntry row = getRow(indx);
       _keyEntryVec.remove(row);
       kTopPanel.remove(row);

@@ -61,9 +61,9 @@ public class KeyEntryGUI extends JPanel{
    /** The tool tip for the colour chooser button */
    protected String colTipText = "choose colour";
    /** The tool tip for the left arrow button */
-   protected String leftTipText = "start of text";
+   protected String leftTipText = "scroll to start of text";
    /** The tool tip for the right arrow button */
-   protected String rightTipText = "end of text";
+   protected String rightTipText = "scroll to end of text";
    /** The tool tip for the visibility button */
    protected String vizTip2Text = "toggle 2D visibility";
    /** The tool tip for the visibility button */
@@ -87,7 +87,8 @@ public class KeyEntryGUI extends JPanel{
 
    protected boolean _is3D;
    protected static final int _entryW = 200;
-   protected static final int _entryH = 35;
+   //protected static final int _entryH = 35;
+   protected static final int _entryH = 25;
 //-------------------------------------------------------------
    /**
     *   Constructs a KeyEntryGUI. 
@@ -114,10 +115,11 @@ public class KeyEntryGUI extends JPanel{
     */
    private void makeGUI() {
 
-      int btnW1 = 12; // left, right button panels
+      int btnW1 = 18; // left, right button panels
       int btnW2 = 20; // colour, viz & zap button panels
       int btnW3 = 25; // combined left & right button panel
       int gap = 1;
+      int W1 = 2*btnW1+btnW3+2*gap;
 
       String imgPath = "sectionViewer"+SLASH+"images"+SLASH;
       leftIcon = new ImageIcon(imgPath+"left.gif");
@@ -134,7 +136,7 @@ public class KeyEntryGUI extends JPanel{
 
 //......................................
       this.setLayout(new BorderLayout());
-      this.setPreferredSize(new Dimension(0, 40));
+      this.setPreferredSize(new Dimension(0, _entryH));
       //this.setBackground(Color.green);
 //......................................
       /**
@@ -181,13 +183,16 @@ public class KeyEntryGUI extends JPanel{
 
       kPanel00.setLayout(new BorderLayout(gap,gap));
       //kPanel00.setBackground(Color.blue);
+      kPanel00.setPreferredSize(new Dimension(W1,0));
       kPanel00.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
 
       kPanel01.setLayout(new BorderLayout(gap,gap));
-      //kPanel01.setBackground(Color.magenta);
+      /*
+      kPanel01.setBackground(Color.magenta);
       kPanel01.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
+      */
 
       kPanel02.setLayout(new BorderLayout(gap,gap));
       //kPanel02.setBackground(Color.magenta);
@@ -197,7 +202,8 @@ public class KeyEntryGUI extends JPanel{
       colBtn0 = new JButton();
       JPanel colPanel0 = new JPanel();
       colPanel0.setLayout(new BorderLayout(gap,gap));
-      colPanel0.setPreferredSize(new Dimension(btnW2,0));
+      //colPanel0.setPreferredSize(new Dimension(btnW2,0));
+      colPanel0.setPreferredSize(new Dimension(btnW3,0));
       colPanel0.add(colBtn0);
       JPanel txtPanel0 = new JPanel();
       txtPanel0.setLayout(new BorderLayout(gap,gap));
@@ -208,8 +214,9 @@ public class KeyEntryGUI extends JPanel{
       tf0.setBackground(_vizCol);
       txtPanel0.add(tf0, BorderLayout.CENTER);
       JPanel navPanel0 = new JPanel();
-      navPanel0.setPreferredSize(new Dimension(btnW3,0));
-      navPanel0.setLayout(new BoxLayout(navPanel0, BoxLayout.X_AXIS));
+      navPanel0.setPreferredSize(new Dimension(2*btnW1,0));
+      //navPanel0.setLayout(new BoxLayout(navPanel0, BoxLayout.X_AXIS));
+      navPanel0.setLayout(new BorderLayout(gap,gap));
       JPanel btnPanel00 = new JPanel();
       btnPanel00.setPreferredSize(new Dimension(btnW1,0));
       btnPanel00.setLayout(new BorderLayout(gap,gap));
@@ -226,8 +233,8 @@ public class KeyEntryGUI extends JPanel{
 	 btn01.setIcon(rightIcon);
       }
       btnPanel01.add(btn01, BorderLayout.CENTER);
-      navPanel0.add(btnPanel00);
-      navPanel0.add(btnPanel01);
+      navPanel0.add(btnPanel00, BorderLayout.WEST);
+      navPanel0.add(btnPanel01, BorderLayout.EAST);
 
       JPanel btnPanel02 = new JPanel();
       btnPanel02.setPreferredSize(new Dimension(btnW2,0));
