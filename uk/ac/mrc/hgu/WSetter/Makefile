@@ -11,8 +11,11 @@ FLAGS = -classpath $(CLASSPATH) -d classes
 
 OBJECTS = $(TARGETPATH)/WSetterGUI.class \
           $(TARGETPATH)/WSetter.class \
-          $(TARGETPATH)/WlzFltModel.class \
-	  $(TARGETPATH)/SliderRangeModel.class
+          $(TARGETPATH)/WSetterConstants.class \
+          $(TARGETPATH)/WSetterModel.class \
+	  $(TARGETPATH)/SliderRangeModel.class \
+	  $(TARGETPATH)/LimitListener.class \
+	  $(TARGETPATH)/LimitEvent.class
 
 all:	$(OBJECTS)
 
@@ -23,11 +26,20 @@ $(TARGETPATH)/WSetter.class:	$(SOURCEPATH)/WSetter.java \
                                 $(TARGETPATH)/WSetterGUI.class
 	$(JAVAC) $(FLAGS) $(SOURCEPATH)/WSetter.java
 
-$(TARGETPATH)/WlzFltModel.class:	$(SOURCEPATH)/WlzFltModel.java
-	$(JAVAC) $(FLAGS) $(SOURCEPATH)/WlzFltModel.java
+$(TARGETPATH)/WSetterConstants.class:	$(SOURCEPATH)/WSetterConstants.java
+	$(JAVAC) $(FLAGS) $(SOURCEPATH)/WSetterConstants.java
+
+$(TARGETPATH)/WSetterModel.class:	$(SOURCEPATH)/WSetterModel.java
+	$(JAVAC) $(FLAGS) $(SOURCEPATH)/WSetterModel.java
 
 $(TARGETPATH)/SliderRangeModel.class:	$(SOURCEPATH)/SliderRangeModel.java 
 	$(JAVAC) $(FLAGS) $(SOURCEPATH)/SliderRangeModel.java
+
+$(TARGETPATH)/LimitListener.class:	$(SOURCEPATH)/LimitListener.java 
+	$(JAVAC) $(FLAGS) $(SOURCEPATH)/LimitListener.java
+
+$(TARGETPATH)/LimitEvent.class:	$(SOURCEPATH)/LimitEvent.java 
+	$(JAVAC) $(FLAGS) $(SOURCEPATH)/LimitEvent.java
 
 clean: clobber
 
