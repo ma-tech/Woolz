@@ -15,7 +15,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      WlzTransform
 * \brief        Generate a regular tetrahedral mesh for a 3D woolz
- object domain.
+*               object domain.
 *               
 * \todo         -
 * \bug          None known
@@ -267,125 +267,11 @@ WlzMeshTransform3D *WlzTetrahedronMeshFromObj( WlzObject *wObjC, const WlzDBox3 
                                   );
 
 
-
 WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst, 
                                                    WlzMeshTransform3D *wmt3D,
 						   WlzErrorNum *disErr);				  
 int static IsNeighbour(int *n, int *np, int *it);
 
-/*!
-* \ingroup     Wlzlib
-* \brief       WlzTetrahedronProducerFromCube
-*
-* \return      Woolz error number.
-* \brief 	Given a cuboid, produce 6 tetrahedrons.
-* - Input:     
-*     -# the eight vertexes of the cuboid, 
-*     -# the indexOfTheNextFirst of the first tetrahedron of
-*                                    the next six new tetrahedrons. 
-*     -# the neighbours:
-*                   <-          neighbourLeft,  neighbourRight       ->   x,
-*                               neighbourUp,    neighbourDown,       ->   y
-*                               neighbourFront, neighbourBack,       ->   z
-*                                                   1 means there is a neighbour
-*                                                   0 no-neighbour
-*/
-/*
-*                                                                      
-*                          @4----------------@5                        
-*                         /|                /|                        
-*                        / |               / |                         
-*                       /  |              /  |                         
-*                      /   |             /   |                         
-*                     /    |            /    |                         
-*                    /     |           /     |                         
-*                   /      |          /      |                         
-*                  /       |         /       |                         
-*                 @0----------------@1       |                         
-*                 |        |        |        |                         
-*                 |        @7-------|--------@6                                 
-*                 |       /         |       /                                 
-*                 |      /          |      /                                  
-*                 |     /           |     /                                  
-*                 |    /            |    /                                  
-*                 |   /             |   /                                  
-*                 |  /              |  /                                  
-*                 | /               | /                                  
-*                 |/                |/                                  
-*                 @3----------------@2                                 
-*
-*		The tetrahedra are are assigned the following indicies:
-*
-*		  tetrahedron index  	cube vertex indicies
-*		   0       		1, 7, 0, 3
-*		   1       		1, 7, 3, 2
-*		   2       		1, 7, 2, 6
-*		   3       		1, 7, 6, 5 
-*		   4        		1, 7, 5, 4 
-*		   5        		1, 7, 4, 0
-*
-*
-*            we will use the following order of surfaces for tetrahedron:
-*                   If the vertex indicies of a tetrahedron is in the
-*                   following order:
-*                                       a, b, c, d
-*                   then the surface order is:
-*
-*                                       a-b-c
-*                                       b-c-d
-*                                       c-d-a
-*                                       d-a-b
-*
-*
-* The relationship with orther tetrahedron is described by its neighbours
-*                   neighbours is defined here as a surface neighbour and
-*                   we assume that every surface has only on neighbour which
-*                   means a tetrahedron has at most four neighbours.
-*
-*
-* Input:     the eight vertexes, 
-*            the indexOfTheNextFirst of the first tetrahedron of
-*                                    the next six new tetrahedrons. 
-*            the neighbours:
-*
-*
-*                   <-          neighbourLeft,  neighbourRight       ->   x,
-*                               neighbourUp,    neighbourDown,       ->   y
-*                               neighbourFront, neighbourBack,       ->   z
-*
-*                                                   1 means there is a neighbour
-*                                                   0 no-neighbour
-*                
-*               z
-*             / 
-*            /                                  
-*            -------->  x
-*           |
-*           |
-*           
-*           y
-*
-*
-* Global refs:	-
-/* - don't know wha these refer to - RAB
-* Parameters:	WlzContour *ctr:	Contour being built.
-*		double isoVal:		Iso-value to use.
-*		double *vPn0Ln0:	Ptr to 2 data values at
-*					z = zPos, y = yPos and
-*					x = xPos, xpos + 1.
-*		double *vPn0Ln1:	Ptr to 2 data values at
-*					z = zPos, y = yPos + 1 and
-*					x = xPos, xpos + 1.
-*		double *vPn1Ln0:	Ptr to 2 data values at
-*					z = zPos + 1, y = yPos and
-*					x = xPos, xpos + 1.
-*		double *vPn1Ln1:	Ptr to 2 data values at
-*					z = zPos + 1, y = yPos + 1 and
-*					x = xPos, xpos + 1.
-*		WlzDVertex3 cbOrg:	The cube's origin.
-*/
-
-/* function:     WlzTetrahedronProducerFromCube    */
 /*! 
 * \ingroup      WlzMesh
 * \brief        Divide a cuboid into six tetrahedral elements.
@@ -406,7 +292,7 @@ int static IsNeighbour(int *n, int *np, int *it);
 * \param    indexOfNextFirst	Index for new elements
 * \param    elements	Element array.
 * \par      Detail
-\verbatim
+* \verbatim
                                                                       
                           @4----------------@5                        
                          /|                /|                        
@@ -655,25 +541,28 @@ WlzErrorNum WlzTetrahedronProducerFromCube(
   return(errNum);
 }
 
-/*
-*
-*   - Purpose:  
-*         -# Get the index of the tetrahedrons which intersect
-*               with a giving z = constant plane. 
+/*!
+*  \return int nIntersect number of tetrahedrons whose body was cutted by the given plane.
+*  \ingroup WlzMesh
+*  \brief   
+*          Get the index of the tetrahedrons which intersect
+*          with a giving z = constant plane. 
 *    
-*   - Input:  
-*         -# zConst:  the z-constant used to cut the tetrahedron mesh. 
-*         -# wmt3D:   the tetrahedron mesh.
-*   - Output: 
-*         -# the table containing the number of tetrahedron whose body intersected
+*  \param       zConst        A z = const plane used to cut the tetrahedron mesh.
+*  \param       wmt3D         the tetrahedron mesh.
+*   
+*         the table containing the number of tetrahedron whose body intersected
 *            with the give plane.
-*         -# *intersectIndex:  stores the intex of tetrahedron whose body been cutted by the given plane.
-*         -# linkList[i][j]:   Store the number of points cutted to the tetrahedra of intersectIndex[i] 
+*  \param   intersectIndex    stores the intex of tetrahedron whose body been cutted by the given plane.
+*  \param   linkList[i][j]    Store the number of points cutted to the tetrahedra of intersectIndex[i] 
 *                             in j = 0. And store the sequence number in j=0,1,...intersectIndex[i][0]-1;
-*         -# planepoints[]:    store the cuting points sequentially according the cuting order.
-* - Author:       J. Rao, R. Baldock and B. Hill
-*/
-/*
+*  \param   planepoints       store the cuting points sequentially according the cuting order.
+*  \param   noRedundancyCutingNum store the number of cuting points.
+*  \param   numTotalTrangularElem  number of total Trangular Elements.
+*  \author    J. Rao, R. Baldock and B. Hill
+*  \par   Detail
+*  \verbatim
+
           x
          / \
         /   \     x
@@ -681,17 +570,7 @@ WlzErrorNum WlzTetrahedronProducerFromCube(
       /       \ /
      x---------x        
 
-            We also need how may points cutted to each tetrahedronthe and the cutting points
-
-    int         zConst         ---------- A z = const plane used to cut the tetrahedron mesh.
-    int         nIntersect     ---------- number of tetrahedrons whose body was cutted by the given plane.
-    int *       intersectIndex ---------- stores the intex of tetrahedron whose body been cutted 
-                                          by the given plane.
-    int         linkList[i][j] ---------- Store the number of points cutted to the tetrahedra of
-                                          intersectIndex[i] in j = 0. And store the sequence number
-					  in j=0,1,...intersectIndex[i][0]-1;
-    WlzDVertex3 planepoints[]  ---------- store the cuting points sequentially according the cuting order.
-
+\endverbatim 
                                           18/10/2001 J.Rao,  try to remove redundancy in the storage and
 					  make it easier to connet with Bill's 2D data structure.
 					  It seems OK now.
@@ -699,13 +578,13 @@ WlzErrorNum WlzTetrahedronProducerFromCube(
     
 
 */
-int WlzIsoIntersectWithTetrahadronIndex(  double                zConst, 
+int WlzIsoIntersectWithTetrahadronIndex(  double                      zConst, 
                                           const WlzMeshTransform3D   *wmt3D, 
-					  int                  *intersectIndex,
-                                          WlzDVertex3          *planepoints, 
-					  int                 **linkList, 
-					  int                  *noRedundancyCutingNum,
-					  int                  *numTotalTrangularElem)
+					  int                        *intersectIndex,
+                                          WlzDVertex3                *planepoints, 
+					  int                       **linkList, 
+					  int                        *noRedundancyCutingNum,
+					  int                        *numTotalTrangularElem)
 {
   int      i, j0, j1, j2, j3, k, k1, kmin, kmax, itemp;
   int      nIntersect = 0;
@@ -1060,26 +939,33 @@ int WlzIsoIntersectWithTetrahadronIndex(  double                zConst,
 }
 
 /*!
-* - Purpose:
+*  \return none
+*  \ingroup  WlzTransform
+*  \brief 
 *
 *    Get 3D Affine transformation from the nodes of
 *    a source tetrahedron and the nodes from a target tetrahedron.
 *  
-* - input:
-*              source tetrahedron: 4 points   sr1,   sr2,   sr3,   sr4
-*              target tetrahedron: 4 points targ1, targ2, targ3, targ4
-* - output:
-*               Affine3D4pointsTrFun[3][4] contains the affine transformation parameters:
+*  \param   sr0    nodes of source tetrahedron
+*  \param   sr1    nodes of source tetrahedron
+*  \param   sr2    nodes of source tetrahedron
+*  \param   sr3    nodes of source tetrahedron
+*  \param   targ0  nodes of target tetrahedron
+*  \param   targ1  nodes of target tetrahedron
+*  \param   targ2  nodes of target tetrahedron
+*  \param   targ3  nodes of target tetrahedron
+*  \param   Affine3D4pointsTrFun  contains the affine transformation parameters 
 *
-* - Author:       J. Rao, R. Baldock and B. Hill
-*/
-/*
-*  A =:
-*	       a11  a12  a13  a14
-*	       a21  a22  a23  a24
-*	       a31  a32  a33  a34
-*                0    0    0    1
-*               
+*  \author:       J. Rao, R. Baldock and B. Hill
+*  \par  Detail
+*  \verbatim
+  A =:
+       a11  a12  a13  a14
+       a21  a22  a23  a24
+       a31  a32  a33  a34
+        0    0    0    1
+           
+ \endverbatim
 */
 void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0, 
                                  WlzDVertex3 sr1, 
@@ -1290,13 +1176,12 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
 }
 
 /*!
-* - Function:   WlzEffWriteMeshTransform3DWithoutDisplacementVTK
-* - Returns:    none 
-* - Purpose:    output the orginal mesh.	
-* - Parameters:	
-*     -# *fp:               pointer pointing to a specific file.
-*     -#  wmt3D:            mesh transform.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzIO
+* \brief    output the orginal mesh.
+* \param    fp               pointer pointing to a specific file.
+* \param    wmt3D            mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,  
                WlzMeshTransform3D *wmt3D){
@@ -1368,17 +1253,14 @@ void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
    }
 }
 
-
 /*!
-* - Function:   WlzEffWriteMeshTransform3DWithDisplacementVTK
-* - Returns:    none 
-* - Purpose:    output the transformed mesh.	
-* - Parameters:	
-*     -# *fp:               pointer pointing to a specific file.
-*     -#  wmt3D:            mesh transform.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzIO
+* \brief    output the transformed mesh.
+* \param    fp               pointer pointing to a specific file.
+* \param    wmt3D            mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
-
 void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp, 
                WlzMeshTransform3D *wmt3D){
 	       
@@ -1452,15 +1334,14 @@ void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp,
 }
 
 /*!
-* - Function:   WlzEffWriteCutplanTetrahedronVTK
-* - Returns:    none 
-* - Purpose:    output the cut plane in VTK format to a file.	
-* - Parameters:	
-*     -# *fp:               pointer pointing to a specific file.
-*     -#  wmt3D:            mesh transform.
-*     -# *intersectIndex:   The index indicating which tetrahedron cut by the plane.
-*     -#  nIntersect:       number of intersect with the tetrahedron.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzIO
+* \brief    output the cut plane in VTK format to a file.
+* \param    fp               pointer pointing to a specific file.
+* \param    wmt3D            mesh transform.
+* \param    intersectIndex   The index indicating which tetrahedron cut by the plane.
+* \param    nIntersect       number of intersect with the tetrahedron.
+* \author       J. Rao, R. Baldock and B. Hill
 */
 void static  WlzEffWriteCutplanTetrahedronVTK(FILE *fp, 
                      const WlzMeshTransform3D *wmt3D,  int *intersectIndex, int nIntersect )
@@ -1539,18 +1420,16 @@ void static  WlzEffWriteCutplanTetrahedronVTK(FILE *fp,
 }
 
 
-
 /*!
-* - Function:   WlzEffWriteOriginalPlaneVTK
-* - Returns:    none 
-* - Purpose:    output the original surface correspoinding to a cut plane in VTK format.	
-* - Parameters:	
-*     -# *fp:               pointer pointing to a specific file.
-*     -#  planepointsO:     the  mesh array.
-*     -# **linkList:        pointer  pointing to a array which stores the linked list.
-*     -#  nIntersect:       number of intersect with the tetrahedron.
-*     -#  noRedundancyNumP: number of points in the mesh nodes.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzIO
+* \brief    output the original surface correspoinding to a cut plane in VTK format.
+* \param    fp               pointer pointing to a specific file.
+* \param    planepointsO     the  mesh array.
+* \param    linkList         pointer  pointing to a array which stores the linked list.
+* \param    nIntersect       number of intersect with the tetrahedron.
+* \param    noRedundancyNumP number of points in the mesh nodes.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void static WlzEffWriteOriginalPlaneVTK(FILE *fp, 
 			   const WlzDVertex3 *planepointsO, 
@@ -1616,29 +1495,40 @@ void static WlzEffWriteOriginalPlaneVTK(FILE *fp,
   }
 }
 
+
 /*!
-* - Function:   WlzGeomTriangle2SnArea3
-* - Returns:    twice the signed area of a triangle
-* - Purpose:	Get twice of the signed area of the triangle determined by a, b, c, positive
-                if a, b, c are oriented ccw, and negative if ccw.
-* - Parameters:
-*     -# *a: 	an array of 3D vertices.
-*     -#  i:    an index of the array indicate the first point of the triangle.
-*     -#  j:    an index of the array indicate the second point of the triangle.
-*     -#  k:    an index of the array indicate the third point of the triangle.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   twice the signed area of a triangle.
+* \ingroup  WlzGeometry
+* \brief    Get twice of the signed area of the triangle determined by a, b, c, positive
+*              if a, b, c are oriented ccw, and negative if ccw.
+* \param    a 	an array of 3D vertices.
+* \param    i   an index of the array indicate the first point of the triangle.
+* \param    j   an index of the array indicate the second point of the triangle.
+* \param    k   an index of the array indicate the third point of the triangle.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
-double WlzGeomTriangle2SnArea3(WlzDVertex3 *a, int i, int j, int k)
+double WlzGeomTriangle2SnArea3(WlzDVertex3 *a, 
+                                     int i, 
+				     int j, 
+				     int k)
 {
    return (a+i)->vtX * (a+j)->vtY - (a+i)->vtY * (a+j)->vtX +
           (a+i)->vtY * (a+k)->vtX - (a+i)->vtX * (a+k)->vtY +
           (a+j)->vtX * (a+k)->vtY - (a+k)->vtX * (a+j)->vtY; 
 }
 
-/*! - input:       tempw,   planepoints, icount  
-*   - output:      a integer  <0 or the index of the existing point  
-*/ 
-int static storedPointIndex(WlzDVertex3 tempw, WlzDVertex3 *planepoints, int icount)
+/*!
+* \return   a integer  <0 or the index of the existing point
+* \ingroup  WlzAccess
+* \brief    output a integer  <0  or the index of the existing point 
+* \param    tempw 
+* \param    planepoints
+* \param    icount
+* \author:       J. Rao, R. Baldock and B. Hill
+*/
+int static storedPointIndex(WlzDVertex3 tempw, 
+                            WlzDVertex3 *planepoints, 
+			    int icount)
 {
   int i;
   /* check if there is a element in planepoints the same as tempw */
@@ -1656,18 +1546,17 @@ int static storedPointIndex(WlzDVertex3 tempw, WlzDVertex3 *planepoints, int ico
   return -1;
 }
 
-/* -------                                          -----  */
+
 /*!
-* - Function:   Make2D5TriangleMeshFromCuttedPlane
-* - Returns:    none 
-* - Purpose:    get a 2D5 mesh transform.	
-* - Parameters:	
-*     -#  *wmt2D5:           2D5 mesh transform.
-*     -#  *planepoints:      the  nodes of the mesh.
-*     -# **linkList:         pointer  pointing to a array which stores the linked list.
-*     -#   nIntersect:       number of intersect with the tetrahedron.
-*     -#   noRedundancyNumP: number of points in the mesh nodes.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzMesh
+* \brief    Make a 2D5 Triangle Mesh from Cutted Plane.
+* \param    wmt2D5           2D5 mesh transform.
+* \param    planepoints      the  nodes of the mesh.
+* \param    linkList         pointer  pointing to a array which stores the linked list.
+* \param    nIntersect       number of intersect with the tetrahedron.
+* \param    noRedundancyNumP number of points in the mesh nodes.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void static Make2D5TriangleMeshFromCuttedPlane(WlzMeshTransform2D5 *wmt2D5, 
                                        WlzDVertex3 *planepoints, 
@@ -1758,13 +1647,15 @@ void static Make2D5TriangleMeshFromCuttedPlane(WlzMeshTransform2D5 *wmt2D5,
 
 }
 
-/*! - purpose: judge whether two 
-*              triangles are neighbour.
-*              if they are neighbour return 1 
-*                 and the "it" contains which edge neighbour it belongs to;
-*              otherwise    return 0
-*
-* - Author:       J. Rao, R. Baldock and B. Hill
+
+/*!
+* \return   1 for is a neighbour or 0 for not
+* \ingroup  WlzAccess
+* \brief    judge whether two triangles are neighbour. 
+* \param    n            
+* \param    np
+* \param    it   contains which edge neighbour it belongs to
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 int static IsNeighbour(int *n, int *np, int *it)
 {
@@ -1979,12 +1870,6 @@ WlzErrorNum  write_Wlz2D5Mesh(FILE *fp, char *cstr, WlzMeshTransform2D5 *wmt2D5)
 *		WlzErrorNum *dstErr:	Destination error pointer.
 * - Author:       J. Rao, R. Baldock and B. Hill
 */
-/*
-*		By J. Rao      14.10.2001         
-*		using a similar structure to that of Bill
-*
-*               A bug find in this code 10.12.2001
-*/
 static WlzMeshScanWSp2D5 *WlzMeshScanWSpInit2D5( WlzMeshTransform2D5 *mesh,
 				    	         WlzErrorNum         *dstErr )
 {
@@ -2111,12 +1996,11 @@ static WlzMeshScanWSp2D5 *WlzMeshScanWSpInit2D5( WlzMeshTransform2D5 *mesh,
 }
 
 /*!
-* - Function:	WlzMeshScanWSpFree
-* - Returns:	void
-* - Purpose:	Free's a mesh scan workspace.
-* - Parameters:	
-*     -#  *mSnWSp:	Mesh scan workspace.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzMesh
+* \brief    Free's a mesh scan workspace.
+* \param    mSnWSp:	Mesh scan workspace.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 static void	WlzMeshScanWSpFree(WlzMeshScanWSp2D5 *mSnWSp)
 {
@@ -2134,18 +2018,18 @@ static void	WlzMeshScanWSpFree(WlzMeshScanWSp2D5 *mSnWSp)
   }
 }
 
-/*
-* - Function:	WlzMeshItvCmp
-* - Returns:	int:			Sorting value for qsort.
-* - Purpose:	Callback function for qsort(3) to sort mesh element
-*		intervals by line and then left left column.
-* - Global refs:	-
-* - Parameters:
-*        -# const void *cmp0:	Used to pass first mesh
-*					interval.
-*	 -# const void *cmp1:	Used to pass second mesh
-*					interval.
-* - Author:       J. Rao, R. Baldock and B. Hill
+
+
+
+/*!
+* \return   Sorting value for qsort
+* \ingroup  WlzAccess
+* \brief    Callback function for qsort(3) to sort mesh element
+*           intervals by line and then left left column.
+
+* \param    cmp0	Used to pass first mesh.
+* \param    cmp1	Used to pass second mesh
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 static int	WlzMeshItvCmp(const void *cmp0, const void *cmp1)
 {
@@ -2162,26 +2046,21 @@ static int	WlzMeshItvCmp(const void *cmp0, const void *cmp1)
   return(rtn);
 }
 
-
 /*!
-* - Function:	WlzMeshScanTriElm
-* - Returns:	int:			Number of intervals added
-*					from the given mesh element.
-* - Purpose:	Scans a single triangular mesh element into mesh 
-*		intervals.					
-* - Parameters:	*mSnWSp:	        Mesh scan workspace.
-*		int eIdx:		Element index.
-*		int iIdx:		Mesh element interval index.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   Number of intervals added from the given mesh element.
+* \ingroup  WlzMesh
+* \brief    Scans a single triangular mesh element into mesh intervals.
+*            it to handle the special situation of triangle
+*             becames a line when two node comes together        10.12.2001
+* \param    mSnWSp	        Mesh scan workspace.
+* \param    eIdx		Element index.
+* \param    iIdx		Mesh element interval index.
+* \param    
+* \author:       J. Rao, R. Baldock and B. Hill
 */
-/*
-*		By J. Rao      14.10.2001                                *
-*		using a similar structure by Bill                        *
-*               revise it to handle the special situation of triangle    *
-*                                  becames a line when two node comes    *
-*                                  together        10.12.2001            *
-*/
-static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp, int eIdx, int iIdx)
+static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp, 
+                                                 int eIdx, 
+						 int iIdx)
 {
   int		  count,
 		  kolI,
@@ -2309,7 +2188,6 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp, int eIdx, int iIdx)
   return(iCnt);
 }
 
-/* function:   Write_WlzCutScanLines      */
 /*! 
 * \ingroup      WlzIO
 * \brief        Write the section view parameters in the bibtex style
@@ -2350,7 +2228,16 @@ WlzErrorNum Write_WlzCutScanLines(
   return errNum;
 }
 
-int  static GetIntersectTetrahedronNumber(double zConst, WlzMeshTransform3D *wmt3D)
+/*!
+* \return   Intersect Tetrahedron Number.
+* \ingroup  WlzMesh
+* \brief    Get Intersect Tetrahedron Number.
+* \param    zConst           z= const plane.
+* \param    wmt3D            mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
+*/
+int  static GetIntersectTetrahedronNumber(double zConst, 
+                                          WlzMeshTransform3D *wmt3D)
 {
   int i;
   int j0, j1, j2, j3; 
@@ -2424,19 +2311,19 @@ int  static GetIntersectTetrahedronNumber(double zConst, WlzMeshTransform3D *wmt
    return icount;
 }
 
-/*              */
 /*!
-* - Function:   GetTheSourceSurfaceOfTheCutPlanePoints
-* - Returns:    none 
-* - Purpose:    get the source surface of the cut plane.
-* - Parameters:	
-*     -#   nIntersect:       number of intersect with the tetrahedron.
-*     -#  *intersectIndex    the index which indicating which tetrahetron has been interseted by a give plane 
-*     -#  *wmt3D:            3D mesh transform.
-*     -#  *planepoints:      the  nodes of the cut mesh.
-*     -#  *planepointsO:     the  nodes of the surface mesh corresponding to the cut mesh.
-*     -# **linkList:         pointer  pointing to a array which stores the linked list.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzMesh
+* \brief    Get the source surface of the cut plane.
+* \param    nIntersect:       number of intersect with the tetrahedron.
+* \param    intersectIndex    the index which indicating which tetrahetron has been interseted by a give plane 
+* \param    wmt3D:            3D mesh transform.
+* \param    planepoints:      the  nodes of the cut mesh.
+* \param    planepointsO:     the  nodes of the surface mesh corresponding to the cut mesh.
+* \param    linkList:         pointer  pointing to a array which stores the linked list.
+* \param    
+* \param    
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void  static GetTheSourceSurfaceOfTheCutPlanePoints(int nIntersect, 
                                              int *intersectIndex,
@@ -2612,27 +2499,16 @@ void  static GetTheSourceSurfaceOfTheCutPlanePoints(int nIntersect,
   
 }
 
-
 /*!
-* - Project:      Woolz
-* - Return        Wlooz Error Number 
-* - Ingroup       WlzTransform
-* - Title:        WlzGetTransformedMesh.c
-* - Date:         18 January 2002 
-* - Author:       J. Rao, R. Baldock and B. Hill
-* - Copyright:	  2002 Medical Research Council, UK.
-*		  All rights reserved.
-* - Address: 	  MRC Human Genetics Unit,
-*		  Western General Hospital,
-*		  Edinburgh, EH4 2XU, UK.
-* - Brief         Get a  3D  mesh transfrom from a basis transform and a 3D mesh 
-* - Parameters:  
-*           -# basisTr:       basis transform. 
-*           -# wmt3D:         a 3D mesh transform. 
-*          		 
-*		
+* \return   Error code. 
+* \ingroup  WlzTransform
+* \brief    Get a  3D  mesh transfrom from a basis transform and a 3D mesh.
+* \param    wmt3D            mesh transform.
+* \param    basisTr:       basis transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
-WlzErrorNum  WlzGetTransformedMesh(WlzMeshTransform3D *wmt3D, WlzBasisFnTransform* basisTr){
+WlzErrorNum  WlzGetTransformedMesh(WlzMeshTransform3D *wmt3D, 
+                                 WlzBasisFnTransform* basisTr){
   WlzDVertex3 vx4;
   WlzErrorNum werro = WLZ_ERR_NONE;
   int i;
@@ -2648,15 +2524,14 @@ WlzErrorNum  WlzGetTransformedMesh(WlzMeshTransform3D *wmt3D, WlzBasisFnTransfor
 
 }
 
+
 /*!
-* - Function:    Make2D5MeshDisplacement 
-* - Returns:     none 
-* - Purpose:     Get the mesh transform. 
-* - Global refs:  -     
-* - Parameters:  
-*      -#  *wmt2D5:        the 2D5 mesh transform.
-*      -#  *planepointsO:  the nodes of the original surface. 
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzTransform
+* \brief    Get the mesh transform.
+* \param    wmt2D5:        the 2D5 mesh transform.
+* \param    planepointsO:  the nodes of the original surface.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void  static Make2D5MeshDisplacement(WlzMeshTransform2D5 *wmt2D5,
 				     WlzDVertex3 *planepointsO )
@@ -2675,16 +2550,15 @@ void  static Make2D5MeshDisplacement(WlzMeshTransform2D5 *wmt2D5,
   }
 }
 
+
 /*!
-* - Function:     WlzEffWriteOriginalPlaneVTKByDis
-* - Returns:       
-* - Purpose:      output the orginal surface corresponding to the cut plane represented by the postion of
-*                 the same mesh. 
-* - Global refs:  -     
-* - Parameters:  
-*      -#  *wmt2D5:  the 2D5 mesh transform.
-*      -#  *fp:      file pointer pointing to a file 
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzIO
+* \brief    output the orginal surface corresponding to the cut plane represented by the postion of
+*           the same mesh.
+* \param    fp               pointer pointing to a specific file.
+* \param    wmt2D5:          the 2D5 mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 { int i;
@@ -2718,14 +2592,12 @@ void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 }
 
 /*!
-* - Function:     WlzEffWriteOriginalPlaneVTKByPos
-* - Returns:       
-* - Purpose:      output the cutted plane. 
-* - Global refs:  -     
-* - Parameters:  
-*      -#  *wmt2D5:  the 2D5 mesh transform.
-*      -#  *fp:      file pointer pointing to a file 
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzIO
+* \brief    output the cutted plane.
+* \param    fp               pointer pointing to a specific file.
+* \param    wmt3D            mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 { int i;
@@ -2761,6 +2633,7 @@ void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 
 /*!
 * - Function:	WlzMeshTransform3DObj
+* - Ingroup:    WlzTransform
 * - Returns:	WlzObject *:		Transformed object, NULL on
 *					error.
 * - Purpose:	Transforms a woolz object using a the given mesh
@@ -2853,6 +2726,7 @@ static WlzObject	*WlzMeshTransformObj3D(WlzObject *srcObj,
 
 /*!
 * - Function:	WlzMeshTransformObjPrv3D
+* - Ingroup:    WlzTransform.
 * - Returns:	WlzObject *:		Transformed object, NULL on
 *					error.	
 * - Purpose:	Private version of WlzMeshTransformObj3D() which
@@ -3084,6 +2958,7 @@ static WlzObject *WlzMeshTransformObjPrv3D( WlzObject *srcObj,
 
 /*!
 * - Function:     WlzMQ3DTransformBBoxI3
+* - Ingroup:      WlzTransform.
 * - Returns:      Wlooz Integer Bounding box. 
 * - Purpose:      Get a bounding box for the transformed mesh. 
 * - Global refs:  -     
@@ -3145,6 +3020,7 @@ WlzIBox3  WlzMQ3DTransformBBoxI3(WlzMeshTransform3D *wmt3D,  WlzErrorNum *errNum
 
 /*!
 * - Function:     WlzMeshTransformValues3D
+* - Ingroup:      WlzTransform
 * - Returns:      WlzErrorNum:            Error number. 
 * - Purpose:      Creates a new value table, fills in the values and 
 *                 adds it to the given new object. 
@@ -3682,6 +3558,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 
 /*!
 * - Function:    WlzGet2D5TrangularMeshFrom3DMesh
+* - Ingroup:     WlzMesh
 * - Returns:     none 
 * - Purpose:     Get 2D5 triangular mesh. 
 * - Global refs:  -     
@@ -3775,7 +3652,8 @@ void  static WlzGet2D5TrangularMeshFrom3DMesh(  WlzMeshTransform2D5 *wmt2D5,
 
 /*!
 * - Function:    WlzIsSinglePointCutMesh
-* - Returns:     an integer >0 Yes. =0 No. 
+* - Returns:     an integer >0 Yes. =0 No.
+* - Ingroup:     WlzAccess
 * - Purpose:     judge whether it is a single point cut. 
 * - Global refs:  -     
 * - Parameters: 
@@ -3804,7 +3682,8 @@ int     WlzIsSinglePointCutMesh(const WlzMeshTransform2D5 *wmt2D5)
 }
 /*!
 * - Function:    WlzNoAreaGreaterThanOne
-* - Returns:     an integer >0 Yes. =0 No. 
+* - Returns:     an integer >0 Yes. =0 No.
+* - Ingroup:     WlzAccess
 * - Purpose:     judge whether there is no area greater than one. 
 * - Global refs:  -     
 * - Parameters: 
@@ -3842,7 +3721,8 @@ int     WlzNoAreaGreaterThanOne(const WlzMeshTransform2D5 *wmt2D5)
 }
 
 /*!
-*
+*   - Return:   None
+*   - Ingroup:  WlzTransform
 *   - Purpose:  Get 2D5 Affine transformation from the nodes of
 *               a source trangle(in x-y plane) and the nodes from a 
 *	       target trangle(in 3D plane).
@@ -4175,6 +4055,7 @@ static WlzPlaneDomain *WlzPDomFromBBox(WlzIBox3  bBox,
 /*!
 * - Function:    WlzGet2D5Transform
 * - Returns:     none 
+* - InGroup      WlzMesh
 * - Purpose:     Get 2D5 triangular mesh. 
 * - Global refs:  -     
 * - Parameters: 
@@ -4293,15 +4174,12 @@ void WlzGet2D5Transform( const WlzMeshTransform3D   *wmt3D,
   */
 }
 
-
 /*!
-* - Function:    WlzInitializeWmt2D5
-* - Returns:     none 
-* - Purpose:     initialize the 2D5 mesh. 
-* - Global refs:  -     
-* - Parameters: 
-*      -#  *wmt2D5:               the 2D5 mesh transform.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \return   None
+* \ingroup  WlzMesh
+* \brief    initialize the 2D5 mesh.
+* \param    *wmt2D5:               the 2D5 mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 void   WlzInitializeWmt2D5(WlzMeshTransform2D5  *wmt2D5)
 { int i;
@@ -4329,50 +4207,16 @@ void   WlzInitializeWmt2D5(WlzMeshTransform2D5  *wmt2D5)
 }
 
 /*!
-*
-*   - Purpose:  
-*         -# Get the index of the tetrahedrons which intersect
+* \return   None 
+* \ingroup  WlzAccess
+* \brief    Get the index of the tetrahedrons which intersect
 *               with a giving z = constant plane. 
-*    
-*   - Input:  
-*         -# zConst  the z-constant used to cut the tetrahedron mesh. 
-*         -# wmt3D   the tetrahedron mesh.
-*   - Output: 
-*         -# the table containing the number of tetrahedron whose body intersected
-*            with the give plane.
-*         -# *intersectIndex  stores the intex of tetrahedron whose body been cutted by the given plane.
-*         -# linkList[i][j]   Store the number of points cutted to the tetrahedra of intersectIndex[i] 
-*                             in j = 0. And store the sequence number in j=0,1,...intersectIndex[i][0]-1;
-*         -# planepoints[]    store the cuting points sequentially according the cuting order.
-* - Author:       J. Rao, R. Baldock and B. Hill
+* \param    zConst           z = const plane.
+* \param    fp               pointer pointing to a specific file.
+* \param    wmt3D            mesh transform.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
-/*
-          x
-         / \
-        /   \     x
-       /     \   /
-      /       \ /
-     x---------x        
-
-            We also need how may points cutted to each tetrahedronthe and the cutting points
-
-    int         zConst         ---------- A z = const plane used to cut the tetrahedron mesh.
-    int         nIntersect     ---------- number of tetrahedrons whose body was cutted by the given plane.
-    int *       intersectIndex ---------- stores the intex of tetrahedron whose body been cutted 
-                                          by the given plane.
-    int         linkList[i][j] ---------- Store the number of points cutted to the tetrahedra of
-                                          intersectIndex[i] in j = 0. And store the sequence number
-					  in j=0,1,...intersectIndex[i][0]-1;
-    WlzDVertex3 planepoints[]  ---------- store the cuting points sequentially according the cuting order.
-
-                                          18/10/2001 J.Rao,  try to remove redundancy in the storage and
-					  make it easier to connet with Bill's 2D data structure.
-					  It seems OK now.
-           
-    
-
-*/
-void  static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double                      zConst, 
+void  static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double             zConst, 
                                                 const WlzMeshTransform3D   *wmt3D, 
 					        WlzMeshTransform2D5        *wmt2D5
 					     )
@@ -5699,27 +5543,15 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 }
 
 /*!
-* - Project:     Woolz
-* - Return       2D5 mesh transform, may be null
-* - Ingroup      WlzTransform
-* - Title:       WlzMeshTransform2D5.c
-* - Date:        18 January 2002 
-* - Author:      J. Rao, R. Baldock and B. Hill
-* - Copyright:	 2002 Medical Research Council, UK.
-*		 All rights reserved.
-* - Address: 	 MRC Human Genetics Unit,
-*		 Western General Hospital,
-*		 Edinburgh, EH4 2XU, UK.
-* - Brief:         Get a  2D5 mesh from a transformed  3D mesh by
+* \return   2D5 mesh transform, may be null
+* \ingroup  WlzTransform
+* \brief     Get a  2D5 mesh from a transformed  3D mesh by
 *                cuting it into a plane.
-* - Parameters:  
-*           -# zConst:       the z = const cuting plane. 
-*           -# wmt3D:        a 3D mesh transform. 
-*           -# dstErr:	      Destination error pointer, may
-*		              be null.
-*          		 
-*		
-*		
+
+* \param    zConst:       the z = const cuting plane. 
+* \param    wmt3D         mesh transform.
+* \param    dstErr:	  Destination error pointer, may be null.
+* \author:       J. Rao, R. Baldock and B. Hill
 */
 WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst, 
                                                    WlzMeshTransform3D *wmt3D,
