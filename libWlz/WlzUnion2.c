@@ -1,33 +1,45 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzUnion2.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Procedure to calculate the union of two Woolz domain
-*		objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzUnion2.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Aug 19 08:26:52 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBinaryOps
+* \brief        Convenience procedure to calculate the union of two
+ woolz domain objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdio.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzUnion2						*
-*   Date       : Mon Oct 28 18:26:14 1996				*
-*************************************************************************
-*   Synopsis   :Convenience procedure to calculate the union of two	*
-*		woolz domain objects. Note uvt set to zero		*
-*   Returns    :WlzObject *: object pointer, NULL on error.		*
-*   Parameters :WlzObject *obj1, *obj2: two domain objects.		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzUnion2    */
+/*! 
+* \ingroup      WlzBinaryOps
+* \brief        Convenience procedure to calculate the union of two
+ woolz domain objects. This calls WlzUnnionN() with uvt=0. Objects must
+ be of the same type.
+*
+* \return       Union object pointer.
+* \param    obj1	First inout object.
+* \param    obj2	Second input object.
+* \param    dstErr	errro return.
+* \par      Source:
+*                WlzUnion2.c
+*/
 WlzObject *WlzUnion2(WlzObject *obj1,
 		     WlzObject *obj2,
 		     WlzErrorNum *dstErr)

@@ -1,0 +1,38 @@
+#pragma ident "MRC HGU $Id$"
+
+/*!
+* \defgroup	bibfile   bibfile
+* \brief Convenience procedures for reading and writing "bibtex" style
+ text files for record-formatted data. 
+* \ref libbibfilepage "libbibfile" for more detail. 
+*/
+
+/*!
+* \file         WlzExtFF.dox
+* \author       Bill Hill
+* \date         November 2002
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+* \page libwlzextpage Woolz External Format Conversion Library
+* \section intro Introduction
+The woolz image processing libary uses its own special internal format,
+ not widely used elsewhere. This library provides conversion functions to
+ relevant alternative formats which and assocaited API so that they can be
+ read and written directly from woolz code.
+\section structure Woolz Structures
+\section usage Example Usage
+\section standards Coding Conventions
+*/

@@ -1359,7 +1359,7 @@ static WlzVertexP WlzVerticesAlcPoly(WlzObjectType polyType, int cnt,
 
 /*!
 * \ingroup	WlzFeatures
-* \return	<void>
+* \return	void
 * \brief	Computes the normals of the given vertices which are
 *		assumed to lie in a 2D polygon.
 *		The normals all have +ve x components. 
@@ -1481,7 +1481,7 @@ static void	WlzVerticesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 
 /*!
 * \ingroup	WlzFeatures
-* \return	<void>
+* \return	void
 * \brief	Computes the normal (n) to a segment (g) between the
 *		given pair of vertices. There are clearly two solutions
 *		to the problem of finding a normal to a line segment,

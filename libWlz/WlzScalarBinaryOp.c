@@ -1,18 +1,27 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzScalarBinaryOp.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Applies scalar binary operators to Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzScalarBinaryOp.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzArithmetic
+* \brief        Apply scalar binary operators to Woolz objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
@@ -919,23 +928,28 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
   return WLZ_ERR_NONE;
 }
 
-/************************************************************************
-*   Function   : WlzScalarBinaryOp					*
-*   Date       : Mon Sep 15 11:46:49 1997				*
-*************************************************************************
-*   Synopsis   :Perform the given binary operation for each grey	*
-*		value in image o1 with val putting the result in o3.	*
-*		The value table of o3 can be identical to that of o1	*
-*		to allow overwriting.					*
-*		This function assumes that the domains of each object	*
-*		are the same. Unless overwriting is required then the	*
-*		functions WlzImageAdd, WlzImageSubtract etc. should be	*
-*		used. These return an object which is the intersection	*
-*		of the input objects.					*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :							*
-*   Global refs:None							*
-************************************************************************/
+/* function:     WlzScalarBinaryOp    */
+/*! 
+* \ingroup      WlzArithmetic
+* \brief        Perform the given binary operation for each grey
+value in image o1 with val putting the result in o3.
+The value table of o3 can be identical to that of o1
+to allow overwriting.
+This function assumes that the domains of each object
+are the same. Unless overwriting is required then the
+functions WlzImageAdd, WlzImageSubtract etc. should be
+used. These return an object which is the intersection
+of the input objects.
+*
+* \return       Woolz error.
+* \param    o1	Input object.
+* \param    pval	Operand value.
+* \param    o3	Oject for the return values. Setting equal to
+ <tt>o1</tt> means values will be overwritten.
+ * \param    op	Opertor to be applied.
+* \par      Source:
+*                WlzScalarBinaryOp.c
+*/
 WlzErrorNum WlzScalarBinaryOp(
   WlzObject		*o1,
   WlzPixelV		pval,

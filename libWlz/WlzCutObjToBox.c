@@ -213,6 +213,20 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 		  }
 		}
 		break;
+	      case WLZ_GREY_RGBA:
+		if(valP)
+		{
+		  dstValP.rgbp = (UINT *)valP;
+		}
+		else
+		{
+		  if((dstValP.rgbp = (UINT *)AlcMalloc((unsigned long )tI0 *
+						      sizeof(UINT))) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		}
+		break;
 	      default:
 	        errNum = WLZ_ERR_VALUES_TYPE;
 		break;
@@ -552,6 +566,20 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 		  }
 		}
 		break;
+	      case WLZ_GREY_RGBA:
+		if(valP)
+		{
+		  dstValP.rgbp = (UINT *)valP;
+		}
+		else
+		{
+		  if((dstValP.rgbp = (UINT *)AlcMalloc((unsigned long )size3D *
+						      sizeof(UINT))) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		}
+		break;
 	      default:
 		errNum = WLZ_ERR_VALUES_TYPE;
 		break;
@@ -646,6 +674,9 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 		    case WLZ_GREY_DOUBLE:
 		      dstVal2DP.dbp += size2D;
 		      break;
+		    case WLZ_GREY_RGBA:
+		      dstVal2DP.rgbp += size2D;
+		      break;
 		  }
 		  WlzFreeObj(dstObj2D);
 		}
@@ -709,7 +740,7 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Set random values from a normal distribution.
 * \param	vec			Vector of values.
@@ -765,6 +796,14 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
 	noise = AlgRandNormal(mu, sigma);
 	*(vec.dbp)++ = noise;
       }
+    case WLZ_GREY_RGBA:
+      vec.inp += vecOff;
+      while(count-- > 0)
+      {
+	noise = AlgRandNormal(mu, sigma);
+	*(vec.rgbp)++ = WLZ_CLAMP(noise, 0, 0xffffff) + 0xff000000;
+      }
+      break;
       break;
   }
 }

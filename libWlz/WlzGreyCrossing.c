@@ -197,6 +197,7 @@ WlzObject 	*WlzGreyCrossing(WlzObject *inObj, int newObjFlag,
 	      break;
 	    case WLZ_GREY_FLOAT:  /* FALLTHROUGH */
 	    case WLZ_GREY_DOUBLE: /* FALLTHROUGH */
+	    case WLZ_GREY_RGBA: /* FALLTHROUGH */
 	    default:
 	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;

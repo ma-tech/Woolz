@@ -51,7 +51,7 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 					int goingUp);
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzValueFilters
 * \brief	Free a recursive filter.
 * \param	ftr			Filter to free.
@@ -346,7 +346,7 @@ WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueFilters
 * \brief	 Filters the given single line data buffer using an
 *               IIR filter defined by the filter coefficients and
@@ -475,7 +475,7 @@ WlzErrorNum	WlzRsvFilterBuffer(WlzRsvFilter *ftr, double *datBuf,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueFilters
 * \brief	Filters a single interval using a vertical IIR filter
 *               defined by the filter coefficients and double precision
@@ -658,7 +658,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueFilters
 * \brief	Filters a single interval using a vertical IIR filter
 *               defined by the filter coefficients and double precision
@@ -909,6 +909,7 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
       case WLZ_GREY_DOUBLE:
         dstGType = WLZ_GREY_DOUBLE;
 	break;
+      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
       default:
         errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -1082,6 +1083,7 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
       case WLZ_GREY_DOUBLE:
         dstGType = WLZ_GREY_DOUBLE;
 	break;
+      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
       default:
         errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -1456,6 +1458,7 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
 	case WLZ_GREY_DOUBLE:
 	  dstGType = WLZ_GREY_DOUBLE;
 	  break;
+        case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;

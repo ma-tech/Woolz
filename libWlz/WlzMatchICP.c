@@ -1174,10 +1174,10 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 * \param	curTr			Current affine transform.
 * \param	tree			Given kD-tree populated by the
 *					target vertices such that the nodes of
-*					the tree have the sameindicies as the
+*					the tree have the same indicies as the
 *					given target vertices.
-* \param	tVx			The source vertices.
 * \param	tVx			The target vertices.
+* \param	sVx			The source vertices.
 * \param	tMVx			The matched target vertex.
 * \param	sMVx			The matched source vertex.
 * \param	wVx			Distance weight.
@@ -2931,7 +2931,7 @@ static int	WlzMatchICPTPPairSortFnD(void *p0, void *p1)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Callback function which is called by the Woolz geometric model
 *		functions when a new element has been created or is about to

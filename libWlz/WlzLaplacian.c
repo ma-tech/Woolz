@@ -175,6 +175,7 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
 	    break;
 	}
 	break;
+      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
       default:
 	errNum = WLZ_ERR_GREY_DATA;
         break;

@@ -1,19 +1,27 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyMask.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to set the value within the domain of a
-*		Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyMask.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:47:57 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Functions to set the value within the domain of a Woolz object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -23,25 +31,25 @@ static WlzObject *WlzGreyMask3d(WlzObject	*obj,
 				WlzErrorNum	*dstErr);
 
 
-/************************************************************************
-*   Function   : WlzGreyMask						*
-*   Date       : Sat Oct 18 18:54:53 1997				*
-*************************************************************************
-*   Synopsis   :Set the value maskVal within the domain given by the	*
-*		mask object. The mask object can be a 2D, 3D, polygon	*
-*		or boundary object. A 3D mask with a 2D object is an	*
-*		error. A 2D mask with a 3D object will be applied to	*
-*		each plane in turn.					*
-*   Returns    :WlzObject*: new object with the same domain as obj but	*
-*			values in the intersection with mask set to	*
-*			maskVal. NULL on error.				*
-*   Parameters :obj:	object to which mask is applied			*
-*		mask:	mask domain					*
-*		maskVal:	mask value - any grey type		*
-*		dstErr:	pointer for error return			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzGreyMask    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Set the value maskVal within the domain given by the	
+*		mask object. The mask object can be a 2D, 3D, polygon	
+*		or boundary object. A 3D mask with a 2D object is an	
+*		error. A 2D mask with a 3D object will be applied to	
+*		each plane in turn.			
+*
+* \return       New object with the same domain as the input object but
+ with values in the intersection with the mask domain set to the mask
+ value. NULL on error.
+ * \param    obj	Input object
+ * \param    mask	Mask object.
+ * \param    maskVal	mask value.
+ * \param    dstErr	Error return.
+* \par      Source:
+*                WlzGreyMask.c
+*/
 WlzObject *WlzGreyMask(
   WlzObject	*obj,
   WlzObject	*mask,
@@ -162,6 +170,11 @@ WlzObject *WlzGreyMask(
 	  case WLZ_GREY_DOUBLE:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.dbp++){
 	      *gptr.dbp = tmpMaskval.v.dbv;
+	    }
+	    break;
+	  case WLZ_GREY_RGBA:
+	    for(i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	      *gptr.rgbp = tmpMaskval.v.rgbv;
 	    }
 	    break;
 	  }

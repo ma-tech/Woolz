@@ -85,7 +85,7 @@ int main(int	argc,
 
   inFile = stdin;
   if( optind < argc ){
-    if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
+    if( (inFile = fopen(*(argv+optind), "rb")) == NULL ){
       (void )fprintf(stderr,
       		     "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);

@@ -1,36 +1,46 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyRange.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the greyrange of an object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzGreyRange.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri May 23 07:55:41 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesFilters
+* \brief        Compute the grey range of an object. Note the colour
+range returned are the independent max and min values for each channel.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzGreyRange						*
-*   Date       : Sun Oct 20 19:53:01 1996				*
-*************************************************************************
-*   Synopsis   : compute greyrange of pixel object			*
-*   Returns    :WlzErrorNum: WLZ_ERR_NONE, WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL,	*
-*		WLZ_ERR_VALUES_NULL, WLZ_ERR_GREY_TYPE, 			*
-*		WLZ_ERR_VOXELVALUES_TYPE, WLZ_ERR_PLANEDOMAIN_TYPE,	*
-*		WLZ_ERR_OBJECT_TYPE.					*
-*   Parameters :WlzObject	*obj: grey-level object			*
-*		WlzPixelV	*min: return for minimum grey value	*
-*		WlzPixelV	*max: return for maximum grey value	*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzGreyRange    */
+/*! 
+* \ingroup      WlzValuesFilters
+* \brief        compute grey-range of a pixel/voxel object.
+*
+* \return       Woolz error number: WLZ_ERR_NONE, WLZ_ERR_OBJECT_NULL,
+ WLZ_ERR_DOMAIN_NULL, WLZ_ERR_VALUES_NULL, WLZ_ERR_GREY_TYPE, 
+WLZ_ERR_VOXELVALUES_TYPE, WLZ_ERR_PLANEDOMAIN_TYPE, WLZ_ERR_OBJECT_TYPE
+* \param    obj	grey-level input object
+* \param    min	minimum values return
+* \param    max	maximum values return.
+* \par      Source:
+*                WlzGreyRange.c
+*/
 WlzErrorNum WlzGreyRange(WlzObject	*obj,
 			 WlzPixelV	*min,
 			 WlzPixelV	*max)
@@ -157,6 +167,50 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	}
 	break;
 
+      case WLZ_GREY_RGBA:
+	for(i=0; i<iwsp.colrmn; i++){
+	  v.rgbv = *g.rgbp++;
+	  if( !init_flag ){
+	    lmin.v.rgbv = v.rgbv;
+	    lmax.v.rgbv = v.rgbv;
+	    init_flag = 1;
+	  }
+	  else {
+	    /* red */
+	    if( (v.rgbv&0xff) > (lmax.v.rgbv&0xff) ){
+	      lmax.v.rgbv = (lmax.v.rgbv&0xffffff00) + (v.rgbv&0xff);
+	    }
+	    else if( (v.rgbv&0xff) < (lmin.v.rgbv&0xff) ){
+	      lmin.v.rgbv = (lmin.v.rgbv&0xffffff00) + (v.rgbv&0xff);
+	    }
+
+	    /* green */
+	    if( (v.rgbv&0xff00) > (lmax.v.rgbv&0xff00) ){
+	      lmax.v.rgbv = (lmax.v.rgbv&0xffff00ff) + (v.rgbv&0xff00);
+	    }
+	    else if( (v.rgbv&0xff00) < (lmin.v.rgbv&0xff00) ){
+	      lmin.v.rgbv = (lmin.v.rgbv&0xffff00ff) + (v.rgbv&0xff00);
+	    }
+
+	    /* blue */
+	    if( (v.rgbv&0xff0000) > (lmax.v.rgbv&0xff0000) ){
+	      lmax.v.rgbv = (lmax.v.rgbv&0xff00ffff) + (v.rgbv&0xff0000);
+	    }
+	    else if( (v.rgbv&0xff0000) < (lmin.v.rgbv&0xff0000) ){
+	      lmin.v.rgbv = (lmin.v.rgbv&0xff00ffff) + (v.rgbv&0xff0000);
+	    }
+
+	    /* alpha */
+	    if( (v.rgbv&0xff000000) > (lmax.v.rgbv&0xff000000) ){
+	      lmax.v.rgbv = (lmax.v.rgbv&0xffffff00) + (v.rgbv&0xff000000);
+	    }
+	    else if( (v.rgbv&0xff000000) < (lmin.v.rgbv&0xff000000) ){
+	      lmin.v.rgbv = (lmin.v.rgbv&0x00ffffff) + (v.rgbv&0xff000000);
+	    }
+	  }
+	}
+	break;
+
       default:
 	return( WLZ_ERR_GREY_TYPE );
 
@@ -252,6 +306,49 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	  else if( Max.v.dbv > lmax.v.dbv ){
 	    lmax.v.dbv = Max.v.dbv;
 	  }
+	  break;
+
+	case WLZ_GREY_RGBA:
+	  /* red */
+	  if( (Min.v.rgbv&0xff) < (lmin.v.rgbv&0xff) ){
+	    lmin.v.rgbv &= ~0xff;
+	    lmin.v.rgbv |= (Min.v.rgbv&0xff);
+	  }
+	  else if( (Max.v.rgbv&0xff) > (lmax.v.rgbv&0xff) ){
+	    lmin.v.rgbv &= ~0xff;
+	    lmin.v.rgbv |= (Max.v.rgbv&0xff);
+	  }
+
+	  /* green */
+	  if( (Min.v.rgbv&0xff00) < (lmin.v.rgbv&0xff00) ){
+	    lmin.v.rgbv &= ~0xff00;
+	    lmin.v.rgbv |= (Min.v.rgbv&0xff00);
+	  }
+	  else if( (Max.v.rgbv&0xff00) > (lmax.v.rgbv&0xff00) ){
+	    lmin.v.rgbv &= ~0xff00;
+	    lmin.v.rgbv |= (Max.v.rgbv&0xff00);
+	  }
+
+	  /* blue */
+	  if( (Min.v.rgbv&0xff0000) < (lmin.v.rgbv&0xff0000) ){
+	    lmin.v.rgbv &= ~0xff0000;
+	    lmin.v.rgbv |= (Min.v.rgbv&0xff0000);
+	  }
+	  else if( (Max.v.rgbv&0xff0000) > (lmax.v.rgbv&0xff0000) ){
+	    lmin.v.rgbv &= ~0xff0000;
+	    lmin.v.rgbv |= (Max.v.rgbv&0xff0000);
+	  }
+
+	  /* alpha */
+	  if( (Min.v.rgbv&0xff000000) < (lmin.v.rgbv&0xff000000) ){
+	    lmin.v.rgbv &= ~0xff000000;
+	    lmin.v.rgbv |= (Min.v.rgbv&0xff000000);
+	  }
+	  else if( (Max.v.rgbv&0xff000000) > (lmax.v.rgbv&0xff000000) ){
+	    lmin.v.rgbv &= ~0xff000000;
+	    lmin.v.rgbv |= (Max.v.rgbv&0xff000000);
+	  }
+
 	  break;
 
 	default:

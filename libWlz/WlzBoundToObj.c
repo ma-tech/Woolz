@@ -1,21 +1,48 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzBoundToObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Boundary to interval domain conversion.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzBoundToObj.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 08:13:27 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBoundary
+* \brief        Procudures to convert a boundary object or domain
+ to a domain object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
+
+/* function:     WlzBoundaryToObj    */
+/*! 
+* \ingroup      WlzBoundary
+* \brief        Return a domain object corresponding to the input boundary
+object.
+*
+* \return       Domain object corresponding to the input boundary, NULL on error.
+* \param    boundary	Input boundary object.
+* \param    fillMode	Fill mode for the individual polyline boundaries.
+ If the input object is a genuine boundary object then there will be no
+ self-intersecting polylines and <tt> fillMode = WLZ_SIMPLE_FILL </tt>
+ is appropriate. See WlzPolyToObj().
+ * \param    dstErr	Error return
+* \par      Source:
+*                WlzBoundToObj.c
+*/
 WlzObject *WlzBoundaryToObj(
   WlzObject		*boundary,
   WlzPolyFillMode	fillMode,
@@ -114,6 +141,23 @@ WlzObject *WlzBoundaryToObj(
   }
   return rtnObj;
 }
+
+
+/* function:     WlzBoundToObj    */
+/*! 
+* \ingroup      WlzBoundary
+* \brief        Convert the input boundary list to a domain object.
+ Use WlzBoundaryToObj if conversion of a 3D stack of boundary list is required
+ or if the boundary is available as a first class object.
+*
+* \return       Domain object corresponding to the input boundary domain,
+ NULL on error.
+* \param    bound	Input boundary list domain.
+* \param    fillMode	Polyline fill mode, see WlzPolyToObj().
+* \param    dstNum	Error return.
+* \par      Source:
+*                WlzBoundToObj.c
+*/
 WlzObject *WlzBoundToObj(
   WlzBoundList		*bound,
   WlzPolyFillMode	fillMode,

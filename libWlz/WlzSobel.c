@@ -111,6 +111,7 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
       case WLZ_GREY_DOUBLE:
         sConv.type = WLZ_CONVOLVE_FLOAT;
 	break;
+      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
       default:
 	errNum = WLZ_ERR_GREY_DATA;
         break;

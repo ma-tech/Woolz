@@ -1,21 +1,30 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzUnionN.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the set union of N Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzUnionN.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Aug 19 08:14:41 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBinaryOps
+* \brief        Compute the set union of N woolz objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <Wlz.h>
 
 extern WlzObject *WlzUnion3d(int 	n,
@@ -23,24 +32,28 @@ extern WlzObject *WlzUnion3d(int 	n,
 			     int 	uvt,
 			     WlzErrorNum *dstErr);
 
-/************************************************************************
-*   Function   : WlzUnionn						*
-*   Returns    :WlzObject *: union of input objects			*
-*   Parameters :WlzObject 	**objs: object array			*
-*		int n: number of objects				*
-*		int uvt: grey-value copy flag				*
-*   Date       : Mon Oct 14 16:07:53 1996				*
-*   Synopsis   :							*
-* union of set of objects.
-* Do domains only unless "uvt" non-zero,
-* in which case make an average grey table.
-************************************************************************/
-
-WlzObject *
-WlzUnionN(int		n,
-	  WlzObject 	**objs,
-	  int 		uvt,
-	  WlzErrorNum	*dstErr)
+/* function:     WlzUnionN    */
+/*! 
+* \ingroup      WlzBinaryOps
+* \brief        Calculate the set union of an array of domain objects.
+ Domians only unless uvt non-zero in which case make an average grey
+ table. Note background values are used in the averaging process. All
+ objects must be domain objects of the same type (2D or 3D) unless
+ WLZ_EMPTY_OBJ, NULL input objects are an error.
+*
+* \return       Union of the array of object.
+* \param    n	number of input objects
+* \param    objs	input object array
+* \param    uvt	grey-table copy flag, copy if non-zero.
+* \param    dstErr	error return.
+* \par      Source:
+*                WlzUnionN.c
+*/
+WlzObject *WlzUnionN(
+  int		n,
+  WlzObject 	**objs,
+  int 		uvt,
+  WlzErrorNum	*dstErr)
 {
   WlzObject		*obj=NULL;
   WlzDomain		domain;
@@ -487,6 +500,26 @@ WlzUnionN(int		n,
 	    }
 	    *greyptr.dbp = gv.dbv / noverlap;
 	    greyptr.dbp++;
+	  }
+	  break;
+	case WLZ_GREY_RGBA: /* RGBA to be done - do properly RAB */
+	  for (k = niwsp.lftpos; k <= niwsp.rgtpos; k++) {
+	    noverlap = 0;
+	    gv.rgbv = 0;
+	    for (iwsp=biwsp,i=0; iwsp<tiwsp; iwsp++,i++) {
+	      while (iwsp->linrmn >= 0
+		     && (iwsp->linpos < l
+			 || (iwsp->linpos == l && iwsp->rgtpos < k))){
+		WlzNextGreyInterval(iwsp);
+	      }
+	      if (iwsp->linrmn >= 0 && iwsp->linpos == l &&
+		  iwsp->lftpos <= k) {
+		noverlap++;
+		gv.rgbv += *(gwsp[i].u_grintptr.rgbp + k - iwsp->lftpos);
+	      }
+	    }
+	    *greyptr.rgbp = gv.rgbv / noverlap;
+	    greyptr.rgbp++;
 	  }
 	  break;
 

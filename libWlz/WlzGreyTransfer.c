@@ -157,6 +157,9 @@ WlzObject *WlzGreyTransfer(
 	case WLZ_GREY_DOUBLE:
 	  size = sizeof(double);
 	  break;
+	case WLZ_GREY_RGBA:
+	  size = sizeof(UINT);
+	  break;
 	}
 
 	while( (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE ){

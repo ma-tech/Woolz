@@ -1,32 +1,44 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyScan.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz object grey value scanning functions.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyScan.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:55:59 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Woolz object grey value scanning functions.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <limits.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzInitGreyScan					*
-*   Returns    :							*
-*   Parameters :							*
-*   Date       : Mon Oct 14 12:19:30 1996				*
-*   Synopsis   :							*
-* initialise interval and grey scanning of standard object in standard  *
-* direction                                                             *
-************************************************************************/
-
+/* function:     WlzInitGreyScan    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Initialise interval and grey scanning of standard object
+ in standard direction.
+*
+* \return       Woolz error.
+* \param    obj	Object to be scanned.
+* \param    iwsp	Interval scanning workspace.
+* \param    gwsp	Value table scanning workspace.
+* \par      Source:
+*                WlzGreyScan.c
+*/
 WlzErrorNum 
 WlzInitGreyScan(WlzObject	*obj,	/* raster and tranpl of 0 provided */
 		WlzIntervalWSpace	*iwsp,
@@ -35,16 +47,21 @@ WlzInitGreyScan(WlzObject	*obj,	/* raster and tranpl of 0 provided */
   return( WlzInitGreyRasterScan(obj, iwsp, gwsp, WLZ_RASTERDIR_ILIC, 0) );
 }
 
-
-/************************************************************************
-*   Function   : WlzInitGreyRasterScan					*
-*   Returns    :							*
-*   Parameters :							*
-*   Date       : Mon Oct 14 12:23:59 1996				*
-*   Synopsis   :							*
-* as initgreyscan, but with choice of raster direction and transplanting*
-************************************************************************/
-
+/* function:     WlzInitGreyRasterScan    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        As WlzInitGreyScan(), but with choice of raster direction
+ and transplanting
+*
+* \return       Woolz error.
+* \param    obj	Input object to be scanned.
+* \param    iwsp	Interval scanning workspace.
+* \param    gwsp	Value table scanning workspace.
+* \param    raster	Direction for the raster scan.
+* \param    tranpl	Flag to llow overwriting of grey-values.
+* \par      Source:
+*                WlzGreyScan.c
+*/
 WlzErrorNum 
 WlzInitGreyRasterScan(WlzObject 	*obj,
 		      WlzIntervalWSpace *iwsp,
@@ -60,15 +77,19 @@ WlzInitGreyRasterScan(WlzObject 	*obj,
   return( WlzInitGreyWSpace(obj,iwsp,gwsp,tranpl) );
 }
 
-/************************************************************************
-*   Function   : WlzInitGreyWSpace					*
-*   Returns    :							*
-*   Parameters :							*
-*   Date       : Mon Oct 14 12:24:22 1996				*
-*   Synopsis   :							*
-* attach grey workspace to interval scanning workspace                  *
-************************************************************************/
-
+/* function:     WlzInitGreyWSpace    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        attach grey workspace to interval scanning workspace  
+*
+* \return       Woolz error.
+* \param    obj	Object to be scanned.
+* \param    iwsp	Interval scanning workspace.
+* \param    gwsp	Value table scanning workspace.
+* \param    tranpl	Flag to enable value transplanting.
+* \par      Source:
+*                WlzGreyScan.c
+*/
 WlzErrorNum 
 WlzInitGreyWSpace(WlzObject 		*obj,
 		  WlzIntervalWSpace 	*iwsp,
@@ -132,19 +153,22 @@ WlzInitGreyWSpace(WlzObject 		*obj,
 
 
 
-/************************************************************************
-*   Function   : WlzNextGreyInterval					*
-*   Returns    :							*
-*   Parameters :							*
-*   Date       : Mon Oct 14 12:26:36 1996				*
-*   Synopsis   :							*
-* obtain next interval and its grey table.
-* if tranpl and gvio=0 and scan already started (check line number)
-*	then must collect previous grey interval
-* if tranpl and gvio=1 then must output this interval
-*	(unless scan finished).
-************************************************************************/
-
+/* function:     WlzNextGreyInterval    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Obtain next interval and its grey table.
+*
+* \return       Woolz error.
+* \param    iwsp	Interval scanning workspace - mut be initialised.
+* \par      Source:
+*                WlzGreyScan.c
+*
+* Note - cryptic documentation:
+ If tranpl
+ and gvio=0 and scan already started (check line number) then the
+ previous grey interval must be collected,  if tranpl and gvio=1 then
+ must output this interval (unless scan finished).
+*/
 WlzErrorNum 
 WlzNextGreyInterval(WlzIntervalWSpace *iwsp)
 {
@@ -168,16 +192,17 @@ WlzNextGreyInterval(WlzIntervalWSpace *iwsp)
 }
 
 
-/************************************************************************
-*   Function   : WlzGreyInterval					*
-*   Returns    :							*
-*   Parameters :							*
-*   Date       : Mon Oct 14 12:28:05 1996				*
-*   Synopsis   :							*
-* handle grey table for an interval.
-* This must follow a call to "nextinterval"
-************************************************************************/
-
+/* function:     WlzGreyInterval    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Handle grey table for an interval. This must follow a
+ call to "nextinterval".
+*
+* \return       Woolz error.
+* \param    iwsp	Interval scaning workspace.
+* \par      Source:
+*                WlzGreyScan.c
+*/
 WlzErrorNum 
 WlzGreyInterval(WlzIntervalWSpace *iwsp)
 {
@@ -226,6 +251,11 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 	       - vdmn.v->kol1 - gwsp->gline->vkol1);
       break;
 
+    case WLZ_GREY_RGBA:
+      g.rgbp = (gwsp->gline->values.rgbp + iwsp->lftpos
+	       - vdmn.v->kol1 - gwsp->gline->vkol1);
+      break;
+
     default:
       return( WLZ_ERR_GREY_TYPE );
       /* break */
@@ -259,6 +289,11 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 
     case WLZ_GREY_DOUBLE:
       g.dbp = (vdmn.r->values.dbp + (iwsp->linpos - vdmn.r->line1)
+	       * vdmn.r->width + iwsp->lftpos - vdmn.r->kol1);
+      break;
+
+    case WLZ_GREY_RGBA:
+      g.rgbp = (vdmn.r->values.rgbp + (iwsp->linpos - vdmn.r->line1)
 	       * vdmn.r->width + iwsp->lftpos - vdmn.r->kol1);
       break;
 
@@ -303,6 +338,10 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 
 	case WLZ_GREY_DOUBLE:
 	  g.dbp = val->values.dbp + iwsp->lftpos - vdmn.i->kol1 - val->vkol1;
+	  break;
+
+	case WLZ_GREY_RGBA:
+	  g.rgbp = val->values.rgbp + iwsp->lftpos - vdmn.i->kol1 - val->vkol1;
 	  break;
 
 	default:
@@ -362,6 +401,11 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 	  *g.dbp++ = gwsp->u_grintptr.inp[i];
 	break;
 
+      case WLZ_GREY_RGBA:
+	for (i=0; i<iwsp->colrmn; i++)
+	  *g.rgbp++ = gwsp->u_grintptr.inp[i];
+	break;
+
       default:
 	/* can't get here because grey-type already checked */
 	break;
@@ -395,6 +439,11 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
       case WLZ_GREY_DOUBLE:
 	for (i=0; i<iwsp->colrmn; i++)
 	  gwsp->u_grintptr.inp[i] = *g.dbp++;
+	break;
+
+      case WLZ_GREY_RGBA:
+	for (i=0; i<iwsp->colrmn; i++)
+	  gwsp->u_grintptr.inp[i] = *g.rgbp++;
 	break;
 
       default:

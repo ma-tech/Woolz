@@ -83,7 +83,7 @@ void		*AlcRealloc(void *givenData, size_t byteCount)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlcAlloc
 * \brief	Free's the given storage.
 * \param	data 	 		Given storage.

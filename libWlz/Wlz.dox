@@ -1,0 +1,15 @@
+/*!
+* \defgroup    Wlz	libWlz
+* \brief This software library provides the core image processing functionality
+of woolz. See the \ref libwlzpage "libWlz" for more detail. All procedures are
+ detailed under different module headings.
+*/
+
+/*! \page libwlzpage Woolz Image Processing Library
+* \section intro Introduction
+The woolz image processing library was developed for the purpose of
+ microscope slide scanning.
+\section structure Woolz Structures
+\section usage Example Usage
+\section standards Coding Conventions
+*/

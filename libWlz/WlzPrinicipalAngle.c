@@ -202,6 +202,18 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 	      ++delta.vtX;
 	    }
 	    break;
+	  case WLZ_GREY_RGBA:
+	    while(iCount-- >= 0)
+	    {
+	      tI0 = WLZ_RGBA_MODULUS(*gPix.rgbp);
+	      tI1 = delta.vtX * tI0;
+	      ixx += delta.vtY * delta.vtY * tI0;
+	      iyy += delta.vtX * tI1;
+	      ixy -= delta.vtY * tI1;
+	      ++gPix.rgbp;
+	      ++delta.vtX;
+	    }
+	    break;
 	}
       }
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */

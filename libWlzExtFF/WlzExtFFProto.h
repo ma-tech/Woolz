@@ -42,6 +42,7 @@ extern WlzErrorNum 		WlzEffWriteObj(
 				  const char *fName,
 				  WlzObject *obj,
 				  WlzEffFormat fFmt);
+extern int			WlzEffNumberOfFormats(void);
 /* From WlzExtFFBmp.c */
 extern WlzObject 		*WlzEffReadObjBmp(
 				  const char *gvnFileName,
@@ -174,6 +175,14 @@ extern WlzObject		*WlzEffReadObjAm(
 extern WlzErrorNum		WlzEffWriteObjAm(
 				  FILE *fP,
 				  WlzObject *obj);
+/* From WlzExtFFJpeg.c */
+extern WlzObject		*WlzEffReadObjJpeg(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzEffWriteObjJpeg(
+				  FILE *fP,
+				  WlzObject *obj,
+				  char	*params);
 
 /* From	WlzExtFFBibUtils.c */
 extern WlzErrorNum 		WlzEffBibWrite3DSectionViewParamsRecord(

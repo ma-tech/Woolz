@@ -1,0 +1,15 @@
+/*!
+\addtogroup binwlz 
+\par Introduction
+Most of the woolz image processing library have a corresponding programme
+ to allow command-line processing of woolz images and image structures
+ (e.g. polylines, boundaries, histograms etc). In general each binary
+will read one or more woolz objects from "standard input" and write the
+result to "standard output" (most will also read from a command line
+ arguement if present). Control parameters for each function are typically
+entered as arguments. In many cases a sequence of image processing
+operations can be concatenated as a Unix "pipeline" which is efficient
+and convenient for rapid prototyping and scripting of common operations.
+
+
+*/

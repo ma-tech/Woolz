@@ -453,7 +453,7 @@ static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP)
 ************************************************************************/
 static WlzErrorNum WlzEffHeadWriteIPL(WlzEffIPLHeader *header, FILE *fP)
 {
-  WlzErrorNum	errNum = WLZ_ERR_UNSPECIFIED;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
   return(errNum);
 }

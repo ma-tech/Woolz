@@ -23,7 +23,7 @@
 #include <Alg.h>
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgRand
 * \brief	Seeds the pseudo-random number generators.
 * \param	 seed			Given seed value.

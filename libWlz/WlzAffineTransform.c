@@ -926,6 +926,9 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	      case WLZ_GREY_DOUBLE:
 	        *(gWSp.u_grintptr.dbp)++ = (*(gVWSp->gVal)).dbv;
 		break;
+	      case WLZ_GREY_RGBA:
+	        *(gWSp.u_grintptr.rgbp)++ = (*(gVWSp->gVal)).rgbv;
+		break;
 	    }
 	    ++(posI.vtX);
 	  }
@@ -975,6 +978,13 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       ((gVWSp->gVal[3]).dbv * tD0 * tD1));
 		*(gWSp.u_grintptr.dbp)++ = tD0;
 		break;
+	      case WLZ_GREY_RGBA:
+		tD0 = (((gVWSp->gVal[0]).rgbv * (1.0 - tD0) * (1.0 - tD1)) +
+		       ((gVWSp->gVal[1]).rgbv * tD0 * (1.0 - tD1)) +
+		       ((gVWSp->gVal[2]).rgbv * (1.0 - tD0) * tD1) +
+		       ((gVWSp->gVal[3]).rgbv * tD0 * tD1));
+		*(gWSp.u_grintptr.rgbp)++ = tD0;
+		break;
 	    }
 	    ++(posI.vtX);
 	  }
@@ -1022,6 +1032,13 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	  }
 	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 	  *(gWSp.u_grintptr.dbp)++ = tD0;
+	  break;
+	case WLZ_GREY_RGBA:
+	  for(indx=0; indx < 4; indx++){
+	    gTmp[indx] = (gVWSp->gVal[indx]).rgbv;
+	  }
+	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	  *(gWSp.u_grintptr.rgbp)++ = tD0;
 	  break;
 	}
       default:
@@ -1187,6 +1204,9 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		  case WLZ_GREY_DOUBLE:
 		    *(gWSp.u_grintptr.dbp)++ = (*(gVWSp->gVal)).dbv;
 		    break;
+		  case WLZ_GREY_RGBA:
+		    *(gWSp.u_grintptr.rgbp)++ = (*(gVWSp->gVal)).rgbv;
+		    break;
 		  default:
 		    errNum = WLZ_ERR_GREY_TYPE;
 		    break;
@@ -1309,6 +1329,26 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
 		      ((gVWSp->gVal[7]).dbv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    *(gWSp.u_grintptr.dbp)++ = tD0;
+		    break;
+		  case WLZ_GREY_RGBA:
+		    tD0 = ((gVWSp->gVal[0]).rgbv *
+			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[1]).rgbv *
+		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[2]).rgbv *
+		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[3]).rgbv *
+		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		      ((gVWSp->gVal[4]).rgbv *
+		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[5]).rgbv *
+		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[6]).rgbv *
+		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		      ((gVWSp->gVal[7]).rgbv *
+		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, 0, 0xffffffff);
 		    *(gWSp.u_grintptr.dbp)++ = tD0;
 		    break;
 		  default:
@@ -1972,7 +2012,7 @@ WlzErrorNum	WlzAffineTransformPrimGet(WlzAffineTransform *tr,
 
 /*!
 * \ingroup	WlzTransform
-* \return	<void>
+* \return	void
 * \brief	Gets the given 2D transform's primitives from it's
 *		matrix.
 * \param	tr			Given 2D affine transform.

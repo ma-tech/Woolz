@@ -1,14 +1,30 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzGeometryTrackUpAndDown_s.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:42:46 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzGeoModel
+* \brief        Giving the standard contour Woolz and the contour Woolz object to be tracked, The code can forme a patch surface points.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 /* This code started on 28/01/2003 by J. Rao  
          it contains codes to find the edges 
 */
-/************************************************************************
-*
-* Function:     WlzGeometryTrackUpAndDown_s.c	
-* Returns:	WlzDVertex3
-* Purpose: 	Giving the standard contour Woolz and the contour Woolz object 
-*               to be tracked, The code can forme a patch surface points.
-*
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -287,10 +303,10 @@ static WlzDVertex2 *WlzVerticesThisIndexOfGM2(WlzGMModel  *model,
                                             int            Idx, 
 					    WlzErrorNum   *dstErr   );
 
-static WlzDVertex2 WlzVerticesNormTriple2(WlzDVertex2 vA, WlzDVertex2 vB,
+static WlzDVertex2 WlzVerticesNormTriple2a(WlzDVertex2 vA, WlzDVertex2 vB,
 					   WlzDVertex2 vC);
 
-static WlzDVertex2 WlzVerticesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1);
+static WlzDVertex2 WlzVerticesNormPair2a(WlzDVertex2 v0, WlzDVertex2 v1);
 
 static int *GroupDivid(int LoopIndex[], int *NumOfGroup, int *Continue, int nt, WlzErrorNum   *dstErr);
 
@@ -357,33 +373,34 @@ static void GetSamplePointsForNextTrackFromTheTrackedLoopOfGM(
 			   int         *suc,
                            WlzErrorNum *dstErr );
 
-/*!
-* \ingroup	WlzFeatures:	WlzGeometryTrackUpAndDown_s.c
-* \return:	WlzDVertex3:  The nearest edge point
-*		
-* \brief:    track down a curve lines 
-* \ref:	-
-* \param:	
-*      \param   *sObj:	                    Woolz contour object (input)
-*      \param   *tObj:	                    Woolz contour object (input)
-*      \param    numberOfPixelsZ:	            the input z-direction of pixel number (input)
-*      \param  **TwoDImageFilesNameList         2D image FIles name list. ( input )
-*      \param    downOrUp:                      parameter to track down or up z-direction
-*      \param    sectionLength_N                length used to cut a patch (unit in pixel) (input )
-*      \param    subSubSectionLength_L          length smalle than the above used to sample points
-*                                                  in the region
-*      \param    numberOfSampleP_k              number of points will be sampled in the above section
-*      \param   *surfacePointFileName:          FileNameStr to output the surface points
-*      \param   *surfaceInPointFileName:        FileNameStr to output the in  surface points 
-*                                                  and their distances to the surface
-*      \param   *surfaceOutPointFileName:       FileNameStr to output the out surface points
-*                                                  and their distances to the surface
-*      \param    startShell                     the n-th Shell to begin with tracking
-*      \param    endShell                       the end  Shell from where stop tracking 
-*      \param    startSection                   the n-th Section to begin with tracking
-*      \param    endSection                     the section to stop tracking.
-*      \param   
-*      \param#  *dstErr:	        Destination error pointer, may be NULL.
+/* function:     WlzGeometryTrackUpAndDown_s    */
+/*! 
+* \ingroup      WlzFeatures
+* \brief        Track a curved path through a set of geometric model shells.
+*
+* \return       An array of vertices tracking thougha set of geometry model shells
+* \param    numberOfPixelsZ	the input z-derection of pixel number (input)
+* \param    startTrackingFile	not documented
+* \param    numberOfFilesDownOrUp	numner of files (?)
+* \param    disForInAndOutGuid	distance parameter
+* \param    disForInAndOut	distance parameter
+* \param    TwoDImageFilesNameList	2D image files name list
+* \param    numOf2DWlzFiles	number of 2D woolz files
+* \param    downOrUp	tracking direction flag
+* \param    sectionLength_N	length used to cut a patch (unit in pixel)
+* \param    subSubSectionLength_L	length, smaller than sectionLength_N used to sample points
+* \param    numberOfSampleP_k	number of points will be sampled in the above section
+* \param    surfacePointFileName	 FileNameStr to output the surface points
+* \param    surfaceInPointFileName	FileNameStr to output the in  surface points
+* \param    surfaceOutPointFileName	 FileNameStr to output the out surface points
+* \param    startShell	the n-th Shell to begin with tracking
+* \param    endShell	 the end  Shell from where stop tracking
+* \param    startSection	the n-th Section to begin with tracking
+* \param    endSection	the section to stop tracking.
+* \param    minDis	minimum distance (?)
+* \param    dstErr	error return.
+* \par      Source:
+*                WlzGeometryTrackUpAndDown_s.c
 * \author:       J. Rao, R. Baldock and B. Hill
 */
 WlzDVertex3  *WlzGeometryTrackUpAndDown_s(  
@@ -2483,7 +2500,7 @@ static void  WlzOutputForFormingSurface(FILE *testFile, char *Fstr, WlzVertexP s
 
 /*!
 * \ingroup	WlzFeatures
-* \return	<void>
+* \return	void
 * \brief	Computes the normal (n) to a segment (g) between the
 *		given pair of vertices. There are clearly two solutions
 *		to the problem of finding a normal to a line segment,
@@ -2501,7 +2518,7 @@ static void  WlzOutputForFormingSurface(FILE *testFile, char *Fstr, WlzVertexP s
 * \param	v0			First of the given pair.
 * \param	v1			Second of the given pair.
 */
-static WlzDVertex2 WlzVerticesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
+static WlzDVertex2 WlzVerticesNormPair2a(WlzDVertex2 v0, WlzDVertex2 v1)
 {
   WlzDVertex2	tV0,
   		tV1,
@@ -2561,7 +2578,7 @@ static WlzDVertex2 WlzVerticesNormPair2(WlzDVertex2 v0, WlzDVertex2 v1)
 *					segments.
 * \param	vC			Third vertex.
 */
-static WlzDVertex2 WlzVerticesNormTriple2(WlzDVertex2 vA, WlzDVertex2 vB,
+static WlzDVertex2 WlzVerticesNormTriple2a(WlzDVertex2 vA, WlzDVertex2 vB,
 					   WlzDVertex2 vC)
 {
   double	tD0;
@@ -2580,11 +2597,11 @@ static WlzDVertex2 WlzVerticesNormTriple2(WlzDVertex2 vA, WlzDVertex2 vB,
   tV3.vtX = tV1.vtX * tV1.vtX; tV3.vtY = tV1.vtY * tV1.vtY;
   if((tV2.vtX < DBL_EPSILON) && (tV2.vtY < DBL_EPSILON))
   {
-    nrm = WlzVerticesNormPair2(vB, vC);
+    nrm = WlzVerticesNormPair2a(vB, vC);
   }
   else if((tV3.vtX < DBL_EPSILON) && (tV3.vtY < DBL_EPSILON))
   {
-    nrm = WlzVerticesNormPair2(vB, vA);
+    nrm = WlzVerticesNormPair2a(vB, vA);
   }
   else
   {
@@ -2593,7 +2610,7 @@ static WlzDVertex2 WlzVerticesNormTriple2(WlzDVertex2 vA, WlzDVertex2 vB,
     tD0 = WlzGeomTriangleSnArea2(vA, vB, vC);
     if((tD0 * tD0) < (DBL_EPSILON))
     {
-      nrm = WlzVerticesNormPair2(vB, vC);
+      nrm = WlzVerticesNormPair2a(vB, vC);
     }
     else
     {
@@ -2966,7 +2983,7 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
 
 		  
 		  /*  printf("%lg   %lg\n", segV[1].vtX, segV[1].vtY ); */
-	         *(vNorm + idx) = WlzVerticesNormTriple2(segV[0], segV[1], segV[2]);
+	         *(vNorm + idx) = WlzVerticesNormTriple2a(segV[0], segV[1], segV[2]);
 		  /*  get the in and out points using the normal and points */
 		  fPoint.vtX =  segV[1].vtX + distance * (vNorm+idx)->vtX;
 		  fPoint.vtY =  segV[1].vtY + distance * (vNorm+idx)->vtY;
@@ -4525,7 +4542,7 @@ static void GetInOutAndFromSurfacePoints(
 	  segV[2].vtX = StandSampleP[i+2].vtX; 
 	  segV[2].vtY = StandSampleP[i+2].vtY;
 	  /*  printf("%lg   %lg\n", segV[1].vtX, segV[1].vtY ); */
-	 *(vNorm + idx) = WlzVerticesNormTriple2(segV[0], segV[1], segV[2]);
+	 *(vNorm + idx) = WlzVerticesNormTriple2a(segV[0], segV[1], segV[2]);
 	  /*  get the in and out points using the normal and points */
 	  fPoint.vtX =  segV[1].vtX + distance * (vNorm+idx)->vtX;
 	  fPoint.vtY =  segV[1].vtY + distance * (vNorm+idx)->vtY;

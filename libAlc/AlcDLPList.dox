@@ -1,23 +1,8 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         AlcDLPList.dox
-* \author       Bill Hill
-* \date         March 2003
-* \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
 * \brief	Alc doubly linked list of pointers module.
 * \ingroup	Alc
-* \defgroup	AlcDLPList
-* \todo         -
-* \bug          None known.
+* \defgroup	AlcDLPList AlcDLPList
 */
 
 

@@ -1,5 +1,6 @@
 /*!
 * \ingroup      Wlz
 * \defgroup      WlzAccess	WlzAccess
+* \brief Domain and grey-value access procedures.
 *
 */

@@ -39,11 +39,6 @@
 /*! 
 * \ingroup      WlzPolyline
 * \brief        Calculate the height of a triangle from the last vertex
-*		to the line defined by the first two.
-*
-*               Calculate the height of a triangle from the last vertex
-*		to the line defined by the first two.
-* 		Calculate the height of a triangle from the last vertex
 *		to the line defined by the first two. Uses formula that
 *		can be derived from Faux and Pratt p57-65 or see my lab
 *		notebook #1, p17. For three vertices \f$\mathbf{v_1}, 

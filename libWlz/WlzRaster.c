@@ -468,7 +468,7 @@ static WlzErrorNum WlzRasterAddSimplex3I(UBYTE ***bMsk, WlzIVertex3 sz,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzRaster
 * \brief	Rasterizes the given 3D line segmant into the given 3D
 *               bit array.
@@ -535,7 +535,7 @@ static void	WlzRasterLine3I(UBYTE ***bMsk, WlzIVertex3 *seg)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzRaster
 * \brief	Sets a single voxel in the given 3D bit array.
 * \param	bMsk			The 3D bitmask to be written to.

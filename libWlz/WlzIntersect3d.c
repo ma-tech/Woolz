@@ -1,35 +1,48 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzIntersect3d.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates the intersection between a list of 3D
-*		Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzIntersect3d.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Aug 19 07:47:49 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBinaryOps
+* \brief        Intersection (set intersection) routines for woolz domain objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzIntersect3d						*
-*   Date       : Mon Oct 21 19:11:53 1996				*
-*************************************************************************
-*   Synopsis   :Calculate the intersection between a list of 3D objects.*
-*   Returns    :WlzObject *: the intersection, NULL on error. Nil	*
-*		intersection is returned as WLZ_EMPTY_OBJ		*
-*   Parameters :WlzObject	**objs: array of object pointers.	*
-*		int 		n: number of objects.			*
-*		int		uvt: copy grey-values flag.		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzIntersect3d    */
+/*! 
+* \ingroup      WlzBinaryOps
+* \brief        Calculate the intersection betweena a list of 3D
+ objects. Should not be used directly but is intended as a static
+ procedure called from WlzIntersectN().
+*
+* \return       The intersection object with new value table as
+ required. Empty intersection is returned as a WLZ_EMPTY_OBJ, NULL
+ on error
+* \param    objs	list of objects to be included in the
+ intersection
+* \param    n	number of input objects
+* \param    uvt	copy grey values flag, 0 do not copy, 1 copy.
+* \param    wlzErr	error return.
+* \par      Source:
+*                WlzIntersect3d.c
+*/
 WlzObject *WlzIntersect3d(WlzObject	**objs,
 			  int 		n,
 			  int		uvt,

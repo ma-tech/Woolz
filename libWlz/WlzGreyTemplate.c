@@ -1,18 +1,27 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyTemplate.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Attacha grey table to a template Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyTemplate.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999.
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Attach a grey table to a template Woolz object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
@@ -23,24 +32,22 @@ static WlzObject *WlzGreyTemplate3d(WlzObject	*obj,
 				WlzErrorNum	*dstErr);
 
 
-/************************************************************************
-*   Function   : WlzGreyTemplate					*
-*   Date       : Sun Oct 19 11:46:10 1997				*
-*************************************************************************
-*   Synopsis   :Attach a grey table to the template (if not defined)	*
-*		and set all values in the intersection with the object	*
-*		equal to those in the object and all others to the	*
-*		template value.						*
-*   Returns    :WlzObject*: new object with the same domain as tmpl but	*
-*			values in the intersection with obj set to	*
-*			those of the object. Returns NULL on error.	*
-*   Parameters :obj:	object to which template is applied		*
-*		tmpl:	template domain					*
-*		tmplVal:	template value - any grey type		*
-*		dstErr:	pointer for error return			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzGreyTemplate    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        
+*
+* \return       New object with the same domain <tt>tmpl</tt> but
+ values in the intersection with <tt>obj</tt> set to those of the object.
+ Returns NULL on error.
+* \param    obj	Input object to which the template is applied
+* \param    tmpl	Template object
+* \param    tmplVal	Template value for regions in the template
+ not in the original object
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzGreyTemplate.c
+*/
 WlzObject *WlzGreyTemplate(
   WlzObject	*obj,
   WlzObject	*tmpl,
@@ -165,6 +172,9 @@ WlzObject *WlzGreyTemplate(
 	  break;
 	case WLZ_GREY_DOUBLE:
 	  size = sizeof(double);
+	  break;
+	case WLZ_GREY_RGBA:
+	  size = sizeof(UINT);
 	  break;
 	}
 

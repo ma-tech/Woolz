@@ -67,7 +67,7 @@ typedef struct _WlzMeshScanWSp
 } WlzMeshScanWSp;
 
 /*!
-* \struct
+* \struct	_WlzMeshPolyVx
 * \ingroup	WlzTransform
 * \brief	Linked list based polygon data structure.
 */
@@ -1181,6 +1181,9 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		case WLZ_GREY_DOUBLE:
 		  *(dGP.dbp)++ = (*(gVWSp->gVal)).dbv;
 		  break;
+		case WLZ_GREY_RGBA:
+		  *(dGP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
+		  break;
 		default:
 		  errNum = WLZ_ERR_GREY_TYPE;
 		  break;
@@ -1230,6 +1233,13 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 			((gVWSp->gVal[3]).dbv * tD0 * tD1);
 		  *(dGP.dbp)++ = tD0;
 		  break;
+		case WLZ_GREY_RGBA:
+		  tD0 = ((gVWSp->gVal[0]).rgbv * tD2 * tD3) +
+			((gVWSp->gVal[1]).rgbv * tD0 * tD3) +
+			((gVWSp->gVal[2]).rgbv * tD2 * tD1) +
+			((gVWSp->gVal[3]).rgbv * tD0 * tD1);
+		  *(dGP.dbp)++ = tD0;
+		  break;
 		default:
 		  errNum = WLZ_ERR_GREY_TYPE;
 		  break;
@@ -1277,6 +1287,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 		  *(dGP.dbp)++ = tD0;
 		  break;
+	        case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 		default:
 		  errNum = WLZ_ERR_GREY_TYPE;
 		  break;
@@ -2702,7 +2713,7 @@ static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Solve's a system of linear equations for the coefficients
 *		of a 2D affine transform from the source triangle to the
@@ -2897,7 +2908,7 @@ static WlzMeshScanWSp *WlzMeshScanWSpInit(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Free's a mesh scan workspace.
 * \param	mSnWSp			Mesh scan workspace.

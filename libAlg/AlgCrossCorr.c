@@ -13,7 +13,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Frequency domain cross correlation functions.
-* \defgroup     AlgCorr
+* \ingroup     AlgCorr
 * \todo         -
 * \bug          None known.
 */
@@ -137,7 +137,7 @@ AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgCorr
 * \brief	Find the maximum correlation value in the given two
 *		dimensional array. Because the correlation data are 
@@ -232,7 +232,7 @@ void		AlgCrossCorrPeakXY(int *dstMaxX, int *dstMaxY,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Finds peak value in cross correlation data, only
 *		searching the first column.
 *		The search is particularly simple because only the

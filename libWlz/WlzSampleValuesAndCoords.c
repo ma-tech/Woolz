@@ -173,6 +173,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
       case WLZ_GREY_DOUBLE:
 	gSz = sizeof(double);
         break;
+      case WLZ_GREY_RGBA:
+	gSz = sizeof(UINT);
+        break;
       default:
         errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -401,6 +404,41 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 	      break;
 	  }
 	  break;
+	case WLZ_GREY_RGBA:
+	  switch(samFn)
+	  {
+	    case WLZ_SAMPLEFN_MIN:
+	      for(iPos = iWsp.lftpos; iPos <= iWsp.rgtpos; ++iPos)
+	      {
+		bIdx = bPos.vtX / samFac;
+		if((*(dBuf + bIdx) == 0) || (*(gVal.rgbp) < *(vBuf.rgbp + bIdx)))
+		{
+		  *(vBuf.rgbp + bIdx) = *(gVal.rgbp);
+		  (cBuf + bIdx)->vtX = iPos;
+		  (cBuf + bIdx)->vtY = iWsp.linpos;
+		  *(dBuf + bIdx) = 1;
+		}
+		++(bPos.vtX);
+		++(gVal.rgbp);
+	      }
+	      break;
+	    case WLZ_SAMPLEFN_MAX:
+	      for(iPos = iWsp.lftpos; iPos <= iWsp.rgtpos; ++iPos)
+	      {
+		bIdx = bPos.vtX / samFac;
+		if((*(dBuf + bIdx) == 0) || (*(gVal.rgbp) > *(vBuf.rgbp + bIdx)))
+		{
+		  *(vBuf.rgbp + bIdx) = *(gVal.rgbp);
+		  (cBuf + bIdx)->vtX = iPos;
+		  (cBuf + bIdx)->vtY = iWsp.linpos;
+		  *(dBuf + bIdx) = 1;
+		}
+		++(bPos.vtX);
+		++(gVal.rgbp);
+	      }
+	      break;
+	  }
+	  break;
       }
       /* Transfer values and coordinates from the buffers to the arrays.
        * It might be necessary to reallocate the arrays. */
@@ -476,6 +514,18 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		if(*(dBuf + bIdx))
 		{
 	          *(vAry.dbp + nVal) = *(vBuf.dbp + bIdx);
+	          *(cAry + nVal) = *(cBuf + bIdx);
+		  ++nVal;
+		}
+		++bIdx;
+	      }
+	      break;
+	    case WLZ_GREY_RGBA:
+	      while(bIdx < bWidth)
+	      {
+		if(*(dBuf + bIdx))
+		{
+	          *(vAry.rgbp + nVal) = *(vBuf.rgbp + bIdx);
 	          *(cAry + nVal) = *(cBuf + bIdx);
 		  ++nVal;
 		}

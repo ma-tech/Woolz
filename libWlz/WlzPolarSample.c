@@ -228,6 +228,13 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
 		break;
+	      case WLZ_GREY_RGBA:
+		if((dstValP.rgbp = (UINT *)AlcMalloc((unsigned long )tI0 *
+						      sizeof(UINT))) == NULL)
+		{
+		  errNum = WLZ_ERR_MEM_ALLOC;
+		}
+		break;
 	      default:
 		errNum = WLZ_ERR_VALUES_TYPE;
 		break;
@@ -276,6 +283,9 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 		  break;
 		case WLZ_GREY_DOUBLE:
 		  *(dstValP.dbp)++ = (*(gVWSp->gVal)).dbv;
+		  break;
+		case WLZ_GREY_RGBA:
+		  *(dstValP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
 		  break;
 	      }
 	      dist += distInc;

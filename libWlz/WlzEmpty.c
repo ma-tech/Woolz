@@ -1,33 +1,42 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzEmpty.c						*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Mon Oct 30 17:34:21 2000				*
-*   $Revision$							*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         WlzEmpty.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 08:03:21 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Convenience procedure to check empty status of an object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
 
 #include <Wlz.h>
 
- 
+
+/* function:     WlzIsEmpty    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Convenience procedure to check if an object is empty.
+This include objects with zero area or volume.
+*
+* \return       Zero if non-empty, 1 if empty.
+* \param    obj	Input object
+* \param    wlzErr	Error return
+* \par      Source:
+*                WlzEmpty.c
+*/ 
 int WlzIsEmpty(WlzObject *obj, WlzErrorNum *wlzErr)
 {
   WlzObject		tmpobj;

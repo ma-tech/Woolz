@@ -216,13 +216,13 @@ fread(cin,sizeof(char),4,fp);
   return(*((float *) &cout[0]));
 }
 
-/************************************************************************
+/*
 *   Function   : getdouble						*
 *   Synopsis   : get the next double from the input stream		*
 *   Returns    : double:	value of next double on the input stream*
 *   Parameters : FILE *fp:	input stream				*
 *   Global refs: -                                                      *
-************************************************************************/
+*/
 
 /*!
 * \return	The  doublevalue.
@@ -1472,11 +1472,62 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     }
     return errNum;
 
+  case WLZ_VALUETABLE_RAGR_RGBA:
+    packing = (WlzGreyType) getc(fp);
+    backgrnd.v.rgbv = getword(fp);
+
+    /* create the value table */
+    if( (values.v = WlzMakeValueTb(type, l1, ll, k1,
+				   backgrnd, obj, &errNum)) == NULL ){
+      return errNum;
+    }
+    values.v->width = obj->domain.i->lastkl - k1 + 1;
+    obj->values = WlzAssignValues(values, NULL);
+
+    /* allocate space for the pixel values, preset to background */
+    table_size = WlzLineArea(obj, NULL) * sizeof(UINT);
+    if( (v.rgbp = (UINT *) AlcMalloc(table_size)) == NULL){
+      WlzFreeValueTb(values.v);
+      obj->values.v = NULL;
+      return WLZ_ERR_MEM_ALLOC;
+    }
+    memset((void *) v.rgbp, (int) backgrnd.v.rgbv, table_size);
+    values.v->freeptr = AlcFreeStackPush(values.v->freeptr, (void *)v.rgbp,
+    					 NULL);
+
+    if( (errNum = WlzInitRasterScan(obj, &iwsp,
+    				    WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE ){
+      while((errNum = WlzNextInterval(&iwsp)) == WLZ_ERR_NONE) {
+	if (iwsp.nwlpos){
+	  kstart = iwsp.lftpos;
+	}
+	g.rgbp = v.rgbp+iwsp.lftpos-kstart;
+	for (i=0; i<iwsp.colrmn; i++){
+	  *g.rgbp++ = getword(fp);
+	}
+	if (iwsp.intrmn == 0) {
+	  (void) WlzMakeValueLine(values.v, iwsp.linpos, kstart,
+				  iwsp.rgtpos, v.inp);
+	  v.rgbp += (iwsp.rgtpos - kstart + 1);
+	}
+      }
+      if (feof(fp) != 0){
+	WlzFreeValueTb(values.v);
+	obj->values.v = NULL;
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      else if( errNum == WLZ_ERR_EOO ){
+	errNum = WLZ_ERR_NONE;
+      }
+    }
+    return errNum;
+
   case WLZ_VALUETABLE_RECT_INT:
   case WLZ_VALUETABLE_RECT_SHORT:
   case WLZ_VALUETABLE_RECT_UBYTE:
   case WLZ_VALUETABLE_RECT_FLOAT:
   case WLZ_VALUETABLE_RECT_DOUBLE:
+  case WLZ_VALUETABLE_RECT_RGBA:
     return WlzReadRectVtb(fp, obj, type);
 
   default:
@@ -1545,6 +1596,10 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     vtb.r->bckgrnd.v.dbv = getdouble(fp);
     values.dbp = (double *) AlcMalloc(num*sizeof(double));
     break;
+  case WLZ_GREY_RGBA:
+    vtb.r->bckgrnd.v.rgbv = getword(fp);
+    values.rgbp = (UINT *) AlcMalloc(num*sizeof(UINT));
+    break;
   }
 
   if( values.inp == NULL ){
@@ -1607,6 +1662,11 @@ short shv = getshort(fp);
   case WLZ_GREY_DOUBLE:
     for (i=0 ; i<num ; i++)
       *values.dbp++ = getdouble(fp);
+    break;
+
+  case WLZ_GREY_RGBA:
+    for (i=0 ; i<num ; i++)
+      *values.rgbp++ = getword(fp);
     break;
 
   }
@@ -2970,16 +3030,18 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 }
 
 
-/************************************************************************
-*   Function   : WlzReadMeshTransform3D					*
-*   Date       : Wednesday Oct 11 2001   				*
-*************************************************************************
-*   written by :  J. Rao 						*
-*   Synopsis   : reads a woolz 3D MeshTransform 			*
-*   Returns    : WlzWlzMeshTransform3D *:				*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
+/* function:     WlzReadMeshTransform3D    */
+/*! 
+* \ingroup      WlzIO
+* \brief        reads a woolz 3D MeshTransform
+* \author	J. Rao.
+*
+* \return       Woolz mesh transform read from the input stream.
+* \param    fp	Input file pointer.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzReadObj.c
+*/
 WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
 				      WlzErrorNum *dstErr)
 {

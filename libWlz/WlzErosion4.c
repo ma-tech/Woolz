@@ -1,27 +1,31 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzErosion4.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Perfom a 4-connected erosion on a woolz domain object.
-*		This should not really be publicly accessible, but is
-*		for historical reasons. Therefore the prototype does
-*		not appear in WlzProto.h. WlzErosion should be used
-*		to access 4-connected erosion.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzErosion4.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 14:28:29 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzMorphologyOps
+* \brief        Perform a 4-connected erosion on a woolz domain object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
-#include <stdlib.h>
+*/
 
+#include <stdlib.h>
 #include <Wlz.h>
 
 static int intvsh_intv(WlzInterval *inta,
@@ -35,17 +39,20 @@ static int line_intsh_ints(WlzIntervalLine *inta,
 static int line_int_int(WlzIntervalLine *itvl,
 			WlzIntervalLine *jtvl,
 			WlzInterval *jp);
-/************************************************************************
-*   Function   : WlzErosion4						*
-*   Date       : Mon Jul  7 11:52:32 1997				*
-*************************************************************************
-*   Synopsis   :4-connected erosion of a woolz domain object.2D objects	*
-*		only.					       		*
-*   Returns    :WlzObject *: the woolz object with NULL valuetable	*
-*   Parameters :WlzObject *obj: input 2D object.			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzErosion4    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        4-connected erosion of a woolz domain object.2D objects
+ only.This should not really be publicly accessible, but is present
+ for historical reasons. Therefore the prototype does not appear in
+ WlzProto.h. WlzErosion should be used to access 4-connected erosion.
+*
+* \return       Eroded object.
+* \param    obj	Input object.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzErosion4.c
+*/
 WlzObject *WlzErosion4(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)

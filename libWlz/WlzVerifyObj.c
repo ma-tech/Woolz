@@ -1,39 +1,46 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzVerifyObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for verifying Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzVerifyObj.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 17:15:06 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzError
+* \brief        Functions for verifying Woolz objects.
+*               
+* \todo         Extend verification beyond just 2D and 3D domain
+ objects.
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzVerifyObject					*
-*   Date       : Fri Nov 29 09:32:54 1996				*
-*************************************************************************
-*   Synopsis   :verify the object data, fix if possible and fix!=0	*
-*		currently only the domains of 2D and 3D domain objects	*
-*		can be verified. This must be extended to all objects.	*
-*   Returns    :WlzErrorNum: all errors are reported but the returned	*
-*		error will depend on whether the error could be fixed	*
-*		if fix == 0 then the error is not fixed and returned	*
-*   Parameters :WlzObject	*obj: object pointer to be checked	*
-*		int 		fix: if != 0 then attempt to fix the	*
-*			error.						*
-*   Global refs:None.							*
-************************************************************************/
-
-WlzErrorNum 
-WlzVerifyObject(WlzObject	*obj, 
-		int 		fix)
+/* function:     WlzVerifyObject    */
+/*! 
+* \ingroup      WlzError
+* \brief        Verify the object data, fix if possible if paramter
+<tt> fix != 0</tt>. Curretnly only the domains of 2D and 3D objects
+ can be verified.
+*
+* \return       Error detected. If fix != 0 then the error may be fixed.
+* \param    obj	Input object to be verified
+* \param    fix	If fix != 0 then attempt to fix the error detected.
+* \par      Source:
+*                WlzVerifyObj.c
+*/
+WlzErrorNum WlzVerifyObject(
+  WlzObject	*obj, 
+  int 		fix)
 {
   /* local variables */
   WlzObject	*tmpobj;
@@ -99,24 +106,23 @@ WlzVerifyObject(WlzObject	*obj,
   return( wlzerrno );
 }
 
-
-
-/************************************************************************
-*   Function   : WlzVerifyIntervalDomain				*
-*   Returns    :WlzErrorNum: one of WLZ_ERR_INTERVALDOMAIN_NULL, WLZ_ERR_LINE_DATA*
-*		WLZ_ERR_COLUMN_DATA, WLZ_ERR_NONE and errors from 	*
-*		WlzVerifyIntervalLine.					*
-*   Parameters :WlzDomain	dom: woolz domain union			*
-*		int 		fix: if != zero attempt to fix		*
-*   Date       : Mon Oct 14 15:47:58 1996				*
-*   Synopsis   :							*
-*	verify_intervaldomain - check domain parameters are valid, fix
-*	if possible for if "fix" > 0
-************************************************************************/
-
-WlzErrorNum 
-WlzVerifyIntervalDomain(WlzDomain	dom,
-			int 		fix)
+/* function:     WlzVerifyIntervalDomain    */
+/*! 
+* \ingroup      WlzError
+* \brief        Verify the input interval domain, check domain parameters,
+ intervals etc. Fix errors if requested.
+*
+* \return       Error detected in the woolz interval domain. Possible values
+ are <tt>WLZ_ERR_INTERVALDOMAIN_NULL, WLZ_ERR_LINE_DATA, WLZ_ERR_COLUMN_DATA,
+ WLZ_ERR_NONE </tt> and errors from WlzVerifyIntervalLine().
+* \param    dom	Input interval domain to be checked.
+* \param    fix	Attempt to fix errors if <tt>fix != 0</tt>
+* \par      Source:
+*                WlzVerifyObj.c
+*/
+WlzErrorNum  WlzVerifyIntervalDomain(
+  WlzDomain	dom,
+  int 		fix)
 {
   /* local variables */
   WlzIntervalLine 	*intvlines;
@@ -166,17 +172,18 @@ WlzVerifyIntervalDomain(WlzDomain	dom,
   return( wlzerrno );
 }
 
-/************************************************************************
-*   Function   : WlzVerifyIntervalLine					*
-*   Returns    :WlzErrorNum: one of WLZ_ERR_NONE, WLZ_ERR_INTERVALLINE_NULL,	*
-*		WLZ_ERR_INTERVAL_ADJACENT or errors returned by		*
-*		WlzVerifyInterval.					*
-*   Parameters :WlzIntervalLine *intvline: interval line structure	*
-*		int fix: if != 0 then attempt to fix.			*
-*   Date       : Mon Oct 14 15:49:46 1996				*
-*   Synopsis   :							*
-************************************************************************/
-
+/* function:     WlzVerifyIntervalLine    */
+/*! 
+* \ingroup      WlzError
+* \brief        Detect errors in an interval line structure, fix if
+ requested.
+*
+* \return       Detected error, one of <tt>WLZ_ERR_NONE, WLZ_ERR_INTERVALLINE_NULL, WLZ_ERR_INTERVAL_ADJACENT</tt> or errors returned by WlzVerifyInterval().
+* \param    intvline	Interval line to be checked
+* \param    fix	Fix error if parameter <tt>fix != 0</tt>
+* \par      Source:
+*                WlzVerifyObj.c
+*/
 WlzErrorNum 
 WlzVerifyIntervalLine(WlzIntervalLine *intvline,
 		      int fix)
@@ -227,19 +234,20 @@ WlzVerifyIntervalLine(WlzIntervalLine *intvline,
   return( wlzerrno );
 }
 
-/************************************************************************
-*   Function   : WlzVerifyInterval					*
-*   Returns    :WlzErrorNum: one of WLZ_ERR_INTERVAL_NULL, WLZ_ERR_INTERVAL_DATA,	*
-*		WLZ_ERR_INTERVAL_BOUND, WLZ_ERR_NONE			*
-*   Parameters :WlzInterval	*intv: interval pointer to test		*
-*		int fix: if != 0 then attempt to fix			*
-*   Date       : Mon Oct 14 15:50:54 1996				*
-*   Synopsis   :							*
-************************************************************************/
-
-WlzErrorNum
-WlzVerifyInterval(WlzInterval	*intv,
-		  int 		fix)
+/* function:     WlzVerifyInterval    */
+/*! 
+* \ingroup      WlzError
+* \brief        Check an interval structure, fix if requested.
+*
+* \return       Error detected in interval, one of <tt>WLZ_ERR_INTERVAL_NULL, WLZ_ERR_INTERVAL_DATA, WLZ_ERR_INTERVAL_BOUND, WLZ_ERR_NONE</tt>.
+* \param    intv	Interval structure to be tested.
+* \param    fix	Fix error if parameter <tt>fix != 0</tt>.
+* \par      Source:
+*                WlzVerifyObj.c
+*/
+WlzErrorNum WlzVerifyInterval(
+  WlzInterval	*intv,
+  int 		fix)
 {
   WlzErrorNum	wlzerrno=WLZ_ERR_NONE;
 

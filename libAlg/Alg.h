@@ -14,18 +14,10 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \defgroup     Alg
+* \ingroup     Alg
 * \brief        MRC HGU numerical algorithms library.
 * \todo         -
 * \bug          None known.
-*/
-
-/*!
-* \mainpage     
-* This library contains numerical algorithms which depend on no other
-* non system library apart from the allocation and fundamental types
-* library libAlc.
-* 
 */
 
 #ifndef __EXTENSIONS__

@@ -39,6 +39,7 @@ typedef enum
   WLZEFF_FORMAT_TIFF,
   WLZEFF_FORMAT_RAW,
   WLZEFF_FORMAT_AM,
+  WLZEFF_FORMAT_JPEG,
   WLZEFF_FORMAT_COUNT 			     /* Keep last: Number of formats */
 } WlzEffFormat;
 

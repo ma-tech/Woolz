@@ -1,74 +1,32 @@
-#pragma ident "MRC HGU %W%\t%G% bill@hgu.mrc.ac.uk"
-#define _WlzSeqPar_c
-/************************************************************************
-* Project:      Woolz						
-* Title:        WlzSkeleton.c			                      
-* Date:         March 1997	                                    
-* Author:       Jim Piper 1984 (modified by Bill Hill 1998)    	
-* Copyright:	1998 Medical Research Council, UK.		
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Version:	%I%						
-* Purpose:      Performs a proper interval-domain skeletonisation by 
-*		Hilditch's  method.				
-* 		This algorithm iterates a two-stage process with three
-*		interval domain objects as follows:		
-*	        Stage 1 - remove points according to algorithm:	
-*	  	  (i)   is current input object.		
-*		  (ii)  is current subset of (i) where a point deletion
-*			is possible.				
-*		  (iii) is the set of points deleted during this pass
-*	       	Stage 2 - tidy up for next pass:		
-*		  (a) check for termination - object (iii) empty
-*		  (b) construct new, thinned input object (i) by
-*		      subtracting object (iii) from old object (i).
-*		  (c) construct new object (ii) by taking dilation of
-*		      (iii) and intersecting with new (i).	
-* 		The method can be further improved by reducing the 
-*		number of points scanned in the first pass to edge
-*		points.  These are extracted as the difference between
-*		the original object and its erosion.		
-* 		Implement Hilditch's tests 1-6 by table look up (48
-*		words, 32 bits).				
-* 		Neighbour order is as follows:			
-*		  3   2*  1 	asterisk marks neighbours	
-*		  4*     0=8	where "removed this pass" (RTP)	
-*		  5   6   7	is relevant to algorithm	
-*		 Use neighbours 0 - 4  and RTP 2 to generate an address
-*		in range 0 - 47 (neighbour 2 has three effective
-*		values: not in object previously, in object now,
-*		removed this pass), bit values as follows:	
-*		  8      16/32*      4				
-*		  2        -         1				
-*		  -        -         -				
-*		or without 4 connected points:			
-*		  2      16/32*      1				
-*		  8        -         4				
-*		  -        -         -				
-*		 Use neighbours 5-7, RTP 4, and the smoothing criterion
-*		to generate a 5 bit bit-address, look at corresponding
-*		bit in addressed word in look-up table. If zero, retain
-*		point. Address values as follows:		
-*		  -        -         -				
-*		  8*       -         -	(smoothing criterion 16)
-*		  2        4         1				
-* 		Thus lookup table is 48 words long, 32 bit unsigned
-*		values.						
-* Notes:	Look-up table constructed by separate program	
-*		"newskelsetup.c".				
-*		We must intersect potDelObj and skObj on each iteration
-*		or alternatively explicitly look at each element of 
-*		potDelObj and see if a member of skObj otherwise we 
-*		may decide to delete points outside skObj and then muck
-*		up points within skObj.				
-* Maintenance:	Log changes below, with most recent at top of list.
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzSkeleton.c
+* \author       Jim Piper 1984 (modified by Bill Hill 1998)
+* \date         March 1997
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Performs a proper interval-domain skeletonisation by
+ Hilditch's  method.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 05-06-2000 bill Fixed enum assignment mismatch.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <stdio.h>
 #include <Wlz.h>
 
@@ -100,15 +58,146 @@ static WlzObject *WlzSkeleton2D(WlzObject *, int, WlzConnectType,
 		 		WlzErrorNum *);
 
 
-/************************************************************************
-* Function:	WlzSkeleton					
-* Returns:	WlzObject *:		Skeleton object, NULL on error.
-* Purpose:	Computes the skeleton of the given object.	
-* Global refs:	-						
-* Parameters:	WlzObject *srcObj:	Given woolz object.	
-*		int smoothpasses:
-*		WlzConnectType minCon: 	Minimum connectivity required.
-************************************************************************/
+
+/* function:     WlzSkeleton    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Computes the skeleton of the given object using Hilditch's
+ method. See detail.
+*
+* \return       Skeleton object, NULL on error.
+* \param    srcObj	Input object.
+* \param    smoothpasses	Number of smoothing passes to be applied.
+* \param    minCon	Minimum connectivity required.
+* \param    dstErr	Error return.
+* \par 	 Skeleton algorithm
+Performs a proper interval-domain skeletonisation by Hilditch's  method.
+<p>This algorithm iterates a two-stage process with three interval
+      domain objects 
+  as follows: </p>
+<p> Stage 1 - remove points according to algorithm: </p>
+  <ul>
+    <li> (i) is current input object.</li>
+    <li> (ii) is current subset of (i) where a point deletion is
+	    possible. </li>
+    <li> (iii) is the set of points deleted during this pass</li>
+  </ul>
+<p> Stage 2 - tidy up for next pass:</p>
+<ol>
+  <li>check for termination - object (iii) above empty</li>
+  <li> construct new, thinned input object (i) by subtracting object
+	(iii) from 
+    old object (i).</li>
+  <li> construct new object (ii) by taking dilation of (iii) and
+	intersecting 
+    with new (i). </li>
+</ol>
+<p>The method can be further improved by reducing the number of points
+      scanned 
+  in the first pass to edge points. These are extracted as the
+      difference between 
+  the original object and its erosion. Implement Hilditch's tests 1-6
+      by table 
+  look up (48 words, 32 bits). Neighbour order is as follows:</p>
+<table width="301" border="1" cellpadding="2">
+  <tr>
+    <td width="77"><table width="0%" border="0" cellpadding="2">
+        <tr>
+          <td>3</td>
+          <td>2*</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>4*</td>
+          <td>&nbsp;</td>
+          <td>0=8</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>6</td>
+          <td>7</td>
+        </tr>
+      </table></td>
+    <td width="184"><p>asterisk marks neighbourswhere &quot;removed
+	      this pass&quot; (RTP) 
+        is relevant to algorithm </p>
+      </td>
+  </tr>
+</table>
+<p>Use neighbours 0 - 4 and RTP 2 to generate an address in range 0 -
+      47 (neighbour 
+  2 has three effective values: not in object previously, in object
+      now, removed 
+  this pass), bit values as follows:</p>
+<table width="0%" border="0" cellpadding="2">
+  <tr>
+    <td>8</td>
+    <td>16/32*</td>
+    <td>4</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>-</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr>
+</table>
+<p>or without 4 connected points: </p>
+<table width="0%" border="0" cellpadding="2">
+  <tr>
+    <td>2</td>
+    <td>16/32*</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>-</td>
+    <td>4</td>
+  </tr>
+  <tr>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr>
+</table>
+<p>Use neighbours 5-7, RTP 4, and the smoothing criterion to generate
+      a 5 bit 
+  bit-address, look at corresponding bit in addressed word in look-up
+      table. If 
+  zero, retain point. Address values as follows: </p>
+<table width="0%" border="0" cellpadding="2">
+  <tr>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <td>8*</td>
+    <td>-</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>4</td>
+    <td>1</td>
+  </tr>
+</table>
+<p>Thus lookup table is 48 words long, 32 bit unsigned values. </p>
+* \par Notes
+Look-up table constructed by separate program	
+"newskelsetup.c".				
+We must intersect potDelObj and skObj on each iteration
+or alternatively explicitly look at each element of 
+potDelObj and see if a member of skObj otherwise we 
+may decide to delete points outside skObj and then muck
+up points within skObj.
+* \par      Source:
+*                WlzSkeleton.c
+*/
 WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
 			     WlzConnectType minCon,
 			     WlzErrorNum *dstErr)
@@ -149,18 +238,6 @@ WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
   return(skObj);
 }
 
-/************************************************************************
-* Function:	WlzSkeleton3D					
-* Returns:	WlzObject *:		Skeleton object, NULL on error.
-* Purpose:	Computes the skeleton of the given 3D domain object.
-* Global refs:	-						
-* Parameters:	WlzObject *srcObj:	Given woolz object.	
-*		int smoothpasses:
-*		WlzConnectType minCon: 	Minimum connectivity, which
-*					must be WLZ_6_CONNECTED,
-*					WLZ_18_CONNECTED or	
-*					WLZ_26_CONNECTED.	
-************************************************************************/
 static WlzObject *WlzSkeleton3D(WlzObject *srcObj, int smoothpasses,
 				WlzConnectType minCon,
 				WlzErrorNum *dstErr)
@@ -185,17 +262,6 @@ static WlzObject *WlzSkeleton3D(WlzObject *srcObj, int smoothpasses,
   return(skObj);
 }
 
-/************************************************************************
-* Function:	WlzSkeleton2D					
-* Returns:	WlzObject *:		Skeleton object, NULL on error.
-* Purpose:	Computes the skeleton of the given 2D domain object.
-* Global refs:	-						
-* Parameters:	WlzObject *srcObj:	Given woolz object.	
-*		int smoothpasses:
-*		WlzConnectType minCon: 	Minimum connectivity, which
-*					must be WLZ_8_CONNECTED or
-*					WLZ_4_CONNECTED.	
-************************************************************************/
 static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 			        WlzConnectType minCon,
 			        WlzErrorNum *dstErr)
@@ -404,18 +470,6 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
   return(skObj);
 }
 
-/************************************************************************
-* Function:	WlzSkStrip4					
-* Returns:	WlzErrorNum:		XXXX			
-* Purpose:	XXXX						
-* Global refs:	-						
-* Parameters:	WlzObject *skObj:	XXXX			
-*		WlzObject *potDelObj:
-*		WlzObject *delObj:
-*		WlzInterval *delItvBase:
-*		int *delArea:
-*		int smPass:
-************************************************************************/
 static WlzErrorNum WlzSkStrip4(WlzObject *skObj, WlzObject *potDelObj,
     			       WlzObject *delObj, WlzInterval *delItvBase,
 			       int itvSpace, int *delArea, int smPass)

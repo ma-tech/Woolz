@@ -2247,7 +2247,7 @@ static double	WlzBasisFnScalarMOS3DEvalFn(void *basisFn, double rad)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzFunction
 * \brief	Computes the extent (bounding box) of two arrays of
 *		2D vertices.
@@ -2306,22 +2306,19 @@ static void	WlzBasisFnVxExtent2D(WlzDBox2 *extentDB,
 
 
 
-/************************************************************************
-* Function:	WlzBasisFnVxExtent3D					*
-* Returns:	void							*
-* Purpose:	Computes the extent (bounding volume) of two vectors	*
-*		of verticies.						*
-* Global refs:	-							*
-* Parameters:	WlzDBox3 *extentDB:	Pointer for the extent of the	*
-*					verticies.			*
-*		WlzDVertex3 *vx0:	First vector of verticies.	*
-*		WlzDVertex3 *vx1:	Second vector of verticies.	*
-*		int nPts:		Number of verticies in each	*
-*					vector.				*
-*					                            	*
-*	added by J. Rao 27/08/2001	                            	*
-*					                            	*
-*************************************************************************/
+/* function:     WlzBasisFnVxExtent3D    */
+/*! 
+* \ingroup      WlzFunction
+* \brief        Computes the extent (bounding volume) of two vectors
+ of verticies.
+*
+* \param    extentDB	Pointer for the extent of the verticies.
+* \param    vx0	First vector of verticies.
+* \param    vx1	Second vector of verticies.
+* \param    nPts	Number of verticies in each vector.
+* \par      Source:
+*                WlzBasisFn.c
+*/
 static void	WlzBasisFnVxExtent3D(WlzDBox3 *extentDB,
 				   WlzDVertex3 *vx0, WlzDVertex3 *vx1,
 				   int nPts)
@@ -2386,7 +2383,7 @@ static void	WlzBasisFnVxExtent3D(WlzDBox3 *extentDB,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzFunction
 * \brief	Extracts the Gaussian coefficients from the given column
 * 		vector using the given extent and range for function.
@@ -2429,7 +2426,7 @@ static void	WlzBasisFnGauss2DCoef(WlzBasisFn *basisFn, double *vec, int forX)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzFunction
 * \brief	Extracts the multiquadric coefficients from the given
 *		column vector using the given extent and range for
@@ -2486,28 +2483,22 @@ static void	WlzBasisFnMQ2DCoexff(WlzBasisFn *basisFn,
   }
 }
 
-
-
-
-/************************************************************************
-* Function:	WlzBasisFnMQCoeff3D					*
-* Returns:	void							*
-* Purpose:	Extracts the multiquadric coefficients from the		*
-*		given column vector using the given extent and range	*
-*		for transformation to pixel space.			*
-* Global refs:	-							*
-* Parameters:	WlzBasisFnTransform *basis: Allocated basis function	*
-*					transform to be filled in.	*
-*					verticies.			*
-*		double *vec:		Given column vector.		*
-*		WlzDBox3 *extentDB:	Extent of the verticies.	*
-*		double range:		Range of the verticies.		*
-*		int forX:		True if the coefficients are	*
-*					for the x coordinate.		*
-*					   		                *
-*	Added by J. Rao 27/08/2001      		                *
-*					   		                *
-*************************************************************************/
+/* function:     WlzBasisFnMQCoeff3D    */
+/*! 
+* \ingroup      WlzFunction
+* \brief        Extracts the multiquadric coefficients from the
+ given column vector using the given extent and range
+ for transformation to pixel space.
+*
+* \param    basis	Allocated basis function transform to be filled in.
+* \param    vec	Given column vector.
+* \param    extentDB	Extent of the verticies.
+* \param    range	Range of the verticies.
+* \param    forX	True if the coefficients are for the x coordinate.
+* \param    forY	True if the coefficients are for the y coordinate.
+* \par      Source:
+*                WlzBasisFn.c
+*/
 static void	WlzBasisFnMQCoeff3D(WlzBasisFn *basis,
 				  double *vec, WlzDBox3 *extentDB,
 				  double range, int forX, int forY)
@@ -2591,7 +2582,7 @@ static void	WlzBasisFnMQCoeff3D(WlzBasisFn *basis,
 
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzFunction
 * \brief	Extracts the thin plate spline coefficients from the given
 *		column vector using the given extent and range for

@@ -472,7 +472,7 @@ WlzErrorNum 	WlzGMFilterGeomLPLM(WlzGMModel *model, double lambda, double mu,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzGeoModel
 * \brief	Filters the geometry of the verticies in a 2D model using
 *		the given input and output buffers for the vertex geometries.
@@ -512,7 +512,7 @@ static void	WlzGMFilterGeomLPL2D(WlzGMModel *model,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzGeoModel
 * \brief	Filters the geometry of the verticies in a 3D model using
 *		the given input and output buffers for the vertex geometries.

@@ -1,22 +1,47 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzScalarArithmeticOp.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions which apply scalar arithmetic operations
-*		to Woolz domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzScalarArithmeticOp.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzArithmetic
+* \brief        Functions which apply scalar arithmetic
+ operations to Woolz domain objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
+
+/* function:     WlzScalarBinaryOp2    */
+/*! 
+* \ingroup      WlzArithmetic
+* \brief        Apply a binary operation (add subtract etc) to
+ each pixel value in the given object. The operand value is in
+ <tt>pval</tt>.
+*
+* \return       Object with transformed grey-values.
+* \param    o1	Input object
+* \param    pval	Pixel value for binary operation.
+* \param    op	Opertor
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzScalarArithmeticOp.c
+*/
 WlzObject *WlzScalarBinaryOp2(
   WlzObject	*o1,
   WlzPixelV	pval,
@@ -217,6 +242,19 @@ WlzObject *WlzScalarBinaryOp2(
   return obj;
 }
 
+
+/* function:     WlzScalarAdd    */
+/*! 
+* \ingroup      WlzArithmetic
+* \brief        Add a value to each pixel of an object.
+*
+* \return       Object with value added to each pixel.
+* \param    o1	Input object
+* \param    pval	Value to be added.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzScalarArithmeticOp.c
+*/
 WlzObject *WlzScalarAdd(
   WlzObject	*o1,
   WlzPixelV	pval,
@@ -224,6 +262,18 @@ WlzObject *WlzScalarAdd(
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_ADD, dstErr);
 }
+/* function:     WlzScalarSubtract    */
+/*! 
+* \ingroup      WlzArithmetic
+* \brief        Subtract a value from each pixel of an object.
+*
+* \return       Object with value subtacted from each pixel.
+* \param    o1	Input object
+* \param    pval	Value to be subtracted.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzScalarArithmeticOp.c
+*/
 WlzObject *WlzScalarSubtract(
   WlzObject	*o1,
   WlzPixelV	pval,
@@ -231,6 +281,18 @@ WlzObject *WlzScalarSubtract(
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_SUBTRACT, dstErr);
 }
+/* function:     WlzScalarMultiply    */
+/*! 
+* \ingroup      WlzArithmetic
+* \brief        Multiply each pixel of an object.
+*
+* \return       Object with multiplied pixel values.
+* \param    o1	Input object
+* \param    pval	Multiplication factor.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzScalarArithmeticOp.c
+*/
 WlzObject *WlzScalarMultiply(
   WlzObject	*o1,
   WlzPixelV	pval,
@@ -238,6 +300,18 @@ WlzObject *WlzScalarMultiply(
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_MULTIPLY, dstErr);
 }
+/* function:     WlzScalarDivide    */
+/*! 
+* \ingroup      WlzArithmetic
+* \brief        Divide each pixel of an object.
+*
+* \return       Object with each pixel divided.
+* \param    o1	Input object
+* \param    pval	Division value.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzScalarArithmeticOp.c
+*/
 WlzObject *WlzScalarDivide(
   WlzObject	*o1,
   WlzPixelV	pval,

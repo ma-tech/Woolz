@@ -121,6 +121,7 @@ WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
       errNum = WLZ_ERR_VALUES_TYPE;
       break;
   }
+
   if(dstErr)
   {
     *dstErr = errNum;
@@ -177,6 +178,7 @@ WlzGreyType	WlzGreyTableTypeToGreyType(WlzObjectType gTabType,
       errNum = WLZ_ERR_GREY_TYPE;
       break;
   }
+
   if(dstErr)
   {
     *dstErr = errNum;
@@ -227,6 +229,7 @@ WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
   }
+
   if(dstErr)
   {
     *dstErr = errNum;
@@ -250,8 +253,8 @@ WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
 WlzGreyType	WlzGreyTypeFromObj(WlzObject *obj, WlzErrorNum *dstErr)
 {
   int		pCnt,
-  		pIdx,
-		firstDomFlg;
+    pIdx,
+    firstDomFlg;
   WlzDomain	dom2D;
   WlzValues	val2D;
   WlzGreyType	gType = WLZ_GREY_ERROR;
@@ -273,46 +276,53 @@ WlzGreyType	WlzGreyTypeFromObj(WlzObject *obj, WlzErrorNum *dstErr)
   {
     switch(obj->type)
     {
-      case WLZ_2D_DOMAINOBJ:
-	gType = WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum);
-	break;
-      case WLZ_3D_DOMAINOBJ:
-	pIdx = 1;
-	firstDomFlg = 1;
-	pCnt = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
-	while((errNum == WLZ_ERR_NONE) && (pIdx < pCnt))
+    case WLZ_2D_DOMAINOBJ:
+      gType = WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum);
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      pIdx = 1;
+      firstDomFlg = 1;
+      pCnt = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
+      while((errNum == WLZ_ERR_NONE) && (pIdx < pCnt))
+      {
+	if(((dom2D = *(obj->domain.p->domains + pIdx)).core != NULL) &&
+	   (dom2D.core->type != WLZ_EMPTY_DOMAIN))
 	{
-	  if(((dom2D = *(obj->domain.p->domains + pIdx)).core != NULL) &&
-	     (dom2D.core->type != WLZ_EMPTY_DOMAIN))
+	  if(((val2D = *(obj->values.vox->values + pIdx)).core == NULL) ||
+	     (val2D.core->type == WLZ_EMPTY_VALUES))
 	  {
-	    if(((val2D = *(obj->values.vox->values + pIdx)).core == NULL) ||
-	       (val2D.core->type == WLZ_EMPTY_VALUES))
+	    errNum = WLZ_ERR_VALUES_NULL;
+	  }
+	  else
+	  {
+	    if(firstDomFlg)
 	    {
-	      errNum = WLZ_ERR_VALUES_NULL;
+	      gType = WlzGreyTableTypeToGreyType(val2D.core->type, &errNum);
 	    }
 	    else
 	    {
-	      if(firstDomFlg)
+	      if(gType != WlzGreyTableTypeToGreyType(val2D.core->type,
+						     &errNum))
 	      {
-	        gType = WlzGreyTableTypeToGreyType(val2D.core->type, &errNum);
-	      }
-	      else
-	      {
-	        if(gType != WlzGreyTableTypeToGreyType(val2D.core->type,
-						       &errNum))
-		{
-		  errNum = WLZ_ERR_VALUES_DATA;
-		}
+		errNum = WLZ_ERR_VALUES_DATA;
 	      }
 	    }
 	  }
-	  ++pIdx;
 	}
-	break;
-      default:
-	errNum = WLZ_ERR_OBJECT_TYPE;
-	break;
+	++pIdx;
+      }
+      break;
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
+  }
+
+  if(dstErr)
+  {
+    *dstErr = errNum;
   }
   return(gType);
 }
@@ -349,6 +359,7 @@ WlzDVertex3	WlzVozelSz(WlzObject *obj, WlzErrorNum *dstErr)
     sz.vtY = obj->domain.p->voxel_size[1];
     sz.vtZ = obj->domain.p->voxel_size[2];
   }
+
   if(dstErr)
   {
     *dstErr = errNum;

@@ -1,21 +1,31 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzLabel.c
-* Date:         March 1999
-* Author:       Jim Piper
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Segment the given Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzLabel.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Aug 19 17:47:51 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBinaryOps
+* \brief        Segment a given woolz object into disconnected regions.
+*               
+* \todo         Make object array grow as required when requested, e.g.
+ for maxNumObjs=0.
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -80,37 +90,35 @@ extern WlzErrorNum	WlzLabel3d	(WlzObject	*obj,
 					 int		ignlns,
 					 WlzConnectType connect);
 
-/************************************************************************
-*   Function   : WlzLabel						*
-*   Date       : Thu Oct 24 13:58:26 1996				*
-*************************************************************************
-*   Synopsis   :segment a domain into connected parts. The connectivity	*
-*		can be 8-connected or 4-connected. Note this version	*
-*		requires that there is sufficient space in the objects	*
-*		array and can not reallocate the space. This should be	*
-*		changed in future so that the array is extended as	*
-*		required.						*
-*   Returns    :WlzErrorNum: WLZ_ERR_NONE on success, possible errors:	*
-*		WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL,		*
-*		WLZ_ERR_INT_DATA,			 		*
-*		WLZ_ERR_DOMAIN_TYPE, WLZ_ERR_OBJECT_TYPE,		*
-*		WLZ_ERR_MEM_ALLOC.  					*
-*   Parameters :WlzObject	*obj: object to be segmented		*
-*		int	*mm: number of objects return			*
-*		WlzObject ***dstArrayObjs: object list array for object	*
-*			pointer return					*
-*		int	maxNumObj: maximum number of objects in array	*
-*		int	ignln: ignore objects with num_lines <= ignln	*
-*		WlzConnectType connect: connectivity type 4 or 8	*
-*   Global refs:None.							*
-************************************************************************/
-
-WlzErrorNum WlzLabel(WlzObject	*obj,
-		     int	*mm,
-		     WlzObject	***dstArrayObjs,
-		     int	maxNumObjs,
-		     int	ignlns,
-		     WlzConnectType connect)
+/* function:     WlzLabel    */
+/*! 
+* \ingroup      WlzBinaryOps
+* \brief        Segment a domain into connected parts. Connectivity
+ is defined by the connect parameter and can be 4- or 8-connected for
+ 2D objects and 6-, 18- or 26-connected for 3D objects. Note this
+ version requires that there is sufficient space in the objects array
+ defined by maxNumObjs and this is not extended. This should be changed
+ in future so that the array is extended as required.
+*
+* \return       Error number.
+* \param    obj	input object to be segmented
+* \param    mm	number of objects return
+* \param    dstArrayObjs	object array return, allocated in the
+ procedure.
+* \param    maxNumObjs	maximum number of object to return (determines
+ the size of the array)
+* \param    ignlns	ignore objects with num lines <= ignlns
+* \param    connect	connectivity to determine connected regions
+* \par      Source:
+*                WlzLabel.c
+*/
+WlzErrorNum WlzLabel(
+  WlzObject	*obj,
+  int		*mm,
+  WlzObject	***dstArrayObjs,
+  int		maxNumObjs,
+  int		ignlns,
+  WlzConnectType connect)
 { 
   WlzIntervalDomain 	*jdp;
   WlzRagRValues 	*jvp;

@@ -41,7 +41,8 @@ CSOURCES		= \
 			WlzExtFFVff.c \
 			WlzExtFFVtk.c \
 			WlzExtFFTiff.c \
-			WlzExtFFBibUtils.c
+			WlzExtFFBibUtils.c \
+			WlzExtFFJpeg.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -73,7 +74,7 @@ DEPENDDIRS		= \
 INCDIRS			= \
 			  $(DEPENDDIRS) \
 			  $(HGU_INC_DIR) \
-			  $(OS_ROOTDIR)/include 
+			  $(SYSINC) 
 
 # List of library search paths (modify as required).
 LIBDIRS			= \

@@ -58,13 +58,16 @@ static WlzPixelP 		WlzGetSectionConvertGreyType(
 * 		the bounding box of the original but in the viewing direction.
 * \param	obj			Given 3D object.
 * \param	view			The given view structure.
+* \param	interp			Interpolation type - nearest neighbour
+ or linear
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-WlzObject 	*WlzGetSectionFromObject(WlzObject *obj,
-					 WlzThreeDViewStruct *view,
-					 WlzInterpolationType	interp,
-					 WlzErrorNum *dstErr)
+WlzObject 	*WlzGetSectionFromObject(
+  WlzObject 		*obj,
+  WlzThreeDViewStruct 	*view,
+  WlzInterpolationType	interp,
+  WlzErrorNum 		*dstErr)
 {
   WlzObject	*newObj = NULL;
   WlzDomain	dom;
@@ -127,6 +130,8 @@ WlzObject 	*WlzGetSectionFromObject(WlzObject *obj,
 *		WlzGetSectionFromObject.
 * \param	obj			Given 3D object.
 * \param	view			The given view structure.
+* \param	interp			Interpolation type - nearest neighbour
+ or linear
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
@@ -553,6 +558,10 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 	      *(gwsp.u_grintptr.dbp) = *(pixptr.p.dbp);
 	      gwsp.u_grintptr.dbp++;
 	      break;
+	    case WLZ_GREY_RGBA:
+	      *(gwsp.u_grintptr.rgbp) = *(pixptr.p.rgbp);
+	      gwsp.u_grintptr.rgbp++;
+	      break;
 	    default:
 	      break;
 	    }
@@ -915,6 +924,10 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 	      *(gwsp.u_grintptr.dbp) = *(pixptr.p.dbp);
 	      gwsp.u_grintptr.dbp++;
 	      break;
+	    case WLZ_GREY_RGBA:
+	      *(gwsp.u_grintptr.rgbp) = *(pixptr.p.rgbp);
+	      gwsp.u_grintptr.rgbp++;
+	      break;
 	    default:
 	      break;
 	    }
@@ -963,105 +976,149 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 * \param	pixptr			Given pixel.
 * \param	grey_type		Required grey type.
 */
+static WlzGreyV GetSectionStaticGreyVal;
 static WlzPixelP WlzGetSectionConvertGreyType(
   WlzPixelP	pixptr,
   WlzGreyType	grey_type)
 {
-  WlzGreyV	val;
+  /*WlzGreyV	val;*/
   WlzPixelP	pix;
+  UINT		uval;
 
   pix.type = grey_type;
-  pix.p.inp = &(val.inv);
+  pix.p.inp = &(GetSectionStaticGreyVal.inv);
 
   switch( pixptr.type ){
   case WLZ_GREY_INT:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.inv = *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.shv = *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.inp);
+      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.flv = *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.dbv = *(pixptr.p.inp);
+      return pix;
+    case WLZ_GREY_RGBA:
+      uval = WLZ_CLAMP(*(pixptr.p.inp), 0, 255);
+      GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
     }
   case WLZ_GREY_SHORT:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.shp);
+      GetSectionStaticGreyVal.inv = *(pixptr.p.shp);
       return pix;
     case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.shp);
+      GetSectionStaticGreyVal.shv = *(pixptr.p.shp);
       return pix;
     case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.shp);
+      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.shp);
       return pix;
     case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.shp);
+      GetSectionStaticGreyVal.flv = *(pixptr.p.shp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.shp);
+      GetSectionStaticGreyVal.dbv = *(pixptr.p.shp);
+      return pix;
+    case WLZ_GREY_RGBA:
+      uval = WLZ_CLAMP(*(pixptr.p.shp), 0, 255);
+      GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
     }
   case WLZ_GREY_UBYTE:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.inv = *(pixptr.p.ubp);
       return pix;
     case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.shv = *(pixptr.p.ubp);
       return pix;
     case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.ubp);
       return pix;
     case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.flv = *(pixptr.p.ubp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.dbv = *(pixptr.p.ubp);
+      return pix;
+    case WLZ_GREY_RGBA:
+      uval = *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
     }
   case WLZ_GREY_FLOAT:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.inv = *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.shv = *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.flp);
+      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.flv = *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.dbv = *(pixptr.p.flp);
+      return pix;
+    case WLZ_GREY_RGBA:
+      uval = WLZ_CLAMP(*(pixptr.p.flp), 0, 255);
+      GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
     }
   case WLZ_GREY_DOUBLE:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      val.inv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.inv = *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_SHORT:
-      val.shv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.shv = *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_UBYTE:
-      val.ubv = (UBYTE) *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_FLOAT:
-      val.flv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.flv = *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      val.dbv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.dbv = *(pixptr.p.dbp);
+      return pix;
+    case WLZ_GREY_RGBA:
+      uval = WLZ_CLAMP(*(pixptr.p.dbp), 0, 255);
+      GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
+      return pix;
+    }
+  case WLZ_GREY_RGBA:
+    uval = WLZ_RGBA_MODULUS(*(pixptr.p.rgbp));
+    switch( grey_type ){
+    case WLZ_GREY_INT:
+      GetSectionStaticGreyVal.inv = uval;
+      return pix;
+    case WLZ_GREY_SHORT:
+      GetSectionStaticGreyVal.shv = uval;
+      return pix;
+    case WLZ_GREY_UBYTE:
+      GetSectionStaticGreyVal.ubv = (uval/sqrt(3.0));
+      return pix;
+    case WLZ_GREY_FLOAT:
+      GetSectionStaticGreyVal.flv = uval;
+      return pix;
+    case WLZ_GREY_DOUBLE:
+      GetSectionStaticGreyVal.dbv = uval;
+      return pix;
+    case WLZ_GREY_RGBA:
+      GetSectionStaticGreyVal.rgbv = *(pixptr.p.rgbp);
       return pix;
     }
   }

@@ -1,23 +1,45 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzVolume.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the volume of a Woolz domain object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzVolume.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 17:36:44 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Compute volume of a Woolz domain object.
+*               
+* \todo         Should extend to include voxel size/ affine transform
+ if requested.
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 03-02-2k bill Fix null pointer reference bug in WlzVolume().
-************************************************************************/
+*/
 #include <Wlz.h>
 
- 
-int		WlzVolume(WlzObject *obj, WlzErrorNum *wlzErr)
+
+/* function:     WlzVolume    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Calculate the volume of the input 3D domain object.
+*
+* \return       Volume of input 3D object, -1 on error.
+* \param    obj	Input object pointer.
+* \param    wlzErr	Error return.
+* \par      Source:
+*                WlzVolume.c
+*/
+int WlzVolume(
+  WlzObject 	*obj,
+  WlzErrorNum 	*wlzErr)
 {
   WlzObject		*tmpobj;
   WlzPlaneDomain	*pldom;
@@ -59,6 +81,10 @@ int		WlzVolume(WlzObject *obj, WlzErrorNum *wlzErr)
     break;
 
   case WLZ_EMPTY_OBJ:
+    if(*wlzErr)
+    {
+      *wlzErr = WLZ_ERR_NONE;
+    }
     return 0;
 
   default:

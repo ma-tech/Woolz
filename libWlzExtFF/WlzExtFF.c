@@ -46,6 +46,8 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "tif", WLZEFF_FORMAT_TIFF,
 			 "raw", WLZEFF_FORMAT_RAW,
 			 "am",  WLZEFF_FORMAT_AM,
+			 "jpg", WLZEFF_FORMAT_JPEG,
+			 "jpeg", WLZEFF_FORMAT_JPEG,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -79,6 +81,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 			 "Tiff", WLZEFF_FORMAT_TIFF,
 			 "Raw", WLZEFF_FORMAT_RAW,
 			 "Amira Lattice", WLZEFF_FORMAT_AM,
+			 "JPEG", WLZEFF_FORMAT_JPEG,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -128,7 +131,9 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*extRawStr = "raw",
 		*fmtRawStr = "Raw",
 		*extAmStr  = "am",
-		*fmtAmStr  = "Amira Lattice";
+                *fmtAmStr  = "Amira Lattice",
+		*extJpegStr  = "jpg",
+		*fmtJpegStr  = "JPEG";
 
   switch(fileFmt)
   {
@@ -172,6 +177,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
       fmtStr = fmtIPLStr;
       extStr = extIPLStr;
       break;
+    case WLZEFF_FORMAT_TIFF:
+      fmtStr = fmtTiffStr;
+      extStr = extTiffStr;
+      break;
     case WLZEFF_FORMAT_RAW:
       fmtStr = fmtRawStr;
       extStr = extRawStr;
@@ -179,6 +188,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_AM:
       fmtStr = fmtAmStr;
       extStr = extAmStr;
+      break;
+    case WLZEFF_FORMAT_JPEG:
+      fmtStr = fmtJpegStr;
+      extStr = extJpegStr;
       break;
   }
   if(dstExtStr)
@@ -222,7 +235,7 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
     if((fFmt != WLZEFF_FORMAT_ICS) && (fFmt != WLZEFF_FORMAT_PNM) &&
        (fFmt != WLZEFF_FORMAT_BMP) && (fFmt != WLZEFF_FORMAT_TIFF))
     {
-      if((fP = fopen(fName, "r")) == NULL)
+      if((fP = fopen(fName, "rb")) == NULL)
       {
 	errNum = WLZ_ERR_READ_EOF;
       }
@@ -272,6 +285,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_AM:
         obj = WlzEffReadObjAm(fP, split, &errNum);
 	break;
+      case WLZEFF_FORMAT_JPEG:
+        obj = WlzEffReadObjJpeg(fP, &errNum);
+	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
 	break;
@@ -315,7 +331,7 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
     if((fFmt != WLZEFF_FORMAT_ICS) && (fFmt != WLZEFF_FORMAT_PNM) &&
        (fFmt != WLZEFF_FORMAT_BMP))
     {
-      if((fP = fopen(fName, "w")) == NULL)
+      if((fP = fopen(fName, "wb")) == NULL)
       {
 	errNum = WLZ_ERR_WRITE_EOF;
       }
@@ -365,6 +381,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
       case WLZEFF_FORMAT_AM:
         errNum = WlzEffWriteObjAm(fP, obj);
 	break;
+      case WLZEFF_FORMAT_JPEG:
+        errNum = WlzEffWriteObjJpeg(fP, obj, (char *) fName);
+	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
 	break;
@@ -375,4 +394,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
     fclose(fP);
   }
   return(errNum);
+}
+
+int WlzEffNumberOfFormats(void)
+{
+  return WLZEFF_FORMAT_COUNT - 1;
 }

@@ -1,0 +1,71 @@
+/*!
+\ingroup binwlz
+\defgroup wlzclipobjtobox WlzClipObjToBox
+\par Name
+WlzClipObjToBox -  Clips the given object so that it lies
+       within the given box.
+\par Synopsis
+\verbatim
+WlzClipObjToBox [-h] [ -o<output object file>]
+    [ -x<x min>,<x max>]  [  -y<y  min>,<y  max>]
+    [  -z<z min>,<z max>]
+    [<input object file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>Column box limits.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Line box limits.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>Plane box limits</td>
+  </tr>
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation (not enabled).</td>
+  </tr>
+</table>
+By  default  the  input  object  is read from the standard
+       input and the output object is  written  to  the  standard
+       output.   Box limit values are comma separated and default
+       to the bounding box of  the  input  objects  domain.   The
+       default  grey  value  type is the same as the input object
+       grey value type.
+\par Description
+Clips the a WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ object so
+       that it lies within the given box.
+\par Examples
+ A simple example of using WlzClipObjToBox to clip an object
+ read from the standard input to a 0-128 cube.
+\verbatim
+WlzClipObjToBox -x0,128 -y0,128 -z0,128 <infile.wlz >outfile.wlz
+\endverbatim
+An example which used the default values so that only the row
+and column lower bounds are clipped.
+\verbatim
+WlzClipObjToBox -x0, -y0, -o outfile.wlz infile.wlz
+\endverbatim  
+
+\par See Also
+<a href="../html_libCore/group__wlzvaluesutils.html"> WlzCutObjToBox(3)</a>,
+\ref wlzcutobjtobox "WlzCutObjToBox(1)",
+<a href="../html_libCore/group__wlzvaluesutils.html">WlzClipObjToBox(3)</a>,
+\ref wlzfacts "WlzFacts(1)".
+
+\par Bugs
+Still to be found.
+*/
+

@@ -41,7 +41,7 @@ WlzObjectType	WlzDomainType(WlzDomain dom)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzDomainOps
 * \brief	Sets bits in the given byte packed bit line which are within
 * 		the given interval.

@@ -39,8 +39,4 @@ extern "C"
 }
 #endif
 
-/*!
-* \defgroup    Wlz	Wlz
-*/
-
 #endif	/* !WLZ_H Don't put anything after this line */

@@ -24,7 +24,7 @@
 #include <Wlz.h>
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Sets the WlzGreyValueWSpace grey value and pointer
 *               to the background value.
@@ -59,11 +59,15 @@ static void	WlzGreyValueSetBkdP(WlzGreyV *gVP, WlzGreyP *gPP,
       (*gVP).dbv = val.dbv;
       (*(gPP)).dbp = &((*gVP).dbv);
       break;
+    case WLZ_GREY_RGBA:
+      (*gVP).rgbv = val.rgbv;
+      (*(gPP)).rgbp = &((*gVP).rgbv);
+      break;
   }
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Sets the WlzGreyValueWSpace grey values and pointers
 *               to the background value.
@@ -114,11 +118,18 @@ static void	WlzGreyValueSetBkdPN(WlzGreyV *gVP, WlzGreyP *gPP,
 	(*(gPP++)).dbp = &((*gVP++).dbv);
       }
       break;
+    case WLZ_GREY_RGBA:
+      while(count-- > 0)
+      {
+        *gVP = val;
+	(*(gPP++)).rgbp = &((*gVP++).rgbv);
+      }
+      break;
   }
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Sets the WlzGreyValueWSpace grey values and pointers
 *               to the value obtained using the given base pointer and
@@ -162,11 +173,16 @@ static void	WlzGreyValueSetGreyP(WlzGreyV *gVP, WlzGreyP *gPP,
       *(gPP) = gP;
       (*(gVP)).dbv = *(gP.dbp);
       break;
+    case WLZ_GREY_RGBA:
+      gP.rgbp = baseGVP.rgbp + offset;
+      *(gPP) = gP;
+      (*(gVP)).rgbv = *(gP.rgbp);
+      break;
   }
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Knowing that the given point is within the value table
 *               computes the base pointer and offset for the point.
@@ -221,7 +237,7 @@ static void	WlzGreyValueComputeGreyP2D(WlzGreyP *baseGVP, int *offset,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets a single grey value/pointer for the given point
 *               from the 2D values and domain in the work space.
@@ -288,7 +304,7 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets a single grey value/pointer for the given point
 *               from the 3D values and domain in the work space.
@@ -340,7 +356,7 @@ static void	WlzGreyValueGet3D1(WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets four grey values/pointers for the given point
 *               from the 2D values and domain in the work space.
@@ -423,7 +439,7 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets eight grey value/pointers for the given point
 *               from the 3D values and domain in the work space.
@@ -520,7 +536,7 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets four or eight grey value/pointers for the given
 *               point from the 2D or 3D values and domain in the work
@@ -594,7 +610,7 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Free's the given grey value work space created by
 * 		WlzGreyValueMakeWSp().
@@ -710,6 +726,7 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 	      case WLZ_GREY_UBYTE:
 	      case WLZ_GREY_FLOAT:
 	      case WLZ_GREY_DOUBLE:
+	      case WLZ_GREY_RGBA:
 		break;
 	      default:
 		errNum = WLZ_ERR_GREY_TYPE;
@@ -904,7 +921,7 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets a single grey value/pointer for the given point
 *		from the object with which the given work space was
@@ -955,7 +972,7 @@ void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzAccess
 * \brief	Gets the four/eight connected grey values/pointers for
 *               the given point which lie at:
@@ -1063,6 +1080,9 @@ int		WlzGreyValueGetI(WlzGreyValueWSpace *gVWSp,
       case WLZ_GREY_DOUBLE:
         val = WLZ_NINT(gVWSp->gVal[0].dbv);
 	break;
+      case WLZ_GREY_RGBA:
+        val = gVWSp->gVal[0].rgbv;
+	break;
     }
   }
   return(val);
@@ -1103,22 +1123,26 @@ double		WlzGreyValueGetD(WlzGreyValueWSpace *gVWSp,
       case WLZ_GREY_DOUBLE:
         val = gVWSp->gVal[0].dbv;
 	break;
+      case WLZ_GREY_RGBA:
+        val = gVWSp->gVal[0].rgbv;
+	break;
     }
   }
   return(val);
 }
 
-/*!
-* \Function:	WlzGreyValueGet3D1					
-* \Returns:	void						
-* \Purpose:	Gets a single grey value/pointer for the given point
+/* function:     WlzGreyValueGetDir    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Gets a single grey value/pointer for the given point
 *		from the 3D values and domain in the work space.
-* \Global refs:	-				
-* \Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.
-*		int plane:		Plane coordinate of point.
-*		int line:		Line coordinate of point.
-*		int kol:		Column coordinate of point.
-*		JRao make it                              
+*
+* \param    gVWSp	grey-value work space
+* \param    plane	plane coordinate
+* \param    line	line coordinate
+* \param    kol	column coordinate
+* \par      Source:
+*                WlzGreyValue.c
 */
 void	WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
 				   int plane, int line, int kol)

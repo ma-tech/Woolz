@@ -1712,7 +1712,7 @@ WlzErrorNum Wlz3DViewGetMinvals(
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the parameters of the equation of the plane
 *		defined by the given 3D view.
 *

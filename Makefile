@@ -162,6 +162,7 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 
 # Target to clean up after making (should not need modifying).
 clean:			
+			-$(RM)  -r doxygen.tag  html_libCore html_binCore *~
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif

@@ -1,4 +1,13 @@
 #pragma ident "MRC HGU $Id$"
+
+/*!
+* \defgroup	WlzExtFF   libWlzExt
+* \brief Types data structures and functions for reading and writing
+ external file formats to and from Woolz objects. See the
+* \ref libwlzextpage "libWlz" for more detail. All procedures are
+ detailed under different module headings.
+*/
+
 /*!
 * \file         WlzExtFF.dox
 * \author       Bill Hill
@@ -13,14 +22,18 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Documentation for the Woolz external file format library.
 * \todo         -
 * \bug          None known.
 */
 
 /*!
- * \defgroup	WlzExtFF
- * Types data structures and functions for reading and writing external
- * file formats to and from Woolz objects.
- */
-
+* \page libwlzextpage Woolz External Format Conversion Library
+* \section intro Introduction
+The woolz image processing libary uses its own special internal format,
+ not widely used elsewhere. This library provides conversion functions to
+ relevant alternative formats which and assocaited API so that they can be
+ read and written directly from woolz code.
+\section structure Woolz Structures
+\section usage Example Usage
+\section standards Coding Conventions
+*/

@@ -1,32 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzUnion3d.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the set union of 3D Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
-#include <stdlib.h>
+/*!
+* \file         WlzUnion3d.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Aug 19 08:23:11 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBinaryOps
+* \brief        Compute the set union of 3D woolz objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
 
+#include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzUnion3d						*
-*   Date       : Mon Oct 21 17:06:15 1996				*
-*************************************************************************
-*   Synopsis   :Private routine for use by WlzUnionN			*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
+/* function:     WlzUnion3d    */
+/*! 
+* \ingroup      WlzBinaryOps
+* \brief        Private routine used by WlzUnionN() for 3D objects.
+*
+* \return       Union object pointer.
+* \param    n	number of input objects
+* \param    objs	object array
+* \param    uvt	grey-table copy flag
+* \param    dstErr	error return
+* \par      Source:
+*                WlzUnion3d.c
+*/
 WlzObject *WlzUnion3d(int	n,
 		      WlzObject **objs,
 		      int	uvt,

@@ -31,7 +31,7 @@ static const char wlzWinFnNameBlackman[]  = "blackman",
 		wlzWinFnNameUnspecified[] = "unspecified";
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesFilters
 * \brief	Applies the specified window function to the given Woolz
 *		object.
@@ -298,6 +298,7 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	      }
 	    }
 	    break;
+	  case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 	  default:
 	    break;
 	}

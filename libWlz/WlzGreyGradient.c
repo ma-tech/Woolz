@@ -53,7 +53,7 @@ static void			WlzBufMagD3(
 				  int cnt);
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzValuesFilters
 * \brief	Computes the magnitudes of the 3 sets of components
 *               given in the double vectors and returns the magnitudes
@@ -218,6 +218,7 @@ static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
     }
     else
     {
+      /* RGBA to be done RAB */
       errNum = WLZ_ERR_GREY_TYPE;
     }
   }

@@ -1,23 +1,49 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzFillBlankPlanes.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Fills blank planes of a 3D object. Originaly for
-*		MAPaint to allow painting of intermediate planes.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
-#include <stdlib.h>
+/*!
+* \file         WlzFillBlankPlanes.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 14:32:11 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Fills blank planes of a 3D object. Originally for
+ MAPaint to allow painting of intermediate planes.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
 
+#include <stdlib.h>
 #include <Wlz.h>
 
+
+/* function:     WlzFillBlankPlanes    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Fill in blank planes of a 3D object.
+* \par Detail
+ A Woolz 3D object can be
+ generated with NULL domains for any plane value (except first and last).
+ This is equivalent to empty planes (empty domains should be used here).
+ This procedure generates new domains to of size determined by the 3D bounding
+ box and will add grey-tables if required. This was primarily of use if it is required to generate a sparse object, e.g. of selected key-sections, which needs to be painted.
+*
+* \return       Woolz error.
+* \param    obj	Input 3D woolz domain object.
+* \param    min_domain	Minimum domain value.
+* \par      Source:
+*                WlzFillBlankPlanes.c
+*/
 WlzErrorNum WlzFillBlankPlanes(
   WlzObject	*obj,
   int		min_domain)

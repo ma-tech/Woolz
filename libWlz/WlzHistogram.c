@@ -136,7 +136,7 @@ static WlzErrorNum WlzHistogramCheckHistObj(WlzObject *histObj)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzHistogram
 * \brief	Adds the bins of the second histogram domain to those
 *               of the first. Both histogram domains are assumed to
@@ -200,6 +200,9 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
       ivCount = iWSp.rgtpos - iWSp.lftpos + 1;
       switch(gWSp.pixeltype)
       {
+        case WLZ_GREY_RGBA: /* RGBA to be done RAB */
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	case WLZ_GREY_INT:
 	  objPix.inp = gWSp.u_grintptr.inp;
 	  if(unityBinSize)
@@ -324,7 +327,7 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzHistogram
 * \brief	Recomputes the given histogram domain for the required
 *               number of bins, origin and bin size.
@@ -658,6 +661,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 		binSize0 = binSize;
 	      }
 	      break;
+	    case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 	    default:
 	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
@@ -731,6 +735,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 		binSize0 = binSize;
 	      }
 	      break;
+	    case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 	    default:
 	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
@@ -1716,6 +1721,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		  }
 		}
 		break;
+	      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
+	        break;
 	    }
 	  }
 	  if(errNum == WLZ_ERR_EOO)	/* Reset error from end of intervals */

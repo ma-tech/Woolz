@@ -207,6 +207,7 @@ WlzErrorNum WlzEffBibParse3DSectionViewParamsRecord(
 * \param    fp	FILE pointer opened for writing
 * \param    recordName	record name
 * \param    basisFnType	interpolation or basis function type
+* \param    affineType	Affine transform type (rigid-body, full affine etc.)
 * \param    meshMthd	method used to define the mesh
 * \param    meshMinDst	mesh minimum distance
 * \param    meshMaxDst	mesh maximum distance
@@ -314,6 +315,7 @@ WlzErrorNum WlzEffBibWriteWarpTransformParamsRecord(
 * \return       Woolz error number
 * \param    bibfileRecord	bibfile record as read by libbibFile
 * \param    basisFnType	return for basis function type
+* \param    affineType	Affine transform type (rigid-body, full affine etc.)
 * \param    meshMthd	return for mesh method type
 * \param    meshMinDst	return for mesh minimum distance
 * \param    meshMaxDst	return for mesh maximum distance

@@ -1,23 +1,32 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzStdStructElements.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Procedures to generate standard structuring elements
-*		in 2D and 3D.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzStdStructElements.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 17:47:23 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzMorphologyOps
+* \brief        Procedures to generate standard structuring elements
+ in 2D and3D. The SE names are rather cryptic.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 19-09-01 jrao Add WlzMakeRectangleObject() and WlzMakeCuboidObject().
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <stdlib.h>
 #include <math.h>
 
@@ -429,6 +438,207 @@ static WlzObject *WlzSpecial_v2(WlzErrorNum *dstErr)  /*-*/
   return obj;
 }
 
+
+/* function:     WlzMakeSpecialStructElement    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Return a pointer to a specific requested "special"
+ structuring element. These are inherited from the original woolz
+ library with rather cryptic names. See detail for more explanation 
+ of the elements and the additional parameters.
+*
+* \return       Structuring element object pointer.
+* \param    eType	Enumerated type of the requested special element.
+* \param    elmIndex	Additional parameter for a particular element
+ if required (see details).
+* \param    dstErr	Error return.
+* \par	    Special element types:
+<table border="1">
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_H4</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_EX4</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_A8</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_H6
+    elmIndex = 0,1,2</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_H6
+    elmIndex = 3,4,5</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_H5
+    elmIndex = 0,1,2,3</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_H7
+    elmIndex = 0,1,2,3</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_A3
+    elmIndex = 0,1,2,3</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>0</td><td>0</td></tr>
+    </table></td>
+    <td><table border="0">
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td></tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_E1</tt></td>
+    <td>2D SE,
+    origin - left:/td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td></tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_E2</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table></td>
+  </tr>
+  <tr>
+    <td><tt>WLZ_SPEC_STRUCT_ELM_V2</tt></td>
+    <td>2D SE,
+    origin - centre:</td>
+    <td><table border="0">
+      <tr><td>1</td></tr>
+      <tr><td>1</td></tr>
+      <tr><td>1</td></tr>
+    </table></td>
+  </tr>
+</table>
+* \par      Source:
+*                WlzStdStructElements.c
+*/
 WlzObject *WlzMakeSpecialStructElement(
   WlzSpecialStructElmType	eType,
   int				elmIndex,
@@ -491,6 +701,22 @@ WlzObject *WlzMakeSpecialStructElement(
 }
 
 
+/* function:     WlzMakeSinglePixelObject    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Make a single pixel/voxel object at the specified
+ coordinate position.
+*
+* \return       Single pixel object with coordinates (k,l,p).
+* \param    oType	Object type - <tt>WLZ_2D_DOMAINOBJ</tt>
+ or <tt>WLZ_3D_DOMAINOBJ</tt>.
+* \param    k	Column (x) coordinate.
+* \param    l	Line (y) coordinate.
+* \param    p	Plane (z) coordinate.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzStdStructElements.c
+*/
 WlzObject *WlzMakeSinglePixelObject(
   WlzObjectType	oType,
   int		k,
@@ -559,6 +785,21 @@ WlzObject *WlzMakeSinglePixelObject(
   return rtnObj;
 }
 
+
+/* function:     WlzMakeCircleObject    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Generate a discretised circle domain centered at (x,y).
+*
+* \return       Object with circular domain.
+
+* \param    radius	Circle radius.
+* \param    x	Column/x coordinate of the circle centre.
+* \param    y	Row/y coordinate of the circle centre.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzStdStructElements.c
+*/
 WlzObject *WlzMakeCircleObject(
   double	radius,
   double	x,
@@ -631,6 +872,22 @@ WlzObject *WlzMakeCircleObject(
 
 
 /* added by J. Rao 19-09-2001 */
+
+/* function:     WlzMakeRectangleObject    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Generate a rectangular object centered at (x,y) with
+ half-width radiusX and half-height radius Y.
+*
+* \return       Rectangular object
+* \param    radiusX	column half-width of rectangle
+* \param    radiusY	Line (y) half-width of rectangle
+* \param    x	Column (x) rectangle centre.
+* \param    y	Line (y) rectangle centre.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzStdStructElements.c
+*/
 WlzObject *WlzMakeRectangleObject(
   double	radiusX,
   double        radiusY,
@@ -661,7 +918,8 @@ WlzObject *WlzMakeRectangleObject(
     lastln = WLZ_NINT(y+radiusY);
     kol1 = WLZ_NINT(x-radiusX);
     lastkl = WLZ_NINT(x+radiusX);
-    width = lastkl - kol1 + 1;
+
+/*    width = lastkl - kol1 + 1;
     if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					 line1, lastln, kol1, lastkl,
 					 &errNum) ){
@@ -670,7 +928,6 @@ WlzObject *WlzMakeRectangleObject(
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr,
 					     (void *)intvlPtr, NULL);
 	for(l=line1; l <= lastln; l++, intvlPtr++){
-	  idelta = (int) radiusX;
 	  intvlPtr->ileft = width/2 - idelta;
 	  intvlPtr->iright = width/2 + idelta;
 	  WlzMakeInterval(l, domain.i, 1, intvlPtr);
@@ -686,6 +943,13 @@ WlzObject *WlzMakeRectangleObject(
 	errNum = WLZ_ERR_MEM_ALLOC;
 	WlzFreeIntervalDomain(domain.i);
       }
+      }*/
+    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					 line1, lastln,
+					 kol1, lastkl, &errNum) ){
+      values.core = NULL;
+      rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
+			   NULL, NULL, &errNum);
     }
   }
     
@@ -697,8 +961,21 @@ WlzObject *WlzMakeRectangleObject(
 }
 
 
-
-
+/* function:     WlzMakeSphereObject    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Make a spherical domain object.
+*
+* \return       Sphere object
+* \param    oType	Object type - make a circle if 2D.
+* \param    radius	Sphere radius
+* \param    x	Column (x) centre.
+* \param    y	Line (y) centre.
+* \param    z	Plane (x) centre.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzStdStructElements.c
+*/
 WlzObject *WlzMakeSphereObject(
   WlzObjectType	oType,
   double	radius,
@@ -778,9 +1055,25 @@ WlzObject *WlzMakeSphereObject(
   return rtnObj;
 }
 
-
-
 /* Added by J. Rao 19-09-2001 */
+
+/* function:     WlzMakeCuboidObject    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Generate a cuboid object centered at (x,y,z).
+*
+* \return       Cuboid domain object
+* \param    oType	Object type use WlzMakerectangleObject() if 2D.
+* \param    radiusX	Cuboid half-width (x)
+* \param    radiusY	Cuboid half-height (y).
+* \param    radiusZ	Cuboid half-depth (z).
+* \param    x	Column (x) centre.
+* \param    y	Line (y) centre.
+* \param    z	Plane (z) centre.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzStdStructElements.c
+*/
 WlzObject *WlzMakeCuboidObject(
   WlzObjectType	oType,
   double	radiusX,

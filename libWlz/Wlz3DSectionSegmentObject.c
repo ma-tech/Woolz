@@ -1,23 +1,48 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        Wlz3DSectionSegmentObject.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Segments a sectionthrough a 3D object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         Wlz3DSectionSegmentObject.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 08:26:48 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzSectionTransform
+* \brief        Segment a given 3D object into 2 parts determined by
+ the input section plane. The parts are the domains on either side of
+ the plane.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <Wlz.h>
 
+/* function:     Wlz3DSectionSegmentObject    */
+/*! 
+* \ingroup      WlzSectionTransform
+* \brief         Segment a given 3D object into 2 parts determined by
+ the input section plane. The parts are the domains on either side of
+ the plane.
+*
+* \return       Error value.
+* \param    obj	Input object to be segmented.
+* \param    viewStr	3D view structure defining the cut plane.
+* \param    numObjs	Number of objects returned.
+* \param    rtnObjs	Array of object pointers, space is allocated
+ for the returned object pointers and will need to be freed by the
+ calling rountine.
+* \par      Source:
+*                Wlz3DSectionSegmentObject.c
+*/
 WlzErrorNum Wlz3DSectionSegmentObject(
   WlzObject		*obj,
   WlzThreeDViewStruct	*viewStr,

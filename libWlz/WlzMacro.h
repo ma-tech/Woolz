@@ -68,6 +68,36 @@ extern "C" {
 #define WLZ_BIT_SET(A,B)	*((A)+((B)>>3))|=(1<<((B)&7))
 #define WLZ_BIT_GET(A,B)	(*((A)+((B)>>3))&(1<<((B)&7)))
 
+/************************************************************************
+* Colour values macros
+************************************************************************/
+#define WLZ_RGBA_RED_GET(V) 	((((UINT) V) & 0xff)>>0)
+#define WLZ_RGBA_GREEN_GET(V) 	((((UINT) V) & 0xff00)>>8)
+#define WLZ_RGBA_BLUE_GET(V) 	((((UINT) V) & 0xff0000)>>16)
+#define WLZ_RGBA_ALPHA_GET(V) 	((((UINT) V) & 0xff000000)>>24)
+
+#define WLZ_RGBA_RED_SET(V,C)	(V = (((UINT) V)&0xffffff00) | \
+                                               (((UINT) C)&0xff))
+#define WLZ_RGBA_GREEN_SET(V,C)	(V = (((UINT) V)&0xffff00ff) | \
+                                               ((((UINT) C)&0xff)<<8))
+#define WLZ_RGBA_BLUE_SET(V,C)	(V = (((UINT) V)&0xff00ffff) | \
+                                               ((((UINT) C)&0xff)<<16))
+#define WLZ_RGBA_ALPHA_SET(V,C)	(V = (((UINT) V)&0x00ffffff) | \
+                                               ((((UINT) C)&0xff)<<24))
+#define WLZ_RGBA_RGBA_SET(V,R,G,B,A) (V = ((((UINT) R)&0xff) + \
+                                           ((((UINT) G)&0xff)<<8) + \
+                                           ((((UINT) B)&0xff)<<16) + \
+                                           ((((UINT) A)&0xff)<<24))) 
+
+#define WLZ_RGBA_MEAN(V) 	((WLZ_RGBA_RED_GET(V) + \
+                                  WLZ_RGBA_GREEN_GET(V) + \
+                                  WLZ_RGBA_BLUE_GET(V))/3.0)
+
+#define WLZ_RGBA_MODULUS_2(V)(WLZ_RGBA_RED_GET(V)*WLZ_RGBA_RED_GET(V) + \
+                              WLZ_RGBA_GREEN_GET(V)*WLZ_RGBA_GREEN_GET(V) + \
+                              WLZ_RGBA_BLUE_GET(V)*WLZ_RGBA_BLUE_GET(V))
+
+#define WLZ_RGBA_MODULUS(V) (sqrt((double) WLZ_RGBA_MODULUS_2(V)))
 
 /************************************************************************
 * Vertex macros.							*

@@ -14,10 +14,12 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief	Alc calendar priority queue module.
-* \ingroup	Alc
-* \defgroup	AlcCPQ
 * \todo         -
 * \bug          None known.
 */
 
+/*!
+ * \ingroup	Alc 
+* \defgroup	AlcCPQ	AlcCPQ
+*/
 

@@ -49,8 +49,8 @@ static void FillGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix,
 * \ingroup      WlzFeatures
 * \return	Woolz obj contain the mixing grey value.
 * \brief        calculate the distance map of a woolz obj	
-* \param	sobj			Given Woolz grey value source object.
-* \param	tobj			Given Woolz grey value target object.
+* \param	sObj			Given Woolz grey value source object.
+* \param	tObj			Given Woolz grey value target object.
 * \param	xmiddle          	mixing parameters 
 * \param	dstErr			Destination error pointer.
 */

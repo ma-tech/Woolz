@@ -819,7 +819,7 @@ WlzErrorNum	WlzMeshExpand(WlzMeshTransform *mesh, int nElem, int nNodes)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Squeeze out any zombie nodes and/or elements so that they
 *		are available for reuse.
@@ -1451,7 +1451,7 @@ WlzErrorNum	WlzMeshNodeDelIdx(WlzMeshTransform *mesh, int startElm,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Initialize the element vector, node vector and ear list
 *		ready for node deletion.
@@ -1478,7 +1478,7 @@ static void	WlzMeshNodeDelInit(WlzMeshIntVec *elmVec,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Free storage allocated for the element vector, node vector
 *		and ear list after node deletion.
@@ -1823,7 +1823,7 @@ static WlzErrorNum WlzMeshElemFindVxWalk(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Finds the mesh element which contains the given vertex by
 *		brute force.
@@ -2066,7 +2066,7 @@ static WlzErrorNum WlzMeshElemReplace1(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Replaces a single mesh element with another mesh element.
 * \param	mesh			Given mesh transform.
@@ -2112,7 +2112,7 @@ static void	WlzMeshElemReplace1With1(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Replaces a single mesh element with 2 mesh elements,
 *		(1 new and 1 recycled) which include the given new node
@@ -2197,7 +2197,7 @@ static void	WlzMeshElemReplace1With2(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Replaces a single mesh element with 3 mesh elements,
 *		(2 new and 1 recycled) which include the given new node
@@ -2836,7 +2836,7 @@ static WlzErrorNum WlzMeshEarListRealloc(WlzMeshEarList *earList,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Computes a power for the given ear, where the power is
 *		given by:
@@ -3099,7 +3099,7 @@ static WlzErrorNum WlzMeshEarsCreate(WlzMeshEarList *earList,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Finds the indicies into the given element vector for the
 *		elements which connect to the given ear and sets the ear's
@@ -3170,7 +3170,7 @@ static void	WlzMeshEarMatchElm(WlzMeshTransform *mesh,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Unlinks the element with the given index from it's neighbours
 *		in the mesh.

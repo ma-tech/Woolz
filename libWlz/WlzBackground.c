@@ -75,6 +75,7 @@ WlzErrorNum WlzSetBackground(WlzObject	*obj,
   case WLZ_GREY_UBYTE:
   case WLZ_GREY_FLOAT:
   case WLZ_GREY_DOUBLE:
+  case WLZ_GREY_RGBA:
     break;
 
   default:

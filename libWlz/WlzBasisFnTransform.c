@@ -160,22 +160,22 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 
 
 /*!
-* \return:	WlzBasisFnTransform *:	New basis function transform.
-* \ingroup:	WlzBasisFnTrFromCPts3	
-* \brief:	Creates a new basis function transform of the given
+* \return	WlzBasisFnTransform *:	New basis function transform.
+* \ingroup	WlzBasisFnTrFromCPts3	
+* \brief	Creates a new basis function transform of the given
 *		type, which will transform an object with the given
 *		source verticies into an object with the given 	
 *		destination verticies.			
-* \param:	WlzFnType type:	        Required basis function type.
-* \param:	int order:		Order of polynomial, only 
+* \param	type	        Required basis function type.
+* \param	order		Order of polynomial, only 
 *					used for WLZ_BASISFN_POLY.
-* \param:	int nDPts:		Number of destination control
+* \param	nDPts		Number of destination control
 *					points.			
-* \param:	WlzDVertex3 *dPts:	Destination control points.
-* \param:	int nSPts:		Number of source control points
+* \param	dPts	Destination control points.
+* \param	nSPts		Number of source control points
 *					(must be same as nDPts)
-* \param:	WlzDVertex3 *sPts:	Source control points.	
-* \param:	WlzErrorNum *dstErr:	Destination error pointer,
+* \param	sPts	Source control points.	
+* \param	dstErr	Destination error pointer,
 *					may be NULL.
 *   added by J. Rao  27/08/2001                      
 */

@@ -340,7 +340,8 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
       case WLZ_GREY_SHORT: /* FALLTHROUGH */
       case WLZ_GREY_INT:   /* FALLTHROUGH */
       case WLZ_GREY_FLOAT: /* FALLTHROUGH */
-      case WLZ_GREY_DOUBLE:
+      case WLZ_GREY_DOUBLE: /* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
 	errNum = WlzToArrayGrey2D(dstP,  srcObj, size, origin,
 				  noiseFlag, dstGreyType);
 	break;
@@ -555,6 +556,13 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 	      {
 		*(valPP + idY) = gValP.dbp;
 		gValP.dbp += size.vtX;
+	      }
+	      break;
+	    case WLZ_GREY_RGBA:
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.rgbp;
+		gValP.rgbp += size.vtX;
 	      }
 	      break;
 	  }
@@ -861,7 +869,8 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
       case WLZ_GREY_SHORT: /* FALLTHROUGH */
       case WLZ_GREY_INT:   /* FALLTHROUGH */
       case WLZ_GREY_FLOAT: /* FALLTHROUGH */
-      case WLZ_GREY_DOUBLE:
+      case WLZ_GREY_DOUBLE:/* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
 	errNum = WlzToArrayGrey3D(dstP,  srcObj, size, origin,
 				  noiseFlag, dstGreyType);
 	break;
@@ -1118,6 +1127,18 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
 	      valPP += size.vtY;
 	    }
 	    break;
+	  case WLZ_GREY_RGBA:
+	    for(idZ = 0; idZ < size.vtZ; ++idZ)
+	    {
+	      for(idY = 0; idY < size.vtY; ++idY)
+	      {
+		*(valPP + idY) = gValP.rgbp;
+		gValP.rgbp += size.vtX;
+	      }
+	      *(valPPP + idZ) = valPP;
+	      valPP += size.vtY;
+	    }
+	    break;
 	}
 	*dstP = valPPP;
       }
@@ -1145,7 +1166,7 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzArray
 * \brief	Transforms and/or clamps a rectangle of data values using
 * 		a given buffer.
@@ -1217,6 +1238,9 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 	  break;
 	case WLZ_GREY_FLOAT:
 	  WlzValueClampDoubleToFloat(bufP, rectSize.vtX);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueClampDoubleToRGBA(bufP, rectSize.vtX);
 	  break;
       }
     }
@@ -1413,7 +1437,8 @@ WlzObject	*WlzFromArray2D(void **arrayP,
       case WLZ_GREY_SHORT: /* FALLTHROUGH */
       case WLZ_GREY_INT:   /* FALLTHROUGH */
       case WLZ_GREY_FLOAT: /* FALLTHROUGH */
-      case WLZ_GREY_DOUBLE:
+      case WLZ_GREY_DOUBLE:/* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
 	dstObj = WlzFromArrayGrey2D(arrayP,
 				    arraySize, arrayOrigin,
 				    dstGreyType, srcGreyType,
@@ -1606,6 +1631,9 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
     case WLZ_GREY_DOUBLE:
       srcValP.dbp = *(double **)arrayP;
       break;
+    case WLZ_GREY_RGBA:
+      srcValP.rgbp = *(UINT **)arrayP;
+      break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
       break;
@@ -1659,6 +1687,13 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 	case WLZ_GREY_DOUBLE:
 	  if((dstValP.dbp = (double *)AlcMalloc(tUL0 *
 						sizeof(double))) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  break;
+	case WLZ_GREY_RGBA:
+	  if((dstValP.rgbp = (UINT *)AlcMalloc(tUL0 *
+						sizeof(UINT))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -2135,6 +2170,9 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
     case WLZ_GREY_DOUBLE:
       srcValP.dbp = **(double ***)arrayP;
       break;
+    case WLZ_GREY_RGBA:
+      srcValP.rgbp = **(UINT ***)arrayP;
+      break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
       break;
@@ -2183,6 +2221,12 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	  break;
 	case WLZ_GREY_DOUBLE:
 	  if((dstValP.dbp = (double *)AlcMalloc(aSz * sizeof(double))) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  break;
+	case WLZ_GREY_RGBA:
+	  if((dstValP.rgbp = (UINT *)AlcMalloc(aSz * sizeof(UINT))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -2266,6 +2310,9 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	  break;
 	case WLZ_GREY_DOUBLE:
 	  tIP0 = (int *)(dstValP.dbp + planeOffset);
+	  break;
+	case WLZ_GREY_RGBA:
+	  tIP0 = (int *)(dstValP.rgbp + planeOffset);
 	  break;
       }
       tDom0.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
@@ -2503,6 +2550,28 @@ int		WlzArrayStats3D(void ***arrayP,
 	while(--tI0 > 0)
 	{
 	  tD0 = *(dataP.dbp)++;
+	  if(tD0 < prvMin)
+	  {
+	    prvMin = tD0;
+	  }
+	  if(tD0 > prvMax)
+	  {
+	    prvMax = tD0;
+	  }
+	  prvSum += tD0;
+	  prvSumSq += tD0 * tD0;
+	}
+	break;
+      case WLZ_GREY_RGBA:
+        dataP.rgbp = **(UINT ***)arrayP;
+	tD0 = *(dataP.rgbp)++;
+	prvMin = tD0;
+	prvMax = tD0;
+	prvSum = tD0;
+	prvSumSq = tD0 * tD0;
+	while(--tI0 > 0)
+	{
+	  tD0 = *(dataP.rgbp)++;
 	  if(tD0 < prvMin)
 	  {
 	    prvMin = tD0;

@@ -1,47 +1,59 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzIntersectN.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Intersection of N Woolz domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzIntersectN.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Aug 19 07:56:44 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBinaryOps
+* \brief        Intersection of N woolz domain objects
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <Wlz.h>
 
 extern WlzObject *WlzIntersect3d(WlzObject	**objs,
 				 int		n,
 				 int		uvt,
-				 WlzErrorNum	 *wlzErr);
+				 WlzErrorNum	 *dstErr);
 
-/************************************************************************
-*   Function   : WlzIntersectn						*
-*   Returns    :WlzObject *: NULL on error otherwise the intersection	*
-*   Parameters :WlzObject **objs: array of objects - must be non-NULL	*
-*		and domain objects all 2d or all 3d.			*
-*		int 	n: number of objects				*
-*		int 	uvt: if non-zero, average the grey tables	*
-*   Date       : Mon Oct 14 12:54:34 1996				*
-*   Synopsis   :							*
-* Intersection of set of objects.
-* Do domains only if "uvt" zero,
-* if "uvt" non-zero make an average grey table.
-************************************************************************/
-WlzObject *
-WlzIntersectN(
-	      int 	n,
-	      WlzObject **objs,
-	      int 	uvt,
-	      WlzErrorNum *wlzErr)
+
+/* function:     WlzIntersectN    */
+/*! 
+* \ingroup      WlzBinaryOps
+* \brief        Calculate the intersection of a set of objects. If
+ uvt=0 calculate domain only, uvt=1 calculate the mmean grey-value at
+ each point. Input objects must be all non-NULL and domain objects of
+ the same type i.e. either 2D or 3D otherwise an error is returned.
+*
+* \return       Intersection object with grey-table as required, if the intersection is empty returns WLZ_EMPTY_OBJ, NULL on error.
+* \param    n	number of input objects
+* \param    objs	input object array
+* \param    uvt	grey-table copy flag (1 - copy, 0 - no copy)
+* \param    dstErr	error return.
+* \par      Source:
+*                WlzIntersectN.c
+*/
+WlzObject *WlzIntersectN(
+  int 	n,
+  WlzObject **objs,
+  int 	uvt,
+  WlzErrorNum *dstErr)
 {
   WlzObject 		*obj = NULL;
   WlzIntervalDomain 	*idom;
@@ -68,7 +80,7 @@ WlzIntersectN(
   values.v = NULL;
   if( n < 1 )
   {
-    return WlzMakeEmpty(wlzErr);
+    return WlzMakeEmpty(dstErr);
   }
 
   /* array pointer == NULL or any object pointer == NULL is an error */
@@ -86,8 +98,8 @@ WlzIntersectN(
   if(errNum != WLZ_ERR_NONE)
   {
     obj = NULL;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -102,13 +114,13 @@ WlzIntersectN(
     return WlzIntersect3d(objs, n, uvt, &errNum);
 
   case WLZ_EMPTY_OBJ:
-    return WlzMakeEmpty(wlzErr);
+    return WlzMakeEmpty(dstErr);
 
   default:
     obj = NULL;
     errNum = WLZ_ERR_OBJECT_TYPE;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
 
@@ -118,8 +130,8 @@ WlzIntersectN(
   if (n == 1){
     obj = WlzMakeMain(objs[0]->type, objs[0]->domain, objs[0]->values,
 		      NULL, NULL, &errNum);
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -129,13 +141,13 @@ WlzIntersectN(
   for (i=0; i<n; i++){
     if( objs[i]->type != objs[0]->type ){
       if( objs[i]->type == WLZ_EMPTY_OBJ ){
-	return WlzMakeEmpty(wlzErr);
+	return WlzMakeEmpty(dstErr);
       }
       else {
 	obj = NULL;
 	errNum = WLZ_ERR_OBJECT_TYPE;
-	if(wlzErr) {
-	  *wlzErr = errNum;
+	if(dstErr) {
+	  *dstErr = errNum;
 	}
 	return(obj);
       }
@@ -143,12 +155,12 @@ WlzIntersectN(
 
     /* check for size */
     if( WlzIsEmpty(objs[i], &errNum) ){
-      return WlzMakeEmpty(wlzErr);
+      return WlzMakeEmpty(dstErr);
     }
     else {
       if( errNum != WLZ_ERR_NONE ){
-	if(wlzErr) {
-	  *wlzErr = errNum;
+	if(dstErr) {
+	  *dstErr = errNum;
 	}
 	return NULL;
       }
@@ -183,8 +195,8 @@ WlzIntersectN(
   }
   if( lastkl < kol1 || lastln < line1 ){
     obj = WlzMakeEmpty(&errNum);
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -199,8 +211,8 @@ WlzIntersectN(
   }
   if(errNum != WLZ_ERR_NONE) {
     obj = NULL;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -213,8 +225,8 @@ WlzIntersectN(
 				    line1, lastln, 0, lastkl-kol1,
 				    &errNum)) == NULL ){
     obj = NULL;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -233,8 +245,8 @@ WlzIntersectN(
   if( (obj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 			 domain, values, NULL, NULL, &errNum)) == NULL ){
     WlzFreeIntervalDomain(idom);
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -247,8 +259,8 @@ WlzIntersectN(
     WlzFreeObj( obj );
     errNum = WLZ_ERR_MEM_ALLOC;
     obj = NULL;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -270,8 +282,8 @@ WlzIntersectN(
   if(errNum != WLZ_ERR_NONE) {
     WlzFreeObj( obj );
     obj = NULL;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -372,8 +384,8 @@ firstfinished:
   if(errNum != WLZ_ERR_NONE) {
     WlzFreeObj(obj);
     obj = NULL;
-    if(wlzErr) {
-      *wlzErr = errNum;
+    if(dstErr) {
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -387,9 +399,9 @@ firstfinished:
     WlzFreeObj(obj);
     AlcFree((void *) biwsp);
     obj = NULL;
-    if(wlzErr)
+    if(dstErr)
     {
-      *wlzErr = errNum;
+      *dstErr = errNum;
     }
     return(obj);
   }
@@ -409,9 +421,9 @@ firstfinished:
       AlcFree((void *) biwsp);
       errNum = WLZ_ERR_MEM_ALLOC;
       obj = NULL;
-      if(wlzErr)
+      if(dstErr)
       {
-        *wlzErr = errNum;
+        *dstErr = errNum;
       }
       return(obj);
     }
@@ -432,9 +444,9 @@ firstfinished:
       AlcFree((void *) gwsp);
       AlcFree((void *) biwsp);
       obj = NULL;
-      if(wlzErr)
+      if(dstErr)
       {
-        *wlzErr = errNum;
+        *dstErr = errNum;
       }
       return(obj);
     }
@@ -444,9 +456,9 @@ firstfinished:
       AlcFree((void *) gwsp);
       AlcFree((void *) biwsp);
       obj = NULL;
-      if(wlzErr)
+      if(dstErr)
       { 
-	*wlzErr = errNum;
+	*dstErr = errNum;
       }
       return(obj);
     }
@@ -471,8 +483,8 @@ firstfinished:
       AlcFree((void *) gwsp);
       AlcFree((void *) biwsp);
       obj = NULL;
-      if(wlzErr) {
-        *wlzErr = errNum;
+      if(dstErr) {
+        *dstErr = errNum;
       }
       return(obj);
     }
@@ -562,6 +574,22 @@ firstfinished:
 	}
 	break;
 
+      case WLZ_GREY_RGBA: /* RGBA to be done again RAB */
+	for (k = niwsp.lftpos; k <= niwsp.rgtpos; k++) {
+	  gv.rgbv = 0;
+	  for (iwsp=biwsp,i=0; iwsp<tiwsp; iwsp++,i++) {
+	    while(iwsp->linrmn >= 0 &&
+		  (iwsp->linpos < l ||
+		   (iwsp->linpos == l && iwsp->rgtpos < k))){
+	      (void )WlzNextGreyInterval(iwsp);
+	    }
+	    gv.rgbv += *(gwsp[i].u_grintptr.rgbp + k - iwsp->lftpos);
+	  }
+	  *greyptr.rgbp = gv.rgbv / n;
+	  greyptr.rgbp++;
+	}
+	break;
+
       default:
 	errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -575,8 +603,8 @@ firstfinished:
     AlcFree((void *) gwsp);
   }
   AlcFree((void *) biwsp);
-  if(wlzErr) {
-    *wlzErr = errNum;
+  if(dstErr) {
+    *dstErr = errNum;
   }
   return(obj);
 }

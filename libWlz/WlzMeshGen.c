@@ -710,7 +710,6 @@ WlzErrorNum	WlzMeshFree2D(WlzMesh2D *mesh)
 * \return	New workspace or NULL on error.
 * \ingroup	WlzMesh
 * \brief	Makes a new 2D mesh workspace.
-* \param        <void>
 */
 WlzMeshWSp2D	*WlzMeshNewWSp2D(void)
 {
@@ -784,11 +783,12 @@ static void	WlzMeshEntUnmarkFree(int *idx)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given mesh node. Actually just sets the
 *		node's index to mark it freed and then decrements
 *		the number of mesh nodes.
+* \param	mesh	Input mesh
 * \param	nod			Given mesh node.
 */
 void 		WlzMeshNodFree(WlzMesh2D *mesh, WlzMeshNod2D *nod)
@@ -801,11 +801,12 @@ void 		WlzMeshNodFree(WlzMesh2D *mesh, WlzMeshNod2D *nod)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given mesh element. Actually just sets the
 *		element's index to mark it freed and then decrements
 *		the number of mesh elements.
+* \param	mesh	Input mesh
 * \param	elm			Given mesh element.
 */
 void		WlzMeshElmFree(WlzMesh2D *mesh, WlzMeshElm2D *elm)
@@ -818,11 +819,12 @@ void		WlzMeshElmFree(WlzMesh2D *mesh, WlzMeshElm2D *elm)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given mesh segment. Actually just sets the
 *		segment's index to mark it freed and then decrements
 *		the number of mesh boundary segments.
+* \param	mesh	Input mesh
 * \param	seg			Given mesh element.
 */
 void		WlzMeshSegFree(WlzMesh2D *mesh, WlzMeshSeg2D *seg)
@@ -835,11 +837,12 @@ void		WlzMeshSegFree(WlzMesh2D *mesh, WlzMeshSeg2D *seg)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given mesh boundary. Actually just sets the
 *		boundary's index to mark it freed and then decrements
 *		the number of mesh boundaries.
+* \param	mesh	Input mesh
 * \param	bnd			Given mesh element.
 */
 void		WlzMeshBndFree(WlzMesh2D *mesh, WlzMeshBnd2D *bnd)
@@ -856,7 +859,7 @@ void		WlzMeshBndFree(WlzMesh2D *mesh, WlzMeshBnd2D *bnd)
 * \ingroup	WlzMesh
 * \brief	Check that the mesh has valid connectivities.
 * \param	mesh			Given mesh.
-* \param	elmP			Destination mesh element pointer
+* \param	dstElm			Destination mesh element pointer
 *					for last mesh element, may be NULL.
 */
 WlzErrorNum	WlzMeshVerify2D(WlzMesh2D *mesh, WlzMeshElm2D **dstElm)
@@ -1032,7 +1035,6 @@ WlzMeshNod2D	*WlzMeshNewNod2D(WlzMesh2D *mesh, WlzDVertex2 pos,
 * \ingroup	WlzMesh
 * \brief	Creates a new 2D mesh boundary segment.
 * \param	mesh			The mesh for resources.
-* \param	nod			Given mesh node.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzMeshSeg2D	*WlzMeshNewSeg2D(WlzMesh2D *mesh, WlzErrorNum *dstErr)
@@ -1383,6 +1385,7 @@ WlzMeshEdg2D	*WlzMeshEdgShareNod2D(WlzMeshNod2D *nod0, WlzMeshNod2D *nod1)
 *		additional vertices along the box edges to keep the
 *		inter node distance below the given value.
 * \param	mesh			The given mesh.
+* \param	wSp			Mesh workspace pointer
 * \param	meshMaxDst		Maximum distance between mesh nodes.
 * \param	bBox			The bounding box.
 */

@@ -2492,7 +2492,7 @@ extern WlzObject		*WlzMakeHistogram(
 extern WlzIVertex2		*WlzMakeIVertex(
 				  int nverts,
 				  WlzErrorNum *dstErr);
-				  extern WlzObject *WlzNewGrey(
+extern WlzObject              	*WlzNewGrey(
 				  WlzObject *iobj,
 				  WlzErrorNum *dstErr);
 extern WlzRagRValues		*WlzNewValueTb(
@@ -3232,6 +3232,63 @@ extern WlzObject 		*WlzStructErosion(WlzObject *obj,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzRGBAConvert.c							*
+************************************************************************/
+extern WlzCompoundArray		*WlzRGBAToCompound(
+                                   WlzObject	*obj,
+				   WlzErrorNum	*dstErr);
+
+extern WlzObject		*WlzRGBAToModulus(
+                                   WlzObject	*obj,
+				   WlzErrorNum	*dstErr);
+/************************************************************************
+* WlzRGBARange.c							*
+************************************************************************/
+extern WlzErrorNum WlzRGBAModulusRange(
+  WlzObject	*obj,
+  double	*min,
+  double	*max);
+/************************************************************************
+* WlzRGBAPixelUtils.c							*
+************************************************************************/
+extern double WlzRGBAPixelValue(
+  WlzPixelV		pixVal,
+  WlzRGBAColorChannel	chan,
+  WlzErrorNum		*dstErr);
+/************************************************************************
+* WlzRGBAMultiThreshold.c						*
+************************************************************************/
+extern WlzObject *WlzRGBAMultiThreshold(
+  WlzObject	*obj,
+  WlzPixelV	lowVal,
+  WlzPixelV	highVal,
+  UINT		combineMode,
+  WlzErrorNum	*dstErr);
+extern WlzObject *WlzRGBASliceThreshold(
+  WlzObject	*obj,
+  WlzPixelV	lowVal,
+  WlzPixelV	highVal,
+  WlzErrorNum	*dstErr);
+extern WlzObject *WlzRGBABoxThreshold(
+  WlzObject	*obj,
+  WlzPixelV	lowVal,
+  WlzPixelV	highVal,
+  WlzErrorNum	*dstErr);
+extern WlzObject *WlzRGBAEllipsoidThreshold(
+  WlzObject	*obj,
+  WlzPixelV	lowVal,
+  WlzPixelV	highVal,
+  double	eccentricity,
+  WlzErrorNum	*dstErr);
+/************************************************************************
+* WlzCbThreshold.c							*
+************************************************************************/
+extern WlzObject *WlzCbThreshold(
+  WlzObject	*obj,
+  WlzThreshCbFn	threshCb,
+  void		*clientData,
+  WlzErrorNum	*dstErr);
+/************************************************************************
 * WlzThreshold.c							*
 ************************************************************************/
 extern WlzObject 		*WlzThreshold(
@@ -3307,6 +3364,10 @@ extern void			WlzValueSetDouble(
 				  double *vec,
 				  double value,
 				  int count);
+extern void			WlzValueSetRGBA(
+				  UINT *vec,
+				  UINT value,
+				  int count);
 extern void			WlzValueSetDVertex(
 				  WlzDVertex2 *vec,
 				  WlzDVertex2 value,
@@ -3369,6 +3430,26 @@ extern void			WlzValueClampDoubleIntoFloat(
 				  float *dst,
 				  double *src,
 				  int count);
+extern void			WlzValueClampDoubleIntoRGBA(
+				  UINT *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueClampIntIntoRGBA(
+				  UINT *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueClampShortIntoRGBA(
+				  UINT *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueClampFloatIntoRGBA(
+				  UINT *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueClampDoubleIntoRGBA(
+				  UINT *dst,
+				  double *src,
+				  int count);
 extern void			WlzValueClampIntToShort(
 				  int *vec,
 				  int count);
@@ -3428,6 +3509,10 @@ extern void			WlzValueCopyIntToDouble(
 				  double *dst,
 				  int *src,
 				  int count);
+extern void			WlzValueCopyIntToRGBA(
+				  UINT *dst,
+				  int *src,
+				  int count);
 extern void			WlzValueCopyShortToInt(
 				  int *dst,
 				  short *src,
@@ -3446,6 +3531,10 @@ extern void			WlzValueCopyShortToFloat(
 				  int count);
 extern void			WlzValueCopyShortToDouble(
 				  double *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueCopyShortToRGBA(
+				  UINT *dst,
 				  short *src,
 				  int count);
 extern void			WlzValueCopyUByteToInt(
@@ -3468,6 +3557,10 @@ extern void			WlzValueCopyUByteToDouble(
 				  double *dst,
 				  UBYTE *src,
 				  int count);
+extern void			WlzValueCopyUByteToRGBA(
+				  UINT *dst,
+				  UBYTE *src,
+				  int count);
 extern void			WlzValueCopyFloatToInt(
 				  int *dst,
 				  float *src,
@@ -3486,6 +3579,10 @@ extern void			WlzValueCopyFloatToFloat(
 				  int count);
 extern void			WlzValueCopyFloatToDouble(
 				  double *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueCopyFloatToRGBA(
+				  UINT *dst,
 				  float *src,
 				  int count);
 extern void			WlzValueCopyDoubleToInt(
@@ -3507,6 +3604,34 @@ extern void			WlzValueCopyDoubleToFloat(
 extern void			WlzValueCopyDoubleToDouble(
 				  double *dst,
 				  double *src,
+				  int count);
+extern void			WlzValueCopyDoubleToRGBA(
+				  UINT *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueCopyRGBAToInt(
+				  int *dst,
+				  UINT *src,
+				  int count);
+extern void			WlzValueCopyRGBAToShort(
+				  short *dst,
+				  UINT *src,
+				  int count);
+extern void			WlzValueCopyRGBAToUByte(
+				  UBYTE *dst,
+				  UINT *src,
+				  int count);
+extern void			WlzValueCopyRGBAToFloat(
+				  float *dst,
+				  UINT *src,
+				  int count);
+extern void			WlzValueCopyRGBAToDouble(
+				  double *dst,
+				  UINT *src,
+				  int count);
+extern void			WlzValueCopyRGBAToRGBA(
+				  UINT *dst,
+				  UINT *src,
 				  int count);
 extern void			WlzValueCopyGreyToGrey(
 				  WlzGreyP dst,

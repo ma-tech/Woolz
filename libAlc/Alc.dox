@@ -1,0 +1,16 @@
+/*!
+* \defgroup    Alc	libAlc
+* \brief This software library provides memory allocation, memory
+management functionality as well as fundamental data structures such
+ as linked lists. It is a lower level library than woolz and does not
+depend on any non-system library. See the \ref libalcpage "libAlc" for more detail.
+All procedures are detailed under different module headings.
+*/
+
+/*!
+\page libalcpage Woolz Memory Management Library
+\section intro Introduction
+\section structure  Structures
+\section usage Example Usage
+\section standards Coding Conventions
+*/

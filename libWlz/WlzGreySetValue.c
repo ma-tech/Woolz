@@ -1,21 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreySetValue.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to set the grey values of Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreySetValue.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:08:55 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Functions to set the grey values of Woolz objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
+
+/* function:     WlzGreySetValue    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Set the grey value of every pixel/voxel tp
+ <tt>val</tt>.
+*
+* \return       Woolz error.
+* \param    obj	Input object.
+* \param    val	New grey value.
+* \par      Source:
+*                WlzGreySetValue.c
+*/
 WlzErrorNum WlzGreySetValue(
   WlzObject	*obj,
   WlzPixelV	val)
@@ -124,6 +146,11 @@ WlzErrorNum WlzGreySetValue(
       case WLZ_GREY_DOUBLE:
 	for (i=0; i<iwsp.colrmn; i++, gptr.dbp++)
 	  *gptr.dbp = tmpVal.v.dbv;
+	break;
+
+      case WLZ_GREY_RGBA:
+	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
+	  *gptr.rgbp = tmpVal.v.rgbv;
 	break;
 
       default:

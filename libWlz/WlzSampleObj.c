@@ -265,6 +265,7 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 	  case WLZ_GREY_INT:
 	  case WLZ_GREY_SHORT:
 	  case WLZ_GREY_UBYTE:
+	  case WLZ_GREY_RGBA:
 	    integralGrey = 1;
 	    break;
 	  case WLZ_GREY_FLOAT:
@@ -915,6 +916,16 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 		{
 		  *(dstPix.dbp)++ = *(srcPix.dbp);
 		  srcPix.dbp += samFac.vtX;
+		}
+		break;
+	      case WLZ_GREY_RGBA:
+		srcPix.rgbp = srcGWsp.u_grintptr.rgbp + srcOffset;
+		dstPix.rgbp = (UINT *)dstGreyValues + dstOffset;
+		tI0 = dstInvWidth;
+		while(tI0-- > 0)
+		{
+		  *(dstPix.rgbp)++ = *(srcPix.rgbp);
+		  srcPix.rgbp += samFac.vtX;
 		}
 		break;
 	    }
@@ -2720,6 +2731,11 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
       case WLZ_GREY_DOUBLE:
 	bCount *= sizeof(double);
 	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE,
+			            &errNum);
+        break;
+      case WLZ_GREY_RGBA:
+	bCount *= sizeof(UINT);
+	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA,
 			            &errNum);
         break;
       default:

@@ -209,6 +209,14 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
 	break;
+      case WLZ_GREY_RGBA:
+	if(((rBuf = AlcMalloc(fSz * fSz * sizeof(UINT))) == NULL) ||
+	   (AlcInt2Malloc((int ***)&vBuf,
+	   		     bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	break;
       default:
         errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -278,6 +286,10 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
         case WLZ_GREY_DOUBLE:
 	  (void )memcpy(*(((double **)vBuf) + bufLn) + bufLft,
 	                gWSp.u_grintptr.dbp, itvWidth * sizeof(double));
+          break;
+        case WLZ_GREY_RGBA:
+	  (void )memcpy(*(((UINT **)vBuf) + bufLn) + bufLft,
+	                gWSp.u_grintptr.rgbp, itvWidth * sizeof(UINT));
           break;
       }
     }
@@ -395,6 +407,14 @@ static WlzErrorNum WlzRankFilterDomObj3D(WlzObject *gObj, int fSz,
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
 	break;
+      case WLZ_GREY_RGBA:
+	if(((rBuf = AlcMalloc(fSz * fSz * fSz * sizeof(UINT))) == NULL) ||
+	   (AlcInt3Malloc((int ****)&vBuf,
+	   		     bufSz.vtZ, bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	break;
       default:
         errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -468,7 +488,7 @@ static WlzErrorNum WlzRankFilterDomObj3D(WlzObject *gObj, int fSz,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzValuesFilters
 * \brief	Rank filter the buffer values for a single line.
 *		If possible the buffer of values to be ranked just has
@@ -599,6 +619,17 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      }
 	      *(gP0.dbp) = gV1.dbv;
 	      break;
+	    case WLZ_GREY_RGBA:
+	      gP0.rgbp = (UINT *)rBuf;
+	      gP1.rgbp = *((UINT **)vBuf + bufPos0.vtY);
+	      gV0.rgbv = *(gP1.rgbp + bufPos0.vtX);
+	      gV1.rgbv = *(gP1.rgbp + bufPos1.vtX);
+	      while(*(gP0.rgbp) != gV0.rgbv)
+	      {
+	        ++(gP0.rgbp);
+	      }
+	      *(gP0.rgbp) = gV1.rgbv;
+	      break;
 	  }
 	}
       }
@@ -624,6 +655,9 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      break;
 	    case WLZ_GREY_DOUBLE:
 	      gP0.dbp = *((double **)vBuf + bufPos0.vtY);
+	      break;
+	    case WLZ_GREY_RGBA:
+	      gP0.rgbp = *((UINT **)vBuf + bufPos0.vtY);
 	      break;
 	  }
 	  bufPos0.vtX = idK - fSz2;
@@ -679,6 +713,8 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		++(bufPos0.vtX);
 	      }
 	      break;
+	  case WLZ_GREY_RGBA: /* RGBA to be done - what to do? RAB */
+	    return;
 	  }
 	}
       }
@@ -693,7 +729,7 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzValuesFilters
 * \brief	Rank filter the buffer values for a single plane.
 *		always popolate the rank buffer afresh, as quick experiments
@@ -774,6 +810,9 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      case WLZ_GREY_DOUBLE:
 		gP0.dbp = *(*((double ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
 		break;
+	      case WLZ_GREY_RGBA:
+		gP0.rgbp = *(*((UINT ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
+		break;
 	    }
 	    iP0 = *(*(iBuf + bufPos0.vtZ) + bufPos0.vtY);
 	    bufPos0.vtX = idK - fSz2;
@@ -833,6 +872,8 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		  ++(bufPos0.vtX);
 		}
 		break;
+	    case WLZ_GREY_RGBA: /* RGBA to be done - what to do? RAB */
+	      return;
 	    }
 	  }
 	}
@@ -848,7 +889,7 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzValuesFilters
 * \brief	Replace the single pixel/voxel in the object used to
 *		initialize the given grey value work space with the

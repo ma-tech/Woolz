@@ -78,7 +78,7 @@ double		AlgVectorDot(double *aV, double *bV, size_t n)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgVector
 * \brief	Adds vector \f$\mathbf{b}\f$ to vector \f$\mathbf{c}\f$.
 *		Computes \f$a_i = b_i + c_i, \forall i \in [0 \ldots n - 1]\f$.
@@ -101,7 +101,7 @@ void		AlgVectorAdd(double *aV, double *bV, double *cV, size_t n)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgVector
 * \brief	Subtracts vector \f$\mathbf{c}\f$ from vector \f$\mathbf{b}\f$.
 *		Computes \f$a_i = b_i - c_i, \forall i \in [0 \ldots n - 1]\f$.
@@ -124,7 +124,7 @@ void		AlgVectorSub(double *aV, double *bV, double *cV, size_t n)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgVector
 * \brief	Copies one vector \f$\mathbf{b}\f$ to vector \f$\mathbf{a}\f$.
 *		\f$a_i = b_i, \forall i \in [0 \ldots n - 1]\f$.

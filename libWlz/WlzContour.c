@@ -896,6 +896,10 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 	  WlzValueCopyDoubleToDouble(valBuf[bufLnIdx] + bufLft, 
 	  			     srcGWSp.u_grintptr.dbp, itvLen);
 	  break;
+        case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToDouble(valBuf[bufLnIdx] + bufLft, 
+	  			     srcGWSp.u_grintptr.rgbp, itvLen);
+	  break;
       }
       idX = bufLft;
       sqOrg.vtY = srcIWSp.linpos - 1.0;

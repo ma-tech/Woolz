@@ -85,7 +85,7 @@ AlgError	AlgMatrixRSEigen(double **aM, int aSz, double *vM, int reqEV)
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief	Sorts the eigenvectors and eigenvalues into descending
 * 		eigenvalue order. Because AlgMatrixRSTDiag() runs in

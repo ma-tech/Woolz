@@ -1346,6 +1346,42 @@ static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
 		}
 	      }
 	    }
+	    if(errNum == WLZ_ERR_EOO)
+	    {
+	      errNum = WLZ_ERR_NONE;
+	    }
+	  }
+	  break;
+	case WLZ_GREY_RGBA:
+	  packing = WLZ_GREY_RGBA;
+	  if((putc((unsigned int )packing, fp) == EOF) ||
+	     !putword(background.v.rgbv, fp))
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	  else
+	  {
+	    errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    while((errNum == WLZ_ERR_NONE) &&
+	           ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE))
+	    {
+	      g = gwsp.u_grintptr;
+	      for(i = 0; (i < iwsp.colrmn) && (errNum == WLZ_ERR_NONE);
+	          i++, g.rgbp++)
+	      {
+		if(!putword(*g.rgbp, fp))
+		{
+		  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		}
+	      }
+	    }
+	    if(errNum == WLZ_ERR_EOO)
+	    {
+	      errNum = WLZ_ERR_NONE;
+	    }
 	  }
 	  break;
 	default:
@@ -2229,19 +2265,21 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzWriteMeshTransform3D				*
-*   Date       : Wednesday Oct 10 2001   				*
-*************************************************************************
-*   written by :  J. Rao 						*
-*   Synopsis   :							*
-*   Returns    :  type are not included, will added later		*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-WlzErrorNum    WlzWriteMeshTransform3D(
-				  FILE *fp,
-			          WlzMeshTransform3D *obj)
+/* function:     WlzWriteMeshTransform3D    */
+/*! 
+* \ingroup      WlzIO
+* \author	J. Rao.
+* \brief        Write a 3D mesh transform to the given file-stream.
+*
+* \return       Error number.
+* \param    fp	Output file-stream pointer
+* \param    obj	Mesh transform to be written.
+* \par      Source:
+*                WlzWriteObj.c
+*/
+WlzErrorNum WlzWriteMeshTransform3D(
+  FILE 			*fp,
+  WlzMeshTransform3D 	*obj)
 {
   int		i,
   		j;

@@ -1,42 +1,50 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzMakeIntervalValues.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Makes an interval values table.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzMakeIntervalValues.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:29:23 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzAllocation
+* \brief        Makes an interval values table.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzMakeIntervalValues					*
-*   Returns    :WlzIntervalValues *: a pointer to the new interval	*
-*		values table with intervals matching the input object	*
-*		retyurns NULL on error.					*
-*   Parameters :WlzObjectType	type: table type. For historical reasons*
-*		this encodes the table type as well as the grey-value	*
-*		type and WlzGreyTableTypeToTableType(type) must return	*
-*		WLZ_GREY_TAB_INTL or an error will be reported and NULL	*
-*		returned. Note the grey-type is also checked		*
-*		WlzObject *obj: 2D interval domain object for which	*
-*		a matching interval value table is required.		*
-*		WlzPixelV bckgrnd: required background value		*
-*   Date       : Mon Oct 14 15:27:05 1996				*
-*   Synopsis   :Make in interval values table to match the input object	*
-*		The table will have linkcount set to zero.		*
-************************************************************************/
-
+/* function:     WlzMakeIntervalValues    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make in interval values table to match the input object
+The table will have linkcount set to zero.
+*
+* \return       New interval values table.
+* \param    type	Required table type.
+* \param    obj	Input object.
+* \param    bckgrnd	Values table background value.
+* \param    dstErr	Error return.
+* \par Constraints
+ The woolz object type must resolve to WLZ_GREY_TAB_INTL using
+ WlzGreyTableTypeToTableType()or an error will be reported and NULL
+ returned.  For historical reasons
+ the type encodes the table type as well as the grey-value type.
+ 
+* \par      Source:
+*                WlzMakeIntervalValues.c
+*/
 WlzIntervalValues *
 WlzMakeIntervalValues(WlzObjectType	type,
 		      WlzObject 	*obj,
@@ -120,6 +128,10 @@ WlzMakeIntervalValues(WlzObjectType	type,
       g.dbp = (double *) AlcCalloc(WlzArea(obj, NULL), sizeof(double));
       break;
 
+    case WLZ_GREY_RGBA:
+      g.rgbp = (UINT *) AlcCalloc(WlzArea(obj, NULL), sizeof(UINT));
+      break;
+
     default:
       WlzFreeValues( v );
       v.i = NULL;
@@ -192,6 +204,11 @@ WlzMakeIntervalValues(WlzObjectType	type,
       case WLZ_GREY_DOUBLE:
 	val->values.dbp = g.dbp;
 	g.dbp += iwsp.colrmn;
+	break;
+
+      case WLZ_GREY_RGBA:
+	val->values.rgbp = g.rgbp;
+	g.rgbp += iwsp.colrmn;
 	break;
 
       }

@@ -1,32 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzLineArea.c
-* Date:         March 1999
-* Author:       Jim Piper
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the line area of a Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzLineArea.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:26:53 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Computes the line area of a Woolz object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzLineArea						*
-*   Returns    :int: line area of the object, -1 on error		*
-*   Parameters :WlzObject *obj: 2D domain object			*
-*   Date       : Mon Oct 14 15:09:02 1996				*
-*   Synopsis   :							*
-* return the line-area of an object
-* defined as the sum of the line segments bounded by the left hand
-* end of the first interval in a line and the right hand end of the
-* last interval in that line.
-************************************************************************/
-
+/* function:     WlzLineArea    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Calculate the line-area of an object defined as the
+ sum of the line segments bounded by the left hand end of the first
+ interval in a line and the right hand end of the last interval in
+ that line.
+*
+* \return       Line area calculated, -1 on error.
+* \param    obj	Input object.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzLineArea.c
+*/
 int WlzLineArea(
   WlzObject *obj,
   WlzErrorNum *dstErr)

@@ -1,36 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDomainFill.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to fill holes in a woolz domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzDomainFill.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Wed Sep 24 08:35:58 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Functions to fill holes in woolz domain objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzDomainFill						*
-*   Date       : Sat Oct 18 15:07:45 1997				*
-*************************************************************************
-*   Synopsis   :fill holes in a woolz domain object domain. The returned*
-*		object will have a NULL valuetable.			*
-*   Returns    :WlzObject *: the new object				*
-*   Parameters :obj: given woolz object					*
-*		dstErr: error return, possible values:			*
-*			WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL,	*
-*			WLZ_ERR_OBJECT_TYPE, WLZ_ERR_DOMAIN_TYPE	*
-*		and errors from WlzObjToBoundary and WlzBoundToObj	*
-*   Global refs:None.							*
-************************************************************************/
 
+/* function:     WlzDomainFill    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        fill holes in a woolz domain object domain. The returned
+ object will have a NULL valuetable.
+*
+* \return       Domain object with holes filled.
+* \param    obj	Input domain object.
+* \param    dstErr	Error return
+* \par      Source:
+*                WlzDomainFill.c
+*/
 WlzObject *WlzDomainFill(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)

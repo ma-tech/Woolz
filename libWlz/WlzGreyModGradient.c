@@ -1,22 +1,46 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyModGradient.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to calculate the modulus of the grey-level
-*		gradient of Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyModGradient.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:52:24 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Functions to calculate the modulus of the grey-level
+ gradient of Woolz objects. 
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
+
+/* function:     WlzGreyModGradient    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Calculate the modulus of the grey-level gradient at each
+ point. The gradient images are calculated using WlzGauss2() with width
+parameter set to <tt>width</tt>.
+*
+* \return       Object with values set to the gradient modulus at each pixel.
+* \param    obj	Input object.
+* \param    width	Width parameter for the gaussian gradient operator.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzGreyModGradient.c
+*/
 WlzObject *WlzGreyModGradient(
   WlzObject	*obj,
   double	width,
@@ -83,10 +107,11 @@ WlzObject *WlzGreyModGradient(
     yobj = WlzGauss2(returnobj, width, width, 0, 1, NULL);
 
     /* calculate modulus  - lockstep raster scan assumes equal domains */
-    WlzInitGreyScan(returnobj, &iwsp1, &gwsp1);
-    WlzInitGreyScan(xobj, &iwsp2, &gwsp2);
-    WlzInitGreyScan(yobj, &iwsp3, &gwsp3);
-    while( WlzNextGreyInterval(&iwsp1) == WLZ_ERR_NONE )
+    errNum = WlzInitGreyScan(returnobj, &iwsp1, &gwsp1);
+    errNum = WlzInitGreyScan(xobj, &iwsp2, &gwsp2);
+    errNum = WlzInitGreyScan(yobj, &iwsp3, &gwsp3);
+    while((errNum == WLZ_ERR_NONE) && 
+	  (WlzNextGreyInterval(&iwsp1) == WLZ_ERR_NONE) )
     {
       (void) WlzNextGreyInterval(&iwsp2);
       (void) WlzNextGreyInterval(&iwsp3);
@@ -142,6 +167,10 @@ WlzObject *WlzGreyModGradient(
 	  g1 = sqrt( g2*g2 + g3*g3 );
 	  *gwsp1.u_grintptr.dbp++ = (double) g1;
 	}
+	break;
+
+      case WLZ_GREY_RGBA: /* RGBA to be done - not sure what RAB */
+	errNum = WLZ_ERR_GREY_TYPE;
 	break;
 
       }

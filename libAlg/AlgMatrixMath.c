@@ -26,7 +26,7 @@
 #include <Alg.h>
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Computes the sum of two matricies and returns
 *		the result in a third supplied matrix:
@@ -69,7 +69,7 @@ void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Subtracts on matrix from another and returns the
 *		result in a third supplied matrix:
@@ -112,7 +112,7 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Computes the product of two matricies and returns
 *		the result in a third supplied matrix:
@@ -179,7 +179,7 @@ double		AlgMatrixTrace(double **aM, size_t nRC)
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Computes the transpose of the given matrix:
 *		\f[
@@ -212,7 +212,7 @@ void		AlgMatrixTranspose(double **aM, double **bM,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Copies the values of the matrix bM to the result
 *		matric aM:
@@ -247,7 +247,7 @@ void		AlgMatrixCopy(double **aM, double **bM,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Multiplies the given matrix by the given scalar:
 *		\f[
@@ -283,7 +283,7 @@ void		AlgMatrixScale(double **aM, double **bM, double sv,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Multiplies the a matrix by a scalar and then adds
 *		another matrix:
@@ -324,7 +324,7 @@ void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Sets the elements of the given square matrix so that it
 *		is a scalar matrix:
@@ -351,7 +351,7 @@ void		AlgMatrixScalar(double **aM, double sv, size_t nRC)
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup      AlgMatrix
 * \brief        Sets the elements of the given matrix to zero.
 * \note		For efficiency the given parameters are not checked.

@@ -113,6 +113,12 @@ WlzObject	*WlzHyThreshold(WlzObject *srcObj,
 	      simpleThr = 1;
 	    }
 	    break;
+	  case WLZ_GREY_RGBA:
+	    if( tmpV.v.rgbv == pThrV.v.rgbv )
+	    {
+	      simpleThr = 1;
+	    }
+	    break;
 	  default:
 	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;

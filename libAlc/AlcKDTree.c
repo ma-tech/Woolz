@@ -482,7 +482,7 @@ static AlcKDTNode *AlcKDTNodeAlcNew(AlcKDTTree *tree, AlcErrno *dstErr)
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup	AlcKDTree
 * \brief        Free's the given KD-tree node and all it's child nodes
 *		by pushing them onto the stack of available nodes.

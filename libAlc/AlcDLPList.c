@@ -127,10 +127,10 @@ AlcErrno	AlcDLPListFree(AlcDLPList *list)
   return(errNum);
 }
 
-/*!
-* \return	Error code.
-* \ingroup	AlcDLPList
-* \brief	Inserts the given entry into the list before the given
+/* function:     AlcDLPListEntryInsert    */
+/*! 
+* \ingroup      AlcDLPList
+* \brief        Inserts the given entry into the list before the given
 *		item.
 * \param	list 			The list data structure.
 * \param	insBefore:		Given item that entry is to

@@ -396,6 +396,9 @@ WlzObject *Wlz3DViewTransformObj(
 	  case WLZ_GREY_DOUBLE:
 	    *(gwsp.u_grintptr.dbp+i) = gVWSp->gVal[0].dbv;
 	    break;
+	  case WLZ_GREY_RGBA:
+	    *(gwsp.u_grintptr.rgbp+i) = gVWSp->gVal[0].rgbv;
+	    break;
 	  case WLZ_GREY_BIT: /* not sure what to do with these */
 	  default:
 	    break;

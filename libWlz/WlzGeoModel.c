@@ -200,7 +200,7 @@ WlzErrorNum	WlzGMModelAddResCb(WlzGMModel *model, WlzGMCbFn fn,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Removes a resource allocation callback from the models
 *		resources. Both the callback function and callback data
@@ -241,7 +241,7 @@ void		WlzGMModelRemResCb(WlzGMModel *model, WlzGMCbFn fn,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Calls all resource allocation callbacks passing on the
 *		given model, element and reason along with the data from
@@ -3564,7 +3564,7 @@ WlzErrorNum	WlzGMShellComputeGBB(WlzGMShell *shell)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Merges the geometries of the two shells so that the
 *               first shell's geometry is set to the union of the
@@ -5217,7 +5217,7 @@ WlzGMFace	*WlzGMEdgeCommonFace(WlzGMEdge *eE0, WlzGMEdge *eE1)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Merges the topologies of the two shells so that the
 *               first shell 'absorbs' the second shell.
@@ -5245,7 +5245,7 @@ static void	WlzGMShellMergeT(WlzGMShell *s0, WlzGMShell *s1)
 /* Model list management */
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Append new vertex topology element onto a doubly
 *               linked list of vertex topology element's, knowing that
@@ -5267,7 +5267,7 @@ void	   	WlzGMVertexTAppend(WlzGMVertexT *eVT, WlzGMVertexT *nVT)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Append new edge topology onto a doubly linked list
 *               of disk topology element's, knowing that neither is NULL.
@@ -5288,7 +5288,7 @@ void	   	WlzGMDiskTAppend(WlzGMDiskT *eDT, WlzGMDiskT *nDT)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Append new edge topology onto a doubly linked list
 *               of edge topology element's, knowing that neither is NULL.
@@ -5310,7 +5310,7 @@ void	   	WlzGMEdgeTAppend(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Insert new edge topology into a doubly linked list
 *               of edge topology element's, knowing that neither is NULL.
@@ -5332,7 +5332,7 @@ void	   	WlzGMEdgeTInsert(WlzGMEdgeT *eET, WlzGMEdgeT *nET)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Inserts the given new edge topology element into a
 *		radially sorted cyclic list of edge topology element's.
@@ -5480,7 +5480,7 @@ void	   	WlzGMEdgeTInsertRadial(WlzGMEdgeT *nET)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Append new loop topology onto a doubly linked list
 *               of loop topology element's, knowing that neither is NULL.
@@ -5501,7 +5501,7 @@ void	   	WlzGMLoopTAppend(WlzGMLoopT *eLT, WlzGMLoopT *nLT)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given loop topology element from a doubly
 *               linked list of loop topology element's, knowing that
@@ -5528,7 +5528,7 @@ void		WlzGMLoopTUnlink(WlzGMLoopT *dLT)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given edge topology element from it's loop
 *		topology element and it's opposite edge topology element.
@@ -5576,7 +5576,7 @@ void		WlzGMEdgeTUnlink(WlzGMEdgeT *dET)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given vertex topology element from a doubly
 *               linked list of vertex topology element's, knowing that
@@ -5605,7 +5605,7 @@ void		WlzGMVertexTUnlink(WlzGMVertexT *dVT)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given disk topology element from a doubly
 *               linked list of disk topology element's, knowing that
@@ -5632,7 +5632,7 @@ void		WlzGMDiskTUnlink(WlzGMDiskT *dDT)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Joins the given pair of disk topology elements
 *		on return the first of the diskTs has all the
@@ -5667,7 +5667,7 @@ void		WlzGMDiskTJoin(WlzGMDiskT *gDT0, WlzGMDiskT *gDT1)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Append new shell onto a doubly linked list of
 *               shells, knowing that neither is NULL.
@@ -5686,7 +5686,7 @@ void	   	WlzGMShellAppend(WlzGMShell *eS, WlzGMShell *nS)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Unlinks the given shell from a doubly linked list of
 *               shells kept by the model, knowing that the given shell
@@ -5714,7 +5714,7 @@ void		WlzGMShellUnlink(WlzGMShell *dS)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Joins the shell to be unlinked onto the shell that's to
 *               be extended and then unlinks (but does not free) it.
@@ -6140,7 +6140,7 @@ WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Frees a GM index look up table data structure.
 * \param	resIdxTb		Given index lut data structure.
@@ -9041,7 +9041,7 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Walks around a loop topology element's child edge
 *               topology elements setting their parent and making
@@ -9067,7 +9067,7 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Moves all loop topology elements connected to the given
 *		loop topology element from their current shell to the
@@ -9086,7 +9086,7 @@ static void	WlzGMShellSetT(WlzGMShell *gS)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      WlzGeoModel
 * \brief	Recursive function which moves loop topology elements
 *		from their current shell to the given shell if they are
@@ -9155,7 +9155,7 @@ static WlzGMShell *WlzGMLoopTFindShell(WlzGMLoopT *gLT)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Removes a vertex from the models vertex hash table.
 *               The vertex's geometry must have been set.
@@ -9198,7 +9198,7 @@ static void	WlzGMModelRemVertex(WlzGMModel *model, WlzGMVertex *dV)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Adds a new vertex into the models vertex hash table.
 *               The vertex's geometry must have been set.
@@ -9252,7 +9252,7 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
 }
 
 /*!
-* \return				<void>
+* \return				void
 * \ingroup      WlzGeoModel
 * \brief	Attempts to find verticies which match the two given
 *               double precision positions.

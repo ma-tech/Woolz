@@ -1,24 +1,45 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGaussNoise.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for making Gaussian noise filled Woolz
-*		objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGaussNoise.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 14:42:07 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesFilters
+* \brief        Functions for making Gaussian noise filled Woolz objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
 #include <Wlz.h>
 
+
+/* function:     WlzGaussNoise    */
+/*! 
+* \ingroup      WlzValuesFilters
+* \brief        Add Gaussian noise to each pixel with mean xero and sigma given
+ by parameter <tt>val</tt>.
+*
+* \return       Woolz error.
+* \param    obj	Input object
+* \param    val	Sigma value for the aditive Guassian noise.
+* \par      Source:
+*                WlzGaussNoise.c
+*/
 WlzErrorNum WlzGaussNoise(
   WlzObject	*obj,
   WlzPixelV	val)
@@ -147,6 +168,15 @@ WlzErrorNum WlzGaussNoise(
 	  mu = (double) *gptr.inp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
 	  *gptr.inp = tmpVal.v.dbv;
+	}
+	break;
+
+      case WLZ_GREY_RGBA:
+	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	  mu = (double) *gptr.inp;
+	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	  *gptr.rgbp = WLZ_CLAMP(tmpVal.v.dbv, 0, 0xffffff);
+	  *gptr.rgbp |= 0xff000000;
 	}
 	break;
 

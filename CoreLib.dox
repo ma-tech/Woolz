@@ -1,0 +1,66 @@
+/*!
+* \mainpage Woolz Core Libraries
+* \section intro Introduction
+The core woolz image processing library, \ref libwlzpage "libWlz",
+ was developed for
+ the purpose of microscope slide scanning. libWlz holds the basic image processing
+ functionality, supplementary libraries provide functionality for memory allocation
+ and management, numerical algorithms, external format conversion and other
+ commonly used programmatic tools. These are:
+\li \ref libalcpage "libAlc"  - memory allocation and management
+\li \ref libalgpage "libAlg" - numerical algorithms
+\li \ref libwlzextpage "libWlzExt" - image format conversion and meta-data IO
+\li \ref libbibfilepage "libbibfile" - IO if "bibtex" format data - standard
+ plain-text meta-data
+\li \ref libdlplistpage "libDlpList"- linked-list structures and
+ procedures for management, sorting and query.
+
+The original woolz software set included libraries for classification and
+chromosome analysis, these are not included in this package. All libraries
+are developed in ANSI Standard C and have been successfully used on any
+Unix system tried so far including Solaris, Linux, IRIX, HPUX, MacOSX. 
+It is also availbale under Windows either using Cygwin or directly using
+ the Microsoft C++ compiler. In addition there is a Java mapping available
+for the woolz library to allow image process from Java code.
+
+\section Structure Overview
+Woolz has been generated over many years at the Medical Research Council
+ Human Genetics Unit in Edinburgh. The basic image processing library
+ originally developed has been extended to include a range of numerical
+ algorithms and libraries for standard programming tasks. The code has been
+ converted to ANSI standard C and standardised with respect to nameing
+ conventions and error reporting. Finally the code has been checked for
+ memory errors such array bound exceptions and leaked bytes. The code is
+ maintained by a number of developers at the MRC and version control is
+ under CVS. The code is open-source and freely available for academic
+ non-profit use. For commercial use of the software please contact
+ matech@hgu.mrc.ac.uk.
+
+The libraries are organised
+
+\section install Usage
+\section install Installation
+\section history Software Development History
+The woolz software libraries have grown over many years for many image
+ processing purposes since the 1970s. The initial development by 
+Dr Denis Rutovitz was in Fortran and defined a number of the key 
+woolz structures, primarily the interval coding of the spatial domains 
+and grey-level values. The current C-coding was initiated in the 1980s, 
+primarily by Dr Jim Piper. The coding has been transformed to its present 
+form in a number of stteps as part of early Alvey and Eu funded projects 
+and more recently as part of the Mouse Atlas porject at the HGU. This 
+has include a large expansion in some of the grey-level image extgensions 
+to the library.
+
+The current software is primarily maintained by Richard Baldock and 
+Bill Hill at the MRC Human Genetics Unit. The sofware is now maintained
+and extended by a group of programmers at the MRC and is managed using
+the Concurrent Versioning System (CVS). A full development history of each
+module is available from the archive. The preceding development is either
+in the source comments or held in a History file generated during the 
+transition form the original C to ANSI standard with standardisation 
+of naming and error reporting.
+ 
+\section pubs Publications
+*
+*/

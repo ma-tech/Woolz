@@ -1,0 +1,34 @@
+/*!
+* \mainpage Woolz Command Line Binaries
+* \section intro Introduction
+The woolz library functions are complemented by a set of binaries for 
+command line processing of woolz formatted data. Most binaries can read data
+from standard input and will write to standard output and can therefore 
+be used in unix "pipeline" mode. This allows efficient concatenation of
+multiple imaging operations for rapid prototyping and script development.
+
+The binary codes are all installed in the Mouse Atlas home bin directory
+(usually /opt/MouseAtlas/bin) and provide a significant proportion of the
+libWlz plus supplementary library functionality. Simple binaries for
+ the basic woolz functions are under \ref binwlz "binWlz", other binaries
+relating to format conversion are under \ref binwlzextff "binWlzExtFF" and
+more complex applications can be found under \ref binwlzapp "binWlzApp".
+
+\section Structure Overview
+\section install Installation
+\section history Software Development History
+\section pubs Publications
+*
+*/
+
+/*!
+\defgroup binwlz Basic Woolz Operations
+\brief Command line programmes for woolz library procedures, select from
+the module list for individual manual pages.
+*/
+/*!
+\defgroup binwlzextff Data Format Conversion
+*/
+/*!
+\defgroup binwlzapp Extended Applications
+*/

@@ -26,7 +26,7 @@
 #include <Wlz.h>
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is int.
@@ -52,7 +52,7 @@ void		WlzValueSetInt(int *vec, int value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is short.
@@ -78,7 +78,7 @@ void		WlzValueSetShort(short *vec, short value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is UBYTE.
@@ -94,7 +94,7 @@ void		WlzValueSetUByte(UBYTE *vec, UBYTE value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is float.
@@ -113,7 +113,7 @@ void		WlzValueSetFloat(float *vec, float value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is double.
@@ -132,7 +132,33 @@ void		WlzValueSetDouble(double *vec, double value,
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is rgb-alpha.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
+void		WlzValueSetRGBA(UINT *vec, UINT value,
+			       int count)
+{
+  if(value)
+  {
+    while(count-- > 0)
+    {
+      *vec++ = value;
+    }
+  }
+  else
+  {
+    (void )memset(vec, 0, count * sizeof(UINT));
+  }
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is WlzDVertex2.
@@ -151,7 +177,7 @@ void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is WlzFVertex2.
@@ -170,7 +196,7 @@ void		WlzValueSetFVertex(WlzFVertex2 *vec, WlzFVertex2 value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given value,
 *		where the vector type is WlzIVertex2.
@@ -196,7 +222,7 @@ void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Sets the elements of the given vector to a given
 *               value, where the vector type is any one of int,
@@ -233,7 +259,7 @@ void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of int values to the limits of short.
 * \param	vec			Vector who's elements are to be
@@ -257,7 +283,7 @@ void		 WlzValueClampIntToShort(int *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of int values to the limits of UBYTE.
 * \param	vec			Vector who's elements are to be
@@ -281,7 +307,7 @@ void		 WlzValueClampIntToUByte(int *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of short values to the limits of UBYTE.
 * \param	vec			Vector who's elements are to be
@@ -305,7 +331,7 @@ void		 WlzValueClampShortToUByte(short *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values to the limits of int.
 * \param	vec			Vector who's elements are to be
@@ -329,7 +355,7 @@ void		 WlzValueClampDoubleToInt(double *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values to the limits of short.
 * \param	vec			Vector who's elements are to be
@@ -353,7 +379,7 @@ void		 WlzValueClampDoubleToShort(double *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values to the limits of UBYTE.
 * \param	vec			Vector who's elements are to be
@@ -377,7 +403,31 @@ void		 WlzValueClampDoubleToUByte(double *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values to the limits of RGBA.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
+void		 WlzValueClampDoubleToRGBA(double *vec, int count)
+{
+  while(count-- > 0)
+  {
+    if(*vec > UCHAR_MAX)
+    {
+      *vec = UCHAR_MAX;
+    }
+    else if(*vec < 0)
+    {
+      *vec = 0;
+    }
+    ++vec;
+  }
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values to the limits of float.
 * \param	vec			Vector who's elements are to be
@@ -401,7 +451,7 @@ void		 WlzValueClampDoubleToFloat(double *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of float values to the limits of int.
 * \param	vec			Vector who's elements are to be
@@ -425,7 +475,7 @@ void		 WlzValueClampFloatToInt(float *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of float values to the limits of short.
 * \param	vec			Vector who's elements are to be
@@ -449,7 +499,7 @@ void		 WlzValueClampFloatToShort(float *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of float values to the limits of UBYTE.
 * \param	vec			Vector who's elements are to be
@@ -473,7 +523,7 @@ void		 WlzValueClampFloatToUByte(float *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of int values into a vector of short
 *		values.
@@ -503,7 +553,7 @@ void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of nt values into a vector of UBYTE
 *		values.
@@ -533,7 +583,7 @@ void		 WlzValueClampIntIntoUByte(UBYTE *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of short values into a vector of UBYTE
 *		values.
@@ -563,7 +613,7 @@ void		 WlzValueClampShortIntoUByte(UBYTE *dst, short *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of float values into a vector of int
 *		values.
@@ -593,7 +643,7 @@ void		WlzValueClampFloatIntoInt(int *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of float values into a vector of short
 *		values.
@@ -623,7 +673,7 @@ void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of float values into a vector of UBYTE
 *		values.
@@ -653,7 +703,7 @@ void		WlzValueClampFloatIntoUByte(UBYTE *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of into double values into a vector of int
 *		values.
@@ -683,7 +733,7 @@ void		WlzValueClampDoubleIntoInt(int *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values into a vector of short
 *		values.
@@ -713,7 +763,7 @@ void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values into a vector of UBYTE
 *		values.
@@ -743,7 +793,7 @@ void		WlzValueClampDoubleIntoUByte(UBYTE *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of double values into a vector of float
 *		values.
@@ -773,7 +823,135 @@ void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of int values into a vector of RGBA
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
+void		WlzValueClampIntIntoRGBA(UINT *dst, int *src, int count)
+{
+  UINT val;
+  while(count-- > 0)
+  {
+    if(*src > 255)
+    {
+      val = 255;
+    }
+    else if(*src < 0)
+    {
+      val = 0;
+    }
+    else
+    {
+      val = (UINT) *src;
+    }
+    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
+    ++src;
+    ++dst;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of short values into a vector of RGBA
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
+void		WlzValueClampShortIntoRGBA(UINT *dst, short *src, int count)
+{
+  UINT val;
+  while(count-- > 0)
+  {
+    if(*src > 255)
+    {
+      val = 255;
+    }
+    else if(*src < 0)
+    {
+      val = 0;
+    }
+    else
+    {
+      val = (UINT) *src;
+    }
+    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
+    ++src;
+    ++dst;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values into a vector of RGBA
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
+void		WlzValueClampFloatIntoRGBA(UINT *dst, float *src, int count)
+{
+  UINT val;
+  while(count-- > 0)
+  {
+    if(*src > 255)
+    {
+      val = 255;
+    }
+    else if(*src < 0)
+    {
+      val = 0;
+    }
+    else
+    {
+      val = (UINT) *src;
+    }
+    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
+    ++src;
+    ++dst;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values into a vector of RGBA
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
+void		WlzValueClampDoubleIntoRGBA(UINT *dst, double *src, int count)
+{
+  UINT val;
+  while(count-- > 0)
+  {
+    if(*src > 255)
+    {
+      val = 255;
+    }
+    else if(*src < 0)
+    {
+      val = 0;
+    }
+    else
+    {
+      val = (UINT) *src;
+    }
+    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
+    ++src;
+    ++dst;
+  }
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Clamps a source vector into a destination vector,
 *               where the source and destination types are any
@@ -818,6 +996,10 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueClampDoubleIntoInt(dst.inp + dstOff, src.dbp + srcOff,
 	  			     count);
 	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToInt(dst.inp + dstOff, src.rgbp + srcOff,
+	  			     count);
+	  break;
       }
       break;
     case WLZ_GREY_SHORT:
@@ -841,6 +1023,10 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  break;
 	case WLZ_GREY_DOUBLE:
 	  WlzValueClampDoubleIntoShort(dst.shp + dstOff, src.dbp + srcOff,
+	  			       count);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToShort(dst.shp + dstOff, src.rgbp + srcOff,
 	  			       count);
 	  break;
       }
@@ -868,6 +1054,10 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueClampDoubleIntoUByte(dst.ubp + dstOff, src.dbp + srcOff,
 	  			       count);
 	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToUByte(dst.ubp + dstOff, src.rgbp + srcOff,
+	  			       count);
+	  break;
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -891,6 +1081,10 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  break;
 	case WLZ_GREY_DOUBLE:
 	  WlzValueClampDoubleIntoFloat(dst.flp + dstOff, src.dbp + srcOff,
+	  			       count);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToFloat(dst.flp + dstOff, src.rgbp + srcOff,
 	  			       count);
 	  break;
       }
@@ -918,13 +1112,46 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyDoubleToDouble(dst.dbp + dstOff, src.dbp + srcOff,
 	  			     count);
 	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToDouble(dst.dbp + dstOff, src.rgbp + srcOff,
+	  			     count);
+	  break;
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueClampIntIntoRGBA(dst.rgbp + dstOff, src.inp + srcOff,
+	  			  count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueClampShortIntoRGBA(dst.rgbp + dstOff, src.shp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToRGBA(dst.rgbp + dstOff, src.ubp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueClampFloatIntoRGBA(dst.rgbp + dstOff, src.flp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueClampDoubleIntoRGBA(dst.rgbp + dstOff, src.dbp + srcOff,
+	  			     count);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToRGBA(dst.rgbp + dstOff, src.rgbp + srcOff,
+	  			     count);
+	  break;
       }
       break;
   }
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Masks a vector of int to the limits of short.
 * \param	vec			Vector who's elements are to be
@@ -940,7 +1167,7 @@ void		 WlzValueMaskIntToShort(int *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Masks a vector of int to the limits of UBYTE.
 * \param	vec			Vector who's elements are to be
@@ -956,7 +1183,7 @@ void		 WlzValueMaskIntToUByte(int *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Masks a vector of short to the limits of UBYTE.
 * \param	vec			Vector who's elements are to be
@@ -972,7 +1199,7 @@ void		 WlzValueMaskShortToUByte(short *vec, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of int to a vector of int.
 * \param	dst			Destination vector.
@@ -985,7 +1212,7 @@ void		WlzValueCopyIntToInt(int *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of int to a vector of short.
 * \param	dst			Destination vector.
@@ -1001,7 +1228,7 @@ void		WlzValueCopyIntToShort(short *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of int to a vector of UBYTE.
 * \param	dst			Destination vector.
@@ -1017,7 +1244,7 @@ void		WlzValueCopyIntToUByte(UBYTE *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of int to a vector of float.
 * \param	dst			Destination vector.
@@ -1033,7 +1260,7 @@ void		WlzValueCopyIntToFloat(float *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of int to a vector of double.
 * \param	dst			Destination vector.
@@ -1049,7 +1276,20 @@ void		WlzValueCopyIntToDouble(double *dst, int *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of int to a vector of RGBA.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyIntToRGBA(UINT *dst, int *src, int count)
+{
+  WlzValueClampIntIntoRGBA(dst, src, count);
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of short to a vector of int.
 * \param	dst			Destination vector.
@@ -1065,7 +1305,7 @@ void		WlzValueCopyShortToInt(int *dst, short *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of short to a vector of short.
 * \param	dst			Destination vector.
@@ -1078,7 +1318,7 @@ void		WlzValueCopyShortToShort(short *dst, short *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of short to a vector of UBYTE.
 * \param	dst			Destination vector.
@@ -1094,7 +1334,7 @@ void		WlzValueCopyShortToUByte(UBYTE *dst, short *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of short to a vector of float.
 * \param	dst			Destination vector.
@@ -1110,7 +1350,7 @@ void		WlzValueCopyShortToFloat(float *dst, short *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of short to a vector of double.
 * \param	dst			Destination vector.
@@ -1127,7 +1367,7 @@ void		WlzValueCopyShortToDouble(double *dst, short *src,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of UBYTE to a vector of int.
 * \param	dst			Destination vector.
@@ -1143,7 +1383,20 @@ void		WlzValueCopyUByteToInt(int *dst, UBYTE *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of short to a vector of RGBA.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyShortToRGBA(UINT *dst, short *src, int count)
+{
+  WlzValueClampShortIntoRGBA(dst, src, count);
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of UBYTE to a vector of short.
 * \param	dst			Destination vector.
@@ -1159,7 +1412,7 @@ void		WlzValueCopyUByteToShort(short *dst, UBYTE *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of UBYTE to a vector of UBYTE.
 * \param	dst			Destination vector.
@@ -1172,7 +1425,7 @@ void		WlzValueCopyUByteToUByte(UBYTE *dst, UBYTE *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of UBYTE to a vector of float.
 * \param	dst			Destination vector.
@@ -1188,7 +1441,7 @@ void		WlzValueCopyUByteToFloat(float *dst, UBYTE *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of UBYTE to a vector of double.
 * \param	dst			Destination vector.
@@ -1204,7 +1457,25 @@ void		WlzValueCopyUByteToDouble(double *dst, UBYTE *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of UBYTE to a vector of RGBA.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyUByteToRGBA(UINT *dst, UBYTE *src, int count)
+{
+  while(count-- > 0)
+  {
+    WLZ_RGBA_RGBA_SET(*dst, *src, *src, *src, 255);
+    dst++;
+    src++;
+  }
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of float to a vector of int.
 * \param	dst			Destination vector.
@@ -1221,7 +1492,7 @@ void		WlzValueCopyFloatToInt(int *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of float to a vector of short.
 * \param	dst			Destination vector.
@@ -1238,7 +1509,7 @@ void		WlzValueCopyFloatToShort(short *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of float to a vector of UBYTE.
 * \param	dst			Destination vector.
@@ -1255,7 +1526,7 @@ void		WlzValueCopyFloatToUByte(UBYTE *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of float to a vector of float.
 * \param	dst			Destination vector.
@@ -1268,7 +1539,7 @@ void		WlzValueCopyFloatToFloat(float *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of float to a vector of double.
 * \param	dst			Destination vector.
@@ -1284,7 +1555,20 @@ void		WlzValueCopyFloatToDouble(double *dst, float *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of float to a vector of RGBA.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyFloatToRGBA(UINT *dst, float *src, int count)
+{
+  WlzValueClampFloatIntoRGBA(dst, src, count);
+}
+
+/*!
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of double to a vector of int.
 * \param	dst			Destination vector.
@@ -1301,7 +1585,7 @@ void		WlzValueCopyDoubleToInt(int *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of double to a vector of short.
 * \param	dst			Destination vector.
@@ -1318,7 +1602,7 @@ void		WlzValueCopyDoubleToShort(short *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of double to a vector of UBYTE.
 * \param	dst			Destination vector.
@@ -1335,7 +1619,7 @@ void		WlzValueCopyDoubleToUByte(UBYTE *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of double to a vector of float.
 * \param	dst			Destination vector.
@@ -1351,7 +1635,7 @@ void		WlzValueCopyDoubleToFloat(float *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of double to a vector of double.
 * \param	dst			Destination vector.
@@ -1364,7 +1648,124 @@ void		WlzValueCopyDoubleToDouble(double *dst, double *src, int count)
 }
 
 /*!
-* \return	<void>
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of double to a vector of RGBA.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyDoubleToRGBA(UINT *dst, double *src, int count)
+{
+  WlzValueClampDoubleIntoRGBA(dst, src, count);
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of RGBA to a vector of int - uses modulus
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyRGBAToInt(int *dst, UINT *src, int count)
+{
+  while(count-- > 0)
+  {
+    *dst++ = WLZ_RGBA_MODULUS(*src);
+    ++src;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of RGBA to a vector of short - uses modulus
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyRGBAToShort(short *dst, UINT *src, int count)
+{
+  while(count-- > 0)
+  {
+    *dst++ = WLZ_RGBA_MODULUS(*src);
+    ++src;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of RGBA to a vector of UBYTE - uses modulus
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyRGBAToUByte(UBYTE *dst, UINT *src, int count)
+{
+  int	ival;
+
+  while(count-- > 0)
+  {
+    ival = WLZ_RGBA_MODULUS(*src);
+    *dst++ = WLZ_CLAMP(ival, 0, 255);
+    ++src;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of RGBA to a vector of float - uses modulus
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyRGBAToFloat(float *dst, UINT *src, int count)
+{
+  while(count-- > 0)
+  {
+    *dst++ = WLZ_RGBA_MODULUS(*src);
+    ++src;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of RGBA to a vector of double - uses modulus
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyRGBAToDouble(double *dst, UINT *src, int count)
+{
+  while(count-- > 0)
+  {
+    *dst++ = WLZ_RGBA_MODULUS(*src);
+    ++src;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of RGBA to a vector of RGBA
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
+void		WlzValueCopyRGBAToRGBA(UINT *dst, UINT *src, int count)
+{
+  while(count-- > 0)
+  {
+    *dst++ = *src++;
+  }
+}
+
+/*!
+* \return	void
 * \ingroup      WlzValueUtils
 * \brief	Copies a source vector to a destination vector,
 *               where the source and destination types are any
@@ -1408,6 +1809,10 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyDoubleToInt(dst.inp + dstOff, src.dbp + srcOff,
 	  			  count);
 	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToInt(dst.inp + dstOff, src.rgbp + srcOff,
+	  			  count);
+	  break;
       }
       break;
     case WLZ_GREY_SHORT:
@@ -1432,6 +1837,10 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	case WLZ_GREY_DOUBLE:
 	  WlzValueCopyDoubleToShort(dst.shp + dstOff, src.dbp + srcOff,
 	  			    count);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToShort(dst.shp + dstOff, src.rgbp + srcOff,
+	  			  count);
 	  break;
       }
       break;
@@ -1458,6 +1867,10 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyDoubleToUByte(dst.ubp + dstOff, src.dbp + srcOff,
 	  			    count);
 	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToUByte(dst.ubp + dstOff, src.rgbp + srcOff,
+	  			  count);
+	  break;
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -1482,6 +1895,10 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	case WLZ_GREY_DOUBLE:
 	  WlzValueCopyDoubleToFloat(dst.flp + dstOff, src.dbp + srcOff,
 	  			    count);
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToFloat(dst.flp + dstOff, src.rgbp + srcOff,
+	  			  count);
+	  break;
 	  break;
       }
       break;
@@ -1508,13 +1925,46 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyDoubleToDouble(dst.dbp + dstOff, src.dbp + srcOff,
 	  			     count);
 	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToDouble(dst.dbp + dstOff, src.rgbp + srcOff,
+	  			  count);
+	  break;
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueCopyIntToRGBA(dst.rgbp + dstOff, src.inp + srcOff,
+	  			  count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueCopyShortToRGBA(dst.rgbp + dstOff, src.shp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToRGBA(dst.rgbp + dstOff, src.ubp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueCopyFloatToRGBA(dst.rgbp + dstOff, src.flp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueCopyDoubleToRGBA(dst.rgbp + dstOff, src.dbp + srcOff,
+	  			     count);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueCopyRGBAToRGBA(dst.rgbp + dstOff, src.rgbp + srcOff,
+	  			  count);
+	  break;
       }
       break;
   }
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D double vertices to a vector of
 *		2D double vertices.
@@ -1530,7 +1980,7 @@ void		WlzValueCopyDVertexToDVertex(WlzDVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D double vertices to a vector of
 *		2D float vertices.
@@ -1552,7 +2002,7 @@ void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D double vertices to a vector of
 *		2D int vertices.
@@ -1574,7 +2024,7 @@ void		WlzValueCopyDVertexToIVertex(WlzIVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D float vertices to a vector of
 *		2D double vertices.
@@ -1596,7 +2046,7 @@ void		WlzValueCopyFVertexToDVertex(WlzDVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D float vertices to a vector of
 *		2D float vertices.
@@ -1612,7 +2062,7 @@ void		WlzValueCopyFVertexToFVertex(WlzFVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D float vertices to a vector of
 *		2D int vertices.
@@ -1634,7 +2084,7 @@ void		WlzValueCopyFVertexToIVertex(WlzIVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D int vertices to a vector of
 *		2D double vertices.
@@ -1656,7 +2106,7 @@ void		WlzValueCopyIVertexToDVertex(WlzDVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D int vertices to a vector of
 *		2D float vertices.
@@ -1678,7 +2128,7 @@ void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 2D int vertices to a vector of
 *		2D int vertices.
@@ -1694,7 +2144,7 @@ void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D double vertices to a vector of
 *		3D double vertices.
@@ -1710,7 +2160,7 @@ void		WlzValueCopyDVertexToDVertex3(WlzDVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D double vertices to a vector of
 *		3D float vertices.
@@ -1733,7 +2183,7 @@ void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D double vertices to a vector of
 *		3D int vertices.
@@ -1756,7 +2206,7 @@ void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D float vertices to a vector of
 *		3D double vertices.
@@ -1779,7 +2229,7 @@ void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D float vertices to a vector of
 *		3D float vertices.
@@ -1795,7 +2245,7 @@ void		WlzValueCopyFVertexToFVertex3(WlzFVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D float vertices to a vector of
 *		3D int vertices.
@@ -1818,7 +2268,7 @@ void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D int vertices to a vector of
 *		3D double vertices.
@@ -1841,7 +2291,7 @@ void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D int vertices to a vector of
 *		3D float vertices.
@@ -1864,7 +2314,7 @@ void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzValueUtils
 * \brief	Copies a vector of 3D int vertices to a vector of
 *		3D int vertices.
@@ -1894,6 +2344,7 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 				     WlzGreyType dstType)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  UINT		val;
 
   if(dstPix == NULL)
   {
@@ -1927,6 +2378,11 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	    dstPix->type = dstType;
 	    dstPix->v.dbv = srcPix.v.inv;
 	    break;
+	  case WLZ_GREY_RGBA:
+	    dstPix->type = dstType;
+	    val = WLZ_CLAMP(srcPix.v.inv, 0, 255);
+	    WLZ_RGBA_RGBA_SET(dstPix->v.rgbv, val, val, val, 255);
+	    break;
 	  default:
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
@@ -1955,6 +2411,11 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	    dstPix->type = dstType;
 	    dstPix->v.dbv = srcPix.v.shv;
 	    break;
+	  case WLZ_GREY_RGBA:
+	    dstPix->type = dstType;
+	    val = WLZ_CLAMP(srcPix.v.shv, 0, 255);
+	    WLZ_RGBA_RGBA_SET(dstPix->v.rgbv, val, val, val, 255);
+	    break;
 	  default:
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
@@ -1981,6 +2442,11 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	  case WLZ_GREY_DOUBLE:
 	    dstPix->type = dstType;
 	    dstPix->v.dbv = srcPix.v.ubv;
+	    break;
+	  case WLZ_GREY_RGBA:
+	    dstPix->type = dstType;
+	    val = srcPix.v.ubv;
+	    WLZ_RGBA_RGBA_SET(dstPix->v.rgbv, val, val, val, 255);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_VALUES_TYPE;
@@ -2012,6 +2478,11 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	    dstPix->type = dstType;
 	    dstPix->v.dbv = srcPix.v.flv;
 	    break;
+	  case WLZ_GREY_RGBA:
+	    dstPix->type = dstType;
+	    val = WLZ_CLAMP(srcPix.v.flv, 0, 255);
+	    WLZ_RGBA_RGBA_SET(dstPix->v.rgbv, val, val, val, 255);
+	    break;
 	  default:
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
@@ -2041,6 +2512,44 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	    dstPix->v.flv = srcPix.v.dbv;
 	    break;
 	  case WLZ_GREY_DOUBLE:
+	    *dstPix = srcPix;
+	    break;
+	  case WLZ_GREY_RGBA:
+	    dstPix->type = dstType;
+	    val = WLZ_CLAMP(srcPix.v.dbv, 0, 255);
+	    WLZ_RGBA_RGBA_SET(dstPix->v.rgbv, val, val, val, 255);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	    break;
+	}
+	break;
+      case WLZ_GREY_RGBA:
+	val = WLZ_RGBA_MODULUS(srcPix.v.rgbv);
+        switch(dstType)
+	{
+	  case WLZ_GREY_INT:
+	    dstPix->type = dstType;
+	    dstPix->v.inv = val;
+	    break;
+	  case WLZ_GREY_SHORT:
+	    dstPix->type = dstType;
+	    dstPix->v.shv = val;
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    dstPix->type = dstType;
+	    dstPix->v.ubv = WLZ_CLAMP(val, 0, 255);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    dstPix->type = dstType;
+	    dstPix->v.flv = val;
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    dstPix->type = dstType;
+	    dstPix->v.dbv = val;
+	    break;
+	  case WLZ_GREY_RGBA:
+	    dstPix->type = dstType;
 	    *dstPix = srcPix;
 	    break;
 	  default:

@@ -292,7 +292,8 @@ static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
 	 (gWsp.pixeltype != WLZ_GREY_SHORT) &&
 	 (gWsp.pixeltype != WLZ_GREY_UBYTE) &&
 	 (gWsp.pixeltype != WLZ_GREY_FLOAT) &&
-	 (gWsp.pixeltype != WLZ_GREY_DOUBLE))
+	 (gWsp.pixeltype != WLZ_GREY_DOUBLE) &&
+	 (gWsp.pixeltype != WLZ_GREY_RGBA))
       {
         errNum = WLZ_ERR_GREY_TYPE;
       }
@@ -358,6 +359,17 @@ static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
 		sum.vtX += pos.vtX * tmpD;
 		mass += tmpD;
 		++(gPix.dbp);
+		++(pos.vtX);
+	      }
+	      break;
+	    case WLZ_GREY_RGBA:
+	      while(iCount-- > 0)
+	      {
+		tmpD = WLZ_RGBA_MODULUS(*(gPix.rgbp));
+		sum.vtY += pos.vtY * tmpD;
+		sum.vtX += pos.vtX * tmpD;
+		mass += tmpD;
+		++(gPix.rgbp);
 		++(pos.vtX);
 	      }
 	      break;

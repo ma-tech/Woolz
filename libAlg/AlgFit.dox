@@ -1,22 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         AlgFit.dox
-* \author       Bill Hill
-* \date         March 2003
-* \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
 * \brief	Alg function fitting algorithms.
 * \ingroup	Alg
-* \defgroup	AlgFit
-* \todo         -
-* \bug          None known.
+* \defgroup	AlgFit AlgFit
 */
 

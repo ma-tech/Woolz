@@ -149,6 +149,23 @@ WlzErrorNum WlzGreySetRangeLut(
 	  *gptr.dbp = lut.p.ubp[(int) *gptr.dbp - minV];
 	break;
 
+      case WLZ_GREY_RGBA:
+	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	  UINT red, green, blue, alpha;
+	  red = WLZ_RGBA_RED_GET(*gptr.rgbp);
+	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp);
+	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp);
+	  alpha = WLZ_RGBA_ALPHA_GET(*gptr.rgbp);
+	  red = lut.p.ubp[red - minV];
+	  green = lut.p.ubp[green - minV];
+	  blue = lut.p.ubp[blue - minV];
+	  WLZ_RGBA_RED_SET(*gptr.rgbp, red);
+	  WLZ_RGBA_GREEN_SET(*gptr.rgbp, green);
+	  WLZ_RGBA_BLUE_SET(*gptr.rgbp, blue);
+	  WLZ_RGBA_ALPHA_SET(*gptr.rgbp, alpha);
+	}
+	break;
+
       default:
 	wlzErrno = WLZ_ERR_GREY_TYPE;
 	break;

@@ -1,18 +1,27 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyInvertMinMax.c
-* Date:         March 1999
-* Author:       Margaret Stark
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Grey value inversion.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyInvertMinMax.c
+* \author       Margaret Stark
+* \date         Fri Sep 26 11:43:54 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Grey value inversion.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -20,36 +29,29 @@ static WlzErrorNum WlzGreyInvertMinMax3d(WlzObject	*obj,
 					 WlzPixelV	min,
 					 WlzPixelV	max);
 
-/************************************************************************
-*   Function   : WlzGreyInvertMinMax					*
-*   Date       : Tue Jan  7 15:37:35 1997				*
-*************************************************************************
-*   Synopsis   : Invert the Grey values of an object within a given	*
-*		range. The supplied min and max values define the grey	*
-*		transformation by: 		       	       		*
-*			g' = gmax + gmin - g				*
-*		which means that g=gmax gives g'=gmin and g=gmin gives	*
-*		g'=gmax. This is a generalisation of the original invert*
-*		and allows for the "normal" inversion of 255-g for byte	*
-*		images. The user must ensure the grey-value type of the	*
-*		given object can hold the result e.g. if the result is	*
-*		negative. Note it is assumed that min and max have 	*
-*		a grey type which can be converted to the grey-type	*
-*		of the given image.					*
-*   Returns    : WlzErrorNum:    WLZ_ERR_NONE on success                *
-*                Possible Errors:                                       *
-*              :                  WLZ_ERR_INT_DATA,                     *
-*              :                  WLZ_ERR_OBJECT_NULL     		*
-*              :                  WLZ_ERR_OBJECT_TYPE                   *
-*              :                  WLZ_ERR_DOMAIN_NULL                   *
-*              :                  WLZ_ERR_VALUES_NULL                   *
-*              :                  WLZ_ERR_GREY_TYPE                     *
-*   Parameters : Wlzobject	  *obj: Object Pointer	                *
-*		 WlzPixelV	  min: minimum grey of transform	*
-*				  max: maximum grey of transform	*
-*   Global refs: None.							*
-************************************************************************/
-
+/* function:     WlzGreyInvertMinMax    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Invert the Grey values of an object within a given	
+*		range. The supplied min and max values define the grey	
+*		transformation by: 		       	       		
+*			g' = gmax + gmin - g				
+*		which means that g=gmax gives g'=gmin and g=gmin gives	
+*		g'=gmax. This is a generalisation of the original invert
+*		and allows for the "normal" inversion of 255-g for byte	
+*		images. The user must ensure the grey-value type of the	
+*		given object can hold the result e.g. if the result is	
+*		negative. Note it is assumed that min and max have 	
+*		a grey type which can be converted to the grey-type	
+*		of the given image.
+*
+* \return       Woolz error.
+* \param    obj	Input object.
+* \param    min	Minimu grey value for the inversion function.
+* \param    max	Maximun value for the inversion function.
+* \par      Source:
+*                WlzGreyInvertMinMax.c
+*/
 WlzErrorNum WlzGreyInvertMinMax(
   WlzObject	*obj,
   WlzPixelV	min,
@@ -61,6 +63,7 @@ WlzErrorNum WlzGreyInvertMinMax(
   WlzGreyWSpace 	gwsp;
   int			irange;
   double		drange;
+  UINT			redrange, greenrange, bluerange;
   int			i;
  
   /* check for NULL object */
@@ -119,6 +122,11 @@ WlzErrorNum WlzGreyInvertMinMax(
   case WLZ_GREY_DOUBLE:
     drange = min.v.dbv + max.v.dbv;
     break;
+  case WLZ_GREY_RGBA:
+    redrange = WLZ_RGBA_RED_GET(min.v.rgbv) + WLZ_RGBA_RED_GET(max.v.rgbv);
+    greenrange = WLZ_RGBA_GREEN_GET(min.v.rgbv) + WLZ_RGBA_GREEN_GET(max.v.rgbv);
+    bluerange = WLZ_RGBA_BLUE_GET(min.v.rgbv) + WLZ_RGBA_BLUE_GET(max.v.rgbv);
+    break;
   }
 
   while( WlzNextGreyInterval(&iwsp) == 0 ){
@@ -154,6 +162,18 @@ WlzErrorNum WlzGreyInvertMinMax(
       }
       break;
 
+    case WLZ_GREY_RGBA: 
+      for (i=0; i<iwsp.colrmn; i++, g.rgbp++){
+	UINT red, green, blue;
+	red = redrange - WLZ_RGBA_RED_GET(*g.rgbp);
+	green = greenrange - WLZ_RGBA_GREEN_GET(*g.rgbp);
+	blue = bluerange - WLZ_RGBA_BLUE_GET(*g.rgbp);
+	WLZ_RGBA_RED_SET(*g.rgbp, red);
+	WLZ_RGBA_GREEN_SET(*g.rgbp, green);
+	WLZ_RGBA_BLUE_SET(*g.rgbp, blue);
+      }
+      break;
+
     default:
       return( WLZ_ERR_GREY_TYPE );
 
@@ -163,18 +183,18 @@ WlzErrorNum WlzGreyInvertMinMax(
 }
 
 
-/************************************************************************
-*   Function   : WlzGreyInvertMinMax3d					*
-*   Date       : Tue Jan 14 12:14:09 1997				*
-*************************************************************************
-*   Synopsis   :Private procedure for WlzGreyInvertMinMax to implement	*
-*	        the function for 3D domain objects. This procedure omits*
-*	        most of the object checks and therefore should never be	*
-*	        called directly.					*
-*   Returns    :WlzErrorNum:  see WlzGreyInvertMinMax		       	*
-*   Parameters :see WlzGreyInvertMinMax	       				*
-*   Global refs:None							*
-************************************************************************/
+/*
+*   Function   : WlzGreyInvertMinMax3d					
+*   Date       : Tue Jan 14 12:14:09 1997				
+*
+*   Synopsis   :Private procedure for WlzGreyInvertMinMax to implement	
+*	        the function for 3D domain objects. This procedure omits
+*	        most of the object checks and therefore should never be	
+*	        called directly.					
+*   Returns    :WlzErrorNum:  see WlzGreyInvertMinMax		       	
+*   Parameters :see WlzGreyInvertMinMax	       				
+*   Global refs:None							
+*/
 
 static WlzErrorNum WlzGreyInvertMinMax3d(WlzObject	*obj,
 					 WlzPixelV	min,

@@ -108,7 +108,7 @@ WlzObject	*WlzEffReadObjTiff(
 	depth = 24;
 	wlzDepth = sizeof(int);
 	newpixtype = WLZ_GREY_RGBA;
-	bckgrnd.v.rgbv = 0;
+	bckgrnd.v.rgbv = 0x0;
       }
       break;
 
@@ -198,20 +198,38 @@ WlzObject	*WlzEffReadObjTiff(
       inp = buf;
       switch (photometric) {
       case PHOTOMETRIC_RGB:
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
 	if (samplesperpixel == 4){
 	  for (col = 0; col < width; col++, offset++) {
-	    wlzData.rgbp[offset] = 
-	      (inp[3]<<24)|(inp[0]<<16)|(inp[1]<<8)|(inp[2]);
+	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			      inp[0], inp[1], inp[2], inp[3]);
 	    inp += 4;	/* skip to next values */
 	  }
 	}
 	else {
 	  for (col = 0; col < width; col++, offset++) {
-	    wlzData.rgbp[offset] = 
-	      (0<<24)|(inp[0]<<16)|(inp[1]<<8)|(inp[2]);
+	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			      inp[0], inp[1], inp[2], 0xff);
+	    inp += 3;	/* skip to next values */
+	  }
+	}
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	if (samplesperpixel == 4){
+	  for (col = 0; col < width; col++, offset++) {
+	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			      inp[3], inp[2], inp[1], inp[0]);
 	    inp += 4;	/* skip to next values */
 	  }
 	}
+	else {
+	  for (col = 0; col < width; col++, offset++) {
+	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			      inp[2], inp[1], inp[0], 0xff);
+	    inp += 3;	/* skip to next values */
+	  }
+	}
+#endif /* __x86 || __alpha */
 	break;
 
       case PHOTOMETRIC_MINISWHITE:
@@ -278,9 +296,13 @@ WlzObject	*WlzEffReadObjTiff(
     }
     colMin = WLZ_NINT(xPosition*xResolution);
     rowMin = WLZ_NINT(yPosition*yResolution);
-    obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
-		      newpixtype, wlzData.inp, bckgrnd,
-		      NULL, NULL, &errNum);
+    if( obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
+			  newpixtype, wlzData.inp, bckgrnd,
+			  NULL, NULL, &errNum) ){
+      obj->values.r->freeptr = 
+	    AlcFreeStackPush(obj->values.r->freeptr,
+			     (void *) wlzData.ubp, &errNum);
+    }
   }  
 
   if( buf ){

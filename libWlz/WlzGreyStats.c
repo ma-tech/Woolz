@@ -84,6 +84,9 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
 	  case WLZ_GREY_DOUBLE:
 	    gVal = *(gPix.dbp)++;
 	    break;
+	  case WLZ_GREY_RGBA: /* RGBA - to be done RAB */
+	    gVal = *(gPix.rgbp)++;
+	    break;
 	  default:
 	    errNum = WLZ_ERR_GREY_TYPE;
 	}

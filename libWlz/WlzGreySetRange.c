@@ -1,38 +1,54 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreySetRange.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Set new grey range for a Woolz object either using
-*		simple linear interpolation or nearest value.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreySetRange.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri May 23 08:09:14 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesFilters
+* \brief        Set new grey range for a Woolz object using
+ simple linear interpolation
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzGreySetRange					*
-*   Date       : Wed Sep 17 12:00:41 1997				*
-*************************************************************************
-*   Synopsis   :Set new grey-range by simple linear interpolation. It	*
-*		assumed that the min and max values enclose the true	*
-*		range of grey-values in the object. Failure to check	*
-*		this could result in a segmentation fault.		*
-*		The transform function is:				*
-*		g' = ((gMax - gMin)/(gmax-gmin))*(g - gmin) + gMin	*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
 
+/* function:     WlzGreySetRange    */
+/*! 
+* \ingroup      WlzValuesFilters
+* \brief        Set new grey-range by simple linear interpolation. It
+ assumes that the min and max values enclose the true range of
+ grey-values in the object. Failure to check this could result in a
+ segmentation fault.
+
+The transform function is:
+\f[g' = \frac{(gMax - gMin)}{(gmax - gmin)} (g - gmin) + gMin
+\f]
+*
+* \return       Woolz error number
+* \param    obj	Input grey-level object whose values are to be reset.
+* \param    min	Initial minimum value
+* \param    max	Initial maximum value
+* \param    Min	Final minimum value
+* \param    Max	Final maximum value
+* \par      Source:
+*                WlzGreySetRange.c
+*/
 WlzErrorNum WlzGreySetRange(
   WlzObject	*obj,
   WlzPixelV	min,
@@ -47,7 +63,7 @@ WlzErrorNum WlzGreySetRange(
   WlzObject		*tempobj;
   WlzValues 		*values;
   WlzDomain		*domains;
-  int			i, nplanes;
+  int			i, j, nplanes;
   WlzErrorNum		wlzErrno=WLZ_ERR_NONE;
 
   /* check object */
@@ -122,49 +138,129 @@ WlzErrorNum WlzGreySetRange(
   }
 
   if( wlzErrno == WLZ_ERR_NONE ){
-    WlzValueConvertPixel(&min, min, WLZ_GREY_DOUBLE);
-    WlzValueConvertPixel(&max, max, WLZ_GREY_DOUBLE);
-    WlzValueConvertPixel(&Min, Min, WLZ_GREY_DOUBLE);
-    WlzValueConvertPixel(&Max, Max, WLZ_GREY_DOUBLE);
-    if( fabs(max.v.dbv - min.v.dbv) < DBL_EPSILON ){
-      return WLZ_ERR_FLOAT_DATA;
+    /* get conversion function - should use LUT
+       use 4 LUTS for rgb type since bounded */
+    if( WlzGreyTypeFromObj(obj, &wlzErrno) == WLZ_GREY_RGBA ){
+      UBYTE	rgbaLut[4][256];
+      UINT	rgbamin[4], rgbaMin[4];
+      double	rgbaFactor[4], val;
+      UINT	red, green, blue, alpha;
+
+      rgbamin[0] = WLZ_RGBA_RED_GET(min.v.rgbv);
+      rgbaMin[0] = WLZ_RGBA_RED_GET(Min.v.rgbv);
+      if(WLZ_RGBA_RED_GET(max.v.rgbv) > WLZ_RGBA_RED_GET(min.v.rgbv)){
+	rgbaFactor[0] = (((double) WLZ_RGBA_RED_GET(Max.v.rgbv) - 
+			  WLZ_RGBA_RED_GET(Min.v.rgbv))/
+			 (WLZ_RGBA_RED_GET(max.v.rgbv) - 
+			  WLZ_RGBA_RED_GET(min.v.rgbv)));
+      }
+      else {
+	rgbaFactor[0] = 0.0;
+      }
+
+      rgbamin[1] = WLZ_RGBA_GREEN_GET(min.v.rgbv);
+      rgbaMin[1] = WLZ_RGBA_GREEN_GET(Min.v.rgbv);
+      if(WLZ_RGBA_GREEN_GET(max.v.rgbv) > WLZ_RGBA_GREEN_GET(min.v.rgbv)){
+	rgbaFactor[1] = (((double) WLZ_RGBA_GREEN_GET(Max.v.rgbv) - 
+			  WLZ_RGBA_GREEN_GET(Min.v.rgbv))/
+			 (WLZ_RGBA_GREEN_GET(max.v.rgbv) - 
+			  WLZ_RGBA_GREEN_GET(min.v.rgbv)));
+      }
+      else {
+	rgbaFactor[1] = 0.0;
+      }
+
+      rgbamin[2] = WLZ_RGBA_BLUE_GET(min.v.rgbv);
+      rgbaMin[2] = WLZ_RGBA_BLUE_GET(Min.v.rgbv);
+      if(WLZ_RGBA_BLUE_GET(max.v.rgbv) > WLZ_RGBA_BLUE_GET(min.v.rgbv)){
+	rgbaFactor[2] = (((double) WLZ_RGBA_BLUE_GET(Max.v.rgbv) - 
+			  WLZ_RGBA_BLUE_GET(Min.v.rgbv))/
+			 (WLZ_RGBA_BLUE_GET(max.v.rgbv) - 
+			  WLZ_RGBA_BLUE_GET(min.v.rgbv)));
+      }
+      else {
+	rgbaFactor[2] = 0.0;
+      }
+
+      rgbamin[3] = WLZ_RGBA_ALPHA_GET(min.v.rgbv);
+      rgbaMin[3] = WLZ_RGBA_ALPHA_GET(Min.v.rgbv);
+      if(WLZ_RGBA_ALPHA_GET(max.v.rgbv) > WLZ_RGBA_ALPHA_GET(min.v.rgbv)){
+	rgbaFactor[3] = (((double) WLZ_RGBA_ALPHA_GET(Max.v.rgbv) - 
+			  WLZ_RGBA_ALPHA_GET(Min.v.rgbv))/
+			 (WLZ_RGBA_ALPHA_GET(max.v.rgbv) - 
+			  WLZ_RGBA_ALPHA_GET(min.v.rgbv)));
+      }
+      else {
+	rgbaFactor[3] = 0.0;
+      }
+
+      /* now set up the LUTS */
+      for(i=0; i < 4; i++){
+	for(j=0; j < 256; j++){
+	  val = rgbaFactor[i] * (j - rgbamin[i]) + rgbaMin[i];
+	  rgbaLut[i][j] = WLZ_CLAMP(val, 0, 255);
+	}
+      }
+
+      /* set values - can assume rgba grey-type */
+      WlzInitGreyScan(obj, &iwsp, &gwsp);
+      while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
+
+	gptr = gwsp.u_grintptr;
+	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	  red = rgbaLut[0][WLZ_RGBA_RED_GET(*gptr.rgbp)];
+	  green = rgbaLut[0][WLZ_RGBA_GREEN_GET(*gptr.rgbp)];
+	  blue = rgbaLut[0][WLZ_RGBA_BLUE_GET(*gptr.rgbp)];
+	  alpha = rgbaLut[0][WLZ_RGBA_ALPHA_GET(*gptr.rgbp)];
+	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
+	}
+      }
     }
-    factor = (Max.v.dbv - Min.v.dbv) / (max.v.dbv - min.v.dbv);
+    else {
+      WlzValueConvertPixel(&min, min, WLZ_GREY_DOUBLE);
+      WlzValueConvertPixel(&max, max, WLZ_GREY_DOUBLE);
+      WlzValueConvertPixel(&Min, Min, WLZ_GREY_DOUBLE);
+      WlzValueConvertPixel(&Max, Max, WLZ_GREY_DOUBLE);
+      if( fabs(max.v.dbv - min.v.dbv) < DBL_EPSILON ){
+	return WLZ_ERR_FLOAT_DATA;
+      }
+      factor = (Max.v.dbv - Min.v.dbv) / (max.v.dbv - min.v.dbv);
 
-    WlzInitGreyScan(obj, &iwsp, &gwsp);
-    while( WlzNextGreyInterval(&iwsp) == 0 ){
+      WlzInitGreyScan(obj, &iwsp, &gwsp);
+      while( WlzNextGreyInterval(&iwsp) == 0 ){
 
-      gptr = gwsp.u_grintptr;
-      switch (gwsp.pixeltype) {
+	gptr = gwsp.u_grintptr;
+	switch (gwsp.pixeltype) {
 
-      case WLZ_GREY_INT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
-	  *gptr.inp = (int) (factor * (*gptr.inp - min.v.dbv) + Min.v.dbv);
-	break;
+	case WLZ_GREY_INT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
+	    *gptr.inp = (int) (factor * (*gptr.inp - min.v.dbv) + Min.v.dbv);
+	  break;
 
-      case WLZ_GREY_SHORT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
-	  *gptr.shp = (short) (factor * (*gptr.shp - min.v.dbv) + Min.v.dbv);
-	break;
+	case WLZ_GREY_SHORT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
+	    *gptr.shp = (short) (factor * (*gptr.shp - min.v.dbv) + Min.v.dbv);
+	  break;
 
-      case WLZ_GREY_UBYTE:
-	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
-	  *gptr.ubp = (UBYTE) (factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv);
-	break;
+	case WLZ_GREY_UBYTE:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
+	    *gptr.ubp = (UBYTE) (factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv);
+	  break;
 
-      case WLZ_GREY_FLOAT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
-	  *gptr.flp = (float) (factor * (*gptr.flp - min.v.dbv) + Min.v.dbv);
-	break;
+	case WLZ_GREY_FLOAT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
+	    *gptr.flp = (float) (factor * (*gptr.flp - min.v.dbv) + Min.v.dbv);
+	  break;
 
-      case WLZ_GREY_DOUBLE:
-	for (i=0; i<iwsp.colrmn; i++, gptr.dbp++)
-	  *gptr.dbp = (double) (factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv);
-	break;
+	case WLZ_GREY_DOUBLE:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.dbp++)
+	    *gptr.dbp = (double) (factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv);
+	  break;
 
-      default:
-	wlzErrno = WLZ_ERR_GREY_TYPE;
-	break;
+	default:
+	  wlzErrno = WLZ_ERR_GREY_TYPE;
+	  break;
+	}
       }
     }
   }

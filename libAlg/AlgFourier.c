@@ -174,7 +174,7 @@ static void			*AlgFourThrRepXY1D(
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup      AlgFourier
 * \brief	Computes the Hartley transform of the given one
 *		dimensional data, and does it in place.
@@ -711,7 +711,7 @@ static void	*AlgFourThrHart1D(AlgFourArgs1 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the Fourier transform of the given one
 *		dimensional complex data, and does it in place.
 * \param	real			Given real data.
@@ -811,7 +811,7 @@ static void	*AlgFourThr1D(AlgFourArgs2 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the inverse Fourier transform of the given
 *		complex one dimensional data, and does it in place.
 * \param	real			Given real data.
@@ -912,7 +912,7 @@ void		*AlgFourThrInv1D(AlgFourArgs2 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes repeated the Fourier transforms of the given
 *	 	one dimensional complex data sets.
 *		These may either be done wrt the rows or columns of
@@ -1163,7 +1163,7 @@ static void	*AlgFourThrRepXY1D(AlgFourArgs4 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the Fourier transform of the given one
 *		dimensional real data, and does it in place.
 * \param	real			Given real data.
@@ -1230,7 +1230,7 @@ void		*AlgFourThrReal1D(AlgFourArgs1 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the inverse Fourier transform of the given one
 *		one dimensional real data, and does it in place.
 * \param	real			Given real/complex data.
@@ -1297,7 +1297,7 @@ void		*AlgFourThrRealInv1D(AlgFourArgs1 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes repeated the Fourier transforms of the given
 *	 	one dimensional real data sets.
 *		These may either be done wrt the rows or columns of
@@ -1589,7 +1589,7 @@ static void	*AlgFourThrRepXYReal1D(AlgFourArgs3 *args)
 #endif /* ALG_THREADS_USED */
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the Fourier transform of the given two
 *		dimensional complex data, and does it in place.
 *		If the two buffer pointers are NULL then the transform
@@ -1626,7 +1626,7 @@ void		AlgFour2D(double **real, double **imag,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the inverse Fourier transform of the given two
 *		dimensional complex data, and does it in place.
 *		If the two buffer pointers are NULL then the transform
@@ -1663,7 +1663,7 @@ void		AlgFourInv2D(double **real, double **imag,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the Fourier transform of the given two
 *		dimensional real data, and does it in place.
 *		If the two buffer pointers are NULL then the transform
@@ -1698,7 +1698,7 @@ void		AlgFourReal2D(double **real, double *reBuf, double *imBuf,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \brief	Computes the Fourier transform of the given two
 *		dimensional data which resulted from a transform using
 *		AlgFourReal2D(), and does it in place.

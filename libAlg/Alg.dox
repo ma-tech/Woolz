@@ -1,0 +1,18 @@
+/*!
+* \defgroup    Alg	libAlg
+* \brief     
+* This library contains numerical algorithms which depend on no other
+* non system library apart from the allocation and fundamental types
+* library libAlc. See \ref libalgpage "libAlg" for more detail.
+*/
+
+/*! \page libalgpage Woolz Numeical Algorithms Library
+* \section intro Introduction
+The woolz image processing library uses a number of standard
+numerical algorithms which have been re-implmented as required to
+provide a stable source and freely distributable code for the Woolz
+core package.
+\section structure Structures
+\section usage Example Usage
+\section standards Coding Conventions
+*/

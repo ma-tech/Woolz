@@ -471,6 +471,7 @@ WlzMakeValueTb(WlzObjectType	type,
     case WLZ_GREY_UBYTE:
     case WLZ_GREY_FLOAT:
     case WLZ_GREY_DOUBLE:
+    case WLZ_GREY_RGBA:
       WlzValueConvertPixel(&(vtb->bckgrnd), backgrnd,
 			   WlzGreyTableTypeToGreyType(type, NULL));
       break;
@@ -653,6 +654,7 @@ WlzMakeRectValueTb(WlzObjectType	type,
     case WLZ_GREY_UBYTE:
     case WLZ_GREY_FLOAT:
     case WLZ_GREY_DOUBLE:
+    case WLZ_GREY_RGBA:
       WlzValueConvertPixel(&(vtb->bckgrnd), backgrnd,
 			   WlzGreyTableTypeToGreyType(type, NULL));
       break;
@@ -1394,6 +1396,10 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
 	data_size = sizeof(double);
 	break;
 
+      case WLZ_GREY_RGBA:
+	data_size = sizeof(UINT);
+	break;
+
       default:
 	WlzFreeObj( jobj );
 	return( NULL );
@@ -1493,6 +1499,11 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	bgd_val = (int) backgrnd.v.dbv;
 	break;
 
+      case WLZ_GREY_RGBA:
+	table_size = WlzLineArea(obj, NULL) * sizeof(UINT);
+	bgd_val = (int) backgrnd.v.rgbv;
+	break;
+
       default:
 	errNum = WLZ_ERR_GREY_TYPE;
 	break;
@@ -1541,6 +1552,10 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 
 	    case WLZ_GREY_DOUBLE:
 	      g.dbp += iwsp.rgtpos - k1 +1;
+	      break;
+
+	    case WLZ_GREY_RGBA:
+	      g.rgbp += iwsp.rgtpos - k1 +1;
 	      break;
 
 	    }
@@ -1596,6 +1611,12 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
       case WLZ_GREY_DOUBLE:
 	v.r->values.dbp  =
 	  (double *) AlcMalloc(sizeof(double)*(v.r->lastln - v.r->line1 + 1)
+			       * v.r->width);
+	break;
+
+      case WLZ_GREY_RGBA:
+	v.r->values.rgbp  =
+	  (UINT *) AlcMalloc(sizeof(UINT)*(v.r->lastln - v.r->line1 + 1)
 			       * v.r->width);
 	break;
 

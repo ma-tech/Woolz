@@ -1,21 +1,30 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzStructDilation.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Performs dilation using a structuring element.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzStructDilation.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzMorphologyOps
+* \brief        Perform dilation using a structuring element.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -43,16 +52,21 @@ static WlzObject *WlzStructDilation3d(WlzObject		*obj,
 				      WlzObject		*structElm,
 				      WlzErrorNum	*dstErr);
 
-/************************************************************************
-*   Function   : WlzStructDilation					*
-*   Date       : Mon Nov  3 07:36:01 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
 
+/* function:     WlzStructDilation    */
+/*! 
+* \ingroup      WlzMorphologyOps
+* \brief        Dilate an object with respect to the given
+ structuring element. This is defined as the domain obtained as
+ the union of the SE placed at every pixel of the input domain.
+*
+* \return       Dilated domain object.
+* \param    obj	Input object to be dilated
+* \param    structElm	Structuring element.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzStructDilation.c
+*/
 WlzObject *WlzStructDilation(
   WlzObject	*obj,
   WlzObject	*structElm,
@@ -275,15 +289,6 @@ WlzObject *WlzStructDilation(
   return rtnObj;
 }
 
-/************************************************************************
-*   Function   : unionitvs						*
-*   Date       : Mon Nov  3 07:35:17 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
 
 static int unionitvs(
   WlzIntervalLine	*itva,
@@ -355,15 +360,6 @@ static int unionitvs(
   }
   return(m);
 }
-/************************************************************************
-*   Function   : line_struct_dil					*
-*   Date       : Mon Nov  3 07:35:06 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
 
 static int line_struct_dil(
   WlzIntervalLine	*itvl,
@@ -391,15 +387,6 @@ static int line_struct_dil(
   return(i);
 }
 
-/************************************************************************
-*   Function   : arr_arr_union						*
-*   Date       : Mon Nov  3 07:35:40 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
 /*
  * Find the union intervals between two lines.
  * One set of m intervals is in aa.
@@ -496,15 +483,6 @@ static int arr_arr_union(
   return((int)(cc-tmp));
 }
 
-/************************************************************************
-*   Function   : WlzStructDilation3d					*
-*   Date       : Mon Nov  3 07:34:47 1997				*
-*************************************************************************
-*   Synopsis   :							*
-*   Returns    :							*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
 
 static WlzObject *WlzStructDilation3d(
   WlzObject 	*obj,

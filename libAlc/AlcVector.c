@@ -296,7 +296,7 @@ unsigned int	AlcVectorCount(AlcVector *vec)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlcVector
 * \brief	Copies elements from the vector into a 1 dimensional
 *		array.

@@ -138,7 +138,7 @@ AlgError	AlgHeapSortIdx(void *data, int *idx,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgSort
 * \brief	Swaps two data elements.
 * \param	elm0			Ptr to first element.
@@ -160,7 +160,7 @@ void 		AlgHeapElmSwap(void *elm0, void *elm1, int cnt)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgSort
 * \brief	Sifts a data element down through the heap.
 * \param	data			Data elements.
@@ -196,7 +196,7 @@ static void 	AlgHeapSiftDown(char *data, int elmSz,
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	AlgSort
 * \brief	Sifts an indexed data element down through the heap.
 * \param	data			Data elements.

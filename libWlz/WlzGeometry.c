@@ -492,7 +492,7 @@ static int	WlzGeomVtxSortRadialFn(void *p0, int *idxP, int idx0, int idx1)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzGeometry
 * \brief	Sorts the given 3D verticies, which lie in a plane
 *               perpendicular to the radial vector, in order of their

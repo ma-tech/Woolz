@@ -296,6 +296,9 @@ static WlzObject *WlzIntRescaleObj2D(
 	  case WLZ_GREY_DOUBLE:
 	    gwsp.u_grintptr.dbp[k] = (*(gVWSp->gVal)).dbv;
 	    break;
+	  case WLZ_GREY_RGBA:
+	    gwsp.u_grintptr.rgbp[k] = (*(gVWSp->gVal)).rgbv;
+	    break;
 	  }
 	}
       }

@@ -1,25 +1,49 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyDitherObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Makes a dithered object from the given grey-level
-*		Woolz object. The destination bits are determined by
-*		the number of shades in the dithered image (usually
-*		1 bit) and the bit planes to use (typically to match
-*		the bit-planes of a display mask).
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyDitherObj.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:39:14 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesUtils
+* \brief        Makes a dithered object from the given grey-level Woolz
+ object. The destination bits are determined by the number of shades in
+ the dithered image (usually 1 bit) and the bit planes to use (typically
+ to match the bit-planes of a display mask).
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
+
+/* function:     WlzGreyDitherObj    */
+/*! 
+* \ingroup      WlzValuesUtils
+* \brief        Makes a dithered object from the given grey-level Woolz
+ object. The destination bits are determined by the number of shades in
+ the dithered image (usually 1 bit) and the bit planes to use (typically
+ to match the bit-planes of a display mask).
+*
+* \return       Object with dithered grey values.
+* \param    o	Input object.
+* \param    destBits	Destination bit planes for dithered values.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzGreyDitherObj.c
+*/
 WlzObject *WlzGreyDitherObj(
   WlzObject	*o,
   unsigned int  destBits,
@@ -154,7 +178,9 @@ WlzObject *WlzGreyDitherObj(
 	      }
 	      break;
 
+	    case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	    }
 	  }

@@ -784,7 +784,7 @@ static int	WlzRegICPItr(WlzRegICPWSp *wSp,
 }
 
 /*!
-* \return       <void>
+* \return       void
 * \ingroup	WlzTransform
 * \brief        Transforms the source vertices and normals using the
 *               current affine transform.
@@ -829,7 +829,7 @@ static void     WlzRegICPTrans(WlzRegICPWSp *wSp)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Finds nearest neighbour matches in the target tree for
 *		the source vertices, sets the nearest neighbour
@@ -876,7 +876,7 @@ static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
 }
 
 /*!
-* \return	<void>
+* \return	void
 * \ingroup	WlzTransform
 * \brief	Weights the matched vertices by combining weightings
 *		for the vertex position and normal matches.

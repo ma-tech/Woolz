@@ -1,40 +1,47 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzSepTrans.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Executes a separable image transform on a 2D Woolz
-*		domain object. It's up to the user to make sure the
-*		resultant is a legal value for the grey-value type.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzSepTrans.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Mon May 26 08:16:16 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzValuesFilters
+* \brief        Execute a separable transform on a 2D Woolz domain object.
+ It is the user responsibility to ensure that the grey-0value type is
+ appropraite for the resultant.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzSepTrans						*
-*   Date       : Thu Jul 17 19:58:46 1997				*
-*************************************************************************
-*   Synopsis   :Perform separable transform on a grey-level image	*
-*   Returns    :WlzObject *: transformed object				*
-*   Parameters :WlzObject *obj: object for transform			*
-*		WlzIntervalConvFunc	x_fun: convolution function to	*
-*			be applied the the intervals - x-direction	*
-*		void		*x_params: parameter pointer to be	*
-*			passed to the convolution function		*
-*		WlzIntervalConvFunc	y_fun: convolution function for	*
-*			the y-direction					*
-*		
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzSepTrans    */
+/*! 
+* \ingroup      WlzValuesFilters
+* \brief        Perform 2D seperable transform on a 2D grey-level image.
+*
+* \return       Pointer to transformed object
+* \param    obj	Input object pointer
+* \param    x_fun	Convolution function to be applied in the x-direction (along the rows).
+* \param    x_params	Parameter pointer to be passed to the x-function.
+* \param    y_fun	Convolution function to be applied in the y-direction (down the columns).
+* \param    y_params	Parameter pointer to be passed to the y-function.
+* \param    dstErr	error return.
+* \par      Source:
+*                WlzSepTrans.c
+*/
 WlzObject *WlzSepTrans(
   WlzObject		*obj,
   WlzIntervalConvFunc	x_fun,
@@ -128,28 +135,36 @@ WlzObject *WlzSepTrans(
     while( (errNum = WlzNextGreyInterval(&iwspace)) == WLZ_ERR_NONE ){
       stwspc.inbuf.p.inp = gwspace.u_grintptr.inp;
       stwspc.len = iwspace.rgtpos - iwspace.lftpos + 1;
-      (*y_fun)(&stwspc, y_params);
-      switch(  stwspc.inbuf.type ){
-      case WLZ_GREY_INT:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.inp++)
-	  *stwspc.inbuf.p.inp = stwspc.outbuf.p.inp[i];
-	break;
-      case WLZ_GREY_SHORT:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.shp++)
-	  *stwspc.inbuf.p.shp = stwspc.outbuf.p.inp[i];
-	break;
-      case WLZ_GREY_UBYTE:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.ubp++)
-	  *stwspc.inbuf.p.ubp = stwspc.outbuf.p.inp[i];
-	break;
-      case WLZ_GREY_FLOAT:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.flp++)
-	  *stwspc.inbuf.p.flp = stwspc.outbuf.p.flp[i];
-	break;
-      case WLZ_GREY_DOUBLE:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.dbp++)
-	  *stwspc.inbuf.p.dbp = stwspc.outbuf.p.dbp[i];
-	break;
+      if( (errNum = (*y_fun)(&stwspc, y_params)) == WLZ_ERR_NONE ){
+	switch(  stwspc.inbuf.type ){
+	case WLZ_GREY_INT:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.inp++)
+	    *stwspc.inbuf.p.inp = stwspc.outbuf.p.inp[i];
+	  break;
+	case WLZ_GREY_SHORT:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.shp++)
+	    *stwspc.inbuf.p.shp = stwspc.outbuf.p.inp[i];
+	  break;
+	case WLZ_GREY_UBYTE:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.ubp++)
+	    *stwspc.inbuf.p.ubp = stwspc.outbuf.p.inp[i];
+	  break;
+	case WLZ_GREY_FLOAT:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.flp++)
+	    *stwspc.inbuf.p.flp = stwspc.outbuf.p.flp[i];
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.dbp++)
+	    *stwspc.inbuf.p.dbp = stwspc.outbuf.p.dbp[i];
+	  break;
+	case WLZ_GREY_RGBA:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.rgbp++)
+	    *stwspc.inbuf.p.rgbp = stwspc.outbuf.p.rgbp[i];
+	  break;
+	}
+      }
+      else {
+	break; /* break from the while loop */
       }
     }
     if( errNum == WLZ_ERR_EOO ){
@@ -170,28 +185,36 @@ WlzObject *WlzSepTrans(
     while( (errNum = WlzNextGreyInterval(&iwspace)) == WLZ_ERR_NONE ){
       stwspc.inbuf.p.inp = gwspace.u_grintptr.inp;
       stwspc.len = iwspace.rgtpos - iwspace.lftpos + 1;
-      (*x_fun)(&stwspc, x_params);
-      switch(  gwspace.pixeltype ){
-      case WLZ_GREY_INT:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.inp++)
-	  *stwspc.inbuf.p.inp = stwspc.outbuf.p.inp[i];
-	break;
-      case WLZ_GREY_SHORT:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.shp++)
-	  *stwspc.inbuf.p.shp = stwspc.outbuf.p.inp[i];
-	break;
-      case WLZ_GREY_UBYTE:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.ubp++)
-	  *stwspc.inbuf.p.ubp = stwspc.outbuf.p.inp[i];
-	break;
-      case WLZ_GREY_FLOAT:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.flp++)
-	  *stwspc.inbuf.p.flp = stwspc.outbuf.p.flp[i];
-	break;
-      case WLZ_GREY_DOUBLE:
-	for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.dbp++)
-	  *stwspc.inbuf.p.dbp = stwspc.outbuf.p.dbp[i];
-	break;
+      if( (errNum = (*x_fun)(&stwspc, x_params)) == WLZ_ERR_NONE ){
+	switch(  gwspace.pixeltype ){
+	case WLZ_GREY_INT:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.inp++)
+	    *stwspc.inbuf.p.inp = stwspc.outbuf.p.inp[i];
+	  break;
+	case WLZ_GREY_SHORT:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.shp++)
+	    *stwspc.inbuf.p.shp = stwspc.outbuf.p.inp[i];
+	  break;
+	case WLZ_GREY_UBYTE:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.ubp++)
+	    *stwspc.inbuf.p.ubp = stwspc.outbuf.p.inp[i];
+	  break;
+	case WLZ_GREY_FLOAT:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.flp++)
+	    *stwspc.inbuf.p.flp = stwspc.outbuf.p.flp[i];
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.dbp++)
+	    *stwspc.inbuf.p.dbp = stwspc.outbuf.p.dbp[i];
+	  break;
+	case WLZ_GREY_RGBA:
+	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.rgbp++)
+	    *stwspc.inbuf.p.rgbp = stwspc.outbuf.p.rgbp[i];
+	  break;
+	}
+      }
+      else {
+	break; /* break from the while loop */
       }
     }
   }

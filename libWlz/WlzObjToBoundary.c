@@ -1,18 +1,27 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzObjToBoundary.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Compute a boundary list from a Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzObjToBoundary.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzBoundary
+* \brief        Compute a boundary list from a Woolz object.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -65,13 +74,22 @@ static void 		vertcompress	(WlzIVertex2 **vtx,
 static int 		wraparound	(WlzPolygonDomain *pdom,
 					 int wrap);
 
-/*
- * compute the recursive boundary structure of input object "obj",
- * with "wrap" points repeated in each boundary polygon to endure
- * wrap-around (usual value for drawing purposes : 1).
- * All boundary polygon arcs lie in one of the 8 directions vertical,
- * horizontal, diagonal.
- */
+/* function:     WlzObjToBoundary    */
+/*! 
+* \ingroup      WlzBoundary
+* \brief        Compute the recursive boundary structure of input
+ object "obj",with "wrap" points repeated in each boundary polygon
+ to ensurewrap-around (usual value for drawing purposes : 1).
+ All boundary polygon arcs lie in one of the 8 directions vertical,
+ horizontal, diagonal.
+*
+* \return       Boundary object, NULL on error.
+* \param    obj	Input domain object.
+* \param    wrap	Number ov overlapping vertices within each polygon.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzObjToBoundary.c
+*/
 WlzObject *WlzObjToBoundary(
   WlzObject	*obj,
   int		wrap,

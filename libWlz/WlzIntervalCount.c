@@ -1,32 +1,42 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzIntervalCount.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Counts the number of intervals (or equivalent) in a
-*		Woolz object's domain.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzIntervalCount.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:15:09 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Counts the number of intervals (or equivalent)
+ in a Woolz object domain.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzIntervalCount					*
-*   Returns    :int: number of intervals if WLZ_INTERVALDOMAIN_INTVL	*
-*		else number of lines					*
-*   Parameters :WlzIntervalDomain *idom: woolz interval domain		*
-*		WlzErrorNum *wlzErr:     Woolz error return.		*
-*   Date       : Mon Oct 14 13:18:00 1996				*
-*   Synopsis   :Count the number of intervals or equivalent if 		*
-*		rectangular						*
-************************************************************************/
-
+/* function:     WlzIntervalCount    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Count the number of intervals or equivalent if rectangular.
+*
+* \return       Number of intervals if the domain type is
+ <tt>WLZ_INTERVALDOMAIN_INTVL</tt> else the number of lines.
+* \param    idom	Input domain.
+* \param    wlzErr	Error return.
+* \par      Source:
+*                WlzIntervalCount.c
+*/
 int WlzIntervalCount(WlzIntervalDomain *idom, WlzErrorNum *wlzErr)
 {
   int		l,

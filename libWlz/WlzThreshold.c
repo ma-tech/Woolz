@@ -137,6 +137,10 @@ WlzObject *WlzThreshold(WlzObject	*obj,
     case WLZ_GREY_DOUBLE:
       thresh_i = thresh_f = thresh_d = threshV.v.dbv;
       break;
+    case WLZ_GREY_RGBA:
+      thresh_i = WLZ_RGBA_MODULUS(threshV.v.rgbv);
+      thresh_f = thresh_d = thresh_i;
+      break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
     }
@@ -154,6 +158,9 @@ WlzObject *WlzThreshold(WlzObject	*obj,
     nkl = idom->kol1;
     (void) WlzInitGreyScan(obj, &iwsp, &gwsp);
     nints = 0;
+    if( gwsp.pixeltype == WLZ_GREY_RGBA ){
+      thresh_i *= thresh_i;
+    }
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
       g = gwsp.u_grintptr;
       over = 0;
@@ -281,6 +288,33 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 	    }
 	  }
 	  g.dbp++;
+	}
+	break;
+
+      case WLZ_GREY_RGBA: /* what to do - OR or AND ? choose MODULUS */
+	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
+	  if(((highlow == WLZ_THRESH_HIGH) && 
+	      (WLZ_RGBA_MODULUS_2(*g.rgbp) >= thresh_i)) ||
+	     ((highlow == WLZ_THRESH_LOW) && 
+	      (WLZ_RGBA_MODULUS_2(*g.rgbp) < thresh_i)) ){
+	    if (over == 0) {
+	      over = 1;
+	      if (iwsp.linpos < nl1)
+		nl1 = iwsp.linpos;
+	      if (iwsp.linpos > nll)
+		nll = iwsp.linpos;
+	      if (colno < nk1)
+		nk1 = colno;
+	    }
+	  } else {
+	    if (over == 1) {
+	      if (colno > nkl)
+		nkl = colno;
+	      over = 0;
+	      nints++;
+	    }
+	  }
+	  g.rgbp++;
 	}
 	break;
 
@@ -432,6 +466,28 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 		}
 	      }
 	      g.dbp++;
+	    }
+	    break;
+
+	  case WLZ_GREY_RGBA: /* what to do - OR or AND ? choose MODULUS */
+	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
+	      if(((highlow == WLZ_THRESH_HIGH) && 
+		  (WLZ_RGBA_MODULUS_2(*g.rgbp) >= thresh_i)) ||
+		 ((highlow == WLZ_THRESH_LOW) && 
+		  (WLZ_RGBA_MODULUS_2(*g.rgbp) < thresh_i)) ){
+		if (over == 0) {
+		  over = 1;
+		  itvl->ileft = colno - nk1;
+		}
+	      } else {
+		if (over == 1) {
+		  over = 0;
+		  itvl->iright = colno - nk1 - 1;
+		  nints++;
+		  itvl++;
+		}
+	      }
+	      g.rgbp++;
 	    }
 	    break;
 

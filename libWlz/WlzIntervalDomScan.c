@@ -1,34 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzIntervalDomScan.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for scanning through a Woolz object's
-*		interval domain.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzIntervalDomScan.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 11:18:29 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzDomainOps
+* \brief        Functions for scanning through a Woolz object
+ interval domain.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   :WlzInitRasterScan					*
-*   Returns    :WlzErrorNum: WLZ_ERR_NONE - success			*
-*			WLZ_ERR_OBJECT_NULL, WLZ_ERR_OBJECT_TYPE,	*
-*			WLZ_ERR_DOMAIN_NULL, WLZ_ERR_DOMAIN_TYPE.	*
-*   Parameters :WlzObject *obj: object to be scanned, must be		*
-*		WLZ_2D_DOMAINOBJ or WLZ_EMPTY_OBJ			*
-*		WlzIntervalWSpace *iwsp: interval scanning work space.	*
-*		WlzRasterDir raster: scanning direction.		*
-*   Date       : Mon Oct 14 13:23:22 1996				*
-*   Synopsis   :initialise interval scanning				*
-************************************************************************/
+/* function:     WlzInitRasterScan    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Initialise raster scanning.
+*
+* \return       Woolz error.
+* \param    obj	Input object too be scanned.
+* \param    iwsp	Interval scan workspace.
+* \param    raster	Scanning direction.
+* \par      Source:
+*                WlzIntervalDomScan.c
+*/
 WlzErrorNum 	WlzInitRasterScan(WlzObject *obj, WlzIntervalWSpace *iwsp,
 		  		  WlzRasterDir raster)
 {
@@ -127,17 +136,16 @@ WlzErrorNum 	WlzInitRasterScan(WlzObject *obj, WlzIntervalWSpace *iwsp,
   return(errNum);
 }
 
-
-/************************************************************************
-*   Function   : WlzNextInterval					*
-*   Returns    : WlzErrorNum:	WLZ_ERR_NONE 	- Next interval		*
-*			        WLZ_ERR_EOO 	- No more intervals	*
-*				*		- Error
-*   Parameters :WlzIntervalWSpace *iwsp: interval scanning work space	*
-*   Date       : Mon Oct 14 13:53:49 1996				*
-*   Synopsis   :							*
-* Get next interval in a standard object.
-************************************************************************/
+/* function:     WlzNextInterval    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Get next interval in a standard object.
+*
+* \return       Woolz error.
+* \param    iwsp	Interval scanning workspace.
+* \par      Source:
+*                WlzIntervalDomScan.c
+*/
 WlzErrorNum	WlzNextInterval(WlzIntervalWSpace *iwsp)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -223,17 +231,19 @@ WlzErrorNum	WlzNextInterval(WlzIntervalWSpace *iwsp)
   return(errNum);
 }
 
-
-/************************************************************************
-*   Function   : WlzNextLine						*
-*   Returns    :							*
-*   Parameters :							*
-*   Date       : Mon Oct 14 13:56:57 1996				*
-*   Synopsis   :							*
-* moving to the line which is step away from the present line
-* (beware when both nextline() and nextinterval() are used 
-* since nextinterval() will locate the first interval in that line)
-************************************************************************/
+/* function:     WlzNextLine    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Moving to the line which is step away from the present line
+ (beware when both nextline() and nextinterval() are used 
+ since nextinterval() will locate the first interval in that line)
+*
+* \return       Woolz error.
+* \param    iwsp	Interval scanning workspace.
+* \param    step	Distance to the required line (1 - next line etc.)
+* \par      Source:
+*                WlzIntervalDomScan.c
+*/
 WlzErrorNum	WlzNextLine(WlzIntervalWSpace *iwsp, int step)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -297,21 +307,21 @@ WlzErrorNum	WlzNextLine(WlzIntervalWSpace *iwsp, int step)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzInitLineScan					*
-*   Returns    :WlzErrorNum: WLZ_ERR_NONE, WLZ_ERR_OBJECT_NULL,		*
-*		WLZ_ERR_OBJECT_TYPE, WLZ_ERR_DOMAIN_NULL,		*
-		WLZ_ERR_DOMAIN_TYPE					*
-*   Parameters :WlzObject *obj: object to be scanned			*
-*		WlzIntervalWSpace *iwsp: interval scanning work space.	*
-*		int raster: controls direction of scanning - see 	*
-*		WlzInitRasterScan					*
-*		int scale: same as step in WlzNextLine			*
-*		int firstline:	starting line for scanning		*
-*   Date       : Mon Oct 14 13:59:04 1996				*
-*   Synopsis   :							*
-* must call before the first call of WlzNextLine()
-************************************************************************/
+/* function:     WlzInitLineScan    */
+/*! 
+* \ingroup      WlzDomainOps
+* \brief        Initialise line scanning, must be called before the first
+call of WlzNextLine().
+*
+* \return       Woolz error.
+* \param    obj	Input object to be scanned.
+* \param    iwsp	Interval scanning work space.
+* \param    raster	Direction for the raster scan.
+* \param    scale	Step for line increments.
+* \param    firstline	Starting line for scanning.
+* \par      Source:
+*                WlzIntervalDomScan.c
+*/
 WlzErrorNum 	WlzInitLineScan(WlzObject *obj, WlzIntervalWSpace *iwsp,
 				WlzRasterDir raster, int scale,
 				int firstline)

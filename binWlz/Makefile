@@ -31,7 +31,6 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
-			Wlz3DWarpMQ \
 			WlzAffineTransformLSq \
 			WlzAffineTransformVertices \
 			WlzAffineTransformObj \

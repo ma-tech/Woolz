@@ -20,12 +20,12 @@
 * \bug          None known
 * \ingroup WlzPolyline
 *
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
+*
+* This module has been copied from the original woolz library and       
+* modified for the public domain distribution. The original authors of  
+* the code and the original file headers and comments are in the        
+* HISTORY file.                                                         
+*
 * Maintenance log with most recent changes at top of list.
 */
 /*

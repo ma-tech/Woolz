@@ -61,6 +61,7 @@ CSOURCES		= \
 			WlzBoundingBox.c \
 			WlzBoundToObj.c \
 			WlzCannyDeriche.c \
+			WlzCbThreshold.c \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
 			WlzCompThresh.c \
@@ -150,6 +151,10 @@ CSOURCES		= \
 			WlzReadObj.c \
 			WlzRegCCor.c \
 			WlzRegICP.c \
+			WlzRGBAConvert.c \
+			WlzRGBARange.c \
+			WlzRGBAPixelUtils.c \
+			WlzRGBAThreshold.c \
 			WlzRsvFilter.c \
 			WlzSampleObj.c \
 			WlzSampleValuesAndCoords.c \

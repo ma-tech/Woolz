@@ -1,25 +1,30 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzTransposeObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Transpose a woolz object (ie interchange row and
-*		column coordinates). This can be thought of as a
-*		rotation by 90 degrees within the bounding box of the
-*		object. Domain boundary, polyline objects can all be
-*		transposed. This is used in the WlzSepTrans procedure.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 15-08-00 bill remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
-*		WLZ_POINT_(INT)|(FLOAT).
-* 21-08-00 richard	Add transpose for 3D objects - plane-wise only
-************************************************************************/
+/*!
+* \file         WlzTransposeObj.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Fri Sep 26 09:36:32 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzTransform
+* \brief        Transpose a woolz object (ie interchange row and column
+ coordinates). This can be thought of as a reflection about the diagonal within
+ the bounding box of the object. Domain boundary, polyline objects can all
+ be transposed. This is used in the WlzSepTrans procedure.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
@@ -33,20 +38,19 @@ static WlzPolygonDomain *WlzTransposePolygon(WlzPolygonDomain *poly,
 static WlzObject *WlzTranspose3DObj(WlzObject *obj,
 				      WlzErrorNum *dstErr);
 
-/************************************************************************
-*   Function   : WlzTransposeObj					*
-*   Date       : Mon Jul  7 13:53:44 1997				*
-*************************************************************************
-*   Synopsis   :Transpose a woolz object. Currently implemented for	*
-*		2D domain, boundary and polyline objects. Transpose 	*
-*		means pixels/vertices at (k,l) are moved to (l,k).	*
-*   Returns    :WlzObject *: transposed object, NULL on error		*
-*		Possible errors: WLZ_ERR_OBJECT_NULL, WLZ_ERR_DOMAIN_NULL, 		*
-*		WLZ_ERR_DOMAIN_TYPE, WLZ_ERR_OBJECT_TYPE		*
-*   Parameters :WlzObject	*obj: object to be transposed		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzTransposeObj    */
+/*! 
+* \ingroup      WlzTransform
+* \brief        Transpose a woolz object. Currently implemented for
+ 2D domain, boundary and polyline objects. Transpose
+ means pixels/vertices at (k,l) are moved to (l,k).
+*
+* \return       Transposed object, NULL on error.
+* \param    obj	Input object
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzTransposeObj.c
+*/
 WlzObject *WlzTransposeObj(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
@@ -202,6 +206,9 @@ WlzObject *WlzTransposeObj(
 	  case WLZ_GREY_DOUBLE:
 	    *gwsp.u_grintptr.dbp++ = (*(gVWSp->gVal)).dbv;
 	    break;
+	  case WLZ_GREY_RGBA:
+	    *gwsp.u_grintptr.rgbp++ = (*(gVWSp->gVal)).rgbv;
+	    break;
 	  }
 	}
       }
@@ -220,17 +227,18 @@ WlzObject *WlzTransposeObj(
   return(nobj);
 }
 
-/************************************************************************
-*   Function   : WlzTransposeBound					*
-*   Date       : Tue Jul  8 17:13:59 1997				*
-*************************************************************************
-*   Synopsis   :Transpose a boundlist structure, only accessed via	*
-*		WlzTransposeObj						*
-*   Returns    :WlzBoundList *:	new boundlist, NULL on error		*
-*   Parameters :WlzBoundList	*blist:					*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzTransposeBound    */
+/*! 
+* \ingroup      WlzTransform
+* \brief        Transpose a boundlist structure, only accessed via
+ WlzTransposeObj().
+*
+* \return       Transposed boundary list
+* \param    blist	Input boundary list domain
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzTransposeObj.c
+*/
 static WlzBoundList *WlzTransposeBound(
   WlzBoundList	*blist,
   WlzErrorNum	*dstErr)
@@ -284,16 +292,17 @@ static WlzBoundList *WlzTransposeBound(
   return newblist;
 }
 
-/************************************************************************
-*   Function   : WlzTransposePolygon					*
-*   Date       : Tue Jul  8 17:18:27 1997				*
-*************************************************************************
-*   Synopsis   :Transpose a polyline					*
-*   Returns    :WlzPolygonDomain *: new polyline, NULL on error		*
-*   Parameters :WlzPolygonDomain *poly: polyline to be transposed	*
-*   Global refs:None							*
-************************************************************************/
-
+/* function:     WlzTransposePolygon    */
+/*! 
+* \ingroup      WlzTransform
+* \brief        Transpose a polyline, only access from WlzTransposeObj().
+*
+* \return       Transposed polygon domain.
+* \param    poly	Input polygon domain
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzTransposeObj.c
+*/
 static WlzPolygonDomain *WlzTransposePolygon(
   WlzPolygonDomain *poly,
   WlzErrorNum	*dstErr)
@@ -358,6 +367,18 @@ static WlzPolygonDomain *WlzTransposePolygon(
 }
 
 
+/* function:     WlzTransposeRectObj    */
+/*! 
+* \ingroup      WlzTransform
+* \brief        Transpose a rectangular object. Static function anly accessed
+ via WlzTransposeObj().
+*
+* \return       Transposed object.
+* \param    obj	Inout rectangular object.
+* \param    dstErr	Error return.
+* \par      Source:
+*                WlzTransposeObj.c
+*/
 static WlzObject *WlzTransposeRectObj(
   WlzObject *obj,
   WlzErrorNum *dstErr)
@@ -410,6 +431,10 @@ static WlzObject *WlzTransposeRectObj(
       case WLZ_GREY_DOUBLE:
 	size = sizeof(double);
 	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, NULL);
+	break;
+      case WLZ_GREY_RGBA:
+	size = sizeof(UINT);
+	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA, NULL);
 	break;
       }
 

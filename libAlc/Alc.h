@@ -14,18 +14,10 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \defgroup	Alc
+* \ingroup	Alc
 * \brief        MRC HGU memory allocation and fundamental type library.
 * \todo		-
 * \bug          None known.
-*/
-
-/*!
-* \mainpage	
-* This library contains memory allocation functions and
-* fundamental data structures, such as linked
-* lists, which do not depend on any non system library.
-* 
 */
 
 #include <AlcType.h>

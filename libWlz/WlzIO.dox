@@ -304,10 +304,11 @@ The structure of the object file is:
 
 The basic philosophy of the sequential form of an object is that sub-objects are
 ordered in such a way that pointers are unnecessary. This ordering is defined
-hierarchically above. All symbols not otherwise defined are taken to be <int>,
+hierarchically above. All symbols not otherwise defined
+ are taken to be "<int>",
 i.e. a 4-byte signed integer, <...>* indicates that the item is repeated a suitable
-number of times. ALternative expansions of a non-terminal symbol are given on
-separate lines. "..." at the biginning of a line indicates the continuation of
+number of times. Alternative expansions of a non-terminal symbol are given on
+separate lines. "..." at the beginning of a line indicates the continuation of
 the previous line.
 
 

@@ -146,89 +146,10 @@ WlzObject *WlzConvertPix(
     go = oldgwsp.u_grintptr;	
     gn = newgwsp.u_grintptr;
 
-    for (k=oldiwsp.lftpos; k<=oldiwsp.rgtpos; k++){
+    WlzValueCopyGreyToGrey(gn, 0, newpixtype, go, 0, oldpixtype,
+			   oldiwsp.rgtpos - oldiwsp.lftpos + 1);
 
-      /* First copy into a temporary grey value - use int for
-       int, short & UBYTE, use double for float and double */		   
-      switch (oldpixtype) {
-      case WLZ_GREY_INT:
-	g.inv = *go.inp++;
-	switch (newpixtype) {
-	case WLZ_GREY_INT:
-	  *gn.inp++ = g.inv; break;
-	case WLZ_GREY_SHORT:
-	  *gn.shp++ = WLZ_CLAMP(g.inv, SHRT_MIN, SHRT_MAX); break;
-	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.inv, 0, UCHAR_MAX)); break;
-	case WLZ_GREY_FLOAT:
-	  *gn.flp++ = g.inv; break;
-	case WLZ_GREY_DOUBLE:
-	  *gn.dbp++ = g.inv; break;
-	}
-	break;
-      case WLZ_GREY_SHORT:
-	g.shv = *go.shp++;
-	switch (newpixtype) {
-	case WLZ_GREY_INT:
-	  *gn.inp++ = g.shv; break;
-	case WLZ_GREY_SHORT:
-	  *gn.shp++ = g.shv; break;
-	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.shv, 0, UCHAR_MAX)); break;
-	case WLZ_GREY_FLOAT:
-	  *gn.flp++ = g.shv; break;
-	case WLZ_GREY_DOUBLE:
-	  *gn.dbp++ = g.shv; break;
-	}
-	break;
-      case WLZ_GREY_UBYTE:
-	g.ubv = *go.ubp++;
-	switch (newpixtype) {
-	case WLZ_GREY_INT:
-	  *gn.inp++ = g.ubv; break;
-	case WLZ_GREY_SHORT:
-	  *gn.shp++ = g.ubv; break;
-	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = g.ubv; break;
-	case WLZ_GREY_FLOAT:
-	  *gn.flp++ = g.ubv; break;
-	case WLZ_GREY_DOUBLE:
-	  *gn.dbp++ = g.ubv; break;
-	}
-	break;
-      case WLZ_GREY_FLOAT:
-	g.flv = *go.flp++;
-	switch (newpixtype) {
-	case WLZ_GREY_INT:
-	  *gn.inp++ = WLZ_CLAMP(g.flv, INT_MIN, INT_MAX); break;
-	case WLZ_GREY_SHORT:
-	  *gn.shp++ = WLZ_CLAMP(g.flv, SHRT_MIN, SHRT_MAX); break;
-	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.flv, 0, UCHAR_MAX)); break;
-	case WLZ_GREY_FLOAT:
-	  *gn.flp++ = g.flv; break;
-	case WLZ_GREY_DOUBLE:
-	  *gn.dbp++ = g.flv; break;
-	}
-	break;
-      case WLZ_GREY_DOUBLE:
-	g.dbv = *go.dbp++;
-	switch (newpixtype) {
-	case WLZ_GREY_INT:
-	  *gn.inp++ = WLZ_CLAMP(g.dbv, INT_MIN, INT_MAX); break;
-	case WLZ_GREY_SHORT:
-	  *gn.shp++ = WLZ_CLAMP(g.dbv, SHRT_MIN, SHRT_MAX); break;
-	case WLZ_GREY_UBYTE:
-	  *gn.ubp++ = (UBYTE) (WLZ_CLAMP(g.dbv, 0, UCHAR_MAX)); break;
-	case WLZ_GREY_FLOAT:
-	  *gn.flp++ = WLZ_CLAMP(g.dbv, FLT_MIN, FLT_MAX); break;
-	case WLZ_GREY_DOUBLE:
-	  *gn.dbp++ = g.dbv; break;
-	}
-	break;
-      }
-    } /* for */
-  } /* while */
+     } /* while */
   if(errNum == WLZ_ERR_EOO)	        /* Reset error from end of intervals */ 
   {
     errNum = WLZ_ERR_NONE;

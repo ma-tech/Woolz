@@ -579,6 +579,54 @@ typedef enum _WlzThresholdType
   WLZ_THRESH_HIGH		     /*!< Threshold >= thresh_value */
 } WlzThresholdType;
 
+
+/*!
+* \enum		_WlzRGBAThresholdType
+* \ingroup	WlzThreshold
+* \brief	Colour threshold type selection.
+* 		Typedef: ::WlzRGBAThresholdType.
+*/
+typedef enum _WlzRGBAThresholdType
+{
+  WLZ_RGBA_THRESH_NONE,
+  WLZ_RGBA_THRESH_SINGLE,
+  WLZ_RGBA_THRESH_MULTI,
+  WLZ_RGBA_THRESH_PLANE,
+  WLZ_RGBA_THRESH_SLICE,
+  WLZ_RGBA_THRESH_BOX,
+  WLZ_RGBA_THRESH_SPHERE
+} WlzRGBAThresholdType;
+
+/*!
+* \enum		_WlzRGBAColorSpace
+* \ingroup	WlzValueUtils
+* \brief	Colour space (i.e. rgb, hsb, grey etc.) selection.
+* 		Typedef: ::WlzRGBAColorSpace.
+*/
+typedef enum _WlzRGBAColorSpace
+{
+  WLZ_RGBA_SPACE_GREY,
+  WLZ_RGBA_SPACE_RGB,
+  WLZ_RGBA_SPACE_HSB
+} WlzRGBAColorSpace;
+
+/*!
+* \enum		_WlzRGBAColorChannel
+* \ingroup	WlzValueUtils
+* \brief	Colour channel selection.
+* 		Typedef: ::WlzRGBAColorChannel.
+*/
+typedef enum _WlzRGBAColorChannel
+{
+  WLZ_RGBA_CHANNEL_GREY,
+  WLZ_RGBA_CHANNEL_RED,
+  WLZ_RGBA_CHANNEL_GREEN,
+  WLZ_RGBA_CHANNEL_BLUE,
+  WLZ_RGBA_CHANNEL_HUE,
+  WLZ_RGBA_CHANNEL_SATURATION,
+  WLZ_RGBA_CHANNEL_BRIGHTNESS
+} WlzRGBAColorChannel;
+
 /*!
 * \enum		_WlzPolyFillMode	
 * \ingroup	WlzPolyline
@@ -1860,8 +1908,7 @@ typedef struct _WlzCompoundArray
   int           linkcount;		/*!< From WlzCoreObject. */
   WlzObjectType otype;		       	/*!< The permitted type if
   					    constrained. */
-  int           n;		 	/*!< The maximum number of objects
-  					     (array length). */
+  int           n;		 	/*!< The  number of objects */
   WlzObject     **o;			/*!< The list of Woolz object
   					     pointers. */
   WlzPropertyList *plist;		/*! A list of the object's
@@ -2511,6 +2558,26 @@ typedef struct _WlzBasisFn
 					     called to free the data when the
 					     basis function is free'd. */
 } WlzBasisFn;
+
+/*!
+* \struct	_WlzThreshCbStr
+* \ingroup	WlzType
+* \brief	Callback structure from WlzCbThreshold()
+*		Typedef: ::WlzThreshCbStr.
+*/
+typedef struct _WlzThreshCbStr
+{
+  WlzPixelP	pix;
+  WlzIVertex3	pos;
+} WlzThreshCbStr;
+
+/*!
+* \typedef	WlzThreshCbFn
+* \ingroup	WlzFunction
+* \brief	Callback function for the WlzCbThreshold()
+*/
+typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
+
 
 /************************************************************************
 * Transforms

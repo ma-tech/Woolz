@@ -36,11 +36,11 @@
 *					</li>
 *					<li>
 * 					2: Array members are given in the
-*					input object list, objects are linked.
+*					input object list, the list linked.
 *					</li>
 *					<li>
 * 					3: Array members are given in the
-*					input object list, objects copied.
+*					input object list, objects assigned.
 *					</li>
 *					</ul>
 * \param	n			Number of objects.

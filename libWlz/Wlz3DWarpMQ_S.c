@@ -1,84 +1,34 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         Wlz3DWarpMQ_S.c
+* \author       J. Rao.
+* \date         Fri Sep 26 13:56:30 2003
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzTransform
+* \brief        Generate a regular tetrahedral mesh for a 3D woolz
+ object domain.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 /* This code started at 13/09/2001 by J. Rao 13/09/2001 
          Richard and Bill have also made contributions
          it experienced a great deal changes 26/10/2001 
          Here is the first version and it can be used  
 	 for 3D warping.  /18/01/2002/           */
-/************************************************************************
-* Function:	WlzTetraHedronProducer
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose: 	Giving a Large cube, first divided it into nx*ny*nz small cubes. 
-*		The small cube is split into 6 tetrahedra 
-*		With the nodes shown in the following figure
-*		cube is split into 6 tetrahedra.
-*
-*               n3 = nxmax+1;
-*               n2 = n3 + 1;
-*               n4 = (nxmax+1)*(nymax+1);
-*               n5 = n4 + 1;
-*               n7 = (nxmax+1)*(nymax+1) + nxmax+1;
-*               n6 = n7 + 1;
-*
-*                              .                 .
-*                             .                 .
-*                            .                 .
-*                           /                 /                          
-*                          @n4---------------@n5------ . . .                        
-*                         /|                /|                        
-*                        / |               / |                         
-*                       /  |              /  |                         
-*                      /   |             /   |                         
-*                     /    |            /    |                         
-*                    /     |           /     |                         
-*                   /      |          /      |                         
-*                  /       |         /       |                         
-*                 @0----------------@1---------------@2----- .....  ------@nxmax           
-*                 |        |        |        |
-*                 |        |        |        |                         
-*                 |        @n7------|--------@n6 ...                            
-*                 |       /.        |       /.                                 
-*                 |      / .        |      / .                                 
-*                 |     /  .        |     /  .                                
-*                 |    /            |    /                                  
-*                 |   /             |   /                                  
-*                 |  /              |  /                                  
-*                 | /               | /                                  
-*                 |/                |/                                  
-*                 @n3---------------@n2--------------@ .....       --------@2*nxmax+1 
-*                 |                 |
-*                 .                 .
-*                 .                 .
-*                 .                 .
-*
-*
-* Input:     the large cubes eight vertexes, 
-*
-*
-*                   <-          neighbourLeft,  neighbourRight       ->   x,
-*                               neighbourUp,    neighbourDown,       ->   y
-*                               neighbourFront, neighbourBack,       ->   z
-*
-*                                                   1 means there is a neighbour
-*                                                   0 no-neighbour
-*                
-*               z
-*             / 
-*            /                                  
-*            -------->  x
-*           |
-*           |
-*           
-*           y
-*
-*
-* Global refs:	-
-*
-*
-* input:       double  xmin, ymin, zmin, xmax, ymax, zmax;
-*              int     nxmax, nymax, nzmax, Zconst;
-*
-*
-*      zConst ---  The cutting plane's z-coordinate
-************************************************************************/
+
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
@@ -321,12 +271,14 @@ WlzMeshTransform3D *WlzTetrahedronMeshFromObj( WlzObject *wObjC, const WlzDBox3 
 WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst, 
                                                    WlzMeshTransform3D *wmt3D,
 						   WlzErrorNum *disErr);				  
+int static IsNeighbour(int *n, int *np, int *it);
+
 /*!
 * \ingroup     Wlzlib
 * \brief       WlzTetrahedronProducerFromCube
 *
 * \return      Woolz error number.
-* \Purpose: 	Giving a cuboid, produce 6 tetrahedrons.
+* \brief 	Given a cuboid, produce 6 tetrahedrons.
 * - Input:     
 *     -# the eight vertexes of the cuboid, 
 *     -# the indexOfTheNextFirst of the first tetrahedron of
@@ -415,7 +367,7 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
 *
 *
 * Global refs:	-
-*
+/* - don't know wha these refer to - RAB
 * Parameters:	WlzContour *ctr:	Contour being built.
 *		double isoVal:		Iso-value to use.
 *		double *vPn0Ln0:	Ptr to 2 data values at
@@ -432,13 +384,122 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
 *					x = xPos, xpos + 1.
 *		WlzDVertex3 cbOrg:	The cube's origin.
 */
-WlzErrorNum static WlzTetrahedronProducerFromCube(
-				int neighbourLeft, int neighbourRight,
-				int neighbourBack, int neighbourFront,
-				int neighbourDown, int neighbourUp,
-				int nxmax, int nymax, int nzmax,
-				int nx, int ny, int nz,
-			        int indexOfNextFirst, WlzMeshElem3D *elements)
+
+/* function:     WlzTetrahedronProducerFromCube    */
+/*! 
+* \ingroup      WlzMesh
+* \brief        Divide a cuboid into six tetrahedral elements.
+*
+* \return       Woolz error.
+* \param    neighbourLeft	Left neighbour index
+* \param    neighbourRight	right neighbour index
+* \param    neighbourBack	back neighbour index
+* \param    neighbourFront	fromt neighbour index
+* \param    neighbourDown	down neighbour index
+* \param    neighbourUp	Up neighbour index
+* \param    nxmax	X size
+* \param    nymax	Y size
+* \param    nzmax	Z size
+* \param    nx	x origin
+* \param    ny	y origin
+* \param    nz	z origin
+* \param    indexOfNextFirst	Index for new elements
+* \param    elements	Element array.
+* \par      Detail
+\verbatim
+                                                                      
+                          @4----------------@5                        
+                         /|                /|                        
+                        / |               / |                         
+                       /  |              /  |                         
+                      /   |             /   |                         
+                     /    |            /    |                         
+                    /     |           /     |                         
+                   /      |          /      |                         
+                  /       |         /       |                         
+                 @0----------------@1       |                         
+                 |        |        |        |                         
+                 |        @7-------|--------@6                                 
+                 |       /         |       /                                 
+                 |      /          |      /                                  
+                 |     /           |     /                                  
+                 |    /            |    /                                  
+                 |   /             |   /                                  
+                 |  /              |  /                                  
+                 | /               | /                                  
+                 |/                |/                                  
+                 @3----------------@2                                 
+
+		The tetrahedra are are assigned the following indicies:
+
+		  tetrahedron index  	cube vertex indicies
+		   0       		1, 7, 0, 3
+		   1       		1, 7, 3, 2
+		   2       		1, 7, 2, 6
+		   3       		1, 7, 6, 5 
+		   4        		1, 7, 5, 4 
+		   5        		1, 7, 4, 0
+
+
+            we will use the following order of surfaces for tetrahedron:
+                   If the vertex indicies of a tetrahedron is in the
+                   following order:
+                                       a, b, c, d
+                   then the surface order is:
+
+                                       a-b-c
+                                       b-c-d
+                                       c-d-a
+                                       d-a-b
+
+
+ The relationship with orther tetrahedron is described by its neighbours
+                   neighbours is defined here as a surface neighbour and
+                   we assume that every surface has only on neighbour which
+                   means a tetrahedron has at most four neighbours.
+
+
+ Input:     the eight vertexes, 
+            the indexOfTheNextFirst of the first tetrahedron of
+                                    the next six new tetrahedrons. 
+            the neighbours:
+
+
+                   <-          neighbourLeft,  neighbourRight       ->   x,
+                               neighbourUp,    neighbourDown,       ->   y
+                               neighbourFront, neighbourBack,       ->   z
+
+                                                   1 means there is a neighbour
+                                                   0 no-neighbour
+                
+               z
+             / 
+            /                                  
+            -------->  x
+           |
+           |
+           
+           y
+
+\endverbatim
+* \par      Source:
+*                Wlz3DWarpMQ_S.c
+*/
+WlzErrorNum WlzTetrahedronProducerFromCube(
+  int neighbourLeft,
+  int neighbourRight,
+  int neighbourBack,
+  int neighbourFront,
+  int neighbourDown,
+  int neighbourUp,
+  int nxmax,
+  int nymax,
+  int nzmax,
+  int nx,
+  int ny,
+  int nz,
+  int indexOfNextFirst,
+  WlzMeshElem3D *elements)
 {
   int		tI0,
 		i,
@@ -594,7 +655,7 @@ WlzErrorNum static WlzTetrahedronProducerFromCube(
   return(errNum);
 }
 
-/*!
+/*
 *
 *   - Purpose:  
 *         -# Get the index of the tetrahedrons which intersect
@@ -638,7 +699,7 @@ WlzErrorNum static WlzTetrahedronProducerFromCube(
     
 
 */
-int static WlzIsoIntersectWithTetrahadronIndex(  double                zConst, 
+int WlzIsoIntersectWithTetrahadronIndex(  double                zConst, 
                                           const WlzMeshTransform3D   *wmt3D, 
 					  int                  *intersectIndex,
                                           WlzDVertex3          *planepoints, 
@@ -1020,7 +1081,7 @@ int static WlzIsoIntersectWithTetrahadronIndex(  double                zConst,
 *                0    0    0    1
 *               
 */
-void static WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0, 
+void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0, 
                                  WlzDVertex3 sr1, 
 				 WlzDVertex3 sr2,
                                  WlzDVertex3 sr3,  
@@ -2073,7 +2134,7 @@ static void	WlzMeshScanWSpFree(WlzMeshScanWSp2D5 *mSnWSp)
   }
 }
 
-/*!
+/*
 * - Function:	WlzMeshItvCmp
 * - Returns:	int:			Sorting value for qsort.
 * - Purpose:	Callback function for qsort(3) to sort mesh element
@@ -2119,7 +2180,7 @@ static int	WlzMeshItvCmp(const void *cmp0, const void *cmp1)
 *               revise it to handle the special situation of triangle    *
 *                                  becames a line when two node comes    *
 *                                  together        10.12.2001            *
-**************************************************************************/
+*/
 static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp, int eIdx, int iIdx)
 {
   int		  count,
@@ -2256,12 +2317,15 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp, int eIdx, int iIdx)
 *
 * \return       woolz error number
 * \param    fp:	FILE pointer opened for writing
-* \param    recordName:	record name
-* \param    mSnWSp: 	woolz ... 
-* \par      Source:
-*                .c
+* \param    cstr	record name
+* \param    mSnWSp 	woolz ... 
+* \par		Source:
+*                Wlz3DWarpMQ_S.c
 */
-WlzErrorNum Write_WlzCutScanLines(FILE *fp,  char *cstr, WlzMeshScanWSp2D5 *mSnWSp)
+WlzErrorNum Write_WlzCutScanLines(
+  FILE *fp,
+  char *cstr,
+  WlzMeshScanWSp2D5 *mSnWSp)
 {
 
   int i, j, it;
@@ -3098,7 +3162,7 @@ WlzIBox3  WlzMQ3DTransformBBoxI3(WlzMeshTransform3D *wmt3D,  WlzErrorNum *errNum
 *                                                                       *
 *               J. Rao  31.10.2001                                      *
 *                                                                       *
-************************************************************************/
+*/
 WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 					    WlzObject *srcObj,
 					    WlzMeshTransform3D *mesh,
@@ -3358,6 +3422,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		             case WLZ_GREY_DOUBLE:
 		               *(dGP.dbp)++ = (*(gVWSp->gVal)).dbv;
 		               break;
+		             case WLZ_GREY_RGBA:
+		               *(dGP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
+		               break;
 		             default:
 		               errNum = WLZ_ERR_GREY_TYPE;
 		             break;
@@ -3509,6 +3576,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		             case WLZ_GREY_DOUBLE:
 		               *(dGP.dbp)++ = (*(gVWSp->gVal)).dbv;
 		               break;
+		             case WLZ_GREY_RGBA:
+		               *(dGP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
+		               break;
 		             default:
 		               errNum = WLZ_ERR_GREY_TYPE;
 		             break;
@@ -3554,6 +3624,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		               break;
 		             case WLZ_GREY_DOUBLE:
 		               *(dGP.dbp)++ = (*(gVWSp->gVal)).dbv;
+		               break;
+		             case WLZ_GREY_RGBA:
+		               *(dGP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
 		               break;
 		             default:
 		               errNum = WLZ_ERR_GREY_TYPE;
