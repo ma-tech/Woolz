@@ -267,7 +267,7 @@ int             main(int argc, char **argv)
   /* Compute the random primatives. */
   if(ok)
   {
-    if(seedF = 0)
+    if(seedF == 0)
     {
       (void )gettimeofday(&tp, NULL);
       seed = (tp.tv_sec * 1000000) + tp.tv_usec;
