@@ -436,6 +436,14 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 	  }
 	}
         break;
+      case WLZ_2D_DOMAINOBJ:
+	errNum = WlzMatchICPDomObj2D(tObj, sObj,
+				     initTr, maxItr, minSpx,
+				     dstNMatch, dstTMatch, dstSMatch, brkFlg,
+				     maxDisp, maxAng, maxDeform,
+				     matchImpNN, matchImpThr);
+
+        break;
       default:
         break;
     }
@@ -444,7 +452,117 @@ WlzErrorNum	WlzMatchICPObjs(WlzObject *tObj, WlzObject *sObj,
 }
 
 /*!
-* \return				Error code.
+* \return	Error code.
+* \ingroup	WlzTransform
+* \brief	Establishes matching points in two 2D domain objects with
+*		values using an ICP based registration algorithm. The
+*		objects are used to compute gradient vectors and maximal
+*		gradient contours. The gradient vectors are then used to
+*		weight the ICP matches.
+* \param	tObj			The target object.
+* \param	sObj			The source object to be
+*					matched with target contour.
+* \param	initTr			Initial affine transform
+*					to be applied to the source
+*					object prior to matching. May
+*					be NULL.
+* \param	maxItr			Maximum number of iterations.
+* \param	minSpx			Minimum number of simplicies in
+*					a contour shell for matching.
+* \param	dstNMatch		Destination pointer for the number
+*					of match points found.
+* \param	dstTMatch		Destination pointer for the target
+*					match points found.
+* \param	dstSMatch		Destination pointer for the source
+*					match points found.
+* \param	brkFlg			Controls the breaking of the source
+*					shells. See WlzMatchICPCtr().
+* \param	maxDisp			The maximum displacement to the
+* 					geometry of a shell for an acceptable
+* 					registration.
+* \param	maxAng			The maximum angle of rotation of a
+* 					shell geometry with respect to the
+* 					global affine transformed geometry for
+* 					an acceptable registration.
+* \param	maxDeform		The maximum deformation to the geometry
+* 					of a shell for an acceptable
+* 					registration.
+* \param	matchImpNN		Number match points in neighbourhood
+*					when removing implausible match
+*					points, must be \f$> 2\f$.
+* \param	matchImpThr		Implausibility threshold which should
+*					be \f$> 0\f$ but the useful range
+*					is probably \f$[0.5-2.5]\f$. Higher
+*					values allow more implausible matches
+*					to be returned.
+*/
+WlzErrorNum	WlzMatchICPDomObj2D(WlzObject *tObj, WlzObject *sObj,
+				    WlzAffineTransform *initTr,
+				    int maxItr, int minSpx,
+				    int *dstNMatch, WlzVertexP *dstTMatch,
+				    WlzVertexP *dstSMatch, int brkFlg,
+				    double  maxDisp, double maxAng,
+				    double maxDeform,
+				    int matchImpNN, double matchImpThr)
+{
+  double	grdHi,
+  		grdLo;
+  WlzContour	*tCtr = NULL,
+  		*sCtr = NULL;
+  WlzObject	*mGrdObj = NULL,
+  		*tXGrdOb = NULL,
+  		*tYGrdOb = NULL,
+		*sXGrdOb = NULL,
+		*sYGrdOb = NULL;
+  WlzRsvFilter	*ftr = NULL;
+  const double	ftrPrm = 1.0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((tObj == NULL) || (sObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    /* Compute the partial derivatives. */
+    if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
+                                     ftrPrm, &errNum)) != NULL)
+    {
+      /* Rescaling to reduce gradient quantization effects. */
+      grdHi *= 64.0;
+      grdLo *= 64.0;
+      ftr->c *= 256.0;
+      tXGrdOb = WlzRsvFilterObj(tObj, ftr, WLZ_RSVFILTER_ACTION_X, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        tYGrdOb = WlzRsvFilterObj(tObj, ftr, WLZ_RSVFILTER_ACTION_Y, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        sXGrdOb = WlzRsvFilterObj(sObj, ftr, WLZ_RSVFILTER_ACTION_Y, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        sYGrdOb = WlzRsvFilterObj(sObj, ftr, WLZ_RSVFILTER_ACTION_Y, &errNum);
+      }
+      WlzRsvFilterFreeFilter(ftr);
+    }
+  }
+  /* Compute modulus of gradient images and find a suitable gradient threshold
+   * value. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mGrdObj = WlzImageArithmetic(tYGrdOb, tXGrdOb, WLZ_BO_MAGNITUDE, 0,
+    				 &errNum);
+    /* TODO */
+    /* HACK (void )WlzWriteObj(stdout, mGrdObj); */
+    /* HACK This code is in the process of being written. */
+  }
+  return(WLZ_ERR_UNIMPLEMENTED);
+}
+
+/*!
+* \return	Error code.
 * \ingroup	WlzTransform
 * \brief	Establishes matching points in two 2D contours using ICP
 *		based registration algorithm. The contours have been
