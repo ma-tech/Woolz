@@ -195,6 +195,8 @@ static WlzErrorNum	WlzContourGrdLink3D(
 *					always either 2D or 3D double
 *					verticies. They are only valid
 *					for valid vertex indicies.
+*					May be NULL if normals are not
+*					required.
 *		double ctrLo:		Lower maximal gradient
 *					threshold value.
 *		double ctrHi:		Higher maximal gradient
