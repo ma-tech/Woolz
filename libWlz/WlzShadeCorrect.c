@@ -12,9 +12,12 @@
 * Purpose:	Function to perform shade correction.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 08-03-01 bill	Added clamp to ubyte and short values in
+*		WlzShadeCorrect2DG()
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
+#include <limits.h>
 #include <string.h>
 #include <Wlz.h>
 
@@ -163,7 +166,8 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 				     double nrmVal, int inPlace,
 				     WlzErrorNum *dstErr)
 {
-  int		iCnt;
+  int		tI0,
+  		iCnt;
   double	tD0;
   WlzObject	*uObj = NULL,
 		*uSrcObj = NULL,
@@ -242,21 +246,23 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    while(iCnt-- > 0)
 	    {
 	      tD0 = (*(srcPix.inp)++ * nrmVal) / (*(shdPix.inp)++ + 1.0);
-	      *(rtnPix.inp)++ = WLZ_NINT(tD0);
+	      *(rtnPix.ubp)++ = WLZ_NINT(tD0);
 	    }
 	    break;
 	  case WLZ_GREY_SHORT:
 	    while(iCnt-- > 0)
 	    {
 	      tD0 = (*(srcPix.shp)++ * nrmVal) / (*(shdPix.shp)++ + 1.0);
-	      *(rtnPix.shp)++ = WLZ_NINT(tD0);
+	      tI0 = WLZ_NINT(tD0);
+	      *(rtnPix.inp)++ = WLZ_CLAMP(tI0, SHRT_MIN, SHRT_MAX);
 	    }
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    while(iCnt-- > 0)
 	    {
 	      tD0 = (*(srcPix.ubp)++ * nrmVal) / (*(shdPix.ubp)++ + 1.0);
-	      *(rtnPix.ubp)++ = WLZ_NINT(tD0);
+	      tI0 = WLZ_NINT(tD0);
+	      *(rtnPix.inp)++ = WLZ_CLAMP(tI0, 0, 255);
 	    }
 	    break;
 	  case WLZ_GREY_FLOAT:
