@@ -2410,6 +2410,64 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 				  int expand,
 				  WlzErrorNum *dstErr);
 /************************************************************************
+* WlzLBTDomain.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzLBTDomain2D           *WlzMakeLBTDomain2D(
+                                  WlzObjectType type,
+                                  int l1,
+                                  int ll,
+                                  int k1,
+                                  int kl,
+                                  WlzErrorNum *dstErr);
+extern WlzLBTDomain2D           *WlzLBTDomain2DFromDomain(
+                                  WlzDomain dom,
+                                  WlzErrorNum *dstErr);
+extern WlzLBTDomain2D           *WlzLBTDomain2DFromIDomain(
+                                  WlzIntervalDomain *iDom,
+                                  WlzErrorNum *dstErr);
+extern WlzIntervalDomain        *WlzLBTDomainToIDomain(
+                                  WlzLBTDomain2D *lDom,
+                                  WlzErrorNum *dstErr);
+extern WlzIntervalDomain        *WlzIDomainFromPItv2D(
+                                  int line1,
+                                  int lastln,
+                                  int kol1,
+                                  int lastkl,
+                                  int nPItv,
+                                  WlzPartialItv2D *pItv,
+                                  WlzErrorNum *dstErr);
+extern WlzErrorNum              WlzLBTBalanceDomain2D(
+                                  WlzLBTDomain2D *sDom,
+                                  WlzObject *idDom);
+extern WlzObject                *WlzLBTMakeNodeIndexObj2D(
+                                  WlzLBTDomain2D *lDom,
+                                  WlzIntervalDomain *iDom,
+                                  WlzErrorNum *dstErr);
+extern WlzErrorNum              WlzFreeLBTDomain2D(
+                                  WlzLBTDomain2D *lDom);
+extern WlzErrorNum              WlzLBTTestOutputNodesTxt(
+                                  FILE *fP,
+                                  WlzLBTDomain2D *lDom);
+extern int                      WlzLBTNodeSz2D(
+                                  WlzLBTNode2D *nod);
+extern int                    	WlzLBTNodeLogSz2D(
+                                  WlzLBTNode2D *nod);
+extern void                       WlzLBTPosToKey2D(
+                                WlzIVertex2 pos,
+                                  unsigned *keys);
+extern void                     WlzLBTGetKeyDigits2D(
+                                  unsigned *keys,
+                                  UBYTE *digits);
+extern void                     WlzLBTKeyToPos2I(
+                                  unsigned *key,
+                                  WlzIVertex2 *pos);
+extern void                     WlzLBTKeyToBox2I(
+                                  unsigned *key,
+                                  WlzIBox2 *box);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * "THE BEAST" - WlzLabel.c						*
 ************************************************************************/
 extern WlzErrorNum 		WlzLabel(
