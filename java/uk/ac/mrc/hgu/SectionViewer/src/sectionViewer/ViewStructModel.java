@@ -369,7 +369,7 @@ public class ViewStructModel implements WlzObjectType {
    private Object[] listeners;
    private ChangeListener cl;
    private int ijk = 0;
-   protected void fireChange() {
+   public void fireChange() {
    //   if(_debug) System.out.println("VSModel.fireChange()");
       // Create the event:
       ce = new ChangeEvent(this);
