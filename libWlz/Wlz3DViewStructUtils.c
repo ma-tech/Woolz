@@ -763,6 +763,30 @@ int Wlz3DViewGetBoundingBoxIntersection(
 					 rtnVtxs, dstErr);
 }
 
+int Wlz3DViewGetBoundingBoxIntersectionA(
+  WlzThreeDViewStruct	*viewStr,
+  int 			*dstSizeArrayVtxs,
+  WlzDVertex3 		**dstArrayVtxs,
+  WlzErrorNum 		*dstErr)
+{
+  WlzDVertex3	*vtxs=NULL;
+  int		numVtxs=0;
+
+  if( vtxs = (WlzDVertex3 *) AlcMalloc(sizeof(WlzDVertex3) * 12) ){
+    numVtxs = Wlz3DViewGetBoundingBoxIntersection(viewStr,
+						  vtxs, dstErr);
+    *dstSizeArrayVtxs = 12;
+  }
+  else {
+    *dstSizeArrayVtxs = 0;
+    if( dstErr ){
+      *dstErr = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+
+  *dstArrayVtxs = vtxs;
+  return numVtxs;
+}
 
 /* function:     Wlz3DViewGetGivenBBIntersection    */
 /*! 

@@ -1,17 +1,31 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzMakeStructs.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Makes Woolz object types.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzMakeStructs.c
+* \author       Bill Hill, Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzAllocation
+* \brief        Procedures for allocating space for woolz structures.
+*               
+* \todo         -
+* \bug          None known
+*
+*************************************************************************
+* This module has been copied from the original woolz library and       *
+* modified for the public domain distribution. The original authors of  *
+* the code and the original file headers and comments are in the        *
+* HISTORY file.                                                         *
+*************************************************************************
+* Maintenance log with most recent changes at top of list.
 * 07-12-00 bill Set error flag if invalid grey type in WlzNewValueTb().
 *		Correct order of parameters in calll to AlcCalloc() in
 *		WlzMakeValueTb().
@@ -20,27 +34,29 @@
 * 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzMakeIntervalDomain					*
-*   Date       : Fri Oct 18 15:39:43 1996				*
-*************************************************************************
-*   Synopsis   :Allocate space for an interval domain structure. If the	*
-*		type is WLZ_INTERVALDOMAIN_INTVL then allocate space for*
-*		the interval line array and set the pointer.		*
-*   Returns    :WlzIntervalDomain *: pointer to the domain structure
-*   Parameters :WlzObjectType type: interval domain type		*
-*		int l1: first line of required domain			*
-*		int ll: last line - this is used with l1 to allocate	*
-*		interval line structures.				*
-*		int k1, kl: first and last columns			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeIntervalDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Allocate space for an interval domain structure. If the
+type is WLZ_INTERVALDOMAIN_INTVL then allocate space for
+the interval line array and set the pointer.
+*
+* \return       Pointer to allocated interval domain.
+* \param    type	Required interval domain type.
+* \param    l1	First line
+* \param    ll	Last line.
+* \param    k1	First column
+* \param    kl	Last column
+* \param    dstErr	error return values: WLZ_ERR_NONE, WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzIntervalDomain *
 WlzMakeIntervalDomain(WlzObjectType type,
 		      int l1,
@@ -105,19 +121,24 @@ WlzMakeIntervalDomain(WlzObjectType type,
   return(idom);
 }
 
-/************************************************************************
-*   Function   : WlzMakePlaneDomain					*
-*   Date       : Fri Oct 18 15:40:04 1996				*
-*************************************************************************
-*   Synopsis   :Allocate space for a plane domain and the domain	*
-*		pointers						*
-*   Returns    :WlzPlaneDomain *: pointer to initialised domain		*
-*   Parameters :WlzObjectType type: must be a valid planedomain type	*
-*		int p1, pl: first and last planes.			*
-*		int l1, ll: first and last lines.			*
-*		int k1, kl: first and last columns.			*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakePlaneDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Allocate space for a plane domain and the domain
+pointers
+*
+* \return       POinter to the allocated planedomain.
+* \param    type	PlaneDomain type.
+* \param    p1	First plane
+* \param    pl	Last plane.
+* \param    l1	First line.
+* \param    ll	Last line.
+* \param    k1	First column.
+* \param    kl	Last column.
+* \param    dstErr	error return values: WLZ_ERR_NONE, WLZ_ERR_MEM_ALLOC, WLZ_ERR_PARAM_DATA.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 
 WlzPlaneDomain *
 WlzMakePlaneDomain(WlzObjectType type,
@@ -186,29 +207,32 @@ WlzMakePlaneDomain(WlzObjectType type,
   return(planedm);
 }
 
-/************************************************************************
-*   Function   : WlzMakeMain						*
-*   Date       : Fri Oct 18 15:40:24 1996				*
-*************************************************************************
-*   Synopsis   :Make a top-level woolz object assigning domain, values	*
-*		and other pointers as required . The type is checked.	*
-*		The domain is not checked for NULL although this should	*
-*		 only apply to the WLZ_EMPTY_OBJ.			*
-*   Returns    :WlzObject *: pointer to the initialised object, NULL on *
-*		error							*
-*   Parameters :WlzObjectType 	type: Object type, one of:		*
-*		WLZ_2D_DOMAINOBJ, WLZ_3D_DOMAINOBJ, WLZ_2D_POLYGON,	*
-*		WLZ_BOUNDLIST, WLZ_CONV_HULL, WLZ_HISTOGRAM, 		*
-*		WLZ_RECTANGLE, WLZ_AFFINE_TRANS, WLZ_PROPERTY_OBJ,	*
-*		WLZ_EMPTY_OBJ.						*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakeMain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make a top-level woolz object assigning domain, values
+and other pointers as required . The type is checked.
+The domain is not checked for NULL although this should
+only apply to the WLZ_EMPTY_OBJ.
+*
+* \return       Pointer to object structure.
+* \param    type	Object type.
+* \param    domain	Domain to be assigned using WlzAssignDomain()
+* \param    values	Values to be attached using WlzAssignValues()
+* \param    plist	Property list attached using WlzAssignPropertyList()
+* \param    assoc	Associated Object attached using WlzAssignObject().
+* \param    dstErr	error return values: WLZ_ERR_NONE,
+ WLZ_ERR_MEM_ALLOC, WLZ_ERR_PARAM_DATA snd error values from WlzAssign
+procedures.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 
 WlzObject *
 WlzMakeMain(WlzObjectType 	type,
 	    WlzDomain 		domain,
 	    WlzValues 		values,
-	    WlzSimpleProperty 	*plist,
+	    AlcDLPList	 	*plist,
 	    WlzObject 		*assoc,
 	    WlzErrorNum 	*dstErr)
 {
@@ -241,8 +265,9 @@ WlzMakeMain(WlzObjectType 	type,
       if( errNum == WLZ_ERR_NONE ){
 	obj->values = WlzAssignValues(values, &errNum);
       }
-      if( errNum == WLZ_ERR_NONE ){
-	obj->plist = WlzAssignProperty(plist, &errNum);
+      /* property lists now more complicated  */
+      if( (errNum == WLZ_ERR_NONE) && (plist != NULL) ){
+	obj->plist = WlzAssignPropertyList(plist, &errNum);
       }
       if( errNum == WLZ_ERR_NONE ){
 	obj->assoc = WlzAssignObject(assoc, &errNum);
@@ -296,23 +321,25 @@ WlzMakeMain(WlzObjectType 	type,
   return(obj);
 }
 
-/************************************************************************
-*   Function   : WlzMakeValueTb						*
-*   Date       : Fri Oct 18 15:40:45 1996				*
-*************************************************************************
-*   Synopsis   :Allocate and initialise space for a ragged-rectangle	*
-*		value table only					*
-*   Returns    :WlzRagRValues *: pointer to new structure		*
-*   Parameters :WlzObjectType	type: type - defines grey type		*
-*		int l1, ll: first and last line				*
-*		int kl: first column - the width is set later when grey	*
-*		values are attached.					*
-*		WlzPixelV backgrnd: background pixel value		*
-*		WlzObject *orig: originating object for the values (not	*
-*		used).
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeValueTb    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Allocate and initialise space for a ragged-rectangle
+value table only
+*
+* \return       Pointer to a ragged rectangle values table.
+* \param    type	Values structure type. Must be a correct type as given
+by WlzGreyTableType() with table_type = WLZ_GREY_TAB_RAGR.
+* \param    l1	First line.
+* \param    ll	Last line.
+* \param    k1	First column.
+* \param    backgrnd	Background pixel value
+* \param    orig	Original object holding the grey-value data.
+* \param    dstErr	Error return values: WLZ_ERR_NONE,
+ WLZ_ERR_PARAM_DATA, WLZ_ERR_LINE_DATA, WLZ_ERR_MEM_ALLOC
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzRagRValues *
 WlzMakeValueTb(WlzObjectType	type,
 	       int 		l1,
@@ -398,19 +425,22 @@ WlzMakeValueTb(WlzObjectType	type,
   return(vtb);
 }
 
-/************************************************************************
-*   Function   : WlzMakeVoxelValueTb					*
-*   Date       : Fri Oct 18 15:41:08 1996				*
-*************************************************************************
-*   Synopsis   :Allocate space for a voxel table			*
-*   Returns    :WlzVoxelValues *: a voxel values structure		*
-*   Parameters :WlzObjectType	type: must be WLZ_VOXELVALUETABLE_GREY	*
-*		int p1, pl: first and last plane values			*
-*		WlzPixelV backgrnd: background pixel value		*
-*		WlzObject *orig: originating object for the values (not	*
-*		used)							*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakeVoxelValueTb    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Allocate space for a voxel table
+*
+* \return       Pointer to a voxel values table.
+* \param    type	Voxel table type.
+* \param    p1	Fist plane.
+* \param    pl	Last plane.
+* \param    backgrnd	Background pixel value.
+* \param    orig	Original object holding the voxel table
+* \param    dstErr	Error return values: WLZ_ERR_NONE,
+ WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 
 WlzVoxelValues *
 WlzMakeVoxelValueTb(WlzObjectType	type,
@@ -472,25 +502,28 @@ WlzMakeVoxelValueTb(WlzObjectType	type,
   return(voxtab);
 }
 
-/************************************************************************
-*   Function   : WlzMakeRectValueTb					*
-*   Date       : Fri Oct 18 15:41:23 1996				*
-*************************************************************************
-*   Synopsis   :Make rectangular value table attaching values if set.	*
-*		Note the values pointer is just copied and will not be	*
-*		freed when the object is freed unless the freeptr is set*
-*		to the required value.					*
-*   Returns    :WlzRectValues *: pointer to the value table.		*
-*   Parameters :WlzObjectType	type: must be 	WLZ_GREY_TAB_RECT with	*
-*		a valid grey-type.					*
-*		int line1, lastln, kol1, width: defines the bounding	*
-*		box and are checked.					*
-*		WlzPixelV backgrnd: background pixel value		*
-*		int	*values: pointer to array of values cast to	*
-*		int * for historical reasons. The actual type is encoded*
-*		in the type.						*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakeRectValueTb    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make rectangular value table attaching values if set.
+Note the values pointer is just copied and will not be
+freed when the object is freed unless the freeptr is set
+using AlcFreePointerPush().
+*
+* \return       Pointer to a rectangular value table.
+* \param    type	Value table type. Must be a valid table type e.g.
+as returned by WlzGreyTableType() with table_type = WLZ_GREY_TAB_RECT.
+* \param    line1	First line
+* \param    lastln	Last line.
+* \param    kol1	First column
+* \param    width	Width
+* \param    backgrnd	Background pixel value.
+* \param    values	Pointer to array of pixel values.
+* \param    dstErr	Error return values: WLZ_ERR_NONE,
+WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 
 WlzRectValues *
 WlzMakeRectValueTb(WlzObjectType	type, 
@@ -573,23 +606,23 @@ WlzMakeRectValueTb(WlzObjectType	type,
   return(vtb);
 }
 
-/************************************************************************
-*   Function   : WlzMakeInterval					*
-*   Date       : Fri Oct 18 15:41:40 1996				*
-*************************************************************************
-*   Synopsis   :Attach and interval pointer to a an interval domain 	*
-*		in the appropriate place and set the number of intervals*
-*		on the line. Note this procedure makes no checks on the	*
-*		arguments because it is often used in deeply nested 	*
-*		loops.							*
-*   Returns    :WlzErrorNum: always succeeds!				*
-*   Parameters :int line: line containing the intervals - must be legal	*
-*		WlzIntervalDomain *idom: domain pointer			*
-*		int nints: number of intervals				*
-*		WlzInterval *intptr: intervals pointer			*
-*   Global refs:None							*
-************************************************************************/
 
+/* function:     WlzMakeInterval    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Attach and interval pointer to a an interval domain
+in the appropriate place and set the number of intervals
+on the line. Note this procedure makes no checks on the
+arguments because it is often used in deeply nested loops.
+*
+* \return       Woolz error, values: WLZ_ERR_NONE
+* \param    line	Line on which the interval array is to be attached.
+* \param    idom	Pointer to the interval domain to hold the intervals.
+* \param    nints	Number of intervals in the array.
+* \param    intptr	Pointer to the set of intervals.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzErrorNum
 WlzMakeInterval(int 			line,
 		WlzIntervalDomain	*idom,
@@ -610,22 +643,23 @@ WlzMakeInterval(int 			line,
   return( WLZ_ERR_NONE );
 }
 
-/************************************************************************
-*   Function   : WlzMakeValueLine					*
-*   Date       : Fri Oct 18 15:42:18 1996				*
-*************************************************************************
-*   Synopsis   :Attach the grey values for a valueline within a ragged-	*
-*		rectangle value table. Not this procedure does not check*
-*		the input arguments because it is often at the core of	*
-*		nested loops.						*
-*   Returns    :WlzErrorNum: always succeeds				*
-*   Parameters :WlzRagRValues 	*vtb: the value table pointer		*
-*		int	line: line for the values to be set.		*
-*		int k1, kl: column interval for which the greys are set *
-*		int *greyptr: grey values pointer cast type int *	*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeValueLine    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Attach the grey values for a valueline within a ragged-
+rectangle value table. Not this procedure does not check
+the input arguments because it is often at the core of
+nested loops.
+*
+* \return       Woolz error, values: WLZ_ERR_NONE.
+* \param    vtb	Pointer to a ragged rectangle value table.
+* \param    line	Line for the values to be set.
+* \param    k1	First column of grey interval.
+* \param    kl	Last column of grey interval.
+* \param    greyptr	Grey values pointer cast type int *.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzErrorNum 
 WlzMakeValueLine(WlzRagRValues 	*vtb,
 		 int 		line,
@@ -645,30 +679,31 @@ WlzMakeValueLine(WlzRagRValues 	*vtb,
   return( WLZ_ERR_NONE );
 }
 
-/************************************************************************
-*   Function   : WlzMakePolyDmn						*
-*   Date       : Fri Oct 18 15:42:42 1996				*
-*************************************************************************
-*   Synopsis   :Make a polygon domain, allocating space and copying as	*
-*		required:						*
-*		vertices != NULL, copy=0 - just plant the pointer	*
-*		vertices != NULL, copy=1 - allocate space and copy	*
-*		vertices == NULL, copy=0 - nor vertex space allocated -	*
-*			probably an error!!				*
-*		vertices == NULL, copy=1 - allocate space for maxv 	*
-*			vertices.					*
-*   Returns    :WlzPolygonDomain *: pointer to initialised structure.	*
-*   Parameters :WlzObjectType	type: one of WLZ_POLYGON_INT, 		*
-*		WLZ_POLYGON_FLOAT, WLZ_POLYGON_DOUBLE			*
-*		WlzIVertex2 	*vertices: vertices to be set, see above*
-*		for value options.					*
-*		int n: number of vertices if vertices!=NULL		*
-*		int maxv: size of array if vertices!=NULL else number	*
-*		of vertices for which space it to be allocated.		*
-*		int copy: copy flag see above for values.		*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakePolyDmn    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make a polygon domain, allocating space and copying as
+required:
+<ul>
+<li>vertices != NULL,  copy=0 - just plant the pointer </li>
+<li>vertices != NULL,  copy=1 - allocate space and copy </li>
+<li>vertices == NULL,  copy=0 - no vertex space allocated\n
+probably an error!!</li>
+<li>vertices == NULL,  copy=1 - allocate space for maxv vertices</li>
+</ul>
 
+*
+* \return       Pointer to the initialised structure.
+* \param    type	one of WLZ_POLYGON_INT, WLZ_POLYGON_FLOAT,
+ WLZ_POLYGON_DOUBLE
+ * \param    vertices	vertices to be set, see type for value options.
+ * \param    n	number of vertices if vertices!=NULL.
+ * \param    maxv	size of array if vertices!=NULL else number of vertices for which space it to be allocated.
+ * \param    copy	copy flag see description for values.
+ * \param    dstErr	Error return, values: WLZ_ERR_NONE, WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzPolygonDomain *
 WlzMakePolyDmn(WlzObjectType	type,
 	       WlzIVertex2 	*vertices,
@@ -734,21 +769,22 @@ WlzMakePolyDmn(WlzObjectType	type,
   return(p);
 }
 
-/************************************************************************
-*   Function   : WlzMakeBoundList					*
-*   Date       : Fri Oct 18 15:42:58 1996				*
-*************************************************************************
-*   Synopsis   :Allocate space and initialise a boundlist structure.	*
-*   Returns    :WlzBoundList *: pointer to the structre.		*
-*   Parameters :WlzObjectType type: boundlist type - WLZ_BOUNDLIST_PIECE*
-*		or 	WLZ_BOUNDLIST_HOLE				*
-*		int wrap: number of vertices by which the polygon is	*
-*		"wrapped" ie number of vertices overlapping at the	*
-*		beginning and end.					*
-*		WlzPolygonDomain *poly: polygon for this boundary struct*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeBoundList    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Allocate space and initialise a boundlist structure.
+*
+* \return       Pointer to a BoundList structure.
+* \param    type	BoundList type, one of: WLZ_BOUNDLIST_PIECE or
+ WLZ_BOUNDLIST_HOLE.
+* \param    wrap	number of vertices by which the polygon is "wrapped"
+ ie number of vertices overlapping at the beginning and end.
+* \param    poly	polygon for this boundary structure
+* \param    dstErr	Error return, values: WLZ_ERR_NONE,
+ WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzBoundList *
 WlzMakeBoundList(WlzObjectType		type,
 		 int			wrap,
@@ -796,16 +832,17 @@ WlzMakeBoundList(WlzObjectType		type,
   return( blist );
 }
 
-/************************************************************************
-*   Function   : WlzMakeIVertex						*
-*   Date       : Fri Oct 18 15:43:24 1996				*
-*************************************************************************
-*   Synopsis   :Make an integer vertex array				*
-*   Returns    :WlzIVertex2 *: pointer to the array.			*
-*   Parameters :int nverts: number of vertices.				*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeIVertex    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make an integer vertex array.
+*
+* \return       Pointer to the array of vertex structures.
+* \param    nverts	Number of vertices.
+* \param    dstErr	Error return, values: WLZ_ERR_NONE, WLZ_ERR_MEM_ALLOC.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzIVertex2 *WlzMakeIVertex(int nverts,
 			   WlzErrorNum		*dstErr)
 {
@@ -823,29 +860,31 @@ WlzIVertex2 *WlzMakeIVertex(int nverts,
   return(vtx);
 }
 
-/************************************************************************
-*   Function   : WlzMakeRect						*
-*   Date       : Fri Oct 18 15:43:45 1996				*
-*************************************************************************
-*   Synopsis   :make a top-level rectangular object, setting values	*
-*		if non-NULL, uses WlzMakeRectValueTb to assign values	*
-*		which by default will not be freed when the object is	*
-*		freed. The freeptr needs to be explicitly set by the	*
-*		calling procedure.					*
-*		This is a convenience procedure calling 		*
-*		WlzMakeIntervalDomain then WlzMakeRectValueTb then	*
-*		WlzMakeMain.						*
-*   Returns    :WlzObject *: pointer to the top-level object		*
-*   Parameters :int line1, lastln, kol1, lastkl: bounding box for the	*
-*		data.							*
-*		WlzGreyType pixeltype: data pixel type.			*
-*		int *grey_values: pointer to grey-values array		*
-*		WlzPixelV backgrnd: background pixel value.		*
-*		WlzSimpleProperty *prop: associated properties		*
-*		WlzObject *assoc_obj: associated object			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeRect    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make a top-level rectangular object, setting values
+if non-NULL, uses WlzMakeRectValueTb() to assign values 
+which by default will not be freed when the object is
+freed. The freeptr needs to be explicitly set by the
+calling procedure. This is a convenience procedure calling
+WlzMakeIntervalDomain() then WlzMakeRectValueTb() then WlzMakeMain().
+*
+* \return       Pointer to the top-level object.
+* \param    line1	First line.
+* \param    lastln	Last line
+* \param    kol1	First column
+* \param    lastkl	last column
+* \param    pixeltype	Pixel type for the grey values.
+* \param    grey_values	Pointer to the grey values array.
+* \param    backgrnd	Background pixel value.
+* \param    plist	Property list to be attached.
+* \param    assoc_obj	Associated object.
+* \param    dstErr	Error return, values: WLZ_ERR_NONE and valuea
+ from WlzMakeRectValueTb() and WlzMakeMain().
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzObject *WlzMakeRect(int 			line1,
 		       int 			lastln,
 		       int 			kol1,
@@ -853,7 +892,7 @@ WlzObject *WlzMakeRect(int 			line1,
 		       WlzGreyType		pixeltype,
 		       int 			*grey_values,
 		       WlzPixelV		backgrnd,
-		       WlzSimpleProperty	*prop,
+		       AlcDLPList		*plist,
 		       WlzObject		*assoc_obj,
 		       WlzErrorNum		*dstErr)
 {
@@ -877,7 +916,7 @@ WlzObject *WlzMakeRect(int 			line1,
 
   if((errNum == WLZ_ERR_NONE) &&
      ((obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-			 prop, assoc_obj, &errNum)) == NULL) ){
+			 plist, assoc_obj, &errNum)) == NULL) ){
     WlzFreeDomain( domain );
     WlzFreeValues( values );
   }
@@ -888,19 +927,21 @@ WlzObject *WlzMakeRect(int 			line1,
   return(obj);
 }
 
-/************************************************************************
-*   Function   : WlzMakeHistogramDomain					*
-*   Date       : Tue May 20 11:29:03 BST 1997				*
-*************************************************************************
-*   Synopsis   :Allocates space for a histogram domain with the space	*
-*		the given maximum number of bins of the appropriate	*
-*		type.							*
-*   Returns    :WlzHistogramDomain *: Pointer to object, NULL on error.	*
-*   Parameters :WlzObjectType type: Can be WLZ_HISTOGRAMDOMAIN_INT or	*
-*		WLZ_HISTOGRAMDOMAIN_FLOAT only.				*
-*		int maxBins: Maximum number of histogram bins.		*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakeHistogramDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Allocates space for a histogram domain with the space
+for the given maximum number of bins of the appropriate type.
+*
+* \return       Pointer to object, NULL on error.
+* \param    type	histogram type, one of: WLZ_HISTOGRAMDOMAIN_INT
+ or WLZ_HISTOGRAMDOMAIN_FLOAT
+* \param    maxBins	Maximum number of histogram bins.
+* \param    dstErr	Error return, values: WLZ_ERR_NONE,
+ WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 					   WlzErrorNum		*dstErr)
 {
@@ -977,16 +1018,16 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
   return(hist);
 }
 
-/************************************************************************
-*   Function   : WlzMakeEmpty						*
-*   Date       : Fri Mar  7 14:04:49 GMT 1997				*
-*************************************************************************
-*   Synopsis   :Convenience procedure to make a top-level empty object.	*
-*   Returns    :WlzObject *: NULL on error.				*
-*   Parameters :void							*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzMakeEmpty    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Convenience procedure to make a top-level empty object.
+*
+* \return       Pointer to the Object structure, NULL on error.
+* \param    dstErr	Error return, values from WlzMakeMain().
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzObject *WlzMakeEmpty(WlzErrorNum *dstErr)
 {
   WlzDomain	domain;
@@ -997,18 +1038,21 @@ WlzObject *WlzMakeEmpty(WlzErrorNum *dstErr)
   return WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, dstErr);
 }
 
-/************************************************************************
-*   Function   : WlzMakeHistogram					*
-*   Date       : Tue May 20 11:38:11 BST 1997				*
-*************************************************************************
-*   Synopsis   :Convenience procedure to make a top-level object with	*
-*		a histogram domain.					*
-*   Returns    :WlzObject *: NULL on error.				*
-*   Parameters :WlzObjectType type: can be WLZ_HISTOGRAMDOMAIN_INT or	*
-*		WLZ_HISTOGRAMDOMAIN_FLOAT only.				*
-*		int maxBins: Maximum number of histogram bins.		*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzMakeHistogram    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Convenience procedure to make a top-level object with
+a histogram domain.
+*
+* \return       Pointer to a Histogram object, NULL on error.
+* \param    type	Type of the histogram domain, one of:
+ WLZ_HISTOGRAMDOMAIN_INT or WLZ_HISTOGRAMDOMAIN_FLOAT.
+* \param    maxBins	Maximum number of histogram bins.
+* \param    dstErr	Error return, values: from WlzMakeHistogramDomain()
+ and WlzMakeMain().
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzObject	*WlzMakeHistogram(WlzObjectType	type, int maxBins,
 				  WlzErrorNum		*dstErr)
 {
@@ -1029,20 +1073,24 @@ WlzObject	*WlzMakeHistogram(WlzObjectType	type, int maxBins,
   return(obj);
 }
 
-/************************************************************************
-*   Function   : WlzNewGrey						*
-*   Date       : Fri Oct 18 15:44:40 1996				*
-*************************************************************************
-*   Synopsis   :Make a top-level object with the same domain as iobj 	*
-*		(pointer copied and linkcount incremented) and new	*
-*		valuetable with values copied from iobj. If iobj has no	*
-*		valuetable then the returned object will have no value-	*
-*		table. This allows a copy of a 2D grey-value object	*
-*   Returns    :WlzObject *: NULL on error				*
-*   Parameters :WlzObject *iobj: object to be copied			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzNewGrey    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make a top-level object with the same domain as iobj
+(pointer copied and linkcount incremented) and new
+valuetable with values copied from iobj. If iobj has no
+valuetable then the returned object will have no value-
+table. This allows a copy of a 2D grey-value object.
+*
+* \return       Pointer to the top-level object, NULL on error.
+* \param    iobj	Input object which defines the domain and grey
+values for which the new grey table will be defined.
+ * \param    dstErr	Error return, values: WLZ_ERR_NONE,
+ WLZ_ERR_OBJECT_TYPE and errors from WlzNewValueTb(), WlzMakeMain(),
+ WlzInitGreyScan() and WlzNextGreyInterval().
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzObject *WlzNewGrey(WlzObject *iobj,
 		      WlzErrorNum		*dstErr)
 {
@@ -1173,20 +1221,23 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
   return(jobj);
 }
 
-/************************************************************************
-*   Function   : WlzNewValueTb						*
-*   Date       : Fri Oct 18 15:44:55 1996				*
-*************************************************************************
-*   Synopsis   :Creat a value table of required type with the same size	*
-*		and shape as the domain of obj. This must be of type	*
-*		WLZ_2D_DOMAINOBJ.					*
-*   Returns    :WlzRagRValues *: pointer to the created table.		*
-*   Parameters :WlzObject *obj: object pointer whose domain is matched	*
-*		WlzObjectType type: type for the valuetable		*
-*		WlzPixelV backgrnd: background pixel value		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzNewValueTb    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Create a value table of required type with the same size
+and shape as the domain of obj. This must be of type WLZ_2D_DOMAINOBJ.
+*
+* \return       Pointer to new ragged-rectangle value table structure.
+* \param    obj	Object which defines the shape of the new value table.
+* \param    type	Value table type.
+* \param    backgrnd	Background pixel value.
+* \param    dstErr	Error return, values: WLZ_ERR_NONE,
+ WLZ_ERR_OBJECT_TYPE, WLZ_ERR_MEM_ALLOC and errors from
+ WlzMakeIntervalValues(), WlzGreyTableTypeToTableType(), WlzLineArea(),
+ WlzMakeValueTb(), WlzInitRasterScan() and WlzMakeValueLine().
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 			     WlzObjectType	type,
 			     WlzPixelV		backgrnd,
@@ -1377,20 +1428,21 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
   return(v.v);
 }
 
-/************************************************************************
-*   Function   : WlzNewIDomain						*
-*   Date       : Fri Oct 18 15:45:09 1996				*
-*************************************************************************
-*   Synopsis   :Make a copy of an intervaldomain			*
-*   Returns    :WlzIntervalDomain *: NULL on error			*
-*   Parameters :WlzObjectType outDomType: Required interval domain	*
-*					  type.				*
-*		WlzIntervalDomain *inDom: Domain to be copied.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, 	*
-*					may be NULL.			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzNewIDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Make a copy of an intervaldomain.
+*
+* \return       Pointer to the new interval domain.
+* \param    outDomType	Interval domain type, one of:
+ WLZ_INTERVALDOMAIN_INTVL or WLZ_INTERVALDOMAIN_RECT.
+* \param    inDom	Input domain to be copied.
+* \param    dstErr	Error return, values: WLZ_ERR_NONE,
+ WLZ_ERR_DOMAIN_TYPE, WLZ_ERR_MEM_ALLOC or errors from WlzMakeInterval(),
+ WlzMakeIntervalDomain().
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzIntervalDomain *
 WlzNewIDomain(WlzObjectType outDomType,
 	      WlzIntervalDomain *inDom,
@@ -1492,14 +1544,16 @@ WlzNewIDomain(WlzObjectType outDomType,
   return(outDom);
 }
 
-/************************************************************************
-* Function:	WlzMakeContour
-* Returns:	WlzContour *:		New contour.
-* Purpose:	Makes a new contour data structure.
-* Global refs:	-
-* Parameters:	WlzErrorNum *dstErr:	Destination error pointer, may
-					be null.
-************************************************************************/
+/* function:     WlzMakeContour    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Makes a new contour data structure.
+*
+* \return       Pointer to a WLZContour object.
+* \param    dstErr	Error return, values: WLZ_ERR_NONE, WLZ_ERR_MEM_ALLOC.
+* \par      Source:
+*                WlzMakeStructs.c
+*/
 WlzContour	*WlzMakeContour(WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;

@@ -184,7 +184,8 @@ typedef enum
   /**********************************************************************
   * Property list types.					
   **********************************************************************/
-  WLZ_PROPERTY_SIMPLE		= 1,
+  WLZ_PROPERTY_SIMPLE		= 180,
+  WLZ_PROPERTY_EMAP		= 181,
   /**********************************************************************
   * 3D view structure types.					
   **********************************************************************/
@@ -196,6 +197,22 @@ typedef enum
   **********************************************************************/
   WLZ_DUMMY_ENTRY
 } WlzObjectType;
+
+
+/*! 
+* \enum		_WlzEMAPPropertyType
+* \ingroup      WlzProperty
+* \brief        Sub types of EMAP properties
+* \par      Source:
+*                WlzType.h
+*/
+typedef enum _WlzEMAPPropertyType
+{
+  WLZ_EMAP_PROPERTY_GREY_MODEL = 1,	/*!< Reference Model */
+  WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN,	/*!< Anatomy Domain */
+  WLZ_EMAP_PROPERTY_OTHER_DOMAIN,	/*!< Other Domain */
+  WLZ_EMAP_PROPERTY_DUMMY		/*!< Dummy property */
+} WlzEMAPPropertyType;
 
 /************************************************************************
 *  Raster scan directions as used by WlzGreyScan().		
@@ -1248,7 +1265,7 @@ typedef enum _WlzContourMethod
 /*!
 * \struct	_WlzContour
 * \ingroup	WlzContour
-*		A collection of 2D polylines or 3D surface elements
+* \brief	A collection of 2D polylines or 3D surface elements
 *		represented by a Woolz geometric model.
 *		Typedef: ::WlzContour.
 */
@@ -1295,17 +1312,75 @@ typedef union
   struct _WlzContour 	     *ctr;
 } WlzDomain;
 
-/************************************************************************
-* Simple property .						
-************************************************************************/
-typedef struct
+/*!
+* \struct	_WlzCoreProperty
+* \ingroup	WlzProperty
+* \brief	Core property with sufficient to data to provide the type
+*		and enough to allow the property to be freed.
+*/
+typedef struct _WlzCoreProperty
 {
-  WlzObjectType		type;
-  int 			linkcount;
-  void 			*freeptr;
-  unsigned long		size;
-  void 			*prop;
+  WlzObjectType		type;			/*!< Type */
+  int 			linkcount;		/*!< linkcount */
+  void 			*freeptr;		/*!< free pointer */
+} WlzCoreProperty;
+
+/*!
+* \struct	_WlzSimpleProperty
+* \ingroup	WlzProperty
+* \brief	A simple property to hold arbitrary length string data.
+*		Read and writing then coercing to a structure with
+*		numerical values will not be portable.
+*/
+typedef struct _WlzSimpleProperty
+{
+  WlzObjectType		type;			/*!< Type */
+  int 			linkcount;		/*!< linkcount */
+  void 			*freeptr;		/*!< free pointer */
+  unsigned long		size;			/*!< Data size of the property */
+  void 			*prop;			/*!< Pointer to the property */
 } WlzSimpleProperty;
+
+/*!
+* \struct	_WlzEMAPProperty
+* \ingroup	WlzProperty
+* \brief	A property to hold EMAP information to attach to
+*		the reference models, anatomy and GE domains. MAPaint
+*		and atlas tools will propogate the information as 
+*		required.
+*/
+#define EMAP_PROPERTY_MODELNAME_LENGTH	32
+#define EMAP_PROPERTY_VERSION_LENGTH	16
+#define	EMAP_PROPERTY_AUTHORNAME_LENGTH 64
+typedef struct _WlzEMAPProperty
+{
+  WlzObjectType		type;				/*!< Type */
+  int 			linkcount;			/*!< linkcount */
+  void 			*freeptr;			/*!< free pointer */
+  WlzEMAPPropertyType	emapType;			/*!< EMAP property type */
+  int			theilerStage;			/*!< Theiler stage */
+  char			modelName[EMAP_PROPERTY_MODELNAME_LENGTH];/*!< Volume model name */
+  char			version[EMAP_PROPERTY_VERSION_LENGTH];/*!< Model version */
+  char			*fileName;			/*!< Original filename (not very useful) */
+  long			creationTime;			/*!< Original creation time */
+  char			creationAuthor[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Creation author */
+  char			creationMachineName[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Original creation machine name - useful for location */
+  long			modificationTime;		/*!< Modification time */
+  char			modificationAuthor[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Modification author */
+  char			*comment;			/*!< Text comment string */
+} WlzEMAPProperty;
+
+/*!
+* \union	_WlzProperty
+* \ingroup	WlzProperty
+* \brief	A union of pointers for properties.
+*/
+typedef union _WlzProperty
+{
+  struct _WlzCoreProperty	*core;
+  struct _WlzSimpleProperty	*simple;
+  struct _WlzEMAPProperty	*emap;
+} WlzProperty;
 
 /************************************************************************
 * WlzObject: The Woolz object.					
@@ -1316,8 +1391,8 @@ typedef struct _WlzObject
   int                linkcount;
   WlzDomain          domain;
   WlzValues          values;
-  WlzSimpleProperty  *plist;
-  struct _WlzObject *assoc;
+  AlcDLPList	     *plist;
+  struct _WlzObject  *assoc;
 } WlzObject;
 
 /************************************************************************
@@ -1994,7 +2069,7 @@ typedef struct
   WlzObjectType otype;		       /* The permitted type if constrained. */
   int           n;		 /* Maximum number of objects (array length) */
   WlzObject     **o;			/* The list of woolz object pointers */
-  WlzSimpleProperty *p;			     /* A non-specific property list */
+  AlcDLPList    *p;			     /* A non-specific property list */
   WlzObject     *assoc;
 } WlzCompoundArray;
 
@@ -2147,7 +2222,7 @@ typedef struct _Wlz3DWarpTrans
   int 			iteration;
   int 			currentplane;
   float 		maxdisp;
-  WlzSimpleProperty 	*plist;
+  AlcDLPList    	*plist;
   WlzObject 		*assoc;
 } Wlz3DWarpTrans;
 

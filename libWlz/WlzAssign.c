@@ -143,26 +143,26 @@ WlzValues 	WlzAssignValues(WlzValues values, WlzErrorNum	*dstErr)
 * \return	Given property list with incremented linkcount or NULL on
 * 		error.
 * \ingroup	WlzAllocation
-* \brief	Assign a property list by incrementing it's linkcount.
+* \brief	Assign a property by incrementing it's linkcount.
 * \param	property		Given property.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzSimpleProperty *WlzAssignProperty(WlzSimpleProperty *property,
-				     WlzErrorNum *dstErr)
+WlzProperty WlzAssignProperty(WlzProperty property, WlzErrorNum *dstErr)
 {
-  WlzSimpleProperty	*rtnProp = NULL;
-  WlzErrorNum		errNum = WLZ_ERR_NONE;
+  WlzProperty	rtnProp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(property)
+  rtnProp.core = NULL;
+  if(property.core)
   {
-    if(property->linkcount < 0)
+    if(property.core->linkcount < 0)
     {
       errNum = WLZ_ERR_LINKCOUNT_DATA;
     }
     else
     {
       rtnProp = property;
-      property->linkcount++;
+      property.core->linkcount++;
     }
   }
 #ifdef WLZ_NO_NULL
@@ -177,6 +177,60 @@ WlzSimpleProperty *WlzAssignProperty(WlzSimpleProperty *property,
   }
   return rtnProp;
 }
+
+AlcDLPList *WlzAssignPropertyList(
+  AlcDLPList	*plist,
+  WlzErrorNum *dstErr)
+{
+  AlcDLPList	*rtnList=NULL;
+  AlcErrno	alcErrNum;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcDLPItem	*item, *newItem;
+  WlzProperty	property;
+  
+  if( plist ){
+    rtnList = AlcDLPListNew(&alcErrNum);
+    if( alcErrNum == ALC_ER_NONE ){
+      item = plist->head;
+      do {
+	if( item ){
+	  if( property.core = (WlzCoreProperty *) item->entry ){
+	    (void) WlzAssignProperty(property, &errNum);
+	    switch(property.core->type){
+	    case WLZ_PROPERTY_SIMPLE:
+	    case WLZ_PROPERTY_EMAP:
+	      alcErrNum = AlcDLPListEntryAppend(rtnList, NULL,
+						(void *) property.core,
+						WlzFreePropertyListEntry);
+	      break;
+
+	    default:
+	      break;
+	    }
+	  }
+	  item = item->next;
+	}
+      } while( (alcErrNum == ALC_ER_NONE) && (item != plist->head) );
+    }
+    if( alcErrNum != ALC_ER_NONE ){
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+#ifdef WLZ_NO_NULL
+  else
+  {
+    errNum = WLZ_ERR_PROPERTY_NULL;
+  }
+#endif /* WLZ_NO_NULL */
+
+
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return rtnList;
+}
+
 
 /*!
 * \return	Given affine transform with incremented linkcount or NULL on

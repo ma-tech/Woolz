@@ -1,5 +1,314 @@
 /*!
 * \ingroup      Wlz
 * \defgroup      WlzIO
-*
+* Woolz objects can be written to disc or pipe as a serial character stream.
+The file format is fixed and the appropriate byte-swapping and ordering is
+managed by architecture dependent functions for I/O of each basic type. These
+could break for non-default settings for byte orderings (e.g. possible on Sun
+workstations). The basic types are char (8-bit), int (4-byte), short (2-byte),
+float(4-byte) and double (8-byte).
+A new version of the object was introduced in 2002 to include a full
+property list therefore old code may not be able to read this data.
+
+The structure of the object file is:
+\verbatim
+<object file> :=       <object>*<WLZ_NULL>
+                       (There can be any number of objects)
+
+<object>:=	       <WLZ_2D_DOMAINOBJ><domain><grey-table><property-list>
+                       <WLZ_3D_DOMAINOBJ><planedomain><voxel-table><property-list>
+                       <WLZ_TRANS_OBJ><affine><object><property-list>
+                       <WLZ_3D_WARP_TRANS><3D warp-transform><property-list>
+                       <WLZ_2D_POLYGON><2D polygon>
+                       <WLZ_BOUNDLIST><bound-list>
+                       <WLZ_CONV_HULL><<2D polygon><convex hull>
+                       <WLZ_HISTOGRAM><histogram>
+                       <WLZ_3D_POLYGON>(not yet implemented)
+                       <WLZ_CONTOUR><contour>
+                       <WLZ_RECTANGLE><rectangle>
+                       <WLZ_AFFINE_TRANS><affine>
+                       <WLZ_WARP_TRANS><warp-transform>
+                       <WLZ_FMATCHOBJ><f-match-object>
+                       <WLZ_COMPOUND_ARR_1><compound-array>
+                       <WLZ_COMPOUND_ARR_2><compound-array>
+                       <WLZ_PROPERTY_OBJ><property-list>
+                       <WLZ_EMPTY_OBJ>
+		       <WLZ_NULL> (only valid for a compound object)
+                       
+<WLZ_2D_DOMAINOBJ>:=   <type=1>
+<WLZ_3D_DOMAINOBJ>:=   <type=2>
+<WLZ_TRANS_OBJ>:=      <type=3>
+<WLZ_3D_WARP_TRANS>:=  <type=4>
+<WLZ_2D_POLYGON>:=     <type=10>
+<WLZ_BOUNDLIST>:=      <type=11>
+<WLZ_CONV_HULL>:=      <type=12>
+<WLZ_HISTOGRAM>:=      <type=13>
+<WLZ_3D_POLYGON>:=     <type=14>
+<WLZ_CONTOUR>:=        <type=15>
+<WLZ_RECTANGLE>:=      <type=20>
+<WLZ_AFFINE_TRANS>:=   <type=63>
+<WLZ_WARP_TRANS>:=     <type=64>
+<WLZ_FMATCHOBJ>:=      <type=65>
+<WLZ_COMPOUND_ARR_1>:= <type=80>
+<WLZ_COMPOUND_ARR_2>:= <type=81>
+<WLZ_PROPERTY_OBJ>:=   <type=110>
+<WLZ_EMPTY_OBJ>:=      <type=127>
+<WLZ_NULL>             <type=0>
+
+<type>:=               <char> (interpreted as 1 byte unsigned integer)
+
+<domain>:=             <WLZ_INTERVALDOMAIN_INTVL><l1><ll><k1><kl><intervals>
+                       <WLZ_INTERVALDOMAIN_RECT><l1><ll><k1><kl>
+                       <WLZ_NULL> (only valid within a planedomain)
+
+<WLZ_INTERVALDOMAIN_INTVL>:= <type=1>
+<WLZ_INTERVALDOMAIN_RECT>:=  <type=2>
+
+<l?>:=                 <int>
+<k?>:=                 <int>
+<p?>:=                 <int>
+
+<intervals>:=          <number of intervals per line>*<endpoint pair>*
+
+<endpoint pair>:=      <left end of interval><right end of interval>
+
+<number of intervals per line>:= <int>
+<left end of interval>:=         <int>
+<right end of interval>:=        <int>
+
+<grey-table>:=         <WLZ_NULL>
+                       <WLZ_GREY_INT><packing=WLZ_GREY_INT><int><greyint>*
+                       <WLZ_GREY_INT><packing=WLZ_GREY_SHORT><int><greyshort>*
+                       <WLZ_GREY_INT><packing=WLZ_GREY_UBYTE><int><greybyte>*
+		       <WLZ_GREY_SHORT><packing=WLZ_GREY_SHORT><int><greyshort>*
+		       <WLZ_GREY_SHORT><packing=WLZ_GREY_UBYTE><int><greybyte>*
+		       <WLZ_GREY_UBYTE><packing=WLZ_GREY_UBYTE><int><greybyte>*
+		       <WLZ_GREY_FLOAT><packing=WLZ_GREY_FLOAT><float><greyfloat>*
+		       <WLZ_GREY_DOUBLE><packing=WLZ_GREY_DOUBLE><double><greydouble>*
+                       (In each case exactly sufficient values to fill the
+		        intervals of the object. The value following the packing
+			is the background pixel value)
+
+<WLZ_GREY_INT>:=       <type=1>
+<WLZ_GREY_SHORT>:=     <type=2>
+<WLZ_GREY_UBYTE>:=     <type=3>
+<WLZ_GREY_FLOAT>:=     <type=4>
+<WLZ_GREY_DOUBLE>:=    <type=5>
+
+<packing>:=            <type>
+
+<greyint>:=            <int>
+<greyshort>:=          <short>
+<greybyte>:=           <char>
+<greyfloat>:=          <float>
+<greydouble>:=         <double>
+
+<property-list>:=      <WLZ_NULL>
+                       <type=2><int=number of properties><property>*
+
+<property>:=           <WLZ_NULL>
+                       <WLZ_PROPERTY_SIMPLE><int=size><char>*
+		       <WLZ_PROPERTY_EMAP><emap property type><int=Theiler stage>
+		       ...<emap model name><emap version><int=creation time>
+		       ...<emap name=author><emap name=machine name>
+		       ...<int=modification time>emap name=modification author>
+		       ...<int=strlen(filename)><char>*
+		       ...<int=strlen(comment)><char>*
+
+<emap property type>:= <WLZ_EMAP_PROPERTY_GREY_MODEL>
+                       <WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN>
+		       <WLZ_EMAP_PROPERTY_OTHER_DOMAIN>
+
+<emap model name>:=    <char>*32
+<emap version>:=       <char>*16
+<emap name>:+          <char>*64
+
+<WLZ_EMAP_PROPERTY_GREY_MODEL>:=     <type=1>
+<WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN>:= <type=2>
+<WLZ_EMAP_PROPERTY_OTHER_DOMAIN>:=   <type=3>
+
+<planedomain>:=        <WLZ_NULL>
+                       <WLZ_PLANEDOMAIN_DOMAIN><p1><pl><l1><ll><k1><kl>
+		       ...<voxel-size><plane-positions><domain>*
+		       <WLZ_PLANEDOMAIN_POLYGON><p1><pl><l1><ll><k1><kl>
+		       ...<voxel-size><plane-positions><2D polygon>*
+		       <WLZ_PLANEDOMAIN_BOUNDLIST><p1><pl><l1><ll><k1><kl>
+		       ...<voxel-size><plane-positions><bound-list>*
+		       <WLZ_PLANEDOMAIN_HISTOGRAM><p1><pl><l1><ll><k1><kl>
+		       ...<voxel-size><plane-positions><histogram>*
+		       <WLZ_PLANEDOMAIN_AFFINE><p1><pl><l1><ll><k1><kl>
+		       ...<voxel-size><plane-positions><affine>*
+		       <WLZ_PLANEDOMAIN_WARP><p1><pl><l1><ll><k1><kl>
+		       ...<voxel-size><plane-positions><warp transform>*
+
+<voxel-size>:=         <float=x-size><float=y-size><float=z-size>
+<plane-positions>:+    <float>* (one value for each plane, now obsolete)
+        
+<voxel-table>:=        <WLZ_NULL>
+                       <WLZ_VOXELVALUETABLE_GREY><int=background><grey-table>*
+		       (note the number of grey-tables is determined from the
+		        associated plane-domain)
+
+<WLZ_VOXELVALUETABLE_GREY>:= <type=1>
+
+<affine>:=             <WLZ_NULL>
+                       <WLZ_TRANSFORM_2D_AFFINE><double>*16
+		       <WLZ_TRANSFORM_2D_REG><double>*16
+		       <WLZ_TRANSFORM_2D_TRANS><double>*16
+		       <WLZ_TRANSFORM_2D_NOSHEAR><double>*16
+		       <WLZ_TRANSFORM_3D_AFFINE><double>*16
+		       <WLZ_TRANSFORM_3D_REG><double>*16
+		       <WLZ_TRANSFORM_3D_TRANS><double>*16
+		       <WLZ_TRANSFORM_3D_NOSHEAR><double>*16
+		       (The affine transform matrix is written row-wise
+		        as 16 double values)
+
+<WLZ_TRANSFORM_2D_AFFINE>:=  <type=1> (full 2D affine)
+<WLZ_TRANSFORM_2D_REG>:=     <type=2> (2D rigid-body)
+<WLZ_TRANSFORM_2D_TRANS>:=   <type=3> (2D translation only)
+<WLZ_TRANSFORM_2D_NOSHEAR>:= <type=4> (2D rigid-body plus scaling)
+<WLZ_TRANSFORM_3D_AFFINE>:=  <type=5> (full 3D affine)
+<WLZ_TRANSFORM_3D_REG>:=     <type=6> (3D rigid-body)
+<WLZ_TRANSFORM_3D_TRANS>:=   <type=7> (3D translation only)
+<WLZ_TRANSFORM_3D_NOSHEAR>:= <type=8> (3D rigid-body plus scaling)
+
+<3D warp-transform>:=  <int=iteration><int=current-plane><float=max-displacement>
+                       ...<planedomain><f-match-object>*
+		       (one f-match-object per plane)
+
+<2D polygon>:=         <WLZ_NULL>
+                       <WLZ_POLYGON_INT><int=num vertices><2D int vertex>*
+		       <WLZ_POLYGON_FLOAT><int=num vertices><2D float vertex>*
+		       <WLZ_POLYGON_DOUBLE><int=num vertices><2D double vertex>*
+
+<2D int vertex>:=      <int=line coord.><int=column coord.>
+<2D float vertex>:=    <float=line coord.><float=column coord.>
+<2D double vertex>:=   <double=line coord.><double=column coord.>
+<3D int vertex>:=      <int=column coord.><int=line coord.><int=plane coord.>
+<3D float vertex>:=    <float=column coord.><float=line coord.><float=plane coord.>
+<3D double vertex>:=   <double=column coord.><double=line coord.><double=plane coord.>
+                       (Note 2D in reverse order (y,x), 3D in normal order (x,y,z))
+
+<bound-list>:=         <WLZ_NULL>
+                       <type=1><bound-list type><bound-list=next>
+		       ...<bound-list=down><int=wrap><polygon>
+
+<bound-list type>:=    <WLZ_BOUNDLIST_PIECE>
+                       <WLZ_BOUNDLIST_HOLE>
+
+<WLZ_BOUNDLIST_PIECE>:= <type=0>
+<WLZ_BOUNDLIST_HOLE>:=  <type=1>
+
+<convex hull>:=        <WLZ_NULL>
+                       <WLZ_CONVHULL_VALUES><int=num chords><int=num sig. chords>
+		       ...<int=mid line><int=mid column><chord>*
+
+<chord>:=              <int=significance><int=acon><int=bcon><int=ccon>
+                       ...<double=chord length>
+		       ...<int=bl><int=bk><int=b-area><int=b-depth>
+		       (parameters are defined in WlzTypes.h)
+
+<WLZ_CONVHULL_VALUES>:= <type=1>
+
+<histogram>:=          <WLZ_NULL>
+                       <WLZ_HISTOGRAMDOMAIN_INT><int=num bins><double=origin>
+		       ...<double=bin size><int>*
+		       <WLZ_HISTOGRAMDOMAIN_FLOAT><int=num bins><double=origin>
+		       ...<double=bin size><double>*
+		       (curiously float type is actually all doubles)
+
+<WLZ_HISTOGRAMDOMAIN_INT>:=   <type=3>
+<WLZ_HISTOGRAMDOMAIN_FLOAT>:= <type=4>
+
+<contour>:=            <WLZ_CONTOUR><GM model>
+
+<GM model>:=           <WLZ_GMMOD_2I><type=0><int=num vertices><int=num edges>
+                       ...<2D int vertex>*<edge indices>*
+                       <WLZ_GMMOD_2D><type=0><int=num vertices><int=num edges>
+		       ...<2D double vertex>*<edge indices>*
+		       <WLZ_GMMOD_3I><type=0><int=num vertices><int=num faces>
+                       ...<3D int vertex>*<face indices>*
+		       <WLZ_GMMOD_3D><type=0><int=num vertices><int=num faces>
+                       ...<3D double vertex>*<face indices>*
+
+<edge indices>:=       <int=1st index><int=2nd index>
+                       (These are indices into the vertex table for each simplex)
+<face indices>:=       <int=1st index><int=2nd index><int=3rd index>
+                       (These are indices into the vertex table for each simplex,
+		        in this case the faces are triangles)
+
+<rectangle>:=          <WLZ_NULL>
+                       <WLZ_RECTANGLE_DOMAIN_INT><k[1-4]><l[-4><rangle>
+		       <WLZ_RECTANGLE_DOMAIN_FLOAT><fk[1-4]><fl[-4><rangle>
+
+<WLZ_RECTANGLE_DOMAIN_INT>:=   <type=1>
+<WLZ_RECTANGLE_DOMAIN_FLOAT>:= <type=2>
+
+<fk?>:=                <float>
+<fl?>:=                <float>
+<rangle>:=             <float>
+
+<warp-transform>:=     <WLZ_WARP_TRANS><int=num elements><int=num nodes>
+                       ...<float=max displacement><float=max disp. last iteration>
+		       ...<node coord>*<displacement>*<element>*
+
+<node coord>:=         <float=x><float=y>
+<displacement:=        <float=x-displacement><float=y-displacement>
+<element>:=            <element type><int=global element #><global node #>
+                       ...<element u-vals><element a-vals>
+
+
+<element type>:=	<WLZ_LINEAR>
+                        <WLZ_INCOMPRESSIBLE>
+			<WLZ_COMPRESSIBLE>
+<global node #>:=       <int=1st node #><int=2nd node #><int=3rd node #>
+<element ?-vals>:=      <float=1st val><float=2nd val><float=3rd val>
+
+<WLZ_LINEAR>:=          <type=1>
+<WLZ_INCOMPRESSIBLE>:=  <type=2>
+<WLZ_COMPRESSIBLE>:=    <type=3>
+
+<f-match-object>:=      <int=num match points><match point>*
+
+<match point>:=         <match type><int=node index><float=x-coord><float=y-coord>
+                        ...<search element indices>
+
+<search element indices>:= <int=element index>*20
+
+<compound-array>:=      <compound-array type><int=num objects><object>*<property-list>
+
+<int>:=                 4 byte signed integer, LSB first (little endian - VAX order!)
+<short>:=               2 byte signed integer, LSB first (little endian - VAX order!)
+<float>:=		4 byte floating point (Vax format for backward compatibility)
+                        mapping to IEEE Standard 754 as:
+			    byte 1 = (IEEE byte 2)
+			    byte 2 = (IEEE byte 1) + 1
+			    byte 3 = (IEEE byte 4)
+			    byte 4 = (IEEE byte 3)
+                        (This scrambled ordering matches sparc, mips and power-pc,
+			 the reverse matches x86 and alpha)
+<double>:=              8 byte floating point mapping to  IEEE Standard 754 as:
+                            byte 1 = (IEEE byte 8)
+                            byte 2 = (IEEE byte 7)
+                            byte 3 = (IEEE byte 6)
+                            byte 4 = (IEEE byte 5)
+                            byte 5 = (IEEE byte 4)
+                            byte 6 = (IEEE byte 3)
+                            byte 7 = (IEEE byte 2)
+                            byte 8 = (IEEE byte 1)
+			(I.e. this is the reverse order for sparc, mips and power-pc,
+			 natural order for x86 and alpha)
+<char>:=                8-bit byte
+
+\endverbatim
+
+The basic philosophy of the sequential form of an object is that sub-objects are
+ordered in such a way that pointers are unnecessary. This ordering is defined
+hierarchically above. All symbols not otherwise defined are taken to be <int>,
+i.e. a 4-byte signed integer, <...>* indicates that the item is repeated a suitable
+number of times. ALternative expansions of a non-terminal symbol are given on
+separate lines. "..." at the biginning of a line indicates the continuation of
+the previous line.
+
+
 */

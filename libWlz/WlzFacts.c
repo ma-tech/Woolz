@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 #include <Wlz.h>
 
 typedef struct
@@ -55,10 +56,13 @@ static WlzErrorNum		WlzObjFactsValueTab(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzValues val);
+static WlzErrorNum WlzObjFactsProperty(
+  WlzObjFactsData *fData,
+  WlzProperty	property);
 static WlzErrorNum		WlzObjFactsPropList(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
-				  WlzSimpleProperty *pList);
+				  AlcDLPList *pList);
 static WlzErrorNum		WlzObjFactsPlaneDom(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
@@ -623,6 +627,108 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 /*!
 * \return	Error number.
 * \ingroup      WlzDebug
+* \brief	Produces a text description of a property.
+* \param	fData			Facts data structure.
+* \param	property		Given property.
+*/
+static WlzErrorNum WlzObjFactsProperty(
+  WlzObjFactsData *fData,
+  WlzProperty	property)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* no indent because already done by WlzObjFactsPropertyList */
+  if( property.core == NULL ){
+    (void )WlzObjFactsAppend(fData, "Property NULL.\n");
+  }
+  else {
+    switch( property.core->type ){
+    case WLZ_PROPERTY_SIMPLE:
+      (void) WlzObjFactsAppend(fData,
+			       "Property type: WLZ_PROPERTY_SIMPLE\n");
+      ++(fData->indent);
+      errNum = WlzObjFactsAppend(fData,
+				 "Linkcount: %d.\n",
+				 property.core->linkcount);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	errNum = WlzObjFactsAppend(fData, "Size: %d.\n",
+				   property.simple->size);
+      }
+      --(fData->indent);
+      break;
+
+    case WLZ_PROPERTY_EMAP:
+      (void) WlzObjFactsAppend(fData,
+			       "Property type: WLZ_PROPERTY_EMAP\n");
+      ++(fData->indent);
+      errNum = WlzObjFactsAppend(fData,
+				 "Linkcount: %d.\n",
+				 property.core->linkcount);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzEMAPProperty *eprop = property.emap;
+	switch( eprop->emapType ){
+	case WLZ_EMAP_PROPERTY_GREY_MODEL:
+	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
+			    "WLZ_EMAP_PROPERTY_GREY_MODEL");
+	  break;
+	case WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN:
+	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
+			    "WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN");
+	  break;
+	case WLZ_EMAP_PROPERTY_OTHER_DOMAIN:
+	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
+			    "WLZ_EMAP_PROPERTY_OTHER_DOMAIN");
+	  break;
+	default:
+	  WlzObjFactsAppend(fData, "EMAP property type: %s.\n",
+			    "UNKNOWN");
+	  break;
+	}
+	WlzObjFactsAppend(fData, "Theiler Stage: %d\n",
+			  eprop->theilerStage);
+	WlzObjFactsAppend(fData, "Model name: %s\n",
+			  eprop->modelName);
+	WlzObjFactsAppend(fData, "Model version: %s\n",
+			  eprop->version);
+	WlzObjFactsAppend(fData, "Filename: %s\n",
+			  eprop->fileName?eprop->fileName:"NULL");
+	WlzObjFactsAppend(fData, "Creation time: %s",
+			  ctime((time_t *) &(eprop->creationTime)));
+	WlzObjFactsAppend(fData, "Creation author: %s\n",
+			  eprop->creationAuthor);
+	WlzObjFactsAppend(fData, "Creation machine name: %s\n",
+			  eprop->creationMachineName);
+	WlzObjFactsAppend(fData, "Modification time: %s",
+			  ctime((time_t *) &(eprop->modificationTime)));
+	WlzObjFactsAppend(fData, "Modification author: %s\n",
+			  eprop->modificationAuthor);
+	WlzObjFactsAppend(fData, "Comment: %s\n",
+			  eprop->comment?eprop->comment:"NULL");
+      }
+      --(fData->indent);
+      break;
+
+    default:
+      (void) WlzObjFactsAppend(fData,
+			       "Property type: UNKNOWN\n");
+      ++(fData->indent);
+      errNum = WlzObjFactsAppend(fData,
+				 "Linkcount: %d.\n",
+				 property.core->linkcount);
+      --(fData->indent);
+      break;
+    }
+  }
+
+  return(errNum);
+}
+
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
 * \brief	Produces a text description of a property list.
 * \param	fData			Facts data structure.
 * \param	obj			Object to determine property list type.
@@ -630,7 +736,7 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 */
 static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
 				       WlzObject *obj,
-				       WlzSimpleProperty *pList)
+				       AlcDLPList *pList)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -641,13 +747,19 @@ static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
   }
   else
   {
-    errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n",
-			       pList->linkcount);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzObjFactsAppend(fData, "Size: %d.\n",
-				 pList->size);
-    }
+    AlcDLPItem	*item;
+    (void )WlzObjFactsAppend(fData, "Property list:\n");
+    item = pList->head;
+    do {
+      WlzProperty	property;
+      if( item ){
+	if( item->entry ){
+	  property.core = (WlzCoreProperty *) item->entry;
+	  errNum = WlzObjFactsProperty(fData, property);
+	}
+	item = item->next;
+      }
+    } while( item != pList->head );
   }
   --(fData->indent);
   return(errNum);

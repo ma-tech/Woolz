@@ -1,16 +1,26 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzWriteObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Writes a Woolz to a file.
-* $Revision$
+/*!
+* \file         WlzWriteObj.c
+* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Thu Aug  1 17:18:12 2002
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzIO
+* \brief        Procedures for writing woolz objects. Only WlzWriteObj() is
+ non-static and currently documented using Doxygen.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * Maintenance:	Log changes below, with most recent at top of list.
 * 13-12-00 bill Allow GM's with no verticies to be written.
 * 02-10-00 bill No longer write primitives in WlzWriteAffineTransform().
@@ -21,7 +31,8 @@
 *		WLZ_DISP_GRID, WLZ_DISP_FRAMEX, Wlz[IF]Vector and
 *		and Wlz[IF]Point. Add WlzWriteVertex[23][ID](),
 *		WlzWriteBox[23][ID]() and WlzWriteInt().
-************************************************************************/
+*/
+
 #include <stdlib.h>
 #include <limits.h>
 #include <Wlz.h>
@@ -32,9 +43,12 @@ static WlzErrorNum	WlzWriteIntervalDomain(
 static WlzErrorNum   	WlzWritePlaneDomain(
 			  FILE *fp,
 		    	  WlzPlaneDomain *planedm);
+static WlzErrorNum	WlzWritePropertyList(
+			  FILE *fp,
+			  AlcDLPList *plist);
 static WlzErrorNum	WlzWriteProperty(
 			  FILE *fp,
-			  WlzSimpleProperty *plist);
+			  WlzProperty property);
 static WlzErrorNum	WlzWriteValueTable(
 			  FILE	*fp,
 			  WlzObject *obj);
@@ -47,6 +61,9 @@ static WlzErrorNum	WlzWritePolygon(
 static WlzErrorNum	WlzWriteBoundList(
 			  FILE *fp,
 			  WlzBoundList *blist);
+static WlzErrorNum      WlzWriteConvexHullValues(
+                          FILE *fp,
+			  WlzConvHullValues *cnvhull);
 static WlzErrorNum	WlzWriteRect(
 			  FILE *fp,
 			  WlzIRect *rdom);
@@ -241,17 +258,19 @@ static int putdouble(double d, FILE *fp)
   return( (int) fwrite(&cout[0], sizeof(char), 8, fp) );
 }
 
-/************************************************************************
-*   Function   : WlzWriteObj						*
-*   Date       : Sun Oct 20 12:40:42 1996				*
-*************************************************************************
-*   Synopsis   : Top-level procedure for writing an object to a file	*
-*		stream.							*
-*   Returns    : Woolz error code.					*
-*   Parameters : FILE *fp: output stream				*
-*		 WlzObject *obj: object to be written			*
-*   Global refs: -							*
-************************************************************************/
+/* function:     WlzWriteObj    */
+/*! 
+* \ingroup      WlzIO
+* \brief        Top-level procedure for writing an object to a file stream.
+*
+* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_PARAM_NULL,
+ WLZ_ERR_WRITE_EOF, WLZ_ERR_OBJECT_TYPE, WLZ_ERR_WRITE_INCOMPLETE,
+ WLZ_ERR_DOMAIN_TYPE, WLZ_ERR_EOO.
+* \param    fp	File pointer for output stream.
+* \param    obj	Pointer to top-level object to be written.
+* \par      Source:
+*                WlzWriteObj.c
+*/
 WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -283,7 +302,7 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 				obj->domain.i)) == WLZ_ERR_NONE) &&
 	   ((errNum = WlzWriteValueTable(fp, obj)) == WLZ_ERR_NONE))
 	{
-	  errNum = WlzWriteProperty(fp, obj->plist);
+	  errNum = WlzWritePropertyList(fp, obj->plist);
 	}
 	break;
       case WLZ_3D_DOMAINOBJ:
@@ -291,7 +310,7 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 				obj->domain.p)) == WLZ_ERR_NONE) &&
 	   ((errNum = WlzWriteVoxelValueTable(fp, obj)) == WLZ_ERR_NONE))
 	{
-	  errNum = WlzWriteProperty(fp, obj->plist);
+	  errNum = WlzWritePropertyList(fp, obj->plist);
 	}
 	break;
       case WLZ_TRANS_OBJ:
@@ -299,14 +318,14 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 				obj->domain.t)) == WLZ_ERR_NONE) &&
 	   ((errNum = WlzWriteObj(fp, obj->values.obj)) == WLZ_ERR_NONE))
 	{
-	  errNum = WlzWriteProperty(fp, obj->plist);
+	  errNum = WlzWritePropertyList(fp, obj->plist);
 	}
 	break;
       case WLZ_3D_WARP_TRANS:
 	if((errNum = WlzWrite3DWarpTrans(fp,
 				(Wlz3DWarpTrans *)obj)) == WLZ_ERR_NONE)
 	{
-	  errNum = WlzWriteProperty(fp, ((Wlz3DWarpTrans *)obj)->plist);
+	  errNum = WlzWritePropertyList(fp, ((Wlz3DWarpTrans *)obj)->plist);
 	}
 	break;
       case WLZ_2D_POLYGON:
@@ -338,11 +357,18 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 	errNum = WlzWriteCompoundA(fp, (WlzCompoundArray *)obj);
 	break;
       case WLZ_PROPERTY_OBJ:
-	errNum = WlzWriteProperty(fp, obj->plist);
+	errNum = WlzWritePropertyList(fp, obj->plist);
 	break;
+    case WLZ_CONV_HULL:
+      if((errNum = WlzWritePolygon(fp, obj->domain.poly))
+	 == WLZ_ERR_NONE){
+	errNum = WlzWriteConvexHullValues(fp, obj->values.c);
+      }
+      break;
+    case WLZ_3D_POLYGON:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
 	/* Orphans and not yet implemented object types for I/O */
-      case WLZ_CONV_HULL:       /* FALLTHROUGH */
-      case WLZ_3D_POLYGON:      /* FALLTHROUGH */
       case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
       case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
       case WLZ_TEXT:            /* FALLTHROUGH */
@@ -783,11 +809,11 @@ static WlzErrorNum WlzWritePlaneDomain(FILE *fp, WlzPlaneDomain *planedm)
 *   Parameters :							*
 *   Global refs:							*
 ************************************************************************/
-static WlzErrorNum WlzWriteProperty(FILE *fp, WlzSimpleProperty *plist)
+static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(plist == NULL)
+  if(property.core == NULL)
   {
     if(putc(0,fp) == EOF)
     {
@@ -796,23 +822,110 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzSimpleProperty *plist)
   } 
   else
   {
-    /* Write the property - note size modified for backwards
-       compatibility  - should change on file-format revision.
-       The new property size is the size of the data area.
-       The old was the size of a structure which included the type
-       plus the data therefore for compatibility must ouput the size
-       incremented by the size on an integer. */
-    if((putc((unsigned int )1, fp) == EOF) ||
-       !putword(plist->size + sizeof(int), fp))
-    {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-    }
-    else if(!fwrite(plist->prop, plist->size, 1, fp))
-    {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    switch( property.core->type ){
+    case WLZ_PROPERTY_SIMPLE:
+      /* Write the size */
+      if((putc((unsigned int) WLZ_PROPERTY_SIMPLE, fp) == EOF) ||
+	 !putword(property.simple->size, fp))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else if(!fwrite(property.simple->prop, property.simple->size, 1, fp))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      break;
+
+    case  WLZ_PROPERTY_EMAP:
+      if((putc((unsigned int) WLZ_PROPERTY_EMAP, fp) == EOF) ||
+	 (putc((unsigned int) property.emap->emapType, fp) == EOF) ||
+	 !putword(property.emap->theilerStage, fp) ||
+	 !fwrite(property.emap->modelName,
+		 EMAP_PROPERTY_MODELNAME_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->version,
+		 EMAP_PROPERTY_VERSION_LENGTH, 1, fp) ||
+	 !putword(property.emap->creationTime, fp) ||
+	 !fwrite(property.emap->creationAuthor,
+		 EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->creationMachineName,
+		 EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp) ||
+	 !putword(property.emap->modificationTime, fp) ||
+	 !fwrite(property.emap->modificationAuthor,
+		 EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp)){
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else {
+	if(property.emap->fileName && 
+	   (strlen(property.emap->fileName) > 0)){
+	  if(!putword(strlen(property.emap->fileName), fp) ||
+	     !fwrite(property.emap->fileName, strlen(property.emap->fileName),
+		     1, fp)){
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+	else {
+	  if(!putword(0, fp)){
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+	if((errNum == WLZ_ERR_NONE) && property.emap->comment &&
+	   (strlen(property.emap->comment))){
+	  if(!putword(strlen(property.emap->comment), fp) ||
+	     !fwrite(property.emap->comment, strlen(property.emap->comment),
+		     1, fp)){
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+	else {
+	  if(!putword(0, fp)){
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+      }
+      break;
     }
   }
   return(errNum);
+}
+
+static WlzErrorNum WlzWritePropertyList(
+  FILE *fp,
+  AlcDLPList	*plist)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  AlcDLPItem	*item;
+  WlzProperty	property;
+
+  if((plist == NULL) || (AlcDLPListCount(plist, NULL) < 1)){
+    if(putc(0,fp) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  } 
+  else {
+    if((putc(2,fp) == EOF) ||
+       !putword(AlcDLPListCount(plist, NULL), fp))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    else {
+      item = plist->head;
+      do {
+	if( item ){
+	  if( item->entry != NULL ){
+	    property.core = (WlzCoreProperty *) item->entry;
+	    errNum = WlzWriteProperty(fp, property);
+	  }
+	  else {
+	    putc(0,fp);
+	  }
+	  item = item->next;
+	}
+      } while((errNum == WLZ_ERR_NONE) && (item != plist->head));
+    }
+  }
+
+  return errNum;
 }
 
 /************************************************************************
@@ -1170,6 +1283,7 @@ static WlzErrorNum WlzWritePolygon(FILE *fp, WlzPolygonDomain *poly)
   int		nvertices, i;
   WlzIVertex2	*ivtx;
   WlzFVertex2	*fvtx;
+  WlzDVertex2	*dvtx;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(poly == NULL)
@@ -1208,6 +1322,16 @@ static WlzErrorNum WlzWritePolygon(FILE *fp, WlzPolygonDomain *poly)
 	for(i = 0; (i < nvertices) && (errNum == WLZ_ERR_NONE); i++, fvtx++)
 	{
 	  if(!putfloat(fvtx->vtY, fp) || !putfloat(fvtx->vtX, fp))
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+	break;
+      case WLZ_POLYGON_DOUBLE:
+	dvtx = (WlzDVertex2 *)poly->vtx;
+	for(i = 0; (i < nvertices) && (errNum == WLZ_ERR_NONE); i++, dvtx++)
+	{
+	  if(!putdouble(fvtx->vtY, fp) || !putdouble(fvtx->vtX, fp))
 	  {
 	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	  }
@@ -1263,7 +1387,62 @@ static WlzErrorNum WlzWriteBoundList(FILE *fp, WlzBoundList *blist)
   }
   return(errNum);
 }
+/************************************************************************
+*   Function   : WlzWriteConvexHullValues				*
+*   Date       : Fri Aug  2 15:20:30 2002				*
+*************************************************************************
+*   Synopsis   :							*
+*   Returns    :							*
+*   Parameters :							*
+*   Global refs:							*
+************************************************************************/
+static WlzErrorNum      WlzWriteConvexHullValues(
+  FILE *fp,
+  WlzConvHullValues *cnvhull)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzChord	*ch;
+  int		i;
 
+  if(cnvhull == NULL)
+  {
+    if(putc(0,fp) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    if((putc((unsigned int)cnvhull->type, fp) == EOF))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    else if(putword(cnvhull->nchords, fp) &&
+	    putword(cnvhull->nsigchords, fp) &&
+	    putword(cnvhull->mdlin, fp) &&
+	    putword(cnvhull->mdkol, fp)){
+      for(i=0, ch = cnvhull->ch; i < cnvhull->nchords; i++, ch++){
+	if(!putword(ch->sig, fp) ||
+	   !putword(ch->acon, fp) ||
+	   !putword(ch->bcon, fp) ||
+	   !putword(ch->ccon, fp) ||
+	   !putdouble(ch->cl, fp) ||
+	   !putword(ch->bl, fp) ||
+	   !putword(ch->bk, fp) ||
+	   !putword(ch->barea, fp) ||
+	   !putword(ch->bd, fp)){
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+    else {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  return(errNum);
+}
+  
 /************************************************************************
 *   Function   : WlzWriteRect						*
 *   Date       : Sun Oct 20 18:55:59 1996				*
@@ -1456,7 +1635,7 @@ static WlzErrorNum WlzWriteCompoundA(FILE *fp, WlzCompoundArray *c)
   }
   if( errNum == WLZ_ERR_NONE )
   {
-    errNum = WlzWriteProperty(fp, c->p);
+    errNum = WlzWritePropertyList(fp, c->p);
   }
   return(errNum);
 }

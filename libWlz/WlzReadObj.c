@@ -1,17 +1,25 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzReadObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Reads a Woolz object from a file.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
+/*!
+* \file         WlzReadObj.c
+* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         March 1999, (documantation revised Thu Aug  1 17:27:10 2002)
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzIO
+* \brief        Reads a Woolz object from a file or input stream.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
 * 13-12-00 bill Modify WlzReadGMModel() so that it doesn't generate an
 *		error if model has no verticies.
 * 02-10-00 bill No longer read primitives (commented out code left in
@@ -27,7 +35,8 @@
 * 03-03-20 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+*/
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -52,7 +61,10 @@ static WlzErrorNum		WlzReadRectVtb(
 static WlzErrorNum		WlzReadVoxelValues(
 				  FILE *fp,
 				  WlzObject *obj);
-static WlzSimpleProperty 	*WlzReadPropertyList(
+static WlzProperty	 	WlzReadProperty(
+				  FILE *fp,
+				  WlzErrorNum *);
+static AlcDLPList	 	*WlzReadPropertyList(
 				  FILE *fp,
 				  WlzErrorNum *);
 static WlzPolygonDomain 	*WlzReadPolygon(
@@ -246,16 +258,22 @@ static double getdouble(FILE *fp)
   return(*((double *) &cout[0]));
 }
 
-/************************************************************************
-*   Function   : WlzReadObj						*
-*   Synopsis   : reads a woolz object from the given input stream	*
-*   Returns    : WlzObject *:	non-NULL - successful read		*
-*				NULL - end of file, incomplete read or	*
-*				memory allocation error			*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: char *err_str:	static string buffer for error message	*
-************************************************************************/
-
+/* function:     WlzReadObj    */
+/*! 
+* \ingroup      WlzIO
+* \brief        Reads a woolz object from the given input stream. For
+some object types (e.g. 3D) an object will be returned with the error
+set to WLZ_ERR_READ_INCOMPLETE. This allows partial recovery of data.
+*
+* \return       Pointer to object just read in, NULL on error.
+* \param    fp	FILE pointer for input stream.
+* \param    dstErr	Error return, values WLZ_ERR_NONE,
+ WLZ_ERR_PARAM_NULL, WLZ_ERR_READ_EOF, WLZ_ERR_EOO, WLZ_ERR_OBJECT_TYPE,
+ WLZ_ERR_READ_INCOMPLETE or errors from any of the WlzMake and WlzAssign
+ procedures.
+* \par      Source:
+*                WlzReadObj.c
+*/
 WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
@@ -301,8 +319,8 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	 (obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum)) )
       {
 	if( (errNum = WlzReadGreyValues(fp, obj)) == WLZ_ERR_NONE ){
-	  obj->plist = WlzAssignProperty(WlzReadPropertyList(fp, NULL),
-					 NULL);
+	  obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
+					     NULL);
 	}
 	else {
 	  WlzFreeObj( obj );
@@ -316,8 +334,8 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	 (obj = WlzMakeMain( type, domain, values, NULL, NULL, &errNum)) )
       {
 	if( (errNum = WlzReadVoxelValues(fp, obj)) == WLZ_ERR_NONE ){
-	  obj->plist = WlzAssignProperty(WlzReadPropertyList(fp, NULL),
-					 NULL);
+	  obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
+					     NULL);
 	}
 	else {
 	  /* attempt to return a partial object */
@@ -332,8 +350,8 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	if( values.obj = WlzReadObj( fp, &errNum ) ){
 	  if( obj = WlzMakeMain(WLZ_TRANS_OBJ, domain, values,
 				NULL, NULL, &errNum) ){
-	    obj->plist = WlzAssignProperty(WlzReadPropertyList(fp, NULL),
-					   NULL);
+	    obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
+					       NULL);
 	  } else {
 	    WlzFreeAffineTransform(domain.t);
 	    WlzFreeObj(values.obj);
@@ -347,8 +365,8 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 
     case WLZ_3D_WARP_TRANS:
       if( wtrans3d = WlzRead3DWarpTrans(fp, &errNum) ){
-	wtrans3d->plist = WlzAssignProperty(WlzReadPropertyList(fp, NULL),
-					    NULL);
+	wtrans3d->plist = WlzAssignPropertyList(
+	  WlzReadPropertyList(fp, NULL), NULL);
       }
       obj = (WlzObject *) wtrans3d;
       break;
@@ -1557,24 +1575,132 @@ static WlzErrorNum WlzReadVoxelValues(FILE 	*fp,
   return errNum;
 }
 
+static WlzProperty WlzReadProperty(
+  FILE		*fp,
+  WlzErrorNum	*dstErr)
+{
+  WlzObjectType	type;
+  WlzProperty	rtnProp;
+  int		si;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  rtnProp.core = NULL;
+  type = getc(fp);
+  switch( type ){
+
+  case (WlzObjectType) EOF:
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+    break;
+
+    /* a NULL property could be allowed */
+  case WLZ_NULL:
+    break;
+
+  case WLZ_PROPERTY_SIMPLE:
+    /* read size */
+    si = getword(fp);
+    if( feof(fp) != 0 || si < 0 ){
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+      break;
+    }
+
+    /* create property list with space for the data */
+    if( (rtnProp.simple = WlzMakeSimpleProperty(si, &errNum)) == NULL ){
+      break;
+    }
+
+    /* The size is now correct for the amount of data */
+    if( si > 0 ){  
+      fread(rtnProp.simple->prop, si, 1, fp);
+    }
+    if( feof(fp) != 0 ){
+      WlzFreeSimpleProperty( rtnProp.simple );
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    break;
+
+  case WLZ_PROPERTY_EMAP:
+    /* create an empty property */
+    if( (rtnProp.emap =
+	 WlzMakeEMAPProperty(WLZ_EMAP_PROPERTY_GREY_MODEL,
+			     1, NULL, NULL, NULL, NULL,
+			     &errNum)) == NULL ){
+      break;
+    }
+
+    /* read the property values */
+    rtnProp.emap->emapType = getc(fp);
+    rtnProp.emap->theilerStage = getword(fp);
+    fread(rtnProp.emap->modelName, EMAP_PROPERTY_MODELNAME_LENGTH,
+	  1, fp);
+    fread(rtnProp.emap->version, EMAP_PROPERTY_VERSION_LENGTH,
+	  1, fp);
+    rtnProp.emap->creationTime = getword(fp);
+    fread(rtnProp.emap->creationAuthor,
+	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
+    fread(rtnProp.emap->creationMachineName,
+	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
+    rtnProp.emap->modificationTime = getword(fp);
+    fread(rtnProp.emap->modificationAuthor,
+	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
+
+    /* now the variable length bits */
+    si = getword(fp);
+    if( si > 0 ){
+      rtnProp.emap->fileName = (char *) AlcMalloc(sizeof(char) *
+						  (si+1));
+      fread(rtnProp.emap->fileName, si, 1, fp);
+      rtnProp.emap->fileName[si] = '\0';
+      rtnProp.emap->freeptr = AlcFreeStackPush(rtnProp.emap->freeptr,
+					       rtnProp.emap->fileName,
+					       NULL);
+    }
+    else {
+      rtnProp.emap->fileName = NULL;
+    }
+
+    si = getword(fp);
+    if( si > 0 ){
+      rtnProp.emap->comment = (char *) AlcMalloc(sizeof(char) *
+						 (si+1));
+      fread(rtnProp.emap->comment, si, 1, fp);
+      rtnProp.emap->comment[si] = '\0';
+      rtnProp.emap->freeptr = AlcFreeStackPush(rtnProp.emap->freeptr,
+					       rtnProp.emap->comment,
+					       NULL);
+    }
+    else {
+      rtnProp.emap->comment = NULL;
+    }
+    break;
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnProp;
+}
+
 /************************************************************************
 *   Function   : WlzReadPropertyList					*
 *   Synopsis   : reads a woolz property list 				*
-*   Returns    : WlzSimpleProperty *:					*
+*   Returns    : AlcDLPList *:					*
 *   Parameters : FILE *fp:	input stream				*
 *   Global refs: char *err_str:	static string buffer for error message	*
 ************************************************************************/
 
-static WlzSimpleProperty *WlzReadPropertyList(FILE *fp,
-					      WlzErrorNum *dstErr)
+static AlcDLPList *WlzReadPropertyList(FILE *fp,
+				       WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
-  WlzSimpleProperty	*pl=NULL;
-  int 			si;
+  AlcDLPList		*pl=NULL;
+  WlzProperty		property;
+  int 			si, numProps=0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
+  AlcErrno	alcErrNum=ALC_ER_NONE;
 
+  /* find number of properties */
   type = getc(fp);
-
   switch( type ){
 
   case (WlzObjectType) EOF:
@@ -1585,34 +1711,81 @@ static WlzSimpleProperty *WlzReadPropertyList(FILE *fp,
     errNum = WLZ_ERR_EOO;
     break;
 
-  default:
-    errNum = WLZ_ERR_PROPERTY_TYPE;
-    break;
-
-  case WLZ_PROPERTY_SIMPLE:
-    /* for compatibility the size read includes an extra sizeof(int)
-       which is not actually written to disc */
+  case (WlzObjectType) 1: /* for backward compatibility this
+			     corresponds to the old format
+			     for a simple property so convert
+			     here to a property list */
+    /* read size  - old format had a funny size definition */
     si = getword(fp) - sizeof(int);
     if( feof(fp) != 0 || si < 0 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
       break;
     }
 
-    /* create property list with space for the data */
-    if( (pl = WlzMakeSimpleProperty(si, &errNum)) == NULL ){
+    /* create property with space for the data */
+    if( (property.simple = WlzMakeSimpleProperty(si, &errNum)) == NULL ){
       break;
     }
 
     /* The size is now correct for the amount of data */
     if( si > 0 ){  
-      fread(pl->prop, si, 1, fp);
+      fread(property.simple->prop, si, 1, fp);
     }
     if( feof(fp) != 0 ){
-      WlzFreeProperty( pl );
-      pl = NULL;
+      WlzFreeSimpleProperty( property.simple );
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+
+    /* create a property list of the new sort and return */
+    pl = AlcDLPListNew(&alcErrNum);
+    if( alcErrNum == ALC_ER_NONE ){
+      alcErrNum = AlcDLPListEntryAppend(pl, NULL,
+				    (void *) property.core,
+				    WlzFreePropertyListEntry);
+    }
+    if( alcErrNum != ALC_ER_NONE ){
+      errNum = WLZ_ERR_MEM_ALLOC;
+      if( pl ){
+	AlcFree((void *) pl);
+	pl = NULL;
+      }
+    }
+    if( dstErr ){
+      *dstErr = errNum;
+    }
+    return;
+
+  case (WlzObjectType) 2:
+    numProps = getword(fp);
+    if( feof(fp) != 0 || numProps < 0 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
     break;
+
+  default:
+    errNum = WLZ_ERR_PROPERTY_TYPE;
+    break;
+  }
+
+  /* now read each property */
+  if((errNum == WLZ_ERR_NONE) && (numProps > 0)){
+    pl = AlcDLPListNew(&alcErrNum);
+    while((alcErrNum == ALC_ER_NONE) && (numProps > 0) ){
+      property = WlzReadProperty(fp, &errNum);
+      if( property.core ){
+	alcErrNum = AlcDLPListEntryAppend(pl, NULL,
+				      (void *) property.core,
+				      WlzFreePropertyListEntry);
+      }
+      numProps--;
+    }
+    if( alcErrNum != ALC_ER_NONE ){
+      errNum = WLZ_ERR_MEM_ALLOC;
+      if( pl ){
+	AlcFree((void *) pl);
+	pl = NULL;
+      }
+    }
   }
 
   if( dstErr ){
@@ -2044,7 +2217,7 @@ static WlzObject *WlzReadCompoundA(FILE			*fp,
       c->o[i] = WlzAssignObject(WlzReadObj(fp, &errNum), NULL);
     }
     if( errNum == WLZ_ERR_NONE ){
-      c->p = WlzAssignProperty(WlzReadPropertyList(fp, NULL), NULL);
+      c->p = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL), NULL);
     }
     else {
       WlzFreeObj((WlzObject *) c);

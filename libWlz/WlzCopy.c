@@ -26,7 +26,10 @@
 WlzDomain	WlzCopyDomain(WlzObjectType, WlzDomain, WlzErrorNum *);
 WlzValues	WlzCopyValues(WlzObjectType, WlzValues, WlzDomain,
 			       WlzErrorNum *);
+WlzProperty WlzCopyProperty(WlzProperty, WlzErrorNum *);
 WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *,
+					 	WlzErrorNum *);
+WlzEMAPProperty *WlzCopyEMAPProperty(WlzEMAPProperty *,
 					 	WlzErrorNum *);
 
 /*!
@@ -44,7 +47,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
   WlzDomain	dom;
   WlzValues	val;
   WlzObject	*outObj = NULL;
-  WlzSimpleProperty *pLst = NULL;
+  AlcDLPList    *pLst = NULL;
 
   dom.core = NULL;
   val.core = NULL;
@@ -73,7 +76,8 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	}
 	if((errNum == WLZ_ERR_NONE) && inObj->plist)
 	{
-	  pLst = WlzCopySimpleProperty(inObj->plist, &errNum);
+	  /* now go through property list */
+	  /*pLst = WlzCopyPropertyList(inObj->plist, &errNum);*/
         }
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -113,7 +117,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
     }
     if(pLst)
     {
-      WlzFreeProperty(pLst);
+      WlzFreePropertyList(pLst);
     }
   }
   if(dstErr)

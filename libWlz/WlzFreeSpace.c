@@ -1,38 +1,40 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzFreeSpace.c
-* Date:         March 1999
-* Author:       Bill Hill, Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to free objects and their data.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 15-08-00 bill Remove obsolete types: WLZ_POINT_(INT)|(FLOAT).
-*		Add WLZ_CONTOUR and WlzFreeContour().
-* 05-06-00 bill Fixed non-matching enum assignment in WlzFreeDomain().
-* 03-03-00 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzFreeSpace.c
+* \author       Bill Hill, Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Thu Aug  1 16:30:41 2002
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2002 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup      WlzAllocation
+* \brief        Procedures for freeing space allocated for woolz objects.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzFreeObj						*
-*   Date       : Mon Oct 21 19:54:29 1996				*
-*************************************************************************
-*   Synopsis   :Free space allocated to a woolz object			*
-*   Returns    :WlzErrorNum: error return				*
-*   Parameters :WlzObject *obj: object to be freed. Note a NULL object	*
-*		is assumed legal.					*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeObj    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free space allocated to a woolz object.
+*
+* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_MEM_FREE
+* \param    obj	Object to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeObj(WlzObject *obj)
 {
   WlzCompoundArray	*ca = (WlzCompoundArray *) obj;
@@ -64,7 +66,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	       (unsigned long )(obj->plist)));
       if( WlzFreeDomain(obj->domain) ||
 	  WlzFreeValueTb(obj->values.v) ||
-	  WlzFreeProperty(obj->plist) ||
+	  WlzFreePropertyList(obj->plist) ||
 	  WlzFreeObj(obj->assoc) ){
 	errNum = WLZ_ERR_MEM_FREE;
       }
@@ -81,7 +83,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	       (unsigned long )(obj->plist)));
       if( WlzFreePlaneDomain(obj->domain.p) ||
 	  WlzFreeVoxelValueTb(obj->values.vox) ||
-	  WlzFreeProperty(obj->plist) ||
+	  WlzFreePropertyList(obj->plist) ||
 	  WlzFreeObj(obj->assoc) ){
 	errNum = WLZ_ERR_MEM_FREE;
       }
@@ -99,7 +101,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	       (unsigned long )(obj->plist)));
       if( WlzFreeAffineTransform(obj->domain.t) ||
 	  WlzFreeObj(obj->values.obj) ||
-	  WlzFreeProperty(obj->plist) ||
+	  WlzFreePropertyList(obj->plist) ||
 	  WlzFreeObj(obj->assoc) ){
 	errNum = WLZ_ERR_MEM_FREE;
       }
@@ -185,7 +187,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj 17 0x%lx WLZ_PROPERTY_OBJ\n",
 	       (unsigned long )obj));
-      errNum = WlzFreeProperty(obj->plist);
+      errNum = WlzFreePropertyList(obj->plist);
       break;
 
     case WLZ_EMPTY_OBJ:
@@ -209,17 +211,17 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
   return( errNum );
 }
 
-/************************************************************************
-*   Function   : WlzFreeIntervalDomain					*
-*   Date       : Fri Oct 18 22:39:21 1996				*
-*************************************************************************
-*   Synopsis   :Free an interval domain - convenience link to		*
-*		WlzFreeDomain						*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzIntervalDomain *idom: domain to be freed		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeIntervalDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free an interval domain - convenience link to
+ WlzFreeDomain()
+*
+* \return       Error number, values: from WlzFreeDomain().
+* \param    idom	interval domain pointer to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeIntervalDomain(WlzIntervalDomain *idom)
 {
   WlzDomain	domain;
@@ -229,16 +231,16 @@ WlzErrorNum WlzFreeIntervalDomain(WlzIntervalDomain *idom)
   return( WlzFreeDomain(domain) );
 }
 
-/************************************************************************
-*   Function   : WlzFreeHistogramDomain					*
-*   Date       : Sun Oct 20 10:04:31 1996				*
-*************************************************************************
-*   Synopsis   :Free a histogram domain					*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzHistogram *hist: the histogram domain to be freed	*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeHistogramDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a histogram domain.
+*
+* \return       Error number, values: from WlzFreeDomain().
+* \param    hist	Histogram domain to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeHistogramDomain(WlzHistogramDomain *hist)
 {
   WlzDomain	domain;
@@ -248,18 +250,18 @@ WlzErrorNum WlzFreeHistogramDomain(WlzHistogramDomain *hist)
   return( WlzFreeDomain(domain) );
 }
 
-/************************************************************************
-*   Function   : WlzFreeDomain						*
-*   Date       : Fri Oct 18 22:39:34 1996				*
-*************************************************************************
-*   Synopsis   :Free a domain structure of any type. All domain		*
-*		structures must have a type, linkcount and freeptr by	*
-*		which, if set, all allocated space can be freed. 	*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzDomain domain: domain to be freed			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a domain structure of any type. All domain
+structures must have a type, linkcount and freeptr by
+which, if set, all allocated space can be freed.
+*
+* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_MEM_FREE.
+* \param    domain	Domain union to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeDomain(WlzDomain domain)
 {
   WlzErrorNum errNum=WLZ_ERR_NONE;
@@ -285,16 +287,18 @@ WlzErrorNum WlzFreeDomain(WlzDomain domain)
   return errNum;
 }
 
-/************************************************************************
-*   Function   : WlzFreePlaneDomain					*
-*   Date       : Fri Oct 18 22:40:51 1996				*
-*************************************************************************
-*   Synopsis   :Free a planedomain					*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzPlaneDomain *planedm: domain to be freed		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreePlaneDomain    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a planedomain
+*
+* \return       Error number, values: WLZ_ERR_NONE and errors from
+ WlzFreeAffineTransform(), WlzFreeDomain(), WlzFreeBoundList(),
+ WlzFreePolyDmn().
+* \param    planedm	Pointer to planedomain structure to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreePlaneDomain(WlzPlaneDomain *planedm)
 {
   WlzDomain	*domains;
@@ -359,17 +363,16 @@ WlzErrorNum WlzFreePlaneDomain(WlzPlaneDomain *planedm)
   return( errNum );
 }
 
-/************************************************************************
-*   Function   : WlzFreeValueTb						*
-*   Date       : Fri Oct 18 23:15:13 1996				*
-*************************************************************************
-*   Synopsis   :Convenience routine to free a ragged rect valuetable.	*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzRagRValues *vdmn: valuetable to be freed - type	*
-*		WlzRagRValues only					*
-*   Global refs:None							*
-************************************************************************/
-
+/* function:     WlzFreeValueTb    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Convenience routine to free a ragged rect valuetable.
+*
+* \return       Error number, values: WLZ_ERR_NONE and from WlzFreeValues().
+* \param    vdmn	Value domain to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeValueTb(WlzRagRValues *vdmn)
 {       
   WlzValues	values;
@@ -384,18 +387,18 @@ WlzErrorNum WlzFreeValueTb(WlzRagRValues *vdmn)
   return( WlzFreeValues( values ) );
 }
 
-/************************************************************************
-*   Function   : WlzFreeValues						*
-*   Date       : Thu Nov 14 10:50:58 1996				*
-*************************************************************************
-*   Synopsis   :Free a values structure, currently only WlzRagRValues	*
-*		and WlzRectValues DO NOT call this function with any	*
-*		other values structure types!				*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzValues values: values table to be freed		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeValues    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a values structure, currently only WlzRagRValues
+and WlzRectValues DO NOT call this function with any
+other values structure types!
+*
+* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_VALUES_DATA.
+* \param    values	Values union to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeValues(WlzValues values)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -428,16 +431,17 @@ WlzErrorNum WlzFreeValues(WlzValues values)
   return( errNum );
 }
 
-/************************************************************************
-*   Function   : WlzFreeVoxelValueTb					*
-*   Date       : Sun Oct 20 09:47:26 1996				*
-*************************************************************************
-*   Synopsis   :Free a voxel value table				*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzVoxelValues *voxtab: voxel table to be freed		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeVoxelValueTb    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a voxel value table
+*
+* \return       Error number, values: WLZ_ERR_NONE,
+ WLZ_ERR_VOXELVALUES_TYPE and from WlzFreeValues().
+* \param    voxtab	
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeVoxelValueTb(WlzVoxelValues *voxtab)
 {
   WlzValues	*values;
@@ -468,16 +472,16 @@ WlzErrorNum WlzFreeVoxelValueTb(WlzVoxelValues *voxtab)
   return( errNum );
 }
 
-/************************************************************************
-*   Function   : WlzFreeConvHull					*
-*   Date       : Sun Oct 20 10:18:55 1996				*
-*************************************************************************
-*   Synopsis   :Free convex hull values.				*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzConvHullValues *c: the values to be freed		*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeConvHull    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free convex hull values.
+*
+* \return       Error number, values: WLZ_ERR_NONE and from WlzUnlink().
+* \param    c	Pointer to convex hull values to be  freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeConvHull(WlzConvHullValues *c)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -494,16 +498,16 @@ WlzErrorNum WlzFreeConvHull(WlzConvHullValues *c)
   return errNum;
 }
 
-/************************************************************************
-*   Function   : WlzFreePolyDmn						*
-*   Date       : Sun Oct 20 10:21:50 1996				*
-*************************************************************************
-*   Synopsis   :Free a polygon domain					*
-*   Returns    :WlzErrorNum:						*
-*   Parameters :WlzPolygonDomain *poly: the polygon domain to be freed	*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreePolyDmn    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a polygon domain.
+*
+* \return       Error number, values: WLZ_ERR_NONE and from WlzUnlink().
+* \param    poly	Polygon domain to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreePolyDmn(WlzPolygonDomain *poly)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -520,16 +524,16 @@ WlzErrorNum WlzFreePolyDmn(WlzPolygonDomain *poly)
   return errNum;
 }
 
-/************************************************************************
-*   Function   : WlzFreeBoundList					*
-*   Date       : Thu Nov 14 10:59:12 1996				*
-*************************************************************************
-*   Synopsis   :Recursively free a boundary list			*
-*   Returns    :WlzErrorNum: 						*
-*   Parameters :WlzBoundList *b: the boundary list			*
-*   Global refs:None.							*
-************************************************************************/
-
+/* function:     WlzFreeBoundList    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Recursively free a boundary list.
+*
+* \return       Error number, values: WLZ_ERR_NONE and from WlzUnlink().
+* \param    b	Boundary list structure to be freed (note this will call WlzFreeBoundList recursively).
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum WlzFreeBoundList(WlzBoundList *b)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -549,15 +553,16 @@ WlzErrorNum WlzFreeBoundList(WlzBoundList *b)
   return( errNum );
 }
 
-/************************************************************************
-*   Function   : WlzFree3DWarpTrans					*
-*   Date       : Thu Oct  2 10:05:19 BST 1997				*
-*************************************************************************
-*   Synopsis   :Free a 3D warp transform.				*
-*   Returns    :WlzErrorNum: 						*
-*   Parameters :Wlz3DWarpTrans *obj: The 3D warp transform.		*
-*   Global refs:None.							*
-************************************************************************/
+/* function:     WlzFree3DWarpTrans    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free a 3D warp transform.
+*
+* \return       Error number, values: WLZ_ERR_NONE and from WlzFreePlaneDomain().
+* \param    obj	3D warp transform object to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum	WlzFree3DWarpTrans(Wlz3DWarpTrans *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -581,13 +586,16 @@ WlzErrorNum	WlzFree3DWarpTrans(Wlz3DWarpTrans *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzFreeContour
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Free's a WlzContour data structure.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour to free.
-************************************************************************/
+/* function:     WlzFreeContour    */
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free's a WlzContour data structure.
+*
+* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_DOMAIN_NULL, WLZ_ERR_DOMAIN_TYPE and from WlzUnlink().
+* \param    ctr	Contour to be freed.
+* \par      Source:
+*                WlzFreeSpace.c
+*/
 WlzErrorNum	WlzFreeContour(WlzContour *ctr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;

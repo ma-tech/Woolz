@@ -161,6 +161,7 @@ extern double 			Wlz3DViewGetIntersectionAngle(
 				  WlzThreeDViewStruct *vS1,
 				  WlzThreeDViewStruct *vS2,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern int 			Wlz3DViewGetBoundingBoxIntersection(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzDVertex3 *rtnVtxs,
@@ -171,6 +172,12 @@ extern int 			Wlz3DViewGetGivenBBIntersection(
 				  WlzDVertex3		bbMax,
 				  WlzDVertex3		*rtnVtxs,
 				  WlzErrorNum		*dstErr);
+#endif /* WLZ_EXT_BIND */
+extern int		Wlz3DViewGetBoundingBoxIntersectionA(
+                          WlzThreeDViewStruct	*viewStr,
+			  int *dstSizeArrayVtxs,
+			  WlzDVertex3 **dstArrayVtxs,
+			  WlzErrorNum *dstErr);
 extern WlzErrorNum Wlz3DViewGetFixed(WlzThreeDViewStruct	*vs,
 				     double			*dstX,
 				     double			*dstY,
@@ -738,9 +745,12 @@ extern WlzDomain		WlzAssignDomain(
 extern WlzValues 		WlzAssignValues(
 				  WlzValues values,
 				  WlzErrorNum *dstErr);
-extern WlzSimpleProperty	*WlzAssignProperty(
-				  WlzSimpleProperty *property,
+extern WlzProperty		WlzAssignProperty(
+				  WlzProperty property,
 				  WlzErrorNum *dstErr );
+extern AlcDLPList               *WlzAssignPropertyList(
+                                  AlcDLPList	*plist,
+                                  WlzErrorNum *dstErr);
 extern WlzAffineTransform	*WlzAssignAffineTransform(
 				  WlzAffineTransform *,
 				  WlzErrorNum *dstErr);
@@ -1933,8 +1943,36 @@ extern WlzIntervalValues 	*WlzMakeIntervalValues(
 extern WlzSimpleProperty	*WlzMakeSimpleProperty(
 				  int size,
 				  WlzErrorNum *dstErr);
-extern WlzErrorNum		WlzFreeProperty(
+extern WlzErrorNum		WlzFreeSimpleProperty(
 				  WlzSimpleProperty *prop);
+extern WlzEMAPProperty          *WlzMakeEMAPProperty(
+                                  WlzEMAPPropertyType	type,
+				  int			theilerStage,
+				  char			*modelName,
+				  char			*version,
+				  char			*fileName,
+				  char			*comment,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum              WlzChangeEMAPProperty(
+                                  WlzEMAPProperty	*prop,
+                                  WlzEMAPPropertyType	type,
+				  int			theilerStage,
+				  char			*modelName,
+				  char			*version,
+				  char			*fileName,
+				  char			*comment);
+extern WlzErrorNum		WlzFreeEMAPProperty(
+				  WlzEMAPProperty *prop);
+extern WlzErrorNum		WlzFreeProperty(WlzProperty prop);
+extern WlzErrorNum		WlzFreePropertyList(AlcDLPList	*plist);
+extern void			WlzFreePropertyListEntry(void *prop);
+extern WlzProperty 		WlzGetProperty(
+                                  AlcDLPList		*plist,
+				  WlzObjectType		type,
+				  WlzErrorNum 		*dstErr);
+extern WlzErrorNum              WlzRemoveProperty(
+                                  AlcDLPList		*plist,
+				  WlzProperty		prop);
 
 #ifndef WLZ_EXT_BIND
 /************************************************************************
@@ -1944,7 +1982,7 @@ extern WlzObject 		*WlzMakeMain(
 				  WlzObjectType type,
 				  WlzDomain domain,
 				  WlzValues values,
-				  WlzSimpleProperty *prop,
+				  AlcDLPList *prop,
 				  WlzObject *assoc,
 				  WlzErrorNum *dstErr);
 extern WlzIntervalDomain	*WlzMakeIntervalDomain(
@@ -2014,7 +2052,7 @@ extern WlzObject		*WlzMakeRect(
 				  WlzGreyType pixeltype,
 				  int *greyptr,
 				  WlzPixelV bckgrnd,
-				  WlzSimpleProperty *prop,
+				  AlcDLPList *plist,
 				  WlzObject *assoc_obj,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzMakeEmpty(
