@@ -116,7 +116,7 @@ int		WlzBoundPolyCount(WlzBoundList *bnd, WlzErrorNum *dstErr)
 * \brief	Recursive function which actualy does the counting of the
 * 		number of polygon domains in the given boundary list and
 *		its children.
-* \param	bnd
+* \param	bnd			Given boundary list.
 */
 static int	WlzBoundPolyCountFn(WlzBoundList *bnd)
 {
@@ -130,6 +130,45 @@ static int	WlzBoundPolyCountFn(WlzBoundList *bnd)
       cnt += WlzBoundPolyCountFn(bnd->down);
       bnd = bnd->next;
     } while(bnd != NULL);
+  }
+  return(cnt);
+}
+
+/*!
+* \return
+* \ingroup	WlzBoundary
+* \brief	Recursive function which counts the total number of
+*		vertices in a boundary list.
+* \param	bnd			Given boundary list.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzBoundVtxCount(WlzBoundList *bnd, WlzErrorNum *dstErr)
+{
+  int		cnt = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(bnd == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    if(bnd->poly)
+    {
+      cnt += bnd->poly->nvertices;
+    }
+    if(bnd->next)
+    {
+      cnt += WlzBoundVtxCount(bnd->next, &errNum);
+    }
+    if(bnd->down)
+    {
+      cnt += WlzBoundVtxCount(bnd->down, &errNum);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
   }
   return(cnt);
 }
