@@ -36,6 +36,7 @@ EXECUTABLES		= \
 			WlzBasisFnTransformObj \
 			WlzBoundaryToObj \
 			WlzBoundingBox \
+			WlzBuildContour \
 			WlzCannyDeriche \
 			WlzCentreOfMass \
 			WlzClipObjToBox \
@@ -118,6 +119,7 @@ CSOURCES		= \
 			WlzAutoTrackUpDown.c \
 			WlzBoundaryToObj.c \
 			WlzBoundingBox.c \
+			WlzBuildContour.c \
 			WlzCannyDeriche.c \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
