@@ -11,14 +11,15 @@
 *		Edinburgh, EH4 2XU, UK.
 * Purpose:      Functions to register two objects using an
 *		frequency domain cross correlation.
-* TODO renormalise cross correlation values.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 #include <float.h>
+#include <limits.h>
 #include <Wlz.h>
 
-#define WLZ_REGCCOR_TEST
+/* #define WLZ_REGCCOR_TEST */
+/* #define WLZ_REGCCOR_DEBUG */
 
 static WlzAffineTransform 	*WlzRegCCorObjs2D(
 				  WlzObject *tObj,
@@ -56,7 +57,6 @@ static double			WlzRegCCorObjs2DRot(
 				  WlzIVertex2 rotCentre,
 				  WlzAffineTransform *initTr,
 				  double maxRot,
-				  double *dstCCor,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -264,12 +264,12 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
   {
     samIdx = 0;
     *samFac = 1;
+    samFacV.vtX = samFacV.vtY = samFacStep;
     *(sTObj + 0) = WlzAssignObject(tObj, NULL);
     *(sSObj + 0) = WlzAssignObject(sObj, NULL);
     while((errNum == WLZ_ERR_NONE) && (++samIdx < nSam))
     {
       *(samFac + samIdx) = *(samFac + samIdx - 1) * samFacStep;
-      samFacV.vtX = samFacV.vtY = *(samFac + samIdx);
       *(sTObj + samIdx) = WlzAssignObject(
       			  WlzSampleObj(*(sTObj + samIdx - 1), samFacV,
       				       WLZ_SAMPLEFN_GAUSS, &errNum), NULL);
@@ -487,7 +487,7 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
       if(errNum == WLZ_ERR_NONE)
       {
 	rot = WlzRegCCorObjs2DRot(tObj, sObj, rotCentreI, curTr, 
-				  maxRot, &cCor, &errNum);
+				  maxRot, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -579,121 +579,186 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
 					WlzDVertex2 maxTran, double *dstCCor,
 					WlzErrorNum *dstErr)
 {
-  double	tSSq,
-  		sSSq,
-		cCor = 0.0;
-  WlzIBox2	aBox,
-  		tBox,
-  		sBox;
+  int		oIdx;
+  double	cCor = 0.0;
+  double	sSq[2];
+  double	**oAr[2];
+  WlzIBox2	aBox;
+  WlzIBox2	oBox[2];
   WlzIVertex2	aSz,
   		aOrg,
 		winOrg,
 		winRad,
-		tranI;
-  WlzDVertex2	tran;
-  double	**tAr = NULL,
-  		**sAr = NULL;
-  WlzObject	*sTrObj = NULL,
-  		*tWObj = NULL,
-		*sWObj = NULL;
+		tran;
+  WlzDVertex2	dstTran;
+  WlzObject	*oObj[2],
+  		*wObj[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  tran.vtX = 0.0;
-  tran.vtY = 0.0;
+  dstTran.vtX = 0.0;
+  dstTran.vtY = 0.0;
+  oAr[0] = oAr[1] = NULL;
+  oObj[0] = oObj[1] = NULL;
+  wObj[0] = wObj[1] = NULL;
+  oObj[0] = WlzAssignObject(tObj, NULL);
   /* Transform source object. */
   if((initTr == NULL) || WlzAffineTransformIsIdentity(initTr, NULL))
   {
-    sTrObj = WlzAssignObject(sObj, NULL);
+    oObj[1] = WlzAssignObject(sObj, NULL);
   }
   else
   {
-    sTrObj = WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
+    oObj[1] = WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
 				   &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    tBox = WlzBoundingBox2D(tObj, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    sBox = WlzBoundingBox2D(sTrObj, &errNum);
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      oBox[oIdx] = WlzBoundingBox2D(oObj[oIdx], &errNum);
+      ++oIdx;
+    }
   }
   /* Compute windowed objects. */
   if(errNum == WLZ_ERR_NONE)
   {
-    winOrg.vtX = (tBox.xMax + tBox.xMin) / 2;
-    winOrg.vtY = (tBox.yMax + tBox.yMin) / 2;
-    winRad.vtX = (tBox.xMax - tBox.xMin) / 2;
-    winRad.vtY = (tBox.yMax - tBox.yMin) / 2;
-    tWObj = WlzAssignObject(WlzWindow(tObj, WLZ_WINDOWFN_HAMMING, winOrg,
-    			     	      winRad, &errNum), NULL);
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      winOrg.vtX = (oBox[oIdx].xMax + oBox[oIdx].xMin) / 2;
+      winOrg.vtY = (oBox[oIdx].yMax + oBox[oIdx].yMin) / 2;
+      winRad.vtX = (oBox[oIdx].xMax - oBox[oIdx].xMin) / 2;
+      winRad.vtY = (oBox[oIdx].yMax - oBox[oIdx].yMin) / 2;
+      wObj[oIdx] = WlzAssignObject(WlzWindow(oObj[oIdx], WLZ_WINDOWFN_HAMMING,
+      					     winOrg, winRad, &errNum), NULL);
+      ++oIdx;
+    }
   }
-  if(errNum == WLZ_ERR_NONE)
+  /* Compute the sums of squares for normalizing the cross correlation value if
+   * it will be returned through the destination pointer. */
+  if(dstCCor)
   {
-    winOrg.vtX = (sBox.xMax + sBox.xMin) / 2;
-    winOrg.vtY = (sBox.yMax + sBox.yMin) / 2;
-    winRad.vtX = (sBox.xMax - sBox.xMin) / 2;
-    winRad.vtY = (sBox.yMax - sBox.yMin) / 2;
-    sWObj = WlzAssignObject(WlzWindow(sTrObj, WLZ_WINDOWFN_HAMMING, winOrg,
-    			    winRad, &errNum), NULL);
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      (void )WlzGreyStats(wObj[oIdx], NULL, NULL, NULL, NULL, &(sSq[oIdx]),
+      			  NULL, NULL, &errNum);
+      ++oIdx;
+    }
   }
   /* Create double arrays. */
   if(errNum == WLZ_ERR_NONE)
   {
-    aBox.xMin = WLZ_MIN(tBox.xMin, sBox.xMin) - ((int )(maxTran.vtX) + 1);
-    aBox.yMin = WLZ_MIN(tBox.yMin, sBox.yMin) - ((int )(maxTran.vtY) + 1);
-    aBox.xMax = WLZ_MAX(tBox.xMax, sBox.xMax) + ((int )(maxTran.vtX) + 1);
-    aBox.yMax = WLZ_MAX(tBox.yMax, sBox.yMax) + ((int )(maxTran.vtY) + 1);
+    aBox.xMin = WLZ_MIN(oBox[0].xMin, oBox[1].xMin) - (int )(maxTran.vtX) + 1;
+    aBox.yMin = WLZ_MIN(oBox[0].yMin, oBox[1].yMin) - (int )(maxTran.vtY) + 1;
+    aBox.xMax = WLZ_MAX(oBox[0].xMax, oBox[1].xMax) + (int )(maxTran.vtX) + 1;
+    aBox.yMax = WLZ_MAX(oBox[0].yMax, oBox[1].yMax) + (int )(maxTran.vtY) + 1;
     aOrg.vtX = aBox.xMin;
     aOrg.vtY = aBox.yMin;
     aSz.vtX = aBox.xMax - aBox.xMin + 1;
     aSz.vtY = aBox.yMax - aBox.yMin + 1;
     (void )AlgBitNextPowerOfTwo((unsigned int *)&(aSz.vtX), aSz.vtX);
     (void )AlgBitNextPowerOfTwo((unsigned int *)&(aSz.vtY), aSz.vtY);
-    errNum = WlzToArray2D((void ***)&tAr, tWObj, aSz, aOrg, 0,
-    			  WLZ_GREY_DOUBLE);
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      errNum = WlzToArray2D((void ***)&(oAr[oIdx]), wObj[oIdx], aSz, aOrg, 0,
+			    WLZ_GREY_DOUBLE);
+      ++oIdx;
+    }
+  }
+#ifdef WLZ_REGCCOR_DEBUG
+  if(errNum == WLZ_ERR_NONE)
+  {
+    FILE	*fP = NULL;
+    WlzObject	*cCObjT = NULL;
+    
+    cCObjT = WlzFromArray2D((void **)(oAr[0]), aSz, aOrg,
+			    WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
+			    0.0, 1.0, 0, 1, &errNum);
+    if(cCObjT)
+    {
+      if((fP = fopen("wObjT0.wlz", "w")) != NULL)
+      {
+	(void )WlzWriteObj(fP, cCObjT);
+	(void )fclose(fP);
+      }
+      (void )WlzFreeObj(cCObjT);
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzToArray2D((void ***)&sAr, sWObj, aSz, aOrg, 0,
-    			  WLZ_GREY_DOUBLE);
+    FILE	*fP = NULL;
+    WlzObject	*cCObjT = NULL;
     
+    cCObjT = WlzFromArray2D((void **)(oAr[1]), aSz, aOrg,
+			    WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
+			    0.0, 1.0, 0, 1, &errNum);
+    if(cCObjT)
+    {
+      if((fP = fopen("wObjT1.wlz", "w")) != NULL)
+      {
+	(void )WlzWriteObj(fP, cCObjT);
+	(void )fclose(fP);
+      }
+      (void )WlzFreeObj(cCObjT);
+    }
   }
+#endif /* WLZ_REGCCOR_DEBUG */
   /* Cross correlate. */
   if(errNum == WLZ_ERR_NONE)
   {
-    (void )AlgCrossCorrelate2D(tAr, sAr, aSz.vtX, aSz.vtY);
-    AlgCrossCorrPeakXY(&(tranI.vtX), &(tranI.vtY), &cCor, tAr,
+    (void )AlgCrossCorrelate2D(oAr[0], oAr[1], aSz.vtX, aSz.vtY);
+    AlgCrossCorrPeakXY(&(tran.vtX), &(tran.vtY), &cCor, oAr[0],
 		       aSz.vtX, aSz.vtY, maxTran.vtX, maxTran.vtY);
-#ifdef WLZ_REGCCOR_DEBUG
-    {
-      FILE	*fP = NULL;
-      WlzObject	*cCObjT = NULL;
-      
-      cCObjT = WlzFromArray2D((void **)tAr, aSz, aOrg,
-      			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
-			      0.0, 1.0, 0, 1, &errNum);
-      if(cCObjT)
-      {
-	if((fP = fopen("cCObjT.wlz", "w")) != NULL)
-	{
-	  (void )WlzWriteObj(fP, cCObjT);
-	  (void )fclose(fP);
-	}
-	(void )WlzFreeObj(cCObjT);
-      }
-    }
-#endif /* WLZ_REGCCOR_DEBUG */
   }
-  (void )WlzFreeObj(sWObj);
-  (void )WlzFreeObj(tWObj);
-  (void )WlzFreeObj(sTrObj);
+#ifdef WLZ_REGCCOR_DEBUG
   if(errNum == WLZ_ERR_NONE)
   {
-    tran.vtX = tranI.vtX;
-    tran.vtY = tranI.vtY;
+    FILE	*fP = NULL;
+    WlzObject	*cCObjT = NULL;
+    
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      (void )WlzGreyStats(wObj[oIdx], NULL, NULL, NULL, NULL, &(sSq[oIdx]),
+			  NULL, NULL, &errNum);
+      ++oIdx;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      cCObjT = WlzFromArray2D((void **)(oAr[0]), aSz, aOrg,
+			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
+			      0.0,
+			      255.0 / (1.0 + (sqrt(sSq[0] * sSq[1]) *
+			      		      aSz.vtX * aSz.vtY)),
+			      0, 0, &errNum);
+    }
+    if(cCObjT)
+    {
+      if((fP = fopen("cCObjT.wlz", "w")) != NULL)
+      {
+	(void )WlzWriteObj(fP, cCObjT);
+	(void )fclose(fP);
+      }
+      (void )WlzFreeObj(cCObjT);
+    }
+  }
+#endif /* WLZ_REGCCOR_DEBUG */
+  for(oIdx = 0; oIdx < 2; ++oIdx)
+  {
+    (void )WlzFreeObj(oObj[oIdx]);
+    (void )WlzFreeObj(wObj[oIdx]);
+    AlcDouble2Free(oAr[oIdx]);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstTran.vtX = tran.vtX;
+    dstTran.vtY = tran.vtY;
     if(dstCCor)
     {
+      cCor = cCor / (1.0 + (sqrt(sSq[0] * sSq[1]) * aSz.vtX * aSz.vtY));
       *dstCCor = cCor;
     }
   }
@@ -701,13 +766,12 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
   {
     *dstErr = errNum;
   }
-  return(tran);
+  return(dstTran);
 }
 
 /************************************************************************
 * Function:	WlzRegCCorObjs2DRot
-* Returns:	double:			Rotation in radians about the
-*					given centre of rotation.
+* Returns:	double:			Angle of roatation.
 * Purpose:	Polar samples then registers the given 2D domain objects
 *		using a frequency domain cross correlation, to find
 *		the angle of rotation about the given centre of rotation
@@ -723,194 +787,215 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
 *					to be applied to the source
 *					object prior to registration.
 *		double maxRot:		Maximum rotation.
-*		double *dstCCor:	Destination ptr for the cross
-*					correlation value, may be NULL.
 *		WlzErrorNum *dstErr:	Destination error pointer,
 *					may be NULL.
 ************************************************************************/
 static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
 				    WlzIVertex2 rotCentre,
-				    WlzAffineTransform *initTr,
-				    double maxRot, double *dstCCor,
+				    WlzAffineTransform *initTr, double maxRot,
 				    WlzErrorNum *dstErr)
 {
-  int		rotY,
-  		angCnt,
-		rotPad;
+  int		oIdx,
+  		angCnt;
   double	angInc,
-		tSSq,
-		sSSq,
-		cCor = 0.0,
-  		rot = 0.0;
-  WlzIBox2	aBox,
-  		tBox,
-  		sBox;
-  WlzIVertex2	aSz,
+  		dstRot = 0.0;
+  WlzIBox2	aBox;
+  WlzIBox2	oBox[2];
+  WlzIVertex2	rot,
+  		aSz,
   		aOrg,
 		winRad,
-		winOrg;
-  double	**tAr = NULL,
-  		**sAr = NULL;
-  WlzObject	*sTrObj = NULL,
-		*tPObj = NULL,
-  		*sPObj = NULL,
-		*tWObj = NULL,
-		*sWObj = NULL;
+		winOrg,
+		rotPad;
+  double	**oAr[2];
+  WlzObject	*oObj[2],
+  		*pObj[2],
+		*wObj[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	minAngCnt = 256;
+  const int	rotCnt = 500;
   const double	distInc = 1.0;
 
-  /* Transform source object. */
+  /* Assign the target and transform source objects. */
+  oAr[0] = oAr[1] = NULL;
+  oAr[0] = oAr[1] = NULL;
+  oObj[0] = oObj[1] = NULL;
+  pObj[0] = pObj[1] = NULL;
+  wObj[0] = wObj[1] = NULL;
+  oObj[0] = WlzAssignObject(tObj, NULL);
   if((initTr == NULL) || WlzAffineTransformIsIdentity(initTr, NULL))
   {
-    sTrObj = WlzAssignObject(sObj, NULL);
+    oObj[1] = WlzAssignObject(sObj, NULL);
   }
   else
   {
-    sTrObj = WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
+    oObj[1] = WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
 				   &errNum);
   }
-  /* Compute polar transformation. */
+  /* Compute rectangular to polar transformation. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tBox = WlzBoundingBox2D(tObj, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    sBox = WlzBoundingBox2D(sTrObj, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    aBox.xMin = WLZ_MIN(tBox.xMin, sBox.xMin);
-    aBox.yMin = WLZ_MIN(tBox.yMin, sBox.yMin);
-    aBox.xMax = WLZ_MAX(tBox.xMax, sBox.xMax);
-    aBox.yMax = WLZ_MAX(tBox.yMax, sBox.yMax);
-    aSz.vtX = aBox.xMax - aBox.xMin + 1;
-    aSz.vtY = aBox.yMax - aBox.yMin + 1;
-    if((angCnt = WLZ_MIN(aSz.vtX, aSz.vtY)) < minAngCnt)
+    angInc = (2.0 * (maxRot + WLZ_M_PI)) / rotCnt;
+    angCnt = (2.0 * WLZ_M_PI) / angInc;
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      angCnt = minAngCnt;
+      pObj[oIdx] = WlzPolarSample(oObj[oIdx], rotCentre, angInc, distInc,
+	                          angCnt, 0, &errNum);
+      ++oIdx;
     }
-    angInc = (2.0 * WLZ_M_PI) / angCnt;
-    tPObj = WlzPolarSample(tObj, rotCentre, angInc, distInc, angCnt, 0,
-    			   &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    sPObj = WlzPolarSample(sTrObj, rotCentre, angInc, distInc, angCnt, 0,
-    			   &errNum);
   }
   /* Compute windowed objects. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tBox = WlzBoundingBox2D(tPObj, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    sBox = WlzBoundingBox2D(sPObj, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    winOrg.vtX = (tBox.xMax + tBox.xMin) / 2;
-    winOrg.vtY = (tBox.yMax + tBox.yMin) / 2;
-    winRad.vtX = (tBox.xMax - tBox.xMin) / 2;
-    winRad.vtY = (tBox.yMax - tBox.yMin) / 2;
-    tWObj = WlzAssignObject(WlzWindow(tPObj, WLZ_WINDOWFN_HAMMING, winOrg,
-    			     	      winRad, &errNum), NULL);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    winOrg.vtX = (sBox.xMax + sBox.xMin) / 2;
-    winOrg.vtY = (sBox.yMax + sBox.yMin) / 2;
-    winRad.vtX = (sBox.xMax - sBox.xMin) / 2;
-    winRad.vtY = (sBox.yMax - sBox.yMin) / 2;
-    sWObj = WlzAssignObject(WlzWindow(sPObj, WLZ_WINDOWFN_HAMMING, winOrg,
-    			    winRad, &errNum), NULL);
-  }
-  /* Create double arrays. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-#ifdef WLZ_REGCCOR_DEBUG
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      FILE	*fP = NULL;
-      
-      if((fP = fopen("sWObj.wlz", "w")) != NULL)
+      oBox[oIdx] = WlzBoundingBox2D(pObj[oIdx], &errNum);
+      if(errNum == WLZ_ERR_NONE)
       {
-        (void )WlzWriteObj(fP, sWObj);
-	(void )fclose(fP);
+	winOrg.vtX = (oBox[oIdx].xMax + oBox[oIdx].xMin) / 2;
+	winOrg.vtY = (oBox[oIdx].yMax + oBox[oIdx].yMin) / 2;
+	winRad.vtX = (oBox[oIdx].xMax - oBox[oIdx].xMin) / 2;
+	winRad.vtY = (oBox[oIdx].yMax - oBox[oIdx].yMin) / 2;
+        wObj[oIdx] = WlzAssignObject(WlzWindow(pObj[oIdx],
+					       WLZ_WINDOWFN_HAMMING, winOrg,
+					       winRad, &errNum), NULL);
       }
-      if((fP = fopen("tWObj.wlz", "w")) != NULL) 
-      {
-        (void )WlzWriteObj(fP, tWObj); 
-	(void )fclose(fP);
-      }
+      ++oIdx;
     }
+  }
+#ifdef WLZ_REGCCOR_DEBUG
+  if(errNum == WLZ_ERR_NONE)
+  {
+    FILE	*fP = NULL;
+    
+    if((fP = fopen("wObjR0.wlz", "w")) != NULL) 
+    {
+      (void )WlzWriteObj(fP, wObj[0]); 
+      (void )fclose(fP);
+    }
+    if((fP = fopen("wObjR1.wlz", "w")) != NULL)
+    {
+      (void )WlzWriteObj(fP, wObj[1]);
+      (void )fclose(fP);
+    }
+  }
 #endif /* WLZ_REGCCOR_DEBUG */
-    aBox.xMin = WLZ_MIN(tBox.xMin, sBox.xMin);
-    aBox.yMin = WLZ_MIN(tBox.yMin, sBox.yMin);
-    aBox.xMax = WLZ_MAX(tBox.xMax, sBox.xMax);
-    aBox.yMax = WLZ_MAX(tBox.yMax, sBox.yMax);
-    rotPad = 1 + WLZ_NINT(maxRot / angInc);
-    aBox.yMin -= rotPad;
-    aBox.yMax += rotPad;
+  /* Create 2D double arrays from the polar sampled objects. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      oBox[oIdx] = WlzBoundingBox2D(wObj[oIdx], &errNum);
+      ++oIdx;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    aBox.xMin = WLZ_MIN(oBox[0].xMin, oBox[1].xMin);
+    aBox.yMin = WLZ_MIN(oBox[0].yMin, oBox[1].yMin);
+    aBox.xMax = WLZ_MAX(oBox[0].xMax, oBox[1].xMax);
+    aBox.yMax = WLZ_MAX(oBox[0].yMax, oBox[1].yMax);
+    rotPad.vtX = (aBox.xMax - aBox.xMin) / 2;
+    rotPad.vtY = 1 + WLZ_NINT(maxRot / angInc);
+    aBox.yMin -= rotPad.vtY;
+    aBox.yMax += rotPad.vtY;
     aOrg.vtX = aBox.xMin;
     aOrg.vtY = aBox.yMin;
     aSz.vtX = aBox.xMax - aBox.xMin + 1;
     aSz.vtY = aBox.yMax - aBox.yMin + 1;
     (void )AlgBitNextPowerOfTwo((unsigned int *)&(aSz.vtX), aSz.vtX);
     (void )AlgBitNextPowerOfTwo((unsigned int *)&(aSz.vtY), aSz.vtY);
-    errNum = WlzToArray2D((void ***)&tAr, tObj, aSz, aOrg, 0,
-    			  WLZ_GREY_DOUBLE);
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      errNum = WlzToArray2D((void ***)&(oAr[oIdx]), wObj[oIdx], aSz, aOrg, 0,
+			    WLZ_GREY_DOUBLE);
+      ++oIdx;
+    }
   }
+#ifdef WLZ_REGCCOR_DEBUG
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzToArray2D((void ***)&sAr, sTrObj, aSz, aOrg, 0,
-    			  WLZ_GREY_DOUBLE);
+    FILE	*fP = NULL;
+    WlzObject	*aObj = NULL;
+
+    aObj = WlzFromArray2D((void **)(oAr[0]), aSz, aOrg,
+    			  WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE, 0.0, 1.0,
+			  0, 0, &errNum);
+    if((fP = fopen("wObj0.wlz", "w")) != NULL) 
+    {
+      (void )WlzWriteObj(fP, aObj); 
+      (void )fclose(fP);
+    }
+    WlzFreeObj(aObj);
+    aObj = WlzFromArray2D((void **)(oAr[1]), aSz, aOrg,
+    			  WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE, 0.0, 1.0,
+			  0, 0, &errNum);
+    if((fP = fopen("wObj1.wlz", "w")) != NULL)
+    {
+      (void )WlzWriteObj(fP, aObj);
+      (void )fclose(fP);
+    }
+    WlzFreeObj(aObj);
   }
+#endif /* WLZ_REGCCOR_DEBUG */
   /* Cross correlate. */
   if(errNum == WLZ_ERR_NONE)
   {
-    (void )AlgCrossCorrelate2D(tAr, sAr, aSz.vtX, aSz.vtY);
-    AlgCrossCorrPeakY(&rotY, &cCor, tAr, aSz.vtY);
-    rot = -rotY * angInc;
-#ifdef WLZ_REGCCOR_DEBUG
-    {
-      FILE	*fP = NULL;
-      WlzObject	*cCObjR = NULL;
-      
-      cCObjR = WlzFromArray2D((void **)tAr, aSz, aOrg,
-      			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
-			      0.0, 1.0, 0, 1, &errNum);
-      if(cCObjR)
-      {
-	if((fP = fopen("cCObjR.wlz", "w")) != NULL)
-	{
-	  (void )WlzWriteObj(fP, cCObjR);
-	  (void )fclose(fP);
-	}
-	(void )WlzFreeObj(cCObjR);
-      }
-      /* HACK */ exit(0);
-    }
-#endif /* WLZ_REGCCOR_DEBUG */
+    (void )AlgCrossCorrelate2D(oAr[0], oAr[1], aSz.vtX, aSz.vtY);
+    AlgCrossCorrPeakXY(&(rot.vtX), &(rot.vtY), NULL, oAr[0],
+		       aSz.vtX, aSz.vtY, rotPad.vtX, rotPad.vtY);
+    dstRot = rot.vtY * angInc;
+    /* dstRot = -(rot.vtY) * angInc; */
   }
-  (void )WlzFreeObj(tWObj);
-  (void )WlzFreeObj(sWObj);
-  (void )WlzFreeObj(tPObj);
-  (void )WlzFreeObj(sPObj);
-  (void )WlzFreeObj(sTrObj);
+#ifdef WLZ_REGCCOR_DEBUG
   if(errNum == WLZ_ERR_NONE)
   {
-    if(dstCCor)
+    double	sSq[2];
+    FILE	*fP = NULL;
+    WlzObject	*cCObjR = NULL;
+    
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      *dstCCor = cCor;
+      (void )WlzGreyStats(wObj[oIdx], NULL, NULL, NULL, NULL, &(sSq[oIdx]),
+			  NULL, NULL, &errNum);
+      ++oIdx;
     }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      cCObjR = WlzFromArray2D((void **)(oAr[0]), aSz, aOrg,
+			      WLZ_GREY_DOUBLE, WLZ_GREY_DOUBLE,
+			      0.0,
+			      255.0 / (1.0 + (sqrt(sSq[0] * sSq[1]) *
+			      		      aSz.vtX * aSz.vtY)),
+			      0, 0, &errNum);
+    }
+    if(cCObjR)
+    {
+      if((fP = fopen("cCObjR.wlz", "w")) != NULL)
+      {
+	(void )WlzWriteObj(fP, cCObjR);
+	(void )fclose(fP);
+      }
+      (void )WlzFreeObj(cCObjR);
+    }
+  }
+#endif /* WLZ_REGCCOR_DEBUG */
+  for(oIdx = 0; oIdx < 2; ++oIdx)
+  {
+    (void )WlzFreeObj(oObj[oIdx]);
+    (void )WlzFreeObj(pObj[oIdx]);
+    (void )WlzFreeObj(wObj[oIdx]);
+    AlcDouble2Free(oAr[oIdx]);
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(rot);
+  return(dstRot);
 }
 
 #ifdef WLZ_REGCCOR_TEST
@@ -928,6 +1013,7 @@ int             main(int argc, char *argv[])
   int           idx,
   		option,
 		maxItr = 10,
+		verbose = 0,
 		conv = 0,
   		ok = 1,
 		usage = 0;
@@ -944,7 +1030,7 @@ int             main(int argc, char *argv[])
   WlzObject	*inObj[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "htro:";
+  static char	optList[] = "htrvo:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -968,6 +1054,9 @@ int             main(int argc, char *argv[])
 	break;
       case 't':
         trType = WLZ_TRANSFORM_2D_TRANS;
+	break;
+      case 'v':
+        verbose = 1;
 	break;
       case 'o':
         outObjFileStr = optarg;
@@ -1070,6 +1159,10 @@ int             main(int argc, char *argv[])
       (void )fclose(fP);
     }
   }
+  if(ok)
+  {
+    (void )printf("%g\n", cCor);
+  }
   if(outObj)
   {
     (void )WlzFreeObj(outObj);
@@ -1086,6 +1179,9 @@ int             main(int argc, char *argv[])
       " [-o<output object>] [-h] [<input object 0>] [<input object 1>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
+      "  -v  Be verbose, outputs the cross correlation value to the standard\n"
+      "      output, watch out that you dont send the affine transfrom to\n"
+      "      the standard output too!\n"
       "  -r  Find registration transform.\n"
       "  -t  Find tranlation only transform.\n"
       "  -o  Output transform object file name.\n"
