@@ -119,12 +119,18 @@ public class AnatomyBuilder {
 	embDir = new File(anaDir.getAbsolutePath() + SLASH + "embryo");
 	xembDir = new File(anaDir.getAbsolutePath() + SLASH + "extraembryonic_component");
 
+	/* operations now combined in the 1 walk through
 	collectWlzFiles(embDir, _embFileStack);
 	collectWlzFiles(xembDir, _xembFileStack);
 	makeObjStack(0); // embryonic
 	makeObjStack(1); // extra-embryonic
 	buildMenu(embDir, _embMenu);
 	buildMenu(xembDir, _xembMenu);
+	*/
+	buildMenu(embDir, _embMenu, _embFileStack);
+	buildMenu(xembDir, _xembMenu, _xembFileStack);
+	makeObjStack(0); // embryonic
+	makeObjStack(1); // extra-embryonic
 	_done = true;
 	//printAnatomy();
 	_lock.notifyAll();
@@ -252,6 +258,54 @@ public class AnatomyBuilder {
 	               leafMod(thisFile.getName()));
 	      item.setActionCommand(fullPath + SLASH + contents[i]);
 	      menu.add(item, 0);
+	   }
+	}
+     }
+  }
+
+//----------------------------------------------------
+  /**
+   *   Recursive function which builds a SelectableMenu and
+   *   collects Woolz file names by walking the anatomy directory.
+   *   @param dir the directory in which to look for Woolz file names.
+   *   If the directory contains sub-directories, these are searched as well.
+   *   @param menu the Selectable menu.
+   *   @param stack the Stack on which to store Woolz filenames.
+   */
+  protected void buildMenu(File dir, SelectableMenu menu, Stack stack) {
+     // walk through the directories
+     String fullPath = dir.getAbsolutePath();
+     menu.setActionCommand(fullPath);
+     String contents[] = null;
+     File thisFile = null;
+
+     if(!dir.isDirectory()) return;
+
+     contents = dir.list();
+
+     int len = contents.length;
+
+     for (int i=0; i<len; i++) {
+	thisFile = new File(fullPath + SLASH + contents[i]);
+	if (thisFile.isDirectory()) {
+	   SelectableMenu subMenu = new SelectableMenu(thisFile.getName());
+	   subMenu.setActionCommand(fullPath + SLASH + contents[i]);
+	   menu.add(subMenu);
+
+	   int newlen = thisFile.list().length;
+	   if(newlen > 0) {
+	      buildMenu(thisFile, subMenu, stack);
+	   }
+	} else {
+	   if(thisFile.getName().equals(
+	      thisFile.getParentFile().getName() + ".wlz")) {
+
+	      JMenuItem item = new JMenuItem(
+	               leafMod(thisFile.getName()));
+	      item.setActionCommand(fullPath + SLASH + contents[i]);
+	      menu.add(item, 0);
+
+	      stack.push(thisFile);
 	   }
 	}
      }
