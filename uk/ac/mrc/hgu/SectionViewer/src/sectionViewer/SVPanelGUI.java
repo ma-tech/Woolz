@@ -14,12 +14,11 @@ import zoom.*;
 
 // import hguUntil.*;
 
-public class SectionViewerGUI extends JFrame {
+public class SVPanelGUI extends JPanel {
 
   private final boolean _debug = false;
 
   JPanel _contentPane;
-  JRootPane _rootPane;
 
   // these need to be visible outside of guiInit()
   int totalH = 500;
@@ -240,19 +239,19 @@ public class SectionViewerGUI extends JFrame {
   //=========================================================
   // constructor
   //=========================================================
-  public SectionViewerGUI() {
+  public SVPanelGUI() {
 
-    if(_debug == true) System.out.println("enter SectionViewerGUI");
+    if(_debug == true) System.out.println("enter SVPanelGUI");
 
     try {
       guiInit();
     }
     catch(Exception e) {
-      System.out.println("SectionViewerGUI");
+      System.out.println("SVPanelGUI");
       e.printStackTrace();
     }
 
-    if(_debug) System.out.println("exit SectionViewer");
+    if(_debug) System.out.println("exit SVPanel");
   }
 
 //========================================
@@ -260,8 +259,7 @@ public class SectionViewerGUI extends JFrame {
 
     if(_debug) System.out.println("enter guiInit");
 
-    _contentPane = (JPanel)this.getContentPane();
-    _rootPane = this.getRootPane();
+    _contentPane = this;
 
     // constants to define GUI shape
     int menuH;
@@ -634,4 +632,4 @@ public class SectionViewerGUI extends JFrame {
   public abstract class planeColChooser implements ActionListener {
   }
 
-} // class SectionViewer
+} // class SVPanelGUI

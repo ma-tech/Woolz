@@ -101,17 +101,36 @@ public class SVParent
   }
 
 //-----------------------------------------------------
-  public SectionViewer createExternalView(String viewstr) {
+  public SVExternal createExternalView(String viewstr) {
 
-     SectionViewer ret = null;
+     SVPanel svp = null;
+     SVExternal svExt = null;
 
-     ret = new SectionViewer(viewstr, this);
-
-     if(ret != null) {
-        System.out.println("made SectionViewer "+ret);
-        addView(ret);
+     svp = new SVPanel(viewstr, this);
+     svExt = new SVExternal(viewstr);
+     if((svp != null) && (svExt != null)) {
+        svExt.setSVPanel(svp);
+	svp.setContainer(svExt);
+        addView(svp);
      }
-     return ret;
+
+     return svExt;
+  }
+//-----------------------------------------------------
+  public SVInternal createInternalView(String viewstr) {
+
+     SVPanel svp = null;
+     SVInternal svInt = null;
+
+     svp = new SVPanel(viewstr, this);
+     svInt = new SVInternal(viewstr);
+     if((svp != null) && (svInt != null)) {
+        svInt.setSVPanel(svp);
+	svp.setContainer(svInt);
+        addView(svp);
+     }
+
+     return svInt;
   }
 //-----------------------------------------------------
   public void reset() {
@@ -183,9 +202,9 @@ public class SVParent
        clearAnatomy();
        _key.setVisible(false);
 
-       SectionViewer SV = null;
+       SVPanel SV = null;
        while(_openViews.isEmpty() == false) {
-	 SV = (SectionViewer)_openViews.elementAt(0);
+	 SV = (SVPanel)_openViews.elementAt(0);
 	 SV.close();
        }
        _openViews.clear();
@@ -196,12 +215,12 @@ public class SVParent
   } // closeGreyLevel()
 
 //-----------------------------------------------------
-  public void addView(SectionViewer view) {
+  public void addView(SVPanel view) {
     _openViews.add(view);
   }
 
 //-----------------------------------------------------
-  public void removeView(SectionViewer view) {
+  public void removeView(SVPanel view) {
     _openViews.remove(view);
   }
 //-----------------------------------------------------
@@ -281,12 +300,12 @@ public class SVParent
  * @param:     void
  **/
   public void clearAnatomy() {
-    SectionViewer SV = null;
+    SVPanel SV = null;
     int numViews = _openViews.size();
     if(numViews <= 0) return;
 
     for(int i=0; i<numViews; i++) {
-      SV = (SectionViewer)_openViews.elementAt(i);
+      SV = (SVPanel)_openViews.elementAt(i);
       SV.removeAnatomy();
       SV.setAnatomyText(SV._anatomyStr);
     }
@@ -303,7 +322,7 @@ public class SVParent
     WlzFileInputStream in;
     File thisFile = new File(str);
 
-    SectionViewer SV = null;
+    SVPanel SV = null;
 
     int pathlen = _anatBuilder._pathLengthToAnatomy;
     String fullName = thisFile.getAbsolutePath();
@@ -315,8 +334,8 @@ public class SVParent
       in = new WlzFileInputStream(str);
       updateAnatomyArr(WlzObject.WlzReadObj(in), capitalise(anatName1)+" *");
     } catch(WlzException we) {
-      System.out.println("showAnatomy: 1");
-      System.out.println(we.getMessage());
+      //System.out.println("showAnatomy: 1");
+      //System.out.println(we.getMessage());
       if(we.getMessage().indexOf("WLZ_ERR_OBJECT_NULL") != -1) {
         updateAnatomyArr(null, capitalise(anatName1));
       }
@@ -329,7 +348,7 @@ public class SVParent
     int numViews = _openViews.size();
     if(numViews == 0) return;
     for(int i=0; i<numViews; i++) {
-      SV = (SectionViewer)_openViews.elementAt(i);
+      SV = (SVPanel)_openViews.elementAt(i);
       SV.removeAnatomy();
       SV.anatomyFromMenu(_anatomyArr);
     }
@@ -356,13 +375,13 @@ public class SVParent
 
     showAnatKey();
 
-    SectionViewer SV = null;
+    SVPanel SV = null;
 
     int numViews = _openViews.size();
     if(numViews <= 0) return;
 
     for(int i=0; i<numViews; i++) {
-      SV = (SectionViewer)_openViews.elementAt(i);
+      SV = (SVPanel)_openViews.elementAt(i);
       SV.removeAnatomy();
       SV.anatomyFromMenu(_anatomyArr);
     }
@@ -386,8 +405,8 @@ public class SVParent
       in = new WlzFileInputStream((String)files.elementAt(0));
       obj1 = WlzObject.WlzReadObj(in);
     } catch(WlzException we) {
-      System.out.println("combineWlzObjs: 1");
-      System.out.println(we.getMessage());
+      //System.out.println("combineWlzObjs: 1");
+      //System.out.println(we.getMessage());
       if(we.getMessage().indexOf("WLZ_ERR_OBJECT_NULL") != -1) {
         obj1 = null;
       }
@@ -410,8 +429,8 @@ public class SVParent
           obj1 = unionObj;
         }
       } catch(WlzException we) {
-        System.out.println("combineWlzObjs: 2");
-        System.out.println(we.getMessage());
+        //System.out.println("combineWlzObjs: 2");
+        //System.out.println(we.getMessage());
       } catch (IOException ie) {
         System.out.println(ie.getMessage());
       }
@@ -530,7 +549,7 @@ public class SVParent
 
     int numViews;
     int indx;
-    SectionViewer SV = null;
+    SVPanel SV = null;
     Color newCol = null;
 
     public keyToControllerAdaptor() {
@@ -576,7 +595,7 @@ public class SVParent
       if(numViews == 0) return;
 
       for(int i=0; i<numViews; i++) {
-        SV = (SectionViewer)_openViews.elementAt(i);
+        SV = (SVPanel)_openViews.elementAt(i);
         SV.removeAnatomy();
         SV.anatomyFromMenu(_anatomyArr);
       }
