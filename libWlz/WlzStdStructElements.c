@@ -404,6 +404,31 @@ static WlzObject *WlzSpecial_e2(WlzErrorNum *dstErr)  /*-*/
   return obj;
 }
 
+/*
+ * 1
+ * 1
+ * 1
+ */
+static WlzObject *WlzSpecial_v2(WlzErrorNum *dstErr)  /*-*/
+{
+  WlzObject	*obj1, *obj2, *obj=NULL;
+  WlzInterval	*intl;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( obj1 = WlzSpecial_a3(1, &errNum) ){
+    if( obj2 = WlzSpecial_a3(3, &errNum) ){
+      obj = WlzIntersect2(obj1, obj2, &errNum);
+      WlzFreeObj(obj2);
+    }
+    WlzFreeObj(obj1);
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return obj;
+}
+
 WlzObject *WlzMakeSpecialStructElement(
   WlzSpecialStructElmType	eType,
   int				elmIndex,
@@ -448,6 +473,10 @@ WlzObject *WlzMakeSpecialStructElement(
 
   case WLZ_SPEC_STRUCT_ELM_E2:
     rtnObj = WlzSpecial_e2(&errNum);
+    break;
+
+  case WLZ_SPEC_STRUCT_ELM_V2:
+    rtnObj = WlzSpecial_v2(&errNum);
     break;
 
   default:

@@ -355,7 +355,8 @@ typedef enum
   WLZ_SPEC_STRUCT_ELM_H7,
   WLZ_SPEC_STRUCT_ELM_A3,
   WLZ_SPEC_STRUCT_ELM_E1,
-  WLZ_SPEC_STRUCT_ELM_E2
+  WLZ_SPEC_STRUCT_ELM_E2,
+  WLZ_SPEC_STRUCT_ELM_V2
 } WlzSpecialStructElmType;
 
 /************************************************************************

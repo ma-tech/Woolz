@@ -516,7 +516,7 @@ static WlzObject *WlzStructDilation3d(
   WlzObject	**objList;
   WlzDomain	domain, *domains, *domains1, *domains2;
   WlzValues	values;
-  int		i, p, plane1, lastpl, nStructPlanes;
+  int		i, j, p, plane1, lastpl, nStructPlanes;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* the object is definitely 3D but the domain needs checking */
@@ -562,6 +562,7 @@ static WlzObject *WlzStructDilation3d(
 					  structElm->domain.i->kol1,
 					  structElm->domain.i->lastkl,
 					  &errNum) ){
+	  domain.p->domains[0] = WlzAssignDomain(structElm->domain, NULL);
 	  values.core = NULL;
 	  if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
 				 NULL, NULL, &errNum) ){
@@ -651,6 +652,7 @@ static WlzObject *WlzStructDilation3d(
 	else {
 	  obj1 = WlzMakeEmpty(NULL);
 	}
+	obj1 = WlzAssignObject(obj1, NULL);
 	/* get the structuring element plane */
 	if( domains2[i].core ){
 	  obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains2[i], values,
@@ -659,10 +661,12 @@ static WlzObject *WlzStructDilation3d(
 	else {
 	  obj2 = WlzMakeEmpty(NULL);
 	}
-	objList[i] = WlzStructDilation(obj1, obj2, NULL);
+	obj2 = WlzAssignObject(obj2, NULL);
+	objList[i] = WlzAssignObject(WlzStructDilation(obj1, obj2, NULL),
+				     NULL);
       }
       obj3 = WlzUnionN(nStructPlanes, objList, 0, &errNum);
-      if( obj3->type == WLZ_EMPTY_OBJ ){
+      if( (obj3 == NULL) || (obj3->type == WLZ_EMPTY_OBJ) ){
 	(*domains).core = NULL;
       }
       else {
@@ -670,9 +674,13 @@ static WlzObject *WlzStructDilation3d(
       }
       WlzFreeObj(obj1);
       WlzFreeObj(obj2);
-      WlzFreeObj(obj3);
+      if( obj3 ){
+	WlzFreeObj(obj3);
+      }
       for(i=0; i < nStructPlanes; i++){
-	WlzFreeObj(objList[i]);
+	if( objList[i] ){
+	  WlzFreeObj(objList[i]);
+	}
       }
     }
     AlcFree((void *) objList);

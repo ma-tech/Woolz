@@ -456,7 +456,7 @@ static WlzObject *WlzStructErosion3d(
   WlzObject	**objList;
   WlzDomain	domain, *domains, *domains1, *domains2;
   WlzValues	values;
-  int		i, p, plane1, lastpl, nStructPlanes;
+  int		i, j, p, plane1, lastpl, nStructPlanes;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* the object is definitely 3D but the domain needs checking */
@@ -495,13 +495,15 @@ static WlzObject *WlzStructErosion3d(
 	  return WlzMakeMain(obj->type, obj->domain, values,
 			     NULL, NULL, dstErr);
 	}
-	if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-					  0, 0,
-					  structElm->domain.i->line1,
-					  structElm->domain.i->lastln,
-					  structElm->domain.i->kol1,
-					  structElm->domain.i->lastkl,
-					  &errNum) ){
+	else if(domain.p =
+		WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+				   0, 0,
+				   structElm->domain.i->line1,
+				   structElm->domain.i->lastln,
+				   structElm->domain.i->kol1,
+				   structElm->domain.i->lastkl,
+				   &errNum) ){
+	  domain.p->domains[0] = WlzAssignDomain(structElm->domain, NULL);
 	  values.core = NULL;
 	  if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
 				 NULL, NULL, &errNum) ){
@@ -559,9 +561,7 @@ static WlzObject *WlzStructErosion3d(
        to be sorted out by WlzStandardPlaneDomain */
     /* assume at least one pixel on each structuring element plane */
     plane1 = obj->domain.p->plane1 - structElm->domain.p->plane1;
-    plane1 = WLZ_MAX(plane1, obj->domain.p->plane1);
     lastpl = obj->domain.p->lastpl - structElm->domain.p->lastpl;
-    lastpl = WLZ_MIN(lastpl, obj->domain.p->lastpl);
     if( lastpl < plane1 ){
       rtnObj = WlzMakeEmpty(NULL);
     }
@@ -588,15 +588,17 @@ static WlzObject *WlzStructErosion3d(
       structElm->domain.p->plane1 + 1;
     objList = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * nStructPlanes);
 
-    for(p=plane1; p <= lastpl; p++, domains++, domains1++){
+    for(p=plane1; p <= lastpl; p++, domains++){
       for(i=0; i < nStructPlanes; i++){
-	if( domains1[i].core ){
-	  obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains1[i], values,
+	j = p + structElm->domain.p->plane1 + i - obj->domain.p->plane1;
+	if( domains1[j].core ){
+	  obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains1[j], values,
 			     NULL, NULL, NULL);
 	}
 	else {
 	  obj1 = WlzMakeEmpty(NULL);
 	}
+	obj1 = WlzAssignObject(obj1, NULL);
 	if( domains2[i].core ){
 	  obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains2[i], values,
 			     NULL, NULL, NULL);
@@ -604,20 +606,26 @@ static WlzObject *WlzStructErosion3d(
 	else {
 	  obj2 = WlzMakeEmpty(NULL);
 	}
-	objList[i] = WlzStructErosion(obj1, obj2, NULL);
+	obj2 = WlzAssignObject(obj2, NULL);
+	objList[i] = WlzAssignObject(WlzStructErosion(obj1, obj2, NULL),
+				     NULL);
       }
       obj3 = WlzIntersectN(nStructPlanes, objList, 0, &errNum);
-      if( obj3->type == WLZ_EMPTY_OBJ ){
+      if( (obj3 == NULL) || (obj3->type == WLZ_EMPTY_OBJ) ){
 	(*domains).core = NULL;
       }
       else {
-	*domains = WlzAssignDomain(obj->domain, NULL);
+	*domains = WlzAssignDomain(obj3->domain, NULL);
       }
       WlzFreeObj(obj1);
       WlzFreeObj(obj2);
-      WlzFreeObj(obj3);
+      if( obj3 ){
+	WlzFreeObj(obj3);
+      }
       for(i=0; i < nStructPlanes; i++){
-	WlzFreeObj(objList[i]);
+	if( objList[i] ){
+	  WlzFreeObj(objList[i]);
+	}
       }
     }
     AlcFree((void *) objList);
