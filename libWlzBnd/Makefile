@@ -34,7 +34,9 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			WlzBndGreyInvert.c \
-			WlzBndJavaUtils.c
+			WlzBndJavaUtils.c \
+			WlzBnd3DWarp.c \
+			WlzBndBasisFn.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).

@@ -28,6 +28,7 @@
 *		grey range as in the Woolz binary.
 * \param	obj			Given object.
 */
+/*
 WlzErrorNum	WlzBndGreyInvert(WlzObject *obj)
 {
   WlzPixelV	min,
@@ -40,3 +41,21 @@ WlzErrorNum	WlzBndGreyInvert(WlzObject *obj)
   }
   return(errNum);
 }
+*/
+
+WlzErrorNum	WlzBndGreyInvert(WlzObject *obj)
+{
+  WlzPixelV	min, max, gmin, gmax;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((errNum = WlzGreyRange(obj, &gmin, &gmax)) == WLZ_ERR_NONE)
+  {
+    WlzValueConvertPixel(&min, gmin, WLZ_GREY_DOUBLE);
+    WlzValueConvertPixel(&max, gmax, WLZ_GREY_DOUBLE);
+
+    errNum = WlzGreyInvertMinMax(obj, min, max);
+  }
+  return(errNum);
+}
+
+
