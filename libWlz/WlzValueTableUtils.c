@@ -1,36 +1,38 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzValueTableUtils.c
-* Date:         March 1999
-* Author:       Bill Hill, Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing value amd value table types.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 23-03-01 bill Add WlzGreyTypeFromObj().
-************************************************************************/
+/*!
+* \file         WlzValueTableUtils.c
+* \author       Bill Hill, Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup	WlzValuesUtils
+* \brief	Functions for computing value amd value table types.
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzGreyTableType
-* Returns:	WlzObjectType:		Type of grey table.
-* Purpose:	Computes a grey table type from table and grey types.
-* Global refs:	-
-* Parameters:	WlzObjectType tableType: The basic table type.
-*		WlzGreyType greyType:	The grey type.
-*		WlzErrorNum *wlzErr:	Destination error pointer, may
-*					BE NULL.
-************************************************************************/
+/*!
+* \return	Type of grey table.
+* \ingroup	WlzValuesUtils
+* \brief	Computes a grey table type from table and grey types.
+* \param	tableType		The basic table type.
+* \param	greyType		The grey type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
 			         WlzGreyType greyType,
-				 WlzErrorNum *wlzErr)
+				 WlzErrorNum *dstErr)
 {
   WlzObjectType gTabType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -119,24 +121,22 @@ WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
       errNum = WLZ_ERR_VALUES_TYPE;
       break;
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   return(gTabType);
 }
 
-/************************************************************************
-* Function:	WlzGreyTableTypeToGreyType
-* Returns:	WlzGreyType:		Type of grey value.
-* Purpose:	Computes the type of grey from a grey table type.
-* Global refs:	-
-* Parameters:	WlzObjectType tableType: The basic table type.
-*		WlzErrorNum *wlzErr:	Destination error pointer, may
-*					BE NULL.
-************************************************************************/
+/*!
+* \return	Type of grey value.
+* \ingroup	WlzValuesUtils
+* \brief	Computes the type of grey from a grey table type.
+* \param	gTabType		The basic table type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzGreyType	WlzGreyTableTypeToGreyType(WlzObjectType gTabType,
-				           WlzErrorNum *wlzErr)
+				           WlzErrorNum *dstErr)
 {
   WlzGreyType	greyType = WLZ_GREY_ERROR;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -177,24 +177,22 @@ WlzGreyType	WlzGreyTableTypeToGreyType(WlzObjectType gTabType,
       errNum = WLZ_ERR_GREY_TYPE;
       break;
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   return(greyType);
 }
 
-/************************************************************************
-* Function:	WlzGreyTableTypeToTableType
-* Returns:	WlzGreyType:		Type of grey value.
-* Purpose:	Computes the type of table from a  grey table type.
-* Global refs:	-
-* Parameters:	WlzObjectType tableType: The basic table type.
-*		WlzErrorNum *wlzErr:	Destination error pointer, may
-*					BE NULL.
-************************************************************************/
+/*!
+* \return	Type of grey value.
+* \ingroup	WlzValuesUtils
+* \brief	Computes the type of table from a  grey table type.
+* \param	gTabType		The basic table type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
-				 	  WlzErrorNum *wlzErr)
+				 	  WlzErrorNum *dstErr)
 {
   WlzObjectType	tableType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -229,28 +227,26 @@ WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   return(tableType);
 }
 
-/************************************************************************
-* Function:	WlzGreyTypeFromObj
-* Returns:	WlzGreyType:		Grey type, WLZ_GREY_ERROR on
-*					error.
-* Purpose:	Gets the grey type of the values in a Woolz object.
-*		If the object is not a domain object with values
-*		an error is returned. If the object is a 3D domain
-*		object with values, all 2D value tables are checked
-*		and an error is returned if they don't all have the
-*		same grey type.
-* Global refs:	-
-* Parameters:	WlzObject *obj:		Given object.
-*		WlzErrorNum *dstErr:	Destination ptr for error code,
+/*!
+* \return	Grey type, WLZ_GREY_ERROR on error.
+* \ingroup	WlzValuesUtils
+* \brief	Gets the grey type of the values in a Woolz object.
+*               If the object is not a domain object with values
+*               an error is returned. If the object is a 3D domain
+*               object with values, all 2D value tables are checked
+*               and an error is returned if they don't all have the
+*               same grey type.
+* \param	obj			Given object.
+* \param	dstErr			Destination ptr for error code,
 *					may be NULL.
-************************************************************************/
+*/
 WlzGreyType	WlzGreyTypeFromObj(WlzObject *obj, WlzErrorNum *dstErr)
 {
   int		pCnt,
@@ -319,4 +315,43 @@ WlzGreyType	WlzGreyTypeFromObj(WlzObject *obj, WlzErrorNum *dstErr)
     }
   }
   return(gType);
+}
+
+/*!
+* \return	Voxel size.
+* \ingroup	WlzValuesUtils
+* \brief	Gets the given 3D domain objects voxel size.
+* \param	obj			Given 3D domain object.
+* \param	dstErr			Destination pointer for error code,
+* 					may be NULL.
+*/
+WlzDVertex3	WlzVozelSz(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  WlzDVertex3	sz;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  sz.vtX = sz.vtY = sz.vtZ = 0;
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if (obj->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    sz.vtX = obj->domain.p->voxel_size[0];
+    sz.vtY = obj->domain.p->voxel_size[1];
+    sz.vtZ = obj->domain.p->voxel_size[2];
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(sz);
 }
