@@ -99,7 +99,8 @@ public class SectionViewerGUI extends JPanel {
   //...................
   String controlMenu_1str = "rotation";
   String controlMenu_1_1str = "yaw pitch roll";
-  String controlMenu_1_2str = "user-defined";
+  String controlMenu_1_2str = "fixed_line";
+  String controlMenu_1_3str = "all";
 
   JMenu controlMenu_1 = new JMenu(controlMenu_1str);
   boolean controlMenu_1_1state = false;
@@ -110,10 +111,15 @@ public class SectionViewerGUI extends JPanel {
   JCheckBoxMenuItem controlMenu_1_2 = new
                JCheckBoxMenuItem(controlMenu_1_2str,
 	                         controlMenu_1_2state);
+  boolean controlMenu_1_3state = false;
+  JCheckBoxMenuItem controlMenu_1_3 = new
+               JCheckBoxMenuItem(controlMenu_1_3str,
+	                         controlMenu_1_3state);
   //...................
   String controlMenu_2str = "view mode";
   String controlMenu_2_1str = "up is up";
   String controlMenu_2_2str = "absolute";
+  String controlMenu_2_3str = "fixed line";
 
   JMenu controlMenu_2 = new JMenu(controlMenu_2str);
   ButtonGroup viewModeGroup = new ButtonGroup();
@@ -121,6 +127,8 @@ public class SectionViewerGUI extends JPanel {
                JRadioButtonMenuItem(controlMenu_2_1str);
   JRadioButtonMenuItem controlMenu_2_2 = new
                JRadioButtonMenuItem(controlMenu_2_2str);
+  JRadioButtonMenuItem controlMenu_2_3 = new
+               JRadioButtonMenuItem(controlMenu_2_3str);
   //...................
   String controlMenu_3str = "fixed point";
   String controlMenu_3_1str = "change fixed point using mouse button";
@@ -132,10 +140,10 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem controlMenu_3_2 = new JMenuItem(controlMenu_3_2str);
   JMenuItem controlMenu_3_3 = new JMenuItem(controlMenu_3_3str);
   //...................
-  String controlMenu_4str = "axis point";
-  String controlMenu_4_1str = "change axis point using mouse button";
-  String controlMenu_4_2str = "change axis pointby entering coordinates";
-  String controlMenu_4_3str = "reset axis point";
+  String controlMenu_4str = "fixed line end-point";
+  String controlMenu_4_1str = "change fixed line using mouse button";
+  String controlMenu_4_2str = "change fixed line by entering coordinates";
+  String controlMenu_4_3str = "reset fixed line";
 
   JMenu controlMenu_4 = new JMenu(controlMenu_4str);
   JMenuItem controlMenu_4_1 = new JMenuItem(controlMenu_4_1str);
@@ -172,7 +180,7 @@ public class SectionViewerGUI extends JPanel {
                JCheckBoxMenuItem(showMenu_4str,
                                  showMenu_4state);
 
-  String showMenu_5str = "rotation axis";
+  String showMenu_5str = "fixed line";
   boolean showMenu_5state = false;
   JCheckBoxMenuItem showMenu_5 = new
                JCheckBoxMenuItem(showMenu_5str,
@@ -309,20 +317,25 @@ public class SectionViewerGUI extends JPanel {
     // rotation
     controlMenu_1.add(controlMenu_1_1);
     controlMenu_1.add(controlMenu_1_2);
+    controlMenu_1.add(controlMenu_1_3);
 
     // view mode
     controlMenu_2.add(controlMenu_2_1);
     controlMenu_2.add(controlMenu_2_2);
+    controlMenu_2.add(controlMenu_2_3);
     viewModeGroup.add(controlMenu_2_1);
     viewModeGroup.add(controlMenu_2_2);
+    viewModeGroup.add(controlMenu_2_3);
+
     controlMenu_2_1.setSelected(true);
+    controlMenu_2_3.setEnabled(false);
 
     // fixed point
     controlMenu_3.add(controlMenu_3_1);
     controlMenu_3.add(controlMenu_3_2);
     controlMenu_3.add(controlMenu_3_3);
 
-    // rotation axis
+    // fixed line
     controlMenu_4.add(controlMenu_4_1);
     controlMenu_4.add(controlMenu_4_2);
     controlMenu_4.add(controlMenu_4_3);
@@ -332,7 +345,7 @@ public class SectionViewerGUI extends JPanel {
     showMenu.add(showMenu_2); // intersection of views
     showMenu.add(showMenu_3); // mouse-click anatomy
     showMenu.add(showMenu_4); // fixed point
-    showMenu.add(showMenu_5); // rotation axis
+    showMenu.add(showMenu_5); // fixed line
     //showMenu_5.setEnabled(false);
  //...............................
  //...............................
@@ -543,7 +556,7 @@ public class SectionViewerGUI extends JPanel {
     yawSetter.setTextWidth(40);
     yawSetter.setSliderLabel("yaw");
     yawSetter.setMin(0.0);
-    yawSetter.setMax(180.0);
+    yawSetter.setMax(360.0);
     yawSetter.setValue(0.0);
 
     pitchyawControlPanel.setPreferredSize(new Dimension(totalW, pyH));
@@ -557,7 +570,7 @@ public class SectionViewerGUI extends JPanel {
     rollSetter.setTextWidth(40);
     rollSetter.setSliderLabel("roll");
     rollSetter.setMin(0.0);
-    rollSetter.setMax(180.0);
+    rollSetter.setMax(360.0);
     rollSetter.setValue(0.0);
     rollSetter.setSliderEnabled(false);
 
@@ -575,9 +588,9 @@ public class SectionViewerGUI extends JPanel {
     rotSetter.setBgc(new Color(230, 255, 255));
     rotSetter.setLabelWidth(60);
     rotSetter.setTextWidth(40);
-    rotSetter.setSliderLabel("fixed rotn");
-    rotSetter.setMin(0.0);
-    rotSetter.setMax(360.0);
+    rotSetter.setSliderLabel("fixed line");
+    rotSetter.setMin(-180.0);
+    rotSetter.setMax(180.0);
     rotSetter.setValue(0.0);
     rotSetter.setSliderEnabled(false);
 

@@ -37,7 +37,8 @@ public class ViewStructModel implements WlzObjectType {
    WlzThreeDViewStruct _VS = null;
 
    double _fpInitial[] = null;
-   double _axisPoint[] = null;
+   double _norm2[] = null;
+   double _norm3[] = null;
 
    int iValArray[];
 
@@ -92,45 +93,44 @@ public class ViewStructModel implements WlzObjectType {
       WlzIBox3 bBox3 = _objModel.getBBox();
 
       _fpInitial = new double[3];
-      _axisPoint = new double[3];
 
       _fpInitial[0] = bBox3.xMin+(bBox3.xMax-bBox3.xMin)/2.0;
       _fpInitial[1] = bBox3.yMin+(bBox3.yMax-bBox3.yMin)/2.0;
       _fpInitial[2] = bBox3.zMin+(bBox3.zMax-bBox3.zMin)/2.0;
 
-      // set the rotation axis end point = fixed point initially
       try {
-	 System.arraycopy(_fpInitial,0,_axisPoint,0,3);
-      }
-      catch (Exception e1) {
-	System.err.println(e1);
-      }
-
-      try {
-	 _obj.Wlz3DViewSetViewMode(_VS, WlzThreeDViewMode.WLZ_UP_IS_UP_MODE);
-	 _obj.Wlz3DViewSetUp(_VS, 0.0, 0.0, -1.0);
-	 _obj.Wlz3DViewSetTheta(_VS, 0.0);
-	 _obj.Wlz3DViewSetPhi(_VS, 0.0);
-	 _obj.Wlz3DViewSetDist(_VS,0.0);
-	 _obj.Wlz3DViewSetFixed(_VS,_fpInitial[0],_fpInitial[1],_fpInitial[2]);
-	 _obj.WlzInit3DViewStruct(_VS,_obj);
-	 /* adapters not in place yet so don't do fireChange() */
+         _obj.Wlz3DViewSetViewMode(_VS, WlzThreeDViewMode.WLZ_UP_IS_UP_MODE);
+         _obj.Wlz3DViewSetUp(_VS, 0.0, 0.0, -1.0);
+         _obj.Wlz3DViewSetTheta(_VS, 0.0);
+         _obj.Wlz3DViewSetPhi(_VS, 0.0);
+         _obj.Wlz3DViewSetDist(_VS,0.0);
+         _obj.Wlz3DViewSetFixed(_VS,_fpInitial[0],_fpInitial[1],_fpInitial[2]);
+         _obj.Wlz3DViewSetFixed2(_VS,_fpInitial[0],_fpInitial[1],_fpInitial[2]);
+         _obj.WlzInit3DViewStruct(_VS,_obj);
+         /* adapters not in place yet so don't do fireChange() */
       }
       catch (WlzException e2) {
-	System.err.println("setInitialViewStruct");
-	System.err.println(e2);
+        System.err.println("setInitialViewStruct");
+        System.err.println(e2);
       }
       if(_debug) System.out.println("exit setInitialViewStruct()");
+
+      _norm2 = new double[3];
+      _norm3 = new double[3];
    }
 
 //----------------------------------------------
    public void setViewMode(String modeStr) {
      int mode;
 
-     if (0 == modeStr.compareTo("absolute")) {
+     if(0 == modeStr.compareTo("absolute")) {
        mode = WlzThreeDViewMode.WLZ_ZETA_MODE;
-     } else {
+     } else if(0 == modeStr.compareTo("up is up")) {
        mode = WlzThreeDViewMode.WLZ_UP_IS_UP_MODE;
+     } else if(0 == modeStr.compareTo("fixed line")) {
+       mode = WlzThreeDViewMode.WLZ_FIXED_LINE_MODE;
+     } else {
+       mode = WlzThreeDViewMode.WLZ_UP_IS_UP_MODE; // default
      }
 
      try {
@@ -144,20 +144,24 @@ public class ViewStructModel implements WlzObjectType {
      fireChange();
    }
 
-   private double toDeg = Math.PI/180.0;
+   private double toRads = Math.PI/180.0;
 //----------------------------------------------
    public void setThetaDeg(double degs) {
-      setTheta(degs * toDeg);
+      setTheta(degs * toRads);
    }
 
 //----------------------------------------------
    public void setPhiDeg(double degs) {
-      setPhi(degs * toDeg);
+      setPhi(degs * toRads);
    }
 
 //----------------------------------------------
    public void setZetaDeg(double degs) {
-      setZeta(degs * toDeg);
+      setZeta(degs * toRads);
+   }
+//----------------------------------------------
+   public void setPsiDeg(double degs) {
+      setPsi(degs * toRads);
    }
 
 //----------------------------------------------
@@ -201,6 +205,57 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   // fixed line rotation
+   public void setPsi(double rads) {
+
+      double phi = 0.0;
+      double theta = 0.0;
+
+      double phiDeg = 0.0;
+      double thetaDeg = 0.0;
+      double zetaDeg = 0.0;
+
+      phi = Math.acos(Math.cos(rads)*_norm2[2] + Math.sin(rads)*_norm3[2]);
+      if(Math.abs(Math.sin(phi)) < .01 ) {
+         theta = 0.0;
+      } else {
+         theta = Math.atan2(Math.cos(rads)*_norm2[1] + Math.sin(rads)*_norm3[1],
+                       Math.cos(rads)*_norm2[0] + Math.sin(rads)*_norm3[0]);
+         if( theta < 0.0 ){
+            theta += 2 * Math.PI;
+         }
+      }
+
+      /*
+      System.out.println("ViewStructModel.setPsi:");
+      System.out.println("norm2 = "+Double.toString(_norm2[0])+", "+
+                                    Double.toString(_norm2[1])+", "+
+				    Double.toString(_norm2[2]));
+      System.out.println("norm3 = "+Double.toString(_norm3[0])+", "+
+                                    Double.toString(_norm3[1])+", "+
+				    Double.toString(_norm3[2]));
+      */
+      phiDeg = phi * 180.0 / Math.PI;
+      thetaDeg = theta * 180.0 / Math.PI;
+      /*
+      System.out.println("phi = "+ Double.toString(phiDeg));
+      System.out.println("theta = "+ Double.toString(thetaDeg));
+      */
+
+
+      try {
+        _obj.Wlz3DViewSetPhi(_VS, phi);
+        _obj.Wlz3DViewSetTheta(_VS, theta);
+        _obj.WlzInit3DViewStruct(_VS,_obj);
+      } catch (WlzException e) {
+        System.err.println("setPsi");
+        System.err.println(e);
+      }
+      _objModel.makeSection(_VS);
+      fireChange();
+   }
+
+//----------------------------------------------
    public void setDist(double dist) {
 
      try {
@@ -229,15 +284,42 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
-   public void setAxisPoint(double[] axisPnt) {
+   public void setAxisPoint(double x, double y, double z) {
+
      try {
-       System.arraycopy(axisPnt,0,_axisPoint,0,3);
+       _obj.Wlz3DViewSetFixed2(_VS, x,y,z);
+       _obj.WlzInit3DViewStruct(_VS,_obj);
+     } catch (WlzException e) {
+       System.err.println("setAxisPoint");
+       System.err.println(e);
+     }
+   }
+
+//----------------------------------------------
+   public void setFixedLineAngle(double angle) {
+     try {
+       _obj.Wlz3DViewSetFixedLineAngle(_VS, angle);
      } catch (Exception e) {
        System.err.println(e);
      }
    }
 
 //----------------------------------------------
+   public void setNorm2(double x, double y, double z) {
+     _norm2[0] = x;
+     _norm2[1] = y;
+     _norm2[2] = z;
+   }
+
+//----------------------------------------------
+   public void setNorm3(double x, double y, double z) {
+     _norm3[0] = x;
+     _norm3[1] = y;
+     _norm3[2] = z;
+   }
+
+//==============================================
+//==============================================
    public void getPhi(double[] phi) {
      try {
        _obj.Wlz3DViewGetPhi(_VS, phi);
@@ -315,9 +397,37 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
-   public double[] getAxisPoint() {
-      return _axisPoint;
+   public void getAxisPoint(double[] x, double[] y, double[] z) {
+      try {
+        _obj.Wlz3DViewGetFixed2(_VS, x,y,z);
+      } catch (WlzException e) {
+        System.err.println("getAxisPoint");
+        System.err.println(e);
+      }
    }
+
+//----------------------------------------------
+    public double[] getAxisPoint() {
+      double[] x = new double[1];
+      double[] y = new double[1];
+      double[] z = new double[1];
+      double[] ap = new double[3];
+   
+      try {
+        _obj.Wlz3DViewGetFixed2(_VS, x, y, z);
+      }
+      catch (WlzException e) {
+        System.err.println("getAxisPoint");
+        System.err.println(e);
+      }
+   
+      ap[0] = x[0];
+      ap[1] = y[0];
+      ap[2] = z[0];
+
+      return ap;
+    }
+
 //----------------------------------------------
    public String getViewMode() {
       String ret = "";
@@ -347,8 +457,66 @@ public class ViewStructModel implements WlzObjectType {
    }
 
 //----------------------------------------------
+   public void getFixedLineAngle(double[] ang) {
+
+     try {
+       _obj.Wlz3DViewGetFixedLineAngle(_VS, ang);
+     } catch (Exception e) {
+       System.err.println(e);
+     }
+   }
+
+//----------------------------------------------
+   public WlzAffineTransform getInverseTransform() {
+
+     WlzAffineTransform ret = null;
+     WlzAffineTransform trans = null;
+
+     try {
+       trans = _obj.WlzGetAffineTransform(_VS);
+       if(trans == null) return null;
+       ret = _obj.WlzAffineTransformInverse(trans);
+     } catch (Exception e) {
+       System.err.println(e);
+     }
+
+     return ret;
+   }
+
+
+//----------------------------------------------
    public WlzThreeDViewStruct getViewStruct() {
       return _VS;
+   }
+
+//----------------------------------------------
+   public double[][][] getTransMatrix(WlzAffineTransform trans) {
+
+     double mat[][][] = new double[1][][];
+     mat[0] = null;
+
+     WlzIVertex2 size[] = new WlzIVertex2[1];
+     size[0] = null;
+
+     try {
+        _obj.WlzGetTransformMatrix(size, mat, trans);
+     }
+     catch(WlzException e) {
+        System.out.println("WlzErr getting transform matrix");
+        System.out.println(e.getMessage());
+     }
+
+     return mat;
+   }
+
+//----------------------------------------------
+   public double[] getNorm2() {
+     return _norm2;
+   }
+
+//----------------------------------------------
+   public double[] getNorm3() {
+     return _norm3;
    }
 
 //----------------------------------------------

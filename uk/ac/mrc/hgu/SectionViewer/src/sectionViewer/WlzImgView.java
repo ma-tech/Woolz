@@ -91,8 +91,8 @@ public class WlzImgView extends Component {
    private GeneralPath _threshConstraintPath = null;
    private int _npts = 0;
    private int _num;
-   private int _fpr = 4; // fixed point indicator radius
-   private int _apr = 4; // axis point indicator radius
+   private int _fpr = 2; // fixed point indicator radius
+   private int _apr = 2; // axis point indicator radius
 
    private boolean _viz[]; // visibility of anatomy objects
 
@@ -100,6 +100,7 @@ public class WlzImgView extends Component {
    private Vector _interColVec = null;
    private Vector _fixedPointVec = null;
    private Vector _axisPointVec = null;
+   private double _axisPointArr[] = null;
 
    private boolean _fixedPoint;
    private boolean _axisPoint;
@@ -616,7 +617,7 @@ public class WlzImgView extends Component {
       drawAnatomy(g2);
       drawIntersection(g2);
       drawFixedPoint(g2);
-      drawAxisPoint(g2);
+      //drawAxisPoint(g2);
       drawAxis(g2);
       // temporarily disabled ... don't remove
       drawThreshold(g2);
@@ -716,6 +717,11 @@ public class WlzImgView extends Component {
 
       g2.setColor(Color.green);
       g2.translate(_xofsFP, _yofsFP);
+      line = (Line2D.Double)_fixedPointVec.elementAt(0);
+      int x = (int)line.getX1() - _fpr;
+      int y = (int)line.getY1() - _fpr;
+      g2.drawOval(x,y,2*_fpr,2*_fpr);
+/*
       for(int i=0; i<num; i++) {
 	 line = (Line2D.Double)_fixedPointVec.elementAt(i);
 	 g2.drawLine((int)line.getX1(),
@@ -728,6 +734,7 @@ public class WlzImgView extends Component {
 	    g2.drawOval(x,y,2*_fpr,2*_fpr);
 	 }
       }
+*/
       g2.translate(-_xofsFP, -_yofsFP);
       g2.setColor(colOrig);
    }
@@ -768,7 +775,7 @@ public class WlzImgView extends Component {
       // draw a line between fixed point and axis point
       if(_axis == false) return;
       if((_fixedPointVec == null) || (_fixedPointVec.size() == 0)) return;
-      if((_axisPointVec == null) || (_axisPointVec.size() == 0)) return;
+      if(_axisPointArr == null) return;
 
       Color colOrig = g2.getColor();
       Line2D.Double line = null;
@@ -776,17 +783,12 @@ public class WlzImgView extends Component {
       g2.setColor(Color.cyan);
       g2.translate(_xofsAP, _yofsAP);
 
-      line = (Line2D.Double)_axisPointVec.elementAt(0);
-      int x1 = (int)line.getX1();
-      int y1 = (int)line.getY1();
-
-      line = (Line2D.Double)_axisPointVec.elementAt(1);
+      int x1 = (int)_axisPointArr[0];
+      int y1 = (int)_axisPointArr[1];
 
       line = (Line2D.Double)_fixedPointVec.elementAt(0);
       int x2 = (int)line.getX1();
       int y2 = (int)line.getY1();
-
-      line = (Line2D.Double)_fixedPointVec.elementAt(1);
 
       g2.drawLine(x1,y1,x2,y2);
 
@@ -975,6 +977,25 @@ public class WlzImgView extends Component {
       setFixedPointOffsets();
       _fixedPoint = true;
    }
+
+   //-------------------------------------------------------------
+   protected void setAxisPointArr(double[] apa) {
+
+      if(apa == null) return;
+
+      if(_axisPointArr != null) {
+         _axisPointArr = null;
+      }
+      _axisPointArr = new double[3];
+
+      _axisPointArr[0] = apa[0];
+      _axisPointArr[1] = apa[1];
+      _axisPointArr[2] = apa[2]; // not used
+
+      setAxisPointOffsets();
+      _axis = true;
+   }
+
 
    //-------------------------------------------------------------
    protected void setAxisPointVec(double[] apa) {
