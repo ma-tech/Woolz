@@ -35,7 +35,7 @@
 * \ingroup      WlzTransform
 * \brief	A workspace data structure for use in the ICP functions.
 */
-struct _WlzRegICPWSp
+typedef struct _WlzRegICPWSp
 {
   /* Itteration control. */
   int		itr;		/*!< Current iteration */
@@ -49,6 +49,8 @@ struct _WlzRegICPWSp
   /* Vericies and normals. */
   WlzVertexType vType;		/*!< Type of vertices WLZ_VERTEX_D2 or
   				     WLZ_VERTEX_D3 */
+  int		sgnNrm;		/*!< Non zero if normals have reliably signed
+  				     components. */
   int		nT;		/*!< Number of target vertices/normals */
   int		nS;		/*!< Number of source vertices/normals */
   int		nMatch;		/*!< Minimum of nT and nS */
@@ -60,14 +62,11 @@ struct _WlzRegICPWSp
   WlzVertexP    tSNr;		/*!< Transformed source normals. */
   WlzVertexP    nNTVx;		/*!< NN ordered target vertices. */
   /* Match weighting */
-  double	kVx;		/*!< Coefficient for vertex weighting */
-  double	kNr;		/*!< Coefficient for normal weighting */
   double	*wgtVx;		/*!< Weights for vertex matches */
   double	*wgtNr;		/*!< Weights for normal matches */
   /* Affine transform. */
   WlzAffineTransform *tr;	/*!< Current affine transform */
-};
-typedef struct _WlzRegICPWSp WlzRegICPWSp;
+}  WlzRegICPWSp;
 
 static void     		WlzRegICPTrans(
 				  WlzRegICPWSp *wSp);
@@ -94,6 +93,7 @@ static WlzAffineTransform 	*WlzRegICPTreeAndVerticesSimple(
 				  AlcKDTTree *tree,
 				  WlzTransformType trType,
 				  WlzVertexType vType,
+				  int sgnNrm,
 				  int nT,
 				  WlzVertexP tVx,
 				  WlzVertexP tNr,
@@ -192,7 +192,7 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
     if(errNum == WLZ_ERR_NONE)
     {
       rDom.ctr = WlzContourObjGrd(gObj[idN], ctrLo, ctrHi, ctrWth,
-				  &errNum);
+				  1, &errNum);
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -258,7 +258,7 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
   {
     regTr = WlzRegICPVertices(vData[0], nData[0], vCnt[0],
 			       vData[1], nData[1], vCnt[1],
-			       vType, initTr,
+			       vType, 1, initTr,
 			       trType, &conv, &itr, maxItr, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -314,7 +314,8 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
 {
   int		idx,
 		conv,
-		itr;
+		itr,
+		sgnNrm;
   int		vCnt[2];
   WlzVertexType	vType[2];
   WlzObject	*objs[2];
@@ -332,6 +333,18 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
   }
   else
   {
+    sgnNrm = 0;
+    if((tObj->type == WLZ_CONTOUR) && (sObj->type == WLZ_CONTOUR) &&
+       (sObj->domain.ctr->model != NULL) && (tObj->domain.ctr->model != NULL))
+    {
+      switch(tObj->domain.ctr->model->type)
+      {
+        case WLZ_GMMOD_2N:
+	case WLZ_GMMOD_3N:
+	  sgnNrm = 1;
+	  break;
+      }
+    }
     idx = 0;
     while((errNum == WLZ_ERR_NONE) && (idx < 2))
     {
@@ -349,7 +362,7 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
   {
      regTr = WlzRegICPVertices(vData[0], nData[0], vCnt[0],
      				vData[1], nData[1], vCnt[1],
-     				vType[0], initTr,
+     				vType[0], sgnNrm, initTr,
 				trType, &conv, &itr, maxItr, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -539,6 +552,8 @@ static WlzErrorNum WlzRegICPCheckVertices(WlzVertexP *vData, int *vCnt,
 * \param	sNr			Source normals, may be NULL.
 * \param	sCnt			Number of source vertices.
 * \param	vType			Type of the vertices.
+* \param	sgnNrm			Non zero if the normals have reliably
+*					signed components.
 * \param	initTr			Initial affine transform
 *					to be applied to the source
 *					object prior to using the ICP
@@ -559,7 +574,7 @@ WlzAffineTransform	*WlzRegICPVertices(WlzVertexP tVx, WlzVertexP tNr,
 					    int tCnt,
 					    WlzVertexP sVx, WlzVertexP sNr,
 					    int sCnt,
-					    WlzVertexType vType,
+					    WlzVertexType vType, int sgnNrm,
 					    WlzAffineTransform *initTr,
 					    WlzTransformType trType,
 					    int *dstConv, int *dstItr,
@@ -582,6 +597,7 @@ WlzAffineTransform	*WlzRegICPVertices(WlzVertexP tVx, WlzVertexP tNr,
   wSp.sNN = NULL;
   wSp.dist = NULL;
   wSp.vType = vType;
+  wSp.sgnNrm = sgnNrm;
   wSp.nT = tCnt;
   wSp.nS = sCnt;
   wSp.nMatch = WLZ_MIN(tCnt, sCnt);
@@ -592,8 +608,6 @@ WlzAffineTransform	*WlzRegICPVertices(WlzVertexP tVx, WlzVertexP tNr,
   wSp.tSVx.v = NULL;
   wSp.tSNr.v = NULL;
   wSp.nNTVx.v = NULL;
-  wSp.kVx = 0.5;
-  wSp.kNr = 0.5;
   wSp.wgtVx = NULL;
   wSp.wgtNr = NULL;
   wSp.tr = NULL;
@@ -884,24 +898,6 @@ static void	WlzRegICPFindNN(WlzRegICPWSp *wSp)
 * \param	wSp			ICP registration workspace.
 */
 static void	WlzRegICPWeight(WlzRegICPWSp *wSp)
-/* #define WLZ_REGICP_SAMEWEIGHT */
-#ifdef WLZ_REGICP_SAMEWEIGHT
-{
-  int		idx;
-
-  for(idx = 0; idx < wSp->nMatch; ++idx)
-  {
-    *(wSp->wgtVx + idx) = wSp->kVx;
-  }
-  if(wSp->gSNr.v)
-  {
-    for(idx = 0; idx < wSp->nMatch; ++idx)
-    {
-      *(wSp->wgtNr +idx) = wSp->kNr;
-    }
-  }
-}
-#else /* WLZ_REGICP_SAMEWEIGHT */
 {
   int		idx;
   double	tD0,
@@ -923,29 +919,37 @@ static void	WlzRegICPWeight(WlzRegICPWSp *wSp)
   /* Compute weights. */
   for(idx = 0; idx < wSp->nMatch; ++idx)
   {
-    tD0 = (maxDist - *(wSp->dist + idx)) / maxDist;
-    wVx = (1.0 - wSp->kVx) + (wSp->kVx * tD0);
+    wVx = (maxDist - *(wSp->dist + idx)) / maxDist;
     if(wSp->gSNr.v)
     {
       if(wSp->vType == WLZ_VERTEX_D2)
       {
         tV.d2 = *(wSp->gTNr.d2 + *(wSp->sNN + idx));
 	sV.d2 = *(wSp->tSNr.d2 + idx);
-	tD0 = WLZ_VTX_2_DOT(sV.d2, tV.d2);
-	wNr = (1.0 - wSp->kNr) + (wSp->kNr * tD0 * tD0);
+	wNr = WLZ_VTX_2_DOT(sV.d2, tV.d2);
       }
       else /* wSp->vType == WLZ_VERTEX_D3 */
       {
         tV.d3 = *(wSp->gTNr.d3 + *(wSp->sNN + idx));
 	sV.d3 = *(wSp->tSNr.d3 + idx);
-	tD0 = WLZ_VTX_3_DOT(sV.d3, tV.d3);
-	wNr = (1.0 - wSp->kNr) + (wSp->kNr * tD0 * tD0);
+	wNr = WLZ_VTX_3_DOT(sV.d3, tV.d3);
+      }
+      if(wSp->sgnNrm && (wNr < 0.0))
+      {
+        wNr = 0.0;
       }
     }
-    *(wSp->wgtVx + idx) = wVx * wNr;
+    if(wSp->sgnNrm)
+    {
+      tD0 = wNr;
+    }
+    else
+    {
+      tD0 = wVx * wNr * wNr;
+    }
+    *(wSp->wgtVx + idx) = tD0;
   }
 }
-#endif /* WLZ_REGICP_SAMEWEIGHT */
 
 /*!
 * \return		 		Woolz error code.
@@ -1108,6 +1112,8 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
 * \param	vType			Vertex type.
+* \param	sgnNrm			Non zero if sign of normal components
+* 					is meaningful.
 * \param	nT			Number of target vertices.
 * \param	tVx			The target vertices.
 * \param	tNr			The target normals.
@@ -1135,7 +1141,8 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 *					may be NULL.
 */
 WlzAffineTransform *WlzRegICPTreeAndVertices(AlcKDTTree *tree,
-				WlzTransformType trType, WlzVertexType vType,
+				WlzTransformType trType,
+				WlzVertexType vType, int sgnNrm,
 				int nT, WlzVertexP tVx, WlzVertexP tNr,
 				int nS, int *sIdx,
 				WlzVertexP sVx, WlzVertexP sNr,
@@ -1167,8 +1174,8 @@ WlzAffineTransform *WlzRegICPTreeAndVertices(AlcKDTTree *tree,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    newTr0 = WlzRegICPTreeAndVerticesSimple(tree, trType0, vType, nT, tVx, tNr,
-					 nS, sIdx, sVx, sNr,
+    newTr0 = WlzRegICPTreeAndVerticesSimple(tree, trType0, vType, sgnNrm,
+    					 nT, tVx, tNr, nS, sIdx, sVx, sNr,
 					 tVxBuf, sVxBuf, wgtBuf,
 					 maxItr, initTr,
 					 &conv, usrWgtFn, usrWgtData,
@@ -1180,9 +1187,8 @@ WlzAffineTransform *WlzRegICPTreeAndVertices(AlcKDTTree *tree,
   }
   if((errNum == WLZ_ERR_NONE) && conv && (trType != trType0))
   {
-    newTr1 = WlzRegICPTreeAndVerticesSimple(tree, trType, vType,
-					 nT, tVx, tNr,
-					 nS, sIdx, sVx, sNr,
+    newTr1 = WlzRegICPTreeAndVerticesSimple(tree, trType, vType, sgnNrm,
+					 nT, tVx, tNr, nS, sIdx, sVx, sNr,
 					 tVxBuf, sVxBuf, wgtBuf,
 					 maxItr, newTr0,
 					 &conv, usrWgtFn, usrWgtData,
@@ -1221,6 +1227,9 @@ WlzAffineTransform *WlzRegICPTreeAndVertices(AlcKDTTree *tree,
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
+* \param	vType			Type of vertex.
+* \param	sgnNrm			Non zero if sign of normal components
+* 					is meaningful.
 * \param	nT			Number of target vertices.
 * \param	tVx			The target vertices.
 * \param	tNr			The target normals.
@@ -1248,7 +1257,8 @@ WlzAffineTransform *WlzRegICPTreeAndVertices(AlcKDTTree *tree,
 *					may be NULL.
 */
 static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
-				WlzTransformType trType, WlzVertexType vType,
+				WlzTransformType trType,
+				WlzVertexType vType, int sgnNrm,
 				int nT, WlzVertexP tVx, WlzVertexP tNr,
 				int nS, int *sIdx,
 				WlzVertexP sVx, WlzVertexP sNr,
@@ -1286,9 +1296,7 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 		wUs;
   double	vxD[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	kNr = 0.5,
-  		kVx = 0.5,
-		convThr = 0.001;
+  const double	convThr = 0.001;
  
   nullP.v = NULL;
   curTr = (initTr == NULL)?
@@ -1377,13 +1385,13 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	    sTV.d3 = *(sVxBuf.d3 + idS);
 	    tV.d3 = *(tVxBuf.d3 + idS);
 	    WLZ_VTX_3_SUB(dV.d3, tV.d3, sTV.d3);
-	    dist = WLZ_VTX_2_LENGTH(dV.d3);
+	    dist = WLZ_VTX_3_LENGTH(dV.d3);
 	  }
-	  wNr = *(wgtBuf + idS);
-	  tD0 = curMaxDist - dist;
-	  wVx = (tD0 > 0.0)? tD0 / curMaxDist: 0.0;
-	  wVx = (1.0 - kVx) + (kVx * wVx);
-	  wNr = (1.0 - kNr) + (kNr * wNr * wNr);
+	  tD0 = *(wgtBuf + idS);
+	  wNr = (sgnNrm && (tD0 < 0.0))? 0.0: tD0 * tD0;
+	  tD0 = (curMaxDist > DBL_EPSILON)?
+	        (curMaxDist - dist) / curMaxDist: 0.0;
+          wVx = tD0 * tD0;
 	  if(usrWgtFn)
 	  {
 	    if(vType == WLZ_VERTEX_D2)
@@ -1422,7 +1430,15 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	    errNum = WLZ_ERR_TRANSFORM_TYPE;
 	    break;
 	}
-	if(errNum == WLZ_ERR_NONE)
+	if(errNum == WLZ_ERR_PARAM_DATA)
+	{
+	  /* If the registration failed because of the given vertex
+	   * position and normal data then set the iteration count
+	   * higher than the limit. This will be set as a convergence
+	   * failure later. */
+	  itr = maxItr;
+	}
+	else if(errNum == WLZ_ERR_NONE)
 	{
 	  conv = ((prvSumDist - curSumDist) / prvSumDist) < convThr;
 	  if(conv == 0)
