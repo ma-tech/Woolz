@@ -1496,11 +1496,14 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 * \return				Error number.
 * \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
-*		A composite transform is built from the primitives
-*		with the order of composition being scale (applied first),
-*		shear, rotation and then translation (applied last),
+*		A composite transform \f$A\f$ is built from the primitives
+*		with the order of composition being scale \f$s\f$
+*		(applied first), shear \f$h\f$, rotation \f$\theta\f$
+*		and then translation \f$t\f$ (applied last),
 *		ie:
-*		  A = T.R.Sh.Sc, x' = A.x
+*		\f[
+		  A = t \theta h s, x' = A x
+		\f]
 * \param	tr			 Given affine transform.
 * \param	prim			 Given primitives.
 */
@@ -1536,11 +1539,14 @@ WlzErrorNum	WlzAffineTransformPrimSet(WlzAffineTransform *tr,
 * \return				Error number.
 * \brief	Sets the given transform's matrix from an
 *		affine transform primitives data structure.
-*		A composite transform is built from the primitives
-*		with the order of composition being scale (applied first),
-*		shear, rotation and then translation (applied last),
+*		A composite transform \f$A\f$ is built from the primitives
+*		with the order of composition being scale \f$s\f$
+*		(applied first), shear \f$h\f$, rotation \f$\theta\f$
+*		and then translation \f$t\f$ (applied last),
 *		ie:
-*		  A = T.R.Sh.Sc, x' = A.x
+*		\f[
+		  A = t \theta h s, x' = A x
+		\f]
 * \param	tr			Given 2D affine transform.
 * \param	prim			Given primitives.
 */

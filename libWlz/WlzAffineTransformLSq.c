@@ -14,7 +14,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \brief        Functions for computing Woolz affine transforms that
 *		give the best fit, in a least squares sense, when
-*		used to transform one set of verticies to another.
+*		used to transform one set of vertices to another.
 * \ingroup      WlzTransform
 * \todo         -
 * \bug          None known.
@@ -98,15 +98,15 @@ static WlzAffineTransform 	*WlzAffineTransformLSqDQ2D(
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of verticies and normals onto the second
+*		first set of vertices and normals onto the second
 *		set. The vertex and normal weighting factors must
 *		be in the range [0-1].
-* \param	vtxType			Type of verticies.
-* \param	nV			Number of verticies.
+* \param	vtxType			Type of vertices.
+* \param	nV			Number of vertices.
 * \param	vW			Vertex weights, may be NULL which
 *					implies that all the weights are 1.0.
-* \param	v0			Verticies of the first set.
-* \param	v1			Verticies of the second set.
+* \param	v0			Vertices of the first set.
+* \param	v1			Vertices of the second set.
 * \param	nW			Normal weights, may be NULL which
 *					implies that all the weights are 1.0
 * \param	nN			Number of normals, may be zero.
@@ -169,13 +169,13 @@ WlzAffineTransform *WlzAffineTransformLSq2(WlzVertexType vtxType,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of verticies onto the second.
-* \param	vtxType			Type of verticies.
-* \param	nVtx0			Number of verticies in first vector.
-* \param	vtxVec0			First vector of verticies.
-* \param	nVtx1			Number of verticies in second
+*		first set of vertices onto the second.
+* \param	vtxType			Type of vertices.
+* \param	nVtx0			Number of vertices in first vector.
+* \param	vtxVec0			First vector of vertices.
+* \param	nVtx1			Number of vertices in second
 *					vector (MUST be same as first).
-* \param	vtxVec1			Second vector of verticies.
+* \param	vtxVec1			Second vector of vertices.
 * \param	trType			 Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -229,14 +229,14 @@ WlzAffineTransform *WlzAffineTransformLSq(WlzVertexType vtxType,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of verticies onto the second, while using
+*		first set of vertices onto the second, while using
 *		the given vertex weights.
-* \param	vtxType			Type of verticies.
+* \param	vtxType			Type of vertices.
 * \param	nVtx			Number of vertex pairs.
 * \param	wgt			Weights for the matched pairs
-*					of verticies.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
+*					of vertices.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
 * \param	trType			Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -289,13 +289,13 @@ WlzAffineTransform *WlzAffineTransformLSqWgt(WlzVertexType vtxType,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of 2D double verticies onto the second,
+*		first set of 2D double vertices onto the second,
 *		while using the given vertex weights.
 * \param	nVtx			Number of vertex pairs.
 * \param	wgt			Weights for the matched pairs
-*					of verticies.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
+*					of vertices.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
 * \param	trType			Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -332,14 +332,14 @@ static WlzAffineTransform *WlzAffineTransformLSqWgt2D(int nVtx, double *wgt,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of 3D double verticies onto the second,
+*		first set of 3D double vertices onto the second,
 *		while using the given vertex weights.
 * \todo		UNIMPLEMENTED
 * \param	nVtx			Number of vertex pairs.
 * \param	wgt			Weights for the matched pairs
-*					of verticies.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
+*					of vertices.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
 * \param	trType			Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -367,13 +367,13 @@ static WlzAffineTransform *WlzAffineTransformLSqWgt3D(int nVtx, double *wgt,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of 3D verticies onto the second.
-* \param	nVtx0			Number of verticies in first
+*		first set of 3D vertices onto the second.
+* \param	nVtx0			Number of vertices in first
 *					vector.
-* \param	vtxVec0			First vector of verticies.
-* \param	nVtx1			Number of verticies in second
+* \param	vtxVec0			First vector of vertices.
+* \param	nVtx1			Number of vertices in second
 *					vector (MUST be same as first).
-* \param	vtxVec1			Second vector of verticies.
+* \param	vtxVec1			Second vector of vertices.
 * \param	trType			 Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -430,13 +430,13 @@ WlzAffineTransform *WlzAffineTransformLSq3D(int nVtx0, WlzDVertex3 *vtxVec0,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of 2D verticies onto the second.
-* \param	nVtx0			Number of verticies in first
+*		first set of 2D vertices onto the second.
+* \param	nVtx0			Number of vertices in first
 *					vector.
-* \param	vtxVec0			First vector of verticies.
-* \param	nVtx1			Number of verticies in second
+* \param	vtxVec0			First vector of vertices.
+* \param	nVtx1			Number of vertices in second
 *					vector (MUST be same as first).
-* \param	vtxVec1			Second vector of verticies.
+* \param	vtxVec1			Second vector of vertices.
 * \param	trType			Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -501,15 +501,15 @@ WlzAffineTransform *WlzAffineTransformLSq2D(int nVtx0, WlzDVertex2 *vtxVec0,
 *					be NULL on error.
 * \brief	Computes the Woolz 3D registration transform which
 *		gives the best (least squares) fit when used to
-*		transform the first set of verticies onto the second.
+*		transform the first set of vertices onto the second.
 *		The transform is constrained to rotation and
 *		translation only.
 *		The algorithm is based on Arun K.S., Huang T.T.
 *		and Blostein S.D. "Least-Squares Fitting of Two 3-D
 *		Point Sets" PAMI 9(5), 698-700, 1987.
-* \param	pos0			First vector of verticies.
-* \param	pos1			Second vector of verticies.
-* \param	nVtx			Number of verticies in vectors.
+* \param	pos0			First vector of vertices.
+* \param	pos1			Second vector of vertices.
+* \param	nVtx			Number of vertices in vectors.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
@@ -545,7 +545,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Compute centroids (cen0 and cen1) and a mean of squares of distance
-     * between the verticies. */
+     * between the vertices. */
     meanSqD = 0.0;
     cen0 = *pos0;
     cen1 = *pos1;
@@ -560,7 +560,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
     meanSqD *= tD0;
     if(meanSqD < tol)
     {
-      /* The verticies coincide, make an identity transform. */
+      /* The vertices coincide, make an identity transform. */
       tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
     }
     else
@@ -568,7 +568,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
       WLZ_VTX_3_SCALE(cen0, cen0, tD0);
       WLZ_VTX_3_SCALE(cen1, cen1, tD0);
       /* Compute the 3x3 matrix hMx, which is the sum of tensor products of
-       * the verticies relative to their centroids. */
+       * the vertices relative to their centroids. */
       for(idN = 0; idN < nVtx; ++idN)
       {
 	WLZ_VTX_3_SUB(rel0, *(pos0 + idN), cen0);
@@ -607,8 +607,8 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 	  (trMx[0][2] * trMx[1][1] * trMx[2][0]);
 	if(tD0 < 0.0)
 	{
-	  /* Are source verticies (rel0) coplanar? They are iff one of the 3
-	   * singular values of hMx in wMx is zero. If the source verticies
+	  /* Are source vertices (rel0) coplanar? They are iff one of the 3
+	   * singular values of hMx in wMx is zero. If the source vertices
 	   * are not coplanar, the the solution of the SVD is correct. */
 	  tI0 = ((fabs(*(wMx + 2)) >= DBL_EPSILON) << 2) |
 	    ((fabs(*(wMx + 1)) >= DBL_EPSILON) << 1) |
@@ -616,13 +616,13 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 	  switch(tI0)
 	  {
 	    case 0:
-	      /* Source verticies are not coplanar or colinear. The SVD gives the
+	      /* Source vertices are not coplanar or colinear. The SVD gives the
 	       * correct solution. */
 	      break;
 	    case 1:
 	    case 2:
 	    case 4:
-	      /* Source verticies are coplanar, but not colinear. There is a
+	      /* Source vertices are coplanar, but not colinear. There is a
 	       * unique reflection as well as a unique rotation. The SVD
 	       * may give either BUT in this case it has found the reflection
 	       * so need to recompute for the rotation.
@@ -650,7 +650,7 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 	    case 3:
 	    case 5:
 	    case 6:
-	      /* Source verticies are colinear and there exists an infinity of
+	      /* Source vertices are colinear and there exists an infinity of
 	       * solutions! */
 	      errNum = WLZ_ERR_ALG_SINGULAR;
 	      break;
@@ -709,11 +709,11 @@ static WlzAffineTransform *WlzAffineTransformLSqReg3D(WlzDVertex3 *pos0,
 *					be NULL on error.
 * \brief	Computes the Woolz 3D registration transform which
 *		gives the best (least squares) fit when used to
-*		transform the first set of verticies onto the second.
+*		transform the first set of vertices onto the second.
 *		The transform is constrained to translation only.
-* \param	pos0			First vector of verticies.
-* \param	pos1			Second vector of verticies.
-* \param	nVtx			Number of verticies in vectors.
+* \param	pos0			First vector of vertices.
+* \param	pos1			Second vector of vertices.
+* \param	nVtx			Number of vertices in vectors.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
@@ -759,10 +759,10 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans3D(WlzDVertex3 *pos0,
 *					be NULL on error.
 * \brief	Computes the Woolz general 2D affine transform which
 *		gives the best (least squares) fit when used to
-*		transform the first set of verticies onto the second.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
-* \param	nVtx			Number of verticies in vectors.
+*		transform the first set of vertices onto the second.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
+* \param	nVtx			Number of vertices in vectors.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
@@ -859,12 +859,12 @@ static WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vtxVec0,
 *					be NULL on error.
 * \brief	Computes the Woolz 2D registration transform which
 *		gives the best (least squares) fit when used to
-*		transform the first set of verticies onto the second.
+*		transform the first set of vertices onto the second.
 *		The transform is constrained to rotation and
 *		translation only.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
-* \param	nVtx			Number of verticies in vectors.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
+* \param	nVtx			Number of vertices in vectors.
 * \param	trType			Required transform type.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
@@ -965,13 +965,13 @@ static WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vtxVec0,
 *					be NULL on error.
 * \brief	Computes the Woolz general 2D affine transform which
 *		gives the best (least squares) fit when used to
-*		transform the first set of verticies onto the second,
+*		transform the first set of vertices onto the second,
 *		while using the given vertex weights.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
-* \param	nVtx			Number of verticies in vectors.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
+* \param	nVtx			Number of vertices in vectors.
 * \param	wgt			Weights for the matched pairs
-*					of verticies.
+*					of vertices.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
@@ -1075,12 +1075,12 @@ static WlzAffineTransform *WlzAffineTransformLSqWgtGen2D(WlzDVertex2 *vtxVec0,
 *					be NULL on error.
 * \brief	Computes the Woolz 2D translation transform which
 *		gives the best (least squares) fit when used to
-*		transform the first set of verticies onto the second.
+*		transform the first set of vertices onto the second.
 *		The transform is constrained to rotation and
 *		translation only.
-* \param	vtxVec0			First vector of verticies.
-* \param	vtxVec1			Second vector of verticies.
-* \param	nVtx			Number of verticies in vectors.
+* \param	vtxVec0			First vector of vertices.
+* \param	vtxVec1			Second vector of vertices.
+* \param	nVtx			Number of vertices in vectors.
 * \param	dstErr			Destination pointer for error
 *					number, may be NULL.
 */
@@ -1119,7 +1119,7 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of verticies and normals onto the second
+*		first set of vertices and normals onto the second
 *		set. The vertex and normal weighting factors must
 *		be in the range [0-1].
 *		This function is based on the dual quaternion
@@ -1135,13 +1135,13 @@ static WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vtxVec0,
 *    		because \f$\mathbf{C}_1\f$ is real and symetric,
 *		\f$\mathbf{C}_2\f$ is scalar and \f$\mathbf{C}_3\f$
 *		is anti-symetric.
-* \param	vtxType			Type of verticies.
-* \param	nV			Number of verticies.
+* \param	vtxType			Type of vertices.
+* \param	nV			Number of vertices.
 * \param	vW			Vertex weights (Walker's beta),
 *					may be NULL which implies that
 *					all the weights are 1.0.
-* \param	v1			Verticies of the target set.
-* \param	v0			Verticies of the source set.
+* \param	v1			Vertices of the target set.
+* \param	v0			Vertices of the source set.
 * \param	nN			Numbr of normals.
 * \param	nW			Normal weights (Walker's alpha).,
 *					may be NULL which implies that
@@ -1354,18 +1354,18 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 *					be NULL on error.
 * \brief	Computes the Woolz affine transform which gives the
 *		best (least squares) fit when used to transform the
-*		first set of verticies and normals onto the second
+*		first set of vertices and normals onto the second
 *		set. The vertex and normal weighting factors must
 *		be in the range [0-1].
 *		See WlzAffineTransformLSqDQ3D() from which this
 *		function has been derived.
-* \param	vtxType			Type of verticies.
-* \param	nV			Number of verticies.
+* \param	vtxType			Type of vertices.
+* \param	nV			Number of vertices.
 * \param	vW			Vertex weights (Walker's beta),
 *					may be NULL which implies that
 *					all the weights are 1.0.
-* \param	v1			Verticies of the target set.
-* \param	v0			Verticies of the source set.
+* \param	v1			Vertices of the target set.
+* \param	v0			Vertices of the source set.
 * \param	nN			Numbr of normals.
 * \param	nW			Normal weights (Walker's alpha).,
 *					may be NULL which implies that
