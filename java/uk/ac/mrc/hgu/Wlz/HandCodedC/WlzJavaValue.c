@@ -43,11 +43,24 @@ jlong 		WlzJavaValueGet(JNIEnv *jEnv,
   jlong		rtnVal = 0;
   jfieldID	fldID;
   jclass	jWCls;
+  char		*tC;
+  jboolean	isCpy = 0;
 
   if(jWObj)
   {
     switch(pKey)
     {
+      case WLZ_JPM_KEY_STRING:
+	tC = (*jEnv)->GetStringUTFChars(jEnv, (jstring )jWObj, &isCpy);
+        if(tC)
+	{
+	  rtnVal = (long )AlcStrDup(tC);
+	  if(isCpy)
+	  {
+	    (*jEnv)->ReleaseStringUTFChars(jEnv, (jstring )jWObj, tC);
+	  }
+	}
+        break;
       case WLZ_JPM_KEY_WLZ_GREYV:
 	if((rtnVal = (long )AlcMalloc(sizeof(WlzGreyV))) != NULL)
 	{
