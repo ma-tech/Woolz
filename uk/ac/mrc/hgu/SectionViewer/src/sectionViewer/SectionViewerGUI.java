@@ -49,7 +49,7 @@ public class SectionViewerGUI extends JPanel {
   JPanel feedbackPanel = new JPanel();
   JPanel imagePanel = new JPanel();
   JPanel _bigPanel = new JPanel();
-  JScrollPane _imageScrollPane = new JScrollPane();
+  protected JScrollPane _imageScrollPane = new JScrollPane();
   JPanel feedbackImagePanel = new JPanel();
 
   Zoom zoomSetter = new Zoom();
@@ -217,7 +217,7 @@ public class SectionViewerGUI extends JPanel {
   JPanel feedbackPanel_7 = new JPanel();
   JPanel fbAnatPanel = new JPanel();
 
-  JTextField xyzTextField = new JTextField();
+  protected JTextField xyzTextField = new JTextField();
   JTextField valueTextField = new JTextField();
   ScrollableTextField anatomyTextField = new ScrollableTextField();
 
