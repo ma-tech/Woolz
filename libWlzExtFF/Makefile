@@ -31,6 +31,7 @@ CSOURCES		= \
 			WlzExtFFBmp.c \
 			WlzExtFFDen.c \
 			WlzExtFFIcs.c \
+			WlzExtFFIPL.c \
 			WlzExtFFPic.c \
 			WlzExtFFPnm.c \
 			WlzExtFFSlc.c \

@@ -42,6 +42,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "vff", WLZEFF_FORMAT_VFF,
 			 "vtk", WLZEFF_FORMAT_VTK,
 			 "wlz", WLZEFF_FORMAT_WLZ,
+			 "ipl", WLZEFF_FORMAT_IPL,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -71,6 +72,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 			 "Sunvision VFF", WLZEFF_FORMAT_VFF,
 			 "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
 			 "Woolz", WLZEFF_FORMAT_WLZ,
+			 "IPLab", WLZEFF_FORMAT_IPL,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -112,7 +114,9 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
   		*extVtkStr = "vtk",
   		*fmtVtkStr = "Visualization Toolkit VTK",
 		*extWlzStr = "wlz",
-		*fmtWlzStr = "Woolz";
+		*fmtWlzStr = "Woolz",
+		*extIPLStr = "ipl",
+		*fmtIPLStr = "IPLab";
 
   switch(fileFmt)
   {
@@ -151,6 +155,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_WLZ:
       fmtStr = fmtWlzStr;
       extStr = extWlzStr;
+      break;
+    case WLZEFF_FORMAT_IPL:
+      fmtStr = fmtIPLStr;
+      extStr = extIPLStr;
       break;
   }
   if(dstExtStr)
@@ -233,6 +241,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_WLZ:
         obj = WlzReadObj(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_IPL:
+        obj = WlzEffReadObjIPL(fP, &errNum);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
@@ -317,6 +328,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_WLZ:
         errNum = WlzWriteObj(fP, obj);
+	break;
+      case WLZEFF_FORMAT_IPL:
+	errNum = WlzEffWriteObjIPL(fP, obj);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;

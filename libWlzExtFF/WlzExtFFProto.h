@@ -92,6 +92,11 @@ WlzObject	*WlzEffReadObjStack(const char *gvnFileName, WlzEffFormat fFmt,
 				WlzErrorNum *dstErr);
 WlzErrorNum	WlzEffWriteObjStack(const char *gvnFileName, WlzEffFormat fFmt,
 				WlzObject *obj);
+
+/* From WlzExtFFIPL.c */
+WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr);
+WlzErrorNum	WlzEffWriteObjIPL(FILE *fP, WlzObject *obj);
+
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */

@@ -290,6 +290,7 @@ int             main(int argc, char **argv)
       "  SLC                         slc     .slc\n"
       "  Sunvision VFF               vff     .vff\n"
       "  Visualization Toolkit VTK   vtk     .vtk\n"
+      "  IPLab                       ipl     .ipl\n"
       "  MRC HGU Woolz               wlz     .wlz\n",
       "Simple example:\n  ",
       *argv,

@@ -34,6 +34,7 @@ typedef enum
   WLZEFF_FORMAT_VFF,
   WLZEFF_FORMAT_VTK,
   WLZEFF_FORMAT_WLZ,
+  WLZEFF_FORMAT_IPL,
   WLZEFF_FORMAT_COUNT 			     /* Keep last: Number of formats */
 } WlzEffFormat;
 
@@ -331,6 +332,43 @@ typedef struct
 
 #define	WLZEFF_VTK_VERSION_MAJOR	(1)
 #define	WLZEFF_VTK_VERSION_MINOR	(0)
+
+/* IPLab format */
+
+typedef enum
+{
+  WLZEFF_IPL_TYPE_UBYTE		= 0,
+  WLZEFF_IPL_TYPE_SHORT		= 1,
+  WLZEFF_IPL_TYPE_INT		= 2,
+  WLZEFF_IPL_TYPE_FLOAT		= 3,
+  WLZEFF_IPL_TYPE_COL_16	= 4,
+  WLZEFF_IPL_TYPE_COL_24	= 5,
+  WLZEFF_IPL_TYPE_U_16		= 6,
+  WLZEFF_IPL_TYPE_LAST
+} WlzEffIPLType;
+
+typedef void * WlzIPLCSpecArray;
+
+typedef struct
+{
+  char		version[5];
+  unsigned char	format;
+  WlzEffIPLType	dType;
+  int		nWidth;
+  int		nHeight;
+  int		nFrames;
+  char		fileClutID;
+  int		overlayInFile;
+  char		viewMode;
+  double	delta;
+  char		units[11];
+  char		normType;
+  char		normSource;
+  int		numRegNarks;
+  double	normMin;
+  double	normMax;
+  WlzIPLCSpecArray	colorTable;
+}WlzEffIPLHeader;
 
 #ifdef  __cplusplus
 }
