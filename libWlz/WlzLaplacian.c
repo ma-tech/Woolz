@@ -1,39 +1,43 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzLaplacian.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Implements a Laplacian edge enhancement filter.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzLaplacian.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Implements a Laplacian edge enhancement filter.
+* \ingroup	WlzValueFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzLaplacian						*
-* Returns:	WlzObject *:		Laplacian filtered object.	*
-* Purpose:	Applies a Laplacian edge enhancement filter to the	*
-*		given woolz object.					*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		int kSize:		Kernel size, must be 3, 5 or 7.	*
-*		int newObjFlag:		If zero the convolution is done	*
-*					in place, else a new object is	*
-*					created.			*
-*		int modFlag:		Take the absolute value of the	*
-*					convolution if non zero (this	*
-*					is always the case for a UBYTE	*
-*					object).			*
-*		WlzErrorNum *wlzErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Laplacian filtered object.
+* \ingroup      WlzValueFilters
+* \brief	Applies a Laplacian edge enhancement filter to the
+*               given woolz object.
+* \param	srcObj			Given source object.
+* \param	kSize			Kernel size, must be 3, 5 or 7.
+* \param	newObjFlag		If zero the convolution is done
+*                                       in place, else a new object is
+*                                       created.
+* \param	modFlag			Take the absolute value of the
+*                                       convolution if non zero (this
+*                                       is always the case for a UBYTE
+*                                       object).
+* \param	wlzErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
 			      int newObjFlag, int modFlag,
 			      WlzErrorNum *wlzErr)

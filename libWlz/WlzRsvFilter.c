@@ -1,33 +1,29 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzRsvFilter.c
-* Date:         May 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Recursive filters for Woolz, these are also known as
-*		Deriche and infinite impulse responce (IIR) filters.
-*		The recursive filter code can be tested by defining
-*		WLZ_RSVFILTER_TEST_1D, WLZ_RSVFILTER_TEST_2D or
-*		WLZ_RSVFILTER_TEST_3D. See code below.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 07-12-00 bill Fix more purify URM's and FMR's.
-* 20-07-00 bill Fixed purify UMR's (uninitialized memory reads) in
-*		WlzRsvFilterFilterBufYF() and WlzRsvFilterFilterBufZF().
-* 05-07-00 bill Fixed bug in WlzRsvFilterFreeFilter().
-* 05-06-2000 bill Removed unused variables.
-* 02-02-2k bill	Added WlzRsvFilterBuffer().
-* 06-09-99 bill Object type error was not returned from WlzRsvFilterObj().
-************************************************************************/
+/*!
+* \file         WlzRsvFilter.c
+* \author       Bill Hill
+* \date         May 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Recursive filters for Woolz, these are also known as
+*               Deriche and infinite impulse responce (IIR) filters.
+* \ingroup	WlzValueFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <Wlz.h>
 
+/* These tests are for debuging only. */
 /* #define WLZ_RSVFILTER_TEST_1D */
 /* #define WLZ_RSVFILTER_TEST_2D */
 /* #define WLZ_RSVFILTER_TEST_3D */
@@ -54,13 +50,12 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 					int itvLen,
 					int goingUp);
 
-/************************************************************************
-* Function:	WlzRsvFilterFreeFilter
-* Returns:	void
-* Purpose:	Free a recursive filter.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	Filter to free.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup      WlzValueFilters
+* \brief	Free a recursive filter.
+* \param	ftr			Filter to free.
+*/
 void		WlzRsvFilterFreeFilter(WlzRsvFilter *ftr)
 {
   if(ftr != NULL)
@@ -69,18 +64,17 @@ void		WlzRsvFilterFreeFilter(WlzRsvFilter *ftr)
   }
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterMakeFilter
-* Returns:	WlzRsvFilter *:	New recursive filter.
-* Purpose:	Creates a new recursive filter.
-* Global refs:	-
-* Parameters:	WlzRsvFilterName name:  Name of filter.
-*		double prm:		Parameter is alpha for Deriche's
-*					operators and sigma for
-*					Gaussians, must be >= 0.0.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New recursive filter.
+* \ingroup      WlzValueFilters
+* \brief	Creates a new recursive filter.
+* \param	name			Name of filter.
+* \param	prm			Parameter is alpha for Deriche's
+*                                       operators and sigma for
+*                                       Gaussians, must be \f$\geq\f$ 0.0.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName name,
 				       double prm, WlzErrorNum *dstErr)
 {
@@ -207,18 +201,16 @@ WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName name,
   return(ftr);
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterObj
-* Returns:	WlzObject:		The filtered object, or NULL on
-*					error.
-* Purpose:	Applies a recursive filter to the given object.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		WlzRsvFilter *ftr:	Recursive filter.
-*		int actionMsk:		Action mask.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	The filtered object, or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Applies a recursive filter to the given object.
+* \param	srcObj			Given object.
+* \param	ftr			Recursive filter.
+* \param	actionMsk		Action mask.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
 			         int actionMsk, WlzErrorNum *dstErr)
 {
@@ -353,37 +345,38 @@ WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterFilterBufXF
-* Returns:	void
-* Purpose:	Filters the given single line data buffer using an
-*		IIR filter defined by the filter coefficients and
-*		double precision arithmetic.
-*		Before optimization this and all the other IIR filter
-*		code looks like:
-*		  for(i = 2; i < dataSz; ++i)
-*		  {
-*		    buf0[i] =   (a0 * data[i + 0]) + (a1 * data[i - 1])
-*			      - (b0 * buf0[i - 1]) - (b1 * buf0[i - 2]);
-*		  }
-*		  for(i = dataSz - 3; i >= 0; --i)
-*		  {
-*		    buf1[i] =   (a2 * data[i + 1]) + (a3 * data[i + 2])
-*			      - (b0 * buf1[i + 1]) - (b1 * buf1[i + 2]);
-*		  }
-*		  for(i = 0; i < dataSz; ++i)
-*		  {
-*		    data[i] =  c * (buf0[i] + buf1[i]);
-*		  }
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		double *data:		The line of data to be filtered.
-*		double *buf0:		Buffer with at least dataSz
-*					elements.
-*		double *buf1:		Buffer with at least dataSz
-*					elements.
-*		int dataSz:		Number of data.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueFilters
+* \brief	 Filters the given single line data buffer using an
+*               IIR filter defined by the filter coefficients and
+*               double precision arithmetic.
+* \note         Before optimization this and all the other IIR filter
+*               code looks like:
+*		\verbatim
+                  for(i = 2; i < dataSz; ++i)
+                  {
+                    buf0[i] =   (a0 * data[i + 0]) + (a1 * data[i - 1])
+                              - (b0 * buf0[i - 1]) - (b1 * buf0[i - 2]);
+                  }
+                  for(i = dataSz - 3; i >= 0; --i)
+                  {
+                    buf1[i] =   (a2 * data[i + 1]) + (a3 * data[i + 2])
+                              - (b0 * buf1[i + 1]) - (b1 * buf1[i + 2]);
+                  }
+                  for(i = 0; i < dataSz; ++i)
+                  {
+                    data[i] =  c * (buf0[i] + buf1[i]);
+                  }
+		\endverbatim
+* \param	ftr			The filter.
+* \param	data			The line of data to be filtered.
+* \param	buf0			Buffer with at least dataSz
+*                                       elements.
+* \param	buf1			Buffer with at least dataSz
+*                                       elements.
+* \param	dataSz			Number of data.
+*/
 static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *ftr, double *data,
 				      double *buf0, double *buf1,
 				      int dataSz)
@@ -448,21 +441,20 @@ static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *ftr, double *data,
   }
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterFilterBufXF
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Filters a given buffer using an IIR filter defined by
-*		the filter coefficients.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		double *datBuf:		The data buffer to be filtered
-*					with bufSz elements.
-*		double *tmpBuf0:	Temporary buffer with at least
-*					dataSz elements.
-*		double *tmpBuf1:	Temporary buffer with at least
-*					dataSz elements.
-*		int bufSz:		Number of data in buffer.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValueFilters
+* \brief	Filters a given buffer using an IIR filter defined by
+*               the filter coefficients.
+* \param	ftr			The filter.
+* \param	datBuf			The data buffer to be filtered
+*                                       with bufSz elements.
+* \param	tmpBuf0			Temporary buffer with at least
+*                                       dataSz elements.
+* \param	tmpBuf1			Temporary buffer with at least
+*                                       dataSz elements.
+* \param	bufSz			Number of data in buffer.
+*/
 WlzErrorNum	WlzRsvFilterBuffer(WlzRsvFilter *ftr, double *datBuf,
 				   double *tmpBuf0, double *tmpBuf1,
 				   int bufSz)
@@ -482,25 +474,24 @@ WlzErrorNum	WlzRsvFilterBuffer(WlzRsvFilter *ftr, double *datBuf,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterFilterBufYF
-* Returns:	void
-* Purpose:	Filters a single interval using a vertical IIR filter
-*		defined by the filter coefficients and double precision
-*		arithmetic.
-*		See the double precision horizontal function for
-*		simple code.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		double **wrkBuf:	Working buffer.
-*		double **srcBuf:	Source buffer.
-*		UBYTE **itvBuf:		Within interval bit buffer.
-*		WlzIVertex2 bufPos:	Position within the buffer.
-*		int itvLen:		Interval length.
-*		int goingUp:		Non-zero if going up through
-*					the lines (ie raster direction
-*					is WLZ_RASTERDIR_DLIC).
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueFilters
+* \brief	Filters a single interval using a vertical IIR filter
+*               defined by the filter coefficients and double precision
+*               arithmetic.
+* \note         See the double precision horizontal function for
+*               simple code.
+* \param	ftr			The filter.
+* \param	wrkBuf			Working buffer.
+* \param	srcBuf			Source buffer.
+* \param	itvBuf			Within interval bit buffer.
+* \param	bufPos			Position within the buffer.
+* \param	itvLen			Interval length.
+* \param	goingUp			Non-zero if going up through
+*                                       the lines (ie raster direction
+*                                       is WLZ_RASTERDIR_DLIC).
+*/
 static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 				      double **wrkBuf, double **srcBuf,
 				      UBYTE **itvBuf,
@@ -666,24 +657,23 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
   }
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterFilterBufZF
-* Returns:	void
-* Purpose:	Filters a single interval using a vertical IIR filter
-*		defined by the filter coefficients and double precision
-*		arithmetic.
-*		See the double precision horizontal function for
-*		simple code.
-* Global refs:	-
-* Parameters:	WlzRsvFilter *ftr:	The filter.
-*		double ***wrkBuf:	Working buffer.
-*		double ***srcBuf:	Source buffer.
-*		UBYTE ***itvBuf:	Within interval bit buffer.
-*		WlzIVertex3 bufPos:	Position within the buffer.
-*		int itvLen:		Interval length.
-*		int goingUp:		Non-zero if going up through
-*					the planes.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueFilters
+* \brief	Filters a single interval using a vertical IIR filter
+*               defined by the filter coefficients and double precision
+*               arithmetic.
+* \note         See the double precision horizontal function for
+*               simple code.
+* \param	ftr			The filter.
+* \param	wrkBuf			Working buffer.
+* \param	srcBuf			Source buffer.
+* \param	itvBuf			Within interval bit buffer.
+* \param	bufPos			Position within the buffer.
+* \param	itvLen			Interval length.
+* \param	goingUp			Non-zero if going up through
+*                                       the planes.
+*/
 static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 				 	double ***wrkBuf,
 					double ***srcBuf,
@@ -853,22 +843,20 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
   }
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterObj2DX
-* Returns:	WlzObject:		The filtered object, or NULL on
-*					error.
-* Purpose:	Applies a recursive filter along the lines of the given
-*		2D domain object with grey values using either double
-*		precision floating point arithmetic or fixed
-*		point arithmetic.
-*		It is assumed that the object type has already been
-*		checked, the domain and values are non-null.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given 2D domain object.
-*		WlzRsvFilter *ftr:	Recursive filter.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	The filtered object, or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Applies a recursive filter along the lines of the given
+*               2D domain object with grey values using either double
+*               precision floating point arithmetic or fixed
+*               point arithmetic.
+*               It is assumed that the object type has already been
+*               checked, the domain and values are non-null.
+* \param	srcObj			Given 2D domain object.
+* \param	ftr			Recursive filter.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
 				     WlzErrorNum *dstErr)
 {
@@ -1020,22 +1008,20 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterObj2DY
-* Returns:	WlzObject:		The filtered object, or NULL on
-*					error.
-* Purpose:	Applies a recursive filter through the rows and columns
-*		of the given 2D domain object with grey values using
-*		either double precision floating point arithmetic or
-*		fixed point arithmetic.
-*		It is assumed that the object type has already been
-*		checked, the domain and values are non-null.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given 2D domain object.
-*		WlzRsvFilter *ftr:	Recursive filter.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	The filtered object, or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Applies a recursive filter through the rows and columns
+*               of the given 2D domain object with grey values using
+*               either double precision floating point arithmetic or
+*               fixed point arithmetic.
+*               It is assumed that the object type has already been
+*               checked, the domain and values are non-null.
+* \param	srcObj			Given 2D domain object.
+* \param	ftr			Recursive filter.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
 			             WlzErrorNum *dstErr)
 {
@@ -1242,24 +1228,22 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterObj3DXY
-* Returns:	WlzObject:		The filtered object, or NULL on
-*					error.
-* Purpose:	Applies a recursive filter along the lines and/or
-*		through the columns of the given 3D domain
-*		object with grey values using either double
-*		precision floating point arithmetic or fixed
-*		point arithmetic.
-*		It is assumed that the object type has already been
-*		checked, the domain and values are non-null.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		WlzRsvFilter *ftr:	Recursive filter.
-*		int actionMsk:		Action mask.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	The filtered object, or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Applies a recursive filter along the lines and/or
+*               through the columns of the given 3D domain
+*               object with grey values using either double
+*               precision floating point arithmetic or fixed
+*               point arithmetic.
+*               It is assumed that the object type has already been
+*               checked, the domain and values are non-null.
+* \param	srcObj			Given object.
+* \param	ftr			Recursive filter.
+* \param	actionMsk		Action mask.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzRsvFilterObj3DXY(WlzObject *srcObj, WlzRsvFilter *ftr,
 			              int actionMsk, WlzErrorNum *dstErr)
 {
@@ -1341,22 +1325,20 @@ static WlzObject *WlzRsvFilterObj3DXY(WlzObject *srcObj, WlzRsvFilter *ftr,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzRsvFilterObj3DZ
-* Returns:	WlzObject:		The filtered object, or NULL on
-*					error.
-* Purpose:	Applies a recursive filter through the planes of the
-*		given 3D domain object with grey values using either
-*		double precision floating point arithmetic or fixed
-*		point arithmetic.
-*		It is assumed that the object type has already been
-*		checked, the domain and values are non-null.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object.
-*		WlzRsvFilter *ftr:	Recursive filter.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	The filtered object, or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Applies a recursive filter through the planes of the
+*               given 3D domain object with grey values using either
+*               double precision floating point arithmetic or fixed
+*               point arithmetic.
+*               It is assumed that the object type has already been
+*               checked, the domain and values are non-null.
+* \param	srcObj			Given object.
+* \param	ftr			Recursive filter.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
 				     WlzErrorNum *dstErr)
 {

@@ -1,38 +1,39 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzImageArithmetic.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for performing binary (ie two objects)
-*		arithmetic on a pair of domain objects with grey
-*		values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-*		bill@hgu.mrc.ac.uk Added magnitude.
-************************************************************************/
+/*!
+* \file         WlzImageArithmetic.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for performing arithmetic on a pair of domain
+*		objects with grey values.
+* \ingroup	WlzArithmetic
+* \todo         -
+* \bug          None known.
+*/
 #include <stdarg.h>
 #include <float.h>
 #include <Wlz.h>
 
 typedef	void (*WlzBinaryOperatorFn)(WlzGreyP, WlzGreyP, int);
 
-/************************************************************************
-* Function:	WlzBufXXX(I)|(D)					*
-* Returns:	void							*
-* Purpose:	Perform self-expanatory binary operation on pair of	*
-*		buffers.						*
-* Global refs:	-							*
-* Parameters:	WlzGreyP gP1:		Second buffer for input, also	*
-*					has the result.			*
-*		WlzGreyP gP0:		First input buffer.		*
-*		int count:		Number of data in buffer.	*
-************************************************************************/
+/*
+* \return 	<void|>
+* \brief	Functions which perform self-expanatory binary operations
+*		on pairs of buffers.
+* \param	gP1			Second buffer for input, also
+*					has the result.
+* \param	gP0			First input buffer.
+* \param	count			Number of data in buffer.
+*/
 static void	WlzBufAddI(WlzGreyP gP1, WlzGreyP gP0, int count)
 {
   int		*iP0,
@@ -493,18 +494,16 @@ static void	WlzBufMagD(WlzGreyP gP1, WlzGreyP gP0, int count)
   }
 }
 
-/************************************************************************
-* Function:	WlzBinaryOperatorFnSet					*
-* Returns:	WlzBinaryOperatorFn:	Pointer to appropriate function	*
-*					or NULL on error.		*
-* Purpose:	Finds the appropriate function for the given binary	*
-*		operator and grey type.					*
-* Global refs:	-							*
-* Parameters:	WlzGreyType gType:	Given grey type.		*
-*		WlzBinaryOperatorType op: Given operator.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Pointer to appropriate function or NULL on error.
+* \ingroup	WlzArithmetic
+* \brief	Finds the appropriate function for the given binary
+*               operator and grey type.
+* \param	gType			Given grey type.
+* \param	op			Given operator.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 static WlzBinaryOperatorFn WlzBinaryOperatorFnSet(WlzGreyType gType,
 						  WlzBinaryOperatorType op,
 						  WlzErrorNum *dstErr)
@@ -583,30 +582,38 @@ static WlzBinaryOperatorFn WlzBinaryOperatorFnSet(WlzGreyType gType,
   return(binOpFn);
 }
 
-/************************************************************************
-* Function:	WlzImageArithmetic2D					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Performs  binary (ie two objects) arithmetic on a pair	*
-*		of 2D domain objects.					*
-*		If the overwrite flag is set and the grey values of	*
-*		the object to be overwritten are of the wrong type then	*
-*		the returned object has new values as though the	*
-*		overwrite flag was not set.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj0:	First object.			*
-*		WlzObject *obj1:	Second object.			*
-*		WlzObject *obj2:	Intersection of the 1st and 2nd	*
-*					objects, but values still to be	*
-*					filled in.			*
-*		WlzBinaryOperatorType op: Binary operator.		*
-*		int overwrite:		Allow the destination object	*
-*					to share values with one of	*
-*					the given objects if non zero.	*
-*					  0: No values shared.		*
-*					  1: Values shared with obj0.	*
-*					  2: Values shared with obj1.	*
-*					  < 0 || > 2: Error condition.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Performs  binary (ie two objects) arithmetic on a pair
+*               of 2D domain objects.
+*               If the overwrite flag is set and the grey values of
+*               the object to be overwritten are of the wrong type then
+*               the returned object has new values as though the
+*               overwrite flag was not set.
+* \param	obj0			First object.
+* \param	obj1			Second object.
+* \param	obj2			Intersection of the 1st and 2nd
+*                                       objects, but values still to be
+*                                       filled in.
+* \param	op			Binary operator.
+* \param	overwrite		Allow the destination object
+*                                       to share values with one of
+*                                       the given objects if non zero.
+*                                       <ul>
+*					  <li>
+*					  0: No values shared.
+*					  </li>
+*					  <li>
+*                                         1: Values shared with obj0.
+*					  </li>
+*					  <li>
+*                                         2: Values shared with obj1.
+*					  </li>
+*					  <li>
+*                                         < 0 || > 2: Error condition.
+*					</ul>
+*/
 static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
 				        WlzObject *obj2,
 				        WlzBinaryOperatorType op,
@@ -824,30 +831,38 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzImageArithmetic3D					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Performs  binary (ie two objects) arithmetic on a pair	*
-*		of 3D domain objects.					*
-*		If the overwrite flag is set and the grey values of	*
-*		the object to be overwritten are of the wrong type then	*
-*		the returned object has new values as though the	*
-*		overwrite flag was not set.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj0:	First object.			*
-*		WlzObject *obj1:	Second object.			*
-*		WlzObject *obj2:	Intrsetion of the 1st and 2nd	*
-*					objects, but values still to be	*
-*					filled in.			*
-*		WlzBinaryOperatorType op: Binary operator.		*
-*		int overwrite:		Allow the destination object	*
-*					to share values with one of	*
-*					the given objects if non zero.	*
-*					  0: No values shared.		*
-*					  1: Values shared with obj0.	*
-*					  2: Values shared with obj1.	*
-*					  < 0 || > 2: Error condition.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Performs arithmetic on a pair of 3D domain objects.
+*		If the overwrite flag is set and the grey values of     *
+*               the object to be overwritten are of the wrong type then *
+*               the returned object has new values as though the        *
+*               overwrite flag was not set.
+* \param	obj0			First object.
+* \param	obj1			Second object.
+* \param	obj2			Intersection of the 1st and 2nd   *
+*                                       objects, but values still to be *
+*                                       filled in.
+* \param	op			Binary operator.
+* \param	overwrite		Allow the destination object    *
+*                                       to share values with one of     *
+*                                       the given objects if non zero.  *
+*					<ul>
+*					  <li>
+*                                         0: No values shared.          *
+*					  </li>
+*					  <li>
+*                                         1: Values shared with obj0.   *
+*					  </li>
+*					  <li>
+*                                         2: Values shared with obj1.   *
+*					  </li>
+*					  <li>
+*                                         < 0 || > 2: Error condition.  *
+*					  </li>
+*					</ul>
+*/
 static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 				        WlzObject *obj2,
 				        WlzBinaryOperatorType op,
@@ -965,29 +980,36 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzImageArithmetic					*
-* Returns:	WlzObject *:		New object or NULL on error.	*
-* Purpose:	Performs  binary (ie two objects) arithmetic on a pair	*
-*		of domain objects.					*
-*		If the overwrite flag is set and the grey values of	*
-*		the object to be overwritten are of the wrong type then	*
-*		the returned object has new values as though the	*
-*		overwrite flag was not set.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj0:	First object.			*
-*		WlzObject *obj1:	Second object.			*
-*		WlzBinaryOperatorType op: Binary operator.		*
-*		int overwrite:		Allow the destination object	*
-*					to share values with one of	*
-*					the given objects if non zero.	*
-*					  0: No values shared.		*
-*					  1: Values shared with obj0.	*
-*					  2: Values shared with obj1.	*
-*					  < 0 || > 2: Error condition.	*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	New object or NULL on error.
+* \brief	Performs arithmetic on a pair of domain objects.
+*               If the overwrite flag is set and the grey values of
+*               the object to be overwritten are of the wrong type then
+*               the returned object has new values as though the
+*               overwrite flag was not set.
+* \param	obj0			First object.
+* \param	obj1			Second object.
+* \param	op			Binary operator.
+* \param	overwrite		Allow the destination object
+*                                       to share values with one of
+*                                       the given objects if non zero.
+*					<ul>
+*					  <li>
+*                                         0: No values shared.
+*					  </li>
+*					  <li>
+*                                         1: Values shared with obj0.
+*					  </li>
+*					  <li>
+*                                         2: Values shared with obj1.
+*					  </li>
+*					  <li>
+*                                         < 0 || > 2: Error condition.
+*					  </li>
+*					</ul>
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzObject	*WlzImageArithmetic(WlzObject *obj0, WlzObject *obj1,
 				    WlzBinaryOperatorType op,
 				    int overwrite,

@@ -1,50 +1,69 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyGradient.c
-* Date:         May 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes a new grey valued object where the grey values
-*		are the gradient of the gray values in the original
-*		image.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables.
-************************************************************************/
+/*!
+* \file         WlzGreyGradient.c
+* \author       Bill Hill
+* \date         May 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Computes objects in which the grey values are the gradient
+*		of the gray values in the original image.
+* \ingroup	WlzValuesFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <Wlz.h>
 
-static WlzObject *WlzGreyGradient2D(WlzObject **dstGrdY, WlzObject **dstGrdX,
-			WlzObject *srcObj, WlzRsvFilter *flt,
-			WlzErrorNum *dstErr);
-static WlzObject *WlzGreyGradient3D(WlzObject **dstGrdZ, WlzObject **dstGrdY,
-			WlzObject **dstGrdX, WlzObject *srcObj,
-			WlzRsvFilter *flt, WlzErrorNum *dstErr);
-static 	WlzObject *WlzGreyMagnitude3D(WlzObject *srcObj0, WlzObject *srcObj1,
-			WlzObject *srcObj2, WlzErrorNum *dstErr);
-static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
-			WlzObject *srcObj2, WlzErrorNum *dstErr);
-static void	WlzBufMagD3(double *dP0, double *dP1, double *dP2, int cnt);
+static WlzObject 		*WlzGreyGradient2D(
+				  WlzObject **dstGrdY,
+				  WlzObject **dstGrdX,
+				  WlzObject *srcObj,
+				  WlzRsvFilter *flt,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzGreyGradient3D(
+				  WlzObject **dstGrdZ,
+				  WlzObject **dstGrdY,
+				  WlzObject **dstGrdX,
+				  WlzObject *srcObj,
+				  WlzRsvFilter *flt,
+				  WlzErrorNum *dstErr);
+static 				WlzObject *WlzGreyMagnitude3D(
+				  WlzObject *srcObj0,
+				  WlzObject *srcObj1,
+				  WlzObject *srcObj2,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzGreyMagnitude2D3(
+				  WlzObject *srcObj0,
+				  WlzObject *srcObj1,
+				  WlzObject *srcObj2,
+				  WlzErrorNum *dstErr);
+static void			WlzBufMagD3(
+				  double *dP0,
+				  double *dP1,
+				  double *dP2,
+				  int cnt);
 
-/************************************************************************
-* Function:	WlzBufMagD3
-* Returns:	void
-* Purpose:	Computes the magnitudes of the 3 sets of components
-*		given in the double vectors and returns the magnitudes
-*		in the first vector.
-* Global refs:	-
-* Parameters:	double *dP0:		First vector of components, also
+/*!
+* \return	<void>
+* \ingroup      WlzValuesFilters
+* \brief	Computes the magnitudes of the 3 sets of components
+*               given in the double vectors and returns the magnitudes
+*               in the first vector.
+* \param	dP0			First vector of components, also
 *					used to return magnitudes.
-*		double *dP1:		Second vector of components.
-*		double *dP2:		Third vector of components.
-*		int cnt:		Number of components.
-************************************************************************/
+* \param	dP1			Second vector of components.
+* \param	dP2			Third vector of components.
+* \param	cnt			Number of components.
+*/
 static void	WlzBufMagD3(double *dP0, double *dP1, double *dP2, int cnt)
 {
   double	tD0;
@@ -65,20 +84,17 @@ static void	WlzBufMagD3(double *dP0, double *dP1, double *dP2, int cnt)
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyGradient2D
-* Returns:	WlzObject:		New Woolz domain object with
-*					gradient grey values or NULL
-*					on error.
-* Purpose:	Computes the magnitude of the gray values in the
-*		3 given Woolz 2D domain objects.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj0:	First object.
-*		WlzObject *srcObj1:	Second object.
-*		WlzObject *srcObj2:	Third object.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with gradient grey values or NULL on
+*		error.
+* \ingroup      WlzValuesFilters
+* \brief	Computes the magnitude of the gray values in the
+*               3 given Woolz 2D domain objects.
+* \param	srcObj0			First object.
+* \param	srcObj1			Second object.
+* \param	srcObj2			Third object.
+* \param	dstErr			Destination error pointer, may be null.
+*/
 static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
 				      WlzObject *srcObj2,
 				      WlzErrorNum *dstErr)
@@ -306,20 +322,18 @@ static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzGreyGradient3D
-* Returns:	WlzObject:		New Woolz domain object with
-*					gradient grey values or NULL
-*					on error.
-* Purpose:	Computes the magnitude of the gray values in the
-*		3 given Woolz 3D domain objects.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj0:	First object.
-*		WlzObject *srcObj1:	Second object.
-*		WlzObject *srcObj2:	Third object.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with gradient grey values or NULL
+*		on error.
+* \ingroup      WlzValuesFilters
+* \brief	Computes the magnitude of the gray values in the
+*               3 given Woolz 3D domain objects.
+* \param	srcObj0			First object.
+* \param	srcObj1			Second object.
+* \param	srcObj2			Third object.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static 	WlzObject *WlzGreyMagnitude3D(WlzObject *srcObj0, WlzObject *srcObj1,
 				      WlzObject *srcObj2, WlzErrorNum *dstErr)
 {
@@ -476,25 +490,23 @@ static 	WlzObject *WlzGreyMagnitude3D(WlzObject *srcObj0, WlzObject *srcObj1,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzGreyGradient2D
-* Returns:	WlzObject:		New Woolz domain object with
-*					gradient grey values or NULL
-*					on error.
-* Purpose:	Computes the gradient of the gray values in the
-*		given Woolz 2D domain object.
-* Global refs:	-
-* Parameters:	WlzObject **dstGrdY:	Destination pointer for the
-*					gradient (partial derivative)
-*					through lines, may be NULL.
-*		WlzObject **dstGrdX:	Destination pointer for the
-*					gradient (partial derivative)
-*					through columns, may be NULL.
-*		WlzObject *srcObj:	Given source object.
-*		WlzRsvFilter *flt:	Recursive filter to use.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with gradient grey values or
+*		NULL on error.
+* \ingroup      WlzValuesFilters
+* \brief	Computes the gradient of the gray values in the
+*               given Woolz 2D domain object.
+* \param	dstGrdY			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through lines, may be NULL.
+* \param	dstGrdX			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through columns, may be NULL.
+* \param	srcObj			Given source object.
+* \param	flt			Recursive filter to use.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzGreyGradient2D(WlzObject **dstGrdY, WlzObject **dstGrdX,
 				    WlzObject *srcObj,
 				    WlzRsvFilter *flt, WlzErrorNum *dstErr)
@@ -551,28 +563,26 @@ static WlzObject *WlzGreyGradient2D(WlzObject **dstGrdY, WlzObject **dstGrdX,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzGreyGradient3D
-* Returns:	WlzObject:		New Woolz domain object with
-*					gradient grey values or NULL
-*					on error.
-* Purpose:	Computes the gradient of the gray values in the
-*		given Woolz 3D domain object.
-* Global refs:	-
-* Parameters:	WlzObject **dstGrdZ:	Destination pointer for the
-*					gradient (partial derivative)
-*					through planes, may be NULL.
-*		WlzObject **dstGrdY:	Destination pointer for the
-*					gradient (partial derivative)
-*					through lines, may be NULL.
-*		WlzObject **dstGrdX:	Destination pointer for the
-*					gradient (partial derivative)
-*					through columns, may be NULL.
-*		WlzObject *srcObj:	Given source object.
-*		WlzRsvFilter *flt:	Recursive filter to use.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with gradient grey values or NULL
+* 		on error.
+* \ingroup      WlzValuesFilters
+* \brief	Computes the gradient of the gray values in the
+*               given Woolz 3D domain object.
+* \param	dstGrdZ			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through planes, may be NULL.
+* \param	dstGrdY			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through lines, may be NULL.
+* \param	dstGrdX			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through columns, may be NULL.
+* \param	srcObj			Given source object.
+* \param	flt			Recursive filter to use.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzGreyGradient3D(WlzObject **dstGrdZ, WlzObject **dstGrdY,
 				    WlzObject **dstGrdX, WlzObject *srcObj,
 				    WlzRsvFilter *flt, WlzErrorNum *dstErr)
@@ -642,28 +652,26 @@ static WlzObject *WlzGreyGradient3D(WlzObject **dstGrdZ, WlzObject **dstGrdY,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzGreyGradient
-* Returns:	WlzObject:		New Woolz domain object with
-*					gradient grey values or NULL
-*					on error.
-* Purpose:	Computes the gradient of the gray values in the
-*		given Woolz domain object.
-* Global refs:	-
-* Parameters:	WlzObject **dstGrdZ:	Destination pointer for the
-*					gradient (partial derivative)
-*					through planes, may be NULL.
-*		WlzObject **dstGrdY:	Destination pointer for the
-*					gradient (partial derivative)
-*					through lines, may be NULL.
-*		WlzObject **dstGrdX:	Destination pointer for the
-*					gradient (partial derivative)
-*					through columns, may be NULL.
-*		WlzObject *srcObj:	Given source object.
-*		WlzRsvFilter *flt:	Recursive filter to use.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with gradient grey values or
+*		NULL on error.
+* \ingroup      WlzValuesFilters
+* \brief	Computes the gradient of the gray values in the
+*               given Woolz domain object.
+* \param	dstGrdZ			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through planes, may be NULL.
+* \param	dstGrdY			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through lines, may be NULL.
+* \param	dstGrdX			Destination pointer for the
+*                                       gradient (partial derivative)
+*                                       through columns, may be NULL.
+* \param	srcObj			Given source object.
+* \param	flt			Recursive filter to use.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzObject	*WlzGreyGradient(WlzObject **dstGrdZ, WlzObject **dstGrdY,
 				 WlzObject **dstGrdX, WlzObject *srcObj,
 				 WlzRsvFilter *flt, WlzErrorNum *dstErr)

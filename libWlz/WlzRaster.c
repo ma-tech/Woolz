@@ -1,19 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzRaster.c
-* Date:         March 2001
-* Author:       Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to rasterize geometric Woolz objects
-*		into 2D or 3D domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzRaster.c
+* \author       Bill Hill
+* \date         March 2001
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions to rasterize geometric Woolz objects into 2D or 3D
+* 		domain objects.
+* \ingroup	WlzRaster
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 #include <limits.h>
 
@@ -48,17 +53,15 @@ static void			WlzRasterSetVoxel(
 				  UBYTE ***bMsk,
 				  WlzIVertex3 pos);
 
-/************************************************************************
-* Function:	WlzRasterObj
-* Returns:	WlzObject *:		Woolz domain object, NULL on
-*					error.
-* Purpose:	Rasterizes the given geometric object, creating a new
-*		domain object.
-* Global refs:	-
-* Parameters:	WlzObject *gObj:	Given geometric object.
-*		WlzErrorNum *dstErr:	Destination ptr for error
-*					code, may be NULL.
-************************************************************************/
+/*!
+* \return	Woolz domain object, NULL on error.
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given geometric object, creating a new
+*               domain object.
+* \param	gObj			Given geometric object.
+* \param	dstErr			Destination ptr for error
+*                                       code, may be NULL.
+*/
 WlzObject 	*WlzRasterObj(WlzObject *gObj, WlzErrorNum *dstErr)
 {
   WlzObject	*dObj = NULL;
@@ -99,18 +102,16 @@ WlzObject 	*WlzRasterObj(WlzObject *gObj, WlzErrorNum *dstErr)
   return(dObj);
 }
 
-/************************************************************************
-* Function:	WlzRasterCtr
-* Returns:	WlzObject *:		Woolz domain object, NULL on
-*					error.
-* Purpose:	Rasterizes the given contour object, creating a new
-*		domain object.
-* Global refs:	-
-* Parameters:	WlzContour *ctr:	Given contour.
-*		WlzIBox3 bBox:		Bounding box of the model.
-*		WlzErrorNum *dstErr:	Destination ptr for error
-*					code, may be NULL.
-************************************************************************/
+/*!
+* \return	Woolz domain object, NULL on error.
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given contour object, creating a new
+*               domain object.
+* \param	ctr			Given contour.
+* \param	bBox			Bounding box of the model.
+* \param	dstErr			Destination ptr for error code, may be
+* 					NULL.
+*/
 static WlzObject *WlzRasterCtr(WlzContour *ctr,
 			       WlzIBox3 bBox, WlzErrorNum *dstErr)
 {
@@ -132,18 +133,16 @@ static WlzObject *WlzRasterCtr(WlzContour *ctr,
   return(dObj);
 }
 
-/************************************************************************
-* Function:	WlzRasterGM
-* Returns:	WlzObject *:		Woolz domain object, NULL on
-*					error.
-* Purpose:	Rasterizes the given geometric model, creating a new
-*		domain object.
-* Global refs:	-
-* Parameters:	WlzGMModel *model: 	Given geometric model.
-*		WlzIBox3 bBox:		Bounding box of the model.
-*		WlzErrorNum *dstErr:	Destination ptr for error
-*					code, may be NULL.
-************************************************************************/
+/*!
+* \return	Woolz domain object, NULL on error.
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given geometric model, creating a new
+*               domain object.
+* \param	model			Given geometric model.
+* \param	bBox			Bounding box of the model.
+* \param	dstErr			Destination ptr for error
+*                                       code, may be NULL.
+*/
 static WlzObject *WlzRasterGM(WlzGMModel *model, 
 			      WlzIBox3 bBox, WlzErrorNum *dstErr)
 {
@@ -182,18 +181,16 @@ static WlzObject *WlzRasterGM(WlzGMModel *model,
   }
   return(dObj);
 }
-/************************************************************************
-* Function:	WlzRasterGM2D
-* Returns:	WlzObject *:		Woolz domain object, NULL on
-*					error.
-* Purpose:	Rasterizes the given 2D geometric model, creating a new
-*		domain object.
-* Global refs:	-
-* Parameters:	WlzGMModel *model: 	Given 2D geometric model.
-*		WlzIBox2 bBox:		Bounding box of the model.
-*		WlzErrorNum *dstErr:	Destination ptr for error
-*					code, may be NULL.
-************************************************************************/
+/*!
+* \return	Woolz domain object, NULL on error.
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given 2D geometric model, creating a new
+*               domain object.
+* \param	model			Given 2D geometric model.
+* \param	bBox			Bounding box of the model.
+* \param	dstErr			Destination ptr for error
+*                                       code, may be NULL.
+*/
 static WlzObject *WlzRasterGM2D(WlzGMModel *model,
 			        WlzIBox2 bBox, WlzErrorNum *dstErr)
 {
@@ -208,18 +205,16 @@ static WlzObject *WlzRasterGM2D(WlzGMModel *model,
   return(dObj);
 }
 
-/************************************************************************
-* Function:	WlzRasterGM3D
-* Returns:	WlzObject *:		Woolz domain object, NULL on
-*					error.
-* Purpose:	Rasterizes the given 3D geometric model, creating a new
-*		domain object.
-* Global refs:	-
-* Parameters:	WlzGMModel *model: 	Given 3D geometric model.
-*		WlzIBox3 bBox:		Bounding box of the model.
-*		WlzErrorNum *dstErr:	Destination ptr for error
-*					code, may be NULL.
-************************************************************************/
+/*!
+* \return	Woolz domain object, NULL on error.
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given 3D geometric model, creating a new
+*               domain object.
+* \param	model			Given 3D geometric model.
+* \param	bBox			Bounding box of the model.
+* \param	dstErr			Destination ptr for error
+*                                       code, may be NULL.
+*/
 static WlzObject *WlzRasterGM3D(WlzGMModel *model,
 			        WlzIBox3 bBox, WlzErrorNum *dstErr)
 {
@@ -327,14 +322,13 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
   return(dObj);
 }
 
-/************************************************************************
-* Function:	WlzRasterVtxCmp3I
-* Returns:	int:			+ve, -ve or zero.
-* Purpose:	Compares two 3D integral verticies for qsort().
-* Global refs:	-
-* Parameters:	const void *ptr0:	First pointer.
-*		const void *ptr1:	Second pointer.
-************************************************************************/
+/*!
+* \return	+ve, -ve or zero.
+* \ingroup	WlzRaster
+* \brief	Compares two 3D integral verticies for qsort().
+* \param	ptr0			First pointer.
+* \param	ptr1			Second pointer.
+*/
 static int 	WlzRasterVtxCmp3I(const void *ptr0, const void *ptr1)
 {
   int		cmp;
@@ -353,18 +347,17 @@ static int 	WlzRasterVtxCmp3I(const void *ptr0, const void *ptr1)
   return(cmp);
 }
 
-/************************************************************************
-* Function:	WlzRasterAddSimplex3I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Rasterizes the given 3D simplex into the given 3D
-*		bit array by setting bits on the face of the simplex.
-* Global refs:	-
-* Parameters:	UBYTE ***bMsk:		The 3D bitmask to be written to.
-*		WlzIVertex3 sz:		Size of the bit map array.
-*		WlzIVertex3 org:	Origin of the bitmap array.
-*		WlzIVertex3 *simplex:	The coordinates of the verticies
-*					of the simplex.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given 3D simplex into the given 3D
+*               bit array by setting bits on the face of the simplex.
+* \param	bMsk			The 3D bitmask to be written to.
+* \param	sz			Size of the bit map array.
+* \param	org			Origin of the bitmap array.
+* \param	simplex			The coordinates of the verticies
+*                                       of the simplex.
+*/
 static WlzErrorNum WlzRasterAddSimplex3I(UBYTE ***bMsk, WlzIVertex3 sz,
 					 WlzIVertex3 org, WlzIVertex3 *simplex)
 {
@@ -474,16 +467,15 @@ static WlzErrorNum WlzRasterAddSimplex3I(UBYTE ***bMsk, WlzIVertex3 sz,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzRasterLine3I
-* Returns:	void
-* Purpose:	Rasterizes the given 3D line segmant into the given 3D
-*		bit array.
-* Global refs:	-
-* Parameters:	UBYTE ***bMsk:		The 3D bitmask to be written to.
-*		WlzIVertex3 *seg:	The coordinates of the line
-*					segment's end points.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzRaster
+* \brief	Rasterizes the given 3D line segmant into the given 3D
+*               bit array.
+* \param	bMsk			The 3D bitmask to be written to.
+* \param	seg			The coordinates of the line
+*                                       segment's end points.
+*/
 static void	WlzRasterLine3I(UBYTE ***bMsk, WlzIVertex3 *seg)
 {
   int		cnt,
@@ -542,15 +534,14 @@ static void	WlzRasterLine3I(UBYTE ***bMsk, WlzIVertex3 *seg)
   }
 }
 
-/************************************************************************
-* Function:	WlzRasterSetVoxel
-* Returns:	void
-* Purpose:	Sets a single voxel in the given 3D bit array.
-* Global refs:	-
-* Parameters:	UBYTE ***bMsk:		The 3D bitmask to be written to.
-*		WlzIVertex3 pos:	The coordinates of the line
-*					voxel to set.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzRaster
+* \brief	Sets a single voxel in the given 3D bit array.
+* \param	bMsk			The 3D bitmask to be written to.
+* \param	pos			The coordinates of the line
+*                                       voxel to set.
+*/
 static void	WlzRasterSetVoxel(UBYTE ***bMsk, WlzIVertex3 pos)
 {
   *(*(*(bMsk + pos.vtZ) + pos.vtY) + (pos.vtX / 8)) |= 1 << (pos.vtX % 8);

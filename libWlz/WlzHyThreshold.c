@@ -1,46 +1,48 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzHyThreshold.c
-* Date:         May 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A hysteresis threshold filter for Woolz.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzHyThreshold.c
+* \author       Bill Hill
+* \date         May 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	A hysteresis threshold filter.
+* \ingroup	WlzThreshold
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <string.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzHyThreshold
-* Returns:	WlzObject:		Thresholded object or
-*					NULL on error.
-* Purpose:	Hysteresis thresholds the given Woolz object.
-*		Values are in the domain of the hysteresis threshold'd
-*		object if they are above/below the primary threshold
-*		or above/below the secondary threshold and connected
-*		to values above/below the primary threshold.
-*		
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Object to be thresholded.
-*		WlzPixelV *pThrV:	Primary hysteresis threshold
-*					value
-*		WlzPixelV *sThrV:	Secondary hysteresis threshold
-*					value
-*		WlzThresholdType hilo:	Threshold for above or below
-*					values.
-*		WlzConnectType con:	Connectivity to examine for
-*					hysteresis.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	Thresholded object or NULL on error.
+* \ingroup      WlzThreshold
+* \brief	Hysteresis thresholds the given Woolz object.
+*               Values are in the domain of the hysteresis threshold'd
+*               object if they are above/below the primary threshold
+*               or above/below the secondary threshold and connected
+*               to values above/below the primary threshold.
+* \param	srcObj			Object to be thresholded.
+* \param	pThrV			Primary hysteresis threshold
+*                                       value.
+* \param	sThrV			Threshold for above or below
+*                                       values.
+* \param	hilo			Threshold for above or below
+*                                       values.
+* \param	con			Connectivity to examine for
+*                                       hysteresis.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzObject	*WlzHyThreshold(WlzObject *srcObj,
 			       WlzPixelV pThrV, WlzPixelV sThrV,
 			       WlzThresholdType hilo, WlzConnectType con,

@@ -1,35 +1,37 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyValue.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Provides functions for random access to the grey values
-*		of 2D and 3D Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 02-10-00 bill	Use 3D transform for 3D object in WlzGreyValueGet().
-* 05-06-00 bill Removed unused variables.
-************************************************************************/
+/*!
+* \file         WlzGreyValue.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Provides functions for random access to the grey values
+*               of 2D and 3D Woolz objects.
+* \ingroup	WlzAccess
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzGreyValueSetBkdP					*
-* Returns:	void							*
-* Purpose:	Sets the WlzGreyValueWSpace grey value and pointer	*
-*		to the background value.				*
-* Global refs:	-							*
-* Parameters:	WlzGreyV *gVP:		Ptr to grey values.		*
-*		WlzGreyP *gPP:		Ptr to grey pointers.		*
-*		WlzGreyType gType:	Grey type.			*
-*		wlzGreyV val:		Background grey value to set.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Sets the WlzGreyValueWSpace grey value and pointer
+*               to the background value.
+* \param	gVP			Ptr to grey values.
+* \param	gPP			Ptr to grey pointers.
+* \param	gType			Grey type.
+* \param	val			Background grey value to set.
+*/
 static void	WlzGreyValueSetBkdP(WlzGreyV *gVP, WlzGreyP *gPP,
 				    WlzGreyType gType,
 				    WlzGreyV val)
@@ -59,18 +61,17 @@ static void	WlzGreyValueSetBkdP(WlzGreyV *gVP, WlzGreyP *gPP,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueSetBkdPN					*
-* Returns:	void							*
-* Purpose:	Sets the WlzGreyValueWSpace grey values and pointers	*
-*		to the background value.				*
-* Global refs:	-							*
-* Parameters:	WlzGreyV *gVP:		Ptr to grey values.		*
-*		WlzGreyP *gPP:		Ptr to grey pointers.		*
-*		WlzGreyType gType:	Grey type.			*
-*		wlzGreyV val:		Background grey value to set.	*
-*		int count:		number of values/pointers set.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Sets the WlzGreyValueWSpace grey values and pointers
+*               to the background value.
+* \param	gVP			Ptr to grey values.
+* \param	gPP			Ptr to grey pointers.
+* \param	gType			Grey type.
+* \param	val			Background grey value to set.
+* \param	count			Number of values/pointers set.
+*/
 static void	WlzGreyValueSetBkdPN(WlzGreyV *gVP, WlzGreyP *gPP,
 				     WlzGreyType gType,
 				     WlzGreyV val, int count)
@@ -115,19 +116,18 @@ static void	WlzGreyValueSetBkdPN(WlzGreyV *gVP, WlzGreyP *gPP,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueSetGreyP					*
-* Returns:	void							*
-* Purpose:	Sets the WlzGreyValueWSpace grey values and pointers	*
-*		to the value obtained using the given base pointer and	*
-*		offset.							*
-* Global refs:	-							*
-* Parameters:	WlzGreyV *gVP:		Ptr to grey values.		*
-*		WlzGreyP *gPP:		Ptr to grey pointers.		*
-*		WlzGreyType gType:	Grey type.			*
-*		WlzGreyP baseGVP:	Base pointer.			*
-*		int offset:		Offset from base pointer.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Sets the WlzGreyValueWSpace grey values and pointers
+*               to the value obtained using the given base pointer and
+*               offset.
+* \param	gVP			Ptr to grey values.
+* \param	gPP			Ptr to grey pointers.
+* \param	gType			Grey type.
+* \param	baseGVP			Base pointer.
+* \param	offset			Offset from base pointer.
+*/
 static void	WlzGreyValueSetGreyP(WlzGreyV *gVP, WlzGreyP *gPP,
 				     WlzGreyType gType,
 	  			     WlzGreyP baseGVP, int offset)
@@ -164,20 +164,19 @@ static void	WlzGreyValueSetGreyP(WlzGreyV *gVP, WlzGreyP *gPP,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueComputeGreyP2D				*
-* Returns:	void							*
-* Purpose:	Knowing that the given point is within the value table	*
-*		computes the base pointer and offset for the point.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyP *baseGVP:	Destination pointer for the	*
-*					base pointer.			*
-*		int *offset:		Destination pointer for the	*
-*					offset from base pointer.	*
-*		WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		int line:		Line coordinate of point.	*
-*		int kol:		Column coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Knowing that the given point is within the value table
+*               computes the base pointer and offset for the point.
+* \param	baseGVP			Destination pointer for the
+*                                       base pointer.
+* \param	offset			Destination pointer for the
+*                                       offset from base pointer.
+* \param	gVWSp			Grey value work space.
+* \param	line			Line coordinate of point.
+* \param	kol			Column coordinate of point.
+*/
 static void	WlzGreyValueComputeGreyP2D(WlzGreyP *baseGVP, int *offset,
 					   WlzGreyValueWSpace *gVWSp,
 					   int line, int kol)
@@ -220,16 +219,15 @@ static void	WlzGreyValueComputeGreyP2D(WlzGreyP *baseGVP, int *offset,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGet2D1					*
-* Returns:	void							*
-* Purpose:	Gets a single grey value/pointer for the given point	*
-*		from the 2D values and domain in the work space.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		int line:		Line coordinate of point.	*
-*		int kol:		Column coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets a single grey value/pointer for the given point
+*               from the 2D values and domain in the work space.
+* \param	gVWSp			Grey value work space.
+* \param	line			Line coordinate of point.
+* \param	kol			Column coordinate of point.
+*/
 static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
 				   int line, int kol)
 {
@@ -288,17 +286,16 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGet3D1					*
-* Returns:	void							*
-* Purpose:	Gets a single grey value/pointer for the given point	*
-*		from the 3D values and domain in the work space.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		int plane:		Plane coordinate of point.	*
-*		int line:		Line coordinate of point.	*
-*		int kol:		Column coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets a single grey value/pointer for the given point
+*               from the 3D values and domain in the work space.
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane coordinate of point.
+* \param	line			Line coordinate of point.
+* \param	kol			Column coordinate of point.
+*/
 static void	WlzGreyValueGet3D1(WlzGreyValueWSpace *gVWSp,
 				   int plane, int line, int kol)
 {
@@ -341,16 +338,15 @@ static void	WlzGreyValueGet3D1(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGet2DCon					*
-* Returns:	void							*
-* Purpose:	Gets four grey values/pointers for the given point	*
-*		from the 2D values and domain in the work space.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		int line:		Line coordinate of point.	*
-*		int kol:		Column coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets four grey values/pointers for the given point
+*               from the 2D values and domain in the work space.
+* \param	gVWSp			Grey value work space.
+* \param	line			Line coordinate of point.
+* \param	kol			Column coordinate of point.
+*/
 static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 				     int line, int kol)
 {
@@ -425,17 +421,16 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGet3DCon					*
-* Returns:	void							*
-* Purpose:	Gets eight grey value/pointers for the given point	*
-*		from the 3D values and domain in the work space.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		int plane:		Plane coordinate of point.	*
-*		int line:		Line coordinate of point.	*
-*		int kol:		Column coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets eight grey value/pointers for the given point
+*               from the 3D values and domain in the work space.
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane coordinate of point.
+* \param	line			Line coordinate of point.
+* \param	kol			Column coordinate of point.
+*/
 static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
 				   int plane, int line, int kol)
 {
@@ -523,18 +518,17 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGetTransCon					*
-* Returns:	void							*
-* Purpose:	Gets four or eight grey value/pointers for the given	*
-*		point from the 2D or 3D values and domain in the work	*
-*		space.							*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		int plane:		Plane coordinate of point.	*
-*		int line:		Line coordinate of point.	*
-*		int kol:		Column coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets four or eight grey value/pointers for the given
+*               point from the 2D or 3D values and domain in the work
+*               space.
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane coordinate of point.
+* \param	line			Line coordinate of point.
+* \param	kol			Column coordinate of point.
+*/
 static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 				        int plane, int line, int kol)
 {
@@ -598,15 +592,13 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueFreeWSp					*
-* Returns:	void							*
-* Purpose:	Free's the given grey value work space.			*
-*		object.							*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given object.			*
-*		WlzErrorNum *dstErrNum:	Destination error pointer.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Free's the given grey value work space created by
+* 		WlzGreyValueMakeWSp().
+* \param	gVWSp			Given grey value work space.
+*/
 void		WlzGreyValueFreeWSp(WlzGreyValueWSpace *gVWSp)
 {
   WLZ_DBG((WLZ_DBG_LVL_1),
@@ -627,15 +619,15 @@ void		WlzGreyValueFreeWSp(WlzGreyValueWSpace *gVWSp)
   	  ("WlzGreyValueFreeWSp FX\n"));
 }
 
-/************************************************************************
-* Function:	WlzGreyValueMakeWSp					*
-* Returns:	WlzGreyValueWSpace *: Grey value work space or NULL	*
-*					on error.			*
-* Purpose:	Creates a grey value work space from the given object.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given object.			*
-*		WlzErrorNum *dstErrNum:	Destination error pointer.	*
-************************************************************************/
+/*!
+* \return	Grey value work space or NULL on error.
+* \ingroup	WlzAccess
+* \brief	Creates a grey value work space from the given object.
+*		The resulting grey value work space should be freed
+*		using WlzGreyValueFreeWSp().
+* \param	obj			Given object.
+* \param	dstErrNum		Destination error pointer, may be NULL.
+*/
 WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 					   WlzErrorNum *dstErrNum)
 {
@@ -910,18 +902,17 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
   return(gVWSp);
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGet						*
-* Returns:	void							*
-* Purpose:	Gets a single grey value/pointer for the given point	*
-*		from the object with which the given work space was 	*
-*		initialised.						*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		double plane:		Plane (z) coordinate of point.	*
-*		double line:		Line (y) coordinate of point.	*
-*		double kol:		Column (x) coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets a single grey value/pointer for the given point
+*		from the object with which the given work space was
+*               initialised.
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane (z) coordinate of point.
+* \param	line			Line (y) coordinate of point.
+* \param	kol			Column (x) coordinate of point.
+*/
 void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
 			        double plane, double line, double kol)
 {
@@ -962,21 +953,22 @@ void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGetCon					*
-* Returns:	void							*
-* Purpose:	Gets the four/eight connected grey values/pointers for	*
-*		the given point which lie at:				*
-*		  (p, k, l),          (p, k + 1, l),			*
-*		  (p, k, l + 1),      (p, k + 1, l + 1),		*
-*		  (p + 1, k, l),      (p + 1, k + 1, l),		*
-*		  (p + 1, k, l + 1),  (p + 1, k + 1, l + 1).		*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		double plane:		Plane (z) coordinate of point.	*
-*		double line:		Line (y) coordinate of point.	*
-*		double kol:		Column (x) coordinate of point.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzAccess
+* \brief	Gets the four/eight connected grey values/pointers for
+*               the given point which lie at:
+*		\verbatim
+                  (p, k, l),          (p, k + 1, l),
+                  (p, k, l + 1),      (p, k + 1, l + 1),
+                  (p + 1, k, l),      (p + 1, k + 1, l),
+                  (p + 1, k, l + 1),  (p + 1, k + 1, l + 1).
+*		\endverbatim
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane (z) coordinate of point.
+* \param	line			Line (y) coordinate of point.
+* \param	kol			Column (x) coordinate of point.
+*/
 void		WlzGreyValueGetCon(WlzGreyValueWSpace *gVWSp,
 			           double plane, double line, double kol)
 {
@@ -1007,16 +999,13 @@ void		WlzGreyValueGetCon(WlzGreyValueWSpace *gVWSp,
   }
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGetGreyType					*
-* Returns:	WlzGreyType:		The workspace's object's grey	*
-*					type.				*
-* Purpose:	Access function to get the object's grey type.		*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		WlzErrorNum *dstErr:	Destination error pointer,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	The workspace's object's grey type.
+* \ingroup	WlzAccess
+* \brief	Access function to get the object's grey type.
+* \param	gVWSp			Grey value work space.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzGreyType	WlzGreyValueGetGreyType(WlzGreyValueWSpace *gVWSp,
 					WlzErrorNum *dstErr)
 {
@@ -1038,17 +1027,16 @@ WlzGreyType	WlzGreyValueGetGreyType(WlzGreyValueWSpace *gVWSp,
   return(gType);
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGetI					*
-* Returns:	int:			Gets the grey value as an int.	*
-* Purpose:	Gets a single grey value for the given point from the	*
-*		object with which the given work space was initialised.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		double plane:		Plane (z) coordinate of point.	*
-*		double line:		Line (y) coordinate of point.	*
-*		double kol:		Column (x) coordinate of point.	*
-************************************************************************/
+/*!
+* \return	The grey value as an int.
+* \ingroup	WlzAccess
+* \brief	Gets a single grey value for the given point from the
+*               object with which the given work space was initialised.
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane (z) coordinate of point.
+* \param	line			Line (y) coordinate of point.
+* \param	kol			Column (x) coordinate of point.
+*/
 int		WlzGreyValueGetI(WlzGreyValueWSpace *gVWSp,
 			         double plane, double line, double kol)
 {
@@ -1079,18 +1067,16 @@ int		WlzGreyValueGetI(WlzGreyValueWSpace *gVWSp,
   return(val);
 }
 
-/************************************************************************
-* Function:	WlzGreyValueGetD					*
-* Returns:	double:			Gets the grey value as a	*
-*					double.				*
-* Purpose:	Gets a single grey value for the given point from the	*
-*		object with which the given work space was initialised.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyValueWSpace *gVWSp: Grey value work space.	*
-*		double plane:		Plane (z) coordinate of point.	*
-*		double line:		Line (y) coordinate of point.	*
-*		double kol:		Column (x) coordinate of point.	*
-************************************************************************/
+/*!
+* \return	The grey value as a double.
+* \ingroup	WlzAccess
+* \brief	Gets a single grey value for the given point from the
+*               object with which the given work space was initialised.
+* \param	gVWSp			Grey value work space.
+* \param	plane			Plane (z) coordinate of point.
+* \param	line			Line (y) coordinate of point.
+* \param	kol			Column (x) coordinate of point.
+*/
 double		WlzGreyValueGetD(WlzGreyValueWSpace *gVWSp,
 				 double plane, double line, double kol)
 {

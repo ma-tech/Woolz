@@ -1,34 +1,35 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzPolarSample.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Implements a rectangular to polar resampling filter.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzPolarSample.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Implements a rectangular to polar image resampling filter.
+* \ingroup	WlzValueFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:     WlzPolarSampleMinOf4I					*
-* Returns:      int:                    Minimum value.                  *
-* Purpose:      Given four values, finds and returns the minimum.       *
-* Global refs:  -                                                       *
-* Parameters:   int val1:               First value.                    *
-*               int val2:               Second value.                   *
-*               int val3:               Third value.                    *
-*               int val4:               Forth value.                    *
-************************************************************************/
+/*!
+* \return	Minimum value.
+* \ingroup      WlzValueFilters
+* \brief	Given four values, finds and returns the minimum.
+* \param	val1			First value.
+* \param	val2			Second value.
+* \param	val3			Third value.
+* \param	val4			Forth value.
+*/
 static int	WlzPolarSampleMinOf4I(int val1, int val2, int val3, int val4)
 {
   if(val1 > val2)
@@ -46,16 +47,15 @@ static int	WlzPolarSampleMinOf4I(int val1, int val2, int val3, int val4)
   return(val1);
 }
 
-/************************************************************************
-* Function:     WlzPolarSampleMaxOf4I					*
-* Returns:      int:                    Minimum value.                  *
-* Purpose:      Given four values, finds and returns the maximum.       *
-* Global refs:  -                                                       *
-* Parameters:   int val1:               First value.                    *
-*               int val2:               Second value.                   *
-*               int val3:               Third value.                    *
-*               int val4:               Forth value.                    *
-************************************************************************/
+/*!
+* \return	Maximum value.
+* \ingroup      WlzValueFilters
+* \brief	Given four values, finds and returns the maximum.
+* \param	val1			First value.
+* \param	val2			Second value.
+* \param	val3			Third value.
+* \param	val4			Forth value.
+*/
 static int	WlzPolarSampleMaxOf4I(int val1, int val2, int val3, int val4)
 {
   if(val1 < val2)
@@ -73,28 +73,27 @@ static int	WlzPolarSampleMaxOf4I(int val1, int val2, int val3, int val4)
   return(val1);
 }
 
-/************************************************************************
-* Function:	WlzPolarSample						*
-* Returns:	WlzObject *:		New polar sampled woolz object.	*
-* Purpose:	Polar resamples the given woolz object using the given	*
-*		angle and radial distance increments. All angles are in	*
-*		radians.						*
-* Notes:	The linkcount of the returned object is not set.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given woolz object.		*
-*		WlzIVertex2 org:	Origin in given object about	*
-*					which to polar resample.	*
-*		double angleInc:	Angle increment (radians).	*
-*		double distInc:		Radial distance increment.	*
-*		int nLines:		Number of lines (angular 	*
-*					samples).			*
-*		int outFlag:		If non zero then the outer	*
-*					bounding circle of the given 	*
-*					object is used, else the inner	*
-*					bound is used for resampling.	*
-*		WlzErrorNum *wlzErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	New polar sampled woolz object.
+* \ingroup      WlzValueFilters
+* \brief	Polar resamples the given woolz object using the given
+*               angle and radial distance increments. All angles are in
+*               radians.
+* Notes:        The linkcount of the returned object is zero.
+* \param	srcObj			Given Woolz object.
+* \param	org			Origin in given object about
+*                                       which to polar resample.
+* \param	angleInc		Angle increment (radians).
+* \param	distInc			Radial distance increment.
+* \param	nLines			Number of lines (angular
+*                                       samples).
+* \param	outFlag			If non zero then the outer
+*                                       bounding circle of the given
+*                                       object is used, else the inner
+*                                       bound is used for resampling.
+* \param	wlzErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 			        double angleInc, double distInc,
 			        int nLines, int outFlag,

@@ -1,48 +1,35 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzSeqPar.c
-* Date:         March 1999
-* Author:       Jim Piper, modified by Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Performs sequential or local transformation of an
-*		object.
-*		Jim Piper derived the original seqpar.c from Fortran
-*		code by Marshall Presser.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzSeqPar.c
+* \author       Jim Piper, modified by Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Performs sequential or local transformation of an object.
+* \note		Jim Piper derived the original seqpar.c from Fortran
+*               code by Marshall Presser.
+* \ingroup	WlzValueFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzSeqParBkgSet						*
-* Returns:	void							*
-* Purpose:	Sets a vector of values to the given background value.	*
-* Global refs:	-							*
-* Parameters:	int *vec:		Vector of values to be set.	*
-*		int vecLen:		Vector length.			*
-*		int bkgVal:		Background value to set.	*
-************************************************************************/
-static void 	WlzSeqParBkgSet(int *vec, int vecLen, int bkgVal)
-{
-  while(vecLen-- > 0)
-  {
-    *vec++ = bkgVal;
-  }
-}
 
-/************************************************************************
-* Function:	WlzSeqParPosMod						*
-* Returns:	int:			Computed positive modulus.	*
-* Purpose:	Computes the positive modulus of a given value.		*
-* Global refs:	-							*
-* Parameters:	int *val:		Given value.			*
-*		int mod:		Modulus to take.		*
-************************************************************************/
+/*!
+* \return	Computed positive modulus.
+* \ingroup	WlzValueFilters
+* \brief	Computes the positive modulus of a given value.
+* \param	val			Given value.
+* \param	mod			Modulus to take.
+*/
 static int 	WlzSeqParPosMod(int val, int mod)
 {
   if((val = val % mod) < 0)
@@ -52,55 +39,51 @@ static int 	WlzSeqParPosMod(int val, int mod)
   return(val);
 }
 
-/************************************************************************
-* Function:	WlzSeqPar						*
-* Returns:	WlzObject *:		The returned object, maybe NULL	*
-*					on error.			*
-* Purpose:	WlzSeqPar performs a sequential or parallel local 	*
-*		transform. A distance transform is an example of a	*
-*		sequential transform and a laplacian is an example of	*
-*		a parallel transform.					*
-*		Only WLZ_2D_DOMAINOBJ objects with values may be passed	*
-*		to WlzSeqPar().						*
-* Notes:	If the point to be transformed is at line l and col k,	*
-*		there is an array of pointers spWSpace->adrptr[-7:7],	*
-*		whose i'th entry gives the address of the point		*
-*		(l + (i * spWSpace->ldelta), k), but which is only	*
-*		meaningful for lines within bdrSz of the point.		*
-*		For example: spWSpace->adrptr[-3] and 			*
-*		spWSpace->adrptr[3] are	undefined if bdrSz < 3.		*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	The given WLZ_2D_DOMAINOBJ	*
-*					object.				*
-*		int newObjFlag:		If zero then the given object	*
-*					is overwritten otherwise a	*
-*					new object is created.		*
-*		int sequentialFlag:	If non zero the transform is	*
-*					seqential and transformed	*
-*					values are used in calculating	*
-*					the neighbouring values.	*
-*					If zero the transform always 	*
-*					works on the original grey	*
-*					values.				*
-*		WlzRasterDir rasterDir:	Direction of raster scan.	*
-*		int bdrSz:		Local transform kernel half-	*
-*					size, must be in range 0 - 7.	*
-*					The usual 8 immediate neighbors	*
-*					correspond to bdrSz == 1.	*
-*		int bkgVal:		Background grey value.		*
-*		void *transformData:	Data supplied to the transform	*
-*					function.			*
-*		int (*transformFn)(WlzSeqParWSpace *, void *) Supplied	*
-*					transform function.		*
-*		WlzErrorNum *wlzErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	The filtered object, maybe NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	WlzSeqPar performs a sequential or parallel local
+*               transform. A distance transform is an example of a
+*               sequential transform and a laplacian is an example of
+*               a parallel transform.
+*               Only WLZ_2D_DOMAINOBJ objects with values may be passed
+*               to WlzSeqPar().
+* \note		If the point to be transformed is at line l and col k,
+*               there is an array of pointers spWSpace->adrptr[-7:7],
+*               whose i'th entry gives the address of the point
+*               (l + (i * spWSpace->ldelta), k), but which is only
+*               meaningful for lines within bdrSz of the point.
+*               For example: spWSpace->adrptr[-3] and
+*               spWSpace->adrptr[3] are undefined if bdrSz < 3.
+* \param	srcObj			The given WLZ_2D_DOMAINOBJ object.
+* \param	newObjFlag		If zero then the given object is
+*					overwritten otherwise a new object is
+*					created.
+* \param	sequentialFlag		If non zero the transform is
+*                                       seqential and transformed
+*                                       values are used in calculating
+*                                       the neighbouring values.
+*                                       If zero the transform always
+*                                       works on the original grey
+*                                       values.
+* \param	rasterDir		Direction of raster scan.
+* \param	bdrSz			Local transform kernel half-size,
+*					must be in range 0 - 7.
+*                                       The usual 8 immediate neighbors
+*                                       correspond to bdrSz == 1.
+* \param	bkgVal			Background grey value.
+* \param	transformData		Data supplied to the transform
+*                                       function.
+* \param	transformFn		Supplied transform function.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 WlzObject	*WlzSeqPar(WlzObject *srcObj,
 			   int newObjFlag, int sequentialFlag,
 			   WlzRasterDir rasterDir, int bdrSz, int bkgVal,
 			   void *transformData,
 			   int (*transformFn)(WlzSeqParWSpace *, void *),
-			   WlzErrorNum *wlzErr)
+			   WlzErrorNum *dstErr)
 {
   int 		tI0,
   		curLine,
@@ -148,13 +131,13 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
 	   (unsigned long )srcObj,
 	   newObjFlag, sequentialFlag, (int )rasterDir, bdrSz, bkgVal,
 	   (unsigned long )transformData, (unsigned long )transformFn,
-	   (unsigned long )wlzErr));
+	   (unsigned long )dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
-    if(wlzErr)
+    if(dstErr)
     {
-      *wlzErr = errNum;
+      *dstErr = errNum;
     }
     return(NULL);
   }
@@ -162,9 +145,9 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
      (srcObj->domain.core == NULL))
   {
     errNum = WLZ_ERR_OBJECT_TYPE;
-    if(wlzErr)
+    if(dstErr)
     {
-      *wlzErr = errNum;
+      *dstErr = errNum;
     }
     return(NULL);
   }
@@ -259,9 +242,9 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    if(wlzErr)
+    if(dstErr)
     {
-      *wlzErr = errNum;
+      *dstErr = errNum;
     }
     return(NULL);
   }
@@ -298,9 +281,9 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
        * This is an error it is impossible to have input a line before needed
        */
       errNum = WLZ_ERR_DOMAIN_DATA;
-      if(wlzErr)
+      if(dstErr)
       {
-        *wlzErr = errNum;
+        *dstErr = errNum;
       }
       return(NULL);
     }
@@ -332,7 +315,7 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
 	  {
 	    inLine += spWSpace.ldelta;
 	    minLine = WlzSeqParPosMod(inLine, numBufs);
-	    WlzSeqParBkgSet(lineBufs[minLine], lineSz, bkgVal);
+	    WlzValueSetInt(lineBufs[minLine], bkgVal, lineSz);
 	  }
 	  break;
 	}
@@ -344,7 +327,7 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
 	{
 	  inLine += spWSpace.ldelta;
 	  minLine = WlzSeqParPosMod(inLine, numBufs);
-	  WlzSeqParBkgSet(lineBufs[minLine], lineSz, bkgVal);
+	  WlzValueSetInt(lineBufs[minLine], bkgVal, lineSz);
 	}
 	/*
 	 * nxxint interval to be put into buffer calculate adrs in
@@ -445,9 +428,9 @@ filledLABEL: 					    /* LABEL! see goto above */
   {
     AlcFree((void *)lineBufSpace);
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
   	  ("WlzSeqPar FX 0x%lx\n",

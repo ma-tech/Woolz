@@ -19,7 +19,7 @@
 
 /*!
 * \ingroup	Wlz
-* \defgroup	WlzTransform
+* \defgroup	WlzTransform	WlzTransform
 * Woolz transforms are Woolz domains 
 * that define either 2D or 3D spatial transformation.
 *

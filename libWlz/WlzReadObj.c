@@ -1,49 +1,26 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzReadObj.c
-* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         March 1999, (documantation revised Thu Aug  1 17:27:10 2002)
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
+* \author       Richard Baldock and Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
 *               All rights reserved.
 * \par Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzIO
-* \brief        Reads a Woolz object from a file or input stream.
-*               
+* \brief	Reads a Woolz object from a file stream.
+* \ingroup	WlzIO
 * \todo         -
-* \bug          None known
-*
-* Maintenance log with most recent changes at top of list.
-* 13-12-00 bill Modify WlzReadGMModel() so that it doesn't generate an
-*		error if model has no vertices.
-* 02-10-00 bill No longer read primitives (commented out code left in
-*		place) in WlzReadAffineTransform().
-* 14-08-00 bill	Add WLZ_CONTOUR to object types read by WlzReadObj().
-*		Add WlzReadContour() and WlzReadGMModel(). Remove
-*		obolete object types:WLZ_VECTOR_(FLOAT|INT),
-*		WLZ_POINT_(FLOAT|INT), WLZ_DISP_FRAME,
-*		WLZ_DISP_GRID, WLZ_DISP_FRAMEX, Wlz[IF]Vector and
-*		and Wlz[IF]Point.
-*		Add functions WlzReadInt(), WlzReadVertex[23][DI](),
-*		WlzReadBox[23][DI]().
-* 03-03-20 bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
+* \bug          None known.
 */
-
 #include <stdlib.h>
 #include <string.h>
-
 #include <Wlz.h>
-
-/* prototypes of static procedures defined below
- */
 
 static WlzIntervalDomain 	*WlzReadIntervalDomain(
 				  FILE *fp,
@@ -137,20 +114,24 @@ static WlzErrorNum 		WlzReadBox3D(
 				  FILE *fP,
 				  WlzDBox3 *bP,
 				  int nB);
-
-/* a set of functions to convert from VAX to SUN byte ordering
-   in the future these should be replaced by calls using XDR procedures
-   */
-
-/************************************************************************
-*   Function   : getword						*
-*   Synopsis   : get the next word (int) from the input stream		*
-*   Returns    : int:		value of next word on the input stream	*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -                                                      *
-************************************************************************/
-
-static int getword(FILE *fp)
+static WlzErrorNum 		WlzReadStr(
+				  FILE *fP,
+				  char **dstStr);
+static WlzErrorNum 		WlzReadPixelV(FILE *fP,
+				  WlzPixelV *pV,
+				  int nPV);
+static WlzErrorNum 		WlzReadGreyV(FILE *fP,
+				  WlzGreyType type,
+				  WlzGreyV *gV,
+				  int nGV);
+/*!
+* \return	The word value.
+* \ingroup	WlzIO
+* \brief	Reads the next word (int) from the input file converting
+*		from DEC VAX(!) byte order.
+* \param	fp			Input file.
+*/
+static int 	getword(FILE *fp)
 {
   char cin[4], cout[4];
 
@@ -170,15 +151,14 @@ static int getword(FILE *fp)
   return(*((int *) &cout[0]));
 }
 
-/************************************************************************
-*   Function   : getshort						*
-*   Synopsis   : get the next short word (int) from the input stream	*
-*   Returns    : int:		value of next word on the input stream	*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -                                                      *
-************************************************************************/
-
-static int getshort(FILE *fp)
+/*!
+* \return	The short value.
+* \ingroup	WlzIO
+* \brief	Reads the next short from the input file converting
+*		from DEC VAX(!) byte order.
+* \param	fp			Input file.
+*/
+static int 	getshort(FILE *fp)
 {
   char cin[2], cout[2];
 
@@ -194,15 +174,14 @@ static int getshort(FILE *fp)
   return((int) *((short *) &cout[0]));
 }
 
-/************************************************************************
-*   Function   : getfloat						*
-*   Synopsis   : get the next float from the input stream		*
-*   Returns    : float:		value of next float on the input stream	*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -                                                      *
-************************************************************************/
-
-static float getfloat(FILE *fp)
+/*!
+* \return	The float value.
+* \ingroup      WlzIO
+* \brief	Reads the next float from the input file converting
+*               from DEC VAX(!) byte order.
+* \param	fp			Input file.
+*/
+static float 	getfloat(FILE *fp)
 {
   char cin[4], cout[4];
 
@@ -222,15 +201,14 @@ static float getfloat(FILE *fp)
   return(*((float *) &cout[0]));
 }
 
-/************************************************************************
-*   Function   : getdouble						*
-*   Synopsis   : get the next double from the input stream		*
-*   Returns    : double:	value of next double on the input stream*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -                                                      *
-************************************************************************/
-
-static double getdouble(FILE *fp)
+/*!
+* \return	The  doublevalue.
+* \ingroup      WlzIO
+* \brief	Reads the next double from the input file converting
+*               from DEC VAX(!) byte order.
+* \param	fp			Input file.
+*/
+static double 	getdouble(FILE *fp)
 {
   char cin[8], cout[8];
 
@@ -258,23 +236,17 @@ static double getdouble(FILE *fp)
   return(*((double *) &cout[0]));
 }
 
-/* function:     WlzReadObj    */
-/*! 
-* \ingroup      WlzIO
-* \brief        Reads a woolz object from the given input stream. For
-some object types (e.g. 3D) an object will be returned with the error
-set to WLZ_ERR_READ_INCOMPLETE. This allows partial recovery of data.
-*
-* \return       Pointer to object just read in, NULL on error.
-* \param    fp	FILE pointer for input stream.
-* \param    dstErr	Error return, values WLZ_ERR_NONE,
- WLZ_ERR_PARAM_NULL, WLZ_ERR_READ_EOF, WLZ_ERR_EOO, WLZ_ERR_OBJECT_TYPE,
- WLZ_ERR_READ_INCOMPLETE or errors from any of the WlzMake and WlzAssign
- procedures.
-* \par      Source:
-*                WlzReadObj.c
+/*!
+* \return	New Woolz object or NULL on error.
+* \ingroup	WlzIO
+* \brief	Reads a woolz object from the given input stream. For
+*		some object types (e.g. 3D) an object may be returned with the
+*		error set to WLZ_ERR_READ_INCOMPLETE. This allows partial
+*		recovery of data.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
+WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
   WlzObject 		*obj;
@@ -445,17 +417,16 @@ WlzObject *WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzReadInt
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 4 byte integers the given file stream into a
-*		buffer of native ints (which must have room for at
-*		least nI ints).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		int *iP:		Buffer for ints.
-*		int nI:			Number of ints.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read's 4 byte integers the given file stream into a
+*               buffer of native ints (which must have room for at
+*               least nI ints).
+* \param	fP			Given file.
+* \param	iP			Buffer for ints.
+* \param	nI			Number of ints.
+*/
 static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -471,17 +442,16 @@ static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadVertex2I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 2D integer vertices from the given file
-*		stream into a buffer (which must have room for
-*		at least nV vertices).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIVertex2 *vP:	Buffer for 2D integer vertices.
-*		int nV:			Number of vertices.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 2D integer vertices from the given file
+*               stream into a buffer (which must have room for
+*               at least nV vertices).
+* \param	fP			Given file.
+* \param	vP			Buffer for 2D integer vertices.
+* \param	nV			Number of vertices.
+*/
 static WlzErrorNum WlzReadVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -499,17 +469,16 @@ static WlzErrorNum WlzReadVertex2I(FILE *fP, WlzIVertex2 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadVertex2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 2D double vertices from the given file
-*		stream into a buffer (which must have room for
-*		at least nV vertices).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDVertex2 *vP:	Buffer for 2D integer vertices.
-*		int nV:			Number of vertices.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 2D double vertices from the given file
+*               stream into a buffer (which must have room for
+*               at least nV vertices).
+* \param	fP			Given file.
+* \param	vP			Buffer for 2D integer vertices.
+* \param	nV			Number of vertices.
+*/
 static WlzErrorNum WlzReadVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -527,17 +496,16 @@ static WlzErrorNum WlzReadVertex2D(FILE *fP, WlzDVertex2 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadVertex3I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 3D integer vertices from the given file
-*		stream into a buffer (which must have room for
-*		at least nV vertices).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIVertex3 *vP:	Buffer for 3D integer vertices.
-*		int nV:			Number of vertices.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 3D integer vertices from the given file
+*               stream into a buffer (which must have room for
+*               at least nV vertices).
+* \param	fP			Given file.
+* \param	vP			Buffer for 3D integer vertices.
+* \param	nV			Number of vertices.
+*/
 static WlzErrorNum WlzReadVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -556,17 +524,16 @@ static WlzErrorNum WlzReadVertex3I(FILE *fP, WlzIVertex3 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadVertex3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 3D integer vertices from the given file
-*		stream into a buffer (which must have room for
-*		at least nV vertices).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDVertex3 *vP:	Buffer for 3D integer vertices.
-*		int nV:			Number of vertices.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 3D integer vertices from the given file
+*               stream into a buffer (which must have room for
+*               at least nV vertices).
+* \param	fP			Given file.
+* \param	vP			Buffer for 3D integer vertices.
+* \param	nV			Number of vertices.
+*/
 static WlzErrorNum WlzReadVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -585,17 +552,16 @@ static WlzErrorNum WlzReadVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadBox2I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 2D integer boxes from the given file stream
-*		into a buffer (which must have room for at least
-*		nB bounding boxes).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIBox2 *bP:		Ptr to 2D integer box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 2D integer boxes from the given file stream
+*               into a buffer (which must have room for at least
+*               nB bounding boxes).
+* \param	fP			Given file.
+* \param	bP			Ptr to 2D integer box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzReadBox2I(FILE *fP, WlzIBox2 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -615,17 +581,16 @@ static WlzErrorNum WlzReadBox2I(FILE *fP, WlzIBox2 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadBox2D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 2D double boxes from the given file stream
-*		into a buffer (which must have room for at least
-*		nB bounding boxes).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDBox2 *bP:		Ptr to 2D integer box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 2D double boxes from the given file stream
+*               into a buffer (which must have room for at least
+*               nB bounding boxes).
+* \param	fP			Given file.
+* \param	bP			Ptr to 2D integer box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzReadBox2D(FILE *fP, WlzDBox2 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -645,17 +610,16 @@ static WlzErrorNum WlzReadBox2D(FILE *fP, WlzDBox2 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadBox3I
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 3D integer boxes from the given file stream
-*		into a buffer (which must have room for at least
-*		nB bounding boxes).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzIBox3 *bP:		Ptr to 3D integer box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 3D integer boxes from the given file stream
+*               into a buffer (which must have room for at least
+*               nB bounding boxes).
+* \param	fP			Given file.
+* \param	bP			Ptr to 3D integer box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzReadBox3I(FILE *fP, WlzIBox3 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -677,17 +641,16 @@ static WlzErrorNum WlzReadBox3I(FILE *fP, WlzIBox3 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzReadBox3D
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Read's 3D double boxes from the given file stream
-*		into a buffer (which must have room for at least
-*		nB bounding boxes).
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzDBox3 *bP:		Ptr to 3D integer box.
-*		int nB:			Number of bounding boxes.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Read's 3D double boxes from the given file stream
+*               into a buffer (which must have room for at least
+*               nB bounding boxes).
+* \param	fP			Given file.
+* \param	bP			Ptr to 3D integer box.
+* \param	nB			Number of bounding boxes.
+*/
 static WlzErrorNum WlzReadBox3D(FILE *fP, WlzDBox3 *bP, int nB)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -709,15 +672,137 @@ static WlzErrorNum WlzReadBox3D(FILE *fP, WlzDBox3 *bP, int nB)
   return(errNum);
 }
 
-/************************************************************************
-*   Function   : WlzIntervaldomain					*
-*   Synopsis   : reads a WlzIntervalDomain from the given input stream	*
-*   Returns    : WlzIntervalDomain *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read a string as written by WlzWriteStr().
+* \param	fP			Input file.
+* \param	dstStr			Destination pointer for string.
+*/
+static WlzErrorNum WlzReadStr(FILE *fP, char **dstStr)
+{
+  int		len;
+  char		*str = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
+  if(((len = getword(fP)) < 0) || feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if((str = (char *)AlcMalloc(sizeof(char) * (len + 1))) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else if(fread(str, sizeof(char), len, fP) != len)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+    AlcFree(str);
+  }
+  else
+  {
+    *(str + len) = '\0';
+    *dstStr = str;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read pixel values with type as written by WlzWritePixelV().
+* \param	fP			Input file.
+* \param	pV			Pixel values to set.
+*/
+static WlzErrorNum WlzReadPixelV(FILE *fP, WlzPixelV *pV, int nPV)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nPV-- > 0))
+  {
+    pV->type = getc(fP);
+    errNum = WlzReadGreyV(fP, pV->type, &(pV->v), 1);
+    ++pV;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read grey values as written by WlzWriteGreyV().
+* \param	fP			Input file.
+* \param	gType			Grey type.
+* \param	gV			Grey values to set.
+* \param	nGV			Number of grey values.
+*/
+static WlzErrorNum WlzReadGreyV(FILE *fP, WlzGreyType gType, WlzGreyV *gV,
+				int nGV)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(gType)
+  {
+    case WLZ_GREY_INT:
+      while(nGV-- > 0)
+      {
+	gV->inv = getword(fP);
+	++gV;
+      }
+      break;
+    case WLZ_GREY_SHORT:
+      while(nGV-- > 0)
+      {
+	gV->shv = getshort(fP);
+	++gV;
+      }
+      break;
+    case WLZ_GREY_UBYTE:
+      while(nGV-- > 0)
+      {
+        gV->ubv = (UBYTE )(getc(fP));
+	++gV;
+      }
+      break;
+    case WLZ_GREY_FLOAT:
+      while(nGV-- > 0)
+      {
+	gV->flv = getfloat(fP);
+	++gV;
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      while(nGV-- > 0)
+      {
+	gV->dbv = getdouble(fP);
+	++gV;
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      while(nGV-- > 0)
+      {
+	gV->rgbv = (unsigned int )getword(fP);
+	++gV;
+      }
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
+  }
+  if((errNum == WLZ_ERR_NONE) && feof(fP))
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	New interval domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz interval domain from the file.
+* \param	fp			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fP,
 						WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
@@ -731,7 +816,7 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
   /* read the type, currently WriteObj will write '\0' given a
      NULL pointer so we do the same here setting the error to be
      WLZ_ERR_EOO to distinguish it from an EOF error */
-  type = (WlzObjectType) getc(fp);
+  type = (WlzObjectType) getc(fP);
   if( type == (WlzObjectType) EOF ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -740,11 +825,11 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
   }
 
   if( errNum == WLZ_ERR_NONE ){
-    l1 = getword(fp);
-    ll = getword(fp);
-    k1 = getword(fp);
-    kl = getword(fp);
-    if( feof(fp) != 0 ){
+    l1 = getword(fP);
+    ll = getword(fP);
+    k1 = getword(fP);
+    kl = getword(fP);
+    if( feof(fP) != 0 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
     else {
@@ -759,11 +844,11 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
       nints = 0;
       ivln = idmn->intvlines;
       for (l=l1; l<=ll; l++) {
-	ivln->nintvs = getword(fp);
+	ivln->nintvs = getword(fP);
 	nints += ivln->nintvs;
 	ivln++;
       }
-      if( feof(fp) != 0 ){
+      if( feof(fP) != 0 ){
 	WlzFreeIntervalDomain(idmn);
 	idmn = NULL;
 	errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -789,13 +874,13 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
       idmn->freeptr = AlcFreeStackPush(idmn->freeptr, (void *)itvl0, NULL);
 
       for (i=0; i<nints; i++,itvl++) {
-	itvl->ileft = getword(fp);
-	itvl->iright = getword(fp);
+	itvl->ileft = getword(fP);
+	itvl->iright = getword(fP);
       }
 
       itvl = itvl0;
 
-      if (feof(fp) != 0){
+      if (feof(fP) != 0){
 	WlzFreeIntervalDomain(idmn);
 	idmn = NULL;
 	errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -827,14 +912,13 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fp,
   return(idmn);
 }
 
-/************************************************************************
-*   Function   : WlzReadPlaneDomain					*
-*   Synopsis   : reads a WlzPlaneDomain from the given input stream	*
-*   Returns    : WlzPlaneDomain *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-
+/*!
+* \return	New plane domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz plane domain from the given file.
+* \param	fp			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 					  WlzErrorNum *dstErr)
 {
@@ -977,19 +1061,15 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
   return(planedm);
 }
 
-/************************************************************************
-*   Function   : WlzReadGreyValues					*
-*   Synopsis   : reads a woolz grey-value table				*
-*   Returns    : int:		error code, WLZ_ERR_NONE for successful	*
-*				completion				*
-*   Parameters : FILE *fp:	input stream				*
-*		 WlzObject *obj: object defining the domain of the grey	*
-*				values.					*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzErrorNum WlzReadGreyValues(FILE *fp,
-				     WlzObject *obj)
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz grey-value table from the given file.
+* \param	fp			Input file.
+* \param	obj			Object defining the domain of the
+*					grey values.
+*/
+static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 {
   WlzObjectType		type;
   WlzGreyType		gtype;
@@ -1341,17 +1421,15 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp,
 
 }
 
-/************************************************************************
-*   Function   : WlzReadRectVtb						*
-*   Synopsis   : reads a woolz rectangular grey table			*
-*   Returns    : int:		error code, WLZ_ERR_NONE for success	*
-*   Parameters : FILE *fp:	input stream				*
-*		 WlzObject *obj: object defining the domain of the grey	*
-*				values.					*
-*		 WlzObjectType type: grey table type - encodes greytype *
-*   Global refs: -							*
-************************************************************************/
-
+/*!
+* \return	Wolz error code.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz rectangular grey table.
+* \param	fp			Input file.
+* \param	obj			Object defining the domain of the
+*					grey values.
+* \param	type			Grey table type - encodes greytype.
+*/
 static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
 				  WlzObject 	*obj,
 				  WlzObjectType type)
@@ -1466,18 +1544,15 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
   return WLZ_ERR_NONE;
 }
 
-/************************************************************************
-*   Function   : WlzReadVoxelValues					*
-*   Synopsis   : reads a woolz voxel value table			*
-*   Returns    : int:		error code, WLZ_ERR_NONE for success	*
-*   Parameters : FILE *fp:	input stream				*
-*		 WlzObject *obj: object defining the domain of the grey	*
-*				values.					*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzErrorNum WlzReadVoxelValues(FILE 	*fp,
-				      WlzObject *obj)
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz voxel value table from the input file.
+* \param	fp			Input file.
+* \param	obj			Object defining the domain of the 
+*					grey values.
+*/
+static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
 {
   WlzObjectType		type;
   int 			i, nplanes;
@@ -1575,6 +1650,15 @@ static WlzErrorNum WlzReadVoxelValues(FILE 	*fp,
   return errNum;
 }
 
+/*!
+* \return	New Woolz property.
+* \ingroup	WlzIO
+* \brief	Reads a single property from the input file.
+*		Unknown properties are ignored in the hope that at least
+*		the objects domain and values can be recovered.
+* \param	fp			input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzProperty WlzReadProperty(
   FILE		*fp,
   WlzErrorNum	*dstErr)
@@ -1582,6 +1666,8 @@ static WlzProperty WlzReadProperty(
   WlzObjectType	type;
   WlzProperty	rtnProp;
   int		si;
+  char		*name;
+  WlzPixelV	pV;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   rtnProp.core = NULL;
@@ -1673,6 +1759,25 @@ static WlzProperty WlzReadProperty(
       rtnProp.emap->comment = NULL;
     }
     break;
+  case WLZ_PROPERTY_NAME:
+    if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
+    {
+      rtnProp.name = WlzMakeNameProperty(name, &errNum);
+    }
+    break;
+  case WLZ_PROPERTY_GREY:
+    if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
+    {
+      if((errNum = WlzReadPixelV(fp, &pV, 1)) == WLZ_ERR_NONE)
+      {
+	rtnProp.greyV = WlzMakeGreyProperty(name, pV, &errNum);
+      }
+      else
+      {
+        AlcFree(name);
+      }
+    }
+    break;
   }
 
   if( dstErr ){
@@ -1681,16 +1786,14 @@ static WlzProperty WlzReadProperty(
   return rtnProp;
 }
 
-/************************************************************************
-*   Function   : WlzReadPropertyList					*
-*   Synopsis   : reads a woolz property list 				*
-*   Returns    : AlcDLPList *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: char *err_str:	static string buffer for error message	*
-************************************************************************/
-
-static AlcDLPList *WlzReadPropertyList(FILE *fp,
-				       WlzErrorNum *dstErr)
+/*!
+* \return	New property list.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz property list from the input file.
+* \param	fp			input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static AlcDLPList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
   AlcDLPList		*pl=NULL;
@@ -1794,16 +1897,14 @@ static AlcDLPList *WlzReadPropertyList(FILE *fp,
   return pl;
 }
 
-/************************************************************************
-*   Function   : WlzReadPolygon						*
-*   Synopsis   : reads a woolz polygon from the given input stream	*
-*   Returns    : WlzPolygonDomain *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzPolygonDomain *WlzReadPolygon(FILE *fp,
-					WlzErrorNum *dstErr)
+/*!
+* \return	New polygon domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz polygon domain from the input file.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzPolygonDomain *WlzReadPolygon(FILE *fp, WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
   WlzPolygonDomain	*poly=NULL;
@@ -1826,7 +1927,7 @@ static WlzPolygonDomain *WlzReadPolygon(FILE *fp,
   }
 
   if((errNum == WLZ_ERR_NONE) &&
-     (poly = WlzMakePolyDmn(type, NULL, 0, nvertices, 1, &errNum)) ){
+     (poly = WlzMakePolygonDomain(type, 0, NULL, nvertices, 1, &errNum)) ){
     poly->nvertices = nvertices;
     switch (type) {
 
@@ -1867,16 +1968,14 @@ static WlzPolygonDomain *WlzReadPolygon(FILE *fp,
   return(poly);
 }
 
-/************************************************************************
-*   Function   : WlzReadBoundList					*
-*   Synopsis   : reads a woolz boundlist  from the given input stream	*
-*   Returns    : WlzBoundList *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzBoundList *WlzReadBoundList(FILE *fp,
-				      WlzErrorNum *dstErr)
+/*!
+* \return	New boundary list.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz boundary list from the input file.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
 {
   WlzObjectType	type;
   WlzBoundList	*blist=NULL, *tmpblist;
@@ -1957,16 +2056,14 @@ static WlzBoundList *WlzReadBoundList(FILE *fp,
   return( blist );
 }
 
-/************************************************************************
-*   Function   : WlzReadRect						*
-*   Synopsis   : reads a woolz rectangle  from the given input stream	*
-*   Returns    : WlzIRect *:						*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: char *err_str:	static string buffer for error message	*
-************************************************************************/
-
-static WlzIRect *WlzReadRect(FILE *fp,
-			    WlzErrorNum *dstErr)
+/*!
+* \return	New Woolz rectangle.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz rectangle from the given file.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
 {
   WlzObjectType	type;
   WlzIRect 	*ir=NULL;
@@ -2037,13 +2134,13 @@ static WlzIRect *WlzReadRect(FILE *fp,
   return( ir );
 }
 
-/************************************************************************
-*   Function   : WlzReadHistogramDomain					*
-*   Synopsis   : reads a woolz histogram domain				*
-*   Returns    : WlzHistogramDomain *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
+/*!
+* \return	New histogram domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz histogram domain.
+* \param	fp			input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzHistogramDomain *WlzReadHistogramDomain(FILE *fp,
 						  WlzErrorNum *dstErr)
 {
@@ -2179,15 +2276,14 @@ static WlzHistogramDomain *WlzReadHistogramDomain(FILE *fp,
   return(hist);
 }
 
-/************************************************************************
-*   Function   : WlzReadCompoundA					*
-*   Synopsis   : reads a woolz compund object				*
-*   Returns    : WlzObject *:						*
-*   Parameters : FILE *fp:	input stream				*
-*		 WlzObjectType type: object type read by WlzReadObj	*
-*   Global refs: -							*
-************************************************************************/
-
+/*!
+* \return	New compound array object.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz compund object.
+* \param	fp			Input file.
+* \param	type			Object type as read by WlzReadObj().
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzObject *WlzReadCompoundA(FILE			*fp,
 				   WlzObjectType	type,
 				   WlzErrorNum		*dstErr)
@@ -2231,14 +2327,13 @@ static WlzObject *WlzReadCompoundA(FILE			*fp,
   return( (WlzObject *) c );
 }
 	
-/************************************************************************
-*   Function   : WlzReadAffineTransform					*
-*   Synopsis   : reads a woolz transform from the given input stream	*
-*   Returns    : WlzAffineTransform *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-
+/*!
+* \return	New affine transform.
+* \ingroup	WlzIO
+* \brief	Reads a woolz transform from the input file.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
 						  WlzErrorNum *dstErr)
 {
@@ -2262,7 +2357,7 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
 
     /* This code has been commented out rather than removed, just incase
      * there are any 2D affine transforms or afftine transobj's written to
-     * a file somewhere.
+     * a file somewhere using the old format.
      * dummyTx = getdouble(fp);
      * dummyTy = getdouble(fp);
      * dummyTz = getdouble(fp);
@@ -2275,7 +2370,7 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
      * dummyInvert = getword(fp);
      */
 
-    /* read the matrix */
+    /* Read the matrix */
     for(i=0; i < 4; i++){
       for(j=0; j < 4; j++){
 	trans->mat[i][j] = getdouble( fp );
@@ -2295,16 +2390,13 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
   return( trans );
 }
 
-/************************************************************************
-*   Function   : WlzReadWarpTrans					*
-*   Synopsis   : reads a woolz warp transform				*
-*   Returns    : WlzWarpTrans *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-
-static WlzWarpTrans *WlzReadWarpTrans(FILE *fp,
-				      WlzErrorNum *dstErr)
+/*!
+* \return	New transform.
+* \brief	Reads a Woolz FE warp transform.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
 {
   /* local variables */
   int	       	i, j;
@@ -2426,14 +2518,13 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp,
   return(obj) ;
 }
 
-/************************************************************************
-*   Function   : WlzReadFMatchObj					*
-*   Synopsis   : reads a woolz match object - used for warping		*
-*   Returns    : WlzFMatchObj *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-
+/*!
+* \return	New match object.
+* \ingroup	WlzIO
+* \brief	Reads a FE warp match object.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzFMatchObj *WlzReadFMatchObj(FILE *fp,
 				      WlzErrorNum *dstErr)
 {
@@ -2491,15 +2582,14 @@ static WlzFMatchObj *WlzReadFMatchObj(FILE *fp,
   return(obj);
 }
 
-/************************************************************************
-*   Function   : WlzRead3DWarpTrans					*
-*   Synopsis   : reads a woolz  3D warp transform			*
-*   Returns    : Wlz3DWarpTrans *:					*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -							*
-************************************************************************/
-static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp,
-					  WlzErrorNum *dstErr)
+/*!
+* \return	New 3D warp transform.
+* \ingroup	WlzIO
+* \brief	Reads a 3D FE warp transform.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp, WlzErrorNum *dstErr)
 {
   /* local variables */
   int 			i, nplanes;
@@ -2566,15 +2656,13 @@ static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp,
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzReadContour
-* Returns:	WlzContour *:		Woolz contour domain.
-* Purpose:	Read's a WlzContour from a file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzErrorNum *dstErr:	Destination ptr for error code,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	New contour.
+* \ingroup	WlzIO
+* \brief	Reads a contour domain from the input file.
+* \param	fP			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
 {
   WlzObjectType cType;
@@ -2613,16 +2701,14 @@ static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
   return(ctr);
 }
 
-/************************************************************************
-* Function:	WlzReadGMModel
-* Returns:	WlzGMModel *:		Woolz contour domain.
-* Purpose:	Read's a WlzGMModel from a file stream.
-*		see  WlzWriteGMModel() for the file format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Given file stream.
-*		WlzErrorNum *dstErr:	Destination ptr for error code,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	New geometric model.
+* \ingroup	WlzIO
+* \brief	Read's a geometric model from the input file. For the
+*		file format see WlzWriteGMModel().
+* \param	fP			input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 {
   int		tI0,

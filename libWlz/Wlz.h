@@ -31,7 +31,7 @@
 #include <WlzMacro.h>
 
 /*!
-* \defgroup    Wlz
+* \defgroup    Wlz	Wlz
 */
 
 #endif	/* !WLZ_H Don't put anything after this line */

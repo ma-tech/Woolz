@@ -1,39 +1,55 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzMakeCompound.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Makes Woolz compound objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzMakeCompound.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Makes Woolz compound objects.
+* \ingroup	WlzAllocation
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzMakeCompoundArray					*
-*   Returns    :WlzCompoundArray *: compound array object		*
-*   Parameters :WlzObjectType	type: compound object type:		*
-*		WLZ_COMPOUND_ARR_1 or WLZ_COMPOUND_ARR_2		*
-*		int 	mode: see below					*
-*		int 	n: number of objects				*
-*		WlzObject **ol: input object list			*
-*		WlzObjectType otype: woolz object type if objects are	*
-*			type checked.					*
-*   Date       : Mon Oct 14 15:24:58 1996				*
-*   Synopsis   :							*
-* allocate a struct compounda.  Various mode-switched behaviour:
-* mode==1:	Allocate empty array space for n objects.
-* mode==2:	Array is input parameter ol; link.
-* mode==3:	Array is input parameter ol; allocate space and copy,
-*		incrementing object linkcounts.
-************************************************************************/
-
+/*!
+* \return	New Woolz compound array object.
+* \ingroup	WlzAllocation
+* \brief	Makes a new Woolz compound array object.
+* \param	type			Type of compound array which should
+*					be either WLZ_COMPOUND_ARR_1 or
+*					WLZ_COMPOUND_ARR_2.
+* \param	mode			Action to be performed, which may have
+*					the values:
+*					<ul>
+*					<li>
+*					1: Allocate an empty array with
+*					space for n objects.
+*					</li>
+*					<li>
+* 					2: Array members are given in the
+*					input object list, objects are linked.
+*					</li>
+*					<li>
+* 					3: Array members are given in the
+*					input object list, objects copied.
+*					</li>
+*					</ul>
+* \param	n			Number of objects.
+* \param	ol			Input object list.
+* \param	otype			Woolz object type if objects are
+*					type checked.
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
 WlzCompoundArray *
 WlzMakeCompoundArray(WlzObjectType	type,
 		     int 		mode,

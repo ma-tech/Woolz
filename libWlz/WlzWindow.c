@@ -1,18 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzWindow.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Implements a spatial grey value windowing filter.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzWindow.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Weights the grey values of Woolz domain objects according
+*		to their spatial distribution using a weighting function.
+* \ingroup	WlzValuesFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -24,43 +30,40 @@ static const char wlzWinFnNameBlackman[]  = "blackman",
 		wlzWinFnNameWelch[]       = "welch",
 		wlzWinFnNameUnspecified[] = "unspecified";
 
-/************************************************************************
-* Function:	WlzWindowApplyFn					*
-* Returns:	void							*
-* Purpose:	Applies the specified 2D data windowing function to the	*
-*		given woolz object. In 1D the window functions are	*
-*		  Blackman  0.42 + 0.50 * cos((2 * PI * n) / (N - 1)) +	*
-*		  	    0.08 * cos((4 * PI * n) / (N - 1))		*
-*		  Hamming   0.54 + 0.46 * cos((2 * PI * n) / (N - 1))	*
-*		  Hanning   0.50 + 0.50 * cos((2 * PI * n) / (N - 1))	*
-*		  Parzen    1.0 - |((2 * n) - (N - 1)) / (N + 1)|	*
-* 		  Welch     1.0 - (((2 * n) - (N - 1)) / (N + 1))^2	*
-*		The 1D window functions are applied along lines from	*
-*		center of the elipse to its edge, all data outside of	*
-*		the elipse are set to zero. The distance from the 	*
-*		center of an elipse (at the origin) to its edge passing	*
-*		through soome point p is given by 			*
-*		  (Rx * Ry) * sqrt((1 + ((px / py)^2)) /		*
-*				   ((Ry^2) + ((Rx * px / py)^2)))	*
-*		and the distance from its center to the point p is 	*
-*		  sqrt((px^2) + (py^2))					*
-*		where 							*
-*		  R[xy]	are the [xy] radii of the ellipse		*
-*		  p[xy] are the coordinates of the point p.		*
-*		The 1D window functions are applied along these lines	*
-*		using the above distances.				*
-*		This function, which is only called by WlzWindow()	*
-*		assumes that all its parameters are valid.		*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given woolz object which MUST	*
-*					HAVE A A NON-NULL RECTANGULAR	*
-*					VALUE TABLE as produced by	*
-*					WlzCutObjToBox2D().		*
-*		WlzIVertex2 center:	Windows center wrt the given	*
-*					woolz object's coordinates.	*
-*		WlzIVertex2 radius:	Windows radius.			*
-*		WlzWindowFnType winFn:	Required windowing function.	*
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValuesFilters
+* \brief	Applies the specified window function to the given Woolz
+*		object.
+*
+*		The 1D window functions are applied along lines from
+*		center of the elipse to its edge, all data outside of
+*		the elipse are set to zero. The distance from the
+*		center of an elipse (at the origin) to its edge passing
+*		through soome point \f$P\f$ is given by
+*		\f[
+		  R_x R_y  \sqrt{\frac{1 + {(\frac{p_x}{p_y})}^2}
+				      {R_y^2 +
+				       {(R_x \frac{p_x}{p_y}}^2)}}
+		\f]
+		and the distance from its center to the point \f$p\f$ is
+*	  	\f$\sqrt{p_x^2 + p_y^2}\f$
+*		where:
+*		\f$R_x\f$ and \f$R_y\f$	are the horizontal and vertical radii
+*		of the axis aligned ellipse; \f$p_x\f$ and \f$p_y\f$ are the
+*		coordinates of the point \f$P\f$.
+*		The 1D window functions are applied along these lines
+*		using the above distances.
+*		This function, which is only called by WlzWindow()
+*		assumes that all its parameters are valid.
+* \param	obj			Given woolz object which MUST have a
+*					non-null rectangular value table as
+*					produced by WlzCutObjToBox2D().
+* \param	center			Centre of the window with respect to
+*					the given object.
+* \param	radius			Radius of the window function.
+* \param	winFn			Required windowing function.
+*/
 static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 				 WlzIVertex2 radius, WlzWindowFnType winFn)
 {
@@ -325,25 +328,22 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	  ("WlzWindowApplyFn FX\n"));
 }
 
-/************************************************************************
-* Function:	WlzWindow						*
-* Returns:	WlzObject *:		New object with window applied	*
-*					to it.				*
-* Purpose:	Cuts a rectangular region from the given object and	*
-*		then applies the specified 2D data windowing function.	*
-* Notes:	The linkcount of the returned object is not set.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzWindowFnType winFn:	Required windowing function.	*
-*		WlzIVertex2 org:	Window origin wrt the given	*
-*					source object's coordinates.	*
-*		WlzIVertex2 rad:	Window radius.			*
-*		WlzErrorNum *wlzErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	New object.
+* \ingroup	WlzValuesFilters
+* \brief	Cuts a rectangular region from the given object and then
+*		applies the specified 2D data windowing function.
+*		The linkcount of the returned object is zero.
+* \param	srcObj			Given source object.
+* \param	winFn			Required windowing function.
+* \param	org			Window origin with respect to the
+*					given given source object.
+* \param	rad			Window radius.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzWindow(WlzObject *srcObj, WlzWindowFnType winFn,
 			      WlzIVertex2 org, WlzIVertex2 rad,
-			      WlzErrorNum *wlzErr)
+			      WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*dstObj = NULL;
@@ -353,7 +353,7 @@ WlzObject	*WlzWindow(WlzObject *srcObj, WlzWindowFnType winFn,
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzWindow FE 0x%lx %d {%d %d} {%d %d} 0x%lx\n",
 	   (unsigned long )srcObj, winFn, org.vtX, org.vtY, rad.vtX, rad.vtY,
-	   (unsigned long )wlzErr));
+	   (unsigned long )dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -412,9 +412,9 @@ WlzObject	*WlzWindow(WlzObject *srcObj, WlzWindowFnType winFn,
       dstObj = NULL;
     }
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzWindow FX 0x%lx\n",
@@ -422,22 +422,13 @@ WlzObject	*WlzWindow(WlzObject *srcObj, WlzWindowFnType winFn,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzWindowFnName						*
-* Returns:	const char *:		Constant name string or NULL if	*
-*					match fails.			*
-* Purpose:	Finds the appropriate name string for the given window	*
-*		function value.						*
-* Global refs:	const char wlzWinFnNameBlackman[]: Window function name	*
-*					strings.			*
-*		const char wlzWinFnNameHamming[]:			*
-*		const char wlzWinFnNameHanning[]:			*
-*		const char wlzWinFnNameParzen[]:			*
-*		const char wlzWinFnNameRectangle[]:			*
-*		const char wlzWinFnNameWelch[]:				*
-*		const char wlzWinFnNameUnspecified[]:			*
-* Parameters:	WlzWindowFnType winFnValue: Window function value.	*
-************************************************************************/
+/*!
+* \return	Constant name string or NULL if match fails.
+* \ingroup	WlzValuesFilters
+* \brief	Finds the appropriate name string for the given window
+*		function value.
+* \param	winFnValue		Window function value.
+*/
 const char 	*WlzWindowFnName(WlzWindowFnType winFnValue)
 {
   const char	*winFnName = NULL;
@@ -470,23 +461,14 @@ const char 	*WlzWindowFnName(WlzWindowFnType winFnValue)
   return(winFnName);
 }
 
-/************************************************************************
-* Function:	WlzWindowFnValue					*
-* Returns:	WlzWindowFnType:	Window function value, which is	*
-*					WLZ_WINDOWFN_UNSPECIFIED if no	*
-*					match is found.			*
-* Purpose:	Finds the appropriate value for the given window	*
-*		function name.						*
-* Global refs:	const char wlzWinFnNameBlackman[]: Window function name	*
-*					strings.			*
-*		const char wlzWinFnNameHamming[]:			*
-*		const char wlzWinFnNameHanning[]:			*
-*		const char wlzWinFnNameParzen[]:			*
-*		const char wlzWinFnNameRectangle[]:			*
-*		const char wlzWinFnNameWelch[]:				*
-*		const char wlzWinFnNameUnspecified[]:			*
-* Parameters:	const char *winFnName:	Window function value.		*
-************************************************************************/
+/*!
+* \return	Window function value. WLZ_WINDOWFN_UNSPECIFIED is returned
+*		if no match is found.
+* \ingroup	WlzValuesFilters
+* \brief	Finds the appropriate value for the given window function
+*		name string.
+* \param	winFnName		Window function name string.
+*/
 WlzWindowFnType	WlzWindowFnValue(const char *winFnName)
 {
   int		matchVal;

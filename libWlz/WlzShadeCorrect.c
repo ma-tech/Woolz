@@ -1,21 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:	Woolz
-* Title:	WlzShadeCorrect.c
-* Date: 	January 2001
-* Author:	Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Function to perform shade correction.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 09-03-01 bill Fixed grey pointers in WlzShadeCorrect2DG().
-* 08-03-01 bill	Added clamp to ubyte and short values in
-*		WlzShadeCorrect2DG().
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzShadeCorrect.c
+* \author       Bill Hill
+* \date         January 2001
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	
+* \ingroup	WlzValueFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <limits.h>
@@ -35,26 +38,25 @@ static WlzObject 		*WlzShadeCorrect2D(
 				  int inPlace,
 				  WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzShadeCorrect
-* Returns:	WlzObject:		Shade corrected object or
-*					NULL on error.
-* Purpose:	Shade corrects the given domain object with grey
-*		values.
-*		  p(i) = n * o(i) / s(i)
-*		The shade corrected image p(i) is created by applying
-*		a correction factor to each pixel/voxel of the
-*		given image o(i).
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object to be shade
-*					corrected.
-*		WlzObject *shdObj:	Given bright field object.
-*		double nrmVal:		Normalization value.
-*		int inPlace:		Modify the grey values of the
-*					given object if non-zero.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	Shade corrected object or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Shade corrects the given domain object with grey
+*               values.
+*		\f[
+		  p_i = \frac{n  o_i}{s_i}
+		\f]
+*               The shade corrected image P with values \f$p_i\f$ is
+*		created by applying a correction factor to each image
+*		value of the given image O with values \f$o_i\f$.
+* \param	srcObj			Given object to be shade corrected.
+* \param	shdObj			Given bright field object.
+* \param	nrmVal			Normalization value.
+* \param	inPlace			Modify the grey values of the given
+*					object in place if non-zero.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzObject	*WlzShadeCorrect(WlzObject *srcObj, WlzObject *shdObj,
 			         double nrmVal, int inPlace,
 			         WlzErrorNum *dstErr)
@@ -97,24 +99,21 @@ WlzObject	*WlzShadeCorrect(WlzObject *srcObj, WlzObject *shdObj,
   return(rtnObj);
 }
 
-/************************************************************************
-* Function:	WlzShadeCorrect2D
-* Returns:	WlzObject:		Shade corrected object or
-*					NULL on error.
-* Purpose:	Shade corrects the given 2D domain object with grey
-*		values. This function just checks that the given and
-*		shade objects have the same grey types, it then calls
-*		WlzShadeCorrect2DG() to shade correct the given object.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object to be shade
-*					corrected.
-*		WlzObject *shdObj:	Given bright field object.
-*		double nrmVal:		Normalization value.
-*		int inPlace:		Modify the grey values of the
-*					given object if non-zero.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	Shade corrected object or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Shade corrects the given 2D domain object with grey
+*               values. This function just checks that the given and
+*               shade objects have the same grey types, it then calls
+*               WlzShadeCorrect2DG() to shade correct the given object.
+* \param	srcObj			Given object to be shade corrected.
+* \param	shdObj			Given bright field object.
+* \param	nrmVal			Normalization value.
+* \param	inPlace			Modify the grey values of the
+*                                       given object if non-zero.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzShadeCorrect2D(WlzObject *srcObj, WlzObject *shdObj,
 				    double nrmVal, int inPlace,
 				    WlzErrorNum *dstErr)
@@ -147,22 +146,20 @@ static WlzObject *WlzShadeCorrect2D(WlzObject *srcObj, WlzObject *shdObj,
   return(rtnObj);
 }
 
-/************************************************************************
-* Function:	WlzShadeCorrect2DG
-* Returns:	WlzObject:		Shade corrected object or
-*					NULL on error.
-* Purpose:	Shade corrects the given 2D domain object with grey
-*		values. Grey value types known to be the same.
-* Global refs:	-
-* Parameters:	WlzObject *srcObj:	Given object to be shade
-*					corrected.
-*		WlzObject *shdObj:	Given bright field object.
-*		double nrmVal:		Normalization value.
-*		int inPlace:		Modify the grey values of the
-*					given object if non-zero.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	Shade corrected object or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Shade corrects the given 2D domain object with grey
+*               values. Grey value types known to be the same.
+* \param	srcObj			Given object to be shade
+*                                       corrected.
+* \param	shdObj			Given bright field object.
+* \param	nrmVal			Normalization value.
+* \param	inPlace			Modify the grey values of the
+*                                       given object if non-zero.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 				     double nrmVal, int inPlace,
 				     WlzErrorNum *dstErr)

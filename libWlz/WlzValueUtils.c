@@ -1,41 +1,40 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzValueUtils.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Implements many functions for setting and copying
-*		vectors of simple values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
-************************************************************************/
+/*!
+* \file         WlzValueUtils.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Many small functions for setting, copying and converting
+*		values.
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzValueSet<VecType>				
-* Returns:	void						
-* Purpose:	Sets the elements of the given vector to a given 
-*		value, where the vector type is any one of int,	
-*		short, UBYTE, float, double, WlzIVertex2, WlzFVertex2 or
-*		WlzDVertex2.					
-* Global refs:	-						
-* Parameters:	<VecType> *vec:		Vector who's elements are to be
-*					set.			
-*		<VecType> value:	Value to use when setting the
-*					vector's elements.	
-*		int count:		Number of vector elements to
-*					be set.			
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is int.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetInt(int *vec, int value,
 			       int count)
 {
@@ -52,6 +51,16 @@ void		WlzValueSetInt(int *vec, int value,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is short.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetShort(short *vec, short value,
 				 int count)
 {
@@ -68,12 +77,32 @@ void		WlzValueSetShort(short *vec, short value,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is UBYTE.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetUByte(UBYTE *vec, UBYTE value,
 				 int count)
 {
   (void )memset(vec, value, count);
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is float.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetFloat(float *vec, float value,
 				 int count)
 {
@@ -83,6 +112,16 @@ void		WlzValueSetFloat(float *vec, float value,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is double.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetDouble(double *vec, double value,
 				  int count)
 {
@@ -92,6 +131,16 @@ void		WlzValueSetDouble(double *vec, double value,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is WlzDVertex2.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
 				   int count)
 {
@@ -101,6 +150,16 @@ void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is WlzFVertex2.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetFVertex(WlzFVertex2 *vec, WlzFVertex2 value,
 				   int count)
 {
@@ -110,6 +169,16 @@ void		WlzValueSetFVertex(WlzFVertex2 *vec, WlzFVertex2 value,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given value,
+*		where the vector type is WlzIVertex2.
+* \param	vec			Vector who's elements are to be set.
+* \param	value			Value to use when setting the vector's
+*					elements.
+* \param	count			Number of vector elements to be set.
+*/
 void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
 				   int count)
 {
@@ -126,22 +195,20 @@ void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
   }
 }
 
-/************************************************************************
-* Function:	WlzValueSetGrey					
-* Returns:	void						
-* Purpose:	Sets the elements of the given vector to a given 
-*		value, where the vector type is any one of int,	
-*		short, UBYTE, float, double.			
-* Global refs:	-						
-* Parameters:	WlzGreyP *vec:		Vector who's elements are to be
-*					set.			
-*		int vecOff:		Offset from vec.	
-*		WlzGreyV value:		Value to use when setting the
-*					vector's elements.	
-*		WlzGreyType gType:	Grey type, ie: int, short....
-*		int count		Number of vector elements to
-*					be set.			
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Sets the elements of the given vector to a given
+*               value, where the vector type is any one of int,
+*               short, UBYTE, float, double.
+* \param	vec			Vector who's elements are to be set.
+* \param	vecOff			Offset from vec.
+* \param	value			Value to use when setting the
+*                                       vector's elements.
+* \param	gType			Grey type, ie: int, short....
+* \param	count			Number of vector elements to
+*					be set.
+*/
 void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
 				WlzGreyType gType, int count)
 {
@@ -165,19 +232,14 @@ void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
   }
 }
 
-/************************************************************************
-* Function:	WlzValueClamp<VecType>To<ReqType>		
-* Returns:	void						
-* Purpose:	Clamps a vector of <VecType> to the limits of	
-*		<ReqType>, where the source and destination types are
-*		any combination of int, short, UBYTE, float or double
-*		in which the range of <VecType> is not contained within
-*		the range of <ReqType>.				
-* Global refs:	-						
-* Parameters:	<VecType> *vec:		Vector who's elements are to be
-*					clamped.		
-*		int count:		Number of vector elements.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of int values to the limits of short.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampIntToShort(int *vec, int count)
 {
   while(count-- > 0)
@@ -194,6 +256,14 @@ void		 WlzValueClampIntToShort(int *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of int values to the limits of UBYTE.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampIntToUByte(int *vec, int count)
 {
   while(count-- > 0)
@@ -210,6 +280,14 @@ void		 WlzValueClampIntToUByte(int *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of short values to the limits of UBYTE.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampShortToUByte(short *vec, int count)
 {
   while(count-- > 0)
@@ -226,6 +304,14 @@ void		 WlzValueClampShortToUByte(short *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values to the limits of int.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampDoubleToInt(double *vec, int count)
 {
   while(count-- > 0)
@@ -242,6 +328,14 @@ void		 WlzValueClampDoubleToInt(double *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values to the limits of short.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampDoubleToShort(double *vec, int count)
 {
   while(count-- > 0)
@@ -258,6 +352,14 @@ void		 WlzValueClampDoubleToShort(double *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values to the limits of UBYTE.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampDoubleToUByte(double *vec, int count)
 {
   while(count-- > 0)
@@ -274,6 +376,14 @@ void		 WlzValueClampDoubleToUByte(double *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values to the limits of float.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampDoubleToFloat(double *vec, int count)
 {
   while(count-- > 0)
@@ -290,6 +400,14 @@ void		 WlzValueClampDoubleToFloat(double *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values to the limits of int.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampFloatToInt(float *vec, int count)
 {
   while(count-- > 0)
@@ -306,6 +424,14 @@ void		 WlzValueClampFloatToInt(float *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values to the limits of short.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampFloatToShort(float *vec, int count)
 {
   while(count-- > 0)
@@ -322,6 +448,14 @@ void		 WlzValueClampFloatToShort(float *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values to the limits of UBYTE.
+* \param	vec			Vector who's elements are to be
+*					clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampFloatToUByte(float *vec, int count)
 {
   while(count-- > 0)
@@ -338,17 +472,15 @@ void		 WlzValueClampFloatToUByte(float *vec, int count)
   }
 }
 
-/************************************************************************
-* Function:	WlzValueClamp<SrcType>Into<DstType>		
-* Returns:	void						
-* Purpose:	Clamps a vector of <SrcType> into a vector of
-*		<DstType>, where the source and destination types are
-*		any combination of int, short, UBYTE, float or double.
-* Global refs:	-						
-* Parameters:	<DstType> *vec:		Destination vector.
-*		<SrcType> *src:		Source vector.
-*		int count:		Number of vector elements.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of int values into a vector of short
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
 {
   while(count-- > 0)
@@ -370,6 +502,15 @@ void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of nt values into a vector of UBYTE
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampIntIntoUByte(UBYTE *dst, int *src, int count)
 {
   while(count-- > 0)
@@ -391,6 +532,15 @@ void		 WlzValueClampIntIntoUByte(UBYTE *dst, int *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of short values into a vector of UBYTE
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueClampShortIntoUByte(UBYTE *dst, short *src, int count)
 {
   while(count-- > 0)
@@ -412,6 +562,15 @@ void		 WlzValueClampShortIntoUByte(UBYTE *dst, short *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values into a vector of int
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampFloatIntoInt(int *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -433,6 +592,15 @@ void		WlzValueClampFloatIntoInt(int *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values into a vector of short
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -454,6 +622,15 @@ void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of float values into a vector of UBYTE
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampFloatIntoUByte(UBYTE *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -475,6 +652,15 @@ void		WlzValueClampFloatIntoUByte(UBYTE *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of into double values into a vector of int
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampDoubleIntoInt(int *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -496,6 +682,15 @@ void		WlzValueClampDoubleIntoInt(int *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values into a vector of short
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -517,6 +712,15 @@ void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values into a vector of UBYTE
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampDoubleIntoUByte(UBYTE *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -538,6 +742,15 @@ void		WlzValueClampDoubleIntoUByte(UBYTE *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Clamps a vector of double values into a vector of float
+*		values.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements.
+*/
 void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -559,22 +772,21 @@ void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
   }
 }
 
-/************************************************************************
-* Function:	WlzValueClampGreyIntoGrey			
-* Returns:	void						
-* Purpose:	Clamps a source vector into a destination vector,
-*		where the source and destination types are any	
-*		combination of int, short, UBYTE, float or double.
-* Global refs:	-						
-* Parameters:	WlzGreyP dst:		Destination vector.	
-*		int dstOff:		Destination offset.	
-*		WlzGreyType dstType:	Destination type, ie: int, ....
-*		WlzGreyP src:		Source vector.		
-*		int srcOff:		Source offset.		
-*		WlzGreyType srcType:	Source type, ie: int, ....
-*		int count:		Number of vector elements to
-*					be copied.		
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Clamps a source vector into a destination vector,
+*               where the source and destination types are any
+*               combination of int, short, UBYTE, float or double.
+* \param	dst			Destination vector.
+* \param	dstOff			Destination offset.
+* \param	dstType			Destination type, eg: WLZ_GREY_INT.
+* \param	src			Source vector.
+* \param	srcOff			Source offset.
+* \param	srcType			Source type, eg: WLZ_GREY_SHORT.
+* \param	count			Number of vector elements to be
+*					clamped and copied.
+*/
 void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 					  WlzGreyType dstType,
 					  WlzGreyP src, int srcOff,
@@ -711,19 +923,14 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
   }
 }
 
-/************************************************************************
-* Function:	WlzValueMask<VecType>To<ReqType>		
-* Returns:	void						
-* Purpose:	Masks a vector of <VecType> to the limits of	
-*		<ReqType>, where the source and destination types are
-*		any combination of int, short or UBYTE in which	
-*		the range of <VecType> is not contained within the
-*		range of <ReqType>.				
-* Global refs:	-						
-* Parameters:	<VecType> *vec:		Vector who's elements are to be
-*					clamped.		
-*		int count:		Number of vector elements.
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Masks a vector of int to the limits of short.
+* \param	vec			Vector who's elements are to be
+*                                       clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueMaskIntToShort(int *vec, int count)
 {
   while(count-- > 0)
@@ -732,6 +939,14 @@ void		 WlzValueMaskIntToShort(int *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Masks a vector of int to the limits of UBYTE.
+* \param	vec			Vector who's elements are to be
+*                                       clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueMaskIntToUByte(int *vec, int count)
 {
   while(count-- > 0)
@@ -740,6 +955,14 @@ void		 WlzValueMaskIntToUByte(int *vec, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Masks a vector of short to the limits of UBYTE.
+* \param	vec			Vector who's elements are to be
+*                                       clamped.
+* \param	count			Number of vector elements.
+*/
 void		 WlzValueMaskShortToUByte(short *vec, int count)
 {
   while(count-- > 0)
@@ -748,23 +971,27 @@ void		 WlzValueMaskShortToUByte(short *vec, int count)
   }
 }
 
-/************************************************************************
-* Function:	WlzValueCopy<SrcType>To<DstType>		
-* Returns:	void						
-* Purpose:	Copies a vector of <SrcType> to a vector of <DstType>,
-*		where the source and destination types are any	
-*		combination of int, short, UBYTE, float or double.
-* Global refs:	-						
-* Parameters:	<SrcType> *dst:		Destination vector.	
-*		<DstType> *src:		Source vector.		
-*		int count:		Number of vector elements to
-*					be copied.		
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of int to a vector of int.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIntToInt(int *dst, int *src, int count)
 {
   (void )memcpy(dst, src, count * sizeof(int));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of int to a vector of short.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIntToShort(short *dst, int *src, int count)
 {
   while(count-- > 0)
@@ -773,6 +1000,14 @@ void		WlzValueCopyIntToShort(short *dst, int *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of int to a vector of UBYTE.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIntToUByte(UBYTE *dst, int *src, int count)
 {
   while(count-- > 0)
@@ -781,6 +1016,14 @@ void		WlzValueCopyIntToUByte(UBYTE *dst, int *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of int to a vector of float.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIntToFloat(float *dst, int *src, int count)
 {
   while(count-- > 0)
@@ -789,6 +1032,14 @@ void		WlzValueCopyIntToFloat(float *dst, int *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of int to a vector of double.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIntToDouble(double *dst, int *src, int count)
 {
   while(count-- > 0)
@@ -797,6 +1048,14 @@ void		WlzValueCopyIntToDouble(double *dst, int *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of short to a vector of int.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyShortToInt(int *dst, short *src, int count)
 {
   while(count-- > 0)
@@ -805,11 +1064,27 @@ void		WlzValueCopyShortToInt(int *dst, short *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of short to a vector of short.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyShortToShort(short *dst, short *src, int count)
 {
   (void )memcpy(dst, src, count * sizeof(short));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of short to a vector of UBYTE.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyShortToUByte(UBYTE *dst, short *src, int count)
 {
   while(count-- > 0)
@@ -818,6 +1093,14 @@ void		WlzValueCopyShortToUByte(UBYTE *dst, short *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of short to a vector of float.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyShortToFloat(float *dst, short *src, int count)
 {
   while(count-- > 0)
@@ -826,6 +1109,14 @@ void		WlzValueCopyShortToFloat(float *dst, short *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of short to a vector of double.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyShortToDouble(double *dst, short *src,
 					        int count)
 {
@@ -835,6 +1126,14 @@ void		WlzValueCopyShortToDouble(double *dst, short *src,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of UBYTE to a vector of int.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyUByteToInt(int *dst, UBYTE *src, int count)
 {
   while(count-- > 0)
@@ -843,6 +1142,14 @@ void		WlzValueCopyUByteToInt(int *dst, UBYTE *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of UBYTE to a vector of short.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyUByteToShort(short *dst, UBYTE *src, int count)
 {
   while(count-- > 0)
@@ -851,11 +1158,27 @@ void		WlzValueCopyUByteToShort(short *dst, UBYTE *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of UBYTE to a vector of UBYTE.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyUByteToUByte(UBYTE *dst, UBYTE *src, int count)
 {
   (void )memcpy(dst, src, count * sizeof(UBYTE));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of UBYTE to a vector of float.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyUByteToFloat(float *dst, UBYTE *src, int count)
 {
   while(count-- > 0)
@@ -864,6 +1187,14 @@ void		WlzValueCopyUByteToFloat(float *dst, UBYTE *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of UBYTE to a vector of double.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyUByteToDouble(double *dst, UBYTE *src, int count)
 {
   while(count-- > 0)
@@ -872,6 +1203,14 @@ void		WlzValueCopyUByteToDouble(double *dst, UBYTE *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of float to a vector of int.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFloatToInt(int *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -881,6 +1220,14 @@ void		WlzValueCopyFloatToInt(int *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of float to a vector of short.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFloatToShort(short *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -890,6 +1237,14 @@ void		WlzValueCopyFloatToShort(short *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of float to a vector of UBYTE.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFloatToUByte(UBYTE *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -899,11 +1254,27 @@ void		WlzValueCopyFloatToUByte(UBYTE *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of float to a vector of float.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFloatToFloat(float *dst, float *src, int count)
 {
   (void )memcpy(dst, src, count * sizeof(float));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of float to a vector of double.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFloatToDouble(double *dst, float *src, int count)
 {
   while(count-- > 0)
@@ -912,6 +1283,14 @@ void		WlzValueCopyFloatToDouble(double *dst, float *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of double to a vector of int.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDoubleToInt(int *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -921,6 +1300,14 @@ void		WlzValueCopyDoubleToInt(int *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of double to a vector of short.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDoubleToShort(short *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -930,6 +1317,14 @@ void		WlzValueCopyDoubleToShort(short *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of double to a vector of UBYTE.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDoubleToUByte(UBYTE *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -939,6 +1334,14 @@ void		WlzValueCopyDoubleToUByte(UBYTE *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of double to a vector of float.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDoubleToFloat(float *dst, double *src, int count)
 {
   while(count-- > 0)
@@ -947,27 +1350,33 @@ void		WlzValueCopyDoubleToFloat(float *dst, double *src, int count)
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of double to a vector of double.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDoubleToDouble(double *dst, double *src, int count)
 {
   (void )memcpy(dst, src, count * sizeof(double));
 }
 
-/************************************************************************
-* Function:	WlzValueCopyGreyToGrey				
-* Returns:	void						
-* Purpose:	Copies a source vector to a destination vector,	
-*		where the source and destination types are any	
-*		combination of int, short, UBYTE, float or double.
-* Global refs:	-						
-* Parameters:	WlzGreyP dst:		Destination vector.	
-*		int dstOff:		Destination offset.	
-*		WlzGreyType dstType:	Destination type, ie: int, ....
-*		WlzGreyP src:		Source vector.		
-*		int srcOff:		Source offset.		
-*		WlzGreyType srcType:	Source type, ie: int, ....
-*		int count:		Number of vector elements to
-*					be copied.		
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup      WlzValueUtils
+* \brief	Copies a source vector to a destination vector,
+*               where the source and destination types are any
+*               combination of int, short, UBYTE, float or double.
+* \param	dst			Destination vector.
+* \param	dstOff			Destination offset.
+* \param	dstType			Destination type, eg WLZ_GREY_INT.
+* \param	src			Source vector.
+* \param	srcOff			Source offset.
+* \param	srcType			Source type, eg WLZ_GREY_SHORT.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 				       WlzGreyType dstType,
 				       WlzGreyP src, int srcOff,
@@ -1104,19 +1513,15 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
   }
 }
 
-/************************************************************************
-* Function:	WlzValueCopy<SrcType>To<DstType>
-* Returns:	void						
-* Purpose:	Copies a vector of <SrcType> verticies to a vector of
-*		<DstType> verticies, where the source and destination
-*		types are any combination of WlzDVertex2, WlzFVertex2
-*		and WlzIVertex2.					
-* Global refs:	-						
-* Parameters:	<SrcType> *dst:		Destination vector.	
-*		<DstType> *src:		Source vector.		
-*		int count:		Number of vector elements to
-*					be copied.		
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D double vertices to a vector of
+*		2D double vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDVertexToDVertex(WlzDVertex2 *dst,
 					     WlzDVertex2 *src,
 					     int count)
@@ -1124,6 +1529,15 @@ void		WlzValueCopyDVertexToDVertex(WlzDVertex2 *dst,
   (void )memcpy(dst, src, count * sizeof(WlzDVertex2));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D double vertices to a vector of
+*		2D float vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
 					     WlzDVertex2 *src,
 					     int count)
@@ -1137,6 +1551,15 @@ void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D double vertices to a vector of
+*		2D int vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDVertexToIVertex(WlzIVertex2 *dst,
 					     WlzDVertex2 *src,
 					     int count)
@@ -1150,6 +1573,15 @@ void		WlzValueCopyDVertexToIVertex(WlzIVertex2 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D float vertices to a vector of
+*		2D double vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFVertexToDVertex(WlzDVertex2 *dst,
 					     WlzFVertex2 *src,
 					     int count)
@@ -1163,6 +1595,15 @@ void		WlzValueCopyFVertexToDVertex(WlzDVertex2 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D float vertices to a vector of
+*		2D float vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFVertexToFVertex(WlzFVertex2 *dst,
 					     WlzFVertex2 *src,
 					     int count)
@@ -1170,6 +1611,15 @@ void		WlzValueCopyFVertexToFVertex(WlzFVertex2 *dst,
   (void )memcpy(dst, src, count * sizeof(WlzFVertex2));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D float vertices to a vector of
+*		2D int vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFVertexToIVertex(WlzIVertex2 *dst,
 					     WlzFVertex2 *src,
 					     int count)
@@ -1183,6 +1633,15 @@ void		WlzValueCopyFVertexToIVertex(WlzIVertex2 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D int vertices to a vector of
+*		2D double vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIVertexToDVertex(WlzDVertex2 *dst,
 					     WlzIVertex2 *src,
 					     int count)
@@ -1196,6 +1655,15 @@ void		WlzValueCopyIVertexToDVertex(WlzDVertex2 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D int vertices to a vector of
+*		2D float vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
 					     WlzIVertex2 *src,
 					     int count)
@@ -1209,6 +1677,15 @@ void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 2D int vertices to a vector of
+*		2D int vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
 					     WlzIVertex2 *src,
 					     int count)
@@ -1216,19 +1693,15 @@ void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
   (void )memcpy(dst, src, count * sizeof(WlzIVertex2));
 }
 
-/************************************************************************
-* Function:	WlzValueCopy<SrcType>To<DstType>3
-* Returns:	void						
-* Purpose:	Copies a vector of <SrcType> verticies to a vector of
-*		<DstType> verticies, where the source and destination
-*		types are any combination of WlzDVertex3, WlzFVertex3
-*		and WlzIVertex3.					
-* Global refs:	-						
-* Parameters:	<SrcType> *dst:		Destination vector.	
-*		<DstType> *src:		Source vector.		
-*		int count:		Number of vector elements to
-*					be copied.		
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D double vertices to a vector of
+*		3D double vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzDVertex3 *src,
 					      int count)
@@ -1236,6 +1709,15 @@ void		WlzValueCopyDVertexToDVertex3(WlzDVertex3 *dst,
   (void )memcpy(dst, src, count * sizeof(WlzDVertex3));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D double vertices to a vector of
+*		3D float vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzDVertex3 *src,
 					      int count)
@@ -1249,6 +1731,15 @@ void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D double vertices to a vector of
+*		3D int vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzDVertex3 *src,
 					      int count)
@@ -1262,6 +1753,15 @@ void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D float vertices to a vector of
+*		3D double vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzFVertex3 *src,
 					      int count)
@@ -1275,6 +1775,15 @@ void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D float vertices to a vector of
+*		3D float vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzFVertex3 *src,
 					      int count)
@@ -1282,6 +1791,15 @@ void		WlzValueCopyFVertexToFVertex3(WlzFVertex3 *dst,
   (void )memcpy(dst, src, count * sizeof(WlzFVertex3));
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D float vertices to a vector of
+*		3D int vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzFVertex3 *src,
 					      int count)
@@ -1295,6 +1813,15 @@ void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D int vertices to a vector of
+*		3D double vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzIVertex3 *src,
 					      int count)
@@ -1308,6 +1835,15 @@ void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D int vertices to a vector of
+*		3D float vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzIVertex3 *src,
 					      int count)
@@ -1321,6 +1857,15 @@ void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
   }
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValueUtils
+* \brief	Copies a vector of 3D int vertices to a vector of
+*		3D int vertices.
+* \param	dst			Destination vector.
+* \param	src			Source vector.
+* \param	count			Number of vector elements to copy.
+*/
 void		WlzValueCopyIVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzIVertex3 *src,
 					      int count)
@@ -1328,19 +1873,16 @@ void		WlzValueCopyIVertexToIVertex3(WlzIVertex3 *dst,
   (void )memcpy(dst, src, count * sizeof(WlzIVertex3));
 }
 
-/************************************************************************
-* Function:	WlzValueConvertPixel				
-* Returns:	WlzErrorNum:		WLZ_ERR_NONE,		
-*					WLZ_ERR_PARAM_NULL or	
-*					WLZ_ERR_GREY_TYPE.	
-* Purpose:	Converts a single pixel value.			
-*		Source values are clamped to the the destination value
-*		range.						
-* Global refs:	-						
-* Parameters:	WlzPixelV *dstPix	Destination pointer for pixel.
-*		WlzPixelV srcPix:	Source pixel.		
-*		WlzGreyType dstType:	Destination type, ie: int, ....
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValueUtils
+* \brief	Converts a single pixel value.
+*               Source values are clamped to the the destination value
+*               range.
+* \param	dstPix			Destination pointer for pixel.
+* \param	srcPix			Source pixel.
+* \param	dstType			Destination type, eg WLZ_GREY_INT.
+*/
 WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 				     WlzPixelV srcPix,
 				     WlzGreyType dstType)
@@ -1508,38 +2050,54 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzValueMedian<VecType>				
-* Returns:	void						
-* Purpose:	Computes the median of the given vector (the vector's
-*		values are overwritten), where the vector type is 
-*		either int or double.				
-*		The algorithm is based on min-max elimination as used
-*		by Peath A W. Median finding on a 3x3 Grid. Graphics
-*		Gems, 171-175. Academic Press. 1990.		
-*		If the vector has less than 1 element 0 is returned.
-*		In the trivial case of 1 or 2 elements, the first
-*		element's value is returned.			
-*		If the vector has more than 3 elements:		
-*		* The given vector is partitioned into two portions:
-*		  the 1st having ((n + 1) / 2) + 1 elements.	
-*		* While all the elements have not been examined:
-*		*   Find maximum and minimum values in the 1st	
-*		    partition.					
-*		*   Replace the min value with the first in the	
-*		    partition and the max with the last in the	
-*		    partition.					
-*		*   Replace the first value in the first partition with
-*		    the next value from the second partition.	
-*		*   Reduce the length of the first partion by 1, ie
-*		    omit the last value.			
-*		* This leaves 3 values in the 1st partion, their median
-*		  is found by direct comparison.		
-* Global refs:	-						
-* Parameters:	<VecType> *vec:		Vector who's elements are to be
-*					used in computing the median.
-*		int count:		Number of vector elements.
-************************************************************************/
+/*!
+* \return	Median value.
+* \ingroup	WlzValueUtils
+* \brief	Computes the median of the given vector (the vector's
+*               values are overwritten), where the vector type is of
+*               int values.
+*               The algorithm is based on min-max elimination as used
+*               by Peath A W. Median finding on a 3x3 Grid. Graphics
+*               Gems, 171-175. Academic Press. 1990.
+*               If the vector has less than 1 element 0 is returned.
+*               In the trivial case of 1 or 2 elements, the first
+*               element's value is returned.
+*               If the vector has more than 3 elements:
+*		<ul>
+*		  <li>
+*                 The given vector is partitioned into two portions:
+*                 the 1st having ((n + 1) / 2) + 1 elements.
+*		  </li>
+*		  <li>
+*                 While all the elements have not been examined:
+*		  </li>
+*		  <ul>
+*		    <li>
+*                   Find maximum and minimum values in the 1st
+*		    </li>
+*		    <li>
+*                   Replace the min value with the first in the
+*                   partition and the max with the last in the
+*                   partition.
+*		    </li>
+*		    <li>
+*                   Replace the first value in the first partition with
+*                   the next value from the second partition.
+*		    </li>
+*		    <li>
+*                   Reduce the length of the first partion by 1, ie
+*                   omit the last value.
+*		    <li>
+*		  </ul>
+*		  </li>
+*		  <li>
+*                 This leaves 3 values in the 1st partion, their median
+*                 is found by direct comparison.
+*		  </li>
+*		</ul>
+* \param	values			Vector of int values.
+* \param	nVal			Number of values in vector.
+*/
 int		WlzValueMedianInt(int *values, int nVal)
 {
   int		tmpV,
@@ -1614,6 +2172,54 @@ int		WlzValueMedianInt(int *values, int nVal)
   return(medVal);
 }
 
+/*!
+* \return	Median value.
+* \ingroup	WlzValueUtils
+* \brief	Computes the median of the given vector (the vector's
+*               values are overwritten), where the vector type is of
+*               double values.
+*               The algorithm is based on min-max elimination as used
+*               by Peath A W. Median finding on a 3x3 Grid. Graphics
+*               Gems, 171-175. Academic Press. 1990.
+*               If the vector has less than 1 element 0 is returned.
+*               In the trivial case of 1 or 2 elements, the first
+*               element's value is returned.
+*               If the vector has more than 3 elements:
+*		<ul>
+*		  <li>
+*                 The given vector is partitioned into two portions:
+*                 the 1st having ((n + 1) / 2) + 1 elements.
+*		  </li>
+*		  <li>
+*                 While all the elements have not been examined:
+*		  </li>
+*		  <ul>
+*		    <li>
+*                   Find maximum and minimum values in the 1st
+*		    </li>
+*		    <li>
+*                   Replace the min value with the first in the
+*                   partition and the max with the last in the
+*                   partition.
+*		    </li>
+*		    <li>
+*                   Replace the first value in the first partition with
+*                   the next value from the second partition.
+*		    </li>
+*		    <li>
+*                   Reduce the length of the first partion by 1, ie
+*                   omit the last value.
+*		    <li>
+*		  </ul>
+*		  </li>
+*		  <li>
+*                 This leaves 3 values in the 1st partion, their median
+*                 is found by direct comparison.
+*		  </li>
+*		</ul>
+* \param	values			Vector of double values.
+* \param	nVal			Number of values in vector.
+*/
 double		WlzValueMedianDouble(double *values, int nVal)
 {
   int		idP,

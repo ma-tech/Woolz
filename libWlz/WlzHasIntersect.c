@@ -27,7 +27,6 @@
 
 /*!
 * \ingroup     Wlz
-* \defgroup    WlzDomainUtils
 */
 
 static int WlzIntervalHasIntersect(

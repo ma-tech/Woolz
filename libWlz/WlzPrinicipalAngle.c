@@ -1,50 +1,61 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzPrinicipalAngle.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates the angle which the long principal axis
-*		makes with the  given object.
-*		This code is based on code by lizg@hgu.mrc.ac.uk which
-*		implemented a combination of methods by Rees and
-*		Hibbard. (D.W.A. Rees, Mechanics of Solids and
-*		Structures).
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 15-05-01 bill	Fixed bugs found by Elizabeth Guest in WlzPrincipalAngle
-*		with binary option.
-************************************************************************/
+/*!
+* \file         WlzPrinicipalAngle.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Calculates the angle which the long principal axis
+*               makes with the  given object.
+* \note         This code is based on code by lizg@hgu.mrc.ac.uk which
+*               implemented a combination of methods by Rees and
+*               Hibbard. (D.W.A. Rees, Mechanics of Solids and
+*               Structures).
+* \ingroup	WlzRegistration
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzPrincipalAngle					*
-* Returns:	double:			Angle in radians.		*
-* Purpose:	Calculates the angle  which the long principal axis	*
-*		makes with the x-axis in the given object.		*
-*		theta = arctan(Ixy*2/(Iyy-Ixx)) / 2			*
-*		where							*
-*		Ixx = SUMySUMx{(y-Cy)*(y-Cy)*G(x,y)}			*
-*		Iyy = SUMySUMx{(x-Cx)(x-Cx)*G{x,y)}			*
-*		Ixy = - SUMySUMx{(x-Cx)*(y-Cy)*G(x,y)}			*
-*		and (Cx,Cy) are the coordinates of the centre of	*
-*		mass.							*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given object.			*
-*		WlzDVertex2 cMass:	Center of mass of given object.	*
-*		int binObjFlag:		Given object is binary if non	*
-*					zero.				*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not 	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	Angle in radians.
+* \ingroup	WlzRegistration
+* \brief	Calculates the angle  which the long principal axis
+*               makes with the x-axis in the given object.
+*               \f[
+		  \theta = \frac{1}{2}
+		  	   \arctan{(2 \frac{I_{xy}}{I_{yy}-I_{xx}})}
+		\f]
+*               where
+*               \f[
+		  I_{xx} = \sum_y \sum_x ((y - C_y) (y - C_y) G(x, y))
+		\f]
+*		\f[
+                  I_{yy} = \sum_y \sum_x ((x - C_x) (x - C_x) G(x, y))
+		\f]
+*		\f[
+                  I_{xy} = - \sum_y \sum_x (((x - C x) (y - C_y) G(x, y))
+		\f]
+*               and \f$(C_x, C_y)\f$ are the coordinates of the centre of
+*               mass.
+* \param	srcObj			Given object.
+* \param	cMass			Center of mass of given object.
+* \param	binObjFlag		Given object is binary if non
+*                                       zero.
+* \param	dstErrNum		Destination pointer for error
+*                                       number, may be NULL if not
+*                                       required.
+*/
 double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 				  int binObjFlag, WlzErrorNum *dstErrNum)
 {

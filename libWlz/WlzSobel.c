@@ -1,35 +1,39 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzSobel.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Implements a Sobel edge detection filter.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzSobel.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Implements a Sobel edge detection filter.
+* \ingroup	WlzValueFilters
+* \todo         -
+* \bug          None known.
+*/
+#pragma ident "MRC HGU $Id$"
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzSobel						*
-* Returns:	WlzObject *:		Sobel filtered object.		*
-* Purpose:	Applies a Sobel edge detection filter to the given	*
-*		woolz object.						*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		int hFlag:		Apply horizontal edge kernel if	*
-*					non-zero.			*
-*		int vFlag:		Apply vertical edge kernel if	*
-*					non-zero.			*
-*		WlzErrorNum *wlzErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Sobel filtered object.
+* \ingroup	WlzValueFilters
+* \brief	Applies a Sobel edge detection filter to the given
+*               woolz object.
+* \param	srcObj			Given source object.
+* \param	hFlag			Apply horizontal edge kernel if
+* 					non-zero.
+* \param	vFlag			Apply vertical edge kernel if
+* 					non-zero.
+* \param	wlzErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
 			  WlzErrorNum *wlzErr)
 {

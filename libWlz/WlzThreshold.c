@@ -1,23 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzThreshold.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Thresholds a Woolz grey-level object, 2D or 3D.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzThreshold.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Thresholds a Woolz grey-level object, 2D or 3D.
+* \ingroup	WlzThreshold
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
-
 #include <Wlz.h>
 
 static WlzObject *WlzThreshold3d(WlzObject	*obj,
@@ -25,23 +26,24 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 				 WlzThresholdType highlow,
 				 WlzErrorNum	*dstErr);
 
-
-/************************************************************************
-*   Function   : WlzThreshold						*
-*   Date       : Sat Nov  2 14:04:32 1996				*
-*************************************************************************
-*   Synopsis   :Threshold a woolz grey-level object, 2D or 3D.		*
-*   Returns    :WlzObject *: NULL on error				*
-*   Parameters :WlzObject *obj: object to be thresholded		*
-*		WlzPixelV threshV: threshold pixel value.		*
-*		WlzThresholdType highlow:				*
-*		highlow = WLZ_THRESH_HIGH - thresholded object is of 	*
-*			values >= threshold value.			*
-*		highlow = WLZ_THRESH_LOW - thresholded object is of	*
-*			values < threshold value.			*
-*   Global refs:None.							*
-************************************************************************/
-
+/*!
+* \return	New Woolz object or NULL on error.
+* \ingroup	WlzThreshold
+* \brief	Thresholds a woolz grey-level object, 2D or 3D.
+* \param	obj			Object to be thresholded.
+* \param	threshV			Threshold pixel value.
+* \param	highlow			Mode parameter with possible values:
+*					<ul>
+*					<li> WLZ_THRESH_HIGH - thresholded
+*					object is of values >= threshold value.
+*					</li>
+*					<li> WLZ_THRESH_LOW - thresholded
+*					object is of values < threshold value.
+*					</li>
+*					</ul>
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
 WlzObject *WlzThreshold(WlzObject	*obj,
 			WlzPixelV	threshV,
 			WlzThresholdType highlow,
@@ -472,16 +474,24 @@ WlzObject *WlzThreshold(WlzObject	*obj,
   return(nobj);
 }
 
-/************************************************************************
-*   Function   : WlzThreshold3d						*
-*   Date       : Thu Nov 28 13:06:19 1996				*
-*************************************************************************
-*   Synopsis   :Private routine used by WlzThreshold for 3D objects.	*
-*   Returns    :See WlzThreshold header.				*
-*   Parameters :							*
-*   Global refs:							*
-************************************************************************/
-
+/*!
+* \return	New Woolz object or NULL on error.
+* \ingroup	WlzThreshold
+* \brief	Private function used to threshold 3D objects.
+* \param	obj			Object to be thresholded.
+* \param	threshV			Threshold pixel value.
+* \param	highlow			Mode parameter with possible values:
+*					<ul>
+*					<li> WLZ_THRESH_HIGH - thresholded
+*					object is of values >= threshold value.
+*					</li>
+*					<li> WLZ_THRESH_LOW - thresholded
+*					object is of values < threshold value.
+*					</li>
+*					</ul>
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
 static WlzObject *WlzThreshold3d(WlzObject	*obj,
 				 WlzPixelV	threshV,
 				 WlzThresholdType highlow,

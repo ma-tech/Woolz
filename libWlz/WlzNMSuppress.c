@@ -1,93 +1,89 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzNMSuppress.c
-* Date:         May 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A maximal supression filter for Woolz. This filter
-*		constructs a new domain object using a Canny-like
-*		non-maximal suppression algorithm. The domain is the
-*		maximaly suppressed domain and the values are the
-*		encoded gradient direction. The direction is encoding
-*		is from the +ve x-axis counter clockwise in eight steps
-*		with a mask of 0x80, ie directions values are in the
-*		range 128 -> 128 + 7.
-*
-*			     ^ Y axis (downwards when displayed)
-*			     |
-*		  +----------+---------+
-*		  | \        |        /|
-*		  |  \128 + 2|128 + 1/ |
-*		  |   \      |      /  |
-*		  |    \     |     /   |
-*		  |     \    |    /    |
-*		  |      \   |   /     |
-*		  |       \  |  /      |
-*		  |128 + 3 \ | /128 + 0|
-*		  |         \|/        |
-*		  +----------O---------+--> X axis
-*		  |         /|\        |
-*		  |128 + 4 / | \128 + 7|
-*		  |       /  |  \      |
-*		  |      /   |   \     |
-*		  |     /    |    \    |
-*		  |    /     |     \   |
-*		  |   /      |      \  |
-*		  |  /128 + 5|128 + 6\ |
-*		  | /        |        \|
-*		  +----------+---------+
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables.
-************************************************************************/
+/*!
+* \file         WlzNMSuppress.c
+* \author       Bill Hill
+* \date         May 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	A non-maximal supression filter, which constructs a new
+*		domain object using a Canny-like non-maximal suppression
+*		algorithm. The domain is the non-maximally suppressed
+*		domain and the values are the encoded gradient direction.
+* \ingroup	WlzFeatures
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <float.h>
 #include <string.h>
 #include <Wlz.h>
 
-static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *,
-				       int **, int *, int *,
-				       WlzDynItvPool *,
-				       UBYTE *, int,
-				       WlzIVertex2, WlzIVertex2, int);
-static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *,
-				       double **, double *, double *,
-				       WlzDynItvPool *,
-				       UBYTE *, int,
-				       WlzIVertex2, WlzIVertex2, double);
-static WlzObject *WlzNMSuppress2D(WlzObject *, WlzObject *, WlzObject *,
-				  WlzPixelV, WlzErrorNum *);
-static WlzObject *WlzNMSuppress3D(WlzObject *, WlzObject *,
-			          WlzObject *, WlzObject *,
-				  WlzPixelV, WlzErrorNum *);
+static WlzErrorNum 		WlzNMSuppress2DBufI(
+				  WlzIntervalDomain *dstIDom,
+				  int **grdMBuf,
+				  int *grdYBuf,
+				  int *grdXBuf,
+				  WlzDynItvPool *iPool,
+				  UBYTE *dstBuf,
+				  int dstLen,
+				  WlzIVertex2 dstPos,
+				  WlzIVertex2 orgPos,
+				  int minGM);
+static WlzErrorNum 		WlzNMSuppress2DBufD(
+				  WlzIntervalDomain *dstIDom,
+				  double **grdMBuf,
+				  double *grdYBuf,
+				  double *grdXBuf,
+				  WlzDynItvPool *iPool,
+				  UBYTE *dstBuf,
+				  int dstLen,
+				  WlzIVertex2 dstPos,
+				  WlzIVertex2 orgPos,
+				  double minGM);
+static WlzObject 		*WlzNMSuppress2D(
+				  WlzObject *grdM,
+				  WlzObject *grdY,
+				  WlzObject *grdX,
+				  WlzPixelV minThrV,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzNMSuppress3D(
+				  WlzObject *grdM,
+				  WlzObject *grdZ,
+				  WlzObject *grdY,
+				  WlzObject *grdX,
+				  WlzPixelV minThrV,
+				  WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzNMSuppress2DBufI
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Performs non-maximal suppression on the given buffers.
-* Global refs:	-
-* Parameters:	WlzIntervalDomain *dstIDom: Interval domain to which
-*					intervals are to be appended.
-*		int **grdMBuf:		Integer modulus of grey gradient
-*					buffer.
-*		int *grdYBuf:		Integer vertical grey gradient
-*					buffer.
-*		int *grdXBuf:		Integer horizontal grey gradient
-*					buffer.
-*		WlzDynItvPool *iPool:   Interval pool.
-*		UBYTE *dstBuf:		Buffer for direction values.
-*		int dstLen:		Buffer (given interval) length.
-*		WlzIVertex2 dstPos:	Position of start of buffer wrt
-*					the origin.
-*		WlzIVertex2 orgPos:	The origin.
-*		int minGM:		Minimum (modulus) gradient value
-*					to be considered.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzFeatures
+* \brief	Performs non-maximal suppression on the given buffers.
+* \param	dstIDom			Interval domain to which
+*                                       intervals are to be appended.
+* \param	grdMBuf			Integer modulus of grey gradient
+*                                       buffer.
+* \param	grdYBuf			Integer vertical grey gradient
+*                                       buffer.
+* \param	grdXBuf			buffer.
+*               int *grdXBuf:           Integer horizontal grey gradient
+*                                       buffer.
+* \param	iPool			Interval pool.
+* \param	dstBuf			Buffer for direction values.
+* \param	dstLen			Buffer (given interval) length.
+* \param	dstPos			Position of start of buffer wrt
+*                                       the origin.
+* \param	orgPos			The origin.
+* \param	minGM			Minimum (modulus) gradient value
+*                                       to be considered.
+*/
 static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 				       int **grdMBuf, int *grdYBuf,
 				       int *grdXBuf,
@@ -235,28 +231,27 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzNMSuppress2DBufD
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Performs non-maximal suppression on the given buffers.
-* Global refs:	-
-* Parameters:	WlzIntervalDomain *dstIDom: Interval domain to which
-*					intervals are to be appended.
-*		int **grdMBuf:		Double modulus of grey gradient
-*					buffer.
-*		int *grdYBuf:		Double vertical grey gradient
-*					buffer.
-*		int *grdXBuf:		Double horizontal grey gradient
-*					buffer.
-*		WlzDynItvPool *iPool:	Interval pool.
-*		UBYTE *dstBuf:		Buffer for direction values.
-*		int dstLen:		Buffer (given interval) length.
-*		WlzIVertex2 dstPos:	Position of start of buffer wrt
-*					the origin.
-*		WlzIVertex2 orgPos:	The origin.
-*		int minGM:		Minimum (modulus) gradient value
-*					to be considered.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzFeatures
+* \brief	Performs non-maximal suppression on the given buffers.
+* \param	dstIDom			Interval domain to which
+*                                       intervals are to be appended.
+* \param	grdMBuf			Double modulus of grey gradient
+*                                       buffer.
+* \param	grdYBuf			Double vertical grey gradient
+*                                       buffer.
+* \param	grdXBuf			Double horizontal grey gradient
+*                                       buffer.
+* \param	iPool			Interval pool.
+* \param	dstBuf			Buffer for direction values.
+* \param	dstLen			Buffer (given interval) length.
+* \param	dstPos			Position of start of buffer wrt
+*                                       the origin.
+* \param	orgPos			The origin.
+* \param	minGM			Minimum (modulus) gradient value
+*                                       to be considered.
+*/
 static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
 				       double **grdMBuf, double *grdYBuf,
 				       double *grdXBuf,
@@ -394,26 +389,24 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzNMSuppress2D
-* Returns:	WlzObject:		New Woolz domain object with
-*					maximal domain and grey values
-*					which encode the gradient's
-*					direction or NULL on error.
-* Purpose:	Computes the maximal domain and gradient direction of 
-*		given Woolz 2D domain object.
-*		All the objects domains are known to be the same.
-* Global refs:	-
-* Parameters:	WlzObject *grdM:	Gradient magnitude.
-*		WlzObject *grdY:	Gradient (partial derivative)
-*					through lines.
-*		WlzObject *grdX:	Gradient (partial derivative)
-*					through columns.
-*		WlzPixelV minThrV:	Minimum gradient value to
-*					consider.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with maximal domain and grey
+*		values which encode the gradient's direction or NULL
+*		on error.
+* \ingroup	WlzFeatures
+* \brief	Computes the maximal domain and gradient direction of
+*               given Woolz 2D domain object.
+* \note         All the objects domains are known to be the same.
+* \param	grdM			Gradient magnitude.
+* \param	grdY			Gradient (partial derivative)
+*                                       through lines.
+* \param	grdX			Gradient (partial derivative)
+*                                       through columns.
+* \param	minThrV			Minimum gradient value to
+*                                       consider.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
 				  WlzObject *grdY, WlzObject *grdX,
 				  WlzPixelV minThrV, WlzErrorNum *dstErr)
@@ -747,28 +740,26 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzNMSuppress3D
-* Returns:	WlzObject:		New Woolz domain object with
-*					maximal domain and grey values
-*					which encode the gradient's
-*					direction or NULL on error.
-* Purpose:	Computes the maximal domain and gradient direction of 
-*		given Woolz 3D domain object.
-*		All the objects domains are known to be the same.
-* Global refs:	-
-* Parameters:	WlzObject *grdM:	Gradient magnitude.
-*		WlzObject *grdZ:	Gradient (partial derivative)
-*					through planes.
-*		WlzObject *grdY:	Gradient (partial derivative)
-*					through lines.
-*		WlzObject *grdX:	Gradient (partial derivative)
-*					through columns.
-*		WlzPixelV minThrV:	Minimum gradient value to
-*					consider.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New Woolz domain object with maximal domain and grey
+*		values which encode the gradient's direction or NULL
+*		on error.
+* \ingroup	WlzFeatures
+* \brief	Computes the maximal domain and gradient direction of
+*               given Woolz 3D domain object.
+* \note		All the objects domains are known to be the same.
+* \param	grdM			Gradient magnitude.
+* \param	grdZ			Gradient (partial derivative)
+*                                       through planes.
+* \param	grdY			Gradient (partial derivative)
+*                                       through lines.
+* \param	grdX			Gradient (partial derivative)
+*                                       through columns.
+* \param	minThrV			Minimum gradient value to
+*                                       consider.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 static WlzObject *WlzNMSuppress3D(WlzObject *grdM, WlzObject *grdZ,
 				  WlzObject *grdY, WlzObject *grdX,
 				  WlzPixelV minThrV, WlzErrorNum *dstErr)
@@ -784,27 +775,55 @@ static WlzObject *WlzNMSuppress3D(WlzObject *grdM, WlzObject *grdZ,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzNMSuppress
-* Returns:	WlzObject:		New Woolz domain object with
-*					maximal domain and grey values
-*					which encode the gradient's
-*					direction or NULL on error.
-* Purpose:	Computes the maximal domain and gradient direction of 
-*		given Woolz domain object.
-* Global refs:	-
-* Parameters:	WlzObject *grdM:	Gradient magnitude.
-*		WlzObject *grdZ:	Gradient (partial derivative)
-*					through planes.
-*		WlzObject *grdY:	Gradient (partial derivative)
-*					through lines.
-*		WlzObject *grdX:	Gradient (partial derivative)
-*					through columns.
-*		WlzPixelV minThrV:	Minimum gradient value to
-*					consider.
-*		WlzErrorNum *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return
+* \brief	Computes the maximal domain and gradient direction of
+*               given Woolz domain object.
+*
+*		Currently only implemented for 2D domain objects.
+*               The domain is the maximaly suppressed domain and the values
+*               are the encoded gradient direction. The direction is encoding 
+*               is from the +ve x-axis counter clockwise in eight steps
+*               with a mask of 0x80, ie directions values are in the
+*               range 128 -> 128 + 7.
+*		\verbatim
+                             ^ Y axis (downwards when displayed)
+                             |
+                  +----------+---------+
+                  | \        |        /|
+                  |  \128 + 2|128 + 1/ |
+                  |   \      |      /  |
+                  |    \     |     /   |
+                  |     \    |    /    |
+                  |      \   |   /     |
+                  |       \  |  /      |
+                  |128 + 3 \ | /128 + 0|
+                  |         \|/        |
+                  +----------O---------+--> X axis
+                  |         /|\        |
+                  |128 + 4 / | \128 + 7|
+                  |       /  |  \      |
+                  |      /   |   \     |
+                  |     /    |    \    |
+                  |    /     |     \   |
+                  |   /      |      \  |
+                  |  /128 + 5|128 + 6\ |
+                  | /        |        \|
+                  +----------+---------+
+		\endverbatim
+
+* \param	grdM			Gradient magnitude.
+* \param	grdZ			Gradient (partial derivative)
+*                                       through planes.
+* \param	grdY			Gradient (partial derivative)
+*                                       through lines.
+* \param	grdX			Gradient (partial derivative)
+*                                       through columns.
+* \param	minThrV			Minimum gradient value to
+*                                       consider.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzObject	*WlzNMSuppress(WlzObject *grdM, WlzObject *grdZ,
 			       WlzObject *grdY, WlzObject *grdX,
 			       WlzPixelV minThrV, WlzErrorNum *dstErr)

@@ -1,40 +1,44 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyStats.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates simple statistics about a Woolz object's
+/*!
+* \file         WlzGreyStats.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Calculates simple statistics about a Woolz object's
 *		grey values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+* \ingroup	WlzFeatures
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzGreyStats2D						*
-* Returns:	int:			Object area or -1 on error.	*
-* Purpose:	Calculates simple quick statistics for the given	*
-*		2D domain object with grey values.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	2D domain object from which to	*
-*					calculate the statistics.	*
-*		WlzGreyType *dstGType:	Pointer for grey type.		*
-*		double *dstMin:		Pointer for minimum value.	*
-*		double *dstMax:		Pointer for maximum value.	*
-*		double *dstSum:		Pointer for sum of values.	*
-*		double *dstSumSq:	Pointer for sum of squares of	*
-*					values.				*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number.				*
-************************************************************************/
+/*!
+* \return	Object area or -1 on error.
+* \ingroup	WlzFeatures
+* \brief	Calculates simple quick statistics for the given
+*               2D domain object with grey values.
+* \param	srcObj			2D domain object from which to
+*                                       calculate the statistics.
+* \param	dstGType		Pointer for grey type.
+* \param	dstMin			Pointer for minimum value.
+* \param	dstMax			Pointer for maximum value.
+* \param	dstSum			Pointer for sum of values.
+* \param	dstSumSq		Pointer for sum of squares of
+*                                       values.
+* \param	dstErr			Destination pointer for error, may
+*					be NULL.
+*/
 static int	WlzGreyStats2D(WlzObject *srcObj,
 			       WlzGreyType *dstGType,
 			       double *dstMin, double *dstMax,
@@ -125,28 +129,27 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
   return(area);
 }
 
-/************************************************************************
-* Function:	WlzGreyStats						*
-* Returns:	int:			Object area or -1 on error.	*
-* Purpose:	Calculates simple quick statistics for given 2D or	*
-*		3D domain object with grey values.			*
-*		Pointers provided for results may be NULL without 	*
-*		causing an error.					*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Object from which to calculate	*
-*					the statistics.			*
-*		WlzGreyType *dstGType:	Pointer for grey type.		*
-*		double *dstMin:		Pointer for minimum value.	*
-*		double *dstMax:		Pointer for maximum value.	*
-*		double *dstSum:		Pointer for sum of values.	*
-*		double *dstSumSq:	Pointer for sum of squares of	*
-*					values.				*
-*		double *dstMean:	Mean value.			*
-*		double *dstStdDev:	Standard deviation of values.	*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	Object area or -1 on error.
+* \ingroup	WlzFeatures
+* \brief	Calculates simple quick statistics for given 2D or
+*               3D domain object with grey values.
+*               Pointers provided for results may be NULL without
+*               causing an error.
+* \param	srcObj			Object from which to calculate
+*                                       the statistics.
+* \param	dstGType		Pointer for grey type.
+* \param	dstMin			Pointer for minimum value.
+* \param	dstMax			Pointer for maximum value.
+* \param	dstSum			Pointer for sum of values.
+* \param	dstSumSq		Pointer for sum of squares of
+*                                       values.
+* \param	dstMean			Mean value.
+* \param	dstStdDev		Standard deviation of values.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL if not
+*                                       required.
+*/
 int		WlzGreyStats(WlzObject *srcObj,
 			     WlzGreyType *dstGType,
 			     double *dstMin, double *dstMax,

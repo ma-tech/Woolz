@@ -1,19 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzRegCCor.c
-* Date:         January 2001
-* Author:       Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions to register two objects using an
-*		frequency domain cross correlation.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzRegCCor.c
+* \author       Bill Hill
+* \date         January 2001
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions to register two objects using frequency
+*		domain cross correlation.
+* \ingroup	WlzRegistration
+* \todo         -
+* \bug          None known.
+*/
 #include <float.h>
 #include <limits.h>
 #include <Wlz.h>
@@ -59,36 +64,33 @@ static double			WlzRegCCorObjs2DRot(
 				  double maxRot,
 				  WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzRegCCorObjs
-* Returns:	WlzAffineTransform *:	Affine transform which brings
-*					the two objects into register.
-* Purpose:	Registers the two given objects using a frequency domain
-*		cross correlation.  An affine transform is computed,
-*		which when applied to the source object takes it
-*		into register with the target object.
-* Global refs:	-
-* Parameters:	WlzObject *tObj:	The target object.
-*		WlzObject *sObj:	The source object to be
-*					registered with target object.
-*		WlzAffineTransform *initTr: Initial affine transform
-*					to be applied to the source
-*					object prior to registration.
-*					May be NULL.
-*		WlzTransformType trType: Required transform type.
-*		WlzDVertex2 maxTran:	Maximum translation.
-*		double maxRot:		Maximum rotation.
-*		int maxItr:		Maximum number of iterations,
-*					if <= 0 then infinite iterations
-*					are allowed.
-*		int *dstConv:		Destination ptr for the
-*					convergence flag (non zero
-*					on convergence), may be NULL.
-*		double *dstCCor:	Destination ptr for the cross
-*					correlation value, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Affine transform which brings the two objects into register.
+* \ingroup	WlzRegistration
+* \brief	Registers the two given objects using a frequency domain
+*               cross correlation.  An affine transform is computed,
+*               which when applied to the source object takes it
+*               into register with the target object.
+* \param	tObj			The target object.
+* \param	sObj			The source object to be registered
+*					with target object.
+* \param	initTr			Initial affine transform to be
+*					applied to the source object prior to
+*					registration. May be NULL.
+* \param	trType			Required transform type.
+* \param	maxTran			Maximum translation.
+* \param	maxRot			Maximum rotation.
+* \param	maxItr			Maximum number of iterations, if
+*					\f$\leq\f$ 0 then infinite iterations
+*					are allowed. 
+* \param	dstConv			Destination ptr for the convergence
+* 					flag (non zero on convergence), may be
+* 					NULL.
+* \param	dstCCor			Destination ptr for the cross
+* 					correlation value, may be NULL.
+* \param	dstErr			Destination error pointer,
+*                                       may be NULL.
+*/
 WlzAffineTransform *WlzRegCCorObjs(WlzObject *tObj, WlzObject *sObj,
 				   WlzAffineTransform *initTr,
 				   WlzTransformType trType,
@@ -136,43 +138,41 @@ WlzAffineTransform *WlzRegCCorObjs(WlzObject *tObj, WlzObject *sObj,
   return(regTr);
 }
 
-/************************************************************************
-* Function:	WlzRegCCorObjs2D
-* Returns:	WlzAffineTransform *:	Affine transform which brings
-*					the two objects into register.
-* Purpose:	Registers the two given 2D domain objects using a
-*		frequency domain cross correlation.  An affine transform
-*		is computed, which when applied to the source object
-*		takes it into register with the target object.
-*		A resolution pyramid is built from the given objects
-*		and used to register the objects, progressing from
-*		a low resolution towards the full resolution objects.
-* Global refs:	-
-* Parameters:	WlzObject *tObj:	The target object. Must have
-*					been assigned.
-*		WlzObject *sObj:	The source object to be
-*					registered with target object.
-*		WlzAffineTransform *initTr: Initial affine transform
-*					to be applied to the source
-*					object prior to registration.
-*					Only translations in x and y
-*					and rotation about the z axis
-*					are used. May be NULL which is
-*					equivalent to an identity transform.
-*		WlzTransformType trType: Required transform type.
-*		WlzDVertex2 maxTran:	Maximum translation.
-*		double maxRot:		Maximum rotation.
-*		int maxItr:		Maximum number of iterations,
-*					if <= 0 then infinite iterations
-*					are allowed.
-*		int *dstConv:		Destination ptr for the
-*					convergence flag (non zero
-*					on convergence), may be NULL.
-*		double *dstCCor:	Destination ptr for the cross
-*					correlation value, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Affine transform which brings the two objects into register.
+* \ingroup	WlzRegistration
+* \brief	Registers the two given 2D domain objects using a
+*               frequency domain cross correlation.  An affine transform
+*               is computed, which when applied to the source object
+*               takes it into register with the target object.
+*               A resolution pyramid is built from the given objects
+*               and used to register the objects, progressing from
+*               a low resolution towards the full resolution objects.
+* \param	tObj			The target object. Must have
+*                                       been assigned.
+* \param	sObj			The source object to be
+*                                       registered with target object.
+* \param	initTr			Initial affine transform
+*                                       to be applied to the source
+*                                       object prior to registration.
+*                                       Only translations in x and y
+*                                       and rotation about the z axis
+*                                       are used. May be NULL which is
+*                                       equivalent to an identity transform.
+* \param	trType			Required transform type.
+* \param	maxTran			Maximum translation.
+* \param	maxRot			Maximum rotation.
+* \param	maxItr			Maximum number of iterations,
+*                                       if \f$leq\f$ 0 then infinite iterations
+*                                       are allowed.
+* \param	dstConv			Destination ptr for the
+*                                       convergence flag (non zero
+*                                       on convergence), may be NULL.
+* \param	dstCCor			Destination ptr for the cross
+*                                       correlation value, may be NULL.
+* \param	dstErr			Destination error pointer,
+*                                       may be NULL.
+*/
 static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
 					    WlzAffineTransform *initTr,
 					    WlzTransformType trType,
@@ -392,41 +392,39 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
   return(regTr);
 }
 
-/************************************************************************
-* Function:	WlzRegCCorObjs2D1
-* Returns:	WlzAffineTransform *:	Affine transform which brings
-*					the two objects into register.
-* Purpose:	Registers the two given 2D domain objects using a
-*		frequency domain cross correlation.  An affine transform
-*		is computed, which when applied to the source object
-*		takes it into register with the target object.
-* Global refs:	-
-* Parameters:	WlzObject *tObj:	The target object. Must have
-*					been assigned.
-*		WlzObject *sObj:	The source object to be
-*					registered with target object.
-*		WlzAffineTransform *initTr: Initial affine transform
-*					to be applied to the source
-*					object prior to registration.
-*					Only translations in x and y
-*					and rotation about the z axis
-*					are used. May be NULL which is
-*					equivalent to an identity transform.
-*		WlzDVertex2 rotCentre:	Centre of rotation.
-*		WlzTransformType trType: Required transform type.
-*		WlzDVertex2 maxTran:	Maximum translation.
-*		double maxRot:		Maximum rotation.
-*		int maxItr:		Maximum number of iterations,
-*					if <= 0 then infinite iterations
-*					are allowed.
-*		int *dstConv:		Destination ptr for the
-*					convergence flag (non zero
-*					on convergence), may be NULL.
-*		double *dstCCor:	Destination ptr for the cross
-*					correlation value, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Affine transform which brings the two objects into register.
+* \ingroup	WlzRegistration
+* \brief	Registers the two given 2D domain objects using a
+*               frequency domain cross correlation.  An affine transform
+*               is computed, which when applied to the source object
+*               takes it into register with the target object.
+* \param	tObj			The target object. Must have
+*                                       been assigned.
+* \param	sObj			The source object to be
+*                                       registered with target object.
+* \param	initTr			Initial affine transform
+*                                       to be applied to the source
+*                                       object prior to registration.
+*                                       Only translations in x and y
+*                                       and rotation about the z axis
+*                                       are used. May be NULL which is
+*                                       equivalent to an identity transform.
+* \param	rotCentre		Centre of rotation.
+* \param	trType			Required transform type.
+* \param	maxTran			Maximum translation.
+* \param	maxRot			Maximum rotation.
+* \param	maxItr			Maximum number of iterations,
+*                                       if \f$\leq\f$ 0 then infinite
+					iterations are allowed.
+* \param	dstConv			Destination ptr for the
+*                                       convergence flag (non zero
+*                                       on convergence), may be NULL.
+* \param	dstCCor			Destination ptr for the cross
+*                                       correlation value, may be NULL.
+* \param	dstErr			Destination error pointer,
+*                                       may be NULL.
+*/
 static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
 					     WlzAffineTransform *initTr,
 				  	     WlzDVertex2 rotCentre,
@@ -551,28 +549,28 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
   return(regTr);
 }
 
-/************************************************************************
-* Function:	WlzRegCCorObjs2DTran
-* Returns:	WlzDVertex2:		Translation.
-* Purpose:	Registers the given 2D domain objects using a
-*		frequency domain cross correlation, to find
-*		the translation which has the highest cross
-*		correlation value.
-* Global refs:	-
-* Parameters:	WlzObject *tObj:	The target object. Must have
-*					been assigned.
-*		WlzObject *sObj:	The source object to be
-*					registered with target object.
-*					Must have been assigned.
-*		WlzAffineTransform *initTr: Initial affine transform
-*					to be applied to the source
-*					object prior to registration.
-*		WlzDVertex2 maxTran:	Maximum translation.
-*		double *dstCCor:	Destination ptr for the cross
-*					correlation value, may be NULL.
-*		WlzErrorNum *dstErr:	Destination error pointer,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Translation.
+* \ingroup	WlzRegistration
+* \brief	Registers the given 2D domain objects using a
+*               frequency domain cross correlation, to find
+*               the translation which has the highest cross
+*               correlation value.
+* \param	tObj			The target object. Must have
+*                                       been assigned.
+* \param	sObj			The source object to be
+*                                       registered with target object.
+*                                       Must have been assigned.
+* \param	initTr			Initial affine transform
+*                                       to be applied to the source
+*                                       object prior to registration.
+*               WlzDVertex2 maxTran:    Maximum translation.
+* \param	maxTran			Maximum translation.
+* \param	dstCCor			Destination ptr for the cross
+*                                       correlation value, may be NULL.
+* \param	dstErr			Destination error pointer,
+*                                       may be NULL.
+*/
 static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
 					WlzAffineTransform *initTr,
 					WlzDVertex2 maxTran, double *dstCCor,
@@ -768,27 +766,26 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
   return(dstTran);
 }
 
-/************************************************************************
-* Function:	WlzRegCCorObjs2DRot
-* Returns:	double:			Angle of roatation.
-* Purpose:	Polar samples then registers the given 2D domain objects
-*		using a frequency domain cross correlation, to find
-*		the angle of rotation about the given centre of rotation
-*		which has the highest cross correlation value.
-* Global refs:	-
-* Parameters:	WlzObject *tObj:	The target object. Must have
-*					been assigned.
-*		WlzObject *sObj:	The source object to be
-*					registered with target object.
-*					Must have been assigned.
-*		WlzIVertex2 rotCentre:	Coordinate of centre of rotation.
-*		WlzAffineTransform *initTr: Initial affine transform
-*					to be applied to the source
-*					object prior to registration.
-*		double maxRot:		Maximum rotation.
-*		WlzErrorNum *dstErr:	Destination error pointer,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Angle of roatation.
+* \ingroup	WlzRegistration
+* \brief	Polar samples then registers the given 2D domain objects
+*               using a frequency domain cross correlation, to find
+*               the angle of rotation about the given centre of rotation
+*               which has the highest cross correlation value.
+* \param	tObj			The target object. Must have
+*                                       been assigned.
+* \param	sObj			The source object to be
+*                                       registered with target object.
+*                                       Must have been assigned.
+* \param	rotCentre		Coordinate of centre of rotation.
+* \param	initTr			Initial affine transform
+*                                       to be applied to the source
+*                                       object prior to registration.
+* \param	maxRot			Maximum rotation.
+* \param	dstErr			Destination error pointer,
+*                                       may be NULL.
+*/
 static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
 				    WlzIVertex2 rotCentre,
 				    WlzAffineTransform *initTr, double maxRot,

@@ -1,6 +1,6 @@
 /*!
 * \ingroup      Wlz
-* \defgroup      WlzIO
+* \defgroup      WlzIO	WlzIO
 * Woolz objects can be written to disc or pipe as a serial character stream.
 The file format is fixed and the appropriate byte-swapping and ordering is
 managed by architecture dependent functions for I/O of each basic type. These

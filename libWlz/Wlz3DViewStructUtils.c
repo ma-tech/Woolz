@@ -1277,7 +1277,7 @@ WlzErrorNum Wlz3DViewGetScale(
 * \ingroup      WlzSectionTransform
 * \brief	Sets the scale in the 3D view.
 * \param	vs			Given view.
-* \param	dstVal			Value of the scale.
+* \param	val			Value of the scale.
 */
 WlzErrorNum Wlz3DViewSetScale(
   WlzThreeDViewStruct	*vs,
@@ -1513,7 +1513,7 @@ WlzErrorNum Wlz3DViewGetFixedLineAngle(
 * \ingroup      WlzSectionTransform
 * \brief	Sets the fixed line angle in the 3D view.
 * \param	vs			Given view.
-* \param	dstVal			The fixed line angle.
+* \param	val			The fixed line angle.
 */
 WlzErrorNum Wlz3DViewSetFixedLineAngle(
   WlzThreeDViewStruct	*vs,

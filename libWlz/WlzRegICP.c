@@ -1094,7 +1094,7 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 }
 
 /*!
-* \return				Affine transform found.
+* \return	Affine transform found.
 * \ingroup	WlzTransform
 * \brief	Registers the given vertices using the already built
 *		kD-tree and the given buffers.
@@ -1108,17 +1108,18 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
+* \param	vType			Vertex type.
 * \param	nT			Number of target vertices.
 * \param	tVx			The target vertices.
 * \param	tNr			The target normals.
 * \param        nS			Number of source vertices.
-*		sIdx			Indicies of the source
+* \param	sIdx			Indicies of the source
 *					vertices/normals.
 * \param        sVx 			The source vertices.
 * \param	sNr			The source normals.
 * \param	tVxBuf			A buffer with room for at least
 *					nS vertices.
-*		sVxBuf			A buffer with room for at least
+* \param	sVxBuf			A buffer with room for at least
 *					nS vertices.
 * \param	wgtBuf			A buffer with room for at least
 *					nS doubles.

@@ -1,35 +1,38 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzInsideDomain.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Provides functions for checking whether a given
-*		vertex lies within an object's domain.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 02-10-00 bill Add switch for transform type in WlzInsideDomain().
-************************************************************************/
+/*!
+* \file         WlzInsideDomain.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions which check whether a given vertex lies within an
+* 		object's domain.
+* \ingroup	WlzAccess
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzInsideDomain2D					*
-* Returns:	int:			Non zero if point is inside.	*
-* Purpose:	Looks to see if the given point is within the given	*
-*		interval domain.					*
-* Global refs:	-							*
-* Parameters:	WlzIntervalDomain *iDom: Given interval domain.		*
-*		int line:		Line (y) position.		*
-*		int kol:		Column (x) position.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NOT NULL.			*
-************************************************************************/
+/*!
+* \return	Non zero if point is inside.
+* \ingroup      WlzAccess
+* \brief	Looks to see if the given point is within the given
+*               interval domain.
+* \param	iDom			Given interval domain.
+* \param	line			Line (y) position.
+* \param	kol			Column (x) position.
+* \param	dstErr			Destination error pointer, may
+*                                       be NOT NULL.
+*/
 static int	WlzInsideDomain2D(WlzIntervalDomain *iDom,
 				  int line,  int kol,
 				  WlzErrorNum *dstErr)
@@ -77,19 +80,18 @@ static int	WlzInsideDomain2D(WlzIntervalDomain *iDom,
   return(inside);
 }
 
-/************************************************************************
-* Function:	WlzInsideDomain3D					*
-* Returns:	int:			Non zero if point is inside.	*
-* Purpose:	Looks to see if the given point is within the given	*
-*		3D domain.						*
-* Global refs:	-							*
-* Parameters:	WlzPlaneDomain *pDom:	Given plane domain.		*
-*		int plane:		Plane (z) position.		*
-*		int line:		Line (y) position.		*
-*		int kol:		Column (x) position.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NOT NULL.			*
-************************************************************************/
+/*!
+* \return	Non zero if point is inside.
+* \ingroup      WlzAccess
+* \brief	Looks to see if the given point is within the given
+*               3D domain.
+* \param	pDom			Given plane domain.
+* \param	plane			Plane (z) position.
+* \param	line			Line (y) position.
+* \param	kol			Column (x) position.
+* \param	dstErr			Destination error pointer, may
+*                                       be NOT NULL.
+*/
 static int	WlzInsideDomain3D(WlzPlaneDomain *pDom,
 				  int plane, int line,  int kol,
 				  WlzErrorNum *dstErr)
@@ -111,20 +113,18 @@ static int	WlzInsideDomain3D(WlzPlaneDomain *pDom,
   return(inside);
 }
 
-/************************************************************************
-* Function:	WlzInsideDomain						*
-* Returns:	int:			Non zero if point is inside.	*
-* Purpose:	Looks to see if the given point is within the objects	*
-*		domain.							*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		Given object.			*
-*		double plane:		Plane (z) position, only used	*
-*					if the object has a 3D domain.	*
-*		double line:		Line (y) position.		*
-*		double kol:		Column (x) position.		*
-*		WlzErrorNum *dstErr:	Destination error pointer, may	*
-*					be NULL.			*
-************************************************************************/
+/*!
+* \return	Non zero if point is inside.
+* \ingroup      WlzAccess
+* \brief	Looks to see if the given point is within the objects domain.
+* \param	obj			Given object.
+* \param	plane			Plane (z) position, only used
+*                                       if the object has a 3D domain.
+* \param	line			Line (y) position.
+* \param	kol			Column (x) position.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 int		WlzInsideDomain(WlzObject *obj,
 				double plane, double line, double kol,
 				WlzErrorNum *dstErr)

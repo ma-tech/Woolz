@@ -1,45 +1,54 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyCrossing.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes an image which encodes the direction at each
-*		pixel of a grey value transition. If the given grey
-*		value is zero then this is the zero crossing direction.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzGreyCrossing.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Computes a domain object with grey values in which the
+*		values encode the direction at each pixel of a grey value
+*		transition. If the given grey value is zero then this is the
+*		zero crossing direction.
+* \ingroup	WlzValuesFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzGreyCrossingSeqParFn					*
-* Returns:	int:			direction value.		*
-* Purpose:	Tests for a grey value crossing using a 3x3 kernel.	*
-*		This function is called by WlzSeqPar().			*
-*		Given an integer kernel about a given pixel (E):	*
-*		   A B C    						*
-*		   D E F    						*
-*		   G H I						*
-*		The sums:						*
-*		  (A + B + C), (G + H + I); (B + C + F), (D + G + H)	*
-*	          (A + D + G), (C + F + I) and (A + B + D), (F + H + I)	*
-*		are computed  about the pixel E.			*
-*		The crossing value is then the maximum difference	*
-*		between the sums which have opposite signs.		*
-* Global refs:	-							*
-* Parameters:	WlzSeqParWSpace *spWSpace: Work space data structure 	*
-*					from WlzSeqPar().		*
-*		void *spData:		Data passed on by WlzSeqPar(),	*
-*					which is used to pass the	*
-*					crossing value.			*
-************************************************************************/
+/*!
+* \return	Direction value.
+* \ingroup	WlzValuesFilters
+* \brief	Tests for a grey value crossing using a 3x3 kernel.
+*               This function is called by WlzSeqPar().
+*               Given an integer kernel about a given pixel (E):
+*		\verbatim
+                   A B C
+                   D E F
+                   G H I
+		\endverbatim
+*               The sums:
+*		\verbatim
+                  (A + B + C), (G + H + I); (B + C + F), (D + G + H)
+                  (A + D + G), (C + F + I) and (A + B + D), (F + H + I)
+		\endverbatim
+*               are computed  about the pixel E.
+*               The crossing value is then the maximum difference
+*               between the sums which have opposite signs.
+* \param	spWSpace		Work space data structure
+*                                       from WlzSeqPar().
+* \param	spData			Data passed on by WlzSeqPar(),
+*                                       which is used to pass the
+*                                       crossing value.
+*/
 int 		WlzGreyCrossingSeqParFn(WlzSeqParWSpace *spWSpace,
   			    	        void *spData)
 {
@@ -121,25 +130,24 @@ int 		WlzGreyCrossingSeqParFn(WlzSeqParWSpace *spWSpace,
   return(dVal);
 }
 
-/************************************************************************
-* Function:	WlzGreyCrossing						*
-* Returns:	WlzObject *:		Grey-crossing object or NULL on	*
-*					error.				*
-* Purpose:	Uses a 3X3 kernel to examine the given object for	*
-*		transitions (grey value crossings) about the given	*
-*		grey value.						*
-*		Only objects with WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ	*
-*		types are valid. WLZ_2D_DOMAINOBJ objects must have	*
-*		a valid domain and integral (ie WLZ_GREY_INT, 		*
-*		WLZ_GREY_SHORT or WLZ_GREY_UBYTE) values.		*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	Given object.			*
-*		int newObjFlag:		If zero the convolution is done	*
-*					in place, else a new object is	*
-*					created.			*
-*		int cVal:		Grey value about which to test	*
-*					for transitions.		*
-************************************************************************/
+/*!
+* \return	Grey-crossing object or NULL on error.
+* \ingroup	WlzValuesFilters
+* \brief	Uses a 3X3 kernel to examine the given object for
+*               transitions (grey value crossings) about the given
+*               grey value.
+*               Only objects with WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ
+*               types are valid. WLZ_2D_DOMAINOBJ objects must have
+*               a valid domain and integral (ie WLZ_GREY_INT,
+*               WLZ_GREY_SHORT or WLZ_GREY_UBYTE) values.
+* \param	inObj			Given object.
+* \param	newObjFlag		If zero the convolution is done
+*                                       in place, else a new object is
+*                                       created.
+* \param	cVal			Grey value about which to test
+*                                       for transitions.
+* \param	dstErr
+*/
 WlzObject 	*WlzGreyCrossing(WlzObject *inObj, int newObjFlag,
 				 int cVal, WlzErrorNum *dstErr)
 {

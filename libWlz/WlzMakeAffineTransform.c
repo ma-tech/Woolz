@@ -1,35 +1,37 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzMakeAffineTransform.c
-* Date:         March 1999
-* Author:       Richard Baldock, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Make and free Woolz affine transforms.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 27-09-00 bill Make modifications for 3D affine transforms (more
-* 		checking). Update comments.
-************************************************************************/
+/*!
+* \file         WlzMakeAffineTransform.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Allocation and freeing of Woolz affine transforms.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzMakeAffineTransform
-* Returns:	WlzAffineTransform *:	New affine transform initialized
-*					to the identity transform.
-* Purpose:	Allocates and initialises space for a 2D or 3D affine
-*		transform. Sufficient space is always allocated for a
-*		3D transform.
-* Global refs:	-
-* Parameters:	WlzTransformType type:	Transform type.
-*		WlzErrorNum   *dstErr:	Destination error pointer, may
-*					be null.
-************************************************************************/
+/*!
+* \return	New affine transform initialized to the identity transform.
+* \ingroup	WlzTransform
+* \brief	Allocates and initialises space for a 2D or 3D affine
+*               transform. Sufficient space is always allocated for a
+*               3D transform.
+*		The transform should be freed using WlzFreeAffineTransform().
+* \param	type			Transform type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
 WlzAffineTransform *WlzMakeAffineTransform(WlzTransformType type,
   				           WlzErrorNum *dstErr)
 {
@@ -81,14 +83,13 @@ WlzAffineTransform *WlzMakeAffineTransform(WlzTransformType type,
   return(trans);
 }
 
-/************************************************************************
-* Function:	WlzFreeAffineTransform
-* Returns:	WlzErrorNum:		Woolz error code.
-* Purpose:	Free's an affine transform allocated by
-*		WlzMakeAffineTransform.
-* Global refs:	-
-* Parameters:	WlzAffineTransform *trans: Affine transform to free.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzTransform
+* \brief	Frees an affine transform allocated by
+*		WlzMakeAffineTransform().
+* \param	trans			Affine transform to free.
+*/
 WlzErrorNum 	WlzFreeAffineTransform(WlzAffineTransform *trans)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
