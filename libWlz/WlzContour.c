@@ -114,7 +114,6 @@ static WlzContour 	*WlzContourGrdObj3D(
 			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourBndObj2D(
 			  WlzObject *obj,
-			  double ctrVal,
 			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourBndObj3D(
 			  WlzObject *obj,
@@ -227,6 +226,18 @@ static WlzErrorNum	WlzContourGrdLink3D(
 			  int *bufIdx,
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
+static WlzErrorNum 	WlzContourBnd2DAddPoly2I(
+			  WlzGMModel *model,
+			  WlzPolygonDomain *poly,
+			  double maxLen);
+static WlzErrorNum 	WlzContourBnd2DAddBnd(
+			  WlzGMModel *model,
+			  WlzBoundList *bnd,
+			  double maxLen);
+static WlzErrorNum 	WlzContourBnd2DAddSeg(
+			  WlzGMModel *model,
+			  WlzDVertex2 *seg,
+			  double maxLen);
 
 /*!
 * \return				Contour, or NULL on error.
@@ -350,7 +361,7 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    {
 	      ctrVal = 1.0;
 	    }
-	    ctr = WlzContourBndObj2D(srcObj, ctrVal, &errNum);
+	    ctr = WlzContourBndObj2D(srcObj, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -677,6 +688,7 @@ static WlzContour *WlzContourFromPoints3D(int nSPts, WlzDVertex3 *sPts,
 
 /*!
 * \return
+* \ingroup	WlzContour
 * \brief	Scale the geometric model from unit voxel dimensions
 *		to those of the given domain.
 * \param	model			The model.
@@ -855,6 +867,7 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 
 /*!
 * \return				Contour , or NULL on error.
+* \ingroup	WlzContour
 * \brief	Creates an iso-value contour (list of surface patches)
 *               from a 3D Woolz object's values.
 * \param	srcObj			Given object from which to
@@ -1802,116 +1815,58 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 }
 
 /*!
-* \return				Woolz contour or NULL on error.
+* \return	Woolz contour or NULL on error.
+* \ingroup	WlzContour
 * \brief	Computes a 2D contour from the boundary of the given objects
 *		domain.
-* \param	obj			The given object.
-* \param	ctrVal			Parameter controling how close
-*					contour is to pixel edges,
-*					range [0.0-1.0], 0.0 and 1.0 for
-*					exact edges, 0.5 for rounded edges.
+* \param	gObj			The given object.
 * \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
-static WlzContour *WlzContourBndObj2D(WlzObject *obj, double ctrVal,
-				      WlzErrorNum *dstErr)
+static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 {
-  int		idX,
-  		bufSz,
-		bufOrg,
-		bufLnIdx,
-		itvBufWidth,
-		lastLn;
-  WlzDomain	srcDom;
-  UBYTE		*itvBuf[2] = {NULL, NULL};
+  WlzObject	*bObj = NULL,
+  		*cObj = NULL,
+		*dObj = NULL,
+  		*sObj = NULL;
   WlzContour 	*ctr = NULL;
-  WlzIntervalWSpace srcIWSp;
+  WlzValues	dumVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Create contour. */
-  if((ctr = WlzMakeContour(&errNum)) != NULL)
-  {
-    ctr->model = WlzAssignGMModel(
-    		 WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
-  }
-  /* Make buffers. */
+  dumVal.core = NULL;
+  /* Copy, scale and dilate domain of given object. */
+  cObj = WlzMakeMain(gObj->type, gObj->domain, dumVal, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    srcDom = obj->domain;
-    bufOrg = srcDom.i->kol1 - 1;
-    bufSz = srcDom.i->lastkl - srcDom.i->kol1 + 3;
-    itvBufWidth = (bufSz + 7) / 8;    /* No of bytes in interval buffer line */
-    if((AlcBit1Calloc(&(itvBuf[0]), bufSz) != ALC_ER_NONE) ||
-       (AlcBit1Calloc(&(itvBuf[1]), bufSz) != ALC_ER_NONE))
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
+    sObj = WlzIntRescaleObj(cObj, 4, 1, &errNum);
   }
-  /* Work down through the object. */
-  if((errNum = WlzInitRasterScan(obj, &srcIWSp,
-  			         WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE)
+  if(errNum == WLZ_ERR_NONE)
   {
-    bufLnIdx = 0;
-    lastLn = srcDom.i->line1 - 1;
-    while((errNum == WLZ_ERR_NONE) &&
-    	  ((errNum = WlzNextInterval(&srcIWSp)) == WLZ_ERR_NONE))
-    {
-      /* Update the interval buffer bit masks. */
-      if(srcIWSp.nwlpos > 0)
-      {
-        bufLnIdx = !bufLnIdx;
-        if(srcIWSp.nwlpos > 1)
-	{
-	  errNum = WlzContourBndEmptyLine2D(ctr, ctrVal, lastLn,
-	  				    itvBuf[bufLnIdx], bufOrg, bufSz);
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    WlzValueSetUByte(itvBuf[!bufLnIdx], 0, itvBufWidth);
-	  }
-	}
-	WlzValueSetUByte(itvBuf[bufLnIdx], 0, itvBufWidth);
-        lastLn = srcIWSp.linpos - 1;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	WlzBitLnSetItv(itvBuf[bufLnIdx], srcIWSp.lftpos - bufOrg,
-		       srcIWSp.rgtpos - bufOrg, bufSz);
-	/* Compute the values at the corners of squares along the interval,
-	 * where the values are set to 0 if the pixel is outside the domain
-	 * and 1 if it is inside. Squares (2D square) are marched along the
-	 * interval on the current and previous lines. */
-	if(srcIWSp.intrmn == 0)
-	{
-	  errNum = WlzContourBndLine2D(ctr, ctrVal, lastLn,
-	  			       itvBuf, bufLnIdx, bufOrg, bufSz);
-	  lastLn = srcIWSp.linpos;
-	}
-      }
-    }
-    if(errNum == WLZ_ERR_EOO)
-    {
-      errNum = WLZ_ERR_NONE;
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzContourBndEmptyLine2D(ctr, ctrVal, lastLn,
-      					itvBuf[bufLnIdx], bufOrg, bufSz);
-    }
+    dObj = WlzDilation(sObj, WLZ_4_CONNECTED, &errNum);
   }
-  /* Tidy up on error. */
-  if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
+  /* Create boundary tree. */
+  if(errNum == WLZ_ERR_NONE)
   {
-    (void )WlzFreeContour(ctr);
-    ctr = NULL;
+    bObj = WlzObjToBoundary(dObj, 1, &errNum);
   }
-  /* Free buffers. */
-  for(idX = 0; idX < 2; ++idX)
+  /* Create contour. */
+  if(errNum == WLZ_ERR_NONE)
   {
-    if(itvBuf[idX])
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
     {
-      AlcFree(itvBuf[idX]);
+      ctr->model = WlzAssignGMModel(
+		   WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum), NULL);
     }
   }
+  /* Recursively add boundary to the contour. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzContourBnd2DAddBnd(ctr->model, bObj->domain.b, 1.0);
+  }
+  (void )WlzFreeObj(bObj);
+  (void )WlzFreeObj(cObj);
+  (void )WlzFreeObj(dObj);
+  (void )WlzFreeObj(sObj);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1920,7 +1875,139 @@ static WlzContour *WlzContourBndObj2D(WlzObject *obj, double ctrVal,
 }
 
 /*!
-* \return				Woolz contour or NULL on error.
+* \return	Woolz error code.
+* \ingroup	WlzContour
+* \brief	Recursive function which builds a geometric model from
+*		a boundary list.
+*		Polygon vertices are to be scaled by 0.25 following a
+*		column/line shift of 1.5.
+* \param	model			Given 2D geometric model.
+* \param	bnd			Boundary list.
+* \param	maxLen			Maximum line segment length.
+*/
+static WlzErrorNum WlzContourBnd2DAddBnd(WlzGMModel *model, WlzBoundList *bnd,
+				double maxLen)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Add the polygon at this level. */
+  errNum = WlzContourBnd2DAddPoly2I(model, bnd->poly, maxLen);
+  /* Add other polygons at this level. */
+  if(bnd->next && (errNum == WLZ_ERR_NONE))
+  {
+    errNum = WlzContourBnd2DAddBnd(model, bnd->next, maxLen);
+  }
+  /* Add enclosed polygons. */
+  if(bnd->down && (errNum == WLZ_ERR_NONE))
+  {
+    errNum = WlzContourBnd2DAddBnd(model, bnd->down, maxLen);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Adds an integer 2D polygon domain to a 2D geometric model.
+*		Polygon vertices are to be scaled by 0.25 following a
+*		column/line shift of 1.5.
+* \param	model			Given 2D geometric model.
+* \param	poly			Integer 2D polygon domain.
+* \param	maxLen			Maximum line segment length.
+*/
+static WlzErrorNum WlzContourBnd2DAddPoly2I(WlzGMModel *model,
+				WlzPolygonDomain *poly, double maxLen)
+{
+  int		cnt;
+  WlzIVertex2 	*vtx;
+  WlzDVertex2	seg[2];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(poly)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      cnt = poly->nvertices;
+      vtx = poly->vtx;
+      seg[1].vtX = (vtx->vtX - 1.5) * 0.25;
+      seg[1].vtY = (vtx->vtY - 1.5) * 0.25;
+    }
+    while((--cnt > 0) && (errNum == WLZ_ERR_NONE))
+    {
+      ++vtx;
+      seg[0] = seg[1];
+      seg[1].vtX = (vtx->vtX - 1.5) * 0.25;
+      seg[1].vtY = (vtx->vtY - 1.5) * 0.25;
+      errNum = WlzContourBnd2DAddSeg(model, seg, maxLen);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return
+* \brief	Adds a single polygon line segment to the geometric model,
+*		possibly as several line segments with no line segment having
+*		greater than the given maximum length.
+* \param	model			Given 2D geometric model.
+* \param	seg			Array of vertices at ends of line
+*					segment.
+* \param	maxLen			Maximum line segment length.
+*/
+static WlzErrorNum WlzContourBnd2DAddSeg(WlzGMModel *model, WlzDVertex2 *seg,
+					 double maxLen)
+{
+  int		idx,
+  		cnt;
+  double	tD0,
+		len;
+  WlzDVertex2	org,
+  		del;
+  WlzDVertex2	mSeg[2];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  org = *(seg + 0);
+  WLZ_VTX_2_SUB(del, *(seg + 1), org);
+  len = WLZ_VTX_2_SQRLEN(del);
+  if(len > DBL_EPSILON)
+  {
+    len = sqrt(len);
+    maxLen = fabs(maxLen);
+    if(len <= maxLen)
+    {
+      errNum = WlzGMModelConstructSimplex2D(model, seg);
+    }
+    else
+    {
+      idx = 0;
+      mSeg[1] = org;
+      tD0 = maxLen / len;
+      cnt = (int )(len / maxLen);
+      WLZ_VTX_2_SCALE(del, del, tD0);
+      while((++idx < cnt) && (errNum == WLZ_ERR_NONE))
+      {
+	mSeg[0] = mSeg[1];
+	mSeg[1].vtX = org.vtX + (idx * del.vtX);
+	mSeg[1].vtY = org.vtY + (idx * del.vtY);
+	errNum = WlzGMModelConstructSimplex2D(model, mSeg);
+      }
+      if((idx <= cnt) && (errNum == WLZ_ERR_NONE))
+      {
+	mSeg[0] = mSeg[1];
+	mSeg[1].vtX = (mSeg[0].vtX + (seg + 1)->vtX) * 0.5;
+	mSeg[1].vtY = (mSeg[0].vtY + (seg + 1)->vtY) * 0.5;
+	errNum = WlzGMModelConstructSimplex2D(model, mSeg);
+      }
+      mSeg[0] = mSeg[1];
+      mSeg[1] = *(seg + 1);
+      errNum = WlzGMModelConstructSimplex2D(model, mSeg);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz contour or NULL on error.
+* \ingroup	WlzContour
 * \brief	Computes a 3D contour from the boundary of the given objects
 *		domain.
 * \param	obj			The given object.
@@ -2069,6 +2156,7 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, double ctrVal,
 
 /*!
 * \return				Woolz error code.
+* \ingroup	WlzContour
 * \brief	Computes edge simplicies(s) linking the voxel at the
 *               centre of a 2x3x3 neighbourhood to it's neighbours.
 *
@@ -2313,6 +2401,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
 
 /*!
 * \return				Woolz error code.
+* \ingroup	WlzContour
 * \brief	Computes the iso-value contour segments by marching a square
 * 		along the pair of given lines.
 * \param	ctr			Given contour, which is being built.
@@ -2361,6 +2450,7 @@ static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, double isoVal,
 
 /*!
 * \return
+* \ingroup	WlzContour
 * \brief	Computes the iso-value contour elements by marching a cube
 *               along the pair of given planes.
 * \param	ctr			Given contour, which is being built.
@@ -2442,6 +2532,7 @@ static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, double isoVal,
 
 /*!
 * \return				Woolz error code.
+* \ingroup	WlzContour
 * \brief	Computes the iso-value contour segments by marching a square
 *		along the given line and a later empty line.
 * \param	ctr			Given contour, which is being built.
@@ -2485,6 +2576,7 @@ static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, double isoVal,
 
 /*!
 * \return
+* \ingroup	WlzContour
 * \brief	Computes the iso-value contour elements by marching a cube
 *               along the pair of given plane and a later empty plane.
 * \param	ctr			Given contour, which is being built.
@@ -3376,7 +3468,7 @@ static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
   /* Test to se if there is an intersection between this cube and the
    * iso-surface. */
   intersect = !(((cVal[0] < -(WLZ_CTR_TOLERANCE)) &&
-		 (cVal[1] > WLZ_CTR_TOLERANCE) &&
+		 (cVal[1] < -(WLZ_CTR_TOLERANCE)) &&
                  (cVal[2] < -(WLZ_CTR_TOLERANCE)) &&
 		 (cVal[3] < -(WLZ_CTR_TOLERANCE)) &&
 		 (cVal[4] < -(WLZ_CTR_TOLERANCE)) &&
