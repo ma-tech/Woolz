@@ -1392,6 +1392,22 @@ extern WlzObject		*WlzReadObj(
 				  FILE *fp,
 			          WlzErrorNum *dstErr);
 /************************************************************************
+* WlzRsvFilter.c
+************************************************************************/
+extern void			WlzRsvFilterFreeFilter(
+				  WlzRsvFilter *ftr);
+extern WlzRsvFilter		*WlzRsvFilterMakeFilter(
+				  WlzRsvFilterName name,
+				  double prm,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzRsvFilterObj(
+				  WlzObject *srcObj,
+				  WlzRsvFilter *ftr,
+				  int actionMsk,
+				  int useFP,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzSampleObj.c							*
 ************************************************************************/
 extern WlzObject 		*WlzSampleObj(
@@ -1686,6 +1702,50 @@ extern void			WlzValueSetGrey(
 				  int vecOff,
 				  WlzGreyV value,
 				  WlzGreyType gType,
+				  int count);
+extern void			WlzValueClampGreyIntoGrey(
+				  WlzGreyP dst,
+				  int dstOff,
+				  WlzGreyType dstType,
+				  WlzGreyP src,
+				  int srcOff,
+				  WlzGreyType srcType,
+				  int count);
+extern void			WlzValueClampIntIntoShort(
+				  short *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueClampIntIntoUByte(
+				  UBYTE *dst,
+				  int *src,
+				  int count);
+extern void			WlzValueClampShortIntoUByte(
+				  UBYTE *dst,
+				  short *src,
+				  int count);
+extern void			WlzValueClampFloatIntoInt(
+				  int *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueClampFloatIntoShort(
+				  short *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueClampFloatIntoUByte(
+				  UBYTE *dst,
+				  float *src,
+				  int count);
+extern void			WlzValueClampDoubleIntoInt(
+				  int *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueClampDoubleIntoUByte(
+				  UBYTE *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueClampDoubleIntoFloat(
+				  float *dst,
+				  double *src,
 				  int count);
 extern void			WlzValueClampIntToShort(
 				  int *vec,

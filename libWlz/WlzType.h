@@ -22,12 +22,12 @@ extern "C" {
 #endif /* __cplusplus */
 
 /************************************************************************
-* UBYTE: An 8 bit unsigned integer.					* 
+* UBYTE: An 8 bit unsigned integer.				
 ************************************************************************/
 typedef unsigned char UBYTE;
 
 /************************************************************************
-* WlzGreyType: The valid grey value types.				*
+* WlzGreyType: The valid grey value types.			
 ************************************************************************/
 typedef enum
 {
@@ -38,16 +38,16 @@ typedef enum
   WLZ_GREY_FLOAT		= 4,
   WLZ_GREY_DOUBLE		= 5,
   /**********************************************************************
-  * WLZ_GREY_ERROR is not a grey type. It is an invalid grey type!	*
-  * Keep it the last enumerator!					*
+  * WLZ_GREY_ERROR is not a grey type. It is an invalid grey type!
+  * Keep it the last enumerator!				
   **********************************************************************/
   WLZ_GREY_ERROR
 } WlzGreyType;
 
 /************************************************************************
-* WlzObjectType: The (top-level) Woolz object types.			*
-* Many of the integer enumeration values are required for historical	*
-* reasons but should never be used explicitly.				*
+* WlzObjectType: The (top-level) Woolz object types.		
+* Many of the integer enumeration values are required for historical
+* reasons but should never be used explicitly.			
 ************************************************************************/
 typedef enum
 {
@@ -80,23 +80,23 @@ typedef enum
   WLZ_COMPOUND_LIST_1		= 82,
   WLZ_COMPOUND_LIST_2		= 83,
   /**********************************************************************
-  * WLZ_PROPERTY_OBJ: An object with only a property list.		*
+  * WLZ_PROPERTY_OBJ: An object with only a property list.	
   **********************************************************************/
   WLZ_PROPERTY_OBJ		= 110,
   /**********************************************************************
-  * WLZ_EMPTY_OBJ, WLZ_EMPTY_DOMAIN, WLZ_EMPTY_VALUES: Empty entities.	*
+  * WLZ_EMPTY_OBJ, WLZ_EMPTY_DOMAIN, WLZ_EMPTY_VALUES: Empty entities.
   **********************************************************************/
   WLZ_EMPTY_OBJ			= 127,
   WLZ_EMPTY_DOMAIN,
   WLZ_EMPTY_VALUES,
   /**********************************************************************
-  * WLZ_INTERVALDOMAIN_INTVL, WLZ_INTERVALDOMAIN_RECT: Interval and	*
-  * rectangular interval domain types.					*
+  * WLZ_INTERVALDOMAIN_INTVL, WLZ_INTERVALDOMAIN_RECT: Interval and
+  * rectangular interval domain types.				
   **********************************************************************/
   WLZ_INTERVALDOMAIN_INTVL	= 1,
   WLZ_INTERVALDOMAIN_RECT	= 2,
   /**********************************************************************
-  * Planedomain types.							*
+  * Planedomain types.						
   **********************************************************************/
   WLZ_PLANEDOMAIN_DOMAIN	= WLZ_2D_DOMAINOBJ,
   WLZ_PLANEDOMAIN_POLYGON	= WLZ_2D_POLYGON,
@@ -106,15 +106,15 @@ typedef enum
   WLZ_PLANEDOMAIN_AFFINE	= WLZ_AFFINE_TRANS,
   WLZ_PLANEDOMAIN_WARP		= WLZ_WARP_TRANS,
   /**********************************************************************
-  * Value table types. A value table type encodes both the type of	*
-  * table and the type of grey value it contains.			*
-  * There are functions provided for extracting and synthesising these	*
-  * types which should be used outside of this header file.		*
-  * WLZ_GREY_TAB_RAGR: Ragged rectangle grey value table types.		*
-  * WLZ_GREY_TAB_RECT: Ragged rectangular grey value table types.	*
-  * WLZ_GREY_TAB_INTL: Interval grey value table types.			*
-  * WLZ_FEAT_TAB_RAGR: Ragged-rectangle feature valuetable types.	*
-  * WLZ_FEATVALUETABLE_RECT: Rectangular feature value table types.	*
+  * Value table types. A value table type encodes both the type of
+  * table and the type of grey value it contains.		
+  * There are functions provided for extracting and synthesising these
+  * types which should be used outside of this header file.	
+  * WLZ_GREY_TAB_RAGR: Ragged rectangle grey value table types.	
+  * WLZ_GREY_TAB_RECT: Ragged rectangular grey value table types.
+  * WLZ_GREY_TAB_INTL: Interval grey value table types.		
+  * WLZ_FEAT_TAB_RAGR: Ragged-rectangle feature valuetable types.
+  * WLZ_FEATVALUETABLE_RECT: Rectangular feature value table types.
   **********************************************************************/
   WLZ_GREY_TAB_RAGR		= 0,
   WLZ_GREY_TAB_RECT		= 1,
@@ -139,57 +139,57 @@ typedef enum
   WLZ_FEATVALUETABLE_RAGR	= 50,
   WLZ_FEATVALUETABLE_RECT	= 60,
   /**********************************************************************
-  * Voxel value table types.						*
+  * Voxel value table types.					
   **********************************************************************/
   WLZ_VOXELVALUETABLE_GREY	= 1,
   WLZ_VOXELVALUETABLE_CONV_HULL,
   /**********************************************************************
-  * Polygon domain types.						*
+  * Polygon domain types.					
   **********************************************************************/
   WLZ_POLYGON_INT		= 1,
   WLZ_POLYGON_FLOAT		= 2,
   WLZ_POLYGON_DOUBLE		= 3,
   /**********************************************************************
-  * Boundary list types.						*
+  * Boundary list types.					
   **********************************************************************/
   WLZ_BOUNDLIST_PIECE		= 0,
   WLZ_BOUNDLIST_HOLE		= 1,
   /**********************************************************************
-  * Convex hull types.							*
+  * Convex hull types.						
   **********************************************************************/
   WLZ_CONVHULL_VALUES		= 1,
   /**********************************************************************
-  * Histogram domain types. WLZ_HISTOGRAMDOMAIN_OLD_INT and		*
-  * WLZ_HISTOGRAMDOMAIN_OLD_FLOAT exist only to allow old files to be	*
-  * read, they should not be used anywhere else.			*
+  * Histogram domain types. WLZ_HISTOGRAMDOMAIN_OLD_INT and	
+  * WLZ_HISTOGRAMDOMAIN_OLD_FLOAT exist only to allow old files to be
+  * read, they should not be used anywhere else.		
   **********************************************************************/
   WLZ_HISTOGRAMDOMAIN_OLD_INT	= 1,
   WLZ_HISTOGRAMDOMAIN_OLD_FLOAT	= 2,
   WLZ_HISTOGRAMDOMAIN_INT	= 3,
   WLZ_HISTOGRAMDOMAIN_FLOAT	= 4,
   /**********************************************************************
-  * Rectangle object domain types.					*
+  * Rectangle object domain types.				
   **********************************************************************/
   WLZ_RECTANGLE_DOMAIN_INT	= 1,
   WLZ_RECTANGLE_DOMAIN_FLOAT	= 2,
   /**********************************************************************
-  * Property list types.						*
+  * Property list types.					
   **********************************************************************/
   WLZ_PROPERTY_SIMPLE		= 1,
   /**********************************************************************
-  * 3D view structure types.						*
+  * 3D view structure types.					
   **********************************************************************/
   WLZ_3D_VIEW_STRUCT		= 160,
   /* leave this last in the list */
   /**********************************************************************
-  * WLZ_DUMMY_ENTRY is not an object type.				*
-  * Keep it the last enumerator!					*
+  * WLZ_DUMMY_ENTRY is not an object type.			
+  * Keep it the last enumerator!				
   **********************************************************************/
   WLZ_DUMMY_ENTRY
 } WlzObjectType;
 
 /************************************************************************
-*  Raster scan directions as used by WlzGreyScan().			*
+*  Raster scan directions as used by WlzGreyScan().		
 ************************************************************************/
 typedef enum
 {
@@ -200,7 +200,7 @@ typedef enum
 } WlzRasterDir;
 
 /************************************************************************
-* Transform types.							*
+* Transform types.						
 ************************************************************************/
 typedef enum
 {
@@ -221,7 +221,7 @@ typedef enum
 } WlzTransformType;
 
 /************************************************************************
-* Types of basis function for basis function transforms.		*
+* Types of basis function for basis function transforms.	
 ************************************************************************/
 typedef enum
 {
@@ -233,7 +233,7 @@ typedef enum
 } WlzBasisFnType;
 
 /************************************************************************
-* Mesh transform element types.						*
+* Mesh transform element types.					
 ************************************************************************/
 typedef enum
 {
@@ -243,7 +243,7 @@ typedef enum
 } WlzMeshElemType;
 
 /************************************************************************
-* Mesh transform element flag masks.					*
+* Mesh transform element flag masks.				
 ************************************************************************/
 typedef enum
 {
@@ -256,7 +256,7 @@ typedef enum
 } WlzMeshElemFlags;
 
 /************************************************************************
-* Mesh transform node flag masks.					*
+* Mesh transform node flag masks.				
 ************************************************************************/
 typedef enum
 {
@@ -269,7 +269,7 @@ typedef enum
 } WlzMeshNodeFlags;
 
 /************************************************************************
-* Mesh generation methods.						*
+* Mesh generation methods.					
 ************************************************************************/
 typedef enum
 {
@@ -278,7 +278,7 @@ typedef enum
 } WlzMeshGenMethod;
 
 /************************************************************************
-* Mesh error masks.							*
+* Mesh error masks.						
 ************************************************************************/
 typedef enum
 {
@@ -295,7 +295,7 @@ typedef enum
 } WlzMeshError;
 
 /************************************************************************
-* Vertex data types.							* 
+* Vertex data types.						
 ************************************************************************/
 typedef enum
 {
@@ -305,7 +305,7 @@ typedef enum
 } WlzVertexType;
 
 /************************************************************************
-* Connectivity.								* 
+* Connectivity.							
 ************************************************************************/
 typedef enum
 {
@@ -317,7 +317,7 @@ typedef enum
 } WlzConnectType;
 
 /************************************************************************
-* Distance metrics.							* 
+* Distance metrics.						
 ************************************************************************/
 typedef enum
 {
@@ -331,7 +331,7 @@ typedef enum
 } WlzDistanceType;
 
 /************************************************************************
-* Special structure elements.						*
+* Special structure elements.					
 ************************************************************************/
 typedef enum
 {
@@ -347,7 +347,7 @@ typedef enum
 } WlzSpecialStructElmType;
 
 /************************************************************************
-*  Binary operators.							*
+*  Binary operators.						
 ************************************************************************/
 typedef enum
 {
@@ -371,7 +371,7 @@ typedef enum
 } WlzBinaryOperatorType;
 
 /************************************************************************
-*  Automatic threshold computation methods.				*
+*  Automatic threshold computation methods.			
 ************************************************************************/
 typedef enum
 {
@@ -382,7 +382,7 @@ typedef enum
 } WlzCompThreshType;
 
 /************************************************************************
-* Interpolation methods.						*
+* Interpolation methods.					
 ************************************************************************/
 typedef enum
 {
@@ -391,7 +391,7 @@ typedef enum
 } WlzInterpolationType;
 
 /************************************************************************
-* Threshold value selection.						*
+* Threshold value selection.					
 ************************************************************************/
 typedef enum
 {
@@ -400,7 +400,7 @@ typedef enum
 } WlzThresholdType;
 
 /************************************************************************
-* Polygon fill modes.							* 
+* Polygon fill modes.						
 ************************************************************************/
 typedef enum
 {
@@ -410,7 +410,7 @@ typedef enum
 } WlzPolyFillMode;
 
 /************************************************************************
-* Standard 3D views.							*
+* Standard 3D views.						
 ************************************************************************/
 typedef enum
 {
@@ -421,7 +421,7 @@ typedef enum
 } WlzThreeDStdViews;
 
 /************************************************************************
-* 3D viewing modes.							*
+* 3D viewing modes.						
 ************************************************************************/
 typedef enum
 {
@@ -433,7 +433,7 @@ typedef enum
 } WlzThreeDViewMode;
 
 /************************************************************************
-* Window functions.							* 
+* Window functions.						
 ************************************************************************/
 typedef enum
 {
@@ -445,14 +445,14 @@ typedef enum
   WLZ_WINDOWFN_RECTANGLE,
   WLZ_WINDOWFN_WELCH,
   /**********************************************************************
-  * WLZ_WINDOWFN_UNSPECIFIED is not a window function, it is an error	*
-  * Keep it the last in the enumeration.				*
+  * WLZ_WINDOWFN_UNSPECIFIED is not a window function, it is an error
+  * Keep it the last in the enumeration.			
   **********************************************************************/
   WLZ_WINDOWFN_UNSPECIFIED
 } WlzWindowFnType;
 
 /************************************************************************
-* Sampling functions.							* 
+* Sampling functions.						
 ************************************************************************/
 typedef enum
 {
@@ -466,7 +466,7 @@ typedef enum
 } WlzSampleFn;
 
 /************************************************************************
-* Vertices 								*
+* Vertices 							
 ************************************************************************/
 typedef struct
 {
@@ -509,7 +509,7 @@ typedef struct
 } WlzDVertex3;
 
 /************************************************************************
-* Bounding boxes.							*
+* Bounding boxes.						
 ************************************************************************/
 typedef struct
 {
@@ -548,7 +548,7 @@ typedef struct
 } WlzDBox3;
 
 /************************************************************************
-* Woolz values union.							* 
+* Woolz values union.						
 ************************************************************************/
 typedef union
 {
@@ -564,7 +564,7 @@ typedef union
 } WlzValues;
 
 /************************************************************************
-* Woolz domain union.							* 
+* Woolz domain union.						
 ************************************************************************/
 typedef union
 {
@@ -581,7 +581,7 @@ typedef union
 } WlzDomain;
 
 /************************************************************************
-* Simple property .							*
+* Simple property .						
 ************************************************************************/
 typedef struct
 {
@@ -593,7 +593,7 @@ typedef struct
 } WlzSimpleProperty;
 
 /************************************************************************
-* WlzObject: The Woolz object.						*
+* WlzObject: The Woolz object.					
 ************************************************************************/
 typedef struct _WlzObject
 {
@@ -606,8 +606,8 @@ typedef struct _WlzObject
 } WlzObject;
 
 /************************************************************************
-* WlzCoreDomain: All Woolz domains must have all the fields of the core	*
-* domain, in the same order and before any others.			*
+* WlzCoreDomain: All Woolz domains must have all the fields of the core
+* domain, in the same order and before any others.		
 ************************************************************************/
 typedef struct _WlzCoreDomain
 {
@@ -617,7 +617,7 @@ typedef struct _WlzCoreDomain
 } WlzCoreDomain;
 
 /************************************************************************
-* WlzPlaneDomain: A 3D domain.						*
+* WlzPlaneDomain: A 3D domain.					
 ************************************************************************/
 
 typedef struct _WlzPlaneDomain
@@ -637,8 +637,8 @@ typedef struct _WlzPlaneDomain
 
 
 /************************************************************************
-* WlzIntervalDomain: 2D interval domain.				*
-* The intervals in a line must be contiguous.				*
+* WlzIntervalDomain: 2D interval domain.			
+* The intervals in a line must be contiguous.			
 ************************************************************************/
 typedef struct _WlzIntervalDomain
 {
@@ -653,7 +653,7 @@ typedef struct _WlzIntervalDomain
 } WlzIntervalDomain;
 
 /************************************************************************
-* A line of intervals.							* 
+* A line of intervals.						
 ************************************************************************/
 typedef struct _WlzIntervalLine
 {
@@ -662,7 +662,7 @@ typedef struct _WlzIntervalLine
 } WlzIntervalLine;
 
 /************************************************************************
-*  A single interval.							*
+*  A single interval.						
 ************************************************************************/
 typedef struct _WlzInterval
 {
@@ -671,7 +671,7 @@ typedef struct _WlzInterval
 } WlzInterval;
 
 /************************************************************************
-* A union of pointers to grey values.					*
+* A union of pointers to grey values.				
 ************************************************************************/
 typedef union
 {
@@ -684,7 +684,7 @@ typedef union
 } WlzGreyP;
 
 /************************************************************************
-* A union of grey values.						*
+* A union of grey values.					
 ************************************************************************/
 typedef union
 {
@@ -697,8 +697,8 @@ typedef union
 } WlzGreyV;
 
 /************************************************************************
-* WlzPixelV, WlzPixelP: Pixel Structures for single typed values 	*
-* eg background.							*
+* WlzPixelV, WlzPixelP: Pixel Structures for single typed values 
+* eg background.						
 ************************************************************************/
 typedef struct
 {
@@ -713,7 +713,7 @@ typedef struct
 } WlzPixelP;
 
 /************************************************************************
-* Structure of grey values in a line .					*
+* Structure of grey values in a line .				
 ************************************************************************/
 typedef struct
 {
@@ -723,8 +723,8 @@ typedef struct
 } WlzValueLine;
 
 /************************************************************************
-* WlzCoreValues: All Woolz value tables must have all the fields of 	*
-* the core values, in the same order and before any others.		*
+* WlzCoreValues: All Woolz value tables must have all the fields of 
+* the core values, in the same order and before any others.	
 ************************************************************************/
 typedef struct _WlzCoreValues
 {
@@ -733,8 +733,8 @@ typedef struct _WlzCoreValues
 } WlzCoreValues;
 
 /************************************************************************
-* Ragged rectangle value table. The type encodes both the type of	*
-* value table and the type of grey value.				*
+* Ragged rectangle value table. The type encodes both the type of
+* value table and the type of grey value.			
 ************************************************************************/
 typedef struct _WlzRagRValues
 {
@@ -752,8 +752,8 @@ typedef struct _WlzRagRValues
 } WlzRagRValues;
 
 /************************************************************************
-* Rectangular values table. The type encodes both the type of		*
-* value table and the type of grey value.				*
+* Rectangular values table. The type encodes both the type of	
+* value table and the type of grey value.			
 ************************************************************************/
 typedef struct _WlzRectValues
 {
@@ -771,7 +771,7 @@ typedef struct _WlzRectValues
 } WlzRectValues;
 
 /************************************************************************
-* One line's worth of grey-intervals 					*
+* One line's worth of grey-intervals 				
 ************************************************************************/
 typedef struct
 {
@@ -780,8 +780,8 @@ typedef struct
 } WlzValueIntervalLine;
 
 /************************************************************************
-* Interval-structured value table. The type encodes both the type of	*
-* value table and the type of grey value.				*
+* Interval-structured value table. The type encodes both the type of
+* value table and the type of grey value.			
 ************************************************************************/
 typedef struct _WlzIntervalValues
 {
@@ -799,7 +799,7 @@ typedef struct _WlzIntervalValues
 } WlzIntervalValues;
 
 /************************************************************************
-* Voxel value table.							*
+* Voxel value table.						
 ************************************************************************/
 typedef struct _WlzVoxelValues
 {
@@ -815,7 +815,7 @@ typedef struct _WlzVoxelValues
 } WlzVoxelValues;
 
 /************************************************************************
-* 2D Polygon domain.							*
+* 2D Polygon domain.						
 ************************************************************************/
 typedef struct _WlzPolygonDomain
 {
@@ -828,7 +828,7 @@ typedef struct _WlzPolygonDomain
 } WlzPolygonDomain;
 
 /************************************************************************
-* 3D Polygon domain.							*
+* 3D Polygon domain.						
 ************************************************************************/
 typedef struct
 {
@@ -841,7 +841,7 @@ typedef struct
 } WlzPolygonDomain3;
 
 /************************************************************************
-* Boundary list.							*
+* Boundary list.						
 ************************************************************************/
 typedef struct _WlzBoundList
 {
@@ -863,8 +863,8 @@ typedef struct _WlzBoundList
 
 
 /************************************************************************
-* Chord and convex hull parameters.					*
-* The chord equation is: ccon = (acon * x) - (bcon * y).		*
+* Chord and convex hull parameters.				
+* The chord equation is: ccon = (acon * x) - (bcon * y).	
 ************************************************************************/
 typedef struct _WlzChord 
 {
@@ -894,7 +894,7 @@ typedef struct _WlzConvHullValues
 } WlzConvHullValues;
 
 /************************************************************************
-* Histogram domain.							*
+* Histogram domain.						
 ***********************************************************************/
 typedef struct _WlzHistogramDomain
 {
@@ -910,9 +910,9 @@ typedef struct _WlzHistogramDomain
 } WlzHistogramDomain;
 
 /************************************************************************
-* Rectangle domains.							*
-* Side from (l[0],k[0]) to (l[1],k[1]) is a long side. 			*
-* The vertices are cyclic.						*
+* Rectangle domains.						
+* Side from (l[0],k[0]) to (l[1],k[1]) is a long side. 		
+* The vertices are cyclic.					
 ************************************************************************/
 typedef struct  _WlzRect
 {
@@ -935,7 +935,7 @@ typedef struct _WlzFRect
 } WlzFRect;
 
 /************************************************************************
-* Vectors.								*
+* Vectors.							
 ************************************************************************/
 typedef struct 
 {
@@ -960,7 +960,7 @@ typedef struct
 } WlzFVector;
 
 /************************************************************************
-* Points.								*
+* Points.							
 ************************************************************************/
 typedef struct
 {
@@ -982,9 +982,9 @@ typedef struct
 
 
 /************************************************************************
-* Convolution mask.							*
-* To reduce computational cost at the expense of data storage the	*
-* complete convolution must be specified even if highly symmetrical.	*
+* Convolution mask.						
+* To reduce computational cost at the expense of data storage the
+* complete convolution must be specified even if highly symmetrical.
 ************************************************************************/
 typedef struct
 {
@@ -996,9 +996,51 @@ typedef struct
   int offset;     				 /* ... then add this offset */
   int modflag;		    /* ... and take the modulus if this is non-zero. */
 } WlzConvolution;
+
+/************************************************************************
+* Recursive filter actions.
+************************************************************************/
+typedef enum
+{
+  WLZ_RSVFILTER_ACTION_NONE     = (0),
+  WLZ_RSVFILTER_ACTION_X        = (1<<0),              /* Filter along lines */
+  WLZ_RSVFILTER_ACTION_Y        = (1<<1),           /*Filter through columns */
+  WLZ_RSVFILTER_ACTION_Z        = (1<<2)            /* Filter through planes */
+} WlzRsvFilterActionMask;
+
+/************************************************************************
+* Recursive filter names that can be used to define a recursive filter
+* along with a filter parameter (eg sigma for Gaussian).
+************************************************************************/
+typedef enum
+{
+  WLZ_RSVFILTER_NAME_NONE,            /* No name, application defined filter */
+  WLZ_RSVFILTER_NAME_DERICHE_0,              /* Deriche's smoothing operator */
+  WLZ_RSVFILTER_NAME_DERICHE_1,                   /* Deriche's edge operator */
+  WLZ_RSVFILTER_NAME_DERICHE_2,               /* Deriche's 2nd edge operator */
+  WLZ_RSVFILTER_NAME_GAUSS_0,                                    /* Gaussian */
+  WLZ_RSVFILTER_NAME_GAUSS_1,                /* First derivative of Gaussian */
+  WLZ_RSVFILTER_NAME_GAUSS_2                /* Second derivative of Gaussian */
+} WlzRsvFilterName;
+
+/************************************************************************
+* Recursive filter parameters.
+* The parameters a0, a1, a2, a3, b0, b1 and c define a recursive
+* filter, where
+*   y+(i) = a0 x(i + 0) + a1 x(i - 1) - b0 y+(i - 1) - b1 y+(i - 2)
+*   y-(i) = a2 x(i + 1) + a3 x(i + 2) - b0 y-(i + 1) - b1 y-(i + 2)
+*   y(i) = c(y+(i) + y-(i))
+************************************************************************/
+typedef struct
+{
+  WlzRsvFilterName	name;				  /* The filter name */
+  double		a[4];		       /* Feed forward coefficients. */
+  double		b[2];		          /* Feed back coefficients. */
+  double		c;			 /* Normalization parameter. */
+} WlzRsvFilter;
  
 /************************************************************************
-* Affine tranform: WLZ_TRANSFORM_2D_AFFINE or WLZ_TRANSFORM_3D_AFFINE.	*
+* Affine tranform: WLZ_TRANSFORM_2D_AFFINE or WLZ_TRANSFORM_3D_AFFINE.
 ************************************************************************/
 typedef struct _WlzAffineTransform
 {
@@ -1019,10 +1061,10 @@ typedef struct _WlzAffineTransform
 } WlzAffineTransform;
 
 /************************************************************************
-* Basis function transform: WLZ_TRANSFORM_2D_BASISFN,			*
-* WLZ_TRANSFORM_2D5_BASISFN or WLZ_TRANSFORM_3D_BASISFN.		*
-* The delta is used by the MQ and Gauss basis functions:  For the MQ	*
-* basis fn delta = R^2, and for the Gaussian basis fn delta = 1/s^2.	*
+* Basis function transform: WLZ_TRANSFORM_2D_BASISFN,		
+* WLZ_TRANSFORM_2D5_BASISFN or WLZ_TRANSFORM_3D_BASISFN.	
+* The delta is used by the MQ and Gauss basis functions:  For the MQ
+* basis fn delta = R^2, and for the Gaussian basis fn delta = 1/s^2.
 ************************************************************************/
 typedef struct _WlzBasisFnTransform
 {
@@ -1040,12 +1082,12 @@ typedef struct _WlzBasisFnTransform
 } WlzBasisFnTransform;
 
 /************************************************************************
-* Mesh transforms: WLZ_TRANSFORM_2D_MESH, WLZ_TRANSFORM_2D5_MESH or	*
-* WLZ_TRANSFORM_3D_MESH.						*
-* The nodes and neighbours are indexed such that:			*
-* Neighbour 0 shares nodes 1 and 2, neighbour 1 shares nodes 2 and 0	*
-* and neighbour 2 shares nodes 0 and 1. All the nodes are stored in	*
-* counter clockwise (CCW) order.					*
+* Mesh transforms: WLZ_TRANSFORM_2D_MESH, WLZ_TRANSFORM_2D5_MESH or
+* WLZ_TRANSFORM_3D_MESH.					
+* The nodes and neighbours are indexed such that:		
+* Neighbour 0 shares nodes 1 and 2, neighbour 1 shares nodes 2 and 0
+* and neighbour 2 shares nodes 0 and 1. All the nodes are stored in
+* counter clockwise (CCW) order.				
 ************************************************************************/
 typedef struct _WlzMeshNode
 {
@@ -1079,7 +1121,7 @@ typedef struct _WlzMeshTransform
 } WlzMeshTransform;
 
 /************************************************************************
-* Sequential/local transformation workspace structure.			*
+* Sequential/local transformation workspace structure.		
 ************************************************************************/
 typedef struct 
 {
@@ -1105,7 +1147,7 @@ typedef struct
 } WlzSepTransWSpace;
 
 /************************************************************************
-* Standard workspace structure for interval objects.			*
+* Standard workspace structure for interval objects.		
 ************************************************************************/
 typedef struct
 {
@@ -1137,7 +1179,7 @@ typedef struct
 } WlzIntervalWSpace;
 
 /************************************************************************
-* Standard workspace for grey-table manipulations 			*
+* Standard workspace for grey-table manipulations 		
 ************************************************************************/
 typedef struct _WlzGreyWSpace
 {
@@ -1183,11 +1225,11 @@ typedef struct _WlzGreyValueWSpace
 } WlzGreyValueWSpace;
 
 /************************************************************************
-* Compound objects: implemented as either ARRAYS or LINKED LISTS of	*
-* other objects.  There is a distinction between an compound of the 	*
-* same type (e.g. resulting from a labelling) and a compound of		*
-* different types (e.g. resulting from a range of image processes from	*
-* a single original object).						*
+* Compound objects: implemented as either ARRAYS or LINKED LISTS of
+* other objects.  There is a distinction between an compound of the 
+* same type (e.g. resulting from a labelling) and a compound of	
+* different types (e.g. resulting from a range of image processes from
+* a single original object).					
 ************************************************************************/
 typedef struct 
 {
@@ -1202,7 +1244,7 @@ typedef struct
 
 
 /************************************************************************
-* Finite Element and Warping structures.				*
+* Finite Element and Warping structures.			
 ************************************************************************/
 
 typedef enum
@@ -1259,7 +1301,7 @@ typedef struct _WlzWarpTrans
 } WlzWarpTrans;
 
 /************************************************************************
-* Feature matching structures.						*
+* Feature matching structures.					
 ************************************************************************/
 typedef enum
 {
@@ -1354,7 +1396,7 @@ typedef struct
 } Wlz3DWarpTrans;
 
 /************************************************************************
-* 3D section structure.							*
+* 3D section structure.						
 ************************************************************************/
 typedef struct {
   WlzObjectType	type;

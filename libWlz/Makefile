@@ -100,6 +100,7 @@ CSOURCES		= \
 			WlzPolyToObj.c \
 			WlzPrinicipalAngle.c \
 			WlzReadObj.c \
+			WlzRsvFilter.c \
 			WlzSampleObj.c \
 			WlzScalarArithmeticOp.c \
 			WlzScalarBinaryOp.c \

@@ -21,19 +21,19 @@
 #include <Wlz.h>
 
 /************************************************************************
-* Function:	WlzValueSet<VecType>					*
-* Returns:	void							*
-* Purpose:	Sets the elements of the given vector to a given 	*
-*		value, where the vector type is any one of int,		*
-*		short, UBYTE, float, double, WlzIVertex2, WlzFVertex2 or	*
-*		WlzDVertex2.						*
-* Global refs:	-							*
-* Parameters:	<VecType> *vec:		Vector who's elements are to be	*
-*					set.				*
-*		<VecType> value:	Value to use when setting the	*
-*					vector's elements.		*
-*		int count:		Number of vector elements to	*
-*					be set.				*
+* Function:	WlzValueSet<VecType>				
+* Returns:	void						
+* Purpose:	Sets the elements of the given vector to a given 
+*		value, where the vector type is any one of int,	
+*		short, UBYTE, float, double, WlzIVertex2, WlzFVertex2 or
+*		WlzDVertex2.					
+* Global refs:	-						
+* Parameters:	<VecType> *vec:		Vector who's elements are to be
+*					set.			
+*		<VecType> value:	Value to use when setting the
+*					vector's elements.	
+*		int count:		Number of vector elements to
+*					be set.			
 ************************************************************************/
 void		WlzValueSetInt(int *vec, int value,
 			       int count)
@@ -126,20 +126,20 @@ void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
 }
 
 /************************************************************************
-* Function:	WlzValueSetGrey						*
-* Returns:	void							*
-* Purpose:	Sets the elements of the given vector to a given 	*
-*		value, where the vector type is any one of int,		*
-*		short, UBYTE, float, double.				*
-* Global refs:	-							*
-* Parameters:	WlzGreyP *vec:		Vector who's elements are to be	*
-*					set.				*
-*		int vecOff:		Offset from vec.		*
-*		WlzGreyV value:		Value to use when setting the	*
-*					vector's elements.		*
-*		WlzGreyType gType:	Grey type, ie: int, short....	*
-*		int count		Number of vector elements to	*
-*					be set.				*
+* Function:	WlzValueSetGrey					
+* Returns:	void						
+* Purpose:	Sets the elements of the given vector to a given 
+*		value, where the vector type is any one of int,	
+*		short, UBYTE, float, double.			
+* Global refs:	-						
+* Parameters:	WlzGreyP *vec:		Vector who's elements are to be
+*					set.			
+*		int vecOff:		Offset from vec.	
+*		WlzGreyV value:		Value to use when setting the
+*					vector's elements.	
+*		WlzGreyType gType:	Grey type, ie: int, short....
+*		int count		Number of vector elements to
+*					be set.			
 ************************************************************************/
 void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
 				WlzGreyType gType, int count)
@@ -165,17 +165,17 @@ void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
 }
 
 /************************************************************************
-* Function:	WlzValueClamp<VecType>To<ReqType>			*
-* Returns:	void							*
-* Purpose:	Clamps a vector of <VecType> to the limits of		*
-*		<ReqType>, where the source and destination types are	*
-*		any combination of int, short, UBYTE, float or double	*
-*		in which the range of <VecType> is not contained within	*
-*		the range of <ReqType>.					*
-* Global refs:	-							*
-* Parameters:	<VecType> *vec:		Vector who's elements are to be	*
-*					clamped.			*
-*		int count:		Number of vector elements.	*
+* Function:	WlzValueClamp<VecType>To<ReqType>		
+* Returns:	void						
+* Purpose:	Clamps a vector of <VecType> to the limits of	
+*		<ReqType>, where the source and destination types are
+*		any combination of int, short, UBYTE, float or double
+*		in which the range of <VecType> is not contained within
+*		the range of <ReqType>.				
+* Global refs:	-						
+* Parameters:	<VecType> *vec:		Vector who's elements are to be
+*					clamped.		
+*		int count:		Number of vector elements.
 ************************************************************************/
 void		 WlzValueClampIntToShort(int *vec, int count)
 {
@@ -338,17 +338,390 @@ void		 WlzValueClampFloatToUByte(float *vec, int count)
 }
 
 /************************************************************************
-* Function:	WlzValueMask<VecType>To<ReqType>			*
-* Returns:	void							*
-* Purpose:	Masks a vector of <VecType> to the limits of		*
-*		<ReqType>, where the source and destination types are	*
-*		any combination of int, short or UBYTE in which		*
-*		the range of <VecType> is not contained within the	*
-*		range of <ReqType>.					*
-* Global refs:	-							*
-* Parameters:	<VecType> *vec:		Vector who's elements are to be	*
-*					clamped.			*
-*		int count:		Number of vector elements.	*
+* Function:	WlzValueClamp<SrcType>Into<DstType>		
+* Returns:	void						
+* Purpose:	Clamps a vector of <SrcType> into a vector of
+*		<DstType>, where the source and destination types are
+*		any combination of int, short, UBYTE, float or double.
+* Global refs:	-						
+* Parameters:	<DstType> *vec:		Destination vector.
+*		<SrcType> *src:		Source vector.
+*		int count:		Number of vector elements.
+************************************************************************/
+void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > SHRT_MAX)
+    {
+      *dst = SHRT_MAX;
+    }
+    else if(*src < SHRT_MIN)
+    {
+      *dst = SHRT_MIN;
+    }
+    else
+    {
+      *dst = *src;
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		 WlzValueClampIntIntoUByte(UBYTE *dst, int *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > UCHAR_MAX)
+    {
+      *dst = UCHAR_MAX;
+    }
+    else if(*src < 0)
+    {
+      *dst = 0;
+    }
+    else
+    {
+      *dst = *src;
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		 WlzValueClampShortIntoUByte(UBYTE *dst, short *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > UCHAR_MAX)
+    {
+      *dst = UCHAR_MAX;
+    }
+    else if(*src < 0)
+    {
+      *dst = 0;
+    }
+    else
+    {
+      *dst = *src;
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampFloatIntoInt(int *dst, float *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > INT_MAX)
+    {
+      *dst = INT_MAX;
+    }
+    else if(*src < INT_MIN)
+    {
+      *dst = INT_MIN;
+    }
+    else
+    {
+      *dst = WLZ_NINT(*src);
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > SHRT_MAX)
+    {
+      *dst = SHRT_MAX;
+    }
+    else if(*src < SHRT_MIN)
+    {
+      *dst = SHRT_MIN;
+    }
+    else
+    {
+      *dst = WLZ_NINT(*src);
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampFloatIntoUByte(UBYTE *dst, float *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > UCHAR_MAX)
+    {
+      *dst = UCHAR_MAX;
+    }
+    else if(*src < 0.0)
+    {
+      *dst = 0;
+    }
+    else
+    {
+      *dst = (UBYTE )(*src + 0.5);
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampDoubleIntoInt(int *dst, double *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > INT_MAX)
+    {
+      *dst = INT_MAX;
+    }
+    else if(*src < INT_MIN)
+    {
+      *dst = INT_MIN;
+    }
+    else
+    {
+      *dst = WLZ_NINT(*src);
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > SHRT_MAX)
+    {
+      *dst = SHRT_MAX;
+    }
+    else if(*src < SHRT_MIN)
+    {
+      *dst = SHRT_MIN;
+    }
+    else
+    {
+      *dst = WLZ_NINT(*src);
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampDoubleIntoUByte(UBYTE *dst, double *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > UCHAR_MAX)
+    {
+      *dst = UCHAR_MAX;
+    }
+    else if(*src < 0.0)
+    {
+      *dst = 0;
+    }
+    else
+    {
+      *dst = (UBYTE )(*src + 0.5);
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
+{
+  while(count-- > 0)
+  {
+    if(*src > FLT_MAX)
+    {
+      *dst = FLT_MAX;
+    }
+    else if(*src < FLT_MIN)
+    {
+      *dst = FLT_MIN;
+    }
+    else
+    {
+      *dst = *src;
+    }
+    ++src;
+    ++dst;
+  }
+}
+
+/************************************************************************
+* Function:	WlzValueClampGreyIntoGrey			
+* Returns:	void						
+* Purpose:	Clamps a source vector into a destination vector,
+*		where the source and destination types are any	
+*		combination of int, short, UBYTE, float or double.
+* Global refs:	-						
+* Parameters:	WlzGreyP dst:		Destination vector.	
+*		int dstOff:		Destination offset.	
+*		WlzGreyType dstType:	Destination type, ie: int, ....
+*		WlzGreyP src:		Source vector.		
+*		int srcOff:		Source offset.		
+*		WlzGreyType srcType:	Source type, ie: int, ....
+*		int count:		Number of vector elements to
+*					be copied.		
+************************************************************************/
+void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
+					  WlzGreyType dstType,
+					  WlzGreyP src, int srcOff,
+					  WlzGreyType srcType,
+					  int count)
+{
+  switch(dstType)
+  {
+    case WLZ_GREY_INT:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueCopyIntToInt(dst.inp + dstOff, src.inp + srcOff,
+	  		       count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueCopyShortToInt(dst.inp + dstOff, src.shp + srcOff,
+	  			 count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToInt(dst.inp + dstOff, src.ubp + srcOff,
+	  			 count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueClampFloatIntoInt(dst.inp + dstOff, src.flp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueClampDoubleIntoInt(dst.inp + dstOff, src.dbp + srcOff,
+	  			     count);
+	  break;
+      }
+      break;
+    case WLZ_GREY_SHORT:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueClampIntIntoShort(dst.shp + dstOff, src.inp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueCopyShortToShort(dst.shp + dstOff, src.shp + srcOff,
+	  			   count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToShort(dst.shp + dstOff, src.ubp + srcOff,
+	  			   count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueClampFloatIntoShort(dst.shp + dstOff, src.flp + srcOff,
+	  			      count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueClampDoubleIntoShort(dst.shp + dstOff, src.dbp + srcOff,
+	  			       count);
+	  break;
+      }
+      break;
+    case WLZ_GREY_UBYTE:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueClampIntIntoUByte(dst.ubp + dstOff, src.inp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueClampShortIntoUByte(dst.ubp + dstOff, src.shp + srcOff,
+	  			      count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToUByte(dst.ubp + dstOff, src.ubp + srcOff,
+	  			   count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueClampFloatIntoUByte(dst.ubp + dstOff, src.flp + srcOff,
+	  			      count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueClampDoubleIntoUByte(dst.ubp + dstOff, src.dbp + srcOff,
+	  			       count);
+	  break;
+      }
+      break;
+    case WLZ_GREY_FLOAT:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueCopyIntToFloat(dst.flp + dstOff, src.inp + srcOff,
+	  			 count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueCopyShortToFloat(dst.flp + dstOff, src.shp + srcOff,
+	  			   count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToFloat(dst.flp + dstOff, src.ubp + srcOff,
+	  			   count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueCopyFloatToFloat(dst.flp + dstOff, src.flp + srcOff,
+	  			   count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueClampDoubleIntoFloat(dst.flp + dstOff, src.dbp + srcOff,
+	  			       count);
+	  break;
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      switch(srcType)
+      {
+	case WLZ_GREY_INT:
+	  WlzValueCopyIntToDouble(dst.dbp + dstOff, src.inp + srcOff,
+	  			  count);
+	  break;
+	case WLZ_GREY_SHORT:
+	  WlzValueCopyShortToDouble(dst.dbp + dstOff, src.shp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  WlzValueCopyUByteToDouble(dst.dbp + dstOff, src.ubp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  WlzValueCopyFloatToDouble(dst.dbp + dstOff, src.flp + srcOff,
+	  			    count);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  WlzValueCopyDoubleToDouble(dst.dbp + dstOff, src.dbp + srcOff,
+	  			     count);
+	  break;
+      }
+      break;
+  }
+}
+
+/************************************************************************
+* Function:	WlzValueMask<VecType>To<ReqType>		
+* Returns:	void						
+* Purpose:	Masks a vector of <VecType> to the limits of	
+*		<ReqType>, where the source and destination types are
+*		any combination of int, short or UBYTE in which	
+*		the range of <VecType> is not contained within the
+*		range of <ReqType>.				
+* Global refs:	-						
+* Parameters:	<VecType> *vec:		Vector who's elements are to be
+*					clamped.		
+*		int count:		Number of vector elements.
 ************************************************************************/
 void		 WlzValueMaskIntToShort(int *vec, int count)
 {
@@ -375,16 +748,16 @@ void		 WlzValueMaskShortToUByte(short *vec, int count)
 }
 
 /************************************************************************
-* Function:	WlzValueCopy<SrcType>To<DstType>			*
-* Returns:	void							*
-* Purpose:	Copies a vector of <SrcType> to a vector of <DstType>,	*
-*		where the source and destination types are any		*
-*		combination of int, short, UBYTE, float or double.	*
-* Global refs:	-							*
-* Parameters:	<SrcType> *dst:		Destination vector.		*
-*		<DstType> *src:		Source vector.			*
-*		int count:		Number of vector elements to	*
-*					be copied.			*
+* Function:	WlzValueCopy<SrcType>To<DstType>		
+* Returns:	void						
+* Purpose:	Copies a vector of <SrcType> to a vector of <DstType>,
+*		where the source and destination types are any	
+*		combination of int, short, UBYTE, float or double.
+* Global refs:	-						
+* Parameters:	<SrcType> *dst:		Destination vector.	
+*		<DstType> *src:		Source vector.		
+*		int count:		Number of vector elements to
+*					be copied.		
 ************************************************************************/
 void		WlzValueCopyIntToInt(int *dst, int *src, int count)
 {
@@ -579,20 +952,20 @@ void		WlzValueCopyDoubleToDouble(double *dst, double *src, int count)
 }
 
 /************************************************************************
-* Function:	WlzValueCopyGreyToGrey					*
-* Returns:	void							*
-* Purpose:	Copies a source vector to a destination vector,		*
-*		where the source and destination types are any		*
-*		combination of int, short, UBYTE, float or double.	*
-* Global refs:	-							*
-* Parameters:	WlzGreyP dst:		Destination vector.		*
-*		int dstOff:		Destination offset.		*
-*		WlzGreyType dstType:	Destination type, ie: int, ....	*
-*		WlzGreyP src:		Source vector.			*
-*		int srcOff:		Source offset.			*
-*		WlzGreyType srcType:	Source type, ie: int, ....	*
-*		int count:		Number of vector elements to	*
-*					be copied.			*
+* Function:	WlzValueCopyGreyToGrey				
+* Returns:	void						
+* Purpose:	Copies a source vector to a destination vector,	
+*		where the source and destination types are any	
+*		combination of int, short, UBYTE, float or double.
+* Global refs:	-						
+* Parameters:	WlzGreyP dst:		Destination vector.	
+*		int dstOff:		Destination offset.	
+*		WlzGreyType dstType:	Destination type, ie: int, ....
+*		WlzGreyP src:		Source vector.		
+*		int srcOff:		Source offset.		
+*		WlzGreyType srcType:	Source type, ie: int, ....
+*		int count:		Number of vector elements to
+*					be copied.		
 ************************************************************************/
 void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 				       WlzGreyType dstType,
@@ -731,17 +1104,17 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 }
 
 /************************************************************************
-* Function:	WlzValueCopy<SrcType>To<DstType>			*
-* Returns:	void							*
-* Purpose:	Copies a vector of <SrcType> verticies to a vector of	*
-*		<DstType> verticies, where the source and destination	*
-*		types are any combination of WlzDVertex2, WlzFVertex2	*
-*		and WlzIVertex2.						*
-* Global refs:	-							*
-* Parameters:	<SrcType> *dst:		Destination vector.		*
-*		<DstType> *src:		Source vector.			*
-*		int count:		Number of vector elements to	*
-*					be copied.			*
+* Function:	WlzValueCopy<SrcType>To<DstType>		
+* Returns:	void						
+* Purpose:	Copies a vector of <SrcType> verticies to a vector of
+*		<DstType> verticies, where the source and destination
+*		types are any combination of WlzDVertex2, WlzFVertex2
+*		and WlzIVertex2.					
+* Global refs:	-						
+* Parameters:	<SrcType> *dst:		Destination vector.	
+*		<DstType> *src:		Source vector.		
+*		int count:		Number of vector elements to
+*					be copied.		
 ************************************************************************/
 void		WlzValueCopyDVertexToDVertex(WlzDVertex2 *dst,
 					     WlzDVertex2 *src,
@@ -843,17 +1216,17 @@ void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
 }
 
 /************************************************************************
-* Function:	WlzValueConvertPixel					*
-* Returns:	WlzErrorNum:		WLZ_ERR_NONE,			*
-*					WLZ_ERR_PARAM_NULL or		*
-*					WLZ_ERR_GREY_TYPE.		*
-* Purpose:	Converts a single pixel value.				*
-*		Source values are clamped to the the destination value	*
-*		range.							*
-* Global refs:	-							*
-* Parameters:	WlzPixelV *dstPix	Destination pointer for pixel.	*
-*		WlzPixelV srcPix:	Source pixel.			*
-*		WlzGreyType dstType:	Destination type, ie: int, ....	*
+* Function:	WlzValueConvertPixel				
+* Returns:	WlzErrorNum:		WLZ_ERR_NONE,		
+*					WLZ_ERR_PARAM_NULL or	
+*					WLZ_ERR_GREY_TYPE.	
+* Purpose:	Converts a single pixel value.			
+*		Source values are clamped to the the destination value
+*		range.						
+* Global refs:	-						
+* Parameters:	WlzPixelV *dstPix	Destination pointer for pixel.
+*		WlzPixelV srcPix:	Source pixel.		
+*		WlzGreyType dstType:	Destination type, ie: int, ....
 ************************************************************************/
 WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 				     WlzPixelV srcPix,
@@ -1023,36 +1396,36 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 }
 
 /************************************************************************
-* Function:	WlzValueMedian<VecType>					*
-* Returns:	void							*
-* Purpose:	Computes the median of the given vector (the vector's	*
-*		values are overwritten), where the vector type is 	*
-*		either int or double.					*
-*		The algorithm is based on min-max elimination as used	*
-*		by Peath A W. Median finding on a 3x3 Grid. Graphics	*
-*		Gems, 171-175. Academic Press. 1990.			*
-*		If the vector has less than 1 element 0 is returned.	*
-*		In the trivial case of 1 or 2 elements, the first	*
-*		element's value is returned.				*
-*		If the vector has more than 3 elements:			*
-*		* The given vector is partitioned into two portions:	*
-*		  the 1st having ((n + 1) / 2) + 1 elements.		*
-*		* While all the elements have not been examined:	*
-*		*   Find maximum and minimum values in the 1st		*
-*		    partition.						*
-*		*   Replace the min value with the first in the		*
-*		    partition and the max with the last in the		*
-*		    partition.						*
-*		*   Replace the first value in the first partition with	*
-*		    the next value from the second partition.		*
-*		*   Reduce the length of the first partion by 1, ie	*
-*		    omit the last value.				*
-*		* This leaves 3 values in the 1st partion, their median	*
-*		  is found by direct comparison.			*
-* Global refs:	-							*
-* Parameters:	<VecType> *vec:		Vector who's elements are to be	*
-*					used in computing the median.	*
-*		int count:		Number of vector elements.	*
+* Function:	WlzValueMedian<VecType>				
+* Returns:	void						
+* Purpose:	Computes the median of the given vector (the vector's
+*		values are overwritten), where the vector type is 
+*		either int or double.				
+*		The algorithm is based on min-max elimination as used
+*		by Peath A W. Median finding on a 3x3 Grid. Graphics
+*		Gems, 171-175. Academic Press. 1990.		
+*		If the vector has less than 1 element 0 is returned.
+*		In the trivial case of 1 or 2 elements, the first
+*		element's value is returned.			
+*		If the vector has more than 3 elements:		
+*		* The given vector is partitioned into two portions:
+*		  the 1st having ((n + 1) / 2) + 1 elements.	
+*		* While all the elements have not been examined:
+*		*   Find maximum and minimum values in the 1st	
+*		    partition.					
+*		*   Replace the min value with the first in the	
+*		    partition and the max with the last in the	
+*		    partition.					
+*		*   Replace the first value in the first partition with
+*		    the next value from the second partition.	
+*		*   Reduce the length of the first partion by 1, ie
+*		    omit the last value.			
+*		* This leaves 3 values in the 1st partion, their median
+*		  is found by direct comparison.		
+* Global refs:	-						
+* Parameters:	<VecType> *vec:		Vector who's elements are to be
+*					used in computing the median.
+*		int count:		Number of vector elements.
 ************************************************************************/
 int		WlzValueMedianInt(int *values, int nVal)
 {
