@@ -33,6 +33,7 @@ int             main(int argc, char **argv)
   		ok = 1,
 		usage = 0,
 		flip = 0,
+		nrm = 0,
 		unitVoxelSz = 0;
   double	ctrVal = 100,
   		ctrWth = 1.0;
@@ -46,7 +47,7 @@ int             main(int argc, char **argv)
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bghilrUo:v:w:";
+  static char	optList[] = "bghilmrUo:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -74,6 +75,9 @@ int             main(int argc, char **argv)
 	break;
       case 'l':
         flip = 1;
+	break;
+      case 'm':
+        nrm = 1;
 	break;
       case 'r':
         ctrMtd = WLZ_CONTOUR_MTD_RBFBND;
@@ -157,7 +161,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    ctrDom.ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, &errNum);
+    ctrDom.ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, nrm, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -237,7 +241,8 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       "Usage: %s%sExample: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i] [-U] [-o#] [-v#] [-w#]\n"
+      " [-o<output object>] [-h] [-o] [-g] [-i] [-l] [-m] [-r]\n"
+      "        [-U] [-o#] [-v#] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -246,6 +251,7 @@ int             main(int argc, char **argv)
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
       "  -l  Flip orientation (normals will be reversed).\n"
+      "  -m  Generate normals (if possible).\n"
       "  -r  Compute object boundary contours using radial basis functions.\n"
       "  -U  Use unit voxel size.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
