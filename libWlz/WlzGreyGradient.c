@@ -14,6 +14,7 @@
 *		image.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -87,9 +88,6 @@ static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
   		bufSz;
   double	**iBufA = NULL;
   WlzObject     *tObj0,
-  		*iObj0 = NULL,
-  		*iObj1 = NULL,
-  		*iObj2 = NULL,
 		*istObj = NULL,
                 *dstObj = NULL;
   WlzObject	*iObjA[3],

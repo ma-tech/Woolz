@@ -16,6 +16,7 @@
 *		WLZ_RSVFILTER_TEST_3D. See code below.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 * 02-02-2k bill	Added WlzRsvFilterBuffer().
 * 06-09-99 bill Object type error was not returned from WlzRsvFilterObj().
 ************************************************************************/
@@ -1353,7 +1354,6 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
   		idD,
 		idN,
   		idP,
-		idLstP,
 		itvLen,
 		dstPnIdx,
 		bufPlIdx,
@@ -1383,8 +1383,7 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
   WlzDomain	*srcDom2D;
   WlzValues	*srcVal2D,
   		*dstVal2D;
-  WlzObject	*tObj2D0,
-  		*srcObj2D,
+  WlzObject	*srcObj2D,
   		*dstObj2D,
 		*dstObj = NULL;
   WlzPixelV	bgdPix;
@@ -1519,7 +1518,6 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
       if(errNum == WLZ_ERR_NONE)
       {
 	idD = 0;
-	idLstP = 0;
 	while((errNum == WLZ_ERR_NONE) && (idD < 2))
 	{
 	  /* Initialise buffers. */

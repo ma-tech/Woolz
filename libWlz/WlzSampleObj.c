@@ -12,6 +12,7 @@
 * Purpose:      Subsamples an object through a convolution kernel.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables. Fixed enum assignment mismatch.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -304,7 +305,7 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
   		srcDom;
   WlzIntervalWSpace srcIWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
 
   dstDom.core = NULL;
   srcDom = srcObj->domain;
@@ -347,7 +348,11 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
       else
       {
         dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
-					     &alcErrNum);
+					     &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
     else
@@ -452,8 +457,8 @@ static WlzObject *WlzSampleObjPoint(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzPixelV	backgroundPix;
   WlzIntervalWSpace srcIWsp;
   WlzGreyWSpace	srcGWsp;
+  AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -509,7 +514,11 @@ static WlzObject *WlzSampleObjPoint(WlzObject *srcObj, WlzIVertex2 samFac,
       else
       {
         dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
-					     &alcErrNum);
+					     &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
     else
@@ -695,8 +704,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		srcIWsp;
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
+  AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -748,7 +757,11 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &alcErrNum);
+					     &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
     else
@@ -1044,7 +1057,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -1096,7 +1109,11 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &alcErrNum);
+					     &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
     else
@@ -1372,7 +1389,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -1425,7 +1442,11 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &alcErrNum);
+					     &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
     else
@@ -1796,7 +1817,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -1849,7 +1870,11 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &alcErrNum);
+					     &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
     else
@@ -2332,9 +2357,9 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
                 rSzX;
   WlzObjectType	gTabType;
   void		*greyValues = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzValues  	values;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
  
   values.core = NULL;
   if((rBox.xMin > rBox.xMax) || (rBox.yMin > rBox.yMax))
@@ -2393,8 +2418,12 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
   if(errNum == WLZ_ERR_NONE)
   {
     values.r->freeptr = AlcFreeStackPush(values.r->freeptr,
-					 greyValues, &alcErrNum);
+					 greyValues, &alcErr);
+    if(alcErr != ALC_ER_NONE)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     if(dstValues)

@@ -13,6 +13,7 @@
 *		function transforms.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
@@ -1065,8 +1066,7 @@ static WlzBasisFnTransform *WlzBasisFnConfFromCPts(int nPts, int order,
   		*wMx = NULL;
   double	**aMx = NULL,
   		**vMx = NULL;
-  WlzDVertex2	powVx,
-  		sVx;
+  WlzDVertex2	sVx;
   ComplexD	z, zPow;
   WlzBasisFnTransform *basis = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;

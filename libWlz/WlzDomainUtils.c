@@ -12,6 +12,7 @@
 * Purpose:      Utility functions for Woolz domains.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Fixed enum assignment mismatch.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -240,11 +241,11 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
   int		lnOff;
   WlzInterval	*itv;
   WlzIntervalLine *itvLn;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
 #ifdef WLZ_DYNITV_TUNE_MALLOC
   static int 	tuneMalloc = 0;
 #endif /* WLZ_DYNITV_TUNE_MALLOC */
-  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   if(iDom == NULL)
   {
@@ -282,7 +283,11 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
       {
 	iDom->freeptr = AlcFreeStackPush(iDom->freeptr,
 					 (void *)(iPool->itvBlock),
-					 &alcErrNum);
+					 &alcErr);
+        if(alcErr != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
       if(errNum == WLZ_ERR_NONE)
       {

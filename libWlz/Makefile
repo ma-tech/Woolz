@@ -261,7 +261,7 @@ CPPFLAGS	= $(INCDIRS:%=-I%) $(DEFINES)
 CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
 ifeq ($(UNIXTYPE), SUNOS5)
-ANSI_CONFORMANCE	= -v -Xc
+ANSI_CONFORMANCE	= -v
 endif
 
 # Default traget which builds everything (should not need modifying).
@@ -347,7 +347,7 @@ endif
 
 # making the tag file
 tags:
-	$(ETAGS) -f $(ETAGSFILE) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+	$(CTAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)

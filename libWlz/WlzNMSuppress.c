@@ -43,6 +43,7 @@
 *		  +----------+---------+
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -110,7 +111,6 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
   int		*grdMBufPrv,
   		*grdMBufCur,
 		*grdMBufNxt;
-  WlzIntervalLine *itvLn;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const UBYTE	dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
@@ -280,7 +280,6 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
   double	*grdMBufPrv,
   		*grdMBufCur,
 		*grdMBufNxt;
-  WlzIntervalLine *itvLn;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const UBYTE	dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
@@ -429,8 +428,7 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
   		inPos,
 		outPos,
 		orgPos;
-  WlzValues	tmpVal,
-  		noValues;
+  WlzValues	tmpVal;
   WlzDomain	dstDom,
   		grdDom;
   WlzIntervalWSpace tmpIWSp,
@@ -455,7 +453,6 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
 
   pool.itvBlock = NULL;
   dstDom.core = NULL;
-  noValues.core = NULL;
   if((grdM->type != WLZ_2D_DOMAINOBJ) ||
      (grdY->type != WLZ_2D_DOMAINOBJ) ||
      (grdX->type != WLZ_2D_DOMAINOBJ))

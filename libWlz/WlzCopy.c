@@ -12,6 +12,8 @@
 * Purpose:      Functions to make 'deep' copies of Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Fixed possible bug caused by unset values pointer
+*		in WlzCopyValues().
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
@@ -327,7 +329,7 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
   WlzDomain	*domP0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  outVal.core = NULL;
+  nullVal.core = outVal.core = NULL;
   if(inVal.core == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;

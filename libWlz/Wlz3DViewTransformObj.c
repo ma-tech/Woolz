@@ -78,7 +78,7 @@ WlzObject *Wlz3DViewTransformObj(
   WlzErrorNum		*dstErr)
 {
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  AlcErrno		alcErr = ALC_ER_NONE;
   WlzObject		*dstObj=NULL;
   int			area;
   int			i, j, k, p, xp, yp, line;
@@ -253,8 +253,10 @@ WlzObject *Wlz3DViewTransformObj(
       itvl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*numInts);
       tmpDomain.i->freeptr = AlcFreeStackPush(tmpDomain.i->freeptr,
 					      (void *) itvl,
-					      &alcErrNum);
-      
+					      &alcErr);
+      if(alcErr != ALC_ER_NONE){
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
       /* one more loop to add the intervals */
       itvl->ileft = vertices[vtxIdx].vtX - kol1;
       line = vertices[vtxIdx].vtY;

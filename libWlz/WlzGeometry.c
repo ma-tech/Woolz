@@ -157,9 +157,10 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 * Returns:	double:			Twice the signed area of the
 *					given triangle.		
 * Purpose:	Computes twice the signed area of the given triangle.
-*		The determinant is NOT computed the factorized form:
-*		(x0 - x1)(y1 - y2) - (y0 - y1)(x1 - x2) because it is
-*		less numericaly robust, although faster.	
+*		The determinant is NOT computed with:
+*		  (x0 - x1)(y1 - y2) - (y0 - y1)(x1 - x2)
+*		instead the factorized form is used because it is
+*		more robust numericaly.
 * Global refs:	-						
 * Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
 *		WlzDVertex2 vx1:	Second vertex of triangle.
@@ -274,7 +275,7 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
 * Returns:	int:			Result of comparison: -ve, 0
 *					or +ve. Only the sign is
 *					meaningful.
-* Purpose:	Given two end connected line segments: (p0, O) and
+* Purpose:	Given two end connected 2D line segments: (p0, O) and
 *		(p1, O), compares the CCW angle of the segments,
 *		where O is the origin (0,0).
 * Global refs:	-

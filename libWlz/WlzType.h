@@ -589,24 +589,27 @@ typedef enum
   WLZ_GMELM_VERTEX_G3I,
   WLZ_GMELM_VERTEX_G3D,
   WLZ_GMELM_VERTEX_T,
+  WLZ_GMELM_DISK_T,
   WLZ_GMELM_EDGE,
-  WLZ_GMELM_EDGE_G,
   WLZ_GMELM_EDGE_T,
   WLZ_GMELM_LOOP,
-  WLZ_GMELM_LOOP_G2I,
-  WLZ_GMELM_LOOP_G2D,
-  WLZ_GMELM_LOOP_G3I,
-  WLZ_GMELM_LOOP_G3D,
   WLZ_GMELM_LOOP_T,
-  WLZ_GMELM_FACE,
-  WLZ_GMELM_FACE_G,
-  WLZ_GMELM_FACE_T,
   WLZ_GMELM_SHELL,
   WLZ_GMELM_SHELL_G2I,
   WLZ_GMELM_SHELL_G2D,
   WLZ_GMELM_SHELL_G3I,
   WLZ_GMELM_SHELL_G3D
 } WlzGMElemType;
+
+/* Geometric model element flags. */
+typedef enum
+{
+  WLZ_GMELEMFLAGS_NONE		= (0),
+  WLZ_GMELEMFLAGS_OUT_0		= (1),
+  WLZ_GMELEMFLAGS_OUT_1		= (1<<1),
+  WLZ_GMELEMFLAGS_INT_0		= (1<<2),
+  WLZ_GMELEMFLAGS_INT_1		= (1<<3)
+} WlzGMElemFlags;
 
 /* Union of pointers to GM elements */
 typedef union
@@ -618,18 +621,11 @@ typedef union
   struct _WlzGMVertexG3I *vertexG3I;
   struct _WlzGMVertexG3D *vertexG3D;
   struct _WlzGMVertexT *vertexT;
+  struct _WlzGMDiskT	*diskT;
   struct _WlzGMEdge 	*edge;
-  struct _WlzGMEdgeG 	*edgeG;
   struct _WlzGMEdgeT 	*edgeT;
   struct _WlzGMLoop 	*loop;
-  struct _WlzGMLoopG2I *loopG2I;
-  struct _WlzGMLoopG2D *loopG2D;
-  struct _WlzGMLoopG3I *loopG3I;
-  struct _WlzGMLoopG3D *loopG3D;
   struct _WlzGMLoopT 	*loopT;
-  struct _WlzGMFace 	*face;
-  struct _WlzGMFaceG 	*faceG;
-  struct _WlzGMFaceT 	*faceT;
   struct _WlzGMShell 	*shell;
   struct _WlzGMShellG2I *shellG2I;
   struct _WlzGMShellG2D *shellG2D;
@@ -690,18 +686,20 @@ typedef union
   WlzGMVertexG3D *vg3D;
 } WlzGMVertexGU;
 
-/* Topological properties of a point in space */
+/* Topological properties of a point in space. The ordering of the linked list
+ * of vertex topology elements formed by the 'next' and 'prev' pointers is
+ * not significant. */
 typedef struct _WlzGMVertexT
 {
   WlzGMElemType type;			/* WLZ_GMELM_VERTEX_T */
   unsigned int 	idx; 	    	        /* Unique identifier for vertex
   					 * topology element */
-  struct _WlzGMVertexT *next;		/* Next vertexT with same vertex */
-  struct _WlzGMVertexT *prev;		/* Previous vertexT with same vertex */
-  struct _WlzGMVertex *vertex;		/* The vertex */
-  WlzGMElemP parent;	   		/* Parent (WlzGMShell, WlzGMLoopT
-  					 * or WlzGMEdgeT) of this vertex
-					 * topology element */
+  struct _WlzGMVertexT *next;		/* Next vertexT in disk. */
+  struct _WlzGMVertexT *prev;		/* Previous vertexT in disk. */
+  struct _WlzGMDiskT *diskT;		/* The disk topology element that this
+  					 * vertex topology element is in */
+  struct _WlzGMEdgeT *parent; 		/* Parent of this vertex topology
+  					 * element */
 } WlzGMVertexT;
 
 /* A single point in space */
@@ -709,32 +707,34 @@ typedef struct _WlzGMVertex
 {
   WlzGMElemType type; 			/* WLZ_GMELM_VERTEX */
   unsigned int	idx;			/* Unique identifier for vertex */
-  WlzGMVertexT *top;			/* Topology of this vertex: A vertexT
-  					 * that uses this vertex, others can
-  					 * be found by following the vertexT's
-					 * next/prev */
-  WlzGMVertexGU geo;	 		/* Geometry of this vertex */
+  unsigned int	flags;			/* Flags mask. */
   void		*data; 	       		/* Hook for data */
+  struct _WlzGMDiskT *diskT;		/* A disk topology element of this
+  					 * vertex, others can be found by
+					 * following the diskT's next/prev */
+  WlzGMVertexGU geo;	 		/* Geometry of this vertex */
+  struct _WlzGMVertex *next;		/* Next in sorted list */
 } WlzGMVertex;
 
-
-/* Geometric properties of an edge. This is currently just a place holder,
-but it may encode real properties one day, e.g. curvature.*/
-typedef struct _WlzGMEdgeG
+/* Topological disk around a vertex. In 2D or in a 3D manifold there is one
+ * disk per vertex. But in a 3D non-manifold shell many manifold surfaces
+ * may be connected at a single vertex, in which case there is on disk per
+ * sheet. The disk encodes the radial order of the vertex topology elements
+ * around the vertex. */
+typedef struct _WlzGMDiskT
 {
-  WlzGMElemType type;			/* WLZ_GMELM_EDGE_G */
-  unsigned int	idx;	      		/* Unique identifier for edge geometry
-  					 * element */
-} WlzGMEdgeG;
+  WlzGMElemType type; 			/* WLZ_GMELM_DISK_T */
+  unsigned int	idx;			/* Unique identifier for vertex */
+  struct _WlzGMDiskT *next;		/* Next diskT of vertex. */
+  struct _WlzGMDiskT *prev;		/* Previous diskT of vertex. */
+  WlzGMVertex	*vertex;		/* The vertex that this disk cycles
+  					 * around */
+  WlzGMVertexT	*vertexT;		/* A vertex topology element in this
+  					 * disk topology element. */
+} WlzGMDiskT;
 
-/* Union of pointers to the geometric properties of an edge */
-typedef union
-{
-  WlzGMCore	*core;
-  WlzGMEdgeG	*eg;
-} WlzGMEdgeGU;
-
-typedef struct _WlzGMEdgeT 	        /* Topological properties of an edge */
+/* Topological properties of an edge */
+typedef struct _WlzGMEdgeT
 {
   WlzGMElemType type;			/* WLZ_GMELM_EDGE_T */
   unsigned int	idx;	      		/* Unique identifier for edge topology
@@ -746,8 +746,8 @@ typedef struct _WlzGMEdgeT 	        /* Topological properties of an edge */
   struct _WlzGMEdge *edge;		/* The edge */
   struct _WlzGMVertexT *vertexT;  	/* Vertex FROM which this edge
    					 * topology element is directed */
-  WlzGMElemP parent;			/* Parent (WlzGMShell or WlzGMLoopT)
-   					 * of this edge topology element */
+  struct _WlzGMLoopT *parent;		/* Parent of this edge topology
+  					 * element */
 } WlzGMEdgeT;
 
 /* Line or curve between a pair of verticies */
@@ -755,56 +755,10 @@ typedef struct _WlzGMEdge
 {
   WlzGMElemType type;	        	/* WLZ_GMELM_EDGE */
   unsigned int	idx;		        /* Unique identifier for edge */
-  WlzGMEdgeT	*top;	       		/* An edge topology use */
-  WlzGMEdgeGU	geo;	       		/* Edge geometry */
   void		*data;		        /* Hook for data */
+  unsigned int	flags;			/* Flags mask. */
+  WlzGMEdgeT	*edgeT;	       		/* An edge topology use */
 } WlzGMEdge;
-
-/* Geometric properties of a loop in 2D integer space */
-typedef struct _WlzGMLoopG2I
-{
-  WlzGMElemType type;			/* WLZ_GMELM_LOOP_G2I */
-  unsigned int	idx;	      		/* Unique identifier for loop geometry
-  					 * element */
-  WlzIBox2	bBox;		 	/* Bounding box of the loop */
-} WlzGMLoopG2I;
-
-/* Geometric properties of a loop in 2D double precision space */
-typedef struct _WlzGMLoopG2D
-{
-  WlzGMElemType type;			/* WLZ_GMELM_LOOP_G2D */
-  unsigned int	idx;	      		/* Unique identifier for loop geometry
-  					 * element */
-  WlzDBox2	bBox;			/* Bounding box of the loop */
-} WlzGMLoopG2D;
-
-/* Geometric properties of a loop in 3D integer space */
-typedef struct _WlzGMLoopG3I
-{
-  WlzGMElemType type;			/* WLZ_GMELM_LOOP_G3I */
-  unsigned int	idx;	      		/* Unique identifier for loop geometry
-  					 * element */
-  WlzIBox3	bBox;			/* Bounding box of the loop */
-} WlzGMLoopG3I;
-
-/* Geometric properties of a loop in 3D double precision space */
-typedef struct _WlzGMLoopG3D
-{
-  WlzGMElemType type;			/* WLZ_GMELM_LOOP_G3D */
-  unsigned int	idx;	      		/* Unique identifier for loop geometry
-  					 * element */
-  WlzIBox3	bBox;			/* Bounding box of the loop */
-} WlzGMLoopG3D;
-
-/* Union of pointers to the geometric properties of a loop */
-typedef union
-{
-  WlzGMCore 	*core;
-  struct _WlzGMLoopG2I *lg2I;
-  struct _WlzGMLoopG2D *lg2D;
-  struct _WlzGMLoopG3I *lg3I;
-  struct _WlzGMLoopG3D *lg3D;
-} WlzGMLoopGU;
 
 /* Topological properties of a loop */
 typedef struct _WlzGMLoopT
@@ -819,8 +773,7 @@ typedef struct _WlzGMLoopT
   WlzGMEdgeT *edgeT;			/* An edge in the loop, others can
   					 * be found by walking the edgeT's
 					 * next/prev */
-  WlzGMElemP parent;			/* Parent (WlzGMFaceT or
-  					 * WlzGMShell) of this loop */
+  struct _WlzGMShell *parent;		/* Parent of this loop */
 } WlzGMLoopT;
 
 /* Circuit of edges (or single vertex) */
@@ -828,53 +781,10 @@ typedef struct _WlzGMLoop
 {
   WlzGMElemType type;			/* WLZ_GMELM_LOOP */
   unsigned int	idx;			/* Unique identifier for loop */
-  WlzGMLoopT 	*top;			/* Loop topology */
-  WlzGMLoopGU 	geo;			/* Loop geometry */
   void		*data;		  	/* Hook for data */
+  unsigned int	flags;			/* Flags mask. */
+  WlzGMLoopT 	*loopT;			/* Loop topology */
 } WlzGMLoop;
-
-/* Geometric properties of an edge. This is currently just a place holder,
-but it may encode real properties one day, e.g. curvature.*/
-typedef struct _WlzGMFaceG
-{
-  WlzGMElemType type;			/* WLZ_GMELM_FACE_G */
-  unsigned int	idx;	      		/* Unique identifier for face geometry
-  					 * element */
-} WlzGMFaceG;
-
-/* Union of pointers to the geometric properties of an face */
-typedef union
-{
-  WlzGMCore	*core;
-  WlzGMFaceG	*fg;
-} WlzGMFaceGU;
-
-
-/* Topological properties of a face */
-typedef struct _WlzGMFaceT
-{
-  WlzGMElemType type;			/* WLZ_GMELM_FACE_T */
-  unsigned int	idx;	      		/* Unique identifier for face topology
-  					 * element */
-  struct _WlzGMFaceT *next; 		/* Next faceT in the shell */
-  struct _WlzGMFaceT *prev; 		/* Previous faceT in the shell */
-  struct _WlzGMFaceT *opp;		/* Opposite face topology element */
-  struct _WlzGMFace *face;		/* The face */
-  WlzGMLoopT	*loopT;			/* A loop in the face, others can
-  					 * be found by walking the loopT's
-					 * next/prev */
-  struct _WlzGMShell *parent;		/* Parent of this face */
-} WlzGMFaceT;
-
-/* Boundary or surface formed by loops */
-typedef struct _WlzGMFace
-{
-  WlzGMElemType type;	       		/* WLZ_GMELM_FACE */
-  unsigned int	idx;			/* Unique identifier for face */
-  WlzGMFaceT 	*top;			/* Face topology */
-  WlzGMFaceGU 	geo;			/* Face geometry */
-  void		*data;		  	/* Hook for data */
-} WlzGMFace;
 
 /* Geometric properties of a shell in 2D integer space */
 typedef struct _WlzGMShellG2I
@@ -927,12 +837,13 @@ typedef struct _WlzGMShell
 {
   WlzGMElemType type;	      		/* WLZ_GMELM_SHELL */
   unsigned int	idx;			/* Shell's index */
+  void		*data;		  	/* Hook for data */
+  unsigned int	flags;			/* Flags mask. */
   struct _WlzGMShell *next;		/* Next shell in the parent */
   struct _WlzGMShell *prev;		/* Previous shell in the parent */
   WlzGMShellGU geo;			/* Shell geometry */
-  WlzGMElemP	child;			/* A child element of the shell,
-  					 * either a loopT or faceT, through
-					 * which all others can be reached
+  WlzGMLoopT	*child;			/* A child loop of the shell,
+					 * all others can be reached
 					 * by walking the next/prev */
   struct _WlzGMModel *parent;		/* The parent model of the shell */
 } WlzGMShell;
@@ -940,8 +851,9 @@ typedef struct _WlzGMShell
 /* A resource vector with a next index */
 typedef struct _WlzGMResource
 {
-  unsigned int	nxtIdx;
-  AlcVector	*vec;
+  unsigned int  numElm;			/* Number of element type in model. */
+  unsigned int	nxtIdx;			/* Index for next element. */
+  AlcVector	*vec;			/* Vector of elements. */
 } WlzGMResource;
 
 /* Resources held by a model */
@@ -950,12 +862,9 @@ typedef struct _WlzGMShellR
   WlzGMResource vertex;			/* Vertex elements */
   WlzGMResource vertexT;	        /* Vertex topology elements */
   WlzGMResource vertexG;	     	/* Vertex geometry elements */
+  WlzGMResource diskT;			/* Disk geometry elements */
   WlzGMResource edge;			/* Edge elements */
   WlzGMResource edgeT;		        /* Edge topology element elements */
-  WlzGMResource edgeG;		       	/* Edge geometry elements */
-  WlzGMResource face;			/* Face elements */
-  WlzGMResource faceT;		        /* Face topology element elements */
-  WlzGMResource faceG;		       	/* Face geometry elements */
   WlzGMResource loop;			/* Loop elements */
   WlzGMResource loopT;		        /* Loop topology element elements */
   WlzGMResource loopG;		       	/* Loop geometry elements */
@@ -972,6 +881,8 @@ typedef struct _WlzGMModel
   WlzGMShell	*child;			/* A child shell of the model, others
   					 * can be reached by walking the
 					 * next/prev */
+  int		vertexHTSz;		/* Vertex hash table size. */
+  WlzGMVertex	**vertexHT;		/* Vertex hash table */
   WlzGMModelR	res;			/* Model resources */
 } WlzGMModel;
 

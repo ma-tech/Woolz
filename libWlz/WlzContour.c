@@ -12,6 +12,7 @@
 * Purpose:	Functions for extracting contours from Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Add 3D isosurface generation. Removed unused variables.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -27,58 +28,101 @@ static void 	WlzContourTestOutPSLn2D(FILE *fP,
 
 /************************************************************************
 * WlzContourTriIsn2D: Classification of intersection of line segment
-* with a triangle
+* with a triangle.
 ************************************************************************/
 typedef enum
 {
-  WLZ_CONTOUR_TIC2D_NONE,                                  /*No intersection */
-  WLZ_CONTOUR_TIC2D_N1N0,                                 /* Node 1 - node 0 */
-  WLZ_CONTOUR_TIC2D_N0N2,                                 /* Node 0 - node 2 */
-  WLZ_CONTOUR_TIC2D_N2N1,                                 /* Node 2 - node 1 */
-  WLZ_CONTOUR_TIC2D_N1S02,                              /* Node 1 - side 0-2 */
-  WLZ_CONTOUR_TIC2D_N0S21,                              /* Node 0 - side 2-1 */
-  WLZ_CONTOUR_TIC2D_N2S10,                              /* Node 2 - side 1-0 */
+  WLZ_CONTOUR_TIC2D_NONE,                             /*No intersection */
+  WLZ_CONTOUR_TIC2D_V1V0,                             /* Vertex 1 - vertex 0 */
+  WLZ_CONTOUR_TIC2D_V0V2,                             /* Vertex 0 - vertex 2 */
+  WLZ_CONTOUR_TIC2D_V2V1,                             /* Vertex 2 - vertex 1 */
+  WLZ_CONTOUR_TIC2D_V1S02,                            /* Vertex 1 - side 0-2 */
+  WLZ_CONTOUR_TIC2D_V0S21,                            /* Vertex 0 - side 2-1 */
+  WLZ_CONTOUR_TIC2D_V2S10,                            /* Vertex 2 - side 1-0 */
   WLZ_CONTOUR_TIC2D_S10S02,                           /* Side 1-0 - side 0-2 */
   WLZ_CONTOUR_TIC2D_S02S21,                           /* Side 0-2 - side 2-1 */
   WLZ_CONTOUR_TIC2D_S21S10                            /* Side 2-1 - side 1-0 */
 } WlzContourTriIsn2D;
 
+/************************************************************************
+* WlzContourTetIsn3D: Classification of intersection of plane with a
+* tetradedron.
+************************************************************************/
+typedef enum
+{
+  WLZ_CONTOUR_TIC3D_NONE,               /*No intersection */
+  WLZ_CONTOUR_TIC3D_V0S12S13,		/* Vertex 0, side 1-2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V0S12S23,		/* Vertex 0, side 1-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V0S13S23,		/* Vertex 0, side 1-3, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V0V1S23,		/* Vertex 0, vertex 1, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V0V1V2,		/* Vertex 0, vertex 1, vertex 2 */
+  WLZ_CONTOUR_TIC3D_V0V1V3,		/* Vertex 0, vertex 2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V0V2S13,		/* Vertex 0, vertex 2, vertex 3 */
+  WLZ_CONTOUR_TIC3D_V0V2V3,		/* Vertex 0, vertex 2, vertex 3 */
+  WLZ_CONTOUR_TIC3D_V0V3S12,		/* Vertex 0, side 0-2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V1S02S03,		/* Vertex 1, side 0-2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V1S02S23,		/* Vertex 1, side 0-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V1S03S23,		/* Vertex 1, side 0-3, side 2-3 */
+  WLZ_CONTOUR_TIC3D_V1V2S03,		/* Vertex 1, vertex 2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V1V2V3,		/* Vertex 1, vertex 2, vertex 3 */
+  WLZ_CONTOUR_TIC3D_V1V3S02,		/* Vertex 1, vertex 3, side 0-2 */
+  WLZ_CONTOUR_TIC3D_V2S01S02,		/* Vertex 2, side 0-1, side 0-2 */
+  WLZ_CONTOUR_TIC3D_V2S01S03,		/* Vertex 2, side 0-1, side 0-3 */
+  WLZ_CONTOUR_TIC3D_V2S01S13,		/* Vertex 2, side 0-1, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V2S03S13,		/* Vertex 2, side 0-3, side 1-3 */
+  WLZ_CONTOUR_TIC3D_V2V3S01,		/* Vertex 2, vertex 3, side 0-1 */
+  WLZ_CONTOUR_TIC3D_V3S01S02,		/* Vertex 3, side 0-1, side 0-2 */
+  WLZ_CONTOUR_TIC3D_V3S01S12,		/* Vertex 3, side 0-1, side 1-2 */
+  WLZ_CONTOUR_TIC3D_V3S02S12,		/* Vertex 3, side 0-2, side 1-2 */
+  WLZ_CONTOUR_TIC3D_S01S02S03,		/* Side 0-1, side 0-2, side 0-3 */
+  WLZ_CONTOUR_TIC3D_S01S02S13S23,  /* Side 0-1, side 0-2, side 1-3, side 2-3 */
+  WLZ_CONTOUR_TIC3D_S01S03S12S23,  /* Side 0-1, side 0-3, side 1-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_S01S12S13,		/* Side 0-1, side 1-2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_S02S03S12S13,  /* Side 0-2, side 0-3, side 1-2, side 1-3 */
+  WLZ_CONTOUR_TIC3D_S02S12S23,		/* Side 0-2, side 1-2, side 2-3 */
+  WLZ_CONTOUR_TIC3D_S03S13S23		/* Side 0-3, side 1-3, side 2-3 */
+} WlzContourTetIsn3D;
+
 static WlzContour	*WlzContourIsoObj2D(
 			  WlzObject *srcObj,
 			  double isoVal,
-			  int minNod,
-			  int minEdg,
 			  WlzErrorNum *dstErr);
 static WlzContour	*WlzContourIsoObj3D(
 			  WlzObject *srcObj,
 			  double isoVal,
-			  int minNod,
-			  int minEdg,
 			  WlzErrorNum *dstErr);
 static WlzContour	*WlzContourGrdObj2D(WlzObject *srcObj,
 				double minGrd, double ftrPrm,
-				int minNod, int minEdg,
 				WlzErrorNum *dstErr);
 static WlzContour	*WlzContourGrdObj3D(
 			  WlzObject *srcObj,
 			  double minGrd,
 			  double ftrPrm,
-			  int minNod,
-			  int minEdg,
 			  WlzErrorNum *dstErr);
 static WlzDVertex2	WlzContourItpTriSide(
-			  double ht0,
-			  double ht1,
-			  WlzDVertex2 org,
-			  WlzDVertex2 dst);
+			  double valOrg,
+			  double valDst,
+			  WlzDVertex2 posOrg,
+			  WlzDVertex2 posDst);
+static WlzDVertex3 	WlzContourItpTetSide(
+			  double valOrg,
+			  double valDst,
+			  WlzDVertex3 posOrg,
+			  WlzDVertex3 posDst);
 static WlzErrorNum	WlzContourIsoCube2D(
 			  WlzContour *ctr,
 			  double isoVal,
 			  double *ln0,
 			  double *ln1,
-			  WlzDVertex2 sqOrg,
-			  int *vtxSearchIdx);
-static WlzErrorNum	WlzContourIsoCube3D(WlzContour *ctr,
+			  WlzDVertex2 sqOrg);
+static WlzErrorNum	WlzContourIsoCube3D24T(WlzContour *ctr,
+			  double isoVal,
+			  double *pn0ln0,
+			  double *pn0ln1,
+			  double *pn1ln0,
+			  double *pn1ln1,
+			  WlzDVertex3 cbOrg);
+static WlzErrorNum	WlzContourIsoCube3D6T(WlzContour *ctr,
 			  double isoVal,
 			  double *pn0ln0,
 			  double *pn0ln1,
@@ -93,15 +137,10 @@ static WlzErrorNum	WlzContourIsoTet3D(
 static WlzErrorNum	WlzContourGrdLink2D(
 			  WlzContour *ctr,
 			  UBYTE **grdDBuf,
-			  int bufWd,
 			  WlzIVertex2 org,
 			  int lnOff,
 			  int lnIdx[],
-			  int klP,
-			  int *vtxSearchIdx);
-static void		WlzContourTestOutVTK(
-			  FILE *fP,
-			  WlzContour *ctr);
+			  int klP);
 
 /************************************************************************
 * Function:	WlzMakeContour
@@ -204,14 +243,11 @@ WlzErrorNum	WlzFreeContour(WlzContour *ctr)
 *		WlzContourMethod ctrMtd: Contour generation method.
 *		double ctrVal:		Contour value.
 *		double ctrWth:		Contour filter width.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 			       double ctrVal, double ctrWth,
-			       int minNod, int minEdg,
 			       WlzErrorNum *dstErr)
 {
   WlzContour	*ctr = NULL;
@@ -237,12 +273,10 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	switch(ctrMtd)
 	{
 	  case WLZ_CONTOUR_MTD_ISO:
-	    ctr = WlzContourIsoObj2D(srcObj, ctrVal, minNod, minEdg,
-	    				&errNum);
+	    ctr = WlzContourIsoObj2D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj2D(srcObj, ctrVal, ctrWth, minNod,
-	    				minEdg, &errNum);
+	    ctr = WlzContourGrdObj2D(srcObj, ctrVal, ctrWth, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -253,12 +287,10 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	switch(ctrMtd)
 	{
 	  case WLZ_CONTOUR_MTD_ISO:
-	    ctr = WlzContourIsoObj3D(srcObj, ctrVal, minNod, minEdg,
-	    				&errNum);
+	    ctr = WlzContourIsoObj3D(srcObj, ctrVal, &errNum);
 	    break;
 	  case WLZ_CONTOUR_MTD_GRD:
-	    ctr = WlzContourGrdObj3D(srcObj, ctrVal, ctrWth, minNod, 
-	    				minEdg, &errNum);
+	    ctr = WlzContourGrdObj3D(srcObj, ctrVal, ctrWth, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -286,13 +318,10 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
 *		double isoVal:		Iso-value.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
-				      int minNod, int minEdg,
 				      WlzErrorNum *dstErr)
 {
   int		idX,
@@ -301,9 +330,7 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 		bufRgt,
 		bufLnIdx,
   		itvLen,
-		itvBufWidth,
-		prevFirstVtxOfLine,      /* Previous line first vertex index */
-		lastLnVtxSearchIdx;
+		itvBufWidth;
   WlzDomain	srcDom;
   UBYTE		*itvBuf[2] = {NULL, NULL};
   double	*valBuf[2] = {NULL, NULL};
@@ -313,7 +340,6 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   WlzGreyWSpace	srcGWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  prevFirstVtxOfLine = 0;   			       /* Make index invalid */
   /* Create contour. */
   ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
   /* Make buffers. */
@@ -346,8 +372,6 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 	{
 	  WlzValueSetUByte(itvBuf[!bufLnIdx], 0, itvBufWidth);
 	}
-	lastLnVtxSearchIdx = prevFirstVtxOfLine;
-	prevFirstVtxOfLine = ctr->model->res.vertex.nxtIdx;
       }
       itvLen = srcIWSp.rgtpos - srcIWSp.lftpos + 1;
       bufLft = srcIWSp.lftpos - srcDom.i->kol1;
@@ -387,7 +411,7 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 	  errNum = WlzContourIsoCube2D(ctr, isoVal,
 				       valBuf[!bufLnIdx] + idX,
 				       valBuf[bufLnIdx] + idX,
-				       sqOrg, &lastLnVtxSearchIdx);
+				       sqOrg);
 	}
 	++idX;
       }
@@ -432,13 +456,10 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 * Parameters:	WlzObject *srcObj:	Given object from which to
 *					compute the contours.
 *		double isoVal:		Iso-value.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
-				      int minNod, int minEdg,
 				      WlzErrorNum *dstErr)
 {
   int		klIdx,
@@ -452,12 +473,10 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 		lastKlIn,
 		thisKlIn;
   WlzObject	*obj2D = NULL;
-  WlzValues	*srcValues;
   WlzValues	dummyValues;
   WlzDomain	dummyDom,
   		srcDom;
   WlzIVertex2	bufSz,
-  		bufOrg,
 		bufOff;
   WlzIBox2	bBox2D;
   WlzIBox3	bBox3D;
@@ -481,7 +500,7 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((srcValues = srcObj->values.vox->values) == NULL)
+  else if(srcObj->values.vox->values == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
@@ -496,8 +515,6 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   {
     bufSz.vtX = bBox3D.xMax - bBox3D.xMin + 1;
     bufSz.vtY = bBox3D.yMax - bBox3D.yMin + 1;
-    bufOrg.vtX = bBox3D.xMin;
-    bufOrg.vtY = bBox3D.yMin;
     if((AlcBit2Calloc(&(itvBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
        (AlcBit2Calloc(&(itvBuf[1]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
        (AlcDouble2Malloc(&(valBuf[0]), bufSz.vtY, bufSz.vtX) != ALC_ER_NONE) ||
@@ -571,7 +588,7 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 	      if(lastKlIn && thisKlIn)
 	      {
                 cbOrg.vtX = bBox3D.xMin + klIdx;
-		errNum = WlzContourIsoCube3D(ctr, isoVal,
+		errNum = WlzContourIsoCube3D6T(ctr, isoVal,
 				       *(valBuf[bufIdx0] + lnIdx) + klIdx,
 				       *(valBuf[bufIdx0] + lnIdx + 1) + klIdx,
 				       *(valBuf[bufIdx1] + lnIdx) + klIdx,
@@ -638,14 +655,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
 *					compute the contours.
 *		double minGrd:		Minimum modulus of gradient.
 *		double ftrPrm:		Filter width parameter.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 				      double minGrd, double ftrPrm,
-				      int minNod, int minEdg,
 				      WlzErrorNum *dstErr)
 {
   int		idX,
@@ -653,9 +667,7 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 		iCnt,
 		iLen,
 		iBufSz,
-		lnInc,
-		prevFirstVtxOfLine,      /* Previous line first vertex index */
-		lastLnVtxSearchIdx;
+		lnInc;
   UBYTE		doLn;
   double	tD0,
   		grdM0,
@@ -664,8 +676,7 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 		grdX0,
 		grdY0,
 		grdMLft,
-		grdMRgt,
-		sqMinGrd;
+		grdMRgt;
   WlzGreyP	grdGP,
   		grdXGP,
   		grdYGP;
@@ -695,13 +706,11 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
   		gYGWSp;
   const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
-  prevFirstVtxOfLine = 0;   			       /* Make index invalid */
   /* Create a new contour. */
   ctr = WlzMakeContour(WLZ_CONTOUR_TYPE_2D, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     /* Compute the partial derivatives. */
-    sqMinGrd = minGrd * minGrd;
     if((ftr = WlzRsvFilterMakeFilter(WLZ_RSVFILTER_NAME_DERICHE_1,
 				     ftrPrm, &errNum)) != NULL)
     {
@@ -816,8 +825,6 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 	klIdx[1] = 1;
 	klIdx[2] = 2;
         itvP[3] = *(grdIBuf + 3);
-	lastLnVtxSearchIdx = prevFirstVtxOfLine;
-	prevFirstVtxOfLine = ctr->model->res.vertex.nxtIdx;
 	while((errNum == WLZ_ERR_NONE) && (klIdx[2] < bufSz.vtX))
 	{
 	  if(WLZ_BIT_GET(itvP[3], klIdx[0]) &&
@@ -929,10 +936,8 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 	    if(*(*(grdDBuf + lnIdx[1]) + klIdx[1]))
 	    {
 	      /* Generate and link edge segments. */
-	      errNum = WlzContourGrdLink2D(ctr, grdDBuf,
-	      				   bufSz.vtX, org, posRel.vtY - 2,
-					   lnIdx, klIdx[0],
-					   &lastLnVtxSearchIdx);
+	      errNum = WlzContourGrdLink2D(ctr, grdDBuf, org, posRel.vtY - 2,
+					   lnIdx, klIdx[0]);
 	    }
 	  }
 	  klIdx[0] = klIdx[1];
@@ -998,14 +1003,11 @@ static WlzContour *WlzContourGrdObj2D(WlzObject *srcObj,
 *					compute the contours.
 *		double minGrd:		Minimum modulus of gradient.
 *		double ftrPrm:		Filter width parameter.
-*		int minNod:		Minimum number of nodes.
-*		int minEdg:		Minimum number of edges.
 *		WlzErrorNum *dstErr:	Destination error pointer, may
 *					be null.
 ************************************************************************/
 static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 				      double minGrd, double ftrPrm,
-				      int minNod, int minEdg,
 				      WlzErrorNum *dstErr)
 {
   WlzContour 	*ctr = NULL;
@@ -1048,26 +1050,21 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 *		UBYTE **grdDBuf:	Buffers containing gradient
 *					direction codes for maximal
 *					gradient pixels.
-*		int bufWd:		Width of the buffers.
 *		WlzIVertex2 org:	Origin of the object.
 *		int lnOff:		Offset from origin to central
 *					pixel line.
 *		int lnIdx[]:		Line indicies.
 *		int klOff:		Column offset of first column.
-*		int *vtxSearchIdx:	Last line vertex search index.
 ************************************************************************/
 static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
-				       int bufWd, WlzIVertex2 org,
-				       int lnOff, int lnIdx[], int klOff,
-			  	       int *vtxSearchIdx)
+				       WlzIVertex2 org,
+				       int lnOff, int lnIdx[], int klOff)
 {
   int		idN,
 		idM,
 		conCnt;
   int		con[5],
      		nbr[4];
-  WlzDVertex2	nbrOrg,
-  		matchDist;
   WlzDVertex2	seg[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	offConKl[5] =
@@ -1082,8 +1079,6 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
   };
 
   conCnt = 0;
-  matchDist.vtX = 2.01;
-  matchDist.vtY = 2.01;
 #ifdef WLZ_CONTOUR_DEBUG
   fprintf(stderr, "255 0 0 setrgbcolor\n");
   seg[0].vtX = org.vtX + klOff + 1.0 - 0.1;
@@ -1123,8 +1118,6 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
   if(conCnt > 0)
   {
     /* Compute segment end points and add them to the contour workspace. */
-    nbrOrg.vtX = org.vtX + klOff;
-    nbrOrg.vtY = org.vtY + lnOff;
     seg[0].vtX = org.vtX + klOff + 1.0;
     seg[0].vtY = org.vtY + lnOff + 1.0;
     for(idN = 0; idN < conCnt; ++idN)
@@ -1135,8 +1128,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
 #ifdef WLZ_CONTOUR_DEBUG
       WlzContourTestOutPSLn2D(stderr, seg[0], seg[1]);
 #endif /* WLZ_CONTOUR_DEBUG */
-      errNum = WlzGMModelConstructSimplex2D(ctr->model,
-      					    matchDist, vtxSearchIdx, seg);
+      errNum = WlzGMModelConstructSimplex2D(ctr->model, seg);
     }
   }
   return(errNum);
@@ -1196,17 +1188,14 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr, UBYTE **grdDBuf,
 static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 				       double isoVal,
 				       double *vLn0, double *vLn1,
-				       WlzDVertex2 sqOrg, int *vtxSearchIdx)
+				       WlzDVertex2 sqOrg)
 {
   int		idT,
 		tN1,
   		tN2,
 		dupIsn = 0;
-  double	tD0;
   WlzContourTriIsn2D iCode;
-  WlzDVertex2	tVx0,
-  		tVx1,
-		matchDist;
+  WlzDVertex2	tVx0;
   int		lev[3];  /* Rel. triangle node level: above 2, on 1, below 0 */
   double	tV[3],			       /* Rel. triangle node values. */
   		sV[5];	 			 /* Rel. square node values. */
@@ -1224,41 +1213,41 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
       },
       {
         WLZ_CONTOUR_TIC2D_NONE,
-	WLZ_CONTOUR_TIC2D_N1N0,
-	WLZ_CONTOUR_TIC2D_N1S02
+	WLZ_CONTOUR_TIC2D_V1V0,
+	WLZ_CONTOUR_TIC2D_V1S02
       },
       {
         WLZ_CONTOUR_TIC2D_S21S10,
-	WLZ_CONTOUR_TIC2D_N0S21,
+	WLZ_CONTOUR_TIC2D_V0S21,
 	WLZ_CONTOUR_TIC2D_S02S21
       }
     },
     {
       {
         WLZ_CONTOUR_TIC2D_NONE,
-	WLZ_CONTOUR_TIC2D_N0N2,
-	WLZ_CONTOUR_TIC2D_N2S10
+	WLZ_CONTOUR_TIC2D_V0V2,
+	WLZ_CONTOUR_TIC2D_V2S10
       },
       {
-        WLZ_CONTOUR_TIC2D_N2N1,
+        WLZ_CONTOUR_TIC2D_V2V1,
 	WLZ_CONTOUR_TIC2D_NONE,
-	WLZ_CONTOUR_TIC2D_N2N1
+	WLZ_CONTOUR_TIC2D_V2V1
       },
       {
-        WLZ_CONTOUR_TIC2D_N2S10,
-	WLZ_CONTOUR_TIC2D_N0N2,
+        WLZ_CONTOUR_TIC2D_V2S10,
+	WLZ_CONTOUR_TIC2D_V0V2,
 	WLZ_CONTOUR_TIC2D_NONE
 	}
     },
     {
       {
         WLZ_CONTOUR_TIC2D_S02S21,
-	WLZ_CONTOUR_TIC2D_N0S21,
+	WLZ_CONTOUR_TIC2D_V0S21,
 	WLZ_CONTOUR_TIC2D_S21S10
       },
       {
-        WLZ_CONTOUR_TIC2D_N1S02,
-	WLZ_CONTOUR_TIC2D_N1N0,
+        WLZ_CONTOUR_TIC2D_V1S02,
+	WLZ_CONTOUR_TIC2D_V1V0,
 	WLZ_CONTOUR_TIC2D_NONE
       },
       {
@@ -1282,8 +1271,6 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
     }
   };
 
-  matchDist.vtX = 1.01; /* TODO check match distances */
-  matchDist.vtY = 1.01;
   sV[1] = *vLn0 - isoVal; sV[2] = *(vLn0 + 1) - isoVal;
   sV[3] = *(vLn1 + 1) - isoVal; sV[4] = *vLn1 - isoVal;
 #ifdef WLZ_CONTOUR_DEBUG
@@ -1322,29 +1309,29 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
       {
 	switch(iCode)
 	{
-	  case WLZ_CONTOUR_TIC2D_N1N0:
+	  case WLZ_CONTOUR_TIC2D_V1V0:
 	    tIsn[0] = sNOffTab[tN1];
 	    tIsn[1] = sNOffTab[tN0];
 	    break;
-	  case WLZ_CONTOUR_TIC2D_N0N2:
+	  case WLZ_CONTOUR_TIC2D_V0V2:
 	    tIsn[0] = sNOffTab[tN0];
 	    tIsn[1] = sNOffTab[tN2];
 	    break;
-	  case WLZ_CONTOUR_TIC2D_N2N1:
+	  case WLZ_CONTOUR_TIC2D_V2V1:
 	    tIsn[0] = sNOffTab[tN2];
 	    tIsn[1] = sNOffTab[tN1];
 	    break;
-	  case WLZ_CONTOUR_TIC2D_N1S02:
+	  case WLZ_CONTOUR_TIC2D_V1S02:
 	    tIsn[0] = sNOffTab[tN1];
 	    tIsn[1] = WlzContourItpTriSide(tV[0], tV[2],
 	    				   sNOffTab[tN0], sNOffTab[tN2]);
 	    break;
-	  case WLZ_CONTOUR_TIC2D_N0S21:
+	  case WLZ_CONTOUR_TIC2D_V0S21:
 	    tIsn[0] = sNOffTab[tN0];
 	    tIsn[1] = WlzContourItpTriSide(tV[2], tV[1],
 	    				   sNOffTab[tN2], sNOffTab[tN1]);
 	    break;
-	  case WLZ_CONTOUR_TIC2D_N2S10:
+	  case WLZ_CONTOUR_TIC2D_V2S10:
 	    tIsn[0] = sNOffTab[tN2];
 	    tIsn[1] = WlzContourItpTriSide(tV[1], tV[0],
 	    				   sNOffTab[tN1], sNOffTab[tN0]);
@@ -1396,8 +1383,7 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 #ifdef WLZ_CONTOUR_DEBUG
   	  WlzContourTestOutPSLn2D(stderr, tIsn[0], tIsn[1]);
 #endif /* WLZ_CONTOUR_DEBUG */
-	  errNum = WlzGMModelConstructSimplex2D(ctr->model,
-						matchDist, vtxSearchIdx, tIsn);
+	  errNum = WlzGMModelConstructSimplex2D(ctr->model, tIsn);
 	}
       }
       ++idT;
@@ -1407,7 +1393,7 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 }
 
 /************************************************************************
-* Function:	WlzContourIsoCube3D
+* Function:	WlzContourIsoCube3D24
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose: 	Checks to see if all above the cube's vertex values are
 *		either above or below the iso-value. If they are then
@@ -1508,7 +1494,7 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
 *					x = xPos, xpos + 1.
 *		WlzDVertex3 cbOrg:	The cube's origin.
 ************************************************************************/
-static WlzErrorNum WlzContourIsoCube3D(WlzContour *ctr,
+static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 				double isoVal,
 				double *vPn0Ln0, double *vPn0Ln1,
 				double *vPn1Ln0, double *vPn1Ln1,
@@ -1543,6 +1529,7 @@ static WlzErrorNum WlzContourIsoCube3D(WlzContour *ctr,
     {0.5, 0.5, 0.1}
   };
 
+  /* Compute values relative to iso-surface. */
   cVal[ 1] = *(vPn0Ln0 + 0) - isoVal;
   cVal[ 2] = *(vPn0Ln0 + 1) - isoVal;
   cVal[ 3] = *(vPn0Ln1 + 1) - isoVal;
@@ -1551,6 +1538,8 @@ static WlzErrorNum WlzContourIsoCube3D(WlzContour *ctr,
   cVal[ 6] = *(vPn1Ln0 + 1) - isoVal;
   cVal[ 7] = *(vPn1Ln1 + 1) - isoVal;
   cVal[ 8] = *(vPn1Ln1 + 0) - isoVal;
+  /* Test to se if there is an intersection between this cube and the
+   * iso-surface. */
   intersect = !(((cVal[ 1] < 0.0) && (cVal[ 2] < 0.0) &&
 		(cVal[ 3] < 0.0) && (cVal[ 4] < 0.0) &&
 		(cVal[ 5] < 0.0) && (cVal[ 6] < 0.0) &&
@@ -1578,21 +1567,138 @@ static WlzErrorNum WlzContourIsoCube3D(WlzContour *ctr,
     cVal[ 0] = (cVal[ 9] + cVal[14]) * 0.5;
     tVal[0] = cVal[ 0];
     tPos[0] = cPos[ 0];
-    for(tIdx = 0; tIdx < 24; ++tIdx)
+    tIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (tIdx < 24))
     {
       tI1 = tVxLUT[tIdx][1];
       tI2 = tVxLUT[tIdx][2];
       tI3 = tVxLUT[tIdx][3];
       tVal[1] = cVal[tI1]; tVal[2] = cVal[tI2]; tVal[3] = cVal[tI3];
-      intersect = !(((tVal[0] < 0.0) && (tVal[1] < 0.0) &&
-		     (tVal[2] < 0.0) && (tVal[3] < 0.0)) ||
-		    ((tVal[0] > 0.0) && (tVal[1] > 0.0) &&
-		     (tVal[2] > 0.0) && (tVal[3] > 0.0)));
-      if(intersect)
+      tPos[1] = cPos[tI1]; tPos[2] = cPos[tI2]; tPos[3] = cPos[tI3];
+      errNum = WlzContourIsoTet3D(ctr, tVal, tPos, cbOrg);
+      ++tIdx;
+    }
+  }
+  return(errNum);
+}
+
+/************************************************************************
+* Function:	WlzContourIsoCube3D6T
+* Returns:	WlzErrorNum:		Woolz error code.
+* Purpose: 	Checks to see if all above the cube's vertex values are
+*		either above or below the iso-value. If they are then
+*		there's no intersection between the iso-surface and the
+*		cube. If there is a possible intersection then the cube
+*		is split into 6 tetrahedra and each tetrahedra is
+*		passed to WlzContourIsoTet3D().
+*		With the 8 data values at the verticies @[0-7] the
+*		cube is split into 6 tetrahedra.
+*                                                                      
+*                          @7----------------@6                        
+*                         /|                /|                        
+*                        / |               / |                         
+*                       /  |              /  |                         
+*                      /   |             /   |                         
+*                     /    |            /    |                         
+*                    /     |           /     |                         
+*                   /      |          /      |                         
+*                  /       |         /       |                         
+*                 @4----------------@5       |                         
+*                 |        |        |        |                         
+*                 |        @3-------|--------@2                                 
+*                 |       /         |       /                                 
+*                 |      /          |      /                                  
+*                 |     /           |     /                                  
+*                 |    /            |    /                                  
+*                 |   /             |   /                                  
+*                 |  /              |  /                                  
+*                 | /               | /                                  
+*                 |/                |/                                  
+*                 @0----------------@1                                 
+*
+*		The tetrahedra are are assigned the following indicies:
+*
+*		  tetradedron index  	cube vertex indicies
+*		   0       		0, 1, 3, 5
+*		   1       		1, 2, 3, 5
+*		   2       		2, 3, 5, 6
+*		   3       		3, 5, 6, 7
+*		   4        		3, 4, 5, 7
+*		   5        		0, 3, 4, 5
+* Global refs:	-
+* Parameters:	WlzContour *ctr:	Contour being built.
+*		double isoVal:		Iso-value to use.
+*		double *vPn0Ln0:	Ptr to 2 data values at
+*					z = zPos, y = yPos and
+*					x = xPos, xpos + 1.
+*		double *vPn0Ln1:	Ptr to 2 data values at
+*					z = zPos, y = yPos + 1 and
+*					x = xPos, xpos + 1.
+*		double *vPn1Ln0:	Ptr to 2 data values at
+*					z = zPos + 1, y = yPos and
+*					x = xPos, xpos + 1.
+*		double *vPn1Ln1:	Ptr to 2 data values at
+*					z = zPos + 1, y = yPos + 1 and
+*					x = xPos, xpos + 1.
+*		WlzDVertex3 cbOrg:	The cube's origin.
+************************************************************************/
+static WlzErrorNum WlzContourIsoCube3D6T(WlzContour *ctr,
+				double isoVal,
+				double *vPn0Ln0, double *vPn0Ln1,
+				double *vPn1Ln0, double *vPn1Ln1,
+				WlzDVertex3 cbOrg)
+{
+  int		tI0,
+  		tIdx,
+		vIdx,
+  		intersect;
+  double 	cVal[8],	  /* Cube's values relative to the iso-value */
+  		tVal[4];			       /* Tetrahedron values */
+  WlzDVertex3	tPos[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	tVxLUT[6][4] =  /* Tetrahedron to cube vertex look up table */
+  {
+    {0, 1, 3, 5}, {1, 2, 3, 5}, {2, 3, 5, 6},
+    {3, 5, 6, 7}, {3, 4, 5, 7}, {0, 3, 4, 5}
+  };
+  const WlzDVertex3 cPos[8] =	 /* Cube positions, order is {vtX, vtY, vtZ} */
+  {
+    {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}
+  };
+
+  /* Compute values relative to iso-surface. */
+  cVal[0] = *(vPn0Ln0 + 0) - isoVal;
+  cVal[1] = *(vPn0Ln0 + 1) - isoVal;
+  cVal[2] = *(vPn0Ln1 + 1) - isoVal;
+  cVal[3] = *(vPn0Ln1 + 0) - isoVal;
+  cVal[4] = *(vPn1Ln0 + 0) - isoVal;
+  cVal[5] = *(vPn1Ln0 + 1) - isoVal;
+  cVal[6] = *(vPn1Ln1 + 1) - isoVal;
+  cVal[7] = *(vPn1Ln1 + 0) - isoVal;
+  /* Test to se if there is an intersection between this cube and the
+   * iso-surface. */
+  intersect = !(((cVal[1] < 0.0) && (cVal[2] < 0.0) &&
+		 (cVal[3] < 0.0) && (cVal[4] < 0.0) &&
+		 (cVal[5] < 0.0) && (cVal[6] < 0.0) &&
+		 (cVal[7] < 0.0) && (cVal[8] < 0.0)) || 
+	        ((cVal[1] > 0.0) && (cVal[2] > 0.0) &&
+	 	 (cVal[3] > 0.0) && (cVal[4] > 0.0) &&
+		 (cVal[5] > 0.0) && (cVal[6] > 0.0) &&
+		 (cVal[7] > 0.0) && (cVal[8] > 0.0)));
+  if(intersect)
+  {
+    tIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (tIdx < 6))
+    {
+      for(vIdx = 0; vIdx < 4; ++vIdx)
       {
-	tPos[1] = cPos[tI1]; tPos[2] = cPos[tI2]; tPos[3] = cPos[tI3];
-        errNum = WlzContourIsoTet3D(ctr, tVal, tPos, cbOrg);
+        tI0 = tVxLUT[tIdx][vIdx];
+	tVal[vIdx] = cVal[tI0];
+	tPos[vIdx] = cPos[tI0];
       }
+      errNum = WlzContourIsoTet3D(ctr, tVal, tPos, cbOrg);
+      ++tIdx;
     }
   }
   return(errNum);
@@ -1602,9 +1708,8 @@ static WlzErrorNum WlzContourIsoCube3D(WlzContour *ctr,
 * Function:	WlzContourIsoTet3D
 * Returns:	WlzErrorNum:		Woolz error code.
 * Purpose: 	Computes the intersection of the given tetrahedron
-*		with the isovalue surface. Creates facet, edge and
-*		node elements and inserts them into the contour data
-*		structure.
+*		with the isovalue surface. Creates new 3D simplicies
+*		for the contour.
 * Global refs:	-
 * Parameters:	WlzContourWSp *ctr:	Contour being built.
 *		double *tVal:		Values wrt the iso-value at the
@@ -1618,9 +1723,498 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
 				      WlzDVertex3 *tPos,
 				      WlzDVertex3 cbOrg)
 {
+  int		idx,
+  		isnCnt;
+  double	tD0,
+  		tD1;
+  WlzDVertex3	*tVP0;
+  WlzDVertex3	tV0;
+  WlzContourTetIsn3D iCode;
+  int		lev[4];     /* Rel. tetra node level: above 2, on 1, below 0 */
+  WlzDVertex3	sIsn[3],
+  		tIsn[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const WlzContourTetIsn3D iCodeTab[3][3][3][3] = /* Intersection code table */
+  {
+    {
+      {
+	{
+	  /* 0000 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0001 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0002 */ WLZ_CONTOUR_TIC3D_S01S02S03
+	},
+	{
+	  /* 0010 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0011 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0012 */ WLZ_CONTOUR_TIC3D_V1S02S03
+	},
+	{
+	  /* 0020 */ WLZ_CONTOUR_TIC3D_S01S12S13,
+	  /* 0021 */ WLZ_CONTOUR_TIC3D_V0S12S13,
+	  /* 0022 */ WLZ_CONTOUR_TIC3D_S02S03S12S13
+	}
+      },
+      {
+	{
+	  /* 0100 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0101 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0102 */ WLZ_CONTOUR_TIC3D_V2S01S03
+	},
+	{
+	  /* 0110 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 0111 */ WLZ_CONTOUR_TIC3D_V0V1V2,
+	  /* 0112 */ WLZ_CONTOUR_TIC3D_V1V2S03
+	},
+	{
+	  /* 0120 */ WLZ_CONTOUR_TIC3D_V2S01S13,
+	  /* 0121 */ WLZ_CONTOUR_TIC3D_V0V2S13,
+	  /* 0122 */ WLZ_CONTOUR_TIC3D_V2S03S13
+	}
+      },
+      {
+	{
+	  /* 0200 */ WLZ_CONTOUR_TIC3D_S02S12S23,
+	  /* 0201 */ WLZ_CONTOUR_TIC3D_V0S12S23,
+	  /* 0202 */ WLZ_CONTOUR_TIC3D_S01S03S12S23
+	},
+	{
+	  /* 0210 */ WLZ_CONTOUR_TIC3D_V1S02S23,
+	  /* 0211 */ WLZ_CONTOUR_TIC3D_V0V1S23,
+	  /* 0212 */ WLZ_CONTOUR_TIC3D_V1S03S23
+	},
+	{
+	  /* 0220 */ WLZ_CONTOUR_TIC3D_S01S02S13S23,
+	  /* 0221 */ WLZ_CONTOUR_TIC3D_V0S13S23,
+	  /* 0222 */ WLZ_CONTOUR_TIC3D_S03S13S23
+	}
+      }
+    },
+    {
+      {
+	{
+	  /* 1000 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 1001 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 1002 */ WLZ_CONTOUR_TIC3D_V2S01S02
+	},
+	{
+	  /* 1010 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 1011 */ WLZ_CONTOUR_TIC3D_V0V1V3,
+	  /* 1012 */ WLZ_CONTOUR_TIC3D_V1V3S02
+	},
+	{
+	  /* 1020 */ WLZ_CONTOUR_TIC3D_V3S01S12,
+	  /* 1021 */ WLZ_CONTOUR_TIC3D_V0V3S12,
+	  /* 1022 */ WLZ_CONTOUR_TIC3D_V3S02S12
+	}
+      },
+      {
+	{
+	  /* 1100 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 1101 */ WLZ_CONTOUR_TIC3D_V0V2V3,
+	  /* 1102 */ WLZ_CONTOUR_TIC3D_V2V3S01
+	},
+	{
+	  /* 1110 */ WLZ_CONTOUR_TIC3D_V1V2V3,
+	  /* 1111 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 1112 */ WLZ_CONTOUR_TIC3D_V1V2V3
+	},
+	{
+	  /* 1120 */ WLZ_CONTOUR_TIC3D_V2V3S01,
+	  /* 1121 */ WLZ_CONTOUR_TIC3D_V0V2V3,
+	  /* 1122 */ WLZ_CONTOUR_TIC3D_NONE
+	}
+      },
+      {
+	{
+	  /* 1200 */ WLZ_CONTOUR_TIC3D_V3S02S12,
+	  /* 1201 */ WLZ_CONTOUR_TIC3D_V0V3S12,
+	  /* 1202 */ WLZ_CONTOUR_TIC3D_V3S01S12
+	},
+	{
+	  /* 1210 */ WLZ_CONTOUR_TIC3D_V1V3S02,
+	  /* 1211 */ WLZ_CONTOUR_TIC3D_V0V1V3,
+	  /* 1212 */ WLZ_CONTOUR_TIC3D_NONE
+	},
+	{
+	  /* 1220 */ WLZ_CONTOUR_TIC3D_V3S01S02,
+	  /* 1221 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 1222 */ WLZ_CONTOUR_TIC3D_NONE
+	}
+      }
+    },
+    {
+      {
+	{
+	  /* 2000 */ WLZ_CONTOUR_TIC3D_S03S13S23,
+	  /* 2001 */ WLZ_CONTOUR_TIC3D_V0S13S23,
+	  /* 2002 */ WLZ_CONTOUR_TIC3D_S01S02S13S23
+	},
+	{
+	  /* 2010 */ WLZ_CONTOUR_TIC3D_V1S03S23,
+	  /* 2011 */ WLZ_CONTOUR_TIC3D_V0V1S23,
+	  /* 2012 */ WLZ_CONTOUR_TIC3D_V1S02S23
+	},
+	{
+	  /* 2020 */ WLZ_CONTOUR_TIC3D_S01S03S12S23,
+	  /* 2021 */ WLZ_CONTOUR_TIC3D_V0S12S23,
+	  /* 2022 */ WLZ_CONTOUR_TIC3D_S02S12S23
+	}
+      },
+      {
+	{
+	  /* 2100 */ WLZ_CONTOUR_TIC3D_V2S03S13,
+	  /* 2101 */ WLZ_CONTOUR_TIC3D_V0V2S13,
+	  /* 2102 */ WLZ_CONTOUR_TIC3D_V2S01S13
+	},
+	{
+	  /* 2110 */ WLZ_CONTOUR_TIC3D_V1V2S03,
+	  /* 2111 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 2112 */ WLZ_CONTOUR_TIC3D_NONE
+	},
+	{
+	  /* 2120 */ WLZ_CONTOUR_TIC3D_V2S01S03,
+	  /* 2121 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 2122 */ WLZ_CONTOUR_TIC3D_NONE
+	}
+      },
+      {
+	{
+	  /* 2200 */ WLZ_CONTOUR_TIC3D_S02S03S12S13,
+	  /* 2201 */ WLZ_CONTOUR_TIC3D_V0S12S13,
+	  /* 2202 */ WLZ_CONTOUR_TIC3D_S01S12S13
+	},
+	{
+	  /* 2210 */ WLZ_CONTOUR_TIC3D_V1S02S03,
+	  /* 2211 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 2212 */ WLZ_CONTOUR_TIC3D_NONE
+	},
+	{
+	  /* 2220 */ WLZ_CONTOUR_TIC3D_S01S02S03,
+	  /* 2221 */ WLZ_CONTOUR_TIC3D_NONE,
+	  /* 2222 */ WLZ_CONTOUR_TIC3D_NONE
+	}
+      }
+    }
+  };
 
-  /* TODO */
+  for(idx = 0; idx < 4; ++idx)
+  {
+    lev[idx] = (tVal[idx] >= DBL_EPSILON) + (tVal[idx] > -(DBL_EPSILON));
+  }
+  iCode = iCodeTab[lev[3]][lev[2]][lev[1]][lev[0]];
+  switch(iCode)
+  {
+    case WLZ_CONTOUR_TIC3D_V0S12S13:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V0S12S23:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V0S13S23:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V0V1S23:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V0V1V2:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = *(tPos + 2);
+      break;
+    case WLZ_CONTOUR_TIC3D_V0V1V3:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 1);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case WLZ_CONTOUR_TIC3D_V0V2S13:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V0V2V3:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case WLZ_CONTOUR_TIC3D_V0V3S12:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 0);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_V1S02S03:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V1S02S23:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V1S03S23:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V1V2S03:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V1V2V3:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 2);
+      *(tIsn + 2) = *(tPos + 3);
+      break;
+    case WLZ_CONTOUR_TIC3D_V1V3S02:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 1);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_V2S01S02:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_V2S01S03:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V2S01S13:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V2S03S13:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_V2V3S01:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 2);
+      *(tIsn + 1) = *(tPos + 3);
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      break;
+    case WLZ_CONTOUR_TIC3D_V3S01S02:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_V3S01S12:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_V3S02S12:
+      isnCnt = 3;
+      *(tIsn + 0) = *(tPos + 3);
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_S01S02S03:
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_S01S02S13S23:
+      isnCnt = 4;
+      /* Take care with ordering as later assume ordered verticies when
+       * spliting quadrilateral: S01,S02,S23,S13. */
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_S01S03S12S23:
+      isnCnt = 4;
+      /* Take care with ordering as later assume ordered verticies when
+       * spliting quadrilateral: S01,S12,S23,S03. */
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_S01S12S13:
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 1),
+					 *(tPos + 0), *(tPos + 1));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_S02S03S12S13:
+      isnCnt = 4;
+      /* Take care with ordering as later assume ordered verticies when
+       * spliting quadrilateral: S03,S13,S12,S02. */
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 3) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      break;
+    case WLZ_CONTOUR_TIC3D_S02S12S23:
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 2),
+					 *(tPos + 0), *(tPos + 2));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 2),
+					 *(tPos + 1), *(tPos + 2));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    case WLZ_CONTOUR_TIC3D_S03S13S23:
+      isnCnt = 3;
+      *(tIsn + 0) = WlzContourItpTetSide(*(tVal + 0), *(tVal + 3),
+					 *(tPos + 0), *(tPos + 3));
+      *(tIsn + 1) = WlzContourItpTetSide(*(tVal + 1), *(tVal + 3),
+					 *(tPos + 1), *(tPos + 3));
+      *(tIsn + 2) = WlzContourItpTetSide(*(tVal + 2), *(tVal + 3),
+					 *(tPos + 2), *(tPos + 3));
+      break;
+    default:
+      isnCnt = 0;
+      break;
+  }
+  if(isnCnt > 0)
+  {
+    /* Add cube origin */
+    idx = isnCnt;
+    tVP0 = tIsn;
+    while(idx-- > 0)
+    {
+      tVP0->vtX += cbOrg.vtX;
+      tVP0->vtY += cbOrg.vtY;
+      tVP0->vtZ += cbOrg.vtZ;
+      ++tVP0;
+    }
+    if(isnCnt == 4)
+    {
+      /* Split quadrilaterals into triangles along the shortest diagonal.
+       * Choose shortest diagonal to try and avoid long thin triangles.
+       * Know verticies to be ordered around the quadrilateral. */
+      WLZ_VTX_3_SUB(tV0, tIsn[0], tIsn[2]);
+      tD0 = WLZ_VTX_3_SQRLEN(tV0);
+      WLZ_VTX_3_SUB(tV0, tIsn[1], tIsn[3]);
+      tD1 = WLZ_VTX_3_SQRLEN(tV0);
+      if(tD0 < tD1)
+      {
+        sIsn[0] = tIsn[0];
+	sIsn[1] = tIsn[2];
+	sIsn[2] = tIsn[3];
+      }
+      else
+      {
+        sIsn[0] = tIsn[1];
+	sIsn[1] = tIsn[2];
+	sIsn[2] = tIsn[3];
+	tIsn[2] = tIsn[3];
+      }
+      if((errNum = WlzGMModelConstructSimplex3D(ctr->model,
+      						tIsn)) == WLZ_ERR_NONE)
+      {
+        errNum = WlzGMModelConstructSimplex3D(ctr->model, sIsn);
+      }
+    }
+    else
+    {
+      errNum = WlzGMModelConstructSimplex3D(ctr->model, tIsn);
+    }
+#ifdef WLZ_CONTOUR_DEBUG
+    (void )fprintf(stderr,
+		   "# %d I%d #%g %g %g,%g %g %g,%g %g %g\n",
+		   isnCnt, iCode,
+		   tIsn[0].vtX, tIsn[0].vtY, tIsn[0].vtZ,
+		   tIsn[1].vtX, tIsn[1].vtY, tIsn[1].vtZ,
+		   tIsn[2].vtX, tIsn[2].vtY, tIsn[2].vtZ);
+    if(isnCnt == 4)
+    {
+      (void )fprintf(stderr,
+		     "# %d I%d #%g %g %g,%g %g %g,%g %g %g\n",
+		     isnCnt, iCode,
+		     sIsn[0].vtX, sIsn[0].vtY, sIsn[0].vtZ,
+		     sIsn[1].vtX, sIsn[1].vtY, sIsn[1].vtZ,
+		     sIsn[2].vtX, sIsn[2].vtY, sIsn[2].vtZ);
+    }
+#endif /* WLZ_CONTOUR_DEBUG */
+  }
   return(errNum);
 }
 
@@ -1629,22 +2223,47 @@ static WlzErrorNum WlzContourIsoTet3D(WlzContour *ctr,
 * Returns:	WlzDVertex2:		Position of intersection with
 *					side.
 * Purpose:	Calculates the position of the intersection of a
-*		line with the zero height plane.
+*		line with the zero height plane in 2D space.
 * Global refs:	-
-* Parameters:	double ht0:		Height at line origin.
-*		double ht1:		Height at line destination.
-*		WlzDVertex2 org:	Line origin.
-*		WlzDVertex2 dst:	Line destination.
+* Parameters:	double valOrg:		Height at line origin.
+*		double valDst:		Height at line destination.
+*		WlzDVertex2 posOrg:	Line origin.
+*		WlzDVertex2 posDst:	Line destination.
 ************************************************************************/
-static WlzDVertex2 WlzContourItpTriSide(double ht0, double ht1,
-				        WlzDVertex2 org, WlzDVertex2 dst)
+static WlzDVertex2 WlzContourItpTriSide(double valOrg, double valDst,
+				        WlzDVertex2 posOrg, WlzDVertex2 posDst)
 {
   double	tD0;
   WlzDVertex2	itp;
 
-  tD0 = ht1 - ht0;
-  itp.vtX = ((ht1 * org.vtX)  - (ht0 * dst.vtX)) / tD0;
-  itp.vtY = ((ht1 * org.vtY)  - (ht0 * dst.vtY)) / tD0;
+  tD0 = valDst - valOrg;
+  itp.vtX = ((valDst * posOrg.vtX)  - (valOrg * posDst.vtX)) / tD0;
+  itp.vtY = ((valDst * posOrg.vtY)  - (valOrg * posDst.vtY)) / tD0;
+  return(itp);
+}
+
+/************************************************************************
+* Function:	WlzContourIntpTetSide
+* Returns:	WlzDVertex3:		Position of intersection with
+*					side.
+* Purpose:	Calculates the position of the intersection of a
+*		line with the zero height plane in 3D space.
+* Global refs:	-
+* Parameters:	double valOrg:		Height at line origin.
+*		double valDst:		Height at line destination.
+*		WlzDVertex3 posOrg:	Line origin.
+*		WlzDVertex3 posDst:	Line destination.
+************************************************************************/
+static WlzDVertex3 WlzContourItpTetSide(double valOrg, double valDst,
+				        WlzDVertex3 posOrg, WlzDVertex3 posDst)
+{
+  double	tD0;
+  WlzDVertex3	itp;
+
+  tD0 = valDst - valOrg;
+  itp.vtX = ((valDst * posOrg.vtX)  - (valOrg * posDst.vtX)) / tD0;
+  itp.vtY = ((valDst * posOrg.vtY)  - (valOrg * posDst.vtY)) / tD0;
+  itp.vtZ = ((valDst * posOrg.vtZ)  - (valOrg * posDst.vtZ)) / tD0;
   return(itp);
 }
 
@@ -1744,9 +2363,7 @@ int             main(int argc, char *argv[])
 		usage = 0,
   		colIdx = 0,
 		nCol,
-		maxCol = 7,
-		minNod = 16,
-		minEdg = 16;
+		maxCol = 7;
   double	ctrVal = 100,
   		ctrWth = 1.0;
   FILE		*fP = NULL;
@@ -1758,7 +2375,7 @@ int             main(int argc, char *argv[])
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   WlzDVertex2	scale,
   		offset;
-  static char	optList[] = "ghic:e:n:o:v:w:";
+  static char	optList[] = "ghic:o:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -1795,20 +2412,6 @@ int             main(int argc, char *argv[])
 	  {
 	    nCol = maxCol;
 	  }
-	}
-	break;
-      case 'e':
-        if(sscanf(optarg, "%d", &minEdg) != 1)
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'n':
-        if(sscanf(optarg, "%d", &minNod) != 1)
-	{
-	  usage = 1;
-	  ok = 0;
 	}
 	break;
       case 'o':
@@ -1887,8 +2490,7 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-    ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth,
-    			minNod, minEdg, &errNum);
+    ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -1898,11 +2500,24 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-    scale.vtX = 0.5;
-    scale.vtY = -0.5;
-    offset.vtX = 100.0;
-    offset.vtY = 700.0;
-    errNum = WlzContourTestOutPS(ctr, fP, nCol, 1, offset, scale);
+    switch(ctr->model->type)
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D:
+	scale.vtX = 2.0;
+	scale.vtY = -2.0;
+	offset.vtX = -240.0;
+	offset.vtY = 700.0;
+        errNum = WlzContourTestOutPS(ctr, fP, nCol, 1, offset, scale);
+	break;
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D:
+        errNum = WlzGMModelTestOutOBJ(ctr->model, fP);
+	break;
+      default: 
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -1917,12 +2532,10 @@ int             main(int argc, char *argv[])
   }
   if(usage)
   {
-    static char	optList[] = "ghic:e:n:o:v:w:";
       (void )fprintf(stderr,
       "Usage: %s%sExample: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i]\n"
-      "        [-c#] [-e#] [-n#] [-o#] [-v#] [-w#]\n"
+      " [-o<output object>] [-h] [-o] [-g] [-i] [-c#] [-o#] [-v#] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -1930,8 +2543,6 @@ int             main(int argc, char *argv[])
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
       "  -c  Cycle contour colours (useful for debuging).\n"
-      "  -e  Minimum number of edges for each contour.\n"
-      "  -n  Minimum number of nodes for each contour.\n"
       "  -v  Contour iso-value.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
       "Computes a contour list from the given input object.\n"

@@ -64,6 +64,7 @@
 *		may decide to delete points outside skObj and then muck
 *		up points within skObj.				
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Fixed enum assignment mismatch.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -214,9 +215,9 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
   WlzInterval	*altItvBase = NULL,
   		*delItvBase = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno	alcErr = ALC_ER_NONE;
   const int	minItv = 1024,
   		sclItv = 16;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dumDom.core = NULL;
   delDom.core = NULL;
@@ -276,7 +277,11 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	{
 	  delDom.i->freeptr = AlcFreeStackPush(delDom.i->freeptr,
 					       (void *)delItvBase,
-					       &alcErrNum);
+					       &alcErr);
+	  if(alcErr != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -299,7 +304,11 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	{
 	  altDelDom.i->freeptr = AlcFreeStackPush(altDelDom.i->freeptr,
 						  (void *)altItvBase,
-						  &alcErrNum);
+						  &alcErr);
+	  if(alcErr != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
 	}
       }
       skObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dumDom, dumVal, NULL, srcObj,
@@ -329,7 +338,11 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	{
 	  delDom.i->freeptr = AlcFreeStackPush(delDom.i->freeptr,
 					       (void *)delItvBase,
-					       &alcErrNum);
+					       &alcErr);
+	  if(alcErr != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
 	}
       }
     }

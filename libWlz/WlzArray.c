@@ -13,6 +13,7 @@
 *		and arrays.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 * 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
 *		WlzFreeFreePtr() with AlcFreeStackPush(),
 *		AlcFreeStackPop() and AlcFreeStackFree().
@@ -1254,8 +1255,7 @@ static WlzObject *WlzFromArrayBit2D(UBYTE **arrayP,
 				    WlzIVertex2 arrayOrigin,
 				    WlzErrorNum *dstErr)
 {
-  int		idX,
-  		idY;
+  int		idY;
   WlzObject	*dstObj = NULL;
   WlzDynItvPool	iPool;
   WlzDomain	dstDom;

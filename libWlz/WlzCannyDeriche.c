@@ -12,6 +12,7 @@
 * Purpose:      A Canny/Deriche edge detection filter.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 ************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -58,11 +59,8 @@ WlzObject 	*WlzCannyDeriche(WlzObject **dstGObj, WlzObject *srcObj,
 		*hTObj = NULL,
 		*dstObj = NULL;
   WlzRsvFilter  *ftr = NULL;
-  WlzPixelV     zeroBV;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  zeroBV.type = WLZ_GREY_INT;
-  zeroBV.v.inv = 0;
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

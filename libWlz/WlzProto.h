@@ -604,8 +604,6 @@ extern WlzContour		*WlzContourObj(
 				  WlzContourMethod ctrMtd,
 				  double ctrVal,
 				  double ctrWth,
-				  int minNod,
-				  int minEdg,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeContour(
 				  WlzContour *ctr);
@@ -876,9 +874,6 @@ extern WlzGMModel	*WlzGMModelNew(
 extern WlzGMShell	*WlzGMModelNewS(
 			  WlzGMModel *model,
 			  WlzErrorNum *dstErr);
-extern WlzGMFace	*WlzGMShellNewF(
-			  WlzGMShell *shell,
-			  WlzErrorNum *dstErr);
 extern WlzGMLoop	*WlzGMModelNewL(
 			  WlzGMModel *model,
 			  WlzErrorNum *dstErr);
@@ -900,76 +895,104 @@ extern WlzGMVertexT    *WlzGMModelNewVT(
 /* Freeing  of geometric modeling elements */
 extern WlzErrorNum	WlzGMModelFree(
 			  WlzGMModel *model);
-extern WlzErrorNum     WlzGMModelFreeS(
+extern WlzErrorNum      WlzGMModelFreeS(
 			  WlzGMModel *model,
 			  WlzGMShell *shell);
-extern WlzErrorNum     WlzGMModelFreeL(
+extern WlzErrorNum      WlzGMModelFreeL(
 			  WlzGMModel *model,
 			  WlzGMLoop *loop);
-extern WlzErrorNum     WlzGMModelFreeLT(
+extern WlzErrorNum      WlzGMModelFreeLT(
 			  WlzGMModel *model,
 			  WlzGMLoopT *loopT);
-extern WlzErrorNum     WlzGMModelFreeF(
-			  WlzGMModel *model,
-			  WlzGMFace *face);
-extern WlzErrorNum     WlzGMModelFreeFT(
-			  WlzGMModel *model,
-			  WlzGMFaceT *faceT);
-extern WlzErrorNum     WlzGMModelFreeE(
+extern WlzErrorNum      WlzGMModelFreeE(
 			  WlzGMModel *model,
 			  WlzGMEdge *edge);
-extern WlzErrorNum     WlzGMModelFreeET(
+extern WlzErrorNum      WlzGMModelFreeET(
 			  WlzGMModel *model,
 			  WlzGMEdgeT *edgeT);
-extern WlzErrorNum     WlzGMModelFreeV(
+extern WlzErrorNum	WlzGMModelFreeDT(
+			  WlzGMModel *model,
+			  WlzGMDiskT *diskT);
+extern WlzErrorNum      WlzGMModelFreeV(
 			  WlzGMModel *model,
 			  WlzGMVertex *vertex);
-extern WlzErrorNum     WlzGMModelFreeVT(
+extern WlzErrorNum      WlzGMModelFreeVT(
 			  WlzGMModel *model,
 			  WlzGMVertexT *vertexT);
+/* Searching */
+extern WlzGMVertex	*WlzGMModelMatchVertexG3D(
+			  WlzGMModel *model,
+			  WlzDVertex3 gPos);
+extern WlzGMVertex	*WlzGMModelMatchVertexG2D(
+			  WlzGMModel *model,
+			  WlzDVertex2 gPos);
 /* Geometry access functions */
 extern WlzGMElemType 	WlzGMModelGetSGeomType(
 			  WlzGMModel *model);
-extern WlzGMElemType 	WlzGMModelGetLGeomType(
-			  WlzGMModel *model);
 extern WlzGMElemType 	WlzGMModelGetVGeomType(
 			  WlzGMModel *model);
-
+extern WlzErrorNum	WlzGMShellSetGBB3D(
+			  WlzGMShell *shell,
+			  WlzDBox3 bBox);
 extern WlzErrorNum	WlzGMShellSetGBB2D(
 			  WlzGMShell *shell,
 			  WlzDBox2 bBox);
+extern WlzErrorNum	WlzGMShellSetGBB2D(
+			  WlzGMShell *shell,
+			  WlzDBox2 bBox);
+extern WlzErrorNum	WlzGMShellSetG3D(
+			  WlzGMShell *shell,
+			  int nPnt,
+			  WlzDVertex3 *pos);
 extern WlzErrorNum	WlzGMShellSetG2D(
 			  WlzGMShell *shell,
-			  WlzDVertex2 pos0,
-			  WlzDVertex2 pos1);
+			  int nPnt,
+			  WlzDVertex2 *pos);
+extern int		WlzGMShellGInBB3D(
+			  WlzGMShell *shell,
+			  WlzDVertex3 pos);
 extern int		WlzGMShellGInBB2D(
 			  WlzGMShell *shell,
 			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMShellUpdateG3D(
+			  WlzGMShell *shell,
+			  WlzDVertex3 pos);
 extern WlzErrorNum	WlzGMShellUpdateG2D(
 			  WlzGMShell *shell,
 			  WlzDVertex2 pos);
-extern WlzErrorNum	WlzGMLoopSetGBB2D(
-			  WlzGMLoop *loop,
+extern WlzErrorNum	WlzGMShellUpdateGBB3D(
+			  WlzGMShell *shell,
+			  WlzDBox3 bBox);
+extern WlzErrorNum	WlzGMShellUpdateGBB2D(
+			  WlzGMShell *shell,
 			  WlzDBox2 bBox);
-extern WlzErrorNum	WlzGMLoopSetG2D(
-			  WlzGMLoop *loop,
-			  WlzDVertex2 pos0,
-			  WlzDVertex2 pos1);
-extern WlzErrorNum	WlzGMLoopUpdateG2D(
-			  WlzGMLoop *loop,
-			  WlzDVertex2 pos);
-extern int		WlzGMLoopGInBB2D(
-			  WlzGMLoop *loop,
-			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMVertexSetG3D(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 pos);
 extern WlzErrorNum	WlzGMVertexSetG2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern WlzErrorNum	WlzGMVertexGetG3D(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 *dstPos);
 extern WlzErrorNum	WlzGMVertexGetG2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 *dstPos);
+extern WlzDVertex3	WlzGMVertexCmp3D(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 pos);
 extern WlzDVertex2	WlzGMVertexCmp2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern int		WlzGMVertexCmpSign3D(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 pos);
+extern int		WlzGMVertexCmpSign2D(
+			  WlzGMVertex *vertex,
+			  WlzDVertex2 pos);
+extern double		WlzGMVertexDistSq3D(
+			  WlzGMVertex *vertex,
+			  WlzDVertex3 pos);
 extern double		WlzGMVertexDistSq2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
@@ -977,9 +1000,26 @@ extern double		WlzGMVertexDistSq2D(
 extern WlzErrorNum 	WlzGMModelTypeValid(
 			WlzGMModelType type);
 /* Topology query */
-extern WlzGMLoopT	*WlzGMEdgeTCommonParent(
+extern WlzGMLoopT	*WlzGMEdgeTCommonLoopT(
 			  WlzGMEdgeT *eT0,
 			  WlzGMEdgeT *eT1);
+extern WlzGMVertex	*WlzGMEdgeCommonVertex(
+			  WlzGMEdge *eE0,
+			  WlzGMEdge *eE1);
+extern WlzGMShell	*WlzGMEdgeGetShell(
+			  WlzGMEdge *eE);
+extern WlzGMEdge	*WlzGMVertexCommonEdge(
+			  WlzGMVertex *eV0,
+			  WlzGMVertex *eV1);
+extern WlzGMShell	*WlzGMVertexCommonShell(
+			  WlzGMVertex *eV0,
+			  WlzGMVertex *eV1);
+extern WlzGMShell	*WlzGMVertexGetShell(
+			  WlzGMVertex *eV);
+/* Tests */
+extern WlzErrorNum	WlzGMModelTestOutOBJ(
+			  WlzGMModel *model,
+			  FILE *fP);
 extern WlzErrorNum	WlzGMModelTestOutPS(
 			  WlzGMModel *model, FILE *fP,
 			  WlzDVertex2 offset,
@@ -1002,13 +1042,18 @@ extern WlzErrorNum     WlzGMEdgeTTestOutPS(
 			  WlzDVertex2 scale);
 /* Model list management */
 extern void	   	WlzGMVertexTAppend(
-			  WlzGMVertexT *pVT,
-			  WlzGMVertexT *newVT);
+			  WlzGMVertexT *eVT,
+			  WlzGMVertexT *nVT);
+extern void		WlzGMDiskTAppend(
+			  WlzGMDiskT *eDT,
+			  WlzGMDiskT *nDT);
 extern void		WlzGMEdgeTAppend(
 			  WlzGMEdgeT *eET,
 			  WlzGMEdgeT *nET);
 extern void		WlzGMEdgeTInsert(
 			  WlzGMEdgeT *eET,
+			  WlzGMEdgeT *nET);
+extern void		WlzGMEdgeTInsertRadial(
 			  WlzGMEdgeT *nET);
 extern void	   	WlzGMLoopTAppend(
 			  WlzGMLoopT *pS,
@@ -1020,30 +1065,21 @@ extern void		WlzGMLoopTUnlink(
 			  WlzGMLoopT *dLT);
 extern void		WlzGMShellUnlink(
 			  WlzGMShell *dS);
+extern void		WlzGMShellJoinAndUnlink(
+			  WlzGMShell *eShell,
+			  WlzGMShell *dShell);
+extern WlzErrorNum	WlzModelMaskFlags(
+			  WlzGMModel *model,
+			  WlzGMElemType eType,
+			  WlzBinaryOperatorType opp,
+			  unsigned mask);
 /* Model construction */
+extern WlzErrorNum	WlzGMModelConstructSimplex3D(
+			  WlzGMModel *model,
+			  WlzDVertex3 *pos);
 extern WlzErrorNum	WlzGMModelConstructSimplex2D(
 			  WlzGMModel *model,
-			  WlzDVertex2 matchDist,
-			  int *searchIdx,
 			  WlzDVertex2 *pos);
-extern WlzErrorNum	WlzGMModelConstructSLE2D(
-			  WlzGMModel *model,
-			  WlzDVertex2 nPos0,
-			  WlzDVertex2 nPos1);
-extern WlzErrorNum	WlzGMModelConstructE2D(
-			  WlzGMModel *model,
-			  WlzGMEdgeT *eET,
-			  WlzDVertex2 nPos);
-extern WlzErrorNum	WlzGMModelConstructESplitL2D(
-			  WlzGMModel *model,
-			  WlzGMEdgeT *eET0,
-			  WlzGMEdgeT *eET1);
-extern WlzErrorNum	WlzGMModelConstructEJoinL2D(
-			  WlzGMModel *model,
-			  WlzGMEdgeT *eET0,
-			  WlzGMEdgeT *eET1);
-extern void		WlzGMLoopSetGT(
-			  WlzGMLoopT *eLT);
 
 /************************************************************************
 * WlzGeometry.c								*

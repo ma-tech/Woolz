@@ -13,6 +13,7 @@
 *		of 2D and 3D Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 05-06-2000 bill Removed unused variables.
 ************************************************************************/
 #include <stdlib.h>
 #include <Wlz.h>
@@ -438,8 +439,7 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
 		savePlane;
   WlzDomain	*domP;
   WlzValues	*valP;
-  WlzObjectType	valType,
-  		saveGTabType2D;
+  WlzObjectType	saveGTabType2D;
   WlzIntervalDomain *saveIDom2D;
   WlzValues	saveValues2D;
   int		planeSet[2];
@@ -474,8 +474,6 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
 	  gVWSp->plane = plane;
 	  gVWSp->iDom2D = (*domP).i;
 	  gVWSp->values2D = (*valP);
-	  valType = (*valP).core->type;
-/*	  gVWSp->gTabType2D = WlzGreyTableTypeToTableType(valType, NULL);*/
 	  gVWSp->gTabType2D = gVWSp->gTabTypes3D[planeRel];
 	  WlzGreyValueGet2D1(gVWSp, line, kol);
 	  planeSet[planeOff] = 1;
