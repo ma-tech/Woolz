@@ -57,6 +57,8 @@ DEPENDDIRS		= \
 			  ../../../../../../../libAlc \
 			  ../../../../../../../libAlg \
 			  ../../../../../../../libWlz \
+			  ../../../../../../../libWlzExtFF \
+			  ../../../../../../../libbibfile \
 			  ../../../../../../../libWlzBnd
 
 # List of all header file directories to be searched (modify as required).
