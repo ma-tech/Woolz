@@ -678,6 +678,7 @@ static WlzContour *WlzContourFromPoints3D(int nSPts, WlzDVertex3 *sPts,
   AlcFree(cPts);
   AlcFree(alpha);
   AlcFree(dist);
+  WlzBasisFnFree(basisFn);
   (void )WlzFreeObj(dObj);
   if(dstErr)
   {
