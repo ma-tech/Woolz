@@ -13,6 +13,7 @@
 *		non-manifold geometric models (GM) within Woolz.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 16-01-01 bill Add WlzGMVertexNormal3D().
 * 12-12-00 bill	Fixed linked list bug in WlzGMModelAddVertex().
 * 27-11-00 bill Add shell geometry updates during 2D model creation,
 *		write WlzGMShellMergeG(). Fix bug allowing insertion
@@ -3808,6 +3809,128 @@ double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 }
 
 /************************************************************************
+* Function:	WlzGMVertexNormal3D
+* Returns:	WlzDVertex3		Value of normal.
+* Purpose:	Computes the value of the normal at the given vertex
+*		which lies within the given model.
+*		This function requires a buffer in which to store the
+*		verticies found on the loops surrounding the given
+*		vertex. For efficiency this can/should be reused
+*		between calls of this function.
+* Global refs:	-
+* Parameters:	WlzGMModel *model:	The given model.
+*		WlzGMVertex *gV:	Given vertex in the model
+*		int *sVBufSz:		Ptr to the number WlzGMVertex's
+*					that can be held in *sVBuf.
+*		WlzGMVertex ***sVBuf:	Ptr to an allocated buffer for
+*					verticies, may NOT be NULL
+*					although the buffer it points
+*					to may be. The buffer should
+*					be free'd using AlcFree when
+*					it is no longer needed.
+*		WlzErrorNum *dstErr:	Destination error pointer, may
+*					be null.
+************************************************************************/
+WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
+				    int *sVBufSz, WlzGMVertex ***sVBuf,
+				    WlzErrorNum *dstErr)
+{
+  int		sIdx,
+  		sCnt,
+  		manifold = 1;
+  double	tD0;
+  WlzGMVertexT	*vT0,
+  		*vT1;
+  WlzGMEdgeT	*eT1;
+  WlzDVertex3	nrm,
+  		cNrm,
+  		sNrm;
+  WlzDVertex3	sVG[3];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nrm.vtX = 0.0;
+  nrm.vtY = 0.0;
+  nrm.vtZ = 0.0;
+  if(gV->diskT->idx != gV->diskT->next->idx)
+  {
+    /* The surface in the imediate neighbourhood of the vertex is
+     * not manifold.*/
+    manifold = 0;
+  }
+  else
+  {
+    /* Find the ordered ring of verticies which surround the current
+     * vertex, checking that each of the edges is part of a manifold
+     * surface. */
+
+    sCnt = 0;
+    vT1 = vT0 = gV->diskT->vertexT;
+    eT1 = vT1->parent;
+    do
+    {
+      if((eT1->idx == eT1->rad->idx) ||
+	  (eT1->idx != eT1->rad->rad->idx))
+      {
+	/* More than two loops are joined by the edge, so the surface
+	 * in the imediate neighbourhood of the vertex is not manifold.
+	 */
+	manifold = 0;
+      }
+      else
+      {
+	if((*sVBufSz <= sCnt) || (*sVBuf == NULL))
+	{
+	  *sVBufSz = (*sVBufSz <= 0)? 64: *sVBufSz * 2;
+	  if((*sVBuf = (WlzGMVertex **)
+		      AlcRealloc(*sVBuf,
+		      *sVBufSz * sizeof(WlzGMVertex *))) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  *(*sVBuf + sCnt++) = eT1->opp->vertexT->diskT->vertex;
+	}
+	/* Find the next edgeT directed from gV. */
+	eT1 = eT1->prev->opp->rad;
+	vT1 = eT1->vertexT;
+      }
+    }
+    while((errNum == WLZ_ERR_NONE) && manifold &&
+	(vT1->idx != vT0->idx));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(manifold)
+    {
+      /* Compute the mean of the normals of the loops around the
+       * current vertex. */
+      sNrm.vtX = 0.0;
+      sNrm.vtY = 0.0;
+      sNrm.vtZ = 0.0;
+      (void )WlzGMVertexGetG3D(gV, sVG + 0);
+      (void )WlzGMVertexGetG3D(*(*sVBuf + 0), sVG + 2);
+      for(sIdx = 0; sIdx < sCnt; ++sIdx)
+      {
+	*(sVG + 1) = *(sVG + 2);
+	(void )WlzGMVertexGetG3D(*(*sVBuf + ((sIdx + 1) % sCnt)), sVG + 2);
+	cNrm = WlzGeomTriangleNormal(*(sVG + 0), *(sVG + 1), *(sVG + 2));
+	WLZ_VTX_3_ADD(sNrm, sNrm, cNrm);
+      }
+      tD0 = 1.0 / (double)sCnt;
+      WLZ_VTX_3_SCALE(nrm, sNrm, tD0);
+    }
+    /* else normal undefined. */
+  }
+  if(dstErr)
+  {
+    *dstErr == errNum;
+  }
+  return(nrm);
+}
+
+/************************************************************************
 * Function:	WlzGMVertexDistSq2D
 * Returns:	double:			Square of distance, -1.0 on
 *					error.
@@ -6941,6 +7064,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
   WlzGMEdge	*nE;
   WlzGMEdgeT	*nET0[3],
   		*nET1[3];
+  WlzGMDiskT	*eDT[2];
   WlzGMVertex	*eV[3];
   WlzGMVertexT	*eVT[3],
   		*nVT0[3],
@@ -6966,7 +7090,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
      ((nVT1[1] = WlzGMModelNewVT(model, &errNum)) != NULL) &&
      ((nVT1[2] = WlzGMModelNewVT(model, &errNum)) != NULL))
   {
-    /* Get shell that's to be extended and deleted. */
+    /* Get shell that's to be extended. */
     eShell = WlzGMEdgeGetShell(eE0);
     /* Get verticies. */
     eV[1] = WlzGMEdgeCommonVertex(eE0, eE1);
@@ -6999,7 +7123,6 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
       nVT0[idx]->parent = nET0[idx];
       nVT1[idx]->parent = nET1[idx];
     }
-    /* No new disk topology elements. */
     /* New edge. */
     nE->edgeT = nET0[2];
     /* New edge topology elements */
@@ -7042,6 +7165,25 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
     nLT[0]->parent = eShell;
     nLT[1]->parent = eShell;
     /* No change to shell */
+    /* No new disk topology elements, but may need to delete one. */
+    eDT[0] = nET0[1]->rad->vertexT->diskT;
+    eDT[1] = nET1[1]->rad->vertexT->diskT;
+    if(eDT[0]->idx != eDT[1]->idx)
+    {
+      eVT[0] = eVT[1] = eDT[1]->vertexT;
+      do
+      {
+        eVT[2] = eVT[1]->next;
+	WlzGMVertexTAppend(eDT[0]->vertexT, eVT[1]);
+	eVT[1]->diskT = eDT[0];
+	eVT[1] = eVT[2];
+      } while(eVT[1]->idx != eVT[0]->idx);
+      if(eV[1]->diskT->idx == eDT[1]->idx)
+      {
+        eV[1]->diskT = eDT[0];
+      }
+      WlzGMModelFreeDT(model, eDT[1]);
+    }
   }
   return(errNum);
 }
@@ -7729,7 +7871,9 @@ WlzErrorNum	WlzGMModelConstructSimplex3D(WlzGMModel *model,
 	  errNum = WlzGMModelExtend3V2E1S3D(model, cE[idx0], cE[idx1]);
 	  break;
 	case 3:
-          /* This simplex already exists within the model! */
+          /* All three verticies and all three edges are within the model,
+	   * but is the loop formed by these verticies within it?
+	   * TODO Check and insert loop if required. */
 	  break;
       }
   }
