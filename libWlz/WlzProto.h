@@ -927,6 +927,9 @@ extern WlzErrorNum		WlzBoundObjToPolyDomArray(
 extern int			WlzBoundPolyCount(
 				  WlzBoundList *bnd,
 				  WlzErrorNum *dstErr);
+extern int			WlzBoundVtxCount(
+				  WlzBoundList *bnd,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzBoundingBox.c							*
@@ -1809,6 +1812,27 @@ extern int			WlzGeomPlaneTriangleIntersect(
 				  WlzDVertex3 p2,
 				  WlzDVertex3 *dstIsn0,
 				  WlzDVertex3 *dstIsn1);
+extern unsigned int    		WlzGeomHashVtx2D(
+				  WlzDVertex2 pos,
+				  double tol);
+extern unsigned int    		WlzGeomHashVtx3D(
+				  WlzDVertex3 pos,
+				  double tol);
+extern int			WlzGeomCmpVtx2D(
+				  WlzDVertex2 pos0,
+				  WlzDVertex2 pos1,
+				  double tol);
+extern int			WlzGeomCmpVtx3D(
+				  WlzDVertex3 pos0,
+				  WlzDVertex3 pos1,
+				  double tol);
+extern WlzDVertex2		WlzGeomUnitVector2D(
+				  WlzDVertex2 pos1,
+				  WlzDVertex2 pos0);
+extern int             		WlzGeomVertexInDiamCircle(
+				  WlzDVertex2 lPos0,
+				  WlzDVertex2 lPos1,
+				  WlzDVertex2 pos);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -2444,6 +2468,34 @@ extern WlzErrorNum		WlzMatchICPObjs(
 				  double maxDeform,
 				  int matchImpNN,
 				  double matchImpThr);
+extern WlzErrorNum  		WlzMatchICPCtr(
+				  WlzContour *tCtr,
+				  WlzContour *sCtr,
+                                  WlzAffineTransform *initTr,
+                                  int maxItr,
+				  int minSpx,
+                                  int *dstNMatch,
+				  WlzVertexP *dstTMatch,
+                                  WlzVertexP *dstSMatch,
+				  int brkFlg,
+                                  double  maxDisp,
+				  double maxAng,
+                                  double maxDeform,
+                                  int matchImpNN,
+				  double matchImpThr,
+                                  WlzRegICPUsrWgtFn usrWgtFn,
+                                  void *usrWgtData);
+extern double          		WlzMatchICPWeightMatches(
+				  WlzVertexType vType,
+				  WlzAffineTransform *curTr,
+				  AlcKDTTree *tree,
+				  WlzVertexP tVx,
+				  WlzVertexP sVx,
+				  WlzVertex tMVx,
+				  WlzVertex sMVx,
+				  double wVx,
+				  double wNr,
+				  void *data);
 #endif /* WLZ_EXT_BIND */
 
 #ifndef WLZ_EXT_BIND
