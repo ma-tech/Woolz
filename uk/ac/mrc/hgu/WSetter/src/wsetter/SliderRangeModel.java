@@ -25,6 +25,14 @@ import wsetter.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+/**
+ * Supporting model class for WSetter bean.
+ * <br>Uses the <b>Model View Controller</b> paradigm.
+ * <p>SliderRangeModel is the model for the JSlider used in WSetter
+ * @author Nick Burton
+ * @see WSetter
+ * @see WlzFltModel
+ */
 public class SliderRangeModel implements BoundedRangeModel {
     protected ChangeEvent changeEvent = null;
     protected EventListenerList listenerList = new EventListenerList();
@@ -37,6 +45,9 @@ public class SliderRangeModel implements BoundedRangeModel {
     protected boolean isAdjusting = false;
     final static boolean DEBUG = false;
 
+  /**
+   * Constructor
+   */
     public SliderRangeModel() {
     }
 
@@ -138,6 +149,15 @@ public class SliderRangeModel implements BoundedRangeModel {
         setRangeProperties(value, extent, minimum, maximum, b);
     }
 
+  /**
+   * Initialises the model for the JSlider used in WSetter.
+   * @param     int newValue
+   * @param     int newExtent
+   * @param     int newMin
+   * @param     int newMax
+   * @param     boolean newAdjusting
+   * @return    void
+   */
     public void setRangeProperties(int newValue,
                                    int newExtent,
                                    int newMin,
@@ -151,8 +171,17 @@ public class SliderRangeModel implements BoundedRangeModel {
                            newAdjusting);
     }
 
+  /**
+   * Initialises the model for the JSlider used in WSetter.
+   * @param     double newValue
+   * @param     int newExtent
+   * @param     int newMin
+   * @param     int newMax
+   * @param     boolean newAdjusting
+   * @return    void
+   */
     public void setRangeProperties(double newValue,
-                                   int unusedExtent,
+                                   int newExtent,
                                    int newMin,
                                    int newMax,
                                    boolean newAdjusting) {
@@ -211,14 +240,29 @@ public class SliderRangeModel implements BoundedRangeModel {
      * The rest of this is event handling code copied from 
      * DefaultBoundedRangeModel. 
      */
+  /**
+   * Adds a ChangeListener for events fired from this model.
+   * @param     ChangeListener x
+   * @return    void
+   */
     public void addChangeListener(ChangeListener l) {
         listenerList.add(ChangeListener.class, l);
     }
 
+  /**
+   * Removes a ChangeListener for events fired from this model.
+   * @param     ChangeListener x
+   * @return    void
+   */
     public void removeChangeListener(ChangeListener l) {
         listenerList.remove(ChangeListener.class, l);
     }
 
+  /**
+   * fires an event when the model changes.
+   * @param     ChangeEvent e
+   * @return    void
+   */
     protected void fireStateChanged() {
         Object[] listeners = listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -=2 ) {

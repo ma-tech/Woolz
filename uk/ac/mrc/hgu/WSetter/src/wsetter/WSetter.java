@@ -8,229 +8,87 @@ import javax.swing.border.*;
 import java.awt.event.*;
 import javax.swing.event.*;
 import java.io.*;
-//import com.borland.jbcl.layout.*;
 
-public class WSetter extends JPanel
+/**
+ * View / Controller class for slider bean.
+ * <br>Uses the <b>Model View Controller</b> paradigm.
+ * @author Nick Burton
+ * @see WlzFltModel
+ * @see SliderRangeModel
+ */
+public class WSetter extends WSetterGUI
                      implements Serializable {
 
-  private boolean _enabled;
+   private boolean _enabled;
+//-------------------------------------------------------------
+   public WlzFltModel mod1;
+   public SliderRangeModel sliderModel;
 
+   protected sliderToModelAdaptor_A SToM_A = null;
+   protected sliderToModelAdaptor_B SToM_B = null;
+   protected textToModelAdaptor TToM = null;
+   protected modelToTextAdaptor MToT = null;
+   protected modelToSliderAdaptor MToS = null;
+   protected modelToThisAdaptor MToThis = null;
+   // model properties
+   private boolean floatingPoint = true; // if false => int
+   private boolean slidingEvents = true;
+   private WlzFltModel.WlzType modelType = WlzFltModel.FLOAT;
+   private float modelMin = 0.0f;
+   private float modelMax = 1000.0f;
+   private float modelInitVal = 0.0f;
+//-------------------------------------------------------------
+  /**
+   * Constructor
+   */
   public WSetter() {
     _enabled = false;
     try {
-      WSInit();
+      initWSetter();
     }
     catch(Exception e) {
       e.printStackTrace();
     }
   }
-
+//-------------------------------------------------------------
+  /**
+   * Allow or inhibit the component's ability to fire events
+   * @param	state	true if the component can fire events
+   * @return	void
+   */
   public void setEnabled(boolean state) {
      _enabled = state;
   }
-
+//-------------------------------------------------------------
+  /**
+   * Query the component's ability to fire events
+   * @param	void
+   * @return	boolean	true if the component can fire events
+   */
   public boolean isEnabled() {
      return _enabled;
   }
-
-// adapters for MVC model
-
-// CONTROL ADAPTORS
-//---------------------------------------
-  public static class sliderToModelAdaptor_A
-    implements ChangeListener {
-    WlzFltModel model;
-    JSlider control;
-    SliderRangeModel sliderMod;
-
-    public sliderToModelAdaptor_A(JSlider cntrl, WlzFltModel mdl) {
-      model = mdl;
-      control = cntrl;
-    }
-
-    public void stateChanged(ChangeEvent e) {
-      sliderMod = (SliderRangeModel) control.getModel();
-      model.setValue((float)(sliderMod.getDoubleValue()));
-    }
-  } // class sliderToModelAdaptor
-
-//---------------------------------------
-  public static class sliderToModelAdaptor_B
-    implements ChangeListener {
-    WlzFltModel model;
-    JSlider control;
-    SliderRangeModel sliderMod;
-
-    public sliderToModelAdaptor_B(JSlider cntrl, WlzFltModel mdl) {
-      model = mdl;
-      control = cntrl;
-    }
-
-    public void stateChanged(ChangeEvent e) {
-      // only do it when the slider isn't moving
-      if (!control.getValueIsAdjusting()) {
-	 // get the model
-	 sliderMod = (SliderRangeModel) control.getModel();
-	 model.setValue((float)(sliderMod.getDoubleValue()));
-      }
-    }
-  } // class sliderToModelAdaptor
-
-//---------------------------------------
-  public static class textToModelAdaptor
-    implements ActionListener {
-    WlzFltModel model;
-    JTextField control;
-    public textToModelAdaptor(JTextField cntrl, WlzFltModel mdl) {
-      model = mdl;
-      control = cntrl;
-    }
-
-    float val = 0.0f;
-    Float VAL;
-    public void actionPerformed(ActionEvent e) {
-       VAL = new Float(control.getText());
-       val = VAL.floatValue();
-       model.setValue(val);
-    }
-  } // class textToModelAdaptor
-
-//---------------------------------------
-// VIEW ADAPTORS
-//---------------------------------------
-  public static class modelToSliderAdaptor
-    implements ChangeListener {
-    WlzFltModel model;
-    JSlider view;
-    SliderRangeModel sliderMod;
-
-    public modelToSliderAdaptor(WlzFltModel mdl, JSlider vw) {
-      view = vw;
-      model = mdl;
-    }
-
-    public void stateChanged(ChangeEvent e) {
-      // get the slider's model
-      sliderMod = (SliderRangeModel)view.getModel();
-      sliderMod.setDoubleValue((double)model.getValue());
-      view.invalidate();
-    }
-  } // class modelToSliderAdaptor
-
-//---------------------------------------
-  public static class modelToTextAdaptor
-    implements ChangeListener {
-    WlzFltModel model;
-    JTextField view;
-    public modelToTextAdaptor(WlzFltModel mdl, JTextField vw) {
-      view = vw;
-      model = mdl;
-    }
-
-    Float flote;
-    public void stateChanged(ChangeEvent e) {
-      flote = new Float(model.getValue());
-      view.setText(flote.toString());
-      view.invalidate();
-    }
-  } // class modelToTextAdaptor
-
-//---------------------------------------
-  // MODEL ADAPTORS
-//---------------------------------------
-  // allows this bean to fire events
-  public static class modelToThisAdaptor
-		implements ChangeListener {
-    //WlzFltModel source;
-    WSetter target;
-    //public modelToThisAdaptor(WlzFltModel mdl1, WSetter wst) {
-    public modelToThisAdaptor(WSetter wst) {
-      //source = mdl1;
-      target = wst;
-    }
-
-    public void stateChanged(ChangeEvent e) {
-      target.fireChange();
-    }
-  } // class modelToThisAdaptor
-
-
-//*******************************************
-  // GUI stuff
-  JPanel textPanel = new JPanel();
-  JTextField textf = new JTextField();
-
-  JPanel sliderPanel = new JPanel();
-  JSlider _slider = new JSlider();
-
-  JPanel labelSliderTextPanel = new JPanel();
-
-  JPanel labelPanel = new JPanel();
-  JLabel paramLabel = new JLabel("", SwingConstants.CENTER);
-//*******************************************
-//===========================================
-  private void WSInit() throws Exception {
+//-------------------------------------------------------------
+  /**
+   * Initialises the slider model and GUI.
+   * @param	void
+   * @return	void
+   */
+  private void initWSetter() throws Exception {
 
     sliderModel = new SliderRangeModel();
     _slider.setModel(sliderModel);
-    setGUI();
     setModel();
 
-  } // WSInit()
-//===========================================
-
-  protected void setGUI() {
-    sliderH = height;
-    sliderW = width - (labelWidth+textWidth);
-
-    this.setLayout(new BorderLayout());
-    //this.setLayout(new FlowLayout());
-    this.setBackground(internalBgc);
-    //this.setPreferredSize(new Dimension(width+pad, height+pad));
-    this.setPreferredSize(new Dimension(0, height+pad));
-    //this.setMaximumSize(new Dimension(width+pad, height+pad));
-
-    textf.setBackground(bgc);
-    textf.setPreferredSize(new Dimension(textWidth, sliderH+pad));
-
-    textPanel.setBackground(internalBgc);
-    textPanel.setLayout(new BorderLayout(0, pad));
-    textPanel.setPreferredSize(new Dimension(textWidth+pad, sliderH+pad));
-    textPanel.add(textf, BorderLayout.NORTH);
-
-    //slider.setLayout(new BorderLayout());
-    _slider.setLayout(new FlowLayout());
-    _slider.setPreferredSize(new Dimension(sliderW, sliderH));
-    //slider.setExtent(sliderExtent);
-    sliderPanel.setBackground(internalBgc);
-    sliderPanel.setLayout(new BorderLayout());
-    //sliderPanel.setPreferredSize(new Dimension(sliderW, sliderH));
-    sliderPanel.setPreferredSize(new Dimension(0, sliderH));
-    sliderPanel.add(_slider, BorderLayout.CENTER);
-
-    paramLabel.setBackground(internalBgc);
-    paramLabel.setPreferredSize(new Dimension(labelWidth, sliderH));
-    paramLabel.setText(sliderLabel);
-
-    labelPanel.setBackground(bgc);
-    labelPanel.setLayout(new BorderLayout(pad, pad));
-    labelPanel.setPreferredSize(new Dimension(labelWidth, sliderH));
-    labelPanel.add(paramLabel, BorderLayout.NORTH);
-
-    labelSliderTextPanel.setBackground(internalBgc);
-    labelSliderTextPanel.setLayout(new BorderLayout());
-    labelSliderTextPanel.setPreferredSize(
-			 new Dimension(width, height));
-    labelSliderTextPanel.add(labelPanel, BorderLayout.WEST);
-    labelSliderTextPanel.add(sliderPanel, BorderLayout.CENTER);
-    labelSliderTextPanel.add(textPanel, BorderLayout.EAST);
-    this.add(labelSliderTextPanel, BorderLayout.NORTH);
-
-  } // setGUI
-
+  } // initWSetter()
 //-------------------------------------------------------------
   // if the programmer wants to change model max & min
   // we need to set up the adaptors again
+  /**
+   * Resets the model to new max and min values.
+   * @param	void
+   * @return	void
+   */
   protected void setModel() {
 
      // the main model
@@ -290,57 +148,18 @@ public class WSetter extends JPanel
 
   } // setModel
 
-  //-------------------------------------------------------------
-  // we need to generate change events
-  // whenever the WlzFltModel changes
-
-  // keep track of all the listeners to this model
-  protected EventListenerList changeListeners =
-     new EventListenerList();
-
-  // add a listener to the register
-  public void addChangeListener(ChangeListener x) {
-     changeListeners.add (ChangeListener.class, x);
-
-     // bring it up to date with current state
-     x.stateChanged(new ChangeEvent(this));
-  }
-
-  // remove a listener from the register
-  public void removeChangeListener(ChangeListener x) {
-     changeListeners.remove (ChangeListener.class, x);
-  }
-
-  protected void fireChange() {
-     if(_enabled == true) {
-	// Create the event:
-	ChangeEvent ce = new ChangeEvent(this);
-	// Get the listener list
-	Object[] listeners =
-	   changeListeners.getListenerList();
-	// Process the listeners last to first
-	// List is in pairs, Class and instance
-	for (int i
-	      = listeners.length-2; i >= 0; i -= 2) {
-	   if (listeners[i] == ChangeListener.class) {
-	      ChangeListener cl = (ChangeListener)listeners[i+1];
-	      cl.stateChanged(ce);
-	   }
-	}
-     }
-  } // fireChange
-
-//-------------------------------------------------------------
+//===========================================
 // accessor methods for the bean properties etc
+//===========================================
    public float getValue() {
       return mod1.getValue();
    }
 //.....................................
    public int getWidth() {
-      return width;
+      return _width;
    }
    public int getHeight() {
-      return height;
+      return _height;
    }
    public int getLabelWidth() {
       return labelWidth;
@@ -377,26 +196,26 @@ public class WSetter extends JPanel
    }
 //.....................................
    public void setWidth(int w) {
-      width = w;
-      if(width < minWidth) width = minWidth;
-      setGUI();
+      _width = w;
+      if(_width < _minWidth) _width = _minWidth;
+      initGUI();
    }
    public void setHeight(int h) {
-      height = h;
-      if(height < minHeight) height = minHeight;
-      setGUI();
+      _height = h;
+      if(_height < _minHeight) _height = _minHeight;
+      initGUI();
    }
    public void setLabelWidth(int w) {
       labelWidth = w;
-      setGUI();
+      initGUI();
    }
    public void setTextWidth(int w) {
       textWidth = w;
-      setGUI();
+      initGUI();
    }
    public void setBgc(Color col) {
       bgc = col;
-      setGUI();
+      initGUI();
    }
    public  void setFloatingPoint(boolean bool) {
       floatingPoint = bool;
@@ -406,7 +225,7 @@ public class WSetter extends JPanel
    }
    public void setSliderLabel(String labl) {
       sliderLabel = labl;
-      setGUI();
+      initGUI();
    }
 //.....................................
    public void setModelMin(float mmin) {
@@ -432,46 +251,232 @@ public class WSetter extends JPanel
       return _slider.isEnabled();
    }
 
-   //public void setModelType(WlzFltMdl.WlzType WlzFltMdl.WlzType.FLOAT)
+//===========================================
+// inner classes
+//===========================================
+// adapters for MVC model
 
-//-------------------------------------------------------------
-   public WlzFltModel mod1;
-   public SliderRangeModel sliderModel;
-   //....................................
-   protected sliderToModelAdaptor_A SToM_A = null;
-   protected sliderToModelAdaptor_B SToM_B = null;
-   protected textToModelAdaptor TToM = null;
-   protected modelToTextAdaptor MToT = null;
-   protected modelToSliderAdaptor MToS = null;
-   protected modelToThisAdaptor MToThis = null;
+// CONTROL ADAPTORS
+//---------------------------------------
+  /**
+   * Inner class to handle continuous changes in slider position
+   */
+  public static class sliderToModelAdaptor_A
+    implements ChangeListener {
 
-//-------------------------------------------------------------
-   // GUI properties
-   // private int width = 250;
-   private int width = 800;
-   private int height = 15;
-   private int textWidth = 50;
-   private int labelWidth = 40;
-   private int pad = 1;
-   private int minWidth = 150; // not accessible
-   private int minHeight = 10; // not accessible
+    WlzFltModel model;
+    JSlider control;
+    SliderRangeModel sliderMod;
 
-   private Color bgc = new Color(230, 230, 230);
-   private Color internalBgc = new Color(200, 200, 200); // not accessible
+  /**
+   * Constructor
+   */
+    public sliderToModelAdaptor_A(JSlider cntrl, WlzFltModel mdl) {
+      model = mdl;
+      control = cntrl;
+    }
 
-   private boolean floatingPoint = true; // if false => int
-   private boolean slidingEvents = true;
+  /**
+   * Event handler, for use when slider has stopped.
+   * @param	ChangeEvent e
+   * @return	void
+   */
+    public void stateChanged(ChangeEvent e) {
+      sliderMod = (SliderRangeModel) control.getModel();
+      model.setValue((float)(sliderMod.getDoubleValue()));
+    }
+  } // class sliderToModelAdaptor
 
-   private String sliderLabel = "";
-   //....................................
-   // model properties
-   private WlzFltModel.WlzType modelType = WlzFltModel.FLOAT;
-   private float modelMin = 0.0f;
-   private float modelMax = 1000.0f;
-   private float modelInitVal = 0.0f;
-   //....................................
-   // constants to define GUI shape
-   int sliderH;
-   int sliderW;
+//---------------------------------------
+  /**
+   * Inner class to handle a step change in slider position
+   *
+   */
+  public static class sliderToModelAdaptor_B
+    implements ChangeListener {
+    WlzFltModel model;
+    JSlider control;
+    SliderRangeModel sliderMod;
 
+  /**
+   * Constructor
+   */
+    public sliderToModelAdaptor_B(JSlider cntrl, WlzFltModel mdl) {
+      model = mdl;
+      control = cntrl;
+    }
+
+  /**
+   * Event handler, for use when slider has is moving. 
+   * @param	void
+   * @return	boolean	true if the component can fire events
+   */
+    public void stateChanged(ChangeEvent e) {
+      // only do it when the slider isn't moving
+      if (!control.getValueIsAdjusting()) {
+	 // get the model
+	 sliderMod = (SliderRangeModel) control.getModel();
+	 model.setValue((float)(sliderMod.getDoubleValue()));
+      }
+    }
+  } // class sliderToModelAdaptor
+
+//---------------------------------------
+  public static class textToModelAdaptor
+    implements ActionListener {
+    WlzFltModel model;
+    JTextField control;
+  /**
+   * Constructor
+   */
+    public textToModelAdaptor(JTextField cntrl, WlzFltModel mdl) {
+      model = mdl;
+      control = cntrl;
+    }
+
+    float val = 0.0f;
+    Float VAL;
+  /**
+   * Event handler, sets the slider to the value in the text field.
+   * @param	ActionEvent e
+   * @return	void
+   */
+    public void actionPerformed(ActionEvent e) {
+       VAL = new Float(control.getText());
+       val = VAL.floatValue();
+       model.setValue(val);
+    }
+  } // class textToModelAdaptor
+
+//---------------------------------------
+// VIEW ADAPTORS
+//---------------------------------------
+  public static class modelToSliderAdaptor
+    implements ChangeListener {
+    WlzFltModel model;
+    JSlider view;
+    SliderRangeModel sliderMod;
+
+  /**
+   * Constructor
+   */
+    public modelToSliderAdaptor(WlzFltModel mdl, JSlider vw) {
+      view = vw;
+      model = mdl;
+    }
+
+  /**
+   * Adaptor, changes the <b>view</b> of the slider when the model changes.
+   * @param	void
+   * @return	boolean	true if the component can fire events
+   */
+    public void stateChanged(ChangeEvent e) {
+      // get the slider's model
+      sliderMod = (SliderRangeModel)view.getModel();
+      sliderMod.setDoubleValue((double)model.getValue());
+      view.revalidate();
+    }
+  } // class modelToSliderAdaptor
+
+//---------------------------------------
+  public static class modelToTextAdaptor
+    implements ChangeListener {
+    WlzFltModel model;
+    JTextField view;
+  /**
+   * Constructor
+   */
+    public modelToTextAdaptor(WlzFltModel mdl, JTextField vw) {
+      view = vw;
+      model = mdl;
+    }
+
+    Float flote;
+  /**
+   * Adaptor, changes the <b>view</b> of the text field when the model changes.
+   * @param	void
+   * @return	boolean	true if the component can fire events
+   */
+    public void stateChanged(ChangeEvent e) {
+      flote = new Float(model.getValue());
+      view.setText(flote.toString());
+    }
+  } // class modelToTextAdaptor
+
+//---------------------------------------
+  // MODEL ADAPTORS
+//---------------------------------------
+  // allows this bean to fire events
+  public static class modelToThisAdaptor
+		implements ChangeListener {
+
+    WSetter target;
+  /**
+   * Constructor
+   */
+    public modelToThisAdaptor(WSetter wst) {
+      target = wst;
+    }
+
+  /**
+   * Adaptor, fires an event from the bean when the model changes.
+   * @param	ChangeEvent e
+   * @return	void
+   */
+    public void stateChanged(ChangeEvent e) {
+      target.fireChange();
+    }
+  } // class modelToThisAdaptor
+
+//===========================================
+// fire events and manage listeners
+//===========================================
+  // keep track of all the listeners to this model
+  protected EventListenerList changeListeners =
+     new EventListenerList();
+
+  /**
+   * Adds a ChangeListener for events fired from this bean.
+   * @param	ChangeListener x
+   * @return	void
+   */
+  public void addChangeListener(ChangeListener x) {
+     changeListeners.add (ChangeListener.class, x);
+
+     // bring it up to date with current state
+     x.stateChanged(new ChangeEvent(this));
+  }
+
+  /**
+   * Removes a ChangeListener for events fired from this bean.
+   * @param	ChangeListener x
+   * @return	void
+   */
+  public void removeChangeListener(ChangeListener x) {
+     changeListeners.remove (ChangeListener.class, x);
+  }
+
+  /**
+   * Fires an event if the slider model changes.
+   * @param	void
+   * @return	void
+   */
+  protected void fireChange() {
+     if(_enabled == true) {
+	// Create the event:
+	ChangeEvent ce = new ChangeEvent(this);
+	// Get the listener list
+	Object[] listeners =
+	   changeListeners.getListenerList();
+	// Process the listeners last to first
+	// List is in pairs, Class and instance
+	for (int i
+	      = listeners.length-2; i >= 0; i -= 2) {
+	   if (listeners[i] == ChangeListener.class) {
+	      ChangeListener cl = (ChangeListener)listeners[i+1];
+	      cl.stateChanged(ce);
+	   }
+	}
+     }
+  } // fireChange
 } // class WSetter
