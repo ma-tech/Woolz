@@ -1238,9 +1238,10 @@ WlzAffineTransform *WlzRegICPTreeAndVertices(AlcKDTTree *tree,
 * \param        sVx 			The source vertices.
 * \param	sNr			The source normals.
 * \param	tVxBuf			A buffer with room for at least
-*					nS vertices.
-* \param	sVxBuf			A buffer with room for at least
-*					nS vertices.
+*					nS vertices. Used for target vertices.
+* \param	sTVxBuf			A buffer with room for at least
+*					nS vertices. Used for transformed
+*					source vertices.
 * \param	wgtBuf			A buffer with room for at least
 *					nS doubles.
 * \param	maxItr			Maximum number of iterations.
@@ -1261,7 +1262,7 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 				int nT, WlzVertexP tVx, WlzVertexP tNr,
 				int nS, int *sIdx,
 				WlzVertexP sVx, WlzVertexP sNr,
-				WlzVertexP tVxBuf, WlzVertexP sVxBuf,
+				WlzVertexP tVxBuf, WlzVertexP sTVxBuf,
 				double *wgtBuf, int maxItr,
 				WlzAffineTransform *initTr, int *dstConv,
 				WlzRegICPUsrWgtFn usrWgtFn, void *usrWgtData,
@@ -1325,7 +1326,7 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	  sN.d2 = *(sNr.d2 + idV);
 	  sTV.d2 = WlzAffineTransformVertexD2(curTr, sV.d2, NULL);
 	  sTN.d2 = WlzAffineTransformNormalD2(curTr, sN.d2, NULL);
-	  *(sVxBuf.d2 + idM) = sTV.d2;
+	  *(sTVxBuf.d2 + idM) = sTV.d2;
 	  vxD[0] = sTV.d2.vtX;
 	  vxD[1] = sTV.d2.vtY;
 	}
@@ -1335,7 +1336,7 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	  sN.d3 = *(sNr.d3 + idV);
 	  sTV.d3 = WlzAffineTransformVertexD3(curTr, sV.d3, NULL);
 	  sTN.d3 = WlzAffineTransformNormalD3(curTr, sN.d3, NULL);
-	  *(sVxBuf.d3 + idM) = sTV.d3;
+	  *(sTVxBuf.d3 + idM) = sTV.d3;
 	  vxD[0] = sTV.d3.vtX;
 	  vxD[1] = sTV.d3.vtY;
 	  vxD[2] = sTV.d3.vtZ;
@@ -1374,14 +1375,14 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	{
 	  if(vType == WLZ_VERTEX_D2)
 	  {
-	    sTV.d2 = *(sVxBuf.d2 + idS);
+	    sTV.d2 = *(sTVxBuf.d2 + idS);
 	    tV.d2 = *(tVxBuf.d2 + idS);
 	    WLZ_VTX_2_SUB(dV.d2, tV.d2, sTV.d2);
 	    dist = WLZ_VTX_2_LENGTH(dV.d2);
 	  }
 	  else /* vType == WLZ_VERTEX_D3 */
 	  {
-	    sTV.d3 = *(sVxBuf.d3 + idS);
+	    sTV.d3 = *(sTVxBuf.d3 + idS);
 	    tV.d3 = *(tVxBuf.d3 + idS);
 	    WLZ_VTX_3_SUB(dV.d3, tV.d3, sTV.d3);
 	    dist = WLZ_VTX_3_LENGTH(dV.d3);
@@ -1390,7 +1391,7 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	  wNr = (sgnNrm && (tD0 < 0.0))? 0.0: tD0 * tD0;
 	  tD0 = (curMaxDist > DBL_EPSILON)?
 	        (curMaxDist - dist) / curMaxDist: 0.0;
-          wVx = tD0 * tD0;
+          wVx = 0.5 * (1.0 + (tD0 * tD0));
 	  if(usrWgtFn)
 	  {
 	    if(vType == WLZ_VERTEX_D2)
@@ -1414,14 +1415,14 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	{
 	  case WLZ_TRANSFORM_2D_REG:
 	  case WLZ_TRANSFORM_3D_REG:
-	    newTr = WlzAffineTransformLSqSVD(vType, idM,
-					     wgtBuf, sVxBuf, tVxBuf,
+            newTr = WlzAffineTransformLSqSVD(vType, idM,
+					     wgtBuf, tVxBuf, sTVxBuf,
 					     trType, &errNum);
 	    break;
 	  case WLZ_TRANSFORM_2D_AFFINE:
 	  case WLZ_TRANSFORM_3D_AFFINE:
 	    newTr = WlzAffineTransformLSqWgt(vType, idM,
-					     wgtBuf, sVxBuf, tVxBuf,
+					     wgtBuf, sTVxBuf, tVxBuf,
 					     trType, &errNum);
 	    break;
 	  default:
@@ -1447,7 +1448,7 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 	    }
 	    else
 	    {
-	      tmpTr = WlzAffineTransformProduct(curTr, newTr, &errNum);
+              tmpTr = WlzAffineTransformProduct(newTr, curTr, &errNum);
 	      WlzFreeAffineTransform(curTr);
 	      WlzFreeAffineTransform(newTr);
 	      curTr = tmpTr;
