@@ -975,8 +975,6 @@ extern void			*WlzPopFreePtr(
 				  void *stack,
 				  void **data,
 				  WlzErrorNum *dstErr);
-extern WlzErrorNum		WlzFreeFreePtr(
-				  void *stack);
 #endif /* !WLZ_EXT_BIND */
 extern WlzErrorNum		WlzFreeObj(
 				  WlzObject *obj);
@@ -1001,10 +999,10 @@ extern WlzErrorNum		WlzFreeConvHull(
 				  WlzConvHullValues *convh);
 extern WlzErrorNum		WlzFreeHistogramDomain(
 				  WlzHistogramDomain *hist);
-extern WlzErrorNum		WlzFreeWarpTrans(
-				  WlzWarpTrans *obj);
-extern WlzErrorNum		WlzFreeFMatchObj(
-				  WlzFMatchObj *obj);
+/*extern WlzErrorNum		WlzFreeWarpTrans(
+				  WlzWarpTrans *obj);*/
+/*extern WlzErrorNum		WlzFreeFMatchObj(
+				  WlzFMatchObj *obj);*/
 extern WlzErrorNum		WlzFree3DWarpTrans(
 				  Wlz3DWarpTrans *obj);
 extern WlzErrorNum		WlzFreeContour(

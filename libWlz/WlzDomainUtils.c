@@ -489,7 +489,7 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
     if( pdom->domains[p].i != NULL && !WlzIsEmpty(&tempobj, NULL)  )
       firstplane = p;
   }
-  if( np == NULL ){
+  if( np == 0 ){
     firstplane = 0;
     lastplane = 0;
   }
