@@ -73,6 +73,7 @@ WlzObject *WlzEffReadObjJpeg(
   WlzPixelV	bckgrnd;
   int		i, rOff;
   WlzGreyP	wlzData;
+  AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* check input */
@@ -189,7 +190,11 @@ WlzObject *WlzEffReadObjJpeg(
 				  NULL, NULL, &errNum) ){
 	  rtnObj->values.r->freeptr = 
 	    AlcFreeStackPush(rtnObj->values.r->freeptr,
-			     (void *) wlzData.ubp, &errNum);
+			     (void *) wlzData.ubp, &alcErr);
+	  if(alcErr != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
 	}
 	else{
 	  AlcFree((void *) wlzData.ubp);
