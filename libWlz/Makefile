@@ -129,6 +129,7 @@ CSOURCES		= \
 			WlzMakeIntervalValues.c \
 			WlzMakeProperties.c \
 			WlzMakeStructs.c \
+			WlzMeshGen.c \
 			WlzMeshTransform.c \
 			WlzMeshUtils.c \
 			WlzMatchICP.c \
