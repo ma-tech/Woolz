@@ -304,6 +304,7 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
   		srcDom;
   WlzIntervalWSpace srcIWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   srcDom = srcObj->domain;
@@ -346,7 +347,7 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
       else
       {
         dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
-					     &errNum);
+					     &alcErrNum);
       }
     }
     else
@@ -452,6 +453,7 @@ static WlzObject *WlzSampleObjPoint(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzIntervalWSpace srcIWsp;
   WlzGreyWSpace	srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -507,7 +509,7 @@ static WlzObject *WlzSampleObjPoint(WlzObject *srcObj, WlzIVertex2 samFac,
       else
       {
         dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr, (void *)dstItv0,
-					     &errNum);
+					     &alcErrNum);
       }
     }
     else
@@ -694,6 +696,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -745,7 +748,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &errNum);
+					     &alcErrNum);
       }
     }
     else
@@ -1041,6 +1044,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -1092,7 +1096,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &errNum);
+					     &alcErrNum);
       }
     }
     else
@@ -1368,6 +1372,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -1420,7 +1425,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &errNum);
+					     &alcErrNum);
       }
     }
     else
@@ -1791,6 +1796,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dstDom.core = NULL;
   dstValues.core = NULL;
@@ -1843,7 +1849,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
       {
 	dstDom.i->freeptr = AlcFreeStackPush(dstDom.i->freeptr,
 					     (void *)dstItvBase,
-					     &errNum);
+					     &alcErrNum);
       }
     }
     else
@@ -2328,6 +2334,7 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
   void		*greyValues = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzValues  	values;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
  
   values.core = NULL;
   if((rBox.xMin > rBox.xMax) || (rBox.yMin > rBox.yMax))
@@ -2386,7 +2393,7 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
   if(errNum == WLZ_ERR_NONE)
   {
     values.r->freeptr = AlcFreeStackPush(values.r->freeptr,
-					 greyValues, &errNum);
+					 greyValues, &alcErrNum);
     }
   if(errNum == WLZ_ERR_NONE)
   {

@@ -244,6 +244,7 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
 #ifdef WLZ_DYNITV_TUNE_MALLOC
   static int 	tuneMalloc = 0;
 #endif /* WLZ_DYNITV_TUNE_MALLOC */
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   if(iDom == NULL)
   {
@@ -281,7 +282,7 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
       {
 	iDom->freeptr = AlcFreeStackPush(iDom->freeptr,
 					 (void *)(iPool->itvBlock),
-					 &errNum);
+					 &alcErrNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {

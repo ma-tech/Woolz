@@ -265,6 +265,7 @@ WlzErrorNum WlzFreeHistogramDomain(WlzHistogramDomain *hist)
 WlzErrorNum WlzFreeDomain(WlzDomain domain)
 {
   WlzErrorNum errNum=WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   /* check the object pointer and linkcount */
   if (domain.core == NULL){
@@ -274,12 +275,15 @@ WlzErrorNum WlzFreeDomain(WlzDomain domain)
   if( WlzUnlink(&(domain.core->linkcount), &errNum) ){
 
     if (domain.core->freeptr != NULL){
-      errNum = AlcFreeStackFree(domain.core->freeptr);
+      alcErrNum = AlcFreeStackFree(domain.core->freeptr);
     }
 
     AlcFree((void *) domain.core);
   }
 
+  if( alcErrNum != ALC_ER_NONE ){
+    errNum = WLZ_ERR_MEM_FREE;
+  }
   return errNum;
 }
 

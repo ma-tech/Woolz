@@ -216,6 +216,7 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	minItv = 1024,
   		sclItv = 16;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   dumDom.core = NULL;
   delDom.core = NULL;
@@ -275,7 +276,7 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	{
 	  delDom.i->freeptr = AlcFreeStackPush(delDom.i->freeptr,
 					       (void *)delItvBase,
-					       &errNum);
+					       &alcErrNum);
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -298,7 +299,7 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	{
 	  altDelDom.i->freeptr = AlcFreeStackPush(altDelDom.i->freeptr,
 						  (void *)altItvBase,
-						  &errNum);
+						  &alcErrNum);
 	}
       }
       skObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dumDom, dumVal, NULL, srcObj,
@@ -328,7 +329,7 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
 	{
 	  delDom.i->freeptr = AlcFreeStackPush(delDom.i->freeptr,
 					       (void *)delItvBase,
-					       &errNum);
+					       &alcErrNum);
 	}
       }
     }

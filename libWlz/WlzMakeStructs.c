@@ -898,6 +898,7 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 {
   WlzHistogramDomain *hist = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno		alcErrNum=ALC_ER_NONE;
 
   if(((type != WLZ_HISTOGRAMDOMAIN_INT) &&
       (type != WLZ_HISTOGRAMDOMAIN_FLOAT)) || (maxBins < 0))
@@ -923,7 +924,7 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 	{
 	  hist->freeptr = AlcFreeStackPush(hist->freeptr,
 					   (void *)(hist->binValues.inp),
-					   &errNum);
+					   &alcErrNum);
 	}
 	break;
       case WLZ_HISTOGRAMDOMAIN_FLOAT:
@@ -936,7 +937,7 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 	{
 	  hist->freeptr = AlcFreeStackPush(hist->freeptr, 
 					   (void *)(hist->binValues.dbp),
-					   &errNum);
+					   &alcErrNum);
 	}
 	break;
     }
