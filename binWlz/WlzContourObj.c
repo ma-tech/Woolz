@@ -32,6 +32,7 @@ int             main(int argc, char **argv)
   int           option,
   		ok = 1,
 		usage = 0,
+		flip = 0,
 		unitVoxelSz = 0;
   double	ctrVal = 100,
   		ctrWth = 1.0;
@@ -45,7 +46,7 @@ int             main(int argc, char **argv)
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bghirUo:v:w:";
+  static char	optList[] = "bghilrUo:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -70,6 +71,9 @@ int             main(int argc, char **argv)
 	break;
       case 'i':
         ctrMtd = WLZ_CONTOUR_MTD_ISO;
+	break;
+      case 'l':
+        flip = 1;
 	break;
       case 'r':
         ctrMtd = WLZ_CONTOUR_MTD_RBFBND;
@@ -165,6 +169,20 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
+    if(flip && ctrDom.core && ctrDom.ctr->model)
+    {
+      if((errNum = WlzGMFilterFlipOrient(ctrDom.ctr->model)) != WLZ_ERR_NONE)
+      {
+        ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	(void )fprintf(stderr,
+		       "%s: Failed to flip orientation (%s).\n",
+		       argv[0], errMsgStr);
+      }
+    }
+  }
+  if(ok)
+  {
   if((fP = (strcmp(outFileStr, "-")?
 	   fopen(outFileStr, "w"): stdout)) == NULL)
     {
@@ -227,6 +245,7 @@ int             main(int argc, char **argv)
       "  -b  Compute object boundary contours.\n"
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
+      "  -l  Flip orientation (normals will be reversed).\n"
       "  -r  Compute object boundary contours using radial basis functions.\n"
       "  -U  Use unit voxel size.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
