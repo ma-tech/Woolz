@@ -85,7 +85,9 @@ public class AnatomyBuilder {
    *   Prevents access to anatomy menus until they have been built.
    */
   public final Object _lock = new Object();
-  private final Font menuFont = new Font("default", Font.PLAIN, 11);
+
+  //private Font _menuFont = new Font("default", Font.PLAIN, 11);
+  private Font _menuFont = null;
 
   /**
    *   Returns the lock object which prevents access to anatomy menus
@@ -98,9 +100,15 @@ public class AnatomyBuilder {
 
   // constructor
   /**
-   *   Default constructor
+   *   Constructs an AnatomyBuilder with the default Font.
    */
   public AnatomyBuilder() {
+     this(null);
+  }
+  /**
+   *   Constructs an AnatomyBuilder with the given Font.
+   */
+  public AnatomyBuilder(Font font) {
      _anaFileStack = new Stack();
      _embFileStack = new Stack();
      _xembFileStack = new Stack();
@@ -108,13 +116,12 @@ public class AnatomyBuilder {
      _embObjStack = new Stack();
      _xembObjStack = new Stack();
      _anaMenu = new SelectableMenu("Anatomy");
-     _anaMenu.setFont(menuFont);
-     /*
-     _embMenu = new SelectableMenu("embryo");
-     _embMenu.setFont(menuFont);
-     _xembMenu = new SelectableMenu("extra_embryonic_component");
-     _xembMenu.setFont(menuFont);
-     */
+     if(font == null) {
+	_menuFont = _anaMenu.getFont();
+     } else {
+        _menuFont = font;
+     }
+     _anaMenu.setFont(_menuFont);
      _done = false;
   }
 
@@ -361,7 +368,7 @@ public class AnatomyBuilder {
 	thisFile = new File(fullPath + SLASH + contents[i]);
 	if (thisFile.isDirectory()) {
 	   SelectableMenu subMenu = new SelectableMenu(thisFile.getName());
-           subMenu.setFont(menuFont);
+           subMenu.setFont(_menuFont);
            subMenu.setActionCommand(fullPath + SLASH + contents[i]);
 	   menu.add(subMenu);
 
@@ -375,7 +382,7 @@ public class AnatomyBuilder {
 
 	      JMenuItem item = new JMenuItem(
 	               leafMod(thisFile.getName()));
-                item.setFont(menuFont);
+                item.setFont(_menuFont);
 	      item.setActionCommand(fullPath + SLASH + contents[i]);
 	      menu.add(item, 0);
 

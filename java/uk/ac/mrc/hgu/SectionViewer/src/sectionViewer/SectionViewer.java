@@ -207,7 +207,12 @@ public class SectionViewer
    *   True if <em>openView()</em> has been called
    *   but has not completed.
    */
-  private boolean _openingView = false;
+  private boolean _viewOpening = false;
+
+  /**
+   *   True if <em>WlzImgView()</em> has been instantiated
+   */
+  public boolean _imgVReady = false;
 
   /**
    *   Flag toggled when the <em>invert button</em> is pressed.
@@ -300,41 +305,26 @@ public class SectionViewer
     handler_4 = new helpMenuHandler();
     handler_5 = new thresholdMenuHandler();
 
-    // attach event handlers to menu items
-    fileMenu_1.addActionListener(handler_1);
-    fileMenu_2.addActionListener(handler_1);
-    fileMenu_3.addActionListener(handler_1);
-    fileMenu_4.addActionListener(handler_1);
-    fileMenu_5.addActionListener(handler_1);
+    // remove any existing handlers
+    removeHandlers(fileMenu);
+    removeHandlers(controlMenu);
+    removeHandlers(showMenu);
+    removeHandlers(helpMenu);
+    //removeHandlers(thresholdMenu);
 
-    controlMenu_1_1.addActionListener(handler_2);
-    controlMenu_1_2.addActionListener(handler_2);
-    controlMenu_1_3.addActionListener(handler_2);
-    controlMenu_2_1.addActionListener(handler_2);
-    controlMenu_2_2.addActionListener(handler_2);
-    controlMenu_2_3.addActionListener(handler_2);
-    controlMenu_3_1.addActionListener(handler_2);
-    controlMenu_3_2.addActionListener(handler_2);
-    controlMenu_3_3.addActionListener(handler_2);
-    controlMenu_4_1.addActionListener(handler_2);
-    controlMenu_4_2.addActionListener(handler_2);
-    controlMenu_4_3.addActionListener(handler_2);
-    controlMenu_5.addActionListener(handler_2);
+    // attach appropriate event handler
+    addHandler(fileMenu, handler_1);
+    addHandler(controlMenu, handler_2);
+    addHandler(showMenu, handler_3);
+    addHandler(helpMenu, handler_4);
+    //addHandler(thresholdMenu, handler_5);
 
-    showMenu_1.addActionListener(handler_3);
-    showMenu_2.addActionListener(handler_3);
-    showMenu_3.addActionListener(handler_3);
-    showMenu_4.addActionListener(handler_3);
-    showMenu_5.addActionListener(handler_3);
-
-    thresholdMenu_1.addActionListener(handler_5);
-    thresholdMenu_2.addActionListener(handler_5);
-    thresholdMenu_3.addActionListener(handler_5);
-    thresholdMenu_4.addActionListener(handler_5);
-
-    helpMenu_1.addActionListener(handler_4);
-    helpMenu_2.addActionListener(handler_4);
-    helpMenu_3.addActionListener(handler_4);
+    // attach appropriate menu font
+    Utils.attachMenuFont(fileMenu, _menuFont);
+    Utils.attachMenuFont(controlMenu, _menuFont);
+    Utils.attachMenuFont(showMenu, _menuFont);
+    Utils.attachMenuFont(helpMenu, _menuFont);
+    //Utils.attachMenuFont(thresholdMenu, _menuFont);
 
     colourHandler = new planeColChooser();
     secColorClt.addActionListener(colourHandler);
@@ -393,6 +383,151 @@ public class SectionViewer
     if (_debug)
       System.out.println("exit SectionViewer");
   } // constructor
+
+//-------------------------------------------------------------
+// methods for adding / removing event handler to / from menu items
+//-------------------------------------------------------------
+  /**
+   *   Removes event handler(s) from menu items.
+   */
+  public void removeHandlers(JComponent menu) {
+
+     int numElements = 0;
+     MenuElement elements[] = null;
+     MenuElement el = null;
+     int numListeners = 0;
+     ActionListener listeners[] = null;
+
+     /*
+      * note that the elements returned by getSubElements()
+      * may be JMenu, JPopupMenu or JMenuItem (but not JSeparator).
+      */
+
+     // System.out.println("------------------");
+     // System.out.println("menu is a "+menu.getClass().getName());
+     if(menu instanceof JMenu) {
+        //System.out.println(((JMenu)menu).getText());
+	/* get the menu elements */
+        elements = ((JMenu)menu).getSubElements();
+	if(elements == null) return;
+	numElements = elements.length;
+	for(int i=0; i<numElements; i++) {
+	   el = elements[i];
+	   // System.out.println("el is a "+el.getClass().getName());
+	   if(el instanceof JPopupMenu) {
+	      removeHandlers((JPopupMenu)el);
+	   } else if(el instanceof JMenuItem) {
+	      listeners = ((JMenuItem)el).getActionListeners();
+	      numListeners = listeners.length;
+	      if(numListeners > 0) {
+		 for(int k=0; k<numListeners; k++) {
+		    ((JMenuItem)el).removeActionListener(listeners[k]);
+		 }
+	      } // if
+	   }
+        }
+     }
+     if(menu instanceof JPopupMenu) {
+	/* get the menu elements */
+        elements = ((JPopupMenu)menu).getSubElements();
+	if(elements == null) return;
+	numElements = elements.length;
+	for(int i=0; i<numElements; i++) {
+	   el = elements[i];
+	   // System.out.println("el is a "+el.getClass().getName());
+	   if(el instanceof JMenu) {
+	      /*
+	       * make sure JMenu goes before JMenuItem
+	       * as JMenu is a JMenuItem and would be missed.
+	       */
+	      removeHandlers((JMenu)el);
+	   } else if(el instanceof JMenuItem) {
+	      listeners = ((JMenuItem)el).getActionListeners();
+	      numListeners = listeners.length;
+	      if(numListeners > 0) {
+		 for(int k=0; k<numListeners; k++) {
+		    ((JMenuItem)el).removeActionListener(listeners[k]);
+		 }
+	      } // if
+	   }
+        }
+     }
+  }
+
+//--------------------------------------
+  /**
+   *   Adds event handler to menu items.
+   *   Assumes that all items in the menu have the same event handler.
+   */
+  public void addHandler(JComponent menu, ActionListener handler) {
+
+     int numElements = 0;
+     MenuElement elements[] = null;
+     MenuElement el = null;
+
+     /*
+      * note that the elements returned by getSubElements()
+      * may be JMenu, JPopupMenu or JMenuItem (but not JSeparator).
+      */
+
+     // System.out.println("------------------");
+     // System.out.println("menu is a "+menu.getClass().getName());
+     if(menu instanceof JMenu) {
+        // System.out.println(((JMenu)menu).getText());
+	/* get the menu elements */
+        elements = ((JMenu)menu).getSubElements();
+	if(elements == null) return;
+	numElements = elements.length;
+	for(int i=0; i<numElements; i++) {
+	   el = elements[i];
+	   // System.out.println("el is a "+el.getClass().getName());
+	   if(el instanceof JPopupMenu) {
+	      addHandler((JPopupMenu)el, handler);
+	   } else if(el instanceof JMenuItem) {
+	      ((JMenuItem)el).addActionListener(handler);
+	   }
+        }
+     }
+     if(menu instanceof JPopupMenu) {
+	/* get the menu elements */
+        elements = ((JPopupMenu)menu).getSubElements();
+	if(elements == null) return;
+	numElements = elements.length;
+	for(int i=0; i<numElements; i++) {
+	   el = elements[i];
+	   // System.out.println("el is a "+el.getClass().getName());
+	   if(el instanceof JMenu) {
+	      /*
+	       * make sure JMenu goes before JMenuItem
+	       * as JMenu is a JMenuItem and would be missed.
+	       */
+	      addHandler((JMenu)el, handler);
+	   } else if(el instanceof JMenuItem) {
+	      ((JMenuItem)el).addActionListener(handler);
+	   }
+        }
+     }
+  }
+
+//-------------------------------------------------------------
+// methods for setting menu font
+//-------------------------------------------------------------
+  /**
+   *   Sets the font to be used for all menus.
+   *   @param font the font to be used.
+   */
+  public void setMenuFont(Font font) {
+     _menuFont = font;
+     Utils.attachMenuFont(_menubar, _menuFont);
+  }
+
+  /**
+   *   Gets the font used for all menus.
+   *   @return _menuFont.
+   */
+  public Font getMenuFont() {
+     return _menuFont;
+  }
 
 //-------------------------------------------------------------
 // methods for adding / removing panels from the gui
@@ -503,6 +638,8 @@ public class SectionViewer
    */
   public void openView() {
 
+    _viewOpening = true;
+
     if (_imgV != null) {
       _bigPanel.remove(_imgV);
       _bigPanel.repaint();
@@ -511,16 +648,30 @@ public class SectionViewer
       _anatBuilder = null;
       _anaFileStack = null;
       _anaObjStack = null;
-      /*
-      _embFileStack = null;
-      _xembFileStack = null;
-      _embObjStack = null;
-      _xembObjStack = null;
-      */
       resetFeedbackText();
     }
 
-    _imgV = new WlzImgView();
+    SVLocks Locks = null;
+    try {
+      Method M0 = null;
+      M0 = _parent.getClass().getMethod("getSVLocks", null);
+      Locks = (SVLocks) M0.invoke(_parent, null);
+    }
+    catch (InvocationTargetException e) {
+      System.out.println(e.getMessage());
+    }
+    catch (NoSuchMethodException ne) {
+      System.out.println("getSVLocks: no such method");
+    }
+    catch (IllegalAccessException ae) {
+      System.out.println(ae.getMessage());
+    }
+    synchronized(Locks._svpLock4) {
+       _imgV = new WlzImgView();
+       _imgVReady = true;
+       Locks._svpLock4.notifyAll();
+    }
+
     _bigPanel.add(_imgV);
 
     if (_OBJModel != null) {
@@ -529,8 +680,6 @@ public class SectionViewer
     if (_VSModel != null) {
       _VSModel = null;
     }
-
-    _openingView = true;
 
     try {
       Method M1 = null;
@@ -568,24 +717,7 @@ public class SectionViewer
     connectAdaptors_1();
     // set WSetters according to which view is set
     resetGUI();
-    /*
-    try {
-      Method M1 = null;
-      M1 = _parent.getClass().getMethod("getSVTitleText", null);
-      setTitleText( (String) M1.invoke(_parent, null));
-    }
-    catch (InvocationTargetException e) {
-      System.out.println(e.getMessage());
-    }
-    catch (NoSuchMethodException ne) {
-      System.out.println("getSVTitleText: no such method");
-      System.out.println(ne.getMessage());
-    }
-    catch (IllegalAccessException ae) {
-      System.out.println(ae.getMessage());
-    }
-    //setTitleText(_parent.getTitleText());
-    */
+
     setViewTitle();
     try {
       Method M1 = null;
@@ -611,7 +743,7 @@ public class SectionViewer
     /* to show intersection of this view on existing views */
     _VSModel.fireChange();
 
-    _openingView = false;
+    _viewOpening = false;
 
   } // openView()
 
@@ -1904,7 +2036,7 @@ public class SectionViewer
    *   Returns the current <em>WlzImgView</em>.
    *   @return _imgV.
    */
-  protected WlzImgView getImageView() {
+  public WlzImgView getImageView() {
     return _imgV;
   }
 
@@ -1954,6 +2086,55 @@ public class SectionViewer
    */
   protected JButton getSecColorClt() {
     return secColorClt;
+  }
+
+//-----------------------------
+  /**
+   *   Returns the <em>file menu</em>.
+   *   @return fileMenu.
+   */
+  protected JMenu getFileMenu() {
+    return fileMenu;
+  }
+
+  /**
+   *   Returns the <em>file menu string</em>.
+   *   @return fileMenu_1str.
+   */
+  protected String getFileMenu_1str() {
+    return fileMenu_1str;
+  }
+
+  /**
+   *   Returns the <em>file menu string</em>.
+   *   @return fileMenu_2str.
+   */
+  protected String getFileMenu_2str() {
+    return fileMenu_2str;
+  }
+
+  /**
+   *   Returns the <em>file menu string</em>.
+   *   @return fileMenu_3str.
+   */
+  protected String getFileMenu_3str() {
+    return fileMenu_3str;
+  }
+
+  /**
+   *   Returns the <em>file menu string</em>.
+   *   @return fileMenu_4str.
+   */
+  protected String getFileMenu_4str() {
+    return fileMenu_4str;
+  }
+
+  /**
+   *   Returns the <em>file menu string</em>.
+   *   @return fileMenu_5str.
+   */
+  protected String getFileMenu_5str() {
+    return fileMenu_5str;
   }
 
 //-------------------------------------------------------------
@@ -2910,8 +3091,45 @@ public class SectionViewer
   }
 
 //......................................
+  public JMenuItem getMenuItem(String menuStr) {
+     
+     JMenuItem ret = null;
 
+     // add more as and when required
+     if(menuStr.equals(controlMenu_1_1str)) {
+	ret = controlMenu_1_1;
+     } else if(menuStr.equals(showMenu_1str)) {
+	ret = showMenu_1;
+     } else if(menuStr.equals(showMenu_2str)) {
+	ret = showMenu_2;
+     } else if(menuStr.equals(showMenu_3str)) {
+	ret = showMenu_3;
+     } else if(menuStr.equals(showMenu_4str)) {
+	ret = showMenu_4;
+     } else if(menuStr.equals(showMenu_5str)) {
+	ret = showMenu_5;
+     }
 
+     return ret;
+  }
+
+//......................................
+  public JPanel getPanel(String panelStr) {
+     
+     JPanel ret = null;
+
+     // add more as and when required
+     if(panelStr.equals("menuPanel")) {
+        ret = menuPanel;
+     }
+
+     return ret;
+  }
+
+//......................................
+  public boolean isViewOpening() {
+     return _viewOpening;
+  }
 //HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 //-------------------------------------------------------------
 // inner classes for event handling
@@ -3243,8 +3461,7 @@ public class SectionViewer
               thresholdMenu_3.doClick();
             }
             thresholdMenu_4.doClick();
-          }
-          else {
+          } else {
             disableAnatomy();
             removeOverlay();
             resetAnatomyText();

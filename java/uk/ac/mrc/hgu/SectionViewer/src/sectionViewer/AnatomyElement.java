@@ -50,7 +50,7 @@ public class AnatomyElement {
     *   Returns the anatomy component.
     *   @return the 3D Woolz object representing the anatomy component.
     */
-   protected WlzObject getObj() {
+   public WlzObject getObj() {
       return _obj;
    }
 
@@ -68,7 +68,7 @@ public class AnatomyElement {
     *   Visible here means that the anatomy component will be displayed
     *   if it is intersected by the 2D section.
     */
-   protected boolean isVisible() {
+   public boolean isVisible() {
       return _visible;
    }
 

@@ -27,12 +27,35 @@ public class SVFrameInt extends JInternalFrame {
    // constructor
    //=========================================================
    /**
-    *   Constructs an SVFrameInt with the given title.
+    *   Constructs an SVFrameInt with the given title
+    *   and resizable.
     *   @param viewstr
     */
    public SVFrameInt(String viewstr) {
+      this(viewstr,true,false,false,false);
+   }
 
-      super(viewstr);
+   //---------------------------------------------
+   /**
+    *   Constructs an SVFrameInt with the given title
+    *   and window controls.
+    *   @param viewstr
+    *   @param resizeable
+    *   @param closeable
+    *   @param maximizable
+    *   @param iconifiable
+    */
+   public SVFrameInt(String viewstr,
+                     boolean resizeable,
+		     boolean closeable,
+		     boolean maximizeable,
+		     boolean iconifiable) {
+
+      super(viewstr,
+            resizeable,
+	    closeable,
+	    maximizeable,
+	    iconifiable);
 
       if (_debug) System.out.println("enter SVFrameInt");
 

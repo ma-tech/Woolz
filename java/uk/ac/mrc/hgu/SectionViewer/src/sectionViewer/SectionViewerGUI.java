@@ -66,7 +66,8 @@ public class SectionViewerGUI extends JPanel {
   int transH;
 
   /**   Font used for the menus. */
-  protected final Font menuFont = new Font("default", Font.PLAIN, 11);
+  //protected final Font _menuFont = new Font("default", Font.PLAIN, 11);
+  protected Font _menuFont = null;
 
   /**   Font used for feedback text. */
   protected final Font feedbackFont = new Font("default", Font.PLAIN, 11);
@@ -74,16 +75,6 @@ public class SectionViewerGUI extends JPanel {
   /**   Font used for <em>mouse-click anatomy</em> feedback text. */
   protected final Font anatomyFont = new Font("default", Font.ITALIC, 11);
 
-/* obsolete
-  JPanel titlePanel = new JPanel();
-  JPanel titlePanel_1 = new JPanel();
-  JPanel titlePanel_2 = new JPanel();
-  JPanel titlePanel_3 = new JPanel();
-*/
-
-  //ScrollableTextField titleText = new ScrollableTextField();
-
-  // no longer contains title text field
   /**
    *   Outer container for menus.
    *   <br>titleMenuPanel used to contain a text field
@@ -605,12 +596,15 @@ public class SectionViewerGUI extends JPanel {
     transH = pyrH+vgap+rotH;
 
 //----------------------------------------------------------
-    fileMenu.setFont(menuFont);
-    fileMenu_1.setFont(menuFont);
-    fileMenu_2.setFont(menuFont);
-    fileMenu_3.setFont(menuFont);
-    fileMenu_4.setFont(menuFont);
-    fileMenu_5.setFont(menuFont);
+    /*
+    fileMenu.setFont(_menuFont);
+    fileMenu_1.setFont(_menuFont);
+    fileMenu_2.setFont(_menuFont);
+    fileMenu_3.setFont(_menuFont);
+    fileMenu_4.setFont(_menuFont);
+    fileMenu_5.setFont(_menuFont);
+    */
+    _menuFont = _menubar.getFont();
 
     fileMenu.add(fileMenu_1);
     fileMenu.addSeparator();
@@ -626,24 +620,26 @@ public class SectionViewerGUI extends JPanel {
     fileMenu_5.setEnabled(true);
  //...............................
  //...............................
-    controlMenu.setFont(menuFont);
-    controlMenu_1.setFont(menuFont);
-    controlMenu_2.setFont(menuFont);
-    controlMenu_3.setFont(menuFont);
-    controlMenu_4.setFont(menuFont);
-    controlMenu_5.setFont(menuFont);
-    controlMenu_1_1.setFont(menuFont);
-    controlMenu_1_2.setFont(menuFont);
-    controlMenu_1_3.setFont(menuFont);
-    controlMenu_2_1.setFont(menuFont);
-    controlMenu_2_2.setFont(menuFont);
-    controlMenu_2_3.setFont(menuFont);
-    controlMenu_3_1.setFont(menuFont);
-    controlMenu_3_2.setFont(menuFont);
-    controlMenu_3_3.setFont(menuFont);
-    controlMenu_4_1.setFont(menuFont);
-    controlMenu_4_2.setFont(menuFont);
-    controlMenu_4_3.setFont(menuFont);
+    /*
+    controlMenu.setFont(_menuFont);
+    controlMenu_1.setFont(_menuFont);
+    controlMenu_2.setFont(_menuFont);
+    controlMenu_3.setFont(_menuFont);
+    controlMenu_4.setFont(_menuFont);
+    controlMenu_5.setFont(_menuFont);
+    controlMenu_1_1.setFont(_menuFont);
+    controlMenu_1_2.setFont(_menuFont);
+    controlMenu_1_3.setFont(_menuFont);
+    controlMenu_2_1.setFont(_menuFont);
+    controlMenu_2_2.setFont(_menuFont);
+    controlMenu_2_3.setFont(_menuFont);
+    controlMenu_3_1.setFont(_menuFont);
+    controlMenu_3_2.setFont(_menuFont);
+    controlMenu_3_3.setFont(_menuFont);
+    controlMenu_4_1.setFont(_menuFont);
+    controlMenu_4_2.setFont(_menuFont);
+    controlMenu_4_3.setFont(_menuFont);
+    */
 
     controlMenu.add(controlMenu_1);
     controlMenu.add(controlMenu_2);
@@ -678,12 +674,14 @@ public class SectionViewerGUI extends JPanel {
     controlMenu_4.add(controlMenu_4_3);
  //...............................
  //...............................
-    showMenu.setFont(menuFont);
-    showMenu_1.setFont(menuFont);
-    showMenu_2.setFont(menuFont);
-    showMenu_3.setFont(menuFont);
-    showMenu_4.setFont(menuFont);
-    showMenu_5.setFont(menuFont);
+    /*
+    showMenu.setFont(_menuFont);
+    showMenu_1.setFont(_menuFont);
+    showMenu_2.setFont(_menuFont);
+    showMenu_3.setFont(_menuFont);
+    showMenu_4.setFont(_menuFont);
+    showMenu_5.setFont(_menuFont);
+    */
 
     showMenu.add(showMenu_1); // cursor feedback
     showMenu.add(showMenu_2); // intersection of views
@@ -693,11 +691,13 @@ public class SectionViewerGUI extends JPanel {
     //showMenu_5.setEnabled(false);
  //...............................
  //...............................
-    thresholdMenu.setFont(menuFont);
-    thresholdMenu_1.setFont(menuFont);
-    thresholdMenu_2.setFont(menuFont);
-    thresholdMenu_3.setFont(menuFont);
-    thresholdMenu_4.setFont(menuFont);
+    /*
+    thresholdMenu.setFont(_menuFont);
+    thresholdMenu_1.setFont(_menuFont);
+    thresholdMenu_2.setFont(_menuFont);
+    thresholdMenu_3.setFont(_menuFont);
+    thresholdMenu_4.setFont(_menuFont);
+    */
 
     thresholdMenu.add(thresholdMenu_1);
     thresholdMenu.add(thresholdMenu_2);
@@ -709,10 +709,12 @@ public class SectionViewerGUI extends JPanel {
     thresholdMenu_3.setEnabled(true);
     thresholdMenu_4.setEnabled(true);
  //...............................
-    helpMenu.setFont(menuFont);
-    helpMenu_1.setFont(menuFont);
-    helpMenu_2.setFont(menuFont);
-    helpMenu_3.setFont(menuFont);
+    /*
+    helpMenu.setFont(_menuFont);
+    helpMenu_1.setFont(_menuFont);
+    helpMenu_2.setFont(_menuFont);
+    helpMenu_3.setFont(_menuFont);
+    */
 
     helpMenu.add(helpMenu_1);
     helpMenu.add(helpMenu_2);
@@ -727,15 +729,8 @@ public class SectionViewerGUI extends JPanel {
     //_menubar.add(thresholdMenu);
     _menubar.add(helpMenu);
     //----------------------------------------------------------
-    /*
-    titleFont = new Font("Helvetica", Font.PLAIN, 12);
-    titleH = titleText.getFontMetrics(titleFont).getHeight() + bord;
-    */
+    menuH = _menubar.getFontMetrics(_menuFont).getHeight() + bord;
     //......................................
-    //menuFont = new Font("default", Font.PLAIN, 11);
-    menuH = _menubar.getFontMetrics(menuFont).getHeight() + bord;
-    //......................................
-    //fbH = titleText.getFontMetrics(feedbackFont).getHeight() + bord;
     fbH = xyzTextField.getFontMetrics(feedbackFont).getHeight() + bord;
     //......................................
     xyzH = fbH+2*bord;
@@ -744,15 +739,6 @@ public class SectionViewerGUI extends JPanel {
     fbimgH = fbH+imgH+vgap;
     permH = menuH+vgap+fbimgH+vgap+distH;
     //----------------------------------------------------------
-
-    /*
-    titleText.setEditable(false);
-    titleText.setHorizontalAlignment(JTextField.CENTER);
-    titleText.setPreferredSize(new Dimension(30,titleH));
-    titleText.setFont(titleFont);
-    titleText.setText("no grey level file");
-    titleText.setBackground(titleCol);
-    */
 
     xyzTextField.setFont(feedbackFont);
     xyzTextField.setEditable(false);
@@ -766,23 +752,7 @@ public class SectionViewerGUI extends JPanel {
     anatomyTextField.setEditable(false);
     anatomyTextField.setBackground(fbCol);
 
-/*  obsolete
-    titlePanel_1.setPreferredSize(new Dimension(50,titleH+4*bord));
-    titlePanel_1.setLayout(new BorderLayout(hgap, vgap));
-    titlePanel_1.setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
-    titlePanel_1.add(titleText, BorderLayout.CENTER);
-
-    titlePanel_2.setPreferredSize(new Dimension(50, 0));
-    titlePanel_3.setPreferredSize(new Dimension(50, 0));
-
-    titlePanel.setPreferredSize(new Dimension(50,titleH+2*bord));
-    titlePanel.setLayout(new BorderLayout(hgap, vgap));
-    titlePanel.add(titlePanel_1, BorderLayout.CENTER);
-    titlePanel.add(titlePanel_2, BorderLayout.WEST);
-    titlePanel.add(titlePanel_3, BorderLayout.EAST);
-*/
     //...............................
-
     _menubar.setPreferredSize(new Dimension(0,menuH+2*bord));
     menuPanel.setPreferredSize(new Dimension(totalW, menuH+4*bord));
     menuPanel.setLayout(new BorderLayout(hgap, vgap));
