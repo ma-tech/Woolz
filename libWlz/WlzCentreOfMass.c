@@ -304,7 +304,8 @@ WlzDVertex3	WlzCentreOfMass3D(WlzObject *srcObj, int binObjFlag,
 	}
 	else
 	{
-	  if((srcValues = srcObj->values.vox) == NULL)
+	  if((srcObj->values.core == NULL) ||
+	     ((srcValues = srcObj->values.vox->values) == NULL))
 	  {
 	    binObjFlag = 1;
 	  }
