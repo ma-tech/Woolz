@@ -145,10 +145,9 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
-	  "\tAutomatically produce a tetrahedron mesh from a woolz object. But\n"
-	  "\tthe user should input some parameters to give a large cuboid which\n"
-	  "\tcover the Woolz object. Sure, you can also just give a small cuboid\n"
-	  "\tby transfer only part of your Woolz object. \n"
+	  "\tAutomatically produce a Woolz object from two Woolz objects. \n"
+	  "\tthe output woolz object has the grey values  mixed from the\n"
+	  "\tthe grey value of the two input Woolz objects. \n"
 	  "\n"
 	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
 	  "\n"
