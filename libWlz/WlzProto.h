@@ -81,6 +81,7 @@
 * \bug          None known.
 * \note
 * Maintenance log with most recent changes at top of list.
+* 23-04-03 JRAO add WlzGreyValueMixing_s();
 * 11-10-01 JRAO add WlzReadMeshTransform3D();
 * 11-10-01 JRAO add WlzWriteMeshTransform3D();
 * 19-02-03 JRao add WlzBasisFnTrFromCPts3()
@@ -3656,6 +3657,16 @@ extern void WlzMakeAffine3D4pointsTrFnByGauss(WlzDVertex3 sr1,
                                               WlzDVertex3 targ3, 
 					      WlzDVertex3 targ4, 
 			                      double    **Affine3D4pointsTrFun);
+
+					      
+/************************************************************************
+* WlzDistanceMap_S.c					         	*
+************************************************************************/
+extern WlzObject	*WlzGreyValueMixing_s(  WlzObject     *srcObj,
+                                                WlzObject     *tarObj,
+					  double          xmiddle,
+				     WlzErrorNum          *dstErr
+				 );
 
 #endif /* !WLZ_EXT_BIND */
 
