@@ -1,0 +1,34 @@
+'\" t
+.\" %W%\\t%G%
+.TH WlzFacts 1 "23 October, 1996" "MRC HGU Woolz" "Woolz Program Library"
+.SH NAME
+WlzFacts \- print out information about the input woolz objects.
+.SH SYNOPSIS
+.LP
+.BI "WlzFacts  [-h] [-f] [-m] [" "<input file>" ]
+.SH OPTIONS
+.LP
+.BI "-m " "			"
+many facts printed out.
+.LP
+.BI "-f " "			"
+few facts printed out (default).
+.LP
+.BI "-h " "			"
+usage message.
+.SH MT-LEVEL
+.LP
+Unsafe
+.SH DESCRIPTION
+.B WlzFacts
+reads woolz objects from the standard input or the given input file
+and writes out information about their structure
+(types, domain bounds, area, etc.) to stderr.
+
+.SH EXAMPLES
+.LP
+
+.SH SEE ALSO
+WlzIntro(1)
+.SH BUGS
+

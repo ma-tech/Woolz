@@ -1,0 +1,72 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzClipObjToBox.1
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz binary for clipping either a 2D or 3D domain
+.\"		objects so that it lies within a given box.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzClipObjToBox" 1 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzClipObjToBox \- Clips the given object so that it lies within
+the given box.
+.SH SYNOPSIS
+.LP
+.BI "WlzClipObjToBox [-h] [ -o" "<output object file>" ]
+.in +4m
+.br
+.BI "[ -x" "<x min>,<x max>" ]
+.BI "[ -y" "<y min>,<y max>" ]
+.BI "[ -z" "<z min>,<z max>" ]
+.br
+.BI [ "<input object file>" ]
+.in -4m
+.SH OPTIONS
+.TS
+tab(^);
+lb l.
+\-o^Output object file name.
+\-x^Column clip box limits.
+\-y^Line clip box limits.
+\-z^Plane clip box limits.
+\-h^Help, prints usage message.
+.TE
+By default the input object is read from the standard input
+and the output object is written to the standard output.
+Box limit values are comma separated and default to the
+bounding box of the input objects domain.
+.SH DESCRIPTION
+Clips the a WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ object so that it
+lies within the given box.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+# A simple example of using WlzClipObjToBox to clip an object
+# read from the standard input to a 0-128 cube.
+
+WlzClipObjToBox -x0,128 -y0,128 -z0,128 <infile.wlz >outfile.wlz
+
+# An example which used the default values so that only the row
+# and column lower bounds are clipped.
+
+WlzClipObjToBox -x0, -y0, -o outfile.wlz infile.wlz
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzClipObjToBox(3), WlzCutObjToBox(1), WlzCutObjToBox(3), WlzFacts(1).
+.SH BUGS
+Still to be found.

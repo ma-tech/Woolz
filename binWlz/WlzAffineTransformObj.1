@@ -1,0 +1,84 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzAffineTransformObj.1
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Applies an affine transform to a Woolz object.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzAffineTransformObj" 1 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzAffineTransformObj \- Applies an affine transform to a Woolz object.
+.SH SYNOPSIS
+.LP
+.BI "WlzAffineTransformObj [ -o" "<output object file>" "]"
+.in +4m
+.br
+.BI "[-L] [-M] [-N] [-P] [-R] [-h] [-3] [-i]"
+.br
+.BI "[-x" "#" ] [-y" "#" "] [-z" "#" "] [-s" "#" "] [-t" "#" "]"
+.br
+.BI "[-a" "#" "] [-b" "#" "] [-u" "#" "] [-v" "#" "] [-w" "#" "]"
+.BI "[" "<input object file>" "]"
+.in -4m
+.SH OPTIONS
+.TS
+tab(^);
+lb l.
+\-3^3D transform instead of 2D.
+\-L^use linear interpolation instead of nearest neighbour.
+\-M^print matix values.
+\-N^no transformation.
+\-P^print transform primatives.
+\-R^use radians for angles instead of degrees.
+\-a^rotation about the z-axis.
+\-b^rotation about the y-axis.
+\-h^help, prints usage message.
+\-i^invert: reflect about the y-axis.
+\-o^output object file name.
+\-s^scale factor.
+\-t^affine transform object.
+\-u^shear strength.
+\-v^shear angle in x-y plane.
+\-w^3D shear angle.
+\-x^column (x) translation.
+\-y^row (y) translation.
+\-z^plane (z) translation.
+.TE
+By default the input object is read from the standard input
+and the transformed object is written to the standard output.
+.SH DESCRIPTION
+WlzAffineTransformObj either reads an affine transform from the given
+file or computes one from the given
+transform primitives.
+If a transform object is specified then none of the transform primatives are
+used.
+Provided that the no transform flag is not set,
+then WlzAffineTransformObj transforms the input object.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+# WlzAffineTransformObj reads an object from myobj.wlz, shifts the
+# object 100 columns and 200 lines and then writes the transformed
+# object to the standard output.
+
+WlzAffineTransformObj -x100 -y200 myobj.wlz > transformed.wlz
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzAffineTransformObj(3).
+.SH BUGS
+Still to be found.

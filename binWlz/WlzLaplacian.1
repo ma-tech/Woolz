@@ -1,0 +1,65 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzLaplacian.1
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz binary which applies a Laplacian edge enhancement
+.\"		filter to a 2D domain object.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzLaplacian" 1 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzLaplacian \- Applies a Laplacian edge enhancement filter.
+.SH SYNOPSIS
+.LP
+.BI "WlzLaplacian [ -o" "<output object file>" "]"
+.BI "[-s " "kernel size" "]"
+.in +4m
+.br
+.BI "[-a]"
+.BI "[-h] [" "<input object file>" ]
+.in -4m
+.SH OPTIONS
+.TS
+tab(^);
+lb l.
+\-a^absolute value of the convolution.
+\-o^output object file name.
+\-s^convolution kernel size (3, 5 or 7), default 3.
+\-h^Help, prints usage message.
+.TE
+By default the input object is read from the standard input
+and the output object is written to the standard output.
+Unless the
+.B -a
+flag is set the resulting pixel values will be signed (for int or short
+pixel values) or centred around 128 for UBYTE pixel values.
+.SH DESCRIPTION
+Applies an edge enhancement filter to the input Woolz object,
+which must be a WLZ_2D_DOMAINOBJ with integral
+(int, short or unsigned char) grey values.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+# An example of using WlzLaplacian with the default 3X3 kernel:
+
+WlzLaplacian -o outfile.wlz infile.wlz
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzLaplacian(3).
+.SH BUGS
+Still to be found.

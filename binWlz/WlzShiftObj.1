@@ -1,0 +1,83 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzShiftObj.1
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz binary which shifts Woolz objects.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.TH "WlzShiftObj" 1 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzShiftObj \- Shifts (applies an integer translation)  Woolz objects.
+.SH SYNOPSIS
+.LP
+.BI "WlzShiftObj [ -o" "<output object file>" "]"
+.in +4m
+.br
+.BI  "[-g]"
+.br
+.BI  "[-x" "<column shift>" "]"
+.br
+.BI  "[-y" "<line shift>" "]"
+.br
+.BI  "[-z" "<plane shift>" "]"
+.br
+.BI  "[-h]"
+.BI [ "<input object file>" ]
+.in -4m
+.SH OPTIONS
+.TS
+tab(^);
+lb l.
+\-g^shift object to the origin.
+\-o^output object file name.
+\-x^column shift.
+\-y^line shift.
+\-z^plane shift.
+\-h^Help, prints usage message.
+.TE
+By default the input object is read from the standard input
+and the output object is written to the standard output.
+.SH DESCRIPTION
+Shifts a Woolz object without copying it's grey values.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+# The following c shell script uses awk(1), WlzBoundingBox(1) and
+# WlzShiftObj(1) to shift infile.wlz so that its first
+# column, line, plane are at the origin.
+
+WlzShiftObj `WlzBoundingBox infile.wlz | \\
+	     awk '{print "-x -" $1 " -y -" $2 " -z -" $3}'` \\
+	     -o outfile.wlz infile.wlz 
+
+.fi
+.cs R
+.ps +2
+
+.LP 
+.ps -2
+.cs R 24
+.nf
+
+# The following commad also shifts the object to it's origin.
+WlzShiftObj -g -o outfile.wlz infile.wlz
+.fi 
+.cs R
+.ps +2
+
+.SH SEE ALSO
+awk(1), WlzBoundingBox(1), WlzShiftObj(3).
+.SH BUGS
+Still to be found.

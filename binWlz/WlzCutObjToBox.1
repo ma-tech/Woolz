@@ -1,0 +1,93 @@
+'\" t
+.\" ident MRC HGU $Id$
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Project:    Woolz
+.\" Title:      WlzCutObjToBox.1
+.\" Date:       March 1999
+.\" Author:     Bill Hill
+.\" Copyright:	1999 Medical Research Council, UK.
+.\"		All rights reserved.
+.\" Address:	MRC Human Genetics Unit,
+.\"		Western General Hospital,
+.\"		Edinburgh, EH4 2XU, UK.
+.\" Purpose:    Woolz binary for cutting a rectangular or cuboid box
+.\"		from either a 2D or 3D domain  object.
+.\" $Revision$
+.\" Maintenance:Log changes below, with most recent at top of list.
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.tr ~
+.TH "WlzCutObjToBox" 1 "MRC HGU Woolz" "Woolz Procedure Library"
+.SH NAME
+WlzCutObjToBox \- Cuts out a filled box (rectangle or cuboid) from \
+the given object.
+.SH SYNOPSIS
+.LP
+.BI "WlzCutObjToBox [-dfhisuN] [ -o" "<output object file>" ]
+.in +4m
+.br
+.BI "[ -M" "<noise mean>" ]
+.BI "[ -S" "<noise std dev>" ]
+.br
+.BI "[ -x" "<x min>,<x max>" ]
+.BI "[ -y" "<y min>,<y max>" ]
+.br
+.BI "[ -z" "<z min>,<z max>" ]
+.BI [ "<input object file>" ]
+.in -4m
+.SH OPTIONS
+.TS
+tab(^);
+lb l s s.
+\-o^Output object file name.
+\-N^Fill background with gausian noise.
+\-M^Mean of gaussian noise.
+\-S^Standard deviation of gaussian noise.
+\-x^Column box limits.
+\-y^Line box limits.
+\-z^Plane box limits.
+.T&
+lb l l l.
+\-d^Output object has^double^value table elements.
+\-f^~~~"~~~~~"~~~~~"^float^~~"~~~~~"~~~~~~"
+\-i^~~~"~~~~~"~~~~~"^int^~~"~~~~~"~~~~~~"
+\-s^~~~"~~~~~"~~~~~"^short^~~"~~~~~"~~~~~~"
+\-u^~~~"~~~~~"~~~~~"^unsigned byte^~~"~~~~~"~~~~~~"
+.T&
+lb l s s.
+\-h^Help, prints usage message.
+.TE
+.LP
+By default the input object is read from the standard input
+and the output object is written to the standard output.
+Box limit values are comma separated and default to the
+bounding box of the input objects domain.
+The default grey value type is the same as the input object
+grey value type.
+.SH DESCRIPTION
+Cuts a WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ rectangular or cuboid
+object so that it fills the given box.
+.SH EXAMPLES
+.LP
+.ps -2
+.cs R 24
+.nf
+
+# A simple example of using WlzCutObjToBox to cut a rectangular or
+# cuboid object from the object that is read from the standard input.
+# The output object, which is written to the standard output,
+# fills the bounding box of the input object.
+
+WlzCutObjToBox <infile.wlz >outfile.wlz
+
+# An example in which the input object is used to create a
+# 0\-256 rectangular or cuboid object.
+
+WlzCutObjToBox -x0,256, -y0,256 -z0,256 -o outfile.wlz infile.wlz
+
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+WlzCutObjToBox(3), WlzClipObjToBox(1), WlzClipObjToBox(3), WlzFacts(1).
+.SH BUGS
+Still to be found.
