@@ -313,7 +313,7 @@ int		main(int argc, char *argv[])
     			       (double **)a0, (double *)x0, (double *)b0,
 			       (double **)w, sz, NULL, NULL, tol, itr,
 			       &del, &itr);
-    errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x1, tol);
+    errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x1, tol, NULL);
     for(id1 = 0; id1 < sz; ++id1)
     {
       tD0 = *(x0 + id1) - *(x1 + id1);
@@ -468,7 +468,7 @@ int		main(int argc, char *argv[])
       {
 	AlgVectorCopy(x0, b0, sz);
 	AlgMatrixCopy(a1, a0, sz, sz);
-	errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x0, tol);
+	errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x0, tol, NULL);
       }
     }
     for(id1 = 0; id1 < sz; ++id1)

@@ -447,7 +447,8 @@ extern AlgError			AlgMatrixSVSolve(
 				  int nM,
 				  int nN,
 				  double *bMat,
-				  double tol);
+				  double tol,
+				  int *dstIC);
 extern AlgError			AlgMatrixSVDecomp(double **aMat,
 				  int nM,
 				  int nN,
