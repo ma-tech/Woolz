@@ -13,6 +13,8 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 04-06-01 bill Add AlgMatrixRSTDiag.c, AlgMatrixTDiagQLI.c and
+#		AlgMatrixRSEigen.c
 # 01-02-01 bill	Add AlgCrossCorr.c
 # 07-11-00 bill Add AlgShuffle.c.
 #########################################################################
@@ -42,13 +44,16 @@ CSOURCES		= \
 			  AlgConvolve.c \
 			  AlgCrossCorr.c \
 			  AlgDebug.c \
-			  AlgHeapSort.c \
-			  AlgGamma.c \
 			  AlgFourier.c \
+			  AlgGamma.c \
+			  AlgHeapSort.c \
 			  AlgLinearFit.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLU.c \
+			  AlgMatrixRSEigen.c \
+			  AlgMatrixRSTDiag.c \
 			  AlgMatrixSV.c \
+			  AlgMatrixTDiagQLI.c \
 			  AlgMixture.c \
 			  AlgPolyLSQ.c \
 			  AlgRand.c \
