@@ -267,12 +267,12 @@ int             main(int argc, char **argv)
   /* Compute the random primatives. */
   if(ok)
   {
-    if(seedF)
+    if(seedF = 0)
     {
       (void )gettimeofday(&tp, NULL);
       seed = (tp.tv_sec * 1000000) + tp.tv_usec;
-      AlgRandSeed(seed);
     }
+    AlgRandSeed(seed);
     if(fabs(primR.tx) > 0.0)
     {
       prim0.tx += ((2.0 * AlgRandUniform()) - 1.0) * primR.tx;
