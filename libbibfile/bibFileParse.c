@@ -32,7 +32,7 @@ int		BibFileFieldParseFmt(BibFileField *topField,
 *		fields are parsed for all name strings. Parsed values 	*
 *		are allowed to overwrite those previously parsed.	*
 *		Note that string values are parsed using a char ** and	*
-*		are strdup()'d.						*
+*		are AlcStrDup()'d.						*
 * Global refs:	-							*
 * Parameters:	BibFileField *topField:	Top most field in hierarchy of	*
 *					fields to be parsed.		*

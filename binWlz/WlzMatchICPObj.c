@@ -22,7 +22,7 @@
 #include <limits.h>
 #include <float.h>
 #include <Wlz.h>
-#include <strings.h>
+#include <string.h>
 
 extern int	getopt(int argc, char * const *argv, const char *optstring);
 

@@ -27,7 +27,7 @@
 #include <Wlz.h>
 #include <bibFile.h>
 #include <WlzExtFF.h>
-#include <strings.h>
+#include <string.h>
 
 static FILE			*WlzMatchICPPlaneSecParFile(
 				  FILE *lFP,

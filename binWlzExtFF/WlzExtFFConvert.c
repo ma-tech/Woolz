@@ -86,14 +86,14 @@ int             main(int argc, char **argv)
 	}
         break;
       case 'f':
-        if((inFmt = WlzEffStringExtToFormat(optarg)) == NULL)
+        if((inFmt = WlzEffStringExtToFormat(optarg)) == 0)
 	{
 	  usage = 1;
 	  ok = 0;
 	}
 	break;
       case 'F':
-        if((outFmt = WlzEffStringExtToFormat(optarg)) == NULL)
+        if((outFmt = WlzEffStringExtToFormat(optarg)) == 0)
 	{
 	  usage = 1;
 	  ok = 0;
@@ -156,7 +156,7 @@ int             main(int argc, char **argv)
     /* Try and determine file formats from extensions if not known already. */
     if(inFmt == WLZEFF_FORMAT_NONE)
     {
-      if((inFmt = WlzEffStringExtFromFileName(inObjFileStr)) == NULL)
+      if((inFmt = WlzEffStringExtFromFileName(inObjFileStr)) == 0)
       {
         usage = 1;
 	ok = 0;
@@ -164,7 +164,7 @@ int             main(int argc, char **argv)
     }
     if(outFmt == WLZEFF_FORMAT_NONE)
     {
-      if((outFmt = WlzEffStringExtFromFileName(outObjFileStr)) == NULL)
+      if((outFmt = WlzEffStringExtFromFileName(outObjFileStr)) == 0)
       {
         usage = 1;
 	ok = 0;

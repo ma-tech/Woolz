@@ -22,9 +22,10 @@
 * Maintenance log with most recent changes at top of list.
 */
 
-#include <Wlz.h>
 #include <pwd.h>
-#include <strings.h>
+#include <string.h>
+
+#include <Wlz.h>
 
 /* function:     WlzMakeSimpleProperty    */
 /*! 
@@ -181,13 +182,13 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 		EMAP_PROPERTY_VERSION_LENGTH - 1);
       }
       if( fileName ){
-	rtnProp->fileName = strdup(fileName);
+	rtnProp->fileName = AlcStrDup(fileName);
 	rtnProp->freeptr = AlcFreeStackPush(rtnProp->freeptr,
 					    rtnProp->fileName,
 					    NULL);
       }
       if( comment ){
-	rtnProp->comment = strdup(comment);
+	rtnProp->comment = AlcStrDup(comment);
 	rtnProp->freeptr = AlcFreeStackPush(rtnProp->freeptr,
 					    rtnProp->comment,
 					    NULL);
@@ -310,7 +311,7 @@ WlzErrorNum WlzChangeEMAPProperty(
 	modifiedFlg = 1;
       }
       
-      prop->fileName = strdup(fileName);
+      prop->fileName = AlcStrDup(fileName);
       prop->freeptr = AlcFreeStackPush(prop->freeptr,
 				       prop->fileName,
 				       NULL);
@@ -325,7 +326,7 @@ WlzErrorNum WlzChangeEMAPProperty(
 	modifiedFlg = 1;
       }
       
-      prop->comment = strdup(comment);
+      prop->comment = AlcStrDup(comment);
       prop->freeptr = AlcFreeStackPush(prop->freeptr,
 				       prop->comment,
 				       NULL);

@@ -22,7 +22,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <Alc.h>
 #include <AlcTemplates.h>
 
@@ -793,7 +793,7 @@ AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
     iF = 0;
     parseS = recS;
     while((errNum == ALC_ER_NONE) &&
-          ((tokS = strtok(parseS, " \t\n")) != NULL) && *tokS)
+          ((tokS = (char *) strtok(parseS, " \t\n")) != NULL) && *tokS)
     {
       parseS = NULL;
       if((dP0 = (double *)AlcVectorExtendAndGet(vec, nV)) == NULL)

@@ -14,7 +14,7 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 #include <Wlz.h>
-#include <strings.h>
+#include <string.h>
 
 
 extern int	getopt(int argc, char * const *argv, const char *optstring);

@@ -65,7 +65,7 @@ int main(int	argc,
       usage(argv[0]);
       return( 0 );
 
-    case '-v':
+    case 'v':
       verboseFlg = 1;
       break;
 

@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include <Wlz.h>
 #include <HGUDlpList.h>
@@ -580,7 +580,7 @@ int main(
 			   NULL, NULL, &errNum);
 	newItem = (FixDomainListItem *)
 	  AlcCalloc(sizeof(FixDomainListItem), 1);
-	newItem->file = strdup(*(argv+optind));
+	newItem->file = AlcStrDup(*(argv+optind));
 	newItem->origDom = WlzAssignObject(obj2, &errNum);
 	(void) HGUDlpListInsert(dmnList, NULL, newItem,
 				freeFixDomainListItem);
@@ -688,7 +688,7 @@ int main(
     /* add the background to the list */
     newItem = (FixDomainListItem *)
       AlcCalloc(sizeof(FixDomainListItem), 1);
-    newItem->file = strdup("background");
+    newItem->file = AlcStrDup("background");
     newItem->origDom = WlzAssignObject(backObj, &errNum);
     (void) HGUDlpListInsert(dmnList, NULL, newItem,
 			    freeFixDomainListItem);
@@ -899,7 +899,7 @@ int main(
 	else {
 	  str++;
 	}
-	fileBody = strdup(str);
+	fileBody = AlcStrDup(str);
 	if( str = strstr((const char *) fileBody, (const char *) ".wlz") ){
 	  str[0] = '\0';
 	}

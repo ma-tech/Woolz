@@ -173,7 +173,7 @@ void insertPolygonDomain(
 
   cntrItem = (ContourItem *) AlcCalloc(1, sizeof(ContourItem));
   cntrItem->poly = WlzAssignPolygonDomain(poly, NULL);
-  cntrItem->uid = strdup(uid);
+  cntrItem->uid = AlcStrDup(uid);
   (void) HGUDlpListInsert(cntrList, NULL, cntrItem, freeContourItem);
 
   return;
@@ -354,8 +354,8 @@ int main(int	argc,
 
     /* make a new domain item */
     dmnItem = (DomainItem *) AlcCalloc(1, sizeof(DomainItem));
-    dmnItem->filename = strdup(filenameBuf);
-    dmnItem->uid = strdup(uidBuf);
+    dmnItem->filename = AlcStrDup(filenameBuf);
+    dmnItem->uid = AlcStrDup(uidBuf);
     dmnItem->obj = WlzAssignObject(obj, &errNum);
     (void) HGUDlpListInsert(dmnList, NULL, dmnItem, freeDomainItem);
   }
