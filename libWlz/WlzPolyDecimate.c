@@ -26,6 +26,7 @@
 *               
 * \todo         -
 * \bug          None known
+* \ingroup      WlzPolyline
 *
 * Maintenance log with most recent changes at top of list.
 */

@@ -431,15 +431,18 @@ typedef enum
   WLZ_THRESH_HIGH		     	       /* Threshold >= thresh_value */
 } WlzThresholdType;
 
-/************************************************************************
-* Polygon fill modes.						
-************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzPolyFillMode	
+* \ingroup	WlzPolyline
+* \brief	Polygon fill modes.
+*/
+enum _WlzPolyFillMode
 {
-  WLZ_SIMPLE_FILL,
-  WLZ_EVEN_ODD_FILL,
-  WLZ_VERTEX_FILL
-} WlzPolyFillMode;
+  WLZ_SIMPLE_FILL,	/*! Fill all pixels with winding number > 0 */
+  WLZ_EVEN_ODD_FILL,	/*! Fill all pixels with odd winding number */
+  WLZ_VERTEX_FILL	/*! Fill all pixels lying under the polyline */
+} 
+typedef _WlzPolyFillMode WlzPolyFillMode;
 
 /************************************************************************
 * Standard 3D views.						
@@ -1274,14 +1277,20 @@ typedef struct _WlzVoxelValues
 /************************************************************************
 * 2D Polygon domain.						
 ************************************************************************/
+/*!
+* \struct	WlzPolygonDomain
+* \ingroup	WlzPolyline
+* \brief	A 2D polyline domain with possible types:WLZ_POLYGON_INT, 
+WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
+*/
 typedef struct _WlzPolygonDomain
 {
-  WlzObjectType type;						     /* CORE */
-  int linkcount;						     /* CORE */
-  void *freeptr;						     /* CORE */
-  int nvertices;				      /* Number of verticies */
-  int maxvertices;	   /* Maximum number of verticies (space allocated). */
-  WlzIVertex2 *vtx; /* Array of verticies, may need casting according to type */
+  WlzObjectType type;			/*!< From the core domain */
+  int linkcount;			/*!< From the core domain */
+  void *freeptr;			/*!< From the core domain */
+  int nvertices;	/*!< Number of verticies */
+  int maxvertices;	/*!< Maximum number of verticies (space allocated). */
+  WlzIVertex2 *vtx; /*!< Array of verticies, may need casting according to type */
 } WlzPolygonDomain;
 
 /************************************************************************

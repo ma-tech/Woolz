@@ -17,6 +17,7 @@
 *               
 * \todo         -
 * \bug          None known
+* \ingroup      WlzPolyline
 *
 */
 

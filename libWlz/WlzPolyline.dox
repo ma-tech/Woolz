@@ -1,5 +1,29 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzPolyline.dox
+* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Thu Aug  2 16:13:50 2001
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Copyright:
+*               1994-2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Polyline operations and polyline conversion routines.
+*               
+* \todo         -
+* \bug          None known
+*
+*/
+
 /*!
 * \ingroup      Wlz
 * \defgroup      WlzPolyline
+A set of procedures for manipulating polylines, either as polygon domains
+(WlzPolygonDomain) or as a first class object (type WLZ_2D_POLYGON).
 *
 */

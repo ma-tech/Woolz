@@ -18,6 +18,7 @@
 *               
 * \todo         -
 * \bug          None known
+* \ingroup WlzPolyline
 *
 *************************************************************************
 * This module has been copied from the original woolz library and       *
