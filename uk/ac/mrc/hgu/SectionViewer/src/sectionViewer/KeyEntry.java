@@ -24,7 +24,6 @@ public class KeyEntry extends KeyEntryGUI{
 
    protected boolean _visible = true;
    protected boolean _visible3D = true;
-   protected boolean _removed = false;
 
    /**
     *   Constructs a 2D KeyEntry.
@@ -86,18 +85,6 @@ public class KeyEntry extends KeyEntryGUI{
 
 //-------------------------------------------------------------
    /**
-    *   Removes the anatomy component from the KeyEntry.
-    *   Changes the 'zap' button icon to a bent arrow.
-    */
-   public void setEntryRemoved() {
-
-      tf0.setText("");
-      tf0.setBackground(_notVizCol);
-      btn02.setIcon(replaceIcon);
-   }
-
-//-------------------------------------------------------------
-   /**
     *   Sets the visibility of the anatomy component.
     *   @param str the full name of the anatomy component.
     */
@@ -149,30 +136,6 @@ public class KeyEntry extends KeyEntryGUI{
 
 //-------------------------------------------------------------
    /**
-    *   Updates the KeyEntry with new / modified data.
-    *   Array entries may be null.
-    *   @param arr an array of AnatomyElements.
-    *   @see sectionViewer.AnatomyElement
-    */
-/*
-   public void update(AnatomyElement el) {
-
-      if(el != null) {
-	 if(el.isRemoved()) {
-	    setEntryRemoved();
-	 } else {
-	    if(el.isVisible()) {
-	       setEntryVisible(el.getDescription(), true);
-	    } else {
-	       setEntryVisible(el.getDescription(), false);
-	    }
-	 }
-      }
-   }
-*/
-
-//-------------------------------------------------------------
-   /**
     *   Returns the width of a KeyEntry.
     *   @return _entryW
     */
@@ -200,11 +163,17 @@ public class KeyEntry extends KeyEntryGUI{
 
 //-------------------------------------------------------------
    /**
-    *   True if the entry has been removed.
-    *   @return _removed
+    *   Sets the icon for 3D visibility control.
+    *   The KeyEntry will not fire an event.
+    *   @param state true if icon is 'visible'.
     */
-   public boolean isRemoved() {
-      return _removed;
+   protected void set3DVisIcon(boolean visible) {
+      if(visible) {
+         btn03.setIcon(viz3DIcon);
+      } else {
+         btn03.setIcon(notViz3DIcon);
+      }
+      _visible3D = visible;
    }
 
 //-------------------------------------------------------------
