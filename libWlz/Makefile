@@ -12,7 +12,8 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
-# 06-11-20 bill	Add WlzVerticies.c and WlzRegICP.c
+# 28-11-00 bill Add WlzGeoModelFilters.c
+# 06-11-00 bill	Add WlzVerticies.c and WlzRegICP.c
 # 29-11-99 bill	Add WlzContour.c
 #########################################################################
 
@@ -68,6 +69,7 @@ CSOURCES		= \
 			WlzGauss.c \
 			WlzGaussNoise.c \
 			WlzGeoModel.c \
+			WlzGeoModelFilters.c \
 			WlzGeometry.c \
 			WlzGreyCrossing.c \
 			WlzGreyDitherObj.c \
