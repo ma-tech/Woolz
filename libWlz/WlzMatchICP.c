@@ -884,6 +884,13 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       WlzGMModelRemResCb(sGM, WlzMatchICPShellCb, &cbData);
     }
   }
+  if(qTop)
+  {
+    if(AlcCPQItemInsert(sMSQueue, qTop) != ALC_ER_NONE)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
   /* Now a priority queue of decomposed shells each of which has more than
    * the threshold number of simplices and is registered to the target
    * model.  Transform each of the shells in the source model while
@@ -1664,8 +1671,10 @@ static int	WlzMatchICPGetPoints2D(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 
   if(mS && ((sS = mS->shell) != NULL) && (sS->child == sS->child->next))
   {
-    cV = WlzMatchICPLoopTMaxCurv2D(sS->child, sNr, minSpx, NULL);
-    /* cV = WlzMatchICPLoopTMid(sS->child); */
+    /* TODO replace WlzMatchICPLoopTMid() with variable function which
+     * gets a specified number of tie points (1, 2 or 3) for each
+     * matched shell. */
+    cV = WlzMatchICPLoopTMid(sS->child);
     if(cV)
     {
       (void )WlzGMVertexGetG2D(cV, &sV);
@@ -1751,7 +1760,8 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
   int		idN,
   		idM,
 		nVx;
-  WlzDVertex2	dVx;
+  WlzDVertex2	dVx0,
+  		dVx1;
   WlzMatchICPTPPair2D *buf = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	epsilon = 0.0001;
@@ -1778,12 +1788,14 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
      * near identical target positions. */
     idN = 0;
     idM = 1;
-    *sVx = buf->sVx;
-    *tVx = buf->tVx;
+    *(sVx + 0) = (buf + 0)->sVx;
+    *(tVx + 0) = (buf + 0)->tVx;
     while(idM < nVx)
     {
-      WLZ_VTX_2_SUB(dVx, *(tVx + idN), (buf + idM)->tVx);
-      if((fabs(dVx.vtX) > epsilon) || (fabs(dVx.vtY) > epsilon))
+      WLZ_VTX_2_SUB(dVx0, *(sVx + idN), (buf + idM)->sVx);
+      WLZ_VTX_2_SUB(dVx1, *(tVx + idN), (buf + idM)->tVx);
+      if(((fabs(dVx0.vtX) > epsilon) || (fabs(dVx0.vtY) > epsilon)) &&
+         ((fabs(dVx1.vtX) > epsilon) || (fabs(dVx1.vtY) > epsilon)))
       {
 	++idN;
 	*(sVx + idN) = (buf + idM)->sVx;
@@ -1791,7 +1803,7 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
       }
       ++idM;
     }
-    nVx = idN;
+    nVx = idN + 1;
     *nVxP = nVx;
   }
   AlcFree(buf);
