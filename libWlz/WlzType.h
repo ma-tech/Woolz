@@ -1592,7 +1592,9 @@ typedef enum _WlzContourMethod
 {
   WLZ_CONTOUR_MTD_ISO,                  /*!< Iso-value. */
   WLZ_CONTOUR_MTD_GRD,            	/*!< Maximum gradient value. */
-  WLZ_CONTOUR_MTD_BND			/*!< Object boundary. */
+  WLZ_CONTOUR_MTD_BND,			/*!< Object boundary. */
+  WLZ_CONTOUR_MTD_RBFBND		/*!< Object boundary established using
+  					     a radial basis function. */
 } WlzContourMethod;
 
 /*!
