@@ -16,6 +16,7 @@
 *		library.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 10-01-01 bill Add WlzEffVtkDataType, WlzEffVtkType and WlzEffVtkHeader.
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -332,6 +333,39 @@ typedef struct
 
 #define	WLZEFF_VTK_VERSION_MAJOR	(1)
 #define	WLZEFF_VTK_VERSION_MINOR	(0)
+
+typedef enum
+{
+  WLZEFF_VTK_DATATYPE_ASCII,
+  WLZEFF_VTK_DATATYPE_BINARY
+} WlzEffVtkDataType;
+
+typedef enum
+{
+  WLZEFF_VTK_TYPE_STRUCTURED_POINTS,
+  WLZEFF_VTK_TYPE_STRUCTURED_GRID,
+  WLZEFF_VTK_TYPE_UNSTRUCTURED_GRID,
+  WLZEFF_VTK_TYPE_POLYDATA,
+  WLZEFF_VTK_TYPE_RECTILNEAR_GRID
+} WlzEffVtkType;
+
+typedef enum
+{
+  WLZEFF_VTK_POLYDATATYPE_POINTS,
+  WLZEFF_VTK_POLYDATATYPE_VERTICIES,
+  WLZEFF_VTK_POLYDATATYPE_LINES,
+  WLZEFF_VTK_POLYDATATYPE_POLYGONS,
+  WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS
+} WlzEffVtkPolyDataType;
+
+typedef struct
+{
+  int		versionMajor;
+  int		versionMinor;
+  char		title[256];
+  WlzEffVtkDataType dataType;
+  WlzEffVtkType type;
+} WlzEffVtkHeader;
 
 /* IPLab format */
 
