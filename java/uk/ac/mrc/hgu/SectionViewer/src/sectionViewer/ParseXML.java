@@ -19,10 +19,10 @@ public class ParseXML extends DefaultHandler {
     float _fval2;
     float _fval3;
     //ViewStructModel _VSM = null;
-    SVPanel _SV = null;
+    SectionViewer _SV = null;
 
     //public ParseXML(ViewStructModel VSM) {
-    public ParseXML(SVPanel SV) {
+    public ParseXML(SectionViewer SV) {
        OK = false;
        _sval = "";
        _fval = 0.0f;

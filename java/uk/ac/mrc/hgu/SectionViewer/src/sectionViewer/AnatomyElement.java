@@ -62,7 +62,7 @@ public class AnatomyElement {
       _indx = indx;
    }
 
-   protected static int getNextIndex(AnatomyElement[] arr) {
+   public static int getNextIndex(AnatomyElement[] arr) {
       // return the lowest available empty space in the array
 
       AnatomyElement el = null;

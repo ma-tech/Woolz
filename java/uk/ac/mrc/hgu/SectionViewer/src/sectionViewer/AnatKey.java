@@ -61,11 +61,15 @@ public class AnatKey extends AnatKeyGUI{
    
 //-------------------------------------------------------------
    // makes sure only 1 instance of the class is created
-   static protected AnatKey instance() {
+   static public AnatKey instance() {
       if(_instance == null) {
          _instance = new AnatKey("anatomy key");
       }
       return _instance;
+   }
+//-------------------------------------------------------------
+   public int getNRows() {
+      return _nrows;
    }
 //-------------------------------------------------------------
    public static void setText(String str, int indx) {

@@ -224,4 +224,6 @@ _done = false;
   public SelectableMenu getEmbMenu() { return _embMenu; }
   public SelectableMenu getXEmbMenu() { return _xembMenu; }
 
+  public int getPathLengthToAnatomy() { return _pathLengthToAnatomy; }
+
 } // class AnatomyBuilder
