@@ -549,13 +549,28 @@ WlzErrorNum Wlz3DSectionTransformInvVtxR(
   WlzDVertex3	new;
   WlzErrorNum	errNum;
 
-  new.vtX = vtx->vtX;
-  new.vtY = vtx->vtY;
-  new.vtZ = vtx->vtZ;
-  errNum = Wlz3DSectionTransformInvVtx(&new, viewStr);
-  dstVtx->vtX = new.vtX;
-  dstVtx->vtY = new.vtY;
-  dstVtx->vtZ = new.vtZ;
+  printf("in Wlz3DSectionTransformInvVtxR\n");
+  if( vtx == NULL ){
+	  errNum = WLZ_ERR_PARAM_NULL;
+	  printf("vtx NULL\n");
+  }
+  else if (dstVtx == NULL){
+	  errNum = WLZ_ERR_PARAM_NULL;
+	  printf("dstVtx = NULL\n");
+  }
+  else if( viewStr == NULL ){
+	  errNum = WLZ_ERR_PARAM_NULL;
+	  printf("viewStr = NULL\n");
+  }
+  else {
+  	new.vtX = vtx->vtX;
+ 	 new.vtY = vtx->vtY;
+ 	 new.vtZ = vtx->vtZ;
+ 	 errNum = Wlz3DSectionTransformInvVtx(&new, viewStr);
+ 	 dstVtx->vtX = new.vtX;
+ 	 dstVtx->vtY = new.vtY;
+ 	 dstVtx->vtZ = new.vtZ;
+  }
   
   return errNum;
 }
@@ -1274,13 +1289,17 @@ WlzErrorNum Wlz3DViewGetMaxvals(
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
+ printf("in Wlz3DViewGetMaxvals\n");
+	 
   if( vs ){
     *dstX = vs->maxvals.vtX;
     *dstY = vs->maxvals.vtY;
     *dstZ = vs->maxvals.vtZ;
+    printf("(x,y,z) = (%f,%f,%f)\n", *dstX, *dstY, *dstZ);
   }
   else {
     errNum = WLZ_ERR_PARAM_NULL;
+    printf("Wlz3DViewGetMaxvals: NULL viewStruct\n");
   }
 
   return errNum;
@@ -1294,7 +1313,9 @@ WlzErrorNum Wlz3DViewGetMinvals(
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( vs ){
+ printf("in Wlz3DViewGetMinvals\n");
+ 	
+   if( vs ){
     *dstX = vs->minvals.vtX;
     *dstY = vs->minvals.vtY;
     *dstZ = vs->minvals.vtZ;
