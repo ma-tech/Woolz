@@ -1407,7 +1407,9 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 				      WlzObject *obj,
 				      WlzGMModel *model)
 {
-  int		dim;
+  int		idS,
+  		dim;
+  WlzGMShell	*s;
   const char	*tStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1502,6 +1504,64 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 	  errNum = WlzObjFactsAppend(fData,
 	  			     "nShellG: %d\n",
 				     model->res.shellG.numElm);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  idS = 0;
+	  ++(fData->indent);
+	  while((errNum == WLZ_ERR_NONE) && (idS < model->res.shell.numIdx))
+	  {
+	    if(((s = (WlzGMShell *)
+	             AlcVectorItemGet(model->res.shell.vec, idS)) != NULL) &&
+	       (s->idx >= 0))
+            {
+	      switch(s->geo.core->type)
+	      {
+	        case WLZ_GMELM_SHELL_G2I:
+		  errNum = WlzObjFactsAppend(fData,
+		                             "% 6d (%d, %d, %d, %d)\n",
+					     idS,
+					     s->geo.sg2I->bBox.xMin,
+					     s->geo.sg2I->bBox.yMin,
+					     s->geo.sg2I->bBox.xMax,
+					     s->geo.sg2I->bBox.yMax);
+		  break;
+	        case WLZ_GMELM_SHELL_G2D:
+		  errNum = WlzObjFactsAppend(fData,
+		                             "% 6d (%g, %g, %g, %g)\n",
+					     idS,
+					     s->geo.sg2D->bBox.xMin,
+					     s->geo.sg2D->bBox.yMin,
+					     s->geo.sg2D->bBox.xMax,
+					     s->geo.sg2D->bBox.yMax);
+		  break;
+	        case WLZ_GMELM_SHELL_G3I:
+		  errNum = WlzObjFactsAppend(fData,
+		                             "% 6d (%d, %d, %d, %d, %d, %d)\n",
+					     idS,
+					     s->geo.sg3I->bBox.xMin,
+					     s->geo.sg3I->bBox.yMin,
+					     s->geo.sg3I->bBox.zMin,
+					     s->geo.sg3I->bBox.xMax,
+					     s->geo.sg3I->bBox.yMax,
+					     s->geo.sg3I->bBox.zMax);
+		  break;
+	        case WLZ_GMELM_SHELL_G3D:
+		  errNum = WlzObjFactsAppend(fData,
+		                             "% 6d (%g, %g, %g, %g, %g, %g)\n",
+					     idS,
+					     s->geo.sg3D->bBox.xMin,
+					     s->geo.sg3D->bBox.yMin,
+					     s->geo.sg3D->bBox.zMin,
+					     s->geo.sg3D->bBox.xMax,
+					     s->geo.sg3D->bBox.yMax,
+					     s->geo.sg3D->bBox.zMax);
+		  break;
+	      }
+	    }
+	    ++idS;
+	  }
+	  --(fData->indent);
 	}
       }
     }
