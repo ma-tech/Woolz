@@ -82,6 +82,13 @@ public class SectionViewer
 
   private Container _frame = null;
 
+  /* workaround for Wlz bug. This is the
+     difference between original fixed point 
+     and user selected one (on screen) */
+  private double _deltaX = 0.0; 
+  private double _deltaY = 0.0;
+  private double _deltaZ = 0.0;
+
   //=========================================================
   // constructor
   //=========================================================
@@ -775,8 +782,13 @@ public class SectionViewer
         }
 
         if (vtx != null) {
-          xp = vtx.vtX;
-          yp = vtx.vtY;
+	  /*
+	   * work-around for bug in Wlz
+	   */
+	  WlzDVertex2 vtx2 = adjustedIntersectionPoint(vtx);
+
+          xp = vtx2.vtX;
+          yp = vtx2.vtY;
           xp += xTotal/2.0;
           yp += yTotal/2.0;
           // assumes xp lies between 0 and xtotal
@@ -1566,28 +1578,58 @@ public class SectionViewer
   }
 
   /*
-   * when the fixed point is moved, the intersection
-   * must be adjusted to compensate for the change.
+   * work-around for bug in Wlz
+   * Wlz3DViewGetIntersectionPoint gives a shifted answer
+   * if the fixed point is changed. This causes intersection lines
+   * to jump in the view with the changed fixed point
    */
-  private void adjustIntersectionArray() {
+  private WlzDVertex2 adjustedIntersectionPoint(WlzDVertex2 vtx) {
 
-     if(_debug) System.out.println("entering adjustIntersectionArray");
+     if(_debug) System.out.println("entering adjustIntersectionPoint");
 
-     Line2D.Double[] intersectionArr = null;
-     double xa[] = new double[1];
-     double ya[] = new double[1];
-     double za[] = new double[1];
+     double[] fpInitial = null;
+     double[] fpNew = new double[3];
+     double[] x = new double[1];
+     double[] y = new double[1];
+     double[] z = new double[1];
+     double[] fp2DOrig = null;
+     double[] fp2DNew = null;
 
-     _VSModel.getFixedPoint(xa, ya, za);
-     System.out.println("FP = "+xa[0]+","+ya[0]+","+za[0]);
+     WlzDVertex2 ret = vtx;
+     WlzThreeDViewStruct vs = _VSModel.getViewStruct();
 
-     intersectionArr =  getIntersectionArr() ;
-     int len = intersectionArr.length;
-     for(int i=0; i<len; i++) {
-	printIntersection(intersectionArr[i], i);
-     }
+     _VSModel.getFixedPoint(x, y, z);
+     fpNew[0] = x[0];
+     fpNew[1] = y[0];
+     fpNew[2] = z[0];
+     fpInitial = _VSModel.getInitialFixedPoint();
 
-     if(_debug) System.out.println("exiting adjustIntersectionArray");
+     fp2DOrig = _OBJModel.get2DPoint(fpInitial, vs);
+     fp2DNew = _OBJModel.get2DPoint(fpNew, vs);
+
+/*
+     System.out.println("fp2DOrig = "+
+               Double.toString(fp2DOrig[0])+","+
+               Double.toString(fp2DOrig[1])+","+
+               Double.toString(fp2DOrig[2]));
+
+     System.out.println("fp2DNew = "+
+               Double.toString(fp2DNew[0])+","+
+               Double.toString(fp2DNew[1])+","+
+               Double.toString(fp2DNew[2]));
+
+     System.out.println("fp2DOrig - fp2DNew = "+
+               Double.toString(fp2DOrig[0] - fp2DNew[0])+","+
+               Double.toString(fp2DOrig[1] - fp2DNew[1])+","+
+               Double.toString(fp2DOrig[2] - fp2DNew[2]));
+*/
+
+     ret.vtX -= fp2DOrig[0] - fp2DNew[0];
+     ret.vtY -= fp2DOrig[1] - fp2DNew[2];
+
+     if(_debug) System.out.println("exiting adjustIntersectionPoint");
+
+     return ret;
   }
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //-------------------------------------------------------------
@@ -2756,7 +2798,10 @@ public class SectionViewer
     ViewStructModel VSModel;
     WlzThreeDViewStruct VS;
     Point pos;
-    double pt3d[];
+    //double pt3d[];
+    Vector distVec = null;
+    double FP3DOrig[] = null;
+    double FP3D[] = null;
 
     public WlzImgViewToFPAdaptor(WlzImgView mdl1,
                                  WlzObjModel mdl2,
@@ -2765,18 +2810,27 @@ public class SectionViewer
       ObjModel = mdl2;
       VSModel = mdl3;
       VS = VSModel.getViewStruct();
+      FP3DOrig = VSModel.getInitialFixedPoint();
     }
 
     public void stateChanged(ChangeEvent e) {
       if (!_setFixedPoint)
         return;
       pos = ImgModel.getPos();
-      pt3d = ObjModel.get3DPoint(pos, VS);
-      VSModel.setFixedPoint(pt3d[0],
-                            pt3d[1],
-                            pt3d[2]);
+      FP3D = ObjModel.get3DPoint(pos, VS);
+
+      VSModel.setFixedPoint(FP3D[0],
+                            FP3D[1],
+                            FP3D[2]);
+
+/*
+      _deltaX = FP3DOrig[0] - FP3D[0];
+      _deltaY = FP3DOrig[1] - FP3D[1];
+      _deltaZ = FP3DOrig[2] - FP3D[2];
+      printDeltas();
+*/
+
       setDistLimits(0.0);
-      adjustIntersectionArray();
       _setFixedPoint = false;
       setCursor(defCursor);
       Runnable fpClick = new Runnable() {
@@ -2790,6 +2844,13 @@ public class SectionViewer
 
   }
 
+/*
+  public void printDeltas() {
+     System.out.println("_deltaX = "+Double.toString(_deltaX));
+     System.out.println("_deltaY = "+Double.toString(_deltaY));
+     System.out.println("_deltaZ = "+Double.toString(_deltaZ));
+  }
+*/
 //---------------------------------------
   // change 'zoom' using Zoom control
   public class ZoomToZoomAdaptor
