@@ -290,6 +290,7 @@ public class SectionViewer
     fileMenu_2.addActionListener(handler_1);
     fileMenu_3.addActionListener(handler_1);
     fileMenu_4.addActionListener(handler_1);
+    fileMenu_5.addActionListener(handler_1);
 
     controlMenu_1_1.addActionListener(handler_2);
     controlMenu_1_2.addActionListener(handler_2);
@@ -1686,6 +1687,23 @@ public class SectionViewer
 
   }
 
+  /**
+   *   Loads <em>ViewStruct</em> and zoom setting from a bib file.
+   *   <br>This causes a previously saved section to be displayed.
+   *   @param str filename for the bib data.
+   */
+  protected void loadViewFromBib(File fil) {
+
+    ParseBib parser = new ParseBib(this);
+    try {
+      parser.doParse(fil);
+    }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
+
+  }
+
 //-------------------------------------------------------------
 // convert from (slider) zoom factor to mag
 //-------------------------------------------------------------
@@ -2877,7 +2895,7 @@ public class SectionViewer
         }
       }
       else if (e.getActionCommand() == fileMenu_3str) {
-        // load view settings
+        // load view settings from xml
         int returnVal = chooser.showOpenDialog(null);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
           selectedFile = chooser.getSelectedFile();
@@ -2886,6 +2904,15 @@ public class SectionViewer
         }
       }
       else if (e.getActionCommand() == fileMenu_4str) {
+        // load view settings from bib
+        int returnVal = chooser.showOpenDialog(null);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+          selectedFile = chooser.getSelectedFile();
+          currentDirFile = chooser.getCurrentDirectory();
+          loadViewFromBib(selectedFile);
+        }
+      }
+      else if (e.getActionCommand() == fileMenu_5str) {
         close();
       }
     } // actionPerformed()
