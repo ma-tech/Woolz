@@ -204,9 +204,11 @@ int             main(int argc, char **argv)
             {
               case WLZ_GMMOD_2I: /* FALLTHROUGH */
               case WLZ_GMMOD_2D:
+              case WLZ_GMMOD_2N:
                 break;
               case WLZ_GMMOD_3I: /* FALLTHROUGH */
               case WLZ_GMMOD_3D:
+              case WLZ_GMMOD_3N:
                 switch(trType)
                 {
                   case WLZ_TRANSFORM_2D_REG:
