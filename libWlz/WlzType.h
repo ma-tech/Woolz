@@ -1466,6 +1466,33 @@ typedef struct
 } WlzRsvFilter;
  
 /*!
+* \union	_WlzTransform
+* \ingroup	WlzTransform
+* \brief	A union of all valid transforms.
+*/
+union _WlzTransform
+{
+  struct _WlzCoreTransform *core;	/*!< Core transform. */
+  struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
+  struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
+  struct _WlzMeshTransform *mesh;	/* Ant mesh transform. */
+};
+typedef union _WlzTransform WlzTransform;
+
+/*!
+* \struct	_WlzCoreTransform
+* \ingroup	WlzTransform
+* \brief	The core transform, with members common to all transforms.
+*/
+struct _WlzCoreTransform
+{
+  WlzTransformType type;       		/*!< From the core domain. */
+  int           linkcount;      	/*!< From the core domain. */
+  void 		*freeptr;		/*!< From the core domain. */
+};
+typedef struct _WlzCoreTransform WlzCoreTransform;
+
+/*!
 * \struct	_WlzAffineTransform
 * \ingroup	WlzTransform
 * \brief	Either a 2D or 3D affine transform.
