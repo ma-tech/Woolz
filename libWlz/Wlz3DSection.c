@@ -215,6 +215,7 @@ static WlzContour *WlzGetSectionFromCtr(WlzContour *ctr,
     {
       case WLZ_GMMOD_3I:
       case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3N:
 	newModel = WlzGetSectionFromGMModel(ctr->model, view, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{

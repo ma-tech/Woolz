@@ -638,7 +638,8 @@ WlzGMModel	*WlzShiftGMModel(WlzGMModel *model,
 	    vP.i2->vtX += xShift;
 	    vP.i2->vtY += yShift;
 	    break;
-	  case WLZ_GMMOD_2D:
+	  case WLZ_GMMOD_2D: /* FALLTHROUGH */
+	  case WLZ_GMMOD_2N:
 	    vP.d2 = &(elmP.vertexG2D->vtx);
 	    vP.d2->vtX += xShift;
 	    vP.d2->vtY += yShift;
@@ -649,7 +650,8 @@ WlzGMModel	*WlzShiftGMModel(WlzGMModel *model,
 	    vP.i3->vtY += yShift;
 	    vP.i3->vtZ += zShift;
 	    break;
-	  case WLZ_GMMOD_3D:
+	  case WLZ_GMMOD_3D: /* FALLTHROUGH */
+	  case WLZ_GMMOD_3N:
 	    vP.d3 = &(elmP.vertexG3D->vtx);
 	    vP.d3->vtX += xShift;
 	    vP.d3->vtY += yShift;
@@ -683,7 +685,8 @@ WlzGMModel	*WlzShiftGMModel(WlzGMModel *model,
 	    bP.i2->xMax += xShift;
 	    bP.i2->yMax += yShift;
 	    break;
-	  case WLZ_GMMOD_2D:
+	  case WLZ_GMMOD_2D: /* FALLTHROUGH */
+	  case WLZ_GMMOD_2N:
 	    bP.d2 = &(elmP.shellG2D->bBox);
 	    bP.d2->xMin += xShift;
 	    bP.d2->yMin += yShift;
@@ -699,7 +702,8 @@ WlzGMModel	*WlzShiftGMModel(WlzGMModel *model,
 	    bP.i3->yMax += yShift;
 	    bP.i3->zMax += zShift;
 	    break;
-	  case WLZ_GMMOD_3D:
+	  case WLZ_GMMOD_3D: /* FALLTHROUGH */
+	  case WLZ_GMMOD_3N:
 	    bP.d3 = &(elmP.shellG3D->bBox);
 	    bP.d3->xMin += xShift;
 	    bP.d3->yMin += yShift;

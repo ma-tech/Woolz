@@ -1429,10 +1429,12 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
       {
         case WLZ_GMMOD_2I:
 	case WLZ_GMMOD_2D:
+	case WLZ_GMMOD_2N:
 	  dim = 2;
 	  break;
 	case WLZ_GMMOD_3I:
 	case WLZ_GMMOD_3D:
+	case WLZ_GMMOD_3N:
 	  dim = 3;
 	  break;
       }

@@ -158,16 +158,18 @@ static WlzObject *WlzRasterGM(WlzGMModel *model,
   {
     switch(model->type)
     {
-      case WLZ_GMMOD_2I:
-      case WLZ_GMMOD_2D:
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
        bBox2.xMin = bBox.xMin;
        bBox2.yMin = bBox.yMin;
        bBox2.xMax = bBox.xMax;
        bBox2.yMax = bBox.yMax;
        dObj = WlzRasterGM2D(model, bBox2, &errNum);
        break;
-      case WLZ_GMMOD_3I:
-      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
        dObj = WlzRasterGM3D(model, bBox, &errNum);
        break;
       default:
@@ -277,7 +279,7 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
 	      tET = tET->next;
 	    } while((tET->idx != fETIdx) && (++vIdx <= 2));
 	  }
-	  else /* model->type == WLZ_GMMOD_3D */
+	  else /* model->type == WLZ_GMMOD_3D || WLZ_GMMOD_3N */
 	  {
 	    do
 	    {

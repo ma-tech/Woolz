@@ -819,11 +819,17 @@ const char	*WlzStringFromGMModelType(WlzGMModelType mType,
     case WLZ_GMMOD_2D:
       tStr = "WLZ_GMMOD_2D";
       break;
+    case WLZ_GMMOD_2N:
+      tStr = "WLZ_GMMOD_2N";
+      break;
     case WLZ_GMMOD_3I:
       tStr = "WLZ_GMMOD_3I";
       break;
     case WLZ_GMMOD_3D:
       tStr = "WLZ_GMMOD_3D";
+      break;
+    case WLZ_GMMOD_3N:
+      tStr = "WLZ_GMMOD_3N";
       break;
     default:
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -854,8 +860,10 @@ WlzGMModelType	WlzStringToGMModelType(const char *tStr,
   if(WlzStringMatchValue(&tI0, tStr,
 			 "WLZ_GMMOD_2I", WLZ_GMMOD_2I,
 			 "WLZ_GMMOD_2D", WLZ_GMMOD_2D,
+			 "WLZ_GMMOD_2N", WLZ_GMMOD_2N,
 			 "WLZ_GMMOD_3I", WLZ_GMMOD_3I,
 			 "WLZ_GMMOD_3D", WLZ_GMMOD_3D,
+			 "WLZ_GMMOD_3N", WLZ_GMMOD_3N,
 			 NULL))
   {
     mType = tI0;

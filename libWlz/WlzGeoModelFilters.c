@@ -72,7 +72,8 @@ WlzErrorNum	WlzGMFilterFlipOrient(WlzGMModel *model)
     switch(model->type)   
     {
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
-      case WLZ_GMMOD_2D:  
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:  
 	eIdx = 0;
 	eCnt = model->res.edge.numIdx;
 	eVec = model->res.edge.vec;
@@ -87,7 +88,8 @@ WlzErrorNum	WlzGMFilterFlipOrient(WlzGMModel *model)
 	}
 	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
-      case WLZ_GMMOD_3D:  
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:  
 	eIdx = 0;
 	eCnt = model->res.face.numIdx;
 	eVec = model->res.face.vec;
@@ -701,6 +703,13 @@ static WlzErrorNum WlzGMFilterGeomSetVertices(WlzGMModel *model,
 	cV->geo.vg2D->vtx = *(vtxBuf.d2 + idx);
       }
       break;
+    case WLZ_GMMOD_2N:
+      for(idx = 0; idx < cnt; ++idx)
+      {
+        cV = (WlzGMVertex *)AlcVectorItemGet(vec, idx);
+	cV->geo.vg2N->vtx = *(vtxBuf.d2 + idx);
+      }
+      break;
     case WLZ_GMMOD_3I:
       for(idx = 0; idx < cnt; ++idx)
       {
@@ -715,6 +724,12 @@ static WlzErrorNum WlzGMFilterGeomSetVertices(WlzGMModel *model,
       {
         cV = (WlzGMVertex *)AlcVectorItemGet(vec, idx);
 	cV->geo.vg3D->vtx = *(vtxBuf.d3 + idx);
+      }
+    case WLZ_GMMOD_3N:
+      for(idx = 0; idx < cnt; ++idx)
+      {
+        cV = (WlzGMVertex *)AlcVectorItemGet(vec, idx);
+	cV->geo.vg3N->vtx = *(vtxBuf.d3 + idx);
       }
       break;
     default:
