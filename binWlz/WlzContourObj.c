@@ -45,7 +45,7 @@ int             main(int argc, char **argv)
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bghiUo:v:w:";
+  static char	optList[] = "bghirUo:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -70,6 +70,9 @@ int             main(int argc, char **argv)
 	break;
       case 'i':
         ctrMtd = WLZ_CONTOUR_MTD_ISO;
+	break;
+      case 'r':
+        ctrMtd = WLZ_CONTOUR_MTD_RBFBND;
 	break;
       case 'o':
         outFileStr = optarg;
@@ -224,6 +227,7 @@ int             main(int argc, char **argv)
       "  -b  Compute object boundary contours.\n"
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
+      "  -r  Compute object boundary contours using radial basis functions.\n"
       "  -U  Use unit voxel size.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
