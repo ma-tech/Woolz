@@ -1228,6 +1228,60 @@ extern WlzObject		*WlzDilation(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzDiistMetric.c							*
+************************************************************************/
+extern WlzErrorNum     		WlzDistMetricGM(
+				  WlzGMModel *model0, 
+				  WlzGMModel *model1,
+				  double *dstDistH,
+				  double *dstDistM,
+				  double *dstDistN,
+				  double *dstDistI);
+extern WlzErrorNum     		WlzDistMetricDirGM(
+				  WlzGMModel *model0,
+				  WlzGMModel *model1,
+				  double *dstDistH,
+				  double *dstDistM,
+				  double *dstDistN,
+				  double *dstDistI);
+extern WlzErrorNum     		WlzDistMetricVertex2D(
+				  int n0,
+				  WlzDVertex2 *vx0,
+				  int n1,
+				  WlzDVertex2 *vx1,
+				  double *dstDistH,
+				  double *dstDistM,
+				  double *dstDistN,
+				  double *dstDistI);
+extern WlzErrorNum     		WlzDistMetricVertex3D(
+				  int n0,
+				  WlzDVertex3 *vx0,
+				  int n1,
+				  WlzDVertex3 *vx1,
+				  double *dstDistH,
+				  double *dstDistM,
+				  double *dstDistN,
+				  double *dstDistI);
+extern WlzErrorNum     		WlzDistMetricDirVertex2D(
+				  int n0,
+				  WlzDVertex2 *vx0,
+				  int n1,
+				  WlzDVertex2 *vx1,
+				  double *dstDistH,
+				  double *dstDistM,
+				  double *dstDistN,
+				  double *dstDistI);
+extern WlzErrorNum     		WlzDistMetricDirVertex3D(
+				  int n0,
+				  WlzDVertex3 *vx0,
+				  int n1,
+				  WlzDVertex3 *vx1,
+				  double *dstDistH,
+				  double *dstDistM,
+				  double *dstDistN,
+				  double *dstDistI);
+
+/************************************************************************
 * WlzDomainFill.c							*
 ************************************************************************/
 extern WlzObject 		*WlzDomainFill(

@@ -75,6 +75,7 @@ CSOURCES		= \
 			WlzDiffDomain.c \
 			WlzDiffDomain3d.c \
 			WlzDilation.c \
+			WlzDistMetric.c \
 			WlzDomainFill.c \
 			WlzDomainUtils.c \
 			WlzEmpty.c \
