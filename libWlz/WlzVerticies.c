@@ -632,7 +632,10 @@ static WlzVertexP WlzVerticiesFromGM3(WlzGMModel *model,
       cV = (WlzGMVertex *)AlcVectorItemGet(vec, vecIdx++);
       if(cV->idx >= 0)
       {
-	*(vId + vIdx) = cV->idx;
+	if(vId)
+	{
+	  *(vId + vIdx) = cV->idx;
+	}
 	if(model->type == WLZ_GMMOD_3I)
 	{
 	  *(vData.i3 + vIdx) = cV->geo.vg3I->vtx;
