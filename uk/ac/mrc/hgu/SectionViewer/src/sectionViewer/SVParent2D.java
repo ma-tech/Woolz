@@ -77,10 +77,14 @@ public class SVParent2D implements SVParent {
   /**   Default height of SectionViewer */
   protected static int defViewH = 550;
 
+  /**   Font to be used for menus */
+  protected Font _menuFont = null;
+
 //-----------------------------------------------------
-  /**   Creates an SVParent2D. */
-  public SVParent2D() {
+  /**   Creates an SVParent2D with the given Anatomy menu Font. */
+  public SVParent2D(Font font) {
     _Locks = new SVLocks();
+    _menuFont = font;
     init2D();
     initHelp();
   }
@@ -90,9 +94,23 @@ public class SVParent2D implements SVParent {
    *   @param wlzFile the 3D Woolz file to open.
    */
   public SVParent2D(File wlzFile) {
-    super();
+    this((Font)null);
     openGreyLevel(wlzFile);
+  }
 
+  /**
+   *   Creates an SVParent2D with the given Anatomy menu Font
+   *   and opens the given 3D Woolz file.
+   *   @param wlzFile the 3D Woolz file to open.
+   */
+  public SVParent2D(Font font, File wlzFile) {
+    this(font);
+    openGreyLevel(wlzFile);
+  }
+
+  /**   Creates an SVParent2D. */
+  public SVParent2D() {
+    this((Font)null);
   }
 
 //-----------------------------------------------------
@@ -623,6 +641,15 @@ public class SVParent2D implements SVParent {
 
 //-------------------------------------------------------------
   /**
+   *   Returns a flag that indicates if the anatomy has been built.
+   *   @return _anatomyBuilt.
+   */
+  public boolean isAnatomyBuilt() {
+    return _anatomyBuilt;
+  }
+
+//-------------------------------------------------------------
+  /**
    *   Returns the collection of objects represented by
    *   the rows of the AnatKey.
    *   @return the AnatomyElement Vector.
@@ -675,6 +702,17 @@ public class SVParent2D implements SVParent {
      return el;
   }
 
+//-------------------------------------------------------------
+  /**   Gets the Font used for the Anatomy menu. */
+  public Font getMenuFont() {
+    return _menuFont;
+  }
+
+//-------------------------------------------------------------
+  /**   Sets the Font used for the Anatomy menu. */
+  public void setMenuFont(Font font) {
+    _menuFont = font;
+  }
 
 //===============================================================
 // Thread stuff
@@ -685,7 +723,8 @@ public class SVParent2D implements SVParent {
      public void run() {
 
 	try {
-	   _anatBuilder = new AnatomyBuilder();
+	   //_anatBuilder = new AnatomyBuilder();
+	   _anatBuilder = new AnatomyBuilder(_menuFont);
 	   _anatBuilder.buildAnatomy(new File(_wlzDir));
 	   synchronized(_Locks._svpLock1) {
 	      _anatomyBuilt = true;

@@ -65,7 +65,12 @@ public interface SVParent {
     *   Tests for the existence of an AnatKey.
     *   @return true if there is an AnatKey.
     */
-    public AnatKey		getAnatomyKey();
+   public AnatKey		getAnatomyKey();
 
+   /**
+    *   Returns the SVLocks object, required for synchronization.
+    *   @return _Locks.
+    */
+   public SVLocks getSVLocks(); 
 }
 
