@@ -12,6 +12,7 @@
 * Purpose:      Woolz functions for computing mesh transforms.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 06-09-1999 bill	Linear interpolation code was crazy.
 ************************************************************************/
 #include <stdlib.h>
 #include <stdarg.h>
@@ -789,6 +790,8 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
   int		mItvIdx;
   double	tD0,
   		tD1,
+		tD2,
+		tD3,
 		trXX,
 		trXYC,
 		trYX,
@@ -931,61 +934,44 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 	      WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
 	      tD0 = sPosD.vtX - floor(sPosD.vtX);
 	      tD1 = sPosD.vtY - floor(sPosD.vtY);
+	      tD2 = 1.0 - tD0;
+	      tD3 = 1.0 - tD1;
 	      switch(gWSp.pixeltype)
 	      {
 		case WLZ_GREY_INT:
-	          tD0 = ((((gVWSp->gVal[0]).inv +
-		           (gVWSp->gVal[2]).inv) * (1.0 - tD0)) +
-	                 (((gVWSp->gVal[1]).inv +
-		           (gVWSp->gVal[3]).inv) * tD0) +
-	                 (((gVWSp->gVal[0]).inv +
-		           (gVWSp->gVal[1]).inv) * (1.0 - tD1)) +
-	                 (((gVWSp->gVal[2]).inv +
-		           (gVWSp->gVal[3]).inv) * tD1)) / 4.0;
+		  tD0 = ((gVWSp->gVal[0]).inv * tD2 * tD3) +
+			((gVWSp->gVal[1]).inv * tD0 * tD3) +
+			((gVWSp->gVal[2]).inv * tD2 * tD1) +
+			((gVWSp->gVal[3]).inv * tD0 * tD1);
 		  *(dGP.inp)++ = WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_SHORT:
-	          tD0 = ((((gVWSp->gVal[0]).shv +
-		           (gVWSp->gVal[2]).shv) * (1.0 - tD0)) +
-	                 (((gVWSp->gVal[1]).shv +
-		           (gVWSp->gVal[3]).shv) * tD0) +
-	                 (((gVWSp->gVal[0]).shv +
-		           (gVWSp->gVal[1]).shv) * (1.0 - tD1)) +
-	                 (((gVWSp->gVal[2]).shv +
-		           (gVWSp->gVal[3]).shv) * tD1)) / 4.0;
+		  tD0 = ((gVWSp->gVal[0]).shv * tD2 * tD3) +
+			((gVWSp->gVal[1]).shv * tD0 * tD3) +
+			((gVWSp->gVal[2]).shv * tD2 * tD1) +
+			((gVWSp->gVal[3]).shv * tD0 * tD1);
 		  *(dGP.shp)++ = WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_UBYTE:
-	          tD0 = ((((gVWSp->gVal[0]).ubv +
-		           (gVWSp->gVal[2]).ubv) * (1.0 - tD0)) +
-	                 (((gVWSp->gVal[1]).ubv +
-		           (gVWSp->gVal[3]).ubv) * tD0) +
-	                 (((gVWSp->gVal[0]).ubv +
-		           (gVWSp->gVal[1]).ubv) * (1.0 - tD1)) +
-	                 (((gVWSp->gVal[2]).ubv +
-		           (gVWSp->gVal[3]).ubv) * tD1)) / 4.01;
+		  tD0 = ((gVWSp->gVal[0]).ubv * tD2 * tD3) +
+			((gVWSp->gVal[1]).ubv * tD0 * tD3) +
+			((gVWSp->gVal[2]).ubv * tD2 * tD1) +
+			((gVWSp->gVal[3]).ubv * tD0 * tD1);
+		  WLZ_CLAMP(tD0, 0.0, 255.0);
 		  *(dGP.ubp)++ = WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_FLOAT:
-	          tD0 = ((((gVWSp->gVal[0]).flv +
-		           (gVWSp->gVal[2]).flv) * (1.0 - tD0)) +
-	                 (((gVWSp->gVal[1]).flv +
-		           (gVWSp->gVal[3]).flv) * tD0) +
-	                 (((gVWSp->gVal[0]).flv +
-		           (gVWSp->gVal[1]).flv) * (1.0 - tD1)) +
-	                 (((gVWSp->gVal[2]).flv +
-		           (gVWSp->gVal[3]).flv) * tD1)) / 4.0;
+		  tD0 = ((gVWSp->gVal[0]).flv * tD2 * tD3) +
+			((gVWSp->gVal[1]).flv * tD0 * tD3) +
+			((gVWSp->gVal[2]).flv * tD2 * tD1) +
+			((gVWSp->gVal[3]).flv * tD0 * tD1);
 		  *(dGP.flp)++ = tD0;
 		  break;
 		case WLZ_GREY_DOUBLE:
-	          tD0 = ((((gVWSp->gVal[0]).dbv +
-		           (gVWSp->gVal[2]).dbv) * (1.0 - tD0)) +
-	                 (((gVWSp->gVal[1]).dbv +
-		           (gVWSp->gVal[3]).dbv) * tD0) +
-	                 (((gVWSp->gVal[0]).dbv +
-		           (gVWSp->gVal[1]).dbv) * (1.0 - tD1)) +
-	                 (((gVWSp->gVal[2]).dbv +
-		           (gVWSp->gVal[3]).dbv) * tD1)) / 4.0;
+		  tD0 = ((gVWSp->gVal[0]).dbv * tD2 * tD3) +
+			((gVWSp->gVal[1]).dbv * tD0 * tD3) +
+			((gVWSp->gVal[2]).dbv * tD2 * tD1) +
+			((gVWSp->gVal[3]).dbv * tD0 * tD1);
 		  *(dGP.dbp)++ = tD0;
 		  break;
 		default:
