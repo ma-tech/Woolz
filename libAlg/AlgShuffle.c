@@ -79,7 +79,7 @@ int		main(int argc, char *argv[])
 		option,
 		ok = 1,
 		usage = 0;
-  int		*data;
+  int		*data = NULL;
   static char	optList[] = "n:s:";
 
   opterr = 0;
@@ -124,6 +124,10 @@ int		main(int argc, char *argv[])
     {
       (void )printf("%d\n", *(data + idx));
     }
+  }
+  if(data)
+  {
+    AlcFree(data);
   }
   if(usage)
   {
