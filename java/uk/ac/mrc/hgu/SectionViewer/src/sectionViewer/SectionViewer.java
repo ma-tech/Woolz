@@ -82,13 +82,6 @@ public class SectionViewer
 
   private Container _frame = null;
 
-  /* workaround for Wlz bug. This is the
-     difference between original fixed point 
-     and user selected one (on screen) */
-  private double _deltaX = 0.0; 
-  private double _deltaY = 0.0;
-  private double _deltaZ = 0.0;
-
   //=========================================================
   // constructor
   //=========================================================
@@ -1607,23 +1600,6 @@ public class SectionViewer
      fp2DOrig = _OBJModel.get2DPoint(fpInitial, vs);
      fp2DNew = _OBJModel.get2DPoint(fpNew, vs);
 
-/*
-     System.out.println("fp2DOrig = "+
-               Double.toString(fp2DOrig[0])+","+
-               Double.toString(fp2DOrig[1])+","+
-               Double.toString(fp2DOrig[2]));
-
-     System.out.println("fp2DNew = "+
-               Double.toString(fp2DNew[0])+","+
-               Double.toString(fp2DNew[1])+","+
-               Double.toString(fp2DNew[2]));
-
-     System.out.println("fp2DOrig - fp2DNew = "+
-               Double.toString(fp2DOrig[0] - fp2DNew[0])+","+
-               Double.toString(fp2DOrig[1] - fp2DNew[1])+","+
-               Double.toString(fp2DOrig[2] - fp2DNew[2]));
-*/
-
      ret.vtX -= fp2DOrig[0] - fp2DNew[0];
      ret.vtY -= fp2DOrig[1] - fp2DNew[2];
 
@@ -2823,13 +2799,6 @@ public class SectionViewer
                             FP3D[1],
                             FP3D[2]);
 
-/*
-      _deltaX = FP3DOrig[0] - FP3D[0];
-      _deltaY = FP3DOrig[1] - FP3D[1];
-      _deltaZ = FP3DOrig[2] - FP3D[2];
-      printDeltas();
-*/
-
       setDistLimits(0.0);
       _setFixedPoint = false;
       setCursor(defCursor);
@@ -2844,13 +2813,6 @@ public class SectionViewer
 
   }
 
-/*
-  public void printDeltas() {
-     System.out.println("_deltaX = "+Double.toString(_deltaX));
-     System.out.println("_deltaY = "+Double.toString(_deltaY));
-     System.out.println("_deltaZ = "+Double.toString(_deltaZ));
-  }
-*/
 //---------------------------------------
   // change 'zoom' using Zoom control
   public class ZoomToZoomAdaptor
