@@ -61,7 +61,7 @@ LIBDIRS			= \
 			  $(DEPENDDIRS)
 
 # List of all sub directories that contain makefiles (modify as required).
-SUBSYSTEMS		= Test
+SUBSYSTEMS		= 
 
 # List of files (should be top level directories) to be put used in creating
 # a compressed tar file for distribution.
