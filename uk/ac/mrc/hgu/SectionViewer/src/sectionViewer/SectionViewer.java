@@ -1921,9 +1921,6 @@ public class SectionViewer
   }
 
 //......................................
-  public ViewStructModel getViewStructModel() {
-    return _VSModel;
-  }
 
 
 //HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
