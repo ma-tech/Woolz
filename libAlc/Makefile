@@ -34,6 +34,7 @@ EXECUTABLES		=
 CSOURCES		= AlcAlloc.c \
 			  AlcArray.c \
 			  AlcBlockStack.c \
+			  AlcCPQueue.c \
 			  AlcDLPList.c \
 			  AlcFreeStack.c \
 			  AlcHashTable.c \

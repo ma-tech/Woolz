@@ -308,6 +308,33 @@ extern AlcErrno			AlcBlockStackFree(
 				  AlcBlockStack *blk);
 
 /************************************************************************
+* AlcCPQueue.c
+************************************************************************/
+extern AlcCPQQueue              *AlcCPQQueueNew(
+                                  AlcErrno *dstErr);
+extern AlcCPQItem               *AlcCPQItemNew(
+                                  AlcCPQQueue *q,
+                                  float priority,
+                                  void *entry,
+                                  void (*freeFn)(void *),
+                                  AlcErrno *dstErr);
+extern AlcErrno                 AlcCPQQueueFree(
+                                  AlcCPQQueue *q);
+extern void                     AlcCPQItemFree(
+                                  AlcCPQQueue *q,
+                                  AlcCPQItem *item);
+extern AlcErrno                 AlcCPQEntryInsert(
+                                  AlcCPQQueue *q,
+                                  float priority,
+                                  void *entry,
+                                  void (*freeFn)(void *));
+extern AlcErrno                 AlcCPQItemInsert(
+                                  AlcCPQQueue *q,
+                                  AlcCPQItem *item);
+extern AlcCPQItem               *AlcCPQItemUnlink(
+                                  AlcCPQQueue *q);
+
+/************************************************************************
 * AlcDLPList.c
 ************************************************************************/
 extern AlcDLPList 		*AlcDLPListNew(

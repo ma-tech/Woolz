@@ -65,6 +65,73 @@ typedef struct _AlcBlockStack
 } AlcBlockStack;
 
 /*!
+* \struct	_AlcCPQQueue
+* \ingroup	AlcCPQ
+* \brief	An \f$O(1)\f$ priority queue based on the Calendar
+*		Priority Queue data structure.
+*		Typedef: ::AlcCPQQueue.
+*/
+typedef struct _AlcCPQQueue
+{
+  int           nItem;		/*!< Number of items in the queue. */
+  int           nBucket;	/*!< Number of buckets for items. */
+  int           nItemIncThr;	/*!< Threshold number of items, at
+  				     which the number of buckets is
+				     increased. */
+  int           nItemDecThr;	/*!< Threshold number of items, at
+  				     which the number of buckets is
+				     decreased. */
+  int           lastIdx;	/*!< The index (offset by bucketBase) of
+                                     the last bucket from which an item
+				     was dequeued or the index of a top
+				     priority item that has been inserted.
+				     A negative value is used to indicate
+				     that the index is invalid. */
+  int           itemBlockSz;	/*!< Number of items allocated in each
+  				     block by AlcBlockStackNew(). */
+  int           bucketBase;	/*!< The offset into the allocated buckets
+  				     of the current buckets. */
+  int           maxBucket;	/*!< The total number of buckets that have
+  				     been allocated. */
+  int           resizable;	/*!< Non-zero if the queue is resizable. */
+  float         lastPriority;	/*!< The priority of either the last item
+  				     dequeued or of the top priority item
+				     that has been inserted. */
+  double        bucketWidth;	/*!< The width of each bucket. */
+  double        bucketMin;	/*!< The minimum priority for the bucket
+  				     with (offset) index lastIdx. A negative
+				     value is used to indicate that the
+				     minimum priority is invalid. */
+  struct _AlcCPQItem **buckets;	/*!< Contiguous array of buckets. */
+  struct _AlcCPQItem *freeItem;	/*!< List of items available for use in the
+  				     priority queue. */
+  struct _AlcBlockStack *freeStack; /*!< Free stack used to efficiently
+  				     allocate and free blocks of queue
+				     items. */
+} AlcCPQQueue;
+
+/*!
+* \struct	_AlcCPQItem
+* \ingroup	AlcCPQ
+* \brief	An item in a calendar priority queue.
+*		Typedef: ::AlcCPQItem.
+*/
+typedef struct _AlcCPQItem
+{
+  float         priority;	/*!< Priority of the item, which must be
+  				     \f$ \geq 0\f$. Priority is greater
+				     for greater priority values. */
+  void          *entry;		/*!< User supplied entry. May be NULL. */
+  void          (*freeFn)(void *); /*!< Function that may be called to
+  				     free the user supplied entry when
+				     an item is freed. May be NULL. */
+  struct _AlcCPQItem *prev;	/*!< Previous item in bucket or free
+      				     item list. */
+  struct _AlcCPQItem *next;	/*!< Next item in bucket or free
+      				     item list. */
+} AlcCPQItem;
+
+/*!
 * \enum 	_AlcDirection
 * \ingroup	AlcBlockStack
 * \brief	Data structure traversal direction.
