@@ -14,6 +14,7 @@
 *		values.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+*		bill@hgu.mrc.ac.uk Added magnitude.
 ************************************************************************/
 #include <stdarg.h>
 #include <float.h>
@@ -448,6 +449,50 @@ static void	WlzBufMinD(WlzGreyP gP1, WlzGreyP gP0, int count)
   }
 }
 
+static void	WlzBufMagI(WlzGreyP gP1, WlzGreyP gP0, int count)
+{
+  double	dV0;
+  int		*iP0,
+  		*iP1;
+  iP0 = gP0.inp;
+  iP1 = gP1.inp;
+  while(count-- > 0)
+  {
+    if(*iP0 && *iP1)
+    {
+      dV0 = (*iP0 * *iP0) + (*iP1 * *iP1);
+      dV0 = sqrt(dV0);
+      *iP1 = WLZ_NINT(dV0);
+    }
+    else
+    {
+      *iP1 = 0;
+    }
+    ++iP0;
+    ++iP1;
+  }
+}
+static void	WlzBufMagD(WlzGreyP gP1, WlzGreyP gP0, int count)
+{
+  double	*dP0,
+  		*dP1;
+  dP0 = gP0.dbp;
+  dP1 = gP1.dbp;
+  while(count-- > 0)
+  {
+    if((*dP1 = (*dP0 * *dP0) + (*dP1 * *dP1)) > DBL_EPSILON)
+    {
+      *dP1= sqrt(*dP1);
+    }
+    else
+    {
+      *dP1 = 0.0;
+    }
+    ++dP0;
+    ++dP1;
+  }
+}
+
 /************************************************************************
 * Function:	WlzBinaryOperatorFnSet					*
 * Returns:	WlzBinaryOperatorFn:	Pointer to appropriate function	*
@@ -522,6 +567,9 @@ static WlzBinaryOperatorFn WlzBinaryOperatorFnSet(WlzGreyType gType,
 	break;
       case WLZ_MIN:
 	binOpFn = (gType == WLZ_GREY_INT)? WlzBufMinI: WlzBufMinD;
+	break;
+      case WLZ_MAGNITUDE:
+	binOpFn = (gType == WLZ_GREY_INT)? WlzBufMagI: WlzBufMagD;
 	break;
       default:
 	errNum = WLZ_ERR_BINARY_OPERATOR_TYPE;
@@ -636,7 +684,8 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
 	case WLZ_ADD:		/* FALLTHROGH */
 	case WLZ_SUBTRACT:	/* FALLTHROGH */
 	case WLZ_MULTIPLY:	/* FALLTHROGH */
-	case WLZ_DIVIDE:
+	case WLZ_DIVIDE:	/* FALLTHROGH */
+	case WLZ_MAGNITUDE:
           gType[2] = WLZ_GREY_SHORT;
 	  break;
 	case WLZ_MODULUS:	/* FALLTHROGH */

@@ -366,7 +366,8 @@ typedef enum
   WLZ_OR,
   WLZ_XOR,
   WLZ_MAX,
-  WLZ_MIN
+  WLZ_MIN,
+  WLZ_MAGNITUDE
 } WlzBinaryOperatorType;
 
 /************************************************************************
