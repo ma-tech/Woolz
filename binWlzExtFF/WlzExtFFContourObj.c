@@ -37,6 +37,7 @@ int             main(int argc, char **argv)
 {
   int           option,
   		ok = 1,
+		useVoxSz = 0,
 		usage = 0;
   double	ctrVal = 100,
   		ctrWth = 1.0;
@@ -44,14 +45,17 @@ int             main(int argc, char **argv)
   char		*fStr,
 		*inObjFileStr,
   		*outFileStr;
+  WlzDVertex3	voxSz;
+  WlzDBox3	bBox;
   WlzObject     *inObj = NULL,
   		*outObj = NULL;
   WlzDomain	ctrDom;
   WlzValues	dumVal;
+  WlzAffineTransform *voxSzTr = NULL;
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bghio:v:w:";
+  static char	optList[] = "bghixo:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -86,6 +90,9 @@ int             main(int argc, char **argv)
 	  usage = 1;
 	  ok = 0;
 	}
+	break;
+      case 'x':
+        useVoxSz = 1;
 	break;
       case 'w':
         if(sscanf(optarg, "%lg", &ctrWth) != 1)
@@ -165,6 +172,40 @@ int             main(int argc, char **argv)
 		     argv[0], errMsgStr);
     }
   }
+  if(ok && useVoxSz)
+  {
+    /* Compute the transform to apply to the contour. */
+    voxSzTr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      bBox = WlzBoundingBox3D(inObj, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      voxSz = WlzVozelSz(inObj, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* set up the transform. */
+      voxSzTr->mat[0][0] = voxSz.vtX;
+      voxSzTr->mat[0][3] = bBox.xMin * (1.0 - voxSz.vtX);
+      voxSzTr->mat[1][1] = voxSz.vtY;
+      voxSzTr->mat[1][3] = bBox.yMin * (1.0 - voxSz.vtY);
+      voxSzTr->mat[2][2] = voxSz.vtZ;
+      voxSzTr->mat[2][3] = bBox.zMin * (1.0 - voxSz.vtZ);
+      /* Apply the transform. */
+      (void )WlzAffineTransformContour(ctrDom.ctr, voxSzTr, 0, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+      		     "%s: Failed to apply for voxel size corection (%s).\n",
+		     argv[0], errMsgStr);
+    }
+    WlzFreeAffineTransform(voxSzTr);
+  }
   if(ok)
   {
     if(strcmp(outFileStr, "-") == 0)
@@ -211,7 +252,7 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       "Usage: %s%sExample: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i] [-o#] [-v#] [-w#]\n"
+      " [-o<output object>] [-h] [-o] [-g] [-i] [-o#] [-v#] [-x] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -220,6 +261,7 @@ int             main(int argc, char **argv)
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
+      "  -x  Use real voxel size.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
       "Computes a contour object from the given Woolz object and saves it\n"
       "using the VTK ascii polydata format.\n"
