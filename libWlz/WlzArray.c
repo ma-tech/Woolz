@@ -1,24 +1,25 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzArray.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for conversion between Woolz domain objects
+/*!
+* \file         WlzArray.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for conversion between Woolz domain objects
 *		and arrays.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 05-06-2000 bill Removed unused variables.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-* 31-08-99 bill	Modified array size parameters for JavaWoolz.
-************************************************************************/
+* \ingroup	WlzArray
+* \todo         -
+* \bug          None known.
+*/
+#pragma ident "MRC HGU $Id$"
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
@@ -61,25 +62,22 @@ static WlzObject *WlzFromArrayGrey3D(void ***arrayP,
 				     int clampFlag, int noCopyFlag,
 				     WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzTo[BISUFD]Array2D				
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts a bit, int, short, UBYTE, float or double Alc
-*		array from any Woolz 2D domain object.		
-* Global refs:	-						
-* Parameters:	WlzIVertex2 *dstSizeArrayDat: Destination pointer for
-*					array size, may be NULL.	
-*		<TYPE> ***dstArrayDat:	Destination pointer for array
-*					of type: int, short, UBYTE,
-*					float or long.		
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex2 origin:	Array origin wrt given object.
-*		WlzIVertex2 size:	Required region size.
-*		int noiseFlag:		Fill background with random 
-*					noise with the same mean and
-*					std. dev. as the given object
-*					if non-zero.		
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a  Alc bit array from any Woolz 2D domain
+*		object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToBArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
@@ -101,6 +99,22 @@ WlzErrorNum WlzToBArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a Alc int array from any Woolz 2D domain
+*		object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToIArray2D(WlzIVertex2 *dstSizeArrayDat, int ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
@@ -122,6 +136,22 @@ WlzErrorNum WlzToIArray2D(WlzIVertex2 *dstSizeArrayDat, int ***dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a Alc short array from any Woolz 2D domain
+*		object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToSArray2D(WlzIVertex2 *dstSizeArrayDat, short ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
@@ -143,6 +173,22 @@ WlzErrorNum WlzToSArray2D(WlzIVertex2 *dstSizeArrayDat, short ***dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a Alc unsigned byte array from any Woolz 2D domain
+*		object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToUArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
@@ -164,6 +210,22 @@ WlzErrorNum WlzToUArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts aAlc float array from any Woolz 2D domain
+*		object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToFArray2D(WlzIVertex2 *dstSizeArrayDat, float ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
@@ -185,6 +247,22 @@ WlzErrorNum WlzToFArray2D(WlzIVertex2 *dstSizeArrayDat, float ***dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a Alc double array from any Woolz 2D domain
+*		object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToDArray2D(WlzIVertex2 *dstSizeArrayDat, double ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
@@ -206,25 +284,24 @@ WlzErrorNum WlzToDArray2D(WlzIVertex2 *dstSizeArrayDat, double ***dstArrayDat,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzToArray2D					
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts an Alc array from any Woolz 2D domain object.
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts an Alc array from any Woolz 2D domain object.
 *		If the destination pointer points to a non-NULL 
 *		pointer then it is assumed to be a suitable Alc array.
 *		The data are assumed to be within the valid range.
-* Global refs:	-						
-* Parameters:	void ***dstP:		Destination pointer (assumed 
+* \param	dstP			Destination pointer (assumed 
 *					valid if *dstP is non-NULL).
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex2 size:	Size of the array.	
-*		WlzIVertex2 origin:	Array origin wrt given object.
-*		int noiseFlag:		Fill background with random 
-*					noise with the same mean and
-*					std. dev. as the given object
-*					if non-zero.		
-*		WlzGreyType dstGreyType: Destination array data type.
-************************************************************************/
+* \param	srcObj			Given Woolz object.
+* \param	size			Size of array.
+* \param	origin			Array origin wrt given object.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+* \param	dstGreyType		Destination array data type.
+*/
 WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
 			     WlzIVertex2 size, WlzIVertex2 origin,
 			     int noiseFlag, WlzGreyType dstGreyType)
@@ -278,25 +355,19 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzToArrayBit2D				
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts an Alc bit array from any Woolz 2D domain
-*		object's domain.
-*		If the destination pointer points to a non-NULL 
-*		pointer then it is assumed to be a suitable Alc array.
-* Global refs:	-						
-* Parameters:	UBYTE ***dstP:		Destination pointer (assumed 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts an Alc bit array from any Woolz 2D domain
+*		object's domain. If the destination pointer points to a
+*		non-NULL pointer then it is assumed to be a suitable Alc
+*		array.
+* \param	dstP			Destination pointer (assumed 
 *					valid if *dstP is non-NULL).
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex2 size:	Size of the array.	
-*		WlzIVertex2 origin:	Array origin wrt given object.
-*		int noiseFlag:		Fill background with random 
-*					noise with the same mean and
-*					std. dev. as the given object
-*					if non-zero.		
-*		WlzGreyType dstGreyType: Destination array data type.
-************************************************************************/
+* \param	srcObj			Given Woolz object.
+* \param	size			Size of the array.
+* \param	origin			Array origin wrt given object.
+*/
 static WlzErrorNum WlzToArrayBit2D(UBYTE ***dstP, WlzObject *srcObj,
 				   WlzIVertex2 size, WlzIVertex2 origin)
 {
@@ -366,25 +437,25 @@ static WlzErrorNum WlzToArrayBit2D(UBYTE ***dstP, WlzObject *srcObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzToArrayGrey2D				
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts an Alc array from any Woolz 2D domain object.
-*		If the destination pointer points to a non-NULL 
-*		pointer then it is assumed to be a suitable Alc array.
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts an Alc array from any Woolz 2D domain
+*		object's domain. If the destination pointer points to a
+*		non-NULL pointer then it is assumed to be a suitable Alc
 *		The data are assumed to be within the valid range.
-* Global refs:	-						
-* Parameters:	void ***dstP:		Destination pointer (assumed 
+*		array.
+* \param	dstP			Destination pointer (assumed 
 *					valid if *dstP is non-NULL).
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex2 size:	Size of the array.	
-*		WlzIVertex2 origin:	Array origin wrt given object.
-*		int noiseFlag:		Fill background with random 
+* \param	srcObj			Given Woolz object.
+* \param	size			Size of the array.
+* \param	origin			Array origin wrt given object.
+* \param	noiseFlag		Fill background with random 
 *					noise with the same mean and
 *					std. dev. as the given object
 *					if non-zero.		
-*		WlzGreyType dstGreyType: Destination array data type.
-************************************************************************/
+* \param	dstGreyType		Destination array data type.
+*/
 static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 				    WlzIVertex2 size, WlzIVertex2 origin,
 				    int noiseFlag, WlzGreyType dstGreyType)
@@ -509,25 +580,22 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzTo[BISUFD]Array3D				
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts a bit, int, short, UBYTE, float or double Alc
-*		array from any Woolz 3D domain object.		
-* Global refs:	-						
-* Parameters:	WlzIVertex3 *dstSizeArrayDat: Destination pointer for
-*					array size, may be NULL.	
-*		<TYPE> ****dstArrayDat:	Destination pointer for array
-*					of type: int, short, UBYTE,
-*					float or long.		
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex3 origin:	Array origin wrt given object.
-*		WlzIVertex3 size:	Required region size.
-*		int noiseFlag:		Fill background with random 
-*					noise with the same mean and
-*					std. dev. as the given object
-*					if non-zero.		
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a bit Alc array from any Woolz 3D domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					bit array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToBArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
@@ -550,6 +618,22 @@ WlzErrorNum WlzToBArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a int Alc array from any Woolz 3D domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					int array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToIArray3D(WlzIVertex3 *dstSizeArrayDat, int ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
@@ -570,6 +654,22 @@ WlzErrorNum WlzToIArray3D(WlzIVertex3 *dstSizeArrayDat, int ****dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a short Alc array from any Woolz 3D domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					short array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToSArray3D(WlzIVertex3 *dstSizeArrayDat, short ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
@@ -590,6 +690,23 @@ WlzErrorNum WlzToSArray3D(WlzIVertex3 *dstSizeArrayDat, short ****dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a unsigned byte Alc array from any Woolz 3D
+*		domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					unsigned byte array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToUArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
@@ -610,6 +727,22 @@ WlzErrorNum WlzToUArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a float Alc array from any Woolz 3D domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					float array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToFArray3D(WlzIVertex3 *dstSizeArrayDat, float ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
@@ -630,6 +763,22 @@ WlzErrorNum WlzToFArray3D(WlzIVertex3 *dstSizeArrayDat, float ****dstArrayDat,
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts a double Alc array from any Woolz 3D domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					double array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
 WlzErrorNum WlzToDArray3D(WlzIVertex3 *dstSizeArrayDat, double ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
@@ -650,25 +799,30 @@ WlzErrorNum WlzToDArray3D(WlzIVertex3 *dstSizeArrayDat, double ****dstArrayDat,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzToArray3D					
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts an Alc array from any Woolz 3D domain object.
+/*!
+* \return	Woolz error code.
+* \ingroup 	WlzArray
+* \brief	Extracts an Alc array from any Woolz 3D domain object.
 *		If the destination pointer points to a non-NULL 
 *		pointer then it is assumed to be a suitable Alc array.
 *		The data are assumed to be within the valid range.
-* Global refs:	-						
-* Parameters:	void ****dstP:		Destination pointer (assumed 
+* \param	dstP
+* \param	srcObj
+* \param	size
+* \param	origin
+* \param	noiseFlag
+* \param	dstGreyType
+* \param	dstP			Destination pointer (assumed 
 *					valid if *dstP is non-NULL).
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex3 size:	Size of the array.	
-*		WlzIVertex3 origin:	Array origin wrt given object.
-*		int noiseFlag:		Fill background with random 
+* \param	srcObj			Given Woolz object.	
+* \param	size			Size of the array.	
+* \param	origin			Array origin wrt given object.
+* \param	noiseFlag 		Fill background with random 
 *					noise with the same mean and
 *					std. dev. as the given object
 *					if non-zero.		
-*		WlzGreyType dstGreyType: Destination array data type.
-************************************************************************/
+* \param	dstGreyType		Destination array data type.
+*/
 WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
 			     WlzIVertex3 size, WlzIVertex3 origin,
 			     int noiseFlag, WlzGreyType dstGreyType)
@@ -722,20 +876,19 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzToArrayBit3D				
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts an Alc bit array from any Woolz 3D domain
-*		object's domain.
-*		If the destination pointer points to a non-NULL 
-*		pointer then it is assumed to be a suitable Alc array.
-* Global refs:	-						
-* Parameters:	UBYTE ****dstP:		Destination pointer (assumed 
-*					valid if *dstP is non-NULL).
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex3 size:	Size of the array.	
-*		WlzIVertex3 origin:	Array origin wrt given object.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts an Alc bit array from any Woolz 3D domain
+*               object's domain.
+*               If the destination pointer points to a non-NULL
+*               pointer then it is assumed to be a suitable Alc array.
+* \param	dstP			Destination pointer (assumed
+*                                       valid if *dstP is non-NULL).
+* \param	srcObj			Given Woolz object.
+* \param	size			Size of the array.
+* \param	origin			Array origin wrt given object.
+*/
 static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
 				   WlzIVertex3 size, WlzIVertex3 origin)
 {
@@ -818,25 +971,24 @@ static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzToArrayGrey3D					
-* Returns:	WlzErrorNum:		Error number.		
-* Purpose:	Extracts an Alc array from any Woolz 3D domain object.
-*		If the destination pointer points to a non-NULL 
-*		pointer then it is assumed to be a suitable Alc array.
-*		The data are assumed to be within the valid range.
-* Global refs:	-						
-* Parameters:	void ****dstP:		Destination pointer (assumed 
-*					valid if *dstP is non-NULL).
-*		WlzObject *srcObj:	Given Woolz object.	
-*		WlzIVertex3 size:	Size of the array.	
-*		WlzIVertex3 origin:	Array origin wrt given object.
-*		int noiseFlag:		Fill background with random 
-*					noise with the same mean and
-*					std. dev. as the given object
-*					if non-zero.		
-*		WlzGreyType dstGreyType: Destination array data type.
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts an Alc array from any Woolz 3D domain object.
+*               If the destination pointer points to a non-NULL
+*               pointer then it is assumed to be a suitable Alc array.
+*               The data are assumed to be within the valid range.
+* \param	dstP			Destination pointer (assumed
+*                                       valid if *dstP is non-NULL).
+* \param	srcObj			Given Woolz object.
+* \param	size			Size of the array.
+* \param	origin			Array origin wrt given object.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+* \param	dstGreyType		Destination array data type.
+*/
 static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
 				    WlzIVertex3 size, WlzIVertex3 origin,
 				    int noiseFlag, WlzGreyType dstGreyType)
@@ -992,31 +1144,32 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzArrayTxRectValues				
-* Returns:	void						
-* Purpose:	Transforms and/or clamps a rectangle of data values
-*		using a given buffer.				
-* Global refs:	-						
-* Parameters:	WlzGreyP dstValP:	Destination grey pointer.
-*		WlzGreyP srcValP:	Source grey pointer.	
-*		double *bufP:		Buffer with space for at least
-*					row of double grey values.
-*		WlzIVertex2 rectSize:	The size of the destination and
-*					source, also the row size for
-*					the buffer.		
-*		int dstOffset:		Offset from destination ptr.
-*		int srcOffset:		Offset from source ptr.	
-*		WlzGreyType dstGreyType: Destination grey type.	
-*		WlzGreyType srcGreyType: Source grey type.	
-*		double valOffset:	Offset added to each value.
-*		double valScale:	Scale factor by which each
-*					value is multiplied before
-*					adding the offset.	
-*		int clampFlag:		Values are clamped to the 
-*					destination type range if the
-*					clamp flag is non-zero.	
-************************************************************************/
+/*!
+* \return	<void>
+* \ingroup	WlzArray
+* \brief	Transforms and/or clamps a rectangle of data values using
+* 		a given buffer.
+* \param	dstValP			Destination grey pointer.
+* \param	srcValP			Source grey pointer.
+* \param	bufP			Buffer with space for at least
+*                                       row of double grey values.
+* \param	rectSize		The size of the destination and
+*                                       source, also the row size for
+*                                       the buffer.
+* \param	dstOffset		Offset from destination ptr.
+* \param	srcOffset		Offset from source ptr.
+* \param	dstGreyType		Destination grey type.
+* \param	srcGreyType		Source grey type.
+* \param	valOffset		Offset added to each value.
+* \param	valScale		Scale factor by which each
+*                                       value is multiplied before
+*                                       adding the offset.
+* \param	clampFlag		Values are clamped to the
+*                                       destination type range if the
+*                                       clamp flag is non-zero.
+* \param	txFlag			Transform flag, if non-zero
+*					values are transformed.
+*/
 static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 				     double *bufP,
 				     WlzIVertex2 rectSize,
@@ -1075,19 +1228,16 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
   }
 }
 
-/************************************************************************
-* Function:	WlzFrom[BISUFD]Array2D				
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 2D domain object from the given Alc
-*		array.						
-* Global refs:	-						
-* Parameters:	WlzIVertex2 arraySizeDat: Dimensions of the array.
-*		<TYPE> **arrayDat:	Given Alc array of type: int,
-*					short, UBYTE, float or double.
-*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromBArray2D(WlzIVertex2 arraySizeDat,
 				 UBYTE **arrayDat,
 				 WlzIVertex2 arrayOrigin,
@@ -1098,6 +1248,16 @@ WlzObject	*WlzFromBArray2D(WlzIVertex2 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromIArray2D(WlzIVertex2 arraySizeDat,
 				 int **arrayDat,
 				 WlzIVertex2 arrayOrigin,
@@ -1108,6 +1268,16 @@ WlzObject	*WlzFromIArray2D(WlzIVertex2 arraySizeDat,
 			0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromSArray2D(WlzIVertex2 arraySizeDat,
 				 short **arrayDat,
 				 WlzIVertex2 arrayOrigin,
@@ -1118,6 +1288,16 @@ WlzObject	*WlzFromSArray2D(WlzIVertex2 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromUArray2D(WlzIVertex2 arraySizeDat,
 				 UBYTE **arrayDat,
 				 WlzIVertex2 arrayOrigin,
@@ -1128,6 +1308,16 @@ WlzObject	*WlzFromUArray2D(WlzIVertex2 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromFArray2D(WlzIVertex2 arraySizeDat,
 				 float **arrayDat,
 				 WlzIVertex2 arrayOrigin,
@@ -1138,6 +1328,16 @@ WlzObject	*WlzFromFArray2D(WlzIVertex2 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromDArray2D(WlzIVertex2 arraySizeDat,
 				 double **arrayDat,
 				 WlzIVertex2 arrayOrigin,
@@ -1148,34 +1348,34 @@ WlzObject	*WlzFromDArray2D(WlzIVertex2 arraySizeDat,
 	                0, 0, dstErr));
 }
 
-/************************************************************************
-* Function:	WlzFromArray2D					
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 2D domain object from the given Alc
-*		array.						
-*		The data are assumed to be within the valid range.
-*		If the noCopyFlag is set (non-zero) then the array data
-*		space is used for the onjects values without copying.
-*		For this to be valid both the source and destination
-*		grey type must be the same.			
-* Global refs:	-						
-* Parameters:	void **arrayP:		Given Alc array.	
-*		WlzIVertex2 arraySize:	Dimensions of the array.
-*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
-*		WlzGreyType dstGreyType: Destination object grey type.
-*		WlzGreyType srcGreyType: Array data type.	
-*		double valOffset:	Offset added to each value.
-*		double valScale:	Scale factor by which each
-*					value is multiplied before
-*					adding the offset.	
-*		int clampFlag:		Values are clamped to the 
-*					destination type range if the
-*					clamp flag is non-zero.	
-*		int noCopyFlag:		Use the array data for the
-*					Woolz object values in-place.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc
+*               array.
+*               The data are assumed to be within the valid range.
+*               If the noCopyFlag is set (non-zero) then the array data
+*               space is used for the onjects values without copying.
+*               For this to be valid both the source and destination
+*               grey type must be the same.
+* \param	arrayP			Given Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstGreyType		Destination object grey type.
+* \param	srcGreyType		Array data type.
+* \param	valOffset		Offset added to each value.
+* \param	valScale		Scale factor by which each
+*                                       value is multiplied before
+*                                       adding the offset.
+* \param	clampFlag		Values are clamped to the
+*                                       destination type range if the
+*                                       clamp flag is non-zero.
+* \param	noCopyFlag		Use the array data for the
+*                                       Woolz object values in-place.
+*					Take care when using this option!
+* \param	dstErr			stination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromArray2D(void **arrayP,
 				WlzIVertex2 arraySize,
 				WlzIVertex2 arrayOrigin,
@@ -1236,20 +1436,17 @@ WlzObject	*WlzFromArray2D(void **arrayP,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzFromArray2D					
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 2D domain object with domain,
-*		but no values from the given Alc bitmap array.
-* Global refs:	-						
-* Parameters:	UBYTE **arrayP:		Given Alc array.	
-*		WlzIVertex2 arraySize:	Dimensions of the array.
-*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
-*		WlzGreyType dstGreyType: Destination object grey type.
-*		WlzGreyType srcGreyType: Array data type.	
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 2D domain object with domain,
+*               but no values from the given Alc bitmap array.
+* \param	arrayP			Given Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 static WlzObject *WlzFromArrayBit2D(UBYTE **arrayP,
 				    WlzIVertex2 arraySize,
 				    WlzIVertex2 arrayOrigin,
@@ -1331,34 +1528,34 @@ static WlzObject *WlzFromArrayBit2D(UBYTE **arrayP,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzFromArrayGrey2D					
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 2D domain object from the given Alc
-*		array.						
-*		The data are assumed to be within the valid range.
-*		If the noCopyFlag is set (non-zero) then the array data
-*		space is used for the onjects values without copying.
-*		For this to be valid both the source and destination
-*		grey type must be the same.			
-* Global refs:	-						
-* Parameters:	void **arrayP:		Given Alc array.	
-*		WlzIVertex2 arraySize:	Dimensions of the array.
-*		WlzIVertex2 arrayOrigin: Array origin wrt given object.
-*		WlzGreyType dstGreyType: Destination object grey type.
-*		WlzGreyType srcGreyType: Array data type.	
-*		double valOffset:	Offset added to each value.
-*		double valScale:	Scale factor by which each
-*					value is multiplied before
-*					adding the offset.	
-*		int clampFlag:		Values are clamped to the 
-*					destination type range if the
-*					clamp flag is non-zero.	
-*		int noCopyFlag:		Use the array data for the
-*					Woolz object values in-place.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup 	WlzArray
+* \brief	Creates a Woolz 2D domain object from the given Alc
+*               array.
+*               The data are assumed to be within the valid range.
+*               If the noCopyFlag is set (non-zero) then the array data
+*               space is used for the onjects values without copying.
+*               For this to be valid both the source and destination
+*               grey type must be the same.
+* \param	arrayP			Given Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstGreyType		Destination object grey type.
+* \param	srcGreyType		Array data type.
+* \param	valOffset		Offset added to each value.
+* \param	valScale		Scale factor by which each
+*                                       value is multiplied before
+*                                       adding the offset.
+* \param	clampFlag		Values are clamped to the
+*                                       destination type range if the
+*                                       clamp flag is non-zero.
+* \param	noCopyFlag		Use the array data for the
+*                                       Woolz object values in-place.
+*					Take care when using this option!
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 				     WlzIVertex2 arraySize,
 				     WlzIVertex2 arrayOrigin,
@@ -1538,19 +1735,16 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzFrom[BISUFD]Array3D				
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 3D domain object from the given Alc
-*		array.						
-* Global refs:	-						
-* Parameters:	WlzIVertex3 arraySizeDat: Dimensions of the array.
-*		<TYPE> **arrayDat:	Given Alc array of type: int,
-*					short, UBYTE, float or double.
-*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromBArray3D(WlzIVertex3 arraySizeDat,
 				 UBYTE ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
@@ -1561,6 +1755,16 @@ WlzObject	*WlzFromBArray3D(WlzIVertex3 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromIArray3D(WlzIVertex3 arraySizeDat,
 				 int ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
@@ -1571,6 +1775,16 @@ WlzObject	*WlzFromIArray3D(WlzIVertex3 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromSArray3D(WlzIVertex3 arraySizeDat,
 				 short ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
@@ -1581,6 +1795,16 @@ WlzObject	*WlzFromSArray3D(WlzIVertex3 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromUArray3D(WlzIVertex3 arraySizeDat,
 				 UBYTE ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
@@ -1591,6 +1815,16 @@ WlzObject	*WlzFromUArray3D(WlzIVertex3 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromFArray3D(WlzIVertex3 arraySizeDat,
 				 float ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
@@ -1601,6 +1835,16 @@ WlzObject	*WlzFromFArray3D(WlzIVertex3 arraySizeDat,
 	                0, 0, dstErr));
 }
 
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc array.
+* \param	arraySizeDat		Dimensions of the array.
+* \param	arrayDat		Given Alc array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromDArray3D(WlzIVertex3 arraySizeDat,
 				 double ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
@@ -1611,34 +1855,33 @@ WlzObject	*WlzFromDArray3D(WlzIVertex3 arraySizeDat,
 	                0, 0, dstErr));
 }
 
-/************************************************************************
-* Function:	WlzFromArray3D					
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 3D domain object from the given Alc
-*		array.						
-*		The data are assumed to be within the valid range.
-*		If the noCopyFlag is set (non-zero) then the array data
-*		space is used for the onjects values without copying.
-*		For this to be valid both the source and destination
-*		grey type must be the same.			
-* Global refs:	-						
-* Parameters:	void ***arrayP:		Given Alc array.	
-*		WlzIVertex3 arraySize:	Dimensions of the array.
-*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
-*		WlzGreyType dstGreyType: Destination object grey type.
-*		WlzGreyType srcGreyType: Array data type.	
-*		double valOffset:	Offset added to each value.
-*		double valScale:	Scale factor by which each
-*					value is multiplied before
-*					adding the offset.	
-*		int clampFlag:		Values are clamped to the 
-*					destination type range if the
-*					clamp flag is non-zero.	
-*		int noCopyFlag:		Use the array data for the
-*					Woolz object values in-place.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc
+*               array.
+*               The data are assumed to be within the valid range.
+*               If the noCopyFlag is set (non-zero) then the array data
+*               space is used for the onjects values without copying.
+*               For this to be valid both the source and destination
+*               grey type must be the same.
+* \param	arrayP			Given Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstGreyType		Destination object grey type.
+* \param	srcGreyType		Array data type.
+* \param	valOffset		Offset added to each value.
+* \param	valScale		Scale factor by which each
+*                                       value is multiplied before
+*                                       adding the offset.
+* \param	clampFlag		Values are clamped to the
+*                                       destination type range if the
+*                                       clamp flag is non-zero.
+* \param	noCopyFlag		Use the array data for the
+*                                       Woolz object values in-place.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 WlzObject	*WlzFromArray3D(void ***arrayP,
 				WlzIVertex3 arraySize, WlzIVertex3 arrayOrigin,
 				WlzGreyType dstGreyType,
@@ -1697,18 +1940,17 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzFromArrayGrey3D					
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 3D domain object without grey values
-*		from the given Alc byte packed bit array.			
-* Global refs:	-						
-* Parameters:	UBYTE ***arrayP:	Given Alc array.	
-*		WlzIVertex3 arraySize:	Dimensions of the array.
-*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object without grey values
+*               from the given Alc byte packed bit array.
+* \param	arrayP			Given Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstErr			Destination pointer for error
+*                                       number, may be NULL.
+*/
 static WlzObject *WlzFromArrayBit3D(UBYTE ***arrayP,
 				    WlzIVertex3 arraySize,
 				    WlzIVertex3 arrayOrigin,
@@ -1801,34 +2043,33 @@ static WlzObject *WlzFromArrayBit3D(UBYTE ***arrayP,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzFromArrayGrey3D					
-* Returns:	WlzObject *:		New Woolz object.	
-* Purpose:	Creates a Woolz 3D domain object from the given Alc
-*		array.						
-*		The data are assumed to be within the valid range.
-*		If the noCopyFlag is set (non-zero) then the array data
-*		space is used for the onjects values without copying.
-*		For this to be valid both the source and destination
-*		grey type must be the same.			
-* Global refs:	-						
-* Parameters:	void ***arrayP:		Given Alc array.	
-*		WlzIVertex3 arraySize:	Dimensions of the array.
-*		WlzIVertex3 arrayOrigin: Array origin wrt given object.
-*		WlzGreyType dstGreyType: Destination object grey type.
-*		WlzGreyType srcGreyType: Array data type.	
-*		double valOffset:	Offset added to each value.
-*		double valScale:	Scale factor by which each
-*					value is multiplied before
-*					adding the offset.	
-*		int clampFlag:		Values are clamped to the 
-*					destination type range if the
-*					clamp flag is non-zero.	
-*		int noCopyFlag:		Use the array data for the
-*					Woolz object values in-place.
-*		WlzErrorNum *dstErr:	Destination pointer for error 
-*					number, may be NULL.	
-************************************************************************/
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzArray
+* \brief	Creates a Woolz 3D domain object from the given Alc
+*               array. The data are assumed to be within the valid range. If
+*               the noCopyFlag is set (non-zero) then the array data space is
+*               used for the onjects values without copying. For this to be
+*               valid both the source and destination grey type must be the
+*               same.
+* \param	arrayP			Given Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	arrayOrigin		Array origin wrt given object.
+* \param	dstGreyType		Destination object grey type.
+* \param	srcGreyType		Array data type.
+* \param	valOffset		Offset added to each value.
+* \param	valScale		Scale factor by which each
+*					value is multiplied before adding the
+*					offset.
+* \param	clampFlag		Values are clamped to the destination
+* 					type range if the clamp flag is
+*					non-zero.
+* \param	noCopyFlag		Use the array data for the Woolz
+*					object values in-place. Take care with
+*					this option!
+* \param	dstErr			Destination pointer for error 
+*                                       number, may be NULL.
+*/
 static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 					    WlzIVertex3 arraySize,
 					    WlzIVertex3 arrayOrigin,
@@ -2106,27 +2347,26 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
   return(dstObj);
 }
 
-/************************************************************************
-* Function:	WlzArrayStats3D					
-* Returns:	int:			Number of data in array.
-* Purpose:	Calculates simple statistics for the given Alc array.
-* Global refs:	-						
-* Parameters:	void ***arrayP:		Given 3D Alc array.	
-*		WlzIVertex3 arraySize:	Dimensions of the array.
-*		WlzGreyType greyType:	Array data type.	
-*		double *dstMin:		Destination ptr for minimum
-*					value, may be NULL.	
-*		double *dstMax:		Destination ptr for maximum
-*					value, may be NULL.	
-*		double *dstSum:		Destination ptr for sum of
-*					values, may be NULL.	
-*		double *dstSumSq:	Destination ptr for sum of
-*					squares of values, may be NULL.
-*		double *dstMean:	Destination ptr for mean of
-*					values, may be NULL.	
-*		double *dstStdDev:	Destination ptr for std. dev. 
-*					of values, may be NULL.	
-************************************************************************/
+/*!
+* \return	Number of data in array.
+* \ingroup 	WlzArray
+* \brief	Calculates simple statistics for the given Alc array.
+* \param	arrayP			Given 3D Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	greyType		Array data type.
+* \param	dstMin			Destination ptr for minimum value,
+* 					may be NULL.
+* \param	dstMax			Destination ptr for maximum value,
+*					may be NULL.
+* \param	dstSum			Destination ptr for sum of values,
+*					may be NULL.
+* \param	dstSumSq		Destination ptr for sum of squares of
+* 					values, may be NULL.
+* \param	dstMean			Destination ptr for mean of values,
+*					may be NULL.
+* \param	dstStdDev		Destination ptr for standard deviation
+*					of values, may be NULL.
+*/
 int		WlzArrayStats3D(void ***arrayP,
 				WlzIVertex3 arraySize,
 				WlzGreyType greyType,
@@ -2331,27 +2571,26 @@ int		WlzArrayStats3D(void ***arrayP,
   return(arrayCount);
 }
 
-/************************************************************************
-* Function:	WlzArrayStats2D					
-* Returns:	int:			Number of data in array.
-* Purpose:	Calculates simple statistics for the given Alc array.
-* Global refs:	-						
-* Parameters:	void **arrayP:		Given 2D Alc array.	
-*		WlzIVertex2 arraySize:	Dimensions of the array.
-*		WlzGreyType greyType:	Array data type.	
-*		double *dstMin:		Destination ptr for minimum
-*					value, may be NULL.	
-*		double *dstMax:		Destination ptr for maximum
-*					value, may be NULL.	
-*		double *dstSum:		Destination ptr for sum of
-*					values, may be NULL.	
-*		double *dstSumSq:	Destination ptr for sum of
-*					squares of values, may be NULL.
-*		double *dstMean:	Destination ptr for mean of
-*					values, may be NULL.	
-*		double *dstStdDev:	Destination ptr for std. dev. 
-*					of values, may be NULL.	
-************************************************************************/
+/*!
+* \return	Number of data in array.
+* \ingroup	WlzArray
+* \brief	Calculates simple statistics for the given Alc array.
+* \param	arrayP			Given 2D Alc array.
+* \param	arraySize		Dimensions of the array.
+* \param	greyType		Array data type.
+* \param	dstMin			Destination ptr for minimum value,
+*					may be NULL.
+* \param	dstMax			Destination ptr for maximum value,
+*					may be NULL.
+* \param	dstSum			Destination ptr for sum of values,
+*					may be NULL.
+* \param	dstSumSq		Destination ptr for sum of squares of
+* 					values, may be NULL.
+* \param	dstMean			Destination ptr for mean of values,
+*					may be NULL.
+* \param	dstStdDev		Destination ptr for standard deviation
+*					of values, may be NULL.
+*/
 int		WlzArrayStats2D(void **arrayP,
 				WlzIVertex2 arraySize,
 				WlzGreyType greyType,
@@ -2381,27 +2620,26 @@ int		WlzArrayStats2D(void **arrayP,
   return(arrayCount);
 }
 
-/************************************************************************
-* Function:	WlzArrayStats1D					
-* Returns:	int:			Number of data in array.
-* Purpose:	Calculates simple statistics for the given Alc array.
-* Global refs:	-						
-* Parameters:	void *arrayP:		Given 1D Alc array.	
-*		int arraySize:		Dimension of the array.	
-*		WlzGreyType greyType:	Array data type.	
-*		double *dstMin:		Destination ptr for minimum
-*					value, may be NULL.	
-*		double *dstMax:		Destination ptr for maximum
-*					value, may be NULL.	
-*		double *dstSum:		Destination ptr for sum of
-*					values, may be NULL.	
-*		double *dstSumSq:	Destination ptr for sum of
-*					squares of values, may be NULL.
-*		double *dstMean:	Destination ptr for mean of
-*					values, may be NULL.	
-*		double *dstStdDev:	Destination ptr for std. dev. 
-*					of values, may be NULL.	
-************************************************************************/
+/*!
+* \return	Number of data in array.
+* \ingroup	WlzArray
+* \brief	Calculates simple statistics for the given Alc array.
+* \param	arrayP			Given 1D Alc array.
+* \param	arraySize		Dimension of the array.
+* \param	greyType		Array data type.
+* \param	dstMin			Destination ptr for minimum value,
+*					may be NULL.
+* \param	dstMax			Destination ptr for maximum value,
+*					may be NULL.
+* \param	dstSum			Destination ptr for sum of values,
+*					may be NULL.
+* \param	dstSumSq		Destination ptr for sum of squares of
+* 					values, may be NULL.
+* \param	dstMean			Destination ptr for mean of values,
+*					may be NULL.
+* \param	dstStdDev		Destination ptr for standard deviation
+*					of values, may be NULL.
+*/
 int		WlzArrayStats1D(void *arrayP,
 				int arraySize,
 				WlzGreyType greyType,
@@ -2430,21 +2668,19 @@ int		WlzArrayStats1D(void *arrayP,
   return(arrayCount);
 }
 
-/************************************************************************
-*   Function   : WlzFromBArray1D					*
-*   Date       : Thu Jun 28 17:57:38 2001				*
-*************************************************************************
-*   Synopsis   : Convert a 1D bit array as generated by the Java 	*
-*		interfaces to a 2D woolz object.			*
-*   Returns    : woolz object or NULL on error				*
-*   Parameters :arraySizeDat: vertex giving the width and height of the	*
-*			corresponding domain				*
-*		bitDat: the bit data, bits set contiguously		*
-*		arrayOrigin: object bounding box origin			*
-*		dstErr: pointer for error return			*
-*   Global refs: None							*
-************************************************************************/
-
+/*!
+* \return	New Woolz object or NULL on error.
+* \ingroup	WlzArray
+* \brief	Converts a 1D bit array as generated by the Java interfaces to
+* 		a 2D woolz object.
+* \param	arraySizeDat		Vertex giving the width and height of
+* 					the corresponding domain.
+* \param	bitData			The bit data with the bits set
+* 					contiguously.
+* \param	arrayOrigin		The origin of the Woolz object.
+* \param	dstErr			Destination pointer for error code,
+*					may be NULL.
+*/
 WlzObject *WlzFromBArray1D(
   WlzIVertex2 arraySizeDat,
   UBYTE *bitData,
@@ -2464,7 +2700,6 @@ WlzObject *WlzFromBArray1D(
   if( (arraySizeDat.vtX <= 0) || (arraySizeDat.vtY <= 0) ){
     errNum = WLZ_ERR_PARAM_DATA;
   }
-
   /* convert the 1D domain to 2D */
   if( errNum == WLZ_ERR_NONE ){
     AlcBit2Calloc(&arrayData, arraySizeDat.vtY, arraySizeDat.vtX);
@@ -2479,13 +2714,11 @@ WlzObject *WlzFromBArray1D(
       }
     }
   }
-
   /* use array conversion to build the woolz object */
   if( errNum == WLZ_ERR_NONE ){
     rtnObj = WlzFromBArray2D(arraySizeDat, arrayData, arrayOrigin, &errNum);
     AlcBit2Free(arrayData);
   }
-
   if( dstErr ){
     *dstErr = errNum;
   }

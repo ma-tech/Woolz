@@ -1,30 +1,34 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzArea.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes the area of an object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzArea.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Computes the area of an object.
+* \ingroup	WlzFeatures
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzArea						*
-*   Returns    : int - area (number of pixels) of an object		*
-*		       -1 on error					*
-*   Parameters : WlzObject *obj: input object				*
-*   Date       : Fri Oct 11 12:10:26 1996				*
-*   Synopsis   : return the area of an object currently only implemented*
-*	     	for 2d domain objects - to be extended			*
-************************************************************************/
-
+/*!
+* \return	Area of object or a negative value on error.
+* \ingroup	WlzFeatures
+* \brief	Computes the area of an object.
+* \todo		Implement for objects other than 2D domain objects.
+* \param	obj			Input object.
+* \param	dstErr			Destination error pointer, may be
+*					NULL.
+*/
 int WlzArea(
   WlzObject *obj,
   WlzErrorNum *dstErr)
