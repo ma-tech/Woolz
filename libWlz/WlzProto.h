@@ -47,20 +47,15 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 29-11-99 bill	Add all the WlzContour and WlzEdge functions.
 * 31-08-99 bill	Modified array size parameters for JavaWoolz.
-		Allowed more functions to be bound using JavaWoolz.
+*		Allowed more functions to be bound using JavaWoolz.
 ************************************************************************/
 
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/************************************************************************
-* WlzSkeleton.c								*
-************************************************************************/
-extern WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
-				     WlzConnectType minCon,
-				     WlzErrorNum *dstErr);
 /************************************************************************
 * Wlz3DSection.c							*
 ************************************************************************/
@@ -592,6 +587,29 @@ extern WlzErrorNum		WlzCompThreshold(
 				  double extraFrac);
 
 /************************************************************************
+* WlzContour.c
+************************************************************************/
+extern WlzContour		*WlzMakeContour(
+				  WlzContourType ctrType,
+				  WlzErrorNum *dstErr);
+extern WlzContourList		*WlzMakeContourList(	
+				  WlzErrorNum *dstErr);
+extern WlzContourList		*WlzContourObj(
+				  WlzObject *srcObj,
+				  WlzContourMethod ctrMtd,
+				  double ctrVal,
+				  double ctrWth,
+				  int minNod,
+				  int minEdg,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzFreeContour(
+				  WlzContour *ctr);
+extern WlzErrorNum		WlzFreeContourList(
+				  WlzContourList *ctrLst);
+extern WlzErrorNum		WlzContourClearFlags(
+				  WlzContour *ctr);
+
+/************************************************************************
 * WlzConvertPix.c							*
 ************************************************************************/
 extern WlzObject 		*WlzConvertPix(
@@ -871,6 +889,19 @@ extern double			WlzGeomTriangleSnArea2(
 				  WlzDVertex2 vx0,
 				  WlzDVertex2 vx1,
 				  WlzDVertex2 vx2);
+extern int			WlzGeomLineSegmentsIntersect(
+				  WlzDVertex2 p0,
+				  WlzDVertex2 p1,
+				  WlzDVertex2 q0,
+				  WlzDVertex2 q1,
+				  WlzDVertex2 *dstN);
+extern int			WlzGeomCmpAngle(
+				  WlzDVertex2 p0,
+				  WlzDVertex2 p1);
+extern int             		WlzGeomVtxEqual2D(
+				  WlzDVertex2 pos0,
+				  WlzDVertex2 pos1,
+                                  double tolSq);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -1613,6 +1644,13 @@ extern WlzValues	 	WlzShiftValues(
 				  int zShift,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzSkeleton.c								*
+************************************************************************/
+extern WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
+				     WlzConnectType minCon,
+				     WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzSobel.c								*

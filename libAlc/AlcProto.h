@@ -16,6 +16,7 @@
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
 * 01-11-1999 bill Added AlcDLPList.
+* 01-12-1999 bill Added AlcBlockStack.
 ************************************************************************/
 
 #ifdef __cplusplus
@@ -92,6 +93,17 @@ extern AlcErrno	AlcBit1Calloc(unsigned char **, int),
 		AlcInt3Free(int ***),
 		AlcFloat3Free(float ***),
 		AlcDouble3Free(double ***);
+
+/************************************************************************
+* AlcBlockStack.c
+************************************************************************/
+extern AlcBlockStack		*AlcBlockStackNew(
+				  unsigned nElem,
+				  unsigned elmSz,
+				  AlcBlockStack *tBlk,
+				  AlcErrno *dstErr);
+extern AlcErrno			AlcBlockStackFree(
+				  AlcBlockStack *blk);
 
 /************************************************************************
 * AlcDLPList.c

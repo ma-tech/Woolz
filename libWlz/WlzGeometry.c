@@ -19,30 +19,30 @@
 
 
 /************************************************************************
-* Function:	WlzGeomTriangleCircumcentre				*
-* Returns:	int:			Zero if the circumcentre of the	*
-*					triangle lies at infinity,	*
-*					else non-zero.			*
-* Purpose:	Computes the circumcentre of the given triangle.	*
-*		Given a triangle (a0, a1), (b0, b1), (c0, c1) then the	*
-*		circumcentre (p0, 1) is given by:			*
-*		  p0 = (a0^2*b1 - a0^2*c1 - b1^2*a1 + c1^2*a1 +		*
-*		        b0^2*c1	+ a1^2*b1 + c0^2*a1 - c1^2*b1 -		*
-*		        c0^2*b1 - b0^2*a1 + b1^2*c1 - a1^2*c1) / D	*
-*		  p1 = (a0^2*c0 + a1^2*c0 + b0^2*a0 - b0^2*c0 +		*
-*		        b1^2*a0 - b1^2*c0 - a0^2*b0 - a1^2*b0 -		*
-*		        c0^2*a0 + c0^2b0 - c1^2*a0 + c1^2*b0) / D	*
-*		Where:							*
-*		  D = 2 * (a1*c0 + b1*a0 - b1*c0 - a1*b0 -		*
-*			   c1*a0 + c1*b0)				*
-*		This is taken from J. O'Rourke: Computational Geometry	*
-*		in C, p201.						*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 *ccVx:	Destination ptr for the		*
-*					circumcentre.			*
-*		WlzDVertex2 vx0:	First vertex of triangle.	*
-*		WlzDVertex2 vx1:	Second vertex of triangle.	*
-*		WlzDVertex2 vx2:	Third vertex of triangle.	*
+* Function:	WlzGeomTriangleCircumcentre			
+* Returns:	int:			Zero if the circumcentre of the
+*					triangle lies at infinity,
+*					else non-zero.		
+* Purpose:	Computes the circumcentre of the given triangle.
+*		Given a triangle (a0, a1), (b0, b1), (c0, c1) then the
+*		circumcentre (p0, 1) is given by:		
+*		  p0 = (a0^2*b1 - a0^2*c1 - b1^2*a1 + c1^2*a1 +	
+*		        b0^2*c1	+ a1^2*b1 + c0^2*a1 - c1^2*b1 -	
+*		        c0^2*b1 - b0^2*a1 + b1^2*c1 - a1^2*c1) / D
+*		  p1 = (a0^2*c0 + a1^2*c0 + b0^2*a0 - b0^2*c0 +	
+*		        b1^2*a0 - b1^2*c0 - a0^2*b0 - a1^2*b0 -	
+*		        c0^2*a0 + c0^2b0 - c1^2*a0 + c1^2*b0) / D
+*		Where:						
+*		  D = 2 * (a1*c0 + b1*a0 - b1*c0 - a1*b0 -	
+*			   c1*a0 + c1*b0)			
+*		This is taken from J. O'Rourke: Computational Geometry
+*		in C, p201.					
+* Global refs:	-						
+* Parameters:	WlzDVertex2 *ccVx:	Destination ptr for the	
+*					circumcentre.		
+*		WlzDVertex2 vx0:	First vertex of triangle.
+*		WlzDVertex2 vx1:	Second vertex of triangle.
+*		WlzDVertex2 vx2:	Third vertex of triangle.
 ************************************************************************/
 int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 					    WlzDVertex2 vx0,
@@ -86,24 +86,24 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 }
 
 /************************************************************************
-* Function:	WlzGeomVxInTriangle					*
-* Returns:	int:			Non-zero if vertex is inside	*
-*					the triangle.			*
-* Purpose:	Test's to set if the given vertex lies within the given	*
-*		triangle using a barycentric coordinates test.		*
-*		If a triangle has vertices p0, p1, p2, then any point	*
-*		in the plane containing the triangle can be represented	*
-*		by:							*
-* 		  p = alpha*p0 + beta*p2 + gamma*p3			*
-*		subject to the constraint:				*
-*		  alpha + beta + gamma = 1				*
-*		If p is inside the triangle at least one of alpha, beta	*
-*		and gamma is -ve.					*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.	*
-*		WlzDVertex2 vx1:	Second vertex of triangle.	*
-*		WlzDVertex2 vx2:	Third vertex of triangle.	*
-*		WlzDVertex2 vxP:	Given vertex.			*
+* Function:	WlzGeomVxInTriangle				
+* Returns:	int:			Non-zero if vertex is inside
+*					the triangle.		
+* Purpose:	Test's to set if the given vertex lies within the given
+*		triangle using a barycentric coordinates test.	
+*		If a triangle has vertices p0, p1, p2, then any point
+*		in the plane containing the triangle can be represented
+*		by:						
+* 		  p = alpha*p0 + beta*p2 + gamma*p3		
+*		subject to the constraint:			
+*		  alpha + beta + gamma = 1			
+*		If p is inside the triangle at least one of alpha, beta
+*		and gamma is -ve.				
+* Global refs:	-						
+* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
+*		WlzDVertex2 vx1:	Second vertex of triangle.
+*		WlzDVertex2 vx2:	Third vertex of triangle.
+*		WlzDVertex2 vxP:	Given vertex.		
 ************************************************************************/
 int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				     WlzDVertex2 vx2, WlzDVertex2 vxP)
@@ -153,17 +153,17 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /************************************************************************
-* Function:	WlzGeomTriangleSnArea2					*
-* Returns:	double:			Twice the signed area of the	*
-*					given triangle.			*
-* Purpose:	Computes twice the signed area of the given triangle.	*
-*		The determinant is NOT computed the factorized form:	*
-*		(x0 - x1)(y1 - y2) - (y0 - y1)(x1 - x2) because it is	*
-*		less numericaly robust, although faster.		*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.	*
-*		WlzDVertex2 vx1:	Second vertex of triangle.	*
-*		WlzDVertex2 vx2:	Third vertex of triangle.	*
+* Function:	WlzGeomTriangleSnArea2				
+* Returns:	double:			Twice the signed area of the
+*					given triangle.		
+* Purpose:	Computes twice the signed area of the given triangle.
+*		The determinant is NOT computed the factorized form:
+*		(x0 - x1)(y1 - y2) - (y0 - y1)(x1 - x2) because it is
+*		less numericaly robust, although faster.	
+* Global refs:	-						
+* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
+*		WlzDVertex2 vx1:	Second vertex of triangle.
+*		WlzDVertex2 vx2:	Third vertex of triangle.
 ************************************************************************/
 double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				       WlzDVertex2 vx2)
@@ -177,17 +177,17 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /************************************************************************
-* Function:	WlzGeomInTriangleCircumcircle				*
-* Returns:	int:			Non zero if there's a conflict.	*
-* Purpose:	Tests to see if the given vertex is inside the		*
-*		circumcircle of the given triangle.			*
-* Global refs:	-							*
-* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.	*
-*		WlzDVertex2 vx1:	Second vertex of triangle.	*
-*		WlzDVertex2 vx2:	Third vertex of triangle.	*
-*		WlzDVertex2 gVx:	Given vertex to test.		*
+* Function:	WlzGeomInTriangleCircumcircle			
+* Returns:	int:			Non zero if there's a conflict.
+* Purpose:	Tests to see if the given vertex is inside the	
+*		circumcircle of the given triangle.		
+* Global refs:	-						
+* Parameters:	WlzDVertex2 vx0:	First vertex of triangle.
+*		WlzDVertex2 vx1:	Second vertex of triangle.
+*		WlzDVertex2 vx2:	Third vertex of triangle.
+*		WlzDVertex2 gVx:	Given vertex to test.	
 ************************************************************************/
- int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
+int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 					      WlzDVertex2 vx2, WlzDVertex2 gVx)
 {
   int			conflict;
@@ -221,4 +221,196 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
   conflict = ((alpha * xp) + (beta * yp) +
 	      (gamma * ((xp * xp) + (yp * yp))) < 0.0);
   return(conflict);
+}
+
+/************************************************************************
+* Function:	WlzGeomLineSegmentsIntersect			
+* Returns:	int:			Non zero if line segments
+*					intersect.
+* Purpose:	Tests to see if the two given line segments intersect.
+*		This is taken from J. O'Rourke: Computational Geometry
+*		in C, p250.					
+* Global refs:	-						
+* Parameters:	WlzDVertex2 p0:		1st vertex of 1st line segment.
+*		WlzDVertex2 p1:		2nd vertex 1st line segment.
+*		WlzDVertex2 q0:		1st vertex of 2nd line segment.
+*		WlzDVertex2 q1:		2nd vertex of 2nd line segment.
+*		WlzDVertex2 *dstN	Destination ptr for intersection
+*					vertex, may be NULL.
+************************************************************************/
+int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
+					     WlzDVertex2 q0, WlzDVertex2 q1,
+					     WlzDVertex2 *dstN)
+{
+  int		intersect = 0;
+  double	sp,
+  		tp,
+		dnm;
+
+  dnm = (p0.vtX * (q1.vtY - q0.vtY)) + (p1.vtX * (q0.vtY - q1.vtY)) +
+        (q0.vtX * (p0.vtY - p1.vtY)) + (q1.vtX * (p1.vtY - p0.vtY));
+  if(fabs(dnm) > DBL_EPSILON)
+  {
+    sp = ((p0.vtX * (q1.vtY - q0.vtY)) +
+          (q0.vtX * (p0.vtY - q1.vtY)) +
+	  (q1.vtX * (q0.vtY - p0.vtY))) / dnm;
+    tp = -(p0.vtX * (q0.vtY - p1.vtY) +
+           p1.vtX * (p0.vtY - q0.vtY) +
+	   q0.vtX * (p1.vtY - p0.vtY)) / dnm;
+  }
+  if((sp > 0.0) && (sp <= 1.0) && (tp > 0.0) && (tp <= 1.0))
+  {
+    if(dstN)
+    {
+      dstN->vtX = p0.vtX + (sp * (p1.vtX - p0.vtX));
+      dstN->vtY = p0.vtY + (sp * (p1.vtY - p0.vtY));
+    }
+  }
+  return(intersect);
+}
+
+/************************************************************************
+* Function:	WlzGeomCmpAngle
+* Returns:	int:			Result of comparison: -ve, 0
+*					or +ve. Only the sign is
+*					meaningful.
+* Purpose:	Given two end connected line segments: (p0, O) and
+*		(p1, O), compares the CCW angle of the segments,
+*		where O is the origin (0,0).
+* Global refs:	-
+* Parameters:	WlzDVertex2 p0:		1st segment endpoint vertex.
+*		WlzDVertex2 p1:		2nd segment endpoint vertex.
+************************************************************************/
+int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
+{
+  int		q0,
+  		q1,
+		o0,
+		o1,
+		cmp = 0;
+  double	tst = 0.0;
+  WlzDVertex2	s0,
+  		s1;
+  const int	quadTbl[4] = {2, 3, 1, 0},
+  		octTbl[8] = {4, 0, 1, 5, 6, 2, 3, 7};
+
+  /* Compute relative endpoints. */
+  /* Find quadrants:
+   *
+   *        ^ Y
+   *        |
+   *   q=1  | q=0
+   * -------O--------> X
+   *   q=2  | q=3
+   *        |
+   */
+  q0 = quadTbl[((p0.vtY > 0.0) << 1) | (p0.vtX > 0.0)]; 
+  q1 = quadTbl[((p1.vtY > 0.0) << 1) | (p1.vtX > 0.0)]; 
+  /* Compare quadrants. */
+  if((cmp = q0 - q1) == 0)
+  {
+    /* Find octants:
+     *       ^ Y
+     *       |
+     *  \o=2 |o=1 /
+     *    \  |  /
+     *  o=3 \|/ o=0
+     * ------O--------> X
+     *  o=4 /|\ o=7
+     *    /  |  \
+     *  / 0=5|o=6 \
+     *       |
+     */
+    s0.vtX = p0.vtX * p0.vtX; s0.vtY = p0.vtY * p0.vtY;
+    s1.vtX = p1.vtX * p1.vtX; s1.vtY = p1.vtY * p1.vtY;
+    o0 = octTbl[((s0.vtX > s0.vtY) << 2) | q0];
+    o1 = octTbl[((s1.vtX > s1.vtY) << 2) | q1];
+    /* Compare octants. */
+    if((cmp = o0 - o1) == 0)
+    {
+      /* The octants are the same need separate case for each octant. */
+      switch(o0)
+      {
+        case 0:
+	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  {
+	    tst = (s0.vtY / s0.vtX) - (s1.vtY / s1.vtX);
+	  }
+	  break;
+        case 1:
+	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  {
+	    tst = (s1.vtX / s1.vtY) - (s0.vtX / s0.vtY);
+	  }
+	  break;
+        case 2:
+	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  {
+	    tst = (s0.vtX / s0.vtY) - (s1.vtX / s1.vtY);
+	  }
+	  break;
+        case 3:
+	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  {
+	    tst = (s1.vtY / s1.vtX) - (s0.vtY / s0.vtX);
+	  }
+	  break;
+        case 4:
+	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  {
+	    tst = (s0.vtY / s0.vtX) - (s1.vtY / s1.vtX);
+	  }
+	  break;
+        case 5:
+	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  {
+	    tst = (s1.vtX / s1.vtY) - (s0.vtX / s0.vtY);
+	  }
+	  break;
+        case 6:
+	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  {
+	    tst = (s0.vtX / s0.vtY) - (s1.vtX / s1.vtY);
+	  }
+	  break;
+        case 7:
+	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  {
+	    tst = (s1.vtY / s1.vtX) - (s0.vtY / s0.vtX);
+	  }
+	  break;
+      }
+      if(tst > DBL_EPSILON)
+      {
+        cmp = 1.0;
+      }
+      else if(tst < -(DBL_EPSILON))
+      {
+        cmp = -1.0;
+      }
+    }
+  }
+  return(cmp);
+}
+
+/************************************************************************
+* Function:	WlzGeomVtxEqual2D
+* Returns:	int:			1 if node positions are equal,
+*					else 0.
+* Purpose:	Checks to see if two verticies are the same
+*		within some tollerance.
+* Global refs:	-
+* Parameters:	WlzDVertex2 pos0:	First node position.
+*		WlzDVertex2 pos1:	Second node position.
+*		double tolSq:		Square of tollerance value.
+************************************************************************/
+int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
+				  double tolSq)
+{
+  int		equal;
+
+  pos0.vtX -= pos1.vtX;
+  pos0.vtY -= pos1.vtY;
+  equal = ((pos0.vtX * pos0.vtX) + (pos0.vtY * pos0.vtY)) < tolSq;
+  return(equal);
 }

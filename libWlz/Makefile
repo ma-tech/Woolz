@@ -12,6 +12,7 @@
 # $Revision$
 # $Id$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 29-11-99 bill	Add WlzContour.c
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -43,6 +44,7 @@ CSOURCES		= \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
 			WlzCompThresh.c \
+			WlzContour.c \
 			WlzConvertPix.c \
 			WlzConvexHull.c \
 			WlzConvolve.c \

@@ -12,6 +12,7 @@
 #		library.
 # $Revision$
 # Maintenance:	Log changes below, with most recent at top of list.
+# 01-12-1999 bill Add AlcBlockStack.c
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -27,6 +28,7 @@ EXECUTABLES		=
 # List of all 'C' source files (modify as required).
 CSOURCES		= AlcAlloc.c \
 			  AlcArray.c \
+			  AlcBlockStack.c \
 			  AlcDLPList.c \
 			  AlcHashTable.c \
 			  AlcString.c

@@ -15,6 +15,10 @@
 *		primatives, enumerations and structures.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 1999-11-29 bill	Add WlzEdge, WlzNode, WlzContour and all
+*			the related types.
+* 1999-09-09 bill	Add WLZ_CONTOUR and WLZ_CONTOUR_LIST to the
+*			WlzObjectType enum.
 ************************************************************************/
 
 #ifdef  __cplusplus
@@ -62,6 +66,8 @@ typedef enum
   WLZ_CONV_HULL			= 12,
   WLZ_HISTOGRAM			= 13,
   WLZ_3D_POLYGON		= 14,
+  WLZ_CONTOUR			= 15,
+  WLZ_CONTOUR_LIST		= 16,
   WLZ_RECTANGLE			= 20,
   WLZ_VECTOR_INT		= 30,
   WLZ_VECTOR_FLOAT		= 31,
@@ -548,6 +554,150 @@ typedef struct
   double	yMax;
   double	zMax;
 } WlzDBox3;
+
+/************************************************************************
+* Edge types
+************************************************************************/
+typedef enum
+{
+  WLZ_EDGENODE_2D,                                           /* 2D edge node */
+  WLZ_EDGENODE_3D                                            /* 3D edge node */
+} WlzEdgeNodeType;
+
+/************************************************************************
+* Edge flags
+************************************************************************/
+typedef enum
+{
+  WLZ_EDGE_FLAGS_NONE           = 0,
+  WLZ_EDGE_FLAGS_STATS          = (1),
+  WLZ_EDGE_FLAGS_COPY           = (1<<1)
+} WlzEdgeFlags;
+
+/************************************************************************
+* WlzEdgeNode: Union of edge node pointers.
+************************************************************************/
+typedef union
+{
+  struct _WlzEdgeNodeCore *core;
+  struct _WlzEdgeNode2    *nod2;
+  struct _WlzEdgeNode3    *nod3;
+} WlzEdgeNode;
+
+/************************************************************************
+* WlzEdgeNodeCore: The core edge node, which contains the type and a
+* pointer to an edge which references this edge node. But does not
+* contain any dimension specific data (ie position).
+************************************************************************/
+typedef struct _WlzEdgeNodeCore
+{
+  WlzEdgeNodeType type;                          /* Type: 2D or 3D edge node */
+  unsigned int  index;     /* Unique index increasing in order of allocation */
+  unsigned int  flags;                                         /* Node flags */
+  void          *data;                    /* Node data, application specific */
+} WlzEdgeNodeCore;
+
+/************************************************************************
+* WlzEdgeNode2: A 2D edge node.
+************************************************************************/
+typedef struct _WlzEdgeNode2
+{
+  WlzEdgeNodeType type;                                /* Type: 2D edge node */
+  unsigned int  index;     /* Unique index increasing in order of allocation */
+  unsigned int  flags;                                         /* Node flags */
+  void          *data;                    /* Node data, application specific */
+  WlzDVertex2   pos;                                  /* Node position in 2D */
+} WlzEdgeNode2;
+
+/************************************************************************
+* WlzEdgeNode3: A 3D edge node.
+************************************************************************/
+typedef struct _WlzEdgeNode3
+{
+  WlzEdgeNodeType type;                                /* Type: 3D edge node */
+  unsigned int  index;     /* Unique index increasing in order of allocation */
+  unsigned int  flags;                                         /* Node flags */
+  void          *data;                    /* Node data, application specific */
+  WlzDVertex3   pos;                                   /* Node position n 3D */
+} WlzEdgeNode3;
+
+/************************************************************************
+* WlzEdge data structure loosely based on the half-edge data structure
+* of Mäntylä.
+*                                 opp
+*                 #### -------------------------\ 
+*            node #  #                           
+*                 #### \-------------------------
+*                   |            this            /|
+*                   |                             |
+*                   | next                   prev |
+*                   |                             |
+*                   |/                            |
+*
+************************************************************************/
+typedef struct _WlzEdge
+{
+  unsigned int  index;     /* Unique index increasing in order of allocation */
+  unsigned int  flags;                                         /* Edge flags */
+  void          *data;                    /* Edge data, application specific */
+  WlzEdgeNode   node;            /* Node towards which this edge is directed */
+  struct _WlzEdge *next;                                        /* Next edge */
+  struct _WlzEdge *prev;                                    /* Previous edge */
+  struct _WlzEdge *opp;                                     /* Opposite edge */
+} WlzEdge;
+
+/************************************************************************
+* Types of contour
+************************************************************************/
+typedef enum
+{
+  WLZ_CONTOUR_TYPE_2D,
+  WLZ_CONTOUR_TYPE_3D
+} WlzContourType;
+
+/************************************************************************
+* Contour generation methods.
+************************************************************************/
+typedef enum
+{
+  WLZ_CONTOUR_MTD_ISO,                                          /* Iso-value */
+  WLZ_CONTOUR_MTD_GRD                              /* Maximum gradient value */
+} WlzContourMethod;
+
+/************************************************************************
+* WlzContour: A single contour (polyline or surface) represented by
+* half-edges. The nodes and edges of the contour are each allocated
+* using AlcBlockStack's so that neither nodes nor edges need to be
+* contigous in memory but all edges and nodes can be accessed by
+* traversing the block stack data structures.
+************************************************************************/
+typedef struct _WlzContour
+{
+  WlzObjectType type;                                                /* CORE */
+  int           linkcount;                                           /* CORE */
+  void          *freeptr;                                            /* CORE */
+  WlzContourType ctrType;			   /* Contour type: 2D or 3D */
+  AlcBlockStack *nodeStk;				 /* Node block stack */
+  AlcBlockStack *edgeStk;				 /* Edge block stack */
+  int		nNodes;			      /* Number of nodes in contour. */
+  int		nEdges;			      /* Number of edges in contour. */
+  WlzEdgeNode   nodes;                       		    /* Contour nodes */
+  WlzEdge       *edges;                      		    /* Contour edges */
+} WlzContour;
+
+/************************************************************************
+* WlzContourList: A linked list of contours.
+************************************************************************/
+typedef struct _WlzContourList
+{
+  WlzObjectType type;                                                /* CORE */
+  int           linkcount;                                           /* CORE */
+  void          *freeptr;                                            /* CORE */
+  struct _WlzContourList *next;                 /* Next contour list element */
+  struct _WlzContourList *prev;             /* Previous contour list element */
+  struct _WlzContour *contour;          /* Contour held by this list element */
+} WlzContourList;
+
 
 /************************************************************************
 * Woolz values union.						
