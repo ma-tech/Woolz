@@ -272,7 +272,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
       fz *= viewStr->voxelSize[2];
     }
     upp_x = (fx*cos_p*cos_t + fy*cos_p*sin_t - fz*sin_p);
-    upp_y = (-fx*sin_t + fz*cos_t);
+    upp_y = (-fx*sin_t + fy*cos_t);
     zeta = -(viewStr->fixed_line_angle - atan2(upp_y, upp_x));
     break;
     
