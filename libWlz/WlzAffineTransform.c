@@ -13,6 +13,7 @@
 *		applying them to Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 19-01-01 bill Modify WlzAffineTransformIsIdentity().
 * 30-11-00 bill WlzAffineTransformMatrixSet() now sets 3D matricies.
 * 10-10-00 bill	Add WlzAffineTransformContour(),
 *		WlzAffineTransformGMModel(),
@@ -1984,6 +1985,7 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
   double        tD0;
   double        **mat;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double	delta = 1.0e-06;
  
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzAffineTransformIsIdentity FE 0x%lx 0x%lx\n",
@@ -1999,36 +2001,36 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
     switch(dim)
     {
       case 2:
-	if((fabs(mat[0][0] - 1.0) <= DBL_EPSILON) &&
-	   (fabs(mat[0][1]) <= DBL_EPSILON) &&
-	   (fabs(mat[0][2]) <= DBL_EPSILON) &&
-	   (fabs(mat[1][0]) <= DBL_EPSILON) &&
-	   (fabs(mat[1][1] - 1.0) <= DBL_EPSILON) &&
-	   (fabs(mat[1][2]) <= DBL_EPSILON) &&
-	   (fabs(mat[2][0]) <= DBL_EPSILON) &&
-	   (fabs(mat[2][1]) <= DBL_EPSILON) &&
-	   (fabs(mat[2][2] - 1.0) <= DBL_EPSILON)) 
+	if((fabs(mat[0][0] - 1.0) <= delta) &&
+	   (fabs(mat[0][1]) <= delta) &&
+	   (fabs(mat[0][2]) <= delta) &&
+	   (fabs(mat[1][0]) <= delta) &&
+	   (fabs(mat[1][1] - 1.0) <= delta) &&
+	   (fabs(mat[1][2]) <= delta) &&
+	   (fabs(mat[2][0]) <= delta) &&
+	   (fabs(mat[2][1]) <= delta) &&
+	   (fabs(mat[2][2] - 1.0) <= delta)) 
 	{
 	  isIdentity = 1;
 	}
         break;
       case 3:
-	if((fabs(mat[0][0] - 1.0) <= DBL_EPSILON) &&
-	   (fabs(mat[0][1]) <= DBL_EPSILON) &&
-	   (fabs(mat[0][2]) <= DBL_EPSILON) &&
-	   (fabs(mat[0][3]) <= DBL_EPSILON) &&
-	   (fabs(mat[1][0]) <= DBL_EPSILON) &&
-	   (fabs(mat[1][1] - 1.0) <= DBL_EPSILON) &&
-	   (fabs(mat[1][2]) <= DBL_EPSILON) &&
-	   (fabs(mat[1][3]) <= DBL_EPSILON) &&
-	   (fabs(mat[2][0]) <= DBL_EPSILON) &&
-	   (fabs(mat[2][1]) <= DBL_EPSILON) &&
-	   (fabs(mat[2][2] - 1.0) <= DBL_EPSILON) &&
-	   (fabs(mat[2][3]) <= DBL_EPSILON) &&
-	   (fabs(mat[3][0]) <= DBL_EPSILON) &&
-	   (fabs(mat[3][1]) <= DBL_EPSILON) &&
-	   (fabs(mat[3][2]) <= DBL_EPSILON) &&
-	   (fabs(mat[3][3] - 1.0) <= DBL_EPSILON))
+	if((fabs(mat[0][0] - 1.0) <= delta) &&
+	   (fabs(mat[0][1]) <= delta) &&
+	   (fabs(mat[0][2]) <= delta) &&
+	   (fabs(mat[0][3]) <= delta) &&
+	   (fabs(mat[1][0]) <= delta) &&
+	   (fabs(mat[1][1] - 1.0) <= delta) &&
+	   (fabs(mat[1][2]) <= delta) &&
+	   (fabs(mat[1][3]) <= delta) &&
+	   (fabs(mat[2][0]) <= delta) &&
+	   (fabs(mat[2][1]) <= delta) &&
+	   (fabs(mat[2][2] - 1.0) <= delta) &&
+	   (fabs(mat[2][3]) <= delta) &&
+	   (fabs(mat[3][0]) <= delta) &&
+	   (fabs(mat[3][1]) <= delta) &&
+	   (fabs(mat[3][2]) <= delta) &&
+	   (fabs(mat[3][3] - 1.0) <= delta))
 	{
 	  isIdentity = 1;
 	}
