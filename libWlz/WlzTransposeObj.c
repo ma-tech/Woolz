@@ -18,20 +18,20 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 * 15-08-00 bill remove obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
 *		WLZ_POINT_(INT)|(FLOAT).
+* 21-08-00 richard	Add transpose for 3D objects - plane-wise only
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
 #include <Wlz.h>
 
-static WlzObject 		*WlzTransposeRectObj(
-				  WlzObject *obj,
-				  WlzErrorNum *dstErr);
-static WlzBoundList 		*WlzTransposeBound(
-				  WlzBoundList *blist,
-				   WlzErrorNum *dstErr);
-static WlzPolygonDomain 	*WlzTransposePolygon(
-				  WlzPolygonDomain *poly,
-				  WlzErrorNum *dstErr);
+static WlzObject *WlzTransposeRectObj(WlzObject *obj,
+				      WlzErrorNum *dstErr);
+static WlzBoundList *WlzTransposeBound(WlzBoundList	*blist,
+				       WlzErrorNum *dstErr);
+static WlzPolygonDomain *WlzTransposePolygon(WlzPolygonDomain *poly,
+					     WlzErrorNum *dstErr);
+static WlzObject *WlzTranspose3DObj(WlzObject *obj,
+				      WlzErrorNum *dstErr);
 
 /************************************************************************
 *   Function   : WlzTransposeObj					*
@@ -100,8 +100,7 @@ WlzObject *WlzTransposeObj(
       break;
 
     case WLZ_3D_DOMAINOBJ:
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      break;
+      return WlzTranspose3DObj(obj, dstErr);
 
     case WLZ_TRANS_OBJ:
       if( nobj = WlzTransposeObj(obj->values.obj, &errNum) ){
@@ -464,4 +463,87 @@ static WlzObject *WlzTransposeRectObj(
     *dstErr = errNum;
   }
   return nobj;
+}
+
+static WlzObject *WlzTranspose3DObj(
+  WlzObject *obj,
+  WlzErrorNum *dstErr)
+{
+  WlzObject	*rtnObj;
+  WlzObject	*obj1, *obj2;
+  WlzDomain	domain;
+  WlzValues	values;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  int		p, indx;
+
+  /* only check for the plane domain - other chacks are done */
+  if( obj->domain.core == NULL ){
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else {
+    if( domain.p = WlzMakePlaneDomain(obj->domain.p->type,
+				      obj->domain.p->plane1,
+				      obj->domain.p->lastpl,
+				      obj->domain.p->kol1,
+				      obj->domain.p->lastkl,
+				      obj->domain.p->line1,
+				      obj->domain.p->lastln,
+				      &errNum) ){
+      domain.p->voxel_size[0] = obj->domain.p->voxel_size[0];
+      domain.p->voxel_size[1] = obj->domain.p->voxel_size[1];
+      domain.p->voxel_size[2] = obj->domain.p->voxel_size[2];
+      if( obj->values.core ){
+	values.vox = WlzMakeVoxelValueTb(obj->values.vox->type,
+					 obj->values.vox->plane1,
+					 obj->values.vox->lastpl,
+					 obj->values.vox->bckgrnd,
+					 NULL, &errNum);
+      }
+      else {
+	values.vox = NULL;
+      }
+
+      if( errNum == WLZ_ERR_NONE ){
+	rtnObj = WlzMakeMain(obj->type, domain, values,
+			     NULL, NULL, &errNum);
+      }
+    
+      if( errNum == WLZ_ERR_NONE ){
+	for(p=obj->domain.p->plane1, indx=0;
+	    p <= obj->domain.p->lastpl; p++, indx++){
+	  if( obj->domain.p->domains[indx].core ){
+	    domain = obj->domain.p->domains[indx];
+	    if( obj->values.core ){
+	      values = obj->values.vox->values[indx];
+	    }
+	    else {
+	      values.core = NULL;
+	    }
+	    obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
+			       NULL, NULL, NULL);
+	    obj2 = WlzTransposeObj(obj1, &errNum);
+	    rtnObj->domain.p->domains[indx] =
+	      WlzAssignDomain(obj2->domain, &errNum);
+	    if( values.core ){
+	      rtnObj->values.vox->values[indx] =
+		WlzAssignValues(obj2->values, &errNum);
+	    }
+	    WlzFreeObj(obj1);
+	    WlzFreeObj(obj2);
+	  }
+	  else {
+	    rtnObj->domain.p->domains[indx].core = NULL;
+	    if( obj->values.core ){
+	      rtnObj->values.vox->values[indx].core = NULL;
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
 }

@@ -76,6 +76,7 @@ int main(int	argc,
     switch( obj->type )
     {
     case WLZ_2D_DOMAINOBJ:
+    case WLZ_3D_DOMAINOBJ:
     case WLZ_TRANS_OBJ:
     case WLZ_2D_POLYGON:
     case WLZ_BOUNDLIST:

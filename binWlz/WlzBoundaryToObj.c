@@ -76,7 +76,7 @@ int main(int	argc,
     switch( obj->type )
     {
     case WLZ_BOUNDLIST:
-      if( (nobj = WlzBoundaryToObj(obj, WLZ_SIMPLE_FILL,
+      if( (nobj = WlzBoundaryToObj(obj, WLZ_EVEN_ODD_FILL,
       				NULL)) != NULL ){
 	(void )WlzWriteObj(stdout, nobj);
 	WlzFreeObj(nobj);
@@ -85,7 +85,7 @@ int main(int	argc,
 
     case WLZ_3D_DOMAINOBJ:
       if( obj->domain.p->type == WLZ_PLANEDOMAIN_BOUNDLIST ){
-	if( (nobj = WlzBoundaryToObj(obj, WLZ_SIMPLE_FILL,
+	if( (nobj = WlzBoundaryToObj(obj, WLZ_EVEN_ODD_FILL,
 				    NULL)) != NULL ){
 	  (void )WlzWriteObj(stdout, nobj);
 	  WlzFreeObj(nobj);

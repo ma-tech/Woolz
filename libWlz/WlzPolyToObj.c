@@ -19,6 +19,45 @@
 #include <stdlib.h>
 #include <Wlz.h>
 
+/* procedure to calculate if inside the polygon using the
+   even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
+   Assumes integer vertices and that the vertex is not on the
+   polyline */
+static int WlzInsidePolyEO(
+  WlzIVertex2	vtx,
+  WlzPolygonDomain	*pgdm,
+  WlzErrorNum		*dstErr)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		i, crossings;
+  WlzIVertex2	*vtxs;
+  double	x;
+  
+  /* run round polyline checking crossings */
+  vtxs = pgdm->vtx;
+  crossings = 0;
+  for(i=0; i < pgdm->nvertices - 1; i++){
+    if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
+       ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
+      x = (vtx.vtY - vtxs[i].vtY) * (vtxs[i+1].vtX - vtxs[i].vtX) /
+	(vtxs[i+1].vtY - vtxs[i].vtY) + vtxs[i].vtX;
+      if( x > vtx.vtX ){
+	crossings++;
+      }
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  if( crossings%2 ){
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
 
 /* static vertex comparison procedures for qsort */
 static int vtx_compare(
@@ -269,8 +308,26 @@ WlzObject *WlzPolyToObj(
       break;
 
     case WLZ_EVEN_ODD_FILL:
-      WlzFreeObj( obj1 );
-      errNum = WLZ_ERR_PARAM_DATA;
+      ignlns = 0;
+      errNum = WlzLabel(obj1, &n, &objs, 1024, ignlns, WLZ_4_CONNECTED);
+      for(i=0; i < n; i++){
+	WlzIVertex2	vtx;
+	vtx.vtX = objs[i]->domain.i->kol1;
+	if( objs[i]->domain.i->type == WLZ_INTERVALDOMAIN_INTVL ){
+	  vtx.vtX += objs[i]->domain.i->intvlines->intvs->ileft;
+	}
+	vtx.vtY = objs[i]->domain.i->line1;
+	if( WlzInsidePolyEO(vtx, pgdm, &errNum) ){
+	  /* replace with empty obj */
+	  WlzFreeObj(objs[i]);
+	  objs[i] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
+	}
+      }
+      obj2 = WlzAssignObject(WlzUnionN(n, objs, 0, &errNum), NULL);
+      for(i=0; i < n; i++){
+	WlzFreeObj(objs[i]);
+      }
+      AlcFree((void *) objs);
       break;
 
     case WLZ_VERTEX_FILL:
