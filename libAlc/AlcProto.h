@@ -316,7 +316,6 @@ extern AlcCPQItem               *AlcCPQItemNew(
                                   AlcCPQQueue *q,
                                   float priority,
                                   void *entry,
-                                  void (*freeFn)(void *),
                                   AlcErrno *dstErr);
 extern AlcErrno                 AlcCPQQueueFree(
                                   AlcCPQQueue *q);
@@ -326,8 +325,7 @@ extern void                     AlcCPQItemFree(
 extern AlcErrno                 AlcCPQEntryInsert(
                                   AlcCPQQueue *q,
                                   float priority,
-                                  void *entry,
-                                  void (*freeFn)(void *));
+                                  void *entry);
 extern AlcErrno                 AlcCPQItemInsert(
                                   AlcCPQQueue *q,
                                   AlcCPQItem *item);

@@ -122,9 +122,6 @@ typedef struct _AlcCPQItem
   				     \f$ \geq 0\f$. Priority is greater
 				     for greater priority values. */
   void          *entry;		/*!< User supplied entry. May be NULL. */
-  void          (*freeFn)(void *); /*!< Function that may be called to
-  				     free the user supplied entry when
-				     an item is freed. May be NULL. */
   struct _AlcCPQItem *prev;	/*!< Previous item in bucket or free
       				     item list. */
   struct _AlcCPQItem *next;	/*!< Next item in bucket or free

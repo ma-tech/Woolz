@@ -110,13 +110,10 @@ AlcCPQQueue	*AlcCPQQueueNew(AlcErrno *dstErr)
 * \param	q			Given queue.
 * \param	priority		Priority for the item.
 * \param	entry			Entry for the item.
-* \param	freeFn			Function that can be used to free
-*					the given entry when an item is freed.
 * \param	dstErr			Destination error pointer may be NULL.
 */
 AlcCPQItem	*AlcCPQItemNew(AlcCPQQueue *q, float priority,
-			      void *entry, void (*freeFn)(void *),
-			      AlcErrno *dstErr)
+			      void *entry, AlcErrno *dstErr)
 {
   int		idx,
   		iCnt;
@@ -145,7 +142,6 @@ AlcCPQItem	*AlcCPQItemNew(AlcCPQQueue *q, float priority,
     item->prev = item->next = NULL;
     item->priority = priority;
     item->entry = entry;
-    item->freeFn = freeFn;
   }
   if(dstErr)
   {
@@ -157,7 +153,8 @@ AlcCPQItem	*AlcCPQItemNew(AlcCPQQueue *q, float priority,
 /*!
 * \return	Alc error code.
 * \ingroup	AlcCPQ
-* \brief	Free's a priority queue.
+* \brief	Frees a priority queue. Queue item entries are not
+*		freed.
 * \param	q			Given queue to free.
 */
 AlcErrno	AlcCPQQueueFree(AlcCPQQueue *q)
@@ -168,18 +165,6 @@ AlcErrno	AlcCPQQueueFree(AlcCPQQueue *q)
 
   if(q)
   {
-    for(idx = 0; idx < q->nBucket; ++idx)
-    {
-      item = *(q->buckets + q->bucketBase + idx);
-      while(item)
-      {
-        if(item->freeFn && item->entry)
-	{
-	  (*(item->freeFn))(item->entry);
-	}
-	item = item->next;
-      }
-    }
     AlcFree(q->buckets);
     AlcBlockStackFree(q->freeStack);
     AlcFree(q);
@@ -190,8 +175,8 @@ AlcErrno	AlcCPQQueueFree(AlcCPQQueue *q)
 /*!
 * \return	Alc error code.
 * \ingroup	AlcCPQ
-* \brief	Free's a priority queue item by putting it onto the freeItem
-*		list.
+* \brief	Frees a priority queue item by putting it onto the freeItem
+*		list. The queue items entries are not freed.
 * \param	q			The queue.
 * \param	item			Given item to free.
 */
@@ -199,10 +184,6 @@ void		AlcCPQItemFree(AlcCPQQueue *q, AlcCPQItem *item)
 {
   if(q && item)
   {
-    if(item->freeFn && item->entry)
-    {
-      (*(item->freeFn))(item->entry);
-    }
     item->next = NULL;
     if((item->prev = q->freeItem) != NULL)
     {
@@ -220,17 +201,13 @@ void		AlcCPQItemFree(AlcCPQQueue *q, AlcCPQItem *item)
 * \param	q			The queue.
 * \param	priority		Priority of entry.
 * \param	entry			Given entry.
-* \param	freeFn			Function that will be called to
-*					free the entry when an item is
-*					freed, may be NULL.
 */
-AlcErrno	AlcCPQEntryInsert(AlcCPQQueue *q, float priority,
-				 void *entry, void (*freeFn)(void *))
+AlcErrno	AlcCPQEntryInsert(AlcCPQQueue *q, float priority, void *entry)
 {
   AlcCPQItem	*item;
   AlcErrno	errNum = ALC_ER_NONE;
 
-  if((item = AlcCPQItemNew(q, priority, entry, freeFn, &errNum)) != NULL)
+  if((item = AlcCPQItemNew(q, priority, entry, &errNum)) != NULL)
   {
     errNum = AlcCPQItemInsert(q, item);
   }
