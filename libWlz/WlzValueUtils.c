@@ -13,6 +13,7 @@
 *		vectors of simple values.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
 ************************************************************************/
 #include <stdlib.h>
 #include <string.h>
@@ -1104,7 +1105,7 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 }
 
 /************************************************************************
-* Function:	WlzValueCopy<SrcType>To<DstType>		
+* Function:	WlzValueCopy<SrcType>To<DstType>
 * Returns:	void						
 * Purpose:	Copies a vector of <SrcType> verticies to a vector of
 *		<DstType> verticies, where the source and destination
@@ -1213,6 +1214,118 @@ void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
 					     int count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzIVertex2));
+}
+
+/************************************************************************
+* Function:	WlzValueCopy<SrcType>To<DstType>3
+* Returns:	void						
+* Purpose:	Copies a vector of <SrcType> verticies to a vector of
+*		<DstType> verticies, where the source and destination
+*		types are any combination of WlzDVertex3, WlzFVertex3
+*		and WlzIVertex3.					
+* Global refs:	-						
+* Parameters:	<SrcType> *dst:		Destination vector.	
+*		<DstType> *src:		Source vector.		
+*		int count:		Number of vector elements to
+*					be copied.		
+************************************************************************/
+void		WlzValueCopyDVertexToDVertex3(WlzDVertex3 *dst,
+					      WlzDVertex3 *src,
+					      int count)
+{
+  (void )memcpy(dst, src, count * sizeof(WlzDVertex3));
+}
+
+void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
+					      WlzDVertex3 *src,
+					      int count)
+{
+  while(count-- > 0)
+  {
+    dst->vtX = WLZ_NINT(src->vtX);
+    dst->vtY = WLZ_NINT(src->vtY);
+    ++dst;
+    ++src;
+  }
+}
+
+void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
+					      WlzDVertex3 *src,
+					      int count)
+{
+  while(count-- > 0)
+  {
+    dst->vtX = WLZ_NINT(src->vtX);
+    dst->vtY = WLZ_NINT(src->vtY);
+    ++dst;
+    ++src;
+  }
+}
+
+void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
+					      WlzFVertex3 *src,
+					      int count)
+{
+  while(count-- > 0)
+  {
+    dst->vtX = src->vtX;
+    dst->vtY = src->vtY;
+    ++dst;
+    ++src;
+  }
+}
+
+void		WlzValueCopyFVertexToFVertex3(WlzFVertex3 *dst,
+					      WlzFVertex3 *src,
+					      int count)
+{
+  (void )memcpy(dst, src, count * sizeof(WlzFVertex3));
+}
+
+void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
+					      WlzFVertex3 *src,
+					      int count)
+{
+  while(count-- > 0)
+  {
+    dst->vtX = WLZ_NINT(src->vtX);
+    dst->vtY = WLZ_NINT(src->vtY);
+    ++dst;
+    ++src;
+  }
+}
+
+void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
+					      WlzIVertex3 *src,
+					      int count)
+{
+  while(count-- > 0)
+  {
+    dst->vtX = src->vtX;
+    dst->vtY = src->vtY;
+    ++dst;
+    ++src;
+  }
+}
+
+void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
+					      WlzIVertex3 *src,
+					      int count)
+{
+  while(count-- > 0)
+  {
+    dst->vtX = src->vtX;
+    dst->vtY = src->vtY;
+    ++dst;
+    ++src;
+  }
+}
+
+void		WlzValueCopyIVertexToIVertex3(WlzIVertex3 *dst,
+					      WlzIVertex3 *src,
+					      int count)
+{
+  (void )memcpy(dst, src, count * sizeof(WlzIVertex3));
 }
 
 /************************************************************************

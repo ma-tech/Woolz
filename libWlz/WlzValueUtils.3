@@ -74,6 +74,15 @@ WlzValueCopyFVertexToIVertex, \
 WlzValueCopyIVertexToDVertex, \
 WlzValueCopyIVertexToFVertex, \
 WlzValueCopyIVertexToIVertex, \
+WlzValueCopyDVertexToDVertex3, \
+WlzValueCopyDVertexToFVertex3, \
+WlzValueCopyDVertexToIVertex3, \
+WlzValueCopyFVertexToDVertex3, \
+WlzValueCopyFVertexToFVertex3, \
+WlzValueCopyFVertexToIVertex3, \
+WlzValueCopyIVertexToDVertex3, \
+WlzValueCopyIVertexToFVertex3, \
+WlzValueCopyIVertexToIVertex3, \
 WlzValueConvertPixel \
  \- Functions for setting and copying vectors of simple values.
 .SH SYNOPSIS
@@ -288,6 +297,42 @@ WlzValueConvertPixel \
 .BI "void WlzValueCopyIVertexToIVertex(WlzIVertex2 *" dst ,
 .ti +10m
 .BI " WlzIVertex2 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDVertexToDVertex3(WlzDVertex3 *" dst ,
+.ti +10m
+.BI " WlzDVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDVertexToFVertex3(WlzFVertex3 *" dst ,
+.ti +10m
+.BI " WlzDVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyDVertexToIVertex3(WlzIVertex3 *" dst ,
+.ti +10m
+.BI " WlzDVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFVertexToDVertex3(WlzDVertex3 *" dst ,
+.ti +10m
+.BI " WlzFVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFVertexToFVertex3(WlzFVertex3 *" dst ,
+.ti +10m
+.BI " WlzFVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyFVertexToIVertex3(WlzIVertex3 *" dst ,
+.ti +10m
+.BI " WlzFVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIVertexToDVertex3(WlzDVertex3 *" dst ,
+.ti +10m
+.BI " WlzIVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIVertexToFVertex3(WlzFVertex3 *" dst ,
+.ti +10m
+.BI " WlzIVertex3 *" src ", int " count );
+.LP
+.BI "void WlzValueCopyIVertexToIVertex3(WlzIVertex3 *" dst ,
+.ti +10m
+.BI " WlzIVertex3 *" src ", int " count );
 .LP
 .BI "WlzErrorNum WlzValueConvertPixel(WlzPixelV *" dstPix ,
 .ti +10m

@@ -15,6 +15,7 @@
 *		primatives, enumerations and structures.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-11-00 bill	Add WlzVertexP and modified the unused WlzVertexType.
 * 29-09-00 bill	Move the primitives from the WlzAffineTransform into
 *		their own data structure.
 * 14-08-00 bill	Remove WLZ_CONTOUR_LIST object type. Add contour to
@@ -312,16 +313,6 @@ typedef enum
 } WlzMeshError;
 
 /************************************************************************
-* Vertex data types.						
-************************************************************************/
-typedef enum
-{
-  WLZ_VERTEX_INT		= 1,
-  WLZ_VERTEX_FLOAT,
-  WLZ_VERTEX_DOUBLE
-} WlzVertexType;
-
-/************************************************************************
 * Connectivity.							
 ************************************************************************/
 typedef enum
@@ -525,6 +516,26 @@ typedef struct
   double	vtY;
   double	vtZ;
 } WlzDVertex3;
+
+typedef enum
+{
+  WLZ_VERTEX_I2		= 1,
+  WLZ_VERTEX_F2,
+  WLZ_VERTEX_D2,
+  WLZ_VERTEX_I3,
+  WLZ_VERTEX_F3,
+  WLZ_VERTEX_D3
+} WlzVertexType;
+
+typedef union
+{
+  WlzIVertex2	*vI2;
+  WlzFVertex2	*vF2;
+  WlzDVertex2	*vD2;
+  WlzIVertex3	*vI3;
+  WlzFVertex3	*vF3;
+  WlzDVertex3	*vD3;
+} WlzVertexP;
 
 /************************************************************************
 * Bounding boxes.						

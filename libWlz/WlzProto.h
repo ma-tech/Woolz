@@ -47,6 +47,7 @@
 *		  be needed to avoid this.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
 * 10-10-00 bill Add WlzAffineTransformContour(),
 *               WlzAffineTransformGMModel(),
 *               WlzAffineTransformBBoxI2(),
@@ -2447,6 +2448,42 @@ extern void			WlzValueCopyIVertexToFVertex(
 extern void			WlzValueCopyIVertexToIVertex(
 				  WlzIVertex2 *dst,
 				  WlzIVertex2 *src,
+				  int count);
+extern void			WlzValueCopyDVertexToDVertex3(
+				  WlzDVertex3 *dst,
+				  WlzDVertex3 *src,
+				  int count);
+extern void			WlzValueCopyDVertexToFVertex3(
+				  WlzFVertex3 *dst,
+				  WlzDVertex3 *src,
+				  int count);
+extern void			WlzValueCopyDVertexToIVertex3(
+				  WlzIVertex3 *dst,
+				  WlzDVertex3 *src,
+				  int count);
+extern void			WlzValueCopyFVertexToDVertex3(
+				  WlzDVertex3 *dst,
+				  WlzFVertex3 *src,
+				  int count);
+extern void			WlzValueCopyFVertexToFVertex3(
+				  WlzFVertex3 *dst,
+				  WlzFVertex3 *src,
+				  int count);
+extern void			WlzValueCopyFVertexToIVertex3(
+				  WlzIVertex3 *dst,
+				  WlzFVertex3 *src,
+				  int count);
+extern void			WlzValueCopyIVertexToDVertex3(
+				  WlzDVertex3 *dst,
+				  WlzIVertex3 *src,
+				  int count);
+extern void			WlzValueCopyIVertexToFVertex3(
+				  WlzFVertex3 *dst,
+				  WlzIVertex3 *src,
+				  int count);
+extern void			WlzValueCopyIVertexToIVertex3(
+				  WlzIVertex3 *dst,
+				  WlzIVertex3 *src,
 				  int count);
 extern WlzErrorNum 		WlzValueConvertPixel(
 				  WlzPixelV *dstPix,
