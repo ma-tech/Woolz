@@ -1776,8 +1776,8 @@ WlzErrorNum	WlzAffineTransformScaleSet(WlzAffineTransform *tr,
 	tr->mat[0][1] = tr->mat[0][2] = tr->mat[0][3] = 0.0;
 	tr->mat[1][0] = tr->mat[1][2] = tr->mat[1][3] = 0.0;
 	tr->mat[2][0] = tr->mat[2][1] = tr->mat[2][3] = 0.0;
-	tr->mat[2][0] = tr->mat[2][1] = tr->mat[2][2] = 0.0;
-
+	tr->mat[3][0] = tr->mat[3][1] = tr->mat[3][2] = 0.0;
+	tr->mat[3][3] = 1.0;
         break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
@@ -2075,7 +2075,10 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
   {
     switch( trans->type )
     {
-      case WLZ_TRANSFORM_2D_AFFINE:
+      case WLZ_TRANSFORM_2D_AFFINE: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_REG: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_TRANS: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_NOSHEAR:
 	for(idx0 = 0; idx0 < 3; ++idx0)
 	{
 	  for(idx1 = 0; idx1 < 3; ++idx1)
@@ -2084,7 +2087,10 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
 	  }
 	}
 	break;
-      case WLZ_TRANSFORM_3D_AFFINE:
+      case WLZ_TRANSFORM_3D_AFFINE: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_REG: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_TRANS: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_NOSHEAR:
 	for(idx0 = 0; idx0 < 4; ++idx0)
 	{
 	  for(idx1 = 0; idx1 < 4; ++idx1)
