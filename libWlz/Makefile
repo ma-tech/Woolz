@@ -153,6 +153,7 @@ CSOURCES		= \
 			WlzRegCCor.c \
 			WlzRegICP.c \
 			WlzRGBAConvert.c \
+			WlzRGBAImageArithmetic.c \
 			WlzRGBARange.c \
 			WlzRGBAPixelUtils.c \
 			WlzRGBAThreshold.c \

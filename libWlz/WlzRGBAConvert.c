@@ -30,6 +30,12 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
   WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr);
 
+static WlzObject *WlzCompoundToRGBA3D(
+  WlzCompoundArray	*cmpnd,
+  WlzRGBAColorSpace	colSpc,
+  int			clipFlg,
+  WlzErrorNum		*dstErr);
+
 static WlzObject *WlzRGBAToModulus3D(
   WlzObject	*obj,
   WlzErrorNum	*dstErr);
@@ -297,6 +303,155 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
     *dstErr = errNum;
   }
   return NULL;
+}
+
+WlzObject *WlzCompoundToRGBA(
+  WlzCompoundArray	*cmpnd,
+  WlzRGBAColorSpace	colSpc,
+  int			clipFlg,
+  WlzErrorNum		*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzPixelV	bckgrnd;
+  int		i, j;
+  UINT		b[4];
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* check object - must have at least 3 grey-level objects
+     all of the same type. A fourth is used as the alpha-channel
+     which is otherwise set to 255.
+     The union of domains is returned with values external to
+     any input domain set using the respective background */
+  if( cmpnd == NULL ){
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if( cmpnd->n < 3 ){
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
+  else {
+    switch( cmpnd->o[0]->type ){
+    case WLZ_2D_DOMAINOBJ:
+    case WLZ_3D_DOMAINOBJ:
+      if((cmpnd->o[1]->type != cmpnd->o[0]->type) ||
+	 (cmpnd->o[2]->type != cmpnd->o[0]->type)){
+	errNum = WLZ_ERR_OBJECT_DATA;
+      }
+      break;
+
+    default:
+      errNum = WLZ_ERR_OBJECT_DATA;
+      break;
+    }
+  }
+
+  /* check the colour space parameter */
+  if( errNum == WLZ_ERR_NONE ){
+    switch( colSpc ){
+    case WLZ_RGBA_SPACE_RGB:
+    case WLZ_RGBA_SPACE_HSB:
+    case WLZ_RGBA_SPACE_CMY:
+      break;
+
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+    }
+  }
+
+  /* check for 3D */
+  if( errNum == WLZ_ERR_NONE ){
+    if( cmpnd->o[0]->type == WLZ_3D_DOMAINOBJ ){
+      return WlzCompoundToRGBA3D(cmpnd, colSpc, clipFlg, dstErr);
+    }
+  }
+
+  /* 2D case */
+  if( errNum == WLZ_ERR_NONE ){
+    /* build the 2D object - union of the rgb channels */
+    if( rtnObj = WlzUnionN(3, cmpnd->o, 0, &errNum) ){
+      WlzValues	values;
+      WlzObjectType	vType;
+
+      /* add an RGBA valuetable, extract background for each channel */
+      vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA, NULL);
+      for(i=0; i < 3; i++){
+	bckgrnd = WlzGetBackground(cmpnd->o[i], NULL);
+	WlzValueConvertPixel(&bckgrnd, bckgrnd, WLZ_GREY_UBYTE);
+	b[i] = bckgrnd.v.ubv;
+      }
+      bckgrnd.type = WLZ_GREY_RGBA;
+      WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], 255);
+      if( values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum) ){
+	rtnObj->values = WlzAssignValues(values, &errNum);
+      }
+      else {
+	WlzFreeObj(rtnObj);
+	rtnObj = NULL;
+      }
+    }
+  }
+
+  /* transfer values */
+  if( errNum == WLZ_ERR_NONE ){
+    WlzGreyValueWSpace	*gValWSpc[4];
+    WlzIntervalWSpace	iwsp;
+    WlzGreyWSpace	gwsp;
+    WlzGreyV		gval;
+
+    /* do it dumb fashion for now, rgb only */
+    for(i=0; i < 3; i++){
+      gValWSpc[i] = WlzGreyValueMakeWSp(cmpnd->o[i], &errNum);
+    }
+    
+    errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
+    while((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
+      WlzPixelV	pix;
+
+      pix.type = gwsp.pixeltype;
+      for(j = iwsp.lftpos; j <= iwsp.rgtpos; j++){
+	for(i=0; i < 3; i++){
+	  WlzGreyValueGet(gValWSpc[i], 0, iwsp.linpos, j);
+	  pix.v = gValWSpc[i]->gVal[0];
+	  WlzValueConvertPixel(&pix, pix, WLZ_GREY_UBYTE);
+	  b[i] = pix.v.ubv;
+	}
+	WLZ_RGBA_RGBA_SET(gval.rgbv,
+			  b[0], b[1], b[2], 255);
+	*gwsp.u_grintptr.rgbp = gval.rgbv;
+	gwsp.u_grintptr.rgbp++;
+      }
+    }
+    if( errNum == WLZ_ERR_EOO ){
+      errNum = WLZ_ERR_NONE;
+    }
+
+    for(i=0; i < 3; i++){
+      if( gValWSpc[i] ){
+	WlzGreyValueFreeWSp(gValWSpc[i]);
+      }
+    }
+  }
+
+  /* set error and return */
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}
+
+static WlzObject *WlzCompoundToRGBA3D(
+  WlzCompoundArray	*cmpnd,
+  WlzRGBAColorSpace	colSpc,
+  int			clipFlg,
+  WlzErrorNum		*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
 }
 
 /* function:     WlzRGBAToModulus    */

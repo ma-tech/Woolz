@@ -3109,11 +3109,19 @@ extern WlzObject 		*WlzSeqPar(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
-* WlzShift.c								*
+* WlzShadeCorrect.c								*
 ************************************************************************/
 extern WlzObject		*WlzShadeCorrect(
 				  WlzObject *srcObj,
 				  WlzObject *shdObj,
+				  double nrmVal,
+				  int inPlace,
+				  WlzErrorNum *dstErr);
+
+extern WlzObject		*WlzShadeCorrectBFDF(
+				  WlzObject *srcObj,
+				  WlzObject *shdBFObj,
+				  WlzObject *shdDFObj,
 				  double nrmVal,
 				  int inPlace,
 				  WlzErrorNum *dstErr);
@@ -3314,13 +3322,27 @@ extern WlzObject 		*WlzStructErosion(WlzObject *obj,
 * WlzRGBAConvert.c							*
 ************************************************************************/
 extern WlzCompoundArray		*WlzRGBAToCompound(
-                                   WlzObject	*obj,
-				   WlzRGBAColorSpace	colSpc,
-				   WlzErrorNum	*dstErr);
-
+  WlzObject	*obj,
+  WlzRGBAColorSpace	colSpc,
+  WlzErrorNum	*dstErr);
+  
+  
+extern WlzObject *WlzCompoundToRGBA(WlzCompoundArray	*cmpnd,
+				    WlzRGBAColorSpace	colSpc,
+				    int			clipFlg,
+				    WlzErrorNum		*dstErr);
+                               
 extern WlzObject		*WlzRGBAToModulus(
                                    WlzObject	*obj,
 				   WlzErrorNum	*dstErr);
+/************************************************************************
+* WlzRGBAImageArithmetic.c			       			*
+************************************************************************/
+extern WlzObject *WlzRGBAImageArithmetic(WlzObject 		*obj0,
+					 WlzObject 		*obj1,
+					 WlzBinaryOperatorType	op,
+					 int 			overwrite,
+					 WlzErrorNum 		*dstErr);
 /************************************************************************
 * WlzRGBARange.c							*
 ************************************************************************/

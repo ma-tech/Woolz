@@ -1,5 +1,4 @@
 #pragma ident "MRC HGU $Id$"
-#pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzShadeCorrect.c
 * \author       Bill Hill
@@ -61,7 +60,45 @@ WlzObject	*WlzShadeCorrect(WlzObject *srcObj, WlzObject *shdObj,
 			         double nrmVal, int inPlace,
 			         WlzErrorNum *dstErr)
 {
+  return WlzShadeCorrectBFDF(srcObj, shdObj, NULL, nrmVal, inPlace, dstErr);
+}
+
+/*!
+* \return	Shade corrected object or NULL on error.
+* \ingroup	WlzValueFilters
+* \brief	Shade corrects the given domain object with grey
+*               values.
+*		\f[
+		  p_i = n \frac{(o_i - d_i)}{(s_i - d_i}
+		\f]
+*               The shade corrected image P with values \f$p_i\f$ is
+*		created by applying a correction factor to each image
+*		value of the given image O with values \f$o_i\f$.
+\f$s_i\f$ and \f$d_i\f$ are the bright and dark-field shade image values
+respectively.
+* \param	srcObj			Given object to be shade corrected.
+* \param	shdObj			Given bright field object.
+* \param	shdDFObj		Given dark field object (may be NULL).
+* \param	nrmVal			Normalization value.
+* \param	inPlace			Modify the grey values of the given
+*					object in place if non-zero.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+WlzObject	*WlzShadeCorrectBFDF(
+  WlzObject 	*srcObj,
+  WlzObject 	*shdObj,
+  WlzObject 	*shdDFObj,
+  double 	nrmVal,
+  int 		inPlace,
+  WlzErrorNum 	*dstErr)
+{
   WlzObject	*rtnObj = NULL;
+  WlzObject	*obj1, *obj2;
+  WlzCompoundArray	*inCobj, *outCobj;
+  WlzObject	**outArray;
+  WlzValues	values;
+  int		i;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((srcObj == NULL) || (shdObj == NULL))
@@ -84,12 +121,82 @@ WlzObject	*WlzShadeCorrect(WlzObject *srcObj, WlzObject *shdObj,
   {
     switch(srcObj->type)
     {
-      case WLZ_2D_DOMAINOBJ:
+    case WLZ_2D_DOMAINOBJ:
+      if( shdDFObj ){
+	if( WlzGreyTypeFromObj(srcObj, &errNum) == WLZ_GREY_RGBA ){
+	  obj1 = WlzRGBAImageArithmetic(srcObj, shdDFObj, WLZ_BO_SUBTRACT,
+					0, &errNum);
+	  obj2 = WlzRGBAImageArithmetic(shdObj, shdDFObj, WLZ_BO_SUBTRACT,
+					0, &errNum);
+	}
+	else {
+	  obj1 = WlzImageArithmetic(srcObj, shdDFObj, WLZ_BO_SUBTRACT,
+				    0, &errNum);
+	  obj2 = WlzImageArithmetic(shdObj, shdDFObj, WLZ_BO_SUBTRACT,
+				    0, &errNum);
+	}
+	rtnObj = WlzShadeCorrect2D(obj1, obj2, nrmVal, inPlace, &errNum);
+	WlzFreeObj(obj1);
+	WlzFreeObj(obj2);;
+      }
+      else {
 	rtnObj = WlzShadeCorrect2D(srcObj, shdObj, nrmVal, inPlace, &errNum);
+      }
+      break;
+
+    case WLZ_COMPOUND_ARR_1:
+    case WLZ_COMPOUND_ARR_2:
+      inCobj = (WlzCompoundArray *) srcObj;
+      if( inCobj->n > 0 ){
+	if( (outArray = (WlzObject **)
+	     AlcCalloc(inCobj->n, sizeof(WlzObject *))) == NULL){
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else {
+	  for(i=0; (i < inCobj->n) && (errNum == WLZ_ERR_NONE); i++){
+	    outArray[i] = WlzShadeCorrectBFDF(inCobj->o[i],
+					      shdObj, shdDFObj,
+					      nrmVal, inPlace, &errNum);
+	  }
+	  if( errNum == WLZ_ERR_NONE ){
+	    outCobj = WlzMakeCompoundArray(srcObj->type, 3, inCobj->n,
+					   outArray, outArray[0]->type,
+					   &errNum);
+	    rtnObj = (WlzObject *) outCobj;
+	  }
+	  else {
+	    while( i >= 0 ){
+	      WlzFreeObj(outArray[i--]);
+	    }
+	  }
+	  AlcFree(outArray);
+	}
+      }
+      else {
+	errNum = WLZ_ERR_OBJECT_DATA;
+      }
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      errNum = WLZ_ERR_UNIMPLEMENTED;
+      break;
+
+    case WLZ_TRANS_OBJ:
+      if( (rtnObj =
+	   WlzShadeCorrectBFDF(srcObj->values.obj, shdObj, shdDFObj,
+			       nrmVal, inPlace, &errNum)) == NULL ){
 	break;
-      default:
-	errNum = WLZ_ERR_OBJECT_TYPE;
-	break;
+      }
+      values.obj = rtnObj;
+      return WlzMakeMain(WLZ_TRANS_OBJ, srcObj->domain, values,
+			 NULL, NULL, dstErr);
+
+    case WLZ_EMPTY_OBJ:
+      return WlzMakeEmpty(dstErr);
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
   }
   if(dstErr)
@@ -165,8 +272,9 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 				     WlzErrorNum *dstErr)
 {
   int		tI0,
-  		iCnt;
+  		iCnt, red, green, blue;
   double	tD0;
+  UINT		tUI0, tUI1;
   WlzObject	*uObj = NULL,
 		*uSrcObj = NULL,
 		*uShdObj = NULL,
@@ -183,8 +291,8 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 		rtnGWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Find union of the given and shade objects. */
-  uObj = WlzUnion2(srcObj, shdObj, &errNum);
+  /* Find intersection of the given and shade objects. */
+  uObj = WlzIntersect2(srcObj, shdObj, &errNum);
   /* Make new objects with the values of the given and shade objects
    * but the domain of their intersection. */
   if(errNum == WLZ_ERR_NONE)
@@ -220,6 +328,7 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
       }
     }
   }
+
   /* Work through the intervals setting the grey values. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -275,6 +384,26 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    {
 	      tD0 = (*(srcPix.dbp)++ * nrmVal) / (*(shdPix.dbp)++ + 1.0);
 	      *(rtnPix.dbp)++ = tD0;
+	    }
+	    break;
+	  case WLZ_GREY_RGBA:
+	    while(iCnt-- > 0)
+	    {
+	      /* slightly different logic here. Avoid divide by zero
+		 by explicit check */
+	      tUI0 = *(srcPix.rgbp)++;
+	      tUI1 = *(shdPix.rgbp)++;
+	      red = WLZ_RGBA_RED_GET(tUI1);
+	      red = (red)?((WLZ_RGBA_RED_GET(tUI0) * nrmVal)) / red : nrmVal;
+	      red = WLZ_CLAMP(red, 0, 255);
+	      green = WLZ_RGBA_GREEN_GET(tUI1);
+	      green = (green)?((WLZ_RGBA_GREEN_GET(tUI0) * nrmVal)) / green : nrmVal;
+	      green = WLZ_CLAMP(green, 0, 255);
+	      blue = WLZ_RGBA_BLUE_GET(tUI1);
+	      blue = (blue)?((WLZ_RGBA_BLUE_GET(tUI0) * nrmVal)) / blue : nrmVal;
+	      blue = WLZ_CLAMP(blue, 0, 255);
+	      WLZ_RGBA_RGBA_SET(tUI0, red, green, blue, 255);
+	      *(rtnPix.rgbp)++ = tUI0;
 	    }
 	    break;
 	}
