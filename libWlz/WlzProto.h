@@ -1070,8 +1070,8 @@ extern WlzContour		*WlzContourRBFBndObj3D(
 				  int bErosion,
 				  int bDilation,
 				  int sDilation,
-				  double sFrac,
-				  double oFrac,
+				  int sFac,
+				  int oFac,
 				  double sAlpha,
 				  double oAlpha,
 				  double delta,
@@ -2798,7 +2798,14 @@ extern WlzObject 		*WlzSampleObj(
 				  WlzIVertex3 samFac,
 				  WlzSampleFn samFn,
 				  WlzErrorNum *dstErr);
-
+extern WlzObject		*WlzSampleObjPoint2D(
+				  WlzObject *srcObj,
+				  WlzIVertex2 samFac,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzSampleObjPoint3D(
+				  WlzObject *srcObj,
+				  WlzIVertex3 samFac,
+				  WlzErrorNum *dstErr);
 /************************************************************************
 * WlzSampleValuesAndCoords.c
 ************************************************************************/
