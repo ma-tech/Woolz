@@ -17,6 +17,8 @@
 *		Structures).
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 15-05-01 bill	Fixed bugs found by Elizabeth Guest in WlzPrincipalAngle
+*		with binary option.
 ************************************************************************/
 #include <stdlib.h>
 #include <float.h>
@@ -103,17 +105,16 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
   {
     if(binObjFlag)
     {
-      while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
+      while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE)
       {
 	delta.vtY = iWsp.linpos - cMass.vtY;
 	delta.vtX = iWsp.lftpos - cMass.vtX;
 	iCount = iWsp.rgtpos - iWsp.lftpos + 1;
-	tI0 = (delta.vtX + iCount - 1);
+	tI0 = iCount * (iCount - 1);
 	ixx += iCount * delta.vtY * delta.vtY;
-	iyy += ((tI0 * (tI0 + 1) * ((2 * tI0) + 1)) -
-	        ((delta.vtX - 1) * delta.vtX * ((2 * delta.vtX) - 1))) / 6.0;
-        ixy -= ((tI0 * (tD0 + 1)) - (delta.vtX * (delta.vtX - 1))) *
-	       delta.vtY / 2.0;
+	iyy += (iCount * delta.vtX * delta.vtX) + (tI0 * delta.vtX) +
+	       (tI0 * ((2 * iCount) - 1) / 6);
+	ixy -= (iCount * delta.vtX * delta.vtY) + (tI0 * delta.vtY / 2);
       }
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
       {
