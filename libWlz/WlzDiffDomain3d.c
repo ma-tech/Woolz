@@ -1,40 +1,39 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDiffDomain3d.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing the domain difference between
-*		3D Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzDiffDomain3d.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for computing the domain difference between 3D Woolz
+* 		objects.
+* \ingroup      WlzDomainOps
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
-
 #include <Wlz.h>
 
-/************************************************************************
-*   Function   : WlzDiffDomain3d					*
-*   Date       : Wed Nov 13 14:50:30 1996				*
-*************************************************************************
-*   Synopsis   :Calculate the domain difference between two 3D objects	*
-*		Note this routine assumes that the object pointers have	*
-*		been checked to be non-NULL, non-empty, both 3D types	*
-*		and with non-NULL domains. This is the case if the	*
-*		function is accessed via WlzDiffDomain which is		*
-*		recommended. This function should not appear in		*
-*		WlzProto.h and there is no manual page.			*
-*   Returns    :WlzObject *: the difference object, NULL on error	*
-*   Parameters :WlzObject *obj1: object 1				*
-*		WlzObject *obj2: object 2				*
-*   Global refs:None							*
-************************************************************************/
-
+/*!
+* \return	The difference object, NULL on error.
+* \ingroup	WlzDomainOps
+* \brief	Calculates the domain difference between two 3D objects
+*		This function assumes that the object pointers have been
+*		checked to be non-NULL, non-empty, both 3D types and with
+*		non-NULL domains. This is the case if the function is accessed
+*		via WlzDiffDomain which is recommended.
+* \param	obj1			First object.
+* \param	obj2			Second object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzDiffDomain3d(
   WlzObject *obj1,
   WlzObject *obj2,

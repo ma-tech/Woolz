@@ -1,35 +1,38 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExplode3D.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Explodes a 3D domain object into 2D domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzExplode3D.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Explodes a 3D domain object into 2D domain objects.
+* \ingroup	WlzSectionTransform
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzExplode3D						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Explodes the given 3D domain object into 2D domain 	*
-*		objects.						*
-* Global refs:	-							*
-* Parameters:	int *dstExpObjCount:	Destination pointer for number	*
-*					of exploded Woolz objects.	*
-*		WlzObject ***dstExpObjVecP: Destination pointer for	*
-*					vector of exploded objects.	*
-*		WlzObject *srcObj:	Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzSectionTransform
+* \brief	Explodes the given 3D domain object into 2D domain objects.
+* \param	dstExpObjCount		Destination pointer for number
+*					of exploded Woolz objects.
+* \param	dstExpObjVecP		Destination pointer for vector of
+* 					exploded objects.
+* \param	srcObj			Given woolz object.
+*/
 WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
 			     WlzObject ***dstExpObjVecP,
 			     WlzObject *srcObj)
@@ -59,10 +62,12 @@ WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
     errNum = WLZ_ERR_DOMAIN_NULL;
     
   }
-/*  else if(((srcVal = srcObj->values).core) == NULL)
+  /*
+  else if(((srcVal = srcObj->values).core) == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
-    }*/
+  }
+  */
   else if((objCount = srcDom.p->lastpl - srcDom.p->plane1 + 1) >= 1)
   {
     if((objVec = (WlzObject **)AlcMalloc((unsigned long )objCount *

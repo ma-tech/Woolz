@@ -1,19 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzConvexHull.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing the convex hull of Woolz
-*		objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzConvexHull.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for computing the convex hull of Woolz objects.
+* \ingroup	WlzConvexHull
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <math.h>
 #include <Wlz.h>
@@ -30,6 +34,13 @@ static WlzObject *WlzObjToConvexPolygon3d(WlzObject	*obj,
 					  WlzErrorNum	*dstErr);
 
 
+/*!
+* \return	Convex hull object, NULL on error.
+* \ingroup	WlzConvexHull
+* \brief	Computes the convex hull of the given object.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzObjToConvexHull(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
@@ -61,9 +72,14 @@ WlzObject *WlzObjToConvexHull(
   return cvh;
 }
 
-/*
- * construct the minimal convex polygonal cover from interval domain
- */
+/*!
+* \return	Convex hull object.
+* \ingroup      WlzConvexHull
+* \brief	Construct the minimal convex polygonal cover from interval
+* 		domain.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzObjToConvexPolygon(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
@@ -244,6 +260,12 @@ WlzObject *WlzObjToConvexPolygon(
 }
 
 
+/*!
+* \return
+* \brief	
+* \param	obj
+* \param	dstErr
+*/
 static WlzObject *WlzObjToConvexPolygon3d(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
@@ -306,10 +328,15 @@ static WlzObject *WlzObjToConvexPolygon3d(
 }
 
 
-/*
- * Fill in parameters of the convex hull into the values table.
- * Compute line equation parameters of chords plus 8*length
- */
+/*!
+* \return	New convex hull values.
+* \ingroup	WlzConvexHull
+* \brief	Fill in parameters of the convex hull into the values table.
+*		Compute line equation parameters of chords plus 8*length.
+* \param	cvh			Given convex hull.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzConvHullValues *WlzMakeConvexHullValues(
   WlzObject *cvh,
   WlzObject *obj,
@@ -372,6 +399,14 @@ static WlzConvHullValues *WlzMakeConvexHullValues(
   return cdom;
 }
 
+/*!
+* \return	New convex hull values.
+* \ingroup	WlzConvexHull
+* \brief	Fill in parameters of the convex hull into the values table.
+* \param	cvh			Given convex hull.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzConvHullValues *WlzMakeConvexHullValues3d(
   WlzObject *cvh,
   WlzObject *obj,

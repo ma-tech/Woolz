@@ -1,37 +1,44 @@
 #ifndef WLZ_DEBUG_H
 #define WLZ_DEBUG_H
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDebug.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Defines the Woolz debug masks and function prototypes.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzDebug.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Defines the Woolz debug masks and function prototypes.
+* \ingroup	WlzDebug
+* \todo         -
+* \bug          None known.
+*/
 
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/************************************************************************
-* Woolz debugging type definitions.					*
-************************************************************************/
-
-typedef enum
+/*!
+* \enum		_WlzDbgMask
+* \ingroup      WlzDebug
+* \brief	Woolz debug bit masks.
+*		Typedef: ::WlzDbgMask
+*/
+typedef enum _WlzDbgMask
 {
-  WLZ_DBG_NONE		= (0),				  /* No debug output */
-   WLZ_DBG_LVL_1	= (1),			       /* Least debug output */
-   WLZ_DBG_LVL_2	= (1<<1),		/* Intermediate debug output */
-   WLZ_DBG_LVL_3	= (1<<2),			/* Most debug output */
-   WLZ_DBG_LVL_FN	= (1<<3),		/* Function entry and return */
-   WLZ_DBG_ALLOC	= (1<<4) 		   /* Allocation and freeing */
+  WLZ_DBG_NONE		= (0),	  	/*!< No debug output */
+   WLZ_DBG_LVL_1	= (1),		/*!< Least debug output */
+   WLZ_DBG_LVL_2	= (1<<1),	/*!< Intermediate debug output */
+   WLZ_DBG_LVL_3	= (1<<2),	/*!< Most debug output */
+   WLZ_DBG_LVL_FN	= (1<<3),	/*!< Function entry and return */
+   WLZ_DBG_ALLOC	= (1<<4) 	/*!< Allocation and freeing */
 } WlzDbgMask;
 
 typedef WlzErrorNum	(*WlzDbgFn)(char *, ...);

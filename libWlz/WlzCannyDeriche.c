@@ -14,6 +14,7 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief	A Canny-Deriche edge detection filter.
+* \ingroup	WlzValuesFilters
 * \todo         -
 * \bug          None known.
 */

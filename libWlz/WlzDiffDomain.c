@@ -1,22 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDiffDomain.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing the domain difference between 
-*		Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzDiffDomain.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for computing the domain difference between Woolz
+* 		objects.
+* \ingroup	WlzDomainOps
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
@@ -24,19 +26,16 @@ extern WlzObject *WlzDiffDomain3d(WlzObject *obj1,
 				  WlzObject *obj2,
 				  WlzErrorNum	*dstErr);
 
-/************************************************************************
-*   Function   : WlzDiffDomain						*
-*   Date       : Thu Oct 24 12:52:16 1996				*
-*************************************************************************
-*   Synopsis   :Calculate the domain difference between two objects	*
-*   Returns    :WlzObject *: object with domain equal to the 		*
-*		set difference between obj1 and obj2 and valuetable	*
-*		from obj1.						*
-*   Parameters :WlzObject *obj1: first object				*
-*		WlzObject *obj2: second object				*
-*   Global refs:None							*
-************************************************************************/
-
+/*!
+* \return	Object with domain equal to the set difference between the
+*		first and second object, with valuetable from the first
+*		object.
+* \ingroup	WlzDomainOps
+* \brief	Calculates the domain difference between two objects.
+* \param	obj1			First object.
+* \param	obj2			Second object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzDiffDomain(
   WlzObject *obj1,
   WlzObject *obj2,

@@ -1,20 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDebug.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Provides default debugging text and object output
-*		functions for the woolz library flag based debugging
-*		system.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzDebug.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Default debugging text and object output functions for the
+* 		woolz library flag based debugging system.
+* \ingroup	WlzDebug
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <stdarg.h>
 #include <Wlz.h>
@@ -30,15 +34,12 @@ void		*wlzDbgData = NULL,
 WlzDbgFn	wlzDbgOutFn = WlzDbgWrite;
 WlzDbgObjFn	wlzDbgOutOutFn = WlzDbgObjWrite;
 
-/************************************************************************
-* Function:	WlzDbgWrite						*
-* Returns:	WlzErrorNum:		Non zero if fails to output	*
-*					given message.			*
-* Purpose:	Writes out the given debug message to the debug file.	*
-* Global refs:	void *wlzDbgData:	Used to hold debug output file.	*
-* Parameters:	char *fmt:		Format for printing message.	*
-*		...			Varargs function.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDebug
+* \brief	Writes out the given debug message to the debug file.
+* \param	fmt			Format for printing message.
+*/
 WlzErrorNum	WlzDbgWrite(char *fmt, ...)
 {
   WlzErrorNum	errFlag = WLZ_ERR_NONE;
@@ -57,18 +58,15 @@ WlzErrorNum	WlzDbgWrite(char *fmt, ...)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	WlzDbgObjWrite						*
-* Returns:	WlzErrorNum:		Non zero if fails to output	*
-*					given message.			*
-* Purpose:	Writes out the given debug Woolz object to the woolz	*
-*		debug file.						*
-* Global refs:	void *wlzDbgObjData:	Used to hold woolz debug output	*
-*					file.				*
-* Parameters:	WlzObject *obj:		Woolz debug object for output.	*
-*		int freeFlg:		If non zero free the object	*
-*					after writting it.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDebug
+* \brief	Writes out the given debug Woolz object to the woolz debug
+* 		file.
+* \param	obj			Woolz debug object for output.
+* \param	freeFlg			If non zero free the object after
+* 					writing it.
+*/
 WlzErrorNum	WlzDbgObjWrite(WlzObject *obj, int freeFlg)
 {
   WlzErrorNum	errFlag = WLZ_ERR_NONE;

@@ -1,22 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzCutObjToBox.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz functions for creating new domain objects with
-*		rectangular value tables.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzCutObjToBox.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for creating new domain objects with rectangular
+* 		value tables.
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
@@ -25,29 +27,23 @@
 static void	WlzCutObjSetRand(WlzGreyP, int, WlzGreyType, int,
 			         double, double);
 
-/************************************************************************
-* Function:	WlzCutObjToBox2D					*
-* Returns:	WlzObject *:		New object with rectangular	*
-*					value table or NULL on error.	*
-* Purpose:	Cuts a new object with a rectangular value table from	*
-*		the given woolz object.					*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIBox2 cutBox:	Rectangle box to cut from	*
-*					the object.			*
-*		WlzGreyType dstGreyType: Required grey type for the	*
-*					value table.			*
-*		int bgdNoise:		If zero background value is	*
-*					used otherwise if non zero	*
-*					the background is set using	*
-*					gaussian noise.			*
-*		double bgdMu:		Mean of background noise.	*
-*		double bgdSigma:	Standard deviation of the	*
-*					background noise.		*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	New object with rectangular value table or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Cuts a new object with a rectangular value table from
+*		the given woolz object.
+* \param	srcObj			Given source object.
+* \param	cutBox			Rectangle box to cut from the object.
+* \param	dstGreyType		Required grey type for the value table.
+* \param	bgdNoise		If zero background value is used
+* 					otherwise if non zero the background
+*					is set using gaussian noise.
+* \param	bgdMu			Mean of background noise.
+* \param	bgdSigma		Standard deviation of the background
+* 					noise.
+* \param	dstErrNum		Destination pointer for error number,
+* 					may be NULL if not required.
+*/
 WlzObject	*WlzCutObjToBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 				  WlzGreyType dstGreyType,
 				  int bgdNoise, double bgdMu, double bgdSigma,
@@ -58,31 +54,25 @@ WlzObject	*WlzCutObjToBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 			     dstErrNum));
 }
 
-/************************************************************************
-* Function:	WlzCutObjToValBox2D					*
-* Returns:	WlzObject *:		New object with rectangular	*
-*					value table or NULL on error.	*
-* Purpose:	Cuts a new object with a rectangular value table from	*
-*		the given woolz object and allows access to grey table.	*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIBox2 cutBox:	Rectangle box to cut from	*
-*					the object.			*
-*		WlzGreyType dstGreyType: Required grey type for the	*
-*					value table.			*
-*		void *valP:		If non-NULL allocated space	*
-*					for grey values.		*
-*		int bgdNoise:		If zero background value is	*
-*					used otherwise if non zero	*
-*					the background is set using	*
-*					gaussian noise.			*
-*		double bgdMu:		Mean of background noise.	*
-*		double bgdSigma:	Standard deviation of the	*
-*					background noise.		*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	New object with rectangular value table or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Cuts a new object with a rectangular value table from
+*               the given woolz object and allows access to grey table.
+* \param	srcObj			Given source object.
+* \param	cutBox			Rectangle box to cut from the object.
+* \param	dstGreyType		Required grey type for the value table.
+* \param	valP			If non-NULL allocated space for grey
+* 					values.
+* \param	bgdNoise		If zero background value is used
+* 					otherwise if non zero the background
+*					is set using gaussian noise.
+* \param	bgdMu			Mean of background noise.
+* \param	bgdSigma		Standard deviation of the background
+* 					noise.
+* \param	dstErrNum		Destination pointer for error number,
+* 					may be NULL if not required.
+*/
 WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 				  WlzGreyType dstGreyType, void *valP,
 				  int bgdNoise, double bgdMu, double bgdSigma,
@@ -352,29 +342,23 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 }
 
 
-/************************************************************************
-* Function:	WlzCutObjToBox3D					*
-* Returns:	WlzObject *:		New object with rectangular	*
-*					value table(s) or NULL on	*
-*					error.				*
-* Purpose:	Cuts a new object with (a) rectangular value table(s)	*
-*		from the given woolz object.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIBox3 clipBox:	Cut box.			*
-*		WlzGreyType dstGreyType: Required grey type for the	*
-*					value table.			*
-*		int bgdNoise:		If zero background value is	*
-*					used otherwise if non zero	*
-*					the background is set using	*
-*					gaussian noise.			*
-*		double bgdMu:		Mean of background noise.	*
-*		double bgdSigma:	Standard deviation of the	*
-*					background noise.		*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	New object with rectangular value table(s) or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Cuts a new object with (a) rectangular value table(s)
+*               from the given woolz object.
+* \param	srcObj			Given source object.
+* \param	cutBox			Cut box.
+* \param	dstGreyType		Required grey type for the value table.
+* \param	bgdNoise		If zero background value is used
+* 					otherwise if non zero the background
+*					is set using gaussian noise.
+* \param	bgdMu			Mean of background noise.
+* \param	bgdSigma		Standard deviation of the background
+* 					noise.
+* \param	dstErrNum		Destination pointer for error number,
+* 					may be NULL if not required.
+*/
 WlzObject	*WlzCutObjToBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 				  WlzGreyType dstGreyType,
 				  int bgdNoise, double bgdMu, double bgdSigma,
@@ -385,31 +369,25 @@ WlzObject	*WlzCutObjToBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 			     dstErrNum));
 }
 
-/************************************************************************
-* Function:	WlzCutObjToValBox3D					*
-* Returns:	WlzObject *:		New object with rectangular	*
-*					value table(s) or NULL on	*
-*					error.				*
-* Purpose:	Cuts a new object with (a) rectangular value table(s)	*
-*		from the given woolz object.				*
-* Global refs:	-							*
-* Parameters:	WlzObject *srcObj:	Given source object.		*
-*		WlzIBox3 clipBox:	Cut box.			*
-*		WlzGreyType dstGreyType: Required grey type for the	*
-*					value table.			*
-*		void *valP:		If non-NULL allocated space	*
-*					for grey values.		*
-*		int bgdNoise:		If zero background value is	*
-*					used otherwise if non zero	*
-*					the background is set using	*
-*					gaussian noise.			*
-*		double bgdMu:		Mean of background noise.	*
-*		double bgdSigma:	Standard deviation of the	*
-*					background noise.		*
-*		WlzErrorNum *dstErrNum:	Destination pointer for error	*
-*					number, may be NULL if not	*
-*					required.			*
-************************************************************************/
+/*!
+* \return	New object with rectangular value table(s) or NULL on error.
+* \ingroup      WlzValuesUtils
+* \brief	Cuts a new object with (a) rectangular value table(s) from the
+* 		given woolz object.
+* \param	srcObj			Given source object.
+* \param	cutBox			Cut box.
+* \param	dstGreyType		Required grey type for the value table.
+* \param	valP			If non-NULL allocated space for grey
+* 					values.
+* \param	bgdNoise		If zero background value is used
+* 					otherwise if non zero the background
+*					is set using gaussian noise.
+* \param	bgdMu			Mean of background noise.
+* \param	bgdSigma		Standard deviation of the background
+* 					noise.
+* \param	dstErrNum		Destination pointer for error number,
+*                                       may be NULL if not required.
+*/
 WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 				  WlzGreyType dstGreyType, void *valP,
 				  int bgdNoise, double bgdMu, double bgdSigma,
@@ -730,6 +708,17 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
   return(dstObj);
 }
 
+/*!
+* \return	<void>
+* \ingroup	WlzValuesUtils
+* \brief	Set random values from a normal distribution.
+* \param	vec			Vector of values.
+* \param	vecOff			Offset into the vector.
+* \param	gType			Grey type of the values in the vector.
+* \param	count			Number of values to set.
+* \param	mu			Mean of distribution.
+* \param	sigma			Standard deviation of distribution.
+*/
 static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
 				 int count, double mu, double sigma)
 {

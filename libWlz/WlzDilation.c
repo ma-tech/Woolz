@@ -1,23 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzDilation.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for dilating Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
-************************************************************************/
+/*!
+* \file         WlzDilation.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for dilating Woolz objects.
+* \ingroup	WlzMorphologyOps
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
-
 #include <Wlz.h>
 
 #define MAXLNITV 300
@@ -46,11 +47,18 @@ static WlzObject *WlzDilation3d(WlzObject *obj,
 				WlzErrorNum	*dstErr);
 static WlzObject *WlzDilation4(WlzObject *obj,
 			       WlzErrorNum	*dstErr);
-/*
- * Since the dilated object is bigger than the original, the size of
- * the valuetable may be smaller than the dilated object. User has to
- * take fully responsibility for using grey value of dilated object
- */
+/*!
+* \return	Dilated object.
+* \ingroup	WlzMorphologyOps
+* \brief	Dilate the given object using the given connectivity type.
+* 		Since the dilated object is bigger than the original, the
+*		size of the valuetable may be smaller than the dilated object.
+*		User has to take fully responsibility for using grey value of
+*		dilated object.
+* \param	obj			Given object.
+* \param	connectivity		Required type of conectivity.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzDilation(
   WlzObject 		*obj,
   WlzConnectType 	connectivity,
@@ -262,14 +270,17 @@ WlzObject *WlzDilation(
   return(dilatobj);
 }
 
-/*
- * find the union intervals between two lines
- * one set of intervals is pointed out by intva
- * the other intervals is pointed out by intvb
- * length is the result number of intersection intervals
- * in interval array cc
- */
-
+/*!
+* \return	Number of intersection intervals in interval array cc.
+* \ingroup	WlzMorphologyOps
+* \brief	Finds the union intervals between two lines. One set of
+* 		intervals is pointed out by intva the other intervals is
+* 		pointed out by intvb length is the result number of
+* 		intersection intervals in interval array cc.
+* \param	inta			First set of intervals.
+* \param	intb			Second set of intervals.
+* \param	cc			Intersection intervals.
+*/
 static int line_int_dil(WlzIntervalLine 	*inta,
 			WlzIntervalLine 	*intb,
 			WlzInterval 	*cc)
@@ -358,15 +369,18 @@ static int line_int_dil(WlzIntervalLine 	*inta,
   return((int)(cc-tmp));
 }
 
-/*
- * find the union intervals between two lines
- * one set of intervals is pointed out by intva
- * the other intervals is pointed out by intvb
- * length is the result number of intersection intervals
- * in interval array cc - non dilate version for 4-connected
- * dilation.
- */
-
+/*!
+* \return	The number of intersection intervals in interval array cc.
+* \ingroup	WlzMorphologyOps
+* \brief	Finds the union intervals between two lines. One set of
+*		intervals is pointed out by intva the other intervals is
+*		pointed out by intvb. The length is the result number of
+*		intersection intervals in interval array cc - non dilate
+*		version for 4-connected dilation.
+* \param	inta			First set of intervals.
+* \param	intb			Second set of intervals.
+* \param	cc			Intersection intervals.
+*/
 static int line_int_cp(WlzIntervalLine 	*inta,
 		       WlzIntervalLine 	*intb,
 		       WlzInterval 	*cc)
@@ -455,10 +469,13 @@ static int line_int_cp(WlzIntervalLine 	*inta,
   return((int)(cc-tmp));
 }
 
-/*
- * put dilated intervals of itvl into
- * interval array jntl
- */
+/*!
+* \return	Number of intervals.
+* \ingroup	WlzMorphologyOps
+* \brief	Put dilated intervals of itvl into interval array jntl.
+* \param	itvl			Source of dilated intervals.
+* \param	jntl			Destination for dilated intervals.
+*/
 static int set_line_dil(WlzIntervalLine 	*itvl,
 			WlzInterval 	*jntl)
 {
@@ -492,10 +509,14 @@ static int set_line_dil(WlzIntervalLine 	*itvl,
   return((int) (jntl-tmp));
 }
 
-/*
- * copy intervals of itvl into
- * interval array jntl - for 4-connected dilation
- */
+/*!
+* \return	Number of intervals.
+* \ingroup	WlzMorphologyOps
+* \brief	Copy intervals of itvl into interval array jntl - for
+* 		4-connected dilation.
+* \param	itvl			Source of intervals.
+* \param	jntl			Destination of intervals.
+*/
 static int set_line_cp(WlzIntervalLine 	*itvl,
 		       WlzInterval 	*jntl)
 {
@@ -518,12 +539,16 @@ static int set_line_cp(WlzIntervalLine 	*itvl,
   return itvl->nintvs;
 }
 
-/*
- * Put the union of intervals of jntl
- * and the dilated intrvals of inta.
- * into cc 
- * note: inta has not been dilated but jntl has
- */
+/*!
+* \return
+* \ingroup	WlzMorphologyOps
+* \brief	Put the union of intervals of jntl and the dilated intrvals of
+* 		inta into cc. Note: inta has not been dilated but jntl has.
+* \param	inta
+* \param	jntl
+* \param	n
+* \param	cc
+*/
 static int line_arr_dil(WlzIntervalLine 	*inta,
 			WlzInterval 	*jntl,
 			int 			n,
@@ -623,6 +648,13 @@ static int line_arr_dil(WlzIntervalLine 	*inta,
   return((int)(cc-tmp));
 }
 
+/*!
+* \return
+* \ingroup	WlzMorphologyOps
+* \brief	Four connected dilation.
+* \param	obj
+* \param	dstErr
+*/
 static WlzObject *WlzDilation4(
   WlzObject *obj,
   WlzErrorNum	*dstErr)
@@ -784,6 +816,14 @@ static WlzObject *WlzDilation4(
   return dilatobj;
 }
 
+/*!
+* \return	Dilated object.
+* \ingroup	WlzMorphologyOps
+* \brief	Dilation of a 3D object.
+* \param	obj			Given object.
+* \param	connectivity		Required connectivity.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzObject *WlzDilation3d(
   WlzObject 		*obj,
   WlzConnectType 	connectivity,

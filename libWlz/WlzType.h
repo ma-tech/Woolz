@@ -380,7 +380,6 @@ typedef enum
 /************************************************************************
 *  Binary operators.						
 ************************************************************************/
-/* TODO HACK WLZ_BO_MIN is multiply defined change these to WLZ_BO_* */
 typedef enum
 {
   WLZ_BO_ADD		= 0,
@@ -402,15 +401,34 @@ typedef enum
   WLZ_BO_MAGNITUDE
 } WlzBinaryOperatorType;
 
-/************************************************************************
-*  Automatic threshold computation methods.			
-************************************************************************/
-typedef enum
+/*!
+* \enum 	_WlzCompThreshType
+* \ingroup	WlzThreshold
+* \brief	Automatic threshold computation methods.			
+*  		The histogram may need to be smoothed for these algorithms
+*		to work.
+		Typedef: ::WlzCompThreshType
+*/
+typedef enum _WlzCompThreshType
 {
-  WLZ_COMPTHRESH_FOOT,
-  WLZ_COMPTHRESH_DEPTH,
-  WLZ_COMPTHRESH_GRADIENT,
-  WLZ_COMPTHRESH_MINIMUM
+  WLZ_COMPTHRESH_FOOT,	/*!< The threshold value is intercept of a line fitted
+			 *  to the upper slope of the histogram main peak with
+			 *  the abscissa.
+			 */
+  WLZ_COMPTHRESH_DEPTH, /*!< The threshold value is that point to the right of
+  			 *  the histogram peak that is maximally distant from
+			 *  the chord joining the peak and the histogram right
+			 *  hand end point.
+			 *  The histogram may need to be smoothed for this
+			 *  algorithm to work.
+			 */
+  WLZ_COMPTHRESH_GRADIENT /*!< The threshold value is the first point to the
+			 *  right of the histogram main peak at which the
+			 *  gradient falls to zero (cf finding a minimum).
+			 *  To find the slope of the histogram at some
+			 *  point a straight line is fitted through the
+			 *  point \f$\pm\f$ a fixed number of points to
+			 * either side. */
 } WlzCompThreshType;
 
 /************************************************************************
@@ -426,34 +444,42 @@ typedef enum
 /************************************************************************
 * Threshold value selection.					
 ************************************************************************/
-typedef enum
+/*!
+* \enum		_WlzThresholdType
+* \ingroup	WlzThreshold
+* \brief	Threshold value selection.
+* 		Type: ::WlzThresholdType
+*/
+typedef enum _WlzThresholdType
 {
-  WLZ_THRESH_LOW		= 0,  		/* Threshold < thresh_value */
-  WLZ_THRESH_HIGH		     	       /* Threshold >= thresh_value */
+  WLZ_THRESH_LOW		= 0, /*!< Threshold < thresh_value */
+  WLZ_THRESH_HIGH		     /*!< Threshold >= thresh_value */
 } WlzThresholdType;
 
 /*!
 * \enum		_WlzPolyFillMode	
 * \ingroup	WlzPolyline
 * \brief	Polygon fill modes.
+*		Type: ::WlzPolyFillMode
 */
 typedef enum _WlzPolyFillMode
 {
-  WLZ_SIMPLE_FILL,	/*! Fill all pixels with winding number > 0 */
-  WLZ_EVEN_ODD_FILL,	/*! Fill all pixels with odd winding number */
-  WLZ_VERTEX_FILL	/*! Fill all pixels lying under the polyline */
+  WLZ_SIMPLE_FILL,	/*!< Fill all pixels with winding number > 0 */
+  WLZ_EVEN_ODD_FILL,	/*!< Fill all pixels with odd winding number */
+  WLZ_VERTEX_FILL	/*!< Fill all pixels lying under the polyline */
 } WlzPolyFillMode;
 
 /*!
 * \enum		_WlzGreyTransformType	
 * \ingroup	WlzTransform
 * \brief	Grey-level transform types.
+*		Type: ::WlzGreyTransformType
 */
 typedef enum _WlzGreyTransformType {
-  WLZ_GREYTRANSFORMTYPE_LINEAR,		/*! linear interpolation */
-  WLZ_GREYTRANSFORMTYPE_GAMMA,		/*! gamma function */
-  WLZ_GREYTRANSFORMTYPE_EXPONENTIAL,	/*! exponential function */
-  WLZ_GREYTRANSFORMTYPE_SIGMOID		/*! sigmoid function */
+  WLZ_GREYTRANSFORMTYPE_LINEAR,		/*!< linear interpolation */
+  WLZ_GREYTRANSFORMTYPE_GAMMA,		/*!< gamma function */
+  WLZ_GREYTRANSFORMTYPE_EXPONENTIAL,	/*!< exponential function */
+  WLZ_GREYTRANSFORMTYPE_SIGMOID		/*!< sigmoid function */
 } WlzGreyTransformType;
 
 /************************************************************************

@@ -1,23 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzFacts.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Text description (facts) of a Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 02-10-00 bill Modify WlzObjFactsAffineTrans() to print an affine
-*		transform's matrix rather than it's primitives.
-* 15-08-00 bill	Removed obsolete types: WLZ_VECTOR_(INT)|(FLOAT) and
-*		WLZ_POINT_(INT)|(FLOAT). Add WlzObjFactsContour()
-*		and WlzObjFactsGMModel().
-************************************************************************/
+/*!
+* \file         WlzFacts.c
+* \author       Bill Hill
+* \date         June 2002
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Text description (facts) of Woolz objects.
+* \ingroup	WlzDebug
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -90,22 +90,20 @@ static WlzErrorNum 		WlzObjFactsGMModel(
 				  WlzGMModel *model);
 		
 
-/************************************************************************
-* Function:	WlzObjectFacts						*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	The external facts interface function.			*
-*		Creates the facts data structure and then produces a	*
-*		text description of the given object.			*
-* Global refs:	-							*
-* Parameters:	WlzObject *obj:		The given object.		*
-*		FILE *factsFile:	If non-NULL the text is		*
-*					written to the file stream.	*
-*		char **dstStr:		If *dstStr is non-NULL the	*
-*					pointer is set to an allocated	*
-*					text string, which should be	*
-*					free'd using AlcFree().		*
-*		int verbose:		Verbose output if non-zero.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDebug
+* \brief	The external facts interface function.
+*		Creates the facts data structure and then produces a
+*               text description of the given object.
+* \param	obj			The given object.
+* \param	factsFile		If non-NULL the text is written to the
+* 					given file.
+* \param	dstStr			If non-NULL the pointer is set to an
+* 					allocated text string, which should be
+*					free'd using AlcFree().
+* \param	verbose			Verbose output if non-zero.
+*/
 WlzErrorNum	WlzObjectFacts(WlzObject *obj, FILE *factsFile, char **dstStr,
 			       int verbose)
 {
@@ -143,14 +141,13 @@ WlzErrorNum	WlzObjectFacts(WlzObject *obj, FILE *factsFile, char **dstStr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsObject					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of an object.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		The given object.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of an object.
+* \param	fData			Facts data structure.
+* \param	obj			The given object.
+*/
 static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 {
   int		pIdx,
@@ -305,14 +302,13 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsLinkcount					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a linkcount.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		int linkcount:		The given linkcount.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of a linkcount.
+* \param	fData			Facts data structure.
+* \param	linkcount		The given linkcount.
+*/
 static WlzErrorNum WlzObjFactsLinkcount(WlzObjFactsData *fData, int linkcount)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -323,15 +319,14 @@ static WlzErrorNum WlzObjFactsLinkcount(WlzObjFactsData *fData, int linkcount)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsAppend					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Builds a text string using the given format and data,	*
-*		cf printf.						*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		int linkcount:		The given linkcount.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Builds a text string using the given format and data, cf
+* 		printf().
+* \param	fData			Facts data structure.
+* \param	fmt		Text format string.
+*/
 static WlzErrorNum WlzObjFactsAppend(WlzObjFactsData *fData, const char *fmt,
 		    		     ...)
 {
@@ -373,15 +368,13 @@ static WlzErrorNum WlzObjFactsAppend(WlzObjFactsData *fData, const char *fmt,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsBackground					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a background pixel	*
-*		value.							*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzPixelV bgdV:		Background pixel value.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of a background pixel value.
+* \param	fData			Facts data structure.
+* \param	bgdV			Background pixel value.
+*/
 static WlzErrorNum WlzObjFactsBackground(WlzObjFactsData *fData,
 					 WlzPixelV bgdV)
 {
@@ -424,17 +417,14 @@ static WlzErrorNum WlzObjFactsBackground(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsIntervalDom					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of an interval domain.	*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object to determine domain	*
-*					type.				*
-*		WlzDomain dom:		Domain union for interval	*
-*					domain.				*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of an interval domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine domain type.
+* \param	dom			Domain union for interval domain.
+*/
 static WlzErrorNum WlzObjFactsIntervalDom(WlzObjFactsData *fData,
 					  WlzObject *obj, WlzDomain dom)
 {
@@ -520,15 +510,14 @@ static WlzErrorNum WlzObjFactsIntervalDom(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsValueTab					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a value table.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object to determine value type.	*
-*		WlzValues val:		values union for value table.	*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a value table.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine value type.
+* \param	val			values union for value table.
+*/
 static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 				       WlzObject *obj, WlzValues val)
 {
@@ -631,16 +620,14 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsPropList					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a property list.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object to determine property	*
-*					list type.			*
-*		WlzSimpleProperty *pList: Given property list.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a property list.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine property list type.
+* \param	pList			Given property list.
+*/
 static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
 				       WlzObject *obj,
 				       WlzSimpleProperty *pList)
@@ -666,16 +653,14 @@ static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsPlaneDom					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a plane domain.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object to determine domain	*
-*					type.				*
-*		WlzDomain dom:		Domain union for plane domain.	*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a plane domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine domain type.
+* \param	dom			Domain union for plane domain.
+*/
 static WlzErrorNum WlzObjFactsPlaneDom(WlzObjFactsData *fData,
 				       WlzObject *obj, WlzDomain dom)
 {
@@ -729,16 +714,14 @@ static WlzErrorNum WlzObjFactsPlaneDom(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsVoxelTab					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a voxel table.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object to determine values	*
-*					type.				*
-*		WlzValues val:		Values union for voxel table.	*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a voxel table.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine values type.
+* \param	val			Values union for voxel table.
+*/
 static WlzErrorNum WlzObjFactsVoxelTab(WlzObjFactsData *fData,
 				       WlzObject *obj, WlzValues val)
 {
@@ -780,14 +763,13 @@ static WlzErrorNum WlzObjFactsVoxelTab(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsAffineTrans					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of an affine transform.	*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzAffineTransform *trans: Given affine transform.	*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of an affine transform.
+* \param	fData			Facts data structure.
+* \param	trans			Given affine transform.
+*/
 static WlzErrorNum WlzObjFactsAffineTrans(WlzObjFactsData *fData,
 				          WlzAffineTransform *trans)
 {
@@ -853,14 +835,13 @@ static WlzErrorNum WlzObjFactsAffineTrans(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsPolygon2D					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of an 2D polygon domain.	*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzPolygonDomain *poly: Given polygon domain.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of an 2D polygon domain.
+* \param	fData			Facts data structure.
+* \param	poly			Given polygon domain.
+*/
 static WlzErrorNum WlzObjFactsPolygon2D(WlzObjFactsData *fData,
 					WlzPolygonDomain *poly)
 {
@@ -968,14 +949,13 @@ static WlzErrorNum WlzObjFactsPolygon2D(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsBoundlist					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a boundary list.		*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzBoundList *bList:	Given boundary list.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a boundary list.
+* \param	fData			Facts data structure.
+* \param	bList			Given boundary list.
+*/
 static WlzErrorNum WlzObjFactsBoundlist(WlzObjFactsData *fData,
 					WlzBoundList *bList)
 {
@@ -1060,16 +1040,14 @@ static WlzErrorNum WlzObjFactsBoundlist(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsHistogram					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a histogram domain.	*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object to determine domain	*
-*					type.				*
-*		WlzHistogramDomain *hist: Given histogram domain.	*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a histogram domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine domain type.
+* \param	hist			Given histogram domain.
+*/
 static WlzErrorNum WlzObjFactsHistogram(WlzObjFactsData *fData,
 				        WlzObject *obj,
 					WlzHistogramDomain *hist)
@@ -1117,15 +1095,14 @@ static WlzErrorNum WlzObjFactsHistogram(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsContour					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a contour domain.	*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object for type, not used.
-*		WlzContour *ctr:	Given contour domain.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a contour domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object for type, not used.
+* \param	ctr			Given contour domain.
+*/
 static WlzErrorNum WlzObjFactsContour(WlzObjFactsData *fData,
 				      WlzObject *obj,
 				      WlzContour *ctr)
@@ -1162,15 +1139,14 @@ static WlzErrorNum WlzObjFactsContour(WlzObjFactsData *fData,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzObjFactsGMModel					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Produces a text description of a geometric model.	*
-* Global refs:	-							*
-* Parameters:	WlzObjFactsData *fData:	Facts data structure.		*
-*		WlzObject *obj:		Object type, not used.
-*		WlzGMModel *model:	Given geometric model.		*
-************************************************************************/
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a geometric model.
+* \param	fData			Facts data structure.
+* \param	obj			Object type, not used.
+* \param	model			Given geometric model.
+*/
 static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 				      WlzObject *obj,
 				      WlzGMModel *model)

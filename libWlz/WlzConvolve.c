@@ -1,33 +1,37 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzConvolve.c
-* Date:         March 1999
-* Author:       Jim Piper, Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for convolving Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzConvolve.c
+* \author       Jim Piper, Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for convolving Woolz objects.
+* \ingroup	WlzValuesFilters
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <Wlz.h>
 
-/************************************************************************
-* Function:	WlzConvolveSeqParFn					*
-* Returns:	int:			Convolved pixel value.		*
-* Purpose:	Performs a general space-domain convolution for 	*
-*		WlzSeqPar().						*
-* Global refs:	-							*
-* Parameters:	WlzSeqParWSpace *spWSpace: Work space data structure 	*
-*					from WlzSeqPar().		*
-*		void *spData:		Data passed on by WlzSeqPar(),	*
-*					which is used to pass the 	*
-*					convolution structure.		*
-************************************************************************/
+/*!
+* \return	Convolved pixel value.
+* \ingroup	WlzValuesFilters
+* \brief	Performs a general space-domain convolution for
+*               WlzSeqPar().
+* \param	spWSpace		Work space data structure from
+* 					WlzSeqPar().
+* \param	spData			Data passed on by WlzSeqPar(),
+*					which is used to pass the convolution
+*					structure.
+*/
 int 		WlzConvolveSeqParFn(WlzSeqParWSpace *spWSpace,
 				    void *spData)
 {
@@ -75,26 +79,20 @@ int 		WlzConvolveSeqParFn(WlzSeqParWSpace *spWSpace,
   return (convPixVal);
 }
 
-/************************************************************************
-* Function:	WlzConvolveObj						*
-* Returns:	WlzObject *:		Convolved object or NULL on	*
-*					error.				*
-* Purpose:	Performs a general space-domain convolution using 	*
-*		WlzSeqPar().						*
-*		Only objects with WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ	*
-*		types are valid. WLZ_2D_DOMAINOBJ ojects must have	*
-*		non null domain and values fields, and only integral	*
-*		values (ie int, short or UBYTE) are valid.		*
-*		Errors may be reported for WLZ_ERR_OBJECT_NULL,		*
-*		WLZ_ERR_DOMAIN_NULL, WLZ_ERR_VALUES_NULL,		*
-*		WLZ_ERR_VALUES_TYPE and	WLZ_ERR_OBJECT_TYPE.		*
-* Global refs:	-							*
-* Parameters:	WlzObject *inObj:	Given object.			*
-*		WlzConvolution *conv:	Convolution data structure.	*
-*		int newObjFlag:		If zero the convolution is done	*
-*					in place, else a new object is	*
-*					created.			*
-************************************************************************/
+/*!
+* \return	Convolved object or NULL on error.
+* \ingroup	WlzValuesFilters
+* \brief	Performs a general space-domain convolution using WlzSeqPar().
+*		Only objects with WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ
+*               types are valid. WLZ_2D_DOMAINOBJ ojects must have
+*               non null domain and values fields, and only integral
+*               values (ie int, short or UBYTE) are valid.
+* \param	inObj			Given object.
+* \param	conv			Convolution data structure.
+* \param	newObjFlag		If zero the convolution is done
+*					in place, else a new object is created.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject 	*WlzConvolveObj(WlzObject *inObj, WlzConvolution *conv,
 			        int newObjFlag, WlzErrorNum *dstErr)
 {
@@ -171,14 +169,12 @@ WlzObject 	*WlzConvolveObj(WlzObject *inObj, WlzConvolution *conv,
   return(outObj);
 }
 
-/************************************************************************
-* Function:	WlzConvolutionSum					*
-* Returns:	int:			Sum of convolution values.
-* Purpose:	Calculates the sum of the values in the convolution	*
-*		object.							*
-* Global refs:	-							*
-* Parameters:	WlzConvolution *conv:	Given convolution object.	*
-************************************************************************/
+/*!
+* \return	Sum of convolution values.
+* \ingroup	WlzValuesFilters
+* \brief	Calculates the sum of the values in the convolution object.
+* \param	conv			Given convolution object.
+*/
 int		WlzConvolutionSum(WlzConvolution *conv)
 {
   int		count,
@@ -197,15 +193,13 @@ int		WlzConvolutionSum(WlzConvolution *conv)
   return(sum);
 }
 
-/************************************************************************
-* Function:	WlzConvolutionNormalise					*
-* Returns:	int:			Convolution sum.		*
-* Purpose:	Normalises a convolution object by adjusting the 	*
-*		scaling such that the components effectively sum to	*
-*		unity.							*
-* Global refs:	-							*
-* Parameters:	WlzConvolution *conv:	Given convolution object.	*
-************************************************************************/
+/*!
+* \return	Convolution sum.
+* \ingroup	WlzValuesFilters
+* \brief	Normalises a convolution object by adjusting the scaling such
+* 		that the components effectively sum to unity.
+* \param	conv			Given convolution object.
+*/
 int		WlzConvolutionNormalise(WlzConvolution *conv)
 {
   int		sum = 0;

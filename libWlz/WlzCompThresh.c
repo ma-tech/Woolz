@@ -1,19 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzCompThresh.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for computing a threshold value from a
-*		histogram object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzCompThresh.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for computing a threshold value from a histogram
+* 		object.
+* \ingroup	WlzThreshold
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>
@@ -25,20 +30,19 @@ static double	WlzCompThreshLSqFit(WlzGreyP vec, int idx0, int idx1,
 				     WlzObjectType histDomtype,
 				     double *dstSlope);
 
-/************************************************************************
-* Function:	WlzCompThreshold					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Computes a threshold value from the given histogram	*
-*		object using the given method.				*
-* Global refs:	-							*
-* Parameters:	double *dstThrVal:	Destination pointer for 	*
-*					threshold value.		*
-*		WlzObject *histObj:	Given histogram object.		*
-*		WlzCompThreshType method: Given method.			*
-*		double extraFrac:	Extra fraction added onto the	*
-*					threshold value, ie:		*
-*					thrVal += thrVal * extraFrac.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzThreshold
+* \brief	Computes a threshold value from the given histogram
+*		object using the given method.
+* \param	dstThrVal		Destination pointer for the threshold
+*					value.
+* \param	histObj			Given histogram object.
+* \param	method			Given method.
+* \param	extraFrac		Extra fraction added onto the
+*					threshold value, ie:
+*					thrVal += thrVal * extraFrac.
+*/
 WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
 				 WlzCompThreshType method,
 				 double extraFrac)
@@ -106,21 +110,25 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzCompThreshFoot					*
-* Returns:	double:			Threshold value.		*
-* Purpose:	Computes a threshold value from the given histogram	*
-*		domain using the WLZ_COMPTHRESH_FOOT method, ie:	*
-*		The threshold value is intercept of a line fitted to	*
-*		the upper slope of the histogram main peak with the	*
-*		abscissa.						*
-*		* The line is fitted from 90% of peak to 33% of peak.	*
-* 		* Zero points in histogram are ignored.			*
-*		* The histogram may need to be smoothed for this	*
-*		  algorithm to work.					*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom: Given histogram domain.	*
-************************************************************************/
+/*!
+* \return	Threshold value.
+* \ingroup 	WlzThreshold
+* \brief	Computes a threshold value from the given histogram
+*               domain using the WLZ_COMPTHRESH_FOOT method, ie:
+*               The threshold value is intercept of a line fitted to
+*               the upper slope of the histogram main peak with the
+*               abscissa.
+*		<ul>
+*		<li>
+*               The line is fitted from 90% of peak to 33% of peak.
+*		<li>
+*               Zero points in histogram are ignored.
+*		<li>
+*               The histogram may need to be smoothed for this
+*               algorithm to work.
+*		</ul>
+* \param	histDom			Given histogram domain.
+*/
 static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
 {
   double	tD0,
@@ -221,35 +229,37 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
   return (thrVal) ;
 }
 
-/************************************************************************
-* Function:	WlzCompThreshDepth					*
-* Returns:	WlzErrorNum:		Error number.			*
-* Purpose:	Computes a threshold value from the given histogram	*
-*		domain using the WLZ_COMPTHRESH_DEPTH method, ie:	*
-*		The threshold value is that point to the right of the	*
-*		histogram peak that is maximally distant from the chord	*
-*		joining the peak and the histogram right hand end 	*
-*		point.							*
-*		For each point from maxIdx to histMaxIdx the depth	*
-*		below the chord joining these thwo points is computed	*
-*		to find the index of the maximum depth.			*
-*		The depth d is given by:				*
-*		  d = 2A / L						*
-*		Where A is the area of the triangle with the chord at	*
-*		it's base and histogram point at its apex, and L is	*
-*		the length of the cord. Since the search only needs	*
-*		to perform a comparison only the area A needs to be	*
-*		computed.						*
-*		The area A is given by:					*
-*		   |(Px - Hx)(My - Hy) - (Py - Hy)(Mx - Hx)| / 2	*
-*		Where 	P is the histogram maximum (peak), 		*
-*			H is the point on the histogram and		*
-*			M is the point at the histogram maximum.	*
-*		* The histogram may need to be smoothed for this	*
-*		  algorithm to work.					*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom: Given histogram domain.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzThreshold
+* \brief	Computes a threshold value from the given histogram
+*               domain using the WLZ_COMPTHRESH_DEPTH method, ie:
+*               The threshold value is that point to the right of the
+*               histogram peak that is maximally distant from the chord
+*               joining the peak and the histogram right hand end
+*               point.
+*               For each point from maxIdx to histMaxIdx the depth
+*               below the chord joining these thwo points is computed
+*               to find the index of the maximum depth.
+*               The depth d is given by:
+*                 \f$d = \frac{2A}{L}\f$
+*               Where A is the area of the triangle with the chord at
+*               it's base and histogram point at its apex, and L is
+*               the length of the cord. Since the search only needs
+*               to perform a comparison only the area A needs to be
+*               computed.
+*               The area A is given by:
+*		\f[
+                  \frac{|{(P_x - H_x)(M_y - H_y) - (P_y - H_y)(M_x - H_x)}|}
+		       {2}
+		\f]
+*               Where   P is the histogram maximum (peak),
+*                       H is the point on the histogram and
+*                       M is the point at the histogram maximum.
+*               The given histogram may need to be smoothed for this
+*               algorithm to work.
+* \param	histDom			Given histogram domain.
+*/
 static double	WlzCompThreshDepth(WlzHistogramDomain *histDom)
 {
   double	depth,
@@ -311,22 +321,21 @@ static double	WlzCompThreshDepth(WlzHistogramDomain *histDom)
   return(thrVal);
 }
 
-/************************************************************************
-* Function:	WlzCompThreshGradient					*
-* Returns:	double:			Threshold value.		*
-* Purpose:	Computes a threshold value from the given histogram	*
-*		domain using the WLZ_COMPTHRESH_GRADIENT method, ie:	*
-*		The threshold value is the first point to the right	*
-*		of the histogram main peak at which the gradient falls	*
-*		to zero (cf finding a minimum).				*
-*		To find the slope of the histogram at some point a	*
-*		straight line is fitted through the point +/- a fixed	*
-*		number of points to either side.			*
-*		* The histogram may need to be smoothed for this	*
-*		  algorithm to work.					*
-* Global refs:	-							*
-* Parameters:	WlzHistogramDomain *histDom: Given histogram domain.	*
-************************************************************************/
+/*!
+* \return	Threshold value.
+* \ingroup	WlzThreshold
+* \brief	Computes a threshold value from the given histogram
+*               domain using the WLZ_COMPTHRESH_GRADIENT method, ie:
+*               The threshold value is the first point to the right
+*               of the histogram main peak at which the gradient falls
+*               to zero (cf finding a minimum).
+*               To find the slope of the histogram at some point a
+*               straight line is fitted through the point \f$\pm\f$ a fixed
+*               number of points to either side.
+*               The histogram may need to be smoothed for this
+*               algorithm to work.
+* \param	histDom			Given histogram domain.
+*/
 static double	WlzCompThreshGradient(WlzHistogramDomain *histDom)
 {
   double	tD0,
@@ -424,45 +433,65 @@ static double	WlzCompThreshGradient(WlzHistogramDomain *histDom)
   return(thrVal);
 }
 
-/************************************************************************
-* Function:	WlzCompThreshLSqFit					*
-* Returns:	double:			Intercept of fitted line.	*
-* Purpose:	Computes the least squares fit of a straight line to	*
-*		the integer or double values in the given vector	*
-*		between the two given indicies.				*
-*		With the straight line of the form			*
-*		  y = a*x + b						*
-*		then							*
-*		  a = ((sxy*sx) - (sxx*sy)) / ((sx^2) - (n*sxx))	*
-*		  b = ((sx*sy) - (n*sxy)) / ((sx^2) - (n*sxx))		*
-*		Where							*
-*		  sx =  Sum(xi), sy = Sum(yi)				*
-*		  sxx = Sum(xi*xi), syy = Sum(yi*yi)			*
-*		  sxy = Sum(xi*yi)					*
-*		If {xi} are known to be integers of the form		*
-*		  {x0, x0 + 1, ..., x0 + n - 1}				*
-*		then							*
-*		  sum(xi) = (n*((2*x0) + n - 1)) / 2			*
-*		  sum(xi^2) = (n/6) - (n*x0) - ((n^2)/2) + ((n^3)/3) +	*
-*			      (n*(x0^2)) + ((n^2)*x0)			*
-*		This gives						*
-*		  a = ((6*sxy*(1  - n - (2*x0))) + 			*
-*		       (2*sy*(1 - (3*n) + (2*(n^2)) +			*
-*			      (6*x0*(-1 + n + x0))))) / 		*
-*		      (n*((n^2) - 1))					*
-*		  b = ((12*sxy) + (6*sy*(1 - n - (2*x0)))) /		*
-*		      (n*((n^2) - 1))					*
-* Global refs:	-							*
-* Parameters:	WlzGreyP vec:		Vector of values.		*
-*		int idx0:		Lowest of the two given search	*
-*					range indicies.			*
-*		int idx1:		Highest of the two given search	*
-*					range indicies.			*
-*		WlzObjectType histDomtype: Histogram domain type which	*
-*					specifies int or double values.	*
-*		double *dstSlope:	Destination pointer for the 	*
-*					slope of the fitted line.	*
-************************************************************************/
+/*!
+* \return	Intercept of fitted line.
+* \ingroup	WlzThreshold
+* \brief	Computes the least squares fit of a straight line to
+*               the integer or double values in the given vector
+*               between the two given indicies.
+*               With the straight line of the form
+*		\f[
+                  y = a x + b
+		\f]
+*               then
+*		\f[
+                  a = \frac{(s_{xy} s_x) - (s_{xx} s_y)}
+		           {(s_x^2) - (n s_{xx})}
+		\f]
+*		\f[
+                  b = \frac{(s_x s_y) - (n s_{xy})}{(s_x^2) - (n s_{xx})}
+		\f]
+*               Where
+*               \f[
+                  s_x =  \sum_i{x_i}, s_y = \sum_i{y_i}
+		\f]
+*		\f[
+                  s_{xx} = \sum_i{x_i^2}, s_{yy} = \sum_i{y_i^2}
+		\f]
+*		\f[
+                  s_{xy} = \sum_i{x_i y_i}
+		\f]
+*               If \f$\{x_i\}\f$ are known to be integers of the form
+*               \f$\{x_0, x_0 + 1, ..., x_0 + n - 1\}\f$
+*               then
+*		\f[
+                  \sum_i{x_i} = \frac{n (2 x_0 + n - 1)}{2}
+		\f]
+*		\f[
+                  \sum_i{x_i^2} = \frac{n}{6} - n x0 - \frac{n^2}{2} +
+                                  \frac{n^3}{3} + n x_0^2 + n^2 x_0
+		\f]
+*               This gives
+*		\f[
+                  a = \frac{6 s_{xy} (1  - n - 2 x_0) +
+                            2 s_y (1 - 3 n + 2 n^2) +
+                            6 x_0 (-1 + n + x_0)}
+                           {n (n^2 - 1)}
+		\f]
+*		\f[
+                  b = \frac{12 s_{xy} + 6 s_y (1 - n - 2 x_0)}
+                           {n (n^2 - 1)}
+		\f]
+* \param	vec			Vector of values.
+* \param	idx0			Lowest of the two given search range
+* 					indicies.
+* \param	idx1			Highest of the two given search range
+* 					indicies.
+* \param	histDomtype		Histogram domain type which specifies
+* 					int or double values.
+* \param	dstSlope		Destination pointer for the slope
+* 					of the fitted line.
+*/
 static double	WlzCompThreshLSqFit(WlzGreyP vec, int idx0, int idx1,
 				    WlzObjectType histDomtype,
 				    double *dstSlope)

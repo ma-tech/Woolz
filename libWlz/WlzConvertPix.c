@@ -1,21 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzConvertPix.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for converting between the various pixel
-*		types.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************
-* 6/7/1		richard	put in WlzConverVtx
-************************************************************************/
+/*!
+* \file         WlzConvertPix.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
+*/
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
@@ -28,23 +30,15 @@ static WlzObject *WlzConvertVtx3d(WlzObject	*obj,
 				  WlzVertexType	newVtxType,
 				  WlzErrorNum	*dstErr);
 
-/************************************************************************
-*   Function   : WlzConvertPix						*
-*   Date       : Sat Nov  2 13:30:12 1996				*
-*************************************************************************
-*   Synopsis   :Convert the pixel type of an image object		*
-*   Returns    :WlzObject *: New object with converted valuetable. The	*
-*		domain is identical to the input. Returns NULL on error	*
-*		The error can be obtained with WlzGetError or by setting*
-*		an error handler. Possible errors:			*
-*		WLZ_ERR_OBJECT_NULL, WLZ_ERR_OBJECT_TYPE, 		*
-*		WLZ_ERR_DOMAIN_NULL, WLZ_ERR_VALUES_NULL,		*
-*		WLZ_ERR_GREY_TYPE				*
-*   Parameters :WlzObject	*obj: the object for conversion		*
-*		WlzGreyType	newpixtype: the required grey-value type*
-*   Global refs:None							*
-************************************************************************/
-
+/*!
+* \return	New object with converted valuetable, NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Converts the pixel type of the image object, creating a new
+*		object with the same domain as the given object.
+* \param	obj			The object for conversion.
+* \param	newpixtype		The required grey-value type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzConvertPix(
   WlzObject	*obj,
   WlzGreyType	newpixtype,
@@ -245,21 +239,14 @@ WlzObject *WlzConvertPix(
   return newobj;
 }	
 		
-/************************************************************************
-*   Function   : WlzConvertPix3d					*
-*   Date       : Tue Nov 12 14:23:07 1996				*
-*************************************************************************
-*   Synopsis   :Convert the pixel type of a 3D image object. This is	*
-*		static to this module and should only be accessed via	*
-*		WlzConvertPix.						*
-*   Returns    :WlzObject *: the converted object or NULL in error	*
-*		Possible errors: WLZ_ERR_DOMAIN_NULL, WLZ_ERR_VALUES_NULL,		*
-*		WLZ_ERR_DOMAIN_TYPE, WLZ_ERR_VALUES_TYPE.		*
-*   Parameters :WlzObject	*obj: object for conversion		*
-*		WlzGreyType	newpixtype: the required pixel type	*
-*   Global refs:None							*
-************************************************************************/
-
+/*!
+* \return	New object with required pixel type, NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Convert the pixel type of a 3D image object.
+* \param	obj			Given object for conversion.
+* \param	newpixtype		The required pixel type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 static WlzObject *WlzConvertPix3d(
   WlzObject	*obj,
   WlzGreyType	newpixtype,
@@ -364,6 +351,15 @@ static WlzObject *WlzConvertPix3d(
 }
 
 
+/*!
+* \return	New polygon domain or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Converts a polygon domain type.
+* \param	pdom			Given polygon domain.
+* \param	type			Required polygon domain type.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 WlzPolygonDomain *WlzConvertPolyType(
   WlzPolygonDomain	*pdom,
   WlzObjectType		type,
@@ -464,6 +460,15 @@ WlzPolygonDomain *WlzConvertPolyType(
   return rtnDom;
 }
 
+/*!
+* \return	New boundary list or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Converts a boundary list to the required type.
+* \param	bound			Given boundary list.
+* \param	type			Required boundary list type.
+* \param	dstErr			Destination pointer for error, may be
+* 					NULL.
+*/
 WlzBoundList *WlzConvertBoundType(
   WlzBoundList		*bound,
   WlzObjectType		type,
@@ -507,6 +512,15 @@ WlzBoundList *WlzConvertBoundType(
   return rtnBound;
 }
 
+/*!
+* \return	New object, NULL on error.
+* \ingroup      WlzValuesUtils
+* \brief	Converts the vertices of an object to the required type.
+* \param	obj			Given object.
+* \param	newVtxType		Required vertex type.
+* \param	dstErr			Destination pointer for error, may be
+*					NULL.
+*/
 WlzObject *WlzConvertVtx(
   WlzObject	*obj,
   WlzVertexType	newVtxType,
@@ -613,6 +627,15 @@ WlzObject *WlzConvertVtx(
   return rtnObj;
 }
 
+/*!
+* \return	New object, NULL on error.
+* \ingroup      WlzValuesUtils
+* \brief	Converts the vertices of a 3D object to the required type.
+* \param	obj			Given object.
+* \param	newVtxType		Required vertex type.
+* \param	dstErr			Destination pointer for error, may be
+*					NULL.
+*/
 static WlzObject *WlzConvertVtx3d(
   WlzObject	*obj,
   WlzVertexType	newVtxType,
@@ -703,4 +726,3 @@ static WlzObject *WlzConvertVtx3d(
   }
   return rtnObj;
 }
-
