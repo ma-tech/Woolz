@@ -478,6 +478,7 @@ extern WlzErrorNum 		WlzAffineTransformPrimSet(
 /************************************************************************
 * WlzAffineTransformLSq.c						*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzAffineTransform 	*WlzAffineTransformLSq(
 				  WlzVertexType vType,
 				  int sizeArrayVT,
@@ -488,6 +489,7 @@ extern WlzAffineTransform 	*WlzAffineTransformLSq(
 				  double *arrayVW,
 				  WlzTransformType trType,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzAffineTransform 	*WlzAffineTransformLSq2D(
 				  int sizeArrayVT,
 				  WlzDVertex2 *arrayVT,
@@ -497,7 +499,7 @@ extern WlzAffineTransform 	*WlzAffineTransformLSq2D(
 				  double *arrayVW,
 				  WlzTransformType trType,
 				  WlzErrorNum *dstErr);
-WlzAffineTransform 		*WlzAffineTransformLSq3D(
+extern WlzAffineTransform 	*WlzAffineTransformLSq3D(
 				  int sizeArrayVT,
 				  WlzDVertex3 *arrayVT,
 				  int sizeArrayVS,
@@ -2982,6 +2984,7 @@ extern WlzObject       		*WlzRegICPObjWSD2D(WlzObject *tObj,
 				  double rStep,
 				  double minDistWgt,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzObject		*WlzRegICPVerticesWSD2D(WlzVertexP tVx,
 				  WlzVertexP tNr,
 				  int tCnt,
@@ -3002,6 +3005,7 @@ extern WlzObject		*WlzRegICPVerticesWSD2D(WlzVertexP tVx,
 				  double rStep,
 				  double minDistWgt,
 				  WlzErrorNum *dstErr);
+#endif /* !WLZ_EXT_BIND */
 extern WlzAffineTransform	*WlzRegICPObjs(
 				  WlzObject *tObj,
 				  WlzObject *sObj,
