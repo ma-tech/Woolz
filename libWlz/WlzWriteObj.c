@@ -26,7 +26,7 @@
 #include <string.h>
 #include <Wlz.h>
 
-#ifdef defined(_WIN32) && !defined(__x86)
+#if defined(_WIN32) && !defined(__x86)
 #define __x86
 #endif
 
