@@ -447,11 +447,13 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
 		*curTr = NULL,
 		*regTr = NULL;
   double	rot,
+		lastRot,
   		cCor;
   WlzIVertex2	rotCentreI;
   WlzDVertex2	tran;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tranTol = 1.0;
+  const double	tranTol = 1.0,
+  		rotTol = 0.01;
 
   /* Register for translation. */
   tran = WlzRegCCorObjs2DTran(tObj, sObj, initTr, maxTran, &cCor, &errNum);
@@ -478,17 +480,18 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
     /* Iterate until translation is less tahn tollerance value or
      * number of itterations exceeds the maximum. */
     itr = 0;
+    rot = 0.0;
+    lastRot = 1.0;
     while((errNum == WLZ_ERR_NONE) &&
 	  ((conv = (fabs(tran.vtX) < tranTol) &&
-	           (fabs(tran.vtY) < tranTol)) == 0) &&
+	           (fabs(tran.vtY) < tranTol) &&
+		   (fabs(lastRot - rot) < rotTol)) == 0) &&
 	  ((maxItr < 0) || (itr++ < maxItr)))
     {
       /* Register for rotation. */
-      if(errNum == WLZ_ERR_NONE)
-      {
-	rot = WlzRegCCorObjs2DRot(tObj, sObj, rotCentreI, curTr, 
-				  maxRot, &errNum);
-      }
+      lastRot = rot;
+      rot = WlzRegCCorObjs2DRot(tObj, sObj, rotCentreI, curTr, 
+				maxRot, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
 	tTr0 = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
