@@ -1150,7 +1150,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
 		    for(i = 0; (i < iwsp.colrmn) && (errNum == WLZ_ERR_NONE);
 			i++, g.inp++)
 		    {
-		      if(!putshort((short )*g.inp, fp))
+		      if(!putshort((short) (*g.inp), fp))
 		      {
 			errNum = WLZ_ERR_WRITE_INCOMPLETE;
 		      }

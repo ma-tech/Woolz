@@ -160,10 +160,10 @@ static int 	getword(FILE *fp)
 */
 static int 	getshort(FILE *fp)
 {
-  char cin[2], cout[2];
+  unsigned char cin[2], cout[2];
 
   fread(cin,sizeof(char),2,fp);
-#if defined (__sparc) || defined (__mips) || defined (_ppc)
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
   cout[0] = cin[1];
   cout[1] = cin[0];
 #endif /* __sparc || __mips */
@@ -171,6 +171,7 @@ static int 	getshort(FILE *fp)
   cout[0] = cin[0];
   cout[1] = cin[1];
 #endif /* __x86 || __alpha */
+
   return((int) *((short *) &cout[0]));
 }
 
@@ -200,6 +201,14 @@ static float 	getfloat(FILE *fp)
 #endif /* __x86 || __alpha */
   return(*((float *) &cout[0]));
 }
+
+/************************************************************************
+*   Function   : getdouble						*
+*   Synopsis   : get the next double from the input stream		*
+*   Returns    : double:	value of next double on the input stream*
+*   Parameters : FILE *fp:	input stream				*
+*   Global refs: -                                                      *
+************************************************************************/
 
 /*!
 * \return	The  doublevalue.
@@ -1497,8 +1506,10 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
 	*values.inp++ = getword(fp);
       break;
     case WLZ_GREY_SHORT:
-      for (i=0 ; i<num ; i++)
-	*values.inp++ = getshort(fp);
+      for (i=0 ; i<num ; i++){
+short shv = getshort(fp);
+	*values.inp++ = shv;
+/*fprintf(stderr, "%d\n", shv);*/}
       break;
     case WLZ_GREY_UBYTE:
       for (i=0 ; i<num ; i++)
