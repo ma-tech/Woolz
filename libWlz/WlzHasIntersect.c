@@ -195,7 +195,7 @@ int WlzHasIntersection(
 	    break;
 	  }
 
-	  if( (iwsp1.linpos != i) || (iwsp1.linpos != i) ){
+	  if( (iwsp1.linpos != i) || (iwsp2.linpos != i) ){
 	    continue;
 	  }
 	
