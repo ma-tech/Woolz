@@ -40,6 +40,11 @@ static void usage(char *proc_str)
 	  "\tGet an arbitrary slice from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
 	  "\tOptions are:\n"
+	  "\t  -A                 Output all sections in the transformed view.\n"
+	  "\t                     This will output each section with the given\n"
+	  "\t                     view orientation into files using the output\n"
+	  "\t                     filename as a stub. If no output file is\n"
+	  "\t                     defined plane_????.wlz will be used\n"
 	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees. If roll\n"
 	  "\t                       is defined then the mode is \"absolute\"\n"
 	  "\t  -b<bibfile>        bibfile defining the view parameters e.g.\n"
@@ -68,9 +73,11 @@ int main(int	argc,
   WlzObject	*obj, *nobj;
   FILE		*inFP, *outFP, *bibFP;
   char		*outFile, *bibFile;
-  char 		optList[] = "a:b:d:f:m:o:s:u:h";
+  char 		optList[] = "Aa:b:d:f:m:o:s:u:h";
   int		option;
   int		iVal;
+  int		allFlg=0;
+  int		i, j;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
   double	scale=1.0;
   WlzDVertex3	fixed={0.0,0.0,0.0};
@@ -90,6 +97,10 @@ int main(int	argc,
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'A':
+      allFlg = 1;
+      break;
 
     case 'a':
       switch( sscanf(optarg, "%lg,%lg", &pitch, &yaw, &roll) ){
@@ -184,16 +195,33 @@ int main(int	argc,
   }
 
   /* check output file/stream */
-  if(strcmp(outFile, "-"))
-  {
-    if((outFP = fopen(outFile, "w")) == NULL)
+  if( allFlg ){
+    if(strcmp(outFile, "-"))
     {
-      errNum = WLZ_ERR_WRITE_EOF;
+      /* strip any file extension */
+      for(i=0, j=strlen(outFile); i < strlen(outFile); i++){
+	if( outFile[i] == '.' ){
+	  j = i;
+	}
+      }
+      outFile[j] = '\0';
+  }
+    else {
+      outFile = "plane";
     }
   }
-  else
-  {
-    outFP = stdout;
+  else {
+    if(strcmp(outFile, "-"))
+    {
+      if((outFP = fopen(outFile, "w")) == NULL)
+      {
+	errNum = WLZ_ERR_WRITE_EOF;
+      }
+    }
+    else
+    {
+      outFP = stdout;
+    }
   }
 
   /* create view structure */
@@ -243,14 +271,37 @@ int main(int	argc,
       case WLZ_CONTOUR:
       case WLZ_3D_DOMAINOBJ:
 	WlzInit3DViewStruct(viewStr, obj);
-	nobj = WlzGetSectionFromObject(obj, viewStr, &errNum);
-	if( nobj != NULL){
-	  WlzWriteObj(outFP, nobj);
+	if( allFlg ){
+	  /* loop through all possible planes */
+	  for(i=WLZ_NINT(viewStr->minvals.vtZ), j=0;
+	      i <= WLZ_NINT(viewStr->maxvals.vtZ); i++, j++){
+	    viewStr->dist = i;
+	    WlzInit3DViewStruct(viewStr, obj);
+	    nobj = WlzGetSectionFromObject(obj, viewStr, &errNum);
+	    if( nobj != NULL){
+	      char	fileBuf[256];
+	      sprintf(fileBuf, "%s%04.4d.wlz", outFile, j);
+	      if( outFP = fopen(fileBuf, "w") ){
+		 WlzWriteObj(outFP, nobj);
+		 fclose(outFP);
+	      }
+	    }
+	    else {
+	      return errNum;
+	    }
+	    WlzFreeObj(nobj);
+	  }
 	}
 	else {
-	  return errNum;
+	  nobj = WlzGetSectionFromObject(obj, viewStr, &errNum);
+	  if( nobj != NULL){
+	    WlzWriteObj(outFP, nobj);
+	  }
+	  else {
+	    return errNum;
+	  }
+	  WlzFreeObj(nobj);
 	}
-	WlzFreeObj(nobj);
 	break;
 
       default:
