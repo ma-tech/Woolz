@@ -1264,8 +1264,8 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
       t0D = wt * ( t13D - t31D); c1M[1][3] += t0D; c1M[3][1] += t0D;
       t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
     }
-    AlgMatrixScale(c1M, -2.0, 4, 4);
-    AlgMatrixScale(c3M, 2.0, 4, 4);
+    AlgMatrixScale(c1M, c1M, -2.0, 4, 4);
+    AlgMatrixScale(c3M, c3M, 2.0, 4, 4);
     if(sumVW < DBL_EPSILON)
     {
       errNum = WLZ_ERR_PARAM_DATA;
@@ -1277,7 +1277,7 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
     AlgMatrixTranspose(t0M, c3M, 4, 4);		/* T0 = C3^T */
     AlgMatrixMul(t1M, t0M, c3M, 4, 4, 4); 	/* T1 = C3^T C3 */
     t0D = 1.0 / (4.0 * sumVW);
-    AlgMatrixScale(t1M, t0D, 4, 4);		
+    AlgMatrixScale(t1M, t1M, t0D, 4, 4);		
     AlgMatrixSub(aM, t1M, c1M, 4, 4);
     /* Find the eigenvector of A which has the greatest eigenvalue.
      * This is returned in the first column of aM. */
@@ -1462,8 +1462,8 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
       t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
       t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
     }
-    AlgMatrixScale(c1M, -2.0, 4, 4);
-    AlgMatrixScale(c3M, 2.0, 4, 4);
+    AlgMatrixScale(c1M, c1M, -2.0, 4, 4);
+    AlgMatrixScale(c3M, c3M, 2.0, 4, 4);
     if(sumVW < DBL_EPSILON)
     {
       errNum = WLZ_ERR_PARAM_DATA;
@@ -1475,7 +1475,7 @@ static WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
     AlgMatrixTranspose(t0M, c3M, 4, 4);		/* T0 = C3^T */
     AlgMatrixMul(t1M, t0M, c3M, 4, 4, 4); 	/* T1 = C3^T C3 */
     t0D = 1.0 / (4.0 * sumVW);
-    AlgMatrixScale(t1M, t0D, 4, 4);		
+    AlgMatrixScale(t1M, t1M, t0D, 4, 4);		
     AlgMatrixSub(aM, t1M, c1M, 4, 4);
     /* Find the eigenvector of A which has the greatest eigenvalue.
      * This is returned in the first column of aM. */
