@@ -243,6 +243,7 @@ int main(int	argc,
   /* read objects and section if possible */
   while((obj = WlzReadObj(inFile, &errNum)) != NULL) 
   {
+    obj = WlzAssignObject(obj, &errNum);
     switch( obj->type )
     {
       case WLZ_2D_DOMAINOBJ:
