@@ -49,7 +49,7 @@
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
 * 26-04-01 bill Add WlzContourObjGrd().
-* 23-04-01 bill Add WlzRegICPVerticies().
+* 23-04-01 bill Add WlzRegICPVertices().
 * 23-03-01 bill Add WlzGreyTypeFromObj().
 * 14-03-01 bill Add WlzRasterObj().
 * 01-02-01 bill Add WlzRegCCorObjs().
@@ -57,14 +57,14 @@
 * 23-01-01 bill Add WlzShadeCorrect().
 * 16-01-01 bill	Add WlzGeomTriangleNormal() and WlzGMVertexNormal3D().
 * 22-12-00 bill Add initial affine transform parameter to WlzRegICPObjs().
-*		Add normals to WlzVerticiesFromObj().
+*		Add normals to WlzVerticesFromObj().
 * 01-12-00 RAB	Add WlzHasIntersection().
 * 01-12-00 RAB	Add get and set functions for 3D view structure params.
 * 29-11-00 bill Rename WlzAffineTransformLSq to WlzAffineTransformLSq2D
 *		add WlzAffineTransformLSq3D and a new WlzAffineTransformLSq.
 * 28-11-00 bill	Add WlzGMShellComputeGBB() and WlzGMFilterRmSmShells().
 * 16-11-00 bill Add WlzGMModelDeleteS().
-* 06-11-00 bill Add WlzVerticiesFromObj() and WlzRegICPObjs().
+* 06-11-00 bill Add WlzVerticesFromObj() and WlzRegICPObjs().
 * 03-11-00 bill Add WlzValueCopy[IFD]VertexTo[IFD]Vertex3().
 * 10-10-00 bill Add WlzAffineTransformContour(),
 *               WlzAffineTransformGMModel(),
@@ -1259,7 +1259,7 @@ extern WlzGMVertex	*WlzGMModelMatchVertexG3D(
 extern WlzGMVertex	*WlzGMModelMatchVertexG2D(
 			  WlzGMModel *model,
 			  WlzDVertex2 gPos);
-/* Geometry access functions */
+/* Geometry access and query functions */
 extern WlzGMElemType 	WlzGMModelGetSGeomType(
 			  WlzGMModel *model);
 extern WlzGMElemType 	WlzGMModelGetVGeomType(
@@ -1347,6 +1347,10 @@ extern double		WlzGMVertexDistSq3D(
 extern double		WlzGMVertexDistSq2D(
 			  WlzGMVertex *vertex,
 			  WlzDVertex2 pos);
+extern double		WlzGMVertexShellDist(
+			  WlzGMVertex *v0,
+			  WlzGMVertex *v1,
+			  WlzErrorNum *dstErr);
 extern WlzDVertex3	WlzGMVertexNormal3D(
 			  WlzGMModel *model,
 			  WlzGMVertex *gV,
@@ -1890,7 +1894,6 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 				  int expand,
 				  WlzErrorNum *dstErr);
 
-#ifndef WLZ_EXT_BIND
 /************************************************************************
 * "THE BEAST" - WlzLabel.c						*
 ************************************************************************/
@@ -1901,7 +1904,6 @@ extern WlzErrorNum 		WlzLabel(
 				  int maxNumObjs,
 				  int ignlns,
 				  WlzConnectType connect);
-#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzLaplacian.c							*
@@ -2388,7 +2390,7 @@ extern WlzAffineTransform	*WlzRegICPObjsGrd(
 				  int maxItr,
 				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
-extern WlzAffineTransform	*WlzRegICPVerticies(
+extern WlzAffineTransform	*WlzRegICPVertices(
 				  WlzVertexP tVx,
 				  WlzVertexP tNr,
 				  int tCnt,
@@ -2402,7 +2404,7 @@ extern WlzAffineTransform	*WlzRegICPVerticies(
 				  int *dstItr,
 				  int maxItr,
 				  WlzErrorNum *dstErr);
-extern WlzAffineTransform	*WlzRegICPTreeAndVerticies(
+extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 				  AlcKDTTree *tree,
 				  WlzTransformType trType,
 				  WlzVertexType vType,
@@ -2419,6 +2421,8 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVerticies(
 				  int maxItr,
 				  WlzAffineTransform *initTr,
 				  int *dstConv,
+				  WlzRegICPUsrWgtFn usrWgtFn,
+				  void *usrWgtData,
 				  WlzErrorNum *dstErr); 
 #endif /* WLZ_EXT_BIND */
 
@@ -3065,20 +3069,20 @@ extern WlzErrorNum 		WlzVerifyInterval(
 * WlzVerticies.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
-extern WlzVertexP		WlzVerticiesFromObj(
+extern WlzVertexP		WlzVerticesFromObj(
 				  WlzObject *obj,
 				  WlzVertexP *dstNr,
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
-extern WlzVertexP               WlzVerticiesFromCtr(
+extern WlzVertexP               WlzVerticesFromCtr(
                                   WlzContour *ctr,
                                   WlzVertexP *dstNr,
                                   int **dstVId,
                                   int *dstCnt,
                                   WlzVertexType *dstType,
                                   WlzErrorNum *dstErr);
-extern AlcKDTTree      		*WlzVerticiesBuildTree(
+extern AlcKDTTree      		*WlzVerticesBuildTree(
 				  WlzVertexType vType,
 				  int nV,
 				  WlzVertexP vtx,
