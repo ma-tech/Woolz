@@ -15,6 +15,7 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 #include <string.h>
 #include <Wlz.h>
@@ -26,7 +27,7 @@ extern int	optind,
 		opterr,
 		optopt;
 
-int             main(int argc, char *argv[])
+int             main(int argc, char **argv)
 {
   int           option,
   		ok = 1,
@@ -43,10 +44,11 @@ int             main(int argc, char *argv[])
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "ghi:o:v:w:";
+  static char	optList[] = "ghio:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
+  opterr = 0;
   ctrDom.core = NULL;
   dumVal.core = NULL;
   outFileStr = (char *)outFileStrDef;
