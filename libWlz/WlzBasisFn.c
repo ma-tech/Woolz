@@ -2179,6 +2179,9 @@ static WlzHistogramDomain *WlzBasisFnScalarMOS3DEvalTb(int nPts,
     rv = sqrt(v);
     rw = sqrt(w);
     norm = 1.0 / (4.0 * ALG_M_PI * delta * delta);
+#ifdef _OPENMP
+    #pragma omp parallel for default(shared)
+#endif
     for(idx = 0; idx < lutMax; ++idx)
     {
       *(lut->binValues.dbp + idx) = WlzBasisFnValueMOSPhiPC(idx * lutStep,
@@ -2380,9 +2383,6 @@ static void	WlzBasisFnVxExtent3D(WlzDBox3 *extentDB,
     ++vx1;
   }
 }
-
-
-
 
 /*!
 * \return	<void>

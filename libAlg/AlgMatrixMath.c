@@ -50,7 +50,7 @@
 void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 			     size_t nR, size_t nC)
 {
-  size_t	id0,
+  size_t        id0,
   		id1;
   double	*aRowM,
   		*bRowM,
@@ -395,13 +395,24 @@ void		AlgMatrixZero(double **aM, size_t nR, size_t nC)
 void 		AlgMatrixVectorMul(double *aV, double **bM, double *cV,
 				   size_t nR, size_t nC)
 {
-  size_t	id0,
-  		id1;
+#ifdef _OPENMP
+  int		id0,
+		oNR;
+#else
+  size_t	id0;
+#endif
+  size_t	id1;
   double	tD0;
   double	*bRow,
   		*cCol;
 
+#ifdef _OPENMP
+  oNR = nR;
+  #pragma omp parallel for default(shared) private(id0,id1,tD0,cCol,bRow)
+  for(id0 = 0; id0 < oNR; ++id0)
+#else
   for(id0 = 0; id0 < nR; ++id0)
+#endif
   {
     tD0 = 0.0;
     cCol = cV;

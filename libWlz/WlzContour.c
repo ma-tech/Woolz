@@ -104,6 +104,11 @@ static WlzContour 	*WlzContourFromPoints3D(
 			  double delta,
 			  double tau,
 			  WlzErrorNum *dstErr);
+static WlzErrorNum 	WlzContourFromPoints3DPn(
+			  WlzDomain dom,
+			  WlzValues val,
+			  int pnPos,
+			  WlzBasisFn *basisFn);
 static WlzDVertex2	WlzContourItpTriSide(
 			  double valOrg,
 			  double valDst,
@@ -530,23 +535,21 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
 		       double delta, double tau, WlzErrorNum *dstErr)
 {
   int		tI0,
-		klIdx,
+		pnCnt,
+		pnIdx,
+		pnPos,
   		nCPts;
   double	*alpha = NULL,
   		*dist = NULL;
   WlzDVertex3	*cPts = NULL;
   WlzContour	*ctr = NULL;
   WlzBasisFn	*basisFn = NULL;
-  WlzDVertex3	dPos;
   WlzDomain	*domP;
   WlzValues	*valP;
   WlzVoxelValues *dVal;
   WlzPlaneDomain *dDom;
   WlzObject	*dObj2D;
   double	bFnParam[2];
-  WlzGreyP	tGP;
-  WlzGreyWSpace	gWSp;
-  WlzIntervalWSpace iWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   bFnParam[0] = delta;
@@ -617,67 +620,46 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
     domP = dDom->domains;
     dVal = dObj->values.vox;
     valP = dVal->values;
+    pnCnt = dDom->lastpl - dDom->plane1 + 1;
 #ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
     (void )fprintf(stderr,
     		   "WlzContourFromPoints3D: %d %d %d %d %d %d\n",
     		   dDom->kol1, dDom->line1, dDom->plane1,
 		   dDom->lastkl, dDom->lastln, dDom->lastpl);
 #endif
-    dPos.vtZ = dDom->plane1;
-    while((errNum == WLZ_ERR_NONE) && (dPos.vtZ <= dDom->lastpl))
+    /* Parallelize this loop using OMP if possible.
+     * The for loop needs to be very simple for OMP, hence errors are
+     * reported but the loop does't terminate until all itterations
+     * are completed. */
+#ifdef _OPENMP
     {
-      if((*domP).core)
+      WlzErrorNum pvErrNum;
+      #pragma omp parallel for default(shared) private(pvErrNum)
+      for(pnIdx = 0; pnIdx < pnCnt; ++pnIdx)
       {
-#ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
-	(void )fprintf(stderr,
-		       "WlzContourFromPoints3D: plane %g (%d %d %d %d)\n",
-		       dPos.vtZ,
-		       (*domP).i->kol1, (*domP).i->line1,
-		       (*domP).i->lastkl, (*domP).i->lastln);
-#endif
-	dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domP, *valP, 
-	    NULL, NULL, &errNum);
-
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  errNum = WlzInitGreyScan(dObj2D, &iWSp, &gWSp);
-	}
-	while((errNum == WLZ_ERR_NONE) &&
-	    ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
-	{
-	  tGP = gWSp.u_grintptr;
-	  dPos.vtY = iWSp.linpos;
-	  switch(gWSp.pixeltype)
+	  pnPos = dDom->plane1 + pnIdx;
+	  pvErrNum = WlzContourFromPoints3DPn(*(domP + pnIdx), *(valP + pnIdx),
+					      pnPos, basisFn);
+	  #pragma omp critical
 	  {
-	    case WLZ_GREY_FLOAT:
-	      for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
-	      {
-		dPos.vtX = klIdx;
-		*(tGP.flp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
-	      }
-	      break;
-	    case WLZ_GREY_DOUBLE:
-	      for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
-	      {
-		dPos.vtX = klIdx;
-		*(tGP.dbp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
-	      }
-	      break;
-	    default:
-	      errNum = WLZ_ERR_GREY_TYPE;
-	      break;
+	    if((pvErrNum != WLZ_ERR_NONE) && (errNum == WLZ_ERR_NONE))
+	    {
+	      errNum = pvErrNum;
+	    }
 	  }
 	}
-	if(errNum == WLZ_ERR_EOO)
-	{
-	  errNum = WLZ_ERR_NONE;
-	}
-	WlzFreeObj(dObj2D);
       }
-      dPos.vtZ += 1.0;
-      ++domP;
-      ++valP;
     }
+#else
+    for(pnIdx = 0; (errNum == WLZ_ERR_NONE) && (pnIdx < pnCnt); ++pnIdx)
+    {
+      pnPos = dDom->plane1 + pnIdx;
+      errNum = WlzContourFromPoints3DPn(*(domP + pnIdx), *(valP + pnIdx),
+      				        pnPos, basisFn);
+    }
+#endif
 #ifdef WLZ_CONTOURFROMPOINTS_DEBUG
     if(errNum == WLZ_ERR_NONE)
     {
@@ -715,6 +697,78 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
     *dstErr = errNum;
   }
   return(ctr);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzContour
+* \brief	Compute and fill in a single plane of distance values
+*		by evaluating the given radial basis function for each
+*		voxel in the given plane.
+* \param	dom			Domain of the given plane.
+* \param	val			Values of the given plane.
+* \param	pnPos			Plane index.
+* \param	basisFn			Basis function to be evaluated.
+*/
+static WlzErrorNum WlzContourFromPoints3DPn(WlzDomain dom, WlzValues val,
+				int pnPos, WlzBasisFn *basisFn)
+{
+  int		klIdx;
+  WlzDVertex3	dPos;
+  WlzObject	*dObj2D = NULL;
+  WlzGreyP	tGP;
+  WlzGreyWSpace	gWSp;
+  WlzIntervalWSpace iWSp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(dom.core && val.core)
+  {
+    dPos.vtZ = pnPos;
+#ifdef WLZ_CONTOURFROMPOINTS_TRACKPROGRESS
+    (void )fprintf(stderr,
+		   "WlzContourFromPoints3DPn: plane %d (%d %d %d %d)\n",
+		   pnPos,
+		   dom.i->kol1, dom.i->line1,
+		   dom.i->lastkl, dom.i->lastln);
+#endif
+    dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom, val, NULL, NULL, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzInitGreyScan(dObj2D, &iWSp, &gWSp);
+    }
+    while((errNum == WLZ_ERR_NONE) &&
+	((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+    {
+      tGP = gWSp.u_grintptr;
+      dPos.vtY = iWSp.linpos;
+      switch(gWSp.pixeltype)
+      {
+	case WLZ_GREY_FLOAT:
+	  for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
+	  {
+	    dPos.vtX = klIdx;
+	    *(tGP.flp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
+	  }
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
+	  {
+	    dPos.vtX = klIdx;
+	    *(tGP.dbp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+    WlzFreeObj(dObj2D);
+  }
+  return(errNum);
 }
 
 /*!

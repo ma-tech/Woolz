@@ -129,6 +129,10 @@ static WlzErrorNum	WlzWriteGreyV(
 			  WlzGreyType type,
 			  WlzGreyV *gV,
 			  int nGV);
+#ifdef _OPENMP
+#define putc(C,S) putc_unlocked(C,S)
+#endif
+
 /*!
 * \return	Number of bytes written.
 * \ingroup 	WlzIO
@@ -255,6 +259,10 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+#ifdef _OPENMP
+  #pragma omp critical
+  {
+#endif
   if(fp == NULL)
   {
     errNum = WLZ_ERR_PARAM_NULL;
@@ -359,6 +367,9 @@ WlzErrorNum	WlzWriteObj(FILE *fp, WlzObject *obj)
 	break;
     }
   }
+#ifdef _OPENMP
+  }
+#endif
   return(errNum);
 }
 

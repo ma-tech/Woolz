@@ -125,6 +125,10 @@ static WlzErrorNum 		WlzReadGreyV(FILE *fP,
 				  WlzGreyType type,
 				  WlzGreyV *gV,
 				  int nGV);
+#ifdef _OPENMP
+#define getc(S)	getc_unlocked(S)
+#endif
+
 /*!
 * \return	The word value.
 * \ingroup	WlzIO
@@ -266,6 +270,10 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   Wlz3DWarpTrans	*wtrans3d;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
+#ifdef _OPENMP
+  #pragma omp critical
+  {
+#endif
   /* check the stream pointer */
   if( fp == NULL ){
     errNum = WLZ_ERR_PARAM_NULL;
@@ -321,8 +329,8 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	}
 	else {
 	  /* attempt to return a partial object */
-/*	  WlzFreeObj( obj );
-	  obj = NULL;*/
+	  /* WlzFreeObj( obj );
+	  obj = NULL; */
 	}
       }
       break;
@@ -424,6 +432,9 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   if( dstErr ){
     *dstErr = errNum;
   }
+#ifdef _OPENMP
+  }
+#endif
   return(obj);
 }
 

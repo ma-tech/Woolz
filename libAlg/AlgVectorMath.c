@@ -159,10 +159,21 @@ void		AlgVectorCopy(double *aV, double *bV, size_t n)
 void		AlgVectorScaleAdd(double *aV, double *bV, double *cV,
 				  double s, size_t n)
 {
+#ifdef _OPENMP
+  int		id0,
+  		oN;
+#else
   size_t	id0;
+#endif
 
+#ifdef _OPENMP
+  oN = n;
+  #pragma omp parallel for default(shared)
+  for(id0 = 0; id0 < oN; ++id0)
+#else
   for(id0 = 0; id0 < n; ++id0)
+#endif
   {
-    *aV++ = (*bV++ * s) + *cV++;
+    *(aV + id0) = (*(bV + id0) * s) + *(cV + id0);
   }
 }
