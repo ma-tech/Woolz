@@ -1,0 +1,605 @@
+'\" te
+.\" MRC HGU @(#)HGUDlpList.3	1.3\t02/28/96 bill@hgu.mrc.ac.uk
+.nh
+.EQ
+delim $$
+.EN
+.TH HGUDlpList 3 "6 Sep 1994"
+.SH NAME
+.BI HGUDlpListAppend ,
+.BI HGUDlpListCount ,
+.BI HGUDlpListCreate ,
+.BI HGUDlpListDelete ,
+.BI HGUDlpListDeleteAll ,
+.BI HGUDlpListDestroy ,
+.BI HGUDlpListDup ,
+.BI HGUDlpListEntryGet ,
+.BI HGUDlpListEntrySet ,
+.BI HGUDlpListExchange ,
+.BI HGUDlpListHead ,
+.BI HGUDlpListInsert ,
+.BI HGUDlpListItemIsHead ,
+.BI HGUDlpListItemIsTail ,
+.BI HGUDlpListIterate ,
+.BI HGUDlpListNext ,
+.BI HGUDlpListNth ,
+.BI HGUDlpListOffset ,
+.BI HGUDlpListPrev ,
+.BI HGUDlpListRemove ,
+.BI HGUDlpListRemoveAll ,
+.BI HGUDlpListSort ,
+.BI HGUDlpListTail 
+\- functions and data structures for doubly linked lists of pointers.
+.SH SYNOPSIS
+.LP
+.B
+#include <HGUDlpList.h>
+.LP
+.BI "int HGUDlpListCount(HGUDlpList *" "list" );
+.in -16m
+.LP
+.BI "int HGUDlpListItemIsHead(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.LP
+.BI "int HGUDlpListItemIsTail(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.LP
+.BI "int HGUDlpListOffset(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" ,
+.BI "HGUDlpListDirection " "dir" );
+.in -16m
+.LP
+.BI "int HGUDlpListSort(HGUDlpList *" "list" ,
+.in +16m
+.BI "int (*" "entryCompFn" ")(void *, void *)" );
+.in -16m
+.LP
+.BI "void HGUDlpListDestroy(HGUDlpList *" "list" );
+.LP
+.BI "void *HGUDlpListEntryGet(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.LP
+.BI "void *HGUDlpListEntrySet(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" ,
+.BI "void *" "entry" );
+.in -16m
+.LP 
+.BI "HGUDlpList *HGUDlpListCreate(HGUDlpListState (*" "lockFn" ,
+.in +16m
+.BI ")(void *, HGUDlpListState)" );
+.in -16m
+.LP
+.BI "HGUDlpList *HGUDlpListDup(HGUDlpList *" "list" );
+.LP
+.BI "HGUDlpListItem *HGUDlpListInsert(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "before" ,
+.BI "void *" "entry" ,
+.BI "void (*" "freeFn" )(void *)" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListAppend(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "after" ,
+.BI "void *" "entry" ,
+.BI "void (*" "freeFn" ")(void *)" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListExchange(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item0" ,
+.BI "HGUDlpListItem *" "item1" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListDeleteAll(HGUDlpList *" "list" );
+.LP
+.BI "HGUDlpListItem *HGUDlpListDelete(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListRemoveAll(HGUDlpList *" "list" );
+.LP
+.BI "HGUDlpListItem *HGUDlpListRemove(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListIterate(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" ,
+.BI "HGUDlpListDirection " "dir" ,
+.BI "int (*" "iterFn" ")(HGUDlpList *, HGUDlpListItem *, void *)" ,
+.BI "void *" "iterData" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListHead(HGUDlpList *" "list" );
+.LP
+.BI "HGUDlpListItem *HGUDlpListTail(HGUDlpList *" "list" );
+.LP
+.BI "HGUDlpListItem *HGUDlpListNext(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListNth(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" ,
+.BI "HGUDlpListDirection " "dir" ,
+.BI "int " "offset" );
+.in -16m
+.LP
+.BI "HGUDlpListItem *HGUDlpListPrev(HGUDlpList *" "list" ,
+.in +16m
+.BI "HGUDlpListItem *" "item" );
+.in -16m
+.SH MT-LEVEL
+.LP
+Safe provided a suitable lock function is provided.
+.SH DESCRIPTION
+.LP
+Functions and data structures for handling doubly linked lists of pointers.
+.LP
+\fBHGUDlpListCreate\fR
+creates a list data structure which is required by all
+the other HGUDlpList functions.
+The function should be supplied with a pointer to a suitable lock function,
+see example below.
+If no locking is required then this may be NULL.
+.LP
+\fBHGUDlpListDestroy\fR
+destroys the given list data structure and any list items.
+.LP
+\fBHGUDlpListInsert\fR 
+inserts the given entry into the list before the given item
+and returns
+the inserted list item or NULL on error.
+If the given item is NULL the entry is inserted at the head of the list.
+The \fBfreeFn\fR parameter can be used to supply a pointer to a function
+that will be used to free the entry when the new item is deleted.
+If this pointer is NULL then the entry will never be freed by
+\fBHGUDlpListDelete\fR.
+.LP
+\fBHGUDlpListDup\fR
+Duplicates a list data structure, but \fBnot\fR its items.
+The head and tail of the new list are both NULL and the new lists item count
+is zero. Only the lock function is common to both the new and the given lists.
+.LP
+\fBHGUDlpListAppend\fR
+appends the given entry into the list after the given item
+and returns
+the appended list item or NULL on error.
+If the given item is NULL the entry is appended at the tail of the list.
+A \fBfreeFn\fR parameter should be supplied as for \fBHGUDlpListInsert\fR.
+.LP
+\fBHGUDlpListExchange\fR
+exchanges the two given list item's entries (not the items)
+and returns
+the first of the two list items (ie  first in the functions parameter list) or
+NULL on error.
+.LP
+\fBHGUDlpListDeleteAll\fR
+deletes all list items from the head on down to and including the tail,
+where delete implies both the removal of items from the list and freeing the
+entries using the item's free functions (unless either the free function or the
+entry is NULL). Returns the new list head which is 
+NULL if all the items were deleted \fBwithout\fB error.
+.LP
+\fBHGUDlpListDelete\fR
+deletes the given list item from the list
+and returns
+the next list item after the item deleted, this may be NULL either on
+error or if the list item was at the tail.
+.LP
+\fBHGUDlpListRemove\fR
+removes the item from the list with the given list,
+were remove implies the removal of the item from the
+list and the freeing of the item \fBexcept\fR for its entry.
+Returns the next list item after the item removed, this may be NULL either 
+error or if the list item at the tail.
+.LP
+\fBHGUDlpListSort\fR
+sorts the entire list using the given entry comparison function.
+A pointer to an entry comparison function must be supplied, this
+must return  an integer less than, equal to, or greater than zero
+to indicate if the first entry is to be  considered  less than, equal to, or
+greater than the second entry.
+Returns the number of items in list or zero for an empty list or on error.
+.LP
+\fBHGUDlpListIterate\fR
+iterates the given function through the list, starting
+with the given item. The iteration may proceed
+toward either the head or tail of the list.
+If the start item is NULL then the iteration starts at either the head
+(direction towards tail) or the tail (direction towards head).
+The iterated function must take the form of:
+.ps -2
+.cs R 24
+.nf
+    int MyItemCount(HGUDlpList *list,
+                    HGUDlpListItem *item,
+                    void *myData)
+     {
+       int         *count;
+
+       if(list && item)
+       {
+         count = (int *)myData;
+         ++*count;
+       }
+       return(1);
+     }
+.fi
+.cs R
+.ps +2
+Iteration stops when either the head or tail of the list have been reached,
+or the iterated function returns zero.
+\fBHGUDlpListIterate\fR
+returns the last item to which the iterated function was applied, this may be
+NULL on error.
+.LP
+\fBHGUDlpListItemIsHead\fR
+looks to see if the given item is at the head of the list.
+Returns non\-zero if the item is at the head.
+.LP
+\fBHGUDlpListItemIsTail\fR
+looks to see if the given item is at the tail of the list.
+Returns non\-zero if the item is at the tail.
+.LP
+\fBHGUDlpListEntryGet\fR
+returns the list items entry.
+.LP
+\fBHGUDlpListEntrySet\fR
+sets the given items entry and returns the previous entry of the item.
+Entries are 
+\fBnever\fB freed by this function.
+.LP
+\fBHGUDlpListTail\fR
+returns the tail list item,
+this may be NULL either on error or if the list is empty.
+.LP
+\fBHGUDlpListHead\fR
+returns the head list item,
+this may be NULL either on error or if the list is empty.
+.LP
+\fBHGUDlpListNext\fR
+returns the next list item after the given item,
+this may be NULL either on error or if the item is at the tail.
+.LP
+\fBHGUDlpListNth\fR
+returns the n'th item from the given item in the list.
+The n'th item from the head or tail can be found by
+calling the function with \fIitem\fR == NULL, in which case
+the direction of approach is optimised.
+.LP
+\fBHGUDlpListOffset\fR
+counts and returns the number of items from the given item to the head or tail
+item of the list.
+.LP
+\fBHGUDlpListPrev\fR
+returns the previous list item before the given item,
+this may be NULL either on error or if the item is at the head of the list.
+.LP
+\fBHGUDlpListCount\fR
+returns the number of items in the list. This is >= zero for a valid list but
+may be negative if the list is invalid.
+
+.SH EXAMPLES
+.LP
+The following is the ANSI C source of a simple test program:
+This program doesn't do anything useful in itself,
+it does however exercise many of the HGUDlpList functions.
+.LP
+.ps -2
+.cs R 24
+.nf
+#include <stdio.h>
+#include <malloc.h>
+#include <assert.h>
+#include <HGUDlpList.h>
+
+static void	HGUDlpListTest(void);
+static int	CompareEntries(void *, void *),
+		PrintItems(HGUDlpList *, HGUDlpListItem *, void *),
+		FindEqualItem(HGUDlpList *, HGUDlpListItem *, void *);
+static HGUDlpListState LockFunc(void *, HGUDlpListState);
+
+int		main(int argc, char **argv)
+{
+  HGUDlpListTest();
+  return(0);
+}
+
+static void     HGUDlpListTest(void)
+{
+  HGUDlpList	*list = NULL;
+  HGUDlpListItem *item = NULL,
+  		*head,
+		*tail;
+  int		count;
+
+  (void )printf("Simple test program for libhguDlpList.a\\n");
+  (void )printf("=======================================\\n\\n");
+  (void )printf("\\n* Create list with dummy lock function "
+  		"(lock function prints 666).\\n");
+  list = HGUDlpListCreate(LockFunc);
+  assert(list != NULL);
+  (void )printf("\\n* Insert items into list.\\n");
+  count = 0;
+  do
+  {
+    item = HGUDlpListInsert(list, item, (void *)count, NULL);
+    ++count;
+  } while(item && (count < 10));
+  assert(item != NULL);
+  (void )printf("\\n* Find head of list.\\n");
+  head = HGUDlpListHead(list);
+  assert(head != NULL);
+  (void )printf("\\n* Find tail of list.\\n");
+  tail = HGUDlpListTail(list);
+  assert(tail != NULL);
+  (void )printf("\\n* Print list using iterator function.\\n");
+  (void )printf("\\nExpected output:\\n"
+		"9 33\\n"
+		"8 33\\n"
+		"7 33\\n"
+		"6 33\\n"
+		"5 33\\n"
+		"4 33\\n"
+		"3 33\\n"
+		"2 33\\n"
+		"1 33\\n"
+		"0 33\\n");
+  (void )printf("\\nActual output:\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   PrintItems, (void *)33);
+  assert((unsigned )item == (unsigned)tail);
+  (void )printf("\\n* Find entry in the list using iterator function.\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   FindEqualItem, (void *)5);
+  (void )printf("\\n* Get entry for the item found.\\n");
+  count = (int )HGUDlpListEntryGet(list, item);
+  (void )printf("\\nExpected output:\\n"
+                "count 5\\n");
+  (void )printf("\\nActual output:\\n"
+  		"count %d\\n", count);
+  assert(count == 5);
+  (void )printf("\\n* Delete this entry from list.\\n");
+  item = HGUDlpListDelete(list, item);
+  (void )printf("\\n* Print list using iterator function.\\n");
+  (void )printf("\\nExpected output:\\n"
+		"9 33\\n"
+		"8 33\\n"
+		"7 33\\n"
+		"6 33\\n"
+		"4 33\\n"
+		"3 33\\n"
+		"2 33\\n"
+		"1 33\\n"
+		"0 33\\n");
+  (void )printf("\\nActual output:\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			    PrintItems, (void *)33);
+  assert((unsigned )item == (unsigned )tail);
+  (void )printf("\\n* Find entry in the list using iterator function.\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   FindEqualItem, (void *)3);
+  (void )printf("\\n* Get entry for the item found.\\n");
+  count = (int )HGUDlpListEntryGet(list, item);
+  (void )printf("\\nExpected output:\\n"
+  		"count 3\\n");
+  (void )printf("\\nActual output:\\n"
+  		"count %d\\n", count);
+  assert(count == 3);
+  (void )printf("\\n* Exchange entry at head of this with this item.\\n");
+  item = HGUDlpListExchange(list, head, item);
+  (void )printf("\\n* Print list using iterator function.\\n");
+  (void )printf("\\nExpected output:\\n"
+  		"3 33\\n"
+		"8 33\\n"
+		"7 33\\n" 
+		"6 33\\n"
+		"4 33\\n"
+		"9 33\\n"
+		"2 33\\n"
+		"1 33\\n"
+		"0 33\\n");
+  (void )printf("\\nActual output:\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   PrintItems, (void *)33);
+  (void )printf("\\n* Find entry in the list using iterator function.\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   FindEqualItem, (void *)7);
+  (void )printf("\\n* Get entry for the item found.\\n");
+  count = (int )HGUDlpListEntryGet(list, item);
+  (void )printf("\\nExpected output:\\n"
+  		"count 7\\n");
+  (void )printf("\\nActual output:\\n"
+  		"count %d\\n", count);
+  assert(count == 7);
+  (void )printf("\\n* Set entry for the item found.\\n");
+  count = (int )HGUDlpListEntrySet(list, item, (void *)77);
+  (void )printf("\\nExpected output:\\n"
+  		"count 7\\n");
+  (void )printf("\\nActual output:\\n"
+		"count %d\\n", count);
+  assert(count == 7);
+  (void )printf("\\n* Print list using iterator function.\\n");
+  (void )printf("\\nExpected output:\\n"
+  		"3 33\\n"
+		"8 33\\n"
+		"77 33\\n" 
+		"6 33\\n"
+		"4 33\\n"
+		"9 33\\n"
+		"2 33\\n"
+		"1 33\\n"
+		"0 33\\n");
+  (void )printf("\\nActual output:\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   PrintItems, (void *)33);
+  (void )printf("\\n* Find entry in the list using iterator function.\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   FindEqualItem, (void *)6);
+  count = (int )HGUDlpListEntryGet(list, item);
+  (void )printf("\\nExpected output:\\n"
+  		"count 6\\n");
+  (void )printf("\\nActual output:\\n"
+  		"count %d\\n", count);
+  assert(count == 6);
+  (void )printf("\\n* Append new item after this item.\\n");
+  item = HGUDlpListAppend(list, item, (void *)55, NULL);
+  count = (int )HGUDlpListEntryGet(list, item);
+  (void )printf("\\nExpected output:\\n"
+                "count 55\\n");
+  (void )printf("\\nActual output:\\n"
+                "count %d\\n", count); 
+  (void )printf("\\n* Print list using iterator function.\\n");
+  (void )printf("\\nExpected output:\\n"
+  		"3 33\\n"
+		"8 33\\n"
+		"77 33\\n" 
+		"6 33\\n"
+		"55 33\\n"
+		"4 33\\n"
+		"9 33\\n"
+		"2 33\\n"
+		"1 33\\n"
+		"0 33\\n");
+  (void )printf("\\nActual output:\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+  			   PrintItems, (void *)33);
+  (void )printf("\\n* Sort the list entries.\\n");
+  count = (int )HGUDlpListSort(list, CompareEntries);
+  (void )printf("\\nExpected output:\\n"
+                "count 10\\n");
+  (void )printf("\\nActual output:\\n"
+                "count %d\\n", count);
+  assert(count == 10);
+  (void )printf("\\n* Print list using iterator function.\\n");
+  (void )printf("\\nExpected output:\\n"
+                "77 33\\n"
+                "55 33\\n"
+                "9 33\\n"
+                "8 33\\n"
+                "6 33\\n"
+                "4 33\\n"
+                "3 33\\n"
+                "2 33\\n"
+                "1 33\\n"
+                "0 33\\n");
+  (void )printf("\\nActual output:\\n");
+  item = HGUDlpListIterate(list, head, HGU_DLPLIST_DIR_TOTAIL,
+                           PrintItems, (void *)33);
+  (void )printf("\\n* Find 6th item from the head.\\n");
+  item = HGUDlpListNth(list, NULL, HGU_DLPLIST_DIR_TOTAIL, 6);
+  count = (int )HGUDlpListEntryGet(list, item);
+  (void )printf("\\nExpected output:\\n"
+                "3\\n");
+  assert(count == 3);
+  (void )printf("\\nActual output:\\n"
+                "%d\\n", count);
+  (void )printf("\\n* Find offset of this item from the head.\\n");
+  count = (int )HGUDlpListOffset(list, item, HGU_DLPLIST_DIR_TOHEAD);
+  (void )printf("\\nExpected output:\\n"
+                "6\\n");
+  assert(count == 6);
+  (void )printf("\\nActual output:\\n"
+                "%d\\n", count);
+  (void )printf("\\n* Find offset of this item from the tail.\\n");
+  count = (int )HGUDlpListOffset(list, item, HGU_DLPLIST_DIR_TOTAIL);
+  (void )printf("\\nExpected output:\\n"
+                "3\\n");
+  assert(count == 3);
+  (void )printf("\\nActual output:\\n"
+                "%d\\n", count);
+  (void )printf("\\n* Destroy the list and all its items.\\n");
+  HGUDlpListDestroy(list);
+}
+
+static int	FindEqualItem(HGUDlpList *list, HGUDlpListItem *item,
+			      void *magic)
+{
+  int		notEqual,
+  		have,
+  		target;
+
+  have = (int )HGUDlpListEntryGet(list, item);
+  target = (int )magic;
+  notEqual = have != target;
+  return(notEqual);
+}
+
+static int	PrintItems(HGUDlpList *list, HGUDlpListItem *item, void *magic)
+{
+  int		number,
+  		thirtyThree;
+  
+  number = (int )HGUDlpListEntryGet(list, item);
+  thirtyThree = (int )magic;
+  (void )printf("%d %d\\n", number, thirtyThree);
+  return(1);
+}
+
+static HGUDlpListState LockFunc(void *lockData, HGUDlpListState state)
+{
+  HGUDlpListState newState = HGU_DLPLIST_STATE_EMPTY;
+  int		*magic = NULL;
+
+  if(lockData && (state & (HGU_DLPLIST_STATE_CREATE|
+  			   HGU_DLPLIST_STATE_LOCK|
+  			   HGU_DLPLIST_STATE_UNLOCK|
+			   HGU_DLPLIST_STATE_DESTROY)))
+  {
+    if(state & HGU_DLPLIST_STATE_CREATE)
+    {
+      (void )printf("Create lock\\n");
+      magic = malloc(sizeof(int));
+      *((int **)lockData) = magic;
+      if(magic)
+	*magic = 666;
+    }
+    else
+      magic = (int *)lockData;
+    if(state &  HGU_DLPLIST_STATE_LOCK)
+    {
+      (void )printf("Lock %d\\n", *magic);
+      newState |= HGU_DLPLIST_STATE_LOCK;
+    }
+    if(state & HGU_DLPLIST_STATE_UNLOCK)
+    {
+      (void )printf("Unlock %d\\n", *magic);
+      newState |= HGU_DLPLIST_STATE_UNLOCK;
+    }
+    if(state & HGU_DLPLIST_STATE_DESTROY)
+    {
+      (void )printf("Destroy lock %d\\n", *magic);
+      free(lockData);
+      newState |= HGU_DLPLIST_STATE_DESTROY;
+    }
+  }
+  return(newState);
+}
+
+static int	CompareEntries(void *entry0, void *entry1)
+{
+  return((int )entry0 - (int )entry1);
+}
+.fi
+.cs R
+.ps +2
+.SH SEE ALSO
+assert(3).
+.SH BUGS
+None known \fByet\fR.
+However \fBassert(3)\fR has been extensively used in the
+C source, so when a bug does show up it could well be through an assertion
+failure.
