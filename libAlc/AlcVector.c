@@ -12,6 +12,7 @@
 * Purpose:      A general purpose 1D vector (extensible array).
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 04-06-2000 bill Fixed loop bug in AlcVectorExtend().
 ************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -153,7 +154,7 @@ AlcErrno	AlcVectorFree(AlcVector *vec)
 ************************************************************************/
 AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
 {
-  unsigned int	blkIdx,
+  int		blkIdx,
   		nBlkUse,
   		nBlkCnt,
   		eBlkUse,
@@ -182,10 +183,12 @@ AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
 	while(blkIdx < vec->blkUse)
 	{
 	  *(nBlocks + blkIdx) = *(vec->blocks + blkIdx);
+	  ++blkIdx;
 	}
 	while(blkIdx < nBlkCnt)
 	{
 	  *(nBlocks + blkIdx) = NULL;
+	  ++blkIdx;
 	}
 	oBlocks = vec->blocks;
 	vec->blocks = nBlocks;
