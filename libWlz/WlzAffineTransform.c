@@ -1431,6 +1431,7 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 	idx.vtX = 0;
 	dPos.vtX = bBox.xMin;
 	lMsk = *(pMsk + idx.vtY);
+	memset(lMsk, 0, (pMskSz.vtX+7)/8);
 	tMat[0][1] = tMat[0][2] + (invTrans->mat[0][1] * dPos.vtY);
 	tMat[1][1] = tMat[1][2] + (invTrans->mat[1][1] * dPos.vtY);
 	tMat[2][1] = tMat[2][2] + (invTrans->mat[2][1] * dPos.vtY);
