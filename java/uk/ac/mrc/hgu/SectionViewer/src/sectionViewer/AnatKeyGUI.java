@@ -12,6 +12,8 @@ import java.io.*;
 
 public class AnatKeyGUI extends JFrame{
 
+   private String SLASH = System.getProperty("file.separator");
+
    static protected int _cols[];
    static protected int _nrows = 6;
    /*
@@ -160,10 +162,11 @@ public class AnatKeyGUI extends JFrame{
       int gap = 2;
       int gap1 = 1;
 
-      leftIcon = new ImageIcon("images/left.gif");
-      rightIcon = new ImageIcon("images/right.gif");
-      zapIcon = new ImageIcon("images/zap.gif");
-      replaceIcon = new ImageIcon("images/replace.gif");
+      String imgPath = "sectionViewer"+SLASH+"images"+SLASH;
+      leftIcon = new ImageIcon(imgPath+"left.gif");
+      rightIcon = new ImageIcon(imgPath+"right.gif");
+      zapIcon = new ImageIcon(imgPath+"zap.gif");
+      replaceIcon = new ImageIcon(imgPath+"replace.gif");
 
       vis = new Color(250,250,250);
       notvis = new Color(200,200,200);

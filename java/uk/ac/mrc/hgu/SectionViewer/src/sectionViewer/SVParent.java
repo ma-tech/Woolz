@@ -85,7 +85,10 @@ public class SVParent
   protected void initHelp() {
 
     try {
-      URL hsURL = HelpSet.findHelpSet(null, "help" + SLASH + "ViewerHelp.hs");
+      URL hsURL = HelpSet.findHelpSet(null, 
+                                      "sectionViewer"+SLASH+
+                                      "help"+SLASH+ 
+                                      "ViewerHelp.hs");
       HelpSet hs = new HelpSet(null, hsURL);
       _helpBroker = hs.createHelpBroker();
       _helpBroker.initPresentation();
