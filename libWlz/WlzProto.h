@@ -870,6 +870,7 @@ extern WlzErrorNum		WlzGaussNoise(
 /************************************************************************
 * WlzGeoModel.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 /* Creation  of geometric modeling elements */
 extern WlzGMModel	*WlzGMModelNew(
 			  WlzGMModelType modType,
@@ -1084,6 +1085,7 @@ extern WlzErrorNum	WlzGMModelConstructSimplex3D(
 extern WlzErrorNum	WlzGMModelConstructSimplex2D(
 			  WlzGMModel *model,
 			  WlzDVertex2 *pos);
+#endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzGeometry.c								*
@@ -1337,6 +1339,7 @@ extern WlzErrorNum		WlzHistogramRsvFilter(
 extern WlzErrorNum 		WlzHistogramSmooth(
 				  WlzObject *histObj,
 				  int width);
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzHistogramFindPeaks(
 				  WlzObject *histObj,
 				  double sigma,
@@ -1357,6 +1360,7 @@ extern WlzErrorNum		WlzHistogramFitPeaks(
 				  int *dstSizeArrayAlpha,
 				  double **dstArrayAlpha,
 				  double *dstLL);
+#endif /* WLZ_EXT_BIND */
 extern WlzErrorNum 		WlzHistogramNorm(
 				  WlzObject *histObj,
 				  double maxVal);
