@@ -482,6 +482,14 @@ extern WlzAffineTransform	*WlzAffineTransformLSqWgt(
 				  WlzVertexP vtxVec1,
 				  WlzTransformType trType,
 				  WlzErrorNum *dstErr);
+extern WlzAffineTransform	*WlzAffineTransformLSqSVD(
+				  WlzVertexType vtxType,
+				  int nV,
+				  double *vW,
+				  WlzVertexP v0,
+				  WlzVertexP v1,
+				  WlzTransformType trType,
+				  WlzErrorNum *dstErr);
 extern WlzAffineTransform 	*WlzAffineTransformLSq2(
 				  WlzVertexType vtxType,
 				  int nV,
