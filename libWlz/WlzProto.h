@@ -3267,6 +3267,23 @@ extern WlzObject 		*WlzSobel(
 				  WlzErrorNum	*dstErr);
 
 /************************************************************************
+* WlzSnapFit.c								*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum     		WlzSnapFit(
+				  WlzObject *tObj,
+				   WlzObject *sObj,
+				   WlzAffineTransform *tr,
+				   WlzVertexType *vType,
+				   int *dstNVtx,
+				   WlzVertexP *dstTVtxP,
+				   WlzVertexP *dstSVtxP,
+				   double maxCDist,
+				   double minTDist,
+				   double minSDist);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * WlzStdStructElements.c						*
 ************************************************************************/
 extern WlzObject 		*WlzMakeSpecialStructElement(

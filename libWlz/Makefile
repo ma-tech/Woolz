@@ -168,6 +168,7 @@ CSOURCES		= \
 			WlzShadeCorrect.c \
 			WlzShift.c \
 			WlzSkeleton.c \
+			WlzSnapFit.c \
 			WlzSobel.c \
 			WlzStdStructElements.c \
 			WlzStringTypes.c \
