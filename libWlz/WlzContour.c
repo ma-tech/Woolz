@@ -12,6 +12,8 @@
 * Purpose:	Functions for extracting contours from Woolz objects.
 * $Revision$
 * Maintenance:	Log changes below, with most recent at top of list.
+* 21-11-00 bill Fix bugs in 3D gradient contour generation and removed
+*		some unused code.
 * 25-08-00 bill	Fix more bugs causing holes in 3D iso-surface.
 * 22-08-00 bill	Fix a bug causing holes in 3D iso-surface.
 * 15-08-00 bill	Move WlzFreeContour to WlzFreeSpace.c and WlzMakeContour
@@ -128,6 +130,7 @@ static WlzErrorNum 	WlzContourGrdCube3D(
 			  double ***zBuf,
 			  double ***yBuf,
 			  double ***xBuf,
+			  int *bufIdx,
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
 static WlzErrorNum	WlzContourIsoCube3D24T(WlzContour *ctr,
@@ -159,6 +162,7 @@ static WlzErrorNum	WlzContourGrdLink2D(
 static WlzErrorNum	WlzContourGrdLink3D(
 			  WlzContour *ctr,
 			  UBYTE ***mBuf,
+			  int *bufIdx,
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
 
@@ -990,14 +994,20 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   WlzIBox2	bBox2D;
   WlzIBox3	bBox3D;
   int		bufIdx[3],
-  		iBufClr[3] = {1, 1, 1}; /* Buffers are cleared when created */
-  UBYTE		**iBuf[3] = {NULL, NULL, NULL},
-  		**mBuf[3] = {NULL, NULL, NULL};
-  double	**xBuf[3] = {NULL, NULL, NULL},
-  		**yBuf[3] = {NULL, NULL, NULL},
-		**zBuf[3] = {NULL, NULL, NULL};
+  		iBufClr[3];
+  UBYTE		**iBuf[3],
+  		**mBuf[3];
+  double	**xBuf[3],
+  		**yBuf[3],
+		**zBuf[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  iBufClr[0] = iBufClr[1] = iBufClr[2] = 1;
+  iBuf[0] = iBuf[1] = iBuf[2] = NULL;
+  mBuf[0] = mBuf[1] = mBuf[2] = NULL;
+  xBuf[0] = xBuf[1] = xBuf[2] = NULL;
+  yBuf[0] = yBuf[1] = yBuf[2] = NULL;
+  zBuf[0] = zBuf[1] = zBuf[2] = NULL;
   if((srcDom = srcObj->domain).core == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -1201,8 +1211,15 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 		if(sGV >= minGrdSq)
 		{
 		  errNum = WlzContourGrdCube3D(ctr, mBuf, zBuf, yBuf, xBuf,
-		  			       bufPos, cbOrg);
+		  			       bufIdx, bufPos, cbOrg);
 		}
+#ifdef WLZ_CONTOUR_DEBUG
+		else
+		{
+		  (void )fprintf(stderr, "%d %d %d 0.0 0.0 0.0\n",
+		  		 cbOrg.vtX + 1, cbOrg.vtY + 1, cbOrg.vtZ + 1);
+		}
+#endif /* WLZ_CONTOUR_DEBUG */
 	      }
 	      ++(bufPos.vtX);
 	      ++(cbOrg.vtX);
@@ -1308,13 +1325,14 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 *		UBYTE ***mBuf:		Buffers containing non-zero
 *					values for maximal gradient
 *					voxels.
+*		int *bufIdx:		Z offsets into the buffers.
 *		WlzIVertex3 bufPos:	Offset into the buffer for the
 *					neighbourhoods origin.
 *		WlzIVertex3 pos:	Absolute position of the 
 *					neighbourhoods origin.
 ************************************************************************/
 static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
-					    WlzIVertex3 bufPos,
+					    int *bufIdx, WlzIVertex3 bufPos,
 					    WlzIVertex3 cbOrg)
 {
   int		tI0,
@@ -1381,7 +1399,7 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr, UBYTE ***mBuf,
     tIV0 = nbrOffTb[idN];
     tIV0.vtX += bufPos.vtX;
     tIV0.vtY += bufPos.vtY;
-    tIV0.vtZ = (tIV0.vtZ + bufPos.vtZ) % 3;
+    tIV0.vtZ = *(bufIdx + tIV0.vtZ);
     if(*(*(*(mBuf + tIV0.vtZ) + tIV0.vtY) + tIV0.vtX) != 0)
     {
       mMsk |= 1 << idN;
@@ -1983,18 +2001,19 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 * Function:	WlzContourGrdCube3D
 * Returns:	WlzErrorNum		Woolz error code.
 * Purpose:	Computes maximal gradient surface simplicies within a
-*		3x3x3 cube. The modulus of the central gradient is known
-*		to be non-zero.
-*		The buffer position wrt z is always modulo 3.
+*		3x3x3 cube.
 *		  * Compute central gradient vector's direction (cGV).
 *		  * Interpolate gradient at intersection of gradient
 *		    vector with the cube's faces.
-*		  * If modulus of gradient is greater than the mudulus
+*		  * If modulus of gradient is greater than the modulus
 *		    of the interpolated gradients at the cubes faces.
-*		    * Find intersection of the plane perpendicular
-*		      to the gradient vector with the cubes edges.
-*		    * Split intersection into simplicies and add to
-*		      the model.
+*		  *   Add position of central voxel to the maximal
+*		      gradient voxels buffer.
+*		  *   Link maximal gradient voxels forming new
+*		      surface elements in the model.
+*		The modulus of the central gradient is known to be
+*		non-zero.
+*		The buffer position wrt z is always modulo 3.
 * Global refs:	-
 * Parameters:	WlzContour *ctr: 	Contour being built.
 *		UBYTE ***mBuf:		Buffer with maximal voxels
@@ -2002,25 +2021,19 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 *		double ***zBuf:		Z gradients.
 *		double ***yBuf:		Y gradients.
 *		double ***xBuf:		X gradients.
+*		int *bufIdx:		Z indicies for the buffers.
 *		WlzIVertex3 bufPos:	Index into buffers.
 *		WlzIVertex3 cbOrg:	Origin of the cube.
 ************************************************************************/
 static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
 				       double ***zBuf, double ***yBuf,
-				       double ***xBuf, WlzIVertex3 bufPos,
+				       double ***xBuf,
+				       int *bufIdx, WlzIVertex3 bufPos,
 				       WlzIVertex3 cbOrg)
 {
-  int		idE,
-  		idF,
-		idX,
-		idY,
-		idZ,
-  		isnIdx,
-  		isnCnt,
-  		clsIdx,
-		eSH;
+  int		idF,
+  		clsIdx;
   double	tD0,
-		eU,
 		modCGV,
 		tCG;
   WlzIVertex3	aFQ,
@@ -2031,97 +2044,16 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
   		cGV,
 		lI,
 		pFV,
-		rV,
-		sV,
 		tV,
 		fS;
-  double	eIP[2],
-  		gF[2],
+  double	gF[2],
   		lIP[4];
-  WlzDVertex2	isnAux[12];
-  WlzDVertex3	tIsn[3],
-  		isnP[12];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  /*
-   * Tables cbVTb and cbETb encode the verticies (on edges) and edges of the
-   * cube:
-   *
-   *                          y
-   *                          |
-   *                          v6-------v5-------v4
-   *                         /|    |           /|
-   *                        / |    e2         / |
-   *                       /  |              /  |
-   *                      v11 |-e3          v10 |
-   *                     /    |            /    |
-   *                    /-e7  v7          /-e6  v3
-   *                   /      |    e10   /      |
-   *                  /       |    |    /       |-e1
-   *                 v18-------v17-----v16      |
-   *                 |        |        |        |
-   *                 |        v0------v1--------v2--->x
-   *                 |-e11   /   |     |-e9    /
-   *                 |      /    e0    |      /
-   *                 v19   /           v15   /
-   *                 |    v8           |    v9
-   *                 |   /             |   /
-   *                 |  /-e4           |  /-e5
-   *                 | /   e8          | /
-   *                 |/    |           |/
-   *                 v12------v13------v14
-   *                /
-   *               z
-   *
-   * These are encoded in the tables cbVTb and cbETb.
-   */
-  const WlzDVertex3 cbVTb[20] =
-  {
-    /* The coordinates of the verticies of the cube, range [-1.0,+1.0].
-     * The  WlzIVertex3 is defined to be {vtX, vtY. vtZ}, this table depends
-     * on this ordering. */
-    {-1.0, -1.0, -1.0} /* 0 */,
-    { 0.0, -1.0, -1.0} /* 1 */,
-    { 1.0, -1.0, -1.0} /* 2 */,
-    { 1.0,  0.0, -1.0} /* 3 */,
-    { 1.0,  1.0, -1.0} /* 4 */,
-    { 0.0,  1.0, -1.0} /* 5 */,
-    {-1.0,  1.0, -1.0} /* 6 */,
-    {-1.0,  0.0, -1.0} /* 7 */,
-    {-1.0, -1.0,  0.0} /* 8 */,
-    { 1.0, -1.0,  0.0} /* 9 */,
-    { 1.0,  1.0,  0.0} /*10 */,
-    {-1.0,  1.0,  0.0} /*11 */,
-    {-1.0, -1.0,  1.0} /*12 */,
-    { 0.0, -1.0,  1.0} /*13 */,
-    { 1.0, -1.0,  1.0} /*14 */,
-    { 1.0,  0.0,  1.0} /*15 */,
-    { 1.0,  1.0,  1.0} /*16 */,
-    { 0.0,  1.0,  1.0} /*17 */,
-    {-1.0,  1.0,  1.0} /*18 */,
-    {-1.0,  0.0,  1.0} /*19 */
-  };
-  /* The index of the verticies along each edge [0-2] and edge direction
-     (x=0, y=1, z=2) [3]. */
-  const int cbETb[12][4] =
-  {
-    { 0,  1,  2, 0} /*  0 */,
-    { 2,  3,  4, 1} /*  1 */,
-    { 6,  5,  4, 1} /*  2 */,
-    { 0,  7,  6, 0} /*  3 */,
-    { 0,  8, 12, 2} /*  4 */,
-    { 2,  9, 14, 2} /*  5 */,
-    { 4, 10, 16, 2} /*  6 */,
-    { 6, 11, 18, 2} /*  7 */,
-    {12, 13, 14, 0} /*  8 */,
-    {14, 15, 16, 1} /*  9 */,
-    {18, 17, 16, 1} /* 10 */,
-    {12, 19, 18, 0} /* 11 */
-  };
-
-  /* Compute central gradient vector as a unit vector and it's modulus. */
+  /* Compute gradient vector at centre of cube as a unit vector and it's
+   * modulus. */
   aCC.vtX = bufPos.vtX + 1;
   aCC.vtY = bufPos.vtY + 1;
-  aCC.vtZ = (bufPos.vtZ + 1) % 3;
+  aCC.vtZ = *(bufIdx + 1);
   cGV.vtX = *(*(*(xBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX);
   cGV.vtY = *(*(*(yBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX);
   cGV.vtZ = *(*(*(zBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX);
@@ -2144,21 +2076,21 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
       /* Gradient vector passes through +/- x faces. */
       for(idF = 0; idF < 2; ++idF)
       {
-	fS.vtX = 1.0 - (idF * 2.0); 	    /* Face: front +1.0 or back -1.0 */
+	fS.vtX = (idF * 2.0) - 1.0; 	    /* Face: left -1.0 or right +1.0 */
 	/* Intersection y, z coordinates. */
 	tCG = cGV.vtX * fS.vtX;
 	pFV.vtY = cGV.vtY / tCG;
 	pFV.vtZ = cGV.vtZ / tCG;
 	/* Indicies into the cube array (origin of face quadrant). */
-	oFQ.vtX = (tCG >= 0.0) << 1;
+	oFQ.vtX = (tCG >= 0.0) * 2;
 	oFQ.vtY = pFV.vtY >= 0.0;
 	oFQ.vtZ = pFV.vtZ >= 0.0;
 	aFQ.vtX = bufPos.vtX + oFQ.vtX;
 	aFQ.vtY = bufPos.vtY + oFQ.vtY;
-	aFQ.vtZ = (bufPos.vtZ + oFQ.vtZ) % 3;
-	aFQ1.vtX = aFQ.vtX + 1;
+	aFQ.vtZ = *(bufIdx + oFQ.vtZ);
+	aFQ1.vtX = aFQ.vtX;
 	aFQ1.vtY = aFQ.vtY + 1;
-	aFQ1.vtZ = (aFQ.vtZ + 1) % 3;
+	aFQ1.vtZ = *(bufIdx + ((oFQ.vtZ + 1) % 3));
 	/* Interpolation coefficients lI.vtY and lI.vtZ
 	 *
 	 *       +ve X face
@@ -2213,7 +2145,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
       /* Gradient vector passes through +/- y faces. */
       for(idF = 0; idF < 2; ++idF)
       {
-	fS.vtY = 1.0 - (idF * 2.0); 	    /* Face: front +1.0 or back -1.0 */
+	fS.vtY = (idF * 2.0) - 1.0; 	    /* Face: front -1.0 or back +1.0 */
 	/* Intersection z, x coordinates. */
 	tCG = cGV.vtY * fS.vtY;
 	pFV.vtX = cGV.vtX / tCG;
@@ -2224,10 +2156,10 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
 	oFQ.vtZ = pFV.vtZ >= 0.0;
 	aFQ.vtX = bufPos.vtX + oFQ.vtX;
 	aFQ.vtY = bufPos.vtY + oFQ.vtY;
-	aFQ.vtZ = (bufPos.vtZ + oFQ.vtZ) % 3;
+	aFQ.vtZ = *(bufIdx + oFQ.vtZ);
 	aFQ1.vtX = aFQ.vtX + 1;
-	aFQ1.vtY = aFQ.vtY + 1;
-	aFQ1.vtZ = (aFQ.vtZ + 1) % 3;
+	aFQ1.vtY = aFQ.vtY;
+	aFQ1.vtZ = *(bufIdx + ((oFQ.vtZ + 1) % 3));
 	/* Interpolation coefficients lI.vtX and lI.vtY. */
 	lI.vtZ = 1.0 + pFV.vtZ - oFQ.vtZ;
 	lI.vtX = 1.0 + pFV.vtX - oFQ.vtX;
@@ -2256,7 +2188,7 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
       /* Gradient vector passes through +/- z faces. */
       for(idF = 0; idF < 2; ++idF)
       {
-	fS.vtZ = 1.0 - (idF * 2.0); 	    /* Face: front +1.0 or back -1.0 */
+	fS.vtZ = (idF * 2.0) - 1.0; 	    /* Face: bottom -1.0 or top +1.0 */
 	/* Intersection x, y coordinates. */
 	tCG = cGV.vtZ * fS.vtZ;
 	pFV.vtX = cGV.vtX / tCG;
@@ -2267,10 +2199,10 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
 	oFQ.vtZ = (tCG >= 0.0) << 1;
 	aFQ.vtX = bufPos.vtX + oFQ.vtX;
 	aFQ.vtY = bufPos.vtY + oFQ.vtY;
-	aFQ.vtZ = (bufPos.vtZ + oFQ.vtZ) % 3;
+	aFQ.vtZ = *(bufIdx + oFQ.vtZ);
 	aFQ1.vtX = aFQ.vtX + 1;
 	aFQ1.vtY = aFQ.vtY + 1;
-	aFQ1.vtZ = (aFQ.vtZ + 1) % 3;
+	aFQ1.vtZ = *(bufIdx + ((oFQ.vtZ + 1) % 3));
 	/* Interpolation coefficients lI.vtX and lI.vtY. */
 	lI.vtX = 1.0 + pFV.vtX - oFQ.vtX;
 	lI.vtY = 1.0 + pFV.vtY - oFQ.vtY;
@@ -2295,14 +2227,28 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr, UBYTE ***mBuf,
       }
       break;
   }
-  /* Test for maximal gradient along the gradient vector. */
+  /* Test for maximal gradient along the gradient vector. Is the gradient at
+   * the centre of the cube greater than the interpolated gradient at it's
+   * faces? */
   if((modCGV > gF[0]) && (modCGV > gF[1]))
   {
     /* Mark this voxel as having a maximal gradient and then link with
      * neighbours to form the model. */
-    *(*(*(mBuf + aFQ1.vtZ) + aFQ1.vtY) + aFQ1.vtX) = 1;
-    errNum = WlzContourGrdLink3D(ctr, mBuf, bufPos, cbOrg);
+#ifdef WLZ_CONTOUR_DEBUG
+    (void )fprintf(stderr, "%d %d %d %g %g %g\n",
+    		   cbOrg.vtX + 1, cbOrg.vtY + 1, cbOrg.vtZ + 1,
+                   modCGV * cGV.vtX, modCGV * cGV.vtY, modCGV * cGV.vtZ);
+#endif /* WLZ_CONTOUR_DEBUG */
+    *(*(*(mBuf + aCC.vtZ) + aCC.vtY) + aCC.vtX) = 1;
+    errNum = WlzContourGrdLink3D(ctr, mBuf, bufIdx, bufPos, cbOrg);
   }
+#ifdef WLZ_CONTOUR_DEBUG
+  else
+  {
+    (void )fprintf(stderr, "%d %d %d 0.0 0.0 0.0\n",
+    cbOrg.vtX + 1, cbOrg.vtY + 1, cbOrg.vtZ + 1);
+  }
+#endif /* WLZ_CONTOUR_DEBUG */
   return(errNum);
 }
 
