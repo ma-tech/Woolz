@@ -38,6 +38,7 @@ typedef enum
   WLZEFF_FORMAT_IPL,
   WLZEFF_FORMAT_TIFF,
   WLZEFF_FORMAT_RAW,
+  WLZEFF_FORMAT_AM,
   WLZEFF_FORMAT_COUNT 			     /* Keep last: Number of formats */
 } WlzEffFormat;
 
@@ -405,6 +406,133 @@ typedef struct
   double	normMax;
   WlzIPLCSpecArray	colorTable;
 }WlzEffIPLHeader;
+
+/*!
+* \enum		_WlzEffAmToken
+* \ingroup	WlzExtFF
+* \brief	Tokens for parsing the headers of Amira lattice files.
+*/
+typedef enum _WlzEffAmToken
+{
+  WLZEFF_AM_TOKEN_NONE		= (0),
+  WLZEFF_AM_TOKEN_BOUNDINGBOX,
+  WLZEFF_AM_TOKEN_CLOSE,
+  WLZEFF_AM_TOKEN_COLOR,
+  WLZEFF_AM_TOKEN_CONTENT,
+  WLZEFF_AM_TOKEN_COORDTYPE,
+  WLZEFF_AM_TOKEN_DEFINE,
+  WLZEFF_AM_TOKEN_HASH,
+  WLZEFF_AM_TOKEN_ID,
+  WLZEFF_AM_TOKEN_IMAGEDATA,
+  WLZEFF_AM_TOKEN_LATTICE,
+  WLZEFF_AM_TOKEN_MATERIALS,
+  WLZEFF_AM_TOKEN_NAME,
+  WLZEFF_AM_TOKEN_OPEN,
+  WLZEFF_AM_TOKEN_PARAMETERS
+} WlzEffAmToken;
+
+/*!
+* \enum		_WlzEffAmDim
+* \brief	Dimension of the data.
+*/
+typedef	enum _WlzEffAmDim
+{
+  WLZEFF_AM_DIM_NONE 		= (0),	/*! Dimension unknown. */
+  WLZEFF_AM_DIM_2		= (2),	/*! 2D. */
+  WLZEFF_AM_DIM_3		= (3)	/*! 3D. */
+} WlzEffAmDim;
+
+/*!
+* \enum		_WlzEffAmFormat
+* \ingroup	WlzExtFF
+* \brief	ASCII or binary data.
+*/
+typedef enum _WlzEffAmFormat
+{
+  WLZEFF_AM_FMT_NONE		= (0),	/*! Unknown data format. */
+  WLZEFF_AM_FMT_BINARY		= (1),	/*! Header ascii, Binary data. */
+  WLZEFF_AM_FMT_ASCII		= (2)	/*! Ascii header and data. */
+} WlzEffAmFormat;
+
+/*!
+* \enum		_WlzEffAmDatType
+* \ingroup	WlzExtFF
+* \brief	Type of data: byte, ...
+*/
+typedef enum _WlzEffAmDatType
+{
+  WLZEFF_AM_DATTYPE_NONE	= (0),	/*! Unknown data type. */
+  WLZEFF_AM_DATTYPE_BYTE	= (1),	/*! Byte (8 bit) data. */
+  WLZEFF_AM_DATTYPE_SHORT	= (2)	/*! Short (16 bit) data. */
+} WlzEffAmDatType;
+
+/*!
+* \enum		_WlzEffAmCoordType
+* \ingroup      WlzExtFF
+* \brief        Type of coordinate system.
+*/
+typedef enum _WlzEffAmCoordType
+{
+  WLZEFF_AM_COORDTYPE_NONE	= (0),	/*! Unknown coordinate type. */
+  WLZEFF_AM_COORDTYPE_UNITFORM	= (1)	/*! Uniform coordinates. */
+} WlzEffAmCoordType;
+
+/*!
+* \enum		_WlzEffAmLatComp
+* \ingroup      WlzExtFF
+* \brief        Type of compression used.
+*/
+typedef enum _WlzEffAmLatComp
+{
+  WLZEFF_AM_LATCOMP_NONE	= (0),  /*! No compression. */
+  WLZEFF_AM_LATCOMP_HXBYTERLE	= (1)	/*! Run length encoded bytes. */
+} WlzEffAmLatComp;
+
+/*!
+* \enum		_WlzEffAmLatType
+* \ingroup	WlzExtFF
+* \brief	Type of lattice: uniform, ...
+*/
+typedef enum	_WlzEffAmLatType
+{
+  WLZEFF_AM_LATTYPE_NONE	= (0),  /*! Unknown lattice type. */
+  WLZEFF_AM_LATTYPE_DATA	= (1),	/*! Voxel lattice data. */
+  WLZEFF_AM_LATTYPE_LABELS	= (2)	/*! Domain lattice data. */
+} WlzEffAmLatType;
+
+typedef struct _WlzEffAmMaterial
+{
+  int			id;		/*! Index in lattice labels. */
+  double		color[3];	/*! RGB colour components. */
+  char			*name;		/*! Material name. Should be free'd
+  					    using AlcFree(). */
+  struct _WlzEffAmMaterial *next;	/*! Next material in list. */
+  struct _WlzEffAmMaterial *prev;	/*! Previous material in list */
+} WlzEffAmMaterial;
+
+typedef struct _WlzEffAmHead
+{
+  int			versionMajor;
+  int			versionMinor;
+  WlzEffAmDim 		dim; 		/*! Dimension of the data. */
+  WlzEffAmFormat	fmt;		/*! Data format. */
+  WlzEffAmLatType	latType;	/*! Lattice type. */
+  WlzEffAmDatType	latDatType;	/*! Lattice data type. */
+  WlzEffAmCoordType	coordType;	/*! Coordinate type. */
+  WlzDBox3		bBox;		/*! Real world coordinates of the
+  					    bounding box. */
+  WlzIVertex3		latSize; 	/*! Lattice size. */
+  int			latBytes;	/*! Number of bytes to read. */
+  int			latLabel;	/*! Label for lattice. */
+  WlzEffAmLatComp	latComp;	/*! Lattice compression. */
+  int			matCount;	/*! Number of materials. */
+  WlzEffAmMaterial	*materials;	/*! Linked list of materials, with
+  					    the first item in the list having
+					    a NULL 'prev' entry and the last
+					    having a NULL 'next' entry. */
+  char			*imageData;	/*! Associated image file. */
+} WlzEffAmHead;
+
 
 #ifdef  __cplusplus
 }
