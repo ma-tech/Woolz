@@ -15,7 +15,7 @@
 * Maintenance:	Log changes below, with most recent at top of list.
 ************************************************************************/
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <HGUDlpList.h>
 
