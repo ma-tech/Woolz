@@ -156,7 +156,7 @@ int             main(int argc, char **argv)
   {
     if((inObj->type == WLZ_3D_DOMAINOBJ) &&
        (inObj->domain.core) &&
-       (inObj->domain.core->type = WLZ_PLANEDOMAIN_DOMAIN))
+       (inObj->domain.core->type == WLZ_PLANEDOMAIN_DOMAIN))
     {
       inObj->domain.p->voxel_size[0] = 1.0;
       inObj->domain.p->voxel_size[1] = 1.0;
