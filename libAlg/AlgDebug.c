@@ -20,7 +20,7 @@
 AlgError 	AlgDbgWrite(char *, ...);
 
 AlgDbgMask	algDbgMask = ALG_DBG_NONE;
-void		*algDbgData = (void *) stderr;
+void		*algDbgData = NULL;
 AlgDbgFn	algDbgOutFn = AlgDbgWrite;
 
 /************************************************************************
