@@ -105,7 +105,7 @@ public class WlzImgView extends Component {
    private boolean _threshold;
    private boolean _threshConstraint;
    private boolean _overlay;
-   private boolean showInterSecLines = false;
+   private boolean _showInterSecLines = true;
 
    private boolean _tiepoint = true;
    private Vector tps = null;
@@ -1096,7 +1096,12 @@ public class WlzImgView extends Component {
      }
 
    //-------------------------------------------------------------
-   public BufferedImage getComponentBufferedImage(double meanGreyVal) {
+   public BufferedImage getComponentBufferedImage(boolean showInterSecLines) {
+     _showInterSecLines = showInterSecLines;
+     getComponentBufferedImage();
+   }
+   //-------------------------------------------------------------
+   public BufferedImage getComponentBufferedImage() {
      BufferedImage _compImage =
          new BufferedImage(_bufImage.getWidth(), _bufImage.getHeight(),
                            BufferedImage.TYPE_INT_RGB);
@@ -1106,34 +1111,8 @@ public class WlzImgView extends Component {
      drawGreyImage(g);
      drawOverlay(g);
      drawAnatomy(g);
-     //drawIntersection(g);
-//if (showInterSecLines) drawIntersectionA(g, meanGreyVal)
-     if (showInterSecLines) drawIntersection(g);
+     if (_showInterSecLines) drawIntersection(g);
      return _compImage;
-   }
-
-   public void drawIntersectionA(Graphics2D g2, double meanGreyVal) {
-
-      if(_intersection == false) return;
-      int num = _intersectionVec.size();
-      if(num == 0) return;
-
-      Line2D.Double line = null;
-
-      if (meanGreyVal > 170 && meanGreyVal <= 255)
-        g2.setColor(Color.black);
-      else if (meanGreyVal > 85 && meanGreyVal <= 170)
-        g2.setColor(Color.red);
-      else if (meanGreyVal <= 85)
-          g2.setColor(Color.white);
-
-      g2.translate(_ixofs, _iyofs);
-      for(int i=0; i<num; i++) {
-         line = (Line2D.Double)_intersectionVec.elementAt(i);
-         g2.drawLine((int)line.getX1(), (int)line.getY1(),
-               (int)line.getX2(), (int)line.getY2());
-      }
-      g2.translate(-_ixofs, -_iyofs);
    }
 
    //-------------------------------------------------------------
@@ -1183,7 +1162,4 @@ public class WlzImgView extends Component {
       }
    } // fireChange
 
-   public void setShowInterSecLines(boolean flag) {
-     showInterSecLines = flag;
-   }
 } // class WlzImgView

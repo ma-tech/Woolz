@@ -1151,8 +1151,10 @@ public class SectionViewer
   protected void saveImage(String str) {
     File fil = new File(str);
     BufferedImage img = null;
+    /* boolean needed because 3D apps have code in WlzImgView */
+    boolean showIntersectionLines = true;
 
-    img = _imgV.getComponentBufferedImage(1000d);
+    img = _imgV.getComponentBufferedImage(showIntersectionLines);
 
     try {
       FileOutputStream fout = new FileOutputStream(fil);
