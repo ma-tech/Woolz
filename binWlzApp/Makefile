@@ -27,6 +27,7 @@ EXECUTABLES		= \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
 			WlzPatchObjRegister \
+			WlzRawToWlz \
 			WlzSizeSelect \
 			WlzObjCompareSpecial_01 \
 			WlzVtxToObj
@@ -40,6 +41,7 @@ CSOURCES		= \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
 			WlzPatchObjRegister.c \
+			WlzRawToWlz.c \
 			WlzSizeSelect.c \
 			WlzObjCompareSpecial_01.c \
 			WlzVtxToObj.c
