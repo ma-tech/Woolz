@@ -5127,6 +5127,11 @@ WlzErrorNum 	WlzGMModelRehashVHT(WlzGMModel *model, int vHTSz)
 	AlcFree(oldVHT);
       }
     }
+    else
+    {
+      (void )memset(model->vertexHT, 0,
+      		    model->vertexHTSz * sizeof(WlzGMVertex *));
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -7773,7 +7778,8 @@ static void	WlzGMModelAddVertex(WlzGMModel *model, WlzGMVertex *nV)
 
   (void )WlzGMVertexGetG3D(nV, &nPos);
   hVal = WlzGMHashPos3D(nPos);
-  if(*(hdV = model->vertexHT + (hVal % model->vertexHTSz)) == NULL)
+  hdV = model->vertexHT + (hVal % model->vertexHTSz);
+  if(*hdV == NULL)
   {
     /* No verticies at this position in the hash table yet. */
     *hdV = nV;
