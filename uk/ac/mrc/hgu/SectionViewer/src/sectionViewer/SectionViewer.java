@@ -676,7 +676,7 @@ public class SectionViewer
 //-------------------------------------------------------------
   /**
    *   Clears the feedback text fields associated with
-   *   <em>mouse-click anatomy.</em>
+   *   <em>mouse-click anatomy</em>.
    */
   protected void resetAnatomyText() {
     anatomyTextField.setText("-----");

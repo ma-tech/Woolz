@@ -46,7 +46,6 @@ public class AnatomyElement {
 
    /**
     *   Returns the anatomy component.
-    *   @param
     *   @return the 3D Woolz object representing the anatomy component.
     */
    protected WlzObject getObj() {
@@ -55,7 +54,6 @@ public class AnatomyElement {
 
    /**
     *   Returns true if the anatomy component is visible.
-    *   @param
     *   @return true if anatomy component is visible.
     *   Visible here means that the anatomy component will be displayed
     *   if it is intersected by the 2D section.
@@ -74,7 +72,6 @@ public class AnatomyElement {
 
    /**
     *   Returns the removed or replaced status of the anatomy component.
-    *   @param
     *   @return true if anatomy component has been removed.
     */
    public boolean isRemoved() {
