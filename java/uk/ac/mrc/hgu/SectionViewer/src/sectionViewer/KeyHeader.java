@@ -20,26 +20,26 @@ public class KeyHeader extends JPanel{
    private String SLASH = System.getProperty("file.separator");
 
    protected JLabel colLabel = null;
-   protected JLabel scrollLabel = null;
+   //protected JLabel scrollLabel = null;
    protected JLabel vizLabel = null;
    protected JLabel viz2DLabel = null;
    protected JLabel viz3DLabel = null;
    protected JLabel zapLabel = null;
    protected JLabel nameLabel = null;
 
-   protected String _fontFamilies[] = null;
-   protected Font _fonts[] = null;
+   //protected String _fontFamilies[] = null;
+   //protected Font _fonts[] = null;
+   //protected Font _defFont = null;
 
-   protected Font _defFont = null;
-   protected Font _labelFont1 = null;
-   protected Font _labelFont2 = null;
-   protected Font _labelFont3 = null;
+   protected final Font _labelFont1 = new Font("Default",Font.PLAIN,14);
+   protected final Font _labelFont2 = new Font("Default",Font.PLAIN,9);
+   protected final Font _labelFont3 = new Font("Default",Font.PLAIN,8);
 
    protected double _rads = 1.5705;
    protected boolean _is3D;
 
-   protected static final int _headerW = 200;
-   protected static final int _headerH = 30;
+   protected static int _headerW = 200;
+   protected static int _headerH;
 //-------------------------------------------------------------
    /**
     *   Constructor. 
@@ -53,37 +53,16 @@ public class KeyHeader extends JPanel{
     */
    protected KeyHeader(boolean is3D) {
       _is3D = is3D;
-      setFonts();
+      if(_is3D) {
+         _headerH = 32;
+      } else {
+         _headerH = 30;
+      }
       makeGUI();
    }
    
 //-------------------------------------------------------------
-   /**
-    *   Set the font(s) for the header.
-    */
-   private void setFonts() {
-
-      getFontNames(false);
-
-      _defFont = getFont();
-      /*
-      System.out.println("default font name "+_defFont.getName());
-      System.out.println("size in points "+
-          Float.toString(_defFont.getSize2D()));
-      System.out.println("plain "+_defFont.isPlain());
-      System.out.println("bold "+_defFont.isBold());
-      System.out.println("italic "+_defFont.isItalic());
-      */
-
-      _labelFont1 = new Font("Dialog",Font.PLAIN,16);
-      _labelFont2 = new Font("Dialog",Font.PLAIN,9);
-      _labelFont3 = new Font("Dialog",Font.BOLD,10);
-
-   }
-//-------------------------------------------------------------
-   /**
-    *   Get the font(s) available to Java.
-    */
+   /*
    private void getFontNames(boolean bool) {
       _fontFamilies = GraphicsEnvironment.getLocalGraphicsEnvironment().
                  getAvailableFontFamilyNames();
@@ -100,6 +79,7 @@ public class KeyHeader extends JPanel{
 	 }
       }
    }
+   */
 //-------------------------------------------------------------
    /**
     *   Called by the constructor. All of the work of building
@@ -109,6 +89,10 @@ public class KeyHeader extends JPanel{
 
       boolean hasAlpha = false;
 
+      int btnW1 = 18; // left, right button panels
+      int btnW2 = 20; // colour, viz & zap button panels
+      int btnW3 = 25; // combined left & right button panel
+
       int W1 = 20;
       int W2 = 25;
       int W3 = 30;
@@ -117,6 +101,8 @@ public class KeyHeader extends JPanel{
       int H3 = 35;
       int gap = 1;
 
+      int w = 0;
+
 //......................................
       this.setLayout(new BorderLayout());
       this.setPreferredSize(new Dimension(0, _headerH));
@@ -124,19 +110,12 @@ public class KeyHeader extends JPanel{
       this.setBorder(BorderFactory.createEtchedBorder(
                                         EtchedBorder.RAISED));
 //......................................
-      colLabel = new JLabel("New");
+      colLabel = new JLabel("Col");
       colLabel.setFont(_labelFont2);
-      //colLabel.setUI( new VLabelUI(false) );
       colLabel.setHorizontalAlignment(JLabel.CENTER);
       colLabel.setVerticalAlignment(JLabel.CENTER);
-      scrollLabel = new JLabel("Scroll");
-      scrollLabel.setFont(_labelFont3);
-      /*
-      scrollLabel.setHorizontalAlignment(JLabel.CENTER);
-      scrollLabel.setVerticalAlignment(JLabel.CENTER);
-      */
-      vizLabel = new JLabel("Visibility");
-      vizLabel.setFont(_labelFont3);
+      vizLabel = new JLabel("See");
+      vizLabel.setFont(_labelFont2);
       vizLabel.setHorizontalAlignment(JLabel.CENTER);
       viz2DLabel = new JLabel("2D");
       viz2DLabel.setFont(_labelFont3);
@@ -146,174 +125,190 @@ public class KeyHeader extends JPanel{
       viz3DLabel.setFont(_labelFont3);
       viz3DLabel.setHorizontalAlignment(JLabel.CENTER);
       viz3DLabel.setVerticalAlignment(JLabel.BOTTOM);
-      zapLabel = new JLabel("Del.");
+      zapLabel = new JLabel("Del");
       zapLabel.setFont(_labelFont2);
-      //zapLabel.setUI( new VLabelUI(false) );
       zapLabel.setHorizontalAlignment(JLabel.CENTER);
       zapLabel.setVerticalAlignment(JLabel.CENTER);
-      nameLabel = new JLabel("Full Component Name");
+      nameLabel = new JLabel("Anatomy Component");
       nameLabel.setFont(_labelFont1);
       nameLabel.setHorizontalAlignment(JLabel.CENTER);
       nameLabel.setVerticalAlignment(JLabel.CENTER);
-//......................................
+//KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+
       /**
        *   Outer container for header
        *   which maintains the preferred size.
-       *   <br>Contains kPanel0.
+       *   <br>Contains innerPanel.
        */
-      JPanel kPanel = new JPanel();
-      kPanel.setLayout(new BorderLayout(gap,gap));
-      //kPanel.setBackground(Color.orange);
-      kPanel.setPreferredSize(new Dimension(_headerW,_headerH));
+      JPanel outerPanel = new JPanel();
+      outerPanel.setLayout(new BorderLayout(gap,gap));
+      //outerPanel.setBackground(Color.orange);
+      outerPanel.setPreferredSize(new Dimension(_headerW,_headerH));
 
       /**
        *   Inner container for header.
-       *   <br>Contains kPanel00, txtPanel0, kPanel02.
        */
-      JPanel kPanel0 = new JPanel();
-      kPanel0.setLayout(new BorderLayout(gap,gap));
-      //kPanel0.setBackground(Color.pink);
-      kPanel0.setPreferredSize(new Dimension(0,_headerH));
+      JPanel innerPanel = new JPanel();
+      innerPanel.setLayout(new BorderLayout(gap,gap));
+      //innerPanel.setBackground(Color.pink);
+      innerPanel.setPreferredSize(new Dimension(0,_headerH));
 
+//....................................
       /**
-       *   Outer container for <em>colour chooser</em>
-       *   and <em>scroll</em> labels.
-       *   <br>Contains colPanel0, navPanel0.
-       *   <br>Added to kPanel0.
+       *   Container for <em>component name</em> label
+       *   <br>Added to innerPanel.
        */
-      JPanel kPanel00 = new JPanel();
-      kPanel00.setLayout(new BorderLayout(gap,gap));
-      kPanel00.setPreferredSize(new Dimension(W2+W3+4*gap,0));
-      /*
-      kPanel00.setBackground(Color.blue);
-      kPanel00.setBorder(BorderFactory.createEtchedBorder(
+      JPanel scrollNamePanel = new JPanel();
+      scrollNamePanel.setLayout(new BorderLayout(gap,gap));
+      scrollNamePanel.setPreferredSize(new Dimension(0,_headerH));
+      scrollNamePanel.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
-      */
-
-      /**
-       *   Outer container for <em>visibility</em> labels
-       *   <br>Contains
-       *   <br>Added to kPanel02.
-       */
-      JPanel kPanel01 = new JPanel();
-      kPanel01.setLayout(new BorderLayout(gap,gap));
-      kPanel01.setPreferredSize(new Dimension(2*W2,0));
-      //kPanel01.setBackground(Color.magenta);
-      kPanel01.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-
-      /**
-       *   Outer container for <em>visibility</em> and
-       *   <em>zap</em> labels.
-       *   <br>Contains kPanel02, btnPanel03.
-       *   <br>Added to kPanel0.
-       */
-      JPanel kPanel02 = new JPanel();
-      kPanel02.setLayout(new BorderLayout(gap,gap));
-      kPanel02.setPreferredSize(new Dimension(W1+2*W2,0));
-      kPanel02.setBackground(Color.red);
-      /*
-      kPanel02.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-      */
+//....................................
 
       /**
        *   Container for <em>visibility</em> label.
-       *   <br>Added to kPanel01.
+       *   <br>Added to visPanel.
        */
-      JPanel kPanel03 = new JPanel();
-      kPanel03.setLayout(new BorderLayout(gap,gap));
-      kPanel03.setPreferredSize(new Dimension(0,H1));
-      //kPanel02.setBackground(Color.red);
-      /*
-      kPanel02.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-      */
+      JPanel visVisPanel = new JPanel();
+      visVisPanel.setLayout(new BorderLayout(gap,gap));
+
+//....................................
+      /**
+       *   Container for <em>vis2D</em> label.
+       *   <br>Added to vis2D3DBtnPanel.
+       *   Only used for 3D case.
+       */
+      JPanel vis2DBtnPanel = new JPanel();
+      vis2DBtnPanel.setLayout(new BorderLayout(gap,gap));
+      vis2DBtnPanel.setPreferredSize(new Dimension(btnW3, H2));
 
       /**
-       *   Container for <em>2D</em> and <em>3D</em> labels.
-       *   <br>Added to kPanel01.
+       *   Container for <em>vis3D</em> label.
+       *   <br>Added to vis2D3DBtnPanel.
+       *   Only used for 3D case.
        */
-      JPanel kPanel04 = new JPanel();
-      kPanel04.setLayout(new BorderLayout(gap,gap));
-      kPanel04.setPreferredSize(new Dimension(0,H2));
-      //kPanel02.setBackground(Color.red);
-      /*
-      kPanel02.setBorder(BorderFactory.createEtchedBorder(
+      JPanel vis3DBtnPanel = new JPanel();
+      vis3DBtnPanel.setLayout(new BorderLayout(gap,gap));
+      vis3DBtnPanel.setPreferredSize(new Dimension(btnW3, H2));
+
+      /**
+       *   Container for <em>2D,3D</em> labels.
+       *   <br>Added to visPanel.
+       *   Only used for 3D case.
+       */
+      JPanel vis2D3DBtnPanel = new JPanel();
+      vis2D3DBtnPanel.setLayout(new BorderLayout(gap,gap));
+      vis2D3DBtnPanel.setPreferredSize(new Dimension(2*btnW3, H2));
+//....................................
+
+      /**
+       *   Overall container for <em>visibility</em> labels
+       *   <br>Added to buttonPanel.
+       */
+      JPanel visPanel = new JPanel();
+      visPanel.setLayout(new BorderLayout(gap,gap));
+      visPanel.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
-      */
+      //visPanel.setBackground(Color.magenta);
 
-      JPanel colPanel0 = new JPanel();
-      colPanel0.setLayout(new BorderLayout(gap,gap));
-      //colPanel0.setBackground(Color.red);
-      colPanel0.setPreferredSize(new Dimension(W2,0));
-      colPanel0.add(colLabel);
+//....................................
 
-      JPanel txtPanel0 = new JPanel();
-      txtPanel0.setLayout(new BorderLayout(gap,gap));
-      txtPanel0.setBorder(BorderFactory.createEtchedBorder(
+      JPanel colBtnPanel = new JPanel();
+      colBtnPanel.setLayout(new BorderLayout(gap,gap));
+      colBtnPanel.setPreferredSize(new Dimension(btnW3+2*gap, _headerH));
+      colBtnPanel.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
-      txtPanel0.add(nameLabel, BorderLayout.CENTER);
+      //colBtnPanel.setBackground(Color.pink);
 
-      JPanel navPanel0 = new JPanel();
-      navPanel0.setLayout(new BorderLayout(gap,gap));
-      navPanel0.setPreferredSize(new Dimension(W3+4*gap,0));
-      navPanel0.setBorder(BorderFactory.createEtchedBorder(
+      JPanel zapBtnPanel = new JPanel();
+      zapBtnPanel.setPreferredSize(new Dimension(btnW3-2*gap, _headerH));
+      zapBtnPanel.setLayout(new BorderLayout(gap,gap));
+      zapBtnPanel.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
-      navPanel0.add(scrollLabel, BorderLayout.CENTER);
+      //zapBtnPanel.setBackground(Color.yellow);
 
-      JPanel btnPanel02 = new JPanel();
-      btnPanel02.setPreferredSize(new Dimension(W2,H2));
-      btnPanel02.setLayout(new BorderLayout(gap,gap));
-      /*
-      btnPanel02.setBorder(BorderFactory.createEtchedBorder(
+      JPanel colZapBtnPanel = new JPanel();
+      w = colBtnPanel.getPreferredSize().width;
+      w += zapBtnPanel.getPreferredSize().width;
+      colZapBtnPanel.setPreferredSize(new Dimension(w, _headerH));
+      w = 0;
+      colZapBtnPanel.setLayout(new BorderLayout(gap,gap));
+      //colZapBtnPanel.setBackground(Color.green);
+
+//....................................
+      /**
+       *   Container for <em>visibility</em>
+       *   <em>col</em> and <em>zap</em> labels.
+       *   <br>Added to innerPanel.
+       */
+      JPanel buttonPanel = new JPanel();
+      buttonPanel.setLayout(new BorderLayout(gap,gap));
+      buttonPanel.setBorder(BorderFactory.createEtchedBorder(
                                           EtchedBorder.LOWERED));
-      */
-      btnPanel02.add(viz2DLabel, BorderLayout.CENTER);
+      //buttonPanel.setBackground(Color.red);
 
-      JPanel btnPanel03 = new JPanel();
-      btnPanel03.setPreferredSize(new Dimension(W2,H2));
-      btnPanel03.setLayout(new BorderLayout(gap,gap));
-      /*
-      btnPanel03.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-      */
-      btnPanel03.add(viz3DLabel, BorderLayout.CENTER);
+//KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+      scrollNamePanel.add(nameLabel, BorderLayout.CENTER);
 
-      JPanel btnPanel04 = new JPanel();
-      btnPanel04.setPreferredSize(new Dimension(W1,0));
-      btnPanel04.setLayout(new BorderLayout(gap,gap));
-      /*
-      btnPanel04.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-      */
-      btnPanel04.add(zapLabel, BorderLayout.CENTER);
+      visVisPanel.add(vizLabel, BorderLayout.CENTER);
+      vis2DBtnPanel.add(viz2DLabel, BorderLayout.SOUTH);
+      vis3DBtnPanel.add(viz3DLabel, BorderLayout.SOUTH);
+      vis2D3DBtnPanel.add(vis2DBtnPanel, BorderLayout.WEST);
+      vis2D3DBtnPanel.add(vis3DBtnPanel, BorderLayout.EAST);
 
-      kPanel00.add(colPanel0, BorderLayout.WEST);
-      kPanel00.add(navPanel0, BorderLayout.EAST);
+      colBtnPanel.add(colLabel, BorderLayout.CENTER);
+      zapBtnPanel.add(zapLabel, BorderLayout.CENTER);
+      colZapBtnPanel.add(colBtnPanel, BorderLayout.WEST);
+      colZapBtnPanel.add(zapBtnPanel, BorderLayout.EAST);
+
       if(_is3D) {
-	 kPanel01.add(kPanel03, BorderLayout.NORTH);
-	 kPanel01.add(kPanel04, BorderLayout.SOUTH);
+         visVisPanel.setPreferredSize(new Dimension(2*btnW3, H1));
+         visPanel.setPreferredSize(new Dimension(2*btnW3, _headerH));
+	 visPanel.add(visVisPanel, BorderLayout.NORTH);
+	 visPanel.add(vis2D3DBtnPanel, BorderLayout.SOUTH);
       } else {
-	 kPanel01.add(kPanel03, BorderLayout.CENTER);
+         visVisPanel.setPreferredSize(new Dimension(btnW3, _headerH));
+         visPanel.setPreferredSize(new Dimension(btnW3+2*gap, _headerH));
+	 visPanel.add(visVisPanel, BorderLayout.CENTER);
       }
-      kPanel02.add(kPanel01, BorderLayout.WEST);
-      kPanel02.add(btnPanel04, BorderLayout.EAST);
-      kPanel03.add(vizLabel, BorderLayout.CENTER);
-      if(_is3D) {
-	 kPanel04.add(btnPanel02, BorderLayout.WEST);
-	 kPanel04.add(btnPanel03, BorderLayout.EAST);
-      }
-      kPanel0.add(kPanel00, BorderLayout.WEST);
-      kPanel0.add(txtPanel0, BorderLayout.CENTER);
-      kPanel0.add(kPanel02, BorderLayout.EAST);
+      w = colZapBtnPanel.getPreferredSize().width;
+      w += visPanel.getPreferredSize().width;
+      buttonPanel.setPreferredSize(new Dimension(w, 0));
+      w = 0;
 
-      //kPanel.add(kPanel0, BorderLayout.NORTH); // set height to preferred size
-      kPanel.add(kPanel0, BorderLayout.CENTER); // set height to expand
-      this.add(kPanel, BorderLayout.CENTER); // allows text field to expand
+      buttonPanel.add(visPanel, BorderLayout.WEST);
+      buttonPanel.add(colZapBtnPanel, BorderLayout.EAST);
+
+      innerPanel.add(scrollNamePanel, BorderLayout.CENTER);
+      innerPanel.add(buttonPanel, BorderLayout.EAST);
+
+      outerPanel.add(innerPanel, BorderLayout.CENTER); // set height to expand
+      this.add(outerPanel, BorderLayout.CENTER); // allows text field to expand
+      //KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+      /* for testing
+      printPanelSize(innerPanel, "outer");
+      printPanelSize(outerPanel, "inner");
+      printPanelSize(scrollNamePanel, "scrollName");
+      printPanelSize(buttonPanel, "button");
+      printPanelSize(visVisPanel, "visVis");
+      printPanelSize(vis2DBtnPanel, "vis2DBtn");
+      printPanelSize(vis3DBtnPanel, "vis3DBtn");
+      printPanelSize(visPanel, "vis");
+      printPanelSize(vis2D3DBtnPanel, "vis2D3DBtn");
+      printPanelSize(colBtnPanel, "colBtn");
+      printPanelSize(zapBtnPanel, "zapBtn");
+      printPanelSize(colZapBtnPanel, "colZapBtn");
+      */
 
    } // makeGUI()
 
+   private void printPanelSize(JPanel panel, String name) {
+      Dimension dim = null;
+      dim = panel.getPreferredSize();
+      System.out.println("---------- "+name+"----------");
+      System.out.println("panel W = "+dim.width);
+      System.out.println("panel H = "+dim.height);
+   }
 //-------------------------------------------------------------
    /**
     *   Returns the height of the header

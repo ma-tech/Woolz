@@ -20,25 +20,25 @@ public class KeyEntryGUI extends JPanel{
    private String SLASH = System.getProperty("file.separator");
 
    /** The colour chooser button for row 0 of the KeyEntry   */
-   protected JButton colBtn0 = null;
+   protected JButton colBtn = null;
 
    /** The left arrow button for row 0 of the KeyEntry   */
-   protected JButton btn00 = null;
+   protected JButton leftBtn = null;
 
    /** The right arrow button for row 0 of the KeyEntry   */
-   protected JButton btn01 = null;
+   protected JButton rightBtn = null;
 
    /** The scrollable text field for row 0 of the KeyEntry   */
-   protected ScrollableTextField tf0 = null;
+   protected ScrollableTextField textF = null;
 
    /** The visibility button of a KeyEntry   */
-   protected JButton btn02 = null;
+   protected JButton vis2DBtn = null;
 
    /** The zap button of a KeyEntry   */
-   protected JButton btn03 = null;
+   protected JButton zapBtn = null;
 
    /** The 3D visibility button of a KeyEntry   */
-   protected JButton btn04 = null;
+   protected JButton vis3DBtn = null;
 
    /** The 'left arrow' icon for the textfield scroll button  */
    protected ImageIcon leftIcon = null;
@@ -52,10 +52,8 @@ public class KeyEntryGUI extends JPanel{
    protected ImageIcon viz3DIcon = null;
    /** The 'notViz3D' icon (the 3D anatomy component is not visible)  */
    protected ImageIcon notViz3DIcon = null;
-   /** The 'zap' icon (toggles between zap & replace)  */
+   /** The 'zap' icon (deletes an entry from the key)  */
    protected ImageIcon zapIcon = null;
-   /** The 'replace' icon (toggles between zap & replace)  */
-   protected ImageIcon replaceIcon = null;
 
 
    /** The tool tip for the colour chooser button */
@@ -69,7 +67,7 @@ public class KeyEntryGUI extends JPanel{
    /** The tool tip for the visibility button */
    protected String vizTip3Text = "toggle 3D visibility";
    /** The tool tip for the zap button */
-   protected String zapTipText = "remove from key";
+   protected String zapTipText = "delete from key";
 
    /**
     *   The background colour of the textfield for the anatomy component name
@@ -94,8 +92,7 @@ public class KeyEntryGUI extends JPanel{
     *   Constructs a KeyEntryGUI.
     */
    protected KeyEntryGUI() {
-      _is3D = false;
-      makeGUI();
+      this(false);
    }
 
    /**
@@ -120,6 +117,8 @@ public class KeyEntryGUI extends JPanel{
       int btnW3 = 25; // combined left & right button panel
       int gap = 1;
       int W1 = 2*btnW1+btnW3+2*gap;
+      int w = 0;
+
 
       try {
         String imgPath = "images/";
@@ -137,8 +136,6 @@ public class KeyEntryGUI extends JPanel{
         notViz3DIcon = new ImageIcon(urlIcon);
         urlIcon = KeyEntryGUI.class.getResource(imgPath + "zap.gif");
         zapIcon = new ImageIcon(urlIcon);
-        urlIcon = KeyEntryGUI.class.getResource(imgPath + "replace.gif");
-        replaceIcon = new ImageIcon(urlIcon);
       }
       catch (Exception ex) {
       }
@@ -154,151 +151,207 @@ public class KeyEntryGUI extends JPanel{
       /**
        *   Outer container for 1 row of the anatomy key
        *   which maintains the preferred size.
-       *   <br>Contains kPanel0.
+       *   <br>Contains innerPanel.
        */
-      JPanel kPanel = new JPanel();
+      JPanel outerPanel = new JPanel();
+      outerPanel.setLayout(new BorderLayout(gap,gap));
+      outerPanel.setPreferredSize(new Dimension(_entryW,_entryH));
 
       /**
        *   Inner container for 1 row of the anatomy key.
-       *   <br>Contains kPanel00, txtPanel0, kPanel02.
+       *   <br>Contains nameScrollPanel, buttonPanel.
        */
-      JPanel kPanel0 = new JPanel();
+      JPanel innerPanel = new JPanel();
+      innerPanel.setLayout(new BorderLayout(gap,gap));
+      innerPanel.setPreferredSize(new Dimension(0,_entryH));
+      //innerPanel.setBackground(Color.pink);
+
+      //................................
+      /**
+       *   Contains leftBtnPanel, namePanel, rightBtnPanel..
+       */
+      JPanel scrollNamePanel = new JPanel();
+      scrollNamePanel.setLayout(new BorderLayout(gap,gap));
+      scrollNamePanel.setPreferredSize(new Dimension(0,_entryH));
+      scrollNamePanel.setBorder(BorderFactory.createEtchedBorder(
+                                          EtchedBorder.LOWERED));
 
       /**
-       *   Container for <em>colour chooser</em> and <em>scroll</em> buttons.
-       *   <br>Contains colPanel0, navPanel0.
-       *   <br>Added to kPanel0.
+       *   Contains leftBtn.
        */
-      JPanel kPanel00 = new JPanel();
+      JPanel leftBtnPanel = new JPanel();
+      leftBtnPanel.setPreferredSize(new Dimension(btnW1,0));
+      leftBtnPanel.setLayout(new BorderLayout(gap,gap));
 
       /**
-       *   Container for <em>visibility</em> controls
-       *   <br>Contains
-       *   <br>Added to kPanel02.
+       *   Contains rightBtn.
        */
-      JPanel kPanel01 = new JPanel();
+      JPanel rightBtnPanel = new JPanel();
+      rightBtnPanel.setPreferredSize(new Dimension(btnW1,0));
+      rightBtnPanel.setLayout(new BorderLayout(gap,gap));
 
       /**
-       *   Container for <em>visibility</em> and <em>zap</em> controls
-       *   <br>Contains kPanel02, btnPanel03.
-       *   <br>Added to kPanel0.
+       *   Contains textF.
        */
-      JPanel kPanel02 = new JPanel();
+      JPanel namePanel = new JPanel();
+      namePanel.setLayout(new BorderLayout(gap,gap));
+      namePanel.setPreferredSize(new Dimension(0,_entryH));
 
-      kPanel.setLayout(new BorderLayout(gap,gap));
-      //kPanel.setBackground(Color.orange);
-      kPanel.setPreferredSize(new Dimension(_entryW,_entryH));
+      //................................
+      /**
+       *   Contains vis2DBtn.
+       */
+      JPanel vis2DPanel = new JPanel();
+      vis2DPanel.setLayout(new BorderLayout(gap,gap));
+      vis2DPanel.setPreferredSize(new Dimension(btnW3,0));
 
-      kPanel0.setLayout(new BorderLayout(gap,gap));
-      //kPanel0.setBackground(Color.pink);
-      kPanel0.setPreferredSize(new Dimension(0,_entryH));
-
-      kPanel00.setLayout(new BorderLayout(gap,gap));
-      //kPanel00.setBackground(Color.blue);
-      kPanel00.setPreferredSize(new Dimension(W1,0));
-      kPanel00.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-
-      kPanel01.setLayout(new BorderLayout(gap,gap));
-      /*
-      kPanel01.setBackground(Color.magenta);
-      kPanel01.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-      */
-
-      kPanel02.setLayout(new BorderLayout(gap,gap));
-      //kPanel02.setBackground(Color.magenta);
-      kPanel02.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-
-      colBtn0 = new JButton();
-      JPanel colPanel0 = new JPanel();
-      colPanel0.setLayout(new BorderLayout(gap,gap));
-      //colPanel0.setPreferredSize(new Dimension(btnW2,0));
-      colPanel0.setPreferredSize(new Dimension(btnW3,0));
-      colPanel0.add(colBtn0);
-      JPanel txtPanel0 = new JPanel();
-      txtPanel0.setLayout(new BorderLayout(gap,gap));
-      txtPanel0.setBorder(BorderFactory.createEtchedBorder(
-                                          EtchedBorder.LOWERED));
-      tf0 = new ScrollableTextField("", 50);
-      tf0.setEditable(false);
-      tf0.setBackground(_vizCol);
-      txtPanel0.add(tf0, BorderLayout.CENTER);
-      JPanel navPanel0 = new JPanel();
-      navPanel0.setPreferredSize(new Dimension(2*btnW1,0));
-      //navPanel0.setLayout(new BoxLayout(navPanel0, BoxLayout.X_AXIS));
-      navPanel0.setLayout(new BorderLayout(gap,gap));
-      JPanel btnPanel00 = new JPanel();
-      btnPanel00.setPreferredSize(new Dimension(btnW1,0));
-      btnPanel00.setLayout(new BorderLayout(gap,gap));
-      btn00 = new JButton();
-      if(leftIcon != null) {
-	 btn00.setIcon(leftIcon);
-      }
-      btnPanel00.add(btn00, BorderLayout.CENTER);
-      JPanel btnPanel01 = new JPanel();
-      btnPanel01.setPreferredSize(new Dimension(btnW1,0));
-      btnPanel01.setLayout(new BorderLayout(gap,gap));
-      btn01 = new JButton();
-      if(leftIcon != null) {
-	 btn01.setIcon(rightIcon);
-      }
-      btnPanel01.add(btn01, BorderLayout.CENTER);
-      navPanel0.add(btnPanel00, BorderLayout.WEST);
-      navPanel0.add(btnPanel01, BorderLayout.EAST);
-
-      JPanel btnPanel02 = new JPanel();
-      btnPanel02.setPreferredSize(new Dimension(btnW2,0));
-      btnPanel02.setLayout(new BorderLayout(gap,gap));
-      btn02 = new JButton();
-      if(vizIcon != null) {
-	 btn02.setIcon(vizIcon);
-      }
-      btnPanel02.add(btn02, BorderLayout.CENTER);
-
-      JPanel btnPanel03 = new JPanel();
-      btnPanel03.setPreferredSize(new Dimension(btnW2,0));
-      btnPanel03.setLayout(new BorderLayout(gap,gap));
-      btn03 = new JButton();
-      if(viz3DIcon != null) {
-	 btn03.setIcon(viz3DIcon);
-      }
-      btnPanel03.add(btn03, BorderLayout.CENTER);
-
-      JPanel btnPanel04 = new JPanel();
-      btnPanel04.setPreferredSize(new Dimension(btnW2,0));
-      btnPanel04.setLayout(new BorderLayout(gap,gap));
-      btn04 = new JButton();
-      if(zapIcon != null) {
-	 btn04.setIcon(zapIcon);
-      }
-      btnPanel04.add(btn04, BorderLayout.CENTER);
-
-      kPanel00.add(colPanel0, BorderLayout.WEST);
-      kPanel00.add(navPanel0, BorderLayout.EAST);
+      /**
+       *   Contains vis3DBtn.
+       */
+      JPanel vis3DPanel = new JPanel();
+      vis3DPanel.setLayout(new BorderLayout(gap,gap));
+      vis3DPanel.setPreferredSize(new Dimension(btnW3,0));
+      
+      /**
+       *   Contains vis2DPanel, vis3DPanel.
+       */
+      JPanel vis2D3DPanel = new JPanel();
+      vis2D3DPanel.setLayout(new BorderLayout(gap,gap));
+      //vis2D3DPanel.setBackground(Color.yellow);
+      w = vis2DPanel.getPreferredSize().width;
       if(_is3D) {
-	 kPanel01.add(btnPanel02, BorderLayout.WEST);
-	 kPanel01.add(btnPanel03, BorderLayout.EAST);
+         w += vis3DPanel.getPreferredSize().width;
+	 vis2D3DPanel.setPreferredSize(new Dimension(w,0));
       } else {
-         kPanel01.setPreferredSize(new Dimension(2*btnW2+5*gap,0));
-	 kPanel01.add(btnPanel02, BorderLayout.CENTER);
+	 vis2D3DPanel.setPreferredSize(new Dimension(w,0));
       }
-      kPanel02.add(kPanel01, BorderLayout.WEST);
-      kPanel02.add(btnPanel04, BorderLayout.EAST);
-      kPanel0.add(kPanel00, BorderLayout.WEST);
-      kPanel0.add(txtPanel0, BorderLayout.CENTER);
-      kPanel0.add(kPanel02, BorderLayout.EAST);
 
-      //kPanel.add(kPanel0, BorderLayout.NORTH); // set height to preferred size
-      kPanel.add(kPanel0, BorderLayout.CENTER); // set height to expand
-      this.add(kPanel, BorderLayout.CENTER); // allows text field to expand
+      //................................
+      /**
+       *   Contains colBtn.
+       */
+      JPanel colPanel = new JPanel();
+      colPanel.setLayout(new BorderLayout(gap,gap));
+      colPanel.setPreferredSize(new Dimension(btnW3,0));
+
+      /**
+       *   Contains zapBtn.
+       */
+      JPanel zapPanel = new JPanel();
+      zapPanel.setLayout(new BorderLayout(gap,gap));
+      zapPanel.setPreferredSize(new Dimension(btnW3,0));
+
+      /**
+       *   Contains colPanel, zapPanel.
+       */
+      JPanel colZapPanel = new JPanel();
+      colZapPanel.setLayout(new BorderLayout(gap,gap));
+      w = colPanel.getPreferredSize().width;
+      w += zapPanel.getPreferredSize().width;
+      colZapPanel.setPreferredSize(new Dimension(w,0));
+
+
+      //................................
+      /**
+       *   Contains vis2D3DPanel, colZapPanel.
+       */
+      JPanel buttonPanel = new JPanel();
+      buttonPanel.setLayout(new BorderLayout(gap,gap));
+      //buttonPanel.setBackground(Color.cyan);
+      w = vis2D3DPanel.getPreferredSize().width;
+      w += colZapPanel.getPreferredSize().width;
+      buttonPanel.setPreferredSize(new Dimension(w,_entryH));
+      //................................
+//-----------------------------------------------------
+
+      colBtn = new JButton();
+
+      textF = new ScrollableTextField("", 50);
+      textF.setEditable(false);
+      textF.setBackground(_vizCol);
+      
+      leftBtn = new JButton();
+      if(leftIcon != null) {
+	 leftBtn.setIcon(leftIcon);
+      }
+      
+      rightBtn = new JButton();
+      if(leftIcon != null) {
+	 rightBtn.setIcon(rightIcon);
+      }
+
+      vis2DBtn = new JButton();
+      if(vizIcon != null) {
+	 vis2DBtn.setIcon(vizIcon);
+      }
+
+      vis3DBtn = new JButton();
+      if(viz3DIcon != null) {
+	 vis3DBtn.setIcon(viz3DIcon);
+      }
+
+      zapBtn = new JButton();
+      if(zapIcon != null) {
+	 zapBtn.setIcon(zapIcon);
+      }
+//-----------------------------------------------------
+      leftBtnPanel.add(leftBtn, BorderLayout.CENTER);
+      namePanel.add(textF, BorderLayout.CENTER);
+      rightBtnPanel.add(rightBtn, BorderLayout.CENTER);
+
+      scrollNamePanel.add(leftBtnPanel, BorderLayout.WEST);
+      scrollNamePanel.add(namePanel, BorderLayout.CENTER);
+      scrollNamePanel.add(rightBtnPanel, BorderLayout.EAST);
+
+      vis2DPanel.add(vis2DBtn, BorderLayout.CENTER);
+      vis3DPanel.add(vis3DBtn, BorderLayout.CENTER);
+      if(_is3D) {
+	 vis2D3DPanel.add(vis2DPanel, BorderLayout.WEST);
+	 vis2D3DPanel.add(vis3DPanel, BorderLayout.EAST);
+      } else {
+	 vis2D3DPanel.add(vis2DPanel, BorderLayout.CENTER);
+      }
+
+      colPanel.add(colBtn, BorderLayout.CENTER);
+      zapPanel.add(zapBtn, BorderLayout.CENTER);
+      colZapPanel.add(colPanel, BorderLayout.WEST);
+      colZapPanel.add(zapPanel, BorderLayout.EAST);
+
+      buttonPanel.add(vis2D3DPanel, BorderLayout.WEST);
+      buttonPanel.add(colZapPanel, BorderLayout.EAST);
+
+      innerPanel.add(scrollNamePanel, BorderLayout.CENTER);
+      innerPanel.add(buttonPanel, BorderLayout.EAST);
+
+      outerPanel.add(innerPanel, BorderLayout.CENTER); // set height to expand
+      this.add(outerPanel, BorderLayout.CENTER); // allows text field to expand
+//-----------------------------------------------------
+      /* for testing
+      printPanelSize(innerPanel, "outer");
+      printPanelSize(outerPanel, "inner");
+      printPanelSize(scrollNamePanel, "scrollName");
+      printPanelSize(buttonPanel, "button");
+      printPanelSize(vis2DPanel, "vis2D");
+      printPanelSize(vis3DPanel, "vis3D");
+      printPanelSize(vis2D3DPanel, "vis2D3D");
+      printPanelSize(colPanel, "col");
+      printPanelSize(zapPanel, "zap");
+      printPanelSize(colZapPanel, "colZap");
+      */
 //......................................
       setToolTips();
 //......................................
 
    } // makeKeyEntryGUI()
 
+   
+   private void printPanelSize(JPanel panel, String name) {
+      Dimension dim = null;
+      dim = panel.getPreferredSize();
+      System.out.println("---------- "+name+"----------");
+      System.out.println("panel W = "+dim.width);
+      System.out.println("panel H = "+dim.height);
+   }
 //......................................
 
    /**
@@ -309,12 +362,12 @@ public class KeyEntryGUI extends JPanel{
       ToolTipManager.sharedInstance().setInitialDelay( 1500 );
       ToolTipManager.sharedInstance().setDismissDelay( 1500 );
 
-      colBtn0.setToolTipText(colTipText);
-      btn00.setToolTipText(leftTipText);
-      btn01.setToolTipText(rightTipText);
-      btn02.setToolTipText(vizTip2Text);
-      btn03.setToolTipText(vizTip3Text);
-      btn04.setToolTipText(zapTipText);
+      colBtn.setToolTipText(colTipText);
+      leftBtn.setToolTipText(leftTipText);
+      rightBtn.setToolTipText(rightTipText);
+      vis2DBtn.setToolTipText(vizTip2Text);
+      vis3DBtn.setToolTipText(vizTip3Text);
+      zapBtn.setToolTipText(zapTipText);
 
    }
 
