@@ -98,6 +98,7 @@ EXECUTABLES		= \
 			WlzPrinicipalAngle \
 			WlzRankObj \
 			WlzRasterObj \
+			WlzRBFContourObj \
 			WlzRegisterICP \
 			WlzRsvFilterObj \
 			WlzSampleObj \
@@ -120,6 +121,7 @@ EXECUTABLES		= \
 			WlzWindow
 
 #			WlzAutoTrackUpDown
+
 
 
 # List of all 'C' source files (modify as required).
@@ -194,6 +196,7 @@ CSOURCES		= \
 			WlzPrinicipalAngle.c \
 			WlzRankObj.c \
 			WlzRasterObj.c \
+			WlzRBFContourObj.c \
 			WlzRegisterICP.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
