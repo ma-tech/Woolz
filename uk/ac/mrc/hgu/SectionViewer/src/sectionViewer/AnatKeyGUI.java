@@ -14,7 +14,7 @@ public class AnatKeyGUI extends JFrame{
 
    private String SLASH = System.getProperty("file.separator");
 
-   static protected int _cols[];
+   static public int _cols[];
    static protected int _nrows = 6;
    /*
       colours are taken from:

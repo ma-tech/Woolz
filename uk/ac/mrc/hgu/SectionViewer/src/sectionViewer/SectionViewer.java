@@ -1,7 +1,7 @@
 package sectionViewer;
 
 import sectionViewer.*;
-import hguUntil.*;
+// import hguUntil.*;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -79,7 +79,7 @@ public class SectionViewer
   // temporarily disabled ... don't remove
   thresholdMenuHandler handler_5 = null;
   //--------------------------------------
-  planeColChooser colourHandler = null;;
+  public planeColChooser colourHandler = null;;
 
   private String SLASH = System.getProperty("file.separator");
 
@@ -700,7 +700,7 @@ public class SectionViewer
 //-------------------------------------------------------------
 // show anatomy selected from menu
 //-------------------------------------------------------------
-  protected void anatomyFromMenu() {
+  public void anatomyFromMenu() {
 
     AnatomyElement anatArr[] = null;
     if (null != _parent) {
@@ -729,7 +729,7 @@ public class SectionViewer
     }
   }
 
-  protected void anatomyFromMenu(AnatomyElement[] arr) {
+  public void anatomyFromMenu(AnatomyElement[] arr) {
     int num = AnatKey._nrows;
     WlzObject obj2D[] = new WlzObject[num];
     boolean viz[] = new boolean[num];
@@ -1113,7 +1113,7 @@ public class SectionViewer
 //-------------------------------------------------------------
 // remove anatomy
 //-------------------------------------------------------------
-  protected void removeAnatomy() {
+  public void removeAnatomy() {
     _imgV.clearAnatomy();
     _imgV.repaint();
   }
@@ -1889,9 +1889,7 @@ public class SectionViewer
       chooser = new JFileChooser(currentDirFile);
       if (e.getActionCommand() == fileMenu_1str) {
         // save image
-	gfFileFilter filter = new gfFileFilter();
-	filter.addExtension("jpg");
-	filter.setDescription("jpg image file");
+	SVFileFilter filter = new SVFileFilter();
 	chooser.setFileFilter(filter);
         int returnVal = chooser.showSaveDialog(null);
         if (returnVal == JFileChooser.APPROVE_OPTION) {

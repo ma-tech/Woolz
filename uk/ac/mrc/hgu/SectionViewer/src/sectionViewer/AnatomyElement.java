@@ -34,15 +34,15 @@ public class AnatomyElement {
       return _visible;
    }
 
-   protected void setVisible(boolean state) {
+   public void setVisible(boolean state) {
       _visible = state;
    }
 
-   protected boolean isRemoved() {
+   public boolean isRemoved() {
       return _removed;
    }
 
-   protected void setRemoved(boolean state) {
+   public void setRemoved(boolean state) {
       _removed = state;
    }
 

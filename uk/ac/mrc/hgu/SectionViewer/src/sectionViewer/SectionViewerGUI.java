@@ -12,7 +12,7 @@ import java.util.*;
 import wsetter.*;
 import zoom.*;
 
-import hguUntil.*;
+// import hguUntil.*;
 
 public class SectionViewerGUI extends JPanel {
 
@@ -75,7 +75,7 @@ public class SectionViewerGUI extends JPanel {
   JPanel fixedPointUserRotPanel = new JPanel();
 
   JPanel menuPanel_2 = new JPanel();
-  JMenuBar _menubar = new JMenuBar();
+  public JMenuBar _menubar = new JMenuBar();
   //...................
 
   JPanel permanentPanel = new JPanel();
@@ -208,7 +208,7 @@ public class SectionViewerGUI extends JPanel {
   JMenuItem helpMenu_2 = new JMenuItem(helpMenu_2str);
   JMenuItem helpMenu_3 = new JMenuItem(helpMenu_3str);
 
-  JMenu helpMenu = new JMenu(helpMenuStr);
+  public JMenu helpMenu = new JMenu(helpMenuStr);
   //-------------------------------
   //-------------------------------
   JPanel feedbackPanel_1 = new JPanel();
@@ -230,9 +230,9 @@ public class SectionViewerGUI extends JPanel {
   Color titleCol = new Color(200, 220, 220);
   Color fbCol = new Color(220, 220, 200);
 
-  JButton secColorClt = new JButton("");
+  public JButton secColorClt = new JButton("");
 
-  static int nSV = 0;
+  public static int nSV = 0;
 
   private Color[] planeColor = new Color[] {Color.red, Color.yellow,
       Color.blue, Color.pink, Color.green, Color.cyan};

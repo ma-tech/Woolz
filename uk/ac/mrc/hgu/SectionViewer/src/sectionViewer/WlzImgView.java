@@ -1003,7 +1003,7 @@ if (showInterSecLines) drawIntersection(g);
       }
    } // fireChange
 
-   void setShowInterSecLines(boolean flag) {
+   public void setShowInterSecLines(boolean flag) {
      showInterSecLines = flag;
    }
 } // class WlzImgView
