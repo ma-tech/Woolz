@@ -15,6 +15,8 @@
 *		Human Genetics Unit numerical algorithm library.
 * $Revision$
 * Maintenance:  Log changes below, with most recent at top of list.
+* 04-06-01 bill Add AlgMatrixRSTDiag(), AlgMatrixTDiagQLI() and
+*		AlgMatrixRSEigen().
 * 01-02-01 bill Add AlgCrossCorrelate2D(), AlgCrossCorrPeakXY() and
 *		AlgCrossCorrPeakY().
 * 31-01-01 bill	Add AlgBitNextPowerOfTwo().
@@ -246,6 +248,20 @@ extern AlgError		AlgMatrixLUBackSub(
 			  int *idxVec,
 			  double *bMat);
 
+/* From AlgMatrixRSEigen.c */
+extern AlgError		AlgMatrixRSEigen(
+			  double **aM,
+			  int aSz,
+			  double *vM,
+			  int reqEV);
+
+/* From AlgMatrixRSTDiag.c */
+extern AlgError		AlgMatrixRSTDiag(
+			  double **aM,
+			  int aSz,
+			  double *dM,
+			  double *oM);
+
 /* From AlgMatrixSV.c */
 extern AlgError		AlgMatrixSVSolve(
 			  double **aMat,
@@ -264,6 +280,13 @@ extern AlgError		AlgMatrixSVBackSub(double **uMat,
 			  double *wMat,
 			  double **vMat,
 			  double *bMat);
+
+/* From AlgMatrixTDiagQLI.c */
+extern AlgError		AlgMatrixTDiagQLI(
+			  double *dM,
+			  double *oM,
+			  int aSz,
+			  double **zM);
 
 /* From AlgMixture.c */
 AlgError		AlgMixtureMLG(
