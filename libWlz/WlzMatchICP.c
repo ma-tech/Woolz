@@ -58,6 +58,14 @@ typedef struct _WlzMatchICPTPPair2D
   WlzDVertex2	tVx;
 } WlzMatchICPTPPair2D;
 
+typedef struct _WlzMatchICPWeightCbData
+{
+  WlzGMModel	*tGM;
+  WlzGMModel	*sGM;
+  int		nScatter;
+  double 	maxDisp;
+} WlzMatchICPWeightCbData;
+
 static WlzErrorNum  		WlzMatchICPCtr(
 				  WlzContour *tCtr,
 				  WlzContour *sCtr,
@@ -75,6 +83,7 @@ static WlzErrorNum  		WlzMatchICPCtr(
 				  double matchImpThr);
 static WlzErrorNum		WlzMatchICPRegShellLst(
 				  AlcKDTTree *tTree,
+				  WlzGMModel *tGM,
 				  WlzGMModel *sGM,
 				  WlzMatchICPShellList *sLst,
 				  WlzAffineTransform *globTr,
@@ -119,6 +128,7 @@ static WlzAffineTransform 	*WlzMatchICPRegModel(
 				  WlzErrorNum *dstErr);
 static WlzAffineTransform 	*WlzMatchICPRegShell(
 				  AlcKDTTree *tTree,
+				  WlzGMModel *tGM,
 				  WlzGMShell *sS,
 				  WlzAffineTransform *globTr,
 				  WlzTransformType trType,
@@ -227,7 +237,8 @@ static WlzErrorNum		WlzMatchICPFilterPts(
 				  double impThr);
 static WlzErrorNum 		WlzMatchICPFilterPtsDisp2D(
 				  WlzDVertex2 *tVx,
-				  WlzDVertex2 *sVx, int *nVx,
+				  WlzDVertex2 *sVx,
+				  int *nVx,
 				  WlzAffineTransform *globTr,
 				  int nN,
 				  double impThr);
@@ -246,7 +257,7 @@ static WlzGMVertex 		*WlzMatchICPLoopTMaxMinCurv2D(
 				  int minEdg,
 				  int maxFlg,
 				  double *dstAngle);
-static WlzErrorNum 		WlzMatchICPRemoveVerticies(
+static WlzErrorNum 		WlzMatchICPRemoveVertices(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
 				  int *iBuf,
@@ -259,6 +270,37 @@ static int			WlzMatchICPDblSortFnD(
 				  int *idx,
 				  int id0,
 				  int id1);
+static double			WlzMatchICPWeightMatches(
+				  WlzVertexType vType,
+				  WlzAffineTransform *curTr,
+				  AlcKDTTree *tree,
+				  WlzVertexP tVx,
+				  WlzVertexP sVx,
+				  WlzVertex tMVx,
+				  WlzVertex sMVx,
+				  void *data);
+static double			WlzMatchICPWeightMatches2D(
+				  WlzAffineTransform *curTr,
+				  AlcKDTTree *tree,
+				  WlzDVertex2 *tVx,
+				  WlzDVertex2 *sVx,
+				  WlzDVertex2 tMVx,
+				  WlzDVertex2 sMVx,
+				  WlzGMModel *tGM,
+				  WlzGMModel *sGM,
+				  double maxDisp,
+				  int nScatter);
+static double			WlzMatchICPWeightMatches3D(
+				  WlzAffineTransform *curTr,
+				  AlcKDTTree *tree,
+				  WlzDVertex3 *tVx,
+				  WlzDVertex3 *sVx,
+				  WlzDVertex3 tMVx,
+				  WlzDVertex3 sMVx,
+				  WlzGMModel *tGM,
+				  WlzGMModel *sGM,
+				  double maxDisp,
+				  int nScatter);
 static void			WlzMatchICPShellCb(
 				  WlzGMModel *model,
 				  WlzGMElemP elm,
@@ -545,14 +587,14 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   {
     errNum = WlzGMFilterRmSmShells(sGM, minSpx);
   }
-  /* Get the verticies and normals from the target and source models. */
+  /* Get the vertices and normals from the target and source models. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVx = WlzVerticiesFromCtr(tCtr, &tNr, NULL, &nTV, &tVType, &errNum);
+    tVx = WlzVerticesFromCtr(tCtr, &tNr, NULL, &nTV, &tVType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    sVx = WlzVerticiesFromCtr(sCtr, &sNr, NULL, &nSV, &vType, &errNum);
+    sVx = WlzVerticesFromCtr(sCtr, &sNr, NULL, &nSV, &vType, &errNum);
     if(tVType != vType)
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -582,9 +624,9 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   /* Create some buffers.
    * vIBuf:	A source vertex index buffer to allow registration to be
    *            between the target (using the kd-tree) and the indexed
-   *		source verticies.
-   * tVBuf:	Temporary buffer for target verticies.
-   * sVBuf:	Temporary buffer for source verticies.
+   *		source vertices.
+   * tVBuf:	Temporary buffer for target vertices.
+   * sVBuf:	Temporary buffer for source vertices.
    * wBuf:	Temporary for nearest neighbour vertex weights.
    * sMSBuf:	Buffer with source shell pointers, shell sizes and affine
    *            transforms.
@@ -619,12 +661,12 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  /* Build a kD-tree from the verticies of the the model. */
+  /* Build a kD-tree from the vertices of the the model. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tTree = WlzVerticiesBuildTree(vType, nTV, tVx, vIBuf, &errNum);
+    tTree = WlzVerticesBuildTree(vType, nTV, tVx, vIBuf, &errNum);
   }
-  /* Register the verticies of the source model to those of the target. */
+  /* Register the vertices of the source model to those of the target. */
   if(errNum == WLZ_ERR_NONE)
   {
     globTr = WlzAssignAffineTransform(
@@ -660,7 +702,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
     while((errNum == WLZ_ERR_NONE) && (idS < nOSS))
     {
       tTr = WlzAssignAffineTransform(
-            WlzMatchICPRegShell(tTree, sMS->shell, globTr, trType, vType,
+            WlzMatchICPRegShell(tTree, tGM, sMS->shell, globTr, trType, vType,
 			        nTV, tVx, tNr, nSV, sVx, sNr,
 			        vIBuf, tVBuf, sVBuf, wBuf,
 			        maxItr, maxDisp, maxAng, maxDeform,
@@ -680,7 +722,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
       ++idS;
     }
   }
-  /* Remove all high connectivity verticies from the shells and then
+  /* Remove all high connectivity vertices from the shells and then
    * register each of the child shells, with size above the threshold
    * to the target model. The list of new shells is built in  a list:
    * This is bSList if brkFlg > 2 or rSList if brkFlg == 2. */
@@ -723,11 +765,11 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 	    WlzMatchICPShellListElmInsert(vSList, lElm0);
 	    if(vSList->head->next != NULL)
 	    {
-	      /* Shell contained high connectivity verticies, so pass through
+	      /* Shell contained high connectivity vertices, so pass through
 	       * the list, registering shells above the size threshold to the
 	       * target model and removing the list elements of any small
 	       * shells or shells that do not register. */
-	      errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList, globTr,
+	      errNum = WlzMatchICPRegShellLst(tTree, tGM, sGM, vSList, globTr,
 		  trType, vType, nTV, tVx, tNr, nSV, sVx, sNr,
 		  vIBuf, tVBuf, sVBuf, wBuf, maxItr,
 		  maxDisp, maxAng, maxDeform, minSpx, sMS->tr);
@@ -814,8 +856,8 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		 * target model and removing the list elements of any small
 		 shells or shells that do not register. */
 		WlzMatchICPShellListElmInsert(vSList, lElm0);
-		errNum = WlzMatchICPRegShellLst(tTree, sGM, vSList, globTr,
-				    trType, vType,
+		errNum = WlzMatchICPRegShellLst(tTree, tGM, sGM, vSList,
+				    globTr, trType, vType,
 				    nTV, tVx, tNr, nSV, sVx, sNr,
 				    vIBuf, tVBuf, sVBuf, wBuf, maxItr,
 				    maxDisp, maxAng, maxDeform, minSpx,
@@ -1023,10 +1065,11 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 *		the list elements of any small shells or shells that do not
 *		register.
 * \param	tTree			Given kD-tree populated by the
-*					target verticies such that the
+*					target vertices such that the
 *					nodes of the tree have the same
-*					indicies as the given target verticies
+*					indicies as the given target vertices
 *					and normals.
+* \param	tGM			Target geometric model.
 * \param	sGM			Source geometric model.
 * \param	sLst			The given list of shells.
 * \param	globTr			Global affine transform.
@@ -1034,17 +1077,17 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
 * \param	vType			Type of vertices.
-* \param	nTV			Number of target verticies.
-* \param	tVx			The target verticies.
+* \param	nTV			Number of target vertices.
+* \param	tVx			The target vertices.
 * \param	tNr			The target normals.
-* \param        nSV			Number of source verticies.
-* \param        sVx 			The source verticies.
+* \param        nSV			Number of source vertices.
+* \param        sVx 			The source vertices.
 * \param	sNr			The source normals.
 *		iBuf			Buffer with at least nSV ints.
 * \param	tVBuf			A buffer with room for at least
-*					nS verticies.
+*					nS vertices.
 *		sVBuf			A buffer with room for at least
-*					nS verticies.
+*					nS vertices.
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
 * \param	maxItr			Maximum number of iterations.
@@ -1056,6 +1099,7 @@ static WlzErrorNum  WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 * \param	gInitTr			Initial affine transform, may be NULL.
 */
 static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
+				WlzGMModel *tGM,
 				WlzGMModel *sGM,
 				WlzMatchICPShellList *sLst,
 				WlzAffineTransform *globTr,
@@ -1088,7 +1132,7 @@ static WlzErrorNum	WlzMatchICPRegShellLst(AlcKDTTree *tTree,
     if(lElm0->mShell.size >= minSpx)
     {
       tTr = WlzAssignAffineTransform(
-	    WlzMatchICPRegShell(tTree, lElm0->mShell.shell,
+	    WlzMatchICPRegShell(tTree, tGM, lElm0->mShell.shell,
 			        globTr, trType, vType,
 			        nTV, tVx, tNr, nSV, sVx, sNr,
 			        iBuf, tVBuf, sVBuf, wBuf,
@@ -1160,28 +1204,28 @@ static void	WlzMatchICPShellListInsertList(WlzMatchICPShellList *list0,
 *					on error.
 * \ingroup	WlzTransform
 * \brief	Establishes an affine transfrom matching the source
-*		model to the target model. The target model's verticies
+*		model to the target model. The target model's vertices
 *		are in an already populated kD-tree in the workspace.
 * \param	tTree			Given kD-tree populated by the
-*					target verticies such that the
+*					target vertices such that the
 *					nodes of the tree have the same
-*					indicies as the given target verticies
+*					indicies as the given target vertices
 *					and normals.
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
 * \param	vType			Type of vertices.
-* \param	nTV			Number of target verticies.
-* \param	tVx			The target verticies.
+* \param	nTV			Number of target vertices.
+* \param	tVx			The target vertices.
 * \param	tNr			The target normals.
-* \param        nSV			Number of source verticies.
-* \param        sVx 			The source verticies.
+* \param        nSV			Number of source vertices.
+* \param        sVx 			The source vertices.
 * \param	sNr			The source normals.
 * \param	iBuf			Buffer with at least nSV ints.
 * \param	tVBuf			A buffer with room for at least
-*					nS verticies.
+*					nS vertices.
 * \param	sVBuf			A buffer with room for at least
-*					nS verticies.
+*					nS vertices.
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
 * \param	maxItr			Maximum number of iterations.
@@ -1211,10 +1255,10 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
   {
     *(iBuf + idV) = idV;
   }
-  tr = WlzRegICPTreeAndVerticies(tTree, trType, vType,
+  tr = WlzRegICPTreeAndVertices(tTree, trType, vType,
   			     nTV, tVx, tNr, nSV, iBuf, sVx, sNr,
 			     tVBuf, sVBuf, wBuf, maxItr, initTr,
-			     &conv, &errNum);
+			     &conv, NULL, NULL, &errNum);
   if(dstConv)
   {
     *dstConv = conv;
@@ -1231,30 +1275,31 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 *					on error.
 * \ingroup	WlzTransform
 * \brief	Establishes an affine transfrom matching the source
-*		shell to the target model. The target model's verticies
+*		shell to the target model. The target model's vertices
 *		are in an already populated kD-tree.
 * \param	tTree			Given kD-tree populated by the
-*					target verticies such that the
+*					target vertices such that the
 *					nodes of the tree have the same
-*					indicies as the given target verticies
+*					indicies as the given target vertices
 *					and normals.
+* \param	tGM			Target model.
 * \param	sS			Source shell.
 * \param	globTr			Global affine transform.
 * \param	trType			The required type of transform,
 *					must be either WLZ_TRANSFORM_2D_REG,
 *					or WLZ_TRANSFORM_2D_AFFINE.
 * \param	vType			Type of vertices.
-* \param	nTV			Number of target verticies.
-* \param	tVx			The target verticies.
+* \param	nTV			Number of target vertices.
+* \param	tVx			The target vertices.
 * \param	tNr			The target normals.
-* \param        nSV			Number of source verticies.
-* \param        sVx 			The source verticies.
+* \param        nSV			Number of source vertices.
+* \param        sVx 			The source vertices.
 * \param	sNr			The source normals.
 * \param	iBuf			Buffer with at least nSV ints.
 * \param	tVBuf			A buffer with room for at least
-*					nS verticies.
+*					nS vertices.
 * \param	sVBuf			A buffer with room for at least
-*					nS verticies.
+*					nS vertices.
 * \param	wBuf			A buffer with room for at least
 *					nS doubles.
 * \param	maxItr			Maximum number of iterations.
@@ -1270,7 +1315,8 @@ static WlzAffineTransform *WlzMatchICPRegModel(AlcKDTTree *tTree,
 *					may be NULL.
 */
 static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
-				WlzGMShell *sS, WlzAffineTransform *globTr,
+				WlzGMModel *tGM, WlzGMShell *sS,
+				WlzAffineTransform *globTr,
 				WlzTransformType trType, WlzVertexType vType,
 				int nTV, WlzVertexP tVx, WlzVertexP tNr,
 				int nSV, WlzVertexP sVx, WlzVertexP sNr,
@@ -1292,9 +1338,11 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
   WlzGMLoopT	*cLT,
   		*fLT;
   WlzAffineTransform *tr = NULL;
+  WlzMatchICPWeightCbData cbData;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	nScatter = 5;
 
-  /* Find the indicies of the source shell's verticies. */
+  /* Find the indicies of the source shell's vertices. */
   nSSV = 0;
   cLT = fLT = sS->child;
   do
@@ -1313,12 +1361,19 @@ static WlzAffineTransform *WlzMatchICPRegShell(AlcKDTTree *tTree,
     } while(cET != fET);
     cLT = cLT->next;
   } while(cLT != fLT);
-  /* Register the source shell's verticies with the target model using the
+  /* Register the source shell's vertices with the target model using the
    * existing kD-tree. */
-  tr = WlzRegICPTreeAndVerticies(tTree, trType, vType,
+  cbData.tGM = tGM;
+  cbData.sGM = sS->parent;
+  cbData.maxDisp = maxDisp;
+  cbData.nScatter = nScatter;
+  tr = WlzRegICPTreeAndVertices(tTree, trType, vType,
   			  nTV, tVx, tNr, nSSV, iBuf, sVx, sNr,
 			  tVBuf, sVBuf, wBuf,
-			  maxItr, initTr, &conv, &errNum);
+			  maxItr, initTr, &conv,
+			  WlzMatchICPWeightMatches,
+			  &cbData,
+			  &errNum);
   if((errNum == WLZ_ERR_NONE) && conv)
   {
     conv = WlzMatchICPRegCheckConv(sS, globTr, tr, maxDisp, maxAng, maxDeform);
@@ -1495,16 +1550,16 @@ static int	WlzMatchICPRegCheckConv3D(WlzGMShell *shell,
 * \brief	Computes matching points from the broken source shells
 *		and their affine transforms.
 * \param	tTree			kD-tree populated by the target
-*					verticies.
+*					vertices.
 * \param	mS			Match shell.
 * \param	vType			Type of vertices.
 * \param	tVx			Target vertex geometries.
 * \param 	tNr			Target normals.
 * \param 	sNr			Source normals.
 * \param	tMatch			Allocated space for the target
-*					match verticies.
+*					match vertices.
 * \param	sMatch			Allocated space for the source
-*					match verticies.
+*					match vertices.
 * \param	offset			Offset into tMatch and smatch.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
@@ -1544,11 +1599,11 @@ static int	WlzMatchICPGetPoints(AlcKDTTree *tTree, WlzMatchICPShell *mS,
 *		it's assosiated affine transform and the target kD-tree.
 * 		Finds the 2D vertex at the given shell's midpoint, applies
 *		the affine transform associated with the shell in the match
-*		shell data structure to the verticies geometry then finds the
+*		shell data structure to the vertices geometry then finds the
 *		closest point in the target model to the transformed vertex
 *		using the target kD-tree.
 * \param	tTree			kD-tree populated by the target
-*					verticies.
+*					vertices.
 * \param	mS			Match shell.
 * \param	tVx			Target vertex geometries.
 * \param 	tNr			Target normals.
@@ -1906,7 +1961,7 @@ static WlzErrorNum WlzMatchICPFilterPtsDisp2D(WlzDVertex2 *tVx,
 * \param	sGM			Source model.
 * \param	sS			Source shell.
 * \param	iBuf			Buffer containing the indicies of
-*					verticies to be removed from the
+*					vertices to be removed from the
 *					model.
 */
 static WlzErrorNum	WlzMatchICPBreakShellCon(WlzMatchICPCbData *cbData,
@@ -1934,7 +1989,7 @@ static WlzErrorNum	WlzMatchICPBreakShellCon(WlzMatchICPCbData *cbData,
 /*!
 * \return				Error code.
 * \ingroup	WlzTransform
-* \brief	Find all verticies within the given shell which have
+* \brief	Find all vertices within the given shell which have
 *		high connectivity and remove them, while at the same
 *		time building a list of the shells that are derived from
 *		the given shell.
@@ -1943,7 +1998,7 @@ static WlzErrorNum	WlzMatchICPBreakShellCon(WlzMatchICPCbData *cbData,
 * \param	sGM			Source model.
 * \param	sS			Source shell.
 * \param	iBuf			Buffer containing the indicies of
-*					verticies to be removed from the
+*					vertices to be removed from the
 *					model.
 */
 static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
@@ -1959,7 +2014,7 @@ static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
   		*fLT;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Find all verticies with high connectivity that are in the given
+  /* Find all vertices with high connectivity that are in the given
    * shell. */
   nHCV = 0;
   cLT = fLT = sS->child;
@@ -1987,7 +2042,7 @@ static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
   /* Remove all the high connectivity that were found. */
   if(nHCV > 0)
   {
-    errNum = WlzMatchICPRemoveVerticies(cbData, sGM, iBuf, nHCV);
+    errNum = WlzMatchICPRemoveVertices(cbData, sGM, iBuf, nHCV);
   }
   return(errNum);
 }
@@ -1995,7 +2050,7 @@ static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
 /*!
 * \return				Error code.
 * \ingroup	WlzTransform
-* \brief	Break the given shell by removing verticies near the
+* \brief	Break the given shell by removing vertices near the
 *		midpoint of the shell. . The given shell is known to only
 *		have simple connectivity, eg a shell with simple connectivity
 *		in a 2D model will no more than two edges using a single
@@ -2006,7 +2061,7 @@ static WlzErrorNum WlzMatchICPBreakShellCon2D(WlzMatchICPCbData *cbData,
 * \param	sMS			The match shell.
 * \param	sNr			The source shell normals.
 * \param	iBuf			Buffer containing the indicies of
-*					verticies to be removed from the
+*					vertices to be removed from the
 *					model.
 * \param	minSpx			Minimum number of simplicies to
 *					leave in a shell.
@@ -2024,7 +2079,7 @@ static WlzErrorNum	WlzMatchICPBreakShellMid(WlzMatchICPCbData *cbData,
       /* If the shell has more than one loop topology element then it is
        * a closed loop so this needs to be broken into a simple non-cyclic
        * chain of edge segments before it can be broken by removing low
-       * curvature verticies. */
+       * curvature vertices. */
       errNum = WlzMatchICPBreakShellCur2D(cbData, sGM, sMS, sNr.d2,
       					  iBuf, minSpx);
       break;
@@ -2083,7 +2138,7 @@ static WlzErrorNum	WlzMatchICPBreakShellLoopTs(WlzGMModel *sGM,
 * \brief	Make sure that all simplex topology elements are connected
 *		through the next and prev pointers without recourse to the
 *		opp pointer for connectivity. In 2D this means that a shell
-*		with no high connectivity verticies has two opposite loop
+*		with no high connectivity vertices has two opposite loop
 *		topology elements. This is fixed by removing the lowest
 *		curvature vertex.
 * \param	sGM			Source model.
@@ -2112,7 +2167,7 @@ static WlzErrorNum	WlzMatchICPBreakShellLop2D(WlzGMModel *sGM,
 * \return				Error code.
 * \ingroup	WlzTransform
 * \brief	Look for the vertex at which the curvature is localy maximal
-*		for each of the shells. Remove all the verticies found from
+*		for each of the shells. Remove all the vertices found from
 *		the 2D source model.
 * \param	cbData			Callback data structure in which
 *					the list of new shells is being built.
@@ -2121,7 +2176,7 @@ static WlzErrorNum	WlzMatchICPBreakShellLop2D(WlzGMModel *sGM,
 *					shell and it's number of simplicies.
 * \param	sNr			Source normals.
 * \param	iBuf			Buffer containing the indicies of
-*					verticies to be removed from the
+*					vertices to be removed from the
 *					model.
 * \param	minSpx			Minimum number of simplicies to
 *					leave in a shell.
@@ -2154,7 +2209,7 @@ static WlzErrorNum WlzMatchICPBreakShellCur2D(WlzMatchICPCbData *cbData,
   } while(sLT != sS->child);
   if(idD > 0)
   {
-    errNum = WlzMatchICPRemoveVerticies(cbData, sGM, iBuf, idD);
+    errNum = WlzMatchICPRemoveVertices(cbData, sGM, iBuf, idD);
   }
   return(errNum);
 }
@@ -2204,7 +2259,7 @@ static WlzGMVertex *WlzMatchICPLoopTMid(WlzGMLoopT *gLT)
 * \return				Vertex at point of weighted
 *					minimum or maximum curvature.
 * \brief	Given a loop topology element and an array of normals
-*		for the verticies of the loop topology element. Finds
+*		for the vertices of the loop topology element. Finds
 *		the vertex at the point of maximum or minimum curvature
 *		weighted towards the centre of the loop.
 * 		The actual curvature is computed using the given
@@ -2405,17 +2460,17 @@ static WlzGMVertex *WlzMatchICPLoopTMaxMinCurv2D(WlzGMLoopT *gLT,
 /*!
 * \return				Error code.
 * \ingroup	WlzTransform
-* \brief	Removes all verticies in the workspace's vertex flags
+* \brief	Removes all vertices in the workspace's vertex flags
 *		buffer from the source model.
 * \param	cbData			Callback data structure in which
 *					the list of new shells is being built.
 * \param	sGM			Source model.
 * \param	iBuf			Buffer containing the indicies of
-*					verticies to be removed from the
+*					vertices to be removed from the
 *					model.
-* \param	nD			Number of verticies to be removed.
+* \param	nD			Number of vertices to be removed.
 */
-static WlzErrorNum WlzMatchICPRemoveVerticies(WlzMatchICPCbData *cbData,
+static WlzErrorNum WlzMatchICPRemoveVertices(WlzMatchICPCbData *cbData,
 				WlzGMModel *sGM, int *iBuf, int nD)
 {
   int		idD;
@@ -2423,7 +2478,7 @@ static WlzErrorNum WlzMatchICPRemoveVerticies(WlzMatchICPCbData *cbData,
   WlzGMVertex	*sV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Remove all these high connectivity verticies from the model creating
+  /* Remove all these high connectivity vertices from the model creating
    * new shells. Make sure that the transform of each of these new shells
    * is a copy of the transform of the shell with the high connectivity
    * vertex. */
@@ -2443,6 +2498,236 @@ static WlzErrorNum WlzMatchICPRemoveVerticies(WlzMatchICPCbData *cbData,
     ++idD;
   }
   return(errNum);
+}
+
+/*!
+* \return	Weight value in the range [0.0-1.0].
+* \ingroup      WlzTransform
+* \brief	Compute an additional weighting for the matched pair of
+* 		verticies.
+*		This function is called from WlzRegICPTreeAndVertices().
+* \param	vType			Type of vertices.
+* \param	curTr			Current affine transform.
+* \param	tree			Given kD-tree populated by the
+*					target vertices such that the nodes of
+*					the tree have the sameindicies as the
+*					given target vertices.
+* \param	tVx			The source vertices.
+* \param	tVx			The target vertices.
+* \param	tMVx			The matched target vertex.
+* \param	sMVx			The matched source vertex.
+* \param	data			Data used to pass the geometric models.
+*/
+static double	WlzMatchICPWeightMatches(WlzVertexType vType,
+					 WlzAffineTransform *curTr,
+					 AlcKDTTree *tree,
+					 WlzVertexP tVx, WlzVertexP sVx,
+					 WlzVertex tMVx, WlzVertex sMVx,
+					 void *data)
+{
+   double	wgt = 0.0;
+   WlzMatchICPWeightCbData *cbData;
+
+   if(data)
+   {
+     cbData = (WlzMatchICPWeightCbData *)data;
+     switch(vType)
+     {
+       case WLZ_VERTEX_D2:
+         wgt = WlzMatchICPWeightMatches2D(curTr, tree, tVx.d2, sVx.d2,
+					  tMVx.d2, sMVx.d2,
+					  cbData->tGM, cbData->sGM,
+					  cbData->maxDisp, cbData->nScatter);
+	 break;
+	 break;
+       case WLZ_VERTEX_D3:
+         wgt = WlzMatchICPWeightMatches3D(curTr, tree, tVx.d3, sVx.d3,
+	 				  tMVx.d3, sMVx.d3,
+					  cbData->tGM, cbData->sGM,
+					  cbData->maxDisp, cbData->nScatter);
+	 break;
+     }
+   }
+}
+
+/*!
+* \return	Weight value in the range [0.0-1.0].
+* \ingroup      WlzTransform
+* \brief	Compute an additional weighting for the matched pair of
+* 		2D verticies.
+*		Each pair of matched verticies has an additional weighting
+*		computed which relates to the sensitivity of the match to
+*		perturbations.
+*		Weight is :
+*		  \li 0.0 	If the vertex and perturbed vertex are in
+*				different shells.
+*		  \li 1.0       If the vertex and perturbed vertex are in
+*				the same shell but not the same loopTs.
+*		  \li 2.0       If the vertex and perturbed vertex share the
+*				same loopT, but there is more than one loopT
+*				per shell.
+*		  \li [2.0-3.0] If the vertex and perturbed vertex share the
+*				same loopT which is the only loopT of the
+*				parent shell. In this case the weight is
+*				computed by comparing Euclidean and Model
+*				distances between the vertices.
+*		The weight is finaly normalized to the range [0-1.0].
+* \param	curTr			Current affine transform.
+* \param	tree			Given kD-tree populated by the
+*					target vertices such that the nodes of
+*					the tree have the sameindicies as the
+*					given target vertices.
+* \param	tVx			The target vertices.
+* \param	sVx			The source vertices.
+* \param	tMVx			The matched target vertex.
+* \param	sMVx			The matched source vertex.
+* \param	tGM			Target geometric model.
+* \param	sGM			Source geometric model.
+* \param	maxDisp			Maximum displacement for source
+*					verticies.
+* \param	nScatter		Number of verticies scattered about
+*					the target vertex to test it's
+*					sensitivity.
+*/
+static double	WlzMatchICPWeightMatches2D(WlzAffineTransform *curTr,
+				       	AlcKDTTree *tree,
+				       	WlzDVertex2 *tVx, WlzDVertex2 *sVx,
+					WlzDVertex2 tMVx, WlzDVertex2 sMVx,
+				       	WlzGMModel *tGM, WlzGMModel *sGM,
+				       	double maxDisp, int nScatter)
+{
+  /* TODO CHECK THIS FUNCTION! */
+  int		idN;
+  double	distE,
+   		distM,
+		wgt;
+  WlzDVertex2	diff,
+   		disp,
+		sMTVx,
+   		tMVx0,
+ 		sMTVx0,
+   		sMVx0;
+  WlzGMLoopT	*tMLT,
+  		*tMLT0;
+  WlzGMShell	*tMS,
+  		*tMS0;
+  WlzGMVertex	*tMV,
+  		*tMV0;
+  AlcKDTNode	*tNode;
+  double	vxD[2];
+  const double	delta = 0.000001;
+
+  if(nScatter > 0)
+  {
+    wgt = 0.0;
+    tMV = WlzGMModelMatchVertexG2D(tGM, tMVx);
+    sMTVx = WlzAffineTransformVertexD2(curTr, sMVx, NULL);
+    tMLT = tMV->diskT->vertexT->parent->parent;
+    tMS = tMLT->parent;
+    for(idN = 0; idN < nScatter; ++idN)
+    {
+      /* Compute a new source vertex with a random displacement
+      * (distance < maxDist) from the source vertex. */
+      disp.vtX = ((AlgRandUniform() * 2.0) - 1.0) * ALG_M_SQRT1_2 * maxDisp;
+      disp.vtY = ((AlgRandUniform() * 2.0) - 1.0) * ALG_M_SQRT1_2 * maxDisp;
+      sMVx0.vtX = sMVx.vtX + disp.vtX;
+      sMVx0.vtY = sMVx.vtY + disp.vtY;
+      /* Transfrom the source vertex using the current affine transform. */
+      sMTVx0 = WlzAffineTransformVertexD2(curTr, sMVx0, NULL);
+      /* Find nearest neighbour of the transformed source vertex in the
+      * target model. */
+      vxD[0] = sMTVx0.vtX;
+      vxD[1] = sMTVx0.vtY;
+      if((tNode = AlcKDTGetNN(tree, vxD, DBL_MAX, NULL, NULL)) != NULL)
+      {
+	tMVx0 = *(tVx + tNode->idx);
+	tMV0 = WlzGMModelMatchVertexG2D(tGM, tMVx0);
+	if(tMV0)
+	{
+	  tMLT0 = tMV->diskT->vertexT->parent->parent;
+	  tMS0 = tMLT0->parent;
+	  if(tMS == tMS0)
+	  {
+	    /* Same shell. */
+	    wgt += 1.0;
+	    if(tMLT == tMLT0)
+	    {
+	      /* Same loopT */
+	      wgt += 1.0;
+	      if(tMLT == tMLT->next)
+	      {
+		if(tMV == tMV0)
+		{
+		  /* Same vertex! */
+		  wgt += 1.0;
+		}
+		else
+		{
+		  /* Compute the Euclidean distance between the transformed
+		   * source vertex and the transformed displaced source
+		   * vertex. */
+		  WLZ_VTX_2_SUB(diff, sMTVx, sMTVx0);
+		  distE = WLZ_VTX_2_LENGTH(diff);
+		  if(distE > delta)
+		  {
+		    /* Compute the distance between the two verticies where the
+		     * path between them is constrained to the edges of the
+		     * common shell, this will be DBL_MAX if the two verticies
+		     * are in different shells. */
+		    distM = WlzGMVertexShellDist(tMV, tMV0, NULL);
+		    /* Compare this distance with the displacement of the
+		     * transformed source vertex and then compute the new
+		     * weight. */
+		    if(distM > 0.0)
+		    {
+		      wgt += (distE > distM)?  distM / distE: distE / distM;
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    wgt /= (3.0 * nScatter);
+  }
+  return(wgt);
+}
+
+/*!
+* \return	Weight value in the range [0.0-1.0].
+* \ingroup      WlzTransform
+* \brief	Compute an additional weighting for the matched pair of
+* 		3D verticies.
+*		Each pair of matched verticies has an additional weighting
+*		computed which relates to the sensitivity of the match to
+*		perturbations.
+* \param	curTr			Current affine transform.
+* \param	tree			Given kD-tree populated by the
+*					target vertices such that the nodes of
+*					the tree have the sameindicies as the
+*					given target vertices.
+* \param	tVx			The target vertices.
+* \param	sVx			The source vertices.
+* \param	tMVx			The matched target vertex.
+* \param	sMVx			The matched source vertex.
+* \param	tGM			Target geometric model.
+* \param	sGM			Source geometric model.
+* \param	maxDisp			Maximum displacement for source
+*					verticies.
+* \param	nScatter		Number of verticies scattered about
+*					the target vertex to test it's
+*					sensitivity.
+*/
+static double	WlzMatchICPWeightMatches3D(WlzAffineTransform *curTr,
+				       	AlcKDTTree *tree,
+				       	WlzDVertex3 *tVx, WlzDVertex3 *sVx,
+					WlzDVertex3 tMVx, WlzDVertex3 sMVx,
+				       	WlzGMModel *tGM, WlzGMModel *sGM,
+				       	double maxDisp, int nScatter)
+{
+  /* TODO */
 }
 
 /*!
