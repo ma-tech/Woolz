@@ -1323,6 +1323,7 @@ extern WlzErrorNum		WlzGaussNoise(
 
 
 
+#ifndef WLZ_EXT_BIND
 /************************************************************************
 * WlzGeometryTrackUpAndDown_s.c							*
 ************************************************************************/
@@ -1338,6 +1339,7 @@ extern WlzDVertex3  *WlzGeometryTrackUpAndDown_s( WlzObject     *sObj,
 		                       		  WlzErrorNum   *dstErr
 		                                );
 
+#endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzGeoModel.c
