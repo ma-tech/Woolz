@@ -260,16 +260,18 @@ WlzObject *Wlz3DViewTransformObj(
       /* one more loop to add the intervals */
       itvl->ileft = vertices[vtxIdx].vtX - kol1;
       line = vertices[vtxIdx].vtY;
-      itvlFlg = 1;
+      itvlFlg = 1; /* interval started */
+      numInts = 1;
       for(i=vtxIdx+1; i < numVtxs; i++){
 
-	/* end of this plane */
+	/* new plane -> interval finished if started */
 	if( vertices[i].vtZ > p ){
 	  if( itvlFlg ){
-	    itvl->iright = vertices[i-1].vtX - kol1;
-	    WlzMakeInterval(line, tmpDomain.i, 1, itvl);
-	    itvl++;
-	    itvlFlg = 0;
+	    itvl[numInts-1].iright = vertices[i-1].vtX - kol1;
+	    WlzMakeInterval(line, tmpDomain.i, numInts, itvl);
+	    itvl += numInts;
+	    itvlFlg = 0; /* interval finished */
+	    numInts = 0;
 	  }
 	  break;
 	}
@@ -279,31 +281,43 @@ WlzObject *Wlz3DViewTransformObj(
 	  itvl->ileft = vertices[i].vtX - kol1;
 	  line = vertices[i].vtY;
 	  itvlFlg = 1;
-	  continue;
+	  numInts = 1;
+	  continue; /* no further tests */
 	}
 	
-	/* check for gap or new-line */
-	if((line < vertices[i].vtY) ||
+	/* check for gap  - increment interval count */
+	if((vertices[i].vtY == line) &&
 	   ((vertices[i].vtX - vertices[i-1].vtX) > 1)){
-	  itvl->iright = vertices[i-1].vtX - kol1;
-	  WlzMakeInterval(line, tmpDomain.i, 1, itvl);
-	  itvl++;
+	  itvl[numInts-1].iright = vertices[i-1].vtX - kol1;
+	  numInts++;
+	  itvl[numInts-1].ileft = vertices[i].vtX - kol1;
+	  itvlFlg = 1;
+	}
+	
+	/* check for new-line */
+	if( line < vertices[i].vtY ){
+	  itvl[numInts-1].iright = vertices[i-1].vtX - kol1;
+	  WlzMakeInterval(line, tmpDomain.i, numInts, itvl);
+	  itvl += numInts;
 	  itvl->ileft = vertices[i].vtX - kol1;
 	  line = vertices[i].vtY;
 	  itvlFlg = 1;
+	  numInts = 1;
 	}
+
       }
 
       /* complete the last interval */
       if( itvlFlg ){
-	itvl->iright = vertices[i-1].vtX - kol1;
-	WlzMakeInterval(line, tmpDomain.i, 1, itvl);
-	itvl++;
+	itvl[numInts-1].iright = vertices[i-1].vtX - kol1;
+	WlzMakeInterval(line, tmpDomain.i, numInts, itvl);
+	itvl += numInts;
       }
 
       /* add the domain to the planedomain */
       domain.p->domains[p - plane1] =
 	WlzAssignDomain(tmpDomain, &errNum);
+      (void) WlzIntervalCount(tmpDomain.i, 0);
 	    
     }
       
