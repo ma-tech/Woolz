@@ -1,26 +1,25 @@
 #ifndef ALCPROTO_H
 #define ALCPROTO_H
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcProto.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Header file which contains function prototypes for
-*		the MRC HGU memory allocation library.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 09-11-00 bill Added AlcKDTTreeFacts().
-* 01-11-00 bill Added AlcKDTree.
-* 02-03-00 bill Added AlcVector and AlcFreeStack.
-* 01-11-99 bill Added AlcDLPList.
-* 01-12-99 bill Added AlcBlockStack.
-************************************************************************/
+/*!
+* \file         AlcProto.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup	Alc
+* \brief        Function prototypes for the MRC HGU memory allocation 
+*		and fundamental type library.
+* \todo		-
+* \bug          None known.
+*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -271,7 +270,8 @@ extern AlcKDTNode	       *AlcKDTGetNN(
 /************************************************************************
 * AlcString.c
 ************************************************************************/
-extern char	*AlcStrDup(const char *srcStr);
+extern char			*AlcStrDup(
+				  const char *srcStr);
 
 /************************************************************************
 * AlcVector.c
@@ -294,6 +294,11 @@ extern void			*AlcVectorExtendAndGet(
 				  unsigned int idx);
 extern unsigned int		AlcVectorCount(
 				  AlcVector *vec);
+extern void			*AlcVectorToArray(
+				  AlcVector *vec,
+				  int fIdx,
+				  int lIdx,
+				  AlcErrno *dstErr);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

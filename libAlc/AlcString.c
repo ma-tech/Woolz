@@ -1,31 +1,37 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcString.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Provides functions for string duplication.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         AlcString.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        Provides functions for string duplication.
+* \todo		-
+* \bug          None found.
+*/
 #include <stdio.h>
 #include <string.h>
 #include <Alc.h>
 
-/************************************************************************
-* Function:	AlcStrDup						*
-* Returns:	char *:			Duplicated string or NULL on	*
-*					error.				*
-* Purpose:	Allocates space for and duplicates the given NULL	*
-*		terminated character string.				*
-* Global refs:	-							*
-* Parameters:	const char *srcStr:	Given string.			*
-************************************************************************/
+/*!
+* \ingroup      Alc
+* \defgroup	AlcString
+* @{
+*/
+
+/*!
+* \return		 		Duplicated string or NULL on error.
+* \brief	Allocates space for and duplicates the given NULL
+*		terminated character string.
+* \param	srcStr			 Given string.
+*/
 char		*AlcStrDup(const char *srcStr)
 {
   char		*dstStr = NULL;
@@ -38,3 +44,6 @@ char		*AlcStrDup(const char *srcStr)
   return(dstStr);
 }
 
+/*!
+* @}
+*/

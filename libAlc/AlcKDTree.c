@@ -1,26 +1,34 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcKDTree.c
-* Date:         November 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A general purpose, arbitrary dimension, integer/floating
+/*!
+* \file         AlcKDTree.c
+* \author       Bill Hill
+* \date         November 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        A general purpose, arbitrary dimension, integer/floating
 *		point binary space partition tree (kD-tree).
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 09-11-00 bill Added AlcKDTTreeFacts().
-************************************************************************/
+* \todo		-
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
 #include <limits.h>
 #include <Alc.h>
+
+/*!
+* \ingroup      Alc
+* \defgroup	AlcKDTree
+* @{
+*/
 
 static void			AlcKDTBoundSet(
 				  AlcKDTTree *tree,
@@ -62,26 +70,24 @@ static AlcKDTNode 		*AlcKDTNodeGetNN(
 				  double minDist,
 				  double *dstDist);
 
-/************************************************************************
-* Function:     AlcKDTTreeNew
-* Returns:      AlcKDTTree *:		KD-tree data structure, or NULL
+/*!
+* \return     				KD-tree data structure, or NULL
 *					on error.
-* Purpose:      Creates a KD-tree data structure.
-* Global refs:  -
-* Parameters:   AlcPointType type:	Type of tree node key.
-*		int dim:		Dimension of tree (must be >= 1).
-*		double tol:		Tollerance for key comparision,
+* \brief        Creates a KD-tree data structure.
+* \param        AlcPointType type:	Type of tree node key.
+* \param	dim			Dimension of tree (must be >= 1).
+* \param	tol			Tollerance for key comparision,
 *					only used if the tree has floating
 *					point keys. If the tolerance is
 *					negative it is set to a default
 *					value.
-*		int nNodes:		Expected number of nodes in the
+* \param	nNodes			Expected number of nodes in the
 *					tree, <= 0 if unknown. This
 *					can be used to optimise node
 *					allocation.
-*               AlcErrno *dstErr:       Destination pointer for error
+* \param        dstErr		    	Destination pointer for error
 *                                       code, may be NULL.
-************************************************************************/
+*/
 AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
 			       int nNodes, AlcErrno *dstErr)
 {
@@ -100,13 +106,13 @@ AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
     switch(type)
     {
       case ALC_POINTTYPE_INT:
-        keySz = sizeof(int) * dim;
+	keySz = sizeof(int) * dim;
 	break;
       case ALC_POINTTYPE_DBL:
-        keySz = sizeof(double) * dim;
+	keySz = sizeof(double) * dim;
 	break;
       default:
-        errNum = ALC_ER_PARAM;
+	errNum = ALC_ER_PARAM;
 	break;
     }
   }
@@ -124,7 +130,7 @@ AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
       tree->tol = (tol < 0.0)? defTol: tol;
       if((tree->nodeBlockSz = nNodes / 10) < minNodeBlockSz)
       {
-        tree->nodeBlockSz = minNodeBlockSz;
+	tree->nodeBlockSz = minNodeBlockSz;
       }
     }
   }
@@ -135,14 +141,12 @@ AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
   return(tree);
 }
 
-/************************************************************************
-* Function:     AlcKDTTreeFacts
-* Returns:      int:			Number of nodes.
-* Purpose:      Prints facts about the kD-tree structure to a file.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree tree
-*		FILE *fP:		Output file stream.
-************************************************************************/
+/*!
+* \return      				Number of nodes.
+* \brief        Prints facts about the kD-tree structure to a file.
+* \param        tree		 	The KD-tree tree
+* \param	fP			Output file stream.
+*/
 int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
 {
   int		nNodes;
@@ -155,28 +159,26 @@ int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
     (void )fprintf(fP, "tol          %-g\n", tree->tol);
     (void )fprintf(fP, "nNodes       %-d\n", tree->nNodes);
     (void )fprintf(fP, "root         0x-%lx\n",
-    		    (unsigned long )(tree->root));
+		    (unsigned long )(tree->root));
     (void )fprintf(fP, "nodeStack    0x%-lx\n",
-    		    (unsigned long)(tree->nodeStack));
+		    (unsigned long)(tree->nodeStack));
     (void )fprintf(fP, "nodeBlockSz  0x%-lx\n",
-    		    (unsigned long)(tree->nodeBlockSz));
+		    (unsigned long)(tree->nodeBlockSz));
     (void )fprintf(fP, "freeStack    0x%-lx\n",
-                   (unsigned long)(tree->freeStack));
+		   (unsigned long)(tree->freeStack));
     (void )fprintf(fP, "\n");
     nNodes = AlcKDTNodeFacts(tree, tree->root, fP);
   }
   return(nNodes);
 }
 
-/************************************************************************
-* Function:     AlcKDTNodeFacts
-* Returns:      int:			Number of child nodes.
-* Purpose:      Prints facts about the kD-tree node structure to a file.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree tree.
-*		AlcKDTNode *node:	The KD-tree node.
-*		FILE *fP:		Output file stream.
-************************************************************************/
+/*!
+* \return      				Number of child nodes.
+* \brief        Prints facts about the kD-tree node structure to a file.
+* \param        tree		 	The KD-tree tree.
+* \param	node			The KD-tree node.
+* \param	fP			Output file stream.
+*/
 static int	AlcKDTNodeFacts(AlcKDTTree *tree, AlcKDTNode *node, FILE *fP)
 {
   int		nNodes = 0;
@@ -187,13 +189,13 @@ static int	AlcKDTNodeFacts(AlcKDTTree *tree, AlcKDTNode *node, FILE *fP)
     (void )fprintf(fP, "idx          %-d\n", node->idx);
     (void )fprintf(fP, "split        %-d\n", node->split);
     (void )fprintf(fP, "parent       0x%-lx (%d)\n",
-    		    (unsigned long )(node->parent),
+		    (unsigned long )(node->parent),
 		    (node->parent)? node->parent->idx: -1);
     (void )fprintf(fP, "childN       0x%-lx (%d)\n",
-    		    (unsigned long )(node->childN),
+		    (unsigned long )(node->childN),
 		    node->childN? node->childN->idx: -1);
     (void )fprintf(fP, "childP       0x%-lx (%d)\n",
-    		    (unsigned long )(node->childP),
+		    (unsigned long )(node->childP),
 		    node->childP? node->childP->idx: -1);
     (void )fprintf(fP, "key          ");
     AlcKDTPointFacts(tree, node->key, fP);
@@ -216,15 +218,13 @@ static int	AlcKDTNodeFacts(AlcKDTTree *tree, AlcKDTNode *node, FILE *fP)
   return(nNodes);
 }
 
-/************************************************************************
-* Function:     AlcKDTPointFacts
-* Returns:      void
-* Purpose:      Prints facts the given point.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree tree.
-*		AlcPointP pnt:		Given point.
-*		FILE *fP:		Output file stream.
-************************************************************************/
+/*!
+* \return       <void>
+* \brief        Prints facts the given point.
+* \param        tree		 	The KD-tree tree.
+* \param	pnt			Given point.
+* \param	fP 			Output file stream.
+*/
 static void	AlcKDTPointFacts(AlcKDTTree *tree, AlcPointP pnt, FILE *fP)
 {
   int		idx;
@@ -242,22 +242,20 @@ static void	AlcKDTPointFacts(AlcKDTTree *tree, AlcPointP pnt, FILE *fP)
   }
 }
 
-/************************************************************************
-* Function:     AlcKDTTreeExpand
-* Returns:      AlcErrno:               Error code.
-* Purpose:      Expands the given tree by allocating more nodes and
+/*!
+* \return:     		               Error code.
+* \brief        Expands the given tree by allocating more nodes and
 *		then adding them to the available node stack.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree data structure.
-************************************************************************/
+* \param        tree		 	The KD-tree data structure.
+*/
 static AlcErrno AlcKDTTreeExpand(AlcKDTTree *tree)
 {
   int		idx,
-  		cnt;
+		cnt;
   AlcKDTNode	*node;
   AlcPointP	key;
   AlcBlockStack	*nStk,
-  		*kStk;
+		*kStk;
   AlcErrno	errNum = ALC_ER_NONE;
 
   if(tree == NULL)
@@ -267,13 +265,13 @@ static AlcErrno AlcKDTTreeExpand(AlcKDTTree *tree)
   else
   {
     nStk = AlcBlockStackNew(tree->nodeBlockSz, sizeof(AlcKDTNode),
-    			    tree->freeStack, &errNum);
+			    tree->freeStack, &errNum);
   }
   if(errNum == ALC_ER_NONE)
   {
     tree->freeStack = nStk;
     kStk = AlcBlockStackNew(tree->nodeBlockSz, 3 * tree->keySz,
-    			    tree->freeStack, &errNum);
+			    tree->freeStack, &errNum);
   }
   if(errNum == ALC_ER_NONE)
   {
@@ -313,14 +311,12 @@ static AlcErrno AlcKDTTreeExpand(AlcKDTTree *tree)
   return(errNum);
 }
 
-/************************************************************************
-* Function:     AlcKDTTreeFree
-* Returns:      AlcErrno:               Error code.
-* Purpose:      Free's the given KD-tree data structure and any nodes
+/*!
+* \return      		               	Error code.
+* \brief        Free's the given KD-tree data structure and any nodes
 *               in the tree.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree data structure.
-************************************************************************/
+* \param        tree			The KD-tree data structure.
+*/
 AlcErrno        AlcKDTTreeFree(AlcKDTTree *tree)
 {
   AlcErrno	errNum = ALC_ER_NONE;
@@ -336,26 +332,24 @@ AlcErrno        AlcKDTTreeFree(AlcKDTTree *tree)
   return(errNum);
 }
 
-/************************************************************************
-* Function:     AlcKDTNodeNew
-* Returns:      AlcKDTNode *:		New node, NULL on error.
-* Purpose:      Allocates a new node and sets it's fields.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree data structure.
-*		AlcKDTNode *parent:	Parent node, NULL if this is
+/*!
+* \return      				New node, NULL on error.
+* \brief        Allocates a new node and sets it's fields.
+* \param        tree		 	The KD-tree data structure.
+* \param	parent			Parent node, NULL if this is
 *					the first node of the tree.
-*		AlcPointP key:		Key values to test agains those
+* \param	key			Key values to test agains those
 *					of the given node.
 *					(int or double) and dimension.
-*		int cmp:		The sign of cmp indicates which
+* \param	cmp			The sign of cmp indicates which
 *					of the parent's children the new
 *					node will become:
-*					  == 0      parent == null
-*					   > 0      childP
-*					   < 0      childN
-*		AlcErrno *dstErr:	Destination pointer for error
+*					  - = 0, parent == null
+*					  - > 0, childP
+*					  - < 0, childN
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcKDTNode	*AlcKDTNodeNew(AlcKDTTree *tree, AlcKDTNode *parent,
 			       AlcPointP key, int cmp,
 			       AlcErrno *dstErr)
@@ -380,20 +374,18 @@ AlcKDTNode	*AlcKDTNodeNew(AlcKDTTree *tree, AlcKDTNode *parent,
   return(node);
 }
 
-/************************************************************************
-* Function:     AlcKDTBoundSet
-* Returns:      void
-* Purpose:      Sets the bounding values of the given node.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree data structure.
-*		AlcKDTNode *node:	Node for which to set bounds.
-*		int cmp:		The sign of cmp indicates which
+/*!
+* \return       <void>
+* \brief        Sets the bounding values of the given node.
+* \param        tree		 	The KD-tree data structure.
+* \param	node			Node for which to set bounds.
+* \param	cmp			The sign of cmp indicates which
 *					of the parent's children the new
 *					node will be:
-*					  == 0      parent == null
-*					   > 0      childP
-*					   < 0      childN
-************************************************************************/
+*					  - = 0, parent == null
+*					  - > 0, childP
+*					  - < 0, childN
+*/
 static void	AlcKDTBoundSet(AlcKDTTree *tree, AlcKDTNode *node, int cmp)
 {
   int		idx;
@@ -429,43 +421,41 @@ static void	AlcKDTBoundSet(AlcKDTTree *tree, AlcKDTNode *node, int cmp)
     {
       if(tree->type == ALC_POINTTYPE_INT)
       {
-        *(node->boundP.kI + parent->split) = *(parent->key.kI + parent->split);
+	*(node->boundP.kI + parent->split) = *(parent->key.kI + parent->split);
       }
       else /* tree->type == ALC_POINTTYPE_DBL */
       {
-        *(node->boundP.kD + parent->split) = *(parent->key.kD + parent->split);
+	*(node->boundP.kD + parent->split) = *(parent->key.kD + parent->split);
       }
     }
     else /* cmp < 0, node will be childN in parent */
     {
       if(tree->type == ALC_POINTTYPE_INT)
       {
-        *(node->boundN.kI + parent->split) = *(parent->key.kI + parent->split);
+	*(node->boundN.kI + parent->split) = *(parent->key.kI + parent->split);
       }
       else /* tree->type == ALC_POINTTYPE_DBL */
       {
-        *(node->boundN.kD + parent->split) = *(parent->key.kD + parent->split);
+	*(node->boundN.kD + parent->split) = *(parent->key.kD + parent->split);
       }
     }
   }
 }
 
-/************************************************************************
-* Function:     AlcKDTNodeAlcNew
-* Returns:      AlcKDTNode *:		New node, NULL on error.
-* Purpose:      Allocates a new node by popping it from the stack of
+/*!
+* \return      				New node, NULL on error.
+* \brief        Allocates a new node by popping it from the stack of
 *		available free nodes.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree data structure.
-*		AlcKDTNode *parent:	Parent node, NULL if this is
+* \param        tree<AlcKDTTree *>: 	The KD-tree data structure.
+* \param	parent			Parent node, NULL if this is
 *					the first node of the tree.
-*		void *keyVal:		Values to test agains those of
+* \param	keyVal			Values to test agains those of
 *					of the given node. These MUST
 *					be of the appropriate type
 *					(int or double) and dimension.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 static AlcKDTNode *AlcKDTNodeAlcNew(AlcKDTTree *tree, AlcErrno *dstErr)
 {
   AlcKDTNode	*node = NULL;
@@ -488,15 +478,13 @@ static AlcKDTNode *AlcKDTNodeAlcNew(AlcKDTTree *tree, AlcErrno *dstErr)
   return(node);
 }
 
-/************************************************************************
-* Function:     AlcKDTNodeFree
-* Returns:      void
-* Purpose:      Free's the given KD-tree node and all it's child nodes
+/*!
+* \return       <void>
+* \brief        Free's the given KD-tree node and all it's child nodes
 *		by pushing them onto the stack of available nodes.
-* Global refs:  -
-* Parameters:   AlcKDTTree *tree: 	The KD-tree data structure.
-*		AlcKDTNode *node: 	The KD-tree node data structure.
-************************************************************************/
+* \param        tree		 	The KD-tree data structure.
+* \param	node		 	The KD-tree node data structure.
+*/
 void		AlcKDTNodeFree(AlcKDTTree *tree, AlcKDTNode *node)
 {
   if(tree && node)
@@ -508,31 +496,29 @@ void		AlcKDTNodeFree(AlcKDTTree *tree, AlcKDTNode *node)
   }
 }
 
-/************************************************************************
-* Function:	AlcKDTInsert
-* Returns:	AlcKDTNode *:		New node added to tree, NULL on
+/*!
+* \return				New node added to tree, NULL on
 *					error or if key matched in tree.
-* Purpose:	Checks for a node in the tree with the given key, if
+* \brief  	Checks for a node in the tree with the given key, if
 *		such a node doesn't exist then insert a new one.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Given tree,
-*		void *keyVal:		Key values which must be
+* \param     	tree			Given tree.
+* \param	keyVal			Key values which must be
 *					consistent with the tree's node
 *					key type and dimension.
-*		AlcKDTNode **dstFndNod:	Destination pointer for matched
+* \param	dstFndNod		Destination pointer for matched
 *					node, may be NULL.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcKDTNode	*AlcKDTInsert(AlcKDTTree *tree,  void *keyVal,
 			      AlcKDTNode **dstFndNod, AlcErrno *dstErr)
 {
 
   int		cmp,
-  		found = 0;
+		found = 0;
   AlcKDTNode	*nodS,
-  		*newNod = NULL,
-  		*tstNod = NULL;
+		*newNod = NULL,
+		*tstNod = NULL;
   AlcPointP	key;
   AlcErrno	errNum = ALC_ER_NONE;
 
@@ -587,21 +573,19 @@ AlcKDTNode	*AlcKDTInsert(AlcKDTTree *tree,  void *keyVal,
   return(newNod);
 }
 
-/************************************************************************
-* Function:	AlcKDTGetMatch
-* Returns:	AlcKDTNode *:		Matched node in tree, NULL on
+/*!
+* \return				Matched node in tree, NULL on
 *					error or if key not matched.
-* Purpose:	Searches for a node with a matching key to the given key.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Given tree,
-*		void *keyVal:		Key values which must be
+* \brief  	Searches for a node with a matching key to the given key.
+* \param     	tree			Given tree,
+* \param	keyVal			Key values which must be
 *					consistent with the tree's node
 *					key type and dimension.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcKDTNode	*AlcKDTGetMatch(AlcKDTTree *tree,  void *keyVal,
-			        AlcErrno *dstErr)
+				AlcErrno *dstErr)
 {
 
   int		cmp;
@@ -640,19 +624,17 @@ AlcKDTNode	*AlcKDTGetMatch(AlcKDTTree *tree,  void *keyVal,
   return(tstNod);
 }
 
-/************************************************************************
-* Function:	AlcKDTGetLeaf
-* Returns:	AlcKDTNode *:		Leaf node containing the given
+/*!
+* \return				Leaf node containing the given
 *					key or NULL if tree has no nodes.
-* Purpose:	Searches for the leaf node containing the given key.
+* \brief  	Searches for the leaf node containing the given key.
 *		progressing downwards in the tree.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Given tree,
-*		AlcKDTNode *node:	Node to search from.
-*		void *keyVal:		Key values which must be
+* \param     	tree			Given tree,
+* \param	node			Node to search from.
+* \param	keyVal			Key values which must be
 *					consistent with the tree's node
 *					key type and dimension.
-************************************************************************/
+*/
 AlcKDTNode 	*AlcKDTGetLeaf(AlcKDTTree *tree,  AlcKDTNode *node,
 			       AlcPointP key)
 {
@@ -660,7 +642,7 @@ AlcKDTNode 	*AlcKDTGetLeaf(AlcKDTTree *tree,  AlcKDTNode *node,
   int		cmp;
   double	distSq = DBL_MAX;
   AlcKDTNode	*tstNod0,
-  		*tstNod1,
+		*tstNod1,
 		*leafNode = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
@@ -684,29 +666,27 @@ AlcKDTNode 	*AlcKDTGetLeaf(AlcKDTTree *tree,  AlcKDTNode *node,
   return(leafNode);
 }
 
-/************************************************************************
-* Function:	AlcKDTGetNN
-* Returns:	AlcKDTNode *:		Nearest neighbour node in tree,
+/*!
+* \return				Nearest neighbour node in tree,
 *					NULL on error or if tree has no
 *					nodes.
-* Purpose:	Searches for the nearest neighbour node to the given
+* \brief  	Searches for the nearest neighbour node to the given
 *		key within the tree.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Given tree,
-*		void *keyVal:		Key values which must be
+* \param     	tree			Given tree,
+* \param	keyVal			Key values which must be
 *					consistent with the tree's node
 *					key type and dimension.
-*		double minDist:		Maximum distance between given
+* \param	minDist			Maximum distance between given
 *					key and the nearest neighbour,
 *					any node at a greater distance
 *					is not a nearest neighbour.
 *					Confusingly used for the minimum
 *					key-node distance found.
-*		double *dstNNDist:	Destination pointer for distance
+* \param	dstNNDist		Destination pointer for distance
 *					to nearest neighbour, may be NULL.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
 			     double minDist, double *dstNNDist,
 			     AlcErrno *dstErr)
@@ -714,11 +694,11 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
 
   int		cmp;
   double	dist,
-  		distSq;
+		distSq;
   AlcPointP	key;
   AlcKDTNode	*tstNode0,
 		*tstNode1,
-  		*nNNode = NULL;
+		*nNNode = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
   if((tree == NULL) || (keyVal == NULL))
@@ -743,9 +723,9 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
        * or the parent node does not intersect the hyper-sphere with
        * centre at key with radius minDist). */
       while(((tstNode1 = tstNode0->parent) != NULL) &&
-            AlcKDTNodeIntersectsSphere(tree, tstNode1, key, minDist))
+	    AlcKDTNodeIntersectsSphere(tree, tstNode1, key, minDist))
       {
-        tstNode0 = tstNode1;
+	tstNode0 = tstNode1;
       }
       /* Walk back down the tree testing nodes that intersect the hyper-sphere
        * until either the child is NULL (at a leaf) or the child does not
@@ -755,7 +735,7 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
       if(tstNode1 && (dist < minDist))
       {
 	minDist = dist;
-        nNNode = tstNode1;
+	nNNode = tstNode1;
       }
     }
   }
@@ -773,28 +753,26 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
   return(nNNode);
 }
 
-/************************************************************************
-* Function:	AlcKDTNodeGetNN
-* Returns:	AlcKDTNode *:		Nearest neighbour node in tree,
+/*!
+* \return:				Nearest neighbour node in tree,
 *					NULL on error or if tree has no
 *					nodes.
-* Purpose:	Walks down the tree testing nodes that intersect the
+* \brief  	Walks down the tree testing nodes that intersect the
 * 		hyper-sphere until either the child is NULL (at a leaf)
 *		or the child does not intersect the hyper-sphere,
 *		updating the nearest neighbour node and distance while
 *		walking.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Given tree,
-*		AlcKDTNode *node:	Given node.
-*		AlcPointP key:		Given key.
-*		double minDist:		Minimum distance between given
+* \param     	tree			Given tree,
+* \param	node			Given node.
+* \param	key			Given key.
+* \param	minDist			Minimum distance between given
 *					key and the nearest neighbour,
 *					any node at a greater distance
 *					is not a nearest neighbour.
-*		double *dstDist:	Destination pointer for minimum
+* \param	doubleminDist		Destination pointer for minimum
 *					distance to nearest neighbour
 *					so far.
-************************************************************************/
+*/
 static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 				   AlcPointP key, double minDist,
 				   double *dstDist)
@@ -802,7 +780,7 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
   double	tstDist,
 		tstDistSq;
   AlcKDTNode	*tstNode,
-  		*nNNode = NULL;
+		*nNNode = NULL;
 
   /* If this node's bounding box intersects the hyper-sphere check
    * the node and its children for the nearest neighbour. */
@@ -817,20 +795,20 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
     if(node->childN)
     {
       tstNode = AlcKDTNodeGetNN(tree, node->childN, key, minDist,
-      				&tstDist); 			/* Recursive */
+				&tstDist); 			/* Recursive */
       if(tstNode && (tstDist < minDist))
       {
-        nNNode = tstNode;
+	nNNode = tstNode;
 	minDist = tstDist;
       }
     }
     if(node->childP)
     {
       tstNode = AlcKDTNodeGetNN(tree, node->childP, key, minDist,
-      				&tstDist); 			/* Recursive */
+				&tstDist); 			/* Recursive */
       if(tstNode && (tstDist < minDist))
       {
-        nNNode = tstNode;
+	nNNode = tstNode;
 	minDist = tstDist;
       }
     }
@@ -840,11 +818,10 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 }
 
 
-/************************************************************************
-* Function:	AlcKDTNodeIntersectsSphere
-* Returns:	int:			Non zero if the given node
+/*!
+* \return				Non zero if the given node
 *					intersects the given sphere.
-* Purpose:	Computes whether the given node intersects the given
+* \brief  	Computes whether the given node intersects the given
 *		hyper-sphere.
 *		There are 3 algorithms that can be used.
 *		* Always true test, NOT RECOMENDED for anything except
@@ -858,13 +835,12 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 *		  and the hyper-sphere itself. This is faster than
 *		  the box intersection test in dimensions higher than
 *		  2, with little difference (~10%) in 2D.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Given tree,
-*		AlcKDTNode *node:	Given node.
-*		AlcPointP key:		Given key at centre of the
+* \param     	tree			Given tree,
+* \param	node			Given node.
+* \param	key			Given key at centre of the
 *					hyper-sphere.
-*		double radius:		Radius of the hyper-sphere.
-************************************************************************/
+* \param	radius			Radius of the hyper-sphere.
+*/
 static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 					   AlcPointP centre, double radius)
 /* #define ALC_KDT_ALWAYSTRUE_TEST */
@@ -909,9 +885,9 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
   int  		idx,
 		inSphere = 1;
   double	tD0,
-  		tD1,
+		tD1,
 		radiusSq,
-  		sum;
+		sum;
 
   /* This code checks for the intersection with the hyper-sphere's
    * itself and not just it's bounding box. */
@@ -928,7 +904,7 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
       }
       else if((tD0 = tD1 - *(node->boundP.kI + idx)) > 0.0)
       {
-        sum += tD0 * tD0;
+	sum += tD0 * tD0;
       }
     } while(++idx < tree->dim);
   }
@@ -937,13 +913,13 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
     do
     {
       if((tD0 = (tD1 = *(centre.kD + idx)) -
-                *(node->boundN.kD + idx)) < tree->tol)
+		*(node->boundN.kD + idx)) < tree->tol)
       {
 	sum += tD0 * tD0;
       }
       else if((tD0 = tD1 - *(node->boundP.kD + idx)) > -(tree->tol))
       {
-        sum += tD0 * tD0;
+	sum += tD0 * tD0;
       }
     } while(++idx < tree->dim);
   }
@@ -952,16 +928,13 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 }
 #endif /* ALC_KDT_SPHEREINTERSECT_TEST */
 
-/************************************************************************
-* Function:	AlcKDTValuesSet
-* Returns:	void
-* Purpose:	Sets the first value to the value of the second.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Tree, used to determine value
-*					type.
-*		AlcPointP val0:		First value.
-*		AlcPointP val1:		Second value.
-************************************************************************/
+/*!
+* \return	<void>
+* \brief  	Sets the first value to the value of the second.
+* \param     	tree			Tree, used to determine value type.
+* \param	val0			First value.
+* \param	val1			Second value.
+*/
 static void	AlcKDTValuesSet(AlcKDTTree *tree,
 				AlcPointP val0, AlcPointP val1)
 {
@@ -986,22 +959,20 @@ static void	AlcKDTValuesSet(AlcKDTTree *tree,
   }
 }
 
-/************************************************************************
-* Function:	AlcKDTKeyDistSq
-* Returns:	double:			Square of distance between the
+/*!
+* \return 				Square of distance between the
 *					two keys.
-* Purpose:	Computes the squared distance between the two keys.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Tree, used to determine key type.
-*		AlcPointP key0:		First key.
-*		AlcPointP key1:		Second key.
-************************************************************************/
+* \brief  	Computes the squared distance between the two keys.
+* \param     	tree			Tree, used to determine key type.
+*		key0			First key.
+*		key1			Second key.
+*/
 static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
-			        AlcPointP key0, AlcPointP key1)
+				AlcPointP key0, AlcPointP key1)
 {
   int		idx;
   double	tD0,
-  		distSq = 0;
+		distSq = 0;
 
   idx = 0;
   if(tree->type == ALC_POINTTYPE_INT)
@@ -1025,25 +996,23 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
   return(distSq);
 }
 
-/************************************************************************
-* Function:	AlcKDTNodeValueCompare
-* Returns:	int:			Result of comparision 0, -ve or
+/*!
+* \return				Result of comparision 0, -ve or
 *					+ve.
-* Purpose:	Compares the values of the given key with those of the
+* \brief  	Compares the values of the given key with those of the
 *		given node.
-* Global refs:	-
-* Parameters:	AlcKDTTree *tree:	Tree, used to determine key type
+* \param     	tree			Tree, used to determine key type
 *					and tolerance.
-*		AlcKDTNode *node:	Given node.
-*		AlcPointP key:		Values to test agains those of
+* \param	node			Given node.
+* \param	key			Values to test agains those of
 *					of the given node.
-************************************************************************/
+*/
 static int	AlcKDTNodeValueCompare(AlcKDTTree *tree, AlcKDTNode *node,
 				       AlcPointP key)
 #ifdef OLD_CODE
 {
   int		jIdx,
-  		kIdx,
+		kIdx,
 		cmp = 0;
   double	diff;
 
@@ -1095,7 +1064,7 @@ static int	AlcKDTNodeValueCompare(AlcKDTTree *tree, AlcKDTNode *node,
 #else
 {
   int		jIdx,
-  		kIdx,
+		kIdx,
 		cmp = 0;
   double	diff;
 
@@ -1132,13 +1101,13 @@ static int	AlcKDTNodeValueCompare(AlcKDTTree *tree, AlcKDTNode *node,
 int		main(int argc, char *argv[])
 {
   int		idx0,
-  		idx1;
+		idx1;
   double	tD0,
-  		dist,
+		dist,
 		sumDist;
   AlcKDTTree	*tree;
   AlcKDTNode	*newNode,
-  		*fndNode;
+		*fndNode;
   AlcErrno	errNum = ALC_ER_NONE;
 #ifdef ALC_KDT_TEST_SMALL
   int		nNodes = 10;
@@ -1191,7 +1160,7 @@ int		main(int argc, char *argv[])
       tD0 = (dat[0] * dat[0]) + (dat[1] * dat[1]);
       if(tD0 < dist)
       {
-        dist = tD0;
+	dist = tD0;
 	sumDist += sqrt(dist);
       }
     }
@@ -1202,14 +1171,14 @@ int		main(int argc, char *argv[])
 #ifdef ALC_KDT_TEST_SMALL
 #ifdef ALC_KDT_TEST_SMALL_INT
   if((tree = AlcKDTTreeNew(ALC_POINTTYPE_INT, 2, -1.0, 0,
-  			   &errNum)) != NULL)
+			   &errNum)) != NULL)
 #else /* ! ALC_KDT_TEST_SMALL_INT */
   if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, 2, -1.0, 0,
-  			   &errNum)) != NULL)
+			   &errNum)) != NULL)
 #endif /* ALC_KDT_TEST_SMALL_INT */
 #else /* ! ALC_KDT_TEST_SMALL */
   if((tree = AlcKDTTreeNew(ALC_POINTTYPE_DBL, 2, -1.0, nNodes / 2,
-  			   &errNum)) != NULL)
+			   &errNum)) != NULL)
 #endif /* ALC_KDT_TEST_SMALL */
   {
     idx0 = 0;
@@ -1241,7 +1210,7 @@ int		main(int argc, char *argv[])
       fndNode = AlcKDTGetNN(tree, dat, DBL_MAX, &dist, &errNum);
       if(fndNode)
       {
-        sumDist += dist;
+	sumDist += dist;
       }
       ++idx0;
     } while((errNum == ALC_ER_NONE) && (idx0 < nNodes));
@@ -1254,3 +1223,7 @@ int		main(int argc, char *argv[])
   return(errNum);
 }
 #endif /* ALC_KDT_TEST */
+
+/*!
+* @}
+*/

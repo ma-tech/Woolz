@@ -1,42 +1,48 @@
-#pragma ident "MRC HGU $Id"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcVector.c
-* Date:         March 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A general purpose 1D vector (extensible array).
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 20-07-00 bill	Fixed leak in AlcVectorFree().
-* 04-06-2000 bill Fixed loop bug in AlcVectorExtend().
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlcVector.c
+* \author       Bill Hill
+* \date         March 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        A general purpose 1D vector (extensible array).
+* \todo		-
+* \bug          None found.
+*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <Alc.h>
 
-/************************************************************************
-* Function:	AlcVectorNew
-* Returns:	AlcVector *:		New vector, or NULL on error.
-* Purpose:	Creates a new 1D vector (extensible array) with
+/*!
+* \ingroup      Alc
+* \defgroup	AlcVector
+* @{
+*/
+
+/*!
+* \return				New vector, or NULL on error.
+* \brief	Creates a new 1D vector (extensible array) with
 *		the required element size and initial number of
 *		elements. Vector elements are initialised by setting
 *		all bytes to zero.
-* Global refs:	-
-* Parameters:	unsigned int elmCnt:	Initial number of elements.
-*		unsigned int elmSz:	Size of elements.
-*		unsigned int int blkSz:	Number of elements per block,
+* \param	elmCnt			Initial number of elements.
+* \param	elmSz			Size of elements.
+* \param	blkSz			Number of elements per block,
 *					also minimum initial number of
 *					blocks allocated.
 *					If blkSz <= 0 then a default
 *					a defualt value is used.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcVector	*AlcVectorNew(unsigned int elmCnt, unsigned int elmSz,
 			      unsigned int blkSz, AlcErrno *dstErr)
 {
@@ -114,13 +120,11 @@ AlcVector	*AlcVectorNew(unsigned int elmCnt, unsigned int elmSz,
   return(nVec);
 }
 
-/************************************************************************
-* Function:	AlcVectorFree
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Free's the given vector.
-* Global refs:	-
-* Parameters:	AlcVector *vec:		Vector to free.
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Free's the given vector.
+* \param	vec			Vector to free.
+*/
 AlcErrno	AlcVectorFree(AlcVector *vec)
 {
   AlcErrno	errNum = ALC_ER_NONE;
@@ -144,15 +148,13 @@ AlcErrno	AlcVectorFree(AlcVector *vec)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcVectorExtend
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Extend the vector for at least the given number of 
+/*!
+* \return				Error code.
+* \brief	Extend the vector for at least the given number of 
 *		elements.
-* Global refs:	-
-* Parameters:	AlcVector *vec:		Vector to extend.
-*		unsigned int elmCnt:	Required number of elements.
-************************************************************************/
+* \param	vec			Vector to extend.
+* \param	elmCnt			Required number of elements.
+*/
 AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
 {
   int		blkIdx,
@@ -232,14 +234,12 @@ AlcErrno	AlcVectorExtend(AlcVector *vec, unsigned int elmCnt)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcVectorItemGet
-* Returns:	void *:			Vector item, or NULL on error.
-* Purpose:	Gets a pointer to the vector item with the given index.
-* Global refs:	-
-* Parameters:	AlcVector *vec:		Vector to extend.
-*		unsigned int idx:	Given item index.
-************************************************************************/
+/*!
+* \return				Vector item, or NULL on error.
+* \brief	Gets a pointer to the vector item with the given index.
+* \param	vec			Vector to extend.
+* \param	idx			Given item index.
+*/
 void		*AlcVectorItemGet(AlcVector *vec, unsigned int idx)
 {
   unsigned int	blkIdx;
@@ -254,15 +254,13 @@ void		*AlcVectorItemGet(AlcVector *vec, unsigned int idx)
 }
 
 
-/************************************************************************
-* Function:	AlcVectorExtendAndGet
-* Returns:	void *:			Vector item, or NULL on error.
-* Purpose:	Extends the vector and gets the vector item with the 
+/*!
+* \return				Vector item, or NULL on error.
+* \brief	Extends the vector and gets the vector item with the 
 * 		given index
-* Global refs:	-
-* Parameters:	AlcVector *vec:		Vector to extend.
-*		unsigned int idx:	Given item index.
-************************************************************************/
+* \param	vec			Vector to extend.
+* \param	idx			Given item index.
+*/
 void		*AlcVectorExtendAndGet(AlcVector *vec, unsigned int idx)
 {
   unsigned int	blkIdx;
@@ -278,14 +276,12 @@ void		*AlcVectorExtendAndGet(AlcVector *vec, unsigned int idx)
   return(data);
 }
 
-/************************************************************************
-* Function:	AlcVectorCount
-* Returns:	unsigned int:		Number of elements in vector.
-* Purpose:	Gets the number of elements that the vector can hold
+/*!
+* \return				Number of elements in vector.
+* \brief	Gets the number of elements that the vector can hold
 *		before it needs to be extended.
-* Global refs:	-
-* Parameters:	AlcVector *vec:		Vector to extend.
-************************************************************************/
+* \param	vec			Vector to extend.
+*/
 unsigned int	AlcVectorCount(AlcVector *vec)
 {
   unsigned int	cnt = 0;
@@ -297,3 +293,69 @@ unsigned int	AlcVectorCount(AlcVector *vec)
   }
   return(cnt);
 }
+
+/*!
+* \return		 		Array of copied elements.
+* \brief	Creates a 1 dimensional array which contains copies
+*		of the vectors elements.
+* \param	vec		 	Given vector.
+* \param	fIdx	 		Index of the first element in the
+*					vector to copy, becomes the first
+*					element of the array.
+* \param	lIdx	 		Index of the last element in the
+*					vector to copy, becomes the last
+*					element of the array.
+* \param	dstErr			Destination pointer for error
+*					code, may be NULL.
+*/
+void		*AlcVectorToArray(AlcVector *vec, int fIdx, int lIdx,
+				  AlcErrno *dstErr)
+{
+  int		aIdx,
+		fVIdx,
+		lVIdx,
+  		fVBlkIdx,
+		lVBlkIdx;
+  void		*array = NULL;
+  AlcErrno	errNum = ALC_ER_NONE;
+
+  if(vec == NULL)
+  {
+    errNum = ALC_ER_NULLPTR;
+  }
+  else if((fIdx < 0) || (lIdx < fIdx))
+  {
+    errNum = ALC_ER_PARAM;
+  }
+  else if((array = AlcCalloc(lIdx - fIdx + 1, vec->elmSz)) == NULL)
+  {
+    errNum = ALC_ER_ALLOC;
+  }
+  else
+  {
+    aIdx = 0;
+    fVBlkIdx = fIdx / vec->blkSz;
+    lVBlkIdx = lIdx / vec->blkSz;
+    fVIdx = fIdx % vec->blkSz;
+    while(fVBlkIdx <= lVBlkIdx)
+    {
+      lVIdx = (fVBlkIdx == lVBlkIdx)? lIdx % vec->blkSz: vec->blkSz - 1;
+      (void )memcpy((void *)((char *)array + (aIdx * vec->elmSz)),
+      		    (void *)((char *)(*(vec->blocks + fVBlkIdx)) + 
+		             (fVIdx * vec->elmSz)),
+    		    (lVIdx - fVIdx + 1) * vec->elmSz);
+      aIdx += lVIdx - fVIdx + 1;
+      fVIdx = 0;
+      ++fVBlkIdx;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(array);
+}
+
+/*!
+* @}
+*/

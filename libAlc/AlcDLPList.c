@@ -1,40 +1,46 @@
-#pragma ident "MRC HGU $Id"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcDLPList.c
-* Date:         November 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A general purpose doubly linked circular list of
-*		pointers.
-*		This code has been derived from the hguDlpList but
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlcDLPList.c
+* \author       Bill Hill
+* \date         November 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        A general purpose doubly linked circular list of pointers.
+* \todo		-
+* \bug          None known.
+* \note		This code has been derived from the hguDlpList but
 *		has been stripped down for efficiency.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <Alc.h>
+
+/*!
+* \ingroup      Alc
+* \defgroup	AlcDLPList
+* @{
+*/
 
 static void	AlcDLPListSortPv(AlcDLPItem *low, AlcDLPItem *high,
 				 int lowIdx, int highIdx,
 				 int (*entryCompFn)(void *, void *));
 
 
-/************************************************************************
-* Function:	AlcDLPListNew
-* Returns:	AlcDLPList *:		List data structure, or	NULL on
+/*!
+* \return			 	List data structure, or NULL on
 *					error.
-* Purpose:	Creates a list data structure which is required by all
-*		the other AlcDLPList functions.
-* Global refs:	-
-* Parameters:	AlcErrno *dstErr:	Destination pointer for error
+* \brief	Creates a list data structure which is required by all
+*               the other AlcDLPList functions.
+* \param	dstErr 			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcDLPList	*AlcDLPListNew(AlcErrno *dstErr)
 {
   AlcDLPList	*list = NULL;
@@ -51,19 +57,17 @@ AlcDLPList	*AlcDLPListNew(AlcErrno *dstErr)
   return(list);
 }
 
-/************************************************************************
-* Function:	AlcDLPItemNew
-* Returns:	AlcDLPItem *:		List item structure, or	NULL on
+/*!
+* \return				List item structure, or	NULL on
 *					error.
-* Purpose:	Creates a list item data structure for building into
+* \brief	Creates a list item data structure for building into
 *		a AlcDLPList list.
-* Global refs:	-
-* Parameters:	void *entry:		New list entry.
-*		void (*freeFn)(void *)): Function that will be called
+* \param	entry 			New list entry.
+* \param	freeFn 			Function that will be called
 *					(if not NULL) to free the entry.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr 			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcDLPItem	*AlcDLPItemNew(void *entry, void (*freeFn)(void *),
 			       AlcErrno *dstErr)
 {
@@ -86,14 +90,11 @@ AlcDLPItem	*AlcDLPItemNew(void *entry, void (*freeFn)(void *),
   return(newItem);
 }
 
-/************************************************************************
-* Function:	AlcDLPListFree
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Free's the given list data structure and any list
-*		items.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Free's the given list data structure and any list items.
+* \param	list 		 	The list data structure.
+*/
 AlcErrno	AlcDLPListFree(AlcDLPList *list)
 {
   AlcDLPItem 	*head,
@@ -127,13 +128,11 @@ AlcErrno	AlcDLPListFree(AlcDLPList *list)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPListEntryInsert
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Inserts the given entry into the list before the given
+/*!
+* \return				Error code.
+* \brief	Inserts the given entry into the list before the given
 *		item.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
+* \param	list 			The list data structure.
 *		AlcDLPItem *insBefore:	Given item that entry is to
 *					be inserted before, if NULL
 *					then the item is inserted at
@@ -142,7 +141,7 @@ AlcErrno	AlcDLPListFree(AlcDLPList *list)
 *		void (*freeFn)(void *)): Function that will be called
 *					(if not NULL) to free the entry
 *					should the item be deleted.
-************************************************************************/
+*/
 AlcErrno	AlcDLPListEntryInsert(AlcDLPList *list, AlcDLPItem *insBefore,
 				      void *entry, void (*freeFn)(void *))
 {
@@ -185,22 +184,20 @@ AlcErrno	AlcDLPListEntryInsert(AlcDLPList *list, AlcDLPItem *insBefore,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPListEntryAppend
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Appends the given entry into the list after the given
+/*!
+* \return				Error code.
+* \brief	Appends the given entry into the list after the given
 *		item.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		AlcDLPItem *appAfter: 	Given item that entry is to
+* \param	list 			The list data structure.
+* \param	appAfter 		 Given item that entry is to
 *					be inserted after, if NULL
 *					then the item is appended at
 *					the tail of the list.
-*		void *entry:		New list entry.
-*		void (*freeFn)(void *)): Function that will be called
+* \param	entry 			New list entry.
+* \param	freeFn 			 Function that will be called
 *					(if not NULL) to free the entry
 *					should the item be deleted.
-************************************************************************/
+*/
 AlcErrno	AlcDLPListEntryAppend(AlcDLPList *list, AlcDLPItem *appAfter,
 				      void *entry, void (*freeFn)(void *))
 {
@@ -242,20 +239,18 @@ AlcErrno	AlcDLPListEntryAppend(AlcDLPList *list, AlcDLPItem *appAfter,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPItemUnlink
-* Returns:	AlcDLPItem *:		Next list item after the item
+/*!
+* \return				Next list item after the item
 *					removed, NULL on error or if
 *					last item removed.
-* Purpose:	Removes the item from the list, but does not free the
+* \brief	Removes the item from the list, but does not free the
 *		item unless the freeItem flag is set.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		AlcDLPItem *item:	Item to be removed.
-*		int freeItem;		Free item if non-zero.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	list 			The list data structure.
+* \param	item 			Item to be removed.
+* \param	freeItem 		Free item if non-zero.
+* \param	dstErr 			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcDLPItem	*AlcDLPItemUnlink(AlcDLPList *list, AlcDLPItem *item,
 				  int freeItem, AlcErrno *dstErr)
 {
@@ -301,19 +296,17 @@ AlcDLPItem	*AlcDLPItemUnlink(AlcDLPList *list, AlcDLPItem *item,
   return(nextItem);
 }
 
-/************************************************************************
-* Function:	AlcDLPItemInsert
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Inserts a new item into the list before the given
+/*!
+* \return				Error code.
+* \brief	Inserts a new item into the list before the given
 *		item.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		AlcDLPItem *insBefore: Given item that entry is to
+* \param	list 			The list data structure.
+* \param	insBefore 		Given item that entry is to
 *					be inserted before, if NULL
 *					then the item is inserted at
 *					the head of the list.
-*		AlcDLPItem *newItem: New item to insert.
-************************************************************************/
+* \param	newItem 		New item to insert.
+*/
 AlcErrno	AlcDLPItemInsert(AlcDLPList *list,
 				     AlcDLPItem *insBefore,
 				     AlcDLPItem *newItem)
@@ -353,19 +346,17 @@ AlcErrno	AlcDLPItemInsert(AlcDLPList *list,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPItemAppend
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Appends a new item into the list after the given
+/*!
+* \return				Error code.
+* \brief	Appends a new item into the list after the given
 *		item.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		AlcDLPItem *appAfter: Given item that entry is to
+* \param	list 			The list data structure.
+* \param	appAfter 		Given item that entry is to
 *					be inserted after, if NULL
 *					then the item is appended at
 *					the tail of the list.
-*		AlcDLPItem *newItem: New item to insert.
-************************************************************************/
+* \param	newItem 		New item to insert.
+*/
 AlcErrno	AlcDLPItemAppend(AlcDLPList *list,
 				 AlcDLPItem *appAfter,
 				 AlcDLPItem *newItem)
@@ -404,14 +395,12 @@ AlcErrno	AlcDLPItemAppend(AlcDLPList *list,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPItemFree
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Free's the list item which has already been removed
+/*!
+* \return		 		Error code.
+* \brief	Free's the list item which has already been removed
 *		from the list.
-* Global refs:	-
-* Parameters:	AlcDLPItem *item:	Item to be deleted.
-************************************************************************/
+* \param	item 		 	Item to be deleted.
+*/
 AlcErrno	AlcDLPItemFree(AlcDLPItem *item)
 {
   AlcErrno	errNum = ALC_ER_NONE;
@@ -431,14 +420,12 @@ AlcErrno	AlcDLPItemFree(AlcDLPItem *item)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPListSort
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Sorts the entire list using the given entry comparison
+/*!
+* \return				Error code.
+* \brief	Sorts the entire list using the given entry comparison
 *		function.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		int (*entryCompFn)(void *, void *): Given entry
+* \param	AlcDLPList *list:	The list data structure.
+* \param	entryCompFn 		Given entry
 *					comparison function which must
 *					return  an integer less than,
 *					equal to, or greater than zero
@@ -446,7 +433,7 @@ AlcErrno	AlcDLPItemFree(AlcDLPItem *item)
 *					is to be  considered  less
 *					than, equal to, or greater than
 *					the second.
-************************************************************************/
+*/
 AlcErrno	AlcDLPListSort(AlcDLPList *list,
 			       int (*entryCompFn)(void *, void *))
 {
@@ -464,23 +451,21 @@ AlcErrno	AlcDLPListSort(AlcDLPList *list,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcDLPListSortPv
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Private recursive quick sort function to sorts the
+/*!
+* \return				Error code.
+* \brief	Private recursive quick sort function to sorts the
 *		list using the given entry comparison function.
 *		The values of the indicies must be such that lowIdx is
 *		less than highIdx and their difference is equal to one
 *		more than the number of items between them (excluding
 *		the items themselves).
-* Global refs:	-
-* Parameters:	AlcDLPItem *low:	Item nearest to tail in section
+* \param	low 			Item nearest to tail in section
 *					to be sorted.
-*		AlcDLPItem *high:	Item nearest to head in section
+* \param	high 			Item nearest to head in section
 *					to be sorted.
-*		int lowIdx:		Index for item nearest to tail.
-*		int highIdx:		Index for item nearest to head.
-*		int (*entryCompFn)(void *, void *): Given entry
+* \param	lowIdx 			Index for item nearest to tail.
+* \param	highIdx 		Index for item nearest to head.
+* \param	entryCompFn 		Given entry
 *					comparison function which must
 *					return  an integer less than,
 *					equal to, or greater than zero
@@ -488,7 +473,7 @@ AlcErrno	AlcDLPListSort(AlcDLPList *list,
 *					is to be  considered  less
 *					than, equal to, or greater than
 *					the second.
-************************************************************************/
+*/
 static void	AlcDLPListSortPv(AlcDLPItem *low, AlcDLPItem *high,
 				 int lowIdx, int highIdx,
 				 int (*entryCompFn)(void *, void *))
@@ -560,16 +545,14 @@ static void	AlcDLPListSortPv(AlcDLPItem *low, AlcDLPItem *high,
   }
 }
 
-/************************************************************************
-* Function:	AlcDLPListCount
-* Returns:	int:			Number of items in list. This
+/*!
+* \return:				Number of items in list. This
 *					is always >= 0.
-* Purpose:	Returns the number of items in the list.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \brief	Returns the number of items in the list.
+* \param	list 			The list data structure.
+* \param	dstErr 			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 int		AlcDLPListCount(AlcDLPList *list, AlcErrno *dstErr)
 {
   int		cnt = 0;
@@ -597,15 +580,13 @@ int		AlcDLPListCount(AlcDLPList *list, AlcErrno *dstErr)
   return(cnt);
 }
 
-/************************************************************************
-* Function:	AlcDLPListIterate
-* Returns:	AlcDLPItem:		Last item.
-* Purpose:	Iterates the given function through the list, starting
+/*!
+* \return				Last item.
+* \brief	Iterates the given function through the list, starting
 *		with the given item. The iteration may proceed towards
 *		either the head or tail of the list. The iterated
-*		function must take the form:
-*		  int func(AlcDLPList *, AlcDLPItem *, void *)
-*		As in the example:
+*		function must take the form
+* \verbatim
 *		  int MyItemCount(AlcDLPList *list,
 *				 AlcDLPItem *item,
 *				 void *myData)
@@ -619,25 +600,25 @@ int		AlcDLPListCount(AlcDLPList *list, AlcErrno *dstErr)
 *		    }
 *		    return(list->head != item->next);
 *		  }
+* \endverbatim
 *		Where the data parameter is the data supplied to this
 *		(AlcDLPListIterate) function.
 *		The iteration continues until the itterated function
 *		returns zero.
-* Global refs:	-
-* Parameters:	AlcDLPList *list:	The list data structure.
-*		AlcDLPItem *item:	First item of iteration which
+* \param	list 			The list data structure.
+* \param	item 			First item of iteration which
 *					may be NULL to indicate list
 *					head (dir == _TO_TAIL) or tail
 *					(dir == _TO_HEAD).
-*		AlcDirection dir: 	Iteration direction, either
+* \param	dir 		 	Iteration direction, either
 *					towards the head or the tail.
-*		int (*iterFn)():	Function to be iterated, see
+* \param	iterFn 			Function to be iterated, see
 *					example above.
-*		void *iterData:		Data supplied to the iterated
+* \param	iterData 		Data supplied to the iterated
 *					function.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr 			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcDLPItem	*AlcDLPListIterate(AlcDLPList *list, AlcDLPItem *item,
 				   AlcDirection dir,
 				   int (*iterFn)(AlcDLPList *,
@@ -689,3 +670,7 @@ AlcDLPItem	*AlcDLPListIterate(AlcDLPList *list, AlcDLPItem *item,
   }
   return(lastItem);
 }
+
+/*!
+* @}
+*/

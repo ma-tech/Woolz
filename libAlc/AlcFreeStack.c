@@ -1,23 +1,31 @@
-#pragma ident "MRC HGU $Id"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcBlockStack.c
-* Date:         March 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A general purpose free stack which allows a single
-*		pointer to be used to keep a list of data to be
-*		free'd.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlcFreeStack.c
+* \author       Bill Hill
+* \date         March 2000
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        A general purpose free stack which allows a single
+*               pointer to be used to keep a list of data to be free'd.
+* \todo		-
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <Alc.h>
+
+/*!
+* \ingroup      Alc
+* \defgroup	AlcFreeStack
+* @{
+*/
 
 typedef struct _AlcFreeStack
 {
@@ -25,19 +33,17 @@ typedef struct _AlcFreeStack
   struct _AlcFreeStack *prev;
 } AlcFreeStack;
 
-/************************************************************************
-* Function:	AlcFreeStackPush
-* Returns:	void *:			New free stack pointer or
+/*!
+* \return				New free stack pointer or
 *					NULL on error.
-* Purpose:	Push's the given pointer onto the free stack on top
+* \brief	Push's the given pointer onto the free stack on top
 *		of the previous free stack pointer.
-* Global refs:	
-* Parameters:	void *prev:		Previous free stack pointer.
-*		void *data:		New pointer to push onto the
+* \param	prev 			Previous free stack pointer.
+* \param	data 			New pointer to push onto the
 *					free stack.
-*		AlcErrno *dstErr:	Destination error pointer,
+* \param	dstErr 			Destination error pointer,
 *					may be NULL
-************************************************************************/
+*/
 void 		*AlcFreeStackPush(void *prev, void *data, AlcErrno *dstErr)
 {
   AlcFreeStack *fPtr = NULL;
@@ -59,21 +65,19 @@ void 		*AlcFreeStackPush(void *prev, void *data, AlcErrno *dstErr)
   return((void *)fPtr);
 }
 
-/************************************************************************
-* Function:	AlcFreeStackPop
-* Returns:	void *:			New free stack pointer or
+/*!
+* \return					New free stack pointer or
 *					NULL on error.
-* Purpose:	Pop's the top entry from the free stack. Returns a
+* \brief	Pop's the top entry from the free stack. Returns a
 *		free stack pointer and set's the given destination
 *		pointer to the entry's data. The entry's data is NOT
 *		free'd
-* Global refs:	-
-* Parameters:	void *prev:		The free stack.
-*		void **dstData:		Destination data pointer, may
+* \param	prev 			The free stack.
+* \param	dstData 		Destination data pointer, may
 *					be NULL.
-*		AlcErrno *dstErr:	Destination error pointer,
+* \param	dstErr 			Destination error pointer,
 *					may be NULL.
-************************************************************************/
+*/
 void 		*AlcFreeStackPop(void *prev, void **dstData, AlcErrno *dstErr)
 {
   AlcFreeStack	*entry0,
@@ -101,14 +105,11 @@ void 		*AlcFreeStackPop(void *prev, void **dstData, AlcErrno *dstErr)
   return((void *)entry1);
 }
 
-/************************************************************************
-* Function:	AlcFreeStackFree
-* Returns:	AlcErrno:		Alc error code.
-* Purpose:	Free's all entries on the given free stack.
-* Global refs:	-
-* Parameters:	void *stack:		The stack of pointers to be
-*					free'd.
-************************************************************************/
+/*!
+* \return				Error code.
+* \brief	Free's all entries on the given free stack.
+* \param	stack 			The stack of pointers to be free'd.
+*/
 AlcErrno	AlcFreeStackFree(void *stack)
 {
   AlcFreeStack	*entry0,
@@ -135,3 +136,7 @@ AlcErrno	AlcFreeStackFree(void *stack)
   }
   return(errNum);
 }
+
+/*!
+* @}
+*/

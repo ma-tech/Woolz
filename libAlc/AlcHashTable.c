@@ -1,37 +1,44 @@
-#pragma ident "MRC HGU $Id"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcHashTable.c
-* Date:         November 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A general purpose hash table.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlcHashTable.c
+* \author       Bill Hill
+* \date         November 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief        A general purpose hash table.
+* \todo		-
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <Alc.h>
 
+/*!
+* \ingroup      Alc
+* \defgroup	AlcHashTable
+* @{
+*/
+
 static AlcHashItem *AlcHashItemListLast(AlcHashItem *item);
 
-/************************************************************************
-* Function:	AlcHashTableNew
-* Returns:	AlcHashTable *:		Hash table structure, or NULL on
+/*!
+* \return				Hash table structure, or NULL on
 *					error.
-* Purpose:	Creates a hash table data structure which is required
+* \brief	Creates a hash table data structure which is required
 *		by all the other AlcHashTable functions.
-* Global refs:	-
-* Parameters:	unsigned tableSz:	Hash table size.
-*		int (*keyCmp)(void *, void *): Key comparison function.
-*		unsigned (*hashFn)(void *): Hash function for table.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	tableSz 		Hash table size.
+* \param	keyCmp			Key comparison function.
+* \param	hashFn			Hash function for table.
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcHashTable	*AlcHashTableNew(unsigned tableSz,
 				 int (*keyCmp)(void *, void *),
 				 unsigned (*hashFn)(void *),
@@ -69,20 +76,18 @@ AlcHashTable	*AlcHashTableNew(unsigned tableSz,
   return(hTbl);
 }
 
-/************************************************************************
-* Function:	AlcHashItemNew
-* Returns:	AlcHashItem *:		Hash item structure, or	NULL on
+/*!
+* \return				Hash item structure, or	NULL on
 *					error.
-* Purpose:	Creates a hash item data structure for building into
+* \brief	Creates a hash item data structure for building into
 *		an AlcHashTable.
-* Global refs:	-
-* Parameters:	void *entry:		New table entry.
-*		void (*freeFn)(void *)): Function that will be called
+* \param	entry			New table entry.
+* \param	freeFn			Function that will be called
 *					(if not NULL) to free the entry.
-*		void *key:		Hash key.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	key			Hash key.
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcHashItem	*AlcHashItemNew(void *entry, void (*freeFn)(void *),
 			       void *key, AlcErrno *dstErr)
 {
@@ -106,14 +111,12 @@ AlcHashItem	*AlcHashItemNew(void *entry, void (*freeFn)(void *),
   return(newItem);
 }
 
-/************************************************************************
-* Function:	AlcHashTableFree
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Free's the given hash table data structure and any hash
+/*!
+* \return	<AlcErrno>:		Error code.
+* \brief	Free's the given hash table data structure and any hash
 *		table items.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-************************************************************************/
+* \param	hTbl 			The hash table data structure.
+*/
 AlcErrno	AlcHashTableFree(AlcHashTable *hTbl)
 {
   int		hCnt;
@@ -151,18 +154,16 @@ AlcErrno	AlcHashTableFree(AlcHashTable *hTbl)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcHashTableEntryInsert
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Inserts the given entry into the hash table.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		void *key:		Hash key.
-*		void *entry:		New list entry.
-*		void (*freeFn)(void *)): Function that will be called
+/*!
+* \return	<AlcErrno>:		Error code.
+* \brief	Inserts the given entry into the hash table.
+* \param	hTbl 			The hash table data structure.
+* \param	key			Hash key.
+* \param	entry			New list entry.
+* \param	freeFn			Function that will be called
 *					(if not NULL) to free the entry
 *					should the item be deleted.
-************************************************************************/
+*/
 AlcErrno	AlcHashTableEntryInsert(AlcHashTable *hTbl, void *key,
 				      void *entry, void (*freeFn)(void *))
 {
@@ -186,18 +187,16 @@ AlcErrno	AlcHashTableEntryInsert(AlcHashTable *hTbl, void *key,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcHashItemUnlink
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Removes the item from the hash table, but does not free
+/*!
+* \return	<AlcErrno>:		Error code.
+* \brief	Removes the item from the hash table, but does not free
 *		the item unless the freeItem flag is set.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		AlcHashItem *rItem:	Item to be removed.
-*		int freeItem;		Free item if non-zero.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	hTbl			The hash table data structure.
+* \param	rItem			Item to be removed.
+* \param	freeItem		Free item if non-zero.
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
 				  int freeItem)
 {
@@ -237,17 +236,15 @@ AlcErrno	AlcHashItemUnlink(AlcHashTable *hTbl, AlcHashItem *rItem,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcHashItemInsert
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Inserts a new item into the hash table.
+/*!
+* \return	<AlcErrno>:		Error code.
+* \brief	Inserts a new item into the hash table.
 *		First find the table list head by generating an
 *		index from the key using the hash function, then
 *		insert the entry into the sorted list.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		AlcHashItem *newItem: New item to insert.
-************************************************************************/
+* \param	hTbl			The hash table data structure.
+* \param	newItem			New item to insert.
+*/
 AlcErrno	AlcHashItemInsert(AlcHashTable *hTbl, AlcHashItem *newItem)
 {
   int		cmp;
@@ -356,14 +353,12 @@ AlcErrno	AlcHashItemInsert(AlcHashTable *hTbl, AlcHashItem *newItem)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcHashItemFree
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Free's the list item which has already been removed
+/*!
+* \return	<AlcErrno>:		Error code.
+* \brief	Free's the list item which has already been removed
 *		from the list.
-* Global refs:	-
-* Parameters:	AlcHashItem *item:	Item to be deleted.
-************************************************************************/
+* \param	item			Item to be deleted.
+*/
 AlcErrno	AlcHashItemFree(AlcHashItem *item)
 {
   AlcErrno	errNum = ALC_ER_NONE;
@@ -383,16 +378,14 @@ AlcErrno	AlcHashItemFree(AlcHashItem *item)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcHashTableCount
-* Returns:	int:			Number of items in list. This
+/*!
+* \return	<int>:			Number of items in list. This
 *					is always >= 0.
-* Purpose:	Returns the number of items in the list.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \brief	Returns the number of items in the list.
+* \param	hTbl			The hash table data structure.
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 int		AlcHashTableCount(AlcHashTable *hTbl, AlcErrno *dstErr)
 {
   int		cnt = 0,
@@ -427,16 +420,14 @@ int		AlcHashTableCount(AlcHashTable *hTbl, AlcErrno *dstErr)
   return(cnt);
 }
 
-/************************************************************************
-* Function:	AlcHashTableIterate
-* Returns:	AlcHashItem:		Last item.
-* Purpose:	Iterates the given function through all entries of
+/*!
+* \return	<AlcHashItem>:		Last item.
+* \brief	Iterates the given function through all entries of
 *		the hash table, starting with either the first or
 *		last item. The iteration proceeds towards either the
 *		last or first item in the table.
-*		The iterated function must take the form:
-*		  int func(AlcHashTable *, AlcHashItem *, void *)
-*		As in the example:
+*		The iterated function must take the form
+* \verbatim
 *		  int MyItemCount(AlcHashTable *hTbl,
 *				  ALC_DIRECTION_FWD,
 *				  void *myData)
@@ -453,21 +444,21 @@ int		AlcHashTableCount(AlcHashTable *hTbl, AlcErrno *dstErr)
 *		    }
 *		    return(1);
 *		  }
+* \endverbatim
 *		Where the data parameter is the data supplied to this
 *		(AlcHashTableIterate) function.
 *		The iteration continues until either the iterated
 *		function returns zero or the last/first item of
 *		the hash table has been processed.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		AlcDirection dir:	Iteration direction.
-*		int (*iterFn)():	Function to be iterated, see
+* \param	hTbl			The hash table data structure.
+* \param	dir			Iteration direction.
+* \param	iterFn			Function to be iterated, see
 *					example above.
-*		void *iterData:		Data supplied to the iterated
+* \param	iterData		Data supplied to the iterated
 *					function.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcHashItem	*AlcHashTableIterate(AlcHashTable *hTbl, AlcDirection dir,
 				     int (*iterFn)(AlcHashTable *,
 				                   AlcHashItem *, void *),
@@ -553,21 +544,18 @@ AlcHashItem	*AlcHashTableIterate(AlcHashTable *hTbl, AlcDirection dir,
   return(lastItem);
 }
 
-/************************************************************************
-* Function:	AlcHashTableUnlinkAll
-* Returns:	AlcErrno:		Error code.
-* Purpose:	Unlinks all items which are matched by the given
+/*!
+* \return	<AlcErrno>:		Error code.
+* \brief	Unlinks all items which are matched by the given
 *		match function. If the match pointer function is
 *		NULL then all the items are unlinked.
 *		The test function should return non-zero to unlink
 *		the item passed to it.
-* Global refs:	-
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		int (*testFn)():	Function to test items.
-*		void *fnData:		Data supplied to the test
-*					function.
-*		int freeItems:		Free unlinked items if non-zero.
-************************************************************************/
+* \param	hTbl			The hash table data structure.
+* \param	testFn			Function to test items.
+* \param	fnData			Data supplied to the test function.
+* \param	freeItems		Free unlinked items if non-zero.
+*/
 AlcErrno	AlcHashTableUnlinkAll(AlcHashTable *hTbl,
 				      int (*testFn)(AlcHashTable *,
 				      		    AlcHashItem *, void *),
@@ -609,16 +597,15 @@ AlcErrno	AlcHashTableUnlinkAll(AlcHashTable *hTbl,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	AlcHashItemGet
-* Returns:	AlcHashItem:		Matched item, NULL if no match.
-* Purpose:	Gets the item from the hash table with the matching
+/*!
+* \return	<AlcHashItem>:		Matched item, NULL if no match.
+* \brief	Gets the item from the hash table with the matching
 *		key, it's not an error if a matching item isn't found.
-* Parameters:	AlcHashTable *hTbl:	The hash table data structure.
-*		void *key:		Given key to match.
-*		AlcErrno *dstErr:	Destination pointer for error
+* \param	hTbl			The hash table data structure.
+* \param	key			Given key to match.
+* \param	dstErr			Destination pointer for error
 *					code, may be NULL.
-************************************************************************/
+*/
 AlcHashItem	*AlcHashItemGet(AlcHashTable *hTbl, void *key,
 				AlcErrno *dstErr)
 {
@@ -658,16 +645,16 @@ AlcHashItem	*AlcHashItemGet(AlcHashTable *hTbl, void *key,
   return(item);
 }
 
-/************************************************************************
-* Function:	AlcHashItemOrder
-* Returns:	int:			 >0 if item0 before item1 or
+/*!
+* \return	<int>:			 >0 if item0 before item1 or
 *					== 0 if item0 is item1 or
 *					 < 0 if item0 after item1
-* Purpose:	Finds the order in which the given items would occur
+* \brief	Finds the order in which the given items would occur
 *		in the hash table.
-* Global refs:	-
-* Parameters:	AlcHashItem *item:	Given item.
-************************************************************************/
+* \param	hTbl			The hash table.
+* \param	item0			Given item0.
+* \param	item1			Given item1.
+*/
 int		AlcHashItemOrder(AlcHashTable *hTbl,
 				 AlcHashItem *item0, AlcHashItem *item1)
 {
@@ -688,14 +675,12 @@ int		AlcHashItemOrder(AlcHashTable *hTbl,
   return(order);
 }
 
-/************************************************************************
-* Function:	AlcHashItemListLast
-* Returns:	AlcHashItem:		Last item (from given) in list,
+/*!
+* \return	<AlcHashItem>:		Last item (from given) in list,
 *					NULL if given NULL.
-* Purpose:	Finds the last item in the list from the given item.
-* Global refs:	-
-* Parameters:	AlcHashItem *item:	Given item.
-************************************************************************/
+* \brief	Finds the last item in the list from the given item.
+* \param	item			Given item.
+*/
 static AlcHashItem *AlcHashItemListLast(AlcHashItem *item)
 {
   AlcHashItem	*nItem;
@@ -709,3 +694,7 @@ static AlcHashItem *AlcHashItemListLast(AlcHashItem *item)
   }
   return(item);
 }
+
+/*!
+* @}
+*/

@@ -1,39 +1,42 @@
 #ifndef ALCTEMPLATES_H
 #define ALCTEMPLATES_H
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        AlcTemplates.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Templates used by the 'C' pre-processor to generate the
-*		body of the MRC HGU allocation functions and the
+/*!
+* \file         AlcTemplates.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2001 Medical Research Council, UK.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \ingroup	Alc
+* \ingroup	AlcArray
+* \brief        Templates used by the 'C' pre-processor to generate the
+*		body of the MRC HGU array allocation functions and the
 *		associated freeing functions.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+* \todo		-
+* \bug          None known.
+*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_C1D					*
-* Purpose:	Allocates 1 dimensional zero'd arrays of any type.	*
-* Global refs:	-							*
-* Parameters:	D:			Destination pointer, of type	*
-*					ie (T *).			*
-*		T:			Type, eg char, short, int, ....	*
-*		M:			Number of elements in array.	*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_C1D(D,T,M,F)
+* \brief	A template for functions which allocate 1 dimensional
+*		zero'd arrays of any type.
+* 		- D:			Destination pointer, of type T *.
+*		- T:			Type, eg char, short, int, ....
+*		- M:			Number of elements in array.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_C1D(D,T,M,F) \
-{ \
   AlcErrno	alcErrno = ALC_ER_NONE; \
   \
   if((D) == NULL) \
@@ -47,21 +50,18 @@ extern "C" {
     if(D) \
       *(D) = NULL; \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_M1D					*
-* Purpose:	Allocates 1 dimensional non-zero'd arrays of any type.	*
-* Global refs:	-							*
-* Parameters:	D:			Destination pointer, of type	*
-*					ie (T *).			*
-*		T:			Type, eg char, short, int, ....	*
-*		M:			Number of elements in array.	*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_M1D(D,T,M,F)
+* \brief	A template for functions which allocate	1 dimensional
+*		non-zero'd arrays of any type.
+* 		- D:			Destination pointer, of type T *.
+*		- T:			Type, eg char, short, int, ....
+*		- M:			Number of elements in array.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_M1D(D,T,M,F) \
-{ \
   AlcErrno	alcErrno = ALC_ER_NONE; \
   \
   if((D) == NULL) \
@@ -75,23 +75,20 @@ extern "C" {
     if(D) \
       *(D) = NULL; \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_C2D					*
-* Purpose:	Allocates 2 dimensional zero'd arrays of any type.	*
-* Global refs:	-							*
-* Parameters:	D:			Destination pointer, of type	*
-*					ie (T **).			*
-*		T:			Type, eg char, short, int, ....	*
-*		M:			Number of 1D arrays.		*
-*		N:			Number of elements in each 1D	*
-*					array.				*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_C2D(D,T,M,N,F)
+* \brief	A template for functions which allocate 2 dimensional
+*		zero'd arrays of any type.
+* 		- D:			Destination pointer, of type T **.
+*		- T:			Type, eg char, short, int, ....
+*		- M:			Number of 1D arrays.
+*		- N:			Number of elements in each 1D
+*					array.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_C2D(D,T,M,N,F) \
-{ \
   int		index; \
   T		*dump0 = NULL; \
   T		**dump1 = NULL; \
@@ -122,23 +119,20 @@ extern "C" {
     if(dump1) \
       AlcFree(dump1); \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_M2D					*
-* Purpose:	Allocates 2 dimensional non-zero'd arrays of any type.	*
-* Global refs:	-							*
-* Parameters:	D:			Destination pointer, of type	*
-*					ie (T **).			*
-*		T:			Type, eg char, short, int, ....	*
-*		M:			Number of 1D arrays.		*
-*		N:			Number of elements in each 1D	*
-*					array.				*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_M2D(D,T,M,N,F)
+* \brief	A template for functions which allocate 2 dimensional
+*		non-zero'd arrays of any type.
+* 		- D:			Destination pointer, of type T **.
+*		- T:			Type, eg char, short, int, ....
+*		- M:			Number of 1D arrays.
+*		- N:			Number of elements in each 1D
+*					array.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_M2D(D,T,M,N,F) \
-{ \
   int		index; \
   T		*dump0 = NULL; \
   T  		**dump1 = NULL; \
@@ -169,19 +163,17 @@ extern "C" {
     if(dump1) \
       AlcFree(dump1); \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_F2D					*
-* Purpose:	Free's 2 dimensional arrays of any type, actualy no	*
-*		type information is used in freeing the array.		*
-* Global refs:	-							*
-* Parameters:	D:			Pointer for array to be free'd.	*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_F2D(D,F)
+* \brief	A template for functions which free 2 dimensional
+*		arrays of any type, actualy no type information
+*		is used in freeing the array.
+* 		- D:			Pointer for array to be free'd.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_F2D(D,F) \
-{ \
   AlcErrno	alcErrno = ALC_ER_NONE; \
   \
   if((D == NULL) || (*(D) == NULL)) \
@@ -193,24 +185,22 @@ extern "C" {
     AlcFree(*(D)); \
     AlcFree(D); \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_C3D					*
-* Purpose:	Allocates 3 dimensional zero'd arrays of any type.	*
-* Global refs:	-							*
-* Parameters:	D:			Destination pointer, of type	*
-*					ie (T **).			*
-*		T:			Type, eg char, short, int, ....	*
-*		M:			Number of 2D arrays.		*
-*		N:			Number of 1D arrays.		*
-*		O:			Number of elements in each 1D	*
-*					array.				*
-*		F:			String with name of function.	*
-************************************************************************/
+
+/*!
+* \def		ALC_TEMPLATE_C3D(D,T,M,N,O,F)
+* \brief	A template for functions which allocate 3 dimensional
+*		zero'd arrays of any type.
+* 		- D:			Destination pointer, of type T **.
+*		- T:			Type, eg char, short, int, ....
+*		- M:			Number of 2D arrays.
+*		- N:			Number of 1D arrays.
+*		- O:			Number of elements in each 1D
+*					array.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_C3D(D,T,M,N,O,F) \
-{ \
   int		index0, \
   		index1; \
   T		*dump0 = NULL, \
@@ -251,24 +241,21 @@ extern "C" {
     if(dump0) \
       AlcFree(dump0); \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_M3D					*
-* Purpose:	Allocates 3 dimensional non-zero'd arrays of any type.	*
-* Global refs:	-							*
-* Parameters:	D:			Destination pointer, of type	*
-*					ie (T **).			*
-*		T:			Type, eg char, short, int, ....	*
-*		M:			Number of 2D arrays.		*
-*		N:			Number of 1D arrays.		*
-*		O:			Number of elements in each 1D	*
-*					array.				*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_M3D(D,T,M,N,O,F)
+* \brief	A template for functions which allocate 3 dimensional
+*		non-zero'd arrays of any type.
+* 		- D:			Destination pointer, of type T **.
+*		- T:			Type, eg char, short, int, ....
+*		- M:			Number of 2D arrays.
+*		- N:			Number of 1D arrays.
+*		- O:			Number of elements in each 1D
+*					array.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_M3D(D,T,M,N,O,F) \
-{ \
   int		index0, \
   		index1; \
   T		*dump0 = NULL, \
@@ -309,19 +296,17 @@ extern "C" {
     if(dump0) \
       AlcFree(dump0); \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno); 
 
-/************************************************************************
-* Template:	ALC_TEMPLATE_F3D					*
-* Purpose:	Free's 3 dimensional arrays of any type, actualy no	*
-*		type information is used in freeing the array.		*
-* Global refs:	-							*
-* Parameters:	D:			Pointer for array to be free'd.	*
-*		F:			String with name of function.	*
-************************************************************************/
+/*!
+* \def		ALC_TEMPLATE_F3D(D,F)
+* \brief	A template for functions which free 3 dimensional
+*		arrays of any type, actualy no type information
+*		is used in freeing the array.
+* 		- D:			Pointer for array to be free'd.
+*		- F:			String with name of function.
+*/
 #define ALC_TEMPLATE_F3D(D,F) \
-{ \
   AlcErrno	alcErrno = ALC_ER_NONE; \
   \
   if((D == NULL) || (*(D) == NULL) || (**(D) == NULL)) \
@@ -334,8 +319,7 @@ extern "C" {
     AlcFree(*(D)); \
     AlcFree(D); \
   } \
-  return(alcErrno); \
-}
+  return(alcErrno);
 
 #ifdef __cplusplus
 }  					       /* Close scope of 'extern "C" */

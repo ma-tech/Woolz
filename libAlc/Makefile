@@ -11,9 +11,6 @@
 # Purpose:      Makefile for building the MRC HGU memory allocation
 #		library.
 # $Revision$
-# Maintenance:	Log changes below, with most recent at top of list.
-# 02-11-00 bill Add AlcKDTree.c
-# 01-12-99 bill Add AlcBlockStack.c
 #########################################################################
 
 # Include the configuration makefile (modify as required).
@@ -45,9 +42,8 @@ CSOURCES		= AlcAlloc.c \
 			  AlcString.c \
 			  AlcVector.c
 
-DLLCSOURCES		= \
-			init.c \
-			fixup.c
+DLLCSOURCES		= init.c \
+			  fixup.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
@@ -59,9 +55,14 @@ INCLUDES_PUB		= Alc.h \
 # executables (modify as required).
 INCLUDES_PRV		= AlcTemplates.h
 
-# List of all troff sources for manual pages, these should have the appropriate
-# extension (eg cat.1) (modify as required).
-MANPAGES		= Alc.3
+# Source man documentation directory
+SRC_MAN_DIR		= man
+
+# Source html documentation directory
+SRC_WWW_DIR		= html
+
+# Destination html documentation directory
+DST_WWW_DIR		= $(HGU_WWW_DIR)/src/Core/libAlc
 
 # List of all directories to be searched before the standard include
 # and lib directories (modify as required).
@@ -99,15 +100,15 @@ CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
  
 
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages
+all:			archive executables includes documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 
 # Target which installs everything after it has been built (should not need
 # modifying).
-install:		install_includes install_manpages install_archive \
-			install_executables
+install:		install_includes install_archive install_executables \
+		        install_documentation
 
 # Target which installs an archive (should not need modifying).
 install_archive:	$(ARCHIVE)
@@ -131,21 +132,30 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the manual pages in the appropriate directories,
-# watch out for the tabs in the sed regexp's (should not need modifying).
-install_manpages:	$(MANPAGES)
+# Target which installs the documentation in the appropriate directories,
+# (should not need modifying).
+install_documentation:	documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			$(install_manpages)
+			$(install_www)
 
-# Target for compressed tar files suitable for distribution (should not need
-# modifying).
-tar:			$(TARSOURCES) clobber allsources
-ifneq ($(strip $(TARSOURCES)),)
-			$(TAR) $(TARFLAGS) $(TARFILE) $(TARSOURCES)
-			$(COMPRESS) $(TARFILE)
+# Target which installs the man pages in the appropriate directories,
+# (should not need modifying).
+install_manpages:	documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
 endif
+			install_manpages
+
+# Target which installs the html pages in the appropriate directories,
+# (should not need modifying).
+install_www:		documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			install_www
 
 # Target for the archive (library), just a dependency (should not need
 # modifying).
@@ -171,8 +181,11 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 # Target to clean up after making (should not need modifying).
 clean:
 			-$(RM) core $(OBJECTS) $(DLLOBJECTS) $(EXECUTABLES) \
-			$(ARCHIVE) $(SOARCHIVE) $(DLLARCHIVE) $(DLLBASE) \
-			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) *~
+			$(ARCHIVE) $(SOARCHIVE) \
+			$(DLLARCHIVE) $(DLLBASE) \
+			$(DLLARCHIVEA) $(DLLEXP) $(DLLDEF) \
+			doxygen.tag *~
+			-$(RMDIR) man html
 
 # Target to clean up everything that might not be wanted (should not need
 # modifying).
@@ -187,7 +200,13 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 
-# making the tag file
+# Use doxygen to make the documentation (should not need modifying).
+documentation:		doxygen.tag
+			
+doxygen.tag:		$(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			doxygen
+
+# Make the tags file
 tags:
 			ctags $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
