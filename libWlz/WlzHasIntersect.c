@@ -211,7 +211,7 @@ int WlzHasIntersection(
     case WLZ_3D_DOMAINOBJ:
       /* get plane bounds */
       pMin = WLZ_MAX(obj1->domain.p->plane1, obj2->domain.p->plane1);
-      pMax = WLZ_MIN(obj1->domain.p->plane1, obj2->domain.p->plane1);
+      pMax = WLZ_MIN(obj1->domain.p->lastpl, obj2->domain.p->lastpl);
       values.core = NULL;
       for(p=pMin;(errNum == WLZ_ERR_NONE)&&(rtnVal == 0)&&(p <= pMax); p++){
 	if( obj1->domain.p->domains[p - obj1->domain.p->plane1].core == NULL ){
@@ -226,7 +226,7 @@ int WlzHasIntersection(
 		      values, NULL, NULL, NULL);
 	tmpObj2 = 
 	  WlzMakeMain(WLZ_2D_DOMAINOBJ, 
-		      obj1->domain.p->domains[p - obj1->domain.p->plane1],
+		      obj2->domain.p->domains[p - obj2->domain.p->plane1],
 		      values, NULL, NULL, NULL);
 	rtnVal = WlzHasIntersection(tmpObj1, tmpObj2, &errNum);
 	WlzFreeObj(tmpObj1);
