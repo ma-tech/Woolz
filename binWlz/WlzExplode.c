@@ -1,19 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExplode.c
-* Date:         March 1999
-* Author:       Bill Hill, Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter to explode 3D and compound objects into
-*		2D domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzExplode.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2002 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Woolz filter to explode 3D and compound objects into
+*		2D objects.
+* \todo         -
+* \bug          None known.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -32,19 +36,23 @@ int             main(int argc, char **argv)
   int		objPlane,
   		objVecIdx,
   		objVecCount,
+		useProps = 0,
   		option,
 		ok = 1,
 		usage = 0;
+  WlzProperty	prop;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
-  WlzObject	*inObj = NULL;
+  WlzObject	*obj,
+  		*inObj = NULL;
   WlzObject	**objVec = NULL;
   WlzCompoundArray	*cmpObj;
-  char 		*outObjFileBodyStr = NULL,
+  char 		*name,
+  		*outObjFileBodyStr = NULL,
 		*outObjFileExtStr = NULL,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "b:e:h",
+  static char	optList[] = "b:e:ph",
 		outObjFileStr[FILENAME_MAX],
 		outObjFileExtStrDef[] = "wlz",
 		outObjFileStrDef[] = "-",
@@ -58,6 +66,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'p':
+        useProps = 1;
+	break;
       case 'b':
         outObjFileBodyStr = optarg;
 	break;
@@ -152,10 +163,39 @@ int             main(int argc, char **argv)
     }
     while((objVecIdx < objVecCount) && ok)
     {
+      obj = *(objVec + objVecIdx);
       if(outObjFileBodyStr)
       {
-        sprintf(outObjFileStr,
-		"%s%06d.%s", outObjFileBodyStr, objPlane, outObjFileExtStr);
+	if(useProps && obj->plist)
+	{
+	  prop = WlzGetProperty(obj->plist, WLZ_PROPERTY_NAME, NULL);
+	  if(prop.core == NULL)
+	  {
+	    prop = WlzGetProperty(obj->plist, WLZ_PROPERTY_GREY, NULL);
+	  }
+	  if(prop.core)
+	  {
+	    switch(prop.core->type)
+	    {
+	      case WLZ_PROPERTY_NAME:
+		name = prop.name->name;
+	        break;
+	      case WLZ_PROPERTY_GREY:
+		name = prop.greyV->name;
+	        break;
+	    }
+	  }
+	}
+	if(name)
+	{
+	  (void )sprintf(outObjFileStr,
+	  	  "%s%s.%s", outObjFileBodyStr, name, outObjFileExtStr);
+	}
+	else
+	{
+	  (void )sprintf(outObjFileStr,
+		  "%s%06d.%s", outObjFileBodyStr, objPlane, outObjFileExtStr);
+	}
         if((fP = fopen(outObjFileStr, "w")) == NULL)
 	{
 	  ok = 0;
@@ -170,7 +210,7 @@ int             main(int argc, char **argv)
       }
       if(ok)
       {
-        if((errNum = WlzWriteObj(fP, *(objVec + objVecIdx))) != WLZ_ERR_NONE)
+        if((errNum = WlzWriteObj(fP, obj)) != WLZ_ERR_NONE)
 	{
 	  ok = 0;
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -179,10 +219,7 @@ int             main(int argc, char **argv)
 			 *argv, errMsg);
 	}
       }
-      if(*(objVec + objVecIdx))
-      {
-        WlzFreeObj(*(objVec + objVecIdx));
-      }
+      WlzFreeObj(obj);
       if(outObjFileBodyStr && fP)
       {
         fclose(fP);
@@ -201,10 +238,13 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-b<file body>] [-e <file extension>] [-h] [<in object>]\n"
+    " [-b<file body>] [-e <file extension>] [-h] [-p] [<in object>]\n"
     "Options:\n"
     "  -b  Output object file body.\n"
     "  -e  Output object file extension (default wlz).\n"
+    "  -p  Use names from the object properties instead of a numerical\n"
+    "      index for the file names. If the objects don't have properties\n"
+    "      with names then the numerical index will still be used.\n"
     "  -h  Help, prints this usage message.\n"
     "Explodes the input 3D Woolz domain object into 2D domain objects or\n"
     "explodes an input compound object into its constituent objects.\n"
