@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzBndGreyInvert.c
-* \author       Bill Hill
+* \author       Guangjie Feng
 * \date         August 2003
 * \version      $Id$
 * \note

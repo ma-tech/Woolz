@@ -36,7 +36,7 @@ CSOURCES		= \
 			WlzBndGreyInvert.c \
 			WlzBndJavaUtils.c \
 			WlzBnd3DWarp.c \
-			WlzBndBasisFn.c
+			WlzBndFunction.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
