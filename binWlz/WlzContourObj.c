@@ -31,7 +31,8 @@ int             main(int argc, char **argv)
 {
   int           option,
   		ok = 1,
-		usage = 0;
+		usage = 0,
+		unitVoxelSz = 0;
   double	ctrVal = 100,
   		ctrWth = 1.0;
   FILE		*fP = NULL;
@@ -44,7 +45,7 @@ int             main(int argc, char **argv)
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bghio:v:w:";
+  static char	optList[] = "bghiUo:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -86,6 +87,9 @@ int             main(int argc, char **argv)
 	  usage = 1;
 	  ok = 0;
 	}
+	break;
+      case 'U':
+        unitVoxelSz = 1;
 	break;
       default:
         usage = 1;
@@ -133,6 +137,16 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
 
+  }
+  if(ok && unitVoxelSz)
+  {
+    if(inObj && (inObj->type == WLZ_3D_DOMAINOBJ) &&
+       inObj->domain.core && (inObj->domain.core->type = WLZ_2D_DOMAINOBJ))
+    {
+      inObj->domain.p->voxel_size[0] = 1.0;
+      inObj->domain.p->voxel_size[1] = 1.0;
+      inObj->domain.p->voxel_size[2] = 1.0;
+    }
   }
   if(ok)
   {
@@ -202,7 +216,7 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       "Usage: %s%sExample: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i] [-o#] [-v#] [-w#]\n"
+      " [-o<output object>] [-h] [-o] [-g] [-i] [-U] [-o#] [-v#] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
@@ -210,6 +224,7 @@ int             main(int argc, char **argv)
       "  -b  Compute object boundary contours.\n"
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
+      "  -U  Use unit voxel size.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
       "Computes a contour list from the given input object.\n"

@@ -225,11 +225,6 @@ int		main(int argc, char *argv[])
     }
     else
     {
-      /* HACK */ WlzGMVertex *hackV;
-      /* HACK */ WlzDVertex3 hackPos = {4.0, 8.0, 10.0};
-      /* HACK */ hackV = WlzGMModelMatchVertexG3D(obj->domain.ctr->model,
-      /* HACK */                                  hackPos);
-
       errNum = WlzGMFilterGeomLPLM(obj->domain.ctr->model, lambda, mu, nItr);
     }
     if(errNum != WLZ_ERR_NONE)
