@@ -23,8 +23,11 @@
 */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <Alg.h>
+
+#ifndef _WIN32
+   #include <unistd.h>
+#endif
 
 static void			AlgRankElmSwap(
 				  void *elm0,

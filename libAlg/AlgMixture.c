@@ -24,12 +24,15 @@
 #include <math.h>
 #include <float.h>
 
-#if defined (CYGWIN) || defined (DARWIN)
+#if defined (CYGWIN) || defined (DARWIN) || defined (_WIN32)
 #define drand48() (((double) rand()) / RAND_MAX)
 #define srand48(X) (srand((unsigned int) X))
 #define lrand48() ((long) ((((double) rand()) / RAND_MAX) * (1<<31)))
 #endif /* CYGWIN || DARWIN */
 
+#ifdef _WIN32
+#define isnan _isnan
+#endif
 /*!
 * \return	Error code.
 * \ingroup     AlgMixture
