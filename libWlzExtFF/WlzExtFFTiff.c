@@ -22,6 +22,7 @@
 */
 
 #include <string.h>
+#include <sys/types.h>
 
 #include <Wlz.h>
 #include <WlzExtFF.h>

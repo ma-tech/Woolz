@@ -70,7 +70,8 @@ DEPENDDIRS		= \
 			  ../libWlz \
 			  ../libAlg \
 			  ../libbibfile \
-			  ../libAlc
+			  ../libAlc \
+			  ../../External/Tiff/libtiff
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -89,7 +90,7 @@ LIBDIRS			= \
 ifeq 		($(UNIXTYPE), SUNOS5)
 EXTRA_LIBS		= tiff gen socket nsl m
 else
-EXTRA_LIBS		= m
+EXTRA_LIBS		= tiff m
 endif
 
 MOTIFLIBS       	= Xm 

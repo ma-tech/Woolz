@@ -244,7 +244,9 @@ DEPENDDIRS		= \
 			  ../libAlg \
 			  ../libbibfile \
 			  ../libWlz \
-			  ../libWlzIO
+			  ../libWlzIO \
+			  ../libWlzExtFF \
+			  ../../External/Tiff/libtiff
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
@@ -260,15 +262,15 @@ LIBDIRS			= \
 
 # List of libraries to link (modify as required).
 ifeq 		($(UNIXTYPE), SUNOS5)
-EXTRA_LIBS		= gen socket nsl m
+EXTRA_LIBS		= tiff gen socket nsl m
 else
-EXTRA_LIBS		= m
+EXTRA_LIBS		= tiff m
 endif
 
 MOTIFLIBS       	= Xm 
 X11LIBS         	= Xt X11
 
-LIBRARIES		= WlzIO Wlz bibfile Alg Alc \
+LIBRARIES		= WlzIO WlzExtFF Wlz bibfile Alg Alc \
 			  $(EXTRA_LIBS)
 
 # List of all sub directories that contain makefiles. The subsystems will be
