@@ -130,6 +130,9 @@ static WlzDVertex3 	WlzContourItpTetSide(
 			  double valDst,
 			  WlzDVertex3 posOrg,
 			  WlzDVertex3 posDst);
+static WlzErrorNum	WlzContourScaleModelVoxSz(
+			  WlzGMModel *model,
+			  WlzPlaneDomain *pDom);
 static WlzErrorNum	WlzContourBndLine2D(
 			  WlzContour *ctr,
 			  double isoVal,
@@ -372,6 +375,36 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
     *dstErr = errNum;
   }
   return(ctr);
+}
+
+/*!
+* \return
+* \brief	Scale the geometric model from unit voxel dimensions
+*		to those of the given domain.
+* \param	model			The model.
+* \param	pDom			The plane domain with voxel size.
+*/
+static WlzErrorNum WlzContourScaleModelVoxSz(WlzGMModel *model,
+					     WlzPlaneDomain *pDom)
+{
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Set up the transform. */
+    tr->mat[0][0] = pDom->voxel_size[0];
+    tr->mat[0][3] = pDom->kol1 * (1.0 - pDom->voxel_size[0]);
+    tr->mat[1][1] = pDom->voxel_size[1];
+    tr->mat[1][3] = pDom->line1 * (1.0 - pDom->voxel_size[1]);
+    tr->mat[2][2] = pDom->voxel_size[2];
+    tr->mat[2][3] = pDom->plane1 * (1.0 - pDom->voxel_size[2]);
+    /* Transform the model. */
+    (void )WlzAffineTransformGMModel(model, tr, 0, &errNum);
+  }
+  WlzFreeAffineTransform(tr);
+  return(errNum);
 }
 
 /*!
@@ -684,6 +717,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
     obj2D->domain = dummyDom;
     obj2D->values = dummyValues;
     (void )WlzFreeObj(obj2D);
+  }
+  /* Scale model using object voxel size. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzContourScaleModelVoxSz(ctr->model, srcDom.p);
   }
   /* Tidy up on error. */
   if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
@@ -1406,6 +1444,11 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
       ++pnIdx;
     }
   }
+  /* Scale model using object voxel size. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzContourScaleModelVoxSz(ctr->model, srcDom.p);
+  }
   /* Tidy up on error. */
   if((errNum != WLZ_ERR_NONE) && (ctr != NULL))
   {
@@ -1698,6 +1741,11 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, double ctrVal,
       					 lastPn, itvBuf[!bufPnIdx],
 					 bufOrg2D, bufSz2D);
     }
+  }
+  /* Scale model using object voxel size. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzContourScaleModelVoxSz(ctr->model, dom.p);
   }
   /* Tidy up on error. */
   if((errNum != WLZ_ERR_NONE) && (ctr != NULL))

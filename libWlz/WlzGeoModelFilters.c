@@ -545,9 +545,7 @@ static WlzDVertex3 WlzGMFilterGeomLPL3Delta(WlzGMModel *model, WlzGMVertex *gV,
   		sVG;
 
   sVG.vtX = sVG.vtY = sVG.vtZ = 0.0;
-  /* TODO HACK BUG why are diskT's non-manifold?
   manifold = gV->diskT == gV->diskT->next;
-  */
   fET = gV->diskT->vertexT->parent->opp;
   if(manifold)
   {
@@ -559,7 +557,6 @@ static WlzDVertex3 WlzGMFilterGeomLPL3Delta(WlzGMModel *model, WlzGMVertex *gV,
       nV = nET->vertexT->diskT->vertex;
       nVG = *(vGIn + nV->idx);
       WLZ_VTX_3_ADD(sVG, sVG, nVG);
-      /* TODO HACK Why are so many faces non manifold? */
       nET = nET->rad->opp->prev;
     } while((nET != fET) && manifold);
     if(manifold)
