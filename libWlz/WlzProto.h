@@ -233,7 +233,7 @@ extern void 			Wlz3DViewGetPlaneEqn(
 				  double *dstB,
 				  double *dstC,
 				  double *dstD);
-extern int             		Wlz3DViewIntersectAABB3D(
+extern int             		Wlz3DViewIntersectAABB(
 				  WlzThreeDViewStruct *view,
                                   WlzDBox3 box);
 
