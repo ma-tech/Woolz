@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!DOCTYPE map
+  PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp Map Version 1.0//EN"
+         "http://java.sun.com/products/javahelp/map_1_0.dtd">
+
+<map version="1.0">
+
+   <mapID target="toplevelfolder" url="Images/toplevel.gif"/>
+
+   <mapID target="key">
+      <mapID target="key.description" url="html/key/description.html"/>
+      <mapID target="key.controls" url="html/key/controls/controls.html"/>
+   </mapID>
+
+   <mapID target="req">
+      <mapID target="req.soft" url="html/req/soft/soft.html"/>
+      <mapID target="req.hard" url="html/req/hard/hard.html"/>
+   </mapID>
+
+   <mapID target="sv">
+      <mapID target="sv.description" url="html/sv/description.html"/>
+      <mapID target="sv.menus">
+	 <mapID target="sv.menus.config" url="html/sv/menus/config.html"/>
+	 <mapID target="sv.menus.file" url="html/sv/menus/file.html"/>
+	 <mapID target="sv.menus.fixed" url="html/sv/menus/fixed.html"/>
+	 <mapID target="sv.menus.help" url="html/sv/menus/help.html"/>
+	 <mapID target="sv.menus.mode" url="html/sv/menus/mode.html"/>
+	 <mapID target="sv.menus.threeD" url="html/sv/menus/threeD.html"/>
+      </mapID>
+      <mapID target="sv.concepts">
+	 <mapID target="sv.concepts.wlz" url="html/sv/concepts/wlz.html"/>
+	 <mapID target="sv.concepts.vs" url="html/sv/concepts/viewstruct.html"/>
+	 <mapID target="sv.concepts.fp" url="html/sv/concepts/fixedpoint.html"/>
+	 <mapID target="sv.concepts.angles" url="html/sv/concepts/angles.html"/>
+	 <mapID target="sv.concepts.dist" url="html/sv/concepts/dist.html"/>
+	 <mapID target="sv.concepts.vm" url="html/sv/concepts/viewmode.html"/>
+      </mapID>
+      <mapID target="sv.controls">
+	 <mapID target="sv.controls.slider" url="html/sv/controls/slider.html"/>
+	 <mapID target="sv.controls.mouse" url="html/sv/controls/mouse.html"/>
+	 <mapID target="sv.controls.colour" url="html/sv/controls/colour.html"/>
+	 <mapID target="sv.controls.point" url="html/sv/controls/point.html"/>
+      </mapID>
+   </mapID>
+
+   <mapID target="cont">
+      <mapID target="cont.description" url="html/cont/description.html"/>
+      <mapID target="cont.menus">
+	 <mapID target="cont.menus.anat" url="html/cont/menus/anat.html"/>
+	 <mapID target="cont.menus.file" url="html/cont/menus/file.html"/>
+	 <mapID target="cont.menus.help" url="html/cont/menus/help.html"/>
+	 <mapID target="cont.menus.orient" url="html/cont/menus/orient.html"/>
+	 <mapID target="cont.menus.threeD" url="html/cont/menus/threeD.html"/>
+	 <mapID target="cont.menus.view" url="html/cont/menus/view.html"/>
+      </mapID>
+      <mapID target="cont.concepts">
+	 <mapID target="cont.concepts.surface" url="html/cont/concepts/surface.html"/>
+      </mapID>
+      <mapID target="cont.controls">
+	 <mapID target="cont.controls.mouse" url="html/cont/controls/mouse.html"/>
+      </mapID>
+   </mapID>
+
+</map>
