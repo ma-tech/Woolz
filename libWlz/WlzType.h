@@ -1951,6 +1951,23 @@ typedef struct _WlzMeshTransform
 } WlzMeshTransform;
 
 /************************************************************************
+* User weighting function for ICP based registration.
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+/*!
+* \typedef	WlzRegICPUsrWgtFn
+* \ingroup	WlzTransform
+* \brief	A pointer to a function called for user code weighting
+*		of the matched verticies.
+*/
+typedef double	(*WlzRegICPUsrWgtFn)(WlzVertexType,
+			     WlzAffineTransform *,
+			     AlcKDTTree *,
+			     WlzVertexP, WlzVertexP, WlzVertex, WlzVertex,
+			     void *);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * Sequential/local transformation workspace structure.		
 ************************************************************************/
 typedef struct 
