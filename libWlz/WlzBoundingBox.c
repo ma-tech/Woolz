@@ -691,7 +691,7 @@ WlzIBox2	WlzBoundingBox2DTo2I(WlzDBox2 bBox2D)
 * \ingroup	WlzFeatures
 * \brief	Comverts a 2D integer bounding box to an double precision
 *		bounding box.
-* \param	bBox2D			Double precision bounding box.
+* \param	bBox2I			Double precision bounding box.
 */
 WlzDBox2	WlzBoundingBox2ITo2D(WlzIBox2 bBox2I)
 {
@@ -730,7 +730,7 @@ WlzIBox3	WlzBoundingBox3DTo3I(WlzDBox3 bBox3D)
 * \ingroup	WlzFeatures
 * \brief	Comverts a 3D integer bounding box to an double precision
 *		bounding box.
-* \param	bBox3D			Double precision bounding box.
+* \param	bBox3I			Double precision bounding box.
 */
 WlzDBox3	WlzBoundingBox3ITo3D(WlzIBox3 bBox3I)
 {
