@@ -157,7 +157,7 @@
 			}
 		}
 
-		name = AlcStrDup((const) dst);
+		name = AlcStrDup((const char *) dst);
 
 		return name;
 	}
