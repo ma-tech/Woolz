@@ -1495,6 +1495,10 @@ static WlzObject *WlzFromArrayBit2D(UBYTE **arrayP,
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzStandardIntervalDomain(dstDom.i);
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
