@@ -39,6 +39,7 @@
 
 #include <Wlz.h>
 #include <bibFile.h>
+
 #include <Reconstruct.h>
 
 /* externals required by getopt  - not in ANSI C standard */

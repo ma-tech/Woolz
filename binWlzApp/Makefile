@@ -72,13 +72,14 @@ MANPAGES		=
 # and lib directories (modify as required).
 DEPENDDIRS		= \
 			  . \
-			  ../libReconstruct \
-			  ../libhguDlpList \
-			  ../libWlzExtFF \
-			  ../libWlz \
+			  ../libAlc \
 			  ../libAlg \
+			  ../libWlz \
 			  ../libbibfile \
-			  ../libAlc
+			  ../libWlzExtFF \
+			../libhguDlpList \
+			../libReconstruct \
+			../../External/Tiff/tiff-v3.5.7/libtiff
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
