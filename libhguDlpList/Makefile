@@ -145,12 +145,6 @@ includes:		$(INCLUDES_PUB)
 # Target for manual pages, just a dependency (should not need modifying).
 manpages:		$(MANPAGES)
 
-# Target for tags files (modify as required).
-tag:			tags
-
-tags:			$(CSOURCES) $(INCLUDES_ALL)
-			$(CTAGS)  $(CSOURCES) $(INCLUDES_ALL)
-
 # Target for lint (modify as required).
 lint:			$(CSOURCES) $(INCLUDES_PRV)
 			$(LINT) $(LINTFLAGS) $(CPPFLAGS) $(CSOURCES)
@@ -169,10 +163,6 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
-
-# making the tag file
-tags:
-	$(ETAGS) -f $(ETAGSFILE) $(ETAGSFLAGS) $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
 
 allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
