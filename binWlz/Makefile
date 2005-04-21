@@ -105,6 +105,7 @@ EXECUTABLES		= \
 			WlzLaplacian \
 			WlzMarkersToDomain \
 			WlzMatchICPObj \
+			WlzMeshTransformObj \
 			WlzObjToBoundary \
 			WlzPolarSample \
 			WlzPolygonToObj \
@@ -225,6 +226,7 @@ CSOURCES		= \
 			WlzLaplacian.c \
 			WlzMarkersToDomain.c \
 			WlzMatchICPObj.c \
+			WlzMeshTransformObj.c \
 			WlzObjToBoundary.c \
 			WlzPolarSample.c \
 			WlzPolygonToObj.c \

@@ -130,7 +130,7 @@ int             main(int argc, char **argv)
        (*inFileStr == '\0') ||
        ((fP = (strcmp(inFileStr, "-")?
 	      fopen(inFileStr, "r"): stdin)) == NULL) ||
-       (AlcDouble2ReadAsci(fP, &vA0, &nV, &nVC) != ALC_ER_NONE) ||
+       (AlcDouble2ReadAsci(fP, &vA0, (size_t *) &nV, (size_t *) &nVC) != ALC_ER_NONE) ||
        (nV < 1) || ((nVC != 2) && (nVC != 3)))
     {
       ok = 0;

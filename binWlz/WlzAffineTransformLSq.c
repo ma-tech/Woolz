@@ -289,7 +289,7 @@ int             main(int argc, char **argv)
     }
     else
     {
-      if(AlcDouble2ReadAsci(fP, &inData, &inR, &inC) != ALC_ER_NONE)
+      if(AlcDouble2ReadAsci(fP, &inData, (size_t *) &inR, (size_t *) &inC) != ALC_ER_NONE)
       {
         ok = 0;
 	(void )fprintf(stderr,
@@ -377,7 +377,7 @@ int             main(int argc, char **argv)
 	}
 	if(ok)
 	{
-	  if((AlcDouble1ReadAsci(fP, &vWgt, &tI0) != ALC_ER_NONE) ||
+	  if((AlcDouble1ReadAsci(fP, &vWgt, (size_t *) &tI0) != ALC_ER_NONE) ||
 	     (tI0 < nV))
 	  {
 	    ok = 0;

@@ -162,7 +162,7 @@ int             main(int argc, char **argv)
        (*inFileStr == '\0') ||
        ((fP = (strcmp(inFileStr, "-")?
 	      fopen(inFileStr, "r"): stdin)) == NULL) ||
-       (AlcDouble2ReadAsci(fP, &bufD, &nRec, &nFld) != ALC_ER_NONE))
+       (AlcDouble2ReadAsci(fP, &bufD, (size_t *) &nRec, (size_t *) &nFld) != ALC_ER_NONE))
     {
       ok = 0;
       (void )fprintf(stderr,

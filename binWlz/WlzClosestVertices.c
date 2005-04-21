@@ -157,7 +157,7 @@ int             main(int argc, char **argv)
        (*inFileStr == '\0') ||
        ((fP = (strcmp(inFileStr, "-")?
 	      fopen(inFileStr, "r"): stdin)) == NULL) ||
-       (AlcDouble2ReadAsci(fP, &ioA, &nIOR, &nIOC) != ALC_ER_NONE) ||
+       (AlcDouble2ReadAsci(fP, &ioA, (size_t *) &nIOR, (size_t *) &nIOC) != ALC_ER_NONE) ||
        (nIOR < 1) || ((nIOC != 2) && (nIOC != 3)) ||
        ((dim == 3) && (nIOC == 2)))
     {

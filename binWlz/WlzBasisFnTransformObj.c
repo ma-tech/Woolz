@@ -425,7 +425,7 @@ int             main(int argc, char **argv)
     "      object.\n"
     "  -U  Output a mesh transform instead of a transformed object.\n"
     "  -y  Use polynomianl basis function if tie points are given.\n"
-    "  -Y  Polynomial order for oolynomianl basis function (default 3).\n"
+    "  -Y  Polynomial order for polynomial basis function (default 3).\n"
     "Computes and applies Woolz basis function transforms.\n"
     "Tie points may be read from an ascii file with the format:\n"
     "  <vertex x> <vertex y> <displacement x> <displacement y>\n"
