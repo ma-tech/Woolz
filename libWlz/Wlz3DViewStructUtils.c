@@ -97,7 +97,7 @@ WlzThreeDViewStruct *WlzMake3DViewStruct(
   /* allocate space */
   if( errNum == WLZ_ERR_NONE ){
     if( (viewStr = (WlzThreeDViewStruct *)
-	 AlcMalloc(sizeof(WlzThreeDViewStruct))) == NULL ){
+	 AlcCalloc(1, sizeof(WlzThreeDViewStruct))) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }

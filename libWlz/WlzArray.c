@@ -16,7 +16,6 @@
 * \brief	Functions for conversion between Woolz domain objects
 *		and arrays.
 * \ingroup	WlzArray
-* \todo         -
 * \bug          None known.
 */
 #pragma ident "MRC HGU $Id$"

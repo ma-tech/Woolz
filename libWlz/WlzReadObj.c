@@ -3291,6 +3291,8 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
         {
           /* get the index of this element */
           eptr->idx = getword(fp);
+	  /* get neighbour flags */
+	  eptr->flags = (unsigned int) getword(fp);
           /* get nodes indeces */
           for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
           {

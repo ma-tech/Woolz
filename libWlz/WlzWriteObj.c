@@ -1519,7 +1519,7 @@ static WlzErrorNum WlzWritePolygon(FILE *fp, WlzPolygonDomain *poly)
 	dvtx = (WlzDVertex2 *)poly->vtx;
 	for(i = 0; (i < nvertices) && (errNum == WLZ_ERR_NONE); i++, dvtx++)
 	{
-	  if(!putdouble(fvtx->vtY, fp) || !putdouble(fvtx->vtX, fp))
+	  if(!putdouble(dvtx->vtY, fp) || !putdouble(dvtx->vtX, fp))
 	  {
 	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	  }
@@ -2456,6 +2456,12 @@ WlzErrorNum    WlzWriteMeshTransform2D(
       {
         errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
+      /* output the neighbour flags */
+      if(!putword(eptr->flags, fp))
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      
       /* output nodes indeces */
       for(j = 0; (j < 3) && (errNum == WLZ_ERR_NONE); j++)
       {

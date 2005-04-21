@@ -3558,7 +3558,7 @@ typedef struct _WlzGreyValueWSpace
   WlzObjectType objType;          	/*!< Type of object, either
   					     WLZ_2D_DOMAINOBJ or
                                              WLZ_3D_DOMAINOBJ. */
-  WlzDomain     domain;         	/*!< The object's domain. */
+  WlzDomain     domain;             	/*!< The object's domain. */
   WlzValues     values;         	/*!< The object's values. */
   WlzObjectType	*gTabTypes3D;		/*!< Cache for efficiency with 2D
   					     value types. */
@@ -3863,6 +3863,16 @@ typedef struct _WlzThreeDViewStruct
 					  parameters. Could include the
 					  voxel size rescaling */
 } WlzThreeDViewStruct;
+
+/*!
+* \typedef	Wlz3DProjectionIntFn
+* \ingroup	WlzFunction
+* \brief	Callback function for the WlzGetProjectionFromObject()
+*/
+typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
+					  WlzErrorNum *);
+
+
 
 #ifdef  __cplusplus
 }

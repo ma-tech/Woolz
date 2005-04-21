@@ -52,25 +52,137 @@ int WlzPolyCrossings(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		i, crossings;
   WlzIVertex2	*vtxs;
+  WlzFVertex2	*vtxsF;
+  WlzDVertex2	*vtxsD;
   double	x;
-  WlzIVertex2 vtxs1, vtxs2;
   
   /* run round polyline checking crossings */
-  vtxs = pgdm->vtx;
-  crossings = 0;
-  for(i=0; i < pgdm->nvertices - 1; i++){
-    vtxs1.vtX = vtxs[i].vtX;
-    vtxs1.vtY = vtxs[i].vtY;
-    vtxs2.vtX = vtxs[i+1].vtX;
-    vtxs2.vtY = vtxs[i+1].vtY;
-    if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
-       ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
-      x = (vtx.vtY - vtxs[i].vtY) * (vtxs[i+1].vtX - vtxs[i].vtX) /
-	(vtxs[i+1].vtY - vtxs[i].vtY) + vtxs[i].vtX;
-      if( x > vtx.vtX ){
-	crossings++;
+  switch( pgdm->type ){
+  case WLZ_POLYGON_INT:
+    vtxs = pgdm->vtx;
+    crossings = 0;
+    for(i=0; i < pgdm->nvertices - 1; i++){
+      if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
+	 ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
+	x = (vtx.vtY - vtxs[i].vtY) * (vtxs[i+1].vtX - vtxs[i].vtX) /
+	  (vtxs[i+1].vtY - vtxs[i].vtY) + vtxs[i].vtX;
+	if( x > vtx.vtX ){
+	  crossings++;
+	}
       }
     }
+    break;
+
+  case WLZ_POLYGON_FLOAT:
+    vtxsF = (WlzFVertex2 *) pgdm->vtx;
+    crossings = 0;
+    for(i=0; i < pgdm->nvertices - 1; i++){
+      if(((vtxsF[i].vtY > vtx.vtY) && (vtxsF[i+1].vtY <= vtx.vtY)) ||
+	 ((vtxsF[i+1].vtY > vtx.vtY) && (vtxsF[i].vtY <= vtx.vtY))){
+	x = (vtx.vtY - vtxsF[i].vtY) * (vtxsF[i+1].vtX - vtxsF[i].vtX) /
+	  (vtxsF[i+1].vtY - vtxsF[i].vtY) + vtxsF[i].vtX;
+	if( x > vtx.vtX ){
+	  crossings++;
+	}
+      }
+    }
+    break;
+
+  case WLZ_POLYGON_DOUBLE:
+    vtxsD = (WlzDVertex2 *) pgdm->vtx;
+    crossings = 0;
+    for(i=0; i < pgdm->nvertices - 1; i++){
+      if(((vtxsD[i].vtY > vtx.vtY) && (vtxsD[i+1].vtY <= vtx.vtY)) ||
+	 ((vtxsD[i+1].vtY > vtx.vtY) && (vtxsD[i].vtY <= vtx.vtY))){
+	x = (vtx.vtY - vtxsD[i].vtY) * (vtxsD[i+1].vtX - vtxsD[i].vtX) /
+	  (vtxsD[i+1].vtY - vtxsD[i].vtY) + vtxsD[i].vtX;
+	if( x > vtx.vtX ){
+	  crossings++;
+	}
+      }
+    }
+    break;
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return crossings;
+}
+
+/* function:     WlzPolyCrossingsD    */
+/*! 
+* \ingroup      WlzPolyline
+* \brief        Procedure to calculate winding number of the polygon with
+respect to the vertex. The algorithm is from "Comp Geom in C" by O'Rourke
+chap 7. It assumes double vertices and that the vertex is not on the
+polyline 
+*
+* \return       Winding number of the polyline with respect to the vertex
+* \param    vtx	input vertex
+* \param    pgdm	input polygon domain
+* \param    dstErr	error return
+* \par      Source:
+*               WlzPolyToObj.c
+*/
+int WlzPolyCrossingsD(
+  WlzDVertex2	vtx,
+  WlzPolygonDomain	*pgdm,
+  WlzErrorNum		*dstErr)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		i, crossings;
+  WlzIVertex2	*vtxs;
+  WlzFVertex2	*vtxsF;
+  WlzDVertex2	*vtxsD;
+  double	x;
+  
+  /* run round polyline checking crossings */
+  switch( pgdm->type ){
+  case WLZ_POLYGON_INT:
+    vtxs = pgdm->vtx;
+    crossings = 0;
+    for(i=0; i < pgdm->nvertices - 1; i++){
+      if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
+	 ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
+	x = (vtx.vtY - vtxs[i].vtY) * (vtxs[i+1].vtX - vtxs[i].vtX) /
+	  (vtxs[i+1].vtY - vtxs[i].vtY) + vtxs[i].vtX;
+	if( x > vtx.vtX ){
+	  crossings++;
+	}
+      }
+    }
+    break;
+
+  case WLZ_POLYGON_FLOAT:
+    vtxsF = (WlzFVertex2 *) pgdm->vtx;
+    crossings = 0;
+    for(i=0; i < pgdm->nvertices - 1; i++){
+      if(((vtxsF[i].vtY > vtx.vtY) && (vtxsF[i+1].vtY <= vtx.vtY)) ||
+	 ((vtxsF[i+1].vtY > vtx.vtY) && (vtxsF[i].vtY <= vtx.vtY))){
+	x = (vtx.vtY - vtxsF[i].vtY) * (vtxsF[i+1].vtX - vtxsF[i].vtX) /
+	  (vtxsF[i+1].vtY - vtxsF[i].vtY) + vtxsF[i].vtX;
+	if( x > vtx.vtX ){
+	  crossings++;
+	}
+      }
+    }
+    break;
+
+  case WLZ_POLYGON_DOUBLE:
+    vtxsD = (WlzDVertex2 *) pgdm->vtx;
+    crossings = 0;
+    for(i=0; i < pgdm->nvertices - 1; i++){
+      if(((vtxsD[i].vtY > vtx.vtY) && (vtxsD[i+1].vtY <= vtx.vtY)) ||
+	 ((vtxsD[i+1].vtY > vtx.vtY) && (vtxsD[i].vtY <= vtx.vtY))){
+	x = (vtx.vtY - vtxsD[i].vtY) * (vtxsD[i+1].vtX - vtxsD[i].vtX) /
+	  (vtxsD[i+1].vtY - vtxsD[i].vtY) + vtxsD[i].vtX;
+	if( x > vtx.vtX ){
+	  crossings++;
+	}
+      }
+    }
+    break;
   }
 
   if( dstErr ){
@@ -104,6 +216,43 @@ int WlzInsidePolyEO(
   int		crossings;
   
   crossings = WlzPolyCrossings(vtx, pgdm, &errNum);
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  if( crossings%2 ){
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+/* function:     WlzInsidePolyEOD    */
+/*! 
+* \ingroup      WlzPolyline
+* \brief        Procedure to calculate if a vertex is 
+inside the polygon using the
+even-odd rule. Algorithm from "Comp Geom in C" by O'Rourke chap 7
+Assumes integer vertices and that the vertex is not on the
+polyline 
+*
+* \return       1 if the vertex is "inside" the polyline, 0 otherwise
+* \param    vtx	the input test vertex
+* \param    pgdm	input polygon domain
+* \param    dstErr	return error
+* \par      Source:
+*               WlzPolyToObj.c
+*/
+int WlzInsidePolyEOD(
+  WlzDVertex2	vtx,
+  WlzPolygonDomain	*pgdm,
+  WlzErrorNum		*dstErr)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		crossings;
+  
+  crossings = WlzPolyCrossingsD(vtx, pgdm, &errNum);
 
   if( dstErr ){
     *dstErr = errNum;

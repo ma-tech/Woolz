@@ -1182,7 +1182,7 @@ static WlzErrorNum WlzObjFactsPolygon2D(WlzObjFactsData *fData,
 	  tFVx0 = (WlzFVertex2 *)(poly->vtx);
 	  while((idx < poly->nvertices) && (errNum == WLZ_ERR_NONE))
 	  {
-	    errNum = WlzObjFactsAppend(fData, "%8g %8d %8g.\n",
+	    errNum = WlzObjFactsAppend(fData, "%8d %8g %8g.\n",
 	    			       idx, tFVx0->vtX, tFVx0->vtY);
 	    ++idx;
 	    ++tFVx0;
@@ -1193,7 +1193,7 @@ static WlzErrorNum WlzObjFactsPolygon2D(WlzObjFactsData *fData,
 	  tDVx0 = (WlzDVertex2 *)(poly->vtx);
 	  while((idx < poly->nvertices) && (errNum == WLZ_ERR_NONE))
 	  {
-	    errNum = WlzObjFactsAppend(fData, "%8g %8d %8g.\n",
+	    errNum = WlzObjFactsAppend(fData, "%8d %8g %8g.\n",
 	    			       idx, tDVx0->vtX, tDVx0->vtY);
 	    ++idx;
 	    ++tDVx0;

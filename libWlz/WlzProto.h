@@ -106,6 +106,15 @@ extern WlzObject 		*Wlz2DContains(
 				  double y,
 				  WlzErrorNum *dstErr);
 /************************************************************************
+* Wlz3DProjection.c							*
+************************************************************************/
+extern WlzObject 		*WlzGetProjectionFromObject(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *viewStr,
+				  Wlz3DProjectionIntFn intFunc,
+				  void	*intFuncData,
+				  WlzErrorNum *dstErr);
+/************************************************************************
 * Wlz3DSection.c							*
 ************************************************************************/
 extern WlzObject 		*WlzGetSectionFromObject(
@@ -3075,6 +3084,12 @@ extern int			WlzPolyCrossings(WlzIVertex2	vtx,
 						 WlzPolygonDomain *pgdm,
 						 WlzErrorNum	  *dstErr);
 extern int			WlzInsidePolyEO(WlzIVertex2	vtx,
+						WlzPolygonDomain  *pgdm,
+						WlzErrorNum	  *dstErr);
+extern int			WlzPolyCrossingsD(WlzDVertex2	vtx,
+						 WlzPolygonDomain *pgdm,
+						 WlzErrorNum	  *dstErr);
+extern int			WlzInsidePolyEOD(WlzDVertex2	vtx,
 						WlzPolygonDomain  *pgdm,
 						WlzErrorNum	  *dstErr);
 
