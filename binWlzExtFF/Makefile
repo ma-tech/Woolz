@@ -26,14 +26,16 @@ EXECUTABLES		= \
 			WlzExtFFContourObj \
 			WlzExtFFConvert \
 			WlzExtFFWlzToXYZ \
-			WlzTiff2Wlz
+			WlzTiff2Wlz \
+			WlzSAToWlz
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			WlzExtFFContourObj.c \
 			WlzExtFFConvert.c \
 			WlzExtFFWlzToXYZ.c \
-			WlzTiff2Wlz.c
+			WlzTiff2Wlz.c \
+			WlzSAToWlz.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
