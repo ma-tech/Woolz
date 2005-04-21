@@ -23,9 +23,11 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
+			Wlz3DGetProjection \
 			Wlz3DGetSection \
 			Wlz3DViewTransformObj \
 			Wlz3DViewTransformBitmap \
+			WlzBibToMeshTrans \
 			WlzBibTransAbsRel \
 			WlzExtractTransform \
 			WlzProductTransform \
@@ -46,10 +48,12 @@ SCRIPTS			= \
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			Wlz3DGetProjection.c \
 			Wlz3DGetSection.c \
 			Wlz3DViewTransformObj.c \
 			Wlz3DViewTransformBitmap.c \
-			WlzExtractTransform.c \
+			WlzBibToMeshTrans.c \
+			WlzBibTransAbsRel.c \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
