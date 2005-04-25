@@ -33,26 +33,31 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		objPlane,
-  		objVecIdx,
+  int		objVecIdx,
   		objVecCount,
+  		objIdx = 0,
+		colourOnly = 0,
+		freeObjAry = 0,
 		useProps = 0,
+		unconcatOnly = 0,
   		option,
 		ok = 1,
 		usage = 0;
   WlzProperty	prop;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  FILE		*fP = NULL;
+  FILE		*inFP = NULL,
+  		*outFP = NULL;
   WlzObject	*obj,
   		*inObj = NULL;
-  WlzObject	**objVec = NULL;
-  WlzCompoundArray	*cmpObj;
+  WlzObject	**objAry = NULL;
+  WlzObject	*singleObjAry[1];
+  WlzCompoundArray *cmpObj = NULL;
   char 		*name = NULL,
   		*outObjFileBodyStr = NULL,
 		*outObjFileExtStr = NULL,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "b:e:ph",
+  static char	optList[] = "b:e:cpuh",
 		outObjFileStr[FILENAME_MAX],
 		outObjFileExtStrDef[] = "wlz",
 		outObjFileStrDef[] = "-",
@@ -66,6 +71,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'c':
+        colourOnly = 1;
+        break;
       case 'p':
         useProps = 1;
 	break;
@@ -75,6 +83,9 @@ int             main(int argc, char **argv)
       case 'e':
         outObjFileExtStr = optarg;
 	break;
+      case 'u':
+        unconcatOnly = 1;
+        break;
       case 'h':
       default:
         usage = 1;
@@ -113,157 +124,214 @@ int             main(int argc, char **argv)
     errNum = WLZ_ERR_READ_EOF;
     if((inObjFileStr == NULL) ||
        (*inObjFileStr == '\0') ||
-       ((fP = (strcmp(inObjFileStr, "-")?
-	      fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((inObj= WlzReadObj(fP, &errNum)) == NULL))
+       ((inFP = (strcmp(inObjFileStr, "-")?
+	        fopen(inObjFileStr, "r"): stdin)) == NULL))
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-		     "%s: failed to read object from file %s (%s).\n",
+		     "%s: Failed to open input file %s (%s).\n",
 		     *argv, inObjFileStr, errMsg);
     }
-    if(fP && strcmp(inObjFileStr, "-"))
-    {
-      fclose(fP);
-    }
   }
-  if(ok)
+  while(ok)
   {
-    switch( inObj->type )
+    objAry = NULL;
+    freeObjAry = 0;
+    if((inObj= WlzAssignObject(WlzReadObj(inFP, &errNum), NULL)) == NULL)
     {
-    case WLZ_COMPOUND_ARR_1:
-    case WLZ_COMPOUND_ARR_2:
-      cmpObj = (WlzCompoundArray *) inObj;
-      objVec = cmpObj->o;
-      objVecCount = cmpObj->n;
-      break;
-
-    case WLZ_BOUNDLIST:
-      if((errNum = WlzBoundaryToPolyObjArray(inObj, &objVecCount, &objVec)) !=
-	 WLZ_ERR_NONE)
+      ok = 0;
+      if(0 == objIdx)
       {
-	ok = 0;
-	(void )WlzStringFromErrorNum(errNum, &errMsg);
-	(void )fprintf(stderr,
-		       "%s: failed to explode object (%s)\n",
-		       *argv, errMsg);
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+		     "%s: Failed to read object from file %s (%s).\n",
+		     *argv, inObjFileStr, errMsg);
       }
-      break;
-
-    default:
-      if((errNum = WlzExplode3D(&objVecCount, &objVec, inObj)) !=
-	 WLZ_ERR_NONE)
-      {
-	ok = 0;
-	(void )WlzStringFromErrorNum(errNum, &errMsg);
-	(void )fprintf(stderr,
-		       "%s: failed to explode object (%s)\n",
-		       *argv, errMsg);
-      }
-      break;
     }
-  }
-  if(ok)
-  {
-    objVecIdx = 0;
-    objPlane = 0;
-    if( inObj->type == WLZ_3D_DOMAINOBJ )
+    if(ok)
     {
-      objPlane = inObj->domain.p->plane1;
-    }
-    while((objVecIdx < objVecCount) && ok)
-    {
-      obj = *(objVec + objVecIdx);
-      if(outObjFileBodyStr)
+      if(colourOnly)
       {
-	if(useProps && obj->plist)
+        cmpObj = WlzRGBAToCompound(inObj, WLZ_RGBA_SPACE_RGB, &errNum);
+	if((NULL == cmpObj) || (WLZ_ERR_NONE != errNum))
 	{
-	  prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_NAME, NULL);
-	  if(prop.core == NULL)
-	  {
-	    prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_GREY, NULL);
-	  }
-	  if(prop.core)
-	  {
-	    switch(prop.core->type)
-	    {
-	      case WLZ_PROPERTY_NAME:
-		name = prop.name->name;
-	        break;
-	      case WLZ_PROPERTY_GREY:
-		name = prop.greyV->name;
-	        break;
-	    }
-	  }
-	}
-	if(name)
-	{
-	  (void )sprintf(outObjFileStr,
-	  	  "%s%s.%s", outObjFileBodyStr, name, outObjFileExtStr);
+	  ok = 0;
 	}
 	else
 	{
-	  (void )sprintf(outObjFileStr,
-		  "%s%06d.%s", outObjFileBodyStr, objPlane, outObjFileExtStr);
+	  freeObjAry = 0;
+	  objAry = cmpObj->o;
+	  objVecCount = cmpObj->n;
 	}
-        if((fP = fopen(outObjFileStr, "w")) == NULL)
-	{
-	  ok = 0;
-	  (void )fprintf(stderr,
-	  		 "%s: failed to open output file %s.\n",
-			 *argv, outObjFileStr);
-	}
+      }
+      else if(unconcatOnly)
+      {
+	freeObjAry = 0;
+	objVecCount = 1;
+	objAry = singleObjAry;
+	objAry[0] = WlzAssignObject(inObj, NULL);
       }
       else
       {
-        fP = stdout;
-      }
-      if(ok)
-      {
-        if((errNum = WlzWriteObj(fP, obj)) != WLZ_ERR_NONE)
+	switch( inObj->type )
 	{
-	  ok = 0;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-	  		 "%s: failed to write output object (%s).\n",
-			 *argv, errMsg);
+	  case WLZ_2D_DOMAINOBJ:
+	    freeObjAry = 0;
+	    objVecCount = 1;
+	    objAry = singleObjAry;
+	    objAry[0] = WlzAssignObject(inObj, NULL);
+	    break;
+	  case WLZ_3D_DOMAINOBJ:
+	    freeObjAry = 1;
+	    errNum = WlzExplode3D(&objVecCount, &objAry, inObj);
+	    break;
+	  case WLZ_COMPOUND_ARR_1:
+	  case WLZ_COMPOUND_ARR_2:
+	    freeObjAry = 0;
+	    cmpObj = (WlzCompoundArray *)inObj;
+	    objAry = cmpObj->o;
+	    objVecCount = cmpObj->n;
+	    break;
+	  case WLZ_BOUNDLIST:
+	    freeObjAry = 1;
+	    errNum = WlzBoundaryToPolyObjArray(inObj, &objVecCount, &objAry);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_OBJECT_TYPE;
+	    break;
 	}
       }
-      WlzFreeObj(obj);
-      if(outObjFileBodyStr && fP)
+      if(WLZ_ERR_NONE != errNum)
       {
-        fclose(fP);
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s: Failed to explode object (%s)\n",
+		       *argv, errMsg);
       }
-      ++objPlane;
-      ++objVecIdx;
     }
-    AlcFree(objVec);
+    if(ok)
+    {
+      objVecIdx = 0;
+      if((colourOnly == 0) && (unconcatOnly == 0) &&
+         (WLZ_3D_DOMAINOBJ ==  inObj->type))
+      {
+	objIdx = inObj->domain.p->plane1;
+      }
+      while((objVecIdx < objVecCount) && ok)
+      {
+	obj = *(objAry + objVecIdx);
+	if(outObjFileBodyStr)
+	{
+	  if(useProps && obj->plist)
+	  {
+	    prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_NAME, NULL);
+	    if(prop.core == NULL)
+	    {
+	      prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_GREY, NULL);
+	    }
+	    if(prop.core)
+	    {
+	      switch(prop.core->type)
+	      {
+		case WLZ_PROPERTY_NAME:
+		  name = prop.name->name;
+		  break;
+		case WLZ_PROPERTY_GREY:
+		  name = prop.greyV->name;
+		  break;
+	      }
+	    }
+	  }
+	  if(name)
+	  {
+	    (void )sprintf(outObjFileStr,
+		    "%s%s.%s", outObjFileBodyStr, name, outObjFileExtStr);
+	  }
+	  else
+	  {
+	    (void )sprintf(outObjFileStr,
+		    "%s%06d.%s", outObjFileBodyStr, objIdx, outObjFileExtStr);
+	  }
+	  if((outFP = fopen(outObjFileStr, "w")) == NULL)
+	  {
+	    ok = 0;
+	    (void )fprintf(stderr,
+			   "%s: failed to open output file %s.\n",
+			   *argv, outObjFileStr);
+	  }
+	}
+	else
+	{
+	  outFP = stdout;
+	}
+	if(ok)
+	{
+	  if((errNum = WlzWriteObj(outFP, obj)) != WLZ_ERR_NONE)
+	  {
+	    ok = 0;
+	    (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+			   "%s: failed to write output object (%s).\n",
+			   *argv, errMsg);
+	  }
+	}
+	WlzFreeObj(obj);
+	if(outObjFileBodyStr && outFP)
+	{
+	  (void )fclose(outFP);
+	}
+	++objIdx;
+	++objVecIdx;
+      }
+      if(objAry && freeObjAry)
+      {
+        AlcFree(objAry);
+      }
+      if(cmpObj)
+      {
+        (void )WlzFreeObj((WlzObject *)cmpObj);
+      }
+    }
+    if(inObj)
+    {
+      (void )WlzFreeObj(inObj);
+    }
   }
-  if(inObj)
+  if((0 == ok) && (WLZ_ERR_READ_EOF == errNum) && (0 < objIdx))
   {
-    WlzFreeObj(inObj);
+    ok = 1; 	/* Recover from file read error which is probably just the end
+                   of files. */
+  }
+  if(inFP && strcmp(inObjFileStr, "-"))
+  {
+    (void )fclose(inFP);
   }
   if(usage)
   {
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-b<file body>] [-e <file extension>] [-h] [-p] [<in object>]\n"
+    " [-b<file body>] [-e <file extension>] [-h] [-p] [-u] [<in object>]\n"
     "Options:\n"
     "  -b  Output object file body.\n"
+    "  -c  Colour objects exploded into RGBA components only.\n"
     "  -e  Output object file extension (default wlz).\n"
     "  -p  Use names from the object properties instead of a numerical\n"
     "      index for the file names. If the objects don't have properties\n"
     "      with names then the numerical index will still be used.\n"
+    "  -u  Unconcatenate objects only. Objects will not be exploded, only\n"
+    "      their concatenation will be.\n"
     "  -h  Help, prints this usage message.\n"
-    "Explodes the input 3D Woolz domain object into 2D domain objects or\n"
-    "explodes an input compound object into its constituent objects or\n"
-    "explodes the input boundary object into its constituent polylines.\n"
+    "Explodes the following:\n"
+    "  Concatenated input objects into separate objects.\n"
+    "  Input 3D Woolz domain object into 2D domain objects.\n"
+    "  Input compound object into its constituent objects.\n"
+    "  Input boundary object into its constituent polylines.\n"
     "An output file extension can only be given if an output file body is\n"
     "also given.\n"
-    "Objects are read from stdin and written to stdout unless the filenames\n"
-    "are given.\n",
+    "Objects are read from stdin unless a filename is given.\n",
     *argv,
     " -b plane myobj.wlz\n"
     "The input Woolz object is read from myobj.wlz (minimum plane coordinate\n"
