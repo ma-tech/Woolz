@@ -15,7 +15,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      WlzTransform
 * \brief        Generate the projection or back-projection of a
- woolz domain object from 3D to 2D and visa versa.
+*		woolz domain object from 3D to 2D and visa versa.
 *               
 * \todo         Implement grey-value integration function call.
 * \bug          None known
@@ -30,7 +30,8 @@
 /*! 
 * \ingroup      WlzTransform
 * \brief        Use the view transform to define a projection from
-3D to 2D. Currently only the domain is projected as an opaque shadow.
+*		3D to 2D. Currently only the domain is projected as
+*		an opaque shadow.
 *
 * \return       projection object
 * \param    obj	source 3D object
@@ -48,7 +49,8 @@ WlzObject *WlzGetProjectionFromObject(
   void			*intFuncData,
   WlzErrorNum		*dstErr)
 {
-  WlzObject		*rtnObj=NULL, *obj1;;
+  WlzObject		*rtnObj=NULL,
+  			*obj1;
   WlzThreeDViewStruct	*viewStr1=NULL;
   WlzDomain		domain;
   WlzValues		values;
