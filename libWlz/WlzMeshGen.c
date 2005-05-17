@@ -20,52 +20,63 @@
 */
 #include <stdio.h>
 #include <float.h>
+#include <math.h>
 #include <Wlz.h>
 
+/* #define WLZ_CMESH_DEBUG_MESH */
 /* #define WLZ_CMESH_DEBUG_MAIN */
 
+static void			WlzCMeshUpdateMaxSqEdgLen2D(
+				  WlzCMesh2D *mesh);
+static void			WlzCMeshUpdateBBox2D(
+				  WlzCMesh2D *mesh);
 static void			WlzCMeshAddNodToGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod);
-static WlzCMeshNod2D 		*WlzCMeshAllocNod2D(
-				  WlzCMesh2D *mesh);
-static WlzCMeshNod3D 		*WlzCMeshAllocNod3D(
-				  WlzCMesh3D *mesh);
-static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
-				  WlzCMesh2D *mesh);
-static WlzErrorNum  		WlzCMeshSetElm2D(
+static void			WlzCMeshRemNodFromGrid2D(
 				  WlzCMesh2D *mesh,
-				  WlzCMeshElm2D *elm,
-				  WlzCMeshNod2D *nod0,
-				  WlzCMeshNod2D *nod1,
-				  WlzCMeshNod2D *nod2);
-static WlzCMeshElm3D 		*WlzCMeshAllocElm3D(
-				  WlzCMesh3D *mesh);
+				  WlzCMeshNod2D *nod);
 static void			WlzCMeshEntMarkFree(
 				  int *idx);
-static WlzIVertex2 		WlzCMeshBucketIdxVtx2D(
+static void			WlzCMeshElmsJoin2D(
 				  WlzCMesh2D *mesh,
-				  WlzDVertex2 vtx);
-static WlzErrorNum 		WlzCMeshAddLBTNode2D(
-				  WlzCMesh2D *mesh,
-				  WlzLBTDomain2D *lDom,
-				  WlzGreyValueWSpace *iGVWSp,
-				  int idN);
+				  int nEdg,
+				  WlzCMeshEdg2D **edg);
+static void 			WlzCMeshRemEntCb2D(
+				  WlzCMeshCbEntry **list,
+				  WlzCMeshCbFn fn,
+				  void *data);
+static void			WlzCMeshEdgSetOpp2D(
+				  WlzCMeshEdg2D *edg0,
+				  WlzCMeshEdg2D *edg1);
 static int			WlzCMeshCompLBTNodPos(
 				  WlzDVertex2 *nPos,
 				  WlzLBTDomain2D *lDom,
 				  int idN,
 				  WlzLBTNodeClass2D cls,
 				  int rot);
-static void			WlzCMeshElmsJoin2D(
+static int			WlzCMeshElmWalkPos2D(
 				  WlzCMesh2D *mesh,
-				  int nEdg,
-				  WlzCMeshEdg2D **edg);
+				  int elmIdx,
+				  WlzDVertex2 gPos);
+static int			WlzCMeshElmJumpPos2D(
+				  WlzCMesh2D *mesh,
+				  WlzDVertex2 gPos);
+static WlzErrorNum		WlzCMeshReassignBuckets(
+				  WlzCMesh2D *mesh,
+			          int newNumNod);
+static WlzErrorNum 		WlzCMeshAddLBTNode2D(
+				  WlzCMesh2D *mesh,
+				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN);
+static WlzErrorNum  		WlzCMeshSetElm2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *elm,
+				  WlzCMeshNod2D *nod0,
+				  WlzCMeshNod2D *nod1,
+				  WlzCMeshNod2D *nod2);
 static WlzErrorNum 		WlzCMeshAddEntCb2D(
-				  WlzCMeshCbEntry **list,
-				  WlzCMeshCbFn fn,
-				  void *data);
-static void 			WlzCMeshRemEntCb2D(
 				  WlzCMeshCbEntry **list,
 				  WlzCMeshCbFn fn,
 				  void *data);
@@ -130,9 +141,25 @@ static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D5(
 				  WlzDVertex2 *nPos,
 				  int *dstNElm,
 				  int *dstNEdg);
-static void			WlzCMeshEdgSetOpp2D(
-				  WlzCMeshEdg2D *edg0,
-				  WlzCMeshEdg2D *edg1);
+static WlzErrorNum 		WlzCMeshSetElmBoundaryFlagsBnd2D(
+				  WlzCMesh2D *mesh,
+				  WlzBoundList *bnd);
+static WlzErrorNum 		WlzCMeshSetElmBoundaryFlagsPly2D(
+				  WlzCMesh2D *mesh,
+				  WlzPolygonDomain *ply);
+static WlzIVertex2 		WlzCMeshBucketIdxVtx2D(
+				  WlzCMesh2D *mesh,
+				  WlzDVertex2 vtx);
+static WlzCMeshNod2D 		*WlzCMeshAllocNod2D(
+				  WlzCMesh2D *mesh);
+static WlzCMeshNod3D 		*WlzCMeshAllocNod3D(
+				  WlzCMesh3D *mesh);
+static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
+				  WlzCMesh2D *mesh);
+static WlzCMeshElm3D 		*WlzCMeshAllocElm3D(
+				  WlzCMesh3D *mesh);
+static WlzCMeshEdg2D 		*WlzCMeshEdgFindOpp2D(
+				  WlzCMeshEdg2D *gEdg);
 
 /*!
 * \return	New 2D mesh.
@@ -507,6 +534,46 @@ static void	WlzCMeshAddNodToGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 }
 
 /*!
+* \return	void
+* \ingroup	WlzMesh
+* \brief	Removes a mesh node from the mesh's bucket grid.
+* \param	mesh			The mesh.
+* \param	nod			New node to add.
+*/
+static void	WlzCMeshRemNodFromGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
+{
+  WlzCMeshNod2D	*nod0,
+  		*nod1;
+  WlzIVertex2	idx;
+  WlzCMeshNod2D	**bktP;
+
+  /* Find the bucket in the grid. */
+  idx = WlzCMeshBucketIdxVtx2D(mesh, nod->pos);
+  bktP = *(mesh->bGrid.buckets + idx.vtY) + idx.vtX;
+  if(*bktP)
+  {
+    if(*bktP == nod)
+    {
+      *bktP = nod->next;
+    }
+    else
+    {
+      nod0 = *bktP;
+      while(nod0)
+      {
+	nod1 = nod0->next;
+	if(nod1 == nod)
+	{
+	  nod0->next = nod->next;
+	  break;
+	}
+	nod0 = nod1;
+      }
+    }
+  }
+}
+
+/*!
 * \return	New 3D mesh node.
 * \ingroup	WlzMesh
 * \brief	Creates a new 3D mesh node at the given position. A node
@@ -677,7 +744,12 @@ static WlzErrorNum  WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
 				     WlzCMeshNod2D *nod0, WlzCMeshNod2D *nod1,
 				     WlzCMeshNod2D *nod2)
 {
-  double	sA2;
+  int		idE,
+  		idN;
+  double	lenSq,
+  		sA2;
+  WlzCMeshEdg2D	*edg;
+  WlzDVertex2	dsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   sA2 = WlzGeomTriangleSnArea2(nod0->pos, nod1->pos, nod2->pos);
@@ -688,24 +760,33 @@ static WlzErrorNum  WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Set up all the adjacencies for the edges. */
-    elm->edg[0].next = &(elm->edg[1]);
-    elm->edg[0].elm = elm;
-    elm->edg[0].nnxt = 
-    elm->edg[1].next = &(elm->edg[2]);
-    elm->edg[1].elm = elm;
-    elm->edg[2].next = &(elm->edg[0]);
-    elm->edg[2].elm = elm;
-    elm->edg[0].nnxt = nod0->edg;
     elm->edg[0].nod = nod0;
-    elm->edg[1].nnxt = nod1->edg;
     elm->edg[1].nod = nod1;
-    elm->edg[2].nnxt = nod2->edg;
     elm->edg[2].nod = nod2;
-    /* Set up all the adjacencies for the nodes. */
-    nod0->edg = &(elm->edg[0]);
-    nod1->edg = &(elm->edg[1]);
-    nod2->edg = &(elm->edg[2]);
+    /* Set up all the adjacencies and check for maximum edge length. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      idN = (idE + 1) % 3;
+      edg = &(elm->edg[idE]);
+      edg->elm = elm;
+      edg->next = &(elm->edg[idN]);
+      if(edg->nod->edg)
+      {
+        edg->nnxt = edg->nod->edg->nnxt;
+	edg->nod->edg->nnxt = edg;
+      }
+      else
+      {
+        edg->nnxt = edg;
+	edg->nod->edg = edg;
+      }
+      WLZ_VTX_2_SUB(dsp, elm->edg[idE].nod->pos, elm->edg[idN].nod->pos);
+      lenSq = WLZ_VTX_2_SQRLEN(dsp);
+      if(lenSq > mesh->maxSqEdgLen)
+      {
+        mesh->maxSqEdgLen = lenSq;
+      }
+    }
   }
   return(errNum);
 }
@@ -777,6 +858,89 @@ WlzErrorNum	WlzCMeshFree3D(WlzCMesh3D *mesh)
     (void )AlcVectorFree(mesh->res.nod.vec);
     (void )Alc3Free((void ***)(mesh->bGrid.buckets));
     AlcFree(mesh);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Deletes the 2D mesh node. This function assumes that the node
+*		is no longer used by any elements.
+* \param	mesh			The mesh to which the element belongs.
+* \param	nod			The given node.
+*/
+WlzErrorNum	WlzCMeshDelNod2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh == NULL) || (nod == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((errNum == WLZ_ERR_NONE) && mesh->res.nod.delEntCb)
+  {
+    errNum = WlzCMeshCallCallbacks(mesh, nod, mesh->res.nod.delEntCb);
+  }
+  else
+  {
+    WlzCMeshRemNodFromGrid2D(mesh, nod);
+    WlzCMeshNodFree2D(mesh, nod);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Deletes the 2D mesh element and any mesh nodes that are
+*		used exclusively by this mesh element. 
+* \param	mesh			The mesh to which the element belongs.
+* \param	elm			The given element.
+*/
+WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
+{
+  int		idE;
+  WlzCMeshEdg2D	*edg0,
+  		*edg1,
+		*edg2;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh == NULL) || (elm == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((errNum == WLZ_ERR_NONE) && mesh->res.elm.delEntCb)
+  {
+    errNum = WlzCMeshCallCallbacks(mesh, elm, mesh->res.elm.delEntCb);
+  }
+  else
+  {
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edg0 = &(elm->edg[idE]);
+      if(edg0->opp)
+      {
+        edg0->opp->opp = NULL;
+      }
+      if(edg0 == edg0->nnxt)
+      {
+        (void )WlzCMeshDelNod2D(mesh, edg0->nod);
+      }
+      else
+      {
+        edg1 = edg0;
+	edg2 = edg1->nnxt;
+	while(edg2 != edg0)
+	{
+	  edg1 = edg2;
+	  edg2 = edg2->nnxt;
+	}
+	edg1->nnxt = edg2->nnxt;
+	edg1->nod->edg = edg1;
+      }
+    }
+    WlzCMeshElmFree2D(mesh, elm);
   }
   return(errNum);
 }
@@ -874,10 +1038,11 @@ void		WlzCMeshElmFree3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
 * \param	mesh			Given mesh.
 * \param	tr			Affine transform.
 */
-WlzErrorNum	WlzCMeshAffineTransformNodes2D(WlzCMesh2D *mesh,
-					       WlzAffineTransform *tr)
+WlzErrorNum	WlzCMeshAffineTransformMesh2D(WlzCMesh2D *mesh,
+					      WlzAffineTransform *tr)
 {
-  int		idN;
+  int		idN,
+  		nNod;
   WlzCMeshNod2D	*nod;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -891,13 +1056,196 @@ WlzErrorNum	WlzCMeshAffineTransformNodes2D(WlzCMesh2D *mesh,
   }
   else
   {
+    /* Transform the nodes. */
+    nNod = 0;
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
       nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
+	++nNod;
         nod->pos = WlzAffineTransformVertexD2(tr, nod->pos, NULL);
       }
+    }
+    /* Update the bounding box. */
+    WlzCMeshUpdateBBox2D(mesh);
+    /* Compute a new bucket grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignBuckets(mesh, nNod);
+    /* Recompute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen2D(mesh);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets the WLZ_CMESH_NOD_FLAG_OUTSIDE for nodes which
+*		are outside the object's domain.
+* \param	mesh			Given mesh.
+* \param	obj			Object with domain to which the
+*					mesh should conform.
+*/
+WlzErrorNum	WlzCMeshSetNodOutsideFlags2D(WlzCMesh2D *mesh,
+					    WlzObject *obj)
+{
+  int		idN;
+  WlzCMeshNod2D	*nod;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((mesh == NULL) || (obj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if((nod->idx >= 0) &&
+         (WlzInsideDomain(obj, 0.0, nod->pos.vtY, nod->pos.vtX, NULL) == 0))
+      {
+	nod->flags |= WLZ_CMESH_NOD_FLAG_OUTSIDE;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets the WLZ_CMESH_ELM_FLAG_BOUNDARY for elements which
+*		intersect the object's boundary.
+* \param	mesh			Given mesh.
+* \param	obj			Object with domain to which the
+*					mesh should conform.
+*/
+WlzErrorNum	WlzCMeshSetElmBoundaryFlags2D(WlzCMesh2D *mesh,
+					      WlzObject *obj)
+{
+  WlzObject	*bObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bObj = WlzObjToBoundary(obj, 1, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshSetElmBoundaryFlagsBnd2D(mesh, bObj->domain.b);
+  }
+  (void )WlzFreeObj(bObj);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets the WLZ_CMESH_ELM_FLAG_BOUNDARY for elements which
+*		intersect the boundary.
+* \param	mesh			Given mesh.
+* \param	bnd			Boundary to which the mesh should
+*					conform.
+*/
+static WlzErrorNum WlzCMeshSetElmBoundaryFlagsBnd2D(WlzCMesh2D *mesh,
+					            WlzBoundList *bnd)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(bnd->poly)
+  {
+    errNum = WlzCMeshSetElmBoundaryFlagsPly2D(mesh, bnd->poly);
+  }
+  if((errNum == WLZ_ERR_NONE) && (bnd->next != NULL))
+  {
+    errNum = WlzCMeshSetElmBoundaryFlagsBnd2D(mesh, bnd->next);
+  }
+  if((errNum == WLZ_ERR_NONE) && (bnd->down != NULL))
+  {
+    errNum = WlzCMeshSetElmBoundaryFlagsBnd2D(mesh, bnd->down);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets the WLZ_CMESH_ELM_FLAG_BOUNDARY for elements which
+*		intersect the polygon.
+* \param	mesh			Given mesh.
+* \param	bnd			Polygon to which the mesh should
+*					conform.
+*/
+static WlzErrorNum WlzCMeshSetElmBoundaryFlagsPly2D(WlzCMesh2D *mesh,
+					            WlzPolygonDomain *ply)
+{
+  int		idE,
+  		idN;
+  WlzObject	*obj8 = NULL;
+  WlzCMeshElm2D	*elm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  obj8 = WlzPolyTo8Polygon(ply, 0, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idE = -1;
+    for(idN = 0; idN < obj8->domain.poly->nvertices; ++idN)
+    {
+      idE = WlzCMeshElmEnclosingPos2D(mesh, idE,
+      				      (obj8->domain.poly->vtx + idN)->vtX,
+      				      (obj8->domain.poly->vtx + idN)->vtY);
+      if(idE >= 0)
+      {
+        elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+      }
+      else
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
+      }
+    }
+  }
+  (void )WlzFreeObj(obj8);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Deletes all mesh elements which have all nodes flaged as
+*		being outside the domain.
+* \param	mesh			Given mesh.
+*/
+WlzErrorNum	WlzCMeshDelAllElmOutside2D(WlzCMesh2D *mesh)
+{
+  int		idE;
+  WlzCMeshElm2D	*elm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+        if(((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) == 0) &&
+	   (((elm->edg[0].nod->flags | elm->edg[1].nod->flags | 
+              elm->edg[2].nod->flags) & WLZ_CMESH_NOD_FLAG_OUTSIDE) != 0))
+        {
+	  (void )WlzCMeshDelElm2D(mesh, elm);
+	}
+      }
+#ifdef WLZ_CMESH_DEBUG_MESH
+      errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+#endif
     }
   }
   return(errNum);
@@ -908,54 +1256,130 @@ WlzErrorNum	WlzCMeshAffineTransformNodes2D(WlzCMesh2D *mesh,
 * \ingroup	WlzMesh
 * \brief	Checks that the 2D mesh has valid connectivities.
 *		This function is slow and should only be used when
-*		debugging mesh connectivities.
+*		debugging mesh connectivities - it is not intended for
+*		routine use. With an invalid mesh this checking function
+*		may provoke NULL pointer access or segmentation faults.
 * \param	mesh			Given mesh.
 * \param	dstElm			Destination mesh element pointer
 *					for last mesh element, may be NULL.
+* \param	allErr			If non zero the checking conmtinues
+*					after an error has been found, else if
+*					zero the checking stops after the first
+*					error has been found.
+* \param	fP			Stream for diagnostic output
+*					statements - may be NULL in which case
+*					there will be no diagnostic output.
 */
-WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm)
+WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
+				 int allErr, FILE *fP)
 {
-  int		idE,
+  int		cnt,
+  		idE,
   		idN;
+  WlzCMeshEdg2D *edg0,
+  		*edg1;
   WlzCMeshElm2D	*elm;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzErrorNum	errNum0,
+  		errNum1 = WLZ_ERR_NONE;
+  const		nnxtLimit = 1000;
+  char		msgBuf[1000];
 
   if(mesh == NULL)
   {
-    errNum = WLZ_ERR_DOMAIN_NULL;
+    errNum1 = WLZ_ERR_DOMAIN_NULL;
   }
   else if(mesh->type != WLZ_CMESH_TRI2D)
   {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
+    errNum1 = WLZ_ERR_DOMAIN_TYPE;
   }
   else
   {
     idE = 0;
-    while((errNum == WLZ_ERR_NONE) && (idE < mesh->res.elm.maxEnt))
+    while((idE < mesh->res.elm.maxEnt) &&
+          ((allErr == 0)  || (errNum1 == WLZ_ERR_NONE)))
     {
+      /* Verify elements of mesh. */
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
 	idN = 0;
-	while((errNum == WLZ_ERR_NONE) && (idN < 3))
+	while((idN < 3) &&
+	      ((allErr == 0)  || (errNum1 == WLZ_ERR_NONE)))
 	{
-	  if((elm->edg[idN].next != &(elm->edg[(idN + 1) % 3])) ||
-	     (elm->edg[idN].nod == NULL) ||
-	     (elm->edg[idN].nod->idx < 0) ||
-	     (elm->edg[idN].nod->edg->nod != elm->edg[idN].nod) ||
-	     (elm->edg[idN].opp &&
-	      ((elm->edg[idN].opp->elm == elm) ||
-	       (elm->edg[idN].opp->opp != &(elm->edg[idN])))))
+	  errNum0 = WLZ_ERR_NONE;
+	  /* Verify each edge of element. */
+	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
+	     (elm->edg[idN].next != &(elm->edg[(idN + 1) % 3])))
 	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+	                   "elm[%d]->edg[%d].next != &(elm[%d]->edg[%d])",
+			   idE, idN, idE, (idN + 1) % 3);
+	  }
+	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
+	     (elm->edg[idN].nod == NULL))
+	  {
+	    (void )sprintf(msgBuf,
+	    		   "elm[%d]->edg[%d].nod == NULL",
+			   idE, idN);
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	  }
+	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
+	     (elm->edg[idN].nod->idx < 0))
+	  {
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+	    		   "elm[%d]->edg[%d].nod->idx < 0",
+			   idE, idN);
+	  }
+	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
+	     (elm->edg[idN].nod->edg->nod != elm->edg[idN].nod))
+	  {
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+		"elm[%d]->edg[%d].nod->edg->nod != elm[%d]->edg[%d].nod",
+		idE, idN, idE, idN);
+	  }
+	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
+	     ((elm->edg[idN].opp != NULL) &&
+	     (elm->edg[idN].opp->opp != &(elm->edg[idN]))))
+	  {
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+	    		   "elm[%d]->edg[%d].opp->opp != &(elm[%d]->edg[%d])",
+			   idE, idN, idE, idN);
+	  }
+	  if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
+	  {
+	    cnt = 0;
+	    edg1 = edg0 = elm->edg[idN].nod->edg;
+	    do
+	    {
+	      edg1 = edg1->nnxt;
+	    }
+	    while((cnt++ < nnxtLimit) && (edg1 != edg0));
+	    if(cnt >= nnxtLimit)
+	    {
+	      errNum0 = WLZ_ERR_DOMAIN_DATA;
+	      (void )sprintf(msgBuf,
+			     "elm[%d]->edg[%d].nod->edg->nnxt cycle > %d",
+			     idE, idN, nnxtLimit);
+	    }
+	  }
+	  if(errNum1 == WLZ_ERR_NONE)
+	  {
+	    errNum1 = errNum0;
 	  }
 	  ++idN;
 	}
-	if(errNum == WLZ_ERR_NONE)
+	if((allErr == 0)  || (errNum1 == WLZ_ERR_NONE))
 	{
 	  if(WlzCMeshElmSnArea22D(elm) < WLZ_MESH_TOLERANCE_SQ)
 	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+	    		   "WlzCMeshElmSnArea22D(elm[%d]) < %g",
+			   idE, WLZ_MESH_TOLERANCE_SQ);
 	  }
 	}
       }
@@ -966,7 +1390,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm)
   {
     *dstElm = elm;
   }
-  return(errNum);
+  return(errNum1);
 }
 
 /*!
@@ -983,6 +1407,154 @@ double		WlzCMeshElmSnArea22D(WlzCMeshElm2D *elm)
   			        elm->edg[1].nod->pos,
   				elm->edg[2].nod->pos);
   return(area);
+}
+
+/*!
+* \return	void
+* \ingroup	WlzMesh
+* \brief	Updates the bounding box of the 2D conforming mesh.
+* \param	mesh			The mesh.
+*/
+static void	WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh)
+{
+  int		idN,
+  		firstNod;
+  WlzCMeshNod2D	*nod;
+  WlzDBox2	bBox;
+
+  /* Update the bounding box. */
+  firstNod = 1;
+  for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+  {
+    nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+    if(nod->idx >= 0)
+    {
+      if(firstNod)
+      {
+	firstNod = 0;
+	bBox.xMin = bBox.xMax = nod->pos.vtX;
+	bBox.yMin = bBox.yMax = nod->pos.vtY;
+      }
+      else
+      {
+	if(nod->pos.vtX < bBox.xMin)
+	{
+	  bBox.xMin = nod->pos.vtX;
+	}
+	else if(nod->pos.vtX > bBox.xMax)
+	{
+	  bBox.xMax = nod->pos.vtX;
+	}
+	if(nod->pos.vtY < bBox.yMin)
+	{
+	  bBox.yMin = nod->pos.vtY;
+	}
+	else if(nod->pos.vtY > bBox.yMax)
+	{
+	  bBox.yMax = nod->pos.vtY;
+	}
+      }
+    }
+  }
+  if(firstNod == 0)
+  {
+    mesh->bBox = bBox;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzMesh
+* \brief	Computes the mesh maximum edge length which is used to
+*		terminate vertex location. This should not be allowed
+*		to become less than the actual maximum edge length or
+*		vertex location may fail, also if it is far larger than
+*		the actual maximum edge length then vertex location
+*		will be inefficient when vertices are outside the mesh.
+* \param	mesh			The mesh.
+*/
+static void	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
+{
+  int		idE;
+  double	dSq;
+  WlzCMeshElm2D	*elm;
+
+  mesh->maxSqEdgLen = 0.0;
+  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  {
+    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+    if(elm->idx >= 0)
+    {
+      dSq = WlzGeomDistSq2D(elm->edg[0].nod->pos, elm->edg[1].nod->pos);
+      if(dSq > mesh->maxSqEdgLen)
+      {
+        mesh->maxSqEdgLen = dSq;
+      }
+      dSq = WlzGeomDistSq2D(elm->edg[1].nod->pos, elm->edg[2].nod->pos);
+      if(dSq > mesh->maxSqEdgLen)
+      {
+        mesh->maxSqEdgLen = dSq;
+      }
+      dSq = WlzGeomDistSq2D(elm->edg[2].nod->pos, elm->edg[0].nod->pos);
+      if(dSq > mesh->maxSqEdgLen)
+      {
+        mesh->maxSqEdgLen = dSq;
+      }
+    }
+  }
+}
+
+/*!
+* \return	Wlz error code.
+* \ingroup	WlzMesh
+* \brief	Allocates a new bucket grid and then reassigns the nodes
+*		to the buckets.
+* \param	mesh			The mesh.
+* \param	mesh			New expected number of nodes.
+*/
+WlzErrorNum    WlzCMeshReassignBuckets(WlzCMesh2D *mesh, int newNumNod)
+{
+  int		idN;
+  double	tD0;
+  WlzIVertex2	bSz;
+  WlzCMeshNod2D	*nod;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	nodPerBucket = 4.0; /* TODO This is an efficiency tuning
+  				       parameter which is to be determined. */
+
+  /* This assumes that the mesh nodes will be evenly distributed over
+   * the LBT domain (which they're not). */
+  tD0 = nodPerBucket / (double)newNumNod;
+  bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin; /* NOT + 1 */
+  bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin; /* NOT + 1 */
+  mesh->bGrid.nB.vtX = (int )ceil((double )(bSz.vtX) * sqrt(tD0)) + 1;
+  mesh->bGrid.nB.vtY = (int )ceil((double )(bSz.vtY) * sqrt(tD0)) + 1;
+  mesh->bGrid.bSz.vtX = (double )(bSz.vtX) /
+			(double )(mesh->bGrid.nB.vtX);
+  mesh->bGrid.bSz.vtY = (double )(bSz.vtY) /
+			(double )(mesh->bGrid.nB.vtY);
+   /* Reallocate the grid buckets. */
+  Alc2Free((void **)(mesh->bGrid.buckets));
+  if(AlcPtr2Calloc((void ***)&(mesh->bGrid.buckets),
+		    mesh->bGrid.nB.vtY,
+		    mesh->bGrid.nB.vtX) != ALC_ER_NONE)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  /* Add all the nodes to the grid buckets. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nod->next = NULL;
+	WlzCMeshAddNodToGrid2D(mesh, nod);
+      }
+    }
+  }
+  return(errNum);
 }
 
 /*!
@@ -1142,16 +1714,219 @@ int		WlzCMeshMatchNNod2D(WlzCMesh2D *mesh, int nNod,
 }
 
 /*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element of the conforming mesh which encloses
+*		the given position.
+*
+*		If a valid last element index is given then a search is
+*		made for the enclosing element both within this element
+*		and then, if not found, within it's immediate edge
+*		neighbours.
+*		If this simple 'walk search' fails to locate the enclosing
+*		element a 'jump search' is used in which the grid buckets
+*		of the conforming mesh are searched.
+* \param        mesh			The mesh.
+* \param        lastElmIdx		Last element index to help efficient
+* 					location. If negative this is ignored.
+* \param        pX			Column coordinate of position.
+* \param        pY			Line coordinate of position.
+*/
+int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
+                                        int lastElmIdx,
+                                        double pX, double pY)
+{
+  WlzDVertex2	gPos;
+  int           elmIdx = -1;
+
+  gPos.vtX = pX;
+  gPos.vtY = pY;
+  if(lastElmIdx >= 0)
+  {
+    elmIdx = WlzCMeshElmWalkPos2D(mesh, lastElmIdx, gPos);
+  }
+  if(elmIdx < 0)
+  {
+    elmIdx = WlzCMeshElmJumpPos2D(mesh, gPos);
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return	Element index or negative value if no enclosing element found.
+* \ingroup	WlzMesh
+* \brief	Locates the element of the conforming mesh which encloses
+*		the given position by testing the given element and it's
+*		immediate edge neighbours.
+* \param	mesh			The mesh.
+* \param	elmIdx			Index of first element to test.
+* \param	gPos			Test position.
+*/
+static int	WlzCMeshElmWalkPos2D(WlzCMesh2D *mesh, int elmIdx,
+				     WlzDVertex2 gPos)
+{
+  int		idE;
+  WlzCMeshElm2D	*elm0,
+  		*elm1;
+
+  if((elmIdx >= 0) && (elmIdx < mesh->res.elm.maxEnt))
+  {
+    elm0 = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, elmIdx);
+    if(WlzCMeshElmEnclosesPos2D(elm0, gPos) == 0)
+    {
+      elmIdx = -1;
+      for(idE = 0; idE < 3; ++idE)
+      {
+	if(elm0->edg[idE].opp)
+	{
+	  elm1 = elm0->edg[idE].opp->elm;
+	  if(WlzCMeshElmEnclosesPos2D(elm1, gPos) != 0)
+	  {
+	    elmIdx = elm1->idx;
+	    break;
+	  }
+	}
+      }
+    }
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return	Index of the enclosing element or < 0 if no enclosing
+*		element is found.
+* \ingroup	WlzMesh
+* \brief	Searches for the conforming mesh element which encloses
+*		the given position by jumping to the corresponding grid
+*		bucket and then spiraling out from this grid bucket until
+*		the maximum search distance is reached. For each of the
+*		grid buckets - all the elements of it's nodes are searched.
+*		The search terminates either when the enclosing element
+*		is found or when the maximum search distance is reached.
+* \param	mesh			The conforming  mesh.
+* \param	gPos			Given position.
+*/
+static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos)
+{
+  int		spiralCnt = 0,
+  		elmIdx = -1;
+  double	d0,
+  		d1;
+  WlzDVertex2	bPos;
+  WlzIVertex2	idB;
+  double	dstSq = 0.0;
+  WlzCMeshNod2D	*nod;
+  WlzCMeshEdg2D	*edg;
+  WlzCMeshNod2D	**bktP;
+
+  /* Compute extra distance to allow for search within circle rather than
+   * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
+   * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
+   * respectively. */
+  if(mesh->bGrid.bSz.vtX > mesh->bGrid.bSz.vtY)
+  {
+    d0 = mesh->bGrid.bSz.vtX * 0.5;
+    d1 = mesh->bGrid.bSz.vtY * 0.5;
+  }
+  else
+  {
+    d0 = mesh->bGrid.bSz.vtY * 0.5;
+    d1 = mesh->bGrid.bSz.vtX * 0.5;
+  }
+  d0 = sqrt((d0 * d0) + (d1 * d1)) - d1; /* This is the extra distance. */
+  /* Find the grid bucket which contains the position. */
+  idB = WlzCMeshBucketIdxVtx2D(mesh, gPos);
+  do
+  {
+    bktP = *(mesh->bGrid.buckets + idB.vtY) + idB.vtX;
+    /* for each node in the grid bucket. */
+    nod = *bktP;
+    while(nod)
+    {
+      edg = nod->edg;
+      do
+      {
+	if(WlzCMeshElmEnclosesPos2D(edg->elm, gPos))
+	{
+	  elmIdx = edg->elm->idx;
+	  goto FOUND;
+	}
+	if(edg->opp && WlzCMeshElmEnclosesPos2D(edg->opp->elm, gPos))
+	{
+	  elmIdx = edg->opp->elm->idx;
+	  goto FOUND;
+	}
+	edg = edg->nnxt;
+      }
+      while(edg != nod->edg);
+      nod = nod->next;
+    }
+    /* Spiral out from the initial grid bucket. */
+    spiralCnt = WlzGeomItrSpiral2I(spiralCnt, &(idB.vtX), &(idB.vtY));
+    /* Compute squared distance from the position to the closest vertex
+     * of the grid bucket's cell, then subtract the extra distance to
+     * account for search in circle rather than rectangle.  If the
+     * resulting squared distance is greater than the maximum square
+     * edge length then stop searching. */
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
+    dstSq = WlzGeomDistSq2D(gPos, bPos);
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
+    d1 = WlzGeomDistSq2D(gPos, bPos);
+    if(d1 < dstSq)
+    {
+      dstSq = d1;
+    }
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
+    d1 = WlzGeomDistSq2D(gPos, bPos);
+    if(d1 < dstSq)
+    {
+      dstSq = d1;
+    }
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
+    d1 = WlzGeomDistSq2D(gPos, bPos);
+    if(d1 < dstSq)
+    {
+      dstSq = d1;
+    }
+  } while((dstSq  - d0) < mesh->maxSqEdgLen);
+FOUND:
+  return(elmIdx);
+}
+
+int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
+{
+  int		inside = 0;
+
+  inside = WlzGeomVxInTriangle(elm->edg[0].nod->pos, elm->edg[1].nod->pos,
+                               elm->edg[2].nod->pos, gPos) >= 0;
+  return(inside);
+}
+
+/*!
 * \return	New mesh or NULL on error.
 * \ingroup	WlzMesh
 * \brief	Constructs a 2D mesh from a 2D domain object.
+*		Because of the difficulty in computing a mesh which conforms
+*		to the domain of the given object, the resulting mesh will
+*		instead cover the given domain with some nodes of the
+*		mesh outside the given domain. All mesh nodes will however
+*		be within the dilated domain, where the dilation is by a sphere
+*		of radius twice the minimum element size.
 * \param	obj			Given domain object.
 * \param	minElmSz		Minimum element size.
 * \param	maxElmSz		Minimum element size.
+* \param	dstDilObj		Destination pointer for the dilated
+*					object used to build the mesh.
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 				   double minElmSz, double maxElmSz,
+				   WlzObject **dstDilObj,
 				   WlzErrorNum *dstErr)
 {
   int		scale;
@@ -1159,10 +1934,10 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   WlzCMesh2D	*mesh = NULL;
   WlzLBTDomain2D *lDom = NULL;
   WlzObject	*dilObj = NULL,
-		*ersObj = NULL,
   		*idxObj = NULL,
   		*sclObj = NULL,
-		*strObj = NULL;
+		*strObj = NULL,
+		*tmpObj = NULL;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1178,45 +1953,31 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(minElmSz < 0.1)
+  else if(minElmSz < 1.0)
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    scale = WLZ_NINT(minElmSz / 0.5);
-    if(scale <= 1)
-    {
-      sclObj = WlzAssignObject(obj, NULL);
-    }
-    else
-    {
-      
-      invScale = 1.0 / scale;
-      strObj = WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, scale,
-      				   0.0, 0.0, 0.0, &errNum);
-      if(errNum == WLZ_ERR_NONE)
-      {
-	dilObj = WlzStructDilation(obj, strObj, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	ersObj = WlzStructErosion(dilObj, strObj, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        tr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	(void )WlzAffineTransformScaleSet(tr, invScale, invScale, invScale);
-	sclObj = WlzAffineTransformObj(ersObj, tr, WLZ_INTERPOLATION_NEAREST,
-				       &errNum);
-      }
-      (void )WlzFreeObj(strObj);
-      (void )WlzFreeObj(dilObj);
-      (void )WlzFreeObj(ersObj);
-    }
+    scale = (int )ceil(minElmSz);
+    invScale = 1.0 / scale;
+    strObj = WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, 2 * scale,
+				 0.0, 0.0, 0.0, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dilObj = WlzStructDilation(obj, strObj, &errNum);
+  }
+  (void )WlzFreeObj(strObj); strObj = NULL;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )WlzAffineTransformScaleSet(tr, invScale, invScale, invScale);
+    sclObj = WlzAffineTransformObj(dilObj, tr, WLZ_INTERPOLATION_NEAREST,
+				   &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1238,16 +1999,32 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   {
     mesh = WlzCMeshFromBalLBTDom2D(lDom, idxObj, &errNum);
   }
+  WlzFreeObj(idxObj); idxObj = NULL;
   if(errNum == WLZ_ERR_NONE)
   {
-    if(scale > 1)
-    {
-      (void )WlzAffineTransformScaleSet(tr, scale, scale, scale);
-      errNum = WlzCMeshAffineTransformNodes2D(mesh, tr);
-    }
+    (void )WlzAffineTransformScaleSet(tr, scale, scale, scale);
+    errNum = WlzCMeshAffineTransformMesh2D(mesh, tr);
   }
-  WlzFreeObj(idxObj);
-  WlzFreeObj(sclObj);
+  WlzFreeObj(dilObj); dilObj = NULL;
+  if((errNum == WLZ_ERR_NONE) && dstDilObj)
+  {
+    dilObj = WlzAffineTransformObj(sclObj, tr, WLZ_INTERPOLATION_NEAREST,
+    				   &errNum);
+    *dstDilObj = dilObj;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshSetNodOutsideFlags2D(mesh, obj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshSetElmBoundaryFlags2D(mesh, obj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshDelAllElmOutside2D(mesh);
+  }
+  (void )WlzFreeObj(sclObj);
   (void )WlzFreeAffineTransform(tr);
   (void )WlzFreeLBTDomain2D(lDom);
   if(dstErr)
@@ -1305,14 +2082,10 @@ WlzCMesh2D	*WlzCMeshFromBalLBTDom2D(WlzLBTDomain2D *lDom, WlzObject *iObj,
 				         WlzErrorNum *dstErr)
 {
   int		idN;
-  double	tD0,
-  		tD1;
   WlzIVertex2	bSz;
   WlzCMesh2D	*mesh = NULL;
   WlzGreyValueWSpace *iGVWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	vtxPerBucket = 10; /* TODO This is an efficiency tuning
-  				      parameter which is to be determined. */
 
   if(lDom == NULL)
   {
@@ -1346,24 +2119,7 @@ WlzCMesh2D	*WlzCMeshFromBalLBTDom2D(WlzLBTDomain2D *lDom, WlzObject *iObj,
   /* Create an initial grid of buckets. */
   if(errNum == WLZ_ERR_NONE)
   {
-    /* This assumes that the mesh nodes will be evenly distributed over
-     * the LBT domain (which they're not). */
-    tD0 = lDom->nNodes * vtxPerBucket * (double )(bSz.vtX);
-    tD1 = 1.0 + (tD0 / (double )(bSz.vtY));
-    mesh->bGrid.nB.vtX = (int )ceil(sqrt(tD1));
-    mesh->bGrid.bSz.vtX = (double )(bSz.vtX) /
-    			  (double )(mesh->bGrid.nB.vtX);
-    tD0 = lDom->nNodes * vtxPerBucket * (double )(bSz.vtY);
-    tD1 = 1.0 + (tD0 / (double )(bSz.vtX));
-    mesh->bGrid.nB.vtY = (int )ceil(sqrt(tD1));
-    mesh->bGrid.bSz.vtY = (double )(bSz.vtY) /
-    			  (double )(mesh->bGrid.nB.vtY);
-    if(AlcPtr2Calloc((void ***)&(mesh->bGrid.buckets),
-    		      mesh->bGrid.nB.vtY,
-		      mesh->bGrid.nB.vtX) != ALC_ER_NONE)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
+    errNum = WlzCMeshReassignBuckets(mesh, lDom->nNodes * 4);
   }
   /* Add the LBT nodes to the mesh. */
   if(errNum == WLZ_ERR_NONE)
@@ -1433,9 +2189,16 @@ static WlzErrorNum WlzCMeshAddLBTNode2D(WlzCMesh2D *mesh, WlzLBTDomain2D *lDom,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Join the new mesh elements to the rest of the mesh. */
+    /* Join the edge of the new mesh elements to the rest of the mesh
+     * using their opp links. */
     WlzCMeshElmsJoin2D(mesh, nEdg, mEdg);
   }
+#ifdef WLZ_CMESH_DEBUG_MESH
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+  }
+#endif
   return(errNum);
 }
 
@@ -1576,8 +2339,11 @@ static void	WlzCMeshElmsJoin2D(WlzCMesh2D *mesh,
   {
     if((*edg)->opp == NULL)
     {
-      (*edg)->opp = WlzCMeshNodesFindCommonEdg2D((*edg)->nod,
-      						(*edg)->next->nod);
+      (*edg)->opp = WlzCMeshEdgFindOpp2D(*edg);
+      if((*edg)->opp)
+      {
+        (*edg)->opp->opp = *edg;
+      }
     }
     ++edg;
   }
@@ -1585,34 +2351,29 @@ static void	WlzCMeshElmsJoin2D(WlzCMesh2D *mesh,
 
 
 /*!
-* \return	The common edge or nULL if there is no common edge.
+* \return	The opposite edge or NULL if there is no opposite edge.
 * \ingroup	WlzMesh
-* \brief	Finds a common edge which is directed from the first
-*		to the second given node. This is easy because of the
-*		edge nnxt pointer.
-* \param	nod0			First node.
-* \param	nod1			Second node.
+* \brief	Finds the opposite edge (to set the opp link) using node
+*		nnxt links.
+* \param	gEdg			Given edge.
 */
-WlzCMeshEdg2D	*WlzCMeshNodesFindCommonEdg2D(WlzCMeshNod2D *nod0,
-					      WlzCMeshNod2D *nod1)
+static WlzCMeshEdg2D *WlzCMeshEdgFindOpp2D(WlzCMeshEdg2D *gEdg)
 {
-  WlzCMeshEdg2D	*tEdg,
-  		*cEdg = NULL;
+  WlzCMeshEdg2D	*fEdg,
+  		*tEdg,
+		*oEdg = NULL;
 
-  tEdg = nod0->edg;
-  while(tEdg)
+  tEdg = fEdg = gEdg->next->nod->edg;
+  do
   {
-    if(tEdg->next->nod == nod1)
+    if(tEdg->next->nod == gEdg->nod)
     {
-      cEdg = tEdg;
-      tEdg = NULL;
+      oEdg = tEdg;
+      break;
     }
-    else
-    {
-      tEdg = tEdg->nnxt;
-    }
-  }
-  return(cEdg);
+    tEdg = tEdg->nnxt;
+  } while(tEdg != fEdg);
+  return(oEdg);
 }
 
 /*!
@@ -2363,7 +3124,7 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     (void )WlzAssignObject(obj, NULL);
-    mesh = WlzCMeshFromObj2D(obj, minElmSz, maxElmSz, &errNum);
+    mesh = WlzCMeshFromObj2D(obj, minElmSz, maxElmSz, NULL, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
