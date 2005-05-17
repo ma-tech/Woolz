@@ -173,7 +173,7 @@ int		main(int argc, char *argv[])
     {
       ok = 0;
       (void )fprintf(stderr,
-                     "%s: Foreground and reference objct types differ.\n",
+                     "%s: Foreground and reference object types differ.\n",
 		     argv[0]);
     }
   }
