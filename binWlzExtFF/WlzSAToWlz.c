@@ -86,7 +86,7 @@ char *nextStartTag(
   }
 
   if( i ){
-    tag = strdup(buf);
+    tag = AlcStrDup(buf);
   }
   return tag;
 }
@@ -130,7 +130,7 @@ char *getNextName(
     }
 
     /* extract name */
-    name = strdup(buffer);
+    name = AlcStrDup(buffer);
   }
 
   return name;
@@ -316,7 +316,7 @@ main(argc, argv)
     if( strcmp(name, " ") == 0 ){
       noNameCntr++;
       sprintf(noNameBuf, "NoName_%03d", noNameCntr);
-      name = strdup(noNameBuf);
+      name = AlcStrDup(noNameBuf);
     }
     /* convert comma to underscore */
     tmpBnd = getNextBoundary(inFile);
