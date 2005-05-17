@@ -63,8 +63,10 @@ CSOURCES		= \
 			WlzBoundToObj.c \
 			WlzCannyDeriche.c \
 			WlzCbThreshold.c \
+			WlzCCor.c \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
+			WlzCMeshTransform.c \
 			WlzCompThresh.c \
 			WlzConstruct3D.c \
 			WlzContour.c \
@@ -72,7 +74,6 @@ CSOURCES		= \
 			WlzConvexHull.c \
 			WlzConvolve.c \
 			WlzCopy.c \
-			WlzCCor.c \
 			WlzCutObjToBox.c \
 			WlzDebug.c \
 			WlzDiffDomain.c \
