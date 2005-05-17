@@ -361,24 +361,28 @@ typedef enum _WlzDirection
 typedef enum _WlzTransformType
 {
   WLZ_TRANSFORM_EMPTY = 0,		/*!< Undefined transform. */
-  WLZ_TRANSFORM_2D_AFFINE = 1,		/*!< General 2D affine transform */
+  WLZ_TRANSFORM_2D_AFFINE = 1,		/*!< General 2D affine transform. */
   WLZ_TRANSFORM_2D_REG,	      		/*!< 2D affine but only rotation
-  					     and translation */
-  WLZ_TRANSFORM_2D_TRANS,       	/*!< 2D affine but only translation */
-  WLZ_TRANSFORM_2D_NOSHEAR,             /*!< 2D affine but no shear */
-  WLZ_TRANSFORM_3D_AFFINE,		/*!< General 3D affine transform */
+  					     and translation. */
+  WLZ_TRANSFORM_2D_TRANS,       	/*!< 2D affine but only translation. */
+  WLZ_TRANSFORM_2D_NOSHEAR,             /*!< 2D affine but no shear. */
+  WLZ_TRANSFORM_3D_AFFINE,		/*!< General 3D affine transform. */
   WLZ_TRANSFORM_3D_REG,	      		/*!< 3D affine but only rotation
-  					     and translation */
-  WLZ_TRANSFORM_3D_TRANS,       	/*!< 3D affine but only translation */
-  WLZ_TRANSFORM_3D_NOSHEAR,             /*!< 3D affine but no shear */
-  WLZ_TRANSFORM_2D_BASISFN,		/*!< 2D basis function transform */
+  					     and translation. */
+  WLZ_TRANSFORM_3D_TRANS,       	/*!< 3D affine but only translation. */
+  WLZ_TRANSFORM_3D_NOSHEAR,             /*!< 3D affine but no shear. */
+  WLZ_TRANSFORM_2D_BASISFN,		/*!< 2D basis function transform. */
   WLZ_TRANSFORM_2D5_BASISFN,   		/*!< 2.5D (plane wise) basis function
-  					     transform */
-  WLZ_TRANSFORM_3D_BASISFN,             /*!< 3D basis function transform */
-  WLZ_TRANSFORM_2D_MESH,                /*!< 2D triangular mesh transform */
+  					     transform. */
+  WLZ_TRANSFORM_3D_BASISFN,             /*!< 3D basis function transform. */
+  WLZ_TRANSFORM_2D_MESH,                /*!< 2D triangular mesh transform. */
   WLZ_TRANSFORM_2D5_MESH,     		/*!< 2.5D (plane wise) triangular
-  					     mesh transform */
-  WLZ_TRANSFORM_3D_MESH			/*!< 3D tetrahedral mesh transform */
+  					     mesh transform. */
+  WLZ_TRANSFORM_3D_MESH,		/*!< 3D tetrahedral mesh transform. */
+  WLZ_TRANSFORM_2D_CMESH,		/*!< 2D conforming triangular mesh
+  				             transform */
+  WLZ_TRANSFORM_3D_CMESH		/*!< 3D conforming tetrahedral mesh
+  					     transform */
 } WlzTransformType;
 
 /*!
@@ -2791,10 +2795,11 @@ typedef enum _WlzFnType
   WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
   WLZ_FN_BASIS_3DPOLY,
   WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
-  WLZ_FN_BASIS_3DMQ,			/*!< Multiquadric basis function */
+  WLZ_FN_BASIS_3DMQ,
   WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
   WLZ_FN_BASIS_3DTPS,
-  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis function */
+  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
+  					     function */
   WLZ_FN_BASIS_3DCONF_POLY,
   WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
   WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
@@ -2811,6 +2816,14 @@ typedef enum _WlzFnType
 *		may be called.
 */
 typedef double (*WlzBasisEvalFn)(void *, double);
+
+/*!
+* \typedef	WlzBasisDistFn
+* \ingroup	WlzFunction
+* \brief	An alternative basis function distance function that may
+*		may be called.
+*/
+typedef double (*WlzBasisDistFn)(void *, int, WlzVertex);
 
 /*!
 * \struct	_WlzBasisFn
@@ -2845,10 +2858,30 @@ typedef struct _WlzBasisFn
 #endif
   WlzHistogramDomain *evalData;		/*!< Data passed to the alternative
   					     basis function evaluation
-					     function if the function poionter
+					     function if the function pointer
 					     is non NULL. AlcFree() will be
 					     called to free the data when the
 					     basis function is free'd. */
+#ifdef WLZ_EXT_BIND
+  void		*distFn;
+#else
+  WlzBasisDistFn distFn;		/*!< An alternative basis function
+  					     distance function that may
+					     be called if non NULL. */
+#endif
+  WlzObject 	**distMap;		/*!< Array of distance map objects
+  					     used by the alternative
+  					     basis function distance
+					     function if the function pointer
+					     is non NULL. WlzFreeObj() will be
+					     called to free an map object for
+					     each of the control points
+					     when the basis function is free'd
+					     Each distance map object is a
+					     coresponds to the control point
+					     withthe same index. */
+  struct _WlzGreyValueWSpace **distWSp;	/*!< Work spaces coresponding to the
+  					     distance map objects. */
 } WlzBasisFn;
 
 /*!
@@ -2870,6 +2903,307 @@ typedef struct _WlzThreshCbStr
 */
 typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
 
+/************************************************************************
+* Conforming mesh data structures.
+************************************************************************/
+
+/*!
+* \enum		_WlzCMeshElmFlags
+* \ingroup	WlzMesh
+* \brief	Conforming mesh element flags. These are bit masks which are
+*		used in a conforming mesh's elements flags.
+*		Typedef: ::WlzCMeshElmFlags.
+*/
+typedef enum _WlzCMeshElmFlags
+{
+  WLZ_CMESH_ELM_FLAG_NONE      = (0),
+  WLZ_CMESH_ELM_FLAG_BOUNDARY  = (1)	  /*!< Element intersects the boundary
+  					       of the domain to which it
+					       should conform. */
+} WlzCMeshElmFlags;
+
+/*!
+* \enum		_WlzCMeshNodFlags
+* \ingroup	WlzMesh
+* \brief	Conforming mesh node flags. These are bit masks which are
+*		used in a conforming mesh's node flags.
+*		Typedef: ::WlzCMeshNodFlags.
+*/
+typedef enum _WlzCMeshNodFlags
+{
+  WLZ_CMESH_NOD_FLAG_NONE       = (0),
+  WLZ_CMESH_NOD_FLAG_OUTSIDE 	= (1)	  /*!< Node is outside the domain to
+  					       which the mesh should
+					       conform. */
+} WlzCMeshNodFlags;
+
+/*!
+* \struct       _WlzCMeshNod2D
+* \ingroup      WlzMesh
+* \brief        A node of a 2D mesh.
+*               Typedef: ::WlzCMeshNod2D.
+*/
+typedef struct _WlzCMeshNod2D
+{
+  int           idx;                    /*!< The node index. */
+  unsigned int  flags;                  /*!< Bitwise description of node. */
+  WlzDVertex2   pos;                    /*!< Node position. */
+  struct _WlzCMeshEdg2D *edg;           /*!< One of many edges which is
+                                             directed from the node. A
+                                             node is shared by many parents. */
+  struct _WlzCMeshNod2D *next;          /*!< Next node in bucket. */
+  void		*prop;      		/*!< Node properties. */
+} WlzCMeshNod2D;
+
+/*!
+* \struct       _WlzCMeshNod3D
+* \ingroup      WlzMesh
+* \brief        A node of a 3D mesh.
+*               Typedef: ::WlzCMeshNod3D.
+*/
+typedef struct _WlzCMeshNod3D
+{
+  int           idx;                    /*!< The node index. */
+  unsigned int  flags;                  /*!< Bitwise description of node. */
+  WlzDVertex3   pos;                    /*!< Node position. */
+  struct _WlzCMeshEdg3D *edg;           /*!< One of many edges which is
+                                             directed from the node. A
+                                             node is shared by many parents. */
+  struct _WlzCMeshNod3D *next;          /*!< Next node in bucket. */
+  void		*prop;      		/*!< Node properties. */
+} WlzCMeshNod3D;
+
+/*!
+* \struct       _WlzCMeshEdg2D
+* \ingroup      WlzMesh
+* \brief        A 2D CCW directed (half) edge within the parent simplex.
+*               Typedef: ::WlzCMeshEdg2D.
+*/
+typedef struct _WlzCMeshEdg2D
+{
+  struct _WlzCMeshNod2D *nod;           /*!< Node form which this edge is
+                                             directed. */
+  struct _WlzCMeshEdg2D *next;          /*!< Next directed edge, previous
+                                             can be found using next->next. */
+  struct _WlzCMeshEdg2D *opp;           /*!< Opposite directed edge. */
+  struct _WlzCMeshEdg2D *nnxt;          /*!< Next edge directed from the
+                                             same node (unordered). */
+  struct _WlzCMeshElm2D *elm;           /*!< Parent element. */
+} WlzCMeshEdg2D;
+/*!
+* \struct       _WlzCMeshEdg3D
+* \ingroup      WlzMesh
+* \brief        A 3D directed (half) edge within the parent face.
+*               Typedef: ::WlzCMeshEdg3D.
+*/
+typedef struct _WlzCMeshEdg3D
+{
+  struct _WlzCMeshNod3D *nod;           /*!< Node form which this edge is
+                                             directed. */
+  struct _WlzCMeshEdg3D *next;          /*!< Next directed edge, previous
+                                             can be found using next->next. */
+  struct _WlzCMeshEdg3D *opp;           /*!< Opposite directed edge on
+                                             neighboring face. */
+  struct _WlzCMeshEdg3D *nnxt;          /*!< Next edge directed from the
+                                             same node (unordered). */
+  struct _WlzCMeshFace *face;           /*!< Parent face. */
+} WlzCMeshEdg3D;
+
+/*!
+* \struct       _WlzCMeshFace
+* \ingroup      WlzMesh
+* \brief        A directed face within the parent simplex.
+*               Typedef: ::WlzCMeshFace.
+*/
+typedef struct _WlzCMeshFace
+{
+  struct _WlzCMeshEdg3D edg[3];         /*!< Directed edges of the face. */
+  struct _WlzCMeshFace *opp;            /*!< Opposite face on neighboring
+                                             mesh element. */
+  struct _WlzCMeshElm3D *elm;           /*!< Parent mesh element. */
+} WlzCMeshFace;
+
+/*!
+* \struct       _WlzCMeshElm2D
+* \ingroup      WlzMesh
+* \brief        A single 2D triangular mesh element.
+*               Typedef: ::WlzCMeshElm2D.
+*/
+typedef struct _WlzCMeshElm2D
+{
+  int           idx;                    /*!< The element index. */
+  unsigned int  flags;                  /*!< Element flags. */
+  struct _WlzCMeshEdg2D edg[3];         /*!< Edges of the mesh element. */
+  void		*prop;      		/*!< Element properties. */
+} WlzCMeshElm2D;
+
+/*!
+* \struct       _WlzCMeshElm3D
+* \ingroup      WlzMesh
+* \brief        A single 3D tetrahedral mesh element.
+*               Typedef: ::WlzCMeshElm3D.
+*/
+typedef struct _WlzCMeshElm3D
+{
+  int           idx;                    /*!< The element index. */
+  unsigned int  flags;                  /*!< Element flags. */
+  struct _WlzCMeshFace face[4];         /*!< Faces of the mesh element. */
+  void		*prop;      		/*!< Element properties. */
+} WlzCMeshElm3D;
+
+/*!
+* \struct       _WlzCMeshBucketGrid2D
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of buckets with each bucket holding
+*               a linked list of the 2D mesh nodes that fall within the
+*               bucket.
+*               Typedef: ::WlzCMeshBucketGrid2D.
+*/
+typedef struct  _WlzCMeshBucketGrid2D
+{
+  WlzIVertex2   nB;                     /*!< Dimensions of the bucket array in
+                                             terms of the number of buckets. */
+  WlzDVertex2   bSz;                    /*!< Size of each bucket. */
+  WlzCMeshNod2D ***buckets;             /*!< The mesh node buckets. */
+} WlzCMeshBucketGrid2D;
+
+/*!
+* \struct       _WlzCMeshBucketGrid3D
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of buckets with each bucket holding
+*               a linked list of the 3D mesh nodes that fall within the
+*               bucket.
+*               Typedef: ::WlzCMeshBucketGrid3D.
+*/
+typedef struct  _WlzCMeshBucketGrid3D
+{
+  WlzIVertex3   nB;                     /*!< Dimensions of the bucket array in
+                                             terms of the number of buckets. */
+  WlzDVertex3   bSz;                    /*!< Size of each bucket. */
+  WlzCMeshNod3D ****buckets;            /*!< The mesh node buckets. */
+} WlzCMeshBucketGrid3D;
+
+#ifndef WLZ_EXT_BIND
+/*!
+* \typedef	WlzCMeshCbFn
+* \ingroup	WlzMesh
+* \brief	A pointer to a function called to make mesh entity
+*               properties.
+*		Parameters passed are: mesh, entity, data.
+*/
+typedef WlzErrorNum (*WlzCMeshCbFn)(void *, void *, void *);
+#endif
+
+/*!
+* \struct	_WlzCMeshCbEntry
+* \ingroup	WlzMesh
+* \brief	Callback entry for list of callbacks.
+*		Typedef: ::WlzCMeshCbEntry.
+*/
+typedef struct _WlzCMeshCbEntry
+{
+#ifndef WLZ_EXT_BIND
+  WlzCMeshCbFn	fn;
+#else
+  void		*fn;
+#endif
+  void		*data;
+  struct _WlzCMeshCbEntry *next;
+} WlzCMeshCbEntry;
+
+/*!
+* \struct       _WlzCMeshEntRes
+* \ingroup      WlzMesh
+* \brief        Resources used for efficient allocation and recycling of
+*               mesh entities.
+*               Typedef: ::WlzCMeshEntRes.
+*/
+typedef struct _WlzCMeshEntRes
+{
+  unsigned int  numEnt;                 /*!< Number of valid entities in
+                                             vector. */
+  unsigned int  maxEnt;                 /*!< Space allocated in vector. */
+  unsigned int  nextIdx;                /*!< Index of next free mesh entity
+                                             in vector. */
+  AlcVector     *vec;                   /*!< Vector (extensible array) of
+                                             mesh entities. */
+  WlzCMeshCbEntry *newEntCb;		/*!< Callbacks for new entities. */
+  WlzCMeshCbEntry *delEntCb;		/*!< Callbacks for deleted entities. */
+} WlzCMeshEntRes;
+
+/*!
+* \struct       _WlzCMeshRes
+* \ingroup      WlzMesh
+* \brief        Resources used for efficient allocation, recycling and
+*               location of mesh elements and nodes.
+*               Typedef: ::WlzCMeshRes.
+*/
+typedef struct _WlzCMeshRes
+{
+  struct _WlzCMeshEntRes        nod;            /*!< Node resources. */
+  struct _WlzCMeshEntRes        elm;            /*!< Element resources. */
+} WlzCMeshRes;
+
+/*!
+* \struct       _WlzCMesh2D
+* \ingroup      WlzMesh
+* \brief        A graph based mesh model for 2D boundary conforming
+*               simplical meshes.
+*               The mesh inherits it's core fields from the Woolz core
+*               domain.
+*               Typedef: ::WlzCMesh2D.
+*/
+typedef struct _WlzCMesh2D
+{
+  int           type;                   /*!< Type of mesh. */
+  int           linkcount;              /*!< Core. */
+  void          *freeptr;               /*!< Core. */
+  WlzDBox2      bBox;                   /*!< Axis aligned bounding box of
+                                             the mesh. */
+  double	maxSqEdgLen;		/*!< Maximum of squared edge lengths
+  					     which can be used to restrict
+					     geometric searches. This may not
+					     be correct if nodes have been
+					     deleted or modified so it should
+					     not be relied upon for any more
+					     than an uper limit. */
+  WlzCMeshBucketGrid2D bGrid;           /*!< Mesh grid of buckets. */
+  struct _WlzCMeshRes res;              /*!< Mesh resources. */
+
+} WlzCMesh2D;
+
+/*!
+* \struct       _WlzCMesh3D
+* \ingroup      WlzMesh
+* \brief        A graph based mesh model for 3D boundary conforming
+*               simplical meshes.
+*               The mesh inherits it's core fields from the Woolz core
+*               domain.
+*               Typedef: ::WlzCMesh3D.
+*/
+typedef struct _WlzCMesh3D
+{
+  int           type;                   /*!< Type of mesh. */
+  int           linkcount;              /*!< Core. */
+  void          *freeptr;               /*!< Core. */
+  WlzDBox3      bBox;                   /*!< Axis aligned bounding box of
+                                             the mesh. */
+  WlzCMeshBucketGrid3D bGrid;           /*!< Mesh grid of buckets. */
+  struct _WlzCMeshRes res;              /*!< Mesh resources. */
+
+} WlzCMesh3D;
+
+/*!
+* \union	_WlzCMeshP
+* \ingroup   	WlzMesh
+* \brief	Union of 2D and 3D conforming simplical mesh pointers.
+*/
+typedef union _WlzCMeshP
+{
+  void		*v;
+  WlzCMesh2D	*m2;
+  WlzCMesh3D	*m3;
+} WlzCMeshP;
 
 /************************************************************************
 * Transforms
@@ -2885,7 +3219,8 @@ typedef union _WlzTransform
   struct _WlzCoreTransform *core;	/*!< Core transform. */
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
-  struct _WlzMeshTransform *mesh;	/*!< Any mesh transform. */
+  struct _WlzMeshTransform *mesh;	/*!< Any convex mesh transform. */
+  struct _WlzCMeshTransform *cMesh;	/*!< Any conforming mesh transform. */
 } WlzTransform;
 
 /*!
@@ -3120,260 +3455,21 @@ typedef struct _WlzMeshTransform2D5
   WlzMeshNode2D5 	*nodes;		/*!< Mesh nodes */
 } WlzMeshTransform2D5;
 
-/************************************************************************
-* Conforming mesh data structures.
-************************************************************************/
-
 /*!
-* \struct       _WlzCMeshNod2D
-* \ingroup      WlzMesh
-* \brief        A node of a 2D mesh.
-*               Typedef: ::WlzCMeshNod2D.
+* \struct       _WlzCMeshTransform
+* \ingroup      WlzTransform
+* \brief        A conforming mesh transform. This data structure is valid
+*		for conforming mesh transforms regardless of their dimension.
+*               typedef: ::WlzCMeshTransform.
 */
-typedef struct _WlzCMeshNod2D
+typedef struct _WlzCMeshTransform
 {
-  int           idx;                    /*!< The node index. */
-  unsigned int  flags;                  /*!< Bitwise description of node. */
-  WlzDVertex2   pos;                    /*!< Node position. */
-  struct _WlzCMeshEdg2D *edg;           /*!< One of many edges which is
-                                             directed from the node. A
-                                             node is shared by many parents. */
-  struct _WlzCMeshNod2D *next;          /*!< Next node in bucket. */
-  void		*prop;      		/*!< Node properties. */
-} WlzCMeshNod2D;
-
-/*!
-* \struct       _WlzCMeshNod3D
-* \ingroup      WlzMesh
-* \brief        A node of a 3D mesh.
-*               Typedef: ::WlzCMeshNod3D.
-*/
-typedef struct _WlzCMeshNod3D
-{
-  int           idx;                    /*!< The node index. */
-  unsigned int  flags;                  /*!< Bitwise description of node. */
-  WlzDVertex3   pos;                    /*!< Node position. */
-  struct _WlzCMeshEdg3D *edg;           /*!< One of many edges which is
-                                             directed from the node. A
-                                             node is shared by many parents. */
-  struct _WlzCMeshNod3D *next;          /*!< Next node in bucket. */
-  void		*prop;      		/*!< Node properties. */
-} WlzCMeshNod3D;
-
-/*!
-* \struct       _WlzCMeshEdg2D
-* \ingroup      WlzMesh
-* \brief        A 2D CCW directed (half) edge within the parent simplex.
-*               Typedef: ::WlzCMeshEdg2D.
-*/
-typedef struct _WlzCMeshEdg2D
-{
-  struct _WlzCMeshNod2D *nod;           /*!< Node form which this edge is
-                                             directed. */
-  struct _WlzCMeshEdg2D *next;          /*!< Next directed edge, previous
-                                             can be found using next->next. */
-  struct _WlzCMeshEdg2D *opp;           /*!< Opposite directed edge. */
-  struct _WlzCMeshEdg2D *nnxt;          /*!< Next edge directed from the
-                                             same node (unordered). */
-  struct _WlzCMeshElm2D *elm;           /*!< Parent element. */
-} WlzCMeshEdg2D;
-/*!
-* \struct       _WlzCMeshEdg3D
-* \ingroup      WlzMesh
-* \brief        A 3D directed (half) edge within the parent face.
-*               Typedef: ::WlzCMeshEdg3D.
-*/
-typedef struct _WlzCMeshEdg3D
-{
-  struct _WlzCMeshNod3D *nod;           /*!< Node form which this edge is
-                                             directed. */
-  struct _WlzCMeshEdg3D *next;          /*!< Next directed edge, previous
-                                             can be found using next->next. */
-  struct _WlzCMeshEdg3D *opp;           /*!< Opposite directed edge on
-                                             neighboring face. */
-  struct _WlzCMeshEdg3D *nnxt;          /*!< Next edge directed from the
-                                             same node (unordered). */
-  struct _WlzCMeshFace *face;           /*!< Parent face. */
-} WlzCMeshEdg3D;
-
-/*!
-* \struct       _WlzCMeshFace
-* \ingroup      WlzMesh
-* \brief        A directed face within the parent simplex.
-*               Typedef: ::WlzCMeshFace.
-*/
-typedef struct _WlzCMeshFace
-{
-  struct _WlzCMeshEdg3D edg[3];         /*!< Directed edges of the face. */
-  struct _WlzCMeshFace *opp;            /*!< Opposite face on neighboring
-                                             mesh element. */
-  struct _WlzCMeshElm3D *elm;           /*!< Parent mesh element. */
-} WlzCMeshFace;
-
-/*!
-* \struct       _WlzCMeshElm2D
-* \ingroup      WlzMesh
-* \brief        A single 2D triangular mesh element.
-*               Typedef: ::WlzCMeshElm2D.
-*/
-typedef struct _WlzCMeshElm2D
-{
-  int           idx;                    /*!< The element index. */
-  unsigned int  flags;                  /*!< Element flags. */
-  struct _WlzCMeshEdg2D edg[3];         /*!< Edges of the mesh element. */
-  void		*prop;      		/*!< Element properties. */
-} WlzCMeshElm2D;
-
-/*!
-* \struct       _WlzCMeshElm3D
-* \ingroup      WlzMesh
-* \brief        A single 3D tetrahedral mesh element.
-*               Typedef: ::WlzCMeshElm3D.
-*/
-typedef struct _WlzCMeshElm3D
-{
-  int           idx;                    /*!< The element index. */
-  unsigned int  flags;                  /*!< Element flags. */
-  struct _WlzCMeshFace face[4];         /*!< Faces of the mesh element. */
-  void		*prop;      		/*!< Element properties. */
-} WlzCMeshElm3D;
-
-/*!
-* \struct       _WlzCMeshBucketGrid2D
-* \ingroup      WlzMesh
-* \brief        A spatial grid or array of buckets with each bucket holding
-*               a linked list of the 2D mesh nodes that fall within the
-*               bucket.
-*               Typedef: ::WlzCMeshBucketGrid2D.
-*/
-typedef struct  _WlzCMeshBucketGrid2D
-{
-  WlzIVertex2   nB;                     /*!< Dimensions of the bucket array in
-                                             terms of the number of buckets. */
-  WlzDVertex2   bSz;                    /*!< Size of each bucket. */
-  WlzCMeshNod2D ***buckets;             /*!< The mesh node buckets. */
-} WlzCMeshBucketGrid2D;
-
-/*!
-* \struct       _WlzCMeshBucketGrid3D
-* \ingroup      WlzMesh
-* \brief        A spatial grid or array of buckets with each bucket holding
-*               a linked list of the 3D mesh nodes that fall within the
-*               bucket.
-*               Typedef: ::WlzCMeshBucketGrid3D.
-*/
-typedef struct  _WlzCMeshBucketGrid3D
-{
-  WlzIVertex3   nB;                     /*!< Dimensions of the bucket array in
-                                             terms of the number of buckets. */
-  WlzDVertex3   bSz;                    /*!< Size of each bucket. */
-  WlzCMeshNod3D ****buckets;            /*!< The mesh node buckets. */
-} WlzCMeshBucketGrid3D;
-
-/*!
-* \typedef	WlzCMeshCbFn
-* \ingroup	WlzMesh
-* \brief	A pointer to a function called to make mesh entity
-*               properties.
-*		Parameters passed are: mesh, entity, data.
-*/
-#ifndef WLZ_EXT_BIND
-typedef WlzErrorNum (*WlzCMeshCbFn)(void *, void *, void *);
-#else
-typedef void *WlzCMeshCbFn;
-#endif
-
-/*!
-* \struct	_WlzCMeshCbEntry
-* \ingroup	WlzMesh
-* \brief	Callback entry for list of callbacks.
-*		Typedef: ::WlzCMeshCbEntry.
-*/
-typedef struct _WlzCMeshCbEntry
-{
-#ifndef WLZ_EXT_BIND
-  WlzCMeshCbFn	fn;
-#else
-  void		*fn;
-#endif
-  void		*data;
-  struct _WlzCMeshCbEntry *next;
-} WlzCMeshCbEntry;
-
-/*!
-* \struct       _WlzCMeshEntRes
-* \ingroup      WlzMesh
-* \brief        Resources used for efficient allocation and recycling of
-*               mesh entities.
-*               Typedef: ::WlzCMeshEntRes.
-*/
-typedef struct _WlzCMeshEntRes
-{
-  unsigned int  numEnt;                 /*!< Number of valid entities in
-                                             vector. */
-  unsigned int  maxEnt;                 /*!< Space allocated in vector. */
-  unsigned int  nextIdx;                /*!< Index of next free mesh entity
-                                             in vector. */
-  AlcVector     *vec;                   /*!< Vector (extensible array) of
-                                             mesh entities. */
-  WlzCMeshCbEntry *newEntCb;		/*!< Callbacks for new entities. */
-  WlzCMeshCbEntry *delEntCb;		/*!< Callbacks for deleted entities. */
-} WlzCMeshEntRes;
-
-/*!
-* \struct       _WlzCMeshRes
-* \ingroup      WlzMesh
-* \brief        Resources used for efficient allocation, recycling and
-*               location of mesh elements and nodes.
-*               Typedef: ::WlzCMeshRes.
-*/
-typedef struct _WlzCMeshRes
-{
-  struct _WlzCMeshEntRes        nod;            /*!< Node resources. */
-  struct _WlzCMeshEntRes        elm;            /*!< Element resources. */
-} WlzCMeshRes;
-
-/*!
-* \struct       _WlzCMesh2D
-* \ingroup      WlzMesh
-* \brief        A graph based mesh model for 2D boundary conforming
-*               simplical meshes.
-*               The mesh inherits it's core fields from the Woolz core
-*               domain.
-*               Typedef: ::WlzCMesh2D.
-*/
-typedef struct _WlzCMesh2D
-{
-  int           type;                   /*!< Type of mesh. */
+  WlzTransformType type;                /*!< Type of transform. */
   int           linkcount;              /*!< Core. */
   void          *freeptr;               /*!< Core. */
-  WlzDBox2      bBox;                   /*!< Axis aligned bounding box of
-                                             the mesh. */
-  WlzCMeshBucketGrid2D bGrid;           /*!< Mesh grid of buckets. */
-  struct _WlzCMeshRes res;              /*!< Mesh resources. */
-
-} WlzCMesh2D;
-
-/*!
-* \struct       _WlzCMesh3D
-* \ingroup      WlzMesh
-* \brief        A graph based mesh model for 3D boundary conforming
-*               simplical meshes.
-*               The mesh inherits it's core fields from the Woolz core
-*               domain.
-*               Typedef: ::WlzCMesh3D.
-*/
-typedef struct _WlzCMesh3D
-{
-  int           type;                   /*!< Type of mesh. */
-  int           linkcount;              /*!< Core. */
-  void          *freeptr;               /*!< Core. */
-  WlzDBox3      bBox;                   /*!< Axis aligned bounding box of
-                                             the mesh. */
-  WlzCMeshBucketGrid3D bGrid;           /*!< Mesh grid of buckets. */
-  struct _WlzCMeshRes res;              /*!< Mesh resources. */
-
-} WlzCMesh3D;
+  WlzCMeshP     mesh;                   /*!< The conforming mesh. */
+  AlcVector     *dspVec;                /*!< Vector for displacements. */
+} WlzCMeshTransform;
 
 /************************************************************************
 * User weighting functions and callback data structures for ICP based
@@ -3864,6 +3960,7 @@ typedef struct _WlzThreeDViewStruct
 					  voxel size rescaling */
 } WlzThreeDViewStruct;
 
+#ifndef WLZ_EXT_BIND
 /*!
 * \typedef	Wlz3DProjectionIntFn
 * \ingroup	WlzFunction
@@ -3871,6 +3968,7 @@ typedef struct _WlzThreeDViewStruct
 */
 typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
 					  WlzErrorNum *);
+#endif
 
 
 
