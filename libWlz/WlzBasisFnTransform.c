@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzBasisFnTransform.c
-* \author       Bill Hill
+* \author       Bill Hill, Jianguo Rao
 * \date         March 1999
 * \version      $Id$
 * \note
@@ -18,7 +18,6 @@
 * \ingroup	WlzTransform
 * \todo         -
 * \bug          None known.
-* 25-08-2001 J. Rao added WlzBasisFnTrFromCPts3() functions
 */
 #include <stdlib.h>
 #include <stdarg.h>
@@ -77,8 +76,13 @@ WlzErrorNum	WlzBasisFnFreeTransform(WlzBasisFnTransform *basisTr)
 * \return	New basis function transform.
 * \ingroup	WlzTransform
 * \brief	Creates a new basis function transform of the given
-*		type, which will transform an object with the given source
-*		verticies into an object with the given destination verticies.
+*		type, which will transform an object with the given
+*		source verticies into an object with the given destination
+*		verticies.
+*		If a constraining object is given all distances will be
+*		computed within the given object for those basis functions
+*		which support constrained evaluation (Gauss, multi-quadric
+*		and thin-plate spline).
 * \param	type			Required basis function type.
 * \param	order			Order of polynomial, only used for
 * 					WLZ_FN_BASIS_2DPOLY.
@@ -87,6 +91,10 @@ WlzErrorNum	WlzBasisFnFreeTransform(WlzBasisFnTransform *basisTr)
 * \param	nSPts			Number of source control points
 *					(must be same as nDPts).
 * \param	sPts			Source control points.
+* \param	cObj			Constraining object, within which all
+*					distances are constrained. If NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
@@ -95,10 +103,13 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 					  WlzDVertex2 *dPts,
 					  int nSPts,
 					  WlzDVertex2 *sPts,
+					  WlzObject *cObj,
 					  WlzErrorNum *dstErr)
 {
+  int		idx;
   WlzBasisFnTransform *basisTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	deltaMQ = 0.01;
 
   if((nDPts != nSPts) || (nDPts <= 0))
   {
@@ -108,18 +119,32 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
-  else if((basisTr = WlzMakeBasisFnTransform(NULL)) == NULL)
+  else if(cObj)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    if(cObj->type != WLZ_2D_DOMAINOBJ)
+    {
+      errNum = WLZ_ERR_OBJECT_TYPE;
+    }
+    else if(cObj->domain.core == NULL)
+    {
+      errNum = WLZ_ERR_DOMAIN_NULL;
+    }
   }
-  else
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((basisTr = WlzMakeBasisFnTransform(NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     basisTr->type = WLZ_TRANSFORM_2D_BASISFN;
     switch(type)
     {
       case WLZ_FN_BASIS_2DGAUSS:
 	basisTr->basisFn = WlzBasisFnGauss2DFromCPts(nDPts,
-					dPts, sPts, 0.9,
+					dPts, sPts, 0.9, cObj,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DPOLY:
@@ -129,12 +154,12 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 	break;
       case WLZ_FN_BASIS_2DMQ:
 	basisTr->basisFn = WlzBasisFnMQ2DFromCPts(nDPts,
-					dPts, sPts, 0.1,
+					dPts, sPts, deltaMQ, cObj,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DTPS:
 	basisTr->basisFn = WlzBasisFnTPS2DFromCPts(nDPts,
-					dPts, sPts,
+					dPts, sPts, cObj,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DCONF_POLY:
@@ -160,24 +185,23 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 
 
 /*!
-* \return	WlzBasisFnTransform *:	New basis function transform.
-* \ingroup	WlzBasisFnTrFromCPts3	
+* \return	New basis function transform.
+* \ingroup	WlzTransform
 * \brief	Creates a new basis function transform of the given
 *		type, which will transform an object with the given
 *		source verticies into an object with the given 	
 *		destination verticies.			
-* \param	type	        Required basis function type.
-* \param	order		Order of polynomial, only 
+* \param	type	        	Required basis function type.
+* \param	order			Order of polynomial, only 
 *					used for WLZ_BASISFN_POLY.
-* \param	nDPts		Number of destination control
+* \param	nDPts			Number of destination control
 *					points.			
-* \param	dPts	Destination control points.
-* \param	nSPts		Number of source control points
+* \param	dPts			Destination control points.
+* \param	nSPts			Number of source control points
 *					(must be same as nDPts)
-* \param	sPts	Source control points.	
-* \param	dstErr	Destination error pointer,
+* \param	sPts			Source control points.	
+* \param	dstErr			Destination error pointer,
 *					may be NULL.
-*   added by J. Rao  27/08/2001                      
 */
 WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
 					  int order,
@@ -205,30 +229,16 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
   else
   {
     switch(type)
-    { /* ------
-      case WLZ_BASISFN_GAUSS:
-	basis = WlzBasisFnGaussFromCPts(nDPts, dPts, sPts, 0.9, &errNum);
-	break;
-      case WLZ_BASISFN_POLY:
-	basis = WlzBasisFnPolyFromCPts(nDPts, order, dPts, sPts, &errNum);
-	break;
-      */
+    { 
       case WLZ_FN_BASIS_3DMQ:
         {
-	  basisTr->basisFn = WlzBasisFnMQ3DFromCPts(nDPts, dPts, sPts, 0.2, &errNum);
+	  basisTr->basisFn = WlzBasisFnMQ3DFromCPts(nDPts, dPts, sPts, 0.2,
+	  					    &errNum);
 	  basisTr->linkcount = 0;
 	  basisTr->freeptr   = NULL;
 	  
 	}
 	break;
-      /*
-      case WLZ_BASISFN_TPS:
-	basis = WlzBasisFnTPSFromCPts(nDPts, dPts, sPts, &errNum);
-	break;
-      case WLZ_BASISFN_CONF_POLY:
-	basis = WlzBasisFnConfFromCPts(nDPts, order, dPts, sPts, &errNum);
-	break;
-      */
       default:
 	 errNum = WLZ_ERR_TRANSFORM_TYPE;
 	 break;
@@ -240,10 +250,6 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
   }
   return(basisTr);
 }
-
-
-
-
 
 /*!
 * \return	Error number.
@@ -318,6 +324,94 @@ WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
       default:
 	errNum = WLZ_ERR_TRANSFORM_TYPE;
 	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup	WlzTransform
+* \brief	Sets the displacements of the given conforming mesh
+*		transform according to the basis function transform.
+* \param	meshTr			Given conforming mesh transform.
+* \param	basisTr			Given basis functiontransform.
+*/
+WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
+				   WlzBasisFnTransform *basisTr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((meshTr == NULL) || (basisTr == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(meshTr->type)
+    {
+      case WLZ_TRANSFORM_2D_CMESH:
+        errNum = WlzBasisFnSetCMesh2D(meshTr, basisTr);
+	break;
+      case WLZ_TRANSFORM_3D_CMESH:
+        errNum = WLZ_ERR_UNIMPLEMENTED;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup	WlzTransform
+* \brief	Sets the displacements of the given 2D conforming mesh
+*		transform according to the basis function transform.
+* \param	meshTr			Given mesh transform.
+* \param	basisTr			Given basis functiontransform.
+*/
+WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
+				     WlzBasisFnTransform *basisTr)
+{
+  int		idN;
+  WlzDVertex2	*dspP;
+  WlzCMeshNod2D	*nod;
+  WlzCMesh2D	*mesh;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((meshTr == NULL) || (basisTr == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((meshTr->type != WLZ_TRANSFORM_2D_CMESH) ||
+	  (basisTr->type != WLZ_TRANSFORM_2D_BASISFN))
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else if((mesh = meshTr->mesh.m2) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+        dspP = (WlzDVertex2 *)AlcVectorItemGet(meshTr->dspVec, idN);
+	switch(basisTr->basisFn->type)
+	{
+	  case WLZ_FN_BASIS_2DGAUSS:
+	    *dspP = WlzBasisFnValueGauss2D(basisTr->basisFn, nod->pos);
+	    break;
+	  case WLZ_FN_BASIS_2DMQ:
+	    *dspP = WlzBasisFnValueMQ2D(basisTr->basisFn, nod->pos);
+	    break;
+	  case WLZ_FN_BASIS_2DTPS:
+	    *dspP = WlzBasisFnValueTPS2D(basisTr->basisFn, nod->pos);
+	    break;
+	}
+      }
     }
   }
   return(errNum);
@@ -961,6 +1055,3 @@ WlzIVertex2	WlzBasisFnTransformVertexI(WlzBasisFnTransform *basisTr,
   dstVxI.vtY = WLZ_NINT(dstVxD.vtY);
   return(dstVxI);
 }
-
-
-
