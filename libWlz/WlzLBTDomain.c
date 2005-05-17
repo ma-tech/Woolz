@@ -1605,42 +1605,6 @@ void		WlzLBTKeyToBox2I(unsigned *key, WlzIBox2 *box)
 */
 static int	WlzLBTDomain2DNodeCmpFn(const void *ptrC,
 				        const void *ptr0, const void *ptr1)
-#ifdef HACK_USEOLDCODE
-{
-  int           d0,
-                d1,
-                cmp,
-                idD;
-  unsigned      k0,
-                k1,
-                dMsk,
-                tMsk;
-  WlzLBTDomain2D *lDom;
-  WlzLBTNode2D  *nod0,
-                *nod1;
-
-  cmp = 0;
-  nod0 = (WlzLBTNode2D *)ptr0;
-  nod1 = (WlzLBTNode2D *)ptr1;
-  lDom = (WlzLBTDomain2D *)ptrC;
-  idD = lDom->depth - 1;
-  dMsk = 1 << idD;
-  tMsk = nod0->keys[2] | nod1->keys[2];
-  while((cmp == 0) && (idD >= 0) && ((tMsk & dMsk) == 0))
-  {
-    k0 = (nod0->keys[0] & dMsk) != 0;
-    k1 = (nod0->keys[1] & dMsk) != 0;
-    d0 = (k1 << 1) + k0;
-    k0 = (nod1->keys[0] & dMsk) != 0;
-    k1 = (nod1->keys[1] & dMsk) != 0;
-    d1 = (k1 << 1) + k0;
-    cmp = d0 - d1;
-    --idD;
-    dMsk >>= 1;
-  }
-  return(cmp);
-}
-#else
 {
   int           cmp;
   unsigned      k0,
@@ -1671,7 +1635,6 @@ static int	WlzLBTDomain2DNodeCmpFn(const void *ptrC,
   }
   return(cmp);
 }
-#endif
 
 /*!
 * \return	void
