@@ -213,7 +213,7 @@ int             main(int argc, char **argv)
     /* get the basis function transform */
       basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
 					nTiePP, vxVec0,
-					nTiePP, vxVec1, &errNum);
+					nTiePP, vxVec1, NULL, &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;
