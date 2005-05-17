@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzStdStructElements.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \author       Richard Baldock, Bill Hill, Jianguo Rao
 * \date         Wed Sep 24 17:47:23 2003
 * \version      MRC HGU $Id$
 *               $Revision$
@@ -15,16 +15,10 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      WlzMorphologyOps
 * \brief        Procedures to generate standard structuring elements
- in 2D and3D. The SE names are rather cryptic.
+*		in 2D and3D. The SE names are rather cryptic.
 *               
 * \todo         -
 * \bug          None known
-*
-* Maintenance log with most recent changes at top of list.
-* 19-09-01 jrao Add WlzMakeRectangleObject() and WlzMakeCuboidObject().
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
 */
 
 #include <stdlib.h>
@@ -438,20 +432,14 @@ static WlzObject *WlzSpecial_v2(WlzErrorNum *dstErr)  /*-*/
   return obj;
 }
 
-
-/* function:     WlzMakeSpecialStructElement    */
 /*! 
+* \return       Structuring element object pointer.
 * \ingroup      WlzMorphologyOps
 * \brief        Return a pointer to a specific requested "special"
- structuring element. These are inherited from the original woolz
- library with rather cryptic names. See detail for more explanation 
- of the elements and the additional parameters.
-*
-* \return       Structuring element object pointer.
-* \param    eType	Enumerated type of the requested special element.
-* \param    elmIndex	Additional parameter for a particular element
- if required (see details).
-* \param    dstErr	Error return.
+*		structuring element. These are inherited from the
+*		original woolz library with rather cryptic names. 
+*		See detail for more explanation of the elements and 
+*		the additional parameters.
 * \par	    Special element types:
 <table border="1">
   <tr>
@@ -636,8 +624,11 @@ static WlzObject *WlzSpecial_v2(WlzErrorNum *dstErr)  /*-*/
     </table></td>
   </tr>
 </table>
-* \par      Source:
-*                WlzStdStructElements.c
+* \param    eType		Enumerated type of the requested special
+*				element.
+* \param    elmIndex		Additional parameter for a particular element
+*				if required (see details).
+* \param    dstErr		Destination error pointer, may be NULL.
 */
 WlzObject *WlzMakeSpecialStructElement(
   WlzSpecialStructElmType	eType,
@@ -701,21 +692,17 @@ WlzObject *WlzMakeSpecialStructElement(
 }
 
 
-/* function:     WlzMakeSinglePixelObject    */
 /*! 
+* \return       Single pixel object with coordinates (k,l,p).
 * \ingroup      WlzMorphologyOps
 * \brief        Make a single pixel/voxel object at the specified
- coordinate position.
-*
-* \return       Single pixel object with coordinates (k,l,p).
-* \param    oType	Object type - <tt>WLZ_2D_DOMAINOBJ</tt>
- or <tt>WLZ_3D_DOMAINOBJ</tt>.
-* \param    k	Column (x) coordinate.
-* \param    l	Line (y) coordinate.
-* \param    p	Plane (z) coordinate.
-* \param    dstErr	Error return.
-* \par      Source:
-*                WlzStdStructElements.c
+*		coordinate position.
+* \param    oType		Object type - <tt>WLZ_2D_DOMAINOBJ</tt>
+*				or <tt>WLZ_3D_DOMAINOBJ</tt>.
+* \param    k			Column (x) coordinate.
+* \param    l			Line (y) coordinate.
+* \param    p			Plane (z) coordinate.
+* \param    dstErr		Destination error pointer, may be NULL.
 */
 WlzObject *WlzMakeSinglePixelObject(
   WlzObjectType	oType,
@@ -737,8 +724,8 @@ WlzObject *WlzMakeSinglePixelObject(
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
-      itv->ileft = k;
-      itv->iright = k;
+      itv->ileft = 0;
+      itv->iright = 0;
       if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					   l, l, k, k, &errNum) ){
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, itv,
@@ -785,20 +772,14 @@ WlzObject *WlzMakeSinglePixelObject(
   return rtnObj;
 }
 
-
-/* function:     WlzMakeCircleObject    */
 /*! 
+* \return       Object with circular domain.
 * \ingroup      WlzMorphologyOps
 * \brief        Generate a discretised circle domain centered at (x,y).
-*
-* \return       Object with circular domain.
-
-* \param    radius	Circle radius.
-* \param    x	Column/x coordinate of the circle centre.
-* \param    y	Row/y coordinate of the circle centre.
-* \param    dstErr	Error return.
-* \par      Source:
-*                WlzStdStructElements.c
+* \param    radius		Circle radius.
+* \param    x			Column/x coordinate of the circle centre.
+* \param    y			Row/y coordinate of the circle centre.
+* \param    dstErr		Destination error pointer, may be NULL.
 */
 WlzObject *WlzMakeCircleObject(
   double	radius,
@@ -862,31 +843,22 @@ WlzObject *WlzMakeCircleObject(
       }
     }
   }
-    
-
   if( dstErr ){
     *dstErr = errNum;
   }
   return rtnObj;
 }
 
-
-/* added by J. Rao 19-09-2001 */
-
-/* function:     WlzMakeRectangleObject    */
 /*! 
+* \return       Rectangular object
 * \ingroup      WlzMorphologyOps
 * \brief        Generate a rectangular object centered at (x,y) with
- half-width radiusX and half-height radius Y.
-*
-* \return       Rectangular object
-* \param    radiusX	column half-width of rectangle
-* \param    radiusY	Line (y) half-width of rectangle
-* \param    x	Column (x) rectangle centre.
-* \param    y	Line (y) rectangle centre.
-* \param    dstErr	Error return.
-* \par      Source:
-*                WlzStdStructElements.c
+*		half-width radiusX and half-height radius Y.
+* \param    	radiusX		Column half-width of rectangle
+* \param    	radiusY		Line (y) half-width of rectangle
+* \param    	x		Column (x) rectangle centre.
+* \param    	y		Line (y) rectangle centre.
+* \param    	dstErr		Destination error pointer, may be NULL.
 */
 WlzObject *WlzMakeRectangleObject(
   double	radiusX,
@@ -918,32 +890,6 @@ WlzObject *WlzMakeRectangleObject(
     lastln = WLZ_NINT(y+radiusY);
     kol1 = WLZ_NINT(x-radiusX);
     lastkl = WLZ_NINT(x+radiusX);
-
-/*    width = lastkl - kol1 + 1;
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					 line1, lastln, kol1, lastkl,
-					 &errNum) ){
-      if( intvlPtr = (WlzInterval *) AlcCalloc((lastln - line1 + 1),
-					       sizeof(WlzInterval)) ){
-	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr,
-					     (void *)intvlPtr, NULL);
-	for(l=line1; l <= lastln; l++, intvlPtr++){
-	  intvlPtr->ileft = width/2 - idelta;
-	  intvlPtr->iright = width/2 + idelta;
-	  WlzMakeInterval(l, domain.i, 1, intvlPtr);
-	}
-	WlzStandardIntervalDomain(domain.i);
-	values.core = NULL;
-	if( (rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-				  NULL, NULL, &errNum)) == NULL ){
-	  WlzFreeIntervalDomain(domain.i);
-	}
-      }
-      else {
-	errNum = WLZ_ERR_MEM_ALLOC;
-	WlzFreeIntervalDomain(domain.i);
-      }
-      }*/
     if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 					 line1, lastln,
 					 kol1, lastkl, &errNum) ){
@@ -952,29 +898,22 @@ WlzObject *WlzMakeRectangleObject(
 			   NULL, NULL, &errNum);
     }
   }
-    
-
   if( dstErr ){
     *dstErr = errNum;
   }
   return rtnObj;
 }
 
-
-/* function:     WlzMakeSphereObject    */
 /*! 
+* \return       Sphere object
 * \ingroup      WlzMorphologyOps
 * \brief        Make a spherical domain object.
-*
-* \return       Sphere object
-* \param    oType	Object type - make a circle if 2D.
-* \param    radius	Sphere radius
-* \param    x	Column (x) centre.
-* \param    y	Line (y) centre.
-* \param    z	Plane (x) centre.
-* \param    dstErr	Error return.
-* \par      Source:
-*                WlzStdStructElements.c
+* \param    	oType		Object type - make a circle if 2D.
+* \param    	radius		Sphere radius
+* \param    	x		Column (x) centre.
+* \param    	y		Line (y) centre.
+* \param    	z		Plane (x) centre.
+* \param    	dstErr		Destination error pointer, may be NULL.
 */
 WlzObject *WlzMakeSphereObject(
   WlzObjectType	oType,
@@ -1055,24 +994,19 @@ WlzObject *WlzMakeSphereObject(
   return rtnObj;
 }
 
-/* Added by J. Rao 19-09-2001 */
-
-/* function:     WlzMakeCuboidObject    */
 /*! 
+* \return       Cuboid domain object
 * \ingroup      WlzMorphologyOps
 * \brief        Generate a cuboid object centered at (x,y,z).
-*
-* \return       Cuboid domain object
-* \param    oType	Object type use WlzMakerectangleObject() if 2D.
-* \param    radiusX	Cuboid half-width (x)
-* \param    radiusY	Cuboid half-height (y).
-* \param    radiusZ	Cuboid half-depth (z).
-* \param    x	Column (x) centre.
-* \param    y	Line (y) centre.
-* \param    z	Plane (z) centre.
-* \param    dstErr	Error return.
-* \par      Source:
-*                WlzStdStructElements.c
+* \param    	oType		Object type use WlzMakerectangleObject()
+*				if 2D.
+* \param    	radiusX		Cuboid half-width (x)
+* \param    	radiusY		Cuboid half-height (y).
+* \param    	radiusZ		Cuboid half-depth (z).
+* \param    	x		Column (x) centre.
+* \param    	y		Line (y) centre.
+* \param    	z		Plane (z) centre.
+* \param    	dstErr		Destination error pointer, may be NULL.
 */
 WlzObject *WlzMakeCuboidObject(
   WlzObjectType	oType,
@@ -1148,11 +1082,17 @@ WlzObject *WlzMakeCuboidObject(
   return rtnObj;
 }
 
-
-
-
-
-
+/*!
+* \return
+* \ingroup	WlzMorphologyOps
+* \brief	Makes a standard structure element - basicaly a sphere
+*		but with the appropriate connectivity or distance metric.
+* \param    	oType		Object type - <tt>WLZ_2D_DOMAINOBJ</tt>
+*				or <tt>WLZ_3D_DOMAINOBJ</tt>.
+* \param	dType		Distance metric.
+* \param	radius		Sphere radius.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
 WlzObject *WlzMakeStdStructElement(
   WlzObjectType		oType,
   WlzDistanceType	dType,
