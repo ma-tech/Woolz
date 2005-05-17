@@ -81,91 +81,85 @@ typedef struct	_WlzMeshPolyVx
 
 
 static int			WlzMeshItvCmp(
-				  const void *,
-				  const void *),
-				WlzMeshScanTriElm(
-				  WlzMeshScanWSp *,
-				  int,
-				  int);
+				  const void *cmp0,
+				  const void *cmp1);
+static int			WlzMeshScanTriElm(
+				  WlzMeshScanWSp *mSnWSp,
+				  int eIdx,
+				  int iIdx);
 static void			WlzMeshScanWSpFree(
-				  WlzMeshScanWSp *);
-static void			WlzMeshAfTrSolve(
-				  double *, 
-				  double *,
-				  double,
-				  WlzDVertex2 *,
-				  WlzDVertex2 *);
+				  WlzMeshScanWSp *mSnWSp);
 static unsigned int 		WlzMeshTransFillBlockLnNod(
-				  WlzMeshNode *,
-				  WlzInterval *,
-			       	  WlzIVertex2,
-				  unsigned int);
+				  WlzMeshNode *nod,
+				  WlzInterval *lnItv,
+				  WlzIVertex2 org,
+				  unsigned int lDist);
 static WlzErrorNum 		WlzMeshRemoveObjBox(
-				  WlzMeshTransform *),
-				WlzMeshBoundCvPolyAdd(
-				  WlzMeshTransform *,
-				  WlzObject *,
-				  double,
-				  double),
-				WlzMeshBoundPolyFix(
-				  WlzObject *,
-				  double),
-				WlzMeshScanDElmUpdate(
-				  WlzMeshScanWSp *,
-				  int),
-				WlzMeshLineCvExtrema(
-				  WlzInterval *,
-				  WlzObject *,
-				  unsigned int,
-				  unsigned int),
-				WlzMeshTransFillBlock(
+				  WlzMeshTransform *mesh);
+static WlzErrorNum 		WlzMeshBoundCvPolyAdd(
 				  WlzMeshTransform *mesh,
-				  WlzInterval *,
-				  WlzIVertex2,
-				  unsigned int,
-				  unsigned int),
-				WlzMeshTransformVxVecI(
-				  WlzMeshTransform *,
-				  WlzIVertex2 *,
-			  	  int),
-				WlzMeshTransformVxVecF(
-				  WlzMeshTransform *,
-				  WlzFVertex2 *,
-			  	  int),
-				WlzMeshTransformVxVecD(
-				  WlzMeshTransform *,
-				  WlzDVertex2 *,
-			  	  int),
-				WlzMeshTransformValues2D(
-				  WlzObject *,
-				  WlzObject *,
-				  WlzMeshTransform *,
-				  WlzInterpolationType);
+				  WlzObject *polyObj,
+				  double minDist,
+				  double maxDist);
+static WlzErrorNum 		WlzMeshBoundPolyFix(
+				  WlzObject *polyObj,
+				  double minDist);
+static WlzErrorNum 		WlzMeshScanDElmUpdate(
+				  WlzMeshScanWSp *mSnWSp,
+				  int eIdx);
+static WlzErrorNum 		WlzMeshLineCvExtrema(
+				  WlzInterval *lnItvs,
+				  WlzObject *cvObj,
+				  unsigned int lDist,
+				  unsigned int nLines);
+static WlzErrorNum 		WlzMeshTransFillBlock(
+				  WlzMeshTransform *mesh,
+				  WlzInterval *lnItvs,
+				  WlzIVertex2 org,
+				  unsigned int lDist,
+				  unsigned int nLines);
+static WlzErrorNum 		WlzMeshTransformVtxAryI(
+				  WlzMeshTransform *mesh,
+				  WlzIVertex2 *vxAry,
+				  int vxCount);
+static WlzErrorNum		WlzMeshTransformVtxAryF(
+				  WlzMeshTransform *mesh,
+				  WlzFVertex2 *vxAry,
+			  	  int vxCount);
+static WlzErrorNum		WlzMeshTransformVtxAryD(
+				  WlzMeshTransform *mesh,
+				  WlzDVertex2 *vxAry,
+			  	  int vxCount);
+static WlzErrorNum 		WlzMeshTransformValues2D(
+				  WlzObject *dstObj,
+				  WlzObject *srcObj,
+				  WlzMeshTransform *mesh,
+				  WlzInterpolationType interp);
 static WlzObject 		*WlzMeshTransformObjPrv(
-				  WlzObject *,
-				  WlzMeshTransform *,
-				  WlzInterpolationType,
-				  WlzErrorNum *);
+				  WlzObject *srcObj,
+				  WlzMeshTransform *mesh,
+				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
 static WlzMeshTransform 	*WlzMeshFromObjBlock(
-				  WlzObject *,
-				  unsigned int,
-			          WlzErrorNum *),
-        			*WlzMeshFromObjGrad(
-				  WlzObject *,
-				  unsigned int,
-				  unsigned int,
-				  WlzErrorNum *);
+				  WlzObject *srcObj,
+				  unsigned int lDist,
+				  WlzErrorNum *dstErr);
+static WlzMeshTransform 	*WlzMeshFromObjGrad(
+				  WlzObject *srcObj,
+				  unsigned int minDist,
+				  unsigned int maxDist,
+				  WlzErrorNum *dstErr);
 static WlzPolygonDomain		*WlzMeshTransformPoly(
-				  WlzPolygonDomain *,
-			      	  WlzMeshTransform *,
-			      	  WlzErrorNum *);
+				  WlzPolygonDomain *srcPoly,
+				  WlzMeshTransform *mesh,
+				  WlzErrorNum *dstErr);
 static WlzBoundList 		*WlzMeshTransformBoundList(
-				  WlzBoundList *,
-				  WlzMeshTransform *,
-				  WlzErrorNum *);
+				  WlzBoundList *srcBound,
+				  WlzMeshTransform *mesh,
+				  WlzErrorNum *dstErr);
 static WlzMeshScanWSp 		*WlzMeshScanWSpInit(
-				  WlzMeshTransform *,
-				  WlzErrorNum *);
+				  WlzMeshTransform *mesh,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	Woolz error code.
@@ -603,7 +597,8 @@ WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
           dPtsT[idx] = WlzAffineTransformVertexD2(aTrI, dPts[idx], NULL);
 	}
         bTr = WlzBasisFnTrFromCPts2D(basisFnType, polyOrder,
-			  	   nSPts, sPts, nSPts, dPtsT, &errNum);
+			  	   nSPts, sPts, nSPts, dPtsT,
+				   NULL, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -876,16 +871,16 @@ static WlzPolygonDomain	*WlzMeshTransformPoly(WlzPolygonDomain *srcPoly,
     switch(srcPoly->type)
     {
       case WLZ_POLYGON_INT:
-        errNum = WlzMeshTransformVxVecI(mesh, dstPoly->vtx,
-					dstPoly->nvertices);
+        errNum = WlzMeshTransformVtxAryI(mesh, dstPoly->vtx,
+					 dstPoly->nvertices);
 	break;
       case WLZ_POLYGON_FLOAT:
-        errNum = WlzMeshTransformVxVecF(mesh, (WlzFVertex2 *)(dstPoly->vtx),
-					dstPoly->nvertices);
+        errNum = WlzMeshTransformVtxAryF(mesh, (WlzFVertex2 *)(dstPoly->vtx),
+					 dstPoly->nvertices);
 	break;
       case WLZ_POLYGON_DOUBLE:
-        errNum = WlzMeshTransformVxVecD(mesh, (WlzDVertex2 *)(dstPoly->vtx),
-					dstPoly->nvertices);
+        errNum = WlzMeshTransformVtxAryD(mesh, (WlzDVertex2 *)(dstPoly->vtx),
+					 dstPoly->nvertices);
 	break;
     }
   }
@@ -1042,7 +1037,8 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 					    WlzMeshTransform *mesh,
 					    WlzInterpolationType interp)
 {
-  int		mItvIdx, indx;
+  int		mItvIdx,
+  		indx;
   double	tD0,
   		tD1,
 		tD2,
@@ -1998,7 +1994,7 @@ static WlzMeshTransform *WlzMeshFromObjGrad(WlzObject *srcObj,
 * \ingroup	WlzTransform
 * \brief	Calculates the block mesh line extrema for the given (convex)
 * 		object.
-* \param	lnItvs			Vector of intervals to be set to block
+* \param	lnItvs			Array of intervals to be set to block
 * 					line extrema.
 * \param	cvObj			The given object.
 * \param	lDist			Distance between block lines.
@@ -2119,7 +2115,7 @@ static WlzErrorNum WlzMeshLineCvExtrema(WlzInterval *lnItvs,
 * \brief	Calculates the mesh transform (already allocated) using the
 * 		given block mesh line interval extrema.
 * \param	mesh			Mesh transform to fill.
-* \param	lnItvs			Vector of block line intervals.
+* \param	lnItvs			Array of block line intervals.
 * \param	org			Origin used by intervals.
 * \param	lDist			Distance between block lines.
 * \param	nLines			Number of block lines.
@@ -2297,16 +2293,16 @@ static unsigned int WlzMeshTransFillBlockLnNod(WlzMeshNode *nod,
 * \return	Woolz error code.
 * \ingroup	WlzTransform
 * \brief	Transforms the vertices in the given integer vertex
-*               vector in place and using the given mesh transform. It is an
+*               array in place and using the given mesh transform. It is an
 *               error if any vertex is not in the mesh or if the signed area
 *               of any mesh element is <= zero.
 * \param	mesh			Given mesh transform.
-* \param	vxVec			Given integer vertex vector.
+* \param	vxAry			Given integer vertex array.
 * \param	vxCount			Number of vertices.
 */
-static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
-					  WlzIVertex2 *vxVec,
-					  int vxCount)
+static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
+					   WlzIVertex2 *vxAry,
+					   int vxCount)
 {
   int		elmIdx,
   		neighbourId,
@@ -2328,8 +2324,8 @@ static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
   elmIdx = 0;
   trValid = 0;
   elm = mesh->elements;
-  vxP.vtX = vxVec->vtX;
-  vxP.vtY = vxVec->vtY;
+  vxP.vtX = vxAry->vtX;
+  vxP.vtY = vxAry->vtY;
   nod[0] = mesh->nodes + elm->nodes[0];
   nod[1] = mesh->nodes + elm->nodes[1];
   nod[2] = mesh->nodes + elm->nodes[2];
@@ -2379,20 +2375,21 @@ static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
 	vxD = nod[2]->displacement;
         (dspVx + 2)->vtX = vxD.vtX + (elmVx + 2)->vtX;
         (dspVx + 2)->vtY = vxD.vtY + (elmVx + 2)->vtY;
-	WlzMeshAfTrSolve(xTr, yTr, elmArea2, elmVx, dspVx);
+	(void )WlzGeomTriangleAffineSolve(xTr, yTr, elmArea2, elmVx, dspVx,
+					  WLZ_MESH_TOLERANCE_SQ);
         trValid = 1;
       }
       /* Vertex is in this element interpolate new displaced vertex using
       the affine transform. */
       vxD.vtX = (xTr[0] * vxP.vtX) + (xTr[1] * vxP.vtY) + xTr[2];
       vxD.vtY = (yTr[0] * vxP.vtX) + (yTr[1] * vxP.vtY) + yTr[2];
-      vxVec->vtX = WLZ_NINT(vxD.vtX);
-      vxVec->vtY = WLZ_NINT(vxD.vtY);
+      vxAry->vtX = WLZ_NINT(vxD.vtX);
+      vxAry->vtY = WLZ_NINT(vxD.vtY);
       if(--vxCount > 0)
       {
-        ++vxVec;
-	vxP.vtX = vxVec->vtX;
-	vxP.vtY = vxVec->vtY;
+        ++vxAry;
+	vxP.vtX = vxAry->vtX;
+	vxP.vtY = vxAry->vtY;
       }
     }
     else
@@ -2428,17 +2425,17 @@ static WlzErrorNum WlzMeshTransformVxVecI(WlzMeshTransform *mesh,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzTransform
-* \brief	Transforms the vertices in the given double vertex vector, in
+* \brief	Transforms the vertices in the given double vertex array, in
 * 		place and using the given mesh transform.  It is an error if
 * 		any vertex is not in the mesh or if the signed area of any
 * 		mesh element is <= zero.
 * \param	mesh			Given mesh transform.
-* \param	vxVec			Given double vertex vector.
+* \param	vxAry			Given double vertex array.
 * \param	vxCount			Number of vertices.
 */
-static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
-					  WlzFVertex2 *vxVec,
-					  int vxCount)
+static WlzErrorNum WlzMeshTransformVtxAryF(WlzMeshTransform *mesh,
+					   WlzFVertex2 *vxAry,
+					   int vxCount)
 {
   int		elmIdx,
   		neighbourId,
@@ -2474,8 +2471,8 @@ static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
   {
     /* Find neighbour which is in the direction of the vertex,
        if none then the vertex is contained within this element */
-    vxD.vtX = vxVec->vtX;
-    vxD.vtY = vxVec->vtY;
+    vxD.vtX = vxAry->vtX;
+    vxD.vtY = vxAry->vtY;
     neighbourMask = WLZ_MESH_ELEM_FLAGS_NONE;
     if((pArea2[0] = WlzGeomTriangleSnArea2(elmVx[1], elmVx[2],
 					   vxD)) < -(WLZ_MESH_TOLERANCE_SQ))
@@ -2510,16 +2507,17 @@ static WlzErrorNum WlzMeshTransformVxVecF(WlzMeshTransform *mesh,
 	vxD = nod[2]->displacement;
         (dspVx + 2)->vtX = vxD.vtX + (elmVx + 2)->vtX;
         (dspVx + 2)->vtY = vxD.vtY + (elmVx + 2)->vtY;
-	WlzMeshAfTrSolve(xTr, yTr, elmArea2, elmVx, dspVx);
+	(void )WlzGeomTriangleAffineSolve(xTr, yTr, elmArea2, elmVx, dspVx,
+				          WLZ_MESH_TOLERANCE_SQ);
         trValid = 1;
       }
       /* Vertex is in this element interpolate new displaced vertex using
       the affine transform. */
-      vxVec->vtX = (xTr[0] * vxVec->vtX) + (xTr[1] * vxVec->vtY) + xTr[2];
-      vxVec->vtY = (yTr[0] * vxVec->vtX) + (yTr[1] * vxVec->vtY) + yTr[2];
+      vxAry->vtX = (xTr[0] * vxAry->vtX) + (xTr[1] * vxAry->vtY) + xTr[2];
+      vxAry->vtY = (yTr[0] * vxAry->vtX) + (yTr[1] * vxAry->vtY) + yTr[2];
       if(vxCount-- > 0)
       {
-        ++vxVec;
+        ++vxAry;
       }
     }
     else
@@ -2576,7 +2574,7 @@ WlzDVertex2 WlzMeshTransformVtx(WlzDVertex2 vtx, WlzMeshTransform *mesh,
   }
   else {
     rtnVtx = vtx;
-    errNum = WlzMeshTransformVxVecD(mesh, &rtnVtx, 1);
+    errNum = WlzMeshTransformVtxAryD(mesh, &rtnVtx, 1);
   }
 
   if(dstErr)
@@ -2590,17 +2588,17 @@ WlzDVertex2 WlzMeshTransformVtx(WlzDVertex2 vtx, WlzMeshTransform *mesh,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzTransform
-* \brief	Transforms the vertices in the given double vertex vector,
+* \brief	Transforms the vertices in the given double vertex array,
 *		in place and using the given mesh transform. It is an error if
 *		any vertex is not in the mesh or if the signed area of any mesh
 *		element is <= zero.
 * \param	mesh			Given mesh transform.
-* \param	vxVec			Given double vertex vector.
+* \param	vxAry			Given double vertex array.
 * \param	vxCount			Number of vertices.
 */
-static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
-					  WlzDVertex2 *vxVec,
-					  int vxCount)
+static WlzErrorNum WlzMeshTransformVtxAryD(WlzMeshTransform *mesh,
+					   WlzDVertex2 *vxAry,
+					   int vxCount)
 {
   int		elmIdx,
   		neighbourId,
@@ -2638,13 +2636,13 @@ static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
        if none then the vertex is contained within this element */
     neighbourMask = WLZ_MESH_ELEM_FLAGS_NONE;
     if((pArea2[0] = WlzGeomTriangleSnArea2(elmVx[1], elmVx[2],
-					   *vxVec)) < -(WLZ_MESH_TOLERANCE_SQ))
+					   *vxAry)) < -(WLZ_MESH_TOLERANCE_SQ))
     {
       neighbourId = 0;
       neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_0;
     }
     else if((pArea2[1] = WlzGeomTriangleSnArea2(elmVx[2], elmVx[0],
-					     *vxVec)) < -(WLZ_MESH_TOLERANCE_SQ))
+					     *vxAry)) < -(WLZ_MESH_TOLERANCE_SQ))
     {
       neighbourId = 1;
       neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_1;
@@ -2670,16 +2668,17 @@ static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
 	vxD = nod[2]->displacement;
         (dspVx + 2)->vtX = vxD.vtX + (elmVx + 2)->vtX;
         (dspVx + 2)->vtY = vxD.vtY + (elmVx + 2)->vtY;
-	WlzMeshAfTrSolve(xTr, yTr, elmArea2, elmVx, dspVx);
+	(void )WlzGeomTriangleAffineSolve(xTr, yTr, elmArea2, elmVx, dspVx,
+				          WLZ_MESH_TOLERANCE_SQ);
         trValid = 1;
       }
       /* Vertex is in this element interpolate new displaced vertex using
       the affine transform. */
-      vxVec->vtX = (xTr[0] * vxVec->vtX) + (xTr[1] * vxVec->vtY) + xTr[2];
-      vxVec->vtY = (yTr[0] * vxVec->vtX) + (yTr[1] * vxVec->vtY) + yTr[2];
+      vxAry->vtX = (xTr[0] * vxAry->vtX) + (xTr[1] * vxAry->vtY) + xTr[2];
+      vxAry->vtY = (yTr[0] * vxAry->vtX) + (yTr[1] * vxAry->vtY) + yTr[2];
       if(vxCount-- > 0)
       {
-        ++vxVec;
+        ++vxAry;
       }
     }
     else
@@ -2710,50 +2709,6 @@ static WlzErrorNum WlzMeshTransformVxVecD(WlzMeshTransform *mesh,
     }
   }
   return(errNum);
-}
-
-/*!
-* \return	void
-* \ingroup	WlzTransform
-* \brief	Solve's a system of linear equations for the coefficients
-*		of a 2D affine transform from the source triangle to the
-*		destination triangle. Because we know that the area of the
-*		triangle is NOT zero and that we have a small system, Cramer's
-*		rule is used.
-* \param	xTr			Transform coordinates for x.
-* \param	yTr			Transform coordinates for y.
-* \param	dd			Twice the area of the source triangle.
-* \param	sVx			Source triangle vertices.
-* \param	dVx			Destination triangle vertices.
-*/
-static void	WlzMeshAfTrSolve(double *xTr, double *yTr, double dd,
-				 WlzDVertex2 *sVx, WlzDVertex2 *dVx)
-{
-  double	tD0,
-  		tD1,
-		tD2,
-		dx0, dy0, sx0, sy0,
-		dx1, dy1, sx1, sy1,
-		dx2, dy2, sx2, sy2;
-
-  dd = 1.0 / dd;
-  dx0 = dVx->vtX; dy0 = dVx->vtY; ++dVx;
-  dx1 = dVx->vtX; dy1 = dVx->vtY; ++dVx;
-  dx2 = dVx->vtX; dy2 = dVx->vtY;
-  sx0 = sVx->vtX; sy0 = sVx->vtY; ++sVx;
-  sx1 = sVx->vtX; sy1 = sVx->vtY; ++sVx;
-  sx2 = sVx->vtX; sy2 = sVx->vtY;
-  tD0 = sy1 - sy2; tD1 = sy2 - sy0; tD2 = sy0 - sy1;
-  *(xTr + 0) = ((dx0 * tD0) + (dx1 * tD1) + (dx2 * tD2)) * dd;
-  *(yTr + 0) = ((dy0 * tD0) + (dy1 * tD1) + (dy2 * tD2)) * dd;
-  tD0 = sx2 - sx1; tD1 = sx0 - sx2; tD2 = sx1 - sx0;
-  *(xTr + 1) = ((dx0 * tD0) + (dx1 * tD1) + (dx2 * tD2)) * dd;
-  *(yTr + 1) = ((dy0 * tD0) + (dy1 * tD1) + (dy2 * tD2)) * dd;
-  tD0 = (sx1 * sy2) - (sx2 * sy1);
-  tD1 = (sx2 * sy0) - (sx0 * sy2);
-  tD2 = (sx0 * sy1) - (sx1 * sy0);
-  *(xTr + 2) = ((dx0 * tD0) + (dx1 * tD1) + (dx2 * tD2)) * dd;
-  *(yTr + 2) = ((dy0 * tD0) + (dy1 * tD1) + (dy2 * tD2)) * dd;
 }
 
 /*!
@@ -2800,7 +2755,8 @@ static WlzErrorNum WlzMeshScanDElmUpdate(WlzMeshScanWSp *mSnWSp, int eIdx)
   }
   else
   {
-    WlzMeshAfTrSolve(dElm->xTr, dElm->yTr, areaSn2, dstVx, srcVx);
+    (void )WlzGeomTriangleAffineSolve(dElm->xTr, dElm->yTr,
+				areaSn2, dstVx, srcVx, WLZ_MESH_TOLERANCE_SQ);
     dElm->valid = 1;
   }
   return(errNum);
