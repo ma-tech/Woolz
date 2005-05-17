@@ -47,6 +47,7 @@ WlzObject 	*DistanceTransform(WlzObject *forObj, WlzObject *refObj,
 		lastP,
 		dim,
   		notDone = 1;
+  double	dInc = 1.0;
   WlzObject	*dilObj,
   		*dstObj,
 		*difObj,
@@ -76,8 +77,8 @@ WlzObject 	*DistanceTransform(WlzObject *forObj, WlzObject *refObj,
   {
     bgdV.type = WLZ_GREY_INT;
     bgdV.v.ubv = 0;
-    dstV.type = WLZ_GREY_INT;
-    dstV.v.inv = 0;
+    dstV.type = WLZ_GREY_DOUBLE;
+    dstV.v.dbv = 0.0;
     dstGType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_SHORT, NULL);
     switch(forObj->type)
     {
@@ -164,7 +165,7 @@ WlzObject 	*DistanceTransform(WlzObject *forObj, WlzObject *refObj,
    * dilated shell. */
   while((errNum == WLZ_ERR_NONE) && notDone)
   {
-    ++(dstV.v.inv);
+    dstV.v.dbv += dInc;
     prvItrObj = curItrObj;
     dilObj = WlzDilation(refObj, con, &errNum);
     if(errNum == WLZ_ERR_NONE)
