@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzBasisFn.c
-* \author       Bill Hill
+* \author       Bill Hill, Jianguo Rao
 * \date         January 2003
 * \version      $Id$
 * \note
@@ -17,11 +17,6 @@
 *		radialy symetric functions.
 * \ingroup	WlzFunction
 * \todo         -
-*  28/01/04 jianguo fixed the bug in WlzBasisFnValueMQ2D()
-*  19/02/03 Jianguo add       WlzBasisFnMQ3DFromCPts();
-*  19/02/03 Jianguo add       WlzBasisFnValueMQ3D();
-*  19/02/03 Jianguo add       WlzBasisFnValueRedPoly3D();
-*
 * \bug          None known.
 */
 #include <stdlib.h>
@@ -50,7 +45,8 @@ static void			WlzBasisFnMQ2DCoexff(
 				  double *vec,
 				  WlzDBox2 *extentDB,
 				  double range,
-				  int forX);
+				  int forX,
+				  int rescale);
 static void	                  WlzBasisFnMQCoeff3D(
                                   WlzBasisFn *basisFn,
 				  double     *vec, 
@@ -95,6 +91,7 @@ static WlzHistogramDomain 	*WlzBasisFnScalarMOS3DEvalTb(
 */
 WlzErrorNum	WlzBasisFnFree(WlzBasisFn *basisFn)
 {
+  int		idx;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(basisFn)
@@ -106,6 +103,20 @@ WlzErrorNum	WlzBasisFnFree(WlzBasisFn *basisFn)
     if(basisFn->evalData)
     {
       (void )WlzFreeHistogramDomain(basisFn->evalData);
+    }
+    if(basisFn->distMap)
+    {
+      for(idx = 0; idx < basisFn->nVtx; ++idx)
+      {
+	(void )WlzFreeObj(basisFn->distMap[idx]);
+      }
+    }
+    if(basisFn->distWSp)
+    {
+      for(idx = 0; idx < basisFn->nVtx; ++idx)
+      {
+	WlzGreyValueFreeWSp(basisFn->distWSp[idx]);
+      }
     }
     AlcFree(basisFn);
   }
@@ -162,7 +173,7 @@ WlzDVertex2 	WlzBasisFnValuePoly2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 */
 WlzDVertex2 	WlzBasisFnValueGauss2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 {
-  int           count;
+  int           idx;
   double        tD0,
 		tD1,
 		delta;
@@ -170,18 +181,27 @@ WlzDVertex2 	WlzBasisFnValueGauss2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 		*cPts;
   WlzDVertex2    polyVx,
   		newVx;
+  WlzVertex	sPt;
 
+  sPt.d2 = srcVx;
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
-  count = basisFn->nVtx;
   cPts = basisFn->vertices.d2;
   basisCo = basisFn->basis.d2;
   delta = *((double *)(basisFn->param));
-  while(count-- > 0)
+  for(idx = 0; idx < basisFn->nVtx; ++idx)
   {
-    tD0 = srcVx.vtX - cPts->vtX;
-    tD1 = srcVx.vtY - cPts->vtY;
-    tD0 = (tD0 * tD0) + (tD1 * tD1);
+    if(basisFn->distFn == NULL)
+    {
+      tD0 = srcVx.vtX - cPts->vtX;
+      tD1 = srcVx.vtY - cPts->vtY;
+      tD0 = (tD0 * tD0) + (tD1 * tD1);
+    }
+    else
+    {
+      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 *= tD0;
+    }
     tD1 = (tD0 > DBL_EPSILON)? exp(tD0 * delta): 1.0;
     newVx.vtX += basisCo->vtX * tD1;
     newVx.vtY += basisCo->vtY * tD1;
@@ -204,7 +224,7 @@ WlzDVertex2 	WlzBasisFnValueGauss2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 */
 WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 {
-  int           count;
+  int           idx;
   double        tD0,
 		tD1,
 		delta;
@@ -212,23 +232,30 @@ WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 		*cPts;
   WlzDVertex2    polyVx,
   		newVx;
+  WlzVertex	sPt;
 
+  sPt.d2 = srcVx;
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
-  count = basisFn->nVtx;
   cPts = basisFn->vertices.d2;
   basisCo = basisFn->basis.d2;
   delta = *((double *)(basisFn->param));
-  while(count-- > 0)
+  for(idx = 0; idx < basisFn->nVtx; ++idx)
   {
-    tD0 = srcVx.vtX - cPts->vtX;
-    tD1 = srcVx.vtY - cPts->vtY;
-    tD0 = (tD0 * tD0) + (tD1 * tD1);
+    if(basisFn->distFn == NULL)
     {
-      tD0 = sqrt(tD0 + delta);
-      newVx.vtX += basisCo->vtX * tD0;
-      newVx.vtY += basisCo->vtY * tD0;
+      tD0 = srcVx.vtX - cPts->vtX;
+      tD1 = srcVx.vtY - cPts->vtY;
+      tD0 = (tD0 * tD0) + (tD1 * tD1);
     }
+    else
+    {
+      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 *= tD0;
+    }
+    tD0 = sqrt(tD0 + delta);
+    newVx.vtX += basisCo->vtX * tD0;
+    newVx.vtY += basisCo->vtY * tD0;
     ++cPts;
     ++basisCo;
   }
@@ -242,14 +269,13 @@ WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 * \return	New vertex value.
 * \ingroup	WlzFunction
 * \brief	Calculates the displacement value for the given vertex using
-*		a multiquadric basis function.
+*		a 3D multiquadric basis function.
 * \param	basisFn			Basis function.
 * \param	srcVx			Source vertex.
-*  29-08-01 add by Jianguo 
 */
 WlzDVertex3 	WlzBasisFnValueMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
 {
-  int           count;
+  int           idx;
   double        tD0,
 		tD1,
 		tD2,
@@ -262,25 +288,19 @@ WlzDVertex3 	WlzBasisFnValueMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
   newVx.vtZ = 0.0;
-   
-  count   = basisFn->nVtx;
   cPts    = basisFn->vertices.d3;
   basisCo = basisFn->basis.d3;
   delta = *((double *)(basisFn->param));
-  while(count-- > 0)
-  { /* get the r_i^2  */
+  for(idx = 0; idx < basisFn->nVtx; ++idx)
+  {
     tD0 = srcVx.vtX - cPts->vtX;
     tD1 = srcVx.vtY - cPts->vtY;
     tD2 = srcVx.vtZ - cPts->vtZ;
     tD0 = (tD0 * tD0) + (tD1 * tD1) + (tD2 * tD2);
-    
-    /* if(tD0 > DBL_EPSILON) J. Rao */
-    {
-      tD0 = sqrt(tD0 + delta);
-      newVx.vtX += basisCo->vtX * tD0;
-      newVx.vtY += basisCo->vtY * tD0;
-      newVx.vtZ += basisCo->vtZ * tD0;
-    }
+    tD0 = sqrt(tD0 + delta);
+    newVx.vtX += basisCo->vtX * tD0;
+    newVx.vtY += basisCo->vtY * tD0;
+    newVx.vtZ += basisCo->vtZ * tD0;
     ++cPts;
     ++basisCo;
   }
@@ -288,7 +308,7 @@ WlzDVertex3 	WlzBasisFnValueMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
   newVx.vtX = newVx.vtX + polyVx.vtX;
   newVx.vtY = newVx.vtY + polyVx.vtY;
   newVx.vtZ = newVx.vtZ + polyVx.vtZ;
-   return(newVx);
+  return(newVx);
 }
 
 
@@ -303,24 +323,33 @@ WlzDVertex3 	WlzBasisFnValueMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
 */
 WlzDVertex2 	WlzBasisFnValueTPS2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 {
-  int           count;
+  int           idx;
   double        tD0,
 		tD1;
   WlzDVertex2    *basisCo,
 		*cPts;
   WlzDVertex2    polyVx,
   		newVx;
+  WlzVertex	sPt;
 
+  sPt.d2 = srcVx;
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
-  count = basisFn->nVtx;
   cPts = basisFn->vertices.d2;
   basisCo = basisFn->basis.d2;
-  while(count-- > 0)
+  for(idx = 0; idx < basisFn->nVtx; ++idx)
   {
-    tD0 = srcVx.vtX - cPts->vtX;
-    tD1 = srcVx.vtY - cPts->vtY;
-    tD0 = (tD0 * tD0) + (tD1 * tD1);
+    if(basisFn->distFn == NULL)
+    {
+      tD0 = srcVx.vtX - cPts->vtX;
+      tD1 = srcVx.vtY - cPts->vtY;
+      tD0 = (tD0 * tD0) + (tD1 * tD1);
+    }
+    else
+    {
+      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 *= tD0;
+    }
     if(tD0 > DBL_EPSILON)
     {
       tD0 *= log(tD0);
@@ -331,8 +360,8 @@ WlzDVertex2 	WlzBasisFnValueTPS2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     ++basisCo;
   }
   polyVx = WlzBasisFnValueRedPoly2D(basisFn->poly.d2, srcVx);
-  newVx.vtX = (newVx.vtX / 2) + polyVx.vtX;
-  newVx.vtY = (newVx.vtY / 2) + polyVx.vtY;
+  newVx.vtX = (newVx.vtX * 0.5) + polyVx.vtX;
+  newVx.vtY = (newVx.vtY * 0.5) + polyVx.vtY;
   return(newVx);
 }
 
@@ -358,8 +387,8 @@ WlzDVertex2 	WlzBasisFnValueConf2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
   z.im = polyP[0].vtY;
   powW.re = 1.0;
   powW.im = 0.0;
-
-  for(i=1; i <= basisFn->nPoly; i++){
+  for(i=1; i <= basisFn->nPoly; i++)
+  {
     powW = AlgCMult(powW, w);
     a.re = polyP[i].vtX;
     a.im = polyP[i].vtY;
@@ -394,7 +423,7 @@ WlzDVertex2 	WlzBasisFnValueConf2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
 */
 WlzDVertex3 	WlzBasisFnValueMOS3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
 {
-  int           count;
+  int           idx;
   double        tD0,
 		tD1,
 		v,
@@ -415,14 +444,13 @@ WlzDVertex3 	WlzBasisFnValueMOS3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
   newVx.vtZ = 0.0;
-  count = basisFn->nVtx;
   cPts = basisFn->vertices.d3;
   basisCo = basisFn->basis.d3;
   delta = *((double *)(basisFn->param) + 0);
   tau = *((double *)(basisFn->param) + 1);
   if(basisFn->evalFn)
   {
-    while(count-- > 0)
+    for(idx = 0; idx < basisFn->nVtx; ++idx)
     {
       WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
       rad = WLZ_VTX_3_LENGTH(dispVx);
@@ -444,7 +472,7 @@ WlzDVertex3 	WlzBasisFnValueMOS3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
     rv = sqrt(v);
     rw = sqrt(w);
     norm = 1.0 / (4.0 * ALG_M_PI * delta * delta);
-    while(count-- > 0)
+    for(idx = 0; idx < basisFn->nVtx; ++idx)
     {
       WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
       rad = WLZ_VTX_3_LENGTH(dispVx);
@@ -484,7 +512,7 @@ WlzDVertex3 	WlzBasisFnValueMOS3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
 double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
 					   WlzDVertex3 srcVx)
 {
-  int           count;
+  int           idx;
   double        tD0,
 		tD1,
 		v,
@@ -502,12 +530,11 @@ double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
   WlzDVertex3   dispVx;
 
   value = 0.0;
-  count = basisFn->nVtx;
   cPts = basisFn->vertices.d3;
   basisCo = (double *)(basisFn->basis.v);
   if(basisFn->evalFn)
   {
-    while(count-- > 0)
+    for(idx = 0; idx < basisFn->nVtx; ++idx)
     {
       WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
       rad = WLZ_VTX_3_LENGTH(dispVx);
@@ -529,7 +556,7 @@ double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
     rv = sqrt(v);
     rw = sqrt(w);
     norm = 1.0 / (4.0 * ALG_M_PI * delta * delta);
-    while(count-- > 0)
+    for(idx = 0; idx < basisFn->nVtx; ++idx)
     {
       WLZ_VTX_3_SUB(dispVx, srcVx, *cPts);
       rad = WLZ_VTX_3_LENGTH(dispVx);
@@ -545,6 +572,7 @@ double 		WlzBasisFnValueScalarMOS3D(WlzBasisFn *basisFn,
 
 /*!
 * \return	The value of a single multiorder radial basis function.
+* \ingroup	WlzFunction
 * \brief	Computes the value of a single multiorder radial basis
 *		function:
 *		\f[
@@ -589,7 +617,72 @@ double          WlzBasisFnValueMOSPhi(double r, double delta, double tau)
 }
 
 /*!
+* \return	Distance from given position to control point.
+* \ingroup	WlzFunction
+* \brief	Computes the distance from the given position to the control
+*		point with the given index for which a distance map has
+*		been computed.
+* \param	bFnP			Used to pass the basis function
+*					data structure.
+* \param	idx			Index of the control point.
+* \param	pos			Given position passed using the
+*					vertex pointer union but always
+*					either 2D or 3D double..
+*/
+double		WlzBasisFnMapDistFn2D(void *bFnP, int idx, WlzVertex pos)
+{
+  double	px,
+  		py,
+		dist = DBL_MAX;
+  WlzBasisFn	*bFn;
+  WlzGreyValueWSpace *gVWSp;
+
+  if(((bFn = (WlzBasisFn *)bFnP) != NULL) &&
+     (bFn->distWSp != NULL) && ((gVWSp = bFn->distWSp[idx]) != NULL))
+  {
+    px = pos.d2.vtX - WLZ_NINT(pos.d2.vtX - 0.5);
+    py = pos.d2.vtY - WLZ_NINT(pos.d2.vtY - 0.5);
+    WlzGreyValueGetCon(gVWSp, 0.0, pos.d2.vtY, pos.d2.vtX);
+    switch(gVWSp->gType)
+    {
+      case WLZ_GREY_INT:
+	dist = (((gVWSp->gVal[0]).inv * (1.0 - px) * (1.0 - py)) +
+		((gVWSp->gVal[1]).inv * px * (1.0 - py)) +
+		((gVWSp->gVal[2]).inv * (1.0 - px) * py) +
+		((gVWSp->gVal[3]).inv * px * py));
+	break;
+      case WLZ_GREY_SHORT:
+	dist = (((gVWSp->gVal[0]).shv * (1.0 - px) * (1.0 - py)) +
+		((gVWSp->gVal[1]).shv * px * (1.0 - py)) +
+		((gVWSp->gVal[2]).shv * (1.0 - px) * py) +
+		((gVWSp->gVal[3]).shv * px * py));
+	break;
+      case WLZ_GREY_UBYTE:
+	dist = (((gVWSp->gVal[0]).ubv * (1.0 - px) * (1.0 - py)) +
+		((gVWSp->gVal[1]).ubv * px * (1.0 - py)) +
+		((gVWSp->gVal[2]).ubv * (1.0 - px) * py) +
+		((gVWSp->gVal[3]).ubv * px * py));
+	break;
+      case WLZ_GREY_FLOAT:
+	dist = (((gVWSp->gVal[0]).flv * (1.0 - px) * (1.0 - py)) +
+		((gVWSp->gVal[1]).flv * px * (1.0 - py)) +
+		((gVWSp->gVal[2]).flv * (1.0 - px) * py) +
+		((gVWSp->gVal[3]).flv * px * py));
+	break;
+      case WLZ_GREY_DOUBLE:
+	dist = (((gVWSp->gVal[0]).dbv * (1.0 - px) * (1.0 - py)) +
+		((gVWSp->gVal[1]).dbv * px * (1.0 - py)) +
+		((gVWSp->gVal[2]).dbv * (1.0 - px) * py) +
+		((gVWSp->gVal[3]).dbv * px * py));
+	break;
+    }
+  }
+  return(dist);
+}
+
+/*!
 * \return	The value of a single multiorder radial basis function.
+* \ingroup	WlzFunction
 * \brief	Computes the value of a single multiorder radial basis
 *		function using either an approximation:
 *		\f[
@@ -655,6 +748,71 @@ static double   WlzBasisFnValueMOSPhiPC(double r, double v, double w,
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzFunction
+* \brief	Computes distance maps for a 2D basis function transform
+*		which has both the number of control points and the
+*		control points set.
+* \param	basisFn			Partialy completed basis function
+*					under construction.
+* \param	cObj			Constraint object.
+*/
+static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
+					WlzObject *cObj)
+{
+  int		idx;
+  WlzObject	*sObj = NULL;
+  WlzPixelV	outsideV;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  outsideV.type = WLZ_GREY_INT;
+  outsideV.v.inv = INT_MAX;
+  basisFn->distFn = WlzBasisFnMapDistFn2D;
+  if(((basisFn->distMap = (WlzObject **)
+		          AlcCalloc(basisFn->nVtx,
+			            sizeof(WlzObject *))) == NULL) ||
+     ((basisFn->distWSp = (WlzGreyValueWSpace **)
+		          AlcCalloc(basisFn->nVtx,
+			            sizeof(WlzGreyValueWSpace *))) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idx = 0; idx < basisFn->nVtx; ++idx)
+    {
+      sObj = WlzAssignObject(
+	     WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ,
+				      basisFn->vertices.d2[idx].vtX,
+				      basisFn->vertices.d2[idx].vtY,
+				      0, &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	basisFn->distMap[idx] = WlzAssignObject(
+				DistanceTransform(cObj, sObj,
+				WLZ_OCTAGONAL_DISTANCE,
+				&errNum), NULL);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzSetBackground(basisFn->distMap[idx], outsideV);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	basisFn->distWSp[idx] = WlzGreyValueMakeWSp(basisFn->distMap[idx],
+					   	    &errNum);
+      }
+      if(errNum != WLZ_ERR_NONE)
+      {
+	break;
+      }
+      (void )WlzFreeObj(sObj);
+    }
+  }
+  return(errNum);
+}
+
+/*!
 * \return	New basis function.
 * \ingroup	WlzFunction
 * \brief	Creates a new Gaussian basis function.
@@ -663,11 +821,16 @@ static double   WlzBasisFnValueMOSPhiPC(double r, double v, double w,
 * \param	sPts			Source control points.
 * \param	delta			Normalized delta value in range 
 *					[> 0.0 , < 1.0 ].
+* \param	cObj			Constraining object, within which all
+*					distances are constrained, if NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
 				    WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				    double delta, WlzErrorNum *dstErr)
+				    double delta, WlzObject *cObj,
+				    WlzErrorNum *dstErr)
 {
   int		idN,
   		idX,
@@ -686,6 +849,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   		*wMx = NULL;
   double	**aMx = NULL,
   		**vMx = NULL;
+  WlzVertex	sPt;
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
   WlzBasisFn 	*basisFn = NULL;
@@ -720,12 +884,19 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     basisFn->type = WLZ_FN_BASIS_2DGAUSS;
+    basisFn->nVtx = nPts;
+    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
+    if(cObj)
+    {
+      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     basisFn->nPoly = 2;
     basisFn->nBasis = nPts;
-    basisFn->nVtx = nPts;
     deltaRg = deltaSq / (range * range);
     *((double *)(basisFn->param)) = deltaRg;
-    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
     /* Fill matrix A and matrix b for the x component. */
     for(idY = 0; idY < 3; ++idY)
     {
@@ -749,11 +920,20 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
       *(*(aMx + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
-	tDVx0.vtX = (dPts + idX)->vtX - (dPts + idY)->vtX;
-	tDVx0.vtX *= tDVx0.vtX;
-	tDVx0.vtY = (dPts + idX)->vtY - (dPts + idY)->vtY;
-	tDVx0.vtY *= tDVx0.vtY;
-	tD0 = (tDVx0.vtX + tDVx0.vtY) * deltaRg;
+	if(basisFn->distFn)
+	{
+	  sPt.d2 = dPts[idX];
+	  tD0 = basisFn->distFn(basisFn, idY, sPt);
+	  tD0 *= tD0 * deltaRg;
+	}
+	else
+	{
+	  tDVx0.vtX = (dPts + idX)->vtX - (dPts + idY)->vtX;
+	  tDVx0.vtX *= tDVx0.vtX;
+	  tDVx0.vtY = (dPts + idX)->vtY - (dPts + idY)->vtY;
+	  tDVx0.vtY *= tDVx0.vtY;
+	  tD0 = (tDVx0.vtX + tDVx0.vtY) * deltaRg;
+        }
 	tD1 = (tD0 > DBL_EPSILON)? exp(tD0): 1.0;
 	idX3 = idX + 3;
 	*(*(aMx + idY3) + idX3) = tD1;
@@ -1064,7 +1244,8 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
       z.im = sVx.vtY;
       zPow.re = 1.0;
       zPow.im = 0.0;
-      for(idY = 0, idX = basisFn->nPoly + 1; idY <= basisFn->nPoly; ++idY, idX++)
+      for(idY = 0, idX = basisFn->nPoly + 1; idY <= basisFn->nPoly;
+          ++idY, idX++)
       {
 	aMx[idM][idY] = zPow.re;
 	aMx[idM][idX] = -zPow.im;
@@ -1142,24 +1323,29 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   return(basisFn);
 }
 
-
-
-
-
 /*!
 * \return	New basis function.
 * \ingroup	WlzFunction
 * \brief	Creates a new multiquadric basis function.
+*		To improve the design matix condition number the problem is
+*		rescaled.
+*		If a distance function is being used then no rescaling
+*		is done.
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
 * \param	delta			Normalized delta value in range
 *					[> 0.0 , < 1.0 ].
+* \param	cObj			Constraining object, within which all
+*					distances are constrained, if NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
 				WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				double delta, WlzErrorNum *dstErr)
+				double delta, WlzObject *cObj,
+				WlzErrorNum *dstErr)
 {
   int		idN,
   		idX,
@@ -1178,6 +1364,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   		*wMx = NULL;
   double	**aMx = NULL,
   		**vMx = NULL;
+  WlzVertex	sPt;
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
   WlzBasisFn *basisFn = NULL;
@@ -1213,12 +1400,19 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     basisFn->type = WLZ_FN_BASIS_2DMQ;
+    basisFn->nVtx = nPts;
+    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
+    if(cObj)
+    {
+      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     basisFn->nPoly = 2;
     basisFn->nBasis = nPts;
-    basisFn->nVtx = nPts;
     deltaRg = deltaSq * range * range;
     *((double *)(basisFn->param)) = deltaRg;
-    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
     /* Fill matrix A and matrix b for the x component. */
     for(idY = 0; idY < 3; ++idY)
     {
@@ -1233,8 +1427,15 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
       idY3 = idY + 3;
       tD0 = (dPts + idY)->vtX;
       *(bMx + idY3) = (sPts + idY)->vtX - tD0;
-      tD0 = (tD0 - extentDB.xMin) / range;
-      tD1 = ((dPts + idY)->vtY - extentDB.yMin) / range;
+      if(basisFn->distFn)
+      {
+	tD1 = (dPts + idY)->vtY;
+      }
+      else
+      {
+	tD0 = (tD0 - extentDB.xMin) / range;
+	tD1 = ((dPts + idY)->vtY - extentDB.yMin) / range;
+      }
       *(*(aMx + idY3) + 0) = 1.0;
       *(*(aMx + idY3) + 1) = tD0;
       *(*(aMx + idY3) + 2) = tD1;
@@ -1243,11 +1444,20 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
       *(*(aMx + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
-	tDVx0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
-	tDVx0.vtX *= tDVx0.vtX;
-	tDVx0.vtY = ((dPts + idX)->vtY - (dPts + idY)->vtY) / range;
-	tDVx0.vtY *= tDVx0.vtY;
-	tD0 = tDVx0.vtX + tDVx0.vtY;
+	if(basisFn->distFn)
+	{
+	  sPt.d2 = dPts[idX];
+	  tD0 = basisFn->distFn(basisFn, idY, sPt);
+	  tD0 *= tD0;
+	}
+	else
+	{
+	  tDVx0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
+	  tDVx0.vtX *= tDVx0.vtX;
+	  tDVx0.vtY = ((dPts + idX)->vtY - (dPts + idY)->vtY) / range;
+	  tDVx0.vtY *= tDVx0.vtY;
+	  tD0 = tDVx0.vtX + tDVx0.vtY;
+	}
 	tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;
 	idX3 = idX + 3;
 	*(*(aMx + idY3) + idX3) = tD1;
@@ -1285,7 +1495,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
        and the y polynomial coefficients. */
-    WlzBasisFnMQ2DCoexff(basisFn, bMx,  &extentDB, range, 1);
+    WlzBasisFnMQ2DCoexff(basisFn, bMx,  &extentDB, range,
+    			 1, (basisFn->distFn)? 0: 1);
     *(bMx + 0) = 0.0;
     *(bMx + 1) = 0.0;
     *(bMx + 2) = 0.0;
@@ -1300,7 +1511,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients. */
-    WlzBasisFnMQ2DCoexff(basisFn, bMx,  &extentDB, range, 0);
+    WlzBasisFnMQ2DCoexff(basisFn, bMx,  &extentDB, range,
+    			 0, (basisFn->distFn)? 0: 1);
   }
   if(bMx)
   {
@@ -1332,20 +1544,6 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   }
   return(basisFn);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*!
 * \return	New basis function.
@@ -1394,7 +1592,6 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
   nSys = nPts + 4;
   deltaSq = delta * delta;
   /*------- allocate memory --------*/
-
   if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
      ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
      (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
@@ -1455,9 +1652,7 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
       }
       *(bMx + idY) = 0.0;
     }
-						    
     /* --- Now the rest --- */
-
     for(idY = 0; idY < nPts; ++idY)
     {
       idY4 = idY + 4;
@@ -1475,9 +1670,7 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
       *(*(aMx + 1) + idY4) = tD0;
       *(*(aMx + 2) + idY4) = tD1;
       *(*(aMx + 3) + idY4) = tD2;
-
       /* the lower right corner elements */
-
        for(idX = 0; idX < idY; ++idX)
       {
 	tDVx0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
@@ -1487,9 +1680,7 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
 	tDVx0.vtZ = ((dPts + idX)->vtZ - (dPts + idY)->vtZ) / range;
 	tDVx0.vtZ *= tDVx0.vtZ;
 
-
 	tD0 = tDVx0.vtX + tDVx0.vtY + tDVx0.vtZ;
-	/*  tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;  J. Rao */
         tD1 = sqrt(tD0 + deltaSq);
 	idX4 = idX + 4;
 	*(*(aMx + idY4) + idX4) = tD1;
@@ -1497,7 +1688,6 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
       }
       *(*(aMx + idY4) + idY4) = delta;
     }
-
     /* Perform singular value decomposition of matrix A. */
     errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
   }
@@ -1606,11 +1796,15 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
+* \param	cObj			Constraining object, within which all
+*					distances are constrained, if NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 				  WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				  WlzErrorNum *dstErr)
+				  WlzObject *cObj, WlzErrorNum *dstErr)
 {
   int		idN,
   		idX,
@@ -1628,6 +1822,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   double	**aMx = NULL,
   		**vMx = NULL;
   WlzBasisFn *basisFn = NULL;
+  WlzVertex	sPt;
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1660,9 +1855,17 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     basisFn->type = WLZ_FN_BASIS_2DTPS;
+    basisFn->nVtx = nPts;
+    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
+    if(cObj)
+    {
+      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     basisFn->nPoly = 2;
     basisFn->nBasis = nPts;
-    basisFn->nVtx = nPts;
     for(idY = 0; idY < 3; ++idY)
     {
       for(idX = 0; idX < 3; ++idX)
@@ -1686,11 +1889,20 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
       *(*(aMx + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
-	tDVx0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
-	tDVx0.vtX *= tDVx0.vtX;
-	tDVx0.vtY = ((dPts + idX)->vtY - (dPts + idY)->vtY) / range;
-	tDVx0.vtY *= tDVx0.vtY;
-	tD0 = tDVx0.vtX + tDVx0.vtY;
+	if(basisFn->distFn)
+	{
+	  sPt.d2 = dPts[idX];
+	  tD0 = basisFn->distFn(basisFn, idY, sPt);
+	  tD0 *= tD0;
+	}
+	else
+	{
+	  tDVx0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
+	  tDVx0.vtX *= tDVx0.vtX;
+	  tDVx0.vtY = ((dPts + idX)->vtY - (dPts + idY)->vtY) / range;
+	  tDVx0.vtY *= tDVx0.vtY;
+	  tD0 = tDVx0.vtX + tDVx0.vtY;
+	}
 	tD1 = (tD0 > DBL_EPSILON)? tD0 * log(tD0): 0.0;
 	idX3 = idX + 3;
 	*(*(aMx + idY3) + idX3) = tD1;
@@ -1726,7 +1938,6 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
     WlzBasisFnTPS2DCoef(basisFn, bMx,  &extentDB, range, 1);
     *(bMx + 0) = 0.0;
     *(bMx + 1) = 0.0;
@@ -2301,15 +2512,10 @@ static void	WlzBasisFnVxExtent2D(WlzDBox2 *extentDB,
   }
 }
 
-
-
-
-
-/* function:     WlzBasisFnVxExtent3D    */
 /*! 
 * \ingroup      WlzFunction
 * \brief        Computes the extent (bounding volume) of two vectors
- of verticies.
+*		of verticies.
 *
 * \param    extentDB	Pointer for the extent of the verticies.
 * \param    vx0	First vector of verticies.
@@ -2329,7 +2535,7 @@ static void	WlzBasisFnVxExtent3D(WlzDBox3 *extentDB,
   extentDB->xMin = extentDB->xMax = vx0->vtX;
   extentDB->yMin = extentDB->yMax = vx0->vtY;
   extentDB->zMin = extentDB->zMax = vx0->vtZ;
-   while(nPts-- > 0)
+  while(nPts-- > 0)
   {
     if((tD0 = vx0->vtX) > (tD1 = vx1->vtX))
     {
@@ -2392,7 +2598,8 @@ static void	WlzBasisFnVxExtent3D(WlzDBox3 *extentDB,
 * \param	forX			True if the coefficients are for the x
 * 					coordinate.
 */
-static void	WlzBasisFnGauss2DCoef(WlzBasisFn *basisFn, double *vec, int forX)
+static void	WlzBasisFnGauss2DCoef(WlzBasisFn *basisFn, double *vec,
+				      int forX)
 {
   int		idN;
   double	*vecP;
@@ -2428,8 +2635,8 @@ static void	WlzBasisFnGauss2DCoef(WlzBasisFn *basisFn, double *vec, int forX)
 * \return	void
 * \ingroup	WlzFunction
 * \brief	Extracts the multiquadric coefficients from the given
-*		column vector using the given extent and range for
-*		function.
+*		column vector and optionaly rescales them using the given
+*		extent and range for the function.
 * \param	basisFn			Allocated basis function
 *					to be filled in.
 * \param	vec			Given column vector.
@@ -2437,10 +2644,12 @@ static void	WlzBasisFnGauss2DCoef(WlzBasisFn *basisFn, double *vec, int forX)
 * \param	range			Range of the vertices.
 * \param	forX		 	True if the coefficients are for
 *					the x coordinate.
+* \param	rescale			Rescale the coeeficients using
+*					the range and extent if non-zero.
 */
 static void	WlzBasisFnMQ2DCoexff(WlzBasisFn *basisFn,
 				  double *vec, WlzDBox2 *extentDB,
-				  double range, int forX)
+				  double range, int forX, int rescale)
 {
   int		idN;
   double 	vec0,
@@ -2458,45 +2667,69 @@ static void	WlzBasisFnMQ2DCoexff(WlzBasisFn *basisFn,
   polyVxP = basisFn->poly.d2;
   if(forX)
   {
-    polyVxP++->vtX = vec0 -
-    		     (((vec1 * extentDB->xMin) +
-    		       (vec2 * extentDB->yMin)) / range);
-    polyVxP++->vtX = vec1 / range;
-    polyVxP->vtX = vec2 / range;
-    for(idN = 0; idN < basisFn->nBasis; ++idN)
+    if(rescale)
     {
-      basisVxP++->vtX = *vecP++ / range;
+      polyVxP++->vtX = vec0 -
+		       (((vec1 * extentDB->xMin) +
+			 (vec2 * extentDB->yMin)) / range);
+      polyVxP++->vtX = vec1 / range;
+      polyVxP->vtX = vec2 / range;
+      for(idN = 0; idN < basisFn->nBasis; ++idN)
+      {
+	basisVxP++->vtX = *vecP++ / range;
+      }
+    }
+    else
+    {
+      polyVxP++->vtX = vec0;
+      polyVxP++->vtX = vec1;
+      polyVxP->vtX = vec2;
+      for(idN = 0; idN < basisFn->nBasis; ++idN)
+      {
+        basisVxP++->vtX = *vecP++;
+      }
     }
   }
   else
   {
-    polyVxP++->vtY = vec0 -
-    		     (((vec1 * extentDB->xMin) +
-    		       (vec2 * extentDB->yMin)) / range);
-    polyVxP++->vtY = vec1 / range;
-    polyVxP->vtY = vec2 / range;
-    for(idN = 0; idN < basisFn->nBasis; ++idN)
+    if(rescale)
     {
-      basisVxP++->vtY = *vecP++ / range;
+      polyVxP++->vtY = vec0 -
+		       (((vec1 * extentDB->xMin) +
+			 (vec2 * extentDB->yMin)) / range);
+      polyVxP++->vtY = vec1 / range;
+      polyVxP->vtY = vec2 / range;
+      for(idN = 0; idN < basisFn->nBasis; ++idN)
+      {
+	basisVxP++->vtY = *vecP++ / range;
+      }
+    }
+    else
+    {
+      polyVxP++->vtY = vec0;
+      polyVxP++->vtY = vec1;
+      polyVxP->vtY = vec2;
+      for(idN = 0; idN < basisFn->nBasis; ++idN)
+      {
+        basisVxP++->vtY = *vecP++;
+      }
     }
   }
 }
 
-/* function:     WlzBasisFnMQCoeff3D    */
 /*! 
 * \ingroup      WlzFunction
 * \brief        Extracts the multiquadric coefficients from the
- given column vector using the given extent and range
- for transformation to pixel space.
+*		given column vector using the given extent and range
+*		for transformation to pixel space.
 *
 * \param    basis	Allocated basis function transform to be filled in.
-* \param    vec	Given column vector.
+* \param    vec		Given column vector.
 * \param    extentDB	Extent of the verticies.
 * \param    range	Range of the verticies.
 * \param    forX	True if the coefficients are for the x coordinate.
 * \param    forY	True if the coefficients are for the y coordinate.
-* \par      Source:
-*                WlzBasisFn.c
+* \par      Source: WlzBasisFn.c
 */
 static void	WlzBasisFnMQCoeff3D(WlzBasisFn *basis,
 				  double *vec, WlzDBox3 *extentDB,
@@ -2566,19 +2799,6 @@ static void	WlzBasisFnMQCoeff3D(WlzBasisFn *basis,
    
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*!
 * \return	void
