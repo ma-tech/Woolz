@@ -102,7 +102,11 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 }
 
 /*!
-* \return	Non-zero if vertex is inside the triangle.
+* \return	Value indicating the position of the vertex with respect
+*               to the triangle:
+*		  +ve if the vertex is inside the triangle,
+*		  0   if the vertex is on an edge of the triangle and
+*		  -ve if the vertex is outside the triangle.
 * \ingroup	WlzGeometry
 * \brief	Test's to set if the given vertex lies within the given
 *		triangle using a barycentric coordinates test.
@@ -111,8 +115,10 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *		in the plane containing the triangle can be represented
 *		by: \f[p = \alpha*p_0 + \beta*p_2 + \gamma*p_3\f]
 *		subject to the constraint: \f[\alpha + \beta + \gamma = 1\f]
-*		If \f$p\f$ is inside the triangle at least one of 
-*		\f$alpha\f$, \f$beta\f$ and \f$gamma\f$ is -ve.
+*		If \f$p\f$ is outside the triangle at one or more of 
+*		\f$alpha\f$, \f$beta\f$ and \f$gamma\f$ is -ve. It
+*               is inside if all are -ve and on an edge of the triangle
+*		if any are close to zero (ie < DBL_EPSILON).
 * \param	vx0			First vertex of triangle.
 * \param	vx1			Second vertex of triangle.
 * \param	vx2			Third vertex of triangle.
@@ -121,48 +127,44 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				     WlzDVertex2 vx2, WlzDVertex2 vxP)
 {
-  int		isInside = 0;
-  double	tD0,
-  		tD1,
-		x0,
-  		y0,
+  int		inside = 0;
+  double	x0,
+		y0,
 		x1,
 		y1,
 		x2,
 		y2,
 		alpha,
 		beta,
-		gamma;
+		gamma,
+		delta;
 
-  tD0 = vx2.vtX;
-  tD1 = vx2.vtY;
-  x0 = vxP.vtX - tD0;
-  y0 = vxP.vtY - tD1;
-  x1 = vx0.vtX - tD0;
-  y1 = vx0.vtY - tD1;
-  x2 = vx1.vtX - tD0;
-  y2 = vx1.vtY - tD1;
-  if((x2 * x2) > DBL_EPSILON)
+  delta = (vx1.vtX - vx0.vtX) * (vx2.vtY - vx0.vtY) -
+          (vx2.vtX - vx0.vtX) * (vx1.vtY - vx0.vtY);
+  if(fabs(delta) > DBL_EPSILON)
   {
-    isInside = (fabs(tD0 = (x1 * y2) - (x2 * y1)) > DBL_EPSILON) &&
-	       ((alpha = ((x0 * y2) - (x2 * y0)) / tD0) >= 0.0) &&
-	       (alpha <= 1.0) &&
-	       ((beta = (x0 - (alpha * x1)) / x2) >= 0.0) &&
-	       (beta <= 1.0) &&
-	       ((gamma = (1 - (alpha + beta))) >= 0.0) &&
-	       (gamma <= 1.0);
+    x0 = vx0.vtX - vxP.vtX;
+    y0 = vx0.vtY - vxP.vtY;
+    x1 = vx1.vtX - vxP.vtX;
+    y1 = vx1.vtY - vxP.vtY;
+    x2 = vx2.vtX - vxP.vtX;
+    y2 = vx2.vtY - vxP.vtY;
+    alpha = ((x1 * y2) - (x2 * y1)) / delta;
+    beta  = ((x2 * y0) - (x0 * y2)) / delta;
+    gamma = ((x0 * y1) - (x1 * y0)) / delta;
+    if((alpha < -DBL_EPSILON) || (beta < -DBL_EPSILON) ||
+       (gamma < -DBL_EPSILON))
+    {
+      inside = -1;
+    }
+    else if((alpha > DBL_EPSILON) && (beta > DBL_EPSILON) &&
+            (gamma > DBL_EPSILON))
+    {
+      inside = 1;
+    }
   }
-  else if((y2 * y2)  > DBL_EPSILON)
-  {
-    isInside = (fabs(tD0 = (x1 * y2) - (x2 * y1)) > DBL_EPSILON) &&
-	       ((alpha = ((x0 * y2) - (x2 * y0)) / tD0) >= 0.0) &&
-	       (alpha <= 1.0) &&
-	       ((beta = (y0 - (alpha * y1)) / y2) >= 0.0) &&
-	       (beta <= 1.0) &&
-	       ((gamma = (1 - (alpha + beta))) >= 0.0) &&
-	       (gamma <= 1.0);
-  }
-  return(isInside);
+  return(inside);
+
 }
 
 /*!
@@ -1225,4 +1227,150 @@ int		WlzGeomVertexInDiamCircle(WlzDVertex2 lPos0, WlzDVertex2 lPos1,
   prod = WLZ_VTX_2_DOT(v0, v1);
   inside = prod < 0.0;
   return(inside);
+}
+
+/*!
+* \return	Incremented spiral step count.
+* \ingroup	WlzGeometry
+* \brief	Iterates the given positions coordinates through an
+*		expanding integer spiral.
+* \param	step			Spiral step count, must be zero
+*					when this function is called for the
+*					for first step.
+* \param	pX			Destination pointer for column
+*					coordinate.
+* \param	pY			Destination pointer for line
+*					coordinate.
+*/
+int             WlzGeomItrSpiral2I(int step, int *pX, int *pY)
+{
+  int           ring,
+                ring2,
+                square;
+  const int	lutX[9] = { 1,  0, -1, -1,  0,  0,  1,  1,  1},
+  		lutY[9] = { 0,  1,  0,  0, -1, -1,  0,  0,  0};
+  if(step <= 0)
+  {
+    step = 1;
+    ++*pX;
+  }
+  else if(step < 9)
+  {
+    *pX += lutX[step];
+    *pY += lutY[step];
+    ++step;
+  }
+  else
+  {
+    ++step;
+    ring = (int )floor(sqrt(step) + 1) / 2;
+    ring2 = 2 * ring;
+    square = (ring2 - 1) * (ring2 - 1);
+    if(step == square)
+    {
+      ++*pX;
+    }
+    else if(step < (square + ring2))
+    {
+      ++*pY;
+    }
+    else if(step < (square + (2 * ring2)))
+    {
+      --*pX;
+    }
+    else if(step < (square + (3 * ring2)))
+    {
+      --*pY;
+    }
+    else
+    {
+      ++*pX;
+    }
+  }
+  return(step);
+}
+
+/*!
+* \return	Euclidean distance between the given vertices.
+* \ingroup	WlzGeometry
+* \brief	Computes square of the Euclidean distance between the given
+* 		two vertices.
+* \param	v0			First of the given vertices.
+* \param	v1			Second of the given vertices.
+*/
+double		WlzGeomDistSq2D(WlzDVertex2 v0, WlzDVertex2 v1)
+{
+  double	dst;
+
+  WLZ_VTX_2_SUB(v0, v0, v1);
+  dst = WLZ_VTX_2_SQRLEN(v0);
+  return(dst);
+}
+
+/*!
+* \return       Non zero if the area of the triangle is very small.
+* \ingroup      WlzGeometry
+* \brief        If the unsigned area of the triangle is very small
+*               then the only the transform translation coefficients
+*               are computed with the other coefficients being set to
+*               zero.
+*               If the unsigned area of the triangle is not very small
+*               then a system of linear equations is solved for the
+*               coefficients of the 2D affine transform from the source
+*               triangle to the destination triangle.
+* \param        xTr                     Transform coordinates for x.
+* \param        yTr                     Transform coordinates for y.
+* \param        dd                      Twice the area of the source triangle.
+* \param        sVx                     Source triangle vertices.
+* \param        dVx                     Destination triangle vertices.
+* \param        thresh                  Threshold value for twice the area.
+*/
+int             WlzGeomTriangleAffineSolve(double *xTr, double *yTr, double dd,
+                                        WlzDVertex2 *sVx, WlzDVertex2 *dVx,
+                                        double thresh)
+{
+  int           squashed = 0;
+  double        tD0,
+                tD1,
+                tD2;
+
+  if(fabs(dd) < thresh)
+  {
+    squashed = 1;
+    xTr[0] = 0.0;
+    xTr[1] = 0.0;
+    xTr[2] = (dVx[0].vtX + dVx[1].vtX + dVx[2].vtX -
+              sVx[0].vtX - sVx[1].vtX - sVx[2].vtX) / 3.0;
+    yTr[0] = 0.0;
+    yTr[1] = 0.0;
+    yTr[2] = (dVx[0].vtY + dVx[1].vtY + dVx[2].vtY -
+              sVx[0].vtY - sVx[1].vtY - sVx[2].vtY) / 3.0;
+  }
+  else
+  {
+    squashed = 0;
+    dd = 1.0 / dd;
+    tD0 = sVx[1].vtY - sVx[2].vtY;
+    tD1 = sVx[2].vtY - sVx[0].vtY;
+    tD2 = sVx[0].vtY - sVx[1].vtY;
+    xTr[0] = ((dVx[0].vtX * tD0) + (dVx[1].vtX * tD1) +
+              (dVx[2].vtX * tD2)) * dd;
+    yTr[0] = ((dVx[0].vtY * tD0) + (dVx[1].vtY * tD1) +
+              (dVx[2].vtY * tD2)) * dd;
+    tD0 = sVx[2].vtX - sVx[1].vtX;
+    tD1 = sVx[0].vtX - sVx[2].vtX;
+    tD2 = sVx[1].vtX - sVx[0].vtX;
+    xTr[1] = ((dVx[0].vtX * tD0) + (dVx[1].vtX * tD1) +
+              (dVx[2].vtX * tD2)) * dd;
+    yTr[1] = ((dVx[0].vtY * tD0) + (dVx[1].vtY * tD1) +
+              (dVx[2].vtY * tD2)) * dd;
+    tD0 = (sVx[1].vtX * sVx[2].vtY) - (sVx[2].vtX * sVx[1].vtY);
+    tD1 = (sVx[2].vtX * sVx[0].vtY) - (sVx[0].vtX * sVx[2].vtY);
+    tD2 = (sVx[0].vtX * sVx[1].vtY) - (sVx[1].vtX * sVx[0].vtY);
+    xTr[2] = ((dVx[0].vtX * tD0) + (dVx[1].vtX * tD1) +
+              (dVx[2].vtX * tD2)) * dd;
+    yTr[2] = ((dVx[0].vtY * tD0) + (dVx[1].vtY * tD1) +
+              (dVx[2].vtY * tD2)) * dd;
+  }
+  return(squashed);
 }
