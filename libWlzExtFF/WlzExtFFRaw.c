@@ -13,7 +13,7 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzIO
+* \ingroup      WlzExtFF
 * \brief        Read/write raw image data.
 *               
 * \todo         -
@@ -25,6 +25,21 @@
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Reads a raw 'brick of bytes' object into a Woolz object.
+* \param	fp			Given file stream.
+* \param	numKols			Number of columns, x size.
+* \param	numLines		Number of lines, y size.
+* \param	numPlanes		Number of planes, z size.
+* \param	bytesPerPixel		Number of bytes per pixel.
+* \param	bitsPerChannel		Number of bits per channel.
+* \param	numChannels		Number of channels.
+* \param	byteOrder		Byte order.
+* \param	dstErr			Destination pointer for error code,
+					may be NULL.
+*/
 WlzObject *WlzExtFFReadObjRaw(
   FILE		*fp,
   int		numKols,

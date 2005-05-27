@@ -57,7 +57,14 @@ my_error_exit (j_common_ptr cinfo)
   longjmp(myerr->setjmp_buffer, 1);
 }
 
-
+/*!
+* \return	Woolz object read from jpeg image.
+* \ingroup	WlzExtFF
+* \brief	Reads a jpeg image frm the given file stream and returns a
+*		Woolz object.
+* \param	fP			Given file stream.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject *WlzEffReadObjJpeg(
   FILE 		*fP,
   WlzErrorNum 	*dstErr)
@@ -257,6 +264,18 @@ WlzObject *WlzEffReadObjJpeg(
   return rtnObj;
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Writes the given object to a jpeg image.
+* \param	fP			Given file stream.
+* \param	obj			Given object to be written.
+* \param	params			Jpeg parameters string, currently this
+*					is a single ascii integer, which should
+*					have the range 1 - 100 and rpresents
+*					the image quality with 100 being
+*					lossless.
+*/
 WlzErrorNum WlzEffWriteObjJpeg(
   FILE 		*fP,
   WlzObject 	*obj,
