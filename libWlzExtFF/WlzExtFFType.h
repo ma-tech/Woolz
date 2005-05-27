@@ -1,46 +1,56 @@
 #ifndef WLZ_EXTFFTYPE_H
 #define WLZ_EXTFFTYPE_H
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFType.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Header file with data types for external data file
-*		format support for the MRC Human Genetics Unit Woolz
-*		library.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 10-01-01 bill Add WlzEffVtkDataType, WlzEffVtkType and WlzEffVtkHeader.
-************************************************************************/
+/*!
+* \file         WlzExtFFType.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Header file with data types for external data file format
+*		support for the MRC Human Genetics Unit Woolz library.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/*!
+* \enum		_WlzEffFormat
+* \ingroup	WlzExtFF
+* \brief	enumeration of the file formats supported.
+*		Typedef: ::WlzEffFormat
+*/
 typedef enum _WlzEffFormat
 {
-  WLZEFF_FORMAT_NONE,
-  WLZEFF_FORMAT_BMP,
-  WLZEFF_FORMAT_DEN,
-  WLZEFF_FORMAT_ICS,
-  WLZEFF_FORMAT_PNM,
-  WLZEFF_FORMAT_PIC,
-  WLZEFF_FORMAT_SLC,
-  WLZEFF_FORMAT_VFF,
-  WLZEFF_FORMAT_VTK,
-  WLZEFF_FORMAT_WLZ,
-  WLZEFF_FORMAT_IPL,
-  WLZEFF_FORMAT_TIFF,
-  WLZEFF_FORMAT_RAW,
-  WLZEFF_FORMAT_AM,
-  WLZEFF_FORMAT_JPEG,
-  WLZEFF_FORMAT_COUNT 			     /* Keep last: Number of formats */
+  WLZEFF_FORMAT_NONE,		/*!< None, used to indicating no match.  */
+  WLZEFF_FORMAT_BMP,		/*!< Microscoft bitmap. */
+  WLZEFF_FORMAT_DEN,		/*!< Stanford density. */
+  WLZEFF_FORMAT_ICS,		/*!< International cytometry standard.  */
+  WLZEFF_FORMAT_PNM,		/*!< Portable any map. */
+  WLZEFF_FORMAT_PIC,		/*!< Biorad confocal pic format. */
+  WLZEFF_FORMAT_SLC,		/*!< SLC volume files. */
+  WLZEFF_FORMAT_VFF,		/*!< Sunvision volumes. */
+  WLZEFF_FORMAT_VTK,		/*!< Visualization Toolkit. */
+  WLZEFF_FORMAT_WLZ,		/*!< Woolz. */
+  WLZEFF_FORMAT_IPL,		/*!< IP Lab. */
+  WLZEFF_FORMAT_TIFF,		/*!< Tiff. */
+  WLZEFF_FORMAT_RAW,		/*!< Raw data. */
+  WLZEFF_FORMAT_AM,		/*!< Amira. */
+  WLZEFF_FORMAT_JPEG,		/*!< Jpeg. */
+  WLZEFF_FORMAT_ANL,		/*!< Analyze 7.5. */
+  WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats */
 } WlzEffFormat;
 
 #ifndef WLZ_EXT_BIND
@@ -418,6 +428,7 @@ typedef struct _WlzEffIPLHeader
 * \enum		_WlzEffAmToken
 * \ingroup	WlzExtFF
 * \brief	Tokens for parsing the headers of Amira lattice files.
+*		Typedef: ::WlzEffAmToken
 */
 typedef enum _WlzEffAmToken
 {
@@ -442,127 +453,330 @@ typedef enum _WlzEffAmToken
 
 /*!
 * \enum		_WlzEffAmDim
+* \ingroup	WlzExtFF
 * \brief	Dimension of the data.
+*		Typedef: ::WlzEffAmDim
 */
 typedef	enum _WlzEffAmDim
 {
-  WLZEFF_AM_DIM_NONE 		= (0),	/*! Dimension unknown. */
-  WLZEFF_AM_DIM_2		= (2),	/*! 2D. */
-  WLZEFF_AM_DIM_3		= (3)	/*! 3D. */
+  WLZEFF_AM_DIM_NONE 		= (0),	/*!< Dimension unknown. */
+  WLZEFF_AM_DIM_2		= (2),	/*!< 2D. */
+  WLZEFF_AM_DIM_3		= (3)	/*!< 3D. */
 } WlzEffAmDim;
 
 /*!
 * \enum		_WlzEffAmFormat
 * \ingroup	WlzExtFF
 * \brief	ASCII or binary data.
+*		Typedef: ::WlzEffAmFormat
 */
 typedef enum _WlzEffAmFormat
 {
-  WLZEFF_AM_FMT_NONE		= (0),	/*! Unknown data format. */
-  WLZEFF_AM_FMT_BINARY		= (1),	/*! Header ascii, Binary data. */
-  WLZEFF_AM_FMT_ASCII		= (2)	/*! Ascii header and data. */
+  WLZEFF_AM_FMT_NONE		= (0),	/*!< Unknown data format. */
+  WLZEFF_AM_FMT_BINARY		= (1),	/*!< Header ascii, Binary data. */
+  WLZEFF_AM_FMT_ASCII		= (2)	/*!< Ascii header and data. */
 } WlzEffAmFormat;
 
 /*!
 * \enum		_WlzEffAmDatType
 * \ingroup	WlzExtFF
 * \brief	Type of data: byte, ...
+*		Typedef: ::WlzEffAmDatType
 */
 typedef enum _WlzEffAmDatType
 {
-  WLZEFF_AM_DATTYPE_NONE	= (0),	/*! Unknown data type. */
-  WLZEFF_AM_DATTYPE_BYTE	= (1),	/*! Byte (8 bit) data. */
-  WLZEFF_AM_DATTYPE_SHORT	= (2)	/*! Short (16 bit) data. */
+  WLZEFF_AM_DATTYPE_NONE	= (0),	/*!< Unknown data type. */
+  WLZEFF_AM_DATTYPE_BYTE	= (1),	/*!< Byte (8 bit) data. */
+  WLZEFF_AM_DATTYPE_SHORT	= (2)	/*!< Short (16 bit) data. */
 } WlzEffAmDatType;
 
 /*!
 * \enum		_WlzEffAmCoordType
 * \ingroup      WlzExtFF
 * \brief        Type of coordinate system.
+*		Typedef: ::WlzEffAmCoordType
 */
 typedef enum _WlzEffAmCoordType
 {
-  WLZEFF_AM_COORDTYPE_NONE	= (0),	/*! Unknown coordinate type. */
-  WLZEFF_AM_COORDTYPE_UNITFORM	= (1)	/*! Uniform coordinates. */
+  WLZEFF_AM_COORDTYPE_NONE	= (0),	/*!< Unknown coordinate type. */
+  WLZEFF_AM_COORDTYPE_UNITFORM	= (1)	/*!< Uniform coordinates. */
 } WlzEffAmCoordType;
 
 /*!
 * \enum		_WlzEffAmLatComp
 * \ingroup      WlzExtFF
 * \brief        Type of compression used.
+*		Typedef: ::WlzEffAmLatComp
 */
 typedef enum _WlzEffAmLatComp
 {
-  WLZEFF_AM_LATCOMP_NONE	= (0),  /*! No compression. */
-  WLZEFF_AM_LATCOMP_HXBYTERLE	= (1)	/*! Run length encoded bytes. */
+  WLZEFF_AM_LATCOMP_NONE	= (0),  /*!< No compression. */
+  WLZEFF_AM_LATCOMP_HXBYTERLE	= (1)	/*!< Run length encoded bytes. */
 } WlzEffAmLatComp;
 
 /*!
 * \enum		_WlzEffAmLatType
 * \ingroup	WlzExtFF
 * \brief	Type of lattice: uniform, ...
+*		Typedef: ::WlzEffAmLatType
 */
 typedef enum	_WlzEffAmLatType
 {
-  WLZEFF_AM_LATTYPE_NONE	= (0),  /*! Unknown lattice type. */
-  WLZEFF_AM_LATTYPE_DATA	= (1),	/*! Voxel lattice data. */
-  WLZEFF_AM_LATTYPE_LABELS	= (2)	/*! Domain lattice data. */
+  WLZEFF_AM_LATTYPE_NONE	= (0),  /*!< Unknown lattice type. */
+  WLZEFF_AM_LATTYPE_DATA	= (1),	/*!< Voxel lattice data. */
+  WLZEFF_AM_LATTYPE_LABELS	= (2)	/*!< Domain lattice data. */
 } WlzEffAmLatType;
 
+/*!
+* \struct	_WlzEffAmMaterial
+* \ingroup	WlzExtFF
+* \brief	Item in an Amira material list.
+*		Typedef: ::WlzEffAmMaterial
+*/
 typedef struct _WlzEffAmMaterial
 {
-  int			id;		/*! Index in lattice labels. */
-  double		color[3];	/*! RGB colour components. */
-  char			*name;		/*! Material name. Should be free'd
+  int			id;		/*!< Index in lattice labels. */
+  double		color[3];	/*!< RGB colour components. */
+  char			*name;		/*!< Material name. Should be free'd
   					    using AlcFree(). */
-  struct _WlzEffAmMaterial *next;	/*! Next material in list. */
-  struct _WlzEffAmMaterial *prev;	/*! Previous material in list */
+  struct _WlzEffAmMaterial *next;	/*!< Next material in list. */
+  struct _WlzEffAmMaterial *prev;	/*!< Previous material in list */
 } WlzEffAmMaterial;
 
+/*!
+* \struct	_WlzEffAmHead
+* \ingroup	WlzExtFF
+* \brief	Head of a list of Amira materials.
+*		Typedef: ::WlzEffAmHead
+*/
 typedef struct _WlzEffAmHead
 {
   int			versionMajor;
   int			versionMinor;
-  WlzEffAmDim 		dim; 		/*! Dimension of the data. */
-  WlzEffAmFormat	fmt;		/*! Data format. */
-  WlzEffAmLatType	latType;	/*! Lattice type. */
-  WlzEffAmDatType	latDatType;	/*! Lattice data type. */
-  WlzEffAmCoordType	coordType;	/*! Coordinate type. */
-  WlzDBox3		bBox;		/*! Real world coordinates of the
+  WlzEffAmDim 		dim; 		/*!< Dimension of the data. */
+  WlzEffAmFormat	fmt;		/*!< Data format. */
+  WlzEffAmLatType	latType;	/*!< Lattice type. */
+  WlzEffAmDatType	latDatType;	/*!< Lattice data type. */
+  WlzEffAmCoordType	coordType;	/*!< Coordinate type. */
+  WlzDBox3		bBox;		/*!< Real world coordinates of the
   					    bounding box. */
-  WlzIVertex3		latSize; 	/*! Lattice size. */
-  int			latBytes;	/*! Number of bytes to read. */
-  int			latLabel;	/*! Label for lattice. */
-  WlzEffAmLatComp	latComp;	/*! Lattice compression. */
-  int			matCount;	/*! Number of materials. */
-  WlzEffAmMaterial	*materials;	/*! Linked list of materials, with
+  WlzIVertex3		latSize; 	/*!< Lattice size. */
+  int			latBytes;	/*!< Number of bytes to read. */
+  int			latLabel;	/*!< Label for lattice. */
+  WlzEffAmLatComp	latComp;	/*!< Lattice compression. */
+  int			matCount;	/*!< Number of materials. */
+  WlzEffAmMaterial	*materials;	/*!< Linked list of materials, with
   					    the first item in the list having
 					    a NULL 'prev' entry and the last
 					    having a NULL 'next' entry. */
-  char			*imageData;	/*! Associated image file. */
+  char			*imageData;	/*!< Associated image file. */
 } WlzEffAmHead;
 
-/* bibfile I/O record structures */
+/*!
+* \struct	_WlzEffBibWarpInputThresholdParamsStruct
+* \brief	Bibfile threshold parameters record.
+*		Typedef: ::WlzEffBibWarpInputThresholdParamsStruct
+*/
 typedef struct _WlzEffBibWarpInputThresholdParamsStruct
 {
-  WlzRGBAThresholdType	thresholdType;	/*! Threshold type - single, multi etc. */
-  WlzRGBAColorSpace	threshRGBSpace;	/*! Colour space */
-  WlzRGBAColorChannel	threshColorChannel; /*! Colour channel */
-  int		threshRangeLow;		/*! Single channel low threshold value */
-  int		threshRangeHigh;	/*! Single channel high threshold value */
-  int		threshRangeRGBLow[3];	/*! Multi channel low threshold value */
-  int		threshRangeRGBHigh[3];	/*! Multi channel high threshold value */
-  UINT		threshRGBCombination;	/*! Colour combination logic mask */
-  WlzPixelV	lowRGBPoint;	/*! Low-point for slice/box/ball threshold */
-  WlzPixelV	highRGBPoint;	/*! High-point for slice/box/ball threshold */
-  double	colorEllipseEcc;	/*! Ball eccentricity */
-  int		globalThreshFlg;	/*! Global thresholding flag */
-  WlzIVertex2	globalThreshVtx;	/*! Global threshold vertex */
-  int		incrThreshFlg;		/*! Incremental threshold flag */
-  int		pickThreshFlg; 		/*! Pick mode (endpoint values) flag */
-  int		distanceThreshFlg;	/*! Distance mode flag */
+  WlzRGBAThresholdType	thresholdType;	/*!< Threshold type - single, multi etc. */
+  WlzRGBAColorSpace	threshRGBSpace;	/*!< Colour space */
+  WlzRGBAColorChannel	threshColorChannel; /*!< Colour channel */
+  int		threshRangeLow;		/*!< Single channel low threshold value */
+  int		threshRangeHigh;	/*!< Single channel high threshold value */
+  int		threshRangeRGBLow[3];	/*!< Multi channel low threshold value */
+  int		threshRangeRGBHigh[3];	/*!< Multi channel high threshold value */
+  UINT		threshRGBCombination;	/*!< Colour combination logic mask */
+  WlzPixelV	lowRGBPoint;	/*!< Low-point for slice/box/ball threshold */
+  WlzPixelV	highRGBPoint;	/*!< High-point for slice/box/ball threshold */
+  double	colorEllipseEcc;	/*!< Ball eccentricity */
+  int		globalThreshFlg;	/*!< Global thresholding flag */
+  WlzIVertex2	globalThreshVtx;	/*!< Global threshold vertex */
+  int		incrThreshFlg;		/*!< Incremental threshold flag */
+  int		pickThreshFlg; 		/*!< Pick mode (endpoint values) flag */
+  int		distanceThreshFlg;	/*!< Distance mode flag */
 
 } WlzEffBibWarpInputThresholdParamsStruct;
+
+/* Analyze 7.5 file format types. */
+
+/*!
+* \enum		_WlzEffAnlDataType
+* \ingroup	WlzExtFF
+* \brief	Valid Analyze data type values.
+*		Typedef: ::WlzEffAnlDataType
+*/
+typedef enum _WlzEffAnlDataType
+{
+  WLZEFF_ANL_DT_NONE = 		0,
+  WLZEFF_ANL_DT_UNKOWN =	0,
+  WLZEFF_ANL_DT_BINARY =	1,
+  WLZEFF_ANL_DT_UNSIGNED_CHAR =	2,
+  WLZEFF_ANL_DT_SIGNED_SHORT =	4,
+  WLZEFF_ANL_DT_SIGNED_INT =	8,
+  WLZEFF_ANL_DT_FLOAT =		16,
+  WLZEFF_ANL_DT_COMPLEX =	32,
+  WLZEFF_ANL_DT_DOUBLE =	64,
+  WLZEFF_ANL_DT_RGB =		128,
+  WLZEFF_ANL_DT_ALL =		255
+} WlzEffAnlDataType;
+
+/*!
+* \enum		_WlzEffAnlDataType
+* \ingroup	WlzExtFF
+* \brief	Valid Analyze data type values.
+*		Typedef: ::WlzEffAnlOrient
+*/
+typedef enum _WlzEffAnlOrient
+{
+  WLZEFF_ANL_ORIENT_TU = 	0, 	/*!< Transverse unflipped. */
+  WLZEFF_ANL_ORIENT_CU = 	1, 	/*!< Coronal unflipped. */
+  WLZEFF_ANL_ORIENT_SU = 	2, 	/*!< Sagital unflipped. */
+  WLZEFF_ANL_ORIENT_TF = 	3, 	/*!< Transverse flipped. */
+  WLZEFF_ANL_ORIENT_CF = 	4, 	/*!< Coronal flipped. */
+  WLZEFF_ANL_ORIENT_SF = 	5 	/*!< Sagital flipped. */
+} WlzEffAnlOrient;
+
+/*!
+* \struct	_WlzEffAnlComplex
+* \ingroup	WlzExtFF
+* \brief	Analyze 7.5 complex number representation.
+*		Typedef: ::WlzEffAnlComplex
+*/
+typedef struct _WlzEffAnlComplex
+{
+  float		real;
+  float		imag;
+} WlzEffAnlComplex;
+
+/*!
+* \struct	_WlzEffAnlHeaderKey
+* \ingroup	WlzExtFF
+* \brief	Analyze 7.5 file header key.
+*		Typedef: ::WlzEffAnlFileKey
+*/
+typedef struct _WlzEffAnlHeaderKey
+{
+  int		hdrSz;			/*!< Size of header in bytes: 4
+  					    bytes. */
+  char		dataType[10];		/*!< Data type: 10 bytes. */
+  char		dbName[18];		/*!< 18 bytes. */
+  int		extents;		/*!< Should be 16384: 4 bytes. */
+  short		sessionErr;		/*!< Session error: 2 bytes. */
+  char		regular;		/*!< Must be 'r' to indicate that the
+  					    images are the same size: 1
+					    byte. */
+  char		hKeyUn0;		/*!< 1 byte.
+					    Total = 40 bytes. */
+} WlzEffAnlFileKey;
+
+/*!
+* \struct	_WlzEffAnlImageDim
+* \ingroup	WlzExtFF
+* \brief	Analyze 7.5 file header structure for the image dimensions.
+*		Typedef: ::WlzEffAnlImageDim
+*/
+typedef struct _WlzEffAnlImageDim
+{
+  short		dim[8];			/*!< Array of the image dimensions.
+					    The number of dimensions is
+					    usually 4 with;
+					    [0] = number of dimensions,
+                                            [1] = number of columns (X),
+					    [2] = number of lines (Y),
+					    [3] = number of planes (Z),
+					    [4] = number of time points.
+					    16 bytes. */
+  short		unused8;		/*!< Unused. 2 bytes. */
+  short		unused9;		/*!< Unused. 2 bytes. */
+  short		unused10;		/*!< Unused. 2 bytes. */
+  short		unused11;		/*!< Unused. 2 bytes. */
+  short		unused12;		/*!< Unused. 2 bytes. */
+  short		unused13;		/*!< Unused. 2 bytes. */
+  short		unused14;		/*!< Unused. 2 bytes. */
+  short		dataType;		/*!< The data type for the image, which
+  					    must be a member of
+  					    enum::_WlzEffAnlDataType.
+					    2 bytes. */
+  short		bitPix;			/*!< Number of bits per pixel, which
+  					    must be one of; 1, 8, 16, 32 or
+					    64. 2 bytes. */
+  short		dimUn0;			/*!< 2 bytes. */
+  float		pixdim[8];		/*!< Real world pixel dimensions in mm
+  					    and ms. The number of dimensions is
+					    usually 4 with;
+					    [0] = number of dimensions,
+                                            [1] = x size (pixel width),
+					    [2] = y size (pixel height),
+					    [3] = z size (voxel depth),
+					    [4] = time interval.
+					    32 bytes.*/
+  float		voxOffset;		/*!< The byte offset in the ".img" file
+  					    at which the pixels start.
+					    If negative then the absolute value
+					    applies to every image in the file.
+					    4 bytes. */
+  float		fUnused1;		/*!< 4 bytes. */
+  float		fUnused2;		/*!< 4 bytes. */
+  float		fUnused3;		/*!< 4 bytes. */
+  float		calMax;			/*!< Maximum calibratin value.
+             				    4 bytes. */
+  float		calMin;			/*!< Minimum calibratin value.
+  					    4 bytes. */
+  float		compressed;		/*!< 4 bytes. */
+  float		verified;		/*!< 4 bytes. */
+  int		glMax;			/*!< Maximum pixel value. 4 bytes. */
+  int		glMin;			/*!< Minimum pixel value. 4 bytes.
+  					    Total = 108 bytes.*/
+} WlzEffAnlImageDim;
+
+
+/*!
+* \struct	_WlzEffAnlDataHistory
+* \ingroup	WlzExtFF
+* \brief	Analyze 7.5 file header structure for the image history.
+*		Typedef: ::WlzEffAnlDataHistory
+*/
+typedef struct _WlzEffAnlDataHistory
+{
+  char		descrip[80];		/*!< Description: 80 bytes. */
+  char		auxFile[24];		/*!< 24 bytes. */
+  char		orient;			/*!< Slice orientation, which must
+  					    be a member of
+					    enum::_WlzEffAnlOrient.
+					    This may be used by Analyze to
+					    determine whether images should be
+					    flipped before being displayed.
+					    1 byte. */
+  char		originator[10];		/*!< 10 bytes. */
+  char		generated[10];		/*!< 10 bytes. */
+  char		scanNum[10];		/*!< 10 bytes. */
+  char		patientId[10];		/*!< 10 bytes. */
+  char		expDate[10];		/*!< 10 bytes. */
+  char		expTime[10];		/*!< 10 bytes. */
+  char		hisUn0[3];		/*!< 3 bytes. */
+  int		views;			/*!< 4 bytes. */
+  int		volsAdded;		/*!< 4 bytes. */
+  int		startField;		/*!< 4 bytes. */
+  int		fieldSkip;		/*!< 4 bytes. */
+  int		oMax;			/*!< 4 bytes. */
+  int		oMin;			/*!< 4 bytes. */
+  int		sMax;			/*!< 4 bytes. */
+  int		sMin;			/*!< 4 bytes. */
+} WlzEffAnlDataHistory;
+
+/*!
+* \struct	_WlzEffAnlDsr
+* \ingroup	WlzExtFF
+* \brief	Analyze 7.5 file header.
+*		Typedef: ::WlzEffAnlDsr
+*/
+typedef struct _WlzEffAnlDsr
+{
+  struct _WlzEffAnlHeaderKey	hk;	/*!< 40 bytes. */
+  struct _WlzEffAnlImageDim	dim;	/*!< 108 bytes. */
+  struct _WlzEffAnlDataHistory	hist;	/*!< 200 bytes. */
+} WlzEffAnlDsr;
 
 #endif /* WLZ_EXT_BIND */
 
