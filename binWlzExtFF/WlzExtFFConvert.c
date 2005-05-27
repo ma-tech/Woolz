@@ -310,6 +310,7 @@ int             main(int argc, char **argv)
 	"  Description                 Fmt     Extension\n"
 	"  ***********                 ***     *********\n"
 	"  Amira Lattice               am      .am\n"
+	"  Analyze                     anl     .hdr/.img\n"
 	"  Microsoft Bitmap            bmp     .bmp\n"
 	"  Stanford Density            den     .den\n"
 	"  ICS                         ics     .ics/.ids\n"
@@ -325,7 +326,7 @@ int             main(int argc, char **argv)
 	"Simple example:\n  ",
 	*argv,
 	" -f wlz -F slc <in.wlz >out.slc\n"
-	"  Converts the Woolz object in.wlz to an SLC data file out.slx\n",
+	"  Converts the Woolz object in.wlz to an SLC data file out.slc\n",
 	"More complex example:\n  ",
 	*argv,
 	" -f den -F pnm -o out.pgm in.den\n"
