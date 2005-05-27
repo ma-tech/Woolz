@@ -30,6 +30,7 @@ EXECUTABLES		=
 CSOURCES		= \
 			WlzExtFF.c \
 			WlzExtFFAm.c \
+			WlzExtFFAnl.c \
 			WlzExtFFBmp.c \
 			WlzExtFFDen.c \
 			WlzExtFFIcs.c \
@@ -55,10 +56,14 @@ INCLUDES_PUB		= \
 # executables (modify as required).
 INCLUDES_PRV		=
 
-# List of all troff sources for manual pages, these should have the appropriate
-# extension (eg cat.1) (modify as required).
-MANPAGES		= \
-			WlzExtFF.3
+# Source man documentation directory
+SRC_MAN_DIR		= man
+
+# Source html documentation directory
+SRC_WWW_DIR		= html
+
+# Destination html documentation directory
+DST_WWW_DIR		= $(HGU_WWW_DIR)/src/Core/libWlz
 
 # List of all directories to be searched before the standard include
 # and lib directories (modify as required).
@@ -121,7 +126,7 @@ CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
  
 
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages
+all:			archive executables includes documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
@@ -153,14 +158,30 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the manual pages in the appropriate directories,
-# watch out for the tabs in the sed regexp's (should not need modifying).
-install_manpages:	$(MANPAGES)
+# Target which installs the documentation in the appropriate directories,
+# (should not need modifying).
+install_documentation:	documentation
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			$(install_manpages)
+			$(install_www)
 
+# Target which installs the man pages in the appropriate directories,
+# (should not need modifying).
+install_manpages:	documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			install_manpages
+
+# Target which installs the html pages in the appropriate directories,
+# (should not need modifying).
+install_www:		documentation
+ifneq ($(strip $(SUBSYSTEMS)),)
+			$(subsystems)
+endif
+			install_www
 # Target for compressed tar files suitable for distribution (should not need
 # modifying).
 tar:			$(TARSOURCES) clobber allsources
@@ -181,9 +202,6 @@ executables:		$(EXECUTABLES)
 # Target for public header files, just a dependency (should not need modifying).
 includes:		$(INCLUDES_PUB)
 
-# Target for manual pages, just a dependency (should not need modifying).
-manpages:		$(MANPAGES)
-
 # Target for lint (modify as required).
 lint:			$(CSOURCES) $(INCLUDES_PRV)
 			$(LINT) $(LINTFLAGS) $(CPPFLAGS) $(CSOURCES)
@@ -192,6 +210,8 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 clean:			
 			-$(RM) core $(OBJECTS) $(EXECUTABLES) \
 			$(ARCHIVE) $(SOARCHIVE)
+			*.dll.a doxygen.tag *~
+			-$(RMDIR) man html
 
 # Target to clean up everything that might not be wanted (should not need
 # modifying).
@@ -200,6 +220,12 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
+
+# Use doxygen to make the documentation (should not need modifying).
+documentation:		doxygen.tag
+
+doxygen.tag:		$(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
+			doxygen
 
 # making the tag file
 tags:			 $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
