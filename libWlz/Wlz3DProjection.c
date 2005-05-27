@@ -35,9 +35,9 @@
 *
 * \return       projection object
 * \param    obj	source 3D object
-* \param    view	view structure defining the projection
-* \param    intFunct	grey-value summation function
-* \param    intFuncdata data to be passed to the integration function
+* \param    viewStr	view structure defining the projection
+* \param    intFunc	grey-value summation function
+* \param    intFuncData data to be passed to the integration function
 * \param    dstErr	error return
 * \par      Source:
 *                Wlz3DProjection.c
