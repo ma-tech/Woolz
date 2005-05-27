@@ -209,7 +209,7 @@ lint:			$(CSOURCES) $(INCLUDES_PRV)
 # Target to clean up after making (should not need modifying).
 clean:			
 			-$(RM) core $(OBJECTS) $(EXECUTABLES) \
-			$(ARCHIVE) $(SOARCHIVE)
+			$(ARCHIVE) $(SOARCHIVE) \
 			*.dll.a doxygen.tag *~
 			-$(RMDIR) man html
 
