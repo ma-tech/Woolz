@@ -1929,7 +1929,8 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 				   WlzObject **dstDilObj,
 				   WlzErrorNum *dstErr)
 {
-  int		scale;
+  int		scale,
+  		maxLBTNdSz;
   double	invScale;
   WlzCMesh2D	*mesh = NULL;
   WlzLBTDomain2D *lDom = NULL;
@@ -1959,7 +1960,16 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    if(minElmSz < 1.0)
+    {
+      minElmSz = 1.0;
+    }
     scale = (int )ceil(minElmSz);
+    maxLBTNdSz = (int )ceil(maxElmSz / minElmSz);
+    if(maxLBTNdSz < 1)
+    {
+      maxLBTNdSz = 1;
+    }
     invScale = 1.0 / scale;
     strObj = WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, 2 * scale,
 				 0.0, 0.0, 0.0, &errNum);
@@ -1989,7 +1999,7 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzLBTBalanceDomain2D(lDom, idxObj);
+    errNum = WlzLBTBalanceDomain2D(lDom, idxObj, maxLBTNdSz);
   }
   if(errNum == WLZ_ERR_NONE)
   {
