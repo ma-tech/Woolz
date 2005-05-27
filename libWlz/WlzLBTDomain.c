@@ -498,13 +498,16 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
 * \param	lDom			Given LBT domain.
 * \param	iObj			Index object for finding neighbours
 *					of nodes.
+* \param	maxSz			Maximum node size.
 */
 WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
-				      WlzObject *iObj)
+				      WlzObject *iObj,
+				      int maxSz)
 {
   int		idN,
   		idM,
 		idP,
+		flg,
 		sz0,
 		sz1,
 		sz2,
@@ -522,6 +525,7 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 				   WLZ_DIRECTION_DL
   				 };
 
+  maxSz = (maxSz < 1)? 1: AlgBitNextPowerOfTwo(NULL, maxSz) + 1;
   iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
   /* Create a priority queue and a hash table to hold the nodes
    * to be split. */
@@ -551,25 +555,35 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
   idN = 0;
   while((errNum == WLZ_ERR_NONE) && (idN < lDom->nNodes))
   {
+    flg = 0;
     nod[0] = lDom->nodes + idN;
     sz0 = WlzLBTNodeLogSz2D(nod[0]);
-    if(sz0 > 1)
+    if(sz0 > maxSz)
+    {
+      flg = 1;
+    }
+    else if(sz0 > 1)
     {
       sz1 = WlzLBTMinLogSzEdgeNbrIdx2D(lDom, iGVWSp, idN);
       if((sz1 >= 0) && (sz0 > sz1 + 1))
       {
-        errNum = WlzLBTQueueInsert(pQ, hT, sz0, idN);
+        flg = 1;
       }
+    }
+    if(flg)
+    {
+      errNum = WlzLBTQueueInsert(pQ, hT, sz0, idN);
     }
     ++idN;
   }
   /* Pull the nodes from the priority queue and split them, returning
-   * child nodes which have a size > twice that of the smallest neighbour 
-   * to the priority queue. */
+   * child nodes which have a size > the maximum node size or > twice
+   * that of the smallest neighbour to the priority queue. */
   if(errNum == WLZ_ERR_NONE)
   {
     while((idN = WlzLBTQueueUnlink(pQ, hT)) >= 0)
     {
+/* TODO use maximum node size! */
       /* Split the node. */
       idNN[0] = idN;
       idNN[1] = lDom->nNodes;
@@ -621,15 +635,24 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 	{
 	  /* Check node size <= twice that of any neighbour. */
 	  /* TODO avoid checking siblings. */
-	  if(sz0 > 1)
+	  flg = 0;
+	  if(sz0 > maxSz)
+	  {
+	    flg = 1;
+	  }
+	  else if(sz0 > 1)
 	  {
 	    sz1 = WlzLBTMinLogSzEdgeNbrIdx2D(lDom, iGVWSp, idNN[idN]);
 	    if((sz1 >= 0) && (sz0 > sz1 + 1))
 	    {
-	      errNum = WlzLBTQueueInsert(pQ, hT, sz0, idNN[idN]);
+	      flg = 1;
 	    }
 	  }
-	  /* Check find any neighbours with node size > twice that of
+	  if(flg)
+	  {
+	    errNum = WlzLBTQueueInsert(pQ, hT, sz0, idNN[idN]);
+	  }
+	  /* Check for any neighbours with node size > twice that of
 	   * the node. */
 	  /* TODO avoid checking siblings. */
 	  idM = 0;
@@ -1954,6 +1977,7 @@ int		main(int argc, char *argv[])
   int		balance = 0,
   		option,
   		ok = 1,
+		maxNodSz - INT_MAX;
 		usage = 0,
   		txtOut = 0,
   		vtkOut = 1;
@@ -2081,7 +2105,7 @@ int		main(int argc, char *argv[])
    idObj = WlzLBTMakeNodeIndexObj2D(lDom, inObj->domain.i, &errNum);
    if(errNum == WLZ_ERR_NONE)
    {
-      errNum = WlzLBTBalanceDomain2D(lDom, idObj);
+      errNum = WlzLBTBalanceDomain2D(lDom, idObj, maxNodSz);
    }
   }
   if(ok)
