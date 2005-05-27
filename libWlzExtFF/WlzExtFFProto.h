@@ -1,22 +1,26 @@
 #ifndef WLZEXTFF_PROTO_H
 #define WLZEXTFF_PROTO_H
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFProto.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Header file with function prototypes for external data
-*		file format support for the MRC Human Genetics Unit
-*		Woolz library.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzExtFFProto.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2005 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Header file with function prototypes for external data file
+*		format support for the MRC Human Genetics Unit Woolz library.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 
 #ifdef  __cplusplus
 extern "C" {
@@ -45,6 +49,26 @@ extern WlzErrorNum 		WlzEffWriteObj(
 extern int			WlzEffNumberOfFormats(void);
 
 #ifndef WLZ_EXT_BIND
+/* From WlzExtFFAm.c */
+extern WlzObject		*WlzEffReadObjAm(
+				  FILE *fP,
+				  int split,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzEffWriteObjAm(
+				  FILE *fP,
+				  WlzObject *obj);
+/* From WlzExtFFAnl.c */
+extern WlzErrorNum		WlzEffAnlFileNames(
+				  char **fileBody,
+				  char **hdrFileName,
+				  char **imgFileName,
+				  const char *gvnFileName);
+extern WlzObject		*WlzEffReadObjAnl(
+				  const char *gvnFileName,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjAnl(
+				  const char *gvnFileName,
+				  WlzObject *obj);
 /* From WlzExtFFBmp.c */
 extern WlzObject 		*WlzEffReadObjBmp(
 				  const char *gvnFileName,
@@ -169,14 +193,6 @@ extern WlzObject 		*WlzEffReadObjTiff(
 				  const char *tiffFileName,
 				  WlzErrorNum *dstErr);
 
-/* From WlzExtFFAm.c */
-extern WlzObject		*WlzEffReadObjAm(
-				  FILE *fP,
-				  int split,
-				  WlzErrorNum *dstErr);
-extern WlzErrorNum		WlzEffWriteObjAm(
-				  FILE *fP,
-				  WlzObject *obj);
 /* From WlzExtFFJpeg.c */
 extern WlzObject		*WlzEffReadObjJpeg(
 				  FILE *fP,
@@ -249,14 +265,14 @@ extern WlzErrorNum 		WlzEffBibParseWarpInputSegmentationParamsRecord(
 				  double *width,
 				  int *threshLow,
 				  int *threshHigh);
-extern WlzErrorNum WlzEffBibWriteWarpInputThresholdParamsRecord(
-  FILE		*fp,
-  char		*recordName,
-  WlzEffBibWarpInputThresholdParamsStruct *paramStruct);
+extern WlzErrorNum 		WlzEffBibWriteWarpInputThresholdParamsRecord(
+				  FILE *fp,
+				  char *recordName,
+			WlzEffBibWarpInputThresholdParamsStruct *paramStruct);
 
-extern WlzErrorNum WlzEffBibParseWarpInputThresholdParamsRecord(
-  BibFileRecord		*bibfileRecord,
-  WlzEffBibWarpInputThresholdParamsStruct	*paramStruct);
+extern WlzErrorNum		WlzEffBibParseWarpInputThresholdParamsRecord(
+  				  BibFileRecord *bibfileRecord,
+  			WlzEffBibWarpInputThresholdParamsStruct *paramStruct);
 #endif /* WLZ_EXT_BIND */
 
 #ifdef  __cplusplus
