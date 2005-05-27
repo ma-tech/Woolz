@@ -1,21 +1,26 @@
 #ifndef WlzEXTFF_H
 #define WlzEXTFF_H
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFF.h
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Main header file for external data file format support
-*		for the MRC Human Genetics Unit Woolz library.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzExtFF.h
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Main header file for external data file format support for the
+* 		MRC Human Genetics Unit Woolz library.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 #include <bibFile.h>
 #include <WlzExtFFType.h>
