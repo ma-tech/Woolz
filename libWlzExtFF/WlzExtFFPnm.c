@@ -1,35 +1,38 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFPnm.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
-*		and from the portable anymap '.pnm' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* GFeng add more delimited to the token.
-************************************************************************/
- #include <ctype.h>
+/*!
+* \file         WlzExtFFPnm.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to and
+*		from the portable anymap '.pnm' data format.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
+#include <ctype.h>
 #include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-/************************************************************************
-* Function:	WlzEffReadObjPnm					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given file(s) using	*
-*		the '.pnm' file format.					*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given file(s) using the '.pnm'
+* 		file format.
+* \param	gvnFileName		Given file name.
+* \param	dstErr			Destination error number ptr,
+*					may be NULL.
+*/
 WlzObject	*WlzEffReadObjPnm(const char *gvnFileName, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -43,15 +46,15 @@ WlzObject	*WlzEffReadObjPnm(const char *gvnFileName, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjPnm					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given file(s)  	*
-*		using the '.pnm' file format.				*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given file(s)
+*		using the '.pnm' file format.
+* \param	gvnFileName		Given file name.
+* \param	obj			Destination error number ptr,
+*					may be NULL.
+*/
 WlzErrorNum	WlzEffWriteObjPnm(const char *gvnFileName, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -60,19 +63,18 @@ WlzErrorNum	WlzEffWriteObjPnm(const char *gvnFileName, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjPnm2D					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given 2D Woolz object to the given file  	*
-*		using the '.pnm' file format.				*
-* Global refs:	-							*
-* Parameters:	const char *fNameStr:	Given file name.		*
-*		WlzObject *obj:		Given woolz object.		*
-*		WlzIVertex2 imgSz:	Required image size.		*
-*		WlzIVertex2 imgOrg:	Required image origin.		*
-*		unsigned char *data:	Buffer of imgSz bytes.		*
-*		unsigned char bgd:	Background value.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given 2D Woolz object to the given file
+*		using the '.pnm' file format.
+* \param	fNameStr		Given file name.
+* \param	obj			Given woolz object.
+* \param	imgSz			Required image size.
+* \param	imgOrg			Required image origin.
+* \param	data			Buffer of imgSz bytes.
+* \param	bgd			Background value.
+*/
 WlzErrorNum 	WlzEffWriteObjPnm2D(const char *fNameStr, WlzObject *obj,
 				    WlzIVertex2 imgSz, WlzIVertex2 imgOrg,
 				    unsigned char *data,
@@ -90,15 +92,15 @@ WlzErrorNum 	WlzEffWriteObjPnm2D(const char *fNameStr, WlzObject *obj,
   }
   else
   {
-	    #ifdef _WIN32
-  if (fP != NULL){
-	if(_setmode(_fileno(fP), 0x8000) == -1)
-	{
-		errNum = WLZ_ERR_READ_EOF;
-	}
+#ifdef _WIN32
+  if(fP != NULL)
+  {
+    if(_setmode(_fileno(fP), 0x8000) == -1)
+    {
+      errNum = WLZ_ERR_READ_EOF;
+    }
   }
-  #endif
-
+#endif
     if((obj == NULL) || (obj->values.core == NULL))
     {
       (void )memset(data, (unsigned int )bgd, imgSz.vtX * imgSz.vtY);
@@ -142,18 +144,16 @@ WlzErrorNum 	WlzEffWriteObjPnm2D(const char *fNameStr, WlzObject *obj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObjPnmData2D					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Reads the  data from a pgm file into the data array	*
-*		given.							*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Given file stream.		*
-*		WlzIVertex2 gvnImgSz:	Dst ptr for image size which	*
-*					is assumed valid if height and	*
-*					width are non zero.		*
-*		unsigned char ***data:	Ptr to 2D array for data.	*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Reads the  data from a pgm file into the data array given.
+* \param	fP			Given file stream.
+* \param	gvnImgSz		Dst ptr for image size which is
+*					assumed valid if height and width are
+*					non zero.
+* \param	data			Ptr to 2D array for data.
+*/
 WlzErrorNum 	WlzEffReadObjPnmData2D(FILE *fP, WlzIVertex2 *gvnImgSz,
 				       unsigned char ***data)
 {

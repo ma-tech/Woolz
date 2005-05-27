@@ -1,56 +1,79 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFStack.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
+/*!
+* \file         WlzExtFFStack.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to
 *		and from a stack of 2D files.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 16-06-2000 bill Fixed freeing unallocated memory bug in
-*		WlzEffReadObjStack3D.
-* GFeng add more delimited to the token.
-************************************************************************/
- #include <ctype.h>
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
+#include <ctype.h>
 #include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-static WlzObject *WlzEffReadObjStack3D(const char *, WlzEffFormat,
-				WlzErrorNum *),
-		*WlzEffReadObjStack2D(FILE *, WlzEffFormat,
-				WlzErrorNum *);
-static WlzErrorNum WlzEffHeadParseStackCtr(WlzEffStackCtrHeader *,
-				FILE *),
-		WlzEffStackFileNameParse(const char *, WlzEffFormat,
-				 char **, char **, char **, char **),
-		WlzEffReadObjStackData2D(FILE *, WlzEffFormat,
-				WlzIVertex2 *, unsigned char ***),
-		WlzEffWriteObjStack3D(const char *, const char *,
-				const char *, const char *,
-				WlzEffFormat, WlzObject *),
-		WlzEffWriteObjStack2D(const char *, WlzEffFormat,
-				WlzObject *, WlzIVertex2, WlzIVertex2,
-				unsigned char *, unsigned char);
+static WlzObject 		*WlzEffReadObjStack3D(
+				  const char *gvnFileName,
+				  WlzEffFormat fFmt,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzEffReadObjStack2D(
+				  FILE *fP,
+				  WlzEffFormat fFmt,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzEffHeadParseStackCtr(
+				  WlzEffStackCtrHeader *header,
+				  FILE *fP);
+static WlzErrorNum 		WlzEffStackFileNameParse(
+				  const char *gvnFileName,
+				  WlzEffFormat fFmt,
+				  char **fPathStr,
+				  char **fBodyStr,
+				  char **fExtStr,
+				  char **fCtrStr);
+static WlzErrorNum 		WlzEffReadObjStackData2D(
+				  FILE *fP,
+				  WlzEffFormat fFmt,
+				  WlzIVertex2 *imgSz,
+				  unsigned char ***data);
+static WlzErrorNum 		WlzEffWriteObjStack3D(
+				  const char *fPathStr,
+				  const char *fBodyStr,
+				  const char *fExtStr,
+				  const char *fCtrStr,
+				  WlzEffFormat fFmt,
+				  WlzObject *obj);
+static WlzErrorNum 		WlzEffWriteObjStack2D(
+				  const char *fNameStr,
+				  WlzEffFormat fFmt,
+				  WlzObject *obj,
+				  WlzIVertex2 imgSz,
+				  WlzIVertex2 imgOrg,
+				  unsigned char *data,
+				  unsigned char bgd);
 
-/************************************************************************
-* Function:	WlzEffReadObjStack					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given file(s) using	*
-*		the given (2D) file format.				*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given file(s) using the given
+* 		(2D) file format.
+* \param	gvnFileName		Given file name.
+* \param	fFmt			Given file format (must be a 2D
+*					file format).
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadObjStack(const char *gvnFileName, WlzEffFormat fFmt,
 				    WlzErrorNum *dstErr)
 {
@@ -70,15 +93,15 @@ WlzObject	*WlzEffReadObjStack(const char *gvnFileName, WlzEffFormat fFmt,
     }
     else
     {
-		  #ifdef _WIN32
-  if (fP != NULL){
-	if(_setmode(_fileno(fP), 0x8000) == -1)
-	{
-		errNum = WLZ_ERR_READ_EOF;
-	}
-  }
-  #endif
-
+#ifdef _WIN32
+    if(fP != NULL)
+    {
+       if(_setmode(_fileno(fP), 0x8000) == -1)
+       {
+	 errNum = WLZ_ERR_READ_EOF;
+       }
+    }
+#endif
       obj = WlzEffReadObjStack2D(fP, fFmt, &errNum);
     }
     if(fP)
@@ -93,17 +116,16 @@ WlzObject	*WlzEffReadObjStack(const char *gvnFileName, WlzEffFormat fFmt,
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjStack					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given file(s)  	*
-*		using the given (2D) file format.			*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given file(s) using the
+*		given (2D) file format.
+* \param	gvnFileName		Given file name.
+* \param	fFmt			Given file format (must be a 2D file
+* 					format).
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjStack(const char *gvnFileName, WlzEffFormat fFmt,
 				    WlzObject *obj)
 {
@@ -218,21 +240,20 @@ WlzErrorNum	WlzEffWriteObjStack(const char *gvnFileName, WlzEffFormat fFmt,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjStack2D					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given 2D Woolz object to the given file  	*
-*		using the given (2D) file format.			*
-* Global refs:	-							*
-* Parameters:	const char *fNameStr:	Given file name.		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-*		WlzObject *obj:		Given woolz object.		*
-*		WlzIVertex2 imgSz:	Required image size.		*
-*		WlzIVertex2 imgOrg:	Required image origin.		*
-*		unsigned char *data:	Buffer of imgSz bytes.		*
-*		unsigned char bgd:	Background value.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given 2D Woolz object to the given file using the
+* 		given (2D) file format.
+* \param	fNameStr		Given file name.
+* \param	fFmt			Given file format (must be a 2D
+*					file format).
+* \param	obj			Given woolz object.
+* \param	imgSz			Required image size.
+* \param	imgOrg			Required image origin.
+* \param	data			Buffer of imgSz bytes.
+* \param	bgd			Background value.
+*/
 static WlzErrorNum WlzEffWriteObjStack2D(const char *fNameStr,
 					 WlzEffFormat fFmt, WlzObject *obj,
 					 WlzIVertex2 imgSz, WlzIVertex2 imgOrg,
@@ -256,20 +277,19 @@ static WlzErrorNum WlzEffWriteObjStack2D(const char *fNameStr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjStack3D					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given 3D Woolz object to the given file(s)  	*
-*		using the given (2D) file format.			*
-* Global refs:	-							*
-* Parameters:	const char *fPathStr:	File name base.			*
-*		const char *fBodyStr:	File body.			*
-*		const char *fExtStr:	File extension.			*
-*		const char *fCtrStr:	File control string (ctr).	*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given 3D Woolz object to the given file(s)
+*		using the given (2D) file format.
+* \param	fPathStr		File name base.
+* \param	fBodyStr		File body.
+* \param	fExtStr			File extension.
+* \param	fCtrStr			File control string (ctr).
+* \param	fFmt			Given file format (must be a 2D
+*					file format).
+* \param	obj			Given woolz object.
+*/
 static WlzErrorNum WlzEffWriteObjStack3D(const char *fPathStr,
 					 const char *fBodyStr,
 					 const char *fExtStr,
@@ -414,18 +434,17 @@ static WlzErrorNum WlzEffWriteObjStack3D(const char *fPathStr,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObjStack2D					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a 2D Woolz object from the given file using	*
-*		the given (2D) file format.				*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Given file.	 		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a 2D Woolz object from the given file using the given
+* 		(2D) file format.
+* \param	fP			Given file.
+* \param	fFmt			Given file format (must be a 2D file
+* 					format).
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 static WlzObject *WlzEffReadObjStack2D(FILE *fP, WlzEffFormat fFmt,
 				       WlzErrorNum *dstErr)
 {
@@ -464,20 +483,18 @@ static WlzObject *WlzEffReadObjStack2D(FILE *fP, WlzEffFormat fFmt,
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObjStackData2D				*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Reads the  data from a file with the given (2D) format	*
-*		into the data array given.				*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Given file stream.		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-*		WlzIVertex2 *imgSz:	Dst ptr for image size which	*
-*					is assumed valid if height and	*
-*					width are non zero.		*
-*		unsigned char ***data:	Ptr to 2D array for data.	*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Reads the  data from a file with the given (2D) format
+*		into the data array given.
+* \param	fP			Given file stream.
+* \param	fFmt			Given file format (must be a 2D file
+* 					format).
+* \param	imgSz			Dst ptr for image size which is assumed
+* 					valid if height and width are non zero.
+* \param	data			Ptr to 2D array for data.
+*/
 static WlzErrorNum WlzEffReadObjStackData2D(FILE *fP, WlzEffFormat fFmt,
 					    WlzIVertex2 *imgSz,
 					    unsigned char ***data)
@@ -499,18 +516,17 @@ static WlzErrorNum WlzEffReadObjStackData2D(FILE *fP, WlzEffFormat fFmt,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObjStack3D					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a 3D Woolz object from the given file(s) using	*
-*		the given (2D) file format.				*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a 3D Woolz object from the given file(s) using the given
+* 		(2D) file format.
+* \param	gvnFileName		Given file name.
+* \param	fFmt			Given file format (must be a 2D file
+* 					format).
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 static WlzObject *WlzEffReadObjStack3D(const char *gvnFileName,
 				       WlzEffFormat fFmt,
 				       WlzErrorNum *dstErr)
@@ -686,29 +702,30 @@ static WlzObject *WlzEffReadObjStack3D(const char *gvnFileName,
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffStackFileNameParse				*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Parses the given file name into it's base, body and	*
-*		extension parts. If there is no extension then the	*
-*		extension '???' is used. The control file extension	*
-*		'.ctr' is also created.					*
-*		Eg, gvnFileName = "/some/where/here.???"		*
-*		    *fPathStr = "/some/where/"				*
-*		    *fBodyStr = "here"					*
-*		    *fExtStr = "???"					*
-*		    *fCtrStr = "ctr"					*
-*		Where the string ??? is: the appropriate extension for	*
-*		the given (2D) file format, ie:	bmp, pgm.		*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-*		WlzEffFormat fFmt:	Given file format (must be a 2D	*
-*					file format).			*
-*		char **fPathStr:	File name base.			*
-*		char **fBodyStr:	File name body.			*
-*		char **fExtStr:		File extension (pgm).		*
-*		char **fCtrStr		Control file extension (ctr).	*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Parses the given file name into it's base, body and extension
+* 		parts. If there is no extension then the extension '???' is
+* 		used. The control file extension '.ctr' is also created.
+*		Eg:
+* \verbatim
+		    gvnFileName = "/some/where/here.???"
+		    *fPathStr = "/some/where/"
+		    *fBodyStr = "here"
+		    *fExtStr = "???"
+		    *fCtrStr = "ctr"
+  \endverbatim
+*		Where the string ??? is: the appropriate extension for
+*		the given (2D) file format, ie: bmp, pgm.
+* \param	gvnFileName		Given file name.
+* \param	fFmt			Given file format (must be a 2D
+*					file format).
+* \param	fPathStr		File name base.
+* \param	fBodyStr		File name body.
+* \param	fExtStr			File extension (eg, pgm).
+* \param	fCtrStr			Control file extension (ctr).
+*/
 static WlzErrorNum WlzEffStackFileNameParse(const char *gvnFileName,
 					    WlzEffFormat fFmt,
 					    char **fPathStr, char **fBodyStr,
@@ -853,15 +870,13 @@ static WlzErrorNum WlzEffStackFileNameParse(const char *gvnFileName,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadParseStackCtr					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Parses the stack control file header until the 'files'	*
-*		record.							*
-* Global refs:	-							*
-* Parameters:	WlzEffStackCtrHeader *header: Header to fill in.	*
-*		FILE *fP:		Opened control file stream.	*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Parses the stack control file header until the 'files' record.
+* \param	header			Header to fill in.
+* \param	fP			Opened control file stream.
+*/
 static WlzErrorNum WlzEffHeadParseStackCtr(WlzEffStackCtrHeader *header,
 					   FILE *fP)
 {

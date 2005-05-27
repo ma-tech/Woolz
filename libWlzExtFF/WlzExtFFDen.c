@@ -1,33 +1,37 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFDen.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
+/*!
+* \file         WlzExtFFDen.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to
 *		and from the Stanford University '.den' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
 
-/************************************************************************
-* Function:	WlzEffReadObjDen					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given stream using 	*
-*		the Stanford density file format.			*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Input file stream.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given stream using the
+*		Stanford density file format.
+* \param	fP			Input file stream.
+* \param	dstErr			Destination error number ptr,
+*					may be NULL.
+*/
 WlzObject	*WlzEffReadObjDen(FILE *fP, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -107,15 +111,14 @@ WlzObject	*WlzEffReadObjDen(FILE *fP, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjDen					*
-* Returns:	WlzErrorNum:		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given stream 	*
-*		using the Stanford density file format.			*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Output file stream.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given stream using
+*		the Stanford density file format.
+* \param	fP			Output file stream.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjDen(FILE *fP, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_WRITE_INCOMPLETE;

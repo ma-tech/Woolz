@@ -1,36 +1,45 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFVff.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
-*		and from the Sunvision '.vff' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         WlzExtFFVff.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2005 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to and from
+* 		the Sunvision '.vff' data format.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 #include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-static int	WlzEffHeadRecReadVff(char *recPtr, int recMax, FILE *fP),
-		WlzEffHeadRecParseVff(WlzEffVffHeader *header, char *recStr);
+static int			WlzEffHeadRecReadVff(
+				  char *recPtr,
+				  int recMax,
+				  FILE *fP);
+static int			WlzEffHeadRecParseVff(
+				  WlzEffVffHeader *header,
+				  char *recStr);
 
-/************************************************************************
-* Function:	WlzEffReadObjVff					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given stream using 	*
-*		the Sunvision vff (rank 3) file format.			*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Input file stream.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given stream using the Sunvision
+* 		vff (rank 3) file format.
+* \param	fP			Input file stream.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadObjVff(FILE *fP, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -164,20 +173,17 @@ WlzObject	*WlzEffReadObjVff(FILE *fP, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadRecReadVff					*
-* Returns:	int:			Last char of record, ie		*
-*					  EOF 	        end of file or	*
-*							error.		*
-*					  '\f' or '{'  	end of header.	*
-*					  '\n' 		successfuly	*
-*							read record.	*
-* Purpose:	Reads a single SunVision VFF file format header record.	*
-* Global refs:	-							*
-* Parameters:	char *recPtr:		Record string buffer.		*
-*		int recMax:		Max number of chars in record.	*
-*		FILE *fP:		Input file stream.		*
-************************************************************************/
+/*!
+* \return	Last char of record, ie
+*		 * EOF - end of file or error.
+*		 * '\f' or '{' - end of header.
+*		 * '\n' - successfuly read record.
+* \ingroup	WlzExtFF
+* \brief	Reads a single SunVision VFF file format header record.
+* \param	recPtr			Record string buffer.
+* \param	recMax			Max number of chars in record.
+* \param	fP			Input file stream.
+*/
 static int	WlzEffHeadRecReadVff(char *recPtr, int recMax, FILE *fP)
 {
   int		tI0,
@@ -204,15 +210,14 @@ static int	WlzEffHeadRecReadVff(char *recPtr, int recMax, FILE *fP)
   return(recC);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadRecParseVff					*
-* Returns:	int:			Negative on error		*
-* Purpose:	Parses the given string for a single SunVision VFF file	*
-*		format header record.					*
-* Global refs:	-							*
-* Parameters:	RecFileHeaderVff *header: Header to be filled in.	*
-*		char *recStr:		Record string.			*
-************************************************************************/
+/*!
+* \return	Negative on error.
+* \ingroup	WlzExtFF
+* \brief	Parses the given string for a single SunVision VFF file format
+* 		header record.
+* \param	header			Header to be filled in.
+* \param	recStr			Record string.
+*/
 static int	WlzEffHeadRecParseVff(WlzEffVffHeader *header, char *recStr)
 {
   int		ok = -1;
@@ -370,15 +375,14 @@ static int	WlzEffHeadRecParseVff(WlzEffVffHeader *header, char *recStr)
   return(ok);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjVff					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given stream 	*
-*		using the Sunvision vff (rank 3) file format.		*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Output file stream.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given stream using the
+* 		Sunvision vff (rank 3) file format.
+* \param	fP			Output file stream.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjVff(FILE *fP, WlzObject *obj)
 {
   unsigned char	***data = NULL;

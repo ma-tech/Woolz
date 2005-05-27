@@ -1,30 +1,23 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzExtFFIPL.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Tue Nov 16 08:19:32 1999				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
-
+/*!
+* \file         WlzExtFFIPL.c
+* \author       Richard Baldock
+* \date         November 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2005 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writing IPLab image formats.
+* \ingroup	WlzextFF
+* \todo         -
+* \bug          None known.
+*/
 
 #include <string.h>
 #include <Wlz.h>
@@ -33,16 +26,15 @@
 static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP),
 		WlzEffHeadWriteIPL(WlzEffIPLHeader *header, FILE *fP);
 
-/************************************************************************
-* Function:	WlzEffReadObjIPL					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given stream using 	*
-*		the '.ipl' file format.					*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Input file stream.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given stream using the '.ipl'
+* 		file format.
+* \param	fP			Input file stream.
+* \param	dstErr			Destination error number ptr,
+*					may be NULL.
+*/
 WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr)
 {
   int		idxZ, i,
@@ -204,15 +196,14 @@ WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjIPL					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given stream 	*
-*		using the '.IPL' file format.				*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Output file stream.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given stream using the
+* 		'.ipl' file format.
+* \param	fP			Output file stream.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjIPL(FILE *fP, WlzObject *obj)
 {
   int		idxZ,
@@ -290,15 +281,14 @@ WlzErrorNum	WlzEffWriteObjIPL(FILE *fP, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadReadIPL					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Reads an IPL header from the given file stream.		*
-* Global refs:	-							*
-* Parameters:	WlzEffIPLHeader *header: Given header data structure to	*
-*					be filled in.			*
-*		FILE *fP:		Given input file stream.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Reads an IPL header from the given file stream.
+* \param	header			Given header data structure to be
+*					filled in.
+* \param	fP			Given input file stream.
+*/
 static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -442,15 +432,15 @@ static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadWriteIPL					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Writes an IPL header to the given file stream.		*
-* Global refs:	-							*
-* Parameters:	WlzEffIPLHeader *header: Given header data structure to	*
-*					be written.			*
-*		FILE *fP:		Given output file stream.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Writes an IPL header to the given file stream.
+* \todo		Just a stub, still to be written.
+* \param	header			Given header data structure to
+*					be written.
+* \param	fP			Given output file stream.
+*/
 static WlzErrorNum WlzEffHeadWriteIPL(WlzEffIPLHeader *header, FILE *fP)
 {
   WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;

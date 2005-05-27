@@ -1,40 +1,47 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFBmp.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
+/*!
+* \file         WlzExtFFBmp.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2005 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to
 *		and from the portable anymap '.pnm' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* GFeng add more delimited to the token.
-************************************************************************/
- #include <ctype.h>
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
+#include <ctype.h>
 #include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-static int	WlzExtFFBmpEncode8(unsigned char **, unsigned char *,
-				   WlzIVertex2, WlzErrorNum *);
-static void	WlzEffBmpSwap2(void *),
-		WlzEffBmpSwap4(void *);
+static int			WlzExtFFBmpEncode8(
+				  unsigned char **rleData,
+				  unsigned char *imgData,
+				  WlzIVertex2 imgSz,
+				  WlzErrorNum *dstErr);
+static void			WlzEffBmpSwap2(
+				  void *data);
+static void			WlzEffBmpSwap4(
+				  void *data);
 
-/************************************************************************
-* Function:	WlzEffReadObjBmp					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given file(s) using	*
-*		the '.pnm' file format.					*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given file(s) using the '.pnm'
+* 		file format.
+* \param	gvnFileName		Given file name.
+* \param	dstErr			Dst error pointer, may be NULL.
+*/
 WlzObject	*WlzEffReadObjBmp(const char *gvnFileName, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -48,15 +55,14 @@ WlzObject	*WlzEffReadObjBmp(const char *gvnFileName, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjBmp					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given file(s)  	*
-*		using the '.pnm' file format.				*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given file(s)
+*		using the '.pnm' file format.
+* \param	gvnFileName		Given file name.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjBmp(const char *gvnFileName, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -65,19 +71,18 @@ WlzErrorNum	WlzEffWriteObjBmp(const char *gvnFileName, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjBmp2D					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given 2D Woolz object to the given file  	*
-*		using the '.pnm' file format.				*
-* Global refs:	-							*
-* Parameters:	const char *fNameStr:	Given file name.		*
-*		WlzObject *obj:		Given woolz object.		*
-*		WlzIVertex2 imgSz:	Required image size.		*
-*		WlzIVertex2 imgOrg:	Required image origin.		*
-*		unsigned char *data:	Buffer of imgSz bytes.		*
-*		unsigned char bgd:	Background value.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given 2D Woolz object to the given file
+*		using the '.pnm' file format.
+* \param	fNameStr		Given file name.
+* \param	obj			Given woolz object.
+* \param	imgSz			Required image size.
+* \param	imgOrg			Required image origin.
+* \param	data			Buffer of imgSz bytes.
+* \param	bgd			Background value.
+*/
 WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
 				    WlzIVertex2 imgSz, WlzIVertex2 imgOrg,
 				    unsigned char *data,
@@ -257,18 +262,17 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObjBmpData2D					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Reads the  data from a pgm file into the data array	*
-*		given.							*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Given file stream.		*
-*		WlzIVertex2 gvnImgSz:	Dst ptr for image size which	*
-*					is assumed valid if height and	*
-*					width are non zero.		*
-*		unsigned char ***data:	Ptr to 2D array for data.	*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Reads the  data from a pgm file into the data array
+*		given.
+* \param	fP			Given file stream.
+* \param	gvnImgSz		Dst ptr for image size which is
+*					assumed valid if height and width are
+*					non zero.
+* \param	 data			Ptr to 2D array for data.
+*/
 WlzErrorNum 	WlzEffReadObjBmpData2D(FILE *fP, WlzIVertex2 *gvnImgSz,
 				       unsigned char ***data)
 {
@@ -599,14 +603,13 @@ WlzErrorNum 	WlzEffReadObjBmpData2D(FILE *fP, WlzIVertex2 *gvnImgSz,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffBmpSwap2						*
-* Returns:	void							*
-* Purpose:	Byte swaps a datum of two bytes.			*
-* Global refs:	-							*
-* Parameters:	void *data:		Pointer to the datum to be byte	*
-*					swapped.			*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	WlzExtFF
+* \brief	Byte swaps a datum of two bytes.
+* \param	data			Pointer to the datum to be byte
+*					swapped.
+*/
 static void	WlzEffBmpSwap2(void *data)
 {
   unsigned short inS,
@@ -617,14 +620,13 @@ static void	WlzEffBmpSwap2(void *data)
   *(unsigned short *)data = outS;
 }
 
-/************************************************************************
-* Function:	WlzEffBmpSwap4						*
-* Returns:	void							*
-* Purpose:	Byte swaps a datum of four bytes.			*
-* Global refs:	-							*
-* Parameters:	void *data:		Pointer to the datum to be byte	*
-*					swapped.			*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	WlzExtFF
+* \brief	Byte swaps a datum of four bytes.
+* \param	data			Pointer to the datum to be byte
+*					swapped.
+*/
 static void	WlzEffBmpSwap4(void *data)
 {
   unsigned char	tB0;
@@ -639,19 +641,17 @@ static void	WlzEffBmpSwap4(void *data)
   *(dataP + 2) = tB0;
 }
 
-/************************************************************************
-* Function:	WlzExtFFBmpEncode8                                      *
-* Returns:	int:			Size of run-length encoded      *
-*					data.                           *
-* Purpose:	Run-length encodes the image data for a eight bit       *
-*		Microsoft bitmap file.                                  *
-* Global refs:	-                                                       *
-* Parameters:	unsigned char **rleData: Destination ptr for the run-   *
-*					length encoded data.            *
-*		unsigned char *imgData:	Image data to be encoded.       *
-*		WlzIVertex2 imgSz:	Image size.                     *
-*		WlzErrorNum *dstErr:	Destination error ptr.          *
-************************************************************************/
+/*!
+* \return	Size of run-length encoded data.
+* \ingroup	WlzExtFF
+* \brief	Run-length encodes the image data for a eight bit
+*		Microsoft bitmap file.
+* \param	rleData			Destination ptr for the run- length
+*					encoded data.
+* \param	imgData			Image data to be encoded.
+* \param	imgSz			Image size.
+* \param	dstErr			Destination error ptr.
+*/
 static int	WlzExtFFBmpEncode8(unsigned char **rleData,
 				   unsigned char *imgData, WlzIVertex2 imgSz,
 				   WlzErrorNum *dstErr)

@@ -1,41 +1,42 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFDen.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
-*		and from the '.ics'/'.ids' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* GFeng add more delimited to the token.
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         WlzExtFFIcs.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to
+*		and from the International Cytometry Standard '.ics'/'.ids'
+*		data format.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 #include <string.h>
-
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-
-/************************************************************************
-* Function:	WlzEffIcsFileNames					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Builds the ics file names from the given file name.	*
-*		These strings should be free'd using AlcFree() when	*
-*		no longer required.					*
-* Global refs:	-							*
-* Parameters:	char **fileBody:	Dest ptr for the file body.	*
-*		char **icsFileName:	Dest ptr for the '.ics' file	*
-*					name.				*
-*		char **idsFileName:	Dest ptr for the '.ids' file	*
-*					name.				*
-*		const char *gvnFileName: Given file name with .ics,	*
-*					.ids or no extension.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Builds the ics file names from the given file name.
+*		These strings should be free'd using AlcFree() when
+*		no longer required.
+* \param	fileBody		Dest ptr for the file body.
+* \param	icsFileName		Dest ptr for the '.ics' file name.
+* \param	idsFileName		Dest ptr for the '.ids' file name.
+* \param	gvnFileName	Given file name with .ics, .ids or no
+* 					extension.
+*/
 WlzErrorNum	WlzEffIcsFileNames(char **fileBody,
 				   char **icsFileName,
 				   char **idsFileName,
@@ -65,17 +66,16 @@ WlzErrorNum	WlzEffIcsFileNames(char **fileBody,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	WlzEffReadObjIcs					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given stream using 	*
-*		the ICS format. The given file name is used to 		*
-*		generate the '.ics' and '.ids' filenames.		*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given stream using the ICS
+*		format. The given file name is used to generate the '.ics' and
+*		'.ids' filenames.
+* \param	gvnFileName		Given file name.
+* \param	dstErr			Destination error number ptr,
+*					may be NULL.
+*/
 WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
 {
   int		bits,
@@ -487,17 +487,16 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjIcs					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given stream 	*
-*		using the ICS format. The given file name is used to	*
-*		generate the '.ics' and '.ids' filenames.		*
-* Global refs:	-							*
-* Parameters:	const char *gvnFileName: Given file name with .ics,	*
-*					.ids or no extension.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given stream
+*		using the ICS format. The given file name is used to generate
+*		the '.ics' and '.ids' filenames.
+* \param	gvnFileName		Given file name with .ics, .ids or
+*					no extension.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjIcs(const char *gvnFileName, WlzObject *obj)
 {
   int  		tI0;

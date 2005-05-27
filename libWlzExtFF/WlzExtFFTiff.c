@@ -14,11 +14,10 @@
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \brief        I/O functions for tiff format images
+* \ingroup	WlzExtFF
 *               
 * \todo         -
 * \bug          None known
-*
-* Maintenance log with most recent changes at top of list.
 */
 
 #include <stdio.h>
@@ -381,17 +380,14 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   return obj;
 }
 
-
-/************************************************************************
-* Function:	WlzEffReadObjTiff					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given file using	 	*
-*		the TIFF format. 					*
-* Global refs:	-							*
-* Parameters:	const char *tiffFileName: Given file name.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given file using the TIFF format.
+* \param	tiffFileName		Given file name.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadObjTiff(
   const char 	*tiffFileName,
   WlzErrorNum 	*dstErr)
@@ -649,15 +645,14 @@ HACK */
   return errNum;
 }
 
-/************************************************************************
- * Function:	WlzEffWriteObjTiff					*
- * Returns:	WlzErrorNum		Woolz error number.		*
- * Purpose:	Writes the given Woolz object to the given file 	*
- *		using the TIFF format. 					*
-* Global refs:	-							*
-* Parameters:	const char *tiffFileName: Given file name with .tif,	*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given file using the TIFF
+* 		format.
+* \param	tiffFileName		Given file name with .tif.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum WlzEffWriteObjTiff(
   const char *tiffFileName,
   WlzObject *obj)
@@ -764,4 +759,3 @@ WlzErrorNum WlzEffWriteObjTiff(
   }
   return errNum;
 }
-

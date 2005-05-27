@@ -1,43 +1,57 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFSlc.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
+/*!
+* \file         WlzExtFFSlc.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to
 *		and from the '.slc' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 #include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-static WlzErrorNum WlzEffHeadReadSlc(WlzEffSlcHeader *header, FILE *fP),
-		WlzEffHeadWriteSlc(WlzEffSlcHeader *header, FILE *fP),
-		WlzEffSlcDecode8(unsigned char *outBuf,
-			   	unsigned char *inBuf, int outSize),
-	        WlzEffSlcEncode8(unsigned char **outBuffer, int *outBufSz,
-				    int *outBytes, unsigned char *inBuffer,
-				    int inBytes);
-static void	WlzEffSlcCreateIcon(WlzEffSlcHeader *header,
-				unsigned char ***data);
+static WlzErrorNum 		WlzEffHeadReadSlc(
+				  WlzEffSlcHeader *header,
+				  FILE *fP);
+static WlzErrorNum		WlzEffHeadWriteSlc(
+				  WlzEffSlcHeader *header,
+				  FILE *fP);
+static WlzErrorNum		WlzEffSlcDecode8(
+				  unsigned char *outBuf,
+			   	  unsigned char *inBuf,
+				  int outSize);
+static WlzErrorNum	        WlzEffSlcEncode8(
+				  unsigned char **outBuffer,
+				  int *outBufSz,
+				  int *outBytes,
+				  unsigned char *inBuffer,
+				  int inBytes);
+static void			WlzEffSlcCreateIcon(
+				  WlzEffSlcHeader *header,
+				  unsigned char ***data);
 
-/************************************************************************
-* Function:	WlzEffReadObjSlc					*
-* Returns:	WlzObject *:		Object read from file.		*
-* Purpose:	Reads a Woolz object from the given stream using 	*
-*		the '.slc' file format.					*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Input file stream.		*
-* 		WlzErrorNum *dstErr:	Destination error number ptr,	*
-*					may be NULL.			*
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given stream using the '.slc'
+*		file format.
+* \param	fP			Input file stream.
+* \param	dstErr			Destination error number ptr,
+*					may be NULL.
+*/
 WlzObject	*WlzEffReadObjSlc(FILE *fP, WlzErrorNum *dstErr)
 {
   int		idxZ,
@@ -168,15 +182,14 @@ WlzObject	*WlzEffReadObjSlc(FILE *fP, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjSlc					*
-* Returns:	WlzErrorNum		Woolz error number.		*
-* Purpose:	Writes the given Woolz object to the given stream 	*
-*		using the '.slc' file format.				*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Output file stream.		*
-*		WlzObject *obj:		Given woolz object.		*
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given stream using the
+* 		'.slc' file format.
+* \param	fP			Output file stream.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjSlc(FILE *fP, WlzObject *obj)
 {
   int		idxZ,
@@ -306,15 +319,14 @@ WlzErrorNum	WlzEffWriteObjSlc(FILE *fP, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadReadSlc					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Reads an SLC header from the given file stream.		*
-* Global refs:	-							*
-* Parameters:	WlzEffSlcHeader *header: Given header data structure to	*
-*					be filled in.			*
-*		FILE *fP:		Given input file stream.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Reads an SLC header from the given file stream.
+* \param	header			Given header data structure to
+*					be filled in.
+* \param	fP			Given input file stream.
+*/
 static WlzErrorNum WlzEffHeadReadSlc(WlzEffSlcHeader *header, FILE *fP)
 {
   int		iconCnSz;
@@ -367,15 +379,14 @@ static WlzErrorNum WlzEffHeadReadSlc(WlzEffSlcHeader *header, FILE *fP)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadWriteSlc					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Writes an SLC header to the given file stream.		*
-* Global refs:	-							*
-* Parameters:	WlzEffSlcHeader *header: Given header data structure to	*
-*					be written.			*
-*		FILE *fP:		Given output file stream.	*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Writes an SLC header to the given file stream.
+* \param	header			Given header data structure to
+*					be written.
+* \param	fP			Given output file stream.
+*/
 static WlzErrorNum WlzEffHeadWriteSlc(WlzEffSlcHeader *header, FILE *fP)
 {
   int		iconCnSz;
@@ -406,15 +417,14 @@ static WlzErrorNum WlzEffHeadWriteSlc(WlzEffSlcHeader *header, FILE *fP)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffSlcDecode8					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Decodes the given input buffer into the output buffer.	*
-* Global refs:	-							*
-* Parameters:	unsigned char *outBuf:	Output buffer.			*
-*		unsigned char *inBuf:	Input buffer to be decoded.	*
-*		int outSize:		Size of output buffer.		*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Decodes the given input buffer into the output buffer.
+* \param	outBuf			Output buffer.
+* \param	nBuf			Input buffer to be decoded.
+* \param	outSize			Size of output buffer.
+*/
 static WlzErrorNum WlzEffSlcDecode8(unsigned char *outBuf,
 				    unsigned char *inBuf, int outSize)
 {
@@ -452,23 +462,20 @@ static WlzErrorNum WlzEffSlcDecode8(unsigned char *outBuf,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffSlcEncode8					*
-* Returns:	WlzErrorNum:		Woolz error code.		*
-* Purpose:	Encodes the given input buffer into the output buffer.	*
-* Global refs:	-							*
-* Parameters:	unsigned char **outBuffer: Output buffer which may be	*
-*					reallocated.			*
-*		int *outBufSize:	Source and destination ptr for	*
-*					the size of the output buffer	*
-*					(ie the number of bytes		*
-*					allocated).			*
-*		int *outBytes:		Destination ptr for the number	*
-*					of bytes in the output buffer.	*
-*		unsigned char *inBuffer: Input buffer to be encoded.	*
-*		int inBytes:		Number of bytes in the input	*
-*					buffer.				*
-************************************************************************/
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Encodes the given input buffer into the output buffer.
+* \param	outBuffer		Output buffer which may be reallocated
+*					using AlcRealloc().
+* \param	outBufSz		Source and destination ptr for the size
+* 					of the output buffer (ie the number of
+* 					bytes allocated).
+* \param	outBytes		Destination ptr for the number of bytes
+* 					in the output buffer.
+* \param	inBuffer		Input buffer to be encoded.
+* \param	inBytes			Number of bytes in the input buffer.
+*/
 static WlzErrorNum WlzEffSlcEncode8(unsigned char **outBuffer, int *outBufSz,
 				    int *outBytes, unsigned char *inBuffer,
 				    int inBytes)
@@ -567,15 +574,14 @@ static WlzErrorNum WlzEffSlcEncode8(unsigned char **outBuffer, int *outBufSz,
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffSlcCreateIcon					*
-* Returns:	void							*
-* Purpose:	Creates an icon for the SLC header from the given	*
-*		cuboid of data by sampling the centre plane.		*
-* Global refs:	-							*
-* Parameters:	WlzEffSlcHeader *header: SLC header data structure.	*
-*		unsigned char ***data:	The cuboid of data.		*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	WlzExtFF
+* \brief	Creates an icon for the SLC header from the given cuboid
+*		of data by sampling the centre plane.
+* \param	header			SLC header data structure.
+* \param	data			The cuboid of data.
+*/
 static void	WlzEffSlcCreateIcon(WlzEffSlcHeader *header,
 				    unsigned char ***data)
 {

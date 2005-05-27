@@ -1,23 +1,24 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFVtk.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for reading and writting Woolz objects to
-*		and from the VTK '.vtk' data format.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 02-05-01 bill	Add 2D line segment output in WlzEffWriteGMModelVtk().
-* 10-01-01 bill Add WlzEffHeadReadVtk(), WlzEffReadCtrVtk(),
-*		WlzEffReadGMVtk() nad WlzEffReadImgVtk().
-* 16-08-00 bill	Add WlzEffWriteCtrVtk() and WlzEffWriteGMModelVtk().
-************************************************************************/
+/*!
+* \file         WlzExtFFVtk.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \note
+*               Copyright
+*               2005 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Functions for reading and writting Woolz objects to and from
+* 		the VTK '.vtk' data format.
+* \ingroup	WlzExtFF
+* \todo         -
+* \bug          None known.
+*/
 #include <Wlz.h>
 #include <WlzExtFF.h>
 #include <string.h>
@@ -47,19 +48,17 @@ static WlzObject		*WlzEffReadImgVtk(
 				  WlzEffVtkHeader *header,
 				  WlzErrorNum *dstErr);
 
-/************************************************************************
-* Function:	WlzEffReadObjVtk
-* Returns:	WlzObject *:		Object read from file.
-* Purpose:	Reads a Woolz object from the given stream using
-*		the Visualization Toolkit (structured points) file
-*		format.
-*		So far ther is no check on the major and minor version
-*		numbers since all files seem compatable.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-* 		WlzErrorNum *dstErr:	Destination error number ptr,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz object from the given stream using the
+* 		Visualization Toolkit file format. There is no check on the
+* 		major and minor version numbers since all files seem
+* 		compatable.
+* \param	fP			Input file stream.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadObjVtk(FILE *fP, WlzErrorNum *dstErr)
 {
   WlzObject	*obj = NULL;
@@ -100,16 +99,14 @@ WlzObject	*WlzEffReadObjVtk(FILE *fP, WlzErrorNum *dstErr)
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteObjVtk
-* Returns:	WlzErrorNum		Woolz error number.
-* Purpose:	Writes the given Woolz object to the given stream
-*		using the Visualization Toolkit (structured points)
-*		file format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		WlzObject *obj:		Given woolz object.
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz object to the given stream using the
+* 		Visualization Toolkit file format.
+* \param	fP			Output file stream.
+* \param	obj			Given woolz object.
+*/
 WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -144,16 +141,15 @@ WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteImgVtk
-* Returns:	WlzErrorNum		Woolz error number.
-* Purpose:	Writes the given Woolz 3D domain object with values
-*		object to the given stream using the Visualization
-*		Toolkit (structured points) file format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		WlzObject *obj:		Given woolz object.
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz 3D domain object with values object to
+* 		the given stream using the Visualization Toolkit (structured
+* 		points) file format.
+* \param	fP			Output file stream.
+* \param	obj			Given woolz object.
+*/
 static WlzErrorNum WlzEffWriteImgVtk(FILE *fP, WlzObject *obj)
 {
   unsigned char	***data = NULL;
@@ -229,16 +225,15 @@ static WlzErrorNum WlzEffWriteImgVtk(FILE *fP, WlzObject *obj)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteCtrVtk
-* Returns:	WlzErrorNum		Woolz error number.
-* Purpose:	Writes the given Woolz contour (2D or 3D model) to the
-*		given stream using the Visualization Toolkit (polydata)
-*		file format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		WlzContour *ctr:	Given woolz contour.
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz contour (2D or 3D model) to the
+*		given stream using the Visualization Toolkit (polydata) file
+*		format.
+* \param	fP			Output file stream.
+* \param	ctr			Given woolz contour.
+*/
 static WlzErrorNum WlzEffWriteCtrVtk(FILE *fP, WlzContour *ctr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -258,16 +253,15 @@ static WlzErrorNum WlzEffWriteCtrVtk(FILE *fP, WlzContour *ctr)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffWriteGMModelVtk
-* Returns:	WlzErrorNum		Woolz error number.
-* Purpose:	Writes the given Woolz gemetric model (2D or 3D) to the
-*		given stream using the Visualization Toolkit (polydata)
-*		file format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		WlzGMModel *model:	Given gemetric model.
-************************************************************************/
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz gemetric model (2D or 3D) to the
+*		given stream using the Visualization Toolkit (polydata) file
+*		format.
+* \param	fP			Output file stream.
+* \param	model			Given gemetric model.
+*/
 static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 {
 
@@ -437,26 +431,28 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffHeadReadVtk
-* Returns:	WlzErrorNum		Woolz error number.
-* Purpose:	Reads the VTK file header which is
-*		  ident\n
-*		  title\n
-*		  data type\n
-*		  type\n
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Reads the VTK file header which is:
+*		<ul>
+*		  <li> ident\n
+*		  <li> title\n
+*		  <li> data type\n
+*		  <li> type\n
+*		</ul>
 *		where
-*		  ident = "vtk DataFile Version MAJOR.MINOR"
-*		  title = less than 256 chars followed by a \n
-*		  data type = "ASCII"|"BINARY"
-*		  type = DATASET "STRUCTURED_POINTS"|"STRUCTURED_GRID"|
-*		         "UNSTRUCTURED_GRID"|"POLYDATA"|
-*		         "RECTILNEAR_GRID"
-* Global refs:	-
-* Parameters:	WlzEffVtkHeader *header: Given header data structure
-*					be filled.
-*		FILE *fP:		Output file stream.
-************************************************************************/
+*		<ul>
+*		  <li> ident = "vtk DataFile Version MAJOR.MINOR"
+*		  <li> title = less than 256 chars followed by a \n
+*		  <li> data type = "ASCII"|"BINARY"
+*		  <li> type = DATASET "STRUCTURED_POINTS"|"STRUCTURED_GRID"|
+*		              "UNSTRUCTURED_GRID"|"POLYDATA"|
+*		              "RECTILNEAR_GRID"
+*		</ul>
+* \param	header			Given header data structure be filled.
+* \param	fP			Output file stream.
+*/
 static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
 {
   int		valI;
@@ -555,18 +551,16 @@ static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
   return(errNum);
 }
 
-/************************************************************************
-* Function:	WlzEffReadCtrVtk
-* Returns:	WlzObject *:		Object read from file.
-* Purpose:	Reads a Woolz contour object from the given stream
-*		using the Visualization Toolkit (polydata) file
-*		format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		WlzEffVtkHeader *header: Header data structure.
-* 		WlzErrorNum *dstErr:	Destination error number ptr,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz contour object from the given stream using
+*		the Visualization Toolkit (polydata) file format.
+* \param	fP			Input file stream.
+* \param	header			Header data structure.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadCtrVtk(FILE *fP, WlzEffVtkHeader *header,
 				  WlzErrorNum *dstErr)
 {
@@ -598,18 +592,16 @@ WlzObject	*WlzEffReadCtrVtk(FILE *fP, WlzEffVtkHeader *header,
   return(obj);
 }
 
-/************************************************************************
-* Function:	WlzEffReadGMVtk
-* Returns:	WlzGMModel *:		Object read from file.
-* Purpose:	Reads a WlzGMModel from the given stream
-*		using the Visualization Toolkit (polydata) file
-*		format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		WlzEffVtkHeader *header: Header data structure.
-* 		WlzErrorNum *dstErr:	Destination error number ptr,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a WlzGMModel from the given stream using the
+*		Visualization Toolkit (polydata) file format.
+* \param	fP			Input file stream.
+* \param	header			Header data structure.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 				 WlzErrorNum *dstErr)
 {
@@ -858,18 +850,17 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
   return(model);
 }
 
-/************************************************************************
-* Function:	WlzEffReadImgVtk
-* Returns:	WlzObject *:		Object read from file.
-* Purpose:	Reads a Woolz domain object from the given stream
-*		using the Visualization Toolkit (structured points)
-*		file format.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		WlzEffVtkHeader *header: Header data structure.
-* 		WlzErrorNum *dstErr:	Destination error number ptr,
-*					may be NULL.
-************************************************************************/
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz domain object from the given stream using
+*		the Visualization Toolkit (structured points) file format.
+* \todo		WlzEffReadImgVtk() is unimplemented.
+* \param	fP			Input file stream.
+* \param	header			Header data structure.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
 WlzObject	*WlzEffReadImgVtk(FILE *fP, WlzEffVtkHeader *header,
 				  WlzErrorNum *dstErr)
 {
@@ -877,7 +868,7 @@ WlzObject	*WlzEffReadImgVtk(FILE *fP, WlzEffVtkHeader *header,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* TODO Read VTK images. */
-  errNum = WLZ_ERR_READ_INCOMPLETE;
+  errNum = WLZ_ERR_UNIMPLEMENTED;
 
   if(dstErr)
   {
