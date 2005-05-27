@@ -713,8 +713,6 @@ WlzErrorNum WlzEffBibParseFileRecord(
 * \param    shadeFlg	shade correct flag
 * \param    gaussFlg	gauss smoothing flag
 * \param    width	gauss smoothing width parameter
-* \param    threshLow	low threshold value
-* \param    threshHigh	high threshold value
 * \par      Source:
 *                WlzExtFFBibUtils.c
 */

@@ -18,7 +18,6 @@
 * \ingroup	WlzExtFF
 * \todo         -
 * \bug          None known.
-* \GFeng add more delimited to the token.
 */
 #include <ctype.h>
 #include <string.h>
