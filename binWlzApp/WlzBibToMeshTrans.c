@@ -83,7 +83,7 @@ int main(int	argc,
   WlzTransformType	affineType;
   WlzDVertex2		*srcVtxs, *dstVtxs;
   int		relFlg=0;
-  int		numVtxs, maxNumVtxs;;
+  int		numVtxs, maxNumVtxs;
   char		*errMsg;
     
   /* additional defaults */
