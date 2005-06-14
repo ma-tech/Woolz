@@ -35,10 +35,19 @@ static int			WlzLBTNodeIdxFromKeys2D(
 				  int idN,
 				  unsigned *keys,
 				  int *dstFound);
+static int			WlzLBTBndEdgNbrIdx2D(
+				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN);
 static int			WlzLBTMinLogSzEdgeNbrIdx2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN);
+static int			WlzLBTBndEdgNbrDirIdx2D(
+				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN,
+				  WlzDirection dir);
 static int			WlzLBTMinLogSzEdgeDirNbrIdx2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
@@ -488,7 +497,8 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
 * \ingroup	WlzDomainOps
 * \brief	Balances the given LBT domain so that the neighbouring
 *		nodes of each node are either of the same size or differ
-*		in size by a ratio of 2:1.
+*		in size by a ratio of 2:1. The function also enforces
+*		maximum node size for all nodes and boundary nodes.
 *		The neighbour finding algorithm used is quick and
 *		simple but it requires an object in which the values
 *		are set to the corresponding LBT domain indices.
@@ -502,7 +512,8 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
 */
 WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 				      WlzObject *iObj,
-				      int maxSz)
+				      int maxSz,
+				      int maxBndSz)
 {
   int		idN,
   		idM,
@@ -526,6 +537,7 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
   				 };
 
   maxSz = (maxSz < 1)? 1: AlgBitNextPowerOfTwo(NULL, maxSz) + 1;
+  maxBndSz = (maxBndSz < 1)? 1: AlgBitNextPowerOfTwo(NULL, maxBndSz) + 1;
   iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
   /* Create a priority queue and a hash table to hold the nodes
    * to be split. */
@@ -549,9 +561,11 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  /* Put all nodes which have a size (cell side length) > twice
-   * that of the smallest neighbour into a priority queue using
-   * the size as the priority. */
+  /* Put all nodes which need to be split into a priority queue using
+   * the size as the priority. Nodes need to be split if they have a
+   * size (cell side length) > twice that of the smallest neighbour,
+   * a size greater than the maximum size or a size greater than the
+   * maximum size for a boundary node. */
   idN = 0;
   while((errNum == WLZ_ERR_NONE) && (idN < lDom->nNodes))
   {
@@ -570,6 +584,11 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
         flg = 1;
       }
     }
+    if(0 == flg)
+    {
+      flg = (sz0 > maxBndSz) &&
+	    (WlzLBTBndEdgNbrIdx2D(lDom, iGVWSp, idN) != 0);
+    }
     if(flg)
     {
       errNum = WlzLBTQueueInsert(pQ, hT, sz0, idN);
@@ -583,7 +602,6 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
   {
     while((idN = WlzLBTQueueUnlink(pQ, hT)) >= 0)
     {
-/* TODO use maximum node size! */
       /* Split the node. */
       idNN[0] = idN;
       idNN[1] = lDom->nNodes;
@@ -633,8 +651,8 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 	sz0 = WlzLBTNodeLogSz2D(nod[0]);
 	while((errNum == WLZ_ERR_NONE) && (idN < 4))
 	{
-	  /* Check node size <= twice that of any neighbour. */
-	  /* TODO avoid checking siblings. */
+	  /* Check nodes and reinsert any that need to be split back into
+	   * the queue. */
 	  flg = 0;
 	  if(sz0 > maxSz)
 	  {
@@ -648,13 +666,17 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 	      flg = 1;
 	    }
 	  }
+	  if(0 == flg)
+	  {
+	    flg = (sz0 > maxBndSz) &&
+		  (WlzLBTBndEdgNbrIdx2D(lDom, iGVWSp, idNN[idN]) != 0);
+	  }
 	  if(flg)
 	  {
 	    errNum = WlzLBTQueueInsert(pQ, hT, sz0, idNN[idN]);
 	  }
 	  /* Check for any neighbours with node size > twice that of
 	   * the node. */
-	  /* TODO avoid checking siblings. */
 	  idM = 0;
 	  while((errNum == WLZ_ERR_NONE) && (idM < 4))
 	  {
@@ -1132,6 +1154,36 @@ static void	WlzLBTSetNodeIndexObj2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Non-zero if the node is on the boundary of the domain.
+* \ingroup	WlzDomainOps
+* \brief	Looks for a non-existant neighbour to the given node.
+* \param        lDom                    Given LBT domain.
+* \param        iGVWSp                  Grey workspace for index object.
+* \param        idN                     Index of node in the LBT domain.
+*/
+static int	WlzLBTBndEdgNbrIdx2D(WlzLBTDomain2D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN)
+{
+  int		isBnd;
+
+  isBnd = WlzLBTBndEdgNbrDirIdx2D(lDom, iGVWSp, idN, WLZ_DIRECTION_IC);
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx2D(lDom, iGVWSp, idN, WLZ_DIRECTION_IL);
+  }
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx2D(lDom, iGVWSp, idN, WLZ_DIRECTION_DC);
+  }
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx2D(lDom, iGVWSp, idN, WLZ_DIRECTION_DL);
+  }
+  return(isBnd);
+}
+
+/*!
 * \return	Log of the size of the smallest neighbouring node or
 		-ve if there is no neighbour.
 * \ingroup	WlzDomainOps
@@ -1164,6 +1216,59 @@ static int	WlzLBTMinLogSzEdgeNbrIdx2D(WlzLBTDomain2D *lDom,
     minSz = sz;
   }
   return(minSz);
+}
+
+/*!
+* \return	Non-zero if the node's neighbour in the given diection is
+*		outside the domain.
+* \ingroup	WlzDomainOps
+* \brief	Looks for a non-existant neighbour to the given node
+*		in the given direction.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+* \param	dir			Given direction.
+*/
+static int	WlzLBTBndEdgNbrDirIdx2D(WlzLBTDomain2D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN, WlzDirection dir)
+{
+  int		pX,
+  		pY,
+		isBnd = 0;
+  WlzLBTNode2D	*nod;
+  WlzIBox2	nBB;
+
+  nod = lDom->nodes + idN;
+  WlzLBTKeyToBox2I(nod->keys, &nBB);
+  switch(dir)
+  {
+    case WLZ_DIRECTION_IC: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DC:
+      pX = (dir == WLZ_DIRECTION_IC)? nBB.xMax + 1: nBB.xMin - 1;
+      pY = nBB.yMin;
+      WlzGreyValueGet(iGVWSp, 0, pY, pX);
+      isBnd = iGVWSp->gVal[0].inv < 0;
+      while(!isBnd && (++pY <= nBB.yMax))
+      {
+        WlzGreyValueGet(iGVWSp, 0, pY, pX);
+	isBnd = iGVWSp->gVal[0].inv < 0;
+      }
+      break;
+    case WLZ_DIRECTION_IL: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DL:
+      pX = nBB.xMin;
+      pY = (dir == WLZ_DIRECTION_IL)? nBB.yMax + 1: nBB.yMin - 1;
+      WlzGreyValueGet(iGVWSp, 0, pY, pX);
+      isBnd = iGVWSp->gVal[0].inv < 0;
+      while(!isBnd && (++pX <= nBB.xMax))
+      {
+        WlzGreyValueGet(iGVWSp, 0, pY, pX);
+	isBnd = iGVWSp->gVal[0].inv < 0;
+      }
+      break;
+  }
+  return(isBnd);
 }
 
 /*!
@@ -1977,7 +2082,8 @@ int		main(int argc, char *argv[])
   int		balance = 0,
   		option,
   		ok = 1,
-		maxNodSz - INT_MAX;
+		maxNodSz = INT_MAX,
+		maxBndNodSz = INT_MAX;
 		usage = 0,
   		txtOut = 0,
   		vtkOut = 1;
@@ -2105,7 +2211,7 @@ int		main(int argc, char *argv[])
    idObj = WlzLBTMakeNodeIndexObj2D(lDom, inObj->domain.i, &errNum);
    if(errNum == WLZ_ERR_NONE)
    {
-      errNum = WlzLBTBalanceDomain2D(lDom, idObj, maxNodSz);
+      errNum = WlzLBTBalanceDomain2D(lDom, idObj, maxNodSz, maxBndNodSz);
    }
   }
   if(ok)
