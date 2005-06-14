@@ -729,7 +729,7 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
 
   (void )fprintf(stderr, "%%!\n"
 			 "/Times-Courier findfont\n"
-			 "2 scalefont\n"
+			 "1 scalefont\n"
 			 "setfont\n"
   			 "1 setlinecap\n"
 			 "1 setlinejoin\n"
