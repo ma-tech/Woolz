@@ -579,7 +579,8 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 					WlzInterpolationType interp)
 {
   int		mItvIdx,
-  		indx;
+  		idN,
+		idP;
   double	tD0,
   		tD1,
 		tD2,
@@ -675,6 +676,7 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 	  while((errNum == WLZ_ERR_NONE) && (dPosI.vtX <= mItv->rgtI) &&
 		(dPosI.vtX <= iWSp.rgtpos))
 	  {
+	    idP = dPosI.vtX - iWSp.lftpos;
 	    sPosD.vtX = (trXX * dPosI.vtX) + trXYC;
 	    sPosD.vtY = (trYX * dPosI.vtX) + trYYC;
 	    switch(interp)
@@ -686,22 +688,22 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		switch(gWSp.pixeltype)
 		{
 		  case WLZ_GREY_INT:
-		    *(dGP.inp)++ = (*(gVWSp->gVal)).inv;
+		    *(dGP.inp + idP) = (*(gVWSp->gVal)).inv;
 		    break;
 		  case WLZ_GREY_SHORT:
-		    *(dGP.shp)++ = (*(gVWSp->gVal)).shv;
+		    *(dGP.shp + idP) = (*(gVWSp->gVal)).shv;
 		    break;
 		  case WLZ_GREY_UBYTE:
-		    *(dGP.ubp)++ = (*(gVWSp->gVal)).ubv;
+		    *(dGP.ubp + idP) = (*(gVWSp->gVal)).ubv;
 		    break;
 		  case WLZ_GREY_FLOAT:
-		    *(dGP.flp)++ = (*(gVWSp->gVal)).flv;
+		    *(dGP.flp + idP) = (*(gVWSp->gVal)).flv;
 		    break;
 		  case WLZ_GREY_DOUBLE:
-		    *(dGP.dbp)++ = (*(gVWSp->gVal)).dbv;
+		    *(dGP.dbp + idP) = (*(gVWSp->gVal)).dbv;
 		    break;
 		  case WLZ_GREY_RGBA:
-		    *(dGP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
+		    *(dGP.rgbp + idP) = (*(gVWSp->gVal)).rgbv;
 		    break;
 		  default:
 		    errNum = WLZ_ERR_GREY_TYPE;
@@ -721,14 +723,14 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 			  ((gVWSp->gVal[1]).inv * tD0 * tD3) +
 			  ((gVWSp->gVal[2]).inv * tD2 * tD1) +
 			  ((gVWSp->gVal[3]).inv * tD0 * tD1);
-		    *(dGP.inp)++ = WLZ_NINT(tD0);
+		    *(dGP.inp + idP) = WLZ_NINT(tD0);
 		    break;
 		  case WLZ_GREY_SHORT:
 		    tD0 = ((gVWSp->gVal[0]).shv * tD2 * tD3) +
 			  ((gVWSp->gVal[1]).shv * tD0 * tD3) +
 			  ((gVWSp->gVal[2]).shv * tD2 * tD1) +
 			  ((gVWSp->gVal[3]).shv * tD0 * tD1);
-		    *(dGP.shp)++ = WLZ_NINT(tD0);
+		    *(dGP.shp + idP) = WLZ_NINT(tD0);
 		    break;
 		  case WLZ_GREY_UBYTE:
 		    tD0 = ((gVWSp->gVal[0]).ubv * tD2 * tD3) +
@@ -736,28 +738,28 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 			  ((gVWSp->gVal[2]).ubv * tD2 * tD1) +
 			  ((gVWSp->gVal[3]).ubv * tD0 * tD1);
 		    WLZ_CLAMP(tD0, 0.0, 255.0);
-		    *(dGP.ubp)++ = WLZ_NINT(tD0);
+		    *(dGP.ubp + idP) = WLZ_NINT(tD0);
 		    break;
 		  case WLZ_GREY_FLOAT:
 		    tD0 = ((gVWSp->gVal[0]).flv * tD2 * tD3) +
 			  ((gVWSp->gVal[1]).flv * tD0 * tD3) +
 			  ((gVWSp->gVal[2]).flv * tD2 * tD1) +
 			  ((gVWSp->gVal[3]).flv * tD0 * tD1);
-		    *(dGP.flp)++ = tD0;
+		    *(dGP.flp + idP) = tD0;
 		    break;
 		  case WLZ_GREY_DOUBLE:
 		    tD0 = ((gVWSp->gVal[0]).dbv * tD2 * tD3) +
 			  ((gVWSp->gVal[1]).dbv * tD0 * tD3) +
 			  ((gVWSp->gVal[2]).dbv * tD2 * tD1) +
 			  ((gVWSp->gVal[3]).dbv * tD0 * tD1);
-		    *(dGP.dbp)++ = tD0;
+		    *(dGP.dbp + idP) = tD0;
 		    break;
 		  case WLZ_GREY_RGBA:
 		    tD0 = ((gVWSp->gVal[0]).rgbv * tD2 * tD3) +
 			  ((gVWSp->gVal[1]).rgbv * tD0 * tD3) +
 			  ((gVWSp->gVal[2]).rgbv * tD2 * tD1) +
 			  ((gVWSp->gVal[3]).rgbv * tD0 * tD1);
-		    *(dGP.dbp)++ = tD0;
+		    *(dGP.dbp + idP) = tD0;
 		    break;
 		  default:
 		    errNum = WLZ_ERR_GREY_TYPE;
@@ -771,40 +773,45 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		switch(gWSp.pixeltype)
 		{
 		  case WLZ_GREY_INT:
-		    for(indx=0; indx < 4; indx++){
-		      gTmp[indx] = (gVWSp->gVal[indx]).inv;
+		    for(idN=0; idN < 4; ++idN)
+		    {
+		      gTmp[idN] = (gVWSp->gVal[idN]).inv;
 		    }
 		    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		    *(dGP.inp)++ = WLZ_NINT(tD0);
+		    *(dGP.inp + idP) = WLZ_NINT(tD0);
 		    break;
 		  case WLZ_GREY_SHORT:
-		    for(indx=0; indx < 4; indx++){
-		      gTmp[indx] = (gVWSp->gVal[indx]).shv;
+		    for(idN=0; idN < 4; ++idN)
+		    {
+		      gTmp[idN] = (gVWSp->gVal[idN]).shv;
 		    }
 		    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		    *(dGP.shp)++ = WLZ_NINT(tD0);
+		    *(dGP.shp + idP) = WLZ_NINT(tD0);
 		    break;
 		  case WLZ_GREY_UBYTE:
-		    for(indx=0; indx < 4; indx++){
-		      gTmp[indx] = (gVWSp->gVal[indx]).ubv;
+		    for(idN=0; idN < 4; ++idN)
+		    {
+		      gTmp[idN] = (gVWSp->gVal[idN]).ubv;
 		    }
 		    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 		    WLZ_CLAMP(tD0, 0.0, 255.0);
-		    *(dGP.ubp)++ = WLZ_NINT(tD0);
+		    *(dGP.ubp + idP) = WLZ_NINT(tD0);
 		    break;
 		  case WLZ_GREY_FLOAT:
-		    for(indx=0; indx < 4; indx++){
-		      gTmp[indx] = (gVWSp->gVal[indx]).flv;
+		    for(idN=0; idN < 4; ++idN)
+		    {
+		      gTmp[idN] = (gVWSp->gVal[idN]).flv;
 		    }
 		    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		    *(dGP.flp)++ = tD0;
+		    *(dGP.flp + idP) = tD0;
 		    break;
 		  case WLZ_GREY_DOUBLE:
-		    for(indx=0; indx < 4; indx++){
-		      gTmp[indx] = (gVWSp->gVal[indx]).dbv;
+		    for(idN=0; idN < 4; ++idN)
+		    {
+		      gTmp[idN] = (gVWSp->gVal[idN]).dbv;
 		    }
 		    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		    *(dGP.dbp)++ = tD0;
+		    *(dGP.dbp + idP) = tD0;
 		    break;
 		  case WLZ_GREY_RGBA: /* RGBA to be done RAB */
 		  default:
