@@ -2541,7 +2541,8 @@ extern WlzIntervalDomain        *WlzIDomainFromPItv2D(
 extern WlzErrorNum              WlzLBTBalanceDomain2D(
                                   WlzLBTDomain2D *sDom,
                                   WlzObject *idDom,
-				  int maxSz);
+				  int maxSz,
+				  int maxBndNdSz);
 extern WlzObject                *WlzLBTMakeNodeIndexObj2D(
                                   WlzLBTDomain2D *lDom,
                                   WlzIntervalDomain *iDom,
