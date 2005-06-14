@@ -1174,6 +1174,9 @@ static WlzErrorNum WlzCMeshSetElmBoundaryFlagsBnd2D(WlzCMesh2D *mesh,
 * \ingroup	WlzMesh
 * \brief	Sets the WLZ_CMESH_ELM_FLAG_BOUNDARY for elements which
 *		intersect the polygon.
+* \todo		If the position is on an edge or is at a node of the
+* 		element then these elements which shares the edge or node
+* 		and the position may not be marked as being on the boundary.
 * \param	mesh			Given mesh.
 * \param	bnd			Polygon to which the mesh should
 *					conform.
@@ -1198,6 +1201,7 @@ static WlzErrorNum WlzCMeshSetElmBoundaryFlagsPly2D(WlzCMesh2D *mesh,
       				      (obj8->domain.poly->vtx + idN)->vtY);
       if(idE >= 0)
       {
+	/* Position is inside element. */
         elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
 	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
       }
@@ -1941,6 +1945,7 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 		*tmpObj = NULL;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	maxBndNdSz = 1;
 
   if(obj == NULL)
   {
@@ -1971,7 +1976,7 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
       maxLBTNdSz = 1;
     }
     invScale = 1.0 / scale;
-    strObj = WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, 2 * scale,
+    strObj = WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, ceil((3.0 * scale) + 1.0),
 				 0.0, 0.0, 0.0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1999,7 +2004,7 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzLBTBalanceDomain2D(lDom, idxObj, maxLBTNdSz);
+    errNum = WlzLBTBalanceDomain2D(lDom, idxObj, maxLBTNdSz, 0);
   }
   if(errNum == WLZ_ERR_NONE)
   {
