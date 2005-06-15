@@ -19,6 +19,7 @@ include			../../../../../../../../Makefile.conf
 
 JAVASOURCES		= \
 			  WlzAffineTransformLSq.java \
+			  WlzArrayStats.java \
 			  WlzArrayViewer.java \
 			  WlzBndGreyInvert.java \
 			  WlzBoundingBoxIntersection.java \
@@ -81,6 +82,11 @@ demo:			$(CLASSES)
 			@echo "WlzGreyStats prints simple grey values stats"
 			@echo "computed from the given object:"
 			$(JAVA) $(JAVAFLAGS) WlzGreyStats t0.wlz
+			@echo 
+			@echo "WlzArrayStats calculates simple statistics on"
+			@echo "the values in a 2D or 3D array created from"
+			@echo "a Woolz object."
+			$(JAVA) $(JAVAFLAGS) WlzArrayStats t0.wlz
 			@echo 
 			@echo "WlzArrayViewer throws up a window with the"
 			@echo "the given object. (the window needs to be"
