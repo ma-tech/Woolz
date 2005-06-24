@@ -313,7 +313,7 @@ void		WlzJavaArray3DSet(JNIEnv *jEnv, jobjectArray dstJObj,
 {
   jobject	newJObj;
 
-  if(aVal && (aSz.vtX > 0) && (aSz.vtY > 0))
+  if(aVal && (aSz.vtX > 0) && (aSz.vtY > 0) && (aSz.vtZ > 0))
   {
     switch(pKey)
     {
@@ -396,63 +396,221 @@ jobject		WlzJavaArray3DWrap(JNIEnv *jEnv,
     sleep(2);
   }
 #endif /* JWLZ_DEBUG */
-  if(aVal && (aSz.vtX > 0) && (aSz.vtY > 0))
+  if(aVal && (aSz.vtX > 0) && (aSz.vtY > 0) && (aSz.vtZ > 0))
   {
     switch(pKey)
     {
       case WLZ_JPM_KEY_INT_ARY3:
-        ok = (jArray1D = (jobject )((*jEnv)->NewIntArray(jEnv,
-						aSz.vtX))) != NULL;
-	if(ok)
+        jArray1D = (jobject )((*jEnv)->NewIntArray(jEnv, aSz.vtX));
+	if(jArray1D)
 	{
 	  elmClass1D = (*jEnv)->GetObjectClass(jEnv, jArray1D);
-	  ok = (jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
-	  				     	(jobject )NULL)) != NULL;
+	  jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+					     (jobject )NULL);
 	}
-	if(ok)
+	if(jArray2D)
 	{
 	  elmClass2D = (*jEnv)->GetObjectClass(jEnv, jArray2D);
-	  ok = (jArray3D = (*jEnv)->NewObjectArray(jEnv, aSz.vtZ, elmClass2D,
-	  					(jobject )NULL)) != NULL;
+	  jArray3D = (*jEnv)->NewObjectArray(jEnv, aSz.vtZ, elmClass2D,
+	  				     (jobject )NULL);
 	}
-	if(ok)
+	if(jArray3D)
 	{
 	  idZ = 0;
-	  while(ok && (idZ < aSz.vtZ))
+	  while(jArray1D && jArray2D && (idZ < aSz.vtZ))
 	  {
 	    idY = 0;
-	    (*jEnv)->SetObjectArrayElement(jEnv, jArray3D, idZ, jArray2D);
-	    while(ok && (idY < aSz.vtY))
+	    while(jArray1D && (idY < aSz.vtY))
 	    {
 	      (*jEnv)->SetIntArrayRegion(jEnv, (jintArray )jArray1D,
-	      			 0, aSz.vtX,
+	      			0, aSz.vtX,
 				(jint *)*(*((int ***)aVal + idZ) + idY));
 	      (*jEnv)->SetObjectArrayElement(jEnv, jArray2D, idY, jArray1D);
-	      if(++idY < aSz.vtX)
+	      if(++idY < aSz.vtY)
 	      {
-		ok = (jArray1D = (jobject )((*jEnv)->NewIntArray(jEnv,
-						aSz.vtX))) != NULL;
+		jArray1D = (jobject )((*jEnv)->NewIntArray(jEnv, aSz.vtX));
 	      }
 	    }
+	    (*jEnv)->SetObjectArrayElement(jEnv, jArray3D, idZ, jArray2D);
 	    if(++idZ < aSz.vtZ)
 	    {
-	      ok = (jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY,
-	      					elmClass1D,
-	  				     	(jobject )NULL)) != NULL;
+	      jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+	  				     	 (jobject )NULL);
 	    }
 	  }
 	}
+	ok = jArray3D && jArray2D && jArray1D;
 	break;
       case WLZ_JPM_KEY_SHORT_ARY3:
+        jArray1D = (jobject )((*jEnv)->NewShortArray(jEnv, aSz.vtX));
+	if(jArray1D)
+	{
+	  elmClass1D = (*jEnv)->GetObjectClass(jEnv, jArray1D);
+	  jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+					     (jobject )NULL);
+	}
+	if(jArray2D)
+	{
+	  elmClass2D = (*jEnv)->GetObjectClass(jEnv, jArray2D);
+	  jArray3D = (*jEnv)->NewObjectArray(jEnv, aSz.vtZ, elmClass2D,
+	  				     (jobject )NULL);
+	}
+	if(jArray3D)
+	{
+	  idZ = 0;
+	  while(jArray1D && jArray2D && (idZ < aSz.vtZ))
+	  {
+	    idY = 0;
+	    while(jArray1D && (idY < aSz.vtY))
+	    {
+	      (*jEnv)->SetShortArrayRegion(jEnv, (jshortArray )jArray1D,
+	      			0, aSz.vtX,
+				(jshort *)*(*((short ***)aVal + idZ) + idY));
+	      (*jEnv)->SetObjectArrayElement(jEnv, jArray2D, idY, jArray1D);
+	      if(++idY < aSz.vtY)
+	      {
+		jArray1D = (jobject )((*jEnv)->NewShortArray(jEnv, aSz.vtX));
+	      }
+	    }
+	    (*jEnv)->SetObjectArrayElement(jEnv, jArray3D, idZ, jArray2D);
+	    if(++idZ < aSz.vtZ)
+	    {
+	      jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+	  				     	 (jobject )NULL);
+	    }
+	  }
+	}
+	ok = jArray3D && jArray2D && jArray1D;
+	break;
       case WLZ_JPM_KEY_BYTE_ARY3:
+        jArray1D = (jobject )((*jEnv)->NewByteArray(jEnv, aSz.vtX));
+	if(jArray1D)
+	{
+	  elmClass1D = (*jEnv)->GetObjectClass(jEnv, jArray1D);
+	  jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+					     (jobject )NULL);
+	}
+	if(jArray2D)
+	{
+	  elmClass2D = (*jEnv)->GetObjectClass(jEnv, jArray2D);
+	  jArray3D = (*jEnv)->NewObjectArray(jEnv, aSz.vtZ, elmClass2D,
+	  				     (jobject )NULL);
+	}
+	if(jArray3D)
+	{
+	  idZ = 0;
+	  while(jArray1D && jArray2D && (idZ < aSz.vtZ))
+	  {
+	    idY = 0;
+	    while(jArray1D && (idY < aSz.vtY))
+	    {
+	      (*jEnv)->SetByteArrayRegion(jEnv, (jbyteArray )jArray1D,
+	      			0, aSz.vtX,
+				(jbyte *)*(*((UBYTE ***)aVal + idZ) + idY));
+	      (*jEnv)->SetObjectArrayElement(jEnv, jArray2D, idY, jArray1D);
+	      if(++idY < aSz.vtY)
+	      {
+		jArray1D = (jobject )((*jEnv)->NewByteArray(jEnv, aSz.vtX));
+	      }
+	    }
+	    (*jEnv)->SetObjectArrayElement(jEnv, jArray3D, idZ, jArray2D);
+	    if(++idZ < aSz.vtZ)
+	    {
+	      jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+	  				     	 (jobject )NULL);
+	    }
+	  }
+	}
+	ok = jArray3D && jArray2D && jArray1D;
+	break;
       case WLZ_JPM_KEY_FLOAT_ARY3:
+        jArray1D = (jobject )((*jEnv)->NewFloatArray(jEnv, aSz.vtX));
+	if(jArray1D)
+	{
+	  elmClass1D = (*jEnv)->GetObjectClass(jEnv, jArray1D);
+	  jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+					     (jobject )NULL);
+	}
+	if(jArray2D)
+	{
+	  elmClass2D = (*jEnv)->GetObjectClass(jEnv, jArray2D);
+	  jArray3D = (*jEnv)->NewObjectArray(jEnv, aSz.vtZ, elmClass2D,
+	  				     (jobject )NULL);
+	}
+	if(jArray3D)
+	{
+	  idZ = 0;
+	  while(jArray1D && jArray2D && (idZ < aSz.vtZ))
+	  {
+	    idY = 0;
+	    while(jArray1D && (idY < aSz.vtY))
+	    {
+	      (*jEnv)->SetFloatArrayRegion(jEnv, (jfloatArray )jArray1D,
+	      			0, aSz.vtX,
+				(jfloat *)*(*((float ***)aVal + idZ) + idY));
+	      (*jEnv)->SetObjectArrayElement(jEnv, jArray2D, idY, jArray1D);
+	      if(++idY < aSz.vtY)
+	      {
+		jArray1D = (jobject )((*jEnv)->NewFloatArray(jEnv, aSz.vtX));
+	      }
+	    }
+	    (*jEnv)->SetObjectArrayElement(jEnv, jArray3D, idZ, jArray2D);
+	    if(++idZ < aSz.vtZ)
+	    {
+	      jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+	  				     	 (jobject )NULL);
+	    }
+	  }
+	}
+	ok = jArray3D && jArray2D && jArray1D;
+	break;
       case WLZ_JPM_KEY_DOUBLE_ARY3:
+        jArray1D = (jobject )((*jEnv)->NewDoubleArray(jEnv, aSz.vtX));
+	if(jArray1D)
+	{
+	  elmClass1D = (*jEnv)->GetObjectClass(jEnv, jArray1D);
+	  jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+					     (jobject )NULL);
+	}
+	if(jArray2D)
+	{
+	  elmClass2D = (*jEnv)->GetObjectClass(jEnv, jArray2D);
+	  jArray3D = (*jEnv)->NewObjectArray(jEnv, aSz.vtZ, elmClass2D,
+	  				     (jobject )NULL);
+	}
+	if(jArray3D)
+	{
+	  idZ = 0;
+	  while(jArray1D && jArray2D && (idZ < aSz.vtZ))
+	  {
+	    idY = 0;
+	    while(jArray1D && (idY < aSz.vtY))
+	    {
+	      (*jEnv)->SetDoubleArrayRegion(jEnv, (jdoubleArray )jArray1D,
+	      			0, aSz.vtX,
+				(jdouble *)*(*((double ***)aVal + idZ) + idY));
+	      (*jEnv)->SetObjectArrayElement(jEnv, jArray2D, idY, jArray1D);
+	      if(++idY < aSz.vtY)
+	      {
+		jArray1D = (jobject )((*jEnv)->NewDoubleArray(jEnv, aSz.vtX));
+	      }
+	    }
+	    (*jEnv)->SetObjectArrayElement(jEnv, jArray3D, idZ, jArray2D);
+	    if(++idZ < aSz.vtZ)
+	    {
+	      jArray2D = (*jEnv)->NewObjectArray(jEnv, aSz.vtY, elmClass1D,
+	  				     	 (jobject )NULL);
+	    }
+	  }
+	}
+	ok = jArray3D && jArray2D && jArray1D;
+	break;
       default:
 	break;
     }
     if(ok)
     {
-      rtnJObj = jArray2D;
+      rtnJObj = jArray3D;
     }
   }
   return(rtnJObj);
