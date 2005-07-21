@@ -26,13 +26,13 @@
 #include <stdlib.h>
 #include <Wlz.h>
 
-
 /* function:     WlzGreyModGradient    */
 /*! 
 * \ingroup      WlzValuesUtils
 * \brief        Calculate the modulus of the grey-level gradient at each
  point. The gradient images are calculated using WlzGauss2() with width
-parameter set to <tt>width</tt>.
+parameter set to <tt>width</tt>. Will now calculate the modulus for each
+object of a compound object if appropriate. 
 *
 * \return       Object with values set to the gradient modulus at each pixel.
 * \param    obj	Input object.
@@ -49,6 +49,7 @@ WlzObject *WlzGreyModGradient(
   WlzObject		*xobj, *yobj, *returnobj=NULL;
   WlzIntervalWSpace	iwsp1, iwsp2, iwsp3;
   WlzGreyWSpace		gwsp1, gwsp2, gwsp3;
+  WlzCompoundArray	*cobj1, *cobj2;
   int			i;
   double		g1, g2, g3;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
@@ -78,16 +79,39 @@ WlzObject *WlzGreyModGradient(
       else {
 	errNum = WLZ_ERR_DOMAIN_NULL;
       }
+      /* one last check for rgb values */
+      if(WlzGreyTableTypeToGreyType(obj->values.core->type, NULL)
+	 == WLZ_GREY_RGBA){
+	return WlzRGBAModGradient(obj, width, dstErr);
+      }
       break;
 
     case WLZ_EMPTY_OBJ:
       returnobj = WlzMakeEmpty(&errNum);
       break;
 
+    case WLZ_COMPOUND_ARR_1:
+    case WLZ_COMPOUND_ARR_2:
+      cobj1 = (WlzCompoundArray *) obj;
+      if( cobj2 = WlzMakeCompoundArray(cobj1->type, 1, cobj1->n, NULL,
+				       cobj1->otype, &errNum) ){
+	/* transform each object, ignore type errors */
+	for(i=0; i < cobj1->n; i++){
+	  cobj2->o[i] =
+	    WlzAssignObject(WlzGreyModGradient(cobj1->o[i],
+					       width, &errNum), NULL);
+	}
+	return (WlzObject *) cobj2;
+      }
+      break;
+
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
     }
+  }
+  else {
+    errNum = WLZ_ERR_OBJECT_NULL;
   }
 
   /* if UBYTE grey values then copy to int */
@@ -98,7 +122,9 @@ WlzObject *WlzGreyModGradient(
     }
     else
     {
-      returnobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, obj->domain, obj->values,
+      returnobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, obj->domain,
+			      WlzCopyValues(obj->type, obj->values,
+					    obj->domain, &errNum),
 			      NULL, NULL, NULL);
     }
 
@@ -169,11 +195,16 @@ WlzObject *WlzGreyModGradient(
 	}
 	break;
 
-      case WLZ_GREY_RGBA: /* RGBA to be done - not sure what RAB */
+      case WLZ_GREY_RGBA: /* RGBA to be done - should not get here */
 	errNum = WLZ_ERR_GREY_TYPE;
 	break;
 
       }
+    }
+
+    /* check for normal return */
+    if( errNum == WLZ_ERR_EOO ){
+      errNum = WLZ_ERR_NONE;
     }
 
     /* clean up */

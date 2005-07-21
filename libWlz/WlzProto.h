@@ -3838,6 +3838,13 @@ extern int WlzRGBAGreyStats(
   double 	*dstStdDev,
   WlzErrorNum 	*dstErr);
 /************************************************************************
+* WlzRGBAModGradient.c							*
+************************************************************************/
+extern WlzObject *WlzRGBAModGradient(
+  WlzObject	*obj,
+  double	width,
+  WlzErrorNum	*dstErr);
+/************************************************************************
 * WlzCbThreshold.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND

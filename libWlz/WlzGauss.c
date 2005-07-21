@@ -40,7 +40,8 @@
  normalised. Derivatives are derivative of the normalised filter. RGB
  data will only return values for smoothing, higher derivatives are not
  implemented. The width parameter is the full-width half-height of the
- Gaussian distribution.
+ Gaussian distribution. Note RGB pixel types are converted to a compound 
+ object with each channel returned with WLZ_GREY_SHORT pixel type.
 *
 * \return       Pointer to transformed object
 * \param    obj	Input object
@@ -60,173 +61,180 @@ WlzObject *WlzGauss2(
   int		y_deriv,
   WlzErrorNum	*wlzErr)
 {
-  WlzObject		*newobj;
+  WlzObject		*newobj=NULL;
   Wlz1DConvMask		x_params, y_params;
   float 		alpha, sum;
   int 			i, n, value;
-  WlzErrorNum		errNum = WLZ_ERR_UNSPECIFIED;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
     
   /* check object, don't need to check type etc. because WlzSepTrans
      does it */
   if( obj == NULL )
   {
     errNum = WLZ_ERR_OBJECT_NULL;
-    if(wlzErr)
-    {
-      *wlzErr = errNum;
-    }
-    return NULL;
   }
 
   /* do need to check for rgb grey type */
-  if( WlzGreyTypeFromObj(obj, &errNum) == WLZ_GREY_RGBA ){
-    if( (x_deriv != 0) || (y_deriv != 0) ){
-      errNum = WLZ_ERR_UNIMPLEMENTED;
+  if( errNum == WLZ_ERR_NONE ){
+    if( (obj->type == WLZ_2D_DOMAINOBJ) &&
+        (WlzGreyTypeFromObj(obj, &errNum) == WLZ_GREY_RGBA) ){
+      if( (x_deriv != 0) || (y_deriv != 0) ){
+	/* implement this using a compond object since the
+	   result should be a vector value */
+	WlzCompoundArray *cobj;
+
+	if( cobj = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB, &errNum) ){
+	  /* need to convert each to short for gradient calc */
+	  for(i=0; i < 3; i++){
+	    WlzObject *tmpObj;
+	    tmpObj = cobj->o[i];
+	    cobj->o[i] = WlzAssignObject(WlzConvertPix(tmpObj,
+						       WLZ_GREY_SHORT,
+						       &errNum), NULL);
+	    WlzFreeObj(tmpObj);
+	  }
+	  newobj = WlzGauss2((WlzObject *) cobj, wx, wy, x_deriv, y_deriv,
+			     &errNum);
+	  WlzFreeObj((WlzObject *) cobj);
+	  if( wlzErr ){
+	    *wlzErr = errNum;
+	  }
+	  return newobj;
+	}
+      }
     }
   }
-  if( errNum != WLZ_ERR_NONE ){
-    if(wlzErr)
-    {
-      *wlzErr = errNum;
-    }
-    return NULL;
-  }    
+
+  /* now start work */
+  if( errNum == WLZ_ERR_NONE ){
+    alpha = (float) 4.0 * log( (double) 2.0 );
     
-  alpha = (float) 4.0 * log( (double) 2.0 );
+    /* set up x function parameters */
+    x_params.mask_size = (((int) wx * 4)/2)*2 + 1;
+    if( (x_params.mask_values = (int *)
+	 AlcMalloc(sizeof(int) * x_params.mask_size)) == NULL){
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else {
+      n = x_params.mask_size / 2;
     
-  /* set up x function parameters */
-  x_params.mask_size = (((int) wx * 4)/2)*2 + 1;
-  if( (x_params.mask_values = (int *)
-       AlcMalloc(sizeof(int) * x_params.mask_size)) == NULL){
-    errNum = WLZ_ERR_MEM_ALLOC;
-    if(wlzErr)
-    {
-      *wlzErr = errNum;
-    }
-    return NULL;
-  }
-  n = x_params.mask_size / 2;
-    
-  switch( x_deriv ){
+      switch( x_deriv ){
 
-  case 0:
-    for(i=0, sum = -AFACTOR; i <= n; i++){
-      value = (int) (AFACTOR * exp(((double) -alpha*i*i/wx/wx)));
-      *(x_params.mask_values+n-i) = value;
-      *(x_params.mask_values+n+i) = value;
-      sum += 2 * value;
-    }
-    x_params.norm_factor = sum;
-    break;
+      case 0:
+	for(i=0, sum = -AFACTOR; i <= n; i++){
+	  value = (int) (AFACTOR * exp(((double) -alpha*i*i/wx/wx)));
+	  *(x_params.mask_values+n-i) = value;
+	  *(x_params.mask_values+n+i) = value;
+	  sum += 2 * value;
+	}
+	x_params.norm_factor = sum;
+	break;
 
-  case 1:
-    *(x_params.mask_values+n) = 0.0;
-    for(i=1, sum = 0; i <= n; i++){
-      value = (int) AFACTOR * i * exp(((double) -alpha*i*i/wx/wx));
-      *(x_params.mask_values+n-i) = value;
-      *(x_params.mask_values+n+i) = -value;
-      sum += value;
-    }
-/*    sum *= -wx / 2 / sqrt( log( (double) 2 ) / WLZ_M_PI );*/
-    if( n > 0 )
-      x_params.norm_factor = sum;
-    else
-      x_params.norm_factor = 1;
-    break;
+      case 1:
+	*(x_params.mask_values+n) = 0.0;
+	for(i=1, sum = 0; i <= n; i++){
+	  value = (int) AFACTOR * i * exp(((double) -alpha*i*i/wx/wx));
+	  *(x_params.mask_values+n-i) = value;
+	  *(x_params.mask_values+n+i) = -value;
+	  sum += value;
+	}
+	/* sum *= -wx / 2 / sqrt( log( (double) 2 ) / WLZ_M_PI );*/
+	if( n > 0 )
+	  x_params.norm_factor = sum;
+	else
+	  x_params.norm_factor = 1;
+	break;
 
-  case 2:
-    for(i=0; i <= n; i++){
-      value = (int) AFACTOR * (alpha * i*i / wx/wx -1) *
-	exp(((double) -alpha*i*i/wx/wx));
-      *(x_params.mask_values+n-i) = value;
-      *(x_params.mask_values+n+i) = value;
-    }
-    x_params.norm_factor = *(x_params.mask_values+n) * wx*wx*wx / 4 / alpha
-      / sqrt( log( (double) 2 ) / WLZ_M_PI );
-    break;
+      case 2:
+	for(i=0; i <= n; i++){
+	  value = (int) AFACTOR * (alpha * i*i / wx/wx -1) *
+	    exp(((double) -alpha*i*i/wx/wx));
+	  *(x_params.mask_values+n-i) = value;
+	  *(x_params.mask_values+n+i) = value;
+	}
+	x_params.norm_factor = *(x_params.mask_values+n) * wx*wx*wx / 4 / alpha
+	  / sqrt( log( (double) 2 ) / WLZ_M_PI );
+	break;
 
-  default:
-    AlcFree((void *) x_params.mask_values);
-    errNum = WLZ_ERR_PARAM_DATA;
-    if(wlzErr)
-    {
-      *wlzErr = errNum;
+      default:
+	AlcFree((void *) x_params.mask_values);
+	x_params.mask_values = NULL;
+	errNum = WLZ_ERR_PARAM_DATA;
+	break;
+      }
     }
-    return NULL;
-
   }
     
   /* set up y function parameters */
-  y_params.mask_size = (((int) wy * 4)/2)*2 + 1;
-  if( (y_params.mask_values = (int *)
-       AlcMalloc(sizeof(int) * y_params.mask_size)) == NULL){
-    AlcFree((void *) x_params.mask_values);
-    errNum = WLZ_ERR_MEM_ALLOC;
-    if(wlzErr)
-    {
-      *wlzErr = errNum;
+  if( errNum == WLZ_ERR_NONE ){
+    y_params.mask_size = (((int) wy * 4)/2)*2 + 1;
+    if( (y_params.mask_values = (int *)
+	 AlcMalloc(sizeof(int) * y_params.mask_size)) == NULL){
+      AlcFree((void *) x_params.mask_values);
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
-    return NULL;
-  }
-  n = y_params.mask_size / 2;
+    else {
+      n = y_params.mask_size / 2;
     
-  switch( y_deriv ){
+      switch( y_deriv ){
 
-  case 0:
-    for(i=0, sum = -AFACTOR; i <= n; i++){
-      value = (int) AFACTOR * exp(((double) -alpha*i*i/wy/wy));
-      *(y_params.mask_values+n-i) = value;
-      *(y_params.mask_values+n+i) = value;
-      sum += 2 * value;
+      case 0:
+	for(i=0, sum = -AFACTOR; i <= n; i++){
+	  value = (int) AFACTOR * exp(((double) -alpha*i*i/wy/wy));
+	  *(y_params.mask_values+n-i) = value;
+	  *(y_params.mask_values+n+i) = value;
+	  sum += 2 * value;
+	}
+	y_params.norm_factor = sum;
+	break;
+
+      case 1:
+	*(y_params.mask_values+n) = 0.0;
+	for(i=1, sum = 0; i <= n; i++){
+	  value = (int) AFACTOR * i * exp(((double) -alpha*i*i/wy/wy));
+	  *(y_params.mask_values+n-i) = value;
+	  *(y_params.mask_values+n+i) = -value;
+	  sum += value;
+	}
+	/* sum *= -wy / 2 / sqrt( log( (double) 2 ) /WLZ_M_PI );*/
+	if( n > 0 )
+	  y_params.norm_factor = sum;
+	else
+	  y_params.norm_factor = 1;
+	break;
+
+      case 2:
+	for(i=0; i <= n; i++){
+	  value = (int) AFACTOR * (alpha * i*i / wy/wy -1) *
+	    exp(((double) -alpha*i*i/wy/wy));
+	  *(y_params.mask_values+n-i) = value;
+	  *(y_params.mask_values+n+i) = value;
+	}
+	y_params.norm_factor = *(y_params.mask_values+n) * wy*wy*wy / 4 / alpha
+	  / sqrt( log( (double) 2 ) / WLZ_M_PI );
+	break;
+
+      default:
+	AlcFree((void *) x_params.mask_values);
+	AlcFree((void *) y_params.mask_values);
+	x_params.mask_values = NULL;
+	y_params.mask_values = NULL;
+	errNum = WLZ_ERR_PARAM_DATA;
+	break;
+      }
     }
-    y_params.norm_factor = sum;
-    break;
+  }
 
-  case 1:
-    *(y_params.mask_values+n) = 0.0;
-    for(i=1, sum = 0; i <= n; i++){
-      value = (int) AFACTOR * i * exp(((double) -alpha*i*i/wy/wy));
-      *(y_params.mask_values+n-i) = value;
-      *(y_params.mask_values+n+i) = -value;
-      sum += value;
-    }
-/*    sum *= -wy / 2 / sqrt( log( (double) 2 ) /WLZ_M_PI );*/
-    if( n > 0 )
-      y_params.norm_factor = sum;
-    else
-      y_params.norm_factor = 1;
-    break;
-
-  case 2:
-    for(i=0; i <= n; i++){
-      value = (int) AFACTOR * (alpha * i*i / wy/wy -1) *
-	exp(((double) -alpha*i*i/wy/wy));
-      *(y_params.mask_values+n-i) = value;
-      *(y_params.mask_values+n+i) = value;
-    }
-    y_params.norm_factor = *(y_params.mask_values+n) * wy*wy*wy / 4 / alpha
-      / sqrt( log( (double) 2 ) / WLZ_M_PI );
-    break;
-
-  default:
+  if( errNum == WLZ_ERR_NONE ){
+    newobj = WlzSepTrans(obj,
+			 Wlz1DConv, (void *) &x_params,
+			 Wlz1DConv, (void *) &y_params,
+			 &errNum);
     AlcFree((void *) x_params.mask_values);
     AlcFree((void *) y_params.mask_values);
-    errNum = WLZ_ERR_PARAM_DATA;
-    if(wlzErr)
-    {
-      *wlzErr = errNum;
-    }
-    return NULL;
-
   }
-    
-  newobj = WlzSepTrans(obj,
-		       Wlz1DConv, (void *) &x_params,
-		       Wlz1DConv, (void *) &y_params,
-		       &errNum);
-  AlcFree((void *) x_params.mask_values);
-  AlcFree((void *) y_params.mask_values);
-  if(wlzErr)
+
+  if( wlzErr )
   {
     *wlzErr = errNum;
   }

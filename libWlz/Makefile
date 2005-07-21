@@ -159,6 +159,7 @@ CSOURCES		= \
 			WlzRGBAConvert.c \
 			WlzRGBAGreyStats.c \
 			WlzRGBAImageArithmetic.c \
+			WlzRGBAModGradient.c \
 			WlzRGBARange.c \
 			WlzRGBAPixelUtils.c \
 			WlzRGBAThreshold.c \

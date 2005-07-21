@@ -15,7 +15,7 @@
 *               Edinburgh, EH4 2XU, UK.
 * \ingroup      WlzValuesFilters
 * \brief        Execute a separable transform on a 2D Woolz domain object.
- It is the user responsibility to ensure that the grey-0value type is
+ It is the user responsibility to ensure that the grey-value type is
  appropraite for the resultant.
 *               
 * \todo         -
@@ -30,7 +30,8 @@
 /* function:     WlzSepTrans    */
 /*! 
 * \ingroup      WlzValuesFilters
-* \brief        Perform 2D seperable transform on a 2D grey-level image.
+* \brief        Perform 2D seperable transform on a 2D grey-level image. Now extended to
+ include compound objects.
 *
 * \return       Pointer to transformed object
 * \param    obj	Input object pointer
@@ -56,6 +57,7 @@ WlzObject *WlzSepTrans(
   WlzValues		values;
   WlzObject		*obj1, *obj2;
   int			i, width, height;
+  WlzCompoundArray	*cobj1, *cobj2;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check object pointers and type */
@@ -90,6 +92,22 @@ WlzObject *WlzSepTrans(
 	values.obj = obj1;
 	return WlzMakeMain(obj->type, obj->domain, values,
 			   NULL, obj, dstErr);
+      }
+      break;
+
+    case WLZ_COMPOUND_ARR_1:
+    case WLZ_COMPOUND_ARR_2:
+      cobj1 = (WlzCompoundArray *) obj;
+      if( cobj2 = WlzMakeCompoundArray(cobj1->type, 1, cobj1->n, NULL,
+				       cobj1->otype, &errNum) ){
+	/* transform each object, ignore type errors */
+	for(i=0; i < cobj1->n; i++){
+	  cobj2->o[i] =
+	    WlzAssignObject(WlzSepTrans(cobj1->o[i],
+					x_fun, x_params, y_fun, y_params,
+					&errNum), NULL);
+	}
+	return (WlzObject *) cobj2;
       }
       break;
 
