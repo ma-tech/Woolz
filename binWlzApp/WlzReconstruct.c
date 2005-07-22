@@ -441,7 +441,6 @@ int		 main(int argc, char *argv[])
     "  -T  Output object file format.\n"
     "  -b  Output bib file, the default is the same file name as the output\n"
     "      object file name but with a .bib file extension.\n"
-    "  -r  Output bibfile with relative transforms.\n"
     "  -o  Output file name.\n"
     "  -f  Force overwriting of files, without this option confirmation is\n"
     "      needed.\n"
