@@ -185,8 +185,8 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
       allSrcFlg = 0;
       if(srcReg && dstReg)
       {
-        plane1D = WLZ_MIN(srcReg->zMin, dstReg->zMin);
-        lastPlD = WLZ_MAX(srcReg->zMax, dstReg->zMax);
+        plane1D = WLZ_MAX(srcReg->zMin, dstReg->zMin);
+        lastPlD = WLZ_MIN(srcReg->zMax, dstReg->zMax);
       }
       else if(srcReg)
       {
@@ -478,6 +478,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	      *doms = WlzAssignDomain(tObj1->domain, NULL);
 	      *vals = WlzAssignValues(tObj1->values, NULL);
 	      (void )WlzFreeObj(tObj1); 
+	      tObj1 = NULL;
 	    }
 	    else
 	    {
