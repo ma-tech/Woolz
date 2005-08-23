@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * Project       Woolz Library
-* \file         WlzPolySmooth.c
+* \file         libWlz/WlzPolySmooth.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Jul 20 07:21:04 2001
 * \version      MRC HGU $Id$

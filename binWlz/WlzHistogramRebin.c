@@ -1,4 +1,97 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzhistogramrebin WlzHistogramRebin
+\par Name
+WlzHistogramRebin - Re-bins a Woolz histogram object.
+\par Synopsis
+\verbatim
+WlzHistogramRebin [-o<output object file>] [-a] [-h]
+           [-i] [-f] [-n<bins>] [-s<start>] [-w<width>]
+           [<input object file>]
+
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-a</b></td>
+    <td>output the histogram as ascii data not a Woolz histogram object.</td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>create integer bin values.</td>
+  </tr>
+  <tr>
+    <td><b>-f</b></td>
+    <td>create (double precision) floating point bin values.</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>number of histogram bins.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>start value, lower limit of histogram.</td>
+  </tr>
+  <tr>
+    <td><b>-w</b></td>
+    <td>width of the histogram bins.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the input histogram object is read from the standard input
+and the output histogram data/object  is written to the  standard  out-
+put.  The default number of bins, origin and bin width values are those
+of the input histogram object.
+\par Description
+Re-bins a Woolz histogram object as required.
+\par
+Output ascii data are written as a set of records one  per  line,  with
+each record composed of two fields separated by white space characters:
+\par
+\<grey value\>   \<histogram bin occupancy\>
+
+\par Examples
+\verbatim
+# An example which uses WlzHistogramRebin and xgraph to plot a
+# histogram with 256 bins, starting at 0 and with a bin width
+# of 1.
+
+WlzHistogramRebin -a -s0 -n256 -w1 myHist.wlz | xgraph
+
+\endverbatim
+
+\par See Also
+WlzHistogram(3).
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 08:45:11 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzHistogramRebin.c
@@ -263,3 +356,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

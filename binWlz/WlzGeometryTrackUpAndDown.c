@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * \Project:      Woolz
 * \Title:        WlzGeometryTrackUpAndDown.c
@@ -618,3 +619,4 @@ static void FillGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix,
             }
 }
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

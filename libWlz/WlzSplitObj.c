@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSplitObj.c
+* \file         libWlz/WlzSplitObj.c
 * \author       Bill Hill
 * \date         November 2004
 * \version      $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzRGBAPixelUtils.c
+* \file         libWlz/WlzRGBAPixelUtils.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Jul 11 18:10:06 2003
 * \version      MRC HGU $Id$

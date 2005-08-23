@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzScalarBinaryOp.c
+* \file         libWlz/WlzScalarBinaryOp.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         March 1999
 * \version      MRC HGU $Id$

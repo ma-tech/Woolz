@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz3DSection.c
+* \file         libWlz/Wlz3DSection.c
 * \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$

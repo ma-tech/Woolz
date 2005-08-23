@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzCannyDeriche.c
+* \file         libWlz/WlzCannyDeriche.c
 * \author       Bill Hill
 * \date         May 1999
 * \version      $Id$

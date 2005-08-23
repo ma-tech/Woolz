@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /************************************************************************
 *   Copyright  :   1994 Medical Research Council, UK.                   *
@@ -146,3 +147,4 @@ int main(int	argc,
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

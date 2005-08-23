@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzDistMetric.c
+* \file         libWlz/WlzDistMetric.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$

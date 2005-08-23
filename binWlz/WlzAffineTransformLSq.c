@@ -1,6 +1,138 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzAffineTransformLSq.c
+\ingroup      BinWlz
+\defgroup     wlzaffinetransformlsq WlzAffineTransformLSq
+\par Name
+WlzAffineTransformLSq - Computes an affine transform from a list of verticies
+and vertex displacements.
+\par Synopsis
+\verbatim
+WlzAffineTransformLSq [-o <output object file>]
+    [-a] [-r] [-t] [-h] [<input data file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-a</b></td>
+    <td>Compute 2D affine transform.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Compute 2D registration transform, affine but no scale or shear.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>Compute 2D translation transform.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+  
+\par Description
+WlzAffineTransformLSq computes an affine transform from the given
+list of verticies and thier displacements.
+The input data must have records with the format:
+<table alignment="left" border="0"  width="500">
+  <tr>
+  <td>\<vertex x\></td>
+  <td>\<vertex y\></td>
+  <td>\<displacement x\></td>
+  <td>\<displacement y\></td>
+  </tr>
+</table>
+
+\par Examples
+\verbatim
+cat tst.num
+  1.0  1.0  2.1  1.0
+  2.0  1.0  1.0  0.1
+  2.0  2.0  2.1 -1.0
+
+WlzAffineTransformLSq tst.num | WlzFacts
+  Object type: WLZ_AFFINE_TRANS.
+  Linkcount: 0.
+  Transform type: WLZ_TRANSFORM_2D_AFFINE.
+  Linkcount: 1.
+  tx: 2.1.
+  ty: 3.
+  tz: 0.
+  scale: 1.
+  theta: -1.5708.
+  phi: 0.
+  alpha: 0.2.
+  psi: 0.785398.
+  xsi: 0.
+  invert: 0.
+WlzAffineTransformLSq -r tst.num | WlzFacts
+  Object type: WLZ_AFFINE_TRANS.
+  Linkcount: 0.
+  Transform type: WLZ_TRANSFORM_2D_AFFINE.
+  Linkcount: 1.
+  tx: 2.15156.
+  ty: 3.09784.
+  tz: 0.
+  scale: 1.
+  theta: -1.62075.
+  phi: 0.
+  alpha: 0.
+  psi: 0.
+  xsi: 0.
+  invert: 0.
+
+WlzAffineTransformLSq -t tst.num | WlzFacts
+  Object type: WLZ_AFFINE_TRANS.
+  Linkcount: 0.
+  Transform type: WLZ_TRANSFORM_2D_AFFINE.
+  Linkcount: 1.
+  tx: 1.73333.
+  ty: 0.0333333.
+  tz: 0.
+  scale: 1.
+  theta: 0.
+  phi: 0.
+  alpha: 0.
+  psi: 0.
+  xsi: 0.
+  invert: 0.
+  
+\endverbatim
+\par See Also
+\ref wlzfacts "WlzFacts(1)," WlzAffineTransformObj(3)
+\par Bugs
+Still to be found
+\author       Bill Hill <Bill.Hill@hgu.mrc.ac.uk>
+\date         Fri Jul 22 16:29:57 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+\file         binWlz/WlzAffineTransformLSq.c
+\brief	Computes an affine transform from a list of vertices
+		and vertex displacements in the 2D format
+		  \<vtx x\> \<vtx y\> \<delta x\> \<delta y\>
+		or the 3D format
+		  \<vtx x\> \<vtx y\> \<vtx z\> \<delta x\> \<delta y\> \<delta z\>
+\todo
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+/*!
 * \author       Bill Hill
 * \date         June 2004
 * \version      $Id$
@@ -526,3 +658,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

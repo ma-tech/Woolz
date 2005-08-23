@@ -128,31 +128,6 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the documentation in the appropriate directories,
-# (should not need modifying).
-install_documentation:	documentation
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			$(install_manpages)
-			$(install_www)
-
-# Target which installs the man pages in the appropriate directories,
-# (should not need modifying).
-install_manpages:	documentation
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			install_manpages
-
-# Target which installs the html pages in the appropriate directories,
-# (should not need modifying).
-install_www:		documentation
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			install_www
-
 # Target for the archive (library), just a dependency (should not need
 # modifying).
 archive:		$(ARCHIVE)
@@ -166,9 +141,6 @@ executables:		$(EXECUTABLES)
 
 # Target for public header files, just a dependency (should not need modifying).
 includes:		$(INCLUDES_PUB)
-
-# Target for manual pages, just a dependency (should not need modifying).
-manpages:		$(MANPAGES)
 
 # Target for lint (modify as required).
 lint:			$(CSOURCES) $(INCLUDES_PRV)
@@ -193,12 +165,6 @@ allsources:		sources
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
-
-# Use doxygen to make the documentation (should not need modifying).
-documentation:		doxygen.tag
-			
-doxygen.tag:		$(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
-			doxygen
 
 # Make the tags file
 tags:

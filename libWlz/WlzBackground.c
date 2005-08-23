@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBackground.c
+* \file         libWlz/WlzBackground.c
 * \author       Richard Baldock
 * \date         March 1999
 * \version      $Id$

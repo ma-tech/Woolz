@@ -1,6 +1,58 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzContourFlipOrient.c
+\ingroup      BinWlz
+\defgroup     wlzcontourfliporient WlzContourFlipOrient
+\par Name
+WlzContourFlipOrient - Flip contour orientation of a woolz countour object.
+\par Synopsis
+\verbatim
+WlzContourFlipOrient [-h] [-o<output file>] [<input file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+Reads from standard input and writes to standard output by default.
+
+\par Description
+
+\par Examples
+\verbatim
+\endverbatim
+
+\par See Also
+\ref wlzcontourobj "WlzContourObj(1)"
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Mon Aug  1 08:34:50 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+/*!
+* \file         binWlz/WlzContourFlipOrient.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
@@ -163,3 +215,4 @@ int		main(int argc, char *argv[])
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

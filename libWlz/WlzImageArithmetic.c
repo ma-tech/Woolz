@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzImageArithmetic.c
+* \file         libWlz/WlzImageArithmetic.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$

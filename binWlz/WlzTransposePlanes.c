@@ -1,4 +1,70 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlztransposeplanes WlzTransposePlanes
+\par Name
+WlzTransposePlanes - Transpose the planes of 3D Woolz objects.
+\par Synopsis
+\verbatim
+WlzTransposePlanes [-o<offset>] [-h] [-v] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-o</b></td>
+    <td>offset for transpose. </td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.
+
+\par Description
+Transpose the planes of a 3D woolz object. The  transpose  relation  is
+new-plane  = offset - old-plane. This is equivalent to reflection about
+the X-Y plane through offset/2. By default the offset is the sum of the
+first and last planes of the input object.
+
+\par Examples
+\verbatim
+# The following command transposes the planes of the object leaving
+# the first and last planes unchanged.
+
+WlzTransposePlanes  infile.wlz > outfile.wlz
+
+
+# The following command transposes the planes of the object relecting
+# the object about the origin
+
+WlzTransposePlanes  -o0 infile.wlz > outfile.wlz
+\endverbatim
+
+\par See Also
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 11:41:33 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /************************************************************************
 *   Copyright  :   1994 Medical Research Council, UK.                   *
 *                  All rights reserved.                                 *
@@ -244,3 +310,4 @@ WlzObject *WlzTransposePlanes(
   }
   return rtnObj;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

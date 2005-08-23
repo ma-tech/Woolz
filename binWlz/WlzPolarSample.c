@@ -1,4 +1,68 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzpolarsample WlzPolarSample
+\par Name
+WlzPolarSample - Applies a polar resampling filter.
+\par Synopsis
+\verbatim
+WlzPolarSample [-o<output object file>] [-i] [-h]
+           [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-i</b></td>
+    <td>inner bounding circle of objects domain used. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the standard input, re-sampled
+using the outer bounding circle of the object's domain and  written  to
+the standard output.
+\par Description
+ Polar resamples the input 2D domain object.
+
+\par Examples
+\verbatim
+       # An example of using WlzPolarSample to resample an object.
+
+       WlzPolarSample -o outfile.wlz infile.wlz
+
+\endverbatim
+
+\par See Also
+WlzPolarSample(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 12:08:10 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzPolarSample.c
@@ -216,3 +280,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

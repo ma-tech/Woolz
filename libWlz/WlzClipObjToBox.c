@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzClipObjToBox.c
+* \file         libWlz/WlzClipObjToBox.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$

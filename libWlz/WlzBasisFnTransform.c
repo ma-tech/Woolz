@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBasisFnTransform.c
+* \file         libWlz/WlzBasisFnTransform.c
 * \author       Bill Hill, Jianguo Rao
 * \date         March 1999
 * \version      $Id$

@@ -1,4 +1,76 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzgreystats WlzGreyStats
+\par Name
+WlzGreyStats - Calculates  simple  statistics  from  a Woolz 2D or 3D
+       domain object's grey values.
+\par Synopsis
+\verbatim
+WlzGreyStats [-o<output file>] [-c] [-h] [-v] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-c</b></td>
+    <td>Colour stats if RGB data else modulus data returned.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the  standard  input  and  the
+       output is written to the standard output.
+
+\par Description
+WlzGreyStats  calculates  the  area,  minimum,  maximum,  sum,  sum  of
+squares, mean and the standard deviation of the input Woolz  2D  or  3D
+domain  object's  grey  values.   If the verbose output flag is not set
+then the following are written to the  output  file  in  the  following
+order:
+\par
+\<area\> \<grey type\> \<min\> \<max\> \<sum\> \<sum of sq\> \<mean\> \<std dev\>.
+
+\par Examples
+\verbatim
+# WlzGreyStats reads an object from myobj.wlz, calculates
+# its grey value statistics and then prints them to the
+# standard output.
+
+WlzGreyStats myobj.wlz
+\endverbatim
+
+\par See Also
+WlzGreyStats(3), WlzRGBAGreyStats(3).
+
+\par Bugs
+None known
+
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Thu Jul 28 08:52:31 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+               1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzGreyStats.c
@@ -222,7 +294,7 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-o<out file>] [-v] [-h] [<in object>]\n"
+    " [-o<out file>] [-c] [-v] [-h] [<in object>]\n"
     "Options:\n"
     "  -c  Colour stats if RGB, otherwise modulus stats calculated\n"
     "  -o  Output file name.\n"
@@ -243,3 +315,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

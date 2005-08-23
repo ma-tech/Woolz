@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzDistanceTransform.c
+* \file         binWlz/WlzDistanceTransform.c
 * \author       Konstantinos Liakos, Bill Hill
 * \date         October 2004
 * \version      $Id$
@@ -259,3 +260,4 @@ int		main(int argc, char *argv[])
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

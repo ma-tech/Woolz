@@ -1,4 +1,92 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzshiftobj WlzShiftObj
+\par Name
+WlzShiftObj - Shifts (applies an integer translation)  Woolz objects.
+\par Synopsis
+\verbatim
+WlzShiftObj [-o<output object file>]
+           [-g]
+           [-x<column shift>]
+           [-y<line shift>]
+           [-z<plane shift>]
+           [-h] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-g</b></td>
+    <td>shift object to the origin. </td>
+  </tr>
+  <tr>
+    <td><b>-x</b></td>
+    <td>column shift. </td>
+  </tr>
+  <tr>
+    <td><b>-y</b></td>
+    <td>line shift. </td>
+  </tr>
+  <tr>
+    <td><b>-z</b></td>
+    <td>plane shift. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.
+\par Description
+Shifts a Woolz object without copying it's grey values.
+\par Examples
+\verbatim
+# The following c shell script uses awk(1), WlzBoundingBox(1) and
+# WlzShiftObj(1) to shift infile.wlz so that its first
+# column, line, plane are at the origin.
+
+WlzShiftObj `WlzBoundingBox infile.wlz | \
+       awk '{print "-x -" $1 " -y -" $2 " -z -" $3}'` \
+       -o outfile.wlz infile.wlz
+
+
+
+
+# The following commad also shifts the object to it's origin.
+WlzShiftObj -g -o outfile.wlz infile.wlz
+
+\endverbatim
+
+\par See Also
+awk(1), \ref wlzboundingbox "WlzBoundingBox(1)", WlzShiftObj(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 11:52:58 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzShiftObj.c
@@ -208,3 +296,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

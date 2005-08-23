@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzFreeSpace.c
+* \file         libWlz/WlzFreeSpace.c
 * \author       Bill Hill, Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Thu Aug  1 16:30:41 2002
 * \version      MRC HGU $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzStructErosion.c
+* \file         libWlz/WlzStructErosion.c
 * \author       Bill Richard Baldock
 * \date         March 1999
 * \version      $Id$

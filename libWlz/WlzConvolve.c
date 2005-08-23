@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzConvolve.c
+* \file         libWlz/WlzConvolve.c
 * \author       Jim Piper, Bill Hill
 * \date         March 1999
 * \version      $Id$

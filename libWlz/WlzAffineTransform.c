@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzAffineTransform.c
+* \file         libWlz/WlzAffineTransform.c
 * \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$

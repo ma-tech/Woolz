@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzNMSuppress.c
+* \file         libWlz/WlzNMSuppress.c
 * \author       Bill Hill
 * \date         May 1999
 * \version      $Id$

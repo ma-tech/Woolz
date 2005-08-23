@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU %W%\t%G% bill@hgu.mrc.ac.uk"
 /************************************************************************
 * Project:      Woolz							*
@@ -199,3 +200,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

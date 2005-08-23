@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzFillBlankPlanes.c
+* \file         libWlz/WlzFillBlankPlanes.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Sep 26 14:32:11 2003
 * \version      MRC HGU $Id$

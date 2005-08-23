@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzClosestVertices.c
+* \file         binWlz/WlzClosestVertices.c
 * \author       Bill Hill
 * \date         July 2004
 * \version      $Id$
@@ -604,3 +605,4 @@ static void	WlzVerticesClosestKDTree(AlcKDTTree *tree,
     }
   }
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

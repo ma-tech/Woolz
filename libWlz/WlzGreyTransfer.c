@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyTransfer.c
+* \file         libWlz/WlzGreyTransfer.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Wed Jan 16 10:02:22 2002
 * \version      MRC HGU $Id$

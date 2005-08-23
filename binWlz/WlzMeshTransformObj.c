@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzMeshTransformObj.c
+* \file         binWlz/WlzMeshTransformObj.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Mar 11 13:51:31 2005
 * \version      MRC HGU $Id$
@@ -188,3 +189,4 @@ int main(int	argc,
 
   return errNum;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

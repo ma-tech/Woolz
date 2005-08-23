@@ -1,4 +1,77 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzhistogramequaliseobj WlzHistogramEqualiseObj
+\par Name
+WlzHistogramEqualiseObj - Histogram equalises a Woolz domain object.
+\par Synopsis
+\verbatim
+WlzHistogramEqualiseObj [-o<output object file>] [-h]
+           [-D] [-s<smoothing>] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-D</b></td>
+    <td>dither pixel value when mapping</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>histogram smoothing factor.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object  is written to the standard output.
+\par Description
+Histogram equalises the given Woolz domain object so that the histogram
+of  the modified object's grey values approximates a uniform histogram.
+\par
+The smoothing  factor  is  the  low-pass  gaussian  convolution  kernel
+half-height  full-width in bins (default 0), used to smooth the objects
+histogram before equalisation.
+
+\par Examples
+\verbatim
+# An example which uses WlzHistogramEqualiseObj to histogram equalise
+# an object.
+
+WlzHistogramEqualiseObj myObj.wlz >myEqualisedObj.wlz
+
+\endverbatim
+
+\par See Also
+WlzHistogram(3)
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 08:21:05 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzHistogramEqualiseObj.c
@@ -186,3 +259,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

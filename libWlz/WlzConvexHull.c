@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzConvexHull.c
+* \file         libWlz/WlzConvexHull.c
 * \author       Richard Baldock
 * \date         March 1999
 * \version      $Id$

@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzShadeCorrect.c
+* \file         binWlz/WlzShadeCorrect.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Wed Jun 16 17:29:29 2004
 * \version      MRC HGU $Id$
@@ -223,3 +224,4 @@ int main(int	argc,
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

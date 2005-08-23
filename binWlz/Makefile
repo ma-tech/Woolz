@@ -37,6 +37,7 @@ EXECUTABLES		= \
 			WlzAffineTransformVertices \
 			WlzAffineTransformObj \
 			WlzArea \
+			WlzAutoTrackUpDown \
 			WlzBasisFnTransformObj \
 			WlzBasisFnTransformVertices \
 			WlzBoundaryToObj \
@@ -143,10 +144,6 @@ EXECUTABLES		= \
 			WlzWindow \
 			Wlz3DWarpMQ
 
-#			WlzAutoTrackUpDown
-
-
-
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
 			Wlz3DWarpMQ.c \
@@ -156,6 +153,7 @@ CSOURCES		= \
 			WlzAffineTransformVertices.c \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
+			WlzAutoTrackUpDown.c \
 			WlzBasisFnTransformObj.c \
 			WlzBasisFnTransformVertices.c \
 			WlzBoundaryToObj.c \
@@ -263,8 +261,6 @@ CSOURCES		= \
 			WlzVolume.c \
 			WlzWindow.c
 
-#			WlzAutoTrackUpDown.c
-
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
 INCLUDES_PUB		= 
@@ -275,33 +271,7 @@ INCLUDES_PRV		=
 
 # List of all troff sources for manual pages, these should have the appropriate
 # extension (eg cat.1) (modify as required).
-MANPAGES		= \
-			  WlzAffineTransformLSq.1 \
-			  WlzAffineTransformObj.1 \
-			  WlzBoundingBox.1 \
-			  WlzCentreOfMass.1 \
-			  WlzClipObjToBox.1 \
-			  WlzCutObjToBox.1 \
-			  WlzErosion.1 \
-			  WlzExplode.1 \
-			  WlzFacts.1 \
-			  WlzGreyCrossing.1 \
-			  WlzGreyStats.1 \
-			  WlzHistogramData.1 \
-			  WlzHistogramEqualiseObj.1 \
-			  WlzHistogramMatchObj.1 \
-			  WlzHistogramObj.1 \
-			  WlzHistogramRebin.1 \
-			  WlzHistogramSmooth.1 \
-			  WlzLaplacian.1 \
-			  WlzMorphological.1 \
-			  WlzPolarSample.1 \
-			  WlzPrinicipalAngle.1 \
-			  WlzSampleObj.1 \
-			  WlzShiftObj.1 \
-			  WlzSobel.1 \
-			  WlzTransposePlanes.1 \
-			  WlzWindow.1
+MANPAGES		= 
 
 # List of all directories to be searched before the standard include
 # and lib directories (modify as required).
@@ -360,14 +330,14 @@ CPPFLAGS		= $(INCDIRS:%=-I%) $(DEFINES) $(UNIXFLAGS)
 CFLAGS			= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages
+all:			archive executables includes
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 
 # Target which installs everything after it has been built (should not need
 # modifying).
-install:		install_includes install_manpages install_archive \
+install:		install_includes install_archive \
 			install_executables install_release
 
 # Target which installs an archive (should not need modifying).
@@ -399,14 +369,6 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the manual pages in the appropriate directories,
-# watch out for the tabs in the sed regexp's (should not need modifying).
-install_manpages:	$(MANPAGES)
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			$(install_manpages)
-
 # Target for compressed tar files suitable for distribution (should not need
 # modifying).
 tar:			$(TARSOURCES) clobber allsources
@@ -424,9 +386,6 @@ executables:		$(EXECUTABLES)
 
 # Target for public header files, just a dependency (should not need modifying).
 includes:		$(INCLUDES_PUB)
-
-# Target for manual pages, just a dependency (should not need modifying).
-manpages:		$(MANPAGES)
 
 # Target for lint (modify as required).
 lint:			$(CSOURCES) $(INCLUDES_PRV)
@@ -455,8 +414,6 @@ $(ARCHIVE):		$(OBJECTS)
 			$(AR) r $(ARCHIVE) $?
 
 # Targets to create executables, just a dependencies (modify as required).
-WlzAutoTrackUpDown:	WlzAutoTrackUpDown.o AlgDPSearch.o
-WlzObjToBoundary:	WlzObjToBoundary.o
 
 # Target for Purified executables (modify as required).
 purify:

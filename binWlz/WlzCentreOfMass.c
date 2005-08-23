@@ -1,4 +1,79 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzcentreofmass WlzCentreOfMass
+\par Name
+WlzCentreOfMass - Calculates the mass and centre of
+mass of domain objects.
+\par Synopsis
+\verbatim
+WlzCentreOfMass [ -o<output file>] [-b] [-h] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-o</b></td>
+    <td>output file name</td>
+  </tr>
+  <tr>
+    <td><b>-b</b></td>
+    <td>object is considered a binaryy object, i.e. just use the domain</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the standard input
+and the output is written to the standard output.
+
+\par Description
+WlzCentreOfMass calculates the mass and centre of mass
+of the input Woolz 2D or 3D
+domain object.
+The mass and centre of mass are written to the output
+file in the following order:
+\par
+\<mass\> \<x\> \<y\> \<z\>
+\par
+Where x, y and z are the column, line and plane coordinates of the
+centre of mass.
+
+\par Examples
+\verbatim
+# WlzCentreOfMass reads an object from myobj.wlz, calculates
+# its mass and centre of mass and then prints them to the
+# standard output.
+
+WlzCentreOfMass myobj.wlz
+
+\endverbatim
+
+\par See Also
+WlzCentreOfMass(3)
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Wed Jul 27 08:22:16 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzCentreOfMass.c
@@ -159,3 +234,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

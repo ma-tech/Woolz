@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBasisFnTransformObj.c
+* \file         binWlz/WlzBasisFnTransformObj.c
 * \author       Bill Hill
 * \date         February 2005
 * \version      $Id$
@@ -950,3 +951,4 @@ static void	WlzPolyOutputPS(WlzPolygonDomain *poly,
 		   (poly->vtx->vtY * -scale) - offset.vtY);
   }
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

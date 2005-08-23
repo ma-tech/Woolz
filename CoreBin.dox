@@ -10,9 +10,9 @@ multiple imaging operations for rapid prototyping and script development.
 The binary codes are all installed in the Mouse Atlas home bin directory
 (usually /opt/MouseAtlas/bin) and provide a significant proportion of the
 libWlz plus supplementary library functionality. Simple binaries for
- the basic woolz functions are under \ref binwlz "binWlz", other binaries
-relating to format conversion are under \ref binwlzextff "binWlzExtFF" and
-more complex applications can be found under \ref binwlzapp "binWlzApp".
+ the basic woolz functions are under \ref BinWlz "binWlz", other binaries
+relating to format conversion are under \ref BinWlzExtFF "binWlzExtFF" and
+more complex applications can be found under \ref BinWlzApp "binWlzApp".
 
 \section Structure Overview
 \section install Installation
@@ -22,13 +22,13 @@ more complex applications can be found under \ref binwlzapp "binWlzApp".
 */
 
 /*!
-\defgroup binwlz Basic Woolz Operations
+\defgroup BinWlz Basic Woolz Operations
 \brief Command line programmes for woolz library procedures, select from
 the module list for individual manual pages.
 */
 /*!
-\defgroup binwlzextff Data Format Conversion
+\defgroup BinWlzExtFF Data Format Conversion
 */
 /*!
-\defgroup binwlzapp Extended Applications
+\defgroup BinWlzApp Extended Applications
 */

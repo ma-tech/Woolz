@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * \Project:      Woolz
 * \Title:        Wlz3DWarpMQ.c
@@ -591,3 +592,4 @@ static void usage(char *proc_str)
 	  proc_str);
   return;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /***********************************************************************
 * Project:      Woolz
@@ -17,10 +18,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <Alg.h>
 #include <Wlz.h>
-
-extern int	NalgsDPSearch(int, int, double **, double **, int **,
-			      double (*)(int, int, int, int **));
 
 typedef struct {
   double	sintheta;
@@ -126,7 +125,7 @@ void PMSnake(
   PMSnakeNlcSetup(spacing, range, nu_alpha, nu_kappa);
 
   /* call the dynamic programming search */
-  (void) NalgsDPSearch(num_mpts, 2*range+1, local_cost, optimal_cost,
+  (void) AlgDPSearch(num_mpts, 2*range+1, local_cost, optimal_cost,
 		       optimal_path, PMSnakeNlc);
 
   /* extract the optimal path and calculate offsets */
@@ -795,3 +794,4 @@ int main(int	argc,
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

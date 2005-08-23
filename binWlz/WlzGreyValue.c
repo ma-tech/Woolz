@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyValue.c
+* \file         binWlz/WlzGreyValue.c
 * \author       Bill Hill
 * \date         May 2004
 * \version      $Id$
@@ -263,3 +264,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

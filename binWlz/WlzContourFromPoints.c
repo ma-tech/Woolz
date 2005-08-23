@@ -1,6 +1,122 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzContourFromPoints.c
+\ingroup      BinWlz
+\defgroup     wlzcontourfrompoints WlzContourFromPoints
+\par Name
+WlzContourFromPoints - Compute contour from point sets.
+\par Synopsis
+\verbatim
+WlzContourFromPoints [-h] [-2] [-3] [-o<out object>]
+                     [-S<surface points file>]
+                     [-I<inside points file>] [-O<outside points file>]
+                     [-a#] [-b#] [-c#] [-d#] [-e#] [-D#] [-M#] [-T#]
+                     [-X#]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-2</b></td>
+    <td> Points are 2D and contour is a curve in 2D. </td>
+  </tr>
+  <tr>
+    <td><b>-3</b></td>
+    <td> Points are 3D and contour is a surface in 3D. </td>
+  </tr>
+  <tr>
+    <td><b>-S</b></td>
+    <td> On surface points file. </td>
+  </tr>
+  <tr>
+    <td><b>-I</b></td>
+    <td>Inside points file. </td>
+  </tr>
+  <tr>
+    <td><b>-O</b></td>
+    <td>Outside points file. </td>
+  </tr>
+  <tr>
+    <td><b>-a</b></td>
+    <td>Surface points alpha value. </td>
+  </tr>
+  <tr>
+    <td><b>-b</b></td>
+    <td>Inside points alpha value. </td>
+  </tr>
+  <tr>
+    <td><b>-c</b></td>
+    <td>Outside points alpha value. </td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td>Inside points distance value. </td>
+  </tr>
+  <tr>
+    <td><b>-e</b></td>
+    <td>Outside points distance value. </td>
+  </tr>
+  <tr>
+    <td><b>-D</b></td>
+    <td>Delta multiorder spline soothing value. </td>
+  </tr>
+  <tr>
+    <td><b>-M</b></td>
+    <td>Distance object sampling factor (can be used to reduce the
+      number of surface facets.) </td>
+  </tr>
+  <tr>
+    <td><b>-T</b></td>
+    <td>Tau multiorder spline soothing value. </td>
+  </tr>
+  <tr>
+    <td><b>-X</b></td>
+    <td>Plane for 2D contour from 3D point sets. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+Unless specified, output to standard out.
+
+\par Description
+Computes a contour from three point sets: inside; outside and on a
+surface.
+All points are given using the following ascii format:
+\par
+  \<vertex x\> \<vertex y\> [\<vertex z\>]
+\par Examples
+\verbatim
+\endverbatim
+
+\par See Also
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Mon Aug  1 08:39:03 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+/*!
+* \file         binWlz/WlzContourFromPoints.c
 * \author       Bill Hill
 * \date         February 2003
 * \version      $Id$
@@ -518,3 +634,4 @@ static WlzVertexP 	WlzCFPReadVtxArray(FILE *fP, int dim, int *dstNVtx,
   *dstNVtx = datCnt;
   return(datVP);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

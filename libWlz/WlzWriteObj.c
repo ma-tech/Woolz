@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzWriteObj.c
+* \file         libWlz/WlzWriteObj.c
 * \author       Richard Baldock and Bill Hill
 * \date         November 2002
 * \version      $Id$

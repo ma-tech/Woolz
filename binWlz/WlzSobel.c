@@ -1,4 +1,78 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzsobel WlzSobel
+\par Name
+WlzSobel - Applies a 3X3 Sobel edge detection filter.
+\par Synopsis
+\verbatim
+WlzSobel [-o<output object file>] [-x] [-y] [-h]
+           [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-x</b></td>
+    <td>no horizontal pass. </td>
+  </tr>
+  <tr>
+    <td><b>-y</b></td>
+    <td>no vertical pass. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.
+\par Description
+Applies a 3X3 Sobel edge detection filter to the  input  Woolz  object,
+which  must be a WLZ_2D_DOMAINOBJ with integral (int, short or unsigned
+char) grey values.
+
+\par Examples
+\verbatim
+# An example of using WlzSobel to detect only vertical edges.
+
+WlzSobel -o outfile.wlz -x infile.wlz
+
+# A simple example in which both horizontal and vertical edges
+# are detected.
+
+WlzSobel <infile.wlz >outfile.wlz
+
+\endverbatim
+
+\par See Also
+WlzSobel(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 11:48:31 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzSobel.c
@@ -157,3 +231,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

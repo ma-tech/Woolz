@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzRBFContourObj.c
+* \file         binWlz/WlzRBFContourObj.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
@@ -270,3 +271,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

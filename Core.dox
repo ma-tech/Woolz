@@ -1,0 +1,159 @@
+/*!
+\mainpage Woolz Core Software
+Thw woolz software has been developed over very many years by many
+ people with its roots in chromosome spread image analysis and
+ microscopy imaging.The primary code design and develoment is due to
+ Denis Rutovitz (refefrence here) and the C-code libraries initially
+ implemented by Jim Piper. The image processing library is optimised
+ for 2D image processing and is especially efficient for binary
+ and morphological operations. The software has been developed
+ in C and is now ANSI standard and are now open-source under the
+ general GNU licence.
+
+Originally the code was developed by the Pattern Recognition Section
+ of the Medical Research Council (<a href="http://www.mrc.ac.uk/">MRC</a>)
+ Clinical and Population
+ Cytogenetics Unit, since 1995 it has been developed as part of the
+ Edinburgh Mouse Atlas Project (
+<a href="http://genex.hgu.mrc.ac.uk/">EMAP</a>) at the
+ MRC Human Genetics Unit
+ (<a href="http://www.hgu.mrc.ac.uk/">HGU</a>). The code is a series of
+ libraries supporting a range of image processing operations and
+ is built into a number of larger applications such as MAPaint,
+ Reconstrucct and the Jave JAtlasViewer. It also underpins the
+ Edinburgh Mouse Atlas of Gene Expression (EMAGE) database defining
+ the spatial content and providing the mapping, comparison, analysis
+ and warping capabilities.
+
+This documentation provide manuals and code documentation for the
+ core libraries and associated command-line binaries. Using these
+ binaries sophisticated image-processing applications can be developed
+ and prototyped using standard unix scripting. In addition the
+ libraries have a Java binding to allow the use of very fast and
+ efficient C-code with a Java interface.
+
+More detail of the code can be found in the sub-sections 
+\subpage binaries "Woolz command line binaries" and
+\subpage libraries "Woolz core libraries".
+Compiled versions and source code can be obtained from the EMAP web-site <a href="http://genex.hgu.mrc.ac.uk/">genex.hgu.mrc.ac.uk</a>.
+*/
+
+/*!
+\page binaries Woolz Command Line Binaries
+\section intro Introduction
+The woolz library functions are complemented by a set of binaries for 
+command line processing of woolz formatted data. Most binaries can read data
+from standard input and will write to standard output and can therefore 
+be used in unix "pipeline" mode. This allows efficient concatenation of
+multiple imaging operations for rapid prototyping and script development.
+
+The binary codes are all installed in the Mouse Atlas home bin directory
+(usually /opt/MouseAtlas/bin) and provide a significant proportion of the
+libWlz plus supplementary library functionality. Simple binaries for
+ the basic woolz functions are under \ref BinWlz "binWlz", other binaries
+relating to format conversion are under \ref BinWlzExtFF "binWlzExtFF" and
+more complex applications can be found under \ref BinWlzApp "binWlzApp".
+
+\section Structure Overview
+\section install Installation
+\section history Software Development History
+\section pubs Publications
+*
+*/
+
+/*!
+\defgroup BinWlz Basic Woolz Operations
+\brief Command line programmes for woolz library procedures, select from
+the module list for individual manual pages.
+*/
+/*!
+\defgroup BinWlzExtFF Data Format Conversion
+*/
+/*!
+\defgroup BinWlzApp Extended Applications
+*/
+
+/*!
+* \page libraries Woolz Core Libraries
+* \section intro Introduction
+The core woolz image processing library, \subpage libwlzpage "libWlz",
+ was developed for
+ the purpose of microscope slide scanning. libWlz holds the basic image processing
+ functionality, supplementary libraries provide functionality for memory allocation
+ and management, numerical algorithms, external format conversion and other
+ commonly used programmatic tools. These are:
+\li \subpage libalcpage "libAlc"  - memory allocation and management
+\li \subpage libalgpage "libAlg" - numerical algorithms
+\li \subpage libwlzextpage "libWlzExt" - image format conversion and meta-data IO
+\li \subpage libbibfilepage "libbibfile" - IO if "bibtex" format data - standard
+ plain-text meta-data
+\li \subpage libdlplistpage "libDlpList"- linked-list structures and
+ procedures for management, sorting and query.
+
+The original woolz software set included libraries for classification and
+chromosome analysis, these are not included in this package. All libraries
+are developed in ANSI Standard C and have been successfully used on any
+Unix system tried so far including Solaris, Linux, IRIX, HPUX, MacOSX. 
+It is also availbale under Windows either using Cygwin or directly using
+ the Microsoft C++ compiler. In addition there is a Java mapping available
+for the woolz library to allow image process from Java code.
+
+\section Structure Overview
+Woolz has been generated over many years at the Medical Research Council
+ Human Genetics Unit in Edinburgh. The basic image processing library
+ originally developed has been extended to include a range of numerical
+ algorithms and libraries for standard programming tasks. The code has been
+ converted to ANSI standard C and standardised with respect to nameing
+ conventions and error reporting. Finally the code has been checked for
+ memory errors such array bound exceptions and leaked bytes. The code is
+ maintained by a number of developers at the MRC and version control is
+ under CVS. The code is open-source and freely available for academic
+ non-profit use. For commercial use of the software please contact
+ matech@hgu.mrc.ac.uk.
+
+The libraries are organised to hierarchically and need to be linked
+ accordingly. The dependencies are:
+\li libAlc - none, system library libc
+\li libAlg - libAlc, system library libm
+\li libbibfile - libAlc
+\li libhguDlpList - libAlc
+\li libWlz - libAlg
+\li libWlzExtFF - libWlz, libbibfile, external libraries libtiff and libjpeg
+
+\section install Usage
+\section install Installation
+The source code and/or compiled versions of the libraries can be
+ downloaded from the Mouse Atlas Web site
+ (http://genex.hgu.mrc.ac.uk/Resources). The installation instructions
+ are provided as a "readme.txt" which requires the selection of a path
+ (e.g. /opt/MouseAtlas) as the root of all Mouse Atlas software. The code
+ is then installed in standard Unix fashion in src, share, lib, bin and
+ so on. If the default path for the woolz root directory is used then the
+ software should build and run without modification.
+
+\section history Software Development History
+The woolz software libraries have grown over many years for many image
+ processing purposes since the 1970s. The initial development by 
+Dr Denis Rutovitz was in Fortran and defined a number of the key 
+woolz structures, primarily the interval coding of the spatial domains 
+and grey-level values. The current C-coding was initiated in the 1980s, 
+primarily by Dr Jim Piper. The coding has been transformed to its present 
+form in a number of stteps as part of early Alvey and Eu funded projects 
+and more recently as part of the Mouse Atlas porject at the HGU. This 
+has include a large expansion in some of the grey-level image extgensions 
+to the library.
+
+The current software is primarily maintained by Richard Baldock and 
+Bill Hill at the MRC Human Genetics Unit. The sofware is now maintained
+and extended by a group of programmers at the MRC and is managed using
+the Concurrent Versioning System (CVS). A full development history of each
+module is available from the archive. The preceding development is either
+in the source comments or held in a History file generated during the 
+transition form the original C to ANSI standard with standardisation 
+of naming and error reporting.
+ 
+\section pubs Publications
+
+*
+*/
+

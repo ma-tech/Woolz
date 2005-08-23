@@ -385,7 +385,7 @@ static AlcErrno	AlcCPQMoreItems(AlcCPQQueue *q)
 
 /*!
 * \return
-* \ingroup
+* \ingroup      AlcCPQ
 * \brief	Insert the given item into the priority queue in the
 *		given bucket.
 * \param	q			The queue.
@@ -509,7 +509,7 @@ static void	AlcCPQQueueDecSize(AlcCPQQueue *q)
 
 /*!
 * \return
-* \ingroup
+* \ingroup      AlcCPQ
 * \brief	Resizes the queue, either increasing or decreasing it's
 *		number of buckets by a factor of two, except when the
 *		number of buckets is small.

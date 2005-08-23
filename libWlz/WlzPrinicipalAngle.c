@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzPrinicipalAngle.c
+* \file         libWlz/WlzPrinicipalAngle.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzPolyToObj.c
+* \file         libWlz/WlzPolyToObj.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Tue Jul 31 07:40:16 2001
 * \version      MRC HGU $Id$

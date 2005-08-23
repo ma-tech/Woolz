@@ -1,4 +1,77 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzerosion WlzErosion
+\par Name
+WlzErosion - Morphological erosion of a woolz domain object
+\par Synopsis
+\verbatim
+WlzErosion [-c<n>] [-r<radius>] [-h] [input file]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-c4</b></td>
+    <td>4-connected erosion (2D)</td>
+  </tr>
+  <tr>
+    <td><b>-c8</b></td>
+    <td>8-connected erosion (2D)</td>
+  </tr>
+  <tr>
+    <td><b>-c6</b></td>
+    <td>6-connected erosion (3D)</td>
+  </tr>
+  <tr>
+    <td><b>-c18</b></td>
+    <td>18-connected erosion (3D)</td>
+  </tr>
+  <tr>
+    <td><b>-c26</b></td>
+    <td>26-connected erosion (3D)</td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Structuring element radius (default 1)</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the standard input
+and the output is written to the standard output.
+
+\par Description
+WlzErosion erodes the input object using a structuring element defined
+by the given connectivity. If a 2D connectivity is applied to a 3D
+object then each plane is eroded independently.
+
+\par Examples  
+\par See Also
+\ref wlzdilation "WlzDilation(1)"
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Wed Jul 27 08:42:52 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzErosion.c
@@ -180,3 +253,4 @@ int main(int	argc,
   }
   return errNum;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

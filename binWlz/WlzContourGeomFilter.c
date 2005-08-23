@@ -1,6 +1,90 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzContourGeomFilter.c
+\ingroup      BinWlz
+\defgroup     wlzcontourgeomfilter WlzContourGeomFilter
+\par Name
+WlzContourGeomFilter - smooth a geometric model.
+\par Synopsis
+\verbatim
+WlzContourGeomFilter [-h] [-o<output file>]
+        [-l#] [-m#] [-n#]
+        [-p#] [-s#] [-P#] [-S#] [<input file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-N</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-l</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-p</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-P</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-S</b></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+
+\par Description
+
+\par Examples
+\verbatim
+\endverbatim
+
+\par See Also
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Mon Aug  1 08:49:52 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+/*!
+* \file         binWlz/WlzContourGeomFilter.c
 * \author       Bill Hill
 * \date         September 2002
 * \version      $Id$
@@ -323,3 +407,4 @@ int		main(int argc, char *argv[])
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

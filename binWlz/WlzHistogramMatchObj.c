@@ -1,4 +1,114 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzhistogrammatchobj WlzHistogramMatchObj
+\par Name
+WlzHistogramMatchObj - Histogram matches a Woolz domain object.
+\par Synopsis
+\verbatim
+WlzHistogramMatchObj  -m<target>
+           [-o<output object file>] [-h]
+           [-D] [-s<smoothing>] [-t<smoothing>]
+           [-i] [-d<min>,<max>] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-D</b></td>
+    <td>dither pixel values when mapping.</td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>target histogram object file.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>input object histogram smoothing.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>target histogram smoothing.</td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>independent planes.</td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td> histogram distance range.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object  is written to the standard output.
+\par
+The histogram distance range limits are comma separated and default  to
+0.0,1.0.
+\par
+If   a  histogram  distance  range  is  given,  then  only  the  domain
+objects/planes which have a histogram within that distance  range  from
+the target histogram are matched.
+
+\par Description
+Modifies  the  grey values of the input object so that the histogram of
+       the modified object's grey values matches the target histogram.
+\par
+       The smoothing  factor  is  the  low-pass  gaussian  convolution  kernel
+       half-height  full-width  in  bins  (default 0), used to smooth the his-
+       togram(s) before matching.
+
+\par Examples
+\verbatim
+# An example which uses WlzHistogramMatchObj and WlzHistogramObj to
+# match the histogram of one domain object to another.
+# an object.
+
+WlzHistogramObj refObj.wlz | \
+WlzHistogramMatchObj -m - -o matchedObj.wlz myObj.wlz
+
+# An example which uses WlzHistogramMatchObj to match all planes of
+# a 3D image to plane 100.
+
+WlzClipObjToBox -z 100,100 my3Dobj.wlz| \
+WlzHistogramObj - | \
+WlzHistogramMatchObj -m - -o matched3DObj.wlz my3Dobj.wlz
+
+\endverbatim
+
+\par See Also
+\ref wlzhistogramobj "WlzHistogramObj(1)",
+\ref wlzclipobjtobox "WlzClipObjToBox(1)",
+WlzHistogram(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 08:25:35 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzHistogramMatchObj.c
@@ -306,3 +416,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

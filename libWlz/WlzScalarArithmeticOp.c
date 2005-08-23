@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzScalarArithmeticOp.c
+* \file         libWlz/WlzScalarArithmeticOp.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         March 1999
 * \version      MRC HGU $Id$

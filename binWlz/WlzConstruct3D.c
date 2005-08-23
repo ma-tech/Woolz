@@ -1,6 +1,71 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzConstruct3D.c
+\ingroup      BinWlz
+\defgroup     wlzconstruct3d WlzConstruct3D
+\par Name
+WlzConstruct3D - Constructs a 3D Woolz domain object from the given
+ 2D Woolz domain objects.
+
+\par Synopsis
+\verbatim
+WlzConstruct3D [-h] [-o<output file>] [-p #] [-s #,#,#] <input file list>
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output file name, default to standard out.</td>
+  </tr>
+  <tr>
+    <td><b>-p</b></td>
+    <td>Coordinate of the first plane</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Voxel size (x, y, z).</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+Read single 2D woolz object from each file and write 3D object.
+
+\par Description
+Each file is read in turn and added to the 3D object. An empty plane
+can be specified by using the string NULL. Either all or none of the
+2D objects must have values. When the 2D objects have values then the
+background value of the first 2D object is set to be the background
+value of the 3D object.
+
+\par Examples
+
+\par See Also
+\ref wlzexplode "WlzExplode(1)", WlzConstruct3DObjFromFile(3).
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Thu Jul 28 08:18:42 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+/*!
+* \file         binWlz/WlzConstruct3D.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
@@ -158,7 +223,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-o<output file>] [-p #] [-s #,#,#] [<input file>]\n"
+    "Usage: %s [-h] [-o<output file>] [-p #] [-s #,#,#] <input file list>\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -p  Coordinate of the first plane.\n"
@@ -174,3 +239,4 @@ int		main(int argc, char *argv[])
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz2DContains.c
+* \file         libWlz/Wlz2DContains.c
 * \author       Nick Burton
 * \date         August 2002
 * \version      $Id$

@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyRange.c
+* \file         libWlz/WlzGreyRange.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri May 23 07:55:41 2003
 * \version      MRC HGU $Id$

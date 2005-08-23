@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSeqPar.c
+* \file         libWlz/WlzSeqPar.c
 * \author       Jim Piper, modified by Bill Hill
 * \date         March 1999
 * \version      $Id$

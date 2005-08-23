@@ -80,14 +80,14 @@ CFLAGS		= $(CDEBUG) $(COPTIMISE) $(ANSI_CONFORMANCE)
 CXXFLAGS	=$(CXXDEBUG) $(CXXOPTIMISE) $(CXXANSI_CONFORMANCE)
  
 # Default traget which builds everything (should not need modifying).
-all:			archive executables includes manpages
+all:			archive executables includes
 ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 
 # Target which installs everything after it has been built (should not need
 # modifying).
-install:		install_includes install_manpages install_archive \
+install:		install_includes install_archive \
 			install_executables
 
 # Target which installs an archive (should not need modifying).
@@ -112,14 +112,6 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the manual pages in the appropriate directories,
-# watch out for the tabs in the sed regexp's (should not need modifying).
-install_manpages:	$(MANPAGES)
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			$(install_manpages)
-
 # Target for compressed tar files suitable for distribution (should not need
 # modifying).
 tar:			$(TARSOURCES) clobber allsources
@@ -137,9 +129,6 @@ executables:		$(EXECUTABLES)
 
 # Target for public header files, just a dependency (should not need modifying).
 includes:		$(INCLUDES_PUB)
-
-# Target for manual pages, just a dependency (should not need modifying).
-manpages:		$(MANPAGES)
 
 # Target for lint (modify as required).
 lint:			$(CSOURCES) $(INCLUDES_PRV)

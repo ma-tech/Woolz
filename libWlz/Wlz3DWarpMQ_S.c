@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz3DWarpMQ_S.c
+* \file         libWlz/Wlz3DWarpMQ_S.c
 * \author       J. Rao.
 * \date         Fri Sep 26 13:56:30 2003
 * \version      MRC HGU $Id$

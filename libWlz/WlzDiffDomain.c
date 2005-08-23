@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzDiffDomain.c
+* \file         libWlz/WlzDiffDomain.c
 * \author       Richard Baldock
 * \date         March 1999
 * \version      $Id$

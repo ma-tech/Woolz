@@ -1,7 +1,7 @@
 #pragma ident "MRC HGU $Id$"
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz3DViewTransformObj.c
+* \file         libWlz/Wlz3DViewTransformObj.c
 * \author       Bill Richard Baldock
 * \date         October 1999
 * \version      $Id$

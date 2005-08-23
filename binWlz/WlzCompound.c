@@ -1,4 +1,67 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzcompound WlzCompound
+\par Name
+WlzCompound - Create a Woolx compounf object.
+\par Synopsis
+\verbatim
+WlzCompound [-n <num objects>] [-h]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-n</b></td>
+    <td>Maximum number of objects, default 100.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+Reads woolz objects from standard input and writes a compound
+ object to standard out.
+
+\par Description
+Create a woolz compound object from a given input stream. Only
+ objects of the same type as the first object read in are included
+ and the compound object will be of type WLZ_COMPOUND_ARR_2.
+
+\par Examples
+\verbatim
+#
+# read up to 150 woolz objects in the current directory
+# and create a compound object 
+#
+cat *.wlz | WlzCompound -n 150 > compound_obj.wlz
+
+\endverbatim
+
+\par See Also
+\ref wlzexplode "WlzExplode(1)"
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Wed Jul 27 23:10:10 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzCompound.c
@@ -136,3 +199,4 @@ int main(int	argc,
 
   return( 0 );
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

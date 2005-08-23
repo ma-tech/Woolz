@@ -1,4 +1,109 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzsampleobj WlzSampleObj
+\par Name
+WlzSampleObj - Sub-samples Woolz 2D domain objects objects.
+\par Synopsis
+\verbatim
+WlzSampleObj [-o<output object file>]
+           [-x<column sampling factor>]
+           [-y<line sampling factor>]
+           [-z<plane sampling factor>]
+           [-a] [-e] [-i] [-g] [-m] [-p] [-h] [<input object file>]
+
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-x</b></td>
+    <td>column sub-sampling factor. </td>
+  </tr>
+  <tr>
+    <td><b>-y</b></td>
+    <td>line sub-sampling factor. </td>
+  </tr>
+  <tr>
+    <td><b>-z</b></td>
+    <td>plane sub-sampling factor. </td>
+  </tr>
+  <tr>
+    <td><b>-a</b></td>
+    <td>maximum value convolution kernel. </td>
+  </tr>
+  <tr>
+    <td><b>-e</b></td>
+    <td>median value convolution kernel. </td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>minimum value convolution kernel. </td>
+  </tr>
+  <tr>
+    <td><b>-g</b></td>
+    <td>gaussian convolution kernel. </td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>mean convolution kernel. </td>
+  </tr>
+  <tr>
+    <td><b>-p</b></td>
+    <td> point sampling.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.
+\par Description
+Sub-samples a woolz interval domain object with grey values.
+
+\par Examples
+\verbatim
+# An example of using WlzSampleObj to apply a scale transform
+# (scale = 0.5) using point sampling:
+
+WlzSampleObj -x 2 -y 2 -p <infile.wlz > outfile.wlz
+
+# Sub-sampling an object using a gaussian convolution kernel
+# with scale along rows = 0.3333 and the scale down columns
+# 0.5.
+
+WlzSobel -x 3 -y 2 -g -o outfile.wlz infile.wlz
+
+\endverbatim
+
+\par See Also
+WlzSampleObj(3).
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 11:57:19 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzSampleObj.c
@@ -213,3 +318,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

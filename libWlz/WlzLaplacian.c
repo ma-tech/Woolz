@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzLaplacian.c
+* \file         libWlz/WlzLaplacian.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$

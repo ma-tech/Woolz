@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzValueTableUtils.c
+* \file         libWlz/WlzValueTableUtils.c
 * \author       Bill Hill, Richard Baldock
 * \date         March 1999
 * \version      $Id$

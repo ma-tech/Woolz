@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyInvertMinMax.c
+* \file         libWlz/WlzGreyInvertMinMax.c
 * \author       Margaret Stark
 * \date         Fri Sep 26 11:43:54 2003
 * \version      MRC HGU $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzPolyDecimate.c
+* \file         libWlz/WlzPolyDecimate.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Tue Jul 17 10:05:33 2001
 * \version      MRC HGU $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz3DSectionFromGeoModel.c
+* \file         libWlz/Wlz3DSectionFromGeoModel.c
 * \author       Bill Hill
 * \date         September 2001
 * \version      $Id$

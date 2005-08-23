@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzCbThreshold.c
+* \file         libWlz/WlzCbThreshold.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Aug  1 16:06:57 2003
 * \version      MRC HGU $Id$

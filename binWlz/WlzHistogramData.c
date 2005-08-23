@@ -1,4 +1,69 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzhistogramdata WlzHistogramData
+\par Name
+WlzHistogramData - Reads  a  Woolz  histogram object and writes it as
+       ascii data.
+
+\par Synopsis
+\verbatim
+WlzHistogramData [-o<output file>] [-h] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input histogram object is read from the  standard  input
+       and the output data  is written to the standard output.
+
+\par Description
+Reads a Woolz histogram object and writes it as ascii data.
+The output data are written as a set of records one per line, with each
+record composed of two fields separated by white space characters:
+\par
+    \<grey value\>   \<histogram bin occupancy\>
+
+\par Examples
+\verbatim
+# An example which uses WlzHistogramData and xgraph to plot a
+# histogram.
+
+WlzHistogramData myHist.wlz | xgraph
+
+\endverbatim
+
+\par See Also
+WlzHistogram(3)
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 08:17:40 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzHistogramData.c
@@ -171,3 +236,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

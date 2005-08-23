@@ -1,4 +1,76 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzlaplacian WlzLaplacian
+\par Name
+WlzLaplacian - Applies a Laplacian edge enhancement filter.
+\par Synopsis
+\verbatim
+WlzLaplacian [-o<output object file>] [-s kernel size]
+           [-a] [-h] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-a</b></td>
+    <td>absolute value of the convolution. </td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td> convolution kernel size (3, 5 or 7), default 3. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.  Unless the -a flag is
+set  the  resulting pixel values will be signed (for int or short pixel
+values) or centred around 128 for UBYTE pixel values.
+
+\par Description
+Applies an edge enhancement filter to the  input  Woolz  object,  which
+must  be a WLZ_2D_DOMAINOBJ with integral (int, short or unsigned char)
+grey values.
+
+\par Examples
+\verbatim
+# An example of using WlzLaplacian with the default 3X3 kernel:
+
+WlzLaplacian -o outfile.wlz infile.wlz
+
+\endverbatim
+
+\par See Also
+WlzLaplacian(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 12:10:39 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzLaplacian.c
@@ -164,3 +236,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

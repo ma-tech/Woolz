@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /***********************************************************************
 * Project:      Woolz
@@ -270,3 +271,4 @@ static WlzObject *WlzSelect1InN(
   }
   return nobj;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

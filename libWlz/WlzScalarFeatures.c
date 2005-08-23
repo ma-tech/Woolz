@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzScalarFeatures.c
+* \file         libWlz/WlzScalarFeatures.c
 * \author       Bill Hill
 * \date         November 2002
 * \version      $Id$

@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         WlzSnapFitObjs.c
@@ -229,3 +230,4 @@ int             main(int argc, char **argv)
   }
   return((ok)? 0: 1);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

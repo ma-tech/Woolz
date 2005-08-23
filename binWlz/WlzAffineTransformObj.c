@@ -1,4 +1,142 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzaffinetransformobj WlzAffineTransformObj
+\par Name
+WlzAffineTransformObj -  Applies an affine transform to a Woolz object.
+\par Synopsis
+\verbatim
+WlzAffineTransformObj [-o<output object file>]
+           [-L] [-M] [-N] [-P] [-R] [-h] [-3] [-i]
+           [-x#][-y"#] [-z#] [-s#] [-t#]
+           [-a#] [-b#] [-u#] [-v#] [-w#] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-3</b></td>
+    <td>3D transform instead of 2D.</td>
+  </tr>
+  <tr>
+    <td><b>-L</b></td>
+    <td>use linear interpolation instead of nearest neighbour.</td>
+  </tr>
+  <tr>
+    <td><b>-M</b></td>
+    <td>print matix values.</td>
+  </tr>
+  <tr>
+    <td><b>-N</b></td>
+    <td>no transformation.</td>
+  </tr>
+  <tr>
+    <td><b>-P</b></td>
+    <td>print transform primatives.</td>
+  </tr>
+  <tr>
+    <td><b>-R</b></td>
+    <td>use radians for angles instead of degrees.</td>
+  </tr>
+  <tr>
+    <td><b>-a</b></td>
+    <td>rotation about the z-axis.</td>
+  </tr>
+  <tr>
+    <td><b>-b</b></td>
+    <td>rotation about the y-axis.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>invert: reflect about the y-axis.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>scale factor.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>affine transform object.</td>
+  </tr>
+  <tr>
+    <td><b>-u</b></td>
+    <td>shear strength.</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>shear angle in x-y plane.</td>
+  </tr>
+  <tr>
+    <td><b>-w</b></td>
+    <td>3D shear angle.</td>
+  </tr>
+  <tr>
+    <td><b>-x</b></td>
+    <td>column (x) translation.</td>
+  </tr>
+  <tr>
+    <td><b>-y</b></td>
+    <td>row (y) translation.</td>
+  </tr>
+  <tr>
+    <td><b>-z</b></td>
+    <td>plane (z) translation.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print this message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the  standard  input  and  the
+transformed object is written to the standard output.
+
+\par Description
+       WlzAffineTransformObj  either  reads an affine transform from the given
+       file or computes one from the given transform primitives.  If a  trans-
+       form  object  is  specified  then  none of the transform primatives are
+       used.  Provided that the no transform flag is not set, then  WlzAffine-
+       TransformObj transforms the input object.
+
+\par Examples
+       # WlzAffineTransformObj reads an object from myobj.wlz, shifts the
+       # object 100 columns and 200 lines and then writes the transformed
+       # object to the standard output.
+
+       WlzAffineTransformObj -x100 -y200 myobj.wlz > transformed.wlz
+  
+\par See Also
+WlzAffineTransformObj(3)
+
+\par Bugs
+None known.
+
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Tue Jul 26 08:46:35 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define _WlzAffineTransformObj_c
 /************************************************************************
 * Project:      Woolz
@@ -580,3 +718,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

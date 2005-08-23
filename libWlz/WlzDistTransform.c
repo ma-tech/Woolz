@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzDistTransform.c
+* \file         libWlz/WlzDistTransform.c
 * \author       Konstantinos Liakos, Bill Hill
 * \date         October 2004
 * \version      $Id$

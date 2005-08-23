@@ -1,4 +1,80 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzwindow WlzWindow
+\par Name
+WlzWindow - Applies a window function to a Woolz 2D domain object.
+\par Synopsis
+\verbatim
+WlzWindow [-h] [ -o<output object file>]
+           [ -c<center column>,<center lines>]
+           [ -r<radius columns>,<radius lines>]
+           [ -w<window function>] [<input object file>]
+
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-c</b></td>
+    <td>Window function center in object's coordinates. </td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Window function radius in object's coordinates. </td>
+  </tr>
+  <tr>
+    <td><b>-w</b></td>
+    <td>Window function to be applied, which must be one of:
+        blackman, hamming, hanning, parzen, rectangle or welch. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+windowed output object is written to the standard output.
+
+\par Description
+Applies a window function to a WLZ_2D_DOMAINOBJ.
+
+\par Examples
+\verbatim
+# Applies a parzen window to the object read from the standard
+# input and then writes the window'd object to the standard output.
+
+WlzWindow -w parzen <infile.wlz >outfile.wlz
+
+\endverbatim
+
+\par See Also
+WlzWindow(3).
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 11:45:12 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzWindow.c
@@ -226,3 +302,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

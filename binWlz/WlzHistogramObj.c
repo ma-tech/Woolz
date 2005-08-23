@@ -1,4 +1,97 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzhistogramobj WlzHistogramObj
+\par Name
+WlzHistogramObj -  Computes  a  Woolz histogram object from a 2D or 3D
+       domain object.
+
+\par Synopsis
+\verbatim
+WlzHistogramObj [-o<output object file>] [-a] [-h]
+           [-n<bins>] [-s<start>] [-w<width>]
+           [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-a</b></td>
+    <td>output the histogram as ascii data not a Woolz histogram object.</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>number of histogram bins.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>start value, lower limit of histogram.</td>
+  </tr>
+  <tr>
+    <td><b>-w</b></td>
+    <td>width of the histogram bins.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the  standard  input  and  the
+output  histogram  data/object   is written to the standard output.  If
+the number of histogram bins is not specified then the number of  bins,
+the origin and the bin width are computed as follows:
+\verbatim
+    number of bins     =     ceil(max(g) - min(g) + 1.0)
+    start value        =     min(g)
+    bin width          =     1.0
+\endverbatim
+where  max(g) and min(g) are the maximum and minimum grey values in the
+domain object.
+\par Description
+Computes a Woolz histogram object from the input Woolz 2D or 3D  domain
+object.
+\par
+Output  ascii  data  are written as a set of records one per line, with
+each record composed of two fields separated by white space characters:
+\par
+    \<grey value\>   \<histogram bin occupancy\>
+\par Examples
+\verbatim
+# An example which uses WlzHistogramObj and xgraph to plot the
+# histogram of a domain object.
+
+WlzHistogramObj -a myObj.wlz | xgraph
+
+\endverbatim
+
+\par See Also
+WlzHistogram(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 08:35:26 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzHistogramObj.c
@@ -234,3 +327,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

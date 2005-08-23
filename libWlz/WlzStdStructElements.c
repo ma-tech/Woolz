@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzStdStructElements.c
+* \file         libWlz/WlzStdStructElements.c
 * \author       Richard Baldock, Bill Hill, Jianguo Rao
 * \date         Wed Sep 24 17:47:23 2003
 * \version      MRC HGU $Id$

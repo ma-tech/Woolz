@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzObjToBoundary.c
+* \file         libWlz/WlzObjToBoundary.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         March 1999
 * \version      MRC HGU $Id$

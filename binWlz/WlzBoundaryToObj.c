@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /***********************************************************************
 * Project:      Woolz
@@ -132,3 +133,4 @@ int main(int	argc,
   }
   return WLZ_ERR_NONE;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

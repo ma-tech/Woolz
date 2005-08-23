@@ -1,5 +1,5 @@
 /*!
-\addtogroup binwlz 
+\addtogroup BinWlz 
 \par Introduction
 Most of the woolz image processing library have a corresponding programme
  to allow command-line processing of woolz images and image structures

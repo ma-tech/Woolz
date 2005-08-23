@@ -586,6 +586,9 @@ extern void            		AlgVectorScaleAdd(
 				  double s,
 				  size_t n);
 
+/* From AlfDPSearch.c */
+extern int AlgDPSearch(int, int, double **, double **, int **,
+		       double (*)(int, int, int, int **));
 
 /* Debugging */
 extern AlgDbgMask	 	algDbgMask;

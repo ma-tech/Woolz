@@ -1,4 +1,93 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzcompthresh WlzCompThresh
+\par Name
+WlzCompThresh - Compute a threshold value from a grey-level histogram
+\par Synopsis
+\verbatim
+WlzCompThresh [-o<out file>] [-d] [-f] [-g] [-x#] [-h] [<in object>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-d</b></td>
+    <td>Use histogram depth method. </td>
+  </tr>
+  <tr>
+    <td><b>-f</b></td>
+    <td>Use histogram foot method. </td>
+  </tr>
+  <tr>
+    <td><b>-g</b></td>
+    <td>Use histogram gradient method.</td>
+  </tr>
+  <tr>
+    <td><b>-x</b></td>
+    <td>Extra fraction to add to computed threshold value. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+The input object is read from stdin and values are written to stdout
+unless the filenames are given.
+
+\par Description
+Computes a threshold value from the given histogram using one of the
+following methods:
+\li  WLZ_COMPTHRESH_DEPTH The threshold value is the point on the
+    histogram which is maximally (perpendicularly) distant from the
+    chord joining the histogram peak with the right hand histogram end
+    point.
+\li  WLZ_COMPTHRESH_FOOT The threshold value is intercept of a line fitted
+    to the upper slope (90% to 33%) to the right of the histogram main
+    peak with the abscissa.
+\li  WLZ_COMPTHRESH_GRADIENT The threshold value is the first point to the
+    right of the histogram main peak at which the gradient falls to
+    zero.
+
+\par Examples
+\verbatim
+#
+# Calculate the threshold using the "foot" method.
+#
+#
+WlzHistogramObj embryo_2_WM_left.wlz | WlzCompThresh -f
+158
+
+\endverbatim
+
+\par See Also
+\ref wlzhistogramobj "WlzHistogramObj(1)", WlzCompThresh(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 17:56:58 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzCompThresh.c
@@ -192,3 +281,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

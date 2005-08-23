@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzExplode3D.c
+* \file         libWlz/WlzExplode3D.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$

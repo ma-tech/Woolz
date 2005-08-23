@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzAffineTransformVertices.c
+* \file         binWlz/WlzAffineTransformVertices.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
@@ -291,3 +292,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

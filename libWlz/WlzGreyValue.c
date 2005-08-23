@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyValue.c
+* \file         libWlz/WlzGreyValue.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$

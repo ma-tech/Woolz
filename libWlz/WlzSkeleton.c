@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSkeleton.c
+* \file         libWlz/WlzSkeleton.c
 * \author       Jim Piper 1984 (modified by Bill Hill 1998)
 * \date         March 1997
 * \version      MRC HGU $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzLabel3d.c
+* \file         libWlz/WlzLabel3d.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Tue Aug 19 18:04:22 2003
 * \version      MRC HGU $Id$

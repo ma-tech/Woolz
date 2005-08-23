@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzIntervalDomScan.c
+* \file         libWlz/WlzIntervalDomScan.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Sep 26 11:18:29 2003
 * \version      MRC HGU $Id$

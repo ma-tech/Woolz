@@ -1,4 +1,83 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzprinicipalangle WlzPrinicipalAngle
+\par Name
+WlzPrinicipalAngle - Calculates the mass and centre of mass and
+ principal angle of domain objects.
+\par Synopsis
+\verbatim
+WlzPrinicipalAngle [-o<output file>] [-b] [-d] [-h]
+           [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-b</b></td>
+    <td>object is considered a binary object. </td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td>output angle in degrees instead of radians. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By default the input object is read from the  standard  input  and  the
+output is written to the standard output.
+
+\par Description
+WlzPrinicipalAngle  calculates  the  mass, centre of mass and principal
+angle of the input Woolz 2D domain object.  The mass,  centre  of  mass
+and  principal  angle  are  written to the output file in the following
+order:
+\par
+\<mass\> \<x\> \<y\> \<angle\>
+\par
+Where x and y are the column and line  coordinates  of  the  centre  of
+mass.
+
+\par Examples
+\verbatim
+# WlzPrinicipalAngle reads an object from myobj.wlz, calculates
+# its mass,  centre of mass and principal angle then prints them
+# to the standard output (angle in degrees).
+
+WlzPrinicipalAngle -d myobj.wlz
+
+\endverbatim
+
+\par See Also
+WlzPrincipalAngle(3).
+
+\par Bugs
+None known (apart from the spelling!)
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 12:02:41 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzPrincipalAngle.c
@@ -187,3 +266,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

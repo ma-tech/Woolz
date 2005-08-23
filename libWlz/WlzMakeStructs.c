@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzMakeStructs.c
+* \file         libWlz/WlzMakeStructs.c
 * \author       Bill Hill, Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         March 1999
 * \version      MRC HGU $Id$

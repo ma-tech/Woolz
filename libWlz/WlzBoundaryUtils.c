@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBoundaryUtils.c
+* \file         libWlz/WlzBoundaryUtils.c
 * \author       Bill Hill
 * \date         September 2002
 * \version      $Id$

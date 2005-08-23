@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGeometryTrackUpAndDown_s.c
+* \file         libWlz/WlzGeometryTrackUpAndDown_s.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Sep 26 11:42:46 2003
 * \version      MRC HGU $Id$

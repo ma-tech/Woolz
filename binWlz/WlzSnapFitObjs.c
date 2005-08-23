@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSnapFitObjs.c
+* \file         binWlz/WlzSnapFitObjs.c
 * \author       Bill Hill
 * \date         July 2004
 * \version      $Id$
@@ -302,3 +303,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

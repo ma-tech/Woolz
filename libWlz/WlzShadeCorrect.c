@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzShadeCorrect.c
+* \file         libWlz/WlzShadeCorrect.c
 * \author       Bill Hill
 * \date         January 2001
 * \version      $Id$

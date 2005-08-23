@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzRsvFilter.c
+* \file         libWlz/WlzRsvFilter.c
 * \author       Bill Hill
 * \date         May 1999
 * \version      $Id$

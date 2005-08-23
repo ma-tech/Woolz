@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzRGBAConvert.c
+* \file         binWlz/WlzRGBAConvert.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Thu Jun  3 08:39:00 2004
 * \version      MRC HGU $Id$
@@ -167,3 +168,4 @@ int main(int	argc,
 
   return WLZ_ERR_NONE;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

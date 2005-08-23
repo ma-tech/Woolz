@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyScan.c
+* \file         libWlz/WlzGreyScan.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Sep 26 11:55:59 2003
 * \version      MRC HGU $Id$

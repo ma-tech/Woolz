@@ -1,3 +1,53 @@
+/*!
+\ingroup BinWlz
+\defgroup wlzfacts WlzFacts
+\par Name
+WlzFacts  -  print  out  information about the input woolz
+       objects.
+\par Synopsis
+\verbatim
+WlzFacts  [-h] [-f] [-m] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-m</b></td>
+    <td>many facts printed out.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Few facts printed out (default).</td>
+  </tr>
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+</table>
+\par Description
+WlzFacts reads woolz objects from the  standard  input  or
+       the  given  input  file  and  writes out information about
+       their structure (types,  domain  bounds,  area,  etc.)  to
+       stderr.
+\par Examples
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\par Bugs
+Still to be found.
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 22 16:29:57 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /***********************************************************************
 * Project:      Woolz
@@ -98,3 +148,4 @@ main(
   }
   return errNum;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

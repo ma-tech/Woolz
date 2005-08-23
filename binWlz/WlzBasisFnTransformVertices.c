@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /************************************************************************
 * Project:      Woolz
 * Title:        WlzBasisFnTransformVertices.c
@@ -394,3 +395,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

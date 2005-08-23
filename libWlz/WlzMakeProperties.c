@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzMakeProperties.c
+* \file         libWlz/WlzMakeProperties.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         March 1999
 * \version      MRC HGU $Id$

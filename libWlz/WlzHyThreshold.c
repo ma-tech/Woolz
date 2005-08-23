@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzHyThreshold.c
+* \file         libWlz/WlzHyThreshold.c
 * \author       Bill Hill
 * \date         May 1999
 * \version      $Id$

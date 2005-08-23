@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzPolyEquispace.c
+* \file         libWlz/WlzPolyEquispace.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Thu Jul 12 11:23:23 2001
 * \version      MRC HGU $Id$

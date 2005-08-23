@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzCMeshTransform.c
+* \file         libWlz/WlzCMeshTransform.c
 * \author       Bill Hill
 * \date         October 2004
 * \version      $Id$
@@ -1448,7 +1448,7 @@ static WlzErrorNum WlzCMeshTransMakeDispCb2D(void *meshP,
 
 /*!
 * \return
-* \ingroup
+* \ingroup      WlzTransform
 * \brief	Creates a displacement for the given 2D conforming mesh node.
 * \param	mesh			Given 2D conforming mesh.
 * \param	vec			Vector from which to allocate the

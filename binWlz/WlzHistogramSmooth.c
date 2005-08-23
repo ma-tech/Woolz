@@ -1,4 +1,82 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzhistogramsmooth WlzHistogramSmooth
+\par Name
+WlzHistogramSmooth -  Low-pass filters a Woolz histogram object.
+\par Synopsis
+\verbatim
+WlzHistogramSmooth [-o<output object file>] [-a] [-h]
+           [-s<smoothing>] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-a</b></td>
+    <td>output the histogram as ascii data not a Woolz histogram object.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>smoothing factor. </td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the input histogram object is read from the standard input
+and the output histogram data/object  is written to the  standard  out-
+put.
+\par
+The  smoothing  factor is the gaussian kernel half-height full-width in
+bins (default 1).
+
+\par Description
+Smooths a Woolz histogram object by convolving the histogram bins  with
+a gaussian.
+\par
+Output  ascii  data  are written as a set of records one per line, with
+each record composed of two fields separated by white space characters:
+\par
+    \<grey value\>   \<histogram bin occupancy\>
+
+\par Examples
+\verbatim
+# An example which uses WlzHistogramSmooth and xgraph to plot a
+# smoothed histogram.
+
+WlzHistogramSmooth -a -s5 myHist.wlz | xgraph
+
+\endverbatim
+
+\par See Also
+WlzHistoGram(3)
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Fri Jul 29 11:30:35 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzHistogramSmooth.c
@@ -220,3 +298,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

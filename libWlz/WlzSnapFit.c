@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSnapFit.c
+* \file         libWlz/WlzSnapFit.c
 * \author       Bill Hill
 * \date         July 2004
 * \version      $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz3DSectionSegmentObject.c
+* \file         libWlz/Wlz3DSectionSegmentObject.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Wed Sep 24 08:26:48 2003
 * \version      MRC HGU $Id$

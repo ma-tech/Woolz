@@ -1,6 +1,86 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzExplode.c
+\ingroup      BinWlz
+\defgroup     wlzexplode WlzExplode
+\par Name
+WlzExplode - Explodes a Woolz 3D domain object or a compound object
+ into 2D domain objects.
+\par Synopsis
+\verbatim
+WlzExplode [-b  <file body>] [-e <file extension>] [-h] [-p] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-b</b></td>
+    <td>Output object file body.</td>
+  </tr>
+  <tr>
+    <td><b>-p</b></td>
+    <td>Use names from the object properties instead of a numerical
+      index for the file names. If the objects don't have properties
+      with names then the numerical index will still be used.</td>
+  </tr>
+  <tr>
+    <td><b>-e</b></td>
+    <td>Output object file extension (default wlz).</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+Objects are read from stdin and written to stdout unless the filenames
+are given.
+
+\par Description
+Explodes the input 3D Woolz domain object into 2D domain objects or
+explodes an input compound object into its constituent objects or
+explodes the input boundary object into its constituent polylines.
+An output file extension can only be given if an output file body is
+also given.
+\par Examples
+\verbatim
+# An example using WlzExplode explode a 3D object into a series of
+# 2D object files. If lobster.wlz has plane coordinates from 7 to 36
+# then 30 output files will be created with file names:
+#   lobsterPlane000007.wlz, ..., lobsterPlane000036.wlz
+
+WlzExplode -b lobsterPlane lobster.wlz
+
+# A simple example in which a 3D object is read from the standard input
+# exploded and the 2D objects concatonated to the standard output.
+
+WlzExplode <infile3D.wlz >outfile2D.wlz
+
+\endverbatim
+\par See Also
+\ref wlzconstruct3d "WlzContruct3D(1)",
+\ref wlzcompound "WlzCompound(1)", WlzExplode(3)
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Wed Jul 27 22:55:51 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+/*!
+* \file         binWlz/WlzExplode.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$
@@ -339,3 +419,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreyDitherObj.c
+* \file         libWlz/WlzGreyDitherObj.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Sep 26 11:39:14 2003
 * \version      MRC HGU $Id$

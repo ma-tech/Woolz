@@ -1,6 +1,7 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzPointsToDomain.c
+* \file         binWlz/WlzMarkersToDomain.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
@@ -443,3 +444,4 @@ static WlzObject *WlzRasterizeMarkers(WlzVertexType vType,
   }
   return(mObj);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzConvertPix.c
+* \file         libWlz/WlzConvertPix.c
 * \author       Richard Baldock
 * \date         March 1999
 * \version      $Id$

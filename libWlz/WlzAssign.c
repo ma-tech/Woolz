@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzAssign.c
+* \file         libWlz/WlzAssign.c
 * \author       Richard Baldock, Christophe Dubreuil, Bill Hill
 * \date         March 1999
 * \version      $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzMeshGen.c
+* \file         libWlz/WlzMeshGen.c
 * \author       Bill Hill
 * \date         June 2003
 * \version      $Id$

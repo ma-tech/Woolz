@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzGreySetRangeLut.c
+* \file         libWlz/WlzGreySetRangeLut.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Thu Nov 15 15:43:55 2001
 * \version      MRC HGU $Id$

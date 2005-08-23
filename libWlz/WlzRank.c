@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzRank.c
+* \file         libWlz/WlzRank.c
 * \author       Bill Hill
 * \date         March 2002
 * \version      $Id$

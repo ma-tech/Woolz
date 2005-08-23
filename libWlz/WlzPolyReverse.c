@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzPolyReverse.c
+* \file         libWlz/WlzPolyReverse.c
 * \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Mon Jul 30 12:07:51 2001
 * \version      MRC HGU $Id$

@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzStringTypes.c
+* \file         libWlz/WlzStringTypes.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$
@@ -673,7 +673,7 @@ const char	*WlzStringFromEMAPPropertyType(WlzEMAPProperty *eProp,
   }
   else
   {
-    switch(eProp->type)
+    switch(eProp->emapType)
     {
       case WLZ_EMAP_PROPERTY_GREY_MODEL:
         pTypeStr = "WLZ_EMAP_PROPERTY_GREY_MODEL";

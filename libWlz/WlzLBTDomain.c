@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzLBTDomain.c
+* \file         libWlz/WlzLBTDomain.c
 * \author       Bill Hill
 * \date         December 2003
 * \version      $Id$
@@ -509,6 +509,7 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
 * \param	iObj			Index object for finding neighbours
 *					of nodes.
 * \param	maxSz			Maximum node size.
+* \param        maxBndSz		Maximum boundary node size
 */
 WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 				      WlzObject *iObj,
@@ -1540,7 +1541,7 @@ int		WlzLBTNodeLogSz2D(WlzLBTNode2D *nod)
 
 /*!
 * \return
-* \ingroup
+* \ingroup      WlzDomainOps
 * \brief	Finds the index of the node which matches the given keys,
 *		starting the search from the node with index \f$n\f$.
 *		The index of the \f$n\f$ node is used for efficiency and

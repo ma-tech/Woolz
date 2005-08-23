@@ -1,4 +1,74 @@
 #pragma ident "MRC HGU $Id$"
+/*!
+\ingroup      BinWlz
+\defgroup     wlzgreycrossing WlzGreyCrossing
+\par Name
+WlzGreyCrossing - Detects grey value crossings
+
+\par Synopsis
+\verbatim
+WlzGreyCrossing [-o<output object file>] [-c crossing value]
+           [-h] [<input object file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-c</b></td>
+    <td>grey-crossing value, default 0.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.  Unless the
+
+\par Description
+Computes a grey value crossing image from a 2D domain object with
+ integral grey values.
+
+\par Examples
+\verbatim
+# An example using WlzLaplacian(1) and WlzGreyCrossing for edge
+# detection
+
+WlzPixConvert 1 <infile.wlz | \
+WlzLaplacian | \
+WlzGreyCrossing -c0 | \
+WlzThreshold -H -v1 >outfile.wlz
+
+\endverbatim
+
+\par See Also
+WlzGreyCrossing(3).
+
+\par Bugs
+None known
+\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+\date         Thu Jul 28 08:36:59 2005
+\version      MRC HGU $Id$
+              $Revision$
+              $Name$
+\par Copyright:
+             1994-2003 Medical Research Council, UK.
+              All rights reserved.
+\par Address:
+              MRC Human Genetics Unit,
+              Western General Hospital,
+              Edinburgh, EH4 2XU, UK.
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzGreyCrossing.c
@@ -160,3 +230,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

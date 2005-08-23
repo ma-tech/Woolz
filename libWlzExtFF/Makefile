@@ -133,7 +133,7 @@ endif
 
 # Target which installs everything after it has been built (should not need
 # modifying).
-install:		install_includes install_manpages install_archive \
+install:		install_includes install_archive \
 			install_executables
 
 # Target which installs an archive (should not need modifying).
@@ -158,30 +158,6 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
-# Target which installs the documentation in the appropriate directories,
-# (should not need modifying).
-install_documentation:	documentation
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			$(install_manpages)
-			$(install_www)
-
-# Target which installs the man pages in the appropriate directories,
-# (should not need modifying).
-install_manpages:	documentation
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			install_manpages
-
-# Target which installs the html pages in the appropriate directories,
-# (should not need modifying).
-install_www:		documentation
-ifneq ($(strip $(SUBSYSTEMS)),)
-			$(subsystems)
-endif
-			install_www
 # Target for compressed tar files suitable for distribution (should not need
 # modifying).
 tar:			$(TARSOURCES) clobber allsources
@@ -220,12 +196,6 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 			$(subsystems)
 endif
 			-$(RM) *.o *.a .pure *.pure *.bak *~
-
-# Use doxygen to make the documentation (should not need modifying).
-documentation:		doxygen.tag
-
-doxygen.tag:		$(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)
-			doxygen
 
 # making the tag file
 tags:			 $(CSOURCES) $(CCSOURCES) $(INCLUDES_ALL)

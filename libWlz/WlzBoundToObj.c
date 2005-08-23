@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBoundToObj.c
+* \file         libWlz/WlzBoundToObj.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Wed Sep 24 08:13:27 2003
 * \version      MRC HGU $Id$
