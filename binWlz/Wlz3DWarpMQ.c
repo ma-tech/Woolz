@@ -1,19 +1,185 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file		binWlz/Wlz3DWarpMQ.c
+* \author       J. Rao
+* \date         January 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Automatically produce a tetrahedron mesh from a woolz object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlz3dwarpmq "Wlz3DWarpMQ"
+*/
+
+
+/*!
+\ingroup	BinWlz
+\defgroup wlz3dwarpmq Wlz3DWarpMQ
+\par Name
+Wlz3DWarpMQ  -  Automatically produce a tetrahedron mesh from a woolz object.
+\par Synopsis
+\verbatim
+Wlz3DWarpMQ [-l#] [-m#] [-n#] [-x#] [-y#] [-z#] [-X#] [-Y#] [-Z#] [-i#]
+            [-j#] [-k#] [-O#] [-o#] [#] [-p#] [-t#] [-M#] [-c#] [-C#]
+	    [-b#] [-u#] [-r#] [-R#] [-e#] [-E#] [-f#] [-F#] [-g#] [-G#]
+	    [-a#] [-A#] [-Q#] [-q#] [-W#] [-B#] [-h] [-G] [-L] [<input file>]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>The number of cuboid elements along x-direction
+        (default is  6).</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>The number of cuboid elements along y-direction
+        (default is  6).</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>The number of cuboid elements along z-direction
+        (default is  6).</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>The minimum x-coordinate.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>The minimum y-coordinate.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>The minimum z-coordinate.</td>
+  </tr>
+  <tr> 
+    <td><b>-X</b></td>
+    <td>The maximum x-coordinate.</td>
+  </tr>
+  <tr> 
+    <td><b>-Y</b></td>
+    <td>The maximum y-coordinate.</td>
+  </tr>
+  <tr> 
+    <td><b>-Z</b></td>
+    <td>The maximum z-coordinate
+        (default will use the input Woolz Obj boxding box.</td>
+  </tr>
+  <tr>
+    <td><b>-C</b></td>
+    <td>Output cuting plane and corresponding surface in VTK form
+        (1 for yes, 0 for  no, default is  no).</td>
+  </tr>
+  <tr>
+    <td><b>-c</b></td>
+    <td>The constant Z-plane used to cut the transformed mesh
+        (default is 0).</td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>Input file name for the Woolz Object.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output file name for the warped Woolz Object.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>Input file name for the tiepoints.</td>
+  </tr>
+  <tr>
+    <td><b>-q</b></td>
+    <td>Output file for Mesh Transform in Wlz format.</td>
+  </tr>
+  <tr>
+    <td><b>-B</b></td>
+    <td>Input file for Mesh Transform in Wlz format..</td>
+  </tr>
+  <tr>
+    <td><b>-g</b></td>
+    <td>Minimum z-coordinate target plane (default is  0).</td>
+  </tr>
+  <tr>
+    <td><b>-G</b></td>
+    <td>Maximum Z-coordinate target plane (default is -1)..</td>
+  </tr>
+  <tr>
+    <td><b>-R</b></td>
+    <td>The tiepoint contains displacement
+        (1 for yes, 0 for  no, default is  no).</td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Read Mesh transform from a file
+        (1 for yes, 0 for  no, default is  no).</td>
+  </tr>
+  <tr>
+    <td><b>-Q</b></td>
+    <td>Output Mesh transform in Wlz format to a file
+        (1 for yes, 0 for  no, default is  no).</td>
+  </tr>
+  <tr>
+    <td><b>-a</b></td>
+    <td>Output the automatically produced 3D mesh VTK form
+        (1 for yes, 0 for  no, default is  no).</td>
+  </tr>
+  <tr>
+    <td><b>-M</b></td>
+    <td>Output the transformed 3D mesh VTK form
+        (1 for yes, 0 for  no, default is  no).</td>
+  </tr>
+  <tr>
+    <td><b>-W</b></td>
+    <td>Warp the Woolz object
+        (1 for yes, 0 for  no, default is yes).</td>
+  </tr>
+</table>
+\par Description
+Wlz3DWarpMQ automatically produces a tetrahedron mesh from a woolz object.
+But the user should input some parameters to give a large cuboid which
+cover the Woolz object. Sure, you can also just give a small cuboid
+by transfer only part of your Woolz object.
+\par Examples
+\par File
+\ref Wlz3DWarpMQ.c "Wlz3DWarpMQ.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* \Project:      Woolz
-* \Title:        Wlz3DWarpMQ.c
-* \Date:         18 January 2002 
-* \Author:       J. Rao
-* \Copyright:	 2002 Medical Research Council, UK.
-*		 All rights reserved.
-* \Address: 	 MRC Human Genetics Unit,
-*		 Western General Hospital,
-*		 Edinburgh, EH4 2XU, UK.
-* \Purpose:      Woolz 3D Warping using MQ 
-*		
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>

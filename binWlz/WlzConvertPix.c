@@ -1,19 +1,90 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzConvertPix.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Converts the pixel type of a grey-level woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzConvertPix.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Converts the pixel type of a grey-level woolz object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzconvertpix "WlzConvertPix"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzconvertpix WlzConvertPix
+\par Name
+WlzConvertPix - converts the pixel type of a grey-level woolz object.
+\par Synopsis
+\verbatim
+WlzConvertPix [-t#] [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Output pixel type specified by an integer:
+    <table width="500" border="0">
+    <tr> <td>1</td> <td>integer</td> </tr>
+    <tr> <td>2</td> <td>short</td> </tr>
+    <tr> <td>3</td> <td>unsigned byte (default)</td> </tr>
+    <tr> <td>4</td> <td>float</td> </tr>
+    <tr> <td>5</td> <td>double</td> </tr>
+    <tr> <td>7</td> <td>RGBA (colour)</td> </tr>
+    </table>
+    </tr>
+    </td>
+  </tr>
+</table>
+\par Description
+Converts the pixel type of a grey-level woolz object writing the new
+object to standard output.
+\par Examples
+\verbatim
+WlzConvertPix lobster.wlz >lobster_ub.wlz
+\endverbatim
+Converts the values of the
+domain object (with values) read from the file lobster.wlz
+to unsigned byte and writes the resulting object to the file lobster_ub.wlz.
+\par File
+\ref WlzConvertPix.c "WlzConvertPix.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzConvertPix "WlzConvertPix(3)"
+\ref WlzGreyType "WlzGreyType(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

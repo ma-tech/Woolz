@@ -1,19 +1,80 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzIntersect.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates the intersection of the input objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzIntersect.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the intersection of the input objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzintersect "WlzIntersect"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzintersect WlzIntersect
+\par Name
+WlzIntersect - computes the intersection of the input objects.
+\par Synopsis
+\verbatim
+WlzIntersect [-h] [-n] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Maximum number of objects, default 100.</td>
+  </tr>
+</table>
+\par Description
+Computes the intersection of the input objects.
+\par Examples
+\verbatim
+cat obj0.wlz obj1.wlz obj2.wlz | WlzIntersect >int.wlz
+\endverbatim
+Computes the intersection of the domain of the objects read from the files
+obj0.wlz, obj1.wlz and obj2.wlz. The resulting object is written to
+int.wlz.
+\par File
+\ref WlzIntersect.c "WlzIntersect.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzdiffdomain "WlzDiffDomain(1)"
+\ref wlzunion "WlzUnion(1)"
+\ref WlzIntersectN "WlzIntersectN(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -29,7 +90,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [<input file>]\n"
+	  "Usage:\t%s [-h] [-n] [<input file>]\n"
 	  "\tCalculate the intersection of the input woolz objects\n"
 	  "\tOptions are:\n"
 	  "\t  -h        Help - prints this usage message\n"

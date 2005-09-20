@@ -1,21 +1,97 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzHistogramGauss.c
-* Date:         February 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which convolves the bin values of a
-*		Woolz histogram object with a Gaussian or it's 1st
-*		or 2nd derivtive..
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzHistogramGauss.c
+* \author       Bill Hill
+* \date         August 2005
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Convolves the bin values of a histogram object with
+*               a Gaussian's 0th, 1st or nd derivative.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzhistogramgauss "WlzHistogramGauss"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzhistogramgauss WlzHistogramGauss
+\par Name
+WlzHistogramGauss - convolves a histogram with a Gaussian.
+\par Synopsis
+\verbatim
+WlzHistogramGauss [-h] [-a] [-r] [-o<out file>] [-d#] [-s#] [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Use a recursive IIR filter.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object/data file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Derivative, range [0-2].</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Gaussian sigma (standard deviation).</td>
+  </tr>
+</table>
+\par Description
+Convolves the bin values of a Woolz histogram object with a Gaussian
+or it's 1st or 2nd derivtive.
+Objects/data are read from stdin and written to stdout unless the
+filenames are given.
+\par Examples
+\verbatim
+WlzHistogramGauss -s3 -a myhist.wlz | xgraph
+\endverbatim
+The input Woolz histogram object is read from myhist.wlz, filtered
+by convolving the histogram bins with a Gaussian (sigma = 3.0) and
+written as ascii to the program xgraph for display.
+\par File
+\ref WlzHistogramGauss.c "WlzHistogramGauss.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzhistogramobj "WlzHistogramObj(1)"
+\ref wlzhistogramsmooth "WlzHistogramSmooth(1)"
+\ref WlzHistogramCnvGauss "WlzHistogramCnvGauss(3)"
+\ref WlzHistogramRsvGauss "WlzHistogramRsvGauss(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -231,7 +307,7 @@ int             main(int argc, char **argv)
     "  -a  Output the histogram as ascii data not a Woolz histogram object.\n"
     "  -r  Use a recursive IIR filter.\n"
     "  -o  Output object/data file name.\n"
-    "  -d Derivative, range [0-2].\n"
+    "  -d  Derivative, range [0-2].\n"
     "  -s  Gaussian sigma (standard deviation).\n"
     "  -h  Help, prints this usage message.\n"
     "Convolves the bin values of a Woolz histogram object with a Gaussian\n"

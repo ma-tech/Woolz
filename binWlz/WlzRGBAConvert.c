@@ -1,28 +1,93 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzRGBAConvert.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Thu Jun  3 08:39:00 2004
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         June 2004
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      binwlz
-* \brief        Access to conversion functions for RGBA data.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Colour conversion for an RGBA colour object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzrgbaconvert "WlzRGBAConvert"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzrgbaconvert WlzRGBAConvert
+\par Name
+WlzRGBAConvert - colour conversion for an RGBA colour object.
+\par Synopsis
+\verbatim
+WlzRGBAConvert [-c] [-m] [-s#] [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-c</b></td>
+    <td>Convert to compound, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Convert to modulus.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Select colour space
+    <table width="500" border="0">
+    <tr> <td>1</td> <td>RGB, default.</td> </tr>
+    <tr> <td>2</td> <td>HSB.</td> </tr>
+    <tr> <td>3</td> <td>CMY.</td> </tr>
+    </table>
+    </td>
+  </tr>
+</table>
+\par Description
+Converts a RGBA (colour) object to either a compound object
+or a modulus of the RGB values,
+writing the new object to standard output.
+The input object <b>must</b> have grey-value type RGBA.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzRGBAConvert.c "WlzRGBAConvert.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzconvertpix "WlzConvertPix(1)"
+\ref WlzRGBAToCompound "WlzRGBAToCompound(3)"
+\ref WlzRGBAToModulus "WlzRGBAToModulus(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -38,7 +103,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-c] [-m] [-h] [<input file>]\n"
+	  "Usage:\t%s [-c] [-m] [-s#][-h] [<input file>]\n"
 	  "\tConvert the RGBA woolz object to a compound object\n"
 	  "\tor to the modulus of the rgb values,\n"
 	  "\twriting the new object to standard output.\n"

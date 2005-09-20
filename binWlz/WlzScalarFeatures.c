@@ -1,26 +1,112 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzScalarFeatures.c
 * \author       Bill Hill
 * \date         November 2002
 * \version      $Id$
-* \note
-*               Copyright
-*               2002 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	Extracts scalar features from Woolz domain objects.
-*		These features are separated by some minimum distance
-*		and are either maximal or minimal within a region which
-*		approximates to the Vorinoi cell containing the feature.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzscalarfeatures "WlzScalarFeatures"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzscalarfeatures WlzScalarFeatures
+\par Name
+WlzScalarFeatures - extracts scalar features from Woolz domain objects.
+\par Synopsis
+\verbatim
+WlzScalarFeatures [-h] [-o<out file>] [-H] [-L] [-a] [-v#] [-d#]
+                  [-t<feature type>] [-f#] [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name, default stdout.</td>
+  </tr>
+  <tr> 
+    <td><b>-H</b></td>
+    <td>Feature values will be at or above the threshold value, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Feature values will be below threshold value, not default.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Compute a threshold value automatically, not default.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Specified threshold value, default 128.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Minimum distance between features, default 20.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Type of feature, valid types are "value" and "grad",
+        default "value".</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Filter value for feature extraction, default 1.</td>
+  </tr>
+</table>
+\par Description
+Extracts scalar features from Woolz domain objects. These features
+are separated by a minimum distance and are either maximal or minimal
+within a region (which approximates to the Vorinoi cell) containing
+the feature.
+\par Examples
+\verbatim
+WlzScalarFeatures -t grad -d 25 -H -v 200 obj.wlz >out.num
+\endverbatim
+A 2D domain object with values is read from obj.wlz and a list of
+2D cooordinates is then output to the file out.num.
+These coordinates are positions within obj.wlz which have high image gradients
+and are seperated by at least 25 pixels.
+\par File
+\ref WlzScalarFeatures.c "WlzScalarFeatures.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzScalarFeatures2D "WlzScalarFeatures2D(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

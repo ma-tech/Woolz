@@ -1,26 +1,113 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzRegisterICPWSD.c
 * \author       Bill Hill
 * \date         May 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	Computes a 3D grey valued object in which the values are
 *		the weighted sums of distances as used for ICP registration.
-* \ingroup
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzregistericpwsd "WlzRegisterICPWSD"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzregistericpwsd WlzRegisterICPWSD
+\par Name
+WlzRegisterICPWSD - computes a 3D grey valued object using ICP weights.
+\par Synopsis
+\verbatim
+WlzRegisterICPWSD - [-M #] [-R] [-i <init tr>] [-o<out obj>]
+                    [-r #,#:#] [-x #,#:#] [-y #,#:#]
+		    [<in obj 0>] [<in obj 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Minimum distance weight, range [0.0-1.0]: Useful values
+        are 0.25 (default) for global matching and 0.0 for local
+	matching.</td>
+  </tr>
+  <tr> 
+    <td><b>-R</b></td>
+    <td>Rotations are in radians not degrees.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Initial affine transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Range and step size for rotation in degrees.</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>Range and step size for translation through columns.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Range and step size for translation through lines.</td>
+  </tr>
+</table>
+\par Description
+Computes a 3D double precission valued object in which the values
+are the weighted sums of distances as used for ICP registration.
+In specifying the ranges the defaults are 0.0 -> 20.0, step 1.0.
+The input objects are read from stdin and values are written to stdout
+unless the filenames are given.
+\par Examples
+\verbatim
+lzRegisterICPWSD -o out.wlz -r 0,90:0.5 -x 100,200: -y ,200: in0.wlz in1.wlz
+\endverbatim
+A weighted sums of distances object is computed for rotations of
+0 to 90 degrees with a step size of 0.5 degrees, the x and y
+translations are from 100 to 200 and 0 to 200 in unit steps.
+The weighted sums of distances object is then written to out.wlz.
+\par File
+\ref WlzRegisterICPWSD.c "WlzRegisterICPWSD.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzregistericp "WlzRegisterICP(1)"
+\ref WlzRegICPObjWSD2D "WlzRegICPObjWSD2D(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -348,7 +435,7 @@ int             main(int argc, char **argv)
     "      0.25 (default) for global matching and 0.0 for local matching.\n"
     "  -R  Rotations are in radians not degrees.\n"
     "  -i  Initial affine transform object.\n"
-    "  -o  Output file name for affine transform.\n"
+    "  -o  Output file name.\n"
     "  -r  Range and step size for rotation in degrees.\n"
     "  -x  Range and step size for translation through columns.\n"
     "  -y  Range and step size for translation through lines.\n"

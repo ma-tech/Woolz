@@ -1,20 +1,116 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzHistogramGauss.c
-* Date:         February 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which fits a series of Gaussian distributions
-*		to a Woolz histogram.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzHistogramFitPeaks.c
+* \author       Bill Hill
+* \date         February 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Fits a series of Gaussian distributions to a histogram.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzhistogramfitpeaks "WlzHistogramFitPeaks"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzhistogramfitpeaks WlzHistogramFitPeaks
+\par Name
+WlzHistogramFitPeaks - fits a series of Gaussian distributions to a histogram.
+\par Synopsis
+\verbatim
+WlzHistogramFitPeaks [-h] [-y] [-o<out file>] [-s#] [-t#] [-l#]
+                     [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Log-liklihood fitting tolerance.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Number of Gaussian distributions.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output data file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Minimum Gaussian sigma (standard deviation).</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Threshold value for peak height.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>
+    Synthesize a new histogram from the mixture of Gaussians, by
+    default just the statistics are output.</td>
+  </tr>
+</table>
+\par Description
+Fits a mixture of Gaussian distributions to the given Woolz
+histogram using a maximum liklihood estimate.
+If given the number of Gaussian
+distributions is zero (default) then Gaussians will be fitted to
+peaks found using WlzHistogramFindPeaks.
+Either the statistics of the Gaussian mixture are output in the format
+\verbatim
+  <mu (mean)> <sigma (std dev)> <alpha (height)> <area>
+\endverbatim
+one record for each fitted Gaussian, or a synthesized histogram built
+using the statistics is output.
+Objects/data are read from stdin and written to stdout unless the
+filenames are given.
+\par Examples
+\verbatim
+WlzHistogramFitPeaks -s1.0 -t 10.0 myhist.wlz
+\endverbatim
+The input Woolz histogram object is read from myhist.wlz. Histogram
+peaks are detected using a Gaussian smoothing filter with a sigma value
+of 1.0 and a threshold value of 10.0, the maximum liklihood mixture
+of Gaussians is computed and the mixture statistics are written to the
+standard output.
+\par File
+\ref WlzHistogramFitPeaks.c "WlzHistogramFitPeaks.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzhistogramobj "WlzHistogramObj(1)"
+\ref WlzHistogramFitPeaks "WlzHistogramFitPeaks(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -361,7 +457,7 @@ int             main(int argc, char **argv)
     "  -y  Synthesize a new histogram from the mixture of Gaussians, by\n"
     "      default just the statistics are output.\n"
     "  -h  Help, prints this usage message.\n"
-    "Fits a mixture of Gaussian distributions to the given Woolz histogram"
+    "Fits a mixture of Gaussian distributions to the given Woolz histogram\n"
     "using a maximum liklihood estimate. If given the number of Gaussian\n"
     "distributions is zero (default) then Gaussians will be fitted to\n"
     "peaks found using WlzHistogramFindPeaks.\n"

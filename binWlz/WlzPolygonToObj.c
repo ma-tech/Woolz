@@ -1,20 +1,85 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzPolygonToObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Converts a 2D or 3D polygon object to the 
-*		corresponding domain * object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzPolygonToObj.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Converts a polygon object to a domain object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzpolygontoobj "WlzPolygonToObj"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzpolygontoobj WlzPolygonToObj
+\par Name
+WlzPolygonToObj  -  converts a polygon object to a domain object.
+\par Synopsis
+\verbatim
+WlzPolygonToObj  [-h] [-v] [-t#] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Polygon fill mode
+    <table width="500" border="0">
+    <tr><td>0</td> <td>Simple fill, default.</td> </tr>
+    <tr><td>1</td> <td>Even-odd fill.</td> </tr>
+    <tr><td>2</td> <td>Vertex fill.</td> </tr>
+    </table></td>
+  </tr>
+</table>
+\par Description
+Converts a polygon object to a domain object.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzPolygonToObj.c "WlzPolygonToObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzboundarytoobj "WlzBoundaryToObj(1)"
+\ref wlzrasterobj "WlzRasterObj(1)"
+\ref WlzPolygonToObj "WlzPolygonToObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -30,7 +95,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [<input file>]\n"
+	  "Usage:\t%s [-h] [-v] [-t#] [<input file>]\n"
 	  "\tConvert a 2D or 3D polygon woolz object\n"
 	  "\tto the corresponding domain object\n"
 	  "\tOptions are:\n"

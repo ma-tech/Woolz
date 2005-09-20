@@ -1,13 +1,50 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzExplode.c
+* \author       Bill Hill, Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Explodes objects into component objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzexplode "WlzExplode"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzexplode WlzExplode
 \par Name
-WlzExplode - Explodes a Woolz 3D domain object or a compound object
- into 2D domain objects.
+WlzExplode - Explodes Woolz objects into component objects.
 \par Synopsis
 \verbatim
-WlzExplode [-b  <file body>] [-e <file extension>] [-h] [-p] [<input object file>]
+WlzExplode [-b <file body>] [-e <file extension>] [-h] [-p]
+           [<input object file>]
 
 \endverbatim
 \par Options
@@ -58,46 +95,24 @@ WlzExplode -b lobsterPlane lobster.wlz
 
 WlzExplode <infile3D.wlz >outfile2D.wlz
 
+# WlzExplode can decompose Woolz colour objects into their red, green, blue
+# and alpha components. In the following example, in which the the colour
+# components of object toucan.wlz are exploded with toucan000000.wlz the
+# red component, toucan000001.wlz the green, toucan000002.wlz the blue
+# and toucan000003.wlz the alpha component.
+
+WlzExplode -b toucan -c toucan.wlz
 \endverbatim
+\par File
+\ref WlzExplode.c "WlzExplode.c"
 \par See Also
 \ref wlzconstruct3d "WlzContruct3D(1)",
-\ref wlzcompound "WlzCompound(1)", WlzExplode(3)
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Wed Jul 27 22:55:51 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzcompound "WlzCompound(1)"
+\ref WlzExplode3D "WlzExplode3D(3)"
+\ref WlzRGBAToCompound "WlzRGBAToCompound(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/*!
-* \file         binWlz/WlzExplode.c
-* \author       Bill Hill
-* \date         March 1999
-* \version      $Id$
-* \note
-*               Copyright
-*               2002 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
-* \brief	Woolz filter to explode 3D and compound objects into
-*		2D objects.
-* \todo         -
-* \bug          None known.
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

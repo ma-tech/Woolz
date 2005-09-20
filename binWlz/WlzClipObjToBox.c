@@ -1,15 +1,52 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file		binWlz/WlzClipObjToBox.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Clips the given object so that it lies within the given box.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzclipobjtobox "WlzClipObjToBox"
+*/
+
 /*!
 \ingroup BinWlz
 \defgroup wlzclipobjtobox WlzClipObjToBox
 \par Name
-WlzClipObjToBox -  Clips the given object so that it lies
+WlzClipObjToBox -  clips the given object so that it lies
        within the given box.
 \par Synopsis
 \verbatim
-WlzClipObjToBox [-h] [ -o<output object file>]
-    [ -x<x min>,<x max>]  [  -y<y  min>,<y  max>]
-    [  -z<z min>,<z max>]
-    [<input object file>]
+WlzClipObjToBox [-h] [-o<output object file>]
+		[-x<x min>,<x max>]  [-y<y  min>,<y  max>] [-z<z min>,<z max>]
+		[<input object file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -59,45 +96,16 @@ and column lower bounds are clipped.
 WlzClipObjToBox -x0, -y0, -o outfile.wlz infile.wlz
 \endverbatim  
 
+\par File
+\ref WlzClipObjToBox.c "WlzClipObjToBox.c"
 \par See Also
-<a href="../html_libCore/group__wlzvaluesutils.html"> WlzCutObjToBox(3)</a>,
-\ref wlzcutobjtobox "WlzCutObjToBox(1)",
-<a href="../html_libCore/group__wlzvaluesutils.html">WlzClipObjToBox(3)</a>,
-\ref wlzfacts "WlzFacts(1)".
-
-\par Bugs
-Still to be found.
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 22 16:29:57 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref BinWlz "WlzIntro(1)"
+\ref wlzcutobjtobox "WlzCutObjToBox(1)"
+\ref WlzClipObjToBox2D "WlzClipObjToBox2D(3)"
+\ref WlzClipObjToBox3D "WlzClipObjToBox3D(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-#pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzClipObjToBox.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter for clipping either a 2D or 3D domain
-*		objects domain so that it lies within a given box.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

@@ -1,5 +1,42 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzHistogramData.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Reads a histogram object and writes it as ascii data.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzhistogramdata "WlzHistogramData"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzhistogramdata WlzHistogramData
 \par Name
@@ -34,7 +71,9 @@ Reads a Woolz histogram object and writes it as ascii data.
 The output data are written as a set of records one per line, with each
 record composed of two fields separated by white space characters:
 \par
-    \<grey value\>   \<histogram bin occupancy\>
+\verbatim
+    <grey value> <histogram bin occupancy>
+\endverbatim
 
 \par Examples
 \verbatim
@@ -45,40 +84,13 @@ WlzHistogramData myHist.wlz | xgraph
 
 \endverbatim
 
+\par File
+\ref WlzHistogramData.c "WlzHistogramData.c"
 \par See Also
-WlzHistogram(3)
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 29 08:17:40 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzhistogramobj "WlzHistogramObj(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzHistogramData.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which reads a Woolz histogram object
-*		and writes it as ascii data.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

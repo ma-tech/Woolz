@@ -1,3 +1,41 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         binWlz/WlzCutObjToBox.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Cuts  out  a  filled  box from the given object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcutobjtobox "WlzCutObjToBox"
+*/
+
 /*!
 \ingroup BinWlz
 \defgroup wlzcutobjtobox WlzCutObjToBox
@@ -99,45 +137,16 @@ An example in which the input object is used to create a
 WlzCutObjToBox -x0,256, -y0,256 -z0,256 -o outfile.wlz infile.wlz
 \endverbatim  
 
+\par File
+\ref WlzCutObjToBox.c "WlzCutObjToBox.c"
 \par See Also
-<a href="../html_libCore/group__wlzvaluesutils.html"> WlzCutObjToBox(3)</a>,
-\ref wlzclipobjtobox "WlzClipObjToBox(1)",
-<a href="../html_libCore/group__wlzvaluesutils.html">WlzClipObjToBox(3)</a>,
-\ref wlzfacts "WlzFacts(1)".
-
-\par Bugs
-Still to be found.
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 22 16:29:57 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref WlzCutObjToBox2D "WlzCutObjToBox2D(3)"
+\ref WlzCutObjToBox3D "WlzCutObjToBox3D(3)"
+\ref WlzClipObjToBox2D "WlzClipObjToBox2D(3)"
+\ref WlzClipObjToBox3D "WlzClipObjToBox3D(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-#pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzCutObjToBox.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter for cutting either a 2D or 3D domain
-*		object so that its value table(s) are rectangular.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

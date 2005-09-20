@@ -1,3 +1,41 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         binWlz/WlzFacts.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Gives information about Woolz objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzfacts "WlzFacts"
+*/
+
 /*!
 \ingroup BinWlz
 \defgroup wlzfacts WlzFacts
@@ -29,44 +67,23 @@ WlzFacts reads woolz objects from the  standard  input  or
        their structure (types,  domain  bounds,  area,  etc.)  to
        stderr.
 \par Examples
+\verbatim
+WlzFacts toucan.wlz
+\endverbatim
+Prints information about the object read from toucan.wlz
+to the standard error output.
+\par File
+\ref WlzFacts.c "WlzFacts.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\par Bugs
-Still to be found.
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 22 16:29:57 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzgreystats "WlzGreyStats(3)"
+\ref WlzObjectFacts "WlzObjectFacts(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-#pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzFacts.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Print out facts about Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
-
  
 /* externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */

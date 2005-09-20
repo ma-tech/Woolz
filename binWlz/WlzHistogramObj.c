@@ -1,9 +1,46 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzHistogramObj.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes a histogram from a 2D or 3D domain object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzhistogramobj "WlzHistogramObj"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzhistogramobj WlzHistogramObj
 \par Name
-WlzHistogramObj -  Computes  a  Woolz histogram object from a 2D or 3D
+WlzHistogramObj -  computes a Woolz histogram object from a 2D or 3D
        domain object.
 
 \par Synopsis
@@ -72,42 +109,13 @@ WlzHistogramObj -a myObj.wlz | xgraph
 
 \endverbatim
 
+\par File
+\ref WlzHistogramObj.c "WlzHistogramObj.c"
 \par See Also
-WlzHistogram(3).
-
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 29 08:35:26 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref WlzHistogramObj "WlzHistogram(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzHistogramObj.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which computes a Woolz histogram object
-*		from the given Woolz domain object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 1999-09-19 bill	Error reporting could cause segfault, fixed bug.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

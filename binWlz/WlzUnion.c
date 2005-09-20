@@ -1,19 +1,82 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzUnion.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates the union of the input objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzUnion.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the union of domain objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzunion "WlzUnion"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzunion WlzUnion
+\par Name
+WlzUnion - computes the union of domain objects.
+\par Synopsis
+\verbatim
+WlzUnion [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Maximum number of objects, default 100.</td>
+  </tr>
+</table>
+\par Description
+Computes the union of domain objects.
+By default objects read read from the standard input and written to the
+standard output.
+\par Examples
+\verbatim
+cat obj0.wlz obj1.wlz obj2.wlz | WlzUnion >uni.wlz
+\endverbatim
+Computes the union of the domain of the objects read from the files
+obj0.wlz, obj1.wlz and obj2.wlz. The resulting object is written to
+uni.wlz.
+\par File
+\ref WlzUnion.c "WlzUnion.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzintersect "WlzIntersect(1)"
+\ref wlzdiffdomain "WlzDiffDomain(1)"
+\ref WlzUnionN "WlzUnionN(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

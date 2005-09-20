@@ -1,31 +1,130 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzCreateSpecialSE.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Fri May  4 11:08:15 2001				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlz/WlzCreateSpecialSE.c
+* \author       Richard Baldock
+* \date         May 2001
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Creates a "special" structuring element object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcreatespecialse "WlzCreateSpecialSE"
+*/
 
+/*!
+\ingroup BinWlz
+\defgroup wlzcreatespecialse WlzCreateSpecialSE
+\par Name
+WlzCreateSpecialSE  -  creates a "special" structuring element object.
+\par Synopsis
+\verbatim
+WlzCreateSpecialSE  -  [-o#] [-r#] [-s#] [-t#] [-x#] [-y#] [-z#] [-h]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Structuring element object type specified by an integer value:
+    <table width="500" border="0">
+    <tr> <td>0</td> <td>2D<td> </tr>
+    <tr> <td>1</td> <td>3D<td> </tr>
+    </table>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Structuring element radius.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Structuring element sub-type specified by an integer value:
+    <table width="500" border="0">
+    <tr> <td>0</td> <td>8-connected (2D)</td> </tr>
+    <tr> <td>1</td> <td>4-connected (2D)</td> </tr>
+    <tr> <td>2</td> <td>6-connected (3D)</td> </tr>
+    <tr> <td>3</td> <td>18-connected (3D)</td> </tr>
+    <tr> <td>4</td> <td>26-connected (3D)</td> </tr>
+    <tr> <td>5</td> <td>octagonal (2D)</td> </tr>
+    <tr> <td>6</td> <td>Euclidean (2D and 3D)</td> </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>Structuring element type specified by an integer value
+        (Liang naming):
+    <table width="500" border="0">
+    <tr> <td>0</td> <td>h4 - 4-connected (default)</td> </tr>
+    <tr> <td>1</td> <td>ex4 - (111)(010)(111)</td> </tr>
+    <tr> <td>2</td> <td>a8 - 8-connected</td> </tr>
+    <tr> <td>3</td> <td>h6 - 6 combinations of 2 missing corners</td> </tr>
+    <tr> <td>4</td> <td>h5 - 4 options of 3 missing corners</td> </tr>
+    <tr> <td>5</td> <td>h7 - 4 options of 1 missing corner</td> </tr>
+    <tr> <td>6</td> <td>a3 - 4-connected, 4 options of 1 missing side</td> </tr>
+    <tr> <td>7</td> <td>e1 - (000)(011)(000)</td> </tr>
+    <tr> <td>8</td> <td>e2 - (000)(111)(000)</td> </tr>
+    <tr> <td>9</td> <td>v2 - (010)(010)(010)</td> </tr>
+    <tr> <td>20</td> <td>single pixel object</td> </tr>
+    <tr> <td>21</td> <td>circle object</td> </tr>
+    <tr> <td>22</td> <td>sphere object</td> </tr>
+    <tr> <td>23</td> <td>standard structuring element - uses
+                         distance type (sub-type), radius and otype</td> </tr>
+    </table>
+    </td>
+  </tr>
+</table>
+\par Description
+Creates a "special" structuring element object
+and writes the new object to standard output.
+\par Examples
+\verbatim
+WlzCreateSpecialSE -o1 -r32 -s4 >sphere.wlz
+\endverbatim
+Creates a 3D domain object in which the domain is a 26-connected sphere of
+radius 32.
+\par File
+\ref WlzCreateSpecialSE.c "WlzCreateSpecialSE.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzdilation "WlzDilation(1)"
+\ref wlzerosion "WlzErosion(1)"
+\ref WlzMakeSpecialStructElement "WlzMakeSpecialStructElement(3)"
+\ref WlzMakeSinglePixelObject "WlzMakeSinglePixelObject(3)"
+\ref WlzMakeCircleObject "WlzMakeCircleObject(3)"
+\ref WlzMakeSphereObject "WlzMakeSphereObject(3)"
+\ref WlzMakeStdStructElement "WlzMakeStdStructElement(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

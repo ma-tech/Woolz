@@ -1,21 +1,63 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzShiftObj.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Shifts objects using an integer translation.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzshiftobj "WlzShiftObj"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzshiftobj WlzShiftObj
 \par Name
-WlzShiftObj - Shifts (applies an integer translation)  Woolz objects.
+WlzShiftObj - shifts objects using an integer translation.
 \par Synopsis
 \verbatim
-WlzShiftObj [-o<output object file>]
-           [-g]
-           [-x<column shift>]
-           [-y<line shift>]
-           [-z<plane shift>]
-           [-h] [<input object file>]
+WlzShiftObj [-h] [-o<output object file>]
+            [-g] [-x<column shift>] [-y<line shift>] [-z<plane shift>]
+            [<input object file>]
 
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
   <tr>
     <td><b>-g</b></td>
     <td>shift object to the origin. </td>
@@ -32,23 +74,11 @@ WlzShiftObj [-o<output object file>]
     <td><b>-z</b></td>
     <td>plane shift. </td>
   </tr>
-  <tr>
-    <td><b>-o</b></td>
-    <td>Output object file name.</td>
-  </tr>
-  <tr>
-    <td><b>-h</b></td>
-    <td>Help - print help message</td>
-  </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
-By  default  the  input  object is read from the standard input and the
-output object is written to the standard output.
 \par Description
 Shifts a Woolz object without copying it's grey values.
+By  default  the  input  object is read from the standard input and the
+output object is written to the standard output.
 \par Examples
 \verbatim
 # The following c shell script uses awk(1), WlzBoundingBox(1) and
@@ -67,41 +97,15 @@ WlzShiftObj -g -o outfile.wlz infile.wlz
 
 \endverbatim
 
+\par File
+\ref WlzShiftObj.c "WlzShiftObj.c"
 \par See Also
-awk(1), \ref wlzboundingbox "WlzBoundingBox(1)", WlzShiftObj(3).
-
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 29 11:52:58 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzboundingbox "WlzBoundingBox(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref WlzShiftObject "WlzShiftObject(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzShiftObj.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Shifts a Woolz object by applying an integral
-*		translation.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

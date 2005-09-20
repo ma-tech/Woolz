@@ -1,19 +1,79 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzContourSzSelect.c
-* Date:         March 2001
-* Author:       Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Filters to remove small shells from contours.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzContourSzSelect.c
+* \author       Bill Hill
+* \date         March 2001
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Filter to remove small shells from contours.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcontourszselect "WlzContourSzSelect"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzcontourszselect WlzContourSzSelect
+\par Name
+WlzContourSzSelect  -  Filter remove small shells from contours.
+\par Synopsis
+\verbatim
+WlzContourSzSelect  [-h] -s<threshold> [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Threshold shell size (edges in 2D, loops in 3D).</td>
+  </tr>
+</table>
+\par Description
+Removes all shells in the contour which have less than the threshold
+number of elements.
+\par Examples
+\verbatim
+ContourSzSelect -s 1000 lobster.wlz >out.wlz
+\endverbatim
+Removes all fragments with less than 1000 faces from  the 3D contour model
+read from lobster.wlz and writes the output to out.wlz.
+\par File
+\ref WlzContourSzSelect.c "WlzContourSzSelect.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzcontourobj "WlzContourObj(1)"
+\ref WlzGMFilterRmSmShells "WlzGMFilterRmSmShells(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <Wlz.h>
 #include <string.h>
 

@@ -1,9 +1,46 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzContourFromPoints.c
+* \author       Bill Hill
+* \date         August 2005
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes a contour object from point sets.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcontourfrompoints "WlzContourFromPoints"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzcontourfrompoints WlzContourFromPoints
 \par Name
-WlzContourFromPoints - Compute contour from point sets.
+WlzContourfrompoints - Compute contour from point sets.
 \par Synopsis
 \verbatim
 WlzContourFromPoints [-h] [-2] [-3] [-o<out object>]
@@ -92,49 +129,25 @@ Computes a contour from three point sets: inside; outside and on a
 surface.
 All points are given using the following ascii format:
 \par
-  \<vertex x\> \<vertex y\> [\<vertex z\>]
+  x y z
 \par Examples
 \verbatim
+WlzContourFromPoints -a 0.5 -b2 -c2 -d4 -e4 -D 0.1 -T 0.1
+                     -I jelly_i.vtx -S jelly_s.vtx -O jelly_o.vtx
+    		     -o jelly_ctr.wlz
 \endverbatim
-
+Computes a closed surface which approximatly fitts the surface points in
+jelly_s.vtx with points jelly_i.vtx inside the surface and points
+jelly_o.vtx outside the surface.
+The resulting contour object is written to jelly_ctr.wlz.
+\par File
+\ref WlzContourFromPoints.c "WlzContourFromPoints.c"
 \par See Also
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Mon Aug  1 08:39:03 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzcontourobj "WlzContourObj(1)"
+\ref WlzContourFromPoints "WlzContourFromPoints(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/*!
-* \file         binWlz/WlzContourFromPoints.c
-* \author       Bill Hill
-* \date         February 2003
-* \version      $Id$
-* \note
-*               Copyright
-*               2002 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
-* \brief	Woolz filter which computes a contour from three
-*		point sets: inside; outside and on a surface.
-* \todo         -
-* \bug          None known.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

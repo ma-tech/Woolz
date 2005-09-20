@@ -1,26 +1,187 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzRandomAffineTransform.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Creates a Woolz affine transform from random
-*		transfrom primatives, where the primitives
-*		are taken from a uniform distribution within
-*		set limits.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Creates an affine transform with random transfrom primatives.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzrandomaffinetransform "WlzRandomAffineTransform"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzrandomaffinetransform WlzRandomAffineTransform
+\par Name
+WlzRandomAffineTransform  -  creates an affine transform with random
+                             transfrom primatives.
+\par Synopsis
+\verbatim
+WlzRandomAffineTransform [-h] [-o<output object>] [-2] [-3]
+                         [-R] [-g] [-r] [-t]
+			 [-x #] [-X #] [-y #] [-Y #] [-z #] [-Z #]
+			 [-a #] [-A #] [-b #] [-B #]
+			 [-u #] [-U #] [-v #] [-V #] [-w #] [-W #]
+			 [-s #] [-S #] [-e #]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output affine transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-2</b></td>
+    <td>2D transform, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-3</b></td>
+    <td>3D transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-R</b></td>
+    <td>Use radians for angles instead of degrees.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>General affine transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Rigid body transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Translation only transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>Mean column (x) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-X</b></td>
+    <td>Half range of column (x) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Mean row (y) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-Y</b></td>
+    <td>Half range of row (y) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>Mean plane (z) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-Z</b></td>
+    <td>Half range of plane (z) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Mean rotation about the z-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Half range of rotation about the z-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Mean rotation about the y-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-B</b></td>
+    <td>Half range of rotation about the y-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Mean shear strength.</td>
+  </tr>
+  <tr> 
+    <td><b>-U</b></td>
+    <td>Half range of shear strength.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Mean shear angle in x-y plane.</td>
+  </tr>
+  <tr> 
+    <td><b>-V</b></td>
+    <td>Half range of shear angle in x-y plane.</td>
+  </tr>
+  <tr> 
+    <td><b>-w</b></td>
+    <td>Mean 3D shear angle.</td>
+  </tr>
+  <tr> 
+    <td><b>-W</b></td>
+    <td>Half range of 3D shear angle.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Mean scale factor.</td>
+  </tr>
+  <tr> 
+    <td><b>-S</b></td>
+    <td>Half range of scale factor.</td>
+  </tr>
+  <tr> 
+    <td><b>-e</b></td>
+    <td>Integer seed for random number generator.</td>
+  </tr>
+</table>
+\par Description
+Creates a random affine transform from random transfrom primatives.
+The default mean and half range of the primatives is 0.0 except for
+the scale which is 1.0 \f$\pm\f$ 0.0.
+\par Examples
+\verbatim
+WlzRandomAffineTransform -t -2 -x 1 -X 4.2 -y 1 -Y 8
+\endverbatim
+Creates a 2D translation only transform with random translations of
+1.0 \f$\pm\f$ 4.2 (x) and 1.0 \f$\pm\f$ 8.0 (y)
+which is written to the standard output.
+\par File
+\ref WlzRandomAffineTransform.c "WlzRandomAffineTransform.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref WlzAffineTransformFromPrimVal "WlzAffineTransformFromPrimVal(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -366,7 +527,8 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-o<output object>] [-2] [-3] [-R] [-g] [-r] [-t]\n"
+    " [-h] [-o<output object>] [-2] [-3]\n"
+    "        [-R] [-g] [-r] [-t]\n"
     "        [-x #] [-X #] [-y #] [-Y #] [-z #] [-Z #]\n"
     "        [-a #] [-A #] [-b #] [-B #]\n"
     "        [-u #] [-U #] [-v #] [-V #] [-w #] [-W #]\n"

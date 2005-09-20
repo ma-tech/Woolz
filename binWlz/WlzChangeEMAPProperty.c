@@ -1,9 +1,47 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file		binWlz/WlzChangeEMAPProperty.c
+* \author       Richard Baldock
+* \date         July 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Changes the EMAP property of a woolz object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzchangeemapproperty "WlzChangeEMAPProperty"
+*/
+
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzchangeemapproperty WlzChangeEMAPProperty
 \par Name
-WlzChangeEMAPProperty - Change the EMAP property of a woolz object.
+WlzChangeEMAPProperty - changes the EMAP property of a woolz object.
 \par Synopsis
 \verbatim
 WlzChangeEMAPProperty [-c<time>] [-C<author>] [-f<filename>]
@@ -137,50 +175,15 @@ WlzChangeEMAPProperty -C "Richard Baldock" -n "embryo_2_WM_left" \
       Modification time: Fri Jul 29 17:44:54 2005
       Modification author: richard (richard)
       Comment: Program test
-
 \endverbatim
 
+\par File
+\ref WlzChangeEMAPProperty.c "WlzChangeEMAPProperty.c"
 \par See Also
 \ref wlzfacts "WlzFacts(1)"
-
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 29 12:17:59 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   MRC HGU Image Processing Utilities			*
-*   File       :   WlzChangeEMAPProperty.c				*
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Mon Jul 29 16:48:25 2002				*
-*   $Revision$					       		*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

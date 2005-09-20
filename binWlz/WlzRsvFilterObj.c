@@ -1,20 +1,128 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzRsvFilterObj.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Recursive filter for Woolz domain objects with grey
-*		values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzRsvFilterObj.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Recursive filter for domain objects with grey values.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzrsvfilterobj "WlzRsvFilterObj"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzrsvfilterobj WlzRsvFilterObj
+\par Name
+WlzRsvFilterObj - recursive filter for domain objects with grey values.
+\par Synopsis
+\verbatim
+WlzRsvFilterObj - [-h] [-o<output object>]
+                  [-a#,#,#,#] [-b#,#] [-c#]
+		  [-P] [-n] [-g] [-d] [-p#] [-r#] [-t#]
+		  [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Filter feed forward parameters.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Filter feed back parameters.</td>
+  </tr>
+  <tr> 
+    <td><b>-c</b></td>
+    <td>Filter normalization parameter.</td>
+  </tr>
+  <tr> 
+    <td><b>-P</b></td>
+    <td>Print filter parameters to the standard output.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Dont filter object.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Use approximate Gaussian filter.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Use Deriche filter.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Filter parameter for Gaussian (sigma) and Deriche (alpha).</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Order of derivative for Gaussian and Deriche filters [0-2].</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Filter directions, eg x filter along lines and x,y filter
+        along lines then through columns.</td>
+  </tr>
+</table>
+\par Description
+Applies a recursive filter to a Woolz domain object with grey values.
+The input object is read from stdin and the filtered object is
+written to stdout unless the filenames are given.
+Objects with unsigned byte grey values will be promoted to short
+grey valued objects.
+\par Examples
+\verbatim
+WlzRsvFilterObj -g -p 2.0 -r 0 -t y -o smoothed.wlz in.wlz
+\endverbatim
+The input Woolz object is read from in.wlz, and filtered using a
+Gaussian filter with varience = 2.0. The is only applied through
+the objects columns. The filtered object is then written to
+smoothed.wlz.
+\par File
+\ref WlzRsvFilterObj.c "WlzRsvFilterObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgauss "WlzGauss(1)"
+\ref WlzRsvFilterObj "WlzRsvFilterObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -351,7 +459,7 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-o<output object>] [-h] [-o] [-a#,#,#,#] [-b#,#] [-c#]\n"
+    " [-h] [-o<output object>] [-a#,#,#,#] [-b#,#] [-c#]\n"
     "        [-P] [-n] [-g] [-d] [-p#] [-r#] [-t#]\n"
     "        [<input object>]\n"
     "Options:\n"

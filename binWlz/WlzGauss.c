@@ -1,19 +1,99 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGauss.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Applies a Gaussian filter to a grey level object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzGauss.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Applies a Gaussian filter to an objects grey values.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgauss "WlzGauss"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgauss WlzGauss
+\par Name
+WlzGauss - applies a Gaussian filter to an objects grey values.
+\par Synopsis
+\verbatim
+WlzGauss [-w #[ #]] [-x#] [-y#] [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-w</b></td>
+    <td>
+    Gaussian widths in the x and (optionaly) y directions,
+    specified as full width half maximum in pixels,
+    with a default value of 3.0. If a single width parameter is given
+    the y width is set equal to the x width.
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>
+    Order of the x derivative with possible values 0,1,2 and
+    a default value of 0.
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>
+    Order of the x derivative with possible values 0,1,2 and
+    a default value of 0.
+    </td>
+  </tr>
+</table>
+\par Description
+Applies a Gaussian filter to the grey values of a Woolz object.
+\par Examples
+\verbatim
+WlzGauss -w 5 in.wlz >smooth.wlz
+\endverbatim
+Smooths the grey values of the object read from in.wlz using a Gaussian filter
+with a full width half maximum of 5 pixels and both derivatives equal to zero.
+The resulting object is written to smooth.wlz.
+\par File
+\ref WlzGauss.c "WlzGauss.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzrankobj "WlzRankObj(1)"
+\ref wlzrsvfilterobj "WlzRsvFilterObj(1)"
+\ref WlzGauss2 "WlzGauss2(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>

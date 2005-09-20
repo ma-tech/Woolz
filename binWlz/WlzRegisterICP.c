@@ -1,21 +1,122 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzRegisterICP.c
-* Date:         December 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Attempts to register two objects using an iterative
-*		closest point algorithm.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 21-12-00 bill	Add initial affine transform option.
-************************************************************************/
+/*!
+* \file         binWlz/WlzRegisterICP.c
+* \author       Bill Hill
+* \date         December 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Registers two objects using an iterative closest point
+* 		algorithm.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzregistericp "WlzRegisterICP"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzregistericp WlzRegisterICP
+\par Name
+WlzRegisterICP - registers two objects using an iterative closest point
+	         algorithm.
+\par Synopsis
+\verbatim
+WlzRegisterICP [-h] [-o<out obj>]
+               [-E #] [-I] [-M #] [-i <init tr>] [-t] [-r]
+	       [<in obj 0>] [<in obj 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name for affine transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-I</b></td>
+    <td>Maximum number of iterations.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Minimum distance weight, range [0.0-1.0]: Useful
+        values are 0.25 (default) for global matching and 0.0
+	for local matching..</td>
+  </tr>
+  <tr> 
+    <td><b>-E</b></td>
+    <td>Tolerance in the mean registration metric value.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Initial affine transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Use maximal gradient contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Find the general affine transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Find the rigid body (aka registration) transform, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Find the translation only transform.</td>
+  </tr>
+</table>
+\par Description
+Register two objects using an iterative closest point
+(ICP) algorithm.  The two objects must be contours, boundary lists
+or polygons.
+The input objects are read from stdin and values are written to stdout
+unless the filenames are given.
+\par Examples
+\verbatim
+WlzRegisterICP -o out-tr.wlz -a in0.wlz in1.wlz
+\endverbatim
+An affine transform is found by registering in1.wlz to in0.wlz using
+an ICP algorithm to find the lest affine transform (in a least squares
+sense). The affine transform is then written to out-tr.wlz.
+\par File
+\ref WlzRegisterICP.c "WlzRegisterICP.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzregisterccor "WlzRegisterCCor(1)"
+\ref WlzRegICPObjs "WlzRegICPObjs(3)"
+\ref WlzRegICPObjsGrd "WlzRegICPObjsGrd(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -345,7 +446,8 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-E #] [-I] [-M #] [-i <init tr>] [-o<out obj>] [-t] [-r]\n"
+    " [-h] [-o<out obj>]\n"
+    "                      [-E #] [-I] [-M #] [-i <init tr>] [-t] [-r]\n"
     "                      [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
     "  -I  Maximum number of iterations.\n"

@@ -1,31 +1,71 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzIsEmpty.c						*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Thu Nov 30 09:52:24 2000				*
-*   $Revision$						*
-*   $Name$						*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlz/WlzIsEmpty.c
+* \author       Richard Baldock
+* \date         November 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Determines whether objects are empty.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzisempty "WlzIsEmpty"
+*/
 
+/*!
+\ingroup BinWlz
+\defgroup wlzisempty WlzIsEmpty
+\par Name
+WlzIsEmpty - determines whether objects are empty.
+\par Synopsis
+\verbatim
+WlzIsEmpty [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+</table>
+\par Description
+Determines whether objects are empty.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzIsEmpty.c "WlzIsEmpty.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzfacts "WlzFacts(1)"
+\ref WlzIsEmpty "WlzIsEmpty(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -42,7 +82,7 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
-	  "\tDetermine it the given woolz object(s) is empty\n"
+	  "\tDetermines whether input object(s) are empty.\n"
 	  "\tOptions are:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",

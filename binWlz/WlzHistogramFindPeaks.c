@@ -1,20 +1,94 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzHistogramGauss.c
-* Date:         February 2000
-* Author:       Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which finds histogram peak positions.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 28-04-2k bill Add peak and/or trough feature selection.
-************************************************************************/
+/*!
+* \file         binWlz/WlzHistogramFindPeaks.c
+* \author       Bill Hill
+* \date         February 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Finds histogram peak positions.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzhistogramfindpeaks "WlzHistogramFindPeaks"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzhistogramfindpeaks WlzHistogramFindPeaks
+\par Name
+WlzHistogramFindPeaks - finds histogram peak positions.
+\par Synopsis
+\verbatim
+WlzHistogramFindPeaks [-h] [-o<out file>] [-f #] [-s#] [-t#]
+                      [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output data file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Features to find, either p (peak), t (trough) or p,t (both).</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Gaussian sigma (standard deviation).</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Threshold value for peak height.</td>
+  </tr>
+</table>
+\par Description
+Finds the positions of histogram peaks.
+Objects/data are read from stdin and written to stdout unless the
+filenames are given.
+\par Examples
+\verbatim
+WlzHistogramFindPeaks -s2 -t 10 myhist.wlz
+The input Woolz histogram object is read from myhist.wlz and peak
+positions are written to the standard output.
+\endverbatim
+\par File
+\ref WlzHistogramFindPeaks.c "WlzHistogramFindPeaks.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzhistogramobj "WlzHistogramObj(1)"
+\ref wlzcompthresh "WlzCompThresh(1)"
+\ref WlzHistogramFindPeaks "WlzHistogramFindPeaks(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -215,7 +289,7 @@ int             main(int argc, char **argv)
     "  -o  Output data file name.\n"
     "  -f  Features to find, either p (peak), t (trough) or p,t (both).\n"
     "  -s  Gaussian sigma (standard deviation).\n"
-    "  -t  Threshold value for peak height.\n",
+    "  -t  Threshold value for peak height.\n"
     "  -h  Help, prints this usage message.\n"
     "Finds the positions of histogram peaks.\n"
     "Objects/data are read from stdin and written to stdout unless the\n"
@@ -223,7 +297,7 @@ int             main(int argc, char **argv)
     *argv,
     " -s2 -t 10 myhist.wlz\n"
     "The input Woolz histogram object is read from myhist.wlz and peak\n"
-    "positions are written th the standard output.\n");
+    "positions are written to the standard output.\n");
   }
   return(!ok);
 }

@@ -1,19 +1,105 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreySetRange.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Resets the grey-range of a grey-level object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzGreySetRange.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Sets the grey-range of a grey-level woolz object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreysetrange "WlzGreySetRange"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgreysetrange WlzGreySetRange
+\par Name
+WlzGreySetRange  -  sets the grey-range of a grey-level woolz object.
+\par Synopsis
+\verbatim
+WlzGreySetRange [-u#] [-l#] [-U#] [-L#] [-h] [-v] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Low grey value in source image, default min value in source.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>Low grey value in destination image, default 0.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Upper grey value in source image, default max value in source.</td>
+  </tr>
+  <tr> 
+    <td><b>-U</b></td>
+    <td>Upper grey value in dest image, default 0.</td>
+  </tr>
+</table>
+\par Description
+Sets the grey-range of a grey-level woolz object
+riting the new object to standard output.
+The original grey-values are linearly transformed
+from their original range. The transformation is
+\f[
+g_{out} = (\frac{U - L}{u - l})g_{in} + L
+new_grey = ((U - L)/(u - l))*old_grey + L
+\f]
+where
+\f$U\f$ and \f$L\f$ are the new upper and lower values and
+\f$u\f$ and \f$l\f$ are the old upper and lower values.
+If \f$u\f$ and \f$l\f$
+are set it is up to the user to ensure that the actual
+image values are within the range \f$[u,l]\f$.
+Use WlzGreyRange to check.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzGreySetRange.c "WlzGreySetRange.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgreyrange "WlzGreyRange(1)"
+\ref WlzGreySetRange "WlzGreySetRange(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

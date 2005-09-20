@@ -1,5 +1,42 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzErosion.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Morphological erosion of a woolz domain object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzerosion "WlzErosion"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzerosion WlzErosion
 \par Name
@@ -53,39 +90,22 @@ by the given connectivity. If a 2D connectivity is applied to a 3D
 object then each plane is eroded independently.
 
 \par Examples  
+\verbatim
+WlzErosion -r8 -c26 obj.wlz >eroded.wlz
+\endverbatim
+Erodes the 3D domain of object read from obj.wlz using a 26-connected
+sphere of radius 8 and then writes the eroded object to eroded.wlz.
+\par File
+\ref WlzErosion.c "WlzErosion.c"
 \par See Also
 \ref wlzdilation "WlzDilation(1)"
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Wed Jul 27 08:42:52 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzdomainfill "WlzDomainFill(1)"
+\ref wlzstructdilation WlzStructDilation(1)"
+\ref wlzstructerosion WlzStructErosion(1)"
+\ref WlzDilation "WlzDilation(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzErosion.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Erodes a domain woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

@@ -1,23 +1,104 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzDistanceMetric.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Computes distance metrics between objects.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes distance metrics between contour objects.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzdistancemetric "WlzDistanceMetric"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzdistancemetric WlzDistanceMetric
+\par Name
+WlzDistanceMetric  - computes distance metrics between contour objects.
+\par Synopsis
+\verbatim
+WlzDistanceMetric [-h] [-o <output file>] [-H] [-M] [-N] [-I]
+                  [<in obj 0>] [<in obj 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file for distance metrics.</td>
+  </tr>
+  <tr> 
+    <td><b>-H</b></td>
+    <td>Hausdorff distance metric.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Mean of nearest neighbours distance metrics.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Median of nearest neighbours distance metrics.</td>
+  </tr>
+  <tr> 
+    <td><b>-I</b></td>
+    <td>Minimum nearest neighbour distance.</td>
+  </tr>
+</table>
+\par Description
+Computes distance metrics for the given pair of contour objects.
+If no distance metrics are specified on the command line then all
+the metrics will be be computed and output, but if any metrics are
+specified on the computed line then only those metrics will be
+computed and output.
+The selected distance metrics are written on a single line as,
+ascii floating point values, separated by white spaces characters
+and in the order: Hausdorff; mean; median and minimum distance.
+The input objects are read from stdin and the distances are written
+to stdout unless the filenames are given.
+\par Examples
+\verbatim
+WlzDistanceMetric -H -N -o out.num in0.wlz in1.wlz
+\endverbatim
+Two objects are read from in0.wlz and in1.wlz, the Hausdorff and
+median of nearest neighbours distance metrics are computed and
+written to the file out.num on a single line in that order.
+\par File
+\ref WlzDistanceMetric.c "WlzDistanceMetric.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzDistMetricGM "WlzDistMetricGM(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

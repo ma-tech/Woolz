@@ -1,19 +1,93 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzSetVoxelSize.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Resets the voxel sizes of the input 3D object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzSetVoxelSize.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Sets the voxel size of a 3D domain object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzsetvoxelsize "WlzSetVoxelSize"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzsetvoxelsize WlzSetVoxelSize
+\par Name
+WlzSetVoxelSize - sets the voxel size of a 3D domain object.
+\par Synopsis
+\verbatim
+WlzSetVoxelSize [-h] [-v] [-x#] [-y#] [-z#] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>Voxel column (x) size.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Voxel line (y) size.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>Voxel plane (z) thickness.</td>
+  </tr>
+</table>
+\par Description
+Sets the voxel size of the input 3D object writing the new object
+to standard output.
+If a voxel size is not defined then the original size is retained.
+\par Examples
+\verbatim
+WlzSetVoxelSize -x 1 -y 1 -z 4 in.wlz >out.wlz
+\endverbatim
+Reads a 3D domain object from in.wlz,
+sets the objects voxel size to be 1.0, 1.0 and 4.0 units in the
+x, y and z dimensions.
+The resulting object is then written to the out.wlz.
+\par File
+\ref WlzSetVoxelSize.c "WlzSetVoxelSize.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzfacts "WlzFacts(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

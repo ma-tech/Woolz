@@ -1,26 +1,110 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzSnapFitObjs.c
 * \author       Bill Hill
 * \date         July 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2004 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Given an pair of objects which are in good alignment, finds
-*		a set of correspondences between the two objects based only
-*		on closest points.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Finds a set of correspondences between two objects based
+* 		on closest points.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzsnapfitobjs "WlzSnapFitObjs"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzsnapfitobjs WlzSnapFitObjs
+\par Name
+WlzSnapFitObjs - finds a set of correspondences between two objects based
+                 on closest points.
+\par Synopsis
+\verbatim
+WlzSnapFitObjs [-h] [-o<output file>]
+               [-A] [-i <transform>] [-d #] [-t #] [-s #]
+	       <target object> <source object>
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file for correspondences.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Correspondences output in absolute format.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Initial affine transform to be applied to the source object.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Maximum distance between any target source correspondences.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Minimum distance between target correspondence points.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Minimum distance between source correspondence points.</td>
+  </tr>
+</table>
+\par Description
+Computes a set of correspondences (tie points) from the given
+source object to the given target object based on closest points.
+The correspondences are output as ascii vertices either in relative
+format:
+\verbatim
+  <sx> <sy>[ <sz> ]<tx - sx> <ty - sy>[ <tz - sz>]
+\endverbatim
+or absolute format:
+\verbatim
+    <tx> <ty>[ <tz> ]<sx> <sy>[ <sz>],
+\endverbatim
+where sx, sy, sz, tx, ty and tz are the source and target coordinates.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzSnapFitObjs.c "WlzSnapFitObjs.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzSnapFit "WlzSnapFit(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

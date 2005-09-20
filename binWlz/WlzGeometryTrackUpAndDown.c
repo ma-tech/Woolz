@@ -1,19 +1,161 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         binWlz/WlzGeometryTrackUpAndDown.c
+* \author       J. Rao
+* \date         January 2003
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Interpolates tie-point bibfiles.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgeometrytrackupanddown "WlzGeometryTrackUpAndDown"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgeometrytrackupanddown WlzGeometryTrackUpAndDown
+\par Name
+WlzGeometryTrackUpAndDown - interpolates tie-point bibfiles.
+\par Synopsis
+\verbatim
+WlzGeometryTrackUpAndDown [-h] [-s #] [-t #] [-n #] [-o #] [-O #] [-i #]
+                          [-l #] [-j #] [-J #] [-a #] [-A #] [-b #] [-B #]
+			  [-c #] [-d #] [-e #] [-E #] [-f #] [-F #] [-g #]
+			  [-G #] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>
+    Input file which contains the list of 2D Woolz contour image
+    file names.
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>
+    Output file for surface points.
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>
+    Input number to decide track down or up, with 0 - track down (the default)
+    and 1 - track up.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file to show the shells and loops.</td>
+  </tr>
+  <tr> 
+    <td><b>-O</b></td>
+    <td>Output file for surface points and their distance to the
+    surface.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Number of pixels for z-direction of vtk contour.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Maximum distance in number of pixels allowed to be tracked,
+        default 10.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Distance in number of pixels for in and out points, default 15.</td>
+  </tr>
+  <tr> 
+    <td><b>-F</b></td>
+    <td>Distance in number of pixels for in and out points guid,
+        default is 15.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Number of files to tack up or down, default is 5.</td>
+  </tr>
+  <tr> 
+    <td><b>-G</b></td>
+    <td>Start tracking file number (counting from  0), default 5.</td>
+  </tr>
+  <tr> 
+    <td><b>-j</b></td>
+    <td>Length to be used to segment the line in unit of number of pixels,
+        default 40.</td>
+  </tr>
+  <tr> 
+    <td><b>-C</b></td>
+    <td>Length to be used to sample the data in unit of number,
+        default 30.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Number of lth loop for output.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Start shell number (not index) for tracking.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>End shell number (not index) for tracking.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Start section number for tracking.</td>
+  </tr>
+  <tr> 
+    <td><b>-B</b></td>
+    <td>End section number for tracking.</td>
+  </tr>
+</table>
+\par Description
+Automatically interpolates tie point bibfiles.
+The user needs to prepare some sample 2D Woolz File names which
+contains a number of files with which the middle one will be used as a
+standard contour and a start plan to track up and down.
+The base part of sample bib file's name should be the same as
+that of 2D Woolz file.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzGeometryTrackUpAndDown.c "WlzGeometryTrackUpAndDown.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* \Project:      Woolz
-* \Title:        WlzGeometryTrackUpAndDown.c
-* \Date:         28 Jan 2003 
-* \Author:       J. Rao
-* \Copyright:	 2003 Medical Research Council, UK.
-*		 All rights reserved.
-* \Address: 	 MRC Human Genetics Unit,
-*		 Western General Hospital,
-*		 Edinburgh, EH4 2XU, UK.
-* \Purpose:      Interpolate for bib files 
-*		
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

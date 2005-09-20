@@ -1,24 +1,88 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzIntRescaleObj.c
 * \author       Bill Hill
 * \date         March 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2002 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Woolz filter which rescales an object using an integer
-*		scale factor.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Rescales an object using an integer scale factor.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzintrescaleobj "WlzIntRescaleObj"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzintrescaleobj WlzIntRescaleObj
+\par Name
+WlzIntRescaleObj - rescales an object using an integer scale factor.
+\par Synopsis
+\verbatim
+WlzIntRescaleObj [-s#] [-c] [-e] [-h] [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Scale factor, default 1.</td>
+  </tr>
+  <tr> 
+    <td><b>-c</b></td>
+    <td>Compress using 1/scale, default false.</td>
+  </tr>
+  <tr> 
+    <td><b>-e</b></td>
+    <td>Expand using scale, default true.</td>
+  </tr>
+</table>
+\par Description
+Rescales a woolz object using an integer scale factor.
+\par Examples
+\verbatim
+WlzIntRescaleObj -o out.wlz -s 2 -c in.wlz
+\endverbatim
+Subsamples the object read from in.wlz using integer scaling so that 
+the linear dimensions of the output object (written to out.wlz) 
+are halved.
+\par File
+\ref WlzIntRescaleObj.c "WlzIntRescaleObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref wlzsampleobj "WlzSampleObj(1)"
+\ref WlzIntRescaleObj "WlzIntRescaleObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

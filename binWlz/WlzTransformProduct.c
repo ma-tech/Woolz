@@ -1,23 +1,78 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzTransformProduct.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	Computes the product of a pair of transforms.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlztransformproduct "WlzTransformProduct"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlztransformproduct WlzTransformProduct
+\par Name
+WlzTransformProduct - computes the product of a pair of transforms.
+\par Synopsis
+\verbatim
+WlzTransformProduct [-h] [-o<output object>] [transform 0] [transform 1]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+</table>
+\par Description
+Computes the product of a pair of transforms.
+\par Examples
+\verbatim
+WlzTransformProduct -o t2.wlz t0.wlz t1.wlz
+\endverbatim
+Computes the product of \f$t_0\f$ and \f$t_1\f$,
+such that \f$t_2\f$ = \f$t_0 t_1\f$.
+\par File
+\ref WlzTransformProduct.c "WlzTransformProduct.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref WlzAffineTransformProduct "WlzAffineTransformProduct(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -187,6 +242,7 @@ int             main(int argc, char **argv)
     " [-h] [-o<output object>] [transform 0] [transform 1]\n" 
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
+    "  -o  Output file name.\n"
     "Computes the product of a pair of transforms.\n",
     *argv,
     " -o t2.wlz t0.wlz t1.wlz\n"

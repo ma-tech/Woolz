@@ -1,5 +1,42 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzConstruct3D.c
+* \author       Bill Hill
+* \date         April 2003
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Constructs a 3D domain object from 2D domain objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzconstruct3d "WlzConstruct3D"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzconstruct3d WlzConstruct3D
 \par Name
@@ -44,46 +81,21 @@ background value of the first 2D object is set to be the background
 value of the 3D object.
 
 \par Examples
+\verbatim
+WlzConstruct3D obj000000.wlz obj000001.wlz empty.wlz obj000003.wlz >out.wlz
+\endverbatim
+Constructs a 3D object from the 2D domain objects obj00000X.wlz and the
+empty object empty.wlz.
 
+\par File
+\ref WlzConstruct3D.c "WlzConstruct3D.c"
 \par See Also
-\ref wlzexplode "WlzExplode(1)", WlzConstruct3DObjFromFile(3).
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Thu Jul 28 08:18:42 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzexplode "WlzExplode(1)"
+\ref wlzmakeempty "WlzMakeEmpty(1)"
+\ref WlzConstruct3DObjFromFile "WlzConstruct3DObjFromFile(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/*!
-* \file         binWlz/WlzConstruct3D.c
-* \author       Bill Hill
-* \date         April 2003
-* \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
-* \brief	Constructs a 3D Woolz domain object from the
-*		given 2D Woolz domain objects.
-* \todo         -
-* \bug          None known.
-*/
-
 #include <stdio.h>
 #include <float.h>
 #include <limits.h>
@@ -234,8 +246,12 @@ int		main(int argc, char *argv[])
     "can be specified by using the string NULL. Either all or none of the\n"
     "2D objects must have values. When the 2D objects have values then the\n"
     "background value of the first 2D object is set to be the background\n"
-    "value of the 3D object.\n",
-    argv[0]);
+    "value of the 3D object.\n"
+    "Example:\n"
+    "%s obj000000.wlz obj000001.wlz empty.wlz obj000003.wlz >out.wlz\n"
+    "Constructs a 3D object from the 2D domain objects obj00000X.wlz and\n"
+    "the empty object empty.wlz.\n",
+    argv[0], argv[0]);
   }
   return(!ok);
 }

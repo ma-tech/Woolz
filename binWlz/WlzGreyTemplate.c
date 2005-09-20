@@ -1,19 +1,91 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyTemplate.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Applies a template to the object values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzGreyTemplate.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Applies a template to an object's values.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreytemplate "WlzGreyTemplate"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgreytemplate WlzGreyTemplate
+\par Name
+WlzGreyTemplate - applies a template to an object's values.
+\par Synopsis
+\verbatim
+WlzGreyTemplate [-t#] [-h] [-v] [<input template> [<input obj>]]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>The template value - default 0.</td>
+  </tr>
+</table>
+\par Description
+Apply the template to the given object setting all pixels
+within the template to the object values. The object must be
+a woolz grey-level object, the template can be a domain
+object, polyline or boundary list which will be filled to make
+a domain. The template is always the second object if read
+from the standard input. Pixels outside the domain of the
+object are set to the template value.
+\par Examples
+\verbatim
+WlzGreyTemplate obj0.wlz obj1.wlz >out.wlz
+\endverbatim
+Creates a new object with the domain of the object read from obj0.wlz in which
+the values are either set to 0 or (within the intersection of the domains
+of obj0.wlz and obj1.wlz) the image values of obj1.wlz.
+\par File
+\ref WlzGreyTemplate.c "WlzGreyTemplate.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgreymask "WlzGreyMask(1)"
+\ref WlzGreyTemplate "WlzGreyTemplate(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

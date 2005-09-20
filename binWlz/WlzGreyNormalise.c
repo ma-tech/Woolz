@@ -1,19 +1,80 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyNormalise.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Normalise the grey-range of a grey-level object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzGreyNormalise.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Normalise the grey-range of a grey-level object.
+* \ingroup	binWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreynormalise "WlzGreyNormalise"
+*/
+
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgreynormalise WlzGreyNormalise
+\par Name
+WlzGreyNormalise - normalise the grey-range of a grey-level woolz object.
+\par Synopsis
+\verbatim
+WlzGreyNormalise [-h] [-v] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>verbatim operation.</td>
+  </tr>
+</table>
+\par Description
+tNormalise the grey-range of a grey-level woolz object
+which resets the grey range to (0,255) and is a
+convenience equivalent to WlzGreySetRange -U255 -L0.
+\par Examples
+\verbatim
+WlzGreySetRange in.wlz >out.wlz
+\endverbatim
+Normalises the grey values of the object read from in.wlz to the range
+0 - 255 and then writes the resulting object to out.wlz.
+\par File
+\ref WlzGreyNormalise.c "WlzGreyNormalise.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgreysetrange "WlzGreySetRange(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

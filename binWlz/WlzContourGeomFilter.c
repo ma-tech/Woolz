@@ -1,9 +1,46 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzContourGeomFilter.c
+* \author       Bill Hill
+* \date         September 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Filters a contour model.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcontourgeomfilter "WlzContourGeomFilter"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzcontourgeomfilter WlzContourGeomFilter
 \par Name
-WlzContourGeomFilter - smooth a geometric model.
+WlzContourGeomFilter - filters a contour model.
 \par Synopsis
 \verbatim
 WlzContourGeomFilter [-h] [-o<output file>]
@@ -15,35 +52,37 @@ WlzContourGeomFilter [-h] [-o<output file>]
 <table width="500" border="0">
   <tr>
     <td><b>-N</b></td>
-    <td> </td>
+    <td>Allow non manifild vertices to be filtered.</td>
   </tr>
   <tr>
     <td><b>-l</b></td>
-    <td> </td>
+    <td>Filter parameter \f$\lambda\f$.</td>
   </tr>
   <tr>
     <td><b>-m</b></td>
-    <td> </td>
+    <td>Filter parameter \f$\mu\f$.</td>
   </tr>
   <tr>
     <td><b>-n</b></td>
-    <td> </td>
+    <td>The number of itterations.
+        If the number of itterations is not given, then the pass and stop
+	band ripple determine the number of itterations.</td>
   </tr>
   <tr>
     <td><b>-p</b></td>
-    <td> </td>
+    <td>The band pass frequency parameter (kPB)</td>
   </tr>
   <tr>
     <td><b>-s</b></td>
-    <td> </td>
+    <td>The band stop frequency parameter (kSB).</td>
   </tr>
   <tr>
     <td><b>-P</b></td>
-    <td> </td>
+    <td>The maximum pass band ripple (dPB)</td>
   </tr>
   <tr>
     <td><b>-S</b></td>
-    <td> </td>
+    <td>The maximum stop band ripple (dSB)</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -53,54 +92,48 @@ WlzContourGeomFilter [-h] [-o<output file>]
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
 
 \par Description
+Low pass filters the geometry of a contour object to smooth without
+shrinkage.
 
+For simple use to smooth a geometric model from a 2D or 3D contour
+don't use lambda and mu. Instead use: Values of kPB in the range
+[0.0100-0.1000], values of kSB in the range [1.000-1.9999]. The default
+ripple values are probably acceptable for most simple filters.
+Simple example, which filters a contour smoothing out voxel edges:
+    prompt% WlzContourGeomFilter -o out.wlz -p 0.1 -s 1.5 -n 100 in.wlz
+    This example passes the geometric model from the contour object
+    in in.wlz through a low pass filter with a transition band starting
+    at 0.1 and ending with the stop band at 1.5. A maximum of 100
+    itterations are performed. If the output from the filter was not
+sufficiently smooth then the ripple values could be decreased.
+If you want to design a more complex filter or one that is not a
+low pass (smoothing) filter then see either:
+Gabriel Taubin <i>Curve and Surface Smoothing without Shrinkage
+International Conference on Computer Vision (ICCV'95) Conference
+Procedings 827-857 1995</i>
+or
+Gabriel Taubin <i>A Signal Processing Approach to Fair Surface
+Design Computer Graphics, 29, 351-358 1995</i>.
+Use the -h flag to see the default parameter values.
 \par Examples
 \verbatim
+WlzContourGeomFilter -o smooth.wlz in.wlz
 \endverbatim
+Smooths the input contour model in.wlz and writes the smoothed result to
+smooth.wlz.
 
+\par File
+\ref WlzContourGeomFilter.c "WlzContourGeomFilter.c"
 \par See Also
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Mon Aug  1 08:49:52 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref BinWlz "WlzIntro(1)"
+\ref WlzGMFilterGeomLPParam "WlzGMFilterGeomLPParam(3)"
+\ref WlzGMFilterGeomLPLM "WlzGMFilterGeomLPLM(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/*!
-* \file         binWlz/WlzContourGeomFilter.c
-* \author       Bill Hill
-* \date         September 2002
-* \version      $Id$
-* \note
-*               Copyright
-*               2001 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
-* \brief	Filters the geometry of a geometric model.
-* \todo         -
-* \bug          None known.
-*/
 #include <stdio.h>
 #include <float.h>
 #include <limits.h>
@@ -357,7 +390,7 @@ int		main(int argc, char *argv[])
     "        [-l#] [-m#] [-n#]\n"
     "        [-p#] [-s#] [-P#] [-S#] [<input file>]\n"
     "  -h  Output this usage message.\n"
-    "  -N  Allow non manifild vertices to be filtered.n"
+    "  -N  Allow non manifild vertices to be filtered.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -l  Filter parameter lambda.\n"
     "  -m  Filter parameter mu.\n"

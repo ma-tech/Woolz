@@ -1,26 +1,87 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSnapFitObjs.c
+* \file		binWlz/WlzAffineTransformDiff.c
 * \author       Bill Hill
 * \date         July 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2004 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Given an pair of objects containing affine transforms,
-*		checks for significant differences between the two
-*		transforms using a given tollerance.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Compares two given affine transforms.
+* \ingroup 	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary:
+* \ref wlzaffinetransformdiff "WlzAffineTransformDiff"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzaffinetransformdiff WlzAffineTransformDiff
+\par Name
+WlzAffineTransformDiff - compares two given affine transforms.
+
+\par Synopsis
+\verbatim
+WlzAffineTransformDiff [-h] [-e #] [-o<output file>] <transform 0> <transform 1>
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-e</b></td>
+    <td>Tolerance value.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file for differences.</td>
+  </tr>
+</table>
+\par Description
+
+Compares two given affine transforms for significant
+differences using the given tollerance value.
+
+The exit status is 0 if the two transforms do not significantly
+differ, otherwise it is 1.
+\par Examples
+\verbatim
+WlzAffineTransformDiff -e 0.00001 -o diff.out tr0.wlz tr1.wlz
+\endverbatim
+Reads a pair of affine transforms from tr0.wlz and tr1.wlz, then
+writes any differences to diff.out.
+\par File
+\ref WlzAffineTransformDiff.c "WlzAffineTransformDiff.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzAffineTransformObj "WlzAffineTransformObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

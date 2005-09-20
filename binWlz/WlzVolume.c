@@ -1,19 +1,79 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzVolume.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates the volume of the input 3D objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzVolume.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the volume of 3D objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzvolume "WlzVolume"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzvolume WlzVolume
+\par Name
+WlzVolume - computes the volume of 3D objects.
+\par Synopsis
+\verbatim
+WlzVolume [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+</table>
+\par Description
+Computes the volume of 3D objects.
+\par Examples
+\verbatim
+WlzThreshold -v 200 -L rec.wlz | WlzLabel | WlzVolume
+\endverbatim
+Reads a 3D object from rec.wlz,
+thresholds the objectt to remove background,
+labels the thresholded object to compute seperate objects for the
+disconnected regions
+and then outputs the volume of each of these regions as ascii text.
+\par File
+\ref WlzVolume.c "WlzVolume.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzarea "WlzArea(1)"
+\ref wlzthreshold "WlzThreshold(1)"
+\ref wlzlabel "WlzLabel(1)"
+\ref WlzVolume "WlzVolume(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

@@ -1,25 +1,79 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzRMSDiff.c
 * \author       Bill Hill
 * \date         October 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Computes the RMS difference between the grey values
-*		within the intersection of the two given domain objects.
-* \ingroup
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the RMS difference between the grey values of objects.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzrmsdiff "WlzRMSDiff"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzrmsdiff WlzRMSDiff
+\par Name
+WlzRMSDiff - computes the RMS difference between the grey values of objects.
+\par Synopsis
+\verbatim
+WlzRMSDiff [-o<out>] [<in obj 0>] [<in obj 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+</table>
+\par Description
+Computes the RMS difference in grey values within the intersection
+of the two given domain objects.
+The input objects are read from stdin and values are written to stdout
+unless the filenames are given.
+\par Examples
+\verbatim
+WlzRMSDiff -o out.num  in0.wlz in1.wlz
+\endverbatim
+An RMS difference in grey values between in0.wlz and in1.wlz is written
+to the file out.num.
+\par File
+\ref WlzRMSDiff.c "WlzRMSDiff.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

@@ -1,19 +1,80 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzConvexPoly.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Calculates the convex polygon (hull) enclosing a domain.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzConvexPoly.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the convex polygon (hull) enclosing a domain.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzconvexpoly "WlzConvexPoly"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzconvexpoly WlzConvexPoly
+\par Name
+WlzConvexPoly - computes the convex polygon (hull) enclosing a domain.
+\par Synopsis
+\verbatim
+WlzConvexPoly [-h] [-v] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+</table>
+\par Description
+Computes the convex polygon (hull) enclosing a domain.
+For 3D objects the convex polygons are calculated for
+each plane and therefore do not necessarily corrspond to
+the 3D convex hull.
+\par Examples
+\verbatim
+WlzConvexPoly obj.wlz >obj_cv.wlz
+\endverbatim
+Reads a domain object from obj.wlz, computes the convex polygon which encloses
+the object and writes the resulting object too obj_cv.wlz.
+\par File
+\ref WlzConvexPoly.c "WlzConvexPoly.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzObjToConvexPolygon "WlzObjToConvexPolygon(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

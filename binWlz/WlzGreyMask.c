@@ -1,20 +1,88 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyMask.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Applies a mask to the given object setting all pixels
-*		within the mask to the mask value.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzGreyMask.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Sets all object values within a mask domain to a mask value.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreymask "WlzGreyMask"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgreymask WlzGreyMask
+\par Name
+WlzGreyMask - sets all object values within a mask domain to a mask value.
+\par Synopsis
+\verbatim
+WlzGreyMask [-m#] [-h] [-v] [<input mask> [<input obj>]]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Mask value, default 0.</td>
+  </tr>
+</table>
+\par Description
+Apply the mask to the given object setting all pixels
+within the mask to the mask value. The object must be
+a woolz grey-level object, the mask can be a domain object
+polyline or boundary list which will be filled to make
+a domain. The mask is always the second object if read
+from the standard input.
+\par Examples
+\verbatim
+WlzGreyMask -m 64 dom.wlz obj.wlz >masked.wlz
+\endverbatim
+Creates a new object mask.wlz which has the same domain and values of
+obj.wlz, except where the domain of obj.wlz and mask.wlz intersect
+where the values are set to 64.
+\par File
+\ref WlzGreyMask.c "WlzGreyMask.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgreytemplate "WlzGreyTemplate(1)"
+\ref WlzGreyMask "WlzGreyMask(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

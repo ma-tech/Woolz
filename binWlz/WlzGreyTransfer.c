@@ -1,26 +1,85 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzGreyTransfer.c					*
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Wed Jan 16 13:39:56 2002				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlz/WlzGreyTransfer.c
+* \author       Richard Baldock
+* \date         January 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Copies grey values from a source object to a destination
+* 		object within the intersection of the object's domains.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreytransfer "WlzGreyTransfer"
+*/
 
+/*!
+\ingroup BinWlz
+\defgroup wlzgreytransfer WlzGreyTransfer
+\par Name
+WlzGreyTransfer - copies grey values from a source object to a destination
+object within the intersection of the object's domains.
+\par Synopsis
+\verbatim
+WlzGreyTransfer [-h] [-v] [<source image> [<destination obj>]]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+</table>
+\par Description
+Copy grey values from the source object to the destination
+object within the domain of intersection. The output object
+has the domain and grey-values of the destination object
+otherwise. If both objects are read from stdin then the
+first object is the destination and the second the source.
+\par Examples
+\verbatim
+WlzGreyTransfer obj0.wlz obj1.wlz >out.wlz
+Creates a new object with the domain of obj1.wlz
+in which the values are those of obj0.wlz within the intersection of the
+two domains and obj1.wlz elsewhere.
+\endverbatim
+\par File
+\ref WlzGreyTransfer.c "WlzGreyTransfer.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgreytemplate "WlzGreyTemplate(1)"
+\ref WlzGreyTransfer "WlzGreyTransfer(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -39,7 +98,7 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-h] [-v] [<source image> [<destination obj>]]\n"
 	  "\tCopy grey values from the source object to the destination\n"
 	  "\tobject within the domain of intersection. The output object\n"
-	  "\thas the domain and grey-values of the destination objecr \n"
+	  "\thas the domain and grey-values of the destination object \n"
 	  "\totherwise. If both objects are read from stdin then the\n"
 	  "\tfirst object is the destination and the second the source.\n"
 	  "\tOptions are:\n"

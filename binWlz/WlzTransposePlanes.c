@@ -1,9 +1,46 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzTransposePlanes.c
+* \author       Richard Baldock
+* \date         July 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Transposes the planes of 3D objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlztransposeplanes "WlzTransposePlanes"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlztransposeplanes WlzTransposePlanes
 \par Name
-WlzTransposePlanes - Transpose the planes of 3D Woolz objects.
+WlzTransposePlanes - Transposes the planes of 3D Woolz objects.
 \par Synopsis
 \verbatim
 WlzTransposePlanes [-o<offset>] [-h] [-v] [<input object file>]
@@ -47,53 +84,13 @@ WlzTransposePlanes  infile.wlz > outfile.wlz
 WlzTransposePlanes  -o0 infile.wlz > outfile.wlz
 \endverbatim
 
+\par File
+\ref WlzTransposePlanes.c "WlzTransposePlanes.c"
 \par See Also
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Jul 29 11:41:33 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzTransposePlanes.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Mon Jul 17 17:38:25 2000				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : Transpose the planes of an object with respect to a	*
-*		given range (by default the first and last planes).	*
-*		This is a reflection operation in 3D about the center	*
-*		of the given range					*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 

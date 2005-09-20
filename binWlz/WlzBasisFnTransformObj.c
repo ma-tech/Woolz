@@ -1,24 +1,192 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         binWlz/WlzBasisFnTransformObj.c
+* \file		binWlz/WlzBasisFnTransformObj.c
 * \author       Bill Hill
 * \date         February 2005
 * \version      $Id$
-* \note
-*               Copyright
-*               2005 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Woolz filter which applies a basis function to a given
-		object.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes and applies Woolz basis function transforms.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzbasisfntransformobj "WlzBasisFnTransformObj"
+
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzbasisfntransformobj WlzBasisFnTransformObj
+\par Name
+WlzBasisFnTransformObj - computes and applies Woolz basis function transforms.
+\par Synopsis
+\verbatim
+WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
+		       [-m<min mesh dist>] [-M<max mesh dist>]
+		       [-t<basis fn transform>] [-Y<order of polynomial>]
+		       [-D<flags>]
+		       [-d] [-g] [-h] [-q] [-s] [-y]
+		       [-B] [-C] [-G] [-L] [-N] [-T]
+		       [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-B</b></td>
+    <td>Block mesh generation method (default).</td>
+  </tr>
+  <tr> 
+    <td><b>-C</b></td>
+    <td>Use conforming mesh.</td>
+  </tr>
+  <tr> 
+    <td><b>-D</b></td>
+    <td>Debug flags:
+    <table width="500" border="0">
+    <tr>
+    <td>1</td>
+    <td>Output the mesh as postscript to standard error output.</td>
+    </tr>
+    <tr>
+    <td>2</td>
+    <td>Output basis function distance maps to standard error
+        output.</td>
+    </tr>
+    </table>
+    </tr>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-G</b></td>
+    <td>Gradient mesh generation method.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>Use linear interpolation instead of nearest neighbour.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Minimum mesh node separation distance (default 10.0).</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Maximum mesh node separation distance (default 100.0).</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Don't transform the object (useful for testing).</td>
+  </tr>
+  <tr> 
+    <td><b>-R</b></td>
+    <td>Restrict the transformation to only a basis function transform
+        instead of the default which uses a least squares affine and
+	basis function transform.
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Tie point file.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Basis function transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-c</b></td>
+    <td>Use conformal polynomial basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Compute transform using conforming distance transforms, also
+        sets the mesh generation to produce a conforming mesh and
+	restricts the transformation to a basis function transform
+	only (ie no least squares affine).</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Use Gaussian basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-q</b></td>
+    <td>Use multi-quadric basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Use thin plate spline basis function (default) if tie points
+        are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-T</b></td>
+    <td>Output a basis function transform instead of a transformed object.</td>
+  </tr>
+  <tr> 
+    <td><b>-U</b></td>
+    <td>Output a mesh transform instead of a transformed object.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Use polynomianl basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-Y</b></td>
+    <td>Polynomial order for polynomial basis function (default 3).</td>
+  </tr>
+</table>
+\par Description
+Computes and applies Woolz basis function transforms.
+Tie points may be read from an ascii file with the format:
+\verbatim
+  <vertex x> <vertex y> <displacement x> <displacement y>
+\endverbatim
+
+\par Examples
+\verbatim
+WlzBasisFnTransformObj -o tied.wlz -p points.tie myobj.wlz
+\endverbatim
+A thin plate spline basis function transform is computed from the
+tie points read from the file points.tie. This transform is then
+applied to the object is read from myobj.wlz. The resulting object
+is then written to tied.wlz.
+\par File
+\ref WlzBasisFnTransformObj.c "WlzBasisFnTransformObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref wlzmeshtransformobj "WlzMeshTransformObj(1)"
+\ref WlzBasisFnTransformObj "WlzBasisFnTransformObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

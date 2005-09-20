@@ -1,20 +1,118 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:	Woolz
-* Title:	WlzContour.c
-* Date: 	August 2000
-* Author:	Bill Hill
-* Copyright:	2000 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Extracts maximal gradient and isosurface contours
-*		from 2 or 3D Woolz objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzContourObj.c
+* \author       Bill Hill
+* \date         August 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes edge and surface based contour models from domain
+* 		objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcontourobj "WlzContourObj"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzcontourobj WlzContourObj
+\par Name
+WlzContourObj - computes edge and surface based contour models from domain
+objects.
+\par Synopsis
+\verbatim
+WlzContourObj [-o<output object>] [-h] [-o] [-g] [-i] [-l] [-m] [-r]
+              [-U] [-o#] [-v#] [-w#] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Compute object boundary contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Compute maximal gradient contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Compute iso-value contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Flip orientation (normals will be reversed).</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Generate normals (if possible).</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Compute object boundary contours using radial basis functions.</td>
+  </tr>
+  <tr> 
+    <td><b>-U</b></td>
+    <td>Use unit voxel size.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Contour iso-value or minimum gradient.</td>
+  </tr>
+  <tr> 
+    <td><b>-w</b></td>
+    <td>Contour (Deriche) gradient operator width.</td>
+  </tr>
+</table>
+\par Description
+Computes a contour model from the given input object.
+The input object is read from stdin and output data are written
+to stdout unless filenames are given.
+\par Examples
+\verbatim
+WlzContourObj -i -v 0.0 in.wlz
+\endverbatim
+The input Woolz object is read from in.wlz, and the iso-value
+(iso-value = 1.0) contour list is written to stdout.
+\par File
+\ref WlzContourObj.c "WlzContourObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzContourObj "WlzContourObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -257,13 +355,13 @@ int             main(int argc, char **argv)
       "  -U  Use unit voxel size.\n"
       "  -v  Contour iso-value or minimum gradient.\n"
       "  -w  Contour (Deriche) gradient operator width.\n"
-      "Computes a contour list from the given input object.\n"
+      "Computes a contour model from the given input object.\n"
       "The input object is read from stdin and output data are written\n"
       "to stdout unless filenames are given.\n",
       *argv,
       " -i -v 0.0 in.wlz\n"
       "The input Woolz object is read from in.wlz, and the iso-value\n"
-      "(iso-value = 1.0) contour list is written to stdout.\n");
+      "(iso-value = 1.0) contour model is written to stdout.\n");
   }
   return(!ok);
 }

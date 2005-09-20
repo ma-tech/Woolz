@@ -1,24 +1,87 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzCrossCorValue.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Computes the cross correlation value (with no shift) of
-*		a pair of 2D spatial domain objects with grey values.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the cross correlation value of two objects.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzcrosscorvalue "WlzCrossCorValue"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzcrosscorvalue WlzCrossCorValue
+\par Name
+WlzCrossCorValue - computes the cross correlation value of two objects.
+\par Synopsis
+\verbatim
+WlzCrossCorValue [-h] [-o<out obj>] [-u] [<in obj 0>] [<in obj 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file for the cross-correlation value.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Compute the cross-correlation value within the union
+        of objects domains. The default is to
+	compute the cross correlation value within the intersection of
+	the objects domains.</td>
+  </tr>
+</table>
+\par Description
+Computes the cross correlation value (with zero shift) of two
+2D spatial domain objects with grey values.
+The input objects are read from stdin and values are written to stdout
+unless the filenames are given.
+\par Examples
+\verbatim
+WlzCrossCorValue -o out.num in0.wlz in1.wlz
+\endverbatim
+The cross correlation value computed from the objects read from
+in0.wlz and in1.wlz is written to the file out.num.
+\par File
+\ref WlzCrossCorValue.c "WlzCrossCorValue.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzCCorS2D "WlzCCorS2D(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -193,10 +256,10 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-o<out obj>] [-u] [<in obj 0>] [<in obj 1>]\n"
+    " [-h] [-o<out file>] [-u] [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
-    "  -o  Output file name for affine transform.\n"
+    "  -o  Output file name for cross-correlation value.\n"
     "  -u  Compute value in union of objects domains. The default is to\n"
     "      compute the cross correlation value within the intersection of\n"
     "      the objects domains.\n"

@@ -1,27 +1,91 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzMeshTransformObj.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Fri Mar 11 13:51:31 2005
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         March 2005
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzTransform
-* \brief        Read in a mesh transform and warp given woolz object.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Applies a mesh transform to an object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzmeshtransformobj "WlzMeshTransformObj"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzmeshtransformobj WlzMeshTransformObj
+\par Name
+WlzMeshTransformObj - applies a mesh transform to an object.
+\par Synopsis
+\verbatim
+WlzMeshTransformObj -m <mesh transform file> [-o <output file>] [-h] [-v]
+                    <2D object input file>
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>Use linear interpolation, default is nearest-neighbour.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Mesh transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output filename, default is stdout.</td>
+  </tr>
+</table>
+\par Description
+Applies a mesh transform to an object.
+\par Examples
+\verbatim
+WlzMeshTransformObj -m mesh.wlz -o out.wlz obj.wlz
+\endverbatim
+Uses the mesh transform read from mesh.wlz to transform the 2D domain object
+with read from obj.wlz. The resulting warped object is written to out.wlz.
+\par File
+\ref WlzMeshTransformObj.c "WlzMeshTransformObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzbasisfntransformobj "WlzBasisFnTransformObj(1)"
+\ref WlzMeshTransformObj "WlzMeshTransformObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

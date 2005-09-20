@@ -1,19 +1,101 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzThreshold.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Thresholds the input grey-level objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzThreshold.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Thresholds a grey-level object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzthreshold "WlzThreshold"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzthreshold WlzThreshold
+\par Name
+WlzThreshold - thresholds a grey-level object.
+\par Synopsis
+\verbatim
+WlzThreshold [-h] [-t#] [-v#] [-H] [-L] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td> <td>Threshold pixel type:
+      <table width="500" border="0">
+	<tr><td>1</td> <td>integer, default</td></tr>
+	<tr><td>2</td> <td>short</td></tr>
+	<tr><td>3</td> <td>unsigned byte</td></tr>
+	<tr><td>4</td> <td>float</td></tr>
+	<tr><td>5</td> <td>double</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Threshold value, default 170.</td>
+  </tr>
+  <tr> 
+    <td><b>-H</b></td>
+    <td>Threshold high,
+        keep pixels at or above threshold value,
+	default.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>Threshold low,
+        keep pixels below threshold value.</td>
+  </tr>
+</table>
+\par Description
+Thresholds a grey-level object writing the new object to the standard output.
+\par Examples
+\verbatim
+WlzThreshold -v 100 -H in.wlz >out.wlz
+\endverbatim
+Reads an grey valued domain object from in.wlz,
+thresholds the object so that it's domain consists of all locations at which
+the grey value is at or above the threshold value.
+The resulting object is written to out.wlz.
+\par File
+\ref WlzThreshold.c "WlzThreshold.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzThreshold "WlzThreshold(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>

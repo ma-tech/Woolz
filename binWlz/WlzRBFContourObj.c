@@ -1,27 +1,130 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzRBFContourObj.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Computes a contour from a Woolz domain by using radial
-*		basis function to approximate the signed distance to
-*		the boundary of the domain and then extracting the zero
-*		level set through the volume as a contour.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Uses radial basis function to approximate a contour
+* 		from point clouds.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzrbfcontourobj "WlzRBFContourObj"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzrbfcontourobj WlzRBFContourObj
+\par Name
+WlzRBFContourObj  -  
+\par Synopsis
+\verbatim
+WlzBFContourObj [-o<output object>] [-h] [-o] [-s#] [-S#] [-Z#]
+                [-f#] [-F#]
+		[-a#] [-A#] [-d#] [-t#] [-M#] [-U] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Distance for points inside domain surface.</td>
+  </tr>
+  <tr> 
+    <td><b>-S</b></td>
+    <td>Distance for points outside domain surface.</td>
+  </tr>
+  <tr> 
+    <td><b>-Z</b></td>
+    <td>Distance from domain surface within which to evaluate the
+        radial basis function.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Sampling factor for surface points.</td>
+  </tr>
+  <tr> 
+    <td><b>-F</b></td>
+    <td>Sampling factor for interior and extrior points.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Surface alpha value, must be greater than zero.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Interior and extrior alpha value, must be greater than zero.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Multiorder spline delta value.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Multiorder spline tau value.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Distance object sampling factor (can be used to reduce the
+        number of surface facets).</td>
+  </tr>
+  <tr> 
+    <td><b>-U</b></td>
+    <td>Use unit voxel size.</td>
+  </tr>
+</table>
+\par Description
+Computes a contour from a domain by using radial basis
+function to approximate the signed distance to the boundary of
+the domain and then extracting the zero level set through the
+volume as a contour.
+The input object is read from stdin and output data are written
+to stdout unless filenames are given.
+\par Examples
+\verbatim
+WlzRBFContourObj -o out.wlz -Z20 in.wlz
+\endverbatim
+\par File
+\ref WlzRBFContourObj.c "WlzRBFContourObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzcontourobj "WlzContourObj(1)"
+\ref WlzContourRBFBndObj3D "WlzContourRBFBndObj3D(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -238,7 +341,8 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-o<output object>] [-h] [-o] [-s#] [-S#] [-Z#] [-f#] [-F#]\n"
+    " [-o<output object>] [-h] [-o] [-s#] [-S#] [-Z#]\n"
+    "        [-f#] [-F#]\n"
     "        [-a#] [-A#] [-d#] [-t#] [-M#] [-U] [<input object>]\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"

@@ -1,24 +1,159 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
- * \file       binWlz/WlzMatchICPObj.c
- * \author     Bill Hill
- * \date       March 2002
- * \version    $Id$
- * \note
- *             Copyright:
- *             2001 Medical Research Council, UK.
- *             All rights reserved.
- * \par  Address:
- *             MRC Human Genetics Unit,
- *             Western General Hospital,
- *             Edinburgh, EH4 2XU, UK.
- * \brief      Object matching using ICP based registration to
- *             find corresponding points.
- * \ingroup    WlzTransform
- * \todo
- * \bug
- */
+* \file         binWlz/WlzMatchICPObj.c
+* \author       Bill Hill
+* \date         March 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Object matching using ICP based registration to
+* 		find corresponding points.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzmatchicpobj "WlzMatchICPObj"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzmatchicpobj WlzMatchICPObj
+\par Name
+WlzMatchICPObj - object matching using ICP based registration.
+\par Synopsis
+\verbatim
+WlzMatchICPObj [-b#] [-d#] [-D#] [-E#] [-o#] [-t#] [-g#] [-i#] [-s#]
+               [-A#] [-S#] [-F#] [-I#] [-N] [-h]
+	       [<input object 0>] [<input object 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Shell breaking control value.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Debug output file.</td>
+  </tr>
+  <tr> 
+    <td><b>-D</b></td>
+    <td>Debug flag, 0 no debug output or 1 output untransformed
+        decomposed source model.</td>
+  </tr>
+  <tr> 
+    <td><b>-E</b></td>
+    <td>Tolerance in mean registration metric value.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Initial affine transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-P</b></td>
+    <td>Minimum number of simplices per matched shell segment, with a
+        pair of correspondence points possibly being generated per
+	matched shell segment.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Maximum number of iterations.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Minmum number of simplicies.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Maximum angle (degrees) from a global transformation.</td>
+  </tr>
+  <tr> 
+    <td><b>-S</b></td>
+    <td>Maximum displacement from a global transformed position.</td>
+  </tr>
+  <tr> 
+    <td><b>-F</b></td>
+    <td>Maximum deformation from a global transformation.</td>
+  </tr>
+  <tr> 
+    <td><b>-I</b></td>
+    <td>Implausibility threshold for rejecting implausible
+        correspondence points which should be greater than zero,
+although the useful range is probably [0.5-2.5]. Higher
+values allow more implausible matches to be returned.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Number of match points in neighbourhood when checking the
+        plausibility of the correspondence points.</td>
+  </tr>
+</table>
+\par Description
+Reads a pair of contours and computes a set of correspondence points
+using an ICP based matching algorithm. The correspondence points are
+ranked by plausibility, with the most plausible first.
+The tie points are generated using and algorithm which
+continualy matches fragments of the contours (shells),
+while these fragments ar decomposed into smaller fragments.
+\par Examples
+\verbatim
+WlzMatchICPObj -I1000 -N2 -A15 -S15.0 -F0.5 -s15 -b1000
+               -o out.num pair_A_OPT_c_s50.wlz pair_A_HE_c_s50.wlz
+\endverbatim
+Reads two contour models from files pair_A_OPT_c_s50.wlz and
+pair_A_HE_c_s50.wlz, then generates a list of tie points
+and writes them to the file out.num.
+The fragments of the contour models (shells)
+will decompose until a decomposition would
+result in a shell having less than 15 edges.
+If any source shell fails to match a target shell using
+constrains of 15 degrees maximum rotation,
+15 pixels displacement and a maximum deformation of 50%
+then the shell will be rejected.
+At the end of the decomposition process
+each shell will be used to generate
+two tie points.
+The implausibility threshold is set so high that no ti points will be
+rejected as being implausible.
+\par File
+\ref WlzMatchICPObj.c "WlzMatchICPObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzbasisfntransformobj "WlzBasisFnTransformObj(1)"
+\ref WlzMatchICPObjs "WlzMatchICPObjs(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
@@ -342,7 +477,7 @@ int             main(int argc, char *argv[])
       "Usage: %s%s",
       *argv,
       " [-b#] [-d#] [-D#] [-E#] [-o#] [-t#] [-g#] [-i#] [-s#]\n"
-      "          [-A#] [-S#] [-I#] [-I#] [-N]\n"
+      "          [-A#] [-S#] [-F#] [-I#] [-N]\n"
       "          [-h] [<input object 0>] [<input object 1>]\n"
       "Options:\n"
       "  -b  Shell breaking control value.\n"
@@ -367,7 +502,7 @@ int             main(int argc, char *argv[])
       "      although the useful range is probably [0.5-2.5]. Higher\n"
       "      values allow more implausible matches to be returned.\n"
       "  -N  Number of match points in neighbourhood when checking the\n"
-      "	     plausibility of the correspondence points.\n"
+      "      plausibility of the correspondence points.\n"
       "Reads a pair of contours and computes a set of correspondence points\n"
       "using an ICP based matching algorithm. The correspondence points are\n"
       "ranked by plausibility, with the most plausible first\n");

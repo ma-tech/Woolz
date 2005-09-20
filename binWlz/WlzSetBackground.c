@@ -1,19 +1,88 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzSetBackground.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Sets the background of a grey-level object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzSetBackground.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Sets the background value of a domain object with
+* 		grey values.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzsetbackground "WlzSetBackground"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzsetbackground WlzSetBackground
+\par Name
+WlzSetBackground - sets the background value of a domain object with
+                   grey values.
+\par Synopsis
+\verbatim
+WlzSetBackground [-h] [-v] [-b#] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Background value, default 0.</td>
+  </tr>
+</table>
+\par Description
+Set the background value of a domain object with grey values to a
+new value. The background value is converted to the grey type of
+the input object.
+The input object is read from the standard input unless a file is given on the
+command line. The output object is always written to the standard output.
+\par Examples
+\verbatim
+WlzSetBackground -b 255 in.wlz >out.wlz
+\endverbatim
+Reads an object from in.wlz,
+set the objects background values to 255
+and then writes the resulting object to out.wlz.
+\par File
+\ref WlzSetBackground.c "WlzSetBackground.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzfacts "WlzFacts(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -29,7 +98,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-b# [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-b#] [-h] [-v] [<input file>]\n"
 	  "\tSet the background of a grey-level woolz object\n"
 	  "\twriting the new object to standard output.\n"
 	  "\tThe background value is converted to the grey type\n"

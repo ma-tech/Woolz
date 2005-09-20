@@ -1,9 +1,46 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file		binWlz/WlzCentreOfMass.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Calculates the mass and centre of mass of domain objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcentreofmass "WlzCentreOfMass"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzcentreofmass WlzCentreOfMass
 \par Name
-WlzCentreOfMass - Calculates the mass and centre of
+WlzCentreOfMass - calculates the mass and centre of
 mass of domain objects.
 \par Synopsis
 \verbatim
@@ -39,38 +76,28 @@ domain object.
 The mass and centre of mass are written to the output
 file in the following order:
 \par
-\<mass\> \<x\> \<y\> \<z\>
+mass x y z
 \par
 Where x, y and z are the column, line and plane coordinates of the
 centre of mass.
 
 \par Examples
 \verbatim
-# WlzCentreOfMass reads an object from myobj.wlz, calculates
-# its mass and centre of mass and then prints them to the
-# standard output.
+WlzCentreOfMass reads an object from myobj.wlz, calculates
+its mass and centre of mass and then prints them to the
+standard output.
 
 WlzCentreOfMass myobj.wlz
 
 \endverbatim
 
+\par File
+\ref WlzCentreOfMass.c "WlzCentreOfMass.c"
 \par See Also
-WlzCentreOfMass(3)
-
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Wed Jul 27 08:22:16 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref BinWlz "WlzIntro(1)"
+\ref wlzprinicipalangle "WlzPrinicipalAngle(1)"
+\ref WlzCentreOfMass2D "WlzCentreOfMass2D(3)"
+\ref WlzCentreOfMass3D "WlzCentreOfMass3D(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

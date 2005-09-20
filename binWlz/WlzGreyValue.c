@@ -1,23 +1,96 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzGreyValue.c
 * \author       Bill Hill
 * \date         May 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Woolz binary to determine a single grey value in an object.
-* \ingroup
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Gets a single grey value in an object.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzgreyvalue "WlzGreyValue"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgreyvalue WlzGreyValue
+\par Name
+WlzGreyValue - gets a single grey value in an object.
+\par Synopsis
+\verbatim
+WlzGreyValue [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Grey value to be set, default false.</td>
+  </tr>
+  <tr> 
+    <td><b>-</b></td>
+    <td>Column position, default 0.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Line position.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>Plane position.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+</table>
+\par Description
+Either sets or gets a grey value within th given objects values.
+If the -v flag is given the objects value is set and the modified
+object is written to the output file, but if the flag is not set
+then the grey value is written out in ascii form with a new line
+character.
+\par Examples
+\verbatim
+WlzGreyValue -x 100 -y 100 toucan.wlz
+Outputs as ascii the value of the pixel at coordinate (100,100).
+\endverbatim
+\par File
+\ref WlzGreyValue.c "WlzGreyValue.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzGreyValueGet "WlzGreyValueGet(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -253,9 +326,9 @@ int             main(int argc, char **argv)
     "character.\n"
     "Options are:\n"
     "  -v#   Grey value to be set (set to %g).\n"
-    "  -x#   Vector column position (set to %g).\n"
-    "  -y#   Vector line positio (set to %g).\n"
-    "  -z#   Vector plane position (set to %g).\n"
+    "  -x#   Column position (set to %g).\n"
+    "  -y#   Line position (set to %g).\n"
+    "  -z#   Plane position (set to %g).\n"
     "  -o#   Output file name.\n"
     "  -h    Display this usage information.\n",
     *argv,

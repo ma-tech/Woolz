@@ -1,20 +1,112 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzRsvFilterObj.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Canny/Deriche edge detection filter for Woolz domain
-*		objects with grey values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzCannyDeriche.c
+* \author       Bill Hill
+* \date         August 2005
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Implements a Canny/Deriche edge detection filter.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzcannyderiche "WlzCannyDeriche"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzcannyderiche WlzCannyDeriche
+\par Name
+WlzCannyDeriche  -  implements a Canny/Deriche edge detection filter.
+\par Synopsis
+\verbatim
+WlzCannyDeriche [-o<output object>] [-h] [-o] [-a#] [-d] [-e] [-g]
+                [-m#] [-l#] [-u#] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Deriche's alpha parameter.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Output object with edge direction encoding.</td>
+  </tr>
+  <tr> 
+    <td><b>-e</b></td>
+    <td>Output object with edge gradients.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Output object with all gradients.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Filter multiplier parameter.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Lower hysteresis threshold value.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Upper hysteresis threshold value.</td>
+  </tr>
+</table>
+\par Description
+Applies a Canny/Deriche edge detection filter to a Woolz domain object
+with grey values.
+The input object is read from stdin and the filtered object is
+written to stdout unless the filenames are given.
+\par Examples
+\verbatim
+WlzCannyDeriche -e -a 1.0 -l 15 -u 40 -m 10 -o edges.wlz in.wlz
+\endverbatim
+The input Woolz object is read from in.wlz, and filtered using a
+Deriche edge operator with alpha=1.0, gradients are multiplied by
+10.0 before non-maximal suppression or hysteresis thresholding. The
+hysteresis threshold values of 15 and 40 are used to threshold the
+edge image which is written to edge.wlz.
+\par File
+\ref WlzCannyDeriche.c "WlzCannyDeriche.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzCannyDeriche "WlzCannyDeriche(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

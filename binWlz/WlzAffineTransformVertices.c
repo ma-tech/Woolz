@@ -1,25 +1,105 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         binWlz/WlzAffineTransformVertices.c
+* \file		binWlz/WlzAffineTransformVertices.c
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Reads vertices, applies an affine transform to them
-*		and then writes transformed vertices.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Affine transforms vertices.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzaffinetransformvertices "WlzAffineTransformVertices"
+
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzaffinetransformvertices WlzAffineTransformVertices
+\par Name
+WlzAffineTransformVertices  -  affine transforms vertices.
+\par Synopsis
+\verbatim
+WlzAffineTransformVertices [-h] [-d] [-o<output file>] [-t <transftransform>]
+                           [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Output the vertices in same format used by WlzAffineTransformLSq
+        for 2D the format is
+\verbatim
+       <vtx x> <vtx y> <disp x> <disp y>
+\endverbatim
+	and for 3D
+\verbatim
+       <vtx x> <vtx y> <vtx z> <disp x> <disp y> <disp z>
+\endverbatim
+	</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Input affine transform object.</td>
+  </tr>
+</table>
+\par Description
+Reads vertices, applies an affine transform to them and then writes
+out the transformed vertices.
+The input vertices are read from stdin and the transformed vertices
+are written to stdout unless the filenames are given.
+\par Examples
+\verbatim
+WlzAffineTransformVertices -t trans.wlz -o shifted.num orig.num
+\endverbatim
+Vertices are read from the file orig.num, transformed by the affine
+transfrom in trans.wlz and then written to shifted.num.
+\par File
+\ref WlzAffineTransformVertices.c "WlzAffineTransformVertices.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref WlzAffineTransformVertexI2 "WlzAffineTransformVertexI2(3)"
+\ref WlzAffineTransformVertexF2 "WlzAffineTransformVertexF2(3)"
+\ref WlzAffineTransformVertexD2 "WlzAffineTransformVertexD2(3)"
+\ref WlzAffineTransformVertexI3 "WlzAffineTransformVertexI3(3)"
+\ref WlzAffineTransformVertexF3 "WlzAffineTransformVertexF3(3)"
+\ref WlzAffineTransformVertexD3 "WlzAffineTransformVertexD3(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

@@ -1,25 +1,106 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzClosestVertices.c
 * \author       Bill Hill
 * \date         July 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2004 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Finds the closest vertices in the given object to those in the
-*		given list of vertices.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Finds the closest vertices in an object to those in a list.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzclosestvertices "WlzClosestVertices"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzclosestvertices WlzClosestVertices
+\par Name
+WlzClosestVertices  -  finds an objects closest vertices to those in a list.
+\par Synopsis
+\verbatim
+WlzClosestVertices  [-h] [-2] [-3] [-s <transform>] [-t <transform>]
+                    [-u <vertices>] [-o<output file>] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-2</b></td>
+    <td>Vertices and object are 2D.</td>
+  </tr>
+  <tr> 
+    <td><b>-3</b></td>
+    <td>Vertices and object are 3D.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Affine transform to be applied to the given vertices.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Affine transform to be applied to the given object.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>File containing vertices encoded as ASCII in x, y, z order.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file for closest vertices to those given that have
+        been found in in the given object. These are in the same order
+	as the given vertices and have the same format.</td>
+  </tr>
+</table>
+\par Description
+Reads vertices, optional affine transforms and a Woolz object which
+has a vertex representation (such as boundaries and contours) and
+finds the closest points ion the given object to those given.
+\par Examples
+\verbatim
+WlzClosestVertices -3 -s tr.wlz -o out.num -u in.num surf.wlz
+\endverbatim
+Reads a target surface object from file surf.wlz and 3D vertices
+from file in.num. Transforms the vertices using an affine transform
+read from the file tr.wlz. For each transformed vertex finds the
+closest vertex in the surface object and then saves the list of
+closest surface vertices to the file out.num.
+\par File
+\ref WlzClosestVertices.c "WlzClosestVertices.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzVerticesBuildTree "WlzVerticesBuildTree(3)"
+\ref AlcKDTGetNN "AlcKDTGetNN(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -330,7 +411,7 @@ int             main(int argc, char **argv)
     "  -2  Vertices and object are 2D.\n"
     "  -3  Vertices and object are 3D.\n"
     "  -s  Affine transform to be applied to the given vertices.\n"
-    "  -t  Affine transform o be applied to the given object.\n"
+    "  -t  Affine transform to be applied to the given object.\n"
     "  -u  File containing vertices encoded as ASCII in x, y, z order.\n"
     "  -o  Output file for closest vertices to those given that have\n"
     "      been found in in the given object. These are in the same order\n"

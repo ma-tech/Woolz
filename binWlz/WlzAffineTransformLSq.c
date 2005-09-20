@@ -1,5 +1,45 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file		binWlz/WlzAffineTransformLSq.c
+* \author       Bill Hill
+* \date         June 2004
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes an affine transform from a list of vertices
+*		and vertex displacements.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzaffinetransformlsq "WlzAffineTransformLSq"
+
+*/
+
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzaffinetransformlsq WlzAffineTransformLSq
 \par Name
@@ -73,6 +113,7 @@ WlzAffineTransformLSq tst.num | WlzFacts
   psi: 0.785398.
   xsi: 0.
   invert: 0.
+
 WlzAffineTransformLSq -r tst.num | WlzFacts
   Object type: WLZ_AFFINE_TRANS.
   Linkcount: 0.
@@ -106,54 +147,16 @@ WlzAffineTransformLSq -t tst.num | WlzFacts
   invert: 0.
   
 \endverbatim
+\par File
+\ref WlzAffineTransformLSq.c "WlzAffineTransformLSq.c"
 \par See Also
-\ref wlzfacts "WlzFacts(1)," WlzAffineTransformObj(3)
-\par Bugs
-Still to be found
-\author       Bill Hill <Bill.Hill@hgu.mrc.ac.uk>
-\date         Fri Jul 22 16:29:57 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
-\file         binWlz/WlzAffineTransformLSq.c
-\brief	Computes an affine transform from a list of vertices
-		and vertex displacements in the 2D format
-		  \<vtx x\> \<vtx y\> \<delta x\> \<delta y\>
-		or the 3D format
-		  \<vtx x\> \<vtx y\> \<vtx z\> \<delta x\> \<delta y\> \<delta z\>
-\todo
+\ref wlzfacts "WlzFacts(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref WlzAffineTransformLSq "WlzAffineTransformLSq(3)"
+\ref WlzAffineTransformObj "WlzAffineTransformObj(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/*!
-* \author       Bill Hill
-* \date         June 2004
-* \version      $Id$
-* \note
-*               Copyright
-*               2004 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
-*               MRC Human Genetics Unit,
-*               Western General Hospital,
-*               Edinburgh, EH4 2XU, UK.
-* \brief	Computes an affine transform from a list of vertices
-*		and vertex displacements in the 2D format
-*		  <vtx x> <vtx y> <delta x> <delta y>
-*		or the 3D format
-*		  <vtx x> <vtx y> <vtx z> <delta x> <delta y> <delta z>
-*		Comment lines start with a '#' character.
-* \todo         -
-* \bug          None known.
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

@@ -1,28 +1,96 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzShadeCorrect.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Wed Jun 16 17:29:29 2004
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         June 2004
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      binWlz
-* \brief        Apply shade correction to input objects.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Shade corrects a domain object with values.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzshadecorrect "WlzShadeCorrect"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzshadecorrect WlzShadeCorrect
+\par Name
+WlzShadeCorrect - shade corrects a domain object with values.
+\par Synopsis
+\verbatim
+WlzShadeCorrect [-h] [-v] [-p] [-d <dark-field image>]
+                -b <bright-field image> [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Patch image, shade images shifted to correct each patch.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Dark-field image (optional)..</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Bright-field image, <b>required</b>.</td>
+  </tr>
+</table>
+\par Description
+Shade corrects a domain object with values.
+The shade using the bright-field and dark-field images
+assumes intensity images and calculates a normalised
+transmission coefficient.
+\par Examples
+\verbatim
+WlzShadeCorrect bright.wlz slide.wlz >side_sc.wlz
+\endverbatim
+Reads objects from files bright.wlz and slide.wlz,
+the bright-field and source objects.
+Shade corrects the source object and then writes the shade corrected object
+to the file side_sc.wlz.
+\par File
+\ref WlzShadeCorrect.c "WlzShadeCorrect.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzShadeCorrect "WlzShadeCorrect(3)"
+\ref WlzShadeCorrectBFDF "WlzShadeCorrectBFDF(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 

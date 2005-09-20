@@ -1,24 +1,100 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:	Woolz
-* Title:	WlzBuildContour.c
-* Date: 	August 2001
-* Author:	Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:	Builds a contour from input simplicies.
-*		These are in one of the two the formats,
-*		2D:
-*                 x0 y0 x1 y1
-*		or 3D
-*                 x0 y0 z0 x1 y1 z1 x2 y2 z3
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file		binWlz/WlzBuildContour.c
+* \author       Bill Hill
+* \date         August 2001
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Builds a contour from input simplices.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzbuildcontour "WlzBuildContour"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzbuildcontour WlzBuildContour
+\par Name
+WlzBuildContour  -  builds a contour from input simplices.
+\par Synopsis
+\verbatim
+WlzBuildContour [-o<output object>] [-h] [-2] [-3] [-d] [-i] [-o#]
+                [<input data>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-2</b></td>
+    <td>Build a 2D contour.</td>
+  </tr>
+  <tr> 
+    <td><b>-3</b></td>
+    <td>Build a 3D contour.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Build a contour with double floating point geometry.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Build a contour with integer geometry.</td>
+  </tr>
+</table>
+\par Description
+Builds a contour from the given input simplicies.
+The input data are read from stdin and the output object is written
+to stdout unless filenames are given.
+\par Examples
+\verbatim
+WlzBuildContour -d -2 -o tri.wlz
+0.0 0.0 1.0 0.0
+1.0 0.0 0.5 0.866025
+0.5 0.866025 0.0 0.0
+<eof>
+\endverbatim
+A 2D triangle is built from the three simplicies read from the
+standard input and the contour is written to tri.wlz.
+\par File
+\ref WlzBuildContour.c "WlzBuildContour.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzContourObj "WlzContourObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>

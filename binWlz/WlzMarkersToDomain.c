@@ -1,25 +1,102 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         binWlz/WlzMarkersToDomain.c
+* \file         WlzMarkersToDomain.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Simple binary which reads a list of 2D or 3D vertices
-*		and then creates a domain with a marker located at each
-*		vertex position.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Creates a domain with a marker located at the position
+* 		of each vertex read from a file.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzmarkerstodomain "WlzMarkersToDomain"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzmarkerstodomain WlzMarkersToDomain
+\par Name
+WlzMarkersToDomain - creates a domain with a marker located at the position
+		     of each vertex read from a file.
+\par Synopsis
+\verbatim
+WlzMarkersToDomain [-h] [-o<output file>] [-2] [-3] [-s #] [-t <type>]
+		   [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name, default standard output.</td>
+  </tr>
+  <tr> 
+    <td><b>-2</b></td>
+    <td>Vertices and output domain are 2D.</td>
+  </tr>
+  <tr> 
+    <td><b>-3</b></td>
+    <td>Vertices and output domain are 3D.</td>
+  </tr>
+  <tr> 
+    <td><b>-2</b></td>
+    <td>marker size.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Marker type: Only valid type is 'sphere'.</td>
+  </tr>
+</table>
+\par Description
+Reads a list of 2D or 3D vertices either from the given file or the
+standard input (default). These vertices are then used to create
+either a 2D or 3D domain with a marker at the position of each vertex.
+\par Examples
+\verbatim
+cat in.num
+10 20 30
+50 60 80
+70 70 60
+
+WlzMarkersToDomain -o out.wlz -3 -s 3 in.num
+\endverbatim
+Creates a new domain with spheres or radius 3 at coordinates (10,20,30),
+(50,60,80) and (70,70,60) and writes the object to the file out.wlz.
+\par File
+\ref WlzMarkersToDomain.c "WlzMarkersToDomain.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <float.h>
 #include <limits.h>
@@ -225,7 +302,7 @@ int		main(int argc, char *argv[])
     "  -2  Vertices and output domain are 2D.\n"
     "  -3  Vertices and output domain are 3D.\n"
     "  -s  Marker size.\n"
-    "  -s  Marker type: Only valid type is 'sphere'.\n"
+    "  -t  Marker type: Only valid type is 'sphere'.\n"
     "Reads a list of 2D or 3D vertices either from the given file or the\n"
     "standard input (default). These vertices are then used to create\n"
     "either a 2D or 3D domain with a marker at the position of each vertex.\n",

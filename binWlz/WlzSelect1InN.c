@@ -1,19 +1,86 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzSelect1InN.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Selects planes 1 in n from a 3D object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzSelect1InN.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Selects planes 1 in n from a 3D object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzselect1inn "WlzSelect1InN"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzselect1inn WlzSelect1InN
+\par Name
+WlzSelect1InN - selects planes 1 in n from a 3D object.
+\par Synopsis
+\verbatim
+WlzSelect1InN [-f#] [-l#] [-s#] [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>First plane, default 0.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Last plane. If the last plane is less than the first then all planes
+        are selected. Default -1.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Step. Default 3, ie one in 3 planes is selected.</td>
+  </tr>
+</table>
+\par Description
+Selects planes 1 in n from a 3D object.
+\par Examples
+\verbatim
+WlzSelect1InN -f3 -l13 -n3 in.wlz >out.wlz
+\endverbatim
+Selects planes 3,6,9 and 12 from in.wlz and writes the 3D object to out.wlz
+with planes 1,2,3 and 4.
+\par File
+\ref WlzSelect1InN.c "WlzSelect1InN.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzsampleobj "WlzSampleObj(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>

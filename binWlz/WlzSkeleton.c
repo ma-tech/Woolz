@@ -1,20 +1,89 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         binWlz/WlzSkeleton.c
+* \author       Bill Hill
+* \date         November 1998
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the skeleton of the a domain object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzskeleton "WlzSkeleton"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzskeleton WlzSkeleton
+\par Name
+WlzSkeleton - computes the skeleton of the a domain object.
+\par Synopsis
+\verbatim
+WlzSkeleton [-h] [-o<out object>] [-c #] [-s #] [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-c</b></td>
+    <td>Minimum connectivity (4, 6, 8, 18, 26), default 8.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Smoothing passes, default 1XXX.</td>
+  </tr>
+</table>
+\par Description
+Computes the skeleton of a 2D domain object.
+Objects are read from stdin and written to stdout unless the filenames
+are given.
+\par Examples
+\verbatim
+WlzSkeleton -o skel.wlz myobj.wlz
+\endverbatim
+The input Woolz object is read from myobj.wlz, filtered and written
+to skel.wlz.
+\par File
+\ref WlzSkeleton.c "WlzSkeleton.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzerosion "WlzErosion(1)"
+\ref wlzdilation "WlzDilation(1)"
+\ref WlzSkeleton "WlzSkeleton(3)"
+*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-#pragma ident "MRC HGU %W%\t%G% bill@hgu.mrc.ac.uk"
-/************************************************************************
-* Project:      Woolz							*
-* Title:        WlzSkeleton.c			                      	*
-* Date:         November 1998	                                    	*
-* Author:       Bill Hill 				    		*
-* Copyright:	1998 Medical Research Council, UK.			*
-*		All rights reserved.					*
-* Address:	MRC Human Genetics Unit,				*
-*		Western General Hospital,				*
-*		Edinburgh, EH4 2XU, UK.					*
-* Version:	%I%							*
-* Purpose:      Woolz filter which computes the skeleton of the		*
-*		given objects domain.					*
-* Maintenance:	Log changes below, with most recent at top of list.	*
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -183,10 +252,10 @@ int             main(int argc, char **argv)
     " [-o<out object>] [-c #] [-s #] [-h] [<in object>]\n"
     "Options:\n"
     "  -o  Output object file name.\n"
-    "  -c  minimum connectivity (4, 6, 8, 18, 26), default ",
+    "  -c  Minimum connectivity (4, 6, 8, 18, 26), default ",
     defCValI,
-    "\n."
-    "  -s  smoothing passes, default ",
+    ".\n"
+    "  -s  Smoothing passes, default ",
     defSmPass,
     ".\n"
     "  -h  Help, prints this usage message.\n"

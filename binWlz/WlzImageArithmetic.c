@@ -1,20 +1,114 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzImageArithmetic.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Performs binary (ie two images) image arithmetic on a
-*		pair of Woolz domain objects to produce a new object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzImageArithmetic.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Binary image arithmetic on a pair of domain objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzimagearithmetic "WlzImageArithmetic"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzimagearithmetic WlzImageArithmetic
+\par Name
+WlzImageArithmetic - binary image arithmetic on a pair of domain objects.
+\par Synopsis
+\verbatim
+WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-m] [-s] [-n] [-N] [-h]
+                   [<in object 0>] [<in object 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Add the object's grey values.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Divide the grey values of the 1st object by those of the 2nd.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Vector magnitude of horizontal and vertical component objects.</td>
+  </tr>
+  <tr>
+    <td><b>-l</b></td>
+    <td>Compute the modulus of the grey values of the 1st object wrt
+        those of the 2nd.</td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>Multiply the object's grey values.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Subtract the grey values of the 2nd object from those of the 1st.</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>Normalises the output object to the range of the imput objects.</td>
+  </tr>
+  <tr>
+    <td><b>-N</b></td>
+    <td>Normalises the output objects to the range [0-255].</td>
+  </tr>
+</table>
+\par Description
+Computes an arithmetic binary (two objects) operation on two domain
+objects. The default operator is add.
+The input objects are read from stdin and values are written to stdout
+unless the filenames are given.
+\par Examples
+\verbatim
+cat obj1.wlz | WlzImageArithmetic -o obj3.wlz -a - obj2.wlz
+\endverbatim
+A new object obj3.wlz is formed by adding the grey values of obj1 and
+obj2.wlz.
+\par File
+\ref WlzImageArithmetic.c "WlzImageArithmetic.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzImageArithmetic "WlzImageArithmetic(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -312,7 +406,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%sExample:\n%s%s%s",
     *argv,
     " [-o<out file>] [-a] [-d] [-l] [-m] [-s] [-h] "
     "[<in object 0>] [<in object 1>]\n"
@@ -332,10 +426,11 @@ int             main(int argc, char **argv)
     "objects. The default operator is add.\n"
     "The input objects are read from stdin and values are written to stdout\n"
     "unless the filenames are given.\n",
-    "cat obj1.wlz | %s",
+    "cat obj1.wlz | ",
+    *argv,
     " -o obj3.wlz -a - obj2.wlz\n"
     "A new object 'obj3.wlz is formed by adding the grey values of obj1 and\n"
-    "obj2.wlz.\n", *argv);
+    "obj2.wlz.\n");
   }
   return(!ok);
 }

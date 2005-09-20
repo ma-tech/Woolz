@@ -1,31 +1,82 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzStructDilation1.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Tue May  8 09:01:39 2001				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlz/WlzStructDilation.c
+* \author       Richard Baldock
+* \date         May 2001
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Dilates an object using a structuring element object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzstructdilation "WlzStructDilation"
+*/
 
+/*!
+\ingroup BinWlz
+\defgroup wlzstructdilation WlzStructDilation
+\par Name
+WlzStructDilation - dilates an object using a structuring element object.
+\par Synopsis
+\verbatim
+WlzStructDilation [-h] [-s <struct-elem file>] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Structuring element object.</td>
+  </tr>
+</table>
+\par Description
+Dilates a domain object using a structuring element writing the new object
+to the standard output.
+\par Examples
+\verbatim
+WlzStructDilation -s str.wlz in.wlz >out.wlz
+\endverbatim
+Dilates the object read from in.wlz using a structuring object read from
+str.wlz. The resulting object is written to out.wlz.
+\par File
+\ref WlzStructDilation.c "WlzStructDilation.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzerosion "WlzErosion(1)"
+\ref wlzdilation "WlzDilation(1)"
+\ref wlzdomainfill "WlzDomainFill(1)"
+\ref wlzstructerosion WlzStructErosion(1)"
+\ref WlzStructDilation "WlzStructDilation(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

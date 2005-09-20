@@ -1,4 +1,3 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzDistanceTransform.c
@@ -14,11 +13,75 @@
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Computes distanc transform objects.
-* \ingroup	WlzMorphologyOps
+* \brief	Computes distance transform objects.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzdistancetransform "WlzDistanceTransform"
 */
+
+/*!
+\ingroup BinWlz
+\defgroup wlzdistancetransform WlzDistanceTransform
+\par Name
+WlzDistanceTransform - computes distance transform objects.
+\par Synopsis
+\verbatim
+WlzDistanceTransform [-b] [-c#] [-f#] [-o#] [-h] [<Reference input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Use the boundary of the reference object.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Distance function:
+      <table width="500" border="0">
+      <tr> <td>0</td> <td>Euclidean (2D and 3D, unimplemented)</td></tr>
+      <tr> <td>1</td> <td>octagonal (2D and 3D) - default</td></tr>
+      <tr> <td>4</td> <td>4-connected (2D)</td></tr>
+      <tr> <td>8</td> <td>8-connected (2D)</td></tr>
+      <tr> <td>6</td> <td>6-connected (3D)</td></tr>
+      <tr> <td>18</td> <td>18-connected (3D)</td></tr>
+      <tr> <td>26</td> <td>26-connected (3D)</td></tr>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>The foreground object file.</td>
+  </tr>
+</table>
+\par Description
+Computes a distance transform object which has the domain of the
+foreground object and values which are the distance from the reference
+object.
+\par Examples
+\verbatim
+WlzDistanceTransform -b -f fish3.wlz fish4.wlz > out.wlz
+\endverbatim
+Creates a new domain object with values, in which the domain is the same as 
+that of fish3.wlz and the values are the minimum octagonal distance from their
+location to the boundary of the reference object fish4.wlz.
+\par File
+\ref WlzDistanceTransform.c "WlzDistanceTransform.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzDistanceTransform "WlzDistanceTransform(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -199,7 +262,7 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     dstObj = WlzAssignObject(
-    	     DistanceTransform(forObj, refObj, dFn, &errNum), NULL);
+    	     WlzDistanceTransform(forObj, refObj, dFn, &errNum), NULL);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -241,7 +304,7 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s [-b] [-c#] [-f#] [-o#] [-h] [<Reference input file>]\n"
     "Computes a distance transform object which has the domain of the\n"
-    "foreground object ad values which are the distance from the reference\n"
+    "foreground object and values which are the distance from the reference\n"
     "object.\n"
     "Options are:\n"
     "  -b  Use the boundary of the reference object.\n"

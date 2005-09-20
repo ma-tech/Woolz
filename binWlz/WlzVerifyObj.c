@@ -1,20 +1,75 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzVerifyObj.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Checks each input object, fixes it if possible and
-*		write to stdout.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzVerifyObj.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Checks objects and fixes them if possible.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzverifyobj "WlzVerifyObj"
+*/
+
+
+/*!
+\ingroup BinWlz
+\defgroup wlzverifyobj WlzVerifyObj
+\par Name
+WlzVerifyObj - checks objects and fixes them if possible.
+\par Synopsis
+\verbatim
+WlzVerifyObj [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+</table>
+\par Description
+Check each input object, fix it if possible and write to stdout.
+\par Examples
+\verbatim
+WlzVerifyObj in.wlz >in_fixed.wlz 
+\endverbatim
+Reads the object from in.wlz, attempts to fixes any errors and then
+writes the fixed object to in_fixed.wlz.
+Any error messages are written to the standard error output.
+\par File
+\ref WlzVerifyObj.c "WlzVerifyObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzVerifyObject "WlzVerifyObject(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

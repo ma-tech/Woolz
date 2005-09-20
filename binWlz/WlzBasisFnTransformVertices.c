@@ -1,19 +1,126 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file		binWlz/WlzBasisFnTransformVertices.c
+* \author       Jianguo Rao
+* \date         January 2004
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Applies a basis function to vertices.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzbasisfntransformvertices "WlzBasisFnTransformVertices"
+
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzbasisfntransformvertices WlzBasisFnTransformVertices
+\par Name
+WlzBasisFnTransformVertices  -  applies a basis function to vertices.
+\par Synopsis
+\verbatim
+WlzBasisFnTransformVertices [-o<out object>] [-p<tie points file>]
+                            [-m<min mesh dist>] [-M<max mesh dist>]
+			    [-t<basis fn transform>] [-Y<order of polynomial>]
+			    [-g] [-h] [-q] [-s] [-y] [-B] [-D] [-G] [-L] [-T]
+			    [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output vertices file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Tie point file.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Vertex file.</td>
+  </tr>
+  <tr> 
+    <td><b>-c</b></td>
+    <td>Use conformal polynomial basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Use Gaussian basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-q</b></td>
+    <td>Use multi-quadric basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Use thin plate spline basis function (default) if tie points
+        are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Use polynomianl basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-Y</b></td>
+    <td>Polynomial order for oolynomianl basis function (default 3).</td>
+  </tr>
+</table>
+\par Description
+Computes and applies Woolz basis function transforms.
+Tie points may be read from an ascii file with the format:
+\verbatim
+  <vertex x> <vertex y> <displacement x> <displacement y>
+\endverbatim
+\par Examples
+\verbatim
+WlzBasisFnTransformVertices -o outVertices.dat -p points.tie -v vertices.dat
+\endverbatim
+A thin plate spline basis function transform is computed from the
+tie points read from the file points.tie. This transform is then
+applied to the vertices read from vertices.dat.
+The resulting vertices are then written to outVertices.dat.
+\par File
+\ref WlzBasisFnTransformVertices.c "WlzBasisFnTransformVertices.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzbasisfntransformobj "WlzBasisFnTransformObj(1)"
+\ref WlzBasisFnTransformVertexI "WlzBasisFnTransformVertexI(3)"
+\ref WlzBasisFnTransformVertexF "WlzBasisFnTransformVertexF(3)"
+\ref WlzBasisFnTransformVertexD "WlzBasisFnTransformVertexD(3)"
+*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/************************************************************************
-* Project:      Woolz
-* Title:        WlzBasisFnTransformVertices.c
-* Date:         January 2004
-* Author:       Jianguo Rao
-* Copyright:	2004 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which applies a basis function to a given
-*		vertice.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

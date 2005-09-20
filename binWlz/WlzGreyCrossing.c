@@ -1,9 +1,46 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzGreyCrossing.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Detects grey value crossings.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreycrossing "WlzGreyCrossing"
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzgreycrossing WlzGreyCrossing
 \par Name
-WlzGreyCrossing - Detects grey value crossings
+WlzGreyCrossing - detects grey value crossings.
 
 \par Synopsis
 \verbatim
@@ -46,45 +83,17 @@ WlzPixConvert 1 <infile.wlz | \
 WlzLaplacian | \
 WlzGreyCrossing -c0 | \
 WlzThreshold -H -v1 >outfile.wlz
-
 \endverbatim
 
+\par File
+\ref WlzGreyCrossing.c "WlzGreyCrossing.c"
 \par See Also
-WlzGreyCrossing(3).
-
-\par Bugs
-None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Thu Jul 28 08:36:59 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzcannyderiche "WlzCannyDeriche(1)"
+\ref wlzgreygradient "WlzGreyGradient(1)"
+\ref WlzGreyCrossing "WlzGreyCrossing(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyCrossing.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which computes a grey value crossing
-*		object from a given grey value (zero by default) and
-*		a 2D domain object with integral grey values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

@@ -1,19 +1,97 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyInvert.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Inverts the grey-range of a grey-level object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzGreyInvert.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Inverts the grey-range of a grey-level object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreyinvert "WlzGreyInvert"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzgreyinvert WlzGreyInvert
+\par Name
+WlzGreyInvert - inverts the grey-range of a grey-level object.
+\par Synopsis
+\verbatim
+WlzGreyInvert [-u#] [-l#] [-h] [-v] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Low grey value, default min value in source.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Upper grey value, default max value in source.</td>
+  </tr>
+</table>
+\par Description
+Invert the grey-range of a grey-level woolz object
+writing the new object to standard output.
+The original grey-values are transformed from their original range.
+The transformation is
+\f[
+g_{out} = g_u + g_l - g_{in}
+\f]
+where
+\f$g_{out}\f$ is the new grey value,
+\f$g_{in}\f$ is the given grey value,
+\f$g_u\f$ is the upper grey value and
+\f$g_l\f$ is the lower grey value.
+\par Examples
+\verbatim
+WlzGreyInvert -u 255 -l 0 in.wlz >out.wlz
+\endverbatim
+Inverts the grey valued object read from in.wlz so that its values
+are inverted and in the range 0 - 255. The resulting object is then
+written to out.wlz.
+\par File
+\ref WlzGreyInvert.c "WlzGreyInvert.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzgreysetrange "WlzGreySetRange(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

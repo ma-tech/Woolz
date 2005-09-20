@@ -1,26 +1,94 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         binWlz/WlzContourSpxStats.c
 * \author       Bill Hill
 * \date         December 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Calculates statistics of the simplices in the given
-*		contours geometric model.
-* \ingroup
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Calculates simplex statistics for contour models.
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzcontourspxstats "WlzContourSpxStats"
 */
 
+/*!
+\ingroup BinWlz
+\defgroup wlzcontourspxstats WlzContourSpxStats
+\par Name
+WlzContourSpxStats - calculates simplex statistics for contour models.
+\par Synopsis
+\verbatim
+WlzContourSpxStats [-o<out file>] [-v] [-h] [<in object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose output flag.</td>
+  </tr>
+</table>
+\par Description
+Calculates statistics of the simplices in the given objects contour.
+These are: The number of simplices together with the minimum, maximum,
+sum, sum of squares, mean and the standard deviation of either the
+length (for 2D contours) of the area (for 3D contours) of the input
+contour's simplices.
+If the verbose output flag is not set then the following are written
+to the output file in the following order:
+\verbatim
+  <area> <min> <max> <sum> <sum of sq> <mean> <std dev>.
+\endverbatim
+The input object is read from stdin and values are written to stdout
+unless the filenames are given.
+
+\par Examples
+\verbatim
+WlzContourSpxStats -o stats.txt myctr.wlz
+\endverbatim
+The input Woolz object is read from myctr.wlz. The statistics are
+calculated and  written to out.txt.
+\par File
+\ref WlzContourSpxStats.c "WlzContourSpxStats.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzcontourobj "WlzContourObj(1)"
+\ref WlzGMModelSpxStats "WlzGMModelSpxStats(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

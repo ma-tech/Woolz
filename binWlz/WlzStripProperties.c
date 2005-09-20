@@ -1,26 +1,78 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   MRC HGU Image Processing Utilities			*
-*   File       :   WlzStripProperties.c					*
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Thu Aug  1 11:53:58 2002				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlz/WlzStripProperties.c
+* \author       Richard Baldock
+* \date         August 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Strips the property list from an object.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzstripproperties "WlzStripProperties"
+*/
 
+/*!
+\ingroup BinWlz
+\defgroup wlzstripproperties WlzStripProperties
+\par Name
+WlzStripProperties - strips the property list from an object.
+\par Synopsis
+\verbatim
+WlzStripProperties [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+</table>
+\par Description
+Strips the property list from an object.
+This could be useful if you need to read an object
+from a newer version of woolz with old code e.g. if
+you have binaries for a different architecture than
+supplied. Object written to stdout.
+\par Examples
+\verbatim
+WlzStripProperties obj.wlz >obj_s.wlz
+\endverbatim
+Reads an object from obj.wlz and writes it back out,
+without a property list,
+to obj_s.wlz.
+\par File
+\ref WlzStripProperties.c "WlzStripProperties.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzchangeemapproperty "WlzChangeEMAPProperty(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>

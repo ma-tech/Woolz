@@ -1,5 +1,43 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file		binWlz/WlzAffineTransformObj.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	General affine transform toolkit.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzaffinetransformobj "WlzAffineTransformObj"
+
+*/
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzaffinetransformobj WlzAffineTransformObj
 \par Name
@@ -116,44 +154,21 @@ transformed object is written to the standard output.
 
        WlzAffineTransformObj -x100 -y200 myobj.wlz > transformed.wlz
   
+\par File
+\ref WlzAffineTransformObj.c "WlzAffineTransformObj.c"
 \par See Also
-WlzAffineTransformObj(3)
+\ref BinWlz "WlzIntro(1)"
+\ref wlzfacts "WlzFacts(1)"
+\ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
+\ref wlztransformproduct "WlzTransformProduct(1)"
+\ref WlzAffineTransformObj "WlzAffineTransformObj(3)"
 
 \par Bugs
 None known.
-
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Tue Jul 26 08:46:35 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #define _WlzAffineTransformObj_c
-/************************************************************************
-* Project:      Woolz
-* Title:        WlzAffineTransformObj.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Applies an affine transform to a Woolz object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 21-12-00 bill Add affine transform input from an ascii matrix.
-* 04-12-00 bill Add affine transform output.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -385,7 +400,7 @@ int             main(int argc, char **argv)
 	ok = 0;
 	(void )fprintf(stderr,
 		       "%s: failed to read object from file %s\n",
-		       *argv, inObjFileStr);
+		       *argv, inTrObjFileStr);
       }
       if(fP && strcmp(inTrObjFileStr, "-"))
       {

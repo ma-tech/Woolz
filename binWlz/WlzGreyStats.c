@@ -1,10 +1,47 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         binWlz/WlzGreyStats.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Calculates simple statistics for a domain object's grey values.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreystats "WlzGreyStats"
+*/
+
+
+/*!
 \ingroup      BinWlz
 \defgroup     wlzgreystats WlzGreyStats
 \par Name
-WlzGreyStats - Calculates  simple  statistics  from  a Woolz 2D or 3D
-       domain object's grey values.
+WlzGreyStats - calculates simple statistics for a domain object's grey values.
 \par Synopsis
 \verbatim
 WlzGreyStats [-o<output file>] [-c] [-h] [-v] [<input object file>]
@@ -30,7 +67,7 @@ WlzGreyStats [-o<output file>] [-c] [-h] [-v] [<input object file>]
   </tr>
 </table>
 By default the input object is read from the  standard  input  and  the
-       output is written to the standard output.
+output is written to the standard output.
 
 \par Description
 WlzGreyStats  calculates  the  area,  minimum,  maximum,  sum,  sum  of
@@ -38,8 +75,9 @@ squares, mean and the standard deviation of the input Woolz  2D  or  3D
 domain  object's  grey  values.   If the verbose output flag is not set
 then the following are written to the  output  file  in  the  following
 order:
-\par
-\<area\> \<grey type\> \<min\> \<max\> \<sum\> \<sum of sq\> \<mean\> \<std dev\>.
+\verbatim
+ <area> <grey type> <min> <max> <sum> <sum of sq> <mean> <std dev>
+\endverbatim
 
 \par Examples
 \verbatim
@@ -50,42 +88,15 @@ order:
 WlzGreyStats myobj.wlz
 \endverbatim
 
+\par File
+\ref WlzGreyStats.c "WlzGreyStats.c"
 \par See Also
-WlzGreyStats(3), WlzRGBAGreyStats(3).
-
-\par Bugs
-None known
-
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Thu Jul 28 08:52:31 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-               1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
+\ref wlzgreyrange "WlzGreyRange(1)"
+\ref WlzGreyStats "WlzGreyStats(3)"
+\ref WlzRGBAGreyStats "WlzRGBAGreyStats(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzGreyStats.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Computes simple statistics about a 2D or 3D Woolz
-*		domain object's grey values.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

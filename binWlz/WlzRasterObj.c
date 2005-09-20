@@ -1,20 +1,80 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzRaster.c
-* Date:         March 2001
-* Author:       Bill Hill
-* Copyright:	2001 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      A filter to rasterize geometric Woolz objects
-*		into 2D or 3D domain objects.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlz/WlzRasterObj.c
+* \author       Bill Hill
+* \date         March 2001
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Rasterizes geometric objects into domain objects.
+* \ingroup	BinWlz
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzrasterobj "WlzRasterObj"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzrasterobj WlzRasterObj
+\par Name
+WlzRasterObj  -  Scan converts a geometric object into a domain object.
+\par Synopsis
+\verbatim
+WlzRasterObj [-o<output object>] [-h] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output object file name.</td>
+  </tr>
+</table>
+\par Description
+Scan converts the given geometric object into a domain object.
+The input object is read from stdin and the output output is written
+to stdout unless filenames are given.
+\par Examples
+\verbatim
+WlzRasterObj in.wlz
+\endverbatim
+The input geometric object is read from in.wlz, and the scan converted
+object is written to stdout.
+\par File
+\ref WlzRasterObj.c "WlzRasterObj.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref wlzpolygontoobj "WlzPolyToObj(1)"
+\ref WlzRasterObj "WlzRasterObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <Wlz.h>
 #include <limits.h>
 #include <string.h>
