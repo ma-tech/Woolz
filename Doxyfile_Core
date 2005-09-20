@@ -445,15 +445,15 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = Core.dox \
-                         binWlz \
                          libWlz \
                          libAlc \
                          libAlg \
                          libWlzExtFF \
                          libbibfile \
-                         libhguDlpList
-#                        binWlzExtFF \
-#                        binWlzApp \
+                         libhguDlpList \
+                         binWlz \
+                         binWlzExtFF \
+                         binWlzApp
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
