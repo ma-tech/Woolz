@@ -1,33 +1,64 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         AlgFourier.c
+* \file         libAlg/AlgFourier.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$
-* \note
-*               Copyright
-*               2001 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief        Fast Fourier and Hartley transform functions.
+*
+* \par
 *		The history of this software is (as stated by Mayer):
-*		  Euler		- Probable inventor of the fourier
-*				  transform.
-*		  Gauss		- Probable inventor of the FFT.
-*		  Hartley	- Probable inventor of the hartley
-*				  transform.
-*		  Bracewell & Buneman - Patent holders for FHT!
-*		  Ron Mayer	- Produced FFT code using the FHT.
-*		  Bill Hill	- Hacked Ron Mayer's code to simplify
-*				  multi dimensional FFT's and for
-*				  compatability with our existing FFT
-*				  routines here at MRC HGU.
-*				  Added multithreading for increased
-*				  speed on multi-cpu system VR4 (Sun
-*				  Solaris 2.X) machines.
+<table width="500" border="0">
+                  <tr>
+		  <td>Euler</td> <td>Probable inventor of the fourier
+				     transform.</td>
+		  </tr>
+		  <tr>
+		  <td>Gauss</td> <td>Probable inventor of the FFT.</td>
+		  </tr>
+		  <tr>
+		  <td>Hartley</td> <td>Probable inventor of the hartley
+				       transform.</td>
+		  </tr>
+		  <tr>
+		  <td>Bracewell & Buneman</td> <td>Patent holders for FHT!</td>
+		  </tr>
+		  <tr>
+		  <td>Ron Mayer</td> <td>Produced FFT code using the FHT.</td>
+		  </tr>
+		  <tr>
+		  <td>Bill Hill</td> <td>Hacked Ron Mayer's code to simplify
+				  multi dimensional FFT's and for
+				  compatability with our existing FFT
+				  routines here at MRC HGU.
+				  Added multithreading for increased
+				  speed on multi-cpu system VR4 (Sun
+				  Solaris 2.X) machines.</td>
+		  </tr>
+</table>
 * 		The two dimensional transform routines may be supplied
 *		with buffers sufficient to hold a column of complex
 *		data, or NULLS may be given. If supplied then these
@@ -712,6 +743,7 @@ static void	*AlgFourThrHart1D(AlgFourArgs1 *args)
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given one
 *		dimensional complex data, and does it in place.
 * \param	real			Given real data.
@@ -812,6 +844,7 @@ static void	*AlgFourThr1D(AlgFourArgs2 *args)
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the inverse Fourier transform of the given
 *		complex one dimensional data, and does it in place.
 * \param	real			Given real data.
@@ -1164,6 +1197,7 @@ static void	*AlgFourThrRepXY1D(AlgFourArgs4 *args)
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given one
 *		dimensional real data, and does it in place.
 * \param	real			Given real data.
@@ -1231,6 +1265,7 @@ void		*AlgFourThrReal1D(AlgFourArgs1 *args)
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the inverse Fourier transform of the given one
 *		one dimensional real data, and does it in place.
 * \param	real			Given real/complex data.
@@ -1590,6 +1625,7 @@ static void	*AlgFourThrRepXYReal1D(AlgFourArgs3 *args)
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given two
 *		dimensional complex data, and does it in place.
 *		If the two buffer pointers are NULL then the transform
@@ -1627,6 +1663,7 @@ void		AlgFour2D(double **real, double **imag,
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the inverse Fourier transform of the given two
 *		dimensional complex data, and does it in place.
 *		If the two buffer pointers are NULL then the transform
@@ -1664,6 +1701,7 @@ void		AlgFourInv2D(double **real, double **imag,
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given two
 *		dimensional real data, and does it in place.
 *		If the two buffer pointers are NULL then the transform
@@ -1699,6 +1737,7 @@ void		AlgFourReal2D(double **real, double *reBuf, double *imBuf,
 
 /*!
 * \return	void
+* \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given two
 *		dimensional data which resulted from a transform using
 *		AlgFourReal2D(), and does it in place.

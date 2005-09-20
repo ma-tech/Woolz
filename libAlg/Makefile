@@ -1,24 +1,36 @@
-#########################################################################
-# Project:      Mouse Atlas
-# Title:        Makefile
-# Date:         March 1999
-# Author:       Bill Hill
-# Copyright:	1999 Medical Research Council, UK.
-#		All rights reserved.
-# Address:	MRC Human Genetics Unit,
-#		Western General Hospital,
-#		Edinburgh, EH4 2XU, UK.
-# Purpose:      Makefile for building the MRC Human Genetics Unit
-#		numerical algorithm library.
-# $Revision$
-# $Id$
-# Maintenance:	Log changes below, with most recent at top of list.
-# 07-06-01 bill	Add AlgMatrixMath.c
-# 04-06-01 bill Add AlgMatrixRSTDiag.c, AlgMatrixTDiagQLI.c and
-#		AlgMatrixRSEigen.c
-# 01-02-01 bill	Add AlgCrossCorr.c
-# 07-11-00 bill Add AlgShuffle.c.
-#########################################################################
+##!
+# \file         Makefile
+# \author       Bill Hill
+# \date         March 1999
+# \version      $Id$
+# \par
+# Address:
+#               MRC Human Genetics Unit,
+#               Western General Hospital,
+#               Edinburgh, EH4 2XU, UK.
+# \par
+# Copyright (C) 2005 Medical research Council, UK.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be
+# useful but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+# \brief        Makefile for the Woolz numerical algorithm library.
+# \ingroup      Alg
+# \todo         -
+# \bug          None known.
+##
 
 # Include the configuration makefile (modify as required).
 include			../../Makefile.conf
@@ -37,13 +49,13 @@ DLLLIBSEXT		=
 EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
+#			  AlgDPSearch.c
 CSOURCES		= \
 			  AlgBits.c \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
 			  AlgCrossCorr.c \
 			  AlgDebug.c \
-			  AlgDPSearch.c \
 			  AlgFourier.c \
 			  AlgGamma.c \
 			  AlgHeapSort.c \
