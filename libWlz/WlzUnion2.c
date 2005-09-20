@@ -1,26 +1,37 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzUnion2.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Aug 19 08:26:52 2003
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzBinaryOps
-* \brief        Convenience procedure to calculate the union of two
- woolz domain objects.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Convenience function to calculate the union
+* 		of two domain objects.
+* \ingroup	WlzBinaryOps
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdio.h>
@@ -28,17 +39,16 @@
 
 /* function:     WlzUnion2    */
 /*! 
+* \return       Union object pointer.
 * \ingroup      WlzBinaryOps
 * \brief        Convenience procedure to calculate the union of two
- woolz domain objects. This calls WlzUnnionN() with uvt=0. Objects must
- be of the same type.
-*
-* \return       Union object pointer.
+* 		woolz domain objects. This calls WlzUnnionN() with
+* 		uvt=0. Objects must be of the same type.
+* \par      Source:
+*                WlzUnion2.c
 * \param    obj1	First inout object.
 * \param    obj2	Second input object.
 * \param    dstErr	errro return.
-* \par      Source:
-*                WlzUnion2.c
 */
 WlzObject *WlzUnion2(WlzObject *obj1,
 		     WlzObject *obj2,

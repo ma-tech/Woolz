@@ -1,29 +1,55 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzRGBAImageArithmetic.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Thu Jun 10 16:39:26 2004
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         June 2004
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzValuesFilters
-* \brief        Perform image arithmetic on RGBA data. Both input files must be RGBA value type.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Performs image arithmetic on RGBA data.
+* 		Both input files must be RGBA value type.
+* \ingroup	WlzArithmetic
+* \todo         -
+* \bug          None known.
 */
 
 #include <Wlz.h>
 
+/*!
+* \return	New object.
+* \ingroup	WlzArithmetic
+* \brief	Performs image arithmetic on objects with RGBA values.
+* 		See WlzImageArithmetic().
+* \param	obj0			First object.
+* \param	obj1			Second object.
+* \param	op			Binary operator.
+* \param	overwrite		Allow the destination object
+* 					to share values with one of
+* 					the given objects if non zero.
+* \param	dstErr			Destination error pointer, may
+* 					be NULL.
+*/
 WlzObject *WlzRGBAImageArithmetic(
   WlzObject 		*obj0,
   WlzObject 		*obj1,

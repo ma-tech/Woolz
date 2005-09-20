@@ -2,18 +2,33 @@
 #define WLZ_PROTO_H
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzProto.h
+* \file         libWlz/WlzProto.h
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$
-* \note
-*               Copyright
-*               2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	Defines the Woolz function prototypes.
 *		
 *		To allow bindings to other languages (ie Java) to be
@@ -79,18 +94,6 @@
 * \ingroup	Wlz
 * \todo         -
 * \bug          None known.
-* \note
-* Maintenance log with most recent changes at top of list.
-* 23-04-03 JRAO add WlzGreyValueMixing_s();
-* 11-10-01 JRAO add WlzReadMeshTransform3D();
-* 11-10-01 JRAO add WlzWriteMeshTransform3D();
-* 19-02-03 JRao add WlzBasisFnTrFromCPts3()
-* 19-02-03 JRao add WlzBasisFnValueMQ3D()
-* 19-02-03 JRao add WlzBasisFnMQ3DFromCPts()
-* 28-01-03 Rao  Add WlzGeometryTrackUpAndDown_s.c
-* 07-11-01 JRAO add WlzGreyValueGetDir().
-* 19-09-01 JRAO Add WlzMakeCuboidObject().
-* 19-09-01 JRAO Add WlzMakeRectangleObject().
 */
 
 #ifdef  __cplusplus
@@ -1465,7 +1468,7 @@ extern WlzErrorNum     		WlzDistMetricDirVertex3D(
 /************************************************************************
 * WlzDistTransform.c                                                    *
 ************************************************************************/
-extern WlzObject 		*DistanceTransform(
+extern WlzObject 		*WlzDistanceTransform(
 				  WlzObject *forObj,
 				  WlzObject *refObj,
 				  WlzDistanceType dFn,

@@ -1,27 +1,42 @@
-/* This code started at 23/04/2003 by J. Rao 
-*/
-/*! \file 	WlzGreyValueMixing_s.c
-* \author       J. Rao 
-* \date         April 2003 
-* \version      
-* \note
-*               Copyright:
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-* \par  Address:
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         libWlz/WlzGreyValueMixing_s.c
+* \author       Jianguo Rao
+* \date         April 2003
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* \brief        Functions to mixing grey values of two woolz object.
-*               and to produce a new Woolz object
-*               Method:
-*               obj = (1-x) obj1 + x obj2
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
 *
-* \ingroup      WlzFeatures
-* \todo
-* \bug
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Functions to mix the grey values of two woolz object
+* 		and produce a new object using
+* 		\f[
+* 		o = (1 - x) o_1 + x o_2
+ 		\f]
+* \ingroup
+* \todo         -
+* \bug          None known.
 */
+
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>

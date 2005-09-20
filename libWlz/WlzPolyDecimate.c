@@ -1,34 +1,45 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzPolyDecimate.c
-* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Jul 17 10:05:33 2001
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2001 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         July 2001
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief        Functions to decimate polyline and boundary domains
-*		The functions remove vertices that are parts of straight
-*		lines as defined by a maximum distance.			
-*		The algorithm starts at vertex 1, walks along the line	
-*		until at least one vertex between the start and current	
-*		position is more than max-dist from the straight line	
-*		between vertex 1 and current. All vertices between	
-*		position 1 and current-1 are removed and position 1 	
-*		is incremented (to what was current-1). The process	
-*		is then repeated.
-*               
-* \todo         -
-* \bug          None known
-* \ingroup      WlzPolyline
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Functions to decimate polyline and boundary domains
+* 		The functions remove vertices that are parts of straight
+* 		lines as defined by a maximum distance.
+* 		The algorithm starts at vertex 1, walks along the line
+* 		until at least one vertex between the start and current
+* 		position is more than max-dist from the straight line
+* 		between vertex 1 and current. All vertices between
+* 		position 1 and current-1 are removed and position 1
+* 		is incremented (to what was current-1). The process
+* 		is then repeated.
+* \ingroup	WlzPolyline
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdio.h>

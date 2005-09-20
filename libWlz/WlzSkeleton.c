@@ -1,30 +1,37 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzSkeleton.c
-* \author       Jim Piper 1984 (modified by Bill Hill 1998)
+* \author       Jim Piper, Bill Hill, Richard Baldock
 * \date         March 1997
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzDomainOps
-* \brief        Performs a proper interval-domain skeletonisation by
- Hilditch's  method.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
-* 05-06-2000 bill Fixed enum assignment mismatch.
-* 03-03-2K bill	Replace WlzPushFreePtr(), WlzPopFreePtr() and 
-*		WlzFreeFreePtr() with AlcFreeStackPush(),
-*		AlcFreeStackPop() and AlcFreeStackFree().
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Performs a proper interval-domain skeletonisation
+* 		Hilditch's  method.
+* \ingroup	WlzDomainOps
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdio.h>
@@ -48,28 +55,21 @@ typedef struct _WlzExtIntv
   int		nextleft;
 } WlzExtIntv;
 
-static WlzErrorNum WlzSkStrip8(WlzObject *, WlzDomain,
-			    WlzInterval *, int, int *, int),
-		WlzSkStrip4(WlzObject *, WlzObject *, WlzObject *,
-			    WlzInterval *, int, int *, int);
-static WlzObject *WlzSkeleton2D(WlzObject *, int, WlzConnectType,
-				WlzErrorNum *),
-		 *WlzSkeleton3D(WlzObject *, int, WlzConnectType,
-		 		WlzErrorNum *);
+static WlzErrorNum 	WlzSkStrip8(WlzObject *, WlzDomain,
+			            WlzInterval *, int, int *, int),
+			WlzSkStrip4(WlzObject *, WlzObject *, WlzObject *,
+			            WlzInterval *, int, int *, int);
+static WlzObject 	*WlzSkeleton2D(WlzObject *, int, WlzConnectType,
+			               WlzErrorNum *),
+		 	*WlzSkeleton3D(WlzObject *, int, WlzConnectType,
+		 		       WlzErrorNum *);
 
-
-
-/* function:     WlzSkeleton    */
 /*! 
+* \return       Skeleton object, NULL on error.
 * \ingroup      WlzDomainOps
 * \brief        Computes the skeleton of the given object using Hilditch's
- method. See detail.
+*		 method. See detail.
 *
-* \return       Skeleton object, NULL on error.
-* \param    srcObj	Input object.
-* \param    smoothpasses	Number of smoothing passes to be applied.
-* \param    minCon	Minimum connectivity required.
-* \param    dstErr	Error return.
 * \par 	 Skeleton algorithm
 Performs a proper interval-domain skeletonisation by Hilditch's  method.
 <p>This algorithm iterates a two-stage process with three interval
@@ -197,6 +197,10 @@ may decide to delete points outside skObj and then muck
 up points within skObj.
 * \par      Source:
 *                WlzSkeleton.c
+* \param    srcObj		Input object.
+* \param    smoothpasses	Number of smoothing passes to be applied.
+* \param    minCon		Minimum connectivity required.
+* \param    dstErr		Error return.
 */
 WlzObject 	*WlzSkeleton(WlzObject *srcObj, int smoothpasses,
 			     WlzConnectType minCon,

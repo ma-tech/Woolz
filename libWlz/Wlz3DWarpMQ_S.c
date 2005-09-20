@@ -1,26 +1,36 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/Wlz3DWarpMQ_S.c
-* \author       J. Rao.
-* \date         Fri Sep 26 13:56:30 2003
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Jianguo Rao
+* \date         September 2003
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzTransform
-* \brief        Generate a regular tetrahedral mesh for a 3D woolz
-*               object domain.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Generates a regular tetrahedral mesh for a 3D domain.
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
 */
 
 /* This code started at 13/09/2001 by J. Rao 13/09/2001 

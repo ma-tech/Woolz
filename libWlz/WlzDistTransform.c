@@ -4,21 +4,37 @@
 * \author       Konstantinos Liakos, Bill Hill
 * \date         October 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2004 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Distance transform functions which calculate the distance of
-* 		every pixel in a foreground object from a reference object.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Distance transform functions which calculate the distance
+* 		of every pixel/voxel in a foreground object from a reference
+* 		object.
 * \ingroup	WlzMorphologyOps
 * \todo         -
 * \bug          None known.
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -40,7 +56,7 @@
 *					the foreground and reference objects.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject 	*DistanceTransform(WlzObject *forObj, WlzObject *refObj,
+WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 				   WlzDistanceType dFn, WlzErrorNum *dstErr)
 {
   int 		idP,

@@ -2,24 +2,35 @@
 /*!
 * \file         libWlz/WlzGreyInvertMinMax.c
 * \author       Margaret Stark
-* \date         Fri Sep 26 11:43:54 2003
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \date         September 2003
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzValuesUtils
-* \brief        Grey value inversion.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Grey value inversion.
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -35,7 +46,9 @@ static WlzErrorNum WlzGreyInvertMinMax3d(WlzObject	*obj,
 * \brief        Invert the Grey values of an object within a given	
 *		range. The supplied min and max values define the grey	
 *		transformation by: 		       	       		
-*			g' = gmax + gmin - g				
+*		\f[
+		g' = g_{max} + g_{min} - g				
+		\f]
 *		which means that g=gmax gives g'=gmin and g=gmin gives	
 *		g'=gmax. This is a generalisation of the original invert
 *		and allows for the "normal" inversion of 255-g for byte	
@@ -183,19 +196,15 @@ WlzErrorNum WlzGreyInvertMinMax(
 }
 
 
-/*
-*   Function   : WlzGreyInvertMinMax3d					
-*   Date       : Tue Jan 14 12:14:09 1997				
-*
-*   Synopsis   :Private procedure for WlzGreyInvertMinMax to implement	
-*	        the function for 3D domain objects. This procedure omits
-*	        most of the object checks and therefore should never be	
-*	        called directly.					
-*   Returns    :WlzErrorNum:  see WlzGreyInvertMinMax		       	
-*   Parameters :see WlzGreyInvertMinMax	       				
-*   Global refs:None							
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	Private version of WlzGreyInvertMinMax() which omits
+* 		the parameter checks.
+* \param	obj			Given object.
+* \param	min			Minimum grey value.
+* \param	max			Maximum grey value.
 */
-
 static WlzErrorNum WlzGreyInvertMinMax3d(WlzObject	*obj,
 					 WlzPixelV	min,
 					 WlzPixelV	max)

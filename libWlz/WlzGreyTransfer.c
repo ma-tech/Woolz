@@ -1,29 +1,40 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzGreyTransfer.c
-* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Wed Jan 16 10:02:22 2002
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2001 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         September 2002
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzValuesUtils
-* \brief        Procedures to transfer grey values from a source to
- a destination object. The source object grey values are set in the
- intersection domain between source and destination. Destination
- domain and the destination values outside of the intersection are
- unchanged.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Transfers grey values from a source to a destination
+* 		object. The source object grey values are set in the
+* 		intersection domain between source and destination.
+* 		Destination domain and the destination values outside of the
+* 		intersection are unchanged.
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdio.h>

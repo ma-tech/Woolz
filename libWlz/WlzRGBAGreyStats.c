@@ -1,31 +1,63 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzRGBAGreyStats.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Fri Jun 18 17:12:20 2004
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         June 2005
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzFeatures
-* \brief        Calculates simple quick statistics for a
- domain object with RGBA values.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Calculates simple quick statistics for a domain object
+* 		with RGBA values.
+* \ingroup	WlzFeatures
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdlib.h>
 #include <Wlz.h>
 
+/*!
+* \return       Object area or -1 on error.
+* \ingroup      WlzFeatures
+* \brief        Calculates simple quick statistics for the domain
+*               object with RGBA values. Each component has its
+*               statictics computed and entered into the four
+*               double[4] arrays.
+* \param        srcObj                  Given object.
+* \param	colSpc			Colour space.
+* \param        dstGType                Pointer for grey type.
+* \param        dstMin                  Array for the 4 minimum value.
+* \param        dstMax                  Array for the 4 maximum value.
+* \param        dstSum                  Array for the 4 sum of values.
+* \param        dstSumSq                Array for the 4 sum of squares of
+*                                       values.
+* \param	dstMean			Array for the 4 mean values.
+* \param	dstStdDev		Array for the 4 standard deviation
+* 					values.
+* \param        dstErr                  Destination pointer for error, may
+*                                       be NULL.
+*/
 int WlzRGBAGreyStats(
   WlzObject	*srcObj,
   WlzRGBAColorSpace	colSpc,

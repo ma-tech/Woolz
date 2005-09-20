@@ -1,27 +1,36 @@
-#########################################################################
-# Project:      Woolz
-# Title:        Makefile
-# Date:         March 1999
-# Author:       Bill Hill
-# Copyright:	2003 Medical Research Council, UK.
-#		All rights reserved.
-# Address:	MRC Human Genetics Unit,
-#		Western General Hospital,
-#		Edinburgh, EH4 2XU, UK.
-# Purpose:      Makefile for the Woolz library.
-# $Revision$
-# $Id$
-# Maintenance:	Log changes below, with most recent at top of list.
-# 23-04-03 Rao  Add WlzGreyValueMixing_s.c
-# 28-01-03 Rao  Add WlzGeometryTrackUpAndDown_s.c
-# 18-01-02 Rao  Add Wlz3DWarpMQ_S.c
-# 14-03-01 bill Add WlzRaster.c
-# 01-02-01 bill Add WlzRegCCor.c
-# 23-01-01 bill Add WlzShadeCorrect.c
-# 28-11-00 bill Add WlzGeoModelFilters.c
-# 06-11-00 bill	Add WlzVerticies.c and WlzRegICP.c
-# 29-11-99 bill	Add WlzContour.c
-#########################################################################
+##!
+# \file         Makefile
+# \author       Bill Hill
+# \date         March 1999
+# \version      $Id$
+# \par
+# Address:
+#               MRC Human Genetics Unit,
+#               Western General Hospital,
+#               Edinburgh, EH4 2XU, UK.
+# \par
+# Copyright (C) 2005 Medical research Council, UK.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be
+# useful but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+# \brief        Makefile for the Woolz library.
+# \ingroup      Wlz
+# \todo         -
+# \bug          None known.
+##
 
 # Include the configuration makefile (modify as required).
 include			../../Makefile.conf

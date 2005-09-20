@@ -1,28 +1,37 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzTransposeObj.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Fri Sep 26 09:36:32 2003
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       richard Baldock
+* \date         September 2003
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzTransform
-* \brief        Transpose a woolz object (ie interchange row and column
- coordinates). This can be thought of as a reflection about the diagonal within
- the bounding box of the object. Domain boundary, polyline objects can all
- be transposed. This is used in the WlzSepTrans procedure.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Transposes objects (ie interchanges row and column
+* 		coordinates).
+* \ingroup	WlzTransform
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -38,18 +47,18 @@ static WlzPolygonDomain *WlzTransposePolygon(WlzPolygonDomain *poly,
 static WlzObject *WlzTranspose3DObj(WlzObject *obj,
 				      WlzErrorNum *dstErr);
 
-/* function:     WlzTransposeObj    */
 /*! 
+* \return       Transposed object, NULL on error.
 * \ingroup      WlzTransform
 * \brief        Transpose a woolz object. Currently implemented for
- 2D domain, boundary and polyline objects. Transpose
- means pixels/vertices at (k,l) are moved to (l,k).
-*
-* \return       Transposed object, NULL on error.
-* \param    obj	Input object
-* \param    dstErr	Error return.
+*		2D domain, boundary and polyline objects. Transpose
+*		means pixels/vertices at (k,l) are moved to (l,k).
+*		Domain, boundary and polyline objects can all be transposed.
+*		This is used in the WlzSepTrans procedure.
 * \par      Source:
 *                WlzTransposeObj.c
+* \param    	obj			Input object
+* \param    	dstErr			Error return.
 */
 WlzObject *WlzTransposeObj(
   WlzObject	*obj,

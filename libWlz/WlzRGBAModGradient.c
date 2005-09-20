@@ -1,27 +1,38 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzRGBAModGradient.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Mon Jun 20 06:46:50 2005
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \author       Richard Baldock
+* \date         June 2005
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzValuesUtils
-* \brief        Calculate the modulus of the gradient of a Woolz RGBA
- object. The gradient is defined as the modulus of the "modulus" vector,
- i.e. the modulus for each colour.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Calculates the modulus of the gradient of a RGBA
+* 		object. The gradient is defined as the modulus of the
+* 		"modulus" vector, i.e. the modulus for each colour.
+* \ingroup	WlzValuesUtils
+* \todo         -
+* \bug          None known.
 */
 
 #include <stdlib.h>

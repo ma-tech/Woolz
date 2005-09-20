@@ -1,28 +1,41 @@
 #pragma ident "MRC HGU $Id$"
 /*!
 * \file         libWlz/WlzPrinicipalAngle.c
-* \author       Bill Hill
+* \author       Elizabeth Guest, Bill Hill
 * \date         March 1999
 * \version      $Id$
-* \note
-*               Copyright
-*               2002 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Calculates the angle which the long principal axis
-*               makes with the  given object.
-* \note         This code is based on code by lizg@hgu.mrc.ac.uk which
-*               implemented a combination of methods by Rees and
-*               Hibbard. (D.W.A. Rees, Mechanics of Solids and
-*               Structures).
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Calculates the angle which the long principal axis makes with
+* 		the  given object. The functions are based on a combination of
+* 		methods by Rees and Hibbard. (D.W.A. Rees, Mechanics of Solids
+* 		and Structures).
 * \ingroup	WlzRegistration
 * \todo         -
 * \bug          None known.
 */
+
 #include <stdlib.h>
 #include <float.h>
 #include <Wlz.h>

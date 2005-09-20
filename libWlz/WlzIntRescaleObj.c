@@ -4,32 +4,35 @@
 * \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Rescale a Woolz object using an integral scale.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Rescales a Woolz object using an integral scale.
 * \ingroup	WlzTransform
 * \todo         -
 * \bug          None known.
-* \note		Log changes below, with most recent at top of list.
-*
-* 05-03-2003	Bill changed to doxygen documentation and implemented code
-*		for 3D domain objects.
-*
-* 22-01-2003	Elizabeth Guest Fixed the scanning of the table so that it
-*		works with non-zero k1. Replaced k with k+iwsp.lftpos where kp
-*		is calculated.
-*
-* 03-03-2000	Bill replaced WlzPushFreePtr(), WlzPopFreePtr() and
-* 		WlzFreeFreePtr() with AlcFreeStackPush(), AlcFreeStackPop()
-* 		and AlcFreeStackFree().
 */
+
 #include <stdlib.h>
 #include <Wlz.h>
 
