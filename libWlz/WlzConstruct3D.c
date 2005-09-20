@@ -4,21 +4,36 @@
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	Functions to construct 3D domain objects from 2D domain
-*		objects.
+* 		objects.
 * \ingroup	WlzAllocation
 * \todo         -
 * \bug          None known.
 */
+
 #include <stdio.h>
 #include <Wlz.h>
 
@@ -75,13 +90,22 @@ WlzObject	*WlzConstruct3DObjFromFile(int nFileStr, char **fileStr,
       (void )fclose(fP);
       fP = NULL;
     }
-    if(obj2D->type != WLZ_2D_DOMAINOBJ)
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(obj2D->type)
     {
-      errNum = WLZ_ERR_OBJECT_TYPE;
-    }
-    else if(obj2D->domain.core == NULL)
-    {
-      errNum = WLZ_ERR_DOMAIN_NULL;
+      case WLZ_EMPTY_OBJ:
+	break;
+      case WLZ_2D_DOMAINOBJ:
+	if(obj2D->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
     }
   }
   /* Make a plane domain, set column and line bounds later. */
@@ -115,20 +139,26 @@ WlzObject	*WlzConstruct3DObjFromFile(int nFileStr, char **fileStr,
   {
     if(obj2D)
     {
-      if(obj2D->type != WLZ_2D_DOMAINOBJ)
+      switch(obj2D->type)
       {
-        errNum = WLZ_ERR_OBJECT_TYPE;
+	case WLZ_EMPTY_OBJ:
+	  break;
+	case WLZ_2D_DOMAINOBJ:
+	  if(obj2D->domain.core == NULL)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_NULL;
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	  break;
       }
-      else if(obj2D->domain.core == NULL)
-      {
-        errNum = WLZ_ERR_DOMAIN_NULL;
-      }
-      else
+      if(errNum == WLZ_ERR_NONE)
       {
 	*(dom3D.p->domains + idx) = WlzAssignDomain(obj2D->domain, NULL);
 	if(val3D.core)
 	{
-	  if(obj2D->values.core == NULL)
+	  if((obj2D->domain.core != NULL) && (obj2D->values.core == NULL))
 	  {
 	    errNum = WLZ_ERR_VALUES_NULL;
 	  }
@@ -230,13 +260,22 @@ WlzObject	*WlzConstruct3DObjFromObj(int nObjs, WlzObject **objs,
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else if(obj2D->type != WLZ_2D_DOMAINOBJ)
+  else
   {
-    errNum = WLZ_ERR_OBJECT_TYPE;
-  }
-  else if(obj2D->domain.core == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
+    switch(obj2D->type)
+    {
+      case WLZ_EMPTY_OBJ:
+	break;
+      case WLZ_2D_DOMAINOBJ:
+	if(obj2D->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
   }
   /* Make a plane domain, set column and line bounds later. */
   if(errNum == WLZ_ERR_NONE)
@@ -269,20 +308,26 @@ WlzObject	*WlzConstruct3DObjFromObj(int nObjs, WlzObject **objs,
     obj2D = *(objs + idx);
     if(obj2D)
     {
-      if(obj2D->type != WLZ_2D_DOMAINOBJ)
+      switch(obj2D->type)
       {
-        errNum = WLZ_ERR_OBJECT_TYPE;
+	case WLZ_EMPTY_OBJ:
+	  break;
+	case WLZ_2D_DOMAINOBJ:
+	  if(obj2D->domain.core == NULL)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_NULL;
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	  break;
       }
-      else if(obj2D->domain.core == NULL)
-      {
-        errNum = WLZ_ERR_DOMAIN_NULL;
-      }
-      else
+      if(errNum == WLZ_ERR_NONE)
       {
 	*(dom3D.p->domains + idx) = WlzAssignDomain(obj2D->domain, NULL);
 	if(val3D.core)
 	{
-	  if(obj2D->values.core == NULL)
+	  if((obj2D->domain.core != NULL) && (obj2D->values.core == NULL))
 	  {
 	    errNum = WLZ_ERR_VALUES_NULL;
 	  }
