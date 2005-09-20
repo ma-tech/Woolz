@@ -1,33 +1,147 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzProductTransform.c				*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Mon May  3 15:24:07 1999				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : generate and write out the product transform of two	*
-*		input trabsforms. If 3D go by plane number.		*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-* 04-10-00 bill Changes following removal of primitives from 
-*               WlzAffinetransform.
-************************************************************************/
+/*!
+* \file         binWlzApp/WlzProductTransform.c
+* \author	Richard Baldock
+* \date         May 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Computes the product transform for bibfiles.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzproducttransform "WlzProductTransform"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzproducttransform WlzProductTransform
+\par Name
+WlzProductTransform - computes the product transform for bibfiles.
+\par Synopsis
+\verbatim
+WlzProductTransform  [-h] [-v] [-A] [-R] [-1] [-2] [-3] [-i] [-I]
+                     [-f<filename1>] [-F<filename2>] 
+		     [-x#] [-y#] [-z#] [-s#] [-a#] [-b#] [-u#] [-v#] [-w#]
+		     [<bibfile1>] [<bibfile2>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Version output.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Calculate absolute transform, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-R</b></td>
+    <td>Calculate relative transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-1</b></td>
+    <td>Transform 1 is relative (defefault absolute).</td>
+  </tr>
+  <tr> 
+    <td><b>-2</b></td>
+    <td>Transform 2 is relative (defefault is absolute).</td>
+  </tr>
+  <tr> 
+    <td><b>-3</b></td>
+    <td>Command-line transform is 3D.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Rotation about the z-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Rotation about the y-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Invert: Reflection about the y-axis.</td>
+  </tr>
+  <tr> 
+    <td><b>-I</b></td>
+    <td>Inverse: Output the inverse of the product.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Scale factor.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Shear strength.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Shear angle in x-y plane.</td>
+  </tr>
+  <tr> 
+    <td><b>-w</b></td>
+    <td>3D shear angle.</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>Column (x) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Row (y) translation.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>Plane (z) translation.</td>
+  </tr>
+</table>
+\par Description
+WlzProductTransform finds the product transform for the given bibfiles.
+Bibfile data from stdin is also read and fitted in
+as per the command line arguments i.e. if filename1
+or bibfile1 are defined then it will be transform 2
+otherwise transform 1. If both transforms are defined
+on the command line then stdin is ignored.
+The transform entered as arguments assume degree angles
+and will be applied after transform 1 or 2.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzProductTransform.c "WlzProductTransform.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -55,9 +169,10 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-A] [-R] [-1] [-2] [-ffilename1] [-Ffilename2] [-3] "
-	  "[-i] [-I] [-x#] [-y#] [-z#] [-s#] [-a#] [-b#] [-u#] [-v#] [-w#] "
-	  "[-h] [-v] [<bibfile1>] [<bibfile2>]\n"
+	  "Usage:\t%s [-A] [-R] [-1] [-2] [-3]\n"
+	  "\t[-ffilename1] [-Ffilename2] [-3]\n"
+	  "\t[-i] [-I] [-x#] [-y#] [-z#] [-s#] [-a#] [-b#]\n"
+	  "\t[-u#] [-v#] [-w#] [-h] [-v] [<bibfile1>] [<bibfile2>]\n"
 	  "\tFind the product transform for the given bibfiles.\n"
 	  "\tBibfile data from stdin is also read and fitted in\n"
 	  "\tas per the command line arguments i.e. if filename1\n"
@@ -67,6 +182,8 @@ static void usage(char *proc_str)
 	  "\tThe transform entered as arguments assume degree angles\n"
 	  "\tand will be applied after transform 1 or 2.\n"
 	  "\tOptions are:\n"
+	  "\t  -h                Help - prints this usage message\n"
+	  "\t  -v                verbose operation\n"
 	  "\t  -A                calculate absolute transform(default)\n"
 	  "\t  -R                calculate relative transform\n"
 	  "\t  -1                transform 1 is relative (def: absolute)\n"
@@ -83,8 +200,6 @@ static void usage(char *proc_str)
 	  "\t  -x                Column (x) translation.\n"
 	  "\t  -y                Row (y) translation.\n"
 	  "\t  -z                Plane (z) translation.\n"
-	  "\t  -h                Help - prints this usage message\n"
-	  "\t  -V                verbose operation\n"
 	  "",
 	  proc_str);
   return;
@@ -983,3 +1098,4 @@ int main(int	argc,
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

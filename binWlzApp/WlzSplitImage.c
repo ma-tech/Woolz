@@ -1,24 +1,111 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSplitImage.c
+* \file         binWlzApp/WlzSplitImage.c
 * \author       Bill Hill
 * \date         October 2004
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	A program which splits an image that is composed of several
-*		components seperated by background  into seperate images -
-*		one for each component.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Splits an object that is composed of several components
+* 		seperated by background into seperate objects.
+* \ingroup	BinWlzApp
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzSplitImage "WlzSplitImage"
 */
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlzSplitImage WlzSplitImage
+\par Name
+WlzSplitImage - splits an object that is composed of several components
+                seperated by background into seperate objects.
+\par Synopsis
+\verbatim
+WlzSplitImage [-h] [-v] [-b#] [-d] [-f#] [-F#] [-n#] [-s#]
+              <path to image file>
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Be verbose, probably only useful for debugging.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Border width for each component image object.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Write the component image objects to separate directories
+        using MA Editorial office conventions.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Input image format, default is to use the input file extension.</td>
+  </tr>
+  <tr> 
+    <td><b>-F</b></td>
+    <td>Output image format, default is same as input.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Number of component images to extract, value 2.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Histogram smoothing parameter, value 5.</td>
+  </tr>
+</table>
+\par Description
+WlzSplitImage splits the given image into component images, with a border region
+around each one and the components being numbered 1, 2, .... The
+image is split using the image values or their modulus of the image
+is colour. At least 20% of the image should be background and there
+should be a good background/foreground brightness contrast. The output
+images are sorted by column origin of the bounding boxes, ie the
+component numbrs increase from left to right.
+origins of their bounding boxes increase.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzSplitImage.c "WlzSplitImage.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref WlzLabel "WlzLabel(1)"
+\ref WlzThreshold "WlzThreshold(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -391,7 +478,7 @@ int             main(int argc, char *argv[])
     "should be a good background/foreground brightness contrast. The output\n"
     "images are sorted by column origin of the bounding boxes, ie the\n"
     "component numbrs increase from left to right.\n"
-    "origins of their bounding boxes increase .\n"
+    "origins of their bounding boxes increase.\n"
     "Command line options are:\n"
     "  -b  Border width for each component image.\n"
     "  -d  Write component images to separate directories using MA Editorial\n"
@@ -432,3 +519,4 @@ static int	WlzSplitImageSortBBFn(void *data, int *idx, int id0, int id1)
   cmp = bBox0.xMin - bBox1.xMin;
   return(cmp);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

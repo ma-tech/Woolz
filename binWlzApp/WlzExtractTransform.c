@@ -1,22 +1,103 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        WlzExtractTransform.c
-* Date:         April 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Finds the affine transforms from a reconstruction
-*		bibfile.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-* 04-10-00 bill Changes following removal of primitives from 
-*		WlzAffinetransform.
-************************************************************************/
+/*!
+* \file         binWlzApp/WlzExtractTransform.c
+* \author       Richard Baldock
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Finds the affine transforms from a reconstruction
+* 		bibfile.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzextracttransform "WlzExtractTransform"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzextracttransform WlzExtractTransform
+\par Name
+WlzExtractTransform - finds the affine transforms from a reconstruction
+                      bibfile.
+\par Synopsis
+\verbatim
+WlzExtractTransform [-h] [-v] [-A] [-R] [-a] [-t] [-T] [-f<filename>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Version operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Calculate absolute transform.</td>
+  </tr>
+  <tr> 
+    <td><b>-R</b></td>
+    <td>Calculate relative transform, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Output and argument string for WlzAffineTransformObj, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Output a Woolz affine transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-T</b></td>
+    <td>Output text.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Filename to be found.</td>
+  </tr>
+</table>
+\par Description
+WlzExtractTransform finds the transform for the given filename
+within the bibfile and outputs either
+an argument string for WlzAffineTransformObj,
+a Woolz affine transform or
+a text description.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzExtractTransform.c "WlzExtractTransform.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,12 +118,14 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-A] [-R] [-a] [-t] [-T] [-ffilename] [input bibfile]"
-	  "[-h] [-v] [<bibfile>]\n"
-	  "\tFind the transform for the given filename\n"
+	  "Usage:\t%s [-h] [-v] [-A] [-R] [-a] [-t] [-T] [-f<filename>]\n"
+	  "                          [input bibfile]\n"
+	  "\tFinds the transform for the given filename\n"
 	  "\twithin the bib-file and output an argument\n"
 	  "\tstring for WlzAffineTransformObj\n"
 	  "\tOptions are:\n"
+	  "\t  -h                Help - prints this usage message\n"
+	  "\t  -v                verbose operation\n"
 	  "\t  -A                calculate absolute transform\n"
 	  "\t  -R                calculate relative transform (default)\n"
 	  "\t  -a                output and argument string for\n"
@@ -50,8 +133,6 @@ static void usage(char *proc_str)
 	  "\t  -t                output a woolz affine transform object\n"
 	  "\t  -T                output text\n"
 	  "\t  -f<filename>      filename to be found\n"
-	  "\t  -h                Help - prints this usage message\n"
-	  "\t  -v                verbose operation\n"
 	  "",
 	  proc_str);
   return;
@@ -245,3 +326,4 @@ int main(int	argc,
 
   return WLZ_ERR_NONE;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

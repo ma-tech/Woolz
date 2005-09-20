@@ -1,27 +1,94 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBibToMeshTrans.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Wed Mar  9 13:33:37 2005
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \file         binWlzApp/WlzBibToMeshTrans.c
+* \author       Richard Baldock
+* \date         March 2005
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzTransform
-* \brief        Generate a mesh transform from an MAPaint bibfiile of
- Basis function parameters and tie-points. Also required is a 2D image
- in order to generate a suitable mesh.
-*               
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief        Generates a mesh transform from an MAPaint bibfiile of
+*		basis function parameters and tie-points.
+*               
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzbibtomeshtrans "WlzBibToMeshTrans"
 */
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlzbibtomeshtrans WlzBibToMeshTrans
+\par Name
+WlzBibToMeshTrans - generates a mesh transform from a bibfiile
+		    with basis function parameters and tie-points.
+\par Synopsis
+\verbatim
+WlzBibToMeshTrans [-h] [-v] [-b<bibfile>] [-f<obj>] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Version operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>A bibfile defining the warp parameters e.g. from MAPaint.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>A 2D Woolz object which is used to define the mesh,
+        this should be the same as the object to which the mesh
+	transform will be applied.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file.</td>
+  </tr>
+</table>
+\par Description
+Creates a mesh transform from an MAPaint warp bibfile.
+By default the 2D object used to define the mesh transfrom
+is read from the standard input and
+the mesh transform is written to the standard output.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref WlzMeshTransformFromCPts "WlzMeshTransformFromCPts(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -252,3 +319,4 @@ int main(int	argc,
   return errNum;
 }
  
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

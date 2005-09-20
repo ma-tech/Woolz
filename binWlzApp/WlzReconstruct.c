@@ -1,6 +1,6 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzReconstruct.c
+* \file         binWlzApp/WlzReconstruct.c
 * \author       Bill Hill
 * \date         June 2005
 * \version      $Id$
@@ -27,12 +27,126 @@
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	Reconstructs a 3D object using the information in the
-* 		given Reconstruct bib file.
+* \brief	Reconstructs a 3D object using the information a
+* 		Reconstruct bibfile.
+* \ingroup	BinWlzApp
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzreconstruct "WlzReconstruct"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzreconstruct WlzReconstruct
+\par Name
+WlzReconstruct - reconstructs a 3D object using the information in a
+                Reconstruct bibfile.
+\par Synopsis
+\verbatim
+WlzReconstruct  [-h] [-o <out obj file>] [-T <out obj fmt>] [-b <out bibfile>]
+                [-f] [-g] [-h] [-i] [-l] [-L] [-p]
+		[-s #] [-m #] [-c #,#,#] [-C #,#,#] <input bibfile>
+                
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr>
+    <td>o</td>
+    <td>Output object file name.</td>
+  </tr>
+  <tr>
+    <td>T</td>
+    <td>Output object file format.</td>
+  </tr>
+  <tr>
+    <td>b</td>
+    <td>Output bib file, the default is the same file name as the output
+      object file name but with a .bib file extension.</td>
+  </tr>
+  <tr>
+    <td>o</td>
+    <td>Output file name.</td>
+  </tr>
+  <tr>
+    <td>f</td>
+    <td>Force overwriting of files, without this option confirmation is
+      needed.</td>
+  </tr>
+  <tr>
+    <td>g</td>
+    <td>Use resource greedy algorithms.</td>
+  </tr>
+  <tr>
+    <td>h</td>
+    <td>Help - show this usage information.</td>
+  </tr>
+  <tr>
+    <td>i</td>
+    <td>Use integer scaling.</td>
+  </tr>
+  <tr>
+    <td>l</td>
+    <td>Use slow but accurate filter when sampling output.</td>
+  </tr>
+  <tr>
+    <td>p</td>
+    <td>Use fast sampling.</td>
+  </tr>
+  <tr>
+    <td>s</td>
+    <td>Scaling factor (eg 0.5 implies half linear dimension of source).</td>
+  </tr>
+  <tr>
+    <td>m</td>
+    <td>Match all section histograms to the section with the given index.</td>
+  </tr>
+  <tr>
+    <td>c</td>
+    <td>Clip the source (2D sections) using the given bounding box.</td>
+  </tr>
+  <tr>
+    <td>C</td>
+    <td>Clip the destination (3D object) using the given bounding box.</td>
+  </tr>
+</table>
+\par Description
+Reads a reconstruction bibfile either from the command line or the
+standard input and constructs a 3D object. The reconstruction process
+is controlled by the values in the bibfile, many of which can be
+overridden on the command line. Unless the force flag is set
+overwriting files will require a confirmation.
+
+By default ./WlzReconstruct reads from it's standard input and
+writes to it's standard output.
+Any bounding boxes specified on the command line should have the format
+\verbatim
+  xMin,yMin,zMin,xMax,yMax,zMax
+\endverbatim
+Both bounding box and scale components may be specified using standard
+floating point formats.
+\par Examples
+\verbatim
+WlzReconstruct -f -b new.bib recon.bib
+\endverbatim
+Reads the reconstruction bib file from recon.bib and constructs a 3D
+object which is written to the object file name specified in the
+bib file. a new bib file will be created for the reconstruction and
+written to new.bib. Because of the -f flag any existing files may
+be overwriten without confirmation.
+\par File
+\ref WlzReconstruct.c "WlzReconstruct.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref wlzconstruct3d "WlzConstruct3D(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -428,9 +542,9 @@ int		 main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage:\n"
-    "  %s [-o <out obj file>] [-T <out obj fmt>] [-b <out bib file>]\n"
+    "  %s [-o <out obj file>] [-T <out obj fmt>] [-b <out bibfile>]\n"
     "                 [-f] [-g] [-h] [-i] [-l] [-L] [-p]\n"
-    "                 [-s #] [-m #] [-c #,#,#] [-C #,#,#] <in bib file>\n"
+    "                 [-s #] [-m #] [-c #,#,#] [-C #,#,#] <in bibfile>\n"
     "Reads a reconstruction bibfile either from the command line or the\n"
     "standard input and constructs a 3D object. The reconstruction process\n"
     "is controlled by the values in the bibfile, many of which can be\n"
@@ -439,7 +553,7 @@ int		 main(int argc, char *argv[])
     "Options are:\n"
     "  -o  Output object file name.\n"
     "  -T  Output object file format.\n"
-    "  -b  Output bib file, the default is the same file name as the output\n"
+    "  -b  Output bibfile, the default is the same file name as the output\n"
     "      object file name but with a .bib file extension.\n"
     "  -o  Output file name.\n"
     "  -f  Force overwriting of files, without this option confirmation is\n"
@@ -461,9 +575,9 @@ int		 main(int argc, char *argv[])
     "floating point formats.\n"
     "Example:\n"
     "  %s -f -b new.bib recon.bib\n"
-    "Reads the reconstruction bib file from recon.bib and constructs a 3D\n"
+    "Reads the reconstruction bibfile from recon.bib and constructs a 3D\n"
     "object which is written to the object file name specified in the\n"
-    "bib file. a new bib file will be created for the reconstruction and\n"
+    "bibfile. a new bibfile will be created for the reconstruction and\n"
     "written to new.bib. Because of the -f flag any existing files may\n"
     "be overwriten without confirmation.\n",
     argv[0], argv[0], argv[0]);
@@ -730,3 +844,4 @@ static RecError	WlzRecMakeFilePathAbs(char **path, char *file)
   }
   return(recErr);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -1,26 +1,80 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         tif2Wlz.c
-* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Fri Dec 14 14:39:56 2001
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2001 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \file         binWlzExtFF/WlzTiff2Wlz.c
+* \author       Richard Baldock
+* \date         December 2001
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief        convert a tiff image file to woolz format
-*              
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief        Convert TIFF images file to Woolz format.
+*              
+* \ingroup	BinWlzExtFF
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlztiff2wlz "WlzTiff2Wlz"
 */
 
+/*!
+\ingroup BinWlzExtFF
+\defgroup wlztiff2wlznce WlzTiff2Wlz
+\par Name
+WlzTiff2Wlz - convert TIFF images file to Woolz format.
+\par Synopsis
+\verbatim
+WlzTiff2Wlz  [-h] [-v] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+</table>
+\par Description
+WlzTiff2Wlz reads a tiff file and converts it to a Woolz format.
+The output object is written to the standard output.
+\par Examples
+\verbatim
+WlzTiff2Wlz sec.tif >sec.wlz
+\endverbatim
+Reads the TIFF image from sec.tif,
+converts the image to a Woolz object
+and then writes the object to the file sec.wlz.
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzExtFF "WlzIntro(1)"
+\ref wlzextffconvert "WlzExtFFConvert(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +99,7 @@ void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s -h -v"
 	  "<input file>\n"
-	  "\tRead the tiff file and convert to woolz\n"
+	  "\tRead the TIFF file and convert to woolz\n"
 	  "\tOptions are:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
@@ -328,3 +382,4 @@ main(argc, argv)
 
   exit(0);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -1,30 +1,111 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzRawToWlz.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Fri Jan  5 10:05:47 2001    				*
-*   $Revision$			       				*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlzApp/WlzRawToWlz.c
+* \author	Richard Baldock
+* \date         January 2001
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Converta raw data to a Woolz object.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzrawtowlz "WlzRawToWlz"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzrawtowlz WlzRawToWlz
+\par Name
+WlzRawToWlz - converta raw data to a Woolz object.
+\par Synopsis
+\verbatim
+WlzRawToWlz  [-h] [-v] [-b] [-d#] [-l] [-o#,#,#]
+             <width> <height> [planes] <type> [<raw-data file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose output.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Big-endian byte ordering, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Image dimensions (2 or 3), default 2.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Little-endian byte ordering.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>The x,y,z offsets, default 0,0,0.</td>
+  </tr>
+  <tr> 
+    <td><b>-X</b></td>
+    <td>XXX.</td>
+  </tr>
+</table>
+\par Description
+WlzRawToWlz converts raw data to a woolz object.
+Input can be from standard input, the width,
+height and type are mandatory parameters.
+Width and height must be integer and > 0.
+Type must one of:
+<table width="500" border="0">
+  <tr> </tr>
+  <tr><td><b>Parameter Value</b></td> <td><b>Data type</b></td></tr>
+  <tr><td>1</td> <td>integer (32-bit signed)</td></tr>
+  <tr><td>2</td> <td>short (16-bit signed)</td></tr>
+  <tr><td>3</td> <td>unsigned byte</td></tr>
+  <tr><td>4</td> <td>float (</td></tr>
+  <tr><td>5</td> <td>double</td></tr>
+  <tr><td>6</td> <td>unsigned 32-bit integer</td></tr>
+  <tr><td>7</td> <td>unsigned 16-bit integer</td></tr>
+  <tr><td>8</td> <td>signed byte</td></tr>
+</table>
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzXXX.c "WlzXXX.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref wlzextffconvert "WlzExtFFConvert(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +125,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-b] [-d#] [-l] [-o#,#,#] [-u] "
+	  "Usage:\t%s [-b] [-d#] [-l] [-o#,#,#] "
 	  "[-h] [-v] <width> <height> [planes] <type> [<raw-data file>]\n"
 	  "\tConvert the given raw data to a woolz image.\n"
 	  "\tInput can be from standard input, the width,\n"
@@ -449,3 +530,4 @@ int main(int	argc,
 
   return WLZ_ERR_NONE;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

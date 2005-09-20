@@ -1,0 +1,9 @@
+/*!
+\addtogroup BinWlzExtFF
+
+There are several small programs which are concerned primarily with
+converting many external file formats to a Woolz file format.
+For converting files between Woolz and other external (non Woolz)
+These are similar in nature to the Woolz binaries,
+in that they are typically controlled by command line arguments.
+*/

@@ -1,31 +1,71 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzObjCompareSpecial_01.c				*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Wed Jun 14 14:50:30 2000				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : Special binary to calculate vlues to compare the	*
-*		distribution of two woolz objects			*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlzApp/WlzObjCompareSpecial_01.c
+* \author	Richard Baldock
+* \date         June 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Compares a pair of objects and prints some statistics.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzobjcomparespecial_01 "WlzObjCompareSpecial_01"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzobjcomparespecial_01 WlzObjCompareSpecial_01
+\par Name
+WlzObjCompareSpecial_01 - compares a pair of objects and
+                          prints some statistics.
+\par Synopsis
+\verbatim
+WlzObjCompareSpecial_01  [-h]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+</table>
+\par Description
+WlzObjCompareSpecial_01 compares a pair of objects read from the standard
+input and prints some statistics.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzObjCompareSpecial_01.c "WlzObjCompareSpecial_01.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -431,3 +471,4 @@ int main(
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

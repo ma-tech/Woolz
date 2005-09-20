@@ -1,19 +1,39 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        bibFileAlloc.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Functions for allocation and freeing of the bibtex
+/*!
+* \file         libbibfile/bibFileAlloc.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Functions for allocation and freeing of the bibtex
 *		based record and field data structures.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+* \ingroup	bibfile
+* \todo         -
+* \bug          None known.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -28,13 +48,12 @@ BibFileField	*BibFileFieldMake(char *name, char *value, BibFileField *next),
 void		BibFileRecordFree(BibFileRecord **record),
 		BibFileFieldFree(BibFileField **field);
 
-/************************************************************************
-* Function:	BibFileRecordFree					*
-* Returns:	void							*
-* Purpose:	Free's the given record and sets it to NULL.		*
-* Global refs:	-							*
-* Parameters:	BibFileRecord **record:	Record ptr to be free'd.	*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	bibfile
+* \brief	Free's the given record and sets it to NULL.
+* \param	record			Record ptr to free.
+*/
 void		BibFileRecordFree(BibFileRecord **record)
 {
   BibFileRecord	*tmpPtr;
@@ -51,13 +70,12 @@ void		BibFileRecordFree(BibFileRecord **record)
   }
 }
 
-/************************************************************************
-* Function:	BibFileFieldFree					*
-* Returns:	void							*
-* Purpose:	Recursively free's the given field and sets it to NULL.	*
-* Global refs:	-							*
-* Parameters:	BibFileField **field:	Field ptr to be free'd.		*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	bibfile
+* \brief	Recursively free's the given field and sets it to NULL.	
+* \param	field			Field ptr to free.
+*/
 void		BibFileFieldFree(BibFileField **field)
 {
   BibFileField	*tmpPtr;
@@ -75,16 +93,15 @@ void		BibFileFieldFree(BibFileField **field)
   }
 }
 
-/************************************************************************
-* Function:	BibFileRecordMake					*
-* Returns:	BibFileRecord *:	New record, NULL on error.	*
-* Purpose:	Given record name and id strings and a field pointer	*
-*		a new record is created.				*
-* Global refs:	-							*
-* Parameters:	char *name:		Record name string.		*
-*		char *id:		Record id string.		*
-*		BibFileField *field:	Top field of record.		*
-************************************************************************/
+/*!
+* \return	New record, NULL on error.
+* \ingroup	bibfile
+* \brief	Given record name and id strings and a field pointer
+*		a new record is created.				
+* \param	name			Record name string.
+* \param	id			Record id string.
+* \param	field			Top field of record.
+*/
 BibFileRecord	*BibFileRecordMake(char *name, char *id, BibFileField *field)
 {
   int		ok = 1;
@@ -120,16 +137,15 @@ BibFileRecord	*BibFileRecordMake(char *name, char *id, BibFileField *field)
   return(newRecord);
 }
 
-/************************************************************************
-* Function:	BibFileFieldMake					*
-* Returns:	BibFileField *:		New field, NULL on error.	*
-* Purpose:	Given field name and value strings and a field pointer	*
-*		for the next field, a new field is created.		*
-* Global refs:	-							*
-* Parameters:	char *name:		Field name string.		*
-*		char *value:		Field value string.		*
-*		BibFileField *next:	Next field below this one.	*
-************************************************************************/
+/*!
+* \return	New field, NULL on error.
+* \ingroup	bibfile
+* \brief	Given field name and value strings and a field pointer
+*		for the next field, a new field is created.		
+* \param	name			Field name string.
+* \param	value			Field value string.
+* \param	next			Next field below this one.
+*/
 BibFileField	*BibFileFieldMake(char *name, char *value, BibFileField *next)
 {
   int		ok = 1;
@@ -165,19 +181,17 @@ BibFileField	*BibFileFieldMake(char *name, char *value, BibFileField *next)
   return(newField);
 }
 
-/************************************************************************
-* Function:	BibFileFieldMakeVa					*
-* Returns:	BibFileField *:		Top of new fields, maybe NULL	*
-*					on error.			*
-* Purpose:	Given a list of field name and value string pairs which	*
-*		is terminated by a NULL. A hierarchy of new fields is 	*
-*		created.						*
-* Global refs:	-							*
-* Parameters:	char *name:		First field name string.	*
-*		char *value:		First field value string.	*
-*		...			NULL terminated varargs list of	*
-*					name value pairs.		*
-************************************************************************/
+/*!
+* \return	Top of new fields, maybe NULL on error.
+* \ingroup	bibfile
+* \brief	Given a list of field name and value string pairs which
+* 		is terminated by a NULL. A hierarchy of new fields is
+* 		created.
+* \param	name			First field name string.
+* \param	value			First field value string.
+* \param	 ...			NULL terminated varargs list of
+* 					name value pairs.
+*/
 /*VARARGS*/
 BibFileField	*BibFileFieldMakeVa(char *name, char *value, ...)
 {
@@ -210,18 +224,16 @@ BibFileField	*BibFileFieldMakeVa(char *name, char *value, ...)
   return(fieldTop);
 }
 
-/************************************************************************
-* Function:	BibFileFieldJoin					*
-* Returns:	BibFileField *:		Top field of the join, NULL	*
-*					on error.			*
-* Purpose:	Given a NULL terminated varargs list of fields, these	*
-*		are joined by filling in the appropriate next fields.	*
-* Global refs:	-							*
-* Parameters:	BibFileField *field0:	Top most field of join.		*
-*		BibFileField *field1:	Field to be added to top field.	*
-*		...			NULL terminated varargs list of	*
-*					fields to be joined.		*
-************************************************************************/
+/*!
+* \return	Top field of the join, NULL on error.
+* \ingroup	bibfile
+* \brief	Given a NULL terminated varargs list of fields, these
+* 		are joined by filling in the appropriate next fields.
+* \param	field0			Top most field of join.
+* \param	field1			Field to be added to top field.
+* \param	 ...			NULL terminated varargs list of
+* 					fields to be joined.
+*/
 /*VARARGS*/
 BibFileField	*BibFileFieldJoin(BibFileField *field0,
 				  BibFileField *field1, ...)

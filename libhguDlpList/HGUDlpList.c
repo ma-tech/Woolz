@@ -1,20 +1,41 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        HGUDlpList.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Data structures and functions for doubly linked lists
-*		of pointers.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
-#define  HGUDLPLIST_C
+/*!
+* \file         HGUDlpList.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Data structures and functions for doubly linked lists
+* 		of pointers.
+* \ingroup	hguDlpList
+* \todo         -
+* \bug          None known.
+*/
+
+#define HGUDLPLIST_C
+
 #include <stdio.h>
 #ifndef __ppc
 #include <malloc.h>
@@ -31,18 +52,15 @@ static void	HGUDlpListPvDeleteAll(HGUDlpList *),
 static HGUDlpListItem *HGUDlpListPvDelRmItem(HGUDlpList *, HGUDlpListItem *,
 					     int);
 
-/************************************************************************
-* Function:	HGUDlpListCreate					*
-* Returns:	HGUDlpList *:		List data structure, or	NULL on	*
-*					error.				*
-* Purpose:	Creates a list data structure which is required by all	*
-*		the other HGUDlpList functions.				*
-* Global refs:	-							*
-* Parameters:	void (*lockFn)(void *, HGUDlpListState): The lock	*
-*					function to be used when	*
-*					accessing the list. If NULL	*
-*					then no locking is used.	*
-************************************************************************/
+/*!
+* \return	List data structure, or NULL on error.
+* \ingroup	hguDlpList
+* \brief	Creates a list data structure which is required by all
+* 		the other HGUDlpList functions.
+* \param	lockFn			The lock function to be used when
+* 					accessing the list. If NULL
+* 					then no locking is used.
+*/
 HGUDlpList	*HGUDlpListCreate(HGUDlpListState (*lockFn)(void *,
 							    HGUDlpListState))
 {
@@ -70,16 +88,14 @@ HGUDlpList	*HGUDlpListCreate(HGUDlpListState (*lockFn)(void *,
   return(list);
 }
 
-/************************************************************************
-* Function:	HGUDlpListDup						*
-* Returns:	HGUDlpList *:		List data structure, or	NULL on	*
-*					error.				*
-* Purpose:	Duplicates a list data structure, but NOT its items.	*
-*		Ie head and tail are both NULL and the item count is	*
-*		zero, only the lock function is common.			*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *givenList					*
-************************************************************************/
+/*!
+* \return	List data structure, or NULL on error.
+* \ingroup	hguDlpList
+* \brief	Duplicates a list data structure, but NOT its items.
+* 		Ie head and tail are both NULL and the item count is
+* 		zero, only the lock function is common.
+* \param	givenList
+*/
 HGUDlpList	*HGUDlpListDup(HGUDlpList *givenList)
 {
   HGUDlpList *newList = NULL;
@@ -89,14 +105,13 @@ HGUDlpList	*HGUDlpListDup(HGUDlpList *givenList)
   return(newList);
 }
 
-/************************************************************************
-* Function:	HGUDlpListDestroy					*
-* Returns:	void							*
-* Purpose:	Destroys the given list list data structure and any	*
-*		list items.						*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	hguDlpList
+* \brief	Destroys the given list list data structure and any
+* 		list items.
+* \param	list			The list data structure.
+*/
 void		HGUDlpListDestroy(HGUDlpList *list)
 {
   if(list)
@@ -110,23 +125,21 @@ void		HGUDlpListDestroy(HGUDlpList *list)
   }
 }
 
-/************************************************************************
-* Function:	HGUDlpListInsert					*
-* Returns:	HGUDlpListItem *:	The inserted list item, or NULL	*
-*					on error.			*
-* Purpose:	Inserts the given entry into the list before the given	*
-*		item.							*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *insBefore: Given item that entry is to	*
-*					be inserted before, if NULL	*
-*					then the item is inserted at	*
-*					the head of the list.		*
-*		void *entry:		New list entry.			*
-*		void (*freeFn)(void *)): Function that will be called	*
-*					(if not NULL) to free the entry	*
-*					should the item be deleted.	*
-************************************************************************/
+/*!
+* \return
+* \ingroup	hguDlpList
+* \brief	Inserts the given entry into the list before the given
+*		item.
+* \param	list			The list data structure.
+* \param	insBefore		Given item that entry is to
+* 					be inserted before, if NULL then
+* 					the item is inserted at the head
+* 					of the list.
+* \param	entry			New list entry.
+* \param	freeFn			Function that will be called
+* 					(if not NULL) to free the entry
+* 					should the item be deleted.
+*/
 HGUDlpListItem	*HGUDlpListInsert(HGUDlpList *list,
 				  HGUDlpListItem *insBefore, void *entry,
 				  void (*freeFn)(void *))
@@ -182,23 +195,21 @@ HGUDlpListItem	*HGUDlpListInsert(HGUDlpList *list,
   return(newItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListAppend					*
-* Returns:	HGUDlpListItem *:	The appended list item, or NULL	*
-*					on error.			*
-* Purpose:	Appends the given entry into the list after the given	*
-*		item.							*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *appAfter: Given item that entry is to	*
-*					be inserted after, if NULL	*
-*					then the item is appended at	*
-*					the tail of the list.		*
-*		void *entry:		New list entry.			*
-*		void (*freeFn)(void *)): Function that will be called	*
-*					(if not NULL) to free the entry	*
-*					should the item be deleted.	*
-************************************************************************/
+/*!
+* \return	The appended list item, or NULL on error.
+* \ingroup	hguDlpList
+* \brief	Appends the given entry into the list after the given
+*		item.
+* \param	list			The list data structure.
+* \param	appAfter		Given item that entry is to
+* 					be inserted after, if NULL
+* 					then the item is appended at
+* 					the tail of the list.
+* \param	entry			New list entry.
+* \param	freeFn			Function that will be called
+* 					(if not NULL) to free the entry
+* 					should the item be deleted.
+*/
 HGUDlpListItem	*HGUDlpListAppend(HGUDlpList *list,
 				  HGUDlpListItem *appAfter, void *entry,
 				  void (*freeFn)(void *))
@@ -254,22 +265,19 @@ HGUDlpListItem	*HGUDlpListAppend(HGUDlpList *list,
   return(newItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListExchange					*
-* Returns:	HGUDlpListItem *:	The first of the two list items	*
-*					(ie  first in the funtions	*
-*					parameter list) or NULL on	*
-*					error.				*
-* Purpose:	Exchanges the two given list item entries and not the	*
-*		items, so that head is still head and tail is still	*
-*		tail.							*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item0:	First item (maybe before, after	*
-*					or even the same as the second	*
-*					item.				*
-*		HGUDlpListItem *item1:	The second item.		*
-************************************************************************/
+/*!
+* \return	The first of the two list items (ie  first in the
+* 		parameter list) or NULL on error.
+* \ingroup	hguDlpList
+* \brief	Exchanges the two given list item entries and not the
+*		items, so that head is still head and tail is still
+*		tail.
+* \param	list			The list data structure.
+* \param	item0			First item (maybe before, after
+* 					or even the same as the second
+* 					item.
+* \param	item1			The second item.
+*/
 HGUDlpListItem	*HGUDlpListExchange(HGUDlpList *list,
 				    HGUDlpListItem *item0,
 				    HGUDlpListItem *item1)
@@ -291,18 +299,17 @@ HGUDlpListItem	*HGUDlpListExchange(HGUDlpList *list,
   return(rtnItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListDeleteAll					*
-* Returns:	HGUDlpListItem *:	New list head which is NULL if	*
-*					all the items were deleted ok.	*
-* Purpose:	Deletes all list items from the head on down to and 	*
-*		including the tail. Where delete implies both the	*
-*		removal of items from the list and freeing the entries	*
-*		using the item's free functions (unless either the free	*
-*		function or the entry is NULL).				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	New list head which is NULL if all the items were
+* 		deleted ok.
+* \ingroup	hguDlpList
+* \brief	Deletes all list items from the head on down to and
+*		including the tail. Where delete implies both the
+*		removal of items from the list and freeing the entries
+*		using the item's free functions (unless either the free
+*		function or the entry is NULL).
+* \param	list			The list data structure.
+*/
 HGUDlpListItem	*HGUDlpListDeleteAll(HGUDlpList *list)
 {
   if(list)
@@ -316,20 +323,17 @@ HGUDlpListItem	*HGUDlpListDeleteAll(HGUDlpList *list)
   return(list->head);
 }
 
-/************************************************************************
-* Function:	HGUDlpListDelete					*
-* Returns:	HGUDlpListItem *:	Next list item after the item	*
-*					deleted, may be NULL either on	*
-*					error or if the list item was 	*
-*					the last in the list.		*
-* Purpose:	Deletes the given list item from the list with the	*
-*		given list. Where delete implies both the removal of	*
-*		an item, the freeing of the item AND (when neither the	*
-*		free function or the entry are NULL) it's entry too.	*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item to be deleted.		*
-************************************************************************/
+/*!
+* \return	Next list item after the item deleted, may be NULL either
+* 		on error or if the list item was the last in the list.
+* \ingroup	hguDlpList
+* \brief	Deletes the given list item from the list with the
+*		given list. Where delete implies both the removal of
+*		an item, the freeing of the item AND (when neither the
+*		free function or the entry are NULL) it's entry too.
+* \param	list			The list data structure.
+* \param	item			Item to be deleted.
+*/
 HGUDlpListItem	*HGUDlpListDelete(HGUDlpList *list,
 				  HGUDlpListItem *item)
 {
@@ -340,19 +344,16 @@ HGUDlpListItem	*HGUDlpListDelete(HGUDlpList *list,
   return(nextItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListRemove					*
-* Returns:	HGUDlpListItem *:	Next list item after the item	*
-*					removed, may be NULL either on	*
-*					error or if the list item was 	*
-*					the last in the list.		*
-* Purpose:	Removes the item from the list withe the given list.	*
-*		Where remove implies the removal of the item from the	*
-*		list and the freeing of the item EXCEPT for its entry.	*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item to be deleted.		*
-************************************************************************/
+/*!
+* \return	Next list item after the item removed, may be NULL
+* 		either on error or if the list item was the last in the list.
+* \ingroup	hguDlpList
+* \brief	Removes the item from the list withe the given list.
+*		Where remove implies the removal of the item from the
+*		list and the freeing of the item EXCEPT for its entry.
+* \param	list			The list data structure.
+* \param	item			Item to be deleted.
+*/
 HGUDlpListItem	*HGUDlpListRemove(HGUDlpList *list,
 				  HGUDlpListItem *item)
 {
@@ -363,23 +364,20 @@ HGUDlpListItem	*HGUDlpListRemove(HGUDlpList *list,
   return(nextItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListSort						*
-* Returns:	int:			Number of items in list or zero	*
-*					for an empty list or on error.	*
-* Purpose:	Sorts the entire list using the given entry comparison	*
-*		function.						*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		int (*entryCompFn)(void *, void *): Given entry 	*
-*					comparison function which must	*
-*					return  an integer less than,	*
-*					equal to, or greater than zero	*
-*					to indicate if the first entry	*
-*					is to be  considered  less 	*
-*					than, equal to, or greater than	*
-*					the second.			*
-************************************************************************/
+/*!
+* \return	Number of items in list or zero for an empty list or on
+* 		error.
+* \ingroup	hguDlpList
+* \brief	Sorts the entire list using the given entry comparison
+*		function.
+* \param	list			The list data structure.
+* \param	entryCompFn		Given entry comparison function which
+* 					must return  an integer less than,
+* 					equal to, or greater than zero
+* 					to indicate if the first entry
+* 					is to be  considered  less than,
+* 					equal to, or greater than the second.
+*/
 int		HGUDlpListSort(HGUDlpList *list,
 			       int (*entryCompFn)(void *, void *))
 {
@@ -399,48 +397,49 @@ int		HGUDlpListSort(HGUDlpList *list,
   return(ok);
 }
 
-/************************************************************************
-* Function:	HGUDlpListIterate					*
-* Returns:	HGUDlpListItem *:	Last item to which the iterated	*
-*					function was applied, may be 	*
-*					NULL on error.			*
-* Purpose:	Iterates the given function through the list, starting 	*
-*		with the supplied given item. The iteration may proceed	*
-*		toward either the head or tail of the list. The 	*
-*		iterated function must take the form of:		*
-*		  int MyItemCount(HGUDlpList *list, 			*
-*				 HGUDlpListItem *item,			*
-*				 void *myData)				*
-*		  {							*
-*		    int		*count;					*
-*		    							*
-*		    if(list && item)					*
-*		    {							*
-*		      count = (int *)myData;				*
-*		      ++*count;						*
-*		    }							*
-*		    return(1);						*
-*		  }							*
-*		Where the data parameter is the data supplied to this	*
-*		(HGUDlpListIterate) function. The iteration stops when:	*
-*		An error is encountered, either the head or tail list	*
-*		item has be processed, or when the supplied function	*
-*		returns zero. So the example function would count the	*
-*		number of items, from the given item to either the	*
-*		list head or tail. 					*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	First item of iteration which	*
-*					may be NULL to indicate list	*
-*					head (dir == _TO_TAIL) or tail	*
-*					(dir == _TO_HEAD).		*
-*		HGUDlpListDirection dir: Iteration direction, either	*
-*					towards the head or the tail.	*
-*		int (*iterFn)():	Function to be iterated, see	*
-*					example above.			*
-*		void *iterData:		Data supplied to the iterated 	*
-*					function.			*
-************************************************************************/
+/*!
+* \return	Last item to which the iterated function was applied,
+* 		may be NULL on error.
+* \ingroup	hguDlpList
+* \brief	Iterates the given function through the list, starting
+*		with the supplied given item. The iteration may proceed
+*		toward either the head or tail of the list. The
+*		iterated function must take the form of:
+\verbatim
+                  int MyItemCount(HGUDlpList *list,
+                                 HGUDlpListItem *item,
+                                 void *myData)
+                  {
+                    int         *count;
+
+                    if(list && item)
+                    {
+                      count = (int *)myData;
+                      ++*count;
+                    }
+                    return(1);
+                  }
+\endverbatim
+*		Where the data parameter is the data supplied to this
+*		(HGUDlpListIterate) function. The iteration stops when:
+*		An error is encountered, either the head or tail list
+*		item has be processed, or when the supplied function
+*		returns zero. So the example function would count the
+*		number of items, from the given item to either the
+*		list head or tail.
+* \param	list			The list data structure.
+* \param	item			First item of iteration which
+* 					may be NULL to indicate list
+* 					head (dir == HGU_DLPLIST_DIR_TO_TAIL)
+* 					or tail
+* 					(dir == HGU_DLPLIST_DIR_TO_HEAD).
+* \param	dir			Iteration direction, either
+* 					towards the head or the tail.
+* \param	iterFn			Function to be iterated, see
+* 					example above.
+* \param	iterData		Data supplied to the iterated
+* 					function.
+*/
 HGUDlpListItem	*HGUDlpListIterate(HGUDlpList *list, HGUDlpListItem *item,
 				   HGUDlpListDirection dir,
 				   int (*iterFn)(HGUDlpList *,
@@ -477,29 +476,26 @@ HGUDlpListItem	*HGUDlpListIterate(HGUDlpList *list, HGUDlpListItem *item,
   return(lastItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListNth						*
-* Returns:	HGUDlpListItem *:	Nth item from the given item,	*
-*					may be NULL on error or if	*
-*					the nth item is beyond the list	*
-*					head or tail.			*
-* Purpose:	Finds the n'th item from the given item in the list.	*
-*		The n'th item from the head or tail can be found by	*
-*		calling the function with item == NULL, in which case	*
-*		the direction of approach is optimised.			*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Given item from which to find 	*
-*					the n'th item.			*
-*		HGUDlpListDirection dir: The direction from given item,	*
-*					either towards the head or the	*
-*					tail.				*
-*		int offset:		The n in n'th. If zero then	*
-*					returns the given item, if the	*
-*					direction is towards the tail	*
-*					and offset == 1, then this is	*
-*					equivalent to HGUDlpListNext().	*
-************************************************************************/
+/*!
+* \return	Nth item from the given item, may be NULL on error or if
+* 		the nth item is beyond the list head or tail.
+* \ingroup	hguDlpList
+* \brief	Finds the n'th item from the given item in the list.
+*		The n'th item from the head or tail can be found by
+*		calling the function with item == NULL, in which case
+*		the direction of approach is optimised.
+* \param	list			The list data structure.
+* \param	item			Given item from which to find
+* 					the n'th item.
+* \param	dir			The direction from given item,
+* 					either towards the head or the
+* 					tail.
+* \param	offset			The n in n'th. If zero then
+* 					returns the given item, if the
+* 					direction is towards the tail
+* 					and offset == 1, then this is
+* 					equivalent to HGUDlpListNext().
+*/
 HGUDlpListItem	*HGUDlpListNth(HGUDlpList *list, HGUDlpListItem *item,
 			       HGUDlpListDirection dir, int offset)
 {
@@ -571,24 +567,22 @@ HGUDlpListItem	*HGUDlpListNth(HGUDlpList *list, HGUDlpListItem *item,
   return(nthItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListOffset					*
-* Returns:	int:			Number of items from the given	*
-*					item to the head or tail item	*
-*					of the list.			*
-* Purpose:	Counts the number of items from the given item to the	*
-*		item with a NULL next/prev item, which is at the head	*
-*		or tail of list. The offset between an item and itself	*
-*		is defined to be zero.					*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Given item from which to find 	*
-*					the offset to the head or the	*
-*					tail.				*
-*		HGUDlpListDirection dir: The direction from given item,	*
-*					either towards the head or the	*
-*					tail.				*
-************************************************************************/
+/*!
+* \return	Number of items from the given item to the head or tail
+* 		item of the list.
+* \ingroup	hguDlpList
+* \brief	Counts the number of items from the given item to the
+*		item with a NULL next/prev item, which is at the head
+*		or tail of list. The offset between an item and itself
+*		is defined to be zero.
+* \param	list			The list data structure.
+* \param	item			Given item from which to find
+* 					the offset to the head or the
+* 					tail.
+* \param	dir			The direction from given item,
+* 					either towards the head or the
+* 					tail.
+*/
 int		HGUDlpListOffset(HGUDlpList *list, HGUDlpListItem *item,
 			         HGUDlpListDirection dir)
 {
@@ -615,17 +609,15 @@ int		HGUDlpListOffset(HGUDlpList *list, HGUDlpListItem *item,
   return(count);
 }
 
-/************************************************************************
-* Function:	HGUDlpListItemIsHead					*
-* Returns:	int:			Non zero if the item is at the	*
-*					head of the list.		*
-* Purpose:	Looks to see if the given item is at the head of the	*
-*		given list.						*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Is this item at the head of the	*
-*					list?.				*
-************************************************************************/
+/*!
+* \return	Non zero if the item is at the head of the list.
+* \ingroup	hguDlpList
+* \brief	Looks to see if the given item is at the head of the
+*		given list.
+* \param	list			The list data structure.
+* \param	item			Is this item at the head of the
+* 					list?
+*/
 int		HGUDlpListItemIsHead(HGUDlpList *list, HGUDlpListItem *item)
 {
   int		atHead = 0;
@@ -645,17 +637,15 @@ int		HGUDlpListItemIsHead(HGUDlpList *list, HGUDlpListItem *item)
   return(atHead);
 }
 
-/************************************************************************
-* Function:	HGUDlpListItemIsTail					*
-* Returns:	int:			Non zero if the item is at the	*
-*					tail of the list.		*
-* Purpose:	Looks to see if the given item is at the tail of the	*
-*		given list.						*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Is this item at the tail of the	*
-*					list?.				*
-************************************************************************/
+/*!
+* \return	Non zero if the item is at the tail of the list.
+* \ingroup	hguDlpList
+* \brief	Looks to see if the given item is at the tail of the
+*		given list.
+* \param	list			The list data structure.
+* \param	item			Is this item at the tail of the
+* 					list?
+*/
 int		HGUDlpListItemIsTail(HGUDlpList *list, HGUDlpListItem *item)
 {
   int		atTail = 0;
@@ -675,16 +665,14 @@ int		HGUDlpListItemIsTail(HGUDlpList *list, HGUDlpListItem *item)
   return(atTail);
 }
 
-/************************************************************************
-* Function:	HGUDlpListEntryGet					*
-* Returns:	void *:			The list item's entry, which	*
-*					may be NULL for an empty list	*
-*					or on error.			*
-* Purpose:	Returns the list items entry.				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item with the entry.		*
-************************************************************************/
+/*!
+* \return	The list item's entry, which may be NULL for an empty
+* 		list or on error.
+* \ingroup	hguDlpList
+* \brief	Returns the list items entry
+* \param	list			The list data structure.
+* \param	item			Item with the entry.
+*/
 void		*HGUDlpListEntryGet(HGUDlpList *list,
 				    HGUDlpListItem *item)
 {
@@ -695,17 +683,16 @@ void		*HGUDlpListEntryGet(HGUDlpList *list,
   return(entry);
 }
 
-/************************************************************************
-* Function:	HGUDlpListEntrySet					*
-* Returns:	void *:			The previous entry.		*
-* Purpose:	Sets the given items entry and returns the previous	*
-*		entry. Entries are NEVER freed by this function.	*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item for which to change entry.	*
-*		void *newEntry:		New entry to be interted into 	*
-*					the given item.			*
-************************************************************************/
+/*!
+* \return	The previous entry.
+* \ingroup	hguDlpList
+* \brief	Sets the given items entry and returns the previous
+*		entry. Entries are NEVER freed by this function.
+* \param	list			The list data structure.
+* \param	item			Item for which to change entry.
+* \param	newEntry		New entry to be interted into the
+* 					given item.
+*/
 void		*HGUDlpListEntrySet(HGUDlpList *list,
 				    HGUDlpListItem *item, void *newEntry)
 {
@@ -723,15 +710,13 @@ void		*HGUDlpListEntrySet(HGUDlpList *list,
   return(oldEntry);
 }
 
-/************************************************************************
-* Function:	HGUDlpListTail						*
-* Returns:	HGUDlpListItem *:	List item at tail of list, may	*
-*					may be NULL either on error or	*
-*					if the list is empty.		*
-* Purpose:	Returns the tail list item.				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	List item at tail of list, may may be NULL either
+* 		on error or if the list is empty.
+* \ingroup	hguDlpList
+* \brief	Returns the tail list item.
+* \param	list			The list data structure.
+*/
 HGUDlpListItem	*HGUDlpListTail(HGUDlpList *list)
 {
   HGUDlpListItem *tail = NULL;
@@ -741,15 +726,13 @@ HGUDlpListItem	*HGUDlpListTail(HGUDlpList *list)
   return(tail);
 }
 
-/************************************************************************
-* Function:	HGUDlpListHead						*
-* Returns:	HGUDlpListItem *:	List item at head of list, may	*
-*					may be NULL either on error or	*
-*					if the list is empty.		*
-* Purpose:	Returns the head list item.				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	List item at head of list, may may be NULL either
+* 		on error or if the list is empty.
+* \ingroup	hguDlpList
+* \brief	Returns the head list item.
+* \param	list			The list data structure.
+*/
 HGUDlpListItem	*HGUDlpListHead(HGUDlpList *list)
 {
   HGUDlpListItem *head = NULL;
@@ -759,18 +742,15 @@ HGUDlpListItem	*HGUDlpListHead(HGUDlpList *list)
   return(head);
 }
 
-/************************************************************************
-* Function:	HGUDlpListNext						*
-* Returns:	HGUDlpListItem *:	Next list item after the given	*
-*					item, may be NULL on error, if 	*
-*					the list is empty or if the	*
-*					given item was at the tail of	*
-*					the list.			*
-* Purpose:	Returns the next list item.				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item with the entry.		*
-************************************************************************/
+/*!
+* \return	Next list item after the given item, may be NULL on error,
+* 		if the list is empty or if the given item was at the tail
+* 		of the list.
+* \ingroup	hguDlpList
+* \brief	Returns the next list item.
+* \param	list			The list data structure.
+* \param	item			Item with the entry.
+*/
 HGUDlpListItem	*HGUDlpListNext(HGUDlpList *list, HGUDlpListItem *item)
 {
   HGUDlpListItem *next = NULL;
@@ -780,18 +760,15 @@ HGUDlpListItem	*HGUDlpListNext(HGUDlpList *list, HGUDlpListItem *item)
   return(next);
 }
 
-/************************************************************************
-* Function:	HGUDlpListPrev						*
-* Returns:	HGUDlpListItem *:	Prev list item before the given	*
-*					item, may be NULL on error, if 	*
-*					the list is empty or if the	*
-*					given item was at the head of	*
-*					the list.			*
-* Purpose:	Returns the prev list item.				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item with the entry.		*
-************************************************************************/
+/*!
+* \return	Prev list item before the given item, may be NULL on
+* 		error, if the list is empty or if the given item was
+* 		at the head of the list.
+* \ingroup	hguDlpList
+* \brief	Returns the prev list item.
+* \param	list			The list data structure.
+* \param	item			Item with the entry.
+*/
 HGUDlpListItem	*HGUDlpListPrev(HGUDlpList *list, HGUDlpListItem *item)
 {
   HGUDlpListItem *prev = NULL;
@@ -801,16 +778,13 @@ HGUDlpListItem	*HGUDlpListPrev(HGUDlpList *list, HGUDlpListItem *item)
   return(prev);
 }
 
-/************************************************************************
-* Function:	HGUDlpListCount						*
-* Returns:	int:			Number of items in list. This 	*
-*					is >= zero for a valid list but	*
-*					may be negative if the list is	*
-*					invalid.			*
-* Purpose:	Returns the number of items in the list.		*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	Number of items in list. This is >= zero for a valid
+* 		list but may be negative if the list is invalid.
+* \ingroup	hguDlpList
+* \brief	Returns the number of items in the list.
+* \param	list			The list data structure.
+*/
 int		HGUDlpListCount(HGUDlpList *list)
 {
   int		count = -1;
@@ -820,15 +794,13 @@ int		HGUDlpListCount(HGUDlpList *list)
 }
 
 
-/************************************************************************
-* Function:	HGUDlpListPvLock					*
-* Returns:	int:			Non zero if locked or lock is	*
-*					not required.			*
-* Purpose:	Private function: Locks list data structures using the	*
-*		installed lock function.				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	Non zero if locked or lock is not required.
+* \ingroup	hguDlpList
+* \brief	Private function: Locks list data structures using the
+*		installed lock function.
+* \param	list			The list data structure.
+*/
 static int	HGUDlpListPvLock(HGUDlpList *list)
 {
   int		locked = 0;
@@ -843,15 +815,13 @@ static int	HGUDlpListPvLock(HGUDlpList *list)
   return(locked);
 }
 
-/************************************************************************
-* Function:	HGUDlpListPvUnlock					*
-* Returns:	int:			Non zero if unlocked or lock is	*
-*					not required.			*
-* Purpose:	Unlocks list data structures using the installed lock 	*
-*		function.						*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	Non zero if unlocked or lock is not required.
+* \ingroup	hguDlpList
+* \brief	Unlocks list data structures using the installed lock
+*		function.
+* \param	list			The list data structure.
+*/
 static int	HGUDlpListPvUnlock(HGUDlpList *list)
 {
   int		unlocked = 0;
@@ -866,18 +836,16 @@ static int	HGUDlpListPvUnlock(HGUDlpList *list)
   return(unlocked);
 }
 
-/************************************************************************
-* Function:	HGUDlpListPvItemCreate					*
-* Returns:	HGUDlpListItem *:	New item with entry and free	*
-*					function set.			*
-* Purpose:	Creates a new item with the entry and free function	*
-*		set.							*
-* Global refs:	-							*
-* Parameters:	void *entry:		New list entry.			*
-*		void (*freeFn)(void *)): Function that will be called	*
-*					(if not NULL) to free the entry	*
-*					should the item be deleted.	*
-************************************************************************/
+/*!
+* \return	New item with entry and free function set.
+* \ingroup	hguDlpList
+* \brief	Creates a new item with the entry and free function
+*		set.
+* \param	entry			New list entry.
+* \param	freeFn			Function that will be called
+* 					(if not NULL) to free the entry
+* 					should the item be deleted.
+*/
 static HGUDlpListItem *HGUDlpListPvItemCreate(void *entry,
 					      void (*freeFn)(void *))
 {
@@ -894,20 +862,19 @@ static HGUDlpListItem *HGUDlpListPvItemCreate(void *entry,
   return(newItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListPvDeleteAll					*
-* Returns:	HGUDlpListItem *:	New list head which is NULL if	*
-*					all the items were deleted ok.	*
-* Purpose:	Deletes all list items from the head on down to and 	*
-*		including the tail. Where delete implies both the	*
-*		removal of items from the list and freeing the entries	*
-*		using the item's free functions (unless either the free	*
-*		function or the entry is NULL).				*
-*		Note that this function assumes that all the list data	*
-*		structures can be accessed without acquiring a lock.	*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-************************************************************************/
+/*!
+* \return	New list head which is NULL if all the items were deleted
+* 		ok.
+* \ingroup	hguDlpList
+* \brief	Deletes all list items from the head on down to and
+*		including the tail. Where delete implies both the
+*		removal of items from the list and freeing the entries
+*		using the item's free functions (unless either the free
+*		function or the entry is NULL).
+*		Note that this function assumes that all the list data
+*		structures can be accessed without acquiring a lock.
+* \param	list			The list data structure.
+*/
 static void	HGUDlpListPvDeleteAll(HGUDlpList *list)
 {
   HGUDlpListItem *tItem0,
@@ -930,24 +897,21 @@ static void	HGUDlpListPvDeleteAll(HGUDlpList *list)
   }
 }
 
-/************************************************************************
-* Function:	HGUDlpListPvDelRmItem					*
-* Returns:	HGUDlpListItem *:	Next list item after the item	*
-*					deleted, may be NULL either on	*
-*					error or if the list item was 	*
-*					the last in the list.		*
-* Purpose:	Deletes or removes the given list item from the list	*
-*		with the given list. Where delete implies both the	*
-*		removal of the item, the freeing of the item and (when	*
-*		neither the free function or the entry are NULL) the	*
-*		freeing of the list entry too. Remove never frees the	*
-*		list entry.						*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *item:	Item to be deleted or removed.	*
-*		int deleteFlag:		Delete rather than remove item	*
-*					if non zero.			*
-************************************************************************/
+/*!
+* \return	Next list item after the item deleted, may be NULL either
+* 		on error or if the list item was the last in the list.
+* \ingroup	hguDlpList
+* \brief	Deletes or removes the given list item from the list
+*		with the given list. Where delete implies both the
+*		removal of the item, the freeing of the item and (when
+*		neither the free function or the entry are NULL) the
+*		freeing of the list entry too. Remove never frees the
+*		list entry.
+* \param	list			The list data structure.
+* \param	item			Item to be deleted or removed.
+* \param	deleteFlag		Delete rather than remove item
+* 					if non zero.
+*/
 static HGUDlpListItem *HGUDlpListPvDelRmItem(HGUDlpList *list,
 				             HGUDlpListItem *item,
 					     int deleteFlag)
@@ -1019,32 +983,28 @@ static HGUDlpListItem *HGUDlpListPvDelRmItem(HGUDlpList *list,
   return(nextItem);
 }
 
-/************************************************************************
-* Function:	HGUDlpListPvSort					*
-* Returns:	void							*
-* Purpose:	Sorts the given section of the list using a modified	*
-*		quick sort algorithm. This function is RECURSIVE. The	*
-*		values of the indicies must be such that lowIdx is less	*
-*		than highIdx and their difference is equal to one more	*
-*		than the number of items between them (excluding the	*
-*		items themselves that is).				*
-* Global refs:	-							*
-* Parameters:	HGUDlpList *list:	The list data structure.	*
-*		HGUDlpListItem *low:	Item nearest to tail in section	*
-*					to be sorted.			*
-*		HGUDlpListItem *high:	Item nearest to head in section	*
-*					to be sorted.			*
-*		int lowIdx:		Index for item nearest to tail.	*
-*		int highIdx:		Index for item nearest to head.	*
-*		int (*entryCompFn)(void *, void *): Given entry 	*
-*					comparison function which must	*
-*					return  an integer less than,	*
-*					equal to, or greater than zero	*
-*					to indicate if the first entry	*
-*					is to be  considered  less 	*
-*					than, equal to, or greater than	*
-*					the second.			*
-************************************************************************/
+/*!
+* \return	void
+* \ingroup	hguDlpList
+* \brief	Sorts the given section of the list using a modified
+*		quick sort algorithm. This function is RECURSIVE. The
+*		values of the indicies must be such that lowIdx is less
+*		than highIdx and their difference is equal to one more
+*		than the number of items between them (excluding the
+*		items themselves that is).
+* \param	low			Item nearest to tail in section
+* 					to be sorted.
+* \param	high			Item nearest to head in section
+* 					to be sorted.
+* \param	lowIdx			Index for item nearest to tail.
+* \param	highIdx			Index for item nearest to head.
+* \param	entryCompFn		Given entry comparison function
+* 					which must return an integer less
+* 					than, equal to, or greater than zero
+* 					to indicate if the first entry
+* 					is to be  considered less than,
+* 					equal to, or greater than the second.
+*/
 static void	HGUDlpListPvSort(HGUDlpListItem *low, HGUDlpListItem *high,
 				 int lowIdx, int highIdx,
 				 int (*entryCompFn)(void *, void *))
@@ -1108,4 +1068,4 @@ static void	HGUDlpListPvSort(HGUDlpListItem *low, HGUDlpListItem *high,
   }
 }
 
-#undef  HGUDLPLIST_C
+#undef HGUDLPLIST_C

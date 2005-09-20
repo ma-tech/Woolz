@@ -1,26 +1,75 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzSAToWlz.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Mar 29 12:23:04 2005
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \file         binWlzExtFF/WlzSAToWlz.c
+* \author       Richard Baldock
+* \date         March 2005
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzTransform
-* \brief        Convert the Smart Atlas polygons to a woolz boundaries.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief        Convert the Smart Atlas polygons to a Woolz
+* 		boundaries.
+*               
+* \ingroup	BinWlzExtFF
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzsatowlz "WlzSAToWlz"
 */
+
+/*!
+\ingroup BinWlzExtFF
+\defgroup wlzsatowlz WlzSAToWlz
+\par Name
+WlzSAToWlz - converts a Smart Atlas XML file and convert to Woolz boundaries.
+\par Synopsis
+\verbatim
+WlzSAToWlz  [-h] [-v] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+</table>
+\par Description
+WlzXXX.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzExtFF "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,9 +92,8 @@ typedef struct _NamedBndItem {
 void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s -h -v"
-	  "[<input file>]\n"
-	  "\tRead the Smart Atlas xml file and convert to woolz\n"
+	  "Usage:\t%s -h -v [<input file>]\n"
+	  "\tRead the Smart Atlas XML file and convert to woolz\n"
 	  "\tOptions are:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
@@ -307,7 +355,7 @@ main(argc, argv)
     }
   }
 
-  /* read xml file building boundary lists */
+  /* read XML file building boundary lists */
   /* quick fix read  - read until no new names */
   bndDLPList = AlcDLPListNew(NULL);
   name = NULL;
@@ -346,3 +394,4 @@ main(argc, argv)
 
   exit(0);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

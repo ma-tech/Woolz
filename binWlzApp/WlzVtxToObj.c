@@ -1,30 +1,79 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzVtxToObj.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Thu Nov  9 13:46:16 2000				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlzApp/WlzVtxToObj.c
+* \author	Richard Baldock
+* \date         November 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Builds a Woolz domain object from a vertex.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzvtxtoobj "WlzVtxToObj"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzvtxtoobj WlzVtxToObj
+\par Name
+WlzVtxToObj - builds a Woolz domain object from a vertex.
+\par Synopsis
+\verbatim
+WlzVtxToObj  [-h] [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-X</b></td>
+    <td>XXX.</td>
+  </tr>
+</table>
+\par Description
+WlzVtxToObj builds Woolz domain objects from vertices represented in text
+format.
+The vertices are read from the standard input and for each vertex a
+corresponding domain object is written to the standard output.
+\par Examples
+\verbatim
+echo '10 20 30' | WlzVtxToObj >out.wlz
+\endverbatim
+Writes a single 3D domain object to the file out.wlz
+corresponding to the single voxel at (10,20,30).
+\par File
+\ref WlzVtxToObj.c "WlzVtxToObj.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -45,7 +94,7 @@ static void usage(
   fprintf(stderr,
 	  "Usage:\n"
 	  "%s\n"
-	  "\tBuild a woolz domain object from a vertex\n"
+	  "\tBuild a Woolz domain object from a vertex\n"
 	  "\n",
 	  str);
 
@@ -150,3 +199,4 @@ int main(
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

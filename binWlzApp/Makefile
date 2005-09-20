@@ -34,6 +34,7 @@ EXECUTABLES		= \
 			WlzFixedPlaneAlign \
 			WlzPatchObjRegister \
 			WlzRawToWlz \
+			WlzReconstruct \
 			WlzSizeSelect \
 			WlzSplitImage \
 			WlzObjCompareSpecial_01 \
@@ -59,6 +60,7 @@ CSOURCES		= \
 			WlzFixedPlaneAlign.c \
 			WlzPatchObjRegister.c \
 			WlzRawToWlz.c \
+			WlzReconstruct.c \
 			WlzSizeSelect.c \
 			WlzSplitImage.c \
 			WlzObjCompareSpecial_01.c \

@@ -1,38 +1,60 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Mouse Atlas
-* Title:        bibFileIO.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      File I/O functions to parse the bibtex based file
-*		syntax used for serial section data, transform data,
-*		....
+/*!
+* \file         libbibfile/bibFileIO.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	File I/O functions to parse the bibtex based file
+*		syntax used for serial section data, ....
+*		
 *		The syntax is:
-*		  file :=	(comment | record)
-*		  comment :=	COMMENT text EOL
-*		  record :=	NEW name OPEN id field (SEP field)*
-*				CLOSE
-*		  field :=	name EQUAL OPEN value CLOSE
-*		Example:
-*		  % this is a comment which is ignored
-*		  @Comment
-*		  { 0,
-*		    Text = {This is a comment too, but it is parsed}
-*		  }
-*		  @Fred{1, FFred={First bit},
-*		    SFred={Second line of text} % comment here too
-*		  }
-*		  % another comment
-*		  @Bert{2,FBert={bert's 1st value has a newline
-*		  and an escaped newline \
-*		  too},
-*		  SBert =
-*		  {bert's 2nd includes a \} character}}
+\verbatim
+                  file :=       (comment | record)
+                  comment :=    COMMENT text EOL
+                  record :=     NEW name OPEN id field (SEP field)*
+                                CLOSE
+                  field :=      name EQUAL OPEN value CLOSE
+\endverbatim
+*               Example:
+\verbatim
+                  % this is a comment which is ignored
+                  @Comment
+                  { 0,
+                    Text = {This is a comment too, but it is parsed}
+                  }
+                  @Fred{1, FFred={First bit},
+                    SFred={Second line of text} % comment here too
+                  }
+                  % another comment
+                  @Bert{2,FBert={bert's 1st value has a newline
+                  and an escaped newline \
+                  too},
+                  SBert =
+                  {bert's 2nd includes a \} character}}
+\endverbatim
 *		All the tokens (eg OPEN, CLOSE, ...) are parsed using
 *		regular expressions and character lists held in tables.
 *		The parsing could be changed/extended by modifying the
@@ -42,9 +64,11 @@
 *		the parsing more flexible at the cost of speed. On a
 *		Sparc 10/40 with -O4 optimisation about 20% of the
 *		execution time is spent matching regular expressions.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+* \ingroup	bibfile
+* \todo         -
+* \bug          None known.
+*/
+
 #define	BIBFILE_REGEXPR_CACHE 			/* Cache regular expressions */
 #undef	BIBFILE_REGEXPR_REGEX		       /* Use regex(3) and regcmp(3) */
 #define	BIBFILE_REGEXPR_REGEXEC		    /* Use regexec(3) and regcomp(3) */
@@ -144,16 +168,15 @@ static char	*bibFileRestrictedChars[BIBFILE_RESTRICTED_NUM] =
     "\\"
 };
 
-/************************************************************************
-* Function:	BibFileRecordRead					*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Read a bibtex style record from the given stream and	*
-*		allocate storage as required.				*
-* Global refs:	-							*
-* Parameters:	BibFileRecord **record:	Destination ptr for the record.	*
-*		char **eMsg:		Ptr for error message strings.	*
-*		FILE *fP:		Input file stream.		*
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Read a bibtex style record from the given stream and
+*		allocate storage as required.				
+* \param	record			Destination ptr for the record.
+* \param	eMsg			Ptr for error message strings.
+* \param	fP			Input file stream.
+*/
 BibFileError	BibFileRecordRead(BibFileRecord **record, char **eMsg,
 				  FILE *fP)
 {
@@ -214,16 +237,14 @@ BibFileError	BibFileRecordRead(BibFileRecord **record, char **eMsg,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileRecordWrite					*
-* Returns:	BibFileError:		Non zero if write fails.	*
-* Purpose:	Write a bibtex style record to the given stream.	*
-* Global refs:	char *bibFileTokOut[]:	Table of output token character	*
-*					strings/characters.		*
-* Parameters:	FILE *fP:		Output file stream.		*
-*		char **eMsg:		Ptr for error message strings.	*
-*		BibFileRecord *record:	Record ptr.			*
-************************************************************************/
+/*!
+* \return	Non zero if write fails.
+* \ingroup	bibfile
+* \brief	Write a bibtex style record to the given stream.
+* \param	fP			Output file stream.
+* \param	eMsg			Ptr for error message strings.
+* \param	record			Record ptr.
+*/
 BibFileError	BibFileRecordWrite(FILE *fP, char **eMsg,
 				   BibFileRecord *record)
 {
@@ -272,16 +293,13 @@ BibFileError	BibFileRecordWrite(FILE *fP, char **eMsg,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileRecordError					*
-* Returns:	BibFileError:		Non zero if fails to build an	*
-*					error string!			*
-* Purpose:	Build an error string showing with some record info.	*
-* Global refs:	char *bibFileTokOut[]:	Table of output token character	*
-*					strings/characters.		*
-* Parameters:	char **eMsg:		Ptr for error message strings.	*
-*		BibFileRecord *record:	Record ptr.			*
-************************************************************************/
+/*!
+* \return	Non zero if fails to build an error string!
+* \ingroup	bibfile
+* \brief	Build an error string showing with some record info.
+* \param	eMsg			Ptr for error message strings.
+* \param	record			Record ptr.
+*/
 static BibFileError BibFileRecordError(char **eMsg, BibFileRecord *record)
 {
   char		*tmpPtr;
@@ -311,17 +329,16 @@ static BibFileError BibFileRecordError(char **eMsg, BibFileRecord *record)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileFieldRead					*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Read a bibtex style field from the given stream and	*
-*		allocate storage as required.				*
-* Global refs:	-							*
-* Parameters:	BibFileField **field:	Destination ptr for the field.	*
-*		char **eMsg:		Ptr for error message strings.	*
-*		int *endFlag:		Set to non zero if last field.	*
-*		FILE *fP:		Input file stream.		*
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Read a bibtex style field from the given stream and
+*		allocate storage as required.				
+* \param	field			Destination ptr for the field.
+* \param	eMsg			Ptr for error message strings.
+* \param	endFlag			Set to non zero if last field.
+* \param	fP			Input file stream.
+*/
 BibFileError	BibFileFieldRead(BibFileField **field, char **eMsg, 
 				 int *endFlag, FILE *fP)
 {
@@ -394,16 +411,14 @@ BibFileError	BibFileFieldRead(BibFileField **field, char **eMsg,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileFieldWrite					*
-* Returns:	BibFileError:		Non zero if write fails.	*
-* Purpose:	Write a bibtex style field to the given stream.		*
-* Global refs:	char *bibFileTokOut[]:	Table of output token character	*
-*					strings/characters.		*
-* Parameters:	FILE *fP:		Output file stream.		*
-*		char **eMsg:		Ptr for error message strings.	*
-*		BibFileField *field:	Field ptr.			*
-************************************************************************/
+/*!
+* \return	Non zero if write fails.
+* \ingroup	bibfile
+* \brief	Write a bibtex style field to the given stream.
+* \param	fP			Output file stream.
+* \param	eMsg			Ptr for error message strings.
+* \param	field			Field ptr.
+*/
 BibFileError	BibFileFieldWrite(FILE *fP, char **eMsg, BibFileField *field)
 {
   char		*tmpStr;
@@ -448,16 +463,13 @@ BibFileError	BibFileFieldWrite(FILE *fP, char **eMsg, BibFileField *field)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileFieldError					*
-* Returns:	BibFileError:		Non zero if fails to build an	*
-*					error string!			*
-* Purpose:	Build an error string showing with some field info.	*
-* Global refs:	char *bibFileTokOut[]:	Table of output token character	*
-*					strings/characters.		*
-* Parameters:	char **eMsg:		Ptr for error message strings.	*
-*		BibFileRecord *field:	Field ptr.			*
-************************************************************************/
+/*!
+* \return	Non zero if fails to build an error string!
+* \ingroup	bibfile
+* \brief	Build an error string showing with some field info.
+* \param	eMsg			Ptr for error message strings.
+* \param	field			Field ptr.
+*/
 static BibFileError BibFileFieldError(char **eMsg, BibFileField *field)
 {
   char		*tmpPtr;
@@ -485,26 +497,24 @@ static BibFileError BibFileFieldError(char **eMsg, BibFileField *field)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileStrRead						*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Read a character string from the given stream until a	*
-*		character not matched by the given charcter list is	*
-*		read, this character is then put back so that it can be	*
-*		read again. If the skip spaces flag is non zero then	*
-*		leading white space characters will be skipped.		*
-*		Characters in the string may be escaped by the escape	*
-*		character. String length is only limited by the memory	*
-*		available to AlcMalloc.					*
-* Global refs:	char *bibFileTokIn[]:	Table of input token character	*
-*					strings/characters.		*
-* Parameters:	char **str:		Ptr for the string to be read.	*
-*		BibFileTok tok:		Regular expression for valid	*
-*					charcaters within the string.	*
-*		int skipSp:		Skip leading white space	*
-*					characters if non zero.		*
-*		FILE *fP:		Given input stream.		*
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Read a character string from the given stream until a
+*		character not matched by the given charcter list is
+*		read, this character is then put back so that it can be
+*		read again. If the skip spaces flag is non zero then
+*		leading white space characters will be skipped.
+*		Characters in the string may be escaped by the escape
+*		character. String length is only limited by the memory
+*		available to AlcMalloc.					
+* \param	str			Ptr for the string to be read.
+* \param	tok			Regular expression for valid
+* 					characters within the string.
+* \param	skipSp			Skip leading white space
+* 					characters if non zero.
+* \param	fP			Given input stream.
+*/
 static BibFileError BibFileStrRead(char **str, BibFileTok tok, int skipSp,
 				   FILE *fP)
 {
@@ -576,23 +586,21 @@ static BibFileError BibFileStrRead(char **str, BibFileTok tok, int skipSp,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileCharMatch					*
-* Returns:	BibFileError:		Non zero if match fails.	*
-* Purpose:	Check for a character that matches the given charcter	*
-*		list. If the skip flag is zero this character is put	*
-*		back so that it can be read again. If the skip spaces	*
-*		flag is non zero then leading white space characters	*
-*		will be skipped.					*
-* Global refs:	-							*
-* Parameters:	BibFileTok tok:		Regular expression token.	*
-*					charcaters within the string.	*
-*		int skipFlag:		Put the character back into the	*
-*					input stream if non zero.	*
-*		int skipSp:		Skip leading white space	*
-*					characters if non zero.		*
-*		FILE *fP:		Given input stream.		*
-************************************************************************/
+/*!
+* \return	Non zero if match fails.
+* \ingroup	bibfile
+* \brief	Check for a character that matches the given charcter
+*		list. If the skip flag is zero this character is put
+*		back so that it can be read again. If the skip spaces
+*		flag is non zero then leading white space characters
+*		will be skipped.					
+* \param	tok			Regular expression token.
+* \param	skipFlag		Put the character back into the
+* 					input stream if non zero.
+* \param	skipSp			Skip leading white space characters
+* 					if non zero.
+* \param	fP			Given input stream.
+*/
 static BibFileError BibFileCharMatch(BibFileTok tok, int skipFlag, int skipSp,
 				     FILE *fP)
 {
@@ -619,23 +627,20 @@ static BibFileError BibFileCharMatch(BibFileTok tok, int skipFlag, int skipSp,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileCharRead						*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Read character from the given stream. If the skip	*
-*		spaces flag is non zero then leading white space	*
-*		characters will be skipped. If escape is non zero then	*
-*		comments will be skipped, this is the only effect of	*
-*		the escape flag.					*
-* Global refs:	char *bibFileTokIn[]:	Table of input token character *
-*					strings/characters.		*
-* Parameters:	char *newC:		Ptr for the character.		*
-*		FILE *fP:		Given input stream.		*
-*		int skipSp:		Skip leading white space	*
-*					characters if non zero.		*
-*		int escape:		Escape next character if non	*
-*					zero.				*
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Read character from the given stream. If the skip
+*		spaces flag is non zero then leading white space
+*		characters will be skipped. If escape is non zero then
+*		comments will be skipped, this is the only effect of
+*		the escape flag.					
+* \param	newC			Ptr for the character.
+* \param	fP			Given input stream.
+* \param	skipSp			Skip leading white space
+* 					characters if non zero.
+* \param	escape			Escape next character if non zero.
+*/
 static BibFileError BibFileCharRead(char *newC, FILE *fP, int skipSp,
 				    int escape)
 {
@@ -677,15 +682,14 @@ static BibFileError BibFileCharRead(char *newC, FILE *fP, int skipSp,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileCharUnread					*
-* Returns:	BibFileError:		Non zero if cant put it back.	*
-* Purpose:	Put a character back into the stream from which it was	*
-*		read.							*
-* Global refs:	-							*
-* Parameters:	char newC:		The character to put back.	*
-*		FILE *fP:		Given input stream.		*
-************************************************************************/
+/*!
+* \return	Non zero if cant put it back.
+* \ingroup	bibfile
+* \brief	Put a character back into the stream from which it was
+*		read.							
+* \param	newC			The character to put back.
+* \param	fP			Given input stream.
+*/
 static BibFileError BibFileCharUnread(char newC, FILE *fP)
 {
   BibFileError	errFlag = BIBFILE_ER_NONE;
@@ -697,18 +701,16 @@ static BibFileError BibFileCharUnread(char newC, FILE *fP)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileCharRegEx					*
-* Returns:	BibFileError:		Non zero if match read fails.	*
-* Purpose:	Match the given character to the given regular		*
-*		expression. The regular expression may either be 	*
-*		compilled or a charcater string. 			*
-* Global refs:	char *bibFileTokIn{]:	Table of input token regular	*
-*					expressions.			*
-* Parameters:	char given:		Character to match.		*
-*		BibFileTok tok:		Regular expression for valid	*
-*					characters to match.		*
-************************************************************************/
+/*!
+* \return	Non zero if match read fails.
+* \ingroup	bibfile
+* \brief	Match the given character to the given regular
+*		expression. The regular expression may either be
+*		compilled or a charcater string. 			
+* \param	given			Character to match.
+* \param	tok			Regular expression for valid
+* 					characters to match.
+*/
 static BibFileError BibFileCharRegEx(char given, BibFileTok tok)
 {
   BibFileError	errFlag = BIBFILE_ER_NONE;
@@ -795,13 +797,12 @@ static BibFileError BibFileCharRegEx(char given, BibFileTok tok)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileSkipSpaces					*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Read and skip white space characters.			*
-* Global refs:	-							*
-* Parameters:	FILE *fP:		Given input stream.		*
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Read and skip white space characters.
+* \param	fP			Given input stream.
+*/
 static BibFileError BibFileSkipSpaces(FILE *fP)
 {
   int 		tmp;
@@ -819,15 +820,14 @@ static BibFileError BibFileSkipSpaces(FILE *fP)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	BibFileEscapeRestrictedChar				*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Replace any special caracter with ESC+spacial char      *
-* Global refs:	char *bibFileRestrictedChars{]:	Table restricted chars.	*
-* Parameters:	char * inString:	Given string.                   *
-*               char **outString:	Destination pointer for the	*
-*					escaped string. 		*
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Replace any special character with ESC+spacial char.
+* \param	inString		Given string.
+* \param	outString		Destination pointer for the
+* 					escaped string.
+*/
 BibFileError BibFileEscapeRestrictedChar(char *inString, char **outString)
 {
 
@@ -912,14 +912,13 @@ BibFileError BibFileEscapeRestrictedChar(char *inString, char **outString)
   return(errorF);
 }
 
-/************************************************************************
-* Function:	BibFileUnEscapeRestrictedChar				*
-* Returns:	BibFileError:		Non zero if read fails.		*
-* Purpose:	Replace any special caracter with ESC+spacial char      *
-* Global refs:	-							*
-* Parameters:	char * inString : 	Original string.                *
-*               char **outString : 	The escaped string.             *
-************************************************************************/
+/*!
+* \return	Non zero if read fails.
+* \ingroup	bibfile
+* \brief	Replace any special caracter with ESC+spacial char.
+* \param	inString		Original string.
+* \param	outString		The escaped string.
+*/
 BibFileError BibFileUnEscapeRestrictedChar(char *inString, char **outString)
 {
   char 		*newString = NULL;

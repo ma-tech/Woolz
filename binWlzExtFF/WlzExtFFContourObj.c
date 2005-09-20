@@ -1,24 +1,141 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzExtFFContourObj.c
+* \file         binWlzExtFF/WlzExtFFContourObj.c
 * \author       Bill Hill
 * \date         September 2001
 * \version      $Id$
-* \note
-*               Copyright
-*               2001 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	A program to extract boundary, maximal gradient and isosurface
 * 		contours from 2 or 3D Woolz and saving them in VTK format
 *		files.
+* \ingroup	BinWlzExtFF
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzextffcontourobj "WlzExtFFContourObj"
 */
+
+/*!
+\ingroup BinWlzExtFF
+\defgroup wlzextffcontourobj WlzExtFFContourObj
+\par Name
+WlzExtFFContourObj - computes a VTK polydata file from a Woolz object.
+\par Synopsis
+\verbatim
+WlzExtFFContourObj  [-h] [-o<output object>]
+                    [-b] [-g] [-i] [-l] [-F] [-N] [-U]
+		    [-p#] [-s#] [-n#] [-v#] [-w#] [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output VTK polydata file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Compute object boundary contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Compute maximal gradient contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Compute iso-value contours.</td>
+  </tr>
+  <tr> 
+    <td><b>-l</b></td>
+    <td>Flip orientation (normals will be reversed).</td>
+  </tr>
+  <tr> 
+    <td><b>-F</b></td>
+    <td>Use geometry filter.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Allow non manifold vertices to be filtered.</td>
+  </tr>
+  <tr> 
+    <td><b>-U</b></td>
+    <td>Use unit voxel size.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Generate normals (if possible).</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Geometry filter itterations.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Geometry filter low band value.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Geometry filter stop band value.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Contour iso-value or minimum gradient value.</td>
+  </tr>
+  <tr> 
+    <td><b>-w</b></td>
+    <td>Contour (Deriche) gradient operator width.</td>
+  </tr>
+</table>
+\par Description
+WlzExtFFContourObj computes a contour object from the given Woolz object and saves it
+using the VTK ascii polydata format.
+See the documentation for WlzContourGeomFilter(1) for an explaination
+of the filter parameters.
+The input object is read from stdin and output data are written
+to stdout unless filenames are given.
+\par Examples
+\verbatim
+WlzExtFFContourObj -o out.vtk -i -v 100.0 in.wlz
+\endverbatim
+The input Woolz object is read from in.wlz, and the iso-value
+(iso-value = 100.0) contour is written in VTK ascii polydata format
+to out.vtk.
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzExtFF "WlzIntro(1)"
+\ref wlzextffconvert "WlzExtFFConvert(1)"
+\ref wlzcontourobj "WlzContourObj(1)"
+\ref Wlzcontourgeomfilter "WlzContourGeomFilter(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -302,12 +419,12 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
       "Usage: %s%sExample: %s%s",
       *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i] [-l] [-o#]\n"
+      " [-h] [-o<output object>] [-b] [-g] [-i] [-l]\n"
       "        [-F] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
       "        [<input object>]\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
-      "  -o  Output object file name.\n"
+      "  -o  Output VTK polydata file name.\n"
       "  -b  Compute object boundary contours.\n"
       "  -g  Compute maximal gradient contours.\n"
       "  -i  Compute iso-value contours.\n"
@@ -333,3 +450,4 @@ int             main(int argc, char **argv)
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

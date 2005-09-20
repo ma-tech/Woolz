@@ -1,28 +1,90 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzTiffStackToPatches.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Jun 15 17:26:10 2004
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \file         binWlzApp/WlzTiffStackToPatches.c
+* \author	Richard Baldock
+* \date         June 2004
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      binWlzApp
-* \brief        Convert a tiff stack to a compound image representing
- the set of patches or mosiac tiles.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Converts a TIFF stack to a compound object representing
+* 		the set of patches or mosiac tiles.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlztiffstacktopatches "WlzTiffStackToPatches"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlztiffstacktopatches WlzTiffStackToPatches
+\par Name
+WlzTiffStackToPatches - converts a TIFF stack to a compound object representing
+                        the set of patches or mosiac tiles.
+\par Synopsis
+\verbatim
+WlzTiffStackToPatches  [-h] [-v] -n cols[,rows] -O overlap <input file>
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose output.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Number (columns, rows) estimated if omitted.</td>
+  </tr>
+  <tr> 
+    <td><b>-O</b></td>
+    <td>Estimated pixel overlap, default 50.</td>
+  </tr>
+</table>
+\par Description
+Converts a TIFF stack to a compound image
+representing the set of patches or mosaic
+tiles. It is assumed that the TIFF images
+are arrannged in the stack row-wise starting
+top-left with the numbers of rows and columns
+input. Also required is the estimated pixel
+overlap. The TIFF is read from the given file,
+output to stdout.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzTiffStackToPatches.c "WlzTiffStackToPatches.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -41,13 +103,13 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s -n cols[,rows] -O overlap -h -v <input file>\n"
-	  "\tConvert a tiff stack to a compound image\n"
+	  "\tConvert a TIFF stack to a compound image\n"
 	  "\trepresenting the set of patches or mosaic\n"
-	  "\ttiles. It is assumed that the tiff images\n"
+	  "\ttiles. It is assumed that the TIFF images\n"
 	  "\tare arrannged in the stack row-wise starting\n"
 	  "\ttop-left with the numbers of rows and columns\n"
 	  "\tinput. Also required is the estimated pixel\n"
-	  "\toverlap. The tiff is read from the given file,\n"
+	  "\toverlap. The TIFF is read from the given file,\n"
 	  "\toutput to stdout.\n"
 	  "\tOptions are:\n" 
 	  "\t  -n#,#     Number (columns, rows) estimated if omitted\n"
@@ -260,12 +322,12 @@ int main(int	argc,
     tiffFile = *(argv+optind);
   }
   else {
-    fprintf(stderr, "%s: input tiff file required\n", argv[0]);
+    fprintf(stderr, "%s: input TIFF file required\n", argv[0]);
     usage(argv[0]);
     return WLZ_ERR_UNSPECIFIED;
   }
 
-  /* read the tiff file */
+  /* read the TIFF file */
   if( (inObj = WlzAssignObject(
 	 WlzEffReadObj(NULL, tiffFile, WLZEFF_FORMAT_TIFF, 0,
 		       &errNum), NULL)) == NULL ){
@@ -359,3 +421,4 @@ int main(int	argc,
   }
   return errNum;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

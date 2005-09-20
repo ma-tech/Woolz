@@ -1,25 +1,111 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   Wlz3DViewTransformObj.c				*
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Tue Nov  2 15:45:35 1999				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlzApp/Wlz3DViewTransformObj.c
+* \author       Richard Baldock
+* \date         November 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Transforms a section view to a 3D object.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlz3dviewtransformobj "Wlz3DViewTransformObj"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlz3dviewtransformobj Wlz3DViewTransformObj
+\par Name
+Wlz3DViewTransformObj - transforms a section view to a 3D object.
+\par Synopsis
+\verbatim
+Wlz3DViewTransformObj  [-h] [-v]
+                 [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>]
+                 [-d <dist>] [-b <view bibfile>] [-m <mode>]
+		 [-u<ux,uy,uz>] [<3D object input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Viewing angles in degrees, defined (0.0, 0.0,0.0).</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Bibfile defining the view parameters e.g. from MAPaint
+        or warp input I/O.
+	Override all other parameter input.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Fixed point position, default (0,0,0).</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Distance parameter, default 0.0.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Viewing mode, possible values:
+    <table width="500" border="0">
+      <tr> <td><b>Parameter value</b></td> <td><b>Viewing mode</b></td> </tr>
+      <tr> <td>"up-is-up"</td> <td>up-is-up, default</td> </tr>
+      <tr> <td>"statue"</td> <td>statue</td> </tr>
+      <tr> <td>"absolute"</td> <td>absolute</td> </tr>
+    </table>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Up vector for up-is-up mode, default (0, 0, -1).</td>
+  </tr>
+</table>
+\par Description
+Transforms a section view to a 3D object
+writing the 3D object to standard output.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref Wlz3DViewTransformObj.c "Wlz3DViewTransformObj.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref Wlz3DViewTransformObj "Wlz3DViewTransformObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -272,3 +358,4 @@ int main(int	argc,
 
   return WLZ_ERR_NONE;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

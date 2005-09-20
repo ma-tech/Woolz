@@ -1,19 +1,183 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        WlzExtFFConvert.c
-* Date:         March 1999
-* Author:       Bill Hill
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Woolz filter which uses the external file formats
-*		extension to convert object data file formats.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlzExtFF/WlzExtFFConvert.c
+* \author       Bill Hill
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Woolz binary which uses the external file formats
+* 		extension to convert object data file formats.
+* \ingroup	BinWlzExtFF
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzextffconvert "WlzExtFFConvert"
+*/
+
+/*!
+\ingroup BinWlzExtFF
+\defgroup wlzextffconvert WlzExtFFConvert
+\par Name
+WlzExtFFConvert - converts image objects between file formats.
+\par Synopsis
+\verbatim
+WlzExtFFConvert [-h] [-s] [-b<background>]
+                [-f<input format>] [-F<output format>]
+		[-x<x size>] [-y<y size>] [-z<z size>]
+		[-o<output file>] [<input file>)]
+
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Split labeled volumes into domains.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Set background to value.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Input file format.</td>
+  </tr>
+  <tr> 
+    <td><b>-F</b></td>
+    <td>Ouput file format.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+  <tr> 
+    <td><b>-x</b></td>
+    <td>Column (x) voxel/pixel size.</td>
+  </tr>
+  <tr> 
+    <td><b>-y</b></td>
+    <td>Line (y) voxel/pixel size.</td>
+  </tr>
+  <tr> 
+    <td><b>-z</b></td>
+    <td>Plane (z) voxel/pixel size.</td>
+  </tr>
+</table>
+\par Description
+Converts objects between one file format and another,
+neither of which need be the Woolz data file format.
+By default objects are read from the standard input and written to
+the standard output.
+
+The valid file formats are:
+<table width="500" border="0">
+  <tr>
+  <td><b>Description</b></td> <td><b>Format</b></td> <td><b>Extension</b></td>
+  </tr>
+  <tr>
+  <td>Amira Lattice</td> <td>am</td> <td>.am</td>
+  </tr>
+  <tr>
+  <td>Analyze</td> <td>anl</td> <td>.hdr/.img</td>
+  </tr>
+  <tr>
+  <td>Microsoft Bitmap</td> <td>bmp</td> <td>.bmp</td>
+  </tr>
+  <tr>
+  <td>Stanford Density</td> <td>den</td> <td>.den</td>
+  </tr>
+  <tr>
+  <td>ICS</td> <td>ics</td> <td>.ics/.ids</td>
+  </tr>
+  <tr>
+  <td>PNM</td> <td>pnm</td> <td>.pgm</td>
+  </tr>
+  <tr>
+  <td>BioRad Confocal</td> <td>pic</td> <td>.pic</td>
+  </tr>
+  <tr>
+  <td>SLC</td> <td>slc</td> <td>.slc</td>
+  </tr>
+  <tr>
+  <td>Sunvision VFF</td> <td>vff</td> <td>.vff</td>
+  </tr>
+  <tr>
+  <td>Visualization Toolkit</td> <td>vtk</td> <td>.vtk</td>
+  </tr>
+  <tr>
+  <td>IPLab</td> <td>ipl</td> <td>.ipl</td>
+  </tr>
+  <tr>
+  <td>TIFF</td> <td>tif</td> <td>.tif</td>
+  </tr>
+  <tr>
+  <td>JPEG</td> <td>jpg</td> <td>.jpg</td>
+  </tr>
+  <tr>
+  <td>MRC HGU Woolz</td> <td>wlz</td> <td>.wlz</td>
+  </tr>
+</table>
+
+The TIFF file format must be read/written from/to a file
+and not from/to the standard input/output.
+
+Not all formats can retain position information i.e. they can
+only keep the size of the bounding box. In these formats the
+size of the bounding box is maintained but the position is set to
+(0,0). This implies that conversion back to woolz will, in general,
+result in a shifted image, i.e. registration is lost. Most 3D
+formats encode this data, of the 2D formats only woolz can retain
+all offsets, TIFF can only encode positive offsets.
+
+\par Examples
+
+\verbatim
+WlzExtFFConvert -f wlz -F slc <in.wlz >out.slc
+\endverbatim
+Converts the Woolz object in.wlz to an SLC data file out.slc.
+
+\verbatim
+WlzExtFFConvert -f den -F pnm -o out.pgm in.den
+\endverbatim
+Converts the Stanford density file in.den to a series of PGM files
+each with a name of the form out000001.pgm where the number
+encodes the image plane and a control file which specifies the
+volume origin, size and voxel dimensions.
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzExtFF "WlzIntro(1)"
+\ref WlzEffReadObj "WlzEffReadObj(3)"
+\ref WlzEffWriteObj "WlzEffWriteObj(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -188,7 +352,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    /* if the output format is tiff then a file name must be
+    /* if the output format is TIFF then a file name must be
        given */
     if((outFmt == WLZEFF_FORMAT_TIFF) && !strcmp(outObjFileStr, "-"))
     {
@@ -290,16 +454,16 @@ int             main(int argc, char **argv)
 	stderr,
 	"Usage: %s%s%s%s%s%s%s%s\n",
 	*argv,
-	" [-h] [-b<background>]\n"
+	" [-h] [-s] [-b<background>]\n"
 	"        [-f<input format>] [-F<output format>]\n"
 	"        [-x<x size>] [-y<y size>] [-z<z size>]\n"
 	"        [-o<output file>] [<input file>)]\n"
-	"Converts image objects between one file format and another,\n"
+	"Converts objects between one file format and another,\n"
 	"neither of which need be the Woolz data file format.\n"
 	"Options are:\n"
 	"  -h    Help, prints this usage information.\n"
 	"  -s    Split labeled volumes into domains.\n"
-	"  -b#   Set background to vale,\n"
+	"  -b#   Set background to value,\n"
 	"  -f#   Input file format.\n"
 	"  -F#   Ouput file format.\n"
 	"  -o#   Output file name.\n"
@@ -320,8 +484,8 @@ int             main(int argc, char **argv)
 	"  Sunvision VFF               vff     .vff\n"
 	"  Visualization Toolkit VTK   vtk     .vtk\n"
 	"  IPLab                       ipl     .ipl\n"
-	"  Tiff                        tif     .tif\n"
-	"  Jpeg                        jpg     .jpg\n"
+	"  TIFF                        tif     .tif\n"
+	"  JPEG                        jpg     .jpg\n"
 	"  MRC HGU Woolz               wlz     .wlz\n",
 	"Simple example:\n  ",
 	*argv,
@@ -338,17 +502,18 @@ int             main(int argc, char **argv)
 	"the standard output.\n"
 	"File formats which use more than one file can not be read or written\n"
 	"using the standard input or standard output.\n"
-	"The Tiff file format must be read/written from/to a file i.e. not\n"
+	"The TIFF file format must be read/written from/to a file i.e. not\n"
 	"from/to stdin or stdout\n"
-	"Note not all formats can retain position information i.e. they can\n"
+	"Not all formats can retain position information i.e. they can\n"
 	"only keep the size of the bounding box. In these formats the\n"
 	"size of the bounding box is maintained but the position is set to\n"
 	"(0,0). This implies that conversion back to woolz will, in general,\n"
 	"result in a shifted image, i.e. registration is lost. Most 3D\n"
-	"formats encode this data, of the 2D formats only woolz can retain\n",
-	"all offsets, tiff can only encode positive offsets.\n"
+	"formats encode this data, of the 2D formats only woolz can retain\n"
+	"all offsets, TIFF can only encode positive offsets.\n"
 	);
     }
   }
   return(!ok);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

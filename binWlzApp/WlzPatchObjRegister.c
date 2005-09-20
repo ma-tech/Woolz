@@ -1,28 +1,109 @@
-#pragma ident "%W%(%G%) - richard"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzPatchObjRegister.c				*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Fri Feb  6 14:42:26 1998				*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         binWlzApp/WlzPatchObjRegister.c
+* \author	Richard Baldock
+* \date         February 1998
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief 	Registers patch objects and outputs a single object.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzpatchobjregister "WlzPatchObjRegister"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzpatchobjregister WlzPatchObjRegister
+\par Name
+WlzPatchObjRegister - registers patch objects and outputs a single object.
+\par Synopsis
+\verbatim
+WlzPatchObjRegister  [-h] [-v] [-b] [-d] [-t#[,#]] [-p#] [-g] [-G] [-T#]
+                     [<input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose output.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Ordered breadth-first search, darkest images first, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Unordered depth-first search.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>Set maximum translation values, default 30,30.
+        One input value implies equal maximum shift in x & y directions.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Percent of pixels match, default 10.
+        Higher is better but slower.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Attempt to reset mean grey values to be equal
+        within matched regions, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-G</b></td>
+    <td>Switch off grey-level matching.</td>
+  </tr>
+  <tr> 
+    <td><b>-T</b></td>
+    <td>Threshold the input images e.g. to remove spurious lines
+        around the edge.</td>
+  </tr>
+</table>
+\par Description
+WlzPatchObjRegister reads a compound woolz object with image patches
+(such produced by xmgrab). These patches are then registered and
+a single domain object is output.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzPatchObjRegister.c "WlzPatchObjRegister.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -44,7 +125,7 @@ static int		verboseFlg=0;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-g] [-G]"
+	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-p] [-g] [-G] [-T#] "
 	  "[<input file>]\n"
 	  "\tWoolz in a compound woolz object assumed\n"
 	  "\tto be output of patch images from xmgrab.\n"

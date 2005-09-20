@@ -1,25 +1,93 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   MRC HGU Image Processing Utilities			*
-*   File       :   WlzFixDomains.c					*
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Wed Jan 16 15:17:57 2002				*
-*   $Revision$								*
-*   $Name$								*
-*   Synopsis    : 							*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlzApp/WlzFixDomains.c
+* \author       Richard Baldock
+* \date         January 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Fixes flying pixels and small holes in domains.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzfixdomains "WlzFixDomains"
+*/
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzfixdomains WlzFixDomains
+\par Name
+WlzFixDomains - fixes flying pixels and small holes in domains.
+\par Synopsis
+\verbatim
+WlzFixDomains [-h] [-v] [-f] [-p] [-s#]  file1.wlz file2.wlz .... fileN.wlz
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Fill holes.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Prune and reassign flying pixels.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Size parameter to determine selection, default 2.</td>
+  </tr>
+</table>
+\par Description
+WlzFixDomains reads in all the domains and corrects flying pixels
+and small holes by reassigning to the closest neighbour
+domains.
+For the holes this is the domain itself, for
+disconnected pixels it is the domain with greatest area
+of intersection with the dilated pixel. Each corrected
+domain is output to a file with extension _new, additions
+and deletions are output to files with extensions _adds
+an _dels respectively.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzFixDomains.c "WlzFixDomains.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -959,3 +1027,4 @@ int main(
 
   return errNum;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

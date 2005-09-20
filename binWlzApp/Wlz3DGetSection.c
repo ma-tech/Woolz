@@ -1,18 +1,137 @@
 #pragma ident "MRC HGU $Id$"
-/***********************************************************************
-* Project:      Woolz
-* Title:        Wlz3DGetSection.c
-* Date:         March 1999
-* Author:       Richard Baldock
-* Copyright:	1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Gets an arbitrary slice from a 3D object.
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+/*!
+* \file         binWlzApp/Wlz3DGetSection.c
+* \author       Richard Baldock
+* \date         March 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Gets an arbitrary slice from a 3D object.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlz3dgetsection "Wlz3DGetSection"
+*/
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlz3dgetsectionnce Wlz3DGetSection
+\par Name
+Wlz3DGetSection - gets an arbitrary slice from a 3D object.
+\par Synopsis
+\verbatim
+Wlz3DGetSection  [-h] [-A] [-C] [-L] [-N]
+                 [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>]
+                 [-d <dist>] [-b <parameter bibfile>] [-m <mode>]
+		 [-s <scale>] [-o <output file>] [-u<ux,uy,uz>]
+		 [<3D object input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-A</b></td>
+    <td>Output all sections in the transformed view.
+        This will output each section with the given
+	view orientation into files using the output
+	filename as a stub. If no output file is
+	defined plane_????.wlz will be used.</td>
+  </tr>
+  <tr> 
+    <td><b>-C</b></td>
+    <td>Use classifier interpolation.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>Use linear interpolation.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Use nearest neighbour interpolation.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Viewing angles in degrees.
+        If roll is defined then the mode is "absolute"..</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Bibfile defining the view parameters e.g. from MAPaint
+        or warp input I/O.
+	Override all other parameter input.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Fixed point position, default (0,0,0).</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Distance parameter, default 0.0.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Viewing mode, possible values:
+    <table width="500" border="0">
+      <tr> <td><b>Parameter value</b></td> <td><b>Viewing mode</b></td> </tr>
+      <tr> <td>0</td> <td>up-is-up, default</td> </tr>
+      <tr> <td>1</td> <td>statue</td> </tr>
+      <tr> <td>2</td> <td>absolute</td> </tr>
+    </table>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Scale factor, default 1.0.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output filename, default is stdout.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Up vector for up-is-up mode, default (0, 0, -1).</td>
+  </tr>
+</table>
+\par Description
+Gets an arbitrary slice from a 3D object,
+ writing the 2D object to standard output.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref Wlz3DGetSection.c "Wlz3DGetSection.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref WlzGetSectionFromObject "WlzGetSectionFromObject(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +154,7 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]"
 	  " [-b <parameter bibfile>] [-m <mode>] [-s <scale>]"
-	  " [-o <output file>] [-u<ux,uy,uz>] [-C] [-L] [-N]"
+	  " [-o <output file>] [-u<ux,uy,uz>] [-A] [-C] [-L] [-N]"
 	  " [<3D object input file>]\n"
 	  "\tGet an arbitrary slice from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
@@ -334,3 +453,4 @@ int main(int	argc,
 
   return errNum;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

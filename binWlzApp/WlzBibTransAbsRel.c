@@ -1,23 +1,89 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzBibTransAbsRel.c
+* \file         binWlzApp/WlzBibTransAbsRel.c
 * \author       Bill Hill
 * \date         February 2005
 * \version      $Id$
-* \note
-*               Copyright
-*               2005 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \brief	Reads a reconstruction bibfile and writes it back out
 *		with either absolute or relative transforms.
+* \ingroup	BinWlzApp
 * \todo         -
 * \bug          None known.
+*
+* \par Binary
+* \ref wlzbibtransabsrel "WlzBibTransAbsRel"
 */
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlzbibtransabsrel WlzBibTransAbsRel
+\par Name
+WlzBibTransAbsRel - converts reconstruction bibfile between absolute and
+                    relative transforms.
+\par Synopsis
+\verbatim
+WlzBibTransAbsRel [-a] [-h] [-r] [-o outfile] [<infile>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Output bibfile with absolute transforms, default.</td>
+  </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Output bibfile with relative transforms.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file name.</td>
+  </tr>
+</table>
+\par Description
+WlzBibTransAbsRel reads a reconstruction bibfile
+and writes it to the output file
+with either absolute or relative transforms.
+\par Examples
+\verbatim
+WlzBibTransAbsRel <recon_rel.bib >recon_abs.bib
+\endverbatim
+Reads a releative transform reconstruction bibfile from recon_rel
+computes the absolute transforms and then writes the reconstruction
+bibfile with absolute transforms to the file recon_abs.
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -186,7 +252,7 @@ int		 main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-a] [-h] [-r] [-o outfile] infile\n"
+    "Usage: %s [-a] [-h] [-r] [-o outfile] [<infile>]\n"
     "Reads a reconstruction bibfile and writes it to the output file\n"
     "with either absolute or relative transforms.\n"
     "Options are:\n"
@@ -374,3 +440,4 @@ WlzErrorNum	WlzTransformNearIdentity2D(WlzAffineTransform *tr, double tol)
   }
   return(errNum);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

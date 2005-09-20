@@ -1,23 +1,221 @@
 #pragma ident "MRC HGU $Id$"
 /*!
- * \file	WlzMatchICPPlane.c
- * \author      Bill Hill
- * \date        June 2002
- * \version	$Id$
- * \note
- *             	Copyright:
- *             	2001 Medical Research Council, UK.
- *             	All rights reserved.
- * \par  Address:
- *             	MRC Human Genetics Unit,
- *             	Western General Hospital,
- *             	Edinburgh, EH4 2XU, UK.
- * \brief      	Compute tie points for a computed plane of section in a
- *		reference object and a 2D object, where these are read from
- *		an 'MAPaint 2D warp input parameters' bibfile.
- * \todo
- * \bug
- */
+* \file         binWlzApp/WlzMatchICPPlane.c
+* \author       Bill Hill
+* \date         June 2002
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Compute tie points for a computed plane of section in a
+*               reference object and a 2D object, where these are read from
+*               an 'MAPaint 2D warp input parameters' bibfile.
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzmatchicpplane "WlzMatchICPPlane"
+*/
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlzmatchicpplane WlzMatchICPPlane
+\par Name
+WlzMatchICPPlane - matches objects and computes tie points using the
+                   warp parameters bibfile.
+\par Synopsis
+\verbatim
+WlzMatchICPPlane [-h] [-d] [-v] [-V]
+                 [-o<output file base>] [-r <reference file>] [-Y]
+		 [-t#] [-x#] [-y#] [-a#] [-s#] [-e]
+		 [-g#,#] [-k#,#] [-u#,#] [-b #] [-B #]
+		 [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]
+		 [-c<contour file base>] [-N] [-L]
+		 [<section parameters file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td>Perform extra tests to aid debuging.</td>
+  </tr>
+  <tr>
+    <td>-E</td>
+    <td>Tolerance in mean registration metric value.</td>
+  </tr>
+  <tr>
+    <td>-v</td>
+    <td>Be verbose, lots of text output to the standard error output!</td>
+  </tr>
+  <tr>
+  <td>V</td> <td>Be verbose with Woolz objects and data, with file name names
+      prefixed by dbg-.</td>
+  </tr>
+  <tr>
+  <td>o</td> <td>Output file base.</td>
+  </tr>
+  <tr>
+  <td>r</td> <td>Reference file.</td>
+  </tr>
+  <tr>
+  <td>Y</td> <td>The section parameters file is a list of section parameters
+      files, one per line.</td>
+  </tr>
+  <tr>
+  <td>e</td> <td>Use centres of mass of geometric models to compute translation,
+      with this translaton being applied after the optional initial
+      affine transform.</td>
+  </tr>
+  <tr>
+  <td>t</td> <td>Initial affine transform (if given all initial affine
+      transform primitives are ignored).</td>
+  </tr>
+  <tr>
+  <td>x</td> <td>Initial horizontal translation.</td>
+  </tr>
+  <tr>
+  <td>y</td> <td>Initial vertical translation.</td>
+  </tr>
+  <tr>
+  <td>a</td> <td>Initial angle of rotation (degrees).</td>
+  </tr>
+  <tr>
+  <td>s</td> <td>Initial scale factor.</td>
+  </tr>
+  <tr>
+  <td>g</td> <td>Maximal gradient contour thresholds, with the format:
+\verbatim
+      <ref threshold>,<src threshold>
+\endverbatim
+      either may be omitted.</td>
+  </tr>
+  <tr>
+  <td>k</td> <td>Median filter size, with the format:
+\verbatim
+  <ref size>,<src size>
+\endverbatim
+  either may be omitted.</td>
+  </tr>
+  <tr>
+  <td>u</td> <td>Gaussian smoothing factors, with the format:
+\verbatim
+  <ref smooth>,<src smooth>
+\endverbatim
+  either may be omitted.</td>
+  </tr>
+  <tr>
+  <td>b</td> <td>Low threshold values used to produce binary mask images for
+      matching instead of the grey valued images, with objects
+      having values at or below the given thresholds.</td>
+  </tr>
+  <tr>
+  <td>B</td> <td>High threshold values used to produce binary mask images for
+      matching instead of the grey valued images, with objects
+      having values above the given thresholds.</td>
+  </tr>
+  <tr>
+  <td>f</td> <td>Keep the reference offset in the reference tie-points (MAPaint
+      doesn't do this).</td>
+  </tr>
+  <tr>
+  <td>i</td> <td>Maximum number of iterations.</td>
+  </tr>
+  <tr>
+  <td>p</td> <td>Minimum number of simplices per shell.</td>
+  </tr>
+  <tr>
+  <td>P</td> <td>Minimum number of simplices per matched shell segment, with a
+      pair of correspondence points possibly being generated per
+      matched shell segment.</td>
+  </tr>
+  <tr>
+  <td>A</td> <td>Maximum angle (degrees) from a global transformation.</td>
+  </tr>
+  <tr>
+  <td>S</td> <td>Maximum displacement from a global transformed position.</td>
+  <tr>
+  <td>F</td> <td>Maximum deformation from a global transformation.</td>
+  </tr>
+  <tr>
+  <td>m</td> <td>Implausibility threshold for rejecting implausible
+      correspondence points which should be greater than zero,
+      although the useful range is probably [0.5-5.0]. Higher
+      values allow more implausible matches to be returned.</td>
+  </tr>
+  <tr>
+  <td>n</td> <td>Number of match points in neighbourhood when checking the
+             plausibility of the correspondence points.</td>
+  </tr>
+  <tr>
+  <td>c</td> <td>Outputs the computed and decomposed geometric models using
+             the given file base.</td>
+  </tr>
+  <tr>
+  <td>N</td> <td>Don't compute the tie-points.</td>
+  </tr>
+  <tr>
+  <td>L</td> <td>Use linear interpolation (instead of nearest neighbour) when
+      cuting sections.</td>
+  </tr>
+</table>
+\par Description
+WlzMatchICPPlane reads either a 2D or 3D reference object and an MAPaint section
+parameters file. Computes tie-points and then writes a new MAPaint
+section parameters file which includes the tie-points.
+
+An initial affine transform is computed from the (optional) initial
+translation, rotation and scale parameters. A centre of mass can be
+computed to improve the initial translation estimates. If a centre of
+mass computation is used then the images must have background with
+high values and foreground with low values. This initial affine
+transform is appiled to the source image before computing the
+tie-points. Once computed, the tie-points are transformed using the
+inverse of the intial transform, before output.
+
+The tie-points are computed using an ICP based matching algorithm
+in which geometric models built from the maximal gradient edges
+extracted from the computed section of the reference object and
+the source object (refered to in the section parameters file).
+
+To aid rejection of poor tie-points, the tie-points are ranked by
+plausibility, with the most plausible first.
+\par Examples
+\verbatim
+\endverbatim
+
+\par File
+\ref WlzMatchICPPlane.c "WlzMatchICPPlane.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref WlzMatchICPCtr "WlzMatchICPCtr(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -946,7 +1144,7 @@ int             main(int argc, char **argv)
       "extracted from the computed section of the reference object and\n"
       "the source object (refered to in the section parameters file).\n"
       "  To aid rejection of poor tie-points, the tie-points are ranked by\n"
-      "plausibility, with the most plausible first\n");
+      "plausibility, with the most plausible first.\n");
   }
   return(!ok);
 }
@@ -1497,3 +1695,4 @@ static int	WlzMatchICPPlaneParseDPair(char *arg,
   }
   return(stat);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

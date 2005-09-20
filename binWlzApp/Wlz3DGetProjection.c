@@ -1,27 +1,122 @@
 #pragma ident "MRC HGU $Id$"
 /*!
-* \file         Wlz3DGetProjection.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Mar  8 14:16:13 2005
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \file         binWlzApp/Wlz3DGetProjection.c
+* \author       Richard Baldock
+* \date         March 2005
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \ingroup      WlzTransform
-* \brief        Command line binary to project a woolz object
- using a view transform.
-*               
-* \todo         -
-* \bug          None known
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
 *
-* Maintenance log with most recent changes at top of list.
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief        Command line binary to project a Woolz object
+*		using a view transform.
+*               
+* \ingroup	BinWlzApp
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlz3dgetprojection "Wlz3DGetProjection"
 */
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlz3dgetprojection Wlz3DGetProjection
+\par Name
+Wlz3DGetProjection - projects a Woolz object using a view transform.
+\par Synopsis
+\verbatim
+Wlz3DGetProjection [-h] [-v]
+                   [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]
+		   [-b <parameter bibfile>] [-m <mode>] [-s <scale>]
+		   [-o <output file>] [-u<ux,uy,uz>] [<3D object input file>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Viewing angles in degrees.
+        If roll is defined then the mode is "absolute"..</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Fixed point position, default (0,0,0).</td>
+  </tr>
+  <tr> 
+    <td><b>-d</b></td>
+    <td>Distance parameter, default 0.0.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Bibfile defining the view parameters e.g. from MAPaint
+        or warp input I/O.
+	Override all other parameter input.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Viewing mode, possible values:
+    <table width="500" border="0">
+      <tr> <td><b>Parameter value</b></td> <td><b>Viewing mode</b></td> </tr>
+      <tr> <td>0</td> <td>up-is-up, default</td> </tr>
+      <tr> <td>1</td> <td>statue</td> </tr>
+      <tr> <td>2</td> <td>absolute</td> </tr>
+    </table>
+    </td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Scale factor, default 1.0.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output filename, default is stdout.</td>
+  </tr>
+  <tr> 
+    <td><b>-u</b></td>
+    <td>Up vector for up-is-up mode, default (0, 0, -1).</td>
+  </tr>
+</table>
+\par Description
+Gets an arbitrary slice projection from a 3D object,
+writing the 2D object to standard output.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref Wlz3DGetProjection.c "Wlz3DGetProjection.c"
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
+\ref WlzGetProjectionFromObject "WlzGetProjectionFromObject(3)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -283,4 +378,4 @@ int main(int	argc,
 
   return errNum;
 }
- 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

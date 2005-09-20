@@ -1,32 +1,95 @@
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-*   Copyright  :   1994 Medical Research Council, UK.                   *
-*                  All rights reserved.                                 *
-*************************************************************************
-*   Address    :   MRC Human Genetics Unit,                             *
-*                  Western General Hospital,                            *
-*                  Edinburgh, EH4 2XU, UK.                              *
-*************************************************************************
-*   Project    :   Woolz Library					*
-*   File       :   WlzExtFFWlzToXYZ.c					*
-*************************************************************************
-* This module has been copied from the original woolz library and       *
-* modified for the public domain distribution. The original authors of  *
-* the code and the original file headers and comments are in the        *
-* HISTORY file.                                                         *
-*************************************************************************
-*   Author Name :  Richard Baldock					*
-*   Author Login:  richard@hgu.mrc.ac.uk				*
-*   Date        :  Mon Oct 23 14:43:18 2000				*
-*   $Revision$							*
-*   $Name$								*
-*   Synopsis    : Converts a set of woolz domain files (3D binary) with	*
-*		associated ID file to GW XYZ format. The ID file	*
-*		holds a set of ids unique for each domain.		*
-*************************************************************************
-*   Maintenance :  date - name - comments (Last changes at the top)	*
-************************************************************************/
+/*!
+* \file         binWlzExtFF/WlzExtFFWlzToXYZ.c
+* \author       Richard Baldock
+* \date         October 2000
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Converts a set of woolz domain files (3D binary)
+* 		with associated ID file to GW XYZ format.
+* 		The ID file holds a set of ids unique for each domain.
+* \ingroup	BinWlzExtFF
+* \todo         -
+* \bug          None known.
+*
+* \par Binary
+* \ref wlzextffwlztoxyz "WlzExtFFWlzToXYZ"
+*/
 
+/*!
+\ingroup BinWlzExtFF
+\defgroup wlzextffwlztoxyz WlzExtFFWlzToXYZ
+\par Name
+WlzExtFFWlzToXYZ - converts Woolz domains to Glaxo-Wellcome XYZ format
+                   contour files.
+\par Synopsis
+\verbatim
+WlzExtFFWlzToXYZ  [-h] [-v] [-m<minSize>] -o<xOff>,<yOff> -p<plane>
+                  -s<width>,<height> <input file list>
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
+  </tr>
+  <tr> 
+    <td><b>-m</b></td>
+    <td>Input minimum size used to determine which contours will be output,
+    default 4.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Offsets for x and y to correspond to the grey-level
+        object so that all coordinates are +ve.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Required plane number.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Width and height for the XYZ file.</td>
+  </tr>
+</table>
+\par Description
+Reads the file list and converts the woolz domains to Glaxo-Wellcome XYZ format contour files.
+\par Examples
+\verbatim
+\endverbatim
+\par File
+\ref WlzFacts.c "WlzFacts.c"
+\par See Also
+\ref BinWlzExtFF "WlzIntro(1)"
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,19 +122,19 @@ typedef struct _contourItem {
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s -m<minSize> -o<xOff,yOff> -p<plane> -s<width,height> -h -v"
-	  "<input file-list>\n"
+	  "Usage:\t%s -h -v -m<minSize> -o<xOff>,<yOff> -p<plane>\n"
+	  "           -s<width>,<height> <input file-list>\n"
 	  "\tRead the file list and convert the woolz domains to\n"
 	  "\tGlaxo-Wellcome XYZ format contour files.\n"
 	  "\tOptions are:\n"
+	  "\t  -h        Help - prints this usage message\n"
+	  "\t  -v        Verbose operation\n"
 	  "\t  -m#       input the min size used to determine which\n"
 	  "\t            contours will be output (default 4).\n"
 	  "\t  -o#,#     x and y offsets to correspond to the grey-level\n"
 	  "\t            object so that all coordinates are +ve.\n"
 	  "\t  -s#,#     width and height for the XYZ file\n"
 	  "\t  -p#       required plane number\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
 	  "",
 	  proc_str);
   return;
@@ -522,3 +585,4 @@ int main(int	argc,
 
   return WLZ_ERR_NONE;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
