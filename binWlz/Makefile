@@ -1,28 +1,36 @@
-#########################################################################
-# Project:      Woolz
-# Title:        Makefile
-# Date:         September 1994
-# Author:       Bill Hill
-# Copyright:	1999 Medical Research Council, UK.
-#		All rights reserved.
-# Address:	MRC Human Genetics Unit,
-#		Western General Hospital,
-#		Edinburgh, EH4 2XU, UK.
-# Purpose:      Makefile for the Woolz filters.
-# $Revision$
-# $Id$
-# Maintenance:	Log changes below, with most recent at top of list.
-# 13-01-04 Rao  add WlzBasisFnTransformVertices.c
-# 23-04-03 Rao  Add WlzGreyValueMixing.c#
-# 28-01-03 Rao  Add WlzGeometryTrackUpAndDown.c
-# 18-09-02 Jianguo add Wlz3DWarpMQ
-# 14-03-01 bill Add WlzRasterObj.
-# 08-03-01 bill Add WlzContourSzSelect.
-# 06-12-00 bill Add WlzRegisterICP.
-# 16-08-00 bill Add WlzContourObj.
-# 07-02-00 bill	Add WlzHistogramFitPeaks.
-# 02-02-00 bill	Add WlzHistogramFindPeaks and WlzHistogramGauss.
-#########################################################################
+##!
+# \file         Makefile
+# \author       Bill Hill
+# \date         September 1994
+# \version      $Id$
+# \par
+# Address:
+#               MRC Human Genetics Unit,
+#               Western General Hospital,
+#               Edinburgh, EH4 2XU, UK.
+# \par
+# Copyright (C) 2005 Medical research Council, UK.
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be
+# useful but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+# \brief	Makefile for the Woolz binaries.
+# \ingroup	binWlz
+# \todo         -
+# \bug          None known.
+##
 
 # Include the configuration makefile (modify as required).
 include			../../Makefile.conf
@@ -31,13 +39,13 @@ include			../../Makefile.conf
 ARCHIVE			=
 
 # Names of executables to be built (modify as required).
+#			WlzAutoTrackUpDown 
 EXECUTABLES		= \
 			WlzAffineTransformDiff \
 			WlzAffineTransformLSq \
 			WlzAffineTransformVertices \
 			WlzAffineTransformObj \
 			WlzArea \
-			WlzAutoTrackUpDown \
 			WlzBasisFnTransformObj \
 			WlzBasisFnTransformVertices \
 			WlzBoundaryToObj \
@@ -104,6 +112,7 @@ EXECUTABLES		= \
 			WlzIntersect \
 			WlzLabel \
 			WlzLaplacian \
+			WlzMakeEmpty \
 			WlzMarkersToDomain \
 			WlzMatchICPObj \
 			WlzMeshTransformObj \
@@ -122,6 +131,7 @@ EXECUTABLES		= \
 			WlzRMSDiff \
 			WlzRsvFilterObj \
 			WlzSampleObj \
+			WlzScalarDivide \
 			WlzScalarFeatures \
 			WlzSelect1InN \
 			WlzSetBackground \
