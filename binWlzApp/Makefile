@@ -29,6 +29,7 @@ EXECUTABLES		= \
 			Wlz3DViewTransformBitmap \
 			WlzBibToMeshTrans \
 			WlzBibTransAbsRel \
+			WlzDomainMatch \
 			WlzExtractTransform \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
@@ -54,6 +55,7 @@ CSOURCES		= \
 			Wlz3DViewTransformObj.c \
 			Wlz3DViewTransformBitmap.c \
 			WlzBibToMeshTrans.c \
+			WlzDomainMatch.c \
 			WlzBibTransAbsRel.c \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
