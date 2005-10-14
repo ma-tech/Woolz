@@ -388,6 +388,15 @@ extern WlzObject 		*WlzAffineTransformObj(
 				  WlzAffineTransform *trans,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzAffineTransformObjCb(
+    				  WlzObject *srcObj,
+				  WlzAffineTransform *trans,
+				  WlzInterpolationType interp,
+				  void *cbData,
+				  WlzAffineTransformCbFn cbFn,
+				  WlzErrorNum *dstErr);
+#endif
 extern WlzDVertex2     		WlzAffineTransformVertexD2(
 				  WlzAffineTransform *trans,
 				  WlzDVertex2 srcVtx,
@@ -1472,6 +1481,7 @@ extern WlzObject 		*WlzDistanceTransform(
 				  WlzObject *forObj,
 				  WlzObject *refObj,
 				  WlzDistanceType dFn,
+				  double dParam,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -2455,6 +2465,17 @@ extern int 			WlzInsideDomain(
 				  double plane,
 				  double line,
 				  double kol,
+				  WlzErrorNum *dstErr);
+extern int			WlzInsideDomain2D(
+    				  WlzIntervalDomain *iDom,
+				  int line,
+				  int kol,
+				  WlzErrorNum *dstErr);
+extern int			WlzInsideDomain3D(
+    				  WlzPlaneDomain *pDom,
+				  int plane,
+				  int line,
+				  int kol,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
