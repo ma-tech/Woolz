@@ -29,7 +29,7 @@
 WlzDistanceTransform - computes distance transform objects.
 \par Synopsis
 \verbatim
-WlzDistanceTransform [-b] [-c#] [-f#] [-o#] [-h] [<Reference input file>]
+WlzDistanceTransform [-b] [-d#] [-f#] [-p#] [-o#] [-h] [<Reference input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -51,6 +51,7 @@ WlzDistanceTransform [-b] [-c#] [-f#] [-o#] [-h] [<Reference input file>]
       <table width="500" border="0">
       <tr> <td>0</td> <td>Euclidean (2D and 3D, unimplemented)</td></tr>
       <tr> <td>1</td> <td>octagonal (2D and 3D) - default</td></tr>
+      <tr> <td>2</td> <td>approximate Euclidean (2D and 3D)</td></tr>
       <tr> <td>4</td> <td>4-connected (2D)</td></tr>
       <tr> <td>8</td> <td>8-connected (2D)</td></tr>
       <tr> <td>6</td> <td>6-connected (3D)</td></tr>
@@ -61,6 +62,13 @@ WlzDistanceTransform [-b] [-c#] [-f#] [-o#] [-h] [<Reference input file>]
   <tr> 
     <td><b>-f</b></td>
     <td>The foreground object file.</td>
+  </tr>
+  <tr> 
+    <td><b>-p</b></td>
+    <td>Distance function parameter, which is curently only used for
+        approximate Euclidean distance transforms. The value should
+	be \f$geq\f$ 1, with larger values giving greater accuracy
+	at the cost of increased time. Default value - 10.0.</td>
   </tr>
 </table>
 \par Description
@@ -104,6 +112,7 @@ int		main(int argc, char *argv[])
   		*forFileStr,
   		*refFileStr,
 		*outFileStr;
+  double	dParam = 10.0;
   FILE		*fP = NULL;
   WlzObject	*tObj0,
   		*tObj1,
@@ -113,7 +122,7 @@ int		main(int argc, char *argv[])
   WlzDistanceType dFn;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bhd:f:o:";
+  static char	optList[] = "bhd:f:p:o:";
   const char    fileStrDef[] = "-";
   const WlzConnectType defDFn = WLZ_OCTAGONAL_DISTANCE;
 
@@ -145,6 +154,9 @@ int		main(int argc, char *argv[])
 	    case 1:
 	      dFn = WLZ_OCTAGONAL_DISTANCE;
 	      break;
+	    case 2:
+	      dFn = WLZ_APX_EUCLIDEAN_DISTANCE;
+	      break;
 	    case 4:
 	      dFn = WLZ_4_DISTANCE;
 	      break;
@@ -168,6 +180,12 @@ int		main(int argc, char *argv[])
 	break;
       case 'f':
 	forFileStr = optarg;
+	break;
+      case 'p':
+	if(sscanf(optarg, "%lg", &dParam) != 1)
+	{
+	  usage = 1;
+	}
 	break;
       case 'o':
 	outFileStr = optarg;
@@ -262,7 +280,7 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     dstObj = WlzAssignObject(
-    	     WlzDistanceTransform(forObj, refObj, dFn, &errNum), NULL);
+    	     WlzDistanceTransform(forObj, refObj, dFn, dParam, &errNum), NULL);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -302,7 +320,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-b] [-c#] [-f#] [-o#] [-h] [<Reference input file>]\n"
+    "Usage: %s [-b] [-d#] [-f#] [-p#] [-o#] [-h] [<Reference input file>]\n"
     "Computes a distance transform object which has the domain of the\n"
     "foreground object and values which are the distance from the reference\n"
     "object.\n"
@@ -311,12 +329,17 @@ int		main(int argc, char *argv[])
     "  -d  Distance function:\n"
     "              0: Euclidean (2D and 3D, unimplemented)\n"
     "              1: octagonal (2D and 3D) - default\n"
+    "              2: approximate Euclidean (2D and 3D)\n"
     "              4: 4-connected (2D)\n"
     "              8: 8-connected (2D)\n"
     "              6: 6-connected (3D)\n"
     "             18: 18-connected (3D)\n"
     "             26: 26-connected (3D)\n"
     "  -f  The foreground object file.\n" 
+    "  -p  Distance function parameter, which is curently only used for\n"
+    "      approximate Euclidean distance transforms. The value should\n"
+    "      be >= 1, with larger values giving greater accuracy at the\n"
+    "      cost of increased time. Default value - 10.0.\n"
     "  -o  Output object file.\n"
     "  -h  Help - prints this usage message\n",
     argv[0]);
