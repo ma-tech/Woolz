@@ -519,7 +519,8 @@ typedef enum _WlzDistanceType
   WLZ_18_DISTANCE		= WLZ_18_CONNECTED,
   WLZ_26_DISTANCE		= WLZ_26_CONNECTED,
   WLZ_OCTAGONAL_DISTANCE,
-  WLZ_EUCLIDEAN_DISTANCE
+  WLZ_EUCLIDEAN_DISTANCE,
+  WLZ_APX_EUCLIDEAN_DISTANCE		/*! Approximate Euclidean. */
 } WlzDistanceType;
 
 /*!
@@ -616,7 +617,9 @@ typedef enum _WlzInterpolationType
 {
   WLZ_INTERPOLATION_NEAREST     = 0,	/*!< Nearest neighbour. */
   WLZ_INTERPOLATION_LINEAR,		/*!< Linear or tri-linear. */
-  WLZ_INTERPOLATION_CLASSIFY_1		/*!< Classification by probability. */
+  WLZ_INTERPOLATION_CLASSIFY_1,		/*!< Classification by probability. */
+  WLZ_INTERPOLATION_CALLBACK		/*!< Callback function computes
+					     each interpolated value. */
 } WlzInterpolationType;
 
 /*!
@@ -3686,6 +3689,33 @@ typedef struct _WlzGreyValueWSpace
   int		bkdFlag;	  	/*!< Flag set to 1 if background used
   					     else 0. */
 } WlzGreyValueWSpace;
+
+/************************************************************************
+* Transform callback functions
+************************************************************************/
+
+/*!
+* \typedef	WlzAffineTransformCbFn
+* \ingroup	WlzTransform
+* \brief	Callback function for the WlzAffineTransformCb()
+* 		which may be used for value interpolation of an
+* 		interval of destination values.
+*
+* 		The parameters are:
+*		\arg cbData Callback data passed to WlzAffineTransformCb().
+*		\arg gWSp   Target grey workspace.
+*		\arg gVWSp  Source grey value workspace.
+*		\arg invTr  Affine transform from target to source.
+*		\arg pln    Plane of interval in destination.
+*		\arg ln     Line of interval in destination.
+*/
+#ifndef WLZ_EXT_BIND
+typedef WlzErrorNum (*WlzAffineTransformCbFn)(void *cbData,
+    				      struct _WlzGreyWSpace *gWSp,
+                                      struct _WlzGreyValueWSpace *gVWSp,
+				      struct _WlzAffineTransform *invTr,
+				      int pln, int ln);
+#endif
 
 /************************************************************************
 * Finite Element and Warping structures.			
