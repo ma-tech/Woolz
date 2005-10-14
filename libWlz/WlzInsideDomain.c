@@ -48,7 +48,7 @@
 * \param	dstErr			Destination error pointer, may
 *                                       be NOT NULL.
 */
-static int	WlzInsideDomain2D(WlzIntervalDomain *iDom,
+int		WlzInsideDomain2D(WlzIntervalDomain *iDom,
 				  int line,  int kol,
 				  WlzErrorNum *dstErr)
 {
@@ -107,7 +107,7 @@ static int	WlzInsideDomain2D(WlzIntervalDomain *iDom,
 * \param	dstErr			Destination error pointer, may
 *                                       be NOT NULL.
 */
-static int	WlzInsideDomain3D(WlzPlaneDomain *pDom,
+int		WlzInsideDomain3D(WlzPlaneDomain *pDom,
 				  int plane, int line,  int kol,
 				  WlzErrorNum *dstErr)
 {
