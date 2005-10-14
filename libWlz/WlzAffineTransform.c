@@ -67,11 +67,15 @@ static WlzBoundList 		*WlzAffineTransformBoundList(WlzBoundList *,
 static WlzErrorNum 		WlzAffineTransformValues2(WlzObject *newObj,
 				  WlzObject *srcObj,
 				  WlzAffineTransform *tr,
-				  WlzInterpolationType interp);
+				  WlzInterpolationType interp,
+				  void *cbData,
+				  WlzAffineTransformCbFn cbFn);
 static WlzErrorNum 		WlzAffineTransformValues3(WlzObject *newObj,
 				  WlzObject *srcObj,
 				  WlzAffineTransform *tr,
-				  WlzInterpolationType interp);
+				  WlzInterpolationType interp,
+				  void *cbData,
+				  WlzAffineTransformCbFn cbFn);
 static WlzErrorNum 		WlzAffineTransformPrimSet2(
 				  WlzAffineTransform *tr,
 				  WlzAffineTransformPrim prim);
@@ -214,10 +218,10 @@ static int	WlzAffineTransformIsTranslate2(WlzAffineTransform *tr,
       /* Given an object: Check for integer translation within the bounding
        * box of the given object. */
       box = WlzBoundingBox2I(obj, &errNum);
-      tstV[0].vtX = box.xMin; tstV[0].vtY = box.yMin;
-      tstV[1].vtX = box.xMin; tstV[1].vtY = box.yMax;
-      tstV[2].vtX = box.xMax; tstV[2].vtY = box.yMin;
-      tstV[3].vtX = box.xMax; tstV[3].vtY = box.yMax;
+      tstV[0].vtX = (double )(box.xMin); tstV[0].vtY = (double )(box.yMin);
+      tstV[1].vtX = (double )(box.xMin); tstV[1].vtY = (double )(box.yMax);
+      tstV[2].vtX = (double )(box.xMax); tstV[2].vtY = (double )(box.yMin);
+      tstV[3].vtX = (double )(box.xMax); tstV[3].vtY = (double )(box.yMax);
       idx = 0;
       do
       {
@@ -293,14 +297,30 @@ static int	WlzAffineTransformIsTranslate3(WlzAffineTransform *tr,
       /* Given an object: Check for integer translation within the bounding
        * box of the given object. */
       box = WlzBoundingBox3I(obj, &errNum);
-      tstV[0].vtX = box.xMin; tstV[0].vtY = box.yMin; tstV[0].vtZ = box.zMin;
-      tstV[1].vtX = box.xMax; tstV[1].vtY = box.yMin; tstV[1].vtZ = box.zMin;
-      tstV[2].vtX = box.xMin; tstV[2].vtY = box.yMax; tstV[2].vtZ = box.zMin;
-      tstV[3].vtX = box.xMax; tstV[3].vtY = box.yMax; tstV[3].vtZ = box.zMin;
-      tstV[4].vtX = box.xMin; tstV[4].vtY = box.yMin; tstV[4].vtZ = box.zMax;
-      tstV[5].vtX = box.xMax; tstV[5].vtY = box.yMin; tstV[5].vtZ = box.zMax;
-      tstV[6].vtX = box.xMin; tstV[6].vtY = box.yMax; tstV[6].vtZ = box.zMax;
-      tstV[7].vtX = box.xMin; tstV[7].vtY = box.yMin; tstV[7].vtZ = box.zMax;
+      tstV[0].vtX = (double )(box.xMin);
+      tstV[0].vtY = (double )(box.yMin);
+      tstV[0].vtZ = (double )(box.zMin);
+      tstV[1].vtX = (double )(box.xMax);
+      tstV[1].vtY = (double )(box.yMin);
+      tstV[1].vtZ = (double )(box.zMin);
+      tstV[2].vtX = (double )(box.xMin);
+      tstV[2].vtY = (double )(box.yMax);
+      tstV[2].vtZ = (double )(box.zMin);
+      tstV[3].vtX = (double )(box.xMax);
+      tstV[3].vtY = (double )(box.yMax);
+      tstV[3].vtZ = (double )(box.zMin);
+      tstV[4].vtX = (double )(box.xMin);
+      tstV[4].vtY = (double )(box.yMin);
+      tstV[4].vtZ = (double )(box.zMax);
+      tstV[5].vtX = (double )(box.xMax);
+      tstV[5].vtY = (double )(box.yMin);
+      tstV[5].vtZ = (double )(box.zMax);
+      tstV[6].vtX = (double )(box.xMin);
+      tstV[6].vtY = (double )(box.yMax);
+      tstV[6].vtZ = (double )(box.zMax);
+      tstV[7].vtX = (double )(box.xMin);
+      tstV[7].vtY = (double )(box.yMin);
+      tstV[7].vtZ = (double )(box.zMax);
       idx = 0;
       do
       {
@@ -640,10 +660,10 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
     /* Transform vertex geometries. */
     idx = 0;
     vec = dstM->res.vertexG.vec;
-    cnt = dstM->res.vertexG.numIdx;
+    cnt = (int )(dstM->res.vertexG.numIdx);
     while((idx < cnt) && (errNum == WLZ_ERR_NONE))
     {
-      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
       if(elmP.core && (elmP.core->idx >= 0))
       {
         switch(dstM->type)
@@ -689,10 +709,10 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
     /* Transform shell geometries. */
     idx = 0;
     vec = dstM->res.shellG.vec;
-    cnt = dstM->res.shellG.numIdx;
+    cnt = (int )(dstM->res.shellG.numIdx);
     while((idx < cnt) && (errNum == WLZ_ERR_NONE))
     {
-      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, idx);
+      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
       if(elmP.core && (elmP.core->idx >= 0))
       {
         switch(dstM->type)
@@ -890,6 +910,10 @@ WlzErrorNum 	WlzAffineTransformGMShell(WlzGMShell *shell,
 * \return				Error number.
 * \brief	Creates a new value table, fills in the values and
 *		adds it to the given new object.
+*		The interpolation data and function may both be NULL
+*		unless the interpolation type is WLZ_INTERPOLATION_CALLBACK
+*		in which case the interpolation callback function will
+*		be called for each interpolated value.
 *		Because this is a static function the parameters are
 *		not checked.
 * \param	newObj			Partialy transformed object
@@ -899,11 +923,16 @@ WlzErrorNum 	WlzAffineTransformGMShell(WlzGMShell *shell,
 * \param	trans			Given affine transform.
 * \param	interp			Level of interpolation to
 *					use.
+* \param	cbData			Data passed to the directly to
+* 					the callback function.
+* \param	cbFn			Callback function.
 */
 static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 					     WlzObject *srcObj,
 					     WlzAffineTransform *trans,
-					     WlzInterpolationType interp)
+					     WlzInterpolationType interp,
+					     void *cbData,
+					     WlzAffineTransformCbFn cbFn)
 {
   int		count, indx;
   double	tD0,
@@ -1030,14 +1059,14 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       ((gVWSp->gVal[1]).shv * tD0 * (1.0 - tD1)) +
 		       ((gVWSp->gVal[2]).shv * (1.0 - tD0) * tD1) +
 		       ((gVWSp->gVal[3]).shv * tD0 * tD1));
-		*(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
+		*(gWSp.u_grintptr.shp)++ = (short )WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_UBYTE:
 		tD0 = (((gVWSp->gVal[0]).ubv * (1.0 - tD0) * (1.0 - tD1)) +
 		       ((gVWSp->gVal[1]).ubv * tD0 * (1.0 - tD1)) +
 		       ((gVWSp->gVal[2]).ubv * (1.0 - tD0) * tD1) +
 		       ((gVWSp->gVal[3]).ubv * tD0 * tD1));
-		*(gWSp.u_grintptr.ubp)++ = WLZ_CLAMP(tD0, 0, 255);
+		*(gWSp.u_grintptr.ubp)++ = (UBYTE )WLZ_CLAMP(tD0, 0, 255);
 		break;
 	      case WLZ_GREY_FLOAT:
 		tD0 = (((gVWSp->gVal[0]).flv * (1.0 - tD0) * (1.0 - tD1)) +
@@ -1054,11 +1083,48 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		*(gWSp.u_grintptr.dbp)++ = tD0;
 		break;
 	      case WLZ_GREY_RGBA:
-		tD0 = (((gVWSp->gVal[0]).rgbv * (1.0 - tD0) * (1.0 - tD1)) +
-		       ((gVWSp->gVal[1]).rgbv * tD0 * (1.0 - tD1)) +
-		       ((gVWSp->gVal[2]).rgbv * (1.0 - tD0) * tD1) +
-		       ((gVWSp->gVal[3]).rgbv * tD0 * tD1));
-		*(gWSp.u_grintptr.rgbp)++ = tD0;
+		tD0 = ((WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
+		        (1.0 - tD0) * (1.0 - tD1)) +
+		       (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
+			tD0 * (1.0 - tD1)) +
+		       (WLZ_RGBA_RED_GET((gVWSp->gVal[2]).rgbv) *
+			(1.0 - tD0) * tD1) +
+		       (WLZ_RGBA_RED_GET((gVWSp->gVal[3]).rgbv) *
+			tD0 * tD1));
+                WLZ_RGBA_RED_SET(*(gWSp.u_grintptr.rgbp),
+		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
+		tD0 = ((WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
+		        (1.0 - tD0) * (1.0 - tD1)) +
+		       (WLZ_RGBA_GREEN_GET((gVWSp->gVal[1]).rgbv) *
+			tD0 * (1.0 - tD1)) +
+		       (WLZ_RGBA_GREEN_GET((gVWSp->gVal[2]).rgbv) *
+			(1.0 - tD0) * tD1) +
+		       (WLZ_RGBA_GREEN_GET((gVWSp->gVal[3]).rgbv) *
+			tD0 * tD1));
+                WLZ_RGBA_GREEN_SET(*(gWSp.u_grintptr.rgbp),
+		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
+		tD0 = ((WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
+		        (1.0 - tD0) * (1.0 - tD1)) +
+		       (WLZ_RGBA_BLUE_GET((gVWSp->gVal[1]).rgbv) *
+			tD0 * (1.0 - tD1)) +
+		       (WLZ_RGBA_BLUE_GET((gVWSp->gVal[2]).rgbv) *
+			(1.0 - tD0) * tD1) +
+		       (WLZ_RGBA_BLUE_GET((gVWSp->gVal[3]).rgbv) *
+			tD0 * tD1));
+                WLZ_RGBA_BLUE_SET(*(gWSp.u_grintptr.rgbp),
+		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
+		tD0 = ((WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
+		        (1.0 - tD0) * (1.0 - tD1)) +
+		       (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[1]).rgbv) *
+			tD0 * (1.0 - tD1)) +
+		       (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[2]).rgbv) *
+			(1.0 - tD0) * tD1) +
+		       (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[3]).rgbv) *
+			tD0 * tD1));
+                WLZ_RGBA_ALPHA_SET(*(gWSp.u_grintptr.rgbp),
+		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
+
+		++(gWSp.u_grintptr.rgbp);
 		break;
 	    }
 	    ++(posI.vtX);
@@ -1074,29 +1140,29 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	{
 	case WLZ_GREY_INT:
 	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (gVWSp->gVal[indx]).inv;
+	    gTmp[indx] = (double )((gVWSp->gVal[indx]).inv);
 	  }
 	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 	  *(gWSp.u_grintptr.inp)++ = WLZ_NINT(tD0);
 	  break;
 	case WLZ_GREY_SHORT:
 	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (gVWSp->gVal[indx]).shv;
+	    gTmp[indx] = (double )((gVWSp->gVal[indx]).shv);
 	  }
 	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 	  *(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
 	  break;
 	case WLZ_GREY_UBYTE:
 	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (gVWSp->gVal[indx]).ubv;
+	    gTmp[indx] = (double )((gVWSp->gVal[indx]).ubv);
 	  }
 	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 	  WLZ_CLAMP(tD0, 0.0, 255.0);
-	  *(gWSp.u_grintptr.ubp)++ = WLZ_NINT(tD0);
+	  *(gWSp.u_grintptr.ubp)++ = (UBYTE )WLZ_NINT(tD0);
 	  break;
 	case WLZ_GREY_FLOAT:
 	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (gVWSp->gVal[indx]).flv;
+	    gTmp[indx] = (double )((gVWSp->gVal[indx]).flv);
 	  }
 	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 	  *(gWSp.u_grintptr.flp)++ = tD0;
@@ -1110,12 +1176,16 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	  break;
 	case WLZ_GREY_RGBA:
 	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (gVWSp->gVal[indx]).rgbv;
+	    gTmp[indx] = (double )((gVWSp->gVal[indx]).rgbv);
 	  }
 	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  *(gWSp.u_grintptr.rgbp)++ = tD0;
+	  *(gWSp.u_grintptr.rgbp)++ = (UINT )tD0;
 	  break;
 	}
+      case WLZ_INTERPOLATION_CALLBACK:
+	errNum = (*cbFn)(cbData, &gWSp, gVWSp, invTrans,
+	                 0, posI.vtY);
+	break;
       default:
 	errNum = WLZ_ERR_INTERPOLATION_TYPE;
 	break;
@@ -1147,11 +1217,16 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 * \param	trans			Given affine transform.
 * \param	interp			Level of interpolation to
 *					use.
+* \param	cbData			Data passed to the directly to
+* 					the callback function.
+* \param	cbFn			Callback function.
 */
 static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 					     WlzObject *srcObj,
 					     WlzAffineTransform *trans,
-					     WlzInterpolationType interp)
+					     WlzInterpolationType interp,
+					     void *cbData,
+					     WlzAffineTransformCbFn cbFn)
 {
   int		tI0,
   		count;
@@ -1258,10 +1333,11 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 	    case WLZ_INTERPOLATION_NEAREST:
 	      while(count-- > 0)
 	      {
-		sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
-		sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
-		sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
-		WlzGreyValueGet(gVWSp, sPos.vtZ, sPos.vtY, sPos.vtX);
+		sPos.vtX = tMat[0][1] + (tMat[0][0] * (double )(dPos.vtX));
+		sPos.vtY = tMat[1][1] + (tMat[1][0] * (double )(dPos.vtX));
+		sPos.vtZ = tMat[2][1] + (tMat[2][0] * (double )(dPos.vtX));
+		WlzGreyValueGet(gVWSp, (double )(sPos.vtZ),
+		                (double )(sPos.vtY), (double )(sPos.vtX));
 		switch(gWSp.pixeltype)
 		{
 		  case WLZ_GREY_INT:
@@ -1321,7 +1397,8 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
 		      ((gVWSp->gVal[7]).inv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
-		    tD0 = WLZ_CLAMP(tD0, INT_MIN, INT_MAX);
+		    tD0 = WLZ_CLAMP(tD0,
+			            (double )(INT_MIN), (double )(INT_MAX));
 		    tI0 = WLZ_NINT(tD0);
 		    *(gWSp.u_grintptr.inp)++ = tI0;
 		    break;
@@ -1342,7 +1419,8 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
 		      ((gVWSp->gVal[7]).shv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
-		    tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
+		    tD0 = WLZ_CLAMP(tD0,
+			            (double )(SHRT_MIN), (double )(SHRT_MAX));
 		    tI0 = WLZ_NINT(tD0);
 		    *(gWSp.u_grintptr.shp)++ = tI0;
 		    break;
@@ -1363,7 +1441,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
 		      ((gVWSp->gVal[7]).ubv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
-		    tD0 = WLZ_CLAMP(tD0, 0, 255);
+		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
 		    tI0 = WLZ_NINT(tD0);
 		    *(gWSp.u_grintptr.ubp)++ = tI0;
 		    break;
@@ -1407,24 +1485,83 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		    *(gWSp.u_grintptr.dbp)++ = tD0;
 		    break;
 		  case WLZ_GREY_RGBA:
-		    tD0 = ((gVWSp->gVal[0]).rgbv *
-			tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
-		      ((gVWSp->gVal[1]).rgbv *
-		       tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
-		      ((gVWSp->gVal[2]).rgbv *
-		       tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
-		      ((gVWSp->gVal[3]).rgbv *
-		       tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
-		      ((gVWSp->gVal[4]).rgbv *
-		       tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
-		      ((gVWSp->gVal[5]).rgbv *
-		       tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
-		      ((gVWSp->gVal[6]).rgbv *
-		       tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
-		      ((gVWSp->gVal[7]).rgbv *
-		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
-		    tD0 = WLZ_CLAMP(tD0, 0, 0xffffffff);
-		    *(gWSp.u_grintptr.dbp)++ = tD0;
+		    tD0 = (WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[2]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[3]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[4]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[5]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[6]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_RED_GET((gVWSp->gVal[7]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		    tI0 = WLZ_NINT(tD0);
+		    WLZ_RGBA_RED_SET(*(gWSp.u_grintptr.rgbp), (UBYTE )tI0);
+		    tD0 = (WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[1]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[2]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[3]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[4]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[5]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[6]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[7]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		    tI0 = WLZ_NINT(tD0);
+		    WLZ_RGBA_GREEN_SET(*(gWSp.u_grintptr.rgbp), (UBYTE )tI0);
+		    tD0 = (WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[1]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[2]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[3]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[4]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[5]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[6]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[7]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		    tI0 = WLZ_NINT(tD0);
+		    WLZ_RGBA_BLUE_SET(*(gWSp.u_grintptr.rgbp), (UBYTE )tI0);
+		    tD0 = (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[1]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[2]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[3]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[4]).rgbv) *
+			   tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[5]).rgbv) *
+			   tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[6]).rgbv) *
+			   tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[7]).rgbv) *
+			   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		    tI0 = WLZ_NINT(tD0);
+		    WLZ_RGBA_ALPHA_SET(*(gWSp.u_grintptr.rgbp), (UBYTE )tI0);
+		    ++(gWSp.u_grintptr.rgbp);
 		    break;
 		  default:
 		    errNum = WLZ_ERR_GREY_TYPE;
@@ -1432,6 +1569,10 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		}
 		++(dPos.vtX);
 	      }
+	      break;
+	    case WLZ_INTERPOLATION_CALLBACK:
+	      errNum = (*cbFn)(cbData, &gWSp, gVWSp, invTrans,
+		               dPos.vtZ, dPos.vtY);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_INTERPOLATION_TYPE;
@@ -1456,6 +1597,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
       ++(dPos.vtZ);
     }
   }
+  WlzGreyValueFreeWSp(gVWSp);
   if(invTrans)
   {
     (void )WlzFreeAffineTransform(invTrans);
@@ -1517,7 +1659,8 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
     pMskOrg.vtY = bBox.yMin;
     pMskSz.vtX = bBox.xMax - bBox.xMin + 1;
     pMskSz.vtY = bBox.yMax - bBox.yMin + 1;
-    if(AlcBit2Calloc(&pMsk, pMskSz.vtY+1, pMskSz.vtX) != ALC_ER_NONE)
+    if(AlcBit2Calloc(&pMsk, (size_t )(pMskSz.vtY + 1),
+	             (size_t )(pMskSz.vtX)) != ALC_ER_NONE)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -1548,7 +1691,7 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 	idx.vtX = 0;
 	dPos.vtX = bBox.xMin;
 	lMsk = *(pMsk + idx.vtY);
-	memset(lMsk, 0, (pMskSz.vtX+7)/8);
+	memset(lMsk, 0, (size_t )((pMskSz.vtX + 7)/8));
 	tMat[0][1] = tMat[0][2] + (invTrans->mat[0][1] * dPos.vtY);
 	tMat[1][1] = tMat[1][2] + (invTrans->mat[1][1] * dPos.vtY);
 	tMat[2][1] = tMat[2][2] + (invTrans->mat[2][1] * dPos.vtY);
@@ -1557,8 +1700,9 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 	  sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
           sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
           sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
-	  insideFlg = WlzInsideDomain(srcObj, sPos.vtZ, sPos.vtY, sPos.vtX, 
-	  			      NULL) != 0;
+	  insideFlg = WlzInsideDomain(srcObj,
+	                              (double )(sPos.vtZ), (double )(sPos.vtY),
+				      (double )(sPos.vtX), NULL) != 0;
 	  *(lMsk + (idx.vtX / 8)) |= insideFlg << (idx.vtX % 8);
 	  ++(idx.vtX);
 	  ++(dPos.vtX);
@@ -1585,7 +1729,7 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
   }
   if(pMsk)
   {
-    Alc2Free((void **)pMsk);
+    (void )Alc2Free((void **)pMsk);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1841,7 +1985,7 @@ WlzAffineTransform *WlzAffineTransformFromTranslation(WlzTransformType type,
     if((errNum = WlzAffineTransformTranslationSet(newTr,
     					     tx, ty, tz)) != WLZ_ERR_NONE)
     {
-      WlzFreeAffineTransform(newTr);
+      (void )WlzFreeAffineTransform(newTr);
       newTr = NULL;
     }
   }
@@ -1929,7 +2073,7 @@ WlzAffineTransform *WlzAffineTransformFromScale(WlzTransformType type,
     if((errNum = WlzAffineTransformScaleSet(newTr,
 					    sx, sy, sz)) != WLZ_ERR_NONE)
     {
-      WlzFreeAffineTransform(newTr);
+      (void )WlzFreeAffineTransform(newTr);
       newTr = NULL;
     }
   }
@@ -2032,7 +2176,7 @@ WlzAffineTransform *WlzAffineTransformFromRotation(WlzTransformType type,
     if((errNum = WlzAffineTransformRotationSet(newTr,
     					     rx, ry, rz)) != WLZ_ERR_NONE)
     {
-      WlzFreeAffineTransform(newTr);
+      (void )WlzFreeAffineTransform(newTr);
       newTr = NULL;
     }
   }
@@ -2319,7 +2463,7 @@ WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType type,
     {
       if((errNum = WlzAffineTransformMatrixSet(newTr, matrix)) != WLZ_ERR_NONE)
       {
-	WlzFreeAffineTransform(newTr);
+	(void )WlzFreeAffineTransform(newTr);
 	newTr = NULL;
       }
     }
@@ -2378,7 +2522,7 @@ WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType type,
 					 trInvert);
     if(errNum != WLZ_ERR_NONE)
     {
-      WlzFreeAffineTransform(newTr);
+      (void )WlzFreeAffineTransform(newTr);
       newTr = NULL;
     }
   }
@@ -2786,6 +2930,36 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 				       WlzInterpolationType interp,
 				       WlzErrorNum *dstErr)
 {
+  return(WlzAffineTransformObjCb(srcObj, trans, interp, NULL, NULL, dstErr));
+}
+
+/*!
+* \ingroup	WlzTransform
+* \return				Transformed object, NULL on
+*					error.
+* \brief	Applies the given affine transform to the given Woolz
+*		object.
+*		The interpolation data and function may both be NULL
+*		unless the interpolation type is WLZ_INTERPOLATION_CALLBACK
+*		in which case the interpolation callback function will
+*		be called for each interpolated value.
+* \param	srcObj			Object to be transformed.
+* \param	trans			Affine transform to apply.
+* \param	interp			Level of interpolation to
+*					use.
+* \param	cbData			Data passed to the directly to
+* 					the callback function.
+* \param	cbFn			Callback function.
+* \param	dstErr			Destination pointer for error
+*					number, may be NULL.
+*/
+WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
+					 WlzAffineTransform *trans,
+					 WlzInterpolationType interp,
+					 void *cbData,
+					 WlzAffineTransformCbFn cbFn,
+					 WlzErrorNum *dstErr)
+{
   WlzDomain	srcDom,
   		dstDom;
   WlzValues	srcValues,
@@ -2796,14 +2970,38 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformObj FE 0x%lx 0x%lx %d 0x%lx\n",
+	  ("WlzAffineTransformObj FE 0x%lx 0x%lx %d 0x%lx 0x%lx 0x%lx\n",
 	   (unsigned long )srcObj, (unsigned long )trans,
-	   (int )interp, (unsigned long )dstErr));
+	   (int )interp, (unsigned long )cbData, (unsigned long )cbFn,
+	   (unsigned long )dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
+  else if(trans == NULL)
+  {
+    errNum = WLZ_ERR_TRANSFORM_NULL;
+  }
   else
+  {
+    switch(interp)
+    {
+      case WLZ_INTERPOLATION_NEAREST: /* FALLTHROUGH */
+      case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
+      case WLZ_INTERPOLATION_CLASSIFY_1:
+	break;
+      case WLZ_INTERPOLATION_CALLBACK:
+	if(cbFn == NULL)
+	{
+	  errNum = WLZ_ERR_PARAM_NULL;
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_PARAM_DATA;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     dstDom.core = NULL;
     dstValues.core = NULL;
@@ -2867,7 +3065,8 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	{
 	  errNum = WLZ_ERR_DOMAIN_NULL;
 	} 
-	else if(WlzAffineTransformIsTranslate(trans, srcObj, NULL))
+	else if((interp != WLZ_INTERPOLATION_CALLBACK) &&
+	        WlzAffineTransformIsTranslate(trans, srcObj, NULL))
 	{
 	  dstObj = WlzAffineTransformIntTranslate(srcObj, trans, &errNum);
 	}
@@ -2878,30 +3077,31 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	  tObj0 = WlzObjToBoundary(srcObj, 1, &errNum);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    tObj1 = WlzAffineTransformObj(tObj0, trans, interp, &errNum);
-	    WlzFreeObj(tObj0);
+	    tObj1 = WlzAffineTransformObjCb(tObj0, trans, interp,
+		                            cbData, cbFn, &errNum);
+	    (void )WlzFreeObj(tObj0);
 	    tObj0 = NULL;
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    dstObj = WlzBoundToObj(tObj1->domain.b, WLZ_SIMPLE_FILL,
 				   &errNum);
-	    WlzFreeObj(tObj1);
+	    (void )WlzFreeObj(tObj1);
 	    tObj1 = NULL;
 	  }
 	  if((errNum == WLZ_ERR_NONE) &&
 	     (srcObj->values.core) )
 	  {
 	    errNum = WlzAffineTransformValues2(dstObj, srcObj, trans,
-						interp);
+						interp, cbData, cbFn);
 	  }
 	  if(tObj0)
 	  {
-	    WlzFreeObj(tObj0);
+	    (void )WlzFreeObj(tObj0);
 	  }
 	  if(tObj1)
 	  {
-	    WlzFreeObj(tObj1);
+	    (void )WlzFreeObj(tObj1);
 	  }
 	}
 	break;
@@ -2912,7 +3112,8 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	{
 	  errNum = WLZ_ERR_DOMAIN_NULL;
 	} 
-	else if(WlzAffineTransformIsTranslate(trans, srcObj, NULL))
+	else if((interp != WLZ_INTERPOLATION_CALLBACK) &&
+	        WlzAffineTransformIsTranslate(trans, srcObj, NULL))
 	{
 	  dstObj = WlzAffineTransformIntTranslate(srcObj, trans, &errNum);
 	}
@@ -2927,7 +3128,7 @@ WlzObject	*WlzAffineTransformObj(WlzObject *srcObj,
 	  if((errNum == WLZ_ERR_NONE) && (srcValues.core != NULL))
 	  {
 	    errNum = WlzAffineTransformValues3(dstObj, srcObj, trans,
-	    				       interp);
+	    				       interp, cbData, cbFn);
 	  }
 	}
 	else
@@ -2966,8 +3167,8 @@ WlzIVertex2	WlzAffineTransformVertexI2(WlzAffineTransform *trans,
   WlzIVertex2	dstVtx;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  dVtx.vtX = srcVtx.vtX;
-  dVtx.vtY = srcVtx.vtY;
+  dVtx.vtX = (double )(srcVtx.vtX);
+  dVtx.vtY = (double )(srcVtx.vtY);
   dVtx = WlzAffineTransformVertexD2(trans, dVtx, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2998,9 +3199,9 @@ WlzIVertex3	WlzAffineTransformVertexI3(WlzAffineTransform *trans,
   WlzIVertex3	dstVtx;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  dVtx.vtX = srcVtx.vtX;
-  dVtx.vtY = srcVtx.vtY;
-  dVtx.vtZ = srcVtx.vtZ;
+  dVtx.vtX = (double )(srcVtx.vtX);
+  dVtx.vtY = (double )(srcVtx.vtY);
+  dVtx.vtZ = (double )(srcVtx.vtZ);
   dVtx = WlzAffineTransformVertexD3(trans, dVtx, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
