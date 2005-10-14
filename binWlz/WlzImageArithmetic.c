@@ -44,7 +44,7 @@ WlzImageArithmetic - binary image arithmetic on a pair of domain objects.
 \par Synopsis
 \verbatim
 WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-m] [-s] [-n] [-N] [-h]
-                   [<in object 0>] [<in object 1>]
+                   [-O#] [<in object 0>] [<in object 1>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -88,6 +88,10 @@ WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-m] [-s] [-n] [-N] [-h]
   <tr>
     <td><b>-N</b></td>
     <td>Normalises the output objects to the range [0-255].</td>
+  </tr>
+  <tr>
+    <td><b>-O</b></td>
+    <td>Overwrite option (only useful for debugging).</td>
   </tr>
 </table>
 \par Description
@@ -133,6 +137,7 @@ int             main(int argc, char **argv)
 {
   int		idx,
 		option,
+		overwrite = 1,
 		ok = 1,
 		usage = 0;
   WlzImArNorm	norm = WLZ_IMARNORM_NONE;
@@ -146,7 +151,7 @@ int             main(int argc, char **argv)
   WlzPixelV	gMin[3],
   		gMax[3];
   const char	*errMsg;
-  static char	optList[] = "o:adglmsnNh",
+  static char	optList[] = "O:o:adglmsnNh",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -160,6 +165,14 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'O':
+	if((sscanf(optarg, "%d", &overwrite) != 1) ||
+	   (overwrite < 0) || (overwrite > 2))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -391,26 +404,18 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
   }
-  if(inObj[0])
-  {
-    WlzFreeObj(inObj[0]);
-  }
-  if(inObj[1])
-  {
-    WlzFreeObj(inObj[1]);
-  }
-  if(outObj)
-  {
-    WlzFreeObj(outObj);
-  }
+  WlzFreeObj(inObj[0]);
+  WlzFreeObj(inObj[1]);
+  WlzFreeObj(outObj);
   if(usage)
   {
     (void )fprintf(stderr,
     "Usage: %s%sExample:\n%s%s%s",
     *argv,
-    " [-o<out file>] [-a] [-d] [-l] [-m] [-s] [-h] "
+    " [-O#] [-o<out file>] [-a] [-d] [-l] [-m] [-s] [-h] "
     "[<in object 0>] [<in object 1>]\n"
     "Options:\n"
+    "  -O  Overwrite option (only useful for debugging)\n"
     "  -o  Output file name.\n"
     "  -a  Add the object's grey values.\n"
     "  -d  Divide the grey values of the 1st object by those of the 2nd.\n"
