@@ -103,6 +103,7 @@ typedef enum _WlzErrorNum
   				     interval.  */
   WLZ_ERR_INTERVAL_BOUND,	/*!< Interval bounds are invalid. */
   WLZ_ERR_INTERVAL_NUMBER,	/*!< Number of intervals is incorrect. */
+  WLZ_ERR_TRANSFORM_NULL,	/*!< Transform is NULL. */
   WLZ_ERR_TRANSFORM_DATA,	/*!< Transform data is invalid or
   				     inappropriate. */
   WLZ_ERR_TRANSFORM_TYPE,	/*!< Transform type is invalid or

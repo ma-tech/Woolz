@@ -1127,6 +1127,10 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
     errStr = "WLZ_ERR_INTERVAL_NUMBER",
       msgStr = "Interval number";
     break;
+  case WLZ_ERR_TRANSFORM_NULL:
+    errStr = "WLZ_ERR_TRANSFORM_NULL",
+      msgStr = "NULL transform";
+    break;
   case WLZ_ERR_TRANSFORM_DATA:
     errStr = "WLZ_ERR_TRANSFORM_DATA",
       msgStr = "Transform data";
@@ -1295,6 +1299,7 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_INTERVAL_ADJACENT", WLZ_ERR_INTERVAL_ADJACENT,
 	      "WLZ_ERR_INTERVAL_BOUND", WLZ_ERR_INTERVAL_BOUND,
 	      "WLZ_ERR_INTERVAL_NUMBER", WLZ_ERR_INTERVAL_NUMBER,
+	      "WLZ_ERR_TRANSFORM_NULL", WLZ_ERR_TRANSFORM_NULL,
 	      "WLZ_ERR_TRANSFORM_DATA", WLZ_ERR_TRANSFORM_DATA,
 	      "WLZ_ERR_TRANSFORM_TYPE", WLZ_ERR_TRANSFORM_TYPE,
 	      "WLZ_ERR_VOXELVALUES_TYPE", WLZ_ERR_VOXELVALUES_TYPE,
