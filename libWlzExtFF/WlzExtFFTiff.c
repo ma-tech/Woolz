@@ -625,12 +625,6 @@ static WlzErrorNum WlzEffWriteTiffDirObj(
 	    break;
 	  case WLZ_GREY_RGBA:
 	    for(i=0, j=0; i < width; i++){
-/* HACK
-	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0x00ff0000)>>16;
-	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0x0000ff00)>>8;
-	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0x000000ff);
-	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0xff000000)>>24;
-HACK */
 	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0x000000ff);
 	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0x0000ff00)>>8;
 	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0x00ff0000)>>16;
