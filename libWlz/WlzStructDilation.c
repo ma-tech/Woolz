@@ -623,8 +623,11 @@ static WlzObject *WlzStructDilation3d(
     nStructPlanes = structElm->domain.p->lastpl -
       structElm->domain.p->plane1 + 1;
     objList = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * nStructPlanes);
+    obj2 = obj1 = NULL;
     for(p=plane1; p <= lastpl; p++, domains++){
       for(i=0; i < nStructPlanes; i++){
+	WlzFreeObj(obj1);
+	WlzFreeObj(obj2);
 	/* get the corresponding object plane */
 	if(((p-i-structElm->domain.p->plane1) >= obj->domain.p->plane1) &&
 	   ((p-i-structElm->domain.p->plane1) <= obj->domain.p->lastpl) &&
@@ -638,7 +641,7 @@ static WlzObject *WlzStructDilation3d(
 	else {
 	  obj1 = WlzMakeEmpty(NULL);
 	}
-	obj1 = WlzAssignObject(obj1, NULL);
+	(void )WlzAssignObject(obj1, NULL);
 	/* get the structuring element plane */
 	if( domains2[i].core ){
 	  obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains2[i], values,
@@ -658,11 +661,9 @@ static WlzObject *WlzStructDilation3d(
       else {
 	*domains = WlzAssignDomain(obj3->domain, NULL);
       }
-      WlzFreeObj(obj1);
-      WlzFreeObj(obj2);
-      if( obj3 ){
-	WlzFreeObj(obj3);
-      }
+      WlzFreeObj(obj1); obj1 = NULL;
+      WlzFreeObj(obj2); obj2 = NULL;
+      WlzFreeObj(obj3);
       for(i=0; i < nStructPlanes; i++){
 	if( objList[i] ){
 	  WlzFreeObj(objList[i]);

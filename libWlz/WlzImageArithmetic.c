@@ -806,6 +806,7 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      (void )WlzFreeValues(obj2->values);
       obj2->values = WlzAssignValues(tVal, NULL);
     }
   }
@@ -877,6 +878,8 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
   {
     AlcFree(buf[1].inp);
   }
+  (void )WlzFreeObj(obj[0]);
+  (void )WlzFreeObj(obj[1]);
   return(errNum);
 }
 
@@ -933,12 +936,15 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   WlzPixelV	bgd[3];
   WlzPlaneDomain *pDom[3];
   WlzVoxelValues *vVal[3];
-  WlzValues	nullValues;
+  WlzValues	tVal,
+		nullValues;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   nullValues.core = NULL;
+  obj[0] = obj[1] = obj[2] = NULL;
   if ((obj0->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN) ||
-           (obj1->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN))
+      (obj1->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN) ||
+      (obj2->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN))
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -966,7 +972,7 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   {
     obj[0] = obj0;
     obj[1] = obj1;
-    obj[2] = WlzIntersect2(obj0, obj1, &errNum);
+    obj[2] = obj2;
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -987,10 +993,12 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
       {
 	bgd[2] = bgd[0];
 	pDom[2] = obj[2]->domain.p;
-	vVal[2] = obj[2]->values.vox =
-	          WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-				      pDom[2]->plane1, pDom[2]->lastpl,
-				      bgd[2], NULL, &errNum);
+	tVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+				       pDom[2]->plane1, pDom[2]->lastpl,
+				       bgd[2], NULL, &errNum);
+	(void )WlzFreeValues(obj[2]->values);
+	vVal[2] = tVal.vox;
+	obj[2]->values = WlzAssignValues(tVal, NULL);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -1001,6 +1009,8 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	  switch(overwrite)
 	  {
 	    case 0: 					/* No values shared. */
+	      (void )WlzFreeValues(*(vVal[2]->values + vIdx[2]));
+	      *(vVal[2]->values + vIdx[2]) = nullValues;
 	      tObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 	      			 *(pDom[2]->domains + pIdx[2]),
 				 nullValues, NULL, NULL, &errNum);
@@ -1012,10 +1022,12 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	      WlzFreeObj(tObj);
 	      break;
 	    case 1: 				 /* Values shared with obj0. */
+	      (void )WlzFreeValues(*(vVal[2]->values + vIdx[2]));
 	      *(vVal[2]->values + vIdx[2]) = WlzAssignValues(
 	        *(vVal[0]->values + vIdx[0]), NULL);
 	      break;
 	    case 2: 				 /* Values shared with obj1. */
+	      (void )WlzFreeValues(*(vVal[2]->values + vIdx[2]));
 	      *(vVal[2]->values + vIdx[2]) = WlzAssignValues(
 	        *(vVal[1]->values + vIdx[1]), NULL);
 	      break;
@@ -1043,22 +1055,13 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    WlzFreeValues(*(vVal[2]->values + pIdx[2]));
+	    (void )WlzFreeValues(*(vVal[2]->values + pIdx[2]));
 	    *(vVal[2]->values + pIdx[2]) = WlzAssignValues(obj2D[2]->values,
 	    						   NULL);
 	  }
-	  if(obj2D[0])
-	  {
-	    (void )WlzFreeObj(obj2D[0]);
-	  }
-	  if(obj2D[1])
-	  {
-	    (void )WlzFreeObj(obj2D[1]);
-	  }
-	  if(obj2D[2])
-	  {
-	    (void )WlzFreeObj(obj2D[2]);
-	  }
+	  (void )WlzFreeObj(obj2D[0]);
+	  (void )WlzFreeObj(obj2D[1]);
+	  (void )WlzFreeObj(obj2D[2]);
 	  ++pIdx[0];
 	  ++vIdx[0];
 	  ++pIdx[1];
@@ -1067,14 +1070,6 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	}
       }
     }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzSetBackground(obj[2], bgd[2]);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    obj2->values = obj[2]->values;
   }
   return(errNum);
 }
@@ -1149,8 +1144,8 @@ WlzObject	*WlzImageArithmetic(WlzObject *obj0, WlzObject *obj1,
 	}
 	else
 	{
-	  obj2 = WlzIntersect2(obj0, obj1, &errNum);
-	  if(errNum == WLZ_ERR_NONE)
+	  obj2 = WlzAssignObject(WlzIntersect2(obj0, obj1, &errNum), NULL);
+	  if(obj2)
 	  {
 	    switch(obj2->type)
 	    {
@@ -1168,13 +1163,10 @@ WlzObject	*WlzImageArithmetic(WlzObject *obj0, WlzObject *obj1,
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    dstObj = obj2;
-	    obj2 = NULL;
+            dstObj = WlzMakeMain(obj2->type, obj2->domain, obj2->values,
+		       		 NULL, NULL, &errNum);
 	  }
-	  else if(obj2)
-	  {
-	    (void )WlzFreeObj(obj2);
-	  }
+	  (void )WlzFreeObj(obj2);
 	}
 	break;
       default:
