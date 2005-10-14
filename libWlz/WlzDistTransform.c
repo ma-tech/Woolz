@@ -37,7 +37,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 #include <Wlz.h>
+
+static WlzObject 		*WlzDistSample(
+				  WlzObject *obj,
+				  int dim,
+				  double scale,
+    			          WlzErrorNum *dstErr);
 
 /*!
 * \return	Distance object which shares the given foreground object's
@@ -45,41 +52,129 @@
 * \ingroup	WlzMorphologyOps
 * \brief	Computes the distance of every pixel/voxel in the foreground
 * 		object from the reference object.
-*		For octagonal distance: 4 and 8 connectivities are alternated
-*		in 2D and 6 and 26 connectivities are alternated in 3D. See:
-*		G. Borgefors. "Distance Transformations in Arbitrary
+*
+*		A distance transform maps all position within a  forground
+*		domain to their distances from a reference domain.
+*		The distance transforms implemented within this function
+*		use efficient morphological primitives.
+*		
+*		Given two domains,
+*		\f$\Omega_r\f$ the reference domain and \f$\Omega_f\f$
+*		the domain specifying the region of interest,
+*		a domain with a thin shell \f$\Omega_i\f$
+*		is iteratively expanded from it's initial domain
+*		corresponding to the reference domain \f$\Omega_r\f$.
+*		At each iteration
+*		\f$\Omega_i\f$ is dilated and clipped
+*		by it's intersection with \f$\Omega_f\f$ until \f$\Omega_i\f$
+*		becomes the null domain \f$\emptyset\f$.
+*		At each iteration the current distance is recorded in a value
+*		table which
+*		covers the domain \f$\Omega_f\f$.
+*
+*		An octagonal distance scheme may be used in which
+*		the distance metric is alternated between 4 and 8
+*		connected for 2D and 6 and 26 connectivities in 3D.
+*		See: G. Borgefors. "Distance Transformations in Arbitrary
 *		Dimensions" CVGIP 27:321-345, 1984.
+*
+* 		An approximate Euclidean distance transform may be computed
+* 		by: Scaling the given foreground and reference objects using
+* 		the given approximation scale parameter, dilating the
+* 		reference domain using a sphere with a radius having the same
+* 		value as the scale parameter and then finaly sampling the
+* 		scaled distances.
 * \param	forObj			Foreground object.
 * \param	refObj			Reference object.
 * \param	dFn			Distance function which must be
 *					appropriate to the dimension of
 *					the foreground and reference objects.
+* \param	dParam			Parameter required for distance
+* 					function. Currently only
+* 					WLZ_APX_EUCLIDEAN_DISTANCE requires a
+* 					parameter. In this case the parameter
+* 					is the approximation scale.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
-				   WlzDistanceType dFn, WlzErrorNum *dstErr)
+				   WlzDistanceType dFn, double dParam,
+				   WlzErrorNum *dstErr)
 {
   int 		idP,
 		lastP,
 		dim,
   		notDone = 1;
-  double	dInc = 1.0;
-  WlzObject	*dilObj,
-  		*dstObj,
-		*difObj,
-		*prvItrObj,
+  double	scale;
+  WlzObject	*tmpObj,
+		*sObj = NULL,
+		*sForObj = NULL,
+		*sRefObj = NULL,
+		*dilObj = NULL,
+  		*dstObj = NULL,
+		*difObj = NULL,
   		*curItrObj = NULL;
   WlzObject 	*bothObj[2];
   WlzDomain	*difDoms;
   WlzPixelV 	dstV,
   		bgdV;
   WlzValues 	*difVals;
+  WlzAffineTransform *tr = NULL;
   WlzConnectType con;
   WlzObjectType dstGType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzValues 	difVal,
-  		dstVal;
+  		dstVal,
+		nullVal;
+  /* By defining WLZ_DIST_TRANSFORM_ENV these normalization parameters
+   * are read from the environment. This is useful for optimization. */
+#ifndef WLZ_DIST_TRANSFORM_ENV
+  const
+#endif /* ! WLZ_DIST_TRANSFORM_ENV */
+  /* These normalizarion factors have been choosen to minimize the sum of
+   * squares of the deviation of the distance values from Euclidean values
+   * over a radius 100 circle or sphere, where the distances are computed
+   * from the circumference of the sphere towards it's centre. The values
+   * were established by experiment. */
+  double	nrmDist4 =  0.97,
+		nrmDist6 =  0.91,
+		nrmDist8 =  1.36,
+		nrmDist18 = 1.34,
+		nrmDist26 = 1.60;
 
+#ifdef WLZ_DIST_TRANSFORM_ENV
+  double	val;
+  char		*envStr;
+
+  if(((envStr = getenv("WLZ_DIST_TRANSFORM_NRMDIST4")) != NULL) &&
+     (sscanf(envStr, "%lg", &val) == 1))
+  {
+    nrmDist4 = val;
+  }
+  if(((envStr = getenv("WLZ_DIST_TRANSFORM_NRMDIST6")) != NULL) &&
+     (sscanf(envStr, "%lg", &val) == 1))
+  {
+    nrmDist6 = val;
+  }
+  if(((envStr = getenv("WLZ_DIST_TRANSFORM_NRMDIST8")) != NULL) &&
+     (sscanf(envStr, "%lg", &val) == 1))
+  {
+    nrmDist8 = val;
+  }
+  if(((envStr = getenv("WLZ_DIST_TRANSFORM_NRMDIST18")) != NULL) &&
+     (sscanf(envStr, "%lg", &val) == 1))
+  {
+    nrmDist18 = val;
+  }
+  if(((envStr = getenv("WLZ_DIST_TRANSFORM_NRMDIST26")) != NULL) &&
+     (sscanf(envStr, "%lg", &val) == 1))
+  {
+    nrmDist26 = val;
+  }
+#endif /* WLZ_DIST_TRANSFORM_ENV */
+
+  scale = dParam;
+  nullVal.core = NULL;
+  /* Check parameters. */
   if((forObj == NULL) || (refObj == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -88,14 +183,12 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  /* Create new values for the computed distances. */
   if(errNum == WLZ_ERR_NONE)
   {
     bgdV.type = WLZ_GREY_INT;
-    bgdV.v.ubv = 0;
+    bgdV.v.inv = 0;
     dstV.type = WLZ_GREY_DOUBLE;
     dstV.v.dbv = 0.0;
-    dstGType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_SHORT, NULL);
     switch(forObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
@@ -103,16 +196,13 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	{
 	  case WLZ_4_DISTANCE: /* FALLTHROUGH */
 	  case WLZ_8_DISTANCE: /* FALLTHROUGH */
-	  case WLZ_OCTAGONAL_DISTANCE:
+	  case WLZ_OCTAGONAL_DISTANCE: /* FALLTHROUGH */
+	  case WLZ_APX_EUCLIDEAN_DISTANCE:
+	    dim = 2;
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
 	    break;
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  dim = 2;
-          dstVal.v = WlzNewValueTb(forObj, dstGType, bgdV, &errNum);
 	}
         break;
       case WLZ_3D_DOMAINOBJ:
@@ -121,16 +211,13 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	  case WLZ_6_DISTANCE:  /* FALLTHROUGH */
 	  case WLZ_18_DISTANCE: /* FALLTHROUGH */
 	  case WLZ_26_DISTANCE: /* FALLTHROUGH */
-	  case WLZ_OCTAGONAL_DISTANCE:
+	  case WLZ_OCTAGONAL_DISTANCE: /* FALLTHROUGH */
+	  case WLZ_APX_EUCLIDEAN_DISTANCE:
+	    dim = 3;
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
 	    break;
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  dim = 3;
-	  dstVal.vox = WlzNewValuesVox(forObj, dstGType, bgdV, &errNum);
 	}
         break;
       default:
@@ -158,50 +245,163 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
         con = WLZ_26_CONNECTED;
 	break;
       case WLZ_OCTAGONAL_DISTANCE:
-        con = (dim == 2)? WLZ_8_DISTANCE: WLZ_26_CONNECTED;
+        con = (dim == 2)? WLZ_8_CONNECTED: WLZ_26_CONNECTED;
+	break;
+      case WLZ_APX_EUCLIDEAN_DISTANCE:
+        con = (dim == 2)? WLZ_8_CONNECTED: WLZ_26_CONNECTED;
+	if(scale < 1.0)
+	{
+	  errNum = WLZ_ERR_PARAM_DATA;
+	}
+	break;
+      case WLZ_EUCLIDEAN_DISTANCE:
+	errNum = WLZ_ERR_UNIMPLEMENTED;
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
 	break;
     }
   }
+  /* create scaled domains and a sphere domain for structual erosion if the
+   * distance function is approximate Euclidean. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(dFn == WLZ_APX_EUCLIDEAN_DISTANCE)
+    {
+      tr = (dim == 2)?
+	   WlzAffineTransformFromScale(WLZ_TRANSFORM_2D_AFFINE,
+	                               scale, scale, 0.0, &errNum):
+	   WlzAffineTransformFromScale(WLZ_TRANSFORM_3D_AFFINE,
+	                               scale, scale, scale, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	tmpObj = WlzMakeMain(forObj->type, forObj->domain, nullVal,
+			     NULL, NULL, &errNum);
+	if(tmpObj)
+	{
+	  sForObj = WlzAssignObject(
+	            WlzAffineTransformObj(tmpObj, tr,
+		                          WLZ_INTERPOLATION_NEAREST,
+		    			  &errNum), NULL);
+	  (void )WlzFreeObj(tmpObj);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	tmpObj = WlzMakeMain(refObj->type, refObj->domain, nullVal,
+	    		     NULL, NULL, &errNum);
+	if(tmpObj)
+	{
+	  sRefObj = WlzAssignObject(
+	            WlzAffineTransformObj(tmpObj, tr,
+		                          WLZ_INTERPOLATION_NEAREST,
+		    			  &errNum), NULL);
+	  (void )WlzFreeObj(tmpObj);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	sObj = WlzAssignObject(
+	       WlzMakeSphereObject(forObj->type, scale,
+	                           0.0, 0.0, 0.0, &errNum), NULL);
+      }
+      (void )WlzFreeAffineTransform(tr);
+    }
+    else
+    {
+      sForObj = WlzAssignObject(
+	        WlzMakeMain(forObj->type, forObj->domain, nullVal,
+	  		    NULL, NULL, &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	sRefObj = WlzAssignObject(
+	          WlzMakeMain(refObj->type, refObj->domain, nullVal,
+			      NULL, NULL, &errNum), NULL);
+      }
+    }
+  }
+  /* Create new values for the computed distances. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstGType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+    if(dim == 2)
+    {
+      dstVal.v = WlzNewValueTb(sForObj, dstGType, bgdV, &errNum);
+    }
+    else
+    {
+      dstVal.vox = WlzNewValuesVox(sForObj, dstGType, bgdV, &errNum);
+    }
+  }
   /* Create a distance object using the foreground object's domain and
    * the new distance values. */
   if(errNum == WLZ_ERR_NONE)
   {
-    dstObj = WlzMakeMain(forObj->type, forObj->domain, dstVal,
+    dstObj = WlzMakeMain(sForObj->type, sForObj->domain, dstVal,
 			 NULL, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    bothObj[0] = forObj;
+    bothObj[0] = sForObj;
     errNum = WlzGreySetValue(dstObj, dstV);
   }
   /* Dilate the reference object while setting the distances in each
    * dilated shell. */
   while((errNum == WLZ_ERR_NONE) && notDone)
   {
-    dstV.v.dbv += dInc;
-    prvItrObj = curItrObj;
-    dilObj = WlzDilation(refObj, con, &errNum);
+    if(dFn == WLZ_APX_EUCLIDEAN_DISTANCE)
+    {
+      dstV.v.dbv += 1.0;
+    }
+    else
+    {
+      switch(con)
+      {
+	case WLZ_4_CONNECTED:
+	  dstV.v.dbv += nrmDist4;
+	  break;
+	case WLZ_6_CONNECTED:
+	  dstV.v.dbv += nrmDist6;
+	  break;
+	case WLZ_8_CONNECTED:
+	  dstV.v.dbv += nrmDist8;
+	  break;
+	case WLZ_18_CONNECTED:
+	  dstV.v.dbv += nrmDist18;
+	  break;
+	case WLZ_26_CONNECTED:
+	  dstV.v.dbv += nrmDist26;
+	  break;
+      }
+    }
+    if(dFn == WLZ_APX_EUCLIDEAN_DISTANCE)
+    {
+      dilObj = WlzStructDilation(sRefObj, sObj, &errNum);
+    }
+    else
+    {
+      dilObj = WlzDilation(sRefObj, con, &errNum);
+    }
     if(errNum == WLZ_ERR_NONE)
     {
-      switch(forObj->type)
+      switch(sForObj->type)
       {
         case WLZ_2D_DOMAINOBJ:
-	  curItrObj = WlzIntersect2(dilObj, forObj, &errNum);
+	  curItrObj = WlzAssignObject(
+	              WlzIntersect2(dilObj, sForObj, &errNum), NULL);
 	  break;
         case WLZ_3D_DOMAINOBJ:
 	  bothObj[1] = dilObj;
-	  curItrObj = WlzIntersectN(2, bothObj, 1, &errNum);
+	  curItrObj = WlzAssignObject(
+	              WlzIntersectN(2, bothObj, 1, &errNum), NULL);
 	  break;
       }
-      (void)WlzFreeObj(dilObj);
     }
+    (void)WlzFreeObj(dilObj);
     /* Create difference object for the expanding shell. */
     if(errNum == WLZ_ERR_NONE)
     {
-      difObj = WlzDiffDomain(curItrObj, refObj, &errNum);
+      difObj = WlzDiffDomain(curItrObj, sRefObj, &errNum);
     }
     if((difObj == NULL) || WlzIsEmpty(difObj, &errNum))
     {
@@ -213,7 +413,7 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
        * and set all it's values to the current distance. */
       if(errNum == WLZ_ERR_NONE)
       {
-	switch(forObj->type)
+	switch(sForObj->type)
 	{
 	  case WLZ_2D_DOMAINOBJ:
 	    difObj->values = WlzAssignValues(dstObj->values, NULL);
@@ -253,22 +453,33 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	    break;
 	}
       }
-      refObj = curItrObj;
+      (void )WlzFreeObj(sRefObj);
+      sRefObj = WlzAssignObject(curItrObj, NULL);
+      (void )WlzFreeObj(curItrObj);
     }
     (void )WlzFreeObj(difObj); difObj = NULL;
-    (void)WlzFreeObj(prvItrObj); prvItrObj = NULL;
-    /* Alternate connectivities for octagonal distance. */
     if(dFn == WLZ_OCTAGONAL_DISTANCE)
     {
+      /* Alternate connectivities for octagonal distance. */
       if(dim == 2)
       {
-        con = (con == WLZ_4_DISTANCE)? WLZ_8_DISTANCE: WLZ_4_DISTANCE;
+	con = (con == WLZ_4_CONNECTED)? WLZ_8_CONNECTED: WLZ_4_CONNECTED;
       }
       else /* dim == 3 */
       {
-        con = (con == WLZ_6_DISTANCE)? WLZ_26_DISTANCE: WLZ_6_DISTANCE;
+	con = (con == WLZ_6_CONNECTED)? WLZ_26_CONNECTED: WLZ_6_CONNECTED;
       }
     }
+  }
+  (void )WlzFreeObj(sObj);
+  (void )WlzFreeObj(sForObj);
+  (void )WlzFreeObj(sRefObj);
+  (void )WlzFreeObj(curItrObj);
+  if((errNum == WLZ_ERR_NONE) && (dFn == WLZ_APX_EUCLIDEAN_DISTANCE))
+  {
+    tmpObj = WlzDistSample(dstObj, dim, scale, &errNum);
+    (void )WlzFreeObj(dstObj);
+    dstObj = tmpObj;
   }
   if(errNum != WLZ_ERR_NONE)
   {
@@ -279,4 +490,47 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
     *dstErr = errNum;
   }
   return(dstObj);
+}
+
+/*!
+* \return	Sampled object.
+* \ingroup	WlzMorphologyOps
+* \brief	Samples the scaled distance object, interpolating the distance
+* 		values.
+* \param	obj			Given object to be sampled.
+* \param	dim			Dimension either 2D or 3D.
+* \param	scale			Scale factor.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzDistSample(WlzObject *obj, int dim, double scale,
+    			        WlzErrorNum *dstErr)
+{
+  WlzObject	*sObj = NULL;
+  WlzAffineTransform *tr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(scale < 1.0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    scale = 1.0 / scale;
+    tr = (dim == 2)?
+	 WlzAffineTransformFromScale(WLZ_TRANSFORM_2D_AFFINE,
+				     scale, scale, 0.0, &errNum):
+	 WlzAffineTransformFromScale(WLZ_TRANSFORM_3D_AFFINE,
+				     scale, scale, scale, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sObj = WlzAffineTransformObj(obj, tr, WLZ_INTERPOLATION_NEAREST,
+				 &errNum);
+  }
+  (void )WlzFreeAffineTransform(tr);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(sObj);
 }
