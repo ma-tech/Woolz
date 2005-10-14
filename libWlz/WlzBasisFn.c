@@ -804,7 +804,7 @@ static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
       {
 	basisFn->distMap[idx] = WlzAssignObject(
 				WlzDistanceTransform(cObj, sObj,
-				WLZ_OCTAGONAL_DISTANCE,
+				WLZ_OCTAGONAL_DISTANCE, 0.0,
 				&errNum), NULL);
       }
       if(errNum == WLZ_ERR_NONE)
