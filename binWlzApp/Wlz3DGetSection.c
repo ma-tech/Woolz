@@ -38,7 +38,7 @@
 
 /*!
 \ingroup BinWlzApp
-\defgroup wlz3dgetsectionnce Wlz3DGetSection
+\defgroup wlz3dgetsection Wlz3DGetSection
 \par Name
 Wlz3DGetSection - gets an arbitrary slice from a 3D object.
 \par Synopsis

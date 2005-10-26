@@ -1,7 +1,14 @@
 /*!
-\addtogroup BinWlz 
-\par Introduction
-Most of the woolz image processing library have a corresponding programme
+\defgroup BinWlz Basic Woolz Operations
+\brief Command line programmes for woolz library procedures, select from
+the module list for individual manual pages.
+*/
+
+/*!
+\page binwlzpage Basic Image Processing
+\section intro  Introduction
+Most of the woolz core image processing library procedure
+ have a corresponding programme
  to allow command-line processing of woolz images and image structures
  (e.g. polylines, boundaries, histograms etc). In general each binary
 will read one or more woolz objects from "standard input" and write the
@@ -10,6 +17,34 @@ result to "standard output" (most will also read from a command line
 entered as arguments. In many cases a sequence of image processing
 operations can be concatenated as a Unix "pipeline" which is efficient
 and convenient for rapid prototyping and scripting of common operations.
+
+All woolz programmes will have an entry in this documentation but
+ will also respond to the flag "-h". For example the programme
+ \ref wlzthreshold WlzThreshold will read in a grey-level woolz
+ object and apply a high or low threshold, writing the resultant
+ object to standard out. The usage parameters are then displayed
+ using the "-h" option:
+\verbatim
+tcsh% WlzThreshold -h
+Usage:  WlzThreshold [-t#] [-v#] [-H] [-L] [-h] [<input file>]
+        Threshold a grey-level woolz object
+        writing the new object to standard output
+        Options are:
+          -H        Threshold high, keep pixels above threshold value (default).
+          -L        Threshold low, keep pixels below threshold value.
+          -t#       Threshold pixel type:
+                    # = 1: integer (default)
+                        2: short
+                        3: unsigned byte
+                        4: float
+                        5: double
+                    Note -t option must precede -v
+          -v#       threshold value  - integer unless -t used
+          -h        Help - prints this usage message
+tcsh% 
+\endverbatim
+
+\section examples Example Usage
 
 
 */

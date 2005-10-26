@@ -84,7 +84,7 @@ height and type are mandatory parameters.
 Width and height must be integer and > 0.
 Type must one of:
 <table width="500" border="0">
-  <tr> </tr>
+  <tr><td> </td> </tr>
   <tr><td><b>Parameter Value</b></td> <td><b>Data type</b></td></tr>
   <tr><td>1</td> <td>integer (32-bit signed)</td></tr>
   <tr><td>2</td> <td>short (16-bit signed)</td></tr>
@@ -99,7 +99,6 @@ Type must one of:
 \verbatim
 \endverbatim
 \par File
-\ref WlzXXX.c "WlzXXX.c"
 \par See Also
 \ref BinWlzApp "WlzIntro(1)"
 \ref wlzextffconvert "WlzExtFFConvert(1)"

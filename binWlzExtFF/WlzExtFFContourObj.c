@@ -132,7 +132,7 @@ to out.vtk.
 \ref BinWlzExtFF "WlzIntro(1)"
 \ref wlzextffconvert "WlzExtFFConvert(1)"
 \ref wlzcontourobj "WlzContourObj(1)"
-\ref Wlzcontourgeomfilter "WlzContourGeomFilter(1)"
+\ref wlzcontourgeomfilter "WlzContourGeomFilter(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

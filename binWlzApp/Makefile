@@ -30,6 +30,7 @@ EXECUTABLES		= \
 			WlzBibToMeshTrans \
 			WlzBibTransAbsRel \
 			WlzDomainMatch \
+			WlzEuclidDistanceMap \
 			WlzExtractTransform \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
@@ -57,6 +58,7 @@ CSOURCES		= \
 			WlzBibToMeshTrans.c \
 			WlzDomainMatch.c \
 			WlzBibTransAbsRel.c \
+			WlzEuclidDistanceMap.c \
 			WlzExtractTransform.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \

@@ -1,9 +1,34 @@
 /*!
-\addtogroup BinWlzExtFF
+\defgroup BinWlzExtFF Data Format Conversion
+*/
 
-There are several small programs which are concerned primarily with
-converting many external file formats to a Woolz file format.
-For converting files between Woolz and other external (non Woolz)
-These are similar in nature to the Woolz binaries,
-in that they are typically controlled by command line arguments.
+/*!
+\page binwlzextffpage Data Format Conversion
+\section intro  Introduction
+Command line binaries that involve reading or writing non-native woolz
+ formats are collected together under the "External File Format"
+ (ExtFF) heading. These binaries typically match procedures in the
+ WlzExtFF library. Supported formats can be determined by running
+ the programme WlzExtFFConvert with the flag "-h" and are:
+\verbatim
+  Description                 Fmt     Extension
+  ***********                 ***     *********
+  Amira Lattice               am      .am
+  Microsoft Bitmap            bmp     .bmp
+  Stanford Density            den     .den
+  ICS                         ics     .ics/.ids
+  PNM                         pnm     .pgm
+  BioRad Confocal             pic     .pic
+  SLC                         slc     .slc
+  Sunvision VFF               vff     .vff
+  Visualization Toolkit VTK   vtk     .vtk
+  IPLab                       ipl     .ipl
+  Tiff                        tif     .tif
+  Jpeg                        jpg     .jpg
+  MRC HGU Woolz               wlz     .wlz
+\endverbatim
+
+Other programmes in this group convert a few special formats for
+ contours and particualar applications. For conversio of raw data
+ then use WlzRawToWlz in the extended applications module.
 */

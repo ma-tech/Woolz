@@ -298,10 +298,12 @@ WlzObject *WlzGetProjectionFromObject(
 	    }
 	  }
 	  /* call integration function and seet value */
-	  intFunc(pixptr, length, viewStr1->dist - WLZ_NINT(viewStr1->minvals.vtZ),
+	  intFunc(pixptr, length, viewStr1->dist -
+		  WLZ_NINT(viewStr1->minvals.vtZ),
 		  intFuncData, &errNum);
 	}
       }
+    }
     if(errNum == WLZ_ERR_EOO)	   /* Reset error from end of intervals */ 
     {
       errNum = WLZ_ERR_NONE;
@@ -322,7 +324,6 @@ WlzObject *WlzGetProjectionFromObject(
 	WlzFreeObj(rtnObj);
 	rtnObj = NULL;
       }
-    }
     }
   }
 

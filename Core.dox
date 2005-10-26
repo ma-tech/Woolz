@@ -1,29 +1,30 @@
 /*!
 \mainpage Woolz Core Software
-Thw woolz software has been developed over very many years by many
- people with its roots in chromosome spread image analysis and
- microscopy imaging.The primary code design and develoment is due to
- Denis Rutovitz (refefrence here) and the C-code libraries initially
- implemented by Jim Piper. The image processing library is optimised
- for 2D image processing and is especially efficient for binary
- and morphological operations. The software has been developed
- in C and is now ANSI standard and are now open-source under the
- general GNU licence.
 
-Originally the code was developed by the Pattern Recognition Section
- of the Medical Research Council (<a href="http://www.mrc.ac.uk/">MRC</a>)
- Clinical and Population
- Cytogenetics Unit, since 1995 it has been developed as part of the
- Edinburgh Mouse Atlas Project (
-<a href="http://genex.hgu.mrc.ac.uk/">EMAP</a>) at the
- MRC Human Genetics Unit
- (<a href="http://www.hgu.mrc.ac.uk/">HGU</a>). The code is a series of
- libraries supporting a range of image processing operations and
- is built into a number of larger applications such as MAPaint,
- Reconstrucct and the Jave JAtlasViewer. It also underpins the
- Edinburgh Mouse Atlas of Gene Expression (EMAGE) database defining
- the spatial content and providing the mapping, comparison, analysis
- and warping capabilities.
+\section overview Overview
+Woolz is the name (not an acronym) for a set of image processing software.
+ The <b> Core</b> software is organised as a series of libraries for
+ application development and a set of <b>Command-Line Binaries</b>
+ which can be used for simple image processing or embedded in scripts
+ for more complex operations. Large scale applications with graphical
+ user-interfaces such as Reconstruct or MAPaint are documented elsewhere.
+ The source code is maintained under CVS and is available as open-source
+ under the general GNU licence. Bug and issue reporting is provided by
+ <a href="http://www.mantisbt.org/">Mantis</a> at
+ <a href="http://aberlour.hgu.mrc.ac.uk/mantis/login_page.php">
+ http://aberlour.hgu.mrc.ac.uk/mantis/login_page.php</a>, this documentation is
+ generated using <a href="http://doxygen.org/">Doxygen</a>.
+
+The best way to use this documentation is to open the "Modules" menu-folder
+ in the index on the LHS browser window. If you simply want to use the
+ command-line binaries then select "Basic woolz operations", "Data Format
+ Conversion" or "Extended Applications". These each expand to a list of
+ the binaries available for which there is a manpage-style page available.
+ In each case there will be (not yet complete) example usage and a
+ brief description. If you are interested in using the library functions
+ then consult the library modules and browse for the required function.
+ Example usage is most easily found in the set of binaries available
+ with the source code.
 
 This documentation provide manuals and code documentation for the
  core libraries and associated command-line binaries. Using these
@@ -32,49 +33,96 @@ This documentation provide manuals and code documentation for the
  libraries have a Java binding to allow the use of very fast and
  efficient C-code with a Java interface.
 
-More detail of the code can be found in the sub-sections 
-\subpage binaries "Woolz command line binaries" and
-\subpage libraries "Woolz core libraries".
+More detail of the code can be found in the sub-sections
+\subpage binaries "Command-Line Programmes" and
+\subpage libraries "Software Libraries".
 Compiled versions and source code can be obtained from the EMAP web-site <a href="http://genex.hgu.mrc.ac.uk/">genex.hgu.mrc.ac.uk</a>.
+
+\section history Software Development History
+The software has been developed over many years by many
+ people with its roots in chromosome spread image analysis and
+ microscopy imaging.The primary code design and develoment is due to
+ Denis Rutovitz (reference here) and the C-code libraries initially
+ implemented by Jim Piper. The image processing library is optimised
+ for 2D image processing and is especially efficient for binary
+ and morphological operations. The software has been developed
+ in C and is now ANSI standard. All source code is open-source under the
+ general GNU licence.
+
+Originally the code was developed by the Pattern Recognition Section
+ of the Medical Research Council (<a href="http://www.mrc.ac.uk/">MRC</a>)
+ Clinical and Population
+ Cytogenetics Unit, since 1995 it has been developed as part of the
+ Edinburgh Mouse Atlas Project
+ (<a href="http://genex.hgu.mrc.ac.uk/">EMAP</a>) at the
+ MRC Human Genetics Unit
+ (<a href="http://www.hgu.mrc.ac.uk/">HGU</a>). The code is a series of
+ libraries supporting a range of image processing operations and
+ is built into a number of larger applications such as MAPaint,
+ Reconstruct and the Jave JAtlasViewer. It also underpins the
+ Edinburgh Mouse Atlas of Gene Expression (EMAGE) database defining
+ the spatial content and providing the mapping, comparison, analysis
+ and warping capabilities.
+
+\section sstructure Structure
+The woolz software is organised as a series of software libraries with
+ a hierarchical dependency. The compiled binaries are compiled against
+ these libraries with in some cases link to other non-system libraries
+ such as libtiff and libjpeg. The source code is organised as a series
+ of directories, one for each library and programme group. The set of
+ directories is:
+\li \c binWlz - simple command-line binaries which typically execute
+ a single woolz library function
+\li \c binWlzExtFF - commmand-line binaries for data format conversion
+\li \c binWlzApp - more complex programmes for image programming
+\li \c libAlc - library for memory allocation and memory management
+\li \c libAlg - library of numerical algorithms
+\li \c libWlz - basic image processing operations, the core of the
+ woolz image processing system.
+\li \c libWlzExtFF - library for format conversion and I/O to different
+ image standards.
+\li \c libbibfile - "bibtex" formmat file handling, used for many
+ standard metadata files generated by woolz applications such as MAPaint
+ and Reconstruct
+\li \c libhguDlpList - library implmenting functions to create and manipulate
+ doubly-linked lists.
+\li \c libReconstruct - obselete library for image registration and alignment,
+\ now incorporated into linWlz.
+\li \c libWlzBnd - library for special Java bindings as part of the Java Woolz
+ automated mapping.
+  
+\section install Installation
+
+\section pubs Publications
+
 */
 
 /*!
-\page binaries Woolz Command Line Binaries
+\page binaries Command-Line Programmes
 \section intro Introduction
-The woolz library functions are complemented by a set of binaries for 
-command line processing of woolz formatted data. Most binaries can read data
+The woolz library functions are complemented by a set of programmes or
+ binaries for 
+command-line processing of woolz formatted data. Most binaries can read data
 from standard input and will write to standard output and can therefore 
 be used in unix "pipeline" mode. This allows efficient concatenation of
 multiple imaging operations for rapid prototyping and script development.
 
-The binary codes are all installed in the Mouse Atlas home bin directory
+The binary codes are all installed in the Mouse Atlas bin directory
 (usually /opt/MouseAtlas/bin) and provide a significant proportion of the
 libWlz plus supplementary library functionality. Simple binaries for
- the basic woolz functions are under \ref BinWlz "binWlz", other binaries
-relating to format conversion are under \ref BinWlzExtFF "binWlzExtFF" and
-more complex applications can be found under \ref BinWlzApp "binWlzApp".
+ the basic woolz functions are under \subpage binwlzpage "binWlz",
+ other binaries
+relating to format conversion are under \subpage binwlzextffpage
+ "binWlzExtFF" and
+more complex applications can be found under \subpage binwlzapppage
+ "binWlzApp".
 
-\section Structure Overview
-\section install Installation
-\section history Software Development History
-\section pubs Publications
+
 *
 */
 
 /*!
-\defgroup BinWlz Basic Woolz Operations
-\brief Command line programmes for woolz library procedures, select from
-the module list for individual manual pages.
-*/
-/*!
-\defgroup BinWlzExtFF Data Format Conversion
-*/
-/*!
-\defgroup BinWlzApp Extended Applications
-*/
-
-/*!
-* \page libraries Woolz Core Libraries
+* \page libraries Libraries
 * \section intro Introduction
 The core woolz image processing library, \subpage libwlzpage "libWlz",
  was developed for
@@ -120,7 +168,7 @@ The libraries are organised to hierarchically and need to be linked
 \li libWlz - libAlg
 \li libWlzExtFF - libWlz, libbibfile, external libraries libtiff and libjpeg
 
-\section install Usage
+\section usage Usage
 \section install Installation
 The source code and/or compiled versions of the libraries can be
  downloaded from the Mouse Atlas Web site

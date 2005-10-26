@@ -39,7 +39,7 @@
 
 /*!
 \ingroup BinWlzExtFF
-\defgroup wlztiff2wlznce WlzTiff2Wlz
+\defgroup wlztiff2wlz WlzTiff2Wlz
 \par Name
 WlzTiff2Wlz - convert TIFF images file to Woolz format.
 \par Synopsis

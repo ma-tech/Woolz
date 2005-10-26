@@ -32,7 +32,7 @@
 * 		\f[
 * 		o = (1 - x) o_1 + x o_2
  		\f]
-* \ingroup
+* \ingroup	WlzFeatures
 * \todo         -
 * \bug          None known.
 */
