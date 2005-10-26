@@ -1,0 +1,18 @@
+/*!
+\defgroup BinWlzApp Extended Applications
+*/
+
+/*!
+\page binwlzapppage Extended Applications
+\section intro  Introduction
+More complex binaries that can be executed from the command line but may
+ include significant image-processing logic have been collected under
+ the general heading of "command-line applications". These are
+ typically programmes that can run without interaction and do not
+ require a user interface. The source code for these
+ applications can be found in Core/binWlzApp and are a good source
+ of template code for any application with similar requirements.
+
+\section examples Example Usage
+
+*/
