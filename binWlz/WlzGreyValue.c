@@ -73,7 +73,7 @@ WlzGreyValue [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]
   </tr>
 </table>
 \par Description
-Either sets or gets a grey value within th given objects values.
+Either sets or gets a grey value within the given objects values.
 If the -v flag is given the objects value is set and the modified
 object is written to the output file, but if the flag is not set
 then the grey value is written out in ascii form with a new line

@@ -48,6 +48,10 @@ WlzVolume [-h] [<input file>]
 \par Options
 <table width="500" border="0">
   <tr> 
+    <td><b>-n</b></td>
+    <td>Numeric output only - number of voxels, zero on error</td>
+  </tr>
+  <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
   </tr>
@@ -89,9 +93,10 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [<input file>]\n"
+	  "Usage:\t%s [-n] [-h] [<input file>]\n"
 	  "\tCalculate the volume of the input 3D woolz objects\n"
 	  "\tOptions are:\n"
+	  "\t  -n        Numeric output only - number of voxels, zero on error\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
 	  proc_str);
@@ -104,9 +109,10 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "h";
+  char 		optList[] = "nh";
   int		option;
   int		count, vol;
+  int		numericFlg=0;
   const char    *errMsg;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
     
@@ -116,6 +122,10 @@ int main(int	argc,
     switch( option ){
 
     case '~': /* dummy to avoid compiler warning */
+      break;
+
+    case 'n':
+      numericFlg = 1;
       break;
 
     case 'h':
@@ -129,9 +139,14 @@ int main(int	argc,
   inFile = stdin;
   if( optind < argc ){
     if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
-      fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
-      usage(argv[0]);
-      return( 1 );
+      if( numericFlg ){
+	fprintf(stdout, "0\n");
+      }
+      else {
+	fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
+	usage(argv[0]);
+      }
+	return( 1 );
     }
   }
 
@@ -145,19 +160,34 @@ int main(int	argc,
      case WLZ_3D_DOMAINOBJ:
        if(((vol = WlzVolume(obj , &errNum)) < 0) ||
           (errNum != WLZ_ERR_NONE)){
-	 (void )WlzStringFromErrorNum(errNum, &errMsg);
-	 fprintf(stderr,
-	 	 "%s: Object %d: error in calculating the volume (%s).\n",
-		 *argv, count, errMsg);
+	 if( numericFlg ){
+	   fprintf(stdout, "0\n");
+	 }
+	 else {
+	   (void )WlzStringFromErrorNum(errNum, &errMsg);
+	   fprintf(stderr,
+		   "%s: Object %d: error in calculating the volume (%s).\n",
+		   *argv, count, errMsg);
+	 }
          return 1 ;
        }
        else {
-	 fprintf(stderr, "Object %d: number of voxels = %d\n", count, vol);
+	 if( numericFlg ){
+	   fprintf(stdout, "%d\n", vol);
+	 }
+	 else {
+	   fprintf(stderr, "Object %d: number of voxels = %d\n", count, vol);
+	 }
        }
        break;
 
     case WLZ_EMPTY_OBJ:
-      fprintf(stderr, "Object %d: number of voxels = %d\n", count, 0);
+      if( numericFlg ){
+	fprintf(stdout, "0\n");
+      }
+      else {
+	fprintf(stderr, "Object %d: number of voxels = %d\n", count, 0);
+      }
       break;
 
      default:

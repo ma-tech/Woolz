@@ -71,11 +71,13 @@ static void usage(
 {
   fprintf(stderr,
 	  "Usage:\n"
-	  "%s -d <delta> -t <type> -h -v \n"
+	  "%s -d <delta> -t <type> -m <matrix-file> -h -v \n"
 	  "\tRead in domains from stdin and calculate the match value\n"
 	  "\taccording to type, writing to stdout.\n"
 	  "Arguments:\n"
 	  "\t-d#        delta value (default 0.01), must be < 1\n"
+	  "\t-m<file>   input the name of a file containing the mixing\n"
+	  "\t           and contrib matrices - csv format\n"
 	  "\t-t#        type parameter to determine match function default 1\n"
 	  "\t             = 1 - Area(intersection)/Area(union)\n"
 	  "\t             = 2 - if Area(d1) > Area(d2) as type=1 else inverse\n"
@@ -130,12 +132,134 @@ static int WlzSize(
   return size;
 }
 
+double WlzMixtureValue(
+  WlzObject	*obj1,
+  WlzObject	*obj2,
+  int		numCatRows,
+  int		numCatCols,
+  double	**mixing,
+  double	**contrib,
+  WlzErrorNum	*dstErr)
+{
+  double	val, con;
+  WlzObject	*tmpObj, *tmpObj1, *tmpObj2;
+  WlzIntervalWSpace	iwsp;
+  WlzGreyWSpace		gwsp;
+  WlzGreyP		gptr;
+  WlzGreyValueWSpace	*gVWSp;
+  WlzPixelV		minP, maxP;
+  int		i;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* objects must be same type with grey-values */
+  if( (obj1 == NULL) || (obj2 == NULL) ){
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else {
+    switch( obj1->type ){
+    case WLZ_2D_DOMAINOBJ:
+      if( obj2->type != obj1->type ){
+	errNum = WLZ_ERR_OBJECT_TYPE;
+      }
+      else {
+	if((obj1->values.core == NULL) || (obj2->values.core == NULL)){
+	  errNum = WLZ_ERR_VALUES_NULL;
+	}
+	else {
+	  /* convert to int and check range */
+	  if( tmpObj1 = WlzConvertPix(obj1, WLZ_GREY_INT, &errNum) ){
+	    errNum = WlzGreyRange(tmpObj1, &minP, &maxP);
+	    if( errNum == WLZ_ERR_NONE ){
+	      if((minP.v.inv < 1) || (minP.v.inv > numCatRows) ||
+		 (maxP.v.inv < 1) || (maxP.v.inv > numCatRows)){
+		errNum = WLZ_ERR_OBJECT_DATA;
+		WlzFreeObj(tmpObj1);
+	      }
+	    }
+	    else {
+	      WlzFreeObj(tmpObj1);
+	    }
+	  }
+	  if((errNum == WLZ_ERR_NONE) &&
+	     (tmpObj2 = WlzConvertPix(obj2, WLZ_GREY_INT, &errNum)) ){
+	    errNum = WlzGreyRange(tmpObj2, &minP, &maxP);
+	    if( errNum == WLZ_ERR_NONE ){
+	      if((minP.v.inv < 1) || (minP.v.inv > numCatCols) ||
+		 (maxP.v.inv < 1) || (maxP.v.inv > numCatCols)){
+		errNum = WLZ_ERR_OBJECT_DATA;
+		WlzFreeObj(tmpObj1);
+		WlzFreeObj(tmpObj2);
+	      }
+	    }
+	    else {
+	      WlzFreeObj(tmpObj1);
+	      WlzFreeObj(tmpObj2);
+	    }
+	  }
+	}
+      }
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+    }
+  }
+
+  /* get the intersection region */
+  if( errNum == WLZ_ERR_NONE ){
+    if( tmpObj = WlzIntersect2(tmpObj1, tmpObj2, &errNum) ){
+      tmpObj->values = WlzAssignValues(tmpObj1->values, &errNum);
+    }
+    else {
+      WlzFreeObj(tmpObj1);
+      WlzFreeObj(tmpObj2);
+    }
+  }
+
+  /* now calculate the mixture value */
+  if( errNum == WLZ_ERR_NONE ){
+    errNum = WlzInitGreyScan(tmpObj, &iwsp, &gwsp);
+    gVWSp = WlzGreyValueMakeWSp(tmpObj2, &errNum);
+    val = 0.0;
+    con = 0.0;
+    while((errNum == WLZ_ERR_NONE) &&
+	  (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+
+      gptr = gwsp.u_grintptr;
+      for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
+	WlzGreyValueGet(gVWSp, 0, iwsp.linpos, iwsp.colpos+i);
+	val += mixing[(*gptr.inp)-1][gVWSp->gVal[0].inv-1];
+	con += contrib[(*gptr.inp)-1][gVWSp->gVal[0].inv-1];
+      }
+    }
+    if( errNum == WLZ_ERR_EOO ){
+      errNum = WLZ_ERR_NONE;
+    }
+    WlzGreyValueFreeWSp(gVWSp);
+    WlzFreeObj(tmpObj);
+    WlzFreeObj(tmpObj1);
+    WlzFreeObj(tmpObj2);
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  if( con > 0.0 ){
+    return val/con;
+  }
+  else {
+    return 0.0;
+  }
+}
+
 int main(
   int   argc,
   char  **argv)
 {
-  FILE		*inFile=stdin;
-  char 		optList[] = "t:hv";
+  FILE		*inFile;
+  char 		optList[] = "d:m:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   char		*errMsg;
@@ -145,6 +269,9 @@ int main(
   double	matchVal=0.0;
   double	s1, s2, s3, s4;
   double	delta=0.01;
+  double	**mixing=NULL, **contrib=NULL;
+  int		k, l;
+  int		numCatRows=-1, numCatCols=-1;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -158,6 +285,41 @@ int main(
 	fprintf(stderr, "%s: invalid delta, reset to 0.01", argv[0]);
       }
       break;
+
+    case 'm':
+      if( inFile = fopen(optarg, "r") ){
+	if( fscanf(inFile, "%d, %d", &numCatCols, &numCatRows) < 2 ){
+	  fprintf(stderr, "%s: can't read mixing matrix dimensions\n", argv[0]);
+	  usage(argv[0]);
+	  return 1;
+	}
+	AlcDouble2Malloc(&mixing, numCatRows, numCatCols);
+	AlcDouble2Malloc(&contrib, numCatRows, numCatCols);
+	for(l=0; l < numCatRows; l++){
+	  for(k=0; k < numCatCols; k++){
+	    if( fscanf(inFile, "%lg,", &(mixing[l][k])) < 1 ){
+	      fprintf(stderr, "%s: can't read mixing matrix\n", argv[0]);
+	      usage(argv[0]);
+	      return 1;
+	    }
+	  }
+	}
+	for(l=0; l < numCatRows; l++){
+	  for(k=0; k < numCatCols; k++){
+	    if( fscanf(inFile, "%lg,", &(contrib[l][k])) < 1 ){
+	      fprintf(stderr, "%s: can't read contributing matrix\n", argv[0]);
+	      usage(argv[0]);
+	      return 1;
+	    }
+	  }
+	}
+      }
+      else {
+	fprintf(stderr, "%s: can't open matrix file\n", argv[0]);
+	usage(argv[0]);
+	return 1;
+      }
+      break; 
 
     case 't':
       type = atoi(optarg);
@@ -175,7 +337,31 @@ int main(
     }
   }
 
+  /* verbose output */
+  if( verboseFlg ){
+    fprintf(stderr, "%s: parameter values:\n", argv[0]);
+    fprintf(stderr, "\ttype = %d, delta = %f\n", type, delta);
+    if( type == 6 ){
+      fprintf(stderr, "\t mixing matrix:\n");
+      for(l=0; l < numCatRows; l++){
+	for(k=0; k < numCatCols; k++){
+	  fprintf(stderr, "%f, ", mixing[l][k]);
+	}
+	fprintf(stderr, "\n");
+      }
+      fprintf(stderr, "\n");
+      fprintf(stderr, "\t contributing matrix:\n");
+      for(l=0; l < numCatRows; l++){
+	for(k=0; k < numCatCols; k++){
+	  fprintf(stderr, "%f, ", contrib[l][k]);
+	}
+	fprintf(stderr, "\n");
+      }
+    }
+  }
+
   /* get objects from stdin */
+  inFile = stdin;
   if( obj1 = WlzReadObj(inFile, &errNum) ){
     switch( obj1->type ){
     case WLZ_2D_DOMAINOBJ:
@@ -367,6 +553,19 @@ int main(
     }
     matchVal = WLZ_MAX(matchVal, delta);
     matchVal = WLZ_MIN(matchVal, 1.0/delta);
+    break;
+
+  case 6:
+    /* this requires a mixing and contributing matrix and the images
+       read in must have grey-values set to the right categories */
+    if((numCatRows == -1) || (numCatCols == -1) ||
+       (mixing == NULL) || (contrib == NULL)){
+      fprintf(stderr, "%s: bad matrix data\n", argv[0]);
+      usage(argv[0]);
+      return 1;
+    }
+    matchVal = WlzMixtureValue(obj1, obj2, numCatRows, numCatCols,
+			       mixing, contrib, &errNum);
     break;
 
   default:

@@ -32,6 +32,7 @@ EXECUTABLES		= \
 			WlzDomainMatch \
 			WlzEuclidDistanceMap \
 			WlzExtractTransform \
+			WlzOccupancy \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
 			WlzPatchObjRegister \
@@ -60,6 +61,7 @@ CSOURCES		= \
 			WlzBibTransAbsRel.c \
 			WlzEuclidDistanceMap.c \
 			WlzExtractTransform.c \
+			WlzOccupancy.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
 			WlzPatchObjRegister.c \
