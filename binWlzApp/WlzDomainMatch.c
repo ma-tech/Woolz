@@ -1,23 +1,96 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         WlzDomainMatch.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Tue Dec 20 11:31:47 2005
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par Copyright:
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \ingroup      BinWlzApp
+* \brief        Calculate a similarity value for a pair or set of woolz domains.
+ This has been developed for the purposes of analysing the EMAGE gene-expression data.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+ 
+/*!
 \ingroup      BinWlzApp
 \defgroup     wlzdomainmatch WlzDomainMatch
 \par Name
-WlzDomainMatch - 
+WlzDomainMatch - calculate a match values between to domains or domain
+ sets according to type.
 \par Synopsis
 \verbatim
-WlzDomainMatch
+WlzDomainMatch -d <delta> -t <type> -m <matrix-file> -h -v 
 
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
-    <td><b>-</b></td>
-    <td> </td>
+    <td><b>-d</b></td>
+    <td>delta value (default 0.01), must be < 1 </td>
   </tr>
   <tr>
-    <td><b>-o</b></td>
-    <td>Output object file name.</td>
+    <td><b>-m \<file\></b></td>
+    <td>input the name of a file containing the mixing
+ and contribution matrices - csv format.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>type parameter to determine match function (default 1), values: </td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 1 - Area(intersection)/Area(union)</td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 2 - if Area(d1) > Area(d2) as type=1 else inverse</td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 3 - Area(intersection)/Area(d1)</td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 4 - Area(intersection)/Area(d2)</td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 5 - Comparative match between two targets given by
+                       the ratio of type 4 matchs to each domain. For this
+                       option a 3rd object is required in the input stream.</td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 6 - use the input mixing and contributing matrices. The matrix dimensions
+ must match the number of categories in the category image data. Note the matrices
+ do not need to be square.</td>
   </tr>
   <tr>
     <td><b>-h</b></td>
@@ -30,6 +103,41 @@ WlzDomainMatch
 </table>
 
 \par Description
+Read in domains or index images from stdin, calculate the match value
+according to type and write the calculated value to stdout. The match functions are:
+\f[
+V_1 = \frac{S(d_1 \wedge d_2)}{S(d_1 \vee d_2)}
+\f]
+\f[
+V_2 = \left \{
+\begin{array}{r@{\quad if \quad}l}
+V_1  &  S(d_1) \ge S(d_2) \\
+\frac{1}{V_1} &  S(d_1) < S(d_2)
+\end{array} \right.
+\f]
+\f[
+V_3 = \frac{S(d_1 \wedge d_2)}{S(d_1)}
+\f]
+\f[
+V_4 = \frac{S(d_1 \wedge d_2)}{S(d_2)}
+\f]
+\f[
+V_5 =  \left \{
+\begin{array}{c@{\quad : \quad}l}
+1.0 & S(d_2) = 0 \quad\mbox{or}\quad  S(d_3) = 0, \\
+1 / \delta & S(d_2) = 0 \quad\mbox{and}\quad  S(d_1 \wedge d_3) = 0, \\
+\delta & S(d_3) = 0 \quad\mbox{and}\quad  S(d_1 \wedge d_2) = 0, \\
+\frac{S(d_1 \wedge d_2)}{S(d_2)} \times \frac{S(d_3)}{S(d_1 \wedge d_3)}  &  \mbox{otherwise}. \\
+\end{array} \right.
+\f]
+\f{eqnarray*}
+V_6  & = & \frac{\sum_{Pixels} M_{ll'}}{A_{contrib}} \quad\mbox{where}\\
+A_{contrib} & = & \sum_{Pixels} \left \{ \begin{array}{c@{\quad \mbox{if} \quad}l}
+1 & C_{ll'} \ne 0,\\
+0 & C_{ll'} = 0,
+\end{array}\right.
+\f}
+In these formulae the \f$S()\f$ is the size of the domain - volume or area depending on the nature of the image. \f$l, l'\f$ are the pixel values of the two input category images.
 
 \par Examples
 \verbatim
@@ -38,19 +146,8 @@ WlzDomainMatch
 \par See Also
 \par Bugs
 None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Fri Sep  9 08:34:25 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
 */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -578,3 +675,4 @@ int main(
   fprintf(stdout, "%f\n", matchVal);
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
