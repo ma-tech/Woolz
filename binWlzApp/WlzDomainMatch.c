@@ -619,33 +619,20 @@ int main(
     }
     /* calculating (s2/s1) * (s3/s4) */
     /* if the denominator non-zero then simple formula */
-    if( (s1*s4) > 0.5 ){
-      matchVal = (s2/s1) * (s3/s4);
-    }
-    /* special cases */
-    else if( s1 < 0.5 ){
-      /* if area(d1) is zero then so also is the intersection
-	 with d1.
-	 if in addition the intersection with d2 is non-zero then the
-	 ratio is 1.0 (neutral)
-	 if the intersection with d2 is zero then if area(2) is
-	 zero the ration is 1.0 (neutral) else the ratio is
-	 infinite.
-      */
-      matchVal = 1.0;
-      if( s4 < 0.5 ){
-	if( s3 > 0.5 ){
-	  matchVal = 1.0/delta;
-	}
+    if( s2 > 0.0 ){
+      if( s4 > 0.0 ){
+	matchVal = (s2/s1) * (s3/s4);
+      }
+      else {
+	matchVal = s2 / s1;
       }
     }
-    else if( s4 < 0.5 ){
-      /* intersection with d1 is non-zero, if the intersection
-	 with d2 is zero then if area(d2) is zero the ratio is 1.0
-	 else infinite */
-      matchVal = 1.0;
-      if( s3 < 0.5 ){
-	matchVal = 1.0/delta;
+    else {
+      if( s4 > 0.0 ){
+	matchVal = s3/s4;
+      }
+      else {
+	matchVal = 1.0;
       }
     }
     matchVal = WLZ_MAX(matchVal, delta);
