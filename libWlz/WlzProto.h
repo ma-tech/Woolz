@@ -3798,6 +3798,9 @@ extern WlzObject *WlzCompoundToRGBA(WlzCompoundArray	*cmpnd,
 extern WlzObject		*WlzRGBAToModulus(
                                    WlzObject	*obj,
 				   WlzErrorNum	*dstErr);
+extern WlzObject *WlzIndexToRGBA(WlzObject	*obj,
+				 unsigned char	colormap[3][256],
+				 WlzErrorNum	*dstErr);
 /************************************************************************
 * WlzRGBAImageArithmetic.c			       			*
 ************************************************************************/
