@@ -2,27 +2,84 @@
 /*!
 * \file         WlzEuclidDistanceMap.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Oct 18 17:36:31 2005
+* \date         Mon Jan  9 14:05:47 2006
 * \version      MRC HGU $Id$
 *               $Revision$
 *               $Name$
-* \par Copyright:
-*               1994-2002 Medical Research Council, UK.
-*               All rights reserved.
 * \par Address:
 *               MRC Human Genetics Unit,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
+* \par Copyright:
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
 * \ingroup      BinWlzApp
-* \brief        Calculate the Euclidean distance from the input
- vertex to all parts of the domain.
+* \brief        Calculate the Euclidean distance from the input vertex to all parts of the domain.
 *               
 * \todo         -
 * \bug          None known
 *
 * Maintenance log with most recent changes at top of list.
 */
+ 
+/*!
+\ingroup      BinWlzApp
+\defgroup     wlzeucliddistancemap WlzEuclidDistanceMap
+\par Name
+WlzEuclidDistanceMap - calculate the Euclidean distance from a vertex.
+\par Synopsis
+\verbatim
+WlzEuclidDistanceMap -p x,y,z  -h -v 
 
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-p x,y,z</b></td>
+    <td>Input vertex, default (0,0,0).</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help - print help message</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose operation</td>
+  </tr>
+</table>
+
+\par Description
+Calculate the Euclidean distance from an input vertex to all pixel locations
+ in a given domain. The input object values are converted to float
+ (WLZ_GREY_FLOAT) type and overwritten with the distance value. Currently
+ the object must have a grey-table and of type WLZ_2D_DOMAINOBJ.
+
+\par Examples
+\verbatim
+\endverbatim
+
+\par See Also
+\par Bugs
+None known
+\todo
+Add a grey-table if required and extend to 3D.
+*/
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -126,7 +183,7 @@ int main(
 
   /* scan through object setting distance values
      use integer values */
-  if( obj1 = WlzConvertPix(obj, WLZ_GREY_INT, &errNum) ){
+  if( obj1 = WlzConvertPix(obj, WLZ_GREY_FLOAT, &errNum) ){
     WlzInitGreyScan(obj1, &iwsp, &gwsp);
     while( WlzNextGreyInterval(&iwsp) == 0 ){
 
@@ -138,7 +195,7 @@ int main(
 	  val = (iwsp.colpos + i - x)*(iwsp.colpos + i - x) \
 	    + (iwsp.linpos - y) * (iwsp.linpos - y);
 	  val = sqrt(val);
-	  *gptr.inp = WLZ_NINT(val);
+	  *gptr.flp = WLZ_NINT(val);
 	}
 	break;
 
@@ -156,3 +213,4 @@ int main(
   WlzFreeObj(obj);
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

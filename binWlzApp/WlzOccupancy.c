@@ -1,23 +1,67 @@
 #pragma ident "MRC HGU $Id$"
 /*!
+* \file         WlzOccupancy.c
+* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
+* \date         Mon Jan  9 14:21:56 2006
+* \version      MRC HGU $Id$
+*               $Revision$
+*               $Name$
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par Copyright:
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \ingroup      BinWlzApp
+* \brief        Calculate the occupancy of each pixel with respect
+ to a series of domains.
+*               
+* \todo         -
+* \bug          None known
+*
+* Maintenance log with most recent changes at top of list.
+*/
+ 
+/*!
 \ingroup      BinWlzApp
 \defgroup     wlzoccupancy WlzOccupancy
 \par Name
-WlzOccupancy - 
+WlzOccupancy - calculate pixel occupancy with respect to a series of domains.
 \par Synopsis
 \verbatim
-WlzOccupancy
+WlzOccupancy [-d <domainfile>] [-m] [-n#] [-h] [-v] [<input file>]
 
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
-    <td><b>-</b></td>
-    <td> </td>
+    <td><b>-d</b></td>
+    <td>Domain over which the occupancy will be calculated. The default
+ is the union of the input domains.</td>
   </tr>
   <tr>
-    <td><b>-o</b></td>
-    <td>Output object file name.</td>
+    <td><b>-m</b></td>
+    <tdCalculate the normalised mean, i.e. multiply by (255/n).</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>Maximum number of objects, default = 100.</td>
   </tr>
   <tr>
     <td><b>-h</b></td>
@@ -30,6 +74,13 @@ WlzOccupancy
 </table>
 
 \par Description
+Calculate the occupancy for each pixel location within the target domain.
+ The occupancy is the number of times the location is included within the
+ input domain series. The target domain is an optional input or taken as
+ the union of the domain series. The output object will have integer
+ (WLZ_GREY_INT) grey type and the value will either be the actual
+ occupancy or the normalise occupancy which will have a maximum value
+ of 255.
 
 \par Examples
 \verbatim
@@ -38,18 +89,6 @@ WlzOccupancy
 \par See Also
 \par Bugs
 None known
-\author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-\date         Tue Nov  8 17:21:46 2005
-\version      MRC HGU $Id$
-              $Revision$
-              $Name$
-\par Copyright:
-             1994-2003 Medical Research Council, UK.
-              All rights reserved.
-\par Address:
-              MRC Human Genetics Unit,
-              Western General Hospital,
-              Edinburgh, EH4 2XU, UK.
 */
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
@@ -70,7 +109,7 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-d <domainfile>] [-n#] [-h] [-v] [<input file>]\n"
 	  "\tCalculate the occupancy given a series of domains.\n"
 	  "\tOptions are:\n"
-	  "\t  -d <file> Optional imput domain over which occupancy\n"
+	  "\t  -d <file> Optional input domain over which occupancy\n"
 	  "\t            will be calculated, default - union of input.\n"
 	  "\t  -m        Calculate a normalised mean (1.e. *255/n).\n"
 	  "\t  -n#       Maximum number of objects -default=100\n"

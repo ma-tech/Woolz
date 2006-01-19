@@ -5,7 +5,8 @@
 /*!
 \page binwlzapppage Extended Applications
 \section intro  Introduction
-More complex binaries that can be executed from the command line but may
+Extended applications are more complex binaries that can be
+ executed from the command line but may
  include significant image-processing logic have been collected under
  the general heading of "command-line applications". These are
  typically programmes that can run without interaction and do not
