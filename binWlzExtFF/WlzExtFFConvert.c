@@ -224,6 +224,7 @@ int             main(int argc, char **argv)
   		option,
 		ok = 1,
 		usage = 0;
+  int		minDimension, maxDimension;
   WlzEffFormat  inFmt = WLZEFF_FORMAT_NONE,
   		outFmt = WLZEFF_FORMAT_NONE;
   WlzFVertex3	voxelSz;
@@ -237,7 +238,7 @@ int             main(int argc, char **argv)
   		bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char    *errMsg;
-  static char	optList[] = "b:f:F:o:x:y:z:hs",
+  static char	optList[] = "b:d:D:f:F:o:x:y:z:hs",
 		outObjFileStrDef[] = "-",
 		inObjFileStrDef[] = "-";
  
@@ -245,6 +246,8 @@ int             main(int argc, char **argv)
   outObjFileStr = outObjFileStrDef;
   inObjFileStr = inObjFileStrDef;
   voxelSzFlags.vtX = voxelSzFlags.vtY = voxelSzFlags.vtZ = 0;
+  minDimension = 0;
+  maxDimension = 0;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
@@ -261,6 +264,28 @@ int             main(int argc, char **argv)
 	  bgdFlag = 1;
 	}
         break;
+      case 'd':
+	if(sscanf(optarg, "%d", &minDimension) != 1){
+	  usage = 1;
+	  ok = 0;
+	}
+	if( minDimension <= 0 ){
+	  fprintf(stderr, "%s: minDimension must be > zero\n");
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
+      case 'D':
+	if(sscanf(optarg, "%d", &maxDimension) != 1){
+	  usage = 1;
+	  ok = 0;
+	}
+	if( maxDimension <= 0 ){
+	  fprintf(stderr, "%s: maxDimension must be > zero\n");
+	  usage = 1;
+	  ok = 0;
+	}
+	break;
       case 'f':
         if((inFmt = WlzEffStringExtToFormat(optarg)) == 0)
 	{
@@ -420,6 +445,35 @@ int             main(int argc, char **argv)
       inObj->domain.p->voxel_size[2] = voxelSz.vtZ;
     }
   }
+  /* option to change output dimension, only 2D for now */
+  if(ok && (maxDimension || minDimension) && (inObj->type == WLZ_2D_DOMAINOBJ)){
+    double 	scale;
+    int		xSize, ySize;
+    WlzAffineTransform	*trans;
+    WlzObject	*tmpObj;
+
+    xSize = inObj->domain.i->lastkl - inObj->domain.i->kol1 + 1;
+    ySize = inObj->domain.i->lastln - inObj->domain.i->line1 + 1;
+    if( maxDimension ){
+      scale = ((double) maxDimension) / WLZ_MAX(xSize, ySize);
+    }
+    else {
+      scale = ((double) minDimension) / WLZ_MIN(xSize, ySize);
+    }
+    trans = WlzAffineTransformFromScale(WLZ_TRANSFORM_2D_AFFINE,
+					scale, scale, scale, &errNum);
+    if( tmpObj = WlzAffineTransformObj(inObj, trans, WLZ_INTERPOLATION_NEAREST,
+				       &errNum) ){
+      tmpObj = WlzAssignObject(tmpObj, &errNum);
+      WlzFreeObj(inObj);
+      inObj = tmpObj;
+    }
+    else {
+      ok = 0;
+    }
+    WlzFreeAffineTransform( trans );
+  }
+      
   if(ok)
   {
     if(strcmp(outObjFileStr, "-") == 0)
