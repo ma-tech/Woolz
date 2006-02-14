@@ -49,13 +49,13 @@ DLLLIBSEXT		=
 EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
-#			  AlgDPSearch.c
 CSOURCES		= \
 			  AlgBits.c \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
 			  AlgCrossCorr.c \
 			  AlgDebug.c \
+			  AlgDPSearch.c \
 			  AlgFourier.c \
 			  AlgGamma.c \
 			  AlgHeapSort.c \

@@ -600,7 +600,7 @@ extern void            		AlgVectorScaleAdd(
 				  double s,
 				  size_t n);
 
-/* From AlfDPSearch.c */
+/* From AlgDPSearch.c */
 extern int AlgDPSearch(int, int, double **, double **, int **,
 		       double (*)(int, int, int, int **));
 
