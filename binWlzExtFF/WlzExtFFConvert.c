@@ -225,6 +225,7 @@ int             main(int argc, char **argv)
 		ok = 1,
 		usage = 0;
   int		minDimension, maxDimension;
+  int		linearFlg;
   WlzEffFormat  inFmt = WLZEFF_FORMAT_NONE,
   		outFmt = WLZEFF_FORMAT_NONE;
   WlzFVertex3	voxelSz;
@@ -238,7 +239,7 @@ int             main(int argc, char **argv)
   		bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char    *errMsg;
-  static char	optList[] = "b:d:D:f:F:o:x:y:z:hs",
+  static char	optList[] = "b:d:D:f:F:Lo:x:y:z:hs",
 		outObjFileStrDef[] = "-",
 		inObjFileStrDef[] = "-";
  
@@ -248,6 +249,7 @@ int             main(int argc, char **argv)
   voxelSzFlags.vtX = voxelSzFlags.vtY = voxelSzFlags.vtZ = 0;
   minDimension = 0;
   maxDimension = 0;
+  linearFlg = 0;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
@@ -299,6 +301,9 @@ int             main(int argc, char **argv)
 	  usage = 1;
 	  ok = 0;
 	}
+	break;
+      case 'L':
+	linearFlg = 1;
 	break;
       case 'x':
 	voxelSzFlags.vtX = 1;
@@ -462,7 +467,9 @@ int             main(int argc, char **argv)
     }
     trans = WlzAffineTransformFromScale(WLZ_TRANSFORM_2D_AFFINE,
 					scale, scale, scale, &errNum);
-    if( tmpObj = WlzAffineTransformObj(inObj, trans, WLZ_INTERPOLATION_NEAREST,
+    if( tmpObj = WlzAffineTransformObj(inObj, trans,
+				       linearFlg?WLZ_INTERPOLATION_LINEAR:
+				       WLZ_INTERPOLATION_NEAREST,
 				       &errNum) ){
       tmpObj = WlzAssignObject(tmpObj, &errNum);
       WlzFreeObj(inObj);
