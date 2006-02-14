@@ -645,6 +645,7 @@ WlzObject *WlzPolyToObj(
 			     NULL, &errNum) ){
 	obj3 = WlzAssignObject(obj3, NULL);
 	obj = WlzDiffDomain(obj3, obj2, &errNum);
+	/* standardize the domain */
 	WlzFreeObj( obj3 );
       }
       else {

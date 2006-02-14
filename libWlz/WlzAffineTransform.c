@@ -937,6 +937,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
   int		count, indx;
   double	tD0,
   		tD1,
+                tD2,
 		dx,
 		dy,
 		tx,
@@ -1083,7 +1084,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		*(gWSp.u_grintptr.dbp)++ = tD0;
 		break;
 	      case WLZ_GREY_RGBA:
-		tD0 = ((WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
+		tD2 = ((WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
 		        (1.0 - tD0) * (1.0 - tD1)) +
 		       (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
 			tD0 * (1.0 - tD1)) +
@@ -1092,8 +1093,8 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       (WLZ_RGBA_RED_GET((gVWSp->gVal[3]).rgbv) *
 			tD0 * tD1));
                 WLZ_RGBA_RED_SET(*(gWSp.u_grintptr.rgbp),
-		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
-		tD0 = ((WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
+		                 (UBYTE )WLZ_CLAMP(tD2, 0, 255));
+		tD2 = ((WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
 		        (1.0 - tD0) * (1.0 - tD1)) +
 		       (WLZ_RGBA_GREEN_GET((gVWSp->gVal[1]).rgbv) *
 			tD0 * (1.0 - tD1)) +
@@ -1102,8 +1103,8 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       (WLZ_RGBA_GREEN_GET((gVWSp->gVal[3]).rgbv) *
 			tD0 * tD1));
                 WLZ_RGBA_GREEN_SET(*(gWSp.u_grintptr.rgbp),
-		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
-		tD0 = ((WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
+		                 (UBYTE )WLZ_CLAMP(tD2, 0, 255));
+		tD2 = ((WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
 		        (1.0 - tD0) * (1.0 - tD1)) +
 		       (WLZ_RGBA_BLUE_GET((gVWSp->gVal[1]).rgbv) *
 			tD0 * (1.0 - tD1)) +
@@ -1112,8 +1113,8 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       (WLZ_RGBA_BLUE_GET((gVWSp->gVal[3]).rgbv) *
 			tD0 * tD1));
                 WLZ_RGBA_BLUE_SET(*(gWSp.u_grintptr.rgbp),
-		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
-		tD0 = ((WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
+		                 (UBYTE )WLZ_CLAMP(tD2, 0, 255));
+		tD2 = ((WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
 		        (1.0 - tD0) * (1.0 - tD1)) +
 		       (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[1]).rgbv) *
 			tD0 * (1.0 - tD1)) +
@@ -1122,7 +1123,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[3]).rgbv) *
 			tD0 * tD1));
                 WLZ_RGBA_ALPHA_SET(*(gWSp.u_grintptr.rgbp),
-		                 (UBYTE )WLZ_CLAMP(tD0, 0, 255));
+		                 (UBYTE )WLZ_CLAMP(tD2, 0, 255));
 
 		++(gWSp.u_grintptr.rgbp);
 		break;

@@ -309,8 +309,10 @@ WlzObject *WlzDiffDomain(
     WlzFreeObj( diff );
     diffdom.i = NULL;
     values.v = NULL;
-    diff = WlzMakeMain(WLZ_EMPTY_OBJ, diffdom, values,
-			NULL, NULL, &errNum);
+    diff = WlzMakeEmpty(&errNum);
+  }
+  else {
+    WlzStandardIntervalDomain(diff->domain.i);
   }
 
   if( dstErr ){
