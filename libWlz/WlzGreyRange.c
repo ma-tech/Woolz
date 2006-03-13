@@ -278,7 +278,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	  if( Min.v.inv < lmin.v.inv ){
 	    lmin.v.inv = Min.v.inv;
 	  }
-	  else if( Max.v.inv > lmax.v.inv ){
+	  if( Max.v.inv > lmax.v.inv ){
 	    lmax.v.inv = Max.v.inv;
 	  }
 	  break;
@@ -287,7 +287,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	  if( Min.v.shv < lmin.v.shv ){
 	    lmin.v.shv = Min.v.shv;
 	  }
-	  else if( Max.v.shv > lmax.v.shv ){
+	  if( Max.v.shv > lmax.v.shv ){
 	    lmax.v.shv = Max.v.shv;
 	  }
 	  break;
@@ -296,7 +296,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	  if( Min.v.ubv < lmin.v.ubv ){
 	    lmin.v.ubv = Min.v.ubv;
 	  }
-	  else if( Max.v.ubv > lmax.v.ubv ){
+	  if( Max.v.ubv > lmax.v.ubv ){
 	    lmax.v.ubv = Max.v.ubv;
 	  }
 	  break;
@@ -305,7 +305,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	  if( Min.v.flv < lmin.v.flv ){
 	    lmin.v.flv = Min.v.flv;
 	  }
-	  else if( Max.v.flv > lmax.v.flv ){
+	  if( Max.v.flv > lmax.v.flv ){
 	    lmax.v.flv = Max.v.flv;
 	  }
 	  break;
@@ -314,7 +314,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	  if( Min.v.dbv < lmin.v.dbv ){
 	    lmin.v.dbv = Min.v.dbv;
 	  }
-	  else if( Max.v.dbv > lmax.v.dbv ){
+	  if( Max.v.dbv > lmax.v.dbv ){
 	    lmax.v.dbv = Max.v.dbv;
 	  }
 	  break;
@@ -325,7 +325,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	    lmin.v.rgbv &= ~0xff;
 	    lmin.v.rgbv |= (Min.v.rgbv&0xff);
 	  }
-	  else if( (Max.v.rgbv&0xff) > (lmax.v.rgbv&0xff) ){
+	  if( (Max.v.rgbv&0xff) > (lmax.v.rgbv&0xff) ){
 	    lmin.v.rgbv &= ~0xff;
 	    lmin.v.rgbv |= (Max.v.rgbv&0xff);
 	  }
@@ -335,7 +335,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	    lmin.v.rgbv &= ~0xff00;
 	    lmin.v.rgbv |= (Min.v.rgbv&0xff00);
 	  }
-	  else if( (Max.v.rgbv&0xff00) > (lmax.v.rgbv&0xff00) ){
+	  if( (Max.v.rgbv&0xff00) > (lmax.v.rgbv&0xff00) ){
 	    lmin.v.rgbv &= ~0xff00;
 	    lmin.v.rgbv |= (Max.v.rgbv&0xff00);
 	  }
@@ -345,7 +345,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	    lmin.v.rgbv &= ~0xff0000;
 	    lmin.v.rgbv |= (Min.v.rgbv&0xff0000);
 	  }
-	  else if( (Max.v.rgbv&0xff0000) > (lmax.v.rgbv&0xff0000) ){
+	  if( (Max.v.rgbv&0xff0000) > (lmax.v.rgbv&0xff0000) ){
 	    lmin.v.rgbv &= ~0xff0000;
 	    lmin.v.rgbv |= (Max.v.rgbv&0xff0000);
 	  }
@@ -355,7 +355,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 	    lmin.v.rgbv &= ~0xff000000;
 	    lmin.v.rgbv |= (Min.v.rgbv&0xff000000);
 	  }
-	  else if( (Max.v.rgbv&0xff000000) > (lmax.v.rgbv&0xff000000) ){
+	  if( (Max.v.rgbv&0xff000000) > (lmax.v.rgbv&0xff000000) ){
 	    lmin.v.rgbv &= ~0xff000000;
 	    lmin.v.rgbv |= (Max.v.rgbv&0xff000000);
 	  }
