@@ -1861,7 +1861,8 @@ static WlzProperty WlzReadProperty(
     /* create an empty property */
     if( (rtnProp.emap =
 	 WlzMakeEMAPProperty(WLZ_EMAP_PROPERTY_GREY_MODEL,
-			     1, NULL, NULL, NULL, NULL,
+			     NULL, NULL, NULL, NULL, NULL,
+			     NULL, NULL, NULL, NULL, NULL,
 			     &errNum)) == NULL ){
       break;
     }
@@ -1870,16 +1871,27 @@ static WlzProperty WlzReadProperty(
 
     rtnProp.emap->emapType = getc(fp);
 
-    rtnProp.emap->theilerStage = getword(fp);
-    fread(rtnProp.emap->modelName, EMAP_PROPERTY_MODELNAME_LENGTH,
-	  1, fp);
-    fread(rtnProp.emap->version, EMAP_PROPERTY_VERSION_LENGTH,
-	  1, fp);
+    fread(rtnProp.emap->modelUID,
+	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
+    fread(rtnProp.emap->anatomyUID,
+	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
+    fread(rtnProp.emap->targetUID,
+	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
+    fread(rtnProp.emap->targetVersion,
+	  EMAP_PROPERTY_VERSION_LENGTH, 1, fp);
+    fread(rtnProp.emap->stage,
+	  EMAP_PROPERTY_STAGE_LENGTH, 1, fp);
+    fread(rtnProp.emap->subStage,
+	  EMAP_PROPERTY_STAGE_LENGTH, 1, fp);
+    fread(rtnProp.emap->modelName,
+	  EMAP_PROPERTY_MODELNAME_LENGTH, 1, fp);
+    fread(rtnProp.emap->version,
+	  EMAP_PROPERTY_VERSION_LENGTH, 1, fp);
     rtnProp.emap->creationTime = getword(fp);
     fread(rtnProp.emap->creationAuthor,
 	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
     fread(rtnProp.emap->creationMachineName,
-	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
+	  EMAP_PROPERTY_MACHINENAME_LENGTH, 1, fp);
     rtnProp.emap->modificationTime = getword(fp);
     fread(rtnProp.emap->modificationAuthor,
 	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);

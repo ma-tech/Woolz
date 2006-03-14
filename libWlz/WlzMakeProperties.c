@@ -243,28 +243,36 @@ WlzGreyProperty *WlzMakeGreyProperty(char *name, WlzPixelV val,
 }
 
 /* function:     WlzMakeEMAPProperty    */
-/*!
+/*! 
 * \ingroup      WlzProperty
-* \brief        Make an EMAP property structure.
+* \brief         Make an EMAP property structure.
 *
-* \return       WlzEMAPProperty *
+* \return       WlzEMAPProperty
 * \param    type	required EMAP property type:
  WLZ_EMAP_PROPERTY_GREY_MODEL, WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN or
  WLZ_EMAP_PROPERTY_OTHER_DOMAIN.
-* \param    theilerStage	Theiler stage of the reconstruction
- or of the reconstruction for which this is a domain
-* \param    modelName	Standard EMAP reconstruction name
-* \param    version	version of the model
-* \param    fileName	original filename when written using MAPaint
-* \param    comment	text comment
-* \param    dstErr	error return values: WLZ_ERR_NONE,
- WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC
+* \param    modelUID	Unique ID for the model (e.g. EMAPM:12345)
+* \param    anatomyUID	Unique ID for the anatomy component (e.g. EMAP:12345)
+* \param    targetUID	Unique ID to the target model (for transform object).
+* \param    targetVersion	Version of the target models
+* \param    stage	Model embryonic  stage.
+* \param    subStage	Model embryonic  sub-stage.
+* \param    modelName	Standard name for the model.
+* \param    version	Model version.
+* \param    fileName	Filename when model registered.
+* \param    comment	Comment string.
+* \param    dstErr	Error return.
 * \par      Source:
 *                WlzMakeProperties.c
 */
 WlzEMAPProperty *WlzMakeEMAPProperty(
   WlzEMAPPropertyType	type,
-  int			theilerStage,
+  char			*modelUID,
+  char			*anatomyUID,
+  char			*targetUID,
+  char			*targetVersion,
+  char			*stage,
+  char			*subStage,
   char			*modelName,
   char			*version,
   char			*fileName,
@@ -280,16 +288,40 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
   /* check the calling parameters */
   switch( type ){
   case WLZ_EMAP_PROPERTY_GREY_MODEL:
-  case WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN:
-  case WLZ_EMAP_PROPERTY_OTHER_DOMAIN:
+  case WLZ_EMAP_PROPERTY_GREY_OTHER:
+  case WLZ_EMAP_PROPERTY_DOMAIN_ANATOMY:
+  case WLZ_EMAP_PROPERTY_DOMAIN_OTHER:
+  case WLZ_EMAP_PROPERTY_TRANSFORM:
     break;
 
   default:
     errNum = WLZ_ERR_PARAM_DATA;
     break;
   }
-  if((theilerStage > 28) || (theilerStage < 1)){
-    errNum = WLZ_ERR_PARAM_DATA;
+  if( modelUID ){
+    if( strlen(modelUID) >= EMAP_PROPERTY_UID_LENGTH ){
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if( anatomyUID ){
+    if( strlen(anatomyUID) >= EMAP_PROPERTY_UID_LENGTH ){
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if( targetUID ){
+    if( strlen(targetUID) >= EMAP_PROPERTY_UID_LENGTH ){
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if( stage ){
+    if( strlen(stage) >= EMAP_PROPERTY_STAGE_LENGTH ){
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if( subStage ){
+    if( strlen(subStage) >= EMAP_PROPERTY_STAGE_LENGTH ){
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
   }
 
   /* allocate space and copy in properties */
@@ -312,12 +344,31 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 		EMAP_PROPERTY_AUTHORNAME_LENGTH - 1);
       }
       (void) gethostname(&(rtnProp->creationMachineName[0]),
-			 EMAP_PROPERTY_AUTHORNAME_LENGTH);
-      rtnProp->creationMachineName[EMAP_PROPERTY_AUTHORNAME_LENGTH-1]
+			 EMAP_PROPERTY_MACHINENAME_LENGTH);
+      rtnProp->creationMachineName[EMAP_PROPERTY_MACHINENAME_LENGTH-1]
 	= '\0';
       strcpy(rtnProp->modificationAuthor, rtnProp->creationAuthor);
 
-      rtnProp->theilerStage = theilerStage;
+      if( modelUID ){
+	strncpy(rtnProp->modelUID, modelUID,
+		EMAP_PROPERTY_UID_LENGTH - 1);
+      }
+      if( anatomyUID ){
+	strncpy(rtnProp->anatomyUID, anatomyUID,
+		EMAP_PROPERTY_UID_LENGTH - 1);
+      }
+      if( targetUID ){
+	strncpy(rtnProp->targetUID, targetUID,
+		EMAP_PROPERTY_UID_LENGTH - 1);
+      }
+      if( stage ){
+	strncpy(rtnProp->stage, stage,
+		EMAP_PROPERTY_STAGE_LENGTH - 1);
+      }
+      if( subStage ){
+	strncpy(rtnProp->subStage, subStage,
+		EMAP_PROPERTY_STAGE_LENGTH - 1);
+      }
       if( modelName ){
 	strncpy(rtnProp->modelName, modelName,
 		EMAP_PROPERTY_MODELNAME_LENGTH - 1);
@@ -354,9 +405,9 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 }
 
 /* function:     WlzChangeEMAPProperty    */
-/*!
+/*! 
 * \ingroup      WlzProperty
-* \brief        Change the values of an EMAP property. Each given
+* \brief         Change the values of an EMAP property. Each given
 value will be checked against the current value to see if a change is
 necessary. If the property is changed the modification time and author
 will be updated. NULL for any of modelName, version, fileName, comment
@@ -366,7 +417,12 @@ modification time appropriately.
 * \return       woolz error
 * \param    prop	property to be changed
 * \param    type	new type
-* \param    theilerStage	new Theiler stage
+* \param    modelUID	new model UID
+* \param    anatomyUID	new anatomy UID
+* \param    targetUID	new target UID
+* \param    targetVersion	new target version
+* \param    stage	new embryonic stage
+* \param    subStage	new embryonic sub-stage
 * \param    modelName	new model name
 * \param    version	new model version
 * \param    fileName	new filename
@@ -377,7 +433,12 @@ modification time appropriately.
 WlzErrorNum WlzChangeEMAPProperty(
   WlzEMAPProperty	*prop,
   WlzEMAPPropertyType	type,
-  int			theilerStage,
+  char			*modelUID,
+  char			*anatomyUID,
+  char			*targetUID,
+  char			*targetVersion,
+  char			*stage,
+  char			*subStage,
   char			*modelName,
   char			*version,
   char			*fileName,
@@ -399,11 +460,10 @@ WlzErrorNum WlzChangeEMAPProperty(
   else {
     switch( type ){
     case WLZ_EMAP_PROPERTY_GREY_MODEL:
-    case WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN:
-    case WLZ_EMAP_PROPERTY_OTHER_DOMAIN:
-      if((theilerStage > 28) || (theilerStage < 1)){
-	errNum = WLZ_ERR_PARAM_DATA;
-      }
+    case WLZ_EMAP_PROPERTY_GREY_OTHER:
+    case WLZ_EMAP_PROPERTY_DOMAIN_ANATOMY:
+    case WLZ_EMAP_PROPERTY_DOMAIN_OTHER:
+    case WLZ_EMAP_PROPERTY_TRANSFORM:
       break;
 
     default:
@@ -420,9 +480,82 @@ WlzErrorNum WlzChangeEMAPProperty(
       modifiedFlg = 1;
     }
 
-    if( prop->theilerStage != theilerStage ){
-      prop->theilerStage = theilerStage;
-      modifiedFlg = 1;
+    if( modelUID ){
+      if( prop->modelUID ){
+	if( strcmp(modelUID, prop->modelUID) ){
+	  modifiedFlg = 1;
+	}
+      }
+      else {
+	modifiedFlg = 1;
+      }
+      strncpy(prop->modelUID, modelUID,
+	      EMAP_PROPERTY_UID_LENGTH - 1);
+    }
+
+    if( anatomyUID ){
+      if( prop->anatomyUID ){
+	if( strcmp(anatomyUID, prop->anatomyUID) ){
+	  modifiedFlg = 1;
+	}
+      }
+      else {
+	modifiedFlg = 1;
+      }
+      strncpy(prop->anatomyUID, anatomyUID,
+	      EMAP_PROPERTY_UID_LENGTH - 1);
+    }
+
+    if( targetUID ){
+      if( prop->targetUID ){
+	if( strcmp(targetUID, prop->targetUID) ){
+	  modifiedFlg = 1;
+	}
+      }
+      else {
+	modifiedFlg = 1;
+      }
+      strncpy(prop->targetUID, targetUID,
+	      EMAP_PROPERTY_UID_LENGTH - 1);
+    }
+
+    if( targetVersion ){
+      if( prop->targetVersion ){
+	if( strcmp(targetVersion, prop->targetVersion) ){
+	  modifiedFlg = 1;
+	}
+      }
+      else {
+	modifiedFlg = 1;
+      }
+      strncpy(prop->targetVersion, targetVersion,
+	      EMAP_PROPERTY_VERSION_LENGTH - 1);
+    }
+
+    if( stage ){
+      if( prop->stage ){
+	if( strcmp(stage, prop->stage) ){
+	  modifiedFlg = 1;
+	}
+      }
+      else {
+	modifiedFlg = 1;
+      }
+      strncpy(prop->stage, stage,
+	      EMAP_PROPERTY_STAGE_LENGTH - 1);
+    }
+
+    if( subStage ){
+      if( prop->subStage ){
+	if( strcmp(subStage, prop->subStage) ){
+	  modifiedFlg = 1;
+	}
+      }
+      else {
+	modifiedFlg = 1;
+      }
+      strncpy(prop->subStage, subStage,
+	      EMAP_PROPERTY_STAGE_LENGTH - 1);
     }
 
     if( modelName ){

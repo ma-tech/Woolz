@@ -322,8 +322,10 @@ typedef enum _WlzObjectType
 typedef enum _WlzEMAPPropertyType
 {
   WLZ_EMAP_PROPERTY_GREY_MODEL = 1,	/*!< Reference Model */
-  WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN,	/*!< Anatomy Domain */
-  WLZ_EMAP_PROPERTY_OTHER_DOMAIN,	/*!< Other Domain */
+  WLZ_EMAP_PROPERTY_GREY_OTHER,		/*!< Grey object e.g. derived from model */
+  WLZ_EMAP_PROPERTY_DOMAIN_ANATOMY,	/*!< Anatomy Domain */
+  WLZ_EMAP_PROPERTY_DOMAIN_OTHER,	/*!< Other Domain */
+  WLZ_EMAP_PROPERTY_TRANSFORM,		/*!< woolz transform for EMAP models */
   WLZ_EMAP_PROPERTY_DUMMY		/*!< Dummy property */
 } WlzEMAPPropertyType;
 
@@ -2047,6 +2049,13 @@ typedef struct _WlzSimpleProperty
 #define EMAP_PROPERTY_MODELNAME_LENGTH	32
 
 /*!
+* \def		EMAP_PROPERTY_UID_LENGTH
+* \ingroup	WlzProperty
+* \brief	Maximum length of the model or anatomy UID in an EMAP property.
+*/
+#define EMAP_PROPERTY_UID_LENGTH	16
+
+/*!
 * \def		EMAP_PROPERTY_VERSION_LENGTH
 * \ingroup	WlzProperty
 * \brief	Maximum length of the version string in an EMAP property.
@@ -2059,6 +2068,20 @@ typedef struct _WlzSimpleProperty
 * \brief	Maximum length of the author strings in an EMAP property.
 */
 #define	EMAP_PROPERTY_AUTHORNAME_LENGTH 64
+
+/*!
+* \def		EMAP_PROPERTY_MACHINENAME_LENGTH
+* \ingroup	WlzProperty
+* \brief	Maximum length of the machine name strings in an EMAP property.
+*/
+#define	EMAP_PROPERTY_MACHINENAME_LENGTH 64
+
+/*!
+* \def		EMAP_PROPERTY_STAGE_LENGTH
+* \ingroup	WlzProperty
+* \brief	Maximum length of the stage strings in an EMAP property.
+*/
+#define	EMAP_PROPERTY_STAGE_LENGTH 32
 
 /*!
 * \struct	_WlzEMAPProperty
@@ -2075,13 +2098,18 @@ typedef struct _WlzEMAPProperty
   int 			linkcount;			/*!< linkcount */
   void 			*freeptr;			/*!< free pointer */
   WlzEMAPPropertyType	emapType;			/*!< EMAP property type */
-  int			theilerStage;			/*!< Theiler stage */
+  char			modelUID[EMAP_PROPERTY_UID_LENGTH]; /*!< model UID */
+  char			anatomyUID[EMAP_PROPERTY_UID_LENGTH];/*!< anatomy UID */
+  char			targetUID[EMAP_PROPERTY_UID_LENGTH];/*!< target model UID */
+  char			targetVersion[EMAP_PROPERTY_VERSION_LENGTH]; /*!< target model version */
+  char			stage[EMAP_PROPERTY_STAGE_LENGTH];/*!< Embryo  stage */
+  char			subStage[EMAP_PROPERTY_STAGE_LENGTH];/*!< Embryo  sub-stage */
   char			modelName[EMAP_PROPERTY_MODELNAME_LENGTH];/*!< Volume model name */
   char			version[EMAP_PROPERTY_VERSION_LENGTH];/*!< Model version */
   char			*fileName;			/*!< Original filename (not very useful) */
   long			creationTime;			/*!< Original creation time */
   char			creationAuthor[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Creation author */
-  char			creationMachineName[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Original creation machine name - useful for location */
+  char			creationMachineName[EMAP_PROPERTY_MACHINENAME_LENGTH];/*!< Original creation machine name */
   long			modificationTime;		/*!< Modification time */
   char			modificationAuthor[EMAP_PROPERTY_AUTHORNAME_LENGTH];/*!< Modification author */
   char			*comment;			/*!< Text comment

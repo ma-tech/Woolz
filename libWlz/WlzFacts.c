@@ -817,8 +817,33 @@ static WlzErrorNum WlzObjFactsProperty(WlzObjFactsData *fData,
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	      errNum = WlzObjFactsAppend(fData, "Theiler Stage: %d\n",
-	      			eProp->theilerStage);
+	    errNum = WlzObjFactsAppend(fData, "Model UID: %s\n",
+	      			eProp->modelUID);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Anatomy UID: %s\n",
+	      			eProp->anatomyUID);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Target UID: %s\n",
+	      			eProp->targetUID);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Target Version: %s\n",
+	      			eProp->targetVersion);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	      errNum = WlzObjFactsAppend(fData, "Stage: %s\n",
+	      			eProp->stage);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	      errNum = WlzObjFactsAppend(fData, "Sub-stage: %s\n",
+	      			eProp->subStage);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {

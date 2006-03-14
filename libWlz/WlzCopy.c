@@ -489,12 +489,17 @@ WlzPropertyList	*WlzCopyPropertyList(WlzPropertyList *gList,
 	    break;
 	  case WLZ_PROPERTY_EMAP:
 	    nProp.emap = WlzMakeEMAPProperty(gProp.emap->emapType,
-	    				gProp.emap->theilerStage,
-					gProp.emap->modelName,
-					gProp.emap->version,
-					gProp.emap->fileName,
-					gProp.emap->comment,
-  					&errNum);
+					     gProp.emap->modelUID,
+					     gProp.emap->anatomyUID,
+					     gProp.emap->targetUID,
+					     gProp.emap->targetVersion,
+					     gProp.emap->stage,
+					     gProp.emap->subStage,
+					     gProp.emap->modelName,
+					     gProp.emap->version,
+					     gProp.emap->fileName,
+					     gProp.emap->comment,
+					     &errNum);
 	    break;
 	  case WLZ_PROPERTY_NAME:
 	    nProp.name = WlzMakeNameProperty(gProp.name->name, &errNum);

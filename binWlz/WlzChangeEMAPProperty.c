@@ -44,15 +44,28 @@
 WlzChangeEMAPProperty - changes the EMAP property of a woolz object.
 \par Synopsis
 \verbatim
-WlzChangeEMAPProperty [-c<time>] [-C<author>] [-f<filename>]
+WlzChangeEMAPProperty [-a<anatomyUID>] [-e<modelUID>] [-E<targetUID>]
+                      [-c<time>] [-C<author>] [-f<filename>] [F<target version>]
                       [-l<location>] [-m<time>] [-M<author>]
-                      [-n<name>] [-r] [-s#] [-t#] [-T<text>]
-                      [-V<version>]
+                      [-n<name>] [-r] [-s<stage>] [-S<sub-stage>]
+                      [-t#] [-T<text>] [-V<version>]
                       [-h] [-v][<input file>]
 
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr>
+    <td><b>-a</b></td>
+    <td>anatomy component unique ID</td>
+  </tr>
+  <tr>
+    <td><b>-e</b></td>
+    <td>EMAP model unique ID</td>
+  </tr>
+  <tr>
+    <td><b>-E</b></td>
+    <td>target EMAP model unique ID for transform object</td>
+  </tr>
   <tr>
     <td><b>-c</b></td>
     <td>Creation time (dd.mm.yyyy) </td>
@@ -64,6 +77,10 @@ WlzChangeEMAPProperty [-c<time>] [-C<author>] [-f<filename>]
   <tr>
     <td><b>-f</b></td>
     <td>File name associated with object </td>
+  </tr>
+  <tr>
+    <td><b>-F</b></td>
+    <td>Target model version if the object is a transform </td>
   </tr>
   <tr>
     <td><b>-l</b></td>
@@ -87,7 +104,11 @@ WlzChangeEMAPProperty [-c<time>] [-C<author>] [-f<filename>]
   </tr>
   <tr>
     <td><b>-s</b></td>
-    <td>Theiler stage (default 1). </td>
+    <td>Embryonic stage (default NULL). </td>
+  </tr>
+  <tr>
+    <td><b>-S</b></td>
+    <td>Embryonic sub-stage (default NULL). </td>
   </tr>
   <tr>
     <td><b>-t</b></td>
@@ -135,8 +156,11 @@ the model and version of a standard EMAP atlas model and the EMAP property
 type will be set to WLZ_EMAP_PROPERTY_GREY_MODEL. The property is used
 track which models have been used for domains submitted to the EMAGE
 database and which version of the painted domains have been used. For
-domains the property type will be WLZ_EMAP_PROPERTY_OTHER_DOMAIN or
-WLZ_EMAP_PROPERTY_PAINTED_DOMAIN.
+domains the property type will be WLZ_EMAP_PROPERTY_DOMAIN_OTHER or
+WLZ_EMAP_PROPERTY_DOMAIN_ANATOMY. Grey-level data that has been mapped or
+associated with a specific EMAP model is ot type WLZ_EMAP_PROPERTY_GREY_OTHER
+and a transform defining the mapping between two models is of type
+WLZ_EMAP_PROPERTY_TRANSFORM.
 
 \par Examples
 \verbatim
@@ -144,37 +168,40 @@ WLZ_EMAP_PROPERTY_PAINTED_DOMAIN.
 # set the properties for a grey-level atlas model
 # and display the result using WlzFacts
 #
-WlzChangeEMAPProperty -C "Richard Baldock" -n "embryo_2_WM_left" \
-    -T "Program test" -V "1.0" -t "2" -f "embryo_2_WM_left.wlz" \
-    -s 15 embryo_2_WM_left.wlz | WlzFacts
-
+richard-lt.local% WlzChangeEMAPProperty -e EMAPM:00025 -C "Richard Baldock" \
+-n "embryo_1_3D" -T "Program test" -V "1.0" -t "1" -f "embryo_1_3D.wlz" \
+-s 14 ts14.wlz | WlzFacts
   Object type: WLZ_3D_DOMAINOBJ.
     Linkcount: 0.
     Domain type: WLZ_PLANEDOMAIN_DOMAIN.
     Linkcount: 1.
-    Domain plane bounds: 0 0
-    Domain line bounds: 66 316
-    Domain column bounds: 44 274
-    VoxelSize: 1 1 1
+    Domain plane bounds: 0 305
+    Domain line bounds: 51 223
+    Domain column bounds: 60 380
+    VoxelSize: 4 4 7
     Values type: WLZ_VOXELVALUETABLE_GREY.
     Linkcount: 1.
     Background type: WLZ_GREY_UBYTE.
     Background value: 255.
-    Values plane bounds: 0 0
+    Values plane bounds: 0 305
     Property list:
     Property type:WLZ_PROPERTY_EMAP
       Linkcount: 1.
       EMAP property type: WLZ_EMAP_PROPERTY_GREY_MODEL.
-      Theiler Stage: 15
-      Model name: embryo_2_WM_left
+      Model UID: EMAPM:00025
+      Anatomy UID: 
+      Target UID: 
+      Theiler Stage: 14
+      Model name: embryo_1_3D
       Model version: 1.0
-      Filename: embryo_2_WM_left.wlz
-      Creation time: Fri Jul 29 17:44:54 2005
+      Filename: embryo_1_3D.wlz
+      Creation time: Thu Feb 23 17:36:42 2006
       Creation author: Richard Baldock
       Creation machine name: richard-lt.local
-      Modification time: Fri Jul 29 17:44:54 2005
+      Modification time: Thu Feb 23 17:36:42 2006
       Modification author: richard (richard)
       Comment: Program test
+richard-lt.local% 
 \endverbatim
 
 \par File
@@ -201,37 +228,47 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-c<time>] [-C<author>] [-f<filename>] "
+	  "Usage:\t%s [-a<UID>] [-e<UID>] [-E<UID>] [-F<target version>] "
+	  "[-c<time>] [-C<author>] [-f<filename>] "
 	  "[-l<location>] [-m<time>] [-M<author>] [-n<name>] "
-	  "[-r] [-s#] [-t#] [-T<text>] [-V<version>] [-h] [-v]"
-	  "[<input file>]\n"
+	  "[-r] [-s<stage>] [-S<sub-stage>] [-t#] [-T<text>]"
+	  "[-V<version>] [-h] [-v] [<input file>]\n"
 	  "\tChange the EMAP property of a woolz object\n"
 	  "\twriting the new object to standard output\n"
 	  "\tNote times and authors are put in from the environment\n"
 	  "\tautomatically. Be sure to put in appropriate escapes\n"
 	  "\tfor spaces and special characters.\n"
 	  "\tOptions are:\n"
+	  "\t  -a<anatomy UID> anatomy UID\n"
+	  "\t  -e<model UID> model EMAP UID\n"
+	  "\t  -E<target UID> target model UID\n"
 	  "\t  -c<time>     Creation time (dd.mm.yyyy)\n"
 	  "\t  -C<author>   Creation author\n"
 	  "\t  -f<filename> File name associated with object\n"
+	  "\t  -F<version>  Target model version if transform object\n"
 	  "\t  -l<location> Machine name (or IP address)\n"
 	  "\t  -m<time>     Modification time (dd.mm.yyyy)\n"
 	  "\t  -M<author>   Modification author\n"
 	  "\t  -n<name>     EMAP Model name\n"
 	  "\t  -r           Remove the property\n"
-	  "\t  -s#          Theiler stage (default 1)\n"
+	  "\t  -s<stage>    Embryo stage (default NULL)\n"
+	  "\t  -S<sub-stage>    Embryo sub-stage (default NULL)\n"
 	  "\t  -t#          EMAP property type:\n"
 	  "\t               # = %d: grey-level EMAP-model\n"
+	  "\t                   %d: grey-level data other\n"
 	  "\t                   %d: EMAP anatomy domain\n"
 	  "\t                   %d: other domain (default)\n"
+	  "\t                   %d: transform\n"
 	  "\t  -T<text>     Comment text\n"
 	  "\t  -V<version>  Model version\n"
 	  "\t  -h           Help - prints this usage message\n"
 	  "\t  -v           Verbose operation\n"
 	  "",
 	  proc_str, WLZ_EMAP_PROPERTY_GREY_MODEL,
-	  WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN,
-	  WLZ_EMAP_PROPERTY_OTHER_DOMAIN);
+	  WLZ_EMAP_PROPERTY_GREY_OTHER,
+	  WLZ_EMAP_PROPERTY_DOMAIN_ANATOMY,
+	  WLZ_EMAP_PROPERTY_DOMAIN_OTHER,
+	  WLZ_EMAP_PROPERTY_TRANSFORM);
   return;
 }
 
@@ -241,11 +278,15 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "c:C:f:l:m:M:n:rs:t:T:V:hv";
+  char 		optList[] = "a:e:E:c:C:f:F:l:m:M:n:rs:S:t:T:V:hv";
   int		option;
-  WlzEMAPPropertyType	emapType=WLZ_EMAP_PROPERTY_OTHER_DOMAIN;
+  WlzEMAPPropertyType	emapType=WLZ_EMAP_PROPERTY_DOMAIN_OTHER;
   int		emapTypeFlg=0;
-  int		theilerStage=1, theilerStageFlg=0;
+  char		*modelUID=NULL;
+  char		*anatomyUID=NULL;
+  char		*targetUID=NULL;
+  char		*targetVersion=NULL;
+  char		*stage=NULL, *subStage=NULL;
   char		*modelName=NULL;
   char		*version=NULL;
   char		*fileName=NULL;
@@ -260,11 +301,24 @@ int main(int	argc,
   int		removeFlg=0;
   WlzProperty	property;
   struct tm	tm;
+  WlzErrorNum	errNum;
     
   /* read the argument list and check for an input file */
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'a':
+      anatomyUID = optarg;
+      break;
+
+    case 'e':
+      modelUID = optarg;
+      break;
+
+    case 'E':
+      targetUID = optarg;
+      break;
 
     case 'c':
 #ifdef BSD 
@@ -293,6 +347,10 @@ int main(int	argc,
 
     case 'f':
       fileName = optarg;
+      break;
+
+    case 'F':
+      targetVersion = optarg;
       break;
 
     case 'l':
@@ -333,16 +391,21 @@ int main(int	argc,
       break;
 
     case 's':
-      theilerStage = atoi(optarg);
-      theilerStageFlg = 1;
+      stage = optarg;
+      break;
+
+    case 'S':
+      subStage = optarg;
       break;
 
     case 't':
       switch( emapType = (WlzEMAPPropertyType) atoi(optarg) ){
 
       case WLZ_EMAP_PROPERTY_GREY_MODEL:
-      case WLZ_EMAP_PROPERTY_ANATOMY_DOMAIN:
-      case WLZ_EMAP_PROPERTY_OTHER_DOMAIN:
+      case WLZ_EMAP_PROPERTY_GREY_OTHER:
+      case WLZ_EMAP_PROPERTY_DOMAIN_ANATOMY:
+      case WLZ_EMAP_PROPERTY_DOMAIN_OTHER:
+      case WLZ_EMAP_PROPERTY_TRANSFORM:
 	break;
 
       default:
@@ -396,7 +459,9 @@ int main(int	argc,
 	property = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_EMAP, NULL);
 	if( property.core == NULL ){
 	  property.emap = WlzMakeEMAPProperty(WLZ_EMAP_PROPERTY_GREY_MODEL,
-					      1, NULL, NULL, NULL, NULL, NULL);
+					      NULL, NULL, NULL, NULL, NULL,
+					      NULL, NULL, NULL, NULL, NULL,
+					      &errNum);
 	  WlzAssignProperty(property, NULL);
 	  AlcDLPListEntryAppend(obj->plist->list, NULL, (void *) property.emap,
 				WlzFreePropertyListEntry);
@@ -409,11 +474,9 @@ int main(int	argc,
 	if( !emapTypeFlg ){
 	  emapType = property.emap->emapType;
 	}
-	if( !theilerStageFlg ){
-	  theilerStage = property.emap->theilerStage;
-	}
-	WlzChangeEMAPProperty(property.emap, emapType, theilerStage,
-			      modelName, version, fileName, comment);
+	WlzChangeEMAPProperty(property.emap, emapType, modelUID,
+			      anatomyUID, targetUID, targetVersion, stage,
+			      subStage, modelName, version, fileName, comment);
 	if( cTimeFlg ){
 	  property.emap->creationTime = creationTime;
 	}

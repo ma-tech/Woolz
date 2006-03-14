@@ -2678,7 +2678,12 @@ extern WlzErrorNum		WlzFreeSimpleProperty(
 				  WlzSimpleProperty *prop);
 extern WlzEMAPProperty          *WlzMakeEMAPProperty(
                                   WlzEMAPPropertyType	type,
-				  int			theilerStage,
+				  char			*modelUID,
+				  char			*anatomyUID,
+				  char			*targetUID,
+				  char			*targetVersion,
+				  char			*stage,
+				  char			*subStage,
 				  char			*modelName,
 				  char			*version,
 				  char			*fileName,
@@ -2694,7 +2699,12 @@ extern WlzGreyProperty 		*WlzMakeGreyProperty(
 extern WlzErrorNum              WlzChangeEMAPProperty(
                                   WlzEMAPProperty	*prop,
                                   WlzEMAPPropertyType	type,
-				  int			theilerStage,
+				  char			*modelUID,
+				  char			*anatomyUID,
+				  char			*targetUID,
+				  char			*targetVersion,
+				  char			*stage,
+				  char			*subStage,
 				  char			*modelName,
 				  char			*version,
 				  char			*fileName,

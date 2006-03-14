@@ -975,7 +975,18 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
     case  WLZ_PROPERTY_EMAP:
       if((putc((unsigned int) WLZ_PROPERTY_EMAP, fp) == EOF) ||
 	 (putc((unsigned int) property.emap->emapType, fp) == EOF) ||
-	 !putword(property.emap->theilerStage, fp) ||
+	 !fwrite(property.emap->modelUID,
+		 EMAP_PROPERTY_UID_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->anatomyUID,
+		 EMAP_PROPERTY_UID_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->targetUID,
+		 EMAP_PROPERTY_UID_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->targetVersion,
+		 EMAP_PROPERTY_VERSION_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->stage,
+		 EMAP_PROPERTY_STAGE_LENGTH, 1, fp) ||
+	 !fwrite(property.emap->subStage,
+		 EMAP_PROPERTY_STAGE_LENGTH, 1, fp) ||
 	 !fwrite(property.emap->modelName,
 		 EMAP_PROPERTY_MODELNAME_LENGTH, 1, fp) ||
 	 !fwrite(property.emap->version,
@@ -984,7 +995,7 @@ static WlzErrorNum WlzWriteProperty(FILE *fp, WlzProperty property)
 	 !fwrite(property.emap->creationAuthor,
 		 EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp) ||
 	 !fwrite(property.emap->creationMachineName,
-		 EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp) ||
+		 EMAP_PROPERTY_MACHINENAME_LENGTH, 1, fp) ||
 	 !putword(property.emap->modificationTime, fp) ||
 	 !fwrite(property.emap->modificationAuthor,
 		 EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp)){
