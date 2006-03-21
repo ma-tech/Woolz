@@ -149,7 +149,7 @@ int main(int	argc,
 
   WlzObject	*obj, *newobj;
   FILE		*inFile;
-  char 		optList[] = "cms:hv";
+  char 		optList[] = "cC:ms:hv";
   int		option;
   int		compoundFlg=1;
   WlzRGBAColorSpace	colSpc=WLZ_RGBA_SPACE_RGB;
@@ -185,6 +185,7 @@ int main(int	argc,
         return 1;
 
       }
+      compoundFlg = 0;
       break;
 
     case 'm':
