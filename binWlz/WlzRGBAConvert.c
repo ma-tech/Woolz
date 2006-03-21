@@ -103,13 +103,23 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-c] [-m] [-s#][-h] [<input file>]\n"
+	  "Usage:\t%s [-c] [-C <channel>] [-m] [-s#][-h] [<input file>]\n"
 	  "\tConvert the RGBA woolz object to a compound object\n"
-	  "\tor to the modulus of the rgb values,\n"
-	  "\twriting the new object to standard output.\n"
+	  "\tor to a specific channel, including modulus, of the rgb\n"
+	  "\tvalues, writing the new object to standard output.\n"
 	  "\tNote input object MUST have grey-value type RGBA\n."
 	  "\tOptions are:\n"
 	  "\t  -c       convert to compound (default)\n"
+	  "\t  -C #     convert to a given channel\n"
+	  "\t           # = %d: red\n"
+	  "\t               %d: green\n"
+	  "\t               %d: blue\n"
+	  "\t               %d: hue\n"
+	  "\t               %d: saturation\n"
+	  "\t               %d: brightness\n"
+	  "\t               %d: cyan\n"
+	  "\t               %d: magenta\n"
+	  "\t               %d: yellow\n"
 	  "\t  -m       convert to modulus\n"
 	  "\t  -s#	select colour space:\n"
 	  "\t           # = %d: RGB (default)\n"
@@ -117,7 +127,18 @@ static void usage(char *proc_str)
 	  "\t               %d: CMY\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
-	  proc_str, WLZ_RGBA_SPACE_RGB, WLZ_RGBA_SPACE_HSB,
+	  proc_str,
+	  WLZ_RGBA_CHANNEL_RED,
+	  WLZ_RGBA_CHANNEL_GREEN,
+	  WLZ_RGBA_CHANNEL_BLUE,
+	  WLZ_RGBA_CHANNEL_HUE,
+	  WLZ_RGBA_CHANNEL_SATURATION,
+	  WLZ_RGBA_CHANNEL_BRIGHTNESS,
+	  WLZ_RGBA_CHANNEL_CYAN,
+	  WLZ_RGBA_CHANNEL_MAGENTA,
+	  WLZ_RGBA_CHANNEL_YELLOW,
+	  WLZ_RGBA_SPACE_RGB,
+	  WLZ_RGBA_SPACE_HSB,
 	  WLZ_RGBA_SPACE_CMY);
   return;
 }
@@ -128,10 +149,11 @@ int main(int	argc,
 
   WlzObject	*obj, *newobj;
   FILE		*inFile;
-  char 		optList[] = "cmh";
+  char 		optList[] = "cms:hv";
   int		option;
   int		compoundFlg=1;
   WlzRGBAColorSpace	colSpc=WLZ_RGBA_SPACE_RGB;
+  WlzRGBAColorChannel	chan=WLZ_RGBA_CHANNEL_GREY;
   WlzErrorNum	errNum;
     
   /* read the argument list and check for an input file */
@@ -141,6 +163,28 @@ int main(int	argc,
 
     case 'c':
       compoundFlg = 1;
+      break;
+
+    case 'C':
+      switch( chan = (WlzRGBAColorChannel) atoi(optarg) ){
+      case WLZ_RGBA_CHANNEL_RED:
+      case WLZ_RGBA_CHANNEL_GREEN:
+      case WLZ_RGBA_CHANNEL_BLUE:
+      case WLZ_RGBA_CHANNEL_HUE:
+      case WLZ_RGBA_CHANNEL_SATURATION:
+      case WLZ_RGBA_CHANNEL_BRIGHTNESS:
+      case WLZ_RGBA_CHANNEL_CYAN:
+      case WLZ_RGBA_CHANNEL_MAGENTA:
+      case WLZ_RGBA_CHANNEL_YELLOW:
+	break;
+
+      default:
+        fprintf(stderr, "%s: colour channel = %d is invalid\n",
+		argv[0], chan );
+        usage(argv[0]);
+        return 1;
+
+      }
       break;
 
     case 'm':
@@ -205,21 +249,42 @@ int main(int	argc,
 	}
       }
       else {
-	if( (newobj = WlzRGBAToModulus(obj, &errNum)) != NULL ){
-	  (void )WlzWriteObj(stdout, newobj);
-	  WlzFreeObj(newobj);
-	}
-	else {
-	  if( errNum == WLZ_ERR_VALUES_TYPE ){
-	    fprintf(stderr, "%s: wrong values type, object not converted\n",
-		    argv[0]);
-	    (void )WlzWriteObj(stdout, obj);
+	if( chan == WLZ_RGBA_CHANNEL_GREY ){
+	  if( (newobj = WlzRGBAToModulus(obj, &errNum)) != NULL ){
+	    (void )WlzWriteObj(stdout, newobj);
+	    WlzFreeObj(newobj);
 	  }
 	  else {
-	    fprintf(stderr, "%s: something wrong, time to quit.\n",
-		    argv[0]);
-	    usage(argv[0]);
-	    return 1;
+	    if( errNum == WLZ_ERR_VALUES_TYPE ){
+	      fprintf(stderr, "%s: wrong values type, object not converted\n",
+		      argv[0]);
+	      (void )WlzWriteObj(stdout, obj);
+	    }
+	    else {
+	      fprintf(stderr, "%s: something wrong, time to quit.\n",
+		      argv[0]);
+	      usage(argv[0]);
+	      return 1;
+	    }
+	  }
+	}
+	else {
+	  if( (newobj = WlzRGBAToChannel(obj, chan, &errNum)) != NULL ){
+	    (void )WlzWriteObj(stdout, newobj);
+	    WlzFreeObj(newobj);
+	  }
+	  else {
+	    if( errNum == WLZ_ERR_VALUES_TYPE ){
+	      fprintf(stderr, "%s: wrong values type, object not converted\n",
+		      argv[0]);
+	      (void )WlzWriteObj(stdout, obj);
+	    }
+	    else {
+	      fprintf(stderr, "%s: something wrong, time to quit.\n",
+		      argv[0]);
+	      usage(argv[0]);
+	      return 1;
+	    }
 	  }
 	}
       }

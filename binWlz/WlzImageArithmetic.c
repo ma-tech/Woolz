@@ -151,7 +151,7 @@ int             main(int argc, char **argv)
   WlzPixelV	gMin[3],
   		gMax[3];
   const char	*errMsg;
-  static char	optList[] = "O:o:adglmsnNh",
+  static char	optList[] = "O:o:ab:dglmsnNh",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -165,46 +165,85 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
-      case 'O':
-	if((sscanf(optarg, "%d", &overwrite) != 1) ||
-	   (overwrite < 0) || (overwrite > 2))
-	{
-	  usage = 1;
-	  ok = 0;
-	}
+    case 'O':
+      if((sscanf(optarg, "%d", &overwrite) != 1) ||
+	 (overwrite < 0) || (overwrite > 2))
+      {
+	usage = 1;
+	ok = 0;
+      }
+      break;
+
+    case 'o':
+      outObjFileStr = optarg;
+      break;
+
+    case 'a':
+      operator = WLZ_BO_ADD;
+      break;
+
+    case 'b':
+      operator = atoi(optarg);
+      switch( operator ){
+      case WLZ_BO_ADD:
+      case WLZ_BO_SUBTRACT:
+      case WLZ_BO_MULTIPLY:
+      case WLZ_BO_DIVIDE:
+      case WLZ_BO_MODULUS:
+      case WLZ_BO_EQ:
+      case WLZ_BO_NE:
+      case WLZ_BO_GT:
+      case WLZ_BO_GE:
+      case WLZ_BO_LT:
+      case WLZ_BO_LE:
+      case WLZ_BO_AND:
+      case WLZ_BO_OR:
+      case WLZ_BO_XOR:
+      case WLZ_BO_MAX:
+      case WLZ_BO_MIN:
+      case WLZ_BO_MAGNITUDE:
 	break;
-      case 'o':
-        outObjFileStr = optarg;
-	break;
-      case 'a':
-        operator = WLZ_BO_ADD;
-	break;
-      case 'd':
-        operator = WLZ_BO_DIVIDE;
-	break;
-      case 'g':
-      	operator = WLZ_BO_MAGNITUDE;
-	break;
-      case 'l':
-        operator = WLZ_BO_MODULUS;
-	break;
-      case 'm':
-        operator = WLZ_BO_MULTIPLY;
-	break;
-      case 's':
-        operator = WLZ_BO_SUBTRACT;
-	break;
-      case 'n':
-        norm = WLZ_IMARNORM_INPUT;
-	break;
-      case 'N':
-        norm = WLZ_IMARNORM_256;
-	break;
-      case 'h':
+
       default:
-        usage = 1;
+	usage = 1;
 	ok = 0;
 	break;
+      }
+      break;
+
+    case 'd':
+      operator = WLZ_BO_DIVIDE;
+      break;
+
+    case 'g':
+      operator = WLZ_BO_MAGNITUDE;
+      break;
+
+    case 'l':
+      operator = WLZ_BO_MODULUS;
+      break;
+
+    case 'm':
+      operator = WLZ_BO_MULTIPLY;
+      break;
+
+    case 's':
+      operator = WLZ_BO_SUBTRACT;
+      break;
+
+    case 'n':
+      norm = WLZ_IMARNORM_INPUT;
+      break;
+
+    case 'N':
+      norm = WLZ_IMARNORM_256;
+      break;
+
+    case 'h':
+    default:
+      usage = 1;
+      ok = 0;
+      break;
     }
   }
   if((inObjFileStr[0] == NULL) || (*inObjFileStr[0] == '\0') ||
@@ -409,33 +448,70 @@ int             main(int argc, char **argv)
   WlzFreeObj(outObj);
   if(usage)
   {
-    (void )fprintf(stderr,
-    "Usage: %s%sExample:\n%s%s%s",
-    *argv,
-    " [-O#] [-o<out file>] [-a] [-d] [-l] [-m] [-s] [-h] "
-    "[<in object 0>] [<in object 1>]\n"
-    "Options:\n"
-    "  -O  Overwrite option (only useful for debugging)\n"
-    "  -o  Output file name.\n"
-    "  -a  Add the object's grey values.\n"
-    "  -d  Divide the grey values of the 1st object by those of the 2nd.\n"
-    "  -g  Vector magnitude of horizontal and vertical component objects\n"
-    "  -l  Compute the modulus of the grey values of the 1st object wrt\n"
-    "      those of the 2nd.\n"
-    "  -m  Multiply the object's grey values.\n"
-    "  -s  Subtract the grey values of the 2nd object from those of the 1st.\n"
-    "  -n  Normalises the output object to the range of the imput objects.\n"
-    "  -N  Normalises the output objects to the range [0-255].\n"
-    "  -h  Help, prints this usage message.\n"
-    "Computes an arithmetic binary (two objects) operation on two domain\n"
-    "objects. The default operator is add.\n"
-    "The input objects are read from stdin and values are written to stdout\n"
-    "unless the filenames are given.\n",
-    "cat obj1.wlz | ",
-    *argv,
-    " -o obj3.wlz -a - obj2.wlz\n"
-    "A new object 'obj3.wlz is formed by adding the grey values of obj1 and\n"
-    "obj2.wlz.\n");
+
+    fprintf(stderr,
+	    "Usage: %s"
+	    " [-O#] [-o<out file>] [-a] [-b <op>] [-d] [-l] [-m] [-s] [-h] "
+	    "[<in object 0>] [<in object 1>]\n"
+	    "Options:\n"
+	    "  -O        Overwrite option (only useful for debugging)\n"
+	    "  -o        Output file name.\n"
+	    "  -a        Add the object's grey values.\n"
+	    "  -b <op>   Apply binary operation to the grey-values.\n"
+	    "            op =  %d - Add\n"   
+	    "               =  %d - SUBTRACT\n"
+	    "               =  %d - MULTIPLY\n"
+	    "               =  %d - DIVIDE\n"
+	    "               =  %d - MODULUS\n"
+	    "               =  %d - EQ\n"
+	    "               =  %d - NE\n"
+	    "               =  %d - GT\n"
+	    "               =  %d - GE\n"
+	    "               =  %d - LT\n"
+	    "               =  %d - LE\n"
+	    "               =  %d - AND\n"
+	    "               =  %d - OR\n"
+	    "               =  %d - XOR\n"
+	    "               =  %d - MAX\n"
+	    "               =  %d - MIN\n"
+	    "               =  %d - MAGNITUDE\n"
+	    "  -d        Divide the grey values of the 1st object by those of the 2nd.\n"
+	    "  -g        Vector magnitude of horizontal and vertical component objects\n"
+	    "  -l        Compute the modulus of the grey values of the 1st object wrt\n"
+	    "            those of the 2nd.\n"
+	    "  -m        Multiply the object's grey values.\n"
+	    "  -s        Subtract the grey values of the 2nd object from those of the 1st.\n"
+	    "  -n        Normalises the output object to the range of the input objects.\n"
+	    "  -N        Normalises the output objects to the range [0-255].\n"
+	    "  -h        Help, prints this usage message.\n"
+	    "Computes an arithmetic binary (two objects) operation on two domain\n"
+	    "objects. The default operator is add.\n"
+	    "The input objects are read from stdin and values are written to stdout\n"
+	    "unless the filenames are given.\n"
+	    "Example:\n%s%s%s",
+	    *argv,
+	    WLZ_BO_ADD,
+	    WLZ_BO_SUBTRACT,
+	    WLZ_BO_MULTIPLY,
+	    WLZ_BO_DIVIDE,
+	    WLZ_BO_MODULUS,
+	    WLZ_BO_EQ,
+	    WLZ_BO_NE,
+	    WLZ_BO_GT,
+	    WLZ_BO_GE,
+	    WLZ_BO_LT,
+	    WLZ_BO_LE,
+	    WLZ_BO_AND,
+	    WLZ_BO_OR,
+	    WLZ_BO_XOR,
+	    WLZ_BO_MAX,
+	    WLZ_BO_MIN,
+	    WLZ_BO_MAGNITUDE,
+	    "cat obj1.wlz | ",
+	    *argv,
+	    " -o obj3.wlz -a - obj2.wlz\n"
+	    "A new object 'obj3.wlz is formed by adding the grey values of obj1 and\n"
+	    "obj2.wlz.\n");
   }
   return(!ok);
 }
