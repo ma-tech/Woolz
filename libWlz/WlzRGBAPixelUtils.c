@@ -60,6 +60,7 @@ double WlzRGBAPixelValue(
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   double	val=-1;
+  int		col[3];
 
   switch( pixVal.type ){
   case WLZ_GREY_INT:
@@ -146,11 +147,47 @@ double WlzRGBAPixelValue(
       val = WLZ_RGBA_BLUE_GET(pixVal.v.rgbv);
       break;
 
-    case WLZ_RGBA_CHANNEL_BRIGHTNESS:
     case WLZ_RGBA_CHANNEL_HUE:
+      col[0] = WLZ_RGBA_RED_GET(pixVal.v.rgbv);
+      col[1] = WLZ_RGBA_GREEN_GET(pixVal.v.rgbv);
+      col[2] = WLZ_RGBA_BLUE_GET(pixVal.v.rgbv);
+      WlzRGBAConvertRGBToHSV_UBYTENormalised(col);
+      val = col[0];
+      break;
+
     case WLZ_RGBA_CHANNEL_SATURATION:
-      /* need definitions here */
-      val = 0.0;
+      col[0] = WLZ_RGBA_RED_GET(pixVal.v.rgbv);
+      col[1] = WLZ_RGBA_GREEN_GET(pixVal.v.rgbv);
+      col[2] = WLZ_RGBA_BLUE_GET(pixVal.v.rgbv);
+      WlzRGBAConvertRGBToHSV_UBYTENormalised(col);
+      val = col[1];
+      break;
+
+    case WLZ_RGBA_CHANNEL_BRIGHTNESS:
+      col[0] = WLZ_RGBA_RED_GET(pixVal.v.rgbv);
+      col[1] = WLZ_RGBA_GREEN_GET(pixVal.v.rgbv);
+      col[2] = WLZ_RGBA_BLUE_GET(pixVal.v.rgbv);
+      WlzRGBAConvertRGBToHSV_UBYTENormalised(col);
+      val = col[2];
+      break;
+
+    case WLZ_RGBA_CHANNEL_CYAN:
+      val = (WLZ_RGBA_BLUE_GET(pixVal.v.rgbv) +
+	     WLZ_RGBA_GREEN_GET(pixVal.v.rgbv)) / 2;
+      break;
+
+    case WLZ_RGBA_CHANNEL_MAGENTA:
+      val = (WLZ_RGBA_BLUE_GET(pixVal.v.rgbv) +
+	     WLZ_RGBA_RED_GET(pixVal.v.rgbv)) / 2;
+      break;
+
+    case WLZ_RGBA_CHANNEL_YELLOW:
+      val = (WLZ_RGBA_RED_GET(pixVal.v.rgbv) +
+	     WLZ_RGBA_GREEN_GET(pixVal.v.rgbv)) / 2;
+      break;
+
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
       break;
 
     }
@@ -170,4 +207,50 @@ double WlzRGBAPixelValue(
     *dstErr = errNum;
   }
   return val;
+}
+
+void WlzRGBAConvertRGBToHSV_UBYTENormalised(
+  int		*col)
+{
+  int	h, s, b;
+  int	max, min;
+
+  /* algorithm from Foley, van Dam, Feiner, Hughes,
+     Computer Graphics. Modified so each value is in the range
+     [0,255]. If saturation is zero then the hue is undefined
+     and in this case set to zero */
+  max = WLZ_MAX(col[0],col[1]);
+  max = WLZ_MAX(max, col[2]);
+  min = WLZ_MIN(col[0],col[1]);
+  min = WLZ_MIN(min, col[2]);
+
+  b = max;
+  if( max > 0 ){
+    s = (max - min) * 255 / max;
+  }
+  else {
+    s = 0;
+  }
+  if( s == 0 ){
+    h = 0;
+  }
+  else {
+    if( col[0] == max ){
+      h = (col[1] - col[2]) * 42.5 / (max - min);
+    }
+    else if( col[1] == max ){
+      h = 85 + (col[2] - col[0]) * 42.5 / (max - min);
+    }
+    else if( col[2] == max ){
+      h = 170 + (col[0] - col[1]) * 42.5 / (max - min);
+    }
+    if( h < 0 ){
+      h += 255;
+    }
+  }
+  col[0] = h;
+  col[1] = s;
+  col[2] = b;
+
+  return;
 }

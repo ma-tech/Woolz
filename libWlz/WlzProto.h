@@ -3811,6 +3811,9 @@ extern WlzObject		*WlzRGBAToModulus(
 extern WlzObject *WlzIndexToRGBA(WlzObject	*obj,
 				 unsigned char	colormap[3][256],
 				 WlzErrorNum	*dstErr);
+extern WlzObject *WlzRGBAToChannel(WlzObject	*obj,
+				   WlzRGBAColorChannel	chan,
+				   WlzErrorNum	*dstErr);
 /************************************************************************
 * WlzRGBAImageArithmetic.c			       			*
 ************************************************************************/
@@ -3833,6 +3836,7 @@ extern double WlzRGBAPixelValue(
   WlzPixelV		pixVal,
   WlzRGBAColorChannel	chan,
   WlzErrorNum		*dstErr);
+extern void WlzRGBAConvertRGBToHSV_UBYTENormalised(int		*col);
 /************************************************************************
 * WlzRGBAMultiThreshold.c						*
 ************************************************************************/

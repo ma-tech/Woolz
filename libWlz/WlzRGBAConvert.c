@@ -57,53 +57,10 @@ static WlzObject *WlzRGBAToModulus3D(
   WlzObject	*obj,
   WlzErrorNum	*dstErr);
 
-static void WlzRGBAConvertRGBToHSV_UBYTENormalised(
-  int		*col)
-{
-  int	h, s, b;
-  int	max, min;
-
-  /* algorithm from Foley, van Dam, Feiner, Hughes,
-     Computer Graphics. Modified so each value is in the range
-     [0,255]. If saturation is zero thgen the hue is undefined
-     and in this case set to zero */
-  max = WLZ_MAX(col[0],col[1]);
-  max = WLZ_MAX(max, col[2]);
-  min = WLZ_MIN(col[0],col[1]);
-  min = WLZ_MIN(min, col[2]);
-
-  b = max;
-  if( max > 0 ){
-    s = (max - min) * 255 / max;
-  }
-  else {
-    s = 0;
-  }
-  if( s == 0 ){
-    h = 0;
-  }
-  else {
-    if( col[0] == max ){
-      h = (col[1] - col[2]) * 42.5 / (max - min);
-    }
-    else if( col[1] == max ){
-      h = 85 + (col[2] - col[0]) * 42.5 / (max - min);
-    }
-    else if( col[2] == max ){
-      h = 170 + (col[0] - col[1]) * 42.5 / (max - min);
-    }
-    if( h < 0 ){
-      h += 255;
-    }
-  }
-  col[0] = h;
-  col[1] = s;
-  col[2] = b;
-
-  return;
-}
-
-
+static WlzObject *WlzRGBAToChannel3D(
+  WlzObject	*obj,
+  WlzRGBAColorChannel	chan,
+  WlzErrorNum	*dstErr);
 
 /* function:     WlzRGBAToCompound    */
 /*! 
@@ -611,7 +568,7 @@ static WlzObject *WlzRGBAToModulus3D(
 * \ingroup      WlzValuesUtils
 * \brief        Convert a grey-level woolz object to RGBA via
  a colourmap look-up table. Values are clamped to [0,255] and the
- LUUT is assumed to be unsigned byte 3X256 
+ LUT is assumed to be unsigned byte 3x256 
 *
 * \return       Woolz object
 * \param    obj	Input object to be converted
@@ -973,4 +930,152 @@ static WlzObject *WlzIndexToRGBA3D(
     *dstErr = errNum;
   }
   return obj1;
+}
+
+WlzObject *WlzRGBAToChannel(
+  WlzObject	*obj,
+  WlzRGBAColorChannel	chan,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzValues		values;
+  WlzObjectType	type;
+  WlzPixelV		pixVal, oldBck, newBck;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* check object and channel */
+  if( obj ){
+    switch( obj->type ){
+    case WLZ_2D_DOMAINOBJ:
+      if( obj->domain.core == NULL ){
+	errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+      else if ( obj->values.core == NULL ){
+	errNum = WLZ_ERR_VALUES_NULL;
+      }
+      else if( WlzGreyTypeFromObj(obj, &errNum) != WLZ_GREY_RGBA ){
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      if( obj->domain.core == NULL ){
+	errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+      else if( obj->domain.p->type != WLZ_PLANEDOMAIN_DOMAIN ){
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+      }
+      else if ( obj->values.core == NULL ){
+	errNum = WLZ_ERR_VALUES_NULL;
+      }
+      else if( obj->values.vox->type != WLZ_VOXELVALUETABLE_GREY ){
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
+      else if( WlzGreyTypeFromObj(obj, &errNum) != WLZ_GREY_RGBA ){
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
+      return WlzRGBAToChannel3D(obj, chan, dstErr);
+
+    case WLZ_TRANS_OBJ:
+      /* not difficult, do it later */
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+
+    case WLZ_COMPOUND_ARR_1:
+    case WLZ_COMPOUND_ARR_2:
+      /* bit recursive this ! */
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+
+    case WLZ_EMPTY_OBJ:
+      return WlzMakeEmpty(dstErr);
+
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+    }
+  }
+  else {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+
+  if( errNum == WLZ_ERR_NONE ){
+    switch( chan ){
+    case WLZ_RGBA_CHANNEL_RED:
+    case WLZ_RGBA_CHANNEL_GREEN:
+    case WLZ_RGBA_CHANNEL_BLUE:
+    case WLZ_RGBA_CHANNEL_HUE:
+    case WLZ_RGBA_CHANNEL_SATURATION:
+    case WLZ_RGBA_CHANNEL_BRIGHTNESS:
+    case WLZ_RGBA_CHANNEL_CYAN:
+    case WLZ_RGBA_CHANNEL_MAGENTA:
+    case WLZ_RGBA_CHANNEL_YELLOW:
+      break;
+
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+    }
+  }
+
+  /* now extract data */
+  if( errNum == WLZ_ERR_NONE ){
+
+    type = WlzGreyTableType(
+      WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
+      WLZ_GREY_UBYTE, &errNum);
+    oldBck = WlzGetBackground(obj, &errNum);
+    newBck.type = WLZ_GREY_UBYTE;
+    newBck.v.ubv = (UBYTE) WlzRGBAPixelValue(oldBck, chan, &errNum);
+  }
+
+  /* make values table and return object */
+  if( errNum == WLZ_ERR_NONE ){
+    values.v = WlzNewValueTb(obj, type, newBck, &errNum);
+    rtnObj = WlzMakeMain(obj->type, obj->domain, values,
+			 NULL, NULL, &errNum);
+  }
+
+  /* iterate through objects setting values */
+  if( errNum == WLZ_ERR_NONE ){
+    WlzIntervalWSpace	iwsp0, iwsp1;
+    WlzGreyWSpace	gwsp0, gwsp1;
+    int			i, j, k;
+
+    errNum = WlzInitGreyScan(obj, &iwsp0, &gwsp0);
+    errNum = WlzInitGreyScan(rtnObj, &iwsp1, &gwsp1);
+    pixVal.type = WLZ_GREY_RGBA;
+    while((errNum == WLZ_ERR_NONE) &&
+	  ((errNum = WlzNextGreyInterval(&iwsp0)) == WLZ_ERR_NONE)){
+      errNum = WlzNextGreyInterval(&iwsp1);
+      for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
+	    gwsp0.u_grintptr.rgbp++){
+	pixVal.v.rgbv = (*(gwsp0.u_grintptr.rgbp));
+	*(gwsp1.u_grintptr.ubp++) = (UBYTE)
+	  WlzRGBAPixelValue(pixVal, chan, &errNum);
+      }
+    }
+    if( errNum == WLZ_ERR_EOO ){
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
+}
+
+
+static WlzObject *WlzRGBAToChannel3D(
+  WlzObject	*obj,
+  WlzRGBAColorChannel	chan,
+  WlzErrorNum	*dstErr)
+{
+  WlzObject	*rtnObj=NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return rtnObj;
 }

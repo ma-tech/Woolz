@@ -35,6 +35,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include <Wlz.h>
 
 static WlzErrorNum 		WlzSampleValuesAndCoords2D(
