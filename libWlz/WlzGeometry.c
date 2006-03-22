@@ -33,6 +33,7 @@
 * \bug          None known.
 */
 
+#include <math.h>
 #include <stdlib.h>
 #include <float.h>
 #include <limits.h>
@@ -143,30 +144,29 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				     WlzDVertex2 vx2, WlzDVertex2 vxP)
 {
   int		inside = 0;
-  double	x0,
-		y0,
-		x1,
-		y1,
-		x2,
-		y2,
+  double	tA,
+  		tB,
+		tC,
+		tD,
+		tE,
+		tF,
 		alpha,
 		beta,
 		gamma,
 		delta;
 
-  delta = (vx1.vtX - vx0.vtX) * (vx2.vtY - vx0.vtY) -
-          (vx2.vtX - vx0.vtX) * (vx1.vtY - vx0.vtY);
+  tA = vx0.vtX - vx2.vtX;
+  tB = vx1.vtX - vx2.vtX;
+  tD = vx0.vtY - vx2.vtY;
+  tE = vx1.vtY - vx2.vtY;
+  delta = (tA * tE) - (tB * tD);
   if(fabs(delta) > DBL_EPSILON)
   {
-    x0 = vx0.vtX - vxP.vtX;
-    y0 = vx0.vtY - vxP.vtY;
-    x1 = vx1.vtX - vxP.vtX;
-    y1 = vx1.vtY - vxP.vtY;
-    x2 = vx2.vtX - vxP.vtX;
-    y2 = vx2.vtY - vxP.vtY;
-    alpha = ((x1 * y2) - (x2 * y1)) / delta;
-    beta  = ((x2 * y0) - (x0 * y2)) / delta;
-    gamma = ((x0 * y1) - (x1 * y0)) / delta;
+    tC = vx2.vtX - vxP.vtX;
+    tF = vx2.vtY - vxP.vtY;
+    alpha = ((tB * tF) - (tC * tE)) / delta;
+    beta  = ((tC * tD) - (tA * tF)) / delta;
+    gamma = 1.0 - (alpha + beta);
     if((alpha < -DBL_EPSILON) || (beta < -DBL_EPSILON) ||
        (gamma < -DBL_EPSILON))
     {
@@ -296,51 +296,157 @@ int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /*!
-* \return	Non zero if line segments intersect.
+* \return	Integer value which classifies the intersection of
+*		the line segments, with values:
+*		<ul>
+*		  <li>0 no intersection.</li>
+*		  <li>1 intersection along line segments or all points
+*			are coincident.</li>
+*                 <li>2 intersection at end points.</li>
+*                 <li>3 intersection at a single point (not end points).</li>
+*		</ul>
 * \ingroup	WlzGeometry
 * \brief	Tests to see if the two given line segments intersect.
 *
-*		Tests to see if the two given line segments intersect.
+*		Tests to see if the two given line segments intersect
+*		using the DBL_EPSILON tollerance value.
 *               This is taken from J. O'Rourke: Computational Geometry
-*               in C, p250.
+*               in C, p250, but has ben modified to include the use of
+*		DBL_EPSILON.
 * \param	p0			1st vertex of 1st line segment.
 * \param	p1			2nd vertex 1st line segment.
 * \param	q0			1st vertex of 2nd line segment.
 * \param	q1			2nd vertex of 2nd line segment.
 * \param	dstN			Destination ptr for intersection
-*					vertex, may be NULL.
+*					vertex, may be NULL. The intersection
+*					value is not set if there is no
+*					intersection or the intersection is
+*					along the line segmants.
 */
 int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
 					     WlzDVertex2 q0, WlzDVertex2 q1,
 					     WlzDVertex2 *dstN)
 {
-  int		intersect = 0;
-  double	sp,
-  		tp,
-		dnm;
+  int		ic,
+  		intersect = 0;
+  double	sgn,
+		spd,
+  		dna,
+		dn,
+  		sp,
+  		tp;
+  WlzDVertex2	ict;
 
-  dnm = (p0.vtX * (q1.vtY - q0.vtY)) + (p1.vtX * (q0.vtY - q1.vtY)) +
-        (q0.vtX * (p0.vtY - p1.vtY)) + (q1.vtX * (p1.vtY - p0.vtY));
-  if(fabs(dnm) > DBL_EPSILON)
+  /* To minimize numerical problems don't factorize the expresion for dn. */
+  dn = (p0.vtX * (q1.vtY - q0.vtY)) + (p1.vtX * (q0.vtY - q1.vtY)) +
+       (q0.vtX * (p0.vtY - p1.vtY)) + (q1.vtX * (p1.vtY - p0.vtY));
+  sgn = (dn < 0)? -1.0: 1.0;
+  sp = ((p0.vtX * (q1.vtY - q0.vtY)) +
+	(q0.vtX * (p0.vtY - q1.vtY)) +
+	(q1.vtX * (q0.vtY - p0.vtY))) * sgn;
+  tp = ((p0.vtX * (q0.vtY - p1.vtY)) +
+	(p1.vtX * (p0.vtY - q0.vtY)) +
+	(q0.vtX * (p1.vtY - p0.vtY))) * sgn * -1.0;
+  if(fabs(dn) < DBL_EPSILON)
   {
-    sp = ((p0.vtX * (q1.vtY - q0.vtY)) +
-          (q0.vtX * (p0.vtY - q1.vtY)) +
-	  (q1.vtX * (q0.vtY - p0.vtY))) / dnm;
-    tp = -(p0.vtX * (q0.vtY - p1.vtY) +
-           p1.vtX * (p0.vtY - q0.vtY) +
-	   q0.vtX * (p1.vtY - p0.vtY)) / dnm;
-  }
-  if((sp > 0.0) && (sp <= 1.0) && (tp > 0.0) && (tp <= 1.0))
-  {
-    if(dstN)
+    /* Line segments are parallel. */
+    if((fabs(sp) < DBL_EPSILON) && (fabs(tp) < DBL_EPSILON))
     {
-      dstN->vtX = p0.vtX + (sp * (p1.vtX - p0.vtX));
-      dstN->vtY = p0.vtY + (sp * (p1.vtY - p0.vtY));
+      /* Line segments are coincident. */
+      ic = 0;
+      if((fabs(p0.vtX - q0.vtX) < DBL_EPSILON) &&
+	 (fabs(p0.vtY - q0.vtY) < DBL_EPSILON))
+      {
+        ict = p0;
+	++ic;
+      }
+      if((fabs(p0.vtX - q1.vtX) < DBL_EPSILON) &&
+	 (fabs(p0.vtY - q1.vtY) < DBL_EPSILON))
+      {
+        ict = p0;
+	++ic;
+      }
+      if((fabs(p1.vtX - q0.vtX) < DBL_EPSILON) &&
+	 (fabs(p1.vtY - q0.vtY) < DBL_EPSILON))
+      {
+        ict = p1;
+	++ic;
+      }
+      if((fabs(p1.vtX - q1.vtX) < DBL_EPSILON) &&
+	 (fabs(p1.vtY - q1.vtY) < DBL_EPSILON))
+      {
+        ict = p1;
+	++ic;
+      }
+      if(ic != 1)
+      {
+        intersect = 1;
+      }
+      else
+      {
+        intersect = 2;
+	if(dstN != NULL)
+	{
+	  *dstN = ict;
+	}
+      }
     }
-    intersect = 1;
+  }
+  else
+  {
+    /* Line segments are not parallel. */
+    dna = dn * sgn;
+    if((sp >= -(DBL_EPSILON)) && (sp < dna + DBL_EPSILON) &&
+       (tp >= -(DBL_EPSILON)) && (tp < dna + DBL_EPSILON))
+    {
+      /* Line segments intersect. */
+      intersect = ((sp > DBL_EPSILON) && (sp < (dna - DBL_EPSILON)) &&
+		   (tp > DBL_EPSILON) && (tp < (dna - DBL_EPSILON)))? 3: 2;
+      if(dstN != NULL)
+      {
+	spd = sp / dna;
+	dstN->vtX = p0.vtX + (spd * (p1.vtX - p0.vtX));
+	dstN->vtY = p0.vtY + (spd * (p1.vtY - p0.vtY));
+      }
+    }
   }
   return(intersect);
 }
+
+#ifdef WLZ_GEOM_LINESEGMENTSINTERSECT_MAIN
+int		main(int argc, char *argv[])
+{
+  int		ic;
+  WlzDVertex2	is,
+  		p0,
+  		p1,
+		q0,
+		q1;
+  char		buf[1000];
+  const int	bufSz = 1000;
+
+  while((fgets(buf, bufSz, stdin) != NULL) &&
+        (sscanf(buf, "%lg %lg %lg %lg %lg %lg %lg %lg",
+	        &(p0.vtX), &(p0.vtY),
+	        &(p1.vtX), &(p1.vtY),
+	        &(q0.vtX), &(q0.vtY),
+	        &(q1.vtX), &(q1.vtY)) == 8))
+  {
+    (void )printf("((%g, %g), (%g, %g)), ((%g, %g), (%g, %g)) -> ",
+                  p0.vtX, p0.vtY, p1.vtX, p1.vtY,
+                  q0.vtX, q0.vtY, q1.vtX, q1.vtY);
+    ic = WlzGeomLineSegmentsIntersect(p0, p1, q0, q1, &is);
+    (void )printf("%d", ic);
+    if(ic > 1)
+    {
+      (void )printf(" (%g, %g)", is.vtX, is.vtY);
+    }
+    (void )printf("\n");
+  }
+  exit(0);
+}
+
+#endif /* WLZ_GEOM_LINESEGMENTSINTERSECT_MAIN */
 
 /*!
 * \return	Result of comparison: -ve, 0 or +ve. Only the sign is
