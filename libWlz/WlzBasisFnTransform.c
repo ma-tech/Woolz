@@ -124,7 +124,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
   int		idx;
   WlzBasisFnTransform *basisTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	deltaMQ = 0.01;
+  const double	deltaMQ = 0.001;
 
   if((nDPts != nSPts) || (nDPts <= 0))
   {
