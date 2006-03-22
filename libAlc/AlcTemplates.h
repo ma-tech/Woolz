@@ -1,6 +1,14 @@
 #ifndef ALCTEMPLATES_H
 #define ALCTEMPLATES_H
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _AlcTemplates_h[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         libAlc/AlcTemplates.h
 * \author       Bill Hill

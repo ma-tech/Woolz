@@ -1,6 +1,14 @@
 #ifndef ALC_H
 #define ALC_H
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _Alc_h[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         libAlc/Alc.h
 * \author       Bill Hill
