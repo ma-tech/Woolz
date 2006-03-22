@@ -491,10 +491,12 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
     itr = 0;
     rot = 0.0;
     lastRot = 1.0;
+    /* The convergence test must only test the translation and not the
+     * rotation too, as the rotation has been applied when finding the
+     * translation. */
     while((errNum == WLZ_ERR_NONE) &&
-	  ((conv = (fabs(tran.vtX) < tranTol) &&
-	           (fabs(tran.vtY) < tranTol) &&
-		   (fabs(lastRot - rot) < rotTol)) == 0) &&
+	  ((conv = (fabs(tran.vtX) <= tranTol) &&
+	           (fabs(tran.vtY) <= tranTol)) == 0) &&
 	  ((maxItr < 0) || (itr++ < maxItr)))
     {
       /* Register for rotation. */
