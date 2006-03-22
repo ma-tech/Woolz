@@ -323,18 +323,19 @@ WlzMakeMain(WlzObjectType 	type,
     switch( type ){
 
     case WLZ_2D_DOMAINOBJ:
-    case WLZ_3D_DOMAINOBJ:
     case WLZ_2D_POLYGON:
-    case WLZ_BOUNDLIST:
-    case WLZ_CONV_HULL:
-    case WLZ_HISTOGRAM:
-    case WLZ_CONTOUR:
-    case WLZ_RECTANGLE:
+    case WLZ_3D_DOMAINOBJ:
     case WLZ_AFFINE_TRANS:
-    case WLZ_PROPERTY_OBJ:
+    case WLZ_BOUNDLIST:
+    case WLZ_CONTOUR:
+    case WLZ_CONV_HULL:
     case WLZ_EMPTY_OBJ:
-    case WLZ_TRANS_OBJ:
+    case WLZ_HISTOGRAM:
     case WLZ_MESH_TRANS:
+    case WLZ_POINTS:
+    case WLZ_PROPERTY_OBJ:
+    case WLZ_RECTANGLE:
+    case WLZ_TRANS_OBJ:
       obj->type = type;
       obj->linkcount = 0;
       obj->domain = WlzAssignDomain(domain, &errNum);
@@ -760,6 +761,80 @@ WlzMakeValueLine(WlzRagRValues 	*vtb,
   vlln->values.inp = greyptr;
 
   return( WLZ_ERR_NONE );
+}
+
+/*!
+* \return	New point domain.
+* \ingroup	WlzFeatures
+* \brief	Creates a new point domain. A point domain consists of an
+* 		array of vertices which are treated as seperate points.
+* \param	type		Type of point vertices, which must be one of
+* 				WLZ_POINTS_2I, WLZ_POINTS_2D, WLZ_POINTS_3I
+* 				or WLZ_POINTS_3D.
+* \param	nVtx		Number of points to copy to the new domain.
+* \param	vtxP		Points to copy to the new domain. These
+* 				must be of the correct type. If NULL then
+* 				no points are copied.
+* \param	maxVtx		The number of vertices for which space is
+* 				allocated.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
+WlzPoints 	*WlzMakePoints(WlzObjectType type, int nVtx, WlzVertexP vtxP,
+    			       int maxVtx, WlzErrorNum *dstErr)
+{
+  size_t	pntSz;
+  WlzPoints	*pnt = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(maxVtx < 1)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_POINTS_2I:
+	pntSz = sizeof(WlzIVertex2);
+	break;
+      case WLZ_POINTS_2D:
+	pntSz = sizeof(WlzDVertex2);
+	break;
+      case WLZ_POINTS_3I:
+	pntSz = sizeof(WlzIVertex3);
+	break;
+      case WLZ_POINTS_3D:
+	pntSz = sizeof(WlzDVertex3);
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((pnt = (WlzPoints *)
+	      AlcCalloc(sizeof(WlzPoints) + pntSz * maxVtx, 1)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pnt->type = type;
+    pnt->maxPoints = maxVtx;
+    pnt->points.v = (void *)(pnt + 1);
+    if(vtxP.v && (nVtx > 0))
+    {
+      pnt->nPoints = nVtx;
+      (void )memcpy(pnt->points.v, vtxP.v, pntSz * nVtx);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pnt);
 }
 
 /* function:     WlzMakePolygonDomain    */
