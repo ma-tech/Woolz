@@ -1,4 +1,12 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _AlgDPSearch_c[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         AlgDPSearch.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
@@ -21,8 +29,6 @@
 * \todo         -
 * \bug          None known
 *
-* Maintenance log with most recent changes at top of list.
-2/7/5		Copied from MAPaint module NalgsDPSearch.c.
 */
 
 #include <stdio.h>
@@ -31,15 +37,6 @@
 
 #include <Alc.h>
 
-/*****************************************************************************
-* Function    : NalgsDPSearch						     *
-* Returns     :								     *
-* Parameters  :								     *
-* Date        : Thu Oct 19 09:21:32 1995				     *
-* Synopsis    :								     *
-*****************************************************************************/
-
-/* function:     AlgDPSearch    */
 /*! 
 * \ingroup      AlgDPSearch
 * \brief        Use dynamic programming to establish an optima path given local
@@ -111,14 +108,16 @@ int AlgDPSearch(
   return( 0 );
 }
 
-/*****************************************************************************
-* Function    : NalgsDPTotalCosts					     *
-* Returns     :								     *
-* Parameters  :								     *
-* Date        : Thu Oct 19 09:27:56 1995				     *
-* Synopsis    :								     *
-*****************************************************************************/
-
+/*!
+* \return	zero
+* \ingroup	AlgDPSearch
+* \brief
+* \param    imax	number of points on the path
+* \param    jmax	number of locations per path point
+* \param    optimal_cost	return for optimal path cost through each point
+* \param    optimal_path	return for optimal path through each point.
+* \param    non_local_cost	non-local cost function calculated in terms
+*/
 int AlgDPTotalCosts(
   int 		imax,
   int		jmax,
