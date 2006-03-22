@@ -35,6 +35,8 @@
 */
 
 #include <Wlz.h>
+#include <limits.h>
+#include <float.h>
 
 static int			WlzPartialItv2DCmpFn(
 				  const void *vc,
@@ -82,7 +84,8 @@ static int			WlzLBTQueueUnlink(
 static unsigned 		WlzLBTIdxHashFn(
 				  void *datum);
 static void			WlzLBTCondenseNodes2D(
-				  WlzLBTDomain2D *lDom);
+				  WlzLBTDomain2D *lDom,
+				  WlzIntervalDomain *iDom);
 static void			WlzLBTSetNodeIndexObj2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
@@ -419,6 +422,7 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
   WlzObject	*obj = NULL;
   WlzLBTNode2D	*nod;
   WlzLBTDomain2D *lDom = NULL;
+  UBYTE		*nodeFlgs = NULL;
   WlzDomain	dom;
   WlzValues	nullVal;
   WlzIVertex2	pos;
@@ -493,11 +497,12 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
       errNum = WLZ_ERR_NONE;
     }
   }
+  (void )AlcFree(nodeFlgs);
   (void )WlzFreeObj(obj);
   if(errNum == WLZ_ERR_NONE)
   {
     /* Condense the nodes to get the linear binary tree. */
-    WlzLBTCondenseNodes2D(lDom);
+    WlzLBTCondenseNodes2D(lDom, iDom);
   }
   if(dstErr)
   {
@@ -1790,10 +1795,11 @@ static int	WlzLBTDomain2DNodeCmpFn(const void *ptrC,
 *		using the term code, eg: 33X.
 *		When all such sequences have been marked identical keys
 *		are removed leaving the linear quadtree nodes.
-   * where those which follow 
-* \param	lDom
+* \param	lDom			The LBT domain.
+* \param	iDom			The corresponding interval domain.
 */
-static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom)
+static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
+    				       WlzIntervalDomain *iDom)
 {
   int		idC,
   		idD,
@@ -1806,6 +1812,7 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom)
   unsigned int	dMsk,
   		pDig,
   		cDig;
+  WlzIVertex2	pos;
   WlzLBTNode2D	*cNod,
   		*pNod,
 		*tNod;
@@ -1839,70 +1846,95 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom)
     }
     for(idN = 1; idN < lDom->nNodes; ++idN)
     {
-      idD = 0;
       dMsk = 1;
       dCnt = 4;
       allPrvD = 1;
       pNod = cNod++;
-      while(allPrvD && (idD < lDom->depth))
+      /* Avoid condensing nodes which are on the boundary of the domain. */
+      WlzLBTKeyToPos2I(pNod->keys, &pos);
+      if((WlzInsideDomain2D(iDom, pos.vtY - 1, pos.vtX - 1, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY - 1, pos.vtX + 0, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY - 1, pos.vtX + 1, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY + 0, pos.vtX - 1, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY + 0, pos.vtX + 0, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY + 0, pos.vtX + 1, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY + 1, pos.vtX - 1, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY + 1, pos.vtX + 0, NULL) == 0) ||
+         (WlzInsideDomain2D(iDom, pos.vtY + 1, pos.vtX + 1, NULL) == 0))
       {
-	pDig = ((pNod->keys[0] & dMsk) != 0) |
-	       (((pNod->keys[1] & dMsk) != 0) << 1);
-	cDig = ((cNod->keys[0] & dMsk) != 0) |
-	       (((cNod->keys[1] & dMsk) != 0) << 1);
-	if(idD == 0)
+	for(idD = 0; idD < lDom->depth; ++idD)
 	{
-	  if(cDig == 0)
-	  {
-	    keyCnt[idD] = 1;
-	  }
-	  else if(keyCnt[idD] && (cDig == pDig + 1))
-	  {
-	    ++keyCnt[idD];
-	  }
-	  else
-	  {
-	    keyCnt[idD] = 0;
-	    allPrvD = 0;
-	  }
+	  allPrvD = allPrvD &&
+		    ((cNod->keys[0] & dMsk) == 0) &&
+		    ((cNod->keys[1] & dMsk) == 0);
+	  keyCnt[idD] = allPrvD;
+	  dMsk <<= 1;
 	}
-	else
-	{
-	  if((cDig == 0) && (keyCnt[idD - 1] == 1))
-	  {
-	    keyCnt[idD] = 1;
-	  }
-	  else if(keyCnt[idD] && ((cDig == pDig) || (cDig == pDig + 1)))
-	  {
-	    ++keyCnt[idD];
-	  }
-	  else
-	  {
-	    keyCnt[idD] = 0;
-	    allPrvD = 0;
-	  }
-	}
-	if(allPrvD && (keyCnt[idD] == dCnt))
-	{
-	  keyCnt[idD] = 0;
-	  /* Mark key digits as term. */
-	  tNod = cNod;
-	  for(idM = 0; idM < dCnt; ++idM)
-	  {
-	    tNod->keys[0] &= ~dMsk;
-	    tNod->keys[1] &= ~dMsk;
-	    tNod->keys[2] |= dMsk;
-	    --tNod;
-	  }
-	}
-	++idD;
-	dMsk <<= 1;
-	dCnt *= 4;
       }
-      while(idD < lDom->depth)
+      else
       {
-        keyCnt[idD] = 0;
-	++idD;
+	idD = 0;
+	while(allPrvD && (idD < lDom->depth))
+	{
+	  /* Compute previous and current key digit for the current depth.
+	   * These digits are in the range [0-3]. */
+	  pDig =  ((pNod->keys[0] & dMsk) != 0) |
+		 (((pNod->keys[1] & dMsk) != 0) << 1);
+	  cDig =  ((cNod->keys[0] & dMsk) != 0) |
+		 (((cNod->keys[1] & dMsk) != 0) << 1);
+	  if(idD == 0)
+	  {
+	    if(cDig == 0)
+	    {
+	      keyCnt[idD] = 1;
+	    }
+	    else if(keyCnt[idD] && (cDig == pDig + 1))
+	    {
+	      ++keyCnt[idD];
+	    }
+	    else
+	    {
+	      keyCnt[idD] = 0;
+	      allPrvD = 0;
+	    }
+	  }
+	  else
+	  {
+	    if((cDig == 0) && (keyCnt[idD - 1] == 1))
+	    {
+	      keyCnt[idD] = 1;
+	    }
+	    else if(keyCnt[idD] && ((cDig == pDig) || (cDig == pDig + 1)))
+	    {
+	      ++keyCnt[idD];
+	    }
+	    else
+	    {
+	      keyCnt[idD] = 0;
+	      allPrvD = 0;
+	    }
+	  }
+	  if(allPrvD && (keyCnt[idD] == dCnt))
+	  {
+	    keyCnt[idD] = 0;
+	    /* Mark key digits as term. */
+	    tNod = cNod;
+	    for(idM = 0; idM < dCnt; ++idM)
+	    {
+	      tNod->keys[0] &= ~dMsk;
+	      tNod->keys[1] &= ~dMsk;
+	      tNod->keys[2] |= dMsk;
+	      --tNod;
+	    }
+	  }
+	  ++idD;
+	  dMsk <<= 1;
+	  dCnt *= 4;
+	}
+	while(idD < lDom->depth)
+	{
+	  keyCnt[idD++] = 0;
+	}
       }
     }
 #ifdef WLZ_LBTDOMAIN_DEBUG
@@ -2098,7 +2130,7 @@ int		main(int argc, char *argv[])
   		option,
   		ok = 1,
 		maxNodSz = INT_MAX,
-		maxBndNodSz = INT_MAX;
+		maxBndNodSz = INT_MAX,
 		usage = 0,
   		txtOut = 0,
   		vtkOut = 1;
