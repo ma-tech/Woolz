@@ -1,6 +1,14 @@
 #ifndef WLZ_H
 #define WLZ_H
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _Wlz_h[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         libWlz/Wlz.h
 * \author       Bill Hill

@@ -1,6 +1,14 @@
 #ifndef WLZBND_TYPE_H
 #define WLZBND_TYPE_H
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _WlzBndType_h[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         WlzBndType.h
 * \author       Bill Hill

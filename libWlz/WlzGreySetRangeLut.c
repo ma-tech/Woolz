@@ -1,4 +1,12 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _WlzGreySetRangeLut_c[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         libWlz/WlzGreySetRangeLut.c
 * \author       Richard Baldock

@@ -1,6 +1,14 @@
 #ifndef WLZ_INLINE_H
 #define WLZ_INLINE_H
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _WlzInline_h[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         libWlz/WlzInline.h
 * \author       Christophe Dubreuil

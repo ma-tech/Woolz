@@ -1,4 +1,12 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _Wlz3DViewTransformObj_c[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         libWlz/Wlz3DViewTransformObj.c
 * \author       Richard Baldock
