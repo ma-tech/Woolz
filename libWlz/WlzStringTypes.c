@@ -770,14 +770,56 @@ const char	*WlzStringFromTransformType(WlzTransformType tType,
 
   switch(tType)
   {
+    case WLZ_TRANSFORM_EMPTY:
+      tStr = "WLZ_TRANSFORM_EMPTY";
+      break;
     case WLZ_TRANSFORM_2D_AFFINE:
       tStr = "WLZ_TRANSFORM_2D_AFFINE";
+      break;
+    case WLZ_TRANSFORM_2D_REG:
+      tStr = "WLZ_TRANSFORM_2D_REG";
+      break;
+    case WLZ_TRANSFORM_2D_TRANS:
+      tStr = "WLZ_TRANSFORM_2D_TRANS";
+      break;
+    case WLZ_TRANSFORM_2D_NOSHEAR:
+      tStr = "WLZ_TRANSFORM_2D_NOSHEAR";
       break;
     case WLZ_TRANSFORM_3D_AFFINE:
       tStr = "WLZ_TRANSFORM_3D_AFFINE";
       break;
+    case WLZ_TRANSFORM_3D_REG:
+      tStr = "WLZ_TRANSFORM_3D_REG";
+      break;
+    case WLZ_TRANSFORM_3D_TRANS:
+      tStr = "WLZ_TRANSFORM_3D_TRANS";
+      break;
+    case WLZ_TRANSFORM_3D_NOSHEAR:
+      tStr = "WLZ_TRANSFORM_3D_NOSHEAR";
+      break;
+    case WLZ_TRANSFORM_2D_BASISFN:
+      tStr = "WLZ_TRANSFORM_2D_BASISFN";
+      break;
+    case WLZ_TRANSFORM_2D5_BASISFN:
+      tStr = "WLZ_TRANSFORM_2D5_BASISFN";
+      break;
+    case WLZ_TRANSFORM_3D_BASISFN:
+      tStr = "WLZ_TRANSFORM_3D_BASISFN";
+      break;
     case WLZ_TRANSFORM_2D_MESH:
-      tStr =  "WLZ_TRANSFORM_2D_MESH";
+      tStr = "WLZ_TRANSFORM_2D_MESH";
+      break;
+    case WLZ_TRANSFORM_2D5_MESH:
+      tStr = "WLZ_TRANSFORM_2D5_MESH";
+      break;
+    case WLZ_TRANSFORM_3D_MESH:
+      tStr = "WLZ_TRANSFORM_3D_MESH";
+      break;
+    case WLZ_TRANSFORM_2D_CMESH:
+      tStr = "WLZ_TRANSFORM_2D_CMESH";
+      break;
+    case WLZ_TRANSFORM_3D_CMESH:
+      tStr = "WLZ_TRANSFORM_3D_CMESH";
       break;
     default:
       errNum = WLZ_ERR_TRANSFORM_TYPE;
@@ -806,9 +848,24 @@ WlzTransformType WlzStringToTransformType(const char *tStr,
   WlzErrorNum	errNum = WLZ_ERR_TRANSFORM_TYPE;
 
   if(WlzStringMatchValue(&tI0, tStr,
-  		         "WLZ_TRANSFORM_2D_AFFINE", WLZ_TRANSFORM_2D_AFFINE,
-			 "WLZ_TRANSFORM_3D_AFFINE", WLZ_TRANSFORM_3D_AFFINE,
-			 NULL))
+		      "WLZ_TRANSFORM_EMPTY", WLZ_TRANSFORM_EMPTY,
+		      "WLZ_TRANSFORM_2D_AFFINE", WLZ_TRANSFORM_2D_AFFINE,
+		      "WLZ_TRANSFORM_2D_REG", WLZ_TRANSFORM_2D_REG,
+		      "WLZ_TRANSFORM_2D_TRANS", WLZ_TRANSFORM_2D_TRANS,
+		      "WLZ_TRANSFORM_2D_NOSHEAR", WLZ_TRANSFORM_2D_NOSHEAR,
+		      "WLZ_TRANSFORM_3D_AFFINE", WLZ_TRANSFORM_3D_AFFINE,
+		      "WLZ_TRANSFORM_3D_REG", WLZ_TRANSFORM_3D_REG,
+		      "WLZ_TRANSFORM_3D_TRANS", WLZ_TRANSFORM_3D_TRANS,
+		      "WLZ_TRANSFORM_3D_NOSHEAR", WLZ_TRANSFORM_3D_NOSHEAR,
+		      "WLZ_TRANSFORM_2D_BASISFN", WLZ_TRANSFORM_2D_BASISFN,
+		      "WLZ_TRANSFORM_2D5_BASISFN", WLZ_TRANSFORM_2D5_BASISFN,
+		      "WLZ_TRANSFORM_3D_BASISFN", WLZ_TRANSFORM_3D_BASISFN,
+		      "WLZ_TRANSFORM_2D_MESH", WLZ_TRANSFORM_2D_MESH,
+		      "WLZ_TRANSFORM_2D5_MESH", WLZ_TRANSFORM_2D5_MESH,
+		      "WLZ_TRANSFORM_3D_MESH", WLZ_TRANSFORM_3D_MESH,
+		      "WLZ_TRANSFORM_2D_CMESH", WLZ_TRANSFORM_2D_CMESH,
+		      "WLZ_TRANSFORM_3D_CMESH", WLZ_TRANSFORM_3D_CMESH,
+		      NULL))
   {
     tType = tI0;
     errNum = WLZ_ERR_NONE;
@@ -818,6 +875,175 @@ WlzTransformType WlzStringToTransformType(const char *tStr,
     *dstErr = errNum;
   }
   return(tType);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given mesh generation method.
+* \param	mtd			Given mesh generation method.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromMeshGenMethod(WlzMeshGenMethod mtd,
+				            WlzErrorNum *dstErr)
+{
+  const char	*tStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(mtd)
+  {
+    case WLZ_MESH_GENMETHOD_BLOCK:
+      tStr = "WLZ_MESH_GENMETHOD_BLOCK";
+      break;
+    case WLZ_MESH_GENMETHOD_GRADIENT:
+      tStr = "WLZ_MESH_GENMETHOD_GRADIENT";
+      break;
+    case WLZ_MESH_GENMETHOD_CONFORM:
+      tStr = "WLZ_MESH_GENMETHOD_CONFORM";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tStr);
+}
+
+/*!
+* \return	Woolz mesh generation method.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given mesh
+*               generation method.
+* \param	tStr			Given mesh generation string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+WlzMeshGenMethod WlzStringToMeshGenMethod(const char *tStr,
+					  WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzMeshGenMethod  mtd = WLZ_MESH_GENMETHOD_BLOCK;
+  WlzErrorNum	errNum = WLZ_ERR_TRANSFORM_TYPE;
+
+  if(WlzStringMatchValue(&tI0, tStr,
+		    "WLZ_MESH_GENMETHOD_BLOCK", WLZ_MESH_GENMETHOD_BLOCK,
+		    "WLZ_MESH_GENMETHOD_GRADIENT", WLZ_MESH_GENMETHOD_GRADIENT,
+		    "WLZ_MESH_GENMETHOD_CONFORM", WLZ_MESH_GENMETHOD_CONFORM,
+		    NULL))
+  {
+    mtd = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mtd);
+}
+
+/*!
+* \return	Woolz function type.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given function type.
+* \param	tStr			Given function type string.
+* \param	dstErr			Destination error pointer, may be null.
+*/
+WlzFnType	WlzStringToFnType(const char *tStr,
+				  WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzFnType  fn = WLZ_FN_BASIS_2DGAUSS;
+  WlzErrorNum	errNum = WLZ_ERR_TRANSFORM_TYPE;
+
+  if(WlzStringMatchValue(&tI0, tStr,
+		       "WLZ_FN_BASIS_2DGAUSS", WLZ_FN_BASIS_2DGAUSS,
+		       "WLZ_FN_BASIS_3DGAUSS", WLZ_FN_BASIS_3DGAUSS,
+		       "WLZ_FN_BASIS_2DPOLY", WLZ_FN_BASIS_2DPOLY,
+		       "WLZ_FN_BASIS_3DPOLY", WLZ_FN_BASIS_3DPOLY,
+		       "WLZ_FN_BASIS_2DMQ", WLZ_FN_BASIS_2DMQ,
+		       "WLZ_FN_BASIS_3DMQ", WLZ_FN_BASIS_3DMQ,
+		       "WLZ_FN_BASIS_2DTPS", WLZ_FN_BASIS_2DTPS,
+		       "WLZ_FN_BASIS_3DTPS", WLZ_FN_BASIS_3DTPS,
+		       "WLZ_FN_BASIS_2DCONF_POLY", WLZ_FN_BASIS_2DCONF_POLY,
+		       "WLZ_FN_BASIS_3DCONF_POLY", WLZ_FN_BASIS_3DCONF_POLY,
+		       "WLZ_FN_BASIS_3DMOS", WLZ_FN_BASIS_3DMOS,
+		       "WLZ_FN_BASIS_SCALAR_3DMOS", WLZ_FN_BASIS_SCALAR_3DMOS,
+		       NULL))
+  {
+    fn = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(fn);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given function type.
+* \param	mtd			Given function type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromFnType(WlzFnType fn,
+				     WlzErrorNum *dstErr)
+{
+  const char	*tStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(fn)
+  {
+    case WLZ_FN_BASIS_2DGAUSS:
+      tStr = "WLZ_FN_BASIS_2DGAUSS";
+      break;
+    case WLZ_FN_BASIS_3DGAUSS:
+      tStr = "WLZ_FN_BASIS_3DGAUSS";
+      break;
+    case WLZ_FN_BASIS_2DPOLY:
+      tStr = "WLZ_FN_BASIS_2DPOLY";
+      break;
+    case WLZ_FN_BASIS_3DPOLY:
+      tStr = "WLZ_FN_BASIS_3DPOLY";
+      break;
+    case WLZ_FN_BASIS_2DMQ:
+      tStr = "WLZ_FN_BASIS_2DMQ";
+      break;
+    case WLZ_FN_BASIS_3DMQ:
+      tStr = "WLZ_FN_BASIS_3DMQ";
+      break;
+    case WLZ_FN_BASIS_2DTPS:
+      tStr = "WLZ_FN_BASIS_2DTPS";
+      break;
+    case WLZ_FN_BASIS_3DTPS:
+      tStr = "WLZ_FN_BASIS_3DTPS";
+      break;
+    case WLZ_FN_BASIS_2DCONF_POLY:
+      tStr = "WLZ_FN_BASIS_2DCONF_POLY";
+      break;
+    case WLZ_FN_BASIS_3DCONF_POLY:
+      tStr = "WLZ_FN_BASIS_3DCONF_POLY";
+      break;
+    case WLZ_FN_BASIS_3DMOS:
+      tStr = "WLZ_FN_BASIS_3DMOS";
+      break;
+    case WLZ_FN_BASIS_SCALAR_3DMOS:
+      tStr = "WLZ_FN_BASIS_SCALAR_3DMOS";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tStr);
 }
 
 /*!
