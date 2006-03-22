@@ -66,6 +66,9 @@ static void 			WlzCMeshRemEntCb2D(
 static void			WlzCMeshEdgSetOpp2D(
 				  WlzCMeshEdg2D *edg0,
 				  WlzCMeshEdg2D *edg1);
+static void	 		WlzCMeshSetElmBoundaryFlagsPly2D(
+				  WlzCMesh2D *mesh,
+				  WlzPolygonDomain *ply);
 static int			WlzCMeshCompLBTNodPos(
 				  WlzDVertex2 *nPos,
 				  WlzLBTDomain2D *lDom,
@@ -158,12 +161,12 @@ static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D5(
 				  WlzDVertex2 *nPos,
 				  int *dstNElm,
 				  int *dstNEdg);
+static WlzErrorNum 		WlzCMeshSetElmOutsideFlags2D(
+    				  WlzCMesh2D *mesh,
+				  WlzObject *obj);
 static WlzErrorNum 		WlzCMeshSetElmBoundaryFlagsBnd2D(
 				  WlzCMesh2D *mesh,
 				  WlzBoundList *bnd);
-static WlzErrorNum 		WlzCMeshSetElmBoundaryFlagsPly2D(
-				  WlzCMesh2D *mesh,
-				  WlzPolygonDomain *ply);
 static WlzIVertex2 		WlzCMeshBucketIdxVtx2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 vtx);
@@ -1097,17 +1100,20 @@ WlzErrorNum	WlzCMeshAffineTransformMesh2D(WlzCMesh2D *mesh,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Sets the WLZ_CMESH_NOD_FLAG_OUTSIDE for nodes which
-*		are outside the object's domain.
+* \brief	Sets the WLZ_CMESH_NOD_FLAG_OUTSIDE for elements which
+*		are outside the object's domain. Tis function relies on
+*		WlzCMeshSetElmBoundaryFlags2D() having been called first.
 * \param	mesh			Given mesh.
 * \param	obj			Object with domain to which the
 *					mesh should conform.
 */
-WlzErrorNum	WlzCMeshSetNodOutsideFlags2D(WlzCMesh2D *mesh,
-					    WlzObject *obj)
+static WlzErrorNum WlzCMeshSetElmOutsideFlags2D(WlzCMesh2D *mesh,
+					WlzObject *obj)
 {
-  int		idN;
-  WlzCMeshNod2D	*nod;
+  int		idE;
+  WlzDVertex2	pos;
+  WlzCMeshElm2D	*elm;
+  WlzDVertex2	*nPos[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(obj == NULL)
@@ -1120,13 +1126,27 @@ WlzErrorNum	WlzCMeshSetNodOutsideFlags2D(WlzCMesh2D *mesh,
   }
   else
   {
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
-      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if((nod->idx >= 0) &&
-         (WlzInsideDomain(obj, 0.0, nod->pos.vtY, nod->pos.vtX, NULL) == 0))
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
       {
-	nod->flags |= WLZ_CMESH_NOD_FLAG_OUTSIDE;
+	if((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) == 0)
+	{
+	  nPos[0] = &(elm->edg[0].nod->pos);
+	  nPos[1] = &(elm->edg[1].nod->pos);
+	  nPos[2] = &(elm->edg[2].nod->pos);
+	  if((WlzInsideDomain(obj, 0.0, nPos[0]->vtY, nPos[0]->vtX,
+		              NULL) == 0) &&
+	     (WlzInsideDomain(obj, 0.0, nPos[1]->vtY, nPos[1]->vtX,
+			      NULL) == 0) &&
+	     (WlzInsideDomain(obj, 0.0, nPos[2]->vtY, nPos[2]->vtX,
+			      NULL) == 0))
+	  {
+	    /* Outside because all nodes are outside the object. */
+	    elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
+	  }
+	}
       }
     }
   }
@@ -1173,9 +1193,9 @@ static WlzErrorNum WlzCMeshSetElmBoundaryFlagsBnd2D(WlzCMesh2D *mesh,
 
   if(bnd->poly)
   {
-    errNum = WlzCMeshSetElmBoundaryFlagsPly2D(mesh, bnd->poly);
+    WlzCMeshSetElmBoundaryFlagsPly2D(mesh, bnd->poly);
   }
-  if((errNum == WLZ_ERR_NONE) && (bnd->next != NULL))
+  if(bnd->next != NULL)
   {
     errNum = WlzCMeshSetElmBoundaryFlagsBnd2D(mesh, bnd->next);
   }
@@ -1187,50 +1207,163 @@ static WlzErrorNum WlzCMeshSetElmBoundaryFlagsBnd2D(WlzCMesh2D *mesh,
 }
 
 /*!
-* \return	Woolz error code.
+* \return	void
 * \ingroup	WlzMesh
 * \brief	Sets the WLZ_CMESH_ELM_FLAG_BOUNDARY for elements which
 *		intersect the polygon.
 * \todo		If the position is on an edge or is at a node of the
 * 		element then these elements which shares the edge or node
 * 		and the position may not be marked as being on the boundary.
+*		All vertices of the boundary polygon must lie within the mesh.
 * \param	mesh			Given mesh.
 * \param	bnd			Polygon to which the mesh should
 *					conform.
 */
-static WlzErrorNum WlzCMeshSetElmBoundaryFlagsPly2D(WlzCMesh2D *mesh,
-					            WlzPolygonDomain *ply)
+static void	WlzCMeshSetElmBoundaryFlagsPly2D(WlzCMesh2D *mesh,
+						 WlzPolygonDomain *ply)
 {
   int		idE,
-  		idN;
-  WlzObject	*obj8 = NULL;
-  WlzCMeshElm2D	*elm;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
+		idF,
+		idI,
+		idN;
+  double	d0,
+  		d1;
+  WlzCMeshEdg2D	*edg0,
+  		*edg1;
+  WlzCMeshElm2D *elm0,
+  		*elm1;
+  WlzDVertex2	v0,
+		v1,
+		vT0,
+		vT1;
+  int		segElmEdg[3],
+  		segElmIsc[3];
+  WlzDVertex2	segElmPos[3];
 
-  obj8 = WlzPolyTo8Polygon(ply, 0, &errNum);
-  if(errNum == WLZ_ERR_NONE)
+  v1.vtX = (ply->vtx + ply->nvertices - 1)->vtX;
+  v1.vtY = (ply->vtx + ply->nvertices - 1)->vtY;
+  /* Find mesh element enclosing first vertex of the polygon. */
+  idE = WlzCMeshElmJumpPos2D(mesh, v1);
+  if(idE >= 0)
   {
-    idE = -1;
-    for(idN = 0; idN < obj8->domain.poly->nvertices; ++idN)
+    elm1 = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+    elm1->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+    for(idN = 0; idN < ply->nvertices; ++idN)
     {
-      idE = WlzCMeshElmEnclosingPos2D(mesh, idE,
-      				      (obj8->domain.poly->vtx + idN)->vtX,
-      				      (obj8->domain.poly->vtx + idN)->vtY);
-      if(idE >= 0)
+      v0 = v1;
+      v1.vtX = (ply->vtx + idN)->vtX;
+      v1.vtY = (ply->vtx + idN)->vtY;
+      while((elm1 != NULL) &&
+            WlzGeomVxInTriangle(elm1->edg[0].nod->pos,
+				elm1->edg[1].nod->pos,
+				elm1->edg[2].nod->pos, v1) < 0)
       {
-	/* Position is inside element. */
-        elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
-      }
-      else
-      {
-        errNum = WLZ_ERR_DOMAIN_DATA;
-	break;
+        elm0 = elm1;
+	/* Find the intersection of the boundary line segment v0,v1 with
+	 * element elm0 that is closest to v1. Intersection type will be
+	 * segElmIsc[idI] at position segElmPos[idC]. */
+	idI = -1;
+	d0 = d1 = DBL_MAX;
+	for(idE = 0; idE < 3; ++idE)
+	{
+	  idF = (idE + 1) % 3;
+	  segElmIsc[idE] = WlzGeomLineSegmentsIntersect(v0, v1,
+				elm0->edg[idE].nod->pos,
+				elm1->edg[idF].nod->pos,
+				segElmPos + idE);
+	  if(segElmIsc[idE] == 2)
+	  {
+	    /* Intersection may be at end point of boundary segment not node,
+	     * check and fix. */
+	    vT0 = elm0->edg[idE].nod->pos;
+	    WLZ_VTX_2_SUB(vT1, segElmPos[idE], vT0);
+	    d1 = WLZ_VTX_2_SQRLEN(vT1);
+	    if(d1 > DBL_EPSILON)
+	    {
+	      vT0 = elm1->edg[idF].nod->pos;
+	      WLZ_VTX_2_SUB(vT1, segElmPos[idE], vT0);
+	      d1 = WLZ_VTX_2_SQRLEN(vT1);
+	      if(d1 > DBL_EPSILON)
+	      {
+		/* Intersection not at a node, must be at an end point of
+		 * the boundary segment. */
+		segElmIsc[idE] = 3;
+	      }
+	    }
+	  }
+	}
+	for(idE = 0; idE < 3; ++idE)
+	{
+	  if((segElmIsc[idE] == 2) || (segElmIsc[idE] == 3))
+	  {
+	    /* Intersection at a node (2) or across edge (3). */
+	    segElmEdg[idE] = idE;
+	    if(segElmIsc[idE] == 2)
+	    {
+	      idF = (idE + 1) % 3;
+	      if((segElmIsc[idF] == 2) || (segElmIsc[idF] == 1))
+	      {
+		vT0 = segElmPos[idE];
+		WLZ_VTX_2_SUB(vT1, elm0->edg[idF].nod->pos, vT0);
+		d1 = WLZ_VTX_2_SQRLEN(vT1);
+		if(d1 <= DBL_EPSILON)
+		{
+		  segElmEdg[idE] = idF; 
+		}
+	      }
+	    }
+	    WLZ_VTX_2_SUB(vT0, v1, segElmPos[idE]);
+	    d1 = WLZ_VTX_2_SQRLEN(vT0);
+	    if(d1 < d0)
+	    {
+	      d0 = d1;
+	      idI = idE;
+	    }
+	  }
+	}
+	if(idI >= 0)
+	{
+	  if(segElmIsc[idI] == 3) /* Intersection across an edge. */
+	  {
+	    /* Make the next element the element across the edge. */
+	    if(elm0->edg[idI].opp != NULL)
+	    {
+	      elm1 = elm0->edg[idI].opp->elm;
+	      elm1->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	    }
+	  }
+	  else /* Intersection at a node. */
+	  {
+	    /* Set the boundary flag for all elements that use the node
+	     * and make next element next which intersects the line segment. */
+	    edg0 = edg1 = &(elm0->edg[segElmEdg[idI]]);
+	    do
+	    {
+	      if(edg1->elm != elm0)
+	      {
+		if((WlzGeomVxInTriangle(edg1->nod->pos,
+		  		        edg1->next->nod->pos,
+				        edg1->next->next->nod->pos,
+				        v1) >= 0) ||
+		   (WlzGeomLineSegmentsIntersect(v0, v1,
+		                                 edg1->next->nod->pos,
+						 edg1->next->next->nod->pos,
+						 NULL) > 0))
+	        {
+		  if((edg1->elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) == 0)
+		  {
+		    elm1 = edg1->elm;
+		  }
+		}
+	        edg1->elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	      }
+	      edg1 = edg1->nnxt;
+	    } while(edg1 != edg0);
+	  }
+	}
       }
     }
   }
-  (void )WlzFreeObj(obj8);
-  return(errNum);
 }
 
 /*!
@@ -1238,6 +1371,8 @@ static WlzErrorNum WlzCMeshSetElmBoundaryFlagsPly2D(WlzCMesh2D *mesh,
 * \ingroup	WlzMesh
 * \brief	Deletes all mesh elements which have all nodes flaged as
 *		being outside the domain.
+*		This function relies on WlzCMeshSetElmOutsideFlags2D()
+*		having been called.
 * \param	mesh			Given mesh.
 */
 WlzErrorNum	WlzCMeshDelAllElmOutside2D(WlzCMesh2D *mesh)
@@ -1257,9 +1392,7 @@ WlzErrorNum	WlzCMeshDelAllElmOutside2D(WlzCMesh2D *mesh)
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-        if(((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) == 0) &&
-	   (((elm->edg[0].nod->flags | elm->edg[1].nod->flags | 
-              elm->edg[2].nod->flags) & WLZ_CMESH_NOD_FLAG_OUTSIDE) != 0))
+        if((elm->flags & WLZ_CMESH_ELM_FLAG_OUTSIDE) != 0)
         {
 	  (void )WlzCMeshDelElm2D(mesh, elm);
 	}
@@ -1337,6 +1470,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	                   "elm[%d]->edg[%d].next != &(elm[%d]->edg[%d])",
 			   idE, idN, idE, (idN + 1) % 3);
 	  }
+	  /* Verify that each edge is directed from a node. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
 	     (elm->edg[idN].nod == NULL))
 	  {
@@ -1345,6 +1479,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 			   idE, idN);
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	  }
+	  /* Verify that each edge's node has not been deleted. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
 	     (elm->edg[idN].nod->idx < 0))
 	  {
@@ -1353,6 +1488,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    		   "elm[%d]->edg[%d].nod->idx < 0",
 			   idE, idN);
 	  }
+	  /* Verify that the each edge's node is the node. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
 	     (elm->edg[idN].nod->edg->nod != elm->edg[idN].nod))
 	  {
@@ -1361,6 +1497,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 		"elm[%d]->edg[%d].nod->edg->nod != elm[%d]->edg[%d].nod",
 		idE, idN, idE, idN);
 	  }
+	  /* Verify that an opposite opposite edge is the edge. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
 	     ((elm->edg[idN].opp != NULL) &&
 	     (elm->edg[idN].opp->opp != &(elm->edg[idN]))))
@@ -1370,6 +1507,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    		   "elm[%d]->edg[%d].opp->opp != &(elm[%d]->edg[%d])",
 			   idE, idN, idE, idN);
 	  }
+	  /* Check the number of edges directed from a node is reasonable. */
 	  if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
 	  {
 	    cnt = 0;
@@ -1734,6 +1872,7 @@ int		WlzCMeshMatchNNod2D(WlzCMesh2D *mesh, int nNod,
   return(cnt);
 }
 
+
 /*!
 * \return       Element index or negative value if there is no enclosing
 *               element.
@@ -1919,12 +2058,23 @@ FOUND:
   return(elmIdx);
 }
 
+/*!
+* \return	Non zero if the given vertex is in the given mesh element.
+* \ingroup	WlzMesh
+* \brief	Checks whether the vertex at the given position is within
+* 		the given mesh element.
+* \param	elm			Given mesh element.
+* \param	gPos			Given vertex position.
+*/
 int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
 {
   int		inside = 0;
 
-  inside = WlzGeomVxInTriangle(elm->edg[0].nod->pos, elm->edg[1].nod->pos,
-                               elm->edg[2].nod->pos, gPos) >= 0;
+  if(elm)
+  {
+    inside = WlzGeomVxInTriangle(elm->edg[0].nod->pos, elm->edg[1].nod->pos,
+				 elm->edg[2].nod->pos, gPos) >= 0;
+  }
   return(inside);
 }
 
@@ -2046,11 +2196,11 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshSetNodOutsideFlags2D(mesh, obj);
+    errNum = WlzCMeshSetElmBoundaryFlags2D(mesh, obj);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshSetElmBoundaryFlags2D(mesh, obj);
+    errNum = WlzCMeshSetElmOutsideFlags2D(mesh, obj);
   }
   if(errNum == WLZ_ERR_NONE)
   {
