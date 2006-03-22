@@ -1,5 +1,13 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _WlzAutoTrackUpDown_c[] = "MRC HGU $Id$";
+#endif
+#endif
 /***********************************************************************
 * Project:      Woolz
 * Title:        WlzAutoTrackUpDown.c

@@ -1,4 +1,12 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
+#else
+static char _WlzDilation_c[] = "MRC HGU $Id$";
+#endif
+#endif
 /*!
 * \file         binWlz/WlzDilation.c
 * \author       Richard Baldock
