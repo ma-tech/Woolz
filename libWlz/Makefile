@@ -152,6 +152,7 @@ CSOURCES		= \
 			WlzMwrAngle.c \
 			WlzNMSuppress.c \
 			WlzObjToBoundary.c \
+			WlzPoints.c \
 			WlzPolarSample.c  \
 			WlzPolyDecimate.c \
 			WlzPolyEquispace.c \
