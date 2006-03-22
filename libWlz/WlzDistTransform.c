@@ -171,13 +171,19 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
     nrmDist26 = val;
   }
 #endif /* WLZ_DIST_TRANSFORM_ENV */
-
   scale = dParam;
   nullVal.core = NULL;
   /* Check parameters. */
   if((forObj == NULL) || (refObj == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((forObj->type != WLZ_2D_DOMAINOBJ) &&
+           (forObj->type != WLZ_3D_DOMAINOBJ)) ||
+          ((refObj->type != WLZ_POINTS) &&
+	   (refObj->type != forObj->type)))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
   }
   else if((forObj->domain.core == NULL) || (refObj->domain.core == NULL))
   {
@@ -262,7 +268,7 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	break;
     }
   }
-  /* create scaled domains and a sphere domain for structual erosion if the
+  /* Create scaled domains and a sphere domain for structual erosion if the
    * distance function is approximate Euclidean. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -288,16 +294,23 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	tmpObj = WlzMakeMain(refObj->type, refObj->domain, nullVal,
-	    		     NULL, NULL, &errNum);
-	if(tmpObj)
+	if(refObj->type == WLZ_POINTS)
 	{
-	  sRefObj = WlzAssignObject(
-	            WlzAffineTransformObj(tmpObj, tr,
-		                          WLZ_INTERPOLATION_NEAREST,
-		    			  &errNum), NULL);
-	  (void )WlzFreeObj(tmpObj);
+	  sRefObj = WlzPointsToDomObj(refObj->domain.pts, scale, &errNum);
 	}
+	else /* type == WLZ_2D_DOMAINOBJ || type == WLZ_3D_DOMAINOBJ */
+	{
+	  tmpObj = WlzMakeMain(refObj->type, refObj->domain, nullVal,
+			       NULL, NULL, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    sRefObj = WlzAssignObject(
+		      WlzAffineTransformObj(tmpObj, tr,
+					    WLZ_INTERPOLATION_NEAREST,
+					    &errNum), NULL);
+	  }
+	}
+	(void )WlzFreeObj(tmpObj);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -314,9 +327,16 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	  		    NULL, NULL, &errNum), NULL);
       if(errNum == WLZ_ERR_NONE)
       {
-	sRefObj = WlzAssignObject(
-	          WlzMakeMain(refObj->type, refObj->domain, nullVal,
-			      NULL, NULL, &errNum), NULL);
+	if(refObj->type == WLZ_POINTS)
+	{
+	  sRefObj = WlzPointsToDomObj(refObj->domain.pts, 1.0, &errNum);
+	}
+	else
+	{
+	  sRefObj = WlzAssignObject(
+		    WlzMakeMain(refObj->type, refObj->domain, nullVal,
+				NULL, NULL, &errNum), NULL);
+	}
       }
     }
   }
