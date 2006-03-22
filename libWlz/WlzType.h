@@ -121,6 +121,7 @@ typedef enum _WlzObjectType
   WLZ_3D_POLYGON		= 14,	/*!< 3D polygon. */
   WLZ_CONTOUR			= 15,	/*!< Contour in either 2D or 3D. */
   WLZ_RECTANGLE			= 20,	/*!< Rectangle. */
+  WLZ_POINTS			= 21,   /*!< Points. */
   WLZ_CONVOLVE_INT		= 50,	/*!< Integer convolution. */
   WLZ_CONVOLVE_FLOAT		= 51,	/*!< Floating point convolution. */
   WLZ_AFFINE_TRANS		= 63,	/*!< Affine transform, either 2D or
@@ -143,7 +144,7 @@ typedef enum _WlzObjectType
   WLZ_EMPTY_OBJ			= 127,	/*!< Empty object: An object which
   					     occupies no space and has no
 					     values. */
-  WLZ_MESH_TRANS                = 128,
+  WLZ_MESH_TRANS                = 128,  /*!< Mesh transform. */
 
   WLZ_EMPTY_DOMAIN,			/*!< Empty domain: A domain which
   					     occupies no space. */
@@ -305,6 +306,15 @@ typedef enum _WlzObjectType
   WLZ_PROPERTY_NAME		= 182,	/*!< Ascii name property. */
   WLZ_PROPERTY_GREY		= 183,	/*!< Grey value property. */
   /**********************************************************************
+  * Points domain types.
+  **********************************************************************/
+  WLZ_POINTS_2I			= 1,	/*!< Integer 2D points domain. */
+  WLZ_POINTS_2D			= 2,	/*!< Integer 2D points domain. */
+  WLZ_POINTS_3I	                = 3,    /*!< Double precision floating point
+					     2D points domain. */
+  WLZ_POINTS_3D	                = 4,    /*!< Double precision floating point
+					     3D points domain. */
+  /**********************************************************************
   * WLZ_DUMMY_ENTRY is not an object type.			
   * Keep it the last enumerator!				
   **********************************************************************/
@@ -452,8 +462,9 @@ typedef enum _WlzMeshGenMethod
 {
   WLZ_MESH_GENMETHOD_BLOCK,	       	/*!< Uniform (triangulated) block
   					     grid. */
-  WLZ_MESH_GENMETHOD_GRADIENT  		/*!< Triangulated grid based on image
+  WLZ_MESH_GENMETHOD_GRADIENT, 		/*!< Triangulated grid based on image
   					     gradient. */
+  WLZ_MESH_GENMETHOD_CONFORM		/*!< Mesh conforming to domain. */
 } WlzMeshGenMethod;
 
 /*!
@@ -1450,7 +1461,7 @@ typedef struct _WlzGMEdgeT
 /*!
 * \struct	_WlzGMEdge
 * \ingroup	WlzGeoModel
-* \brief	A line or curve between a pair of verticies.
+* \brief	A line or curve between a pair of vertices.
 *		Although this only has a topological component a geometric
 *		component would allow curves to be represented.
 *		Typedef: ::WlzGMEdge.
@@ -1995,6 +2006,7 @@ typedef union _WlzDomain
   struct _WlzLBTDomain3D     *l3;
   struct _WlzCMesh2D	     *cm2;
   struct _WlzCMesh3D	     *cm3;
+  struct _WlzPoints	     *pts;
 } WlzDomain;
 
 /*!
@@ -2514,12 +2526,36 @@ typedef struct _WlzVoxelValues
 } WlzVoxelValues;
 
 /************************************************************************
+* Point domains.						
+************************************************************************/
+/*!
+* \struct	_WlzPoints
+* \ingroup	WlzFeatures
+* \brief	An array of either 2D or 3D points which may have
+*       	either integral of floating point values. Possible
+*       	types are: WLZ_POINTS_2I, WLZ_POINTS_2D, WLZ_POINTS_3I
+*       	and WLZ_POINTS_3D.
+*       	Typedef: ::WlzPoints
+*/
+typedef struct _WlzPoints
+{
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int		linkcount;		/*!< From WlzCoreDomain. */
+  void		*freeptr;		/*!< From WlzCoreDomain. */
+  int		nPoints;		/*!< Number of points. */
+  int		maxPoints;		/*!< The maximum number of points
+					     for which space has been
+					     allocated. */
+  WlzVertexP	points;			/*!< Array of point vertices. */
+} WlzPoints;
+
+/************************************************************************
 * Polygon domains.						
 ************************************************************************/
 /*!
 * \struct	_WlzPolygonDomain
 * \ingroup	WlzPolyline
-* \brief	A 2D polyline domain with possible types:WLZ_POLYGON_INT, 
+* \brief	A 2D polyline domain with possible types: WLZ_POLYGON_INT, 
 *		WLZ_POLYGON_FLOAT  or WLZ_POLYGON_DOUBLE. 
 *		Typedef: ::WlzPolygonDomain.
 */
@@ -2528,11 +2564,11 @@ typedef struct _WlzPolygonDomain
   WlzObjectType type;			/*!< From WlzCoreDomain. */
   int linkcount;			/*!< From WlzCoreDomain. */
   void *freeptr;			/*!< From WlzCoreDomain. */
-  int nvertices;			/*!< Number of verticies. */
-  int maxvertices;			/*!< The maximum number of verticies
+  int nvertices;			/*!< Number of vertices. */
+  int maxvertices;			/*!< The maximum number of vertices
   					     for which space has been
 					     allocated. */
-  WlzIVertex2 *vtx; 			/*!< Array of verticies.
+  WlzIVertex2 *vtx; 			/*!< Array of vertices.
   					     This may need casting according
 					     to the type field. */
 } WlzPolygonDomain;
@@ -2549,11 +2585,11 @@ typedef struct _WlzPolygonDomain3
   WlzObjectType type;			/*!< From WlzCoreDomain. */
   int 	linkcount;			/*!< From WlzCoreDomain. */
   void *freeptr;			/*!< From WlzCoreDomain. */
-  int nvertices;			/*!< Number of verticies. */
-  int maxvertices;	   		/*!< The maximum number of verticies
+  int nvertices;			/*!< Number of vertices. */
+  int maxvertices;	   		/*!< The maximum number of vertices
   					     for which space has been
 					     allocated. */
-  WlzIVertex2 *vtx; 			/*!< Array of verticies.
+  WlzIVertex2 *vtx; 			/*!< Array of vertices.
   					     This may need casting according
 					     to the type field. */
 } WlzPolygonDomain3;
@@ -2877,7 +2913,7 @@ typedef struct _WlzBasisFn
   int           nBasis;             	/*!< Number of basis function
   					     coefficients. */
   int           nVtx;                   /*!< Number of control point
-  					     verticies. */
+  					     vertices. */
   WlzVertexP    poly;          		/*!< Polynomial coefficients. */
   WlzVertexP    basis;         		/*!< Basis function coefficients. */
   WlzVertexP    vertices;     		/*!< Control point vertices. */
@@ -2955,10 +2991,13 @@ typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
 */
 typedef enum _WlzCMeshElmFlags
 {
-  WLZ_CMESH_ELM_FLAG_NONE      = (0),
-  WLZ_CMESH_ELM_FLAG_BOUNDARY  = (1)	  /*!< Element intersects the boundary
+  WLZ_CMESH_ELM_FLAG_NONE	= (0),
+  WLZ_CMESH_ELM_FLAG_BOUNDARY	= (1),	  /*!< Element intersects the boundary
   					       of the domain to which it
 					       should conform. */
+  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2)	  /*!< Element is outside the domain to
+  					       which the mesh should
+					       conform. */
 } WlzCMeshElmFlags;
 
 /*!
@@ -2970,10 +3009,7 @@ typedef enum _WlzCMeshElmFlags
 */
 typedef enum _WlzCMeshNodFlags
 {
-  WLZ_CMESH_NOD_FLAG_NONE       = (0),
-  WLZ_CMESH_NOD_FLAG_OUTSIDE 	= (1)	  /*!< Node is outside the domain to
-  					       which the mesh should
-					       conform. */
+  WLZ_CMESH_NOD_FLAG_NONE       = (0)
 } WlzCMeshNodFlags;
 
 /*!
@@ -3205,7 +3241,7 @@ typedef struct _WlzCMesh2D
 					     be correct if nodes have been
 					     deleted or modified so it should
 					     not be relied upon for any more
-					     than an uper limit. */
+					     than an upper limit. */
   WlzCMeshBucketGrid2D bGrid;           /*!< Mesh grid of buckets. */
   struct _WlzCMeshRes res;              /*!< Mesh resources. */
 
@@ -3519,7 +3555,7 @@ typedef struct _WlzCMeshTransform
 * \typedef	WlzRegICPUsrWgtFn
 * \ingroup	WlzTransform
 * \brief	A pointer to a function called for user code weighting
-*		of the matched verticies.
+*		of the matched vertices.
 */
 typedef double	(*WlzRegICPUsrWgtFn)(WlzVertexType,
 			     WlzAffineTransform *,
