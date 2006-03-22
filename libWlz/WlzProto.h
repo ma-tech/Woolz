@@ -2726,6 +2726,14 @@ extern WlzErrorNum              WlzRemoveProperty(
 /************************************************************************
  * WlzMakeStructs.c
  ************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzPoints		*WlzMakePoints(
+    				  WlzObjectType type,
+				  int nVtx,
+				  WlzVertexP vtxP,
+				  int maxVtx,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzPolygonDomain		*WlzMakePolygonDomain(
 				  WlzObjectType type,
 				  int sizeArrayVertices,
@@ -2988,9 +2996,6 @@ extern WlzErrorNum		WlzCMeshDelElm2D(
 extern WlzErrorNum		WlzCMeshDelNod2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod);
-extern WlzErrorNum		WlzCMeshSetNodOutsideFlags2D(
-				  WlzCMesh2D *mesh,
-				  WlzObject *obj);
 extern WlzErrorNum		WlzCMeshSetElmBoundaryFlags2D(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj);
@@ -3175,6 +3180,16 @@ extern WlzObject 		*WlzObjToBoundary(
 				  WlzObject *obj,
 				  int wrap,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzPoints.c								*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzPointsToDomObj(
+    				  WlzPoints *pnt,
+				  double scale,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzPolarSample.c							*
@@ -3744,6 +3759,18 @@ extern WlzTransformType 	WlzStringToTransformType(
 				  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromTransformType(
 				  WlzTransformType tType,
+				  WlzErrorNum *dstErr);
+extern WlzMeshGenMethod		WlzStringToMeshGenMethod(
+				  const char *tStr,
+				  WlzErrorNum *dstErr);
+extern const char		*WlzStringFromMeshGenMethod(
+				  WlzMeshGenMethod mtd,
+				  WlzErrorNum *dstErr);
+extern WlzFnType		WlzStringToFnType(
+				  const char *tStr,
+				  WlzErrorNum *dstErr);
+extern const char		*WlzStringFromFnType(
+				  WlzFnType fn,
 				  WlzErrorNum *dstErr);
 extern WlzGMModelType		WlzStringToGMModelType(
 				  const char *tStr,
