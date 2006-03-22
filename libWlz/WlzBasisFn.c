@@ -775,10 +775,31 @@ static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
 					WlzObject *cObj)
 {
   int		idx;
-  WlzObject	*sObj = NULL;
+  WlzDomain	sDom;
+  WlzValues	sVal;
+  WlzObject	*sObj;
   WlzPixelV	outsideV;
+  WlzVertexP	vP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+#ifdef WLZ_BASISFN_DISTMAP_ENV
+  char          *envStr;
+#endif /* WLZ_BASISFN_DISTMAP_ENV */
+  WlzDistanceType dFn = WLZ_APX_EUCLIDEAN_DISTANCE;
+  double 	dParam = 10.0;
 
+#ifdef WLZ_BASISFN_DISTMAP_ENV
+  if(((envStr = getenv("WLZ_BASISFN_DISTMAP_PARAM")) == NULL) ||
+     (sscanf(envStr, "%lg", &dParam) != 1))
+  {
+    dParam = 10.0;
+  }
+  if(((envStr = getenv("WLZ_BASISFN_DISTMAP_DFN")) == NULL) ||
+     (sscanf(envStr, "%d", &dFn) != 1))
+  {
+    dFn = WLZ_APX_EUCLIDEAN_DISTANCE;
+  }
+#endif /* WLZ_BASISFN_DISTMAP_ENV */
+  sVal.core = NULL;
   outsideV.type = WLZ_GREY_INT;
   outsideV.v.inv = INT_MAX;
   basisFn->distFn = WlzBasisFnMapDistFn2D;
@@ -795,17 +816,27 @@ static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
   {
     for(idx = 0; idx < basisFn->nVtx; ++idx)
     {
-      sObj = WlzAssignObject(
-	     WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ,
-				      basisFn->vertices.d2[idx].vtX,
-				      basisFn->vertices.d2[idx].vtY,
-				      0, &errNum), NULL);
+      sObj = NULL;
+      vP.d2 = &(basisFn->vertices.d2[idx]);
+      sDom.pts = WlzMakePoints(WLZ_POINTS_2D, 1, vP, 1, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        sObj = WlzMakeMain(WLZ_POINTS, sDom, sVal, NULL, NULL, &errNum);
+      }
       if(errNum == WLZ_ERR_NONE)
       {
 	basisFn->distMap[idx] = WlzAssignObject(
 				WlzDistanceTransform(cObj, sObj,
-				WLZ_OCTAGONAL_DISTANCE, 0.0,
+				dFn, dParam,
 				&errNum), NULL);
+      }
+      if(sObj)
+      {
+        (void )WlzFreeObj(sObj);
+      }
+      else if(sDom.core)
+      {
+	(void )WlzFreeDomain(sDom);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -820,7 +851,6 @@ static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
       {
 	break;
       }
-      (void )WlzFreeObj(sObj);
     }
   }
   return(errNum);
@@ -868,7 +898,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   WlzDBox2	extentDB;
   WlzBasisFn 	*basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
+  const double	tol = 1.0e-09;
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
@@ -1059,7 +1089,7 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
   		sVx;
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
+  const double	tol = 1.0e-09;
 
   if((order < 0) || (nPts <= 0))
   {
@@ -1218,7 +1248,7 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   ComplexD	z, zPow;
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
+  const double	tol = 1.0e-09;
 
   if((order < 0) || (nPts <= 0))
   {
@@ -1381,9 +1411,9 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   WlzVertex	sPt;
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
-  WlzBasisFn *basisFn = NULL;
+  WlzBasisFn	*basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
+  const double	tol = 1.0e-09;
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
@@ -1840,7 +1870,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
+  const double	tol = 1.0e-09;
 
   nSys = nPts + 3;
   if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
