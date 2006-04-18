@@ -193,6 +193,7 @@ CSOURCES		= \
 			WlzStructDilation.c \
 			WlzStructErosion.c \
 			WlzThreshold.c \
+			WlzTransform.c \
 			WlzTransposeObj.c \
 			WlzUnion2.c \
 			WlzUnion3d.c \
