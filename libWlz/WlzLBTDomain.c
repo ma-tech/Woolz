@@ -846,6 +846,7 @@ WlzErrorNum	WlzLBTIndexObjSetAllNodes2D(WlzLBTDomain2D *lDom,
   WlzGreyValueWSpace *iGVWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  bgdV.type = WLZ_GREY_INT;
   bgdV.v.inv = -1;
   iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
