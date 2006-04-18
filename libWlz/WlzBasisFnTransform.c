@@ -132,7 +132,8 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
   int		idx;
   WlzBasisFnTransform *basisTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	deltaMQ = 0.001;
+  const double	deltaMQ = 0.001,
+  		paramGauss = 0.9;
 
   if((nDPts != nSPts) || (nDPts <= 0))
   {
@@ -167,27 +168,27 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
     {
       case WLZ_FN_BASIS_2DGAUSS:
 	basisTr->basisFn = WlzBasisFnGauss2DFromCPts(nDPts,
-					dPts, sPts, 0.9, cObj,
+					dPts, sPts, paramGauss, cObj, NULL,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DPOLY:
-	basisTr->basisFn = WlzBasisFnPoly2DFromCPts(nDPts, order,
-					dPts, sPts,
+	basisTr->basisFn = WlzBasisFnPoly2DFromCPts(nDPts,
+					 order, dPts, sPts,
 				         &errNum);
 	break;
       case WLZ_FN_BASIS_2DMQ:
 	basisTr->basisFn = WlzBasisFnMQ2DFromCPts(nDPts,
-					dPts, sPts, deltaMQ, cObj,
+					dPts, sPts, deltaMQ, cObj, NULL,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DTPS:
 	basisTr->basisFn = WlzBasisFnTPS2DFromCPts(nDPts,
-					dPts, sPts, cObj,
+					dPts, sPts, cObj, NULL,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DCONF_POLY:
-	basisTr->basisFn = WlzBasisFnConf2DFromCPts(nDPts, order,
-					dPts, sPts,
+	basisTr->basisFn = WlzBasisFnConf2DFromCPts(nDPts,
+					order, dPts, sPts,
 				        &errNum);
 	break;
       default:
@@ -204,6 +205,157 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
     *dstErr = errNum;
   }
   return(basisTr);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Changes control points in an existing basis function transform.
+*		Using this function to add, move or delete control points
+*		avoids recomputing distance transforms when using basis
+*		functions which use constrained distances. Because distances
+*		transforms are very expensive to compute calling this function
+*		can be far more efficient, but when non-constrained (Euclidean)
+*		distances are used then there is no benefit in using this
+*		function as opposed to WlzBasisFnTPS2DFromCPts().
+*		The full list of control points must be given.
+* \param	basisTr			Existing basis function transform.
+* \param	nDPts			Number of destination control points.
+* \param	dPts			Destination control points.
+* \param	nSPts			Number of source control
+*					points (must be same as nDPts).
+* \param	sPts			Source control points.
+* \param	cObj			Constraining object, within which all
+*					distances are constrained. If NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzErrorNum	WlzBasisFnTPS2DChangeCPts(WlzBasisFnTransform *basisTr,
+				int nDPts, WlzDVertex2 *dPts,
+				int nSPts, WlzDVertex2 *sPts,
+				WlzObject *cObj)
+{
+  int		idB,
+  		idN;
+  WlzObject	**dMap = NULL;
+  WlzBasisFn    *newBasisFn = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	deltaMQ = 0.001;
+
+  if((nDPts != nSPts) || (nDPts <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if((dPts == NULL) || (sPts == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(cObj)
+  {
+    if(cObj->type != WLZ_2D_DOMAINOBJ)
+    {
+      errNum = WLZ_ERR_OBJECT_TYPE;
+    }
+    else if(cObj->domain.core == NULL)
+    {
+      errNum = WLZ_ERR_DOMAIN_NULL;
+    }
+  }
+  else if(basisTr == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(basisTr->type != WLZ_TRANSFORM_2D_BASISFN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(basisTr->basisFn->type)
+    {
+      case WLZ_FN_BASIS_2DGAUSS: /* FALLTHROUGH */
+      case WLZ_FN_BASIS_2DMQ:    /* FALLTHROUGH */
+      case WLZ_FN_BASIS_2DTPS:
+	/* Only for those basis functions can use constrained distances. */
+	if(basisTr->basisFn->sVertices.v)
+	{
+	  if((dMap = (WlzObject **)AlcCalloc(nDPts,
+					     sizeof(WlzObject *))) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  else
+	  {
+	    for(idN = 0; idN < nDPts; ++idN)
+	    {
+	      for(idB = 0; idB < basisTr->basisFn->nVtx; ++idB)
+	      {
+		if((WlzGeomCmpVtx2D(sPts[idN],
+				    basisTr->basisFn->sVertices.d2[idB],
+				    DBL_EPSILON) == 0) ||
+		   (WlzGeomCmpVtx2D(dPts[idN],
+				    basisTr->basisFn->vertices.d2[idB],
+				    DBL_EPSILON) == 0))
+		{
+		  dMap[idN] = WlzAssignObject(basisTr->basisFn->distMap[idB],
+					      NULL);
+		  break;
+		}
+	      }
+	    }
+	  }
+	  switch(basisTr->basisFn->type)
+	  {
+	    case WLZ_FN_BASIS_2DGAUSS:
+	      newBasisFn = WlzBasisFnGauss2DFromCPts(nDPts,
+					      dPts, sPts, 0.9, cObj, dMap,
+					      &errNum);
+	      break;
+	    case WLZ_FN_BASIS_2DMQ:
+	      newBasisFn = WlzBasisFnMQ2DFromCPts(nDPts,
+					      dPts, sPts, deltaMQ, cObj, dMap,
+					      &errNum);
+	      break;
+	    case WLZ_FN_BASIS_2DTPS:
+	      newBasisFn = WlzBasisFnTPS2DFromCPts(nDPts,
+					      dPts, sPts, cObj, dMap,
+					      &errNum);
+	      break;
+	    default:
+	       break;
+	  }
+	  if(dMap)
+	  {
+	    for(idN = 0; idN < nDPts; ++idN)
+	    {
+	      (void )WlzFreeObj(dMap[idN]);
+	    }
+	    AlcFree(dMap);
+	  }
+	}
+	break;
+      case WLZ_FN_BASIS_2DPOLY:
+	newBasisFn = WlzBasisFnPoly2DFromCPts(nDPts, basisTr->basisFn->nPoly,
+					 dPts, sPts,
+				         &errNum);
+	break;
+      case WLZ_FN_BASIS_2DCONF_POLY:
+	newBasisFn = WlzBasisFnConf2DFromCPts(nDPts, basisTr->basisFn->nPoly,
+					dPts, sPts,
+				        &errNum);
+	break;
+      default:
+	 errNum = WLZ_ERR_TRANSFORM_TYPE;
+	 break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )WlzBasisFnFree(basisTr->basisFn);
+    basisTr->basisFn = newBasisFn;
+  }
+  return(errNum);
 }
 
 
