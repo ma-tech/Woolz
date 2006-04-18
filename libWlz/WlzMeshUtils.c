@@ -3229,3 +3229,124 @@ static void	WlzMeshElemUnlink(WlzMeshTransform *mesh, int eId)
     }
   }
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Gets the nodes, node displacements and edges of the mesh.
+*		The nodes and node displacements are returned as simple
+*		arrays of vertices. The edges are returned as a degenerate
+*		list of triples, with each triple being the indices of the
+*		nodes of an element.
+* \param	mesh			Given mesh transform.
+* \param	dstNNod			Destination pointer for the number of
+* 					mesh nodes.
+* \param	dstNod			Destination pointer for the mesh nodes.
+* \param	dstNDsp			Destination pointer for the number of
+*					mesh node displacements.
+* \param	dstDsp			Destination pointer for the mesh node
+*					displacement.
+* \param	dstNEdg			Destination pointer for the number of
+*					edge indices. 
+* \param	dstEdg			Destination pointer for the edge
+*					indices.
+*/
+WlzErrorNum	WlzMeshGetNodesAndEdges(WlzMeshTransform *mesh,
+				int *dstNNod, WlzDVertex2 **dstNod,
+				int *dstNDsp, WlzDVertex2 **dstDsp,
+				int *dstNEdg, int **dstEdg)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  int		nId0,
+  		nId1,
+		eId0,
+		eId1,
+		nNod = 0,
+  		nEdg = 0,
+		tblSz = 0;
+  WlzDVertex2	*nod = NULL,
+		*dsp = NULL;
+  int		*edg = NULL,
+  		*tbl = NULL;
+  int		elmNodBuf[3];
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((dstNNod == NULL) || (dstNod == NULL) ||
+          (dstNDsp == NULL) || (dstDsp == NULL) ||
+	  (dstNEdg == NULL) || (dstEdg == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((mesh->nNodes > 0) && (mesh->nElem > 0))
+  {
+    /* Make a table for skipping out invalid node and element id's
+     * along with arrays for the nodes, displaced nodes and the edge
+     * indices. */
+    tblSz = (mesh->nElem > mesh->nNodes)? mesh->nElem: mesh->nNodes;
+    if(((tbl = (int *)
+               AlcMalloc(tblSz * sizeof(int))) == NULL) ||
+       ((nod = (WlzDVertex2 *)
+	       AlcMalloc(mesh->nNodes * sizeof(WlzDVertex2))) == NULL) ||
+       ((dsp = (WlzDVertex2 *)
+	       AlcMalloc(mesh->nNodes * sizeof(WlzDVertex2))) == NULL) ||
+       ((edg = (int *)
+               AlcMalloc(mesh->nElem * 3 * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* Skip zombie nodes while building the node table and inserting
+       * the nodes and displaced nodes into their arrays. */
+      nId0 = 0;
+      while((nId0 < mesh->nNodes) &&
+	    ((mesh->nodes[nId0].flags & WLZ_MESH_NODE_FLAGS_ZOMBIE) == 0))
+      {
+	tbl[nId0] = nId0;
+	nod[nId0] = mesh->nodes[nId0].position;
+	dsp[nId0] = mesh->nodes[nId0].displacement;
+	++nId0;
+      }
+      nId1 = nId0 + 1;
+      while(nId1 < mesh->nNodes)
+      {
+	tbl[nId1] = nId0;
+	if((mesh->nodes[nId1].flags & WLZ_MESH_NODE_FLAGS_ZOMBIE) == 0)
+	{
+	  nod[nId0] = mesh->nodes[nId1].position;
+	  dsp[nId0] = mesh->nodes[nId1].displacement;
+	  ++nId0;
+	}
+	++nId1;
+      }
+      nNod = nId0;
+      eId0 = 0;
+      eId1 = 0;
+      while(eId0 < mesh->nElem)
+      {
+	if((mesh->elements[eId0].flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0)
+	{
+	  edg[eId1++] = tbl[mesh->elements[eId0].nodes[0]];
+	  edg[eId1++] = tbl[mesh->elements[eId0].nodes[1]];
+	  edg[eId1++] = tbl[mesh->elements[eId0].nodes[2]];
+	}
+	++eId0;
+      }
+      nEdg = eId1;
+    }
+    AlcFree(tbl);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *dstNNod = nNod;
+    *dstNod = nod;
+    *dstNDsp = nNod;
+    *dstDsp = dsp;
+    *dstNEdg = nEdg;
+    *dstEdg = edg;
+  }
+  return(errNum);
+}
