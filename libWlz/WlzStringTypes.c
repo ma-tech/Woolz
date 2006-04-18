@@ -1216,6 +1216,78 @@ WlzGreyType	WlzStringToGreyType(const char *gStr,
 /*!
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
+* \brief	Finds a string for the given interpolation type.
+* \param	iType			Given interpolation type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromInterpolationType(WlzInterpolationType iType,
+				       WlzErrorNum *dstErr)
+{
+  const char	*iStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(iType)
+  {
+    case WLZ_INTERPOLATION_NEAREST:
+      iStr = "WLZ_INTERPOLATION_NEAREST";
+      break;
+    case WLZ_INTERPOLATION_LINEAR:
+      iStr = "WLZ_INTERPOLATION_LINEAR";
+      break;
+    case WLZ_INTERPOLATION_CLASSIFY_1:
+      iStr = "WLZ_INTERPOLATION_CLASSIFY_1";
+      break;
+    case WLZ_INTERPOLATION_CALLBACK:
+      iStr = "WLZ_INTERPOLATION_CALLBACK";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(iStr);
+}
+
+/*!
+* \return	Woolz interpolation type.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given interpolation type
+*               string.
+* \param	iStr			Given interpolation type string.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+WlzInterpolationType WlzStringToInterpolationType(const char *iStr,
+				    WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzInterpolationType iType = WLZ_INTERPOLATION_NEAREST;
+  WlzErrorNum	errNum = WLZ_ERR_PARAM_DATA;
+
+  if(WlzStringMatchValue(&tI0, iStr,
+		 "WLZ_INTERPOLATION_NEAREST", WLZ_INTERPOLATION_NEAREST,
+		 "WLZ_INTERPOLATION_LINEAR", WLZ_INTERPOLATION_LINEAR,
+		 "WLZ_INTERPOLATION_CLASSIFY_1", WLZ_INTERPOLATION_CLASSIFY_1,
+		 "WLZ_INTERPOLATION_CALLBACK", WLZ_INTERPOLATION_CALLBACK,
+		 NULL))
+  {
+    iType = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(iType);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
 * \brief	Finds a string for the given error.
 * \param	wlzErr			Given error code.
 * \param	dstMsgStr		Destination pointer for a 'meaningful'
