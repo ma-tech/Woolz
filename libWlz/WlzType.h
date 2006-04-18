@@ -1015,6 +1015,21 @@ typedef struct _WlzDBox2
 } WlzDBox2;
 
 /*!
+* \struct       _WlzFBox2
+* \ingroup	WlzType
+* \brief	2D single precision floating point axis aligned rectangle
+* 		(box).
+*		Typedef: ::WlzFBox2.
+*/
+typedef struct _WlzFBox2
+{
+  float		xMin;
+  float		yMin;
+  float		xMax;
+  float		yMax;
+} WlzFBox2;
+
+/*!
 * \struct	_WlzIBox3
 * \ingroup	WlzType
 * \brief	3D integer axis aligned cubiod (box).
@@ -1047,6 +1062,22 @@ typedef struct _WlzDBox3
 } WlzDBox3;
 
 /*!
+* \struct	_WlzFBox3
+* \ingroup	WlzType
+* \brief	3D single precision floating point axis aligned cubiod (box).
+*		Typedef: ::WlzFBox3.
+*/
+typedef struct _WlzFBox3
+{
+  float		xMin;
+  float		yMin;
+  float		zMin;
+  float		xMax;
+  float		yMax;
+  float		zMax;
+} WlzFBox3;
+
+/*!
 * \union	_WlzBoxP
 * \ingroup	WlzType
 * \brief	Union of axis aligned box pointers.
@@ -1056,8 +1087,10 @@ typedef union _WlzBoxP
 {
   void		*v;
   WlzIBox2	*i2;
+  WlzFBox2	*f2;
   WlzDBox2	*d2;
   WlzIBox3	*i3;
+  WlzFBox3	*f3;
   WlzDBox3	*d3;
 } WlzBoxP;
 
@@ -1070,8 +1103,10 @@ typedef union _WlzBoxP
 typedef union _WlzBox
 {
   WlzIBox2	i2;
+  WlzFBox2	f2;
   WlzDBox2	d2;
   WlzIBox3	i3;
+  WlzFBox3	f3;
   WlzDBox3	d3;
 } WlzBox;
 
@@ -2924,7 +2959,13 @@ typedef struct _WlzBasisFn
   					     vertices. */
   WlzVertexP    poly;          		/*!< Polynomial coefficients. */
   WlzVertexP    basis;         		/*!< Basis function coefficients. */
-  WlzVertexP    vertices;     		/*!< Control point vertices. */
+  WlzVertexP    vertices;     		/*!< Control point vertices, these are
+  					     the destination vertices of the
+					     control points used to define the
+					     basis function transform. */
+  WlzVertexP	sVertices;		/*!< Source vertices used to compute
+  					     the transform. Not always used
+					     and may be NULL. */
   void		*param;			/*!< Other parameters used by the
   					     basis function, e.g. delta in
 					     the MQ and Gauss basis
