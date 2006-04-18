@@ -48,6 +48,9 @@ static char _WlzBasisFn_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+static void			WlzBasisFnEditSV(
+				  int nV,
+				  double *vMx);
 static void			WlzBasisFnVxExtent2D(
 				  WlzDBox2 *extentDB,
 				  WlzDVertex2 *vx0,
@@ -93,6 +96,10 @@ static double   		WlzBasisFnValueMOSPhiPC(
 static double			WlzBasisFnScalarMOS3DEvalFn(
 				  void *basisFn,
 				  double rad);
+static WlzErrorNum 		WlzBasisFnComputeDistMap2D(
+				  WlzBasisFn *basisFn,
+				  WlzObject *cObj,
+				  WlzObject **dObj);
 static WlzDVertex2 		WlzBasisFnValueRedPoly2D(
 				  WlzDVertex2 *poly,
 				  WlzDVertex2 srcVx);
@@ -121,6 +128,7 @@ WlzErrorNum	WlzBasisFnFree(WlzBasisFn *basisFn)
     AlcFree(basisFn->poly.v);
     AlcFree(basisFn->basis.v);
     AlcFree(basisFn->vertices.v);
+    AlcFree(basisFn->sVertices.v);
     AlcFree(basisFn->param);
     if(basisFn->evalData)
     {
@@ -778,9 +786,11 @@ static double   WlzBasisFnValueMOSPhiPC(double r, double v, double w,
 * \param	basisFn			Partialy completed basis function
 *					under construction.
 * \param	cObj			Constraint object.
+* \param	dObj			Array of pre-computed distance
+*					transform objects.
 */
 static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
-					WlzObject *cObj)
+					WlzObject *cObj, WlzObject **dObj)
 {
   int		idx;
   WlzDomain	sDom;
@@ -824,31 +834,38 @@ static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
   {
     for(idx = 0; idx < basisFn->nVtx; ++idx)
     {
-      sObj = NULL;
-      vP.d2 = &(basisFn->vertices.d2[idx]);
-      sDom.pts = WlzMakePoints(WLZ_POINTS_2D, 1, vP, 1, &errNum);
-      if(errNum == WLZ_ERR_NONE)
+      if(dObj && dObj[idx])
       {
-        sObj = WlzMakeMain(WLZ_POINTS, sDom, sVal, NULL, NULL, &errNum);
+        basisFn->distMap[idx] = WlzAssignObject(dObj[idx], NULL);
       }
-      if(errNum == WLZ_ERR_NONE)
+      else
       {
-	basisFn->distMap[idx] = WlzAssignObject(
-				WlzDistanceTransform(cObj, sObj,
-				dFn, dParam,
-				&errNum), NULL);
-      }
-      if(sObj)
-      {
-        (void )WlzFreeObj(sObj);
-      }
-      else if(sDom.core)
-      {
-	(void )WlzFreeDomain(sDom);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        errNum = WlzSetBackground(basisFn->distMap[idx], outsideV);
+	sObj = NULL;
+	vP.d2 = &(basisFn->vertices.d2[idx]);
+	sDom.pts = WlzMakePoints(WLZ_POINTS_2D, 1, vP, 1, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  sObj = WlzMakeMain(WLZ_POINTS, sDom, sVal, NULL, NULL, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  basisFn->distMap[idx] = WlzAssignObject(
+				    WlzDistanceTransform(cObj, sObj,
+				    dFn, dParam,
+				    &errNum), NULL);
+	}
+	if(sObj)
+	{
+	  (void )WlzFreeObj(sObj);
+	}
+	else if(sDom.core)
+	{
+	  (void )WlzFreeDomain(sDom);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzSetBackground(basisFn->distMap[idx], outsideV);
+	}
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -877,12 +894,13 @@ static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
 *					distances are constrained, if NULL
 *					Euclidean distances are used in place
 *					of constrained distances.
+* \param	dObj			Array of distance transform objects.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
 				    WlzDVertex2 *dPts, WlzDVertex2 *sPts,
 				    double delta, WlzObject *cObj,
-				    WlzErrorNum *dstErr)
+				    WlzObject **dObj, WlzErrorNum *dstErr)
 {
   int		idN,
   		idX,
@@ -906,7 +924,6 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   WlzDBox2	extentDB;
   WlzBasisFn 	*basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-09;
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
@@ -921,6 +938,13 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
      ((basisFn->param = AlcMalloc(sizeof(double))) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if((errNum == WLZ_ERR_NONE) && cObj)
+  {
+    if((basisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -940,7 +964,8 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
     WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
     if(cObj)
     {
-      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj);
+      WlzValueCopyDVertexToDVertex(basisFn->sVertices.d2, sPts, nPts);
+      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj, dObj);
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -999,22 +1024,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nSys, wMx);
     /* Solve for lambda and the X polynomial coefficients. */
     errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
     						vMx, bMx));
@@ -1097,7 +1107,6 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
   		sVx;
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-09;
 
   if((order < 0) || (nPts <= 0))
   {
@@ -1151,22 +1160,7 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nCoef; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nCoef; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nCoef, wMx);
     /* Fill matrix b for x coordinate */
     for(idM = 0; idM < nPts; ++idM)
     {
@@ -1256,7 +1250,6 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   ComplexD	z, zPow;
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-09;
 
   if((order < 0) || (nPts <= 0))
   {
@@ -1312,22 +1305,7 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nCoef; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nCoef; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nCoef, wMx);
     /* Fill matrix b for x coordinate */
     for(idM = 0; idM < nPts; ++idM)
     {
@@ -1392,12 +1370,13 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
 *					distances are constrained, if NULL
 *					Euclidean distances are used in place
 *					of constrained distances.
+* \param	dObj			Array of distance transform objects.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
 				WlzDVertex2 *dPts, WlzDVertex2 *sPts,
 				double delta, WlzObject *cObj,
-				WlzErrorNum *dstErr)
+				WlzObject **dObj, WlzErrorNum *dstErr)
 {
   int		idN,
   		idX,
@@ -1421,7 +1400,6 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   WlzDBox2	extentDB;
   WlzBasisFn	*basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-09;
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
@@ -1437,6 +1415,13 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
      ((basisFn->param = AlcMalloc(sizeof(double))) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if((errNum == WLZ_ERR_NONE) && cObj)
+  {
+    if((basisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1456,7 +1441,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
     WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
     if(cObj)
     {
-      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj);
+      WlzValueCopyDVertexToDVertex(basisFn->sVertices.d2, sPts, nPts);
+      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj, dObj);
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1523,22 +1509,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nSys, wMx);
     /* Solve for lambda and the X polynomial coefficients. */
     errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
     						vMx, bMx));
@@ -1639,7 +1610,6 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
   WlzDBox3	extentDB;
   WlzBasisFn   *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
 
   nSys = nPts + 4;
   deltaSq = delta * delta;
@@ -1747,22 +1717,7 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nSys, wMx);
     /* Solve for lambda and the X polynomial coefficients. */
     errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
     						vMx, bMx));
@@ -1852,11 +1807,13 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
 *					distances are constrained, if NULL
 *					Euclidean distances are used in place
 *					of constrained distances.
+* \param	dObj			Array of distance transform objects.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 				  WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				  WlzObject *cObj, WlzErrorNum *dstErr)
+				  WlzObject *cObj,
+				  WlzObject **dObj, WlzErrorNum *dstErr)
 {
   int		idN,
   		idX,
@@ -1878,7 +1835,6 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-09;
 
   nSys = nPts + 3;
   if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
@@ -1892,6 +1848,13 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
      ((basisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if((errNum == WLZ_ERR_NONE) && cObj)
+  {
+    if((basisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1911,7 +1874,8 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
     WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
     if(cObj)
     {
-      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj);
+      WlzValueCopyDVertexToDVertex(basisFn->sVertices.d2, sPts, nPts);
+      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj, dObj);
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1968,22 +1932,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nSys, wMx);
     /* Solve for lambda and the X polynomial coefficients. */
     errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
     						vMx, bMx));
@@ -2204,7 +2153,6 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 		tV2;
   WlzHistogramDomain *evalData = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tol = 1.0e-06;
   
   delta = *(param + 0);
   tau = *(param + 1);
@@ -2306,22 +2254,7 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    wMax = 0.0;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) > wMax)
-      {
-	wMax = *(wMx + idN);
-      }
-    }
-    thresh = tol * wMax;
-    for(idN = 0; idN < nSys; ++idN)
-    {
-      if(*(wMx + idN) < thresh)
-      {
-	*(wMx + idN) = 0.0;
-      }
-    }
+    WlzBasisFnEditSV(nSys, wMx);
     /* Solve for lambda and the polynomial coefficients. */
     errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
     						vMx, bMx));
@@ -2951,7 +2884,6 @@ static WlzDVertex2 WlzBasisFnValueRedPoly2D(WlzDVertex2 *poly,
 * 		used by the TPS, MQ and Gauss basis functions.
 * \param	poly			Given polynomial coefficients.
 * \param	srcVx			Source vertex.
-* 29-08-01 add by Jianguo
 */
 static WlzDVertex3 WlzBasisFnValueRedPoly3D(WlzDVertex3 *poly,
 					WlzDVertex3 srcVx)
@@ -2976,5 +2908,37 @@ static WlzDVertex3 WlzBasisFnValueRedPoly3D(WlzDVertex3 *poly,
   dspVx.vtX += poly->vtX * srcVx.vtZ;
   dspVx.vtY += poly->vtY * srcVx.vtZ;
   dspVx.vtZ += poly->vtZ * srcVx.vtZ;
-   return(dspVx);
+  return(dspVx);
+}
+
+/*!
+* \return	void
+* \ingroup	WlzFunction
+* \brief	Edits the 1D array of potentialy singular values,
+*		maxing those that are close to zero zero.
+* \param	nV			Number of values.
+* \param	vMx			Array of values.
+*/
+static void	WlzBasisFnEditSV(int nV, double *vMx)
+{
+  int		idN;
+  double	thresh,
+  		vMax = 0.0;
+  const double	tol = 1.0e-09;
+
+  for(idN = 0; idN < nV; ++idN)
+  {
+    if(*(vMx + idN) > vMax)
+    {
+      vMax = *(vMx + idN);
+    }
+  }
+  thresh = tol * vMax;
+  for(idN = 0; idN < nV; ++idN)
+  {
+    if(*(vMx + idN) < thresh)
+    {
+      *(vMx + idN) = 0.0;
+    }
+  }
 }
