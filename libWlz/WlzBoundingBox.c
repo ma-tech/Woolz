@@ -814,7 +814,7 @@ static WlzDBox3 WlzBoundingBoxContour3D(WlzContour *ctr, WlzErrorNum *dstErr)
 /*!
 * \return	Integer bounding box.
 * \ingroup	WlzFeatures
-* \brief	Comverts a 2D double precision bounding box to an integer
+* \brief	Converts a 2D double precision bounding box to an integer
 *		bounding box. There is no checking done for underflows or
 *		overflows.
 * \param	bBox2D			Double precision bounding box.
@@ -833,7 +833,7 @@ WlzIBox2	WlzBoundingBox2DTo2I(WlzDBox2 bBox2D)
 /*!
 * \return	Double precision bounding box.
 * \ingroup	WlzFeatures
-* \brief	Comverts a 2D integer bounding box to an double precision
+* \brief	Converts a 2D integer bounding box to an double precision
 *		bounding box.
 * \param	bBox2I			Double precision bounding box.
 */
@@ -851,7 +851,7 @@ WlzDBox2	WlzBoundingBox2ITo2D(WlzIBox2 bBox2I)
 /*!
 * \return	Integer bounding box.
 * \ingroup	WlzFeatures
-* \brief	Comverts a 3D double precision bounding box to an integer
+* \brief	Converts a 3D double precision bounding box to an integer
 *		bounding box. There is no checking done for underflows or
 *		overflows.
 * \param	bBox3D			Double precision bounding box.
@@ -872,9 +872,9 @@ WlzIBox3	WlzBoundingBox3DTo3I(WlzDBox3 bBox3D)
 /*!
 * \return	Double precision bounding box.
 * \ingroup	WlzFeatures
-* \brief	Comverts a 3D integer bounding box to an double precision
+* \brief	Converts a 3D integer bounding box to an double precision
 *		bounding box.
-* \param	bBox3I			Double precision bounding box.
+* \param	bBox3I			Integer bounding box.
 */
 WlzDBox3	WlzBoundingBox3ITo3D(WlzIBox3 bBox3I)
 {
@@ -890,6 +890,46 @@ WlzDBox3	WlzBoundingBox3ITo3D(WlzIBox3 bBox3I)
 }
 
 /*!
+* \return	Single precision bounding box.
+* \ingroup	WlzFeatures
+* \brief	Converts a 3D double bounding box to a single precision
+*		bounding box.
+* \param	bBox3D			Double precision bounding box.
+*/
+WlzFBox3	WlzBoundingBox3DTo3F(WlzDBox3 bBox3D)
+{
+  WlzFBox3	bBox3F;
+
+  bBox3F.xMin = bBox3D.xMin;
+  bBox3F.yMin = bBox3D.yMin;
+  bBox3F.zMin = bBox3D.zMin;
+  bBox3F.xMax = bBox3D.xMax;
+  bBox3F.yMax = bBox3D.yMax;
+  bBox3F.zMax = bBox3D.zMax;
+  return(bBox3F);
+}
+
+/*!
+* \return	Double precision bounding box.
+* \ingroup	WlzFeatures
+* \brief	Converts a 3D single bounding box to a double precision
+*		bounding box.
+* \param	bBox3F			Single precision bounding box.
+*/
+WlzDBox3	WlzBoundingBox3FTo3D(WlzFBox3 bBox3F)
+{
+  WlzDBox3	bBox3D;
+
+  bBox3D.xMin = bBox3F.xMin;
+  bBox3D.yMin = bBox3F.yMin;
+  bBox3D.zMin = bBox3F.zMin;
+  bBox3D.xMax = bBox3F.xMax;
+  bBox3D.yMax = bBox3F.yMax;
+  bBox3D.zMax = bBox3F.zMax;
+  return(bBox3D);
+}
+
+/*!
 * \return	Axis alligned 2D integer bounding box.
 * \ingroup	WlzFeatures
 * \brief	Computes the 2D integer bounding box which
@@ -898,6 +938,35 @@ WlzDBox3	WlzBoundingBox3ITo3D(WlzIBox3 bBox3I)
 * \param	box1			Second bounding box.
 */
 WlzIBox2	WlzBoundingBoxUnion2I(WlzIBox2 box0, WlzIBox2 box1)
+{
+  if(box1.xMin < box0.xMin)
+  {
+    box0.xMin = box1.xMin;
+  }
+  if(box1.xMax > box0.xMax)
+  {
+    box0.xMax = box1.xMax;
+  }
+  if(box1.yMin < box0.yMin)
+  {
+    box0.yMin = box1.yMin;
+  }
+  if(box1.yMax > box0.yMax)
+  {
+    box0.yMax = box1.yMax;
+  }
+  return(box0);
+}
+
+/*!
+* \return	Axis alligned 2D single precision bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 2D single precision bounding box which
+*		encloses the given pair of bounding boxes.
+* \param	box0			First bounding box.
+* \param	box1			Second bounding box.
+*/
+WlzFBox2	WlzBoundingBoxUnion2F(WlzFBox2 box0, WlzFBox2 box1)
 {
   if(box1.xMin < box0.xMin)
   {
@@ -946,6 +1015,7 @@ WlzDBox2	WlzBoundingBoxUnion2D(WlzDBox2 box0, WlzDBox2 box1)
   }
   return(box0);
 }
+
 /*!
 * \return	Axis alligned 3D integer bounding box.
 * \ingroup	WlzFeatures
@@ -955,6 +1025,43 @@ WlzDBox2	WlzBoundingBoxUnion2D(WlzDBox2 box0, WlzDBox2 box1)
 * \param	box1			Second bounding box.
 */
 WlzIBox3	WlzBoundingBoxUnion3I(WlzIBox3 box0, WlzIBox3 box1)
+{
+  if(box1.xMin < box0.xMin)
+  {
+    box0.xMin = box1.xMin;
+  }
+  if(box1.xMax > box0.xMax)
+  {
+    box0.xMax = box1.xMax;
+  }
+  if(box1.yMin < box0.yMin)
+  {
+    box0.yMin = box1.yMin;
+  }
+  if(box1.yMax > box0.yMax)
+  {
+    box0.yMax = box1.yMax;
+  }
+  if(box1.zMin < box0.zMin)
+  {
+    box0.zMin = box1.zMin;
+  }
+  if(box1.zMax > box0.zMax)
+  {
+    box0.zMax = box1.zMax;
+  }
+  return(box0);
+}
+
+/*!
+* \return	Axis alligned 3D float precision bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 3D single precision bounding box which
+*		encloses the given pair of bounding boxes.
+* \param	box0			First bounding box.
+* \param	box1			Second bounding box.
+*/
+WlzFBox3	WlzBoundingBoxUnion3F(WlzFBox3 box0, WlzFBox3 box1)
 {
   if(box1.xMin < box0.xMin)
   {
