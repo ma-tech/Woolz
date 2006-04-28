@@ -134,6 +134,11 @@ ifneq ($(strip $(SUBSYSTEMS)),)
 endif
 			$(install_includes)
 
+# Target which installs the public 'C' header files (should not need 
+# modifying).
+install_documentation:	documentation
+			cp -r html_Core $(HGU_DOC_DIR)/WlzCore
+
 # Target for compressed tar files suitable for distribution (should not need
 # modifying).
 tar:			$(TARSOURCES) clobber allsources
@@ -155,8 +160,8 @@ includes:		$(INCLUDES_PUB)
 # Use doxygen to make the documentation.
 documentation:
 			doxygen Doxyfile_Core
-			doxygen Doxyfile_binCore
-			doxygen Doxyfile_libCore
+#			doxygen Doxyfile_binCore
+#			doxygen Doxyfile_libCore
 
 # Target for lint (modify as required).
 lint:			$(CSOURCES) $(INCLUDES_PRV)
