@@ -164,6 +164,7 @@ WlzObject *WlzAddValuesTable(
 			   NULL, NULL, &errNum);
       domains = rtnObj->domain.p->domains;
       valuess = rtnObj->values.vox->values;
+      type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
       for(p=0;
 	  p < (rtnObj->domain.p->lastpl - rtnObj->domain.p->plane1 + 1);
 	  p++, domains++, valuess++){
