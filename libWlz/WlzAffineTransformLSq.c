@@ -737,6 +737,7 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
 		**trM = NULL;
   double	bV[4],
   		sums[22];
+  const double	eps = 0.000000001;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -835,7 +836,7 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
     aM[3][2] = sums[8];  aM[3][3] = sums[9];
     bV[0] =    sums[10]; bV[1] = sums[11];
     bV[2] =    sums[12]; bV[3] = sums[13];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, 0.000001);
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, eps);
     trM[0][0] = bV[0]; trM[0][1] = bV[1];
     trM[0][2] = bV[2]; trM[0][3] = bV[3];
   }
@@ -852,7 +853,7 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
     aM[3][2] = sums[8];  aM[3][3] = sums[9];
     bV[0] =    sums[14]; bV[1] = sums[15];
     bV[2] =    sums[16]; bV[3] = sums[17];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, 0.000001);
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, eps);
     trM[1][0] = bV[0]; trM[1][1] = bV[1];
     trM[1][2] = bV[2]; trM[1][3] = bV[3];
   }
@@ -869,14 +870,14 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
     aM[3][2] = sums[8];  aM[3][3] = sums[9];
     bV[0] =    sums[18]; bV[1] = sums[19];
     bV[2] =    sums[20]; bV[3] = sums[21];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, 0.000001);
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, eps);
     trM[2][0] = bV[0]; trM[2][1] = bV[1];
     trM[2][2] = bV[2]; trM[2][3] = bV[3];
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Make the transform */
-    trM[3][0] = 0; trM[3][1] = 0; trM[3][2] = 0; trM[3][2] = 1;
+    trM[3][0] = 0; trM[3][1] = 0; trM[3][2] = 0; trM[3][3] = 1;
     tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trM,
 				      &errNum);
   }
