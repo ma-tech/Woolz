@@ -102,7 +102,11 @@ static void usage(
   fprintf(stderr,
 	  "Usage:\n"
 	  "%s\n"
-	  "\tBuild a Woolz domain object from a vertex\n"
+	  "\tBuild a Woolz domain object from a vertex reading the\n"
+	  "\tvertex values from standard input\n"
+	  "\t-d#     input dimension, can be 2 or 3 (default 2)\n"
+	  "\t-h      help message\n"
+	  "\t-v     verbose operation\n"
 	  "\n",
 	  str);
 
@@ -171,15 +175,26 @@ int main(
   
   WlzObject     	*obj;
   WlzDVertex3		vtx;
-  char 	optList[] = "hv";
+  char 	optList[] = "d:hv";
   int		option;
   int		verboseFlg=0;
+  int		dimension=2;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* parse the command line */
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'd':
+      dimension = atoi(optarg);
+      if( (dimension != 2) && (dimension != 3) ){
+	fprintf(stderr, "%s: must have dimension equal to 2 or 3\n",
+		argv[0]);
+	usage(argv[0]);
+	return 1;
+      }
+      break;
 
     case 'v':
       verboseFlg = 1;
@@ -195,12 +210,14 @@ int main(
 
   /* read vertex from stdin and write the objects to stdout */
   while( scanf("%lg %lg %lg", &vtx.vtX, &vtx.vtY, &vtx.vtZ) != EOF ){
-    obj = WlzCoordsToObject(WLZ_2D_DOMAINOBJ, vtx.vtX, vtx.vtY, vtx.vtZ,
-			    &errNum);
-    WlzWriteObj(stdout, obj);
-    WlzFreeObj(obj);
-    obj = WlzCoordsToObject(WLZ_3D_DOMAINOBJ, vtx.vtX, vtx.vtY, vtx.vtZ,
-			    &errNum);
+    if( dimension == 2 ){
+      obj = WlzCoordsToObject(WLZ_2D_DOMAINOBJ, vtx.vtX, vtx.vtY, vtx.vtZ,
+			      &errNum);
+    }
+    else {
+      obj = WlzCoordsToObject(WLZ_3D_DOMAINOBJ, vtx.vtX, vtx.vtY, vtx.vtZ,
+			      &errNum);
+    }
     WlzWriteObj(stdout, obj);
     WlzFreeObj(obj);
   }
