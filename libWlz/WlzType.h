@@ -3799,8 +3799,11 @@ typedef struct _WlzGreyValueWSpace
   					     pointers. */
   WlzGreyV      gVal[8];        	/*!< One, four or eight grey
   					     values. */
-  int		bkdFlag;	  	/*!< Flag set to 1 if background used
-  					     else 0. */
+  unsigned	bkdFlag;	  	/*!< Flag set if background used
+  					     with a bitmask to indicate
+					     which values are background.
+					     Value is 0 if there are no
+					     background values. */
 } WlzGreyValueWSpace;
 
 /************************************************************************
