@@ -392,14 +392,17 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
   int		kol1,
 		kolRel,
 		count,
-  		pass = 2,
+  		pass,
   		offset;
+  unsigned	hitMsk;
   WlzGreyP	baseGVP;
   WlzInterval	*itv;
   WlzIntervalLine *itvLn;
   WlzGreyV	*gVP;
   WlzGreyP	*gPP;
 
+  hitMsk = 0;
+  gVWSp->bkdFlag = 0;
   kol1 = gVWSp->iDom2D->kol1;
   gVP = gVWSp->gVal;
   gPP = gVWSp->gPtr;
@@ -407,7 +410,8 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
   if((gVWSp->values2D.core) &&
      ((kol + 1) >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
   {
-    while(pass-- > 0)
+    pass = 0;
+    while(pass < 2)
     {
       if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
       {
@@ -416,10 +420,12 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 	  WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
 	  if(kol >= kol1)
 	  {
+	    hitMsk |= 1 << (pass * 2);
 	    WlzGreyValueSetGreyP(gVP, gPP, gVWSp->gType, baseGVP, offset);
 	  }
 	  if(kol <= (gVWSp->iDom2D->lastkl - 1))
 	  {
+	    hitMsk |= 1 << (pass * 2) + 1;
 	    WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
 	    			 baseGVP, offset + 1);
 	  }
@@ -441,10 +447,12 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 	      WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
 	      if(kol >= (kol1 + itv->ileft))
 	      {
+	        hitMsk |= 1 << (pass * 2);
 		WlzGreyValueSetGreyP(gVP, gPP, gVWSp->gType, baseGVP, offset);
 	      }
 	      if(kol <= (itv->iright + kol1 - 1))
 	      {
+	        hitMsk |= 1 << (pass * 2) + 1;
 		WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
 				     baseGVP, offset + 1);
 	      }
@@ -453,11 +461,13 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 	  }
 	}
       }
+      ++pass;
       ++line;
       gVP += 2;
       gPP += 2;
     }
   }
+  gVWSp->bkdFlag = 0xf & ~hitMsk;
 }
 
 /*!
