@@ -10,7 +10,7 @@ static char _WlzDomainMatchMatric_c[] = "MRC HGU $Id$";
 /*!
 * \file         WlzDomainMatchMatrix.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Tue Dec 20 11:31:47 2005
+* \date         Wed Jun 14 07:50:43 BST 2006
 * \version      MRC HGU $Id$
 *               $Revision$
 *               $Name$
@@ -48,13 +48,13 @@ static char _WlzDomainMatchMatric_c[] = "MRC HGU $Id$";
  
 /*!
 \ingroup      BinWlzApp
-\defgroup     wlzdomainmatch WlzDomainMatch
+\defgroup     wlzdomainmatchmatrix WlzDomainMatchMatrix
 \par Name
-WlzDomainMatch - calculate a match values between to domains or domain
+WlzDomainMatchMatrix - calculate match values between to domain
  sets according to type.
 \par Synopsis
 \verbatim
-WlzDomainMatch -d <delta> -t <type> -m <matrix-file> -h -v 
+WlzDomainMatchMatrix -d <delta> -t <type> -m <matrix-file> -h -v <rows> <cols>
 
 \endverbatim
 \par Options
@@ -92,7 +92,7 @@ WlzDomainMatch -d <delta> -t <type> -m <matrix-file> -h -v
     <td><b> </b></td>
     <td>= 5 - Comparative match between two targets given by
                        the ratio of type 4 matchs to each domain. For this
-                       option a 3rd object is required in the input stream.</td>
+                       two objects per column are required in the input stream.</td>
   </tr>
   <tr>
     <td><b> </b></td>
@@ -192,7 +192,7 @@ static void usage(
 	  "\t             = 4 - Area(intersection)/Area(d2)\n"
 	  "\t             = 5 - Comparative match between two targets given by\n"
 	  "\t               the ratio of type 4 matchs to each domain. For this\n"
-	  "\t               option a 3rd object is required in the input stream.\n"
+	  "\t               option two objects are required per column in the input.\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n"
 	  "\n",

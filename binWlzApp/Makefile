@@ -30,12 +30,15 @@ EXECUTABLES		= \
 			WlzBibToMeshTrans \
 			WlzBibTransAbsRel \
 			WlzDomainMatch \
+			WlzDomainMatchMatrix \
 			WlzEuclidDistanceMap \
 			WlzExtractTransform \
+			WlzInterpolateSectionViewerBibFiles \
 			WlzOccupancy \
 			WlzProductTransform \
 			WlzFixedPlaneAlign \
 			WlzPatchObjRegister \
+			WlzPosterProcessForStackupKeep3StraitLines \
 			WlzRawToWlz \
 			WlzReconstruct \
 			WlzSizeSelect \
@@ -58,13 +61,16 @@ CSOURCES		= \
 			Wlz3DViewTransformBitmap.c \
 			WlzBibToMeshTrans.c \
 			WlzDomainMatch.c \
+			WlzDomainMatchMatrix.c \
 			WlzBibTransAbsRel.c \
 			WlzEuclidDistanceMap.c \
 			WlzExtractTransform.c \
+			WlzInterpolateSectionViewerBibFiles.c \
 			WlzOccupancy.c \
 			WlzProductTransform.c \
 			WlzFixedPlaneAlign.c \
 			WlzPatchObjRegister.c \
+			WlzPosterProcessForStackupKeep3StraitLines.c \
 			WlzRawToWlz.c \
 			WlzReconstruct.c \
 			WlzSizeSelect.c \
