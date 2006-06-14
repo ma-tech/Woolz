@@ -44,11 +44,13 @@ EXECUTABLES		= \
 			WlzSizeSelect \
 			WlzSplitImage \
 			WlzObjCompareSpecial_01 \
+			WlzVtxDistance \
 			WlzVtxToObj \
 			WlzFixDomains \
 			WlzMatchICPPlane \
 			WlzTiffStackToShade \
-			WlzTiffStackToPatches
+			WlzTiffStackToPatches \
+			WlzVtxDistance
 
 SCRIPTS			= \
 			WlzObjCompareSpecial_01.csh
@@ -76,11 +78,13 @@ CSOURCES		= \
 			WlzSizeSelect.c \
 			WlzSplitImage.c \
 			WlzObjCompareSpecial_01.c \
+			WlzVtxDistance.c \
 			WlzVtxToObj.c \
 			WlzFixDomains.c \
 			WlzMatchICPPlane.c \
 			WlzTiffStackToShade.c \
-			WlzTiffStackToPatches.c
+			WlzTiffStackToPatches.c \
+			WlzVtxDistance.c
 
 # List of all header files that are available outside of either this archive
 # or these executables (modify as required).
