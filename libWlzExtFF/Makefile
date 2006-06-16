@@ -50,6 +50,7 @@ CSOURCES		= \
 			WlzExtFFAnl.c \
 			WlzExtFFBmp.c \
 			WlzExtFFDen.c \
+			WlzExtFFGif.c \
 			WlzExtFFIcs.c \
 			WlzExtFFIPL.c \
 			WlzExtFFPic.c \
