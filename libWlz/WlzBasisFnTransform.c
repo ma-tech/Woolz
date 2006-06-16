@@ -101,11 +101,7 @@ WlzErrorNum	WlzBasisFnFreeTransform(WlzBasisFnTransform *basisTr)
 * \brief	Creates a new basis function transform of the given
 *		type, which will transform an object with the given
 *		source verticies into an object with the given destination
-*		verticies.
-*		If a constraining object is given all distances will be
-*		computed within the given object for those basis functions
-*		which support constrained evaluation (Gauss, multi-quadric
-*		and thin-plate spline).
+*		verticies. See WlzBasisFnTrFromCPts2DParam().
 * \param	type			Required basis function type.
 * \param	order			Order of polynomial, only used for
 * 					WLZ_FN_BASIS_2DPOLY.
@@ -127,6 +123,57 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 					  int nSPts,
 					  WlzDVertex2 *sPts,
 					  WlzObject *cObj,
+					  WlzErrorNum *dstErr)
+{
+  WlzBasisFnTransform *basisTr = NULL;
+
+  basisTr = WlzBasisFnTrFromCPts2DParam(type, order, nDPts, dPts,
+                                        nSPts, sPts, cObj, 0, NULL,
+					dstErr);
+  return(basisTr);
+}
+
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new basis function transform of the given
+*		type, which will transform an object with the given
+*		source verticies into an object with the given destination
+*		verticies.
+*		If a constraining object is given all distances will be
+*		computed within the given object for those basis functions
+*		which support constrained evaluation (Gauss, multi-quadric
+*		and thin-plate spline).
+*		Additional basis functions parameters may be supplied via
+*		the nParam and param parameters. Currently this is only used to
+*		supply the multi-quadric delta or gauss parameter scaling.
+*		The default values of multi-quadric delta = 0.001 and
+*		gauss param = 0.9 are used if nParam <= 0 or param == NULL.
+* \param	type			Required basis function type.
+* \param	order			Order of polynomial, only used for
+* 					WLZ_FN_BASIS_2DPOLY.
+* \param	nDPts			Number of destination control points.
+* \param	dPts			Destination control points.
+* \param	nSPts			Number of source control points
+*					(must be same as nDPts).
+* \param	sPts			Source control points.
+* \param	cObj			Constraining object, within which all
+*					distances are constrained. If NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
+* \param	nParam			Number of additional parameters.
+* \param	param			Array of additional parameters.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
+					  int order,
+					  int nDPts,
+					  WlzDVertex2 *dPts,
+					  int nSPts,
+					  WlzDVertex2 *sPts,
+					  WlzObject *cObj,
+					  int nParam,
+					  double *param,
 					  WlzErrorNum *dstErr)
 {
   int		idx;
@@ -168,7 +215,10 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
     {
       case WLZ_FN_BASIS_2DGAUSS:
 	basisTr->basisFn = WlzBasisFnGauss2DFromCPts(nDPts,
-					dPts, sPts, paramGauss, cObj, NULL,
+					dPts, sPts,
+					((nParam > 0) && (param != NULL))?
+					*param: paramGauss,
+					cObj, NULL,
 					&errNum);
 	break;
       case WLZ_FN_BASIS_2DPOLY:
@@ -178,8 +228,10 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 	break;
       case WLZ_FN_BASIS_2DMQ:
 	basisTr->basisFn = WlzBasisFnMQ2DFromCPts(nDPts,
-					dPts, sPts, deltaMQ, cObj, NULL,
-					&errNum);
+					dPts, sPts,
+					((nParam > 0) && (param != NULL))?
+					*param: deltaMQ,
+					cObj, NULL, &errNum);
 	break;
       case WLZ_FN_BASIS_2DTPS:
 	basisTr->basisFn = WlzBasisFnTPS2DFromCPts(nDPts,
@@ -229,19 +281,60 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 *					distances are constrained. If NULL
 *					Euclidean distances are used in place
 *					of constrained distances.
-* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzErrorNum	WlzBasisFnTPS2DChangeCPts(WlzBasisFnTransform *basisTr,
 				int nDPts, WlzDVertex2 *dPts,
 				int nSPts, WlzDVertex2 *sPts,
 				WlzObject *cObj)
 {
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzBasisFnTPS2DChangeCPtsParam(basisTr, nDPts, dPts, nSPts, sPts,
+                                          cObj, 0, NULL);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Changes control points in an existing basis function transform.
+*		Using this function to add, move or delete control points
+*		avoids recomputing distance transforms when using basis
+*		functions which use constrained distances. Because distances
+*		transforms are very expensive to compute calling this function
+*		can be far more efficient, but when non-constrained (Euclidean)
+*		distances are used then there is no benefit in using this
+*		function as opposed to WlzBasisFnTPS2DFromCPts().
+*		The full list of control points must be given.
+*		Additional basis functions parameters may be supplied via
+*		the nParam and param parameters. Currently this is only used to
+*		supply the multi-quadric delta or gauss parameter scaling.
+*		The default values of multi-quadric delta = 0.001 and
+*		gauss param = 0.9 are used if nParam <= 0 or param == NULL.
+* \param	basisTr			Existing basis function transform.
+* \param	nDPts			Number of destination control points.
+* \param	dPts			Destination control points.
+* \param	nSPts			Number of source control
+*					points (must be same as nDPts).
+* \param	sPts			Source control points.
+* \param	cObj			Constraining object, within which all
+*					distances are constrained. If NULL
+*					Euclidean distances are used in place
+*					of constrained distances.
+* \param	nParam			Number of additional parameters.
+* \param	param			Array of additional parameters.
+*/
+WlzErrorNum	WlzBasisFnTPS2DChangeCPtsParam(WlzBasisFnTransform *basisTr,
+				int nDPts, WlzDVertex2 *dPts,
+				int nSPts, WlzDVertex2 *sPts,
+				WlzObject *cObj, int nParam, double *param)
+{
   int		idB,
   		idN;
   WlzObject	**dMap = NULL;
   WlzBasisFn    *newBasisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	deltaMQ = 0.001;
+  const double	deltaMQ = 0.001,
+  		paramGauss = 0.9;
 
   if((nDPts != nSPts) || (nDPts <= 0))
   {
@@ -309,13 +402,17 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPts(WlzBasisFnTransform *basisTr,
 	  {
 	    case WLZ_FN_BASIS_2DGAUSS:
 	      newBasisFn = WlzBasisFnGauss2DFromCPts(nDPts,
-					      dPts, sPts, 0.9, cObj, dMap,
-					      &errNum);
+				dPts, sPts,
+				((nParam > 0) && (param != NULL))?
+				*param: paramGauss,
+				cObj, dMap, &errNum);
 	      break;
 	    case WLZ_FN_BASIS_2DMQ:
 	      newBasisFn = WlzBasisFnMQ2DFromCPts(nDPts,
-					      dPts, sPts, deltaMQ, cObj, dMap,
-					      &errNum);
+				dPts, sPts,
+				((nParam > 0) && (param != NULL))?
+				*param: deltaMQ,
+				cObj, dMap, &errNum);
 	      break;
 	    case WLZ_FN_BASIS_2DTPS:
 	      newBasisFn = WlzBasisFnTPS2DFromCPts(nDPts,
