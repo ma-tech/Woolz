@@ -72,6 +72,7 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_AM,		/*!< Amira. */
   WLZEFF_FORMAT_JPEG,		/*!< Jpeg. */
   WLZEFF_FORMAT_ANL,		/*!< Analyze 7.5. */
+  WLZEFF_FORMAT_GIF,		/*!< Graphics Interchange Format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats */
 } WlzEffFormat;
 
