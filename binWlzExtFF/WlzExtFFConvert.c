@@ -148,6 +148,9 @@ The valid file formats are:
   <td>JPEG</td> <td>jpg</td> <td>.jpg</td>
   </tr>
   <tr>
+  <td>GIF</td> <td>gif</td> <td>.gif</td>
+  </tr>
+  <tr>
   <td>MRC HGU Woolz</td> <td>wlz</td> <td>.wlz</td>
   </tr>
 </table>
@@ -555,6 +558,7 @@ int             main(int argc, char **argv)
 	"  IPLab                       ipl     .ipl\n"
 	"  TIFF                        tif     .tif\n"
 	"  JPEG                        jpg     .jpg\n"
+	"  GIF                         gif     .gif\n"
 	"  MRC HGU Woolz               wlz     .wlz\n",
 	"Simple example:\n  ",
 	*argv,
