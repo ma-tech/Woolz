@@ -109,6 +109,11 @@ extern WlzErrorNum 		WlzEffWriteObjBmp2D(
 extern WlzErrorNum 		WlzEffWriteObjBmp(
 				  const char *gvnFileName,
 				  WlzObject *obj);
+/* From WlzExtFFGif.c */
+extern WlzObject		*WlzEffReadObjGif(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+
 /* From WlzExtFFDen.c */
 extern WlzObject 		*WlzEffReadObjDen(
 				  FILE *fP,
