@@ -56,25 +56,26 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
   unsigned int	fileFmt;
 
   if(WlzStringMatchValue((int *)&fileFmt, extStr,
+			 "am",  WLZEFF_FORMAT_AM,
 			 "bmp", WLZEFF_FORMAT_BMP,
 			 "den", WLZEFF_FORMAT_DEN,
+			 "gif", WLZEFF_FORMAT_GIF,
+			 "hdr", WLZEFF_FORMAT_ANL,
 			 "ics", WLZEFF_FORMAT_ICS,
 			 "ids", WLZEFF_FORMAT_ICS,
+			 "img", WLZEFF_FORMAT_ANL,
+			 "ipl", WLZEFF_FORMAT_IPL,
+			 "jpeg", WLZEFF_FORMAT_JPEG,
+			 "jpg", WLZEFF_FORMAT_JPEG,
 			 "pgm", WLZEFF_FORMAT_PNM,
-			 "pnm", WLZEFF_FORMAT_PNM,
 			 "pic", WLZEFF_FORMAT_PIC,
+			 "pnm", WLZEFF_FORMAT_PNM,
+			 "raw", WLZEFF_FORMAT_RAW,
 			 "slc", WLZEFF_FORMAT_SLC,
+			 "tif", WLZEFF_FORMAT_TIFF,
 			 "vff", WLZEFF_FORMAT_VFF,
 			 "vtk", WLZEFF_FORMAT_VTK,
 			 "wlz", WLZEFF_FORMAT_WLZ,
-			 "ipl", WLZEFF_FORMAT_IPL,
-			 "tif", WLZEFF_FORMAT_TIFF,
-			 "raw", WLZEFF_FORMAT_RAW,
-			 "am",  WLZEFF_FORMAT_AM,
-			 "jpg", WLZEFF_FORMAT_JPEG,
-			 "jpeg", WLZEFF_FORMAT_JPEG,
-			 "hdr", WLZEFF_FORMAT_ANL,
-			 "img", WLZEFF_FORMAT_ANL,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -93,21 +94,22 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
   unsigned int	fileFmt;
 
   if(WlzStringMatchValue((int *)&fileFmt, fmtStr,
-			 "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
-			 "Stanford Density", WLZEFF_FORMAT_DEN,
-			 "ICS", WLZEFF_FORMAT_ICS,
-			 "PNM", WLZEFF_FORMAT_PNM,
+			 "Amira Lattice", WLZEFF_FORMAT_AM,
+			 "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
 			 "BioRad Confocal", WLZEFF_FORMAT_PIC,
+			 "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
+			 "ICS", WLZEFF_FORMAT_ICS,
+			 "IPLab", WLZEFF_FORMAT_IPL,
+			 "JPEG", WLZEFF_FORMAT_JPEG,
+			 "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
+			 "PNM", WLZEFF_FORMAT_PNM,
+			 "Raw", WLZEFF_FORMAT_RAW,
 			 "SLC", WLZEFF_FORMAT_SLC,
+			 "Stanford Density", WLZEFF_FORMAT_DEN,
 			 "Sunvision VFF", WLZEFF_FORMAT_VFF,
+			 "Tiff", WLZEFF_FORMAT_TIFF,
 			 "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
 			 "Woolz", WLZEFF_FORMAT_WLZ,
-			 "IPLab", WLZEFF_FORMAT_IPL,
-			 "Tiff", WLZEFF_FORMAT_TIFF,
-			 "Raw", WLZEFF_FORMAT_RAW,
-			 "Amira Lattice", WLZEFF_FORMAT_AM,
-			 "JPEG", WLZEFF_FORMAT_JPEG,
-			 "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -133,6 +135,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtBmpStr = "Microsoft Bitmap",
   		*extDenStr = "den",
   		*fmtDenStr = "Stanford Density",
+		*extGifStr = "gif",
+		*fmtGifStr = "Graphics Interchange Format",
   		*extIcsStr = "ics",
   		*fmtIcsStr = "ICS",
   		*extPnmStr = "pnm",
@@ -169,6 +173,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_DEN:
       fmtStr = fmtDenStr;
       extStr = extDenStr;
+      break;
+    case WLZEFF_FORMAT_GIF:
+      fmtStr = fmtGifStr;
+      extStr = extGifStr;
       break;
     case WLZEFF_FORMAT_ICS:
       fmtStr = fmtIcsStr;
@@ -302,6 +310,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_DEN:
 	obj = WlzEffReadObjDen(fP, &errNum);
 	break;
+      case WLZEFF_FORMAT_GIF:
+        obj = WlzEffReadObjGif(fP, &errNum);
+	break;
       case WLZEFF_FORMAT_ICS:
 	obj = WlzEffReadObjIcs(fName, &errNum);
 	break;
@@ -415,6 +426,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_DEN:
 	errNum = WlzEffWriteObjDen(fP, obj);
+	break;
+      case WLZEFF_FORMAT_GIF:
+        errNum = WLZ_ERR_UNIMPLEMENTED;
 	break;
       case WLZEFF_FORMAT_ICS:
 	errNum = WlzEffWriteObjIcs(fName, obj);
