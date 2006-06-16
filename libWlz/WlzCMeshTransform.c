@@ -241,7 +241,7 @@ WlzCMeshTransform *WlzMakeCMeshTransform(WlzTransformType type,
 WlzCMeshTransform *WlzMakeCMeshTransform2D(WlzCMesh2D *mesh,
 					WlzErrorNum *dstErr)
 {
-  int 		idN;
+  unsigned int	idN;
   WlzDomain	dom;
   WlzCMeshNod2D	*nod;
   WlzCMeshTransform *mTr = NULL;
@@ -279,7 +279,7 @@ WlzCMeshTransform *WlzMakeCMeshTransform2D(WlzCMesh2D *mesh,
     idN = 0;
     while((errNum == WLZ_ERR_NONE) && (idN < mesh->res.nod.maxEnt))
     {
-      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, (size_t )idN);
       errNum = WlzCMeshTransMakeDisp2D(mTr, mesh, nod, idN);
       ++idN;
     }
@@ -423,7 +423,7 @@ WlzErrorNum	WlzCMeshTransformVtxAry2I(WlzCMeshTransform *mTr,
   for(idN = 0; idN < nVtx; ++idN)
   {
     if((sE.idx = WlzCMeshElmEnclosingPos2D(mTr->mesh.m2, lastElmIdx,
-					   vtx[idN].vtX, vtx[idN].vtY)) < 0)
+		     (double )(vtx[idN].vtX), (double )(vtx[idN].vtY))) < 0)
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
       break;
@@ -1069,6 +1069,7 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 	      case WLZ_GREY_RGBA:
 		while(idX <= iRgt)
 		{
+		  idP = idX - dstIWSp.lftpos;
 		  sPosD.vtX = (trXX * idX) + trXYC;
 		  sPosD.vtY = (trYX * idX) + trYYC;
 		  WlzGreyValueGetCon(srcGVWSp, 0, sPosD.vtY, sPosD.vtX);
@@ -1266,9 +1267,8 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 static WlzCMeshScanWSp *WlzCMeshScanWSpInit(WlzCMeshTransform *mTr,
 				    	    WlzErrorNum *dstErr)
 {
-  int		iIdx,
-  		eIdx,
-		ndIdx;
+  int		iIdx;
+  unsigned int 	eIdx;
   double	ndLn,
   		eLnMin,
 		eLnMax;
@@ -1293,7 +1293,7 @@ static WlzCMeshScanWSp *WlzCMeshScanWSpInit(WlzCMeshTransform *mTr,
     eIdx = 0;
     for(eIdx = 0; eIdx < elmRes->maxEnt; ++eIdx)
     {
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(elmRes->vec, eIdx);
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(elmRes->vec, (size_t )eIdx);
       if(elm->idx >= 0)
       {
 	nod = elm->edg[0].nod;
@@ -1341,7 +1341,7 @@ static WlzCMeshScanWSp *WlzCMeshScanWSpInit(WlzCMeshTransform *mTr,
     dElm = mSWSp->dElm;
     while(eIdx < elmRes->maxEnt)
     {
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(elmRes->vec, eIdx);
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(elmRes->vec, (size_t )eIdx);
       dElm->idx = elm->idx;
       if(elm->idx >= 0)
       {
@@ -1673,13 +1673,13 @@ static WlzObject *WlzCMeshTransformObj2D(WlzObject *srcObj,
 	  tObj1 = WlzCMeshTransformObj2D(tObj0, mTr, interp, &errNum);
 	}
       }
-      WlzFreeObj(tObj0); tObj0 = NULL;
+      (void )WlzFreeObj(tObj0); tObj0 = NULL;
       if(errNum == WLZ_ERR_NONE)
       {
         dstObj = WlzBoundToObj(tObj1->domain.b,
 			       WLZ_SIMPLE_FILL, &errNum);
       }
-      WlzFreeObj(tObj1); tObj1 = NULL;
+      (void )WlzFreeObj(tObj1); tObj1 = NULL;
       if((errNum == WLZ_ERR_NONE) &&
          (srcObj->values.core))
       {
@@ -1711,37 +1711,36 @@ static WlzBoundList *WlzCMeshTransformBoundList(WlzBoundList *srcBound,
 					WlzErrorNum *dstErr)
 {
   WlzDomain	dumDom;
-  WlzBoundList	*dstBound = NULL;
-  WlzObject	*polyobj = NULL;
-  WlzPolygonDomain *pgdm1 = NULL,
-  		*pgdm2 = NULL;
+  WlzBoundList	*dstBnd = NULL;
+  WlzObject	*plyObj = NULL;
+  WlzPolygonDomain *plyDom = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((dstBound = (WlzBoundList *)AlcCalloc(sizeof(WlzBoundList), 1)) == NULL)
+  if((dstBnd = (WlzBoundList *)AlcCalloc(sizeof(WlzBoundList), 1)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   else
   {
     /* Wrap set to 1 for closed lines by WlzPolyDecimate(). */
-    dstBound->type = srcBound->type;
-    dstBound->wrap = (srcBound->wrap)? 1: 0;
+    dstBnd->type = srcBound->type;
+    dstBnd->wrap = (srcBound->wrap)? 1: 0;
     /* Transform the polygon. */
     /* Don't decimate the poly becauase it may make poly vertices lie outside
      * the mesh. */
-    if((polyobj = WlzPolyTo8Polygon(srcBound->poly,
-    				    srcBound->wrap, &errNum)) != NULL)
+    if((plyObj = WlzPolyTo8Polygon(srcBound->poly,
+    				   srcBound->wrap, &errNum)) != NULL)
     {
-      if((pgdm1 = WlzCMeshTransformPoly(polyobj->domain.poly,
+      if((plyDom = WlzCMeshTransformPoly(plyObj->domain.poly,
 				        mTr, &errNum)) != NULL)
       {
-	  dstBound->poly = WlzAssignPolygonDomain(pgdm1, NULL);
+	  dstBnd->poly = WlzAssignPolygonDomain(plyDom, NULL);
       }
       else
       {
-	dstBound->poly = NULL;
+	dstBnd->poly = NULL;
       }
-      (void )WlzFreeObj(polyobj);
+      (void )WlzFreeObj(plyObj);
     }
   }
   /* Transform next boundlist. */
@@ -1751,7 +1750,7 @@ static WlzBoundList *WlzCMeshTransformBoundList(WlzBoundList *srcBound,
 					      &errNum)) != NULL)
     {
       (void )WlzAssignDomain(dumDom, &errNum);
-      dstBound->next = dumDom.b;
+      dstBnd->next = dumDom.b;
     }
   }
   /* Transform down boundlist. */
@@ -1761,18 +1760,18 @@ static WlzBoundList *WlzCMeshTransformBoundList(WlzBoundList *srcBound,
 					      &errNum)) != NULL)
     {
       (void )WlzAssignDomain(dumDom, &errNum);
-      dstBound->down = dumDom.b;
+      dstBnd->down = dumDom.b;
     }
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    AlcFree(dstBound); dstBound = NULL;
+    AlcFree(dstBnd); dstBnd = NULL;
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(dstBound);
+  return(dstBnd);
 }
 
 /*!
