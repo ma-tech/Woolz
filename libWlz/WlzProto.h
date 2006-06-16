@@ -994,13 +994,6 @@ extern WlzBasisFn 		*WlzBasisFnScalarMOS3DFromCPts(
 				  double *alpha,
 				  double *param,
 				  WlzErrorNum *dstErr);
-extern WlzErrorNum		WlzBasisFnTPS2DChangeCPts(
-				  WlzBasisFnTransform *basisTr,
-				  int nDPts,
-				  WlzDVertex2 *dPts,
-				  int nSPts,
-				  WlzDVertex2 *sPts,
-				  WlzObject *cObj);
 
 /************************************************************************
 * WlzBasisFnTransform.c							*
@@ -1016,6 +1009,33 @@ extern WlzBasisFnTransform	*WlzBasisFnTrFromCPts2D(
 				  WlzDVertex2 *arraySPts,
 				  WlzObject *conObj,
 				  WlzErrorNum *dstErr);
+extern WlzBasisFnTransform	*WlzBasisFnTrFromCPts2DParam(
+				  WlzFnType type,
+				  int order,
+				  int sizeArrayDPts,
+				  WlzDVertex2 *arrayDPts,
+				  int sizeArraySPts,
+				  WlzDVertex2 *arraySPts,
+				  WlzObject *conObj,
+				  int nParam,
+				  double *param,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzBasisFnTPS2DChangeCPts(
+				  WlzBasisFnTransform *basisTr,
+				  int nDPts,
+				  WlzDVertex2 *dPts,
+				  int nSPts,
+				  WlzDVertex2 *sPts,
+				  WlzObject *cObj);
+extern WlzErrorNum		WlzBasisFnTPS2DChangeCPtsParam(
+				  WlzBasisFnTransform *basisTr,
+				  int nDPts,
+				  WlzDVertex2 *dPts,
+				  int nSPts,
+				  WlzDVertex2 *sPts,
+				  WlzObject *cObj,
+				  int nParam,
+				  double *param);
 extern WlzErrorNum		WlzBasisFnSetCMesh(
 				  WlzCMeshTransform *meshTr,
 				  WlzBasisFnTransform *basisTr);
