@@ -77,6 +77,10 @@ WlzGreySetValue -g 128 dom.wlz >out.wlz
 \endverbatim
 Creates a new object with the domain of the object read from dom.wlz
 but with all grey values having value 128.
+The grey type of the resulting object are chosen to be the minimum
+which can be used to encode the specified value,
+with the possible types (in increasing order) being:
+unsigned byte, short, int and double.
 The resulting object is written to out.wlz.
 \par File
 \ref WlzGreySetValue.c "WlzGreySetValue.c"
@@ -89,6 +93,8 @@ The resulting object is written to out.wlz.
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <float.h>
 #include <Wlz.h>
 
 /* externals required by getopt  - not in ANSI C standard */
@@ -123,7 +129,9 @@ int main(int	argc,
   WlzValues	values, *valuess;
   FILE		*inFile;
   char 		optList[] = "g:hv";
-  int		option;
+  int		igv,
+		pCnt,
+  		option;
   WlzPixelV	greyVal;
   WlzPixelV	bckgrnd;
   WlzObjectType	type;
@@ -133,14 +141,18 @@ int main(int	argc,
     
   /* read the argument list and check for an input file */
   opterr = 0;
-  greyVal.type = WLZ_GREY_FLOAT;
-  greyVal.v.flv = 0.0;
+  greyVal.type = WLZ_GREY_DOUBLE;
+  greyVal.v.dbv = 0.0;
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
 
     case 'g':
-      greyVal.v.flv = atof(optarg);
+      if(sscanf(optarg, "%lg", &(greyVal.v.dbv)) != 1)
+      {
+        usage(argv[0]);
+	return 1;
+      }
       break;
 
     case 'v':
@@ -165,10 +177,33 @@ int main(int	argc,
     }
   }
 
-  /* set up type and background */
-  type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
-  bckgrnd.type = WLZ_GREY_UBYTE;
-  bckgrnd.v.ubv = 0;
+  /* Set up the type and background: Type will be the minimum required from
+     unsigned byte, short, int and double. */
+  igv = WLZ_NINT(greyVal.v.dbv);
+  bckgrnd.type = WLZ_GREY_DOUBLE;
+  bckgrnd.v.dbv = 0.0;
+  if((fabs(greyVal.v.dbv - igv) < DBL_EPSILON) &&
+     (igv >= INT_MIN) && (igv <= INT_MAX))
+  {
+    if((igv >= 0) && (igv <= 255))
+    {
+      bckgrnd.v.ubv = 0;
+      bckgrnd.type = WLZ_GREY_UBYTE;
+    }
+    else if((igv >= SHRT_MIN) && (igv <= SHRT_MAX))
+    {
+      bckgrnd.v.shv = 0;
+      bckgrnd.type = WLZ_GREY_SHORT;
+    }
+    else
+    {
+      bckgrnd.v.inv = 0;
+      bckgrnd.type = WLZ_GREY_INT;
+    }
+    /* WlzValueConvertPixel() sets greyVal.type. */
+    (void )WlzValueConvertPixel(&greyVal, greyVal, bckgrnd.type);
+  }
+  type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, greyVal.type, NULL);
 
   /* read objects and set value if possible */
   while(((obj = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) != NULL) &&
@@ -177,17 +212,56 @@ int main(int	argc,
     switch( obj->type )
     {
     case WLZ_2D_DOMAINOBJ:
-      if( obj->values.core == NULL ){
+      if((obj->values.core == NULL) || (obj->values.core->type != type))
+      {
+	if(obj->values.core)
+	{
+	  (void )WlzFreeValueTb(obj->values.v);
+	  obj->values.core = NULL;
+	}
 	values.v = WlzNewValueTb(obj, type, bckgrnd, &errNum);
 	obj->values = WlzAssignValues(values, NULL);
       }
-      errNum = WlzGreySetValue(obj, greyVal);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzGreySetValue(obj, greyVal);
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
       switch( obj->domain.p->type ){
       case WLZ_PLANEDOMAIN_DOMAIN:
-	if( obj->values.core == NULL ){
+	pCnt = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
+        if(obj->values.core)
+	{
+	  domains = obj->domain.p->domains;
+	  valuess = obj->values.vox->values;
+	  p = 0;
+	  while((errNum == WLZ_ERR_NONE) && (p < pCnt))
+	  {
+	    if((*domains).core)
+	    {
+	      if(((*valuess).core == NULL) || (valuess->core->type != type))
+	      {
+		values.core = NULL;
+		tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, values,
+				     NULL, NULL, NULL);
+		values.v = WlzNewValueTb(tmpObj, type, bckgrnd, &errNum);
+		if((*valuess).core)
+		{
+		  (void )WlzFreeValueTb(valuess->v);
+		}
+		*valuess = WlzAssignValues(values, NULL);
+		WlzFreeObj(tmpObj);
+	      }
+	    }
+	    ++p;
+	    ++valuess;
+	    ++domains;
+	  }
+	}
+	else
+	{
 	  if( values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
 					       obj->domain.p->plane1,
 					       obj->domain.p->lastpl,
@@ -195,9 +269,11 @@ int main(int	argc,
 	    obj->values = WlzAssignValues(values, NULL);
 	    domains = obj->domain.p->domains;
 	    valuess = obj->values.vox->values;
-	    for(p=0; p < (obj->domain.p->lastpl - obj->domain.p->plane1 + 1);
-		p++, domains++, valuess++){
-	      if( (*domains).core ){
+	    p = 0;
+	    while((errNum == WLZ_ERR_NONE) && (p < pCnt))
+	    {
+	      if((*domains).core)
+	      {
 		values.core = NULL;
 		tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, values,
 				     NULL, NULL, NULL);
@@ -205,10 +281,16 @@ int main(int	argc,
 		*valuess = WlzAssignValues(values, NULL);
 		WlzFreeObj(tmpObj);
 	      }
+	      ++p;
+	      ++valuess;
+	      ++domains;
 	    }
 	  }
 	}
-	errNum = WlzGreySetValue(obj, greyVal);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzGreySetValue(obj, greyVal);
+	}
 	break;
 
       default:
