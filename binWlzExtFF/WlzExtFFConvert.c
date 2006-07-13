@@ -73,6 +73,14 @@ WlzExtFFConvert [-h] [-s] [-b<background>]
     <td>Set background to value.</td>
   </tr>
   <tr> 
+    <td><b>-d</b></td>
+    <td>Set size of minimum dimension, i.e. min of width or height.</td>
+  </tr>
+  <tr> 
+    <td><b>-D</b></td>
+    <td>Set size of maximum dimension, i.e. max of width or height.</td>
+  </tr>
+  <tr> 
     <td><b>-f</b></td>
     <td>Input file format.</td>
   </tr>
@@ -527,6 +535,7 @@ int             main(int argc, char **argv)
 	"Usage: %s%s%s%s%s%s%s%s\n",
 	*argv,
 	" [-h] [-s] [-b<background>]\n"
+	"        [-d<min-dimension>] [-D<max-dimension>]\n"
 	"        [-f<input format>] [-F<output format>]\n"
 	"        [-x<x size>] [-y<y size>] [-z<z size>]\n"
 	"        [-o<output file>] [<input file>)]\n"
@@ -536,6 +545,8 @@ int             main(int argc, char **argv)
 	"  -h    Help, prints this usage information.\n"
 	"  -s    Split labeled volumes into domains.\n"
 	"  -b#   Set background to value,\n"
+	"  -d#   Set size of minimum dimension, i.e. min of width or height\n"
+	"  -D#   Set size of maximum dimension, i.e. max of width or height\n"
 	"  -f#   Input file format.\n"
 	"  -F#   Ouput file format.\n"
 	"  -o#   Output file name.\n"
