@@ -32,6 +32,7 @@ JAVASOURCES		= \
 			  WlzGreyStats.java \
 			  WlzLabelTest.java \
 			  WlzTest3DVtx.java \
+			  WlzUnion.java \
 			  WlzViewer.java
 
 CLASSPATH		= .:../../../../../..
@@ -92,6 +93,10 @@ demo:			$(CLASSES)
 			@echo "the given object. (the window needs to be"
 			@echo "resized):"
 			$(JAVA) $(JAVAFLAGS) WlzArrayViewer t0.wlz
+			@echo 
+			@echo "WlzUnion computes the union of objects given"
+			@echo "on the command line:"
+			$(JAVA) $(JAVAFLAGS) WlzUnion -o out.wlz t0.wlz t1.wlz
 			@echo 
 			@echo "WlzViewer throws up a window with the"
 			@echo "the given object, single left mouse click"
