@@ -50,6 +50,10 @@ static int			WlzPartialItv2DCmpFn(
 				  const void *vc,
 				  const void *v0,
 				  const void *v1);
+static int			WlzLBTDomain3DNodeCmpFn(
+				  const void *lPtr,
+				  const void *ptr0,
+				  const void *ptr1);
 static int			WlzLBTDomain2DNodeCmpFn(
 				  const void *lPtr,
 				  const void *ptr0,
@@ -89,8 +93,17 @@ static int			WlzLBTIdxCmpFn(
 static int			WlzLBTQueueUnlink(
 				  AlcCPQQueue *pQ,
 				  AlcHashTable *hT);
+static int			WlzLBNodeAtBoundary3D(
+				  WlzPlaneDomain *pDom,
+				  WlzLBTNode3D *nod);
+static int			WlzLBNodeAtBoundary2D(
+				  WlzIntervalDomain *iDom,
+				  WlzLBTNode2D *nod);
 static unsigned 		WlzLBTIdxHashFn(
 				  void *datum);
+static void			WlzLBTCondenseNodes3D(
+				  WlzLBTDomain3D *lDom,
+				  WlzPlaneDomain *pDom);
 static void			WlzLBTCondenseNodes2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzIntervalDomain *iDom);
@@ -166,6 +179,90 @@ WlzLBTDomain2D	*WlzMakeLBTDomain2D(WlzObjectType type,
 }
 
 /*!
+* \return	New 3D linear binary tree domain.
+* \ingroup	WlzAllocation
+* \brief	Creates a linear binary tree domain without creating any
+*		nodes, leaving the nodes pointer NULL. Only the type,
+*		bounding box and depth are set. The depth \f$d\f$ is set
+*		such that
+*		\f[
+		  2^d >= \max(p_l - p_1, k_l - k_1, l_l - l_1) + 1
+		\f]
+*		where \f$k_1\f$, \f$k_l\f$, \f$l_1\f$ and \f$l_l\f$
+*		are the first column, last column, first line and
+*		last line respectively.
+* \param	type			Type of domain, which must be
+*					WLZ_LBTDOMAIN_3D.
+* \param	p1			First plane.
+* \param	pl			Last plane.
+* \param	l1			First line.
+* \param	ll			Last line.
+* \param	k1			First column.
+* \param	kl			Last column.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzLBTDomain3D	*WlzMakeLBTDomain3D(WlzObjectType type,
+				    int p1,
+				    int pl,
+				    int l1,
+				    int ll,
+				    int k1,
+				    int kl,
+				    WlzErrorNum *dstErr)
+{
+  unsigned int	sz;
+  WlzLBTDomain3D *dom = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((type != WLZ_LBTDOMAIN_3D) || (pl < p1) || (ll < l1) || (kl < k1))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    if((dom = (WlzLBTDomain3D *)AlcCalloc(sizeof(WlzLBTDomain3D), 1)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dom->type = type;
+    dom->plane1 = p1;
+    dom->lastpl = pl;
+    dom->line1 = l1;
+    dom->lastln = ll;
+    dom->kol1 = k1;
+    dom->lastkl = kl;
+    /* Compute the depth. */
+    sz = WLZ_MAX(kl - k1, ll - l1);
+    sz = WLZ_MAX(sz, pl - p1);
+    dom->depth = AlgBitNextPowerOfTwo(NULL, sz);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dom);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Frees the given 3D linear binary tree domain.
+* \param	lDom			Given LBT domain.
+*/
+WlzErrorNum	WlzFreeLBTDomain3D(WlzLBTDomain3D *lDom)
+{
+  WlzDomain	dom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  dom.l3 = lDom;
+  errNum = WlzFreeDomain(dom);
+  return(errNum);
+}
+
+/*!
 * \return	Woolz error code.
 * \ingroup	WlzAllocation
 * \brief	Frees the given 2D linear binary tree domain.
@@ -207,6 +304,42 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromDomain(WlzDomain dom, WlzErrorNum *dstErr)
         break;
       case WLZ_INTERVALDOMAIN_RECT:
 	lDom = WlzLBTDomain2DFromIDomain(dom.i, &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(lDom);
+}
+
+/*!
+* \return	New 2D linear binary tree domain.
+* \ingroup	WlzDomainOps
+* \brief	Creates a new 2D linear binary tree domain from the given
+*		domain.
+* \param	dom			Given domain, which must be 2D.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzLBTDomain3D	*WlzLBTDomain3DFromDomain(WlzDomain dom, WlzErrorNum *dstErr)
+{
+  WlzLBTDomain3D *lDom = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(dom.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(dom.core->type)
+    {
+      case WLZ_PLANEDOMAIN_DOMAIN:
+	lDom = WlzLBTDomain3DFromPDomain(dom.p, &errNum);
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -405,6 +538,141 @@ WlzIntervalDomain *WlzIDomainFromPItv2D(int line1, int lastln,
 }
 
 /*!
+* \return	New 3D linear binary tree domain.
+* \ingroup	WlzDomainOps
+* \brief	Creates a new 3D linear binary tree domain from the given
+*		interval domain.
+* \todo		There are two possible algorithms here:
+*		Create all possible nodes for in Morton order condensing
+*		nodes on the fly or the simpler and slower algorithm
+*		create all possible nodes in scan order and then
+*		sort to get the Morton order. Currently the latter
+*		algorithm is used but this should be replaced with the former
+*		when there's working code.
+*		time than 
+*		
+* \param	iDom			Given domain, which must be an
+*					interval domain.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzLBTDomain3D	*WlzLBTDomain3DFromPDomain(WlzPlaneDomain *pDom,
+					WlzErrorNum *dstErr)
+{
+  int		idI,
+  		idN,
+		idP,
+		pCnt;
+  WlzObject	*obj = NULL;
+  WlzLBTNode3D	*nod;
+  WlzLBTDomain3D *lDom = NULL;
+  WlzDomain	dom;
+  WlzDomain	*dom2;
+  WlzValues	nullVal;
+  WlzIVertex3	pos;
+  WlzIntervalWSpace iWsp;
+  AlcErrno	alcErr = ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dom.p = pDom;
+  nullVal.core = NULL;
+  lDom = WlzMakeLBTDomain3D(WLZ_LBTDOMAIN_3D,
+  			    pDom->plane1, pDom->lastpl,
+  			    pDom->line1, pDom->lastln,
+			    pDom->kol1, pDom->lastkl, &errNum);
+  /* Compute volume for the initial (and maximum) number of nodes. */
+  idP = 0;
+  pCnt = pDom->lastpl - pDom->plane1 + 1;
+  while((errNum == WLZ_ERR_NONE) && (idP < pCnt))
+  {
+    if(((dom2 = pDom->domains + idP) != NULL) &&
+       (dom2->core->type != WLZ_EMPTY_DOMAIN))
+    {
+      obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dom2, nullVal, NULL, NULL, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	errNum = WlzInitRasterScan(obj, &iWsp, WLZ_RASTERDIR_ILIC);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE )
+	{
+	  lDom->maxNodes += iWsp.rgtpos - iWsp.lftpos + 1;
+	}
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
+	}
+      }
+      (void )WlzFreeObj(obj);
+    }
+    ++idP;
+  }
+  /* Allocate nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((lDom->nodes = (WlzLBTNode3D *)AlcCalloc(sizeof(WlzLBTNode3D),
+    						lDom->maxNodes)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      lDom->nNodes = lDom->maxNodes;
+      lDom->freeptr = AlcFreeStackPush(lDom->freeptr, lDom->nodes, &alcErr);
+      if(alcErr != ALC_ER_NONE)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+  }
+  /* Set keys of all initial nodes. */
+  idP = 0;
+  nod = lDom->nodes;
+  while((errNum == WLZ_ERR_NONE) && (idP < pCnt))
+  {
+    if(((dom2 = pDom->domains + idP) != NULL) &&
+       (dom2->core->type != WLZ_EMPTY_DOMAIN))
+    {
+      obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dom2, nullVal, NULL, NULL, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	pos.vtZ = pDom->plane1 + idP;
+	errNum = WlzInitRasterScan(obj, &iWsp, WLZ_RASTERDIR_ILIC);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE )
+	{
+	  pos.vtY = iWsp.linpos;
+	  pos.vtX = iWsp.lftpos;
+	  for(idI = 0; idI < iWsp.colrmn; ++idI)
+	  {
+	    WlzLBTPosToKey3D(pos, nod->keys);
+	    ++nod;
+	    ++(pos.vtX);
+	  }
+	}
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
+	}
+      }
+      (void )WlzFreeObj(obj);
+    }
+    ++idP;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Condense the nodes to get the linear binary tree. */
+    WlzLBTCondenseNodes3D(lDom, pDom);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(lDom);
+}
+/*!
 * \return	New 2D linear binary tree domain.
 * \ingroup	WlzDomainOps
 * \brief	Creates a new 2D linear binary tree domain from the given
@@ -430,7 +698,6 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
   WlzObject	*obj = NULL;
   WlzLBTNode2D	*nod;
   WlzLBTDomain2D *lDom = NULL;
-  UBYTE		*nodeFlgs = NULL;
   WlzDomain	dom;
   WlzValues	nullVal;
   WlzIVertex2	pos;
@@ -505,7 +772,6 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
       errNum = WLZ_ERR_NONE;
     }
   }
-  (void )AlcFree(nodeFlgs);
   (void )WlzFreeObj(obj);
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1667,6 +1933,28 @@ int		WlzLBTNodeIdxFromKeys2D(WlzLBTDomain2D *lDom, int idN,
 *		where the position is relative to the first line and
 *		column of the domain.
 *		The key is encoded by interleaving the bits of the
+*		column coordinate, line coordinate, plane coordinate
+*		and term value in that order.
+*		The keys are ordered so that bit 0 is least significant.
+* \param	pos			Position.
+* \param	keys			Keys to be set in line, column and
+*					term order.
+*/
+void		WlzLBTPosToKey3D(WlzIVertex3 pos, unsigned *keys)
+{
+  keys[0] = pos.vtX;
+  keys[1] = pos.vtY;
+  keys[2] = pos.vtZ;
+  keys[3] = 0;
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Sets the value of the LBT key for the given position,
+*		where the position is relative to the first line and
+*		column of the domain.
+*		The key is encoded by interleaving the bits of the
 *		column coordinate, line coordinate and term value
 *		in that order.
 *		The keys are ordered so that bit 0 is least significant.
@@ -1685,7 +1973,39 @@ void		WlzLBTPosToKey2D(WlzIVertex2 pos, unsigned *keys)
 * \return	void
 * \ingroup	WlzDomainOps
 * \brief	Gets an array of WLZ_LBTDOMAIN_MAXDIGITS location digits
-*		from the given keys.
+*		from the given 3D keys.
+* \param	keys			Keys to be read.
+* \param	digits			Array of WLZ_LBTDOMAIN_MAXDIGITS
+*					digits.
+*/
+void		WlzLBTGetKeyDigits3D(unsigned *keys, UBYTE *digits)
+{
+  int		idD;
+  unsigned	k0,
+  		k1,
+		k2,
+		k3,
+		dMsk;
+
+  idD = 0;
+  dMsk = 1;
+  while(idD < WLZ_LBTDOMAIN_MAXDIGITS)
+  {
+    k0 = (keys[0] & dMsk) != 0; 
+    k1 = (keys[1] & dMsk) != 0; 
+    k2 = (keys[2] & dMsk) != 0; 
+    k3 = (keys[3] & dMsk) != 0; 
+    digits[idD] = k0 + (k1 << 1) + (k2 << 2) + (k3 << 3);
+    ++idD;
+    dMsk <<= 1;
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Gets an array of WLZ_LBTDOMAIN_MAXDIGITS location digits
+*		from the given 2D keys.
 * \param	keys			Keys to be read.
 * \param	digits			Array of WLZ_LBTDOMAIN_MAXDIGITS
 *					digits.
@@ -1715,7 +2035,22 @@ void		WlzLBTGetKeyDigits2D(unsigned *keys, UBYTE *digits)
 * \return	void
 * \ingroup	WlzDomainOps
 * \brief	Sets position (relative to the first line and column of the
-* 		domain) which corresponds to the given LBT key.
+* 		domain) which corresponds to the given 3D LBT key.
+* \param	key			Keys in line, column and term order.
+* \param	pos			Position to be set.
+*/
+void		WlzLBTKeyToPos3I(unsigned *key, WlzIVertex3 *pos)
+{
+  pos->vtX = key[0];
+  pos->vtY = key[1];
+  pos->vtZ = key[2];
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Sets position (relative to the first line and column of the
+* 		domain) which corresponds to the given 3D LBT key.
 * \param	key			Keys in line, column and term order.
 * \param	pos			Position to be set.
 */
@@ -1728,7 +2063,36 @@ void		WlzLBTKeyToPos2I(unsigned *key, WlzIVertex2 *pos)
 /*!
 * \return	void
 * \ingroup	WlzDomainOps
-* \brief	Sets bounding box which corresponds to the given LBT key.
+* \brief	Sets bounding box which corresponds to the given 3D LBT key.
+* \param	key			Keys in line, column and term order.
+* \param	box			Position to be set.
+*/
+void		WlzLBTKeyToBox3I(unsigned *key, WlzIBox3 *box)
+{
+  unsigned int	k,
+  		sz = 1;
+
+  box->xMin = key[0];
+  box->yMin = key[1];
+  box->zMin = key[2];
+  if(key[3] != 0)
+  {
+    k = key[3];
+    while(k)
+    {
+      sz <<= 1;
+      k >>= 1;
+    }
+  }
+  box->xMax = box->xMin + sz - 1;
+  box->yMax = box->yMin + sz - 1;
+  box->zMax = box->zMin + sz - 1;
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Sets bounding box which corresponds to the given 2D LBT key.
 * \param	key			Keys in line, column and term order.
 * \param	box			Position to be set.
 */
@@ -1755,7 +2119,53 @@ void		WlzLBTKeyToBox2I(unsigned *key, WlzIBox2 *box)
 /*!
 * \return	Sort value - less than, equal to, or greater than zero.
 * \ingroup	WlzDomainOps
-* \brief	Sorts the keys into accending order by node value.
+* \brief	Sorts the 3D keys into accending order by node value.
+* \param	ptrC			Used to pass the domain pointer.
+* \param	ptr0			Used to pass first node.
+* \param	ptr1			Used to pass second node.
+*/
+static int	WlzLBTDomain3DNodeCmpFn(const void *ptrC,
+				        const void *ptr0, const void *ptr1)
+{
+  int           cmp;
+  unsigned      k0,
+                k1,
+                dMsk,
+                tMsk;
+  WlzLBTDomain3D *lDom;
+  WlzLBTNode3D  *nod0,
+                *nod1;
+
+  cmp = 0;
+  nod0 = (WlzLBTNode3D *)ptr0;
+  nod1 = (WlzLBTNode3D *)ptr1;
+  lDom = (WlzLBTDomain3D *)ptrC;
+  dMsk = 1 << (lDom->depth - 1);
+  tMsk = nod0->keys[3] | nod1->keys[3];
+  while((cmp == 0) && (dMsk != 0) && ((tMsk & dMsk) == 0))
+  {
+    k0 = nod0->keys[2] & dMsk;
+    k1 = nod1->keys[2] & dMsk;
+    if((cmp = k0 - k1) == 0)
+    {
+      k0 = nod0->keys[1] & dMsk;
+      k1 = nod1->keys[1] & dMsk;
+      if((cmp = k0 - k1) == 0)
+      {
+	k0 = nod0->keys[0] & dMsk;
+	k1 = nod1->keys[0] & dMsk;
+	cmp = k0 - k1;
+      }
+    }
+    dMsk >>= 1;
+  }
+  return(cmp);
+}
+
+/*!
+* \return	Sort value - less than, equal to, or greater than zero.
+* \ingroup	WlzDomainOps
+* \brief	Sorts the 2D keys into accending order by node value.
 * \param	ptrC			Used to pass the domain pointer.
 * \param	ptr0			Used to pass first node.
 * \param	ptr1			Used to pass second node.
@@ -1796,12 +2206,200 @@ static int	WlzLBTDomain2DNodeCmpFn(const void *ptrC,
 /*!
 * \return	void
 * \ingroup	WlzDomainOps
+* \brief	Condenses the sorted 3D LBT domain's nodes.
+* 		Runs through the nodes looking for keys in which the key
+*		values differ only in less significant digits and the
+*		less significant digits form a complete set, eg:
+*		330 331 332 333 ... 337. The these keys are modified
+*		using the term code, eg: 33X.
+*		When all such sequences have been marked identical keys
+*		are removed leaving the linear quadtree nodes.
+* \param	lDom			The LBT domain.
+* \param	pDom			The corresponding plane domain.
+*/
+static void	 WlzLBTCondenseNodes3D(WlzLBTDomain3D *lDom,
+    				       WlzPlaneDomain *pDom)
+{
+  int		idC,
+  		idD,
+		idP,
+		idM,
+		idN,
+		dCnt,
+  		nCnt,
+		allPrvD;
+  unsigned int	dMsk,
+  		pDig,
+  		cDig;
+#ifdef WLZ_LBTDOMAIN_DEBUG
+  WlzDomain	tDom;
+#endif
+  WlzLBTNode3D	*cNod,
+  		*pNod,
+		*tNod;
+  int		keyCnt[WLZ_LBTDOMAIN_MAXDIGITS];
+
+  if(lDom->nNodes > 1)
+  {
+#ifdef WLZ_LBTDOMAIN_DEBUG
+    tDom.l3 = lDom;
+    (void )fprintf(stderr, "Nodes:\n");
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
+#endif /* WLZ_LBTDOMAIN_DEBUG */
+    /* Sort the nodes by key values. */
+    AlgQSort(lDom->nodes, lDom->nNodes, sizeof(WlzLBTNode3D), lDom,
+	     WlzLBTDomain3DNodeCmpFn);
+#ifdef WLZ_LBTDOMAIN_DEBUG
+    (void )fprintf(stderr, "Sorted nodes:\n");
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
+#endif /* WLZ_LBTDOMAIN_DEBUG */
+    /* First pass: Mark key digits using the term digit when all previous
+     * digits increment. */
+    dMsk = 1;
+    cNod = lDom->nodes;
+    allPrvD = 1;
+    for(idD = 0; idD < lDom->depth; ++idD)
+    {
+      allPrvD = allPrvD &&
+                ((cNod->keys[0] & dMsk) == 0) &&
+                ((cNod->keys[1] & dMsk) == 0) &&
+                ((cNod->keys[2] & dMsk) == 0);
+      keyCnt[idD] = allPrvD;
+      dMsk <<= 1;
+    }
+    for(idN = 1; idN < lDom->nNodes; ++idN)
+    {
+      dMsk = 1;
+      dCnt = 8;
+      allPrvD = 1;
+      pNod = cNod++;
+      /* Avoid condensing nodes which are on the boundary of the domain. */
+      if(WlzLBNodeAtBoundary3D(pDom, pNod))
+      {
+	for(idD = 0; idD < lDom->depth; ++idD)
+	{
+	  allPrvD = allPrvD &&
+		    ((cNod->keys[0] & dMsk) == 0) &&
+		    ((cNod->keys[1] & dMsk) == 0) &&
+		    ((cNod->keys[2] & dMsk) == 0);
+	  keyCnt[idD] = allPrvD;
+	  dMsk <<= 1;
+	}
+      }
+      else
+      {
+	idD = 0;
+	while(allPrvD && (idD < lDom->depth))
+	{
+	  /* Compute previous and current key digit for the current depth.
+	   * These digits are in the range [0-3]. */
+	  pDig =  ((pNod->keys[0] & dMsk) != 0) |
+		 (((pNod->keys[1] & dMsk) != 0) << 1) |
+		 (((pNod->keys[2] & dMsk) != 0) << 2);
+	  cDig =  ((cNod->keys[0] & dMsk) != 0) |
+		 (((cNod->keys[1] & dMsk) != 0) << 1) |
+		 (((cNod->keys[2] & dMsk) != 0) << 2);
+	  if(idD == 0)
+	  {
+	    if(cDig == 0)
+	    {
+	      keyCnt[idD] = 1;
+	    }
+	    else if(keyCnt[idD] && (cDig == pDig + 1))
+	    {
+	      ++keyCnt[idD];
+	    }
+	    else
+	    {
+	      keyCnt[idD] = 0;
+	      allPrvD = 0;
+	    }
+	  }
+	  else
+	  {
+	    if((cDig == 0) && (keyCnt[idD - 1] == 1))
+	    {
+	      keyCnt[idD] = 1;
+	    }
+	    else if(keyCnt[idD] && ((cDig == pDig) || (cDig == pDig + 1)))
+	    {
+	      ++keyCnt[idD];
+	    }
+	    else
+	    {
+	      keyCnt[idD] = 0;
+	      allPrvD = 0;
+	    }
+	  }
+	  if(allPrvD && (keyCnt[idD] == dCnt))
+	  {
+	    keyCnt[idD] = 0;
+	    /* Mark key digits as term. */
+	    tNod = cNod;
+	    for(idM = 0; idM < dCnt; ++idM)
+	    {
+	      tNod->keys[0] &= ~dMsk;
+	      tNod->keys[1] &= ~dMsk;
+	      tNod->keys[2] &= ~dMsk;
+	      tNod->keys[3] |= dMsk;
+	      --tNod;
+	    }
+	  }
+	  ++idD;
+	  dMsk <<= 1;
+	  dCnt *= 8;
+	}
+	while(idD < lDom->depth)
+	{
+	  keyCnt[idD++] = 0;
+	}
+      }
+    }
+#ifdef WLZ_LBTDOMAIN_DEBUG
+    (void )fprintf(stderr, "Marked nodes:\n");
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
+#endif /* WLZ_LBTDOMAIN_DEBUG */
+    /* Second pass: Remove nodes with duplicate keys. */
+    nCnt = 1;
+    idP = 0;
+    idC = 1;
+    while(idC < lDom->nNodes)
+    {
+      pNod = lDom->nodes + idP;
+      cNod = lDom->nodes + idC;
+      if((cNod->keys[0] != pNod->keys[0]) ||
+	 (cNod->keys[1] != pNod->keys[1]) ||
+	 (cNod->keys[2] != pNod->keys[2]))
+      {
+	if(++idP != idC)
+	{
+	  pNod = lDom->nodes + idP;
+	  pNod->keys[0] = cNod->keys[0];
+	  pNod->keys[1] = cNod->keys[1];
+	  pNod->keys[2] = cNod->keys[2];
+	  pNod->keys[3] = cNod->keys[3];
+	}
+	++nCnt;
+      }
+      ++idC;
+    }
+    lDom->nNodes = nCnt;
+#ifdef WLZ_LBTDOMAIN_DEBUG
+    (void )fprintf(stderr, "Condensed nodes:\n");
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
+#endif /* WLZ_LBTDOMAIN_DEBUG */
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
 * \brief	Condenses the sorted 2D LBT domain's nodes.
 * 		Runs through the nodes looking for keys in which the key
 *		values differ only in less significant digits and the
 *		less significant digits form a complete set, eg:
-*		321 323 330 331 332 333. The these keys are modified
-*		using the term code, eg: 33X.
+*		330 331 332 333. The these keys are modified using the
+*		term code, eg: 33X.
 *		When all such sequences have been marked identical keys
 *		are removed leaving the linear quadtree nodes.
 * \param	lDom			The LBT domain.
@@ -1821,7 +2419,12 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
   unsigned int	dMsk,
   		pDig,
   		cDig;
+#ifdef HACK_OLD_CODE
   WlzIVertex2	pos;
+#endif
+#ifdef WLZ_LBTDOMAIN_DEBUG
+  WlzDomain	tDom;
+#endif
   WlzLBTNode2D	*cNod,
   		*pNod,
 		*tNod;
@@ -1830,15 +2433,16 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
   if(lDom->nNodes > 1)
   {
 #ifdef WLZ_LBTDOMAIN_DEBUG
+    tDom.l2 = lDom;
     (void )fprintf(stderr, "Nodes:\n");
-    (void )WlzLBTTestOutputNodesTxt(stderr, lDom);
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
 #endif /* WLZ_LBTDOMAIN_DEBUG */
     /* Sort the nodes by key values. */
     AlgQSort(lDom->nodes, lDom->nNodes, sizeof(WlzLBTNode2D), lDom,
 	     WlzLBTDomain2DNodeCmpFn);
 #ifdef WLZ_LBTDOMAIN_DEBUG
     (void )fprintf(stderr, "Sorted nodes:\n");
-    (void )WlzLBTTestOutputNodesTxt(stderr, lDom);
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
 #endif /* WLZ_LBTDOMAIN_DEBUG */
     /* First pass: Mark key digits using the term digit when all previous
      * digits increment. */
@@ -1860,6 +2464,7 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
       allPrvD = 1;
       pNod = cNod++;
       /* Avoid condensing nodes which are on the boundary of the domain. */
+#ifdef HACK_OLD_CODE
       WlzLBTKeyToPos2I(pNod->keys, &pos);
       if((WlzInsideDomain2D(iDom, pos.vtY - 1, pos.vtX - 1, NULL) == 0) ||
          (WlzInsideDomain2D(iDom, pos.vtY - 1, pos.vtX + 0, NULL) == 0) ||
@@ -1870,6 +2475,9 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
          (WlzInsideDomain2D(iDom, pos.vtY + 1, pos.vtX - 1, NULL) == 0) ||
          (WlzInsideDomain2D(iDom, pos.vtY + 1, pos.vtX + 0, NULL) == 0) ||
          (WlzInsideDomain2D(iDom, pos.vtY + 1, pos.vtX + 1, NULL) == 0))
+#else
+      if(WlzLBNodeAtBoundary2D(iDom, pNod))
+#endif
       {
 	for(idD = 0; idD < lDom->depth; ++idD)
 	{
@@ -1948,7 +2556,7 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
     }
 #ifdef WLZ_LBTDOMAIN_DEBUG
     (void )fprintf(stderr, "Marked nodes:\n");
-    (void )WlzLBTTestOutputNodesTxt(stderr, lDom);
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
 #endif /* WLZ_LBTDOMAIN_DEBUG */
     /* Second pass: Remove nodes with duplicate keys. */
     nCnt = 1;
@@ -1975,9 +2583,81 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
     lDom->nNodes = nCnt;
 #ifdef WLZ_LBTDOMAIN_DEBUG
     (void )fprintf(stderr, "Condensed nodes:\n");
-    (void )WlzLBTTestOutputNodesTxt(stderr, lDom);
+    (void )WlzLBTTestOutputNodesTxt(stderr, tDom);
 #endif /* WLZ_LBTDOMAIN_DEBUG */
   }
+}
+
+/*!
+* \return	Non zero value if the node is at the domain's boundary.
+* \ingroup	WlzDomainOps
+* \brief	Checks whether the 3D LBT node is at the boundary of
+*		the interval domain.
+* \param	iDom
+* \param	nod
+*/
+static int	WlzLBNodeAtBoundary3D(WlzPlaneDomain *pDom,
+				      WlzLBTNode3D *nod)
+{
+  int		bnd = 0;
+  WlzIVertex3	inc,
+  		pos0,
+  		pos1;
+
+  WlzLBTKeyToPos3I(nod->keys, &pos0);
+  for(inc.vtZ = -1; inc.vtZ <= 1; ++inc.vtZ)
+  {
+    pos1.vtZ = pos0.vtZ + inc.vtZ;
+    for(inc.vtY = -1; inc.vtY <= 1; ++inc.vtY)
+    {
+      pos1.vtY = pos0.vtY + inc.vtY;
+      for(inc.vtX = -1; inc.vtX <= 1; ++inc.vtX)
+      {
+	pos1.vtX = pos0.vtX + inc.vtX;
+	if(WlzInsideDomain3D(pDom, pos1.vtZ, pos1.vtY, pos1.vtX, NULL) == 0)
+	{
+	  bnd = 1;
+	  goto done;
+	}
+      }
+    }
+  }
+done:
+  return(bnd);
+}
+
+/*!
+* \return	Non zero value if the node is at the domain's boundary.
+* \ingroup	WlzDomainOps
+* \brief	Checks whether the 2D LBT node is at the boundary of
+*		the interval domain.
+* \param	iDom
+* \param	nod
+*/
+static int	WlzLBNodeAtBoundary2D(WlzIntervalDomain *iDom,
+				      WlzLBTNode2D *nod)
+{
+  int		bnd = 0;
+  WlzIVertex2	inc,
+  		pos0,
+  		pos1;
+
+  WlzLBTKeyToPos2I(nod->keys, &pos0);
+  for(inc.vtY = -1; inc.vtY <= 1; ++inc.vtY)
+  {
+    pos1.vtY = pos0.vtY + inc.vtY;
+    for(inc.vtX = -1; inc.vtX <= 1; ++inc.vtX)
+    {
+      pos1.vtX = pos0.vtX + inc.vtX;
+      if(WlzInsideDomain2D(iDom, pos1.vtY, pos1.vtX, NULL) == 0)
+      {
+        bnd = 1;
+	goto done;
+      }
+    }
+  }
+done:
+  return(bnd);
 }
 
 /*!
@@ -1985,53 +2665,92 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
 * \ingroup	WlzDomainOps
 * \brief	Outputs the nodes of the LBT ask text for testing.
 * \param	fP		Output file.
-* \param	lDom		The LBT domain to output.
+* \param	dom		The LBT domain to output.
 */
-WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzLBTDomain2D *lDom)
+WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
 {
   int		idD,
   		idN;
-  WlzIBox2	nBB;
-  WlzLBTNode2D	*nod;
+  WlzBox	nBB;
+  WlzLBTNode2D	*nod2;
+  WlzLBTNode3D	*nod3;
   UBYTE		digits[WLZ_LBTDOMAIN_MAXDIGITS];
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  if(lDom == NULL)
+  if(dom.core == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(lDom->type != WLZ_LBTDOMAIN_2D)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
   else
   {
-    (void )fprintf(fP, "type = %d\n", lDom->type);
-    (void )fprintf(fP, "linkcount = %d\n", lDom->linkcount);
-    (void )fprintf(fP, "freeptr = 0x%lx\n", (unsigned long )(lDom->freeptr));
-    (void )fprintf(fP, "line1 %d\n", lDom->line1);
-    (void )fprintf(fP, "lastln %d\n", lDom->lastln);
-    (void )fprintf(fP, "kol1 %d\n", lDom->kol1);
-    (void )fprintf(fP, "lastkl %d\n", lDom->lastkl);
-    (void )fprintf(fP, "depth %d\n", lDom->depth);
-    (void )fprintf(fP, "nNodes %d\n", lDom->nNodes);
-    (void )fprintf(fP, "maxNodes %d\n", lDom->maxNodes);
-    (void )fprintf(fP, "nodes:\n");
-    nod = lDom->nodes;
-    idN = 0;
-    while(idN < lDom->nNodes)
+    switch(dom.core->type)
     {
-      (void )fprintf(fP, "%8d  ", idN);
-      WlzLBTGetKeyDigits2D(nod->keys, digits);
-      for(idD = 29; idD >= 0; --idD)
-      {
-        (void )fprintf(fP, "%d", digits[idD]);
-      }
-      WlzLBTKeyToBox2I(nod->keys, &nBB);
-      (void )fprintf(fP, "  %d,%d,%d,%d\n",
-                     nBB.xMin, nBB.yMin, nBB.xMax, nBB.yMax);
-      ++idN;
-      ++nod;
+      case WLZ_LBTDOMAIN_2D:
+	(void )fprintf(fP, "type = %d\n", dom.l2->type);
+	(void )fprintf(fP, "linkcount = %d\n", dom.l2->linkcount);
+	(void )fprintf(fP, "freeptr = 0x%lx\n",
+	               (unsigned long )(dom.l2->freeptr));
+	(void )fprintf(fP, "line1 %d\n", dom.l2->line1);
+	(void )fprintf(fP, "lastln %d\n", dom.l2->lastln);
+	(void )fprintf(fP, "kol1 %d\n", dom.l2->kol1);
+	(void )fprintf(fP, "lastkl %d\n", dom.l2->lastkl);
+	(void )fprintf(fP, "depth %d\n", dom.l2->depth);
+	(void )fprintf(fP, "nNodes %d\n", dom.l2->nNodes);
+	(void )fprintf(fP, "maxNodes %d\n", dom.l2->maxNodes);
+	(void )fprintf(fP, "nodes:\n");
+	nod2 = dom.l2->nodes;
+	idN = 0;
+	while(idN < dom.l2->nNodes)
+	{
+	  (void )fprintf(fP, "%8d  ", idN);
+	  WlzLBTGetKeyDigits2D(nod2->keys, digits);
+	  for(idD = 29; idD >= 0; --idD)
+	  {
+	    (void )fprintf(fP, "%d", digits[idD]);
+	  }
+	  WlzLBTKeyToBox2I(nod2->keys, &(nBB.i2));
+	  (void )fprintf(fP, "  %d,%d,%d,%d\n",
+			 nBB.i2.xMin, nBB.i2.yMin, nBB.i2.xMax, nBB.i2.yMax);
+	  ++idN;
+	  ++nod2;
+	}
+        break;
+      case WLZ_LBTDOMAIN_3D:
+	(void )fprintf(fP, "type = %d\n", dom.l3->type);
+	(void )fprintf(fP, "linkcount = %d\n", dom.l3->linkcount);
+	(void )fprintf(fP, "freeptr = 0x%lx\n",
+	               (unsigned long )(dom.l3->freeptr));
+	(void )fprintf(fP, "plane1 %d\n", dom.l3->plane1);
+	(void )fprintf(fP, "lastpl %d\n", dom.l3->lastpl);
+	(void )fprintf(fP, "line1 %d\n", dom.l3->line1);
+	(void )fprintf(fP, "lastln %d\n", dom.l3->lastln);
+	(void )fprintf(fP, "kol1 %d\n", dom.l3->kol1);
+	(void )fprintf(fP, "lastkl %d\n", dom.l3->lastkl);
+	(void )fprintf(fP, "depth %d\n", dom.l3->depth);
+	(void )fprintf(fP, "nNodes %d\n", dom.l3->nNodes);
+	(void )fprintf(fP, "maxNodes %d\n", dom.l3->maxNodes);
+	(void )fprintf(fP, "nodes:\n");
+	nod3 = dom.l3->nodes;
+	idN = 0;
+	while(idN < dom.l3->nNodes)
+	{
+	  (void )fprintf(fP, "%8d  ", idN);
+	  WlzLBTGetKeyDigits3D(nod3->keys, digits);
+	  for(idD = 29; idD >= 0; --idD)
+	  {
+	    (void )fprintf(fP, "%d", digits[idD]);
+	  }
+	  WlzLBTKeyToBox3I(nod3->keys, &(nBB.i3));
+	  (void )fprintf(fP, "  %d,%d,%d,%d%d,%d\n",
+			 nBB.i3.xMin, nBB.i3.yMin, nBB.i3.zMin,
+			 nBB.i3.xMax, nBB.i3.yMax, nBB.i3.zMax);
+	  ++idN;
+	  ++nod3;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
     }
   }
   return(errNum);
@@ -2042,9 +2761,9 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzLBTDomain2D *lDom)
 * \ingroup	WlzDomainOps
 * \brief	Outputs the nodes of the LBT as VTK polydata for testing.
 * \param	fP		Output file.
-* \param	lDom		The LBT domain to output.
+* \param	dom		The LBT domain to output.
 */
-WlzErrorNum	WlzLBTTestOutputNodesVtk(FILE *fP, WlzLBTDomain2D *lDom)
+WlzErrorNum	WlzLBTTestOutputNodesVtk(FILE *fP, WlzDomain dom)
 {
   int		idN,
   		nOff;
@@ -2053,67 +2772,74 @@ WlzErrorNum	WlzLBTTestOutputNodesVtk(FILE *fP, WlzLBTDomain2D *lDom)
   		*nodeBB = NULL;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  if(lDom == NULL)
+  if(dom.core == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(lDom->type != WLZ_LBTDOMAIN_2D)
+  else
   {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else if(lDom->nNodes > 0)
-  {
-    if((nodeBB = (WlzIBox2 *)
-                 AlcMalloc(sizeof(WlzIBox2) * lDom->nNodes)) == NULL)
+    switch(dom.core->type)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      nodBB = nodeBB;
-      nod = lDom->nodes;
-      for(idN = 0; idN < lDom->nNodes; ++idN)
-      {
-        WlzLBTKeyToBox2I(nod->keys, nodBB);
-	nodBB->xMax += 1;
-	nodBB->yMax += 1;
-        ++nod;
-	++nodBB;
-      }
-      (void )fprintf(fP, "# vtk DataFile Version 1.0\n"
-      		         "WlzLBTDomain2D test output\n"
-			 "ASCII\n"
-			 "DATASET POLYDATA\n"
-			 "POINTS %d float\n",
-			 lDom->nNodes * 4);
-      nodBB = nodeBB;
-      for(idN = 0; idN < lDom->nNodes; ++idN)
-      {
-        (void )fprintf(fP, "%d %d 0\n"
-                           "%d %d 0\n"
-                           "%d %d 0\n"
-                           "%d %d 0\n",
-			   nodBB->xMin, nodBB->yMin,
-			   nodBB->xMax, nodBB->yMin,
-			   nodBB->xMax, nodBB->yMax,
-			   nodBB->xMin, nodBB->yMax);
-        ++nodBB;
-      }
-      (void )fprintf(fP, "LINES %d %d\n",
-                         lDom->nNodes * 4, lDom->nNodes * 12);
-      for(idN = 0; idN < lDom->nNodes; ++idN)
-      {
-	nOff = idN * 4;
-        (void )fprintf(fP, "2 %d %d\n"
-	                   "2 %d %d\n"
-			   "2 %d %d\n"
-			   "2 %d %d\n",
-			   nOff + 0, nOff + 1,
-			   nOff + 1, nOff + 2,
-			   nOff + 2, nOff + 3,
-			   nOff + 3, nOff + 0);
-      }
-      AlcFree(nodeBB);
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+      case WLZ_LBTDOMAIN_2D:
+	if(dom.l2->nNodes > 0)
+	{
+	  if((nodeBB = (WlzIBox2 *)
+		       AlcMalloc(sizeof(WlzIBox2) * dom.l2->nNodes)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  else
+	  {
+	    nodBB = nodeBB;
+	    nod = dom.l2->nodes;
+	    for(idN = 0; idN < dom.l2->nNodes; ++idN)
+	    {
+	      WlzLBTKeyToBox2I(nod->keys, nodBB);
+	      nodBB->xMax += 1;
+	      nodBB->yMax += 1;
+	      ++nod;
+	      ++nodBB;
+	    }
+	    (void )fprintf(fP, "# vtk DataFile Version 1.0\n"
+			       "WlzLBTDomain2D test output\n"
+			       "ASCII\n"
+			       "DATASET POLYDATA\n"
+			       "POINTS %d float\n",
+			       dom.l2->nNodes * 4);
+	    nodBB = nodeBB;
+	    for(idN = 0; idN < dom.l2->nNodes; ++idN)
+	    {
+	      (void )fprintf(fP, "%d %d 0\n"
+				 "%d %d 0\n"
+				 "%d %d 0\n"
+				 "%d %d 0\n",
+				 nodBB->xMin, nodBB->yMin,
+				 nodBB->xMax, nodBB->yMin,
+				 nodBB->xMax, nodBB->yMax,
+				 nodBB->xMin, nodBB->yMax);
+	      ++nodBB;
+	    }
+	    (void )fprintf(fP, "LINES %d %d\n",
+			       dom.l2->nNodes * 4, dom.l2->nNodes * 12);
+	    for(idN = 0; idN < dom.l2->nNodes; ++idN)
+	    {
+	      nOff = idN * 4;
+	      (void )fprintf(fP, "2 %d %d\n"
+				 "2 %d %d\n"
+				 "2 %d %d\n"
+				 "2 %d %d\n",
+				 nOff + 0, nOff + 1,
+				 nOff + 1, nOff + 2,
+				 nOff + 2, nOff + 3,
+				 nOff + 3, nOff + 0);
+	    }
+	    AlcFree(nodeBB);
+	  }
+	}
+	break;
     }
   }
   return(errNum);
@@ -2308,10 +3034,10 @@ int		main(int argc, char *argv[])
 	}
 	break;
       case WLZ_LBTDOMAIN_TEST_OUT_TXT:
-        errNum = WlzLBTTestOutputNodesTxt(fP, lDom);
+        errNum = WlzLBTTestOutputNodesTxt(fP, tDom);
 	break;
       case WLZ_LBTDOMAIN_TEST_OUT_VTK:
-        errNum = WlzLBTTestOutputNodesVtk(fP, lDom);
+        errNum = WlzLBTTestOutputNodesVtk(fP, tDom);
 	break;
     }
     if(errNum != WLZ_ERR_NONE)
