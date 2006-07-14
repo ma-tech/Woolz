@@ -278,6 +278,9 @@ void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
     case WLZ_GREY_DOUBLE:
       WlzValueSetDouble(vec.dbp + vecOff, value.dbv, count);
       break;
+    case WLZ_GREY_RGBA:
+      WlzValueSetRGBA(vec.rgbp + vecOff, value.rgbv, count);
+      break;
   }
 }
 
