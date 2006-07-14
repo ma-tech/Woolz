@@ -68,9 +68,11 @@ public class WlzC2Java
     static final int WLZ_JPM_KEY_WLZ_FVERTEX3	= 0x00000016;
     static final int WLZ_JPM_KEY_WLZ_DVERTEX3	= 0x00000017;
     static final int WLZ_JPM_KEY_WLZ_IBOX2	= 0x00000018;
-    static final int WLZ_JPM_KEY_WLZ_DBOX2	= 0x00000019;
-    static final int WLZ_JPM_KEY_WLZ_IBOX3	= 0x0000001a;
-    static final int WLZ_JPM_KEY_WLZ_DBOX3	= 0x0000001b;
+    static final int WLZ_JPM_KEY_WLZ_FBOX2	= 0x00000019;
+    static final int WLZ_JPM_KEY_WLZ_DBOX2	= 0x0000001a;
+    static final int WLZ_JPM_KEY_WLZ_IBOX3	= 0x0000001b;
+    static final int WLZ_JPM_KEY_WLZ_FBOX3	= 0x0000001c;
+    static final int WLZ_JPM_KEY_WLZ_DBOX3	= 0x0000001d;
     // Indirection values
     static final int WLZ_JPM_MASK_PTR_1		= 0x00001000;
     static final int WLZ_JPM_MASK_PTR_2		= 0x00002000;
@@ -136,11 +138,17 @@ public class WlzC2Java
     static final int WLZ_JPM_KEY_WLZ_IBOX2_PTR1	 =
     						(WLZ_JPM_KEY_WLZ_IBOX2 |
 						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_FBOX2_PTR1	 =
+    						(WLZ_JPM_KEY_WLZ_FBOX2 |
+						 WLZ_JPM_MASK_PTR_1);
     static final int WLZ_JPM_KEY_WLZ_DBOX2_PTR1	 =
     						(WLZ_JPM_KEY_WLZ_DBOX2 |
 						 WLZ_JPM_MASK_PTR_1);
     static final int WLZ_JPM_KEY_WLZ_IBOX3_PTR1	 =
     						(WLZ_JPM_KEY_WLZ_IBOX3 |
+						 WLZ_JPM_MASK_PTR_1);
+    static final int WLZ_JPM_KEY_WLZ_FBOX3_PTR1	 =
+    						(WLZ_JPM_KEY_WLZ_FBOX3 |
 						 WLZ_JPM_MASK_PTR_1);
     static final int WLZ_JPM_KEY_WLZ_DBOX3_PTR1	 =
     						(WLZ_JPM_KEY_WLZ_DBOX3 |
@@ -246,11 +254,17 @@ public class WlzC2Java
     static final int WLZ_JPM_KEY_WLZ_IBOX2_ARY1	=
     						(WLZ_JPM_KEY_WLZ_IBOX2 |
 						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_FBOX2_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_FBOX2 |
+						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_WLZ_DBOX2_ARY1	=
     						(WLZ_JPM_KEY_WLZ_DBOX2 |
 						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_WLZ_IBOX3_ARY1	=
     						(WLZ_JPM_KEY_WLZ_IBOX3 |
+						 WLZ_JPM_MASK_ARY_1);
+    static final int WLZ_JPM_KEY_WLZ_FBOX3_ARY1	=
+    						(WLZ_JPM_KEY_WLZ_FBOX3 |
 						 WLZ_JPM_MASK_ARY_1);
     static final int WLZ_JPM_KEY_WLZ_DBOX3_ARY1	=
     						(WLZ_JPM_KEY_WLZ_DBOX3 |
@@ -416,10 +430,14 @@ public class WlzC2Java
 		      "WLZ_JPM_KEY_WLZ_DVERTEX3");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX2),
 		      "WLZ_JPM_KEY_WLZ_IBOX2");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FBOX2),
+		      "WLZ_JPM_KEY_WLZ_FBOX2");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX2),
 		      "WLZ_JPM_KEY_WLZ_DBOX2");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX3),
 		      "WLZ_JPM_KEY_WLZ_IBOX3");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FBOX3),
+		      "WLZ_JPM_KEY_WLZ_FBOX3");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX3),
 		      "WLZ_JPM_KEY_WLZ_DBOX3");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_VOID_PTR1),
@@ -460,10 +478,14 @@ public class WlzC2Java
 		      "WLZ_JPM_KEY_WLZ_DVERTEX3_PTR1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX2_PTR1),
 		      "WLZ_JPM_KEY_WLZ_IBOX2_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FBOX2_PTR1),
+		      "WLZ_JPM_KEY_WLZ_FBOX2_PTR1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX2_PTR1),
 		      "WLZ_JPM_KEY_WLZ_DBOX2_PTR1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX3_PTR1),
 		      "WLZ_JPM_KEY_WLZ_IBOX3_PTR1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FBOX3_PTR1),
+		      "WLZ_JPM_KEY_WLZ_FBOX3_PTR1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX3_PTR1),
 		      "WLZ_JPM_KEY_WLZ_DBOX3_PTR1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_BYTE_ARY1),
@@ -524,10 +546,14 @@ public class WlzC2Java
 		      "WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX2_ARY1),
 		      "WLZ_JPM_KEY_WLZ_IBOX2_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FBOX2_ARY1),
+		      "WLZ_JPM_KEY_WLZ_FBOX2_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX2_ARY1),
 		      "WLZ_JPM_KEY_WLZ_DBOX2_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_IBOX3_ARY1),
 		      "WLZ_JPM_KEY_WLZ_IBOX3_ARY1");
+      jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_FBOX3_ARY1),
+		      "WLZ_JPM_KEY_WLZ_FBOX3_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_DBOX3_ARY1),
 		      "WLZ_JPM_KEY_WLZ_DBOX3_ARY1");
       jPmKeyTable.put(new Integer(WLZ_JPM_KEY_WLZ_PTR2),
@@ -761,6 +787,10 @@ public class WlzC2Java
 	    {
 	      jPmKey = WLZ_JPM_KEY_WLZ_IBOX2;
 	    }
+	    else if(cPmType.equals("WlzFBox2"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_FBOX2;
+	    }
 	    else if(cPmType.equals("WlzDBox2"))
 	    {
 	      jPmKey = WLZ_JPM_KEY_WLZ_DBOX2;
@@ -768,6 +798,10 @@ public class WlzC2Java
 	    else if(cPmType.equals("WlzIBox3"))
 	    {
 	      jPmKey = WLZ_JPM_KEY_WLZ_IBOX3;
+	    }
+	    else if(cPmType.equals("WlzFBox3"))
+	    {
+	      jPmKey = WLZ_JPM_KEY_WLZ_FBOX3;
 	    }
 	    else if(cPmType.equals("WlzDBox3"))
 	    {
@@ -915,6 +949,10 @@ public class WlzC2Java
 		{
 		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX2_PTR1;
 		}
+		else if(cPmType.equals("WlzFBox2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FBOX2_PTR1;
+		}
 		else if(cPmType.equals("WlzDBox2"))
 		{
 		  jPmKey = WLZ_JPM_KEY_WLZ_DBOX2_PTR1;
@@ -922,6 +960,10 @@ public class WlzC2Java
 		else if(cPmType.equals("WlzIBox3"))
 		{
 		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX3_PTR1;
+		}
+		else if(cPmType.equals("WlzFBox3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FBOX3_PTR1;
 		}
 		else if(cPmType.equals("WlzDBox3"))
 		{
@@ -970,6 +1012,10 @@ public class WlzC2Java
 		{
 		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX2_ARY1;
 		}
+		else if(cPmType.equals("WlzFBox2"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FBOX2_ARY1;
+		}
 		else if(cPmType.equals("WlzDBox2"))
 		{
 		  jPmKey = WLZ_JPM_KEY_WLZ_DBOX2_ARY1;
@@ -977,6 +1023,10 @@ public class WlzC2Java
 		else if(cPmType.equals("WlzIBox3"))
 		{
 		  jPmKey = WLZ_JPM_KEY_WLZ_IBOX3_ARY1;
+		}
+		else if(cPmType.equals("WlzFBox3"))
+		{
+		  jPmKey = WLZ_JPM_KEY_WLZ_FBOX3_ARY1;
 		}
 		else if(cPmType.equals("WlzDBox3"))
 		{
@@ -1446,6 +1496,10 @@ public class WlzC2Java
 	      {
 		jPmKey = WLZ_JPM_KEY_WLZ_IBOX2;
 	      }
+	      else if(cFnType.equals("WlzFBox2"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_FBOX2;
+	      }
 	      else if(cFnType.equals("WlzDBox2"))
 	      {
 		jPmKey = WLZ_JPM_KEY_WLZ_DBOX2;
@@ -1453,6 +1507,10 @@ public class WlzC2Java
 	      else if(cFnType.equals("WlzIBox3"))
 	      {
 		jPmKey = WLZ_JPM_KEY_WLZ_IBOX3;
+	      }
+	      else if(cFnType.equals("WlzFBox3"))
+	      {
+		jPmKey = WLZ_JPM_KEY_WLZ_FBOX3;
 	      }
 	      else if(cFnType.equals("WlzDBox3"))
 	      {
@@ -1590,8 +1648,10 @@ public class WlzC2Java
         case WLZ_JPM_KEY_WLZ_FVERTEX3:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DVERTEX3:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IBOX2:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FBOX2:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX2:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IBOX3:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FBOX3:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX3:
 	  jPmClass = cType;
 	  jniPmType = "jobject";
@@ -1656,12 +1716,16 @@ public class WlzC2Java
         case WLZ_JPM_KEY_WLZ_DVERTEX3_ARY1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IBOX2_PTR1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IBOX2_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FBOX2_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FBOX2_ARY1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX2_PTR1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX2_ARY1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IBOX3_PTR1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_IBOX3_ARY1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX3_PTR1:	// FALLTHROUGH
         case WLZ_JPM_KEY_WLZ_DBOX3_ARY1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FBOX3_PTR1:	// FALLTHROUGH
+        case WLZ_JPM_KEY_WLZ_FBOX3_ARY1:	// FALLTHROUGH
 	case WLZ_JPM_KEY_WLZ_PTR1_ARY1:		// FALLTHROUGH
 	case WLZ_JPM_KEY_WLZ_PTR2:
 	  jPmClass = cType + " []";
