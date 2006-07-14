@@ -939,6 +939,7 @@ extern double          		WlzBasisFnValueMOSPhi(
 				  double r,
 				  double delta,
 				  double tau);
+#ifndef WLZ_EXT_BIND
 extern WlzBasisFn		*WlzBasisFnGauss2DFromCPts(
 				  int nPts,
 				  WlzDVertex2 *dPts,
@@ -994,6 +995,7 @@ extern WlzBasisFn 		*WlzBasisFnScalarMOS3DFromCPts(
 				  double *alpha,
 				  double *param,
 				  WlzErrorNum *dstErr);
+#endif
 
 /************************************************************************
 * WlzBasisFnTransform.c							*
@@ -1254,6 +1256,7 @@ extern WlzErrorNum		WlzCMeshTransformVtxAry2D(
 				  WlzCMeshTransform *mTr,
 				  int sizeArrayVtx,
 				  WlzDVertex2 *arrayVtx);
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzCMeshGetNodesAndEdges(
 				  WlzCMeshTransform *mesh,
 				  int *dstSizeArrayNod,
@@ -1262,6 +1265,7 @@ extern WlzErrorNum		WlzCMeshGetNodesAndEdges(
 				  WlzDVertex2 **dstArrayDsp,
 				  int *dstSizeArrayEdg,
 				  int **dstArrayEdg);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzCompThresh.c							*
@@ -2613,6 +2617,15 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 * WlzLBTDomain.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzLBTDomain3D           *WlzMakeLBTDomain3D(
+                                  WlzObjectType type,
+                                  int p1,
+                                  int lp,
+                                  int l1,
+                                  int ll,
+                                  int k1,
+                                  int lk,
+                                  WlzErrorNum *dstErr);
 extern WlzLBTDomain2D           *WlzMakeLBTDomain2D(
                                   WlzObjectType type,
                                   int l1,
@@ -2623,9 +2636,15 @@ extern WlzLBTDomain2D           *WlzMakeLBTDomain2D(
 extern WlzLBTDomain2D           *WlzLBTDomain2DFromDomain(
                                   WlzDomain dom,
                                   WlzErrorNum *dstErr);
+extern WlzLBTDomain3D		*WlzLBTDomain3DFromDomain(
+				  WlzDomain dom,
+				  WlzErrorNum *dstErr);
 extern WlzLBTDomain2D           *WlzLBTDomain2DFromIDomain(
                                   WlzIntervalDomain *iDom,
                                   WlzErrorNum *dstErr);
+extern WlzLBTDomain3D		*WlzLBTDomain3DFromPDomain(
+				  WlzPlaneDomain *pDom,
+				  WlzErrorNum *dstErr);
 extern WlzIntervalDomain        *WlzLBTDomainToIDomain(
                                   WlzLBTDomain2D *lDom,
                                   WlzErrorNum *dstErr);
@@ -2649,11 +2668,13 @@ extern WlzObject                *WlzLBTMakeNodeIndexObj2D(
 extern WlzErrorNum		WlzLBTIndexObjSetAllNodes2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzObject *iObj);
+extern WlzErrorNum              WlzFreeLBTDomain3D(
+                                  WlzLBTDomain3D *lDom);
 extern WlzErrorNum              WlzFreeLBTDomain2D(
                                   WlzLBTDomain2D *lDom);
 extern WlzErrorNum              WlzLBTTestOutputNodesTxt(
                                   FILE *fP,
-                                  WlzLBTDomain2D *lDom);
+                                  WlzDomain dom);
 extern int                      WlzLBTNodeSz2D(
                                   WlzLBTNode2D *nod);
 extern int                    	WlzLBTNodeLogSz2D(
@@ -2663,15 +2684,27 @@ extern int			WlzLBTCountNodNbrDir2D(
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN,
 				  WlzDirection dir);
+extern void                     WlzLBTPosToKey3D(
+                                  WlzIVertex3 pos,
+                                  unsigned *keys);
 extern void                     WlzLBTPosToKey2D(
                                   WlzIVertex2 pos,
                                   unsigned *keys);
+extern void                     WlzLBTGetKeyDigits3D(
+                                  unsigned *keys,
+                                  UBYTE *digits);
 extern void                     WlzLBTGetKeyDigits2D(
                                   unsigned *keys,
                                   UBYTE *digits);
+extern void                     WlzLBTKeyToPos3I(
+                                  unsigned *key,
+                                  WlzIVertex3 *pos);
 extern void                     WlzLBTKeyToPos2I(
                                   unsigned *key,
                                   WlzIVertex2 *pos);
+extern void                     WlzLBTKeyToBox3I(
+                                  unsigned *key,
+                                  WlzIBox3 *box);
 extern void                     WlzLBTKeyToBox2I(
                                   unsigned *key,
                                   WlzIBox2 *box);
