@@ -300,14 +300,24 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	  switch( newpixtype ){
 	  case WLZ_GREY_SHORT:
 	    for (col = 0; col < width; col++, offset++){
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
 	      wlzData.shp[offset] = (inp[0]<<8) | (inp[1]);
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	      wlzData.shp[offset] = (inp[0]) | (inp[1]<<8);
+#endif /* __x86 || __alpha */
 	      inp += 2;
 	    }
 	    break;
 
 	  case WLZ_GREY_INT:
 	    for (col = 0; col < width; col++, offset++){
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
 	      wlzData.inp[offset] = (inp[0]<<8) | (inp[1]);
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	      wlzData.inp[offset] = (inp[0]) | (inp[1]<<8);
+#endif /* __x86 || __alpha */
 	      inp += 2;
 	    }
 	    break;
