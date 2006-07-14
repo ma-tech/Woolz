@@ -64,7 +64,7 @@ install_jar:		$(JARFILE)
 
 $(JARFILE):		WlzObject.class
 			cd ../../../../..; \
-			jar cf $(JARFILE) uk/ac/mrc/hgu/Wlz/*.class
+			jar -cf $(JARFILE) uk/ac/mrc/hgu/Wlz/*.class
 
 classes:		WlzObject.class
 
