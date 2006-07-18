@@ -71,7 +71,8 @@ Computes the product of a pair of transforms.
 WlzTransformProduct -o t2.wlz t0.wlz t1.wlz
 \endverbatim
 Computes the product of \f$t_0\f$ and \f$t_1\f$,
-such that \f$t_2\f$ = \f$t_0 t_1\f$.
+such that \f$t_2\f$ = \f$t_1 t_0\f$, i.e. transform \f$t_0\f$ is applied first
+then \f$t_1\f$.
 \par File
 \ref WlzTransformProduct.c "WlzTransformProduct.c"
 \par See Also
@@ -254,7 +255,8 @@ int             main(int argc, char **argv)
     "Computes the product of a pair of transforms.\n",
     *argv,
     " -o t2.wlz t0.wlz t1.wlz\n"
-    "Computes the product of t0 and t1 such that t2 = t0 t1\n");
+    "Computes the product of t0 and t1 such that t2 = t1 t0 i.e.\n"
+    "t0 is applied first then t1\n");
   }
   return(!ok);
 }
