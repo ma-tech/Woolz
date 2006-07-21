@@ -29,8 +29,8 @@ public class WlzFBox3 extends WlzFBox2 implements Cloneable
   **********************************************************************/
   public	WlzFBox3()
   {
-    zMin = 0.0;
-    zMax = 0.0;
+    zMin = 0.0f;
+    zMax = 0.0f;
   }
 
   /**********************************************************************
