@@ -31,10 +31,10 @@ public class WlzFBox2 extends WlzBase implements Cloneable
   **********************************************************************/
   public	WlzFBox2()
   {
-    xMin = 0.0;
-    xMax = 0.0;
-    yMin = 0.0;
-    yMax = 0.0;
+    xMin = 0.0f;
+    xMax = 0.0f;
+    yMin = 0.0f;
+    yMax = 0.0f;
   }
 
   /**********************************************************************
