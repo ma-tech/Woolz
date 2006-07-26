@@ -81,7 +81,7 @@ WlzLaplacian [-o<output object file>] [-s kernel size]
 By  default  the  input  object is read from the standard input and the
 output object is written to the standard output.  Unless the -a flag is
 set  the  resulting pixel values will be signed (for int or short pixel
-values) or centred around 128 for UBYTE pixel values.
+values) or centred around 128 for WlzUByte pixel values.
 
 \par Description
 Applies an edge enhancement filter to the  input  Woolz  object,  which

@@ -109,7 +109,7 @@ int 		WlzConvolveSeqParFn(WlzSeqParWSpace *spWSpace,
 *		Only objects with WLZ_EMPTY_OBJ and WLZ_2D_DOMAINOBJ
 *               types are valid. WLZ_2D_DOMAINOBJ ojects must have
 *               non null domain and values fields, and only integral
-*               values (ie int, short or UBYTE) are valid.
+*               values (ie int, short or WlzUByte) are valid.
 * \param	inObj			Given object.
 * \param	conv			Convolution data structure.
 * \param	newObjFlag		If zero the convolution is done

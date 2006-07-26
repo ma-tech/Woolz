@@ -302,7 +302,7 @@ main(argc, argv)
     fprintf(stderr, "%s: can't allocate memory for scanline buffer...\n", argv[0]);
 
   /* allocate space for the data */
-  if( (wlzData.ubp = (UBYTE *) AlcCalloc(width*height, wlzDepth)) == NULL ){
+  if( (wlzData.ubp = (WlzUByte *) AlcCalloc(width*height, wlzDepth)) == NULL ){
     fprintf(stderr,
 	    "%s: not enough memory for the image data please"
 	    "check size parameters\n",

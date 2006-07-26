@@ -49,17 +49,17 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*!
-* \typedef	UBYTE
+* \typedef	WlzUByte
 * \ingroup	WlzType
 * \brief	An eight bit unsigned integer.
 */
-typedef unsigned char UBYTE;
+typedef unsigned char WlzUByte;
 /*!
-* \typedef	UINT
+* \typedef	WlzUInt
 * \ingroup	WlzType
 * \brief        A 32 bit unsigned integer.
 */
-typedef unsigned int  UINT;
+typedef unsigned int  WlzUInt;
 
 /*!
 * \enum		_WlzGreyType
@@ -1124,10 +1124,10 @@ typedef union _WlzGreyP
   long *lnp;
   int  *inp;
   short *shp;
-  UBYTE *ubp;
+  WlzUByte *ubp;
   float *flp;
   double *dbp;
-  UINT *rgbp;
+  WlzUInt *rgbp;
 } WlzGreyP;
 
 /*!
@@ -1141,10 +1141,10 @@ typedef union _WlzGreyV
   long lnv;
   int inv;
   short shv;
-  UBYTE ubv;
+  WlzUByte ubv;
   float flv;
   double dbv;
-  UINT rgbv;
+  WlzUInt rgbv;
 } WlzGreyV;
 
 /*!
@@ -1882,6 +1882,19 @@ typedef enum _WlzLBTNodeClass2D
 #define WLZ_LBTDOMAIN_MAXDIGITS (30)
 
 /*!
+* \enum		_WlzLBTNodeFlags
+* \ingroup	WlzGeoModel
+* \brief	The reason a callback function is called.
+*		Typedef: ::WlzGMCbReason.
+*/
+typedef enum _WlzLBTNodeFlags
+{
+  WLZ_LBT_NODE_FLAG_NONE	= 0,
+  WLZ_LBT_NODE_FLAG_BOUNDARY	= 1     /*!< Node is adjacent to the objects
+  					     boundary. */
+} WlzLBTNodeFlags;
+
+/*!
 * \struct       _WlzLBTNode2D
 * \ingroup      WlzType
 * \brief        A 2D linear binary tree node for spatial domain representation.
@@ -1889,6 +1902,7 @@ typedef enum _WlzLBTNodeClass2D
 */
 typedef struct _WlzLBTNode2D
 {
+  unsigned		flags;		/*!< Bit flags fo the node. */
   unsigned              keys[3];        /*!< A single location key which
                                              uses bit interleaving with
                                              the bits interleaved between
@@ -1907,6 +1921,7 @@ typedef struct _WlzLBTNode2D
 */
 typedef struct _WlzLBTNode3D
 {
+  unsigned		flags;		/*!< Bit flags fo the node. */
   unsigned              keys[4];        /*!< A single location key which
                                              uses bit interleaving with
                                              the bits interleaved between

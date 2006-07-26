@@ -438,7 +438,7 @@ static WlzObject *WlzTransposeRectObj(
 	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_SHORT, NULL);
 	break;
       case WLZ_GREY_UBYTE:
-	size = sizeof(UBYTE);
+	size = sizeof(WlzUByte);
 	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE, NULL);
 	break;
       case WLZ_GREY_FLOAT:
@@ -450,7 +450,7 @@ static WlzObject *WlzTransposeRectObj(
 	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, NULL);
 	break;
       case WLZ_GREY_RGBA:
-	size = sizeof(UINT);
+	size = sizeof(WlzUInt);
 	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA, NULL);
 	break;
       }

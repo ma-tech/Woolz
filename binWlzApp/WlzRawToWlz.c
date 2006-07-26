@@ -489,7 +489,7 @@ int main(int	argc,
     }
     break;
   }
-  wlzData.ubp = (UBYTE *) **data3D;
+  wlzData.ubp = (WlzUByte *) **data3D;
 
   /* copy to woolz type */
   if( type < 7 ){

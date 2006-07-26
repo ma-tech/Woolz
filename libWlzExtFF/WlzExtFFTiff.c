@@ -239,7 +239,8 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 
   if(errNum == WLZ_ERR_NONE)
   {
-    if( (wlzData.ubp = (UBYTE *) AlcCalloc(width*height, wlzDepth)) == NULL ){
+    if((wlzData.ubp = (WlzUByte *)AlcCalloc(width*height, wlzDepth)) == NULL)
+    {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }

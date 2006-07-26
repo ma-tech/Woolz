@@ -75,7 +75,7 @@ static WlzErrorNum		WlzEffWriteAnlHdrKey(
 static WlzErrorNum		WlzEffReadAnlChar(
 				  FILE *fP,
 				  int cnt,
-				  UBYTE *buf);
+				  WlzUByte *buf);
 static WlzErrorNum		WlzEffReadAnlShort(
 				  FILE *fP,
 				  int cnt,
@@ -99,7 +99,7 @@ static WlzErrorNum		WlzEffReadAnlDouble(
 static WlzErrorNum		WlzEffWriteAnlChar(
 				  FILE *fP,
 				  int cnt,
-				  UBYTE *buf);
+				  WlzUByte *buf);
 static WlzErrorNum		WlzEffWriteAnlShort(
 				  FILE *fP,
 				  int cnt,
@@ -596,7 +596,7 @@ WlzErrorNum	WlzEffWriteObjAnl(const char *gvnFileName, WlzObject *obj)
 	      dataP.shp = *(short **)data;
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      dataP.ubp = *(UBYTE **)data;
+	      dataP.ubp = *(WlzUByte **)data;
 	      break;
 	    case WLZ_GREY_FLOAT:
 	      dataP.flp = *(float **)data;
@@ -623,7 +623,7 @@ WlzErrorNum	WlzEffWriteObjAnl(const char *gvnFileName, WlzObject *obj)
 	      dataP.shp = **(short ***)data;
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      dataP.ubp = **(UBYTE ***)data;
+	      dataP.ubp = **(WlzUByte ***)data;
 	      break;
 	    case WLZ_GREY_FLOAT:
 	      dataP.flp = **(float ***)data;
@@ -765,12 +765,12 @@ static WlzErrorNum	WlzEffReadAnlHdrKey(FILE *fP, WlzEffAnlDsr *dsr,
 	break;
     }
   }
-  if(WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hk.dataType)) ||
-     WlzEffReadAnlChar(fP, 18, (UBYTE *)(dsr->hk.dbName)) ||
+  if(WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hk.dataType)) ||
+     WlzEffReadAnlChar(fP, 18, (WlzUByte *)(dsr->hk.dbName)) ||
      WlzEffReadAnlInt(fP, 1, &(dsr->hk.extents), *swap) ||
      WlzEffReadAnlShort(fP, 1, &(dsr->hk.sessionErr), *swap) ||
-     WlzEffReadAnlChar(fP, 1, (UBYTE *)&(dsr->hk.regular)) ||
-     WlzEffReadAnlChar(fP, 1, (UBYTE *)&(dsr->hk.hKeyUn0)))
+     WlzEffReadAnlChar(fP, 1, (WlzUByte *)&(dsr->hk.regular)) ||
+     WlzEffReadAnlChar(fP, 1, (WlzUByte *)&(dsr->hk.hKeyUn0)))
   {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
@@ -831,16 +831,16 @@ static WlzErrorNum	WlzEffReadAnlHdrDataHistory(FILE *fP,
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(WlzEffReadAnlChar(fP, 80, (UBYTE *)(dsr->hist.descrip)) ||
-     WlzEffReadAnlChar(fP, 24, (UBYTE *)(dsr->hist.auxFile)) ||
-     WlzEffReadAnlChar(fP, 1, (UBYTE *)&(dsr->hist.orient)) ||
-     WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hist.originator)) ||
-     WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hist.generated)) ||
-     WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hist.scanNum)) ||
-     WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hist.patientId)) ||
-     WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hist.expDate)) ||
-     WlzEffReadAnlChar(fP, 10, (UBYTE *)(dsr->hist.expTime)) ||
-     WlzEffReadAnlChar(fP, 3, (UBYTE *)(dsr->hist.hisUn0)) ||
+  if(WlzEffReadAnlChar(fP, 80, (WlzUByte *)(dsr->hist.descrip)) ||
+     WlzEffReadAnlChar(fP, 24, (WlzUByte *)(dsr->hist.auxFile)) ||
+     WlzEffReadAnlChar(fP, 1, (WlzUByte *)&(dsr->hist.orient)) ||
+     WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hist.originator)) ||
+     WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hist.generated)) ||
+     WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hist.scanNum)) ||
+     WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hist.patientId)) ||
+     WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hist.expDate)) ||
+     WlzEffReadAnlChar(fP, 10, (WlzUByte *)(dsr->hist.expTime)) ||
+     WlzEffReadAnlChar(fP, 3, (WlzUByte *)(dsr->hist.hisUn0)) ||
      WlzEffReadAnlInt(fP, 1, &(dsr->hist.views), swap) ||
      WlzEffReadAnlInt(fP, 1, &(dsr->hist.volsAdded), swap) ||
      WlzEffReadAnlInt(fP, 1, &(dsr->hist.startField), swap) ||
@@ -953,12 +953,12 @@ static WlzErrorNum	WlzEffWriteAnlHdrKey(FILE *fP, WlzEffAnlDsr *dsr)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(WlzEffWriteAnlInt(fP, 1, &(dsr->hk.hdrSz)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hk.dataType)) ||
-     WlzEffWriteAnlChar(fP, 18, (UBYTE *)(dsr->hk.dbName)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hk.dataType)) ||
+     WlzEffWriteAnlChar(fP, 18, (WlzUByte *)(dsr->hk.dbName)) ||
      WlzEffWriteAnlInt(fP, 1, &(dsr->hk.extents)) ||
      WlzEffWriteAnlShort(fP, 1, &(dsr->hk.sessionErr)) ||
-     WlzEffWriteAnlChar(fP, 1, (UBYTE *)&(dsr->hk.regular)) ||
-     WlzEffWriteAnlChar(fP, 1, (UBYTE *)&(dsr->hk.hKeyUn0)))
+     WlzEffWriteAnlChar(fP, 1, (WlzUByte *)&(dsr->hk.regular)) ||
+     WlzEffWriteAnlChar(fP, 1, (WlzUByte *)&(dsr->hk.hKeyUn0)))
   {
     errNum = WLZ_ERR_WRITE_INCOMPLETE;
   }
@@ -1016,16 +1016,16 @@ static WlzErrorNum	WlzEffWriteAnlHdrDataHistory(FILE *fP,
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(WlzEffWriteAnlChar(fP, 80, (UBYTE *)(dsr->hist.descrip)) ||
-     WlzEffWriteAnlChar(fP, 24, (UBYTE *)(dsr->hist.auxFile)) ||
-     WlzEffWriteAnlChar(fP, 1, (UBYTE *)&(dsr->hist.orient)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hist.originator)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hist.generated)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hist.scanNum)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hist.patientId)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hist.expDate)) ||
-     WlzEffWriteAnlChar(fP, 10, (UBYTE *)(dsr->hist.expTime)) ||
-     WlzEffWriteAnlChar(fP, 3, (UBYTE *)(dsr->hist.hisUn0)) ||
+  if(WlzEffWriteAnlChar(fP, 80, (WlzUByte *)(dsr->hist.descrip)) ||
+     WlzEffWriteAnlChar(fP, 24, (WlzUByte *)(dsr->hist.auxFile)) ||
+     WlzEffWriteAnlChar(fP, 1, (WlzUByte *)&(dsr->hist.orient)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hist.originator)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hist.generated)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hist.scanNum)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hist.patientId)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hist.expDate)) ||
+     WlzEffWriteAnlChar(fP, 10, (WlzUByte *)(dsr->hist.expTime)) ||
+     WlzEffWriteAnlChar(fP, 3, (WlzUByte *)(dsr->hist.hisUn0)) ||
      WlzEffWriteAnlInt(fP, 1, &(dsr->hist.views)) ||
      WlzEffWriteAnlInt(fP, 1, &(dsr->hist.volsAdded)) ||
      WlzEffWriteAnlInt(fP, 1, &(dsr->hist.startField)) ||
@@ -1048,7 +1048,7 @@ static WlzErrorNum	WlzEffWriteAnlHdrDataHistory(FILE *fP,
 * \param	cnt			Number of chars to read.
 * \param	buf			Buffer for chars.
 */
-static WlzErrorNum	WlzEffReadAnlChar(FILE *fP, int cnt, UBYTE *buf)
+static WlzErrorNum	WlzEffReadAnlChar(FILE *fP, int cnt, WlzUByte *buf)
 {
   WlzErrorNum	errNum;
   
@@ -1092,8 +1092,8 @@ static WlzErrorNum	WlzEffReadAnlShort(FILE *fP, int cnt, short *buf,
 static WlzErrorNum	WlzEffReadAnlInt(FILE *fP, int cnt, int *buf,
 					int swap)
 {
-  UBYTE		ubv;
-  UBYTE		*ubp;
+  WlzUByte	ubv;
+  WlzUByte	*ubp;
   WlzErrorNum	errNum;
   
   errNum = (fread(buf, sizeof(int), cnt, fP) == cnt)?
@@ -1155,7 +1155,7 @@ static WlzErrorNum	WlzEffReadAnlDouble(FILE *fP, int cnt, double *buf,
 * \param	cnt			Number of chars to write.
 * \param	buf			Buffer with chars.
 */
-static WlzErrorNum	WlzEffWriteAnlChar(FILE *fP, int cnt, UBYTE *buf)
+static WlzErrorNum	WlzEffWriteAnlChar(FILE *fP, int cnt, WlzUByte *buf)
 {
   WlzErrorNum	errNum;
   
@@ -1242,10 +1242,10 @@ static WlzErrorNum	WlzEffWriteAnlDouble(FILE *fP, int cnt, double *buf)
 */
 static void	WlzEffReadAnlSwap2(void *buf, unsigned int cnt)
 {
-  UBYTE		ubv;
-  UBYTE		*ubp;
+  WlzUByte	ubv;
+  WlzUByte	*ubp;
 
-  ubp = (UBYTE *)buf;
+  ubp = (WlzUByte *)buf;
   while(cnt-- > 0)
   {
     ubv = *(ubp + 0);
@@ -1265,10 +1265,10 @@ static void	WlzEffReadAnlSwap2(void *buf, unsigned int cnt)
 */
 static void	WlzEffReadAnlSwap4(void *buf, unsigned int cnt)
 {
-  UBYTE		ubv;
-  UBYTE		*ubp;
+  WlzUByte	ubv;
+  WlzUByte	*ubp;
 
-  ubp = (UBYTE *)buf;
+  ubp = (WlzUByte *)buf;
   while(cnt-- > 0)
   {
     ubv = *(ubp + 0);

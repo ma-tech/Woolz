@@ -136,8 +136,8 @@ static WlzErrorNum 		WlzEffAmReadArray3D(
 				  WlzEffAmHead *head,
 				  WlzGreyType gType);
 static void			WlzEffAmBufDecodeHXByteRLEUByte(
-				  UBYTE *dst,
-				  UBYTE *src,
+				  WlzUByte *dst,
+				  WlzUByte *src,
 				  int dstCnt,
 				  int srcCnt);
 static void			WlzEffAmBufDecodeHXByteRLEShort(
@@ -1424,7 +1424,7 @@ static WlzErrorNum WlzEffAmReadArray3D(FILE *fP, void ***data,
   switch(gType)
   {
     case WLZ_GREY_UBYTE:
-      datumSz = sizeof(UBYTE);
+      datumSz = sizeof(WlzUByte);
       break;
     case WLZ_GREY_SHORT:
       datumSz = sizeof(short);
@@ -1458,7 +1458,8 @@ static WlzErrorNum WlzEffAmReadArray3D(FILE *fP, void ***data,
 	  switch(gType)
 	  {
 	    case WLZ_GREY_UBYTE:
-	      WlzEffAmBufDecodeHXByteRLEUByte(**(UBYTE ***)data, (UBYTE *)buf,
+	      WlzEffAmBufDecodeHXByteRLEUByte(**(WlzUByte ***)data,
+	                                      (WlzUByte *)buf,
 	      				      nDst, head->latBytes);
 	      break;
 	    case WLZ_GREY_SHORT:
@@ -1488,11 +1489,11 @@ static WlzErrorNum WlzEffAmReadArray3D(FILE *fP, void ***data,
 * \param	dstCnt			Destination buffer size.
 * \param	srcCnt			Source buffer size.
 */
-static void	WlzEffAmBufDecodeHXByteRLEUByte(UBYTE *dst, UBYTE *src,
+static void	WlzEffAmBufDecodeHXByteRLEUByte(WlzUByte *dst, WlzUByte *src,
 						int dstCnt, int srcCnt)
 {
   int		vCnt;
-  UBYTE 	vVal;
+  WlzUByte 	vVal;
 
   vVal = *src++;
   while((vCnt = vVal & 0x7f) != 0)

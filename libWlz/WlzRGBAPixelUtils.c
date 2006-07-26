@@ -51,7 +51,7 @@ For grey-pixel types the colour channel values are set equal to the
  grey value i.e. the pixel is assumed to be (g,g,g). If the grey-channel
  is requested of a colour pixel the modulus is returned. For colour
  pixels the error return value is -1, for grey pixels the error return
- should be tested since all values are valid (except grey-type UBYTE).
+ should be tested since all values are valid (except grey-type WlzUByte).
  Hue and saturation are zero for grey-pixel types.
 *
 * \return       requested value of pixel

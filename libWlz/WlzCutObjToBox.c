@@ -197,12 +197,13 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 	      case WLZ_GREY_UBYTE:
 		if(valP)
 		{
-		  dstValP.ubp = (UBYTE *)valP;
+		  dstValP.ubp = (WlzUByte *)valP;
 		}
 		else
 		{
-		  if((dstValP.ubp = (UBYTE *)AlcMalloc((unsigned long )tI0 *
-						       sizeof(UBYTE))) == NULL)
+		  if((dstValP.ubp = (WlzUByte *)
+		                    AlcMalloc((unsigned long )tI0 *
+					      sizeof(WlzUByte))) == NULL)
 		  {
 		    errNum = WLZ_ERR_MEM_ALLOC;
 		  }
@@ -239,12 +240,13 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 	      case WLZ_GREY_RGBA:
 		if(valP)
 		{
-		  dstValP.rgbp = (UINT *)valP;
+		  dstValP.rgbp = (WlzUInt *)valP;
 		}
 		else
 		{
-		  if((dstValP.rgbp = (UINT *)AlcMalloc((unsigned long )tI0 *
-						      sizeof(UINT))) == NULL)
+		  if((dstValP.rgbp = (WlzUInt *)
+		                     AlcMalloc((unsigned long )tI0 *
+					       sizeof(WlzUInt))) == NULL)
 		  {
 		    errNum = WLZ_ERR_MEM_ALLOC;
 		  }
@@ -550,12 +552,13 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	      case WLZ_GREY_UBYTE:
 		if(valP)
 		{
-		  dstValP.ubp = (UBYTE *)valP;
+		  dstValP.ubp = (WlzUByte *)valP;
 		}
 		else
 		{
-		  if((dstValP.ubp = (UBYTE *)AlcMalloc((unsigned long )size3D *
-						       sizeof(UBYTE))) == NULL)
+		  if((dstValP.ubp = (WlzUByte *)
+		  		    AlcMalloc((unsigned long )size3D *
+					       sizeof(WlzUByte))) == NULL)
 		  {
 		    errNum = WLZ_ERR_MEM_ALLOC;
 		  }
@@ -592,12 +595,13 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	      case WLZ_GREY_RGBA:
 		if(valP)
 		{
-		  dstValP.rgbp = (UINT *)valP;
+		  dstValP.rgbp = (WlzUInt *)valP;
 		}
 		else
 		{
-		  if((dstValP.rgbp = (UINT *)AlcMalloc((unsigned long )size3D *
-						      sizeof(UINT))) == NULL)
+		  if((dstValP.rgbp = (WlzUInt *)
+		                     AlcMalloc((unsigned long )size3D *
+					       sizeof(WlzUInt))) == NULL)
 		  {
 		    errNum = WLZ_ERR_MEM_ALLOC;
 		  }

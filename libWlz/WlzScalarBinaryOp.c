@@ -153,16 +153,16 @@ static WlzErrorNum WlzBufIntIntScalarBinaryOp(
   case WLZ_GREY_UBYTE:
     switch( op ){
     case WLZ_BO_ADD:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ + val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ + val);}
       break;
     case WLZ_BO_SUBTRACT:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ - val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ - val);}
       break;
     case WLZ_BO_MULTIPLY:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ * val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ * val);}
       break;
     case WLZ_BO_DIVIDE:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ / val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ / val);}
       break;
     case WLZ_BO_MODULUS:
       while( buflen-- ){*outPP.p.ubp++ = *inbuf1++ % val;}
@@ -386,16 +386,16 @@ static WlzErrorNum WlzBufIntDblScalarBinaryOp(
   case WLZ_GREY_UBYTE:
     switch( op ){
     case WLZ_BO_ADD:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ + val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ + val);}
       break;
     case WLZ_BO_SUBTRACT:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ - val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ - val);}
       break;
     case WLZ_BO_MULTIPLY:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ * val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ * val);}
       break;
     case WLZ_BO_DIVIDE:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ / val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ / val);}
       break;
     case WLZ_BO_EQ:
       while( buflen-- ){*outPP.p.ubp++ = 
@@ -604,16 +604,16 @@ static WlzErrorNum WlzBufDblIntScalarBinaryOp(
   case WLZ_GREY_UBYTE:
     switch( op ){
     case WLZ_BO_ADD:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ + val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ + val);}
       break;
     case WLZ_BO_SUBTRACT:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ - val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ - val);}
       break;
     case WLZ_BO_MULTIPLY:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ * val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ * val);}
       break;
     case WLZ_BO_DIVIDE:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ / val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ / val);}
       break;
     case WLZ_BO_EQ:
       while( buflen-- ){*outPP.p.ubp++ = 
@@ -822,16 +822,16 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
   case WLZ_GREY_UBYTE:
     switch( op ){
     case WLZ_BO_ADD:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ + val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ + val);}
       break;
     case WLZ_BO_SUBTRACT:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ - val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ - val);}
       break;
     case WLZ_BO_MULTIPLY:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ * val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ * val);}
       break;
     case WLZ_BO_DIVIDE:
-      while( buflen-- ){*outPP.p.ubp++ = (UBYTE) (*inbuf1++ / val);}
+      while( buflen-- ){*outPP.p.ubp++ = (WlzUByte) (*inbuf1++ / val);}
       break;
     case WLZ_BO_EQ:
       while( buflen-- ){*outPP.p.ubp++ = 

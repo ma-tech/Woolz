@@ -3980,7 +3980,7 @@ static WlzPlaneDomain *WlzPDomFromBBox(WlzIBox3  bBox,
 				       WlzErrorNum *dstErr)
 {
   WlzObject      *tObj;
-  UBYTE		**pMsk = NULL;
+  WlzUByte	**pMsk = NULL;
   WlzIVertex2	  pMskOrg,
   		  pMskSz;
   WlzPlaneDomain *dstPDom = NULL;

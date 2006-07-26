@@ -136,7 +136,7 @@ WlzMakeIntervalValues(WlzObjectType	type,
       break;
 
     case WLZ_GREY_UBYTE:
-      g.ubp = (UBYTE *) AlcCalloc(WlzArea(obj, NULL), sizeof(UBYTE));
+      g.ubp = (WlzUByte *) AlcCalloc(WlzArea(obj, NULL), sizeof(WlzUByte));
       break;
 
     case WLZ_GREY_FLOAT:
@@ -148,7 +148,7 @@ WlzMakeIntervalValues(WlzObjectType	type,
       break;
 
     case WLZ_GREY_RGBA:
-      g.rgbp = (UINT *) AlcCalloc(WlzArea(obj, NULL), sizeof(UINT));
+      g.rgbp = (WlzUInt *) AlcCalloc(WlzArea(obj, NULL), sizeof(WlzUInt));
       break;
 
     default:

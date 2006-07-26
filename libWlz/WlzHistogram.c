@@ -355,7 +355,7 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 * \brief	Recomputes the given histogram domain for the required
 *               number of bins, origin and bin size.
 *               This function will only be called for a histogram
-*               computed from UBYTE grey values with the range [0-255]
+*               computed from WlzUByte grey values with the range [0-255]
 *               with histDom->maxBins == 256. Also the given histograms
 *               binSize is known to be 1.0 and it's origin is known to
 *               be 0.0.
@@ -653,7 +653,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	  switch(greyType)
 	  {
 	    case WLZ_GREY_UBYTE:
-	      nBins0 = 256;   /* Compute range after from histogram if UBYTE */
+	      nBins0 = 256;    /* Compute range after histogram if WlzUByte */
 	      binOrigin0 = 0.0;
 	      binSize0 = 1.0;
 	      break;

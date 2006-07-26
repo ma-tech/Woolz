@@ -283,7 +283,7 @@ WlzErrorNum Wlz1DConv(
   int		intSum;
   double	dblSum;
   WlzGreyP	inbuf, outbuf;
-  UINT		red, green, blue;
+  WlzUInt	red, green, blue;
     
   /* set some local parameters */
   n = convParams->mask_size / 2;
@@ -293,8 +293,8 @@ WlzErrorNum Wlz1DConv(
   outbuf = stwspc->outbuf.p;
   length = stwspc->len;
 
-  /* calculate the new value  - use int for UBYTE, short and int
-     double otherwise, separate rgb values each use UINT */
+  /* calculate the new value  - use int for WlzUByte, short and int
+     double otherwise, separate rgb values each use WlzUInt */
   switch( stwspc->inbuf.type ){
 
   case WLZ_GREY_INT:
@@ -315,7 +315,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -348,7 +348,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -381,7 +381,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -416,7 +416,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -449,7 +449,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -482,7 +482,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -517,7 +517,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -550,7 +550,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -583,7 +583,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = intSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte) intSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = intSum/factor;
@@ -618,7 +618,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = dblSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = dblSum/factor;
@@ -651,7 +651,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = dblSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = dblSum/factor;
@@ -684,7 +684,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = dblSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = dblSum/factor;
@@ -719,7 +719,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = dblSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = dblSum/factor;
@@ -752,7 +752,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = dblSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = dblSum/factor;
@@ -785,7 +785,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = dblSum/factor;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = dblSum/factor;
@@ -829,7 +829,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) (red+green+blue)/factor/3.0;
+	*outbuf.ubp++ = (WlzUByte) (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = (red+green+blue)/factor/3.0;
@@ -870,7 +870,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) (red+green+blue)/factor/3.0;
+	*outbuf.ubp++ = (WlzUByte) (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = (red+green+blue)/factor/3.0;
@@ -914,7 +914,7 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.shp++ = (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (UBYTE) (red+green+blue)/factor/3.0;
+	*outbuf.ubp++ = (WlzUByte) (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_FLOAT:
 	*outbuf.flp++ = (red+green+blue)/factor/3.0;

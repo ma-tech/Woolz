@@ -231,8 +231,8 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 		}
 		break;
 	      case WLZ_GREY_UBYTE:
-		if((dstValP.ubp = (UBYTE *)AlcMalloc((unsigned long )tI0 *
-						     sizeof(UBYTE))) == NULL)
+		if((dstValP.ubp = (WlzUByte *)AlcMalloc((unsigned long )tI0 *
+						   sizeof(WlzUByte))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
@@ -252,8 +252,9 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 		}
 		break;
 	      case WLZ_GREY_RGBA:
-		if((dstValP.rgbp = (UINT *)AlcMalloc((unsigned long )tI0 *
-						      sizeof(UINT))) == NULL)
+		if((dstValP.rgbp = (WlzUInt *)
+		                   AlcMalloc((unsigned long )tI0 *
+					     sizeof(WlzUInt))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}

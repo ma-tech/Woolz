@@ -62,7 +62,7 @@ static WlzObject 		*WlzRasterGM3D(
 				  WlzIBox3 bBox,
 			          WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzRasterAddSimplex3I(
-				  UBYTE ***bMsk,
+				  WlzUByte ***bMsk,
 				  WlzIVertex3 sz,
 				  WlzIVertex3 org,
 				  WlzIVertex3 *simplex);
@@ -70,10 +70,10 @@ static int 			WlzRasterVtxCmp3I(
 				  const void *ptr0,
 				  const void *ptr1);
 static void			WlzRasterLine3I(
-				  UBYTE ***bMsk,
+				  WlzUByte ***bMsk,
 				  WlzIVertex3 *seg);
 static void			WlzRasterSetVoxel(
-				  UBYTE ***bMsk,
+				  WlzUByte ***bMsk,
 				  WlzIVertex3 pos);
 
 /*!
@@ -255,7 +255,7 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
 		*tS;
   char		*lFlg = NULL;
   WlzObject	*dObj = NULL;
-  UBYTE		***dAry = NULL;
+  WlzUByte	***dAry = NULL;
   WlzDVertex3	*vDP;
   WlzIVertex3	vBuf[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -383,7 +383,7 @@ static int 	WlzRasterVtxCmp3I(const void *ptr0, const void *ptr1)
 * \param	simplex			The coordinates of the verticies
 *                                       of the simplex.
 */
-static WlzErrorNum WlzRasterAddSimplex3I(UBYTE ***bMsk, WlzIVertex3 sz,
+static WlzErrorNum WlzRasterAddSimplex3I(WlzUByte ***bMsk, WlzIVertex3 sz,
 					 WlzIVertex3 org, WlzIVertex3 *simplex)
 {
   int		idN,
@@ -501,7 +501,7 @@ static WlzErrorNum WlzRasterAddSimplex3I(UBYTE ***bMsk, WlzIVertex3 sz,
 * \param	seg			The coordinates of the line
 *                                       segment's end points.
 */
-static void	WlzRasterLine3I(UBYTE ***bMsk, WlzIVertex3 *seg)
+static void	WlzRasterLine3I(WlzUByte ***bMsk, WlzIVertex3 *seg)
 {
   int		cnt,
   		errXY,
@@ -567,7 +567,7 @@ static void	WlzRasterLine3I(UBYTE ***bMsk, WlzIVertex3 *seg)
 * \param	pos			The coordinates of the line
 *                                       voxel to set.
 */
-static void	WlzRasterSetVoxel(UBYTE ***bMsk, WlzIVertex3 pos)
+static void	WlzRasterSetVoxel(WlzUByte ***bMsk, WlzIVertex3 pos)
 {
   *(*(*(bMsk + pos.vtZ) + pos.vtY) + (pos.vtX / 8)) |= 1 << (pos.vtX % 8);
 }

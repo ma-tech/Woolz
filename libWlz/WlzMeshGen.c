@@ -2089,6 +2089,60 @@ int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
 /*!
 * \return	New mesh or NULL on error.
 * \ingroup	WlzMesh
+* \brief	Constructs a 2D or 3D mesh from a 2D or 3D domain object.
+*		Because of the difficulty in computing a mesh which conforms
+*		to the domain of the given object, the resulting mesh will
+*		instead cover the given domain with some nodes of the
+*		mesh outside the given domain. All mesh nodes will however
+*		be within the dilated domain, where the dilation is by a sphere
+*		of radius twice the minimum element size.
+* \param	obj			Given domain object.
+* \param	minElmSz		Minimum element size.
+* \param	maxElmSz		Minimum element size.
+* \param	dstDilObj		Destination pointer for the dilated
+*					object used to build the mesh.
+* \param	dstErr			Destination error pointer may be NULL.
+*/
+WlzCMeshP	WlzCMeshFromObj(WlzObject *obj,
+				double minElmSz, double maxElmSz,
+				WlzObject **dstDilObj,
+				WlzErrorNum *dstErr)
+{
+  WlzCMeshP	mesh;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  mesh.v = NULL;
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(obj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        mesh.m2 = WlzCMeshFromObj2D(obj, minElmSz, maxElmSz, dstDilObj,
+		                    &errNum);
+        break;
+      case WLZ_3D_DOMAINOBJ:
+        mesh.m3 = WlzCMeshFromObj3D(obj, minElmSz, maxElmSz, dstDilObj,
+		                    &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mesh);
+}
+
+/*!
+* \return	New mesh or NULL on error.
+* \ingroup	WlzMesh
 * \brief	Constructs a 2D mesh from a 2D domain object.
 *		Because of the difficulty in computing a mesh which conforms
 *		to the domain of the given object, the resulting mesh will
@@ -2229,9 +2283,16 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 * \ingroup	WlzMesh
 * \brief	Constructs a 3D mesh from a 3D domain object.
 * \param	obj			Given domain object.
+* \param	minElmSz		Minimum element size.
+* \param	maxElmSz		Minimum element size.
+* \param	dstDilObj		Destination pointer for the dilated
+*					object used to build the mesh.
 * \param	dstErr			Destination error pointer may be NULL.
 */
-WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj, WlzErrorNum *dstErr)
+WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
+				   double minElmSz, double maxElmSz,
+				   WlzObject **dstDilObj,
+			           WlzErrorNum *dstErr)
 {
   WlzCMesh3D	*mesh = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3219,6 +3280,43 @@ void		WlzCMeshDbgOutVTK2D(FILE *fP, WlzCMesh2D *mesh)
   }
 }
 
+/*!
+* \return	void
+* \ingroup      WlzTransform
+* \brief	Debuging function for 3D mesh output in VTK format.
+* \param	fP			Given file pointer.
+* \param	mesh			Given mesh.
+*/
+void		WlzCMeshDbgOutVTK3D(FILE *fP, WlzCMesh2D *mesh)
+{
+  /* TODO */
+}
+
+/*!
+* \return	void
+* ingroup	WlzTransform
+* \brief	Debuging function for mesh output in VTK format.
+* \param	fP			Given file pointer.
+* \param	mesh			Given mesh.
+*/
+void		WlzCMeshDbgOutVTK(FILE *fP, WlzCMeshP mesh)
+{
+  if(mesh.v)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        WlzCMeshDbgOutVTK2D(fP, mesh.m2);
+	break;
+      case WLZ_CMESH_TET3D:
+        WlzCMeshDbgOutVTK3D(fP, mesh.m3);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 extern char 	*optarg;
 extern int 	optind,
 		opterr,
@@ -3237,11 +3335,12 @@ int		main(int argc, char *argv[])
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*obj = NULL;
-  WlzCMesh2D 	*mesh = NULL;
+  WlzCMeshP 	mesh;
   static char   optList[] = "hm:M:o:";
   const char    inObjFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
 
+  mesh.v = NULL;
   opterr = 0;
   inObjFileStr = (char *)inObjFileStrDef;
   outFileStr = (char *)outFileStrDef;
@@ -3314,7 +3413,7 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     (void )WlzAssignObject(obj, NULL);
-    mesh = WlzCMeshFromObj2D(obj, minElmSz, maxElmSz, NULL, &errNum);
+    mesh = WlzCMeshFromObj(obj, minElmSz, maxElmSz, NULL, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -3338,7 +3437,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    WlzCMeshDbgOutVTK2D(fP, mesh);
+    WlzCMeshDbgOutVTK(fP, mesh);
   }
   if(fP && strcmp(outFileStr, "-"))
   {

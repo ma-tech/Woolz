@@ -63,12 +63,12 @@ static void	WlzRsvFilterFilterBufXF(WlzRsvFilter *,
 				      double *, double *, double *,
 				      int);
 static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *,
-				      double **, double **, UBYTE **,
+				      double **, double **, WlzUByte **,
 				      WlzIVertex2, int, int);
 static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 				 	double ***wrkBuf,
 					double ***srcBuf,
-					UBYTE ***itvBuf,
+					WlzUByte ***itvBuf,
 					WlzIVertex3 bufPos,
 					int itvLen,
 					int goingUp);
@@ -517,7 +517,7 @@ WlzErrorNum	WlzRsvFilterBuffer(WlzRsvFilter *ftr, double *datBuf,
 */
 static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 				      double **wrkBuf, double **srcBuf,
-				      UBYTE **itvBuf,
+				      WlzUByte **itvBuf,
 				      WlzIVertex2 bufPos, int itvLen,
 				      int goingUp)
 {
@@ -543,7 +543,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 		f0,
 		f1,
 		f2;
-  UBYTE		*iBP1,
+  WlzUByte	*iBP1,
   		*iBP2,
   		*iP1,
   		*iP2;
@@ -700,7 +700,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 				 	double ***wrkBuf,
 					double ***srcBuf,
-					UBYTE ***itvBuf,
+					WlzUByte ***itvBuf,
 					WlzIVertex3 bufPos,
 					int itvLen,
 					int goingUp)
@@ -728,7 +728,7 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 		f0,
 		f1,
 		f2;
-  UBYTE		*iBP1,
+  WlzUByte	*iBP1,
   		*iBP2,
   		*iP1,
   		*iP2;
@@ -1071,7 +1071,7 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
   WlzObject	*dstObj = NULL;
   void		**srcBuf = NULL,
   		**wrkBuf = NULL;
-  UBYTE		**itvBuf = NULL;
+  WlzUByte	**itvBuf = NULL;
   WlzIntervalWSpace srcIWSp,
   		dstIWSp;
   WlzGreyWSpace srcGWSp,
@@ -1395,8 +1395,8 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
   void		**srcBuf2D,
 		**dstBuf2D,
   		**wrkBuf2D;
-  UBYTE		***itvBuf = NULL;
-  UBYTE		**itvBuf2D;
+  WlzUByte	***itvBuf = NULL;
+  WlzUByte	**itvBuf2D;
   WlzDomain	*srcDom2D;
   WlzValues	*srcVal2D,
   		*dstVal2D;

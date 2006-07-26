@@ -49,9 +49,9 @@ static char _WlzArray_c[] = "MRC HGU $Id$";
 
 /* #define WLZ_ARRAY_TEST */
 
-static WlzErrorNum WlzToArrayBit2D(UBYTE ***dstP, WlzObject *srcObj,
+static WlzErrorNum WlzToArrayBit2D(WlzUByte ***dstP, WlzObject *srcObj,
 				   WlzIVertex2 size, WlzIVertex2 origin);
-static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
+static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
 				   WlzIVertex3 size, WlzIVertex3 origin);
 static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 				    WlzIVertex2 size, WlzIVertex2 origin,
@@ -59,7 +59,7 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
 				    WlzIVertex3 size, WlzIVertex3 origin,
 				    int noiseFlag, WlzGreyType dstGreyType);
-static WlzObject *WlzFromArrayBit2D(UBYTE**arrayP,
+static WlzObject *WlzFromArrayBit2D(WlzUByte**arrayP,
 				    WlzIVertex2 arraySize,
 				    WlzIVertex2 arrayOrigin,
 				    WlzErrorNum *dstErr);
@@ -71,7 +71,7 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 				     double valOffset, double valScale,
 				     int clampFlag, int noCopyFlag,
 				     WlzErrorNum *dstErr);
-static WlzObject *WlzFromArrayBit3D(UBYTE ***arrayP,
+static WlzObject *WlzFromArrayBit3D(WlzUByte ***arrayP,
 				    WlzIVertex3 arraySize,
 				    WlzIVertex3 arrayOrigin,
 				    WlzErrorNum *dstErr);
@@ -100,7 +100,8 @@ static WlzObject *WlzFromArrayGrey3D(void ***arrayP,
 *                                       std. dev. as the given object
 *                                       if non-zero.
 */
-WlzErrorNum WlzToBArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
+WlzErrorNum WlzToBArray2D(WlzIVertex2 *dstSizeArrayDat,
+			  WlzUByte ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
@@ -214,7 +215,8 @@ WlzErrorNum WlzToSArray2D(WlzIVertex2 *dstSizeArrayDat, short ***dstArrayDat,
 *                                       std. dev. as the given object
 *                                       if non-zero.
 */
-WlzErrorNum WlzToUArray2D(WlzIVertex2 *dstSizeArrayDat, UBYTE ***dstArrayDat,
+WlzErrorNum WlzToUArray2D(WlzIVertex2 *dstSizeArrayDat,
+			  WlzUByte ***dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex2 origin, WlzIVertex2 size,
 			  int noiseFlag)
@@ -359,7 +361,7 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
     switch(dstGreyType)
     {
       case WLZ_GREY_BIT:
-	errNum = WlzToArrayBit2D((UBYTE ***)dstP,  srcObj, size, origin);
+	errNum = WlzToArrayBit2D((WlzUByte ***)dstP,  srcObj, size, origin);
 	break;
       case WLZ_GREY_UBYTE: /* FALLTHROUGH */
       case WLZ_GREY_SHORT: /* FALLTHROUGH */
@@ -394,13 +396,13 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
 * \param	size			Size of the array.
 * \param	origin			Array origin wrt given object.
 */
-static WlzErrorNum WlzToArrayBit2D(UBYTE ***dstP, WlzObject *srcObj,
+static WlzErrorNum WlzToArrayBit2D(WlzUByte ***dstP, WlzObject *srcObj,
 				   WlzIVertex2 size, WlzIVertex2 origin)
 {
   int		ivY,
 		lstY,
 		bytWidth;
-  UBYTE		*bitLnP;
+  WlzUByte	*bitLnP;
   WlzIntervalWSpace iWSp;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -629,7 +631,8 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 *                                       std. dev. as the given object
 *                                       if non-zero.
 */
-WlzErrorNum WlzToBArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
+WlzErrorNum WlzToBArray3D(WlzIVertex3 *dstSizeArrayDat,
+			  WlzUByte ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
@@ -740,7 +743,8 @@ WlzErrorNum WlzToSArray3D(WlzIVertex3 *dstSizeArrayDat, short ****dstArrayDat,
 *                                       std. dev. as the given object
 *                                       if non-zero.
 */
-WlzErrorNum WlzToUArray3D(WlzIVertex3 *dstSizeArrayDat, UBYTE ****dstArrayDat,
+WlzErrorNum WlzToUArray3D(WlzIVertex3 *dstSizeArrayDat, 
+			  WlzUByte ****dstArrayDat,
 			  WlzObject *srcObj,
 			  WlzIVertex3 origin, WlzIVertex3 size,
 			  int noiseFlag)
@@ -888,7 +892,7 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
     switch(dstGreyType)
     {
       case WLZ_GREY_BIT:
-	errNum = WlzToArrayBit3D((UBYTE ****)dstP,  srcObj, size, origin);
+	errNum = WlzToArrayBit3D((WlzUByte ****)dstP,  srcObj, size, origin);
 	break;
       case WLZ_GREY_UBYTE: /* FALLTHROUGH */
       case WLZ_GREY_SHORT: /* FALLTHROUGH */
@@ -923,14 +927,14 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
 * \param	size			Size of the array.
 * \param	origin			Array origin wrt given object.
 */
-static WlzErrorNum WlzToArrayBit3D(UBYTE ****dstP, WlzObject *srcObj,
+static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
 				   WlzIVertex3 size, WlzIVertex3 origin)
 {
   int		plnIdx,
   		plnCnt,
 		plnSz;
   WlzDomain	*srcDomains;
-  UBYTE		***dstP2D;
+  WlzUByte	***dstP2D;
   WlzIVertex2	size2D,
   		origin2D;
   WlzDomain	srcDom,
@@ -1288,7 +1292,7 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 *                                       number, may be NULL.
 */
 WlzObject	*WlzFromBArray2D(WlzIVertex2 arraySizeDat,
-				 UBYTE **arrayDat,
+				 WlzUByte **arrayDat,
 				 WlzIVertex2 arrayOrigin,
 				 WlzErrorNum *dstErr)
 {
@@ -1348,7 +1352,7 @@ WlzObject	*WlzFromSArray2D(WlzIVertex2 arraySizeDat,
 *                                       number, may be NULL.
 */
 WlzObject	*WlzFromUArray2D(WlzIVertex2 arraySizeDat,
-				 UBYTE **arrayDat,
+				 WlzUByte **arrayDat,
 				 WlzIVertex2 arrayOrigin,
 				 WlzErrorNum *dstErr)
 {
@@ -1455,7 +1459,7 @@ WlzObject	*WlzFromArray2D(void **arrayP,
     switch(dstGreyType)
     {
       case WLZ_GREY_BIT:
-        dstObj = WlzFromArrayBit2D((UBYTE **)arrayP,
+        dstObj = WlzFromArrayBit2D((WlzUByte **)arrayP,
 				   arraySize, arrayOrigin, &errNum);
 	break;
       case WLZ_GREY_UBYTE: /* FALLTHROUGH */
@@ -1497,7 +1501,7 @@ WlzObject	*WlzFromArray2D(void **arrayP,
 * \param	dstErr			Destination pointer for error
 *                                       number, may be NULL.
 */
-static WlzObject *WlzFromArrayBit2D(UBYTE **arrayP,
+static WlzObject *WlzFromArrayBit2D(WlzUByte **arrayP,
 				    WlzIVertex2 arraySize,
 				    WlzIVertex2 arrayOrigin,
 				    WlzErrorNum *dstErr)
@@ -1648,7 +1652,7 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
       srcValP.shp = *(short **)arrayP;
       break;
     case WLZ_GREY_UBYTE:
-      srcValP.ubp = *(UBYTE **)arrayP;
+      srcValP.ubp = *(WlzUByte **)arrayP;
       break;
     case WLZ_GREY_FLOAT:
       srcValP.flp = *(float **)arrayP;
@@ -1657,7 +1661,7 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
       srcValP.dbp = *(double **)arrayP;
       break;
     case WLZ_GREY_RGBA:
-      srcValP.rgbp = *(UINT **)arrayP;
+      srcValP.rgbp = *(WlzUInt **)arrayP;
       break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
@@ -1696,8 +1700,8 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 	  }
 	  break;
 	case WLZ_GREY_UBYTE:
-	  if((dstValP.ubp = (UBYTE *)AlcMalloc(tUL0 *
-					       sizeof(UBYTE))) == NULL)
+	  if((dstValP.ubp = (WlzUByte *)AlcMalloc(tUL0 *
+					       sizeof(WlzUByte))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -1717,8 +1721,8 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 	  }
 	  break;
 	case WLZ_GREY_RGBA:
-	  if((dstValP.rgbp = (UINT *)AlcMalloc(tUL0 *
-						sizeof(UINT))) == NULL)
+	  if((dstValP.rgbp = (WlzUInt *)AlcMalloc(tUL0 *
+						sizeof(WlzUInt))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -1810,7 +1814,7 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 *                                       number, may be NULL.
 */
 WlzObject	*WlzFromBArray3D(WlzIVertex3 arraySizeDat,
-				 UBYTE ***arrayDat,
+				 WlzUByte ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
 				 WlzErrorNum *dstErr)
 {
@@ -1870,7 +1874,7 @@ WlzObject	*WlzFromSArray3D(WlzIVertex3 arraySizeDat,
 *                                       number, may be NULL.
 */
 WlzObject	*WlzFromUArray3D(WlzIVertex3 arraySizeDat,
-				 UBYTE ***arrayDat,
+				 WlzUByte ***arrayDat,
 				 WlzIVertex3 arrayOrigin,
 				 WlzErrorNum *dstErr)
 {
@@ -1982,8 +1986,8 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
       }
       else
       {
-	dstObj = WlzFromArrayBit3D((UBYTE ***)arrayP, arraySize, arrayOrigin,
-				   &errNum);
+	dstObj = WlzFromArrayBit3D((WlzUByte ***)arrayP, arraySize,
+				   arrayOrigin, &errNum);
       }
     }
     else
@@ -2015,7 +2019,7 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
 * \param	dstErr			Destination pointer for error
 *                                       number, may be NULL.
 */
-static WlzObject *WlzFromArrayBit3D(UBYTE ***arrayP,
+static WlzObject *WlzFromArrayBit3D(WlzUByte ***arrayP,
 				    WlzIVertex3 arraySize,
 				    WlzIVertex3 arrayOrigin,
 				    WlzErrorNum *dstErr)
@@ -2187,7 +2191,7 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
       srcValP.shp = **(short ***)arrayP;
       break;
     case WLZ_GREY_UBYTE:
-      srcValP.ubp = **(UBYTE ***)arrayP;
+      srcValP.ubp = **(WlzUByte ***)arrayP;
       break;
     case WLZ_GREY_FLOAT:
       srcValP.flp = **(float ***)arrayP;
@@ -2196,7 +2200,7 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
       srcValP.dbp = **(double ***)arrayP;
       break;
     case WLZ_GREY_RGBA:
-      srcValP.rgbp = **(UINT ***)arrayP;
+      srcValP.rgbp = **(WlzUInt ***)arrayP;
       break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
@@ -2233,7 +2237,8 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	  }
 	  break;
 	case WLZ_GREY_UBYTE:
-	  if((dstValP.ubp = (UBYTE *)AlcMalloc(aSz * sizeof(UBYTE))) == NULL)
+	  if((dstValP.ubp = (WlzUByte *)AlcMalloc(aSz *
+	                                           sizeof(WlzUByte))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -2251,7 +2256,8 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	  }
 	  break;
 	case WLZ_GREY_RGBA:
-	  if((dstValP.rgbp = (UINT *)AlcMalloc(aSz * sizeof(UINT))) == NULL)
+	  if((dstValP.rgbp = (WlzUInt *)
+	                     AlcMalloc(aSz * sizeof(WlzUInt))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -2522,7 +2528,7 @@ int		WlzArrayStats3D(void ***arrayP,
 	}
 	break;
       case WLZ_GREY_UBYTE:
-        dataP.ubp = **(UBYTE ***)arrayP;
+        dataP.ubp = **(WlzUByte ***)arrayP;
 	tD0 = *(dataP.ubp)++;
 	prvMin = tD0;
 	prvMax = tD0;
@@ -2588,7 +2594,7 @@ int		WlzArrayStats3D(void ***arrayP,
 	}
 	break;
       case WLZ_GREY_RGBA:
-        dataP.rgbp = **(UINT ***)arrayP;
+        dataP.rgbp = **(WlzUInt ***)arrayP;
 	tD0 = *(dataP.rgbp)++;
 	prvMin = tD0;
 	prvMax = tD0;
@@ -2776,15 +2782,15 @@ int		WlzArrayStats1D(void *arrayP,
 */
 WlzObject *WlzFromBArray1D(
   WlzIVertex2 arraySizeDat,
-  UBYTE *bitData,
+  WlzUByte *bitData,
   WlzIVertex2 arrayOrigin,
   WlzErrorNum *dstErr)
 {
   WlzObject	*rtnObj=NULL;
   WlzErrorNum 	errNum=WLZ_ERR_NONE;
-  UBYTE		**arrayData;
+  WlzUByte	**arrayData;
   int		i, j, srcOffset;
-  UBYTE		bitmask;
+  WlzUByte	bitmask;
 
   /* check input data */
   if( bitData == NULL ){
@@ -2824,7 +2830,7 @@ main(int argc, char *argv[])
 {
   WlzObject	*inObj= NULL,
   		*outObj = NULL;
-  UBYTE		**array = NULL;
+  WlzUByte	**array = NULL;
   WlzIVertex2	org,
   		size;
   WlzIBox2	bBox;

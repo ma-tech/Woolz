@@ -162,7 +162,7 @@ static WlzErrorNum	WlzContourBndLine2D(
 			  WlzContour *ctr,
 			  double isoVal,
 			  int line0,
-			  UBYTE **itvBuf,
+			  WlzUByte **itvBuf,
 			  int bufLnIdx,
 			  int bufOrg,
 			  int bufSz);
@@ -170,7 +170,7 @@ static WlzErrorNum 	WlzContourBndPlane3D(
 			  WlzContour *ctr,
 			  double isoVal,
 			  int plane0,
-			  UBYTE ***itvBuf,
+			  WlzUByte ***itvBuf,
 			  int bufPnIdx,
 			  WlzIVertex2 bufOrg,
 			  WlzIVertex2 bufSz);
@@ -178,14 +178,14 @@ static WlzErrorNum	WlzContourBndEmptyLine2D(
 			  WlzContour *ctr,
 			  double isoVal,
 			  int line0,
-			  UBYTE *itvBuf,
+			  WlzUByte *itvBuf,
 			  int bufOrg,
 			  int bufSz);
 static WlzErrorNum 	WlzContourBndEmptyPlane3D(
 			  WlzContour *ctr,
 			  double isoVal,
 			  int plane0,
-			  UBYTE **itvBuf,
+			  WlzUByte **itvBuf,
 			  WlzIVertex2 bufOrg,
 			  WlzIVertex2 bufSz);
 static WlzErrorNum	WlzContourIsoCube2D(
@@ -196,7 +196,7 @@ static WlzErrorNum	WlzContourIsoCube2D(
 			  WlzDVertex2 sqOrg);
 static WlzErrorNum 	WlzContourGrdCube3D(
 			  WlzContour *ctr,
-			  UBYTE ***mBuf,
+			  WlzUByte ***mBuf,
 			  double ***zBuf,
 			  double ***yBuf,
 			  double ***xBuf,
@@ -224,7 +224,7 @@ static WlzErrorNum	WlzContourIsoTet3D(
 			  WlzDVertex3 cbOrg);
 static WlzErrorNum	WlzContourGrdLink2D(
 			  WlzContour *ctr,
-			  UBYTE **grdDBuf,
+			  WlzUByte **grdDBuf,
 			  WlzIVertex2 org,
 			  int lnOff,
 			  int lnIdx[],
@@ -234,7 +234,7 @@ static WlzErrorNum	WlzContourGrdLink2D(
 			  double **grdYBuf);
 static WlzErrorNum	WlzContourGrdLink3D(
 			  WlzContour *ctr,
-			  UBYTE ***mBuf,
+			  WlzUByte ***mBuf,
 			  int *bufIdx,
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
@@ -920,7 +920,7 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   		itvLen,
 		itvBufWidth;
   WlzDomain	srcDom;
-  UBYTE		*itvBuf[2] = {NULL, NULL};
+  WlzUByte	*itvBuf[2] = {NULL, NULL};
   double	*valBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
   WlzDVertex2	sqOrg;
@@ -1083,11 +1083,11 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   WlzIBox2	bBox2D;
   WlzIBox3	bBox3D;
   WlzDVertex3	cbOrg;
-  UBYTE		*tUP0,
+  WlzUByte	*tUP0,
   		*tUP1,
 		*tUP2,
 		*tUP3;
-  UBYTE		**itvBuf[2] = {NULL, NULL};
+  WlzUByte	**itvBuf[2] = {NULL, NULL};
   double	**valBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1296,7 +1296,7 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 		iLen,
 		iBufSz,
 		lnInc;
-  UBYTE		doLn;
+  WlzUByte	doLn;
   double	tD0,
   		grdM0,
   		grdM1,
@@ -1314,8 +1314,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   WlzObject	*gXObj = NULL,
   		*gYObj = NULL;
   WlzRsvFilter	*ftr = NULL;
-  UBYTE		*itvP[4];
-  UBYTE		**grdIBuf = NULL,
+  WlzUByte	*itvP[4];
+  WlzUByte	**grdIBuf = NULL,
   		**grdLBuf = NULL;
   double	**grdMBuf = NULL,	            /* Magnitude of gradient */
   		**grdXBuf = NULL,    	    /* Horizontal gradient component */
@@ -1336,7 +1336,7 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   		gYIWSp;
   WlzGreyWSpace	gXGWSp,
   		gYGWSp;
-  const UBYTE   dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
+  const WlzUByte dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
   if(srcObj == NULL)
   {
@@ -1694,7 +1694,7 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   		sGV,
 		grdLoSq;
   WlzDomain	srcDom;
-  UBYTE		*iMP,
+  WlzUByte	*iMP,
 	  	*iMC,
 	  	*iMN;
   WlzGMVertex	*mVtx;
@@ -1716,7 +1716,7 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   WlzIBox3	bBox3D;
   int		bufIdx[3],
   		iBufClr[3];
-  UBYTE		**iBuf[3],
+  WlzUByte	**iBuf[3],
   		**mBuf[3];
   double	**xBuf[3],
   		**yBuf[3],
@@ -2649,7 +2649,7 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, double ctrVal,
   WlzIVertex2	bufSz2D,
 		bufOrg2D;
   WlzIBox3	bBox3D;
-  UBYTE		**itvBuf[2] = {NULL, NULL};
+  WlzUByte	**itvBuf[2] = {NULL, NULL};
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2802,7 +2802,7 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, double ctrVal,
 *                                       neighbourhoods origin.
 */
 static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr,
-					    UBYTE ***mBuf,
+					    WlzUByte ***mBuf,
 					    int *bufIdx, WlzIVertex3 bufPos,
 					    WlzIVertex3 cbOrg)
 {
@@ -2949,7 +2949,7 @@ static WlzErrorNum	WlzContourGrdLink3D(WlzContour *ctr,
 * 					components.
 */
 static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
-				       UBYTE **grdLBuf, WlzIVertex2 org,
+				       WlzUByte **grdLBuf, WlzIVertex2 org,
 				       int lnOff, int lnIdx[], int klOff,
 				       int useNrm,
 				       double **grdXBuf, double **grdYBuf)
@@ -3062,7 +3062,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
 * \param	bufSz			Bit buffer size in bits.
 */
 static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, double isoVal,
-				       int line0, UBYTE **itvBuf,
+				       int line0, WlzUByte **itvBuf,
 				       int bufLnIdx, int bufOrg, int bufSz)
 {
   int		idX,
@@ -3111,14 +3111,14 @@ static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, double isoVal,
 * \param	bufSz			Bit buffer size in bits.
 */
 static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, double isoVal,
-					int plane0, UBYTE ***itvBuf,
+					int plane0, WlzUByte ***itvBuf,
 					int bufPnIdx, WlzIVertex2 bufOrg,
 					WlzIVertex2 bufSz)
 {
   int		idX,
   		idY,
 		cbCnt;
-  UBYTE		*tPn0Ln0,
+  WlzUByte	*tPn0Ln0,
   		*tPn0Ln1,
 		*tPn1Ln0,
 		*tPn1Ln1;
@@ -3192,7 +3192,7 @@ static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, double isoVal,
 * \param	bufSz			Bit buffer size in bits.
 */
 static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, double isoVal,
-					    int line0, UBYTE *itvBuf,
+					    int line0, WlzUByte *itvBuf,
 					    int bufOrg, int bufSz)
 {
   int		idX,
@@ -3236,13 +3236,13 @@ static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, double isoVal,
 * \param	bufSz			Bit buffer size in bits.
 */
 static WlzErrorNum WlzContourBndEmptyPlane3D(WlzContour *ctr, double isoVal,
-					int plane0, UBYTE **itvBuf,
+					int plane0, WlzUByte **itvBuf,
 					WlzIVertex2 bufOrg, WlzIVertex2 bufSz)
 {
   int		idX,
   		idY,
 		cbCnt;
-  UBYTE		*tPn0Ln0,
+  WlzUByte	*tPn0Ln0,
   		*tPn0Ln1;
   int		iPn0Ln0[2],
   		iPn0Ln1[2];
@@ -3787,7 +3787,7 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
 * \param	cbOrg			Origin of the cube.
 */
 static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr,
-				       UBYTE ***mBuf,
+				       WlzUByte ***mBuf,
 				       double ***zBuf, double ***yBuf,
 				       double ***xBuf,
 				       int *bufIdx, WlzIVertex3 bufPos,

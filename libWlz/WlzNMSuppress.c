@@ -55,7 +55,7 @@ static WlzErrorNum 		WlzNMSuppress2DBufI(
 				  int *grdYBuf,
 				  int *grdXBuf,
 				  WlzDynItvPool *iPool,
-				  UBYTE *dstBuf,
+				  WlzUByte *dstBuf,
 				  int dstLen,
 				  WlzIVertex2 dstPos,
 				  WlzIVertex2 orgPos,
@@ -66,7 +66,7 @@ static WlzErrorNum 		WlzNMSuppress2DBufD(
 				  double *grdYBuf,
 				  double *grdXBuf,
 				  WlzDynItvPool *iPool,
-				  UBYTE *dstBuf,
+				  WlzUByte *dstBuf,
 				  int dstLen,
 				  WlzIVertex2 dstPos,
 				  WlzIVertex2 orgPos,
@@ -111,7 +111,7 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 				       int **grdMBuf, int *grdYBuf,
 				       int *grdXBuf,
 				       WlzDynItvPool *iPool,
-				       UBYTE *dstBuf, int dstLen,
+				       WlzUByte *dstBuf, int dstLen,
 				       WlzIVertex2 dstPos, WlzIVertex2 orgPos,
 				       int minGM)
 {
@@ -126,12 +126,12 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 		gMRgt,
 		gY,
 		gX;
-  UBYTE		dCode;
+  WlzUByte	dCode;
   int		*grdMBufPrv,
   		*grdMBufCur,
 		*grdMBufNxt;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const UBYTE	dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
+  const WlzUByte dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
   grdMBufPrv = *(grdMBuf + ((dstPos.vtY + 3 - 1) % 3)) + dstPos.vtX;
   grdMBufCur = *(grdMBuf + ((dstPos.vtY + 3 + 0) % 3)) + dstPos.vtX;
@@ -279,7 +279,7 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
 				       double **grdMBuf, double *grdYBuf,
 				       double *grdXBuf,
 				       WlzDynItvPool *iPool,
-				       UBYTE *dstBuf, int dstLen,
+				       WlzUByte *dstBuf, int dstLen,
 				       WlzIVertex2 dstPos, WlzIVertex2 orgPos,
 				       double minGM)
 {
@@ -287,7 +287,7 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
 		itvLft,
 		itvLen,
   		maximal;
-  UBYTE		dCode;
+  WlzUByte	dCode;
   double	g0,
   		g1,
 		gM,
@@ -299,7 +299,7 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
   		*grdMBufCur,
 		*grdMBufNxt;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const UBYTE	dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
+  const WlzUByte dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
   grdMBufPrv = *(grdMBuf + ((dstPos.vtY + 3 - 1) % 3)) + dstPos.vtX;
   grdMBufCur = *(grdMBuf + ((dstPos.vtY + 3 + 0) % 3)) + dstPos.vtX;

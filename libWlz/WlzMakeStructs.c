@@ -1480,7 +1480,7 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
 	break;
 
       case WLZ_GREY_UBYTE:
-	data_size = sizeof(UBYTE);
+	data_size = sizeof(WlzUByte);
 	break;
 
       case WLZ_GREY_FLOAT:
@@ -1492,7 +1492,7 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
 	break;
 
       case WLZ_GREY_RGBA:
-	data_size = sizeof(UINT);
+	data_size = sizeof(WlzUInt);
 	break;
 
       default:
@@ -1580,7 +1580,7 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	break;
 
       case WLZ_GREY_UBYTE:
-	table_size = WlzLineArea(obj, NULL) * sizeof(UBYTE);
+	table_size = WlzLineArea(obj, NULL) * sizeof(WlzUByte);
 	bgd_val = (int) backgrnd.v.ubv;
 	break;
 
@@ -1595,7 +1595,7 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	break;
 
       case WLZ_GREY_RGBA:
-	table_size = WlzLineArea(obj, NULL) * sizeof(UINT);
+	table_size = WlzLineArea(obj, NULL) * sizeof(WlzUInt);
 	bgd_val = (int) backgrnd.v.rgbv;
 	break;
 
@@ -1693,8 +1693,8 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 
       case WLZ_GREY_UBYTE:
 	v.r->values.ubp  =
-	  (UBYTE *) AlcMalloc(sizeof(UBYTE)*(v.r->lastln - v.r->line1 + 1)
-			      * v.r->width);
+	  (WlzUByte *) AlcMalloc(sizeof(WlzUByte)*(v.r->lastln - v.r->line1 +
+	                                             1) * v.r->width);
 	break;
 
       case WLZ_GREY_FLOAT:
@@ -1711,8 +1711,8 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 
       case WLZ_GREY_RGBA:
 	v.r->values.rgbp  =
-	  (UINT *) AlcMalloc(sizeof(UINT)*(v.r->lastln - v.r->line1 + 1)
-			       * v.r->width);
+	  (WlzUInt *) AlcMalloc(sizeof(WlzUInt) *
+	                         (v.r->lastln - v.r->line1 + 1) * v.r->width);
 	break;
 
       }

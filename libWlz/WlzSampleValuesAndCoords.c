@@ -165,7 +165,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
   WlzGreyType	gType;
   WlzIVertex2	bPos,
   		bStart;
-  UBYTE		*dBuf = NULL;
+  WlzUByte	*dBuf = NULL;
   WlzIVertex2	*cBuf = NULL,
 		*cAry = NULL;
   WlzGreyP	gVal,
@@ -189,7 +189,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 	gSz = sizeof(short);
         break;
       case WLZ_GREY_UBYTE:
-	gSz = sizeof(UBYTE);
+	gSz = sizeof(WlzUByte);
         break;
       case WLZ_GREY_FLOAT:
 	gSz = sizeof(float);
@@ -198,7 +198,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 	gSz = sizeof(double);
         break;
       case WLZ_GREY_RGBA:
-	gSz = sizeof(UINT);
+	gSz = sizeof(WlzUInt);
         break;
       default:
         errNum = WLZ_ERR_GREY_TYPE;
@@ -236,7 +236,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
     if(((cBuf = (WlzIVertex2 *)
     	        AlcMalloc(bWidth * sizeof(WlzIVertex2))) == NULL) ||
        ((vBuf.inp = (int *)AlcMalloc(bWidth * gSz)) == NULL) ||
-       ((dBuf = (UBYTE *)AlcCalloc(bWidth, sizeof(UBYTE))) == NULL))
+       ((dBuf = (WlzUByte *)AlcCalloc(bWidth, sizeof(WlzUByte))) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }

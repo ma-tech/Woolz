@@ -96,7 +96,7 @@ static char _WlzProto_h[] = "MRC HGU $Id$";
 *                 be needed to avoid this.
 *		  </li>
 *		  <li>
-*		  Because of a parsing bug UBYTE should be expanded to
+*		  Because of a parsing bug WlzUByte should be expanded to
 *		  unsigned char.
 *		</ul>
 * \ingroup	Wlz
@@ -1578,7 +1578,7 @@ extern WlzObject 		*WlzDomainFill(
 extern WlzObjectType		WlzDomainType(
 				  WlzDomain dom);
 extern void			WlzBitLnSetItv(
-				  UBYTE *bitLn,
+				  WlzUByte *bitLn,
 				  int iLft,
 				  int iRgt,
 				  int size);
@@ -1590,7 +1590,7 @@ extern WlzErrorNum		WlzDynItvAdd(
 				  int iLen);
 extern WlzErrorNum		WlzDynItvLnFromBitLn(
 				  WlzIntervalDomain *iDom,
-				  UBYTE *bitLn,
+				  WlzUByte *bitLn,
 				  int line,
 				  int width,
 				  WlzDynItvPool *iPool);
@@ -2633,6 +2633,9 @@ extern WlzLBTDomain2D           *WlzMakeLBTDomain2D(
                                   int k1,
                                   int kl,
                                   WlzErrorNum *dstErr);
+extern WlzDomain		WlzLBTDomainFromObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 extern WlzLBTDomain2D           *WlzLBTDomain2DFromDomain(
                                   WlzDomain dom,
                                   WlzErrorNum *dstErr);
@@ -2692,10 +2695,10 @@ extern void                     WlzLBTPosToKey2D(
                                   unsigned *keys);
 extern void                     WlzLBTGetKeyDigits3D(
                                   unsigned *keys,
-                                  UBYTE *digits);
+                                  WlzUByte *digits);
 extern void                     WlzLBTGetKeyDigits2D(
                                   unsigned *keys,
-                                  UBYTE *digits);
+                                  WlzUByte *digits);
 extern void                     WlzLBTKeyToPos3I(
                                   unsigned *key,
                                   WlzIVertex3 *pos);
@@ -3033,7 +3036,13 @@ extern double          		WlzMatchICPWeightMatches(
 ************************************************************************/
 extern WlzCMesh2D               *WlzCMeshNew2D(
                                   WlzErrorNum *dstErr);
-extern WlzCMesh2D                     *WlzCMeshFromBalLBTDom2D(
+extern WlzCMeshP		WlzCMeshFromObj(
+				  WlzObject *obj,
+				  double minElmSz,
+				  double maxElmSz,
+				  WlzObject **dstDilObj,
+				  WlzErrorNum *dstErr);
+extern WlzCMesh2D               *WlzCMeshFromBalLBTDom2D(
                                   WlzLBTDomain2D *lDom,
                                   WlzObject *iObj,
                                   WlzErrorNum *dstErr);
@@ -3045,6 +3054,9 @@ extern WlzCMesh2D    		*WlzCMeshFromObj2D(
                                   WlzErrorNum *dstErr);
 extern WlzCMesh3D               *WlzCMeshFromObj3D(
                                   WlzObject *obj,
+				  double minElmSz,
+				  double maxElmSz,
+				  WlzObject **dstDilObj,
                                   WlzErrorNum *dstErr);
 extern WlzCMesh3D               *WlzCMeshNew3D(
                                   WlzErrorNum *dstErr);
@@ -4011,7 +4023,7 @@ extern WlzObject 		*WlzRGBAMultiThreshold(
 				  WlzObject *obj,
 				  WlzPixelV lowVal,
 				  WlzPixelV highVal,
-				  UINT combineMode,
+				  WlzUInt combineMode,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 extern WlzObject 		*WlzRGBASliceThreshold(
@@ -4138,8 +4150,8 @@ extern void			WlzValueSetShort(
 				  short value,
 				  int count);
 extern void			WlzValueSetUByte(
-				  UBYTE *vec,
-				  UBYTE value,
+				  WlzUByte *vec,
+				  WlzUByte value,
 				  int count);
 extern void			WlzValueSetFloat(
 				  float *vec,
@@ -4150,8 +4162,8 @@ extern void			WlzValueSetDouble(
 				  double value,
 				  int count);
 extern void			WlzValueSetRGBA(
-				  UINT *vec,
-				  UINT value,
+				  WlzUInt *vec,
+				  WlzUInt value,
 				  int count);
 extern void			WlzValueSetDVertex(
 				  WlzDVertex2 *vec,
@@ -4184,11 +4196,11 @@ extern void			WlzValueClampIntIntoShort(
 				  int *src,
 				  int count);
 extern void			WlzValueClampIntIntoUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  int *src,
 				  int count);
 extern void			WlzValueClampShortIntoUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  short *src,
 				  int count);
 extern void			WlzValueClampFloatIntoInt(
@@ -4200,7 +4212,7 @@ extern void			WlzValueClampFloatIntoShort(
 				  float *src,
 				  int count);
 extern void			WlzValueClampFloatIntoUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  float *src,
 				  int count);
 extern void			WlzValueClampDoubleIntoInt(
@@ -4208,7 +4220,7 @@ extern void			WlzValueClampDoubleIntoInt(
 				  double *src,
 				  int count);
 extern void			WlzValueClampDoubleIntoUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  double *src,
 				  int count);
 extern void			WlzValueClampDoubleIntoFloat(
@@ -4216,23 +4228,23 @@ extern void			WlzValueClampDoubleIntoFloat(
 				  double *src,
 				  int count);
 extern void			WlzValueClampDoubleIntoRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  double *src,
 				  int count);
 extern void			WlzValueClampIntIntoRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  int *src,
 				  int count);
 extern void			WlzValueClampShortIntoRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  short *src,
 				  int count);
 extern void			WlzValueClampFloatIntoRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  float *src,
 				  int count);
 extern void			WlzValueClampDoubleIntoRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  double *src,
 				  int count);
 extern void			WlzValueClampIntToShort(
@@ -4283,7 +4295,7 @@ extern void			WlzValueCopyIntToShort(
 				  int *src,
 				  int count);
 extern void			WlzValueCopyIntToUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  int *src,
 				  int count);
 extern void			WlzValueCopyIntToFloat(
@@ -4295,7 +4307,7 @@ extern void			WlzValueCopyIntToDouble(
 				  int *src,
 				  int count);
 extern void			WlzValueCopyIntToRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  int *src,
 				  int count);
 extern void			WlzValueCopyShortToInt(
@@ -4307,7 +4319,7 @@ extern void			WlzValueCopyShortToShort(
 				  short *src,
 				  int count);
 extern void			WlzValueCopyShortToUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  short *src,
 				  int count);
 extern void			WlzValueCopyShortToFloat(
@@ -4319,32 +4331,32 @@ extern void			WlzValueCopyShortToDouble(
 				  short *src,
 				  int count);
 extern void			WlzValueCopyShortToRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  short *src,
 				  int count);
 extern void			WlzValueCopyUByteToInt(
 				  int *dst,
-				  UBYTE *src,
+				  WlzUByte *src,
 				  int count);
 extern void			WlzValueCopyUByteToShort(
 				  short *dst,
-				  UBYTE *src,
+				  WlzUByte *src,
 				  int count);
 extern void			WlzValueCopyUByteToUByte(
-				  UBYTE *dst,
-				  UBYTE *src,
+				  WlzUByte *dst,
+				  WlzUByte *src,
 				  int count);
 extern void			WlzValueCopyUByteToFloat(
 				  float *dst,
-				  UBYTE *src,
+				  WlzUByte *src,
 				  int count);
 extern void			WlzValueCopyUByteToDouble(
 				  double *dst,
-				  UBYTE *src,
+				  WlzUByte *src,
 				  int count);
 extern void			WlzValueCopyUByteToRGBA(
-				  UINT *dst,
-				  UBYTE *src,
+				  WlzUInt *dst,
+				  WlzUByte *src,
 				  int count);
 extern void			WlzValueCopyFloatToInt(
 				  int *dst,
@@ -4355,7 +4367,7 @@ extern void			WlzValueCopyFloatToShort(
 				  float *src,
 				  int count);
 extern void			WlzValueCopyFloatToUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  float *src,
 				  int count);
 extern void			WlzValueCopyFloatToFloat(
@@ -4367,7 +4379,7 @@ extern void			WlzValueCopyFloatToDouble(
 				  float *src,
 				  int count);
 extern void			WlzValueCopyFloatToRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  float *src,
 				  int count);
 extern void			WlzValueCopyDoubleToInt(
@@ -4379,7 +4391,7 @@ extern void			WlzValueCopyDoubleToShort(
 				  double *src,
 				  int count);
 extern void			WlzValueCopyDoubleToUByte(
-				  UBYTE *dst,
+				  WlzUByte *dst,
 				  double *src,
 				  int count);
 extern void			WlzValueCopyDoubleToFloat(
@@ -4391,32 +4403,32 @@ extern void			WlzValueCopyDoubleToDouble(
 				  double *src,
 				  int count);
 extern void			WlzValueCopyDoubleToRGBA(
-				  UINT *dst,
+				  WlzUInt *dst,
 				  double *src,
 				  int count);
 extern void			WlzValueCopyRGBAToInt(
 				  int *dst,
-				  UINT *src,
+				  WlzUInt *src,
 				  int count);
 extern void			WlzValueCopyRGBAToShort(
 				  short *dst,
-				  UINT *src,
+				  WlzUInt *src,
 				  int count);
 extern void			WlzValueCopyRGBAToUByte(
-				  UBYTE *dst,
-				  UINT *src,
+				  WlzUByte *dst,
+				  WlzUInt *src,
 				  int count);
 extern void			WlzValueCopyRGBAToFloat(
 				  float *dst,
-				  UINT *src,
+				  WlzUInt *src,
 				  int count);
 extern void			WlzValueCopyRGBAToDouble(
 				  double *dst,
-				  UINT *src,
+				  WlzUInt *src,
 				  int count);
 extern void			WlzValueCopyRGBAToRGBA(
-				  UINT *dst,
-				  UINT *src,
+				  WlzUInt *dst,
+				  WlzUInt *src,
 				  int count);
 extern void			WlzValueCopyGreyToGrey(
 				  WlzGreyP dst,

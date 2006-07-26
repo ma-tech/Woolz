@@ -78,7 +78,7 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
 		max,
 		sum = 0.0,
 		sumSq = 0.0;
-  UINT		rgbVal;
+  WlzUInt	rgbVal;
   WlzGreyType	gType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     

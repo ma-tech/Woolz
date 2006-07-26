@@ -609,7 +609,7 @@ typedef struct _WlzEffBibWarpInputThresholdParamsStruct
   int		threshRangeHigh;	/*!< Single channel high threshold value */
   int		threshRangeRGBLow[3];	/*!< Multi channel low threshold value */
   int		threshRangeRGBHigh[3];	/*!< Multi channel high threshold value */
-  UINT		threshRGBCombination;	/*!< Colour combination logic mask */
+  WlzUInt	threshRGBCombination;	/*!< Colour combination logic mask */
   WlzPixelV	lowRGBPoint;	/*!< Low-point for slice/box/ball threshold */
   WlzPixelV	highRGBPoint;	/*!< High-point for slice/box/ball threshold */
   double	colorEllipseEcc;	/*!< Ball eccentricity */

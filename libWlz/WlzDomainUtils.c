@@ -72,7 +72,7 @@ WlzObjectType	WlzDomainType(WlzDomain dom)
 * \param	iRgt			Right coordinate of interval.
 * \param	size			Number of bits in the bit line.
 */
-void		WlzBitLnSetItv(UBYTE *bitLnP, int iLft, int iRgt, int size)
+void		WlzBitLnSetItv(WlzUByte *bitLnP, int iLft, int iRgt, int size)
 {
   int		bitIdx,
   		bitCnt,
@@ -80,8 +80,8 @@ void		WlzBitLnSetItv(UBYTE *bitLnP, int iLft, int iRgt, int size)
 		bytCnt,
 		mskIdx,
 		mskCnt;
-  UBYTE		*bytP;
-  const UBYTE	bitMsk[9] = 
+  WlzUByte	*bytP;
+  const WlzUByte bitMsk[9] = 
   {
     0x00, 
     0x01,
@@ -151,7 +151,7 @@ void		WlzBitLnSetItv(UBYTE *bitLnP, int iLft, int iRgt, int size)
 * \param	iPool			Interval pool.
 */
 WlzErrorNum 	WlzDynItvLnFromBitLn(WlzIntervalDomain *iDom,
-				     UBYTE *bitLn, int line, int width,
+				     WlzUByte *bitLn, int line, int width,
 				     WlzDynItvPool *iPool)
 {
   int		iLft = 0,
@@ -160,7 +160,7 @@ WlzErrorNum 	WlzDynItvLnFromBitLn(WlzIntervalDomain *iDom,
 		bitIdx,
 		bitMsk,
 		bitIdxWas;
-  UBYTE		*bytP;
+  WlzUByte	*bytP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(iDom == NULL)

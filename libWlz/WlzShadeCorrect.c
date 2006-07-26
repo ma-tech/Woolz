@@ -315,7 +315,7 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
   int		tI0,
   		iCnt, red, green, blue;
   double	tD0;
-  UINT		tUI0, tUI1;
+  WlzUInt	tUI0, tUI1;
   WlzObject	*uObj = NULL,
 		*uSrcObj = NULL,
 		*uShdObj = NULL,

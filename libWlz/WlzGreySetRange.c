@@ -160,10 +160,10 @@ WlzErrorNum WlzGreySetRange(
     /* get conversion function - should use LUT
        use 4 LUTS for rgb type since bounded */
     if( WlzGreyTypeFromObj(obj, &wlzErrno) == WLZ_GREY_RGBA ){
-      UBYTE	rgbaLut[4][256];
-      UINT	rgbamin[4], rgbaMin[4];
+      WlzUByte	rgbaLut[4][256];
+      WlzUInt	rgbamin[4], rgbaMin[4];
       double	rgbaFactor[4], val;
-      UINT	red, green, blue, alpha;
+      WlzUInt	red, green, blue, alpha;
 
       rgbamin[0] = WLZ_RGBA_RED_GET(min.v.rgbv);
       rgbaMin[0] = WLZ_RGBA_RED_GET(Min.v.rgbv);

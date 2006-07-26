@@ -179,7 +179,7 @@ WlzObject *WlzGetProjectionFromObject(
       size = sizeof(short)*length;
       break;
     case WLZ_GREY_UBYTE:
-      size = sizeof(UBYTE)*length;
+      size = sizeof(WlzUByte)*length;
       break;
     case WLZ_GREY_FLOAT:
       size = sizeof(float)*length;
@@ -212,10 +212,10 @@ WlzObject *WlzGetProjectionFromObject(
       if( rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL, NULL,
 			       &errNum) ){
 	/* note the grey-values required are determined by the integration
-	   function. Here we use UBYTE and reset later if needed */
+	   function. Here we use WlzUByte and reset later if needed */
 	dstGType = WLZ_GREY_UBYTE;
 	pixval.type = WLZ_GREY_UBYTE;
-	pixval.v.ubv = (UBYTE) 0;
+	pixval.v.ubv = (WlzUByte )0;
 	if( values.v = WlzNewValueTb(rtnObj,
 				     WlzGreyTableType(WLZ_GREY_TAB_RECT,
 						      dstGType, NULL),
@@ -268,7 +268,7 @@ WlzObject *WlzGetProjectionFromObject(
 	    }
 	  }
 
-	  /* set the integrated value - only UBYTE at the moment */
+	  /* set the integrated value - only WlzUByte at the moment */
 	  *(gwsp.u_grintptr.ubp) = occupiedFlg;
 	  gwsp.u_grintptr.ubp++;
 	}

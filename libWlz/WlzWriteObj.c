@@ -1309,7 +1309,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
 	           ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE))
 	    {
 	      g = gwsp.u_grintptr;
-	      if((int )fwrite(g.ubp, sizeof(UBYTE),
+	      if((int )fwrite(g.ubp, sizeof(WlzUByte),
 	      		      iwsp.colrmn, fp) < iwsp.colrmn)
 	      {
 		errNum = WLZ_ERR_WRITE_INCOMPLETE;

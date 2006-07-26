@@ -70,7 +70,7 @@ WlzObject *WlzRGBAMultiThreshold(
   WlzObject	*obj,
   WlzPixelV	lowVal,
   WlzPixelV	highVal,
-  UINT		combineMode,
+  WlzUInt	combineMode,
   WlzErrorNum	*dstErr)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -79,7 +79,7 @@ WlzObject *WlzRGBAMultiThreshold(
   WlzValues	values;
   WlzCompoundArray	*cobj=NULL;
   int		low[3], high[3];
-  UINT		mode[3]; 
+  WlzUInt	mode[3]; 
 
   /* check inputs */
   if( obj == NULL ){
@@ -255,7 +255,7 @@ int WlzVectorThreshCb(
   WlzVectorThresholdStruct *vts=(WlzVectorThresholdStruct *) clientData;
   int		i, rtnVal=-1;
   double	d, d1, vect[3];
-  UINT		val;
+  WlzUInt	val;
 
   switch( cbs->pix.type ){
   case WLZ_GREY_INT:
@@ -374,7 +374,7 @@ WlzObject *WlzRGBABoxThreshold(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzObject	*rtnObj=NULL;
   int		h, l;
-  UINT		combineMode;
+  WlzUInt	combineMode;
 
   /* check and reset low annd high values */
   l = WLZ_RGBA_RED_GET(lowVal.v.rgbv);

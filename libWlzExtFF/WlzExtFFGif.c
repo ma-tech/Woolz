@@ -115,7 +115,7 @@ typedef struct _WlzEffGifLWZWSp
 static WlzErrorNum 		WlzEffGifColorMapRead(
 				  FILE *fP,
 				  int nC,
-				  UBYTE map[3][WLZEFF_GIF_MAXCMAPSZ]);
+				  WlzUByte map[3][WLZEFF_GIF_MAXCMAPSZ]);
 static WlzErrorNum 		WlzEffGifExtensionRead(
 				  FILE *fP,
 				  int label,
@@ -124,7 +124,7 @@ static WlzErrorNum 		WlzEffGifExtensionRead(
 				  int *zdb);
 static int 			WlzEffGifDataBlkRead(
 				  FILE *fP,
-				  UBYTE *buf,
+				  WlzUByte *buf,
 				  int *zdb);
 static int			WlzEffGifCodeRead(
 				  FILE *fP,
@@ -142,7 +142,7 @@ static WlzErrorNum		WlzEffGifImageRead(
 				  FILE *fP,
                       		  WlzIVertex2 imgSz,
 				  unsigned **img,
-                      		  UBYTE cmap[3][WLZEFF_GIF_MAXCMAPSZ],
+                      		  WlzUByte cmap[3][WLZEFF_GIF_MAXCMAPSZ],
 				  int interlace,
 		      		  int *zdb);
 
@@ -162,7 +162,7 @@ static WlzErrorNum		WlzEffGifImageRead(
 */
 WlzObject 	*WlzEffReadObjGif(FILE *fP, WlzErrorNum *dstErr)
 {
-  UBYTE		c;
+  WlzUByte	c;
   int		imageNumber = 1;
   int		useGlobalColormap;
   int		bitPixel;
@@ -173,8 +173,8 @@ WlzObject 	*WlzEffReadObjGif(FILE *fP, WlzErrorNum *dstErr)
   		imgOrg;
   char		version[4];
   char		comment[WLZEFF_GIF_BUFSZ];
-  UBYTE		buf[16];
-  UBYTE		localColorMap[3][WLZEFF_GIF_MAXCMAPSZ];
+  WlzUByte	buf[16];
+  WlzUByte	localColorMap[3][WLZEFF_GIF_MAXCMAPSZ];
   WlzEffGif89	gif89 = { -1, -1, -1, 0 };
   WlzEffGifScreen gifScreen;
   WlzObject	*obj = NULL;
@@ -304,10 +304,10 @@ WlzObject 	*WlzEffReadObjGif(FILE *fP, WlzErrorNum *dstErr)
 * \param	buf			The map to be filled in.
 */
 static WlzErrorNum WlzEffGifColorMapRead(FILE *fP, int nC,
-                                         UBYTE map[3][WLZEFF_GIF_MAXCMAPSZ])
+				       WlzUByte map[3][WLZEFF_GIF_MAXCMAPSZ])
 {
   int		idx;
-  UBYTE		rgb[3];
+  WlzUByte	rgb[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   for(idx = 0; idx < nC; ++idx)
@@ -351,7 +351,7 @@ static WlzErrorNum WlzEffGifExtensionRead(FILE *fP, int label,
       break;
     case 0xfe: /* Comment Extension */
       *comment = '\0';
-      while((cInc = WlzEffGifDataBlkRead(fP, (UBYTE *)buf, zdb)) > 0)
+      while((cInc = WlzEffGifDataBlkRead(fP, (WlzUByte *)buf, zdb)) > 0)
       {
         if(cFirst)
 	{
@@ -396,10 +396,10 @@ static WlzErrorNum WlzEffGifExtensionRead(FILE *fP, int label,
 */
 static WlzErrorNum WlzEffGifImageRead(FILE *fP,
 		      WlzIVertex2 imgSz, unsigned **img,
-                      UBYTE cmap[3][WLZEFF_GIF_MAXCMAPSZ],
+                      WlzUByte cmap[3][WLZEFF_GIF_MAXCMAPSZ],
                       int interlace, int *zdb)
 {
-  UBYTE		alpha,
+  WlzUByte	alpha,
   		codeSz,
 		red,
 		green,
@@ -495,7 +495,7 @@ done:
 * \param	buf			Buffer for data (256 bytes).
 * \param	zdb			Zero data block flag.
 */
-static int 	WlzEffGifDataBlkRead(FILE *fP, UBYTE *buf, int *zdb)
+static int 	WlzEffGifDataBlkRead(FILE *fP, WlzUByte *buf, int *zdb)
 {
   int		cnt = 0;
 
@@ -548,7 +548,7 @@ static int 	WlzEffGifLWZReadByte(FILE *fP, int flag, int inCodeSz,
 		cnt,
   		code,
 		inCode;
-  UBYTE		buf[260];
+  WlzUByte	buf[260];
 
 
   if(flag)

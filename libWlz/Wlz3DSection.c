@@ -328,7 +328,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
     grey_type = WLZ_GREY_UBYTE;
     voxvals = NULL;
     pixval.type = WLZ_GREY_UBYTE;
-    pixval.v.ubv = (UBYTE) 0;
+    pixval.v.ubv = (WlzUByte) 0;
     if( obj->values.core ){
       voxvals = obj->values.vox;
       pixval = voxvals->bckgrnd;
@@ -400,7 +400,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
   }
   if((errNum == WLZ_ERR_NONE) && (voxvals)){
     pixval.type = WLZ_GREY_UBYTE;
-    pixval.v.ubv = (UBYTE) 0;
+    pixval.v.ubv = (WlzUByte) 0;
     values.v = WlzNewValueTb(newobj,
 			     WlzGreyTableType(WLZ_GREY_TAB_RECT,
 					      grey_type, NULL),
@@ -714,7 +714,7 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
     grey_type = WLZ_GREY_UBYTE;
     voxvals = NULL;
     pixval.type = WLZ_GREY_UBYTE;
-    pixval.v.ubv = (UBYTE) 0;
+    pixval.v.ubv = (WlzUByte) 0;
     if( obj->values.core ){
       voxvals = obj->values.vox;
       pixval = voxvals->bckgrnd;
@@ -1017,7 +1017,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
 {
   /*WlzGreyV	val;*/
   WlzPixelP	pix;
-  UINT		uval;
+  WlzUInt	uval;
 
   pix.type = grey_type;
   pix.p.inp = &(GetSectionStaticGreyVal.inv);
@@ -1032,7 +1032,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.shv = *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.inp);
+      GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_FLOAT:
       GetSectionStaticGreyVal.flv = *(pixptr.p.inp);
@@ -1054,7 +1054,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.shv = *(pixptr.p.shp);
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.shp);
+      GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.shp);
       return pix;
     case WLZ_GREY_FLOAT:
       GetSectionStaticGreyVal.flv = *(pixptr.p.shp);
@@ -1076,7 +1076,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.shv = *(pixptr.p.ubp);
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.ubp);
+      GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.ubp);
       return pix;
     case WLZ_GREY_FLOAT:
       GetSectionStaticGreyVal.flv = *(pixptr.p.ubp);
@@ -1098,7 +1098,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.shv = *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.flp);
+      GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_FLOAT:
       GetSectionStaticGreyVal.flv = *(pixptr.p.flp);
@@ -1120,7 +1120,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.shv = *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (UBYTE) *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_FLOAT:
       GetSectionStaticGreyVal.flv = *(pixptr.p.dbp);

@@ -172,7 +172,7 @@ WlzErrorNum WlzGreySetRangeLut(
 
       case WLZ_GREY_RGBA:
 	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
-	  UINT red, green, blue, alpha;
+	  WlzUInt red, green, blue, alpha;
 	  red = WLZ_RGBA_RED_GET(*gptr.rgbp);
 	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp);
 	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp);

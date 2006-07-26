@@ -133,9 +133,10 @@ WlzObject *WlzGreyModGradient(
     errNum = WLZ_ERR_OBJECT_NULL;
   }
 
-  /* if UBYTE grey values then copy to int */
+  /* if WlzUByte grey values then copy to int */
   if( (errNum == WLZ_ERR_NONE) && !returnobj ){
-    if(WlzGreyTableTypeToGreyType(obj->values.core->type, NULL) == WLZ_GREY_UBYTE)
+    if(WlzGreyTableTypeToGreyType(obj->values.core->type,
+                                  NULL) == WLZ_GREY_UBYTE)
     {
       returnobj = WlzConvertPix(obj, WLZ_GREY_INT, NULL);
     }
@@ -190,7 +191,7 @@ WlzObject *WlzGreyModGradient(
 	  g2 = *gwsp2.u_grintptr.ubp++;
 	  g3 = *gwsp3.u_grintptr.ubp++;
 	  g1 = sqrt( g2*g2 + g3*g3 );
-	  *gwsp1.u_grintptr.ubp++ = (UBYTE) g1;
+	  *gwsp1.u_grintptr.ubp++ = (WlzUByte) g1;
 	}
 	break;
 

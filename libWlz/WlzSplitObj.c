@@ -68,7 +68,7 @@ static int			WlzSplitObjSortSzFn(
 * \param	refObj			Reference object.
 * \param	ppObj			Pre-processed object which is
 *					normalised to values in the range
-*					0 - 255 as UBYTE greys.
+*					0 - 255 as WlzUByte greys.
 * \param	bWidth			Border width.
 * \param	bgdFrac			Minimum fraction of values which are
 * 					background values, with range

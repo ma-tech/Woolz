@@ -60,7 +60,7 @@ static WlzErrorNum 		WlzRankFilterDomObj3D(
 static void     		WlzRankFilterValLn(WlzObject *gObj,
 				  WlzGreyValueWSpace *gVWSp,
 				  void **vBuf,
-				  UBYTE **iBuf,
+				  WlzUByte **iBuf,
 				  void *rBuf,
 				  int lnPos,
 				  WlzGreyType vType,
@@ -70,7 +70,7 @@ static void			WlzRankFilterValPl(
 				  WlzObject *gObj,
 				  WlzGreyValueWSpace *gVWSp,
 				  void ***vBuf,
-				  UBYTE ***iBuf,
+				  WlzUByte ***iBuf,
 				  void *rBuf,
 				  int plane,
 				  WlzGreyType vType,
@@ -169,7 +169,7 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
 		iBufWidth; 	      /* No of bytes in interval buffer line */
   void		*rBuf = NULL;
   void		**vBuf = NULL;
-  UBYTE		**iBuf = NULL;
+  WlzUByte	**iBuf = NULL;
   WlzIVertex2	bufSz;
   WlzGreyType	vType;
   WlzDomain	gDom;
@@ -193,8 +193,8 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
     switch(vType)
     {
       case WLZ_GREY_UBYTE:
-	if(((rBuf = AlcMalloc(fSz * fSz * sizeof(UBYTE))) == NULL) ||
-	   (AlcUnchar2Malloc((UBYTE ***)&vBuf,
+	if(((rBuf = AlcMalloc(fSz * fSz * sizeof(WlzUByte))) == NULL) ||
+	   (AlcUnchar2Malloc((WlzUByte ***)&vBuf,
 	   		     bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
@@ -233,7 +233,7 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
 	}
 	break;
       case WLZ_GREY_RGBA:
-	if(((rBuf = AlcMalloc(fSz * fSz * sizeof(UINT))) == NULL) ||
+	if(((rBuf = AlcMalloc(fSz * fSz * sizeof(WlzUInt))) == NULL) ||
 	   (AlcInt2Malloc((int ***)&vBuf,
 	   		     bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
 	{
@@ -291,7 +291,7 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
       switch(vType)
       {
         case WLZ_GREY_UBYTE:
-	  (void )memcpy(*(((UBYTE **)vBuf) + bufLn) + bufLft,
+	  (void )memcpy(*(((WlzUByte **)vBuf) + bufLn) + bufLft,
 	                gWSp.u_grintptr.ubp, itvWidth);
           break;
         case WLZ_GREY_SHORT:
@@ -311,8 +311,8 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
 	                gWSp.u_grintptr.dbp, itvWidth * sizeof(double));
           break;
         case WLZ_GREY_RGBA:
-	  (void )memcpy(*(((UINT **)vBuf) + bufLn) + bufLft,
-	                gWSp.u_grintptr.rgbp, itvWidth * sizeof(UINT));
+	  (void )memcpy(*(((WlzUInt **)vBuf) + bufLn) + bufLft,
+	                gWSp.u_grintptr.rgbp, itvWidth * sizeof(WlzUInt));
           break;
       }
     }
@@ -362,7 +362,7 @@ static WlzErrorNum WlzRankFilterDomObj3D(WlzObject *gObj, int fSz,
 		fSz2;
   void		*rBuf = NULL;
   void		***vBuf = NULL;
-  UBYTE		***iBuf = NULL;
+  WlzUByte	***iBuf = NULL;
   WlzObject	*obj2D = NULL;
   WlzValues	dummyValues;
   WlzDomain	dummyDom,
@@ -391,8 +391,8 @@ static WlzErrorNum WlzRankFilterDomObj3D(WlzObject *gObj, int fSz,
     switch(vType)
     {
       case WLZ_GREY_UBYTE:
-	if(((rBuf = AlcMalloc(fSz * fSz * fSz * sizeof(UBYTE))) == NULL) ||
-	   (AlcUnchar3Malloc((UBYTE ****)&vBuf,
+	if(((rBuf = AlcMalloc(fSz * fSz * fSz * sizeof(WlzUByte))) == NULL) ||
+	   (AlcUnchar3Malloc((WlzUByte ****)&vBuf,
 	   		     bufSz.vtZ, bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
@@ -431,7 +431,7 @@ static WlzErrorNum WlzRankFilterDomObj3D(WlzObject *gObj, int fSz,
 	}
 	break;
       case WLZ_GREY_RGBA:
-	if(((rBuf = AlcMalloc(fSz * fSz * fSz * sizeof(UINT))) == NULL) ||
+	if(((rBuf = AlcMalloc(fSz * fSz * fSz * sizeof(WlzUInt))) == NULL) ||
 	   (AlcInt3Malloc((int ****)&vBuf,
 	   		     bufSz.vtZ, bufSz.vtY, bufSz.vtX) != ALC_ER_NONE))
 	{
@@ -535,7 +535,7 @@ static WlzErrorNum WlzRankFilterDomObj3D(WlzObject *gObj, int fSz,
 *					1.0 maximum.
 */
 static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
-				   void **vBuf, UBYTE **iBuf, void *rBuf,
+				   void **vBuf, WlzUByte **iBuf, void *rBuf,
 				   int line, WlzGreyType vType,
 				   WlzIVertex2 bufSz, double rank)
 {
@@ -588,8 +588,8 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	  switch(vType)
 	  {
 	    case WLZ_GREY_UBYTE:
-	      gP0.ubp = (UBYTE *)rBuf;
-	      gP1.ubp = *((UBYTE **)vBuf + bufPos0.vtY);
+	      gP0.ubp = (WlzUByte *)rBuf;
+	      gP1.ubp = *((WlzUByte **)vBuf + bufPos0.vtY);
 	      gV0.ubv = *(gP1.ubp + bufPos0.vtX);
 	      gV1.ubv = *(gP1.ubp + bufPos1.vtX);
 	      while(*(gP0.ubp) != gV0.ubv)
@@ -643,8 +643,8 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      *(gP0.dbp) = gV1.dbv;
 	      break;
 	    case WLZ_GREY_RGBA:
-	      gP0.rgbp = (UINT *)rBuf;
-	      gP1.rgbp = *((UINT **)vBuf + bufPos0.vtY);
+	      gP0.rgbp = (WlzUInt *)rBuf;
+	      gP1.rgbp = *((WlzUInt **)vBuf + bufPos0.vtY);
 	      gV0.rgbv = *(gP1.rgbp + bufPos0.vtX);
 	      gV1.rgbv = *(gP1.rgbp + bufPos1.vtX);
 	      while(*(gP0.rgbp) != gV0.rgbv)
@@ -665,7 +665,7 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	  switch(vType)
 	  {
 	    case WLZ_GREY_UBYTE:
-	      gP0.ubp = *((UBYTE **)vBuf + bufPos0.vtY);
+	      gP0.ubp = *((WlzUByte **)vBuf + bufPos0.vtY);
 	      break;
 	    case WLZ_GREY_SHORT:
 	      gP0.shp = *((short **)vBuf + bufPos0.vtY);
@@ -680,7 +680,7 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      gP0.dbp = *((double **)vBuf + bufPos0.vtY);
 	      break;
 	    case WLZ_GREY_RGBA:
-	      gP0.rgbp = *((UINT **)vBuf + bufPos0.vtY);
+	      gP0.rgbp = *((WlzUInt **)vBuf + bufPos0.vtY);
 	      break;
 	  }
 	  bufPos0.vtX = idK - fSz2;
@@ -691,7 +691,7 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      {
 		if(WLZ_BIT_GET(*(iBuf + bufPos0.vtY), bufPos0.vtX) != 0)
 		{
-		  *((UBYTE *)rBuf + rCnt++) = *(gP0.ubp + bufPos0.vtX);
+		  *((WlzUByte *)rBuf + rCnt++) = *(gP0.ubp + bufPos0.vtX);
 		}
 		++(bufPos0.vtX);
 	      }
@@ -776,7 +776,7 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 *					1.0 maximum.
 */
 static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
-				   void ***vBuf, UBYTE ***iBuf, void *rBuf,
+				   void ***vBuf, WlzUByte ***iBuf, void *rBuf,
 				   int plane, WlzGreyType vType,
 				   WlzIVertex3 bufSz, double rank)
 {
@@ -787,7 +787,7 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		idZ,
 		rCnt,
 		fSz2;
-  UBYTE		*iP0;
+  WlzUByte	*iP0;
   WlzGreyP	gP0;
   WlzDomain	gDom;
   WlzIVertex3	bufPos0,
@@ -819,7 +819,7 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	    switch(vType)
 	    {
 	      case WLZ_GREY_UBYTE:
-		gP0.ubp = *(*((UBYTE ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
+		gP0.ubp = *(*((WlzUByte ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
 		break;
 	      case WLZ_GREY_SHORT:
 		gP0.shp = *(*((short ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
@@ -834,7 +834,7 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		gP0.dbp = *(*((double ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
 		break;
 	      case WLZ_GREY_RGBA:
-		gP0.rgbp = *(*((UINT ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
+		gP0.rgbp = *(*((WlzUInt ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
 		break;
 	    }
 	    iP0 = *(*(iBuf + bufPos0.vtZ) + bufPos0.vtY);
@@ -846,7 +846,7 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		{
 		  if(WLZ_BIT_GET(iP0, bufPos0.vtX) != 0)
 		  {
-		    *((UBYTE *)rBuf + rCnt) = *(gP0.ubp + bufPos0.vtX);
+		    *((WlzUByte *)rBuf + rCnt) = *(gP0.ubp + bufPos0.vtX);
 		    ++rCnt;
 		  }
 		  ++(bufPos0.vtX);
@@ -938,8 +938,8 @@ static void	WlzRankFilterValues(WlzGreyValueWSpace *gVWSp,
   switch(vType)
   {
     case WLZ_GREY_UBYTE:
-      AlgRankSelectUB((UBYTE *)values, nValues, rankI);
-      *(gVWSp->gPtr[0].ubp) = *((UBYTE *)values + rankI);
+      AlgRankSelectUB((WlzUByte *)values, nValues, rankI);
+      *(gVWSp->gPtr[0].ubp) = *((WlzUByte *)values + rankI);
       break;
     case WLZ_GREY_SHORT:
       AlgRankSelectS((short *)values, nValues, rankI);

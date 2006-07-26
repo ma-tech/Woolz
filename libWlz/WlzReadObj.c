@@ -824,9 +824,8 @@ static WlzErrorNum WlzReadGreyV(FILE *fP, WlzGreyType gType, WlzGreyV *gV,
     case WLZ_GREY_UBYTE:
       while(nGV-- > 0)
       {
-        gV->ubv = (UBYTE )(getc(fP));
-
-		++gV;
+        gV->ubv = (WlzUByte )(getc(fP));
+	++gV;
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -1351,8 +1350,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     obj->values = WlzAssignValues(values, NULL);
 
     /* allocate space for the pixel values, preset to background value */
-    table_size = WlzLineArea(obj, NULL) * sizeof(UBYTE);
-    if( (v.ubp = (UBYTE *) AlcMalloc(table_size)) == NULL){
+    table_size = WlzLineArea(obj, NULL) * sizeof(WlzUByte);
+    if( (v.ubp = (WlzUByte *) AlcMalloc(table_size)) == NULL){
       WlzFreeValueTb(values.v);
       obj->values.v = NULL;
       return WLZ_ERR_MEM_ALLOC;
@@ -1507,8 +1506,8 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
     obj->values = WlzAssignValues(values, NULL);
 
     /* allocate space for the pixel values, preset to background */
-    table_size = WlzLineArea(obj, NULL) * sizeof(UINT);
-    if( (v.rgbp = (UINT *) AlcMalloc(table_size)) == NULL){
+    table_size = WlzLineArea(obj, NULL) * sizeof(WlzUInt);
+    if( (v.rgbp = (WlzUInt *) AlcMalloc(table_size)) == NULL){
       WlzFreeValueTb(values.v);
       obj->values.v = NULL;
       return WLZ_ERR_MEM_ALLOC;
@@ -1608,7 +1607,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     break;
   case WLZ_GREY_UBYTE:
     vtb.r->bckgrnd.v.ubv = getword(fp);
-    values.ubp = (UBYTE *) AlcMalloc(num*sizeof(UBYTE));
+    values.ubp = (WlzUByte *) AlcMalloc(num*sizeof(WlzUByte));
     break;
   case WLZ_GREY_FLOAT:
     vtb.r->bckgrnd.v.flv = getfloat(fp);
@@ -1620,7 +1619,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     break;
   case WLZ_GREY_RGBA:
     vtb.r->bckgrnd.v.rgbv = getword(fp);
-    values.rgbp = (UINT *) AlcMalloc(num*sizeof(UINT));
+    values.rgbp = (WlzUInt *) AlcMalloc(num*sizeof(WlzUInt));
     break;
   }
 
@@ -1673,7 +1672,7 @@ short shv = getshort(fp);
     break;
 
   case WLZ_GREY_UBYTE:
-    fread(values.ubp, sizeof(UBYTE), num, fp);
+    fread(values.ubp, sizeof(WlzUByte), num, fp);
     break;
 
   case WLZ_GREY_FLOAT:

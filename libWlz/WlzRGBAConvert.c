@@ -297,7 +297,7 @@ WlzObject *WlzCompoundToRGBA(
   WlzObject	*rtnObj=NULL;
   WlzPixelV	bckgrnd;
   int		i, j;
-  UINT		b[4];
+  WlzUInt	b[4];
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* check object - must have at least 3 grey-level objects
@@ -1033,7 +1033,7 @@ WlzObject *WlzRGBAToChannel(
       WLZ_GREY_UBYTE, &errNum);
     oldBck = WlzGetBackground(obj, &errNum);
     newBck.type = WLZ_GREY_UBYTE;
-    newBck.v.ubv = (UBYTE) WlzRGBAPixelValue(oldBck, chan, &errNum);
+    newBck.v.ubv = (WlzUByte )WlzRGBAPixelValue(oldBck, chan, &errNum);
   }
 
   /* make values table and return object */
@@ -1058,7 +1058,7 @@ WlzObject *WlzRGBAToChannel(
       for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
 	    gwsp0.u_grintptr.rgbp++){
 	pixVal.v.rgbv = (*(gwsp0.u_grintptr.rgbp));
-	*(gwsp1.u_grintptr.ubp++) = (UBYTE)
+	*(gwsp1.u_grintptr.ubp++) = (WlzUByte )
 	  WlzRGBAPixelValue(pixVal, chan, &errNum);
       }
     }

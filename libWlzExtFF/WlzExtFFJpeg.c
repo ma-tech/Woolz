@@ -212,7 +212,7 @@ WlzObject *WlzEffReadObjJpeg(
       /* make the woolz object */
       width = cinfo.image_width;
       height = cinfo.image_height;
-      if( wlzData.ubp = (UBYTE *) AlcCalloc(width*height, wlzDepth) ){
+      if( wlzData.ubp = (WlzUByte *) AlcCalloc(width*height, wlzDepth) ){
 	if( rtnObj = WlzMakeRect(0, height-1, 0, width-1, newpixtype,
 				  wlzData.inp, bckgrnd,
 				  NULL, NULL, &errNum) ){
@@ -439,7 +439,7 @@ WlzErrorNum WlzEffWriteObjJpeg(
        note this is the "input" to the compressor */
     if((errNum = WlzInitGreyScan(rectObj, &iwsp, &gwsp)) == WLZ_ERR_NONE){
       while((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
-	UINT val;
+	WlzUInt val;
 	switch( gType ){
 	case WLZ_GREY_UBYTE:
 	  for(i=0, j=0; i < width; i++){

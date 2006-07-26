@@ -156,7 +156,7 @@ WlzObject *WlzExtFFReadObjRaw(
     /* determine woolz size */
     switch( greyType ){
     case WLZ_GREY_UBYTE:
-      wlzSize = sizeof(UBYTE);
+      wlzSize = sizeof(WlzUByte);
       break;
     case WLZ_GREY_SHORT:
       wlzSize = sizeof(short);
@@ -185,7 +185,7 @@ WlzObject *WlzExtFFReadObjRaw(
 
   /* allocate space for woolz object data and read data */
   if( errNum == WLZ_ERR_NONE ){
-    rawData = (UBYTE *) AlcMalloc(bytesPerPixel);
+    rawData = (WlzUByte *) AlcMalloc(bytesPerPixel);
     switch( objType ){
     case WLZ_3D_DOMAINOBJ:
     case WLZ_2D_DOMAINOBJ:

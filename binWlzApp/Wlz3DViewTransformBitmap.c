@@ -178,7 +178,7 @@ int main(int	argc,
   WlzDVertex3		upVectorVtx={0.0,0.0,1.0};
   int			width, height, xOffset, yOffset, numBytes;
   int			offsetFlg=1, sizeFlg=1;
-  UBYTE			*bitData=NULL;
+  WlzUByte		*bitData=NULL;
   char			*errMsg;
     
   /* read the argument list and check for an input file */

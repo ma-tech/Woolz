@@ -913,7 +913,7 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 		break;
 	      case WLZ_GREY_UBYTE:
 		srcPix.ubp = srcGWsp.u_grintptr.ubp + srcOffset;
-		dstPix.ubp = (UBYTE *)dstGreyValues + dstOffset;
+		dstPix.ubp = (WlzUByte *)dstGreyValues + dstOffset;
 		tI0 = dstInvWidth;
 		while(tI0-- > 0)
 		{
@@ -943,7 +943,7 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 		break;
 	      case WLZ_GREY_RGBA:
 		srcPix.rgbp = srcGWsp.u_grintptr.rgbp + srcOffset;
-		dstPix.rgbp = (UINT *)dstGreyValues + dstOffset;
+		dstPix.rgbp = (WlzUInt *)dstGreyValues + dstOffset;
 		tI0 = dstInvWidth;
 		while(tI0-- > 0)
 		{
@@ -1252,7 +1252,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 	      tGP0.shp = (short *)dstGreyValues + dstOffset;
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      tGP0.ubp = (UBYTE *)dstGreyValues + dstOffset;
+	      tGP0.ubp = (WlzUByte *)dstGreyValues + dstOffset;
 	      break;
 	  }
 	  tI0 = dstInvWidth;
@@ -1290,7 +1290,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		{
 		  tI1 = 255;
 		}
-		*(tGP0.ubp)++ = (UBYTE )tI1;
+		*(tGP0.ubp)++ = (WlzUByte )tI1;
 		break;
 	    }
 	    bufPos.vtX += samFac.vtX;
@@ -1957,7 +1957,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	      tGP0.shp = (short *)dstGreyValues + dstOffset;
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      tGP0.ubp = (UBYTE *)dstGreyValues + dstOffset;
+	      tGP0.ubp = (WlzUByte *)dstGreyValues + dstOffset;
 	      break;
 	  }
 	  for(tI0 = 0; tI0 < dstInvWidth; ++tI0)
@@ -2055,7 +2055,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		*(tGP0.shp)++ = tI1;
 		break;
 	      case WLZ_GREY_UBYTE:
-		*(tGP0.ubp)++ = (UBYTE )tI1; /* Fits because rank operation. */
+		*(tGP0.ubp)++ = (WlzUByte )tI1; /* Fits because rank op. */
 		break;
 	    }
 	    bufPos.vtX += samFac.vtX;
@@ -2757,7 +2757,7 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
 			            &errNum);
         break;
       case WLZ_GREY_RGBA:
-	bCount *= sizeof(UINT);
+	bCount *= sizeof(WlzUInt);
 	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA,
 			            &errNum);
         break;

@@ -56,7 +56,7 @@ static char _WlzLaplacian_c[] = "MRC HGU $Id$";
 *                                       created.
 * \param	modFlag			Take the absolute value of the
 *                                       convolution if non zero (this
-*                                       is always the case for a UBYTE
+*                                       is always the case for a WlzUByte
 *                                       object).
 * \param	wlzErr			Destination error pointer, may
 *                                       be NULL.

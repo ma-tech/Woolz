@@ -84,7 +84,7 @@ WlzErrorNum WlzGreyInvertMinMax(
   WlzGreyWSpace 	gwsp;
   int			irange;
   double		drange;
-  UINT			redrange, greenrange, bluerange;
+  WlzUInt		redrange, greenrange, bluerange;
   int			i;
  
   /* check for NULL object */
@@ -185,7 +185,7 @@ WlzErrorNum WlzGreyInvertMinMax(
 
     case WLZ_GREY_RGBA: 
       for (i=0; i<iwsp.colrmn; i++, g.rgbp++){
-	UINT red, green, blue;
+	WlzUInt red, green, blue;
 	red = redrange - WLZ_RGBA_RED_GET(*g.rgbp);
 	green = greenrange - WLZ_RGBA_GREEN_GET(*g.rgbp);
 	blue = bluerange - WLZ_RGBA_BLUE_GET(*g.rgbp);

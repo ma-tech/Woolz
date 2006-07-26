@@ -168,7 +168,7 @@ WlzObject *WlzGreyTransfer(
 	  size = sizeof(short);
 	  break;
 	case WLZ_GREY_UBYTE:
-	  size = sizeof(UBYTE);
+	  size = sizeof(WlzUByte);
 	  break;
 	case WLZ_GREY_FLOAT:
 	  size = sizeof(float);
@@ -177,7 +177,7 @@ WlzObject *WlzGreyTransfer(
 	  size = sizeof(double);
 	  break;
 	case WLZ_GREY_RGBA:
-	  size = sizeof(UINT);
+	  size = sizeof(WlzUInt);
 	  break;
 	}
 
