@@ -42,47 +42,69 @@ static char _WlzArray_c[] = "MRC HGU $Id$";
 * \bug          None known.
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
 #include <Wlz.h>
+#include <Wlz.h>
 
-/* #define WLZ_ARRAY_TEST */
-
-static WlzErrorNum WlzToArrayBit2D(WlzUByte ***dstP, WlzObject *srcObj,
-				   WlzIVertex2 size, WlzIVertex2 origin);
-static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
-				   WlzIVertex3 size, WlzIVertex3 origin);
-static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
-				    WlzIVertex2 size, WlzIVertex2 origin,
-				    int noiseFlag, WlzGreyType dstGreyType);
-static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
-				    WlzIVertex3 size, WlzIVertex3 origin,
-				    int noiseFlag, WlzGreyType dstGreyType);
-static WlzObject *WlzFromArrayBit2D(WlzUByte**arrayP,
-				    WlzIVertex2 arraySize,
-				    WlzIVertex2 arrayOrigin,
-				    WlzErrorNum *dstErr);
-static WlzObject *WlzFromArrayGrey2D(void **arrayP,
-				     WlzIVertex2 arraySize,
-				     WlzIVertex2 arrayOrigin,
-				     WlzGreyType dstGreyType,
-				     WlzGreyType srcGreyType,
-				     double valOffset, double valScale,
-				     int clampFlag, int noCopyFlag,
-				     WlzErrorNum *dstErr);
-static WlzObject *WlzFromArrayBit3D(WlzUByte ***arrayP,
-				    WlzIVertex3 arraySize,
-				    WlzIVertex3 arrayOrigin,
-				    WlzErrorNum *dstErr);
-static WlzObject *WlzFromArrayGrey3D(void ***arrayP,
-				     WlzIVertex3 arraySize,
-				     WlzIVertex3 arrayOrigin,
-				     WlzGreyType dstGreyType,
-				     WlzGreyType srcGreyType,
-				     double valOffset, double valScale,
-				     int clampFlag, int noCopyFlag,
-				     WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzToArrayBit2D(
+				  WlzUByte ***dstP,
+				  WlzObject *srcObj,
+				  WlzIVertex2 size,
+				  WlzIVertex2 origin);
+static WlzErrorNum 		WlzToArrayBit3D(
+				  WlzUByte ****dstP,
+				  WlzObject *srcObj,
+				  WlzIVertex3 size,
+				  WlzIVertex3 origin);
+static WlzErrorNum 		WlzToArrayGrey2D(
+				  void ***dstP,
+				  WlzObject *srcObj,
+				  WlzIVertex2 size,
+				  WlzIVertex2 origin,
+				  int noiseFlag,
+				  WlzGreyType dstGreyType);
+static WlzErrorNum 		WlzToArrayGrey3D(
+				  void ****dstP,
+				  WlzObject *srcObj,
+				  WlzIVertex3 size,
+				  WlzIVertex3 origin,
+				  int noiseFlag,
+				  WlzGreyType dstGreyType);
+static WlzObject 		*WlzFromArrayBit2D(
+				  WlzUByte**arrayP,
+				  WlzIVertex2 arraySize,
+				  WlzIVertex2 arrayOrigin,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzFromArrayGrey2D(
+				  void **arrayP,
+				  WlzIVertex2 arraySize,
+				  WlzIVertex2 arrayOrigin,
+				  WlzGreyType dstGreyType,
+				  WlzGreyType srcGreyType,
+				  double valOffset,
+				  double valScale,
+				  int clampFlag,
+				  int noCopyFlag,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzFromArrayBit3D(
+				  WlzUByte ***arrayP,
+				  WlzIVertex3 arraySize,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzFromArrayGrey3D(
+				  void ***arrayP,
+				  WlzIVertex3 arraySize,
+				  WlzIVertex3 arrayOrigin,
+				  WlzGreyType dstGreyType,
+				  WlzGreyType srcGreyType,
+				  double valOffset,
+				  double valScale,
+				  int clampFlag,
+				  int noCopyFlag,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	Woolz error code.
@@ -2825,7 +2847,240 @@ WlzObject *WlzFromBArray1D(
   return rtnObj;
 }
 
-#ifdef WLZ_ARRAY_TEST
+/*!
+* \return	New object.
+* \ingroup	WlzArray
+* \brief	Creates a new 2D or 3D domain object from the given 1D array.
+*		The object created is rectangular/cuboid with the given
+*		origin and size. The background value of the new object
+*		is set to zero.
+*		The returned object can be free'd using WlzFreeObj(),
+*		irespective of whether the noCopy flag is set, but if
+*		an object created with the noCopy flag set is free'd the
+*		data must be free'd independently after the returned object.
+*		The no copy option was originaly intended for efficient
+*		output of Woolz objects to a file in non-Woolz applications.
+* \param	oType			Required object type, must be 
+      					WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ.
+* \param	sz			Size of the required object, ie the
+* 					number of columns, lines and planes.
+*					The number of planes is ignored for
+					WLZ_2D_DOMAINOBJ objects.
+* \param	org			The origin of the object. The plane
+*					origin is ignored for WLZ_2D_DOMAINOBJ
+*					objects.
+* \param	gType			The grey type of the given data and the
+*					resulting object.
+* \param	gDat			The 1D array of data.
+* \param	noCopy			If non-zero then the data are not
+* 					copied but are used in place.
+*					TODO this is yet to be written.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzFromArray1D(WlzObjectType oType,
+				WlzIVertex3 sz, WlzIVertex3 org,
+				WlzGreyType gType, WlzGreyP gDat,
+				int noCopy, WlzErrorNum *dstErr)
+{
+  int		idP,
+  		gSz2;
+  WlzObject	*obj = NULL;
+  WlzObjectType	gTabType;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzGreyP	cDat;
+  WlzPixelV	bgdV;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dom.core = NULL;
+  val.core = NULL;
+  bgdV.type = gType;
+  switch(gType)
+  {
+    case WLZ_GREY_INT:
+      bgdV.v.inv = 0;
+      gSz2 = sz.vtX * sz.vtY * sizeof(int);
+      break;
+    case WLZ_GREY_SHORT:
+      bgdV.v.shv = 0;
+      gSz2 = sz.vtX * sz.vtY * sizeof(short);
+      break;
+    case WLZ_GREY_UBYTE:
+      bgdV.v.ubv = 0;
+      gSz2 = sz.vtX * sz.vtY * sizeof(WlzUByte);
+      break;
+    case WLZ_GREY_FLOAT:
+      bgdV.v.flv = 0;
+      gSz2 = sz.vtX * sz.vtY * sizeof(float);
+      break;
+    case WLZ_GREY_DOUBLE:
+      bgdV.v.dbv = 0;
+      gSz2 = sz.vtX * sz.vtY * sizeof(double);
+      break;
+    case WLZ_GREY_RGBA:
+      bgdV.v.rgbv = 0;
+      gSz2 = sz.vtX * sz.vtY * sizeof(WlzUInt);
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(oType)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	cDat.v = NULL;
+	if((sz.vtX < 1) || (sz.vtY < 1))
+	{
+	  errNum = WLZ_ERR_PARAM_DATA;
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if(noCopy)
+	  {
+	    cDat.v = gDat.v;
+	  }
+	  else
+	  {
+	    if((cDat.v = AlcMalloc(gSz2)) == NULL)
+	    {
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
+	    else
+	    {
+	      (void )memcpy(cDat.v, gDat.v, gSz2);
+	    }
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					org.vtY, org.vtY + sz.vtY - 1,
+					org.vtX, org.vtX + sz.vtX - 1,
+					&errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  val.r = WlzMakeRectValueTb(gTabType, 
+				     org.vtX, org.vtX + sz.vtX - 1,
+				     org.vtX, org.vtX + sz.vtX,
+				     bgdV, cDat.v,
+				     &errNum);
+	  if((val.r != NULL) && (noCopy == 0))
+	  {
+	    val.r->freeptr = cDat.inp;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom, val, NULL, NULL,
+			    &errNum);
+	}
+	/* Clean up for 2D on error. */
+	if(obj == NULL)
+	{
+	  if((val.core == NULL) && (noCopy == 0))
+	  {
+	    AlcFree(cDat.v);
+	  }
+	  (void )WlzFreeValues(val);
+	  (void )WlzFreeDomain(dom);
+	}
+	break;
+      case WLZ_3D_DOMAINOBJ:
+	if((sz.vtX < 1) || (sz.vtY < 1) || (sz.vtZ < 1))
+	{
+	  errNum = WLZ_ERR_PARAM_DATA;
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	  			      org.vtZ, org.vtZ + sz.vtZ - 1,
+	  			      org.vtY, org.vtY + sz.vtY - 1,
+				      org.vtX, org.vtX + sz.vtX - 1,
+				      &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+	  				 org.vtZ, org.vtZ + sz.vtZ - 1,
+					 bgdV, NULL, &errNum);
+	}
+	idP = 0;
+	while((errNum == WLZ_ERR_NONE) && (idP < sz.vtZ))
+	{
+	  (dom.p->domains + idP)->i =
+		WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+				org.vtY, org.vtY + sz.vtY - 1,
+				org.vtX, org.vtX + sz.vtX - 1,
+				&errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if(noCopy)
+	    {
+	     cDat.v = gDat.ubp + (gSz2 * idP);
+	    }
+	    else
+	    {
+	      if((cDat.v = AlcMalloc(gSz2)) == NULL)
+	      {
+		errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+		(void )memcpy(cDat.v, (void *)(gDat.ubp + (gSz2 * idP)), gSz2);
+	      }
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    (val.vox->values + idP)->r = WlzMakeRectValueTb(gTabType, 
+				org.vtX, org.vtX + sz.vtX - 1,
+				org.vtX, org.vtX + sz.vtX,
+				bgdV, cDat.inp,
+				&errNum);
+	    if(((val.vox->values + idP)->r != NULL) && (noCopy == 0))
+	    {
+	      (val.vox->values + idP)->r->freeptr = cDat.inp;
+	      cDat.v = NULL;
+	    }
+	  }
+	  ++idP;
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  obj = WlzMakeMain(oType, dom, val, NULL, NULL,
+			    &errNum);
+	}
+	/* Clean up for 3D on error. */
+	if(obj == NULL)
+	{
+	  if(noCopy == 0)
+	  {
+	    AlcFree(cDat.v);
+	  }
+	  (void )WlzFreeVoxelValueTb(val.vox);
+	  (void )WlzFreePlaneDomain(dom.p);
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+
+#ifdef WLZ_ARRAY_TEST_1
 main(int argc, char *argv[])
 {
   WlzObject	*inObj= NULL,
@@ -2896,4 +3151,191 @@ main(int argc, char *argv[])
   }
   return(0);
 }
-#endif /* WLZ_ARRAY_TEST */
+#endif /* WLZ_ARRAY_TEST_1 */
+
+#ifdef WLZ_ARRAY_TEST_2
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+
+extern char     *optarg;
+extern int      optind,
+                opterr,
+                optopt;
+
+int		main(int argc, char *argv[])
+{
+  int		idA,
+		aSz,
+  		option,
+		noCopy = 0,
+  		ok = 1,
+  		usage = 0;
+  double	nrm,
+  		val;
+  WlzObject	*obj = NULL;
+  WlzGreyP	arrayP;
+  WlzObjectType	oType = WLZ_2D_DOMAINOBJ;
+  WlzIVertex3	*vP;
+  WlzIVertex3	idV,
+  		dst,
+		org,
+  		sz;
+  char		*outObjFileStr;
+  FILE		*fP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  static char   optList[] = "23hno:f:s:",
+  		outObjFileStrDef[] = "-";
+
+  
+  arrayP.v = NULL;
+  org.vtX = org.vtY = org.vtZ = 0;
+  sz.vtX = sz.vtY = sz.vtZ = 64;
+  outObjFileStr = outObjFileStrDef;
+  while(ok && ((option = getopt(argc, argv, optList)) != -1))
+  {
+    switch(option)
+    {
+      case '2':
+        oType = WLZ_2D_DOMAINOBJ;
+	break;
+      case '3':
+        oType = WLZ_3D_DOMAINOBJ;
+	break;
+      case 'n':
+        noCopy = 1;
+	break;
+      case 'o':
+	outObjFileStr = optarg;
+	break;
+      case 'f':  /* FALLTHROUGH */
+      case 's':
+	vP = (option == 'f')? &org: &sz;
+	if(optarg)
+	{
+	  (void )sscanf(optarg, "%d,%d,%d",
+	                &(vP->vtX), &(vP->vtY), &(vP->vtZ));
+	}
+        break;
+      case 'h':  /* FALLTHROUGH */
+      default:
+        usage = 1;
+	break;
+    }
+  }
+  if(optind < argc)
+  {
+    usage = 1;
+  }
+  ok = usage == 0;
+  if(ok)
+  {
+    aSz = sz.vtX * sz.vtY;
+    if(oType == WLZ_3D_DOMAINOBJ)
+    {
+      aSz *= sz.vtZ;
+    }
+    arrayP.v = AlcMalloc(aSz * sizeof(WlzUByte));
+    if(arrayP.v == NULL)
+    {
+      ok = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+      (void )fprintf(stderr, "%s: failed to allocate test array\n", *argv);
+    }
+  }
+  if(ok)
+  {
+    /* Set the grey values so that they decay away from the centre of
+     * the object. */
+    if(oType == WLZ_3D_DOMAINOBJ)
+    {
+      idA = 0;
+      nrm = sz.vtX + sz.vtY + sz.vtZ;
+      nrm = 255 * 64 / (nrm * nrm);
+      for(idV.vtZ = 0; idV.vtZ < sz.vtZ; ++idV.vtZ)
+      {
+	dst.vtZ = idV.vtZ - (sz.vtZ / 2);
+	dst.vtZ *= dst.vtZ;
+	for(idV.vtY = 0; idV.vtY < sz.vtY; ++idV.vtY)
+	{
+	  dst.vtY = idV.vtY - (sz.vtY / 2);
+	  dst.vtY *= dst.vtY;
+	  for(idV.vtX = 0; idV.vtX < sz.vtX; ++idV.vtX)
+	  {
+	    dst.vtX = idV.vtX - (sz.vtX / 2);
+	    dst.vtX *= dst.vtX;
+	    val = (dst.vtZ + dst.vtY + dst.vtX) * nrm;
+	    val = WLZ_CLAMP(val, 0, 255);
+	    *(arrayP.ubp + idA++) = 255 - WLZ_NINT(val);
+	  }
+	}
+      }
+    }
+    else /* oType == WLZ_2D_DOMAINOBJ */
+    {
+      idA = 0;
+      nrm = sz.vtX + sz.vtY;
+      nrm = 255 * 16 / (nrm * nrm);
+      for(idV.vtY = 0; idV.vtY < sz.vtY; ++idV.vtY)
+      {
+	dst.vtY = idV.vtY - (sz.vtY / 2);
+	dst.vtY *= dst.vtY;
+	for(idV.vtX = 0; idV.vtX < sz.vtX; ++idV.vtX)
+	{
+	  dst.vtX = idV.vtX - (sz.vtX / 2);
+	  dst.vtX *= dst.vtX;
+	  val = (dst.vtY + dst.vtX) * nrm;
+	  val = WLZ_CLAMP(val, 0, 255);
+	  *(arrayP.ubp + idA++) = 255 - WLZ_NINT(val);
+	}
+      }
+    }
+    obj = WlzFromArray1D(oType, sz, org, WLZ_GREY_UBYTE, arrayP,
+                         noCopy, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )fprintf(stderr, "%s: Error failed to make Woolz object (%s)\n",
+		     *argv, WlzStringFromErrorNum(errNum, NULL));
+      ok = 0;
+    }
+  }
+  (void )WlzFreeObj(obj);
+  AlcFree(arrayP.v);
+  if(ok)
+  {
+    if(((fP = (strcmp(outObjFileStr, "-")?
+              fopen(outObjFileStr, "w"):
+              stdout)) == NULL) ||
+       ((errNum = WlzWriteObj(fP, obj)) != WLZ_ERR_NONE))
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+                     "%s: failed to test object\n",
+                     *argv);
+    }
+    if(fP && strcmp(outObjFileStr, "-"))
+    {
+      fclose(fP);
+    }
+  }
+  if(usage)
+  {
+    (void )fprintf(stderr,
+    "Usage: %s%s\n",
+    *argv,
+    " [-h] [-o<out object>]\n"
+    "        [-2] [-3] [-n] [-s<x>,<y>,<z>] [-f<x>,<y>,<z>]\n"
+    "Test for WlzFromArray1D() which writes out a grey valued 2D or 3D\n"
+    "object. The origin and size may be set using the command line flags\n"
+    "The grey values of the object are 255 at it's centre and decay to 0\n"
+    "at the boundary of the object.\n"
+    "Options:\n"
+    "  -h  Help, prints this usage message.\n"
+    "  -o  Output object file name.\n"
+    "  -2  2D object.\n"
+    "  -3  3D object.\n"
+    "  -n  Object shares data (no copy).\n"
+    "  -f  Object origin (offset).\n"
+    "  -s  Object size.\n");
+  }
+  return((ok)? 0: 1);
+}
+#endif /* WLZ_ARRAY_TEST_2 */

@@ -801,6 +801,14 @@ extern WlzErrorNum 		WlzToArray3D(
 				  WlzIVertex3 origin,
 				  int noiseFlg,
 				  WlzGreyType dstGreyType);
+extern WlzObject		*WlzFromArray1D(
+				  WlzObjectType oType,
+				  WlzIVertex3 sz,
+				  WlzIVertex3 org,
+				  WlzGreyType gType,
+				  WlzGreyP gDat,
+				  int noCopy,
+				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzFromArray2D(
 				  void **arrayP,
 				   WlzIVertex2 arraySize,
