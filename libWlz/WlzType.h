@@ -1121,6 +1121,7 @@ typedef union _WlzBox
 */
 typedef union _WlzGreyP
 {
+  void *v; 				/*!< Can save a cast when assigning. */
   long *lnp;
   int  *inp;
   short *shp;
