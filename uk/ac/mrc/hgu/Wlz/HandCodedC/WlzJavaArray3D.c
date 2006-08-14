@@ -84,7 +84,7 @@ jlong 		WlzJavaArray3DGet(JNIEnv *jEnv,
 						isCpy)) != NULL);
 		if(ok)
 		{
-		  (void )memcpy(*(*((UBYTE ***)aryW3D + idZ) + idY), bufJ,
+		  (void )memcpy(*(*((WlzUByte ***)aryW3D + idZ) + idY), bufJ,
 		  		wArraySz.vtX * sizeof(jbyte));
 		  if(*isCpy)
 		  {
@@ -506,7 +506,7 @@ jobject		WlzJavaArray3DWrap(JNIEnv *jEnv,
 	    {
 	      (*jEnv)->SetByteArrayRegion(jEnv, (jbyteArray )jArray1D,
 	      			0, aSz.vtX,
-				(jbyte *)*(*((UBYTE ***)aVal + idZ) + idY));
+				(jbyte *)*(*((WlzUByte ***)aVal + idZ) + idY));
 	      (*jEnv)->SetObjectArrayElement(jEnv, jArray2D, idY, jArray1D);
 	      if(++idY < aSz.vtY)
 	      {
