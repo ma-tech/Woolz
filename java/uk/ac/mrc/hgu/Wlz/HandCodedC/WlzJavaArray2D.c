@@ -72,7 +72,7 @@ jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
 						isCpy)) == NULL);
 	    if(ok)
 	    {
-	      (void )memcpy(*((UBYTE **)aryW2D + idY), bufJ,
+	      (void )memcpy(*((WlzUByte **)aryW2D + idY), bufJ,
 	      		    wArraySz.vtX * sizeof(jbyte));
 	      if(*isCpy)
 	      {
@@ -101,7 +101,7 @@ jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
 						isCpy)) != NULL);
 	    if(ok)
 	    {
-	      (void )memcpy(*((UBYTE **)aryW2D + idY), bufJ,
+	      (void )memcpy(*((WlzUByte **)aryW2D + idY), bufJ,
 	      		    wArraySz.vtX * sizeof(short));
 	      if(*isCpy)
 	      {
@@ -131,7 +131,7 @@ jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
 						isCpy)) != NULL);
 	    if(ok)
 	    {
-	      (void )memcpy(*((UBYTE **)aryW2D + idY), bufJ,
+	      (void )memcpy(*((WlzUByte **)aryW2D + idY), bufJ,
 	      		    wArraySz.vtX * sizeof(int));
 	      if(*isCpy)
 	      {
@@ -161,7 +161,7 @@ jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
 						 isCpy)) != NULL);
 	    if(ok)
 	    {
-	      (void )memcpy(*((UBYTE **)aryW2D + idY), bufJ,
+	      (void )memcpy(*((WlzUByte **)aryW2D + idY), bufJ,
 	      		    wArraySz.vtX * sizeof(float));
 	      if(*isCpy)
 	      {
@@ -191,7 +191,7 @@ jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
 						isCpy)) != NULL);
 	    if(ok)
 	    {
-	      (void )memcpy(*((UBYTE **)aryW2D + idY), bufJ,
+	      (void )memcpy(*((WlzUByte **)aryW2D + idY), bufJ,
 	      		    wArraySz.vtX * sizeof(double));
 	      if(*isCpy)
 	      {

@@ -2806,8 +2806,8 @@ public class WlzC2Java
     else
     {
       addType("FILE");
-      addType("UBYTE");
-      addType("UINT");
+      addType("WlzUByte");
+      addType("WlzUInt");
       addType("size_t");
       if(optIdx == args.length)
       {
