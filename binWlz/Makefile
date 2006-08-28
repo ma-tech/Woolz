@@ -133,6 +133,7 @@ EXECUTABLES		= \
 			WlzSampleObj \
 			WlzScalarDivide \
 			WlzScalarFeatures \
+			WlzScalarFnObj \
 			WlzSelect1InN \
 			WlzSetBackground \
 			WlzSetVoxelSize \
@@ -251,6 +252,7 @@ CSOURCES		= \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
 			WlzScalarFeatures.c \
+			WlzScalarFnObj.c \
 			WlzSelect1InN.c \
 			WlzSetBackground.c \
 			WlzSetVoxelSize.c \
