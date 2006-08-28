@@ -908,6 +908,10 @@ WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
       dstPoly = NULL;
     }
   }
+  if(newPoly == 0)
+  {
+    dstPoly = srcPoly;
+  }
   if(dstErr)
   {
     *dstErr = errNum;
