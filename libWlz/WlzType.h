@@ -2938,6 +2938,9 @@ typedef enum _WlzFnType
   WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
   WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
                                              values. */
+  WLZ_FN_SCALAR_MOD,			/*!< Modulus (abs() or fabs()). */
+  WLZ_FN_SCALAR_EXP,                    /*!< Exponential (exp()). */
+  WLZ_FN_SCALAR_LOG,                    /*!< Logarithm (log()). */
   WLZ_FN_COUNT				/*!< Not a function but the number
   					     of functions. Keep this the
 					     last of the enums! */

@@ -3676,6 +3676,13 @@ extern WlzErrorNum     		WlzScalarFeatures2D(
 				  double filterV,
 				  double minDist);
 
+/************************************************************************
+WlzScalarFn.c
+************************************************************************/
+extern WlzObject 		*WlzScalarFn(
+				  WlzObject *inObj,
+				  WlzFnType fn,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzSepTrans.c
