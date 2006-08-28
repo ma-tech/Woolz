@@ -179,6 +179,7 @@ CSOURCES		= \
 			WlzScalarArithmeticOp.c \
 			WlzScalarBinaryOp.c \
 			WlzScalarFeatures.c \
+			WlzScalarFn.c \
 			WlzSepTrans.c \
 			WlzSeqPar.c \
 			WlzShadeCorrect.c \
