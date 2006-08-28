@@ -1066,10 +1066,12 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
   		tD1,
 		tD2,
 		tD3,
+		tD4,
 		trXX,
 		trXYC,
 		trYX,
 		trYYC;
+  WlzUInt	tU0;
   double	gTmp[4];
   WlzIVertex2	dPosI,
   		sPosI;
@@ -1253,11 +1255,43 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		  *(dGP.dbp)++ = tD0;
 		  break;
 		case WLZ_GREY_RGBA:
-		  tD0 = ((gVWSp->gVal[0]).rgbv * tD2 * tD3) +
-			((gVWSp->gVal[1]).rgbv * tD0 * tD3) +
-			((gVWSp->gVal[2]).rgbv * tD2 * tD1) +
-			((gVWSp->gVal[3]).rgbv * tD0 * tD1);
-		  *(dGP.dbp)++ = tD0;
+		  tD4 = (WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
+		         tD2 * tD3) +
+			 (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
+			  tD0 * tD3) +
+			 (WLZ_RGBA_RED_GET((gVWSp->gVal[2]).rgbv) *
+			  tD2 * tD1) +
+			 (WLZ_RGBA_RED_GET((gVWSp->gVal[3]).rgbv) *
+			  tD0 * tD1);
+		  WLZ_RGBA_RED_SET(tU0, (WlzUByte )WLZ_CLAMP(tD4, 0, 255));
+		  tD4 = (WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
+		         tD2 * tD3) +
+			 (WLZ_RGBA_GREEN_GET((gVWSp->gVal[1]).rgbv) *
+			  tD0 * tD3) +
+			 (WLZ_RGBA_GREEN_GET((gVWSp->gVal[2]).rgbv) *
+			  tD2 * tD1) +
+			 (WLZ_RGBA_GREEN_GET((gVWSp->gVal[3]).rgbv) *
+			  tD0 * tD1);
+		  WLZ_RGBA_GREEN_SET(tU0, (WlzUByte )WLZ_CLAMP(tD4, 0, 255));
+		  tD4 = (WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
+		         tD2 * tD3) +
+			 (WLZ_RGBA_BLUE_GET((gVWSp->gVal[1]).rgbv) *
+			  tD0 * tD3) +
+			 (WLZ_RGBA_BLUE_GET((gVWSp->gVal[2]).rgbv) *
+			  tD2 * tD1) +
+			 (WLZ_RGBA_BLUE_GET((gVWSp->gVal[3]).rgbv) *
+			  tD0 * tD1);
+		  WLZ_RGBA_BLUE_SET(tU0, (WlzUByte )WLZ_CLAMP(tD4, 0, 255));
+		  tD4 = (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
+		         tD2 * tD3) +
+			 (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[1]).rgbv) *
+			  tD0 * tD3) +
+			 (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[2]).rgbv) *
+			  tD2 * tD1) +
+			 (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[3]).rgbv) *
+			  tD0 * tD1);
+		  WLZ_RGBA_ALPHA_SET(tU0, (WlzUByte )WLZ_CLAMP(tD4, 0, 255));
+		  *(dGP.rgbp)++ = tU0;
 		  break;
 		default:
 		  errNum = WLZ_ERR_GREY_TYPE;
