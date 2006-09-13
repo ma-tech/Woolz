@@ -2967,8 +2967,8 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  val.r = WlzMakeRectValueTb(gTabType, 
-				     org.vtX, org.vtX + sz.vtX - 1,
-				     org.vtX, org.vtX + sz.vtX,
+				     org.vtY, org.vtY + sz.vtY - 1,
+				     org.vtX, sz.vtX,
 				     bgdV, cDat.v,
 				     &errNum);
 	  if((val.r != NULL) && (noCopy == 0))
@@ -3041,7 +3041,7 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	  {
 	    (val.vox->values + idP)->r = WlzMakeRectValueTb(gTabType, 
 				org.vtX, org.vtX + sz.vtX - 1,
-				org.vtX, org.vtX + sz.vtX,
+				org.vtX, sz.vtX,
 				bgdV, cDat.inp,
 				&errNum);
 	    if(((val.vox->values + idP)->r != NULL) && (noCopy == 0))
@@ -3078,6 +3078,128 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
     *dstErr = errNum;
   }
   return(obj);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Sets values in the given buffer to those of the given
+*		object. The given buffer must be large enough to hold
+*		the given bounding box of image values.
+*		Only values within the domain of the object are set.
+* \param	gP			Grey pointer to allocated buffer.
+* \param	gType			Grey type of the buffer.
+* \param	gBufBox			Buffer bounding box. The z component
+*					is ignored if the object is a 2D
+*					object.
+* \param	gOffset			Offset into the buffer.
+* \param	obj			Given object.
+*/
+WlzErrorNum	WlzToArray1D(WlzGreyP gP, WlzGreyType gType,
+			     WlzIBox3 gBufBox, int gOffset, WlzObject *obj)
+{
+  int		fst,
+  		lst,
+		idx,
+		skp,
+		offset,
+		bufStp;
+  WlzObject	*obj2D;
+  WlzGreyWSpace	gWSp;
+  WlzIntervalWSpace iWSp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gP.v == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(obj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        bufStp = gBufBox.xMax - gBufBox.xMin + 1;
+	if((errNum = WlzInitGreyScan(obj, &iWSp, &gWSp)) == WLZ_ERR_NONE)
+	{
+	  while((errNum == WLZ_ERR_NONE) &&
+	        (WlzNextGreyInterval(&iWSp) == 0))
+	  {
+	    if((iWSp.linpos >= gBufBox.yMin) &&
+	       (iWSp.linpos <= gBufBox.yMax) &&
+	       (iWSp.lftpos <= gBufBox.xMax) &&
+	       (iWSp.rgtpos >= gBufBox.xMin))
+	    {
+	      fst = (iWSp.lftpos < gBufBox.xMin)? gBufBox.xMin: iWSp.lftpos;
+	      lst = (iWSp.rgtpos > gBufBox.xMax)? gBufBox.xMax: iWSp.rgtpos;
+	      offset = gOffset +
+	               ((iWSp.linpos - gBufBox.yMin) * bufStp) +
+		       fst - gBufBox.xMin;
+	      WlzValueCopyGreyToGrey(gP, offset, gType,
+				     gWSp.u_grintptr, fst - iWSp.lftpos,
+				     gWSp.pixeltype, lst - fst + 1);
+	    }
+	  }
+	  if(errNum == WLZ_ERR_EOO)
+	  {
+	    errNum = WLZ_ERR_NONE;
+	  }
+	}
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	if((obj->domain.p->plane1 <= gBufBox.zMax) &&
+	   (obj->domain.p->lastpl >= gBufBox.zMin))
+	{
+	  bufStp = (gBufBox.xMax - gBufBox.xMin + 1) *
+	           (gBufBox.yMax - gBufBox.yMin + 1);
+	  if(obj->domain.p->plane1 < gBufBox.zMin)
+	  {
+	    fst = gBufBox.zMin - obj->domain.p->plane1;
+	    skp = -fst;
+	  }
+	  else
+	  {
+	    fst = 0;
+	    skp = obj->domain.p->plane1 - gBufBox.zMin;
+	  }
+	  lst = (obj->domain.p->lastpl > gBufBox.zMax)?
+	        gBufBox.zMax - obj->domain.p->plane1:
+		obj->domain.p->lastpl - obj->domain.p->plane1;
+	  idx = fst;
+	  while((errNum == WLZ_ERR_NONE) && (idx <= lst))
+	  {
+	    if((*(obj->domain.p->domains + idx)).core &&
+	       (*(obj->values.vox->values + idx)).core)
+	    {
+	      obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+	                          *(obj->domain.p->domains + idx),
+				  *(obj->values.vox->values + idx),
+				  NULL, NULL, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		offset = (skp + idx) * bufStp;
+		errNum = WlzToArray1D(gP, gType, gBufBox,
+		                      gOffset + offset, obj2D);
+	      }
+	      (void )WlzFreeObj(obj2D);
+	    }
+	    ++idx;
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  return(errNum);
 }
 
 #ifdef WLZ_ARRAY_TEST_1

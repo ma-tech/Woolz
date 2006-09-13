@@ -787,6 +787,12 @@ extern WlzObject		*WlzFromDArray3D(
 				  WlzIVertex3 arrayOrigin,
 				  WlzErrorNum *dstErrNum);
 #ifndef WLZ_EXT_BIND
+extern WlzErrorNum		WlzToArray1D(
+				  WlzGreyP gP,
+				  WlzGreyType gType,
+				  WlzIBox3 gBufBox,
+				  int gOffset,
+				  WlzObject *obj);
 extern WlzErrorNum 		WlzToArray2D(
 				  void ***dstP,
 				  WlzObject *srcObj,
