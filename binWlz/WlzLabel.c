@@ -127,7 +127,7 @@ static void usage(char *proc_str)
   return;
 }
  
-#define MAXOBJS 2000    /* Was 10000 */
+#define MAXOBJS 10000    /* Was 2000 */
 
 int main(int	argc,
 	 char	**argv)
