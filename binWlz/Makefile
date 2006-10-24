@@ -131,6 +131,7 @@ EXECUTABLES		= \
 			WlzRMSDiff \
 			WlzRsvFilterObj \
 			WlzSampleObj \
+			WlzScalarBinaryOp \
 			WlzScalarDivide \
 			WlzScalarFeatures \
 			WlzScalarFnObj \
@@ -251,6 +252,7 @@ CSOURCES		= \
 			WlzRMSDiff.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
+			WlzScalarBinaryOp.c \
 			WlzScalarFeatures.c \
 			WlzScalarFnObj.c \
 			WlzSelect1InN.c \

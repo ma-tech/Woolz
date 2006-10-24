@@ -29,6 +29,8 @@ EXECUTABLES		= \
 			Wlz3DViewTransformBitmap \
 			WlzBibToMeshTrans \
 			WlzBibTransAbsRel \
+			WlzClassMap \
+			WlzCreateRandomDomain \
 			WlzDomainMatch \
 			WlzDomainMatchMatrix \
 			WlzEuclidDistanceMap \
@@ -61,6 +63,8 @@ CSOURCES		= \
 			Wlz3DViewTransformObj.c \
 			Wlz3DViewTransformBitmap.c \
 			WlzBibToMeshTrans.c \
+			WlzClassMap.c \
+			WlzCreateRandomDomain.c \
 			WlzDomainMatch.c \
 			WlzDomainMatchMatrix.c \
 			WlzBibTransAbsRel.c \

@@ -91,7 +91,7 @@ WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-m] [-s] [-n] [-N] [-h]
   </tr>
   <tr>
     <td><b>-n</b></td>
-    <td>Normalises the output object to the range of the imput objects.</td>
+    <td>Normalises the output object to the range of the input objects.</td>
   </tr>
   <tr>
     <td><b>-N</b></td>
@@ -109,7 +109,7 @@ The input objects are read from stdin and values are written to stdout
 unless the filenames are given.
 \par Examples
 \verbatim
-cat obj1.wlz | WlzImageArithmetic -o obj3.wlz -a - obj2.wlz
+cat obj1.wlz | WlzImageArithmetic -o obj3.wlz -a  obj2.wlz
 \endverbatim
 A new object obj3.wlz is formed by adding the grey values of obj1 and
 obj2.wlz.
@@ -517,7 +517,7 @@ int             main(int argc, char **argv)
 	    WLZ_BO_MAGNITUDE,
 	    "cat obj1.wlz | ",
 	    *argv,
-	    " -o obj3.wlz -a - obj2.wlz\n"
+	    " -o obj3.wlz -a obj2.wlz\n"
 	    "A new object 'obj3.wlz is formed by adding the grey values of obj1 and\n"
 	    "obj2.wlz.\n");
   }

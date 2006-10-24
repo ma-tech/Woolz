@@ -203,6 +203,7 @@ WlzErrorNum	WlzGreyScalarAddValue(
   WlzDomain		*domains;
   WlzValues		*values;
   int			i, nplanes;
+  int			red, green, blue, alpha;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check object */
@@ -270,7 +271,7 @@ WlzErrorNum	WlzGreyScalarAddValue(
 
   if( errNum == WLZ_ERR_NONE ){
     errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
-    WlzValueConvertPixel(&tmpVal, val, gwsp.pixeltype);
+    WlzValueConvertPixel(&tmpVal, val, WLZ_GREY_DOUBLE);
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 
       gptr = gwsp.u_grintptr;
@@ -278,22 +279,22 @@ WlzErrorNum	WlzGreyScalarAddValue(
 
       case WLZ_GREY_INT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
-	  *gptr.inp += tmpVal.v.inv;
+	  *gptr.inp += tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_SHORT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
-	  *gptr.shp += tmpVal.v.shv;
+	  *gptr.shp += tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_UBYTE:
 	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
-	  *gptr.ubp += tmpVal.v.ubv;
+	  *gptr.ubp += tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_FLOAT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
-	  *gptr.flp += tmpVal.v.flv;
+	  *gptr.flp += tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_DOUBLE:
@@ -303,7 +304,14 @@ WlzErrorNum	WlzGreyScalarAddValue(
 
       case WLZ_GREY_RGBA:
 	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
-	  *gptr.rgbp += tmpVal.v.rgbv;
+	  red = WLZ_RGBA_RED_GET(*gptr.rgbp) + tmpVal.v.dbv;
+	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp) + tmpVal.v.dbv;
+	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp) + tmpVal.v.dbv;
+	  alpha = WLZ_RGBA_ALPHA_GET(*gptr.rgbp);
+	  red = WLZ_CLAMP(red, 0, 255);
+	  green = WLZ_CLAMP(red, 0, 255);
+	  blue = WLZ_CLAMP(red, 0, 255);
+	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
 	break;
 
       default:
@@ -331,6 +339,7 @@ WlzErrorNum	WlzGreyScalarMultValue(
   WlzDomain		*domains;
   WlzValues		*values;
   int			i, nplanes;
+  int			red, green, blue, alpha;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check object */
@@ -398,7 +407,7 @@ WlzErrorNum	WlzGreyScalarMultValue(
 
   if( errNum == WLZ_ERR_NONE ){
     errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
-    WlzValueConvertPixel(&tmpVal, val, gwsp.pixeltype);
+    WlzValueConvertPixel(&tmpVal, val, WLZ_GREY_DOUBLE);
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 
       gptr = gwsp.u_grintptr;
@@ -406,22 +415,22 @@ WlzErrorNum	WlzGreyScalarMultValue(
 
       case WLZ_GREY_INT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
-	  *gptr.inp *= tmpVal.v.inv;
+	  *gptr.inp *= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_SHORT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
-	  *gptr.shp *= tmpVal.v.shv;
+	  *gptr.shp *= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_UBYTE:
 	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
-	  *gptr.ubp *= tmpVal.v.ubv;
+	  *gptr.ubp *= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_FLOAT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
-	  *gptr.flp *= tmpVal.v.flv;
+	  *gptr.flp *= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_DOUBLE:
@@ -431,7 +440,14 @@ WlzErrorNum	WlzGreyScalarMultValue(
 
       case WLZ_GREY_RGBA:
 	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
-	  *gptr.rgbp *= tmpVal.v.rgbv;
+	  red = WLZ_RGBA_RED_GET(*gptr.rgbp) * tmpVal.v.dbv;
+	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp) * tmpVal.v.dbv;
+	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp) * tmpVal.v.dbv;
+	  alpha = WLZ_RGBA_ALPHA_GET(*gptr.rgbp);
+	  red = WLZ_CLAMP(red, 0, 255);
+	  green = WLZ_CLAMP(red, 0, 255);
+	  blue = WLZ_CLAMP(red, 0, 255);
+	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
 	break;
 
       default:
@@ -459,6 +475,7 @@ WlzErrorNum	WlzGreyScalarDivValue(
   WlzDomain		*domains;
   WlzValues		*values;
   int			i, nplanes;
+  int			red, green, blue, alpha;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check object */
@@ -526,7 +543,7 @@ WlzErrorNum	WlzGreyScalarDivValue(
 
   if( errNum == WLZ_ERR_NONE ){
     errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
-    WlzValueConvertPixel(&tmpVal, val, gwsp.pixeltype);
+    WlzValueConvertPixel(&tmpVal, val, WLZ_GREY_DOUBLE);
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 
       gptr = gwsp.u_grintptr;
@@ -534,22 +551,22 @@ WlzErrorNum	WlzGreyScalarDivValue(
 
       case WLZ_GREY_INT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
-	  *gptr.inp /= tmpVal.v.inv;
+	  *gptr.inp /= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_SHORT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
-	  *gptr.shp /= tmpVal.v.shv;
+	  *gptr.shp /= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_UBYTE:
 	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
-	  *gptr.ubp /= tmpVal.v.ubv;
+	  *gptr.ubp /= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_FLOAT:
 	for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
-	  *gptr.flp /= tmpVal.v.flv;
+	  *gptr.flp /= tmpVal.v.dbv;
 	break;
 
       case WLZ_GREY_DOUBLE:
@@ -559,7 +576,14 @@ WlzErrorNum	WlzGreyScalarDivValue(
 
       case WLZ_GREY_RGBA:
 	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
-	  *gptr.rgbp /= tmpVal.v.rgbv;
+	  red = WLZ_RGBA_RED_GET(*gptr.rgbp) / tmpVal.v.dbv;
+	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp) / tmpVal.v.dbv;
+	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp) / tmpVal.v.dbv;
+	  alpha = WLZ_RGBA_ALPHA_GET(*gptr.rgbp);
+	  red = WLZ_CLAMP(red, 0, 255);
+	  green = WLZ_CLAMP(red, 0, 255);
+	  blue = WLZ_CLAMP(red, 0, 255);
+	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
 	break;
 
       default:
