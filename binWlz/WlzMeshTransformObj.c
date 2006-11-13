@@ -57,12 +57,8 @@ WlzMeshTransformObj -m <mesh transform file> [-o <output file>] [-h] [-v]
 \par Options
 <table width="500" border="0">
   <tr> 
-    <td><b>-h</b></td>
-    <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
+    <td><b>-i</b></td>
+    <td>Use the inverse transformation.</td>
   </tr>
   <tr> 
     <td><b>-L</b></td>
@@ -75,6 +71,14 @@ WlzMeshTransformObj -m <mesh transform file> [-o <output file>] [-h] [-v]
   <tr> 
     <td><b>-o</b></td>
     <td>Output filename, default is stdout.</td>
+  </tr>
+  <tr> 
+    <td><b>-h</b></td>
+    <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -107,6 +111,35 @@ extern int 	optind, opterr, optopt;
 extern char     *optarg;
 #endif /* __STDC__ ] */
 
+WlzErrorNum WlzSetMeshInverse(
+  WlzMeshTransform	*meshTr)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		i;
+
+  /* check the mesh transform */
+  if( meshTr ){
+    if( meshTr->nodes == NULL ){
+      errNum = WLZ_ERR_PARAM_NULL;
+    }
+  }
+  else {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+
+  /* loop through nodes,add the displacement then invert displacement */
+  if( errNum == WLZ_ERR_NONE ){
+    for(i=0; i < meshTr->nNodes; i++){
+      meshTr->nodes[i].position.vtX += meshTr->nodes[i].displacement.vtX;
+      meshTr->nodes[i].position.vtY += meshTr->nodes[i].displacement.vtY;
+      meshTr->nodes[i].displacement.vtX *= -1.0;
+      meshTr->nodes[i].displacement.vtY *= -1.0;
+    }
+  }
+
+  return errNum;
+}
+
 static void usage(char *proc_str)
 {
   fprintf(stderr,
@@ -116,6 +149,7 @@ static void usage(char *proc_str)
 	  "\tApply a mesh transform to given input objects\n"
 	  "\twriting the warped objects to standard output.\n"
 	  "\tOptions are:\n"
+	  "\t  -i                 Inverse transform\n"
 	  "\t  -L                 Use linear interpolation instead of nearest-neighbour\n"
 	  "\t  -m<meshfile>       Mesh transform object\n"
 	  "\t  -o<output file>    Output filename, default to stdout\n"
@@ -129,11 +163,12 @@ static void usage(char *proc_str)
 int main(int	argc,
 	 char	**argv)
 {
-  WlzObject	*inObj, *meshObj, *outObj;
+  WlzObject	*inObj, *meshObj, *outObj, *tmpObj;
   FILE		*inFP, *outFP, *meshFP;
   char		*outFile, *meshFile;
-  char 		optList[] = "Lm:o:hv";
+  char 		optList[] = "iLm:o:hv";
   int		option;
+  int		inverseFlg = 0;
   int		verboseFlg = 0;
   const char    *errMsg;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
@@ -147,6 +182,10 @@ int main(int	argc,
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'i':
+      inverseFlg = 1;
+      break;
 
     case 'L':
       interp = WLZ_INTERPOLATION_LINEAR;
@@ -223,6 +262,11 @@ int main(int	argc,
 	    argv[0]);
     usage(argv[0]);
     return 1;
+  }
+
+  /* check for inverse transform */
+  if( (errNum == WLZ_ERR_NONE) && inverseFlg ){
+    WlzSetMeshInverse(meshObj->domain.mt);
   }
 
   /* transform any suitable input objects */
