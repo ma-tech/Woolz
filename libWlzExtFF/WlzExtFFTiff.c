@@ -627,14 +627,26 @@ static WlzErrorNum WlzEffWriteTiffDirObj(
 	  switch( gType ){
 	  case WLZ_GREY_INT:
 	    for(i=0, j=0; i < width; i++){
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
 	      buf[j++] = ((gwsp.u_grintptr.inp[i]) & 0xff00) >> 8;
 	      buf[j++] = (gwsp.u_grintptr.inp[i]) & 0xff;
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	      buf[j++] = (gwsp.u_grintptr.inp[i]) & 0xff;
+	      buf[j++] = ((gwsp.u_grintptr.inp[i]) & 0xff00) >> 8;
+#endif /* __x86 || __alpha */
 	    }
 	    break;
 	  case WLZ_GREY_SHORT:
 	    for(i=0, j=0; i < width; i++){
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
 	      buf[j++] = ((gwsp.u_grintptr.shp[i]) & 0xff00) >> 8;
 	      buf[j++] = (gwsp.u_grintptr.shp[i]) & 0xff;
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	      buf[j++] = (gwsp.u_grintptr.shp[i]) & 0xff;
+	      buf[j++] = ((gwsp.u_grintptr.shp[i]) & 0xff00) >> 8;
+#endif /* __x86 || __alpha */
 	    }
 	    break;
 	  case WLZ_GREY_UBYTE:

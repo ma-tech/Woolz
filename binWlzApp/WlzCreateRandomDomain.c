@@ -274,7 +274,7 @@ int main(
 
   /* now generate random domains */
   domainCount= 0;
-  srandomdev();
+/*  srandomdev();*/
   while( domainCount < numDomains ){
     long	xRan, yRan, zRan;
     double	xp, yp, zp;
