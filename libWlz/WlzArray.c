@@ -3040,7 +3040,7 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    (val.vox->values + idP)->r = WlzMakeRectValueTb(gTabType, 
-				org.vtX, org.vtX + sz.vtX - 1,
+				org.vtY, org.vtY + sz.vtY - 1,
 				org.vtX, sz.vtX,
 				bgdV, cDat.inp,
 				&errNum);
