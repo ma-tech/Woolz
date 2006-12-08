@@ -108,6 +108,9 @@ static void usage(
 	  "\tdomains within the model. <num domains> domains are created\n"
 	  "\taccording to type and written to stdout.\n"
 	  "Arguments:\n"
+	  "\t-m         generate a regular mesh of square domains with size\n"
+	  "\t           defined by the radius and type, enough domains will\n"
+	  "\t           be generated to cover the model.\n"
 	  "\t-n#        number of domains to be generate (default 100)\n"
 	  "\t-r#        radius parameter for random domains (default 100)\n"
 	  "\t-t#        type of random domain default 1\n"
@@ -165,10 +168,11 @@ int main(
   char  **argv)
 {
   FILE		*inFile;
-  char 		optList[] = "n:r:t:hv";
+  char 		optList[] = "mn:r:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   char		*errMsg;
+  int		meshFlg=0;
   int		verboseFlg=0;
   int		type=1;
   int		numDomains=100, domainCount;
@@ -182,6 +186,10 @@ int main(
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'm':
+      meshFlg = 1;
+      break;
 
     case 'n':
       numDomains = atoi(optarg);
@@ -238,24 +246,42 @@ int main(
   /* generate the base domain */
   switch( obj->type ){
   case WLZ_2D_DOMAINOBJ:
-    baseDomain = WlzMakeCircleObject(radius, 0.0, 0.0, &errNum);
+    if( meshFlg ){
+      baseDomain = WlzMakeRectangleObject(radius, radius, 0.0, 0.0, &errNum);
+    }
+    else {
+      baseDomain = WlzMakeCircleObject(radius, 0.0, 0.0, &errNum);
+    }
     break;
 
   case WLZ_3D_DOMAINOBJ:
     switch( type ){
     case 1:
-      obj1 = WlzMakeCircleObject(radius, 0.0, 0.0, &errNum);
-      domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-				    0, 0, 0, 0, 0, 0, &errNum);
-      domain.p->domains[0] = WlzAssignDomain(obj1->domain, &errNum);
-      values.core = NULL;
-      baseDomain = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,	
-			       NULL, NULL, &errNum);
-      WlzFreeObj(obj1);
+      if( meshFlg ){
+	baseDomain = WlzMakeCuboidObject(WLZ_3D_DOMAINOBJ, radius, radius, 0.0,
+					 0.0, 0.0, 0.0, &errNum);
+      }
+      else {
+	obj1 = WlzMakeCircleObject(radius, 0.0, 0.0, &errNum);
+	domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+				      0, 0, 0, 0, 0, 0, &errNum);
+	domain.p->domains[0] = WlzAssignDomain(obj1->domain, &errNum);
+	values.core = NULL;
+	baseDomain = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,	
+				 NULL, NULL, &errNum);
+	WlzFreeObj(obj1);
+      }
       break;
 
     case 2:
-      baseDomain = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, radius, 0.0, 0.0, 0.0, &errNum);
+      if( meshFlg ){
+	baseDomain = WlzMakeCuboidObject(WLZ_3D_DOMAINOBJ, radius, radius, radius,
+					 0.0, 0.0, 0.0, &errNum);
+      }
+      else {
+	baseDomain = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, radius,
+					 0.0, 0.0, 0.0, &errNum);
+      }
       break;
 
     default:
@@ -273,41 +299,110 @@ int main(
   minSize = WlzSize(baseDomain, &errNum) / 4;
 
   /* now generate random domains */
-  domainCount= 0;
-/*  srandomdev();*/
-  while( domainCount < numDomains ){
-    long	xRan, yRan, zRan;
-    double	xp, yp, zp;
-    int		x, y, z;
-    xRan = random();
-    yRan = random();
-    zRan = random();
-    xp = ((double) (xRan&0xffffff))/0xffffff;
-    yp = ((double) (yRan&0xffffff))/0xffffff;
-    zp = ((double) (zRan&0xffffff))/0xffffff;
+  if( meshFlg ){
+    int	xNum, yNum, zNum;
+    int xWidth, yWidth, zWidth;
+    int i, j, k;
+    int	x, y, z;
 
+    domainCount = 0;
     switch( obj->type ){
+
     case WLZ_2D_DOMAINOBJ:
-      x = obj->domain.i->kol1 + xp*(obj->domain.i->lastkl - obj->domain.i->kol1);
-      y = obj->domain.i->line1 + yp*(obj->domain.i->lastln - obj->domain.i->line1);
-      z = 0;
+      xWidth = baseDomain->domain.i->lastkl - baseDomain->domain.i->kol1 + 1;
+      yWidth = baseDomain->domain.i->lastln - baseDomain->domain.i->line1 + 1;
+      xNum = obj->domain.i->lastkl - obj->domain.i->kol1 + 1;
+      xNum = (xNum % xWidth) ? xNum/xWidth + 1 : xNum/xWidth;
+      yNum = obj->domain.i->lastln - obj->domain.i->line1 + 1;
+      yNum = (yNum % yWidth) ? yNum/yWidth + 1 : yNum/yWidth;
+      for(j=0; j < yNum; j++){
+	y = obj->domain.i->line1 + j * yWidth + yWidth/2;
+	for(i=0; i < xNum; i++){
+	  x = obj->domain.i->kol1 + i * xWidth + xWidth/2;
+	  if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
+	    if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
+	      if( WlzSize(obj2, &errNum) > minSize ){
+		WlzWriteObj(stdout, obj2);
+		WlzFreeObj(obj2);
+		domainCount++;
+	      }
+	    }
+	    WlzFreeObj(obj1);
+	  }
+	}
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
-      x = obj->domain.p->kol1 + xp*(obj->domain.p->lastkl - obj->domain.p->kol1);
-      y = obj->domain.p->line1 + yp*(obj->domain.p->lastln - obj->domain.p->line1);
-      z = obj->domain.p->plane1 + zp*(obj->domain.p->lastpl - obj->domain.p->plane1);
-      break;
-    }
-    if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
-      if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
-	if( WlzSize(obj2, &errNum) > minSize ){
-	  WlzWriteObj(stdout, obj2);
-	  WlzFreeObj(obj2);
-	  domainCount++;
+      xWidth = baseDomain->domain.p->lastkl - baseDomain->domain.p->kol1 + 1;
+      yWidth = baseDomain->domain.p->lastln - baseDomain->domain.p->line1 + 1;
+      zWidth = baseDomain->domain.p->lastpl - baseDomain->domain.p->plane1 + 1;
+      xNum = obj->domain.p->lastkl - obj->domain.p->kol1 + 1;
+      xNum = (xNum % xWidth) ? xNum/xWidth + 1 : xNum/xWidth;
+      yNum = obj->domain.p->lastln - obj->domain.p->line1 + 1;
+      yNum = (yNum % yWidth) ? yNum/yWidth + 1 : yNum/yWidth;
+      zNum = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
+      zNum = (zNum % zWidth) ? zNum/zWidth + 1 : zNum/zWidth;
+      for(k=0; k < zNum; k++){
+	z = obj->domain.p->plane1 + k * yWidth + zWidth/2;
+	for(j=0; j < yNum; j++){
+	  y = obj->domain.p->line1 + j * yWidth + yWidth/2;
+	  for(i=0; i < xNum; i++){
+	    x = obj->domain.p->kol1 + i * xWidth + xWidth/2;
+	    if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
+	      if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
+		if( WlzSize(obj2, &errNum) > minSize ){
+		  WlzWriteObj(stdout, obj2);
+		  WlzFreeObj(obj2);
+		  domainCount++;
+		}
+	      }
+	      WlzFreeObj(obj1);
+	    }
+	  }
 	}
       }
-      WlzFreeObj(obj1);
+      break;
+
+    }
+  }
+  else {
+    domainCount= 0;
+/*  srandomdev();*/
+    while( domainCount < numDomains ){
+      long	xRan, yRan, zRan;
+      double	xp, yp, zp;
+      int		x, y, z;
+      xRan = random();
+      yRan = random();
+      zRan = random();
+      xp = ((double) (xRan&0xffffff))/0xffffff;
+      yp = ((double) (yRan&0xffffff))/0xffffff;
+      zp = ((double) (zRan&0xffffff))/0xffffff;
+
+      switch( obj->type ){
+      case WLZ_2D_DOMAINOBJ:
+	x = obj->domain.i->kol1 + xp*(obj->domain.i->lastkl - obj->domain.i->kol1);
+	y = obj->domain.i->line1 + yp*(obj->domain.i->lastln - obj->domain.i->line1);
+	z = 0;
+	break;
+
+      case WLZ_3D_DOMAINOBJ:
+	x = obj->domain.p->kol1 + xp*(obj->domain.p->lastkl - obj->domain.p->kol1);
+	y = obj->domain.p->line1 + yp*(obj->domain.p->lastln - obj->domain.p->line1);
+	z = obj->domain.p->plane1 + zp*(obj->domain.p->lastpl - obj->domain.p->plane1);
+	break;
+      }
+      if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
+	if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
+	  if( WlzSize(obj2, &errNum) > minSize ){
+	    WlzWriteObj(stdout, obj2);
+	    WlzFreeObj(obj2);
+	    domainCount++;
+	  }
+	}
+	WlzFreeObj(obj1);
+      }
     }
   }
 
