@@ -33,6 +33,7 @@ EXECUTABLES		= \
 			WlzCreateRandomDomain \
 			WlzDomainMatch \
 			WlzDomainMatchMatrix \
+			WlzEMAPDomainTransform \
 			WlzEuclidDistanceMap \
 			WlzExtractTransform \
 			WlzInterpolateSectionViewerBibFiles \
@@ -68,6 +69,7 @@ CSOURCES		= \
 			WlzDomainMatch.c \
 			WlzDomainMatchMatrix.c \
 			WlzBibTransAbsRel.c \
+			WlzEMAPDomainTransform.c \
 			WlzEuclidDistanceMap.c \
 			WlzExtractTransform.c \
 			WlzInterpolateSectionViewerBibFiles.c \

@@ -197,7 +197,7 @@ int main(int	argc,
   /* check input file/stream */
   inFP = stdin;
   if( optind < argc ){
-    if( (inFP = fopen(*(argv+optind), "r")) == NULL ){
+    if( (inFP = fopen(*(argv+optind), "rb")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
