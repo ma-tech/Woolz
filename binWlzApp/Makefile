@@ -70,6 +70,7 @@ CSOURCES		= \
 			WlzDomainMatchMatrix.c \
 			WlzBibTransAbsRel.c \
 			WlzEMAPDomainTransform.c \
+			WlzEMAPTransformUtils.c \
 			WlzEuclidDistanceMap.c \
 			WlzExtractTransform.c \
 			WlzInterpolateSectionViewerBibFiles.c \
@@ -246,6 +247,7 @@ $(ARCHIVE):		$(OBJECTS)
 			$(AR) r $(ARCHIVE) $?
 
 # Targets to create executables, just a dependencies (modify as required).
+WlzEMAPDomainTransform:	WlzEMAPDomainTransform.o WlzEMAPTransformUtils.o
 
 # Target for Purified executables (modify as required).
 purify:
