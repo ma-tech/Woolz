@@ -214,7 +214,7 @@ int main(int	argc,
   /* check input file/stream */
   inFP = stdin;
   if( optind < argc ){
-    if( (inFP = fopen(*(argv+optind), "r")) == NULL ){
+    if( (inFP = fopen(*(argv+optind), "rb")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
@@ -224,7 +224,7 @@ int main(int	argc,
   /* check output file/stream */
   if(strcmp(outFile, "-"))
   {
-    if((outFP = fopen(outFile, "w")) == NULL)
+    if((outFP = fopen(outFile, "wb")) == NULL)
     {
       errNum = WLZ_ERR_WRITE_EOF;
     }
@@ -236,7 +236,7 @@ int main(int	argc,
 
   /* check meshfile */
   if((errNum == WLZ_ERR_NONE) && (meshFile != NULL)){
-    if( meshFP = fopen(meshFile, "r") ){
+    if( meshFP = fopen(meshFile, "rb") ){
       if( meshObj = WlzReadObj(meshFP, &errNum) ){
 	if( meshObj->type != WLZ_MESH_TRANS ){
 	  fprintf(stderr,

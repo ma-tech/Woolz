@@ -3285,7 +3285,7 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
   /* read  nodal position and displacement */
   if( errNum == WLZ_ERR_NONE )
   {
-    if( (obj->nodes = (WlzMeshNode *)AlcMalloc(  obj->nNodes * sizeof(WlzMeshNode))) == NULL )
+    if( (obj->nodes = (WlzMeshNode *)AlcCalloc(  obj->nNodes, sizeof(WlzMeshNode))) == NULL )
     {
       AlcFree( (void *) obj->nodes );
       AlcFree( (void *) obj );
@@ -3307,7 +3307,7 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
 
     /* read elements */
     if( errNum == WLZ_ERR_NONE ){
-      if( (obj->elements = (WlzMeshElem *)AlcMalloc(  obj->nElem *
+      if( (obj->elements = (WlzMeshElem *)AlcCalloc(  obj->nElem,
                            sizeof(WlzMeshElem))) == NULL )
       {
         AlcFree( (void *) obj->nodes );
