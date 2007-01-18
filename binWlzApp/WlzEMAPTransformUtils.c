@@ -294,7 +294,7 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       errNum = WLZ_ERR_PARAM_DATA;
     }
   }
-  else if( stat(mappingDirStrF, &statBuf) == 0 ){
+  else if( stat(mappingDirStrB, &statBuf) == 0 ){
     if( S_ISDIR(statBuf.st_mode) ){
 
       /* the mapping is backwards */
@@ -362,18 +362,21 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       }
 
       /* now the mesh transforms */
-      mapping->meshObj[0] = WlzEMAPGetObject(mappingDirStrB,
-					     "source_to_target_bb.wlz",
-					     &errNum);
-      WlzSetMeshInverse(mapping->meshObj[0]->domain.mt);
-      mapping->meshObj[1] = WlzEMAPGetObject(mappingDirStrB,
-					     "source_to_target_bt.wlz",
-					     &errNum);
-      WlzSetMeshInverse(mapping->meshObj[1]->domain.mt);
-      mapping->meshObj[2] = WlzEMAPGetObject(mappingDirStrB,
-					     "source_to_target_tt.wlz",
-					     &errNum);
-      WlzSetMeshInverse(mapping->meshObj[2]->domain.mt);
+      if( mapping->meshObj[0] = WlzEMAPGetObject(mappingDirStrB,
+						 "source_to_target_bb.wlz",
+						 &errNum) ){
+	WlzSetMeshInverse(mapping->meshObj[0]->domain.mt);
+      }
+      if( mapping->meshObj[1] = WlzEMAPGetObject(mappingDirStrB,
+						 "source_to_target_bt.wlz",
+						 &errNum) ){
+	WlzSetMeshInverse(mapping->meshObj[1]->domain.mt);
+      }
+      if( mapping->meshObj[2] = WlzEMAPGetObject(mappingDirStrB,
+						 "source_to_target_tt.wlz",
+						 &errNum) ){
+	WlzSetMeshInverse(mapping->meshObj[2]->domain.mt);
+      }
     }
     else {
       errNum = WLZ_ERR_PARAM_DATA;
@@ -435,7 +438,7 @@ int WlzEMAPIsMapping(
       errNum = WLZ_ERR_PARAM_DATA;
     }
   }
-  else if( stat(mappingDirStrF, &statBuf) == 0 ){
+  else if( stat(mappingDirStrB, &statBuf) == 0 ){
     if( S_ISDIR(statBuf.st_mode) ){
       rtnVal = 1;
     }
