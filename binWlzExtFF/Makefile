@@ -41,6 +41,7 @@ ARCHIVE			=
 
 # Names of executables to be built (modify as required).
 EXECUTABLES		= \
+			WlzExtFFConstruct3D \
 			WlzExtFFContourObj \
 			WlzExtFFConvert \
 			WlzExtFFWlzToXYZ \
@@ -49,6 +50,7 @@ EXECUTABLES		= \
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			WlzExtFFConstruct3D.c \
 			WlzExtFFContourObj.c \
 			WlzExtFFConvert.c \
 			WlzExtFFWlzToXYZ.c \

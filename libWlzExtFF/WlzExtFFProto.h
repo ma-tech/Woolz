@@ -54,6 +54,8 @@ extern WlzEffFormat 		WlzEffStringToFormat(
 				  const char *fmtStr);
 extern WlzEffFormat 		WlzEffStringExtToFormat(
 				  const char *extStr);
+extern WlzEffFormat 		WlzEffStringFormatFromFileName(
+				  const char *fNameStr);
 extern const char 		*WlzEffStringFromFormat(
 				  WlzEffFormat fileFmt,
 				  const char **dstExtStr);

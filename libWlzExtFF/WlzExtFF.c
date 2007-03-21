@@ -42,6 +42,7 @@ static char _WlzExtFF_c[] = "MRC HGU $Id$";
 * \bug          None known.
 */
 
+#include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
@@ -238,6 +239,39 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     *dstExtStr = extStr;
   }
   return(fmtStr);
+}
+
+/*!
+* \return	File format.
+* \ingroup	WlzExtFF
+* \brief	Returns a the file format implied by the file extension used
+*		in the given file name. If no match is found
+*		WlzEffFormat::WLZEFF_FORMAT_NONE is returned.
+* \param	fNameStr		Given file name.
+*/
+WlzEffFormat 	WlzEffStringFormatFromFileName(const char *fNameStr)
+{
+  int           len;
+  char          *dot,
+                *ext,
+                *sep;
+  WlzEffFormat  fmt = WLZEFF_FORMAT_NONE;
+
+  if(((len = strlen(fNameStr)) >= 3) &&  /* Minimum of 3 chars. */
+     (*(fNameStr + len - 1) != '/'))     /* Directory not plain file. */
+  {
+    sep = strrchr(fNameStr, '/');
+    if(((dot = strrchr(fNameStr, '.')) != NULL) &&
+       ((sep == NULL) || ((dot - sep) > 1)))
+    {
+      ext = ++dot;
+      if(ext != NULL)
+      {
+        fmt = WlzEffStringExtToFormat(ext);
+      }
+    }
+  }
+  return(fmt);
 }
 
 /*!

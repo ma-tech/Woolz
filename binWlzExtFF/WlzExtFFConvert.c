@@ -211,31 +211,6 @@ extern int      optind,
                 opterr,
                 optopt;
 
-static WlzEffFormat WlzEffStringExtFromFileName(const char *fNameStr)
-{
-  int		len;
-  char		*dot,
-  		*ext,
-		*sep;
-  WlzEffFormat	fmt = WLZEFF_FORMAT_NONE;
-
-  if(((len = strlen(fNameStr)) >= 3) &&  /* Minimum of 3 chars. */
-     (*(fNameStr + len - 1) != '/'))     /* Directory not plain file. */
-  {
-    sep = strrchr(fNameStr, '/');
-    if(((dot = strrchr(fNameStr, '.')) != NULL) &&
-       ((sep == NULL) || ((dot - sep) > 1)))
-    {
-      ext = ++dot;
-      if(ext != NULL)
-      {
-        fmt = WlzEffStringExtToFormat(ext);
-      }
-    }
-  }
-  return(fmt);
-}
-
 int             main(int argc, char **argv)
 {
   int		bgdFlag = 0,
@@ -384,7 +359,7 @@ int             main(int argc, char **argv)
     /* Try and determine file formats from extensions if not known already. */
     if(inFmt == WLZEFF_FORMAT_NONE)
     {
-      if((inFmt = WlzEffStringExtFromFileName(inObjFileStr)) == 0)
+      if((inFmt = WlzEffStringFormatFromFileName(inObjFileStr)) == 0)
       {
         usage = 1;
 	ok = 0;
@@ -392,7 +367,7 @@ int             main(int argc, char **argv)
     }
     if(outFmt == WLZEFF_FORMAT_NONE)
     {
-      if((outFmt = WlzEffStringExtFromFileName(outObjFileStr)) == 0)
+      if((outFmt = WlzEffStringFormatFromFileName(outObjFileStr)) == 0)
       {
         usage = 1;
 	ok = 0;
