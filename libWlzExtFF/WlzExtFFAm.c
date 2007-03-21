@@ -46,6 +46,7 @@ static char _WlzExtFFAm_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <float.h>
 #include <limits.h>
+#include <time.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
@@ -135,6 +136,9 @@ static WlzErrorNum 		WlzEffAmReadArray3D(
 				  void ***data,
 				  WlzEffAmHead *head,
 				  WlzGreyType gType);
+static WlzErrorNum		WlzEffAmWrite3DDomObj(
+				  FILE *fP,
+				  WlzObject *obj);
 static void			WlzEffAmBufDecodeHXByteRLEUByte(
 				  WlzUByte *dst,
 				  WlzUByte *src,
@@ -248,6 +252,170 @@ WlzErrorNum	WlzEffWriteObjAm(FILE *fP, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
+  if(fP == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(obj->type)
+    {
+      case WLZ_3D_DOMAINOBJ:
+	errNum = WlzEffAmWrite3DDomObj(fP, obj);
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz 3D domain object with values to
+*		the given file using the Amira lattice (.am file) format.
+* \param	fP			Output file pointer
+* \param	obj			Object to be written.
+*/
+static WlzErrorNum	WlzEffAmWrite3DDomObj(FILE *fP, WlzObject *obj)
+{
+  size_t	dataCnt,
+  		dataSz;
+  WlzDBox3	bbD;
+  WlzIBox3	bbI;
+  WlzIVertex3	sz,
+  		org;
+  WlzDVertex3	vSz;
+  char		*dateS,
+  		*dataTypeS;
+  time_t	tTime;
+  WlzGreyType	gType;
+  void		***data = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  if(obj->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(obj->values.core == NULL)
+  {
+     errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(obj->values.core->type != WLZ_VOXELVALUETABLE_GREY)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    bbI = WlzBoundingBox3I(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tTime = time(NULL);
+    dateS = ctime(&tTime);
+    *(dateS + strlen(dateS) - 1) = '\0';
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vSz = WlzVozelSz(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bbD.xMin = bbI.xMin * vSz.vtX;
+    bbD.xMax = bbI.xMax * vSz.vtX;
+    bbD.yMin = bbI.yMin * vSz.vtY;
+    bbD.yMax = bbI.yMax * vSz.vtY;
+    bbD.zMin = bbI.zMin * vSz.vtZ;
+    bbD.zMax = bbI.zMax * vSz.vtZ;
+    sz.vtX = bbI.xMax - bbI.xMin + 1;
+    sz.vtY = bbI.yMax - bbI.yMin + 1;
+    sz.vtZ = bbI.zMax - bbI.zMin + 1;
+    org.vtX = bbI.xMin;
+    org.vtY = bbI.yMin;
+    org.vtZ = bbI.zMin;
+    gType = WlzGreyTypeFromObj(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(gType)
+    {
+      case WLZ_GREY_SHORT:
+	dataTypeS = "short";
+        break;
+      case WLZ_GREY_UBYTE:
+	dataTypeS = "byte";
+        break;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
+        break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(fprintf(fP,
+               "# AmiraMesh 3D BINARY 2.0\n"
+               "# WlzExtFF\n"
+               "# CreationDate: %s\n"
+               "\n"
+               "define Lattice %d %d %d\n"
+               "\n"
+               "Parameters {\n"
+               "    Content \"%dx%dx%d %s, uniform coordinates\",\n"
+               "    BoundingBox %g %g %g %g %g %g,\n"
+               "    CoordType \"uniform\"\n"
+               "}\n"
+	       "\n"
+               "Lattice { %s Data } @1\n"
+	       "\n"
+               "# Data section follows\n"
+               "@1\n",
+	       dateS,
+	       sz.vtX, sz.vtY, sz.vtZ,
+	       sz.vtX, sz.vtY, sz.vtZ, dataTypeS,
+	       bbD.xMin, bbD.xMax, bbD.yMin, bbD.yMax, bbD.zMin, bbD.zMax,
+	       dataTypeS) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzToArray3D(&data, obj, sz, org, 0, gType);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dataCnt = sz.vtX * sz.vtY * sz.vtZ;
+    switch(gType)
+    {
+      case WLZ_GREY_SHORT:
+	dataSz = 2;
+	break;
+      case WLZ_GREY_UBYTE:
+	dataSz = 1;
+	break;
+      default:
+	break;
+    }
+    if(fwrite(**data, dataSz, dataCnt, fP) != dataSz * dataCnt)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  (void )Alc3Free(data);
   return(errNum);
 }
 
