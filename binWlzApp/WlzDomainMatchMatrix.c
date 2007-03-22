@@ -179,7 +179,7 @@ static void usage(
 	  "%s -d <delta> -t <type> -m <matrix-file> -h -v  <rows> <cols>\n"
 	  "\tRead in domains from stdin and calculate the match value\n"
 	  "\tmatrix according to type, writing to stdout. The row domains\n"
-	  "\tare read firrst followed by the column domains, there must be\n"
+	  "\tare read first followed by the column domains, there must be\n"
 	  "\tsufficient for the match type.\n"
 	  "Arguments:\n"
 	  "\t-d#        delta value (default 0.01), must be < 1\n"
@@ -193,6 +193,9 @@ static void usage(
 	  "\t             = 5 - Comparative match between two targets given by\n"
 	  "\t               the ratio of type 4 matchs to each domain. For this\n"
 	  "\t               option two objects are required per column in the input.\n"
+	  "\t             = 6 - Match value calculated using the mixing matrices\n"
+	  "\t             = 7 - Distance between the bounding box centres of the\n"
+	  "\t               domains\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n"
 	  "\n",
@@ -382,6 +385,7 @@ int main(
   double	**mixing=NULL, **contrib=NULL;
   int		i, j, k, l;
   int		numCatRows=-1, numCatCols=-1;
+  WlzDBox3	box1, box2;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -703,6 +707,14 @@ int main(
 	}
 	matchVal = WlzMixtureValue(obj1, obj2, numCatRows, numCatCols,
 				   mixing, contrib, &errNum);
+	break;
+
+      case 7:
+	box1 = WlzBoundingBox3D(obj1, &errNum);
+	box2 = WlzBoundingBox3D(obj2, &errNum);
+	s1 = (box1.xMax + box1.xMin)/2.0 - (box2.xMax + box2.xMin)/2.0;
+	s2 = (box1.yMax + box1.yMin)/2.0 - (box2.yMax + box2.yMin)/2.0;
+	matchVal = sqrt(s1*s1 + s2*s2);
 	break;
 
       default:
