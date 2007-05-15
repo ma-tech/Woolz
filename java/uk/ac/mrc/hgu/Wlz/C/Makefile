@@ -20,6 +20,7 @@ include			../../../../../../../../Makefile.conf
 # Name of archive (library) to be built (modify as required).
 ARCHIVE			= libJWlz.a
 SOARCHIVE		= $(ARCHIVE:%.a=%.so)
+DYLIBARCHIVE		= $(ARCHIVE:%.a=%.dylib)
 DLLARCHIVE		= $(ARCHIVE:lib%.a=%.dll)
 DLLIMPORTLIB		= $(ARCHIVE:%.a=%.dll.a)
 PROTOTYPES		= 
@@ -55,7 +56,9 @@ DEPENDDIRS		= \
 			  ../../../../../../../libWlz \
 			  ../../../../../../../libbibfile \
 			  ../../../../../../../libWlzExtFF \
-			  ../../../../../../../libWlzBnd
+			  ../../../../../../../libWlzBnd \
+			  ../../../../../../../../External/Tiff/tiff-v3.5.7/libtiff \
+			  ../../../../../../../../External/Jpeg/jpeg-6b
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS                 = \
@@ -75,6 +78,9 @@ EXTRA_LIBS		= jpeg tiff gen socket nsl m
 endif
 ifeq ($(UNIXTYPE), LINUX2)
 EXTRA_LIBS		= jpeg tiff m
+endif
+ifeq ($(UNIXTYPE), DARWIN)
+EXTRA_LIBS		= jpeg tiff
 endif
 LIBRARIES		= WlzBnd WlzExtFF bibfile Wlz Alg Alc \
 			  $(EXTRA_LIBS)
@@ -101,6 +107,10 @@ endif
 ifeq ($(CC), gcc)
 SOFLAGS			= -shared
 endif
+ifeq ($(UNIXTYPE), DARWIN)
+SOFLAGS			= -dynamiclib
+LDFLAGS			= $(LIBDIRS:%=-L%)
+endif
 
 # Default traget which builds everything.
 all:			archive
@@ -116,7 +126,7 @@ install_archive:	$(ARCHIVE)
 install_soarchive:	$(SOARCHIVE)
 			$(INSTALL) -o $(OWNER) -m 644 $(SOARCHIVE) \
 			$(HGU_LIB_DIR)
-			
+
 install_dll:		$(DLLARCHIVE)
 			$(INSTALL) -o $(OWNER) -m 755 $(DLLARCHIVE) \
 			$(HGU_BIN_DIR)
@@ -124,6 +134,8 @@ install_dll:		$(DLLARCHIVE)
 archive:		$(ARCHIVE)
 
 soarchive:		$(SOARCHIVE)
+
+dylibarchive:		$(DYLIBARCHIVE)
 
 dll:			$(DLLARCHIVE)
 
@@ -133,6 +145,10 @@ $(ARCHIVE):		$(OBJECTS)
 $(SOARCHIVE):		$(OBJECTS) $(INCLUDES)
 			$(CC) $(SOFLAGS) $(OBJECTS) $(LDFLAGS) $(LDLIBS) \
 			      -o $(SOARCHIVE)
+
+$(DYLIBARCHIVE):	$(OBJECTS) $(INCLUDES)
+			$(CC) $(SOFLAGS) $(OBJECTS) $(LDFLAGS) $(LDLIBS) \
+			      -o $(DYLIBARCHIVE)
 
 
 $(DLLARCHIVE):		$(OBJECTS)
