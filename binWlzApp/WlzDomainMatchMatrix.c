@@ -101,6 +101,10 @@ WlzDomainMatchMatrix -d <delta> -t <type> -m <matrix-file> -h -v <rows> <cols>
  do not need to be square.</td>
   </tr>
   <tr>
+    <td><b> </b></td>
+    <td>= 8 - Area(intersection)</td>
+  </tr>
+  <tr>
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
@@ -196,6 +200,7 @@ static void usage(
 	  "\t             = 6 - Match value calculated using the mixing matrices\n"
 	  "\t             = 7 - Distance between the bounding box centres of the\n"
 	  "\t               domains\n"
+	  "\t             = 8 - Area/volume of intersection.\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n"
 	  "\n",
@@ -715,6 +720,17 @@ int main(
 	s1 = (box1.xMax + box1.xMin)/2.0 - (box2.xMax + box2.xMin)/2.0;
 	s2 = (box1.yMax + box1.yMin)/2.0 - (box2.yMax + box2.yMin)/2.0;
 	matchVal = sqrt(s1*s1 + s2*s2);
+	break;
+
+      case 8:
+	if( obj = WlzIntersect2(obj1, obj2, &errNum) ){
+	  s1 = WlzSize(obj, &errNum);
+	  WlzFreeObj(obj);
+	}
+	else {
+	  s1 = -1;
+	}
+	matchVal = s1;
 	break;
 
       default:
