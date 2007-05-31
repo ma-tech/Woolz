@@ -45,9 +45,10 @@ static char _HGUDlpList_c[] = "MRC HGU $Id$";
 #define HGUDLPLIST_C
 
 #include <stdio.h>
-#ifndef __ppc
+#include <stdlib.h>
+/*#ifndef __ppc
 #include <malloc.h>
-#endif
+#endif*/
 #include <assert.h>
 #include <HGUDlpList.h>
 

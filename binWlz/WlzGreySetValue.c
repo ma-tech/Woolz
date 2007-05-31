@@ -108,10 +108,11 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-g#] [-h] [-v] [<input mask> [<input obj>]]\n"
+	  "Usage:\t%s [-c#,#,#] [-g#] [-h] [-v] [<input mask> [<input obj>]]\n"
 	  "\tSet the grey values of the object to the input value.\n"
 	  "\tA valuetable will be attached if required.\n"
 	  "\tOptions are:\n"
+	  "\t  -c#,#,#   the new colour value r,g,b - default 0,0,0\n"
 	  "\t  -g#       the new grey value - default 0\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n"
@@ -128,14 +129,15 @@ int main(int	argc,
   WlzDomain	*domains;
   WlzValues	values, *valuess;
   FILE		*inFile;
-  char 		optList[] = "g:hv";
+  char 		optList[] = "c:g:hv";
   int		igv,
 		pCnt,
   		option;
   WlzPixelV	greyVal;
   WlzPixelV	bckgrnd;
   WlzObjectType	type;
-  int		verboseFlg=0, p;
+  int		verboseFlg=0, p, colFlg=0;
+  int		red=0, green=0, blue=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -147,12 +149,24 @@ int main(int	argc,
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
 
+    case 'c':
+      if(sscanf(optarg, "%d,%d,%d", &red, &green, &blue) != 3)
+      {
+        usage(argv[0]);
+	return 1;
+      }
+      WLZ_RGBA_RGBA_SET(greyVal.v.rgbv, red, green, blue, 255);
+      greyVal.type = WLZ_GREY_RGBA;
+      colFlg = 1;
+      break;
+
     case 'g':
       if(sscanf(optarg, "%lg", &(greyVal.v.dbv)) != 1)
       {
         usage(argv[0]);
 	return 1;
       }
+      colFlg = 0;
       break;
 
     case 'v':
@@ -179,29 +193,35 @@ int main(int	argc,
 
   /* Set up the type and background: Type will be the minimum required from
      unsigned byte, short, int and double. */
-  igv = WLZ_NINT(greyVal.v.dbv);
-  bckgrnd.type = WLZ_GREY_DOUBLE;
-  bckgrnd.v.dbv = 0.0;
-  if((fabs(greyVal.v.dbv - igv) < DBL_EPSILON) &&
-     (igv >= INT_MIN) && (igv <= INT_MAX))
-  {
-    if((igv >= 0) && (igv <= 255))
+  if( colFlg ){
+    bckgrnd.v.rgbv = 0;
+    bckgrnd.type = WLZ_GREY_RGBA;
+  }
+  else {
+    igv = WLZ_NINT(greyVal.v.dbv);
+    bckgrnd.type = WLZ_GREY_DOUBLE;
+    bckgrnd.v.dbv = 0.0;
+    if((fabs(greyVal.v.dbv - igv) < DBL_EPSILON) &&
+       (igv >= INT_MIN) && (igv <= INT_MAX))
     {
-      bckgrnd.v.ubv = 0;
-      bckgrnd.type = WLZ_GREY_UBYTE;
+      if((igv >= 0) && (igv <= 255))
+      {
+	bckgrnd.v.ubv = 0;
+	bckgrnd.type = WLZ_GREY_UBYTE;
+      }
+      else if((igv >= SHRT_MIN) && (igv <= SHRT_MAX))
+      {
+	bckgrnd.v.shv = 0;
+	bckgrnd.type = WLZ_GREY_SHORT;
+      }
+      else
+      {
+	bckgrnd.v.inv = 0;
+	bckgrnd.type = WLZ_GREY_INT;
+      }
+      /* WlzValueConvertPixel() sets greyVal.type. */
+      (void )WlzValueConvertPixel(&greyVal, greyVal, bckgrnd.type);
     }
-    else if((igv >= SHRT_MIN) && (igv <= SHRT_MAX))
-    {
-      bckgrnd.v.shv = 0;
-      bckgrnd.type = WLZ_GREY_SHORT;
-    }
-    else
-    {
-      bckgrnd.v.inv = 0;
-      bckgrnd.type = WLZ_GREY_INT;
-    }
-    /* WlzValueConvertPixel() sets greyVal.type. */
-    (void )WlzValueConvertPixel(&greyVal, greyVal, bckgrnd.type);
   }
   type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, greyVal.type, NULL);
 

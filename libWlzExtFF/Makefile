@@ -91,7 +91,8 @@ DEPENDDIRS		= \
 			  ../libAlg \
 			  ../libWlz \
 			  ../libbibfile \
-			  ../../External/Tiff/tiff-v3.5.7/libtiff
+			  ../../External/Tiff/tiff-v3.5.7/libtiff \
+			  ../../External/Jpeg/jpeg-6b
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS			= \
