@@ -8,7 +8,7 @@ static char _WlzExtFFConstruct3D_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         binWlz/WlzExtFFConstruct3D.c
+* \file         binWlzExtFF/WlzExtFFConstruct3D.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$
@@ -47,7 +47,7 @@ static char _WlzExtFFConstruct3D_c[] = "MRC HGU $Id$";
 
 /*!
 \ingroup      BinWlz
-\defgroup     wlzconstruct3d WlzExtFFConstruct3D
+\defgroup     wlzextffconstruct3d WlzExtFFConstruct3D
 \par Name
 WlzExtFFConstruct3D - Constructs a 3D image from 2D images, assuming perfect
 alignment.

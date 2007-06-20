@@ -59,7 +59,7 @@ extern int      optind,
 
 static void     usage(char *proc_str); 
 
-static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPts(WlzObject *obj,
+static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPtsT(WlzObject *obj,
 				WlzFnType basisFnType, int polyOrder,
 				int nSPts, WlzDVertex2 *sPts,
 				int nDPts, WlzDVertex2 *dPts,
@@ -273,7 +273,7 @@ int             main(int argc, char **argv)
    }
   if(errNum == WLZ_ERR_NONE)
   {
-      basisTr = WlzAffineBasisFnTransformFromCPts(inObj, basisFnType, 
+      basisTr = WlzAffineBasisFnTransformFromCPtsT(inObj, basisFnType, 
 					    basisFnPolyOrder,
 					    nTiePP, srcVtx2, nTiePP, dstVtx2, 
 					    &errNum);
@@ -354,7 +354,7 @@ static void usage(char *proc_str)
 * \param	dstErr			Destination error pointer, may be
 *					NULL.
 */
-static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPts(WlzObject *obj,
+static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPtsT(WlzObject *obj,
 				WlzFnType basisFnType, int polyOrder,
 				int nSPts, WlzDVertex2 *sPts,
 				int nDPts, WlzDVertex2 *dPts,
