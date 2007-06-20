@@ -71,7 +71,8 @@ SUBSYSTEMS		= \
 			libWlzBnd \
 			binWlz \
 			binWlzApp \
-			binWlzExtFF
+			binWlzExtFF \
+			binWlzTst
 
 # Name of distribution tar file (modify as required).
 

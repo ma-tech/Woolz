@@ -50,6 +50,10 @@ static int			WlzPartialItv2DCmpFn(
 				  const void *vc,
 				  const void *v0,
 				  const void *v1);
+static int			WlzPartialItv3DCmpFn(
+				  const void *vc,
+				  const void *v0,
+				  const void *v1);
 static int			WlzLBTDomain3DNodeCmpFn(
 				  const void *lPtr,
 				  const void *ptr0,
@@ -67,12 +71,25 @@ static int			WlzLBTBndEdgNbrIdx2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN);
+static int			WlzLBTBndEdgNbrIdx3D(
+				  WlzLBTDomain3D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN);
 static int			WlzLBTMinLogSzEdgeNbrIdx2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN);
+static int			WlzLBTMinLogSzEdgeNbrIdx3D(
+				  WlzLBTDomain3D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN);
 static int			WlzLBTBndEdgNbrDirIdx2D(
 				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN,
+				  WlzDirection dir);
+static int			WlzLBTBndEdgNbrDirIdx3D(
+				  WlzLBTDomain3D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN,
 				  WlzDirection dir);
@@ -81,8 +98,19 @@ static int			WlzLBTMinLogSzEdgeDirNbrIdx2D(
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN,
 				  WlzDirection dir);
+static int			WlzLBTMinLogSzEdgeDirNbrIdx3D(
+				  WlzLBTDomain3D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN,
+				  WlzDirection dir);
 static int			WlzLBTMaxLogSzEdgeDirNbrIdx2D(
 				  WlzLBTDomain2D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN,
+				  WlzDirection dir,
+				  int *dstSz);
+static int			WlzLBTMaxLogSzEdgeDirNbrIdx3D(
+				  WlzLBTDomain3D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN,
 				  WlzDirection dir,
@@ -99,6 +127,8 @@ static int			WlzLBNodeAtBoundary3D(
 static int			WlzLBNodeAtBoundary2D(
 				  WlzIntervalDomain *iDom,
 				  WlzLBTNode2D *nod);
+static int 			WlzLBTClassifyRotFromEdgeMask2D(
+				  unsigned msk);
 static unsigned 		WlzLBTIdxHashFn(
 				  void *datum);
 static void			WlzLBTCondenseNodes3D(
@@ -113,11 +143,17 @@ static void			WlzLBTSetNodeIndexObj2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN);
+static void			WlzLBTSetNodeIndexObj3D(
+				  WlzLBTDomain3D *lDom,
+				  WlzGreyValueWSpace *iGVWSp,
+				  int idN);
 static WlzErrorNum 		WlzLBTQueueInsert(
 				  AlcCPQQueue *pQ,
 				  AlcHashTable *hT,
 				  int sz,
 				  int idx);
+static WlzLBTNodeClass2D 	WlzLBTClassifyNodeFromEdgeMask2D(
+				  unsigned msk);
 
 /*!
 * \return	New 2D linear binary tree domain.
@@ -483,6 +519,94 @@ WlzIntervalDomain *WlzLBTDomainToIDomain(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	New 3D plane domain.
+* \ingroup	WlzDomainOps
+* \brief	Creates a new plane domain from the given 3D linear
+* 		binary tree domain.
+* \param	lDom			Given 3D linear binary tree domain.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPlaneDomain *WlzLBTDomainToPDomain(WlzLBTDomain3D *lDom,
+					 WlzErrorNum *dstErr)
+{
+  int		idI,
+		idJ,
+  		idN,
+		nItv,
+		nSz,
+  		nPItv;
+  WlzIVertex3	nPos;
+  WlzLBTNode3D	*nod;
+  WlzPartialItv3D *pItv0,
+  		*pItvTb = NULL;
+  WlzPlaneDomain *pDom = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+
+  if(lDom == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(lDom->type != WLZ_LBTDOMAIN_3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    /* Count number of node partial intervals. */
+    nPItv = 0;
+    nod = lDom->nodes;
+    for(idN = 0; idN < lDom->nNodes; ++idN)
+    {
+      nSz = WlzLBTNodeSz3D(nod++);
+      nPItv += nSz * nSz;
+    }
+    /* Allocate node partial intervals. */
+    if((pItvTb = (WlzPartialItv3D *)AlcCalloc(sizeof(WlzPartialItv3D),
+					      nPItv)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Set node partial intervals. */
+    idI = 0;
+    pItv0 = pItvTb;
+    nod = lDom->nodes;
+    for(idN = 0; idN < lDom->nNodes; ++idN)
+    {
+      nSz = WlzLBTNodeSz3D(nod); 
+      WlzLBTKeyToPos3I(nod->keys, &nPos);
+      for(idJ = 0; idJ < nSz; ++idJ)
+      {
+	for(idI = 0; idI < nSz; ++idI)
+	{
+	  pItv0->ileft = nPos.vtX;
+	  pItv0->iright = nPos.vtX + nSz - 1;
+	  pItv0->ln = nPos.vtY + idI;
+	  pItv0->pl = nPos.vtZ + idJ;
+	  ++pItv0;
+	}
+      }
+      ++nod;
+    }
+    pDom = WlzPDomainFromPItv3D(lDom->plane1, lDom->lastpl,
+   			        lDom->line1, lDom->lastln,
+    				lDom->kol1, lDom->lastkl,
+				nPItv, pItvTb,
+				&errNum);
+  }
+  /* Free storage. */
+  AlcFree(pItvTb);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pDom);
+}
+
+/*!
 * \return 	Woolz interval domain or NULL on error.
 * \ingroup	WlzDomainOps
 * \brief	Allocates and computes an interval domain from the given
@@ -586,6 +710,174 @@ WlzIntervalDomain *WlzIDomainFromPItv2D(int line1, int lastln,
 }
 
 /*!
+* \return 	Woolz interval domain or NULL on error.
+* \ingroup	WlzDomainOps
+* \brief	Allocates and computes a plane domain from the given
+*		table of partial intervals. The given partial intervals
+*               must fit within the given domain bounding box.
+* \param	plane1			First plane.
+* \param	lastpl			Last plane.
+* \param	line1			First line.
+* \param	lastln			Last line.
+* \param	kol1			First column.
+* \param	lastkl			last column.
+* \param	nPItv			Number of partial intervals.
+* \param	pItv			Array of partial intervals.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPlaneDomain	*WlzPDomainFromPItv3D(int plane1, int lastpl,
+				      int line1, int lastln,
+				      int kol1, int lastkl,
+				      int nPItv, WlzPartialItv3D *pItv,
+				      WlzErrorNum *dstErr)
+{
+  int		idI,
+		idP,
+  		nItv,
+		nItv2;
+  WlzIBox2	bBox2;
+  WlzDomain	tDom;
+  WlzPartialItv3D *pItv0,
+  		*pItv1,
+		*pItv2;
+  WlzIntervalLine *itvLn;
+  WlzInterval	*itv0,
+		*itv1,
+  		*itvTb = NULL;
+  WlzIntervalDomain *iDom;
+  WlzPlaneDomain *pDom = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((plane1 > lastpl) || (line1 > lastln) || (kol1 > lastkl) ||
+     (nPItv < 1) || (pItv == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(nPItv > 1)
+  {
+    /* Sort the partial intervals. */
+    AlgQSort(pItv, nPItv, sizeof(WlzPartialItv3D), NULL, WlzPartialItv3DCmpFn);
+    /* Condense the partial intervals into intervals. */
+    idI = 0;
+    nItv = 0;
+    pItv0 = pItv;
+    pItv1 = pItv + 1;
+    while(idI < nPItv)
+    {
+      if((pItv0->pl == pItv1->pl) && (pItv0->ln == pItv1->ln) &&
+         ((pItv0->iright + 1) == pItv1->ileft))
+      {
+        pItv0->iright = pItv1->iright;
+      }
+      else
+      {
+	*++pItv0 = *pItv1;
+	++nItv;
+      }
+      ++idI;
+      ++pItv1;
+    }
+  }
+  /* Create the plane domain. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pDom = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+                              plane1, lastpl, line1, lastln, kol1, lastkl,
+			      &errNum);
+  }
+  /* For each plane of the LBT domain create and set the interval domain. */
+  idP = plane1;
+  pItv0 = pItv;
+  while((errNum == WLZ_ERR_NONE) && (idP <= lastpl))
+  {
+    pItv1 = pItv0;
+    /* Count intervals in this plane and find their 2D bounding box. */
+    nItv2 = 0;
+    bBox2.xMin = pItv1->ileft;
+    bBox2.xMax = pItv1->iright;
+    bBox2.yMax = bBox2.yMin = pItv1->ln;
+    while(pItv1->pl == idP)
+    {
+      if(bBox2.xMin > pItv1->ileft)
+      {
+        bBox2.xMin = pItv1->ileft;
+      }
+      if(bBox2.xMax < pItv1->iright)
+      {
+        bBox2.xMax = pItv1->iright;
+      }
+      if(bBox2.yMin > pItv1->ln)
+      {
+        bBox2.yMin = pItv1->ln;
+      }
+      else if(bBox2.yMax < pItv1->ln)
+      {
+        bBox2.yMax = pItv1->ln;
+      }
+      ++nItv2;
+      ++pItv1;
+    }
+    iDom = NULL;
+    if(nItv2 > 0)
+    {
+      /* Allocate an interval domain, interval lines and intervals
+       * then set the intervals. */
+      if(((iDom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					bBox2.yMin, bBox2.yMax,
+					bBox2.xMin, bBox2.yMax,
+					&errNum)) == NULL) ||
+	 ((itvTb = (WlzInterval *)AlcCalloc(sizeof(WlzInterval),
+					    nItv2)) == NULL))
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	iDom->freeptr = AlcFreeStackPush(iDom->freeptr, (void *)itvTb, NULL);
+	/* Fill in the interval domain. */
+	idI = 0;
+	pItv2 = pItv1 = pItv0;
+	itv1 = itv0 = itvTb;
+	while(idI < nItv2)
+	{
+	  itvLn = iDom->intvlines + pItv1->ln - iDom->line1;
+	  while((pItv2->ln == pItv1->ln) && (idI < nItv2))
+	  {
+	    itv1->ileft = pItv2->ileft;
+	    itv1->iright = pItv2->iright;
+	    ++(itvLn->nintvs);
+	    ++itv1;
+	    ++pItv2;
+	    ++idI;
+	  }
+	  itvLn->intvs = itv0;
+	  pItv1 = pItv2;
+	  itv0 = itv1;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tDom.i = iDom;
+      *(pDom->domains + idP - plane1) = WlzAssignDomain(tDom, NULL);
+    }
+    pItv0 += nItv2;
+    ++idP;
+  }
+
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreePlaneDomain(pDom);
+    pDom = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pDom);
+}
+
+/*!
 * \return	New 3D linear binary tree domain.
 * \ingroup	WlzDomainOps
 * \brief	Creates a new 3D linear binary tree domain from the given
@@ -599,8 +891,7 @@ WlzIntervalDomain *WlzIDomainFromPItv2D(int line1, int lastln,
 *		when there's working code.
 *		time than 
 *		
-* \param	iDom			Given domain, which must be an
-*					interval domain.
+* \param	pDom			Given plane domain.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzLBTDomain3D	*WlzLBTDomain3DFromPDomain(WlzPlaneDomain *pDom,
@@ -634,6 +925,7 @@ WlzLBTDomain3D	*WlzLBTDomain3DFromPDomain(WlzPlaneDomain *pDom,
   while((errNum == WLZ_ERR_NONE) && (idP < pCnt))
   {
     if(((dom2 = pDom->domains + idP) != NULL) &&
+       (dom2->core != NULL) &&
        (dom2->core->type != WLZ_EMPTY_DOMAIN))
     {
       obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dom2, nullVal, NULL, NULL,
@@ -1081,6 +1373,245 @@ WlzErrorNum	WlzLBTBalanceDomain2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzDomainOps
+* \brief	Balances the given LBT domain so that the neighbouring
+*		nodes of each node are either of the same size or differ
+*		in size by a ratio of 2:1. The function also enforces
+*		maximum node size for all nodes and boundary nodes.
+*		The neighbour finding algorithm used is quick and
+*		simple but it requires an object in which the values
+*		are set to the corresponding LBT domain indices.
+*		For efficiency an associated interval domain may be given,
+*		if the associated domain pointer is NULL then a domain
+*		will be computed.
+* \param	lDom			Given LBT domain.
+* \param	iObj			Index object for finding neighbours
+*					of nodes.
+* \param	maxSz			Maximum node size.
+* \param        maxBndSz		Maximum boundary node size
+*/
+WlzErrorNum	WlzLBTBalanceDomain3D(WlzLBTDomain3D *lDom,
+				      WlzObject *iObj,
+				      int maxSz,
+				      int maxBndSz)
+{
+  int		idN,
+  		idM,
+		idP,
+		flg,
+		sz0,
+		sz1,
+		sz2,
+		sInc;
+  int		idNN[8];
+  WlzLBTNode3D	*nod[8];
+  AlcCPQQueue	*pQ = NULL;
+  AlcHashTable	*hT = NULL;
+  WlzGreyValueWSpace *iGVWSp = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const WlzDirection dirTab[6] = {
+				   WLZ_DIRECTION_IC,
+				   WLZ_DIRECTION_IL,
+				   WLZ_DIRECTION_IP,
+				   WLZ_DIRECTION_DC,
+				   WLZ_DIRECTION_DL,
+				   WLZ_DIRECTION_DP
+  				 };
+
+  maxSz = (maxSz < 1)? 1: AlgBitNextPowerOfTwo(NULL, maxSz) + 1;
+  maxBndSz = (maxBndSz < 1)? 1: AlgBitNextPowerOfTwo(NULL, maxBndSz) + 1;
+  iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
+  /* Create a priority queue and a hash table to hold the nodes
+   * to be split. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((pQ = AlcCPQQueueNew(NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((sz0 = (lDom->nNodes / 8)) < 1024)
+    {
+      sz0 = 1024;
+    }
+    if((hT = AlcHashTableNew(sz0, WlzLBTIdxCmpFn,
+    			     WlzLBTIdxHashFn, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Put all nodes which need to be split into a priority queue using
+   * the size as the priority. Nodes need to be split if they have a
+   * size (cell side length) > twice that of the smallest neighbour,
+   * a size greater than the maximum size or a size greater than the
+   * maximum size for a boundary node. */
+  idN = 0;
+  while((errNum == WLZ_ERR_NONE) && (idN < lDom->nNodes))
+  {
+    flg = 0;
+    nod[0] = lDom->nodes + idN;
+    sz0 = WlzLBTNodeLogSz3D(nod[0]);
+    if(sz0 > 0)
+    {
+      if(sz0 > maxSz)
+      {
+	flg = 1;
+      }
+      else if(sz0 > 1)
+      {
+	sz1 = WlzLBTMinLogSzEdgeNbrIdx3D(lDom, iGVWSp, idN);
+	if((sz1 >= 0) && (sz0 > sz1 + 1))
+	{
+	  flg = 1;
+	}
+      }
+      if(0 == flg)
+      {
+	flg = (sz0 > maxBndSz) &&
+	      (WlzLBTBndEdgNbrIdx3D(lDom, iGVWSp, idN) != 0);
+      }
+      if(flg)
+      {
+	errNum = WlzLBTQueueInsert(pQ, hT, sz0, idN);
+      }
+    }
+    ++idN;
+  }
+  /* Pull the nodes from the priority queue and split them, returning
+   * child nodes which have a size > the maximum node size or > twice
+   * that of the smallest neighbour to the priority queue. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    while((idN = WlzLBTQueueUnlink(pQ, hT)) >= 0)
+    {
+      /* Split the node. */
+      idNN[0] = idN;
+      for(idM = 0; idM < 7; ++idM)
+      {
+        idNN[idM + 1] = lDom->nNodes + idM;
+      }
+      lDom->nNodes += 7;
+      if(lDom->nNodes > lDom->maxNodes)
+      {
+        /* Reallocate the nodes. */
+	sz0 = (lDom->maxNodes > 0)?
+	      ((int )floor(lDom->nNodes / lDom->maxNodes) + 1) *
+	      lDom->maxNodes: 1024;
+	if((lDom->nodes = (WlzLBTNode3D *)
+			  AlcRealloc(lDom->nodes,
+			  	     sz0 * sizeof(WlzLBTNode3D))) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  lDom->maxNodes = sz0;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        for(idM = 0; idM < 8; ++idM)
+	{
+	  nod[idM] = lDom->nodes + idNN[idM];
+	}
+	sInc = WlzLBTNodeSz3D(nod[0]) / 2;
+	nod[1]->keys[0] = nod[0]->keys[0] + sInc;
+	nod[1]->keys[1] = nod[0]->keys[1];
+	nod[1]->keys[2] = nod[0]->keys[2];
+	nod[2]->keys[0] = nod[0]->keys[0];
+	nod[2]->keys[1] = nod[0]->keys[1] + sInc;
+	nod[2]->keys[2] = nod[0]->keys[2];
+	nod[3]->keys[0] = nod[0]->keys[0] + sInc;
+	nod[3]->keys[1] = nod[0]->keys[1] + sInc;
+	nod[3]->keys[2] = nod[0]->keys[2];
+	nod[4]->keys[0] = nod[0]->keys[0];
+	nod[4]->keys[1] = nod[0]->keys[1];
+	nod[4]->keys[2] = nod[0]->keys[2] + sInc;
+	nod[5]->keys[0] = nod[0]->keys[0] + sInc;
+	nod[5]->keys[1] = nod[0]->keys[1];
+	nod[5]->keys[2] = nod[0]->keys[2] + sInc;
+	nod[6]->keys[0] = nod[0]->keys[0];
+	nod[6]->keys[1] = nod[0]->keys[1] + sInc;
+	nod[6]->keys[2] = nod[0]->keys[2] + sInc;
+	nod[7]->keys[0] = nod[0]->keys[0] + sInc;
+	nod[7]->keys[1] = nod[0]->keys[1] + sInc;
+	nod[7]->keys[2] = nod[0]->keys[2] + sInc;
+	nod[0]->keys[3] >>= 1;
+	nod[7]->keys[3] = nod[6]->keys[3] =
+	nod[5]->keys[3] = nod[4]->keys[3] =
+	nod[3]->keys[3] = nod[2]->keys[3] =
+	nod[1]->keys[3] = nod[0]->keys[3];
+	/* Set indices in the index object. */
+	for(idN = 0; idN < 8; ++idN)
+	{
+	  WlzLBTSetNodeIndexObj3D(lDom, iGVWSp, idNN[idN]);
+	}
+	/* Test each child node to see if either the child node or it's
+	 * neighbours need to be inserted into the queue. */
+	idN = 0;
+	sz0 = WlzLBTNodeLogSz3D(nod[0]);
+	while((errNum == WLZ_ERR_NONE) && (idN < 8))
+	{
+	  /* Check nodes and reinsert any that need to be split back into
+	   * the queue. */
+	  flg = 0;
+	  if(sz0 > maxSz)
+	  {
+	    flg = 1;
+	  }
+	  else if(sz0 > 1)
+	  {
+	    sz1 = WlzLBTMinLogSzEdgeNbrIdx3D(lDom, iGVWSp, idNN[idN]);
+	    if((sz1 >= 0) && (sz0 > sz1 + 1))
+	    {
+	      flg = 1;
+	    }
+	  }
+	  if(0 == flg)
+	  {
+	    flg = (sz0 > maxBndSz) &&
+		  (WlzLBTBndEdgNbrIdx3D(lDom, iGVWSp, idNN[idN]) != 0);
+	  }
+	  if(flg)
+	  {
+	    errNum = WlzLBTQueueInsert(pQ, hT, sz0, idNN[idN]);
+	  }
+	  /* Check for any neighbours with node size > twice that of
+	   * the node. */
+	  idM = 0;
+	  while((errNum == WLZ_ERR_NONE) && (idM < 8))
+	  {
+	    idP = WlzLBTMaxLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idNN[idN],
+						dirTab[idM], &sz2);
+	    if(sz2 > sz0 + 1)
+	    {
+	      errNum = WlzLBTQueueInsert(pQ, hT, sz2, idP);
+	    }
+	    ++idM;
+	  }
+	  ++idN;
+	}
+      }
+    }
+  }
+  /* Free temporary storage. */
+  WlzGreyValueFreeWSp(iGVWSp);
+  (void )AlcCPQQueueFree(pQ);
+  (void )AlcHashTableFree(hT);
+  /* Sort the nodes so that all the split nodes are in the appropriate
+   * place. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    AlgQSort(lDom->nodes, lDom->nNodes, sizeof(WlzLBTNode3D), lDom,
+             WlzLBTDomain3DNodeCmpFn);
+  }
+  return(errNum);
+}
+
+/*!
 * \return	New object with node indices or NULL on error.
 * \ingroup	WlzDomainOps
 * \brief	Creates a new 2D domain object with integer values 
@@ -1176,9 +1707,95 @@ WlzObject	*WlzLBTMakeNodeIndexObj2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	New object with node indices or NULL on error.
+* \ingroup	WlzDomainOps
+* \brief	Creates a new 3D domain object with integer values 
+*		which are the indices of the nodes containing the
+*		pixels of the domain.
+* \param	lDom			Given LBT domain.
+* \param	pDom			Corresponding interval domain,
+					may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzLBTMakeNodeIndexObj3D(WlzLBTDomain3D *lDom,
+				       WlzPlaneDomain *pDom,
+				       WlzErrorNum *dstErr)
+{
+  int 		idN;
+  WlzDomain	tDom;
+  WlzValues	tVal;
+  WlzPixelV	iBkg;
+  WlzObjectType iValTblType;
+  WlzGreyValueWSpace *iGVWSp = NULL;
+  WlzObject	*iObj = NULL;
+  WlzIBox3	nBox;
+  WlzPixelV	bgdV;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bgdV.type = WLZ_GREY_INT;
+  bgdV.v.inv = -1;
+  tDom.core = NULL;
+  tVal.core = NULL;
+  if(pDom)
+  {
+    tDom.p = pDom;
+  }
+  else
+  {
+    tDom.p = WlzLBTDomainToPDomain(lDom, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    iObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, tDom, tVal, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    iValTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+    iBkg.type = WLZ_GREY_INT;
+    iBkg.v.ubv = 0;
+    tVal.vox = WlzNewValuesVox(iObj, iValTblType, iBkg, &errNum);
+    iObj->values = WlzAssignValues(tVal, NULL);
+    iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < lDom->nNodes; ++idN)
+    {
+      WlzLBTSetNodeIndexObj3D(lDom, iGVWSp, idN);
+    }
+    (void )WlzSetBackground(iObj, bgdV);
+  }
+  WlzGreyValueFreeWSp(iGVWSp);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(iObj)
+    {
+      (void )WlzFreeObj(iObj);
+      iObj = NULL;
+    }
+    else
+    {
+      if((pDom == NULL) && (tDom.core != NULL))
+      {
+	(void )WlzFreeIntervalDomain(tDom.i);
+      }
+      if(tVal.core)
+      {
+        (void )WlzFreeValueTb(tVal.v);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(iObj);
+}
+
+/*!
 * \return	Woolz error code.
 * \ingroup	WlzDomainOps
-* \brief	Sets all index values in an existing LBT node
+* \brief	Sets all index values in an existing 2D LBT node
 *		index object.
 * \param	lDom
 * \param	iObj
@@ -1207,35 +1824,49 @@ WlzErrorNum	WlzLBTIndexObjSetAllNodes2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
-* \return	void
+* \return	Woolz error code.
 * \ingroup	WlzDomainOps
-* \brief	Classifies the given LBT node by it's connectivity and
-*		returns it's class and the counter-clockwise rotation
-*		of the basic class pattern in multiples of 90 degrees.
-* \param	lDom			Linear binary tree domain.
-* \param	iGVWSp			Grey workspace for index object.
-* \param	idN			Index of the LBT node.
-* \param	dstCls			Destination pointer for the class.
-* \param	dstRot			Destination pointer for the rotation.
+* \brief	Sets all index values in an existing 3D LBT node
+*		index object.
+* \param	lDom
+* \param	iObj
 */
-void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
-				     WlzGreyValueWSpace *iGVWSp,
-				     int idN, WlzLBTNodeClass2D *dstCls,
-				     int *dstRot)
+WlzErrorNum	WlzLBTIndexObjSetAllNodes3D(WlzLBTDomain3D *lDom,
+				        WlzObject *iObj)
 {
-  int		idM,
-		nNbr,
-		nSz;
-  unsigned	msk;
-  WlzIBox2	nBB;
-  const WlzDirection dirTab[4] = {
-				  WLZ_DIRECTION_IC,
-				  WLZ_DIRECTION_IL,
-				  WLZ_DIRECTION_DC,
-				  WLZ_DIRECTION_DL
-			 	};
-  const int	 rotTab[16] = {
-				0, 		/*  0  o-o
+  int		idN;
+  WlzPixelV	bgdV;
+  WlzGreyValueWSpace *iGVWSp = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bgdV.type = WLZ_GREY_INT;
+  bgdV.v.inv = -1;
+  iGVWSp = WlzGreyValueMakeWSp(iObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < lDom->nNodes; ++idN)
+    {
+      WlzLBTSetNodeIndexObj3D(lDom, iGVWSp, idN);
+    }
+    (void )WlzSetBackground(iObj, bgdV);
+  }
+  WlzGreyValueFreeWSp(iGVWSp);
+  return(errNum);
+}
+
+/*!
+* \return	Counter-clockwise rotation in 90 degree steps,
+*		with range [0-3].
+* \ingroup	WlzDomainOps
+* \brief	Looks up the rotation of a 2D node in steps of 90
+*		degrees from the given edge mask.
+* \param	msk			Given edge mask.
+*/
+static int 	WlzLBTClassifyRotFromEdgeMask2D(unsigned msk)
+{
+  int		rot;
+  const int	rotTab[16] = {
+			       0, 		/*  0  o-o
 						       | |
 						       o-o */
 				3,		/*  1  o-o
@@ -1283,6 +1914,20 @@ void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
 				0};		/* 15  ooo
 						       o o
 						       ooo */
+  rot = rotTab[msk & 0xf];
+  return(rot);
+}
+
+/*!
+* \return	Node classification.
+* \ingroup	WlzDomainOps
+* \brief	Looks up the 2D node (or face of 3D node) class from the
+*		given edge mask.
+* \param	msk			Given edge mask.
+*/
+static WlzLBTNodeClass2D WlzLBTClassifyNodeFromEdgeMask2D(unsigned msk)
+{
+  WlzLBTNodeClass2D cls;
   const WlzLBTNodeClass2D clsTab[16] = {
 				0, 		/*  0  o-o
 						       | |
@@ -1332,6 +1977,38 @@ void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
 				5};		/* 15  ooo
 						       o o
 						       ooo */
+  cls = clsTab[msk & 0xf];
+  return(cls);
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Classifies the given LBT node by it's connectivity and
+*		returns it's class and the counter-clockwise rotation
+*		of the basic class pattern in multiples of 90 degrees.
+* \param	lDom			Linear binary tree domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of the LBT node.
+* \param	dstCls			Destination pointer for the class.
+* \param	dstRot			Destination pointer for the rotation.
+*/
+void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
+				     WlzGreyValueWSpace *iGVWSp,
+				     int idN, WlzLBTNodeClass2D *dstCls,
+				     int *dstRot)
+{
+  int		idM,
+		nNbr,
+		nSz;
+  unsigned	msk;
+  WlzIBox2	nBB;
+  const WlzDirection dirTab[4] = {
+				  WLZ_DIRECTION_IC,
+				  WLZ_DIRECTION_IL,
+				  WLZ_DIRECTION_DC,
+				  WLZ_DIRECTION_DL
+			 	};
 
 
   nSz = WlzLBTNodeSz2D(lDom->nodes + idN);
@@ -1384,15 +2061,150 @@ void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
     nNbr = (idM >= 0) && (WlzLBTNodeSz2D(lDom->nodes + idM) < nSz);
     msk |= nNbr << 3;
     /* Look up the class and rotation. */
-    *dstCls = clsTab[msk];
-    *dstRot = rotTab[msk];
+    *dstCls = WlzLBTClassifyNodeFromEdgeMask2D(msk);
+    *dstRot = WlzLBTClassifyRotFromEdgeMask2D(msk);
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Classifies the given LBT node's face by it's connectivity
+*		and returns it's class and the counter-clockwise rotation
+*		of the basic class pattern, when viewed from outside of the
+*		node's cube looking at the face, in multiples of 90 degrees.
+*		This function uses the face index and orientation system
+*		defined in WlzCMeshFromBalLBTDom3D().
+* \param	lDom			Linear binary tree domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of the LBT node.
+* \param	idF			Index of the face.
+* \param	vtx			Coordinates of the 6 vertices
+*					at the origin of faces of the
+					LBT node's bounding box.
+* \param	dstCls			Destination pointer for the class.
+* \param	dstRot			Destination pointer for the rotation.
+*/
+void		WlzLBTClassifyNodeFace3D(WlzLBTDomain3D *lDom,
+				     WlzGreyValueWSpace *iGVWSp,
+				     int idN, int idF,
+				     WlzDVertex3 *vtx,
+				     WlzLBTNodeClass2D *dstCls,
+				     int *dstRot)
+{
+  /* TODO Check this function! */
+  int		idE,
+		idO,
+		idNN,
+		nSz,
+		nNSz,
+		sSz;
+  unsigned	msk;
+  WlzDVertex3	off,
+  		pos;
+  const int 	offTbl0[6][3] = /* Offsets from 1st vertex of cube faces
+  				 * to neighbours. These are small
+				 * offsets to ensure the correct
+				 * neighbouring face is located. */
+     {
+       { 0, -1,  0},
+       { 0,  0, -1},
+       { 1,  0,  0},
+       { 0,  0,  1},
+       {-1,  0,  0},
+       { 0,  1,  0}
+     };
+  const	int	offTbl1[6][2][3] = /* Offsets from 1st vertex of cube faces
+				    * to neighbours. These are multiples
+				    * of the current cube size, with
+				    * all as defined in the function
+				    * WlzCMeshFromBalLBTDom3D() for o1 and
+				    * o2, o3 = -o1 and o4 = -o2. */
+     {
+       /*     o1            o2   */
+       {{ 1,  0,  0}, { 0,  0,  1}},
+       {{-1,  0,  0}, { 0,  1,  0}},
+       {{ 0,  0, -1}, { 0,  1,  0}},
+       {{ 1,  0,  0}, { 0,  1,  0}},
+       {{ 0,  0,  1}, { 0,  1,  0}},
+       {{ 0,  0,  1}, { 1,  0,  0}}
+     };
+
+  msk = 0;
+  nSz = WlzLBTNodeSz3D(lDom->nodes + idN);
+  if(nSz == 1)
+  {
+    *dstRot = 0;
+    *dstCls = 0;
+  }
+  else
+  {
+    /* First check the size of the neighbour which shares the current face.
+     * If the neighbour is smaller than the current node or the node is on
+     * the outer boundary, then set the flags for all it's edges, ie set
+     * the mask value to 0xf. */
+    off.vtX = offTbl0[idF][0];
+    off.vtY = offTbl0[idF][1];
+    off.vtZ = offTbl0[idF][2];
+    WLZ_VTX_3_ADD(pos, vtx[idF], off);
+    WlzGreyValueGet(iGVWSp, pos.vtZ, pos.vtY, pos.vtX);
+    if(iGVWSp->bkdFlag)
+    {
+      msk = 0xf;
+    }
+    else
+    {
+      idNN = *(iGVWSp->gPtr[0].inp);
+      if(idNN >= 0)
+      {
+        nNSz = WlzLBTNodeSz3D(lDom->nodes + idNN);
+	if(nNSz < nSz)
+	{
+	  msk = 0xf;
+	}
+      }
+    }
+    /* If mask not set because of smaller node abutting face then check
+     * the neighbours which share the edges of the given face. */
+    if(msk == 0)
+    {
+      for(idE = 0; idE < 4; ++idE)
+      {
+	idO = (idE % 2) + 1;
+	sSz = (idE > 1)? -nSz: nSz;
+        off.vtX = offTbl1[idF][idO][0] * sSz;
+	off.vtY = offTbl1[idF][idO][1] * sSz;
+	off.vtZ = offTbl1[idF][idO][2] * sSz;
+	WLZ_VTX_3_ADD(pos, vtx[idF], off);
+	WlzGreyValueGet(iGVWSp, pos.vtZ, pos.vtY, pos.vtX);
+	if(iGVWSp->bkdFlag)
+	{
+	  msk |= 1 << idE;
+	}
+	else
+	{
+	  idNN = *(iGVWSp->gPtr[0].inp);
+	  if(idNN >= 0)
+	  {
+	    nNSz = WlzLBTNodeSz3D(lDom->nodes + idNN);
+	    if(nNSz < nSz)
+	    {
+	      msk |= 1 << idE;
+	    }
+	  }
+	}
+      }
+    }
+    /* Look up the class and rotation. */
+    *dstCls = WlzLBTClassifyNodeFromEdgeMask2D(msk);
+    *dstRot = WlzLBTClassifyRotFromEdgeMask2D(msk);
   }
 }
 
 /*!
 * \return	Returns signed comparison for AlgQSort().
 * \ingroup	WlzDomainOps
-* \brief	Compares to partial intervals.
+* \brief	Compares two 2D partial intervals.
 * \param	vc			Unused client data.
 * \param	v0			First partial interval.
 * \param	v1			Second partial interval.
@@ -1409,6 +2221,33 @@ static int	WlzPartialItv2DCmpFn(const void *vc,
   if((cmp = pItv0->ln - pItv1->ln) == 0)
   {
     cmp = pItv0->ileft - pItv1->ileft;
+  }
+  return(cmp);
+}
+
+/*!
+* \return	Returns signed comparison for AlgQSort().
+* \ingroup	WlzDomainOps
+* \brief	Compares two 3D partial intervals.
+* \param	vc			Unused client data.
+* \param	v0			First partial interval.
+* \param	v1			Second partial interval.
+*/
+static int	WlzPartialItv3DCmpFn(const void *vc,
+				     const void *v0, const void *v1)
+{
+  int		cmp;
+  WlzPartialItv3D *pItv0,
+  		*pItv1;
+
+  pItv0 = (WlzPartialItv3D *)v0;
+  pItv1 = (WlzPartialItv3D *)v1;
+  if((cmp = pItv0->pl - pItv1->pl) == 0)
+  {
+    if((cmp = pItv0->ln - pItv1->ln) == 0)
+    {
+      cmp = pItv0->ileft - pItv1->ileft;
+    }
   }
   return(cmp);
 }
@@ -1460,6 +2299,9 @@ static WlzErrorNum WlzLBTQueueInsert(AlcCPQQueue *pQ, AlcHashTable *hT,
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+#ifdef WLZ_LBTDOMAIN_DEBUG
+  (void )fprintf(stderr, "WlzLBTQueueInsert idx = %d sz = %d\n", idx, sz);
+#endif /* WLZ_LBTDOMAIN_DEBUG */ 
   if(AlcHashItemGet(hT, (void *)idx, NULL) == NULL)
   {
     if((AlcCPQEntryInsert(pQ, (float )sz, (void *)idx) != ALC_ER_NONE) ||
@@ -1493,6 +2335,9 @@ static int	WlzLBTQueueUnlink(AlcCPQQueue *pQ, AlcHashTable *hT)
     if((hItem = AlcHashItemGet(hT, (void *)(idx), NULL)) != NULL)
     {
       (void )AlcHashItemUnlink(hT, hItem, 1);
+#ifdef WLZ_LBTDOMAIN_DEBUG
+  (void )fprintf(stderr, "WlzLBTQueueUnlink idx = %d\n", idx);
+#endif /* WLZ_LBTDOMAIN_DEBUG */ 
     }
   }
   return(idx);
@@ -1501,8 +2346,8 @@ static int	WlzLBTQueueUnlink(AlcCPQQueue *pQ, AlcHashTable *hT)
 /*!
 * \return	void
 * \ingroup	WlzDomainOps
-* \brief	Sets values within a nodes bounding box in an index
-*		object. All parameters are assumed valid.
+* \brief	Sets values within a node's bounding box in an index
+*		object for a 2D LBT. All parameters are assumed valid.
 * \param	lDom			Given LBT domain.
 * \param	iGVWSp			Grey workspace for index object.
 * \param	idN			Index of node in the LBT domain.
@@ -1528,9 +2373,43 @@ static void	WlzLBTSetNodeIndexObj2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	void
+* \ingroup	WlzDomainOps
+* \brief	Sets values within a node's bounding box in an index
+*		object for a 3D LBT. All parameters are assumed valid.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+*/
+static void	WlzLBTSetNodeIndexObj3D(WlzLBTDomain3D *lDom,
+				      WlzGreyValueWSpace *iGVWSp, int idN)
+{
+  int		pX,
+  		pY,
+		pZ;
+  WlzIBox3	nBox;
+  WlzLBTNode3D	*nod;
+
+  nod = lDom->nodes + idN;
+  WlzLBTKeyToBox3I(nod->keys, &nBox);
+  for(pZ = nBox.zMin; pZ <= nBox.zMax; ++pZ)
+  {
+    for(pY = nBox.yMin; pY <= nBox.yMax; ++pY)
+    {
+      for(pX = nBox.xMin; pX <= nBox.xMax; ++pX)
+      {
+	WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	*(iGVWSp->gPtr[0].inp) = idN;
+      }
+    }
+  }
+}
+
+/*!
 * \return	Non-zero if the node is on the boundary of the domain.
 * \ingroup	WlzDomainOps
-* \brief	Looks for a non-existant neighbour to the given node.
+* \brief	Looks for a non-existant neighbour to the given node in the
+*		2D LBT.
 * \param        lDom                    Given LBT domain.
 * \param        iGVWSp                  Grey workspace for index object.
 * \param        idN                     Index of node in the LBT domain.
@@ -1558,10 +2437,49 @@ static int	WlzLBTBndEdgNbrIdx2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Non-zero if the node is on the boundary of the domain.
+* \ingroup	WlzDomainOps
+* \brief	Looks for a non-existant neighbour to the given node in the
+*		3D LBT.
+* \param        lDom                    Given LBT domain.
+* \param        iGVWSp                  Grey workspace for index object.
+* \param        idN                     Index of node in the LBT domain.
+*/
+static int	WlzLBTBndEdgNbrIdx3D(WlzLBTDomain3D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN)
+{
+  int		isBnd;
+
+  isBnd = WlzLBTBndEdgNbrDirIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_IC);
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_IL);
+  }
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_IP);
+  }
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_DC);
+  }
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_DL);
+  }
+  if(isBnd == 0)
+  {
+    isBnd = WlzLBTBndEdgNbrDirIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_DP);
+  }
+  return(isBnd);
+}
+
+/*!
 * \return	Log of the size of the smallest neighbouring node or
 		-ve if there is no neighbour.
 * \ingroup	WlzDomainOps
-* \brief	Finds the size of the smallest neighbouring node.
+* \brief	Finds the size of the smallest neighbouring node in a 2D LBT.
 * \param	lDom			Given LBT domain.
 * \param	iGVWSp			Grey workspace for index object.
 * \param	idN			Index of node in the LBT domain.
@@ -1593,10 +2511,55 @@ static int	WlzLBTMinLogSzEdgeNbrIdx2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Log of the size of the smallest neighbouring node or
+		-ve if there is no neighbour.
+* \ingroup	WlzDomainOps
+* \brief	Finds the size of the smallest neighbouring node in a 3D LBT.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+*/
+static int	WlzLBTMinLogSzEdgeNbrIdx3D(WlzLBTDomain3D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN)
+{
+  int		sz,
+  		minSz;
+
+  minSz = WlzLBTMinLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_IC);
+  sz = WlzLBTMinLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_IL);
+  if((minSz < 0) || ((sz >= 0) && (sz < minSz)))
+  {
+    minSz = sz;
+  }
+  sz = WlzLBTMinLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_IP);
+  if((minSz < 0) || ((sz >= 0) && (sz < minSz)))
+  {
+    minSz = sz;
+  }
+  sz = WlzLBTMinLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_DC);
+  if((minSz < 0) || ((sz >= 0) && (sz < minSz)))
+  {
+    minSz = sz;
+  }
+  sz = WlzLBTMinLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_DL);
+  if((minSz < 0) || ((sz >= 0) && (sz < minSz)))
+  {
+    minSz = sz;
+  }
+  sz = WlzLBTMinLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idN, WLZ_DIRECTION_DP);
+  if((minSz < 0) || ((sz >= 0) && (sz < minSz)))
+  {
+    minSz = sz;
+  }
+  return(minSz);
+}
+
+/*!
 * \return	Non-zero if the node's neighbour in the given diection is
 *		outside the domain.
 * \ingroup	WlzDomainOps
-* \brief	Looks for a non-existant neighbour to the given node
+* \brief	Looks for a non-existant neighbour to the given 2D LBT node
 *		in the given direction.
 * \param	lDom			Given LBT domain.
 * \param	iGVWSp			Grey workspace for index object.
@@ -1646,11 +2609,90 @@ static int	WlzLBTBndEdgNbrDirIdx2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Non-zero if the node's neighbour in the given diection is
+*		outside the domain.
+* \ingroup	WlzDomainOps
+* \brief	Looks for a non-existant neighbour to the given 3D LBT node
+*		in the given direction.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+* \param	dir			Given direction.
+*/
+static int	WlzLBTBndEdgNbrDirIdx3D(WlzLBTDomain3D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN, WlzDirection dir)
+{
+  int		pX,
+  		pY,
+		pZ,
+		isBnd = 0;
+  WlzLBTNode3D	*nod;
+  WlzIBox3	nBB;
+
+  nod = lDom->nodes + idN;
+  WlzLBTKeyToBox3I(nod->keys, &nBB);
+  switch(dir)
+  {
+    case WLZ_DIRECTION_IC: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DC:
+      pX = (dir == WLZ_DIRECTION_IC)? nBB.xMax + 1: nBB.xMin - 1;
+      pY = nBB.yMin;
+      pZ = nBB.zMin;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      isBnd = iGVWSp->gVal[0].inv < 0;
+      while(!isBnd && (++pZ <= nBB.zMax))
+      {
+	while(!isBnd && (++pY <= nBB.yMax))
+	{
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  isBnd = iGVWSp->gVal[0].inv < 0;
+	}
+      }
+      break;
+    case WLZ_DIRECTION_IL: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DL:
+      pX = nBB.xMin;
+      pY = (dir == WLZ_DIRECTION_IL)? nBB.yMax + 1: nBB.yMin - 1;
+      pZ = nBB.zMin;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      isBnd = iGVWSp->gVal[0].inv < 0;
+      while(!isBnd && (++pZ <= nBB.zMax))
+      {
+	while(!isBnd && (++pX <= nBB.xMax))
+	{
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  isBnd = iGVWSp->gVal[0].inv < 0;
+	}
+      }
+      break;
+    case WLZ_DIRECTION_IP: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DP:
+      pX = nBB.xMin;
+      pY = nBB.yMin;
+      pZ = (dir == WLZ_DIRECTION_IP)? nBB.zMax + 1: nBB.zMin - 1;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      isBnd = iGVWSp->gVal[0].inv < 0;
+      while(!isBnd && (++pY <= nBB.yMax))
+      {
+	while(!isBnd && (++pX <= nBB.xMax))
+	{
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  isBnd = iGVWSp->gVal[0].inv < 0;
+	}
+      }
+      break;
+  }
+  return(isBnd);
+}
+
+
+/*!
 * \return	Log of the size of the smallest neighbouring node or
-		-ve if there is no neighbour.
+*		-ve if there is no neighbour.
 * \ingroup	WlzDomainOps
 * \brief	Finds the size of the smallest neighbouring node in the
-*		given direction.
+*		given direction in a 2D LBT.
 * \param	lDom			Given LBT domain.
 * \param	iGVWSp			Grey workspace for index object.
 * \param	idN			Index of node in the LBT domain.
@@ -1713,6 +2755,117 @@ static int	WlzLBTMinLogSzEdgeDirNbrIdx2D(WlzLBTDomain2D *lDom,
 	  if((sz >= 0) && ((minSz < 0) || (sz < minSz)))
 	  {
 	    minSz = sz;
+	  }
+	}
+      }
+      break;
+  }
+  return(minSz);
+}
+
+/*!
+* \return	Log of the size of the smallest neighbouring node or
+*		-ve if there is no neighbour.
+* \ingroup	WlzDomainOps
+* \brief	Finds the size of the smallest neighbouring node in the
+*		given direction in a 3D LBT.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+* \param	dir			Given direction.
+*/
+static int	WlzLBTMinLogSzEdgeDirNbrIdx3D(WlzLBTDomain3D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN, WlzDirection dir)
+{
+  int		id0,
+  		id1,
+		pX,
+  		pY,
+		pZ,
+		sz,
+		minSz = -1;
+  WlzLBTNode3D	*nod;
+  WlzIBox3	nBB;
+
+  nod = lDom->nodes + idN;
+  WlzLBTKeyToBox3I(nod->keys, &nBB);
+  switch(dir)
+  {
+    case WLZ_DIRECTION_IC: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DC:
+      pX = (dir == WLZ_DIRECTION_IC)? nBB.xMax + 1: nBB.xMin - 1;
+      pY = nBB.yMin;
+      pZ = nBB.zMin;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      id1 = iGVWSp->gVal[0].inv;
+      minSz = sz = (id1 >= 0)? WlzLBTNodeLogSz3D(lDom->nodes + id1): -1;
+      while(++pZ <= nBB.zMax)
+      {
+	while(++pY <= nBB.yMax)
+	{
+	  id0 = id1;
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  id1 = iGVWSp->gVal[0].inv;
+	  if((id1 != id0) && (id1 >= 0))
+	  {
+	    sz = WlzLBTNodeLogSz3D(lDom->nodes + id1);
+	    if((sz >= 0) && ((minSz < 0) || (sz < minSz)))
+	    {
+	      minSz = sz;
+	    }
+	  }
+	}
+      }
+      break;
+    case WLZ_DIRECTION_IL: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DL:
+      pX = nBB.xMin;
+      pY = (dir == WLZ_DIRECTION_IL)? nBB.yMax + 1: nBB.yMin - 1;
+      pZ = nBB.zMin;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      id1 = iGVWSp->gVal[0].inv;
+      minSz = sz = (id1 >= 0)? WlzLBTNodeLogSz3D(lDom->nodes + id1): -1;
+      while(++pZ <= nBB.zMax)
+      {
+	while(++pX <= nBB.xMax)
+	{
+	  id0 = id1;
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  id1 = iGVWSp->gVal[0].inv;
+	  if((id1 != id0) && (id1 >= 0))
+	  {
+	    sz = WlzLBTNodeLogSz3D(lDom->nodes + id1);
+	    if((sz >= 0) && ((minSz < 0) || (sz < minSz)))
+	    {
+	      minSz = sz;
+	    }
+	  }
+	}
+      }
+      break;
+    case WLZ_DIRECTION_IP: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DP:
+      pX = nBB.xMin;
+      pY = nBB.yMin;
+      pZ = (dir == WLZ_DIRECTION_IP)? nBB.zMax + 1: nBB.zMin - 1;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      id1 = iGVWSp->gVal[0].inv;
+      minSz = sz = (id1 >= 0)? WlzLBTNodeLogSz3D(lDom->nodes + id1): -1;
+      while(++pY <= nBB.yMax)
+      {
+	while(++pX <= nBB.xMax)
+	{
+	  id0 = id1;
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  id1 = iGVWSp->gVal[0].inv;
+	  if((id1 != id0) && (id1 >= 0))
+	  {
+	    sz = WlzLBTNodeLogSz3D(lDom->nodes + id1);
+	    if((sz >= 0) && ((minSz < 0) || (sz < minSz)))
+	    {
+	      minSz = sz;
+	    }
 	  }
 	}
       }
@@ -1785,7 +2938,7 @@ int		WlzLBTCountNodNbrDir2D(WlzLBTDomain2D *lDom,
 * \return	Index of maximum sized neighbour or -ve if no neighbour.
 * \ingroup	WlzDomainOps
 * \brief	Finds a maximum sized neighbour in the given direction
-*		then returns it's index and size.
+*		in the 2D LBT and then returns it's index and size.
 * \param	lDom			Given LBT domain.
 * \param	iGVWSp			Grey workspace for index object.
 * \param	idN			Index of node in the LBT domain.
@@ -1864,6 +3017,124 @@ static int	WlzLBTMaxLogSzEdgeDirNbrIdx2D(WlzLBTDomain2D *lDom,
 }
 
 /*!
+* \return	Index of maximum sized neighbour or -ve if no neighbour.
+* \ingroup	WlzDomainOps
+* \brief	Finds a maximum sized neighbour in the given direction
+*		in the 3D LBT and then returns it's index and size.
+* \param	lDom			Given LBT domain.
+* \param	iGVWSp			Grey workspace for index object.
+* \param	idN			Index of node in the LBT domain.
+* \param	dir			Given direction.
+* \param	dstSz			Destination pointer for log size
+*					of neighbour.
+*/
+static int	WlzLBTMaxLogSzEdgeDirNbrIdx3D(WlzLBTDomain3D *lDom,
+					WlzGreyValueWSpace *iGVWSp,
+					int idN, WlzDirection dir,
+					int *dstSz)
+{
+  int		id0,
+  		id1,
+		pX,
+  		pY,
+		pZ,
+		sz,
+		idM = -1,
+  		szM = -1;
+  WlzLBTNode3D	*nod;
+  WlzIBox3	nBB;
+
+  nod = lDom->nodes + idN;
+  WlzLBTKeyToBox3I(nod->keys, &nBB);
+  switch(dir)
+  {
+    case WLZ_DIRECTION_IC: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DC:
+      pX = (dir == WLZ_DIRECTION_IC)? nBB.xMax + 1: nBB.xMin - 1;
+      pY = nBB.yMin;
+      pZ = nBB.zMin;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      idM = id1 = iGVWSp->gVal[0].inv;
+      szM = sz = (id1 >= 0)? WlzLBTNodeLogSz3D(lDom->nodes + id1): -1;
+      while(++pZ <= nBB.zMax)
+      {
+	while(++pY <= nBB.yMax)
+	{
+	  id0 = id1;
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  id1 = iGVWSp->gVal[0].inv;
+	  if((id1 != id0) && (id1 >= 0))
+	  {
+	    sz = WlzLBTNodeLogSz3D(lDom->nodes + id1);
+	    if((sz >= 0) && ((szM < 0) || (sz > szM)))
+	    {
+	      szM = sz;
+	      idM = id1;
+	    }
+	  }
+	}
+      }
+      break;
+    case WLZ_DIRECTION_IL: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DL:
+      pX = nBB.xMin;
+      pY = (dir == WLZ_DIRECTION_IL)? nBB.yMax + 1: nBB.yMin - 1;
+      pZ = nBB.zMin;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      idM = id1 = iGVWSp->gVal[0].inv;
+      szM = sz = (id1 >= 0)? WlzLBTNodeLogSz3D(lDom->nodes + id1): -1;
+      while(++pZ <= nBB.zMax)
+      {
+	while(++pX <= nBB.xMax)
+	{
+	  id0 = id1;
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  id1 = iGVWSp->gVal[0].inv;
+	  if((id1 != id0) && (id1 >= 0))
+	  {
+	    sz = WlzLBTNodeLogSz3D(lDom->nodes + id1);
+	    if((sz >= 0) && ((szM < 0) || (sz > szM)))
+	    {
+	      szM = sz;
+	      idM = id1;
+	    }
+	  }
+	}
+      }
+      break;
+    case WLZ_DIRECTION_IP: /* FALLTHROUGH */
+    case WLZ_DIRECTION_DP:
+      pX = nBB.xMin;
+      pY = nBB.yMin;
+      pZ = (dir == WLZ_DIRECTION_IP)? nBB.zMax + 1: nBB.zMin - 1;
+      WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+      idM = id1 = iGVWSp->gVal[0].inv;
+      szM = sz = (id1 >= 0)? WlzLBTNodeLogSz3D(lDom->nodes + id1): -1;
+      while(++pY <= nBB.yMax)
+      {
+	while(++pX <= nBB.xMax)
+	{
+	  id0 = id1;
+	  WlzGreyValueGet(iGVWSp, pZ, pY, pX);
+	  id1 = iGVWSp->gVal[0].inv;
+	  if((id1 != id0) && (id1 >= 0))
+	  {
+	    sz = WlzLBTNodeLogSz3D(lDom->nodes + id1);
+	    if((sz >= 0) && ((szM < 0) || (sz > szM)))
+	    {
+	      szM = sz;
+	      idM = id1;
+	    }
+	  }
+	}
+      }
+      break;
+  }
+  *dstSz = szM;
+  return(idM);
+}
+
+/*!
 * \return	Node size: 0 on error else 1, 2, 4, ....
 * \ingroup	WlzDomainOps
 * \brief	Computes the size of a 2D linear binary tree node.
@@ -1902,6 +3173,55 @@ int		WlzLBTNodeLogSz2D(WlzLBTNode2D *nod)
   if(nod)
   {
     key = nod->keys[2];
+    sz = 0;
+    while(key)
+    {
+      key >>= 1;
+      ++sz;
+    }
+  }
+  return(sz);
+}
+
+/*!
+* \return	Node size: 0 on error else 1, 2, 4, ....
+* \ingroup	WlzDomainOps
+* \brief	Computes the size of a 3D linear binary tree node.
+* \param	nod			Given node.
+*/
+int		WlzLBTNodeSz3D(WlzLBTNode3D *nod)
+{
+  int		key,
+  		sz = 0;
+
+  if(nod)
+  {
+    key = nod->keys[3];
+    sz = 1;
+    while(key)
+    {
+      key >>= 1;
+      sz <<= 1;
+    }
+  }
+  return(sz);
+}
+
+/*!
+* \return	Node size: -1 on error else 0, 1, 2, ....
+* \ingroup	WlzDomainOps
+* \brief	Computes the log (base 2) of the size of a 3D linear binary
+*		tree node.
+* \param	nod			Given node.
+*/
+int		WlzLBTNodeLogSz3D(WlzLBTNode3D *nod)
+{
+  int		key,
+  		sz = -1;
+
+  if(nod)
+  {
+    key = nod->keys[3];
     sz = 0;
     while(key)
     {
@@ -2367,11 +3687,7 @@ static void	 WlzLBTCondenseNodes3D(WlzLBTDomain3D *lDom,
       allPrvD = 1;
       pNod = cNod++;
       /* Avoid condensing nodes which are on the boundary of the domain. */
-#ifdef HACK_OLD_CODE
-      if((bndCndFlg == 0) && WlzLBNodeAtBoundary3D(pDom, pNod))
-#else
       if((bndCndFlg == 0) && ((pNod->flags & WLZ_LBT_NODE_FLAG_BOUNDARY) != 0))
-#endif
       {
 	for(idD = 0; idD < lDom->depth; ++idD)
 	{
@@ -2561,11 +3877,7 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
       allPrvD = 1;
       pNod = cNod++;
       /* Avoid condensing nodes which are on the boundary of the domain. */
-#ifdef HACK_OLD_CODE
-      if((bndCndFlg == 0) && WlzLBNodeAtBoundary2D(iDom, pNod))
-#else
       if((bndCndFlg == 0) && ((pNod->flags & WLZ_LBT_NODE_FLAG_BOUNDARY) != 0))
-#endif
       {
 	for(idD = 0; idD < lDom->depth; ++idD)
 	{
@@ -2797,8 +4109,11 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
 	    (void )fprintf(fP, "%d", digits[idD]);
 	  }
 	  WlzLBTKeyToBox2I(nod2->keys, &(nBB.i2));
-	  (void )fprintf(fP, "  %d,%d,%d,%d\n",
+	  (void )fprintf(fP, "  %d,%d,%d,%d",
 			 nBB.i2.xMin, nBB.i2.yMin, nBB.i2.xMax, nBB.i2.yMax);
+	  (void )fprintf(fP, "  %d\n",
+			 (nBB.i2.xMax - nBB.i2.xMin + 1) *
+			 (nBB.i2.yMax - nBB.i2.yMin + 1));
 	  ++idN;
 	  ++nod2;
 	}
@@ -2829,9 +4144,13 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
 	    (void )fprintf(fP, "%d", digits[idD]);
 	  }
 	  WlzLBTKeyToBox3I(nod3->keys, &(nBB.i3));
-	  (void )fprintf(fP, "  %d,%d,%d,%d,%d,%d\n",
+	  (void )fprintf(fP, "  %d,%d,%d,%d,%d,%d",
 			 nBB.i3.xMin, nBB.i3.yMin, nBB.i3.zMin,
 			 nBB.i3.xMax, nBB.i3.yMax, nBB.i3.zMax);
+	  (void )fprintf(fP, "  %d\n",
+			 (nBB.i3.xMax - nBB.i3.xMin + 1) *
+			 (nBB.i3.yMax - nBB.i3.yMin + 1) *
+			 (nBB.i3.zMax - nBB.i3.zMin + 1));
 	  ++idN;
 	  ++nod3;
 	}
@@ -2976,6 +4295,7 @@ WlzErrorNum	WlzLBTTestOutputNodesVtk(FILE *fP, WlzDomain dom)
 typedef enum _WlzLBTTestOutType
 {
   WLZ_LBTDOMAIN_TEST_OUT_IDOM,
+  WLZ_LBTDOMAIN_TEST_OUT_IDX,
   WLZ_LBTDOMAIN_TEST_OUT_TXT,
   WLZ_LBTDOMAIN_TEST_OUT_VTK
 } WlzLBTTestOutType;
@@ -2993,14 +4313,12 @@ int		main(int argc, char *argv[])
   		ok = 1,
 		maxNodSz = INT_MAX,
 		maxBndNodSz = INT_MAX,
-		usage = 0,
-  		txtOut = 0,
-  		vtkOut = 1;
+		usage = 0;
   WlzLBTTestOutType outType = WLZ_LBTDOMAIN_TEST_OUT_VTK;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
   FILE		*fP = NULL;
-  WlzObject	*idObj = NULL,
+  WlzObject	*idxObj = NULL,
   		*inObj = NULL,
   		*outObj = NULL;
   WlzDomain	lDom,
@@ -3008,7 +4326,7 @@ int		main(int argc, char *argv[])
   WlzValues	nullVal;
   char		*inFileStr,
   		*outFileStr;
-  static char	optList[] = "bdtvho:",
+  static char	optList[] = "bditvho:",
   		outFileStrDef[] = "-",
   		inFileStrDef[] = "-";
 
@@ -3027,13 +4345,14 @@ int		main(int argc, char *argv[])
       case 'd':
         outType = WLZ_LBTDOMAIN_TEST_OUT_IDOM;
 	break;
+      case 'i':
+        outType = WLZ_LBTDOMAIN_TEST_OUT_IDX;
+	break;
       case 't':
         outType = WLZ_LBTDOMAIN_TEST_OUT_TXT;
-	vtkOut = 0;
         break;
       case 'v':
 	outType = WLZ_LBTDOMAIN_TEST_OUT_VTK;
-        txtOut = 0;
         break;
       case 'o':
 	outFileStr = optarg;
@@ -3127,13 +4446,27 @@ int		main(int argc, char *argv[])
 		     *argv, errMsg);
     }
   }
-  if(ok && balance)
+  if(ok && (balance || (outType == WLZ_LBTDOMAIN_TEST_OUT_IDX)))
   {
-   idObj = WlzLBTMakeNodeIndexObj2D(lDom.l2, inObj->domain.i, &errNum);
-   if(errNum == WLZ_ERR_NONE)
-   {
-      errNum = WlzLBTBalanceDomain2D(lDom.l2, idObj, maxNodSz, maxBndNodSz);
-   }
+    switch(lDom.core->type)
+    {
+      case WLZ_LBTDOMAIN_2D:
+        idxObj = WlzLBTMakeNodeIndexObj2D(lDom.l2, inObj->domain.i, &errNum);
+        if(errNum == WLZ_ERR_NONE)
+        {
+	   errNum = WlzLBTBalanceDomain2D(lDom.l2, idxObj, maxNodSz,
+	                                  maxBndNodSz);
+        }
+	break;
+      case WLZ_LBTDOMAIN_3D:
+        idxObj = WlzLBTMakeNodeIndexObj3D(lDom.l3, inObj->domain.p, &errNum);
+        if(errNum == WLZ_ERR_NONE)
+        {
+	   errNum = WlzLBTBalanceDomain3D(lDom.l3, idxObj, maxNodSz,
+	                                  maxBndNodSz);
+        }
+	break;
+    }
   }
   if(ok)
   {
@@ -3152,12 +4485,31 @@ int		main(int argc, char *argv[])
   {
     switch(outType)
     {
+      case WLZ_LBTDOMAIN_TEST_OUT_IDX:
+        errNum = WlzWriteObj(fP, idxObj);
+	break;
       case WLZ_LBTDOMAIN_TEST_OUT_IDOM:
-        outDom.i = WlzLBTDomainToIDomain(lDom.l2, &errNum);
-	if(errNum == WLZ_ERR_NONE)
+        switch(lDom.core->type)
 	{
-	  outObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, outDom, nullVal,
-	                       NULL, NULL, &errNum);
+          case WLZ_LBTDOMAIN_2D:
+            outDom.i = WlzLBTDomainToIDomain(lDom.l2, &errNum);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      outObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, outDom, nullVal,
+				   NULL, NULL, &errNum);
+	    }
+	    break;
+          case WLZ_LBTDOMAIN_3D:
+            outDom.p = WlzLBTDomainToPDomain(lDom.l3, &errNum);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      outObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, outDom, nullVal,
+				   NULL, NULL, &errNum);
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -3189,19 +4541,20 @@ int		main(int argc, char *argv[])
     }
   }
   (void )WlzFreeObj(inObj);
-  (void )WlzFreeObj(idObj);
+  (void )WlzFreeObj(idxObj);
   (void )WlzFreeLBTDomain2D(lDom.l2);
   if(usage)
   {
     (void )fprintf(stderr,
     "Usage: %s%s",
     *argv,
-    " [-o<output object>] [-h] [-b] [-t|v] [<input object>]\n"
+    " [-o<output object>] [-h] [-b] [-i|t|v] [<input object>]\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"
-    "  -o  Output object file name.\n"
+    "  -o  Output file name.\n"
     "  -b  Produce a balanced tree.\n"
     "  -d  Woolz interval or plane domain output.\n"
+    "  -i  Index object output.\n"
     "  -t  Text output.\n"
     "  -v  VTK output.\n");
   }

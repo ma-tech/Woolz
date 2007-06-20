@@ -216,6 +216,52 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 }
 
 /*!
+* \return	Six times the signed volume of the given tetrahedron.
+* \ingroup	WlzGeometry
+* \brief	Computes six times the signed volume of the given tetrahedron
+*		using simple determinant evaluation:
+*		\f[
+		area \times 6 = \left|
+		     \begin{array}{cccc}
+		     x_0 & y_0 & z_0 & 1 \\
+		     x_1 & y_1 & z_1 & 1 \\
+		     x_2 & y_2 & z_2 & 1 \\
+		     x_3 & y_3 & z_3 & 1
+		     \end{array}
+		     \right|
+		 \f]
+*		which can be written
+*		\f[
+                area \times 6 =
+  x_0 ((y_2 z_3 + y_1 (z_2 - z_3)) - (y_3 z_2 + z_1 (y_2 - y_3))) 
+- y_0 ((x_2 z_3 + x_1 (z_2 - z_3)) - (x_3 z_2 + z_1 (x_2 - x_3)))
++ z_0 ((x_2 y_3 + x_1 (y_2 - y_3)) - (x_3 y_2 + y_1 (x_2 - x_3)))
+- x_1 (y_2 z_3 - y_3 z_2) + y_1 (x_2 z_3 - x_3 z_2) - z_1 (x_2 y_3 - x_3 y_2)
+		\f]
+*		Simple evaluation of this determinant is not robust.
+* \param	vx0			First vertex of tetrahedron.
+* \param	vx1			Second vertex of tetrahedron.
+* \param	vx2			Third vertex of tetrahedron.
+* \param	vx3			Forth vertex of tetrahedron.
+*/
+double		WlzGeomTetraSnVolume6(WlzDVertex3 vx0, WlzDVertex3 vx1,
+				       WlzDVertex3 vx2, WlzDVertex3 vx3)
+{
+  double	vol6;
+
+  vol6 = vx0.vtX * ((vx2.vtY * vx3.vtZ + vx1.vtY * (vx2.vtZ - vx3.vtZ)) -
+                    (vx3.vtY * vx2.vtZ + vx1.vtZ * (vx2.vtY - vx3.vtY))) -
+	 vx0.vtY * ((vx2.vtX * vx3.vtZ + vx1.vtX * (vx2.vtZ - vx3.vtZ)) -
+	            (vx3.vtX * vx2.vtZ + vx1.vtZ * (vx2.vtX - vx3.vtX))) +
+	 vx0.vtZ * ((vx2.vtX * vx3.vtY + vx1.vtX * (vx2.vtY - vx3.vtY)) -
+	            (vx3.vtX * vx2.vtY + vx1.vtY * (vx2.vtX - vx3.vtX))) -
+	 vx1.vtX * (vx2.vtY * vx3.vtZ - vx3.vtY * vx2.vtZ) +
+	 vx1.vtY * (vx2.vtX * vx3.vtZ - vx3.vtX * vx2.vtZ) -
+	 vx1.vtZ * (vx2.vtX * vx3.vtY - vx3.vtX * vx2.vtY);
+  return(vol6);
+}
+
+/*!
 * \return	Twice the square of the area of the given triangle.
 * \ingroup	WlzGeometry
 * \brief	Computes twice the square of the area of the given
@@ -604,6 +650,28 @@ int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
   pos0.vtX -= pos1.vtX;
   pos0.vtY -= pos1.vtY;
   equal = ((pos0.vtX * pos0.vtX) + (pos0.vtY * pos0.vtY)) < tolSq;
+  return(equal);
+}
+
+/*!
+* \return	1 if node positions are equal, else 0.
+* \ingroup	WlzGeometry
+* \brief	Checks to see if two verticies are the same
+*               within some tollerance.
+* \param	pos0			First node position.
+* \param	pos1			Second node position.
+* \param	tolSq			Square of tollerance value.
+*/
+int		WlzGeomVtxEqual3D(WlzDVertex3 pos0, WlzDVertex3 pos1,
+				  double tolSq)
+{
+  int		equal;
+
+  pos0.vtX -= pos1.vtX;
+  pos0.vtY -= pos1.vtY;
+  pos0.vtZ -= pos1.vtZ;
+  equal = ((pos0.vtX * pos0.vtX) + (pos0.vtY * pos0.vtY) +
+	   (pos0.vtZ * pos0.vtZ)) < tolSq;
   return(equal);
 }
 
@@ -1437,6 +1505,23 @@ double		WlzGeomDistSq2D(WlzDVertex2 v0, WlzDVertex2 v1)
 }
 
 /*!
+* \return	Euclidean distance between the given vertices.
+* \ingroup	WlzGeometry
+* \brief	Computes square of the Euclidean distance between the given
+* 		two vertices.
+* \param	v0			First of the given vertices.
+* \param	v1			Second of the given vertices.
+*/
+double		WlzGeomDistSq3D(WlzDVertex3 v0, WlzDVertex3 v1)
+{
+  double	dst;
+
+  WLZ_VTX_3_SUB(v0, v0, v1);
+  dst = WLZ_VTX_3_SQRLEN(v0);
+  return(dst);
+}
+
+/*!
 * \return       Non zero if the area of the triangle is very small.
 * \ingroup      WlzGeometry
 * \brief        If the unsigned area of the triangle is very small
@@ -1502,4 +1587,450 @@ int             WlzGeomTriangleAffineSolve(double *xTr, double *yTr, double dd,
               (dVx[2].vtY * tD2)) * dd;
   }
   return(squashed);
+}
+
+/*!
+* \return       Non zero if the volume of the tetrahedron is very small.
+* \ingroup      WlzGeometry
+* \brief        Computes the affine transform coefficients from the
+*		source to target tetrahedron.
+*
+*		This is done by solving for general 3D affine transform
+*		matrix which transforms the source tetrahedrons vertices
+*		to those of the destination tetrahedron
+*		If the destination tetrahedron vertices are given by
+*		\f[
+                D = \left(
+		    \begin{array}{cccc}
+                    d_{x0} & d_{x0} & d_{x1} & d_{x2} \\
+                    d_{y0} & d_{y0} & d_{y1} & d_{y2} \\
+                    d_{z0} & d_{z0} & d_{z1} & d_{z2} \\
+                    1      & 1      & 1      & 1
+		    \end{array}
+		    \right)
+                \f]
+*		and the source vertices by
+*		\f[
+                S = \left(
+		    \begin{array}{cccc}
+                    s_{x0} & s_{x0} & s_{x1} & s_{x2} \\
+                    s_{y0} & s_{y0} & s_{y1} & s_{y2} \\
+                    s_{z0} & s_{z0} & s_{z1} & s_{z2} \\
+                    1      & 1      & 1      & 1
+		    \end{array}
+		    \right)
+                \f]
+*		then the transform being sought satisfies
+*		\f[
+                D = T S
+                \f]
+*		Solving for \f$T\f$
+*		\f[
+                T = D S^{-1}
+                \f]
+*		Setting
+*		\f[
+		U = S^{-1}
+		\f]
+		with
+*		\f[
+                U = \left(
+		    \begin{array}{cccc}
+                    u_{11} & u_{12} & u_{13} & u_{14} \\
+                    u_{21} & u_{22} & u_{23} & u_{24} \\
+                    u_{31} & u_{32} & u_{33} & u_{34} \\
+                    u_{41} & u_{42} & u_{43} & u_{44}
+		    \end{array}
+		    \right)
+                \f]
+*		and
+		\f[
+		d = \det(S)
+		\f]
+*		For efficiency the followingcollect common sub-expressions
+*		are used
+		\f{eqnarray*}
+		cz2z3 = s_{z2} - s_{z3} \\
+		cz1z3 = s_{z1} - s_{z3} \\
+		cz1z2 = s_{z1} - s_{z2} \\
+		cy2y3 = s_{y2} - s_{y3} \\
+		cy1y3 = s_{y1} - s_{y3} \\
+		cy1y2 = s_{y1} - s_{y2} \\
+		cy2z3y3z2 = s_{y2} s_{z3} - s_{y3} s_{z2} \\
+		cy1z3y3z1 = s_{y1} s_{z3} - s_{y3} s_{z1} \\
+		cy1z2y2z1 = s_{y1} s_{z2} - s_{y2} s_{z1} \\
+		cz0z3 = s_{z0} - s_{z3} \\
+		cz0z2 = s_{z0} - s_{z2} \\
+		cy0y3 = s_{y0} - s_{y3} \\
+		cy0y2 = s_{y0} - s_{y2} \\
+		cy0z3y3z0 = s_{y0} s_{z3} - s_{y3} s_{z0} \\
+		cy0z2y2z0 = s_{y0} s_{z2} - s_{y2} s_{z0} \\
+		cz0z1 = s_{z0} - s_{z1} \\
+		cy0y1 = s_{y0} - s_{y1} \\
+		cy0z1y1z0 = s_{y0} s_{z1} - s_{y1} s_{z0}
+		\f}
+*		giving
+*		\f[
+		d =   s_{x0}( s_{y1} cz2z3 - s_{y2} cz1z3 + s_{y3} (cz1z2)) 
+                    + s_{x1}(-s_{y0} cz2z3 + s_{y2} cz0z3 - s_{y3} (cz0z2))
+                    + s_{x2}( s_{y0} cz1z3 - s_{y1} cz0z3 + s_{y3} (cz0z1))
+                    + s_{x3}(-s_{y0} cz1z2 + s_{y1} cz0z2 - s_{y2} (cz0z1))
+		\f]
+*		and for the non-degenerate case, when \f$d \not= 0\f$
+*		\f{eqnarray*}
+  u11 = \frac{1}{d}( s_{y1} cz2z3 - s_{y2} cz1z3 + s_{y3} cz1z2) \\
+  u12 = \frac{1}{d}(-s_{x1} cz2z3 + s_{x2} cz1z3 - s_{x3} cz1z2) \\
+  u13 = \frac{1}{d}( s_{x1} cy2y3 - s_{x2} cy1y3 + s_{x3} cy1y2) \\
+  u14 = \frac{1}{d}(-s_{x1} cy2z3y3z2 + s_{x2} cy1z3y3z1 - s_{x3} cy1z2y2z1) \\
+  u21 = \frac{1}{d}(-s_{y0} cz2z3 + s_{y2} cz0z3 - s_{y3} cz0z2)  \\
+  u22 = \frac{1}{d}( s_{x0} cz2z3 - s_{x2} cz0z3 + s_{x3} cz0z2) \\
+  u23 = \frac{1}{d}(-s_{x0} cy2y3 + s_{x2} cy0y3 - s_{x3} cy0y2)  \\
+  u24 = \frac{1}{d}( s_{x0} cy2z3y3z2 - s_{x2} cy0z3y3z0 + s_{x3} cy0z2y2z0) \\
+  u31 = \frac{1}{d}( s_{y0} cz1z3 - s_{y1} cz0z3 + s_{y3} cz0z1) \\
+  u32 = \frac{1}{d}(-s_{x0} cz1z3 + s_{x1} cz0z3 - s_{x3} cz0z1) \\
+  u33 = \frac{1}{d}( s_{x0} cy1y3 - s_{x1} cy0y3 + s_{x3} cy0y1)  \\
+  u34 = \frac{1}{d}(-s_{x0} cy1z3y3z1 + s_{x1} cy0z3y3z0 - s_{x3} cy0z1y1z0) \\
+  u41 = \frac{1}{d}(-s_{y0} cz1z2 + s_{y1} cz0z2 - s_{y2} cz0z1) \\
+  u42 = \frac{1}{d}( s_{x0} cz1z2 - s_{x1} cz0z2 + s_{x2} cz0z1)  \\
+  u43 = \frac{1}{d}(-s_{x0} cy1y2 + s_{x1} cy0y2 - s_{x2} cy0y1) \\
+  u44 = \frac{1}{d}( s_{x0} cy1z2y2z1 - s_{x1} cy0z2y2z0 + s_{x2} cy0z1y1z0)
+		\f}
+*		and so (\f$T = D U\f$)
+                \f{eqnarray*}
+		t11 = d_{x3} u41 + d_{x2} u31 + d_{x1} u21 + d_{x0} u11 \\
+		t12 = d_{x3} u42 + d_{x2} u32 + d_{x1} u22 + d_{x0} u12 \\
+		t13 = d_{x3} u43 + d_{x2} u33 + d_{x1} u23 + d_{x0} u13 \\
+		t14 = d_{x3} u44 + d_{x2} u34 + d_{x1} u24 + d_{x0} u14 \\
+		t21 = d_{y3} u41 + d_{y2} u31 + d_{y1} u21 + d_{y0} u11 \\
+		t22 = d_{y3} u42 + d_{y2} u32 + d_{y1} u22 + d_{y0} u12 \\
+		t23 = d_{y3} u43 + d_{y2} u33 + d_{y1} u23 + d_{y0} u13 \\
+		t24 = d_{y3} u44 + d_{y2} u34 + d_{y1} u24 + d_{y0} u14 \\
+		t31 = d_{z3} u41 + d_{z2} u31 + d_{z1} u21 + d_{z0} u11 \\
+		t32 = d_{z3} u42 + d_{z2} u32 + d_{z1} u22 + d_{z0} u12  \\
+		t33 = d_{z3} u43 + d_{z2} u33 + d_{z1} u23 + d_{z0} u13 \\
+		t34 = d_{z3} u44 + d_{z2} u34 + d_{z1} u24 + d_{z0} u14 \\
+		t41 = u41 + u31 + u21 + u11 (0) \\
+		t42 = u42 + u32 + u22 + u12 (0) \\
+		t43 = u43 + u33 + u23 + u13 (0) \\
+		t44 = u44 + u34 + u24 + u14 (1)
+		\f}
+*		For the degenerate cases in which \f$d \approx 0\f$
+*		then the transformation is given as a simple translation.
+* \param        tr                      Transform matrix with 4x4 contiguous
+* 					coefficients which are equivalent
+* 					to the base storage of the matrix
+*					in a WlzAffineTransform.
+* \param        sVx                     Source tetrahedron vertices.
+* \param        dVx                     Destination tetrahedron vertices.
+* \param	thresh			Threshold value which is the lower
+* 					limit of 6 x the source tetrahedron's
+*					volume.
+*/
+int             WlzGeomTetraAffineSolve(double *tr,
+					WlzDVertex3 *sVx,
+					WlzDVertex3 *dVx,
+					double thresh)
+{
+  int           squashed = 0;
+  double	d,
+  		cz2z3,
+		cz1z3,
+		cz1z2,
+		cy2y3,
+		cy1y3,
+		cy1y2,
+		cy2z3y3z2,
+		cy1z3y3z1,
+		cy1z2y2z1,
+		cz0z3,
+		cz0z2,
+		cy0y3,
+		cy0y2,
+		cy0z3y3z0,
+		cy0z2y2z0,
+		cz0z1,
+		cy0y1,
+		cy0z1y1z0;
+  double	u[4];
+
+  cz2z3 = sVx[2].vtZ - sVx[3].vtZ;
+  cz1z3 = sVx[1].vtZ - sVx[3].vtZ;
+  cz1z2 = sVx[1].vtZ - sVx[2].vtZ;
+  cy2y3 = sVx[2].vtY - sVx[3].vtY;
+  cy1y3 = sVx[1].vtY - sVx[3].vtY;
+  cy1y2 = sVx[1].vtY - sVx[2].vtY;
+  cy2z3y3z2 = sVx[2].vtY * sVx[3].vtZ - sVx[3].vtY * sVx[2].vtZ;
+  cy1z3y3z1 = sVx[1].vtY * sVx[3].vtZ - sVx[3].vtY * sVx[1].vtZ;
+  cy1z2y2z1 = sVx[1].vtY * sVx[2].vtZ - sVx[2].vtY * sVx[1].vtZ;
+  cz0z3 = sVx[0].vtZ - sVx[3].vtZ;
+  cz0z2 = sVx[0].vtZ - sVx[2].vtZ;
+  cy0y3 = sVx[0].vtY - sVx[3].vtY;
+  cy0y2 = sVx[0].vtY - sVx[2].vtY;
+  cy0z3y3z0 = sVx[0].vtY * sVx[3].vtZ - sVx[3].vtY * sVx[0].vtZ;
+  cy0z2y2z0 = sVx[0].vtY * sVx[2].vtZ - sVx[2].vtY * sVx[0].vtZ;
+  cz0z1 = sVx[0].vtZ - sVx[1].vtZ;
+  cy0y1 = sVx[0].vtY - sVx[1].vtY;
+  cy0z1y1z0 = sVx[0].vtY * sVx[1].vtZ - sVx[1].vtY * sVx[0].vtZ;
+  d =  sVx[0].vtX * ( sVx[1].vtY * cz2z3 - sVx[2].vtY * cz1z3 +
+                      sVx[3].vtY * (cz1z2))  +
+       sVx[1].vtX * (-sVx[0].vtY * cz2z3 + sVx[2].vtY * cz0z3 -
+                      sVx[3].vtY * (cz0z2)) +
+       sVx[2].vtX * ( sVx[0].vtY * cz1z3 - sVx[1].vtY * cz0z3 +
+                      sVx[3].vtY * (cz0z1)) +
+       sVx[3].vtX * (-sVx[0].vtY * cz1z2 + sVx[1].vtY * cz0z2 -
+                      sVx[2].vtY * (cz0z1));
+  if(fabs(d) < thresh)
+  {
+    squashed = 1;
+    tr[ 0] = tr[ 1] = tr[ 2] = 0.0;
+    tr[ 4] = tr[ 5] = tr[ 6] = 0.0;
+    tr[ 8] = tr[ 9] = tr[10] = 0.0;
+    tr[11] = tr[12] = tr[13] = 0.0;
+    tr[ 3] = 0.25 * (dVx[0].vtX + dVx[1].vtX + dVx[2].vtX + dVx[3].vtX -
+                     sVx[0].vtX - sVx[1].vtX - sVx[2].vtX - sVx[3].vtX);
+    tr[ 7] = 0.25 * (dVx[0].vtY + dVx[1].vtY + dVx[2].vtY + dVx[3].vtY -
+                     sVx[0].vtY - sVx[1].vtY - sVx[2].vtY - sVx[3].vtY);
+    tr[11] = 0.25 * (dVx[0].vtZ + dVx[1].vtZ + dVx[2].vtZ + dVx[3].vtZ -
+                     sVx[0].vtZ - sVx[1].vtZ - sVx[2].vtZ - sVx[3].vtZ);
+    tr[15] = 1.0;
+  }
+  else
+  {
+    squashed = 0;
+    d = 1.0 / d;
+    u[0] =  sVx[1].vtY * cz2z3 - sVx[2].vtY * cz1z3 + sVx[3].vtY * cz1z2;
+    u[1] = -sVx[0].vtY * cz2z3 + sVx[2].vtY * cz0z3 - sVx[3].vtY * cz0z2;
+    u[2] =  sVx[0].vtY * cz1z3 - sVx[1].vtY * cz0z3 + sVx[3].vtY * cz0z1;
+    u[3] = -sVx[0].vtY * cz1z2 + sVx[1].vtY * cz0z2 - sVx[2].vtY * cz0z1;
+    tr[ 0] = d * (dVx[3].vtX * u[3] + dVx[2].vtX * u[2] +
+                  dVx[1].vtX * u[1] + dVx[0].vtX * u[0]);
+    tr[ 4] = d * (dVx[3].vtY * u[3] + dVx[2].vtY * u[2] +
+                  dVx[1].vtY * u[1] + dVx[0].vtY * u[0]);
+    tr[ 8] = d * (dVx[3].vtZ * u[3] + dVx[2].vtZ * u[2] +
+                  dVx[1].vtZ * u[1] + dVx[0].vtZ * u[0]);
+    tr[12] = 0.0;
+    u[0] = -sVx[1].vtX * cz2z3 + sVx[2].vtX * cz1z3 - sVx[3].vtX * cz1z2;
+    u[1] =  sVx[0].vtX * cz2z3 - sVx[2].vtX * cz0z3 + sVx[3].vtX * cz0z2;
+    u[2] = -sVx[0].vtX * cz1z3 + sVx[1].vtX * cz0z3 - sVx[3].vtX * cz0z1;
+    u[3] =  sVx[0].vtX * cz1z2 - sVx[1].vtX * cz0z2 + sVx[2].vtX * cz0z1;
+    tr[ 1] = d * (dVx[3].vtX * u[3] + dVx[2].vtX * u[2] +
+                  dVx[1].vtX * u[1] + dVx[0].vtX * u[0]);
+    tr[ 5] = d * (dVx[3].vtY * u[3] + dVx[2].vtY * u[2] +
+                  dVx[1].vtY * u[1] + dVx[0].vtY * u[0]);
+    tr[ 9] = d * (dVx[3].vtZ * u[3] + dVx[2].vtZ * u[2] +
+                  dVx[1].vtZ * u[1] + dVx[0].vtZ * u[0]);
+    tr[13] = 0.0;
+    u[0] =  sVx[1].vtX * cy2y3 - sVx[2].vtX * cy1y3 + sVx[3].vtX * cy1y2;
+    u[1] = -sVx[0].vtX * cy2y3 + sVx[2].vtX * cy0y3 - sVx[3].vtX * cy0y2;
+    u[2] =  sVx[0].vtX * cy1y3 - sVx[1].vtX * cy0y3 + sVx[3].vtX * cy0y1;
+    u[3] = -sVx[0].vtX * cy1y2 + sVx[1].vtX * cy0y2 - sVx[2].vtX * cy0y1;
+    tr[ 2] = d * (dVx[3].vtX * u[3] + dVx[2].vtX * u[2] +
+                  dVx[1].vtX * u[1] + dVx[0].vtX * u[0]);
+    tr[ 6] = d * (dVx[3].vtY * u[3] + dVx[2].vtY * u[2] +
+                  dVx[1].vtY * u[1] + dVx[0].vtY * u[0]);
+    tr[10] = d * (dVx[3].vtZ * u[3] + dVx[2].vtZ * u[2] +
+                  dVx[1].vtZ * u[1] + dVx[0].vtZ * u[0]);
+    tr[14] = 0.0;
+    u[0] = -sVx[1].vtX * cy2z3y3z2 + sVx[2].vtX * cy1z3y3z1 -
+            sVx[3].vtX * cy1z2y2z1;
+    u[1] =  sVx[0].vtX * cy2z3y3z2 - sVx[2].vtX * cy0z3y3z0 +
+            sVx[3].vtX * cy0z2y2z0;
+    u[2] = -sVx[0].vtX * cy1z3y3z1 + sVx[1].vtX * cy0z3y3z0 -
+            sVx[3].vtX * cy0z1y1z0;
+    u[3] =  sVx[0].vtX * cy1z2y2z1 - sVx[1].vtX * cy0z2y2z0 +
+            sVx[2].vtX * cy0z1y1z0;
+    tr[ 3] = d * (dVx[3].vtX * u[3] + dVx[2].vtX * u[2] +
+                  dVx[1].vtX * u[1] + dVx[0].vtX * u[0]);
+    tr[ 7] = d * (dVx[3].vtY * u[3] + dVx[2].vtY * u[2] +
+                  dVx[1].vtY * u[1] + dVx[0].vtY * u[0]);
+    tr[11] = d * (dVx[3].vtZ * u[3] + dVx[2].vtZ * u[2] +
+                  dVx[1].vtZ * u[1] + dVx[0].vtZ * u[0]);
+    tr[15] = 1.0;
+  }
+  return(squashed);
+}
+
+/*!
+* \return      	Position of intersection.
+* \ingroup      WlzGeometry
+* \brief        Given a Woolz object and two vertices, finds the
+*               position along a line segment between the two
+*               vertices which is just inside/outside the boundary
+*		of the object. The destination pointer is used to
+*		return the status of the vertices, using the
+*		following
+*               code:
+*                 0 - One of the given verticies was inside and the
+*                     other outside,
+*                 1 - Both the given verticies were inside,
+*                 2 - Both the given verticies were outside.
+*		This function assumes that the line segment only crosses
+*		the object's boundary once.
+*
+*               Given the line segment \f$p_0\f$, \f$p_1\f$ any position
+*               along the segment can be given by a parameter \f$\alpha\f$
+*               (range [0-1]), where \f$p_x = p_0 + \alpha(p_1 - p_0)\f$.
+* \param        obj                     Given object. Object must have a
+*                                       valid domain.
+* \param        p0                      Position of first vertex.
+* \param        p1                      Position of first vertex.
+* \param        tol                     Acceptable placement error.
+* \param	inside			Non-zero if the returned position
+*					should be inside or on the
+*					boundary, if zero it will be
+*					outside or on the boundary.
+* \param        dstStat                 Destination pointer for status,
+*                                       may be NULL.
+*/
+WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
+					WlzDVertex2 p0, WlzDVertex2 p1,
+					double tol, int inside, int *dstStat)
+{
+  int           s0,
+                s1,
+                s2,
+                stat;
+  double        dErr;
+  WlzDVertex2   p2;
+
+  tol *= tol;
+  s0 = WlzInsideDomain(obj, 0.0, p0.vtY, p0.vtX, NULL);
+  s1 = WlzInsideDomain(obj, 0.0, p1.vtY, p1.vtX, NULL);
+  if(s0 != s1)
+  {
+    stat = 0;
+    if(s0 != 0)
+    {
+      /* Ensure that p0 is outside the domain. */
+      p2 = p0; p0 = p1; p1 = p2;
+      s2 = s0; s0 = s1; s1 = s2;
+    }
+    do
+    {
+      /* Find midpoint of p0 and p1. */
+      p2.vtX = 0.5 * (p0.vtX + p1.vtX);
+      p2.vtY = 0.5 * (p0.vtY + p1.vtY);
+      /* Check if the midpoint is within the object and update end points. */
+      s2 = WlzInsideDomain(obj, 0.0, p2.vtY, p2.vtX, NULL);
+      if(s2 != 0)
+      {
+        p1 = p2;
+      }
+      else
+      {
+        p0 = p2;
+      }
+      /* Check distance error. */
+      WLZ_VTX_2_SUB(p2, p0, p1);
+      dErr = WLZ_VTX_2_SQRLEN(p2);
+    }
+    while(dErr > tol);
+  }
+  else if(s0 != 0)
+  {
+    stat = 1;
+  }
+  else
+  {
+    stat = 2;
+  }
+  p2 = (inside)? p1: p0;
+  if(dstStat)
+  {
+    *dstStat = stat;
+  }
+  return(p2);
+}
+
+/*!
+* \return      	Position of intersection.
+* \ingroup      WlzGeometry
+* \brief        Given a Woolz object and two vertices, finds the
+*               position along a line segment between the two
+*               vertices which is just inside/outside the boundary
+*		of the object. The destination pointer is used to
+*		return the status of the vertices, using the
+*		following
+*               code:
+*                 0 - One of the given verticies was inside and the
+*                     other outside,
+*                 1 - Both the given verticies were inside,
+*                 2 - Both the given verticies were outside.
+*		This function assumes that the line segment only crosses
+*		the object's boundary once.
+*
+*               Given the line segment \f$p_0\f$, \f$p_1\f$ any position
+*               along the segment can be given by a parameter \f$\alpha\f$
+*               (range [0-1]), where \f$p_x = p_0 + \alpha(p_1 - p_0)\f$.
+* \param        obj                     Given object. Object must have a
+*                                       valid domain.
+* \param        p0                      Position of first vertex.
+* \param        p1                      Position of first vertex.
+* \param        tol                     Acceptable placement error.
+* \param	inside			Non-zero if the returned position
+*					should be inside or on the
+*					boundary, if zero it will be
+*					outside or on the boundary.
+* \param        dstStat                 Destination pointer for status,
+*                                       may be NULL.
+*/
+WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
+					WlzDVertex3 p0, WlzDVertex3 p1,
+					double tol, int inside, int *dstStat)
+{
+  int           s0,
+                s1,
+                s2,
+                stat;
+  double        dErr;
+  WlzDVertex3   p2;
+
+  tol *= tol;
+  s0 = WlzInsideDomain(obj, p0.vtZ, p0.vtY, p0.vtX, NULL);
+  s1 = WlzInsideDomain(obj, p1.vtZ, p1.vtY, p1.vtX, NULL);
+  if(s0 != s1)
+  {
+    stat = 0;
+    if(s0 != 0)
+    {
+      /* Ensure that p0 is outside the domain. */
+      p2 = p0; p0 = p1; p1 = p2;
+      s2 = s0; s0 = s1; s1 = s2;
+    }
+    do
+    {
+      /* Find midpoint of p0 and p1. */
+      p2.vtX = 0.5 * (p0.vtX + p1.vtX);
+      p2.vtY = 0.5 * (p0.vtY + p1.vtY);
+      p2.vtZ = 0.5 * (p0.vtZ + p1.vtZ);
+      /* Check if the midpoint is within the object and update end points. */
+      s2 = WlzInsideDomain(obj, p2.vtZ, p2.vtY, p2.vtX, NULL);
+      if(s2 != 0)
+      {
+        p1 = p2;
+      }
+      else
+      {
+        p0 = p2;
+      }
+      /* Check distance error. */
+      WLZ_VTX_3_SUB(p2, p0, p1);
+      dErr = WLZ_VTX_3_SQRLEN(p2);
+    }
+    while(dErr > tol);
+  }
+  else if(s0 != 0)
+  {
+    stat = 1;
+  }
+  else
+  {
+    stat = 2;
+  }
+  p2 = (inside)? p1: p0;
+  if(dstStat)
+  {
+    *dstStat = stat;
+  }
+  return(p2);
 }

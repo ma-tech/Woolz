@@ -1556,9 +1556,9 @@ static WlzObject *WlzFromArrayBit2D(WlzUByte **arrayP,
   		      (arraySize.vtX * arraySize.vtY / ivPoolTune);
   dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
   				   arrayOrigin.vtY,
-				   arrayOrigin.vtY + arraySize.vtY - 1,
+				   arrayOrigin.vtY + arraySize.vtY,
 				   arrayOrigin.vtX,
-				   arrayOrigin.vtX + arraySize.vtX - 1,
+				   arrayOrigin.vtX + arraySize.vtX,
 				   &errNum);
   idY = 0;
   while((errNum == WLZ_ERR_NONE) && (idY < arraySize.vtY))

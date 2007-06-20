@@ -995,7 +995,7 @@ WlzFnType	WlzStringToFnType(const char *tStr,
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
 * \brief	Finds a string for the given function type.
-* \param	mtd			Given function type.
+* \param	fn			Given function type.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */

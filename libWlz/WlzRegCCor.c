@@ -48,6 +48,7 @@ static char _WlzRegCCor_c[] = "MRC HGU $Id$";
 
 /* #define WLZ_REGCCOR_TEST */
 /* #define WLZ_REGCCOR_DEBUG */
+#define WLZ_REGCCOR_NO_WINDOW
 
 static WlzAffineTransform 	*WlzRegCCorObjs2D(
 				  WlzObject *tObj,
@@ -630,8 +631,9 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
   }
   else
   {
-    oObj[1] = WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
-				   &errNum);
+    oObj[1] = WlzAssignObject(
+              WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
+				   &errNum), NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -645,6 +647,10 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
   /* Compute windowed objects. */
   if(errNum == WLZ_ERR_NONE)
   {
+#ifdef WLZ_REGCCOR_NO_WINDOW
+    wObj[0] = WlzAssignObject(oObj[0], NULL);
+    wObj[1] = WlzAssignObject(oObj[1], NULL);
+#else 
     oIdx = 0;
     while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
@@ -656,6 +662,7 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
       					     winOrg, winRad, &errNum), NULL);
       ++oIdx;
     }
+#endif
   }
   /* Compute the sums of squares for normalizing the cross correlation value if
    * it will be returned through the destination pointer. */

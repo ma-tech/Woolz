@@ -199,6 +199,16 @@ extern "C" {
 		(U).vtX = (V).vtX * (C), \
 		(U).vtY = (V).vtY * (C), \
 		(U).vtZ = (V).vtZ * (C)
+/* WLZ_VTX_2_SCALE_ADD: Scale a Wlz[DFI]Vertex2 then add a Wlz[DFI]Vertex2. */
+#define WLZ_VTX_2_SCALE_ADD(U,V,C,W) \
+		(U).vtX = (V).vtX * (C) + (W.vtX), \
+		(U).vtY = (V).vtY * (C) + (W.vtY)
+
+/* WLZ_VTX_3_SCALE_ADD: Scale a Wlz[DFI]Vertex3 then add a Wlz[DFI]Vertex3. */
+#define WLZ_VTX_3_SCALE_ADD(U,V,C,W) \
+		(U).vtX = (V).vtX * (C) + (W.vtX), \
+		(U).vtY = (V).vtY * (C) + (W.vtY), \
+		(U).vtZ = (V).vtZ * (C) + (W.vtZ)
 
 /* WLZ_VTX_2_DOT: Dot (scalar) product of two Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_DOT(V,W) \

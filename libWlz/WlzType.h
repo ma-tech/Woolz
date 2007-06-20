@@ -1795,82 +1795,84 @@ typedef struct _WlzGMResIdxTb
 } WlzGMResIdxTb;
 
 /************************************************************************
-* data structure for linear binary tree domains.
+* Data structures for linear binary tree domains.
 ************************************************************************/
 
 /*!
 * \enum		_WlzLBTNodeClass2D
 * \ingroup	WlzType
-* \brief	Classification of a 2D LBT node by its connectivity
-*		with it's neighbours.
+* \brief	Classification of a 2D LBT node a face of a 3D LBT node bycl
+*		its connectivity with it's neighbouring nodes (2D) or faces
+*		(3D)
 */
 typedef enum _WlzLBTNodeClass2D
 {
   WLZ_LBT_NODE_CLASS_2D_0, 	/*!< Node has no more than one neighbour on
                                      any edge.
 \verbatim
-+-----+
-|     |
-|     |
-|     |
-|     |
-|     |
-+-----+
+                                  0
+2D  +---+       3D               /
+    |   |           z      5----/4
+    |   |           ^  y   |   / |
+    |   |           | %    |  1  |
+    +---+           |/     |     |
+                    +--->x 2-----3
 \endverbatim */
   WLZ_LBT_NODE_CLASS_2D_1, 	/*!< Node has no more than one neighbour on all
   			  	     edges except one.
 \verbatim
-+--+--+
-|     |
-|     |
-|     |
-|     |
-+-----+
+                                  0
+2D  +-+-+       3D               /
+    |   |           z      5--6-/4
+    |   |           ^  y   |   / |
+    |   |           | %    |  1  |
+    +---+           |/     |     |
+                    +--->x 2-----3
 \endverbatim */
   WLZ_LBT_NODE_CLASS_2D_2,	/*!< Node only has more than one neighbour on
   				     adjacent edges.
 \verbatim
-+--+--+
-|     |
-|     |
-|     +
-|     |
-|     |
-+-----+
+                                  0
+2D  +-+-+       3D               /
+    |   |           z      5--6-/4
+    |   +           ^  y   |   / |
+    |   |           | %    |  1  7
+    +---+           |/     |     |
+                    +--->x 2-----3
 \endverbatim */
   WLZ_LBT_NODE_CLASS_2D_3,	/*!< Node only has more than one neighbour on
   				     opposite edges.
 \verbatim
-+--+--+
-|     |
-|     |
-|     |
-|     |
-|     |
-+--+--+
+                                  0
+2D  +-+-+       3D               /
+    |   |           z      5--6-/4
+    |   |           ^  y   |   / |
+    |   |           | %    |  1  |
+    +-+-+           |/     |     |
+                    +--->x 2--7--3
 \endverbatim */
 
   WLZ_LBT_NODE_CLASS_2D_4,	/*!< Node has more than one neighbour on all
   				     edges except one.
 \verbatim
-+--+--+
-|     |
-|     |
-|     +
-|     |
-|     |
-+--+--+
+                                  0
+2D  +-+-+       3D               /
+    |   |           z      5--6-/4
+    |   +           ^  y   |   / |
+    |   |           | %    |  1  8
+    +-+-+           |/     |     |
+                    +--->x 2--7--3
 \endverbatim */
   WLZ_LBT_NODE_CLASS_2D_5	/*!< Node has more than one neighbour on all
   				     edges.
 \verbatim
-+--+--+
-|     |
-|     |
-+     +
-|     |
-|     |
-+--+--+
+                                  0
+2D  +-+-+       3D               /
+    |   |           z      5--6-/4
+    +   +           ^  y   |   / |
+    |   |           | %    9  1  8
+    +-+-+           |/     |     |
+                    +--->x 2--7--3
 \endverbatim */
 } WlzLBTNodeClass2D;
 
@@ -2439,6 +2441,21 @@ typedef struct _WlzPartialItv2D
   int                   iright;
   int                   ln;
 } WlzPartialItv2D;
+
+/*!
+* \struct       _WlzPartialItv3D
+* \ingroup      DomainOps
+* \brief        Data structure that can be used to hold partial intervals.
+*               These can then be sorted and condensed to find the intervals
+*               for a plane domain.
+*/
+typedef struct _WlzPartialItv3D
+{
+  int                   ileft;
+  int                   iright;
+  int                   ln;
+  int			pl;
+} WlzPartialItv3D;
 
 /************************************************************************
 * Grey value tables.
@@ -3060,12 +3077,12 @@ typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
 typedef enum _WlzCMeshElmFlags
 {
   WLZ_CMESH_ELM_FLAG_NONE	= (0),
-  WLZ_CMESH_ELM_FLAG_BOUNDARY	= (1),	  /*!< Element intersects the boundary
-  					       of the domain to which it
-					       should conform. */
-  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2)	  /*!< Element is outside the domain to
-  					       which the mesh should
-					       conform. */
+  WLZ_CMESH_ELM_FLAG_BOUNDARY	= (1),	/*!< Element intersects the boundary
+  					     of the domain to which it
+					     should conform. */
+  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2)	/*!< Element is outside the domain to
+  					     which the mesh should
+					     conform. */
 } WlzCMeshElmFlags;
 
 /*!
@@ -3077,7 +3094,10 @@ typedef enum _WlzCMeshElmFlags
 */
 typedef enum _WlzCMeshNodFlags
 {
-  WLZ_CMESH_NOD_FLAG_NONE       = (0)
+  WLZ_CMESH_NOD_FLAG_NONE	= (0),
+  WLZ_CMESH_NOD_FLAG_ADJUSTED	= (1),	/*!< Node position adjusted. */
+  WLZ_CMESH_NOD_FLAG_BOUNDARY   = (2)	/*!< Node is on a boundary of the
+                                             mesh. */
 } WlzCMeshNodFlags;
 
 /*!
@@ -3145,8 +3165,6 @@ typedef struct _WlzCMeshEdg3D
                                              directed. */
   struct _WlzCMeshEdg3D *next;          /*!< Next directed edge, previous
                                              can be found using next->next. */
-  struct _WlzCMeshEdg3D *opp;           /*!< Opposite directed edge on
-                                             neighboring face. */
   struct _WlzCMeshEdg3D *nnxt;          /*!< Next edge directed from the
                                              same node (unordered). */
   struct _WlzCMeshFace *face;           /*!< Parent face. */
@@ -3185,6 +3203,82 @@ typedef struct _WlzCMeshElm2D
 * \ingroup      WlzMesh
 * \brief        A single 3D tetrahedral mesh element.
 *               Typedef: ::WlzCMeshElm3D.
+*		
+*		The following diagram depicts a mesh element, viewed from
+*		above with the apex (node n1) pointing towards the viewer.
+*		From this view, face f3 is at the rear of the tetrahedron.
+* \verbatim
+                                        O n3                         
+                                       /|\                   
+                                      / | \                  
+                                     /  |  \                 
+                                    /   |   \                
+                                   /    |    \    f3          
+                                  /     |     \  /           
+                                 /      |      \/            
+                                /       |      .\            
+                               /        |     .  \            
+                              /         |    .    \                  
+                             /          |   .      \                 
+                            /           O           \                
+                           /      f2   / \    f1     \               
+                          /          /  n1 \          \              
+                         /         /         \         \             
+                        /        /             \        \            
+                       /       /                 \       \            
+                      /      /                     \      \            
+                     /     /                         \     \            
+                    /    /              f0             \    \            
+                   /   /                                 \   \            
+                  /  /                                     \  \           
+                 / /                                         \ \           
+             n2 O-----------------------------------------------O n0        
+\endverbatim
+*		The relationship between nodes and faces depicted in
+*		this diagrap is used in constructing new mesh elements.
+*
+*		The tetrahedron can be opened a net and viewed looking
+*		at the directed edges associated with the faces from
+*		outside surface as shown below:
+* \verbatim
+                                    n1                                
+   n3 O-----------------------------O-----------------------------0 n3  
+       \    ---------------------> / \    -------------------->  /    
+        \ %         e2            / % \ %         e1            /     
+         \ \                   / / /   \ \                  /  /      
+          \ \                 / / /   \ \ \                /  /       
+           \ \               / / /     \ \ \              /  /        
+            \ \     f3      / / /       \ \ \     f1     /  /        
+             \ \ e1     e0 / / /         \ \ \ e2    e0 /  /         
+              \ \         / / /           \ \ \        /  /           
+               \ \       / / /     f0      \ \ \      /  /             
+                \ \     / / /  e1       e0  \ \ \    /  /               
+                 \ \   / / /                 \ \    /  /                 
+                  \   / / /                   \ \  %  /                   
+                   \ % /           e2          % \   /                    
+                    \ /  <--------------------    \ /                       
+                     O-----------------------------O                         
+                   n2 \ %  -------------------->  / n0                
+                       \ \         e0            /                    
+                        \ \                   / /                     
+                         \ \                 / /                      
+                          \ \               / /                       
+                           \ \     f2      / /                        
+                            \ \           / /                         
+                             \ \ e1   e2 / /                          
+                              \ \       / /                           
+                               \ \     / /                            
+                                \ \   / /                            
+                                 \   / /                              
+                                  \ % /                               
+                                   \ /                                
+                                    O                                 
+                                   n3                                 
+\endverbatim
+*		Each mesh element has four faces and each face has three
+*		directed edges, with the edges directed counter clockwise
+*		(when viewed from outside the mesh element) away from their
+*		nodes.
 */
 typedef struct _WlzCMeshElm3D
 {
@@ -3301,8 +3395,6 @@ typedef struct _WlzCMesh2D
   int           type;                   /*!< Type of mesh. */
   int           linkcount;              /*!< Core. */
   void          *freeptr;               /*!< Core. */
-  WlzDBox2      bBox;                   /*!< Axis aligned bounding box of
-                                             the mesh. */
   double	maxSqEdgLen;		/*!< Maximum of squared edge lengths
   					     which can be used to restrict
 					     geometric searches. This may not
@@ -3310,6 +3402,8 @@ typedef struct _WlzCMesh2D
 					     deleted or modified so it should
 					     not be relied upon for any more
 					     than an upper limit. */
+  WlzDBox2      bBox;                   /*!< Axis aligned bounding box of
+                                             the mesh. */
   WlzCMeshBucketGrid2D bGrid;           /*!< Mesh grid of buckets. */
   struct _WlzCMeshRes res;              /*!< Mesh resources. */
 
@@ -3329,6 +3423,13 @@ typedef struct _WlzCMesh3D
   int           type;                   /*!< Type of mesh. */
   int           linkcount;              /*!< Core. */
   void          *freeptr;               /*!< Core. */
+  double	maxSqEdgLen;		/*!< Maximum of squared edge lengths
+  					     which can be used to restrict
+					     geometric searches. This may not
+					     be correct if nodes have been
+					     deleted or modified so it should
+					     not be relied upon for any more
+					     than an upper limit. */
   WlzDBox3      bBox;                   /*!< Axis aligned bounding box of
                                              the mesh. */
   WlzCMeshBucketGrid3D bGrid;           /*!< Mesh grid of buckets. */

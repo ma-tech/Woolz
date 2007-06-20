@@ -291,9 +291,9 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if(line < iDom->line1)
+  else if((line < iDom->line1) || (line > iDom->lastln))
   {
-    errNum = WLZ_ERR_PARAM_DATA;
+    errNum = WLZ_ERR_DOMAIN_DATA;
   }
   else if(iPool == NULL)
   {
@@ -301,7 +301,6 @@ WlzErrorNum 	WlzDynItvAdd(WlzIntervalDomain *iDom, WlzDynItvPool *iPool,
   }
   else
   {
-    iDom->lastln = line;
     itvLn = iDom->intvlines + line - iDom->line1;
     if((iPool->itvBlock == NULL) ||
        (iPool->itvsInBlock - iPool->offset - 1) < 1)
