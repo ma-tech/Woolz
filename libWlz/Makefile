@@ -76,6 +76,7 @@ CSOURCES		= \
 			WlzCentreOfMass.c \
 			WlzClipObjToBox.c \
 			WlzCMeshTransform.c \
+			WlzCMeshUtils.c \
 			WlzCompThresh.c \
 			WlzConstruct3D.c \
 			WlzContour.c \
