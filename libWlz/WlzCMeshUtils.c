@@ -438,7 +438,8 @@ WlzErrorNum	WlzCMeshGetBndElm3D(WlzCMesh3D *mesh,
 	{
 	  for(idF = 0; idF < 4; ++idF)
 	  {
-            if((elm->face[idF].opp == NULL) || (elm->face[idF].opp == elm))
+            if((elm->face[idF].opp == NULL) ||
+	       (elm->face[idF].opp == &(elm->face[idF])))
 	    {
 	      isBnd = 1;
 	      break;

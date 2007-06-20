@@ -2843,6 +2843,11 @@ extern WlzErrorNum              WlzLBTBalanceDomain2D(
                                   WlzObject *idDom,
 				  int maxSz,
 				  int maxBndNdSz);
+extern WlzErrorNum              WlzLBTBalanceDomain3D(
+				  WlzLBTDomain3D *lDom,
+				  WlzObject *iObj,
+				  int maxSz,
+				  int maxBndSz);
 extern WlzObject                *WlzLBTMakeNodeIndexObj2D(
                                   WlzLBTDomain2D *lDom,
                                   WlzIntervalDomain *iDom,
