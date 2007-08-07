@@ -106,13 +106,16 @@ static void usage(
 	  "%s -n <num domains> -r <radius> -t <type> -h -v  [<model-file>]\n"
 	  "\tRead in model domain from file or stdin and generate a set of random\n"
 	  "\tdomains within the model. <num domains> domains are created\n"
-	  "\taccording to type and written to stdout.\n"
+	  "\taccording to type and written to stdout.If domain sequence is\n"
+	  "\tselected then a series of incrementing domains will be generated,\n"
+	  "\twith each step a random selctio of pixels from the remaining set.\n"
 	  "Arguments:\n"
 	  "\t-m         generate a regular mesh of square domains with size\n"
 	  "\t           defined by the radius and type, enough domains will\n"
 	  "\t           be generated to cover the model.\n"
 	  "\t-n#        number of domains to be generate (default 100)\n"
 	  "\t-r#        radius parameter for random domains (default 100)\n"
+	  "\t-s         create an incrementing sequence of domains\n"
 	  "\t-t#        type of random domain default 1\n"
 	  "\t             = 1 - circular domain (on a single plane in 3D)\n"
 	  "\t             = 2 - spherical domain\n"
@@ -168,11 +171,12 @@ int main(
   char  **argv)
 {
   FILE		*inFile;
-  char 		optList[] = "mn:r:t:hv";
+  char 		optList[] = "mn:r:st:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   char		*errMsg;
   int		meshFlg=0;
+  int		seqFlg=0;
   int		verboseFlg=0;
   int		type=1;
   int		numDomains=100, domainCount;
@@ -181,6 +185,7 @@ int main(
   WlzObject	*obj, *baseDomain, *obj1, *obj2;
   WlzDomain	domain;
   WlzValues	values;
+  WlzPixelV	backgrnd;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -209,6 +214,10 @@ int main(
 	radius = 5.0;
 	fprintf(stderr, "%s: invalid radius, reset to 5\n", argv[0]);
       }
+      break;
+
+    case 's':
+      seqFlg = 1;
       break;
 
     case 't':
@@ -299,7 +308,54 @@ int main(
   minSize = WlzSize(baseDomain, &errNum) / 4;
 
   /* now generate random domains */
-  if( meshFlg ){
+  if( seqFlg ){
+    int 	pixelsPerStep, numPixels, *indices;
+    int		i, j, k, index;
+    long	ran;
+    double	dran;
+    WlzUByte	*values;
+
+    values = AlcCalloc(sizeof(char),
+		       (obj->domain.i->lastln - obj->domain.i->line1 + 1) *
+		       (obj->domain.i->lastkl - obj->domain.i->kol1 + 1));
+    obj1 = WlzMakeRect(obj->domain.i->line1,
+		       obj->domain.i->lastln,
+		       obj->domain.i->kol1,
+		       obj->domain.i->lastkl,
+		       WLZ_GREY_UBYTE, (int *) values, backgrnd,
+		       NULL, NULL, &errNum);
+
+    /* calc number of pixels to switch foreach step */
+    numPixels = WlzArea(obj1, &errNum);
+    pixelsPerStep = numPixels / numDomains;
+    indices = AlcMalloc(sizeof(int) * numPixels);
+    for(i=0; i < numPixels; i++){
+      indices[i] = i;
+    }
+
+    /* now randomise */
+    for(i=0; i < numPixels * 10; i++){
+      ran = random();
+      dran = ((double) (ran&0xffffff)) / 0xffffff;
+      j = dran * numPixels;
+      index = indices[j];
+      indices[j] = indices[0];
+      indices[0] = index;
+    }
+
+    /* create the domains */
+    k = 0;
+    WlzWriteObj(stdout, obj1);
+    for(i=0; i < numDomains; i++){
+      for(j=0; j < pixelsPerStep; j++, k++){
+	values[indices[k]] = 255;
+      }
+      WlzWriteObj(stdout, obj1);
+    }
+    
+    
+  }
+  else if( meshFlg ){
     int	xNum, yNum, zNum;
     int xWidth, yWidth, zWidth;
     int i, j, k;
