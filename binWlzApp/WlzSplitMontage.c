@@ -516,8 +516,8 @@ int             main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-v] [-a <min area>] [-A] [-b <base>] [-g <gap value>]\n"
-    "                       [-f <fmt>] [-F <fmt>] [-t <tol>]\n"
+    "Usage: %s [-h] [-v] [-a <min area>] [-A] [-b <base>] [-g <gap\n"
+    "                       value> [-f <fmt>] [-F <fmt>] [-t <tol>]\n"
     "                       [-w <border width>] <path to image file>\n"
     "Splits a montage image, one that is composed of several axis aligned\n"
     "rectangular component images separated by a gap, with the gap having\n"
