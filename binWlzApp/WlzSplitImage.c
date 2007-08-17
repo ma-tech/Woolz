@@ -111,6 +111,7 @@ origins of their bounding boxes increase.
 \ref BinWlzApp "WlzIntro(1)"
 \ref WlzLabel "WlzLabel(1)"
 \ref WlzThreshold "WlzThreshold(1)"
+\ref WlzSplitMontage "WlzSplitMontage(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

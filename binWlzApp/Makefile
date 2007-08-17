@@ -46,6 +46,7 @@ EXECUTABLES		= \
 			WlzReconstruct \
 			WlzSizeSelect \
 			WlzSplitImage \
+			WlzSplitMontage \
 			WlzObjCompareSpecial_01 \
 			WlzVtxDistance \
 			WlzVtxToObj \
@@ -83,6 +84,7 @@ CSOURCES		= \
 			WlzReconstruct.c \
 			WlzSizeSelect.c \
 			WlzSplitImage.c \
+			WlzSplitMontage.c \
 			WlzObjCompareSpecial_01.c \
 			WlzVtxDistance.c \
 			WlzVtxToObj.c \

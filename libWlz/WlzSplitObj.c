@@ -294,3 +294,224 @@ static int	WlzSplitObjSortSzFn(const void *cData,
   cmp = bSz - aSz;
   return(cmp);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzBinaryOps
+* \brief	Splits the given montage object into component objects
+*		clipped from the montage object.  The montage object
+*		must be composed of component images embedded in a
+*		background, with little variation in the background
+*		values.
+* \param	mObj			Montage object, which must be either
+*					a WLZ_2D_DOMAINOBJ or a
+*					WLZ_3D_DOMAINOBJ with values.
+* \param	gapV			Value for the uniform background.
+*					Must be either WLZ_GREY_INT or
+*					WLZ_GREY_RGBA.
+* \param	tol			Tolerance (fraction) for the
+*					variation in background values.
+* \param	bWidth			Additional boundary width added
+*					to detected images before they are
+*					clipped.
+* \param	minArea			Minimum area for a valid component
+*					image, must be greater than zero.
+* \param	maxComp			Maximum number of components.
+* \param	dstNComp		Destination pointer for the number of
+*					components extracted, must not be NULL.
+* \param	dstComp			Destination pointer for the extracted
+*					components, must not be NULL.
+*/
+WlzErrorNum 	WlzSplitMontageObj(WlzObject *mObj, WlzPixelV gapV,
+				      double tol, int bWidth, int minArea,
+				      int maxComp,
+				      int *dstNComp, WlzObject ***dstComp)
+{
+  int		id0,
+  		id1,
+		area,
+		nLComp = 0;
+  WlzObject	*gObj = NULL,
+  		*tObj = NULL;
+  WlzObject	**lComp;
+  WlzGreyType	objG;
+  WlzBox	box;
+  WlzPixelV	gapLV,
+  		gapHV;
+  WlzConnectType lCon;
+  int		tI[8];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tol = WLZ_CLAMP(tol, 0.0, 1.0);
+  if(mObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(minArea < 1)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(mObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	lCon = WLZ_4_CONNECTED;
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	lCon = WLZ_6_CONNECTED;
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    objG = WlzGreyTypeFromObj(mObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(gapV.type)
+    {
+      case WLZ_GREY_INT: /* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
+        break;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(objG == WLZ_GREY_RGBA)
+    {
+      if(gapV.type != WLZ_GREY_RGBA)
+      {
+        (void )WlzValueConvertPixel(&gapV, gapV, WLZ_GREY_RGBA);
+      }
+    }
+    else
+    {
+      if(gapV.type != WLZ_GREY_INT)
+      {
+        (void )WlzValueConvertPixel(&gapV, gapV, WLZ_GREY_INT);
+      }
+    }
+    gapLV.type = gapHV.type = gapV.type;
+    if(gapV.type == WLZ_GREY_INT)
+    {
+      tI[0] = gapV.v.inv * tol;
+      gapLV.v.inv = gapV.v.inv - tI[0];
+      gapHV.v.inv = gapV.v.inv + tI[0];
+      tObj = WlzThreshold(mObj, gapLV, WLZ_THRESH_HIGH, &errNum);
+      if((errNum == WLZ_ERR_NONE) && (tObj != NULL))
+      {
+	gObj = WlzThreshold(tObj, gapHV, WLZ_THRESH_LOW, &errNum);
+      }
+      (void )WlzFreeObj(tObj);
+      tObj = NULL;
+    }
+    else /* gapV.type == WLZ_GREY_RGBA */
+    {
+	tI[0] = WLZ_RGBA_RED_GET(gapV.v.rgbv);
+	tI[1] = (int )floor((double )(tI[0]) * tol);
+	tI[2] = tI[0] - tI[1];
+	tI[5] = tI[0] + tI[1];
+	tI[0] = WLZ_RGBA_GREEN_GET(gapV.v.rgbv);
+	tI[1] = (int )floor((double )(tI[0]) * tol);
+	tI[3] = tI[0] - tI[1];
+	tI[6] = tI[0] + tI[1];
+	tI[0] = WLZ_RGBA_BLUE_GET(gapV.v.rgbv);
+	tI[1] = (int )floor((double )(tI[0]) * tol);
+	tI[4] = tI[0] - tI[1];
+	tI[7] = tI[0] + tI[1];
+	tI[2] = WLZ_CLAMP(tI[2], 0, 255);
+	tI[3] = WLZ_CLAMP(tI[3], 0, 255);
+	tI[4] = WLZ_CLAMP(tI[4], 0, 255);
+	WLZ_RGBA_RGBA_SET(gapLV.v.rgbv, tI[2], tI[3], tI[4], 255);
+	tI[5] = WLZ_CLAMP(tI[5], 0, 255);
+	tI[6] = WLZ_CLAMP(tI[6], 0, 255);
+	tI[7] = WLZ_CLAMP(tI[7], 0, 255);
+	WLZ_RGBA_RGBA_SET(gapHV.v.rgbv, tI[5], tI[6], tI[7], 255);
+        gObj = WlzRGBABoxThreshold(mObj, gapLV, gapHV, &errNum);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tObj = WlzDiffDomain(mObj, gObj, &errNum);
+  }
+  (void )WlzFreeObj(gObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzLabel(tObj, &nLComp, &lComp, maxComp, 0, lCon);
+  }
+  (void )WlzFreeObj(tObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Get rid of small objects using minArea as the threshold. */
+    id0 = 0;
+    id1 = 0;
+    while(id0 < nLComp)
+    {
+      switch((*(lComp + id0))->type)
+      {
+        case WLZ_2D_DOMAINOBJ:
+	  area = WlzArea(*(lComp + id0), NULL);
+	  break;
+        case WLZ_3D_DOMAINOBJ:
+	  area = WlzVolume(*(lComp + id0), NULL);
+	  break;
+        default:
+          area = 0;
+	  break;
+      }
+      if(area >= minArea)
+      {
+        *(lComp + id1) = *(lComp + id0);
+        ++id1;
+      }
+      else
+      {
+        (void )WlzFreeObj(*(lComp + id0));
+	*(lComp + id0) = NULL;
+      }
+      ++id0;
+    }
+    nLComp = id1;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Clip rectangular objects from the montage object. */
+    id0 = 0;
+    while((errNum == WLZ_ERR_NONE) && (id0 < nLComp))
+    {
+      if(tObj->type == WLZ_2D_DOMAINOBJ)
+      {
+        box.i2 = WlzBoundingBox2I(*(lComp + id0), &errNum);
+	box.i2.xMin -= bWidth;
+	box.i2.yMin -= bWidth;
+	box.i2.xMax += bWidth;
+	box.i2.yMax += bWidth;
+	(void )WlzFreeObj(*(lComp + id0));
+	*(lComp + id0) = WlzClipObjToBox2D(mObj, box.i2, &errNum);
+      }
+      else /* tObj->type == WLZ_3D_DOMAINOBJ */
+      {
+        box.i3 = WlzBoundingBox3I(*(lComp + id0), &errNum);
+	box.i3.xMin -= bWidth;
+	box.i3.yMin -= bWidth;
+	box.i3.zMin -= bWidth;
+	box.i3.xMax += bWidth;
+	box.i3.yMax += bWidth;
+	box.i3.zMax += bWidth;
+	(void )WlzFreeObj(*(lComp + id0));
+	*(lComp + id0) = WlzClipObjToBox3D(mObj, box.i3, &errNum);
+      }
+      ++id0;
+    }
+  }
+  *dstNComp = nLComp;
+  *dstComp = lComp;
+  return(errNum);
+}

@@ -167,7 +167,7 @@ int             main(int argc, char **argv)
   {
     cMesh = WlzCMeshTransformFromObj(inObj,
 			  meshGenMth, minElmSz, maxElmSz,
-			  &dilObj, &errNum);
+			  &dilObj, 1, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;

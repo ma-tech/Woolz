@@ -198,7 +198,7 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     (void )WlzAssignObject(obj, NULL);
-    mesh = WlzCMeshFromObj(obj, minElmSz, maxElmSz, NULL, &errNum);
+    mesh = WlzCMeshFromObj(obj, minElmSz, maxElmSz, NULL, 1, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;

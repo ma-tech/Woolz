@@ -1252,6 +1252,7 @@ extern WlzCMeshTransform	*WlzCMeshTransformFromObj(
 				  double minDist,
 				  double maxDist,
 				  WlzObject **dstDilObj,
+				  int delOut,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshTransformObj(
 				  WlzObject *srcObj,
@@ -2274,6 +2275,12 @@ extern int			WlzGeomVxInTriangle(
 				  WlzDVertex2 vx1,
 			          WlzDVertex2 vx2,
 				  WlzDVertex2 vxP);
+extern int			WlzGeomVxInTetrahedron(
+				  WlzDVertex3 vx0,
+				  WlzDVertex3 vx1,
+			          WlzDVertex3 vx2,
+			          WlzDVertex3 vx3,
+				  WlzDVertex3 vxP);
 extern int 			WlzGeomInTriangleCircumcircle(
 				  WlzDVertex2 vx0,
 				  WlzDVertex2 vx1,
@@ -2372,6 +2379,11 @@ extern int			WlzGeomItrSpiral2I(
 				  int step,
 				  int *dstX,
 				  int *dstY);
+extern int			WlzGeomItrSpiral3I(
+				  int step,
+				  int *dstX,
+				  int *dstY,
+				  int *dstZ);
 extern double          		WlzGeomDistSq2D(
 				  WlzDVertex2 v0,
 				  WlzDVertex2 v1);
@@ -3241,6 +3253,7 @@ extern WlzCMeshP		WlzCMeshFromObj(
 				  double minElmSz,
 				  double maxElmSz,
 				  WlzObject **dstDilObj,
+				  int delOut,
 				  WlzErrorNum *dstErr);
 extern WlzCMesh2D               *WlzCMeshFromBalLBTDom2D(
                                   WlzLBTDomain2D *lDom,
@@ -3255,12 +3268,14 @@ extern WlzCMesh2D    		*WlzCMeshFromObj2D(
                                   double minElmSz,
                                   double maxElmSz,
 				  WlzObject **dstDilObj,
+				  int delOut,
                                   WlzErrorNum *dstErr);
 extern WlzCMesh3D               *WlzCMeshFromObj3D(
                                   WlzObject *obj,
 				  double minElmSz,
 				  double maxElmSz,
 				  WlzObject **dstDilObj,
+				  int delOut,
                                   WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzCMeshAddNewNodCb2D(
 				  WlzCMesh2D *mesh,
@@ -3419,11 +3434,6 @@ extern int                      WlzCMeshMatchNNod3D(
                                   int nNod,
                                   WlzDVertex3 *nPos,
                                   WlzCMeshNod3D **mNod);
-extern int                      WlzCMeshMatchNNod3D(
-                                  WlzCMesh3D *mesh,
-                                  int nNod,
-                                  WlzDVertex3 *nPos,
-                                  WlzCMeshNod3D **mNod);
 extern int                      WlzCMeshLocateNod2D(
                                   WlzCMesh2D *mesh,
                                   WlzDVertex2 nPos,
@@ -3441,6 +3451,18 @@ extern int			WlzCMeshElmEnclosingPos2D(
 				  int lastElmIdx,
 				  double pX,
 				  double pY);
+extern int			WlzCMeshElmEnclosingPos3D(
+				  WlzCMesh3D *mesh,
+				  int lastElmIdx,
+				  double pX,
+				  double pY,
+				  double pZ);
+extern int			WlzCMeshElmEnclosesPos2D(
+				  WlzCMeshElm2D *elm,
+				  WlzDVertex2 gPos);
+extern int			WlzCMeshElmEnclosesPos3D(
+				  WlzCMeshElm3D *elm,
+				  WlzDVertex3 gPos);
 extern void			WlzCMeshDbgOutVTK(
 				  FILE *fP,
 				  WlzCMeshP mesh);
@@ -4087,6 +4109,15 @@ extern WlzErrorNum		WlzSplitObj(
 				  int nReqComp,
 				  int *dstSizeArrayComp,
 				  WlzObject ***dstArrayComp);
+extern WlzErrorNum		WlzSplitMontageObj(
+				  WlzObject *mObj,
+				  WlzPixelV gapV,
+				  double tol,
+				  int bWidth,
+				  int minArea,
+				  int maxComp,
+				  int *dstNComp,
+				  WlzObject ***dstComp);
 
 /************************************************************************
 * WlzStdStructElements.c						*
