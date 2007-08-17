@@ -41,17 +41,19 @@ static char _WlzGeometry_c[] = "MRC HGU $Id$";
 * \bug          None known.
 */
 
-#include <math.h>
 #include <stdlib.h>
+#include <math.h>
 #include <float.h>
 #include <limits.h>
 #include <Wlz.h>
 
-static int		WlzGeomVtxSortRadialFn(
-			  void *p0,
-			  int *idxP,
-			  int idx0,
-			  int idx1);
+extern double			cbrt(double c);
+
+static int			WlzGeomVtxSortRadialFn(
+				  void *p0,
+				  int *idxP,
+				  int idx0,
+				  int idx1);
 
 /*!
 * \return	Zero if the circumcentre of the triangle lies at infinity,
@@ -137,12 +139,12 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *
 *		If a triangle has vertices \f$p_0, p_1, p_2\f$, then any point
 *		in the plane containing the triangle can be represented
-*		by: \f[p = \alpha*p_0 + \beta*p_2 + \gamma*p_3\f]
-*		subject to the constraint: \f[\alpha + \beta + \gamma = 1\f]
-*		If \f$p\f$ is outside the triangle at one or more of 
-*		\f$alpha\f$, \f$beta\f$ and \f$gamma\f$ is -ve. It
-*               is inside if all are -ve and on an edge of the triangle
-*		if any are close to zero (ie < DBL_EPSILON).
+*		by: \f[p = \lambda_0 p_0 + \lambda_1 p_2 + \lambda_2 p_3\f]
+*		subject to the constraint: \f[\lambda_0 + \lambda_1 + \lambda_2 = 1\f]
+*		\f$p\f$ is outside the triangle at one or more of 
+*		\f$lambda_0\f$, \f$lambda_1\f$ and \f$lambda_2\f$ is -ve.
+*		It is inside if all are +ve and on an edge of the
+*		triangle if any are close to zero (ie < DBL_EPSILON).
 * \param	vx0			First vertex of triangle.
 * \param	vx1			Second vertex of triangle.
 * \param	vx2			Third vertex of triangle.
@@ -158,9 +160,9 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 		tD,
 		tE,
 		tF,
-		alpha,
-		beta,
-		gamma,
+		l0,
+		l1,
+		l2,
 		delta;
 
   tA = vx0.vtX - vx2.vtX;
@@ -172,22 +174,195 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
   {
     tC = vx2.vtX - vxP.vtX;
     tF = vx2.vtY - vxP.vtY;
-    alpha = ((tB * tF) - (tC * tE)) / delta;
-    beta  = ((tC * tD) - (tA * tF)) / delta;
-    gamma = 1.0 - (alpha + beta);
-    if((alpha < -DBL_EPSILON) || (beta < -DBL_EPSILON) ||
-       (gamma < -DBL_EPSILON))
+    l0 = ((tB * tF) - (tC * tE)) / delta;
+    l1 = ((tC * tD) - (tA * tF)) / delta;
+    l2 = 1.0 - (l0 + l1);
+    if((l0 < -DBL_EPSILON) || (l1 < -DBL_EPSILON) ||
+       (l2 < -DBL_EPSILON))
     {
       inside = -1;
     }
-    else if((alpha > DBL_EPSILON) && (beta > DBL_EPSILON) &&
-            (gamma > DBL_EPSILON))
+    else if((l0 > DBL_EPSILON) && (l1 > DBL_EPSILON) &&
+            (l2 > DBL_EPSILON))
     {
       inside = 1;
     }
   }
   return(inside);
+}
 
+/*!
+* \return	Value indicating the position of the vertex with respect
+*               to the tetrahedron:
+*		  +ve if the vertex is inside the tetrahedron,
+*		  0   if the vertex is on an edge of the tetrahedron and
+*		  -ve if the vertex is outside the tetrahedron.
+* \ingroup	WlzGeometry
+* \brief	Test's to set if the given vertex lies within the given
+*		tetrahedron using a barycentric coordinates test.
+*
+*		If a tetrahedron has vertices \f$p_0, p_1, p_2, p_3\f$,
+*		then any point in the 3D space containing the 
+*		tetrahedron can be represented by:
+*		\f[p = \lambda_0 p_0 + \lambda_1 p_1 + \lambda_2 p_2 +
+                       \lambda_3 p_3\f]
+*		subject to the constraint:
+*		\f[\lambda_0 + \lambda_1 + \lambda_2 + \lambda_3 = 1\f]
+*		\f$p\f$ is outside the tetrahedron at one or more of 
+*		\f$\lambda_0\f$, \f$\lambda_1\f$, \f$\lambda_2\f$ and
+*		\f$\lambda_3\f$ is -ve. It is inside if all are +ve and
+*		on an edge of the tetrahedron if any are close to
+*		zero (ie fabs(x) < DBL_EPSILON).
+*
+* 		The barycentric coordinates are computed by inverting the
+*		The tetrahedron vertices
+*		\f[
+		V = \left[
+		    \begin{array}{cccc}
+		    vx_0 & vx_1 & vx_2 & vx_3 \\
+		    vy_0 & vy_1 & vy_2 & vy_3 \\
+		    vz_0 & vz_1 & vz_2 & vz_3 \\
+		       1 &    1 &    1 &    1
+		    \end{array}
+		    \right]
+		\f]
+*		the barycentric coordinates
+*		\f[
+                L = \left[
+		    \begin{array}{c}
+		    \lambda_0 \\
+		    \lambda_1 \\
+		    \lambda_2 \\
+		    \lambda_3
+		    \end{array}
+		    \right]
+                \f]
+*              and the point to be queried
+*		\f[
+                U = \left[
+		    \begin{array}{c}
+		    \px \\
+		    \py \\
+		    \pz \\
+		    1
+		    \end{array}
+		    \right]
+                \f]
+*		can be written \f[V L = P \f] and solved for the
+*		the barycentric coordinates using \f[L = V^{-1} P\f].
+* \param	v0			First vertex of tetrahedron.
+* \param	v1			Second vertex of tetrahedron.
+* \param	v2			Third vertex of tetrahedron.
+* \param	v3			Fourth vertex of tetrahedron.
+* \param	vP			Given vertex.
+*/
+int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
+				        WlzDVertex3 v2, WlzDVertex3 v3,
+				        WlzDVertex3 vP)
+{
+  int		inside = 0;
+  double	delta,
+		l0,
+		l1,
+		l2,
+		l3,
+		u0,
+		u1,
+		u2,
+		u3,
+		vy01,
+		vy02,
+		vy03,
+		vy12,
+		vy13,
+		vy23,
+		vyz01,
+		vyz02,
+		vyz03,
+		vyz12,
+		vyz13,
+		vyz23,
+                vz01,
+  		vz02,
+		vz03,
+		vz12,
+		vz13,
+		vz23;
+
+  vz01 =  v0.vtZ - v1.vtZ;
+  vz02 =  v0.vtZ - v2.vtZ;
+  vz03 =  v0.vtZ - v3.vtZ;
+  vz12 =  v1.vtZ - v2.vtZ;
+  vz13 =  v1.vtZ - v3.vtZ;
+  vz23 =  v2.vtZ - v3.vtZ;
+  delta =   v0.vtX * ( v1.vtY * vz23 - v2.vtY * vz13 + v3.vtY * vz12)
+	  + v1.vtX * (-v0.vtY * vz23 + v2.vtY * vz03 - v3.vtY * vz02)
+	  + v2.vtX * ( v0.vtY * vz13 - v1.vtY * vz03 + v3.vtY * vz01)
+	  + v3.vtX * (-v0.vtY * vz12 + v1.vtY * vz02 - v2.vtY * vz01);
+  if(fabs(delta) > DBL_EPSILON)
+  {
+    vy01 =  v0.vtY - v1.vtY;
+    vy02 =  v0.vtY - v2.vtY;
+    vy03 =  v0.vtY - v3.vtY;
+    vy12 =  v1.vtY - v2.vtY;
+    vy13 =  v1.vtY - v3.vtY;
+    vy23 =  v2.vtY - v3.vtY;
+    vyz01 = v0.vtY * v1.vtZ - v1.vtY * v0.vtZ;
+    vyz02 = v0.vtY * v2.vtZ - v2.vtY * v0.vtZ;
+    vyz03 = v0.vtY * v3.vtZ - v3.vtY * v0.vtZ;
+    vyz12 = v1.vtY * v2.vtZ - v2.vtY * v1.vtZ;
+    vyz13 = v1.vtY * v3.vtZ - v3.vtY * v1.vtZ;
+    vyz23 = v2.vtY * v3.vtZ - v3.vtY * v2.vtZ;
+    u0 =   v1.vtY * vz23  - v2.vtY * vz13  + v3.vtY * vz12;
+    u1 = - v1.vtX * vz23  + v2.vtX * vz13  - v3.vtX * vz12;
+    u2 =   v1.vtX * vy23  - v2.vtX * vy13  + v3.vtX * vy12;
+    u3 = - v1.vtX * vyz23 + v2.vtX * vyz13 - v3.vtX * vyz12;
+    l0 =  (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3) / delta;
+    if(l0 < -DBL_EPSILON)
+    {
+      inside = -1;
+    }
+    else
+    {
+      u0 = - v0.vtY * vz23  + v2.vtY * vz03  - v3.vtY * vz02;
+      u1 =   v0.vtX * vz23  - v2.vtX * vz03  + v3.vtX * vz02;
+      u2 = - v0.vtX * vy23  + v2.vtX * vy03  - v3.vtX * vy02;
+      u3 =   v0.vtX * vyz23 - v2.vtX * vyz03 + v3.vtX * vyz02;
+      l1 =  (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3) / delta;
+      if(l1 < -DBL_EPSILON)
+      {
+        inside = -1;
+      }
+      else
+      {
+	u0 =   v0.vtY * vz13  - v1.vtY * vz03  + v3.vtY * vz01;
+	u1 = - v0.vtX * vz13  + v1.vtX * vz03  - v3.vtX * vz01;
+	u2 =   v0.vtX * vy13  - v1.vtX * vy03  + v3.vtX * vy01;
+	u3 = - v0.vtX * vyz13 + v1.vtX * vyz03 - v3.vtX * vyz01;
+	l2 =  (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3) / delta;
+	if(l2 < -DBL_EPSILON)
+	{
+	  inside = -1;
+	}
+	else
+	{
+          l3 = 1.0 - (l0 + l1 + l2);
+	  if(l3 < -DBL_EPSILON)
+	  {
+	    inside = -1;
+	  }
+	  else if((l0 > DBL_EPSILON) &&
+	          (l1 > DBL_EPSILON) &&
+		  (l2 > DBL_EPSILON) &&
+		  (l3 > DBL_EPSILON))
+	  {
+	    inside = 1;
+	  }
+        }
+      }
+    }
+  }
+  return(inside);
 }
 
 /*!
@@ -1429,7 +1604,7 @@ int		WlzGeomVertexInDiamCircle(WlzDVertex2 lPos0, WlzDVertex2 lPos1,
 /*!
 * \return	Incremented spiral step count.
 * \ingroup	WlzGeometry
-* \brief	Iterates the given positions coordinates through an
+* \brief	Iterates the given positions coordinates through a 2D
 *		expanding integer spiral.
 * \param	step			Spiral step count, must be zero
 *					when this function is called for the
@@ -1484,6 +1659,149 @@ int             WlzGeomItrSpiral2I(int step, int *pX, int *pY)
       ++*pX;
     }
   }
+  return(step);
+}
+
+/*!
+* \return	Incremented spiral step count.
+* \ingroup	WlzGeometry
+* \brief	Iterates the given positions coordinates through a 3D
+*		expanding integer spiral.
+* \param	step			Spiral step count, must be zero
+*					when this function is called for the
+*					for first step.
+* \param	pX			Destination pointer for column
+*					coordinate.
+* \param	pY			Destination pointer for line
+*					coordinate.
+* \param	pZ			Destination pointer for plane
+*					coordinate.
+*/
+int             WlzGeomItrSpiral3I(int step, int *pX, int *pY, int *pZ)
+{
+  int           tI0,
+  		intermediate,
+		ring,
+  		shell,
+		stepInPn,
+		stepInPn1,
+		stepInRing,
+		stepInShell;
+  double	tD0;
+  const int	lutX[27] = { 0,
+                             0,  1,  1,  0, -1, -1, -1,  0,  1,
+			         1,  1,  0, -1, -1, -1,  0,  1,
+			     0,  1,  1,  0, -1, -1, -1,  0,  1},
+  		lutY[27] = { 0,
+		             0,  0,  1,  1,  1,  0, -1, -1, -1,
+		                 0,  1,  1,  1,  0, -1, -1, -1,
+		             0,  0,  1,  1,  1,  0, -1, -1, -1},
+  		lutZ[27] = { 0,
+		            -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		                 0,  0,  0,  0,  0,  0,  0,  0,
+		             1,  1,  1,  1,  1,  1,  1,  1,  1};
+  if(step < 27)
+  {
+    if(step < 0)
+    {
+      step = 0;
+    }
+    *pX = lutX[step];
+    *pY = lutY[step];
+    *pZ = lutZ[step];
+  }
+  else
+  {
+    intermediate = 0;
+    /* Each shell + all sub shells has (2n + 1)^3 steps, where n is the shell
+     * number. */
+    shell = ((int )(floor(cbrt(step))) + 1) / 2;
+    tI0 = 2 * shell - 1;
+    stepInShell = step - tI0 * tI0 * tI0; 
+    /* First and last planes of a shell have (2n +1)^2 steps.
+     * The (2n - 1) intermediate planes each have 8n steps. */
+    tI0 = 2 * shell + 1;
+    stepInPn1 = tI0 * tI0;
+    if(stepInShell <= stepInPn1)
+    {
+      /* In first plane of shell. */
+      stepInPn = stepInShell;
+      *pZ = -shell;
+    }
+    else
+    {
+      tI0 = stepInPn1 + 8 * shell * (2 * shell - 1);
+      if(stepInShell > tI0)
+      {
+        /* In last plane of shell. */
+	stepInPn = stepInShell - tI0; 
+	*pZ = shell;
+      }
+      else
+      {
+        /* In intermediate plane of shell. */
+        intermediate = 1;
+	tI0 = stepInShell - stepInPn1;
+	stepInPn = tI0 % (8 * shell);
+	*pZ = (tI0 / (8 * shell)) + 1 - shell;
+      }
+    }
+    if(intermediate)
+    {
+      ring = shell;
+      stepInRing = stepInPn;
+    }
+    else
+    {
+      if(stepInPn > 0)
+      {
+        ring =  ((int )floor(sqrt(stepInPn)) + 1) / 2;
+	tI0 = (2 * ring - 1);
+	stepInRing = stepInPn - tI0 * tI0;
+      }
+      else
+      {
+        ring = 0;
+	stepInRing = 0;
+      }
+    }
+    if(ring == 0)
+    {
+      *pX = 0;
+      *pY = 0;
+    }
+    else
+    {
+      tI0 = stepInRing % ring;
+      switch(tI0)
+      {
+	case 0:
+	  *pX = ring;
+	  *pY = stepInRing;
+	  break;
+	case 1: /* FALLTHROUGH */
+	case 2:
+	  *pX = (2 * ring) - stepInRing;
+	  *pY = ring;
+	  break;
+	case 3: /* FALLTHROUGH */
+	case 4:
+	  *pX =  -ring;
+	  *pY = (4 * ring) - stepInRing;
+	  break;
+	case 5: /* FALLTHROUGH */
+	case 6:
+	  *pX = (6 * ring) - stepInRing;
+	  *pY = -ring;
+	  break;
+	case 7:
+	  *pX =  ring;
+	  *pY = (8 * ring) - stepInRing;
+	  break;
+      }
+    }
+  }
+  ++step;
   return(step);
 }
 
@@ -1872,8 +2190,8 @@ int             WlzGeomTetraAffineSolve(double *tr,
 *               (range [0-1]), where \f$p_x = p_0 + \alpha(p_1 - p_0)\f$.
 * \param        obj                     Given object. Object must have a
 *                                       valid domain.
-* \param        p0                      Position of first vertex.
-* \param        p1                      Position of first vertex.
+* \param        p0                      First vertex.
+* \param        p1                      Second vertex.
 * \param        tol                     Acceptable placement error.
 * \param	inside			Non-zero if the returned position
 *					should be inside or on the
@@ -1964,8 +2282,8 @@ WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
 *               (range [0-1]), where \f$p_x = p_0 + \alpha(p_1 - p_0)\f$.
 * \param        obj                     Given object. Object must have a
 *                                       valid domain.
-* \param        p0                      Position of first vertex.
-* \param        p1                      Position of first vertex.
+* \param        p0                      First vertex.
+* \param        p1                      Second vertex.
 * \param        tol                     Acceptable placement error.
 * \param	inside			Non-zero if the returned position
 *					should be inside or on the

@@ -178,6 +178,12 @@ extern "C" {
 		(U).vtY = (V).vtY + (W).vtY + (X).vtY, \
 		(U).vtZ = (V).vtZ + (W).vtZ + (X).vtZ
 
+/* WLZ_VTX_4_ADD: Add four Wlz[DFI]Vertex3's */
+#define WLZ_VTX_3_ADD4(U,V,W,X,Y) \
+		(U).vtX = (V).vtX + (W).vtX + (X).vtX + (Y).vtX, \
+		(U).vtY = (V).vtY + (W).vtY + (X).vtY + (Y).vtY, \
+		(U).vtZ = (V).vtZ + (W).vtZ + (X).vtZ + (Y).vtZ
+
 /* WLZ_VTX_2_SUB: Subtract two Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_SUB(U,V,W) \
 		(U).vtX = (V).vtX - (W).vtX, \
