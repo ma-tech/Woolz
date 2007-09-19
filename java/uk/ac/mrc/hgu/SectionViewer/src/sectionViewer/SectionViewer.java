@@ -16,14 +16,13 @@ import com.sun.image.codec.jpeg.*;
 import uk.ac.mrc.hgu.Wlz.*;
 import wsetter.*;
 import zoom.*;
-import utils.*;
 
 /**
  *   Combined <b>View</b> & <b>Controller</b> class for SectionViewer component.
  */
 public class SectionViewer
     extends SectionViewerGUI
-    implements Serializable, WlzObjectType, WSetterConstants, JAV_Constants {
+    implements Serializable, WlzObjectType, WSetterConstants {
 
   /**  Toggle for display of debugging information. */
   private final boolean _debug = false;
@@ -209,9 +208,6 @@ public class SectionViewer
   /**   flag required by tie point application. */
   public boolean _drawfixLine = false;
 
-  /**   true if there are high res sections. */
-  public boolean _hasHighRes = false;
-
   /**
    *   Event handler for file menu selections.
    */
@@ -251,11 +247,6 @@ public class SectionViewer
    *   Event handler for invertButton control.
    */
   public invertButtonHandler invertHandler = null;
-
-  /**
-   *   Event handler for highResButton control.
-   */
-  public highResButtonHandler highResHandler = null;
 
   /**   System file separator ("/" or "\"). */
   private String SLASH = System.getProperty("file.separator");
@@ -327,9 +318,6 @@ public class SectionViewer
     invertHandler = new invertButtonHandler();
     invertButton.addActionListener(invertHandler);
 
-    highResHandler = new highResButtonHandler();
-    highResButton.addActionListener(highResHandler);
-
     zoomSetter.setEnabled(true);
     distSetter.setEnabled(true);
     pitchSetter.setEnabled(true);
@@ -347,24 +335,6 @@ public class SectionViewer
       }
       if (rollSetter != null) {
         rollSetter.setValue(0.0);
-      }
-      try {
-	 Method M1 = null;
-	 M1 = _parent.getClass().getMethod("hasHighResSections", (Class[])null);
-	 _hasHighRes = ((Boolean) M1.invoke(_parent, (Object[])null)).booleanValue();
-      }
-      catch (InvocationTargetException e) {
-	 System.out.println(e.getMessage());
-      }
-      catch (NoSuchMethodException ne) {
-	 System.out.println("SectionViewer: no such method 1");
-	 System.out.println(ne.getMessage());
-      }
-      catch (IllegalAccessException ae) {
-	 System.out.println(ae.getMessage());
-      }
-      if(_hasHighRes) {
-         addHighResButton(true);
       }
     }
     else if (viewType.equals("YZ")) {
@@ -654,24 +624,6 @@ public class SectionViewer
     _bigPanel.repaint();
   }
 
-  //...............................
-  /**
-   *   Adds / removes high res button from zoom control panel.
-   *   @param add true if button is to be added.
-   */
-  protected void addHighResButton(boolean add) {
-    zoomControlPanel.removeAll();
-    zoomControlPanel.add(zoomSetter);
-    zoomControlPanel.add(Box.createHorizontalGlue());
-    if(add) {
-       zoomControlPanel.add(highResButton);
-       zoomControlPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-       zoomControlPanel.add(Box.createHorizontalGlue());
-    }
-    zoomControlPanel.add(invertButton);
-    //revalidate();
-    //_bigPanel.repaint();
-  }
 //-------------------------------------------------------------
 // methods for opening / closing views
 //-------------------------------------------------------------
@@ -3745,111 +3697,6 @@ public class SectionViewer
     }
   }
 
-//---------------------------------------
-  /**
-   *   Event handler for
-   *   the highRes button.
-   */
-  public class highResButtonHandler
-      implements ActionListener {
-
-    public highResButtonHandler() {
-    }
-
-    public void actionPerformed(ActionEvent e) {
-       launchJavascriptViewer();
-       return;
-    }
-  }
-
- //-------------------------------------------------------------
-  protected void launchJavascriptViewer() {
-
-     Vector maxVec = distSetter.getMax();
-     Vector minVec = distSetter.getMin();
-     Vector valVec = distSetter.getValue();
-
-     Integer IVal;
-     Float FVal;
-     Double DVal;
-
-     double dval = 0.0;
-     int imin = 0;
-     int imax = 0;
-
-     int range;
-
-     switch (distSetter.getType()) {
-	case INTEGER:
-	   IVal = (Integer) valVec.elementAt(0);
-	   dval = (double) IVal.intValue();
-	   IVal = (Integer) maxVec.elementAt(0);
-	   imax = IVal.intValue();
-	   IVal = (Integer) minVec.elementAt(0);
-	   imin = IVal.intValue();
-	   break;
-	case FLOAT:
-	   FVal = (Float) valVec.elementAt(0);
-	   dval = (double) FVal.floatValue();
-	   FVal = (Float) maxVec.elementAt(0);
-	   imax = (int) FVal.floatValue();
-	   FVal = (Float) minVec.elementAt(0);
-	   imin = (int) FVal.floatValue();
-	   break;
-	case DOUBLE:
-	   DVal = (Double) valVec.elementAt(0);
-	   dval = DVal.doubleValue();
-	   DVal = (Double) maxVec.elementAt(0);
-	   imax = (int)DVal.doubleValue();
-	   DVal = (Double) minVec.elementAt(0);
-	   imin = (int)DVal.doubleValue();
-	   break;
-	default:
-	   break;
-     }
-
-     //System.out.println("value = "+dval);
-     //System.out.println("max = "+imax);
-     //System.out.println("min = "+imin);
-
-     long lval = (long)dval;
-
-     HighResDetails hrd = null; 
-     if (null != _parent) {
-	try {
-	   Method M1 = null;
-	   M1 = _parent.getClass().getMethod("getHighResDetails", (Class[])null);
-	   hrd = (HighResDetails) M1.invoke(_parent, (Object[])null);
-	}
-	catch (InvocationTargetException ie) {
-	   System.out.println(ie.getMessage());
-	}
-	catch (NoSuchMethodException ne) {
-	   System.out.println("getHighResDetails: no such method");
-	   System.out.println(ne.getMessage());
-	}
-	catch (IllegalAccessException ae) {
-	   System.out.println(ae.getMessage());
-	}
-     }
-
-     if(hrd == null) {
-        return;
-     }
-     hrd.setSectionNum(lval);
-
-     String url = hrd.getURL(true);
-
-     try{
-	utils.BrowserLauncher.openURL(url) ;
-     }
-     catch(Exception e2){
-	BrowserDialog bd = new BrowserDialog(null, url, true);
-	bd.setLocation(((screen.width)/2 -400), ((screen.height)/2 -100));
-	bd.showDialog();
-     }
-  } // launchJavascriptViewer()
-
 //WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 //---------------------------------------
 // Control ADAPTORS, wsetter to wlz object
@@ -3915,7 +3762,6 @@ public class SectionViewer
     double valArr[] = new double[1];
     Vector vec = null;
     double val;
-    boolean highRes = false;
 
     public WSetterToPitchAdaptor(WSetter cntrl, ViewStructModel mdl1,
                                  WlzObjModel mdl2) {
@@ -3944,13 +3790,6 @@ public class SectionViewer
       }
       VSmodel.setPhiDeg(val);
       VSmodel.getZeta(valArr);
-      if(_hasHighRes && !control.isAdjusting()) {
-	 if(val == 0.0) {
-	    highResButton.setEnabled(true);
-	 } else {
-	    highResButton.setEnabled(false);
-	 }
-      }
       val = (180.0 / Math.PI) * valArr[0];
       //rollSetter.setSliderEnabled(true);
       rollSetter.setValue(val);

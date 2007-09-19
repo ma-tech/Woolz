@@ -7,15 +7,21 @@ import javax.swing.border.*;
 
 import wsetter.*;
 import zoom.*;
-import utils.JAV_Constants;
 
 /**
  *   GUI for the SectionViewer.
  */
-public class SectionViewerGUI extends JPanel implements JAV_Constants {
+public class SectionViewerGUI extends JPanel {
 
   /** Toggles output of debugging messages. */
-  private final boolean _debug = false;
+   private final boolean _debug = false;
+
+   /**
+    *  Fonts used in GUI
+    */
+   public static final Font menuFont = new Font("default", Font.PLAIN, 11);
+   public static final Font feedbackFont = new Font("default", Font.PLAIN, 11);
+   public static final Font anatomyFont = new Font("default", Font.ITALIC, 11);
 
   /**
    *   Top level container for SectionViewer GUI.
@@ -678,9 +684,9 @@ public class SectionViewerGUI extends JPanel implements JAV_Constants {
     //_menubar.add(thresholdMenu);
     _menubar.add(helpMenu);
     //----------------------------------------------------------
-    menuH = _menubar.getFontMetrics(JAV_Constants.menuFont).getHeight() + bord;
+    menuH = _menubar.getFontMetrics(menuFont).getHeight() + bord;
     //......................................
-    fbH = xyzTextField.getFontMetrics(JAV_Constants.feedbackFont).getHeight() + bord;
+    fbH = xyzTextField.getFontMetrics(feedbackFont).getHeight() + bord;
     //......................................
     xyzH = fbH+2*bord;
     valH = fbH+2*bord;
@@ -689,15 +695,15 @@ public class SectionViewerGUI extends JPanel implements JAV_Constants {
     permH = menuH+vgap+fbimgH+vgap+distH;
     //----------------------------------------------------------
 
-    xyzTextField.setFont(JAV_Constants.feedbackFont);
+    xyzTextField.setFont(feedbackFont);
     xyzTextField.setEditable(false);
     xyzTextField.setBackground(fbCol);
 
-    valueTextField.setFont(JAV_Constants.feedbackFont);
+    valueTextField.setFont(feedbackFont);
     valueTextField.setEditable(false);
     valueTextField.setBackground(fbCol);
 
-    anatomyTextField.setFont(JAV_Constants.feedbackFont);
+    anatomyTextField.setFont(feedbackFont);
     anatomyTextField.setEditable(false);
     anatomyTextField.setBackground(fbCol);
 
@@ -804,7 +810,7 @@ public class SectionViewerGUI extends JPanel implements JAV_Constants {
     highResButton.setPreferredSize(new Dimension(highResW, highResH));
     highResButton.setMaximumSize(new Dimension(highResW, highResH));
     highResButton.setMinimumSize(new Dimension(highResW, highResH));
-    highResButton.setFont(JAV_Constants.feedbackFont);
+    highResButton.setFont(feedbackFont);
 
     invertButton = new JButton();
     invertButton.setPreferredSize(new Dimension(invertW, invertH));
