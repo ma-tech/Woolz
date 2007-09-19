@@ -5,46 +5,41 @@
  */
 
 package sectionViewer;
-import sectionViewer.*;
 
 import java.awt.*;
-import java.util.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-
-import javax.swing.plaf.basic.*;
 import java.awt.geom.*;
+import javax.swing.*;
+import javax.swing.plaf.basic.*;
 
 class VLabelUI extends BasicLabelUI {
 
        static {
 	       labelUI = new VLabelUI(false);
        }
-       
+
        protected boolean clockwise;
        VLabelUI( boolean clockwise )
        {
 	       super();
 	       this.clockwise = clockwise;
        }
-       
 
-   public Dimension getPreferredSize(JComponent c) 
+
+   public Dimension getPreferredSize(JComponent c)
    {
        Dimension dim = super.getPreferredSize(c);
        return new Dimension( dim.height, dim.width );
-   }   
+   }
 
    private static Rectangle paintIconR = new Rectangle();
    private static Rectangle paintTextR = new Rectangle();
    private static Rectangle paintViewR = new Rectangle();
    private static Insets paintViewInsets = new Insets(0, 0, 0, 0);
 
-       public void paint(Graphics g, JComponent c) 
+       public void paint(Graphics g, JComponent c)
    {
 
-       
+
        JLabel label = (JLabel)c;
        String text = label.getText();
        Icon icon = (label.isEnabled()) ? label.getIcon() : label.getDisabledIcon();
@@ -58,7 +53,7 @@ class VLabelUI extends BasicLabelUI {
 
        paintViewR.x = paintViewInsets.left;
        paintViewR.y = paintViewInsets.top;
-       
+
        // Use inverted height & width
        paintViewR.height = c.getWidth() - (paintViewInsets.left + paintViewInsets.right);
        paintViewR.width = c.getHeight() - (paintViewInsets.top + paintViewInsets.bottom);
@@ -66,19 +61,19 @@ class VLabelUI extends BasicLabelUI {
        paintIconR.x = paintIconR.y = paintIconR.width = paintIconR.height = 0;
        paintTextR.x = paintTextR.y = paintTextR.width = paintTextR.height = 0;
 
-       String clippedText = 
+       String clippedText =
 	   layoutCL(label, fm, text, icon, paintViewR, paintIconR, paintTextR);
 
        Graphics2D g2 = (Graphics2D) g;
        AffineTransform tr = g2.getTransform();
        if( clockwise )
        {
-	       g2.rotate( Math.PI / 2 ); 
+	       g2.rotate( Math.PI / 2 );
 	       g2.translate( 0, - c.getWidth() );
        }
        else
        {
-	       g2.rotate( - Math.PI / 2 ); 
+	       g2.rotate( - Math.PI / 2 );
 	       g2.translate( - c.getHeight(), 0 );
        }
 
@@ -97,8 +92,8 @@ class VLabelUI extends BasicLabelUI {
 	       paintDisabledText(label, g, clippedText, textX, textY);
 	   }
        }
-       
-       
+
+
        g2.setTransform( tr );
    }
 }

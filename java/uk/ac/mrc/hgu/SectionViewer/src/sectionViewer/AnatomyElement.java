@@ -1,11 +1,4 @@
 package sectionViewer;
-import sectionViewer.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.io.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
@@ -16,7 +9,7 @@ import uk.ac.mrc.hgu.Wlz.*;
  */
 public class AnatomyElement {
 
-   
+
    /**   The 3D anatomy component.  */
    private WlzObject _obj;
    /**   The full name of the anatomy component.  */
@@ -31,7 +24,7 @@ public class AnatomyElement {
    //private boolean _removed;
 
    /**
-    *   Creates an AnatomyElement with the given anatomy component (obj), 
+    *   Creates an AnatomyElement with the given anatomy component (obj),
     *   and name (descr).
     *   @param obj A 3D Woolz object representing an anatomy component.
     *   @param descr A String giving the full name of the anatomy component.
@@ -119,4 +112,4 @@ public class AnatomyElement {
 
 }
 
- 
+

@@ -1,14 +1,12 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import java.net.*;
 import java.io.*;
+import java.net.*;
 import java.util.*;
+//import javax.help.*;
+
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.JColorChooser;
-import javax.help.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
@@ -24,7 +22,7 @@ public class SVParent2D implements SVParent {
 
   /**   Model for the underlying 3D Woolz object. */
   private WlzObjModel _OBJModel = null;
-  
+
   /**   Object that will build the anatomy menus. */
   private AnatomyBuilder _anatBuilder = null;
 
@@ -32,7 +30,7 @@ public class SVParent2D implements SVParent {
   private SVLocks _Locks = null;
 
   /**   Collection of currently open SectionViewers. */
-  protected Vector _openViews = null;
+  protected Vector<SectionViewer> _openViews = null;
 
   /**   Indicates colour of anatomy components in SectionViewers. */
   protected AnatKey _key = null;
@@ -44,17 +42,17 @@ public class SVParent2D implements SVParent {
   protected AnatomyElement _anatomyArr[];
 
   /**   Array of objects corresponding to rows in the AnatKey. */
-  protected Vector _elementVec = null;
+  protected Vector<AnatomyElement> _elementVec = null;
 
   /**   Manages events initiated from the AnatKey controls. */
   protected keyToControllerAdaptor K2C_1 = null;
 
 
   /**   Java Help Helpset for SectionViewer. */
-  private HelpSet _hs = null;
+  //private HelpSet _hs = null;
 
   /**   Java Help HelpBroker for SectionViewer. */
-  private HelpBroker _helpBroker = null;
+  //private HelpBroker _helpBroker = null;
 
   /**   toggles display of debugging messages */
   private final boolean _debug = false;
@@ -86,7 +84,7 @@ public class SVParent2D implements SVParent {
     _Locks = new SVLocks();
     _menuFont = font;
     init2D();
-    initHelp();
+    //initHelp();
   }
 
   /**
@@ -134,7 +132,7 @@ public class SVParent2D implements SVParent {
    *   and the AnatKey.
    */
   protected void init2D() {
-    _openViews = new Vector();
+    _openViews = new Vector<SectionViewer>();
     /* make sure only 1 AnatKey is created */
     if(_key == null) {
        _key = new AnatKey();
@@ -143,16 +141,16 @@ public class SVParent2D implements SVParent {
     _key.pack();
     _key.setVisible(false);
     _key.setResizable(true);
-    _elementVec = new Vector();
+    _elementVec = new Vector<AnatomyElement>();
 
     K2C_1 = new keyToControllerAdaptor();
   }
 //-----------------------------------------------------
   /**
    *   Initialises the Java Help system for SectionViewer.
-   */
   protected void initHelp() {
 
+    System.out.println("SVParent2D: enter initHelp");
     URL hsURL = null;
     Dummy dummy = new Dummy();
 
@@ -166,7 +164,9 @@ public class SVParent2D implements SVParent {
       System.out.println(ex.getMessage());
       System.out.println("error initialising help");
     }
+    System.out.println("SVParent2D: exit initHelp");
   }
+    */
 
 //-----------------------------------------------------
   /**
@@ -232,7 +232,7 @@ public class SVParent2D implements SVParent {
    *   @param imgFile the 3D Woolz file.
    */
   public void openGreyLevel(File imgFile) {
-  
+
      closeGreyLevel();
 
 // check that it's a Wlz file
@@ -324,7 +324,7 @@ public class SVParent2D implements SVParent {
 //-----------------------------------------------------
   /**
    *   Returns the Model for the underlying 3D Woolz object.
-   *   This is synchronized so that it can't return until 
+   *   This is synchronized so that it can't return until
    *   the 3D Woolz object has been read in.
    *   @return the WlzObjModel for the current 3D Woolz object.
    */
@@ -363,17 +363,17 @@ public class SVParent2D implements SVParent {
 
 //-----------------------------------------------------
   /**
-   *   Walks through an anatomy directory hierarchy accumulating 
+   *   Walks through an anatomy directory hierarchy accumulating
    *   3D Woolz files for each available anatomy component.
    *   @param str the filename of the current directory.
    *   @param sofar the current collection of anatomy component
    *   pathnames.
    *   @return the collection of anatomy component pathnames.
    */
-  public Vector collectWlzFiles(String str, Vector sofar) {
+  public Vector<String> collectWlzFiles(String str, Vector<String> sofar) {
     File currDir = new File(str);
     //Vector cumTotal = new Vector(sofar);
-    Vector cumTotal = sofar;
+    Vector<String> cumTotal = sofar;
     if(!currDir.isDirectory()) {
       //System.out.println("not a directory");
       return cumTotal;
@@ -446,8 +446,11 @@ public class SVParent2D implements SVParent {
 
     try {
       in = new WlzFileInputStream(str);
+      System.out.println("calling WlzReadObj from SVParent2D !!!!!!!!!!!!!");
       updateElementVec(WlzObject.WlzReadObj(in),
                        capitalise(anatName1)+" *");
+      in.close();
+      System.out.println("stream has been closed !!!!!!!!!!!!!");
     }
     catch(WlzException we) {
       System.out.println("showAnatomy: 1");
@@ -481,12 +484,12 @@ public class SVParent2D implements SVParent {
   public void showCombinedAnatomy(String str) {
 
     File thisDir = new File(str);
-    Vector files = collectWlzFiles(str, new Vector());
+    Vector<String> files = collectWlzFiles(str, new Vector<String>());
 
     int pathlen = _anatBuilder._pathLengthToAnatomy;
     String fullName = thisDir.getAbsolutePath();
     String anatName = fullName.substring(pathlen);
-  
+
     try {
       updateElementVec(combineWlzObjs(files),
                        capitalise(anatName));
@@ -526,6 +529,7 @@ public class SVParent2D implements SVParent {
     try {
       in = new WlzFileInputStream((String)files.elementAt(0));
       obj1 = WlzObject.WlzReadObj(in);
+      in.close();
     } catch(WlzException we) {
       System.out.println("combineWlzObjs: 1");
       System.out.println(we.getMessage());
@@ -543,6 +547,7 @@ public class SVParent2D implements SVParent {
         for(int i=1; i<len; i++) {
           in = new WlzFileInputStream((String)files.elementAt(i));
           obj2 = WlzObject.WlzReadObj(in);
+          in.close();
           if (obj2 != null) unionObj = WlzObject.WlzUnion2(obj1, obj2);
 
           in = null;
@@ -591,7 +596,7 @@ public class SVParent2D implements SVParent {
    *   @param dir the directory containing the given file.
    *   @param fil the full path name of the given file.
    *   @return true if the given filename ends in '.wlz'
-   *   and the base of the name is the same as the 
+   *   and the base of the name is the same as the
    *   directory that contains it.
    */
   protected boolean isValidName(String dir, String fil) {
@@ -662,19 +667,19 @@ public class SVParent2D implements SVParent {
   /**
    *   Returns the Java Help Helpset for SectionViewer.
    *   @return the Java Help Helpset for SectionViewer.
-   */
   public HelpSet getHelpSet() {
     return _hs;
   }
+   */
 
 //-------------------------------------------------------------
   /**
    *   Returns the Java Help Help broker for SectionViewer.
    *   @return the Java Help Help broker for SectionViewer.
-   */
   public HelpBroker getSVHelpBroker() {
     return _helpBroker;
   }
+   */
 
 //-------------------------------------------------------------
   /**
@@ -760,19 +765,19 @@ public class SVParent2D implements SVParent {
       String cmd = e.getActionCommand();
 
       String[] splits = cmd.split("\\d", 2);
-      /* 
+      /*
        * assumes cmd is of the form "name123"
-       * where 'name' describes the action to be taken 
+       * where 'name' describes the action to be taken
        * and '123' is the unique index number of the keyEntry
        */
       indx = (Integer.valueOf(
                 cmd.substring(splits[0].length()))).intValue();
 
       if(cmd.indexOf("makeVisible") != -1) {
-         _key.setEntryVisible(indx, true);
+         _key.setEntryText(indx);
 	 getAnatomyElement(indx).setElementVisible(true);
       } else if(cmd.indexOf("makeInvisible") != -1) {
-         _key.setEntryVisible(indx, false);
+         _key.setEntryText(indx);
 	 getAnatomyElement(indx).setElementVisible(false);
       } else if(cmd.indexOf("zap") != -1) {
 	 _key.removeRow(indx);

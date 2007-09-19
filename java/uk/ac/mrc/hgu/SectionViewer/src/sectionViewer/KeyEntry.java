@@ -1,12 +1,8 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 import javax.swing.event.*;
-import java.io.*;
 
 
 /**
@@ -31,7 +27,7 @@ public class KeyEntry extends KeyEntryGUI{
    public KeyEntry(int indx) {
       this(indx, false);
    }
-   
+
    /**
     *   Constructs a 2D or 3D KeyEntry depending
     *   upon the state of 'is3D'.
@@ -61,7 +57,7 @@ public class KeyEntry extends KeyEntryGUI{
       _indx = indx;
 
    }
-   
+
 //-------------------------------------------------------------
    /**
     *   Sets the anatomy component name for the KeyEntry.
@@ -79,30 +75,23 @@ public class KeyEntry extends KeyEntryGUI{
     *   this EntryKey.
     *   @return _txt.
     */
-   protected String getTxt(){
+   public String getTxt(){
      return _txt;
    }
 
 //-------------------------------------------------------------
    /**
-    *   Sets the visibility of the anatomy component.
-    *   @param str the full name of the anatomy component.
+    *   Sets the text for the anatomy component.
     */
-   public void setEntryVisible(boolean viz) {
-
+   public void setEntryText() {
       textF.setText(getTxt());
-      if(viz) {
-	 textF.setBackground(_vizCol);
-      } else {
-         textF.setBackground(_notVizCol);
-      }
    }
 
 //-------------------------------------------------------------
    /**
     *   Sets the colour of the anatomy component
     *   to that returned by a standard color chooser dialog.
-    *   The color chooser dialog is opened by clicking on the 
+    *   The color chooser dialog is opened by clicking on the
     *   Colour chooser button in the KeyEntry.
     *   @param col the new colour of the anatomy component.
     */
@@ -130,7 +119,6 @@ public class KeyEntry extends KeyEntryGUI{
    public void reset() {
 
       textF.setText("");
-      textF.setBackground(_notVizCol);
       vis2DBtn.setIcon(null);
    }
 
@@ -141,6 +129,16 @@ public class KeyEntry extends KeyEntryGUI{
     */
    public static int getW() {
       return _entryW;
+   }
+
+//......................................
+   /**
+    *   Sets the width of a KeyEntry.
+    */
+   protected void setKeyWidth(int w) {
+      this.setPreferredSize(new Dimension(w, _entryH));
+      this.setMinimumSize(new Dimension(w, _entryH));
+      this.setMaximumSize(new Dimension(10000, _entryH));
    }
 
 //-------------------------------------------------------------
@@ -244,14 +242,17 @@ public class KeyEntry extends KeyEntryGUI{
 
       public void actionPerformed(ActionEvent e) {
 	 if(e.getSource() == vis2DBtn) {
+	    vis2DBtn.setToolTipText(null);
 	    if(!_visible) {
-	       if(vizIcon != null) {
-	            vis2DBtn.setIcon(vizIcon);
+	       if(hideIcon != null) {
+	            vis2DBtn.setIcon(hideIcon);
+		    vis2DBtn.setToolTipText(hide2TipText);
                }
 	       fireAction(new String("makeVisible" + _indx));
 	    } else {
-	       if(notVizIcon != null) {
-	            vis2DBtn.setIcon(notVizIcon);
+	       if(showIcon != null) {
+	            vis2DBtn.setIcon(showIcon);
+		    vis2DBtn.setToolTipText(show2TipText);
                }
 	       fireAction(new String("makeInvisible" + _indx));
 	    }
@@ -277,14 +278,17 @@ public class KeyEntry extends KeyEntryGUI{
 
       public void actionPerformed(ActionEvent e) {
 	 if(e.getSource() == vis3DBtn) {
+	    vis3DBtn.setToolTipText(null);
 	    if(!_visible3D) {
-	       if(viz3DIcon != null) {
-	            vis3DBtn.setIcon(viz3DIcon);
+	       if(hideIcon != null) {
+	            vis3DBtn.setIcon(hideIcon);
+		    vis3DBtn.setToolTipText(hide3TipText);
                }
 	       fireAction(new String("showThreeDAnat" + _indx));
 	    } else {
-	       if(notViz3DIcon != null) {
-	            vis3DBtn.setIcon(notViz3DIcon);
+	       if(showIcon != null) {
+	            vis3DBtn.setIcon(showIcon);
+		    vis3DBtn.setToolTipText(show3TipText);
                }
 	       fireAction(new String("hideThreeDAnat" + _indx));
 	    }

@@ -18,12 +18,8 @@
 * \bug          None known.
 */
 package sectionViewer;
-import sectionViewer.*;
 
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.event.*;
-import java.io.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
@@ -157,14 +153,11 @@ public class ViewStructModel implements WlzObjectType {
    public void setViewMode(String modeStr) {
      int mode;
 
-     if ((modeStr.equals("absolute")) ||
-	 (modeStr.equals("Absolute"))) {
+     if(0 == modeStr.compareTo("absolute")) {
        mode = WlzThreeDViewMode.WLZ_ZETA_MODE;
-     } else if((modeStr.equals("up is up")) ||
-	 (modeStr.equals("Up is up"))) {
+     } else if(0 == modeStr.compareTo("up is up")) {
        mode = WlzThreeDViewMode.WLZ_UP_IS_UP_MODE;
-     } else if((modeStr.equals("fixed line")) ||
-	 (modeStr.equals("Fixed line"))) {
+     } else if(0 == modeStr.compareTo("fixed line")) {
        mode = WlzThreeDViewMode.WLZ_FIXED_LINE_MODE;
      } else {
        mode = WlzThreeDViewMode.WLZ_UP_IS_UP_MODE; // default

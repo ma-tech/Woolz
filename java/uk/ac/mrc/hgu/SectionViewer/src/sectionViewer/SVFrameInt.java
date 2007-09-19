@@ -1,10 +1,7 @@
 package sectionViewer;
-import sectionViewer.*;
 
 import java.awt.*;
 import javax.swing.*;
-import javax.swing.border.*;
-import java.io.*;
 
 /**
  *   Associates a SectionViewer with JInternalFrame.

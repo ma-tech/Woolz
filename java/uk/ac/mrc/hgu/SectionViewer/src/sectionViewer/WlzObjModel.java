@@ -18,12 +18,11 @@
 * \bug          None known.
 */
 package sectionViewer;
-import sectionViewer.*;
+
+import java.io.*;
 
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.event.*;
-import java.io.*;
 
 import uk.ac.mrc.hgu.Wlz.*;
 
@@ -40,7 +39,7 @@ public class WlzObjModel implements WlzObjectType {
    /**
     *   File containing a 3D Woolz object.
     */
-   File imgFile;
+   //File imgFile;
 
    /**
     *   Stream used to read a 3D Woolz object.
@@ -56,7 +55,7 @@ public class WlzObjModel implements WlzObjectType {
     *   2D section through a 3D Woolz object.
     */
    WlzObject _sectObj = null;
-   
+
    /**
     *   Bounding box of a 3D Woolz object.
     */
@@ -100,7 +99,7 @@ public class WlzObjModel implements WlzObjectType {
 	if (in != null) in.close();
      }
      catch (IOException e) {
-        System.out.println (e.getMessage());
+        //System.out.println (e.getMessage());
      }
    }
 //----------------------------------------------
@@ -110,12 +109,12 @@ public class WlzObjModel implements WlzObjectType {
     */
    public void setWlzObj(String imgFileStr) {
       try {
-	 imgFile = new File(imgFileStr);
+	 File imgFile = new File(imgFileStr);
 	 setWlzObj(imgFile);
       }
       catch (Exception e) {
          System.out.println("setWlzObj");
-         System.out.println(e.getMessage());
+         //System.out.println(e.getMessage());
       }
    }
 
@@ -128,7 +127,14 @@ public class WlzObjModel implements WlzObjectType {
 
       try {
 	 in = new WlzFileInputStream(imgFile.getAbsolutePath());
+	 //System.out.println("setWlzObj: imgFile path = "+imgFile.getAbsolutePath());
+	 if(in == null) {
+	    System.out.println("WlzFileInputStream is null");
+	 }
+	 //System.out.println("calling WlzReadObj from WlzObjModel +++++++++");
 	 _obj = WlzObject.WlzReadObj(in);
+         in.close();
+	 //System.out.println("stream has been closed +++++++++");
 	 _bBox3 = WlzObject.WlzBoundingBox3I(_obj);
       }
       catch (IOException e) {
@@ -136,7 +142,7 @@ public class WlzObjModel implements WlzObjectType {
       }
       catch (WlzException e) {
 	System.err.println("setWlzObj");
-	System.err.println(e);
+	e.printStackTrace();
       }
    }
 
@@ -189,7 +195,7 @@ public class WlzObjModel implements WlzObjectType {
 	      WlzInterpolationType.WLZ_INTERPOLATION_NEAREST);
 
 	 if(ret != null) {
-	    
+
 	 }
       }
       catch (WlzException e) {
@@ -311,7 +317,7 @@ public class WlzObjModel implements WlzObjectType {
 
 //----------------------------------------------
    /**
-    *   Returns the Woolz object from the given array 
+    *   Returns the Woolz object from the given array
     *   that contains the given x,y point.
     *   @param objArray Collection of 2D Woolz objects in a plane.
     *   @param x x coord of test point.
@@ -351,7 +357,7 @@ public class WlzObjModel implements WlzObjectType {
 //----------------------------------------------
    /**
     *   takes a 2D Woolz object, decomposes it and returns the region
-    *   containing the given point(x,y). 
+    *   containing the given point(x,y).
     *   @param obj the composite Woolz object.
     *   @param x x coord of contained point
     *   @param y y coord of contained point
@@ -410,7 +416,7 @@ public class WlzObjModel implements WlzObjectType {
     *   @param viewStr the current View Structure.
     *   @param dstSizeArrayVtxs size of intersection point array.
     *   @param dstArrayVtxs array containing the intersection points.
-    *   @return the number of intersection points. Should be 12 unless 
+    *   @return the number of intersection points. Should be 12 unless
     *   an error has occurred.
     */
    public int Wlz3DViewGetBoundingBoxIntersectionA (
@@ -423,7 +429,7 @@ public class WlzObjModel implements WlzObjectType {
                         viewStr, dstSizeArrayVtxs, dstArrayVtxs);
       } catch (WlzException e) {
 	System.err.println("Wlz3DViewGetBoundingBoxIntersectionA");
-        System.out.println(e);
+        //System.out.println(e);
       }
       return ret;
    }
@@ -476,7 +482,7 @@ public class WlzObjModel implements WlzObjectType {
       }
       catch (WlzException e) {
         System.err.println("get3DPoint");
-        System.out.println(e.getMessage());
+        //System.out.println(e.getMessage());
       }
       WlzDVertex3 xy = new WlzDVertex3(pt.getX(), pt.getY(), dist[0]);
       WlzDVertex3 xyz[] = new WlzDVertex3[1];
@@ -486,7 +492,7 @@ public class WlzObjModel implements WlzObjectType {
       }
       catch (WlzException e) {
 	System.err.println("get3DPoint");
-         System.out.println(e.getMessage());
+        //System.out.println(e.getMessage());
       }
 
       ret[0] = xyz[0].vtX;
@@ -502,7 +508,7 @@ public class WlzObjModel implements WlzObjectType {
     *   @param pt3D the 3D point.
     *   @param VS the current View Structure.
     *   @return the 2D point.
-    *   Note that this is a 3 element array, the x & y coordinates 
+    *   Note that this is a 3 element array, the x & y coordinates
     *   corresponding to elements 0 & 1 respectively.
     */
    public double[] get2DPoint(double pt3D[], WlzThreeDViewStruct VS) {
@@ -520,7 +526,7 @@ public class WlzObjModel implements WlzObjectType {
          _obj.Wlz3DSectionTransformVtxR(VS, xyz3D, xyz2D);
       }
       catch (WlzException e) {
-         System.out.println(e.getMessage());
+         //System.out.println(e.getMessage());
       }
 
       ret[0] = xyz2D[0].vtX;
@@ -538,7 +544,7 @@ public class WlzObjModel implements WlzObjectType {
     *   @return the max & min x,y,z values in a 6 element array.
     *   Elements 0,1,2 correspond to min x,y,z respectively.
     *   Elements 3,4,5 correspond to max x,y,z respectively.
-    *   
+    *
     */
    public double[] getMaxMin(WlzThreeDViewStruct VS) {
 
@@ -558,7 +564,7 @@ public class WlzObjModel implements WlzObjectType {
       }
       catch (WlzException e) {
 	System.err.println("getMaxMin");
-         System.out.println(e.getMessage());
+        //System.out.println(e.getMessage());
       }
 
       try {
@@ -569,7 +575,7 @@ public class WlzObjModel implements WlzObjectType {
       }
       catch (WlzException e) {
 	System.err.println("getMaxMin2");
-         System.out.println(e.getMessage());
+        //System.out.println(e.getMessage());
       }
 
       //...................................
