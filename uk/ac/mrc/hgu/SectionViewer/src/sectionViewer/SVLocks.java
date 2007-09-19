@@ -1,5 +1,4 @@
 package sectionViewer;
-import sectionViewer.*;
 
 /**
  *   Provides various locks for multi-threading synchronization.

@@ -1,18 +1,12 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import java.awt.*;
-import java.awt.color.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.awt.geom.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.event.*;
-import java.io.*;
 import java.util.*;
 
-import wsetter.*;
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+import javax.swing.event.*;
+
 import uk.ac.mrc.hgu.Wlz.*;
 
 /**
@@ -437,13 +431,13 @@ public class WlzImgView extends Component {
     *   Collection of <em>Line2D.Double</em> elements representing
     *   the intersection of other SectionViewers with this one.
     */
-   private Vector _intersectionVec = null;
+   private Vector<Line2D.Double> _intersectionVec = null;
 
    /**
     *   Collection of <em>Color</em> elements representing the colour of
     *   the corresponding intersection lines in <em>_intersectionVec</em>.
     */
-   private Vector _interColVec = null;
+   private Vector<Color> _interColVec = null;
 
    /**
     *   Collection of <em>Line2D.Double</em> elements representing
@@ -451,14 +445,14 @@ public class WlzImgView extends Component {
     *   A cross pattern is no longer used to indicate the fixed point,
     *   the first element is used to obtain the centre point for a circle.
     */
-   private Vector _fixedPointVec = null;
+   private Vector<Line2D.Double> _fixedPointVec = null;
 
    /**
     *   Collection of <em>Line2D.Double</em> elements representing
     *   a cross centred on the <em>2nd fixed point</em>.
     *   Obsolete.
     */
-   private Vector _axisPointVec = null;
+   private Vector<Line2D.Double> _axisPointVec = null;
 
    /**
     *   x,y, coordinates of the <em>2nd fixed point</em>.
@@ -535,11 +529,11 @@ public class WlzImgView extends Component {
 
       _num = 0;
 
-      _intersectionVec = new Vector();
-      _interColVec = new Vector();
+      _intersectionVec = new Vector<Line2D.Double>();
+      _interColVec = new Vector<Color>();
       _interColVec.add(Color.red);
-      _fixedPointVec = new Vector();
-      _axisPointVec = new Vector();
+      _fixedPointVec = new Vector<Line2D.Double>();
+      _axisPointVec = new Vector<Line2D.Double>();
 
       _mcCol = new Color(255,0,255,125); // default is magenta semi-transparent
    }
@@ -1568,7 +1562,7 @@ public class WlzImgView extends Component {
    public void setIntersectionVec(Line2D.Double[] lines) {
 
       if(_intersectionVec == null) {
-	 _intersectionVec = new Vector();
+	 _intersectionVec = new Vector<Line2D.Double>();
       } else {
 	 _intersectionVec.clear();
       }
@@ -1592,7 +1586,7 @@ public class WlzImgView extends Component {
       if((cols == null) || (cols.length == 0)) return;
 
       if(_interColVec == null) {
-	 _interColVec = new Vector();
+	 _interColVec = new Vector<Color>();
       } else {
 	 _interColVec.clear();
       }
@@ -1683,7 +1677,7 @@ public class WlzImgView extends Component {
       if((fpa == null) || (fpa.length != 3)) return;
 
       if(_fixedPointVec == null) {
-	 _fixedPointVec = new Vector();
+	 _fixedPointVec = new Vector<Line2D.Double>();
       } else {
 	 _fixedPointVec.clear();
       }
@@ -1744,7 +1738,7 @@ public class WlzImgView extends Component {
       if((apa == null) || (apa.length != 3)) return;
 
       if(_axisPointVec == null) {
-	 _axisPointVec = new Vector();
+	 _axisPointVec = new Vector<Line2D.Double>();
       } else {
 	 _axisPointVec.clear();
       }

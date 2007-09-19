@@ -1,21 +1,18 @@
 package sectionViewer;
-import sectionViewer.*;
 
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.event.*;
-import java.io.*;
-import java.util.*;
 
 import wsetter.*;
 import zoom.*;
+import utils.JAV_Constants;
 
 /**
  *   GUI for the SectionViewer.
  */
-public class SectionViewerGUI extends JPanel {
+public class SectionViewerGUI extends JPanel implements JAV_Constants {
 
   /** Toggles output of debugging messages. */
   private final boolean _debug = false;
@@ -65,16 +62,6 @@ public class SectionViewerGUI extends JPanel {
    */
   int transH;
 
-  /**   Font used for the menus. */
-  //protected final Font _menuFont = new Font("default", Font.PLAIN, 11);
-  protected Font _menuFont = null;
-
-  /**   Font used for feedback text. */
-  protected final Font feedbackFont = new Font("default", Font.PLAIN, 11);
-
-  /**   Font used for <em>mouse-click anatomy</em> feedback text. */
-  protected final Font anatomyFont = new Font("default", Font.ITALIC, 11);
-
   /**
    *   Outer container for menus.
    *   <br>titleMenuPanel used to contain a text field
@@ -102,7 +89,7 @@ public class SectionViewerGUI extends JPanel {
    *   <br>Added to the Viewport of _imageScrollPane.
    *   <br>(The WlzImgView is added in SectionViewer.)
    */
-  JPanel _bigPanel = new JPanel();
+  protected JPanel _bigPanel = new JPanel();
 
   /**
    *   Scrollable container for _bigPanel.
@@ -155,6 +142,12 @@ public class SectionViewerGUI extends JPanel {
   JButton invertButton = null;
 
   /**
+   *   Control for launching web browser (with url of high resolution section).
+   *   <br>Added to highResPanel.
+   */
+  JButton highResButton = null;
+
+  /**
    *   Container for <em>zoomSetter</em> component, spacerPanel_R
    *   & invertPanel.
    *   <br>Added to basicControlPanel.
@@ -169,6 +162,12 @@ public class SectionViewerGUI extends JPanel {
    *   <br>Added to zoomControlPanel.
    */
   JPanel invertPanel = new JPanel();
+
+  /**
+   *   Container for highResButton.
+   *   <br>Added to zoomControlPanel.
+   */
+  JPanel highResPanel = new JPanel();
 
   /**
    *   Container for zoomControlPanel and <em>distSetter</em>.
@@ -442,12 +441,16 @@ public class SectionViewerGUI extends JPanel {
   String helpMenu_2str = "Index";
   /**   help sub-menu name */
   String helpMenu_3str = "Search";
+  /**   help sub-menu name */
+  String helpMenu_4str = "About";
   /**   help sub-menu */
   JMenuItem helpMenu_1 = new JMenuItem(helpMenu_1str);
   /**   help sub-menu */
   JMenuItem helpMenu_2 = new JMenuItem(helpMenu_2str);
   /**   help sub-menu */
   JMenuItem helpMenu_3 = new JMenuItem(helpMenu_3str);
+  /**   help sub-menu */
+  JMenuItem helpMenu_4 = new JMenuItem(helpMenu_4str);
 
   /**   help menu */
   public JMenu helpMenu = new JMenu(helpMenuStr);
@@ -583,29 +586,23 @@ public class SectionViewerGUI extends JPanel {
 
     int imgH = 200;
     int fbimgH;
-    int distH = 25;
+    int distH = 23;
     int invertH = 20;
     int invertW = 20;
+    int highResH = 20;
+    int highResW = 120;
+    int zoomW = 160;
+    int zoomH = 12;
 
     int permH;
     //......................................
     int pyH = 40;
     int rH = 20;
-    pyrH = pyH+rH;
+    pyrH = pyH + rH;
     rotH = 25;
-    transH = pyrH+vgap+rotH;
+    transH = pyrH + vgap + rotH;
 
 //----------------------------------------------------------
-    /*
-    fileMenu.setFont(_menuFont);
-    fileMenu_1.setFont(_menuFont);
-    fileMenu_2.setFont(_menuFont);
-    fileMenu_3.setFont(_menuFont);
-    fileMenu_4.setFont(_menuFont);
-    fileMenu_5.setFont(_menuFont);
-    */
-    _menuFont = _menubar.getFont();
-
     fileMenu.add(fileMenu_1);
     fileMenu.addSeparator();
     fileMenu.add(fileMenu_2);
@@ -618,29 +615,8 @@ public class SectionViewerGUI extends JPanel {
     fileMenu_3.setEnabled(true);
     fileMenu_4.setEnabled(true);
     fileMenu_5.setEnabled(true);
- //...............................
- //...............................
-    /*
-    controlMenu.setFont(_menuFont);
-    controlMenu_1.setFont(_menuFont);
-    controlMenu_2.setFont(_menuFont);
-    controlMenu_3.setFont(_menuFont);
-    controlMenu_4.setFont(_menuFont);
-    controlMenu_5.setFont(_menuFont);
-    controlMenu_1_1.setFont(_menuFont);
-    controlMenu_1_2.setFont(_menuFont);
-    controlMenu_1_3.setFont(_menuFont);
-    controlMenu_2_1.setFont(_menuFont);
-    controlMenu_2_2.setFont(_menuFont);
-    controlMenu_2_3.setFont(_menuFont);
-    controlMenu_3_1.setFont(_menuFont);
-    controlMenu_3_2.setFont(_menuFont);
-    controlMenu_3_3.setFont(_menuFont);
-    controlMenu_4_1.setFont(_menuFont);
-    controlMenu_4_2.setFont(_menuFont);
-    controlMenu_4_3.setFont(_menuFont);
-    */
 
+ //...............................
     controlMenu.add(controlMenu_1);
     controlMenu.add(controlMenu_2);
     controlMenu.add(controlMenu_3);
@@ -672,33 +648,16 @@ public class SectionViewerGUI extends JPanel {
     controlMenu_4.add(controlMenu_4_1);
     controlMenu_4.add(controlMenu_4_2);
     controlMenu_4.add(controlMenu_4_3);
- //...............................
- //...............................
-    /*
-    showMenu.setFont(_menuFont);
-    showMenu_1.setFont(_menuFont);
-    showMenu_2.setFont(_menuFont);
-    showMenu_3.setFont(_menuFont);
-    showMenu_4.setFont(_menuFont);
-    showMenu_5.setFont(_menuFont);
-    */
 
+ //...............................
     showMenu.add(showMenu_1); // cursor feedback
     showMenu.add(showMenu_2); // intersection of views
     showMenu.add(showMenu_3); // mouse-click anatomy
     showMenu.add(showMenu_4); // fixed point
     showMenu.add(showMenu_5); // fixed line
     //showMenu_5.setEnabled(false);
- //...............................
- //...............................
-    /*
-    thresholdMenu.setFont(_menuFont);
-    thresholdMenu_1.setFont(_menuFont);
-    thresholdMenu_2.setFont(_menuFont);
-    thresholdMenu_3.setFont(_menuFont);
-    thresholdMenu_4.setFont(_menuFont);
-    */
 
+ //...............................
     thresholdMenu.add(thresholdMenu_1);
     thresholdMenu.add(thresholdMenu_2);
     thresholdMenu.add(thresholdMenu_3);
@@ -708,20 +667,10 @@ public class SectionViewerGUI extends JPanel {
     thresholdMenu_2.setEnabled(true);
     thresholdMenu_3.setEnabled(true);
     thresholdMenu_4.setEnabled(true);
- //...............................
-    /*
-    helpMenu.setFont(_menuFont);
-    helpMenu_1.setFont(_menuFont);
-    helpMenu_2.setFont(_menuFont);
-    helpMenu_3.setFont(_menuFont);
-    */
 
-    helpMenu.add(helpMenu_1);
-    helpMenu.add(helpMenu_2);
-    helpMenu.add(helpMenu_3);
-    helpMenu_1.setEnabled(true);
-    helpMenu_2.setEnabled(true);
-    helpMenu_3.setEnabled(true);
+ //...............................
+    helpMenu.add(helpMenu_4);
+    helpMenu_4.setEnabled(true);
     //----------------------------------------------------------
     _menubar.add(fileMenu);
     _menubar.add(controlMenu);
@@ -729,9 +678,9 @@ public class SectionViewerGUI extends JPanel {
     //_menubar.add(thresholdMenu);
     _menubar.add(helpMenu);
     //----------------------------------------------------------
-    menuH = _menubar.getFontMetrics(_menuFont).getHeight() + bord;
+    menuH = _menubar.getFontMetrics(JAV_Constants.menuFont).getHeight() + bord;
     //......................................
-    fbH = xyzTextField.getFontMetrics(feedbackFont).getHeight() + bord;
+    fbH = xyzTextField.getFontMetrics(JAV_Constants.feedbackFont).getHeight() + bord;
     //......................................
     xyzH = fbH+2*bord;
     valH = fbH+2*bord;
@@ -740,15 +689,15 @@ public class SectionViewerGUI extends JPanel {
     permH = menuH+vgap+fbimgH+vgap+distH;
     //----------------------------------------------------------
 
-    xyzTextField.setFont(feedbackFont);
+    xyzTextField.setFont(JAV_Constants.feedbackFont);
     xyzTextField.setEditable(false);
     xyzTextField.setBackground(fbCol);
 
-    valueTextField.setFont(feedbackFont);
+    valueTextField.setFont(JAV_Constants.feedbackFont);
     valueTextField.setEditable(false);
     valueTextField.setBackground(fbCol);
 
-    anatomyTextField.setFont(feedbackFont);
+    anatomyTextField.setFont(JAV_Constants.feedbackFont);
     anatomyTextField.setEditable(false);
     anatomyTextField.setBackground(fbCol);
 
@@ -831,7 +780,6 @@ public class SectionViewerGUI extends JPanel {
 
     _imageScrollPane.getViewport().add(_bigPanel, BorderLayout.CENTER);
     _imageScrollPane.getViewport().setScrollMode(JViewport.BLIT_SCROLL_MODE);
-    _imageScrollPane.setWheelScrollingEnabled(true);
 
     imagePanel.setLayout(new BorderLayout(hgap, vgap));
     imagePanel.setBorder(BorderFactory.createCompoundBorder(
@@ -848,26 +796,34 @@ public class SectionViewerGUI extends JPanel {
     zoomSetter.setMin(20);
     zoomSetter.setMax(1000);
     zoomSetter.setValue(100);
-    zoomSetter.setInc(50);
+    zoomSetter.setInc(10);
+    zoomSetter.setHeight(zoomH);
+    zoomSetter.setWidth(zoomW);
+
+    highResButton = new JButton("high res image");
+    highResButton.setPreferredSize(new Dimension(highResW, highResH));
+    highResButton.setMaximumSize(new Dimension(highResW, highResH));
+    highResButton.setMinimumSize(new Dimension(highResW, highResH));
+    highResButton.setFont(JAV_Constants.feedbackFont);
 
     invertButton = new JButton();
     invertButton.setPreferredSize(new Dimension(invertW, invertH));
+    invertButton.setMinimumSize(new Dimension(invertW, invertH));
+    invertButton.setMaximumSize(new Dimension(invertW, invertH));
     invertButton.setBackground(Color.white);
     invertButton.setForeground(Color.black);
-    invertPanel.setLayout(new BorderLayout(hgap, vgap));
-    invertPanel.add(invertButton, BorderLayout.EAST);
 
     distSetter.setBgc(new Color(255, 255, 230));
     distSetter.setLabelWidth(60);
-    distSetter.setTextWidth(40);
+    distSetter.setTextWidth(43);
     distSetter.setSliderLabel("dist");
 
-    zoomControlPanel.setLayout(new BorderLayout(hgap, vgap));
-    zoomControlPanel.add(zoomSetter, BorderLayout.WEST);
-    zoomControlPanel.add(spacerPanel_R, BorderLayout.CENTER);
-    zoomControlPanel.add(invertPanel, BorderLayout.EAST);
+    zoomControlPanel.setLayout(new BoxLayout(zoomControlPanel, BoxLayout.LINE_AXIS));
+    zoomControlPanel.add(zoomSetter);
+    zoomControlPanel.add(Box.createHorizontalGlue());
+    zoomControlPanel.add(invertButton);
 
-    basicControlPanel.setPreferredSize(new Dimension(totalW, 2*distH));
+    basicControlPanel.setPreferredSize(new Dimension(totalW, 2*(distH+vgap)));
     basicControlPanel.setLayout(new BorderLayout(hgap, vgap));
     basicControlPanel.setBorder(BorderFactory.createCompoundBorder(
                  BorderFactory.createEmptyBorder(3,1,3,1),
@@ -877,7 +833,7 @@ public class SectionViewerGUI extends JPanel {
 
     pitchSetter.setBgc(new Color(255, 230, 230));
     pitchSetter.setLabelWidth(60);
-    pitchSetter.setTextWidth(40);
+    pitchSetter.setTextWidth(43);
     pitchSetter.setSliderLabel("pitch");
     pitchSetter.setMin(0.0);
     pitchSetter.setMax(180.0);
@@ -885,7 +841,7 @@ public class SectionViewerGUI extends JPanel {
 
     yawSetter.setBgc(new Color(230, 255, 230));
     yawSetter.setLabelWidth(60);
-    yawSetter.setTextWidth(40);
+    yawSetter.setTextWidth(43);
     yawSetter.setSliderLabel("yaw");
     yawSetter.setMin(0.0);
     yawSetter.setMax(360.0);
@@ -899,7 +855,7 @@ public class SectionViewerGUI extends JPanel {
 
     rollSetter.setBgc(new Color(230, 230, 255));
     rollSetter.setLabelWidth(60);
-    rollSetter.setTextWidth(40);
+    rollSetter.setTextWidth(43);
     rollSetter.setSliderLabel("roll");
     rollSetter.setMin(0.0);
     rollSetter.setMax(360.0);
@@ -918,7 +874,7 @@ public class SectionViewerGUI extends JPanel {
 
     rotSetter.setBgc(new Color(230, 255, 255));
     rotSetter.setLabelWidth(60);
-    rotSetter.setTextWidth(40);
+    rotSetter.setTextWidth(43);
     rotSetter.setSliderLabel("fixed line");
     rotSetter.setMin(-180.0);
     rotSetter.setMax(180.0);

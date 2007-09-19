@@ -1,11 +1,7 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.*;
-import java.io.*;
 
 /**
  *   A text field which can be scrolled even if it is non-editable.
@@ -24,7 +20,7 @@ public class ScrollableTextField extends JTextField {
   int XPrev = 0;
 
   /**   the number of pixels to scroll the text each time. */
-  final int  DELTA = 5;
+  final int  DELTA = 3;
 
   /**
    *   Creates a ScrollableTextField with no initial text.

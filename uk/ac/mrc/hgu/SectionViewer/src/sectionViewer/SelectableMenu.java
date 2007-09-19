@@ -1,11 +1,8 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
-import java.io.*;
 
 /**
  *   Allows sub-menus to be selected.
@@ -122,4 +119,4 @@ public class SelectableMenu extends JMenu {
 
 }
 
- 
+

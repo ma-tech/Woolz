@@ -1,11 +1,12 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import javax.swing.*;
-import java.util.*;
 import java.io.*;
-import java.awt.Font;
-import java.awt.Component;
+import java.util.*;
+import java.util.List;
+
+import java.awt.*;
+import javax.swing.*;
+
 import uk.ac.mrc.hgu.Wlz.*;
 
 /**
@@ -18,36 +19,36 @@ public class AnatomyBuilder {
   /**
    *   Anatomy component file names
    */
-  private volatile Stack _anaFileStack = null;
+  private volatile Stack<File> _anaFileStack = null;
 
   /**
    *   Anatomy component file names in the
    *   'embryo' hierarchy
    */
-  private volatile Stack _embFileStack = null;
+  private volatile Stack<File> _embFileStack = null;
 
   /**
    *   Anatomy component file names in the
    *   'extra_embryonic_component' hierarchy
    */
-  private volatile Stack _xembFileStack = null;
+  private volatile Stack<File> _xembFileStack = null;
 
   /**
    *   Anatomy component Woolz objects
    */
-  private volatile Stack _anaObjStack = null;
+  private volatile Stack<WlzObject> _anaObjStack = null;
 
   /**
    *   Anatomy component Woolz objects in the
    *   'embryo' hierarchy
    */
-  private volatile Stack _embObjStack = null;
+  private volatile Stack<WlzObject> _embObjStack = null;
 
   /**
    *   Anatomy component Woolz objects in the
    *   'extra_embryonic_component' hierarchy
    */
-  private volatile Stack _xembObjStack = null;
+  private volatile Stack<WlzObject> _xembObjStack = null;
 
   /**
    *   Flag to indicate when anatomy menus have been built.
@@ -109,12 +110,12 @@ public class AnatomyBuilder {
    *   Constructs an AnatomyBuilder with the given Font.
    */
   public AnatomyBuilder(Font font) {
-     _anaFileStack = new Stack();
-     _embFileStack = new Stack();
-     _xembFileStack = new Stack();
-     _anaObjStack = new Stack();
-     _embObjStack = new Stack();
-     _xembObjStack = new Stack();
+     _anaFileStack = new Stack<File>();
+     _embFileStack = new Stack<File>();
+     _xembFileStack = new Stack<File>();
+     _anaObjStack = new Stack<WlzObject>();
+     _embObjStack = new Stack<WlzObject>();
+     _xembObjStack = new Stack<WlzObject>();
      _anaMenu = new SelectableMenu("Anatomy");
      if(font == null) {
 	_menuFont = _anaMenu.getFont();
@@ -135,14 +136,16 @@ public class AnatomyBuilder {
    *   this would be the top level directory for a Theiler stage, such as ts14.
    */
   public void buildAnatomy(File stageDir) {
-     _done = false;
-     File anaDir = null;
-     /*
-     File embDir = null;
-     File xembDir = null;
-     */
-     Stack fileStack = new Stack();
 
+    _done = false;
+     File anaDir = null;
+
+     //File embDir = null;
+     //File xembDir = null;
+
+     Stack<File> fileStack = new Stack<File>();
+
+     //using anatomy tree
      if(!stageDir.isAbsolute()) return;
 
      synchronized(_lock) {
@@ -151,32 +154,31 @@ public class AnatomyBuilder {
 
 	_pathLengthToAnatomy = anaDir.getAbsolutePath().length() + 1;
 
-        /*
-	embDir = new File(anaDir.getAbsolutePath() + SLASH + "embryo");
-	xembDir = new File(anaDir.getAbsolutePath() + SLASH + "extraembryonic_component");
-	*/
+	//embDir = new File(anaDir.getAbsolutePath() + SLASH + "embryo");
+	//xembDir = new File(anaDir.getAbsolutePath() + SLASH + "extraembryonic_component");
 
-	/* operations now combined in the 1 walk through
-	collectWlzFiles(embDir, _embFileStack);
-	collectWlzFiles(xembDir, _xembFileStack);
-	makeObjStack(0); // embryonic
-	makeObjStack(1); // extra-embryonic
-	buildMenu(embDir, _embMenu);
-	buildMenu(xembDir, _xembMenu);
-	*/
-	buildMenu(anaDir, _anaMenu, _anaFileStack);
+	// operations now combined in the 1 walk through
+	//collectWlzFiles(embDir, _embFileStack);
+	//collectWlzFiles(xembDir, _xembFileStack);
+	//makeObjStack(0); // embryonic
+	//makeObjStack(1); // extra-embryonic
+	//buildMenu(embDir, _embMenu);
+	//buildMenu(xembDir, _xembMenu);
+
+	buildMenu(anaDir, _anaFileStack);
+//buildMenu(anaDir, _anaMenu, _anaFileStack);
 	makeObjStack(); // embryonic
-	/*
-	buildMenu(embDir, _embMenu, _embFileStack);
-	buildMenu(xembDir, _xembMenu, _xembFileStack);
-	makeObjStack(0); // embryonic
-	makeObjStack(1); // extra-embryonic
-	*/
+
+	//buildMenu(embDir, _embMenu, _embFileStack);
+	//buildMenu(xembDir, _xembMenu, _xembFileStack);
+	//makeObjStack(0); // embryonic
+	//makeObjStack(1); // extra-embryonic
+
 	_done = true;
 	//printAnatomy();
 	_lock.notifyAll();
      } // sync
-  }
+}
 
 //----------------------------------------------------
   /**
@@ -185,7 +187,7 @@ public class AnatomyBuilder {
    *   If the directory contains sub-directories, these are searched as well.
    *   @param stack the Stack on which to store Woolz filenames.
    */
-  protected void collectWlzFiles(File dir, Stack stack) {
+  protected void collectWlzFiles(File dir, Stack<File> stack) {
 
      // walk through the directories
      String fullPath = dir.getAbsolutePath();
@@ -195,9 +197,6 @@ public class AnatomyBuilder {
      if(!dir.isDirectory()) return;
 
      contents = dir.list();
-     List l = Arrays.asList(contents);
-     Collections.sort(l);
-     contents = (String[])l.toArray();
 
      int len = contents.length;
 
@@ -224,8 +223,8 @@ public class AnatomyBuilder {
      WlzObject obj = null;
      WlzFileInputStream in = null;
 
-     Stack fstack = null;
-     Stack ostack = null;
+     Stack<File> fstack = null;
+     Stack<WlzObject> ostack = null;
 
      int len = 0;
 
@@ -238,7 +237,10 @@ public class AnatomyBuilder {
 	for (int i=0; i<len; i++) {
 	   thisFile = (File)fstack.elementAt(i);
 	   in = new WlzFileInputStream(thisFile.getAbsolutePath());
+	   //System.out.println("calling WlzReadObj from AnatomyBuilder ^^^^^^^^^^");
 	   obj = WlzObject.WlzReadObj(in);
+           in.close();
+	   //System.out.println("stream has been closed ^^^^^^^^^^");
 	   ostack.push(obj);
 	}
      }
@@ -263,8 +265,8 @@ public class AnatomyBuilder {
      WlzObject obj = null;
      WlzFileInputStream in = null;
 
-     Stack fstack = null;
-     Stack ostack = null;
+     Stack<File> fstack = null;
+     Stack<WlzObject> ostack = null;
 
      int len = 0;
 
@@ -287,7 +289,10 @@ public class AnatomyBuilder {
 	for (int i=0; i<len; i++) {
 	   thisFile = (File)fstack.elementAt(i);
 	   in = new WlzFileInputStream(thisFile.getAbsolutePath());
+	   //System.out.println("calling WlzReadObj from AnatomyBuilder ^^^^^^^^^^");
 	   obj = WlzObject.WlzReadObj(in);
+           in.close();
+	   //System.out.println("stream has been closed ^^^^^^^^^^");
 	   ostack.push(obj);
 	}
      }
@@ -311,16 +316,15 @@ public class AnatomyBuilder {
   protected void buildMenu(File dir, SelectableMenu menu) {
      // walk through the directories
      String fullPath = dir.getAbsolutePath();
-     menu.setActionCommand(fullPath);
-     String contents[] = null;
+     //menu.setActionCommand(fullPath);
+     String[] contents = null;
      File thisFile = null;
 
      if(!dir.isDirectory()) return;
 
      contents = dir.list();
 
-     contents = dir.list();
-     List l = Arrays.asList(contents);
+     List<String> l = Arrays.asList(contents);
      Collections.sort(l);
      contents = (String[])l.toArray();
 
@@ -350,6 +354,38 @@ public class AnatomyBuilder {
      }
   }
 
+  protected void buildMenu(File dir) {
+     // walk through the directories
+     String fullPath = dir.getAbsolutePath();
+     //menu.setActionCommand(fullPath);
+     String contents[] = null;
+     File thisFile = null;
+
+     if(!dir.isDirectory()) return;
+
+     contents = dir.list();
+
+     List<String> l = Arrays.asList(contents);
+     Collections.sort(l);
+     contents = (String[])l.toArray();
+
+     int len = contents.length;
+
+     for (int i=0; i<len; i++) {
+        thisFile = new File(fullPath + SLASH + contents[i]);
+        if (thisFile.isDirectory()) {
+           int newlen = thisFile.list().length;
+           if(newlen > 0) {
+              buildMenu(thisFile);
+           }
+        } else {
+           if(thisFile.getName().equals(
+              thisFile.getParentFile().getName() + ".wlz")) {
+           }
+        }
+     }
+  }
+
 //----------------------------------------------------
   /**
    *   Recursive function which builds a SelectableMenu and
@@ -359,7 +395,7 @@ public class AnatomyBuilder {
    *   @param menu the Selectable menu.
    *   @param stack the Stack on which to store Woolz filenames.
    */
-  protected void buildMenu(File dir, SelectableMenu menu, Stack stack) {
+  protected void buildMenu(File dir, SelectableMenu menu, Stack<File> stack) {
      // walk through the directories
      String fullPath = dir.getAbsolutePath();
      menu.setActionCommand(fullPath);
@@ -370,8 +406,7 @@ public class AnatomyBuilder {
 
      contents = dir.list();
 
-     contents = dir.list();
-     List l = Arrays.asList(contents);
+     List<String> l = Arrays.asList(contents);
      Collections.sort(l);
      contents = (String[])l.toArray();
 
@@ -404,6 +439,38 @@ public class AnatomyBuilder {
 	}
      }
   }
+
+  protected void buildMenu(File dir, Stack<File> stack) {
+   // walk through the directories
+   String fullPath = dir.getAbsolutePath();
+   String contents[] = null;
+   File thisFile = null;
+
+   if(!dir.isDirectory()) return;
+
+   contents = dir.list();
+
+   List<String> l = Arrays.asList(contents);
+   Collections.sort(l);
+   contents = (String[])l.toArray();
+
+   int len = contents.length;
+
+   for (int i=0; i<len; i++) {
+      thisFile = new File(fullPath + SLASH + contents[i]);
+      if (thisFile.isDirectory()) {
+         int newlen = thisFile.list().length;
+         if(newlen > 0) {
+            buildMenu(thisFile, stack);
+         }
+      } else {
+         if(thisFile.getName().equals(
+            thisFile.getParentFile().getName() + ".wlz")) {
+            stack.push(thisFile);
+         }
+      }
+   }
+}
 
 //----------------------------------------------------
   /**
@@ -443,7 +510,6 @@ public class AnatomyBuilder {
         item = _anaMenu.getItem(i);
 	System.out.println("menu item = "+item.getText());
      }
-
   }
 //----------------------------------------------------
   /**
@@ -468,13 +534,25 @@ public class AnatomyBuilder {
       }
   }
 
+  public void setAnaObjStack(Stack<WlzObject> stack){
+    _anaObjStack = stack;
+  }
+
+  public void setAnaFilesStack(Stack<File> stack){
+    _anaFileStack = stack;
+  }
+
+  public void setPathLengthToAnatomy(int length){
+    _pathLengthToAnatomy = length;
+  }
+
 //----------------------------------------------------
-  public Stack getAnaFileStack() { return _anaFileStack; }
-  public Stack getEmbFileStack() { return _embFileStack; }
-  public Stack getXEmbFileStack() { return _xembFileStack; }
-  public Stack getAnaObjStack() { return _anaObjStack; }
-  public Stack getEmbObjStack() { return _embObjStack; }
-  public Stack getXEmbObjStack() { return _xembObjStack; }
+  public Stack<File> getAnaFileStack() { return _anaFileStack; }
+  public Stack<File> getEmbFileStack() { return _embFileStack; }
+  public Stack<File> getXEmbFileStack() { return _xembFileStack; }
+  public Stack<WlzObject> getAnaObjStack() { return _anaObjStack; }
+  public Stack<WlzObject> getEmbObjStack() { return _embObjStack; }
+  public Stack<WlzObject> getXEmbObjStack() { return _xembObjStack; }
 
   public SelectableMenu getAnaMenu() { return _anaMenu; }
   public SelectableMenu getEmbMenu() { return _embMenu; }

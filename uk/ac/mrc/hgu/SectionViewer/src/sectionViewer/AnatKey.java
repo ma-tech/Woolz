@@ -1,16 +1,12 @@
 package sectionViewer;
-import sectionViewer.*;
 
 import java.util.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.io.*;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
-import uk.ac.mrc.hgu.Wlz.*;
+import java.awt.*;
+import java.awt.event.ComponentListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ActionEvent;
+import javax.swing.*;
 
 /**
  *   A table which indicates the colour of anatomy components in SectionViewers.
@@ -28,7 +24,7 @@ public class AnatKey extends AnatKeyGUI{
    /**
     *   The collection of rows in the AnatKey.
     */
-   protected  Vector _keyEntryVec = null;
+   protected  Vector<KeyEntry> _keyEntryVec = null;
 
    /**
     *   The number of rows in the AnatKey.
@@ -39,6 +35,15 @@ public class AnatKey extends AnatKeyGUI{
     *   A unique index number for KeyElements.
     */
    protected  int _indx = 0;
+
+   protected int _maxW = 600;
+   protected int _maxH = 371;
+   protected int _minW = 100;
+   protected int _minH = 20;
+
+   protected int _userW = _goldenW;
+   protected int _userH = _goldenH;
+   protected Point _userLoc = new Point(0,0);
 
 //-------------------------------------------------------------
    /**
@@ -62,8 +67,28 @@ public class AnatKey extends AnatKeyGUI{
 
       super("Anatomy Key", is3D);
       _is3D = is3D;
-      _keyEntryVec = new Vector();
+      _keyEntryVec = new Vector<KeyEntry>();
+      ResizeListener resizeListen = new ResizeListener(this);
+      this.addComponentListener(resizeListen);
    }
+
+//-------------------------------------------------------------
+   /**
+    *   Returns the data model for AnatKey.
+    *   @return _keyEntryVec
+    */
+    public Vector<KeyEntry> getModel() {
+       return _keyEntryVec;
+    }
+
+//-------------------------------------------------------------
+   /**
+    *   Sets the data model for AnatKey.
+    *   @param entries
+    */
+    public void setModel(Vector<KeyEntry> entries) {
+       _keyEntryVec = entries;
+    }
 
 //-------------------------------------------------------------
    /**
@@ -71,18 +96,30 @@ public class AnatKey extends AnatKeyGUI{
     */
    public void addRow(String txt) {
 
-      Dimension currDim = null;
-      currDim = this.getSize(null);
-      this.setSize(new Dimension(currDim.width,
-                                 currDim.height + KeyEntry.getH() + 2));
+      //System.out.println("enter addRow++++++++++++++++++++++++++++++++++++++");
+
+      clear();
+
       KeyEntry row = new KeyEntry(_indx, _is3D);
-      _keyEntryVec.add(row);
-      _nrows++;
       row.setText(txt);
       row.setCol(nextCol());
-      kTopPanel.add(row);
-      this.invalidate();
-      this.validate();
+      _keyEntryVec.add(row);
+      _nrows = _keyEntryVec.size();
+
+      if(_nrows == 1) {
+         kScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+      }
+      
+      for(int i=0; i<_nrows; i++) {
+         row = (KeyEntry)_keyEntryVec.elementAt(i);
+	 kTopPanel.add(row);
+      }
+
+      this.pack();
+      setUserSize(_userW, _userH);
+      setUserLocation(_userLoc);
+
+      //System.out.println("exit addRow");
    }
 //-------------------------------------------------------------
    /**
@@ -90,20 +127,23 @@ public class AnatKey extends AnatKeyGUI{
     */
    public void removeRow(int indx) {
 
-      Dimension currDim = null;
-      currDim = this.getSize(null);
-      this.setSize(new Dimension(currDim.width,
-                                 currDim.height - KeyEntry.getH() - 2));
+      //System.out.println("enter removeRow -------------------------------");
+
       /* find row with appropriate indx from _keyEntryVec */
       KeyEntry row = getRow(indx);
       _keyEntryVec.remove(row);
       kTopPanel.remove(row);
-      this.invalidate();
-      this.validate();
+
       _nrows--;
-      if(_nrows == 0) {
-	 this.setSize(new Dimension(currDim.width, _emptyH));
+      if(_nrows <= 0) {
+         kScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
       }
+
+      this.pack();
+      setUserSize(_userW, _userH);
+      setUserLocation(_userLoc);
+
+      //System.out.println("exit removeRow");
    }
 //-------------------------------------------------------------
    /**
@@ -116,15 +156,33 @@ public class AnatKey extends AnatKeyGUI{
 
 //-------------------------------------------------------------
    /**
+    *   Returns the anatomy key header.
+    *   @return The header.
+    */
+   public void addHeader() {
+      if(_header == null) {
+         _header = new KeyHeader();
+      }
+      topPanel.add(_header);
+   }
+
+//-------------------------------------------------------------
+   /**
+    *   Removes all entries and the header.
+    */
+   public void clear() {
+      kTopPanel.removeAll();
+   }
+
+//-------------------------------------------------------------
+   /**
     *   Sets the visibility of a KeyEntry to the given state.
     *   @param indx the index of the KeyEntry to be made visible.
-    *   @param str the full name of the corresponding anatomy component.
-    *   @param viz true if the KeyEntry is to be visible.
     */
-   public void setEntryVisible(int indx, boolean viz) {
+   public void setEntryText(int indx) {
 
       KeyEntry row = this.getRow(indx);
-      row.setEntryVisible(viz);
+      row.setEntryText();
 
    }
 
@@ -146,7 +204,7 @@ public class AnatKey extends AnatKeyGUI{
    /**
     *   Sets the colour of the anatomy component
     *   to that returned by a standard color chooser dialog.
-    *   The color chooser dialog is opened by clicking on the 
+    *   The color chooser dialog is opened by clicking on the
     *   Colour chooser button in the AnatKey.
     *   @param col the new colour of the anatomy component.
     *   @param indx the position (i.e. the row number in the AnatKey)
@@ -248,78 +306,21 @@ public class AnatKey extends AnatKeyGUI{
     *   @param state true if controls are to have viz3DIcon.
     */
    public void set3DVisIcons(boolean visible) {
-     int size = _keyEntryVec.size();
-     for(int i=0; i<size; i++) {
-        ((KeyEntry)_keyEntryVec.elementAt(i)).set3DVisIcon(visible);
-     }
+      int size = _keyEntryVec.size();
+      for(int i=0; i<size; i++) {
+	 ((KeyEntry)_keyEntryVec.elementAt(i)).set3DVisIcon(visible);
+      }
    }
 
 //-------------------------------------------------------------
-// handle all objects that are interested in changes
-//-------------------------------------------------------------
-
-   // keep track of all the listeners to this model
-   /**
-    *   A list of ActionListeners which are
-    *   listening for events fired from the AnatKey.
-    */
-/*
-   protected EventListenerList actionListeners =
-                             new EventListenerList();
-*/
-
-  // add a listener to the register
-   /**
-    *   Registers an ActionListener
-    *   with the EventListenerList.
-    *   @param x an Event handler implementing ActionListener
-    */
-/*
-  public void addActionListener(ActionListener x) {
-    actionListeners.add (ActionListener.class, x);
-  }
-*/
-
-
-  // remove a listener from the register
-   /**
-    *   Removes a previously registered ActionListener
-    *   from the EventListenerList
-    *   @param x an Event handler implementing ActionListener
-    */
-/*
-  public void removeActionListener(ActionListener x) {
-    actionListeners.remove (ActionListener.class, x);
-  }
-*/
-
-   /**
-    *   Fires an ActionEvent with the given Action Command.
-    *   This allows an event handler to choose the appropriate action.
-    */
-/*
-   protected void fireAction(String cmd) {
-   // Create the event:
-   ActionEvent ae = new ActionEvent(this,
-                                    ActionEvent.ACTION_PERFORMED,
-				    cmd);
-   // Get the listener list
-   Object[] listeners =
-     actionListeners.getListenerList();
-   // Process the listeners last to first
-   // List is in pairs, Class and instance
-   for (int i
-     = listeners.length-2; i >= 0; i -= 2) {
-     if (listeners[i] == ActionListener.class) {
-        ActionListener al = (ActionListener)listeners[i+1];
-        al.actionPerformed(ae);
-     }
+   private void setUserLocation(Point p) {
+      this.setLocation(p.x, p.y);
    }
-  } // fireAction
-*/
 
+   private void setUserSize(int w, int h) {
+      this.setPreferredSize(new Dimension(w, h));
+   }
 //-------------------------------------------------------------
-
    /**
     *   For testing only.
     */
@@ -335,5 +336,54 @@ public class AnatKey extends AnatKeyGUI{
 
   }
 */
+   /**
+    *   Listens for re-size and move events, but only every once in a while.
+    *   The timer is used to set the interval between events that are actioned.
+    *   Resizing should only throw an event when the resize has finished,
+    *   but on Linux it throws events continually.
+    *   Moving throws events continually on all platforms.:w
+    */
+   class ResizeListener implements ComponentListener {
+
+      private javax.swing.Timer timer;
+      private AnatKey key;
+      private static final int DELAY = 200;
+
+      public ResizeListener(AnatKey key) {
+         this.key = key;
+
+	 timer = new javax.swing.Timer(DELAY, new AbstractAction() {
+	    public void actionPerformed(ActionEvent e) {
+	       savePrefs();
+	    }
+	 });
+	 timer.setRepeats(false);
+      }
+
+      /**
+       * @param e
+       */
+      public void componentResized(ComponentEvent e) {
+	 timer.start();
+      }
+
+      private void savePrefs() {
+         if(!key.isShowing()) {
+	    return;
+	 }
+	 _userW = key.getWidth();
+	 _userH = key.getHeight();
+	 _userLoc = key.getLocationOnScreen();
+      }
+
+      public void componentMoved(ComponentEvent e) {
+	 //System.out.println("move");
+	 timer.start();
+      }
+      public void componentShown(ComponentEvent e) {
+      }
+      public void componentHidden(ComponentEvent e) {
+      }
+   } // class ResizeListener
 
 } // class AnatKey

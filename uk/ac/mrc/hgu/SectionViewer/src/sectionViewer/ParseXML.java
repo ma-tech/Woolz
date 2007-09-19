@@ -1,13 +1,11 @@
 package sectionViewer;
-import sectionViewer.*;
 
 // JAXP packages
+import java.io.*;
 import javax.xml.parsers.*;
+
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
-
-import java.util.*;
-import java.io.*;
 
 
 /**
@@ -27,7 +25,7 @@ public class ParseXML extends DefaultHandler {
     //public ParseXML(ViewStructModel VSM) {
     /**
      *   Constructs a ParseXML object for the given SectionViewer.
-     *   @param SV the SectionViewer that will use the information 
+     *   @param SV the SectionViewer that will use the information
      *   read in from the .xml file.
      */
     public ParseXML(SectionViewer SV) {

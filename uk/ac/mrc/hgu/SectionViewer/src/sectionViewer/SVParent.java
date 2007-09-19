@@ -1,9 +1,7 @@
 package sectionViewer;
-import sectionViewer.*;
 
 import java.util.*;
-import java.io.*;
-import javax.help.*;
+//import javax.help.*;
 
 /**
  *   <b>Must</b> be implemented by any application that uses SectionViewer components.
@@ -58,8 +56,8 @@ public interface SVParent {
    /**
     *   Supplies the SectionViewer Help Broker.
     *   @return the HelpBroker for SectionViewer.
-    */
    public HelpBroker		getSVHelpBroker();
+    */
 
    /**
     *   Tests for the existence of an AnatKey.
@@ -71,6 +69,6 @@ public interface SVParent {
     *   Returns the SVLocks object, required for synchronization.
     *   @return _Locks.
     */
-   public SVLocks getSVLocks(); 
+   public SVLocks getSVLocks();
 }
 

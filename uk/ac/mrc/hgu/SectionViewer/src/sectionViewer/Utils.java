@@ -1,10 +1,7 @@
 package sectionViewer;
 
-import sectionViewer.*;
-
 import java.awt.*;
 import javax.swing.*;
-import java.io.*;
 
 /**
  *   Utility class for SectionViewer

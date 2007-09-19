@@ -1,5 +1,4 @@
 package sectionViewer;
-import sectionViewer.*;
 
 import java.io.*;
 import java.util.*;
@@ -24,7 +23,7 @@ public class ParseBib {
 
    /**
     *   Constructs a ParseBib object for the given SectionViewer.
-    *   @param SV the SectionViewer that will use the information 
+    *   @param SV the SectionViewer that will use the information
     *   read in from the .bib file.
     */
    protected ParseBib(SectionViewer SV) {

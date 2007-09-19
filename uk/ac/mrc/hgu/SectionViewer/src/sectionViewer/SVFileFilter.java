@@ -1,8 +1,8 @@
 package sectionViewer;
-import sectionViewer.*;
 
-import java.io.File;
-import javax.swing.filechooser.*;
+import java.io.*;
+
+import javax.swing.filechooser.FileFilter;
 
 /**
  *   File filter which accepts .jpg or .jpeg files

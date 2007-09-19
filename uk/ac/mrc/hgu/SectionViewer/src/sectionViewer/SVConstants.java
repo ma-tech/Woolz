@@ -1,9 +1,4 @@
 package sectionViewer;
-import sectionViewer.*;
-
-import java.util.*;
-import java.io.*;
-import javax.help.*;
 
 /**
  *   Defines constants for the sectionViewer package.
