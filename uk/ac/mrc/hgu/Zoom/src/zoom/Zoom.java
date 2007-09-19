@@ -175,6 +175,28 @@ public class Zoom extends ZoomGUI {
    public void setZoomLabel(String labl) {
       super.setZoomLabel(labl);
    }
+//.....................................
+   public void setHeight(int h) {
+      int wid = this.getWidth();
+      wid = (wid < _minWidth) ? _minWidth: wid;
+      wid = (wid > _maxWidth) ? _maxWidth: wid;
+      int newh = (h < _minHeight) ? _minHeight: h;
+      newh = (newh > _maxHeight) ? _maxHeight: newh;
+      topPanel.setMinimumSize(new Dimension(wid, newh));
+      topPanel.setMaximumSize(new Dimension(wid, newh));
+      topPanel.setPreferredSize(new Dimension(wid, newh));
+   }
+//.....................................
+   public void setWidth(int w) {
+      int hei = this.getHeight();
+      hei = (hei < _minHeight) ? _minHeight: hei;
+      hei = (hei > _maxHeight) ? _maxHeight: hei;
+      int neww = (w < _minWidth) ? _minWidth: w;
+      neww = (neww > _maxWidth) ? _maxWidth: neww;
+      topPanel.setMinimumSize(new Dimension(neww, hei));
+      topPanel.setMaximumSize(new Dimension(neww, hei));
+      topPanel.setPreferredSize(new Dimension(neww, hei));
+   }
 
 //===========================================
 // inner classes
