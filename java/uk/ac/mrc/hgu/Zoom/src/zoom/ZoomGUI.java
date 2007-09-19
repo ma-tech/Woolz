@@ -45,15 +45,17 @@ public class ZoomGUI extends JComponent
    protected JLabel paramLabel = new JLabel("", SwingConstants.CENTER);
 
    // constants to define GUI shape
-   protected int _height = 15;
-   protected int _width = 150;
+   //protected int _height = 15;
+   //protected int _width = 150;
    protected int _buttonH = 15;
    protected int _buttonW = 25;
    protected int _textWidth = 50;
    protected int _labelWidth = 50;
    protected int _pad = 1;
    protected int _minWidth = 150; // not accessible
-   protected int _minHeight = 10; // not accessible
+   protected int _maxWidth = 300; // not accessible
+   protected int _minHeight = 15; // not accessible
+   protected int _maxHeight = 30; // not accessible
 
    protected Color _bgc = new Color(230, 230, 230);
    protected Color _internalBgc = new Color(200, 200, 200); // not accessible
