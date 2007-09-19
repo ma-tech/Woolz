@@ -45,11 +45,11 @@ public class WSetterGUI extends JPanel {
    /**
     * The width of the WSetter text field in pixels.
     */
-   protected int textWidth = 50;
+   protected int textWidth = 40;
    /**
     * The width of the WSetter label in pixels.
     */
-   protected int labelWidth = 40;
+   protected int labelWidth = 60;
    /**
     */
    protected int pad = 1;
@@ -93,18 +93,23 @@ public class WSetterGUI extends JPanel {
       this.setBackground(internalBgc);
 
       textf.setBackground(bgc);
+      textf.setFont(new Font("default", Font.PLAIN, 11));
       textf.setPreferredSize(new Dimension(textWidth, sliderH+pad));
+      textf.setMinimumSize(new Dimension(textWidth, sliderH+pad));
+      textf.setMaximumSize(new Dimension(textWidth, sliderH+pad));
 
+/*
       textPanel.setBackground(internalBgc);
       textPanel.setLayout(new BorderLayout(0, pad));
       textPanel.setPreferredSize(new Dimension(textWidth+pad, sliderH+pad));
       textPanel.add(textf, BorderLayout.NORTH);
+*/
 
       sliderPanel.setBackground(internalBgc);
       sliderPanel.setLayout(new BorderLayout());
       sliderPanel.add(_slider, BorderLayout.CENTER);
 
-      paramLabel.setBackground(internalBgc);
+      //paramLabel.setBackground(bgc);
       paramLabel.setFont(new Font("default", Font.PLAIN, 11));
       paramLabel.setPreferredSize(new Dimension(labelWidth, sliderH));
       paramLabel.setText(sliderLabel);
@@ -112,13 +117,15 @@ public class WSetterGUI extends JPanel {
       labelPanel.setBackground(bgc);
       labelPanel.setLayout(new BorderLayout(pad, pad));
       labelPanel.setPreferredSize(new Dimension(labelWidth, sliderH));
+      labelPanel.setMaximumSize(new Dimension(labelWidth, sliderH));
+      labelPanel.setMinimumSize(new Dimension(labelWidth, sliderH));
       labelPanel.add(paramLabel, BorderLayout.NORTH);
 
       labelSliderTextPanel.setBackground(internalBgc);
-      labelSliderTextPanel.setLayout(new BorderLayout());
-      labelSliderTextPanel.add(labelPanel, BorderLayout.WEST);
-      labelSliderTextPanel.add(sliderPanel, BorderLayout.CENTER);
-      labelSliderTextPanel.add(textPanel, BorderLayout.EAST);
+      labelSliderTextPanel.setLayout(new BoxLayout(labelSliderTextPanel, BoxLayout.LINE_AXIS));
+      labelSliderTextPanel.add(labelPanel);
+      labelSliderTextPanel.add(sliderPanel);
+      labelSliderTextPanel.add(textf);
       this.add(labelSliderTextPanel, BorderLayout.NORTH);
 
    } // initGUI
