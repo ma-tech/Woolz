@@ -1,75 +1,30 @@
-# JAVAHEAPSIZE = 150m
+# Makefile for SectionViewer
 
 include ../../../../../../../Makefile.conf
 
-CLASSPATH = .:..:../../../../../../..:../../../WSetter/classes:../../../Zoom/classes
+CLASSPATH = .:..:../../../../..:../WSetter/classes:../Zoom/classes
 ifeq ($(UNIXTYPE), CYGWIN) 
-CLASSPATH = '.;..;../../../../../../..;../../../WSetter/classes;../../../Zoom/classes'
+CLASSPATH = '.;..;../../../../..;../WSetter/classes;../Zoom/classes'
 endif
 SOURCEPATH = ./src/sectionViewer/
-TARGETPATH = ./classes/sectionViewer/
+TARGETPATH1 = ./classes/
+TARGETPATH2 = ./classes/sectionViewer
 JAVAC = /opt/java/bin/javac
 JAR = /opt/java/bin/jar
-JAVACFLAGS = -classpath $(CLASSPATH)
+#JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1) -verbose
+#JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1) -g
+JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1)
 JAVADOC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javadoc
 JAVADOCFLAGS = -sourcepath ./src -d docs
 
-SOURCES = \
-	  $(SOURCEPATH)SelectableMenu.java \
-	  $(SOURCEPATH)ScrollableTextField.java \
-	  $(SOURCEPATH)PointEntryGUI.java \
-	  $(SOURCEPATH)PointEntry.java \
-	  $(SOURCEPATH)SVLocks.java \
-	  $(SOURCEPATH)AnatKey.java \
-	  $(SOURCEPATH)AnatKeyGUI.java \
-	  $(SOURCEPATH)AnatomyElement.java \
-	  $(SOURCEPATH)AnatomyBuilder.java \
-	  $(SOURCEPATH)ParseXML.java \
-	  $(SOURCEPATH)WlzImgView.java \
-	  $(SOURCEPATH)WlzObjModel.java \
-	  $(SOURCEPATH)ViewStructModel.java \
-	  $(SOURCEPATH)SVFrame.java \
-	  $(SOURCEPATH)SVFrameInt.java \
-	  $(SOURCEPATH)SVParent.java \
-	  $(SOURCEPATH)SVParent2D.java \
-	  $(SOURCEPATH)SectionViewerGUI.java \
-	  $(SOURCEPATH)SectionViewer.java \
-	  $(SOURCEPATH)SVFileFilter.java
+all:	sectionViewer jar
 
-OBJECTS = \
-	  $(TARGETPATH)SelectableMenu.class \
-	  $(TARGETPATH)ScrollableTextField.class \
-	  $(TARGETPATH)PointEntryGUI.class \
-	  $(TARGETPATH)PointEntry.class \
-	  $(TARGETPATH)SVLocks.java \
-	  $(TARGETPATH)AnatKey.class \
-	  $(TARGETPATH)AnatKeyGUI.class \
-	  $(TARGETPATH)AnatomyElement.class \
-	  $(TARGETPATH)AnatomyBuilder.class \
-	  $(TARGETPATH)ParseXML.class \
-	  $(TARGETPATH)WlzImgView.class \
-	  $(TARGETPATH)WlzObjModel.class \
-	  $(TARGETPATH)ViewStructModel.class \
-	  $(TARGETPATH)SVFrame.java \
-	  $(TARGETPATH)SVFrameInt.java \
-	  $(TARGETPATH)SVParent.class \
-	  $(TARGETPATH)SVParent2D.class \
-	  $(TARGETPATH)SectionViewerGUI.class \
-	  $(TARGETPATH)SectionViewer.class \
-	  $(TARGETPATH)SVFileFilter.class
+sectionViewer:
+	$(JAVAC) $(JAVACFLAGS) $(SOURCEPATH)*.java
 
-
-
-all:	classes jar
-
-classes:	$(OBJECTS)
-
-$(OBJECTS):	$(SOURCES)
-	cd $(SOURCEPATH); $(JAVAC) $(JAVACFLAGS) *.java
-	mv $(SOURCEPATH)*.class $(TARGETPATH)
-
-jar:	classes
-	cd classes; $(JAR) cfm ../sectionViewer.jar bean.tmp sectionViewer
+jar:	
+	-cp -rf images $(TARGETPATH1)
+	cd classes; $(JAR) cfm ../sectionViewer.jar ../bean.tmp sectionViewer images
 
 # Use doxygen to make the documentation
 dox:
@@ -84,5 +39,5 @@ clean: clobber
 clobber:
 	-rm -rf *.jar META-INF dox docs
 	cd $(SOURCEPATH); rm -rf *.class doxygen.tag
-	cd $(TARGETPATH); rm -rf *.class
+	cd $(TARGETPATH2); rm -rf *.class
 
