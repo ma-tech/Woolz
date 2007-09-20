@@ -3031,21 +3031,27 @@ public class SectionViewer
 
 //......................................
   /**
-   *   Returns the current contents of the
-   *   position feedback text field.
-   *   @return xyzTextField.
-   */
-  public JTextField getXyzTextField() {
-    return xyzTextField;
-  }
-
-//......................................
-  /**
    *   Returns the SectionViewer's JScrollPane.
    *   @return _imageScrollPane.
    */
   public JScrollPane getImageScrollPane() {
     return _imageScrollPane;
+  }
+
+//......................................
+  /**
+   *   Returns the zoom control panel
+   *   @return zoomControlPanel.
+   */
+  public JPanel getZoomControlPanel() {
+    return zoomControlPanel;
+  }
+
+//......................................
+  /**
+   */
+  public JButton getInvertButton() {
+    return invertButton;
   }
 
 //......................................
@@ -3107,6 +3113,21 @@ public class SectionViewer
     }
 
     return ret;
+  }
+
+//......................................
+  public JTextField getValueTextField() {
+     return valueTextField;
+  }
+
+//......................................
+  public JTextField getAnatomyTextField() {
+     return anatomyTextField;
+  }
+
+//......................................
+  public JTextField getXyzTextField() {
+     return xyzTextField;
   }
 
 //......................................
