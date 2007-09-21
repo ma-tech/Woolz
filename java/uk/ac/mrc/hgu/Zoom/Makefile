@@ -1,4 +1,8 @@
-# JAVAHEAPSIZE = 50m
+# Makefile for Zoom component
+
+include ../../../../../../../Makefile.conf
+
+CLASSPATH = .:..:../../../../..
 
 SOURCEPATH = ./src/zoom/
 TARGETPATH1 = ./classes/

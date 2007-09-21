@@ -1,5 +1,9 @@
 # Makefile for WSetter
 
+include ../../../../../../../Makefile.conf
+
+CLASSPATH = .:..:../../../../..
+
 SOURCEPATH = ./src/wsetter/
 TARGETPATH1 = ./classes/
 TARGETPATH2 = ./classes/wsetter/
