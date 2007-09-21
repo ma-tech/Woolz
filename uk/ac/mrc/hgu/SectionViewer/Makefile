@@ -8,7 +8,7 @@ CLASSPATH = '.;..;../../../../..;../WSetter/classes;../Zoom/classes'
 endif
 SOURCEPATH = ./src/sectionViewer/
 TARGETPATH1 = ./classes/
-TARGETPATH2 = ./classes/sectionViewer
+TARGETPATH2 = ./classes/sectionViewer/
 JAVAC = /opt/java/bin/javac
 JAR = /opt/java/bin/jar
 #JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1) -verbose
@@ -24,7 +24,7 @@ sectionViewer:
 
 jar:	
 	-cp -rf images $(TARGETPATH1)
-	cd classes; $(JAR) cfm ../sectionViewer.jar ../bean.tmp sectionViewer images
+	cd $(TARGETPATH1); $(JAR) cf ../sectionViewer.jar sectionViewer images
 
 # Use doxygen to make the documentation
 dox:
