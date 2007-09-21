@@ -3,6 +3,7 @@
 include ../../../../../../../Makefile.conf
 
 CLASSPATH = .:..:../../../../..:../WSetter/classes:../Zoom/classes
+
 ifeq ($(UNIXTYPE), CYGWIN) 
 CLASSPATH = '.;..;../../../../..;../WSetter/classes;../Zoom/classes'
 endif
