@@ -1,47 +1,36 @@
-# JAVAHEAPSIZE = 50m
+# Makefile for WSetter
 
 SOURCEPATH = ./src/wsetter/
-TARGETPATH = ./classes/wsetter/
+TARGETPATH1 = ./classes/
+TARGETPATH2 = ./classes/wsetter/
 JAVAC = /opt/java/bin/javac
 JAR = /opt/java/bin/jar
+#JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1) -verbose
+#JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1) -g
+JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1)
+JAVADOC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javadoc
+JAVADOCFLAGS = -sourcepath ./src -d docs
 
-SOURCES = \
-          $(SOURCEPATH)LimitEvent.java \
-          $(SOURCEPATH)LimitListener.java \
-          $(SOURCEPATH)WSetterConstants.java \
-          $(SOURCEPATH)WSetterGUI.java \
-          $(SOURCEPATH)WSetterModel.java \
-          $(SOURCEPATH)SliderRangeModel.java \
-          $(SOURCEPATH)WSetter.java
+all:		wsetter jar
 
-OBJECTS = \
-          $(TARGETPATH)LimitEvent.class \
-          $(TARGETPATH)LimitListener.class \
-          $(TARGETPATH)WSetterConstants.class \
-          $(TARGETPATH)WSetterGUI.class \
-          $(TARGETPATH)WSetterModel.class \
-          $(TARGETPATH)SliderRangeModel.class \
-          $(TARGETPATH)WSetter.class
+wsetter:
+	$(JAVAC) $(JAVACFLAGS) $(SOURCEPATH)*.java
 
-all:		$(OBJECTS) jar
-
-classes:	$(OBJECTS)
-
-$(OBJECTS):	$(SOURCES)
-	cd ./src/wsetter; $(JAVAC) *.java
-	mv $(SOURCEPATH)*.class $(TARGETPATH)
-
-jar: 		$(OBJECTS)
-	cd ./classes;$(JAR) cfm ../wsetter.jar bean.tmp wsetter
+jar:
+	cd $(TARGETPATH1); $(JAR) cf ../wsetter.jar wsetter
 
 # Use doxygen to make the documentation
 doc:
-	cd src/wsetter; doxygen
+	cd $(SOURCEPATH); doxygen
+
+# Use javadoc to make the documentation
+javadocs:
+	$(JAVADOC) $(JAVADOCFLAGS) wsetter
 
 clean: 		clobber
 
 clobber:
-	-rm -rf *.jar META-INF dox
-	cd src/wsetter; rm -rf *.class doxygen.tag
-	cd classes; rm -rf wsetter/*.class
+	-rm -rf *.jar META-INF dox docs
+	cd $(SOURCEPATH); rm -rf *.class doxygen.tag
+	cd $(TARGETPATH2); rm -rf *.class
 
