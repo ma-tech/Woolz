@@ -90,10 +90,19 @@ public class ZoomGUI extends JComponent
 
       _outIcon = null;
       _inIcon = null;
-      URL urlIn = ZoomGUI.class.getResource("images/in.gif");
-      URL urlOut = ZoomGUI.class.getResource("images/out.gif");
-      if(urlIn != null) _inIcon = new ImageIcon(urlIn);
-      if(urlOut != null) _outIcon = new ImageIcon(urlOut);
+      //URL urlIn = ZoomGUI.class.getResource("images/in.gif");
+      //URL urlOut = ZoomGUI.class.getResource("images/out.gif");
+
+      // Get current classloader
+      // this is needed to retrieve resources from a jar file (ie from web start deployed application)
+      ClassLoader cl = ZoomGUI.class.getClassLoader();
+      String imgPath = "images/";
+      _outIcon = new ImageIcon(cl.getResource(imgPath + "out.gif"));
+      _inIcon = new ImageIcon(cl.getResource(imgPath + "in.gif"));
+
+
+      //if(urlIn != null) _inIcon = new ImageIcon(urlIn);
+      //if(urlOut != null) _outIcon = new ImageIcon(urlOut);
       if(_inIcon != null) {
 	 _inButton = new JButton(_inIcon);
       } else {
