@@ -1,0 +1,184 @@
+#
+# Makefile for Borland.
+#
+
+CC			= bcc32
+
+# Name of archive (library) to be built (modify as required).
+ARCHIVE			= libAlg.lib
+
+CFLAGS			= -I. -I../libAlc -I../../../include -A -p-
+
+all:			$(ARCHIVE)
+
+COBJECTS		= \
+			  AlgBits.obj \
+			  AlgComplexUtils.obj \
+			  AlgConvolve.obj \
+			  AlgCrossCorr.obj \
+			  AlgDebug.obj \
+			  AlgDPSearch.obj \
+			  AlgFourier.obj \
+			  AlgGamma.obj \
+			  AlgHeapSort.obj \
+			  AlgLinearFit.obj \
+			  AlgMatrixCG.obj \
+			  AlgMatrixGauss.obj \
+			  AlgMatrixLU.obj \
+			  AlgMatrixMath.obj \
+			  AlgMatrixRSEigen.obj \
+			  AlgMatrixRSTDiag.obj \
+			  AlgMatrixSV.obj \
+			  AlgMatrixTDiagQLI.obj \
+			  AlgMixture.obj \
+			  AlgPolyLSQ.obj \
+			  AlgQSort.obj \
+			  AlgRand.obj \
+			  AlgRange.obj \
+			  AlgRank.obj \
+			  AlgShuffle.obj \
+			  AlgVectorMath.obj
+
+# List of all 'C' source files (modify as required).
+CSOURCES		= \
+			  AlgBits.c \
+			  AlgComplexUtils.c \
+			  AlgConvolve.c \
+			  AlgCrossCorr.c \
+			  AlgDebug.c \
+			  AlgDPSearch.c \
+			  AlgFourier.c \
+			  AlgGamma.c \
+			  AlgHeapSort.c \
+			  AlgLinearFit.c \
+			  AlgMatrixCG.c \
+			  AlgMatrixGauss.c \
+			  AlgMatrixLU.c \
+			  AlgMatrixMath.c \
+			  AlgMatrixRSEigen.c \
+			  AlgMatrixRSTDiag.c \
+			  AlgMatrixSV.c \
+			  AlgMatrixTDiagQLI.c \
+			  AlgMixture.c \
+			  AlgPolyLSQ.c \
+			  AlgQSort.c \
+			  AlgRand.c \
+			  AlgRange.c \
+			  AlgRank.c \
+			  AlgShuffle.c \
+			  AlgVectorMath.c
+
+
+#
+#AlgBits.obj:		AlgBits.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgBits.c
+#
+#AlgComplexUtils.obj:	AlgComplexUtils.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgComplexUtils.c
+#
+#AlgConvolve.obj:	AlgConvolve.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgConvolve.c
+#
+#AlgCrossCorr.obj:	AlgCrossCorr.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgCrossCorr.c
+#
+#AlgDebug.obj:		AlgDebug.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgDebug.c
+#
+#AlgDPSearch.obj:	AlgDPSearch.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgDPSearch.c
+#
+#AlgFourier.obj:		AlgFourier.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgFourier.c
+#
+#AlgGamma.obj:		AlgGamma.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgGamma.c
+#
+#AlgHeapSort.obj:	AlgHeapSort.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgHeapSort.c
+#
+#AlgLinearFit.obj:	AlgLinearFit.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgLinearFit.c
+#
+#AlgMatrixCG.obj:	AlgMatrixCG.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixCG.c
+#
+#AlgMatrixGauss.obj:	AlgMatrixGauss.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixGauss.c
+#
+#AlgMatrixLU.obj:	AlgMatrixLU.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixLU.c
+#
+#AlgMatrixMath.obj:	AlgMatrixMath.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixMath.c
+#
+#AlgMatrixRSEigen.obj:	AlgMatrixRSEigen.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixRSEigen.c
+#
+#AlgMatrixRSTDiag.obj:	AlgMatrixRSTDiag.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixRSTDiag.c
+#
+#AlgMatrixSV.obj:	AlgMatrixSV.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixSV.c
+#
+#AlgMatrixTDiagQLI.obj:	AlgMatrixTDiagQLI.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMatrixTDiagQLI.c
+#
+#AlgMixture.obj:		AlgMixture.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgMixture.c
+#
+#AlgPolyLSQ.obj:		AlgPolyLSQ.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgPolyLSQ.c
+#
+#AlgQSort.obj:		AlgQSort.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgQSort.c
+#
+#AlgRand.obj:		AlgRand.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgRand.c
+#
+#AlgRange.obj:		AlgRange.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgRange.c
+#
+#AlgRank.obj:		AlgRank.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgRank.c
+#
+#AlgShuffle.obj:		AlgShuffle.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgShuffle.c
+#
+#AlgVectorMath.obj:	AlgVectorMath.c Alg.h AlgProto.h
+#			bcc32 $(CFLAGS) -c AlgVectorMath.c
+
+$(ARCHIVE):		$(COBJECTS)
+			tlib $(ARCHIVE) /C \
+			+AlgBits.obj \
+			+AlgComplexUtils.obj \
+			+AlgConvolve.obj \
+			+AlgCrossCorr.obj \
+			+AlgDebug.obj \
+			+AlgDPSearch.obj \
+			+AlgFourier.obj \
+			+AlgGamma.obj \
+			+AlgHeapSort.obj \
+			+AlgLinearFit.obj \
+			+AlgMatrixCG.obj \
+			+AlgMatrixGauss.obj \
+			+AlgMatrixLU.obj \
+			+AlgMatrixMath.obj \
+			+AlgMatrixRSEigen.obj \
+			+AlgMatrixRSTDiag.obj \
+			+AlgMatrixSV.obj \
+			+AlgMatrixTDiagQLI.obj \
+			+AlgMixture.obj \
+			+AlgPolyLSQ.obj \
+			+AlgQSort.obj \
+			+AlgRand.obj \
+			+AlgRange.obj \
+			+AlgRank.obj \
+			+AlgShuffle.obj \
+			+AlgVectorMath.obj, Alg
+
+%.obj:			%.c Alg.h AlgProto.h
+			$(CC) $(CFLAGS) -c $(.SOURCE)
+
+clean:			
+			del *.o *.obj *.i *.rsp *.LST *.lib

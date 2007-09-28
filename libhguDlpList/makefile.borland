@@ -1,0 +1,26 @@
+#
+# Makefile for Borland.
+#
+
+CC			= bcc32
+
+# Name of archive (library) to be built (modify as required).
+ARCHIVE			= libhguDlpList.lib
+
+CFLAGS			= -I. -A -p-
+
+all:			$(ARCHIVE)
+
+COBJECTS		= \
+			HGUDlpList.obj
+
+
+$(ARCHIVE):		$(COBJECTS)
+			tlib $(ARCHIVE) /C \
+			+HGUDlpList.obj, hguDlpList
+
+%.obj:			%.c HGUDlpList.h
+			$(CC) $(CFLAGS) -c $(.SOURCE)
+
+clean:			
+			del *.o *.obj *.i *.rsp *.LST *.lib
