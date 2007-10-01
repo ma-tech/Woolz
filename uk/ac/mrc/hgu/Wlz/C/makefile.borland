@@ -2,30 +2,27 @@
 # Makefile for Borland.
 #
 
-JAVAHOME	= C:\Program Files\Java\jdk1.5.0_12
-TIFFHOME	= ..\..\..\..\..\..\..\..\External\Tiff\tiff-v3.5.7\libtiff
-JPEGHOME	= ..\..\..\..\..\..\..\..\External\Jpeg\jpeg-6b
-
 CC			= bcc32
 
 # Name of dll (library) to be built (modify as required).
 DLL			= JWlz.dll 
 CFLAGS			= -I. \
-			-I$(JAVAHOME)\include \
-			-I$(JAVAHOME)\include\win32" \
+			-I"C:\Program Files\Java\jdk1.5.0_12\include" \
+			-I"C:\Program Files\Java\jdk1.5.0_12\include\win32" \
 			-I..\..\..\..\..\..\..\libAlc \
 			-I..\..\..\..\..\..\..\libAlg \
 			-I..\..\..\..\..\..\..\libWlz \
 			-I..\..\..\..\..\..\..\libbibfile \
 			-I..\..\..\..\..\..\..\libWlzExtFF \
 			-I..\..\..\..\..\..\..\libWlzBnd \
-		        -ITIFFHOME \
-		        -IJPEGHOME \
+		        -I"..\..\..\..\..\..\..\..\External\Tiff\tiff-v3.5.7\libtiff" \
+		        -I"..\..\..\..\..\..\..\..\External\Jpeg\jpeg-6b" \
 			-A -w- -p-
 
+
 LIBFLAGS		= -L. \
-		        -LJPEGHOME \
-		        -LTIFFHOME \
+		        -L"..\..\..\..\..\..\..\..\External\Jpeg\jpeg-6b" \
+		        -L"..\..\..\..\..\..\..\..\External\Tiff\tiff-v3.5.7\libtiff" \
 			-L..\..\..\..\..\..\..\libAlc \
 			-L..\..\..\..\..\..\..\libAlg \
 			-L..\..\..\..\..\..\..\libWlz \
