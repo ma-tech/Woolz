@@ -1,0 +1,73 @@
+#
+# Makefile for Borland.
+#
+
+JAVAHOME	= C:\Program Files\Java\jdk1.5.0_12
+TIFFHOME	= ..\..\..\..\..\..\..\..\External\Tiff\tiff-v3.5.7\libtiff
+JPEGHOME	= ..\..\..\..\..\..\..\..\External\Jpeg\jpeg-6b
+
+CC			= bcc32
+
+# Name of dll (library) to be built (modify as required).
+DLL			= JWlz.dll 
+CFLAGS			= -I. \
+			-I$(JAVAHOME)\include \
+			-I$(JAVAHOME)\include\win32" \
+			-I..\..\..\..\..\..\..\libAlc \
+			-I..\..\..\..\..\..\..\libAlg \
+			-I..\..\..\..\..\..\..\libWlz \
+			-I..\..\..\..\..\..\..\libbibfile \
+			-I..\..\..\..\..\..\..\libWlzExtFF \
+			-I..\..\..\..\..\..\..\libWlzBnd \
+		        -ITIFFHOME \
+		        -IJPEGHOME \
+			-A -w- -p-
+
+LIBFLAGS		= -L. \
+		        -LJPEGHOME \
+		        -LTIFFHOME \
+			-L..\..\..\..\..\..\..\libAlc \
+			-L..\..\..\..\..\..\..\libAlg \
+			-L..\..\..\..\..\..\..\libWlz \
+			-L..\..\..\..\..\..\..\libbibfile \
+			-L..\..\..\..\..\..\..\libWlzExtFF \
+			-L..\..\..\..\..\..\..\libhguDlpList \
+			-L..\..\..\..\..\..\..\libWlzBnd \
+			libAlc.lib \
+			libAlg.lib \
+			libWlz.lib \
+			libbibfile.lib \
+			libWlzExtFF.lib \
+			libhguDlpList.lib \
+			libWlzBnd.lib \
+			libjpeg.lib \
+			libtiff.lib
+
+			
+DLLFLAGS		= -tWD -e$(DLL)
+
+all:			$(DLL)
+
+
+# List of all 'C' source files (modify as required).
+COBJECTS		= \
+			WlzFileStream.obj \
+			WlzJavaArray1D.obj \
+			WlzJavaArray2D.obj \
+			WlzJavaArray3D.obj \
+			WlzJavaUtils.obj \
+			WlzJavaValue.obj \
+			WlzNative.obj \
+			WlzObjectC2J.obj
+
+
+objects:		$(COBJECTS)
+
+$(DLL):			$(COBJECTS)
+			$(CC) $(CFLAGS) $(DLLFLAGS) $(LIBFLAGS) $(COBJECTS)
+
+%.obj:			%.c WlzBnd.h WlzBndProto.h
+			$(CC) $(CFLAGS) -c $(.SOURCE)
+
+clean:			
+			del *.obj *.i *.rsp *.LST *.tds *.lib *.dll
