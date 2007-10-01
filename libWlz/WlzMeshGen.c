@@ -50,6 +50,38 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
+#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+/*!
+ *  Dummy functions to allow compilation with borland bcc32 under Windows.
+ */
+double WlzCMeshElmSnArea22D(WlzCMeshElm2D *elm) {
+   return(0.0);
+}
+double WlzCMeshElmSnVolume63D(WlzCMeshElm3D *elm) {
+   return(0.0);
+}
+void WlzCMeshElmGetNodes3D(
+      WlzCMeshElm3D *elm,
+      WlzCMeshNod3D **dstNod0,
+      WlzCMeshNod3D **dstNod1,
+      WlzCMeshNod3D **dstNod2,
+      WlzCMeshNod3D **dstNod3) {
+   return;
+}
+void WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh) {
+   return;
+}
+void WlzCMeshUpdateBBox3D(WlzCMesh3D *mesh) {
+   return;
+}
+void WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh){
+   return;
+}
+void WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh) {
+   return;
+}
+#endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
+
 /* #define WLZ_CMESH_DEBUG_MESH */
 
 static void			WlzCMeshAddNodToGrid2D(
