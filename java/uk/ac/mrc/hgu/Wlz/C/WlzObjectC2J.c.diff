@@ -1,0 +1,53 @@
+*** WlzObjectC2J.c	2007-10-01 16:22:10.909169350 +0100
+--- WlzObjectC2J.c.mod	2007-10-01 16:46:22.633115577 +0100
+***************
+*** 2969,2975 ****
+    arrayDat =  (char *)WlzJavaArray1DGet(jEnv,
+      "char", "byte []", "jarray",
+      1, WLZ_JPM_KEY_BYTE_ARY1, jjarrayDat, 
+!     arraySizeDat, &arrayDatIsCopy);
+    arrayOrigin =  (WlzIVertex2 *)WlzJavaValueGet(jEnv,
+      "WlzIVertex2", "WlzIVertex2", "jobject",
+      0, WLZ_JPM_KEY_WLZ_IVERTEX2, jjarrayOrigin);
+--- 2969,2975 ----
+    arrayDat =  (char *)WlzJavaArray1DGet(jEnv,
+      "char", "byte []", "jarray",
+      1, WLZ_JPM_KEY_BYTE_ARY1, jjarrayDat, 
+!     (int)arraySizeDat, &arrayDatIsCopy);
+    arrayOrigin =  (WlzIVertex2 *)WlzJavaValueGet(jEnv,
+      "WlzIVertex2", "WlzIVertex2", "jobject",
+      0, WLZ_JPM_KEY_WLZ_IVERTEX2, jjarrayOrigin);
+***************
+*** 2978,2984 ****
+      "WlzObject", "WlzObject", "jobject",
+      1, WLZ_JPM_KEY_WLZ_PTR1, (long )jwRtn);
+    WlzJavaValueFree(arraySizeDat, WLZ_JPM_KEY_WLZ_IVERTEX2, (jboolean )0);
+!   WlzJavaArray1DFree(arrayDat, arraySizeDat, WLZ_JPM_KEY_BYTE_ARY1, arrayDatIsCopy);
+    WlzJavaValueFree(arrayOrigin, WLZ_JPM_KEY_WLZ_IVERTEX2, (jboolean )0);
+    return(jjRtn);
+  }
+--- 2978,2984 ----
+      "WlzObject", "WlzObject", "jobject",
+      1, WLZ_JPM_KEY_WLZ_PTR1, (long )jwRtn);
+    WlzJavaValueFree(arraySizeDat, WLZ_JPM_KEY_WLZ_IVERTEX2, (jboolean )0);
+!   WlzJavaArray1DFree(arrayDat, (int)arraySizeDat, WLZ_JPM_KEY_BYTE_ARY1, arrayDatIsCopy);
+    WlzJavaValueFree(arrayOrigin, WLZ_JPM_KEY_WLZ_IVERTEX2, (jboolean )0);
+    return(jjRtn);
+  }
+***************
+*** 11969,11975 ****
+      "WlzObject", "WlzObject", "jobject",
+      1, WLZ_JPM_KEY_WLZ_PTR1, jjobj);
+    colormap =  (char )jjcolormap;
+!   jwRtn = WlzIndexToRGBA(obj, colormap, &dstErr);
+    jjRtn = WlzJavaValueWrap(jEnv,
+      "WlzObject", "WlzObject", "jobject",
+      1, WLZ_JPM_KEY_WLZ_PTR1, (long )jwRtn);
+--- 11969,11975 ----
+      "WlzObject", "WlzObject", "jobject",
+      1, WLZ_JPM_KEY_WLZ_PTR1, jjobj);
+    colormap =  (char )jjcolormap;
+!   jwRtn = WlzIndexToRGBA(obj, (char *)colormap, &dstErr);
+    jjRtn = WlzJavaValueWrap(jEnv,
+      "WlzObject", "WlzObject", "jobject",
+      1, WLZ_JPM_KEY_WLZ_PTR1, (long )jwRtn);
