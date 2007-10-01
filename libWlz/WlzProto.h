@@ -108,6 +108,12 @@ static char _WlzProto_h[] = "MRC HGU $Id$";
 extern "C" {
 #endif /* __cplusplus */
 
+#ifdef _WIN32
+#define _BORLAND_HACK_FOR_JATLASVIEWER
+#define fabsf(x) fabs(x)
+#define _setmode setmode
+#endif
+
 /************************************************************************
 * Wlz2DContains.c							*
 ************************************************************************/
