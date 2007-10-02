@@ -9,7 +9,7 @@ It is assumed that you have checked JWlz out of cvs using something like
 % cvs co src/Core/java;
 .....................................
 and that you have checked out Makefile.conf
-% cvs co src/Makefile.conf;
+% cvs co src/Makefile.conf
 .....................................
 and that you have successfully built the Wlz libraries for Win32
 .....................................
@@ -18,36 +18,36 @@ Do The Following Steps On A Linux Machine
 =========================================
 .....................................
 Generate the C files using javacc
-% cd src/Core/java/uk/ac/mrc/hgu/Wlz/C2Java;
-% gmake;
+% cd src/Core/java/uk/ac/mrc/hgu/Wlz/C2Java
+% gmake
 .....................................
 You will now have to patch the file WlzC2Java.java to change the word 'enum'
 which is (since java1.5) a reserved word.
-% patch -i WlzC2Java.java.diff;
+% patch -i WlzC2Java.java.diff
 NOTE: The file WlzC2Java.java is generated automatically so in future the patch might not work.
 If you have problems, what you need to do is change 3 instances of the word 'enum' into 'enoom'
-at approx lines 7642, 7643
+at approx lines 7652, 7653
 .....................................
-% gmake; // again with the patched version of WlzC2Java.java
+% gmake // again with the patched version of WlzC2Java.java
 .....................................
-% cd ..; // you should be in the directory src/Core/java/uk/ac/mrc/hgu/Wlz
+% cd .. // you should be in the directory src/Core/java/uk/ac/mrc/hgu/Wlz
 .....................................
 build uk.jar
-% gmake;
+% gmake
 .....................................
 make a backup copy of a file we are going to patch
-% cd C; // you should be in the directory src/Core/java/uk/ac/mrc/hgu/Wlz/C
-% cp WlzObjectC2J.c WlzObjectC2J.c.orig;
+% cd C // you should be in the directory src/Core/java/uk/ac/mrc/hgu/Wlz/C
+% cp WlzObjectC2J.c WlzObjectC2J.c.orig
 .....................................
 apply the patch
-% patch -i WlzObjectC2J.c.diff;
+% patch -i WlzObjectC2J.c.diff
 .....................................
 ========================================
 Do The Following Step On A Win32 Machine
 ========================================
 .....................................
 build JWlz.dll
-% cd src\Core\java\uk\ac\mrc\hgu\Wlz\C;
+% cd src\Core\java\uk\ac\mrc\hgu\Wlz\C
 % make
 .....................................
 
