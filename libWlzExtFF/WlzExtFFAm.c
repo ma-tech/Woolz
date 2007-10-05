@@ -592,8 +592,10 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
               tok[1] = WLZEFF_AM_TOKEN_NONE;
 	      (void )WlzStringMatchValue((int *)&(tok[1]), tokBuf,
 				   "BoundingBox", WLZEFF_AM_TOKEN_BOUNDINGBOX,
+				   "Colormap", WLZEFF_AM_TOKEN_COLORMAP,
 				   "Content", WLZEFF_AM_TOKEN_CONTENT,
 				   "CoordType", WLZEFF_AM_TOKEN_COORDTYPE,
+				   "Expression", WLZEFF_AM_TOKEN_EXPRESSION,
 				   "ImageData", WLZEFF_AM_TOKEN_IMAGEDATA,
 				   "Materials", WLZEFF_AM_TOKEN_MATERIALS,
 				   "Seeds", WLZEFF_AM_TOKEN_SEEDS,
@@ -606,6 +608,10 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 					    &(head->bBox));
 		  *tokBuf = '\0';
 		  break;
+	        case WLZEFF_AM_TOKEN_COLORMAP:
+		  errNum = WlzEffAmSkipEOL(fP);
+		  *tokBuf = '\0';
+		  break;
 	        case WLZEFF_AM_TOKEN_CONTENT:
 		  errNum = WlzEffAmCheckContent(fP, tokBuf, tokBufMax);
 		  *tokBuf = '\0';
@@ -613,6 +619,10 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 	        case WLZEFF_AM_TOKEN_COORDTYPE:
 		  errNum = WlzEffAmReadCoordType(fP, tokBuf, tokBufMax,
 		  				 &(head->coordType));
+		  *tokBuf = '\0';
+		  break;
+	        case WLZEFF_AM_TOKEN_EXPRESSION:
+		  errNum = WlzEffAmSkipEOL(fP);
 		  *tokBuf = '\0';
 		  break;
 	        case WLZEFF_AM_TOKEN_MATERIALS:
