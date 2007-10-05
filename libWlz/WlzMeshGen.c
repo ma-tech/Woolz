@@ -182,10 +182,12 @@ static int			WlzCMeshElmJumpPos3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 gPos);
 static double			WlzCMeshCompGridBSz2D(
+				  int tnn,
 				  double npb,
 				  double sz0,
 				  double sz1);
 static double			WlzCMeshCompGridBSz3D(
+				  int tnn,
 				  double npb,
 				  double sz0,
 				  double sz1,
@@ -2547,7 +2549,6 @@ double 		WlzCMeshElmMinEdgLnSq3D(WlzCMeshElm3D *elm)
 WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
 {
   int		idN;
-  double	tD0;
   WlzIVertex2	bSz;
   WlzCMeshNod2D	*nod;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2561,11 +2562,12 @@ WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
   }
   /* This assumes that the mesh nodes will be evenly distributed over
    * the LBT domain (which they're not). */
-  tD0 = nodPerBucket / (double)newNumNod;
   bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin + 1;
   bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin + 1;
-  mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz2D(nodPerBucket, bSz.vtX, bSz.vtY);
-  mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz2D(nodPerBucket, bSz.vtY, bSz.vtX);
+  mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz2D(newNumNod, nodPerBucket,
+                                              bSz.vtX, bSz.vtY);
+  mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz2D(newNumNod, nodPerBucket,
+                                              bSz.vtY, bSz.vtX);
   mesh->bGrid.nB.vtX = (int )ceil(bSz.vtX / mesh->bGrid.bSz.vtX) + 1;
   mesh->bGrid.nB.vtY = (int )ceil(bSz.vtY / mesh->bGrid.bSz.vtY) + 1;
   /* Reallocate the grid buckets. */
@@ -2608,7 +2610,6 @@ WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
 WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
 {
   int		idN;
-  double	tD0;
   WlzIVertex3	bSz;
   WlzCMeshNod3D	*nod;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2622,16 +2623,15 @@ WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
   }
   /* This assumes that the mesh nodes will be evenly distributed over
    * the LBT domain (which they're not). */
-  tD0 = nodPerBucket / (double)newNumNod;
   bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin + 1;
   bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin + 1;
   bSz.vtZ = mesh->bBox.zMax - mesh->bBox.zMin + 1;
-  mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz3D(nodPerBucket, bSz.vtX,
-                                            bSz.vtY, bSz.vtZ);
-  mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz3D(nodPerBucket, bSz.vtY,
-                                            bSz.vtZ, bSz.vtX);
-  mesh->bGrid.bSz.vtZ = WlzCMeshCompGridBSz3D(nodPerBucket, bSz.vtZ,
-                                            bSz.vtX, bSz.vtY);
+  mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
+  					      bSz.vtX, bSz.vtY, bSz.vtZ);
+  mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
+                                              bSz.vtY, bSz.vtZ, bSz.vtX);
+  mesh->bGrid.bSz.vtZ = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
+                                              bSz.vtZ, bSz.vtX, bSz.vtY);
   mesh->bGrid.nB.vtX = (int )ceil(bSz.vtX / mesh->bGrid.bSz.vtX) + 1;
   mesh->bGrid.nB.vtY = (int )ceil(bSz.vtY / mesh->bGrid.bSz.vtY) + 1;
   mesh->bGrid.nB.vtZ = (int )ceil(bSz.vtZ / mesh->bGrid.bSz.vtZ) + 1;
@@ -2671,21 +2671,26 @@ WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
 *		the bounding box of the mesh and uses simple scaling to
 *		compute  the bucket size. The function should be called for
 *		the x, and y components.
+* \param	tnn			Total number of nodes in the mesh.
 * \param	npb			Number of nodes per bucket.
 * \param	sz0			Component of mesh size same as
 *					return (eg x if x required, y if
 *					y required).
 * \param	sz1			Other component of mesh size.
 */
-static double	WlzCMeshCompGridBSz2D(double npb,
+static double	WlzCMeshCompGridBSz2D(int tnn, double npb,
 				    double sz0, double sz1)
 {
-  double	gz;
+  double	bs;
   const double	delta = WLZ_MESH_TOLERANCE; /* A small +ve number which is
   					       smaller than any expected
 					       mesh node separation. */
-  gz = sqrt(fabs((npb * sz0 * sz0) / sz1) + delta);
-  return(gz);
+#ifdef HACK_OLD_CODE
+  bs = sqrt(fabs((npb * sz0 * sz0) / sz1) + delta);
+#else /* HACK_OLD_CODE */
+  bs = sqrt(fabs((tnn * sz0) / ( npb * sz1)) + delta);
+#endif /* HACK_OLD_CODE */
+  return(bs);
 }
 
 /*!
@@ -2697,6 +2702,7 @@ static double	WlzCMeshCompGridBSz2D(double npb,
 *		the bounding box of the mesh and uses simple scaling to
 *		compute  the bucket size. The function should be called for
 *		the x, y and z components.
+* \param	tnn			Total number of nodes in the mesh.
 * \param	npb			Number of nodes per bucket.
 * \param	sz0			Component of mesh size same as
 *					return (eg x if x required, y if
@@ -2704,15 +2710,19 @@ static double	WlzCMeshCompGridBSz2D(double npb,
 * \param	sz1			Other component of mesh size.
 * \param	sz2			Other component of mesh size.
 */
-static double	WlzCMeshCompGridBSz3D(double npb,
+static double	WlzCMeshCompGridBSz3D(int tnn, double npb,
 				    double sz0, double sz1, double sz2)
 {
-  double	gz;
+  double	bs;
   const double	delta = WLZ_MESH_TOLERANCE; /* A small +ve number which is
   					       smaller than any expected
 					       mesh node separation. */
-  gz = pow(fabs((npb * sz0 * sz0) / (sz1 * sz2)) + delta, 0.3333);
-  return(gz);
+#ifdef HACK_OLD_CODE
+  bs = pow(fabs((npb * sz0 * sz0) / (sz1 * sz2)) + delta, 0.3333);
+#else /* HACK_OLD_CODE */
+  bs = pow((fabs((tnn * sz0 * sz0)/(npb * sz1 * sz2)) + delta), 1.0 / 3.0);
+#endif /* HACK_OLD_CODE */
+  return(bs);
 }
 
 /*!
@@ -3183,23 +3193,16 @@ static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos)
    * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
    * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
    * respectively. */
-  if(mesh->bGrid.bSz.vtX > mesh->bGrid.bSz.vtY)
-  {
-    d0 = mesh->bGrid.bSz.vtX * 0.5;
-    d1 = mesh->bGrid.bSz.vtY * 0.5;
-  }
-  else
-  {
-    d0 = mesh->bGrid.bSz.vtY * 0.5;
-    d1 = mesh->bGrid.bSz.vtX * 0.5;
-  }
-  d0 = sqrt((d0 * d0) + (d1 * d1)) - d1; /* This is the extra distance. */
+  d0 = ALG_MAX(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY) * 0.5;
+  d1 = ALG_MIN(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY) * 0.5;
+  /* d0 is the extra distance. */
+  d0 = sqrt((d0 * d0) + (d1 * d1)) - d1;
   /* Find the grid bucket which contains the position. */
   idB = WlzCMeshBucketIdxVtx2D(mesh, gPos);
   do
   {
     bktP = *(mesh->bGrid.buckets + idB.vtY) + idB.vtX;
-    /* for each node in the grid bucket. */
+    /* For each node in the grid bucket. */
     nod = *bktP;
     while(nod)
     {
@@ -3273,9 +3276,112 @@ FOUND:
 */
 static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
 {
-  int		elmIdx = -1;
+  int		spiralCnt,
+  		elmIdx = -1;
+  double	d0,
+  		d1;
+  WlzDVertex3	bPos;
+  WlzIVertex3	idB,
+		idC,
+                idS;
+  double	dstSq = 0.0;
+  WlzCMeshNod3D	*nod;
+  WlzCMeshEdg3D	*edg;
+  WlzCMeshNod3D	**bktP;
 
-  /* HACK TODO */
+  /* Compute extra distance to allow for search within circle rather than
+   * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
+   * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
+   * respectively. */
+
+  d0 = ALG_MAX3(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY,
+                mesh->bGrid.bSz.vtZ) * 0.5;
+  d1 = ALG_MIN3(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY,
+                mesh->bGrid.bSz.vtZ) * 0.5;
+  /* d0 is the extra distance. */
+  d0 = sqrt((mesh->bGrid.bSz.vtX * mesh->bGrid.bSz.vtX) +
+            (mesh->bGrid.bSz.vtY * mesh->bGrid.bSz.vtY) +
+	    (mesh->bGrid.bSz.vtZ * mesh->bGrid.bSz.vtZ)) - d1;
+  /* Find the grid bucket which contains the position. */
+  spiralCnt = 1;
+  idB = idC = WlzCMeshBucketIdxVtx3D(mesh, gPos);
+  do
+  {
+    if((idB.vtX < 0) ||
+       (idB.vtY < 0) ||
+       (idB.vtZ < 0) ||
+       (idB.vtX >= mesh->bGrid.nB.vtX) ||
+       (idB.vtY >= mesh->bGrid.nB.vtY) ||
+       (idB.vtZ >= mesh->bGrid.nB.vtZ))
+    {
+      nod = NULL;
+    }
+    else
+    {
+      bktP = *(*(mesh->bGrid.buckets + idB.vtZ) + idB.vtY) + idB.vtX;
+      /* For each node in the grid bucket. */
+      nod = *bktP;
+      while(nod)
+      {
+	edg = nod->edg;
+	do
+	{
+	  if(WlzCMeshElmEnclosesPos3D(edg->face->elm, gPos))
+	  {
+	    elmIdx = edg->face->elm->idx;
+	    goto FOUND;
+	  }
+	  if(edg->face->opp &&
+	     WlzCMeshElmEnclosesPos3D(edg->face->opp->elm, gPos))
+	  {
+	    elmIdx = edg->face->opp->elm->idx;
+	    goto FOUND;
+	  }
+	  edg = edg->nnxt;
+	}
+	while(edg != nod->edg);
+	nod = nod->next;
+      }
+    }
+    /* Spiral out from the initial grid bucket. */
+    spiralCnt = WlzGeomItrSpiral3I(spiralCnt,
+                                   &(idS.vtX), &(idS.vtY), &(idS.vtZ));
+    WLZ_VTX_3_ADD(idB, idC, idS);
+    /* Compute squared distance from the position to the closest vertex
+     * of the grid bucket's cell, then subtract the extra distance to
+     * account for search in circle rather than rectangle.  If the
+     * resulting squared distance is greater than the maximum square
+     * edge length then stop searching. */
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
+    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 0));
+    dstSq = WlzGeomDistSq3D(gPos, bPos);
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
+    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 0));
+    d1 = WlzGeomDistSq3D(gPos, bPos);
+    if(d1 < dstSq)
+    {
+      dstSq = d1;
+    }
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
+    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 1));
+    d1 = WlzGeomDistSq3D(gPos, bPos);
+    if(d1 < dstSq)
+    {
+      dstSq = d1;
+    }
+    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
+    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
+    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 1));
+    d1 = WlzGeomDistSq3D(gPos, bPos);
+    if(d1 < dstSq)
+    {
+      dstSq = d1;
+    }
+  } while((dstSq  - d0) < mesh->maxSqEdgLen);
+FOUND:
   return(elmIdx);
 }
 
