@@ -1356,7 +1356,7 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 	{
 	  errNum1 = errNum0;
 	}
-	/* Check element areas are positive). */
+	/* Check element volumes are positive). */
 	if((allErr == 0)  || (errNum1 == WLZ_ERR_NONE))
 	{
 	  if(WlzCMeshElmSnVolume63D(elm) < WLZ_MESH_TOLERANCE_SQ)
