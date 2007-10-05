@@ -100,6 +100,7 @@ CSOURCES		= \
 			WlzError.c \
 			WlzFacts.c \
 			WlzFillBlankPlanes.c \
+			WlzFilterNObjValues.c \
 			WlzFreeSpace.c \
 			WlzGauss.c \
 			WlzGaussNoise.c \
