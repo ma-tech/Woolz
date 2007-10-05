@@ -2953,7 +2953,7 @@ static WlzErrorNum WlzCMeshVerifyWSp3D(WlzObject *srcObj,
 	      /* Found voxel not covered by the scan intervals. */
 	      sPos.vtX = iWSp.lftpos + idI;
 	      /* Find element C mesh which encloses the voxel. */
-	      idI = WlzCMeshElmEnclosingPos3D(mSWSp->mTr->mesh.m3, -1,
+	      idN = WlzCMeshElmEnclosingPos3D(mSWSp->mTr->mesh.m3, -1,
 	      				      sPos.vtX, sPos.vtY, sPos.vtZ);
 	      /* Output message. */
 	      (void )fprintf(stderr, "WlzCMeshVerifyWSp3D() %d %d %d n %d\n",
