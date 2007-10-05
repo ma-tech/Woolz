@@ -1784,6 +1784,17 @@ extern WlzErrorNum		WlzFillBlankPlanes(
 				  int min_domain);
 
 /************************************************************************
+* WlzFilterNObjValues.c
+************************************************************************/
+extern WlzObject		*WlzFilterNObjValues(
+				  WlzObject *rObj,
+				  int sizeArrayObjs,
+				  WlzObject **arrayObjs,
+				  int fn,
+				  double rank,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzFreeSpace.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
