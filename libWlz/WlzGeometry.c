@@ -249,9 +249,9 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 *		\f[
                 U = \left[
 		    \begin{array}{c}
-		    \px \\
-		    \py \\
-		    \pz \\
+		    px \\
+		    py \\
+		    pz \\
 		    1
 		    \end{array}
 		    \right]
