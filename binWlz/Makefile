@@ -79,6 +79,7 @@ EXECUTABLES		= \
 			WlzErosion \
 			WlzExplode \
 			WlzFacts \
+			WlzFilterNObjsValues \
 			WlzGauss \
 			WlzGaussNoise \
 			WlzGeometryTrackUpAndDown \
@@ -201,6 +202,7 @@ CSOURCES		= \
 			WlzExplode.c \
 			WlzExplode3D.c \
 			WlzFacts.c \
+			WlzFilterNObjsValues.c \
 			WlzGauss.c \
 			WlzGaussNoise.c \
 			WlzGeometryTrackUpAndDown.c \
