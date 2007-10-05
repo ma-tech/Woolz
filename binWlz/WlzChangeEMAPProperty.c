@@ -329,7 +329,7 @@ int main(int	argc,
       break;
 
     case 'c':
-#ifdef BSD 
+#if defined(BSD)  || defined(_WIN32)
       if( sscanf(optarg, "%d/%d/%d", &(tm.tm_mday), &(tm.tm_mon), &(tm.tm_year)) == 3 ){
 	tm.tm_sec = 0;
 	tm.tm_min = 0;
@@ -366,7 +366,7 @@ int main(int	argc,
       break;
 
     case 'm':
-#ifdef BSD 
+#if defined(BSD)  || defined(_WIN32)
       if( sscanf(optarg, "%d/%d/%d", &(tm.tm_mday), &(tm.tm_mon), &(tm.tm_year)) == 3 ){
 	tm.tm_sec = 0;
 	tm.tm_min = 0;

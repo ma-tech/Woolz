@@ -439,7 +439,11 @@ int             main(int argc, char **argv)
   {
     if(seedF == 0)
     {
+#if defined(_WIN32)
+      (void )time(&tp);
+#else
       (void )gettimeofday(&tp, NULL);
+#endif
       seed = (tp.tv_sec * 1000000) + tp.tv_usec;
     }
     AlgRandSeed(seed);
