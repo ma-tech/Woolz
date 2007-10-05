@@ -49,8 +49,10 @@ extern "C" {
 #endif
 
 /* Standard min, max, absolute value and nearest integer macros */
-#define	ALG_MAX(X,Y)	(((X)>=(Y))?(X):(Y))
-#define	ALG_MIN(X,Y)	(((X)<=(Y))?(X):(Y))
+#define	ALG_MAX3(X,Y,Z)	(((X)>(Y))?(((X)>(Z))?(X):(Z)):(((Y)>(Z))?(Y):(Z)))
+#define	ALG_MIN3(X,Y,Z)	(((X)<(Y))?(((X)<(Z))?(X):(Z)):(((Y)<(Z))?(Y):(Z)))
+#define	ALG_MAX(X,Y)	(((X)>(Y))?(X):(Y))
+#define	ALG_MIN(X,Y)	(((X)<(Y))?(X):(Y))
 #define	ALG_ABS(X)	(((X)>0)?(X):(-(X)))
 #define	ALG_NINT(X)	((int)(((X)<0)?((X)-(0.5)):((X)+(0.5))))
 #define	ALG_SQR(X)	((X)*(X))
