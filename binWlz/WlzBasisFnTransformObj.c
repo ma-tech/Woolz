@@ -265,6 +265,7 @@ int             main(int argc, char **argv)
 		*basisFnTrFileStr = NULL,
 		*tiePtFileStr = NULL,
   		*outObjFileStr;
+  const int	delOut = 1;
   const char    *errMsg;
   static char	optList[] = "m:o:p:t:D:M:Y:cdghqsyBCGLNRTU",
   		inObjFileStrDef[] = "-",
@@ -509,7 +510,7 @@ int             main(int argc, char **argv)
       {
 	meshTr.cMesh = WlzCMeshTransformFromObj(inObj,
 			      meshGenMth, meshMinDist, meshMaxDist,
-			      &dilObj, &errNum);
+			      &dilObj, delOut, &errNum);
       }
       else
       {
