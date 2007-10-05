@@ -159,8 +159,6 @@ void		AlgVectorSub(double *aV, double *bV, double *cV, size_t n)
 */
 void		AlgVectorCopy(double *aV, double *bV, size_t n)
 {
-  size_t	id0;
-
   memcpy(aV, bV, sizeof(double) * n);
 }
 

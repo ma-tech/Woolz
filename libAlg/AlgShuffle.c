@@ -44,6 +44,7 @@ static char _AlgShuffle_c[] = "MRC HGU $Id$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <Alg.h>
 
 #if defined (CYGWIN) || defined (DARWIN) || defined (_WIN32)

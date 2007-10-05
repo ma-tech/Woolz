@@ -43,9 +43,10 @@ static char _AlgMixture_c[] = "MRC HGU $Id$";
 * \bug          None known.
 */
 
-#include <Alg.h>
+#include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <Alg.h>
 
 #if defined (CYGWIN) || defined (DARWIN) || defined (_WIN32)
 #define drand48() (((double) rand()) / RAND_MAX)

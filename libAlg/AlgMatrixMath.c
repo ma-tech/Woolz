@@ -389,10 +389,6 @@ void		AlgMatrixScalar(double **aM, double sv, size_t nRC)
 */
 void		AlgMatrixZero(double **aM, size_t nR, size_t nC)
 {
-  size_t	id0,
-  		nRC;
-  double	*aRowM;
-
   (void )memset(*aM, 0, nR * nC);
 }
 

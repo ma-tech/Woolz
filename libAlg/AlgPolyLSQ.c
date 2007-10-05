@@ -64,8 +64,6 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
   int		tI0,
   		tI1,
 		idxI,
-		idxJ,
-		idxK,
 		count0,
 		polyDeg2;
   double	tD0,

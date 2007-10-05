@@ -67,7 +67,6 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
 			            double *xMat)
 {
   int		idxI,
-  		idxJ,
 		idxK,
 		count0,
 		pivotRow,

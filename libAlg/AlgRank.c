@@ -493,7 +493,6 @@ static void	AlgRankElmSwap(void *elm0, void *elm1, unsigned int elmSz)
 */
 static void	AlgRankElmCopy(void *elm0, void *elm1, unsigned int elmSz)
 {
-  char		buf;
   char		*p0,
   		*p1;
 
