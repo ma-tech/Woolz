@@ -72,6 +72,8 @@ LIBDIRS			= \
 			  $(SYSLIB) \
 			  $(HGU_LIB_DIR)
 
+EXT_STATIC_LIBS	=
+
 # List of libraries to link (modify as required).
 ifeq ($(UNIXTYPE), SUNOS5)
 EXTRA_LIBS		= jpeg tiff gen socket nsl m
@@ -80,6 +82,8 @@ ifeq ($(UNIXTYPE), LINUX2)
 EXTRA_LIBS		= jpeg tiff m
 endif
 ifeq ($(UNIXTYPE), DARWIN)
+# .LIBPATTERNS only affects pre-requisite directory search, it has no affect on which lib is linked.
+.LIBPATTERNS		= 'lib%.a'
 EXTRA_LIBS		= jpeg tiff
 endif
 LIBRARIES		= WlzBnd WlzExtFF bibfile Wlz Alg Alc \
@@ -160,3 +164,7 @@ $(DLLARCHIVE):		$(OBJECTS)
 				$(DLLLIBDIRS) $(DLLLIBDEPS) \
 			-Wl,--no-whole-archive $(DLLLIBSEXT)
 
+echo:
+			@echo 'LDLIBS:' $(LDLIBS)
+			@echo 'LDFLAGS:' $(LDFLAGS)
+			@echo 'SOFLAGS:' $(SOFLAGS)
