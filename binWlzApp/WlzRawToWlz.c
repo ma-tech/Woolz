@@ -117,6 +117,7 @@ Type must one of:
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <unistd.h>
 #include <float.h>
 
 #include <Wlz.h>
@@ -182,7 +183,6 @@ int main(int	argc,
   char 		optList[] = "bd:lo:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  char		*errMsg;
   int		byteOrderFlg=0;
   WlzGreyType	newpixtype;
   int		verboseFlg=0;
@@ -513,9 +513,9 @@ int main(int	argc,
   bckgrnd.v.inv = 0;
   
   if( numDims == 2 ){
-    if( obj = WlzMakeRect(offY, offY+height-1, offX, offX+width-1,
+    if((obj = WlzMakeRect(offY, offY+height-1, offX, offX+width-1,
 			  newpixtype, wlzData.inp, bckgrnd,
-			  NULL, NULL, &errNum) ){
+			  NULL, NULL, &errNum)) != NULL){
       WlzWriteObj(stdout, obj);
     }
   }

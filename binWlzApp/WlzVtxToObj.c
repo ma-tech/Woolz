@@ -132,8 +132,8 @@ WlzObject *WlzCoordsToObject(
   case WLZ_2D_DOMAINOBJ:
     k = x;
     l = y;
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
-					 l, l, k, k, &errNum) ){
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					 l, l, k, k, &errNum)) != NULL){
       values.core = NULL;
       rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			   NULL, NULL, &errNum);
@@ -141,13 +141,13 @@ WlzObject *WlzCoordsToObject(
     break;
 
   case WLZ_3D_DOMAINOBJ:
-    if( tmpObj = WlzCoordsToObject(WLZ_2D_DOMAINOBJ,
-				   x, y, z, &errNum) ){
+    if((tmpObj = WlzCoordsToObject(WLZ_2D_DOMAINOBJ,
+				   x, y, z, &errNum)) != NULL){
       k = x;
       l = y;
       p = z;
-      if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-					p, p, l, l, k, k, &errNum) ){
+      if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+					p, p, l, l, k, k, &errNum)) != NULL){
 	values.core = NULL;
 	domain.p->domains[0] = WlzAssignDomain(tmpObj->domain, NULL);
 	rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,

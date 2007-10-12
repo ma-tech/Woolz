@@ -334,14 +334,12 @@ int             main(int argc, char **argv)
   		*outFileBaseStr = NULL,
 		*ctrFileBaseStr = NULL;
   char		secParFile[256];
-  char		*parseStr[2];
   char		*refObjFileStr = NULL,
   		*srcObjFileStr = NULL;
   WlzThresholdType thrType = WLZ_THRESH_LOW;
   WlzEffFormat	refObjFileType = WLZEFF_FORMAT_WLZ,
   		srcObjFileType = WLZEFF_FORMAT_WLZ;
   WlzObject	*tObj0 = NULL,
-		*tObj1 = NULL,
   		*refObj3D = NULL,
 		*refObj2D = NULL,
   		*srcObj2D = NULL,
@@ -351,8 +349,7 @@ int             main(int argc, char **argv)
   		refCOfM,
   		srcCOfM,
 		refObj2DOrg;
-  WlzAffineTransform *tTr0,
-  		*inTr = NULL,
+  WlzAffineTransform *inTr = NULL,
 		*inPTr = NULL;
   WlzThreeDViewStruct *view = NULL;
   WlzVertexP	matchRP,
@@ -594,8 +591,8 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr, "  srcThr = %g\n", srcThr);
     (void )fprintf(stderr, "  refCThr = %g\n", refCThr);
     (void )fprintf(stderr, "  srcCThr = %g\n", srcCThr);
-    (void )fprintf(stderr, "  refMedianSz = %g\n", refMedianSz);
-    (void )fprintf(stderr, "  srcMedianSz = %g\n", srcMedianSz);
+    (void )fprintf(stderr, "  refMedianSz = %d\n", refMedianSz);
+    (void )fprintf(stderr, "  srcMedianSz = %d\n", srcMedianSz);
     (void )fprintf(stderr, "  refSmooth = %g\n", refSmooth);
     (void )fprintf(stderr, "  srcSmooth = %g\n", srcSmooth);
     (void )fprintf(stderr, "  delta = %g\n", delta);
@@ -1195,7 +1192,6 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
   int		idx;
   char		*fileStr;
   WlzEffFormat	fileType;
-  FILE		*wFP;
   BibFileRecord	*bibRec;
   BibFileError  bibErr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1295,7 +1291,6 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
 		*sgnlFileS = NULL;
   time_t	tmpTime;
   BibFileRecord	*bibRec;
-  WlzDVertex2	tVx;
   WlzDVertex3	refVx,
   		srcVx;
   char		tmpBufS[256];
@@ -1384,7 +1379,7 @@ static WlzErrorNum WlzMatchICPPlaneWriteSecParam(FILE *fP,
   {
     if(BibFileRecordWrite(fP, NULL, bibRec) != BIBFILE_ER_NONE)
     {
-      WLZ_ERR_WRITE_INCOMPLETE;
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
     BibFileRecordFree(&bibRec);
   }
@@ -1465,7 +1460,7 @@ static WlzObject *WlzMatchICPPlaneCreateContourObj(WlzObject *gObj,
   FILE		*dFP = NULL;
   WlzPixelV	thrV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const		nrmFlg = 1;
+  const int	nrmFlg = 1;
 
   tVal.core = NULL;
   if(binFlg)

@@ -129,7 +129,6 @@ int main(
   char 		optList[] = "p:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  char		*errMsg;
   int		verboseFlg=0;
   int		type;
   WlzObject	*obj, *obj1;
@@ -170,7 +169,7 @@ int main(
   }
 
   /* get objects from stdin */
-  if( obj = WlzReadObj(inFile, &errNum) ){
+  if((obj = WlzReadObj(inFile, &errNum)) != NULL){
     switch( obj->type ){
     case WLZ_2D_DOMAINOBJ:
       break;
@@ -191,7 +190,7 @@ int main(
 
   /* scan through object setting distance values
      use integer values */
-  if( obj1 = WlzConvertPix(obj, WLZ_GREY_FLOAT, &errNum) ){
+  if((obj1 = WlzConvertPix(obj, WLZ_GREY_FLOAT, &errNum)) != NULL){
     WlzInitGreyScan(obj1, &iwsp, &gwsp);
     while( WlzNextGreyInterval(&iwsp) == 0 ){
 

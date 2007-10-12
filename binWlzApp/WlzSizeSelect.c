@@ -130,7 +130,7 @@ static WlzObject *WlzSizeFilter(
 {
   WlzObject	**objs;
   WlzObject	*new_obj, *obj1;
-  int           num_obj, i, max_i, size, max_size;
+  int           num_obj, i;
 
   if( (nobj == NULL) || (nobj->domain.core == NULL) )
   {
@@ -233,7 +233,7 @@ int main(
   int   argc,
   char  **argv)
 {
-  WlzObject     	*obj, *nobj, *max_obj, *tmpobj, *obj1;
+  WlzObject     	*obj, *nobj, *tmpobj, *obj1;
   WlzPlaneDomain	*planedmn, *new_planedmn;
   int           	mesh_area = 5;
   int			mesh_flag = 0;
@@ -243,7 +243,7 @@ int main(
   int			connectivity=4;
   int			verboseFlg=0;
   char			*nameStr;
-  WlzDomain		domain, *domains;
+  WlzDomain		domain;
   WlzValues		values;
   
   /* check input arguments */
@@ -276,7 +276,7 @@ int main(
 	connectivity = 8;
       }
       else {
-	fprintf(stderr,"%s: Unknown connectivity - setting to 4\n");
+	fprintf(stderr,"%s: Unknown connectivity - setting to 4\n", *argv);
 	connectFlg = WLZ_4_CONNECTED;
 	connectivity = 4;
       }
@@ -390,7 +390,8 @@ int main(
 	    tmpobj = WlzAssignObject(obj1, NULL);
 	  }
 
-	  if( nobj = WlzSizeFilter(tmpobj, mesh_area, mesh_flag, connectFlg) )
+	  if((nobj = WlzSizeFilter(tmpobj, mesh_area, mesh_flag,
+	                           connectFlg)) != NULL)
 	  {
 	    new_planedmn->domains[plane] = WlzAssignDomain(nobj->domain, NULL);
 	    WlzFreeObj( nobj );

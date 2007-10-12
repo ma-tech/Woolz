@@ -172,9 +172,9 @@ WlzObject *SecListToTransforms(
   sec = (RecSection *) HGUDlpListEntryGet(secList->list, listItem);
   pMax = sec->index;
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
 				      pMin, pMax, 0, 0, 0, 0,
-				      &errNum) ){
+				      &errNum)) != NULL){
       values.core = NULL;
       rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ,
 			   domain, values, NULL, NULL, &errNum);

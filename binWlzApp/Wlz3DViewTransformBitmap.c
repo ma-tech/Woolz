@@ -164,13 +164,12 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject		*obj, *nobj;
+  WlzObject		*obj;
   FILE			*inFile;
   char 			optList[] = "a:b:d:f:hm:o:s:v";
   int			option;
   double		dist=0.0, theta=0.0, phi=0.0, zeta=0.0;
   WlzDVertex3		fixed={0.0,0.0,0.0};
-  WlzThreeDViewStruct	*viewStr=NULL;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
   int			verboseFlg=0;
   WlzThreeDViewMode	viewMode=WLZ_UP_IS_UP_MODE;
@@ -194,7 +193,7 @@ int main(int	argc,
       break;
 
     case 'b':
-      if( inFile = fopen(optarg, "r") ){
+      if((inFile = fopen(optarg, "r")) != NULL){
 	char		viewModeStr[64];
 	int		numParsedFields=0;
 	BibFileRecord	*bibfileRecord;
@@ -348,7 +347,7 @@ int main(int	argc,
       return 1;
     }
     numBytes = (int) (((double) width*height)/8.0 + 1.0);
-    if( bitData = AlcMalloc(sizeof(char) * (numBytes + 1) ) ){
+    if((bitData = AlcMalloc(sizeof(char) * (numBytes + 1) )) != NULL){
       if( fread(bitData, sizeof(char), numBytes, inFile) < numBytes ){
 	fprintf(stderr, "%s: not enough data\n", argv[0]);
       }
@@ -365,11 +364,11 @@ int main(int	argc,
   }
 
   /* read bitmap data and section if possible */
-  if( obj = Wlz3DViewTransformBitmap((width / 8) * height, bitData,
+  if((obj = Wlz3DViewTransformBitmap((width / 8) * height, bitData,
   				     width, height,
 				     xOffset, yOffset,
 				     fixed.vtX, fixed.vtY, fixed.vtZ,
-				     theta, phi, dist, &errNum) ){
+				     theta, phi, dist, &errNum)) != NULL){
     WlzWriteObj(stdout, obj);
     WlzFreeObj(obj);
   }

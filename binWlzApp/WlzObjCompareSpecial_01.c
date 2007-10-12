@@ -123,7 +123,7 @@ int WlzEdgeVerticesPoly(
 
   /* convert to an 8-connected polyline */
   if( poly ){
-    if( polyObj = WlzPolyTo8Polygon(poly, 1, &errNum) ){
+    if((polyObj = WlzPolyTo8Polygon(poly, 1, &errNum)) != NULL){
       nVtxs = polyObj->domain.poly->nvertices;
       if( numVtxs > 0 ){
 	*vtxs = AlcRealloc(*vtxs, sizeof(WlzDVertex3)*
@@ -161,6 +161,9 @@ int WlzEdgeVerticesPoly(
 	  (*vtxs)[numVtxs+i].vtZ = 0.0;
 	}
 	break;
+      default:
+	errNum = WLZ_ERR_POLYGON_TYPE;
+        break;
       }
       WlzFreeObj(polyObj);
     }
@@ -203,8 +206,7 @@ int WlzEdgeVertices(
   WlzDVertex3	*rtnVtxs=NULL, *tmpVtxs;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzObject	*obj1, *obj2;
-  int		p, i, j;
-  WlzDomain	domain;
+  int		i, j;
   WlzValues	values;
   WlzPlaneDomain	*planedmn;
 
@@ -215,7 +217,7 @@ int WlzEdgeVertices(
   else {
     switch( obj->type ){
     case WLZ_2D_DOMAINOBJ:
-      if( obj1 = WlzObjToBoundary(obj, 1, &errNum) ){
+      if((obj1 = WlzObjToBoundary(obj, 1, &errNum)) != NULL){
 	numVtxs = WlzEdgeVerticesBound(obj1->domain.b, &rtnVtxs,
 				       0, &errNum);
 	WlzFreeObj(obj1);

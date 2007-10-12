@@ -184,7 +184,6 @@ int main(int	argc,
   char 		optList[] = "a:b:d:f:m:o:s:u:hv";
   int		option;
   int		iVal;
-  int		i, j;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
   double	scale=1.0;
   WlzDVertex3	fixed={0.0,0.0,0.0};
@@ -194,7 +193,6 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
-  WlzPixelV	dummyIntFunc;
   int		verboseFlg=0;
   char		*errMsg;
     
@@ -208,7 +206,7 @@ int main(int	argc,
     switch( option ){
 
     case 'a':
-      switch( sscanf(optarg, "%lg,%lg", &pitch, &yaw, &roll) ){
+      switch( sscanf(optarg, "%lg,%lg,%lg", &pitch, &yaw, &roll) ){
       default:
 	usage(argv[0]);
 	return 1;
@@ -317,7 +315,7 @@ int main(int	argc,
   }
 
   /* create view structure */
-  if( viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum) ){
+  if((viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL){
     viewStr->theta = yaw * WLZ_M_PI / 180.0;
     viewStr->phi = pitch * WLZ_M_PI / 180.0;
     viewStr->zeta = roll * WLZ_M_PI / 180.0;
@@ -330,7 +328,7 @@ int main(int	argc,
 
   /* check bibfile - select first section parameters in the file */
   if((errNum == WLZ_ERR_NONE) && (bibFile != NULL)){
-    if( bibFP = fopen(bibFile, "r") ){
+    if((bibFP = fopen(bibFile, "r")) != NULL){
       bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, bibFP);
       while((bibFileErr == BIBFILE_ER_NONE) &&
 	    (strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22))){

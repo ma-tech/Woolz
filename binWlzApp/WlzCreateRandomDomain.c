@@ -88,6 +88,7 @@ None known
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <stdlib.h>
 #include <Wlz.h>
 
 /* externals required by getopt  - not in ANSI C standard */
@@ -174,7 +175,6 @@ int main(
   char 		optList[] = "mn:r:st:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  char		*errMsg;
   int		meshFlg=0;
   int		seqFlg=0;
   int		verboseFlg=0;
@@ -375,8 +375,8 @@ int main(
 	y = obj->domain.i->line1 + j * yWidth + yWidth/2;
 	for(i=0; i < xNum; i++){
 	  x = obj->domain.i->kol1 + i * xWidth + xWidth/2;
-	  if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
-	    if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
+	  if((obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum)) != NULL){
+	    if((obj2 = WlzIntersect2(obj, obj1, &errNum)) != NULL){
 	      if( WlzSize(obj2, &errNum) > minSize ){
 		WlzWriteObj(stdout, obj2);
 		WlzFreeObj(obj2);
@@ -405,8 +405,8 @@ int main(
 	  y = obj->domain.p->line1 + j * yWidth + yWidth/2;
 	  for(i=0; i < xNum; i++){
 	    x = obj->domain.p->kol1 + i * xWidth + xWidth/2;
-	    if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
-	      if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
+	    if((obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum)) != NULL){
+	      if((obj2 = WlzIntersect2(obj, obj1, &errNum)) != NULL){
 		if( WlzSize(obj2, &errNum) > minSize ){
 		  WlzWriteObj(stdout, obj2);
 		  WlzFreeObj(obj2);
@@ -420,6 +420,8 @@ int main(
       }
       break;
 
+      default:
+        break;
     }
   }
   else {
@@ -448,9 +450,11 @@ int main(
 	y = obj->domain.p->line1 + yp*(obj->domain.p->lastln - obj->domain.p->line1);
 	z = obj->domain.p->plane1 + zp*(obj->domain.p->lastpl - obj->domain.p->plane1);
 	break;
+      default:
+        break;
       }
-      if( obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum) ){
-	if( obj2 = WlzIntersect2(obj, obj1, &errNum) ){
+      if((obj1 = WlzShiftObject(baseDomain, x, y, z, &errNum)) != NULL){
+	if((obj2 = WlzIntersect2(obj, obj1, &errNum)) != NULL){
 	  if( WlzSize(obj2, &errNum) > minSize ){
 	    WlzWriteObj(stdout, obj2);
 	    WlzFreeObj(obj2);

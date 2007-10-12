@@ -158,7 +158,6 @@ int main(int	argc,
   char		*errMsg;
   int		numParsedFields=0;
   BibFileRecord	*bibfileRecord;
-  BibFileField	*bibfileField;
   BibFileError	bibFileErr=BIBFILE_ER_NONE;
   int		outputOpt=2;
   int		absoluteFlg=0;

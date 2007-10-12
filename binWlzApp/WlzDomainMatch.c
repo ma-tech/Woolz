@@ -272,7 +272,7 @@ double WlzMixtureValue(
 	}
 	else {
 	  /* convert to int and check range */
-	  if( tmpObj1 = WlzConvertPix(obj1, WLZ_GREY_INT, &errNum) ){
+	  if((tmpObj1 = WlzConvertPix(obj1, WLZ_GREY_INT, &errNum)) != NULL){
 	    errNum = WlzGreyRange(tmpObj1, &minP, &maxP);
 	    if( errNum == WLZ_ERR_NONE ){
 	      if((minP.v.inv < 1) || (minP.v.inv > numCatRows) ||
@@ -314,7 +314,7 @@ double WlzMixtureValue(
 
   /* get the intersection region */
   if( errNum == WLZ_ERR_NONE ){
-    if( tmpObj = WlzIntersect2(tmpObj1, tmpObj2, &errNum) ){
+    if((tmpObj = WlzIntersect2(tmpObj1, tmpObj2, &errNum)) != NULL){
       tmpObj->values = WlzAssignValues(tmpObj1->values, &errNum);
     }
     else {
@@ -367,7 +367,6 @@ int main(
   char 		optList[] = "d:m:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  char		*errMsg;
   int		verboseFlg=0;
   int		type=1;
   WlzObject	*obj, *obj1, *obj2, *obj3;
@@ -392,7 +391,7 @@ int main(
       break;
 
     case 'm':
-      if( inFile = fopen(optarg, "r") ){
+      if((inFile = fopen(optarg, "r")) != NULL){
 	if( fscanf(inFile, "%d, %d", &numCatCols, &numCatRows) < 2 ){
 	  fprintf(stderr, "%s: can't read mixing matrix dimensions\n", argv[0]);
 	  usage(argv[0]);
@@ -467,7 +466,7 @@ int main(
 
   /* get objects from stdin */
   inFile = stdin;
-  if( obj1 = WlzReadObj(inFile, &errNum) ){
+  if((obj1 = WlzReadObj(inFile, &errNum)) != NULL){
     switch( obj1->type ){
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
@@ -487,7 +486,7 @@ int main(
     return 1;
   }
 
-  if( obj2 = WlzReadObj(inFile, &errNum) ){
+  if((obj2 = WlzReadObj(inFile, &errNum)) != NULL){
     if( (obj2->type != obj1->type) && (obj2->type != WLZ_EMPTY_OBJ) ){
       fprintf(stderr, "%s: objects must be same type\n", argv[0]);
       usage(argv[0]);
@@ -502,7 +501,7 @@ int main(
 
   /* this can fail silently but if there is an object it must
      be valid */
-  if( obj3 = WlzReadObj(inFile, &errNum) ){
+  if((obj3 = WlzReadObj(inFile, &errNum)) != NULL){
     if( (obj3->type != obj1->type) && (obj3->type != WLZ_EMPTY_OBJ) ){
       fprintf(stderr, "%s: objects must be same type\n", argv[0]);
       usage(argv[0]);
@@ -513,14 +512,14 @@ int main(
   /* now calculate a match value */
   switch( type ){
   case 1:
-    if( obj = WlzIntersect2(obj1, obj2, &errNum) ){
+    if((obj = WlzIntersect2(obj1, obj2, &errNum)) != NULL){
       s1 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
     else {
       s1 = 0;
     }
-    if( obj = WlzUnion2(obj1, obj2, &errNum) ){
+    if((obj = WlzUnion2(obj1, obj2, &errNum)) != NULL){
       s2 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
@@ -531,14 +530,14 @@ int main(
     break;
 
   case 2:
-    if( obj = WlzIntersect2(obj1, obj2, &errNum) ){
+    if((obj = WlzIntersect2(obj1, obj2, &errNum)) != NULL){
       s1 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
     else {
       s1 = 0;
     }
-    if( obj = WlzUnion2(obj1, obj2, &errNum) ){
+    if((obj = WlzUnion2(obj1, obj2, &errNum)) != NULL){
       s2 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
@@ -562,7 +561,7 @@ int main(
     break;
 
   case 3:
-    if( obj = WlzIntersect2(obj1, obj2, &errNum) ){
+    if((obj = WlzIntersect2(obj1, obj2, &errNum)) != NULL){
       s1 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
@@ -577,7 +576,7 @@ int main(
     break;
 
   case 4:
-    if( obj = WlzIntersect2(obj1, obj2, &errNum) ){
+    if((obj = WlzIntersect2(obj1, obj2, &errNum)) != NULL){
       s1 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
@@ -604,7 +603,7 @@ int main(
       return 1;
     }
     s1 = WlzSize(obj2, &errNum);
-    if( obj = WlzIntersect2(obj1, obj2, &errNum) ){
+    if((obj = WlzIntersect2(obj1, obj2, &errNum)) != NULL){
       s2 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }
@@ -612,7 +611,7 @@ int main(
       s2 = 0.0;
     }
     s3 = WlzSize(obj3, &errNum);
-    if( obj = WlzIntersect2(obj1, obj3, &errNum) ){
+    if((obj = WlzIntersect2(obj1, obj3, &errNum)) != NULL){
       s4 = WlzSize(obj, &errNum);
       WlzFreeObj(obj);
     }

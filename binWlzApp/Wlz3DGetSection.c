@@ -246,7 +246,7 @@ int main(int	argc,
       break;
 
     case 'a':
-      switch( sscanf(optarg, "%lg,%lg", &pitch, &yaw, &roll) ){
+      switch( sscanf(optarg, "%lg,%lg,%lg", &pitch, &yaw, &roll) ){
       default:
 	usage(argv[0]);
 	return 1;
@@ -368,7 +368,7 @@ int main(int	argc,
   }
 
   /* create view structure */
-  if( viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum) ){
+  if((viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL){
     viewStr->theta = yaw * WLZ_M_PI / 180.0;
     viewStr->phi = pitch * WLZ_M_PI / 180.0;
     viewStr->zeta = roll * WLZ_M_PI / 180.0;
@@ -381,7 +381,7 @@ int main(int	argc,
 
   /* check bibfile - select first section parameters in the file */
   if((errNum == WLZ_ERR_NONE) && (bibFile != NULL)){
-    if( bibFP = fopen(bibFile, "r") ){
+    if((bibFP = fopen(bibFile, "r")) != NULL){
       bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, bibFP);
       while((bibFileErr == BIBFILE_ER_NONE) &&
 	    (strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22))){
@@ -423,8 +423,8 @@ int main(int	argc,
 	    nobj = WlzGetSectionFromObject(obj, viewStr, interp, &errNum);
 	    if( nobj != NULL){
 	      char	fileBuf[256];
-	      sprintf(fileBuf, "%s%04.4d.wlz", outFile, j);
-	      if( outFP = fopen(fileBuf, "w") ){
+	      sprintf(fileBuf, "%s%d.wlz", outFile, j);
+	      if((outFP = fopen(fileBuf, "w")) != NULL){
 		 WlzWriteObj(outFP, nobj);
 		 fclose(outFP);
 	      }

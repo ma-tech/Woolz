@@ -191,9 +191,11 @@ typedef	struct _WlzRecCmdLnOptions
 static unsigned 		WlzRecParseBox3D(
     				  WlzDBox3 *box,
 				  char *gStr);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static unsigned 		WlzRecParseVtx3D(
     				  WlzDVertex3 *vtx,
 				  char *gStr);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static unsigned 		WlzRecParseCSD(
     				  int nVal,
 				  double *val,
@@ -224,7 +226,6 @@ int		 main(int argc, char *argv[])
 		*cp1,
 		*cp2,
 		*errMsg;
-  const char	pathSep = '/';
   static char	optList[] = "fghilLpb:c:C:m:o:s:T:",
   		defFile[] = "-",
 		defErrMsg[] = "";
@@ -647,6 +648,7 @@ static unsigned WlzRecParseBox3D(WlzDBox3 *box, char *gStr)
   return(cmpMsk);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	Integer with bits set to indicate which components of the
 * 		vertex are in the string:
@@ -685,6 +687,7 @@ static unsigned WlzRecParseVtx3D(WlzDVertex3 *vtx, char *gStr)
   }
   return(cmpMsk);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	Integer with bits set to indicate which elements of the

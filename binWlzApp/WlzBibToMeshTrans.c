@@ -219,7 +219,7 @@ int main(int	argc,
 
   /* check bibfile - get warp function parameters and tie-points */
   if((errNum == WLZ_ERR_NONE) && (bibFile != NULL)){
-    if( bibFP = fopen(bibFile, "r") ){
+    if((bibFP = fopen(bibFile, "r")) != NULL){
       bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, bibFP);
       while( bibFileErr == BIBFILE_ER_NONE ){
 
@@ -292,10 +292,10 @@ int main(int	argc,
     {
     case WLZ_2D_DOMAINOBJ:
       /* now create the mesh transform */
-      if( meshTr = WlzMeshTransformFromCPts(inObj, wlzFnType, basisFnPolyOrder,
+      if((meshTr = WlzMeshTransformFromCPts(inObj, wlzFnType, basisFnPolyOrder,
 					    numVtxs, srcVtxs, numVtxs, dstVtxs,
 					    meshMthd, meshMinDst, meshMaxDst,
-					    &errNum) ){
+					    &errNum)) != NULL){
 	/* write out transform and free */
 	domain.mt = meshTr;
 	values.core = NULL;

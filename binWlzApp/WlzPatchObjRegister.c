@@ -488,7 +488,6 @@ WlzObject *WlzGreyShift(
   WlzGreyWSpace		gwsp;
   WlzGreyP		gptr;
   int			i, idelta;
-  double		r;
 
   /* check the object */
   /* 2D only for now to test the idea */
@@ -527,9 +526,10 @@ WlzObject *WlzGreyShift(
 
   /* 2D case */
   if( (errNum == WLZ_ERR_NONE) && (rtnObj == NULL) ){
-    if( rtnObj = WlzCopyObject(obj, &errNum) ){
-      if( (errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp)) == WLZ_ERR_NONE ){
-	while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+    if((rtnObj = WlzCopyObject(obj, &errNum)) != NULL){
+      if((errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp)) == WLZ_ERR_NONE){
+	while((errNum == WLZ_ERR_NONE) &&
+	      ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)){
 	  gptr = gwsp.u_grintptr;
 	  switch (gwsp.pixeltype) {
 	  case WLZ_GREY_INT:
@@ -589,6 +589,9 @@ WlzObject *WlzGreyShift(
 	      *gptr.dbp += delta;
 	    }
 	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
 	  }
 	}
 	if( errNum == WLZ_ERR_EOO ){
@@ -624,7 +627,6 @@ WlzObject *WlzGreyScale(
   WlzGreyWSpace		gwsp;
   WlzGreyP		gptr;
   int			i, idelta;
-  double		r;
 
   /* check the object */
   /* 2D only for now to test the idea */
@@ -663,10 +665,11 @@ WlzObject *WlzGreyScale(
 
   /* 2D case */
   if( (errNum == WLZ_ERR_NONE) && (rtnObj == NULL) ){
-    if( rtnObj = WlzCopyObject(obj, &errNum) ){
+    if((rtnObj = WlzCopyObject(obj, &errNum)) != NULL){
       if((scale != 1.0) && 
 	 (errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp)) == WLZ_ERR_NONE ){
-	while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+	while( (errNum == WLZ_ERR_NONE) &&
+	       (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 	  gptr = gwsp.u_grintptr;
 	  switch (gwsp.pixeltype) {
 	  case WLZ_GREY_INT:
@@ -703,6 +706,9 @@ WlzObject *WlzGreyScale(
 	    for(i=0; i<iwsp.colrmn; i++, gptr.dbp++){
 	      *gptr.dbp += scale;
 	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;
 	  }
 	}
@@ -748,7 +754,8 @@ WlzObject *WlzRGBAGreyScale(
   else {
     switch( obj->type ){
     case WLZ_2D_DOMAINOBJ:	/* only flavour for now */
-      if( cmpnd = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB, &errNum) ){
+      if((cmpnd = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB,
+                                    &errNum)) != NULL){
 	/* apply re-scaling to each channel */
 	for(i=0; i < 3; i++){
 	  objs[i] = WlzGreyScale(cmpnd->o[i], scale[i], &errNum);
@@ -804,7 +811,8 @@ double WlzGreyMeanDifference(
   idiff = 0;
   countedArea = 0;
   pixelIncr = (int) (100.0 / samplePercent);
-  while( (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE ){
+  while((errNum == WLZ_ERR_NONE) &&
+        (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE ){
     (void) WlzNextGreyInterval(&iwsp2);
     gptr1 = gwsp1.u_grintptr;
     gptr2 = gwsp2.u_grintptr;
@@ -863,6 +871,9 @@ double WlzGreyMeanDifference(
 	idiff += (idiffIncr < 0)?-idiffIncr:idiffIncr;
 	countedArea++;
       }
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
       break;
     }
   } 
@@ -927,8 +938,8 @@ WlzPatchTree *WlzPatchTreeUnalignedChild(
     shift->vtY += patchTree->yOff;
     if(patchTree->depth < depth){
       for(i=0; i < patchTree->nchildren; i++){
-	if( child = WlzPatchTreeUnalignedChild(patchTree->children[i],
-					       depth, shift) ){
+	if((child = WlzPatchTreeUnalignedChild(patchTree->children[i],
+					       depth, shift)) != NULL){
 	  break;
 	}
       }
@@ -975,7 +986,7 @@ WlzErrorNum WlzRegisterPatchTreeBF(
 {
   WlzObject	*obj, *obj1, *obj2, *objs[2];
   WlzPatchTree	*child;
-  int 		i, depth;
+  int 		depth;
   WlzDVertex2	shift;
   double	ccVal;
   WlzIVertex2	maxShift;
@@ -992,7 +1003,8 @@ WlzErrorNum WlzRegisterPatchTreeBF(
   shift.vtX = 0;
   shift.vtY = 0;
   while( depth <= WlzPatchMaxDepth(patchTree) ){
-    while( child = WlzPatchTreeUnalignedChild(patchTree, depth, &shift) ){
+    while((child = WlzPatchTreeUnalignedChild(patchTree, depth,
+                                              &shift)) != NULL){
       obj1 = WlzShiftObject(child->obj, shift.vtX, shift.vtY, 0, NULL);
       (void) DumbRegMatch(&shift, &ccVal, obj, obj1, maxShift);
       child->offsetsCalculatedFlag = 1;
@@ -1017,9 +1029,8 @@ WlzErrorNum WlzRegisterPatchTreeBF(
 WlzErrorNum WlzRegisterPatchTreeDF(
   WlzPatchTree	*patchTree)
 {
-  WlzObject	*obj, *obj1, *obj2;
   int 		i;
-  RecError	recErr=REC_ERR_NONE;
+  /* RecError	recErr=REC_ERR_NONE; */
   WlzDVertex2	shift;
   double	ccVal;
   WlzIVertex2	maxShift;
@@ -1082,7 +1093,7 @@ WlzObject *WlzPatchTreeToObject(
 	double 		min2[4], max2[4], sum2[4], sumSq2[4], mean2[4], stdDev2[4];
 	WlzGreyType	gType;
 
-	if( obj2 = WlzIntersect2(obj1, objs[0], NULL) ){
+	if((obj2 = WlzIntersect2(obj1, objs[0], NULL)) != NULL){
 	  obj2->values.core = obj1->values.core;
 	  WlzRGBAGreyStats(obj2, WLZ_RGBA_SPACE_RGB, &gType, min1, max1,
 			   sum1, sumSq1, mean1, stdDev1, NULL);
@@ -1106,7 +1117,7 @@ WlzObject *WlzPatchTreeToObject(
 	double 		min2, max2, sum2, sumSq2, mean2, stdDev2;
 	WlzGreyType	gType;
 
-	if( obj2 = WlzIntersect2(obj1, objs[0], NULL) ){
+	if((obj2 = WlzIntersect2(obj1, objs[0], NULL)) != NULL){
 	  obj2->values.core = obj1->values.core;
 	  WlzGreyStats(obj2, &gType, &min1, &max1,
 		       &sum1, &sumSq1, &mean1, &stdDev1, NULL);
@@ -1497,7 +1508,7 @@ int main(int	argc,
 
   /* trap the WLZ_ERR_READ_EOF since this is a legal way of indicating
      the end of objects in a file */
-  if( errNum = WLZ_ERR_READ_EOF ){
+  if( errNum == WLZ_ERR_READ_EOF ){
     errNum = WLZ_ERR_NONE;
   }
 

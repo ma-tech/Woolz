@@ -199,7 +199,7 @@ int main(int	argc,
 
   WlzObject	*obj1, *obj2, *obj, **objlist, *rtnObj, *structElem;
   WlzObjectType	type = (WlzObjectType) -1;
-  int 		i, n, nmax, p;
+  int 		i, n, nmax;
   FILE		*inFile;
   char 		optList[] = "b:B:d:i:n:NosShv";
   int		option;
@@ -213,7 +213,6 @@ int main(int	argc,
   int		red, green, blue;
   int		width, height;
   int		*buf;
-  WlzValues	values;
 /*  WlzUByte	**colorTable; */
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
@@ -258,7 +257,7 @@ int main(int	argc,
       /* read in a target domain over which to capture the occupancy,
 	 set grey type to WLZ_GREY_INT and value to zero */
     case 'd':
-      if( inFile = fopen(optarg, "rb") ){
+      if((inFile = fopen(optarg, "rb")) != NULL){
 	if( (obj = WlzReadObj(inFile, &errNum)) == NULL ){
 	  fprintf(stderr, "%s: Can't read class-map domain file\n", argv[0]);
 	  usage(argv[0]);
@@ -483,7 +482,7 @@ int main(int	argc,
     FILE	*fp;
     WlzUInt	uiVal;
     int		k;
-    if( fp = fopen(indexFile, "wb") ){
+    if((fp = fopen(indexFile, "wb")) != NULL){
       WlzFreeObj(rtnObj);
       bckgrnd.type = WLZ_GREY_RGBA;
       bckgrnd.v.rgbv = 0;

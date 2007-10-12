@@ -248,8 +248,8 @@ WlzErrorNum	WlzGreyScalarAddValue(
 	    continue;
 	  }
 
-	  if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				    NULL, NULL,	NULL) ){
+	  if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				    NULL, NULL,	NULL)) != NULL){
 	    errNum = WlzGreyScalarAddValue(tmpObj, val);
 	    WlzFreeObj( tmpObj );
 	  }
@@ -380,12 +380,12 @@ WlzErrorNum	WlzGreyScalarMultValue(
 	for(i=0; (errNum == WLZ_ERR_NONE) && (i < nplanes);
 	    i++, domains++, values++){
 
-	  if( (*domains).core == NULL || (*values).core == NULL ){
+	  if(((*domains).core == NULL) || ((*values).core == NULL)){
 	    continue;
 	  }
 
-	  if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				    NULL, NULL,	NULL) ){
+	  if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				    NULL, NULL,	NULL)) != NULL){
 	    errNum = WlzGreyScalarMultValue(tmpObj, val);
 	    WlzFreeObj( tmpObj );
 	  }
@@ -520,8 +520,8 @@ WlzErrorNum	WlzGreyScalarDivValue(
 	    continue;
 	  }
 
-	  if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				    NULL, NULL,	NULL) ){
+	  if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				    NULL, NULL,	NULL)) != NULL){
 	    errNum = WlzGreyScalarDivValue(tmpObj, val);
 	    WlzFreeObj( tmpObj );
 	  }
@@ -603,7 +603,7 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj1, *obj2, *obj, **objlist, *rtnObj;
+  WlzObject	*obj1, *obj, **objlist, *rtnObj;
   WlzObjectType	type = (WlzObjectType) -1;
   int 		i, n, nmax, p;
   FILE		*inFile;
@@ -630,8 +630,8 @@ int main(int	argc,
       /* read in a target domain over which to capture the occupancy,
 	 set grey type to WLZ_GREY_INT and value to zero */
     case 'd':
-      if( inFile = fopen(optarg, "rb") ){
-	if( obj = WlzReadObj(inFile, &errNum) ){
+      if((inFile = fopen(optarg, "rb")) != NULL){
+	if((obj = WlzReadObj(inFile, &errNum)) != NULL){
 	  if( (rtnObj = WlzAddValuesTable(obj, WLZ_GREY_INT,
 					  bckgrnd, &errNum)) == NULL ){
 	    (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -744,7 +744,7 @@ int main(int	argc,
   /* now add 1 to each pixel for each domain */
   bckgrnd.v.inv = 1;
   for(i=0; i < n; i++){
-    if( obj1 = WlzIntersect2(rtnObj, objlist[i], &errNum) ){
+    if((obj1 = WlzIntersect2(rtnObj, objlist[i], &errNum)) != NULL){
       if( obj1->type != WLZ_EMPTY_OBJ ){
 	if( obj1->type == WLZ_2D_DOMAINOBJ ){
 	  obj1->values = WlzAssignValues(rtnObj->values, &errNum);

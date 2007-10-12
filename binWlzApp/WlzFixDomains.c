@@ -131,7 +131,7 @@ static WlzErrorNum WlzDomainSizeSelect3d(
   WlzObject	**rtnObjs;
   int		rtnNobjs, maxRtnNobjs;
   WlzObject	**objArray, *tmpObj, *obj1;
-  int		i, n, p, nobjs, maxNobjs=1024;
+  int		i, p, nobjs;
   WlzValues	values;
   WlzDomain	domain;
   WlzPlaneDomain	*pdom;
@@ -232,7 +232,6 @@ WlzErrorNum WlzDomainSizeSelect(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzObject	**objArray, *tmpObj;
   int		i, n, nobjs, maxNobjs=1024;
-  WlzValues	values;
 
   /* check parameters */
   if( size <= 0 ){
@@ -360,14 +359,14 @@ static WlzObject *WlzDomainFillHoles3d(
     WlzObject	*obj1, *obj2;
     int		p;
     
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 				      obj->domain.p->plane1,
 				      obj->domain.p->lastpl,
 				      obj->domain.p->line1,
 				      obj->domain.p->lastln,
 				      obj->domain.p->kol1,
 				      obj->domain.p->lastkl,
-				      &errNum) ){
+				      &errNum)) != NULL){
       values.core = NULL;
       rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values, NULL, NULL,
 			   &errNum);
@@ -447,8 +446,8 @@ WlzObject *WlzDomainFillHoles(
 	return WlzDomainFillHoles3d(obj, size, connectivity, dstErr);
 
       case WLZ_TRANS_OBJ:
-	if( values.obj = WlzDomainFillHoles(obj, size, connectivity,
-					    &errNum) ){
+	if((values.obj = WlzDomainFillHoles(obj, size, connectivity,
+					    &errNum)) != NULL){
 	  return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
 			     NULL, NULL, dstErr);
 	}
@@ -467,16 +466,16 @@ WlzObject *WlzDomainFillHoles(
   /* 2D object with domain */
   /* build background object and extract holes */
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 					 obj->domain.i->line1 - 1,
 					 obj->domain.i->lastln + 1,
 					 obj->domain.i->kol1 - 1,
 					 obj->domain.i->lastkl + 1,
-					 &errNum) ){
+					 &errNum)) != NULL){
       values.core = NULL;
       obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			 NULL, NULL, &errNum);
-      if( backObj = WlzDiffDomain(obj1, obj, &errNum) ){
+      if((backObj = WlzDiffDomain(obj1, obj, &errNum)) != NULL){
 	backObj = WlzAssignObject(backObj, &errNum);
 	errNum = WlzLabel(backObj, &numObjs, &objs, 1024, 0, connectivity);
 	WlzFreeObj(backObj);
@@ -576,7 +575,6 @@ int main(
   char 		optList[] = "fps:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  char		*errMsg;
   int		verboseFlg=0;
   int		fillFlg=0, pruneFlg=0;
   int		size=2;
@@ -650,7 +648,7 @@ int main(
       if(verboseFlg){
 	fprintf(stderr, "%s: reading %s\n", argv[0], *(argv+optind));
       }
-      if( obj1 = WlzAssignObject(WlzReadObj(inFile, &errNum), NULL) ){
+      if((obj1 = WlzAssignObject(WlzReadObj(inFile, &errNum), NULL)) != NULL){
 	values.core = NULL;
 	obj2 = WlzMakeMain(obj1->type, obj1->domain, values,
 			   NULL, NULL, &errNum);
@@ -793,8 +791,8 @@ int main(
 	  }
 
 	  /* fill holes */
-	  if( obj1 = WlzDomainFillHoles(newItem->origDom, size,
-					WLZ_4_CONNECTED, &errNum) ){
+	  if((obj1 = WlzDomainFillHoles(newItem->origDom, size,
+					WLZ_4_CONNECTED, &errNum)) != NULL){
 	    newItem->newDom = WlzAssignObject(obj1, &errNum);
 
 	    /* remove intersection with other domains */
@@ -805,16 +803,16 @@ int main(
 		HGUDlpListEntryGet(dmnList, tmpItem);
 	      if( strcmp(domItem->file, newItem->file) ){
 		if( domItem->newDom ){
-		  if( obj2 = WlzDiffDomain(domItem->newDom,
-					   obj1, &errNum) ){
+		  if((obj2 = WlzDiffDomain(domItem->newDom,
+					   obj1, &errNum)) != NULL){
 		    obj2 = WlzAssignObject(obj2, NULL);
 		    WlzFreeObj(domItem->newDom);
 		    domItem->newDom = obj2;
 		  }
 		}
 		else {
-		  if( obj2 = WlzDiffDomain(domItem->origDom,
-					   obj1, &errNum) ){
+		  if((obj2 = WlzDiffDomain(domItem->origDom,
+					   obj1, &errNum)) != NULL){
 		    obj2 = WlzAssignObject(obj2, NULL);
 		    WlzFreeObj(domItem->origDom);
 		    domItem->origDom = obj2;
@@ -937,7 +935,7 @@ int main(
 	  }
 	  AlcFree(objs);
 	  if(verboseFlg){
-	    fprintf(stderr, " done\n", numObjs);
+	    fprintf(stderr, "%d done\n", numObjs);
 	  }
 	}
 	item = HGUDlpListPrev(dmnList, item);
@@ -976,13 +974,14 @@ int main(
 	  str++;
 	}
 	fileBody = AlcStrDup(str);
-	if( str = strstr((const char *) fileBody, (const char *) ".wlz") ){
+	if((str = strstr((const char *)fileBody,
+	                 (const char *)".wlz")) != NULL){
 	  str[0] = '\0';
 	}
 
 	/* write new, adds and dels */
 	sprintf(strBuf, "%s_new.wlz", fileBody);
-	if( outFile = fopen(strBuf, "w") ){
+	if((outFile = fopen(strBuf, "w")) != NULL){
 	  WlzWriteObj(outFile, newItem->newDom);
 	  fclose(outFile);
 	  if(verboseFlg){
@@ -994,9 +993,9 @@ int main(
 	}
 	
 	sprintf(strBuf, "%s_adds.wlz", fileBody);
-	if( outFile = fopen(strBuf, "w") ){
-	  if( obj1 = WlzDiffDomain(newItem->newDom, newItem->origDom,
-				   &errNum) ){
+	if((outFile = fopen(strBuf, "w")) != NULL){
+	  if((obj1 = WlzDiffDomain(newItem->newDom, newItem->origDom,
+				   &errNum)) != NULL){
 	    WlzWriteObj(outFile, obj1);
 	    WlzFreeObj(obj1);
 	    if(verboseFlg){
@@ -1010,9 +1009,9 @@ int main(
 	}
 	
 	sprintf(strBuf, "%s_dels.wlz", fileBody);
-	if( outFile = fopen(strBuf, "w") ){
-	  if( obj1 = WlzDiffDomain(newItem->origDom, newItem->newDom,
-				   &errNum) ){
+	if((outFile = fopen(strBuf, "w")) != NULL){
+	  if((obj1 = WlzDiffDomain(newItem->origDom, newItem->newDom,
+				   &errNum)) != NULL){
 	    WlzWriteObj(outFile, obj1);
 	    WlzFreeObj(obj1);
 	    if(verboseFlg){

@@ -299,9 +299,9 @@ WlzObject *SecListToTransforms(
   sec = (RecSection *) HGUDlpListEntryGet(secList->list, listItem);
   pMax = sec->index;
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
 				      pMin, pMax, 0, 0, 0, 0,
-				      &errNum) ){
+				      &errNum)) != NULL){
       values.core = NULL;
       rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ,
 			   domain, values, NULL, NULL, &errNum);
@@ -360,9 +360,8 @@ WlzObject *ReadMAPaintRealignTransforms(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzObject	*rtnObj=NULL;
   BibFileRecord		*bibfileRecord;
-  BibFileField		*bibfileField;
   BibFileError		bibFileErr=BIBFILE_ER_NONE;
-  int		i, p, pMin, pMax;
+  int		p, pMin, pMax;
   int		identFlg=0, planeFlg=0;
   WlzDomain	domain;
   WlzValues	values;
@@ -421,9 +420,9 @@ WlzObject *ReadMAPaintRealignTransforms(
 
   /* make the tranforms object */
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_AFFINE,
 				      pMin, pMax, 0, 0, 0, 0,
-				      &errNum) ){
+				      &errNum)) != NULL){
       values.core = NULL;
       rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ,
 			   domain, values, NULL, NULL, &errNum);
@@ -506,9 +505,7 @@ WlzErrorNum WriteMAPaintRealignTransforms(
   int			i, p;
   WlzAffineTransformPrim prim;
   BibFileRecord	*record = NULL;
-  BibFileField	*field0 = NULL,
-		*field1 = NULL,
-		*field2 = NULL;
+  BibFileField	*field0 = NULL;
   char		tmpBuf[256], *eMsg;
   char		*tmpS,
 		*idxS = NULL,

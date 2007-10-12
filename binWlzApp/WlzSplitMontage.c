@@ -476,7 +476,7 @@ int             main(int argc, char *argv[])
       }
       else
       {
-	sprintf(idxBuf, "06d", idC + 1);
+	(void )sprintf(idxBuf, "%06d", idC + 1);
       }
       if(ext)
       {

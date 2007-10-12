@@ -51,9 +51,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <Wlz.h>
+#include <WlzExtFF.h>
 #include <WlzEMAP.h>
-#include <bibFile.h>
 
 /* externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
@@ -109,8 +108,8 @@ static WlzObject *WlzEMAPGetObject(
 			    sizeof(char));
   
   sprintf(fileBuf, "%s/%s", dirStr, fileStr);
-  if(FP = fopen(fileBuf, "rb")){
-    if(obj = WlzReadObj(FP, &errNum)){
+  if((FP = fopen(fileBuf, "rb")) != NULL){
+    if((obj = WlzReadObj(FP, &errNum)) != NULL){
       obj = WlzAssignObject(obj, &errNum);
     }
     fclose(FP);
@@ -130,7 +129,6 @@ WlzErrorNum WlzEMAPFreeMapping(
   WLZ_EMAP_WarpTransformStruct	*mapping)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  AlcErrno	alcErrNum;
   int		i;
 
   if( mapping ){
@@ -180,7 +178,6 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
   FILE		*FP;
   char		*transDir;
   struct stat	statBuf;
-  WlzObject	*obj;
   WlzThreeDViewStruct	*viewStr;
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
@@ -232,7 +229,7 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       /* src projection */
       viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
       sprintf(file, "%s/source_projection.bib", mappingDirStrF);
-      if( FP = fopen(file, "r") ){
+      if((FP = fopen(file, "r")) != NULL){
 	bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, FP);
 	while((bibFileErr == BIBFILE_ER_NONE) &&
 	      (strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22))){
@@ -261,7 +258,7 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       /* dst projection */
       viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
       sprintf(file, "%s/target_projection.bib", mappingDirStrF);
-      if( FP = fopen(file, "r") ){
+      if((FP = fopen(file, "r")) != NULL){
 	bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, FP);
 	while((bibFileErr == BIBFILE_ER_NONE) &&
 	      (strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22))){
@@ -314,7 +311,7 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       /* src projection */
       viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
       sprintf(file, "%s/target_projection.bib", mappingDirStrB);
-      if( FP = fopen(file, "r") ){
+      if((FP = fopen(file, "r")) != NULL){
 	bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, FP);
 	while((bibFileErr == BIBFILE_ER_NONE) &&
 	      (strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22))){
@@ -343,7 +340,7 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       /* dst projection */
       viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
       sprintf(file, "%s/source_projection.bib", mappingDirStrB);
-      if( FP = fopen(file, "r") ){
+      if((FP = fopen(file, "r")) != NULL){
 	bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, FP);
 	while((bibFileErr == BIBFILE_ER_NONE) &&
 	      (strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22))){
@@ -362,19 +359,19 @@ WLZ_EMAP_WarpTransformStruct *WlzEMAPGetMapping(
       }
 
       /* now the mesh transforms */
-      if( mapping->meshObj[0] = WlzEMAPGetObject(mappingDirStrB,
+      if((mapping->meshObj[0] = WlzEMAPGetObject(mappingDirStrB,
 						 "source_to_target_bb.wlz",
-						 &errNum) ){
+						 &errNum)) != NULL){
 	WlzSetMeshInverse(mapping->meshObj[0]->domain.mt);
       }
-      if( mapping->meshObj[1] = WlzEMAPGetObject(mappingDirStrB,
+      if((mapping->meshObj[1] = WlzEMAPGetObject(mappingDirStrB,
 						 "source_to_target_bt.wlz",
-						 &errNum) ){
+						 &errNum)) != NULL){
 	WlzSetMeshInverse(mapping->meshObj[1]->domain.mt);
       }
-      if( mapping->meshObj[2] = WlzEMAPGetObject(mappingDirStrB,
+      if((mapping->meshObj[2] = WlzEMAPGetObject(mappingDirStrB,
 						 "source_to_target_tt.wlz",
-						 &errNum) ){
+						 &errNum)) != NULL){
 	WlzSetMeshInverse(mapping->meshObj[2]->domain.mt);
       }
     }
@@ -500,20 +497,23 @@ WlzObject *WlzEMAPDomainTransform(
   }
 
   /* Get the mapping structure and apply */
-  if( errNum == WLZ_ERR_NONE ){
-    if( mapping = WlzEMAPGetMapping(srcModel, dstModel, NULL,
-				    &errNum) ){
-      if( (errNum = WlzInit3DViewStruct(mapping->srcProj, obj)) == WLZ_ERR_NONE ){
+  if(errNum == WLZ_ERR_NONE){
+    if((mapping = WlzEMAPGetMapping(srcModel, dstModel, NULL,
+				    &errNum)) != NULL){
+      if((errNum = WlzInit3DViewStruct(mapping->srcProj,
+                                       obj)) == WLZ_ERR_NONE ){
 	for(i=0; i < 3; i++){
 	  if( mapping->srcDoms[i] ){
-	    if( obj1 = WlzIntersect2(obj, mapping->srcDoms[i], &errNum) ){
-	      if( obj2 = WlzGetSectionFromObject(obj1,
+	    if((obj1 = WlzIntersect2(obj, mapping->srcDoms[i],
+	                             &errNum)) != NULL){
+	      if((obj2 = WlzGetSectionFromObject(obj1,
 						 mapping->srcProj,
 						 WLZ_INTERPOLATION_NEAREST,
-						 &errNum) ){
-		if( obj3 = WlzMeshTransformObj(obj2, mapping->meshObj[i]->domain.mt,
+						 &errNum)) != NULL){
+		if((obj3 = WlzMeshTransformObj(obj2,
+		                               mapping->meshObj[i]->domain.mt,
 					       WLZ_INTERPOLATION_NEAREST,
-					       &errNum) ){
+					       &errNum)) != NULL){
 		  WlzFreeObj(obj1);
 		  WlzFreeObj(obj2);
 		  if( rtnObj ){
@@ -532,8 +532,10 @@ WlzObject *WlzEMAPDomainTransform(
 	}
       }
       if((errNum == WLZ_ERR_NONE) && rtnObj ){
-	if( (errNum = WlzInit3DViewStruct(mapping->dstProj, rtnObj)) == WLZ_ERR_NONE ){
-	  if( obj1 = Wlz3DViewTransformObj(rtnObj, mapping->dstProj, &errNum) ){
+	if((errNum = WlzInit3DViewStruct(mapping->dstProj,
+	                                 rtnObj)) == WLZ_ERR_NONE){
+	  if((obj1 = Wlz3DViewTransformObj(rtnObj, mapping->dstProj,
+	                                   &errNum)) != NULL){
 	    WlzFreeObj(rtnObj);
 	    rtnObj = obj1;
 	  }

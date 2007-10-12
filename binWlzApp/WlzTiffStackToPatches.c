@@ -129,7 +129,7 @@ static void usage(char *proc_str)
   return;
 }
 
-static guessColsRows(
+static int	guessColsRows(
   int	numPatches,
   int	*cols,
   int	*rows)

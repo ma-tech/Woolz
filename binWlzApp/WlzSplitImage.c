@@ -120,6 +120,7 @@ origins of their bounding boxes increase.
 #include <unistd.h>
 #include <stdio.h>
 #include <strings.h>
+#include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
@@ -272,7 +273,7 @@ int             main(int argc, char *argv[])
     {
       ext = NULL;
     }
-    if(sscanf(inFile, "%0d%s", &fileNum, dirPFx) != 2)
+    if(sscanf(inFile, "%d%s", &fileNum, dirPFx) != 2)
     {
       dirPFx = defDirPFx;
     }

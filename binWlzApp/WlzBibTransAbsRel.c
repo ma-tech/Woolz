@@ -97,6 +97,7 @@ bibfile with absolute transforms to the file recon_abs.
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#include <math.h>
 #include <Wlz.h>
 #include <bibFile.h>
 #include <Reconstruct.h>

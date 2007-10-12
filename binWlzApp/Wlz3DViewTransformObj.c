@@ -183,7 +183,7 @@ int main(int	argc,
       break;
 
     case 'b':
-      if( inFile = fopen(optarg, "r") ){
+      if((inFile = fopen(optarg, "r")) != NULL){
 	char		viewModeStr[64];
 	int		numParsedFields=0;
 	BibFileRecord	*bibfileRecord;
@@ -317,7 +317,7 @@ int main(int	argc,
 
   /* create the view structure */
   if( errNum == WLZ_ERR_NONE ){
-    if( viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum) ){
+    if((viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL){
       viewStr->fixed 	= fixed;
       viewStr->theta 	= theta;
       viewStr->phi 	= phi;
