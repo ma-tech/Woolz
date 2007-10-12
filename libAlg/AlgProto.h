@@ -523,6 +523,18 @@ extern AlgError	        	AlgPolynomialLSq(
 				  int polyDeg,
 				  double *cVec);
 
+/* From AlgQSort.c */
+#ifndef WLZ_EXT_BIND
+extern void			AlgQSort(
+				  void *base,
+				  size_t nElm,
+				  size_t elmSz,
+			          void *cData,
+		                  int (*cmpFn)(const void *,
+				               const void *,
+					       const void *));
+#endif /* WLZ_EXT_BIND */
+
 /* From AlgRand.c */
 extern void			AlgRandSeed(
 				  long seed);
