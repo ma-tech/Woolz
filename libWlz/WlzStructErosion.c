@@ -125,8 +125,8 @@ WlzObject *WlzStructErosion(
       return WlzStructErosion3d(obj, structElm, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzStructErosion(obj->values.obj, structElm,
-					&errNum) ){
+      if((values.obj = WlzStructErosion(obj->values.obj, structElm,
+					&errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -216,7 +216,7 @@ WlzObject *WlzStructErosion(
      * space for the intervals of the resultant object.
      */
     m = 2 * WlzIntervalCount(obj->domain.i, NULL);
-    if( jp = (WlzInterval *) AlcMalloc(sizeof(WlzInterval) * m) ){
+    if((jp = (WlzInterval *)AlcMalloc(sizeof(WlzInterval) * m)) != NULL){
       jpw = jp;
       /*
        * construct an interval domain approximately and the return object.
@@ -228,9 +228,9 @@ WlzObject *WlzStructErosion(
       lastln = bDom.i->lastln - sDom.i->lastln;
       kol1 = bDom.i->kol1 - sDom.i->kol1;
       lastkl = bDom.i->lastkl - sDom.i->lastkl;
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					   line1, lastln, kol1, lastkl,
-					   &errNum) ){
+					   &errNum)) != NULL){
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
 					     NULL);
 	values.core = NULL;
@@ -514,18 +514,18 @@ static WlzObject *WlzStructErosion3d(
 	  return WlzMakeMain(obj->type, obj->domain, values,
 			     NULL, NULL, dstErr);
 	}
-	else if(domain.p =
-		WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	else if((domain.p =
+		 WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 				   0, 0,
 				   structElm->domain.i->line1,
 				   structElm->domain.i->lastln,
 				   structElm->domain.i->kol1,
 				   structElm->domain.i->lastkl,
-				   &errNum) ){
+				   &errNum)) != NULL){
 	  domain.p->domains[0] = WlzAssignDomain(structElm->domain, NULL);
 	  values.core = NULL;
-	  if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
-				 NULL, NULL, &errNum) ){
+	  if((obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
+				 NULL, NULL, &errNum)) != NULL){
 	    rtnObj = WlzStructErosion3d(obj, obj1, &errNum);
 	    WlzFreeObj(obj1);
 	  }

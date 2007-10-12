@@ -286,6 +286,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		++(gVal.inp);
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
 	  }
 	  break;
 	case WLZ_GREY_SHORT:
@@ -320,6 +323,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		++(bPos.vtX);
 		++(gVal.shp);
 	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
 	      break;
 	  }
 	  break;
@@ -356,6 +362,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		++(gVal.ubp);
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
 	  }
 	  break;
 	case WLZ_GREY_FLOAT:
@@ -390,6 +399,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		++(bPos.vtX);
 		++(gVal.flp);
 	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
 	      break;
 	  }
 	  break;
@@ -426,6 +438,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		++(gVal.dbp);
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
 	  }
 	  break;
 	case WLZ_GREY_RGBA:
@@ -461,7 +476,13 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		++(gVal.rgbp);
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
 	  }
+	  break;
+        default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
       }
       /* Transfer values and coordinates from the buffers to the arrays.
@@ -555,6 +576,9 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 		}
 		++bIdx;
 	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	  }
 	  if(iWsp.linrmn)

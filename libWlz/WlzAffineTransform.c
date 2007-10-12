@@ -515,6 +515,8 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
           ++dstVtxD;
         }
         break;
+      default:
+        break;
     }
   }
   if(dstErr)
@@ -1042,6 +1044,9 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	      case WLZ_GREY_RGBA:
 	        *(gWSp.u_grintptr.rgbp)++ = (*(gVWSp->gVal)).rgbv;
 		break;
+	      default:
+	        errNum = WLZ_ERR_GREY_TYPE;
+		break;
 	    }
 	    ++(posI.vtX);
 	  }
@@ -1135,6 +1140,9 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 
 		++(gWSp.u_grintptr.rgbp);
 		break;
+	      default:
+	        errNum = WLZ_ERR_GREY_TYPE;
+		break;
 	    }
 	    ++(posI.vtX);
 	  }
@@ -1147,49 +1155,52 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	tD1 = dy - floor(dy);
 	switch(gWSp.pixeltype)
 	{
-	case WLZ_GREY_INT:
-	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (double )((gVWSp->gVal[indx]).inv);
-	  }
-	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  *(gWSp.u_grintptr.inp)++ = WLZ_NINT(tD0);
-	  break;
-	case WLZ_GREY_SHORT:
-	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (double )((gVWSp->gVal[indx]).shv);
-	  }
-	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  *(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
-	  break;
-	case WLZ_GREY_UBYTE:
-	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (double )((gVWSp->gVal[indx]).ubv);
-	  }
-	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  WLZ_CLAMP(tD0, 0.0, 255.0);
-	  *(gWSp.u_grintptr.ubp)++ = (WlzUByte )WLZ_NINT(tD0);
-	  break;
-	case WLZ_GREY_FLOAT:
-	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (double )((gVWSp->gVal[indx]).flv);
-	  }
-	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  *(gWSp.u_grintptr.flp)++ = tD0;
-	  break;
-	case WLZ_GREY_DOUBLE:
-	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (gVWSp->gVal[indx]).dbv;
-	  }
-	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  *(gWSp.u_grintptr.dbp)++ = tD0;
-	  break;
-	case WLZ_GREY_RGBA:
-	  for(indx=0; indx < 4; indx++){
-	    gTmp[indx] = (double )((gVWSp->gVal[indx]).rgbv);
-	  }
-	  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	  *(gWSp.u_grintptr.rgbp)++ = (WlzUInt )tD0;
-	  break;
+	  case WLZ_GREY_INT:
+	    for(indx=0; indx < 4; indx++){
+	      gTmp[indx] = (double )((gVWSp->gVal[indx]).inv);
+	    }
+	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	    *(gWSp.u_grintptr.inp)++ = WLZ_NINT(tD0);
+	    break;
+	  case WLZ_GREY_SHORT:
+	    for(indx=0; indx < 4; indx++){
+	      gTmp[indx] = (double )((gVWSp->gVal[indx]).shv);
+	    }
+	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	    *(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    for(indx=0; indx < 4; indx++){
+	      gTmp[indx] = (double )((gVWSp->gVal[indx]).ubv);
+	    }
+	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+	    *(gWSp.u_grintptr.ubp)++ = (WlzUByte )WLZ_NINT(tD0);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    for(indx=0; indx < 4; indx++){
+	      gTmp[indx] = (double )((gVWSp->gVal[indx]).flv);
+	    }
+	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	    *(gWSp.u_grintptr.flp)++ = tD0;
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    for(indx=0; indx < 4; indx++){
+	      gTmp[indx] = (gVWSp->gVal[indx]).dbv;
+	    }
+	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	    *(gWSp.u_grintptr.dbp)++ = tD0;
+	    break;
+	  case WLZ_GREY_RGBA:
+	    for(indx=0; indx < 4; indx++){
+	      gTmp[indx] = (double )((gVWSp->gVal[indx]).rgbv);
+	    }
+	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
+	    *(gWSp.u_grintptr.rgbp)++ = (WlzUInt )tD0;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
 	}
       case WLZ_INTERPOLATION_CALLBACK:
 	errNum = (*cbFn)(cbData, &gWSp, gVWSp, invTrans,
@@ -3056,6 +3067,9 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
 	    case WLZ_AFFINE_TRANS:
 	      dstDom.t = WlzAffineTransformProduct(srcObj->domain.t,
 	      					   trans, &errNum);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_OBJECT_TYPE;
 	      break;
 	  }
 	}

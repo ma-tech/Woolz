@@ -68,7 +68,6 @@ WlzObject *WlzConvertPix(
   WlzErrorNum	*dstErr)
 {
   WlzGreyType		oldpixtype;
-  WlzGreyV		g;
   WlzGreyP		go, gn;
   WlzIntervalWSpace	oldiwsp, newiwsp;
   WlzGreyWSpace		oldgwsp, newgwsp;
@@ -77,7 +76,6 @@ WlzObject *WlzConvertPix(
   WlzPixelV		bg;
   WlzValues		newvalues,
   			values;
-  int 			k;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the object */
@@ -322,8 +320,8 @@ WlzPolygonDomain *WlzConvertPolyType(
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
   else {
-    if( rtnDom = WlzMakePolygonDomain(type, pdom->nvertices, NULL,
-				pdom->nvertices, 1, &errNum) ){
+    if((rtnDom = WlzMakePolygonDomain(type, pdom->nvertices, NULL,
+				pdom->nvertices, 1, &errNum)) != NULL){
       switch( type ){
       case WLZ_POLYGON_INT:
 	iVtxs = rtnDom->vtx;
@@ -424,8 +422,8 @@ WlzBoundList *WlzConvertBoundType(
   if( bound == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if( rtnBound = WlzMakeBoundList(bound->type, bound->wrap,
-				       NULL, &errNum) ){
+  else if((rtnBound = WlzMakeBoundList(bound->type, bound->wrap,
+				       NULL, &errNum)) != NULL){
     if( (errNum == WLZ_ERR_NONE) && bound->next ){
       rtnBound->next =
 	WlzAssignBoundList(WlzConvertBoundType(bound->next, type,

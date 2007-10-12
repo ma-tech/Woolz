@@ -125,6 +125,7 @@ static WlzErrorNum 	WlzWriteVertex3D(
 			  FILE *fP,
 			  WlzDVertex3 *vP,
 			  int nV);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 	WlzWriteBox2I(
 			  FILE *fP,
 			  WlzIBox2 *bP,
@@ -141,6 +142,7 @@ static WlzErrorNum 	WlzWriteBox3D(
 			  FILE *fP,
 			  WlzDBox3 *bP,
 			  int nB);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzErrorNum	WlzWriteStr(
 			  FILE *fP,
 			  char *str);
@@ -531,6 +533,7 @@ static WlzErrorNum WlzWriteVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
   return(errNum);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	Woolz error code.
 * \ingroup      WlzIO
@@ -630,6 +633,7 @@ static WlzErrorNum WlzWriteBox3D(FILE *fP, WlzDBox3 *bP, int nB)
   }
   return(errNum);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	Woolz error code.
@@ -1229,6 +1233,9 @@ static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
 		      }
 		    }
 		    break;
+		  default:
+		    errNum = WLZ_ERR_GREY_TYPE;
+		    break;
 		}
 	      }
 	      if(errNum == WLZ_ERR_EOO)
@@ -1282,6 +1289,9 @@ static WlzErrorNum WlzWriteValueTable(FILE *fp, WlzObject *obj)
 			errNum = WLZ_ERR_WRITE_INCOMPLETE;
 		      }
 		    }
+		    break;
+		  default:
+		    errNum = WLZ_ERR_GREY_TYPE;
 		    break;
 		}
 	      }
@@ -1801,6 +1811,8 @@ static WlzErrorNum WlzWriteHistogramDomain(FILE *fp, WlzHistogramDomain *hist)
 	        errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	      }
 	    } while((--tI0 > 0) && (errNum == WLZ_ERR_NONE));
+	    break;
+	  default:
 	    break;
 	}
       }

@@ -63,8 +63,10 @@ static char _WlzGeoModel_c[] = "MRC HGU $Id$";
 #include <limits.h>
 #include <string.h>
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzGMShell 	*WlzGMLoopTFindShell(
 			  WlzGMLoopT *gLT);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static void	 	WlzGMShellMergeG(
 			  WlzGMShell *shell0,
 			  WlzGMShell *shell1);
@@ -192,8 +194,10 @@ static WlzErrorNum      WlzGMModelJoinL2D(
 static void		WlzGMLoopTSetAdjT(
 			  WlzGMLoopT *gLT,
 			  WlzGMShell *gS);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static void		WlzGMShellSetT(
 			  WlzGMShell *gS);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static void             WlzGMLoopTSetT(
                           WlzGMLoopT *eLT);
 static void		WlzGMElmMarkFree(
@@ -1006,6 +1010,8 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	      nElmP.vertexG3N->vtx = gElmP.vertexG3N->vtx;
 	      nElmP.vertexG3N->nrm = gElmP.vertexG3N->nrm;
 	      break;
+	    default:
+	      break;
 	  }
         }
       }
@@ -1358,6 +1364,8 @@ WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 	      break;
 	    case WLZ_GMELM_SHELL_G3D:
 	      nElmP.shellG3D->bBox = gElmP.shellG3D->bBox;
+	      break;
+	    default:
 	      break;
 	  }
         }
@@ -1939,7 +1947,6 @@ WlzErrorNum	WlzGMModelDeleteV(WlzGMModel *model, WlzGMVertex *dV)
   WlzGMDiskT	*tDT0,
   		*tDT1;
   WlzGMEdge	**edgeCol = NULL;
-  WlzGMShell	*pS;
   const int	eStp = 16;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -3774,6 +3781,8 @@ static void	WlzGMShellMergeG(WlzGMShell *s0, WlzGMShell *s1)
       {
 	s0->geo.sg3D->bBox.zMax = s1->geo.sg3D->bBox.zMax;
       }
+      break;
+    default:
       break;
   }
 }
@@ -8592,8 +8601,7 @@ static WlzErrorNum WlzGMModelExtend3V2E1S3D(WlzGMModel *model,
   		*nET1[3];
   WlzGMDiskT	*eDT[3];
   WlzGMVertex	*eV[3];
-  WlzGMVertexT	*eVT[3],
-  		*nVT0[3],
+  WlzGMVertexT	*nVT0[3],
   		*nVT1[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -9727,6 +9735,7 @@ static void	WlzGMLoopTSetT(WlzGMLoopT *gLT)
   }
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	void
 * \ingroup      WlzGeoModel
@@ -9745,6 +9754,7 @@ static void	WlzGMShellSetT(WlzGMShell *gS)
     WlzGMLoopTSetAdjT(gS->child, gS);
   }
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	void
@@ -9781,6 +9791,7 @@ static void	WlzGMLoopTSetAdjT(WlzGMLoopT *gLT, WlzGMShell *gS)
   } while(cET != fET);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				The parent shell or NULL if no
 *					parent shell was found.
@@ -9814,6 +9825,7 @@ static WlzGMShell *WlzGMLoopTFindShell(WlzGMLoopT *gLT)
   } while((fS == NULL) && (tET != fET));
   return(fS);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return				void

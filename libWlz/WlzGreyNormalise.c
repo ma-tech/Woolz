@@ -66,13 +66,13 @@ WlzErrorNum WlzGreyNormalise(
   WlzObject	*obj)
 {
   WlzPixelV	min, max, Min, Max;
-  WlzErrorNum	wlzErrno=WLZ_ERR_NONE;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* get then set the grey-range of the object */
-  wlzErrno = WlzGreyRange(obj, &min, &max);
+  errNum = WlzGreyRange(obj, &min, &max);
   Min = min;
   Max = max;
-  if( wlzErrno == WLZ_ERR_NONE ){
+  if( errNum == WLZ_ERR_NONE ){
     switch( min.type ){
     case WLZ_GREY_INT:
       Min.v.inv = 0;
@@ -98,9 +98,15 @@ WlzErrorNum WlzGreyNormalise(
       Min.v.rgbv = 0xff000000;
       Max.v.rgbv = 0xffffffff;
       break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
     }
-    wlzErrno = WlzGreySetRange(obj, min, max, Min, Max);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzGreySetRange(obj, min, max, Min, Max);
+    }
   }
 
-  return wlzErrno;
+  return(errNum);
 }

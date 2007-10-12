@@ -311,6 +311,8 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 		case WLZ_GREY_RGBA:
 		  *(dstValP.rgbp)++ = (*(gVWSp->gVal)).rgbv;
 		  break;
+	        default:
+		  break;
 	      }
 	      dist += distInc;
 	    }

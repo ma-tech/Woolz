@@ -208,15 +208,18 @@ WlzAffineTransform *WlzAffineTransformLSq2D(int nVT, WlzDVertex2 *vT,
       int			i;
 
       /* kludge for now - scale then rigid body */
-      if( tr1 = WlzAffineTransformLSqScale2D(vT, vS, vW, nVT, &errNum) ){
+      if((tr1 = WlzAffineTransformLSqScale2D(vT, vS, vW, nVT,
+                                             &errNum)) != NULL ){
 	/* apply to the source vertices */
-	if( vS1 = (WlzDVertex2 *) AlcMalloc(sizeof(WlzDVertex2) * nVT) ){
+	if((vS1 = (WlzDVertex2 *) AlcMalloc(sizeof(WlzDVertex2) *
+	                                    nVT)) != NULL ){
 	  for(i=0; (i < nVT) && (errNum == WLZ_ERR_NONE); i++){
 	    vS1[i] = WlzAffineTransformVertexD2(tr1, vS[i], &errNum);
 	  }
 	  /* now rigid body from re-scaled vertices */
 	  if( errNum == WLZ_ERR_NONE ){
-	    if( tr2 = WlzAffineTransformLSqReg2D(vT, vS1, vW, nVT, &errNum) ){
+	    if((tr2 = WlzAffineTransformLSqReg2D(vT, vS1, vW, nVT,
+	                                         &errNum)) != NULL){
 	      tr = WlzAffineTransformProduct(tr1, tr2, &errNum);
 	      WlzFreeAffineTransform(tr2);
 	    }
@@ -1113,8 +1116,7 @@ WlzAffineTransform *WlzAffineTransformLSqScale2D(WlzDVertex2 *vT,
 		    		WlzDVertex2 *vS, double *vW, int nVtx,
 				WlzErrorNum *dstErr)
 {
-  int		tI0,
-  		idN;
+  int		idN;
   double	tD0;
   WlzDVertex2	p0,
   		p1,

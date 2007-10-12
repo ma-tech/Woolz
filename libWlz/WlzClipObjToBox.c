@@ -190,6 +190,9 @@ WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
 					         clipBox.xMin, clipBox.xMax,
 						 &errNum);
 		break;
+	      default:
+	        errNum = WLZ_ERR_DOMAIN_TYPE;
+		break;
 	    }
 	    if(dstDom.i)
 	    {
@@ -433,6 +436,9 @@ WlzObject	*WlzClipObjToBox3D(WlzObject *srcObj, WlzIBox3 clipBox,
 	    dstObj = WlzMakeEmpty(&errNum);
 	  }
 	}
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
     }
   }

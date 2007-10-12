@@ -126,8 +126,8 @@ WlzObject *WlzStructDilation(
       return WlzStructDilation3d(obj, structElm, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzStructDilation(obj->values.obj, structElm,
-					&errNum) ){
+      if((values.obj = WlzStructDilation(obj->values.obj, structElm,
+					&errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -224,7 +224,7 @@ WlzObject *WlzStructDilation(
      * space for the intervals of the return object
      */
     size = WlzIntervalCount(sDom.i, NULL) * WlzIntervalCount(bDom.i, NULL);
-    if( jp = (WlzInterval *) AlcMalloc(sizeof(WlzInterval) * size) ){
+    if((jp = (WlzInterval *) AlcMalloc(sizeof(WlzInterval) * size)) != NULL){
       jpw = jp;
       /*
        * working space
@@ -236,9 +236,9 @@ WlzObject *WlzStructDilation(
       lastkl = bDom.i->lastkl + sDom.i->lastkl;
       n = 1;
       m = line1 + k - 1;
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					 line1, lastln, kol1, lastkl,
-					 &errNum) ){
+					 &errNum)) != NULL){
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jpw,
 					     NULL);
 	rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
@@ -281,8 +281,8 @@ WlzObject *WlzStructDilation(
    * copy the domain to minimise the allocated space
    */
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.i = WlzNewIDomain(WLZ_INTERVALDOMAIN_INTVL,
-    				 rtnObj->domain.i, &errNum) ){
+    if((domain.i = WlzNewIDomain(WLZ_INTERVALDOMAIN_INTVL,
+    				 rtnObj->domain.i, &errNum)) != NULL){
       WlzFreeIntervalDomain(rtnObj->domain.i);
       rtnObj->domain = WlzAssignDomain(domain, NULL);
     }
@@ -549,17 +549,17 @@ static WlzObject *WlzStructDilation3d(
 	  return WlzMakeMain(obj->type, obj->domain, values,
 			     NULL, NULL, dstErr);
 	}
-	if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					  0, 0,
 					  structElm->domain.i->line1,
 					  structElm->domain.i->lastln,
 					  structElm->domain.i->kol1,
 					  structElm->domain.i->lastkl,
-					  &errNum) ){
+					  &errNum)) != NULL){
 	  domain.p->domains[0] = WlzAssignDomain(structElm->domain, NULL);
 	  values.core = NULL;
-	  if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
-				 NULL, NULL, &errNum) ){
+	  if((obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
+				 NULL, NULL, &errNum)) != NULL){
 	    rtnObj = WlzStructDilation3d(obj, obj1, &errNum);
 	    WlzFreeObj(obj1);
 	  }

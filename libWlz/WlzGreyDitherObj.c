@@ -116,7 +116,7 @@ WlzObject *WlzGreyDitherObj(
     }
     else {
       /* make a new object with the same domain */
-      if( obj = WlzNewGrey(o, &errNum) ){
+      if((obj = WlzNewGrey(o, &errNum)) != NULL){
 	if( n_to < 8 ){
 
 	  /* set up some factors */

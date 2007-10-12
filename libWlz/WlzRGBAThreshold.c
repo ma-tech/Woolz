@@ -95,7 +95,8 @@ WlzObject *WlzRGBAMultiThreshold(
       }
       else {
 	/* create compound object */
-	if( cobj = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB, &errNum) ){
+	if((cobj = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB,
+	                             &errNum)) != NULL){
 	  cobj = (WlzCompoundArray *) WlzAssignObject((WlzObject *) cobj,
 						      &errNum);
 	}
@@ -103,8 +104,8 @@ WlzObject *WlzRGBAMultiThreshold(
       break;
 
     case WLZ_TRANS_OBJ:
-      if( obj1 = WlzRGBAMultiThreshold(obj->values.obj, lowVal, highVal,
-				       combineMode, &errNum) ){
+      if((obj1 = WlzRGBAMultiThreshold(obj->values.obj, lowVal, highVal,
+				       combineMode, &errNum)) != NULL){
 	values.obj = WlzAssignObject(obj1, NULL);
 	rtnObj = WlzMakeMain(obj->type, obj->domain, values,
 			     NULL, obj, &errNum);
@@ -121,7 +122,7 @@ WlzObject *WlzRGBAMultiThreshold(
       else if((cobj->o[0]->values.core == NULL) ||
 	      (cobj->o[1]->values.core == NULL) ||
 	      (cobj->o[2]->values.core == NULL)){
-	errNum == WLZ_ERR_VALUES_NULL;
+	errNum = WLZ_ERR_VALUES_NULL;
       }
       break;
 
@@ -166,10 +167,12 @@ WlzObject *WlzRGBAMultiThreshold(
     for(i=0; i < 3; i++){
       threshV.type = WLZ_GREY_INT;
       threshV.v.inv = low[i];
-      if( obj1 = WlzThreshold(cobj->o[i], threshV, WLZ_THRESH_HIGH, &errNum) ){
+      if((obj1 = WlzThreshold(cobj->o[i], threshV, WLZ_THRESH_HIGH,
+      			      &errNum)) != NULL){
 	obj1 = WlzAssignObject(obj1, &errNum);
 	threshV.v.inv = high[i] + 1;
-	if( obj2 = WlzThreshold(obj1, threshV, WLZ_THRESH_LOW, &errNum) ){
+	if((obj2 = WlzThreshold(obj1, threshV, WLZ_THRESH_LOW,
+	                        &errNum)) != NULL){
 	  objs[i] = WlzAssignObject(obj2, &errNum);
 	}
 	else {
@@ -278,6 +281,8 @@ int WlzVectorThreshCb(
     vect[0] = WLZ_RGBA_RED_GET(val);
     vect[1] = WLZ_RGBA_GREEN_GET(val);
     vect[2] = WLZ_RGBA_BLUE_GET(val);
+    break;
+  default:
     break;
   }
 

@@ -497,11 +497,11 @@ WlzObject *Wlz3DViewTransformBitmap(
   arrayOrigin.vtX = x_offset;
   arrayOrigin.vtY = y_offset;
 
-  if( tmpObj = WlzAssignObject(WlzFromBArray1D(arraySizeDat, bitData,
-					       arrayOrigin, &errNum), NULL) ){
+  if((tmpObj = WlzAssignObject(WlzFromBArray1D(arraySizeDat, bitData,
+				       arrayOrigin, &errNum), NULL)) != NULL){
 
     /* make  and initialise WlzThreeDViewStruct */
-    if( viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum) ){
+    if((viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL){
       viewStr->fixed.vtX	= x;
       viewStr->fixed.vtY	= y;
       viewStr->fixed.vtZ	= z;

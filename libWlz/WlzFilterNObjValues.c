@@ -247,8 +247,7 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
 				          WlzNObjFilterFn filterFn,
 					  int idF, WlzErrorNum *dstErr)
 {
-  int		idI,
-  		idO;
+  int		idI;
   WlzObject	*fObj = NULL;
   WlzIVertex3	pos;
   WlzIntervalWSpace iWSp;
@@ -694,6 +693,7 @@ static WlzErrorNum WlzFilterNObjMakeWBuf(WlzGreyValueWSpace ***wBuf,
     WlzFilterNObjFreeWBuf(*wBuf, nObj);
     *wBuf = NULL;
   }
+  return(errNum);
 }
   
 /*!

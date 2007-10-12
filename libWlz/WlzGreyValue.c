@@ -43,6 +43,7 @@ static char _WlzGreyValue_c[] = "MRC HGU $Id$";
 */
 
 #include <stdlib.h>
+#include <limits.h>
 #include <Wlz.h>
 
 /*!
@@ -61,6 +62,10 @@ static void	WlzGreyValueSetBkdP(WlzGreyV *gVP, WlzGreyP *gPP,
 {
   switch(gType)
   {
+    case WLZ_GREY_LONG:
+      (*gVP).lnv = val.lnv;
+      (*(gPP)).lnp = &((*gVP).lnv);
+      break;
     case WLZ_GREY_INT:
       (*gVP).inv = val.inv;
       (*(gPP)).inp = &((*gVP).inv);
@@ -85,6 +90,8 @@ static void	WlzGreyValueSetBkdP(WlzGreyV *gVP, WlzGreyP *gPP,
       (*gVP).rgbv = val.rgbv;
       (*(gPP)).rgbp = &((*gVP).rgbv);
       break;
+    default:
+      break;
   }
 }
 
@@ -105,6 +112,13 @@ static void	WlzGreyValueSetBkdPN(WlzGreyV *gVP, WlzGreyP *gPP,
 {
   switch(gType)
   {
+    case WLZ_GREY_LONG:
+      while(count-- > 0)
+      {
+        *gVP = val;
+	(*(gPP++)).lnp = &((*gVP++).lnv);
+      }
+      break;
     case WLZ_GREY_INT:
       while(count-- > 0)
       {
@@ -147,6 +161,8 @@ static void	WlzGreyValueSetBkdPN(WlzGreyV *gVP, WlzGreyP *gPP,
 	(*(gPP++)).rgbp = &((*gVP++).rgbv);
       }
       break;
+    default:
+      break;
   }
 }
 
@@ -170,6 +186,11 @@ static void	WlzGreyValueSetGreyP(WlzGreyV *gVP, WlzGreyP *gPP,
 
   switch(gType)
   {
+    case WLZ_GREY_LONG:
+      gP.lnp = baseGVP.lnp + offset;
+      *(gPP) = gP;
+      (*(gVP)).lnv = *(gP.lnp);
+      break;
     case WLZ_GREY_INT:
       gP.inp = baseGVP.inp + offset;
       *(gPP) = gP;
@@ -199,6 +220,8 @@ static void	WlzGreyValueSetGreyP(WlzGreyV *gVP, WlzGreyP *gPP,
       gP.rgbp = baseGVP.rgbp + offset;
       *(gPP) = gP;
       (*(gVP)).rgbv = *(gP.rgbp);
+      break;
+    default:
       break;
   }
 }
@@ -254,6 +277,8 @@ static void	WlzGreyValueComputeGreyP2D(WlzGreyP *baseGVP, int *offset,
 	}
 	++vLn;
       }
+      break;
+    default:
       break;
   }
 }
@@ -425,7 +450,7 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 	  }
 	  if(kol <= (gVWSp->iDom2D->lastkl - 1))
 	  {
-	    hitMsk |= 1 << (pass * 2) + 1;
+	    hitMsk |= 1 << ((pass * 2) + 1);
 	    WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
 	    			 baseGVP, offset + 1);
 	  }
@@ -452,7 +477,7 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
 	      }
 	      if(kol <= (itv->iright + kol1 - 1))
 	      {
-	        hitMsk |= 1 << (pass * 2) + 1;
+	        hitMsk |= 1 << ((pass * 2) + 1);
 		WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
 				     baseGVP, offset + 1);
 	      }
@@ -638,6 +663,8 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 	gVWSp->gVal[idN] = gVal[idN];
       }
       break;
+    default:
+      break;
   }
 }
 
@@ -753,6 +780,7 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 	  {
 	    switch(gVWSp->gType)
 	    {
+	      case WLZ_GREY_LONG:
 	      case WLZ_GREY_INT:
 	      case WLZ_GREY_SHORT:
 	      case WLZ_GREY_UBYTE:
@@ -1097,6 +1125,9 @@ int		WlzGreyValueGetI(WlzGreyValueWSpace *gVWSp,
     WlzGreyValueGet(gVWSp, plane, line, kol);
     switch(gVWSp->gType)
     {
+      case WLZ_GREY_LONG:
+        val = WLZ_CLAMP(gVWSp->gVal[0].lnv, INT_MIN, INT_MAX);
+        break;
       case WLZ_GREY_INT:
         val = gVWSp->gVal[0].inv;
         break;
@@ -1115,6 +1146,8 @@ int		WlzGreyValueGetI(WlzGreyValueWSpace *gVWSp,
       case WLZ_GREY_RGBA:
         val = gVWSp->gVal[0].rgbv;
 	break;
+      default:
+        break;
     }
   }
   return(val);
@@ -1140,6 +1173,9 @@ double		WlzGreyValueGetD(WlzGreyValueWSpace *gVWSp,
     WlzGreyValueGet(gVWSp, plane, line, kol);
     switch(gVWSp->gType)
     {
+      case WLZ_GREY_LONG:
+        val = gVWSp->gVal[0].lnv;
+        break;
       case WLZ_GREY_INT:
         val = gVWSp->gVal[0].inv;
         break;
@@ -1158,6 +1194,8 @@ double		WlzGreyValueGetD(WlzGreyValueWSpace *gVWSp,
       case WLZ_GREY_RGBA:
         val = gVWSp->gVal[0].rgbv;
 	break;
+      default:
+        break;
     }
   }
   return(val);

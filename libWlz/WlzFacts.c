@@ -724,6 +724,9 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 	case WLZ_GREY_TAB_INTL:
           errNum = WlzObjFactsBackground(fData, val.i->bckgrnd);
 	  break;
+        default:
+	  errNum = WLZ_ERR_VALUES_TYPE;
+	  break;
       }
     }
     if(errNum == WLZ_ERR_NONE)
@@ -759,6 +762,9 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 	    			       val.i->kol1,
 				       val.i->kol1 + val.i->width - 1);
 	  }
+	  break;
+        default:
+	  errNum = WLZ_ERR_VALUES_TYPE;
 	  break;
       }
     }
@@ -1247,6 +1253,9 @@ static WlzErrorNum WlzObjFactsPolygon2D(WlzObjFactsData *fData,
 	    ++tDVx0;
 	  }
 	  break;
+        default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  break;
       }
       --(fData->indent);
     }
@@ -1606,6 +1615,8 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 					     s->geo.sg3D->bBox.xMax,
 					     s->geo.sg3D->bBox.yMax,
 					     s->geo.sg3D->bBox.zMax);
+		  break;
+	        default:
 		  break;
 	      }
 	    }

@@ -113,8 +113,8 @@ WlzErrorNum WlzGreySetValue(
 	    continue;
 	  }
 
-	  if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				    NULL, NULL,	NULL) ){
+	  if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				    NULL, NULL,	NULL)) != NULL){
 	    errNum = WlzGreySetValue(tmpObj, val);
 	    WlzFreeObj( tmpObj );
 	  }

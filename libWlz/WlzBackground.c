@@ -157,6 +157,9 @@ WlzErrorNum WlzSetBackground(WlzObject	*obj,
     voxtab->bckgrnd = bgd;
     break;
 
+  default:
+    errNum = WLZ_ERR_OBJECT_TYPE;
+    break;
   }
 
   return( errNum );

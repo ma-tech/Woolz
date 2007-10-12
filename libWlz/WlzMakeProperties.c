@@ -43,12 +43,11 @@ static char _WlzMakeProperties_c[] = "MRC HGU $Id$";
 
 #ifndef _WIN32
   #include <pwd.h>
-  #include <unistd.h>
 #endif
+#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
-
 #include <Wlz.h>
 
 /*!
@@ -334,8 +333,8 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 
   /* allocate space and copy in properties */
   if( errNum == WLZ_ERR_NONE ){
-    if( rtnProp = (WlzEMAPProperty *)
-       AlcCalloc(1, sizeof(WlzEMAPProperty)) ){
+    if((rtnProp = (WlzEMAPProperty *)
+                  AlcCalloc(1, sizeof(WlzEMAPProperty))) != NULL){
       rtnProp->type = WLZ_PROPERTY_EMAP;
       rtnProp->emapType = type;
       rtnProp->creationTime = time(NULL);
@@ -351,7 +350,7 @@ WlzEMAPProperty *WlzMakeEMAPProperty(
 	strncpy(rtnProp->creationAuthor, pwdStruct->pw_name,
 		EMAP_PROPERTY_AUTHORNAME_LENGTH - 1);
       }
-      (void) gethostname(&(rtnProp->creationMachineName[0]),
+      (void )gethostname(&(rtnProp->creationMachineName[0]),
 			 EMAP_PROPERTY_MACHINENAME_LENGTH);
       rtnProp->creationMachineName[EMAP_PROPERTY_MACHINENAME_LENGTH-1]
 	= '\0';
@@ -799,7 +798,6 @@ WlzErrorNum WlzFreeProperty(WlzProperty prop)
 */
 WlzErrorNum 	WlzFreePropertyList(WlzPropertyList *pList)
 {
-  AlcDLPItem	item;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(pList)

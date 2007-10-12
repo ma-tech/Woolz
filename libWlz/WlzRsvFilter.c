@@ -170,6 +170,8 @@ WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName name,
 	    ftr->a[3] = tD0 * tExp2;
 	    ftr->c = tNorm;
 	    break;
+	  default:
+	    break;
 	}
         break;
       case WLZ_RSVFILTER_NAME_GAUSS_0: /* FALLTHROUGH */
@@ -186,6 +188,8 @@ WlzRsvFilter *WlzRsvFilterMakeFilter(WlzRsvFilterName name,
 	    break;
 	  case WLZ_RSVFILTER_NAME_GAUSS_2:
 	    idx = 2;
+	    break;
+	  default:
 	    break;
 	}
 	tWS = wGauss[idx] / prm;
@@ -608,7 +612,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 	d0 = *dP0;
 	f0 = *fP0;
 	iBM = 1 << iBS;
-	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
+	if(((*iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
 	{
 	  d1 = d0;
 	  d2 = d0;
@@ -656,7 +660,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
       {
 	d0 = *dP0;
 	iBM = 1 << iBS;
-	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
+	if(((*iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
 	{
 	  d1 = d0;
 	  f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
@@ -794,7 +798,7 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
 	d0 = *dP0;
 	f0 = *fP0;
 	iBM = 1 << iBS;
-	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
+	if(((*iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
 	{
 	  d1 = d0;
 	  d2 = d0;
@@ -842,7 +846,7 @@ static void	WlzRsvFilterFilterBufZF(WlzRsvFilter *ftr,
       {
 	d0 = *dP0;
 	iBM = 1 << iBS;
-	if((*iBP1 & iBM == 0) || ((*iBP2 & iBM) == 0))
+	if(((*iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
 	{
 	  d1 = d0;
 	  f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);

@@ -116,8 +116,8 @@ WlzErrorNum WlzGaussNoise(
 	    continue;
 	  }
 
-	  if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				    NULL, NULL,	NULL) ){
+	  if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				    NULL, NULL,	NULL)) != NULL){
 	    errNum = WlzGaussNoise(tmpObj, val);
 	    WlzFreeObj( tmpObj );
 	  }

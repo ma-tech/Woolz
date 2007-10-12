@@ -129,12 +129,18 @@ WlzObject	*WlzPointsToDomObj(WlzPoints *pnt, double scale,
 	case WLZ_POINTS_3D:
 	  pos.d3 = pnt->points.d3[idP];
 	  break;
+        default:
+	  errNum = WLZ_ERR_PARAM_TYPE;
+	  break;
       }
-      tObj1 = WlzMakeSphereObject(dType, scale / 2.0,
-				  scale * pos.d3.vtX,
-				  scale * pos.d3.vtY,
-				  scale * pos.d3.vtZ,
-				  &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	tObj1 = WlzMakeSphereObject(dType, scale / 2.0,
+				    scale * pos.d3.vtX,
+				    scale * pos.d3.vtY,
+				    scale * pos.d3.vtZ,
+				    &errNum);
+      }
     }
     else
     {
@@ -156,10 +162,16 @@ WlzObject	*WlzPointsToDomObj(WlzPoints *pnt, double scale,
 	  pos.i3.vtY = WLZ_NINT(pnt->points.d3[idP].vtY);
 	  pos.i3.vtZ = WLZ_NINT(pnt->points.d3[idP].vtZ);
 	  break;
+        default:
+	  errNum = WLZ_ERR_PARAM_TYPE;
+	  break;
       }
-      tObj1 = WlzMakeSinglePixelObject(dType,
-				       pos.i3.vtX, pos.i3.vtY, pos.i3.vtZ,
-				       &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	tObj1 = WlzMakeSinglePixelObject(dType,
+					 pos.i3.vtX, pos.i3.vtY, pos.i3.vtZ,
+				         &errNum);
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {

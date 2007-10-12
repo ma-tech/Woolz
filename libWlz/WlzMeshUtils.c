@@ -85,7 +85,9 @@ static void	WlzMeshElemFindVxForce(WlzMeshTransform *, WlzDVertex2,
 				WlzDVertex2, unsigned int),
 		WlzMeshElemReplace1With3(WlzMeshTransform *, int,
 				WlzDVertex2, unsigned int),
+#ifdef WLZ_UNUSED_FUNCTIONS
 		WlzMeshElemUnlink(WlzMeshTransform *, int),
+#endif /* WLZ_UNUSED_FUNCTIONS */
 		WlzMeshEarPowerSet(WlzMeshTransform *, WlzMeshEar *, int),
 		WlzMeshEarMatchElm(WlzMeshTransform *, WlzMeshEar *,
 				WlzMeshIntVec *, int *),
@@ -3192,6 +3194,7 @@ static void	WlzMeshEarMatchElm(WlzMeshTransform *mesh,
   }
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	void
 * \ingroup	WlzTransform
@@ -3229,6 +3232,7 @@ static void	WlzMeshElemUnlink(WlzMeshTransform *mesh, int eId)
     }
   }
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	Woolz error code.
@@ -3268,7 +3272,6 @@ WlzErrorNum	WlzMeshGetNodesAndEdges(WlzMeshTransform *mesh,
 		*dsp = NULL;
   int		*edg = NULL,
   		*tbl = NULL;
-  int		elmNodBuf[3];
 
   if(mesh == NULL)
   {

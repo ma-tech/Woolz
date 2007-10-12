@@ -400,6 +400,9 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	case WLZ_26_CONNECTED:
 	  dstV.v.dbv += nrmDist26;
 	  break;
+        default:
+	  errNum = WLZ_ERR_CONNECTIVITY_TYPE;
+	  break;
       }
     }
     if(dFn == WLZ_APX_EUCLIDEAN_DISTANCE)
@@ -422,6 +425,9 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 	  bothObj[1] = dilObj;
 	  curItrObj = WlzAssignObject(
 	              WlzIntersectN(2, bothObj, 1, &errNum), NULL);
+	  break;
+        default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
 	  break;
       }
     }
@@ -478,6 +484,9 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 		errNum = WlzGreySetValue(difObj, dstV);
 	      }
 	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_OBJECT_TYPE;
 	    break;
 	}
       }

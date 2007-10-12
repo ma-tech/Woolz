@@ -101,7 +101,8 @@ WlzObject *WlzGreyMask(
       return WlzGreyMask3d(obj, mask, maskVal, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzGreyMask(obj->values.obj, mask, maskVal, &errNum) ){
+      if((values.obj = WlzGreyMask(obj->values.obj, mask, maskVal,
+      				   &errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -157,13 +158,14 @@ WlzObject *WlzGreyMask(
   }
 
   /* copy input obj and setvalues in the intersection */
-  if( errNum == WLZ_ERR_NONE ){
-    if( rtnObj = WlzNewGrey(obj, &errNum) ){
-      if( obj1 = WlzIntersect2(obj, tmpMask, &errNum) ){
+  if(errNum == WLZ_ERR_NONE){
+    if((rtnObj = WlzNewGrey(obj, &errNum)) != NULL){
+      if((obj1 = WlzIntersect2(obj, tmpMask, &errNum)) != NULL){
 	obj1->values = WlzAssignValues(rtnObj->values, NULL);
 	errNum = WlzInitGreyScan(obj1, &iwsp, &gwsp);
 	WlzValueConvertPixel(&tmpMaskval, maskVal, gwsp.pixeltype);
-	while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+	while((errNum == WLZ_ERR_NONE) &&
+	      ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)){
 	  gptr = gwsp.u_grintptr;
 	  switch( gwsp.pixeltype ){
 	  case WLZ_GREY_INT:
@@ -195,6 +197,9 @@ WlzObject *WlzGreyMask(
 	    for(i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
 	      *gptr.rgbp = tmpMaskval.v.rgbv;
 	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;
 	  }
 	}
@@ -286,7 +291,7 @@ static WlzObject *WlzGreyMask3d(
 	    obj1 = WlzAssignObject(
 	      WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *valuess,
 			  NULL, NULL, NULL), NULL);
-	    if( obj2 = WlzGreyMask(obj1, mask, maskVal, &errNum) ){
+	    if((obj2 = WlzGreyMask(obj1, mask, maskVal, &errNum)) != NULL){
 	      newvaluess[p - pdom->plane1] =
 		WlzAssignValues(obj->values, NULL);
 	      WlzFreeObj(obj2);
@@ -321,7 +326,8 @@ static WlzObject *WlzGreyMask3d(
 	      obj1 = WlzAssignObject(
 		WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *valuess,
 			    NULL, NULL, NULL), NULL);
-	      if( obj2 = WlzGreyMask(obj1, tmpMask, maskVal, &errNum) ){
+	      if((obj2 = WlzGreyMask(obj1, tmpMask, maskVal,
+	      			     &errNum)) != NULL){
 		newvaluess[p - pdom->plane1] =
 		  WlzAssignValues(obj2->values, NULL);
 		WlzFreeObj(obj2);
@@ -351,7 +357,8 @@ static WlzObject *WlzGreyMask3d(
 	      obj1 = WlzAssignObject(
 		WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *valuess,
 			    NULL, NULL, NULL), NULL);
-	      if( obj2 = WlzGreyMask(obj1, tmpMask, maskVal, &errNum) ){
+	      if((obj2 = WlzGreyMask(obj1, tmpMask, maskVal,
+	                             &errNum)) != NULL){
 		newvaluess[p - pdom->plane1] =
 		  WlzAssignValues(obj2->values, NULL);
 		WlzFreeObj(obj2);
@@ -381,7 +388,8 @@ static WlzObject *WlzGreyMask3d(
 	      obj1 = WlzAssignObject(
 		WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *valuess,
 			    NULL, NULL, NULL), NULL);
-	      if( obj2 = WlzGreyMask(obj1, tmpMask, maskVal, &errNum) ){
+	      if((obj2 = WlzGreyMask(obj1, tmpMask, maskVal,
+	                             &errNum)) != NULL){
 		newvaluess[p - pdom->plane1] =
 		  WlzAssignValues(obj2->values, NULL);
 		WlzFreeObj(obj2);

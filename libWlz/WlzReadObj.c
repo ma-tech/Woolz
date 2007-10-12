@@ -125,6 +125,7 @@ static WlzErrorNum 		WlzReadVertex3D(
 				  FILE *fP,
 				  WlzDVertex3 *vP,
 				  int nV);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzReadBox2I(
 				  FILE *fP,
 				  WlzIBox2 *bP,
@@ -141,6 +142,7 @@ static WlzErrorNum 		WlzReadBox3D(
 				  FILE *fP,
 				  WlzDBox3 *bP,
 				  int nB);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzErrorNum 		WlzReadStr(
 				  FILE *fP,
 				  char **dstStr);
@@ -299,7 +301,6 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   WlzValues		values;
   Wlz3DWarpTrans	*wtrans3d;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-  char buf[1];
 
 #ifdef _OPENMP
   #pragma omp critical
@@ -374,10 +375,10 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       break;
 
     case WLZ_TRANS_OBJ:
-      if( domain.t = WlzReadAffineTransform( fp, &errNum ) ){
-	if( values.obj = WlzReadObj( fp, &errNum ) ){
-	  if( obj = WlzMakeMain(WLZ_TRANS_OBJ, domain, values,
-				NULL, NULL, &errNum) ){
+      if((domain.t = WlzReadAffineTransform( fp, &errNum)) != NULL){
+	if((values.obj = WlzReadObj( fp, &errNum)) != NULL){
+	  if((obj = WlzMakeMain(WLZ_TRANS_OBJ, domain, values,
+				NULL, NULL, &errNum)) != NULL){
 	    obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
 					       NULL);
 	  } else {
@@ -392,7 +393,7 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       break;
 
     case WLZ_3D_WARP_TRANS:
-      if( wtrans3d = WlzRead3DWarpTrans(fp, &errNum) ){
+      if((wtrans3d = WlzRead3DWarpTrans(fp, &errNum)) != NULL){
 	wtrans3d->plist = WlzAssignPropertyList(
 	  WlzReadPropertyList(fp, NULL), NULL);
       }
@@ -400,37 +401,37 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       break;
 
     case WLZ_2D_POLYGON:
-      if( domain.poly = WlzReadPolygon(fp, &errNum) ){
+      if((domain.poly = WlzReadPolygon(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
 
     case WLZ_BOUNDLIST:
-      if( domain.b = WlzReadBoundList(fp, &errNum) ){
+      if((domain.b = WlzReadBoundList(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
 
     case WLZ_HISTOGRAM:
-      if( domain.hist = WlzReadHistogramDomain(fp, &errNum) ){
+      if((domain.hist = WlzReadHistogramDomain(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
 
     case WLZ_CONTOUR:
-      if( domain.ctr = WlzReadContour(fp, &errNum) ){
+      if((domain.ctr = WlzReadContour(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
 
     case WLZ_RECTANGLE:
-      if( domain.r = WlzReadRect(fp, &errNum) ){
+      if((domain.r = WlzReadRect(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
 
     case WLZ_AFFINE_TRANS:
-      if( domain.t = WlzReadAffineTransform(fp, &errNum) ){
+      if((domain.t = WlzReadAffineTransform(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
@@ -453,7 +454,7 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 			WlzReadPropertyList(fp, NULL), NULL, &errNum);
       break;
     case WLZ_MESH_TRANS:
-      if( domain.mt = WlzReadMeshTransform2D(fp, &errNum) ){
+      if((domain.mt = WlzReadMeshTransform2D(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
@@ -615,6 +616,7 @@ static WlzErrorNum WlzReadVertex3D(FILE *fP, WlzDVertex3 *vP, int nV)
   return(errNum);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	Woolz error code.
 * \ingroup      WlzIO
@@ -734,6 +736,7 @@ static WlzErrorNum WlzReadBox3D(FILE *fP, WlzDBox3 *bP, int nB)
   }
   return(errNum);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	Woolz error code.
@@ -1019,11 +1022,11 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
     k1 = getword(fp);
     kl = getword(fp);
 
-    if (feof(fp) != 0){
+    if(feof(fp) != 0){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    else if( planedm = WlzMakePlaneDomain(type, p1, pl, l1, ll, k1, kl,
-					  &errNum) ){
+    else if((planedm = WlzMakePlaneDomain(type, p1, pl, l1, ll, k1, kl,
+					  &errNum)) != NULL){
       domains = planedm->domains;
       (planedm->voxel_size)[0] = getfloat(fp);
       (planedm->voxel_size)[1] = getfloat(fp);
@@ -1048,7 +1051,7 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
     case WLZ_PLANEDOMAIN_DOMAIN:
       for(i=0; i < nplanes; i++, domains++){
-	if( domain.i = WlzReadIntervalDomain(fp, &errNum) ){
+	if((domain.i = WlzReadIntervalDomain(fp, &errNum)) != NULL){
 	  *domains = WlzAssignDomain(domain, NULL);
 	} else if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
@@ -1060,7 +1063,7 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
     case WLZ_PLANEDOMAIN_POLYGON:
       for(i=0; i < nplanes; i++, domains++){
-	if( domain.poly = WlzReadPolygon(fp, &errNum) ){
+	if((domain.poly = WlzReadPolygon(fp, &errNum)) != NULL){
 	  *domains = WlzAssignDomain(domain, NULL);
 	} else if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
@@ -1072,7 +1075,7 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
     case WLZ_PLANEDOMAIN_BOUNDLIST:
       for(i=0; i < nplanes; i++, domains++){
-	if( domain.b = WlzReadBoundList(fp, &errNum) ){
+	if((domain.b = WlzReadBoundList(fp, &errNum)) != NULL){
 	  *domains = WlzAssignDomain(domain, NULL);
 	} else if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
@@ -1084,7 +1087,7 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
     case WLZ_PLANEDOMAIN_HISTOGRAM:
       for(i=0; i < nplanes; i++, domains++){
-	if( domain.hist = WlzReadHistogramDomain(fp, &errNum) ){
+	if((domain.hist = WlzReadHistogramDomain(fp, &errNum)) != NULL){
 	  *domains = WlzAssignDomain(domain, NULL);
 	} else if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
@@ -1096,7 +1099,7 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
     case WLZ_PLANEDOMAIN_AFFINE:
       for (i=0; i< nplanes ; i++, domains++){
-	if( domain.t = WlzReadAffineTransform(fp, &errNum) ){
+	if((domain.t = WlzReadAffineTransform(fp, &errNum)) != NULL){
 	  *domains = WlzAssignDomain(domain, NULL);
 	} else if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
@@ -1108,7 +1111,7 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
     case WLZ_PLANEDOMAIN_WARP:
       for (i=0; i< nplanes ; i++, domains++){
-	if( domain.wt = WlzReadWarpTrans(fp, &errNum) ){
+	if((domain.wt = WlzReadWarpTrans(fp, &errNum)) != NULL){
 	  *domains = WlzAssignDomain(domain, NULL);
 	} else if( errNum == WLZ_ERR_EOO ){
 	  errNum = WLZ_ERR_NONE;
@@ -1253,6 +1256,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 
 	  }
 	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	}
 	if (iwsp.intrmn == 0) {
 	  (void) WlzMakeValueLine(values.v, iwsp.linpos, kstart,
@@ -1316,6 +1322,9 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 		  *g.shp++ = getc(fp);
 
 	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
 	}
 	if (iwsp.intrmn == 0) {
@@ -1621,6 +1630,9 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     vtb.r->bckgrnd.v.rgbv = getword(fp);
     values.rgbp = (WlzUInt *) AlcMalloc(num*sizeof(WlzUInt));
     break;
+  default:
+    return WLZ_ERR_GREY_TYPE;
+    break;
   }
 
   if( values.inp == NULL ){
@@ -1652,6 +1664,8 @@ short shv = getshort(fp);
 
 		}
       break;
+    default:
+      break;
     }
     break;
 
@@ -1667,6 +1681,8 @@ short shv = getshort(fp);
 	*values.shp++ = getc(fp);
 
 		}
+      break;
+    default:
       break;
     }
     break;
@@ -1690,6 +1706,9 @@ short shv = getshort(fp);
       *values.rgbp++ = getword(fp);
     break;
 
+  default:
+    return  WLZ_ERR_GREY_TYPE;
+    break;
   }
   if( feof(fp) != 0 ){
     WlzFreeValueTb(vtb.v);
@@ -1749,9 +1768,9 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
   switch( type ){
 
   case WLZ_VOXELVALUETABLE_GREY:
-    if( voxtab = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+    if((voxtab = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
 				     planedm->plane1, planedm->lastpl,
-				     bgd, obj, &errNum) ){
+				     bgd, obj, &errNum)) != NULL){
       values = voxtab->values;
       voxtab->bckgrnd.v.inv = getword(fp);
     }
@@ -1761,8 +1780,8 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
 
     for(i=0; i < nplanes; i++, values++, domains++){
       (*values).core = NULL;
-      if( tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-			       NULL, NULL, &errNum) ){
+      if((tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+			       NULL, NULL, &errNum)) != NULL){
 	if( (errNum = WlzReadGreyValues(fp, tmpobj)) == WLZ_ERR_NONE ){
 	  *values = WlzAssignValues(tmpobj->values, NULL);
 	  /* reset voxel-table background */
@@ -1776,6 +1795,9 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
 	      break;
 	    case WLZ_GREY_TAB_INTL:
 	      voxtab->bckgrnd = (*values).i->bckgrnd;
+	      break;
+	    default:
+	      return WLZ_ERR_VALUES_TYPE;
 	      break;
 	    }
 	  }
@@ -1792,6 +1814,7 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
 
   default:
     return WLZ_ERR_VOXELVALUES_TYPE;
+    break;
 
   }
 
@@ -1948,6 +1971,8 @@ static WlzProperty WlzReadProperty(
       }
       AlcFree(name);
     }
+    break;
+  default:
     break;
   }
 
@@ -2124,6 +2149,9 @@ static WlzPolygonDomain *WlzReadPolygon(FILE *fp, WlzErrorNum *dstErr)
 	((dvtx)+i)->vtX = getdouble(fp);
       }
       break;
+    default:
+      errNum = WLZ_ERR_POLYGON_TYPE;
+      break;
     }
 
     if( feof(fp) != 0 ){
@@ -2174,7 +2202,7 @@ static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
       break;
     }
 
-    if( tmpblist = WlzReadBoundList(fp, &errNum) ){
+    if((tmpblist = WlzReadBoundList(fp, &errNum)) != NULL){
       blist->next = WlzAssignBoundList(tmpblist, NULL);
     }
     else if( errNum == WLZ_ERR_EOO){
@@ -2187,7 +2215,7 @@ static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
       break;
     }
 
-    if( tmpblist = WlzReadBoundList(fp, &errNum) ){
+    if((tmpblist = WlzReadBoundList(fp, &errNum)) != NULL){
       blist->down = WlzAssignBoundList(tmpblist, NULL);
     }
     else if( errNum == WLZ_ERR_EOO){
@@ -2201,7 +2229,7 @@ static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
     }
 
     blist->wrap = getword(fp);
-    if( tmppoly = WlzReadPolygon(fp, &errNum) ){
+    if((tmppoly = WlzReadPolygon(fp, &errNum)) != NULL){
       blist->poly = WlzAssignPolygonDomain(tmppoly, NULL);
     }
     else if( errNum == WLZ_ERR_EOO){
@@ -2221,6 +2249,8 @@ static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
     }
     break;
 
+  default:
+    break;
   }
 
   if( dstErr ){
@@ -2258,7 +2288,7 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
     break;
 
   case WLZ_RECTANGLE_DOMAIN_INT:
-    if( (ir = (WlzIRect *) AlcMalloc (sizeof(WlzIRect))) == NULL){
+    if((ir = (WlzIRect *) AlcMalloc (sizeof(WlzIRect))) == NULL){
       errNum = WLZ_ERR_MEM_ALLOC;
       break;
     }
@@ -2275,7 +2305,7 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
     break;
 
   case WLZ_RECTANGLE_DOMAIN_FLOAT:
-    if( (fr = (WlzFRect *) AlcMalloc (sizeof(WlzFRect))) == NULL){
+    if((fr = (WlzFRect *) AlcMalloc (sizeof(WlzFRect))) == NULL){
       errNum = WLZ_ERR_MEM_ALLOC;
       break;
     }
@@ -2297,7 +2327,7 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
     break;
   }
 
-  if( (errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
+  if((errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
     AlcFree( (void *) ir );
     ir = NULL;
     errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -2332,11 +2362,11 @@ static WlzHistogramDomain *WlzReadHistogramDomain(FILE *fp,
 
   type = (WlzObjectType )getc(fp);
 
-  if(type == (WlzObjectType) EOF )
+  if(type == (WlzObjectType )EOF)
   {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-  else if( type == WLZ_NULL )
+  else if(type == WLZ_NULL)
   {
     errNum = WLZ_ERR_EOO;
   }
@@ -2385,10 +2415,12 @@ static WlzHistogramDomain *WlzReadHistogramDomain(FILE *fp,
 		*tDP0++ = getfloat(fp);
 	      }
 	      break;
+	    default:
+	      break;
 	  }
 	}
 	break;
-      case WLZ_HISTOGRAMDOMAIN_INT:
+      case WLZ_HISTOGRAMDOMAIN_INT: /* FALLTHROUGH */
       case WLZ_HISTOGRAMDOMAIN_FLOAT:
 	numBins = getword(fp);
 	origin = getdouble(fp);
@@ -2421,6 +2453,8 @@ static WlzHistogramDomain *WlzReadHistogramDomain(FILE *fp,
 	      {
 		*tDP0++ = getdouble(fp);
 	      }
+	      break;
+	    default:
 	      break;
 	  }
 	  hist->nBins = numBins;
@@ -2485,7 +2519,7 @@ static WlzObject *WlzReadCompoundA(FILE			*fp,
   }
 
   if((errNum == WLZ_ERR_NONE) &&
-     (c = WlzMakeCompoundArray(type, 1, n, NULL, otype, &errNum)) ){
+     ((c = WlzMakeCompoundArray(type, 1, n, NULL, otype, &errNum)) != NULL)){
     for(i=0; (i<n) && (errNum == WLZ_ERR_NONE); i++){
       c->o[i] = WlzAssignObject(WlzReadObj(fp, &errNum), NULL);
     }
@@ -2521,13 +2555,13 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
 
   type = (WlzTransformType) getc( fp );
 
-  if( type == (WlzTransformType) EOF ){
+  if(type == (WlzTransformType )EOF){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-  else if( type == (WlzTransformType) WLZ_NULL ){
+  else if(type == (WlzTransformType )WLZ_NULL){
     errNum = WLZ_ERR_EOO;
   }
-  else if( trans = WlzMakeAffineTransform(type, &errNum) ){
+  else if((trans = WlzMakeAffineTransform(type, &errNum)) != NULL){
 
     /* set linkcount and freeptr */
     trans->linkcount = 0;
@@ -3117,7 +3151,6 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
   /* local variables */
   int		i,
   		j;
-  WlzDVertex3 	*vptr;
   WlzMeshNode3D	*dptr;
   WlzMeshElem3D	*eptr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3254,11 +3287,9 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
   /* local variables */
   int		i,
   		j;
-  WlzDVertex3 	*vptr;
   WlzMeshNode	*dptr;
   WlzMeshElem	*eptr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObjectType type;
   WlzMeshTransform   	*obj=NULL;
 
   /* make space for obj */

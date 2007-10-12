@@ -148,6 +148,9 @@ WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
 	    case WLZ_COMPTHRESH_GRADIENT:
 	      tV.v.dbv = WlzCompThreshGradient(hDom);
 	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_DATA;
+	      break;
 	  }
 	}
 	break;
@@ -477,6 +480,8 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
         --topIdx;
       }
       break;
+    default:
+      break;
   }
   /* Find the bin at which the histogram first drops to 33% of the maximum. */
   botIdx = topIdx + 1;
@@ -507,6 +512,8 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
       {
         --botIdx;
       }
+      break;
+    default:
       break;
   }
   /* Compute least squares fit of line to histogram values between topIdx
@@ -686,6 +693,8 @@ static double	WlzCompThreshGradient(WlzHistogramDomain *histDom)
       {
         --topIdx;
       }
+      break;
+    default:
       break;
   }
   /* Find the bin at which the histogram gradient drops to zero. */

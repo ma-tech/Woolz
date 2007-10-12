@@ -61,11 +61,11 @@ static WlzObject *WlzSpecial_h4(WlzErrorNum *dstErr)  /*-*/
   int 	i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL, 
-				       -1, 1, -1, 1, &errNum) ){
+  if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL, 
+				       -1, 1, -1, 1, &errNum)) != NULL){
     values.core = NULL;
-    if( obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-			  NULL, NULL, &errNum) ){
+    if((obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
+			  NULL, NULL, &errNum)) != NULL){
       intl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*3);
       domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intl,
       					   NULL);
@@ -105,11 +105,11 @@ static WlzObject *WlzSpecial_ex4(WlzErrorNum *dstErr)  /*-*/
   int 	i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL, 
-				       -1, 1, -1, 1, &errNum) ){
+  if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL, 
+				       -1, 1, -1, 1, &errNum)) != NULL){
     values.core = NULL;
-    if( obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-			  NULL, NULL, &errNum) ){
+    if((obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
+			  NULL, NULL, &errNum)) != NULL){
       intl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*3);
       domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intl,
       					   NULL);
@@ -149,11 +149,11 @@ static WlzObject *WlzSpecial_a8(WlzErrorNum *dstErr)  /*-*/
   int 	i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL, 
-				       -1, 1, -1, 1, &errNum) ){
+  if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL, 
+				       -1, 1, -1, 1, &errNum)) != NULL){
     values.core = NULL;
-    if( obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-			  NULL, NULL, &errNum) ){
+    if((obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
+			  NULL, NULL, &errNum)) != NULL){
       intl = (WlzInterval *) AlcMalloc(sizeof(WlzInterval)*3);
       domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)intl,
       					   NULL);
@@ -187,7 +187,7 @@ static WlzObject *WlzSpecial_h6(int num, WlzErrorNum *dstErr)  /*-*/
   WlzInterval	*intl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj = WlzSpecial_a8(&errNum) ){
+  if((obj = WlzSpecial_a8(&errNum)) != NULL){
     intl = obj->domain.i->intvlines->intvs;
     switch(num){
     case 0:
@@ -245,7 +245,7 @@ static WlzObject *WlzSpecial_h5(int num, WlzErrorNum *dstErr)  /*-*/
   WlzInterval *intl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj = WlzSpecial_h4(&errNum) ){
+  if((obj = WlzSpecial_h4(&errNum)) != NULL){
     intl = obj->domain.i->intvlines->intvs;
     switch(num){
     case 0:
@@ -289,7 +289,7 @@ static WlzObject *WlzSpecial_h7(int num, WlzErrorNum *dstErr)  /*-*/
   WlzInterval	*intl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj = WlzSpecial_a8(&errNum) ){
+  if((obj = WlzSpecial_a8(&errNum)) != NULL){
     intl = obj->domain.i->intvlines->intvs;
     switch(num){
     case 0:
@@ -332,7 +332,7 @@ static WlzObject *WlzSpecial_a3(int num, WlzErrorNum *dstErr)  /*-*/
   int 	i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj = WlzSpecial_a8(&errNum) ){
+  if((obj = WlzSpecial_a8(&errNum)) != NULL){
     switch(num){
     case 0:
       intl = obj->domain.i->intvlines[0].intvs;
@@ -393,7 +393,8 @@ static WlzObject *WlzSpecial_e1(WlzErrorNum *dstErr)  /*-*/
   WlzInterval	*intl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ, 0, 0, 0, &errNum) ){
+  if((obj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ, 0, 0, 0,
+  			             &errNum)) != NULL){
     intl = obj->domain.i->intvlines->intvs;
     intl->ileft = 0;
     intl->iright = 1;
@@ -414,7 +415,8 @@ static WlzObject *WlzSpecial_e2(WlzErrorNum *dstErr)  /*-*/
   WlzInterval	*intl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ, 0, 0, 0, &errNum) ){
+  if((obj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ, 0, 0, 0,
+                                     &errNum)) != NULL){
     intl = obj->domain.i->intvlines->intvs;
     intl->ileft = 0;
     intl->iright = 2;
@@ -438,8 +440,8 @@ static WlzObject *WlzSpecial_v2(WlzErrorNum *dstErr)  /*-*/
   WlzObject	*obj1, *obj2, *obj=NULL;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  if( obj1 = WlzSpecial_a3(1, &errNum) ){
-    if( obj2 = WlzSpecial_a3(3, &errNum) ){
+  if((obj1 = WlzSpecial_a3(1, &errNum)) != NULL){
+    if((obj2 = WlzSpecial_a3(3, &errNum)) != NULL){
       obj = WlzIntersect2(obj1, obj2, &errNum);
       WlzFreeObj(obj2);
     }
@@ -746,8 +748,8 @@ WlzObject *WlzMakeSinglePixelObject(
     else {
       itv->ileft = 0;
       itv->iright = 0;
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					   l, l, k, k, &errNum) ){
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					   l, l, k, k, &errNum)) != NULL){
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, itv,
 					     NULL);
 	domain.i->intvlines->nintvs = 1;
@@ -762,16 +764,16 @@ WlzObject *WlzMakeSinglePixelObject(
     break;
 
   case WLZ_3D_DOMAINOBJ:
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-				      p, p, l, l, k, k, &errNum) ){
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+				      p, p, l, l, k, k, &errNum)) != NULL){
       values.core = NULL;
       if( (rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
 				NULL, NULL, &errNum)) == NULL ){
 	WlzFreePlaneDomain(domain.p);
 	break;
       }
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					 l, l, k, k, &errNum) ){
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					 l, l, k, k, &errNum)) != NULL){
 	rtnObj->domain.p->domains[0] = WlzAssignDomain(domain, NULL);
       }
       else {
@@ -831,11 +833,11 @@ WlzObject *WlzMakeCircleObject(
     kol1 = WLZ_NINT(x-radius);
     lastkl = WLZ_NINT(x+radius);
     width = lastkl - kol1 + 1;
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					 line1, lastln, kol1, lastkl,
-					 &errNum) ){
-      if( intvlPtr = (WlzInterval *) AlcCalloc((lastln - line1 + 1),
-					       sizeof(WlzInterval)) ){
+					 &errNum)) != NULL){
+      if((intvlPtr = (WlzInterval *) AlcCalloc((lastln - line1 + 1),
+					       sizeof(WlzInterval))) != NULL){
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr,
 					     (void *)intvlPtr, NULL);
 	for(l=line1; l <= lastln; l++, intvlPtr++){
@@ -890,10 +892,7 @@ WlzObject *WlzMakeRectangleObject(
   WlzObject	*rtnObj=NULL;
   WlzDomain	domain;
   WlzValues	values;
-  WlzInterval	*intvlPtr;
-  int		line1, lastln, kol1, lastkl, width, idelta;
-  int		l;
-  double	delta;
+  int		line1, lastln, kol1, lastkl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* only error checked for is a negative radius */
@@ -910,9 +909,9 @@ WlzObject *WlzMakeRectangleObject(
     lastln = WLZ_NINT(y+radiusY);
     kol1 = WLZ_NINT(x-radiusX);
     lastkl = WLZ_NINT(x+radiusX);
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 					 line1, lastln,
-					 kol1, lastkl, &errNum) ){
+					 kol1, lastkl, &errNum)) != NULL){
       values.core = NULL;
       rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			   NULL, NULL, &errNum);
@@ -964,13 +963,13 @@ WlzObject *WlzMakeSphereObject(
     case WLZ_3D_DOMAINOBJ:
       plane1 = WLZ_NINT(z-radius);
       lastpl = WLZ_NINT(z+radius);
-      if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+      if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					plane1, lastpl,
 					WLZ_NINT(y-radius),
 					WLZ_NINT(y+radius),
 					WLZ_NINT(x-radius),
 					WLZ_NINT(x+radius),
-					&errNum) ){
+					&errNum)) != NULL){
 	values.core = NULL;
 	if( (rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
 				  NULL, NULL, &errNum)) == NULL ){
@@ -986,7 +985,7 @@ WlzObject *WlzMakeSphereObject(
 	  else {
 	    tmpRadius = sqrt(tmpRadius);
 	  }
-	  if( obj1 = WlzMakeCircleObject(tmpRadius, x, y, &errNum) ){
+	  if((obj1 = WlzMakeCircleObject(tmpRadius, x, y, &errNum)) != NULL){
 	    *domains = WlzAssignDomain(obj1->domain, NULL);
 	    WlzFreeObj(obj1);
 	  }
@@ -1042,7 +1041,6 @@ WlzObject *WlzMakeCuboidObject(
   WlzObject	*obj1;
   WlzDomain	domain, *domains;
   WlzValues	values;
-  double	tmpRadius;
   int		p, plane1, lastpl;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
@@ -1059,13 +1057,13 @@ WlzObject *WlzMakeCuboidObject(
     case WLZ_3D_DOMAINOBJ:
       plane1 = WLZ_NINT(z-radiusZ);
       lastpl = WLZ_NINT(z+radiusZ);
-      if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+      if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					plane1, lastpl,
 					WLZ_NINT(y-radiusY),
 					WLZ_NINT(y+radiusY),
 					WLZ_NINT(x-radiusX),
 					WLZ_NINT(x+radiusX),
-					&errNum) ){
+					&errNum)) != NULL){
 	values.core = NULL;
 	if( (rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
 				  NULL, NULL, &errNum)) == NULL ){
@@ -1074,7 +1072,8 @@ WlzObject *WlzMakeCuboidObject(
 	}
 	domains = domain.p->domains;
 	for(p=plane1; p <= lastpl; p++, domains++){
-	  if( obj1 = WlzMakeRectangleObject(radiusX,radiusY, x, y, &errNum) ){
+	  if((obj1 = WlzMakeRectangleObject(radiusX,radiusY, x, y,
+	                                    &errNum)) != NULL){
 	    *domains = WlzAssignDomain(obj1->domain, NULL);
 	    WlzFreeObj(obj1);
 	  }
@@ -1147,9 +1146,10 @@ WlzObject *WlzMakeStdStructElement(
     case WLZ_26_DISTANCE:
       /* make a domain with a single pixel at the origin and dilate
 	 to the required radius */
-      if( obj1 = WlzMakeSinglePixelObject(oType, 0, 0, 0, &errNum) ){
+      if((obj1 = WlzMakeSinglePixelObject(oType, 0, 0, 0, &errNum)) != NULL){
 	while( intRadius-- > 0 ){
-	  if( obj2 = WlzDilation(obj1, (WlzConnectType) dType, &errNum) ){
+	  if((obj2 = WlzDilation(obj1, (WlzConnectType) dType,
+	  		         &errNum)) != NULL){
 	    WlzFreeObj(obj1);
 	    obj1 = obj2;
 	  }
@@ -1166,7 +1166,7 @@ WlzObject *WlzMakeStdStructElement(
     case WLZ_OCTAGONAL_DISTANCE:
       /* make a domain with a single pixel at the origin and dilate
 	 alternately 8-conn, 4-conn to required radius */
-      if( obj1 = WlzMakeSinglePixelObject(oType, 0, 0, 0, &errNum) ){
+      if((obj1 = WlzMakeSinglePixelObject(oType, 0, 0, 0, &errNum)) != NULL){
 	while( intRadius-- > 0 ){
 	  if( intRadius & 0x01 ){
 	    obj2 = WlzDilation(obj1, WLZ_4_CONNECTED, &errNum);

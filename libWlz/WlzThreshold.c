@@ -111,8 +111,8 @@ WlzObject *WlzThreshold(WlzObject	*obj,
       return WlzThreshold3d(obj, threshV, highlow, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( nobj = WlzThreshold(obj->values.obj, threshV, highlow,
-			      &errNum) ){
+      if((nobj = WlzThreshold(obj->values.obj, threshV, highlow,
+			      &errNum)) != NULL){
 	values.obj = nobj;
 	return WlzMakeMain(obj->type, obj->domain, values,
 			   NULL, obj, dstErr);
@@ -187,7 +187,7 @@ WlzObject *WlzThreshold(WlzObject	*obj,
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
       g = gwsp.u_grintptr;
       over = 0;
-      switch( gwsp.pixeltype ){
+      switch(gwsp.pixeltype){
 
       case WLZ_GREY_INT:
 	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
@@ -341,6 +341,8 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 	}
 	break;
 
+      default:
+        break;
       }
 
       if (over == 1) {
@@ -359,8 +361,8 @@ WlzObject *WlzThreshold(WlzObject	*obj,
   /* domain structure */
   if( errNum == WLZ_ERR_NONE ){
     if( nints > 0 ){
-      if( idom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-				       nl1, nll, nk1, nkl, &errNum) ){
+      if((idom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+				       nl1, nll, nk1, nkl, &errNum)) != NULL){
 	if( (itvl = (WlzInterval *)
 	     AlcMalloc(nints * sizeof(WlzInterval))) == NULL ){
 	  errNum = WLZ_ERR_MEM_ALLOC;
@@ -388,7 +390,7 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 	  }
 	  g = gwsp.u_grintptr;
 	  over = 0;
-	  switch( gwsp.pixeltype ){
+	  switch(gwsp.pixeltype){
 
 	  case WLZ_GREY_INT:
 	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
@@ -514,6 +516,8 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 	    }
 	    break;
 
+	  default:
+	    break;
 	  }
 	  if (over == 1) {
 	    over = 0;
@@ -701,11 +705,11 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
       (*ndomains).core = NULL;
       (*nvalues).core = NULL;
     }
-    else if( temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				NULL, NULL, &errNum) ){
+    else if((temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				NULL, NULL, &errNum)) != NULL){
 
       if( temp->domain.i != NULL ){
-	if( obj1 = WlzThreshold(temp, threshV, highlow, &errNum) ){
+	if((obj1 = WlzThreshold(temp, threshV, highlow, &errNum)) != NULL){
 	  if( obj1->type == WLZ_2D_DOMAINOBJ ){
 	    *ndomains = WlzAssignDomain(obj1->domain, NULL);
 	    *nvalues = WlzAssignValues(obj1->values, NULL);
@@ -744,8 +748,8 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
   if( errNum == WLZ_ERR_NONE ){
     domain.p = npdom;
     vals.vox = nvoxtab;
-    if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, vals,
-			   NULL, obj, &errNum) ){
+    if((obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, vals,
+			   NULL, obj, &errNum)) != NULL){
       /*	nvoxtab->original = obj1; */
       nvoxtab->original_table = WlzAssignValues(obj->values, NULL);
     }

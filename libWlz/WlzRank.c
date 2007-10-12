@@ -314,6 +314,9 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
 	  (void )memcpy(*(((WlzUInt **)vBuf) + bufLn) + bufLft,
 	                gWSp.u_grintptr.rgbp, itvWidth * sizeof(WlzUInt));
           break;
+        default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
       }
     }
     if(errNum == WLZ_ERR_EOO)
@@ -653,6 +656,8 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      }
 	      *(gP0.rgbp) = gV1.rgbv;
 	      break;
+	    default:
+	      break;
 	  }
 	}
       }
@@ -681,6 +686,8 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      break;
 	    case WLZ_GREY_RGBA:
 	      gP0.rgbp = *((WlzUInt **)vBuf + bufPos0.vtY);
+	      break;
+	    default:
 	      break;
 	  }
 	  bufPos0.vtX = idK - fSz2;
@@ -738,6 +745,8 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      break;
 	  case WLZ_GREY_RGBA: /* RGBA to be done - what to do? RAB */
 	    return;
+	  default:
+	    break;
 	  }
 	}
       }
@@ -836,6 +845,8 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 	      case WLZ_GREY_RGBA:
 		gP0.rgbp = *(*((WlzUInt ***)vBuf + bufPos0.vtZ) + bufPos0.vtY);
 		break;
+	      default:
+	        break;
 	    }
 	    iP0 = *(*(iBuf + bufPos0.vtZ) + bufPos0.vtY);
 	    bufPos0.vtX = idK - fSz2;
@@ -895,8 +906,11 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		  ++(bufPos0.vtX);
 		}
 		break;
-	    case WLZ_GREY_RGBA: /* RGBA to be done - what to do? RAB */
-	      return;
+	      case WLZ_GREY_RGBA:
+	        /* TODO RGBA to be done - what to do? RAB */
+		return;
+	      default:
+	        break;
 	    }
 	  }
 	}
@@ -956,6 +970,8 @@ static void	WlzRankFilterValues(WlzGreyValueWSpace *gVWSp,
     case WLZ_GREY_DOUBLE:
       AlgRankSelectD((double *)values, nValues, rankI);
       *(gVWSp->gPtr[0].dbp) = *((double *)values + rankI);
+      break;
+    default:
       break;
   }
 }

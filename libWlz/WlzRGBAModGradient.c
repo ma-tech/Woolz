@@ -116,10 +116,10 @@ extern WlzObject *WlzRGBAModGradient(
   if( errNum == WLZ_ERR_NONE ){
     bckgrnd.type = WLZ_GREY_SHORT;
     bckgrnd.v.shv = 0.0;
-    if( values.v = WlzNewValueTb(obj,
+    if((values.v = WlzNewValueTb(obj,
 				 WlzGreyTableType(WLZ_GREY_TAB_RAGR,
 						  WLZ_GREY_SHORT, NULL),
-				 bckgrnd, &errNum) ){
+				 bckgrnd, &errNum)) != NULL){
       rtnObj = WlzMakeMain(obj->type, obj->domain, values,
 			   NULL, NULL, &errNum);
     }

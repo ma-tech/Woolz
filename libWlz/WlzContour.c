@@ -158,6 +158,7 @@ static WlzIVertex3 	*WlzContourBndPtsSamReg(
 static WlzErrorNum	WlzContourScaleModelVoxSz(
 			  WlzGMModel *model,
 			  WlzPlaneDomain *pDom);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum	WlzContourBndLine2D(
 			  WlzContour *ctr,
 			  double isoVal,
@@ -166,6 +167,7 @@ static WlzErrorNum	WlzContourBndLine2D(
 			  int bufLnIdx,
 			  int bufOrg,
 			  int bufSz);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzErrorNum 	WlzContourBndPlane3D(
 			  WlzContour *ctr,
 			  double isoVal,
@@ -174,6 +176,7 @@ static WlzErrorNum 	WlzContourBndPlane3D(
 			  int bufPnIdx,
 			  WlzIVertex2 bufOrg,
 			  WlzIVertex2 bufSz);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum	WlzContourBndEmptyLine2D(
 			  WlzContour *ctr,
 			  double isoVal,
@@ -181,6 +184,7 @@ static WlzErrorNum	WlzContourBndEmptyLine2D(
 			  WlzUByte *itvBuf,
 			  int bufOrg,
 			  int bufSz);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzErrorNum 	WlzContourBndEmptyPlane3D(
 			  WlzContour *ctr,
 			  double isoVal,
@@ -203,13 +207,6 @@ static WlzErrorNum 	WlzContourGrdCube3D(
 			  int *bufIdx,
 			  WlzIVertex3 bufPos,
 			  WlzIVertex3 cbOrg);
-static WlzErrorNum	WlzContourIsoCube3D24T(WlzContour *ctr,
-			  double isoVal,
-			  double *pn0ln0,
-			  double *pn0ln1,
-			  double *pn1ln0,
-			  double *pn1ln1,
-			  WlzDVertex3 cbOrg);
 static WlzErrorNum	WlzContourIsoCube3D6T(WlzContour *ctr,
 			  double isoVal,
 			  double *pn0ln0,
@@ -577,8 +574,7 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
 		       double delta, double tau, double samFac,
 		       WlzErrorNum *dstErr)
 {
-  int		tI0,
-		pnCnt,
+  int		pnCnt,
 		pnIdx,
 		pnPos,
   		nCPts,
@@ -1002,6 +998,9 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 	  WlzValueCopyRGBAToDouble(valBuf[bufLnIdx] + bufLft, 
 	  			     srcGWSp.u_grintptr.rgbp, itvLen);
 	  break;
+        default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
       }
       idX = bufLft;
       sqOrg.vtY = srcIWSp.linpos - 1.0;
@@ -1320,7 +1319,6 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   double	**grdMBuf = NULL,	            /* Magnitude of gradient */
   		**grdXBuf = NULL,    	    /* Horizontal gradient component */
   		**grdYBuf = NULL;             /* Vertical gradient component */
-  WlzGMVertex	*mVtx;
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   int		lnIdx[3],
@@ -1329,9 +1327,7 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   		org,
   		posAbs,
 		posRel;
-  WlzDVertex2	pos,
-  		nrm;
-  WlzDVertex2	*grd;
+  WlzDVertex2	nrm;
   WlzIntervalWSpace gXIWSp,
   		gYIWSp;
   WlzGreyWSpace	gXGWSp,
@@ -1697,7 +1693,6 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   WlzUByte	*iMP,
 	  	*iMC,
 	  	*iMN;
-  WlzGMVertex	*mVtx;
   WlzRsvFilter	*ftr = NULL;
   WlzObject	*srcObj2D = NULL,
   		*xObj2D = NULL,
@@ -1705,8 +1700,6 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
 		*zObj2D = NULL,
   		*zObj = NULL;
   WlzContour 	*ctr = NULL;
-  WlzDVertex3	pos;
-  WlzDVertex3	*grd;
   WlzIVertex3	bufPos,
   		cbOrg;
   WlzIVertex2	bufSz,
@@ -2145,11 +2138,12 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
 				double samFac,
 				WlzErrorNum *dstErr)
 {
-  int		idx,
-  		nDPts,
+#ifdef WLZ_CONTOUR_DEBUG_RBF
+  int		idx;
+#endif /* WLZ_CONTOUR_DEBUG_RBF */
+  int  		nDPts,
 		nEPts,
-  		nSPts,
-		nTPts;
+  		nSPts;
   WlzObjectType	gTType;
   WlzVertexP	dPts,
   		ePts,
@@ -2161,7 +2155,6 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
 		*tObj1 = NULL;
   WlzContour 	*ctr = NULL;
   WlzValues	tVal;
-  WlzVertexP	vP;
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const WlzContourBndSamMethod sMtd = WLZ_CONTOUR_BNDPTS_RANDOM;
@@ -2441,8 +2434,7 @@ static WlzIVertex3 *WlzContourBndPtsSamReg(WlzObject *obj, int sFac,
   double	dithOffD,
   		dithSclD,
   		sFacD;
-  WlzIVertex3	ptI,
-  		sFacI3;
+  WlzIVertex3	sFacI3;
   WlzDVertex3	ptD;
   WlzIVertex3	*pts = NULL;
   WlzObject	*tObj = NULL;
@@ -2958,7 +2950,6 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
 		conFnd = 0;
   int		con[6],
      		thr[6];
-  double	len;
   WlzDVertex2	seg[2],
   		nrm[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3047,6 +3038,7 @@ static WlzErrorNum WlzContourGrdLink2D(WlzContour *ctr,
   return(errNum);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				Woolz error code.
 * \ingroup	WlzContour
@@ -3095,6 +3087,7 @@ static WlzErrorNum WlzContourBndLine2D(WlzContour *ctr, double isoVal,
   }
   return(errNum);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return
@@ -3178,6 +3171,7 @@ static WlzErrorNum WlzContourBndPlane3D(WlzContour *ctr, double isoVal,
   return(errNum);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				Woolz error code.
 * \ingroup	WlzContour
@@ -3221,6 +3215,7 @@ static WlzErrorNum WlzContourBndEmptyLine2D(WlzContour *ctr, double isoVal,
   }
   return(errNum);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return
@@ -3551,6 +3546,7 @@ static WlzErrorNum WlzContourIsoCube2D(WlzContour *ctr,
   return(errNum);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				Woolz error code.
 * \ingroup	WlzContour
@@ -3754,6 +3750,7 @@ static WlzErrorNum WlzContourIsoCube3D24(WlzContour *ctr,
   }
   return(errNum);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return				Woolz error code.

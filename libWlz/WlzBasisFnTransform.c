@@ -176,7 +176,6 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
 					  double *param,
 					  WlzErrorNum *dstErr)
 {
-  int		idx;
   WlzBasisFnTransform *basisTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	deltaMQ = 0.001,
@@ -291,6 +290,7 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPts(WlzBasisFnTransform *basisTr,
 
   errNum = WlzBasisFnTPS2DChangeCPtsParam(basisTr, nDPts, dPts, nSPts, sPts,
                                           cObj, 0, NULL);
+  return(errNum);
 }
 
 /*!
@@ -628,6 +628,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
       case WLZ_TRANSFORM_3D_CMESH:
         errNum = WLZ_ERR_UNIMPLEMENTED;
 	break;
+      default:
+        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
     }
   }
   return(errNum);
@@ -681,6 +684,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
 	    break;
 	  case WLZ_FN_BASIS_2DTPS:
 	    *dspP = WlzBasisFnValueTPS2D(basisTr->basisFn, nod->pos);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_TRANSFORM_TYPE;
 	    break;
 	}
       }
@@ -769,6 +775,9 @@ WlzObject	*WlzBasisFnTransformObj(WlzObject *srcObj,
 	    case WLZ_CONTOUR:
 	      dstDom.ctr = WlzBasisFnTransformContour(srcObj->domain.ctr,
 	      					      basisTr, 1, &errNum);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_DOMAIN_TYPE;
 	      break;
 	  }
 	}
@@ -901,6 +910,9 @@ WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
 	  }
 	}
         break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
     }
     if(errNum != WLZ_ERR_NONE)
     {

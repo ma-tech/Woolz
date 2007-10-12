@@ -89,8 +89,7 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
 			      int nReqComp, int *dstNComp,
 			      WlzObject ***dstComp)
 {
-  int		tI,
-  		dim,
+  int		dim,
   		idC;
   WlzObject	*hObj = NULL,
   		*tObj = NULL;

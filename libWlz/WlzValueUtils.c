@@ -281,6 +281,8 @@ void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
     case WLZ_GREY_RGBA:
       WlzValueSetRGBA(vec.rgbp + vecOff, value.rgbv, count);
       break;
+    default:
+      break;
   }
 }
 
@@ -1030,6 +1032,8 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToInt(dst.inp + dstOff, src.rgbp + srcOff,
 	  			     count);
 	  break;
+	default:
+	  break;
       }
       break;
     case WLZ_GREY_SHORT:
@@ -1058,6 +1062,8 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	case WLZ_GREY_RGBA:
 	  WlzValueCopyRGBAToShort(dst.shp + dstOff, src.rgbp + srcOff,
 	  			       count);
+	  break;
+	default:
 	  break;
       }
       break;
@@ -1088,6 +1094,8 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToUByte(dst.ubp + dstOff, src.rgbp + srcOff,
 	  			       count);
 	  break;
+	default:
+	  break;
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -1116,6 +1124,8 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	case WLZ_GREY_RGBA:
 	  WlzValueCopyRGBAToFloat(dst.flp + dstOff, src.rgbp + srcOff,
 	  			       count);
+	  break;
+	default:
 	  break;
       }
       break;
@@ -1146,6 +1156,8 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToDouble(dst.dbp + dstOff, src.rgbp + srcOff,
 	  			     count);
 	  break;
+	default:
+	  break;
       }
       break;
     case WLZ_GREY_RGBA:
@@ -1175,56 +1187,12 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToRGBA(dst.rgbp + dstOff, src.rgbp + srcOff,
 	  			     count);
 	  break;
+	default:
+	  break;
       }
       break;
-  }
-}
-
-/*!
-* \return	void
-* \ingroup	WlzValueUtils
-* \brief	Masks a vector of int to the limits of short.
-* \param	vec			Vector who's elements are to be
-*                                       clamped.
-* \param	count			Number of vector elements.
-*/
-void		 WlzValueMaskIntToShort(int *vec, int count)
-{
-  while(count-- > 0)
-  {
-    *vec++ = *vec & USHRT_MAX;
-  }
-}
-
-/*!
-* \return	void
-* \ingroup	WlzValueUtils
-* \brief	Masks a vector of int to the limits of WlzUByte.
-* \param	vec			Vector who's elements are to be
-*                                       clamped.
-* \param	count			Number of vector elements.
-*/
-void		 WlzValueMaskIntToUByte(int *vec, int count)
-{
-  while(count-- > 0)
-  {
-    *vec++ = *vec & UCHAR_MAX;
-  }
-}
-
-/*!
-* \return	void
-* \ingroup	WlzValueUtils
-* \brief	Masks a vector of short to the limits of WlzUByte.
-* \param	vec			Vector who's elements are to be
-*                                       clamped.
-* \param	count			Number of vector elements.
-*/
-void		 WlzValueMaskShortToUByte(short *vec, int count)
-{
-  while(count-- > 0)
-  {
-    *vec++ = *vec & UCHAR_MAX;
+    default:
+      break;
   }
 }
 
@@ -1847,6 +1815,8 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToInt(dst.inp + dstOff, src.rgbp + srcOff,
 	  			  count);
 	  break;
+	default:
+	  break;
       }
       break;
     case WLZ_GREY_SHORT:
@@ -1875,6 +1845,8 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	case WLZ_GREY_RGBA:
 	  WlzValueCopyRGBAToShort(dst.shp + dstOff, src.rgbp + srcOff,
 	  			  count);
+	  break;
+	default:
 	  break;
       }
       break;
@@ -1905,6 +1877,8 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToUByte(dst.ubp + dstOff, src.rgbp + srcOff,
 	  			  count);
 	  break;
+	default:
+	  break;
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -1933,6 +1907,7 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToFloat(dst.flp + dstOff, src.rgbp + srcOff,
 	  			  count);
 	  break;
+	default:
 	  break;
       }
       break;
@@ -1963,6 +1938,8 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToDouble(dst.dbp + dstOff, src.rgbp + srcOff,
 	  			  count);
 	  break;
+	default:
+	  break;
       }
       break;
     case WLZ_GREY_RGBA:
@@ -1992,7 +1969,11 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 	  WlzValueCopyRGBAToRGBA(dst.rgbp + dstOff, src.rgbp + srcOff,
 	  			  count);
 	  break;
+	default:
+	  break;
       }
+      break;
+    default:
       break;
   }
 }
@@ -2878,6 +2859,8 @@ size_t		WlzValueSize(WlzGreyType gType)
       break;
     case WLZ_GREY_RGBA:
       gSz = sizeof(unsigned int);
+      break;
+    default:
       break;
   }
   return(gSz);

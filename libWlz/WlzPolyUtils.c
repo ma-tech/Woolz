@@ -70,6 +70,7 @@ WlzErrorNum	WlzPolyVertices2I(WlzPolygonDomain *poly,
     *dstArySz = poly->nvertices;
     *dstPolyAry = poly->vtx;
   }
+  return(errNum);
 }
 
 /*!
@@ -99,6 +100,7 @@ WlzErrorNum	WlzPolyVertices2D(WlzPolygonDomain *poly,
     *dstArySz = poly->nvertices;
     *dstPolyAry = (WlzDVertex2 *)(poly->vtx);
   }
+  return(errNum);
 }
 
 

@@ -297,6 +297,9 @@ WlzDomain	 WlzShiftDomain(WlzObjectType inObjType, WlzDomain inDom,
 		++tDVP0;
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_DOMAIN_TYPE;
+	      break;
 	  }
 	}
         break;

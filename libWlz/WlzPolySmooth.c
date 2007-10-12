@@ -98,8 +98,10 @@ WlzPolygonDomain *WlzPolySmooth(
     switch( poly->type ){
     case WLZ_POLYGON_INT:
       /* smooth using double vertices */
-      if( tmp1Poly = WlzConvertPolyType(poly, WLZ_POLYGON_DOUBLE, &errNum) ){
-	if( tmp2Poly = WlzPolySmooth(tmp1Poly, wrap, iterations, &errNum) ){
+      if((tmp1Poly = WlzConvertPolyType(poly, WLZ_POLYGON_DOUBLE,
+                                        &errNum)) != NULL){
+	if((tmp2Poly = WlzPolySmooth(tmp1Poly, wrap, iterations,
+	                             &errNum)) != NULL){
 	  rtnPoly = WlzConvertPolyType(tmp2Poly, WLZ_POLYGON_INT, &errNum);
 	  WlzFreePolyDmn(tmp2Poly);
 	}
@@ -108,7 +110,7 @@ WlzPolygonDomain *WlzPolySmooth(
       break;
 
     case WLZ_POLYGON_FLOAT:
-      if( rtnPoly = WlzPolyEquispace(poly, wrap, 1.0, 0, &errNum) ){
+      if((rtnPoly = WlzPolyEquispace(poly, wrap, 1.0, 0, &errNum)) != NULL){
 
 	/* 1-2-1 smoothing, iterated, leaving end-points alone unless wrapped */
 	for(n=0, factor=1.0; n < iterations; n++){
@@ -168,7 +170,7 @@ WlzPolygonDomain *WlzPolySmooth(
       break;
 
     case WLZ_POLYGON_DOUBLE:
-      if( rtnPoly = WlzPolyEquispace(poly, wrap, 1.0, 0, &errNum) ){
+      if((rtnPoly = WlzPolyEquispace(poly, wrap, 1.0, 0, &errNum)) != NULL){
 
 	/* 1-2-1 smoothing, iterated, leaving end-points alone unless wrapped */
 	for(n=0, factor=1.0; n < iterations; n++){
@@ -263,8 +265,8 @@ WlzBoundList *WlzBoundSmooth(
   if( bound == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if( rtnBound = WlzMakeBoundList(bound->type, bound->wrap, NULL,
-				       &errNum) ){
+  else if((rtnBound = WlzMakeBoundList(bound->type, bound->wrap, NULL,
+				       &errNum)) != NULL){
     if( (errNum == WLZ_ERR_NONE) && bound->next ){
       rtnBound->next = 
 	WlzAssignBoundList(WlzBoundSmooth(bound->next, iterations, &errNum),

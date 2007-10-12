@@ -107,7 +107,7 @@ WlzErrorNum WlzRGBAModulusRange(
 	  }
 	}
       }
-      if( errNum = WLZ_ERR_EOO ){
+      if( errNum == WLZ_ERR_EOO ){
 	errNum = WLZ_ERR_NONE;
       }
       *min = lmin;

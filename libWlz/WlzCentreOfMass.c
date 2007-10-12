@@ -127,7 +127,7 @@ WlzDVertex2	WlzCentreOfMass2D(WlzObject *srcObj, int binObjFlag,
 	cMass = WlzCentreOfMassCtr2D(srcObj, &mass, &errNum);
 	break;
       default:
-	WLZ_ERR_OBJECT_TYPE;
+	errNum = WLZ_ERR_OBJECT_TYPE;
         break;
     }
   }
@@ -395,6 +395,8 @@ static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
 		++(gPix.rgbp);
 		++(pos.vtX);
 	      }
+	      break;
+	    default:
 	      break;
 	  }
 	}

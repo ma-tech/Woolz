@@ -295,6 +295,8 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 	  case WLZ_GREY_DOUBLE:
 	    integralGrey = 0;
 	    break;
+	  default:
+	    break;
 	}
 	switch(samFn)
 	{
@@ -445,8 +447,7 @@ static WlzObject *WlzSampleObj3D(WlzObject *srcObj, WlzIVertex3 samFac,
 static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 				   WlzErrorNum *dstErr)
 {
-  int		idx,
-  		itvCount,
+  int		itvCount,
 		totItvCount,
 		delItvCount,
   		maxItvCount,
@@ -951,6 +952,9 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 		  srcPix.rgbp += samFac.vtX;
 		}
 		break;
+	      default:
+	        errNum = WLZ_ERR_GREY_TYPE;
+		break;
 	    }
 	  }
 	}
@@ -1141,6 +1145,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 	  case WLZ_GREY_UBYTE:
 	    backgroundVal = (int )(backgroundPix.v.ubv);
 	    break;
+	  default:
+	    break;
 	}
       }
     }
@@ -1226,6 +1232,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 			WlzValueCopyUByteToInt(tIP0, bufGWsp.u_grintptr.ubp,
 					       tI1);
 			break;
+		      default:
+		        break;
 		    }
 		    bufPos.vtX = bufIWsp.rgtpos + 1;
 		  }
@@ -1253,6 +1261,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 	      break;
 	    case WLZ_GREY_UBYTE:
 	      tGP0.ubp = (WlzUByte *)dstGreyValues + dstOffset;
+	      break;
+	    default:
 	      break;
 	  }
 	  tI0 = dstInvWidth;
@@ -1292,6 +1302,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		}
 		*(tGP0.ubp)++ = (WlzUByte )tI1;
 		break;
+	      default:
+	        break;
 	    }
 	    bufPos.vtX += samFac.vtX;
 	  }
@@ -1498,6 +1510,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 	  case WLZ_GREY_DOUBLE:
 	    backgroundVal = backgroundPix.v.dbv;
 	    break;
+	  default:
+	    break;
 	}
       }
     }
@@ -1579,6 +1593,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 			WlzValueCopyDoubleToDouble(tDP0, bufGWsp.u_grintptr.dbp,
 						   tI1);
 			break;
+		      default:
+		        break;
 		    }
 		    bufPos.vtX = bufIWsp.rgtpos + 1;
 		  }
@@ -1603,6 +1619,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 	      break;
 	    case WLZ_GREY_DOUBLE:
 	      tGP0.dbp = (double *)dstGreyValues + dstOffset;
+	      break;
+	    default:
 	      break;
 	  }
 	  tI0 = dstInvWidth;
@@ -1630,6 +1648,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 	      case WLZ_GREY_DOUBLE:
 		*(tGP0.dbp)++ = tD0;
 		break;
+	      default:
+	        break;
 	    }
 	    bufPos.vtX += samFac.vtX;
 	  }
@@ -1837,6 +1857,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	  case WLZ_GREY_UBYTE:
 	    backgroundVal = (int )(backgroundPix.v.ubv);
 	    break;
+	  default:
+	    break;
 	}
       }
     }
@@ -1931,6 +1953,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 			WlzValueCopyUByteToInt(tIP0, bufGWsp.u_grintptr.ubp,
 					       tI1);
 			break;
+		      default:
+		        break;
 		    }
 		    bufPos.vtX = bufIWsp.rgtpos + 1;
 		  }
@@ -1958,6 +1982,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	      break;
 	    case WLZ_GREY_UBYTE:
 	      tGP0.ubp = (WlzUByte *)dstGreyValues + dstOffset;
+	      break;
+	    default:
 	      break;
 	  }
 	  for(tI0 = 0; tI0 < dstInvWidth; ++tI0)
@@ -2045,6 +2071,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		  tI1 = WlzValueMedianInt(bufMedian, bufMedianSz);
 		}
 		break;
+	      default:
+	        break;
 	    }
 	    switch(greyType)
 	    {
@@ -2057,6 +2085,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	      case WLZ_GREY_UBYTE:
 		*(tGP0.ubp)++ = (WlzUByte )tI1; /* Fits because rank op. */
 		break;
+	      default:
+	        break;
 	    }
 	    bufPos.vtX += samFac.vtX;
 	  }
@@ -2268,6 +2298,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	  case WLZ_GREY_FLOAT:
 	    backgroundVal = (double )(backgroundPix.v.flv);
 	    break;
+	  default:
+	    break;
 	}
       }
     }
@@ -2358,6 +2390,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 			WlzValueCopyDoubleToDouble(tDP0, bufGWsp.u_grintptr.dbp,
 						   tI1);
 			break;
+		      default:
+		        break;
 		    }
 		    bufPos.vtX = bufIWsp.rgtpos + 1;
 		  }
@@ -2382,6 +2416,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	      break;
 	    case WLZ_GREY_DOUBLE:
 	      tGP0.dbp = (double *)dstGreyValues + dstOffset;
+	      break;
+	    default:
 	      break;
 	  }
 	  for(tI0 = 0; tI0 < dstInvWidth; ++tI0)
@@ -2470,6 +2506,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 		  tD0 = WlzValueMedianDouble(bufMedian, bufMedianSz);
 		}
 		break;
+	      default:
+	        break;
 	    }
 	    switch(greyType)
 	    {
@@ -2479,6 +2517,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	      case WLZ_GREY_DOUBLE:
 		*(tGP0.dbp)++ = tD0;
 		break;
+	      default:
+	        break;
 	    }
 	    bufPos.vtX += samFac.vtX;
 	  }
@@ -2849,6 +2889,8 @@ static int	WlzSampleObjEstIntervals(WlzDomain srcDom,
 	break;
       case WLZ_INTERVALDOMAIN_RECT:
 	itvCount = ((lastLn - line1) /  samFac.vtY) + samFac.vtY + 1;
+        break;
+      default:
         break;
     }
   }

@@ -652,7 +652,7 @@ WlzErrorNum Wlz3DSectionTransformInvVtx(
     WlzAffineTransform	*trans;
     WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-    if( trans = WlzAffineTransformInverse(viewStr->trans, &errNum) ){
+    if((trans = WlzAffineTransformInverse(viewStr->trans, &errNum)) != NULL){
       dst = WlzAffineTransformVertexD3(trans, *vtx, &errNum);
       *vtx = dst;
       WlzFreeAffineTransform(trans);
@@ -720,7 +720,7 @@ WlzErrorNum Wlz3DSectionIncrementDistance(
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* get the inverse transform */
-  if( trans = WlzAffineTransformInverse(viewStr->trans, &errNum) ){
+  if((trans = WlzAffineTransformInverse(viewStr->trans, &errNum)) != NULL){
     for(xp=0; xp <=  WLZ_NINT(viewStr->maxvals.vtX) -
 	  WLZ_NINT(viewStr->minvals.vtX); xp++){
       viewStr->xp_to_x[xp] += trans->mat[0][2]*incr;
@@ -769,8 +769,8 @@ WlzDVertex2 Wlz3DViewGetIntersectionPoint(
     errNum = WLZ_ERR_PARAM_DATA;
   }
   else {
-    if( t1 = WlzAffineTransformInverse(v1->trans, &errNum) ){
-      if( t2 = WlzAffineTransformInverse(v2->trans, &errNum) ){
+    if((t1 = WlzAffineTransformInverse(v1->trans, &errNum)) != NULL){
+      if((t2 = WlzAffineTransformInverse(v2->trans, &errNum)) != NULL){
 	for(i=0; i < 3; i++){
 	  dp1 += t1->mat[i][2] * t1->mat[i][2];
 	  dp12 += t1->mat[i][2] * t2->mat[i][2];
@@ -843,8 +843,8 @@ double Wlz3DViewGetIntersectionAngle(
     errNum = WLZ_ERR_PARAM_DATA;
   }
   else {
-    if( t1 = WlzAffineTransformInverse(v1->trans, &errNum) ){
-      if( t2 = WlzAffineTransformInverse(v2->trans, &errNum) ){
+    if((t1 = WlzAffineTransformInverse(v1->trans, &errNum)) != NULL){
+      if((t2 = WlzAffineTransformInverse(v2->trans, &errNum)) != NULL){
 	for(i=3; i < 6; i++){
 	  vector_prod[i%3] =
 	    (t1->mat[(i+1)%3][2] * t2->mat[(i-1)%3][2] - 
@@ -943,9 +943,8 @@ int Wlz3DViewGetBoundingBoxIntersectionA(
   }
   else
   {
-    if( vtxs = (WlzDVertex3 *) AlcMalloc(sizeof(WlzDVertex3) * 12) ){
-      numVtxs = Wlz3DViewGetBoundingBoxIntersection(viewStr,
-	  vtxs, dstErr);
+    if((vtxs = (WlzDVertex3 *) AlcMalloc(sizeof(WlzDVertex3) * 12)) != NULL){
+      numVtxs = Wlz3DViewGetBoundingBoxIntersection(viewStr, vtxs, dstErr);
       arraySz = 12;
     }
     else {

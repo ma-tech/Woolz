@@ -123,8 +123,6 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
   double	dist;
   WlzGreyType	vType;
   WlzGreyP	valP;
-  WlzPixelV	minV,
-  		maxV;
   int		*vRank = NULL,
   		*dRank = NULL;
   WlzObject	*fObj = NULL,
@@ -208,7 +206,7 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
     if(((vRank = (int *)AlcMalloc(nVal * sizeof(int))) == NULL) ||
        ((dRank = (int *)AlcMalloc(nVal * sizeof(int))) == NULL))
     {
-      errNum == WLZ_ERR_MEM_ALLOC;
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
     else
     {

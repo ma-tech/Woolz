@@ -382,6 +382,9 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
 	case WLZ_GMMOD_3N:
 	  sgnNrm = 1;
 	  break;
+        default:
+	  errNum = WLZ_ERR_PARAM_TYPE;
+	  break;
       }
     }
     idx = 0;
@@ -498,6 +501,9 @@ WlzObject	*WlzRegICPObjWSD2D(WlzObject *tObj, WlzObject *sObj,
         case WLZ_GMMOD_2N:
 	case WLZ_GMMOD_3N:
 	  sgnNrm = 1;
+	  break;
+        default:
+	  errNum = WLZ_ERR_PARAM_TYPE;
 	  break;
       }
     }
@@ -637,6 +643,8 @@ static WlzErrorNum WlzRegICPCheckVertices(WlzVertexP *vData, int *vCnt,
 					      vCnt[idx]);
 		copiedFlg = 1;
 		break;
+	      default:
+	        break;
 	    }
 	    if(copiedFlg)
 	    {
@@ -668,6 +676,8 @@ static WlzErrorNum WlzRegICPCheckVertices(WlzVertexP *vData, int *vCnt,
 					      vCnt[idx]);
 		copiedFlg = 1;
 		break;
+	      default:
+	        break;
 	    }
 	    if(copiedFlg)
 	    {

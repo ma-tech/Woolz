@@ -145,8 +145,12 @@ WlzErrorNum WlzGreyInvertMinMax(
     break;
   case WLZ_GREY_RGBA:
     redrange = WLZ_RGBA_RED_GET(min.v.rgbv) + WLZ_RGBA_RED_GET(max.v.rgbv);
-    greenrange = WLZ_RGBA_GREEN_GET(min.v.rgbv) + WLZ_RGBA_GREEN_GET(max.v.rgbv);
+    greenrange = WLZ_RGBA_GREEN_GET(min.v.rgbv) +
+                 WLZ_RGBA_GREEN_GET(max.v.rgbv);
     bluerange = WLZ_RGBA_BLUE_GET(min.v.rgbv) + WLZ_RGBA_BLUE_GET(max.v.rgbv);
+    break;
+  default:
+    return WLZ_ERR_GREY_TYPE;
     break;
   }
 

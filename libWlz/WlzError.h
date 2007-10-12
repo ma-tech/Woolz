@@ -151,6 +151,8 @@ typedef enum _WlzErrorNum
   WLZ_ERR_ALG_HOMOGENEOUS,	/*!< Algorithm failure due to a homogeneous
   				     matrix. */
   WLZ_ERR_ALG_CONVERGENCE,	/*!< Algorithm convergence failure. */
+  WLZ_ERR_ALG_NONGLOBAL,	/*!< Algorithm convergence to local not
+                                     global solution. */
   WLZ_ERR_UNIMPLEMENTED,	/*!< A function has not been implemented. */
   WLZ_ERR_UNSPECIFIED,		/*!< All other errors. */
   WLZ_ERR_FILE_OPEN,		/*!< Error opening a file */

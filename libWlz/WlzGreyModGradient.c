@@ -112,8 +112,8 @@ WlzObject *WlzGreyModGradient(
     case WLZ_COMPOUND_ARR_1:
     case WLZ_COMPOUND_ARR_2:
       cobj1 = (WlzCompoundArray *) obj;
-      if( cobj2 = WlzMakeCompoundArray(cobj1->type, 1, cobj1->n, NULL,
-				       cobj1->otype, &errNum) ){
+      if((cobj2 = WlzMakeCompoundArray(cobj1->type, 1, cobj1->n, NULL,
+				       cobj1->otype, &errNum)) != NULL){
 	/* transform each object, ignore type errors */
 	for(i=0; i < cobj1->n; i++){
 	  cobj2->o[i] =

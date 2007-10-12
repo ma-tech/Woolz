@@ -2900,6 +2900,10 @@ extern WlzErrorNum              WlzLBTTestOutputNodesTxt(
                                   WlzDomain dom);
 extern int                      WlzLBTNodeSz2D(
                                   WlzLBTNode2D *nod);
+extern int			WlzLBTNodeSz3D(
+				  WlzLBTNode3D *nod);
+extern int                    	WlzLBTNodeLogSz3D(
+                                  WlzLBTNode3D *nod);
 extern int                    	WlzLBTNodeLogSz2D(
                                   WlzLBTNode2D *nod);
 extern int			WlzLBTCountNodNbrDir2D(
@@ -4606,6 +4610,9 @@ extern void			WlzValueClampDoubleToShort(
 extern void			WlzValueClampDoubleToUByte(
 				  double *vec,
 				  int count);
+extern void			WlzValueClampDoubleToRGBA(
+				  double *vec,
+				  int count);
 extern void			WlzValueClampDoubleToFloat(
 				  double *vec,
 				  int count);
@@ -4617,15 +4624,6 @@ extern void			WlzValueClampFloatToShort(
 				  int count);
 extern void			WlzValueClampFloatToUByte(
 				  float *vec,
-				  int count);
-extern void			WlzValueMaskIntToShort(
-				  int *vec,
-				  int count);
-extern void			WlzValueMaskIntToUByte(
-				  int *vec,
-				  int count);
-extern void			WlzValueMaskShortToUByte(
-				  short *vec,
 				  int count);
 extern void			WlzValueCopyIntToInt(
 				  int *dst,

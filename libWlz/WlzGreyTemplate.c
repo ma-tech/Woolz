@@ -102,8 +102,8 @@ WlzObject *WlzGreyTemplate(
       return WlzGreyTemplate3d(obj, tmpl, tmplVal, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzGreyTemplate(obj->values.obj, tmpl,
-				       tmplVal, &errNum) ){
+      if((values.obj = WlzGreyTemplate(obj->values.obj, tmpl,
+				       tmplVal, &errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -160,7 +160,7 @@ WlzObject *WlzGreyTemplate(
      note the background is set to the input object or zero if empty */
   if( errNum == WLZ_ERR_NONE ){
     type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gtype, NULL);
-    if( values.v = WlzNewValueTb(rtnObj, type, bckgrnd, &errNum) ){
+    if((values.v = WlzNewValueTb(rtnObj, type, bckgrnd, &errNum)) != NULL){
       rtnObj->values = WlzAssignValues(values, NULL);
       errNum = WlzGreySetValue(rtnObj, tmplVal);
     }
@@ -195,9 +195,13 @@ WlzObject *WlzGreyTemplate(
 	case WLZ_GREY_RGBA:
 	  size = sizeof(WlzUInt);
 	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	}
 
-	while( (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE ){
+	while((errNum == WLZ_ERR_NONE) &&
+	      ((errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE)){
 	  (void) WlzNextGreyInterval(&iwsp2);
 	  memcpy((void *) gwsp1.u_grintptr.inp,
 		 (const void *) gwsp2.u_grintptr.inp,
@@ -266,11 +270,11 @@ static WlzObject *WlzGreyTemplate3d(
       switch( tmpl->type ){
       case WLZ_2D_DOMAINOBJ:
 	pdom = obj->domain.p;
-	if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					  pdom->plane1, pdom->lastpl,
 					  pdom->line1, pdom->lastpl,
 					  pdom->kol1, pdom->lastkl,
-					  &errNum) ){
+					  &errNum)) != NULL){
 	  domain.p->voxel_size[0] = pdom->voxel_size[0];
 	  domain.p->voxel_size[1] = pdom->voxel_size[1];
 	  domain.p->voxel_size[2] = pdom->voxel_size[2];
@@ -285,11 +289,11 @@ static WlzObject *WlzGreyTemplate3d(
 
       case WLZ_2D_POLYGON:
 	pdom = obj->domain.p;
-	if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					  pdom->plane1, pdom->lastpl,
 					  pdom->line1, pdom->lastpl,
 					  pdom->kol1, pdom->lastkl,
-					  &errNum) ){
+					  &errNum)) != NULL){
 	  domain.p->voxel_size[0] = pdom->voxel_size[0];
 	  domain.p->voxel_size[1] = pdom->voxel_size[1];
 	  domain.p->voxel_size[2] = pdom->voxel_size[2];
@@ -306,11 +310,11 @@ static WlzObject *WlzGreyTemplate3d(
 
       case WLZ_BOUNDLIST:
 	pdom = obj->domain.p;
-	if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					  pdom->plane1, pdom->lastpl,
 					  pdom->line1, pdom->lastpl,
 					  pdom->kol1, pdom->lastkl,
-					  &errNum) ){
+					  &errNum)) != NULL){
 	  domain.p->voxel_size[0] = pdom->voxel_size[0];
 	  domain.p->voxel_size[1] = pdom->voxel_size[1];
 	  domain.p->voxel_size[2] = pdom->voxel_size[2];
@@ -335,11 +339,11 @@ static WlzObject *WlzGreyTemplate3d(
 	  case WLZ_PLANEDOMAIN_POLYGON:
 	  case WLZ_PLANEDOMAIN_CONV_HULL:
 	    pdom = tmpl->domain.p;
-	    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					      pdom->plane1, pdom->lastpl,
 					      pdom->line1, pdom->lastpl,
 					      pdom->kol1, pdom->lastkl,
-					      &errNum) ){
+					      &errNum)) != NULL){
 	      domain.p->voxel_size[0] = pdom->voxel_size[0];
 	      domain.p->voxel_size[1] = pdom->voxel_size[1];
 	      domain.p->voxel_size[2] = pdom->voxel_size[2];
@@ -360,11 +364,11 @@ static WlzObject *WlzGreyTemplate3d(
 
 	  case WLZ_PLANEDOMAIN_BOUNDLIST:
 	    pdom = tmpl->domain.p;
-	    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					      pdom->plane1, pdom->lastpl,
 					      pdom->line1, pdom->lastpl,
 					      pdom->kol1, pdom->lastkl,
-					      &errNum) ){
+					      &errNum)) != NULL){
 	      domain.p->voxel_size[0] = pdom->voxel_size[0];
 	      domain.p->voxel_size[1] = pdom->voxel_size[1];
 	      domain.p->voxel_size[2] = pdom->voxel_size[2];
@@ -450,7 +454,7 @@ static WlzObject *WlzGreyTemplate3d(
 	obj1 = WlzAssignObject(
 	  WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, values,
 		      NULL, NULL, NULL), NULL);
-	if( obj2 = WlzGreyTemplate(tmpObj, obj1, tmplVal, &errNum) ){
+	if((obj2 = WlzGreyTemplate(tmpObj, obj1, tmplVal, &errNum)) != NULL){
 	  *valuess = WlzAssignValues(obj2->values, NULL);
 	  WlzFreeObj(obj2);
 	}
@@ -464,11 +468,11 @@ static WlzObject *WlzGreyTemplate3d(
     valuess = rtnObj->values.vox->values;
     for(p=pdom->plane1; p <= pdom->lastpl; p++, domains++, valuess++){
       if((*domains).core &&
-	 (WlzGreyTableTypeToGreyType((*valuess).core->type, NULL) != gtype) ){
+	 (WlzGreyTableTypeToGreyType((*valuess).core->type, NULL) != gtype)){
 	obj1 = WlzAssignObject(
 	  WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *valuess,
 		      NULL, NULL, NULL), NULL);
-	if( obj2 = WlzConvertPix(obj1, gtype, &errNum) ){
+	if((obj2 = WlzConvertPix(obj1, gtype, &errNum)) != NULL){
 	  /* substitute the valuetable in the voxel table array */
 	  WlzFreeValues(*valuess);
 	  *valuess = WlzAssignValues(obj2->values, NULL);

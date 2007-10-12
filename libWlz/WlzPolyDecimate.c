@@ -335,8 +335,8 @@ WlzBoundList *WlzBoundDecimate(
   if( bound == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if( rtnBound = WlzMakeBoundList(bound->type, 1, NULL,
-				       &errNum) ){
+  else if((rtnBound = WlzMakeBoundList(bound->type, 1, NULL,
+				       &errNum)) != NULL){
     if( (errNum == WLZ_ERR_NONE) && bound->next ){
       rtnBound->next = 
 	WlzAssignBoundList(WlzBoundDecimate(bound->next, maxDist, &errNum),

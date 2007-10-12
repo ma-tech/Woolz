@@ -303,9 +303,6 @@ void            WlzCMeshUpdateBBox3D(WlzCMesh3D *mesh)
 */
 void		WlzCMeshSetBoundNodFlags(WlzCMeshP mesh)
 {
-  int		idN;
-  WlzCMeshNod2D *nod;
-
   if(mesh.v)
   {
     switch(mesh.m2->type)
@@ -1097,7 +1094,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   WlzCMeshElm2D	*elm;
   WlzErrorNum	errNum0,
   		errNum1 = WLZ_ERR_NONE;
-  const		nnxtLimit = 1000;
+  const int	nnxtLimit = 1000;
   char		msgBuf[1000];
 
   if(mesh == NULL)
@@ -1249,7 +1246,7 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
   WlzCMeshFace	*fce;
   WlzErrorNum	errNum0,
   		errNum1 = WLZ_ERR_NONE;
-  const		nnxtLimit = 1000;
+  const int	nnxtLimit = 1000;
   char		msgBuf[1000];
 
 
@@ -1479,8 +1476,7 @@ WlzErrorNum 	WlzCMeshCmpElmFeat2D(WlzCMesh2D *mesh, int *dstNElm,
 				   double **dstMinLen, double **dstMaxLen)
 {
   int		idE,
-		idV,
-  		nElm = 0;
+		idV;
   int		*idx = NULL;
   double	*vol = NULL,
   		*minLen = NULL,
@@ -1615,8 +1611,7 @@ WlzErrorNum 	WlzCMeshCmpElmFeat3D(WlzCMesh3D *mesh, int *dstNElm,
 				   double **dstMinLen, double **dstMaxLen)
 {
   int		idE,
-		idV,
-  		nElm = 0;
+		idV;
   int		*idx = NULL;
   double	*vol = NULL,
   		*minLen = NULL,

@@ -86,7 +86,7 @@ int WlzRGBAGreyStats(
 
   /* all object checks done bt RGBAToCOmpound including
      grey-level type */
-  if( cmpnd = WlzRGBAToCompound(srcObj, colSpc, &errNum) ){
+  if((cmpnd = WlzRGBAToCompound(srcObj, colSpc, &errNum)) != NULL){
     *dstGType = WLZ_GREY_RGBA;
     for(i=0; (i < 4) && (errNum == WLZ_ERR_NONE) ; i++){
       area = WlzGreyStats(cmpnd->o[i], &gType,

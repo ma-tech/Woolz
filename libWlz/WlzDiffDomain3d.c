@@ -158,7 +158,7 @@ WlzObject *WlzDiffDomain3d(
       }
 
       /* find difference domain */
-      if( obj = WlzDiffDomain( &o1, &o2, &errNum ) ){
+      if((obj = WlzDiffDomain( &o1, &o2, &errNum)) != NULL){
 	newpdom->domains[i] = WlzAssignDomain(obj->domain, NULL);
 	WlzFreeObj( obj );
       }

@@ -198,7 +198,6 @@ WlzVertexP 	WlzVerticesFromObjBnd(WlzObject *obj,
 				      WlzErrorNum *dstErr)
 {
   WlzVertexP	vP;
-  WlzVertexType	vType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   vP.v = NULL;
@@ -421,7 +420,6 @@ WlzErrorNum	WlzVerticesFromObj3I(WlzObject *obj,
 		vCnt,
   		nVtx = 0;
   WlzDomain	*domP;
-  WlzValues	*valP;
   WlzIVertex3	*vtx0 = NULL,
   		*vtx1;
   WlzIVertex2	*vtxP0 = NULL,
@@ -774,7 +772,6 @@ static WlzDVertex2 *WlzDVerticesFromGM2(WlzGMModel *model, int *dstCnt,
   int		idx,
   		cnt,
 		vIdx;
-  WlzVertexType	type;
   WlzDVertex2   *tDVP,
   		*vData = NULL;
   WlzIVertex2	*tIVP;
@@ -842,7 +839,6 @@ static WlzDVertex3 *WlzDVerticesFromGM3(WlzGMModel *model, int *dstCnt,
   int		idx,
   		cnt,
 		vIdx;
-  WlzVertexType	type;
   WlzDVertex3   *tDVP,
   		*vData = NULL;
   WlzIVertex3	*tIVP;
@@ -1145,6 +1141,9 @@ static WlzVertexP WlzVerticesFromGM2(WlzGMModel *model,
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
       break;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1647,6 +1646,8 @@ static void	WlzVerticesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 	  segV[0] = *(vtx.d2 + 0);
 	  segV[1] = *(vtx.d2 + 1);
 	  break;
+        default:
+	  break;
       }
       *nrm = WlzVerticesNormPair2(segV[0], segV[1]);
       break;
@@ -1678,6 +1679,8 @@ static void	WlzVerticesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 	  segV[1] = *(vtx.d2 + 0);
 	  segV[2] = *(vtx.d2 + 1);
 	  break;
+        default:
+	  break;
       }
       *(nrm + 0) = WlzVerticesNormTriple2(segV[0], segV[1], segV[2]);
       while(idx1 < cnt)
@@ -1697,6 +1700,8 @@ static void	WlzVerticesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 	  case WLZ_POLYGON_DOUBLE:
 	    segV[2] = *(vtx.d2 + idx1);
 	    break;
+	  default:
+	    break;
 	}
 	*(nrm + ++idx) = WlzVerticesNormTriple2(segV[0], segV[1], segV[2]);
         ++idx1;
@@ -1715,6 +1720,8 @@ static void	WlzVerticesNorm2(WlzDVertex2 *nrm, WlzVertexP vtx, int cnt,
 	  break;
 	case WLZ_POLYGON_DOUBLE:
 	  segV[2] = *(vtx.d2 + 0);
+	  break;
+        default:
 	  break;
       }
       *(nrm + ++idx) = WlzVerticesNormTriple2(segV[0], segV[1], segV[2]);
@@ -1945,6 +1952,9 @@ AlcKDTTree	*WlzVerticesBuildTree(WlzVertexType vType, int nV,
 	  ++idx;
 	}
 	break;
+      default:
+	errNum = WLZ_ERR_PARAM_TYPE;
+        break;
     }
     if(dstErr)
     {

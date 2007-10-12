@@ -142,18 +142,21 @@ WlzObject *WlzScalarBinaryOp2(
 	errNum = WLZ_ERR_VALUES_NULL;
 	break;
       }
-      if( values.obj = WlzScalarBinaryOp2(o1->values.obj, pval,
-					 op, &errNum) ){
+      if((values.obj = WlzScalarBinaryOp2(o1->values.obj, pval,
+					 op, &errNum)) != NULL){
 	obj = WlzMakeMain(WLZ_TRANS_OBJ, o1->domain, values,
 			  NULL, NULL, &errNum);
 	break;
       }
       break;
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
   }
 
   /* set up temporary object */
-  if( (errNum == WLZ_ERR_NONE) && (obj == NULL) ){
+  if((errNum == WLZ_ERR_NONE) && (obj == NULL)){
     switch( o1->type ){
 
     case WLZ_2D_DOMAINOBJ:
@@ -177,18 +180,23 @@ WlzObject *WlzScalarBinaryOp2(
 	new_bckgrnd.type = WLZ_GREY_SHORT;
 	new_bckgrnd.v.shv = old_bckgrnd.v.ubv;
 	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
       }
-      values.v = WlzNewValueTb(tmp3,
-			       WlzGreyTableType(WLZ_GREY_TAB_RAGR,
-						new_grey_type, NULL),
-			       new_bckgrnd, &errNum);
-      tmp3->values = WlzAssignValues( values, NULL );
+      if(errNum == WLZ_ERR_NONE){
+	values.v = WlzNewValueTb(tmp3,
+				 WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+						  new_grey_type, NULL),
+				 new_bckgrnd, &errNum);
+	tmp3->values = WlzAssignValues( values, NULL );
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
       values.core = NULL;
-      if( (tmp3 = WlzMakeMain(WLZ_3D_DOMAINOBJ, o1->domain, values,
-			      NULL, NULL, &errNum)) == NULL ){
+      if((tmp3 = WlzMakeMain(WLZ_3D_DOMAINOBJ, o1->domain, values,
+			     NULL, NULL, &errNum)) == NULL){
 	break;
       }
 
@@ -207,47 +215,54 @@ WlzObject *WlzScalarBinaryOp2(
 	new_bckgrnd.type = WLZ_GREY_SHORT;
 	new_bckgrnd.v.shv = old_bckgrnd.v.ubv;
 	break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
       }
-      values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-				       tmp3->domain.p->plane1,
-				       tmp3->domain.p->lastpl,
-				       new_bckgrnd, NULL, &errNum);
-      if( values.vox == NULL ){break;}
+      if(errNum == WLZ_ERR_NONE){
+	values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					 tmp3->domain.p->plane1,
+					 tmp3->domain.p->lastpl,
+					 new_bckgrnd, NULL, &errNum);
+	if( values.vox == NULL ){break;}
 
-      for(p=tmp3->domain.p->plane1; p <= tmp3->domain.p->lastpl; p++){
-	WlzValues	values2d;
+	for(p=tmp3->domain.p->plane1; p <= tmp3->domain.p->lastpl; p++){
+	  WlzValues	values2d;
 
-	/* currently test for NULL domain to imply WLZ_EMPTY_DOMAIN */
-	if( tmp3->domain.p->domains[p-tmp3->domain.p->plane1].core
-	   == NULL ){
-	  values2d.core = NULL;
-	}
-	else {
-	  WlzObject	*tmp2d;
-	  values2d.core = NULL;
-	  if( tmp2d = WlzMakeMain
-	     (WLZ_2D_DOMAINOBJ,
-	      tmp3->domain.p->domains[p-tmp3->domain.p->plane1],
-	      values2d, NULL, NULL, &errNum) ){
-	    values2d.v = WlzNewValueTb(
-	      tmp2d, WlzGreyTableType(WLZ_GREY_TAB_RAGR, new_grey_type,
-				      NULL), new_bckgrnd, &errNum);
-	    WlzFreeObj( tmp2d );
+	  /* currently test for NULL domain to imply WLZ_EMPTY_DOMAIN */
+	  if( tmp3->domain.p->domains[p-tmp3->domain.p->plane1].core
+	     == NULL ){
+	    values2d.core = NULL;
 	  }
+	  else {
+	    WlzObject	*tmp2d;
+	    values2d.core = NULL;
+	    if((tmp2d = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+		             tmp3->domain.p->domains[p-tmp3->domain.p->plane1],
+		             values2d, NULL, NULL, &errNum)) != NULL){
+	      values2d.v = WlzNewValueTb(
+		tmp2d, WlzGreyTableType(WLZ_GREY_TAB_RAGR, new_grey_type,
+					NULL), new_bckgrnd, &errNum);
+	      WlzFreeObj( tmp2d );
+	    }
+	  }
+	  values.vox->values[p-tmp3->domain.p->plane1] = 
+	    WlzAssignValues(values2d, NULL);
 	}
-	values.vox->values[p-tmp3->domain.p->plane1] = 
-	  WlzAssignValues(values2d, NULL);
+	tmp3->values = WlzAssignValues(values, NULL);
       }
-      tmp3->values = WlzAssignValues(values, NULL);
 
       break;
 
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
   }
 
   /* apply operation and free space */
-  if( (errNum == WLZ_ERR_NONE) && (obj == NULL) ){
-    if( (errNum = WlzScalarBinaryOp(o1, pval, tmp3, op)) != WLZ_ERR_NONE ){
+  if((errNum == WLZ_ERR_NONE) && (obj == NULL)){
+    if((errNum = WlzScalarBinaryOp(o1, pval, tmp3, op)) != WLZ_ERR_NONE){
       WlzFreeObj( tmp3 );
     }
     else {

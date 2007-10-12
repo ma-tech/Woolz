@@ -174,9 +174,9 @@ WlzObject *WlzDilation(
       lastkl = idmn->lastkl + 1;
       line1 = idmn->line1 - 1;
       lastln = idmn->lastln + 1;
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 					    line1, lastln, kol1, lastkl,
-					    &errNum) ){
+					    &errNum)) != NULL){
 	return WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, dilatvalues,
 			   NULL, NULL, dstErr);
       }
@@ -201,13 +201,14 @@ WlzObject *WlzDilation(
     /*inttot += 10 * MAXLNITV;*/
     inttot *= 3;
     if( errNum == WLZ_ERR_NONE ){
-      if( jp = (WlzInterval *) AlcMalloc(inttot * sizeof(WlzInterval)) )
+      if((jp = (WlzInterval *)AlcMalloc(inttot *
+                                        sizeof(WlzInterval))) != NULL)
       {
 	odd = i & 01;
-	if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+	if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					     line1-1, lastln+1,
 					     kol1-1, lastkl+1,
-					     &errNum) ){
+					     &errNum)) != NULL){
 	  domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
 	  				       NULL);
 	  if((dilatobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, dilatvalues,
@@ -712,12 +713,13 @@ static WlzObject *WlzDilation4(
     line1 = obj->domain.i->line1;
     lastln = obj->domain.i->lastln;
     width = lastkl - kol1 + 3;
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					     line1-1, lastln+1,
 					     kol1-1, lastkl+1,
-					     &errNum) ){
+					     &errNum)) != NULL){
       inttot = lastln - line1 + 3;
-      if( jp = (WlzInterval *) AlcMalloc(inttot * sizeof(WlzInterval)) ){
+      if((jp = (WlzInterval *) AlcMalloc(inttot *
+                                         sizeof(WlzInterval))) != NULL){
 	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
 					     NULL);
 	/* first line */
@@ -760,12 +762,13 @@ static WlzObject *WlzDilation4(
     /*inttot += 10 * MAXLNITV;*/
     inttot *= 3;
     if( errNum == WLZ_ERR_NONE ){
-      if( jp = (WlzInterval *) AlcMalloc(inttot * sizeof(WlzInterval)) )
+      if((jp = (WlzInterval *) AlcMalloc(inttot *
+                                         sizeof(WlzInterval))) != NULL)
       {
-	if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+	if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 					     line1-1, lastln+1,
 					     kol1-1, lastkl+1,
-					     &errNum) ){
+					     &errNum)) != NULL){
 	  domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, (void *)jp,
 	  				       NULL);
 	  if((dilatobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
@@ -876,28 +879,28 @@ static WlzObject *WlzDilation3d(
   /* create a new 3D object to hold the dilated domains
      use WlzStandardPlaneDomain to trim leading and trailing
      empty domains */
-  if( errNum == WLZ_ERR_NONE ){
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+  if(errNum == WLZ_ERR_NONE){
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 				      obj->domain.p->plane1 - 1,
 				      obj->domain.p->lastpl + 1,
 				      obj->domain.p->line1 - 1,
 				      obj->domain.p->lastln + 1,
 				      obj->domain.p->kol1 - 1,
 				      obj->domain.p->lastkl + 1,
-				      &errNum) ){
+				      &errNum)) != NULL){
       for(p=0; p < 3; p++){
 	domain.p->voxel_size[p] = obj->domain.p->voxel_size[p];
       }
     }
   }
-  if( errNum == WLZ_ERR_NONE ){
+  if(errNum == WLZ_ERR_NONE){
     values.core = NULL;
     dilatobj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
 			  NULL, NULL, &errNum);
   }
 
   /* foreach plane dilate as required by connectivity */
-  if( errNum == WLZ_ERR_NONE ){
+  if(errNum == WLZ_ERR_NONE){
     domain.core = NULL;
     values.core = NULL;
     start_obj[0] = WlzAssignObject(WlzMakeEmpty(NULL), NULL);
@@ -922,7 +925,8 @@ static WlzObject *WlzDilation3d(
 
       case WLZ_8_CONNECTED:
       case WLZ_4_CONNECTED:
-	if( dest_obj[1] = WlzDilation(start_obj[1], connectivity, NULL) ){
+	if((dest_obj[1] = WlzDilation(start_obj[1], connectivity,
+	                              NULL)) != NULL){
 	  dilatobj->domain.p->domains[p] =	
 	    WlzAssignDomain(dest_obj[1]->domain, NULL);
 	  WlzFreeObj( dest_obj[1] );
@@ -971,6 +975,9 @@ static WlzObject *WlzDilation3d(
 	WlzFreeObj( dest_obj[2] );
 	break;
 
+      default:
+	errNum = WLZ_ERR_CONNECTIVITY_TYPE;
+        break;
       }
     }
     WlzFreeObj( start_obj[0] );

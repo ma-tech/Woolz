@@ -581,8 +581,10 @@ WlzErrorNum	WlzCMeshAddDelElmCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemNewNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.nod.newEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -596,8 +598,10 @@ WlzErrorNum	WlzCMeshRemNewNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemNewNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.nod.newEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -611,8 +615,10 @@ WlzErrorNum	WlzCMeshRemNewNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemNewElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.elm.newEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -626,8 +632,10 @@ WlzErrorNum	WlzCMeshRemNewElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemNewElmCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.elm.newEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -641,8 +649,10 @@ WlzErrorNum	WlzCMeshRemNewElmCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemDelNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.nod.delEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -656,8 +666,10 @@ WlzErrorNum	WlzCMeshRemDelNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemDelNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.nod.delEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -671,8 +683,10 @@ WlzErrorNum	WlzCMeshRemDelNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemDelElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.elm.delEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -686,8 +700,10 @@ WlzErrorNum	WlzCMeshRemDelElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 WlzErrorNum	WlzCMeshRemDelElmCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WlzCMeshRemEntCb(&(mesh->res.elm.delEntCb), fn, data);
+  return(errNum);
 }
 
 /*!
@@ -1053,7 +1069,7 @@ WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
   {
     if((nElm = WlzCMeshAllocElm2D(mesh)) == NULL)
     {
-      errNum == WLZ_ERR_MEM_ALLOC;
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1104,7 +1120,7 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
   {
     if((nElm = WlzCMeshAllocElm3D(mesh)) == NULL)
     {
-      errNum == WLZ_ERR_MEM_ALLOC;
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1865,7 +1881,6 @@ WlzErrorNum 	WlzCMeshAdjustBoundaryElm2D(WlzCMesh2D *mesh,
 {
   int		iMsk,
   		idE,
-		idM,
 		idN;
   WlzCMeshNod2D *nod;
   WlzCMeshElm2D	*elm;
@@ -1952,7 +1967,6 @@ WlzErrorNum 	WlzCMeshAdjustBoundaryElm3D(WlzCMesh3D *mesh,
 {
   int		iMsk,
   		idE,
-		idM,
 		idN;
   WlzCMeshNod3D *nod;
   WlzCMeshElm3D	*elm;
@@ -2448,11 +2462,9 @@ void	 	WlzCMeshSetAllSmallBndElmOutside3D(WlzCMesh3D *mesh,
 */
 double 		WlzCMeshElmMinEdgLnSq2D(WlzCMeshElm2D *elm)
 {
-  int		idE;
   double	lenSq,
   		minLenSq = -1.0;
   WlzDVertex2	p0;
-  WlzCMeshNod2D *nod;
   WlzCMeshNod2D *nodBuf[3];
 
   if(elm && (elm->idx >= 0))
@@ -2490,11 +2502,9 @@ double 		WlzCMeshElmMinEdgLnSq2D(WlzCMeshElm2D *elm)
 */
 double 		WlzCMeshElmMinEdgLnSq3D(WlzCMeshElm3D *elm)
 {
-  int		idE;
   double	lenSq,
   		minLenSq = -1.0;
   WlzDVertex3	p0;
-  WlzCMeshNod3D *nod;
   WlzCMeshNod3D *nodBuf[4];
 
   if(elm && (elm->idx >= 0))
@@ -2574,7 +2584,7 @@ WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
   Alc2Free((void **)(mesh->bGrid.buckets));
   /* Allowing one more bucket in each dimension removes the need for lots of
    * boundary checks and so speeds node location significantly. */
-  if(AlcPtr2Calloc((void ***)&(mesh->bGrid.buckets),
+  if(AlcPtr2Calloc((void ****)&(mesh->bGrid.buckets),
 		    mesh->bGrid.nB.vtY + 1,
 		    mesh->bGrid.nB.vtX + 1) != ALC_ER_NONE)
   {
@@ -2639,7 +2649,7 @@ WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
   Alc3Free((void ***)(mesh->bGrid.buckets));
   /* Allowing one more bucket in each dimension removes the need for lots of
    * boundary checks and so speeds node location significantly. */
-  if(AlcPtr3Calloc((void ****)&(mesh->bGrid.buckets),
+  if(AlcPtr3Calloc((void *****)&(mesh->bGrid.buckets),
 		    mesh->bGrid.nB.vtZ + 1,
 		    mesh->bGrid.nB.vtY + 1,
 		    mesh->bGrid.nB.vtX + 1) != ALC_ER_NONE)
@@ -3519,7 +3529,6 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 		*strObj = NULL;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	maxBndNdSz = 1;
 
   if(obj == NULL)
   {
@@ -3658,7 +3667,6 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
   		*sclObj = NULL,
 		*strObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	maxBndNdSz = 1;
 
   if(obj == NULL)
   {
@@ -4164,9 +4172,6 @@ static WlzErrorNum WlzCMeshAddLBTNode3D(WlzCMesh3D *mesh,
 		idM,
 		bnd,
 		rot,
-		nEdg,
-		nElm,
-  		nFce,
 		nNod;
   WlzIBox3	nBB;
   WlzDVertex3	vtx[8];
@@ -4176,7 +4181,6 @@ static WlzErrorNum WlzCMeshAddLBTNode3D(WlzCMesh3D *mesh,
   WlzCMeshEdg3D *mEdg[32];
   WlzCMeshElm3D *mElm[8];
   WlzCMeshNod3D	*mNod[10];
-  WlzCMeshFace	*mFce[24];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* For each face of the LBT node's cube:
@@ -4391,7 +4395,6 @@ static int	WlzCMeshCompLBTFceNodPos3D(WlzDVertex3 *nPos,
   int		nNod = 0;
   double	tX,
 		tY,
-		tZ,
   		sz,
 		hSz;
   WlzIVertex3	lPos;
@@ -5842,7 +5845,6 @@ void		WlzCMeshDbgOutVTK2D(FILE *fP, WlzCMesh2D *mesh)
 {
   int		idE,
 		idN,
-		bCnt,
 		nElm,
 		nVElm,
   		nNod;
@@ -5911,7 +5913,6 @@ void		WlzCMeshDbgOutVTK3D(FILE *fP, WlzCMesh3D *mesh)
   int		idE,
 		idF,
 		idN,
-		bCnt,
 		nElm,
 		nVSpx,
   		nNod;

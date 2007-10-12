@@ -196,6 +196,9 @@ WlzObject	*WlzShadeCorrectBFDF(
 				    ((WlzCompoundArray *) shdDFObj)->o[i]:NULL,
 				    nrmVal, inPlace, &errNum);
 	      break;
+	    default:
+	      errNum = WLZ_ERR_OBJECT_TYPE;
+	      break;
 	    }
 	      
 	  }
@@ -223,9 +226,9 @@ WlzObject	*WlzShadeCorrectBFDF(
       break;
 
     case WLZ_TRANS_OBJ:
-      if(rtnObj =
-	 WlzShadeCorrectBFDF(srcObj->values.obj, shdObj, shdDFObj,
-			     nrmVal, inPlace, &errNum) ){
+      if((rtnObj = WlzShadeCorrectBFDF(srcObj->values.obj,
+                                       shdObj, shdDFObj, nrmVal,
+				       inPlace, &errNum)) != NULL){
 	values.obj = rtnObj;
 	return WlzMakeMain(WLZ_TRANS_OBJ, srcObj->domain, values,
 			   NULL, NULL, dstErr);
@@ -446,6 +449,9 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	      WLZ_RGBA_RGBA_SET(tUI0, red, green, blue, 255);
 	      *(rtnPix.rgbp)++ = tUI0;
 	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;
 	}
       }

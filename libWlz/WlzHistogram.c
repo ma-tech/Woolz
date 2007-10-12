@@ -223,9 +223,6 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
       ivCount = iWSp.rgtpos - iWSp.lftpos + 1;
       switch(gWSp.pixeltype)
       {
-        case WLZ_GREY_RGBA: /* RGBA to be done RAB */
-	  errNum = WLZ_ERR_GREY_TYPE;
-	  break;
 	case WLZ_GREY_INT:
 	  objPix.inp = gWSp.u_grintptr.inp;
 	  if(unityBinSize)
@@ -334,6 +331,9 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	      ++*(histBin + idx);
 	    }
 	  }
+	  break;
+        default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
       }
     }
@@ -1744,7 +1744,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		  }
 		}
 		break;
-	      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
+	      default:
+	        errNum = WLZ_ERR_GREY_TYPE;
 	        break;
 	    }
 	  }
@@ -1753,6 +1754,9 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	    errNum = WLZ_ERR_NONE;
 	  }
 	}
+	break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
 	break;
     }
   }
@@ -1953,6 +1957,8 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 	    ++binIdx;
 	  }
 	  break;
+        default:
+	  break;
       }
       if(featIdx == 0)
       {
@@ -2133,6 +2139,8 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
 	{
 	  fitObs += *(pkFreq + idx) = *(smHistDom->binValues.dbp + idx);
 	}
+        break;
+      default:
         break;
     }
     if(pkCnt == 0)
@@ -2374,6 +2382,8 @@ double		WlzHistogramBinSum(WlzHistogramDomain *histDom)
 	  binSum += *(binVal.dbp)++;
 	}
 	break;
+      default:
+        break;
     }
   }
   return(binSum);
@@ -2422,6 +2432,8 @@ int		WlzHistogramBinMax(WlzHistogramDomain *histDom)
 	  }
 	}
 	break;
+      default:
+        break;
     }
   }
   return(maxIdx);

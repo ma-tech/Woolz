@@ -322,8 +322,8 @@ static WlzObject *WlzSkeleton2D(WlzObject *srcObj, int smoothpasses,
   /* check for rectangular domain which has no intervalline pointer */
   if(errNum == WLZ_ERR_NONE){
     if(srcObj->domain.core->type == WLZ_INTERVALDOMAIN_RECT){
-      if( dumDom.i = WlzNewIDomain(WLZ_INTERVALDOMAIN_INTVL,
-				   srcObj->domain.i, &errNum) ){
+      if((dumDom.i = WlzNewIDomain(WLZ_INTERVALDOMAIN_INTVL,
+				   srcObj->domain.i, &errNum)) != NULL){
 	WlzFreeDomain(srcObj->domain);
 	srcObj->domain = WlzAssignDomain(dumDom, &errNum);
 	dumDom.core = NULL;
@@ -498,10 +498,7 @@ static WlzErrorNum WlzSkStrip4(WlzObject *skObj, WlzObject *potDelObj,
 		pdl1,
 		skl1,
 		skll,
-   		rtp,
-  		smBits,
-     		v, 
-		wa;
+  		smBits;
   unsigned int	w;
   WlzDomain	delDom,
   		skDom;
@@ -949,7 +946,6 @@ static WlzErrorNum WlzSkStrip8(WlzObject *skObj, WlzDomain delDom,
   WlzIntervalLine *intl,
   		 *lintl;
   WlzSkIntvLn	dm1lint,
-  		llint,
   		lm1lint,
 		lp1lint;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1182,7 +1178,7 @@ exitP1b:
 	} 
 	rtp = 16; 
 exitP1c:
-	w += (16-rtp);
+	w += (16 - rtp);
       }
       /* Here "k" refers to the middle position in the run of three.
        * Interval stepping has already been performed.

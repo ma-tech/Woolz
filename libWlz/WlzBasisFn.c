@@ -675,6 +675,12 @@ double		WlzBasisFnMapDistFn2D(void *bFnP, int idx, WlzVertex pos)
     WlzGreyValueGetCon(gVWSp, 0.0, pos.d2.vtY, pos.d2.vtX);
     switch(gVWSp->gType)
     {
+      case WLZ_GREY_LONG:
+	dist = (((gVWSp->gVal[0]).lnv * (1.0 - px) * (1.0 - py)) +
+		((gVWSp->gVal[1]).lnv * px * (1.0 - py)) +
+		((gVWSp->gVal[2]).lnv * (1.0 - px) * py) +
+		((gVWSp->gVal[3]).lnv * px * py));
+	break;
       case WLZ_GREY_INT:
 	dist = (((gVWSp->gVal[0]).inv * (1.0 - px) * (1.0 - py)) +
 		((gVWSp->gVal[1]).inv * px * (1.0 - py)) +
@@ -705,6 +711,8 @@ double		WlzBasisFnMapDistFn2D(void *bFnP, int idx, WlzVertex pos)
 		((gVWSp->gVal[2]).dbv * (1.0 - px) * py) +
 		((gVWSp->gVal[3]).dbv * px * py));
 	break;
+      default:
+        break;
     }
   }
   return(dist);
@@ -902,8 +910,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
 				    double delta, WlzObject *cObj,
 				    WlzObject **dObj, WlzErrorNum *dstErr)
 {
-  int		idN,
-  		idX,
+  int		idX,
   		idY,
 		idX3,
 		idY3,
@@ -912,9 +919,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
 		tD1,
 		deltaRg,
 		deltaSq,
-		range,
-		thresh,
-		wMax;
+		range;
   double	*bMx = NULL,
   		*wMx = NULL;
   double	**aMx = NULL,
@@ -1097,8 +1102,6 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
 		idX,
   		idY,
 		nCoef;
-  double	thresh,
-  		wMax;
   double	*bMx = NULL,
   		*wMx = NULL;
   double	**aMx = NULL,
@@ -1240,8 +1243,6 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
 		idX,
   		idY,
 		nCoef;
-  double	thresh,
-  		wMax;
   double	*bMx = NULL,
   		*wMx = NULL;
   double	**aMx = NULL,
@@ -1378,8 +1379,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
 				double delta, WlzObject *cObj,
 				WlzObject **dObj, WlzErrorNum *dstErr)
 {
-  int		idN,
-  		idX,
+  int		idX,
   		idY,
 		idX3,
 		idY3,
@@ -1388,9 +1388,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
 		tD1,
 		deltaRg,
 		deltaSq,
-		range,
-		thresh,
-		wMax;
+		range;
   double	*bMx = NULL,
   		*wMx = NULL;
   double	**aMx = NULL,
@@ -1586,22 +1584,17 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
 				double delta, 
 				WlzErrorNum *dstErr)
 {
-  int		idN,
-  		idX,
+  int		idX,
   		idY,
-		idZ,
                 idX4,
 		idY4,
-                idZ4,
 		nSys;
   double	tD0,
 		tD1,
                 tD2,
 		deltaRg,
 		deltaSq,
-		range,
-		thresh,
-		wMax;
+		range;
   double	*bMx = NULL,
   		*wMx = NULL;
   double	**aMx = NULL,
@@ -1815,17 +1808,14 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 				  WlzObject *cObj,
 				  WlzObject **dObj, WlzErrorNum *dstErr)
 {
-  int		idN,
-  		idX,
+  int		idX,
 		idY,
 		idX3,
 		idY3,
 		nSys;
   double	tD0,
 		tD1,
-		range,
-		thresh,
-		wMax;
+		range;
   double	*bMx = NULL,
   		*wMx = NULL;
   double	**aMx = NULL,
@@ -2125,8 +2115,7 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 				  double *alpha, double *param,
 				  WlzErrorNum *dstErr)
 {
-  int		idN,
-  		idX,
+  int		idX,
 		idY,
 		idX1,
 		idY1,
@@ -2134,7 +2123,6 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   double	tD0,
 		rad,
 		phi0,
-		thresh,
 		delta,
 		tau;
   double	*bMx = NULL;

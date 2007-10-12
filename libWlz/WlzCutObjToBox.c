@@ -166,6 +166,20 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 	    tI0 = cutSz.vtX * cutSz.vtY;
 	    switch(dstGreyType)
 	    {
+	      case WLZ_GREY_LONG:
+		if(valP)
+		{
+		  dstValP.lnp = (long *)valP;
+		}
+		else
+		{
+		  if((dstValP.lnp = (long *)AlcMalloc((unsigned long )tI0 *
+						     sizeof(long))) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		}
+		break;
 	      case WLZ_GREY_INT:
 		if(valP)
 		{
@@ -353,6 +367,9 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 	  }
 	}
         break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
     }
   }
   if(errNum != WLZ_ERR_NONE)
@@ -521,6 +538,20 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	    size3D = size2D * (cutBox.zMax - cutBox.zMin + 1);
 	    switch(dstGreyType)
 	    {
+	      case WLZ_GREY_LONG:
+		if(valP)
+		{
+		  dstValP.lnp = (long *)valP;
+		}
+		else
+		{
+		  if((dstValP.lnp = (long *)AlcMalloc((unsigned long )size3D *
+						     sizeof(long))) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		}
+		break;
 	      case WLZ_GREY_INT:
 		if(valP)
 		{
@@ -686,6 +717,9 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 		  ++dstPlaneIdx;
 		  switch(dstGreyType)
 		  {
+		    case WLZ_GREY_LONG:
+		      dstVal2DP.lnp += size2D;
+		      break;
 		    case WLZ_GREY_INT:
 		      dstVal2DP.inp += size2D;
 		      break;
@@ -703,6 +737,9 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 		      break;
 		    case WLZ_GREY_RGBA:
 		      dstVal2DP.rgbp += size2D;
+		      break;
+		    default:
+		      errNum = WLZ_ERR_GREY_TYPE;
 		      break;
 		  }
 		  WlzFreeObj(dstObj2D);
@@ -730,6 +767,9 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	    dstObj = WlzMakeEmpty(&errNum);
 	  }
 	}
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
     }
   }
@@ -784,6 +824,14 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
 
   switch(gType)
   {
+    case WLZ_GREY_LONG:
+      vec.lnp += vecOff;
+      while(count-- > 0)
+      {
+	noise = AlgRandNormal(mu, sigma);
+	*(vec.lnp)++ = WLZ_CLAMP(noise, INT_MIN, INT_MAX);
+      }
+      break;
     case WLZ_GREY_INT:
       vec.inp += vecOff;
       while(count-- > 0)
@@ -823,6 +871,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
 	noise = AlgRandNormal(mu, sigma);
 	*(vec.dbp)++ = noise;
       }
+      break;
     case WLZ_GREY_RGBA:
       vec.inp += vecOff;
       while(count-- > 0)
@@ -831,6 +880,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
 	*(vec.rgbp)++ = WLZ_CLAMP(noise, 0, 0xffffff) + 0xff000000;
       }
       break;
+    default:
       break;
   }
 }

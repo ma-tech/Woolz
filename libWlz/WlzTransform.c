@@ -61,32 +61,32 @@ WlzErrorNum	WlzFreeTransform(WlzTransform tr)
   {
     switch(tr.core->type)
     {
-      WLZ_TRANSFORM_EMPTY:
+      case WLZ_TRANSFORM_EMPTY:
         break;
-      WLZ_TRANSFORM_2D_AFFINE:  /* FALLTHROUGH */
-      WLZ_TRANSFORM_2D_REG:     /* FALLTHROUGH */
-      WLZ_TRANSFORM_2D_TRANS:   /* FALLTHROUGH */
-      WLZ_TRANSFORM_2D_NOSHEAR: /* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_AFFINE:  /* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_REG:     /* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_TRANS:   /* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_NOSHEAR:
+      case WLZ_TRANSFORM_2D_AFFINE:  /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_REG:     /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_TRANS:   /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_NOSHEAR: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_AFFINE:  /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_REG:     /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_TRANS:   /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_NOSHEAR:
 	errNum = WlzFreeAffineTransform(tr.affine);
         break;
-      WLZ_TRANSFORM_2D_BASISFN:  /* FALLTHROUGH */
-      WLZ_TRANSFORM_2D5_BASISFN: /* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_BASISFN:
+      case WLZ_TRANSFORM_2D_BASISFN:  /* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D5_BASISFN: /* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_BASISFN:
 	errNum = WlzBasisFnFreeTransform(tr.basis);
         break;
-      WLZ_TRANSFORM_2D_MESH:	/* FALLTHROUGH */
+      case WLZ_TRANSFORM_2D_MESH:	/* FALLTHROUGH */
 	errNum = WlzMeshFreeTransform(tr.mesh);
         break;
-      WLZ_TRANSFORM_2D_CMESH:	/* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_CMESH:
+      case WLZ_TRANSFORM_2D_CMESH:	/* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_CMESH:
 	errNum = WlzFreeCMeshTransform(tr.cMesh);
         break;
-      WLZ_TRANSFORM_2D5_MESH:	/* FALLTHROUGH */
-      WLZ_TRANSFORM_3D_MESH:
+      case WLZ_TRANSFORM_2D5_MESH:	/* FALLTHROUGH */
+      case WLZ_TRANSFORM_3D_MESH:
 	errNum = WLZ_ERR_UNIMPLEMENTED;
         break;
       default:

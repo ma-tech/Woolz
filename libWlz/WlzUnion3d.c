@@ -140,10 +140,10 @@ WlzObject *WlzUnion3d(int	n,
     domains = newpdom->domains;
     newvoxtab = NULL;
     if( uvt ){
-      if( newvoxtab = WlzMakeVoxelValueTb((*objs)->values.vox->type,
+      if((newvoxtab = WlzMakeVoxelValueTb((*objs)->values.vox->type,
 					  min_plane, max_plane,
 					  (*objs)->values.vox->bckgrnd,
-					  NULL, &errNum) ){
+					  NULL, &errNum)) != NULL){
 	values = newvoxtab->values;
       }
     }

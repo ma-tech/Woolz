@@ -87,7 +87,7 @@ WlzErrorNum WlzLabel3d(
   WlzPlaneDomain	*planedm;
   WlzDomain		*domains;
   WlzValues		*values;
-  int 			i, j, nplanes;
+  int 			i, nplanes;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* only need to check the planedomain type because object pointer
@@ -224,12 +224,12 @@ static WlzObject *find3Dobj(
 {
   /* local variables */
   WlzObject 		*new_3D, *temp_3D, *current_3D, *tobj;
-  WlzObject		*iobj, **objlist, *objn[2];
+  WlzObject		*objn[2];
   WlzPlaneDomain	*pdom;
   WlzVoxelValues	*voxtab;
   WlzDomain		domain;
   WlzValues		values;
-  int			i, j, nplanes;
+  int			i, nplanes;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* make a 3D object with one plane */

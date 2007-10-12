@@ -73,8 +73,8 @@ WlzPolygonDomain *WlzPolyReverse(
     errNum = WLZ_ERR_OBJECT_NULL;
   }
   else {
-    if( rtnPoly = WlzMakePolygonDomain(poly->type, poly->nvertices, NULL,
-				 poly->nvertices, 1, &errNum) ){
+    if((rtnPoly = WlzMakePolygonDomain(poly->type, poly->nvertices, NULL,
+				 poly->nvertices, 1, &errNum)) != NULL){
       switch( rtnPoly->type ){
       case WLZ_POLYGON_INT:
 	n = rtnPoly->nvertices;
@@ -121,6 +121,8 @@ WlzPolygonDomain *WlzPolyReverse(
 	}
 	break;
 
+      default:
+        break;
       }
     }
   }

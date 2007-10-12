@@ -79,7 +79,6 @@ WlzObject *WlzGreyTransfer(
   WlzObject	*obj1, *obj2;
   WlzValues	values;
   WlzPixelV	bckgrnd;
-  WlzObjectType	type;
   WlzGreyType	gtype=WLZ_GREY_UBYTE;
   WlzIntervalWSpace	iwsp1, iwsp2;
   WlzGreyWSpace		gwsp1, gwsp2;
@@ -105,8 +104,8 @@ WlzObject *WlzGreyTransfer(
       return WlzGreyTransfer3d(obj, srcObj, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzGreyTransfer(obj->values.obj, srcObj,
-				       &errNum) ){
+      if((values.obj = WlzGreyTransfer(obj->values.obj, srcObj,
+				       &errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -179,9 +178,13 @@ WlzObject *WlzGreyTransfer(
 	case WLZ_GREY_RGBA:
 	  size = sizeof(WlzUInt);
 	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	}
 
-	while( (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE ){
+	while((errNum == WLZ_ERR_NONE) &&
+	      (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE){
 	  (void) WlzNextGreyInterval(&iwsp2);
 	  memcpy((void *) gwsp1.u_grintptr.inp,
 		 (const void *) gwsp2.u_grintptr.inp,
@@ -225,7 +228,7 @@ static WlzObject *WlzGreyTransfer3d(
 {
   WlzObject	*rtnObj=NULL;
   WlzObject	*obj1, *obj2, *tmpObj;
-  WlzDomain	domain, *domains;
+  WlzDomain	*domains;
   WlzValues	values, *valuess;
   WlzPlaneDomain	*pdom;
   int		p;
@@ -290,7 +293,6 @@ static WlzObject *WlzGreyTransfer3d(
   if( errNum == WLZ_ERR_NONE ){
     WlzDomain	*objDoms;
     WlzValues	*objVals;
-    WlzGreyType	gtype=WLZ_GREY_UBYTE;
 
     /* attach a voxel table with empty values list */
     values.vox = WlzMakeVoxelValueTb(obj->values.vox->type,

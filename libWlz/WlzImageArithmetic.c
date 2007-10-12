@@ -1167,6 +1167,9 @@ WlzObject	*WlzImageArithmetic(WlzObject *obj0, WlzObject *obj1,
 		errNum = WlzImageArithmetic3D(obj0, obj1, obj2, op,
 					      overwrite);
 		break;
+	      default:
+	        errNum = WLZ_ERR_OBJECT_TYPE;
+		break;
 	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)

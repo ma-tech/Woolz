@@ -181,9 +181,9 @@ WlzObject *WlzErosion(
       if( kol1 > lastkl || line1 > lastln ){
 	return WlzMakeEmpty(dstErr);
       }
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 					    line1, lastln, kol1, lastkl,
-					    &errNum) ){
+					    &errNum)) != NULL){
 	return WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -529,14 +529,15 @@ static WlzObject *WlzErosion3d(
   /* create a new 3D object to hold the eroded domains
      use WlzStandardPlaneDomain to trim leading and trailing
      empty domains */
-  if( errNum == WLZ_ERR_NONE ){
-    if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+  if(errNum == WLZ_ERR_NONE){
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 				      obj->domain.p->plane1,
 				      obj->domain.p->lastpl,
 				      obj->domain.p->line1,
 				      obj->domain.p->lastln,
 				      obj->domain.p->kol1,
-				      obj->domain.p->lastkl, &errNum) ){
+				      obj->domain.p->lastkl,
+				      &errNum)) != NULL){
       for(p=0; p < 3; p++){
 	domain.p->voxel_size[p] = obj->domain.p->voxel_size[p];
       }
@@ -576,7 +577,8 @@ static WlzObject *WlzErosion3d(
 
       case WLZ_8_CONNECTED:
       case WLZ_4_CONNECTED:
-	if( dest_obj[1] = WlzErosion(start_obj[1], connectivity, NULL) ){
+	if((dest_obj[1] = WlzErosion(start_obj[1], connectivity,
+	                             NULL)) != NULL){
 	  if( dest_obj[1]->type == WLZ_EMPTY_OBJ ){
 	    new_obj->domain.p->domains[p].core = NULL;
 	  }
@@ -595,7 +597,7 @@ static WlzObject *WlzErosion3d(
 	dest_obj[0] = WlzAssignObject(start_obj[0], NULL);
 	dest_obj[1] = WlzErosion(start_obj[1], WLZ_4_CONNECTED, NULL);
 	dest_obj[2] = WlzAssignObject(start_obj[2], NULL);
-	if( tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL) ){
+	if((tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL)) != NULL){
 	  if( tmp_obj->type == WLZ_EMPTY_OBJ){
 	    new_obj->domain.p->domains[p].core = NULL;
 	  }
@@ -617,8 +619,8 @@ static WlzObject *WlzErosion3d(
 	dest_obj[0] = WlzErosion(start_obj[0], WLZ_4_CONNECTED, NULL);
 	dest_obj[1] = WlzErosion(start_obj[1], WLZ_8_CONNECTED, NULL);
 	dest_obj[2] = WlzErosion(start_obj[2], WLZ_4_CONNECTED, NULL);
-	if( tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL) ){
-	  if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	if((tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL)) != NULL){
+	  if(tmp_obj->type == WLZ_EMPTY_OBJ){
 	    new_obj->domain.p->domains[p].core = NULL;
 	  }
 	  else{
@@ -639,8 +641,8 @@ static WlzObject *WlzErosion3d(
 	dest_obj[0] = WlzErosion(start_obj[0], WLZ_8_CONNECTED, NULL);
 	dest_obj[1] = WlzErosion(start_obj[1], WLZ_8_CONNECTED, NULL);
 	dest_obj[2] = WlzErosion(start_obj[2], WLZ_8_CONNECTED, NULL);
-	if( tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL) ){
-	  if( tmp_obj->type == WLZ_EMPTY_OBJ){
+	if((tmp_obj = WlzIntersectN(3, dest_obj, 0, NULL)) != NULL){
+	  if(tmp_obj->type == WLZ_EMPTY_OBJ){
 	    new_obj->domain.p->domains[p].core = NULL;
 	  }
 	  else{
@@ -657,6 +659,9 @@ static WlzObject *WlzErosion3d(
 	WlzFreeObj( dest_obj[2] );
 	break;
 
+      default:
+        errNum = WLZ_ERR_CONNECTIVITY_TYPE;
+	break;
       }
     }
     WlzFreeObj( start_obj[0] );

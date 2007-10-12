@@ -99,8 +99,8 @@ WlzObject *WlzTransposeObj(
       switch( obj->domain.core->type ){
 
       case WLZ_INTERVALDOMAIN_INTVL:
-	if( bobj = WlzObjToBoundary(obj, 1, &errNum) ){
-	  if( domain.b = WlzTransposeBound(bobj->domain.b, &errNum) ){
+	if((bobj = WlzObjToBoundary(obj, 1, &errNum)) != NULL){
+	  if((domain.b = WlzTransposeBound(bobj->domain.b, &errNum)) != NULL){
 	    nobj = WlzBoundToObj(domain.b, WLZ_SIMPLE_FILL, &errNum);
 	    WlzFreeObj(bobj);
 	    WlzFreeBoundList(domain.b);
@@ -124,7 +124,7 @@ WlzObject *WlzTransposeObj(
       return WlzTranspose3DObj(obj, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( nobj = WlzTransposeObj(obj->values.obj, &errNum) ){
+      if((nobj = WlzTransposeObj(obj->values.obj, &errNum)) != NULL){
 	nvalues.obj = nobj;
 	return WlzMakeMain(obj->type, obj->domain, nvalues,
 			   NULL, obj, dstErr);
@@ -132,7 +132,8 @@ WlzObject *WlzTransposeObj(
       break;
 
     case WLZ_2D_POLYGON:
-      if( domain.poly = WlzTransposePolygon(obj->domain.poly, &errNum) ){
+      if((domain.poly = WlzTransposePolygon(obj->domain.poly,
+                                            &errNum)) != NULL){
 	values.core = NULL;
 	return WlzMakeMain(WLZ_2D_POLYGON, domain, values,
 			   NULL, NULL, dstErr);
@@ -140,7 +141,7 @@ WlzObject *WlzTransposeObj(
       break;
 
     case WLZ_BOUNDLIST:
-      if( domain.b = WlzTransposeBound(obj->domain.b, &errNum) ){
+      if((domain.b = WlzTransposeBound(obj->domain.b, &errNum)) != NULL){
 	values.core = NULL;
 	return WlzMakeMain(WLZ_BOUNDLIST, domain, values,
 			   NULL, NULL, dstErr);
@@ -197,8 +198,9 @@ WlzObject *WlzTransposeObj(
 
   /* now attach a grey-table */
   if((errNum == WLZ_ERR_NONE) && obj->values.core ){
-    if( values.v = WlzNewValueTb(nobj, obj->values.v->type,
-				 WlzGetBackground(obj, NULL), &errNum) ){
+    if((values.v = WlzNewValueTb(nobj, obj->values.v->type,
+				 WlzGetBackground(obj,
+				                  NULL), &errNum)) != NULL){
       nobj->values = WlzAssignValues(values, NULL);
 
   /* transfer values */
@@ -225,6 +227,8 @@ WlzObject *WlzTransposeObj(
 	    break;
 	  case WLZ_GREY_RGBA:
 	    *gwsp.u_grintptr.rgbp++ = (*(gVWSp->gVal)).rgbv;
+	    break;
+	  default:
 	    break;
 	  }
 	}
@@ -273,11 +277,10 @@ static WlzBoundList *WlzTransposeBound(
   }
   else {
     /* make a new polygon with transposed vertices */
-    if( poly = WlzTransposePolygon(blist->poly, &errNum) ){
+    if((poly = WlzTransposePolygon(blist->poly, &errNum)) != NULL){
       /* make new boundlist structure */
-      if( (newblist = WlzMakeBoundList(blist->type,
-				       blist->wrap, poly, &errNum))
-	 == NULL ){
+      if((newblist = WlzMakeBoundList(blist->type,
+				      blist->wrap, poly, &errNum)) == NULL){
 	WlzFreePolyDmn( poly );
       }
     }
@@ -373,6 +376,9 @@ static WlzPolygonDomain *WlzTransposePolygon(
 	dvtx->vtY = dbx;
       }
       break;
+    default:
+      errNum = WLZ_ERR_POLYGON_TYPE;
+      break;
     }
   }
 
@@ -453,6 +459,8 @@ static WlzObject *WlzTransposeRectObj(
 	size = sizeof(WlzUInt);
 	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA, NULL);
 	break;
+      default:
+        break;
       }
 
       /* allocate space */
@@ -523,14 +531,14 @@ static WlzObject *WlzTranspose3DObj(
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else {
-    if( domain.p = WlzMakePlaneDomain(obj->domain.p->type,
+    if((domain.p = WlzMakePlaneDomain(obj->domain.p->type,
 				      obj->domain.p->plane1,
 				      obj->domain.p->lastpl,
 				      obj->domain.p->kol1,
 				      obj->domain.p->lastkl,
 				      obj->domain.p->line1,
 				      obj->domain.p->lastln,
-				      &errNum) ){
+				      &errNum)) != NULL){
       domain.p->voxel_size[0] = obj->domain.p->voxel_size[0];
       domain.p->voxel_size[1] = obj->domain.p->voxel_size[1];
       domain.p->voxel_size[2] = obj->domain.p->voxel_size[2];

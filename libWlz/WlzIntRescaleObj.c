@@ -205,8 +205,8 @@ static WlzObject *WlzIntRescaleObj2D(
   }
 
   /* create a new object */
-  if( domain.i = WlzMakeIntervalDomain(obj->domain.i->type,
-				       l1, ll, k1, kl, &errNum) ){
+  if((domain.i = WlzMakeIntervalDomain(obj->domain.i->type,
+				       l1, ll, k1, kl, &errNum)) != NULL){
     values.core = NULL;
     rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, 
 			 NULL, NULL, NULL);
@@ -270,8 +270,8 @@ static WlzObject *WlzIntRescaleObj2D(
     WlzGreyType		gtype;
 
     backgrnd = WlzGetBackground(obj, NULL);
-    if( values.v = WlzNewValueTb(rtnObj, obj->values.v->type,
-				 backgrnd, &errNum) ){
+    if((values.v = WlzNewValueTb(rtnObj, obj->values.v->type,
+				 backgrnd, &errNum)) != NULL){
 
       rtnObj->values = WlzAssignValues(values, NULL);
       
@@ -279,7 +279,8 @@ static WlzObject *WlzIntRescaleObj2D(
       WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
       gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
       gtype = WlzGreyTableTypeToGreyType(obj->values.v->type, NULL);
-      while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE )
+      while((errNum == WLZ_ERR_NONE) &&
+            (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)
       {
 	int k;
 	int lp = expand ? iwsp.linpos/scale : iwsp.linpos*scale;
@@ -309,6 +310,9 @@ static WlzObject *WlzIntRescaleObj2D(
 	    break;
 	  case WLZ_GREY_RGBA:
 	    gwsp.u_grintptr.rgbp[k] = (*(gVWSp->gVal)).rgbv;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;
 	  }
 	}

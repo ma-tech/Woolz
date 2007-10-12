@@ -102,7 +102,8 @@ WlzObject *WlzGauss2(
 	   result should be a vector value */
 	WlzCompoundArray *cobj;
 
-	if( cobj = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB, &errNum) ){
+	if((cobj = WlzRGBAToCompound(obj, WLZ_RGBA_SPACE_RGB,
+	                             &errNum)) != NULL){
 	  /* need to convert each to short for gradient calc */
 	  for(i=0; i < 3; i++){
 	    WlzObject *tmpObj;
@@ -326,7 +327,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }
@@ -359,7 +363,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }   
@@ -392,7 +399,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }      
@@ -427,7 +437,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }
@@ -460,7 +473,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }   
@@ -493,7 +509,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }      
@@ -528,7 +547,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }
@@ -561,7 +583,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }   
@@ -594,7 +619,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }      
@@ -629,7 +657,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }
@@ -662,7 +693,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }   
@@ -695,7 +729,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }      
@@ -730,7 +767,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }
@@ -763,7 +803,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }   
@@ -796,7 +839,10 @@ WlzErrorNum Wlz1DConv(
       case WLZ_GREY_RGBA:
 	red = WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }      
@@ -842,7 +888,10 @@ WlzErrorNum Wlz1DConv(
 	green = WLZ_CLAMP(green/factor, 0, 255);
 	blue = WLZ_CLAMP(blue/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, green, blue, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }
@@ -883,7 +932,10 @@ WlzErrorNum Wlz1DConv(
 	green = WLZ_CLAMP(green/factor, 0, 255);
 	blue = WLZ_CLAMP(blue/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, green, blue, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }   
@@ -927,12 +979,18 @@ WlzErrorNum Wlz1DConv(
 	green = WLZ_CLAMP(green/factor, 0, 255);
 	blue = WLZ_CLAMP(blue/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, green, blue, 255);
-	*outbuf.rgbp++;
+	outbuf.rgbp++;
+	break;
+      default:
+        return WLZ_ERR_GREY_TYPE;
 	break;
       }
     }      
     break;
 
+  default:
+    return WLZ_ERR_GREY_TYPE;
+    break;
   }
 
   return WLZ_ERR_NONE;

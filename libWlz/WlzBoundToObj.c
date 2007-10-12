@@ -87,14 +87,14 @@ WlzObject *WlzBoundaryToObj(
       else {
 	switch( boundary->domain.p->type ){
 	case WLZ_PLANEDOMAIN_BOUNDLIST:
-	  if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	  if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					    boundary->domain.p->plane1,
 					    boundary->domain.p->lastpl,
 					    boundary->domain.p->line1,
 					    boundary->domain.p->lastln,
 					    boundary->domain.p->kol1,
 					    boundary->domain.p->lastkl,
-					    &errNum) ){
+					    &errNum)) != NULL){
 	    domain.p->voxel_size[0] = boundary->domain.p->voxel_size[0];
 	    domain.p->voxel_size[1] = boundary->domain.p->voxel_size[1];
 	    domain.p->voxel_size[2] = boundary->domain.p->voxel_size[2];
@@ -103,8 +103,8 @@ WlzObject *WlzBoundaryToObj(
 	    for(p=domain.p->plane1; p <= domain.p->lastpl;
 		p++, domains++, bnddmns++){
 	      if( (*bnddmns).poly ){
-		if( tmpObj = WlzBoundToObj((*bnddmns).b, fillMode,
-					  &errNum) ){
+		if((tmpObj = WlzBoundToObj((*bnddmns).b, fillMode,
+					   &errNum)) != NULL){
 		  *domains = WlzAssignDomain(tmpObj->domain, NULL);
 		  WlzFreeObj(tmpObj);
 		}
@@ -139,8 +139,8 @@ WlzObject *WlzBoundaryToObj(
       return WlzBoundToObj(boundary->domain.b, fillMode, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzBoundaryToObj(boundary->values.obj, fillMode,
-				       &errNum) ){
+      if((values.obj = WlzBoundaryToObj(boundary->values.obj, fillMode,
+				       &errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, boundary->domain, values,
 			   NULL, NULL, dstErr);
       }

@@ -559,6 +559,9 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 		break;
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_UNIMPLEMENTED;
+	      break;
 	    }
 
 	    /* now copy the value */
@@ -931,6 +934,9 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 		break;
 	      }
 	      break;
+	    default:
+	      errNum = WLZ_ERR_UNIMPLEMENTED;
+	      break;
 	    }
 
 	    /* now copy the value */
@@ -1044,6 +1050,8 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       uval = WLZ_CLAMP(*(pixptr.p.inp), 0, 255);
       GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
+    default:
+      break;
     }
   case WLZ_GREY_SHORT:
     switch( grey_type ){
@@ -1066,6 +1074,8 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       uval = WLZ_CLAMP(*(pixptr.p.shp), 0, 255);
       GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
+    default:
+      break;
     }
   case WLZ_GREY_UBYTE:
     switch( grey_type ){
@@ -1088,6 +1098,8 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       uval = *(pixptr.p.ubp);
       GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
+    default:
+      break;
     }
   case WLZ_GREY_FLOAT:
     switch( grey_type ){
@@ -1110,6 +1122,8 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       uval = WLZ_CLAMP(*(pixptr.p.flp), 0, 255);
       GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
+    default:
+      break;
     }
   case WLZ_GREY_DOUBLE:
     switch( grey_type ){
@@ -1132,6 +1146,8 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       uval = WLZ_CLAMP(*(pixptr.p.dbp), 0, 255);
       GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
+    default:
+      break;
     }
   case WLZ_GREY_RGBA:
     uval = WLZ_RGBA_MODULUS(*(pixptr.p.rgbp));
@@ -1154,7 +1170,11 @@ static WlzPixelP WlzGetSectionConvertGreyType(
     case WLZ_GREY_RGBA:
       GetSectionStaticGreyVal.rgbv = *(pixptr.p.rgbp);
       return pix;
+    default:
+      break;
     }
+  default:
+    break;
   }
   return(pix);
 }

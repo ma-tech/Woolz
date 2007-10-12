@@ -99,7 +99,7 @@ WlzErrorNum Wlz3DSectionSegmentObject(
       break;
 
     case WLZ_EMPTY_OBJ:
-      if( objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * 2) ){
+      if((objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * 2)) != NULL){
 	objs[0] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
 	objs[1] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
 	*rtnObjs = objs;
@@ -129,7 +129,7 @@ WlzErrorNum Wlz3DSectionSegmentObject(
   }
 
   /* allocate space and set number of objects */
-  if( objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * 2) ){
+  if((objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * 2)) != NULL){
     *rtnObjs = objs;
     *numObjs = 2;
   }
@@ -140,12 +140,12 @@ WlzErrorNum Wlz3DSectionSegmentObject(
   /* create a new 3d objects for each side */
   if( errNum == WLZ_ERR_NONE ){
     values.core = NULL;
-    if(domain.p = 
-       WlzMakePlaneDomain(obj->domain.p->type,
-			  obj->domain.p->plane1, obj->domain.p->lastpl,
-			  obj->domain.p->line1, obj->domain.p->lastln,
-			  obj->domain.p->kol1, obj->domain.p->lastkl,
-			  &errNum) ){
+    if((domain.p = 
+        WlzMakePlaneDomain(obj->domain.p->type,
+			   obj->domain.p->plane1, obj->domain.p->lastpl,
+			   obj->domain.p->line1, obj->domain.p->lastln,
+			   obj->domain.p->kol1, obj->domain.p->lastkl,
+			   &errNum)) != NULL){
       if( (objs[0] = WlzMakeMain(obj->type, domain, values,
 				 NULL, NULL, &errNum)) == NULL ){
 	WlzFreePlaneDomain(domain.p);
@@ -158,12 +158,12 @@ WlzErrorNum Wlz3DSectionSegmentObject(
   }
   if( errNum == WLZ_ERR_NONE ){
     values.core = NULL;
-    if(domain.p = 
-       WlzMakePlaneDomain(obj->domain.p->type,
-			  obj->domain.p->plane1, obj->domain.p->lastpl,
-			  obj->domain.p->line1, obj->domain.p->lastln,
-			  obj->domain.p->kol1, obj->domain.p->lastkl,
-			  &errNum) ){
+    if((domain.p = 
+        WlzMakePlaneDomain(obj->domain.p->type,
+			   obj->domain.p->plane1, obj->domain.p->lastpl,
+			   obj->domain.p->line1, obj->domain.p->lastln,
+			   obj->domain.p->kol1, obj->domain.p->lastkl,
+			   &errNum)) != NULL){
       if( (objs[1] = WlzMakeMain(obj->type, domain, values,
 				 NULL, NULL, &errNum)) == NULL ){
 	WlzFreePlaneDomain(domain.p);

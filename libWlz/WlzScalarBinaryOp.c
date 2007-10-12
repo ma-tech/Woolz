@@ -102,6 +102,8 @@ static WlzErrorNum WlzBufIntIntScalarBinaryOp(
     case WLZ_BO_XOR:
       while( buflen-- ){*outPP.p.inp++ = *inbuf1++ ^ val;}
       break;
+    default:
+      break;
     }
     break;
   case WLZ_GREY_SHORT:
@@ -147,6 +149,8 @@ static WlzErrorNum WlzBufIntIntScalarBinaryOp(
       break;
     case WLZ_BO_XOR:
       while( buflen-- ){*outPP.p.shp++ = *inbuf1++ ^ val;}
+      break;
+    default:
       break;
     }
     break;
@@ -194,6 +198,8 @@ static WlzErrorNum WlzBufIntIntScalarBinaryOp(
     case WLZ_BO_XOR:
       while( buflen-- ){*outPP.p.ubp++ = *inbuf1++ ^ val;}
       break;
+    default:
+      break;
     }
     break;
   case WLZ_GREY_FLOAT:
@@ -239,6 +245,8 @@ static WlzErrorNum WlzBufIntIntScalarBinaryOp(
       break;
     case WLZ_BO_XOR:
       while( buflen-- ){*outPP.p.flp++ = *inbuf1++ ^ val;}
+      break;
+    default:
       break;
     }
     break;
@@ -286,8 +294,12 @@ static WlzErrorNum WlzBufIntIntScalarBinaryOp(
     case WLZ_BO_XOR:
       while( buflen-- ){*outPP.p.dbp++ = *inbuf1++ ^ val;}
       break;
+    default:
+      break;
     }
     break;
+  default:
+    return WLZ_ERR_GREY_TYPE;
   }
 
   return WLZ_ERR_NONE;
@@ -335,10 +347,11 @@ static WlzErrorNum WlzBufIntDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.inp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -376,10 +389,11 @@ static WlzErrorNum WlzBufIntDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.shp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -417,10 +431,11 @@ static WlzErrorNum WlzBufIntDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.ubp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -458,10 +473,11 @@ static WlzErrorNum WlzBufIntDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.flp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -499,13 +515,16 @@ static WlzErrorNum WlzBufIntDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.dbp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
+  default:
+    return WLZ_ERR_GREY_TYPE;
   }
 
   return WLZ_ERR_NONE;
@@ -553,10 +572,11 @@ static WlzErrorNum WlzBufDblIntScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.inp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -594,10 +614,11 @@ static WlzErrorNum WlzBufDblIntScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.shp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -635,10 +656,11 @@ static WlzErrorNum WlzBufDblIntScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.ubp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -676,10 +698,11 @@ static WlzErrorNum WlzBufDblIntScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.flp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -717,13 +740,16 @@ static WlzErrorNum WlzBufDblIntScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.dbp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
+  default:
+    return WLZ_ERR_GREY_TYPE;
   }
 
   return WLZ_ERR_NONE;
@@ -771,10 +797,11 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.inp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -812,10 +839,11 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.shp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -853,10 +881,11 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.ubp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -894,10 +923,11 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.flp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
@@ -935,13 +965,16 @@ static WlzErrorNum WlzBufDblDblScalarBinaryOp(
     case WLZ_BO_LE:
       while( buflen-- ){*outPP.p.dbp++ = *inbuf1++ <= val;}
       break;
-    case WLZ_BO_MODULUS:
-    case WLZ_BO_AND:
-    case WLZ_BO_OR:
-    case WLZ_BO_XOR:
+    case WLZ_BO_MODULUS: /* FALLTHROUGH */
+    case WLZ_BO_AND: /* FALLTHROUGH */
+    case WLZ_BO_OR: /* FALLTHROUGH */
+    case WLZ_BO_XOR: /* FALLTHROUGH */
+    default:
       return WLZ_ERR_BINARY_OPERATOR_TYPE;
     }
     break;
+  default:
+    return WLZ_ERR_GREY_TYPE;
   }
 
   return WLZ_ERR_NONE;
@@ -1050,6 +1083,9 @@ WlzErrorNum WlzScalarBinaryOp(
     case WLZ_EMPTY_OBJ:
       break;
 
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
   }
 
@@ -1091,6 +1127,8 @@ WlzErrorNum WlzScalarBinaryOp(
 				(iwsp1.intdmn->lastkl-iwsp1.intdmn->kol1+1));
       o1PP.p.inp = o1Buf;
       break;
+    default:
+      break;
     }
 
     switch( pval.type ){
@@ -1114,6 +1152,8 @@ WlzErrorNum WlzScalarBinaryOp(
       dval = (double) pval.v.flv;
       pval.v.inv = dval;
       pval.type = WLZ_GREY_DOUBLE;
+      break;
+    default:
       break;
     }
 
@@ -1150,6 +1190,8 @@ WlzErrorNum WlzScalarBinaryOp(
 	o1PP.p.dbp = gwsp1.u_grintptr.dbp;
 	break;
 
+      default:
+	break;
       }
 
       switch(  gwsp3.pixeltype ){
@@ -1173,6 +1215,8 @@ WlzErrorNum WlzScalarBinaryOp(
 	o3PP.p.dbp = gwsp3.u_grintptr.dbp;
 	break;
 
+      default:
+	break;
       }
 
       /* apply binary operation */
@@ -1187,6 +1231,8 @@ WlzErrorNum WlzScalarBinaryOp(
 	  errNum = WlzBufIntDblScalarBinaryOp(o1PP.p.inp, pval.v.dbv,
 						o3PP, iwsp1.colrmn, op);
 	  break;
+	default:
+	  break;
 	}
 	break;
       case WLZ_GREY_DOUBLE:
@@ -1199,7 +1245,11 @@ WlzErrorNum WlzScalarBinaryOp(
 	  errNum = WlzBufDblDblScalarBinaryOp(o1PP.p.dbp, pval.v.dbv,
 						o3PP, iwsp1.colrmn, op);
 	  break;
+	default:
+	  break;
 	}
+	break;
+      default:
 	break;
       }
 
@@ -1282,10 +1332,10 @@ static WlzErrorNum WlzScalarBinaryOp3d(
       continue;
     }
 
-    if( temp1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values1,
-			    NULL, NULL, &errNum) ){
-      if(temp3 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values3,
-			     NULL, NULL, &errNum) ){
+    if((temp1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values1,
+			    NULL, NULL, &errNum)) != NULL){
+      if((temp3 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values3,
+			     NULL, NULL, &errNum)) != NULL){
 	errNum = WlzScalarBinaryOp(temp1, pval, temp3, op);
 	WlzFreeObj( temp3 );
       }

@@ -75,8 +75,8 @@ WlzObject *WlzObjToConvexHull(
   /* the convex hull is a polygon domain with values which are
      a set of chords with pre-calculated parameters which can be used
      by other procedures */
-  if( cvh = WlzObjToConvexPolygon(obj, &errNum) ){
-    if( values.c = WlzMakeConvexHullValues(cvh, obj, &errNum) ){
+  if((cvh = WlzObjToConvexPolygon(obj, &errNum)) != NULL){
+    if((values.c = WlzMakeConvexHullValues(cvh, obj, &errNum)) != NULL){
       /* assign values and reset object type which is now
 	 WLZ_CONV_HULL rather than WLZ_2D_POLYGON */
       cvh->values = WlzAssignValues(values, NULL);
@@ -302,14 +302,14 @@ static WlzObject *WlzObjToConvexPolygon3d(
 
   /* the object and domain have been checked therefore can create the
      new straight away and fill each plane appropriately */
-  if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_POLYGON,
+  if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_POLYGON,
 				    obj->domain.p->plane1,
 				    obj->domain.p->lastpl,
 				    obj->domain.p->line1,
 				    obj->domain.p->lastln,
 				    obj->domain.p->kol1,
 				    obj->domain.p->lastkl,
-				    &errNum) ){
+				    &errNum)) != NULL){
     domain.p->voxel_size[0] = obj->domain.p->voxel_size[0];
     domain.p->voxel_size[1] = obj->domain.p->voxel_size[1];
     domain.p->voxel_size[2] = obj->domain.p->voxel_size[2];
@@ -327,7 +327,7 @@ static WlzObject *WlzObjToConvexPolygon3d(
       if( (*domains).core ){
 	obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, values,
 			   NULL, NULL, NULL);
-	if( obj2 = WlzObjToConvexPolygon(obj1, &errNum) ){
+	if((obj2 = WlzObjToConvexPolygon(obj1, &errNum)) != NULL){
 	  *new_domains = WlzAssignDomain(obj2->domain, NULL);
 	  WlzFreeObj(obj2);
 	}
@@ -382,9 +382,9 @@ static WlzConvHullValues *WlzMakeConvexHullValues(
   /*
    * allocate space
    */
-  if( cdom = (WlzConvHullValues *)
-     AlcCalloc(1, sizeof(WlzConvHullValues) +
-	       (cvhpdom->nvertices-1) * sizeof(WlzChord)) ){
+  if((cdom = (WlzConvHullValues *)
+             AlcCalloc(1, sizeof(WlzConvHullValues) +
+	               (cvhpdom->nvertices-1) * sizeof(WlzChord))) != NULL){
     cdom->ch = (WlzChord *)(cdom + 1);
 
     cdom->type = WLZ_CONVHULL_VALUES;
@@ -450,10 +450,10 @@ static WlzConvHullValues *WlzMakeConvexHullValues3d(
   bckgrnd.v.ubv = 0;
 
   /* make a voxeltable and calculate the convex hull values for each plane */
-  if( rtnvalues.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_CONV_HULL,
+  if((rtnvalues.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_CONV_HULL,
 					  cvh->domain.p->plane1,
 					  cvh->domain.p->lastpl,
-					  bckgrnd, NULL, &errNum) ){
+					  bckgrnd, NULL, &errNum)) != NULL){
     domains1 = cvh->domain.p->domains;
     domains2 = obj->domain.p->domains;
     valuess = rtnvalues.vox->values;
@@ -465,7 +465,7 @@ static WlzConvHullValues *WlzMakeConvexHullValues3d(
 			   NULL, NULL, NULL);
 	obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains2, values,
 			   NULL, NULL, NULL);
-	if( values.c = WlzMakeConvexHullValues(obj1, obj2, &errNum) ){
+	if((values.c = WlzMakeConvexHullValues(obj1, obj2, &errNum)) != NULL){
 	  *valuess = WlzAssignValues(values, NULL);
 	}
 	else {

@@ -1293,6 +1293,9 @@ WlzHistogramDomain *WlzMakeHistogramDomain(WlzObjectType type, int maxBins,
 	  }
 	}
 	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1605,8 +1608,9 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
       }
 
       if( errNum == WLZ_ERR_NONE ){
-	if( v.v = WlzMakeValueTb(type, idom.i->line1, idom.i->lastln,
-				 idom.i->kol1, backgrnd, obj, &errNum) ){
+	if((v.v = WlzMakeValueTb(type, idom.i->line1, idom.i->lastln,
+				 idom.i->kol1, backgrnd, obj,
+				 &errNum)) != NULL){
 	  if( (g.inp = (int *) AlcMalloc(table_size)) == NULL ){
 	    WlzFreeValueTb(v.v);
 	    errNum = WLZ_ERR_MEM_ALLOC;
@@ -1653,6 +1657,9 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	      g.rgbp += iwsp.rgtpos - k1 +1;
 	      break;
 
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
 	    }
 	  }
 	}
@@ -1673,7 +1680,8 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
       if( (v.r = WlzMakeRectValueTb(type, idom.i->line1, idom.i->lastln,
 				    idom.i->kol1,
 				    idom.i->lastkl - idom.i->kol1 + 1,
-				    backgrnd, NULL, &errNum)) == NULL ){
+				    backgrnd, NULL,
+				    &errNum)) == NULL ){
 	break;
       }
 
@@ -1715,6 +1723,9 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	                         (v.r->lastln - v.r->line1 + 1) * v.r->width);
 	break;
 
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
       }
     
       if( v.r->values.ubp == NULL ){

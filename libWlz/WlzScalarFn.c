@@ -487,6 +487,8 @@ static void	WlzScalarFnItvMod(WlzGreyP gValP, WlzGreyType gType, int len)
     case WLZ_GREY_RGBA:
       /* Can't be -ve. */
       break;
+    default:
+      break;
   }
 }
 

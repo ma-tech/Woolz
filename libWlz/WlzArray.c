@@ -394,8 +394,8 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
 	errNum = WlzToArrayGrey2D(dstP,  srcObj, size, origin,
 				  noiseFlag, dstGreyType);
 	break;
-      deafult:
-	WLZ_ERR_GREY_TYPE;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
 	break;
     }
   }
@@ -613,6 +613,9 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
 		*(valPP + idY) = gValP.rgbp;
 		gValP.rgbp += size.vtX;
 	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	  }
 	}
@@ -925,8 +928,8 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
 	errNum = WlzToArrayGrey3D(dstP,  srcObj, size, origin,
 				  noiseFlag, dstGreyType);
 	break;
-      deafult:
-	WLZ_ERR_GREY_TYPE;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
 	break;
     }
   }
@@ -1190,6 +1193,9 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
 	      valPP += size.vtY;
 	    }
 	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
 	}
 	*dstP = valPPP;
       }
@@ -1292,6 +1298,8 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 	  break;
 	case WLZ_GREY_RGBA:
 	  WlzValueClampDoubleToRGBA(bufP, rectSize.vtX);
+	  break;
+        default:
 	  break;
       }
     }
@@ -1497,8 +1505,8 @@ WlzObject	*WlzFromArray2D(void **arrayP,
 				    clampFlag, noCopyFlag,
 				    &errNum);
 	break;
-      deafult:
-	WLZ_ERR_GREY_TYPE;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
 	break;
     }
   }
@@ -2366,6 +2374,8 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	  break;
 	case WLZ_GREY_RGBA:
 	  tIP0 = (int *)(dstValP.rgbp + planeOffset);
+	  break;
+        default:
 	  break;
       }
       tDom0.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,

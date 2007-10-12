@@ -1715,7 +1715,6 @@ int             WlzGeomItrSpiral3I(int step, int *pX, int *pY, int *pZ)
 		stepInPn1,
 		stepInRing,
 		stepInShell;
-  double	tD0;
   const int	lutX[27] = { 0,
                              0,  1,  1,  0, -1, -1, -1,  0,  1,
 			         1,  1,  0, -1, -1, -1,  0,  1,

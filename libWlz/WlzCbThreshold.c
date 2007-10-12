@@ -94,8 +94,8 @@ WlzObject *WlzCbThreshold(
       return WlzCbThreshold3d(obj, threshCb, clientData, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( nobj = WlzCbThreshold(obj->values.obj, threshCb, clientData,
-				&errNum) ){
+      if((nobj = WlzCbThreshold(obj->values.obj, threshCb, clientData,
+				&errNum)) != NULL){
 	values.obj = nobj;
 	return WlzMakeMain(obj->type, obj->domain, values,
 			   NULL, obj, dstErr);
@@ -169,6 +169,8 @@ WlzObject *WlzCbThreshold(
 	case WLZ_GREY_RGBA:
 	  g.rgbp++;
 	  break;
+	default:
+	  break;
 	}
       }
 
@@ -188,8 +190,8 @@ WlzObject *WlzCbThreshold(
   /* domain structure */
   if( errNum == WLZ_ERR_NONE ){
     if( nints > 0 ){
-      if( idom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-				       nl1, nll, nk1, nkl, &errNum) ){
+      if((idom = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+				       nl1, nll, nk1, nkl, &errNum)) != NULL){
 	if( (itvl = (WlzInterval *)
 	     AlcMalloc(nints * sizeof(WlzInterval))) == NULL ){
 	  errNum = WLZ_ERR_MEM_ALLOC;
@@ -255,6 +257,8 @@ WlzObject *WlzCbThreshold(
 	      break;
 	    case WLZ_GREY_RGBA:
 	      g.rgbp++;
+	      break;
+	    default:
 	      break;
 	    }
 	  }
@@ -383,8 +387,8 @@ static WlzObject *WlzCbThreshold3d(
       (*ndomains).core = NULL;
       (*nvalues).core = NULL;
     }
-    else if( temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				NULL, NULL, &errNum) ){
+    else if((temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				NULL, NULL, &errNum)) != NULL){
       
       if( (temp->domain.i != NULL) && 
 	 (obj1 = WlzCbThreshold(temp, threshCb, clientData, &errNum)) ){
@@ -419,8 +423,8 @@ static WlzObject *WlzCbThreshold3d(
   if( errNum == WLZ_ERR_NONE ){
     domain.p = npdom;
     vals.vox = nvoxtab;
-    if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, vals,
-			   NULL, obj, &errNum) ){
+    if((obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, vals,
+			   NULL, obj, &errNum)) != NULL){
       /*	nvoxtab->original = obj1; */
       nvoxtab->original_table = WlzAssignValues(obj->values, NULL);
     }

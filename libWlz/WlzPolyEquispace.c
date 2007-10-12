@@ -125,6 +125,8 @@ double WlzPolyLength(
 	length += sqrt(dx*dx + dy*dy);
       }
       break;
+    default:
+      break;
     }
   }
 
@@ -321,6 +323,8 @@ WlzPolygonDomain  *WlzPolyEquispace(
 	eVtxs[n] = dVtxs[i];
       }
       rtnPoly->nvertices = n;
+      break;
+    default:
       break;
     }
   }

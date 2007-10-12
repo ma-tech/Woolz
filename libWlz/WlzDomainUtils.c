@@ -453,9 +453,7 @@ WlzErrorNum WlzStandardPlaneDomain(WlzPlaneDomain 	*pdom,
 {
   /* local variables */
   WlzObject 	tempobj;
-  WlzDomain 	*domains,
-  		*tDom;
-  WlzValues	*tVal;
+  WlzDomain 	*domains;
   int	 	line1, lastln, kol1, lastkl;
   int 		p, nplanes, np, firstplane, lastplane, bndFnd;
 

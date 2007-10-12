@@ -85,7 +85,7 @@ WlzObject *WlzGetProjectionFromObject(
   double		*s_to_x=NULL;
   double		*s_to_y=NULL;
   double		*s_to_z=NULL;
-  int			k, xp, yp, p, s, sp;
+  int			k, xp, yp, s, sp;
   int			length, size, occupiedFlg;
   WlzErrorNum 	errNum=WLZ_ERR_NONE;
 
@@ -109,7 +109,7 @@ WlzObject *WlzGetProjectionFromObject(
 
   /* create new view transform */
   if( errNum == WLZ_ERR_NONE ){
-    if( viewStr1 = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum) ){
+    if((viewStr1 = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL){
       /* need to worry about fixed line mode here sometime */
       viewStr1->fixed = viewStr->fixed;
       viewStr1->theta = viewStr->theta;
@@ -190,6 +190,9 @@ WlzObject *WlzGetProjectionFromObject(
     case WLZ_GREY_RGBA:
       size = sizeof(int)*length;
       break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
     }
     if( (pixptr.p.inp = (int *) AlcMalloc(size)) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -202,24 +205,24 @@ WlzObject *WlzGetProjectionFromObject(
 
   /* create rectangular projection image */
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 				     WLZ_NINT(viewStr1->minvals.vtY),
 				     WLZ_NINT(viewStr1->maxvals.vtY),
 				     WLZ_NINT(viewStr1->minvals.vtX),
 				     WLZ_NINT(viewStr1->maxvals.vtX),
-					 &errNum) ){
+					 &errNum)) != NULL){
       values.core = NULL;
-      if( rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL, NULL,
-			       &errNum) ){
+      if((rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL, NULL,
+			       &errNum)) != NULL){
 	/* note the grey-values required are determined by the integration
 	   function. Here we use WlzUByte and reset later if needed */
 	dstGType = WLZ_GREY_UBYTE;
 	pixval.type = WLZ_GREY_UBYTE;
 	pixval.v.ubv = (WlzUByte )0;
-	if( values.v = WlzNewValueTb(rtnObj,
+	if((values.v = WlzNewValueTb(rtnObj,
 				     WlzGreyTableType(WLZ_GREY_TAB_RECT,
 						      dstGType, NULL),
-				     pixval, &errNum) ){
+				     pixval, &errNum)) != NULL){
 	  rtnObj->values = WlzAssignValues(values, &errNum);
 	}
 	else {
@@ -303,6 +306,9 @@ WlzObject *WlzGetProjectionFromObject(
 	    case WLZ_GREY_RGBA:
 	      pixptr.p.rgbp[sp] = gVWSp->gVal[0].rgbv;
 	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
 	    }
 	  }
 	  /* call integration function and seet value */
@@ -321,7 +327,8 @@ WlzObject *WlzGetProjectionFromObject(
     if( intFunc == NULL ){
       pixval.v.ubv = 1;
       rtnObj = WlzAssignObject(rtnObj, NULL);
-      if( obj1 = WlzThreshold(rtnObj, pixval, WLZ_THRESH_HIGH, &errNum) ){
+      if((obj1 = WlzThreshold(rtnObj, pixval, WLZ_THRESH_HIGH,
+                              &errNum)) != NULL){
 	WlzFreeObj(rtnObj);
 	values.core = NULL;
 	rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, obj1->domain, values, NULL, NULL,

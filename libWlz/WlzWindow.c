@@ -186,6 +186,8 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	      tD0 *= tD0;
 	      tD0 = 1.0 - tD0;
 	      break;
+	    default:
+              break;
 	  }
 	}
 	switch(vType)

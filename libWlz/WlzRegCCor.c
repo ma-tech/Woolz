@@ -470,8 +470,7 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
   WlzIVertex2	rotCentreI;
   WlzDVertex2	tran;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tranTol = 1.0,
-  		rotTol = 0.01;
+  const double	tranTol = 1.0;
 
   /* Register for translation. */
   tran = WlzRegCCorObjs2DTran(tObj, sObj, initTr, maxTran, &cCor, &errNum);
@@ -610,8 +609,10 @@ static WlzDVertex2 WlzRegCCorObjs2DTran(WlzObject *tObj, WlzObject *sObj,
   WlzIBox2	oBox[2];
   WlzIVertex2	aSz,
   		aOrg,
+#ifndef WLZ_REGCCOR_NO_WINDOW
 		winOrg,
 		winRad,
+#endif /* WLZ_REGCCOR_NO_WINDOW */
 		tran;
   WlzDVertex2	dstTran;
   WlzObject	*oObj[2],

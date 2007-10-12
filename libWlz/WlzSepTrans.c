@@ -106,8 +106,9 @@ WlzObject *WlzSepTrans(
       break;
 
     case WLZ_TRANS_OBJ:
-      if( obj1 = WlzSepTrans(obj->values.obj,
-			     x_fun, x_params, y_fun, y_params, &errNum) ){
+      if((obj1 = WlzSepTrans(obj->values.obj,
+			     x_fun, x_params, y_fun, y_params,
+			     &errNum)) != NULL){
 	values.obj = obj1;
 	return WlzMakeMain(obj->type, obj->domain, values,
 			   NULL, obj, dstErr);
@@ -117,8 +118,8 @@ WlzObject *WlzSepTrans(
     case WLZ_COMPOUND_ARR_1:
     case WLZ_COMPOUND_ARR_2:
       cobj1 = (WlzCompoundArray *) obj;
-      if( cobj2 = WlzMakeCompoundArray(cobj1->type, 1, cobj1->n, NULL,
-				       cobj1->otype, &errNum) ){
+      if((cobj2 = WlzMakeCompoundArray(cobj1->type, 1, cobj1->n, NULL,
+				       cobj1->otype, &errNum)) != NULL){
 	/* transform each object, ignore type errors */
 	for(i=0; i < cobj1->n; i++){
 	  cobj2->o[i] =
@@ -172,7 +173,7 @@ WlzObject *WlzSepTrans(
     while( (errNum = WlzNextGreyInterval(&iwspace)) == WLZ_ERR_NONE ){
       stwspc.inbuf.p.inp = gwspace.u_grintptr.inp;
       stwspc.len = iwspace.rgtpos - iwspace.lftpos + 1;
-      if( (errNum = (*y_fun)(&stwspc, y_params)) == WLZ_ERR_NONE ){
+      if((errNum = (*y_fun)(&stwspc, y_params)) == WLZ_ERR_NONE){
 	switch(  stwspc.inbuf.type ){
 	case WLZ_GREY_INT:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.inp++)
@@ -198,6 +199,9 @@ WlzObject *WlzSepTrans(
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.rgbp++)
 	    *stwspc.inbuf.p.rgbp = stwspc.outbuf.p.rgbp[i];
 	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	}
       }
       else {
@@ -219,7 +223,7 @@ WlzObject *WlzSepTrans(
   if((errNum == WLZ_ERR_NONE) &&
      ((errNum = WlzInitGreyScan(obj2, &iwspace, &gwspace)) == WLZ_ERR_NONE))
   {
-    while( (errNum = WlzNextGreyInterval(&iwspace)) == WLZ_ERR_NONE ){
+    while((errNum = WlzNextGreyInterval(&iwspace)) == WLZ_ERR_NONE){
       stwspc.inbuf.p.inp = gwspace.u_grintptr.inp;
       stwspc.len = iwspace.rgtpos - iwspace.lftpos + 1;
       if( (errNum = (*x_fun)(&stwspc, x_params)) == WLZ_ERR_NONE ){
@@ -247,6 +251,9 @@ WlzObject *WlzSepTrans(
 	case WLZ_GREY_RGBA:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.rgbp++)
 	    *stwspc.inbuf.p.rgbp = stwspc.outbuf.p.rgbp[i];
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
 	}
       }

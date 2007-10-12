@@ -120,10 +120,11 @@ WlzObject *WlzErosion4(
       break;
 
     case WLZ_INTERVALDOMAIN_RECT:
-      if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 					   line1, lastln,
 					   idmn2->kol1 + 1,
-					   idmn2->lastkl - 1, &errNum) ){
+					   idmn2->lastkl - 1,
+					   &errNum)) != NULL){
 	return WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			   NULL, NULL, dstErr);
       }

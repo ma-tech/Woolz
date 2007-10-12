@@ -83,7 +83,7 @@ WlzObject *WlzDomainFill(
       else {
 	switch( obj->domain.core->type ){
 	case WLZ_INTERVALDOMAIN_INTVL:
-	  if( obj1 = WlzObjToBoundary(obj, 1, &errNum) ){
+	  if((obj1 = WlzObjToBoundary(obj, 1, &errNum)) != NULL){
 	    bndList = obj1->domain.b;
 	    while( bndList != NULL ){
 	      if( bndList->down ){
@@ -128,10 +128,10 @@ WlzObject *WlzDomainFill(
 	rtnpdom->voxel_size[2] = pdom->voxel_size[2];
 	values.core = NULL;
 	for(p=pdom->plane1; p <= pdom->lastpl; p++){
-	  if( domain.i = (pdom->domains)[p - pdom->plane1].i ){
+	  if((domain.i = (pdom->domains)[p - pdom->plane1].i) != NULL){
 	    obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
 			       NULL, NULL, NULL);
-	    if( obj2 = WlzDomainFill(obj1, &errNum) ){
+	    if((obj2 = WlzDomainFill(obj1, &errNum)) != NULL){
 	      rtnpdom->domains[p - pdom->plane1] =
 		WlzAssignDomain(obj2->domain, NULL);
 	      WlzFreeObj(obj2);

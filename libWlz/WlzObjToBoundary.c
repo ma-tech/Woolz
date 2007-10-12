@@ -177,14 +177,14 @@ WlzObject *WlzObjToBoundary(
 	switch( obj->domain.p->type ){
 	case WLZ_PLANEDOMAIN_DOMAIN:
 	case WLZ_PLANEDOMAIN_POLYGON:
-	  if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_BOUNDLIST,
+	  if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_BOUNDLIST,
 					    obj->domain.p->plane1,
 					    obj->domain.p->lastpl,
 					    obj->domain.p->line1,
 					    obj->domain.p->lastln,
 					    obj->domain.p->kol1,
 					    obj->domain.p->lastkl,
-					    &errNum) ){
+					    &errNum)) != NULL){
 	    domain.p->voxel_size[0] = obj->domain.p->voxel_size[0];
 	    domain.p->voxel_size[1] = obj->domain.p->voxel_size[1];
 	    domain.p->voxel_size[2] = obj->domain.p->voxel_size[2];

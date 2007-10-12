@@ -190,7 +190,8 @@ WlzMakeIntervalValues(WlzObjectType	type,
      note grey-type already checked.
    */
   if( errNum == WLZ_ERR_NONE ){
-    while( (errNum = WlzNextInterval(&iwsp)) == WLZ_ERR_NONE ){
+    while((errNum == WLZ_ERR_NONE) &&
+          (errNum = WlzNextInterval(&iwsp)) == WLZ_ERR_NONE){
       if (iwsp.nwlpos != 0) {
 	vil += iwsp.nwlpos;
 	vil->vtbint = val;
@@ -230,6 +231,9 @@ WlzMakeIntervalValues(WlzObjectType	type,
 	g.rgbp += iwsp.colrmn;
 	break;
 
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
       }
       val++;
     }

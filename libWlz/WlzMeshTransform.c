@@ -567,7 +567,6 @@ WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
 				WlzErrorNum *dstErr)
 {
   int		idx;
-  WlzDVertex2	tDV0;
   WlzDVertex2	*dPtsT = NULL;
   WlzAffineTransform *aTr = NULL,
   		*aTrI = NULL;
@@ -739,6 +738,9 @@ static WlzObject *WlzMeshTransformObjPrv(WlzObject *srcObj,
 	    dstDom.b = WlzMeshTransformBoundList(srcObj->domain.b,
 						 mesh, &errNum);
 	    break;
+	  default:
+	    errNum = WLZ_ERR_OBJECT_TYPE;
+	    break;
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -905,6 +907,9 @@ static WlzPolygonDomain	*WlzMeshTransformPoly(WlzPolygonDomain *srcPoly,
         errNum = WlzMeshTransformVtxAryD(mesh, (WlzDVertex2 *)(dstPoly->vtx),
 					 dstPoly->nvertices);
 	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
     }
   }
   if(dstErr)
@@ -944,12 +949,19 @@ static WlzBoundList *WlzMeshTransformBoundList(WlzBoundList *srcBound,
     dstBound->wrap = srcBound->wrap?1:0;
 
     /* Transform the polygon */
-    if( polyobj = WlzPolyTo8Polygon(srcBound->poly, srcBound->wrap, &errNum) ){
-      if( pgdm1 = WlzMeshTransformPoly(polyobj->domain.poly, mesh,&errNum) ){
-	if( pgdm2 = WlzPolyDecimate(pgdm1, srcBound->wrap, 0.75, &errNum) ){
+    if((polyobj = WlzPolyTo8Polygon(srcBound->poly, srcBound->wrap,
+                                    &errNum)) != NULL)
+    {
+      if((pgdm1 = WlzMeshTransformPoly(polyobj->domain.poly, mesh,
+      				       &errNum)) != NULL)
+      {
+	if((pgdm2 = WlzPolyDecimate(pgdm1, srcBound->wrap, 0.75,
+	                            &errNum)) != NULL)
+        {
 	  dstBound->poly = WlzAssignPolygonDomain(pgdm2, NULL);
 	}
-	else {
+	else
+	{
 	  dstBound->poly = NULL;
 	}
 	WlzFreePolyDmn(pgdm1);
@@ -1237,7 +1249,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 			((gVWSp->gVal[1]).ubv * tD0 * tD3) +
 			((gVWSp->gVal[2]).ubv * tD2 * tD1) +
 			((gVWSp->gVal[3]).ubv * tD0 * tD1);
-		  WLZ_CLAMP(tD0, 0.0, 255.0);
+		  tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
 		  *(dGP.ubp)++ = WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_FLOAT:
@@ -1323,7 +1335,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		    gTmp[indx] = (gVWSp->gVal[indx]).ubv;
 		  }
 		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		  WLZ_CLAMP(tD0, 0.0, 255.0);
+		  tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
 		  *(dGP.ubp)++ = WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_FLOAT:

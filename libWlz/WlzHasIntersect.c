@@ -268,6 +268,9 @@ int WlzHasIntersection(
 	WlzFreeObj(tmpObj2);
       }
       break;
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
     }
   }
 

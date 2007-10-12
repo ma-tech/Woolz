@@ -62,11 +62,13 @@ static int			WlzLBTDomain2DNodeCmpFn(
 				  const void *lPtr,
 				  const void *ptr0,
 				  const void *ptr1);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static int			WlzLBTNodeIdxFromKeys2D(
 				  WlzLBTDomain2D *lDom,
 				  int idN,
 				  unsigned *keys,
 				  int *dstFound);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static int			WlzLBTBndEdgNbrIdx2D(
 				  WlzLBTDomain2D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
@@ -121,12 +123,14 @@ static int			WlzLBTIdxCmpFn(
 static int			WlzLBTQueueUnlink(
 				  AlcCPQQueue *pQ,
 				  AlcHashTable *hT);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static int			WlzLBNodeAtBoundary3D(
 				  WlzPlaneDomain *pDom,
 				  WlzLBTNode3D *nod);
 static int			WlzLBNodeAtBoundary2D(
 				  WlzIntervalDomain *iDom,
 				  WlzLBTNode2D *nod);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static int 			WlzLBTClassifyRotFromEdgeMask2D(
 				  unsigned msk);
 static unsigned 		WlzLBTIdxHashFn(
@@ -450,7 +454,6 @@ WlzIntervalDomain *WlzLBTDomainToIDomain(WlzLBTDomain2D *lDom,
 {
   int		idI,
   		idN,
-		nItv,
 		nSz,
   		nPItv;
   WlzIVertex2	nPos;
@@ -532,7 +535,6 @@ WlzPlaneDomain *WlzLBTDomainToPDomain(WlzLBTDomain3D *lDom,
   int		idI,
 		idJ,
   		idN,
-		nItv,
 		nSz,
   		nPItv;
   WlzIVertex3	nPos;
@@ -898,7 +900,6 @@ WlzLBTDomain3D	*WlzLBTDomain3DFromPDomain(WlzPlaneDomain *pDom,
 					WlzErrorNum *dstErr)
 {
   int		idI,
-  		idN,
 		idP,
 		pCnt;
   WlzObject	*obj = NULL,
@@ -1053,8 +1054,7 @@ WlzLBTDomain3D	*WlzLBTDomain3DFromPDomain(WlzPlaneDomain *pDom,
 WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
 					WlzErrorNum *dstErr)
 {
-  int		idI,
-  		idN;
+  int		idI;
   WlzObject	*obj = NULL,
   		*eObj = NULL;
   WlzLBTNode2D	*nod;
@@ -1633,7 +1633,6 @@ WlzObject	*WlzLBTMakeNodeIndexObj2D(WlzLBTDomain2D *lDom,
   WlzObjectType iValTblType;
   WlzGreyValueWSpace *iGVWSp = NULL;
   WlzObject	*iObj = NULL;
-  WlzIBox2	nBox;
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1728,7 +1727,6 @@ WlzObject	*WlzLBTMakeNodeIndexObj3D(WlzLBTDomain3D *lDom,
   WlzObjectType iValTblType;
   WlzGreyValueWSpace *iGVWSp = NULL;
   WlzObject	*iObj = NULL;
-  WlzIBox3	nBox;
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2003,13 +2001,6 @@ void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
 		nSz;
   unsigned	msk;
   WlzIBox2	nBB;
-  const WlzDirection dirTab[4] = {
-				  WLZ_DIRECTION_IC,
-				  WLZ_DIRECTION_IL,
-				  WLZ_DIRECTION_DC,
-				  WLZ_DIRECTION_DL
-			 	};
-
 
   nSz = WlzLBTNodeSz2D(lDom->nodes + idN);
   if(nSz == 1)
@@ -2604,6 +2595,8 @@ static int	WlzLBTBndEdgNbrDirIdx2D(WlzLBTDomain2D *lDom,
 	isBnd = iGVWSp->gVal[0].inv < 0;
       }
       break;
+    default:
+      break;
   }
   return(isBnd);
 }
@@ -2758,6 +2751,8 @@ static int	WlzLBTMinLogSzEdgeDirNbrIdx2D(WlzLBTDomain2D *lDom,
 	  }
 	}
       }
+      break;
+    default:
       break;
   }
   return(minSz);
@@ -2930,6 +2925,8 @@ int		WlzLBTCountNodNbrDir2D(WlzLBTDomain2D *lDom,
 	id0 = id1;
       }
       break;
+    default:
+      break;
   }
   return(nCnt);
 }
@@ -3010,6 +3007,8 @@ static int	WlzLBTMaxLogSzEdgeDirNbrIdx2D(WlzLBTDomain2D *lDom,
 	  }
 	}
       }
+      break;
+    default:
       break;
   }
   *dstSz = szM;
@@ -3232,6 +3231,7 @@ int		WlzLBTNodeLogSz3D(WlzLBTNode3D *nod)
   return(sz);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return
 * \ingroup      WlzDomainOps
@@ -3254,8 +3254,8 @@ int		WlzLBTNodeLogSz3D(WlzLBTNode3D *nod)
 *					set non zero if an exact match is
 *					found. May be NULL.
 */
-int		WlzLBTNodeIdxFromKeys2D(WlzLBTDomain2D *lDom, int idN,
-				      unsigned *gKeys, int *dstFound)
+static int	WlzLBTNodeIdxFromKeys2D(WlzLBTDomain2D *lDom, int idN,
+				        unsigned *gKeys, int *dstFound)
 {
   int		idMin,
   		idMax,
@@ -3324,6 +3324,7 @@ int		WlzLBTNodeIdxFromKeys2D(WlzLBTDomain2D *lDom, int idN,
   }
   return(idN);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	void
@@ -3988,6 +3989,7 @@ static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
   }
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	Non zero value if the node is at the domain's boundary.
 * \ingroup	WlzDomainOps
@@ -4059,6 +4061,7 @@ static int	WlzLBNodeAtBoundary2D(WlzIntervalDomain *iDom,
 done:
   return(bnd);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	Woolz error code.

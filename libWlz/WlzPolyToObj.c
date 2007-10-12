@@ -117,6 +117,9 @@ int WlzPolyCrossings(
       }
     }
     break;
+  default:
+    errNum = WLZ_ERR_POLYGON_TYPE;
+    break;
   }
 
   if( dstErr ){
@@ -197,6 +200,9 @@ int WlzPolyCrossingsD(
 	}
       }
     }
+    break;
+  default:
+    errNum = WLZ_ERR_POLYGON_TYPE;
     break;
   }
 
@@ -342,14 +348,14 @@ WlzObject *WlzPolygonToObj(
       else {
 	switch( polygon->domain.p->type ){
 	case WLZ_PLANEDOMAIN_POLYGON:
-	  if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+	  if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					    polygon->domain.p->plane1,
 					    polygon->domain.p->lastpl,
 					    polygon->domain.p->line1,
 					    polygon->domain.p->lastln,
 					    polygon->domain.p->kol1,
 					    polygon->domain.p->lastkl,
-					    &errNum) ){
+					    &errNum)) != NULL){
 	    domain.p->voxel_size[0] = polygon->domain.p->voxel_size[0];
 	    domain.p->voxel_size[1] = polygon->domain.p->voxel_size[1];
 	    domain.p->voxel_size[2] = polygon->domain.p->voxel_size[2];
@@ -357,9 +363,9 @@ WlzObject *WlzPolygonToObj(
 	    polydmns = polygon->domain.p->domains;
 	    for(p=domain.p->plane1; p <= domain.p->lastpl;
 		p++, domains++, polydmns++){
-	      if( (*polydmns).poly ){
-		if( tmpObj = WlzPolyToObj((*polydmns).poly, fillMode,
-					  &errNum) ){
+	      if((*polydmns).poly){
+		if((tmpObj = WlzPolyToObj((*polydmns).poly, fillMode,
+					  &errNum)) != NULL){
 		  *domains = WlzAssignDomain(tmpObj->domain, NULL);
 		  WlzFreeObj(tmpObj);
 		}
@@ -394,8 +400,8 @@ WlzObject *WlzPolygonToObj(
       return WlzPolyToObj(polygon->domain.poly, fillMode, dstErr);
 
     case WLZ_TRANS_OBJ:
-      if( values.obj = WlzPolygonToObj(polygon->values.obj, fillMode,
-				       &errNum) ){
+      if((values.obj = WlzPolygonToObj(polygon->values.obj, fillMode,
+				       &errNum)) != NULL){
 	return WlzMakeMain(WLZ_TRANS_OBJ, polygon->domain, values,
 			   NULL, NULL, dstErr);
       }
@@ -485,7 +491,7 @@ WlzObject *WlzPolyToObj(
   }
 
   /* find a new polygon eight-connected and closed if required */
-  if( new_poly = WlzPolyTo8Polygon(pgdm, wrap, &errNum) ){
+  if((new_poly = WlzPolyTo8Polygon(pgdm, wrap, &errNum)) != NULL){
     new_poly = WlzAssignObject(new_poly, NULL);
     vtxs     = new_poly->domain.poly->vtx;
     num_vtxs = new_poly->domain.poly->nvertices - wrap;
@@ -514,11 +520,11 @@ WlzObject *WlzPolyToObj(
     qsort((void *) vtxs, num_vtxs, sizeof(WlzIVertex2), vtx_compare);
 
     /* build an object with intervals given by non-polynomial points */
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					 l1, ll, k1, lk, &errNum) ){
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+					 l1, ll, k1, lk, &errNum)) != NULL){
       values.core = NULL;
-      if( obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
-			     NULL, &errNum) ){
+      if((obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
+			     NULL, &errNum)) != NULL){
 	obj1 = WlzAssignObject(obj1, NULL);
       }
       else {
@@ -647,10 +653,10 @@ WlzObject *WlzPolyToObj(
 
   /* find residual object */
   if( errNum == WLZ_ERR_NONE ){
-    if( domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
-					 l1, ll, k1, lk, &errNum) ){
-      if( obj3 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
-			     NULL, &errNum) ){
+    if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					 l1, ll, k1, lk, &errNum)) != NULL){
+      if((obj3 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL,
+			     NULL, &errNum)) != NULL){
 	obj3 = WlzAssignObject(obj3, NULL);
 	obj = WlzDiffDomain(obj3, obj2, &errNum);
 	/* standardize the domain */
@@ -729,7 +735,7 @@ WlzObject *WlzPolyTo8Polygon(
 
     case WLZ_POLYGON_FLOAT:
       n = pgdm->nvertices;
-      if( freeptr = AlcMalloc(sizeof(WlzIVertex2)*n) ){
+      if((freeptr = AlcMalloc(sizeof(WlzIVertex2)*n)) != NULL){
 	vtxs = (WlzIVertex2 *) freeptr;
 	WlzValueCopyFVertexToIVertex(vtxs, (WlzFVertex2 *) (pgdm->vtx), n);
       }
@@ -740,7 +746,7 @@ WlzObject *WlzPolyTo8Polygon(
 
     case WLZ_POLYGON_DOUBLE:
       n = pgdm->nvertices;
-      if( freeptr = AlcMalloc(sizeof(WlzIVertex2)*n) ){
+      if((freeptr = AlcMalloc(sizeof(WlzIVertex2)*n)) != NULL){
 	vtxs = (WlzIVertex2 *) freeptr;
 	WlzValueCopyDVertexToIVertex(vtxs, (WlzDVertex2 *) pgdm->vtx, n);
       }

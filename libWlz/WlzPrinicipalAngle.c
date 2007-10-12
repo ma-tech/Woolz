@@ -155,7 +155,8 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
     }
     else
     {
-      while(WlzNextGreyInterval(&iWsp) == 0)
+      while((errNum = WLZ_ERR_NONE) &&
+            ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
       {
 	gPix = gWsp.u_grintptr;
 	delta.vtX = iWsp.lftpos - cMass.vtX;
@@ -234,6 +235,9 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 	      ++gPix.rgbp;
 	      ++delta.vtX;
 	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;
 	}
       }

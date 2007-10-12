@@ -248,6 +248,7 @@ static WlzErrorNum		WlzMatchICPBreakShellMid(
 				  WlzVertexP sNr,
 				  int *iBuf,
 				  int minSpx);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum		WlzMatchICPBreakShellLoopTs(
 				  WlzGMModel *sGM,
 				  WlzGMShell *sS,
@@ -258,6 +259,7 @@ static WlzErrorNum		WlzMatchICPBreakShellLop2D(
 				  WlzGMShell *sS,
 				  WlzDVertex2 *sNr,
 				  int minSpx);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzErrorNum 		WlzMatchICPBreakShellCur2D(
 				  WlzMatchICPCbData *cbData,
 				  WlzGMModel *sGM,
@@ -300,11 +302,13 @@ static int			WlzMatchICPTPPairSortFnD(
 				  void *p1);
 static WlzGMVertex 		*WlzMatchICPLoopTMid(
 				  WlzGMLoopT *gLT);
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzGMVertex 		*WlzMatchICPLoopTMaxCurv2D(
 				  WlzGMLoopT *gLT,
 				  WlzDVertex2 *gNr,
 				  int minEdg,
 				  double *dstAngle);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzGMVertex 		*WlzMatchICPLoopTMinCurv2D(
 				  WlzGMLoopT *gLT,
 				  WlzDVertex2 *gNr,
@@ -1145,6 +1149,8 @@ double		WlzMatchICPWeightMatches(WlzVertexType vType,
 					  cbData->tGM, cbData->sGM,
 					  cbData->maxDisp, cbData->nScatter);
 	 break;
+       default:
+         break;
      }
      wgt *= wVx * wNr;
    }
@@ -2236,6 +2242,7 @@ static WlzErrorNum	WlzMatchICPBreakShellMid(WlzMatchICPCbData *cbData,
   return(errNum);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				Error code.
 * \ingroup	WlzTransform
@@ -2271,7 +2278,6 @@ static WlzErrorNum	WlzMatchICPBreakShellLoopTs(WlzGMModel *sGM,
       break;
   }
   return(errNum);
-
 }
 
 /*!
@@ -2303,6 +2309,7 @@ static WlzErrorNum	WlzMatchICPBreakShellLop2D(WlzGMModel *sGM,
   errNum = WlzGMModelDeleteV(sGM, sV);
   return(errNum);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return				Error code.
@@ -2393,6 +2400,7 @@ static WlzGMVertex *WlzMatchICPLoopTMid(WlzGMLoopT *gLT)
   return(mV);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return       Vertex at point of maximum curvature which avoids the
 *		neighbourhoods of the loopT ends vertices (if they exist).
@@ -2555,6 +2563,7 @@ static WlzGMVertex *WlzMatchICPLoopTMaxCurv2D(WlzGMLoopT *gLT,
   }
   return(mV);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return       Vertex at point of minimum curvature which avoids the

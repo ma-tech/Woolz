@@ -260,6 +260,9 @@ WlzCompoundArray *WlzRGBAToCompound(
 	  *(gwsp[3].u_grintptr.ubp++) = a;
 	    }
 	break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
       }
     }
     if( errNum == WLZ_ERR_EOO ){
@@ -279,7 +282,6 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
   WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr)
 {
-  WlzCompoundArray	*cobj=NULL;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
   
   if( dstErr ){
@@ -351,7 +353,7 @@ WlzObject *WlzCompoundToRGBA(
   /* 2D case */
   if( errNum == WLZ_ERR_NONE ){
     /* build the 2D object - union of the rgb channels */
-    if( rtnObj = WlzUnionN(3, cmpnd->o, 0, &errNum) ){
+    if((rtnObj = WlzUnionN(3, cmpnd->o, 0, &errNum)) != 0){
       WlzValues	values;
       WlzObjectType	vType;
 
@@ -364,7 +366,7 @@ WlzObject *WlzCompoundToRGBA(
       }
       bckgrnd.type = WLZ_GREY_RGBA;
       WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], 255);
-      if( values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum) ){
+      if((values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum)) != NULL){
 	rtnObj->values = WlzAssignValues(values, &errNum);
       }
       else {
@@ -534,7 +536,7 @@ WlzObject *WlzRGBAToModulus(
   if( errNum == WLZ_ERR_NONE ){
     WlzIntervalWSpace	iwsp0, iwsp1;
     WlzGreyWSpace	gwsp0, gwsp1;
-    int			i, j, k;
+    int			j, k;
 
     errNum = WlzInitGreyScan(obj, &iwsp0, &gwsp0);
     errNum = WlzInitGreyScan(rtnObj, &iwsp1, &gwsp1);
@@ -597,8 +599,7 @@ WlzObject *WlzIndexToRGBA(
   WlzGreyWSpace		oldgwsp, newgwsp;
   WlzObjectType		newvtbltype;
   WlzPixelV		bg;
-  WlzValues		newvalues,
-  			values;
+  WlzValues		values;
   int 			k, greyVal, redVal, greenVal, blueVal;
   unsigned int		rgbaVal;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -887,11 +888,11 @@ static WlzObject *WlzIndexToRGBA3D(
       (*ndomains).core = NULL;
       (*nvalues).core = NULL;
     }
-    else if( temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				NULL, NULL, &errNum) ){
+    else if((temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				NULL, NULL, &errNum)) != NULL){
 
       if( temp->domain.i != NULL ){
-	if( obj1 = WlzIndexToRGBA(temp, colormap, &errNum) ){
+	if((obj1 = WlzIndexToRGBA(temp, colormap, &errNum)) != NULL){
 	  if( obj1->type == WLZ_2D_DOMAINOBJ ){
 	    *ndomains = WlzAssignDomain(obj1->domain, NULL);
 	    *nvalues = WlzAssignValues(obj1->values, NULL);
@@ -923,8 +924,8 @@ static WlzObject *WlzIndexToRGBA3D(
   if( errNum == WLZ_ERR_NONE ){
     domain.p = npdom;
     vals.vox = nvoxtab;
-    if( obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, vals,
-			   NULL, obj, &errNum) ){
+    if((obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, vals,
+			   NULL, obj, &errNum)) != NULL){
       /*	nvoxtab->original = obj1; */
       nvoxtab->original_table = WlzAssignValues(obj->values, NULL);
     }
@@ -1047,7 +1048,7 @@ WlzObject *WlzRGBAToChannel(
   if( errNum == WLZ_ERR_NONE ){
     WlzIntervalWSpace	iwsp0, iwsp1;
     WlzGreyWSpace	gwsp0, gwsp1;
-    int			i, j, k;
+    int			j, k;
 
     errNum = WlzInitGreyScan(obj, &iwsp0, &gwsp0);
     errNum = WlzInitGreyScan(rtnObj, &iwsp1, &gwsp1);
