@@ -137,6 +137,10 @@ extern AlcErrno			AlcDouble2Calloc(
 				  double ***dest,
 				  size_t mElem,
 				  size_t nElem);
+extern AlcErrno			AlcPtr2Calloc(
+				  void ****dest,
+				  size_t mElem,
+				  size_t nElem);
 extern AlcErrno			AlcBit2Malloc(
 				  unsigned char ***dest,
 				  size_t mElem,
@@ -287,6 +291,11 @@ extern AlcErrno			AlcDouble3Malloc(
 				  size_t mElem,
 				  size_t nElem,
 				  size_t oElem);
+extern AlcErrno			AlcPtr3Calloc(
+				  void *****dest,
+				  size_t mElem,
+				  size_t nElem,
+			          size_t oElem);
 extern AlcErrno			Alc3Free(
 				  void ***dat);
 extern AlcErrno			AlcBit3Free(
