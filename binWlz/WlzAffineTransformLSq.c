@@ -347,6 +347,8 @@ int             main(int argc, char **argv)
 	case WLZ_TRANSFORM_2D_TRANS:
 	  trType = WLZ_TRANSFORM_3D_TRANS;
 	  break;
+        default:
+	  break;
       }
     }
   }
@@ -427,7 +429,7 @@ int             main(int argc, char **argv)
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
 		       "%s: failed to create test data (%s).\n",
-		       *argv, inFileStr, errMsg);
+		       *argv, errMsg);
       }
     }
     else
@@ -664,8 +666,7 @@ int             main(int argc, char **argv)
     "or the 3D format:\n"
     "  <vtx x> <vtx y> <vtx z> <disp x> <disp y> <disp z>\n"
     "The input data are read from stdin and the transform object is written\n"
-    "to stdout unless the filenames are given.\n",
-    *argv);
+    "to stdout unless the filenames are given.\n");
   }
   return(!ok);
 }

@@ -100,6 +100,7 @@ location to the boundary of the reference object fish4.wlz.
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <Wlz.h>
 
 extern int      getopt(int argc, char * const *argv, const char *optstring);

@@ -168,10 +168,10 @@ int main(int	argc,
     case 't':
       switch( threshpixtype = (WlzGreyType) atoi(optarg) ){
 
-      case WLZ_GREY_INT:
-      case WLZ_GREY_SHORT:
-      case WLZ_GREY_UBYTE:
-      case WLZ_GREY_FLOAT:
+      case WLZ_GREY_INT: /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
       case WLZ_GREY_DOUBLE:
 	break;
 
@@ -207,6 +207,8 @@ int main(int	argc,
 	thresh.v.dbv = atof(optarg);
 	break;
 
+      default:
+        break;
       }
       break;
 

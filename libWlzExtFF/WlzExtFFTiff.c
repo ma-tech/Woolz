@@ -65,12 +65,12 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   unsigned short *Map=NULL;
   unsigned short *redcolormap, *bluecolormap, *greencolormap;
   unsigned char red[256], green[256], blue[256];
-  int		width, height, numPlanes, depth, numcolors;
+  int		width, height, depth, numcolors;
   int		wlzDepth;
   WlzGreyType	newpixtype;
   WlzPixelV	bckgrnd;
   int		i, row, col, offset;
-  float		xPosition, yPosition, xResolution, yResolution;
+  float		xPosition, yPosition;
   int		colMin, rowMin;
   unsigned char	*buf=NULL;
   unsigned char *inp;
@@ -323,7 +323,8 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	    }
 	    break;
 
-	  case WLZ_GREY_FLOAT:
+	  case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+	  default:
 	    errNum = WLZ_ERR_FILE_FORMAT;
 	    break;
 	  }
@@ -385,9 +386,9 @@ static WlzObject *WlzExtFFReadTiffDirObj(
     }
     colMin = WLZ_NINT(xPosition);
     rowMin = WLZ_NINT(yPosition);
-    if( obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
+    if((obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
 			  newpixtype, wlzData.inp, bckgrnd,
-			  NULL, NULL, &errNum) ){
+			  NULL, NULL, &errNum)) != NULL){
       AlcErrno	errAlcNum;
       obj->values.r->freeptr = 
 	    AlcFreeStackPush(obj->values.r->freeptr,
@@ -454,21 +455,21 @@ WlzObject	*WlzEffReadObjTiff(
 
     /* use width, height and position of first object for the plane-domain
        standardise later */
-    if( tmpObj = WlzExtFFReadTiffDirObj(tif, 0, &errNum) ){
+    if((tmpObj = WlzExtFFReadTiffDirObj(tif, 0, &errNum)) != NULL){
 
       /* build the planedomain and voxelvaluetable */
-      if( domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+      if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
 					0, numPlanes - 1,
 					tmpObj->domain.i->line1,
 					tmpObj->domain.i->lastln,
 					tmpObj->domain.i->kol1,
 					tmpObj->domain.i->lastkl,
-					&errNum) ){
+					&errNum)) != NULL){
 	bckgrnd = WlzGetBackground(tmpObj, &errNum);
-	if( values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+	if((values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
 					     0, numPlanes - 1,
 					     bckgrnd, NULL,
-					     &errNum) ){
+					     &errNum)) != NULL){
 	  domains = domain.p->domains;
 	  domains[0] = WlzAssignDomain(tmpObj->domain, NULL);
 	  valuess = values.vox->values;
@@ -495,7 +496,7 @@ WlzObject	*WlzEffReadObjTiff(
     /* now put in remaining planes */
     if( errNum == WLZ_ERR_NONE ){
       for(p=1; p < numPlanes; p++){
-	if( tmpObj = WlzExtFFReadTiffDirObj(tif, p, &errNum) ){
+	if((tmpObj = WlzExtFFReadTiffDirObj(tif, p, &errNum)) != NULL){
 	  domains[p] = WlzAssignDomain(tmpObj->domain, NULL);
 	  valuess[p] = WlzAssignValues(tmpObj->values, NULL);
 	  WlzFreeObj(tmpObj);
@@ -623,7 +624,8 @@ static WlzErrorNum WlzEffWriteTiffDirObj(
       }
       else if((errNum = WlzInitGreyScan(rectObj, &iwsp, &gwsp))
 	      == WLZ_ERR_NONE){
-	while((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
+	while((errNum == WLZ_ERR_NONE) &&
+	      (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
 	  switch( gType ){
 	  case WLZ_GREY_INT:
 	    for(i=0, j=0; i < width; i++){
@@ -662,11 +664,17 @@ static WlzErrorNum WlzEffWriteTiffDirObj(
 	      buf[j++] = (gwsp.u_grintptr.rgbp[i]&0xff000000)>>24;
 	    }
 	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
 	  }
 
-	  if( TIFFWriteScanline(out, buf, iwsp.linpos-iwsp.linbot, 0) < 0 ){
-	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    break;
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if( TIFFWriteScanline(out, buf, iwsp.linpos-iwsp.linbot, 0) < 0 ){
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      break;
+	    }
 	  }
 	}
 	if( errNum == WLZ_ERR_EOO ){
@@ -755,9 +763,9 @@ WlzErrorNum WlzEffWriteObjTiff(
 		  WlzFreeObj(tmpObj);
 		  tmpObj = NULL;
 		}
-		if( tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+		if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 					 domains[p], valuess[p],
-					 NULL, NULL, &errNum) ){
+					 NULL, NULL, &errNum)) != NULL){
 		  errNum = WlzEffWriteTiffDirObj(out, tmpObj, p);
 		}
 	      }

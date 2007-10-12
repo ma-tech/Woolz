@@ -152,8 +152,6 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *newobj;
-  FILE		*inFile;
   char 		optList[] = "b:hv";
   int		option;
   int		verboseFlg=0;

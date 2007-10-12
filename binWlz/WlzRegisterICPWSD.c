@@ -287,8 +287,8 @@ int             main(int argc, char **argv)
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-	     "%s: failed to read initial affine transform from file %s (%s)\n",
-	     *argv, errMsg);
+	     "%s: Failed to read initial affine transform from file %s (%s)\n",
+	     *argv, inTrObjFileStr, errMsg);
     }
     if(fP && strcmp(inTrObjFileStr, "-"))
     {
@@ -299,7 +299,7 @@ int             main(int argc, char **argv)
     {
       ok = 0;
       (void )fprintf(stderr,
-      		     "%s: initial affine transform object invalid type\n",
+      		     "%s: Initial affine transform object invalid type\n",
 		     *argv);
     }
   }
@@ -320,7 +320,7 @@ int             main(int argc, char **argv)
 	ok = 0;
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-		       "%s: failed to read object %d from file %s (%s)\n",
+		       "%s: Failed to read object %d from file %s (%s)\n",
 		       *argv, idN, inObjFileStr[idN], errMsg);
       }
       if(fP && strcmp(inObjFileStr[idN], "-"))
@@ -379,7 +379,7 @@ int             main(int argc, char **argv)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr, "%s: input object(s) not appropriate\n",
+      (void )fprintf(stderr, "%s: Input object(s) not appropriate (%s).\n",
 		     *argv, errMsg);
     }
   }
@@ -396,7 +396,7 @@ int             main(int argc, char **argv)
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-		   "%s: failed to compute weighted sums of distances (%s).\n",
+		   "%s: Failed to compute weighted sums of distances (%s).\n",
 		   *argv, errMsg);
     }
   }
@@ -410,7 +410,7 @@ int             main(int argc, char **argv)
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-		     "%s: failed to write output object (%s).\n",
+		     "%s: Failed to write output object (%s).\n",
 		     *argv, errMsg);
     }
     if(fP && strcmp(outObjFileStr, "-"))

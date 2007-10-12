@@ -95,8 +95,7 @@ extern int	optind,
 
 int             main(int argc, char *argv[])
 {
-  int           idx,
-  		option,
+  int           option,
   		ok = 1,
 		usage = 0,
 		smShellSz = -1;

@@ -163,7 +163,7 @@ static void usage(char *proc_str)
 int main(int	argc,
 	 char	**argv)
 {
-  WlzObject	*inObj, *meshObj, *outObj, *tmpObj;
+  WlzObject	*inObj, *meshObj, *outObj;
   FILE		*inFP, *outFP, *meshFP;
   char		*outFile, *meshFile;
   char 		optList[] = "iLm:o:hv";
@@ -236,10 +236,10 @@ int main(int	argc,
 
   /* check meshfile */
   if((errNum == WLZ_ERR_NONE) && (meshFile != NULL)){
-    if( meshFP = fopen(meshFile, "rb") ){
-      if( meshObj = WlzReadObj(meshFP, &errNum) ){
-	if( meshObj->type != WLZ_MESH_TRANS ){
-	  fprintf(stderr,
+    if((meshFP = fopen(meshFile, "rb")) != NULL){
+      if((meshObj = WlzReadObj(meshFP, &errNum)) != NULL){
+	if(meshObj->type != WLZ_MESH_TRANS){
+	  (void )fprintf(stderr,
 		  "%s: mesh file does not have a mesh transform object\n",
 		  argv[0]);
 	  return 1;
@@ -276,8 +276,8 @@ int main(int	argc,
     switch( inObj->type )
     {
     case WLZ_2D_DOMAINOBJ:
-      if( outObj = WlzMeshTransformObj(inObj, meshObj->domain.mt,
-				       interp, &errNum) ){
+      if((outObj = WlzMeshTransformObj(inObj, meshObj->domain.mt,
+				       interp, &errNum)) != NULL){
 	WlzWriteObj(outFP, outObj);
 	WlzFreeObj(outObj);
       }

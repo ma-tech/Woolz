@@ -199,7 +199,6 @@ int             main(int argc, char **argv)
   WlzObject 	*dObj = NULL;
   WlzBox	bBox0,
   		bBox1;
-  WlzIVertex2	tDASz;
   WlzVertexP	sPts,
   		iPts,
 		oPts;

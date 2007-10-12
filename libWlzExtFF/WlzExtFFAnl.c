@@ -122,9 +122,6 @@ static void			WlzEffReadAnlSwap2(
 static void			WlzEffReadAnlSwap4(
 				  void *buf,
 				  unsigned int cnt);
-static void			WlzEffReadAnlSwap8(
-				  void *buf,
-				  unsigned int cnt);
 
 /*!
 * \return	Woolz error code.
@@ -181,7 +178,6 @@ WlzErrorNum	WlzEffAnlFileNames(char **fileBody,
 WlzObject	*WlzEffReadObjAnl(const char *gvnFileName, WlzErrorNum *dstErr)
 {
   int		idx,
-		byteSwap,
   		timePoints = 0;
   FILE		*fP = NULL;
   char		*fileName = NULL,
@@ -191,7 +187,6 @@ WlzObject	*WlzEffReadObjAnl(const char *gvnFileName, WlzErrorNum *dstErr)
   		sz;
   WlzEffAnlDsr 	dsr;
   int 		swap;
-  void		**dataBuf = NULL;
   WlzObject	*obj = NULL;
   WlzGreyType	gType = WLZ_GREY_ERROR;
   WlzPixelV	bgdV;
@@ -605,6 +600,7 @@ WlzErrorNum	WlzEffWriteObjAnl(const char *gvnFileName, WlzObject *obj)
 	      dataP.dbp = *(double **)data;
 	      break;
 	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	  }
 	}
@@ -632,11 +628,13 @@ WlzErrorNum	WlzEffWriteObjAnl(const char *gvnFileName, WlzObject *obj)
 	      dataP.dbp = **(double ***)data;
 	      break;
 	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	  }
 	}
         break;
       default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
         break;
     }
   }
@@ -937,6 +935,9 @@ static WlzErrorNum	WlzEffReadAnlImgData(WlzObject *obj,
         ++idx;
       }
       break;
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
   }
   return(errNum);
 }
@@ -1092,8 +1093,6 @@ static WlzErrorNum	WlzEffReadAnlShort(FILE *fP, int cnt, short *buf,
 static WlzErrorNum	WlzEffReadAnlInt(FILE *fP, int cnt, int *buf,
 					int swap)
 {
-  WlzUByte	ubv;
-  WlzUByte	*ubp;
   WlzErrorNum	errNum;
   
   errNum = (fread(buf, sizeof(int), cnt, fP) == cnt)?

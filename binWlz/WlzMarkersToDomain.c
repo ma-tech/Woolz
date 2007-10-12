@@ -109,6 +109,7 @@ Creates a new domain with spheres or radius 3 at coordinates (10,20,30),
 #include <float.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 #include <Wlz.h>
 
 typedef enum _WlzMarkerType
@@ -143,8 +144,7 @@ extern int 	optind,
 
 int		main(int argc, char *argv[])
 {
-  int		idx,
-  		ok = 1,
+  int		ok = 1,
   		option,
   		usage = 0,
 		dim = 2,

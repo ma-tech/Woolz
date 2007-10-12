@@ -402,6 +402,8 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
 	  case WLZEFF_ICS_TKN_Z:
 	    size.vtZ = header.sizes[idx];
 	    break;
+	  default:
+	    break;
 	}
       }
     }

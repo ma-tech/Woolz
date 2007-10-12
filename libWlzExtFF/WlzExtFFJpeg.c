@@ -101,7 +101,6 @@ WlzObject *WlzEffReadObjJpeg(
   WlzPixelV	bckgrnd;
   int		i, rOff;
   WlzGreyP	wlzData;
-  AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* check input */
@@ -212,10 +211,11 @@ WlzObject *WlzEffReadObjJpeg(
       /* make the woolz object */
       width = cinfo.image_width;
       height = cinfo.image_height;
-      if( wlzData.ubp = (WlzUByte *) AlcCalloc(width*height, wlzDepth) ){
-	if( rtnObj = WlzMakeRect(0, height-1, 0, width-1, newpixtype,
+      if((wlzData.ubp = (WlzUByte *)AlcCalloc(width*height,
+                                               wlzDepth)) != NULL){
+	if((rtnObj = WlzMakeRect(0, height-1, 0, width-1, newpixtype,
 				  wlzData.inp, bckgrnd,
-				  NULL, NULL, &errNum) ){
+				  NULL, NULL, &errNum)) != NULL){
 	  AlcErrno	errAlcNum;
 	  rtnObj->values.r->freeptr = 
 	    AlcFreeStackPush(rtnObj->values.r->freeptr,
@@ -269,6 +269,8 @@ WlzObject *WlzEffReadObjJpeg(
 			    255);
 	}
 	break;
+      default:
+        break;
       }
     }
 
@@ -334,8 +336,8 @@ WlzErrorNum WlzEffWriteObjJpeg(
 	  cutBox.xMax = obj->domain.i->lastkl;
 	  cutBox.yMax = obj->domain.i->lastln;
 	  gType = WlzGreyTypeFromObj(obj, &errNum);
-	  if( rectObj = WlzCutObjToBox2D(obj, cutBox, gType,
-					 0, 0.0, 0.0, &errNum) ){
+	  if((rectObj = WlzCutObjToBox2D(obj, cutBox, gType,
+					 0, 0.0, 0.0, &errNum)) != NULL){
 	    width = rectObj->domain.i->lastkl - rectObj->domain.i->kol1 + 1;
 	    height = rectObj->domain.i->lastln - rectObj->domain.i->line1 + 1;
 	  }
@@ -405,6 +407,8 @@ WlzErrorNum WlzEffWriteObjJpeg(
       cinfo.input_components = 3;
       cinfo.in_color_space = JCS_RGB;
       break;
+    default:
+      break;
     }
 
     if( errNum == WLZ_ERR_NONE ){
@@ -453,6 +457,8 @@ WlzErrorNum WlzEffWriteObjJpeg(
 	    buffer[0][j++] = WLZ_RGBA_GREEN_GET(val);
 	    buffer[0][j++] = WLZ_RGBA_BLUE_GET(val);
 	  }
+	  break;
+	default:
 	  break;
 	}
 	(void) jpeg_write_scanlines(&cinfo, buffer, 1);

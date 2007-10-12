@@ -162,6 +162,8 @@ int             main(int argc, char **argv)
 	  case WLZ_GMMOD_3D:
 	    modelType = WLZ_GMMOD_2D;
 	    break;
+	  default:
+	    break;
 	}
 	break;
       case '3':
@@ -175,6 +177,8 @@ int             main(int argc, char **argv)
 	    break;
 	  case WLZ_GMMOD_3I: /* FALLTHROUGH */
 	  case WLZ_GMMOD_3D:
+	    break;
+	  default:
 	    break;
 	}
 	break;
@@ -190,6 +194,8 @@ int             main(int argc, char **argv)
 	    break;
 	  case WLZ_GMMOD_3D:
 	    break;
+	  default:
+	    break;
 	}
 	break;
       case 'i':
@@ -204,6 +210,8 @@ int             main(int argc, char **argv)
 	    break;
 	  case WLZ_GMMOD_3D:
 	    modelType = WLZ_GMMOD_3I;
+	    break;
+	  default:
 	    break;
 	}
 	break;
@@ -294,6 +302,8 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	}
 	break;
+      default:
+	break;
     }
     if(ok == 0)
     {
@@ -329,6 +339,8 @@ int             main(int argc, char **argv)
           bufD3[2].vtY = *(*(bufD + idR) + 7);
           bufD3[2].vtZ = *(*(bufD + idR) + 8);
 	  errNum = WlzGMModelConstructSimplex3D(model, bufD3);
+	  break;
+	default:
 	  break;
       }
       ++idR;

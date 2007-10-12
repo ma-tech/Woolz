@@ -368,7 +368,7 @@ int             main(int argc, char **argv)
     "Reads vertices, applies an affine transform to them and then writes\n"
     "out the transformed vertices.\n"
     "The input vertices are read from stdin and the transformed vertices\n"
-    "are written to stdout unless the filenames are given.\n",
+    "are written to stdout unless the filenames are given.\n"
     "The vertex format for both the input and output is: Space (or tab)\n"
     "separated ascii floating point, with either two or three floating point\n"
     "numbers per vertex and one vertex per line in x, y, z order. All\n"

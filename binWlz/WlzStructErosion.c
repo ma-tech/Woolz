@@ -160,13 +160,13 @@ int main(int	argc,
     seFile = inFile;
   }
   
-  if( seObj = WlzAssignObject(WlzReadObj(seFile, &errNum), NULL) ){
+  if((seObj = WlzAssignObject(WlzReadObj(seFile, &errNum), NULL)) != NULL){
 
     /* read objects and threshold if possible */
     while((obj = WlzAssignObject(WlzReadObj(inFile, &errNum), NULL))
 	  != NULL) 
     {
-      if( nobj = WlzStructErosion(obj, seObj, &errNum) ){
+      if((nobj = WlzStructErosion(obj, seObj, &errNum)) != NULL){
 	nobj = WlzAssignObject(nobj, NULL);
 	WlzWriteObj(stdout, nobj);
 	WlzFreeObj(nobj);

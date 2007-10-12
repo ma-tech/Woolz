@@ -108,6 +108,7 @@ empty object empty.wlz.
 #include <float.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 #include <Wlz.h>
 
 extern char 	*optarg;

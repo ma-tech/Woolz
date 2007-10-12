@@ -811,8 +811,6 @@ WlzErrorNum WlzEffBibParseWarpInputSegmentationParamsRecord(
   int	 		*threshHigh)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  char		basisFnTypeStr[32];
-  char		meshMthdStr[32];
   int		numParsedFields=0;
 
   /* check inputs */

@@ -156,8 +156,8 @@ int main(int	argc,
   }
 
   /* read objects */
-  if( obj1 = WlzAssignObject(WlzReadObj(inFile, NULL), NULL) ){
-    if( obj2 = WlzAssignObject(WlzReadObj(inFile, NULL), NULL) ){
+  if((obj1 = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) != NULL){
+    if((obj2 = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) != NULL){
 
       if( obj1->type != obj2->type ){
 	fprintf(stderr, "%s: objects must be of the same type\n", argv[0]);

@@ -237,7 +237,7 @@ int             main(int argc, char **argv)
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
 	     "%s: Failed to read initial affine transform from file %s (%s)\n",
-	     *argv, errMsg);
+	     *argv, inTrObjFileStr, errMsg);
     }
     if(fP && strcmp(inTrObjFileStr, "-"))
     {
@@ -301,7 +301,7 @@ int             main(int argc, char **argv)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr, "%s: Input object(s) not appropriate\n",
+      (void )fprintf(stderr, "%s: Input object(s) not appropriate (%s).\n",
 		     *argv, errMsg);
     }
   }

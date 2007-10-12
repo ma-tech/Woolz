@@ -146,6 +146,7 @@ smooth.wlz.
 #include <float.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 #include <Wlz.h>
 
 
@@ -414,7 +415,7 @@ int		main(int argc, char *argv[])
     "[0.0100-0.1000], values of kSB in the range [1.000-1.9999]. The default\n"
     "ripple values are probably acceptable for most simple filters.\n"
     "Simple example, which filters a contour smoothing out voxel edges:\n"
-    "    prompt% WlzContourGeomFilter -o out.wlz -p 0.1 -s 1.5 -n 100 in.wlz\n"
+    "    prompt%% WlzContourGeomFilter -o out.wlz -p 0.1 -s 1.5 -n 100 in.wlz\n"
     "This example passes the geometric model from the contour object\n"
     "in in.wlz through a low pass filter with a transition band starting\n"
     "at 0.1 and ending with the stop band at 1.5. A maximum of 100\n"

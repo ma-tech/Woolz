@@ -176,10 +176,7 @@ static WlzPropertyList 		*WlzEffAmMakeMaterialPropList(
 */
 WlzObject	*WlzEffReadObjAm(FILE *fP, int split, WlzErrorNum *dstErr)
 {
-  WlzIVertex3	org;
-  WlzDVertex3	voxSz;
   WlzEffAmHead	*head;
-  WlzGreyType	gType;
   WlzObject	*tObj,
   		*obj = NULL;
   void		***data = NULL;
@@ -908,7 +905,6 @@ static WlzErrorNum WlzEffAmSeekLabel(FILE *fP, int gLabel)
   char		buf[WLZ_EFF_AM_LABEL_MAXC];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	bufMax = WLZ_EFF_AM_LABEL_MAXC;
-  const char   	tokSepWS[] = " \t\n\r\f\v";
 
   do
   {
@@ -940,7 +936,7 @@ static WlzErrorNum WlzEffAmSeekLabel(FILE *fP, int gLabel)
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
-	else if (fLabel = gLabel)
+	else if (fLabel == gLabel)
 	{
 	  found = 1;
 	}
@@ -1275,8 +1271,7 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
 				  WlzEffAmHead *head)
 {
 
-  int		tmpI,
-		matId = 0;
+  int		tmpI;
   WlzEffAmToken	tok;
   WlzEffAmMaterial *lastMat = NULL,
   		*newMat = NULL;
@@ -1284,8 +1279,7 @@ static WlzErrorNum WlzEffAmReadMaterials(FILE *fP, char *buf, const int bufLen,
   const char	tokSepDQ[] = "\"",
   		tokSepWS[] = " \t\n\r\f\v",
             	tokSepWSC[] = " \t\n,\r\f\v",
-            	tokSepWSCQ[] = " \t\n,\"\r\f\v",
-            	tokSepWSQ[] = " \t\n\"\r\f\v";
+            	tokSepWSCQ[] = " \t\n,\"\r\f\v";
 
   errNum =  WlzEffAmReadAndCheckAToken(fP, tokSepWS, buf, bufLen, "{");
   if(errNum == WLZ_ERR_NONE)
@@ -1429,7 +1423,6 @@ static WlzErrorNum WlzEffAmReadAndSkipValues(FILE *fP,
 {
 
   int		idN;
-  WlzEffAmToken	tok;
   WlzErrorNum   errNum;
   const char	tokSepWS[] = " \t\n\r\f\v";
 
@@ -1643,6 +1636,8 @@ static WlzErrorNum WlzEffAmReadArray3D(FILE *fP, void ***data,
 	    case WLZ_GREY_SHORT:
 	      WlzEffAmBufDecodeHXByteRLEShort(**(short ***)data, (short *)buf,
 	      				      nDst, head->latBytes);
+	      break;
+	    default:
 	      break;
 	  }
 	}

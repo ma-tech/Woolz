@@ -233,7 +233,7 @@ int main(int	argc,
   }
     
   /* apply template and write resultant object */
-  if( newobj = WlzGreyTemplate(obj, tmpl, tmplVal, &errNum) ){
+  if((newobj = WlzGreyTemplate(obj, tmpl, tmplVal, &errNum)) != NULL){
     if((errNum = WlzWriteObj(stdout, newobj)) != WLZ_ERR_NONE) {
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,

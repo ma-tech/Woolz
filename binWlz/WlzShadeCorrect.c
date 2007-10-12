@@ -216,13 +216,13 @@ int main(int	argc,
   }
 
   /* now read the objects and shade correct */
-  while( inObj = WlzReadObj(fp, &errNum) ){
+  while((inObj = WlzReadObj(fp, &errNum)) != NULL){
     switch( inObj->type ){
 
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      if( outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
-				       255.0, 0, &errNum) ){
+      if((outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
+				       255.0, 0, &errNum)) != NULL){
 	WlzWriteObj(stdout, outObj);
 	WlzFreeObj(outObj);
       }
@@ -238,7 +238,7 @@ int main(int	argc,
 	/* shade correct each patch, shifting the shade image
 	   as required */
 	cObj = (WlzCompoundArray *) inObj;
-	if( outObjs = AlcMalloc(sizeof(WlzObject *) * cObj->n) ){
+	if((outObjs = AlcMalloc(sizeof(WlzObject *) * cObj->n)) != NULL){
 	  for(i=0; (i < cObj->n) && (errNum == WLZ_ERR_NONE); i++){
 	    /* could test for 3D here */
 	    xShift = cObj->o[i]->domain.i->kol1 - bfObj->domain.i->kol1;
@@ -260,10 +260,10 @@ int main(int	argc,
 	      WlzFreeObj(obj2);
 	    }
 	  }
-	  if( outObj = (WlzObject *)
+	  if((outObj = (WlzObject *)
 	     WlzMakeCompoundArray(cObj->type, 3, cObj->n,
 				  &(outObjs[0]), cObj->o[0]->type,
-				  &errNum) ){
+				  &errNum)) != NULL){
 	    WlzWriteObj(stdout, outObj);
 	    WlzFreeObj(outObj);
 	    AlcFree(outObjs);
@@ -273,8 +273,8 @@ int main(int	argc,
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
       }
-      else if( outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
-				       255.0, 0, &errNum) ){
+      else if((outObj = WlzShadeCorrectBFDF(inObj, bfObj, dfObj,
+				       255.0, 0, &errNum)) != NULL){
 	WlzWriteObj(stdout, outObj);
 	WlzFreeObj(outObj);
       }

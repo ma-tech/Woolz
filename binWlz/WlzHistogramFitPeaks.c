@@ -138,7 +138,6 @@ int             main(int argc, char **argv)
   int		idB,
   		idD,
   		option,
-		pkCnt = 0,
 		numDbn = 0,
 		synthesize = 0,
 		fitCnt = 0,
@@ -161,7 +160,6 @@ int             main(int argc, char **argv)
   		*fitAlpha = NULL,
 		*fitArea = NULL,
 		*synBuf = NULL;
-  int		*pkPos = NULL;
   WlzHistogramDomain *inDom,
   		     *outDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -393,6 +391,8 @@ int             main(int argc, char **argv)
 	    case WLZ_HISTOGRAMDOMAIN_FLOAT:
 	      WlzValueCopyDoubleToDouble(outDom->binValues.dbp, synBuf,
 	      			         inDom->nBins);
+	      break;
+	    default:
 	      break;
 	  }
 	  if(WlzWriteObj(fP, outObj) != WLZ_ERR_NONE)

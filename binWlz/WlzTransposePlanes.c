@@ -195,7 +195,7 @@ int main(int	argc,
 	  offset = obj->domain.p->plane1 + obj->domain.p->lastpl;
 	}
 
-	if( nobj = WlzTransposePlanes(obj, offset, &errNum) ){
+	if((nobj = WlzTransposePlanes(obj, offset, &errNum)) != NULL){
 	  errNum = WlzWriteObj(stdout, nobj);
 	  WlzFreeObj(nobj);
 	}

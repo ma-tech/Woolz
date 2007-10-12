@@ -282,10 +282,11 @@ int main(int	argc,
 	}
 	else
 	{
-	  if( values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+	  if((values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
 					       obj->domain.p->plane1,
 					       obj->domain.p->lastpl,
-					       bckgrnd, NULL, &errNum) ){
+					       bckgrnd, NULL,
+					       &errNum)) != NULL){
 	    obj->values = WlzAssignValues(values, NULL);
 	    domains = obj->domain.p->domains;
 	    valuess = obj->values.vox->values;

@@ -115,9 +115,7 @@ static void usage(char *proc_str)
   return;
 }
  
-main(
-     int		argc,
-     char**	argv)
+int		main(int argc, char** argv)
 {
   WlzObject	*obj;
   FILE	*inFile;
@@ -159,7 +157,7 @@ main(
   }
 
   /* read objects until EOF or an error */
-  while( obj = WlzReadObj(inFile, &errNum) ){
+  while((obj = WlzReadObj(inFile, &errNum)) != NULL){
     (void ) WlzObjectFacts(obj, stderr, NULL, manyFactsFlg);
     WlzFreeObj(obj);
     printf("\n");

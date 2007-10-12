@@ -228,7 +228,7 @@ int main(int	argc,
   }
     
   /* apply mask and write resultant object */
-  if( newobj = WlzGreyMask(obj, mask, maskVal, &errNum) ){
+  if((newobj = WlzGreyMask(obj, mask, maskVal, &errNum)) != NULL){
     if((errNum = WlzWriteObj(stdout, newobj)) != WLZ_ERR_NONE) {
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,

@@ -344,6 +344,8 @@ int             main(int argc, char **argv)
 		case WLZ_PROPERTY_GREY:
 		  name = prop.greyV->name;
 		  break;
+	        default:
+		  break;
 	      }
 	    }
 	  }

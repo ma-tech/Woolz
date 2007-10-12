@@ -47,11 +47,8 @@ static char _WlzBnd3DWarp_c[] = "MRC HGU $Id$";
 WlzObject  *WlzBnd3DWarpFile(char *inFileStr, char *TiePointsFileStr, char *outFileStr, WlzErrorNum *dstErr)
 {
     FILE *inFile = NULL;   /* used to read Woolz object */
-    int option,i;
-    int nbelow = 2, nup = 0;
     int ReadDisplacement = 0;
     int outputAutoMeshVTK = 0,
-    outputAutoMeshWLZ = 0,
     outputTransformedMeshVTK = 0,
     outputTransformedMeshWLZ = 0,
     outputCutPlaneAndCorrepSurfaceVTK = 0,
@@ -60,21 +57,14 @@ WlzObject  *WlzBnd3DWarpFile(char *inFileStr, char *TiePointsFileStr, char *outF
     int numOfElemAlonX = 6,
     numOfElemAlonY = 6,
     numOfElemAlonZ = 6;
-    double xmin = -10.0, xmax = 10.0,
-    ymin = -10.0, ymax = 10.0,
-    zmin = -10.0, zmax = 10.0,
-    zConst = 0.;
-    /*char                *inFileStr, *outFileStr, *TiePointsFileStr;*/
+    const double zConst = 0.0;
 
-    const char *errMsg;
     WlzErrorNum errNum = WLZ_ERR_NONE;
     WlzMeshTransform3D *wmt3D = NULL;
     WlzBasisFnTransform *basisTr = NULL;   /* the transformation functions  */
     WlzFnType basisFnType = WLZ_FN_BASIS_3DMQ;
     WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;  /* Use the nearest neighbour */
     int basisFnPolyOrder = 3;
-    WlzDVertex3 vx4,vx5;
-    WlzIBox3 bBox0 = {0,0,0,-1,-1,-1}; /* store the output Bounding box */
     WlzDBox3 bBoxS = {0.,0.,0.,0.,0.,0.};
     WlzObject *wObjS = NULL; /* source Woolz object */
     WlzObject *wObjW = NULL; /* Warped Woolz object */

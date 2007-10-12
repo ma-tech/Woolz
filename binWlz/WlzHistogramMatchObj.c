@@ -424,8 +424,8 @@ int             main(int argc, char **argv)
     *argv,
     " -m myhist.wlz -i -o matched.wlz mydom.wlz\n"
     "The input Woolz domain object is read from mydom.wlz, matched\n"
-    "to the histogram read from the file myhist.wlz and written to the\n",
-    "file matched.wlz. If the domain object is a 3D object then it's\n",
+    "to the histogram read from the file myhist.wlz and written to the\n"
+    "file matched.wlz. If the domain object is a 3D object then it's\n"
     "planes are matched independently.\n");
   }
   return(!ok);

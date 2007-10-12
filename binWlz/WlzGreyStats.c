@@ -285,7 +285,7 @@ int             main(int argc, char **argv)
 	{
 	  (void )fprintf(fP,
 			 "area        % 14d\n"
-			 "grey type   % 14s\n"
+			 "grey type    %14s\n"
 			 "min         % 14g\n"
 			 "max         % 14g\n"
 			 "sum         % 14g\n"

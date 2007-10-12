@@ -60,8 +60,6 @@ static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP),
 WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr)
 {
   int		idxZ, i,
-  		compPlaneSz,
-  		planeBufSz,
   		planeSz, pixelSz;
   void 		***data;
   unsigned char	***ubData = NULL;
@@ -177,6 +175,8 @@ WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr)
 	  planePtr[3] = 0;
 	}
 	break;
+      default:
+        break;
       }
 
       ++idxZ;
@@ -228,14 +228,9 @@ WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr)
 */
 WlzErrorNum	WlzEffWriteObjIPL(FILE *fP, WlzObject *obj)
 {
-  int		idxZ,
-  		planeSz,
-		compPlaneSz,
-		compBufSz;
   WlzIVertex3   size;
   WlzErrorNum	errNum = WLZ_ERR_WRITE_INCOMPLETE;
   WlzIVertex3	origin;
-  unsigned char	*compBuf = NULL;
   unsigned char ***data = NULL;
   WlzEffIPLHeader header;
 

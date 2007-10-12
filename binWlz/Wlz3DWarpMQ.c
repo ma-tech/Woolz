@@ -192,6 +192,7 @@ by transfer only part of your Woolz object.
 #include <stdlib.h>
 #include <float.h>
 #include <string.h>
+#include <unistd.h>
 #include <Wlz.h>
 
 /* externals required by getopt  - not in ANSI C standard */
@@ -213,7 +214,7 @@ int main(int	argc,
 {
 
   FILE	       *inFile = NULL;   /* used to read Woolz object */ 
-  int		option,i;
+  int		option;
   int           nbelow                   = 2, 
                 nup                      = 0;
   int           ReadDisplacement         = 0;
@@ -227,20 +228,15 @@ int main(int	argc,
   int           numOfElemAlonX = 6,
                 numOfElemAlonY = 6,
                 numOfElemAlonZ = 6;
-  double        xmin = -10.0, xmax = 10.0,
-                ymin = -10.0, ymax = 10.0,
-	        zmin = -10.0, zmax = 10.0,
-		       zConst = 0.;
+  double        zConst = 0.0;
   char                *inFileStr, *outFileStr, *TiePointsFileStr;
   char                *outFileMeshTrWlzStr, *inFileMeshTrWlzStr;
-  const char	      *errMsg;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   WlzMeshTransform3D  *wmt3D = NULL;
   WlzBasisFnTransform *basisTr       = NULL;   /* the transformation functions  */
   WlzFnType            basisFnType    = WLZ_FN_BASIS_3DMQ;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;  /* Use the nearest neighbour */
   int                  basisFnPolyOrder = 3;
-  WlzDVertex3 vx4,vx5;
   WlzIBox3             bBox0 = {0,0,0,-1,-1,-1}; /* store the output Bounding box */
   WlzDBox3             bBoxS = {0.,0.,0.,0.,0.,0.};
   WlzObject           *wObjS          = NULL; /* source Woolz object */
@@ -253,9 +249,8 @@ int main(int	argc,
 
   /* read the argument list and check for an input file */
 
-  static char	optList[] = "l:m:n:x:y:z:X:Y:Z:i:j:k:O:o:p:t:M:c:C:b:u:r:R:e:E:f:F:g:G:a:A:Q:q:W:B:hGL",
+  static char	optList[] = "l:m:n:x:y:z:X:Y:Z:i:j:k:O:o:p:t:M:c:C:b:u:r:R:e:E:f:F:g:G:a:A:Q:q:W:B:hGL";
 
-  opterr = 0;
   /*
   bBox0.xMin = 0;
   bBox0.xMax = -1;
@@ -484,14 +479,6 @@ int main(int	argc,
               return(0);
       }
    }
-  /*
-
-  if(errNum != WLZ_ERR_NONE) {
-    (void )WlzStringFromErrorNum(errNum, &errMsg);
-    (void )fprintf(stderr,
-    		   "%s: failed to make boundary list (%s)\n",
-		   argv[0], errMsg);
-  }   */
 
   /* read Woolz object */
   if((inFile = fopen(inFileStr, "r")) == NULL )

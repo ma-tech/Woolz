@@ -138,6 +138,7 @@ are the median of the input object values.
 #include <float.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 #include <Wlz.h>
 
 extern char 	*optarg;
@@ -161,7 +162,6 @@ int		main(int argc, char *argv[])
   char		*fStr,
   		*outObjFileStr = NULL,
 		*refObjFileStr = NULL;
-  char		**inFileStr = NULL;
   const char	*errMsgStr;
   WlzObject	*refObj = NULL,
   		*outObj = NULL;
@@ -283,7 +283,7 @@ int		main(int argc, char *argv[])
         ++nObjs;
       }
     }
-    if(errNum = WLZ_ERR_EOO)
+    if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
     }

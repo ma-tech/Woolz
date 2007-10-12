@@ -159,7 +159,7 @@ int main(int	argc,
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
       values.core = NULL;
-      if( tmpObj = WlzDomainFill(obj, &errNum) ){
+      if((tmpObj = WlzDomainFill(obj, &errNum)) != NULL){
 	if((errNum = WlzWriteObj(stdout, tmpObj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,

@@ -154,8 +154,8 @@ int main(int	argc,
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
       values.core = NULL;
-      if( tmpObj = WlzMakeMain(obj->type, obj->domain, values,
-			       obj->plist, obj->assoc, &errNum) ){
+      if((tmpObj = WlzMakeMain(obj->type, obj->domain, values,
+			       obj->plist, obj->assoc, &errNum)) != NULL){
 	if((errNum = WlzWriteObj(stdout, tmpObj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,

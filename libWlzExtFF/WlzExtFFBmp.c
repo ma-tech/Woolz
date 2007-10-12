@@ -121,7 +121,6 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
   WlzEffBmpRGBQuad mapC;
   WlzEffBmpFileHead fHead;
   WlzEffBmpInfoHead iHead;
-  const unsigned char padBuf[] = {0x00, 0x00, 0x00, 0x00};
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((fP = fopen(fNameStr, "w")) == NULL)
@@ -581,7 +580,7 @@ WlzErrorNum 	WlzEffReadObjBmpData2D(FILE *fP, WlzIVertex2 *gvnImgSz,
 			     iHead.biWidth) != ALC_ER_NONE) ||
 	   (*data == NULL))
         {
-	  WLZ_ERR_MEM_ALLOC;
+	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -610,7 +609,8 @@ WlzErrorNum 	WlzEffReadObjBmpData2D(FILE *fP, WlzIVertex2 *gvnImgSz,
 	}
 	else 				 /* 24 bit image data, no colour map */
 	{
-	  *dataPtr++ = (*imgPtr++ + *imgPtr++ + *imgPtr++) / 3;
+	  *dataPtr++ = (*imgPtr + *(imgPtr + 1) + *(imgPtr + 2)) / 3;
+	  imgPtr += 3;
 	}
       }
     }

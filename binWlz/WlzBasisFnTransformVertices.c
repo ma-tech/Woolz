@@ -164,8 +164,6 @@ int             main(int argc, char **argv)
 		*vertVecTr = NULL,
 		srcV,
 		transV;
-  WlzObject	*inObj   = NULL,
-		*outObj  = NULL;
   WlzMeshTransform *meshTr = NULL;
   WlzBasisFnTransform *basisTr = NULL;
   WlzFnType basisFnType = WLZ_FN_BASIS_2DMQ;

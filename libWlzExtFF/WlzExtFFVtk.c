@@ -177,9 +177,7 @@ static WlzErrorNum WlzEffWriteImgVtk(FILE *fP, WlzObject *obj)
 {
   unsigned char	***data = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  int		bufCount,
-  		bufIdx,
-  		dataCount;
+  int		dataCount;
   WlzFVertex3	aspect;
   WlzIVertex3	origin,
   		size;
@@ -638,7 +636,6 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		vHTSz;
   char *valS;
   WlzGMModel	*model = NULL;
-  WlzObject	*obj = NULL;
   WlzEffVtkPolyDataType prim;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzDVertex3	*pointBuf = NULL;
@@ -702,7 +699,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	        if((pointBuf = (WlzDVertex3 *)AlcRealloc(pointBuf,
 			              sizeof(WlzDVertex3) * nPoints)) == NULL)
 	        {
-		  errNum == WLZ_ERR_MEM_ALLOC;
+		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
 	      }
 	      if(errNum == WLZ_ERR_NONE)
@@ -783,11 +780,11 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS:
 	      /* TODO Read triangle strip polydata. */
-	      errNum == WLZ_ERR_READ_INCOMPLETE;
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_VERTICIES: /* FALLTHROUGH */
 	      /* TODO Read triangle strip polydata. */
-	      errNum == WLZ_ERR_READ_INCOMPLETE;
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_LINES:     /* FALLTHROUGH */
 	      if(model == NULL)
@@ -850,7 +847,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      break;
 	    default:
-	      errNum == WLZ_ERR_READ_INCOMPLETE;
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	  }
 	}

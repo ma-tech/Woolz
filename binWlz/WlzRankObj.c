@@ -102,10 +102,13 @@ the object read from the file in.wlz.
 #include <Wlz.h>
 
 
-extern char 	*optarg;
-extern int 	optind,
-		opterr,
-		optopt;
+/* externals required by getopt  - not in ANSI C standard */
+#ifdef __STDC__ /* [ */
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+ 
+extern int 	optind, opterr, optopt;
+extern char     *optarg;
+#endif /* __STDC__ ] */
 
 int		main(int argc, char *argv[])
 {

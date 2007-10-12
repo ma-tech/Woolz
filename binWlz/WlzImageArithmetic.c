@@ -420,6 +420,9 @@ int             main(int argc, char **argv)
 	      gMax[0].v.dbv = gMax[1].v.dbv;
 	    }
 	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
 	}
       }
     }

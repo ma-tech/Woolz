@@ -226,6 +226,8 @@ int             main(int argc, char **argv)
 		    *(histDom->binValues.dbp + idx));
 	  }
 	  break;
+        default:
+	  break;
       }
     }
     if(fP && strcmp(outObjFileStr, "-"))

@@ -319,6 +319,8 @@ int             main(int argc, char **argv)
 		      *(histDom->binValues.dbp + idx));
 	    }
 	    break;
+	  default:
+	    break;
 	}
       }
     }
@@ -370,7 +372,7 @@ int             main(int argc, char **argv)
     *argv,
     " -s 0.0 -w 10.0 -n 30 -a myhist.wlz | xgraph\n"
     "The input Woolz histogram object is read from myhist.wlz, re-bined\n"
-    "so that it starts at 0.0, has 30 bins of width 10.0, and is written\n",
+    "so that it starts at 0.0, has 30 bins of width 10.0, and is written\n"
     "as ascii to the program xgraph for display.\n");
   }
   return(!ok);

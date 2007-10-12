@@ -121,10 +121,7 @@ int             main(int argc, char **argv)
 {
   int		option,
 		ok = 1,
-		usage = 0,
-		printFtrPrm = 0;
-  unsigned int	actMsk = WLZ_RSVFILTER_ACTION_X | WLZ_RSVFILTER_ACTION_Y |
-  			 WLZ_RSVFILTER_ACTION_Z;
+		usage = 0;
   double	ftrMlt = 1.0,
   		ftrPrm = 1.0;
   WlzRsvFilterName ftrName = WLZ_RSVFILTER_NAME_DERICHE_1;

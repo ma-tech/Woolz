@@ -292,13 +292,13 @@ static WlzObject *WlzSelect1InN(
       new_lastpl = p / step;
     }
 
-    if( domain.p = WlzMakePlaneDomain(obj->domain.p->type,
+    if((domain.p = WlzMakePlaneDomain(obj->domain.p->type,
 				      new_plane1, new_lastpl,
 				      obj->domain.p->line1,
 				      obj->domain.p->lastln,
 				      obj->domain.p->kol1,
 				      obj->domain.p->lastkl,
-				      &errNum) ){
+				      &errNum)) != NULL){
       domain.p->voxel_size[0] = obj->domain.p->voxel_size[0];
       domain.p->voxel_size[1] = obj->domain.p->voxel_size[1];
       domain.p->voxel_size[2] = step * (obj->domain.p->voxel_size[2]);

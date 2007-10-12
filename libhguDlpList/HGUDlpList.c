@@ -521,7 +521,7 @@ HGUDlpListItem	*HGUDlpListNth(HGUDlpList *list, HGUDlpListItem *item,
         if(dir == HGU_DLPLIST_DIR_TOHEAD)
 	  dir = HGU_DLPLIST_DIR_TOTAIL;
         else
-	  dir == HGU_DLPLIST_DIR_TOHEAD;
+	  dir = HGU_DLPLIST_DIR_TOHEAD;
       }
       if(offset > list->itemCount)        /* Check that offset is reasonable */
 	item = NULL;

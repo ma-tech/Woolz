@@ -187,6 +187,7 @@ static  WlzErrorNum WlzTetrahedronProducer(int nxmax, int nymax, int nzmax,
    double xmin, double xmax, double ymin , double ymax, double zmin, double zmax);
 */
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 static void GetGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix, 
                      int *intensity,    WlzErrorNum  *dstErr );
 		     
@@ -194,13 +195,14 @@ static void FillGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix,
                      int intensity,    WlzErrorNum  *dstErr );
 
 
-static void  outPutSectionsForTest(
+static void  OutPutSectionsForTest(
                   WlzObject   *WObjS, 
 		  WlzObject   *WObj2D, 
 		  FILE        *outFile, 
 		  char        *outFileStr,
 		  int          iloop,
 		  WlzErrorNum *errNum);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 
 static void usage(char *proc_str);  
@@ -210,21 +212,15 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  FILE	       *inFile = NULL;   /* used to read Woolz object */ 
-  FILE	       *outFile = NULL;   /* used to read Woolz object */
-  int           i,j,k, m, l1;
+  FILE	        *inFile = NULL;   /* used to read Woolz object */ 
+  /* FILE       *outFile = NULL;   used to read Woolz object */
+  int           i;
   int           startShell = -10, endShell = -15, startSection = -10, endSection = -15;
   int           startLoop  = -10, endLoop  = -15;
   int           downOrUp = 0;
   int		option;
-  int           numChar, numChar1, TotalN;
-  int           basisFnPolyOrder = 3;
-  int           Inumber, numP_in_Z= 10;
-  int           globalCycle;
-  int           binObjFlag;
-  int           centorOfMass = 1;
-  int           numOf2DWlzFiles = 0, numOfVtkFiles = 0;
-  int           initialn0, endNum0,initialn1, endNum1;
+  int           numP_in_Z= 10;
+  int           numOf2DWlzFiles = 0;
   int           sectionLength_N       = 40;
   int           subSubSectionLength_L = sectionLength_N /2;
   int           numberOfSampleP_k     =  2;
@@ -232,29 +228,18 @@ int main(int	argc,
   int           startTrackingFile     =  5;
   int           iloop=1, test=0;
   double        DisForInOut = 15, DisForInOutGuid = 15;
-  double	zConst                   = 0.;
-  double        mass = 0.0;
   double        minDis = 10.;
-  char          under ='_';
-  char          ctemp;
-  char         *inFileStr, *inFileStr3, *outFileStr;
+  char         *outFileStr;
   unsigned char        **TwoDImageFilesNameList;
   char         *ContourFilesNameList;
   char         *surfacePointFileName, *surfaceInPointFileName, *surfaceOutPointFileName;
-  char         *cstr;
-  const char   *errMsg;
   WlzDVertex3          *SurfacePatchPoints;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;  /* Use the nearest neighbour */
-  WlzThreeDViewStruct *wlzViewStr, *wlzViewStr1, *wlzViewStrInter;
   AlcErrno             alcErr = ALC_ER_NONE;
-  WlzObjectType        wtp = WLZ_3D_DOMAINOBJ;
 
   /* read the argument list and check for an input file */
-  static char	optList[] = "s:t:n:o:O:i:l:L:j:J:a:A:b:B:c:d:e:E:f:F:g:G:h",
+  static char	optList[] = "s:t:n:o:O:i:l:L:j:J:a:A:b:B:c:d:e:E:f:F:g:G:h";
 
-  opterr = 0;
- 
   while( (option = getopt(argc, argv, optList)) != EOF )
   {
       switch( option )
@@ -444,7 +429,7 @@ int main(int	argc,
     /*
     if(test  &&  ( errNum == WLZ_ERR_NONE ) )
     {
-      outPutSectionsForTest(WObjS, WObj2D, outFile, outFileStr, iloop, &errNum);
+      OutPutSectionsForTest(WObjS, WObj2D, outFile, outFileStr, iloop, &errNum);
      }
     */
     /*---------- extract contour and track down or up  to get the surface patch ----------- */
@@ -547,6 +532,7 @@ static void usage(char *proc_str)
 }
 
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * - Function:   WlzEffWriteMeshTransform3DWithoutDisplacementVTK
 * - Returns:    none 
@@ -556,10 +542,10 @@ static void usage(char *proc_str)
 *     -#  wmt3D:            mesh transform.
 * - Author:       J. Rao, R. Baldock and B. Hill
 */
-static void  outPutSectionsForTest(
+static void  OutPutSectionsForTest(
                   WlzObject   *WObjS, 
 		  WlzObject   *WObj2D, 
-		  FILE        *outFile, 
+		  /* FILE        *outFile;  */
 		  char        *outFileStr, 
 		  int          iloop,
 		  WlzErrorNum *errNum){
@@ -711,7 +697,6 @@ static void  outPutSectionsForTest(
 
 }
 
-
 static void GetGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix, 
                      int *intensity,    WlzErrorNum  *dstErr )
 {
@@ -738,9 +723,6 @@ static void GetGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix,
 	              break;
               }
 }
-
-
-
 		     
 static void FillGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix, 
                      int intensity,    WlzErrorNum  *dstErr )
@@ -768,5 +750,6 @@ static void FillGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix,
 	              break;
             }
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

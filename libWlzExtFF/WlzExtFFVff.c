@@ -352,10 +352,10 @@ static int	WlzEffHeadRecParseVff(WlzEffVffHeader *header, char *recStr)
 	    if(((token = strtok(NULL, " \t,;")) != NULL) &&
 	       (sscanf(token, "%lg", &(header->origin.vtX)) == 1) &&
 	       ((token = strtok(NULL, " \t,;")) != NULL) &&
-	       (sscanf(token, "%dg", &(header->origin.vtY)) == 1))
+	       (sscanf(token, "%lg", &(header->origin.vtY)) == 1))
 	    {
 	      if(((token = strtok(NULL, " \t;")) == NULL) ||
-	         (sscanf(token, "%dg", &(header->origin.vtZ)) != 1))
+	         (sscanf(token, "%lg", &(header->origin.vtZ)) != 1))
 	      {
 	        header->size.vtZ = 1;
 	      }
@@ -366,10 +366,10 @@ static int	WlzEffHeadRecParseVff(WlzEffVffHeader *header, char *recStr)
 	    if(((token = strtok(NULL, " \t,;")) != NULL) &&
 	       (sscanf(token, "%lg", &(header->extent.vtX)) == 1) &&
 	       ((token = strtok(NULL, " \t,;")) != NULL) &&
-	       (sscanf(token, "%dg", &(header->extent.vtY)) == 1))
+	       (sscanf(token, "%lg", &(header->extent.vtY)) == 1))
 	    {
 	      if(((token = strtok(NULL, " \t;")) == NULL) ||
-	         (sscanf(token, "%dg", &(header->extent.vtZ)) != 1))
+	         (sscanf(token, "%lg", &(header->extent.vtZ)) != 1))
 	      {
 	        header->size.vtZ = 1;
 	      }
@@ -380,10 +380,10 @@ static int	WlzEffHeadRecParseVff(WlzEffVffHeader *header, char *recStr)
 	    if(((token = strtok(NULL, " \t,;")) != NULL) &&
 	       (sscanf(token, "%lg", &(header->aspect.vtX)) == 1) &&
 	       ((token = strtok(NULL, " \t,;")) != NULL) &&
-	       (sscanf(token, "%dg", &(header->aspect.vtY)) == 1))
+	       (sscanf(token, "%lg", &(header->aspect.vtY)) == 1))
 	    {
 	      if(((token = strtok(NULL, " \t;")) == NULL) ||
-	         (sscanf(token, "%dg", &(header->aspect.vtZ)) != 1))
+	         (sscanf(token, "%lg", &(header->aspect.vtZ)) != 1))
 	      {
 	        header->size.vtZ = 1;
 	      }

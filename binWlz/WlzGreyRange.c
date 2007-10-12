@@ -193,6 +193,8 @@ int main(int	argc,
 		  WlzStringFromObjType(obj, NULL),
 		  gmin.v.dbv, gmax.v.dbv);
 	  break;
+	default:
+	  break;
 	}
       }
       break;

@@ -106,7 +106,7 @@ int main(int	argc,
   FILE		*inFile;
   char 		optList[] = "h";
   int		option;
-  int		count, vol;
+  int		count;
   const char    *errMsg;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
     

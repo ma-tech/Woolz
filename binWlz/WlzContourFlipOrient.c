@@ -97,6 +97,8 @@ and writes the output to out.wlz.
 #include <string.h>
 #include <Wlz.h>
 
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+
 extern char 	*optarg;
 extern int 	optind,
 		opterr,

@@ -157,7 +157,7 @@ int main(int	argc,
     {
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      if( newobj = WlzObjToConvexPolygon(obj, &errNum) ){
+      if((newobj = WlzObjToConvexPolygon(obj, &errNum)) != NULL){
 	if((errNum = WlzWriteObj(stdout, newobj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,

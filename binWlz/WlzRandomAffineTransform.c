@@ -206,8 +206,7 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		idx,
-  		option,
+  int		option,
 		ok = 1,
 		usage = 0,
 		dim = 2,
@@ -432,6 +431,8 @@ int             main(int argc, char **argv)
       case WLZ_TRANSFORM_2D_TRANS:
         trType = WLZ_TRANSFORM_3D_TRANS;
 	break;
+      default:
+        break;
     }
   }
   /* Compute the random primatives. */

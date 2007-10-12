@@ -112,7 +112,6 @@ int             main(int argc, char **argv)
   		unionFlg = 0;
   double 	cCor = 0.0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzTransformType trType = WLZ_TRANSFORM_2D_REG;
   WlzDomain	outDom;
   WlzValues	nullVal;
   WlzObject	*inObj[2];
@@ -220,7 +219,7 @@ int             main(int argc, char **argv)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr, "%s: Input object(s) not appropriate\n",
+      (void )fprintf(stderr, "%s: Input object(s) not appropriate (%s).\n",
 		     *argv, errMsg);
     }
   }

@@ -350,37 +350,38 @@ int main(int	argc,
   case 7:
   case 8:
   case 9:
-    if( obj = WlzMakeSpecialStructElement(seType, subType, &errNum) ){
+    if((obj = WlzMakeSpecialStructElement(seType, subType, &errNum)) != NULL){
       WlzWriteObj(stdout, obj);
       WlzFreeObj(obj);
     }
     break;
 
   case 20:
-    if( obj = WlzMakeSinglePixelObject(oType, (int) x, (int) y, (int) z,
-				       &errNum) ){
+    if((obj = WlzMakeSinglePixelObject(oType, (int) x, (int) y, (int) z,
+				       &errNum)) != NULL){
       WlzWriteObj(stdout, obj);
       WlzFreeObj(obj);
     }
     break;
 
   case 21:
-    if( obj = WlzMakeCircleObject(radius, x, y, &errNum) ){
+    if((obj = WlzMakeCircleObject(radius, x, y, &errNum)) != NULL){
       WlzWriteObj(stdout, obj);
       WlzFreeObj(obj);
     }
     break;
 
   case 22:
-    if( obj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, radius, x, y, z,
-				  &errNum) ){
+    if((obj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, radius, x, y, z,
+				  &errNum)) != NULL){
       WlzWriteObj(stdout, obj);
       WlzFreeObj(obj);
     }
     break;
 
   case 23:
-    if( obj = WlzMakeStdStructElement(oType, dType, radius, &errNum) ){
+    if((obj = WlzMakeStdStructElement(oType, dType, radius,
+    				      &errNum)) != NULL){
       WlzWriteObj(stdout, obj);
       WlzFreeObj(obj);
     }

@@ -265,6 +265,8 @@ int             main(int argc, char **argv)
 		      *(histDom->binValues.dbp + idx));
 	    }
 	    break;
+	  default:
+	    break;
 	}
       }
     }
@@ -313,8 +315,8 @@ int             main(int argc, char **argv)
     *argv,
     " -s3 -a myhist.wlz | xgraph\n"
     "The input Woolz histogram object is read from myhist.wlz, smoothed\n"
-    "by convolving the histogram bins with a gaussian which has a half\n",
-    "height half width of 3 histogram bins, and written as ascii to the\n",
+    "by convolving the histogram bins with a gaussian which has a half\n"
+    "height half width of 3 histogram bins, and written as ascii to the\n"
     "program xgraph for display.\n");
   }
   return(!ok);

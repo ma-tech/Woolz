@@ -213,7 +213,7 @@ int             main(int argc, char **argv)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr, "%s: input object(s) not appropriate\n",
+      (void )fprintf(stderr, "%s: input object(s) not appropriate (%s).\n",
 		     *argv, errMsg);
     }
   }

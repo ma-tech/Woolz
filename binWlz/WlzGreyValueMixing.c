@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <string.h>
+#include <unistd.h>
 #include <Wlz.h>
 
 /* externals required by getopt  - not in ANSI C standard */
@@ -36,24 +37,21 @@ int main(int	argc,
 {
 
   FILE	       *inFile = NULL;   /* used to read Woolz object */ 
-  int		option,i;
+  int		option;
 
   double        xmidle         = 0;
   
   char                *inFileStr, *outFileStr, *targetfileStr;
-  const char	      *errMsg;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   WlzObject           *wObjS          = NULL; /* source Woolz object */
   WlzObject           *wObjT          = NULL; /* target Woolz object */
-  WlzObject           *wObjW          = NULL; /* mixed grey value Woolz object using source Obj as basis */
-  char                *cstr;
+  WlzObject           *wObjW          = NULL; /* mixed grey value Woolz object
+                                                 using source Obj as basis */
 
   /* read the argument list and check for an input file */
 
-  static char	optList[] = "i:t:o:x:h",
+  static char	optList[] = "i:t:o:x:h";
 
-  opterr = 0;
- 
    while( (option = getopt(argc, argv, optList)) != EOF )
    {
       switch( option )
