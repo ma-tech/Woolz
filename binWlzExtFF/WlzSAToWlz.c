@@ -163,7 +163,7 @@ char *getNextName(
   }
 
   /* search for name tag */
-  while( tag = nextStartTag(inFile) ){
+  while((tag = nextStartTag(inFile)) != NULL){
     if(strcmp(tag, "name") == 0){
       break;
     }
@@ -203,7 +203,7 @@ WlzBoundList *getNextBoundary(
   WlzDVertex2	*vtxs;
 
   /* find the polyline start tag */
-  while( tag = nextStartTag(inFile) ){
+  while((tag = nextStartTag(inFile)) != NULL){
     if(strcmp(tag, "c") == 0){
       break;
     }
@@ -252,7 +252,7 @@ WlzBoundList *getNextBoundary(
   fread(buf, 3, sizeof(char), inFile);
   fseek(inFile, start, SEEK_SET);
   if( strncmp(buf, "<c>", 3) == 0 ){
-    if( bnd1 = getNextBoundary(inFile) ){
+    if((bnd1 = getNextBoundary(inFile)) != NULL){
       /* check for down or next */
       vtxs = (WlzDVertex2 *) bnd1->poly;
       if( WlzInsidePolyEOD(*vtxs, poly, NULL) ){
@@ -315,9 +315,7 @@ void addToBndList(
   return;
 }
 
-main(argc, argv)
-  int         argc;
-  char       *argv[];
+int		main(int argc, char *argv[])
 {
   FILE		*inFile, *outFile;
   char 		optList[] = "hv";
@@ -333,7 +331,6 @@ main(argc, argv)
   NamedBndItem	*namedBndItem;
   int		noNameCntr=0;
   char		noNameBuf[32];
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -367,7 +364,7 @@ main(argc, argv)
   /* quick fix read  - read until no new names */
   bndDLPList = AlcDLPListNew(NULL);
   name = NULL;
-  while( name = getNextName(inFile) ){
+  while((name = getNextName(inFile)) != NULL){
     /* check for empty name */
     if( strcmp(name, " ") == 0 ){
       noNameCntr++;
@@ -385,7 +382,7 @@ main(argc, argv)
     namedBndItem = (NamedBndItem *) bndItem->entry;
     name = (char *) AlcMalloc(sizeof(char)*(strlen(namedBndItem->name)+16));
     sprintf(name, "%s.wlz", namedBndItem->name);
-    if( outFile = fopen(name, "w") ){
+    if((outFile = fopen(name, "w")) != NULL){
       domain.b = namedBndItem->bnd;
       values.core = NULL;
       obj = WlzMakeMain(WLZ_BOUNDLIST, domain, values, NULL, NULL, NULL);

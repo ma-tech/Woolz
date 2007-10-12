@@ -117,19 +117,15 @@ void usage(char *proc_str)
 }
 
 
-main(argc, argv)
-  int         argc;
-  char       *argv[];
+int		main(int argc, char *argv[])
 {
   char       *inf = NULL;
-  char       *outf = NULL;
   long        width,
-    height;
+    	      height;
   int         depth,
     numcolors;
   TIFF 	*tif;
   unsigned char	*inp;
-  unsigned char	*outp;
   int 	col,
     i;
   long 	row;
@@ -241,7 +237,7 @@ main(argc, argv)
   TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
 
   if (verboseFlg)
-    fprintf(stderr, "%dx%dx%d image, \n", width, height, depth);
+    fprintf(stderr, "%ld x %ld x %d image, \n", width, height, depth);
   if (verboseFlg)
     fprintf(stderr, "%d bits/sample, %d samples/pixel,\n",
 	    bitspersample, samplesperpixel);
@@ -295,7 +291,8 @@ main(argc, argv)
   }
 
   if( verboseFlg ){
-    fprintf(stderr, "%s: ScanlineSize = %d\n", argv[0], TIFFScanlineSize(tif));
+    fprintf(stderr, "%s: ScanlineSize = %ld\n",
+            argv[0], (long )TIFFScanlineSize(tif));
   }
   buf = (unsigned char *) AlcMalloc(TIFFScanlineSize(tif));
   if (buf == NULL)
@@ -312,7 +309,7 @@ main(argc, argv)
 
   for (row = 0, offset=0; row < height; row++) {
     if (TIFFReadScanline(tif, buf, row, 0) < 0)
-      fprintf(stderr, "%s: bad data read on line: %d\n", argv[0], row);
+      fprintf(stderr, "%s: bad data read on line: %ld\n", argv[0], row);
     inp = buf;
     switch (photometric) {
     case PHOTOMETRIC_RGB:
@@ -379,9 +376,9 @@ main(argc, argv)
   bckgrnd.type = WLZ_GREY_INT;
   bckgrnd.v.inv = 0;
   
-  if( obj = WlzMakeRect(0, height-1, 0, width-1,
+  if((obj = WlzMakeRect(0, height-1, 0, width-1,
 			newpixtype, wlzData.inp, bckgrnd,
-			NULL, NULL, &errNum) ){
+			NULL, NULL, &errNum)) != NULL){
     WlzWriteObj(stdout, obj);
   }
 

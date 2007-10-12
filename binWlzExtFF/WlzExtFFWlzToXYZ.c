@@ -399,8 +399,8 @@ int main(int	argc,
     }
 
     /* check we can read the file and it includes a woolz 3D object */
-    if( objFp = fopen(filenameBuf, "r") ){
-      if( obj = WlzReadObj(objFp, &errNum) ){
+    if((objFp = fopen(filenameBuf, "r")) != NULL){
+      if((obj = WlzReadObj(objFp, &errNum)) != NULL){
 	if( obj->type != WLZ_3D_DOMAINOBJ ){
 	  fprintf(stderr, "%s: not a 3D object in %s\n", argv[0], filenameBuf);
 	  WlzFreeObj(obj);
@@ -436,7 +436,7 @@ int main(int	argc,
   XYZWriteComment(stdout, "");
 
   /* add a dummy enclosing contour */
-  if( item = HGUDlpListHead(dmnList) ){
+  if((item = HGUDlpListHead(dmnList)) != NULL){
     dmnItem = (DomainItem *) HGUDlpListEntryGet(dmnList, item);
     minL = dmnItem->obj->domain.p->line1;
     maxL = dmnItem->obj->domain.p->lastln;

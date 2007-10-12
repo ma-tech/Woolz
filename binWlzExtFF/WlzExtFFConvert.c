@@ -266,7 +266,7 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	}
 	if( minDimension <= 0 ){
-	  fprintf(stderr, "%s: minDimension must be > zero\n");
+	  fprintf(stderr, "%s: minDimension must be > zero\n", *argv);
 	  usage = 1;
 	  ok = 0;
 	}
@@ -277,7 +277,7 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	}
 	if( maxDimension <= 0 ){
-	  fprintf(stderr, "%s: maxDimension must be > zero\n");
+	  fprintf(stderr, "%s: maxDimension must be > zero\n", *argv);
 	  usage = 1;
 	  ok = 0;
 	}
@@ -461,10 +461,10 @@ int             main(int argc, char **argv)
     }
     trans = WlzAffineTransformFromScale(WLZ_TRANSFORM_2D_AFFINE,
 					scale, scale, scale, &errNum);
-    if( tmpObj = WlzAffineTransformObj(inObj, trans,
+    if((tmpObj = WlzAffineTransformObj(inObj, trans,
 				       linearFlg?WLZ_INTERPOLATION_LINEAR:
 				       WLZ_INTERPOLATION_NEAREST,
-				       &errNum) ){
+				       &errNum)) != NULL){
       tmpObj = WlzAssignObject(tmpObj, &errNum);
       WlzFreeObj(inObj);
       inObj = tmpObj;

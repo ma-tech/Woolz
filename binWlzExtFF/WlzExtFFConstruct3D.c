@@ -133,10 +133,13 @@ in the file img-list.txt.
 #define WLZEFFCON_FILE_STEP	1024
 #define WLZEFFCON_BUF_LEN	256
 
-extern char 		*optarg;
-extern int 		optind,
-			opterr,
-			optopt;
+/* externals required by getopt  - not in ANSI C standard */
+#ifdef __STDC__ /* [ */
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+ 
+extern int 	optind, opterr, optopt;
+extern char     *optarg;
+#endif /* __STDC__ ] */
 
 static WlzErrorNum 		WlzEFFConAddImg(
 				  WlzObject **objP,
@@ -158,7 +161,6 @@ int		main(int argc, char *argv[])
   char		*fStr,
   		*fLstStr = NULL,
   		*outFileStr = NULL;
-  char		**inFileStr = NULL;
   const char	*errMsgStr;
   WlzEffFormat	outFmt = WLZEFF_FORMAT_WLZ;
   WlzDVertex3	voxSz;
@@ -271,7 +273,7 @@ int		main(int argc, char *argv[])
 	               AlcRealloc(objs,
 		                  nObjMax * sizeof(WlzObject *))) == NULL)
             {
-	      errNum == WLZ_ERR_MEM_ALLOC;
+	      errNum = WLZ_ERR_MEM_ALLOC;
 	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)
