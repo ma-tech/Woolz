@@ -48,10 +48,14 @@ static char _Wlz3DWarpMQ_S_c[] = "MRC HGU $Id$";
 	 for 3D warping.  /18/01/2002/           */
 
 #include <stdlib.h>
+#include <ctype.h> /* this is just for isspace() function */
 #include <float.h>
 #include <Wlz.h>
 
 #define	IN_RECORD_MAX   (1024)
+
+
+#undef DEBUGME
 
 typedef struct _WlzMeshScanDElm
 {
@@ -92,17 +96,19 @@ void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
 
 void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp, 
                                               WlzMeshTransform3D *wmt3D);
-
+#ifdef DEBUGME
 void static WlzEffWriteCutplanTetrahedronVTK(FILE *fp, 
                                 const WlzMeshTransform3D *wmt3D,  
 				int *intersectIndex, 
 				int nIntersect );
-
+#endif
+#ifdef DEBUGME
 void static WlzEffWriteOriginalPlaneVTK(FILE *fp, 
 			   const WlzDVertex3 *planepointsO, 
                            int **linkList, 
 			   const int nIntersect,  
 			   const int noRedundancyNumP);
+#endif
 
 void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5);
 
@@ -133,8 +139,10 @@ WlzErrorNum  WlzGetTransformedMesh(WlzMeshTransform3D *wmt3D, WlzBasisFnTransfor
 
 void static Make2D5MeshDisplacement( WlzMeshTransform2D5 *wmt2D5,
 				     WlzDVertex3 *planepointsO );
-
+#ifdef DEBUGME
 int  static GetIntersectTetrahedronNumber(double zConst, WlzMeshTransform3D *wmt3D);
+#endif
+
 
 WlzObject       *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 				         WlzMeshTransform3D   *wmt3D,
@@ -144,7 +152,7 @@ WlzObject       *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 
 
 
-
+#ifdef DEBUGME
 static WlzObject	*WlzMeshTransformObj3D(WlzObject            *srcObj,
 				       WlzMeshTransform3D   *wmt3D,
 				       WlzMeshTransform2D5  *wmt2D5,
@@ -160,7 +168,8 @@ static WlzObject	*WlzMeshTransformObj3D(WlzObject            *srcObj,
 				 WlzMeshScanWSp2D5 *mSnWSp,
 				 WlzIBox3        bBox0
 				       );
-
+#endif
+#ifdef DEBUGME
 static WlzObject *WlzMeshTransformObjPrv3D(WlzObject *srcObj,
 				     WlzMeshTransform3D *mesh,
 				     WlzMeshTransform2D5 *wmt2D5,
@@ -176,6 +185,7 @@ static WlzObject *WlzMeshTransformObjPrv3D(WlzObject *srcObj,
                                  WlzMeshScanWSp2D5 *mSnWSp,
 				 WlzIBox3        bBox0
 				     );
+#endif
 
 WlzIBox3  WlzMQ3DTransformBBoxI3( WlzMeshTransform3D *wmt3D,  
                                   WlzErrorNum        *errNum );
@@ -223,9 +233,10 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
                                  WlzDVertex3 targ2, 
 			         double **Affine2D5With3PointsTrFun );
 
-
+#ifdef DEBUGME
 static WlzPlaneDomain *WlzPDomFromBBox(WlzIBox3  bBox, 
 				       WlzErrorNum *dstErr);
+#endif
 
 void WlzGet2D5Transform( const WlzMeshTransform3D   *wmt3D,
                       int   cutPosition,
@@ -235,22 +246,25 @@ void WlzGet2D5Transform( const WlzMeshTransform3D   *wmt3D,
 
 void   WlzInitializeWmt2D5(WlzMeshTransform2D5  *wmt2D5);
 
-
+#ifdef DEBUGME
 void   static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double                      zConst, 
                                                 const WlzMeshTransform3D   *wmt3D, 
 					        WlzMeshTransform2D5        *wmt2D5
 					     );
-
+#endif
+#ifdef DEBUGME
 void  static validityOfMinAndMax( const int   nxmax, const int   nymax, const int   nzmax, 
                            const double xmin, const double xmax, 
 			   const double ymin, const double ymax,
 			   const double zmin, const double zmax  );
+#endif
 
-
+#ifdef DEBUGME
 void  static ElementsGenerator(const int nxmax, const int nymax, const int nzmax,
                         WlzMeshTransform3D   *wmt3D, 
 			const int *intersectionTable);
-
+#endif
+#ifdef DEBUGME
 void static GetIntersectionTable( const int nxmax, const int nymax, const int nzmax,
                              const double xmin, const double ymin, const double zmin,
                              const double xdelta, const double ydelta, const double zdelta,
@@ -258,13 +272,14 @@ void static GetIntersectionTable( const int nxmax, const int nymax, const int nz
 			     int *intersectionTable 
 			   );
 
-
+#endif
 
 WlzErrorNum  read_WlzTiePoints( FILE *fp, int *nTiePP, 
                      WlzDVertex3 **vxVec0, 
 		     WlzDVertex3 **vxVec1, 
 		     const int  ReadDisplacement  );
 
+#ifdef DEBUGME
 void static AllocateMemForElemAndNodes(WlzMeshTransform3D   *wmt3D,
                                 const int nxynumber,  
 			        const int nxnumber,
@@ -275,7 +290,7 @@ void static AllocateMemForElemAndNodes(WlzMeshTransform3D   *wmt3D,
 			        const double ydelta,
 			        const double zdelta
                                 );
-
+#endif
 
 WlzMeshTransform3D *WlzTetrahedronMeshFromObj( WlzObject *wObjC, const WlzDBox3 bBoxS,
 				       const int numOfElemAlonX,
@@ -405,7 +420,7 @@ WlzErrorNum WlzTetrahedronProducerFromCube(
   int indexOfNextFirst,
   WlzMeshElem3D *elements)
 {
-  int		tI0,
+  int	     /*	tI0, */
 		i,
 		Node0,
 		Node1,
@@ -414,22 +429,31 @@ WlzErrorNum WlzTetrahedronProducerFromCube(
 		Node4,
 		Node5,
 		Node6,
-		Node7,
-  		intersect;
-  double 	cVal[8],	  /* Cube's values relative to the iso-value */
-  		tVal[4];			       /* Tetrahedron values */
-  WlzDVertex3	tPos[4];
+    Node7;
+  /*	intersect; */
+/* Cube's values relative to the iso-value */
+  /* double 	cVal[8], */	 
+/* Tetrahedron values */ 
+    /* 		tVal[4];	*/		       
+  /* WlzDVertex3	tPos[4]; */
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	tVxLUT[6][4] =  /* Tetrahedron to cube vertex look up table */
-  {
-    {1, 7, 0, 3}, {1, 7, 3, 2}, {1, 7, 2, 6},
-    {1, 7, 6, 5}, {1, 7, 5, 4}, {1, 7, 4, 0}
-  };
-  const WlzDVertex3 cPos[8] =	 /* Cube positions, order is {vtX, vtY, vtZ} */
-  {
-    {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0},
-    {0.0, 0.0, 1.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}
-  };
+
+  /* Tetrahedron to cube vertex look up table */
+  /*!const int	tVxLUT[6][4] =  
+   *{
+   * {1, 7, 0, 3}, {1, 7, 3, 2}, {1, 7, 2, 6},
+   * {1, 7, 6, 5}, {1, 7, 5, 4}, {1, 7, 4, 0}
+   *};
+   */
+ /* Cube positions, order is {vtX, vtY, vtZ} */
+  /*!
+   * const WlzDVertex3 cPos[8] =	 
+   *{
+   *  {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 0.0},
+   *  {0.0, 0.0, 1.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}
+   *};
+   */
+
    
   /* Calculate the index of the in this cube  counting from 0 */ 
         
@@ -604,13 +628,13 @@ int WlzIsoIntersectWithTetrahadronIndex(  double                      zConst,
 					  int                        *noRedundancyCutingNum,
 					  int                        *numTotalTrangularElem)
 {
-  int      i, j0, j1, j2, j3, k, k1, kmin, kmax, itemp;
+  int      i, j0, j1, j2, j3, k, k1, itemp;/* kmin, kmax */
   int      nIntersect = 0;
   int      nUp;
   int      iup, idown, icount, numberOfTriangular=0, isnumber=0;
   int      n0up, n1up, n2up, n3up;
   double   z0, z1, z2, z3;
-  double   zt;
+  /* double   zt; */
 
  /* WlzDVertex3 planepoints[3000]; */  /* store the cutting points */
  /* int         linkList[3000][5];   */   /* store the linked list
@@ -621,7 +645,7 @@ int WlzIsoIntersectWithTetrahadronIndex(  double                      zConst,
   WlzDVertex3 wv3up[4];
   WlzDVertex3 wv3down[4];
   WlzDVertex3 tempw;
-    int       iidebug = 1;
+  /* int       iidebug = 1; */
     int       idex;
   
   icount = 0;  /* used to count how many points cutted (no redundancy counting) */
@@ -1005,7 +1029,7 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
   int           thresh;
   const double  tol  = 1.0e-06;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlgError      algerr;
+
 
   /*------- allocate memory --------*/
   if (
@@ -1251,19 +1275,19 @@ void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
             ( (wmt3D->elements+i)->nodes[3]  > 0  )  )
      { 
 
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, (wmt3D->elements+i)->nodes[0],
-                                          (wmt3D->elements+i)->nodes[1], 
-				          (wmt3D->elements+i)->nodes[2] );
+       fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt3D->elements+i)->nodes[0],
+	       (wmt3D->elements+i)->nodes[1], 
+	       (wmt3D->elements+i)->nodes[2] );
 				    
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, (wmt3D->elements+i)->nodes[1],
+        fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt3D->elements+i)->nodes[1],
                                           (wmt3D->elements+i)->nodes[2], 
 				          (wmt3D->elements+i)->nodes[3] );
 				    
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,  (wmt3D->elements+i)->nodes[2],
+        fprintf(fp, "%d  %d  %d  %d\n",3,(wmt3D->elements+i)->nodes[2],
                                           (wmt3D->elements+i)->nodes[3], 
 				          (wmt3D->elements+i)->nodes[0] );
 
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,  (wmt3D->elements+i)->nodes[3],
+        fprintf(fp, "%d  %d  %d  %d\n",3, (wmt3D->elements+i)->nodes[3],
                                           (wmt3D->elements+i)->nodes[0], 
 				          (wmt3D->elements+i)->nodes[1] );
 
@@ -1331,19 +1355,19 @@ void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp,
             ( (wmt3D->elements+i)->nodes[3]  > 0 )  )
      { 
 
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, (wmt3D->elements+i)->nodes[0],
+        fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt3D->elements+i)->nodes[0],
                                           (wmt3D->elements+i)->nodes[1], 
 				          (wmt3D->elements+i)->nodes[2] );
 				    
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, (wmt3D->elements+i)->nodes[1],
+        fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt3D->elements+i)->nodes[1],
                                           (wmt3D->elements+i)->nodes[2], 
 				          (wmt3D->elements+i)->nodes[3] );
 				    
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,  (wmt3D->elements+i)->nodes[2],
+        fprintf(fp, "%d  %d  %d  %d\n",3,  (wmt3D->elements+i)->nodes[2],
                                           (wmt3D->elements+i)->nodes[3], 
 				          (wmt3D->elements+i)->nodes[0] );
 
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,  (wmt3D->elements+i)->nodes[3],
+        fprintf(fp, "%d  %d  %d  %d\n",3,  (wmt3D->elements+i)->nodes[3],
                                           (wmt3D->elements+i)->nodes[0], 
 				          (wmt3D->elements+i)->nodes[1] );
 
@@ -1361,6 +1385,7 @@ void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp,
 * \param    nIntersect       number of intersect with the tetrahedron.
 * \author       J. Rao, R. Baldock and B. Hill
 */
+#ifdef DEBUGME
 void static  WlzEffWriteCutplanTetrahedronVTK(FILE *fp, 
                      const WlzMeshTransform3D *wmt3D,  int *intersectIndex, int nIntersect )
 {
@@ -1417,26 +1442,26 @@ void static  WlzEffWriteCutplanTetrahedronVTK(FILE *fp,
 	    ( (wmt3D->elements+j )->nodes[3]  < 0 )    )
      { 
 
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,(wmt3D->elements+j)->nodes[0],
+        fprintf(fp, "%d  %d  %d  %d\n",3,(wmt3D->elements+j)->nodes[0],
                                              (wmt3D->elements+j)->nodes[1], 
 				             (wmt3D->elements+j)->nodes[2] );
 				    
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,(wmt3D->elements+j)->nodes[1],
+        fprintf(fp, "%d  %d  %d  %d\n",3,(wmt3D->elements+j)->nodes[1],
                                              (wmt3D->elements+j)->nodes[2], 
 				             (wmt3D->elements+j)->nodes[3] );
 					     
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,(wmt3D->elements+j)->nodes[2],
+        fprintf(fp, "%d  %d  %d  %d\n",3,(wmt3D->elements+j)->nodes[2],
                                              (wmt3D->elements+j)->nodes[3], 
 				             (wmt3D->elements+j)->nodes[0] );
 
-        fprintf(fp, "%ld  %ld  %ld  %ld\n",3,(wmt3D->elements+j)->nodes[3],
+        fprintf(fp, "%d  %d  %d  %d\n",3,(wmt3D->elements+j)->nodes[3],
                                              (wmt3D->elements+j)->nodes[0], 
 				             (wmt3D->elements+j)->nodes[1] );
      }
   }
   /* --------output for check part finished-------- */
 }
-
+#endif
 
 /*!
 * \return   None
@@ -1449,6 +1474,7 @@ void static  WlzEffWriteCutplanTetrahedronVTK(FILE *fp,
 * \param    noRedundancyNumP number of points in the mesh nodes.
 * \author:       J. Rao, R. Baldock and B. Hill
 */
+#ifdef DEBUGME
 void static WlzEffWriteOriginalPlaneVTK(FILE *fp, 
 			   const WlzDVertex3 *planepointsO, 
                            int **linkList, 
@@ -1496,22 +1522,24 @@ void static WlzEffWriteOriginalPlaneVTK(FILE *fp,
   for(i=0; i< nIntersect; i++)
   {
      if( *(*(linkList+i ) +0) == 3 )
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, *(*(linkList+i ) + 1),
+        fprintf(fp, "%d  %d  %d  %d\n", 3, *(*(linkList+i ) + 1),
                                           *(*(linkList+ i ) + 2), 
 				          *(*(linkList+i ) + 3) ); 
                       
         if( *(*(linkList+i ) +0) == 4 )
 	{
-         fprintf(fp, "%ld  %ld  %ld   %ld\n", 3, *(*(linkList+i ) + 1),
+         fprintf(fp, "%d  %d  %d   %d\n", 3, *(*(linkList+i ) + 1),
                                                *(*(linkList+i ) + 2), 
 				               *(*(linkList+i ) + 3)
 				                );
-         fprintf(fp, "%ld  %ld  %ld   %ld\n", 3, *(*(linkList+i ) + 1),
+         fprintf(fp, "%d  %d  %d  %d\n", 3, *(*(linkList+i ) + 1),
 				               *(*(linkList+i ) + 3),
 				               *(*(linkList+i ) + 4) );
         }
   }
 }
+
+#endif
 
 
 /*!
@@ -1582,10 +1610,10 @@ void static Make2D5TriangleMeshFromCuttedPlane(WlzMeshTransform2D5 *wmt2D5,
 				       int nIntersect,  
 				       int noRedundancyNumP)
 {
-  int i, j, k, k1, it, it0, it1, it2;
+  int i, j, k, it;
   int n[3]; 
   int np[3]; 
-  int neighbour[3];
+  /* int neighbour[3]; */
    /* copy the nodes 
       correct        */
   for(i=0; i< wmt2D5->nNodes; i++)
@@ -1677,7 +1705,7 @@ void static Make2D5TriangleMeshFromCuttedPlane(WlzMeshTransform2D5 *wmt2D5,
 */
 int static IsNeighbour(int *n, int *np, int *it)
 {
-  int i, j, k;
+  int i, j,k=0;
   int itt0= 0, itt1 = 0;
   /* ---- test for the node 0 ---- */
     for(j=0; j<3; j++)
@@ -1837,7 +1865,7 @@ int static IsNeighbour(int *n, int *np, int *it)
 */
 WlzErrorNum  write_Wlz2D5Mesh(FILE *fp, char *cstr, WlzMeshTransform2D5 *wmt2D5)
 {
-  int i, j, it;
+  int i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   if((fp = fopen(cstr, "w")) == NULL )
   {
@@ -1900,8 +1928,8 @@ static WlzMeshScanWSp2D5 *WlzMeshScanWSpInit2D5( WlzMeshTransform2D5 *mesh,
   WlzMeshElem	*elm;
   WlzMeshScanWSp2D5 *meshSnWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  int  l,m,n;
-  WlzDVertex2   v2[3];
+ 
+ 
 
   if((meshSnWSp = (WlzMeshScanWSp2D5 *)
   		  AlcCalloc(1, sizeof(WlzMeshScanWSp2D5))) == NULL)
@@ -2224,7 +2252,7 @@ WlzErrorNum Write_WlzCutScanLines(
   WlzMeshScanWSp2D5 *mSnWSp)
 {
 
-  int i, j, it;
+  int i;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   if((fp = fopen(cstr, "w")) == NULL )
@@ -2254,6 +2282,7 @@ WlzErrorNum Write_WlzCutScanLines(
 * \param    wmt3D            mesh transform.
 * \author:       J. Rao, R. Baldock and B. Hill
 */
+#ifdef DEBUGME
 int  static GetIntersectTetrahedronNumber(double zConst, 
                                           WlzMeshTransform3D *wmt3D)
 {
@@ -2328,6 +2357,8 @@ int  static GetIntersectTetrahedronNumber(double zConst,
    }
    return icount;
 }
+#endif
+
 
 /*!
 * \return   None
@@ -2602,7 +2633,7 @@ void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
   fprintf(fp, "%s %d %d\n","POLYGONS", wmt2D5->nElem,  wmt2D5->nElem * sizeof(float) ); 
   for(i=0; i< wmt2D5->nElem ; i++)
   {
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, (wmt2D5->elements+i)->nodes[0],
+        fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt2D5->elements+i)->nodes[0],
                                                (wmt2D5->elements+i)->nodes[1],
                                                (wmt2D5->elements+i)->nodes[2]
                );
@@ -2641,7 +2672,7 @@ void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
   fprintf(fp, "%s %d %d\n","POLYGONS", wmt2D5->nElem,  wmt2D5->nElem * sizeof(float) ); 
   for(i=0; i< wmt2D5->nElem ; i++)
   {
-        fprintf(fp, "%ld  %ld  %ld  %ld\n", 3, (wmt2D5->elements+i)->nodes[0],
+        fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt2D5->elements+i)->nodes[0],
                                                (wmt2D5->elements+i)->nodes[1],
                                                (wmt2D5->elements+i)->nodes[2]
                );
@@ -2670,6 +2701,7 @@ void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 *        30.10.2001	
 *		
 */
+#ifdef DEBUGME
 static WlzObject	*WlzMeshTransformObj3D(WlzObject *srcObj,
 				       WlzMeshTransform3D  *wmt3D,
 				       WlzMeshTransform2D5 *wmt2D5,
@@ -2686,14 +2718,12 @@ static WlzObject	*WlzMeshTransformObj3D(WlzObject *srcObj,
 				 WlzIBox3        bBox0
 				       )
 {
-  int cutPosition;
-
   WlzObject	*dstObj = NULL;
   /*
   WlzMeshTransform *aMesh = NULL;
   */
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double minElmArea = 1.0;
+
 
   if(srcObj == NULL)
   {
@@ -2741,7 +2771,7 @@ static WlzObject	*WlzMeshTransformObj3D(WlzObject *srcObj,
   return(dstObj);
 
 }
-
+#endif
 /*!
 * - Function:	WlzMeshTransformObjPrv3D
 * - Ingroup:    WlzTransform.
@@ -2763,6 +2793,7 @@ static WlzObject	*WlzMeshTransformObj3D(WlzObject *srcObj,
 *	        J. Rao 31.10.2001
 *					 			        *
 */
+#ifdef DEBUGME
 static WlzObject *WlzMeshTransformObjPrv3D( WlzObject *srcObj,
 				            WlzMeshTransform3D *mesh,
 				            WlzMeshTransform2D5 *wmt2D5,
@@ -2973,6 +3004,8 @@ static WlzObject *WlzMeshTransformObjPrv3D( WlzObject *srcObj,
   }
   return(dstObj);
 }
+#endif
+
 
 /*!
 * - Function:     WlzMQ3DTransformBBoxI3
@@ -3073,22 +3106,22 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 				 WlzMeshScanWSp2D5 *mSnWSp 
 					    )
 {
-  int		mItvIdx, indx, i, j, k, k0, k1, k2, gk, ip;
-  int           i_elments, i_lineCom, i_columnP, debugNum, i_prevC;
+  int		mItvIdx, i, j, k, k0, k1, k2, ip;
+  int           i_lineCom, i_columnP, debugNum, i_prevC;
   int           ix,iy,iz;
-  double	tD0,
-  		tD1,
-		tD2,
-		tD3,
-		trXX,
-		trXYC,
-		trYX,
-		trYYC;
-  double	gTmp[4];
+  
+  		
+		
+		
+		
+		
+		
+		
+ 
   double        xs, ys, zs;
-  WlzIVertex2	dPosI,
-  		sPosI;
-  WlzDVertex2	sPosD;
+  WlzIVertex2	dPosI;
+  		
+  
   WlzGreyP	dGP;
   WlzGreyType	newGreyType;
   WlzPixelV	bkdV;
@@ -3097,7 +3130,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
   WlzMeshScanItv oldItvDebug;
 #endif /* WLZ_MESH_DEBUG */
   WlzMeshScanItv *mItv;
-  WlzMeshScanDElm    *dElm;
+
   WlzGreyValueWSpace *gVWSp = NULL;
   WlzGreyWSpace       gWSp;
   WlzIntervalWSpace   iWSp;
@@ -3292,8 +3325,15 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		     while( (errNum == WLZ_ERR_NONE) && (i_columnP < mItv->lftI) )
 		     {
 		       i_columnP++;
-	               switch(interp)
+	               switch(interp) 
 	               {
+		         case WLZ_INTERPOLATION_LINEAR:
+		         case WLZ_INTERPOLATION_CLASSIFY_1:
+		         case WLZ_INTERPOLATION_CALLBACK:
+
+
+
+			 
 	                 case WLZ_INTERPOLATION_NEAREST:
 	                   /* get grey value   */
 			   /*
@@ -3444,6 +3484,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 
 	            switch(interp)
 	            {
+		     	case WLZ_INTERPOLATION_LINEAR:
+		        case WLZ_INTERPOLATION_CLASSIFY_1:
+		        case WLZ_INTERPOLATION_CALLBACK:
 	                case WLZ_INTERPOLATION_NEAREST:
 	                  /* get grey value   */
 			  /*
@@ -3497,6 +3540,10 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		       i_prevC++;
 	               switch(interp)
 	               {
+
+		         case WLZ_INTERPOLATION_LINEAR:
+		         case WLZ_INTERPOLATION_CLASSIFY_1:
+		         case WLZ_INTERPOLATION_CALLBACK:
 	                 case WLZ_INTERPOLATION_NEAREST:
 	                   /* get grey value   */
 			   /*
@@ -3559,10 +3606,10 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
     if( (errNum =	WlzWriteObj(fp, dstObj) ) != WLZ_ERR_NONE )
     {
       printf("output Woolz Object Error.\n");
-      close(fp);
+      fclose(fp);
       exit(1);
     }
-    close(fp);
+    fclose(fp);
     fp = NULL;
   }
   /* WlzMeshScanWSpFree(mSnWSp); */
@@ -3612,8 +3659,8 @@ void  static WlzGet2D5TrangularMeshFrom3DMesh(  WlzMeshTransform2D5 *wmt2D5,
      int  i, j;
      int  noRedundancyCutingNum;
      int  numTotalTrangularElem;
-     FILE  *fp;
-     char  *cstr;
+
+
 
 
      
@@ -3789,7 +3836,7 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
   int           thresh;
   const double  tol  = 1.0e-06;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  AlgError      algerr;
+
 
   /*------- allocate memory --------*/
   if (
@@ -3976,11 +4023,13 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
 * \param	dstErr			Destination ptr for Woolz error
 *					code, may be NULL.
 */
+#ifdef DEBUGME
 static WlzPlaneDomain *WlzPDomFromBBox(WlzIBox3  bBox, 
 				       WlzErrorNum *dstErr)
 {
   WlzObject      *tObj;
-  WlzUByte	**pMsk = NULL;
+  /* WlzUByte	**pMsk = NULL; */
+  UBYTE         **pMsk = NULL;
   WlzIVertex2	  pMskOrg,
   		  pMskSz;
   WlzPlaneDomain *dstPDom = NULL;
@@ -4070,6 +4119,8 @@ static WlzPlaneDomain *WlzPDomFromBBox(WlzIBox3  bBox,
   return(dstPDom);
 
 }
+#endif
+
 
 /*!
 * - Function:    WlzGet2D5Transform
@@ -4235,18 +4286,19 @@ void   WlzInitializeWmt2D5(WlzMeshTransform2D5  *wmt2D5)
 * \param    wmt3D            mesh transform.
 * \author:       J. Rao, R. Baldock and B. Hill
 */
+#ifdef DEBUGME
 void  static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double             zConst, 
                                                 const WlzMeshTransform3D   *wmt3D, 
 					        WlzMeshTransform2D5        *wmt2D5
 					     )
 {
-  int      i, j0, j1, j2, j3, k, k1, kmin, kmax, itemp;
+  int      i, j0, j1, j2, j3, k, k1, itemp;
   int      nIntersect = 0;
   int      nUp;
   int      iup, idown, icount, numberOfTriangular=0, isnumber=0;
   int      n0up, n1up, n2up, n3up;
   double   z0, z1, z2, z3;
-  double   zt;
+ 
 
  /* WlzDVertex3 planepoints[3000]; */  /* store the cutting points */
  /* int         linkList[3000][5];   */   /* store the linked list
@@ -4257,7 +4309,7 @@ void  static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double             zCon
   WlzDVertex3 wv3up[4];
   WlzDVertex3 wv3down[4];
   WlzDVertex3 tempw;
-  int       iidebug = 1;
+
   int       idex;
 
   int                  *intersectIndex;
@@ -4706,6 +4758,9 @@ void  static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double             zCon
 
 
 }
+#endif
+
+
 
 
 /*!
@@ -4727,6 +4782,7 @@ void  static WlzIsoIntersectWithTetrahadronIndexAnDETC(  double             zCon
 *     -# 	  ymax:                    the maximum positoin in y-direction.
 *     -# 	  zmax:                    the maximum positoin in z-direction.
 */
+#ifdef DEBUGME
 void  static validityOfMinAndMax( const int   nxmax, const int   nymax, const int   nzmax, 
                            const double xmin, const double xmax, 
 			   const double ymin, const double ymax,
@@ -4746,7 +4802,7 @@ void  static validityOfMinAndMax( const int   nxmax, const int   nymax, const in
   }
 
 }
-
+#endif
 
 /*!
 * - Project:      Woolz
@@ -4763,6 +4819,7 @@ void  static validityOfMinAndMax( const int   nxmax, const int   nymax, const in
 *     -# 	 *wmt3D:                   3D mesh transform.  output
 *     -# 	 *intersectionTable:       intersect table. output.
 */
+#ifdef DEBUGME
 void  static ElementsGenerator(const int nxmax, const int nymax, const int nzmax,
                         WlzMeshTransform3D   *wmt3D, 
 			const int *intersectionTable)
@@ -4813,6 +4870,8 @@ void  static ElementsGenerator(const int nxmax, const int nymax, const int nzmax
   }
 
 }
+#endif
+
 
 /*!
 * - Project:      Woolz
@@ -4835,6 +4894,7 @@ void  static ElementsGenerator(const int nxmax, const int nymax, const int nzmax
 *     -# 	 *wobjC:                   Woolz source obejct.
 *     -# 	 *intersectionTable:       intersect table. output.
 */
+#ifdef DEBUGME
 void static GetIntersectionTable( const int nxmax, const int nymax, const int nzmax,
                              const double xmin, const double ymin, const double zmin,
                              const double xdelta, const double ydelta, const double zdelta,
@@ -4914,6 +4974,8 @@ void static GetIntersectionTable( const int nxmax, const int nymax, const int nz
 
 
 }
+#endif
+
 			   
 /*!
 * - Project:      Woolz
@@ -4942,7 +5004,7 @@ WlzErrorNum  read_WlzTiePoints( FILE *fp, int *nTiePP,
   int                  vxCount       = 0, 
                        vxLimit       = 0;
 
-  WlzDVertex3         *vx0, *vx1;
+  WlzDVertex3         *vx0=NULL, *vx1=NULL;
   WlzDVertex3         *vxVec0=NULL, *vxVec1=NULL;
   
   while( (errNum == WLZ_ERR_NONE) &&
@@ -4950,6 +5012,7 @@ WlzErrorNum  read_WlzTiePoints( FILE *fp, int *nTiePP,
   {
     inRecord[IN_RECORD_MAX - 1] = '\0';
     rec = inRecord;
+
     while(*rec && isspace(*rec))
     {
       ++rec;
@@ -5024,6 +5087,7 @@ WlzErrorNum  read_WlzTiePoints( FILE *fp, int *nTiePP,
 *     -# 	  ydelta:      the size of the cuboid in y-direction.
 *     -# 	  zdelta:      the size of the cuboid in z-direction.
 */
+#ifdef DEBUGME
 void static AllocateMemForElemAndNodes(WlzMeshTransform3D   *wmt3D, 
                                 const int nxynumber,  
 			        const int nxnumber,
@@ -5074,6 +5138,7 @@ void static AllocateMemForElemAndNodes(WlzMeshTransform3D   *wmt3D,
   }
 
 }
+#endif
 
 /*!
 * - Project:      Woolz
@@ -5328,7 +5393,7 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
   WlzIBox3        bBox;
   
   /*  2D object used as working variables  */
-  WlzObject      *dstObj2D;
+  WlzObject      *dstObj2D = NULL;
   WlzValues       dummyValues;
   WlzDomain	  dummyDom;
   int             planeIdx,
