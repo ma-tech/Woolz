@@ -51,6 +51,12 @@ static char _WlzGeometryTrackUpAndDown_s_c[] = "MRC HGU $Id$";
 #define MaxNumOfFiles   (100)
 #define TOL 1.0e-5
 
+
+#undef DEBUGME  /* this for debug use */
+
+
+
+
 static void testConsistencyBreakDownTheGM(  WlzGMModel *gModel[], 
                         int numOf2DWlzFiles,
 			int sectionLength_N,
@@ -140,13 +146,13 @@ static void  outputThisSection( WlzVertexP AllVerticesInThisStartLoop,
                                 int          i_s, 
                                 int          subSubSectionLength_L,
                                 WlzErrorNum *dstErr );
-
+#ifdef DEBUGME 
 static void  outputThisSectionForView( WlzVertexP AllVerticesInThisStartLoop, 
                                 int          i_s, 
                                 int          subSubSectionLength_L,
                                 WlzErrorNum *dstErr );
 
-
+#endif
 static double SixTimesOfVoulumeOfTetraHedron( WlzDVertex3 p0, 
 			                      WlzDVertex3 p1,
 					      WlzDVertex3 p2,
@@ -154,8 +160,11 @@ static double SixTimesOfVoulumeOfTetraHedron( WlzDVertex3 p0,
 
 static int IsDVertexZero( WlzDVertex3  normal);
 
-static int IsDVertexEqual( WlzDVertex3 p1, WlzDVertex3 p2);
 
+
+#ifdef DEBUGME 
+static int IsDVertexEqual( WlzDVertex3 p1, WlzDVertex3 p2);
+#endif
 #ifdef _BORLAND_HACK_FOR_JATLASVIEWER
 #else
 static void RecalInOutPBy3DNorm(
@@ -168,18 +177,19 @@ static void RecalInOutPBy3DNorm(
 				  WlzDVertex3   *OutPoints,     
 				  int           *nOfVOutTheS );
 #endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
-
+#ifdef DEBUGME 
 static void pureThisGM(WlzGMModel *gMC, 
 		       int LoopIdx, 
 		       int numOfEnds, 
                        int *EndsIdx, 
 		       int *bifurIdx, 
 		       WlzErrorNum *dstErrgMC);
-
+#endif
+#ifdef DEBUGME 
 static void outputVerticesInThisLoop(WlzGMModel *gMC, int LoopIdx, WlzErrorNum *dstErr);
 
 static void WlzGMModelPure( WlzGMModel *gMC, WlzErrorNum *dstErr);
-
+#endif
 static void GetInOutAndFromSurfacePoints( 
 				   int          numberOfPixelsZ,
                                    WlzDVertex2  StandSampleP[NumberToTrack],
@@ -189,7 +199,7 @@ static void GetInOutAndFromSurfacePoints(
 				   WlzDVertex3 *OutPoints,
 				   int         *nOfVOutTheS,
 				   WlzErrorNum *dstErr );
-
+#ifdef DEBUGME 
 static void	outputSurfaceInAndOutPoints(int j_shell,
                                             int i_loop,
 					    int i_sec,
@@ -209,33 +219,37 @@ static void	outputSurfaceInAndOutPoints(int j_shell,
 					    WlzDVertex3   *OutPoints,     
 					    int            nOfVOutTheS,
 					    WlzErrorNum *dstErr);
+#endif
 static void GetSamplePointsFromAllVertices(   WlzVertexP   sLoopVData, 
                                               int          i_s,
 					      int          subSubSectionLength_L,       
                                               WlzDVertex2  StandSampleP[NumberToTrack],
                                               WlzErrorNum *dstErr );
-
+#ifdef DEBUGME 
 static int NumberOfVerticesDoubleInNonCycleCaseInTheLoopOfGM( WlzGMModel  *gM, 
  						int sLoopIdx, 
 						WlzErrorNum *dstErr);
-
+#endif
+#ifdef DEBUGME 
 static int *GetThebifurcatePointsIndexInTheNonCycleLine(  WlzGMModel *gM, 
                                            int          LoopIdx,
 					   int          numOfEnds,
                                            WlzErrorNum *dstErr );
+#endif
 
-
+#ifdef DEBUGME 
 static int *GetTheEndsPointsIndexInTheNonCycleLine(  WlzGMModel *gM, 
                                            int          LoopIdx,
 					   int          numOfEnds,
                                            WlzErrorNum *dstErr );
-
+#endif
+#ifdef DEBUGME 
 static int HowManyEndsInTheNonCycleLine(  WlzGMModel  *gM, 
                                            int          LoopIdx, 
                                            WlzErrorNum *dstErr );
-
+#endif
 static int IsACycle(  WlzGMModel  *gM, int  LoopIdx, WlzErrorNum *dstErr );
-
+#ifdef DEBUGME 
 static void  WlzOutputForFormingSurface( FILE *testFile, 
 					 char *Fstr, 
 					 WlzVertexP sLoopVData, 
@@ -243,21 +257,23 @@ static void  WlzOutputForFormingSurface( FILE *testFile,
 					 double zC, 
 					 int sampleD, 
 					 WlzErrorNum *dstErr);
-
+#endif
+#ifdef DEBUGME 
 static void  WlzOutputForTestGM(WlzGMModel *gM, WlzErrorNum *dstErr);
-
+#endif
 static void  WlzOutputForTestAsectionData(WlzVertexP   sLoopVData, int nV, WlzErrorNum *dstErr);
-
+#ifdef DEBUGME 
 static int  nOfEdgeEndVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop);
-
+#endif
+#ifdef DEBUGME 
 static int  nOfVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop);
-
+#endif
 static int *WlzShellsIndexAboutGM(WlzGMModel *gM, int nS, WlzErrorNum *dstErr);
 
 static int *WlzLoopIndexAboutGM(WlzGMModel *gM, int nThSell, int numLoops, WlzErrorNum *dstErr);
-
+#ifdef DEBUGME 
 static void FactsAboutGM(WlzGMModel *gM);
-
+#endif
 static int NumberOfShellsAboutGM(WlzGMModel *gM );
 
 static int NumberOfLoopsInThe_nThShellOfGM(WlzGMModel *gM, int nThShell );
@@ -271,7 +287,7 @@ static void WlzGetTheShellAndLoopNumberFromTheIndexOfTheVertex(WlzGMModel *gM,
 					   int *nShell, 
 					   int *nLoop,
 					   WlzErrorNum *dstErr);
-
+#ifdef DEBUGME 
 static WlzVertexP WlzEdgeEndVerticesOneLoopFromGM(WlzGMModel *gM, 
                                            int   nThShell, 
 					   int   nThLoop, 
@@ -297,12 +313,12 @@ static WlzDVertex2 *WlzDVerticesOneLoopFromGM2(WlzGMModel *model,
                                             int          nThShell, 
 					    int          nThLoop, 
 					    WlzErrorNum *dstErr   );
-					    
+				    
 static WlzDVertex3 *WlzDVerticesOneLoopFromGM3(WlzGMModel *model, 
                                             int          nThShell, 
 					    int          nThLoop, 
 					    WlzErrorNum *dstErr   );
-
+#endif
 static WlzVertexP WlzVerticesThisLoopOfGM(WlzGMModel  *model, 
                                             int            LoopIdx, 
 					    int            numOfVertices, 
@@ -317,11 +333,11 @@ static WlzDVertex3 *WlzDVerticesThisLoopOfGM3(WlzGMModel  *model,
                                             int            LoopIdx, 
 					    int            numOfVertices, 
 					    WlzErrorNum   *dstErr   );
-
+#ifdef DEBUGME 
 static WlzDVertex2 *WlzVerticesThisIndexOfGM2(WlzGMModel  *model, 
                                             int            Idx, 
 					    WlzErrorNum   *dstErr   );
-
+#endif
 static WlzDVertex2 WlzVerticesNormTriple2a(WlzDVertex2 vA, WlzDVertex2 vB,
 					   WlzDVertex2 vC);
 
@@ -332,7 +348,7 @@ static int *GroupDivid(int LoopIndex[], int *NumOfGroup, int *Continue, int nt, 
 static int *GroupByNumber(int LoopIndex[], int *NumOfGroup, int nt,  WlzErrorNum *dstErr);
 
 static int BigestGroup(int  GroupNum[], int nt,  WlzErrorNum *dstErr);
-
+#ifdef DEBUGME 
 static void InAndOutSurfacePoints( WlzGMModel  *gM2, 
                                    int          nThLoop, 
 				   int          numberOfPixelsZ,
@@ -349,7 +365,7 @@ static void GetSamplePointsFromOneLoopOfGM( WlzGMModel  *gM,
                                    int          sloopIdx,  
                                    WlzDVertex2  StandSampleP[NumberToTrack],
                                    WlzErrorNum *dstErr );
-
+#endif
 static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2, 
                                     AlcKDTTree         *tTree,
                                    int          *LoopIdx, 
@@ -363,7 +379,7 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 
 static AlcKDTTree *GetTreeFromGM( WlzObject  *tObj,
                                   WlzErrorNum *dstErr );
-
+#ifdef DEBUGME 
 static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
                            int          j_shell,
 			   int          i_sec,
@@ -378,7 +394,7 @@ static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
 			   int		nOfTracked,
 			   int         *suc,
                            WlzErrorNum *dstErr );
-
+#endif
 static void GetSamplePointsForNextTrackFromTheTrackedLoopOfGM(
                            int          i_file,
 			   int          sectionLength_L,
@@ -448,10 +464,9 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 		                     )
 {
   WlzErrorNum	      errNum = WLZ_ERR_NONE;
-  WlzGMModel         *gM, *gMS, *gMT, *gMC;
-  WlzGMModel         *gM2, *gM3,*gModel[numOf2DWlzFiles];
+  WlzGMModel         *gModel[numOf2DWlzFiles];
 
-  int                *sNN, suc;
+  int                suc;
   AlcKDTTree         *tTree;
   AlcKDTTree         *tTreeArray[numOf2DWlzFiles];
   AlcKDTNode         *node;
@@ -459,68 +474,56 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 
   double             datD[3];
    
-  WlzGMShell         *cS, *fS;
-  WlzGMLoopT         *cLT, *fLT;
-  WlzGMEdgeT         *cET, *fET;
-  WlzDVertex2        *v1,  *v2, *vNorm=NULL;
-  WlzDVertex2	      segV[3];
+
+
+
+
+
   WlzDVertex2         StandSampleP[NumberToTrack], StandSampleP0[NumberToTrack] ;
-  WlzDVertex2         TrackedSampleP[NumberToTrack], TrackedSamplePBlgToOneLp[NumberToTrack];
-  WlzDVertex2         TrackedSampleFirstP, TrackedSampleSecondP;
-  WlzIVertex2         wV2, wV2I;
-  WlzDVertex2         wD1, wD2;
+  WlzDVertex2         TrackedSamplePBlgToOneLp[NumberToTrack];
+
+
   WlzDVertex3        *surfP, *SurfacePoints, *InPoints, *OutPoints;
-  int                *numOfPInS, numInThisGM;  
+  int                *numOfPInS;  
   WlzIVertex2        *sectionData[MaxNumOfFiles]; 
-  WlzDVertex2         fPoint, *inPoints, *outPoints;
-  WlzVertexP          nData[2], vData[2];
-  WlzVertexP          sLoopVData, tLoopVData, AllVerticesInThisStartLoop;
-  WlzVertexP          outVerticesForGM;
-  WlzVertexType       vType;
+
+
+  WlzVertexP          AllVerticesInThisStartLoop;
+
+
    
-  WlzObject          *newSObj, *newTObj, *WObj[numOf2DWlzFiles];
-  int                 indexStr[NumberToTrack], LoopIdx, ifileStar;
-  int                 LoopIndex[NumberToTrack];
-  int                 ShellIndex[NumberToTrack];
-  int                 *GroupNum, *FixNumForEachGroup;
-  int                 NumOfGroup;
-  int                 sp, nbgN, trackedBigestLoopIndex;
-  int                 loopDirection, ncycals;
+  WlzObject           *WObj[numOf2DWlzFiles];
+  int                 ifileStar;
+
+
+
+
+
+
   int                 numOfLoopsInStartShell, numOfShellsInStartGM;
-  int                 numOfVerticesInTheStartLoop, numOfSections, i_s;
+  int                 numOfVerticesInTheStartLoop, numOfSections;
   int                 nOfVOnTheS, nOfVWithinTheS, nOfVOutTheS;
   int                *iBuf, numHV;
-  int                 endLoop, ifile;
-  int                 numberN1, numberN2;
+  int                 endLoop;
 
-  AlcVector          *vec;
+
+
    
-  int                 idx, max, nShell, nLoop;
-  int                 intensity, intensityB;
-  int                 intensityT;
-  int                 NumOfDiv, sampleD = 10;
-  int                *sShellIdx, *tShellIdx, *sLoopIdx, *tLoopIdx;
-  int                *startShellIdx, *startLoopIdx;
-  int                *EndPointsIdx, *BifurcationPointsIdx, numOfEnds;
-  WlzIBox2            bBoxS, bBoxT, bBoxO, bBoxWarp;
-  int                 imax, nOfTracked;
 
-  int                 i,j, k, ix, jy, it, jt, kt, test = 0, nE, i_l;
+
+
+
+
+  int                *startShellIdx, *startLoopIdx;
+
+
+  int                 nOfTracked;
+
+  int                 i,k, test = 0;
   int                 loopForFile, loopForShell, loopForLoop, loopForSection;
-  int                 tempI, tempJ, tempK, tempL, tempM, tempN;
-  int                 nS, nL, nV, ntS, ntL, ntV;
-  int                 Continue;
-  double              TempD, Tempd;
-  double              di, dj, dk;
-  double              Sumfr_halpha, Ialpha;
-  double              HA, HTB, HATB, YATB, MI;
-  double              wg[4];
-  double              h,w, zC;
+  int                 ntL;
   double              zdvoxels;
-  int                 vCnt[2], idN;
-  int                 deltaX, deltaY, startI, fianlI;
   FILE                *testFile = NULL, *surfacefp, *infp= NULL, *outfp=NULL;
-  char                *testFileStr = "outputForTest.dat";
 
    ifileStar = startTrackingFile;
    /* ifileStar = 10; */
@@ -893,8 +896,8 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 		           for(k=0; k<numOfVerticesInTheStartLoop; k++)
 	   		   {
                 			printf("%lg  %lg  %lg\n", ( AllVerticesInThisStartLoop.d2 + k )->vtX,
-		                	     		          ( AllVerticesInThisStartLoop.d2 + k )->vtY ),
-								  (double) 0;
+		                	     		          ( AllVerticesInThisStartLoop.d2 + k )->vtY,
+					  (double) 0 );
 	   		   }
 						    
               }
@@ -1308,6 +1311,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 *  \param       nThShell            n-th shell in the model
 *  \param       nThLoop             n-th loop of the n-th shell in the model
 */
+#ifdef DEBUGME 
 static int nOfEdgeEndVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop)
 {
    int nShell, nLoop, nVertices;
@@ -1354,7 +1358,7 @@ static int nOfEdgeEndVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop)
 
     return  nVertices;
 }
-
+#endif
 /*!
 *  \return      Number of unique Vertices in the nThShell and nThLoop;
 *  \ingroup     WlzFeatures
@@ -1364,6 +1368,7 @@ static int nOfEdgeEndVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop)
 *  \param       nThShell            n-th shell in the model
 *  \param       nThLoop             n-th loop of the n-th shell in the model
 */
+#ifdef DEBUGME 
 static int nOfVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop)
 {
    int nShell, nLoop, nVertices;
@@ -1406,7 +1411,7 @@ static int nOfVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop)
 
     return  nVertices;
 }
-
+#endif
 
 
 /*!
@@ -1416,6 +1421,7 @@ static int nOfVInOneLoopOfGM(WlzGMModel *gM, int nThShell, int nThLoop)
 *               of the given G model 
 *  \param       gM                  given G model 
 */
+#ifdef DEBUGME 
 static void FactsAboutGM(WlzGMModel *gM)
 {
    int nShell, nLoop, nVertices;
@@ -1459,6 +1465,8 @@ static void FactsAboutGM(WlzGMModel *gM)
        ++nShell;
    }  while(cS != fS );
 }
+
+#endif
 
 /*!
 *  \return      none;
@@ -1591,6 +1599,7 @@ static int *WlzLoopIndexAboutGM(WlzGMModel *gM, int nThShell, int numLoops, WlzE
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static WlzVertexP WlzEdgeEndVerticesOneLoopFromGM( WlzGMModel  *model, 
                                             int          nThShell, 
 					    int          nThLoop, 
@@ -1624,7 +1633,7 @@ static WlzVertexP WlzEdgeEndVerticesOneLoopFromGM( WlzGMModel  *model,
  return(vData);
 
 }
-
+#endif
 
 /*!
 * \return	Allocated vertices.
@@ -1638,6 +1647,7 @@ static WlzVertexP WlzEdgeEndVerticesOneLoopFromGM( WlzGMModel  *model,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static WlzVertexP WlzVerticesOneLoopFromGM( WlzGMModel  *model, 
                                             int          nThShell, 
 					    int          nThLoop, 
@@ -1671,7 +1681,7 @@ static WlzVertexP WlzVerticesOneLoopFromGM( WlzGMModel  *model,
  return(vData);
 
 }
-
+#endif
 /*!
 * \return	Allocated edge end vertices.
 * \ingroup	WlzFeatures
@@ -1683,19 +1693,20 @@ static WlzVertexP WlzVerticesOneLoopFromGM( WlzGMModel  *model,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static WlzDVertex2 *WlzDEdgeEndVerticesOneLoopFromGM2(WlzGMModel *model, 
                                             int            nThShell, 
 					    int            nThLoop, 
 					    WlzErrorNum   *dstErr   )
 {
-  int		idx,
+  int	      
   		cnt,
 		vIdx;
   int      nShell, nLoop, nVertices;		
    WlzGMShell         *cS, *fS;
    WlzGMLoopT         *cLT, *fLT;
    WlzGMEdgeT         *cET, *fET;
-   WlzVertexType	type;
+
    WlzDVertex2   *vData = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -1768,7 +1779,7 @@ static WlzDVertex2 *WlzDEdgeEndVerticesOneLoopFromGM2(WlzGMModel *model,
   } 
   return(vData);
 }
-
+#endif
 
 
 
@@ -1785,19 +1796,20 @@ static WlzDVertex2 *WlzDEdgeEndVerticesOneLoopFromGM2(WlzGMModel *model,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static WlzDVertex2 *WlzDVerticesOneLoopFromGM2(WlzGMModel *model, 
                                             int            nThShell, 
 					    int            nThLoop, 
 					    WlzErrorNum   *dstErr   )
 {
-  int		idx,
+  int	       
   		cnt,
 		vIdx;
   int      nShell, nLoop, nVertices;		
    WlzGMShell         *cS, *fS;
    WlzGMLoopT         *cLT, *fLT;
    WlzGMEdgeT         *cET, *fET;
-   WlzVertexType	type;
+
    WlzDVertex2    *vData = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -1868,7 +1880,7 @@ static WlzDVertex2 *WlzDVerticesOneLoopFromGM2(WlzGMModel *model,
   } 
   return(vData);
 }
-
+#endif
 
 /*!
 * \return	Allocated edge end vertices.
@@ -1881,19 +1893,20 @@ static WlzDVertex2 *WlzDVerticesOneLoopFromGM2(WlzGMModel *model,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static WlzDVertex3 *WlzDEdgeEndVerticesOneLoopFromGM3( WlzGMModel  *model, 
                                                 int          nThShell, 
 					        int          nThLoop, 
 					        WlzErrorNum *dstErr   )
 {
-  int		idx,
+  int	       
   		cnt,
 		vIdx;
   int      nShell, nLoop, nVertices;	
   WlzGMShell         *cS, *fS;
   WlzGMLoopT         *cLT, *fLT;
   WlzGMEdgeT         *cET, *fET;
-  WlzVertexType	type;
+
   WlzDVertex3   *vData = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -1973,7 +1986,7 @@ static WlzDVertex3 *WlzDEdgeEndVerticesOneLoopFromGM3( WlzGMModel  *model,
   return(vData);
 }
 
-
+#endif
 
 
 /*!
@@ -1987,19 +2000,20 @@ static WlzDVertex3 *WlzDEdgeEndVerticesOneLoopFromGM3( WlzGMModel  *model,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static WlzDVertex3 *WlzDVerticesOneLoopFromGM3( WlzGMModel  *model, 
                                                 int          nThShell, 
 					        int          nThLoop, 
 					        WlzErrorNum *dstErr   )
 {
-  int		idx,
+  int	      
   		cnt,
 		vIdx;
   int      nShell, nLoop, nVertices;	
   WlzGMShell         *cS, *fS;
   WlzGMLoopT         *cLT, *fLT;
   WlzGMEdgeT         *cET, *fET;
-  WlzVertexType	type;
+
   WlzDVertex3  	*vData = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -2077,7 +2091,7 @@ static WlzDVertex3 *WlzDVerticesOneLoopFromGM3( WlzGMModel  *model,
  } 
   return(vData);
 }
-
+#endif
 static void WlzGetTheShellAndLoopNumberFromTheIndexOfTheVertex( WlzGMModel *gM,
                                                           int idx, 
 					                  int *nShell, 
@@ -2176,11 +2190,12 @@ static int NumberOfVerticesInTheLoopOfGM(WlzGMModel   *gM,
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static int NumberOfVerticesDoubleInNonCycleCaseInTheLoopOfGM(WlzGMModel   *gM, 
  						int sLoopIdx, 
 						WlzErrorNum *dstErr)
 {
-   WlzErrorNum   errNum = WLZ_ERR_NONE;
+
    int nVertices;
    AlcVector          *vec;
    WlzGMLoopT         *cLT;
@@ -2201,7 +2216,7 @@ static int NumberOfVerticesDoubleInNonCycleCaseInTheLoopOfGM(WlzGMModel   *gM,
     return ( nVertices );
 
 }  
-
+#endif
 
 
 /*!
@@ -2396,13 +2411,13 @@ static WlzDVertex3 *WlzDVerticesThisLoopOfGM3(WlzGMModel  *model,
   }
   return(vData);
 }
-
+#ifdef DEBUGME 
 static WlzDVertex2 *WlzVerticesThisIndexOfGM2( WlzGMModel    *model, 
                                               int            Idx, 
 					      WlzErrorNum   *dstErr   )
 {
    WlzDVertex2    *vData;
-   WlzErrorNum   errNum = WLZ_ERR_NONE;
+
    AlcVector          *vec;
    vec    =  model->res.vertex.vec;
     /* get the loopT of the model. */
@@ -2410,7 +2425,8 @@ static WlzDVertex2 *WlzVerticesThisIndexOfGM2( WlzGMModel    *model,
     return vData;
 
 }
-
+#endif
+#ifdef DEBUGME 
 static void  WlzOutputForTestGM(WlzGMModel *gM, WlzErrorNum   *dstErr)
 {
     int          i, j;
@@ -2455,7 +2471,7 @@ static void  WlzOutputForTestGM(WlzGMModel *gM, WlzErrorNum   *dstErr)
      if(dstErr)
        *dstErr = errNum;
 }
-
+#endif
 
 static void  WlzOutputForTestAsectionData(WlzVertexP   sLoopVData, int nV, WlzErrorNum *dstErr)
 {
@@ -2490,6 +2506,7 @@ static void  WlzOutputForTestAsectionData(WlzVertexP   sLoopVData, int nV, WlzEr
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
+#ifdef DEBUGME 
 static void  WlzOutputForFormingSurface(FILE *testFile, char *Fstr, WlzVertexP sLoopVData, int nV, double zC, int sampleD, WlzErrorNum *dstErr)
 {
      WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -2517,7 +2534,7 @@ static void  WlzOutputForFormingSurface(FILE *testFile, char *Fstr, WlzVertexP s
 	testFile = NULL;
      }
 }
-
+#endif
 
 
 /*!
@@ -2671,8 +2688,8 @@ static WlzDVertex2 WlzVerticesNormTriple2a(WlzDVertex2 vA, WlzDVertex2 vB,
 */
 static int *GroupDivid(int LoopIndex[], int *NumOfGroup, int *Continue, int nt,  WlzErrorNum *dstErr)
 {
-  int  i, j, k, jg, IbreakPoint, FirstIofG, loopI, IthGroup;
-  int *groupI, *NumOfElInGroup;
+  int  i, j, k, jg=0, IbreakPoint, FirstIofG = 0, loopI, IthGroup=0;
+  int *groupI, *NumOfElInGroup = 0;
   int test = 0;
 
   WlzErrorNum errNum = WLZ_ERR_NONE;
@@ -2810,7 +2827,7 @@ static int *GroupDivid(int LoopIndex[], int *NumOfGroup, int *Continue, int nt, 
 */
 static int *GroupByNumber(int LoopIndex[], int *NumOfGroup, int nt,  WlzErrorNum *dstErr)
 {
-  int  i, j, k, jg, IbreakPoint, FirstIofG, loopI, IthGroup;
+  int  i, j, IbreakPoint, FirstIofG=0, loopI, IthGroup;
   int *groupI;
   WlzErrorNum errNum = WLZ_ERR_NONE;
 
@@ -2866,7 +2883,7 @@ static int *GroupByNumber(int LoopIndex[], int *NumOfGroup, int nt,  WlzErrorNum
 static int BigestGroup(int  GroupNum[], int nt, WlzErrorNum *dstErr)
 {
   WlzErrorNum errNum = WLZ_ERR_NONE;
-  int i, j, ig;
+  int i, j, ig=0;
   if( GroupNum == NULL)
   {
      errNum = WLZ_ERR_PARAM_NULL;
@@ -2887,7 +2904,7 @@ static int BigestGroup(int  GroupNum[], int nt, WlzErrorNum *dstErr)
   }
   return ig;
 }
-
+#ifdef DEBUGME 
 static void InAndOutSurfacePoints( WlzGMModel  *gM2, 
                                    int          nThLoop, 
 				   int          numberOfPixelsZ,
@@ -3114,7 +3131,7 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
       *nOfVWithinTheS  = inN;
 
 }
-
+#endif
 /*!
 * \ingroup      WlzFeatures
 * \return			array of int	.
@@ -3126,6 +3143,7 @@ static void InAndOutSurfacePoints( WlzGMModel  *gM2,
 * \param        StandSampleP[NumberToTrack] output sampled points
 * \param       *dstErr			    Woolz err number pointer.
 */
+#ifdef DEBUGME 
 static void GetSamplePointsFromOneLoopOfGM(     WlzGMModel  *gM, 
                                    int          LoopIdx,
                                    WlzDVertex2  StandSampleP[NumberToTrack],
@@ -3245,7 +3263,7 @@ static void GetSamplePointsFromOneLoopOfGM(     WlzGMModel  *gM,
       AlcFree(sLoopVData.d2);
       
 }
-
+#endif
 
 /*!
 * \ingroup      WlzFeatures
@@ -3274,7 +3292,7 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
                                    WlzErrorNum *dstErr )
 {
         
-        int                 i, j, k, m, idx, ntL;
+        int                 i, j, idx=0, ntL=0;
 	int                 test = 0;
 	int                 nShell, nLoop;
 	int                 Continue;
@@ -3284,15 +3302,14 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
         int                 LoopIndex[NumberToTrack];
         int                 ShellIndex[NumberToTrack];
         int                 indexStr[NumberToTrack];
-	int                 indexStrC[NumberToTrack];
-        int                *GroupNum, *FixNumForEachGroup;
+
+        int                *GroupNum, *FixNumForEachGroup=0;
         int                 NumOfGroup;
-        int                 sp, nbgN, trackedBigestLoopIndex;
-	int                 nV;
-        int                 loopDirection;
-        WlzDVertex2         TrackedSampleFirstP, TrackedSampleSecondP;
+        int                 nbgN=0;
+
+
 	WlzDVertex2         TrackedSampleP[NumberToTrack];
-        WlzVertexP          sLoopVData;
+
 
         WlzErrorNum         errNum = WLZ_ERR_NONE;
 	*suc = 1;
@@ -3412,13 +3429,17 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 	           /*                         TrackedSampleP[i].vtY, (double) numberOfPixelsZ); */
 		  if(idx == 0)
 		  {
+		    /*
 		   TrackedSampleFirstP.vtX  = TrackedSampleP[i].vtX;
 		   TrackedSampleFirstP.vtY  = TrackedSampleP[i].vtY;
+		    */
 		  }
 		  else if(idx == 1)
 		  {
+		    /*
 		   TrackedSampleSecondP.vtX = TrackedSampleP[i].vtX;
 		   TrackedSampleSecondP.vtY = TrackedSampleP[i].vtY;
+		    */
 		  } 
 		  idx++;
 		}			   
@@ -3559,6 +3580,7 @@ static AlcKDTTree *GetTreeFromGM( WlzObject  *tObj,
 * \param        StandSampleP[NumberToTrack] output sampled points
 * \param       *dstErr			    Woolz err number pointer.
 */
+#ifdef DEBUGME 
 static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
                            int          j_shell,
 			   int          i_sec,
@@ -3574,12 +3596,12 @@ static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
 			   int         *suc,
                            WlzErrorNum *dstErr )
 {
-    int   i, j, k, m, sp, nS, nV, nL, test, istar, iend, icount;
-    int  *sShellIdx=NULL, *sLoopIdx=NULL;
+    int   i, j, k, m, sp, nV, istar, iend, icount;
+
     int   deltaV;
     WlzErrorNum errNum = WLZ_ERR_NONE;
     WlzVertexP          sLoopVData;
-    AlcErrno            alcErr = ALC_ER_NONE;
+
    *suc = 1;
 
      /*  change to sample the bigest tracked line segment as next track starting points */
@@ -3750,7 +3772,7 @@ static void GetTrackedPlusSomeSamplePointsFromOneLoopOfGM(
 
 }
 
-
+#endif
 
 /*!
 * \ingroup      WlzFeatures
@@ -3778,14 +3800,14 @@ static void GetSamplePointsForNextTrackFromTheTrackedLoopOfGM(
 			   int         *suc,
                            WlzErrorNum *dstErr )
 {
-    int   i, j, k, m, sp, nS, nV, nL, test, istar, iend, icount;
-    int  *sShellIdx=NULL, *sLoopIdx=NULL;
+    int   i, j, k, m,  nV, istar, iend, icount;
+
     int   deltaV;
     int   oldversion = 1;
     double  x0, y0, x1, y1, dis, stand;
     WlzErrorNum errNum = WLZ_ERR_NONE;
     WlzVertexP          sLoopVData;
-    AlcErrno            alcErr = ALC_ER_NONE;
+
    *suc = 1;
 
      /*  change to sample the bigest tracked line segment as next track starting points */
@@ -4038,16 +4060,17 @@ static int IsACycle(   WlzGMModel  *gM,
 *  \param       gM                  given G model (input) 
 *  \param       nThLoop             n-th loop of the n-th shell in the model (input)
 */
+#ifdef DEBUGME 
 static int HowManyEndsInTheNonCycleLine(   WlzGMModel  *gM, 
                                            int          LoopIdx, 
                                            WlzErrorNum *dstErr )
 {
    int numberOfEnds, numBAgain;
-   WlzErrorNum errNum = WLZ_ERR_NONE;
-   int nVertices;
+ 
+ 
    AlcVector          *vec;
    WlzGMLoopT         *cLT;
-   WlzGMShell         *cS;
+
    WlzGMEdgeT         *cET, *fET;
   
    numberOfEnds = 0;
@@ -4084,7 +4107,7 @@ static int HowManyEndsInTheNonCycleLine(   WlzGMModel  *gM,
 
    return(numberOfEnds);
 }
-
+#endif
 
 /*!
 *  \return      index of the Ends points ;
@@ -4094,6 +4117,7 @@ static int HowManyEndsInTheNonCycleLine(   WlzGMModel  *gM,
 *  \param       nThLoop             n-th loop of the n-th shell in the model (input )
 *  \param       numOfEnds           number of Ends points in n-th shell in the model (input )
 */
+#ifdef DEBUGME 
 static int *GetTheEndsPointsIndexInTheNonCycleLine(   WlzGMModel  *gM, 
                                            int          LoopIdx,
 					   int          numOfEnds,
@@ -4104,7 +4128,7 @@ static int *GetTheEndsPointsIndexInTheNonCycleLine(   WlzGMModel  *gM,
    WlzErrorNum errNum = WLZ_ERR_NONE;
    AlcVector          *vec;
    WlzGMLoopT         *cLT;
-   WlzGMShell         *cS;
+
    WlzGMEdgeT         *cET, *fET;
 
   if( ( EndPointsIndex = (int *)AlcMalloc(sizeof(int) * numOfEnds )) == NULL ) 
@@ -4158,7 +4182,7 @@ static int *GetTheEndsPointsIndexInTheNonCycleLine(   WlzGMModel  *gM,
     *dstErr = errNum;
   return (EndPointsIndex);
 }
-
+#endif
 /*!
 *  \return      index of the bifurcating points ;
 *  \ingroup     WlzFeatures
@@ -4170,6 +4194,7 @@ static int *GetTheEndsPointsIndexInTheNonCycleLine(   WlzGMModel  *gM,
 *  \param       numOfEnds           number of Ends points in n-th shell in the model (input )
 *                                    > 2 (otherwise no bifurcate point)
 */
+#ifdef DEBUGME 
 static int *GetThebifurcatePointsIndexInTheNonCycleLine(   WlzGMModel  *gM, 
                                            int          LoopIdx,
 					   int          numOfEnds,
@@ -4180,7 +4205,7 @@ static int *GetThebifurcatePointsIndexInTheNonCycleLine(   WlzGMModel  *gM,
    WlzErrorNum errNum = WLZ_ERR_NONE;
    AlcVector          *vec;
    WlzGMLoopT         *cLT;
-   WlzGMShell         *cS;
+
    WlzGMEdgeT         *cET, *fET;
    if( numOfEnds < 3 )
    {
@@ -4250,7 +4275,7 @@ static int *GetThebifurcatePointsIndexInTheNonCycleLine(   WlzGMModel  *gM,
     *dstErr = errNum;
   return (BifurcatePointsIndex);
 }
-
+#endif
 /*!
 * \ingroup      WlzFeatures
 * \return			none
@@ -4271,7 +4296,7 @@ static void GetSamplePointsFromAllVertices(   WlzVertexP   sLoopVData,
 {
     int   i, k;
     int delta;
-    WlzErrorNum errNum = WLZ_ERR_NONE;
+
 
     /*  first  */
 
@@ -4303,6 +4328,7 @@ static void GetSamplePointsFromAllVertices(   WlzVertexP   sLoopVData,
 * \param        nOfVOutTheS          Given the number of points outside  the surface. 
 * \todo         
 */
+#ifdef DEBUGME 
 static void	outputSurfaceInAndOutPoints(int j_shell,
 					    int i_loop,
 					    int i_sec,
@@ -4507,6 +4533,7 @@ static void	outputSurfaceInAndOutPoints(int j_shell,
       
 }
 
+#endif
 /*!
 * \return	the pure the Geometry Model to a simple case by cutting small braches.
 * \ingroup	WlzFeatures
@@ -4530,7 +4557,7 @@ static void GetInOutAndFromSurfacePoints(
 				   int         *nOfVOutTheS,
 				   WlzErrorNum *dstErr )
 {
-    int i, j, k, m, delta, idx, ntV, loopDirection, di, num;
+    int i, delta, idx, di, num;
     int inN, outN;
 
     WlzErrorNum errNum = WLZ_ERR_NONE;
@@ -4664,6 +4691,7 @@ static void GetInOutAndFromSurfacePoints(
 *					may be NULL.
 * \todo         haven't finished
 */
+#ifdef DEBUGME 
 static void WlzGMModelPure( WlzGMModel *gMC, WlzErrorNum *dstErr)
 {
    int             numOfShellsInStartGM;
@@ -4746,7 +4774,7 @@ static void WlzGMModelPure( WlzGMModel *gMC, WlzErrorNum *dstErr)
 	if(errNum != WLZ_ERR_NONE)
 	        *dstErr = errNum;
 }
-
+#endif
 /*!
 * \return	none.
 * \ingroup	WlzFeatures
@@ -4758,14 +4786,15 @@ static void WlzGMModelPure( WlzGMModel *gMC, WlzErrorNum *dstErr)
 *					may be NULL.
 * \todo         
 */
+#ifdef DEBUGME 
 static void outputVerticesInThisLoop(WlzGMModel *gMC, int LoopIdx, WlzErrorNum *dstErr)
 {
    int numberOfEnds, numBAgain;
-   WlzErrorNum errNum = WLZ_ERR_NONE;
-   int nVertices;
+
+
    AlcVector          *vec;
    WlzGMLoopT         *cLT;
-   WlzGMShell         *cS;
+ 
    WlzGMEdgeT         *cET, *fET;
   
    numberOfEnds = 0;
@@ -4792,6 +4821,7 @@ static void outputVerticesInThisLoop(WlzGMModel *gMC, int LoopIdx, WlzErrorNum *
 
 
 }
+#endif
 
 /*!
 * \return	the pure the Geometry Model to a simple case by cutting small braches.
@@ -4806,6 +4836,7 @@ static void outputVerticesInThisLoop(WlzGMModel *gMC, int LoopIdx, WlzErrorNum *
 *					may be NULL.
 * \todo         haven't finished
 */
+#ifdef DEBUGME 
 static void pureThisGM(WlzGMModel *gMC, 
 				int LoopIdx, 
 				int numOfEnds, 
@@ -4813,15 +4844,15 @@ static void pureThisGM(WlzGMModel *gMC,
 				int *bifurIdx, 
 				WlzErrorNum *dstErr)
 {
-   int      numberOfEnds, numBAgain;
+
    WlzErrorNum       errNum = WLZ_ERR_NONE;
-   int                 nVertices;
-   int      i, j, d1, d2, d3, it;
+
+   int      i, j, d1, it;
    int      dx, dy, dz;
-   int      *length;
+
    AlcVector          *vec;
    WlzGMLoopT         *cLT;
-   WlzGMShell         *cS;
+
    WlzGMEdgeT         *cET, *fET, *aET, *bET, *ffET;
 
     vec          =  gMC->res.loopT.vec;
@@ -4976,7 +5007,7 @@ static void pureThisGM(WlzGMModel *gMC,
 
 
 }
-
+#endif
 #ifdef _BORLAND_HACK_FOR_JATLASVIEWER
 #else
 /*!
@@ -5003,10 +5034,10 @@ static void RecalInOutPBy3DNorm(
 				 WlzDVertex3   *OutPoints,     
 				 int           *nOfVOutTheS )
 {
-   int i, j, k;
+   int i, k;
    int nn,mm,ll;
    int l, delta, halfDelta, count, num, lastline, lines1, lines2, nW, nt;
-   int jumpLines, ik, mid, last;
+   int jumpLines, mid, last;
    WlzDVertex3 p[4], p1[3], p2[3], normal, inOrOut[3][2], InStand[100];
    WlzDVertex3 tpv1[NumberToTrack*numOf2DWlzFiles], tpv2[numOf2DWlzFiles], tpv3[numOf2DWlzFiles];
    
@@ -5520,6 +5551,11 @@ static void RecalInOutPBy3DNorm(
 }
 #endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
 
+
+/*!
+ * reserved for future use!
+ */
+#ifdef DEBUGME 
 static int IsDVertexEqual(WlzDVertex3 p1, WlzDVertex3 p2)
 {
    int equal;
@@ -5533,7 +5569,7 @@ static int IsDVertexEqual(WlzDVertex3 p1, WlzDVertex3 p2)
    }
    return equal;
 }
-
+#endif
 
 static int IsDVertexZero(WlzDVertex3  normal)
 {
@@ -5581,7 +5617,7 @@ static double SixTimesOfVoulumeOfTetraHedron(WlzDVertex3 p0,
          - ay * bx * cz+ax * by * cz+az * by * dx - ay * bz * dx
 	 - az * cy * dx+bz * cy * dx+ay * cz * dx - by * cz * dx
 	 - az * bx * dy+ax * bz * dy+az * cx * dy - bz * cx * dy
-	 - ax * cz * dy+bx * cz * dy+ay * bx * dz - ax * by * dz;
+	 - ax * cz * dy+bx * cz * dy+ay * bx * dz - ax * by * dz
 	 - ay * cx * dz+by * cx * dz+ax * cy * dz - bx * cy * dz;
 		 
    return vol;
@@ -5605,7 +5641,10 @@ static void  outputThisSection( WlzVertexP AllVerticesInThisStartLoop,
 
 }
 
-
+/*!
+ *  reserved for the future use:
+ */
+#ifdef DEBUGME 
 static void  outputThisSectionForView( WlzVertexP AllVerticesInThisStartLoop, 
                                 int          i_s, 
                                 int          subSubSectionLength_L,
@@ -5616,13 +5655,13 @@ static void  outputThisSectionForView( WlzVertexP AllVerticesInThisStartLoop,
   for(i=i_s; i<k; i++)
   {
      printf("%lg %lg %lg\n",  (AllVerticesInThisStartLoop.d2 + i)->vtX, 
-                        (AllVerticesInThisStartLoop.d2 + i)->vtY, 0 );
+	    (AllVerticesInThisStartLoop.d2 + i)->vtY, (double) 0 );
   }
 
 
 }
 
-
+#endif
 
 
 
@@ -5665,13 +5704,13 @@ static void	outputSurfaceByPatch(int j_shell,
 					    WlzErrorNum *dstErr )
 {
      WlzErrorNum errNum = WLZ_ERR_NONE;
-     double  *xp,  *yp, *zp,  *ac,  *sig;
+     double  *xp=NULL,  *yp=NULL, *zp,  *ac=NULL,  *sig=NULL;
      double  *xpA,  *ypA, *zpA, *sigA;
-     double **u,  **v,   *w1,   chisq, **fittedx, **fittedy;
+     double **u=NULL,  **v=NULL,   *w1=NULL,   chisq, **fittedx=NULL, **fittedy=NULL;
      double **uA;
-     double **orderedSurfaceX, **orderedSurfaceY, *inx;
-     double  *Esx, *Esy, *Efx, *Efy;
-     double   x0, x1, y0, y1, X0, Y0, X1, Y1;
+     double **orderedSurfaceX=NULL, **orderedSurfaceY=NULL, *inx=NULL;
+     double  *Esx, *Esy=NULL,  *Efx, *Efy;
+     double   x0, x1, y0, y1;
 
      char    fullnameS[90];
      char    fullnameI[90];
@@ -5685,7 +5724,7 @@ static void	outputSurfaceByPatch(int j_shell,
      char    fullname_sectionTN[90];
      char    fStr[80];
      char    tempStr[4];
-     int     i, k, j, l, m, delta, dimV;
+     int     i, k, j, l, m, delta, dimV=0;
      int     polyDeg = 3;
      FILE   *secfp = NULL;
      
@@ -6477,7 +6516,7 @@ void svbksb(double **u, double w[], double **v, int m, int n, double b[], double
 static double polynomialF( double x, double ac[], int polyDeg)
 { 
   double sum, temp;
-  int i, jy;
+  int jy;
       sum  = ac[1];
       temp = x;
       for(jy=2; jy<= polyDeg; jy++)
