@@ -53,8 +53,8 @@ WlzRegisterCCor - registers a pair of 2D domain objects with grey values
                   using frequency domain cross-correlation.
 \par Synopsis
 \verbatim
-WlzRegisterCCor [-h] [-v] [-o<out obj>] [-i <init tr>]
-                [-t] [-r] [-R #] [-T #,#]
+WlzRegisterCCor [-h] [-v] [-o<out obj>] [-i <init tr>] [-n]
+                [-r] [-t] [-w <win fn>] [-R #] [-T #,#] [-V]
 		[<in obj 0>] [<in obj 1>]
 \endverbatim
 \par Options
@@ -71,6 +71,10 @@ WlzRegisterCCor [-h] [-v] [-o<out obj>] [-i <init tr>]
     <td><b>-i</b></td>
     <td>Initial affine transform object.</td>
   </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>Use Gaussian noise (may be useful inplace of a window function).</td>
+  </tr>
   <tr> 
     <td><b>-r</b></td>
     <td>Find the rigid body (aka registration) transform, default.</td>
@@ -80,12 +84,22 @@ WlzRegisterCCor [-h] [-v] [-o<out obj>] [-i <init tr>]
     <td>Find the translation only transform.</td>
   </tr>
   <tr> 
+    <td><b>-w</b></td>
+    <td>Window function name, this must be one of: blackman,
+        hamming, hanning, none, parzen, rectangle or welch.</td>
+  </tr>
+  <tr> 
     <td><b>-R</b></td>
     <td>Maximum rotation.</td>
   </tr>
   <tr> 
     <td><b>-T</b></td>
     <td>Maximum translation.</td>
+  </tr>
+  <tr>
+    <td><b>-V</b></td>
+    <td>Invert grey values. Objects must have the background with low
+        and the foreground with high values.</td>
   </tr>
 </table>
 \par Description
@@ -100,11 +114,13 @@ The input objects are read from stdin and values are written to stdout
 unless the filenames are given.
 \par Examples
 \verbatim
-WlzRegisterCCor -o out-tr.wlz -R 10 -T 20,30 -r in0.wlz in1.wlz
+WlzRegisterCCor -w hamming -o out-tr.wlz -R 10 -T 20,30 -r in0.wlz in1.wlz
 \endverbatim
 A rigid body affine transform is found by registering in1.wlz to
-in0.wlz using a cross-correlation based registration algorithm. The
-affine transform is then written to out-tr.wlz. The maximum rotation
+in0.wlz using a cross-correlation based registration algorithm,
+with a Hamming window function being used to reduce the effect of the
+source and target image boundaries.
+The affine transform is then written to out-tr.wlz. The maximum rotation
 in a single itteration is 10 degrees and the maximum translation in
 a single itteration is 20 columns and 30 rows.
 \par File
@@ -133,6 +149,9 @@ int             main(int argc, char **argv)
 {
   int		idx,
 		option,
+		inv = 0,
+		maxItr = 100,
+		noise = 0,
 		cConv = 0,
 		verbose = 0,
 		ok = 1,
@@ -147,12 +166,13 @@ int             main(int argc, char **argv)
   		*outObj = NULL;
   WlzObject	*inObj[2];
   WlzDVertex2 	maxTran;
+  WlzWindowFnType winFn = WLZ_WINDOWFN_NONE;
   FILE		*fP = NULL;
   char 		*inTrObjFileStr = NULL,
   		*outObjFileStr;
   char  	*inObjFileStr[2];
   const char	*errMsg;
-  static char	optList[] = "i:o:R:T:hrtv",
+  static char	optList[] = "i:o:w:I:R:T:hnrtvV",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -162,7 +182,7 @@ int             main(int argc, char **argv)
   inObj[0] = NULL;
   inObj[1] = NULL;
   maxRot = 45;
-  maxTran.vtX = maxTran.vtY = 100.0;
+  maxTran.vtX = maxTran.vtY = 200.0;
   outObjFileStr = outObjFileStrDef;
   inObjFileStr[0] = inObjFileStrDef;
   inObjFileStr[1] = inObjFileStrDef;
@@ -173,6 +193,9 @@ int             main(int argc, char **argv)
       case 'i':
         inTrObjFileStr = optarg;
 	break;
+      case 'n':
+        noise = 1;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -182,6 +205,18 @@ int             main(int argc, char **argv)
       case 't':
         trType = WLZ_TRANSFORM_2D_TRANS;
 	break;
+      case 'w':
+        if((winFn = WlzWindowFnValue(optarg)) == WLZ_WINDOWFN_UNSPECIFIED)
+	{
+	  usage = 1;
+	}
+	break;
+      case 'I':
+	if(sscanf(optarg, "%d", &maxItr) != 1)
+	{
+	  usage = 1;
+	}
+        break;
       case 'R':
 	if(sscanf(optarg, "%lg", &maxRot) != 1)
 	{
@@ -196,6 +231,9 @@ int             main(int argc, char **argv)
         break;
       case 'v':
         verbose = 1;
+	break;
+      case 'V':
+      	inv = 1;
 	break;
       case 'h':
       default:
@@ -307,9 +345,11 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
+    maxRot *= (2.0 * WLZ_M_PI) / 360.0;
     outDom.t = WlzRegCCorObjs(inObj[0], inObj[1],
 			      inTrObj? inTrObj->domain.t: NULL, trType,
-			      maxTran, maxRot, 1000,
+			      maxTran, maxRot, maxItr,
+			      winFn, noise, inv,
 			      &cConv, &cCor, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -377,7 +417,7 @@ int             main(int argc, char **argv)
     "Usage: %s%sExample: %s%s",
     *argv,
     " [-h] [-v] [-o<out obj>] [-i <init tr>]\n"
-    "                      [-t] [-r] [-R #] [-T #,#]\n"
+    "                      [-n] [-t] [-r] [-R #] [-T #,#] [-V]\n"
     "                      [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
@@ -386,12 +426,17 @@ int             main(int argc, char **argv)
     "      When the algorithm has converged the convergence flag has\n"
     "      non-zero value. Cross correlation values are normalized to the\n"
     "      range [0.0-1.0].\n"
+    "  -n  Use Gaussian noise (may be useful inplace of a window function).\n"
     "  -o  Output file name for affine transform.\n"
     "  -i  Initial affine transform object.\n"
     "  -r  Find the rigid body (aka registration) transform, default.\n"
     "  -t  Find the translation only transform.\n"
+    "  -w  Window function name, this must be one of: blackman,\n"
+    "      hamming, hanning, none, parzen, rectangle or welch.\n"
     "  -R  Maximum rotation.\n"
     "  -T  Maximum translation.\n"
+    "  -V  Invert grey values. Objects must have the background with low\n"
+    "      and the foreground with high values.\n"
     "Attempts to register two objects using an frequency domain\n"
     "cross-correlation algorithm.  The two objects must be 2D spatial\n"
     "domain objects with grey values.\n"
@@ -402,12 +447,14 @@ int             main(int argc, char **argv)
     "The input objects are read from stdin and values are written to stdout\n"
     "unless the filenames are given.\n",
     *argv,
-    " -o out-tr.wlz -R 10 -T 20,30 -r in0.wlz in1.wlz\n"
+    " -w hamming -o out-tr.wlz -R 10 -T 20,30 -r in0.wlz in1.wlz\n"
     "A rigid body affine transform is found by registering in1.wlz to\n"
-    "in0.wlz using a cross-correlation based registration algorithm. The\n"
-    "affine transform is then written to out-tr.wlz. The maximum rotation\n"
-    "in a single itteration is 10 degrees and the maximum translation in\n"
-    "a single itteration is 20 columns and 30 rows.\n");
+    "in0.wlz using a cross-correlation based registration algorithm, with\n"
+    "a Hamming window function being used to reduce the effect of the\n"
+    "source and target image boundaries. The affine transform is then\n"
+    "written to out-tr.wlz. The maximum rotation in a single itteration\n"
+    "is 10 degrees and the maximum translation in a single itteration\n"
+    "is 20 columns and 30 rows.\n");
   }
   return(!ok);
 }
