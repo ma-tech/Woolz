@@ -1884,8 +1884,8 @@ AlcKDTTree	*WlzVerticesBuildTree(WlzVertexType vType, int nV,
 		sIdx,
   		treeDim;
   double	datD[3];
-  AlcKDTTree	*tree;
-  AlcKDTNode	*node;
+  AlcKDTTree	*tree = NULL;
+  AlcKDTNode	*node = NULL;
   WlzVertexP	tVP;
   AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
