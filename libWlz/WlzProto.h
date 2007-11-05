@@ -3786,6 +3786,9 @@ extern WlzAffineTransform 	*WlzRegCCorObjs(
 				  WlzDVertex2 maxTran,
 				  double maxRot,
 				  int maxItr,
+				  WlzWindowFnType winFn,
+				  int noise,
+				  int inv,
 				  int *dstConv,
 				  double *dstCCor,
 				  WlzErrorNum *dstErr);
