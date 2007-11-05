@@ -390,9 +390,12 @@ WlzAffineTransform *WlzAffineTransformLSqTrans2D(WlzDVertex2 *vT,
       }
     }
   }
-  tr = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_2D_AFFINE,
-				   sum.vtX / nV, sum.vtY / nV, 0.0,
-					 &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tr = WlzAffineTransformFromTranslation(WLZ_TRANSFORM_2D_AFFINE,
+				           sum.vtX / nV, sum.vtY / nV, 0.0,
+				           &errNum);
+  }
   if(dstErr)
   {
     *dstErr = errNum;
