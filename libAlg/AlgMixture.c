@@ -104,7 +104,7 @@ AlgError	AlgMixtureMLG(int nDbn, int nCls,
   int		idC,
   		idD,
 		idD1,
-		converged;
+		converged = 0;
   double	tD0,
   		tD1,
 		tD2,
