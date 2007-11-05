@@ -63,7 +63,7 @@ static char _Wlz3DSectionFromGeoModel_c[] = "MRC HGU $Id$";
 WlzGMModel	*WlzGetSectionFromGMModel(WlzGMModel *gModel,
 				WlzThreeDViewStruct *view, WlzErrorNum *dstErr)
 {
-  int		iFlg;
+  int		iFlg = 0;
   WlzGMEdgeT	*cET;
   WlzGMLoopT	*cLT,
   		*fLT;
