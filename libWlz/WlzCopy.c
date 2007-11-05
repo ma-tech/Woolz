@@ -354,14 +354,23 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
     switch(inObjType)
     {
       case WLZ_2D_DOMAINOBJ:
-	if( (tObj0 = WlzMakeMain(inObjType, inDom, inVal,
-				 NULL, NULL, &errNum)) != NULL ){
+	if((tObj0 = WlzMakeMain(inObjType, inDom, inVal,
+				 NULL, NULL, &errNum)) != NULL)
+        {
 	  tObj0 = WlzAssignObject(tObj0, NULL);
-	  if( (tObj1 = WlzNewGrey(tObj0, &errNum)) != NULL ){
+	  if((tObj1 = WlzNewGrey(tObj0, &errNum)) != NULL)
+	  {
 	    outVal = WlzAssignValues(tObj1->values, NULL);
 	    (void )WlzFreeObj(tObj1);
 	  }
 	  (void )WlzFreeObj(tObj0);
+	  if(outVal.core && (outVal.core->linkcount == 1))
+	  {
+	    /* The linkcount is 1 but returned objects, values, etc should
+	     * have a linkcount of 0 unless they are used more than once.
+	     */
+	    outVal.core->linkcount = 0;
+	  }
 	}
 	break;
       case WLZ_3D_DOMAINOBJ:
