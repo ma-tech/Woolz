@@ -46,7 +46,7 @@ static char _WlzRegCCor_c[] = "MRC HGU $Id$";
 #include <limits.h>
 #include <Wlz.h>
 
-#define WLZ_REGCCOR_DEBUG
+/* #define WLZ_REGCCOR_DEBUG */
 static WlzObject 		*WlzRegCCorNormaliseObj2D(
 				  WlzObject *obj,
 				  int inv,
