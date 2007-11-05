@@ -65,11 +65,11 @@ static char _AlcVector_c[] = "MRC HGU $Id$";
 AlcVector	*AlcVectorNew(size_t elmCnt, size_t elmSz,
 			      size_t blkSz, AlcErrno *dstErr)
 {
-  size_t	blkCnt,
-		blkUse,
-		blkIdx,
-		blkInc;
-  char		*data;
+  size_t	blkIdx,
+		blkInc,
+		blkCnt = 0,
+		blkUse = 0;
+  char		*data = NULL;
   AlcVector	*nVec = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
   const size_t defaultBlkSz = 1024;
