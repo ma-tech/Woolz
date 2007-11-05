@@ -47,6 +47,7 @@ EXECUTABLES		= \
 			WlzTstGeomTriangleAffineSolve \
 			WlzTstItrSpiral \
 			WlzTstLBTDomain \
+			WlzTstRegCCor \
 			WlzTstVxInSimplex
 
 # List of all 'C' source files (modify as required).
@@ -57,6 +58,7 @@ CSOURCES		= \
 			WlzTstGeomTriangleAffineSolve.c \
 			WlzTstItrSpiral.c \
 			WlzTstLBTDomain.c \
+			WlzTstRegCCor.c \
 			WlzTstVxInSimplex.c
 
 # List of all header files that are available outside of either this archive
