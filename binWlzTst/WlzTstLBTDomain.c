@@ -45,6 +45,7 @@ static char _WlzLBTDomain_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 #include <limits.h>
 #include <float.h>
+#include <string.h>
 
 typedef enum _WlzLBTTestOutType
 {
@@ -53,6 +54,8 @@ typedef enum _WlzLBTTestOutType
   WLZ_LBTDOMAIN_TEST_OUT_TXT,
   WLZ_LBTDOMAIN_TEST_OUT_VTK
 } WlzLBTTestOutType;
+
+extern int      getopt(int argc, char * const *argv, const char *optstring);
 
 extern char	*optarg;
 extern int	optind,
@@ -196,7 +199,7 @@ int		main(int argc, char *argv[])
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-                     "%s: Failed to compute LBT domain (%d).\n",
+                     "%s: Failed to compute LBT domain (%s).\n",
 		     *argv, errMsg);
     }
   }
@@ -220,6 +223,9 @@ int		main(int argc, char *argv[])
 	                                  maxBndNodSz);
         }
 	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
     }
   }
   if(ok)
