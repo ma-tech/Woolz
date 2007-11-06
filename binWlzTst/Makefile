@@ -41,6 +41,7 @@ ARCHIVE			=
 # Names of executables to be built (modify as required).
 #			WlzAutoTrackUpDown 
 EXECUTABLES		= \
+			WlzTstAlgCrossCorr \
 			WlzTstCMeshGen \
 			WlzTstCMeshTransformObj \
 			WlzTstGeomTetraAffineSolve \
@@ -52,6 +53,7 @@ EXECUTABLES		= \
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			WlzTstAlgCrossCorr.c \
 			WlzTstCMeshGen.c \
 			WlzTstCMeshTransformObj.c \
 			WlzTstGeomTetraAffineSolve.c \
