@@ -53,10 +53,14 @@ static int			WlzTstInGetPosition(
 				  char *pos[]);
 static char			*WlzTstInValueToStr(
 				  int inV);
+
+/* Externals required by getopt  - not in ANSI C standard */
+#ifdef __STDC__ /* [ */
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+
+extern int      optind, opterr, optopt;
 extern char     *optarg;
-extern int      optind,
-                opterr,
-                optopt;
+#endif /* __STDC__ ] */
 
 int		main(int argc, char *argv[])
 {
