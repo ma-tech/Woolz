@@ -51,13 +51,18 @@ static char _WlzCrossCorValue_c[] = "MRC HGU $Id$";
 WlzCrossCorValue - computes the cross correlation value of two objects.
 \par Synopsis
 \verbatim
-WlzCrossCorValue [-h] [-o<out obj>] [-u] [<in obj 0>] [<in obj 1>]
+WlzCrossCorValue [-h] [-n] [-o<out obj>] [-u] [<in obj 0>] [<in obj 1>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-n</b></td>
+    <td>Normalise the cross-correlation value by dividing it by the
+        area/volume over which it is computed.</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -108,6 +113,7 @@ int             main(int argc, char **argv)
   int		idx,
 		option,
 		ok = 1,
+		normFlg = 0,
 		usage = 0,
   		unionFlg = 0;
   double 	cCor = 0.0;
@@ -119,7 +125,7 @@ int             main(int argc, char **argv)
   char 		*outFileStr;
   char  	*inObjFileStr[2];
   const char	*errMsg;
-  static char	optList[] = "ho:u",
+  static char	optList[] = "hno:u",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -135,6 +141,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'n':
+        normFlg = 1;
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -225,7 +234,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    cCor = WlzCCorS2D(inObj[0], inObj[1], unionFlg, &errNum);
+    cCor = WlzCCorS2D(inObj[0], inObj[1], unionFlg, normFlg, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -263,9 +272,11 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-o<out file>] [-u] [<in obj 0>] [<in obj 1>]\n"
+    " [-h] [-n] [-o<out file>] [-u] [<in obj 0>] [<in obj 1>]\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
+    "  -n  Normalise the cross-correlation value by dividing it by the\n"
+    "	   area/volume over which it is computed.\n"
     "  -o  Output file name for cross-correlation value.\n"
     "  -u  Compute value in union of objects domains. The default is to\n"
     "      compute the cross correlation value within the intersection of\n"

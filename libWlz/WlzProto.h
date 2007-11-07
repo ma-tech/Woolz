@@ -1584,6 +1584,7 @@ extern double			WlzCCorS2D(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
 				  int unionFlg,
+				  int normFlg,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -2896,6 +2897,9 @@ extern WlzErrorNum              WlzFreeLBTDomain3D(
 extern WlzErrorNum              WlzFreeLBTDomain2D(
                                   WlzLBTDomain2D *lDom);
 extern WlzErrorNum              WlzLBTTestOutputNodesTxt(
+                                  FILE *fP,
+                                  WlzDomain dom);
+extern WlzErrorNum              WlzLBTTestOutputNodesVtk(
                                   FILE *fP,
                                   WlzDomain dom);
 extern int                      WlzLBTNodeSz2D(

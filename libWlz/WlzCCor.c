@@ -59,12 +59,17 @@ static char _WlzCCor_c[] = "MRC HGU $Id$";
 *					domains if non zero. The default is
 *					to use the intersection of the
 *					domains.
+* \param	normFlg			Normalise the cross-correlation value
+*					by dividing it by the area/volume over
+*					which it is computed if this flag
+					is non-zero.
 * \param	dstErr			Destination error pointer,
 *                                       may be NULL.
 */
 double		WlzCCorS2D(WlzObject *obj0, WlzObject *obj1,
-			   int unionFlg, WlzErrorNum *dstErr)
+			   int unionFlg, int normFlg, WlzErrorNum *dstErr)
 {
+  int		area = 0;
   double	gV0,
   		gV1,
 		gV2,
@@ -97,6 +102,10 @@ double		WlzCCorS2D(WlzObject *obj0, WlzObject *obj1,
     obj2 = (unionFlg)?
     	   WlzUnion2(obj0, obj1, &errNum):
 	   WlzIntersect2(obj0, obj1, &errNum);
+  }
+  if((errNum == WLZ_ERR_NONE) && (normFlg != 0))
+  {
+    area = WlzArea(obj2, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -168,6 +177,10 @@ double		WlzCCorS2D(WlzObject *obj0, WlzObject *obj1,
   if(errNum == WLZ_ERR_EOO)
   {
     errNum = WLZ_ERR_NONE;
+  }
+  if((errNum == WLZ_ERR_NONE) && (area > 0))
+  {
+    cCor = cCor / (double )area;
   }
   WlzFreeObj(obj2);
   WlzGreyValueFreeWSp(gVWSp0);
