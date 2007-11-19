@@ -309,6 +309,13 @@ extern int             		Wlz3DViewIntersectAABB(
                                   WlzDBox3 box);
 
 /************************************************************************
+* WlzAutoCor.c
+************************************************************************/
+extern WlzObject		*WlzAutoCor(
+				  WlzObject *gObj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzGetSectionFromGMModel.c
 ************************************************************************/
 extern WlzGMModel		*WlzGetSectionFromGMModel(
