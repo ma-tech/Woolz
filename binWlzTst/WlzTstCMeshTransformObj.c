@@ -266,6 +266,9 @@ static WlzErrorNum WlzTstCMeshSetDsp(WlzCMeshTransform *cMesh)
     case WLZ_TRANSFORM_3D_CMESH:
       errNum = WlzTstCMeshSetDsp3D(cMesh);
       break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
   }
   return(errNum);
 }

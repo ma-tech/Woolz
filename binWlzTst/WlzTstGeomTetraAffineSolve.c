@@ -122,5 +122,6 @@ int		main(int argc, char *argv[])
     }
   }
   (void )WlzFreeAffineTransform(tr);
+  return(0);
 }
 
