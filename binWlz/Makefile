@@ -46,6 +46,7 @@ EXECUTABLES		= \
 			WlzAffineTransformVertices \
 			WlzAffineTransformObj \
 			WlzArea \
+			WlzAutoCorrelate \
 			WlzBasisFnTransformObj \
 			WlzBasisFnTransformVertices \
 			WlzBoundaryToObj \
@@ -166,6 +167,7 @@ CSOURCES		= \
 			WlzAffineTransformVertices.c \
 			WlzAffineTransformObj.c \
 			WlzArea.c \
+			WlzAutoCorrelate.c \
 			WlzAutoTrackUpDown.c \
 			WlzBasisFnTransformObj.c \
 			WlzBasisFnTransformVertices.c \
