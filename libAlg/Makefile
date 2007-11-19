@@ -50,6 +50,7 @@ EXECUTABLES		=
 
 # List of all 'C' source files (modify as required).
 CSOURCES		= \
+			  AlgAutoCorr.c \
 			  AlgBits.c \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
