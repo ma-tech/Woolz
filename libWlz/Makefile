@@ -59,6 +59,7 @@ CSOURCES		= \
 			Wlz3DViewStructUtils.c \
 			Wlz3DViewTransformObj.c \
 			Wlz3DWarpMQ_S.c \
+			WlzAutoCor.c \
 			WlzAffineTransform.c \
 			WlzAffineTransformLSq.c \
 			WlzArea.c \
