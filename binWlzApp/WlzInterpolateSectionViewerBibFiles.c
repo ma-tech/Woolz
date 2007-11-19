@@ -49,10 +49,10 @@ static WlzErrorNum WriteBibFile(FILE *inFile,    char *inFileStr,  char *inFileS
 WlzThreeDViewStruct  *wlzViewStr  );
 
 
-WlzErrorNum     LinearInterpolations( WlzThreeDViewStruct *wlzViewStr, WlzThreeDViewStruct  *wlzViewStr1, 
+static WlzErrorNum     LinearInterpolations( WlzThreeDViewStruct *wlzViewStr, WlzThreeDViewStruct  *wlzViewStr1, 
                                        WlzThreeDViewStruct *wlzViewStrInter, int Inumber, int TotalN );
 
-WlzErrorNum     ChangeFixedPoint(WlzThreeDViewStruct *wlzViewStr, double x, double y, double z );
+static WlzErrorNum     ChangeFixedPoint(WlzThreeDViewStruct *wlzViewStr, double x, double y, double z );
 
 int main(int	argc,
 	 char	**argv)
@@ -60,28 +60,30 @@ int main(int	argc,
 
   FILE	       *inFile = NULL;   /* used to read Woolz object */ 
   FILE	       *outFile = NULL;   /* used to read Woolz object */
-  int           i,j,k, m, l1, label[3], individual[4];
+  int           i,j,k=0, m; /* , l1, label[3], individual[4] */
   int		option;
-  int           numChar, numChar1, TotalN;
-  int           outputAutoMeshVTK        = 0,
+  int            TotalN; /* numChar, numChar1, */
+  
+  /* int           outputAutoMeshVTK        = 0,
                 outputAutoMeshWLZ        = 0,
                 outputTransformedMeshWLZ = 0,
-		outputCutPlaneAndCorrepSurfaceVTK        = 0,
-		WARP                     = 1;
-  int                  basisFnPolyOrder = 3;
+    outputCutPlaneAndCorrepSurfaceVTK        = 0;
+  */
+    /*		WARP                     = 1 */
+  /* int                  basisFnPolyOrder = 3; */
   int                  Inumber, num;
   int                  globalCycle;
-  int                  binObjFlag;
+  /* int                  binObjFlag; */
   int                  centorOfMass = 1;
   int                  numOf2DWlzFiles = 0, numOfSampleBibFiles = 0;
-  int                  initialn0, endNum0,initialn1, endNum1;
+  /* int                  initialn0, endNum0,initialn1, endNum1; */
   int           BibFileIndex[50];
-  double	zConst                   = 0.;
-  double        mass = 0.0;
-  char          under ='_';
-  char                ctemp;
-  char                *inFileStr, *inFileStr1, *inFileStr3, *outFileStr;
-  char                *inFileStrw, *outputBibFilesDir, inFileStrSec[100];
+  /* double	zConst                   = 0.; */
+  /* double        mass = 0.0; */
+  /* char          under ='_'; */
+  /* char                ctemp; */
+  char                *inFileStr, *inFileStr1,  *outFileStr; /* *inFileStr3, */
+  char                *inFileStrw, *outputBibFilesDir; /* , inFileStrSec[100]; */
   char                TwoDImageFilesNameList[1000][120];
   char                TwoDImagePureFilesNameList[1000][70];
   char                PureBibFilesNameList[700][70];
@@ -90,15 +92,15 @@ int main(int	argc,
   char                SampleBibFilesDir[100];
   char                TwoDImageFilesDir[100];
   char                *List2DImageFilesStr, *SampleBibFilesStr;
-  char                *cstr;
-  const char	      *errMsg;
-  WlzDVertex2          cMass, cMassS;
+  /* char                *cstr; */
+  /* const char	      *errMsg; */
+  /* WlzDVertex2          cMass, cMassS; */
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;  /* Use the nearest neighbour */
+  /* WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;  Use the nearest neighbour */
   WlzThreeDViewStruct *wlzViewStr, *wlzViewStr1, *wlzViewStrInter;
-  AlcErrno             alcErr = ALC_ER_NONE;
-  WlzObject           *WObjS, *WObj2DS, *WObj2D; 
-  WlzObjectType        wtp = WLZ_3D_DOMAINOBJ;
+  /* AlcErrno             alcErr = ALC_ER_NONE; */
+  WlzObject           *WObjS;/*, *WObj2DS, *WObj2D;*/ 
+  /* WlzObjectType        wtp = WLZ_3D_DOMAINOBJ; */
 
   /* read the argument list and check for an input file */
   static char	optList[] = "i:I:f:w:o:d:z:M:m:n:r:R:L:B:h",
@@ -318,7 +320,14 @@ int main(int	argc,
       errNum = ReadBibFile(inFile, SampleBibFilesNameList[globalCycle+1], wlzViewStr1 );
       errNum = ReadBibFile(inFile, SampleBibFilesNameList[globalCycle],   wlzViewStrInter  );
       TotalN = BibFileIndex[globalCycle+1] - BibFileIndex[globalCycle];
-      for(i=BibFileIndex[globalCycle]+1; i< BibFileIndex[globalCycle+1]; i++)
+
+
+      /* cycle through between sample bib file */
+      j = BibFileIndex[globalCycle] + 1;
+      k = BibFileIndex[globalCycle+1];
+      printf("NNNN:  %d %d\n",j,k );
+      i=j;
+      while ( i < k )
       {
           Inumber = i - BibFileIndex[globalCycle];
 	  
@@ -331,6 +340,7 @@ int main(int	argc,
 	  /* write Section viewer parameters */
 	  printf("%s\n", PureBibFilesNameList[i]);
 	  errNum = WriteBibFile(outFile, PureBibFilesNameList[i], inFileStrw,  TwoDImageFilesNameList[i], wlzViewStrInter);
+	  i++;
       }
       globalCycle++;
    }
@@ -433,26 +443,21 @@ static WlzErrorNum ReadBibFile(FILE *inFile, char *inFileStr, WlzThreeDViewStruc
        exit(1);
    }
    /* read the bibfile */
-      bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, inFile);
-     
-      if(  bibFileErr != BIBFILE_ER_NONE )
-      {
-        printf("read error");
-	exit(0);
-      }
+   bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, inFile);
+   while( bibFileErr == BIBFILE_ER_NONE ){
+     if( !strncmp(bibfileRecord->name, "Wlz3DSectionViewParams", 22) ){
+       /* allocate memory for wlzViewStr */
 
-      /* allocate memory for wlzViewStr */
-      /*
-      if( !strncmp(bibfileRecord->name, inFileStr, 22) ){
-      */
        WlzEffBibParse3DSectionViewParamsRecord(bibfileRecord, wlzViewStr);
-       /*
-      }
-      */
-      BibFileRecordFree(&bibfileRecord);
-      fclose(inFile);
-      inFile = NULL;        
-      return errNum;
+
+     }
+     BibFileRecordFree(&bibfileRecord);
+     bibFileErr = BibFileRecordRead(&bibfileRecord, &errMsg, inFile);
+   }
+     BibFileRecordFree(&bibfileRecord);
+     fclose(inFile);
+     inFile = NULL;        
+     return errNum;
 }
 
 
@@ -465,19 +470,18 @@ static WlzErrorNum ReadBibFile(FILE *inFile, char *inFileStr, WlzThreeDViewStruc
 *     -#  wmt3D:            mesh transform.
 * - Author:       J. Rao, R. Baldock and B. Hill
 */
-static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileStrw, char *inFileStrSec
-,WlzThreeDViewStruct  *wlzViewStr)
+static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileStrw, char *inFileStrSec,WlzThreeDViewStruct  *wlzViewStr)
 {
    WlzErrorNum	    errNum = WLZ_ERR_NONE;
-   BibFileRecord	   *bibfileRecord;
-   BibFileError      bibFileErr;
-   char             *errMsg;
+   BibFileRecord	*bibfileRecord;
+   /* BibFileError      bibFileErr; */
+   /* char             *errMsg; */
    char             *tmpS,
                     *dateS = NULL,
 		    *hostS = NULL,
                     *userS = NULL,
                     *refFileS = NULL,
-		    *srcFileS, sgnlFileS;
+     *srcFileS; /*,     sgnlFileS; */
    time_t		tmpTime;   
    char			tmpBuf[256];
    static char		unknownS[] = "unknown";
@@ -487,7 +491,7 @@ static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileSt
    WlzTransformType   at = WLZ_TRANSFORM_2D_NOSHEAR;
    WlzMeshGenMethod     wmgmd  = WLZ_MESH_GENMETHOD_GRADIENT;
    WlzEffFormat    weft =  WLZEFF_FORMAT_WLZ;
-   WlzObjectType    wtp =    WLZ_2D_DOMAINOBJ;
+   /* WlzObjectType    wtp =    WLZ_2D_DOMAINOBJ; */
    if((outFile = fopen(outFileStr, "w")) == NULL )
    {
        printf("cannot open the output bib file.\n");
@@ -595,7 +599,7 @@ static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileSt
 WlzErrorNum     LinearInterpolations(  WlzThreeDViewStruct *wlzViewStr, WlzThreeDViewStruct  *wlzViewStr1, 
                                        WlzThreeDViewStruct *wlzViewStrInter, int Inumber, int TotalN )
 {
-   int i,j,k;
+  /* int i,j,k; */
    double ratio;
    WlzErrorNum	    errNum = WLZ_ERR_NONE;
    ratio = ( (double) Inumber ) /(double)(TotalN);
