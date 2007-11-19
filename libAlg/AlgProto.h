@@ -47,6 +47,10 @@ static char _AlgProto_h[] = "MRC HGU $Id$";
 extern "C" {
 #endif
 
+/* From AlgAutoCorr.c */
+extern AlgError			AlgAutoCorrelate2D(double **data,
+				  int nX,
+				  int nY);
 /* From AlgBits.c */
 extern int			AlgBitSetCount(
 				  unsigned long gMsk);
