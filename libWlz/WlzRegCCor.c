@@ -645,7 +645,7 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
   		cCor;
   WlzDVertex2	tran;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	tranTol = 1.0;
+  const double	tranTol = 0.5;
 
   /* Register for translation. */
   tran = WlzRegCCorObjs2DTran(tObj, sObj, initTr, maxTran, winFn, noise,
@@ -674,8 +674,8 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
     rot = 0.0;
     lastRot = 1.0;
     /* The convergence test must only test the translation and not the
-     * rotation too, as the rotation has been applied when finding the
-     * translation. */
+     * rotation too, as the rotation has already been applied when
+     * finding the translation. */
     while((errNum == WLZ_ERR_NONE) &&
 	  ((conv = (fabs(tran.vtX) <= tranTol) &&
 	           (fabs(tran.vtY) <= tranTol)) == 0) &&
@@ -1011,7 +1011,6 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
   		dstRot = 0.0;
   WlzIBox2	aBox;
   WlzIBox2	oBox[2];
-  WlzDVertex2	rotCentreD;
   WlzIVertex2	rot,
   		aSz,
   		aOrg,
@@ -1044,6 +1043,17 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
     	      WlzAffineTransformObj(sObj, initTr, WLZ_INTERPOLATION_NEAREST,
 				   &errNum), NULL);
   }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    oIdx = 0;
+    while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
+    {
+      tObj = WlzAutoCor(oObj[oIdx], &errNum);
+      (void )WlzFreeObj(oObj[oIdx]);
+      oObj[oIdx] = WlzAssignObject(tObj, NULL);
+      ++oIdx;
+    }
+  }
   /* Compute rectangular to polar transformation. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1052,9 +1062,8 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
     oIdx = 0;
     while((errNum == WLZ_ERR_NONE) && (oIdx < 2))
     {
-      rotCentreD = WlzCentreOfMass2D(oObj[oIdx], 0, NULL, &errNum);
-      rotCentreI.vtX = WLZ_NINT(rotCentreD.vtX);
-      rotCentreI.vtY = WLZ_NINT(rotCentreD.vtY);
+      rotCentreI.vtX = 0;
+      rotCentreI.vtY = 0;
       if(errNum == WLZ_ERR_NONE)
       {
 	pObj[oIdx] = WlzAssignObject(
