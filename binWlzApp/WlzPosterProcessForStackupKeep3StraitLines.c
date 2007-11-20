@@ -79,67 +79,42 @@ int main(int	argc,
 {
 
   FILE	       *inFile = NULL;   /* used to read Woolz object */ 
-  FILE	       *outFile = NULL;   /* used to read Woolz object */
-  int           i,j,k, m, l1, label[3], individual[4];
+  int           i,j,k=0, m;
   int		option;
-  int           numChar, numChar1, TotalN;
-  int           outputAutoMeshVTK        = 0,
-                outputAutoMeshWLZ        = 0,
-                outputTransformedMeshWLZ = 0,
-		outputCutPlaneAndCorrepSurfaceVTK        = 0,
-		WARP                     = 1;
-  int                  basisFnPolyOrder = 3;
-  int                  Inumber, num, startJ;
-  int                  cycleI, cycleNext;
-  int                  binObjFlag;
-  int                  centorOfMass = 1;
-  int                  numOf2DWlzFiles = 0, numOfBibFiles = 0;
-  int                  initialn0, endNum0,initialn1, endNum1;
+  int           startJ;
+  int           cycleI, cycleNext;
+  double           ntnm,nfnm,nsnm;
+  int           numOf2DWlzFiles = 0, numOfBibFiles = 0;
   int           ok, usage1, idx;
-  double	zConst                   = 0.;
   double        deltaZ;
-  double        scaleV, trX, trY, cosinTheta, mass = 0.0;
-  double        sx,sy,sz, fx,fy,fz, tx,ty,tz;
-  double        Sx,Sy,Sz, Fx,Fy,Fz, Tx,Ty,Tz;
-  double        dtemp,dtemp1,dtemp2;
-  double        ntnm, nfnm, nsnm;
-  double        lengthTS, lengthts;
-  char          under ='_';
-  char                ctemp;
-  char                *inFileStr, *inFileStr1, *inFileStr3, *outFileStr;
-  char                *inFileStrw, *outputWlzFilesDir, inFileStrSec[120];
-  char                TwoDImageFilesNameList[700][120];
-  char                TwoDImagePureFilesNameList[700][120];
-  char                warpedFilesNameList[700][120];
-  char                BibFilesNameList[700][120];
-  char                SampleBibPureFilesName[700][120];
-  char                SampleBibFilesDir[120];
-  char                TwoDImageFilesDir[120];
-  char                *List2DImageFilesStr, *ListBibFilesStr;
-  char                *cstr;
-  const char	      *errMsg;
-  WlzVertex            vs, vt, vf,  vS, vT, vF, vo, vso, vtemp, vtemp1, vtemp2, vn;
-  WlzVertex            vs1, vt1, vf1, vsp, vtp, vfp, vs1p, vt1p, vf1p, vST, vst;
-  WlzVertex            vtx1, vtx2;
-  WlzVertex            vsr, vtr, vfr;
-  WlzVertex            nI, nIP1, ns, nf, nt, nsp, nfp, ntp, nz,nm;
-  WlzDVertex2         *vtxVec0, *vtxVec1;
-  WlzDVertex2          s,t,f;
-  WlzErrorNum	       errNum = WLZ_ERR_NONE;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_LINEAR;  /* Use the nearest neighbour */
-  WlzThreeDViewStruct *wlzViewStr, *wlzViewStr1, *wlzViewStrInter;
-  AlcErrno             alcErr = ALC_ER_NONE;
-  WlzObject           *WObjS, *WObj2DS, *WObj2D, *tObj, *sObj; 
-  WlzObjectType        wtp = WLZ_3D_DOMAINOBJ;
-  WlzAffineTransform  *trans, *rTrans;
-  WlzTransformType tType = WLZ_TRANSFORM_2D_REG;
+  double        sx=0,sy=0,sz=0, fx=0,fy=100,fz=0, tx=100,ty=0,tz=0;
+  double        Sx=0,Sy=0,Sz=60, Fx=0,Fy=100,Fz=60, Tx=100,Ty=0,Tz=60;
+  double        lengthTS;
+  char         *inFileStr, *inFileStr1, *outFileStr;
+  char         *inFileStrw=NULL, *outputWlzFilesDir=NULL;
+  char          TwoDImageFilesNameList[700][120];
+  char          TwoDImagePureFilesNameList[700][120];
+  char          warpedFilesNameList[700][120];
+  char          BibFilesNameList[700][120];
+
+  char          TwoDImageFilesDir[120];
+  char         *List2DImageFilesStr= NULL, *ListBibFilesStr= NULL;
+
+
+  WlzVertex      vs, vt, vf,  vS, vT, vF;
+  WlzVertex      vs1, vt1, vf1, vsp, vtp, vfp, vST;
+
+  WlzVertex      vsr, vtr, vfr;
+  WlzVertex      ns, nf, nt, nsp, nfp, ntp, nz,nm;
+  WlzDVertex2   *vtxVec1;
+  WlzErrorNum	 errNum = WLZ_ERR_NONE;
+  WlzThreeDViewStruct *wlzViewStr, *wlzViewStr1;
+  WlzObject     *WObjS; 
   char		*cutStr[3];
   double        cutVal[3];
 
   /* read the argument list and check for an input file */
-  static char	optList[] = "i:I:w:o:d:s:S:f:F:t:T::M:n:r:R:L:B:h",
-
-  opterr = 0;
+  static char	optList[] = "i:I:w:o:d:s:S:f:F:t:T:M:n:r:R:L:B:h",opterr = 0;
   ok = 1;
  
    while( (option = getopt(argc, argv, optList)) != EOF )
@@ -267,7 +242,8 @@ int main(int	argc,
       }
    }
 
-
+      printf("t: %f %f %f\n",tx,ty, tz );
+      printf("T: %f %f %f\n",Tx,Ty, Tz );
 
     /*------- allocate memory --------*/
     if (
@@ -406,6 +382,8 @@ int main(int	argc,
       vf.d3.vtY = fy;
       vf.d3.vtZ = fz;
       
+      printf("vt: %f %f %f\n",vt.d3.vtX,vt.d3.vtY, vt.d3.vtZ );
+      printf("vT: %f %f %f\n",vT.d3.vtX,vT.d3.vtY, vT.d3.vtZ );
 /*  -----get the three directions in OPT space------- 
     n = 1/(|r2-r1|) { (x2-x1) i  + (y2-y1) j + (z2-z1) k  }
 
@@ -425,7 +403,10 @@ int main(int	argc,
       nf.d3.vtZ = vST.d3.vtZ/ lengthTS;
 
       WLZ_VTX_3_SUB(vST.d3,vT.d3,vt.d3);
+      printf("vt: %f %f %f\n",vt.d3.vtX,vt.d3.vtY, vt.d3.vtZ );
+      printf("vT: %f %f %f\n",vT.d3.vtX,vT.d3.vtY, vT.d3.vtZ );
       lengthTS  =  WLZ_VTX_3_LENGTH( vST.d3);
+      printf("Length: %f\n",lengthTS);
       nt.d3.vtX = vST.d3.vtX/ lengthTS;
       nt.d3.vtY = vST.d3.vtY/ lengthTS;
       nt.d3.vtZ = vST.d3.vtZ/ lengthTS;
@@ -497,16 +478,20 @@ int main(int	argc,
 	 exit(1);
    }
    /* get the nt dot nm, etc */
-   ntnm  =  WLZ_VTX_3_DOT(nt.d3, nm.d3);
-   nfnm  =  WLZ_VTX_3_DOT(nf.d3, nm.d3);
-   nsnm  =  WLZ_VTX_3_DOT(ns.d3, nm.d3);
-   if(  ( ( ntnm == 0 )  || ( nfnm == 0 ) ) ||( nsnm == 0 ) )
-   {
-         printf("At least one of your three strait lines are parallel to the main plane err.\n");
-         printf("Which means your three straight line has to be rechosen or chose another plane\n");
-         printf("as main plane\n");
-	 exit(1);
-   }
+
+  ntnm  =  WLZ_VTX_3_DOT(nt.d3, nm.d3);
+  nfnm  =  WLZ_VTX_3_DOT(nf.d3, nm.d3);
+  nsnm  =  WLZ_VTX_3_DOT(ns.d3, nm.d3);
+  ntnm = nm.d3.vtX * nt.d3.vtX +  nm.d3.vtY * nt.d3.vtY + nm.d3.vtZ * nt.d3.vtZ;
+
+
+  if(  ( ( ntnm == 0 )  || ( nfnm == 0 ) ) ||( nsnm == 0 ) )
+    {
+      printf("At least one of your three strait lines are parallel to the main plane err.\n");
+      printf("Which means your three straight line has to be rechosen or chose another plane\n");
+      printf("as main plane\n");
+      exit(1);
+    }
 
 
 
@@ -514,18 +499,16 @@ int main(int	argc,
   /* get crossed point in this plane p_{i} then project to viewer space */
   errNum = WlzGetCorssPoint(vs,  ns,  &vsr,  wlzViewStr);
   if(errNum != WLZ_ERR_NONE)
-  {
-         printf("can not find crossed point err.\n");
-         exit(1);
-   
-  }
+    {
+      printf("can not find crossed point err.\n");
+      exit(1);
+    }
   errNum = WlzGetCorssPoint(vt,  nt,  &vtr,  wlzViewStr);
   if(errNum != WLZ_ERR_NONE)
-  {
-         printf("can not find crossed point err.\n");
-         exit(1);
-   
-  }
+    {
+      printf("can not find crossed point err.\n");
+      exit(1);
+    }
 
   errNum = WlzGetCorssPoint(vf,  nf,  &vfr,  wlzViewStr);
   if(errNum != WLZ_ERR_NONE)
@@ -913,14 +896,13 @@ static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileSt
 {
    WlzErrorNum	    errNum = WLZ_ERR_NONE;
    BibFileRecord	   *bibfileRecord;
-   BibFileError      bibFileErr;
-   char             *errMsg;
+
    char             *tmpS,
                     *dateS = NULL,
 		    *hostS = NULL,
                     *userS = NULL,
                     *refFileS = NULL,
-		    *srcFileS, sgnlFileS;
+		    *srcFileS;
    time_t		tmpTime;   
    char			tmpBuf[256];
    static char		unknownS[] = "unknown";
@@ -929,7 +911,7 @@ static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileSt
    WlzTransformType   at = WLZ_TRANSFORM_2D_NOSHEAR;
    WlzMeshGenMethod     wmgmd  = WLZ_MESH_GENMETHOD_GRADIENT;
    WlzEffFormat    weft =  WLZEFF_FORMAT_WLZ;
-   WlzObjectType    wtp =    WLZ_2D_DOMAINOBJ;
+
    if((outFile = fopen(outFileStr, "w")) == NULL )
    {
        printf("cannot open the output bib file.\n");
@@ -1054,9 +1036,9 @@ static WlzErrorNum WlzTrack3DVertical( WlzVertex sip,
 				int UpOrDown)
 {
 
-   WlzVertex vtemp, vtemp0, vtemp1, vtemp2, vn, vs, vo, vso, vtx1;
-   WlzVertex vs1, nI, nIP1, vnso, nz;
-   double    dtemp, dtemp0, dtemp1, dtemp2;
+   WlzVertex vtemp, vtemp0, vs, vo, vso, vtx1;
+   WlzVertex vs1, nI, nIP1;
+   double    dtemp, dtemp1, dtemp2;
    WlzErrorNum	       errNum = WLZ_ERR_NONE;
   
 
@@ -1200,12 +1182,12 @@ static WlzErrorNum outputTheWarpedWlz( WlzVertex  vsp,
 				       char *out2DWlzStr
 				     )
 {
-    WlzAffineTransform  *trans;
-    /* WlzTransformType     tType = WLZ_TRANSFORM_2D_NOSHEAR; */
+    WlzAffineTransform  *trans=NULL;
+
     WlzTransformType     tType = WLZ_TRANSFORM_2D_AFFINE;
     WlzDVertex2         *vtxVec0;
     WlzDVertex2          sv, tv;
-    WlzObject           *sObj, *tObj;
+    WlzObject           *sObj=NULL, *tObj=NULL;
     FILE                *inFile;
     WlzErrorNum	         errNum = WLZ_ERR_NONE;
     WlzInterpolationType interp = WLZ_INTERPOLATION_LINEAR;  /* Use the nearest neighbour */
@@ -1325,9 +1307,9 @@ static WlzErrorNum WlzGetCorssPoint( WlzVertex sip,
                                 WlzThreeDViewStruct  *wlzViewStri  
 				)
 {
-   WlzVertex    vtemp, vtemp0, vtemp1, vtemp2, vn, vs, vo, vso, vtx1;
-   WlzVertex    vs1, nI, nIP1, vnso, nz;
-   double       dtemp, dtemp0, dtemp1, dtemp2;
+   WlzVertex    vtemp, vtemp0, vo, vso, vtx1;
+   WlzVertex    vs1, nI;
+   double       dtemp, dtemp1, dtemp2;
    WlzErrorNum	errNum = WLZ_ERR_NONE;
   
 
