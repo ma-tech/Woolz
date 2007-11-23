@@ -130,6 +130,7 @@ EXECUTABLES		= \
 			WlzRegisterICP \
 			WlzRegisterICPWSD \
 			WlzRGBAConvert \
+			WlzRGBCombine \
 			WlzRMSDiff \
 			WlzRsvFilterObj \
 			WlzSampleObj \
@@ -253,6 +254,7 @@ CSOURCES		= \
 			WlzRegisterICP.c \
 			WlzRegisterICPWSD.c \
 			WlzRGBAConvert.c \
+			WlzRGBCombine.c \
 			WlzRMSDiff.c \
 			WlzRsvFilterObj.c \
 			WlzSampleObj.c \
