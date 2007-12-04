@@ -21,7 +21,7 @@ public class CorrelationScrollBar extends JSlider implements Observer {
 
 	private ImageViewManager tvim;
 	private static final int MAX = 100;
-	private static final boolean RESPONSIVE_SCROLLING = true;
+	private static final boolean RESPONSIVE_SCROLLING = false;
 	private MultiTreeSelectionI geneSelection;
 	private boolean _debug;
 
@@ -46,8 +46,6 @@ public class CorrelationScrollBar extends JSlider implements Observer {
 	   addChangeListener(new ChangeListener() {
 	      public void stateChanged(ChangeEvent e) {
 		 double corr = ((double)getValue())/((double)MAX);
-
-		 //tvim.setCorrelationView(true);
 
 		 //System.out.println("CorrelationScrollBar: stateChanged RESPONSIVE_SCROLLING = "+RESPONSIVE_SCROLLING);
 		 if (RESPONSIVE_SCROLLING) {
