@@ -24,11 +24,11 @@ import edu.stanford.genetics.treeview.dendroview.*;
  * A panel that directly contains images to display.
  * 
  */
-public class ImagePanel extends JPanel implements MouseListener {
+public class ImagePanel extends JPanel implements MouseListener, TVTypes {
 
    private int borderWidth = 2;
    private ImageContainer parent;
-   private Color bgc = ImageViewManager.BGCOLOR;
+   private Color bgc = TVTypes.BGCOLOR;
    protected java.util.Timer tim = null;
    protected boolean doubleclick = false;
    private int doubleClickTime = 500; // milliseconds
@@ -65,7 +65,7 @@ public class ImagePanel extends JPanel implements MouseListener {
          //System.out.println("ImagePanel.setImage: returning, img is null");
          return;
       }
-      img = parent.scaleImg(bi);
+      img = bi;
       actualImageSize = new Dimension(img.getWidth(), img.getHeight());
    }
 
