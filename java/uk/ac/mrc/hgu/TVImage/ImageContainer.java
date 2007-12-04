@@ -21,8 +21,10 @@ import edu.stanford.genetics.treeview.dendroview.*;
  * 
  * @author Tom Perry <tperry@hgu.mrc.ac.uk>
  */
-public abstract class ImageContainer extends JPanel {
+public abstract class ImageContainer extends JPanel implements TVTypes {
 
+	public static final int imagePanelW = 140;
+	public static final int imagePanelH = 140;
 	protected int borderWidth = 2;
 	protected BufferedImage img = null;
 	protected ImagePanel imagePanel = null;
@@ -36,14 +38,13 @@ public abstract class ImageContainer extends JPanel {
 	private int sortIndex = 0;
 	private int thisW = 140;
 	private int thisH = 185;
-	private int imagePanelW = 140;
-	private int imagePanelH = 140;
 	private int labelPanelW = 140;
 	private int labelPanelH = 35;
 	private Color selectedCol = Color.red;
 	private Color notSelectedCol = Color.green;
 	//private Color bgc = new Color(240,240,245);
-	private Color bgc = ImageViewManager.BGCOLOR;
+	private Color bgc = TVTypes.BGCOLOR;
+	private boolean inTopPanel = false;
 	private boolean _debug = false;
 
 //---------------------------------------------------------------------------
@@ -71,7 +72,7 @@ public abstract class ImageContainer extends JPanel {
 //---------------------------------------------------------------------------
 	private void initPanels() {
 	   this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-	   this.setBackground(ImageViewManager.BGCOLOR);
+	   this.setBackground(TVTypes.BGCOLOR);
 	   //this.setBorder(BorderFactory.createLineBorder(Color.blue, borderWidth));
 	   this.setPreferredSize(new Dimension(thisW, thisH));
 	   this.setMinimumSize(new Dimension(thisW, thisH));
@@ -86,7 +87,7 @@ public abstract class ImageContainer extends JPanel {
 	   imagePanel.setBorderWidth(borderWidth);
 	   imagePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 	   //imagePanel.setBorder(BorderFactory.createLineBorder(notSelectedCol, borderWidth));
-	   //imagePanel.setBackground(ImageViewManager.BGCOLOR);
+	   //imagePanel.setBackground(TVTypes.BGCOLOR);
 	   imagePanel.setBackground(bgc);
 
 	   labelPanel = new JPanel();
@@ -94,7 +95,7 @@ public abstract class ImageContainer extends JPanel {
 	   labelPanel.setPreferredSize(new Dimension(labelPanelW, labelPanelH));
 	   labelPanel.setMaximumSize(new Dimension(labelPanelW, labelPanelH));
 	   labelPanel.setMinimumSize(new Dimension(labelPanelW, labelPanelH));
-	   //labelPanel.setBackground(ImageViewManager.BGCOLOR);
+	   //labelPanel.setBackground(TVTypes.BGCOLOR);
 	   labelPanel.setBackground(bgc);
 
 	   add(Box.createRigidArea(new Dimension(0,2)));
@@ -178,74 +179,6 @@ public abstract class ImageContainer extends JPanel {
       }
 //---------------------------------------------------------------------------
    /**
-    *   Makes a scaled BufferedImage.
-    *   (based on comp.lang.java.gui reply by Shannon Hickey - Swing Team)
-    *   Google:	scaling a BufferedImage w/ Java 2D
-    *   @param bi the unscaled image.
-    *   @return the scaled image.
-    */
-   protected BufferedImage scaleImg(BufferedImage bi) {
-
-      int H = bi.getHeight();
-      int W = bi.getWidth();
-      //System.out.println("ImageContainer.scaleImg: panel is "+imagePanelW+" wide X "+imagePanelH+" high");
-      //System.out.println("ImageContainer.scaleImg: img is "+W+" wide X "+H+" high");
-
-      if(H <= imagePanelH && W <= imagePanelW) {
-	 // no need to scale image to fit container
-	 //System.out.println("ImageContainer.scaleImg: returning, img fits container already");
-         return bi;
-      }
-
-      double ratio = ((double)H/(double)W);
-      boolean portrait = (ratio >= 1.0); // the image is taller than it is wide (or square).
-      //System.out.println("Image H/W = "+ratio);
-
-      int scaledW = 0;
-      int scaledH = 0;
-      double newRatio = 1.0;
-
-      if(portrait) {
-	 //System.out.println("portrait");
-	 scaledH = imagePanelH;
-	 scaledW = (int)(Math.ceil((imagePanelH / ratio)));
-	 //System.out.println("scaled img is "+scaledW+" wide X "+scaledH+" high");
-	 newRatio = ((double)scaledW/(double)imagePanelW);
-	 //System.out.println("new ratio = "+ratio);
-	 if(newRatio > 1.0) {
-	    scaledH /= newRatio;
-	    scaledW /= newRatio;
-	 }
-	 //System.out.println("scaled img is now "+scaledW+" wide X "+scaledH+" high");
-      } else {
-	 //System.out.println("landscape");
-	 scaledW = imagePanelW;
-	 scaledH = (int)(Math.ceil((imagePanelW * ratio)));
-	 //System.out.println("scaled img is "+scaledW+" wide X "+scaledH+" high");
-	 newRatio = ((double)scaledH/(double)imagePanelH);
-	 //System.out.println("new ratio = "+ratio);
-	 if(newRatio > 1.0) {
-	    scaledH /= newRatio;
-	    scaledW /= newRatio;
-	 }
-	 //System.out.println("scaled img is now "+scaledW+" wide X "+scaledH+" high");
-      }
-
-      BufferedImage scaledImg = new BufferedImage(scaledW, scaledH, bi.getType());
-      Graphics2D g = (Graphics2D)(scaledImg.getGraphics());
-
-      // Frame implements imageObserver interface.
-      Frame dummyObserver = new Frame();
-
-      //g.setBackground(Color.magenta);
-      g.clearRect(0, 0, scaledW, scaledH);
-      g.drawImage(bi, 0, 0, scaledW, scaledH, dummyObserver);
-      g.dispose();
-
-      return scaledImg;
-   } // scaleImg()
-//---------------------------------------------------------------------------
-   /**
     *   Handles single mouse click events from images.
     *   If the correlation slider (or text box) has been changed:
     *      single-clicking a heatmap image (Node) highlights the corresponding part of the tree.
@@ -259,8 +192,6 @@ public abstract class ImageContainer extends JPanel {
       }
       boolean wasSelected = selected;
       if(tviv.getManager().isCorrelationView()) {
-	 //System.out.println("isCorrelationValueSet() "+tviv.getManager().getGeneSelection().isCorrelationValueSet());
-	 //System.out.println("getSelectedNodes().size() "+tviv.getManager().getGeneSelection().getSelectedNodes().size());
 	 int index = -1;
 	 tviv.setSelectedContainer(null);
 	 if(!wasSelected) {
@@ -284,36 +215,33 @@ public abstract class ImageContainer extends JPanel {
 	 System.out.println(">>>>>> ImageContainer: "+getID()+" enter doDoubleMouseClick");
       }
       String path = "";
+      ImageViewManager manager = tviv.getManager();
       if(isGene(getID())) {
-	 tviv.getManager().setDoubleClickGene(true);
+	 manager.setDoubleClickGene(true);
       } else {
-	 tviv.getManager().setDoubleClickNode(true);
+	 manager.setDoubleClickNode(true);
       }
-      //if (tviv.getManager().getGeneSelection().isCorrelationValueSet() ||
-         //tviv.getManager().getGeneSelection().getSelectedNodes().size() > 1) {
-      if(tviv.getManager().isCorrelationView()) {
-	 //System.out.println("isCorrelationValueSet() "+tviv.getManager().getGeneSelection().isCorrelationValueSet());
-	 //System.out.println("getSelectedNodes().size() "+tviv.getManager().getGeneSelection().getSelectedNodes().size());
-	 tviv.getManager().getGeneSelection().resetCorrelationValue();
+      if(manager.isCorrelationView()) {
+	 manager.getGeneSelection().resetCorrelationValue();
 	 int index = -1;
 	 tviv.setSelectedContainer(null);
 	 //tviv.getManager().getGeneSelection().setSelectedNode(getID());
 	 if (isGene(getID())) {
-	    tviv.getManager().getGeneSelection().setSelectedNode(null);
-	    index = tviv.getManager().getGeneIndex(getID());
-	    tviv.getManager().getGeneSelection().selectIndexRange(index,index);
+	    manager.getGeneSelection().setSelectedNode(null);
+	    index = manager.getGeneIndex(getID());
+	    manager.getGeneSelection().selectIndexRange(index,index);
 	 } else {
-	    tviv.getManager().getGeneSelection().setSelectedNode(getID());
+	    manager.getGeneSelection().setSelectedNode(getID());
 	 }
-	 tviv.getManager().getGeneSelection().notifyObservers();
+	 manager.getGeneSelection().notifyObservers();
       } else {
 	 path = getHyperlinkTarget();
 	 if (path != null && path != "") {
 	    System.out.println(path);
-	    tviv.getManager().displayURL(path);
+	    manager.displayURL(path);
 	 }
       }
-      tviv.getManager().setDoubleClick(false);
+      manager.setDoubleClick(false);
       if(_debug) {
 	 System.out.println("<<<<<< ImageContainer: "+getID()+" exit doDoubleMouseClick");
       }
