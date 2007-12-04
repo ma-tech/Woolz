@@ -16,7 +16,7 @@ import edu.stanford.genetics.treeview.dendroview.*;
  * 
  * @author Tom Perry <tperry@hgu.mrc.ac.uk>
  */
-class ImageScrollPane extends JScrollPane implements Observer {
+class ImageScrollPane extends JScrollPane implements Observer, TVTypes {
 
    JPanel content = null;
    SortedSet<ImageContainer> panels = new TreeSet<ImageContainer>(new PanelComparator());
@@ -25,7 +25,7 @@ class ImageScrollPane extends JScrollPane implements Observer {
    Dimension available;
    ImageServer imgProducer;
    ImageView parent;
-   int type = ImageViewManager.TYPE_NULL;
+   int type = TVTypes.NULL;
    String nodename = "";
    private boolean _debug = false;
    //-----------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ class ImageScrollPane extends JScrollPane implements Observer {
       content = new JPanel();
       //content.setBackground(Color.red);
       //content.setBorder(BorderFactory.createLineBorder(Color.blue,1));
-      content.setBackground(ImageViewManager.BGCOLOR);
+      content.setBackground(TVTypes.BGCOLOR);
       setViewportView(content);
       addMouseWheelListener(group);
       this.type = type;
@@ -63,15 +63,15 @@ class ImageScrollPane extends JScrollPane implements Observer {
    public boolean isEmpty() { return panels.isEmpty(); }
    //-----------------------------------------------------------------------------------------
    protected String getType() {
-      if(type == ImageViewManager.TYPE_NODE) {
+      if(type == TVTypes.NODE) {
 	 return "Node";
-      } else if(type == ImageViewManager.TYPE_HEATMAP) {
+      } else if(type == TVTypes.HEATMAP) {
 	 return "Heatmap";
-      } else if(type == ImageViewManager.TYPE_RAW) {
+      } else if(type == TVTypes.RAW) {
 	 return "Raw";
-      } else if(type == ImageViewManager.TYPE_ANNOTATED) {
+      } else if(type == TVTypes.ANNOTATED) {
 	 return "Annotated";
-      } else if(type == ImageViewManager.TYPE_NULL) {
+      } else if(type == TVTypes.NULL) {
 	 return "Null";
       }
       return "not known";
@@ -145,9 +145,17 @@ class ImageScrollPane extends JScrollPane implements Observer {
       }
    }
    //-----------------------------------------------------------------------------------------
-   protected void clear() {
+   protected void clearAll() {
+      if(panels != null && panels.size() > 0) {
+         for(ImageContainer ic : panels) {
+	    ic.imagePanel.img = null;
+	    ic.imagePanel = null;
+	    ic = null;
+	 }
+      }
       content.removeAll();
       panels.clear();
+      imgProducer.clearAll();
    }
    //-----------------------------------------------------------------------------------------
    void setStuff() {
