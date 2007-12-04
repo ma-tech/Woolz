@@ -24,47 +24,37 @@ import edu.stanford.genetics.treeview.*;
 import edu.stanford.genetics.treeview.dendroview.*;
 
 /** 
- * Manager for image-related panels.  Also contains a bunch of
+ * Manager for image-related views.  Also contains a bunch of
  * wrapper methods for the geneSelection and nodeSelection
  * objects.
  *
  * @author Tom Perry <tperry@hgu.mrc.ac.uk>
  * @version 
  */
-public class ImageViewManager extends JTabbedPane implements Observer {
+public class ImageViewManager extends JTabbedPane implements Observer, TVTypes {
 
    private MultiTreeSelectionI geneSelection = null;
    private JTabbedPane tabbedPane = null;
    private HeaderInfo gtrInfo = null;
    private HeaderInfo geneInfo = null;
-   private ArrayList<JComponent> panels = new ArrayList<JComponent>();
-   private ArrayList<String> panelNames = new ArrayList<String>();
+   private ArrayList<JComponent> views = new ArrayList<JComponent>();
+   private ArrayList<String> viewNames = new ArrayList<String>();
    private int scrollValue = 0;
+   private int useCase = NONE;
    private XmlAppSettings appSettings;
    private ScrollGroup sg = new ScrollGroup();
    private ModelManipulator mm;
    private ViewFrame viewFrame;
    private LeftTreeDrawer drawer;
    private TreeDrawerNode rootNode;
+   private Object _updateParam = null;
    private boolean isCorrelationView = false;
    private boolean isDoubleClickGene = false;
    private boolean isDoubleClickNode = false;
+   private boolean tabChangedByUser = true;
+
    private boolean _debug = false;
-
-   public static final Color BGCOLOR = Color.white;
-   public static final boolean MULTITHREADED = false;
-   public static final boolean PRELOAD = false;
    private static final boolean DEBUG_MODE = false;
-
-   /*
-    * These are bad, but they ensure that only one scroll pane of
-    * a particular type can be included in a scroll group.
-    */
-   public static final int TYPE_NULL = 0;
-   public static final int TYPE_NODE = 1;
-   public static final int TYPE_HEATMAP = 2;
-   public static final int TYPE_RAW = 3;
-   public static final int TYPE_ANNOTATED = 4;
 
    public static boolean isDebugMode() {
       return DEBUG_MODE;
@@ -99,6 +89,12 @@ public class ImageViewManager extends JTabbedPane implements Observer {
       geneInfo = geneI;
       viewFrame = vf;
 
+      this.addChangeListener(new ChangeListener() {
+	 public void stateChanged(ChangeEvent e) {
+	    doTabChanged(e);
+	 }
+      });
+
       mm = new ModelManipulator(gtrI, geneI);
       drawer = d;
       drawer.addObserver(this);
@@ -116,57 +112,61 @@ public class ImageViewManager extends JTabbedPane implements Observer {
        * panes.  They use the same image factory (and image cache)
        * though, so it's not so bad.
        */
-      TopImageScrollPane nodePane
-	 = new TopImageScrollPane(new ScrollGroup(), TYPE_NODE, hif, this);
-      TopImageScrollPane nodePane2
-	 = new TopImageScrollPane(new ScrollGroup(), TYPE_NODE, hif, this);
-      TopImageScrollPane nodePane3
-	 = new TopImageScrollPane(new ScrollGroup(), TYPE_NODE, hif, this);
+      ImageScrollPane nodePane
+	 = new ImageScrollPane(new ScrollGroup(), NODE, hif, this);
+      ImageScrollPane nodePane2
+	 = new ImageScrollPane(new ScrollGroup(), NODE, hif, this);
+      ImageScrollPane nodePane3
+	 = new ImageScrollPane(new ScrollGroup(), NODE, hif, this);
       ImageScrollPane geneHeatmapPane
-	 = new ImageScrollPane(sg, TYPE_HEATMAP,   hif, this);
+	 = new ImageScrollPane(sg, HEATMAP,   hif, this);
       ImageScrollPane geneRawPane
-	 = new ImageScrollPane(sg, TYPE_RAW,       rif, this);
+	 = new ImageScrollPane(sg, RAW,       rif, this);
       ImageScrollPane geneAnnotatedPane
-	 = new ImageScrollPane(sg, TYPE_ANNOTATED, aif, this);
+	 = new ImageScrollPane(sg, ANNOTATED, aif, this);
 
       ImageView heatmapView = new ImageView(
 	    this,
 	    appSettings,
 	    true,
-	    "Heat map",
+	    HEATMAP_DESCRIPTION,
 	    nodePane,
 	    geneHeatmapPane);
       ImageView rawView = new ImageView(
 	    this,
 	    appSettings,
 	    false,
-	    "Raw data",
+	    RAW_DESCRIPTION,
 	    nodePane2,
 	    geneRawPane);
       ImageView annotatedView = new ImageView(
 	    this,
 	    appSettings,
 	    false,
-	    "Annotated images",
+	    ANNOTATED_DESCRIPTION,
 	    nodePane3,
 	    geneAnnotatedPane);
 
-      panels.add(heatmapView);
-      panels.add(rawView);
-      panels.add(annotatedView);
-      panels.add(new SummaryView(this));
+      views.add(heatmapView);
+      views.add(rawView);
+      views.add(annotatedView);
+      views.add(new SummaryView(this));
 
-      panelNames.add(heatmapView.viewDescription());
-      panelNames.add(rawView.viewDescription());
-      panelNames.add(annotatedView.viewDescription());
-      panelNames.add(new String("Summary"));
+      viewNames.add(heatmapView.viewDescription());
+      viewNames.add(rawView.viewDescription());
+      viewNames.add(annotatedView.viewDescription());
+      viewNames.add(SUMMARY_DESCRIPTION);
 
-      for (int i=0; i<panels.size(); i++) {
+      for (int i=0; i<views.size(); i++) {
 	 if(_debug) {
-	    System.out.println("ImageViewManager: adding "+panelNames.get(i));
+	    System.out.println("ImageViewManager: adding "+viewNames.get(i));
 	 }
-	 addTab(panelNames.get(i), panels.get(i));
+	 addTab(viewNames.get(i), views.get(i));
       }
+   } // constructor
+
+   public int getUseCase() {
+      return useCase;
    }
 
    /*
@@ -250,42 +250,79 @@ public class ImageViewManager extends JTabbedPane implements Observer {
       if(_debug) {
 	 System.out.println(">>>>>> ImageViewManager: enter update, Observable = "+o.getClass().getSimpleName()+", arg = "+arg);
       }
+      _updateParam = arg;
       if (o == getGeneSelection()) {
 	 if (getGeneSelection().isCorrelationValueSet()) {
 	    /*
 	     * XXX: we're currently hard coding allowable tab indexes
 	     * for correlation views.  Bad.
 	     */
+	    tabChangedByUser = false;
 	    setSelectedIndex(0);
+	    tabChangedByUser = true;
 	    setEnabledAt(1, false);
 	    setEnabledAt(2, false);
 	    setEnabledAt(3, false);
 	    setCorrelationView(true);
 	 } else {
+	    tabChangedByUser = false;
 	    setSelectedIndex(1);
+	    tabChangedByUser = true;
 	    setEnabledAt(1, true);
 	    setEnabledAt(2, true);
 	    setEnabledAt(3, true);
 	    setCorrelationView(false);
 	 }
+	 clearAll();
+	  // We only want to update views that will be displayed.
+	 if (isCorrelationView()) {
+	    useCase = CORRELATION_CHANGED;
+	    updateView(o, arg, HEATMAP_DESCRIPTION);
+	 } else if (arg != null && arg.toString().trim().equalsIgnoreCase("treeNodeClicked")) {
+	    useCase = TREE_NODE_CLICKED;
+	    updateView(o, arg, RAW_DESCRIPTION);
+	    updateView(o, arg, SUMMARY_DESCRIPTION);
+	 } else if (isDoubleClickNode()) {
+	    useCase = DOUBLE_CLICK_NODE;
+	    updateView(o, arg, RAW_DESCRIPTION);
+	    updateView(o, arg, SUMMARY_DESCRIPTION);
+	 } else if (isDoubleClickGene()) {
+	    useCase = DOUBLE_CLICK_GENE;
+	    updateView(o, arg, RAW_DESCRIPTION);
+	    updateView(o, arg, SUMMARY_DESCRIPTION);
+	 } else {
+	    useCase = MATRIX_CLICKED;
+	    updateView(o, arg, RAW_DESCRIPTION);
+	    updateView(o, arg, SUMMARY_DESCRIPTION);
+	 }
       } else if (o == drawer && (rootNode == null || !rootNode.equals(drawer.getRootNode()))) {
 	 rootNode = drawer.getRootNode();
 	 mm.doTreeSearch(rootNode);
       }
-
-      /*
-       * We may as well tell everyone what's going on (unless
-       * overhead becomes a problem) -- chain of responsibility
-       * design pattern?
-       *
-       * Also a good idea because we shouldn't expect the manager
-       * instance to know details of its subpanels.
-       */
-      for (int i=0; i<panels.size(); i++) {
-	 ((Observer)panels.get(i)).update(o,arg);
-      }
       if(_debug) {
 	 System.out.println("<<<<<< ImageViewManager: exit update, Observable = "+o.getClass().getSimpleName());
+      }
+   } // update
+
+   /**
+    *   Update the relevant image view.
+    *   @param o the Observable object that caused this update.
+    *   @param arg Data to be passed to update.
+    *   @param description the type ov view to be updated.
+    */
+   public void updateView(Observable o, Object arg, String description) {
+      if(views == null || views.size() <= 0) {
+         return;
+      }
+      int siz = views.size();
+      JComponent view;
+      for (int i=0; i<siz; i++) {
+	 view = views.get(i);
+	 if(getViewDescription(view).equalsIgnoreCase(description)) {
+	    //System.out.println("ImageViewManager: updating "+description);
+	    ((Observer)view).update(o,arg);
+	    break;
+	 }
       }
    }
 
@@ -357,5 +394,60 @@ public class ImageViewManager extends JTabbedPane implements Observer {
       isDoubleClickNode = bool;
       isDoubleClickGene = bool;
    }
+
+   public void clearAll() {
+      //System.out.println("ImageViewManager: clearAll");
+      if(views == null) {
+         return;
+      }
+      int siz = views.size();
+      if(siz <= 0) {
+         return;
+      }
+      JComponent view;
+      // SummaryView is a different class from the other views.
+      for (int i=0; i<siz; i++) {
+	 view = views.get(i);
+	 if(getViewDescription(view).equalsIgnoreCase(TVTypes.SUMMARY_DESCRIPTION)) {
+	    continue;
+	 }
+	 ((ImageView)views.get(i)).clearAll();
+      }
+   } // clearAll
+
+   //---------------------------------------------------------------------------
+   public static String getViewDescription(Object view) {
+
+      String ret = "";
+      Method M1 = null;
+
+      try {
+	 M1 = view.getClass().getMethod("viewDescription", null);
+	 ret = (String)M1.invoke(view, null);
+      }
+      catch (InvocationTargetException ie) {}
+      catch (NoSuchMethodException ie) {}
+      catch (IllegalAccessException ie) {}
+
+      return ret;
+   } // getViewDescription
+
+   //---------------------------------------------------------------------------
+   private void doTabChanged(ChangeEvent e) {
+      int index = getSelectedIndex();
+      String title = getTitleAt(index);
+      if(!tabChangedByUser) {
+	 return;
+      }
+      clearAll();
+      Observable o = (Observable)getGeneSelection();
+      JComponent view;
+      for (int i=0; i<views.size(); i++) {
+	 view = views.get(i);
+	 if(getViewDescription(view).equalsIgnoreCase(title)) {
+	    ((Observer)view).update(o, _updateParam);
+	 }
+      }
+   } // doTabChanged
 
 }
