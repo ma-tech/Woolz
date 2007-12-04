@@ -33,9 +33,11 @@ import edu.stanford.genetics.treeview.dendroview.*;
  *
  * @author Tom Perry, Paul Smith
  */
-abstract class ImageServer
-{
+abstract class ImageServer {
+
 	private Map<String,BufferedImage> imageMap;
+	private static long time = 0;
+
 	protected ImageViewManager tvim = null;
 	protected XmlAppSettings xml = null;
 
@@ -43,17 +45,18 @@ abstract class ImageServer
 
 	private boolean _debug = false;
 
-	ImageServer(ImageViewManager tvim, XmlAppSettings xml)
-	{
-		this.tvim = tvim;
-		this.xml = xml;
-		// Set imageMap capacity to known tree size?
-		//imageMap = new HashMap<String,BufferedImage>(
-				//tvim.getNumNodes()*2, (float)1.0);
-		// Or let java work it out?
-		imageMap = new HashMap<String,BufferedImage>();
+//---------------------------------------------------------------------------
+	ImageServer(ImageViewManager tvim, XmlAppSettings xml) {
+	   this.tvim = tvim;
+	   this.xml = xml;
+	   // Set imageMap capacity to known tree size?
+	   //imageMap = new HashMap<String,BufferedImage>(
+	   //tvim.getNumNodes()*2, (float)1.0);
+	   // Or let java work it out?
+	   imageMap = new HashMap<String,BufferedImage>();
 	}
 	
+//---------------------------------------------------------------------------
 	/** 
 	 * Gets an image from the hash table.  Single-threaded.
 	 *
@@ -75,6 +78,7 @@ abstract class ImageServer
 	   return img;
 	}
 
+//---------------------------------------------------------------------------
 	/** 
 	 * Provides the path to the image for the requested node.
 	 * 
@@ -83,6 +87,7 @@ abstract class ImageServer
 	 */
 	protected abstract String getImagePath(String nodeID);
 
+//---------------------------------------------------------------------------
 	/** 
 	 * Gets the ImageContainer for the requested node or gene ID.
 	 * 
@@ -91,6 +96,7 @@ abstract class ImageServer
 	 */
 	public abstract ImageContainer getMedia(String id);
 
+//---------------------------------------------------------------------------
 	/** 
 	 * Checks whether an image that corresponds to the provided
 	 * node ID exists in the hash table.
@@ -98,11 +104,12 @@ abstract class ImageServer
 	 * @param id the requested image identifier
 	 * @return true if the hash table returns a non-null image
 	 */
-	private boolean isLoaded(String id) {
+	protected boolean isLoaded(String id) {
 	   //System.out.println(">>>>>> ImageServer: enter / exit isLoaded("+id+")");
 	   return (imageMap.get(id) != null);
 	}
 
+//---------------------------------------------------------------------------
 	/** 
 	 * Load an image multi-threadedly.
 	 *
@@ -114,15 +121,17 @@ abstract class ImageServer
 	 * there may be numerous instances of a particular class that
 	 * are all able to load images.
 	 */
-	public void loadImagesMT(Set<String> nodeIDs, Observer requester)
-	{
-		for (String s : nodeIDs)
-			new Thread(new ImageLoader(s, requester)).start();
+	public void loadImagesMT(Set<String> nodeIDs, Observer requester) {
+	   for (String s : nodeIDs) {
+	      new Thread(new ImageLoader(s, requester)).start();
+	   }
 	}
 
-	public void loadImagesST(Set<String> nodeIDs, Observer requester) {
+//---------------------------------------------------------------------------
+	public void loadImagesST(Set<String> nodeIDs, ImageView requester, boolean isTop) {
+	   //_debug = true;
 	   if(_debug) {
-	      System.out.println(">>>>>> ImageServer: enter loadImagesST, requester = "+getRequesterDescription(requester));
+	      System.out.println(">>>>>> ImageServer: enter loadImagesST, requester = "+requester.viewDescription()+" isTop = "+isTop);
 	      for(String id : nodeIDs) {
 		 System.out.println(id);
 	      }
@@ -137,13 +146,15 @@ abstract class ImageServer
 		 assert img != null;
 		 if(_debug) {
 		    if(img == null) {
-		       System.out.println("PUT NULL "+getRequesterDescription(requester)+" IMAGE "+nodeID+" IN IMAGE MAP (((((((((((");
+		       System.out.println("PUT NULL "+requester.viewDescription()+" IMAGE "+nodeID+" IN IMAGE MAP (((((((((((");
 		    } else {
-		       System.out.println("SUCCESSFULLY PUT "+getRequesterDescription(requester)+" IMAGE "+nodeID+" IN IMAGE MAP ))))))))");
+		       System.out.println("SUCCESSFULLY PUT "+requester.viewDescription()+" IMAGE "+nodeID+" IN IMAGE MAP ))))))))");
 		    }
 		 }
-		 imageMap.put(nodeID, img);
+		 BufferedImage scaledImage = scaleImage(img);
+		 imageMap.put(nodeID, scaledImage);
 		 assert isLoaded(nodeID);
+		 img = null;
 	      } else {
 		 if(_debug) {
 		    System.out.println("!!!!!!!!!!!!!!!!!!!!!!  nodeID "+nodeID+" already loaded !!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -151,37 +162,26 @@ abstract class ImageServer
 		 ImageViewManager.printDebugMessage("Loading an image for "+nodeID+"... already loaded.");
 	      }
 	      //System.out.println("updating requester with "+nodeID);
-	      requester.update(null, nodeID);
+	      //requester.update(null, nodeID);
 	   }
+
+	   requester.addLoadedImages(nodeIDs, this, isTop);
+
 	   if(_debug) {
-	      System.out.println("<<<<<< ImageServer: exit loadImagesST, requester = "+getRequesterDescription(requester));
+	      System.out.println("<<<<<< ImageServer: exit loadImagesST, requester = "+requester.viewDescription());
 	   }
+	   //_debug = false;
 	}
 
-	private String getRequesterDescription(Observer requester) {
-	   
-	   String ret = "";
-	   Method M1 = null;
-
-	   try {
-	      M1 = requester.getClass().getMethod("viewDescription", null);
-	      ret = (String)M1.invoke(requester, null);
-	   }
-	   catch (InvocationTargetException ie) {}
-	   catch (NoSuchMethodException ie) {}
-	   catch (IllegalAccessException ie) {}
-
-	   return ret;
-	}
-
+//---------------------------------------------------------------------------
 	/** 
 	 * Wait for a random period.
 	 */
-	private synchronized void waitForAWhile()
-	{
-		waitForAWhile(100+(new java.util.Random()).nextInt(500));
+	private synchronized void waitForAWhile() {
+	   waitForAWhile(100+(new java.util.Random()).nextInt(500));
 	}
 
+//---------------------------------------------------------------------------
 	/** 
 	 * Attempts to simulate network latency by forcing a wait for
 	 * the specified number of milliseconds.  Only one thread may
@@ -190,16 +190,16 @@ abstract class ImageServer
 	 * 
 	 * @param ms number of milliseconds to wait for
 	 */
-	private synchronized void waitForAWhile(int ms)
-	{
-		synchronized(imageMap)
-		{
-			try
-			{ imageMap.wait(ms); }
-			catch (InterruptedException ie) {}
-		}
+	private synchronized void waitForAWhile(int ms) {
+	   synchronized(imageMap) {
+	      try {
+		 imageMap.wait(ms);
+	      }
+	      catch (InterruptedException ie) {}
+	   }
 	}
 
+//---------------------------------------------------------------------------
 	/** 
 	 * Gets an image for the specified node and stores it in a map.
 	 * Images may be loaded from a local file or from the web.
@@ -245,69 +245,178 @@ abstract class ImageServer
 	      //System.out.println("<<<<<< ImageServer: exit fetchImage "+nodeID+" SUCCESS");
 	   }
 	   return img;
-	}
+	} // fetchImage
 
-	private static long time = 0;
-
-	public synchronized static void startClock()
-	{
-		time = System.currentTimeMillis();
-	}
-
-	public synchronized static long stopClock()
-	{
-		return System.currentTimeMillis() - time;
-	}
-
-//------------------------------------------------------------------------------
-	/** 
-	 * Runnable inner class that loads images
-	 * 
-	 * @author Tom Perry
-	 * @version 
+//---------------------------------------------------------------------------
+	/**
+	 *   Removes BufferedImage from imageMap.
+	 *   @param id the key for the image to be removed.
+	 *   @param removeKey if true remove the key-value pair from the HashMap (otherwise set the value to null).
+	 *   @return true if the image was non-null.
 	 */
-	class ImageLoader extends Observable implements Runnable {
-	   private String nodeID;
-	   private Observer requester;
+	protected boolean removeImage(String id, boolean removeKey) {
 
-	   private ImageLoader(String nodeID, Observer requester) {
-	      this.nodeID = nodeID;
-	      this.requester = requester;
-	   } 
+	   boolean ret = false;
+	   BufferedImage img = null;
 
-	   /* 
-	    * Could return the loaded image in the argument to
-	    * notifyObservers(), but this would force all receiving
-	    * classes to be prepared for multithreadedness.
-	    *
-	    * Instead, we make the ImageLoader observable and notify
-	    * requesting classes when the load has finished.  They can
-	    * then request the loaded image whenever they like
-	    * (generally "now").
-	    *
-	    * We're already getting enough parallelism from loading the
-	    * images, so a single-threaded getImage() isn't a
-	    * bottleneck,
-	    */
-	   public void run() {
-	      addObserver(requester);
-	      if (!isLoaded(nodeID)) {
-		 startClock();
-		 BufferedImage img = fetchImage(nodeID);
-		 ImageViewManager.printDebugMessage(
-		       "Loaded an image for "+nodeID+" in "+stopClock()+"ms");
-		 assert img != null;
-		 imageMap.put(nodeID, img);
-		 while (!isLoaded(nodeID)) {
-		    try { img.wait(10); }
-		    catch (InterruptedException ie) {}
-		 }
-	      } else {
-		 ImageViewManager.printDebugMessage("Loading an image for "+nodeID+"... already loaded.");
+	   if(imageMap.containsKey(id)) {
+	      img = imageMap.get(id);
+	      if(img != null) {
+		 ret = true;
+		 img = null;
 	      }
-	      setChanged();
-	      notifyObservers(nodeID);
-	      deleteObserver(requester);
+	      imageMap.remove(id);
+	      if(!removeKey) {
+		 imageMap.put(id, null);
+	      }
 	   }
+	   return ret;
 	}
+
+//---------------------------------------------------------------------------
+   /**
+    *   Remove all entries from imageMap.
+    */
+    protected void clearAll() {
+
+       BufferedImage img = null;
+       Set<String> keys = imageMap.keySet();
+       for(String str : keys) {
+          img = imageMap.get(str);
+	  if(img != null) {
+	     img = null;
+	  }
+       }
+       imageMap.clear();
+    }
+//---------------------------------------------------------------------------
+   /**
+    *   Makes a scaled BufferedImage.
+    *   (based on comp.lang.java.gui reply by Shannon Hickey - Swing Team)
+    *   Google:	scaling a BufferedImage w/ Java 2D
+    *   @param bi the unscaled image.
+    *   @return the scaled image.
+    */
+   private BufferedImage scaleImage(BufferedImage bi) {
+
+      int H = bi.getHeight();
+      int W = bi.getWidth();
+      int scaledImageH = ImageContainer.imagePanelH;
+      int scaledImageW = ImageContainer.imagePanelW;
+
+      if(H <= scaledImageH && W <= scaledImageW) {
+	 // no need to scale image to fit container
+	 //System.out.println("ImageContainer.scaleImg: returning, img fits container already");
+         return bi;
+      }
+
+      double ratio = ((double)H/(double)W);
+      boolean portrait = (ratio >= 1.0); // the image is taller than it is wide (or square).
+      //System.out.println("Image H/W = "+ratio);
+
+      int scaledW = 0;
+      int scaledH = 0;
+      double newRatio = 1.0;
+
+      if(portrait) {
+	 //System.out.println("portrait");
+	 scaledH = scaledImageH;
+	 scaledW = (int)(Math.ceil((scaledImageH / ratio)));
+	 //System.out.println("scaled img is "+scaledW+" wide X "+scaledH+" high");
+	 newRatio = ((double)scaledW/(double)scaledImageW);
+	 //System.out.println("new ratio = "+ratio);
+	 if(newRatio > 1.0) {
+	    scaledH /= newRatio;
+	    scaledW /= newRatio;
+	 }
+	 //System.out.println("scaled img is now "+scaledW+" wide X "+scaledH+" high");
+      } else {
+	 //System.out.println("landscape");
+	 scaledW = scaledImageW;
+	 scaledH = (int)(Math.ceil((scaledImageW * ratio)));
+	 //System.out.println("scaled img is "+scaledW+" wide X "+scaledH+" high");
+	 newRatio = ((double)scaledH/(double)scaledImageH);
+	 //System.out.println("new ratio = "+ratio);
+	 if(newRatio > 1.0) {
+	    scaledH /= newRatio;
+	    scaledW /= newRatio;
+	 }
+	 //System.out.println("scaled img is now "+scaledW+" wide X "+scaledH+" high");
+      }
+
+      BufferedImage scaledImg = new BufferedImage(scaledW, scaledH, bi.getType());
+      Graphics2D g = (Graphics2D)(scaledImg.getGraphics());
+
+      // Frame implements imageObserver interface.
+      Frame dummyObserver = new Frame();
+
+      //g.setBackground(Color.magenta);
+      g.clearRect(0, 0, scaledW, scaledH);
+      g.drawImage(bi, 0, 0, scaledW, scaledH, dummyObserver);
+      g.dispose();
+
+      return scaledImg;
+   } // scaleImage()
+
+//---------------------------------------------------------------------------
+   public synchronized static void startClock() {
+      time = System.currentTimeMillis();
+   }
+
+//---------------------------------------------------------------------------
+   public synchronized static long stopClock() {
+      return System.currentTimeMillis() - time;
+   }
+
+//===========================================================================
+   /** 
+    * Runnable inner class that loads images
+    * 
+    * @author Tom Perry
+    * @version 
+    */
+   class ImageLoader extends Observable implements Runnable {
+      private String nodeID;
+      private Observer requester;
+
+      private ImageLoader(String nodeID, Observer requester) {
+	 this.nodeID = nodeID;
+	 this.requester = requester;
+      } 
+
+      /* 
+       * Could return the loaded image in the argument to
+       * notifyObservers(), but this would force all receiving
+       * classes to be prepared for multithreadedness.
+       *
+       * Instead, we make the ImageLoader observable and notify
+       * requesting classes when the load has finished.  They can
+       * then request the loaded image whenever they like
+       * (generally "now").
+       *
+       * We're already getting enough parallelism from loading the
+       * images, so a single-threaded getImage() isn't a
+       * bottleneck,
+       */
+      public void run() {
+	 addObserver(requester);
+	 if (!isLoaded(nodeID)) {
+	    startClock();
+	    BufferedImage img = fetchImage(nodeID);
+	    ImageViewManager.printDebugMessage(
+		  "Loaded an image for "+nodeID+" in "+stopClock()+"ms");
+	    assert img != null;
+	    imageMap.put(nodeID, img);
+	    while (!isLoaded(nodeID)) {
+	       try { img.wait(10); }
+	       catch (InterruptedException ie) {}
+	    }
+	 } else {
+	    ImageViewManager.printDebugMessage("Loading an image for "+nodeID+"... already loaded.");
+	 }
+	 setChanged();
+	 notifyObservers(nodeID);
+	 deleteObserver(requester);
+      }
+   }
 }
