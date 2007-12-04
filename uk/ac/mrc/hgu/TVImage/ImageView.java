@@ -26,7 +26,7 @@ import edu.stanford.genetics.treeview.dendroview.*;
  * Changes
  * Paul Smith - Change to allow for raw and annotated images
  */
-class ImageView extends JSplitPane implements Observer, ComponentListener {
+class ImageView extends JSplitPane implements Observer, ComponentListener, TVTypes {
 
    private ImageViewManager tvim;
    private Set<String> topPanels = new TreeSet<String>();
@@ -243,12 +243,6 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
     * When this happens, we need to ask the image server to load
     * some new images.
     * 
-    * The only other way that this method can be called is when a
-    * ImageServer has finished loading an image.  The
-    * loadImagesMT(...) call contains a reference to this class,
-    * so that it can call addObserver(theImageView) and then
-    * notify it using notifyObservers(someArg)
-    *
     * Most of this stuff should eventually be moved to the
     * ImageScrollPane class, as we're duplicating code here and
     * assuming that this class has exactly two subcomponents.
@@ -271,7 +265,11 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 	 }
       }
       //_debug = false;
+
+      int useCase = tvim.getUseCase();
+
       if (o != null && o.equals(tvim.getGeneSelection())) {
+
 	 Collection<String> newSelectedNodes;
 	 Collection<String> newSelectedGenes;
 	 /*
@@ -308,29 +306,24 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 
 	 ImageViewManager.printDebugMessage("Calculating changes in selection");
 
-	 if (tvim.isCorrelationView()) {
-	    //System.out.println("i) Correlation changed");
-	    newBottom.addAll(newSelectedNodes);
-	 } else if (arg != null && arg.toString().trim().equalsIgnoreCase("treeNodeClicked")) {
-	    //System.out.println("ii) Tree node clicked");
-	    newTop.addAll(newSelectedNodes);
-	 } else if (tvim.isDoubleClickNode()) {
-	    //System.out.println("iii) node double clicked");
-	    newTop.addAll(newSelectedNodes);
-	 } else if (tvim.isDoubleClickGene()) {
-	    //System.out.println("iv) gene double clicked");
-	    //System.out.println("adding newSelectedGenes to newTop a");
-	    newTop.addAll(newSelectedGenes);
-	 }
-	 newBottom.addAll(newSelectedGenes);
-
-	 if(newTop.size() <= 0) {
-	    if(!tvim.isCorrelationView()) {
-	       //System.out.println("v) matrix clicked");
-	       //System.out.println("adding newSelectedGenes to newTop b");
+         switch(useCase) {
+	    case TVTypes.CORRELATION_CHANGED:
+	       newBottom.addAll(newSelectedNodes);
+	       break;
+	    case TVTypes.DOUBLE_CLICK_NODE:
+	       newTop.addAll(newSelectedNodes);
+	       break;
+	    case TVTypes.DOUBLE_CLICK_GENE:
 	       newTop.addAll(newSelectedGenes);
-	    }
-	 }
+	       break;
+	    case TVTypes.TREE_NODE_CLICKED:
+	       newTop.addAll(newSelectedNodes);
+	       break;
+	    case TVTypes.MATRIX_CLICKED:
+	       newTop.addAll(newSelectedGenes);
+	       break;
+	 } // switch
+	 newBottom.addAll(newSelectedGenes);
 
 	 for (String s : topPanels) {
 	    if (!newTop.contains(s)) {
@@ -380,37 +373,15 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 	 } else {
 	    //System.out.println("\n"+viewDescription()+" is requesting new images");
 	    ImageViewManager.printDebugMessage("Requesting new images");
-	    if (ImageViewManager.MULTITHREADED) {
+	    if (TVTypes.MULTITHREADED) {
 	       top.imgProducer.loadImagesMT(topToAdd, (Observer)this);
 	       bottom.imgProducer.loadImagesMT(bottomToAdd, (Observer)this);
 	    } else {
-	       /*
-	        *   If user has changed correlation value, we want 'bottom' but not 'top' images.
-		*   If user has clicked in GlobalView, we want 'bottom' but not 'top' images (and we copy heatmap to top).
-		*   If user has clicked a tree node, we want top and bottom images.
-		*   If user has double-clicked a node image in 'correlationView', we want top and bottom images.
-		*   If user has double-clicked a gene image in 'correlationView', we want bottom but not top images (and we copy heatmap to top).
-		*/
-	       if (tvim.isCorrelationView()) {
-		  //System.out.println("i) Correlation changed");
-		  bottom.imgProducer.loadImagesST(bottomToAdd, (Observer)this);
-	       } else if (arg != null && arg.toString().trim().equalsIgnoreCase("treeNodeClicked")) {
-		  //System.out.println("ii) Tree node clicked");
-		  //System.out.println("from top");
-		  top.imgProducer.loadImagesST(topToAdd, (Observer)this);
-		  bottom.imgProducer.loadImagesST(bottomToAdd, (Observer)this);
-	       } else if (tvim.isDoubleClickNode()) {
-		  //System.out.println("iii) node double clicked");
-		  top.imgProducer.loadImagesST(topToAdd, (Observer)this);
-		  bottom.imgProducer.loadImagesST(bottomToAdd, (Observer)this);
-	       } else if (tvim.isDoubleClickGene()) {
-		  //System.out.println("iv) gene double clicked");
-		  bottom.imgProducer.loadImagesST(bottomToAdd, (Observer)this);
-	       } else {
-		  //System.out.println("v) matrix clicked");
-		  bottom.imgProducer.loadImagesST(bottomToAdd, (Observer)this);
+	       bottom.imgProducer.loadImagesST(bottomToAdd, this, false);
+	       if(useCase != TVTypes.CORRELATION_CHANGED)  {
+		  //System.out.println("\n"+viewDescription()+" is requesting new images");
+		  top.imgProducer.loadImagesST(topToAdd, this, true);
 	       }
-
 	    }
 	    if(bottomToAdd.isEmpty()) {
 	       setDividerLocation(1.0);
@@ -419,7 +390,51 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 	       setDividerLocation(0.0);
 	    }
 	 }
-      } else {
+      }
+      //_debug = true;
+      if(_debug) {
+	 if(o != null) {
+	    System.out.println("<<<<<< ImageView: exit update, Observable = "+o.getClass().getSimpleName()+"-------------------------------");
+	 } else {
+	    System.out.println("<<<<<< ImageView: exit update, Observable = null .....................................");
+	 }
+      }
+      //_debug = false;
+   } // update
+
+//------------------------------------------------------------------------------------
+   protected void addLoadedImages(Set<String>nodeIDs, ImageServer server, boolean isTop) {
+      //System.out.println("enter addLoadedImages, isTop = "+isTop);
+
+      if(nodeIDs == null || nodeIDs.size() <= 0) {
+         System.out.println("returning because nodeIDs is empty or null");
+	 return;
+      }
+      if(server == null) {
+         System.out.println("returning because server is null");
+	 return;
+      }
+
+      // top and bottom may both have the same nodeID for matrix & double click gene
+      for(String str : nodeIDs) {
+         if(isTop) {
+	    if (topPanels.contains(str)) {
+	       top.addPanel(str);
+	    }
+	 } else {
+	    if (bottomPanels.contains(str)) {
+	       bottom.addPanel(str);
+	    }
+	 }
+      }
+
+      doMediaLayout();
+
+      //System.out.println("exit addLoadedImages, isTop = "+isTop);
+   } // addLoadedImages
+
+//------------------------------------------------------------------------------------
+      //} else {
 	 /*
 	  * Assume that any other updates must be from the image
 	  * server, though this may turn out to be a bad assumption.
@@ -433,6 +448,7 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 	  * selected nodes (this could happen if the selection
 	  * changes while images are loading), we should ignore it.
 	  */
+	  /*
 	 boolean addedPanelToTop = false;
 	 boolean addedPanelToBottom = false;
 	 //System.out.println("update from image server: arg = "+(String)arg);
@@ -483,11 +499,9 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 	       }
 	    } // for
 	 } else {
-	    /*
-	     * Just to make things look smoother, we won't display
-	     * anything until at least one image in the top panel has
-	     * been loaded
-	     */
+	     // Just to make things look smoother, we won't display
+	     // anything until at least one image in the top panel has
+	     // been loaded
 	    if (top.getPanels().isEmpty() && !topPanels.isEmpty()) {
 	       readyToDisplay = false;
 	    }
@@ -497,16 +511,7 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
 	    doMediaLayout();
 	 }
       } // else
-      //_debug = true;
-      if(_debug) {
-	 if(o != null) {
-	    System.out.println("<<<<<< ImageView: exit update, Observable = "+o.getClass().getSimpleName()+"-------------------------------");
-	 } else {
-	    System.out.println("<<<<<< ImageView: exit update, Observable = null .....................................");
-	 }
-      }
-      //_debug = false;
-   } // update
+      */
 
    private void printCollection(Collection col, String name) {
       if(col == null || col.size() <= 0) {
@@ -531,6 +536,20 @@ class ImageView extends JSplitPane implements Observer, ComponentListener {
       }
       top.getContent().removeAll();
       topPanels.clear();
+   }
+
+   /**
+    *   Clear all ImageContainers from memory.
+    */
+   protected void clearAll() {
+      if(topPanels != null && topPanels.size() > 0) {
+	 topPanels.clear();
+      }
+      if(bottomPanels != null && bottomPanels.size() > 0) {
+	 bottomPanels.clear();
+      }
+      top.clearAll();
+      bottom.clearAll();
    }
 
 } // class ImageView
