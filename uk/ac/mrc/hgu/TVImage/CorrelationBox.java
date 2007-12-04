@@ -16,7 +16,7 @@ import java.util.*;
  * 
  * @author Tom Perry <tperry@hgu.mrc.ac.uk>
  */
-public class CorrelationBox extends JPanel implements Observer {
+public class CorrelationBox extends JPanel implements Observer, TVTypes {
 
 	private ImageViewManager tvim;
 	private MultiTreeSelectionI geneSelection;
@@ -37,7 +37,7 @@ public class CorrelationBox extends JPanel implements Observer {
 	   lm.setHgap(0);
 	   lm.setVgap(0);
 
-	   setBackground(ImageViewManager.BGCOLOR);
+	   setBackground(TVTypes.BGCOLOR);
 	   setPreferredSize(new Dimension(getVisibleRect().width, height));
 	   setLayout(lm);
 
