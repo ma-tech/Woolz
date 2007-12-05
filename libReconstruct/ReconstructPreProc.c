@@ -1,39 +1,62 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructPreProc.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for pre-processing woolz objects
-*		to aid registration through cross correlation for
-*		the MRC Human Genetics Unit reconstruction library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-* 26-09-00 bill Change WlzSampleObj parameters.
-************************************************************************/
+#else
+static char _ReconstructPreProc_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructPreProc.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for pre-processing Woolz objects
+*		for the Reconstruct library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <string.h>
 
-/************************************************************************
-* Function:	RecPreProcObj					
-* Returns:	WlzObject *:		Pre-processed woolz object with
-*					link count incremented or
-*					NULL on error.		
-* Purpose:	Pre-process the given object according to the given
-*		pre-processing mask.				
-* Note:		The link count of the returned (pre-processed) object
-*		IS incremented by this function.		
-* Global refs:	-						
-* Parameters:	WlzObject *obj:		Given object.		
-*		RecPPControl *ppCtrl:	Pre-processing control data
-*					structure.		
-*		RecError *dstErr:	Destination ptr for error code.
-************************************************************************/
+/*!
+* \return	Pre-processed Woolz object with link count incremented or
+*		NULL on error.
+* \ingroup	Reconstruct
+* \brief	Pre-process the given object according to the given
+*               pre-processing mask.
+*		The link count of the returned (pre-processed) object
+*               is incremented by this function.
+* \param	obj			Given object.
+* \param	ppCtrl			Pre-processing control data
+*                                       structure.
+* \param	dstErr			Destination pointer for error code.
+*/
 WlzObject	*RecPreProcObj(WlzObject *obj, RecPPControl *ppCtrl,
 			       RecError *dstErr)
 {

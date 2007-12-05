@@ -1,49 +1,82 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructRotMatch.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for the automatic registration of
-*		a single pair of serial sections for the MRC Human
-*		Genetics Unit reconstruction library.		
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
+#else
+static char _ReconstructRotMatch_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructRotMatch.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for the automatic registration of
+*		a single pair of serial sections for the Reconstruct
+*		library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
+
+
 #include <Reconstruct.h>
 #include <string.h>
 #include <float.h>
 
-static void	RecFindRotPeak(double *angle, double *value, double **data,
-			       double angleInc, int size);
-
-/************************************************************************
-* Function:	RecRotMatch					
-* Returns:	int:			Non zero if match fails.
-* Purpose:	Performs polar resampling of the givn objects and then
-*		uses cross correlation to find the angle of rotation
-*		which gives the best match between the given objects.
-*		Data are accessed as				
-*		  *(*(data + line) + column), x == column, y == line.
-* Global refs:	-						
-* Parameters:	double *angle:		Destination for angle (radians)
-*					of rotation.		
-*		double *value:		Destination for cross-	
-*					correlation peak value.	
-*		WlzObject *obj0:	First of two type 1 objects.
-*		WlzObject *obj1:	Second of two type 1 objects.
-*		WlzIVertex2 cRot:	Center of rotation for objects.
-*		double angleInc:	Angle increment (radians).
-*		double distInc:		Distance increment.	
-*		int maxRadiusFlag:	Use maximum radius for the
-*					polar resampling if non zero.
-*		RecPPControl *ppCtrl:	Pre-processing control.	
-************************************************************************/
+static void			RecFindRotPeak(
+				  double *angle,
+				  double *value,
+				  double **data,
+			          double angleInc,
+				  int size);
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct.
+* \brief	Performs polar resampling of the givn objects and then
+*               uses cross correlation to find the angle of rotation
+*               which gives the best match between the given objects.
+*               Data are accessed as
+* \verbatim
+                  *(*(data + line) + column), x == column, y == line.
+\endverbatim
+* \param	angle			Destination pointer for angle of
+*					rotation (in radians).
+* \param	value			Destination pointer for the
+*					cross-correlation peak value.
+* \param	obj0			First of two type 1 objects.
+* \param	obj1			Second of two type 1 objects.
+* \param	cRot			Center of rotation for objects.
+* \param	angleInc		Angle increment (radians).
+* \param	distInc			Distance increment.
+* \param	maxRadiusFlag		Use maximum radius for the
+*                                       polar resampling if non zero.
+* \param	ppCtrl			Pre-processing control.
+*/
 RecError	RecRotMatch(double *angle, double *value,
 			    WlzObject *obj0, WlzObject *obj1,
 			    WlzIVertex2 cRot,
@@ -159,25 +192,25 @@ RecError	RecRotMatch(double *angle, double *value,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFindRotPeak					
-* Returns:	void						
-* Purpose:	Finds peak rotation value in cross correlation data.
-*		The search is particularly simple because only the
-*		first column of the cross correlation data needs to be
-*		searched for the angle of rotation.		
-*		Data are in wrap around order.			
-*		A least squares quadratic is fitted to the cross
-*		correlation maximum.				
-* Global refs:	-						
-* Parameters:	double *angle:		Angle (degrees) for the cross-
-*					correlation maximum.	
-*		double *value:		Cross correlation maximum.
-*		double **data:		Cross correlation data.	
-*		double angleInc:	Angle increment used to find 
-*					angle from data index.	
-*		int size:		Size of data array.	
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Finds peak rotation value in cross correlation data.
+*               The search is particularly simple because only the
+*               first column of the cross correlation data needs to be
+*               searched for the angle of rotation.
+*               Data are in wrap around order.
+*               A least squares quadratic is fitted to the cross
+*               correlation maximum.
+* \param	angle			Destination pointer for the angle
+*					(degrees) for the cross-correlation
+*					maximum.
+* \param	value			Destination pointer for the
+*					cross-correlation maximum.
+* \param	data			Cross correlation data.
+* \param	angleInc		Angle increment used to find
+*                                       angle from data index.
+* \param	size			Size of data array.
+*/
 static void	RecFindRotPeak(double *angle, double *value, double **data,
 			       double angleInc, int size)
 {

@@ -1,73 +1,96 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructConstruct3D.c			
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for the automatic registration of
-*		a single pair of serial sections for the MRC Human
-*		Genetics Unit reconstruction library.		
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-* 04-10-00 bill Changes following removal of primitives from 
-*               WlzAffinetransform.
-* 26-09-00 bill Change WlzSampleObj parameters.
-* 15-02-00 bill	Add dither flag for WlzHistogramMatchObj().
-************************************************************************/
+#else
+static char _ReconstructConstruct3D_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructConstruct3D.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for the automatic registration of a
+*		single pair of serial sections.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <string.h>
 #include <float.h>
 
 
-static void	RecConstructForceIntScale(double *);
+static void			RecConstructForceIntScale(
+				  double *scale);
+static int			RecConstruct3DPlaneCount(
+				  HGUDlpList *secList,
+				  int allPlanes,
+				  int gvnPlaneMin,
+				  int gvnPlaneMax,
+				  int *dstPlaneMin,
+				  int *dstPlaneMax,
+				  RecError *dstErr);
+static RecError			RecConstructTargetHist(
+				  WlzObject **dstHist,
+				  HGUDlpList *secList,
+				  int targetIdx,
+				  char **eMsg);
 
-static int	RecConstruct3DPlaneCount(HGUDlpList *, int, int, int,
-					 int *, int *, RecError *);
-static RecError RecConstructTargetHist(WlzObject **, HGUDlpList *, int,
-				       char **);
-
-
-/************************************************************************
-* Function:	RecConstruct3DObj				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Constructs a 3D woolz object from the given section
-*		list. Each  image is read its section file,	
-*		transformed and used to build a 3D woolz object.
-*		The z component of the scale factor is treated as an
-*		integer, ie sections may be either omitted or	
-*		duplicated.					
-* Global refs:	-						
-* Parameters:	WlzObject **dstObj:	Ptr for new 3D object.	
-*		HGUDlpList *secList:	Given section list.	
-*		double confLimit:	Confidence limit, any section 
-*					a confidence/correlation value
-*					less than the limit uses an
-*					identity transform.	
-*		int gaussSamFlg:	Use gaussian subsampling if
-*					non-zero.		
-*		WlzInterpolationType interp: Interpolation to use.
-*		int fastSamFlg:		Use fast sampling code if
-*					non-zero.		
-*		int greedyFlg:		Be resource greedy if non-zero.
-*		int intScaleFlg:	Use integer scale factor if
-*					non-zero.		
-*		WlzDVertex3 scale:	Scale factor.		
-*		int matchHistFlg:	Match histograms.	
-*		int matchIdx:		Section index for target 
-*					histogram.		
-*		WlzDBox3 *srcReg:	Source region in the	
-*					non-transformed sections. NULL
-*					implies all.		
-*		WlzDBox3 *dstReg:	Destination region in the 
-*					transformed sections. NULL
-*					implies all.		
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+/*!
+* \return	Reconstruction error code.
+* \ingroup	Reconstruct	
+* \brief	Constructs a 3D woolz object from the given section list.
+*		Each  image is read its section file, transformed and used to
+*		build a 3D woolz object. The z component of the scale factor is
+*		treated as an integer, ie sections may be either omitted or
+*		duplicated.
+* \param	dstObj			Destination pointer for new 3D object.
+* \param	secList			Given section list.
+* \param	confLimit		Confidence limit, any section with
+*					a confidence/correlation value less
+*					than the limit uses an identity
+*					transform.
+* \param	gaussSamFlg		Use gaussian subsampling if non-zero.
+* \param	interp			Interpolation to use.
+* \param	fastSamFlg		Use fast sampling code if non-zero.
+* \param	greedyFlg		Be resource greedy if non-zero.
+* \param	intScaleFlg		Use integer scale factor if non-zero.
+* \param	scale			Scale factor.
+* \param	matchHistFlg		Match histograms.
+* \param	matchIdx		Section index for target histogram.
+* \param	srcReg			Source region in the non-transformed
+* 					sections, NULL implies all.
+* \param	dstReg			Destination region in the transformed
+* 					sections, NULL implies all.
+* \param	eMsg			Destination pointer for error
+*					messages.
+*/
 RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 			       double confLimit,
 			       int gaussSamFlg, WlzInterpolationType interp,
@@ -570,13 +593,12 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecConstructForceIntScale			
-* Returns:	void						
-* Purpose:	Force the scale to be an integer ratio: Eg 0.5 or 2.0.
-* Global refs:	-						
-* Parameters:	double *scale:		Src and dst scale pointer.
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Forces the scale to be an integer ratio: Eg 0.5 or 2.0.
+* \param	scale			Source and destination pointer for
+*					the scale.
+*/
 static void	RecConstructForceIntScale(double *scale)
 {
   if(scale)
@@ -596,22 +618,21 @@ static void	RecConstructForceIntScale(double *scale)
   }
 }
 
-/************************************************************************
-* Function:	RecConstruct3DPlaneCount			
-* Returns:	int:			Number of planes within given
-*					limits.			
-* Purpose:	Counts the number of sections for which the image plane
-*		lies within the given plane limits.		
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		int allPlanes:		Count all planes if non zero.
-*		int gvnPlaneMin:	Given plane minimum limit.
-*		int gvnPlaneMax:	Given plane maximum limit.
-*		int *dstPlaneMin:	Actual plane minimum limit.
-*		int *dstPlaneMax:	Actual plane maximum limit.
-*		RecError *dstErr:	Destination pointer for error
-*					code.			
-************************************************************************/
+/*!
+* \return	Number of planes within given limits.
+* \ingroup	Reconstruct
+* \brief	Counts the number of sections for which the image plane lies
+* 		within the given plane limits.
+* \param	secList			Given section list.
+* \param	allPlanes		Count all planes if non zero.
+* \param	gvnPlaneMin		Given plane minimum limit.
+* \param	gvnPlaneMax		Given plane maximum limit.
+* \param	dstPlaneMin		Destination pointer for the minimum
+*					plane limit.
+* \param	dstPlaneMax		Destination pointer for the maximum
+*					plane limit.
+* \param	dstErr			Destination pointer for error code.
+*/
 static int	RecConstruct3DPlaneCount(HGUDlpList *secList, int allPlanes,
 			       		 int gvnPlaneMin, int gvnPlaneMax,
 					 int *dstPlaneMin, int *dstPlaneMax,
@@ -666,24 +687,22 @@ static int	RecConstruct3DPlaneCount(HGUDlpList *secList, int allPlanes,
   return(planeCount);
 }
 
-/************************************************************************
-* Function:	RecConstructTargetHist				
-* Returns:	RecError:		Error code, non-zero on error.
-* Purpose:	Creates a histogram which is the mean of the section
-*		histograms. Assumes all objects have been read in.
-* Global refs:	-						
-* Parameters:	WlzObject **dstHist:	Destination pointer for the
-*					mean histogram.		
-*		HGUDlpList *secList:	Given section list.	
-*		int targetIdx:		Target section index.	
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Creates a histogram which is the mean of the section
+* 		histograms. This assumes all objects have been read in.
+* \param	dstHist			Destination pointer for mean histogram.
+* \param	secList			Given section list.
+* \param	targetIdx		Target section index.
+* \param	eMsg			Destination pointer for error
+*					messages.
+*/
 static RecError	RecConstructTargetHist(WlzObject **dstHist,
 				       HGUDlpList *secList,
 				       int targetIdx, char **eMsg)
 {
   int		found = 0;
-  double	tD0;
   RecError	errFlag = REC_ERR_NONE;
   WlzErrorNum	wlzErr = WLZ_ERR_NONE;
   HGUDlpListItem *secItem;

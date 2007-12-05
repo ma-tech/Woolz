@@ -1,43 +1,70 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructTranMatch.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for the automatic registration of
-*		a single pair of serial sections for the MRC Human
-*		Genetics Unit reconstruction library.		
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-* 01-02-01 bill Fix bug in RecTranFindPeak().
-************************************************************************/
+#else
+static char _ReconstructTranMatch_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructTranMatch.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for the automatic registration of
+*		a single pair of serial sections for the Reconstruct
+*		library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <string.h>
 #include <float.h>
 
-/************************************************************************
-* Function:	RecTranMatch					
-* Returns:	int:			Non zero if match fails.
-* Purpose:	Uses the cross correlation of the two given objects to
-*		find the shift (translation) which gives the best match
-*		(cross correlation maximum) between them.	
-*		Data is accessed as				
-*		  *(*(data + line) + column), x == column, y == line.
-* Global refs:	-						
-* Parameters:	WlzDVertex2 *shift:	Destination for cross-	
-*					correlation peak position.
-*		double *value:		Destination for cross-	
-*					correlation peak value.	
-*		WlzObject *obj0:	First of two type 1 objects.
-*		WlzObject *obj1:	Second of two type 1 objects.
-*		WlzIVertex2 maxShift:	Maximum shift.		
-*		RecPPControl *ppCtrl:	Pre-processing control.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Uses the cross correlation of the two given objects to
+*               find the shift (translation) which gives the best match
+*               (cross correlation maximum) between them.
+*               Data is accessed as:
+* \verbatim
+                  *(*(data + line) + column), x == column, y == line.
+  \endverbatim
+* \param	shift			Destination pointer for the
+*					cross-correlation peak position.
+* \param	value			Destination pointer for the
+*					cross-correlation peak value.
+* \param	obj0			First of two WLZ_2D_DOMAINOBJ objects.
+* \param	obj1			Second of two WLZ_2D_DOMAINOBJ objects.
+* \param	maxShift		Maximum shift.
+* \param	ppCtrl			Pre-processing control.
+*/
 RecError	RecTranMatch(WlzDVertex2 *shift, double *value,
 			      WlzObject *obj0, WlzObject *obj1,
 			      WlzIVertex2 maxShift,
@@ -129,25 +156,21 @@ RecError	RecTranMatch(WlzDVertex2 *shift, double *value,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecTranFindPeak					
-* Returns:	void						
-* Purpose:	Find the maximum correlation value in the given two
-*		dimensional array. Because the correlation data are 
-*		stored in wrap-around order and the maximum is known
-*		to lie within a limited search range, only the four
-*		corners of the array are searched.		
-*		Two least squares quadratics are fitted to the cross
-*		correlation maximum.				
-* Global refs:	-						
-* Parameters:	WlzDVertex2 *shift:	Ptr for x/y position of the
-*					maximum value.		
-*		double *pValue		Ptr for maximum value.	
-*		double **data:		Data to search for maximum in
-*					double2alloc style.	
-*		WlzIVertex2 size:	Size of data array.	
-*		WlzIVertex2 search:	Size of search range.	
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Finds the maximum correlation value in the given two
+*               dimensional array. Because the correlation data are
+*               stored in wrap-around order and the maximum is known
+*               to lie within a limited search range, only the four
+*               corners of the array are searched.
+* \param	shift			Destination pointer for the position
+*					of the maximum value.
+* \param	pValue			Destination pointer for the maximum
+* 					value.
+* \param	data			Data to search for maximum.
+* \param	size			Size of data array.
+* \param	search			Size of search range.
+*/
 void		RecTranFindPeak(WlzDVertex2 *shift, double *pValue,
 			        double **data, WlzIVertex2 size,
 			        WlzIVertex2 search)

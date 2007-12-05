@@ -1,19 +1,47 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructDebug.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for flag based debugging for the
-*		MRC Human Genetics Unit	reconstruction library.	
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
+#else
+static char _ReconstructDebug_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructDebug.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for flag based debugging of the
+*		Reconstruct library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
+
 #include <Reconstruct.h>
 #include <unistd.h>
 
@@ -31,15 +59,14 @@ void		*recDbgData = NULL,
 RecDbgFn	recDbgOutFn = RecDbgWrite;
 RecDbgWlzFn	recDbgOutWlzFn = RecDbgWlzWrite;
 
-/************************************************************************
-* Function:	RecDbgWrite					
-* Returns:	RecError:		Non zero if fails to output
-*					given message.		
-* Purpose:	Writes out the given debug message to the debug file.
-* Global refs:	void *recDbgData:	Used to pass debug output file.
-* Parameters:	char *fmt:		Format for printing message.
-*		...			Varargs function.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes out the given debug message to the debug file.
+* 		Global recDbgData is used to pass debug output file.
+* \param	fmt			Format for printing message.
+* \param	 ...			Varargs function.
+*/
 RecError	RecDbgWrite(char *fmt, ...)
 {
   RecError	errFlag = REC_ERR_NONE;
@@ -60,18 +87,17 @@ RecError	RecDbgWrite(char *fmt, ...)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecDbgWlzWrite					
-* Returns:	RecError:		Non zero if fails to output
-*					given message.		
-* Purpose:	Writes out the given debug Woolz object to the woolz
-*		debug file.					
-* Global refs:	FILE *recDbgWlzData:	Used to pass woolz debug output
-*					file.			
-* Parameters:	WlzObject *obj:		Woolz debug object for output.
-*		int freeFlg:		If non zero free the object
-*					after writting it.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes out the given debug Woolz object to the woolz
+*		debug file.
+*		Global recDbgWlzData: is used to pass woolz debug output
+*		file.
+* \param	obj			Woolz debug object for output.
+* \param	freeFlg			If non zero free the object after
+*					writting it.
+*/
 RecError	RecDbgWlzWrite(WlzObject *obj, int freeFlg)
 {
   RecError	errFlag = REC_ERR_NONE;

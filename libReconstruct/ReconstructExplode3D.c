@@ -1,43 +1,68 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructExplode3D.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for explodeing a 3D object into
-*		a section list and 2D files.			
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
+#else
+static char _ReconstructExplode3D_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructExplode3D.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for explodeing a 3D object into a
+*		section list and 2D files.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
 
-/************************************************************************
-* Function:	RecExplode3DObjToFile				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Given a destination directory and file body and a 3D
-*		woolz object, the 3D object is and exploded into a
-*		series of 2D section files (in the destination	
-*		directory) each with a name formed from the given file
-*		body and the source plane index. A section list is
-*		also created in the directory using the given file body
-*		together with the  '.bib' file extension.	
-* Global refs:	-						
-* Parameters:	char *dstDirStr:	Destination directory.	
-*		char *dstBodyStr:	Destination file body.	
-*		WlzObject *srcObj:	Source 3D woolz	object.	
-*		char *srcFName:		Source file name, may be NULL.
-*		WlzEffFormat srcFFormat: Source file format, may be
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Given a destination directory and file body and a 3D
+*		Woolz object, the 3D object is and exploded into a series of 2D
+*		section files (in the destination directory) each with a name
+*		formed from the given file body and the source plane index. A
+*		section list is also created in the directory using the given
+*		file body together with the  '.bib' file extension.
+* \param	dstDirStr		Destination directory.
+* \param	dstBodyStr		Destination file body.
+* \param	srcObj			Source 3D woolz object.
+* \param	srcFName		Source file name, may be NULL.
+* \param	srcFFormat		Source file format, may be
 *					WLZEFF_FORMAT_NONE.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+* \param	eMsg			Destinagtion pointer for messages.
+*/
 RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
 				      WlzObject *srcObj, char *srcFName,
 				      WlzEffFormat srcFFormat, char **eMsg)
@@ -226,23 +251,21 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecExplode3DFileToFile				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Given a destination directory and file body and a 3D
-*		image file, the 3D object is and exploded into a
-*		series of 2D section files (in the destination	
-*		directory) each with a name formed from the given file
-*		body and the source plane index. A section list is
-*		also created in the directory using the given file body
-*		together with the  '.bib' file extension.	
-* Global refs:	-						
-* Parameters:	char *dstDirStr:	Destination directory.	
-*		char *dstBodyStr:	Destination file body.	
-*		char *srcFile:		Source 3D image file.	
-*		WlzEffFormat srcFmt:	Source 3D image file format.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Given a destination directory and file body and a 3D image
+* 		file, the 3D object is and exploded into a series of 2D section
+* 		files (in the destination directory) each with a name formed
+* 		from the given file body and the source plane index. A section
+* 		list is also created in the directory using the given file body
+* 		together with the  '.bib' file extension.
+* \param	dstDirStr		Destination directory.
+* \param	dstBodyStr		Destination file body.
+* \param	srcFile			Source 3D image file.
+* \param	srcFmt			Source 3D image file format.
+* \param	eMsg			Ptr for any error messages.
+*/
 RecError	RecExplode3DFileToFile(char *dstDirStr, char *dstBodyStr,
 				      char *srcFile, WlzEffFormat srcFmt,
 				      char **eMsg)

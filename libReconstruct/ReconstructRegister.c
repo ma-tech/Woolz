@@ -1,66 +1,93 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructRegister.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for the automatic registration of
-*		a single pair of serial sections for the MRC Human
-*		Genetics Unit reconstruction library.		
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-* 08-12-00 bill Change WlzAffineTransformLSq() to WlzAffineTransformLSq2D().
-* 04-10-00 bill Changes following removal of primitives from 
-*               WlzAffinetransform.
-* 26-09-00 bill Change WlzSampleObj parameters.
-************************************************************************/
+#else
+static char _ReconstructRegister_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructRegister.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Functions for the automatic registration of a single
+*		pair of serial sections for the Reconstruct library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
+
 #include <Reconstruct.h>
 #include <string.h>
 #include <float.h>
 
-static RecError	RecRegPrincipal(WlzAffineTransform **transf,
-				WlzObject **transfObj,
-				WlzDVertex2 cMass0, WlzDVertex2 cMass1,
-				double angle, WlzObject *givenObj),
-		RecRegRotate(WlzAffineTransform **transf,
-				WlzObject **transfObj,
-				WlzIVertex2 cMass, double angle,
-				WlzObject *secObj),
-		RecRegTranslate(WlzAffineTransform **transf,
-				WlzObject **transfObj,
-				WlzDVertex2 trans, WlzObject *secObj);
+static RecError			RecRegPrincipal(
+				  WlzAffineTransform **transf,
+				  WlzObject **transfObj,
+				  WlzDVertex2 cMass0,
+				  WlzDVertex2 cMass1,
+				  double angle,
+				  WlzObject *givenObj);
+static RecError			RecRegRotate(
+				  WlzAffineTransform **transf,
+				  WlzObject **transfObj,
+				  WlzIVertex2 cMass,
+				  double angle,
+				  WlzObject *secObj);
+static RecError			RecRegTranslate(
+				  WlzAffineTransform **transf,
+				  WlzObject **transfObj,
+				  WlzDVertex2 trans,
+				  WlzObject *secObj);
 
-/************************************************************************
-* Function:	RecRegisterPair					
-* Returns:	RecError:		Non zero if the registration
-*					fails or is invalid.	
-* Purpose:	Calculates the affine transform which when applied
-*		to the second object brings it into register with the
-*		first object.					
-* Global refs:	-						
-* Parameters:	WlzAffineTransform **dstTrans: Destination transform
-*					pointer.		
-*		double *dstCrossC:	Destination ptr for cross-
-*					correlation value.	
-*		int *dstIter:		Destination ptr for the number
-*					of iterations.		
-*		RecControl *rCtrl:	The registration control data
-*					structure.		
-*		RecPPControl *ppCtrl:	Pre-processing control data
-*					structure.		
-*		WlzObject *obj0:	First object.		
-*		WlzObject *obj1:	Second object.		
-*		RecWorkFunction workFn:	Application supplied work
-*					function.		
-*		void *workData:		Application supplied data for
-*					the work function.	
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Calculates the affine transform which when applied
+*               to the second object brings it into register with the
+*               first object.
+* \param	dstTrans		Destination pointer for transform.
+* \param	dstCrossC		Destination pointer for the
+*					cross-correlation value.
+* \param	dstIter			Destination pointer for the number
+*                                       of iterations.
+* \param	rCtrl			The registration control data
+*                                       structure.
+* \param	ppCtrl			Pre-processing control data
+*                                       structure.
+* \param	obj0			First object.
+* \param	obj1			Second object.
+* \param	workFn			Application supplied work
+*                                       function.
+* \param	workData		Application supplied data for
+*                                       the work function.
+* \param	eMsg			Destination pointer for messages.
+*/
 RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
 				double *dstCrossC, int *dstIter,
 				RecControl *rCtrl, RecPPControl *ppCtrl,
@@ -462,22 +489,22 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecRegPrincipal					
-* Returns:	RecError:		Error code.		
-* Purpose:	Builds a transform and then transforms the given
-*		image object, using the given pair of centers of mass
-*		and angle for the principal axis.		
-*		If *transfObj == givenObj, this function should still
-*		work.						
-* Global refs:	-						
-* Parameters:	WlzAffineTransform **transf:	Ptr for transform.	
-*		WlzObject **transfObj:	Ptr for transformed object.
-*		WlzDVertex2 cMass0:	Center of mass of 1st object.
-*		WlzDVertex2 cMass1:	Center of mass of 2nd object.
-*		double angle:		Principal angle.	
-*		WlzObject *givenObj:	Given obj for transformation.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Builds a transform and then transforms the given
+*               image object, using the given pair of centers of mass
+*               and angle for the principal axis.
+*               If *transfObj == givenObj, this function should still
+*               work.
+* \param	transf			Destination pointer for transform.
+* \param	transfObj		Destination pointer for transformed
+* 					object.
+* \param	cMass0			Center of mass of 1st object.
+* \param	cMass1			Center of mass of 2nd object.
+* \param	angle			Principal angle.
+* \param	givenObj		Given object fro transformation.
+*/
 static RecError	RecRegPrincipal(WlzAffineTransform **transf,
 			       WlzObject **transfObj,
 			       WlzDVertex2 cMass0, WlzDVertex2 cMass1,
@@ -557,20 +584,20 @@ static RecError	RecRegPrincipal(WlzAffineTransform **transf,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecRegRotate					
-* Returns:	RecError:		Reconstruct error code.	
-* Purpose:	Builds a transform and then transforms the given
-*		image object, using the given center of mass and
-*		angle of rotation.				
-* Global refs:	-						
-* Parameters:	WlzAffineTransform **transf: Ptr for transform.	
-*		WlzObject **transfObj:	Ptr for transformed object.
-*		WlzIVertex2 cMass:	Center of mass about which to 
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Builds a transform and then transforms the given
+*               image object, using the given center of mass and
+*               angle of rotation.
+* \param	transf			Destination pointer for transform.
+* \param	transfObj		Destination pointer for transformed
+*					object.
+* \param	cMass			Center of mass about which to
 *					rotate the image object.
-*		double angle:		Angle of roattion.	
-*		WlzObject *secObj:	Image object to be transformed.
-************************************************************************/
+* \param	angle			Angle of roattion.
+* \param	secObj			Object to be transformed.
+*/
 static RecError	RecRegRotate(WlzAffineTransform **transf, WlzObject **transfObj,
 			     WlzIVertex2 cMass, double angle,
 			     WlzObject *secObj)
@@ -625,17 +652,17 @@ static RecError	RecRegRotate(WlzAffineTransform **transf, WlzObject **transfObj,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecRegTranslate					
-* Returns:	RecError:		Reconstruct erro code.	
-* Purpose:	Builds a transform and then transforms the given
-*		image object, using the given translation.	
-* Global refs:	-						
-* Parameters:	WlzAffineTransform **transf:	Ptr for transform.
-*		WlzObject **transfObj:	Ptr for transformed object.
-*		WlzDVertex2 trans:	Given translation.	
-*		WlzObject *secObj:	Image object to be transformed.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Builds a transform and then transforms the given
+*               object, using the given translation.
+* \param	transf			Destination pointer for transform.
+* \param	transfObj		Destination pointer for transformed
+* 					object.
+* \param	trans			Given translation.
+* \param	secObj			Oobject to be transformed.
+*/
 static RecError	RecRegTranslate(WlzAffineTransform **transf,
 			        WlzObject **transfObj,
 			        WlzDVertex2 trans,
@@ -693,31 +720,29 @@ static RecError	RecRegTranslate(WlzAffineTransform **transf,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecRegisterTiePoints				
-* Returns:	RecError:		Non zero if the registration
-*					fails or is invalid.	
-* Purpose:	Calculates a registration transform from the given 
-*		vector of tie-points. If required an error distance
-*		and/or cross-correlation value are calculated.	
-*		The cross-correlation is the mean of cross-correlations
-*		about the tie points.				
-* Global refs:	-						
-* Parameters:	WlzAffineTransform **dstTr: Destination ptr for the
-*					calculated transform.	
-*		double *dstED:		Destination ptr for the error
-*					distance. Not calculated if
-*					NULL.			
-*		double *dstCC:		Destination ptr for the cross-
-*					correlation. Not calculated if
-*					NULL.			
-*		RecTiePointPair *tppVec: Vector of tie points.	
-*		int tppCount:		Number of tie point pairs.
-*		WlzObject *obj0		First object (only used if 
-*					cross-correlation required).
-*		WlzObject *obj1		Second object (only used if 
-*					cross-correlation required).
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Calculates a registration transform from the given
+*               vector of tie-points. If required an error distance
+*               and/or cross-correlation value are calculated.
+*               The cross-correlation is the mean of cross-correlations
+*               about the tie points.
+* \param	dstTr			Destination pointer for the
+*                                       calculated transform.
+* \param	dstED			Destination pointer for the error
+*                                       distance. Not calculated if
+*                                       NULL.
+* \param	dstCC			Destination pointer for the
+*					cross-correlation value. Not
+*					calculated if NULL.
+* \param	tppVec			Vector of tie points.
+* \param	tppCount		Number of tie point pairs.
+* \param	obj0			First object (only used if
+*                                       cross-correlation required).
+* \param	obj1			Second object (only used if
+*                                       cross-correlation required).
+*/
 RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 				     double *dstED, double *dstCC,
 				     RecTiePointPair *tppVec, int tppCount,

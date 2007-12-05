@@ -1,22 +1,46 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructSection.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for manipulationg sections and
-*		section lists for the MRC Human Genetics Unit	
-*		reconstruction library.				
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-* 04-10-00 bill Changes following removal of primitives from 
-*               WlzAffinetransform.
-************************************************************************/
+#else
+static char _ReconstructSection_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructSection.c
+* \author       Bill Hill
+* \date         November 2007
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for manipulationg sections and section lists
+* 		for the Reconstruct library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <string.h>
 
@@ -33,39 +57,83 @@ typedef struct
   RecSection	*prevSec;
 } RecSecListInvalidArgs;
 
-static int	RecSecSortFnSignCmpDbl(double, double),
-		RecSecSortFnTransf(void *, void *, unsigned int),
-		RecSecSortFnIndex(void *, void *),
-		RecSecSortFnIterations(void *, void *),
-		RecSecSortFnCorrel(void *, void *),
-		RecSecSortFnImageFile(void *, void *),
-		RecSecSortFnTransfTx(void *, void *),
-		RecSecSortFnTransfTy(void *, void *),
-		RecSecSortFnTransfTz(void *, void *),
-		RecSecSortFnTransfScale(void *, void *),
-		RecSecSortFnTransfTheta(void *, void *),
-		RecSecSortFnTransfPhi(void *, void *),
-		RecSecSortFnTransfAlpha(void *, void *),
-		RecSecSortFnTransfPsi(void *, void *),
-		RecSecSortFnTransfXsi(void *, void *),
-		RecSecSortFnTransfInvert(void *, void *),
-		RecSecListIndexFn(HGUDlpList *, HGUDlpListItem *, void *),
-		RecSecListInvalidFn(HGUDlpList *, HGUDlpListItem *, void *),
-		RecSecCumTransfClearItFn(HGUDlpList *, HGUDlpListItem *,
-					 void *),
-		RecSecCumTransfSetItFn(HGUDlpList *, HGUDlpListItem *, void *),
-		RecSecFindItemIndexItFn(HGUDlpList *, HGUDlpListItem *,
-					void *);
+static int			RecSecSortFnSignCmpDbl(
+				  double d0,
+				  double d1);
+static int			RecSecSortFnTransf(
+				  void *entry0,
+				  void *entry1,
+				  unsigned int mask);
+static int			RecSecSortFnIndex(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnIterations(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnCorrel(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnImageFile(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfTx(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfTy(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfTz(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfScale(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfTheta(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfPhi(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfAlpha(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfPsi(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfXsi(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecSortFnTransfInvert(
+				  void *entry0,
+				  void *entry1);
+static int			RecSecListIndexFn(
+				  HGUDlpList *secList,
+				  HGUDlpListItem *item,
+				  void *data);
+static int			RecSecListInvalidFn(
+				  HGUDlpList *secList,
+				  HGUDlpListItem *item,
+				  void *data);
+static int			RecSecCumTransfClearItFn(
+				  HGUDlpList *secList,
+				  HGUDlpListItem *secItem,
+				  void *itData);
+static int			RecSecCumTransfSetItFn(
+				  HGUDlpList *secList,
+				  HGUDlpListItem *secItem,
+				  void *itData);
+static int			RecSecFindItemIndexItFn(
+				  HGUDlpList *secList,
+				  HGUDlpListItem *secItem,
+				  void *data);
 
-/************************************************************************
-* Function:	RecSecAssign					
-* Returns:	RecSection *:		Section with incremented link-
-*					count, if non NULL.	
-* Purpose:	Increments the given sections link count to ease 
-*		registration section assignment.		
-* Global refs:	-						
-* Parameters:	RecSection *sec:	Section to be assigned.	
-************************************************************************/
+/*!
+* \return	Section with incremented link count, if non NULL.
+* \ingroup	Reconstruct
+* \brief	Increments the given sections link count to ease registration
+* 		section assignment.
+* \param	sec			Section to be assigned.
+*/
 RecSection	*RecSecAssign(RecSection *sec)
 {
   REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -84,14 +152,12 @@ RecSection	*RecSecAssign(RecSection *sec)
   return(sec);
 }
 
-/************************************************************************
-* Function:	RecSecDup					
-* Returns:	RecSection *:		Duplicated section maybe NULL
-*					on error.		
-* Purpose:	Duplicates the given section
-* Global refs:	-						
-* Parameters:	RecSection *sec:	Section to be assigned.	
-************************************************************************/
+/*!
+* \return	Duplicated section, NULL on error.
+* \ingroup	Reconstruct
+* \brief	Duplicates the given section.
+* \param	sec			Section to be duplicated.
+*/
 RecSection	*RecSecDup(RecSection *sec)
 {
   RecSection	*newSec = NULL;
@@ -135,28 +201,24 @@ RecSection	*RecSecDup(RecSection *sec)
   return(newSec);
 }
 
-/************************************************************************
-* Function:	RecSecMake					
-* Returns:	RecSection *:		New registration section.
-* Purpose:	Makes a registration section using the given member
-*		values.						
-* Global refs:	-						
-* Parameters:	int index:		Section index.		
-*		int iterations:		Number of iterations to find
-*					sections transform.	
-*		double correlation:	Sections correlation value.
-*		char *imageFile:	Image file path, this is 
-*					duplicated so that the original
-*					may be AlcFree'd. The image file
-*					path may not be NULL.	
-*		WlzAffineTransform *transform: Section transform, if NULL an
-*					identity transform is created.
-*		WlzObject *obj:		Woolz object corresponding to
-*					the given image file. This may
-*					be NULL without causing the
-*					object to be read from the
-*					associated file.	
-************************************************************************/
+/*!
+* \return	New registration section.
+* \ingroup	Reconstruct
+* \brief	Makes a registration section using the given member values.
+* \param	index			Section index.
+* \param	iterations		Number of iterations to find
+*                                       section transform.
+* \param	correlation		Section correlation value.
+* \param	imageFile		Image file path, this is duplicated
+*					so that the original may be freed
+*					The image file path must not be NULL.
+* \param	transform		Section transform, if NULL an identity
+* 					transform is created.
+* \param	obj			Woolz object corresponding to the given
+* 					image file. This may be NULL without
+* 					causing the object to be read from the
+* 					associated file.
+*/
 RecSection	*RecSecMake(int index, int iterations, double correlation,
 			    char *imageFile,
 			    WlzAffineTransform *transform, WlzObject *obj)
@@ -217,13 +279,12 @@ RecSection	*RecSecMake(int index, int iterations, double correlation,
   return(sec);
 }
 
-/************************************************************************
-* Function:	RecSecMakeEmpty					
-* Returns:	RecSection *:		New registration section.
-* Purpose:	Makes an empty registration section.		
-* Global refs:	-						
-* Parameters:	int index:		Section index.		
-************************************************************************/
+/*!
+* \return	New registration section.
+* \ingroup	Reconstruct
+* \brief	Makes an empty registration section.
+* \param	index			Section index.
+*/
 RecSection	*RecSecMakeEmpty(int index)
 {
   RecSection	*sec = NULL;
@@ -238,14 +299,11 @@ RecSection	*RecSecMakeEmpty(int index)
   return(sec);
 }
 
-
-/************************************************************************
-* Function:	RecSecFree					
-* Returns:	void						
-* Purpose:	Free's the given section.			
-* Global refs:	-						
-* Parameters:	RecSection *sec:	Section to AlcFree.	
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Free's the given section.
+* \param	sec			Section to free.
+*/
 void		RecSecFree(RecSection *sec)
 {
   REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -304,15 +362,13 @@ void		RecSecFree(RecSection *sec)
 	  ("RecSecFree FX\n"));
 }
 
-/************************************************************************
-* Function:	RecSecIsEmpty					
-* Returns:	int:			Non zero if section is empty.
-* Purpose:	Checks if this is an empty section by comparing the
-*		image file name with the case insensitive string
-*		'empty'.					
-* Global refs:	-						
-* Parameters:	RecSection *sec:	Section to be checked.	
-************************************************************************/
+/*!
+* \return	Non zero if section is empty.
+* \ingroup	Reconstruct
+* \brief	Checks if this is an empty section by comparing the image file
+* 		name with the case insensitive string 'empty'.
+* \param	sec			Section to be checked.
+*/
 int		RecSecIsEmpty(RecSection *sec)
 {
   int		isEmpty = 0;
@@ -334,23 +390,21 @@ int		RecSecIsEmpty(RecSection *sec)
   return(isEmpty);
 }
 
-/************************************************************************
-* Function:	RecSecNext					
-* Returns:	RecSection *:		Next registration section,
-*					or NULL if at end of list.
-* Purpose:	Given a section list and a current item pointer, this
-*		function sets the given destination pointer to the next
-*		item and returns that list item's section entry.
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Section list.		
-*		HGUDlpListItem *cItem:	Current list item, NULL to
-*					get first list entry.	
-*		HGUDlpListItem **nItemP: Destination pointer for the
-*					next list item, will be set to
-*					NULL at end of list.	
-*		int skipEmpty:		Skip over empty entries if flag
-*					is non-zero.		
-************************************************************************/
+/*!
+* \return	Next registration section, or NULL if at end of list.
+* \ingroup	Reconstruct
+* \brief	Given a section list and a current item pointer, this
+*               function sets the given destination pointer to the next
+*               item and returns that list item's section entry.
+* \param	secList			Section list.
+* \param	cItem			Current list item, NULL to
+*                                       get first list entry.
+* \param	nItemP			Destination pointer for the
+*                                       next list item, will be set to
+*                                       NULL at end of list.
+* \param	skipEmpty		Skip over empty entries if flag
+*                                       is non-zero.
+*/
 RecSection	*RecSecNext(HGUDlpList *secList, HGUDlpListItem *cItem,
 			    HGUDlpListItem **nItemP, int skipEmpty)
 {
@@ -380,24 +434,22 @@ RecSection	*RecSecNext(HGUDlpList *secList, HGUDlpListItem *cItem,
   return(sec);
 }
 
-/************************************************************************
-* Function:	RecSecPrev					
-* Returns:	RecSection *:		Previous registration section,
-*					or NULL if at head of list.
-* Purpose:	Given a section list and a current item pointer, this
-*		function sets the given destination pointer to the
-*		previous item and returns that list item's section
-*		entry.						
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Section list.		
-*		HGUDlpListItem *cItem:	Current list item, NULL to
-*					get last list entry.	
-*		HGUDlpListItem **nItemP: Destination pointer for the
-*					previous list item, will be
-*					set to NULL at head of list.
-*		int skipEmpty:		Skip over empty entries if flag
-*					is non-zero.		
-************************************************************************/
+/*!
+* \return	Previous registration section or NULL if at head of list.
+* \ingroup	Reconstruct
+* \brief	Given a section list and a current item pointer, this
+*               function sets the given destination pointer to the
+*               previous item and returns that list item's section
+*               entry.
+* \param	secList			Section list.
+* \param	cItem			Current list item, NULL to get the
+*					last list entry.
+* \param	pItemP			Destination pointer for the
+*					previous list item, will be set to NULL
+*					at head of list.
+* \param	skipEmpty		Skip over empty entries if flag
+*                                       is non-zero.
+*/
 RecSection	*RecSecPrev(HGUDlpList *secList, HGUDlpListItem *cItem,
 			    HGUDlpListItem **pItemP, int skipEmpty)
 {
@@ -427,17 +479,16 @@ RecSection	*RecSecPrev(HGUDlpList *secList, HGUDlpListItem *cItem,
   return(sec);
 }
 
-/************************************************************************
-* Function:	RecSecToStr					
-* Returns:	char *:			New section string.	
-* Purpose:	Creates a string from the given registration serial
-*		section and bit mask for the fields required.	
-* Global refs:	-						
-* Parameters:	RecSection *sec:	Given section.		
-*		unsigned int reqFields:	Bit mask for fields required
-*					in the strings.		
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	New section string.
+* \ingroup	Reconstruct
+* \brief	Creates a string from the given registration serial
+*               section and bit mask for the fields required.
+* \param	sec			Given section.
+* \param	reqFields		Bit mask for fields required
+*                                       in the strings.
+* \param	eMsg			Destination pointer for messages.
+*/
 char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
 			     char **eMsg)
 {
@@ -566,24 +617,23 @@ char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
   return(secStr);
 }
 
-/************************************************************************
-* Function:	RecSecListToStrList				
-* Returns:	RecError:		Non-zero if function fails.
-* Purpose:	Creates a list of strings from a registration serial
-*		section list and a bit mask for the fields required.
-*		This is NOT intended to be used for output to a file
-*		(RecFileSecWrite() should be used). This function was
-*		written to allow a user to be presented with a simple 
-*		list of serial sections within a GUI application.
-* Global refs:	-						
-* Parameters:	char ***strList:	Destination ptr for list of
-*					strings.		
-*		HGUDlpList *secList:	Given section list.	
-*		int numSec:		Number of sections in secList.
-*		char **eMsg:		Ptr for error message strings.
-*		unsigned int reqFields:	Bit mask for fields required
-*					in the strings.		
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Creates a list of strings from a registration serial
+*               section list and a bit mask for the fields required.
+*               This is NOT intended to be used for output to a file
+*               (RecFileSecWrite() should be used). This function was
+*               written to allow a user to be presented with a simple
+*               list of serial sections within a GUI application.
+* \param	strList			Destination pointer for list of
+*                                       strings.
+* \param	secList			Given section list.
+* \param	numSec			Number of sections in secList.
+* \param	eMsg			Destination pointer for messages.
+* \param	reqFields		Bit mask for fields required
+*                                       in the strings.
+*/
 RecError	RecSecListToStrList(char ***strList, HGUDlpList *secList,
 				    int numSec, char **eMsg,
 				    unsigned int reqFields)
@@ -622,16 +672,14 @@ RecError	RecSecListToStrList(char ***strList, HGUDlpList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecSecListSort					
-* Returns:	void						
-* Purpose:	Sorts the given HGUDlpList section list using the given
-*		section field mask.				
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		unsigned int sortMask:	Bit mask for the section field
-*					to sort on.		
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Sorts the given HGUDlpList section list using the given
+*               section field mask.
+* \param	secList			Given section list.
+* \param	sortMask		Bit mask for the section field
+*                                       to sort on.
+*/
 void		RecSecListSort(HGUDlpList *secList, unsigned int sortMask)
 {
   REC_DBG((REC_DBG_SEC|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -690,16 +738,15 @@ void		RecSecListSort(HGUDlpList *secList, unsigned int sortMask)
           ("RecSecListSort FX\n"));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnSignCmpDbl				
-* Returns:	int:			+1, 0 or -1		
-* Purpose:	Given a pair of doubles, returns an integer with the
-*		sign of their difference. Ie sign(d0 - d1).	
-*		Used by some of the sort functions.		
-* Global refs:	-						
-* Parameters:	double d0:		First of the doubles.	
-*		double d1:		Second of the doubles.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given a pair of doubles, returns an integer with the
+*               sign of their difference. Ie sign(d0 - d1).
+*               Used by some of the sort functions.
+* \param	d0			First of the doubles.
+* \param	d1			Second of the doubles.
+*/
 static int	RecSecSortFnSignCmpDbl(double d0, double d1)
 {
   int		sgnCmp = 0;
@@ -715,16 +762,15 @@ static int	RecSecSortFnSignCmpDbl(double d0, double d1)
   return(sgnCmp);
 }
 
-/************************************************************************
-* Function:	RecSecSortFnIndex				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		indicies for HGUDlpListSort().			
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               indicies for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnIndex(void *entry0, void *entry1)
 {
   int		tI0 = 0;
@@ -740,16 +786,15 @@ static int	RecSecSortFnIndex(void *entry0, void *entry1)
   return(tI0);
 }
 
-/************************************************************************
-* Function:	RecSecSortFnIterations				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		iterations for HGUDlpListSort().		
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               iterations for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnIterations(void *entry0, void *entry1)
 {
   int		tI0 = 0;
@@ -765,16 +810,15 @@ static int	RecSecSortFnIterations(void *entry0, void *entry1)
   return(tI0);
 }
 
-/************************************************************************
-* Function:	RecSecSortFnCorrel				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		cross-correlations for HGUDlpListSort().	
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               cross-correlations for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnCorrel(void *entry0, void *entry1)
 {
   int		tI0 = 0;
@@ -790,16 +834,15 @@ static int	RecSecSortFnCorrel(void *entry0, void *entry1)
   return(tI0);
 }
 
-/************************************************************************
-* Function:	RecSecSortFnImageFile				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		image file names for HGUDlpListSort().		
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               image file names for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnImageFile(void *entry0, void *entry1)
 {
   int		tI0 = 0;
@@ -818,168 +861,157 @@ static int	RecSecSortFnImageFile(void *entry0, void *entry1)
   return(tI0);
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfTx				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform x components for HGUDlpListSort().	
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be
+*               pointers to registration sections, compares the sections
+*               transform x components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfTx(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_TX));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfTy				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform y components for HGUDlpListSort().	
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform y components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfTy(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_TY));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfTz				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform z components for HGUDlpListSort().	
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform z components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfTz(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_TZ));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfScale				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform scale components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform scale components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfScale(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_SCALE));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfTheta				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform theta components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform theta components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfTheta(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_THETA));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfPhi				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform phi components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform phi components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfPhi(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_PHI));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfAlpha				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform alpha components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform alpha components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfAlpha(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_ALPHA));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfPsi				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform psi components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform psi components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfPsi(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_PSI));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfXsi				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform xsi components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform xsi components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfXsi(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_XSI));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransfInvert			
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, compares the sections	
-*		transform invert components for HGUDlpListSort().
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, compares the sections
+*               transform invert components for HGUDlpListSort().
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+*/
 static int	RecSecSortFnTransfInvert(void *entry0, void *entry1)
 {
   return(RecSecSortFnTransf(entry0, entry1, REC_SECMSK_TRANSF_INVERT));
 }
 
-/************************************************************************
-* Function:	RecSecSortFnTransf				
-* Returns:	int:			>0, 0 or <0		
-* Purpose:	Given two HGUDlpList entries which are known to be ptrs
-*		to registration sections, and a registration section 
-*		field mask, compares the sections transform fields
-*		for RecSecSortFnTransf*()'s.			
-* Global refs:	-						
-* Parameters:	void *entry0:		First list entry.	
-*		void *entry1:		Second list entry.	
-*		unsigned int mask:	Mask for required field.
-************************************************************************/
+/*!
+* \return	Signed value as for sort().
+* \ingroup	Reconstruct
+* \brief	Given two HGUDlpList entries which are known to be pointers
+*               to registration sections, and a registration section
+*               field mask, compares the sections transform fields
+*               for RecSecSortFnTransfXXX() functions.
+* \param	entry0			First list entry.
+* \param	entry1			Second list entry.
+* \param	mask
+*/
 static int	RecSecSortFnTransf(void *entry0, void *entry1,
 				   unsigned int mask)
 {
@@ -1039,18 +1071,16 @@ static int	RecSecSortFnTransf(void *entry0, void *entry1,
   return(tI0);
 }
 
-/************************************************************************
-* Function:	RecSecListIndiciesSet				
-* Returns:	void						
-* Purpose:	Sets the indicies for the sections in the given section
-*		list using the given first index value and the given 
-*		index increment.				
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		int indexFirst:		First index value.	
-*		int indexInc:		Index increment between the
-*					sections.		
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Sets the indicies for the sections in the given section
+*               list using the given first index value and the given
+*               index increment.
+* \param	secList			Given section list.
+* \param	indexFirst		First index value.
+* \param	indexInc		Index increment between the
+*                                       sections.
+*/
 void		RecSecListIndiciesSet(HGUDlpList *secList,
 				      int indexFirst, int indexInc)
 {
@@ -1067,17 +1097,16 @@ void		RecSecListIndiciesSet(HGUDlpList *secList,
   }
 }
 
-/************************************************************************
-* Function:	RecSecListIndexFn				
-* Returns:	void						
-* Purpose:	Iterated function for section lists associated with
-*		RecSecListIndiciesSet() which sets the section index
-*		of the given item.				
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		HGUDlpListItem *item:	List item with section entry.
-*		void *data:		Used to pass other args.
-************************************************************************/
+/*!
+* \return	Non-zero for itteration to continue.
+* \ingroup	Reconstruct
+* \brief	Iterated function for section lists associated with
+*               RecSecListIndiciesSet() which sets the section index
+*               of the given item.
+* \param	secList			Given section list.
+* \param	item			List item with section entry.
+* \param	data			Used to pass other args.
+*/
 static int	RecSecListIndexFn(HGUDlpList *secList, HGUDlpListItem *item,
 				  void *data)
 {
@@ -1096,23 +1125,19 @@ static int	RecSecListIndexFn(HGUDlpList *secList, HGUDlpListItem *item,
   return(continueFlag);
 }
 
-/************************************************************************
-* Function:	RecSecListInvalid				
-* Returns:	unsigned int:		Registration section mask with
-*					any fields that are INVALID
-*					set.			
-* Purpose:	Checks the registration section list for validity.
-*		Only section fields which are indicated in the given 
-*		section mask are checked for validity.		
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		RecSection *invalidSec:	Destination pointer for the 
-*					first invalid section list item
-*					found, maybe NULL if not 
-*					required.		
-*		unsigned int mask:	Mask specifying which fields
-*					are to be checked for validity.
-************************************************************************/
+/*!
+* \return	Registration section mask with any fields that are INVALID set.
+* \ingroup	Reconstruct
+* \brief	Checks the registration section list for validity.
+*               Only section fields which are indicated in the given
+*               section mask are checked for validity.
+* \param	secList			Given section list.
+* \param	invalidItem		Destination pointer for the
+*                                       first invalid section list item
+*                                       found, maybe NULL if not required.
+* \param	mask			Mask specifying which fields
+*                                       are to be checked for validity.
+*/
 unsigned int	 RecSecListInvalid(HGUDlpList *secList,
 				   HGUDlpListItem **invalidItem,
 				   unsigned int mask)
@@ -1154,17 +1179,16 @@ unsigned int	 RecSecListInvalid(HGUDlpList *secList,
   return(args.invalidMask);
 }
 
-/************************************************************************
-* Function:	RecSecListInvalidFn				
-* Returns:	void						
-* Purpose:	Iterated function for section lists associated with
-*		RecSecListInvalid() which checks the validity of the
-*		given section item.				
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Given section list.	
-*		HGUDlpListItem *item:	List item with section entry.
-*		void *data:		Used to pass other args.
-************************************************************************/
+/*!
+* \return	Non-zero to continue iteration.
+* \ingroup	Reconstruct
+* \brief	Iterated function for section lists associated with
+*               RecSecListInvalid() which checks the validity of the
+*               given section item.
+* \param	secList			Given section list.
+* \param	item			List item with section entry.
+* \param	data			Used to pass other args.
+*/
 static int	RecSecListInvalidFn(HGUDlpList *secList, HGUDlpListItem *item,
 				    void *data)
 {
@@ -1218,29 +1242,27 @@ static int	RecSecListInvalidFn(HGUDlpList *secList, HGUDlpListItem *item,
   return(continueFlag);
 }
 
-/************************************************************************
-* Function:	RecSecAppendListFromFiles			
-* Returns:	RecError:		Non-zero if function fails.
-* Purpose:	Appends new section records to the given section list
-*		using the given list of image file names. The section
-*		indicies are set using the given first index and index
-*		increment values. The new section records have identity
-*		transforms, zero iteration count and cross correlation
-*		values. The woolz image object is set to NULL.	
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	Section list to which the new
-*					sections should be appended.
-*		HGUDlpListItem *secmark: List item after which the new
-*					sections should be appended, if
-*					this is NULL the the new
-*					sections are appended at the
-*					end of the list.	
-*		char **fileVec:		Vector of file name strings.
-*		int nFiles:		Number of file names.	
-*		int indexFirst:		Index value of first section of
-*					the list.		
-*		int indexInc:		Index increment value.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Appends new section records to the given section list
+*               using the given list of image file names. The section
+*               indicies are set using the given first index and index
+*               increment values. The new section records have identity
+*               transforms, zero iteration count and cross correlation
+*               values. The woolz image object is set to NULL.
+* \param	secList			Given section list.
+* \param	secMark			List item after which the new
+*                                       sections should be appended, if
+*                                       this is NULL the the new
+*                                       sections are appended at the
+*                                       end of the list.
+* \param	fileVec			Vector of file name strings.
+* \param	nFiles			Number of file names.
+* \param	indexFirst		Index value of first section of
+*                                       the list.
+* \param	indexInc		Index increment value.
+*/
 RecError	 RecSecAppendListFromFiles(HGUDlpList *secList,
 					   HGUDlpListItem *secMark,
 					   char **fileVec, int nFiles,
@@ -1284,21 +1306,20 @@ RecError	 RecSecAppendListFromFiles(HGUDlpList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecSecCumTransfClear				
-* Returns:	RecError:		Non-zero if function fails.
-* Purpose:	Sets the cumulative transform field of each section in
-*		the section list to NULL, from the given section to the
-*		tail of the list. When set to NULL the cumulative
-*		transforms then need recalculating prior to section
-*		display, ie NULL is used to mark the cumulative 
-*		transforms as invalid/outdated.			
-*		If the given section item is NULL then all list items
-*		are processed.					
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	The section list.	
-*		HGUDlpListItem *secItem: Given section item.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Sets the cumulative transform field of each section in
+*               the section list to NULL, from the given section to the
+*               tail of the list. When set to NULL the cumulative
+*               transforms then need recalculating prior to section
+*               display, ie NULL is used to mark the cumulative
+*               transforms as invalid/outdated.
+*               If the given section item is NULL then all list items
+*               are processed.
+* \param	secList			Given section list.
+* \param	secItem			Given section item.
+*/
 RecError	 RecSecCumTransfClear(HGUDlpList *secList,
 			    	      HGUDlpListItem *secItem)
 {
@@ -1318,17 +1339,16 @@ RecError	 RecSecCumTransfClear(HGUDlpList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecSecCumTransfClearItFn			
-* Returns:	int:			Non-zero to continue iteration.
-* Purpose:	Iterated function which clears the cumulative transform
-*		and cumulative transform transformed object fields of
-*		the given section list item to be NULL.		
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	The section list.	
-*		HGUDlpListItem *secItem: Given section item.	
-*		void *itData:		Not used.		
-************************************************************************/
+/*!
+* \return	Non-zero to continue iteration.
+* \ingroup	Reconstruct
+* \brief	Iterated function which clears the cumulative transform
+*               and cumulative transform transformed object fields of
+*               the given section list item to be NULL.
+* \param	secList			Given section list.
+* \param	secItem			Given section item.
+* \param	itData			Not used.
+*/
 static int	RecSecCumTransfClearItFn(HGUDlpList *secList,
 					 HGUDlpListItem *secItem,
 					void *itData)
@@ -1361,22 +1381,21 @@ static int	RecSecCumTransfClearItFn(HGUDlpList *secList,
   return(iterate);
 }
 
-/************************************************************************
-* Function:	RecSecCumTransfSet				
-* Returns:	RecError:		Non-zero if function fails.
-* Purpose:	Calculates and sets the cumulative transform field of
-*		each section in the section list from the head of
-*		the list to the given section. If a section has a 
-*		non-NULL cumulative transform then it is assumed valid.
-*		This function should be called AFTER the function
-*		RecSecCumTransfClear has been called to set invalid
-*		entries to NULL.				
-*		If the given section item is NULL then all entries in
-*		the list will be processed.			
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	The section list.	
-*		HGUDlpListItem *secItem: Given section item.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Calculates and sets the cumulative transform field of
+*               each section in the section list from the head of
+*               the list to the given section. If a section has a
+*               non-NULL cumulative transform then it is assumed valid.
+*               This function should be called AFTER the function
+*               RecSecCumTransfClear has been called to set invalid
+*               entries to NULL.
+*               If the given section item is NULL then all entries in
+*               the list will be processed.
+* \param	secList			Given section list.
+* \param	secItem			Given section item.
+*/
 RecError	 RecSecCumTransfSet(HGUDlpList *secList,
 		 		   HGUDlpListItem *secItem)
 {
@@ -1396,18 +1415,17 @@ RecError	 RecSecCumTransfSet(HGUDlpList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecSecCumTransfSetItFn				
-* Returns:	int:			Non-zero to continue iteration.
-* Purpose:	Iterated function which sets the cumulative transform 
-*		fields of a section list, working from the head of the
-*		list towards the tail and stoping when the specified 
-*		list item has been processed.			
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	The section list.	
-*		HGUDlpListItem *secItem: Given section item.	
-*		void *itData:		Used to pass item to stop at.
-************************************************************************/
+/*!
+* \return	Non-zero to continue iteration.
+* \ingroup	Reconstruct
+* \brief	Iterated function which sets the cumulative transform
+*               fields of a section list, working from the head of the
+*               list towards the tail and stoping when the specified
+*               list item has been processed.
+* \param	secList			Given section list.
+* \param	secItem			Given section item.
+* \param	itData			Used to pass item to stop at.
+*/
 static int	RecSecCumTransfSetItFn(HGUDlpList *secList,
 					 HGUDlpListItem *secItem,
 					void *itData)
@@ -1447,16 +1465,9 @@ static int	RecSecCumTransfSetItFn(HGUDlpList *secList,
 	  prevSec = (RecSection *)HGUDlpListEntryGet(secList, prevItem);
 	  if(prevSec && prevSec->cumTransform)      /* Should always be true */
 	  {
-	    /* HACK NEW CODE */
 	    cumTransf = WlzAffineTransformProduct(curSec->transform,
 	    					  prevSec->cumTransform,
 						  NULL);
-	    /* HACK NEW CODE */
-	    /* HACK OLD CODE
-	    cumTransf = WlzAffineTransformProduct(prevSec->cumTransform,
-					          curSec->transform,
-						  NULL);
-	    HACK OLD CODE */
 	    curSec->cumTransform = cumTransf;
 	    ++(curSec->cumTransform->linkcount);
 	  }
@@ -1498,19 +1509,17 @@ static int	RecSecCumTransfSetItFn(HGUDlpList *secList,
   return(iterate);
 }
 
-/************************************************************************
-* Function:	RecSecFindItemIndex				
-* Returns:	HGUDlpListItem *:	First item found with matching 
-*					index or NULL if no matching
-*					index (or on error).	
-* Purpose:	Finds the first item in the given section list with a
-*		matching index and returns a pointer to the list item.
-* Global refs:	-						
-* Parameters:	HGUDlpList *list:	Section list to search.	
-*		HGUDlpListItem *item:	Item to search first and from.
-*		int index:		Section index to search for.
-*		HGUDlpListDirection dir: Search direction.	
-************************************************************************/
+/*!
+* \return	First item found with matching index or NULL if no matching
+*		index (or on error).
+* \ingroup	Reconstruct
+* \brief	Finds the first item in the given section list with a
+*               matching index and returns a pointer to the list item.
+* \param	list			Section list to search.
+* \param	from			Item to search first and from.
+* \param	index			Section index to search for.
+* \param	dir			Search direction.
+*/
 HGUDlpListItem	*RecSecFindItemIndex(HGUDlpList *list, HGUDlpListItem *from,
 				     int index, HGUDlpListDirection dir)
 {
@@ -1540,16 +1549,14 @@ HGUDlpListItem	*RecSecFindItemIndex(HGUDlpList *list, HGUDlpListItem *from,
   return(found);
 }
 
-/************************************************************************
-* Function:	RecSecFindItemIndexItFn				
-* Returns:	int:			Non zero if the item's index is
-*					equal to the given index.
-* Purpose:	Iterated function for RecSecFindItemIndex().	
-* Global refs:	-						
-* Parameters:	HGUDlpList *secList:	The section list.	
-*		HGUDlpListItem *secItem: The given item.	
-*		void *data:		Used to pass given index.
-************************************************************************/
+/*!
+* \return	Non zero if the item's index is equal to the given index.
+* \ingroup	Reconstruct
+* \brief	Iterated function for RecSecFindItemIndex().
+* \param	secList			Given section list.
+* \param	secItem			The given item.
+* \param	data			Used to pass given index.
+*/
 static int	RecSecFindItemIndexItFn(HGUDlpList *secList,
 					HGUDlpListItem *secItem,
 				  	void *data)
@@ -1568,14 +1575,13 @@ static int	RecSecFindItemIndexItFn(HGUDlpList *secList,
   return(notEqual);
 }
 
-/************************************************************************
-* Function:	RecSecNewSectionList				
-* Returns:	RecSectionList *:	New secton list or NULL on error.
-* Purpose:	Creates a new empty section list with default settings.
-* Global refs:	-						
-* Parameters:	RecError *dstErr:	Destination error pointer, may
-*					be NULL.
-************************************************************************/
+/*!
+* \return	New secton list or NULL on error.
+* \ingroup	Reconstruct
+* \brief	Creates a new empty section list with default settings.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
 RecSectionList	*RecSecNewSectionList(RecError *dstErr)
 {
   RecSectionList *newSecList = NULL;
@@ -1601,13 +1607,11 @@ RecSectionList	*RecSecNewSectionList(RecError *dstErr)
   return(newSecList);
 }
 
-/************************************************************************
-* Function:	RecSecRecSetDefaults				
-* Returns:	void
-* Purpose:	Sets the reconstruction information to default values.
-* Global refs:	-						
-* Parameters:	RecReconstruction *rec:	Reconstruction information.
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Sets the reconstruction information to default values.
+* \param	rec			Reconstruction information.
+*/
 void		RecSecRecSetDefaults(RecReconstruction *rec)
 {
   if(rec)

@@ -1,50 +1,100 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructFileIO.c
-* Date:         April 1999
-* Author:       Bill Hill
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Purpose:      Provides functions for file based I/O for the
-*		MRC Human Genetics Unit reconstruction library.
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.
-* 04-10-00 bill Changes following removal of primitives from 
-*               WlzAffinetransform.
-************************************************************************/
+#else
+static char _ReconstructFileIO_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructFileIO.c
+* \author       Bill Hill
+* \date         November 2007
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	File based I/O functions for the Reconstruct library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
 
-static RecError	RecFileSecSecListRead(HGUDlpList *secList, int *numSec,
-                                      int version, FILE *fP, char **eMsg);
-static RecError	RecFileSecAtrbRead(RecSectionListAtrb *atrb, int version,
-				   FILE *fP, char **eMsg);
-static RecError  RecFileSecRecRead(RecReconstruction *rec, int version,
-                                   FILE *fP, char **eMsg);
-static RecError RecFileSecIdentRead(int *version, FILE *fP, char **eMsg);
-static RecError RecFileSecIdentWrite(FILE *fP, char **eMsg);
-static RecError RecFileSecCommentsWrite(FILE *fP, char **eMsg);
-static RecError	RecFileSecAtrbWrite(FILE *fP, RecSectionListAtrb *atrb,
-				    char **eMsg);
-static RecError RecFileSecRecWrite(FILE *fP, RecReconstruction *rec,
-                                   char **eMsg);
-static RecError RecFileSecSecListWrite(FILE *fP, HGUDlpList *secList,
-                                       int numSec, char **eMsg);
-static RecError	RecFileIcsFileNames(char **fileBody,
-				    char **icsFileName, char **idsFileName,
-				    char *gvnFileName);
-static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
-					     int *recNum, FILE *fP,
-					     char **eMsg);
-static BibFileField *RecFileTransfToField(WlzAffineTransform *transf);
-static WlzAffineTransform *RecFileFieldToTransf(BibFileField *field,
-						int defaultFlg);
+static RecError			RecFileSecSecListRead(
+				  HGUDlpList *secList,
+				  int *numSec,
+				  int version,
+				  FILE *fP,
+				  char **eMsg) ;
+static RecError			RecFileSecAtrbRead(
+				  RecSectionListAtrb *atrb,
+				  int version,
+				  FILE *fP,
+				  char **eMsg);
+static RecError  		RecFileSecRecRead(
+				  RecReconstruction *rec,
+				  int version,
+				  FILE *fP,
+				  char **eMsg);
+static RecError 		RecFileSecIdentRead(
+				  int *version,
+				  FILE *fP,
+				  char **eMsg);
+static RecError 		RecFileSecIdentWrite(
+				  FILE *fP,
+				  char **eMsg);
+static RecError 		RecFileSecCommentsWrite(
+				  FILE *fP,
+				  char **eMsg);
+static RecError			RecFileSecAtrbWrite(
+				  FILE *fP,
+				  RecSectionListAtrb *atrb,
+				  char **eMsg);
+static RecError 		RecFileSecRecWrite(
+				  FILE *fP,
+				  RecReconstruction *rec,
+				  char **eMsg);
+static RecError 		RecFileSecSecListWrite(
+				  FILE *fP,
+				  HGUDlpList *secList,
+				  int numSec,
+				  char **eMsg);
+static RecError			RecFileSecRecordReadAndParse(
+				  RecSection *sec,
+				  int *doneFlag,
+				  int *recNum,
+				  FILE *fP,
+				  char **eMsg);
+static BibFileField 		*RecFileTransfToField(
+				  WlzAffineTransform *transf);
+static WlzAffineTransform 	*RecFileFieldToTransf(
+				  BibFileField *field,
+				  int defaultFlg);
 
 typedef enum	       /* Warning: keep consistant with recFileTransfFieldS! */
 {
@@ -92,106 +142,108 @@ const char *recFileAtrbValueS[REC_FILE_SECATRB_MAX] =
   "abs"
 };
 
-/************************************************************************
-* Function:	RecFileSecListWrite
-* Returns:	RecError:		Non zero if read fails.
-* Purpose:	Write registration sections file.
-* Notes:	Files are written using the restricted bixtex file
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief 	Writes registration sections file.
+
+* 		Files are written using the restricted bixtex file
 *		syntax of the BibFileIO library.
-*		File format version 1 records have the format:
-*		  @Ident
-*		  {
-*		    0,
-*		    Text = {registration section file},
-*		    Version = {1}
-*		  }
-*		  @Comment
-*		  {
-*		    0,
-*		    Text = {...},
-*		    .
-*		    .
-*		    Text = {...}
-*		  }
-*		  @Section
-*		  {
-*		    <section index>,
-*		    Iterations = {<iterations to find best match>},
-*		    Correlation = {<correlation value>},
-*		    File = {<section image data file>},
-*		    TransformType = {1},
-*		    TransformTx = {<x>}
-*		    TransformTy = {<y>}
-*		    TransformTz = {<z>}
-*		    TransformScale = {<scale>}
-*		    TransformTheta = {<theta>}
-*		    TransformPhi = {<phi>}
-*		    TransformAlpha = {<alpha>}
-*		    TransformPsi = {<psi>}
-*		    TransformXsi = {<xsi>}
-*		    TransformInvert  = {<invert}
-*		  }
-*		File format version 2 records have the format:
-*		  @Ident
-*		  {
-*		    0,
-*		    Text = {registration section file},
-*		    Version = {2}
-*		  }
-*		  @Comment
-*		  {
-*		    0,
-*		    Text = {...},
-*		    .
-*		    .
-*		    Text = {...}
-*		  }
-*		  @Attributes
-*		  {
-*		    0,
-*		    TransformMode = {"rel"|"abs"}
-*		  }
-*		  @Reconstruction
-*		  {
-*		    0,
-*		    File = {<complete reconstruction file name string>}
-*		    Format = {<file format extension string>}
-*		    Filter = {0|1}
-*		    FastSampling = {0|1}
-*		    IntScale = {0|1}
-*		    Greedy = {0|1}
-*		    Scale = {<scale x> <scale y> <scale z>}
-*		    MatchHistograms = {0|1}
-*		    MatchSection = {<section index>},
-*		    ClipSrc = {0|1}
-*		    SrcBox = {<x min> <y min> <z min> <x max> <y max> <z max>}
-*		    ClipDst = {0|1}
-*		    DstBox = {<x min> <y min> <z min> <x max> <y max> <z max>}
-*		  }
-*		  @Section
-*		  {
-*		    <section index>,
-*		    Iterations = {<iterations to find best match>},
-*		    Correlation = {<correlation value>},
-*		    File = {<section image data file>},
-*		    TransformType = {1},
-*		    TransformTx = {<x>}
-*		    TransformTy = {<y>}
-*		    TransformTz = {<z>}
-*		    TransformScale = {<scale>}
-*		    TransformTheta = {<theta>}
-*		    TransformPhi = {<phi>}
-*		    TransformAlpha = {<alpha>}
-*		    TransformPsi = {<psi>}
-*		    TransformXsi = {<xsi>}
-*		    TransformInvert  = {<invert}
-*		  }
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		RecSectionList *secList: Sections list.
-*		int numSec:		Number of sections.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+ 		File format version 1 records have the format:
+* \verbatim
+ 		  @Ident
+ 		  {
+ 		    0,
+ 		    Text = {registration section file},
+ 		    Version = {1}
+ 		  }
+ 		  @Comment
+ 		  {
+ 		    0,
+ 		    Text = {...},
+ 		    .
+ 		    .
+ 		    Text = {...}
+ 		  }
+ 		  @Section
+ 		  {
+ 		    <section index>,
+ 		    Iterations = {<iterations to find best match>},
+ 		    Correlation = {<correlation value>},
+ 		    File = {<section image data file>},
+ 		    TransformType = {1},
+ 		    TransformTx = {<x>}
+ 		    TransformTy = {<y>}
+ 		    TransformTz = {<z>}
+ 		    TransformScale = {<scale>}
+ 		    TransformTheta = {<theta>}
+ 		    TransformPhi = {<phi>}
+ 		    TransformAlpha = {<alpha>}
+ 		    TransformPsi = {<psi>}
+ 		    TransformXsi = {<xsi>}
+ 		    TransformInvert  = {<invert}
+ 		  }
+ 		File format version 2 records have the format:
+ 		  @Ident
+ 		  {
+ 		    0,
+ 		    Text = {registration section file},
+ 		    Version = {2}
+ 		  }
+ 		  @Comment
+ 		  {
+ 		    0,
+ 		    Text = {...},
+ 		    .
+ 		    .
+ 		    Text = {...}
+ 		  }
+ 		  @Attributes
+ 		  {
+ 		    0,
+ 		    TransformMode = {"rel"|"abs"}
+ 		  }
+ 		  @Reconstruction
+ 		  {
+ 		    0,
+ 		    File = {<complete reconstruction file name string>}
+ 		    Format = {<file format extension string>}
+ 		    Filter = {0|1}
+ 		    FastSampling = {0|1}
+ 		    IntScale = {0|1}
+ 		    Greedy = {0|1}
+ 		    Scale = {<scale x> <scale y> <scale z>}
+ 		    MatchHistograms = {0|1}
+ 		    MatchSection = {<section index>},
+ 		    ClipSrc = {0|1}
+ 		    SrcBox = {<x min> <y min> <z min> <x max> <y max> <z max>}
+ 		    ClipDst = {0|1}
+ 		    DstBox = {<x min> <y min> <z min> <x max> <y max> <z max>}
+ 		  }
+ 		  @Section
+ 		  {
+ 		    <section index>,
+ 		    Iterations = {<iterations to find best match>},
+ 		    Correlation = {<correlation value>},
+ 		    File = {<section image data file>},
+ 		    TransformType = {1},
+ 		    TransformTx = {<x>}
+ 		    TransformTy = {<y>}
+ 		    TransformTz = {<z>}
+ 		    TransformScale = {<scale>}
+ 		    TransformTheta = {<theta>}
+ 		    TransformPhi = {<phi>}
+ 		    TransformAlpha = {<alpha>}
+ 		    TransformPsi = {<psi>}
+ 		    TransformXsi = {<xsi>}
+ 		    TransformInvert  = {<invert}
+ 		  }
+* \endverbatim
+* \param	fP			Output file pointer.
+* \param	secList			Sections list.
+* \param	numSec			Number of sections.
+* \param	eMsg			Destination pointer for messages.
+*/
 RecError	RecFileSecListWrite(FILE *fP, RecSectionList *secList,
 				    int numSec, char **eMsg)
 {
@@ -231,14 +283,13 @@ RecError	RecFileSecListWrite(FILE *fP, RecSectionList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecIdentWrite
-* Returns:	RecError:		Non zero if write fails.
-* Purpose:	Write out file identification.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes out file identification.
+* \param	fP			Output file.
+* \param	eMsg			Destination pointer for error messages.
+*/
 static RecError	RecFileSecIdentWrite(FILE *fP, char **eMsg)
 {
   BibFileRecord	*record = NULL;
@@ -275,14 +326,13 @@ static RecError	RecFileSecIdentWrite(FILE *fP, char **eMsg)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecCommentsWrite
-* Returns:	RecError:		Non zero if write fails.
-* Purpose:	Write out comments to the given file.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code
+* \ingroup	Reconstruct
+* \brief	Writes the comments section of an output file.
+* \param	fP			Output file.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecCommentsWrite(FILE *fP, char **eMsg)
 {
   time_t	tmpTime;
@@ -368,15 +418,15 @@ static RecError	RecFileSecCommentsWrite(FILE *fP, char **eMsg)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecAtrbWrite
-* Returns:	RecError:		Non zero if write fails.
-* Purpose:	Write out the section list attributes.
-* Global refs:	char *recFileAtrbValueS: Attribute strings.
-* Parameters:	FILE *fP:		Input file stream.
-*		RecSectionListAtrb *atrb: Section list attributes.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes the section list attributes. Global recFileAtrbValueS
+*		is used for the attribute strings.
+* \param	fP			Output file.
+* \param	atrb			Section list attributes.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecAtrbWrite(FILE *fP, RecSectionListAtrb *atrb,
 				   char **eMsg)
 {
@@ -429,15 +479,14 @@ static RecError	RecFileSecAtrbWrite(FILE *fP, RecSectionListAtrb *atrb,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecRecWrite
-* Returns:	RecError:		Non zero if write fails.
-* Purpose:	Write out reconstruction details.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		RecReconstruction *rec:	Reconstruction details.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes out reconstruction details.
+* \param	fP			Output file.
+* \param	rec			Reconstruction details.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecRecWrite(FILE *fP, RecReconstruction *rec,
 				   char **eMsg)
 {
@@ -458,7 +507,7 @@ static RecError	RecFileSecRecWrite(FILE *fP, RecReconstruction *rec,
   	  ("RecFileSecRecWrite FE 0x%lx 0x%lx 0x%lx\n",
 	   (unsigned long )fP, (unsigned long )rec, (unsigned long )eMsg));
   fileNameS = (rec->fileName)? rec->fileName: nullS;
-  (void *)WlzEffStringFromFormat(rec->fileFormat, &fileFormatS);
+  (void )WlzEffStringFromFormat(rec->fileFormat, &fileFormatS);
   if(fileFormatS == NULL)
   {
     fileFormatS = nullS;
@@ -531,17 +580,15 @@ static RecError	RecFileSecRecWrite(FILE *fP, RecReconstruction *rec,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecSecListWrite
-* Returns:	RecError:		Non zero if write fails.
-* Purpose:	Write the body of the section list to the given
-*		file.
-* Global refs:	-
-* Parameters:	FILE *fP:		Input file stream.
-*		HGUDlpList *secList:	List of sections to write.
-*		int numSec:		Number of sections to write.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes the body of the section list to the given file.
+* \param	fP			Output file.
+* \param	secList			Section list to write.
+* \param	numSec			Number of sections to write.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecSecListWrite(FILE *fP, HGUDlpList *secList,
 				       int numSec, char **eMsg)
 {
@@ -634,14 +681,13 @@ static RecError	RecFileSecSecListWrite(FILE *fP, HGUDlpList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecObjRead
-* Returns:	RecError:		Non zero if read fails.
-* Purpose:	Read section image object from file.
-* Global refs:	-
-* Parameters:	RecSection *sec:	Section with obj to be read in.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads section image object from file.
+* \param	sec			Section with obj to be read.
+* \param	eMsg			Destination pointer for messages.
+*/
 RecError	RecFileSecObjRead(RecSection *sec, char **eMsg)
 {
   RecError	errFlag = REC_ERR_NONE;
@@ -656,7 +702,7 @@ RecError	RecFileSecObjRead(RecSection *sec, char **eMsg)
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_1),
   	  ("RecFileSecObjRead 01 0x%lx  0x%lx %d\n",
 	   (unsigned long )sec,
-	   (sec)? ((unsigned long )(sec->obj)): NULL,
+	   (sec)? ((unsigned long )(sec->obj)): (unsigned long)0,
 	   (sec)? ((sec->obj)? (sec->obj->linkcount): -999): -999));
   if((sec->obj = WlzAssignObject(sec->obj, NULL)) == NULL)
   {
@@ -699,13 +745,11 @@ RecError	RecFileSecObjRead(RecSection *sec, char **eMsg)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecObjFree
-* Returns:	void
-* Purpose:	Free (ie decrement linkcount) section image object.
-* Global refs:	-
-* Parameters:	RecSection *sec:	Section with obj to be read in.
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Frees section image object.
+* \param	sec			Section with obj.
+*/
 void		RecFileSecObjFree(RecSection *sec)
 {
   REC_DBG((REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_1),
@@ -726,19 +770,18 @@ void		RecFileSecObjFree(RecSection *sec)
 	  ("RecFileSecObjFree FX\n"));
 }
 
-/************************************************************************
-* Function:	RecFileSecObjsRead
-* Returns:	RecError:		Non zero if read fails.
-* Purpose:	Read section image objects from files for all sections
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads section image objects from files for all sections
 *		with indicies in given range.
-* Global refs:	-
-* Parameters:	HGUDlpList *secList:	Given section list.
-*		int minIdx:		Minimum index of range.
-*		int maxIdx:		Maximum index of range.
-*		int allSecFlag:		Flag to read all section's if
+* \param	secList			Given section list.
+* \param	minIdx			Minimum index of range.
+* \param	maxIdx			Maximum index of range.
+* \param	allSecFlag		Flag to read all section's if
 *					non zero.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+* \param	eMsg			Destination pointer for messages.
+*/
 RecError	RecFileSecObjsRead(HGUDlpList *secList, int minIdx, int maxIdx,
 				   int allSecFlag, char **eMsg)
 {
@@ -775,18 +818,15 @@ RecError	RecFileSecObjsRead(HGUDlpList *secList, int minIdx, int maxIdx,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecObjsFree
-* Returns:	void
-* Purpose:	Free section image objects from files for all sections
+/*!
+* \ingroup	Reconstruct
+* \brief	Free section image objects from files for all sections
 *		with indicies in given range.
-* Global refs:	-
-* Parameters:	HGUDlpList *secList:	Given section list.
-*		int minIdx:		Minimum index of range.
-*		int maxIdx:		Maximum index of range.
-*		int allSecFlag:		Flag to read all section's if
-*					non zero.
-************************************************************************/
+* \param	secList			Given section list.
+* \param	minIdx			Minimum index of range.
+* \param	maxIdx			Maximum index of range.
+* \param	allSecFlag		Flag to read all section's if non zero.
+*/
 void		RecFileSecObjsFree(HGUDlpList *secList, int minIdx, int maxIdx,
 				   int allSecFlag)
 {
@@ -814,20 +854,18 @@ void		RecFileSecObjsFree(HGUDlpList *secList, int minIdx, int maxIdx,
 	  ("RecFileSecObjsFree FX\n"));
 }
 
-/************************************************************************
-* Function:	RecFileSecListRead
-* Returns:	RecSectionList		New section list.
-* Purpose:	Reads a bibtex style reconstruction list which contains
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads a bibtex style reconstruction list which contains
 *		both details of how a reconstruction was made and the
 *		list of section transform records.
-* Global refs:	-
-* Parameters:	RecSectionList *secList: Reconstruction section list.
-*		int *numSec:		Ptr for number of sections in
-*					the list.
-*		FILE *fP:		Input file.
-*		RecError *dstErr:	Destination pointer for error.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+* \param	secList			Reconstruction section list.
+* \param	numSec			Destination pointer for the number
+*					of sections in the list.
+* \param	fP			Destination error pointer.
+* \param	eMsg			Destination pointer for messages.
+*/
 RecError	RecFileSecListRead(RecSectionList *secList,
 				   int *numSec, FILE *fP, char **eMsg)
 {
@@ -876,18 +914,23 @@ RecError	RecFileSecListRead(RecSectionList *secList,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecIdentRead
-* Returns:	RecError:		Non zero if read fails.
-* Purpose:	Read the file identification to establish that this is
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads the file identification to establish that this is
 *		a valid  reconstruction file and that is's version
-*		number is reasonable.
-* Global refs:	-
-* Parameters:	int *version:		Ptr for version number.
-*		FILE *fP:		Input file stream.
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+* 		number is reasonable.
+* \param	version			Destination pinter for version number.
+* \param	fP			File pointer.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecIdentRead(int *version, FILE *fP, char **eMsg)
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief
+* \param	(REC_DBG_FILE|REC_DBG_LVL_FN|REC_DBG_LVL_2)
+*/
 {
   BibFileField	*idField,
 		*vField;
@@ -992,16 +1035,16 @@ static RecError	RecFileSecIdentRead(int *version, FILE *fP, char **eMsg)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecAtrbRead
-* Returns:	RecError:		Non zero on error.
-* Purpose:	Reads the reconstruct section list attributes.
-* Global refs:	-
-* Parameters:	RecSectionListAtrb *atrb: Section list attributes.
-*		FILE *fP:		Input file.
-*		RecError *dstErr:	Destination pointer for error.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads the reconstruct section list attributes.
+* \param	atrb			Section list attributres data 
+* 					attributres to be filled in.
+* \param	version			Version number.
+* \param	fP			File pointer.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	 RecFileSecAtrbRead(RecSectionListAtrb *atrb, int version,
 				    FILE *fP, char **eMsg)
 {
@@ -1086,16 +1129,16 @@ static RecError	 RecFileSecAtrbRead(RecSectionListAtrb *atrb, int version,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecRecRead
-* Returns:	RecError:		Non zero on error.
-* Purpose:	Reads the reconstruct reconstruction information.
-* Global refs:	-
-* Parameters:	RecReconstruction *rec:	Reconstruction information.
-*		FILE *fP:		Input file.
-*		RecError *dstErr:	Destination pointer for error.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads the reconstruct reconstruction information.
+* \param	rec			Reconstruct information data structure
+* 					to be filled in.
+* \param	version			Version number.
+* \param	fP			File pointer.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	 RecFileSecRecRead(RecReconstruction *rec, int version,
 				   FILE *fP, char **eMsg)
 {
@@ -1269,20 +1312,19 @@ static RecError	 RecFileSecRecRead(RecReconstruction *rec, int version,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecSecListRead
-* Returns:	RecError:		Non zero on error.
-* Purpose:	Reads the body of a bibtex style list of section
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads the body of a bibtex style list of section
 *		transform records from the given file stream, parsing
-*		parsing them and building a linked list of sections.
-* Global refs:	-
-* Parameters:	HGUDlpList *secList:	Section list.
-*		int *numSec:		Ptr for number of sections in
+*		them and building a linked list of sections.
+* \param	secList			Section list.
+* \param	numSec			Ptr for number of sections in
 *					the list.
-*		int version:		File version number.
-*		FILE *fP:		Input file.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+* \param	version			Version number.
+* \param	fP			File pointer.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecSecListRead(HGUDlpList *secList, int *numSec,
 				      int version, FILE *fP, char **eMsg)
 {
@@ -1355,7 +1397,7 @@ static RecError	RecFileSecSecListRead(HGUDlpList *secList, int *numSec,
 	errFlag = REC_ERR_READ;
 	(void )sprintf(errBuf,
 		       "unsupported file version %d.",
-		       version, 1);
+		       version);
         break;
     }
   }
@@ -1372,14 +1414,14 @@ static RecError	RecFileSecSecListRead(HGUDlpList *secList, int *numSec,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileObjWlzRead
-* Returns:	RecError:		Non zero on error.
-* Purpose:	Reads a woolz object from the the given file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		WlzObject **obj:	Given woolz object.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads a woolz object from the the given file.
+* \param	fP			File pointer.
+* \param	obj			Destination pointer fow Woolz
+*					object.
+*/
 RecError	RecFileObjWlzRead(FILE *fP, WlzObject **obj)
 {
   RecError	errFlag = REC_ERR_FUNC;
@@ -1406,15 +1448,13 @@ RecError	RecFileObjWlzRead(FILE *fP, WlzObject **obj)
   return(errFlag);
 }
 
-
-/************************************************************************
-* Function:	RecFileObjWlzWrite
-* Returns:	RecError:		Non zero on error.
-* Purpose:	Writes the given woolz object to the given file stream.
-* Global refs:	-
-* Parameters:	FILE *fP:		Output file stream.
-*		WlzObject *obj:		Given woolz object.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Writes a woolz object to the given file.
+* \param	fP			File pointer.
+* \param	obj			Woolz object to be written.
+*/
 RecError	RecFileObjWlzWrite(FILE *fP, WlzObject *obj)
 {
   RecError	errFlag = REC_ERR_WRITE;
@@ -1436,19 +1476,21 @@ RecError	RecFileObjWlzWrite(FILE *fP, WlzObject *obj)
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileSecRecordReadAndParse
-* Returns:	RecError		Non zero on error.
-* Purpose:	Reads and parses the next BibFile section record from
-*		the given file stream. The record is parsed into the
-*		given section data structure.
-* Global refs:	-
-* Parameters:	RecSection *sec:	Given section (allocated).
-*		int *doneFlag:		Non-error, done flag.
-*		int *recNum:		Used to count records parsed.
-*		FILE *fP:		Input file stream.
-*		char **eMsg:		Ptr for any error messages.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Reads and parses the next BibFile section record from
+*               the given file stream. The record is parsed into the
+*               given section data structure.
+* \param	sec			Section list (already allocated).
+* \param	doneFlag		Destination pointer for a non-error,
+*					done flag.
+* \param	recNum			Destination pointer for a record
+*					counter, which may be used to count
+*					the number of words parsed.
+* \param	fP			File pointer.
+* \param	eMsg			Destination pointer for messages.
+*/
 static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
 					     int *recNum, FILE *fP,
 					     char **eMsg)
@@ -1568,14 +1610,15 @@ static RecError	RecFileSecRecordReadAndParse(RecSection *sec, int *doneFlag,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecFileTransfToField
-* Returns:      BibFileField *:		New field, NULL on error.
-* Purpose:      Creates fields using the bibtex file syntax for the
-*		given transform and allocate storage as required.
-* Global refs:  char *bibFileTransfFieldS: Transform field names.
-* Parameters:   WlzAffineTransform *transf:	Given transform.
-************************************************************************/
+/*!
+* \return
+* \ingroup	Reconstruct
+* \brief	Creates fields using the bibtex file syntax for the
+*               given transform and allocate storage as required.
+* 		Global bibFileTransfFieldS is used fro transform field
+*		names.
+* \param	transf			Given transform.
+*/
 BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
 {
   BibFileField	*field = NULL;
@@ -1629,20 +1672,19 @@ BibFileField	*RecFileTransfToField(WlzAffineTransform *transf)
   return(field);
 }
 
-/************************************************************************
-* Function:	RecFileFieldToTransf
-* Returns:      WlzAffineTransform:	New transform, NULL on error.
-* Purpose:      Parses bibtex file syntax fields for the transform
-*		fields and allocate storage for the new transform as
-*		required.
-* Note:		The transform's linkcount is not set by this function.
-* Global refs:  char *bibFileTransfFieldS: Transform field names.
-* Parameters:   BibFileField *field:	Given field which is at the top
-*					of the transform fields to be
-*					parsed.
-*		int defaultFlg:		Allow default transform fields
-*					if non zero.
-************************************************************************/
+/*!
+* \return
+* \ingroup	Reconstruct
+* \brief	Parses bibtex file syntax fields for the transform
+*               fields and allocate storage for the new transform as
+*               required.
+* 		Note: The transform's linkcount is not set by this function.
+* \param	field			Given field which is at the top
+*                                       of the transform fields to be
+*                                       parsed.
+* \param	defaultFlg		Allow default transform fields
+*                                       if non zero.
+*/
 WlzAffineTransform	*RecFileFieldToTransf(BibFileField *field,
 					      int defaultFlg)
 {

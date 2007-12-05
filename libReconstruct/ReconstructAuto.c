@@ -1,51 +1,71 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:      Mouse Atlas
-* Title:        ReconstructAuto.c				
-* Date:         April 1999					
-* Author:       Bill Hill                                              
-* Copyright:	1999 Medical Research Council, UK.		
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for the automatic registration of
-*		serial sections for the MRC Human Genetics Unit	
-*		reconstruction library.				
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
+#else
+static char _ReconstructAuto_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructAuto.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for the automatic registration of
+*		serial sections.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
+
 #include <Reconstruct.h>
 #include <string.h>
 
-/************************************************************************
-* Function:	RecAuto						
-* Returns:	RecError:		Non zero if registration fails.
-* Purpose:	Performs the automatic registration of serial sections.
-* Global refs:	-						
-* Parameters:	RecControl *rCtrl:	The registration control data
-*					structure.		
-*		RecPPControl *ppCtrl:	Pre-processing control data
-*					structure.		
-*		HGUDlpList *secList:	Section list.		
-*		int *cancelFlag:	If non NULL and the value 
-*					pointed to is (or becomes) 
-*					non zero then the automatic
-*					registration is halted.	
-*		RecSecUpdateFunction secFn: Application supplied 
-*					section update function. This
-*					function is responsible for
-*					replacing the section in the
-*					list, it may also display it,
-*					etc, ....		
-*		void *secData:		Application supplied data for
-*					section update function.
-*		RecWorkFunction workFn:	Application supplied work
-*					function.		
-*		void *workData:		Application supplied data for
-*					the work function.	
-*		char **eMsg:		Ptr for error message strings.
-************************************************************************/
+/*!
+* \return	Non zero if registration fails.
+* \ingroup	Reconstruct
+* \brief	Performs the automatic registration of serial sections.
+* \param	rCtrl			The registration control data
+* 					structure.
+* \param	ppCtrl			Pre-processing control data
+*					structure.
+* \param	secList			Section list.
+* \param	cancelFlag		Cancel if flag pointed to is non-zero.
+* \param	secFn			application supplied section update
+*					function. This function is responsible
+*					for replacing the section in the list,
+*					it may also display it, etc, ....
+* \param	secData			Application supplied data for section
+* 					update function.
+* \param	workFn			Application supplied work function.
+* \param	workData		Application supplied data for the
+*					work function.
+* \param	eMsg			Pointer for error message strings.
+*/
 RecError	RecAuto(RecControl *rCtrl, RecPPControl *ppCtrl,
 			HGUDlpList *secList, int *cancelFlag,
 			RecSecUpdateFunction secFn, void *secData,
@@ -183,7 +203,7 @@ RecError	RecAuto(RecControl *rCtrl, RecPPControl *ppCtrl,
       case REC_ERR_LIST:
         *eMsg = AlcStrDup(errMsgInvalidListStr);
         break;
-      deafult:
+      default:
         break;
     }
   }

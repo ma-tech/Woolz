@@ -1,40 +1,75 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructMisc.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides miscellaneous small functions for the the
-*		MRC Human Genetics Unit reconstruction library.	
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
+#else
+static char _ReconstructMisc_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructMisc.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides miscellaneous small functions for the the
+*		Revconstruct library.
+* \ingroup	Revconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 
-int		RecMinOf4I(int val1, int val2, int val3, int val4),
-		RecMaxOf4I(int val1, int val2, int val3, int val4);
-RecError	RecErrorFromWlz(WlzErrorNum wlzErr);
+int				RecMinOf4I(
+				  int val1,
+				  int val2,
+				  int val3,
+				  int val4);
+int				RecMaxOf4I(
+				  int val1,
+				  int val2,
+				  int val3,
+				  int val4);
+RecError			RecErrorFromWlz(
+				  WlzErrorNum wlzErr);
 
-/************************************************************************
-* Function:	RecPowerOfTwoC2I				
-* Returns:	WlzIVertex2:		Calculated powers of two.
-* Purpose:	Uses RecPowerOfTwo() for x,y coordinate pairs.	
-*		Calculates the pair of integers that are an integer
-*		power of two and greater than or equal to the given
-*		pair.						
-* Global refs:	-						
-* Parameters:	WlzIVertex2 *ipLarger:	Destination for pair that
-*					has each component an integer
-*					power of two that is greater
-*					than or equal to the given
-*					component.		
-*		WlzIVertex2 given:	Given coordinate pair.	
-************************************************************************/
+/*!
+* \return	Calculated powers of two.
+* \ingroup	Reconstruct
+* \brief	Uses RecPowerOfTwo() for x,y coordinate pairs.
+*               Calculates the pair of integers that are an integer
+*               power of two and greater than or equal to the given
+*               pair.
+* \param	ipLarger		Destination pointer for pair that
+*                                       has each component an integer
+*                                       power of two that is greater
+*                                       than or equal to the given
+*                                       component.
+* \param	given			Given coordinate pair.
+*/
 WlzIVertex2	RecPowerOfTwoC2I(WlzIVertex2 *ipLarger, WlzIVertex2 given)
 {
   WlzIVertex2	powOfTwo;
@@ -57,18 +92,18 @@ WlzIVertex2	RecPowerOfTwoC2I(WlzIVertex2 *ipLarger, WlzIVertex2 given)
 	   powOfTwo.vtX, powOfTwo.vtY));
   return(powOfTwo);
 }
-/************************************************************************
-* Function:	RecPowerOfTwo					
-* Returns:	int:			Calculated power of two.
-* Purpose:	Calculates an integer that is an integer power of two
-*		and greater than or equal to the given integer.	
-* Global refs:	-						
-* Parameters:	int *ipLarger:		Destination for integer that is
-*					an integer power of two and is
-*					for greater than or equal to
-*					the given integer.	
-*		unsigned int given:	Given integer.		
-************************************************************************/
+
+/*!
+* \return	Calculated power of two.
+* \ingroup	Reconstruct
+* \brief	Calculates an integer that is an integer power of two
+*               and greater than or equal to the given integer.
+* \param	ipLarger		Destinationpointer for integer that
+*                                       is an integer power of two and is
+*                                       for greater than or equal to
+*                                       the given integer.
+* \param	given			Given integer.
+*/
 int		RecPowerOfTwo(int *ipLarger, unsigned int given)
 {
   int		n = 1,
@@ -92,16 +127,15 @@ int		RecPowerOfTwo(int *ipLarger, unsigned int given)
   return(powOfTwo);
 }
 
-/************************************************************************
-* Function:	RecMinOf4I					
-* Returns:	int:			Minimum value.		
-* Purpose:	Given four values, finds and returns the minimum.
-* Global refs:	-						
-* Parameters:	int val1:		First value.		
-*		int val2:		Second value.		
-*		int val3:		Third value.		
-*		int val4:		Forth value.		
-************************************************************************/
+/*!
+* \return	Minimum value.
+* \ingroup	Reconstruct
+* \brief	Given four values, finds and returns the minimum.
+* \param	val1			First value.
+* \param	val2			Second value.
+* \param	val3			Third value.
+* \param	val4			Forth value.
+*/
 int		RecMinOf4I(int val1, int val2, int val3, int val4)
 {
   int		minValue;
@@ -131,16 +165,15 @@ int		RecMinOf4I(int val1, int val2, int val3, int val4)
   return(minValue);
 }
 
-/************************************************************************
-* Function:	RecMaxOf4I					
-* Returns:	int:			Maximum value.		
-* Purpose:	Given four values, finds and returns the maximum.
-* Global refs:	-						
-* Parameters:	int val1:		First value.		
-*		int val2:		Second value.		
-*		int val3:		Third value.		
-*		int val4:		Forth value.		
-************************************************************************/
+/*!
+* \return	Maximum value.
+* \ingroup	Reconstruct
+* \brief	Given four values, finds and returns the maximum.
+* \param	val1			First value.
+* \param	val2			Second value.
+* \param	val3			Third value.
+* \param	val4			Forth value.
+*/
 int		RecMaxOf4I(int val1, int val2, int val3, int val4)
 {
   int		maxValue;
@@ -170,16 +203,14 @@ int		RecMaxOf4I(int val1, int val2, int val3, int val4)
   return(maxValue);
 }
 
-/************************************************************************
-* Function:	RecUCharToShort					
-* Returns:	void						
-* Purpose:	Copies the given unsigned chars to shorts using the
-*		given buffers.					
-* Global refs:	-						
-* Parameters:	short *sBuf:		Short buffer.		
-*		unsigned char *ucBuf:	Unsigned char buffer.	
-*		int count:		Number of elements in buffer.
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Copies the given unsigned chars to shorts using the
+*               given buffers.
+* \param	sBuf			Short buffer.
+* \param	cBuf			Unsigned char buffer.
+* \param	count			Number of elements in buffer.
+*/
 void		RecUCharToShort(short *sBuf, unsigned char *ucBuf, int count)
 {
   REC_DBG((REC_DBG_MISC|REC_DBG_LVL_FN|REC_DBG_LVL_2),
@@ -193,16 +224,14 @@ void		RecUCharToShort(short *sBuf, unsigned char *ucBuf, int count)
 	  ("RecUCharToShort FX\n"));
 }
 
-/************************************************************************
-* Function:	RecUCharToInt					
-* Returns:	void						
-* Purpose:	Copies the given unsigned chars to ints using the
-*		given buffers.					
-* Global refs:	-						
-* Parameters:	int *iBuf:		Int buffer.		
-*		unsigned char *ucBuf:	Unsigned char buffer.	
-*		int count:		Number of elements in buffer.
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Copies the given unsigned chars to ints using the
+*               given buffers.
+* \param	iBuf			Int buffer.
+* \param	cBuf			Unsigned char buffer.
+* \param	count			Number of elements in buffer.
+*/
 void		RecUCharToInt(int *iBuf, unsigned char *ucBuf, int count)
 {
   REC_DBG((REC_DBG_MISC|REC_DBG_LVL_FN|REC_DBG_LVL_2),
@@ -216,14 +245,13 @@ void		RecUCharToInt(int *iBuf, unsigned char *ucBuf, int count)
 	  ("RecUCharToInt FX\n"));
 }
 
-/************************************************************************
-* Function:	RecErrorToStr					
-* Returns:	const char *:		Error string.		
-* Purpose:	Returns a pointer to a const error string appropriate
-*		to the given error.				
-* Global refs:	-						
-* Parameters:	RecError errFlag:	Given error.		
-************************************************************************/
+/*!
+* \return	Error string.
+* \ingroup	Reconstruct
+* \brief	Returns a pointer to a const error string appropriate
+*               to the given error.
+* \param	errFlag			Given error.
+*/
 const char	*RecErrorToStr(RecError errFlag)
 {
   const char	*errStr;
@@ -289,14 +317,13 @@ const char	*RecErrorToStr(RecError errFlag)
     return(errStr);
 }
 
-/************************************************************************
-* Function:	RecMethodToStr					
-* Returns:	const char *:		Method string.		
-* Purpose:	Returns a pointer to a const error string appropriate
-*		to the given error.				
-* Global refs:	-						
-* Parameters:	RecMethod method:	Given method.		
-************************************************************************/
+/*!
+* \return	Method string.
+* \ingroup	Reconstruct
+* \brief	Returns a pointer to a const error string appropriate
+*               to the given error.
+* \param	method			Given method.
+*/
 const char	*RecMethodToStr(RecMethod method)
 {
   const char	*mthdStr;
@@ -334,14 +361,13 @@ const char	*RecMethodToStr(RecMethod method)
     return(mthdStr);
 }
 
-/************************************************************************
-* Function:	RecErrorFromWlz					
-* Returns:	RecError:		Reconstruct error code.	
-* Purpose:	Converts the given Woolz error code into the 	
-*		appropriate reconstruct error code.		
-* Global refs:	-						
-* Parameters:	WlzErrorNum wlzErr:	Given woolz error code.	
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Converts the given Woolz error code into the appropriate
+*		reconstruct error code.
+* \param	wlzErr			Given woolz error code.
+*/
 RecError	RecErrorFromWlz(WlzErrorNum wlzErr)
 {
   RecError	recErrNum  = REC_ERR_WLZ;

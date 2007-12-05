@@ -1,40 +1,72 @@
 #ifndef RECONSTRUCTTYPE_H
-#pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructType.h				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Header file with type definitions for the MRC Human
-*		Genetics Unit reconstruction library.		
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
 #define RECONSTRUCTTYPE_H
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#pragma ident "MRC HGU $Id$"
+#else
+static char _ReconstructType_h[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructType.h
+* \author       Bill Hill
+* \date         November 2007
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Header file with type definitions for the reconstruct library.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum
+/*!
+* \enum         _RecError
+* \ingroup      Reconstruct
+* \brief        Reconstruct error codes.
+*               Typedef: ::RecError.
+*/
+typedef enum _RecError
 {
-  REC_ERR_NONE		= (0),
-  REC_ERR_USAGE,			       /* Command line usage invalid */
-  REC_ERR_ARGS,				   /* Command line arguments invalid */
-  REC_ERR_READ,						     /* Read failure */
-  REC_ERR_WRITE,					    /* Write failure */
-  REC_ERR_MALLOC,				/* Memory allocation failure */
-  REC_ERR_UNIMPL,				    /* Unimplemented feature */
-  REC_ERR_WLZ,						      /* Woolz error */
-  REC_ERR_SYNTAX,					/* File syntax error */
-  REC_ERR_FUNC,				      /* Function parameters invalid */
-  REC_ERR_CANCEL,	   /* Not an error as such, more of a cancel request */
-  REC_ERR_LIST,					       /* Section list error */
+  REC_ERR_NONE		= (0),                                /*!< No error. */
+  REC_ERR_USAGE,			     /*!< Command line usage invalid */
+  REC_ERR_ARGS,				 /*!< Command line arguments invalid */
+  REC_ERR_READ,						   /*!< Read failure */
+  REC_ERR_WRITE,					  /*!< Write failure */
+  REC_ERR_MALLOC,		              /*!< Memory allocation failure */
+  REC_ERR_UNIMPL,				  /*!< Unimplemented feature */
+  REC_ERR_WLZ,					            /*!< Woolz error */
+  REC_ERR_SYNTAX,			  	      /*!< File syntax error */
+  REC_ERR_FUNC,				    /*!< Function parameters invalid */
+  REC_ERR_CANCEL,        /*!< Not an error as such, more of a cancel request */
+  REC_ERR_LIST,					     /*!< Section list error */
   REC_ERR_MAX
 } RecError;
 

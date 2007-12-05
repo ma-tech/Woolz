@@ -1,20 +1,46 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id$"
-/************************************************************************
-* Project:	Mouse Atlas
-* Title:        ReconstructCrossCor.c				
-* Date:         April 1999
-* Author:       Bill Hill                                              
-* Copyright:    1999 Medical Research Council, UK.
-*		All rights reserved.				
-* Address:	MRC Human Genetics Unit,			
-*		Western General Hospital,			
-*		Edinburgh, EH4 2XU, UK.				
-* Purpose:      Provides functions for the automatic registration of
-*		a single pair of serial sections for the MRC Human
-*		Genetics Unit reconstruction library.		
-* $Revision$
-* Maintenance:  Log changes below, with most recent at top of list.    
-************************************************************************/
+#else
+static char _ReconstructCrossCor_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         ReconstructCrossCor.c
+* \author       Bill Hill
+* \date         April 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2007 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Provides functions for the automatic registration of a single
+* 		pair of serial sections.
+* \ingroup	Reconstruct
+* \todo         -
+* \bug          None known.
+*/
 #include <Reconstruct.h>
 #include <unistd.h>
 #include <string.h>
@@ -48,45 +74,36 @@ static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
 static void	*RecCCorThrObjToFour(RecCCorArgs1 *args);
 #endif /* REC_THREADS_USED */
 
-/************************************************************************
-* Function:	RecCrossCorrelate				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Perform the cross correlation of the two given woolz
-*		objects and return their cross correlation together
-*		with the fourier transform of the second object.
-* Note:		The cross correlation data are un-normalized, this can
-*		be done by multiplying each datum by		
-*		  1.0 / sqrt(*sSq1 * *sSq2).			
-* Global refs:  -						
-* Parameters:	double **data0:		Data for/with obj0's FFT 
-*					(source: AlcDouble2Malloc)
-*					which holds the cross	
-*					correlation data on return.
-*		double **data1:		Data for/with obj1's FFT 
-*					(source: AlcDouble2Malloc).
-*		double *sSq0:		Destination for sum of squares
-*					of obj0 after any preprocessing
-*					which may be used together with
-*					sSq1 to normalize the cross-
-*					correlation data.	
-*		double *sSq1:		Destination for sum of squares
-*					of obj1 after any preprocessing
-*					which may be used together with
-*					sSq0 to normalize the cross-
-*					correlation data.	
-*		RecCcFlag ccFlags:	Crosscorrelation control flags.
-*		WlzObject *obj0:	First object for cross-	
-*					correlation.		
-*		WlzObject *obj1:	Second object for cross-
-*					correlation.		
-*		WlzIVertex2 org:	Origin of data wrt the given 
-*					woolz objects, should be less
-*					than or equal to the minimum
-*					coordinate pair.	
-*		WlzIVertex2 size:	The size of data0 and data1.
-*		RecPPControl *ppCtrl:	Pre-processing control data
-*					structure.		
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Performs the cross correlation of the two given Woolz
+*		objects and return their cross correlation together with the
+*		fourier transform of the second object. The cross correlation
+*		data are un-normalized, this can be done by multiplying each
+*		datum by \f$\frac{1}{\sqrt{ss1 ss2}}\f$, where \f$ss1\f$ and
+*		\f$ss2\f$ are the sums of squares of the two objects.
+* \param	data0			Given object (obj0) data and returned
+*					FFT.
+* \param	data1			Given object (obj1) data and returned
+*					FFT.
+* \param	sSq0			Destination for sum of squares of obj0
+*					after any preprocessing which may be
+*					used together with sSq1 to normalize
+*					the cross-correlation data.
+* \param	sSq1			Destination for sum of squares of obj1
+*					after any preprocessing which may be
+*					used together with sSq0 to normalize
+*					the cross-correlation data.
+* \param	ccFlags			Crosscorrelation control flags.
+* \param	obj0			First object for cross-correlation.
+* \param	obj1			Second object for cross-correlation.
+* \param	org			Origin of data wrt the given woolz
+* 					objects, should be less than or equal
+* 					to the minimum coordinate pair.
+* \param	size			The size of data0 and data1.
+* \param	ppCtrl			Pre-processing control data structure.
+*/
 RecError	RecCrossCorrelate(double **data0, double **data1,
 			          double *sSq0, double *sSq1,
 			          RecCcFlag ccFlags,
@@ -292,24 +309,24 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
   return(errFlag);
 }
 
-/************************************************************************
-* Function:	RecCCorObjToFour				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Pre process  the given object and calculate it's (real)
-*		Fourier transform.				
-* Global refs:  -						
-* Parameters:	double **data:		Data for/with obj's FT (in
-*					double2alloc style).	
-*		double *sSq:		Destination for sum of squares
-*					of obj after any preprocessing.
-*		WlzObject *obj:		Given object.		
-*		WlzIVertex2 org:		Origin of data wrt the given 
-*					woolz object.		
-*		WlzIVertex2 size:	The size of data.	
-*		RecPPControl *ppCtrl:	Pre-processing control data
-*					structure.		
-*		int cThr:		Concurrent threads available.
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Preprocesses the given object and calculates it's (real)
+*		Fourier transform.
+* \param	data			Given object data and returned FFT.
+* \param	reBuf			Buffer for real data row or column.
+* \param	imBuf			Buffer for imaginary data row or
+*					column.
+* \param	sSq			Destination for sum of squares of the
+*					object after any preprocessing.
+* \param	obj			Given object.
+* \param	org			Origin of data wrt the given woolz
+* 					object.
+* \param	size			The size of data.
+* \param	ppCtrl			Preprocessing control data structure.
+* \param	cThr			Concurrent threads available.
+*/
 static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
 				 double *sSq, WlzObject *obj,
 				 WlzIVertex2 org, WlzIVertex2 size,
@@ -377,14 +394,12 @@ static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
 }
 
 #ifdef REC_THREADS_USED
-/************************************************************************
-* Function:     RecCCorThrObjToFour				
-* Returns:      void *:                 Always NULL.                   
-* Purpose:      Simple wrapper for RecCCorObjToFour(), used for thread
-*               creation.					
-* Global refs:  -                                                      
-* Parameters:   RecCCorArgs1 *args:     Parameter list.                
-************************************************************************/
+/*!
+* \ingroup	Reconstruct
+* \brief	Simple wrapper for RecCCorObjToFour(), used for thread
+* 		creation.
+* \param	args			Parameter list.
+*/
 static void     *RecCCorThrObjToFour(RecCCorArgs1 *args)
 {
   args->errFlag = RecCCorObjToFour(args->data, args->reBuf, args->imBuf,
@@ -394,41 +409,29 @@ static void     *RecCCorThrObjToFour(RecCCorArgs1 *args)
 }
 #endif /* REC_THREADS_USED */
 
-
-/************************************************************************
-* Function:	RecCrossCorrelateROI				
-* Returns:	RecError:		Non zero on error.	
-* Purpose:	Performs a cross correlation on the two rectangular
-*		regions of interest given woolz objects.	
-* Global refs:  -						
-* Parameters:	*ccVal:			Destination pointer for the
-*					normalised [0.0 - 1.0] cross-
-*					correlation value (may be
-*					NULL if notrequired).	
-*		double ***data0:	Data for obj0's FFT (in	
-*					double2alloc style and size
-*					roiSz), if NULL the data space
-*					is AlcFree'd at end of function 
-*					else if *data0 is NULL data 
-*					space is not AlcFree'd and is
-*					returned with the normalised
-*					(range [0.0 - 1.0] cross-
-*					correlation data using *data0.
-*		double ***data1:	Data for obj1's FFT as for
-*					data0, except that if not
-*					NULL the FFT  data is returned
-*					using *data1.		
-*		WlzObject *obj0:	First object for cross-	
-*					correlation.		
-*		WlzObject *obj1:	Second object for cross-
-*					correlation.		
-*		WlzIVertex2 roiCtr:	The center of the region of 
-*					interest wrt obj0 and obj1.
-*		WlzIVertex2 roiSz:	The size of the regions of 
-*					interest.		
-*		RecPPControl *ppCtrl:	Pre-processing control data
-*					structure.		
-************************************************************************/
+/*!
+* \return	Error code.
+* \ingroup	Reconstruct
+* \brief	Performs a cross correlation on the two rectangular regions of
+* 		interest of the given woolz objects.
+* \param	newCC			Destination pointer for the normalised
+* 				        [0.0 - 1.0] cross-correlation value
+* 				        (may be NULL if notrequired).
+* \param	data0			Data for obj0's FFT (size roiSz), if
+* 					NULL the data space is freed and is
+*					returned with the normalised (range
+*					[0.0 - 1.0]) cross-correlation data
+*					using *data0.
+* \param	data1			Data for obj1's FFT as for data0,
+* 					except that if not NULL the FFT  data
+* 					is returned using *data1.
+* \param	obj0			First object for cross-correlation.
+* \param	obj1			Second object for cross-correlation.
+* \param	roiCtr			The center of the region of interest
+* 					wrt obj0 and obj1.
+* \param	roiSz			The size of the region of interest.
+* \param	ppCtrl			Preprocessing control data structure.
+*/
 RecError	RecCrossCorrelateROI(double *newCC,
 				     double ***data0, double ***data1,
 				     WlzObject *obj0, WlzObject *obj1,
