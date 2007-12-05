@@ -1,0 +1,49 @@
+Core Woolz README
+=================
+
+bill@hgu.mrc.ac.uk 20070914
+
+Contents
+--------
+
+
+1) What is Woolz
+	a) History
+        b) Authors
+	c) Other Acknowledgements
+2) Where can I get the Woolz software?
+3) How can I build the libraries?
+        a) Compatibility issues
+        b) Compiler warning messages
+4) How can I write my own Woolz code?
+	a) Where to start
+
+
+1) What is Woolz?
+----------------
+
+
+Woolz is a set of software libraries and executables for image processing
+and pattern recognition. It has been written in ANSI standard C so that
+it will build and run on all computing platforms that support some basic
+requirements, such as supporting at least 32 bit integers. The software
+is know to build on GNU/Linux, MacOSX and Solaris systems. It will also
+build using MingW on Windows systems.
+
+The code is partitioned into the following modules:
+
+libAlc:		A basic library providing generic data structures and
+		memory allocation functions.
+TODO
+
+1a) History
+===========
+
+1b) Authors
+===========
+
+1c) Other Acknowledgements
+==========================
+
+The skeleton for the autoconf system was shamelessly copied from Tina
+(http://www.tina-vision.net).

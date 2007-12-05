@@ -1,0 +1,10 @@
+-*-text-*-
+
+The Woolz software has been developed over many years by many people with its
+roots in chromosome spread image analysis and microscopy imaging.  The primary
+code design and develoment is due to Denis Rutovitz with the initial C
+implementation was due to Jim Piper.  Since 1994 the code has been maintained
+and extended by Richard Baldock, Bill Hill and Jianguo Rao at the MRC Human
+Genetics, Edinburgh, UK.
+
+Contact WOOLZ-DEV.hgu.mrc.ac.uk
