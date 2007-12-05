@@ -1,5 +1,5 @@
 ##
-# \file         configure.ac
+# \file         configure.in
 # \author       Bill Hill
 # \date         September 2007
 # \version      $Id$
@@ -41,12 +41,14 @@ AC_GNU_SOURCE
 
 AM_INIT_AUTOMAKE
 
+AC_PROG_CC
+
 AC_CONFIG_SRCDIR([libWlz/Wlz.h])
-AC_CONFIG_HEADERS([config.h])
 
 # Set defaults
 AC_PREFIX_DEFAULT(/opt/MouseAtlas)
 AC_DISABLE_SHARED
+CPUDEF=""
 USE_CTAGS=1
 USE_ETAGS=0
 ENABLE_EXTFF="no"
@@ -59,7 +61,7 @@ JAVACC="NONE"
 
 # Check CPU type
 echo "Checking cpu/system type"
-case $host_cpu in
+case $target_cpu in
   i386|i486|i586|i686)
     CPUDEF="-D__x86"
     ;;
@@ -75,14 +77,14 @@ case $host_cpu in
   sparc|sparc64)
     CPUDEF="-D__sparc"
     ;;
-  ppc)
+  ppc|powerpc)
     CPUDEF="-D__ppc"
     ;;
   mips)
     CPUDEF="-D__mpis"
     ;;
   *)
-    echo "CPU type unknown."
+    echo "CPU type $target_cpu unknown."
     ;;
 esac
 
@@ -151,7 +153,7 @@ CFLAGS=""
 AC_PROG_CC
 if test "$GCC" = yes
 then
-  CFLAGS="$CFLAGS -Wall"
+  CFLAGS="${CFLAGS} -Wall"
 fi
 
 CFLAGS="${CFLAGS} ${CPUDEF}"
@@ -166,28 +168,28 @@ AC_ARG_ENABLE(optimise,
     # GNU CC
     if test "$CC" = "gcc"
     then
-      CFLAGS="$CFLAGS -O2"
+      CFLAGS="${CFLAGS} -O2"
     else
       # AIX CC
       if test "`uname`" = "AIX"
       then
-        CFLAGS="$CFLAGS -O3"
+        CFLAGS="${CFLAGS} -O3"
       fi
       # SGI CC
       if test "`uname`" = "IRIX" || test "`uname`" = "IRIX64" 
       then
-        CFLAGS="$CFLAGS -Ofast"
+        CFLAGS="${CFLAGS} -Ofast"
 	LDDFLAGS="${LDFLAGS} -IPA"
       fi
       # HP-UX CC
       if test "`uname`" = "HP-UX"
       then
-        CFLAGS="$CFLAGS -fast"
+        CFLAGS="${CFLAGS} -fast"
       fi
       # Sun CC
       if test "`uname`" = "SunOS"
       then
-        CFLAGS="$CFLAGS -fast"
+        CFLAGS="${CFLAGS} -fast"
       fi
     fi)
 
@@ -196,7 +198,7 @@ AC_ARG_ENABLE(openmp,
     # INTEL CC
     if test "$CC" = "icc"
     then
-      CFLAGS="$CFLAGS -openmp"
+      CFLAGS="${CFLAGS} -openmp"
     fi)
 
 AC_ARG_ENABLE(profile,
