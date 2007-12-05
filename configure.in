@@ -225,7 +225,8 @@ AC_CONFIG_FILES([	Makefile \
 		        libAlc/Makefile \
 			libAlg/Makefile \
 			libWlz/Makefile \
-			binWlz/Makefile ])
+			binWlz/Makefile \
+			binWlzTst/Makefile ])
 
 if test x${ENABLE_EXTFF} = "xyes"
 then
