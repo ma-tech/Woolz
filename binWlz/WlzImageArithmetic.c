@@ -331,7 +331,18 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if((outObj = WlzImageArithmetic(inObj[0], inObj[1], operator, 1,
+    if( WlzGreyTypeFromObj(inObj[0], &errNum) == WLZ_GREY_RGBA ){
+      if((outObj = WlzRGBAImageArithmetic(inObj[0], inObj[1], operator, 1,
+				      &errNum)) == NULL)
+      {
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s: failed to compute new object (%s).\n",
+		       *argv, errMsg);
+      }
+    }
+    else if((outObj = WlzImageArithmetic(inObj[0], inObj[1], operator, 1,
 				    &errNum)) == NULL)
     {
       ok = 0;
@@ -341,7 +352,7 @@ int             main(int argc, char **argv)
 		     *argv, errMsg);
     }
   }
-  if(ok && (norm != WLZ_IMARNORM_NONE))
+  if(ok && (norm != WLZ_IMARNORM_NONE) && (WlzGreyTypeFromObj(inObj[0], &errNum) != WLZ_GREY_RGBA) )
   {
     if((errNum = WlzGreyRange(outObj, gMin+ 2, gMax + 2)) != WLZ_ERR_NONE)
     {

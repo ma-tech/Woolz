@@ -4357,6 +4357,15 @@ extern WlzObject 		*WlzRGBAImageArithmetic(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzRGBAScalarBinaryOp.c			       			*
+************************************************************************/
+extern WlzObject 		*WlzRGBAScalarBinaryOp(
+				  WlzObject		*o1,
+				  WlzPixelV		pval,
+				  WlzBinaryOperatorType op,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzRGBARange.c							*
 ************************************************************************/
 extern WlzErrorNum 		WlzRGBAModulusRange(

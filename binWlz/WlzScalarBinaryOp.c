@@ -156,6 +156,11 @@ int main(int	argc,
   int		option;
   int		verboseFlg=0;
   WlzBinaryOperatorType operator = WLZ_BO_ADD;
+  FILE		*inFile;
+  double	val;
+  WlzPixelV	pval;
+  WlzObject	*obj, *obj1;
+  WlzErrorNum	errNum;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -198,6 +203,61 @@ int main(int	argc,
     default:
       usage(argv[0]);
       return( 1 );
+    }
+  }
+
+  /* get the scalar value */
+  switch( operator ){
+  case WLZ_BO_ADD:
+  case WLZ_BO_SUBTRACT:
+  case WLZ_BO_MULTIPLY:
+  case WLZ_BO_DIVIDE:
+  case WLZ_BO_MODULUS:
+  case WLZ_BO_EQ:
+  case WLZ_BO_NE:
+  case WLZ_BO_GT:
+  case WLZ_BO_GE:
+  case WLZ_BO_LT:
+  case WLZ_BO_LE:
+  case WLZ_BO_AND:
+  case WLZ_BO_OR:
+  case WLZ_BO_XOR:
+  case WLZ_BO_MAX:
+  case WLZ_BO_MIN:
+    if( optind < argc ){
+      val = atof(*(argv+optind));
+      pval.type = WLZ_GREY_DOUBLE;
+      pval.v.dbv = val;
+      optind++;
+    }
+    break;
+
+  case WLZ_BO_MAGNITUDE:
+    break;
+  }
+
+  /* get the file pointer */
+  inFile = stdin;
+  if( optind < argc ){
+    if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
+      fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
+      usage(argv[0]);
+      return( 1 );
+    }
+  }
+
+  /* process objects */
+  while( (obj = WlzReadObj(inFile, NULL)) != NULL )
+  {
+    if( WlzGreyTypeFromObj(obj, &errNum) == WLZ_GREY_RGBA ){
+      obj1 = WlzRGBAScalarBinaryOp(obj, pval, operator, &errNum);
+      WlzWriteObj(stdout, obj1);
+      WlzFreeObj(obj1);
+    }
+    else {
+      WlzScalarBinaryOp(obj, pval, obj, operator);
+      WlzWriteObj(stdout, obj);
+      WlzFreeObj(obj);
     }
   }
 

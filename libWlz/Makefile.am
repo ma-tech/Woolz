@@ -166,6 +166,7 @@ libWlz_la_SOURCES 	= \
 			  WlzRGBAGreyStats.c \
 			  WlzRGBAImageArithmetic.c \
 			  WlzRGBAModGradient.c \
+			  WlzRGBAScalarBinaryOp.c \
 			  WlzRGBAPixelUtils.c \
 			  WlzRGBARange.c \
 			  WlzRGBAThreshold.c \
