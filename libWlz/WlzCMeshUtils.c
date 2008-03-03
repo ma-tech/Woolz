@@ -35,8 +35,8 @@ static char _WlzCMeshUtils_c[] = "MRC HGU $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	Utility functions for 2D and 3D conforming simplical meshes.
-*
+* \brief	Utility functions for 2D and 3D graph based conforming
+* 		simplical meshes.
 * \ingroup	WlzMesh
 * \todo         -
 * \bug          None known.
@@ -97,20 +97,20 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
       				              idE);
       if(elm->idx >= 0)
       {
-	dSq = WlzGeomDistSq2D(elm->edg[0].nod->pos,
-	                      elm->edg[1].nod->pos);
+	dSq = WlzGeomDistSq2D(elm->edu[0].nod->pos,
+	                      elm->edu[1].nod->pos);
 	if(dSq > mesh->maxSqEdgLen)
 	{
 	  mesh->maxSqEdgLen = dSq;
 	}
-	dSq = WlzGeomDistSq2D(elm->edg[1].nod->pos,
-			      elm->edg[2].nod->pos);
+	dSq = WlzGeomDistSq2D(elm->edu[1].nod->pos,
+			      elm->edu[2].nod->pos);
 	if(dSq > mesh->maxSqEdgLen)
 	{
 	  mesh->maxSqEdgLen = dSq;
 	}
-	dSq = WlzGeomDistSq2D(elm->edg[2].nod->pos,
-	                      elm->edg[0].nod->pos);
+	dSq = WlzGeomDistSq2D(elm->edu[2].nod->pos,
+	                      elm->edu[0].nod->pos);
 	if(dSq > mesh->maxSqEdgLen)
 	{
 	  mesh->maxSqEdgLen = dSq;
@@ -150,20 +150,20 @@ void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
 	for(idF = 0; idF < 3; ++idF) /* Only need to check 3 faces
 	                                for all edges. */
 	{
-	  dSq = WlzGeomDistSq3D(elm->face[idF].edg[0].nod->pos,
-				elm->face[idF].edg[1].nod->pos);
+	  dSq = WlzGeomDistSq3D(elm->face[idF].edu[0].nod->pos,
+				elm->face[idF].edu[1].nod->pos);
 	  if(dSq > mesh->maxSqEdgLen)
 	  {
 	    mesh->maxSqEdgLen = dSq;
 	  }
-	  dSq = WlzGeomDistSq3D(elm->face[idF].edg[1].nod->pos,
-				elm->face[idF].edg[2].nod->pos);
+	  dSq = WlzGeomDistSq3D(elm->face[idF].edu[1].nod->pos,
+				elm->face[idF].edu[2].nod->pos);
 	  if(dSq > mesh->maxSqEdgLen)
 	  {
 	    mesh->maxSqEdgLen = dSq;
 	  }
-	  dSq = WlzGeomDistSq3D(elm->face[idF].edg[2].nod->pos,
-				elm->face[idF].edg[0].nod->pos);
+	  dSq = WlzGeomDistSq3D(elm->face[idF].edu[2].nod->pos,
+				elm->face[idF].edu[0].nod->pos);
 	  if(dSq > mesh->maxSqEdgLen)
 	  {
 	    mesh->maxSqEdgLen = dSq;
@@ -297,21 +297,21 @@ void            WlzCMeshUpdateBBox3D(WlzCMesh3D *mesh)
 
 /*!
 * \ingroup	WlzMesh
-* \brief	Sets or clears the boundary node flag bit for all nodes
-*		of the mesh.
+* \brief	Sets the node flags for all valid nodes of the mesh.
 * \param	mesh			Given mesh.
+* \param	flags			Flags to set.
 */
-void		WlzCMeshSetBoundNodFlags(WlzCMeshP mesh)
+void		WlzCMeshSetNodFlags(WlzCMeshP mesh, unsigned int flags)
 {
   if(mesh.v)
   {
     switch(mesh.m2->type)
     {
       case WLZ_CMESH_TRI2D:
-        WlzCMeshSetBoundNodFlags2D(mesh.m2);
+        WlzCMeshSetNodFlags2D(mesh.m2, flags);
 	break;
       case WLZ_CMESH_TET3D:
-        WlzCMeshSetBoundNodFlags3D(mesh.m3);
+        WlzCMeshSetNodFlags3D(mesh.m3, flags);
 	break;
       default:
         break;
@@ -321,13 +321,164 @@ void		WlzCMeshSetBoundNodFlags(WlzCMeshP mesh)
 
 /*!
 * \ingroup	WlzMesh
+* \brief	Sets node flags for all valid nodes of the 2D mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to set.
+*/
+void		WlzCMeshSetNodFlags2D(WlzCMesh2D *mesh, unsigned int flags)
+{
+  int		idN;
+  WlzCMeshNod2D *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nod->flags |= flags;
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Sets node flags for all valid nodes of the 3D mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to set.
+*/
+void		WlzCMeshSetNodFlags3D(WlzCMesh3D *mesh, unsigned int flags)
+{
+  int		idN;
+  WlzCMeshNod3D *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nod->flags |= flags;
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Clears the node flags for all valid nodes of the mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to clear.
+*/
+void		WlzCMeshClearNodFlags(WlzCMeshP mesh, unsigned int flags)
+{
+  if(mesh.v)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        WlzCMeshClearNodFlags2D(mesh.m2, flags);
+	break;
+      case WLZ_CMESH_TET3D:
+        WlzCMeshClearNodFlags3D(mesh.m3, flags);
+	break;
+      default:
+        break;
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Clears node flags for all valid nodes of the 2D mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to clear.
+*/
+void		WlzCMeshClearNodFlags2D(WlzCMesh2D *mesh, unsigned int flags)
+{
+  int		idN;
+  WlzCMeshNod2D *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  {
+    flags = ~flags;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nod->flags &= flags;
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Clears node flags for all valid nodes of the 3D mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to clear.
+*/
+void		WlzCMeshClearNodFlags3D(WlzCMesh3D *mesh, unsigned int flags)
+{
+  int		idN;
+  WlzCMeshNod3D *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  {
+    flags = ~flags;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nod->flags &= flags;
+      }
+    }
+  }
+}
+
+/*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
+* \brief	Sets or clears the boundary node flag bit for all nodes
+*		of the mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshSetBoundNodFlags(WlzCMeshP mesh)
+{
+  int		nBnd = 0;
+  if(mesh.v)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        nBnd = WlzCMeshSetBoundNodFlags2D(mesh.m2);
+	break;
+      case WLZ_CMESH_TET3D:
+        nBnd = WlzCMeshSetBoundNodFlags3D(mesh.m3);
+	break;
+      default:
+        break;
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
 * \brief	Sets or clears the boundary node flag bit for all nodes
 *		of the 2D mesh.
 * \param	mesh			Given mesh.
 */
-void		WlzCMeshSetBoundNodFlags2D(WlzCMesh2D *mesh)
+int		WlzCMeshSetBoundNodFlags2D(WlzCMesh2D *mesh)
 {
-  int		idN;
+  int		idN,
+  		nBnd = 0;
   WlzCMeshNod2D *nod;
 
   if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
@@ -340,22 +491,26 @@ void		WlzCMeshSetBoundNodFlags2D(WlzCMesh2D *mesh)
 	nod->flags &= ~(WLZ_CMESH_NOD_FLAG_BOUNDARY);
 	if(WlzCMeshNodIsBoundary2D(nod))
 	{
+	  ++nBnd;
 	  nod->flags |= WLZ_CMESH_NOD_FLAG_BOUNDARY;
 	}
       }
     }
   }
+  return(nBnd);
 }
 
 /*!
+* \return	Number of boundary nodes.
 * \ingroup	WlzMesh
 * \brief	Sets or clears the boundary node flag bit for all nodes
 *		of the 3D mesh.
 * \param	mesh			Given mesh.
 */
-void		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
+int		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
 {
-  int		idN;
+  int		idN,
+  		nBnd = 0;
   WlzCMeshNod3D *nod;
 
   if(mesh && (mesh->type == WLZ_CMESH_TET3D))
@@ -368,11 +523,13 @@ void		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
 	nod->flags &= ~(WLZ_CMESH_NOD_FLAG_BOUNDARY);
 	if(WlzCMeshNodIsBoundary3D(nod))
 	{
+	  ++nBnd;
 	  nod->flags |= WLZ_CMESH_NOD_FLAG_BOUNDARY;
 	}
       }
     }
   }
+  return(nBnd);
 }
 
 /*!
@@ -484,21 +641,21 @@ WlzErrorNum	WlzCMeshGetBndElm3D(WlzCMesh3D *mesh,
 int		WlzCMeshNodIsBoundary2D(WlzCMeshNod2D *nod)
 {
   int		isBnd = 0;
-  WlzCMeshEdg2D	*edg0,
-  		*edg1;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
 
   if(nod && (nod->idx >= 0))
   {
-    edg0 = edg1 = nod->edg;
+    edu0 = edu1 = nod->edu;
     do
     {
-      if((edg1->opp == NULL) || (edg1->opp == edg1))
+      if((edu1->opp == NULL) || (edu1->opp == edu1))
       {
 	isBnd = 1;
 	break;
       }
-      edg1 = edg1->nnxt;
-    } while(edg1 != edg0);
+      edu1 = edu1->nnxt;
+    } while(edu1 != edu0);
   }
   return(isBnd);
 }
@@ -517,22 +674,22 @@ int		WlzCMeshNodIsBoundary3D(WlzCMeshNod3D *nod)
 {
   int		isBnd = 0;
   WlzCMeshFace	*fce;
-  WlzCMeshEdg3D	*edg0,
-  		*edg1;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1;
 
   if(nod && (nod->idx >= 0))
   {
-    edg0 = edg1 = nod->edg;
+    edu0 = edu1 = nod->edu;
     do
     {
-      fce = edg1->face;
+      fce = edu1->face;
       if((fce->opp == NULL) || (fce->opp == fce))
       {
 	isBnd = 1;
 	break;
       }
-      edg1 = edg1->nnxt;
-    } while(edg1 != edg0);
+      edu1 = edu1->nnxt;
+    } while(edu1 != edu0);
   }
   return(isBnd);
 }
@@ -616,8 +773,8 @@ WlzErrorNum	WlzCMeshLaplacianSmooth2D(WlzCMesh2D *mesh,
   WlzDVertex2	nPos;
   WlzCMeshNod2D *nod,
   		*oNod;
-  WlzCMeshEdg2D	*edg0,
-  		*edg1;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
@@ -633,15 +790,15 @@ WlzErrorNum	WlzCMeshLaplacianSmooth2D(WlzCMesh2D *mesh,
 	  {
 	    nCnt = 0;
 	    nPos.vtX = nPos.vtY = 0.0;
-	    edg0 = edg1 = nod->edg;
+	    edu0 = edu1 = nod->edu;
 	    do
 	    {
-	      oNod = edg1->next->nod;
+	      oNod = edu1->next->nod;
 	      nPos.vtX += oNod->pos.vtX;
 	      nPos.vtY += oNod->pos.vtY;
 	      ++nCnt;
-	      edg1 = edg1->nnxt;
-	    } while(edg0 != edg1);
+	      edu1 = edu1->nnxt;
+	    } while(edu0 != edu1);
 	    if(nCnt > 0)
 	    {
 	      nod->pos.vtX = (1.0 - alpha) * nod->pos.vtX + 
@@ -687,8 +844,8 @@ WlzErrorNum	WlzCMeshLaplacianSmooth3D(WlzCMesh3D *mesh,
   WlzDVertex3	nPos;
   WlzCMeshNod3D *nod,
   		*oNod;
-  WlzCMeshEdg3D	*edg0,
-  		*edg1;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(mesh && (mesh->type == WLZ_CMESH_TET3D))
@@ -704,16 +861,16 @@ WlzErrorNum	WlzCMeshLaplacianSmooth3D(WlzCMesh3D *mesh,
 	  {
 	    nCnt = 0;
 	    nPos.vtX = nPos.vtY = nPos.vtZ = 0.0;
-	    edg0 = edg1 = nod->edg;
+	    edu0 = edu1 = nod->edu;
 	    do
 	    {
-	      oNod = edg1->next->nod;
+	      oNod = edu1->next->nod;
 	      nPos.vtX += oNod->pos.vtX;
 	      nPos.vtY += oNod->pos.vtY;
 	      nPos.vtZ += oNod->pos.vtZ;
 	      ++nCnt;
-	      edg1 = edg1->nnxt;
-	    } while(edg0 != edg1);
+	      edu1 = edu1->nnxt;
+	    } while(edu0 != edu1);
 	    if(nCnt > 0)
 	    {
 	      nod->pos.vtX = (1.0 - alpha) * nod->pos.vtX + 
@@ -1089,8 +1246,8 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   int		cnt,
   		idE,
   		idN;
-  WlzCMeshEdg2D *edg0,
-  		*edg1;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
   WlzCMeshElm2D	*elm;
   WlzErrorNum	errNum0,
   		errNum1 = WLZ_ERR_NONE;
@@ -1122,65 +1279,65 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	  errNum0 = WLZ_ERR_NONE;
 	  /* Verify each edge of element. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
-	     (elm->edg[idN].next != &(elm->edg[(idN + 1) % 3])))
+	     (elm->edu[idN].next != &(elm->edu[(idN + 1) % 3])))
 	  {
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
-	                   "elm[%d]->edg[%d].next != &(elm[%d]->edg[%d])",
+	                   "elm[%d]->edu[%d].next != &(elm[%d]->edu[%d])",
 			   idE, idN, idE, (idN + 1) % 3);
 	  }
 	  /* Verify that each edge is directed from a node. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
-	     (elm->edg[idN].nod == NULL))
+	     (elm->edu[idN].nod == NULL))
 	  {
 	    (void )sprintf(msgBuf,
-	    		   "elm[%d]->edg[%d].nod == NULL",
+	    		   "elm[%d]->edu[%d].nod == NULL",
 			   idE, idN);
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	  }
 	  /* Verify that each edge's node has not been deleted. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
-	     (elm->edg[idN].nod->idx < 0))
+	     (elm->edu[idN].nod->idx < 0))
 	  {
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
-	    		   "elm[%d]->edg[%d].nod->idx < 0",
+	    		   "elm[%d]->edu[%d].nod->idx < 0",
 			   idE, idN);
 	  }
 	  /* Verify that the each edge's node is the node. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
-	     (elm->edg[idN].nod->edg->nod != elm->edg[idN].nod))
+	     (elm->edu[idN].nod->edu->nod != elm->edu[idN].nod))
 	  {
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
-		"elm[%d]->edg[%d].nod->edg->nod != elm[%d]->edg[%d].nod",
+		"elm[%d]->edu[%d].nod->edu->nod != elm[%d]->edu[%d].nod",
 		idE, idN, idE, idN);
 	  }
 	  /* Verify that an opposite opposite edge is the edge. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
-	     ((elm->edg[idN].opp != NULL) &&
-	     (elm->edg[idN].opp->opp != &(elm->edg[idN]))))
+	     ((elm->edu[idN].opp != NULL) &&
+	     (elm->edu[idN].opp->opp != &(elm->edu[idN]))))
 	  {
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
-	    		   "elm[%d]->edg[%d].opp->opp != &(elm[%d]->edg[%d])",
+	    		   "elm[%d]->edu[%d].opp->opp != &(elm[%d]->edu[%d])",
 			   idE, idN, idE, idN);
 	  }
 	  /* Check the number of edges directed from a node is reasonable. */
 	  if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
 	  {
 	    cnt = 0;
-	    edg1 = edg0 = elm->edg[idN].nod->edg;
+	    edu1 = edu0 = elm->edu[idN].nod->edu;
 	    do
 	    {
-	      edg1 = edg1->nnxt;
+	      edu1 = edu1->nnxt;
 	    }
-	    while((cnt++ < nnxtLimit) && (edg1 != edg0));
+	    while((cnt++ < nnxtLimit) && (edu1 != edu0));
 	    if(cnt >= nnxtLimit)
 	    {
 	      errNum0 = WLZ_ERR_DOMAIN_DATA;
 	      (void )sprintf(msgBuf,
-			     "elm[%d]->edg[%d].nod->edg->nnxt cycle > %d",
+			     "elm[%d]->edu[%d].nod->edu->nnxt cycle > %d",
 			     idE, idN, nnxtLimit);
 	    }
 	  }
@@ -1239,9 +1396,9 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 		idN,
 		cnt;
   WlzCMeshNod3D	*nod;
-  WlzCMeshEdg3D	*edg,
-  		*edg0,
-		*edg1;
+  WlzCMeshEdgU3D *edu,
+  		*edu0,
+		*edu1;
   WlzCMeshElm3D	*elm;
   WlzCMeshFace	*fce;
   WlzErrorNum	errNum0,
@@ -1286,28 +1443,28 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 	  {
 	    for(idN = 0; idN < 3; ++idN)
 	    {
-	      edg = fce->edg + idN;
-	      if(edg->face != fce)
+	      edu = fce->edu + idN;
+	      if(edu->face != fce)
 	      {
 		errNum0 = WLZ_ERR_DOMAIN_DATA;
 	        (void )sprintf(msgBuf,
-		  "elm[%d]->face[%d].edg[%d]->face != elm[%d]->face[%d]\n",
+		  "elm[%d]->face[%d].edu[%d]->face != elm[%d]->face[%d]\n",
 		  idE, idF, idN, idE, idF);
 	      }
-	      if(edg->next->next->next != edg)
+	      if(edu->next->next->next != edu)
 	      {
 	        errNum0 = WLZ_ERR_DOMAIN_DATA;
 		(void )sprintf(msgBuf,
-                               "elm[%d]->face[%d].edg[%d].next->next->next |= "
-			       "elm[%d]->face[%d].edg[%d]\n",
+                               "elm[%d]->face[%d].edu[%d].next->next->next |= "
+			       "elm[%d]->face[%d].edu[%d]\n",
 			       idE, idF, idN, idE, idF, idN);
 	      }
-	      nod = edg->nod;
+	      nod = edu->nod;
 	      if(nod == NULL)
 	      {
 	        errNum0 = WLZ_ERR_DOMAIN_DATA;
 		(void )sprintf(msgBuf,
-                               "elm[%d]->face[%d].edg[%d].nod == NULL\n",
+                               "elm[%d]->face[%d].edu[%d].nod == NULL\n",
 			       idE, idF, idN);
 	      }
 	      else
@@ -1316,31 +1473,31 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 		{
 		  errNum0 = WLZ_ERR_DOMAIN_DATA;
 		  (void )sprintf(msgBuf,
-		                 "elm[%d]->face[%d].edg[%d].nod->idx < 0\n",
+		                 "elm[%d]->face[%d].edu[%d].nod->idx < 0\n",
 				 idE, idF, idN);
 
 		}
-		else if(nod->edg == NULL)
+		else if(nod->edu == NULL)
 		{
 		  errNum0 = WLZ_ERR_DOMAIN_DATA;
 		  (void )sprintf(msgBuf,
-			       "elm[%d]->face[%d].edg[%d].nod->edg == NULL\n",
+			       "elm[%d]->face[%d].edu[%d].nod->edu == NULL\n",
 			       idE, idF, idN);
 		}
 		if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
 		{
 		  cnt = 0;
-		  edg1 = edg0 = nod->edg;
+		  edu1 = edu0 = nod->edu;
 		  do
 		  {
-		    edg1 = edg1->nnxt;
+		    edu1 = edu1->nnxt;
 		  }
-		  while((cnt++ < nnxtLimit) && (edg1 != edg0));
+		  while((cnt++ < nnxtLimit) && (edu1 != edu0));
 		  if(cnt >= nnxtLimit)
 		  {
 		    errNum0 = WLZ_ERR_DOMAIN_DATA;
 		    (void )sprintf(msgBuf,
-			 "elm[%d]->face[%d].edg[%d].nod->edg->nnxt cycle > %d",
+			 "elm[%d]->face[%d].edu[%d].nod->edu->nnxt cycle > %d",
 				   idE, idF, idN, nnxtLimit);
 		  }
 		}
@@ -1526,9 +1683,9 @@ WlzErrorNum 	WlzCMeshCmpElmFeat2D(WlzCMesh2D *mesh, int *dstNElm,
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	nod[0] = elm->edg[0].nod;
-	nod[1] = elm->edg[1].nod;
-	nod[2] = elm->edg[2].nod;
+	nod[0] = elm->edu[0].nod;
+	nod[1] = elm->edu[1].nod;
+	nod[2] = elm->edu[2].nod;
 	if(idx)
 	{
 	  *(idx + idV) = elm->idx;
@@ -1736,9 +1893,9 @@ double          WlzCMeshElmSnArea22D(WlzCMeshElm2D *elm)
 {
   double        area;
 
-  area = WlzGeomTriangleSnArea2(elm->edg[0].nod->pos,
-                                elm->edg[1].nod->pos,
-                                elm->edg[2].nod->pos);
+  area = WlzGeomTriangleSnArea2(elm->edu[0].nod->pos,
+                                elm->edu[1].nod->pos,
+                                elm->edu[2].nod->pos);
   return(area);
 }
 
@@ -1780,12 +1937,12 @@ void		WlzCMeshElmGetNodes3D(WlzCMeshElm3D *elm,
   int		idN;
   WlzCMeshNod3D	*nod;
 
-  *dstNod0 = elm->face[0].edg[0].nod;
-  *dstNod1 = elm->face[0].edg[1].nod;
-  *dstNod2 = elm->face[0].edg[2].nod;
+  *dstNod0 = elm->face[0].edu[0].nod;
+  *dstNod1 = elm->face[0].edu[1].nod;
+  *dstNod2 = elm->face[0].edu[2].nod;
   for(idN = 0; idN < 3; ++idN)
   {
-    nod = elm->face[1].edg[idN].nod;
+    nod = elm->face[1].edu[idN].nod;
     if((nod != *dstNod0) &&
        (nod != *dstNod1) &&
        (nod != *dstNod2))
@@ -1794,6 +1951,24 @@ void		WlzCMeshElmGetNodes3D(WlzCMeshElm3D *elm,
       break;
     }
   }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Gets the three nodes of a 2D element.
+* \param	elm			Given mesh element.
+* \param	dstNod0			First destination pointer for node.
+* \param	dstNod1			Second destination pointer for node.
+* \param	dstNod2			Third destination pointer for node.
+*/
+void		WlzCMeshElmGetNodes2D(WlzCMeshElm2D *elm,
+				      WlzCMeshNod2D **dstNod0,
+				      WlzCMeshNod2D **dstNod1,
+				      WlzCMeshNod2D **dstNod2)
+{
+  *dstNod0 = elm->edu[0].nod;
+  *dstNod1 = elm->edu[1].nod;
+  *dstNod2 = elm->edu[2].nod;
 }
 
 /*!
@@ -1903,8 +2078,8 @@ static WlzDVertex2 WlzCMeshFilterLPLDelta2D(WlzCMesh2D *mesh,
   int           nN = 0;
   double        tD0;
   WlzCMeshNod2D	*oNod;
-  WlzCMeshEdg2D	*edg0,
-  		*edg1;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
   WlzDVertex2   nP,
                 sP;
 
@@ -1912,15 +2087,15 @@ static WlzDVertex2 WlzCMeshFilterLPLDelta2D(WlzCMesh2D *mesh,
   if((nod->idx >= 0) &&
      (doBnd || ((nod->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0)))
   {
-    edg0 = edg1 = nod->edg;
+    edu0 = edu1 = nod->edu;
     do
     {
-      oNod = edg1->next->nod;
+      oNod = edu1->next->nod;
       nP = *(vBuf + oNod->idx);
       WLZ_VTX_2_ADD(sP, sP, nP);
       ++nN;
-      edg1 = edg1->nnxt;
-    } while(edg0 != edg1);
+      edu1 = edu1->nnxt;
+    } while(edu0 != edu1);
     if(nN > 0)
     {
       tD0 = 1.0 / nN;
@@ -1952,8 +2127,8 @@ static WlzDVertex3 WlzCMeshFilterLPLDelta3D(WlzCMesh3D *mesh,
   int           nN = 0;
   double        tD0;
   WlzCMeshNod3D	*oNod;
-  WlzCMeshEdg3D	*edg0,
-  		*edg1;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1;
   WlzDVertex3   nP,
                 sP;
 
@@ -1961,15 +2136,15 @@ static WlzDVertex3 WlzCMeshFilterLPLDelta3D(WlzCMesh3D *mesh,
   if((nod->idx >= 0) &&
      (doBnd || ((nod->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0)))
   {
-    edg0 = edg1 = nod->edg;
+    edu0 = edu1 = nod->edu;
     do
     {
-      oNod = edg1->next->nod;
+      oNod = edu1->next->nod;
       nP = *(vBuf + oNod->idx);
       WLZ_VTX_3_ADD(sP, sP, nP);
       ++nN;
-      edg1 = edg1->nnxt;
-    } while(edg0 != edg1);
+      edu1 = edu1->nnxt;
+    } while(edu0 != edu1);
     if(nN > 0)
     {
       tD0 = 1.0 / nN;
@@ -1980,4 +2155,314 @@ static WlzDVertex3 WlzCMeshFilterLPLDelta3D(WlzCMesh3D *mesh,
     }
   }
   return(sP);
+}
+
+/*!
+* \return	Copy of the given mesh.
+* \ingroup	WlzMesh
+* \brief	Creates a copy of the given constrained mesh in which
+* 		all deleted entities have been squeezed out. In the
+* 		mew mesh the valid mesh entities are contiguous and start
+* 		with index 0.
+* 		As well as copying the given mesh this function will
+* 		also copy data associated with the nodes of the mesh.
+* 		The associated data are held in AlcVector data structures
+* 		and are indexed using the node index.
+* 		If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
+* 		then the associated data will be ignored.
+* \param	gvnMesh			Given mesh.
+* \param	datSz			Size of associated datum.
+* \param	newDat			Destination pointer for the copied
+* 					associated data, may be NULL.
+* \param	gvnDat			Given associated data, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, size_t datSz,
+				AlcVector **newDat, AlcVector *gvnDat,
+				WlzErrorNum *dstErr)
+{
+  WlzCMeshP	newMesh;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  newMesh.v = NULL;
+  if(gvnMesh.v == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(gvnMesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        newMesh.m2 = WlzCMeshCopy2D(gvnMesh.m2, datSz, newDat, gvnDat,
+				    &errNum);
+        break;
+      case WLZ_CMESH_TET3D:
+        newMesh.m3 = WlzCMeshCopy3D(gvnMesh.m3, datSz, newDat, gvnDat,
+				    &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(newMesh);
+}
+
+/*!
+* \return	Copy of the given mesh.
+* \ingroup	WlzMesh
+* \brief	Creates a copy of the given constrained mesh in which
+* 		all deleted entities have been squeezed out. In the
+* 		mew mesh the valid mesh entities are contiguous and start
+* 		with index 0.
+* 		As well as copying the given mesh this function will
+* 		also copy data associated with the nodes of the mesh.
+* 		The associated data are held in AlcVector data structures
+* 		and are indexed using the node index.
+* 		If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
+* 		then the associated data will be ignored.
+* \param	gvnMesh			Given mesh.
+* \param	datSz			Size of associated datum.
+* \param	newDat			Destination pointer for the copied
+* 					associated data, may be NULL.
+* \param	gvnDat			Given associated data, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
+				AlcVector **newDat, AlcVector *gvnDat,
+				WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN;
+  void		*ascP;
+  AlcVector	*prvDat = NULL;
+  WlzIVertex2	dumGrdPos;
+  WlzCMeshNod2D	*dumNod;
+  WlzCMeshNod2D	*gvnNodes[3],
+  		*newNodes[3];
+  WlzCMeshElm2D	*gvnElm;
+  WlzCMesh2D	*newMesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gvnMesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gvnMesh->type != WLZ_CMESH_TRI2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((datSz > 0) && (newDat != NULL) && (gvnDat != NULL))
+  {
+    if((prvDat = AlcVectorNew(1, datSz, gvnDat->blkSz, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) &&
+     (gvnMesh->res.nod.numEnt > 0) && (gvnMesh->res.elm.numEnt > 0))
+  {
+    idE = 0;
+    newMesh = WlzCMeshNew2D(&errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      newMesh->bBox = gvnMesh->bBox;
+      errNum = WlzCMeshReassignBuckets2D(newMesh, gvnMesh->res.nod.numEnt);
+    }
+    while((errNum == WLZ_ERR_NONE) && (idE < gvnMesh->res.elm.maxEnt))
+    {
+      gvnElm = (WlzCMeshElm2D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
+      if(gvnElm->idx >= 0)
+      {
+	/* Copy Nodes. */
+        WlzCMeshElmGetNodes2D(gvnElm, gvnNodes + 0, gvnNodes + 1,
+	                      gvnNodes + 2);
+	idN = 0;
+	do
+	{
+	  if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
+	                         &dumGrdPos, &dumNod, newNodes + idN) == 0)
+
+	  {
+	    newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
+	                                     &errNum);
+	    /* Copy associated data. */
+	    if((errNum == WLZ_ERR_NONE) && (prvDat != NULL))
+	    {
+	      if((ascP = AlcVectorExtendAndGet(prvDat,
+	                                       newNodes[idN]->idx)) != NULL)
+	      {
+	        memcpy(ascP, AlcVectorItemGet(prvDat, gvnNodes[idN]->idx),
+		       datSz);
+	      }
+	    }
+	  }
+	} while((errNum == WLZ_ERR_NONE) && (++idN < 3));
+	/* Copy element. */
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  (void )WlzCMeshNewElm2D(newMesh,
+	                          newNodes[0], newNodes[1], newNodes[2],
+				  &errNum);
+	}
+      }
+      ++idE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(prvDat != NULL)
+    {
+      *newDat = prvDat;
+    }
+  }
+  else
+  {
+    if(newMesh != NULL)
+    {
+      WlzCMeshFree2D(newMesh);
+      newMesh = NULL;
+    }
+    if(prvDat != NULL)
+    {
+      (void )AlcVectorFree(prvDat);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(newMesh);
+}
+
+/*!
+* \return	Copy of the given mesh.
+* \ingroup	WlzMesh
+* \brief	Creates a copy of the given constrained mesh in which
+* 		all deleted entities have been squeezed out. In the
+* 		mew mesh the valid mesh entities are contiguous and start
+* 		with index 0.
+*		As well as copying the given mesh this function will
+*               also copy data associated with the nodes of the mesh.
+*               The associated data are held in AlcVector data structures
+*               and are indexed using the node index.
+*               If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
+*               then the associated data will be ignored.
+* \param	gvnMesh			Given mesh.
+* \param        datSz                   Size of associated datum.
+* \param        newDat                  Destination pointer for the copied
+*                                       associated data, may be NULL.
+* \param        gvnDat                  Given associated data, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
+                                AlcVector **newDat, AlcVector *gvnDat,
+                                WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN;
+  void          *ascP;
+  AlcVector     *prvDat = NULL;
+  WlzIVertex3	dumGrdPos;
+  WlzCMeshNod3D	*dumNod;
+  WlzCMeshNod3D	*gvnNodes[4],
+  		*newNodes[4];
+  WlzCMeshElm3D	*gvnElm;
+  WlzCMesh3D	*newMesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gvnMesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gvnMesh->type != WLZ_CMESH_TET3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((datSz > 0) && (newDat != NULL) && (gvnDat != NULL))
+  {
+    if((prvDat = AlcVectorNew(1, datSz, gvnDat->blkSz, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) &&
+     (gvnMesh->res.nod.numEnt > 0) && (gvnMesh->res.elm.numEnt > 0))
+  {
+    idE = 0;
+    newMesh = WlzCMeshNew3D(&errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      newMesh->bBox = gvnMesh->bBox;
+      errNum = WlzCMeshReassignBuckets3D(newMesh, gvnMesh->res.nod.numEnt);
+    }
+    while((errNum == WLZ_ERR_NONE) && (idE < gvnMesh->res.elm.maxEnt))
+    {
+      gvnElm = (WlzCMeshElm3D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
+      if(gvnElm->idx >= 0)
+      {
+	/* Copy Nodes. */
+        WlzCMeshElmGetNodes3D(gvnElm, gvnNodes + 0, gvnNodes + 1,
+	                      gvnNodes + 2, gvnNodes + 3);
+	idN = 0;
+	do
+	{
+	  if(WlzCMeshLocateNod3D(newMesh, gvnNodes[idN]->pos,
+	                         &dumGrdPos, &dumNod, newNodes + idN) == 0)
+
+	  {
+	    newNodes[idN] = WlzCMeshNewNod3D(newMesh, gvnNodes[idN]->pos,
+	                                     &errNum);
+            /* Copy associated data. */
+            if((errNum == WLZ_ERR_NONE) && (prvDat != NULL))
+            {
+              if((ascP = AlcVectorExtendAndGet(prvDat,
+                                               newNodes[idN]->idx)) != NULL)
+              {
+                memcpy(ascP, AlcVectorItemGet(prvDat, gvnNodes[idN]->idx),
+		       datSz);
+              }
+            }
+	  }
+	} while((errNum == WLZ_ERR_NONE) && (++idN < 4));
+	/* Copy element. */
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  (void )WlzCMeshNewElm3D(newMesh,
+	                          newNodes[0], newNodes[1], newNodes[2],
+				  newNodes[3], &errNum);
+	}
+      }
+      ++idE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(prvDat != NULL)
+    {
+      *newDat = prvDat;
+    }
+  }
+  else
+  {
+    if(newMesh != NULL)
+    {
+      WlzCMeshFree3D(newMesh);
+      newMesh = NULL;
+    }
+    if(prvDat != NULL)
+    {
+      (void )AlcVectorFree(prvDat);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(newMesh);
 }

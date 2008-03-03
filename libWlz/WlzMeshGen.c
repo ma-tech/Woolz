@@ -54,30 +54,37 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 /*!
  *  Dummy functions to allow compilation with borland bcc32 under Windows.
  */
-double WlzCMeshElmSnArea22D(WlzCMeshElm2D *elm) {
+double 		WlzCMeshElmSnArea22D(WlzCMeshElm2D *elm)
+{
    return(0.0);
 }
-double WlzCMeshElmSnVolume63D(WlzCMeshElm3D *elm) {
+double 		WlzCMeshElmSnVolume63D(WlzCMeshElm3D *elm)
+{
    return(0.0);
 }
-void WlzCMeshElmGetNodes3D(
-      WlzCMeshElm3D *elm,
-      WlzCMeshNod3D **dstNod0,
-      WlzCMeshNod3D **dstNod1,
-      WlzCMeshNod3D **dstNod2,
-      WlzCMeshNod3D **dstNod3) {
+void 		WlzCMeshElmGetNodes3D(
+		  WlzCMeshElm3D *elm,
+		  WlzCMeshNod3D **dstNod0,
+		  WlzCMeshNod3D **dstNod1,
+		  WlzCMeshNod3D **dstNod2,
+		  WlzCMeshNod3D **dstNod3)
+{
    return;
 }
-void WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh) {
+void WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh)
+{
    return;
 }
-void WlzCMeshUpdateBBox3D(WlzCMesh3D *mesh) {
+void WlzCMeshUpdateBBox3D(WlzCMesh3D *mesh)
+{
    return;
 }
-void WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh){
+void WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
+{
    return;
 }
-void WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh) {
+void WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
+{
    return;
 }
 #endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
@@ -98,61 +105,74 @@ static void			WlzCMeshRemNodFromGrid3D(
 				  WlzCMeshNod3D *nod);
 static void			WlzCMeshEntMarkFree(
 				  int *idx);
-static void			WlzCMeshElmsJoin2D(
-				  WlzCMesh2D *mesh,
-				  int nEdg,
-				  WlzCMeshEdg2D **edg);
 static void 			WlzCMeshRemEntCb(
 				  WlzCMeshCbEntry **list,
 				  WlzCMeshCbFn fn,
 				  void *data);
-static void			WlzCMeshEdgSetOpp2D(
-				  WlzCMeshEdg2D *edg0,
-				  WlzCMeshEdg2D *edg1);
-static void			WlzCMeshNodAddEdg3D(
+static void			WlzCMeshNodAddEdu3D(
 				  WlzCMeshNod3D *nod,
-				  WlzCMeshEdg3D *edg);
-static void			WlzCMeshAdjustBoundaryElm2D1(
+				  WlzCMeshEdgU3D *edu);
+static WlzCMeshNod2D 		*WlzCMeshComputeBoundNod2D(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj,
-				  WlzCMeshNod2D **nodes,
-				  int n0,
-				  int n1,
-				  int n2,
-				  double tol);
-static void			WlzCMeshAdjustBoundaryElm3D1(
+				  WlzCMeshNod2D *nod0,
+				  WlzCMeshNod2D *nod1,
+				  double tol,
+				  WlzErrorNum *dstErr);
+static WlzCMeshNod3D 		*WlzCMeshComputeBoundNod3D(
 				  WlzCMesh3D *mesh,
 				  WlzObject *obj,
-				  WlzCMeshNod3D **nodes,
-				  int n0,
-				  int n1,
-				  int n2,
-				  int n3,
-				  double tol);
-static void			WlzCMeshAdjustBoundaryElm3D2(
-				  WlzCMesh3D *mesh,
-				  WlzObject *obj,
-				  WlzCMeshNod3D **nodes,
-				  int n0,
-				  int n1,
-				  int n2,
-				  int n3,
-				  double tol);
-static void			WlzCMeshAdjustBoundaryElm2D2(
+				  WlzCMeshNod3D *nod0,
+				  WlzCMeshNod3D *nod1,
+				  double tol,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzCMeshBoundConformElm2D1(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj,
-				  WlzCMeshNod2D **nodes,
-				  int n0, int n1,
-				  int n2,
+				  WlzCMeshElm2D *elm,
+				  WlzCMeshNod2D **nodBuf,
+				  int nIdx0,
+				  int nIdx1,
+				  int nIdx2,
 				  double tol);
-static void			WlzCMeshAdjustBoundaryElm3D3(
+static WlzErrorNum 		WlzCMeshBoundConformElm2D2(
+				  WlzCMesh2D *mesh,
+				  WlzObject *obj,
+				  WlzCMeshElm2D *elm,
+				  WlzCMeshNod2D **nodBuf,
+				  int nIdx0,
+				  int nIdx1,
+				  int nIdx2,
+				  double tol);
+static WlzErrorNum 		WlzCMeshBoundConformElm3D1(
 				  WlzCMesh3D *mesh,
 				  WlzObject *obj,
-				  WlzCMeshNod3D **nodes,
-				  int n0,
-				  int n1,
-				  int n2,
-				  int n3,
+				  WlzCMeshElm3D *elm,
+				  WlzCMeshNod3D **nodBuf,
+				  int nIdx0,
+				  int nIdx1,
+				  int nIdx2,
+				  int nIdx3,
+				  double tol);
+static WlzErrorNum 		WlzCMeshBoundConformElm3D2(
+				  WlzCMesh3D *mesh,
+				  WlzObject *obj,
+				  WlzCMeshElm3D *elm,
+				  WlzCMeshNod3D **nodBuf,
+				  int nIdx0,
+				  int nIdx1,
+				  int nIdx2,
+				  int nIdx3,
+				  double tol);
+static WlzErrorNum 		WlzCMeshBoundConformElm3D3(
+				  WlzCMesh3D *mesh,
+				  WlzObject *obj,
+				  WlzCMeshElm3D *elm,
+				  WlzCMeshNod3D **nodBuf,
+				  int nIdx0,
+				  int nIdx1,
+				  int nIdx2,
+				  int nIdx3,
 				  double tol);
 static int			WlzCMeshCompLBTNodPos2D(
 				  WlzDVertex2 *nPos,
@@ -225,70 +245,53 @@ static WlzErrorNum 		WlzCMeshCallCallbacks(
 				  WlzCMeshCbEntry *entry);
 static WlzErrorNum 		WlzCMeshElmFromLBTNode2D(
 				  WlzCMesh2D *mesh,
-				  unsigned flg,
 				  WlzDVertex2 *nPos,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzLBTNodeClass2D cls,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmFromLBTNode3D(
 				  WlzCMesh3D *mesh,
-				  unsigned flg,
 				  WlzDVertex3 *nPos,
 				  WlzCMeshElm3D **mElm,
-				  WlzCMeshEdg3D **mEdg,
 				  WlzCMeshNod3D **mNod,
 				  WlzLBTNodeClass2D cls);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D0(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzDVertex2 *nPos,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D1(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzDVertex2 *nPos,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D2(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzDVertex2 *nPos,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D3(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzDVertex2 *nPos,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D4(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzDVertex2 *nPos,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode2D5(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D **mElm,
-				  WlzCMeshEdg2D **mEdg,
 				  WlzCMeshNod2D **mNod,
 				  WlzDVertex2 *nPos,
-				  int *dstNElm,
-				  int *dstNEdg);
+				  int *dstNElm);
 static WlzErrorNum 		WlzCMeshElmsFromLBTNode3D0(
 				  WlzCMesh3D *mesh,
 				  WlzCMeshElm3D **mElm,
@@ -339,8 +342,8 @@ static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
 				  WlzCMesh2D *mesh);
 static WlzCMeshElm3D 		*WlzCMeshAllocElm3D(
 				  WlzCMesh3D *mesh);
-static WlzCMeshEdg2D 		*WlzCMeshEdgFindOpp2D(
-				  WlzCMeshEdg2D *gEdg);
+static WlzCMeshEdgU2D 		*WlzCMeshEdgUseFindOpp2D(
+				  WlzCMeshEdgU2D *gEdu);
 static WlzCMeshFace 		*WlzCMeshFindOppFce(
 				  WlzCMeshFace *gFce);
 
@@ -1040,7 +1043,6 @@ static WlzCMeshNod3D *WlzCMeshAllocNod3D(WlzCMesh3D *mesh)
   }
   return(nod);
 }
-
 /*!
 * \return	New 2D mesh element.
 * \ingroup	WlzMesh
@@ -1076,7 +1078,7 @@ WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
   {
     errNum = WlzCMeshSetElm2D(mesh, nElm, nod0, nod1, nod2);
   }
-  if((errNum == WLZ_ERR_NONE) && mesh->res.nod.newEntCb)
+  if((errNum == WLZ_ERR_NONE) && mesh->res.elm.newEntCb)
   {
     errNum = WlzCMeshCallCallbacks(mesh, nElm, mesh->res.elm.newEntCb);
   }
@@ -1127,7 +1129,7 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
   {
     errNum = WlzCMeshSetElm3D(mesh, nElm, nod0, nod1, nod2, nod3);
   }
-  if((errNum == WLZ_ERR_NONE) && mesh->res.nod.newEntCb)
+  if((errNum == WLZ_ERR_NONE) && mesh->res.elm.newEntCb)
   {
     errNum = WlzCMeshCallCallbacks(mesh, nElm, mesh->res.elm.newEntCb);
   }
@@ -1137,7 +1139,6 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
   }
   return(nElm);
 }
-
 /*!
 * \return	New 2D mesh element or NULL on error.
 * \ingroup	WlzMesh
@@ -1158,9 +1159,32 @@ static WlzCMeshElm2D *WlzCMeshAllocElm2D(WlzCMesh2D *mesh)
     ++(eRes->numEnt);
     ++(eRes->maxEnt);
     elm->idx = eRes->nextIdx++;
-    elm->edg[0].next = &(elm->edg[1]);
-    elm->edg[1].next = &(elm->edg[2]);
-    elm->edg[2].next = &(elm->edg[0]);
+    elm->edu[0].next = &(elm->edu[1]);
+    elm->edu[1].next = &(elm->edu[2]);
+    elm->edu[2].next = &(elm->edu[0]);
+  }
+  return(elm);
+}
+
+/*!
+* \return	New 3D mesh element or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates a new 3D mesh element and sets it's index. 
+* 		For efficiency this function does not check it's parameters.
+* \param	mesh			Mesh with resources.
+*/
+static WlzCMeshElm3D *WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
+{
+  WlzCMeshEntRes	*eRes;
+  WlzCMeshElm3D	*elm = NULL;
+  
+  eRes = &(mesh->res.elm);
+  if((elm = (WlzCMeshElm3D *)
+	    (AlcVectorExtendAndGet(eRes->vec, eRes->nextIdx))) != NULL)
+  {
+    ++(eRes->numEnt);
+    ++(eRes->maxEnt);
+    elm->idx = eRes->nextIdx++;
   }
   return(elm);
 }
@@ -1188,7 +1212,7 @@ static WlzErrorNum  WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
   		idN;
   double	lenSq,
   		sA2;
-  WlzCMeshEdg2D	*edg;
+  WlzCMeshEdgU2D *edu;
   WlzDVertex2	dsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1200,31 +1224,40 @@ static WlzErrorNum  WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    elm->edg[0].nod = nod0;
-    elm->edg[1].nod = nod1;
-    elm->edg[2].nod = nod2;
-    /* Set up all the adjacencies and check for maximum edge length. */
+    elm->edu[0].nod = nod0;
+    elm->edu[1].nod = nod1;
+    elm->edu[2].nod = nod2;
+    /* Set internal adjacencies and check for maximum edge length. */
     for(idE = 0; idE < 3; ++idE)
     {
       idN = (idE + 1) % 3;
-      edg = &(elm->edg[idE]);
-      edg->elm = elm;
-      edg->next = &(elm->edg[idN]);
-      if(edg->nod->edg)
+      edu = &(elm->edu[idE]);
+      edu->elm = elm;
+      edu->next = &(elm->edu[idN]);
+      if(edu->nod->edu)
       {
-        edg->nnxt = edg->nod->edg->nnxt;
-	edg->nod->edg->nnxt = edg;
+        edu->nnxt = edu->nod->edu->nnxt;
+	edu->nod->edu->nnxt = edu;
       }
       else
       {
-        edg->nnxt = edg;
-	edg->nod->edg = edg;
+        edu->nnxt = edu;
+	edu->nod->edu = edu;
       }
-      WLZ_VTX_2_SUB(dsp, elm->edg[idE].nod->pos, elm->edg[idN].nod->pos);
+      WLZ_VTX_2_SUB(dsp, elm->edu[idE].nod->pos, elm->edu[idN].nod->pos);
       lenSq = WLZ_VTX_2_SQRLEN(dsp);
       if(lenSq > mesh->maxSqEdgLen)
       {
         mesh->maxSqEdgLen = lenSq;
+      }
+    }
+    /* Set external adjacencies. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edu = &(elm->edu[idE]);
+      if((edu->opp = WlzCMeshEdgUseFindOpp2D(edu)) != NULL)
+      {
+        edu->opp->opp = edu;
       }
     }
   }
@@ -1261,11 +1294,11 @@ static WlzErrorNum  WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
 		dsp;
   WlzCMeshNod3D	*nod[4];
   WlzCMeshFace	*fce;
-  WlzCMeshEdg3D	*edg;
+  WlzCMeshEdgU3D *edu;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   /* See the diagrams with the definition of WlzCMeshElm3D for the node,
    * edge and face numbering. */
-  const int	edgNodTbl[4][3] = /* [fce, edg] -> node index within the
+  const int	edgNodTbl[4][3] = /* [fce, edu] -> node index within the
                                      element. */
 		{
   		  {0, 1, 2},
@@ -1295,11 +1328,15 @@ static WlzErrorNum  WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
       for(idE = 0; idE < 3; ++idE)
       {
         idN = (idE + 1) % 3;
-        edg = fce->edg + idE;
-	edg->nod = nod[edgNodTbl[idF][idE]];
-	edg->next = fce->edg + idN;
-	WlzCMeshNodAddEdg3D(edg->nod, edg); /* Sets edg->nnxt */
-	edg->face = fce;
+        edu = fce->edu + idE;
+	edu->nod = nod[edgNodTbl[idF][idE]];
+	if(edu->nod->edu == NULL)
+	{
+	  edu->nod->edu = edu;
+	}
+	edu->next = fce->edu + idN;
+	WlzCMeshNodAddEdu3D(edu->nod, edu); /* Sets edu->nnxt */
+	edu->face = fce;
       }
       fce->opp = NULL;
       fce->elm = elm;
@@ -1332,6 +1369,7 @@ static WlzErrorNum  WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
 * \return	Opposite face or NULL.
 * \ingroup	WlzMesh
 * \brief	Finds the face opposite to the given face within the mesh.
+* 		This function is only needed when building a mesh.
 * \param	gFce			Given face.
 */
 static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
@@ -1340,13 +1378,13 @@ static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
   		idN,
 		cnt = 0;
   WlzCMeshNod3D	*tmp;
-  WlzCMeshEdg3D	*fEdg,
+  WlzCMeshEdgU3D *fEdg,
   		*tEdg;
   WlzCMeshFace	*tFce,
   		*oFce = NULL;
   WlzCMeshNod3D *tNod[3];
 
-  fEdg = gFce->edg[0].nod->edg;
+  fEdg = gFce->edu[0].nod->edu;
   tEdg = fEdg->nnxt;
   while (tEdg != fEdg)
   {
@@ -1354,14 +1392,14 @@ static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
     tFce = tEdg->face;
     if(tFce != gFce)
     {
-      tNod[0] = tFce->edg[0].nod;
-      tNod[1] = tFce->edg[1].nod;
-      tNod[2] = tFce->edg[2].nod;
+      tNod[0] = tFce->edu[0].nod;
+      tNod[1] = tFce->edu[1].nod;
+      tNod[2] = tFce->edu[2].nod;
       for(idN = 0; idN < 3; ++idN)
       {
 	for(idM = idN; idM < 3; ++idM)
 	{
-	  if(tNod[idM] == gFce->edg[idN].nod)
+	  if(tNod[idM] == gFce->edu[idN].nod)
 	  {
 	    if(idN < 2)
 	    {
@@ -1394,47 +1432,23 @@ static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
 
 /*!
 * \ingroup	WlzMesh
-* \brief	Adds an edge to the circular linked list of edges directed
-*		from the node. The node and edge must both be valid and the
-*		edge must not be in the list already.
+* \brief	Adds an edge use to the circular linked list of edges
+* 		directed from the node. The node and edge use must both
+* 		be valid and the use must not be in the list already.
 * \param	nod			The node.
-* \param	edg			The edge directed from the node.
+* \param	edu			The edge directed from the node.
 */
-static void	WlzCMeshNodAddEdg3D(WlzCMeshNod3D *nod, WlzCMeshEdg3D *edg)
+static void	WlzCMeshNodAddEdu3D(WlzCMeshNod3D *nod, WlzCMeshEdgU3D *edu)
 {
-  if(nod->edg == NULL)
+  if(nod->edu == NULL)
   {
-    nod->edg = edg->nnxt = edg;
+    nod->edu = edu->nnxt = edu;
   }
   else
   {
-    edg->nnxt = nod->edg->nnxt;
-    nod->edg->nnxt = edg;
+    edu->nnxt = nod->edu->nnxt;
+    nod->edu->nnxt = edu;
   }
-}
-
-/*!
-* \return	New 3D mesh element or NULL on error.
-* \ingroup	WlzMesh
-* \brief	Allocates a new 3D mesh element and sets it's index. 
-* 		For efficiency this function does not check it's parameters.
-* \param	mesh			Mesh with resources.
-*/
-static WlzCMeshElm3D *WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
-{
-  WlzCMeshEntRes	*eRes;
-  WlzCMeshElm3D	*elm = NULL;
-  
-  eRes = &(mesh->res.elm);
-  if((elm = (WlzCMeshElm3D *)
-	    (AlcVectorExtendAndGet(eRes->vec, eRes->nextIdx))) != NULL)
-  {
-    ++(eRes->numEnt);
-    ++(eRes->maxEnt);
-    (void )memset(elm, 0, sizeof(WlzCMeshElm3D));
-    elm->idx = eRes->nextIdx++;
-  }
-  return(elm);
 }
 
 /*!
@@ -1522,7 +1536,7 @@ WlzErrorNum	WlzCMeshFree3D(WlzCMesh3D *mesh)
 * \ingroup	WlzMesh
 * \brief	Deletes the 2D mesh node. This function assumes that the node
 *		is no longer used by any elements.
-* \param	mesh			The mesh to which the element belongs.
+* \param	mesh			The mesh to which the node belongs.
 * \param	nod			The given node.
 */
 WlzErrorNum	WlzCMeshDelNod2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
@@ -1550,7 +1564,7 @@ WlzErrorNum	WlzCMeshDelNod2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 * \ingroup	WlzMesh
 * \brief	Deletes the 3D mesh node. This function assumes that the node
 *		is no longer used by any elements.
-* \param	mesh			The mesh to which the element belongs.
+* \param	mesh			The mesh to which the node belongs.
 * \param	nod			The given node.
 */
 WlzErrorNum	WlzCMeshDelNod3D(WlzCMesh3D *mesh, WlzCMeshNod3D *nod)
@@ -1584,9 +1598,9 @@ WlzErrorNum	WlzCMeshDelNod3D(WlzCMesh3D *mesh, WlzCMeshNod3D *nod)
 WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 {
   int		idE;
-  WlzCMeshEdg2D	*edg0,
-  		*edg1,
-		*edg2;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1,
+		*edu2;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((mesh == NULL) || (elm == NULL))
@@ -1601,26 +1615,27 @@ WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
   {
     for(idE = 0; idE < 3; ++idE)
     {
-      edg0 = &(elm->edg[idE]);
-      if(edg0->opp)
+      edu0 = &(elm->edu[idE]);
+      if(edu0->opp)
       {
-        edg0->opp->opp = NULL;
+        edu0->opp->opp = NULL;
       }
-      if(edg0 == edg0->nnxt)
+      if(edu0 == edu0->nnxt)
       {
-        (void )WlzCMeshDelNod2D(mesh, edg0->nod);
+        (void )WlzCMeshDelNod2D(mesh, edu0->nod);
       }
       else
       {
-        edg1 = edg0;
-	edg2 = edg1->nnxt;
-	while(edg2 != edg0)
+        edu1 = edu0;
+	while((edu2 = edu1->nnxt) != edu0)
 	{
-	  edg1 = edg2;
-	  edg2 = edg2->nnxt;
+	  edu1 = edu2;
 	}
-	edg1->nnxt = edg2->nnxt;
-	edg1->nod->edg = edg1;
+	edu1->nnxt = edu0->nnxt;
+	if(edu0->nod->edu == edu0)
+	{
+	  edu0->nod->edu = edu1;
+	}
       }
     }
     WlzCMeshElmFree2D(mesh, elm);
@@ -1640,35 +1655,35 @@ WlzErrorNum	WlzCMeshDelElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
 {
   int		idE,
   		idF;
-  WlzCMeshEdg3D	*edg0,
-  		*edg1,
-		*edg2;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1,
+		*edu2;
   WlzCMeshFace	*fce0;
   WlzErrorNum errNum = WLZ_ERR_NONE;
 
   for(idF = 0; idF < 4; ++idF)
   {
     fce0 = elm->face + idF;
-    /* Unlink edges from the nodes. */
+    /* Unlink edge uses from the nodes. */
     for(idE = 0; idE < 3; ++idE)
     {
-      edg0 = fce0->edg + idE;
-      if(edg0 == edg0->nnxt)
+      edu0 = fce0->edu + idE;
+      if(edu0 == edu0->nnxt)
       {
 	/* Node is only used by this edge so it can be deleted. */
-        (void )WlzCMeshDelNod3D(mesh, edg0->nod);
+        (void )WlzCMeshDelNod3D(mesh, edu0->nod);
       }
       else
       {
-        edg1 = edg0;
-	edg2 = edg1->nnxt;
-	while(edg2 != edg0)
+        edu1 = edu0;
+	edu2 = edu1->nnxt;
+	while(edu2 != edu0)
 	{
-	  edg1 = edg2;
-	  edg2 = edg2->nnxt;
+	  edu1 = edu2;
+	  edu2 = edu2->nnxt;
 	}
-	edg1->nnxt = edg2->nnxt;
-	edg1->nod->edg = edg1;
+	edu1->nnxt = edu2->nnxt;
+	edu1->nod->edu = edu1;
       }
     }
     /* Unlink face. */
@@ -1862,45 +1877,47 @@ WlzErrorNum	WlzCMeshAffineTransformMesh3D(WlzCMesh3D *mesh,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Adjusts the position of the elements vertices for elements
-*		which intersect the boundary. Elements which have all nodes
-*		and centroid outside the domain are flaged as outside.
-*		Elements which intersect the boundary of the domain have
-*		their node positions adjusted. All boundary flags changed
-*		by this function.
-*		When testing elements only those which have the boundary
-*		flag set are tested.
+* \brief	Examines all the mesh elements deleting those with all
+* 		elements outside and decomposing those on it's boundary.
+* 		At the first pass boundary elements (those with between one
+* 		and three nodes outside the object's domain) are decomposed
+* 		into one or three new elements and elements which have all
+* 		four nodes outside the domain are deleted. In the second
+* 		pass new elements outside the domain are deleted.
 * \param	mesh			Given mesh.
 * \param	obj			Object with domain to which the
 *					mesh should conform.
 * \param	tol			Acceptable placement error.
 */
-WlzErrorNum 	WlzCMeshAdjustBoundaryElm2D(WlzCMesh2D *mesh,
+WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
 					WlzObject *obj,
 					double tol)
 {
   int		iMsk,
   		idE,
-		idN;
+		idN,
+		idM;
   WlzCMeshNod2D *nod;
   WlzCMeshElm2D	*elm;
-  WlzCMeshNod2D *nodBuf[3];
+  WlzCMeshNod2D *nodes[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  idE = 0;
+  /* Pass 0: Classify elements by whether their nodes are inside the
+   * domain of the given object. */
+  idM = mesh->res.elm.maxEnt;
+  while((errNum == WLZ_ERR_NONE) && (idE < idM))
   {
     elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-    if(elm->idx >= 0) 				  /* Consider all elements. */
+    if(elm->idx >= 0)
     {
-      nodBuf[0] = elm->edg[0].nod;
-      nodBuf[1] = elm->edg[1].nod;
-      nodBuf[2] = elm->edg[2].nod;
+      WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
       /* Set mask depending on whether nodes are inside or outside the
        * domain. */
       iMsk = 0;
       for(idN = 0; idN < 3; ++idN)
       {
-	nod = nodBuf[idN];
+	nod = nodes[idN];
 	if(WlzInsideDomain(obj,
 			   0.0, nod->pos.vtY, nod->pos.vtX,
 			   NULL))
@@ -1908,39 +1925,83 @@ WlzErrorNum 	WlzCMeshAdjustBoundaryElm2D(WlzCMesh2D *mesh,
 	  iMsk |= 1 << idN;
 	}
       }
-      elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+      elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
       switch(iMsk)
       {
-	/* All nodes of the element are outside the domain. */
-        case  0: /*  0|000|0 */
-	  elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
+	/* 0 nodes are inside the domain. */
+	case 0:
+	  (void )WlzCMeshDelElm2D(mesh, elm);
 	  break;
 	/* 1 node is inside the domain. */
-        case  1: /*  1|001|1 */
-          WlzCMeshAdjustBoundaryElm2D2(mesh, obj, nodBuf, 1, 2, 0, tol);
+	case  1: /*  1|001|1 */
+	  errNum = WlzCMeshBoundConformElm2D2(mesh, obj, elm,
+					      nodes, 1, 2, 0, tol);
 	  break;
-        case  2: /*  2|010|1 */
-          WlzCMeshAdjustBoundaryElm2D2(mesh, obj, nodBuf, 2, 0, 1, tol);
+	case  2: /*  2|010|1 */
+	  errNum = WlzCMeshBoundConformElm2D2(mesh, obj, elm,
+					      nodes, 2, 0, 1, tol);
 	  break;
-        case  4: /*  4|100|1 */
-          WlzCMeshAdjustBoundaryElm2D2(mesh, obj, nodBuf, 0, 1, 2, tol);
+	case  4: /*  4|100|1 */
+	  errNum = WlzCMeshBoundConformElm2D2(mesh, obj, elm,
+					      nodes, 0, 1, 2, tol);
+	  break;
 	  break;
 	/* 2 nodes are inside the domain. */
-        case  3: /*  3|011|2 */
-          WlzCMeshAdjustBoundaryElm2D1(mesh, obj, nodBuf, 2, 0, 1, tol);
+	case  3: /*  3|011|2 */
+	  errNum = WlzCMeshBoundConformElm2D1(mesh, obj, elm,
+					      nodes, 2, 0, 1, tol);
 	  break;
-        case  5: /*  5|101|2 */
-          WlzCMeshAdjustBoundaryElm2D1(mesh, obj, nodBuf, 1, 0, 2, tol);
+	case  5: /*  5|101|2 */
+	  errNum = WlzCMeshBoundConformElm2D1(mesh, obj, elm,
+					      nodes, 1, 0, 2, tol);
 	  break;
-        case  6: /*  6|110|2 */
-          WlzCMeshAdjustBoundaryElm2D1(mesh, obj, nodBuf, 0, 1, 2, tol);
+	case  6: /*  6|110|2 */
+	  errNum = WlzCMeshBoundConformElm2D1(mesh, obj, elm,
+					      nodes, 0, 1, 2, tol);
 	  break;
-	/* All 3 nodes of the element are inside the domain. */
-        case 7: /* 7|111|3 */
-          elm->flags &= ~(WLZ_CMESH_ELM_FLAG_BOUNDARY);
+	case  7: /*  7|111|3 */
+	  elm->flags &= ~(WLZ_CMESH_ELM_FLAG_BOUNDARY);
+	  break;
+	default:
 	  break;
       }
     }
+    ++idE;
+  }
+  /* Pass 1: Delete new elemets marked as boundary but outside the
+   * given object's domain. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idE = 0;
+    idM = mesh->res.elm.maxEnt;
+    while((errNum == WLZ_ERR_NONE) && (idE < idM))
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if((elm->idx >= 0) &&
+         (elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
+      {
+	WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
+	/* Set mask depending on whether nodes are inside or outside the
+	 * domain. */
+	iMsk = 0;
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  nod = nodes[idN];
+	  if(WlzInsideDomain(obj,
+			     0.0, nod->pos.vtY, nod->pos.vtX,
+			     NULL))
+	  {
+	    iMsk |= 1 << idN;
+	    break;
+	  }
+	}
+	if(iMsk == 0)    /* All nodes of the element are outside the domain. */
+	{
+	  (void )WlzCMeshDelElm2D(mesh, elm);
+	}
+      } 
+      ++idE;
+    } 
   }
   return(errNum);
 }
@@ -1948,45 +2009,48 @@ WlzErrorNum 	WlzCMeshAdjustBoundaryElm2D(WlzCMesh2D *mesh,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Adjusts the position of the elements vertices for elements
-*		which intersect the boundary. Elements which have all nodes
-*		and centroid outside the domain are flaged as outside.
-*		Elements which intersect the boundary of the domain have
-*		their node positions adjusted. All boundary flags changed
-*		by this function.
-*		When testing elements only those which have the boundary
-*		flag set are tested.
+* \brief	Examines all the mesh elements deleting those with all
+* 		elements outside and decomposing those on it's boundary.
+* 		At the first pass boundary elements (those with between one
+* 		and three nodes outside the object's domain) are decomposed
+* 		into one or three new elements and elements which have all
+* 		four nodes outside the domain are deleted. In the second
+* 		pass new elements outside the domain are deleted.
 * \param	mesh			Given mesh.
 * \param	obj			Object with domain to which the
 *					mesh should conform.
 * \param	tol			Acceptable placement error.
 */
-WlzErrorNum 	WlzCMeshAdjustBoundaryElm3D(WlzCMesh3D *mesh,
+WlzErrorNum 	WlzCMeshBoundConform3D(WlzCMesh3D *mesh,
 					WlzObject *obj,
 					double tol)
 {
   int		iMsk,
   		idE,
-		idN;
+		idN,
+		idM;
   WlzCMeshNod3D *nod;
   WlzCMeshElm3D	*elm;
-  WlzCMeshNod3D *nodBuf[4];
-  WlzDVertex3	cen;
+  WlzCMeshNod3D *nodes[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  /* Pass 0: Classify elements by whether their nodes are inside the
+   * domain of the given object. */
+  idE = 0;
+  idM = mesh->res.elm.maxEnt;
+  while((errNum == WLZ_ERR_NONE) && (idE < idM))
   {
     elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-    if(elm->idx >= 0) 				  /* Consider all elements. */
+    if(elm->idx >= 0)
     {
       WlzCMeshElmGetNodes3D(elm,
-                            nodBuf + 0, nodBuf + 1, nodBuf + 2, nodBuf + 3);
+			    nodes + 0, nodes + 1, nodes + 2, nodes + 3);
       /* Set mask depending on whether nodes are inside or outside the
        * domain. */
       iMsk = 0;
       for(idN = 0; idN < 4; ++idN)
       {
-	nod = nodBuf[idN];
+	nod = nodes[idN];
 	if(WlzInsideDomain(obj,
 			   nod->pos.vtZ, nod->pos.vtY, nod->pos.vtX,
 			   NULL))
@@ -1994,462 +2058,865 @@ WlzErrorNum 	WlzCMeshAdjustBoundaryElm3D(WlzCMesh3D *mesh,
 	  iMsk |= 1 << idN;
 	}
       }
-      elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+      elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
       switch(iMsk)
       {
-	/* All nodes of the element are outside the domain. */
-        case  0: /*  0|0000|0 */
-	  /* Check centroid too before setting outside flag. */
-	  /* HACK New code check this TODO */
-	  WLZ_VTX_3_ADD4(cen, nodBuf[0]->pos, nodBuf[1]->pos,
-	                      nodBuf[2]->pos, nodBuf[3]->pos);
-	  WLZ_VTX_3_SCALE(cen, cen, 0.25);
-	  if(WlzInsideDomain(obj, cen.vtZ, cen.vtY, cen.vtX, NULL) == 0)
-	  {
-	    elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
-	  }
-	  else
-	  {
-            elm->flags &= ~(WLZ_CMESH_ELM_FLAG_OUTSIDE);
-	  }
+	case 0: /* 0|0000|0 */
+	  (void )WlzCMeshDelElm3D(mesh, elm);
 	  break;
 	/* 1 node is inside the domain. */
-        case  1: /*  1|0001|1 */
-          WlzCMeshAdjustBoundaryElm3D3(mesh, obj, nodBuf, 1, 2, 3, 0, tol);
+	case  1: /*  1|0001|1 */
+	  errNum = WlzCMeshBoundConformElm3D3(mesh, obj, elm,
+					      nodes, 1, 2, 3, 0, tol);
 	  break;
-        case  2: /*  2|0010|1 */
-          WlzCMeshAdjustBoundaryElm3D3(mesh, obj, nodBuf, 2, 3, 0, 1, tol);
+	case  2: /*  2|0010|1 */
+	  errNum = WlzCMeshBoundConformElm3D3(mesh, obj, elm,
+					      nodes, 2, 3, 0, 1, tol);
 	  break;
-        case  4: /*  4|0100|1 */
-          WlzCMeshAdjustBoundaryElm3D3(mesh, obj, nodBuf, 3, 0, 1, 2, tol);
+	case  4: /*  4|0100|1 */
+	  errNum = WlzCMeshBoundConformElm3D3(mesh, obj, elm,
+					      nodes, 3, 0, 1, 2, tol);
 	  break;
-        case  8: /*  8|1000|1 */
-          WlzCMeshAdjustBoundaryElm3D3(mesh, obj, nodBuf, 0, 1, 2, 3, tol);
+	case  8: /*  8|1000|1 */
+	  errNum = WlzCMeshBoundConformElm3D3(mesh, obj, elm,
+					      nodes, 0, 1, 2, 3, tol);
 	  break;
 	/* 2 nodes are inside the domain. */
-        case  3: /*  3|0011|2 */
-          WlzCMeshAdjustBoundaryElm3D2(mesh, obj, nodBuf, 3, 2, 0, 1, tol);
+	case  3: /*  3|0011|2 */
+	  errNum = WlzCMeshBoundConformElm3D2(mesh, obj, elm,
+					      nodes, 3, 2, 0, 1, tol);
 	  break;
-        case  5: /*  5|0101|2 */
-          WlzCMeshAdjustBoundaryElm3D2(mesh, obj, nodBuf, 3, 1, 0, 2, tol);
+	case  5: /*  5|0101|2 */
+	  errNum = WlzCMeshBoundConformElm3D2(mesh, obj, elm,
+					      nodes, 3, 1, 0, 2, tol);
 	  break;
-        case  6: /*  6|0110|2 */
-          WlzCMeshAdjustBoundaryElm3D2(mesh, obj, nodBuf, 3, 0, 1, 2, tol);
+	case  6: /*  6|0110|2 */
+	  errNum = WlzCMeshBoundConformElm3D2(mesh, obj, elm,
+					      nodes, 3, 0, 1, 2, tol);
 	  break;
-        case  9: /*  9|1001|2 */
-          WlzCMeshAdjustBoundaryElm3D2(mesh, obj, nodBuf, 2, 1, 3, 0, tol);
+	case  9: /*  9|1001|2 */
+	  errNum = WlzCMeshBoundConformElm3D2(mesh, obj, elm,
+					      nodes, 2, 1, 3, 0, tol);
 	  break;
-        case 10: /* 10|1010|2 */
-          WlzCMeshAdjustBoundaryElm3D2(mesh, obj, nodBuf, 2, 0, 3, 1, tol);
+	case 10: /* 10|1010|2 */
+	  errNum = WlzCMeshBoundConformElm3D2(mesh, obj, elm,
+					      nodes, 2, 0, 3, 1, tol);
 	  break;
-        case 12: /* 12|1100|2 */
-          WlzCMeshAdjustBoundaryElm3D2(mesh, obj, nodBuf, 1, 0, 3, 2, tol);
+	case 12: /* 12|1100|2 */
+	  errNum = WlzCMeshBoundConformElm3D2(mesh, obj, elm,
+					      nodes, 1, 0, 3, 2, tol);
 	  break;
 	/* 3 nodes are inside the domain. */
-        case  7: /*  7|0111|3 */
-          WlzCMeshAdjustBoundaryElm3D1(mesh, obj, nodBuf, 3, 0, 1, 2, tol);
+	case  7: /*  7|0111|3 */
+	  errNum = WlzCMeshBoundConformElm3D1(mesh, obj, elm,
+					      nodes, 3, 0, 1, 2, tol);
 	  break;
-        case 11: /* 11|1011|3 */
-          WlzCMeshAdjustBoundaryElm3D1(mesh, obj, nodBuf, 2, 3, 0, 1, tol);
+	case 11: /* 11|1011|3 */
+	  errNum = WlzCMeshBoundConformElm3D1(mesh, obj, elm,
+					      nodes, 2, 3, 0, 1, tol);
 	  break;
-        case 13: /* 13|1101|3 */
-          WlzCMeshAdjustBoundaryElm3D1(mesh, obj, nodBuf, 1, 2, 3, 0, tol);
+	case 13: /* 13|1101|3 */
+	  errNum = WlzCMeshBoundConformElm3D1(mesh, obj, elm,
+					      nodes, 1, 2, 3, 0, tol);
 	  break;
-        case 14: /* 14|1110|3 */
-          WlzCMeshAdjustBoundaryElm3D1(mesh, obj, nodBuf, 0, 1, 2, 3, tol);
+	case 14: /* 14|1110|3 */
+	  errNum = WlzCMeshBoundConformElm3D1(mesh, obj, elm,
+					      nodes, 0, 1, 2, 3, tol);
 	  break;
-	/* All 4 nodes of the element are inside the domain. */
-        case 15: /* 15|1111|4 */
-          elm->flags &= ~(WLZ_CMESH_ELM_FLAG_BOUNDARY);
+	/* 4 nodes are inside the domain. */
+	case 15: /* 15|1111|4 */
+	  elm->flags &= ~(WLZ_CMESH_ELM_FLAG_BOUNDARY);
+	  break;
+	default:
 	  break;
       }
     }
+    ++idE;
   }
-  return(errNum);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Given an array of four nodes, each of which is at the
-*		vertex of a tetrahedron. The first three nodes are
-*		outside the domain of the given object and the last
-*		is inside it. This function repositions the three
-*		outside nodes, adjusting their position so that they
-*		lie on a (tetrahedron edge) line segments between the
-*		intside node's position and the position of the nodes
-*		on the opposite face, with the position along the
-*		segments such that they are  just outside the domain of
-*		the given object. Here the limit on 'just' outside is
-*		defined by the tollerance parameter.
-* \param	mesh			Given mesh.
-* \param	obj			Given object.
-* \param	nodes			Array of four nodes.
-* \param	n0			Index of the first node to be moved.
-* \param	n1			Index of the second node to be moved.
-* \param	n2			Index of the third node to be moved.
-* \param	n3			Index of a node inside object.
-* \param	tol			Acceptable placement error.
-*/
-static void	WlzCMeshAdjustBoundaryElm3D3(WlzCMesh3D *mesh,
-					     WlzObject *obj,
-					     WlzCMeshNod3D **nodes,
-					     int n0, int n1, int n2, int n3,
-					     double tol)
-{
-  if((nodes[n0]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
+  /* Pass 1: Delete new elemets marked as boundary but outside the
+   * given object's domain. */
+  if(errNum == WLZ_ERR_NONE)
   {
-    WlzCMeshRemNodFromGrid3D(mesh, nodes[n0]);
-    nodes[n0]->pos = WlzGeomObjLineSegIntersect3D(obj, nodes[n0]->pos,
-						  nodes[n3]->pos, tol, 0,
-						  NULL);
-    WlzCMeshAddNodToGrid3D(mesh, nodes[n0]);
-    nodes[n0]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-  if((nodes[n1]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    WlzCMeshRemNodFromGrid3D(mesh, nodes[n1]);
-    nodes[n1]->pos = WlzGeomObjLineSegIntersect3D(obj, nodes[n1]->pos,
-						  nodes[n3]->pos, tol, 0,
-						  NULL);
-    WlzCMeshAddNodToGrid3D(mesh, nodes[n1]);
-    nodes[n1]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-  if((nodes[n2]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    WlzCMeshRemNodFromGrid3D(mesh, nodes[n2]);
-    nodes[n2]->pos = WlzGeomObjLineSegIntersect3D(obj, nodes[n2]->pos,
-						  nodes[n3]->pos, tol, 0,
-						  NULL);
-    WlzCMeshAddNodToGrid3D(mesh, nodes[n2]);
-    nodes[n2]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Given an array of three nodes, each of which is at the
-*		vertex of a triangle. The first two nodes are
-*		outside the domain of the given object and remaining
-*		node is inside it. This function repositions the two
-*		outside nodes, adjusting their position so that they
-*		lie on (triangle edge) line segments between the
-*		intside node's position and the position of the nodes
-*		on the opposite edge, with the position along the
-*		segments such that they are  just outside the domain of
-*		the given object. Here the limit on 'just' outside is
-*		defined by the tollerance parameter.
-* \param	mesh			Given mesh.
-* \param	obj			Given object.
-* \param	nodes			Array of four nodes.
-* \param	n0			Index of the first node to be moved.
-* \param	n1			Index of the second node to be moved.
-* \param	n2			Index of the inside node.
-* \param	tol			Acceptable placement error.
-*/
-static void	WlzCMeshAdjustBoundaryElm2D2(WlzCMesh2D *mesh,
-					     WlzObject *obj,
-					     WlzCMeshNod2D **nodes,
-					     int n0, int n1, int n2,
-					     double tol)
-{
-  if((nodes[n0]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    WlzCMeshRemNodFromGrid2D(mesh, nodes[n0]);
-    nodes[n0]->pos = WlzGeomObjLineSegIntersect2D(obj, nodes[n0]->pos,
-						  nodes[n2]->pos, tol, 0,
-						  NULL);
-    WlzCMeshAddNodToGrid2D(mesh, nodes[n0]);
-    nodes[n0]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-  if((nodes[n1]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    WlzCMeshRemNodFromGrid2D(mesh, nodes[n1]);
-    nodes[n1]->pos = WlzGeomObjLineSegIntersect2D(obj, nodes[n1]->pos,
-						  nodes[n2]->pos, tol, 0,
-						  NULL);
-    WlzCMeshAddNodToGrid2D(mesh, nodes[n1]);
-    nodes[n1]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Given an array of four nodes, each of which is at the
-*		vertex of a tetrahedron. The first two nodes are
-*		outside the domain of the given object and the last
-*		two are inside it. This function repositions the two
-*		outside nodes, adjusting their position so that they lie
-*		on a line segment between the outside node and the
-*		midpoint of the two inside nodes, with the position along
-*		the segments such that they are  just outside the domain
-*		of the given object. Here the limit on 'just' outside is
-*		defined by the tollerance parameter.
-* \param	mesh			Given mesh.
-* \param	obj			Given object.
-* \param	nodes			Array of four nodes.
-* \param	n0			Index of the first node to be moved.
-* \param	n1			Index of the second node to be moved.
-* \param	n2			Index of the first node inside object.
-* \param	n3			Index of the second node inside object.
-* \param	tol			Acceptable placement error.
-*/
-static void	WlzCMeshAdjustBoundaryElm3D2(WlzCMesh3D *mesh,
-					     WlzObject *obj,
-					     WlzCMeshNod3D **nodes,
-					     int n0, int n1, int n2, int n3,
-					     double tol)
-{
-  WlzDVertex3	p0;
-
-  p0.vtX = (nodes[n2]->pos.vtX + nodes[n3]->pos.vtX) / 2.0;
-  p0.vtY = (nodes[n2]->pos.vtY + nodes[n3]->pos.vtY) / 2.0;
-  p0.vtZ = (nodes[n2]->pos.vtZ + nodes[n3]->pos.vtZ) / 2.0;
-  if((nodes[n0]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    WlzCMeshRemNodFromGrid3D(mesh, nodes[n0]);
-    nodes[n0]->pos = WlzGeomObjLineSegIntersect3D(obj, p0, nodes[n0]->pos,
-						  tol, 0, NULL);
-    WlzCMeshAddNodToGrid3D(mesh, nodes[n0]);
-    nodes[n0]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-  if((nodes[n1]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    WlzCMeshRemNodFromGrid3D(mesh, nodes[n1]);
-    nodes[n1]->pos = WlzGeomObjLineSegIntersect3D(obj, p0, nodes[n1]->pos,
-						  tol, 0, NULL);
-    WlzCMeshAddNodToGrid3D(mesh, nodes[n1]);
-    nodes[n1]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Given an array of three nodes, each of which is at the
-*		vertex of a triangle. The first node is outside the
-*		domain of the given object and the other two are
-*		inside it. This function repositions the first node
-*		so that it lies on a line segments between the outside
-*		node's position and the position at the centre of the
-*		opposite edge, with the position along the segment such
-*		that it is just outside the domain of the given object.
-*		Here the limit on 'just' outside is defined by the
-*		tollerance parameter.
-* \param	mesh			Given mesh.
-* \param	obj			Given object.
-* \param	nodes			Array of four nodes.
-* \param	n0			Index of the node to be adjusted.
-* \param	n1			Index of a node on opposite edge.
-* \param	n2			Index of a node on opposite edge.
-* \param	tol			Acceptable placement error.
-*/
-static void	WlzCMeshAdjustBoundaryElm2D1(WlzCMesh2D *mesh,
-					     WlzObject *obj,
-					     WlzCMeshNod2D **nodes,
-					     int n0, int n1, int n2,
-					     double tol)
-{
-  WlzDVertex2	p0;
-
-  if((nodes[n0]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    p0.vtX = (nodes[n1]->pos.vtX +
-	      nodes[n2]->pos.vtX) / 2.0;
-    p0.vtY = (nodes[n1]->pos.vtY +
-	      nodes[n2]->pos.vtY) / 2.0;
-    WlzCMeshRemNodFromGrid2D(mesh, nodes[n0]);
-    nodes[n0]->pos = WlzGeomObjLineSegIntersect2D(obj, nodes[n0]->pos, p0,
-						  tol, 0, NULL);
-    WlzCMeshAddNodToGrid2D(mesh, nodes[n0]);
-    nodes[n0]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Given an array of four nodes, each of which is at the
-*		vertex of a tetrahedron. The first node is outside the
-*		domain of the given object and the other three are
-*		inside it. This function repositions the first node
-*		so that it lies on a line segments between the outside
-*		node's position and the position of the centroid of the
-*		opposite face, with the position along the segment such
-*		that it is just outside the domain of the given object.
-*		Here the limit on 'just' outside is defined by the
-*		tollerance parameter.
-* \param	mesh			Given mesh.
-* \param	obj			Given object.
-* \param	nodes			Array of four nodes.
-* \param	n0			Index of the node to be adjusted.
-* \param	n1			Index of a node on opposite face.
-* \param	n2			Index of a node on opposite face.
-* \param	n3			Index of a node on opposite face.
-* \param	tol			Acceptable placement error.
-*/
-static void	WlzCMeshAdjustBoundaryElm3D1(WlzCMesh3D *mesh,
-					     WlzObject *obj,
-					     WlzCMeshNod3D **nodes,
-					     int n0, int n1, int n2, int n3,
-					     double tol)
-{
-  WlzDVertex3	p0;
-
-  if((nodes[n0]->flags & WLZ_CMESH_NOD_FLAG_ADJUSTED) == 0)
-  {
-    p0.vtX = (nodes[n1]->pos.vtX +
-	      nodes[n2]->pos.vtX +
-	      nodes[n3]->pos.vtX) / 3.0;
-    p0.vtY = (nodes[n1]->pos.vtY +
-	      nodes[n2]->pos.vtY +
-	      nodes[n3]->pos.vtY) / 3.0;
-    p0.vtZ = (nodes[n1]->pos.vtZ +
-	      nodes[n2]->pos.vtZ +
-	      nodes[n3]->pos.vtZ) / 3.0;
-    WlzCMeshRemNodFromGrid3D(mesh, nodes[n0]);
-    nodes[n0]->pos = WlzGeomObjLineSegIntersect3D(obj, nodes[n0]->pos, p0,
-						  tol, 0, NULL);
-    WlzCMeshAddNodToGrid3D(mesh, nodes[n0]);
-    nodes[n0]->flags |= WLZ_CMESH_NOD_FLAG_ADJUSTED;
-  }
-}
-
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzMesh
-* \brief	Deletes all mesh elements flaged as being outside
-*		the domain.
-* \param	mesh			Given mesh.
-*/
-WlzErrorNum	WlzCMeshDelAllElmOutside2D(WlzCMesh2D *mesh)
-{
-  int		idE;
-  WlzCMeshElm2D	*elm;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(mesh == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
-    {
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-      if(elm->idx >= 0)
-      {
-        if((elm->flags & WLZ_CMESH_ELM_FLAG_OUTSIDE) != 0)
-        {
-	  (void )WlzCMeshDelElm2D(mesh, elm);
-	}
-      }
-#ifdef WLZ_CMESH_DEBUG_MESH
-      errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
-#endif
-    }
-  }
-  return(errNum);
-}
-
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzMesh
-* \brief	Deletes all mesh elements flaged as being outside
-*		the domain.
-* \param	mesh			Given mesh.
-*/
-WlzErrorNum	WlzCMeshDelAllElmOutside3D(WlzCMesh3D *mesh)
-{
-  int		idE;
-  WlzCMeshElm3D	*elm;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(mesh == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else
-  {
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    idE = 0;
+    idM = mesh->res.elm.maxEnt;
+    while((errNum == WLZ_ERR_NONE) && (idE < idM))
     {
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-      if(elm->idx >= 0)
+      if((elm->idx >= 0) &&
+         (elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
       {
-        if((elm->flags & WLZ_CMESH_ELM_FLAG_OUTSIDE) != 0)
-        {
+	WlzCMeshElmGetNodes3D(elm,
+			      nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+	/* Set mask depending on whether nodes are inside or outside the
+	 * domain. */
+	iMsk = 0;
+	for(idN = 0; idN < 4; ++idN)
+	{
+	  nod = nodes[idN];
+	  if(WlzInsideDomain(obj,
+			     nod->pos.vtZ, nod->pos.vtY, nod->pos.vtX,
+			     NULL))
+	  {
+	    iMsk |= 1 << idN;
+	    break;
+	  }
+	}
+	if(iMsk == 0)    /* All nodes of the element are outside the domain. */
+	{
 	  (void )WlzCMeshDelElm3D(mesh, elm);
 	}
       }
-#ifdef WLZ_CMESH_DEBUG_MESH
-      errNum = WlzCMeshVerify3D(mesh, NULL, 1, stderr);
-#endif
+      ++idE;
     }
   }
   return(errNum);
 }
 
 /*!
+* \return	New or existing mesh node.
 * \ingroup	WlzMesh
-* \brief	Sets the outside flag bit for all boundary elements
-*		which have a minimum edge length or area less than the
-*		threshold values.
-* \param	mesh			The mesh.
-* \param	thrLenSq		Threshold minimum edge length
-*					squared.
-* \param	thrArea2		Threshold minimum area times 2.
+* \brief	Computes the position for a node between the two given
+* 		nodes (one inside the given object and the other outside
+* 		it) such that the new node is outside the object. The
+* 		new node is placed using the tollerance provided, because
+* 		of this the new node returned may be one of the given nodes
+* 		or it may be an actual new node.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	nod0			First given node.
+* \param	nod1			Second given node.
+* \param	tol			Acceptable placement error.
+* \param	dstErr			Destination error pointer may be NULL.
 */
-void	 	WlzCMeshSetAllSmallBndElmOutside2D(WlzCMesh2D *mesh,
-					double thrLenSq, double thrArea2)
+static WlzCMeshNod2D *WlzCMeshComputeBoundNod2D(WlzCMesh2D *mesh,
+					WlzObject *obj,
+					WlzCMeshNod2D *nod0,
+					WlzCMeshNod2D *nod1,
+					double tol,
+					WlzErrorNum *dstErr)
 {
-  int		idE;
-  double	minLenSq,
-  		area2;
-  WlzCMeshElm2D	*elm;
+  double	tolSq;
+  WlzIVertex2	dumGrdPos;
+  WlzDVertex2	pos;
+  WlzDVertex2   pos0,
+  		pos1;
+  WlzCMeshNod2D *pNod,
+  		*nod = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  pos0 = nod0->pos;
+  pos1 = nod1->pos;
+  tolSq = (tol * tol) + DBL_EPSILON;
+  pos = WlzGeomObjLineSegIntersect2D(obj, pos0, pos1, tol, 0, NULL);
+  if(WlzGeomDistSq2D(pos, pos0) < tolSq)
   {
-    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-    if((elm->idx >= 0) && ((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0))
+    nod = nod0;
+  }
+  else if(WlzGeomDistSq2D(pos, pos1) < tolSq)
+  {
+    nod = nod1;
+  }
+  else
+  {
+    if(WlzCMeshLocateNod2D(mesh, pos, &dumGrdPos, &pNod, &nod) == 0)
     {
-      minLenSq = WlzCMeshElmMinEdgLnSq2D(elm);
-      area2 = WlzCMeshElmSnArea22D(elm);
-      if((minLenSq < thrLenSq) || (area2 < thrArea2))
-      {
-        elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
-      }
+      nod = WlzCMeshNewNod2D(mesh, pos, &errNum); 
     }
   }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nod);
 }
 
 /*!
+* \return	New or existing mesh node.
 * \ingroup	WlzMesh
-* \brief	Sets the outside flag bit for all boundary elements
-*		which have a minimum edge length or area less than the
-*		threshold values.
-* \param	mesh			The mesh.
-* \param	thrLenSq		Threshold minimum edge length
-*					squared.
-* \param	thrVol6			Threshold minimum volume times 6.
+* \brief	Computes the position for a node between the two given
+* 		nodes (one inside the given object and the other outside
+* 		it) such that the new node is outside the object. The
+* 		new node is placed using the tollerance provided, because
+* 		of this the new node returned may be one of the given nodes
+* 		or it may be an actual new node.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	nod0			First given node.
+* \param	nod1			Second given node.
+* \param	tol			Acceptable placement error.
+* \param	dstErr			Destination error pointer may be NULL.
 */
-void	 	WlzCMeshSetAllSmallBndElmOutside3D(WlzCMesh3D *mesh,
-					double thrLenSq, double thrVol6)
+static WlzCMeshNod3D *WlzCMeshComputeBoundNod3D(WlzCMesh3D *mesh,
+					WlzObject *obj,
+					WlzCMeshNod3D *nod0,
+					WlzCMeshNod3D *nod1,
+					double tol,
+					WlzErrorNum *dstErr)
+{
+  double	tolSq;
+  WlzIVertex3	dumGrdPos;
+  WlzDVertex3	pos;
+  WlzDVertex3   pos0,
+  		pos1;
+  WlzCMeshNod3D *pNod,
+  		*nod = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  pos0 = nod0->pos;
+  pos1 = nod1->pos;
+  tolSq = (tol * tol) + DBL_EPSILON;
+  pos = WlzGeomObjLineSegIntersect3D(obj, pos0, pos1, tol, 0, NULL);
+  if(WlzGeomDistSq3D(pos, pos0) < tolSq)
+  {
+    nod = nod0;
+  }
+  else if(WlzGeomDistSq3D(pos, pos1) < tolSq)
+  {
+    nod = nod1;
+  }
+  else
+  {
+    if(WlzCMeshLocateNod3D(mesh, pos, &dumGrdPos, &pNod, &nod) == 0)
+    {
+      nod = WlzCMeshNewNod3D(mesh, pos, &errNum); 
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nod);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given an array of three nodes, each of which is at the
+* 		vertex of a 2D conforming mesh element, such that the
+* 		first node is outside the domain of the given object
+* 		and the other tho are inside it. This function replaces
+* 		the given element with 2 new elements.
+* 		Nodes are added (if they do not already exist) at the
+* 		intersection of the elements edges with the given object.
+* 		These nodes are then used to create new elements by adding
+* 		a single edge.
+* 		When truncating the tetrahedral mesh element, the points
+* 		of intersection point are choosen to be just outside the
+* 		domain of the given object, with the limit on 'just'
+* 		controlled by the tollerance parametrer.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	elm			Given element to delete and replace
+* 					with a conforming element.
+* \param	nodBuf			Array of four nodes.
+* \param	nIdx0			Index of node outside object.
+* \param	nIdx1			Index of a node on opposite face.
+* \param	nIdx2			Index of a node on opposite face.
+* \param	tol			Acceptable placement error.
+*/
+static WlzErrorNum WlzCMeshBoundConformElm2D1(WlzCMesh2D *mesh,
+					WlzObject *obj, WlzCMeshElm2D *elm,
+                                        WlzCMeshNod2D **nodBuf,
+					int nIdx0, int nIdx1,
+					int nIdx2, double tol)
 {
   int		idE;
-  double	minLenSq,
-  		vol6;
-  WlzCMeshElm3D	*elm;
-
-  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  double	area;
+  WlzCMeshNod2D	*nod[5];
+  WlzCMeshNod2D	*eNod[3];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	elmNodTbl[2][3] =
   {
-    elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-    if((elm->idx >= 0) && ((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0))
+    {1, 2, 4},
+    {1, 4, 3}
+  };
+
+  /* Nodes 0 - 3 are the nodes of the given element. */
+  nod[0] = *(nodBuf + nIdx0);
+  nod[1] = *(nodBuf + nIdx1);
+  nod[2] = *(nodBuf + nIdx2);
+  nod[3] = nod[4] = NULL;
+  /* Create new (or find existing) boundary nodes: Nodes 3 - 4. */
+  for(idE = 1; idE <= 2; ++idE)
+  {
+    nod[2 + idE] = WlzCMeshComputeBoundNod2D(mesh, obj, nod[0], nod[idE],
+				             tol, &errNum);
+    if(errNum != WLZ_ERR_NONE)
     {
-      minLenSq = WlzCMeshElmMinEdgLnSq3D(elm);
-      vol6 = WlzCMeshElmSnVolume63D(elm);
-      if((minLenSq < thrLenSq) || (vol6 < thrVol6))
+      break;
+    }
+  }
+  /* Create new elements and then delete the given one. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < 2; ++idE)
+    {
+      eNod[0] = nod[elmNodTbl[idE][0]];
+      eNod[1] = nod[elmNodTbl[idE][1]];
+      eNod[2] = nod[elmNodTbl[idE][2]];
+      area = WlzGeomTriangleSnArea2(eNod[0]->pos, eNod[1]->pos, eNod[2]->pos);
+      if(area * area > WLZ_MESH_TOLERANCE_SQ)
       {
-        elm->flags |= WLZ_CMESH_ELM_FLAG_OUTSIDE;
+	if(area < 0)
+	{
+	  (void )WlzCMeshNewElm2D(mesh, eNod[0], eNod[2], eNod[1],
+				  &errNum);
+	}
+	else
+	{
+	  (void )WlzCMeshNewElm2D(mesh, eNod[0], eNod[1], eNod[2],
+				  &errNum);
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+	else
+	{
+	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+        }
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzCMeshDelElm2D(mesh, elm);
+    }
+  }
+  /* Delete any unused nodes which may result from zero volume elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE <= 4; ++idE)
+    {
+      if(nod[idE]->edu == NULL)
+      {
+        (void )WlzCMeshDelNod2D(mesh, nod[idE]);
       }
     }
   }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given an array of three nodes, each of which is at the
+* 		vertex of a 2D conforming mesh element, such that the
+* 		first two nodes are outside the domain of the given object
+* 		and the last node is inside it. This function replaces
+* 		the given element with a new element in which the first
+* 		two nodes are replaced with (possibly) new nodes,
+* 		the positions of which are given by the intersection of
+* 		the elements edges with the given object's boundary.
+* 		The intersection point is choosen to be just outside the
+* 		domain of the given object, with the limit on 'just'
+* 		controlled by the tollerance parametrer.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	elm			Given element to delete and replace
+* 					with a conforming element.
+* \param	nodBuf			Array of four nodes.
+* \param	nIdx0			Index of first node outside object.
+* \param	nIdx1			Index of second node outside object.
+* \param	nIdx2			Index of third node outside object.
+* \param	tol			Acceptable placement error.
+*/
+static WlzErrorNum WlzCMeshBoundConformElm2D2(WlzCMesh2D *mesh,
+					WlzObject *obj, WlzCMeshElm2D *elm,
+                                        WlzCMeshNod2D **nodBuf,
+					int nIdx0, int nIdx1,
+					int nIdx2, double tol)
+{
+  int		idE;
+  double	area;
+  WlzCMeshNod2D	*nod[5];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nod[0] = *(nodBuf + nIdx0);
+  nod[1] = *(nodBuf + nIdx1);
+  nod[2] = *(nodBuf + nIdx2);
+  nod[3] = nod[4] = NULL;
+  /* Create (or find existing) new boundary nodes. */
+  for(idE = 0; idE < 2; ++idE)
+  {
+    nod[idE + 3] = WlzCMeshComputeBoundNod2D(mesh, obj, nod[2], nod[idE],
+				      tol, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    area = WlzGeomTriangleSnArea2(nod[2]->pos, nod[3]->pos, nod[4]->pos);
+    if(area * area > WLZ_MESH_TOLERANCE_SQ)
+    {
+      /* Create new element. */
+      if(area < 0)
+      {
+	(void )WlzCMeshNewElm2D(mesh, nod[2], nod[4], nod[3], &errNum);
+      }
+      else
+      {
+	(void )WlzCMeshNewElm2D(mesh, nod[2], nod[3], nod[4], &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+      }
+    }
+    else
+    {
+      /* Delete the unused new nodes. */
+      for(idE = 0; idE < 5; ++idE)
+      {
+	if((nod[idE] != NULL) && (nod[idE]->edu == NULL))
+	{
+	  (void )WlzCMeshDelNod2D(mesh, nod[idE]);
+	}
+      }
+    }
+    (void )WlzCMeshDelElm2D(mesh, elm);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given an array of four nodes, each of which is at the
+* 		vertex of a 3D conforming mesh element, such that the
+* 		first node is outside the domain of the given object
+* 		and the other three are inside it. This function replaces
+* 		the given element with 14 new elements.
+* 		Nodes are added (if they do not already exist) at the
+* 		intersection of the elements edges with the given object,
+* 		at the centre of each quadrilateral face of the truncated
+* 		tetrahedron and at the centre of the truncated tetrahedron
+* 		itself. These nodes are then used to create new elements
+* 		in a body centred tesselation.
+* 		When truncating the tetrahedral mesh element, the points
+* 		of intersection point are choosen to be just outside the
+* 		domain of the given object, with the limit on 'just'
+* 		controlled by the tollerance parametrer.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	elm			Given element to delete and replace
+* 					with a conforming element.
+* \param	nodBuf			Array of four nodes.
+* \param	nIdx0			Index of node outside object.
+* \param	nIdx1			Index of a node on opposite face.
+* \param	nIdx2			Index of a node on opposite face.
+* \param	nIdx3			Index of a node on opposite face.
+* \param	tol			Acceptable placement error.
+*/
+static WlzErrorNum WlzCMeshBoundConformElm3D1(WlzCMesh3D *mesh,
+					WlzObject *obj, WlzCMeshElm3D *elm,
+                                        WlzCMeshNod3D **nodBuf,
+					int nIdx0, int nIdx1,
+					int nIdx2, int nIdx3,
+					double tol)
+{
+  int		idE;
+  double	vol;
+  WlzIVertex3	dumGrdPos;
+  WlzDVertex3	pos[11];
+  WlzCMeshNod3D	*nod[11];
+  WlzCMeshNod3D	*eNod[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	quadFceNodTbl[3][4] =
+  {
+    {1, 2, 5, 4},
+    {2, 3, 6, 5},
+    {3, 1, 4, 6}
+  };
+  const int	elmNodTbl[14][4] =
+  {
+    {1, 2, 7, 10},
+    {2, 5, 7, 10},
+    {5, 4, 7, 10},
+    {4, 1, 7, 10},
+    {2, 3, 8, 10},
+    {3, 6, 8, 10},
+    {6, 5, 8, 10},
+    {5, 2, 8, 10},
+    {3, 1, 9, 10},
+    {1, 4, 9, 10},
+    {4, 6, 9, 10},
+    {6, 3, 9, 10},
+    {1, 2, 3, 10},
+    {4, 5, 6, 10}
+  };
+
+  /* Nodes 0 - 3 are the nodes of the given element. */
+  nod[0] = *(nodBuf + nIdx0);
+  nod[1] = *(nodBuf + nIdx1);
+  nod[2] = *(nodBuf + nIdx2);
+  nod[3] = *(nodBuf + nIdx3);
+  nod[4] = nod[5] = nod[6] = nod[7] = nod[8] = nod[9] = nod[10] = NULL;
+  /* Create new (or find existing) boundary nodes: Nodes 4 - 6. */
+  for(idE = 1; idE <= 3; ++idE)
+  {
+    nod[3 + idE] = WlzCMeshComputeBoundNod3D(mesh, obj, nod[0], nod[idE],
+				             tol, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      break;
+    }
+  }
+  /* Create (or find existing) nodes at centres of quadrilateral faces:
+   * Nodes 7 - 9. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < 3; ++idE)
+    {
+      pos[0] = nod[quadFceNodTbl[idE][0]]->pos;
+      pos[1] = nod[quadFceNodTbl[idE][1]]->pos;
+      pos[2] = nod[quadFceNodTbl[idE][2]]->pos;
+      pos[3] = nod[quadFceNodTbl[idE][3]]->pos;
+      pos[idE + 7].vtX = (pos[0].vtX + pos[1].vtX +
+                          pos[2].vtX + pos[3].vtX) / 4.0;
+      pos[idE + 7].vtY = (pos[0].vtY + pos[1].vtY +
+                          pos[2].vtY + pos[3].vtY) / 4.0;
+      pos[idE + 7].vtZ = (pos[0].vtZ + pos[1].vtZ +
+                          pos[2].vtZ + pos[3].vtZ) / 4.0;
+      if(WlzCMeshLocateNod3D(mesh, pos[idE + 7],
+                             &dumGrdPos, eNod + 1, eNod + 0) == 0)
+      {
+        eNod[0] = WlzCMeshNewNod3D(mesh, pos[idE + 7], &errNum); 
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
+      nod[idE + 7] = eNod[0];
+    }
+  }
+  /* Create node at centre of truncated tetrahedron: Node 10. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pos[10].vtX = (pos[7].vtX + pos[8].vtX + pos[9].vtX) / 3.0;
+    pos[10].vtY = (pos[7].vtY + pos[8].vtY + pos[9].vtY) / 3.0;
+    pos[10].vtZ = (pos[7].vtZ + pos[8].vtZ + pos[9].vtZ) / 3.0;
+    nod[10] = WlzCMeshNewNod3D(mesh, pos[10], &errNum);
+  }
+  /* Create new elements and then delete the given one. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < 14; ++idE)
+    {
+      eNod[0] = nod[elmNodTbl[idE][0]];
+      eNod[1] = nod[elmNodTbl[idE][1]];
+      eNod[2] = nod[elmNodTbl[idE][2]];
+      eNod[3] = nod[elmNodTbl[idE][3]];
+      vol = WlzGeomTetraSnVolume6(eNod[0]->pos, eNod[1]->pos,
+				  eNod[2]->pos, eNod[3]->pos);
+      if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+      {
+	if(vol < 0)
+	{
+	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
+				  &errNum);
+	}
+	else
+	{
+	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
+				  &errNum);
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+	else
+	{
+	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzCMeshDelElm3D(mesh, elm);
+    }
+  }
+  /* Delete any unused nodes which may result from zero volume elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE <= 10; ++idE)
+    {
+      if(nod[idE]->edu == NULL)
+      {
+        (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given an array of four nodes, each of which is at the
+* 		vertex of a 3D conforming mesh element, such that the
+* 		first two nodes are outside the domain of the given
+* 		object and remaining two are inside it. This function
+* 		replaces the given element with new elements in which
+* 		the first two nodes are replaced with (possibly) new
+* 		nodes, the positions of which are given by the
+* 		intersection of the elements edges with the object's
+* 		boundary.
+* 		The intersection points are choosen to be just outside
+* 		the domain of the given object, with the limit on 'just'
+* 		controlled by the tollerance parametrer.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	elm			Given element to delete and replace
+* 					with a conforming element.
+* \param	nodBuf			Array of four nodes.
+* \param	nIdx0			Index of first node outside object.
+* \param	nIdx1			Index of second node outside object.
+* \param	nIdx2			Index of first node inside object.
+* \param	nIdx3			Index of second node inside object.
+* \param	tol			Acceptable placement error.
+*/
+static WlzErrorNum WlzCMeshBoundConformElm3D2(WlzCMesh3D *mesh,
+					WlzObject *obj, WlzCMeshElm3D *elm,
+                                        WlzCMeshNod3D **nodBuf,
+					int nIdx0, int nIdx1,
+					int nIdx2, int nIdx3,
+					double tol)
+{
+  int		idE;
+  double	vol;
+  WlzIVertex3	dumGrdPos;
+  WlzDVertex3	pos[12];
+  WlzCMeshNod3D	*nod[12];
+  WlzCMeshNod3D	*eNod[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	edgNodTbl[4][2] =
+  {
+    {0, 2},
+    {0, 3},
+    {1, 2},
+    {1, 3}
+  };
+  const int quadFceNodTbl[3][4] =
+  {
+    {2, 3, 5, 7},
+    {4, 5, 7, 6},
+    {2, 3, 7, 6}
+  };
+  const int	elmNodTbl[14][4] =
+  {
+    {2, 3,  8, 11},
+    {3, 5,  8, 11},
+    {5, 4,  8, 11},
+    {4, 2,  8, 11},
+    {4, 5,  9, 11},
+    {5, 7,  9, 11},
+    {7, 6,  9, 11},
+    {6, 4,  9, 11},
+    {2, 3, 10, 11},
+    {3, 7, 10, 11},
+    {7, 6, 10, 11},
+    {6, 2, 10, 11},
+    {2, 4,  6, 11},
+    {3, 5,  7, 11}
+  };
+
+  /* Nodes 0 - 3 are the nodes of the given element. */
+  nod[0] = *(nodBuf + nIdx0);
+  nod[1] = *(nodBuf + nIdx1);
+  nod[2] = *(nodBuf + nIdx2);
+  nod[3] = *(nodBuf + nIdx3);
+  nod[4] = nod[5] = nod[6] = nod[7] = nod[8] = nod[9] =
+           nod[10] = nod[11] = NULL;
+  /* Create new (or find existing) boundary nodes: Nodes 4 - 7. */
+  for(idE = 0; idE <= 3; ++idE)
+  {
+    nod[idE + 4] = WlzCMeshComputeBoundNod3D(mesh, obj,
+				      nod[edgNodTbl[idE][0]],
+				      nod[edgNodTbl[idE][1]],
+				      tol, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      break;
+    }
+  }
+  /* Create (or find existing) nodes at centres of quadrilateral faces:
+   * Nodes 8 - 10.*/
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < 3; ++idE)
+    {
+      pos[0] = nod[quadFceNodTbl[idE][0]]->pos;
+      pos[1] = nod[quadFceNodTbl[idE][1]]->pos;
+      pos[2] = nod[quadFceNodTbl[idE][2]]->pos;
+      pos[3] = nod[quadFceNodTbl[idE][3]]->pos;
+      pos[idE + 8].vtX = (pos[0].vtX + pos[1].vtX +
+                          pos[2].vtX + pos[3].vtX) / 4.0;
+      pos[idE + 8].vtY = (pos[0].vtY + pos[1].vtY +
+                          pos[2].vtY + pos[3].vtY) / 4.0;
+      pos[idE + 8].vtZ = (pos[0].vtZ + pos[1].vtZ +
+                          pos[2].vtZ + pos[3].vtZ) / 4.0;
+      if(WlzCMeshLocateNod3D(mesh, pos[idE + 8],
+                             &dumGrdPos, eNod + 1, eNod + 0) == 0)
+      {
+        eNod[0] = WlzCMeshNewNod3D(mesh, pos[idE + 8], &errNum); 
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
+      nod[idE + 8] = eNod[0];
+    }
+  }
+  /* Create node at centre of truncated tetrahedron: Node 11. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pos[11].vtX = (pos[8].vtX + pos[9].vtX + pos[10].vtX) / 3.0;
+    pos[11].vtY = (pos[8].vtY + pos[9].vtY + pos[10].vtY) / 3.0;
+    pos[11].vtZ = (pos[8].vtZ + pos[9].vtZ + pos[10].vtZ) / 3.0;
+    nod[11] = WlzCMeshNewNod3D(mesh, pos[11], &errNum);
+  }
+  /* Create new elements and then delete the given one. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < 14; ++idE)
+    {
+      eNod[0] = nod[elmNodTbl[idE][0]];
+      eNod[1] = nod[elmNodTbl[idE][1]];
+      eNod[2] = nod[elmNodTbl[idE][2]];
+      eNod[3] = nod[elmNodTbl[idE][3]];
+      vol = WlzGeomTetraSnVolume6(eNod[0]->pos, eNod[1]->pos,
+				  eNod[2]->pos, eNod[3]->pos);
+      if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+      {
+	if(vol < 0)
+	{
+	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
+				  &errNum);
+	}
+	else
+	{
+	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
+				  &errNum);
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+	else
+	{
+	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzCMeshDelElm3D(mesh, elm);
+    }
+  }
+  /* Delete any unused nodes which may result from zero volume elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE <= 11; ++idE)
+    {
+      if(nod[idE]->edu == NULL)
+      {
+        (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given an array of four nodes, each of which is at the
+* 		vertex of a 3D conforming mesh element, such that the
+* 		first three nodes are outside the domain of the given object
+* 		and the last node is inside it. This function replaces
+* 		the given element with a new element in which the first
+* 		three nodes are replaced with (possibly) new nodes,
+* 		the positions of which are given by the intersection of
+* 		the elements edges with the given object's boundary.
+* 		The intersection point is choosen to be just outside the
+* 		domain of the given object, with the limit on 'just'
+* 		controlled by the tollerance parametrer.
+* \param	mesh			Given mesh.
+* \param	obj			Given object.
+* \param	elm			Given element to delete and replace
+* 					with a conforming element.
+* \param	nodBuf			Array of four nodes.
+* \param	nIdx0			Index of first node outside object.
+* \param	nIdx1			Index of second node outside object.
+* \param	nIdx2			Index of third node outside object.
+* \param	nIdx3			Index of the node inside the object.
+* \param	tol			Acceptable placement error.
+*/
+static WlzErrorNum WlzCMeshBoundConformElm3D3(WlzCMesh3D *mesh,
+					WlzObject *obj, WlzCMeshElm3D *elm,
+                                        WlzCMeshNod3D **nodBuf,
+					int nIdx0, int nIdx1,
+					int nIdx2, int nIdx3,
+					double tol)
+{
+  int		idE;
+  double	vol;
+  WlzCMeshNod3D	*nod[8];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nod[0] = *(nodBuf + nIdx0);
+  nod[1] = *(nodBuf + nIdx1);
+  nod[2] = *(nodBuf + nIdx2);
+  nod[3] = *(nodBuf + nIdx3);
+  nod[4] = nod[5] = nod[6] = nod[7] = NULL;
+  /* Create (or find existing) new boundary nodes. */
+  for(idE = 0; idE < 3; ++idE)
+  {
+    nod[idE + 4] = WlzCMeshComputeBoundNod3D(mesh, obj, nod[3], nod[idE],
+				      tol, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vol = WlzGeomTetraSnVolume6(nod[3]->pos, nod[4]->pos,
+				nod[5]->pos, nod[6]->pos);
+    if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+    {
+      /* Create new element. */
+      if(vol < 0)
+      {
+	(void )WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[6], nod[5],
+				&errNum);
+      }
+      else
+      {
+	(void )WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[5], nod[6],
+				&errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+      }
+    }
+    else
+    {
+      /* Delete the unused new nodes. */
+      for(idE = 0; idE < 8; ++idE)
+      {
+	if((nod[idE] != NULL) && (nod[idE]->edu == NULL))
+	{
+	  (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+	}
+      }
+    }
+    (void )WlzCMeshDelElm3D(mesh, elm);
+  }
+  return(errNum);
 }
 
 /*!
@@ -2470,9 +2937,9 @@ double 		WlzCMeshElmMinEdgLnSq2D(WlzCMeshElm2D *elm)
   if(elm && (elm->idx >= 0))
   {
     /* Collect the nodes of the element. */
-    nodBuf[0] = elm->edg[0].nod;
-    nodBuf[1] = elm->edg[1].nod;
-    nodBuf[2] = elm->edg[2].nod;
+    nodBuf[0] = elm->edu[0].nod;
+    nodBuf[1] = elm->edu[1].nod;
+    nodBuf[2] = elm->edu[2].nod;
     /* Compute and compare edge lengths. */
     WLZ_VTX_2_SUB(p0, nodBuf[0]->pos, nodBuf[1]->pos);
     minLenSq = WLZ_VTX_2_SQRLEN(p0);
@@ -2695,11 +3162,7 @@ static double	WlzCMeshCompGridBSz2D(int tnn, double npb,
   const double	delta = WLZ_MESH_TOLERANCE; /* A small +ve number which is
   					       smaller than any expected
 					       mesh node separation. */
-#ifdef HACK_OLD_CODE
-  bs = sqrt(fabs((npb * sz0 * sz0) / sz1) + delta);
-#else /* HACK_OLD_CODE */
   bs = sqrt(fabs((tnn * sz0) / ( npb * sz1)) + delta);
-#endif /* HACK_OLD_CODE */
   return(bs);
 }
 
@@ -2727,11 +3190,7 @@ static double	WlzCMeshCompGridBSz3D(int tnn, double npb,
   const double	delta = WLZ_MESH_TOLERANCE; /* A small +ve number which is
   					       smaller than any expected
 					       mesh node separation. */
-#ifdef HACK_OLD_CODE
-  bs = pow(fabs((npb * sz0 * sz0) / (sz1 * sz2)) + delta, 0.3333);
-#else /* HACK_OLD_CODE */
   bs = pow((fabs((tnn * sz0 * sz0)/(npb * sz1 * sz2)) + delta), 1.0 / 3.0);
-#endif /* HACK_OLD_CODE */
   return(bs);
 }
 
@@ -2804,8 +3263,7 @@ int	 	WlzCMeshLocateNod2D(WlzCMesh2D *mesh,
   WlzDVertex2	relPos;
   WlzIVertex2	idx;
   WlzIBox2	box;
-  WlzCMeshNod2D	*nod,
-  		*prv = NULL;
+  WlzCMeshNod2D	*nod;
   const double	eps = 0.01;
 
   /* Search within a box of buckets because the vertex may be on the
@@ -2822,16 +3280,14 @@ int	 	WlzCMeshLocateNod2D(WlzCMesh2D *mesh,
   {
     for(idx.vtX = box.xMin; idx.vtX <= box.xMax; ++idx.vtX)
     {
-      prv = NULL;
       nod = *(*(mesh->bGrid.buckets + idx.vtY) + idx.vtX);
       while(nod)
       {
-	if(WlzGeomVtxEqual2D(nod->pos, pos, WLZ_MESH_TOLERANCE_SQ))
+	if(WLZ_VTX_2_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
 	{
 	  found = 1;
 	  goto FOUND;
 	}
-	prv = nod;
 	nod = nod->next;
       }
     }
@@ -2875,8 +3331,7 @@ int	 	WlzCMeshLocateNod3D(WlzCMesh3D *mesh,
   WlzDVertex3	relPos;
   WlzIVertex3	idx;
   WlzIBox3	box;
-  WlzCMeshNod3D	*nod,
-  		*prv = NULL;
+  WlzCMeshNod3D	*nod;
   const double	eps = 0.01;
 
   /* Search within a box of buckets because the vertex may be on the
@@ -2899,16 +3354,14 @@ int	 	WlzCMeshLocateNod3D(WlzCMesh3D *mesh,
     {
       for(idx.vtX = box.xMin; idx.vtX <= box.xMax; ++idx.vtX)
       {
-	prv = NULL;
 	nod = *(*(*(mesh->bGrid.buckets + idx.vtZ) + idx.vtY) + idx.vtX);
 	while(nod)
 	{
-	  if(WlzGeomVtxEqual3D(nod->pos, pos, WLZ_MESH_TOLERANCE_SQ))
+	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
 	  {
 	    found = 1;
 	    goto FOUND;
 	  }
-	  prv = nod;
 	  nod = nod->next;
 	}
       }
@@ -3116,9 +3569,9 @@ static int	WlzCMeshElmWalkPos2D(WlzCMesh2D *mesh, int elmIdx,
       elmIdx = -1;
       for(idE = 0; idE < 3; ++idE)
       {
-	if(elm0->edg[idE].opp)
+	if(elm0->edu[idE].opp)
 	{
-	  elm1 = elm0->edg[idE].opp->elm;
+	  elm1 = elm0->edu[idE].opp->elm;
 	  if(WlzCMeshElmEnclosesPos2D(elm1, gPos) != 0)
 	  {
 	    elmIdx = elm1->idx;
@@ -3195,10 +3648,9 @@ static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos)
   WlzIVertex2	idB;
   double	dstSq = 0.0;
   WlzCMeshNod2D	*nod;
-  WlzCMeshEdg2D	*edg;
+  WlzCMeshEdgU2D *edu;
   WlzCMeshNod2D	**bktP;
 
-  /* HACK This code needs to be checked! TODO */
   /* Compute extra distance to allow for search within circle rather than
    * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
    * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
@@ -3216,22 +3668,22 @@ static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos)
     nod = *bktP;
     while(nod)
     {
-      edg = nod->edg;
+      edu = nod->edu;
       do
       {
-	if(WlzCMeshElmEnclosesPos2D(edg->elm, gPos))
+	if(WlzCMeshElmEnclosesPos2D(edu->elm, gPos))
 	{
-	  elmIdx = edg->elm->idx;
+	  elmIdx = edu->elm->idx;
 	  goto FOUND;
 	}
-	if(edg->opp && WlzCMeshElmEnclosesPos2D(edg->opp->elm, gPos))
+	if(edu->opp && WlzCMeshElmEnclosesPos2D(edu->opp->elm, gPos))
 	{
-	  elmIdx = edg->opp->elm->idx;
+	  elmIdx = edu->opp->elm->idx;
 	  goto FOUND;
 	}
-	edg = edg->nnxt;
+	edu = edu->nnxt;
       }
-      while(edg != nod->edg);
+      while(edu != nod->edu);
       nod = nod->next;
     }
     /* Spiral out from the initial grid bucket. */
@@ -3296,7 +3748,7 @@ static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
                 idS;
   double	dstSq = 0.0;
   WlzCMeshNod3D	*nod;
-  WlzCMeshEdg3D	*edg;
+  WlzCMeshEdgU3D *edu;
   WlzCMeshNod3D	**bktP;
 
   /* Compute extra distance to allow for search within circle rather than
@@ -3333,23 +3785,23 @@ static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
       nod = *bktP;
       while(nod)
       {
-	edg = nod->edg;
+	edu = nod->edu;
 	do
 	{
-	  if(WlzCMeshElmEnclosesPos3D(edg->face->elm, gPos))
+	  if(WlzCMeshElmEnclosesPos3D(edu->face->elm, gPos))
 	  {
-	    elmIdx = edg->face->elm->idx;
+	    elmIdx = edu->face->elm->idx;
 	    goto FOUND;
 	  }
-	  if(edg->face->opp &&
-	     WlzCMeshElmEnclosesPos3D(edg->face->opp->elm, gPos))
+	  if(edu->face->opp &&
+	     WlzCMeshElmEnclosesPos3D(edu->face->opp->elm, gPos))
 	  {
-	    elmIdx = edg->face->opp->elm->idx;
+	    elmIdx = edu->face->opp->elm->idx;
 	    goto FOUND;
 	  }
-	  edg = edg->nnxt;
+	  edu = edu->nnxt;
 	}
-	while(edg != nod->edg);
+	while(edu != nod->edu);
 	nod = nod->next;
       }
     }
@@ -3409,8 +3861,8 @@ int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
 
   if(elm)
   {
-    inside = WlzGeomVxInTriangle(elm->edg[0].nod->pos, elm->edg[1].nod->pos,
-				 elm->edg[2].nod->pos, gPos) >= 0;
+    inside = WlzGeomVxInTriangle(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
+				 elm->edu[2].nod->pos, gPos) >= 0;
   }
   return(inside);
 }
@@ -3452,13 +3904,14 @@ int		WlzCMeshElmEnclosesPos3D(WlzCMeshElm3D *elm, WlzDVertex3 gPos)
 * \param	maxElmSz		Minimum element size.
 * \param	dstDilObj		Destination pointer for the dilated
 *					object used to build the mesh.
-* \param	delOut			Delete all elements with nodes
+* \param	conform			If non-zero make the mesh conform to
+* 					the object's domain.
 *					outside the object if non-zero.
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzCMeshP	WlzCMeshFromObj(WlzObject *obj,
 				double minElmSz, double maxElmSz,
-				WlzObject **dstDilObj, int delOut,
+				WlzObject **dstDilObj, int conform,
 				WlzErrorNum *dstErr)
 {
   WlzCMeshP	mesh;
@@ -3475,11 +3928,11 @@ WlzCMeshP	WlzCMeshFromObj(WlzObject *obj,
     {
       case WLZ_2D_DOMAINOBJ:
         mesh.m2 = WlzCMeshFromObj2D(obj, minElmSz, maxElmSz, dstDilObj,
-		                    delOut, &errNum);
+		                    conform, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
         mesh.m3 = WlzCMeshFromObj3D(obj, minElmSz, maxElmSz, dstDilObj,
-		                    delOut, &errNum);
+		                    conform, &errNum);
         break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -3508,19 +3961,22 @@ WlzCMeshP	WlzCMeshFromObj(WlzObject *obj,
 * \param	maxElmSz		Minimum element size.
 * \param	dstDilObj		Destination pointer for the dilated
 *					object used to build the mesh.
-* \param	delOut			Delete all elements with nodes
-*					outside the object if non-zero.
+* \param	conform			If non-zero make boundary elements
+* 					conform to the given domain by
+* 					decomposing them. Any elements with
+* 					all nodes outside the given domain
+* 					are deleted.
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 				   double minElmSz, double maxElmSz,
-				   WlzObject **dstDilObj, int delOut,
+				   WlzObject **dstDilObj, int conform,
 				   WlzErrorNum *dstErr)
 {
-  int		scale,
-  		maxLBTNdSz;
-  double	tD0,
-  		invScale;
+  int		scale = 1,
+  		maxLBTNdSz = 1;
+  double	dilation,
+  		invScale = 1.0;
   WlzCMesh2D	*mesh = NULL;
   WlzLBTDomain2D *lDom = NULL;
   WlzObject	*dilObj = NULL,
@@ -3553,15 +4009,16 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
       minElmSz = 1.0;
     }
     scale = (int )ceil(minElmSz);
+    dilation = (scale + 1) / 2.0;
     maxLBTNdSz = (int )ceil(maxElmSz / minElmSz);
     if(maxLBTNdSz < 1)
     {
       maxLBTNdSz = 1;
     }
     invScale = 1.0 / scale;
-    tD0 = scale + 1.0;
     strObj = WlzAssignObject(
-             WlzMakeRectangleObject(tD0, tD0, 0.0, 0.0, &errNum), NULL);
+             WlzMakeRectangleObject(dilation, dilation,
+	                            0.0, 0.0, &errNum), NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3599,8 +4056,8 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   {
     mesh = WlzCMeshFromBalLBTDom2D(lDom, idxObj, &errNum);
   }
-  WlzFreeObj(idxObj); idxObj = NULL;
   (void )WlzFreeLBTDomain2D(lDom);
+  WlzFreeObj(idxObj); idxObj = NULL;
   if(errNum == WLZ_ERR_NONE)
   {
     (void )WlzAffineTransformScaleSet(tr, scale, scale, scale);
@@ -3615,14 +4072,9 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   }
   (void )WlzFreeObj(sclObj);
   (void )WlzFreeAffineTransform(tr);
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (conform != 0))
   {
-    errNum = WlzCMeshAdjustBoundaryElm2D(mesh, obj, WLZ_MESH_TOLERANCE);
-  }
-  if((errNum == WLZ_ERR_NONE) && (delOut != 0))
-  {
-    WlzCMeshSetAllSmallBndElmOutside2D(mesh, 0.5, 0.1);
-    errNum = WlzCMeshDelAllElmOutside2D(mesh);
+    errNum = WlzCMeshBoundConform2D(mesh, obj, 0.5);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3646,19 +4098,22 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 * \param	maxElmSz		Minimum element size.
 * \param	dstDilObj		Destination pointer for the dilated
 *					object used to build the mesh.
-* \param	delOut			Delete all elements with nodes
-*					outside the object if non-zero.
+* \param	conform			If non-zero make boundary elements
+* 					conform to the given domain by
+* 					decomposing them. Any elements with
+* 					all nodes outside the given domain
+* 					are deleted.
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
 				   double minElmSz, double maxElmSz,
-				   WlzObject **dstDilObj, int delOut,
+				   WlzObject **dstDilObj, int conform,
 			           WlzErrorNum *dstErr)
 {
-  int		scale,
-  		maxLBTNdSz;
+  int		scale = 1,
+  		maxLBTNdSz = 1;
   double	dilation,
-  		invScale;
+  		invScale = 1.0;
   WlzCMesh3D	*mesh = NULL;
   WlzLBTDomain3D *lDom = NULL;
   WlzAffineTransform *tr = NULL;
@@ -3691,7 +4146,7 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
       minElmSz = 1.0;
     }
     scale = (int )ceil(minElmSz);
-    dilation = (scale - (1.000001)) / 2.0;
+    dilation = (scale  + 1) / 2.0;
     maxLBTNdSz = (int )ceil(maxElmSz / minElmSz);
     if(maxLBTNdSz < 1)
     {
@@ -3755,14 +4210,9 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
   }
   (void )WlzFreeObj(sclObj);
   (void )WlzFreeAffineTransform(tr);
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (conform != 0))
   {
-    errNum = WlzCMeshAdjustBoundaryElm3D(mesh, obj, 0.5);
-  }
-  if((errNum == WLZ_ERR_NONE) && (delOut != 0))
-  {
-    WlzCMeshSetAllSmallBndElmOutside3D(mesh, 0.1, 0.1);
-    errNum = WlzCMeshDelAllElmOutside3D(mesh);
+    errNum = WlzCMeshBoundConform3D(mesh, obj, 0.5);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -4100,12 +4550,9 @@ static WlzErrorNum WlzCMeshAddLBTNode2D(WlzCMesh2D *mesh,
 {
   int		rot,
   		nElm,
-		nEdg,
 		nNod;
-  unsigned	bnd;
   WlzLBTNodeClass2D cls;
   WlzDVertex2	nPos[8];
-  WlzCMeshEdg2D	*mEdg[8];
   WlzCMeshNod2D	*mNod[8];
   WlzCMeshElm2D	*mElm[6];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -4131,17 +4578,7 @@ static WlzErrorNum WlzCMeshAddLBTNode2D(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Create new mesh elements. */
-    bnd = (((lDom->nodes + idN)->flags & WLZ_LBT_NODE_FLAG_BOUNDARY) == 0)?
-	  0: WLZ_CMESH_ELM_FLAG_BOUNDARY;
-    errNum = WlzCMeshElmFromLBTNode2D(mesh, bnd,
-                                      nPos, mElm, mEdg, mNod, cls,
-    				      &nElm, &nEdg);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Join the edge of the new mesh elements to the rest of the mesh
-     * using their opp links. */
-    WlzCMeshElmsJoin2D(mesh, nEdg, mEdg);
+    errNum = WlzCMeshElmFromLBTNode2D(mesh, nPos, mElm, mNod, cls, &nElm);
   }
 #ifdef WLZ_CMESH_DEBUG_MESH
   if(errNum == WLZ_ERR_NONE)
@@ -4170,7 +4607,6 @@ static WlzErrorNum WlzCMeshAddLBTNode3D(WlzCMesh3D *mesh,
 {
   int		idF,
 		idM,
-		bnd,
 		rot,
 		nNod;
   WlzIBox3	nBB;
@@ -4178,7 +4614,6 @@ static WlzErrorNum WlzCMeshAddLBTNode3D(WlzCMesh3D *mesh,
   WlzLBTNodeClass2D cls; /* The 2D node classification is valid for faces. */
   WlzDVertex3	nPos[27]; /* Nodes at cube vertices (8), edge midpoints (12),
                              face centres (6) and cube centre (1) = 27. */
-  WlzCMeshEdg3D *mEdg[32];
   WlzCMeshElm3D *mElm[8];
   WlzCMeshNod3D	*mNod[10];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -4240,10 +4675,7 @@ static WlzErrorNum WlzCMeshAddLBTNode3D(WlzCMesh3D *mesh,
     if(errNum == WLZ_ERR_NONE)
     {
       /* Create new mesh elements. */
-      bnd = (((lDom->nodes + idN)->flags & WLZ_LBT_NODE_FLAG_BOUNDARY) == 0)?
-	    0: WLZ_CMESH_ELM_FLAG_BOUNDARY;
-      errNum = WlzCMeshElmFromLBTNode3D(mesh, bnd,
-					nPos, mElm, mEdg, mNod, cls);
+      errNum = WlzCMeshElmFromLBTNode3D(mesh, nPos, mElm, mNod, cls);
     }
     ++idF;
   }
@@ -4606,58 +5038,29 @@ static int	WlzCMeshCompLBTFceNodPos3D(WlzDVertex3 *nPos,
 }
 
 /*!
-* \return	void
-* \ingroup	WlzMesh
-* \brief	Joins the collection of elements created by the addition
-*		of an LBT node to the other elements of the mesh.
-* \param	mesh			The mesh.
-* \param	nEdg 			The number of peripheral edges.
-* \param	edg			The peripheral edges.
-*/
-static void	WlzCMeshElmsJoin2D(WlzCMesh2D *mesh,
-				   int nEdg, WlzCMeshEdg2D **edg)
-{
-  int		idE;
-
-  for(idE = 0; idE < nEdg; ++idE)
-  {
-    if((*edg)->opp == NULL)
-    {
-      (*edg)->opp = WlzCMeshEdgFindOpp2D(*edg);
-      if((*edg)->opp)
-      {
-        (*edg)->opp->opp = *edg;
-      }
-    }
-    ++edg;
-  }
-}
-
-
-/*!
 * \return	The opposite edge or NULL if there is no opposite edge.
 * \ingroup	WlzMesh
 * \brief	Finds the opposite edge (to set the opp link) using node
 *		nnxt links.
-* \param	gEdg			Given edge.
+* \param	gEdu			Given edge.
 */
-static WlzCMeshEdg2D *WlzCMeshEdgFindOpp2D(WlzCMeshEdg2D *gEdg)
+static WlzCMeshEdgU2D *WlzCMeshEdgUseFindOpp2D(WlzCMeshEdgU2D *gEdu)
 {
-  WlzCMeshEdg2D	*fEdg,
-  		*tEdg,
-		*oEdg = NULL;
+  WlzCMeshEdgU2D *fEdu,
+  		*tEdu,
+		*oEdu = NULL;
 
-  tEdg = fEdg = gEdg->next->nod->edg;
+  tEdu = fEdu = gEdu->next->nod->edu;
   do
   {
-    if(tEdg->next->nod == gEdg->nod)
+    if(tEdu->next->nod == gEdu->nod)
     {
-      oEdg = tEdg;
+      oEdu = tEdu;
       break;
     }
-    tEdg = tEdg->nnxt;
-  } while(tEdg != fEdg);
-  return(oEdg);
+    tEdu = tEdu->nnxt;
+  } while(tEdu != fEdu);
+  return(oEdu);
 }
 
 /*!
@@ -4667,66 +5070,44 @@ static WlzCMeshEdg2D *WlzCMeshEdgFindOpp2D(WlzCMeshEdg2D *gEdg)
 *		must be valid but this is not checked for because this is
 *		a static function.
 * \param	mesh			The mesh.
-* \param	flg			Flags for the new mesh elements,
 * \param	nPos			Positions of the nodes.
-* \param	mEdg			The peripheral edges.
 * \param	mElm			The new mesh elements.
 * \param	mNod			Mesh nodes, non-NULL where the
 *					already exist.
 * \param	cls			LBT node connectivity class.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmFromLBTNode2D(WlzCMesh2D *mesh,
-					unsigned flg,
                                         WlzDVertex2 *nPos,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 					WlzLBTNodeClass2D cls,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
-  int		idE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   *dstNElm = 0;
   switch(cls)
   {
     case WLZ_LBT_NODE_CLASS_2D_0:
-      errNum = WlzCMeshElmsFromLBTNode2D0(mesh, mElm, mEdg, mNod, nPos,
-      					 dstNElm, dstNEdg);
+      errNum = WlzCMeshElmsFromLBTNode2D0(mesh, mElm, mNod, nPos, dstNElm);
       break;
     case WLZ_LBT_NODE_CLASS_2D_1:
-      errNum = WlzCMeshElmsFromLBTNode2D1(mesh, mElm, mEdg, mNod, nPos,
-      					 dstNElm, dstNEdg);
+      errNum = WlzCMeshElmsFromLBTNode2D1(mesh, mElm, mNod, nPos, dstNElm);
       break;
     case WLZ_LBT_NODE_CLASS_2D_2:
-      errNum = WlzCMeshElmsFromLBTNode2D2(mesh, mElm, mEdg, mNod, nPos,
-      					 dstNElm, dstNEdg);
+      errNum = WlzCMeshElmsFromLBTNode2D2(mesh, mElm, mNod, nPos, dstNElm);
       break;
     case WLZ_LBT_NODE_CLASS_2D_3:
-      errNum = WlzCMeshElmsFromLBTNode2D3(mesh, mElm, mEdg, mNod, nPos,
-      					 dstNElm, dstNEdg);
+      errNum = WlzCMeshElmsFromLBTNode2D3(mesh, mElm, mNod, nPos, dstNElm);
       break;
     case WLZ_LBT_NODE_CLASS_2D_4:
-      errNum = WlzCMeshElmsFromLBTNode2D4(mesh, mElm, mEdg, mNod, nPos,
-      					 dstNElm, dstNEdg);
+      errNum = WlzCMeshElmsFromLBTNode2D4(mesh, mElm, mNod, nPos, dstNElm);
       break;
     case WLZ_LBT_NODE_CLASS_2D_5:
-      errNum = WlzCMeshElmsFromLBTNode2D5(mesh, mElm, mEdg, mNod, nPos,
-      					 dstNElm, dstNEdg);
+      errNum = WlzCMeshElmsFromLBTNode2D5(mesh, mElm, mNod, nPos, dstNElm);
       break;
-  }
-  /* Set the flags of the new mesh elements. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE < *dstNElm; ++idE)
-    {
-      (*(mElm + idE))->flags |= flg;
-    }
   }
   return(errNum);
 }
@@ -4738,24 +5119,19 @@ static WlzErrorNum WlzCMeshElmFromLBTNode2D(WlzCMesh2D *mesh,
 *		must be valid but this is not checked for because this is
 *		a static function.
 * \param	mesh			The mesh.
-* \param	flg			Flags for the new mesh elements,
 * \param	nPos			Positions of the nodes.
-* \param	mEdg			The peripheral edges.
 * \param	mElm			The new mesh elements.
 * \param	mNod			Mesh nodes, non-NULL where the
 *					already exist.
 * \param	cls			LBT node connectivity class.
 */
 static WlzErrorNum WlzCMeshElmFromLBTNode3D(WlzCMesh3D *mesh,
-					unsigned flg,
                                         WlzDVertex3 *nPos,
 					WlzCMeshElm3D **mElm,
-					WlzCMeshEdg3D **mEdg,
 					WlzCMeshNod3D **mNod,
 					WlzLBTNodeClass2D cls)
 {
-  int		idE,
-  		nElm = 0;
+  int		nElm = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   switch(cls)
@@ -4778,14 +5154,6 @@ static WlzErrorNum WlzCMeshElmFromLBTNode3D(WlzCMesh3D *mesh,
     case WLZ_LBT_NODE_CLASS_2D_5:
       errNum = WlzCMeshElmsFromLBTNode3D5(mesh, mElm, mNod, nPos, &nElm);
       break;
-  }
-  /* Set the flags of the new mesh * elements. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE < nElm; ++idE)
-    {
-      (*(mElm + idE))->flags |= flg;
-    }
   }
   return(errNum);
 }
@@ -4822,21 +5190,16 @@ static WlzErrorNum WlzCMeshElmFromLBTNode3D(WlzCMesh3D *mesh,
 		\endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmsFromLBTNode2D0(WlzCMesh2D *mesh,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 				        WlzDVertex2 *nPos,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -4852,14 +5215,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D0(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     *dstNElm = 2;
-    /* Set inter-element edge connectivities. */
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[2]), &(mElm[1]->edg[2]));
-    /* Set peripheral edges. */
-    *dstNEdg = 4;
-    mEdg[0] = &(mElm[0]->edg[0]);
-    mEdg[1] = &(mElm[0]->edg[1]);
-    mEdg[2] = &(mElm[1]->edg[0]);
-    mEdg[3] = &(mElm[1]->edg[1]);
   }
   return(errNum);
 }
@@ -4896,21 +5251,16 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D0(WlzCMesh2D *mesh,
 		\endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmsFromLBTNode2D1(WlzCMesh2D *mesh,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 				        WlzDVertex2 *nPos,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -4930,16 +5280,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D1(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     *dstNElm = 3;
-    /* Set inter-element edge connectivities. */
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[2]), &(mElm[2]->edg[2]));
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[1]), &(mElm[1]->edg[2]));
-    /* Set peripheral edges. */
-    *dstNEdg = 5;
-    mEdg[0] = &(mElm[0]->edg[0]);
-    mEdg[1] = &(mElm[1]->edg[0]);
-    mEdg[2] = &(mElm[1]->edg[1]);
-    mEdg[3] = &(mElm[2]->edg[0]);
-    mEdg[4] = &(mElm[2]->edg[1]);
   }
   return(errNum);
 }
@@ -4976,21 +5316,16 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D1(WlzCMesh2D *mesh,
 		\endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmsFromLBTNode2D2(WlzCMesh2D *mesh,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 				        WlzDVertex2 *nPos,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -5014,18 +5349,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D2(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     *dstNElm = 4;
-    /* Set inter-element edge connectivities. */
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[2]), &(mElm[3]->edg[0]));
-    WlzCMeshEdgSetOpp2D(&(mElm[1]->edg[2]), &(mElm[3]->edg[1]));
-    WlzCMeshEdgSetOpp2D(&(mElm[2]->edg[2]), &(mElm[3]->edg[2]));
-    /* Set peripheral edges. */
-    *dstNEdg = 6;
-    mEdg[0] = &(mElm[0]->edg[0]);
-    mEdg[1] = &(mElm[0]->edg[1]);
-    mEdg[2] = &(mElm[1]->edg[0]);
-    mEdg[3] = &(mElm[1]->edg[1]);
-    mEdg[4] = &(mElm[2]->edg[0]);
-    mEdg[5] = &(mElm[2]->edg[1]);
   }
   return(errNum);
 }
@@ -5062,21 +5385,16 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D2(WlzCMesh2D *mesh,
 		\endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmsFromLBTNode2D3(WlzCMesh2D *mesh,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 				        WlzDVertex2 *nPos,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -5100,18 +5418,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D3(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     *dstNElm = 4;
-    /* Set inter-element edge connectivities. */
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[1]), &(mElm[2]->edg[1]));
-    WlzCMeshEdgSetOpp2D(&(mElm[1]->edg[2]), &(mElm[2]->edg[2]));
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[2]), &(mElm[3]->edg[2]));
-    /* Set peripheral edges. */
-    *dstNEdg = 6;
-    mEdg[0] = &(mElm[0]->edg[0]);
-    mEdg[1] = &(mElm[1]->edg[0]);
-    mEdg[2] = &(mElm[1]->edg[1]);
-    mEdg[3] = &(mElm[2]->edg[0]);
-    mEdg[4] = &(mElm[3]->edg[0]);
-    mEdg[5] = &(mElm[3]->edg[1]);
   }
   return(errNum);
 }
@@ -5148,21 +5454,16 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D3(WlzCMesh2D *mesh,
 		\endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmsFromLBTNode2D4(WlzCMesh2D *mesh,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 				        WlzDVertex2 *nPos,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -5190,20 +5491,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D4(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     *dstNElm = 5;
-    /* Set inter-element edge connectivities. */
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[1]), &(mElm[4]->edg[2]));
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[2]), &(mElm[3]->edg[2]));
-    WlzCMeshEdgSetOpp2D(&(mElm[1]->edg[2]), &(mElm[4]->edg[0]));
-    WlzCMeshEdgSetOpp2D(&(mElm[2]->edg[2]), &(mElm[4]->edg[1]));
-    /* Set peripheral edges. */
-    *dstNEdg = 7;
-    mEdg[0] = &(mElm[0]->edg[0]);
-    mEdg[1] = &(mElm[1]->edg[0]);
-    mEdg[2] = &(mElm[1]->edg[1]);
-    mEdg[3] = &(mElm[2]->edg[0]);
-    mEdg[4] = &(mElm[2]->edg[1]);
-    mEdg[5] = &(mElm[3]->edg[0]);
-    mEdg[6] = &(mElm[3]->edg[1]);
   }
   return(errNum);
 }
@@ -5240,21 +5527,16 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D4(WlzCMesh2D *mesh,
 		\endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for number of
 					elements.
-* \param	dstNEdg			Destination pointer for number of
-					peripheral edges.
 */
 static WlzErrorNum WlzCMeshElmsFromLBTNode2D5(WlzCMesh2D *mesh,
 					WlzCMeshElm2D **mElm,
-					WlzCMeshEdg2D **mEdg,
 					WlzCMeshNod2D **mNod,
 				        WlzDVertex2 *nPos,
-					int *dstNElm,
-					int *dstNEdg)
+					int *dstNElm)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -5286,22 +5568,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D5(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     *dstNElm = 6;
-    /* Set inter-element edge connectivities. */
-    WlzCMeshEdgSetOpp2D(&(mElm[0]->edg[1]), &(mElm[4]->edg[0]));
-    WlzCMeshEdgSetOpp2D(&(mElm[5]->edg[2]), &(mElm[4]->edg[1]));
-    WlzCMeshEdgSetOpp2D(&(mElm[3]->edg[2]), &(mElm[4]->edg[2]));
-    WlzCMeshEdgSetOpp2D(&(mElm[1]->edg[2]), &(mElm[5]->edg[0]));
-    WlzCMeshEdgSetOpp2D(&(mElm[2]->edg[2]), &(mElm[5]->edg[1]));
-    /* Set peripheral edges. */
-    *dstNEdg = 8;
-    mEdg[0] = &(mElm[0]->edg[0]);
-    mEdg[1] = &(mElm[1]->edg[0]);
-    mEdg[2] = &(mElm[1]->edg[1]);
-    mEdg[3] = &(mElm[2]->edg[0]);
-    mEdg[4] = &(mElm[2]->edg[1]);
-    mEdg[5] = &(mElm[3]->edg[0]);
-    mEdg[6] = &(mElm[3]->edg[1]);
-    mEdg[7] = &(mElm[0]->edg[2]);
   }
   return(errNum);
 }
@@ -5433,7 +5699,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D0(WlzCMesh3D *mesh,
 \endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for the number of
@@ -5518,7 +5783,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D1(WlzCMesh3D *mesh,
 \endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for the number of
@@ -5604,7 +5868,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D2(WlzCMesh3D *mesh,
 \endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for the number of
@@ -5690,7 +5953,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D3(WlzCMesh3D *mesh,
 \endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for the number of
@@ -5777,7 +6039,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D4(WlzCMesh3D *mesh,
 \endverbatim
 * \param	mesh			The mesh.
 * \param	mElm			The new mesh elements.
-* \param	mEdg			The peripheral edges.
 * \param	mNod			Matched nodes, NULL if don't exist.
 * \param	nPos			Node positions.
 * \param	dstNElm			Destination pointer for the number of
@@ -5819,19 +6080,6 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D5(WlzCMesh3D *mesh,
     *dstNElm = nElm;
   }
   return(errNum);
-}
-
-/*!
-* \return	void
-* \ingroup	WlzMesh
-* \brief	Sets the two edges to be opposite to each other.
-* \param	edg0			First edge.
-* \param	edg1			Secon edge.
-*/
-static void	WlzCMeshEdgSetOpp2D(WlzCMeshEdg2D *edg0, WlzCMeshEdg2D *edg1)
-{
-  edg0->opp = edg1;
-  edg1->opp = edg0;
 }
 
 /*!
@@ -5894,8 +6142,8 @@ void		WlzCMeshDbgOutVTK2D(FILE *fP, WlzCMesh2D *mesh)
       if(elm->idx >= 0)
       {
 	(void )fprintf(fP, "3 %d %d %d\n",
-		       elm->edg[0].nod->idx, elm->edg[1].nod->idx, 
-		       elm->edg[2].nod->idx);
+		       elm->edu[0].nod->idx, elm->edu[1].nod->idx, 
+		       elm->edu[2].nod->idx);
       }
     }
   }
@@ -5958,7 +6206,9 @@ void		WlzCMeshDbgOutVTK3D(FILE *fP, WlzCMesh3D *mesh)
         for(idF = 0; idF < 4; ++idF)
 	{
 	  fce = elm->face + idF;
-	  if((fce->opp == NULL) || (fce->elm->idx < fce->opp->elm->idx))
+	  if((fce->opp == NULL) ||
+	     (fce->opp == fce) ||
+	     (fce->elm->idx < fce->opp->elm->idx))
 	  {
             ++nVSpx;
 	  }
@@ -5976,11 +6226,13 @@ void		WlzCMeshDbgOutVTK3D(FILE *fP, WlzCMesh3D *mesh)
         for(idF = 0; idF < 4; ++idF)
 	{
 	  fce = elm->face + idF;
-	  if((fce->opp == NULL) || (fce->elm->idx < fce->opp->elm->idx))
+	  if((fce->opp == NULL) ||
+	     (fce->opp == fce) ||
+	     (fce->elm->idx < fce->opp->elm->idx))
 	  {
 	    (void )fprintf(fP, "3 %d %d %d\n",
-			   fce->edg[0].nod->idx, fce->edg[1].nod->idx, 
-			   fce->edg[2].nod->idx);
+			   fce->edu[0].nod->idx, fce->edu[1].nod->idx, 
+			   fce->edu[2].nod->idx);
 	  }
 	}
       }

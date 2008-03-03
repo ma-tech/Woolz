@@ -730,7 +730,7 @@ static void 	WlzCMeshUpdateScanElm2D(WlzCMeshTransform *mTr,
   vec = mTr->dspVec;
   for(idN = 0; idN < 3; ++idN)
   {
-    nod = elm->edg[idN].nod;
+    nod = elm->edu[idN].nod;
     sVx[idN] = nod->pos;
     dVx[idN] = *(WlzDVertex2 *)AlcVectorItemGet(vec, nod->idx);
     WLZ_VTX_2_ADD(dVx[idN], dVx[idN], sVx[idN]);
@@ -1400,10 +1400,10 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzCMeshTransform *mTr,
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(elmRes->vec, (size_t )eIdx);
       if(elm->idx >= 0)
       {
-	nod = elm->edg[0].nod;
+	nod = elm->edu[0].nod;
 	dsp = (WlzDVertex2 *)AlcVectorItemGet(mTr->dspVec, nod->idx);
 	eLnMin = eLnMax = nod->pos.vtY + dsp->vtY;
-	nod = elm->edg[1].nod;
+	nod = elm->edu[1].nod;
 	dsp = (WlzDVertex2 *)AlcVectorItemGet(mTr->dspVec, nod->idx);
 	ndLn = nod->pos.vtY + dsp->vtY;
 	if(ndLn < eLnMin)
@@ -1414,7 +1414,7 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzCMeshTransform *mTr,
 	{
 	  eLnMax = ndLn;
 	}
-	nod = elm->edg[2].nod;
+	nod = elm->edu[2].nod;
 	dsp = (WlzDVertex2 *)AlcVectorItemGet(mTr->dspVec, nod->idx);
 	ndLn = nod->pos.vtY + dsp->vtY;
 	if(ndLn < eLnMin)
@@ -1814,7 +1814,7 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
   /* Compute the integer displaced nodes of the element. */
   for(ndIdx0 = 0; ndIdx0 < 3; ++ndIdx0)
   {
-    nod = elm->edg[ndIdx0].nod;
+    nod = elm->edu[ndIdx0].nod;
     dVx0 = nod->pos;
     dVx1 = *(WlzDVertex2 *)AlcVectorItemGet(mSWSp->mTr->dspVec, nod->idx);
     tD0 = dVx0.vtX + dVx1.vtX;
@@ -4235,9 +4235,9 @@ WlzErrorNum     WlzCMeshGetNodesAndEdges(WlzCMeshTransform *meshTr,
           mElm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, eId0);
 	  if(mElm->idx >= 0)
 	  {
-	    edg[eId1++] = tbl[mElm->edg[0].nod->idx];
-	    edg[eId1++] = tbl[mElm->edg[1].nod->idx];
-	    edg[eId1++] = tbl[mElm->edg[2].nod->idx];
+	    edg[eId1++] = tbl[mElm->edu[0].nod->idx];
+	    edg[eId1++] = tbl[mElm->edu[1].nod->idx];
+	    edg[eId1++] = tbl[mElm->edu[2].nod->idx];
 	  }
 	  ++eId0;
 	}

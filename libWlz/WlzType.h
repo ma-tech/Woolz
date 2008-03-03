@@ -153,6 +153,7 @@ typedef enum _WlzObjectType
   					     occupies no space and has no
 					     values. */
   WLZ_MESH_TRANS                = 128,  /*!< Mesh transform. */
+  WLZ_CMESH_TRANS               = 129,  /*!< Mesh transform. */
 
   WLZ_EMPTY_DOMAIN,			/*!< Empty domain: A domain which
   					     occupies no space. */
@@ -2067,6 +2068,7 @@ typedef union _WlzDomain
   struct _WlzLBTDomain3D     *l3;
   struct _WlzCMesh2D	     *cm2;
   struct _WlzCMesh3D	     *cm3;
+  struct _WlzCMeshTransform  *cmt;
   struct _WlzPoints	     *pts;
 } WlzDomain;
 
@@ -3080,9 +3082,10 @@ typedef enum _WlzCMeshElmFlags
   WLZ_CMESH_ELM_FLAG_BOUNDARY	= (1),	/*!< Element intersects the boundary
   					     of the domain to which it
 					     should conform. */
-  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2)	/*!< Element is outside the domain to
+  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2),	/*!< Element is outside the domain to
   					     which the mesh should
 					     conform. */
+  WLZ_CMESH_ELM_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
 } WlzCMeshElmFlags;
 
 /*!
@@ -3095,9 +3098,19 @@ typedef enum _WlzCMeshElmFlags
 typedef enum _WlzCMeshNodFlags
 {
   WLZ_CMESH_NOD_FLAG_NONE	= (0),
-  WLZ_CMESH_NOD_FLAG_ADJUSTED	= (1),	/*!< Node position adjusted. */
-  WLZ_CMESH_NOD_FLAG_BOUNDARY   = (2)	/*!< Node is on a boundary of the
-                                             mesh. */
+  WLZ_CMESH_NOD_FLAG_ADJUSTED	= (1),	   /*!< Node position adjusted. */
+  WLZ_CMESH_NOD_FLAG_BOUNDARY   = (1<<1),  /*!< Node is on a boundary of the
+                                                mesh. */
+  WLZ_CMESH_NOD_FLAG_UPWIND     = (1<<2),   /*!< Node is upwind of the active
+                                                region having already been
+						processed. */
+  WLZ_CMESH_NOD_FLAG_ACTIVE     = (1<<3),  /*!< Node is in the active region
+  						and is being processed. */
+  WLZ_CMESH_NOD_FLAG_KNOWN	= (1<<4),  /*!< Property associated with
+                                                node is known. */
+  WLZ_CMESH_NOD_FLAG_ESTIMATED	= (1<<5),  /*!< Property associated with
+                                                node is estimated. */
+  WLZ_CMESH_NOD_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
 } WlzCMeshNodFlags;
 
 /*!
@@ -3111,7 +3124,7 @@ typedef struct _WlzCMeshNod2D
   int           idx;                    /*!< The node index. */
   unsigned int  flags;                  /*!< Bitwise description of node. */
   WlzDVertex2   pos;                    /*!< Node position. */
-  struct _WlzCMeshEdg2D *edg;           /*!< One of many edges which is
+  struct _WlzCMeshEdgU2D *edu;        /*!< One of many edge uses which is
                                              directed from the node. A
                                              node is shared by many parents. */
   struct _WlzCMeshNod2D *next;          /*!< Next node in bucket. */
@@ -3129,46 +3142,47 @@ typedef struct _WlzCMeshNod3D
   int           idx;                    /*!< The node index. */
   unsigned int  flags;                  /*!< Bitwise description of node. */
   WlzDVertex3   pos;                    /*!< Node position. */
-  struct _WlzCMeshEdg3D *edg;           /*!< One of many edges which is
+  struct _WlzCMeshEdgU3D *edu;        /*!< One of many edge uses which is
                                              directed from the node. A
                                              node is shared by many parents. */
   struct _WlzCMeshNod3D *next;          /*!< Next node in bucket. */
   void		*prop;      		/*!< Node properties. */
 } WlzCMeshNod3D;
 
+
 /*!
-* \struct       _WlzCMeshEdg2D
+* \struct       _WlzCMeshEdgU2D
 * \ingroup      WlzMesh
 * \brief        A 2D CCW directed (half) edge within the parent simplex.
-*               Typedef: ::WlzCMeshEdg2D.
+*               Typedef: ::WlzCMeshEdgU2D.
 */
-typedef struct _WlzCMeshEdg2D
+typedef struct _WlzCMeshEdgU2D
 {
-  struct _WlzCMeshNod2D *nod;           /*!< Node form which this edge is
+  struct _WlzCMeshNod2D *nod;           /*!< Node from which this edge is
                                              directed. */
-  struct _WlzCMeshEdg2D *next;          /*!< Next directed edge, previous
+  struct _WlzCMeshEdgU2D *next;       /*!< Next directed edge, previous
                                              can be found using next->next. */
-  struct _WlzCMeshEdg2D *opp;           /*!< Opposite directed edge. */
-  struct _WlzCMeshEdg2D *nnxt;          /*!< Next edge directed from the
-                                             same node (unordered). */
+  struct _WlzCMeshEdgU2D *opp;        /*!< Opposite directed edge. */
+  struct _WlzCMeshEdgU2D *nnxt;       /*!< Next edge directed from the
+                                             same node (un-ordered). */
   struct _WlzCMeshElm2D *elm;           /*!< Parent element. */
-} WlzCMeshEdg2D;
+} WlzCMeshEdgU2D;
 /*!
-* \struct       _WlzCMeshEdg3D
+* \struct       _WlzCMeshEdgU3D
 * \ingroup      WlzMesh
 * \brief        A 3D directed (half) edge within the parent face.
-*               Typedef: ::WlzCMeshEdg3D.
+*               Typedef: ::WlzCMeshEdgU3D.
 */
-typedef struct _WlzCMeshEdg3D
+typedef struct _WlzCMeshEdgU3D
 {
-  struct _WlzCMeshNod3D *nod;           /*!< Node form which this edge is
+  struct _WlzCMeshNod3D *nod;           /*!< Node from which this edge is
                                              directed. */
-  struct _WlzCMeshEdg3D *next;          /*!< Next directed edge, previous
+  struct _WlzCMeshEdgU3D *next;       /*!< Next directed edge, previous
                                              can be found using next->next. */
-  struct _WlzCMeshEdg3D *nnxt;          /*!< Next edge directed from the
-                                             same node (unordered). */
+  struct _WlzCMeshEdgU3D *nnxt;       /*!< Next edge directed from the
+                                             same node (un-ordered). */
   struct _WlzCMeshFace *face;           /*!< Parent face. */
-} WlzCMeshEdg3D;
+} WlzCMeshEdgU3D;
 
 /*!
 * \struct       _WlzCMeshFace
@@ -3178,7 +3192,7 @@ typedef struct _WlzCMeshEdg3D
 */
 typedef struct _WlzCMeshFace
 {
-  struct _WlzCMeshEdg3D edg[3];         /*!< Directed edges of the face. */
+  struct _WlzCMeshEdgU3D edu[3];      /*!< Directed edges of the face. */
   struct _WlzCMeshFace *opp;            /*!< Opposite face on neighboring
                                              mesh element. */
   struct _WlzCMeshElm3D *elm;           /*!< Parent mesh element. */
@@ -3194,7 +3208,7 @@ typedef struct _WlzCMeshElm2D
 {
   int           idx;                    /*!< The element index. */
   unsigned int  flags;                  /*!< Element flags. */
-  struct _WlzCMeshEdg2D edg[3];         /*!< Edges of the mesh element. */
+  struct _WlzCMeshEdgU2D edu[3];      /*!< Edges of the mesh element. */
   void		*prop;      		/*!< Element properties. */
 } WlzCMeshElm2D;
 
