@@ -983,7 +983,7 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
 	{
 	  for(idN = 0; idN < 3; ++idN)
 	  {
-	    pos = elm->edg[idN].nod->pos;
+	    pos = elm->edu[idN].nod->pos;
 	    elmVx[idN].vtX = (pos.vtX * scale) - offset.vtX;
 	    elmVx[idN].vtY = (pos.vtY * -scale) - offset.vtY;
 	  }
@@ -1024,9 +1024,9 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
 	  {
 	    for(idN = 0; idN < 3; ++idN)
 	    {
-	      pos = elm->edg[idN].nod->pos;
+	      pos = elm->edu[idN].nod->pos;
 	      dsp = (WlzDVertex2 *)AlcVectorItemGet(meshTr->dspVec,
-						    elm->edg[idN].nod->idx);
+						    elm->edu[idN].nod->idx);
 	      WLZ_VTX_2_ADD(pos, pos, *dsp);
 	      elmVx[idN].vtX = (pos.vtX * scale) - offset.vtX;
 	      elmVx[idN].vtY = (pos.vtY * -scale) - offset.vtY;
