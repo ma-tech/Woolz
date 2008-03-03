@@ -120,6 +120,7 @@ libWlz_la_SOURCES 	= \
 			  WlzGreyTransfer.c \
 			  WlzGreyValue.c \
 			  WlzGreyValueMixing_s.c \
+			  WlzGreyVariance.c \
 			  WlzHasIntersect.c \
 			  WlzHistogram.c \
 			  WlzHyThreshold.c \
@@ -170,6 +171,7 @@ libWlz_la_SOURCES 	= \
 			  WlzRGBAPixelUtils.c \
 			  WlzRGBARange.c \
 			  WlzRGBAThreshold.c \
+			  WlzRGBChanRatio.c \
 			  WlzRsvFilter.c \
 			  WlzSampleObj.c \
 			  WlzSampleValuesAndCoords.c \
