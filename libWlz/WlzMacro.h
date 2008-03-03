@@ -263,6 +263,17 @@ extern "C" {
 		(U).vtY = 0, \
 		(U).vtZ = 0
 
+/* WLZ_VTX_2_EQUAL: Tests for equality of vertices. */
+#define WLZ_VTX_2_EQUAL(U,V,T) \
+		((fabs((U).vtX - (V).vtX) < (T)) && \
+		 (fabs((U).vtY - (V).vtY) < (T)))
+
+/* WLZ_VTX_3_EQUAL: Tests for equality of vertices. */
+#define WLZ_VTX_3_EQUAL(U,V,T) \
+		((fabs((U).vtX - (V).vtX) < (T)) && \
+		 (fabs((U).vtY - (V).vtY) < (T)) && \
+		 (fabs((U).vtZ - (V).vtZ) < (T)))
+
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
