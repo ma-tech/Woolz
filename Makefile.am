@@ -32,14 +32,7 @@
 # \bug          None known.
 ##
 
-if BUILD_EXTFF
-  SUBDIRS =	\
-		libAlc \
-		libAlg \
-		libWlz \
-		binWlz \
-		binWlzTst
-else
+if  BUILD_EXTFF
   SUBDIRS =	\
 		libAlc \
 		libAlg \
@@ -52,6 +45,13 @@ else
 		binWlzTst \
 		binWlzApp \
 		binWlzExtFF
+else
+  SUBDIRS =	\
+		libAlc \
+		libAlg \
+		libWlz \
+		binWlz \
+		binWlzTst
 endif
 
 doc:

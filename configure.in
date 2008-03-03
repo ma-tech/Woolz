@@ -58,6 +58,7 @@ ENABLE_JAVA="no"
 HAVE_JNI="no"
 JDK_DIR="NONE"
 JAVACC="NONE"
+AC_SUBST(ENABLE_EXTFF)
 
 # Check CPU type
 echo "Checking cpu/system type"
@@ -147,8 +148,10 @@ AC_PATH_PROG(DOXYGEN, doxygen)
 AC_CHECK_PROG(HAVE_DOXYGEN, doxygen, "yes", "no")
 AM_CONDITIONAL(HAVE_DOXYGEN, test x$HAVE_DOXYGEN = xyes)
 
-# Compilation flags
+# Compilation and linking flags
 CFLAGS=""
+LIBS_EXTFF=""
+AC_SUBST(LIBS_EXTFF)
 
 AC_PROG_CC
 if test "$GCC" = yes
@@ -236,13 +239,13 @@ then
                   AC_CHECK_LIB(tiff, TIFFOpen,
 		               [
 				 HAVE_TIFF=yes
-				 LIBS="-ltiff $LIBS"
+				 LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
 			       ]))
   AC_CHECK_HEADER(jpeglib.h,
                   AC_CHECK_LIB(jpeg, jpeg_CreateCompress,
 		               [
 				 HAVE_JPEG=yes
-				 LIBS="-ljpeg $LIBS"
+				 LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
 			       ]))
   AC_CONFIG_FILES([	libbibfile/Makefile \
 			libhguDlpList/Makefile \
@@ -292,7 +295,7 @@ Woolz core has been configured for ${host}
   Installation directory:          ${prefix}
   C compiler:                      ${CC}
   CFLAGS:                         ${CFLAGS}
-  LIBS needed for configure:       ${LIBS}
+  LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code: ${ENABLE_EXTFF}
   Java Woolz binding:              ${ENABLE_JAVA}
   JDK directory:                   ${JDK_DIR}

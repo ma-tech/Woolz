@@ -180,3 +180,13 @@ operates.
      script, and exit.
 
 `configure' also accepts some other, not widely useful, options.
+
+To Build The Woolz Core System
+==============================
+
+If building from CVS:
+
+automake -a
+aclocal
+autoconf
+./configure --enable-extff
