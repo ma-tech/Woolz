@@ -101,6 +101,7 @@ bin_PROGRAMS		= \
 			  WlzGreyTransfer \
 			  WlzGreyValue \
 			  WlzGreyValueMixing \
+			  WlzGreyVarianceObj \
 			  WlzHasIntersect \
 			  WlzHistogramData \
 			  WlzHistogramEqualiseObj \
@@ -135,6 +136,7 @@ bin_PROGRAMS		= \
 			  WlzRegisterICPWSD \
 			  WlzRGBAConvert \
 			  WlzRGBCombine \
+			  WlzRGBChannelRatio \
 			  WlzRMSDiff \
 			  WlzRsvFilterObj \
 			  WlzSampleObj \
@@ -396,6 +398,10 @@ WlzGreyValueMixing_SOURCES		= WlzGreyValueMixing.c
 WlzGreyValueMixing_LDADD		= $(LDADD)
 WlzGreyValueMixing_LDFLAGS		= $(AM_LFLAGS)
 
+WlzGreyVarianceObj_SOURCES		= WlzGreyVarianceObj.c
+WlzGreyVarianceObj_LDADD		= $(LDADD)
+WlzGreyVarianceObj_LDFLAGS		= $(AM_LFLAGS)
+
 WlzHasIntersect_SOURCES			= WlzHasIntersect.c
 WlzHasIntersect_LDADD			= $(LDADD)
 WlzHasIntersect_LDFLAGS			= $(AM_LFLAGS)
@@ -524,13 +530,17 @@ WlzRegisterICPWSD_SOURCES		= WlzRegisterICPWSD.c
 WlzRegisterICPWSD_LDADD			= $(LDADD)
 WlzRegisterICPWSD_LDFLAGS		= $(AM_LFLAGS)
 
-WlzRGBCombine_SOURCES			= WlzRGBCombine.c
-WlzRGBCombine_LDADD			= $(LDADD)
-WlzRGBCombine_LDFLAGS			= $(AM_LFLAGS)
-
 WlzRGBAConvert_SOURCES			= WlzRGBAConvert.c
 WlzRGBAConvert_LDADD			= $(LDADD)
 WlzRGBAConvert_LDFLAGS			= $(AM_LFLAGS)
+
+WlzRGBChannelRatio_SOURCES		= WlzRGBChannelRatio.c
+WlzRGBChannelRatio_LDADD		= $(LDADD)
+WlzRGBChannelRatio_LDFLAGS		= $(AM_LFLAGS)
+
+WlzRGBCombine_SOURCES			= WlzRGBCombine.c
+WlzRGBCombine_LDADD			= $(LDADD)
+WlzRGBCombine_LDFLAGS			= $(AM_LFLAGS)
 
 WlzRMSDiff_SOURCES			= WlzRMSDiff.c
 WlzRMSDiff_LDADD			= $(LDADD)
