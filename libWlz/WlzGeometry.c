@@ -837,24 +837,22 @@ int		WlzGeomVtxEqual2D(WlzDVertex2 pos0, WlzDVertex2 pos1,
 }
 
 /*!
-* \return	1 if node positions are equal, else 0.
+* \return	Non-zero if node positions are equal, else 0.
 * \ingroup	WlzGeometry
 * \brief	Checks to see if two verticies are the same
 *               within some tollerance.
 * \param	pos0			First node position.
 * \param	pos1			Second node position.
-* \param	tolSq			Square of tollerance value.
+* \param	tol			Tollerance value.
 */
 int		WlzGeomVtxEqual3D(WlzDVertex3 pos0, WlzDVertex3 pos1,
-				  double tolSq)
+				  double tol)
 {
   int		equal;
 
-  pos0.vtX -= pos1.vtX;
-  pos0.vtY -= pos1.vtY;
-  pos0.vtZ -= pos1.vtZ;
-  equal = ((pos0.vtX * pos0.vtX) + (pos0.vtY * pos0.vtY) +
-	   (pos0.vtZ * pos0.vtZ)) < tolSq;
+  equal = (fabs(pos0.vtX - pos1.vtX) < tol) &&
+          (fabs(pos0.vtY - pos1.vtY) < tol) &&
+	  (fabs(pos0.vtZ - pos1.vtZ) < tol);
   return(equal);
 }
 
@@ -2378,4 +2376,85 @@ WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
     *dstStat = stat;
   }
   return(p2);
+}
+
+/*!
+* \return	Maximum diameter sphere inscribed within the tetrahedron.
+* 		
+* \ingroup
+* \brief	Given the coordinates of the four vertices of a tetrahedron
+* 		the function computes the maximum diameter of an inscribed
+* 		sphere.
+* 		
+* 		Diameter of the (maximum) inscribed sphere \f$d\f$ is given
+* 		by:
+* 		\f[
+                    d = \frac{6V}{A}
+ 	        \f]
+*               where \f$V\f$ is the volume of the tetrahedron and \f$A\f$
+*               is it's surface area. "Encyclopedia of Mathematics"
+*               ISBN 1402006098 (http://eom.springer.de).
+* \param	vx0			First vertex of tetrahedron.
+* \param	vx1			Second vertex of tetrahedron.
+* \param	vx2			Third vertex of tetrahedron.
+* \param	vx3			Forth vertex of tetrahedron.
+*/
+double		WlzGeomTetraInSphereDiam(WlzDVertex3 vx0, WlzDVertex3 vx1,
+				         WlzDVertex3 vx2, WlzDVertex3 vx3)
+{
+  double	diam = 0.0,
+		a0,
+		a1,
+		a2,
+		a3,
+  		vol6;
+
+  vol6 = fabs(WlzGeomTetraSnVolume6(vx0, vx1, vx2, vx3));
+  if(vol6 > DBL_EPSILON)
+  {
+    a0 = WlzGeomTriangleArea2Sq3(vx0, vx1, vx2);
+    a1 = WlzGeomTriangleArea2Sq3(vx1, vx2, vx3);
+    a2 = WlzGeomTriangleArea2Sq3(vx2, vx3, vx0);
+    a3 = WlzGeomTriangleArea2Sq3(vx3, vx0, vx1);
+    diam = (2.0 * vol6) /
+           (sqrt(fabs(a0)) + sqrt(fabs(a1)) +
+	    sqrt(fabs(a2)) + sqrt(fabs(a3)));
+  }
+  return(diam);
+}
+
+/*!
+* \return	Maximum diameter sphere inscribed within the regular
+* 		tetrahedron.
+* 		
+* \ingroup
+* \brief	Given the side length of a regular tetrahedron this function
+* 		computes the maximum diameter of an inscribed sphere.
+* 		
+* 		Diameter of the (maximum) inscribed sphere \f$d\f$ is given
+* 		by:
+* 		\f[
+                    d = \frac{6V}{A}
+ 	        \f]
+*               where \f$V\f$ is the volume of the tetrahedron and \f$A\f$
+*               is it's surface area. "Encyclopedia of Mathematics"
+*               ISBN 1402006098 (http://eom.springer.de).
+*               Standard formulae are used for the area and volume.
+* \param	side			Length of an edge.
+*/
+double		WlzGeomTetraInSphereRegDiam(double side)
+{
+  double	diam = 0.0,
+		area,
+		sideSq,
+  		vol12;
+
+  sideSq = side * side;
+  if(sideSq > DBL_EPSILON)
+  {
+    area = sideSq * ALG_M_SQRT3;
+    vol12 = side * sideSq * ALG_M_SQRT2;
+    diam = 0.5 * vol12 / area;
+  }
+  return(diam);
 }
