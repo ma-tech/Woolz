@@ -169,7 +169,7 @@ int 		WlzGreyCrossingSeqParFn(WlzSeqParWSpace *spWSpace,
 *                                       created.
 * \param	cVal			Grey value about which to test
 *                                       for transitions.
-* \param	dstErr
+* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject 	*WlzGreyCrossing(WlzObject *inObj, int newObjFlag,
 				 int cVal, WlzErrorNum *dstErr)
