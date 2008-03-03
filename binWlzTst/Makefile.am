@@ -54,7 +54,7 @@ bin_PROGRAMS		= \
 			  WlzTstRegCCor \
 			  WlzTstVxInSimplex
 
-Wlz3DWarpMQ_SOURCES			= WlzTstAlgCrossCorr.c
+
 WlzTstAlgCrossCorr_LDADD		= $(LDADD)
 WlzTstAlgCrossCorr_LDFLAGS		= $(AM_LFLAGS)
 
