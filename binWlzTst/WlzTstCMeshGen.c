@@ -64,6 +64,8 @@ int		main(int argc, char *argv[])
   		ok = 1,
   		option,
   		usage = 0,
+		conform = 1,
+		copyMesh = 0,
 		features = 0,
 		laplacianItr = 0,
 		lowPassItr = 0,
@@ -84,8 +86,9 @@ int		main(int argc, char *argv[])
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*obj = NULL;
-  WlzCMeshP 	mesh;
-  static char   optList[] = "a:BFhl:L:m:M:o:u:VW:";
+  WlzCMeshP 	mesh,
+  		meshCopy;
+  static char   optList[] = "a:BCFhl:L:m:M:o:u:VW:y";
   const char    inObjFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
 
@@ -105,6 +108,9 @@ int		main(int argc, char *argv[])
         break;
       case 'B':
         smoothBnd = 1;
+	break;
+      case 'C':
+        conform = 0;
 	break;
       case 'F':
         features = 1;
@@ -150,6 +156,9 @@ int		main(int argc, char *argv[])
         break;
       case 'V':
         verify = 1;
+	break;
+      case 'y':
+        copyMesh = 1;
 	break;
       case 'h':
       default:
@@ -201,7 +210,7 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     (void )WlzAssignObject(obj, NULL);
-    mesh = WlzCMeshFromObj(obj, minElmSz, maxElmSz, NULL, 1, &errNum);
+    mesh = WlzCMeshFromObj(obj, minElmSz, maxElmSz, NULL, conform, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -265,6 +274,25 @@ int		main(int argc, char *argv[])
 		     errMsgStr);
     }
   }
+  if(ok && (copyMesh != 0))
+  {
+    meshCopy = WlzCMeshCopy(mesh, 0, NULL, NULL, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+                     "%s Failed to copy mesh, %s.\n",
+		     argv[0],
+		     errMsgStr);
+    }
+    else
+    {
+      (void )WlzCMeshFree(mesh);
+      mesh = meshCopy;
+      meshCopy.v = NULL;
+    }
+  }
   if(ok)
   {
     if((fP = (strcmp(outFileStr, "-")?
@@ -315,25 +343,27 @@ int		main(int argc, char *argv[])
   {
     fprintf(stderr,
             "Usage: %s [-h] [-o<output file>]\n"
-	    "       [-L#] [-a#] [-W#] [-l#] [-u#] [-B]\n"
-	    "       [-m#] [-M#] [-F] [-V] [<input object>]\n"
+	    "       [-L#] [-a#] [-W#] [-l#] [-u#] [-B] [-C]\n"
+	    "       [-m#] [-M#] [-F] [-V] [-y] [<input object>]\n"
     	    "Computes a conforming mesh for the given input object.\n"
 	    "Options are:\n"
 	    "  -h  Help, prints this usage message.\n"
 	    "  -o  Output file.\n"
-	    "  -L  Number of Laplacian smoothing iterations.\n"
 	    "  -a  Laplacian alpha parameter.\n"
 	    "  -W  Number of low pass filter smoothing iterations.\n"
 	    "  -l  Low pass filter lambda value.\n"
 	    "  -u  Low pass filter mu value.\n"
 	    "  -B  Smooth boundary (requires a smoothing method to be\n"
 	    "      selected).\n"
+	    "  -C  Don't make the mesh conform to the object's domain.\n"
 	    "  -m  Minimum mesh element size.\n"
+	    "  -L  Number of Laplacian smoothing iterations.\n"
 	    "  -M  Maximum mesh element size.\n"
 	    "  -F  Prints features of the mesh elements to the standard\n"
 	    "      output.\n"
 	    "  -V  Verify mesh. This may take a long time and may give\n"
-	    "      segmentation faults for buggy meshes.\n",
+	    "      segmentation faults for buggy meshes.\n"
+	    "  -y  Copy mesh to squeeze out all deleted entities.\n",
 	    argv[0]);
 
   }
