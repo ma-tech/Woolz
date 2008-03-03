@@ -156,6 +156,15 @@ static WlzErrorNum 		WlzReadGreyV(FILE *fP,
 static WlzMeshTransform         *WlzReadMeshTransform2D(
 				  FILE *fp,
 				  WlzErrorNum *);
+static WlzCMeshTransform	*WlzReadCMeshTransform(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzCMeshTransform	*WlzReadCMeshTransform2D(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzCMeshTransform	*WlzReadCMeshTransform3D(
+				  FILE *fp,
+				  WlzErrorNum *);
 
 #ifdef _OPENMP
 #define getc(S)	getc_unlocked(S)
@@ -458,7 +467,12 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
-      /* orphans and not yet implemented object types for I/O */
+    case WLZ_CMESH_TRANS:
+      if((domain.cmt = WlzReadCMeshTransform(fp, &errNum)) != NULL){
+	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      }
+      break;
+    /* orphans and not yet implemented object types for I/O */
     case WLZ_CONV_HULL:
     case WLZ_3D_POLYGON:
     case WLZ_CONVOLVE_INT:
@@ -3133,7 +3147,6 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
 }
 
 
-/* function:     WlzReadMeshTransform3D    */
 /*! 
 * \ingroup      WlzIO
 * \brief        reads a woolz 3D MeshTransform
@@ -3198,7 +3211,8 @@ WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fp,
   /* read  nodal position and displacement */
   if( errNum == WLZ_ERR_NONE )
   {
-    if( (obj->nodes = (WlzMeshNode3D *)AlcMalloc(  obj->nNodes * sizeof(WlzMeshNode3D))) == NULL )
+    if( (obj->nodes = (WlzMeshNode3D *)
+                      AlcMalloc(obj->nNodes * sizeof(WlzMeshNode3D))) == NULL)
     {
       AlcFree( (void *) obj->nodes );
       AlcFree( (void *) obj );
@@ -3387,3 +3401,82 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
   }
   return(obj) ;
 }
+
+/*!
+* \return	Conforming Mesh Transform.
+* \ingroup	WlzIO
+* \brief	Reads a conforming mesh transform from the input file.
+* \param	fP			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshTransform *WlzReadCMeshTransform(FILE *fp,
+					WlzErrorNum *dstErr)
+{
+  WlzTransformType type;
+  WlzCMeshTransform *cmt = NULL;
+  WlzErrorNum errNum = WLZ_ERR_NONE;
+
+  type = (WlzTransformType )getword(fp);
+  if(feof(fp) != 0)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_TRANSFORM_2D_CMESH:
+	cmt = WlzReadCMeshTransform2D(fp, &errNum);
+	break;
+      case WLZ_TRANSFORM_3D_CMESH:
+	cmt = WlzReadCMeshTransform3D(fp, &errNum);
+	break;
+      default:
+	errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cmt);
+}
+
+/*!
+* \return	Conforming Mesh Transform.
+* \ingroup	WlzIO
+* \brief	Reads a 2D conforming mesh transform from the input file.
+* \param	fP			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshTransform *WlzReadCMeshTransform2D(FILE *fp,
+					WlzErrorNum *dstErr)
+{
+  WlzCMeshTransform *cmt = NULL;
+  WlzErrorNum errNum = WLZ_ERR_NONE;
+
+  /* I AM HERE HACK */
+
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cmt);
+}
+
+/*!
+* \return	Conforming Mesh Transform.
+* \ingroup	WlzIO
+* \brief	Reads a 3D conforming mesh transform from the input file.
+* \param	fP			Given file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
+					WlzErrorNum *dstErr)
+{
+  WlzCMeshTransform *cmt = NULL;
+
+  return(cmt);
+}
+
