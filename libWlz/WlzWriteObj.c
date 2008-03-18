@@ -46,6 +46,8 @@ static char _WlzWriteObj_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
+/* #define WLZ_DEBUG_WRITEOBJ */
+
 #if defined(_WIN32) && !defined(__x86)
 #define __x86
 #endif
@@ -2621,6 +2623,7 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
 {
   int		idN,
   		idE,
+		nDsp,
 		nNod,
   		nElm;
   WlzDVertex2	dsp;
@@ -2639,8 +2642,7 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
   else if((mesh->res.nod.numEnt < 0) ||
-          (mesh->res.elm.numEnt < 0) ||
-	  (dspVec == NULL))
+          (mesh->res.elm.numEnt < 0))
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
@@ -2666,7 +2668,7 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
       }
     }
     nElm = 0;
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idN)
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
@@ -2674,14 +2676,23 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
 	nElm++;
       }
     }
+    nDsp = (dspVec != NULL)? nNod: 0;
     putword(nNod, fP);
     putword(nElm, fP);
+    putword(nDsp, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform2D() "
+                       "%d %d %d\n",
+		       nNod, nElm, nDsp);
+#endif /* WLZ_DEBUG_WRITEOBJ */
     if(feof(fP) != 0)
     {
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
   }
-  /* Write node flags, node position (x then y) and displacement (x then y). */
+  /* Write node flags, node position (x then y) and then if the number of
+   * displacements is greater than zero the displacements (x then y). */
   if(errNum == WLZ_ERR_NONE)
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
@@ -2689,12 +2700,28 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
       nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
-	dsp = *(WlzDVertex2 *)AlcVectorItemGet(dspVec, idN);
 	putword(nod->flags, fP);
 	putdouble(nod->pos.vtX, fP);
 	putdouble(nod->pos.vtY, fP);
-	putdouble(dsp.vtX, fP);
-	putdouble(dsp.vtY, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform2D() "
+		       "% 8d % 8d 0x%08x % 8g % 8g\n",
+                       nod->idx, nodTbl[idN], nod->flags,
+		       nod->pos.vtX, nod->pos.vtY);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+	if(nDsp > 0)
+	{
+	  dsp = *(WlzDVertex2 *)AlcVectorItemGet(dspVec, idN);
+	  putdouble(dsp.vtX, fP);
+	  putdouble(dsp.vtY, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform2D() "
+		       "% 8g % 8g\n",
+		       dsp.vtX, dsp.vtY);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+	}
 	if(feof(fP) != 0)
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -2706,22 +2733,28 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
   /* Write element flags and node indices. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idE = 0; idN < mesh->res.elm.maxEnt; ++idE)
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
 	WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
 	putword(elm->flags, fP);
-	putdouble(nodTbl[nodes[0]->idx], fP);
-	putdouble(nodTbl[nodes[1]->idx], fP);
-	putdouble(nodTbl[nodes[2]->idx], fP);
+	putword(nodTbl[nodes[0]->idx], fP);
+	putword(nodTbl[nodes[1]->idx], fP);
+	putword(nodTbl[nodes[2]->idx], fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform2D() "
+                       "% 8d 0x%08x % 8d % 8d % 8d\n",
+		       elm->idx, elm->flags,
+		       nodes[0]->idx, nodes[1]->idx, nodes[2]->idx);
+#endif /* WLZ_DEBUG_WRITEOBJ */
 	if(feof(fP) != 0)
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	  break;
 	}
-	++idE;
       }
     }
   }
@@ -2744,6 +2777,7 @@ static WlzErrorNum	WlzWriteCMeshTransform3D(
 {
   int		idN,
   		idE,
+		nDsp,
 		nNod,
   		nElm;
   WlzDVertex3	dsp;
@@ -2762,8 +2796,7 @@ static WlzErrorNum	WlzWriteCMeshTransform3D(
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
   else if((mesh->res.nod.numEnt < 0) ||
-          (mesh->res.elm.numEnt < 0) ||
-	  (dspVec == NULL))
+          (mesh->res.elm.numEnt < 0))
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
@@ -2789,7 +2822,7 @@ static WlzErrorNum	WlzWriteCMeshTransform3D(
       }
     }
     nElm = 0;
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idN)
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
@@ -2797,15 +2830,23 @@ static WlzErrorNum	WlzWriteCMeshTransform3D(
 	nElm++;
       }
     }
+    nDsp = (dspVec != NULL)? nNod: 0;
     putword(nNod, fP);
     putword(nElm, fP);
+    putword(nDsp, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform3D() "
+                       "%d %d %d\n",
+		       nNod, nElm, nDsp);
+#endif /* WLZ_DEBUG_WRITEOBJ */
     if(feof(fP) != 0)
     {
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
   }
-  /* Write node flags, node position (x, y then z) and displacement (x, y
-   * then z). */
+  /* Write node flags, node position (x then y) and then if the number of
+   * displacements is greater than zero the displacements (x then y). */
   if(errNum == WLZ_ERR_NONE)
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
@@ -2813,14 +2854,30 @@ static WlzErrorNum	WlzWriteCMeshTransform3D(
       nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
-	dsp = *(WlzDVertex3 *)AlcVectorItemGet(dspVec, idN);
 	putword(nod->flags, fP);
 	putdouble(nod->pos.vtX, fP);
 	putdouble(nod->pos.vtY, fP);
 	putdouble(nod->pos.vtZ, fP);
-	putdouble(dsp.vtX, fP);
-	putdouble(dsp.vtY, fP);
-	putdouble(dsp.vtZ, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform2D() "
+		       "% 8d % 8d 0x%08x % 8g % 8g % 8g\n",
+                       nod->idx, nodTbl[idN], nod->flags,
+		       nod->pos.vtX, nod->pos.vtY, nod->pos.vtZ);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+	if(nDsp > 0)
+	{
+	  dsp = *(WlzDVertex3 *)AlcVectorItemGet(dspVec, idN);
+	  putdouble(dsp.vtX, fP);
+	  putdouble(dsp.vtY, fP);
+	  putdouble(dsp.vtZ, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform3D() "
+		       "% 8g % 8g % 8g\n",
+		       dsp.vtX, dsp.vtY, dsp.vtZ);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+	}
 	if(feof(fP) != 0)
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -2832,23 +2889,31 @@ static WlzErrorNum	WlzWriteCMeshTransform3D(
   /* Write element flags and node indices. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idE = 0; idN < mesh->res.elm.maxEnt; ++idE)
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+	WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1,
+	                           nodes + 2, nodes + 3);
 	putword(elm->flags, fP);
-	putdouble(nodTbl[nodes[0]->idx], fP);
-	putdouble(nodTbl[nodes[1]->idx], fP);
-	putdouble(nodTbl[nodes[2]->idx], fP);
-	putdouble(nodTbl[nodes[3]->idx], fP);
+	putword(nodTbl[nodes[0]->idx], fP);
+	putword(nodTbl[nodes[1]->idx], fP);
+	putword(nodTbl[nodes[2]->idx], fP);
+	putword(nodTbl[nodes[3]->idx], fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMeshTransform3D() "
+                       "% 8d 0x%08x % 8d % 8d % 8d % 8d\n",
+		       elm->idx, elm->flags,
+		       nodes[0]->idx, nodes[1]->idx,
+		       nodes[2]->idx, nodes[3]->idx);
+#endif /* WLZ_DEBUG_WRITEOBJ */
 	if(feof(fP) != 0)
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	  break;
 	}
-	++idE;
       }
     }
   }
