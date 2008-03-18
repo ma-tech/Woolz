@@ -49,7 +49,8 @@ WlzRGBChannelRatio - computes log ratio of RGB channels in a RGBA object.
 \par Synopsis
 \verbatim
 WlzRGBChannelRatio [-h] [-o<output object file>]
-                   [-d<r|g|b>] [-n<r|g|b>] [<input object file>]
+                   [-d<channel>] [-n<channel>] [-m<channel>]
+		   [-N] [<input object file>]
 
 \endverbatim
 \par Options
@@ -64,23 +65,38 @@ WlzRGBChannelRatio [-h] [-o<output object file>]
   </tr>
   <tr>
     <td><b>-d</b></td>
-    <td>Denominator, must be r, g, b, y, m or c. </td>
+    <td>Denominator, must be a valid channel letter. </td>
   </tr>
   <tr>
     <td><b>-n</b></td>
-    <td>Numerator, must be r, g, b, y, m or c. </td>
+    <td>Numerator, must be a valid channel letter. </td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>Multiplier, must be a valid channel letter. </td>
+  </tr>
+  <tr>
+    <td><b>-N</b></td>
+    <td>Normalise the values and convert to unsigned byte. </td>
   </tr>
 </table>
 \par Description
 Computes log ratio of RGB channels in a RGBA object for each
 pixel using ratio \f$r\f$ with
 \f[
-r = 46 \log(1 + \frac{n}{1 + d}).
+r = \log(1 + \frac{n}{1 + d}).
 \f]
-This results in an object normalised to the range 0-255.
-Colour channels are specified by the first letter of the colour channel
-strings red, green, blue, yellow, magenta and cyan, ie r, g, b, y, m
-and c. 
+or if a multiplier channel is specified
+\f[
+r = m \log(1 + \frac{n}{1 + d}).
+\f]
+
+This results in an object with either float values or values normalised
+to the range 0-255 and converted to ubyte.
+Colour channels are specified by the ** letter of the colour channel
+strings *r*ed, *g*reen, *b*lue, *y*ellow, *m*agenta, "*c*yan, *h*ue,
+*s*aturation, *v*alue and gr*e*y, ie r, g, b, y, m, c, h, s, v and e.
+No multiplier is used unless given on the command line.
 By default the input object is read from the standard input and the
 output object is written to standard the output.
 \par Examples
@@ -119,9 +135,12 @@ static int			WlzRGBRatioChan(
 int		main(int argc, char *argv[])
 {
   int		option,
-  		usage = 0;
-  WlzRGBAColorChannel numC,
-  		denC;
+  		usage = 0,
+		norm = 0,
+		useMul = 0;
+  WlzRGBAColorChannel denC = WLZ_RGBA_CHANNEL_GREEN,
+  		mulC = WLZ_RGBA_CHANNEL_GREY,
+		numC = WLZ_RGBA_CHANNEL_RED;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -129,7 +148,7 @@ int		main(int argc, char *argv[])
   char		*inObjStr,
   		*outObjStr;
   const char    *errMsg;
-  static char   optList[] = "d:n:o:h",
+  static char   optList[] = "d:m:n:o:Nh",
   		outObjStrDef[] = "-",
 		inObjStrDef[] = "-";
 
@@ -145,8 +164,15 @@ int		main(int argc, char *argv[])
       case 'n':
 	usage = WlzRGBRatioChan(&numC, optarg);
 	break;
+      case 'm':
+	useMul = 1;
+	usage = WlzRGBRatioChan(&mulC, optarg);
+	break;
       case 'o':
         outObjStr = optarg;
+	break;
+      case 'N':
+        norm = 1;
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -192,7 +218,7 @@ int		main(int argc, char *argv[])
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      outObj = WlzRGBChanRatio(inObj, numC, denC, &errNum);
+      outObj = WlzRGBChanRatio(inObj, numC, denC, mulC, useMul, norm, &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -224,17 +250,20 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
       "Usage: %s [-h] [-o<out>] [-d<r|g|b>] [-n<r|g|b>] [<in>]\n"
       "Computes log ratio of RGB channels in an RGBA object for each\n"
-      "pixel using: ratio = 46 * ln(1 + n/(1 + d)). This results in an\n"
+      "pixel using: ratio = ln(1 + n/(1 + d)). This results in an\n"
       "object normalised to the range 0-255.\n"
-      "Colour channels are specified by the first letter of the colour\n"
-      "channel strings red, green, blue, yellow, magenta and cyan, ie r,\n"
-      "g, b, y, m and c.\n"
+      "Colour channels are specified by the ** letter of the colour\n"
+      "channel strings *r*ed, *g*reen, *b*lue, *y*ellow, *m*agenta\n"
+      "*c*yan, *h*ue, *s*aturation, *v*alue and gr*e*y, ie r, g, b,\n"
+      "y, m, c, h, s, v and e.\n"
+      "No multiplier is used unless given on the command line.\n"
       "By default the input object is read from the standard input and the\n"
       "output object is written to standard the output.\n"
       "Options are:\n"
       "  -d  Denominator colour channel.\n"
       "  -n  Numerator colour channel.\n"
-      "  -o Output file.\n"
+      "  -m  Multiplier colour channel.\n"
+      "  -o  Output file.\n"
       "  -h  Help, prints this usage message.\n",
       *argv);
   }
@@ -252,6 +281,9 @@ static int	WlzRGBRatioChan(WlzRGBAColorChannel *chan, char *str)
     val = toupper(*str);
     switch(val)
     {
+      case 'E':
+        *chan = WLZ_RGBA_CHANNEL_GREY;
+	break;
       case 'R':
         *chan = WLZ_RGBA_CHANNEL_RED;
 	break;
@@ -269,6 +301,15 @@ static int	WlzRGBRatioChan(WlzRGBAColorChannel *chan, char *str)
 	break;
       case 'Y':
         *chan = WLZ_RGBA_CHANNEL_YELLOW;
+	break;
+      case 'H':
+        *chan = WLZ_RGBA_CHANNEL_HUE;
+	break;
+      case 'S':
+        *chan = WLZ_RGBA_CHANNEL_SATURATION;
+	break;
+      case 'V':
+        *chan = WLZ_RGBA_CHANNEL_BRIGHTNESS;
 	break;
       default:
         usage = 1;
