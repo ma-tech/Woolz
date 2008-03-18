@@ -126,7 +126,10 @@ static WlzErrorNum 		WlzObjFactsGreyV(
 				  WlzGreyV gV);
 static WlzErrorNum	        WlzObjFactsMeshTrans(
 				  WlzObjFactsData *fData,
-				   WlzMeshTransform *mtrans);		
+				  WlzMeshTransform *mtrans);		
+static WlzErrorNum 		WlzObjFactsCMeshTrans(
+				  WlzObjFactsData *fData,
+				  WlzCMeshTransform *cmt);
 
 /*!
 * \return	Woolz error code.
@@ -375,6 +378,13 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  break;
 	case WLZ_MESH_TRANS:
 	  errNum = WlzObjFactsMeshTrans(fData, obj->domain.mt);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_CMESH_TRANS:
+	  errNum = WlzObjFactsCMeshTrans(fData, obj->domain.cmt);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
@@ -1630,6 +1640,7 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
   --(fData->indent);
   return(errNum);
 }
+
 /*!
 * \return	Error number.
 * \ingroup      WlzDebug
@@ -1668,6 +1679,65 @@ static WlzErrorNum WlzObjFactsMeshTrans(WlzObjFactsData *fData,
       errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", trans->nElem);
       errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", trans->nNodes);
 
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of an constrained mesh transform.
+* \param	fData			Facts data structure.
+* \param	cmt			Given constrained mesh transform.
+*/
+static WlzErrorNum WlzObjFactsCMeshTrans(WlzObjFactsData *fData,
+				         WlzCMeshTransform *cmt)
+{
+  int		nElm = 0,
+  		nNod = 0;
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromTransformType(cmt->type, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Transform NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Transform type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Transform type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", cmt->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      switch(cmt->type)
+      {
+        case WLZ_TRANSFORM_2D_CMESH:
+	  nElm = cmt->mesh.m2->res.elm.numEnt;
+	  nNod = cmt->mesh.m2->res.nod.numEnt;
+	  break;
+	case WLZ_TRANSFORM_3D_CMESH:
+	  nElm = cmt->mesh.m3->res.elm.numEnt;
+	  nNod = cmt->mesh.m3->res.nod.numEnt;
+	  break;
+	default:
+	  errNum = WLZ_ERR_TRANSFORM_TYPE;
+	  break;
+      }
+      errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", nElm);
+      errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
     }
   }
   --(fData->indent);
