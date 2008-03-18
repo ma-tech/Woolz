@@ -50,6 +50,9 @@ static WlzObject 		*WlzRGBChanRatio2D(
 				  WlzObject *rgbObj,
 				  WlzRGBAColorChannel numC,
 				  WlzRGBAColorChannel denC,
+				  WlzRGBAColorChannel mulC,
+				  int useMul,
+				  int norm,
 				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzRGBAChanValid(
 				  WlzRGBAColorChannel chan);
@@ -63,19 +66,30 @@ static WlzUByte			WlzRGBAChanGetValue(
 * \brief	Computes log ratio of RGB channels in a RGBA object for each
 * 		pixel using ratio \f$r\f$ with
 \f[
-r = 46 \log(1 + \frac{n}{1 + d}).
+r = m \log(1 + \frac{n}{1 + d}).
 \f]
-* 		This results in an object normalised to the range 0-255.
+*		where m is the multipler channel value or unity if not
+*		used.
+* 		This results in either an object with float values or if
+* 		the normalise parameter is non-zero an object with unsigned
+* 		byte values normalised to the range 0-255.
 * 		The numerator and denominator channels must be red, green
-* 		blue, yellow, magenta or cyan.
+* 		blue, yellow, magenta, cyan, hue, staturation, brightness,
+* 		or grey (modulus).
 * \param	rgbObj			The input RGBA object.
 * \param	num			Channel for numerator in ratio.
 * \param	den			Channel for denominator in ratio.
+* \param	mul			Channel for multiplier value.
+* \param	useMul			Multiplier used if non zero.
+* \param	norm			Normalise the object values and
+* 					return a ubyte object.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
 				WlzRGBAColorChannel num,
 				WlzRGBAColorChannel den,
+				WlzRGBAColorChannel mul,
+				int useMul, int norm,
 				WlzErrorNum *dstErr)
 {
   WlzObject	*ratioObj = NULL;
@@ -106,7 +120,8 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
     switch(rgbObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
-        ratioObj = WlzRGBChanRatio2D(rgbObj, num, den, &errNum);
+        ratioObj = WlzRGBChanRatio2D(rgbObj, num, den, mul, useMul, norm,
+				     &errNum);
 	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -128,20 +143,29 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
 * \param	rgbObj			The input 2D RGBA object.
 * \param	num			Channel for numerator in ratio.
 * \param	den			Channel for denominator in ratio.
+* \param	mul			Channel for multiplier value.
+* \param	useMul			Multiplier used if non zero.
+* \param	norm			Normalise the object values and
+* 					return a ubyte object.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
 				WlzRGBAColorChannel numC,
 				WlzRGBAColorChannel denC,
+				WlzRGBAColorChannel mulC,
+				int useMul,
+				int norm,
 				WlzErrorNum *dstErr)
 {
   int		cnt;
   double	num,
   		den,
+		mul,
 		ratio;
   WlzValues	values;
   WlzPixelV	bgdV;
-  WlzObject	*ratioObj = NULL;
+  WlzObject	*rtnObj = NULL,
+  		*ratioObj = NULL;
   WlzObjectType	vType;
   WlzGreyWSpace	gWSp0,
   		gWSp1;
@@ -149,7 +173,7 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
   		iWSp1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
+  vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
   values.v = WlzNewValueTb(rgbObj, vType, bgdV, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
@@ -158,6 +182,7 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    values.core = NULL;
     errNum = WlzInitGreyScan(rgbObj, &iWSp0, &gWSp0);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -176,10 +201,15 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
 	{
 	  num = WlzRGBAChanGetValue(*(gWSp0.u_grintptr.rgbp), numC);
 	  den = WlzRGBAChanGetValue(*(gWSp0.u_grintptr.rgbp), denC);
-	  ratio = 46.0 * log(1.0 + (num / (den + 1.0)));
-	  *(gWSp1.u_grintptr.ubp) = WLZ_NINT(ratio);
+	  ratio = log(1.0 + (num / (den + 1.0)));
+	  if(useMul)
+	  {
+	    mul = WlzRGBAChanGetValue(*(gWSp0.u_grintptr.rgbp), mulC);
+	    ratio = ratio * mul;
+	  }
+	  *(gWSp1.u_grintptr.flp) = ratio;
 	  ++(gWSp0.u_grintptr.rgbp);
-	  ++(gWSp1.u_grintptr.ubp);
+	  ++(gWSp1.u_grintptr.flp);
 	}
 	break;
       default:
@@ -191,17 +221,33 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
   {
     errNum = WLZ_ERR_NONE;
   }
-  if(errNum != WLZ_ERR_NONE)
+  if(errNum == WLZ_ERR_NONE)
   {
-    if(ratioObj)
+    if(norm)
     {
-      WlzFreeObj(ratioObj);
+      if((errNum = WlzGreyNormalise(ratioObj, 1)) == WLZ_ERR_NONE)
+      {
+        rtnObj = WlzConvertPix(ratioObj, WLZ_GREY_UBYTE, &errNum);
+      }
+    }
+    else
+    {
+      rtnObj = ratioObj;
       ratioObj = NULL;
     }
-    else if(values.core != NULL)
-    {
-      WlzFreeValues(values);
-    }
+  }
+  if(ratioObj)
+  {
+    (void )WlzFreeObj(ratioObj);
+  }
+  else if(values.core != NULL)
+  {
+    (void )WlzFreeValues(values);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(rtnObj);
+    rtnObj = NULL;
   }
   if(errNum == WLZ_ERR_EOO)
   {
@@ -211,7 +257,7 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
   {
     *dstErr = errNum;
   }
-  return(ratioObj);
+  return(rtnObj);
 }
 
 /*!
@@ -227,12 +273,16 @@ static WlzErrorNum WlzRGBAChanValid(WlzRGBAColorChannel chan)
 
   switch(chan)
   {
+    case WLZ_RGBA_CHANNEL_GREY:       /* FALLTHROUGH */
     case WLZ_RGBA_CHANNEL_RED:        /* FALLTHROUGH */
     case WLZ_RGBA_CHANNEL_GREEN:      /* FALLTHROUGH */
     case WLZ_RGBA_CHANNEL_BLUE:	      /* FALLTHROUGH */
     case WLZ_RGBA_CHANNEL_CYAN:       /* FALLTHROUGH */
     case WLZ_RGBA_CHANNEL_MAGENTA:    /* FALLTHROUGH */
-    case WLZ_RGBA_CHANNEL_YELLOW:
+    case WLZ_RGBA_CHANNEL_YELLOW:     /* FALLTHROUGH */
+    case WLZ_RGBA_CHANNEL_HUE:        /* FALLTHROUGH */
+    case WLZ_RGBA_CHANNEL_SATURATION: /* FALLTHROUGH */
+    case WLZ_RGBA_CHANNEL_BRIGHTNESS:
       break;
     default:
       errNum = WLZ_ERR_PARAM_DATA;
@@ -250,14 +300,26 @@ static WlzErrorNum WlzRGBAChanValid(WlzRGBAColorChannel chan)
 */
 static WlzUByte	WlzRGBAChanGetValue(WlzUInt rgba, WlzRGBAColorChannel chan)
 {
-  WlzUByte	c,
-		y,
-		m,
+  int		b,
+		c,
+		h,
 		k,
-		val = 0;
+		m,
+		s,
+		y,
+		red,
+		green,
+		blue,
+		del,
+		min,
+		max;
+  WlzUByte	val = 0;
 
   switch(chan)
   {
+    case WLZ_RGBA_CHANNEL_GREY:
+      val = WLZ_NINT((double )(WLZ_RGBA_MODULUS(rgba)) / sqrt(3.0));
+      break;
     case WLZ_RGBA_CHANNEL_RED:
       val = WLZ_RGBA_RED_GET(rgba);
       break;
@@ -289,7 +351,54 @@ static WlzUByte	WlzRGBAChanGetValue(WlzUInt rgba, WlzRGBAColorChannel chan)
 	  break;
       }
       break;
+    case WLZ_RGBA_CHANNEL_HUE:        /* FALLTHROUGH */
+    case WLZ_RGBA_CHANNEL_SATURATION: /* FALLTHROUGH */
+    case WLZ_RGBA_CHANNEL_BRIGHTNESS:
+      red = WLZ_RGBA_RED_GET(rgba);
+      green = WLZ_RGBA_GREEN_GET(rgba);
+      blue = WLZ_RGBA_BLUE_GET(rgba);
+      min = ALG_MIN3(red, green, blue);
+      max = ALG_MAX3(red, green, blue);
+      del = max - min;
+      b = max;
+      s = (max == 0)? 0: 255.0 * del / max;
+      switch(chan)
+      {
+        case WLZ_RGBA_CHANNEL_BRIGHTNESS:
+	  val = b;
+	  break;
+        case WLZ_RGBA_CHANNEL_SATURATION:
+	  val = s;
+	  break;
+        case WLZ_RGBA_CHANNEL_HUE:
+	  if(s == 0)
+	  {
+	    h = -1;
+	  }
+	  else
+	  {
+	    if(max == red)
+	    {
+	      h = (green - blue) / del;
+	    }
+	    else if(max == green)
+	    {
+	      h = 2 + (blue - red) / del;
+	    }
+	    else
+	    {
+	      h = 4 + (red - green) / del;
+	    }
+	  }
+	  h = (360 + (h * 60)) % 360;
+	  val = h;
+	  break;
+        default:
+	  break;
+      }
+      break;
     default:
       break;
   }
+  return(val);
 }
