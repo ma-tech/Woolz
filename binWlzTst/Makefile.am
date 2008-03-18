@@ -45,6 +45,7 @@ LDADD 			= -L$(top_srcdir)/libWlz/.libs -lWlz \
 
 bin_PROGRAMS		= \
 			  WlzTstAlgCrossCorr \
+			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
 			  WlzTstCMeshTransformObj \
 			  WlzTstGeomTetraAffineSolve \
