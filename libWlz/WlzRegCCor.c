@@ -269,7 +269,7 @@ static WlzObject *WlzRegCCorNormaliseObj2D(WlzObject *obj, int inv,
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzSetBackground(obj0, zero);
-    errNum = WlzGreySetRange(obj0, min, max, minN, maxN);
+    errNum = WlzGreySetRange(obj0, min, max, minN, maxN, 0);
   }
   if(errNum != WLZ_ERR_NONE)
   {

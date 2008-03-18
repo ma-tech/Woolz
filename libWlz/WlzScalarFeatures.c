@@ -178,7 +178,7 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
 	       WlzGreyModGradient(obj, filterV, &errNum) ,NULL);
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  errNum = WlzGreyNormalise(fObj);
+	  errNum = WlzGreyNormalise(fObj, 0);
 	}
         break;
       default:
