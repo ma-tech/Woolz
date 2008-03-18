@@ -161,6 +161,9 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_MESH_TRANS:
       oTypeStr = "WLZ_MESH_TRANS";
       break;
+    case WLZ_CMESH_TRANS:
+      oTypeStr = "WLZ_CMESH_TRANS";
+      break;
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
@@ -210,6 +213,8 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_COMPOUND_LIST_2", WLZ_COMPOUND_LIST_2,
 		"WLZ_PROPERTY_OBJ", WLZ_PROPERTY_OBJ,
 		"WLZ_EMPTY_OBJ", WLZ_EMPTY_OBJ,
+		"WLZ_MESH_TRANS", WLZ_MESH_TRANS,
+		"WLZ_CMESH_TRANS", WLZ_CMESH_TRANS,
 		NULL))
   {
     oType = tI0;
