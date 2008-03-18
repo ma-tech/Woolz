@@ -41,6 +41,7 @@ static char _WlzBasisFnTransformObj_c[] = "MRC HGU $Id$";
 * \bug          None known.
 */
 
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

@@ -72,7 +72,7 @@ static void usage(char *proc_str)
   return;
 }
 
-main(int argc, char **argv)
+int		main(int argc, char **argv)
 {
   WlzCompoundArray *inObj;
   WlzObject        *objT11,
@@ -143,11 +143,11 @@ main(int argc, char **argv)
       case WLZ_COMPOUND_ARR_1:
 	if (inObj->n == 3)
 	{
-	  if (objT11 = inObj->o[0])
+	  if ((objT11 = inObj->o[0]) != NULL)
 	  {
-	    if (objT22 = inObj->o[1])
+	    if ((objT22 = inObj->o[1]) != NULL)
 	    {
-	      if (!(objT12 = inObj->o[2]))
+	      if ((objT12 = inObj->o[2]) == NULL)
 	      {
 		objT11 = NULL;
 		objT22 = NULL;
@@ -277,7 +277,7 @@ static WlzErrorNum WlzTensorToVtk(FILE *outFile, WlzObject *objT11,
   }
   if (errNum == WLZ_ERR_NONE)
   {
-    fprintf(outFile,  "%s %ld\n","POINT_DATA", numpoints);
+    fprintf(outFile,  "%s %d\n","POINT_DATA", numpoints);
     fprintf(outFile, "%s %s %s\n","TENSORS","tensors", "float" );
     while(((errNum = WlzNextGreyInterval(&iWspT11)) == WLZ_ERR_NONE) &&
 	  ((errNum = WlzNextGreyInterval(&iWspT22)) == WLZ_ERR_NONE) &&

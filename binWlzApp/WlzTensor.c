@@ -43,6 +43,7 @@ static char _WlzTensor_c[] = "MRC HGU $Id$";
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <float.h>
@@ -50,31 +51,38 @@ static char _WlzTensor_c[] = "MRC HGU $Id$";
 #include <WlzExtFF.h>
 #include <bibFile.h>
 
+/* Externals required by getopt  - not in ANSI C standard */
+#ifdef __STDC__ /* [ */
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
 extern char     *optarg;
 extern int      optind,
                 opterr,
                 optopt;
+#endif /* __STDC__ ] */
 
-static void     usage(char *proc_str); 
+static void     		usage(
+				  char *proc_str); 
 
-static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPtsT(WlzObject *obj,
-				WlzFnType basisFnType, int polyOrder,
-				int nSPts, WlzDVertex2 *sPts,
-				int nDPts, WlzDVertex2 *dPts,
-				WlzErrorNum *dstErr);
-
-static WlzCompoundArray *WlzBasisFnTensorTransformObjPrv
-                                        (WlzObject *inObj, 
-					 WlzBasisFnTransform *basisTr, 
-					 WlzErrorNum *dstErr);
-
-static double WlzBasisFnValueMQ2DPrv(WlzBasisFn *basisFn, 
-					    WlzDVertex2 srcVx, int component);
-
-static double WlzBasisFnValueTPS2DPrv(WlzBasisFn *basisFn, 
-					    WlzDVertex2 srcVx, int component);
+static WlzBasisFnTransform 	*WlzAffineBasisFnTransformFromCPtsT(
+				  WlzObject *obj,
+				  WlzFnType basisFnType,
+				  int polyOrder,
+				  int nSPts, WlzDVertex2 *sPts,
+				  int nDPts, WlzDVertex2 *dPts,
+				  WlzErrorNum *dstErr);
+static WlzCompoundArray 	*WlzBasisFnTensorTransformObjPrv(
+				  WlzObject *inObj, 
+				  WlzBasisFnTransform *basisTr, 
+				  WlzErrorNum *dstErr);
+static double 			WlzBasisFnValueMQ2DPrv(
+				  WlzBasisFn *basisFn, 
+				  WlzDVertex2 srcVx,
+				  int component);
+static double 			WlzBasisFnValueTPS2DPrv(
+				  WlzBasisFn *basisFn, 
+				  WlzDVertex2 srcVx,
+				  int component);
 
 
 int             main(int argc, char **argv)
@@ -88,8 +96,7 @@ int             main(int argc, char **argv)
                 relFlag,
                 meshMinDist,
                 meshMaxDist;
-  char 		*rec,
-  		*srcFileStr,
+  char 		*srcFileStr,
 		*bibFileStr = NULL,
                 *outFileStr,
                 *bibErrMsg;
@@ -110,7 +117,6 @@ int             main(int argc, char **argv)
   WlzTransformType     trType;
   WlzFnType basisFnType;
   WlzMeshGenMethod genMethod;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzErrorNum	errNum = WLZ_ERR_NONE; 
   BibFileRecord	       *bibfileRecord;
   BibFileError         bibFileErr;
@@ -317,6 +323,7 @@ int             main(int argc, char **argv)
   AlcFree(srcVtx2);
   AlcFree(dstVtx2);
   WlzBasisFnFreeTransform(basisTr);
+  return(errNum);
 }
 
 static void usage(char *proc_str)
@@ -361,7 +368,6 @@ static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPtsT(WlzObject *obj,
 				WlzErrorNum *dstErr)
 {
   int		idx;
-  WlzDVertex2	tDV0;
   WlzDVertex2	*dPtsT = NULL;
   WlzAffineTransform *aTr = NULL,
   		*aTrI = NULL;
@@ -457,7 +463,6 @@ static WlzCompoundArray *WlzBasisFnTensorTransformObjPrv(WlzObject *inObj,
                         gWspT22;
   WlzDVertex2           sVtx;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-  WlzObjectType		type;
   WlzObjectType           vType;
   WlzGreyP	        gPixT11,
                         gPixT12,
@@ -479,9 +484,9 @@ static WlzCompoundArray *WlzBasisFnTensorTransformObjPrv(WlzObject *inObj,
   vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
   backgrnd.type = WLZ_GREY_FLOAT;
   backgrnd.v.inv = 0;
-  if(valuesT11.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum))
+  if((valuesT11.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum)) != NULL)
   {
-    if(valuesT12.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum))
+    if((valuesT12.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum)) != NULL)
     {
       valuesT22.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum);
     }
@@ -498,14 +503,14 @@ static WlzCompoundArray *WlzBasisFnTensorTransformObjPrv(WlzObject *inObj,
   /* create three Wlz objects to hold t11, t22 and t12 tensor components */
   if (errNum == WLZ_ERR_NONE)
   {
-    if (objT11 = WlzMakeMain(inObj->type, inObj->domain, valuesT11, NULL, 
-			     NULL, &errNum)) 
+    if ((objT11 = WlzMakeMain(inObj->type, inObj->domain, valuesT11, NULL, 
+			      NULL, &errNum)) != NULL) 
     {
-      if (objT12 = WlzMakeMain(inObj->type, inObj->domain, valuesT12, NULL, 
-			       NULL, &errNum)) 
+      if ((objT12 = WlzMakeMain(inObj->type, inObj->domain, valuesT12, NULL, 
+			        NULL, &errNum)) != NULL) 
       {
-	if (!(objT22 = WlzMakeMain(inObj->type, inObj->domain, valuesT22, 
-				   NULL, NULL, &errNum)))
+	if ((objT22 = WlzMakeMain(inObj->type, inObj->domain, valuesT22, 
+				   NULL, NULL, &errNum)) == NULL)
 	{
 	  WlzFreeObj(objT11);
 	  objT11 = NULL;
