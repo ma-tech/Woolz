@@ -1,0 +1,515 @@
+#if defined(__GNUC__)
+#ident "MRC HGU $Id$"
+#else
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#pragma ident "MRC HGU $Id$"
+#else
+static char _WlzMeshGen_c[] = "MRC HGU $Id$";
+#endif
+#endif
+/*!
+* \file         binWlzTst/WlzTstCMeshGen.c
+* \author       Bill Hill
+* \date         June 2003
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C) 2005 Medical research Council, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Test for 2D and 3D distance computation using fast marching
+* 		methods within simplical conforming meshes.
+*
+* \ingroup	WlzTst
+* \todo         -
+* \bug          None known.
+*/
+
+#include <stdio.h>
+#include <float.h>
+#include <math.h>
+#include <string.h>
+#include <Wlz.h>
+
+typedef enum _WlzTstParam
+{
+  WLZTST_SEED_BOUNDARY,
+  WLZTST_SEED_SEEDS,
+  WLZTST_OUT_IMAGE,
+  WLZTST_OUT_TXT
+} WlzTstParam;
+
+/* Externals required by getopt  - not in ANSI C standard */
+#ifdef __STDC__ /* [ */
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+
+extern int      optind, opterr, optopt;
+extern char     *optarg;
+#endif /* __STDC__ ] */
+
+int		main(int argc, char *argv[])
+{
+  int		idN,
+  		nSeeds = 0,
+  		ok = 1,
+  		option,
+  		usage = 0,
+		maxNod = 0,
+		seedType = WLZTST_SEED_SEEDS,
+		outType = WLZTST_OUT_TXT;
+  double	minElmSz = 25.0,
+  		maxElmSz = 100.0;
+  double	*dist = NULL;
+  double	**inSeeds = NULL;
+  size_t	inRow = 0,
+  		inCol = 0;
+  WlzObjectType	gTblType;
+  WlzPixelV	val;
+  WlzValues	values;
+  WlzVertexP	seeds;
+  WlzCMeshNod2D	*nod2;
+  WlzGreyValueWSpace *gVWSp = NULL;
+  FILE		*fP = NULL;
+  char		*inObjFileStr,
+  		*outFileStr,
+		*outMeshStr;
+  const char	*errMsgStr;
+  AlcErrno	alcErr = ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzObject	*inObj = NULL,
+  		*outObj = NULL;
+  WlzCMeshP 	mesh;
+  static char   optList[] = "bihtE:m:M:o:s:S:";
+  const char    inObjFileStrDef[] = "-",
+  	        outFileStrDef[] = "-";
+
+  opterr = 0;
+  mesh.v = NULL;
+  seeds.v = NULL;
+  inObjFileStr = (char *)inObjFileStrDef;
+  outFileStr = (char *)outFileStrDef;
+  outMeshStr = NULL;
+  while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
+  {
+    switch(option)
+    {
+      case 'b':
+	seedType = WLZTST_SEED_BOUNDARY;
+        break;
+      case 'i':
+	outType = WLZTST_OUT_IMAGE;
+        break;
+      case 't':
+	outType = WLZTST_OUT_TXT;
+        break;
+      case 's':
+	seedType = WLZTST_SEED_SEEDS;
+	if(AlcDouble2Malloc(&inSeeds, 1, 3) != ALC_ER_NONE)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	  usage = 1;
+	}
+	else
+	{
+	  if(sscanf(optarg,
+	  	    "%lg,%lg,%lg",
+	            &(inSeeds[0][0]), &(inSeeds[0][1]), &(inSeeds[0][2])) != 3)
+	  {
+	    usage = 1;
+	  }
+	  else
+	  {
+	    inRow = 1;
+	    inCol = 3;
+	  }
+	}
+	break;
+      case 'S':
+	seedType = WLZTST_SEED_SEEDS;
+	if((*optarg == '\0') ||
+	   ((fP = (strcmp(optarg, "-")?
+		  fopen(optarg, "r"): stdin)) == NULL) ||
+	   ((alcErr = AlcDouble2ReadAsci(fP, &inSeeds,
+	                                 &inRow, &inCol)) != ALC_ER_NONE))
+	{
+	  switch(alcErr)
+	  {
+	    case ALC_ER_READ:
+	      errNum = WLZ_ERR_READ_EOF;
+	    case ALC_ER_ALLOC:
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	      break;
+	    default:
+	      break;
+	  }
+	  usage = 1;
+	}
+	if(fP && strcmp(optarg, "-"))
+	{
+	  (void )fclose(fP); fP = NULL;
+	}
+	break;
+      case 'm':
+        if(sscanf(optarg, "%lg", &minElmSz) != 1)
+	{
+	  usage = 1;
+	}
+	break;
+      case 'M':
+        if(sscanf(optarg, "%lg", &maxElmSz) != 1)
+	{
+	  usage = 1;
+	}
+        break;
+      case 'E':
+        outMeshStr = optarg;
+	break;
+      case 'o':
+        outFileStr = optarg;
+	break;
+      case 'h':
+      default:
+	usage = 1;
+	break;
+    }
+  }
+  if(usage == 0)
+  {
+    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
+       (outFileStr == NULL) || (*outFileStr == '\0'))
+    {
+      usage = 1;
+    }
+    if((usage == 0) && (optind < argc))
+    {
+      if((optind + 1) != argc)
+      {
+        usage = 1;
+      }
+      else
+      {
+        inObjFileStr = *(argv + optind);
+      }
+    }
+  }
+  ok = usage == 0;
+  if(ok && (seedType == WLZTST_SEED_SEEDS))
+  {
+    if((inRow < 1) || (inCol != 3))
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+      		     "%s Failed to read input seeds (%s).\n",
+		     argv[0],
+		     errMsgStr);
+
+    }
+  }
+  if(ok)
+  {
+    if((inObjFileStr == NULL) ||
+       (*inObjFileStr == '\0') ||
+       ((fP = (strcmp(inObjFileStr, "-")?
+              fopen(inObjFileStr, "r"): stdin)) == NULL) ||
+       ((inObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+       (errNum != WLZ_ERR_NONE))
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+                     "%s: Failed to read object from file (%s)\n",
+                     *argv, inObjFileStr);
+    }
+    if(fP && strcmp(inObjFileStr, "-"))
+    {
+      (void )fclose(fP); fP = NULL;
+    }
+  }
+  if(ok && (seedType == WLZTST_SEED_SEEDS))
+  {
+    switch(inObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	if((seeds.d2 = (WlzDVertex2 *)
+	               AlcMalloc(sizeof(WlzDVertex2) * inRow)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  for(idN = 0; idN < inRow; ++idN)
+	  {
+	    (seeds.d2 + idN)->vtX = *(*(inSeeds + idN) + 0);
+	    (seeds.d2 + idN)->vtY = *(*(inSeeds + idN) + 1);
+	  }
+	  nSeeds = inRow;
+	}
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	if((seeds.d3 = (WlzDVertex3 *)
+	               AlcMalloc(sizeof(WlzDVertex3) * inRow)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  for(idN = 0; idN < inRow; ++idN)
+	  {
+	    (seeds.d3 + idN)->vtX = *(*(inSeeds + idN) + 0);
+	    (seeds.d3 + idN)->vtY = *(*(inSeeds + idN) + 1);
+	    (seeds.d3 + idN)->vtZ = *(*(inSeeds + idN) + 2);
+	  }
+	  nSeeds = inRow;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+                     "%s: failed to build seeds from input (%s),\n",
+		     argv[0],
+		     errMsgStr);
+    }
+  }
+  (void )Alc2Free((void **)inSeeds);
+  if(ok)
+  {
+    mesh = WlzCMeshFromObj(inObj, minElmSz, maxElmSz, NULL, 1, &errNum);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+      		     "%s Failed to create conforming mesh (%s).\n",
+      		     argv[0],
+		     errMsgStr);
+    }
+  }
+  if(ok && outMeshStr)
+  {
+    /* HACK TODO write out the mesh. */
+  }
+  if(ok)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        maxNod = mesh.m2->res.nod.maxEnt;
+	break;
+      case WLZ_CMESH_TET3D:
+        maxNod = mesh.m3->res.nod.maxEnt;
+	break;
+      default:
+        ok = 0;
+	(void )fprintf(stderr,
+	               "%s: Unrecognised mesh type (%d)\n",
+		       argv[0],
+		       mesh.m2->type);
+    }
+  }
+  if(ok)
+  {
+    if((dist = AlcCalloc(maxNod, sizeof(double))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+                     "%s: Failed to allocate distance array (%s),\n",
+		     argv[0],
+		     errMsgStr);
+    }
+  }
+  if(ok)
+  {
+    errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, NULL, nSeeds, seeds.d2);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr,
+		     "%s Failed to compute distances in mesh (%s).\n",
+		     argv[0],
+		     errMsgStr);
+    }
+  }
+  if(ok)
+  {
+    switch(outType)
+    {
+      case WLZTST_OUT_IMAGE: /* FALLTHROUGH */
+      case WLZTST_OUT_TXT:
+	if((fP = (strcmp(outFileStr, "-")?
+		 fopen(outFileStr, "w"): stdout)) == NULL)
+	{
+	  ok = 0;
+	  (void )fprintf(stderr,
+			 "%s: Failed to open output file %s.\n",
+			 argv[0], outFileStr);
+	}
+	  switch(outType)
+	  {
+	    case WLZTST_OUT_IMAGE:
+	      val.type = WLZ_GREY_DOUBLE;
+	      val.v.dbv = 0.0;
+	      switch(mesh.m2->type)
+	      {
+		case WLZ_CMESH_TRI2D:
+		  gTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+		                              val.type, NULL);
+		  values.v = WlzNewValueTb(inObj, gTblType, val, &errNum);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    outObj = WlzMakeMain(inObj->type, inObj->domain, values,
+		    			 NULL, inObj, &errNum);
+		  }
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    errNum = WlzGreySetValue(outObj, val);
+		  }
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    gVWSp = WlzGreyValueMakeWSp(outObj, &errNum);
+		  }
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    for(idN = 0; idN < maxNod; ++idN)
+		    {
+		      nod2 = (WlzCMeshNod2D *)
+			     AlcVectorItemGet(mesh.m2->res.nod.vec, idN);
+		      if(nod2->idx >= 0)
+		      {
+		        if(WlzInsideDomain(outObj,
+			                   0.0, nod2->pos.vtY, nod2->pos.vtX,
+					   NULL))
+                        {
+			  WlzGreyValueGet(gVWSp,
+			                  0.0, nod2->pos.vtY, nod2->pos.vtX);
+			  *(gVWSp->gPtr[0].rgbp) = dist[nod2->idx];
+			}
+		      }
+		    }
+		  }
+		  WlzGreyValueFreeWSp(gVWSp);
+		  break;
+		case WLZ_CMESH_TET3D:
+		  errNum = WLZ_ERR_UNIMPLEMENTED;
+		  break;
+		default:
+		  break;
+	      }
+	      break;
+	    case WLZTST_OUT_TXT:
+	      switch(mesh.m2->type)
+	      {
+		case WLZ_CMESH_TRI2D:
+		  for(idN = 0; idN < maxNod; ++idN)
+		  {
+		    nod2 = (WlzCMeshNod2D *)
+		           AlcVectorItemGet(mesh.m2->res.nod.vec, idN);
+		    if(nod2->idx >= 0)
+		    {
+		      if(fprintf(fP, "% 8d % 8lg % 8lg % 8lg % 8g\n",
+				 nod2->idx,
+				 nod2->pos.vtX,
+				 nod2->pos.vtY,
+				 0.0,
+				 dist[nod2->idx]) <= 0)
+		      {
+		        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+			break;
+		      }
+		    }
+		  }
+		  break;
+		case WLZ_CMESH_TET3D:
+		  errNum = WLZ_ERR_UNIMPLEMENTED;
+		  break;
+		default:
+		  break;
+	      }
+	      break;
+	    default:
+	      break;
+	  }
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    ok = 0;
+	    (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	    (void )fprintf(stderr,
+			   "%s Failed to output distance data (%s).\n",
+			   argv[0],
+			   errMsgStr);
+	    
+	  }
+	if(fP && strcmp(outFileStr, "-"))
+	{
+	  (void )fclose(fP); fP = NULL;
+	}
+	break;
+      default:
+	break;
+    }
+  }
+  (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(outObj);
+  if(usage)
+  {
+    (void )fprintf(stderr,
+    "Usage: %s [-h] [-o<output file>] [-E<output mesh>]\n"
+    "       [-b] [-s<seed>] [-S<seed file>]\n"
+    "       [-m#] [-M#]\n"
+    "       [-i] [-t] [<input object>]\n"
+    "First computes a conforming mesh for the given input object and then\n"
+    "computes distances from the given seeds or the boundary.\n"
+    "The distances are either printed to the output file as text or output\n"
+    "as a Woolz domain object with double distance values.\n"
+    "All seeds must be specified using 3D coordinates <x>,<y>,<z> on the\n"
+    "command line or in a file:\n"
+    "<x> <y> <z>\n"
+    "ie one seed point per line with space seperated fields.\n"
+    "Text output has one node per line with the fields:\n"
+    "<index> <x> <y> <z> <distance>\n"
+    "Image output is a double valued image with the same domain as the\n"
+    "input object. Values within the output image are either 0.0 or the\n"
+    "computed distance at the mesh nodes.\n"
+    "Options are:\n"
+    "  -h  Help, prints this usage message.\n"
+    "  -o  Output file.\n"
+    "  -M  Maximum mesh element size.\n"
+    "  -b  Compute distances from boundary nodes.\n"
+    "  -s  Compute distances from given seed point, which must be within\n"
+    "      the mesh.\n"
+    "  -S  File of seed points, each as of which must be within the mesh.\n"
+    "  -m  Minimum mesh element size.\n"
+    "  -E  Output file for mesh.\n"
+    "  -i  Output image with (double) distance values.\n"
+    "  -t  Output text data.\n",
+    argv[0]);
+
+  }
+  return(!ok);
+}
