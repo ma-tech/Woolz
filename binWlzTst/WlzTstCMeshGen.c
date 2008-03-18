@@ -71,6 +71,7 @@ int		main(int argc, char *argv[])
 		lowPassItr = 0,
 		smoothBnd = 0,
 		verify = 0;
+  char		outFmt = 'v';
   double	laplacianAlpha = 0.1,
 		lowPassLambda = 0.33,
 		lowPassMu = -0.34,
@@ -85,13 +86,18 @@ int		main(int argc, char *argv[])
   		*outFileStr;
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObject	*obj = NULL;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzObject	*obj = NULL,
+  		*outObj = NULL;
   WlzCMeshP 	mesh,
   		meshCopy;
-  static char   optList[] = "a:BCFhl:L:m:M:o:u:VW:y";
+  WlzObjectType	cMType;
+  static char   optList[] = "a:BCFhl:L:m:M:o:u:vVwW:y";
   const char    inObjFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
 
+  val.core = NULL;
   mesh.v = NULL;
   opterr = 0;
   inObjFileStr = (char *)inObjFileStrDef;
@@ -154,8 +160,14 @@ int		main(int argc, char *argv[])
 	  usage = 1;
 	}
         break;
+      case 'v':
+        outFmt = 'v';
+	break;
       case 'V':
         verify = 1;
+	break;
+      case 'w':
+        outFmt = 'w';
 	break;
       case 'y':
         copyMesh = 1;
@@ -332,7 +344,50 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    WlzCMeshDbgOutVTK(fP, mesh);
+    switch(outFmt)
+    {
+      case 'v':
+        WlzCMeshDbgOutVTK(fP, mesh);
+	break;
+      case 'w':
+	switch(mesh.m2->type)
+	{
+	  case WLZ_CMESH_TRI2D:
+	    cMType = WLZ_TRANSFORM_2D_CMESH;
+	    break;
+	  case WLZ_CMESH_TET3D:
+	    cMType = WLZ_TRANSFORM_3D_CMESH;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom.cmt = WlzMakeCMeshTransform(cMType, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom.cmt->dspVec = NULL;
+	  dom.cmt->mesh = mesh;
+	  outObj = WlzMakeMain(WLZ_CMESH_TRANS, dom, val,
+	  		       NULL, NULL, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzWriteObj(fP, outObj);
+	}
+	dom.cmt->mesh.v = NULL;
+	if(outObj != NULL)
+	{
+	  WlzFreeObj(outObj);
+	}
+	else
+	{
+	  (void )WlzFreeCMeshTransform(dom.cmt);
+	}
+	break;
+    }
   }
   if(fP && strcmp(outFileStr, "-"))
   {
@@ -363,6 +418,8 @@ int		main(int argc, char *argv[])
 	    "      output.\n"
 	    "  -V  Verify mesh. This may take a long time and may give\n"
 	    "      segmentation faults for buggy meshes.\n"
+	    "  -v  VTK file format for output.\n"
+	    "  -w  Woolz file format for output.\n"
 	    "  -y  Copy mesh to squeeze out all deleted entities.\n",
 	    argv[0]);
 
