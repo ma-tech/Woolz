@@ -350,7 +350,7 @@ int             main(int argc, char *argv[])
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzGreyNormalise(ppObj);
+      errNum = WlzGreyNormalise(ppObj, 1);
     }
     if(errNum != WLZ_ERR_NONE)
     {
