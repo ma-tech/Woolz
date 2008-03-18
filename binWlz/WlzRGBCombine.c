@@ -378,7 +378,7 @@ int             main(int argc, char **argv)
 	}
 	if(nrmFlg)
 	{
-	  errNum = WlzGreyNormalise(inObj[idx]);
+	  errNum = WlzGreyNormalise(inObj[idx], 1);
 	}
       }
       ++idx;
