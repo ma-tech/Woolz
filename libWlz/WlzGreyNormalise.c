@@ -51,19 +51,22 @@ static char _WlzGreyNormalise_c[] = "MRC HGU $Id$";
 
 /* function:     WlzGreyNormalise    */
 /*! 
-* \ingroup      WlzValuesFilters
-* \brief        
-*
 * \return       Woolz error number
-* \param    obj	Input object to be normalised i.e the grey values reset to
-fill the range 0-255. Colour values are independently reset which will
-change colour balance. Use WlzGreySetRange directly to avoid this.
-Note grey-values are reset in place and not copied.
-* \par      Source:
-*                WlzGreyNormalise.c
+* \ingroup      WlzValuesFilters
+* \brief        Normalizes the the grey values of the input object to
+*		fill the range 0-255. Colour values are independently
+*		reset which will change colour balance. Use WlzGreySetRange
+*		directly to avoid this.
+*		Note grey-values are reset in place and not copied.
+* \par          Source:
+*                 WlzGreyNormalise.c
+* \param obj	Input object.
+* \param    	Dither values if destination range is greater than source
+* 		range and this flag is non-zero.
 */
 WlzErrorNum WlzGreyNormalise(
-  WlzObject	*obj)
+  WlzObject	*obj,
+  int		dither)
 {
   WlzPixelV	min, max, Min, Max;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -104,7 +107,7 @@ WlzErrorNum WlzGreyNormalise(
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzGreySetRange(obj, min, max, Min, Max);
+      errNum = WlzGreySetRange(obj, min, max, Min, Max, dither);
     }
   }
 
