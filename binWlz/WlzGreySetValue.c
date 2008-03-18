@@ -51,10 +51,18 @@ static char _WlzGreySetValue_c[] = "MRC HGU $Id$";
 WlzGreySetValue - sets the grey values of the object to a specified value.
 \par Synopsis
 \verbatim
-WlzGreySetValue [-g#] [-h] [-v] [<input mask> [<input obj>]]
+WlzGreySetValue [-c #,#,#] [-g#] [-h] [-v] [<input mask> [<input obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr> 
+    <td><b>-c</b></td>
+    <td>New colour value r,g,b - default 0,0,0.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>The specified grey value - default 0.</td>
+  </tr>
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
@@ -62,10 +70,6 @@ WlzGreySetValue [-g#] [-h] [-v] [<input mask> [<input obj>]]
   <tr> 
     <td><b>-v</b></td>
     <td>Verbose operation.</td>
-  </tr>
-  <tr> 
-    <td><b>-g</b></td>
-    <td>The specified grey value - default 0.</td>
   </tr>
 </table>
 \par Description
@@ -108,7 +112,8 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-c#,#,#] [-g#] [-h] [-v] [<input mask> [<input obj>]]\n"
+	  "Usage:\t%s [-c#,#,#] [-g#] [-h] [-v]\n"
+	  "\t  [<input mask> [<input obj>]]\n"
 	  "\tSet the grey values of the object to the input value.\n"
 	  "\tA valuetable will be attached if required.\n"
 	  "\tOptions are:\n"
