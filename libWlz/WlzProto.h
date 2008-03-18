@@ -1249,6 +1249,24 @@ extern WlzObject		*WlzClipObjToBox3D(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzCMeshFMar.c.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum     		WlzCMeshFMarNodes2D(
+				  WlzCMesh2D *mesh,
+				  double *times,
+				  double *speeds,
+				  int sizeArraySdPos,
+				  WlzDVertex2 *arraySdPos);
+extern WlzErrorNum     		WlzCMeshFMarNodes3D(
+				  WlzCMesh3D *mesh,
+				  double *times,
+				  double *speeds,
+				  int sizeArraySdPos,
+				  WlzDVertex3 *arraySdPos);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * WlzCMeshTransform.c							*
 ************************************************************************/
 extern WlzErrorNum		WlzFreeCMeshTransform(
@@ -2545,7 +2563,8 @@ extern WlzObject 		*WlzGreyModGradient(WlzObject *obj,
 * WlzGreyNormalise.c							*
 ************************************************************************/
 extern WlzErrorNum 		WlzGreyNormalise(
-				  WlzObject *obj);
+				  WlzObject *obj,
+				  int dither);
 
 /************************************************************************
 * WlzGreyRange.c							*
@@ -2588,7 +2607,8 @@ extern WlzErrorNum		WlzGreySetRange(
 				  WlzPixelV min,
 				  WlzPixelV max,
 				  WlzPixelV Min,
-				  WlzPixelV Max);
+				  WlzPixelV Max,
+				  int dither);
 
 /************************************************************************
 * WlzGreySetRangeLut.c							*
@@ -4502,6 +4522,9 @@ extern WlzObject 		*WlzRGBAModGradient(
 extern WlzObject		*WlzRGBChanRatio(WlzObject *rgbObj,
 				  WlzRGBAColorChannel num,
 				  WlzRGBAColorChannel den,
+				  WlzRGBAColorChannel mul,
+				  int useMul,
+				  int norm,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
