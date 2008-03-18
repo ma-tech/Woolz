@@ -51,8 +51,8 @@ static char _WlzImageArithmetic_c[] = "MRC HGU $Id$";
 WlzImageArithmetic - binary image arithmetic on a pair of domain objects.
 \par Synopsis
 \verbatim
-WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-m] [-s] [-n] [-N] [-h]
-                   [-O#] [<in object 0>] [<in object 1>]
+WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-i] [-m] [-s]
+                   [-n] [-N] [-h] [-O#] [<in object 0>] [<in object 1>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -75,6 +75,10 @@ WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-m] [-s] [-n] [-N] [-h]
   <tr> 
     <td><b>-g</b></td>
     <td>Vector magnitude of horizontal and vertical component objects.</td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>Dither values when setting range.</td>
   </tr>
   <tr>
     <td><b>-l</b></td>
@@ -145,6 +149,7 @@ int             main(int argc, char **argv)
 {
   int		idx,
 		option,
+		dither = 0,
 		overwrite = 1,
 		ok = 1,
 		usage = 0;
@@ -159,7 +164,7 @@ int             main(int argc, char **argv)
   WlzPixelV	gMin[3],
   		gMax[3];
   const char	*errMsg;
-  static char	optList[] = "O:o:ab:dglmsnNh",
+  static char	optList[] = "O:o:ab:dgilmsnNh",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -173,85 +178,76 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
-    case 'O':
-      if((sscanf(optarg, "%d", &overwrite) != 1) ||
-	 (overwrite < 0) || (overwrite > 2))
-      {
-	usage = 1;
-	ok = 0;
-      }
-      break;
-
-    case 'o':
-      outObjFileStr = optarg;
-      break;
-
-    case 'a':
-      operator = WLZ_BO_ADD;
-      break;
-
-    case 'b':
-      operator = atoi(optarg);
-      switch( operator ){
-      case WLZ_BO_ADD:
-      case WLZ_BO_SUBTRACT:
-      case WLZ_BO_MULTIPLY:
-      case WLZ_BO_DIVIDE:
-      case WLZ_BO_MODULUS:
-      case WLZ_BO_EQ:
-      case WLZ_BO_NE:
-      case WLZ_BO_GT:
-      case WLZ_BO_GE:
-      case WLZ_BO_LT:
-      case WLZ_BO_LE:
-      case WLZ_BO_AND:
-      case WLZ_BO_OR:
-      case WLZ_BO_XOR:
-      case WLZ_BO_MAX:
-      case WLZ_BO_MIN:
-      case WLZ_BO_MAGNITUDE:
+      case 'O':
+	if((sscanf(optarg, "%d", &overwrite) != 1) ||
+	   (overwrite < 0) || (overwrite > 2))
+	{
+	  usage = 1;
+	  ok = 0;
+	}
 	break;
-
+      case 'o':
+	outObjFileStr = optarg;
+	break;
+      case 'a':
+	operator = WLZ_BO_ADD;
+	break;
+      case 'b':
+	operator = atoi(optarg);
+	switch( operator ){
+	  case WLZ_BO_ADD:
+	  case WLZ_BO_SUBTRACT:
+	  case WLZ_BO_MULTIPLY:
+	  case WLZ_BO_DIVIDE:
+	  case WLZ_BO_MODULUS:
+	  case WLZ_BO_EQ:
+	  case WLZ_BO_NE:
+	  case WLZ_BO_GT:
+	  case WLZ_BO_GE:
+	  case WLZ_BO_LT:
+	  case WLZ_BO_LE:
+	  case WLZ_BO_AND:
+	  case WLZ_BO_OR:
+	  case WLZ_BO_XOR:
+	  case WLZ_BO_MAX:
+	  case WLZ_BO_MIN:
+	  case WLZ_BO_MAGNITUDE:
+	    break;
+	  default:
+	    usage = 1;
+	    ok = 0;
+	    break;
+	}
+	break;
+      case 'd':
+	operator = WLZ_BO_DIVIDE;
+	break;
+      case 'g':
+	operator = WLZ_BO_MAGNITUDE;
+	break;
+      case 'l':
+	operator = WLZ_BO_MODULUS;
+	break;
+      case 'm':
+	operator = WLZ_BO_MULTIPLY;
+	break;
+      case 's':
+	operator = WLZ_BO_SUBTRACT;
+	break;
+      case 'n':
+	norm = WLZ_IMARNORM_INPUT;
+	break;
+      case 'N':
+	norm = WLZ_IMARNORM_256;
+	break;
+      case 'i':
+	dither = 1;
+	break;
+      case 'h':
       default:
 	usage = 1;
 	ok = 0;
 	break;
-      }
-      break;
-
-    case 'd':
-      operator = WLZ_BO_DIVIDE;
-      break;
-
-    case 'g':
-      operator = WLZ_BO_MAGNITUDE;
-      break;
-
-    case 'l':
-      operator = WLZ_BO_MODULUS;
-      break;
-
-    case 'm':
-      operator = WLZ_BO_MULTIPLY;
-      break;
-
-    case 's':
-      operator = WLZ_BO_SUBTRACT;
-      break;
-
-    case 'n':
-      norm = WLZ_IMARNORM_INPUT;
-      break;
-
-    case 'N':
-      norm = WLZ_IMARNORM_256;
-      break;
-
-    case 'h':
-    default:
-      usage = 1;
-      ok = 0;
-      break;
     }
   }
   if((inObjFileStr[0] == NULL) || (*inObjFileStr[0] == '\0') ||
@@ -352,7 +348,9 @@ int             main(int argc, char **argv)
 		     *argv, errMsg);
     }
   }
-  if(ok && (norm != WLZ_IMARNORM_NONE) && (WlzGreyTypeFromObj(inObj[0], &errNum) != WLZ_GREY_RGBA) )
+  if(ok &&
+     (norm != WLZ_IMARNORM_NONE) &&
+     (WlzGreyTypeFromObj(inObj[0], &errNum) != WLZ_GREY_RGBA) )
   {
     if((errNum = WlzGreyRange(outObj, gMin+ 2, gMax + 2)) != WLZ_ERR_NONE)
     {
@@ -438,7 +436,7 @@ int             main(int argc, char **argv)
       }
     }
     if((errNum = WlzGreySetRange(outObj, gMin[2], gMax[2],
-    				 gMin[0], gMax[0])) != WLZ_ERR_NONE)
+    				 gMin[0], gMax[0], dither)) != WLZ_ERR_NONE)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -473,7 +471,7 @@ int             main(int argc, char **argv)
 
     fprintf(stderr,
 	    "Usage: %s"
-	    " [-O#] [-o<out file>] [-a] [-b <op>] [-d] [-l] [-m] [-s] [-h] "
+	    " [-O#] [-o<out file>] [-a] [-b <op>] [-d] [-g] [-i] [-l] [-m] [-s] [-h] "
 	    "[<in object 0>] [<in object 1>]\n"
 	    "Options:\n"
 	    "  -O        Overwrite option (only useful for debugging)\n"
@@ -499,6 +497,7 @@ int             main(int argc, char **argv)
 	    "               =  %d - MAGNITUDE\n"
 	    "  -d        Divide the grey values of the 1st object by those of the 2nd.\n"
 	    "  -g        Vector magnitude of horizontal and vertical component objects\n"
+	    "  -i        Dither values if setting range\n"
 	    "  -l        Compute the modulus of the grey values of the 1st object wrt\n"
 	    "            those of the 2nd.\n"
 	    "  -m        Multiply the object's grey values.\n"
