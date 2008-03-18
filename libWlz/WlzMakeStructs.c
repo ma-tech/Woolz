@@ -335,6 +335,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_3D_DOMAINOBJ:
     case WLZ_AFFINE_TRANS:
     case WLZ_BOUNDLIST:
+    case WLZ_CMESH_TRANS:
     case WLZ_CONTOUR:
     case WLZ_CONV_HULL:
     case WLZ_EMPTY_OBJ:
