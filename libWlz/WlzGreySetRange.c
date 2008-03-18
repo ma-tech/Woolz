@@ -44,6 +44,7 @@ static char _WlzGreySetRange_c[] = "MRC HGU $Id$";
 
 #include <stdlib.h>
 #include <float.h>
+#include <limits.h>
 #include <Wlz.h>
 
 
@@ -56,8 +57,9 @@ static char _WlzGreySetRange_c[] = "MRC HGU $Id$";
  segmentation fault.
 
 The transform function is:
-\f[g' = \frac{(gMax - gMin)}{(gmax - gmin)} (g - gmin) + gMin
+\f[g' = \frac{(gMax - gMin)}{(gmax - gmin)} (g - gmin) + gMin + \delta
 \f]
+Here \f$\delta\f$ is the dither value.
 *
 * \return       Woolz error number
 * \param    obj	Input grey-level object whose values are to be reset.
@@ -65,6 +67,8 @@ The transform function is:
 * \param    max	Initial maximum value
 * \param    Min	Final minimum value
 * \param    Max	Final maximum value
+* \param    Dither values if destination range is greater than source range
+*           and this flag is non-zero.
 * \par      Source:
 *                WlzGreySetRange.c
 */
@@ -73,9 +77,14 @@ WlzErrorNum WlzGreySetRange(
   WlzPixelV	min,
   WlzPixelV	max,
   WlzPixelV	Min,
-  WlzPixelV	Max)
+  WlzPixelV	Max,
+  int		dither)
 {
-  double		factor, val;
+  double		gMin,
+  			gMax,
+			sigma,
+  			factor,
+			val;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
   WlzGreyP		gptr;
@@ -83,14 +92,14 @@ WlzErrorNum WlzGreySetRange(
   WlzValues 		*values;
   WlzDomain		*domains;
   int			i, j, nplanes;
-  WlzErrorNum		wlzErrno=WLZ_ERR_NONE;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
   /* check object */
   if( obj == NULL ){
-    wlzErrno = WLZ_ERR_OBJECT_NULL;
+    errNum = WLZ_ERR_OBJECT_NULL;
   }
 
-  if( wlzErrno == WLZ_ERR_NONE ){
+  if( errNum == WLZ_ERR_NONE ){
     switch( obj->type ){
 
     case WLZ_2D_DOMAINOBJ:
@@ -129,37 +138,37 @@ WlzErrorNum WlzGreySetRange(
 
 	tempobj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 			      *domains, *values, NULL, NULL,
-			      &wlzErrno);
-	if((tempobj == NULL) && (wlzErrno == WLZ_ERR_NONE) ){
-	  wlzErrno = WLZ_ERR_UNSPECIFIED;
+			      &errNum);
+	if((tempobj == NULL) && (errNum == WLZ_ERR_NONE) ){
+	  errNum = WLZ_ERR_UNSPECIFIED;
 	  break;
 	}
 
-	wlzErrno = WlzGreySetRange(tempobj, min, max, Min, Max);
+	errNum = WlzGreySetRange(tempobj, min, max, Min, Max, dither);
 	WlzFreeObj( tempobj );
-	if( wlzErrno != WLZ_ERR_NONE ){
+	if( errNum != WLZ_ERR_NONE ){
 	  break;
 	}
       }
       
-      return wlzErrno;
+      return errNum;
 
     case WLZ_TRANS_OBJ:
-      return WlzGreySetRange(obj->values.obj, min, max, Min, Max);
+      return WlzGreySetRange(obj->values.obj, min, max, Min, Max, dither);
 
     case WLZ_EMPTY_OBJ:
-      return wlzErrno;
+      return errNum;
 
     default:
-      wlzErrno = WLZ_ERR_OBJECT_TYPE;
+      errNum = WLZ_ERR_OBJECT_TYPE;
       break;
     }
   }
 
-  if( wlzErrno == WLZ_ERR_NONE ){
+  if( errNum == WLZ_ERR_NONE ){
     /* get conversion function - should use LUT
        use 4 LUTS for rgb type since bounded */
-    if( WlzGreyTypeFromObj(obj, &wlzErrno) == WLZ_GREY_RGBA ){
+    if( WlzGreyTypeFromObj(obj, &errNum) == WLZ_GREY_RGBA ){
       WlzUByte	rgbaLut[4][256];
       WlzUInt	rgbamin[4], rgbaMin[4];
       double	rgbaFactor[4], val;
@@ -243,54 +252,125 @@ WlzErrorNum WlzGreySetRange(
       if( fabs(max.v.dbv - min.v.dbv) < DBL_EPSILON ){
 	return WLZ_ERR_FLOAT_DATA;
       }
-      factor = (Max.v.dbv - Min.v.dbv) / (max.v.dbv - min.v.dbv);
-
       WlzInitGreyScan(obj, &iwsp, &gwsp);
-      while( WlzNextGreyInterval(&iwsp) == 0 ){
-
+      factor = (Max.v.dbv - Min.v.dbv) / (max.v.dbv - min.v.dbv);
+      if(dither)
+      {
+	if(fabs(factor) < 1.0 + DBL_EPSILON)
+	{
+	  dither = 0;
+	}
+	else
+	{
+	  sigma = fabs(sqrt(1.0 / ALG_M_LN2) / factor);
+	  AlgRandSeed(101);
+	  switch(gwsp.pixeltype) {
+	    case WLZ_GREY_INT:
+	      gMin = ALG_MAX(Min.v.dbv, INT_MIN);
+	      gMax = ALG_MIN(Max.v.dbv, INT_MAX);
+	      break;
+	    case WLZ_GREY_SHORT:
+	      gMin = ALG_MAX(Min.v.dbv, SHRT_MIN);
+	      gMax = ALG_MIN(Max.v.dbv, SHRT_MAX);
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      gMin = ALG_MAX(Min.v.dbv, 0);
+	      gMax = ALG_MIN(Max.v.dbv, 255);
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      gMin = ALG_MAX(Min.v.dbv, FLT_MIN);
+	      gMax = ALG_MIN(Max.v.dbv, FLT_MAX);
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      gMin = Min.v.dbv;
+	      gMax = Max.v.dbv;
+	      break;
+	    default:
+	      break;
+	  }
+	}
+      }
+      while((errNum == WLZ_ERR_NONE) &&
+            ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)){
 	gptr = gwsp.u_grintptr;
 	switch (gwsp.pixeltype) {
-
-	case WLZ_GREY_INT:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
-            val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
-	    *gptr.inp = WLZ_NINT(val);
-          }
-	  break;
-
-	case WLZ_GREY_SHORT:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
-            val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
-	    *gptr.shp = WLZ_NINT(val);
-          }
-	  break;
-
-	case WLZ_GREY_UBYTE:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-            val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
-	    *gptr.ubp = WLZ_NINT(val);
-          }
-	  break;
-
-	case WLZ_GREY_FLOAT:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
-	    *gptr.flp = (float) (factor * (*gptr.flp - min.v.dbv) + Min.v.dbv);
-          }
-	  break;
-
-	case WLZ_GREY_DOUBLE:
-	  for (i=0; i<iwsp.colrmn; i++, gptr.dbp++){
-	    *gptr.dbp = (double) (factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv);
-          }
-	  break;
-
-	default:
-	  wlzErrno = WLZ_ERR_GREY_TYPE;
-	  break;
+	  case WLZ_GREY_INT:
+	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
+	      val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
+	      if(dither){
+		val = factor * (*gptr.inp +
+				AlgRandNormal(0.0, sigma) -
+				min.v.dbv) + Min.v.dbv;
+		val = WLZ_CLAMP(val, gMin, gMax);
+	      } else {
+		val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
+	      }
+	      *gptr.inp = WLZ_NINT(val);
+	    }
+	    break;
+	  case WLZ_GREY_SHORT:
+	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
+	      val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
+	      if(dither){
+		val = factor * (*gptr.shp +
+				AlgRandNormal(0.0, sigma) -
+				min.v.dbv) + Min.v.dbv;
+		val = WLZ_CLAMP(val, gMin, gMax);
+	      } else {
+		val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
+	      }
+	      *gptr.shp = WLZ_NINT(val);
+	    }
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
+	      val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
+	      if(dither){
+		val = factor * (*gptr.ubp +
+				AlgRandNormal(0.0, sigma) -
+				min.v.dbv) + Min.v.dbv;
+		val = WLZ_CLAMP(val, gMin, gMax);
+	      } else {
+		val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
+	      }
+	      *gptr.ubp = WLZ_NINT(val);
+	    }
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
+	      if(dither){
+		val = factor * (*gptr.flp +
+				AlgRandNormal(0.0, sigma) -
+				min.v.dbv) + Min.v.dbv;
+		val = WLZ_CLAMP(val, gMin, gMax);
+	      } else {
+		val = factor * (*gptr.flp - min.v.dbv) + Min.v.dbv;
+	      }
+	      *gptr.flp = (float )val;
+	    }
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    for (i=0; i<iwsp.colrmn; i++, gptr.dbp++){
+	      if(dither){
+		val = factor * (*gptr.dbp +
+				AlgRandNormal(0.0, sigma) -
+				min.v.dbv) + Min.v.dbv;
+		val = WLZ_CLAMP(val, gMin, gMax);
+	      } else {
+		val = factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv;
+	      }
+	      *gptr.dbp = val;
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
 	}
+      }
+      if(errNum == WLZ_ERR_EOO){
+        errNum = WLZ_ERR_NONE;
       }
     }
   }
-
-  return wlzErrno;
+  return errNum;
 }
