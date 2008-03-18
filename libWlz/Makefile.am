@@ -69,6 +69,7 @@ libWlz_la_SOURCES 	= \
 			  WlzCCor.c \
 			  WlzCentreOfMass.c \
 			  WlzClipObjToBox.c \
+			  WlzCMeshFMar.c \
 			  WlzCMeshTransform.c \
 			  WlzCMeshUtils.c \
 			  WlzCompThresh.c \
