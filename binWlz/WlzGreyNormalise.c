@@ -52,13 +52,17 @@ static char _WlzGreyNormalise_c[] = "MRC HGU $Id$";
 WlzGreyNormalise - normalise the grey-range of a grey-level woolz object.
 \par Synopsis
 \verbatim
-WlzGreyNormalise [-h] [-v] [<input file>]
+WlzGreyNormalise [-h] [-d] [-v] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-v</b></td>
+    <td>dither values.</td>
   </tr>
   <tr> 
     <td><b>-v</b></td>
@@ -104,6 +108,7 @@ static void usage(char *proc_str)
 	  "\tconvenience routine equivalent to WlzGreySetRange -U255 -L0\n"
 	  "\tOptions are:\n"
 	  "\t  -h        help - prints this usage message\n"
+	  "\t  -d        dither values\n"
 	  "\t  -v        verbose operation\n"
 	  "",
 	  proc_str);
@@ -116,8 +121,9 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "hv";
-  int		option;
+  char 		optList[] = "dhv";
+  int		dither = 0,
+  		option;
   int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
@@ -128,11 +134,13 @@ int main(int	argc,
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
 
+    case 'd':
+      dither = 1;
+      break;
     case 'v':
       verboseFlg = 1;
       break;
-
-    case 'h':
+    case 'h': /* FALLTHROUGH */
     default:
       usage(argv[0]);
       return 1;
@@ -157,7 +165,7 @@ int main(int	argc,
     {
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      if( (errNum = WlzGreyNormalise(obj)) == WLZ_ERR_NONE ){
+      if( (errNum = WlzGreyNormalise(obj, dither)) == WLZ_ERR_NONE ){
 	if((errNum = WlzWriteObj(stdout, obj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,

@@ -60,6 +60,10 @@ WlzGreySetRange [-u#] [-l#] [-U#] [-L#] [-h] [-v] [<input file>]
     <td>Help, prints usage message.</td>
   </tr>
   <tr> 
+    <td><b>-d</b></td>
+    <td>Dither values.</td>
+  </tr>
+  <tr> 
     <td><b>-v</b></td>
     <td>Verbose operation.</td>
   </tr>
@@ -123,7 +127,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-u#] [-l#] [-U#] [-L#] [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-d] [-u#] [-l#] [-U#] [-L#] [-h] [-v] [<input file>]\n"
 	  "\tReset the grey-range of a grey-level woolz object\n"
 	  "\twriting the new object to standard output\n"
 	  "\tThe original grey-values are linearly transformed\n"
@@ -135,6 +139,7 @@ static void usage(char *proc_str)
 	  "\timage values are within the range [u,l]. Use WlzGreyRange\n"
 	  "\tto check."
 	  "\tOptions are:\n"
+	  "\t  -d        dither values\n"
 	  "\t  -l#       low grey value in source image, default min value"
 	  "in source\n"
 	  "\t  -L#       low grey value in dest image, default 0"
@@ -155,8 +160,9 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "l:L:u:U:hv";
-  int		option;
+  char 		optList[] = "l:L:u:U:dhv";
+  int		dither = 0,
+  		option;
   WlzPixelV	max, min, Max, Min;
   WlzPixelV	gmin, gmax;
   int		getminFlg=1, getmaxFlg=1, verboseFlg=0;
@@ -172,34 +178,30 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'l':
-      min.v.dbv = atof(optarg);
-      getminFlg = 0;
-      break;
-
-    case 'L':
-      Min.v.dbv = atof(optarg);
-      break;
-
-    case 'u':
-      max.v.dbv = atof(optarg);
-      getmaxFlg = 0;
-      break;
-
-    case 'U':
-      Max.v.dbv = atof(optarg);
-      break;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
-    case 'h':
-    default:
-      usage(argv[0]);
-      return 1;
-
+      case 'd':
+	dither = 1;
+	break;
+      case 'l':
+	min.v.dbv = atof(optarg);
+	getminFlg = 0;
+	break;
+      case 'L':
+	Min.v.dbv = atof(optarg);
+	break;
+      case 'u':
+	max.v.dbv = atof(optarg);
+	getmaxFlg = 0;
+	break;
+      case 'U':
+	Max.v.dbv = atof(optarg);
+	break;
+      case 'v':
+	verboseFlg = 1;
+	break;
+      case 'h':
+      default:
+	usage(argv[0]);
+	return 1;
     }
   }
 
@@ -239,7 +241,7 @@ int main(int	argc,
 		  Min.v.dbv, Max.v.dbv);
 	}
 
-	errNum = WlzGreySetRange(obj, min, max, Min, Max);
+	errNum = WlzGreySetRange(obj, min, max, Min, Max, dither);
 	if( errNum == WLZ_ERR_NONE ){
 	  errNum = WlzWriteObj(stdout, obj);
 	}
