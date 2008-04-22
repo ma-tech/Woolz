@@ -353,10 +353,12 @@ int		main(int argc, char *argv[])
 	switch(mesh.m2->type)
 	{
 	  case WLZ_CMESH_TRI2D:
-	    cMType = WLZ_TRANSFORM_2D_CMESH;
+	    cMType = WLZ_CMESH_2D;
+	    dom.cm2 = mesh.m2;
 	    break;
 	  case WLZ_CMESH_TET3D:
-	    cMType = WLZ_TRANSFORM_3D_CMESH;
+	    cMType = WLZ_CMESH_3D;
+	    dom.cm3 = mesh.m3;
 	    break;
 	  default:
 	    errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -364,28 +366,13 @@ int		main(int argc, char *argv[])
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dom.cmt = WlzMakeCMeshTransform(cMType, &errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  dom.cmt->dspVec = NULL;
-	  dom.cmt->mesh = mesh;
-	  outObj = WlzMakeMain(WLZ_CMESH_TRANS, dom, val,
-	  		       NULL, NULL, &errNum);
+	  outObj = WlzMakeMain(cMType, dom, val, NULL, NULL, &errNum);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzWriteObj(fP, outObj);
 	}
-	dom.cmt->mesh.v = NULL;
-	if(outObj != NULL)
-	{
-	  WlzFreeObj(outObj);
-	}
-	else
-	{
-	  (void )WlzFreeCMeshTransform(dom.cmt);
-	}
+	(void )WlzFreeObj(outObj);
 	break;
     }
   }
