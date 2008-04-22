@@ -127,6 +127,14 @@ static WlzErrorNum 		WlzObjFactsGreyV(
 static WlzErrorNum	        WlzObjFactsMeshTrans(
 				  WlzObjFactsData *fData,
 				  WlzMeshTransform *mtrans);		
+static WlzErrorNum 		WlzObjFactsCMesh2D(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzCMesh2D *mesh);
+static WlzErrorNum 		WlzObjFactsCMesh3D(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzCMesh3D *mesh);
 static WlzErrorNum 		WlzObjFactsCMeshTrans(
 				  WlzObjFactsData *fData,
 				  WlzCMeshTransform *cmt);
@@ -321,6 +329,20 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  break;
 	case WLZ_CONTOUR:
 	  errNum = WlzObjFactsContour(fData, obj, obj->domain.ctr);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_CMESH_2D:
+	  errNum = WlzObjFactsCMesh2D(fData, obj, obj->domain.cm2);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_CMESH_3D:
+	  errNum = WlzObjFactsCMesh3D(fData, obj, obj->domain.cm3);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
@@ -1688,7 +1710,111 @@ static WlzErrorNum WlzObjFactsMeshTrans(WlzObjFactsData *fData,
 /*!
 * \return	Error number.
 * \ingroup      WlzDebug
-* \brief	Produces a text description of an constrained mesh transform.
+* \brief	Produces a text description of a 2D constrained mesh.
+* \param	fData			Facts data structure.
+* \param	obj			Object for type.
+* \param	cmt			Given constrained mesh transform.
+*/
+static WlzErrorNum WlzObjFactsCMesh2D(WlzObjFactsData *fData,
+				      WlzObject *obj,
+				      WlzCMesh2D *mesh)
+{
+  int		nElm,
+  		nNod;
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", mesh->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      nElm = mesh->res.elm.numEnt;
+      nNod = mesh->res.nod.numEnt;
+      errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", nElm);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
+      }
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a 3D constrained mesh.
+* \param	fData			Facts data structure.
+* \param	obj			Object for type.
+* \param	cmt			Given constrained mesh transform.
+*/
+static WlzErrorNum WlzObjFactsCMesh3D(WlzObjFactsData *fData,
+				      WlzObject *obj,
+				      WlzCMesh3D *mesh)
+{
+  int		nElm,
+  		nNod;
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", mesh->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      nElm = mesh->res.elm.numEnt;
+      nNod = mesh->res.nod.numEnt;
+      errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", nElm);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
+      }
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a constrained mesh transform.
 * \param	fData			Facts data structure.
 * \param	cmt			Given constrained mesh transform.
 */
@@ -1737,7 +1863,10 @@ static WlzErrorNum WlzObjFactsCMeshTrans(WlzObjFactsData *fData,
 	  break;
       }
       errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", nElm);
-      errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
+      }
     }
   }
   --(fData->indent);
