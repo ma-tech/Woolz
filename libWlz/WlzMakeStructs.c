@@ -337,6 +337,8 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_BOUNDLIST:
     case WLZ_CMESH_TRANS:
     case WLZ_CONTOUR:
+    case WLZ_CMESH_2D:
+    case WLZ_CMESH_3D:
     case WLZ_CONV_HULL:
     case WLZ_EMPTY_OBJ:
     case WLZ_HISTOGRAM:
