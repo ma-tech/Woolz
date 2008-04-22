@@ -1223,6 +1223,16 @@ extern WlzObject		*WlzCannyDeriche(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+ * WlzCentrality.c							*
+ ************************************************************************/
+ extern double          	WlzCentrality(
+ 				  WlzObject *fObj,
+				  WlzObject *bObj,
+				  int nRay,
+				  int binFlg,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
  * WlzCentreOfMass.c							*
  ************************************************************************/
 extern WlzDVertex2 		WlzCentreOfMass2D(
@@ -2507,6 +2517,10 @@ extern WlzDVertex3		WlzGeomObjLineSegIntersect3D(
 				  double tol,
 				  int inside,
 				  int *dstStat);
+extern double                   WlzGeomPolar2D(
+                                  WlzDVertex2 org,
+                                  WlzDVertex2 dst,
+                                  double *dstRad);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -3773,6 +3787,9 @@ extern WlzObject 		*WlzPolyTo8Polygon(
 				  WlzPolygonDomain *pgdm,
 				  int wrap,
 				  WlzErrorNum *dstErr);
+extern WlzObject                *WlzBoundTo8Bound(
+                                  WlzObject *gvnObj,
+                                  WlzErrorNum *dstErr);
 extern int			WlzPolyCrossings(
 				  WlzIVertex2 vtx,
 				  WlzPolygonDomain *pgdm,
