@@ -128,6 +128,8 @@ typedef enum _WlzObjectType
   WLZ_HISTOGRAM			= 13,	/*!< Histogram. */
   WLZ_3D_POLYGON		= 14,	/*!< 3D polygon. */
   WLZ_CONTOUR			= 15,	/*!< Contour in either 2D or 3D. */
+  WLZ_CMESH_2D			= 16,   /*!< 2D constrained mesh. */
+  WLZ_CMESH_3D			= 17,   /*!< 3D constrained mesh. */
   WLZ_RECTANGLE			= 20,	/*!< Rectangle. */
   WLZ_POINTS			= 21,   /*!< Points. */
   WLZ_CONVOLVE_INT		= 50,	/*!< Integer convolution. */
@@ -153,7 +155,8 @@ typedef enum _WlzObjectType
   					     occupies no space and has no
 					     values. */
   WLZ_MESH_TRANS                = 128,  /*!< Mesh transform. */
-  WLZ_CMESH_TRANS               = 129,  /*!< Mesh transform. */
+  WLZ_CMESH_TRANS               = 129,  /*!< Constrained mesh transform,
+  					     either 2D or 3D. */
 
   WLZ_EMPTY_DOMAIN,			/*!< Empty domain: A domain which
   					     occupies no space. */
