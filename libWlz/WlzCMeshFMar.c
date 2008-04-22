@@ -65,7 +65,10 @@ typedef struct _WlzCMeshFMarQ
   					   the lowest priority entry at
 					   the tail. */
   int			last;		/* Index of last entry inserted. */
-  int			cnt;		/* Number of entries in queue. */
+  int			cnt;		/* Number of entries in use:
+                                           incremented when entry inserted,
+					   no change if unlinked,
+					   decremented when entry freed. */
   int			max;		/* Number of entries allocated. */
   int 			free;		/* Index of first free entry, rest
                                            via next index. */
@@ -89,10 +92,13 @@ static WlzErrorNum 		WlzCMeshFMarQInsert2D(
 				  WlzCMeshFMarQ *queue,
 				  double *times,
 				  WlzCMeshNod2D *nod);
-static WlzCMeshFMarQEntry 	*WlzCMeshFMarQNewEntry(
+static WlzCMeshFMarQEntry 	*WlzCMeshFMarQNewEnt(
 				  WlzCMeshFMarQ *queue,
 				  WlzErrorNum *dstErr);
-static void			WlzCMeshFMarQEntryUnlink(
+static void			WlzCMeshFMarQUnlinkEntFromList(
+				  WlzCMeshFMarQ *queue,
+				  WlzCMeshFMarQEntry *ent);
+static void			WlzCMeshFMarQUnlinkEntFromHash(
 				  WlzCMeshFMarQ *queue,
 				  WlzCMeshFMarQEntry *ent);
 static void			WlzCMeshFMarQRehash(
@@ -100,7 +106,7 @@ static void			WlzCMeshFMarQRehash(
 static int			WlzCMeshFMarQHashFn(
 				  int value,
 				  int maxVal);
-static void			WlzCMeshFMarQInsertEntry(
+static void			WlzCMeshFMarQInsertEnt(
 				  WlzCMeshFMarQ *queue,
 				  WlzCMeshFMarQEntry *gEnt);
 static WlzCMeshFMarQEntry 	*WlzCMeshFMarQPopTail(
@@ -329,7 +335,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh,
 
 
 /*!
-* \return	New constrained mesh node priority queue.
+* \return	New constrained mesh node priority queue, NULL on error.
 * \ingroup	WlzMesh
 * \brief	Constructs a new constrained mesh node priority queue
 * 		with room allocated for at least the given number of
@@ -342,7 +348,8 @@ static WlzCMeshFMarQ *WlzCMeshFMarQNew(int nEntries)
   int		idE;
   WlzCMeshFMarQ	*queue;
   WlzCMeshFMarQEntry *ent;
-  const size_t	minEntries = 1024;
+  const size_t	minEntries = 1024; /* Just to avoid costly reallocation for
+  				    * small queues. */
 
   queue = (WlzCMeshFMarQ *)AlcMalloc(sizeof(WlzCMeshFMarQ));
   if(queue)
@@ -397,11 +404,14 @@ static WlzErrorNum WlzCMeshFMarQRealloc(WlzCMeshFMarQ *queue, int minEnt)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const size_t	minEntryInc = 1024;
 
+  /* Avoid frequent costly reallocation by having a minimum reallocation
+   * size.  */
   newMax = queue->max + minEntryInc;
   if(minEnt > newMax)
   {
     newMax = minEnt;
   }
+  /* Realllocate the data structures. */
   if(((queue->entries = (WlzCMeshFMarQEntry *)
                         AlcRealloc(queue->entries,
 				   sizeof(WlzCMeshFMarQEntry) *
@@ -414,6 +424,8 @@ static WlzErrorNum WlzCMeshFMarQRealloc(WlzCMeshFMarQ *queue, int minEnt)
   }
   else
   {
+    /* Setup the new entries in the free list and rebuild the node
+     * index hash table. */
     for(idE = queue->max; idE < newMax; ++idE)
     {
       ent = queue->entries + idE;
@@ -450,7 +462,8 @@ static void	WlzCMeshFMarQFree(WlzCMeshFMarQ *queue)
 /*!
 * \ingroup	WlzMesh
 * \brief	Frees the given mesh fast marching queue entry.
-* 		The entry must already have been unlinked.
+* 		The entry must already have been unlinked from
+* 		both the queue's list and hash table.
 * \param	queue			The queue.
 * \param	ent			The queue entry to free.
 */
@@ -489,24 +502,29 @@ static WlzErrorNum WlzCMeshFMarQInsert2D(WlzCMeshFMarQ *queue,
   idE = queue->buckets[idH];
   if(idE >= 0)
   {
+    /* Search through the hash table's list for an entry matching the node
+     * index. If found unlink it from the queue's list and the queue's node
+     * index hash table. */
     prevEnt = NULL;
     ent = queue->entries + idE;
-    while(ent->nodIdx != nod->idx)
+    while((ent->nodIdx != nod->idx) && (ent->hashNxt > 0))
     {
       prevEnt = ent;
       ent = queue->entries + ent->hashNxt;
     }
-    /* If entry fouund for node unlink it and remove the hash table entry. */
+    /* If entry found matching the node index unlink it and remove the
+     * hash table entry. */
     if(ent->nodIdx == nod->idx)
     {
-      WlzCMeshFMarQEntryUnlink(queue, ent);
+      WlzCMeshFMarQUnlinkEntFromList(queue, ent);
+      WlzCMeshFMarQUnlinkEntFromHash(queue, ent);
       if(prevEnt != NULL)
       {
         prevEnt->hashNxt = ent->hashNxt;
       }
       else
       {
-        queue->buckets[idH] = -1;
+        queue->buckets[idH] = ent->hashNxt;
       }
     }
     else
@@ -516,19 +534,18 @@ static WlzErrorNum WlzCMeshFMarQInsert2D(WlzCMeshFMarQ *queue,
   }
   if(ent == NULL)
   {
-    /* Node entry not found: Create a new entry. */
-    ent = WlzCMeshFMarQNewEntry(queue, &errNum);
+    /* Node entry not found so create a new entry. */
+    ent = WlzCMeshFMarQNewEnt(queue, &errNum);
   }
   /* Insert entry into the queue and add hash table entry. */
   if(errNum == WLZ_ERR_NONE)
   {
     idE = ent - queue->entries;
     ent->priority = WlzCMeshFMarQPriority(nod, times);
-    WlzCMeshFMarQInsertEntry(queue, ent);
-    ent->hashNxt = queue->buckets[idH];
+    WlzCMeshFMarQInsertEnt(queue, ent);
     ent->nodIdx = nod->idx;
+    ent->hashNxt = queue->buckets[idH];
     queue->buckets[idH] = idE; 
-    queue->last = idE;
   }
   return(errNum);
 }
@@ -541,7 +558,7 @@ static WlzErrorNum WlzCMeshFMarQInsert2D(WlzCMeshFMarQ *queue,
 * \param	queue			The priority queue.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEntry(WlzCMeshFMarQ *queue,
+static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEnt(WlzCMeshFMarQ *queue,
 				WlzErrorNum *dstErr)
 {
   int		idE;
@@ -553,7 +570,7 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEntry(WlzCMeshFMarQ *queue,
     /* Reallocate entries to get more and update the free list. */
     errNum = WlzCMeshFMarQRealloc(queue, queue->cnt);
   }
-  else
+  if(errNum == WLZ_ERR_NONE)
   {
     /* Pop entry from free list. */
     idE = queue->free;
@@ -570,7 +587,7 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEntry(WlzCMeshFMarQ *queue,
 
 /*!
 * \ingroup	WlzMesh
-* \brief	Unlinks the given entry from the priority queue.
+* \brief	Unlinks the given entry from the priority queue's list.
 * 		If the head, last or tail index entry is unlinked the
 * 		corresponding index is changed to the next or previous
 * 		entry in the queue.
@@ -578,7 +595,7 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEntry(WlzCMeshFMarQ *queue,
 * 					queue.
 * \param	ent			Entry to unlink.
 */
-static void	WlzCMeshFMarQEntryUnlink(WlzCMeshFMarQ *queue,
+static void	WlzCMeshFMarQUnlinkEntFromList(WlzCMeshFMarQ *queue,
 				WlzCMeshFMarQEntry *ent)
 {
   if(ent->prev >= 0)
@@ -597,6 +614,8 @@ static void	WlzCMeshFMarQEntryUnlink(WlzCMeshFMarQ *queue,
   {
     queue->tail = ent->prev;
   }
+  /* If unlinked entry is the queue last entry set queue last entry to
+   * next or previous entry. */
   if(queue->last == ent - queue->entries)
   {
     if(ent->next >= 0)
@@ -606,6 +625,51 @@ static void	WlzCMeshFMarQEntryUnlink(WlzCMeshFMarQ *queue,
     else
     {
       queue->last = ent->prev;
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Unlinks the given entry from the priority queue's node
+* 		index hash table.
+* \param	queue			Given constrained mesh node priority
+* 					queue.
+* \param	ent			Entry to unlink.
+*/
+static void	WlzCMeshFMarQUnlinkEntFromHash(WlzCMeshFMarQ *queue,
+				WlzCMeshFMarQEntry *gEnt)
+{
+  int		idE,
+  		idH;
+  WlzCMeshFMarQEntry *ent,
+  		*prevEnt;
+
+  if(gEnt->nodIdx >= 0)
+  {
+    idH = WlzCMeshFMarQHashFn(gEnt->nodIdx, queue->max);
+    idE = queue->buckets[idH];
+    if(idE >= 0)
+    {
+      prevEnt = NULL;
+      ent = queue->entries + idE;
+      while((ent != gEnt) && (ent->hashNxt > 0))
+      {
+	prevEnt = ent;
+	ent = queue->entries + ent->hashNxt;
+      }
+      /* If entry found for node remove it. */
+      if(ent == gEnt)
+      {
+	if(prevEnt != NULL)
+	{
+	  prevEnt->hashNxt = ent->hashNxt;
+	}
+	else
+	{
+	  queue->buckets[idH] = ent->hashNxt;
+	}
+      }
     }
   }
 }
@@ -622,10 +686,12 @@ static void	WlzCMeshFMarQRehash(WlzCMeshFMarQ *queue)
   		idH;
   WlzCMeshFMarQEntry *ent;
 
+  /* Clear hash table. */
   for(idE = 0; idE < queue->max; ++idE)
   {
     queue->buckets[idE] = -1;
   }
+  /* Add all entries in the queue's list to the hash table. */
   idE = queue->head;
   while(idE >= 0)
   {
@@ -643,6 +709,8 @@ static void	WlzCMeshFMarQRehash(WlzCMeshFMarQ *queue)
 * \brief	Simple hash function for integer values. The hash value
 * 		returned is in the range [0-maxVal], but maxVal must be
 * 		less than the largest of the generator primes (99999989).
+* 		All this function has to do is map the given integers
+* 		fairly uniformly over the integer range 0 - maxVal.
 * \param	value			Given integer value.
 * \param	maxVal			Maximum hash value.
 */
@@ -654,6 +722,7 @@ static int	WlzCMeshFMarQHashFn(int value, int maxVal)
 		p2 = 46048241,
 		p3 = 99999989;
 
+  /* TODO: Check the distribution is fairly uniform, without to many spikes.*/
   key = (((((long long)value * p0) ^ p1) + p2) % p3) % maxVal;
   return(key);
 }
@@ -675,12 +744,13 @@ static double	WlzCMeshFMarQPriority(WlzCMeshNod2D *nod, double *times)
 /*!
 * \ingroup	WlzMesh
 * \brief	Inserts the given entry into the given queue, knowing
-* 		that the entry is valid and is not already in the queue.
+* 		that the entry is valid and that it's not already in
+* 		the queue.
 * \param	queue			Given constrained mesh node priority
 * 					queue.
 * \param	ent0			Entry to insert.
 */
-static void	WlzCMeshFMarQInsertEntry(WlzCMeshFMarQ *queue,
+static void	WlzCMeshFMarQInsertEnt(WlzCMeshFMarQ *queue,
 				WlzCMeshFMarQEntry *gEnt)
 {
   int		idE,
@@ -751,6 +821,7 @@ static void	WlzCMeshFMarQInsertEntry(WlzCMeshFMarQ *queue,
       }
     }
   }
+  queue->last = idG;
 }
 
 /*!
@@ -767,7 +838,8 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQPopTail(WlzCMeshFMarQ *queue)
   if(queue->tail >= 0)
   {
     ent = queue->entries + queue->tail;
-    WlzCMeshFMarQEntryUnlink(queue, ent);
+    WlzCMeshFMarQUnlinkEntFromList(queue, ent);
+    WlzCMeshFMarQUnlinkEntFromHash(queue, ent);
   }
   return(ent);
 }
