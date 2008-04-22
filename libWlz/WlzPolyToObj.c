@@ -44,6 +44,10 @@ static char _WlzPolyToObj_c[] = "MRC HGU $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
+static WlzBoundList             *WlzBoundTo8BoundBnd(
+                                  WlzBoundList *gvnBnd,
+                                  WlzErrorNum *dstErr);
+
 /* function:     WlzPolyCrossings    */
 /*! 
 * \ingroup      WlzPolyline
@@ -850,4 +854,106 @@ WlzObject *WlzPolyTo8Polygon(
   return obj;
 }
 
+/*!
+* \return       New object with boundary list or NULL on error.
+* \ingroup      WlzBoundary
+* \brief        Computes a new boundary list from the given one, such
+*               that the new boundary list has 8-connected polylines.
+* \param        gvnObj                  Object with given boundary list.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject       *WlzBoundTo8Bound(WlzObject *gvnObj, WlzErrorNum *dstErr)
+{
+  WlzDomain     newDom;
+  WlzValues     dumVal;
+  WlzBoundList  *gvnBnd;
+  WlzObject     *newObj = NULL,
+                *tmpObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
+  newDom.core = NULL;
+  dumVal.core = NULL;
+  if(gvnObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(gvnObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gvnObj->type != WLZ_BOUNDLIST)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    gvnBnd = gvnObj->domain.b;
+    tmpObj = WlzPolyTo8Polygon(gvnBnd->poly, gvnBnd->wrap, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    newDom.b = WlzMakeBoundList(gvnBnd->type, gvnBnd->wrap,
+                                tmpObj->domain.poly, &errNum);
+    tmpObj->domain.core = NULL;
+  }
+  (void )WlzFreeObj(tmpObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    newDom.b->next = WlzBoundTo8BoundBnd(gvnBnd->next, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    newDom.b->down = WlzBoundTo8BoundBnd(gvnBnd->down, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    newObj = WlzMakeMain(WLZ_BOUNDLIST, newDom, dumVal, NULL, NULL, &errNum);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(newObj);
+}
+
+/*!
+* \return       New boundary list.
+* \ingroup      WlzBoundList
+* \brief        Computes a new boundary list from the given one, such
+*               that the new boundary list has 8-connected polylines.
+*               This is a recursive function.
+* \param        gvnBnd                  Given boundary list.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+static WlzBoundList *WlzBoundTo8BoundBnd(WlzBoundList *gvnBnd,
+                                WlzErrorNum *dstErr)
+{
+  WlzBoundList  *newBnd = NULL;
+  WlzObject     *tmpObj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(gvnBnd)
+  {
+    tmpObj = WlzPolyTo8Polygon(gvnBnd->poly, gvnBnd->wrap, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      newBnd = WlzMakeBoundList(gvnBnd->type, gvnBnd->wrap,
+                                tmpObj->domain.poly, &errNum);
+      tmpObj->domain.core = NULL;
+    }
+    (void )WlzFreeObj(tmpObj);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      newBnd->next = WlzBoundTo8BoundBnd(gvnBnd->next, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      newBnd->down = WlzBoundTo8BoundBnd(gvnBnd->down, &errNum);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(newBnd);
+}
