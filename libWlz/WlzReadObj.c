@@ -167,6 +167,12 @@ static WlzCMeshTransform	*WlzReadCMeshTransform2D(
 static WlzCMeshTransform	*WlzReadCMeshTransform3D(
 				  FILE *fp,
 				  WlzErrorNum *);
+WlzCMesh2D			*WlzReadCMesh2D(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
+WlzCMesh3D			*WlzReadCMesh3D(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
 
 #ifdef _OPENMP
 #define getc(S)	getc_unlocked(S)
@@ -431,6 +437,18 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 
     case WLZ_CONTOUR:
       if((domain.ctr = WlzReadContour(fp, &errNum)) != NULL){
+	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      }
+      break;
+
+    case WLZ_CMESH_2D:
+      if((domain.cm2 = WlzReadCMesh2D(fp, &errNum)) != NULL){
+	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      }
+      break;
+
+    case WLZ_CMESH_3D:
+      if((domain.cm3 = WlzReadCMesh3D(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
@@ -3455,99 +3473,47 @@ static WlzCMeshTransform *WlzReadCMeshTransform(FILE *fp,
 static WlzCMeshTransform *WlzReadCMeshTransform2D(FILE *fp,
 					WlzErrorNum *dstErr)
 {
-  int		idE,
-  		idN,
-		nDsp,
-  		nElm,
-  		nNod;
-  int		idx[3];
-  unsigned int  flags;
-  WlzDVertex2	dsp,
-  		pos;
-  WlzCMeshNod2D *nod[3];
-  WlzCMeshElm2D *elm;
+  int		idD,
+  		nDsp;
+  WlzDVertex2	dsp;
   WlzCMeshTransform *cmt = NULL;
   WlzErrorNum errNum = WLZ_ERR_NONE;
 
-  /* Get number of nodes, elements and displacements. Te number of
-   * displacements may be either zero or the same as the number of
-   * nodes. */
-  nNod = getword(fp);
-  nElm = getword(fp);
-  nDsp = getword(fp);
-  if(feof(fp) != 0)
-  {
-    errNum = WLZ_ERR_READ_INCOMPLETE;
-  }
-  else if((nNod < 0) || (nElm < 0) || ((nDsp != 0) && (nDsp != nNod)))
-  {
-    errNum = WLZ_ERR_PARAM_DATA;
-  }
-#ifdef WLZ_DEBUG_READOBJ
+  cmt = WlzMakeCMeshTransform(WLZ_TRANSFORM_2D_CMESH, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    (void )fprintf(stderr,
-    		   "WlzReadCMeshTransform2D() "
-		   "%d %d %d\n",
-		   nNod, nElm, nDsp);
-  }
-#endif /* WLZ_DEBUG_READOBJ */
-  /* Allocate all data structures. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    cmt = WlzMakeCMeshTransform(WLZ_TRANSFORM_2D_CMESH, &errNum);
+    cmt->mesh.m2 = WlzReadCMesh2D(fp, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    cmt->mesh.m2 = WlzCMeshNew2D(&errNum);
+    if((nDsp = cmt->mesh.m2->res.nod.maxEnt) < 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((AlcVectorExtendAndGet(cmt->mesh.m2->res.nod.vec, nNod) == NULL) ||
-       (AlcVectorExtendAndGet(cmt->mesh.m2->res.elm.vec, nElm) == NULL))
+    if(((cmt->dspVec = AlcVectorNew(1, sizeof(WlzDVertex2),
+				   cmt->mesh.m2->res.nod.vec->blkSz,
+				    NULL)) == NULL) ||
+       (AlcVectorExtendAndGet(cmt->dspVec, nDsp) == NULL))				        
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
-    else
-    {
-      errNum = WlzCMeshReassignBuckets2D(cmt->mesh.m2, nNod);
-    }
-    if(nDsp != 0)
-    {
-      if(((cmt->dspVec = AlcVectorNew(1, sizeof(WlzDVertex2),
-				      cmt->mesh.m2->res.nod.vec->blkSz,
-				      NULL)) == NULL) ||
-         (AlcVectorExtendAndGet(cmt->dspVec, nDsp) == NULL))				        
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
   }
-  /* Read nodes and posible displacements. */
+  /* Read displacements. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idN = 0; idN < nNod; ++idN)
+    for(idD = 0; idD < nDsp; ++idD)
     {
-      flags = getword(fp);
-      pos.vtX = getdouble(fp);
-      pos.vtY = getdouble(fp);
+      dsp.vtX = getdouble(fp);
+      dsp.vtY = getdouble(fp);
 #ifdef WLZ_DEBUG_READOBJ
       (void )fprintf(stderr,
                      "WlzReadCMeshTransform2D() "
-		     "% 8d 0x%08x % 8g % 8g\n",
-		     idN, flags, pos.vtX, pos.vtY);
+		     "% 8d % 8g % 8g\n",
+		     idD, dsp.vtX, dsp.vtY);
 #endif /* WLZ_DEBUG_READOBJ */
-      if(nDsp != 0)
-      {
-        dsp.vtX = getdouble(fp);
-        dsp.vtY = getdouble(fp);
-#ifdef WLZ_DEBUG_READOBJ
-      (void )fprintf(stderr,
-                     "WlzReadCMeshTransform2D() "
-		     "% 8g % 8g\n",
-		     dsp.vtX, dsp.vtY);
-#endif /* WLZ_DEBUG_READOBJ */
-      }
       if(feof(fp) != 0)
       {
         errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -3555,68 +3521,7 @@ static WlzCMeshTransform *WlzReadCMeshTransform2D(FILE *fp,
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	if(nDsp != 0)
-	{
-	  *(WlzDVertex2 *)AlcVectorItemGet(cmt->dspVec, idN) = dsp;
-	}
-	nod[0] = WlzCMeshNewNod2D(cmt->mesh.m2, pos, &errNum);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  nod[0]->flags = flags;
-	}
-	else
-	{
-	  break;
-	}
-      }
-    }
-  }
-  /* Read elements and create them within the mesh using the existing
-   * already created nodes. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE < nElm; ++idE)
-    {
-      flags = getword(fp);
-      idx[0] = getword(fp);
-      idx[1] = getword(fp);
-      idx[2] = getword(fp);
-      if(feof(fp) != 0)
-      {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
-	break;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-#ifdef WLZ_DEBUG_READOBJ
-	(void )fprintf(stderr,
-		       "WlzReadCMeshTransform2D() "
-		       "% 8d 0x%08x % 8d % 8d % 8d\n",
-		       idE, flags, idx[0], idx[1], idx[2]);
-#endif /* WLZ_DEBUG_READOBJ */
-	for(idN = 0; idN < 3; ++idN)
-	{
-	  if((idx[idN] < 0) || (idx[idN] >= nNod))
-	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
-	    break;
-	  }
-	  nod[idN] = (WlzCMeshNod2D *)
-	  	     AlcVectorItemGet(cmt->mesh.m2->res.nod.vec, idx[idN]);
-	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        elm = WlzCMeshNewElm2D(cmt->mesh.m2,
-	                       nod[0], nod[1], nod[2], &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        elm->flags = flags;
-      }
-      else
-      {
-        break;
+	*(WlzDVertex2 *)AlcVectorItemGet(cmt->dspVec, idD) = dsp;
       }
     }
   }
@@ -3643,101 +3548,48 @@ static WlzCMeshTransform *WlzReadCMeshTransform2D(FILE *fp,
 static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
 					WlzErrorNum *dstErr)
 {
-  int		idE,
-  		idN,
-		nDsp,
-  		nElm,
-  		nNod;
-  int		idx[4];
-  unsigned int  flags;
-  WlzDVertex3	dsp,
-  		pos;
-  WlzCMeshNod3D *nod[4];
-  WlzCMeshElm3D *elm;
+  int		idD,
+  		nDsp;
+  WlzDVertex3	dsp;
   WlzCMeshTransform *cmt = NULL;
   WlzErrorNum errNum = WLZ_ERR_NONE;
 
-  /* Get number of nodes, elements and displacements. Te number of
-   * displacements may be either zero or the same as the number of
-   * nodes. */
-  nNod = getword(fp);
-  nElm = getword(fp);
-  nDsp = getword(fp);
-  if(feof(fp) != 0)
-  {
-    errNum = WLZ_ERR_READ_INCOMPLETE;
-  }
-  else if((nNod < 0) || (nElm < 0) || ((nDsp != 0) && (nDsp != nNod)))
-  {
-    errNum = WLZ_ERR_PARAM_DATA;
-  }
-#ifdef WLZ_DEBUG_READOBJ
+  cmt = WlzMakeCMeshTransform(WLZ_TRANSFORM_3D_CMESH, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    (void )fprintf(stderr,
-    		   "WlzReadCMeshTransform3D() "
-		   "%d %d %d\n",
-		   nNod, nElm, nDsp);
-  }
-#endif /* WLZ_DEBUG_READOBJ */
-  /* Allocate all data structures. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    cmt = WlzMakeCMeshTransform(WLZ_TRANSFORM_3D_CMESH, &errNum);
+    cmt->mesh.m3 = WlzReadCMesh3D(fp, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    cmt->mesh.m3 = WlzCMeshNew3D(&errNum);
+    if((nDsp = cmt->mesh.m3->res.nod.maxEnt) < 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((AlcVectorExtendAndGet(cmt->mesh.m3->res.nod.vec, nNod) == NULL) ||
-       (AlcVectorExtendAndGet(cmt->mesh.m3->res.elm.vec, nElm) == NULL))
+    if(((cmt->dspVec = AlcVectorNew(1, sizeof(WlzDVertex3),
+				   cmt->mesh.m3->res.nod.vec->blkSz,
+				    NULL)) == NULL) ||
+       (AlcVectorExtendAndGet(cmt->dspVec, nDsp) == NULL))				        
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
-    else
-    {
-      errNum = WlzCMeshReassignBuckets3D(cmt->mesh.m3, nNod);
-    }
-    if(nDsp != 0)
-    {
-      if(((cmt->dspVec = AlcVectorNew(1, sizeof(WlzDVertex3),
-				      cmt->mesh.m3->res.nod.vec->blkSz,
-				      NULL)) == NULL) ||
-         (AlcVectorExtendAndGet(cmt->dspVec, nDsp) == NULL))				        
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
   }
-  /* Read nodes and posible displacements. */
+  /* Read displacements. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idN = 0; idN < nNod; ++idN)
+    for(idD = 0; idD < nDsp; ++idD)
     {
-      flags = getword(fp);
-      pos.vtX = getdouble(fp);
-      pos.vtY = getdouble(fp);
-      pos.vtZ = getdouble(fp);
-#ifdef WLZ_DEBUG_READOBJ
-      (void )fprintf(stderr,
-                     "WlzReadCMeshTransform2D() "
-		     "% 8d 0x%08x % 8g % 8g % 8g\n",
-		     idN, flags, pos.vtX, pos.vtY, pos.vtZ);
-#endif /* WLZ_DEBUG_READOBJ */
-      if(nDsp != 0)
-      {
-        dsp.vtX = getdouble(fp);
-        dsp.vtY = getdouble(fp);
-        dsp.vtZ = getdouble(fp);
+      dsp.vtX = getdouble(fp);
+      dsp.vtY = getdouble(fp);
+      dsp.vtZ = getdouble(fp);
 #ifdef WLZ_DEBUG_READOBJ
       (void )fprintf(stderr,
                      "WlzReadCMeshTransform3D() "
-		     "% 8g % 8g % 8g\n",
-		     dsp.vtX, dsp.vtY, dsp.vtZ);
+		     "% 8d % 8g % 8g % 8g\n",
+		     idD, dsp.vtX, dsp.vtY, dsp.vtZ);
 #endif /* WLZ_DEBUG_READOBJ */
-      }
       if(feof(fp) != 0)
       {
         errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -3745,11 +3597,101 @@ static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	if(nDsp != 0)
-	{
-	  *(WlzDVertex3 *)AlcVectorItemGet(cmt->dspVec, idN) = dsp;
-	}
-	nod[0] = WlzCMeshNewNod3D(cmt->mesh.m3, pos, &errNum);
+	*(WlzDVertex3 *)AlcVectorItemGet(cmt->dspVec, idD) = dsp;
+      }
+    }
+  }
+  /* Clean up if errors. */
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeCMeshTransform(cmt);
+    cmt = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cmt);
+}
+
+/*!
+* \return	New 2D constrained mesh.
+* \ingroup	WlzIO
+* \brief	reads a 2D constrained mesh using the given file pointer.
+* \param	fp			Given file pointer.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh2D	*WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN,
+		flags,
+		nElm,
+		nNod;
+  WlzDVertex2	pos;
+  WlzCMeshElm2D	*elm;
+  WlzCMesh2D	*mesh = NULL;
+  int		idx[3];
+  WlzCMeshNod2D	*nod[3];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nNod = getword(fp);
+  nElm = getword(fp);
+  if(feof(fp) != 0)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if((nNod < 0) || (nElm < 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+#ifdef WLZ_DEBUG_READOBJ
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr,
+    		   "WlzReadCMesh2D() "
+		   "%d %d\n",
+		   nNod, nElm);
+  }
+#endif /* WLZ_DEBUG_READOBJ */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mesh = WlzCMeshNew2D(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
+       (AlcVectorExtendAndGet(mesh->res.elm.vec, nElm) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      errNum = WlzCMeshReassignBuckets2D(mesh, nNod);
+    }
+  }
+  /* Read nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < nNod; ++idN)
+    {
+      flags = getword(fp);
+      pos.vtX = getdouble(fp);
+      pos.vtY = getdouble(fp);
+#ifdef WLZ_DEBUG_READOBJ
+      (void )fprintf(stderr,
+                     "WlzReadCMesh2D() "
+		     "% 8d 0x%08x % 8g % 8g\n",
+		     idN, flags, pos.vtX, pos.vtY);
+#endif /* WLZ_DEBUG_READOBJ */
+      if(feof(fp) != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	nod[0] = WlzCMeshNewNod2D(mesh, pos, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  nod[0]->flags = flags;
@@ -3761,8 +3703,160 @@ static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
       }
     }
   }
-  /* Read elements and create them within the mesh using the existing
-   * already created nodes. */
+  /* Read elements and create them within the mesh using the already
+   * created nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < nElm; ++idE)
+    {
+      flags = getword(fp);
+      idx[0] = getword(fp);
+      idx[1] = getword(fp);
+      idx[2] = getword(fp);
+      if(feof(fp) != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+#ifdef WLZ_DEBUG_READOBJ
+	(void )fprintf(stderr,
+		       "WlzReadCMesh2D() "
+		       "% 8d 0x%08x % 8d % 8d % 8d\n",
+		       idE, flags, idx[0], idx[1], idx[2]);
+#endif /* WLZ_DEBUG_READOBJ */
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  if((idx[idN] < 0) || (idx[idN] >= nNod))
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    break;
+	  }
+	  nod[idN] = (WlzCMeshNod2D *)
+	             AlcVectorItemGet(mesh->res.nod.vec, idx[idN]);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        elm = WlzCMeshNewElm2D(mesh,
+	                       nod[0], nod[1], nod[2], &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        elm->flags = flags;
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  /* Clean up if errors. */
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D(mesh);
+    mesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mesh);
+}
+
+/*!
+* \return	New 3D constrained mesh.
+* \ingroup	WlzIO
+* \brief	reads a 3D constrained mesh using the given file pointer.
+* \param	fp			Given file pointer.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN,
+		flags,
+		nElm,
+		nNod;
+  WlzDVertex3	pos;
+  WlzCMeshElm3D	*elm;
+  WlzCMesh3D	*mesh = NULL;
+  int		idx[4];
+  WlzCMeshNod3D	*nod[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nNod = getword(fp);
+  nElm = getword(fp);
+  if(feof(fp) != 0)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if((nNod < 0) || (nElm < 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+#ifdef WLZ_DEBUG_READOBJ
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr,
+    		   "WlzReadCMesh3D() "
+		   "%d %d\n",
+		   nNod, nElm);
+  }
+#endif /* WLZ_DEBUG_READOBJ */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mesh = WlzCMeshNew3D(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
+       (AlcVectorExtendAndGet(mesh->res.elm.vec, nElm) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      errNum = WlzCMeshReassignBuckets3D(mesh, nNod);
+    }
+  }
+  /* Read nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < nNod; ++idN)
+    {
+      flags = getword(fp);
+      pos.vtX = getdouble(fp);
+      pos.vtY = getdouble(fp);
+      pos.vtZ = getdouble(fp);
+#ifdef WLZ_DEBUG_READOBJ
+      (void )fprintf(stderr,
+                     "WlzReadCMesh3D() "
+		     "% 8d 0x%08x % 8g % 8g % 8g\n",
+		     idN, flags, pos.vtX, pos.vtY, pos.vtZ);
+#endif /* WLZ_DEBUG_READOBJ */
+      if(feof(fp) != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	nod[0] = WlzCMeshNewNod3D(mesh, pos, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  nod[0]->flags = flags;
+	}
+	else
+	{
+	  break;
+	}
+      }
+    }
+  }
+  /* Read elements and create them within the mesh using the already
+   * created nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
     for(idE = 0; idE < nElm; ++idE)
@@ -3781,7 +3875,7 @@ static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
       {
 #ifdef WLZ_DEBUG_READOBJ
 	(void )fprintf(stderr,
-		       "WlzReadCMeshTransform3D() "
+		       "WlzReadCMesh3D() "
 		       "% 8d 0x%08x % 8d % 8d % 8d % 8d\n",
 		       idE, flags, idx[0], idx[1], idx[2], idx[3]);
 #endif /* WLZ_DEBUG_READOBJ */
@@ -3793,12 +3887,12 @@ static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
 	    break;
 	  }
 	  nod[idN] = (WlzCMeshNod3D *)
-	             AlcVectorItemGet(cmt->mesh.m3->res.nod.vec, idx[idN]);
+	             AlcVectorItemGet(mesh->res.nod.vec, idx[idN]);
 	}
       }
       if(errNum == WLZ_ERR_NONE)
       {
-        elm = WlzCMeshNewElm3D(cmt->mesh.m3,
+        elm = WlzCMeshNewElm3D(mesh,
 	                       nod[0], nod[1], nod[2], nod[3], &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
@@ -3814,13 +3908,12 @@ static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
   /* Clean up if errors. */
   if(errNum != WLZ_ERR_NONE)
   {
-    (void )WlzFreeCMeshTransform(cmt);
-    cmt = NULL;
+    (void )WlzCMeshFree3D(mesh);
+    mesh = NULL;
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(cmt);
+  return(mesh);
 }
-
