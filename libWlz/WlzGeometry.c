@@ -2458,3 +2458,46 @@ double		WlzGeomTetraInSphereRegDiam(double side)
   }
   return(diam);
 }
+
+/*!
+* \return       Angle, range \f$[0 - 2\pi]\f$.
+* \ingroup      WlzGeometry
+* \brief        Computes the angle of a ray from the origin to the
+*               destination vertex along with the length of the ray.
+*               Angles are:
+*               \verbatim
+                      (y)
+                       ^  pi/2
+                       |
+                       |
+                 pi    |
+                <------+-------> (x)
+                       |       0
+                       |
+                  3pi/2|
+                       V
+                \endverbatim
+* \param        org                     Position of the origin.
+* \param        dst                     Position of the destination.
+* \param        dstRad                  Destination pointer for the length
+*                                       of the ray, may be NULL.
+*/
+double          WlzGeomPolar2D(WlzDVertex2 org, WlzDVertex2 dst,
+                                double *dstRad)
+{
+  double        ang;
+  WlzDVertex2   del;
+
+  WLZ_VTX_2_SUB(del, dst, org);
+  ang = atan2(del.vtY, del.vtX);
+  if(ang < 0.0)
+  {
+    ang += 2.0 * ALG_M_PI;
+  }
+  if(dstRad)
+  {
+    *dstRad = WLZ_VTX_2_LENGTH(del);
+  }
+  return(ang);
+}
+
