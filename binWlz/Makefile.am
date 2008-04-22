@@ -57,6 +57,7 @@ bin_PROGRAMS		= \
 			  WlzBoundingBox \
 			  WlzBuildContour \
 			  WlzCannyDeriche \
+			  WlzCentralityObj \
 			  WlzCentreOfMass \
 			  WlzChangeEMAPProperty \
 			  WlzClipObjToBox \
@@ -221,6 +222,10 @@ WlzBuildContour_LDFLAGS			= $(AM_LFLAGS)
 WlzCannyDeriche_SOURCES			= WlzCannyDeriche.c
 WlzCannyDeriche_LDADD			= $(LDADD)
 WlzCannyDeriche_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCentralityObj_SOURCES		= WlzCentralityObj.c
+WlzCentralityObj_LDADD			= $(LDADD)
+WlzCentralityObj_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCentreOfMass_SOURCES			= WlzCentreOfMass.c
 WlzCentreOfMass_LDADD			= $(LDADD)
