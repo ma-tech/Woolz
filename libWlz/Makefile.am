@@ -67,6 +67,7 @@ libWlz_la_SOURCES 	= \
 			  WlzCannyDeriche.c \
 			  WlzCbThreshold.c \
 			  WlzCCor.c \
+			  WlzCentrality.c \
 			  WlzCentreOfMass.c \
 			  WlzClipObjToBox.c \
 			  WlzCMeshFMar.c \
