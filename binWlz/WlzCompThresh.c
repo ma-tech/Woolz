@@ -51,7 +51,7 @@ static char _WlzCompThresh_c[] = "MRC HGU $Id$";
 WlzCompThresh - Compute a threshold value from a grey-level histogram
 \par Synopsis
 \verbatim
-WlzCompThresh [-o<out file>] [-d] [-f] [-g] [-x#] [-h] [<in object>]
+WlzCompThresh [-o<out file>] [-d] [-f] [-g] [-s] [-x#] [-h] [<in object>]
 
 \endverbatim
 \par Options
@@ -67,6 +67,10 @@ WlzCompThresh [-o<out file>] [-d] [-f] [-g] [-x#] [-h] [<in object>]
   <tr>
     <td><b>-g</b></td>
     <td>Use histogram gradient method.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Use histogram smooth split method.</td>
   </tr>
   <tr>
     <td><b>-x</b></td>
@@ -101,6 +105,9 @@ following methods:
 \li  WLZ_COMPTHRESH_GRADIENT The threshold value is the first point to the
     right of the histogram main peak at which the gradient falls to
     zero.
+\li WLZ_COMPTHRESH_SMOOTHSPLIT The threshold value is the found by
+    first finding the minimum of a heavily smoothed histogram and
+    then the closest minimum in successively less smoothed histograms.
 
 \par Examples
 \verbatim
@@ -147,7 +154,7 @@ int             main(int argc, char **argv)
   char 		*outFileStr,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "o:x:dfgh",
+  static char	optList[] = "o:x:dfghs",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -169,6 +176,9 @@ int             main(int argc, char **argv)
 	break;
       case 'g':
         thrMethod = WLZ_COMPTHRESH_GRADIENT;
+	break;
+      case 's':
+        thrMethod = WLZ_COMPTHRESH_SMOOTHSPLIT;
 	break;
       case 'x':
         if(sscanf(optarg, "%lg", &extFrac) != 1)
@@ -269,12 +279,14 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-o<out file>] [-d] [-f] [-g] [-x#] [-h] [<in object>]\n"
+    " [-o<out file>] [-d] [-f] [-g] [-s] [-x#] [-h]\n"
+    "                     [<in object>]\n"
     "Options:\n"
     "  -o  Output file name.\n"
     "  -d  Use histogram depth method.\n"
     "  -f  Use histogram foot method.\n"
     "  -g  Use histogram gradient method.\n"
+    "  -s  Use histogram smooth split.\n"
     "  -h  Help, prints this usage message.\n"
     "  -x# Extra fraction to add to computed threshold value.\n"
     "Computes a threshold value from the given histogram using one of the\n"
@@ -289,6 +301,9 @@ int             main(int argc, char **argv)
     "  WLZ_COMPTHRESH_GRADIENT The threshold value is the first point to the\n"
     "    right of the histogram main peak at which the gradient falls to\n"
     "    zero.\n"
+    "  WLZ_COMPTHRESH_SMOOTHSPLIT The threshold value is the found by\n"
+    "    first finding the minimum of a heavily smoothed histogram and\n"
+    "    then the closest minimum in successively less smoothed histograms.\n"
     "The input object is read from stdin and values are written to stdout\n"
     "unless the filenames are given.\n",
     *argv,

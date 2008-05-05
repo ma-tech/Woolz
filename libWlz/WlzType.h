@@ -606,30 +606,33 @@ typedef enum _WlzBinaryOperatorType
 typedef enum _WlzCompThreshType
 {
   WLZ_COMPTHRESH_FOOT,	/*!< Can not determine threshold type.
-  			 * The threshold value is intercept of a line fitted
-			 * to the upper slope of the histogram main peak with
-			 * the abscissa.
-			 */
+  			   The threshold value is intercept of a line fitted
+			   to the upper slope of the histogram main peak with
+			   the abscissa.  */
   WLZ_COMPTHRESH_DEPTH, /*!< Can not determine threshold type.
-  			 * The threshold value is that point to the right of
-  			 * the histogram peak that is maximally distant from
-			 * the chord joining the peak and the histogram right
-			 * hand end point.
-			 * The histogram may need to be smoothed for this
-			 * algorithm to work.
-			 */
+  			   The threshold value is that point to the right of
+  			   the histogram peak that is maximally distant from
+			   the chord joining the peak and the histogram right
+			   hand end point.
+			   The histogram may need to be smoothed for this
+			   algorithm to work.  */
   WLZ_COMPTHRESH_GRADIENT, /*!< Can not determine threshold type.
-  			 * The threshold value is the first point to the
-			 * right of the histogram main peak at which the
-			 * gradient falls to zero (cf finding a minimum).
-			 * To find the slope of the histogram at some
-			 * point a straight line is fitted through the
-			 * point \f$\pm\f$ a fixed number of points to
-			 * either side. */
-  WLZ_COMPTHRESH_FRACMIN /*!< The threshold type is determined from the
-  			 * position of the histogram's maximum and the
-			 * threshold value is the minimum following
-                         * the specified fraction of the values.  */
+  			   The threshold value is the first point to the
+			   right of the histogram main peak at which the
+			   gradient falls to zero (cf finding a minimum).
+			   To find the slope of the histogram at some
+			   point a straight line is fitted through the
+			   point \f$\pm\f$ a fixed number of points to
+			   either side. */
+  WLZ_COMPTHRESH_FRACMIN, /*!< The threshold type is determined from the
+  			   position of the histogram's maximum and the
+			   threshold value is the minimum following
+                           the specified fraction of the values.  */
+  WLZ_COMPTHRESH_SMOOTHSPLIT /*!< The threshold value is found by
+  			   heavily smoothing the histogram and looking
+			   for the minimum. Successively lesser smmothing
+			   values are then applied and at each itteration
+			   the minimum closest to the previous is found. */
 } WlzCompThreshType;
 
 /*!

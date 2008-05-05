@@ -46,6 +46,9 @@ static char _WlzCompThresh_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+static int			WlzCompThreshClosestMin(
+				  WlzHistogramDomain *hist,
+				  int idx);
 static double			WlzCompThreshDepth(
 				  WlzHistogramDomain *hDom);
 static double			WlzCompThreshFoot(
@@ -54,6 +57,11 @@ static double			WlzCompThreshFracMin(
 				  WlzHistogramDomain *hDom,
 				  double bFrac,
 				  WlzThresholdType *dstThrType);
+static double			WlzCompThreshSmoothSplit(
+				  WlzObject *hObj,
+				  double minSmooth,
+				  double maxSmooth,
+				  WlzErrorNum *dstErr);
 static double			WlzCompThreshGradient(
 				  WlzHistogramDomain *hDom);
 static double			WlzCompThreshLSqFit(
@@ -208,7 +216,9 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
   double	thrVal;
   WlzHistogramDomain *histDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	minBgdFrac = 0.20;
+  const double	minBgdFrac = 0.20,
+  		smMin = 4.0,
+		smMax = 32.0;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzCompThreshold FE 0x%lx 0x%lx %d %g\n",
@@ -255,6 +265,9 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
         break;
       case WLZ_COMPTHRESH_FRACMIN:
 	thrVal = WlzCompThreshFracMin(histDom, minBgdFrac, NULL);
+        break;
+      case WLZ_COMPTHRESH_SMOOTHSPLIT:
+	thrVal = WlzCompThreshSmoothSplit(histObj, smMin, smMax, &errNum);
         break;
       default:
         errNum = WLZ_ERR_COMPTHRESH_TYPE;
@@ -534,7 +547,120 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
 }
 
 /*!
-* \return	Woolz error code.
+* \return	Threshold value.
+* \ingroup	WlzThreshold
+* \brief	Computes a threshold value from the given histogram
+* 		domain using the WLZ_COMPTHRESH_SMOOTHSPLIT method.
+* 		The given histogram is smoothed using the given maximum
+* 		smoothing value and the minimum of the resulting histogram
+* 		is found. At successive itterations the smoothing value
+* 		is halved until it is \f$\f$ the given minimum smoothing
+* 		value or 1, which ever is greater. At each itteration
+* 		the minimum closest to that with the previous smoothing
+* 		value is selected. The result is the grey value for the
+* 		minimum smoothing value.
+* 		Smoothing values are applied using WlzHistogramSmooth().
+* \param	gH			Given object which is known to
+* 					have a valid histogram domain.
+* \param	smMin			Minimum smoothing value.
+* \param	smMax			Maximum smoothing value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
+				  double smMin, double smMax,
+				  WlzErrorNum *dstErr)
+{
+  int		idx,
+		idT,
+  		nTroughs;
+  double 	sm,
+  		thr;
+  int		*troughs = NULL;
+  WlzObject	*sObj;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Find histogram global minimum. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzHistogramFindPeaks(gObj, smMax, 0.0, &nTroughs, &troughs,
+    				   WLZ_HIST_FEATURE_TROUGH);
+    if(nTroughs == 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idx = troughs[0];
+    for(idT = 1; idT < nTroughs; ++idT)
+    {
+      if((troughs[idT] > 0) &&
+         (troughs[idT] < (gObj->domain.hist->nBins - 1)))
+      {
+	switch(gObj->domain.hist->type)
+	{
+	  case WLZ_HISTOGRAMDOMAIN_INT:
+	    if((*(gObj->domain.hist->binValues.inp + troughs[idT])) <
+	       (*(gObj->domain.hist->binValues.inp + idx)))
+	    {
+	      idx = troughs[idT];
+	    }
+	    break;
+	  case WLZ_HISTOGRAMDOMAIN_FLOAT:
+	    if((*(gObj->domain.hist->binValues.dbp + troughs[idT])) <
+	       (*(gObj->domain.hist->binValues.dbp + idx)))
+	    {
+	      idx = troughs[idT];
+	    }
+	    break;
+	  default:
+	    break;
+	}
+      }
+    }
+  }
+#ifdef WLZ_DEBUG_COMPTHRESH
+  (void )fprintf(stderr, "WlzCompThreshSmoothSplit idx = %d\n", idx);
+#endif
+  (void )AlcFree(troughs);
+  /* Itterate through smoothing values finding minimum closest to previous. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sm = smMax / 2.0;
+    while((errNum == WLZ_ERR_NONE) &&
+          ((sm + DBL_EPSILON) > 1.0) && ((sm + DBL_EPSILON) > smMin))
+    {
+      /* Create smoothed histogram. */
+      sObj = WlzCopyObject(gObj, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzHistogramSmooth(sObj, sm);
+      }
+      /* Find closest histogram minimum to previous. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	idx = WlzCompThreshClosestMin(sObj->domain.hist, idx);
+	sm = sm / 2.0;
+      }
+      (void )WlzFreeObj(sObj);
+#ifdef WLZ_DEBUG_COMPTHRESH
+  (void )fprintf(stderr, "WlzCompThreshSmoothSplit idx = %d\n", idx);
+#endif
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    thr = gObj->domain.hist->origin + (idx * gObj->domain.hist->binSize);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(thr);
+}
+
+/*!
+* \return	Threshold value.
 * \ingroup	WlzThreshold
 * \brief	Computes a threshold value from the given histogram
 *               domain using the WLZ_COMPTHRESH_DEPTH method, ie:
@@ -856,5 +982,124 @@ static double	WlzCompThreshLSqFit(WlzGreyP vec, int idx0, int idx1,
     *dstSlope = lsqB;
   }
   return(lsqA);
+}
+
+/*!
+* \return	Index into histogram domain bins.
+* \ingroup	WlzHistogram
+* \brief	Finds the index of the bin with histogram value minimum 
+*               closest to the given index.
+* \param	hist			Histogram domain.
+* \param	idG			Given index, which must be a valid
+* 					index to a histogram bin.
+*/
+static int	WlzCompThreshClosestMin(WlzHistogramDomain *hist, int idG)
+{
+  int		del0,
+  		del1,
+		id0,
+  		id1,
+		itr0 = 0,
+		itr1 = 0,
+		idM = 0;
+  WlzGreyV	val0,
+  		val1,
+		valT;
+
+  id1 = id0 = idG;
+  switch(hist->type)
+  {
+    case WLZ_HISTOGRAMDOMAIN_INT:
+      val0.inv = val1.inv = *(hist->binValues.inp + idG);
+      while((id0 >= 0) &&
+            ((valT.inv = *(hist->binValues.inp + id0)) <= val0.inv))
+      {
+	val0.inv = valT.inv;
+        --id0;
+	++itr0;
+      }
+      while((id1 < hist->nBins) &&
+            ((valT.inv = *(hist->binValues.inp + id1)) <= val1.inv))
+      {
+	val1.inv = valT.inv;
+        ++id1;
+	++itr1;
+      }
+      break;
+    case WLZ_HISTOGRAMDOMAIN_FLOAT:
+      val0.dbv = val1.dbv = *(hist->binValues.dbp + idG);
+      while((id0 >= 0) &&
+            ((valT.dbv = *(hist->binValues.dbp +
+	                   id0)) < (val0.dbv + DBL_EPSILON)))
+      {
+	val0.dbv = valT.dbv;
+        --id0;
+	++itr0;
+      }
+      while((id1 < hist->nBins) &&
+            ((valT.dbv = *(hist->binValues.dbp +
+	                   id1)) < (val1.dbv + DBL_EPSILON)))
+      {
+	val1.dbv = valT.dbv;
+        ++id1;
+	++itr1;
+      }
+      break;
+    default:
+      break;
+  }
+  if(itr0 > 0)
+  {
+    ++id0;
+  }
+  if(itr1 > 0)
+  {
+    --id1;
+  }
+  del0 = abs(id0 - idG);
+  del1 = abs(id1 - idG);
+  if(del0 < del1)
+  {
+    if(del0 == 0)
+    {
+      switch(hist->type)
+      {
+        case WLZ_HISTOGRAMDOMAIN_INT:
+	  idM = (val0.inv < val1.inv)? id0: id1;
+	  break;
+        case WLZ_HISTOGRAMDOMAIN_FLOAT:
+	  idM = (val0.dbv < val1.dbv)? id0: id1;
+	  break;
+        default:
+	  break;
+      }
+    }
+    else
+    {
+      idM = id0;
+    }
+  }
+  else
+  {
+    if(del1 == 0)
+    {
+      switch(hist->type)
+      {
+        case WLZ_HISTOGRAMDOMAIN_INT:
+          idM = (val0.inv < val1.inv)? id0: id1;
+	  break;
+        case WLZ_HISTOGRAMDOMAIN_FLOAT:
+	  idM = (val0.dbv < val1.dbv)? id0: id1;
+	  break;
+        default:
+	  break;
+      }
+    }
+    else
+    {
+      idM = id1;
+    }
+  }
+  return(idM);
 }
 
