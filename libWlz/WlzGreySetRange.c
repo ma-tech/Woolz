@@ -295,8 +295,7 @@ WlzErrorNum WlzGreySetRange(
 	gptr = gwsp.u_grintptr;
 	switch (gwsp.pixeltype) {
 	  case WLZ_GREY_INT:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-	      val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
+	    for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
 	      if(dither){
 		val = factor * (*gptr.inp +
 				AlgRandNormal(0.0, sigma) -
@@ -309,8 +308,7 @@ WlzErrorNum WlzGreySetRange(
 	    }
 	    break;
 	  case WLZ_GREY_SHORT:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-	      val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
+	    for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
 	      if(dither){
 		val = factor * (*gptr.shp +
 				AlgRandNormal(0.0, sigma) -
@@ -324,7 +322,6 @@ WlzErrorNum WlzGreySetRange(
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-	      val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
 	      if(dither){
 		val = factor * (*gptr.ubp +
 				AlgRandNormal(0.0, sigma) -
