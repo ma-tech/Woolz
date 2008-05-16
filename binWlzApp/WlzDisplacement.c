@@ -77,8 +77,7 @@ int             main(int argc, char **argv)
                 relFlag,
                 meshMinDist,
                 meshMaxDist;
-  char 		*rec,
-  		*srcFileStr,
+  char 		*srcFileStr,
 		*bibFileStr = NULL,
                 *outFileStr,
                 *bibErrMsg;
@@ -99,7 +98,6 @@ int             main(int argc, char **argv)
   WlzTransformType     trType;
   WlzFnType basisFnType;
   WlzMeshGenMethod genMethod;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzErrorNum	errNum = WLZ_ERR_NONE; 
   BibFileRecord	       *bibfileRecord;
   BibFileError         bibFileErr;
@@ -306,6 +304,7 @@ int             main(int argc, char **argv)
   AlcFree(srcVtx2);
   AlcFree(dstVtx2);
   (void )WlzBasisFnFreeTransform(basisTr);
+  return(errNum);
 }
 
 static void usage(char *proc_str)
@@ -350,7 +349,6 @@ static WlzBasisFnTransform *WlzAffineBasisFnTransformFromCPts(WlzObject *obj,
 				WlzErrorNum *dstErr)
 {
   int		idx;
-  WlzDVertex2	tDV0;
   WlzDVertex2	*dPtsT = NULL;
   WlzAffineTransform *aTr = NULL,
   		*aTrI = NULL;
@@ -444,7 +442,6 @@ static WlzCompoundArray *WlzBasisFnTransformObjPrv(WlzObject *inObj,
   WlzDVertex2           sVtx,
                         dVtx;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-  WlzObjectType		type;
   WlzObjectType         vType;
   WlzGreyP	        gPixX,
                         gPixY;
@@ -460,7 +457,7 @@ static WlzCompoundArray *WlzBasisFnTransformObjPrv(WlzObject *inObj,
   vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
   backgrnd.type = WLZ_GREY_FLOAT;
   backgrnd.v.inv = 0;
-  if(valuesX.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum))
+  if((valuesX.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum)) != 0)
   {
     valuesY.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum);
   }
@@ -471,11 +468,11 @@ static WlzCompoundArray *WlzBasisFnTransformObjPrv(WlzObject *inObj,
   /* create two Wlz objects to hold x and y displacements */
   if (errNum == WLZ_ERR_NONE)
   {
-    if (objX = WlzMakeMain(inObj->type, inObj->domain, valuesX, NULL, NULL, 
-			 &errNum)) 
+    if ((objX = WlzMakeMain(inObj->type, inObj->domain, valuesX, NULL, NULL, 
+			 &errNum)) != 0)
     {
-      if (!(objY = WlzMakeMain(inObj->type, inObj->domain, valuesY, NULL, 
-			       NULL, &errNum))) 
+      if ((objY = WlzMakeMain(inObj->type, inObj->domain, valuesY, NULL, 
+			       NULL, &errNum)) == 0) 
       {
 	WlzFreeObj(objX);
 	objX = NULL;

@@ -70,7 +70,7 @@ static void usage(char *proc_str)
   return;
 }
 
-main(int argc, char **argv)
+int		main(int argc, char **argv)
 {
   WlzCompoundArray *inObj;
   WlzObject        *objX,
@@ -136,9 +136,9 @@ main(int argc, char **argv)
       case WLZ_COMPOUND_ARR_1:
 	if (inObj->n == 2)
 	{
-	  if (objX = inObj->o[0])
+	  if ((objX = inObj->o[0]) != 0)
 	  {
-	    if (!(objY = inObj->o[1]))
+	    if ((objY = inObj->o[1]) == 0)
 	    {
 	      objX = NULL;
 	      errNum = WLZ_ERR_OBJECT_NULL;
@@ -167,7 +167,7 @@ main(int argc, char **argv)
     fclose(outFile);
   }
   
-  return errNum;
+  return(errNum);
 }
 
 /*!
@@ -250,7 +250,7 @@ static WlzErrorNum WlzDisplacementsToVtk(FILE *outFile,
   }
   if (errNum == WLZ_ERR_NONE)
   {
-    fprintf(outFile,  "%s %ld\n","POINT_DATA", numpoints);
+    fprintf(outFile,  "%s %d\n","POINT_DATA", numpoints);
     fprintf(outFile, "%s %s %s\n","VECTORS","vectors", "float" );
     while(((errNum = WlzNextGreyInterval(&iWspX)) == WLZ_ERR_NONE) &&
 	  ((errNum = WlzNextGreyInterval(&iWspY)) == WLZ_ERR_NONE))
