@@ -313,14 +313,20 @@ WlzObject *WlzDiffDomain(
 
   /* this checks the area and returns NULL if zero
      in principle it should return an "empty object" */
-  if( (errNum == WLZ_ERR_NONE) && !WlzIntervalCount(diffdom.i, NULL) ){
-    WlzFreeObj( diff );
-    diffdom.i = NULL;
-    values.v = NULL;
-    diff = WlzMakeEmpty(&errNum);
+  if(errNum == WLZ_ERR_NONE) {
+    if(WlzIntervalCount(diffdom.i, NULL) == 0){
+      WlzFreeObj(diff);
+      diffdom.i = NULL;
+      values.v = NULL;
+      diff = WlzMakeEmpty(&errNum);
+    }
+    else {
+      WlzStandardIntervalDomain(diff->domain.i);
+    }
   }
   else {
-    WlzStandardIntervalDomain(diff->domain.i);
+    WlzFreeObj(diff);
+    diff = NULL;
   }
 
   if( dstErr ){

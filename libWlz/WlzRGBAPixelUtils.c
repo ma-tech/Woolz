@@ -206,9 +206,11 @@ double WlzRGBAPixelValue(
     errNum = WLZ_ERR_GREY_TYPE;
     break;
   }
-  if( val < 0 ){
-    val = -1.0;
-    errNum = WLZ_ERR_GREY_DATA;
+  if(errNum == WLZ_ERR_NONE){
+    if( val < 0 ){
+      val = -1.0;
+      errNum = WLZ_ERR_GREY_DATA;
+    }
   }
 
   if( dstErr ){
