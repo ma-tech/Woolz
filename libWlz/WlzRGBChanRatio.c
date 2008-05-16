@@ -93,8 +93,11 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
 				WlzErrorNum *dstErr)
 {
   WlzObject	*ratioObj = NULL;
+  WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  bgdV.type = WLZ_GREY_UBYTE;
+  bgdV.v.ubv = 0;
   if(rgbObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -127,6 +130,15 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
         errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzSetBackground(ratioObj, bgdV);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(ratioObj);
+    ratioObj = NULL;
   }
   if(dstErr)
   {
@@ -162,10 +174,13 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
   		den,
 		mul,
 		ratio;
+  WlzUInt	rgb;
   WlzValues	values;
   WlzPixelV	bgdV;
   WlzObject	*rtnObj = NULL,
   		*ratioObj = NULL;
+  WlzGreyP	gP0,
+  		gP1;
   WlzObjectType	vType;
   WlzGreyWSpace	gWSp0,
   		gWSp1;
@@ -173,16 +188,19 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
   		iWSp1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  bgdV.type = WLZ_GREY_FLOAT;
+  bgdV.v.flv = 0.0f;
   vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
   values.v = WlzNewValueTb(rgbObj, vType, bgdV, &errNum);
+  (void )WlzAssignValues(values, NULL);
   if(errNum == WLZ_ERR_NONE)
   {
-    ratioObj = WlzMakeMain(rgbObj->type, rgbObj->domain, values,
-			   rgbObj->plist, rgbObj, &errNum);
+    ratioObj = WlzAssignObject(
+               WlzMakeMain(rgbObj->type, rgbObj->domain, values,
+			   NULL, NULL, &errNum), NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    values.core = NULL;
     errNum = WlzInitGreyScan(rgbObj, &iWSp0, &gWSp0);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -190,26 +208,28 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
     errNum = WlzInitGreyScan(ratioObj, &iWSp1, &gWSp1);
   }
   while((errNum == WLZ_ERR_NONE) &&
-	((errNum = WlzNextGreyInterval(&iWSp0)) == WLZ_ERR_NONE))
+	((errNum = WlzNextGreyInterval(&iWSp0)) == WLZ_ERR_NONE) &&
+	((errNum = WlzNextGreyInterval(&iWSp1)) == WLZ_ERR_NONE))
   {
-    (void )WlzNextGreyInterval(&iWSp1);
     switch(gWSp0.pixeltype)
     {
       case WLZ_GREY_RGBA:
+	gP0.rgbp = gWSp0.u_grintptr.rgbp;
+	gP1.rgbp = gWSp1.u_grintptr.rgbp;
 	cnt = iWSp0.rgtpos - iWSp0.lftpos + 1;
 	while(cnt-- > 0)
 	{
-	  num = WlzRGBAChanGetValue(*(gWSp0.u_grintptr.rgbp), numC);
-	  den = WlzRGBAChanGetValue(*(gWSp0.u_grintptr.rgbp), denC);
+	  rgb = *(gP0.rgbp);
+	  num = WlzRGBAChanGetValue(rgb, numC);
+	  den = WlzRGBAChanGetValue(rgb, denC);
 	  ratio = log(1.0 + (num / (den + 1.0)));
 	  if(useMul)
 	  {
-	    mul = WlzRGBAChanGetValue(*(gWSp0.u_grintptr.rgbp), mulC);
+	    mul = WlzRGBAChanGetValue(rgb, mulC);
 	    ratio = ratio * mul;
 	  }
-	  *(gWSp1.u_grintptr.flp) = ratio;
-	  ++(gWSp0.u_grintptr.rgbp);
-	  ++(gWSp1.u_grintptr.flp);
+	  ++(gP0.rgbp);
+	  *(gP1.flp)++ = ratio;
 	}
 	break;
       default:
@@ -230,20 +250,9 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
         rtnObj = WlzConvertPix(ratioObj, WLZ_GREY_UBYTE, &errNum);
       }
     }
-    else
-    {
-      rtnObj = ratioObj;
-      ratioObj = NULL;
-    }
   }
-  if(ratioObj)
-  {
-    (void )WlzFreeObj(ratioObj);
-  }
-  else if(values.core != NULL)
-  {
-    (void )WlzFreeValues(values);
-  }
+  (void )WlzFreeValues(values);
+  (void )WlzFreeObj(ratioObj);
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzFreeObj(rtnObj);
