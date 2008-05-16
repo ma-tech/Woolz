@@ -1801,7 +1801,7 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 				      WlzHistFeature feat)
 {
   int		binIdx,
-  		binCnt,
+		binCnt1,
 		binLst,
 		fndFlg,
   		featIdx,
@@ -1869,7 +1869,7 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
       binLst = -(minSep + 1);
       featIdx = 0;
       binIdx = 0;
-      binCnt = histDom->nBins;
+      binCnt1 = histDom->nBins - 1;
       maxBinIdx = WlzHistogramBinMax(sHist->domain.hist);
       switch(histDom->type)
       {
@@ -1879,7 +1879,7 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 	  dIN = dIC + 1;
 	  sIC = sHist->domain.hist->binValues.inp;
 	  maxI = *(sIC + maxBinIdx);
-	  while(binIdx < binCnt)
+	  while(binIdx < binCnt1)
 	  {
 	    fndFlg = 0;
 	    if(feat & WLZ_HIST_FEATURE_PEAK)
@@ -1929,7 +1929,7 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 	  dDN = dDC + 1;
 	  sDC = sHist->domain.hist->binValues.dbp;
 	  maxD = *(sDC + maxBinIdx);
-	  while(binIdx < binCnt)
+	  while(binIdx < binCnt1)
 	  {
 	    if(*sDC > thresh)
 	    {
