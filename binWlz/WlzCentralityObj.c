@@ -52,7 +52,8 @@ WlzCentralityObj - computes the centrality of a feature object's domain
 		   with respect to a reference object's domain.
 \par Synopsis
 \verbatim
-WlzCentralityObj [-b] [-h] [-n#] [-o <output file>] [<feat obj>] [<ref obj>]
+WlzCentralityObj [-b] [-h] [-n#] [-o <output file>] [-R]
+                 [<feat obj>] [<ref obj>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -71,6 +72,10 @@ WlzCentralityObj [-b] [-h] [-n#] [-o <output file>] [<feat obj>] [<ref obj>]
   <tr> 
     <td><b>-o</b></td>
     <td>Output file.</td>
+  </tr>
+  <tr> 
+    <td><b>-R</b></td>
+    <td>Output maximum radius after centrality value.</td>
   </tr>
 </table>
 \par Description
@@ -111,9 +116,11 @@ int		main(int argc, char *argv[])
   int		ok,
 		binFlg = 0,
   		nAng = 360,
+		maxRFlg = 0,
   		option,
 		usage = 0;
-  double	cen = 0.0;
+  double	cen = 0.0,
+  		maxR = 0.0;
   char		*fFileStr,
   		*rFileStr,
 		*oFileStr;
@@ -122,7 +129,7 @@ int		main(int argc, char *argv[])
 		*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bhn:o:";
+  static char	optList[] = "bhn:o:R";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -145,6 +152,9 @@ int		main(int argc, char *argv[])
 	break;
       case 'o':
 	oFileStr = optarg;
+	break;
+      case 'R':
+        maxRFlg = 1;
 	break;
       case 'h':
       default:
@@ -222,7 +232,7 @@ int		main(int argc, char *argv[])
   /* Compute centrality feature. */
   if(ok)
   {
-    cen = WlzCentrality(fObj, rObj, nAng, binFlg, &errNum);
+    cen = WlzCentrality(fObj, rObj, nAng, binFlg, &maxR, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -246,7 +256,8 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    if(fprintf(fP, "%lg\n", cen) <= 0)
+    if(((maxRFlg == 0) && (fprintf(fP, "%lg\n", cen) <= 0)) ||
+       ((maxRFlg != 0) && (fprintf(fP, "%lg %lg\n", cen, maxR) <= 0)))
     {
       ok = 0;
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -261,7 +272,8 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-b] [-h] [-n#] [-o <output file>] [<feat obj>] [<ref obj>]\n"
+    "Usage: %s [-b] [-h] [-n#] [-o <output file>] [-R]\n"
+    "Usage:                  [<feat obj>] [<ref obj>]\n"
     "Computes the centrality of the feature object's domain with respect to\n"
     "the reference object's domain.\n"
     "Options are:\n"
@@ -269,6 +281,7 @@ int		main(int argc, char *argv[])
     "  -h  Help - prints this usage message\n"
     "  -n  Number of angle increments to use (default 360).\n"
     "  -o  Output file for centrality feature value.\n"
+    "  -R  Output maximum radius value after centrality value.\n"
     "By default the feature and reference objects are read from the standard\n"
     "input. This may be made explicit if only one of these is given by using\n"
     "- to specify the standard input.\n",
