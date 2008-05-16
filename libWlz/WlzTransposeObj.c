@@ -204,32 +204,36 @@ WlzObject *WlzTransposeObj(
       nobj->values = WlzAssignValues(values, NULL);
 
   /* transfer values */
-      WlzInitGreyScan(nobj, &iwsp, &gwsp);
-      gVWSp = WlzGreyValueMakeWSp(obj, NULL);
-      while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
-	for(i=iwsp.lftpos; i<=iwsp.rgtpos; i++){
-	  WlzGreyValueGet(gVWSp, 0, i, iwsp.linpos);
-	  switch(gVWSp->gType) {
-	  case WLZ_GREY_INT:
-	    *gwsp.u_grintptr.inp++ = (*(gVWSp->gVal)).inv;
-	    break;
-	  case WLZ_GREY_SHORT:
-	    *gwsp.u_grintptr.shp++ = (*(gVWSp->gVal)).shv;
-	    break;
-	  case WLZ_GREY_UBYTE:
-	    *gwsp.u_grintptr.ubp++ = (*(gVWSp->gVal)).ubv;
-	    break;
-	  case WLZ_GREY_FLOAT:
-	    *gwsp.u_grintptr.flp++ = (*(gVWSp->gVal)).flv;
-	    break;
-	  case WLZ_GREY_DOUBLE:
-	    *gwsp.u_grintptr.dbp++ = (*(gVWSp->gVal)).dbv;
-	    break;
-	  case WLZ_GREY_RGBA:
-	    *gwsp.u_grintptr.rgbp++ = (*(gVWSp->gVal)).rgbv;
-	    break;
-	  default:
-	    break;
+      errNum = WlzInitGreyScan(nobj, &iwsp, &gwsp);
+      if(errNum == WLZ_ERR_NONE){
+	gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
+	if(errNum == WLZ_ERR_NONE){
+	  while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
+	    for(i=iwsp.lftpos; i<=iwsp.rgtpos; i++){
+	      WlzGreyValueGet(gVWSp, 0, i, iwsp.linpos);
+	      switch(gVWSp->gType) {
+	      case WLZ_GREY_INT:
+		*gwsp.u_grintptr.inp++ = (*(gVWSp->gVal)).inv;
+		break;
+	      case WLZ_GREY_SHORT:
+		*gwsp.u_grintptr.shp++ = (*(gVWSp->gVal)).shv;
+		break;
+	      case WLZ_GREY_UBYTE:
+		*gwsp.u_grintptr.ubp++ = (*(gVWSp->gVal)).ubv;
+		break;
+	      case WLZ_GREY_FLOAT:
+		*gwsp.u_grintptr.flp++ = (*(gVWSp->gVal)).flv;
+		break;
+	      case WLZ_GREY_DOUBLE:
+		*gwsp.u_grintptr.dbp++ = (*(gVWSp->gVal)).dbv;
+		break;
+	      case WLZ_GREY_RGBA:
+		*gwsp.u_grintptr.rgbp++ = (*(gVWSp->gVal)).rgbv;
+		break;
+	      default:
+		break;
+	      }
+	    }
 	  }
 	}
       }
@@ -240,7 +244,10 @@ WlzObject *WlzTransposeObj(
       WlzGreyValueFreeWSp(gVWSp);
     }
   }
-
+  if(errNum != WLZ_ERR_NONE){
+    (void )WlzFreeObj(nobj);
+    nobj = NULL;
+  }
   /* return new object */
   if( dstErr ){
     *dstErr = errNum;
