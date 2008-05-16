@@ -88,7 +88,7 @@ static void			WlzCentralityUpdate2D(
 * 		
 * 		Rays are projected from the centre of mass of the boundary
 * 		domain to it's boundary. The maximum value of this distance
-* 		for a given angle \f(i\f) being \f$R_i\f$. At each point
+* 		for a given angle \f$i\f$ being \f$R_i\f$. At each point
 * 		in the feature domain intersected by the ray the currrent
 * 		value of the centrality is updated. The distance from the
 * 		centre of mass to each feature point is defined to be
