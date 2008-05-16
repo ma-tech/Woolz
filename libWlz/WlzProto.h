@@ -1230,6 +1230,7 @@ extern WlzObject		*WlzCannyDeriche(
 				  WlzObject *bObj,
 				  int nRay,
 				  int binFlg,
+				  double *dstMaxR,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
