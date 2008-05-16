@@ -84,10 +84,19 @@ static double			WlzCompThreshLSqFit(
 *					  WLZ_COMPTHRESH_FRACMIN = minimum
 *					  fraction of values which are
 *					  background.
+*					  <li>
+*					  WLZ_COMPTHRESH_SMOOTHSPLIT =
+*					  minimum smoothing value for
+*					  WlzHistogramSmooth().
 *					</ul>
 *					Otherwise not used.
 * \param	param1			First passed parameter:
-*					  Not used.
+*					<ul>
+*					  <li>
+*					  WLZ_COMPTHRESH_SMOOTHSPLIT =
+*					  maximum smoothing value for
+*					  WlzHistogramSmooth().
+*					</ul>
 * \param	extraFrac		Extra fraction to be added or
 *					subtracted from the threshold value.
 * \param	dstTV			Destination pointer for threshold
@@ -106,6 +115,7 @@ WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
   WlzHistogramDomain *hDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  tType = WLZ_THRESH_HIGH;
   tV.type = WLZ_GREY_DOUBLE;
   if(hObj == NULL)
   {
@@ -144,7 +154,6 @@ WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
 	}
 	else
 	{
-	  tType = WLZ_THRESH_HIGH;
 	  switch(method)
 	  {
 	    case WLZ_COMPTHRESH_FOOT:
@@ -165,6 +174,9 @@ WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
       case WLZ_COMPTHRESH_FRACMIN:
         tV.v.dbv = WlzCompThreshFracMin(hDom, param0, &tType);
         break;
+      case WLZ_COMPTHRESH_SMOOTHSPLIT:
+	tV.v.dbv = WlzCompThreshSmoothSplit(hObj, param0, param1, &errNum);
+	break;
       default:
         errNum = WLZ_ERR_COMPTHRESH_TYPE;
 	break;
@@ -217,7 +229,7 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
   WlzHistogramDomain *histDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	minBgdFrac = 0.20,
-  		smMin = 4.0,
+  		smMin = 1.0,
 		smMax = 32.0;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
@@ -571,44 +583,76 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
 				  WlzErrorNum *dstErr)
 {
   int		idx,
+		idM,
 		idT,
-  		nTroughs;
+  		nTroughs = 0;
   double 	sm,
   		thr;
   int		*troughs = NULL;
+  WlzGreyP	bins;
   WlzObject	*sObj;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* Find histogram global minimum. */
-  if(errNum == WLZ_ERR_NONE)
+  /* Find index of bin with maximum occupancy. */
+  idM = 0;
+  bins = gObj->domain.hist->binValues;
+  switch(gObj->domain.hist->type)
   {
-    errNum = WlzHistogramFindPeaks(gObj, smMax, 0.0, &nTroughs, &troughs,
-    				   WLZ_HIST_FEATURE_TROUGH);
-    if(nTroughs == 0)
-    {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-    }
+    case WLZ_HISTOGRAMDOMAIN_INT:
+      for(idx = 1; idx < gObj->domain.hist->nBins; ++idx)
+      {
+	if(*(bins.inp + idx) > *(bins.inp + idM))
+	{
+	  idM = idx;
+	}
+      }
+      break;
+    case WLZ_HISTOGRAMDOMAIN_FLOAT:
+      for(idx = 1; idx < gObj->domain.hist->nBins; ++idx)
+      {
+	if(*(bins.dbp + idx) > *(bins.dbp + idM))
+	{
+	  idM = idx;
+	}
+      }
+      break;
+    default:
+      break;
   }
+  /* Find histogram global minima decreasing the smoothing width if
+   * no minima are before the maximum. */
+  sm = smMax;
+  do
+  {
+    AlcFree(troughs);
+    troughs = NULL;
+    errNum = WlzHistogramFindPeaks(gObj, sm, 0.0, &nTroughs, &troughs,
+    				   WLZ_HIST_FEATURE_TROUGH);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      sm /= 2.0;
+    }
+  } while((errNum == WLZ_ERR_NONE) && (sm > 1.0) &&
+           ((nTroughs < 2) || (troughs[0] >= idM)));
   if(errNum == WLZ_ERR_NONE)
   {
+    /* Select bin which has lowest ocupancy provided it is in a bin
+     * before the histogram maximum. */
     idx = troughs[0];
     for(idT = 1; idT < nTroughs; ++idT)
     {
-      if((troughs[idT] > 0) &&
-         (troughs[idT] < (gObj->domain.hist->nBins - 1)))
+      if((troughs[idT] > 0) && (troughs[idT] < idM))
       {
 	switch(gObj->domain.hist->type)
 	{
 	  case WLZ_HISTOGRAMDOMAIN_INT:
-	    if((*(gObj->domain.hist->binValues.inp + troughs[idT])) <
-	       (*(gObj->domain.hist->binValues.inp + idx)))
+	    if(*(bins.inp + troughs[idT]) < *(bins.inp + idx))
 	    {
 	      idx = troughs[idT];
 	    }
 	    break;
 	  case WLZ_HISTOGRAMDOMAIN_FLOAT:
-	    if((*(gObj->domain.hist->binValues.dbp + troughs[idT])) <
-	       (*(gObj->domain.hist->binValues.dbp + idx)))
+	    if(*(bins.dbp + troughs[idT]) < *(bins.dbp + idx))
 	    {
 	      idx = troughs[idT];
 	    }
@@ -626,7 +670,6 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
   /* Itterate through smoothing values finding minimum closest to previous. */
   if(errNum == WLZ_ERR_NONE)
   {
-    sm = smMax / 2.0;
     while((errNum == WLZ_ERR_NONE) &&
           ((sm + DBL_EPSILON) > 1.0) && ((sm + DBL_EPSILON) > smMin))
     {
