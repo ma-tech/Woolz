@@ -53,6 +53,7 @@ static double			WlzCentrality2D(
 				  WlzObject *bObj,
 				  int nRay,
 				  int binFlg,
+				  double *dstMaxR,
 				  WlzErrorNum *dstErr);
 static void			WlzCentralityCompPolarTbl2D(
 				  WlzDVertex2 cmV,
@@ -95,8 +96,8 @@ static void			WlzCentralityUpdate2D(
 * 		The centrality of the feature domain \f$\Omega_f\f$ with
 * 		respect to the border domain \fOmega_b\f$ is defined to be
 * 		\f[
-		c = \frac{({\sum_{i,j}{|m_{i,j}(R_i - r_{i,j)})|}})^2}
-		         {({\sum_{i,j}{m_{i,j}R}})^2}
+		c = \frac{\sum_{i,j}{m_{i,j}(R_i - r_{i,j})}}
+		         {\sum_{i,j}{m_{i,j}R}}
                 \f]
 * \param	fObj			Feature domain object, \f$Omega_f\f$.
 * \param	bObj			Boundary domain object, \f$Omega_b\f$.
@@ -104,13 +105,17 @@ static void			WlzCentralityUpdate2D(
 * 					projected from the centre of mass.
 * \param	binFlg			Treat as binary object if non-zero,
 * 					with all masses having value 1.0.
+* \param	dstMaxR			Destination pointer for maximum
+* 					boundary radius, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 double		WlzCentrality(WlzObject *fObj, WlzObject *bObj,
 			      int nRay, int binFlg,
+			      double *dstMaxR,
 			      WlzErrorNum *dstErr)
 {
-  double	cent = 0.0;
+  double	cent = 0.0,
+  		maxR = 0.0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((fObj == NULL) || (bObj == NULL))
@@ -134,7 +139,7 @@ double		WlzCentrality(WlzObject *fObj, WlzObject *bObj,
     switch(fObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
-	cent = WlzCentrality2D(fObj, bObj, nRay, binFlg, &errNum);
+	cent = WlzCentrality2D(fObj, bObj, nRay, binFlg, &maxR, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
 	errNum = WLZ_ERR_UNIMPLEMENTED;
@@ -143,6 +148,10 @@ double		WlzCentrality(WlzObject *fObj, WlzObject *bObj,
         errNum = WLZ_ERR_NONE;
 	break;
     }
+  }
+  if((errNum == WLZ_ERR_NONE) && (dstMaxR != NULL))
+  {
+    *dstMaxR = maxR;
   }
   if(dstErr)
   {
@@ -162,15 +171,19 @@ double		WlzCentrality(WlzObject *fObj, WlzObject *bObj,
 * \param	nRay			Number of equally spaced rays projected
 * 					from the centre of mass.
 * \param	binFlg			Treat as binary object if non-zero.
+* \param	dstMaxR			Destination pointer for maximum
+* 					boundary radius, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static double	WlzCentrality2D(WlzObject *fObj, WlzObject *bObj,
 				int nRay, int binFlg,
-				WlzErrorNum *dstErr)
+				double *dstMaxR, WlzErrorNum *dstErr)
 {
+  int		idx;
   double	cent = 0.0,
   		fNum = 0.0,
-		fDnm = 0.0;
+		fDnm = 0.0,
+		maxR = 0.0;
   WlzIVertex2	pos;
   WlzDVertex2	cmV;
   double	*pTbl = NULL;
@@ -206,6 +219,16 @@ static double	WlzCentrality2D(WlzObject *fObj, WlzObject *bObj,
   if(errNum == WLZ_ERR_NONE)
   {
     WlzCentralityCompPolarTbl2D(cmV, nRay, pTbl, bndObj);
+    if(dstMaxR != NULL)
+    {
+      for(idx = 0; idx < nRay; ++idx)
+      {
+        if(pTbl[idx] > maxR)
+	{
+	  maxR = pTbl[idx];
+	}
+      }
+    }
   }
   (void )WlzFreeObj(bndObj);
   /* Scan through feature domain adding to feature values. */
@@ -269,6 +292,10 @@ static double	WlzCentrality2D(WlzObject *fObj, WlzObject *bObj,
   if(errNum == WLZ_ERR_NONE)
   {
     cent = (fabs(fDnm) > DBL_EPSILON)? fNum / fDnm: DBL_MAX;
+    if(dstMaxR != NULL)
+    {
+      *dstMaxR = maxR;
+    }
   }
   AlcFree(pTbl);
   if(dstErr)
@@ -444,9 +471,7 @@ static void	WlzCentralityUpdate2D(double *fNum, double *fDnm,
   posD.vtY = pos.vtY;
   ang = WlzGeomPolar2D(cmV, posD, &rad);
   idA = (int )(floor((ang * (pTblSz - 1.0)) / (2.0 * ALG_M_PI)));
-  tmp= mass * (pTbl[idA] - rad);
-  *fNum += tmp * tmp;
-  tmp = mass * pTbl[idA];
-  *fDnm += tmp * tmp;
+  *fNum += mass * (pTbl[idA] - rad);
+  *fDnm += mass * pTbl[idA];
 }
 
