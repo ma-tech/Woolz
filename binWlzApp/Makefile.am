@@ -62,6 +62,7 @@ bin_PROGRAMS		=  \
 			  Wlz3DViewTransformObj \
 			  WlzBibToMeshTrans \
 			  WlzBibTransAbsRel \
+			  WlzCelCmpFeatures \
 			  WlzClassMap \
 			  WlzCreateRandomDomain \
 			  WlzDisplacement \
@@ -115,6 +116,10 @@ WlzBibToMeshTrans_LDFLAGS	= $(AM_LFLAGS)
 WlzBibTransAbsRel_SOURCES	= WlzBibTransAbsRel.c
 WlzBibTransAbsRel_LDADD		= $(LDADD)
 WlzBibTransAbsRel_LDFLAGS	= $(AM_LFLAGS)
+
+WlzCelCmpFeatures_SOURCES	= WlzCelCmpFeatures.c
+WlzCelCmpFeatures_LDADD		= $(LDADD)
+WlzCelCmpFeatures_LDFLAGS	= $(AM_LFLAGS)
 
 WlzClassMap_SOURCES		= WlzClassMap.c
 WlzClassMap_LDADD		= $(LDADD)
