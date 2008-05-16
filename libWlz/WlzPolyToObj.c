@@ -894,7 +894,6 @@ WlzObject       *WlzBoundTo8Bound(WlzObject *gvnObj, WlzErrorNum *dstErr)
   {
     newDom.b = WlzMakeBoundList(gvnBnd->type, gvnBnd->wrap,
                                 tmpObj->domain.poly, &errNum);
-    tmpObj->domain.core = NULL;
   }
   (void )WlzFreeObj(tmpObj);
   if(errNum == WLZ_ERR_NONE)
