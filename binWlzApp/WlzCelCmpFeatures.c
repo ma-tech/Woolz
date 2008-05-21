@@ -143,8 +143,8 @@ The features computed are:
   The ratio of clump minimum to maximum diameter.
   The centrality of the cells with respect to the clump, with the centrality
   \f[
-  c = \frac{({\sum_{i,j}{|m_{i,j}(R_i - r_{i,j)})|}})^2}
-           {({\sum_{i,j}{m_{i,j}R}})^2}
+  c = \frac{\sum_{i,j}{m_{i,j}(R_i - r_{i,j})}}
+           {\sum_{i,j}{m_{i,j}R}}
   \f]
 The image formats recognised are: jpg, tif and wlz.
 By default the image is read from the standard input and the features are
