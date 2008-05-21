@@ -65,6 +65,7 @@ libAlg_la_SOURCES 	= \
 			  AlgPolyLSQ.c \
 			  AlgQSort.c \
 			  AlgRand.c \
+			  AlgRandZig.c \
 			  AlgRange.c \
 			  AlgRank.c \
 			  AlgShuffle.c \
