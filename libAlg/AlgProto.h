@@ -547,6 +547,12 @@ extern double			AlgRandUniform(
 extern double			AlgRandNormal(
 				  double mu,
 				  double sigma);
+
+/* From AlgRandZig.c */
+extern double			AlgRandZigNormal(
+				  double mu,
+				  double sigma);
+
 /* From AlgRange.c */
 extern AlgError			AlgRange1D(
 				  int datASz,
