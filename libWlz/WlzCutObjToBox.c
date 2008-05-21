@@ -47,8 +47,13 @@ static char _WlzCutObjToBox_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
-static void	WlzCutObjSetRand(WlzGreyP, int, WlzGreyType, int,
-			         double, double);
+static void			WlzCutObjSetRand(
+				  WlzGreyP vec,
+				  int vecOff,
+				  WlzGreyType gType,
+				  int count,
+				  double mu,
+				  double sigma);
 
 /*!
 * \return	New object with rectangular value table or NULL on error.

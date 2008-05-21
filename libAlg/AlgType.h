@@ -168,8 +168,6 @@ extern AlgDbgFn		algDbgOutFn;
 #define ALG_DBG_FN      (*algDbgOutFn)
 #define ALG_DBG(F,M)    ((((F)&(algDbgMask))==(F))?ALG_DBG_FN M:ALG_ERR_NONE)
  
-
-
 #ifdef  __cplusplus 
 }
 #endif /* __cplusplus */
