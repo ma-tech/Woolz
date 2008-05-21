@@ -262,7 +262,7 @@ WlzErrorNum WlzGreySetRange(
 	}
 	else
 	{
-	  sigma = fabs(sqrt(1.0 / ALG_M_LN2) / factor);
+	  sigma = fabs(2.0 / factor);
 	  AlgRandSeed(101);
 	  switch(gwsp.pixeltype) {
 	    case WLZ_GREY_INT:
@@ -298,7 +298,7 @@ WlzErrorNum WlzGreySetRange(
 	    for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
 	      if(dither){
 		val = factor * (*gptr.inp +
-				AlgRandNormal(0.0, sigma) -
+				AlgRandZigNormal(0.0, sigma) -
 				min.v.dbv) + Min.v.dbv;
 		val = WLZ_CLAMP(val, gMin, gMax);
 	      } else {
@@ -311,7 +311,7 @@ WlzErrorNum WlzGreySetRange(
 	    for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
 	      if(dither){
 		val = factor * (*gptr.shp +
-				AlgRandNormal(0.0, sigma) -
+				AlgRandZigNormal(0.0, sigma) -
 				min.v.dbv) + Min.v.dbv;
 		val = WLZ_CLAMP(val, gMin, gMax);
 	      } else {
@@ -324,7 +324,7 @@ WlzErrorNum WlzGreySetRange(
 	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
 	      if(dither){
 		val = factor * (*gptr.ubp +
-				AlgRandNormal(0.0, sigma) -
+				AlgRandZigNormal(0.0, sigma) -
 				min.v.dbv) + Min.v.dbv;
 		val = WLZ_CLAMP(val, gMin, gMax);
 	      } else {
@@ -337,7 +337,7 @@ WlzErrorNum WlzGreySetRange(
 	    for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
 	      if(dither){
 		val = factor * (*gptr.flp +
-				AlgRandNormal(0.0, sigma) -
+				AlgRandZigNormal(0.0, sigma) -
 				min.v.dbv) + Min.v.dbv;
 		val = WLZ_CLAMP(val, gMin, gMax);
 	      } else {
@@ -350,7 +350,7 @@ WlzErrorNum WlzGreySetRange(
 	    for (i=0; i<iwsp.colrmn; i++, gptr.dbp++){
 	      if(dither){
 		val = factor * (*gptr.dbp +
-				AlgRandNormal(0.0, sigma) -
+				AlgRandZigNormal(0.0, sigma) -
 				min.v.dbv) + Min.v.dbv;
 		val = WLZ_CLAMP(val, gMin, gMax);
 	      } else {
