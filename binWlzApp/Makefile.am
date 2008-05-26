@@ -41,7 +41,7 @@ AM_CPPFLAGS		= \
 			  -I$(top_srcdir)/libWlz \
 			  -I$(top_srcdir)/libAlg \
 			  -I$(top_srcdir)/libAlc \
-             		  $(all_includes)
+			  $(all_includes)
 
 LDADD 			= \
 			  -L$(top_srcdir)/libReconstruct/.libs -lReconstruct \
@@ -74,6 +74,7 @@ bin_PROGRAMS		=  \
 			  WlzExtractTransform \
 			  WlzFixDomains \
 			  WlzFixedPlaneAlign \
+			  WlzIndexBoundaries \
 			  WlzInterpolateSectionViewerBibFiles \
 			  WlzMatchICPPlane \
 			  WlzObjCompareSpecial_01 \
@@ -166,6 +167,10 @@ WlzFixDomains_LDFLAGS		= $(AM_LFLAGS)
 WlzFixedPlaneAlign_SOURCES	= WlzFixedPlaneAlign.c
 WlzFixedPlaneAlign_LDADD	= $(LDADD)
 WlzFixedPlaneAlign_LDFLAGS	= $(AM_LFLAGS)
+
+WlzIndexBoundaries_SOURCES	= WlzIndexBoundaries.c
+WlzIndexBoundaries_LDADD	= $(LDADD)
+WlzIndexBoundaries_LDFLAGS	= $(AM_LFLAGS)
 
 WlzInterpolateSectionViewerBibFiles_SOURCES = \
                                           WlzInterpolateSectionViewerBibFiles.c
