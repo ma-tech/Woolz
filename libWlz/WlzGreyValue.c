@@ -1010,7 +1010,7 @@ void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
 	  kol = vtx2.vtX;
 	  line = vtx2.vtY;
 	}
-	WlzGreyValueGet2D1(gVWSp, line, kol);
+	WlzGreyValueGet2D1(gVWSp, WLZ_NINT(line), WLZ_NINT(kol));
 	break;
       case WLZ_3D_DOMAINOBJ:
 	if(gVWSp->invTrans)
@@ -1023,7 +1023,7 @@ void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
 	  line = vtx3.vtY;
 	  plane = vtx3.vtZ;
 	}
-	WlzGreyValueGet3D1(gVWSp, plane, line, kol);
+	WlzGreyValueGet3D1(gVWSp, WLZ_NINT(plane), WLZ_NINT(line), WLZ_NINT(kol));
 	break;
       default:
 	break;

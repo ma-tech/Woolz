@@ -1023,6 +1023,8 @@ WlzErrorNum WlzRegisterPatchTreeBF(
     depth++;
   }
 
+  WlzFreeObj(obj);
+
   return errNum;
 }
 
@@ -1135,7 +1137,7 @@ WlzObject *WlzPatchTreeToObject(
 
     WlzFreeObj(obj1);
     obj1 = WlzUnionN(2, objs, 1, NULL);
-    WlzStandardIntervalDomain(obj1->domain.i);
+    /* WlzStandardIntervalDomain(obj1->domain.i); */
     WlzFreeObj(objs[0]);
     WlzFreeObj(objs[1]);
     objs[0] = obj1;
