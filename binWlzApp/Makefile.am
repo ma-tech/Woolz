@@ -69,6 +69,7 @@ bin_PROGRAMS		=  \
 			  WlzDisplacementToVtk \
 			  WlzDomainMatch \
 			  WlzDomainMatchMatrix \
+			  WlzDomainToTiles \
 			  WlzEMAPDomainTransform \
 			  WlzEuclidDistanceMap \
 			  WlzExtractTransform \
@@ -145,6 +146,10 @@ WlzDomainMatch_LDFLAGS		= $(AM_LFLAGS)
 WlzDomainMatchMatrix_SOURCES	= WlzDomainMatchMatrix.c
 WlzDomainMatchMatrix_LDADD	= $(LDADD)
 WlzDomainMatchMatrix_LDFLAGS	= $(AM_LFLAGS)
+
+WlzDomainToTiles_SOURCES	= WlzDomainToTiles.c
+WlzDomainToTiles_LDADD		= $(LDADD)
+WlzDomainToTiles_LDFLAGS	= $(AM_LFLAGS)
 
 WlzEMAPDomainTransform_SOURCES	= WlzEMAPDomainTransform.c \
 				  WlzEMAPTransformUtils.c \

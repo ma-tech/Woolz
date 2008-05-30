@@ -136,10 +136,10 @@ static int polyItemCompArea(
   PolyListItem	*polyItem1 = (PolyListItem *) item1;
   PolyListItem	*polyItem2 = (PolyListItem *) item2;
 
-  if( polyItem1->area < polyItem2->area ){
+  if( polyItem1->area > polyItem2->area ){
     return -1;
   }
-  if( polyItem1->area > polyItem2->area ){
+  if( polyItem1->area < polyItem2->area ){
     return 1;
   }
   return 0;
@@ -262,40 +262,47 @@ int main(
 	WlzGreyRange(obj, &minG, &maxG);
 	WlzValueConvertPixel(&minG, minG, WLZ_GREY_INT);
 	WlzValueConvertPixel(&maxG, maxG, WLZ_GREY_INT);
-	minG.v.inv = (minG.v.inv < 1) ? 1 : minG.v.inv;
-	if((obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum)) &&
-	   (!WlzIsEmpty(obj1, &errNum))){
-	  for( index=minG.v.inv; index <= maxG.v.inv; index++){
-	    minG.v.inv++;
-	    if((obj2 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum)) &&
-	       (!WlzIsEmpty(obj2, &errNum))){
-
-	      /* find diff domain */
-	      if((obj3 = WlzDiffDomain(obj1, obj2, &errNum)) &&
-		 (!WlzIsEmpty(obj3, &errNum))){
-		
-		/* now find the polylines */
-		boundObj = WlzObjToBoundary(obj3, 1, &errNum);
-		addPolylineToList(polyList, index, boundObj->domain.b);
-	      }
-	      else {
-		if( obj3 ){
-		  WlzFreeObj(obj3);
-		}
-	      }
-
-	      WlzFreeObj(obj1);
-	      obj1 = obj2;
-	    }
-	    else {
-	      if( obj2 ){
-		WlzFreeObj(obj2);
-	      }
+	index = (minG.v.inv < 1) ? 1 : minG.v.inv;
+	minG.v.inv = index;
+	for(;index < maxG.v.inv; index++){
+	  minG.v.inv = index;
+	  if( obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum) ){
+	    if( WlzIsEmpty(obj1, &errNum) ){
 	      break;
 	    }
+	    minG.v.inv++;
+	    obj2 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum);
+	    if( (obj2 == NULL) || (WlzIsEmpty(obj2, &errNum)) ){
+	      boundObj = WlzObjToBoundary(obj1, 1, &errNum);
+	      addPolylineToList(polyList, index, boundObj->domain.b);
+	      WlzFreeObj(boundObj);
+	    }
+	    else {
+	      obj3 = WlzDiffDomain(obj1, obj2, &errNum);
+	      if( obj3 ){
+		if( !WlzIsEmpty(obj3, &errNum) ){
+		  boundObj = WlzObjToBoundary(obj3, 1, &errNum);
+		  addPolylineToList(polyList, index, boundObj->domain.b);
+		  WlzFreeObj(boundObj);
+		}
+		WlzFreeObj(obj3);
+	      }
+	    }
+	    if( obj2 ){
+	      WlzFreeObj(obj2);
+	    }
+	    WlzFreeObj(obj1);
 	  }
 	}
-	if( obj1 ){
+
+	/* get the last polygons */
+	minG.v.inv = index;
+	if( obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum) ){
+	  if( !WlzIsEmpty(obj1, &errNum) ){
+	    boundObj = WlzObjToBoundary(obj1, 1, &errNum);
+	    addPolylineToList(polyList, index, boundObj->domain.b);
+	    WlzFreeObj(boundObj);
+	  }
 	  WlzFreeObj(obj1);
 	}
 
@@ -304,7 +311,7 @@ int main(
 
 	/* write polygon list to stdout */
 	if( AlcDLPListCount(polyList, &alcErr) > 0 ){
-	  fprintf(stdout, "{\"polylines\":[\n");
+	  fprintf(stdout, " \"polylines\":[\n");
 	  listItem = polyList->head;
 	  do {
 	    polyItem = (PolyListItem *) listItem->entry;
@@ -331,7 +338,7 @@ int main(
 	    listItem = listItem->next;
 	  } while( listItem != polyList->head );
 
-	  fprintf(stdout, "  ]\n}\n");
+	  fprintf(stdout, "  ]\n");
 	}
 	break;
 
