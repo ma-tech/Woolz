@@ -59,8 +59,6 @@ typedef struct _WlzMeshScanDElm
   double	yTr[3];           /* Affine transform coefficients for lines */
 } WlzMeshScanDElm;
 
-static void GetLookUpTableDist(int ***LUT, int mElem, int nElem, int TypeDis);
-
 static void GetGreyValue( WlzGreyValueWSpace *gVWSp, int kz, int jy, int ix, 
                      int *intensity,    WlzErrorNum  *dstErr );
 		     
@@ -85,13 +83,10 @@ WlzObject	*WlzGreyValueMixing_s(  WlzObject       *sObj,
 {
     WlzIBox3        bBox;
     WlzObject      *tempObj;
-    int             M0, Mf;
-    int             ix, iy, iz, xi, yi, zi, ixp, iyp, im, jm;
-    int             distance;
-    int             i, j, k, intensityS, intensityT, intensityW;
-    int             mElem, nElem, lElem, dist, dist0;
+    int             ix, iy, iz, xi, yi, zi;
+    int             intensityS, intensityT, intensityW;
+    int             mElem, nElem, lElem;
     int          dmin, dmin0;
-    AlcErrno        alcErr =   ALC_ER_NONE;
     WlzGreyValueWSpace *gVWSpS = NULL, *gVWSpT = NULL, *gVWSpW = NULL;
     WlzErrorNum  errNum = WLZ_ERR_NONE;
 

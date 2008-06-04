@@ -149,6 +149,16 @@ extern WlzObject 		*WlzGetMaskedSectionFromObject(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* Wlz3DSubSection.c							*
+************************************************************************/
+extern WlzObject 		*WlzGetSubSectionFromObject(
+				  WlzObject 	*obj,
+				  WlzObject	*subDomain,
+				  WlzThreeDViewStruct *viewStr,
+				  WlzInterpolationType	interp,
+				  WlzObject	**maskRtn,
+				  WlzErrorNum *dstErr);
+/************************************************************************
 * Wlz3DSectionSegmentObject.c						*
 ************************************************************************/
 extern WlzErrorNum 		Wlz3DSectionSegmentObject(
@@ -174,6 +184,13 @@ extern WlzErrorNum 		WlzFree3DViewStruct(
 extern WlzErrorNum 		WlzInit3DViewStruct(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzObject *obj);
+extern WlzErrorNum 		WlzInit3DViewStructAffineTransform(
+                                  WlzThreeDViewStruct	*viewStr);
+extern WlzErrorNum 		Wlz3DViewStructSetupTransformLuts(
+                                  WlzThreeDViewStruct	*viewStr);
+extern WlzErrorNum 		Wlz3DViewStructTransformBB(
+                                  WlzObject	*obj,
+                                  WlzThreeDViewStruct	*viewStr);
 extern WlzErrorNum 		Wlz3DSectionTransformVtx(
 				  WlzDVertex3 *vtx,
 				  WlzThreeDViewStruct *viewStr);

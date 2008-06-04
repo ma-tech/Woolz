@@ -4208,6 +4208,21 @@ typedef struct _Wlz3DWarpTrans
   WlzObject 	*assoc;			/*!< Associated object. */
 } Wlz3DWarpTrans;
 
+/*!
+* \enum		_Wlz3DViewStructInitMask
+* \ingroup	WlzTransform
+* \brief	Mesh transform element flag bit masks.
+*		Typedef: ::WlzMeshElemFlags.
+*/
+typedef enum _Wlz3DViewStructInitMask
+{
+  WLZ_3DVIEWSTRUCT_INIT_NONE	= (0),
+  WLZ_3DVIEWSTRUCT_INIT_TRANS	= (1),	  /*!< Initialised transform */
+  WLZ_3DVIEWSTRUCT_INIT_BB	= (1<<1), /*!< Initialised bounding box */
+  WLZ_3DVIEWSTRUCT_INIT_LUT     = (1<<2), /*!< Initialised look-up tables */
+  WLZ_3DVIEWSTRUCT_INIT_ALL	= 0x7	  /*!< Initialised all convenience mask */
+} Wlz3DViewStructInitMask;
+
 /************************************************************************
 * 3D section structure.						
 ************************************************************************/
@@ -4236,7 +4251,7 @@ typedef struct _WlzThreeDViewStruct
   					     fixed point to the view plane. */
   double	scale;			/*!< Overall scale parameter */
   double	voxelSize[3];		/*!< Voxel rescaling if required */
-  int		voxelRescaleFlg;	/*!< Use voxel rescaling if set */
+  int		voxelRescaleFlg;	/*!< Voxel rescaling mode */
   WlzInterpolationType interp;		/*!< use pixel interpolation */
   WlzThreeDViewMode view_mode;		/*!< Determines the angle at which the
   					     section cut. */

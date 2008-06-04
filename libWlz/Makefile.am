@@ -49,6 +49,7 @@ libWlz_la_SOURCES 	= \
 			  Wlz3DSection.c \
 			  Wlz3DSectionFromGeoModel.c \
 			  Wlz3DSectionSegmentObject.c \
+			  Wlz3DSubSection.c \
 			  Wlz3DViewStructUtils.c \
 			  Wlz3DViewTransformObj.c \
 			  Wlz3DWarpMQ_S.c \

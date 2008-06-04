@@ -130,7 +130,7 @@ WlzThreeDViewStruct *WlzMake3DViewStruct(
     viewStr->type 	= type;
     viewStr->linkcount 	= 0;
     viewStr->freeptr 	= NULL;
-    viewStr->initialised= 0;
+    viewStr->initialised= WLZ_3DVIEWSTRUCT_INIT_NONE;
     viewStr->fixed.vtX 	= 0.0;
     viewStr->fixed.vtY 	= 0.0;
     viewStr->fixed.vtZ 	= 0.0;
@@ -182,16 +182,19 @@ WlzErrorNum WlzFree3DViewStruct(
   if( WlzUnlink(&(viewStr->linkcount), &errNum) )
   {
     /* free luts and rotation matrix if set */
-    if( viewStr->initialised && viewStr->freeptr != NULL ){
+    if((viewStr->initialised & WLZ_3DVIEWSTRUCT_INIT_LUT) && (viewStr->freeptr != NULL)){
       AlcFreeStackFree(viewStr->freeptr);
+      viewStr->freeptr = NULL;
     }
     if( viewStr->ref_obj != NULL ){
       WlzFreeObj( viewStr->ref_obj );
+      viewStr->ref_obj = NULL;
     }
 
     /* free the affine transform and structure */
     /*AlcDouble2Free(viewStr->rotation);*/
     (void) WlzFreeAffineTransform(viewStr->trans);
+    viewStr->trans = NULL;
     AlcFree((void *) viewStr);
   }
 
@@ -234,10 +237,19 @@ static void setupEulerRotationMatrix(
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzSectionTransform
-* \brief	Sets up the rotation matrix of the given view.
+* \brief	Sets up the affine transform of the given view including scale.
+*               This does not require any initialisation. The intialisation mask
+*               will have the WLZ_3DVIEWSTRUCT_INIT_TRANS bit set.
+*               
+*               By default the scale parameters are not used. Scaling is enabled
+*               by setting bits in the voxelRescaleFlg: setting bit 1 will switch
+*               on voxel-size rescaling; setting bit 2 will enable global scaling.
+*               
+*               
+*               
 * \param	viewStr			Given view.
 */
-static WlzErrorNum setup3DSectionAffineTransform(
+WlzErrorNum WlzInit3DViewStructAffineTransform(
   WlzThreeDViewStruct	*viewStr)
 {
   double xsi, eta, zeta;
@@ -267,7 +279,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
     sin_t = sin(viewStr->theta);
     cos_p = cos(viewStr->phi);
     sin_p = sin(viewStr->phi);
-    if( viewStr->voxelRescaleFlg ){
+    if( (viewStr->voxelRescaleFlg)&0x1 ){
       upp_x = (viewStr->up.vtX*viewStr->voxelSize[0]*cos_p*cos_t +
 	       viewStr->up.vtY*viewStr->voxelSize[1]*cos_p*sin_t -
 	       viewStr->up.vtZ*viewStr->voxelSize[2]*sin_p);
@@ -299,7 +311,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
     fx = viewStr->fixed_2.vtX - viewStr->fixed.vtX;
     fy = viewStr->fixed_2.vtY - viewStr->fixed.vtY;
     fz = viewStr->fixed_2.vtZ - viewStr->fixed.vtZ;
-    if( viewStr->voxelRescaleFlg ){
+    if( (viewStr->voxelRescaleFlg)&0x1 ){
       fx *= viewStr->voxelSize[0];
       fy *= viewStr->voxelSize[1];
       fz *= viewStr->voxelSize[2];
@@ -346,7 +358,13 @@ static WlzErrorNum setup3DSectionAffineTransform(
       }
     }
     for(i=0; i < 3; i++){
-      rotation[i][i] = viewStr->voxelSize[i];
+      rotation[i][i] = 1.0;
+      if( (viewStr->voxelRescaleFlg)&0x1 ){
+	rotation[i][i] *= viewStr->voxelSize[i];
+      }
+      if( (viewStr->voxelRescaleFlg)&0x2 ){
+	rotation[i][i] *= viewStr->scale;
+      }
     }
     rotation[3][3] = 1.0;
     ts = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE,
@@ -368,6 +386,7 @@ static WlzErrorNum setup3DSectionAffineTransform(
   WlzAffineTransformMatrixSet(viewStr->trans, tmpTrans->mat);
   WlzFreeAffineTransform(tmpTrans);
   AlcDouble2Free(rotation);
+  viewStr->initialised |= WLZ_3DVIEWSTRUCT_INIT_TRANS;
 
   return WLZ_ERR_NONE;
 }
@@ -378,66 +397,195 @@ static WlzErrorNum setup3DSectionAffineTransform(
 * \brief	Sets up the transformation look up tables of the given view.
 * \param	viewStr			Given view.
 */
-static void setupTransformLuts(
+WlzErrorNum Wlz3DViewStructSetupTransformLuts(
   WlzThreeDViewStruct	*viewStr)
 {
-  int		xp, yp, i;
+  int			xp, yp, i;
   WlzAffineTransform	*trans;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-  WlzDVertex3	vtx, dst;
+  WlzDVertex3		vtx, dst;
+  unsigned int		widthp, heightp;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
 
-  /* get the inverse transform */
-  trans = WlzAffineTransformInverse(viewStr->trans, &errNum);
+  if( viewStr ){
 
-  for(xp= WLZ_NINT(viewStr->minvals.vtX), i=0;
-      xp <= WLZ_NINT(viewStr->maxvals.vtX); xp++, i++){
-    vtx.vtX = xp;
-    vtx.vtY = 0.0;
-    vtx.vtZ = viewStr->dist;
-    dst = WlzAffineTransformVertexD3(trans, vtx, &errNum);
-    viewStr->xp_to_x[i] = dst.vtX;
-    viewStr->xp_to_y[i] = dst.vtY;
-    viewStr->xp_to_z[i] = dst.vtZ;
+    /* allocate space for LUTs */
+    widthp  = WLZ_NINT(viewStr->maxvals.vtX) -
+      WLZ_NINT(viewStr->minvals.vtX) + 1;
+    heightp = WLZ_NINT(viewStr->maxvals.vtY) -
+      WLZ_NINT(viewStr->minvals.vtY) + 1;
+    AlcDouble1Malloc(&(viewStr->xp_to_x), 3*widthp + 3*heightp);
+    viewStr->freeptr = AlcFreeStackPush(NULL, viewStr->xp_to_x, NULL);
+    viewStr->xp_to_y = viewStr->xp_to_x + widthp;
+    viewStr->xp_to_z = viewStr->xp_to_y + widthp;
+    viewStr->yp_to_x = viewStr->xp_to_z + widthp;
+    viewStr->yp_to_y = viewStr->yp_to_x + heightp;
+    viewStr->yp_to_z = viewStr->yp_to_y + heightp;
+
+    /* get the inverse transform */
+    trans = WlzAffineTransformInverse(viewStr->trans, &errNum);
+
+    for(xp= WLZ_NINT(viewStr->minvals.vtX), i=0;
+	xp <= WLZ_NINT(viewStr->maxvals.vtX); xp++, i++){
+      vtx.vtX = xp;
+      vtx.vtY = 0.0;
+      vtx.vtZ = viewStr->dist;
+      dst = WlzAffineTransformVertexD3(trans, vtx, &errNum);
+      viewStr->xp_to_x[i] = dst.vtX;
+      viewStr->xp_to_y[i] = dst.vtY;
+      viewStr->xp_to_z[i] = dst.vtZ;
+    }
+
+    for(yp= WLZ_NINT(viewStr->minvals.vtY), i=0;
+	yp <= WLZ_NINT(viewStr->maxvals.vtY); yp++, i++){
+      viewStr->yp_to_x[i] = trans->mat[0][1]*yp;
+      viewStr->yp_to_y[i] = trans->mat[1][1]*yp;
+      viewStr->yp_to_z[i] = trans->mat[2][1]*yp;
+    }
+
+    WlzFreeAffineTransform(trans);
+    viewStr->initialised |= WLZ_3DVIEWSTRUCT_INIT_LUT;
+  }
+  else {
+    errNum = WLZ_ERR_OBJECT_NULL;
   }
 
-  for(yp= WLZ_NINT(viewStr->minvals.vtY), i=0;
-      yp <= WLZ_NINT(viewStr->maxvals.vtY); yp++, i++){
-    viewStr->yp_to_x[i] = trans->mat[0][1]*yp;
-    viewStr->yp_to_y[i] = trans->mat[1][1]*yp;
-    viewStr->yp_to_z[i] = trans->mat[2][1]*yp;
-  }
+  return errNum;
+}
 
-  WlzFreeAffineTransform(trans);
-  return;
+static int vtxXSortFn(
+  const void *item1,
+  const void *item2)
+{
+  WlzDVertex3	*vtx1=(WlzDVertex3 *) item1;
+  WlzDVertex3	*vtx2=(WlzDVertex3 *) item2;
+
+  if( vtx1->vtX < vtx2->vtX ){
+    return -1;
+  }
+  else if( vtx1->vtX > vtx2->vtX ){
+    return 1;
+  }
+  return 0;
+}
+
+static int vtxYSortFn(
+  const void *item1,
+  const void *item2)
+{
+  WlzDVertex3	*vtx1=(WlzDVertex3 *) item1;
+  WlzDVertex3	*vtx2=(WlzDVertex3 *) item2;
+
+  if( vtx1->vtY < vtx2->vtY ){
+    return -1;
+  }
+  else if( vtx1->vtY > vtx2->vtY ){
+    return 1;
+  }
+  return 0;
+}
+
+static int vtxZSortFn(
+  const void *item1,
+  const void *item2)
+{
+  WlzDVertex3	*vtx1=(WlzDVertex3 *) item1;
+  WlzDVertex3	*vtx2=(WlzDVertex3 *) item2;
+
+  if( vtx1->vtZ < vtx2->vtZ ){
+    return -1;
+  }
+  else if( vtx1->vtZ > vtx2->vtZ ){
+    return 1;
+  }
+  return 0;
 }
 
 
-#define CHECK_MIN_MAX_VTX(X,Y,Z) \
-vtx.vtX = X; vtx.vtY = Y; vtx.vtZ = Z; \
-Wlz3DSectionTransformVtx( &vtx, viewStr ); \
-if( vtx.vtX < viewStr->minvals.vtX )viewStr->minvals.vtX = vtx.vtX; \
-if( vtx.vtX > viewStr->maxvals.vtX )viewStr->maxvals.vtX = vtx.vtX; \
-if( vtx.vtY < viewStr->minvals.vtY )viewStr->minvals.vtY = vtx.vtY; \
-if( vtx.vtY > viewStr->maxvals.vtY )viewStr->maxvals.vtY = vtx.vtY; \
-if( vtx.vtZ < viewStr->minvals.vtZ )viewStr->minvals.vtZ = vtx.vtZ; \
-if( vtx.vtZ > viewStr->maxvals.vtZ )viewStr->maxvals.vtZ = vtx.vtZ;
+/* function:     Wlz3DViewStructTransformBB    */
+/*! 
+* \ingroup      WlzSectionTransform
+* \brief        Set up the min and max vertex values for the transformed space.
+*               If the input object is a WLZ_3D_DOMAINOBJ then the bounding box
+*               will enclose the transformed bounding box of the input object.
+*               If the input object is a WLZ_2D_DOMAINOBJ then it is assumed that
+*               this is the transformed section and the min and max valuesa are
+*               those of the object itself. These values are padded to account
+*               for round-off errors.
+*
+* \return       WlzErrorNum
+* \param    obj	Input object to define the required bounding box of transform range.
+* \param    viewStr	3D view structure with the transform initialised.
+* \par      Source:
+*                Wlz3DViewStructUtils.c
+*/
+WlzErrorNum Wlz3DViewStructTransformBB(
+  WlzObject	*obj,
+  WlzThreeDViewStruct	*viewStr)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzDVertex3	vtxs[8];
+  int		i;
 
-#define CHECK_3D_BB_VTX(X,Y) \
-vtx.vtX = X; \
-vtx.vtY = Y; \
-vtx.vtZ = viewStr->dist; \
-Wlz3DSectionTransformInvVtx( &vtx, viewStr ); \
-i = WLZ_NINT(vtx.vtX); \
-tmpPlanedmn.kol1 = WLZ_MIN(tmpPlanedmn.kol1, i); \
-tmpPlanedmn.lastkl = WLZ_MAX(tmpPlanedmn.lastkl, i); \
-i = WLZ_NINT(vtx.vtY); \
-tmpPlanedmn.line1 = WLZ_MIN(tmpPlanedmn.line1, i); \
-tmpPlanedmn.lastln = WLZ_MAX(tmpPlanedmn.lastln, i); \
-i = WLZ_NINT(vtx.vtZ); \
-tmpPlanedmn.plane1 = WLZ_MIN(tmpPlanedmn.plane1, i); \
-tmpPlanedmn.lastpl = WLZ_MAX(tmpPlanedmn.lastpl, i);
+  /* check the pointers and types */
+  if( viewStr == NULL || obj == NULL ){
+    errNum =  WLZ_ERR_OBJECT_NULL;
+  }
+  else if( viewStr->trans == NULL ){
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
+  else if( !viewStr->initialised&WLZ_3DVIEWSTRUCT_INIT_TRANS ){
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
 
+  /* now transform the BB */
+  if( errNum == WLZ_ERR_NONE ){
+    if( obj->type == WLZ_3D_DOMAINOBJ ){
+      if( obj->domain.p && (obj->domain.p->type == WLZ_PLANEDOMAIN_DOMAIN) ){
+	vtxs[0].vtX = vtxs[2].vtX = vtxs[4].vtX = vtxs[6].vtX = obj->domain.p->kol1;
+	vtxs[1].vtX = vtxs[3].vtX = vtxs[5].vtX = vtxs[7].vtX = obj->domain.p->lastkl;
+	vtxs[0].vtY = vtxs[1].vtY = vtxs[4].vtY = vtxs[5].vtY = obj->domain.p->line1;
+	vtxs[2].vtY = vtxs[3].vtY = vtxs[6].vtY = vtxs[7].vtY = obj->domain.p->lastln;
+	vtxs[0].vtZ = vtxs[1].vtZ = vtxs[2].vtZ = vtxs[3].vtZ = obj->domain.p->plane1;
+	vtxs[4].vtZ = vtxs[5].vtZ = vtxs[6].vtZ = vtxs[7].vtZ = obj->domain.p->lastpl;
+	for(i=0; i < 8; i++){
+	  Wlz3DSectionTransformVtx( &(vtxs[i]), viewStr );
+	}
+	qsort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxXSortFn);
+	viewStr->minvals.vtX = vtxs[0].vtX;
+	viewStr->maxvals.vtX = vtxs[7].vtX;
+	qsort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxYSortFn);
+	viewStr->minvals.vtY = vtxs[0].vtY;
+	viewStr->maxvals.vtY = vtxs[7].vtY;
+	qsort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxZSortFn);
+	viewStr->minvals.vtZ = vtxs[0].vtZ;
+	viewStr->maxvals.vtZ = vtxs[7].vtZ;
+	viewStr->initialised |= WLZ_3DVIEWSTRUCT_INIT_BB;
+      }
+      else {
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+      }
+    }
+    else if( obj->type == WLZ_2D_DOMAINOBJ ){
+      if( obj->domain.i ){
+	viewStr->minvals.vtX = obj->domain.i->kol1 - 1;
+	viewStr->minvals.vtY = obj->domain.i->line1 - 1;
+	viewStr->minvals.vtZ = (int) ((viewStr->dist>0)?viewStr->dist:viewStr->dist-1);
+	viewStr->maxvals.vtX = obj->domain.i->lastkl + 1;
+	viewStr->maxvals.vtY = obj->domain.i->lastln + 1;
+	viewStr->maxvals.vtZ = (int) ((viewStr->dist>0)?viewStr->dist+1:viewStr->dist);
+	viewStr->initialised |= WLZ_3DVIEWSTRUCT_INIT_BB;
+      }
+      else {
+	errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+    }
+    else {
+      errNum =  WLZ_ERR_OBJECT_TYPE;
+    }
+  }
 
+  return errNum;
+}
 
 /*!
 * \return				Woolz error code.
@@ -452,6 +600,12 @@ tmpPlanedmn.lastpl = WLZ_MAX(tmpPlanedmn.lastpl, i);
 *		object as the reference object for this view. This view
 *		structure can be reused for simple changes of the view
 *		parameter "dist" but otherwise must be re-initialised.
+*
+*		This is a convenience rountine which checks previous memory
+*		allocation then calls in turn WlzInit3DViewStructAffineTransform(),
+*		Wlz3DViewStructTransformBB() and Wlz3DViewStructSetupTransformLuts()
+*		and finally adds a link to the reference object.
+*		
 * \param	viewStr			View to be intialised.
 * \param	obj			The 3D object to be sectioned.
 */
@@ -459,123 +613,51 @@ WlzErrorNum WlzInit3DViewStruct(
   WlzThreeDViewStruct	*viewStr,
   WlzObject		*obj)
 {
-  double		*tDP0;
-  WlzPlaneDomain	*planedmn, tmpPlanedmn;
-  WlzDVertex3		vtx;
-  unsigned int		widthp, heightp;
-  int			i;
-  WlzErrorNum		dstErr;
-  
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the pointers and types */
   if( viewStr == NULL || obj == NULL ){
-    return WLZ_ERR_OBJECT_NULL;
-  }
-  switch( obj->type ){
-
-  case WLZ_3D_DOMAINOBJ: /* 3D object to be sectioned */
-    planedmn = obj->domain.p;
-    if( planedmn == NULL ){
-      return WLZ_ERR_DOMAIN_NULL;
-    }
-    if( planedmn->type != WLZ_PLANEDOMAIN_DOMAIN ){
-      return WLZ_ERR_DOMAIN_TYPE;
-    }
-
-    /* put in the voxel sizes, rescaled to min 1.0 */
-    viewStr->voxelSize[0] = planedmn->voxel_size[0];
-    viewStr->voxelSize[1] = planedmn->voxel_size[1];
-    viewStr->voxelSize[2] = planedmn->voxel_size[2];
-
-    /* set the rotation matrix */
-    (void) setup3DSectionAffineTransform(viewStr);
-    break;
-
-  case WLZ_2D_DOMAINOBJ:	/* assume this is the section */
-    if( obj->domain.i == NULL ){
-      return WLZ_ERR_DOMAIN_TYPE;
-    }
-    /* get the 3D bounding box */
-    (void) setup3DSectionAffineTransform(viewStr);
-    vtx.vtX = obj->domain.i->kol1;
-    vtx.vtY = obj->domain.i->line1;
-    vtx.vtZ = viewStr->dist;
-    Wlz3DSectionTransformInvVtx( &vtx, viewStr );
-    tmpPlanedmn.kol1 = WLZ_NINT(vtx.vtX);
-    tmpPlanedmn.line1 = WLZ_NINT(vtx.vtY);
-    tmpPlanedmn.plane1 = WLZ_NINT(vtx.vtZ);
-    tmpPlanedmn.lastkl = tmpPlanedmn.kol1;
-    tmpPlanedmn.lastln = tmpPlanedmn.line1;
-    tmpPlanedmn.lastpl = tmpPlanedmn.plane1;
-    CHECK_3D_BB_VTX(obj->domain.i->kol1, obj->domain.i->lastln);
-    CHECK_3D_BB_VTX(obj->domain.i->lastkl, obj->domain.i->line1);
-    CHECK_3D_BB_VTX(obj->domain.i->lastkl, obj->domain.i->lastln);
-    tmpPlanedmn.kol1 -= 1;
-    tmpPlanedmn.line1 -= 1;
-    tmpPlanedmn.plane1 -= 1;
-    tmpPlanedmn.lastkl += 1;
-    tmpPlanedmn.lastln += 1;
-    tmpPlanedmn.lastpl += 1;
-    planedmn = &tmpPlanedmn;
-
-    break;
-
-  default:
-    return WLZ_ERR_OBJECT_TYPE;
-
+    errNum =  WLZ_ERR_OBJECT_NULL;
   }
 
-  /* if intialised then free existing luts */
-  if( viewStr->initialised ){
+  /* release any allocated structures and memory */
+  if( errNum == WLZ_ERR_NONE ){
+
+    /* check free stack */
     if( viewStr->freeptr ){
-      AlcFreeStackFree( viewStr->freeptr );
+      AlcFreeStackFree(viewStr->freeptr);
+      viewStr->freeptr = NULL;
     }
+    /* check the reference object */
+    if( viewStr->ref_obj ){
+      errNum = WlzFreeObj(viewStr->ref_obj);
+      viewStr->ref_obj = NULL;
+    }
+    /* reset initialisation */
+    viewStr->initialised = WLZ_3DVIEWSTRUCT_INIT_NONE;
   }
 
-  /* transform one corner of the bounding box to initialise min and max
-     coordinate values */
-  vtx.vtX = planedmn->kol1;
-  vtx.vtY = planedmn->line1;
-  vtx.vtZ = planedmn->plane1;
-  Wlz3DSectionTransformVtx( &vtx, viewStr );
-  viewStr->minvals.vtX = viewStr->maxvals.vtX = vtx.vtX;
-  viewStr->minvals.vtY = viewStr->maxvals.vtY = vtx.vtY;
-  viewStr->minvals.vtZ = viewStr->maxvals.vtZ = vtx.vtZ;
-  CHECK_MIN_MAX_VTX(planedmn->kol1, planedmn->line1, planedmn->lastpl);
-  CHECK_MIN_MAX_VTX(planedmn->kol1, planedmn->lastln, planedmn->plane1);
-  CHECK_MIN_MAX_VTX(planedmn->kol1, planedmn->lastln, planedmn->lastpl);
-  CHECK_MIN_MAX_VTX(planedmn->lastkl, planedmn->line1, planedmn->plane1);
-  CHECK_MIN_MAX_VTX(planedmn->lastkl, planedmn->line1, planedmn->lastpl);
-  CHECK_MIN_MAX_VTX(planedmn->lastkl, planedmn->lastln, planedmn->plane1);
-  CHECK_MIN_MAX_VTX(planedmn->lastkl, planedmn->lastln, planedmn->lastpl);
+  /* calculate the affine transform */
+  if( errNum == WLZ_ERR_NONE ){
+    errNum = WlzInit3DViewStructAffineTransform(viewStr);
+  }
 
-  /* find range of values required, and allocate space for the LUT's */
-  widthp  = WLZ_NINT(viewStr->maxvals.vtX) -
-    WLZ_NINT(viewStr->minvals.vtX) + 1;
-  heightp = WLZ_NINT(viewStr->maxvals.vtY) -
-    WLZ_NINT(viewStr->minvals.vtY) + 1;
-  AlcDouble1Malloc(&tDP0, 3*widthp + 3*heightp);
-  viewStr->freeptr = AlcFreeStackPush(NULL, tDP0, NULL);
-  viewStr->xp_to_x = tDP0;
-  viewStr->xp_to_y = viewStr->xp_to_x + widthp;
-  viewStr->xp_to_z = viewStr->xp_to_y + widthp;
-  viewStr->yp_to_x = viewStr->xp_to_z + widthp;
-  viewStr->yp_to_y = viewStr->yp_to_x + heightp;
-  viewStr->yp_to_z = viewStr->yp_to_y + heightp;
+  /* calculate target bounding box */
+  if( errNum == WLZ_ERR_NONE ){
+    errNum = Wlz3DViewStructTransformBB(obj, viewStr);
+  }
 
   /* set LUT values using current parameters */
-  setupTransformLuts( viewStr );
-
-  /* set initialised and attach the reference object */
-  viewStr->initialised = 1;
-  if( viewStr->ref_obj != obj ){
-    if( viewStr->ref_obj ){
-      WlzFreeObj( viewStr->ref_obj );
-    }
-    viewStr->ref_obj = WlzAssignObject( obj, &dstErr );
+  if( errNum == WLZ_ERR_NONE ){
+    errNum = Wlz3DViewStructSetupTransformLuts( viewStr );
   }
 
-  return WLZ_ERR_NONE;
+  /* attach the reference object */
+  if( errNum == WLZ_ERR_NONE ){
+    viewStr->ref_obj = WlzAssignObject( obj, &errNum );
+  }
+
+  return errNum;
 }
 
 /*!

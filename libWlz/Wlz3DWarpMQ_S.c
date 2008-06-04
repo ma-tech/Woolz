@@ -1263,7 +1263,7 @@ void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
    }
  
    /* there are four triangles for each tetrahedron.  */
-   fprintf(fp, "%s %d %d\n","POLYGONS",it*4, it*4*sizeof(float) ); 
+   fprintf(fp, "%s %d %ld\n","POLYGONS",it*4, it*4*sizeof(float) ); 
   
    for(i=0; i<wmt3D->nElem; i++)
    { /*
@@ -1343,7 +1343,7 @@ void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp,
    }
  
    /* there are four triangles for each tetrahedron.  */
-   fprintf(fp, "%s %d %d\n","POLYGONS",it*4, it*4*sizeof(float) ); 
+   fprintf(fp, "%s %d %ld\n","POLYGONS",it*4, it*4*sizeof(float) ); 
   
    for(i=0; i<wmt3D->nElem; i++)
    { /*
@@ -2630,7 +2630,7 @@ void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 	       );
   }
   
-  fprintf(fp, "%s %d %d\n","POLYGONS", wmt2D5->nElem,  wmt2D5->nElem * sizeof(float) ); 
+  fprintf(fp, "%s %d %ld\n","POLYGONS", wmt2D5->nElem,  wmt2D5->nElem * sizeof(float) ); 
   for(i=0; i< wmt2D5->nElem ; i++)
   {
         fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt2D5->elements+i)->nodes[0],
@@ -2669,7 +2669,7 @@ void WlzEffWriteOriginalPlaneVTKByPos(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 	       );
   }
   
-  fprintf(fp, "%s %d %d\n","POLYGONS", wmt2D5->nElem,  wmt2D5->nElem * sizeof(float) ); 
+  fprintf(fp, "%s %d %ld\n","POLYGONS", wmt2D5->nElem,  wmt2D5->nElem * sizeof(float) ); 
   for(i=0; i< wmt2D5->nElem ; i++)
   {
         fprintf(fp, "%d  %d  %d  %d\n", 3, (wmt2D5->elements+i)->nodes[0],

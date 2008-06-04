@@ -97,6 +97,7 @@ WlzObject 	*WlzGetSectionFromObject(
   WlzValues	val;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
+
   if(obj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -110,7 +111,7 @@ WlzObject 	*WlzGetSectionFromObject(
     switch(obj->type)
     {
       case WLZ_3D_DOMAINOBJ:
-        newObj = WlzGetSectionFrom3DDomObj(obj, view, interp, &errNum);
+        newObj = WlzGetSubSectionFromObject(obj, NULL, view, interp, NULL, &errNum);
         break;
       case WLZ_CONTOUR:
 	dom.core = NULL;
@@ -163,9 +164,9 @@ WlzObject 	*WlzGetMaskedSectionFromObject(WlzObject *obj,
 					       WlzInterpolationType	interp,
 					       WlzErrorNum *dstErr)
 {
-  WlzObject	*newObj = NULL;
-  WlzDomain	dom;
-  WlzValues	val;
+  WlzObject	*newObj=NULL;
+  WlzObject	*mask=NULL;
+  WlzObject	*obj1;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
   if(obj == NULL)
@@ -181,23 +182,16 @@ WlzObject 	*WlzGetMaskedSectionFromObject(WlzObject *obj,
     switch(obj->type)
     {
       case WLZ_3D_DOMAINOBJ:
-        newObj = WlzGetMaskedSectionFrom3DDomObj(obj, view, interp, &errNum);
-        break;
-      case WLZ_CONTOUR:
-	dom.core = NULL;
-	val.core = NULL;
-        dom.ctr = WlzGetSectionFromCtr(obj->domain.ctr, view, interp, &errNum);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  newObj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL, &errNum);
-	  if(errNum != WLZ_ERR_NONE)
-	  {
-	    WlzFreeContour(dom.ctr);
-	  }
+        obj1 = WlzGetSubSectionFromObject(obj, NULL, view, interp, &mask, &errNum);
+	if( errNum == WLZ_ERR_NONE ){
+	  newObj = WlzMakeMain(obj1->type, mask->domain, obj1->values,
+			       NULL, NULL, &errNum);
+	  (void) WlzFreeObj(obj1);
 	}
         break;
+
       default:
-        errNum = WLZ_ERR_OBJECT_TYPE;
+	newObj = WlzGetSectionFromObject(obj, view, interp, &errNum);
 	break;
     }
   }
