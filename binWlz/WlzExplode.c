@@ -295,6 +295,7 @@ int             main(int argc, char **argv)
 	    cmpObj = (WlzCompoundArray *)inObj;
 	    objAry = cmpObj->o;
 	    objVecCount = cmpObj->n;
+	    cmpObj = NULL;
 	    break;
 	  case WLZ_BOUNDLIST:
 	    freeObjAry = 1;
@@ -382,7 +383,9 @@ int             main(int argc, char **argv)
 			   *argv, errMsg);
 	  }
 	}
-	WlzFreeObj(obj);
+	if ( freeObjAry ){
+	  WlzFreeObj(obj);
+	}
 	if(outObjFileBodyStr && outFP)
 	{
 	  (void )fclose(outFP);
