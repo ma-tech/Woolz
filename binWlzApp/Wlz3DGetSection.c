@@ -163,6 +163,7 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]"
 	  " [-b <parameter bibfile>] [-m <mode>] [-s <scale>]"
 	  " [-o <output file>] [-u<ux,uy,uz>] [-A] [-C] [-L] [-N]"
+	  " [-R <ROI domain>]"
 	  " [<3D object input file>]\n"
 	  "\tGet an arbitrary slice from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
@@ -190,6 +191,7 @@ static void usage(char *proc_str)
 	  "\t  -C                 Use classifier interpolation\n"
 	  "\t  -L                 Use linear interpolation\n"
 	  "\t  -N                 Use nearest neighbour interpolation\n"
+	  "\t  -R<ROI domain>     Only calculate values within the ROI domain.\n"
 	  "\t  -h                 Help - prints this usage message\n"
 	  "",
 	  proc_str);
@@ -200,10 +202,10 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *nobj;
+  WlzObject	*obj, *nobj, *subDomain;
   FILE		*inFP, *outFP, *bibFP;
   char		*outFile, *bibFile;
-  char 		optList[] = "ACLNa:b:d:f:m:o:s:u:h";
+  char 		optList[] = "ACLNa:b:d:f:m:o:s:u:R:h";
   int		option;
   int		iVal;
   int		allFlg=0;
@@ -223,6 +225,7 @@ int main(int	argc,
   /* additional defaults */
   outFile = "-";
   bibFile = NULL;
+  subDomain = NULL;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -319,6 +322,22 @@ int main(int	argc,
       }
       break;
 
+    case 'R':
+      if((inFP = fopen(optarg, "rb"))){
+	if((subDomain = WlzReadObj(inFP, &errNum)) == NULL){
+	  fprintf(stderr, "%s: can't read sub-domain object %s\n", argv[0], optarg);
+	  usage(argv[0]);
+	  return 1;
+	}
+	fclose(inFP);
+      }
+      else {
+	fprintf(stderr, "%s: can't open file %s\n", argv[0], optarg);
+	usage(argv[0]);
+	return 1;
+      }
+      break;
+
     case 'h':
     default:
       usage(argv[0]);
@@ -330,7 +349,7 @@ int main(int	argc,
   /* check input file/stream */
   inFP = stdin;
   if( optind < argc ){
-    if( (inFP = fopen(*(argv+optind), "r")) == NULL ){
+    if( (inFP = fopen(*(argv+optind), "rb")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
@@ -356,7 +375,7 @@ int main(int	argc,
   else {
     if(strcmp(outFile, "-"))
     {
-      if((outFP = fopen(outFile, "w")) == NULL)
+      if((outFP = fopen(outFile, "wb")) == NULL)
       {
 	errNum = WLZ_ERR_WRITE_EOF;
       }
@@ -420,7 +439,8 @@ int main(int	argc,
 	      i <= WLZ_NINT(viewStr->maxvals.vtZ); i++, j++){
 	    viewStr->dist = i;
 	    WlzInit3DViewStruct(viewStr, obj);
-	    nobj = WlzGetSectionFromObject(obj, viewStr, interp, &errNum);
+	    nobj = WlzGetSubSectionFromObject(obj, subDomain, viewStr, interp,
+					      NULL, &errNum);
 	    if( nobj != NULL){
 	      char	fileBuf[256];
 	      sprintf(fileBuf, "%s%d.wlz", outFile, j);
@@ -436,7 +456,8 @@ int main(int	argc,
 	  }
 	}
 	else {
-	  nobj = WlzGetSectionFromObject(obj, viewStr, interp, &errNum);
+	  nobj = WlzGetSubSectionFromObject(obj, subDomain, viewStr, interp,
+					    NULL, &errNum);
 	  if( nobj != NULL){
 	    WlzWriteObj(outFP, nobj);
 	  }
