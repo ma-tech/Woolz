@@ -235,18 +235,22 @@ AC_CONFIG_FILES([	Makefile \
 
 if test x${ENABLE_EXTFF} = "xyes"
 then
-  AC_CHECK_HEADER(tiff.h,
-                  AC_CHECK_LIB(tiff, TIFFOpen,
-		               [
-				 HAVE_TIFF=yes
-				 LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
-			       ]))
-  AC_CHECK_HEADER(jpeglib.h,
-                  AC_CHECK_LIB(jpeg, jpeg_CreateCompress,
-		               [
-				 HAVE_JPEG=yes
-				 LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
-			       ]))
+  HAVE_TIFF=yes
+  LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
+  HAVE_JPEG=yes
+  LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
+#  AC_CHECK_HEADER(tiff.h,
+#                  AC_CHECK_LIB(tiff, TIFFOpen,
+#		               [
+#				 HAVE_TIFF=yes
+#				 LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
+#			       ]))
+#  AC_CHECK_HEADER(jpeglib.h,
+#                  AC_CHECK_LIB(jpeg, jpeg_CreateCompress,
+#		               [
+#				 HAVE_JPEG=yes
+#				 LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
+#			       ]))
   AC_CONFIG_FILES([	libbibfile/Makefile \
 			libhguDlpList/Makefile \
 			libReconstruct/Makefile \
