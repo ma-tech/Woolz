@@ -39,6 +39,7 @@ AM_CPPFLAGS		= -I. \
 			  -I$(top_srcdir)/libWlz \
 			  -I$(top_srcdir)/libAlg \
 			  -I$(top_srcdir)/libAlc \
+			  -I$(includedir) \
              		  $(all_includes)
 
 LDADD 			= -L$(top_srcdir)/libWlzExtFF/.libs -lWlzExtFF \
@@ -47,6 +48,7 @@ LDADD 			= -L$(top_srcdir)/libWlzExtFF/.libs -lWlzExtFF \
 			  -L$(top_srcdir)/libWlz/.libs -lWlz \
 			  -L$(top_srcdir)/libAlg/.libs -lAlg \
 			  -L$(top_srcdir)/libAlc/.libs -lAlc \
+			  -L$(libdir) \
 			  ${LIBS_EXTFF} ${LIBS}
 
 bin_PROGRAMS		= \
