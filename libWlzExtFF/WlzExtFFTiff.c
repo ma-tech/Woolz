@@ -51,12 +51,304 @@ static char _WlzExtFFTiff_c[] = "MRC HGU $Id$";
 
 #define	CVT(x)		(((x) * 255) / ((1L<<16)-1))
 
+static WlzErrorNum setPixelProperties(
+  short		bitspersample,
+  short 	samplesperpixel,
+  short 	sampleformat,
+  int		*wlzDepthRtn,
+  WlzGreyType	*newpixtypeRtn,
+  WlzPixelV	*bckgrndRtn)
+{
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int		wlzDepth;
+  WlzGreyType	newpixtype;
+  WlzPixelV	bckgrnd;
+
+  switch( samplesperpixel ){
+  case 1:
+    if (bitspersample == 1){
+      wlzDepth = sizeof(char);
+      newpixtype = WLZ_GREY_UBYTE;
+      bckgrnd.v.ubv = 0;
+    }
+    else if (bitspersample <= 8){
+      wlzDepth = sizeof(char);
+      newpixtype = WLZ_GREY_UBYTE;
+      bckgrnd.v.ubv = 0;
+    }
+    else if (bitspersample <= 16){
+      switch( sampleformat ){
+      case SAMPLEFORMAT_UINT:
+	wlzDepth = sizeof(int);
+	newpixtype = WLZ_GREY_INT;
+	bckgrnd.v.inv = 0;
+	break;
+
+      case SAMPLEFORMAT_INT:
+	wlzDepth = sizeof(short);
+	newpixtype = WLZ_GREY_SHORT;
+	bckgrnd.v.shv = 0;
+	break;
+
+      case SAMPLEFORMAT_IEEEFP:
+	wlzDepth = sizeof(float);
+	newpixtype = WLZ_GREY_FLOAT;
+	bckgrnd.v.flv = 0;
+	break;
+
+      default:
+	errNum = WLZ_ERR_IMAGE_TYPE;
+	break;
+      }
+    }
+    else {
+      switch( sampleformat ){
+      case SAMPLEFORMAT_UINT:
+      case SAMPLEFORMAT_INT:
+	wlzDepth = sizeof(int);
+	newpixtype = WLZ_GREY_INT;
+	bckgrnd.v.inv = 0;
+	break;
+
+      case SAMPLEFORMAT_IEEEFP:
+	wlzDepth = sizeof(float);
+	newpixtype = WLZ_GREY_FLOAT;
+	bckgrnd.v.flv = 0;
+	break;
+
+      default:
+	errNum = WLZ_ERR_IMAGE_TYPE;
+	break;
+      }
+    }
+    break;
+
+  case 3:
+    if( bitspersample > 8 ){
+      errNum = WLZ_ERR_IMAGE_TYPE;
+    }
+    else {
+      wlzDepth = sizeof(int);
+      newpixtype = WLZ_GREY_RGBA;
+      bckgrnd.v.rgbv = 0x0;
+    }
+    break;
+
+  case 4:
+    if( bitspersample > 8 ){
+      errNum = WLZ_ERR_IMAGE_TYPE;
+    }
+    else {
+      wlzDepth = sizeof(int);
+      newpixtype = WLZ_GREY_RGBA;
+      bckgrnd.v.inv = 0;
+    }
+    break;
+
+  default:
+    errNum = WLZ_ERR_IMAGE_TYPE;
+    break;
+  }
+  bckgrnd.type = newpixtype;
+
+  /* set return values */
+  *wlzDepthRtn = wlzDepth;
+  *newpixtypeRtn = newpixtype;
+  *bckgrndRtn = bckgrnd;
+ 
+  return errNum;
+}
+
+static unsigned char *WlzEFFTiffToWlzRowData(
+  unsigned char	*inp,
+  unsigned char	*dstPtr,
+  int		width,
+  short		photometric,
+  short		samplesperpixel,
+  short		bitspersample,
+  WlzGreyType	newpixtype,
+  unsigned char	red[],
+  unsigned char	green[],
+  unsigned char	blue[],
+  WlzErrorNum	*dstErr)
+{
+  WlzGreyP	wlzData;
+  int		col, offset;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if( inp == NULL ){
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  if( dstPtr ){
+    wlzData.ubp = dstPtr;
+  }
+  else {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+
+  if( (errNum == WLZ_ERR_NONE) ){
+    offset = 0;
+    switch (photometric) {
+    case PHOTOMETRIC_RGB:
+      if (samplesperpixel == 4){
+	for (col = 0; col < width; col++, offset++) {
+	  WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			    inp[0], inp[1], inp[2], inp[3]);
+	  inp += 4;	/* skip to next values */
+	}
+      }
+      else {
+	for (col = 0; col < width; col++, offset++) {
+	  WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			    inp[0], inp[1], inp[2], 0xff);
+	  inp += 3;	/* skip to next values */
+	}
+      }
+      break;
+
+    case PHOTOMETRIC_MINISWHITE:
+    case PHOTOMETRIC_MINISBLACK:
+      switch (bitspersample) {
+      case 1:
+	for (col = 0; col < ((width + 7) / 8); col++, offset++){
+	  wlzData.ubp[offset] = *inp++;
+	}
+	break;
+      case 2:
+	for (col = 0; col < ((width + 3) / 4); col++) {
+	  wlzData.ubp[offset++] = (*inp >> 6) & 3;
+	  wlzData.ubp[offset++] = (*inp >> 4) & 3;
+	  wlzData.ubp[offset++] = (*inp >> 2) & 3;
+	  wlzData.ubp[offset++] = *inp++ & 3;
+	}
+	break;
+      case 4:
+	for (col = 0; col < width / 2; col++) {
+	  wlzData.ubp[offset++] = *inp >> 4;
+	  wlzData.ubp[offset++] = *inp++ & 0xf;
+	}
+	break;
+      case 8:
+	for (col = 0; col < width; col++, offset++){
+	  wlzData.ubp[offset] = *inp++;
+	}
+	break;
+      case 16:
+	switch( newpixtype ){
+	case WLZ_GREY_SHORT:
+	  for (col = 0; col < width; col++, offset++){
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+	    wlzData.shp[offset] = (inp[0]<<8) | (inp[1]);
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	    wlzData.shp[offset] = (inp[0]) | (inp[1]<<8);
+#endif /* __x86 || __alpha */
+	    inp += 2;
+	  }
+	  break;
+
+	case WLZ_GREY_INT:
+	  for (col = 0; col < width; col++, offset++){
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+	    wlzData.inp[offset] = (inp[0]<<8) | (inp[1]);
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+	    wlzData.inp[offset] = (inp[0]) | (inp[1]<<8);
+#endif /* __x86 || __alpha */
+	    inp += 2;
+	  }
+	  break;
+
+	case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+	default:
+	  errNum = WLZ_ERR_FILE_FORMAT;
+	  break;
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_FILE_FORMAT;
+	break;
+      }
+      break;
+
+    case PHOTOMETRIC_PALETTE:
+      switch (bitspersample) {
+      case 4:
+	for (col = 0; col < width / 2; col++) {
+	  wlzData.ubp[offset++] = *inp >> 4;
+	  wlzData.ubp[offset++] = *inp++ & 0xf;
+	}
+	break;
+      case 8:
+	switch( newpixtype ){
+	case WLZ_GREY_UBYTE:
+	  for (col = 0; col < width; col++, offset++){
+	    wlzData.ubp[offset] = *inp++;
+	  }
+	  break;
+	case WLZ_GREY_RGBA:
+	  for (col = 0; col < width; col++, offset++){
+	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
+			      red[*inp], green[*inp], blue[*inp],
+			      255);
+	    inp += 1;	/* skip to next value */
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_FILE_FORMAT;
+	}
+	break;
+
+      default:
+	errNum = WLZ_ERR_FILE_FORMAT;
+	break;
+      }
+      break;
+
+    default:
+      errNum = WLZ_ERR_FILE_FORMAT;
+      break;
+    }
+  }
+
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+
+  /* set the pointer for next data */
+  if( dstPtr ){
+    switch( newpixtype ){
+    case WLZ_GREY_UBYTE:
+      dstPtr = (unsigned char *) &(wlzData.ubp[offset]);
+	break;
+
+    case WLZ_GREY_SHORT:
+	dstPtr = (unsigned char *) &(wlzData.shp[offset]);
+	break;
+	
+    default:
+    case WLZ_GREY_INT:
+	dstPtr = (unsigned char *) &(wlzData.inp[offset]);
+	break;
+
+    case WLZ_GREY_RGBA:
+	dstPtr = (unsigned char *) &(wlzData.rgbp[offset]);
+	break;
+
+    }
+  }
+
+  return dstPtr;
+}
+  
+
 static WlzObject *WlzExtFFReadTiffDirObj(
   TIFF 		*tif, 
   int		dir,
+  int		split,
   WlzErrorNum	*dstErr)
 {
-  WlzObject	*obj=NULL;
+  WlzObject	*obj=NULL, **objs;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   short		bitspersample;
   short		samplesperpixel;
@@ -65,127 +357,37 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   unsigned short *Map=NULL;
   unsigned short *redcolormap, *bluecolormap, *greencolormap;
   unsigned char red[256], green[256], blue[256];
-  int		width, height, depth, numcolors;
+  int		width, height, numcolors;
+  int		len, tileWidth, tileHeight;
   int		wlzDepth;
   WlzGreyType	newpixtype;
   WlzPixelV	bckgrnd;
-  int		i, row, col, offset;
+  int		i, y, row, col, tileIndx;
   float		xPosition, yPosition;
   int		colMin, rowMin;
   unsigned char	*buf=NULL;
-  unsigned char *inp;
+  unsigned char *dstPtr, *srcPtr;
   WlzGreyP	wlzData;
 
   /* don't need to check tif file pointer since already checked
      but do need to set the directory */
   TIFFSetDirectory(tif, dir);
 
+  /* determine depth and pixel type */
   if(errNum == WLZ_ERR_NONE)
   {
-    /* determine depth and pixel type */
     TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
     TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
     if( TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT, &sampleformat) == 0 ){
       sampleformat = SAMPLEFORMAT_UINT;
     }
-    switch( samplesperpixel ){
-    case 1:
-      if (bitspersample == 1){
-	depth = 1;
-	wlzDepth = sizeof(char);
-	newpixtype = WLZ_GREY_UBYTE;
-	bckgrnd.v.ubv = 0;
-      }
-      else if (bitspersample <= 8){
-	depth = 8;
-	wlzDepth = sizeof(char);
-	newpixtype = WLZ_GREY_UBYTE;
-	bckgrnd.v.ubv = 0;
-      }
-      else if (bitspersample <= 16){
-	depth = 16;
-	switch( sampleformat ){
-	case SAMPLEFORMAT_UINT:
-	  wlzDepth = sizeof(int);
-	  newpixtype = WLZ_GREY_INT;
-	  bckgrnd.v.inv = 0;
-	  break;
-
-	case SAMPLEFORMAT_INT:
-	  wlzDepth = sizeof(short);
-	  newpixtype = WLZ_GREY_SHORT;
-	  bckgrnd.v.shv = 0;
-	  break;
-
-	case SAMPLEFORMAT_IEEEFP:
-	  wlzDepth = sizeof(float);
-	  newpixtype = WLZ_GREY_FLOAT;
-	  bckgrnd.v.flv = 0;
-	  break;
-
-	default:
-	  errNum = WLZ_ERR_IMAGE_TYPE;
-	  break;
-	}
-      }
-      else {
-	depth = 32;
-	switch( sampleformat ){
-	case SAMPLEFORMAT_UINT:
-	case SAMPLEFORMAT_INT:
-	  wlzDepth = sizeof(int);
-	  newpixtype = WLZ_GREY_INT;
-	  bckgrnd.v.inv = 0;
-	  break;
-
-	case SAMPLEFORMAT_IEEEFP:
-	  wlzDepth = sizeof(float);
-	  newpixtype = WLZ_GREY_FLOAT;
-	  bckgrnd.v.flv = 0;
-	  break;
-
-	default:
-	  errNum = WLZ_ERR_IMAGE_TYPE;
-	  break;
-	}
-      }
-      break;
-
-    case 3:
-      if( bitspersample > 8 ){
-	errNum = WLZ_ERR_IMAGE_TYPE;
-      }
-      else {
-	depth = 24;
-	wlzDepth = sizeof(int);
-	newpixtype = WLZ_GREY_RGBA;
-	bckgrnd.v.rgbv = 0x0;
-      }
-      break;
-
-    case 4:
-      if( bitspersample > 8 ){
-	errNum = WLZ_ERR_IMAGE_TYPE;
-      }
-      else {
-	wlzDepth = sizeof(int);
-	newpixtype = WLZ_GREY_RGBA;
-	depth = 32;
-	bckgrnd.v.inv = 0;
-      }
-      break;
-
-    default:
-      errNum = WLZ_ERR_IMAGE_TYPE;
-      break;
-    }
-    bckgrnd.type = newpixtype;
+    errNum = setPixelProperties(bitspersample, samplesperpixel, sampleformat,
+				&wlzDepth, &newpixtype, &bckgrnd);
   }
 
+  /* determine color mapping */
   if(errNum == WLZ_ERR_NONE)
   {
-    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
-    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
     numcolors = (1 << bitspersample);
     TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
     if( numcolors > 2 ){
@@ -230,13 +432,21 @@ static WlzObject *WlzExtFFReadTiffDirObj(
     }
   }
 
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if( (buf = (unsigned char *) AlcMalloc(TIFFScanlineSize(tif))) == NULL ){
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
+  /* establish data size */
+  if(errNum == WLZ_ERR_NONE){
+    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
+    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
   }
 
+  /* check for tiles */
+  if(errNum == WLZ_ERR_NONE){
+    tileWidth = -1;
+    tileHeight = -1;
+    TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
+    TIFFGetField(tif, TIFFTAG_TILELENGTH, &tileHeight);
+  }
+
+  /* allocate space for the woolz data */
   if(errNum == WLZ_ERR_NONE)
   {
     if((wlzData.ubp = (WlzUByte *)AlcCalloc(width*height, wlzDepth)) == NULL)
@@ -245,156 +455,120 @@ static WlzObject *WlzExtFFReadTiffDirObj(
     }
   }
 
-  if( errNum == WLZ_ERR_NONE ){
-    for (row = 0, offset=0; row < height; row++) {
-      if (TIFFReadScanline(tif, buf, row, 0) < 0){
-	errNum = WLZ_ERR_FILE_FORMAT;
-	break;
+  /* read data */
+  if( errNum == WLZ_ERR_NONE )
+  {
+    if( tileWidth > 0 ){
+      /* read in tiles */
+      if( (buf = (unsigned char *) AlcMalloc(TIFFTileSize(tif))) == NULL ){
+	errNum = WLZ_ERR_MEM_ALLOC;
       }
-      inp = buf;
-      switch (photometric) {
-      case PHOTOMETRIC_RGB:
-	if (samplesperpixel == 4){
-	  for (col = 0; col < width; col++, offset++) {
-	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
-			      inp[0], inp[1], inp[2], inp[3]);
-	    inp += 4;	/* skip to next values */
+      if( split ){
+	objs = (WlzObject **) AlcMalloc(sizeof(WlzObject *) * TIFFNumberOfTiles(tif));
+	dstPtr = wlzData.ubp;
+      }
+
+      if( errNum == WLZ_ERR_NONE ){
+	tileIndx = 0;
+	for (row = 0; row < height; row += tileHeight){
+	  for (col = 0; col < width; col += tileWidth){
+	    if( TIFFReadTile(tif, buf, col, row, 0, 0) < 0 ){
+	      errNum = WLZ_ERR_FILE_FORMAT;
+	      break;
+	    }
+	    tileIndx++;
+
+	    /* convert and fill wlz data buffer */
+	    if( split ){
+	      len = ((col + tileWidth) > width) ? width - col : tileWidth;
+	      obj = WlzMakeRect(0, ((row+tileHeight > height)?height-row:tileHeight)-1,
+				0, len-1, newpixtype, (int *) dstPtr, bckgrnd,
+				NULL, NULL, &errNum);
+	      objs[tileIndx-1] = WlzAssignObject(obj, NULL);
+	      if( tileIndx == 1 ){
+		obj->values.r->freeptr = 
+		  AlcFreeStackPush(obj->values.r->freeptr,
+				   (void *) wlzData.ubp, NULL);
+	      }
+	      else {
+		obj->assoc = WlzAssignObject(objs[0], &errNum);
+	      }
+
+	      for(y = row; (y < (row + tileHeight)) && (y < height); y++){
+		srcPtr = buf + TIFFTileRowSize(tif) * (y - row);
+		dstPtr =  WlzEFFTiffToWlzRowData(srcPtr, dstPtr, len,
+						 photometric, samplesperpixel,
+						 bitspersample, newpixtype,
+						 red, green, blue, &errNum);
+	      }
+
+	    }
+	    else {
+	      len = ((col + tileWidth) > width) ? width - col : tileWidth;
+	      for(y = row; (y < (row + tileHeight)) && (y < height); y++){
+		dstPtr = &(wlzData.ubp[(y*width + col)*wlzDepth]);
+		srcPtr = buf + TIFFTileRowSize(tif) * (y - row);
+		(void) WlzEFFTiffToWlzRowData(srcPtr, dstPtr, len,
+					      photometric, samplesperpixel,
+					      bitspersample, newpixtype,
+					      red, green, blue, &errNum);
+	      }
+	    }
 	  }
 	}
-	else {
-	  for (col = 0; col < width; col++, offset++) {
-	    WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
-			      inp[0], inp[1], inp[2], 0xff);
-	    inp += 3;	/* skip to next values */
-	  }
-	}
-	break;
+      }
+    }
+    else {
+      /* use scanline read */
+      if( (buf = (unsigned char *) AlcMalloc(TIFFScanlineSize(tif))) == NULL ){
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
 
-      case PHOTOMETRIC_MINISWHITE:
-      case PHOTOMETRIC_MINISBLACK:
-	switch (bitspersample) {
-	case 1:
-	  for (col = 0; col < ((width + 7) / 8); col++, offset++){
-	    wlzData.ubp[offset] = *inp++;
-	  }
-	  break;
-	case 2:
-	  for (col = 0; col < ((width + 3) / 4); col++) {
-	    wlzData.ubp[offset++] = (*inp >> 6) & 3;
-	    wlzData.ubp[offset++] = (*inp >> 4) & 3;
-	    wlzData.ubp[offset++] = (*inp >> 2) & 3;
-	    wlzData.ubp[offset++] = *inp++ & 3;
-	  }
-	  break;
-	case 4:
-	  for (col = 0; col < width / 2; col++) {
-	    wlzData.ubp[offset++] = *inp >> 4;
-	    wlzData.ubp[offset++] = *inp++ & 0xf;
-	  }
-	  break;
-	case 8:
-	  for (col = 0; col < width; col++, offset++){
-	    wlzData.ubp[offset] = *inp++;
-	  }
-	  break;
-	case 16:
-	  switch( newpixtype ){
-	  case WLZ_GREY_SHORT:
-	    for (col = 0; col < width; col++, offset++){
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-	      wlzData.shp[offset] = (inp[0]<<8) | (inp[1]);
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-	      wlzData.shp[offset] = (inp[0]) | (inp[1]<<8);
-#endif /* __x86 || __alpha */
-	      inp += 2;
-	    }
-	    break;
+      if( errNum == WLZ_ERR_NONE ){
+	dstPtr = wlzData.ubp;
+	for (row = 0; row < height; row++) {
 
-	  case WLZ_GREY_INT:
-	    for (col = 0; col < width; col++, offset++){
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-	      wlzData.inp[offset] = (inp[0]<<8) | (inp[1]);
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-	      wlzData.inp[offset] = (inp[0]) | (inp[1]<<8);
-#endif /* __x86 || __alpha */
-	      inp += 2;
-	    }
-	    break;
-
-	  case WLZ_GREY_FLOAT: /* FALLTHROUGH */
-	  default:
+	  /* read a scanline */
+	  if (TIFFReadScanline(tif, buf, row, 0) < 0){
 	    errNum = WLZ_ERR_FILE_FORMAT;
 	    break;
 	  }
-	  break;
-	default:
-	  errNum = WLZ_ERR_FILE_FORMAT;
-	  break;
+
+	  /* convert a row of data */
+	  dstPtr = WlzEFFTiffToWlzRowData(buf, dstPtr, width, photometric, samplesperpixel,
+					  bitspersample, newpixtype, red, green, blue, &errNum);
 	}
-	break;
-
-      case PHOTOMETRIC_PALETTE:
-	switch (bitspersample) {
-	case 4:
-	  for (col = 0; col < width / 2; col++) {
-	    wlzData.ubp[offset++] = *inp >> 4;
-	    wlzData.ubp[offset++] = *inp++ & 0xf;
-	  }
-	  break;
-	case 8:
-	  switch( newpixtype ){
-	  case WLZ_GREY_UBYTE:
-	    for (col = 0; col < width; col++, offset++){
-	      wlzData.ubp[offset] = *inp++;
-	    }
-	    break;
-	  case WLZ_GREY_RGBA:
-	    for (col = 0; col < width; col++, offset++){
-	      WLZ_RGBA_RGBA_SET(wlzData.rgbp[offset],
-				red[*inp], green[*inp], blue[*inp],
-				255);
-	      inp += 1;	/* skip to next value */
-	    }
-	    break;
-	  default:
-	    errNum = WLZ_ERR_FILE_FORMAT;
-	  }
-	  break;
-
-	default:
-	  errNum = WLZ_ERR_FILE_FORMAT;
-	  break;
-	}
-	break;
-
-      default:
-	errNum = WLZ_ERR_FILE_FORMAT;
-	break;
       }
     }
   }
 
   /* I don't think we should multiply with the resolution here - RAB */
   if( errNum == WLZ_ERR_NONE ){
-    if( TIFFGetField(tif, TIFFTAG_XPOSITION, &xPosition) != 1 ){
-      xPosition = 0.0;
+    if( split ){
+      WlzCompoundArray	*cobj;
+      cobj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 2, tileIndx, objs,
+  			      WLZ_2D_DOMAINOBJ, &errNum);
+      obj = (WlzObject *) cobj;
     }
-    if( TIFFGetField(tif, TIFFTAG_YPOSITION, &yPosition) != 1 ){
-      yPosition = 0.0;
-    }
-    colMin = WLZ_NINT(xPosition);
-    rowMin = WLZ_NINT(yPosition);
-    if((obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
-			  newpixtype, wlzData.inp, bckgrnd,
-			  NULL, NULL, &errNum)) != NULL){
-      AlcErrno	errAlcNum;
-      obj->values.r->freeptr = 
-	    AlcFreeStackPush(obj->values.r->freeptr,
-			     (void *) wlzData.ubp, &errAlcNum);
-      if( errAlcNum != ALC_ER_NONE ){
-	errNum = WLZ_ERR_MEM_ALLOC;
+    else {
+      if( TIFFGetField(tif, TIFFTAG_XPOSITION, &xPosition) != 1 ){
+	xPosition = 0.0;
+      }
+      if( TIFFGetField(tif, TIFFTAG_YPOSITION, &yPosition) != 1 ){
+	yPosition = 0.0;
+      }
+      colMin = WLZ_NINT(xPosition);
+      rowMin = WLZ_NINT(yPosition);
+      if((obj = WlzMakeRect(rowMin, rowMin+height-1, colMin, colMin+width-1,
+			    newpixtype, wlzData.inp, bckgrnd,
+			    NULL, NULL, &errNum)) != NULL){
+	AlcErrno	errAlcNum;
+	obj->values.r->freeptr = 
+	  AlcFreeStackPush(obj->values.r->freeptr,
+			   (void *) wlzData.ubp, &errAlcNum);
+	if( errAlcNum != ALC_ER_NONE ){
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
       }
     }
   }  
@@ -418,11 +592,14 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 * \ingroup	WlzExtFF
 * \brief	Reads a Woolz object from the given file using the TIFF format.
 * \param	tiffFileName		Given file name.
+* \param	split			If the image is tiled return individual
+*					tiles within a compound object.
 * \param	dstErr			Destination error number ptr, may be
 * 					NULL.
 */
 WlzObject	*WlzEffReadObjTiff(
   const char 	*tiffFileName,
+  int		split,
   WlzErrorNum 	*dstErr)
 {
   WlzObject	*obj=NULL;
@@ -434,7 +611,7 @@ WlzObject	*WlzEffReadObjTiff(
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
-  else if( (tif = TIFFOpen(tiffFileName, "r")) == NULL )
+  else if( (tif = TIFFOpen(tiffFileName, "rb")) == NULL )
   {
     errNum = WLZ_ERR_READ_EOF;
   }
@@ -448,79 +625,93 @@ WlzObject	*WlzEffReadObjTiff(
   */
   numPlanes = TIFFNumberOfDirectories(tif);
   if( numPlanes > 1 ){
-    WlzObject	*tmpObj;
-    WlzDomain	domain, *domains;
-    WlzValues	values, *valuess;
-    WlzPixelV 	bckgrnd;
+    if( split ){
+      /* create a compound object here */
+      WlzCompoundArray	*cobj;
 
-    /* use width, height and position of first object for the plane-domain
-       standardise later */
-    if((tmpObj = WlzExtFFReadTiffDirObj(tif, 0, &errNum)) != NULL){
+      cobj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_2, 1, numPlanes, NULL,
+				  WLZ_2D_DOMAINOBJ, &errNum);
+      for(p=0; p < numPlanes; p++){
+	obj = WlzExtFFReadTiffDirObj(tif, p, split, &errNum);
+	cobj->o[p] = WlzAssignObject(obj, &errNum);
+      }
+      obj = (WlzObject *) cobj;
+    }
+    else {
+      WlzObject	*tmpObj;
+      WlzDomain	domain, *domains;
+      WlzValues	values, *valuess;
+      WlzPixelV 	bckgrnd;
 
-      /* build the planedomain and voxelvaluetable */
-      if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-					0, numPlanes - 1,
-					tmpObj->domain.i->line1,
-					tmpObj->domain.i->lastln,
-					tmpObj->domain.i->kol1,
-					tmpObj->domain.i->lastkl,
-					&errNum)) != NULL){
-	bckgrnd = WlzGetBackground(tmpObj, &errNum);
-	if((values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-					     0, numPlanes - 1,
-					     bckgrnd, NULL,
-					     &errNum)) != NULL){
-	  domains = domain.p->domains;
-	  domains[0] = WlzAssignDomain(tmpObj->domain, NULL);
-	  valuess = values.vox->values;
-	  valuess[0] = WlzAssignValues(tmpObj->values, NULL);
-	  if((obj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
-				NULL, NULL, &errNum)) == NULL){
-	    WlzFreeValues(values);
+      /* use width, height and position of first object for the plane-domain
+	 standardise later */
+      if((tmpObj = WlzExtFFReadTiffDirObj(tif, 0, split, &errNum)) != NULL){
+
+	/* build the planedomain and voxelvaluetable */
+	if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+					  0, numPlanes - 1,
+					  tmpObj->domain.i->line1,
+					  tmpObj->domain.i->lastln,
+					  tmpObj->domain.i->kol1,
+					  tmpObj->domain.i->lastkl,
+					  &errNum)) != NULL){
+	  bckgrnd = WlzGetBackground(tmpObj, &errNum);
+	  if((values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					       0, numPlanes - 1,
+					       bckgrnd, NULL,
+					       &errNum)) != NULL){
+	    domains = domain.p->domains;
+	    domains[0] = WlzAssignDomain(tmpObj->domain, NULL);
+	    valuess = values.vox->values;
+	    valuess[0] = WlzAssignValues(tmpObj->values, NULL);
+	    if((obj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
+				  NULL, NULL, &errNum)) == NULL){
+	      WlzFreeValues(values);
+	      WlzFreeDomain(domain);
+	    }
+	  }
+	  else{
 	    WlzFreeDomain(domain);
 	  }
 	}
-	else{
-	  WlzFreeDomain(domain);
-	}
+	WlzFreeObj(tmpObj);
       }
-      WlzFreeObj(tmpObj);
-    }
 
-    /* put in voxel size  - have to assume plane separation of 1.0 */
-    if( errNum == WLZ_ERR_NONE ){
-      TIFFGetField(tif, TIFFTAG_XRESOLUTION, &(domain.p->voxel_size[0]));
-      TIFFGetField(tif, TIFFTAG_YRESOLUTION, &(domain.p->voxel_size[1]));
-    }
+      /* put in voxel size  - have to assume plane separation of 1.0 */
+      if( errNum == WLZ_ERR_NONE ){
+	TIFFGetField(tif, TIFFTAG_XRESOLUTION, &(domain.p->voxel_size[0]));
+	TIFFGetField(tif, TIFFTAG_YRESOLUTION, &(domain.p->voxel_size[1]));
+      }
 
-    /* now put in remaining planes */
-    if( errNum == WLZ_ERR_NONE ){
-      for(p=1; p < numPlanes; p++){
-	if((tmpObj = WlzExtFFReadTiffDirObj(tif, p, &errNum)) != NULL){
-	  domains[p] = WlzAssignDomain(tmpObj->domain, NULL);
-	  valuess[p] = WlzAssignValues(tmpObj->values, NULL);
-	  WlzFreeObj(tmpObj);
-	}
-	else {
-	  /* if it is an image-type error then it is probably some
-	   proprietory information. If there is only one plane
-	  then convert to 2D but still return incomplete read */
-	  if((errNum == WLZ_ERR_IMAGE_TYPE) && (p == 1)){
-	    tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains[0],
-				 valuess[0], NULL, NULL, NULL);
-	    WlzFreeObj(obj);
-	    obj = tmpObj;
+      /* now put in remaining planes */
+      if( errNum == WLZ_ERR_NONE ){
+	for(p=1; p < numPlanes; p++){
+	  if((tmpObj = WlzExtFFReadTiffDirObj(tif, p, split, &errNum)) != NULL){
+	    domains[p] = WlzAssignDomain(tmpObj->domain, NULL);
+	    valuess[p] = WlzAssignValues(tmpObj->values, NULL);
+	    WlzFreeObj(tmpObj);
 	  }
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	  break;
+	  else {
+	    /* if it is an image-type error then it is probably some
+	       proprietory information. If there is only one plane
+	       then convert to 2D but still return incomplete read */
+	    if((errNum == WLZ_ERR_IMAGE_TYPE) && (p == 1)){
+	      tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domains[0],
+				   valuess[0], NULL, NULL, NULL);
+	      WlzFreeObj(obj);
+	      obj = tmpObj;
+	    }
+	    errNum = WLZ_ERR_READ_INCOMPLETE;
+	    break;
+	  }
 	}
       }
-    }
 
-    /* should standardise here (if 3D) */
+      /* should standardise here (if 3D) */
+    }
   }
   else {
-    obj = WlzExtFFReadTiffDirObj(tif, 0, &errNum);
+    obj = WlzExtFFReadTiffDirObj(tif, 0, split, &errNum);
   }
 
   if( tif ){
@@ -731,7 +922,7 @@ WlzErrorNum WlzEffWriteObjTiff(
   {
     switch( obj->type ){
     case WLZ_2D_DOMAINOBJ:
-      if( (out = TIFFOpen(tiffFileName, "w")) == NULL ){
+      if( (out = TIFFOpen(tiffFileName, "wb")) == NULL ){
 	errNum = WLZ_ERR_FILE_OPEN;
       }
       else {

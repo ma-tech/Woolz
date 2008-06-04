@@ -372,7 +372,7 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
         obj = WlzEffReadObjIPL(fP, &errNum);
 	break;
       case WLZEFF_FORMAT_TIFF:
-	obj = WlzEffReadObjTiff(fName, &errNum);
+	obj = WlzEffReadObjTiff(fName, split, &errNum);
 	break;
       case WLZEFF_FORMAT_AM:
         obj = WlzEffReadObjAm(fP, split, &errNum);

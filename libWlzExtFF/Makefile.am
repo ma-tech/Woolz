@@ -38,6 +38,7 @@ AM_CPPFLAGS		= -I. \
 			  -I$(top_srcdir)/libWlz \
 			  -I$(top_srcdir)/libAlg \
 			  -I$(top_srcdir)/libAlc \
+			  -I$(includedir) \
              		  $(all_includes)
 
 lib_LTLIBRARIES 	= libWlzExtFF.la

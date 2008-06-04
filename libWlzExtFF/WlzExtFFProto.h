@@ -220,6 +220,7 @@ extern WlzErrorNum 		WlzEffWriteObjTiff(
 				  WlzObject *obj);
 extern WlzObject 		*WlzEffReadObjTiff(
 				  const char *tiffFileName,
+				  int	split,
 				  WlzErrorNum *dstErr);
 
 /* From WlzExtFFJpeg.c */
