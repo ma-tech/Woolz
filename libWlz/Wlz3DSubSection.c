@@ -141,6 +141,8 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
   }
 
   /* sort out return object requirements */
+  maskFlg = 0;
+  greyFlg = 0;
   if( errNum == WLZ_ERR_NONE ){
     if((obj->values.core == NULL)){
       /* object without values therefore mask object only */
