@@ -280,6 +280,46 @@ WlzAffineTransform *WlzAssignAffineTransform(
 }
 
 /*!
+* \return	Given 3D view structure with incremented linkcount or NULL on
+*		error.
+* \ingroup      WlzAllocation
+* \brief	Assign an woolz 3D view structure by incrementing it's linkcount.
+* \param	viewStr			Given 3D view structure.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzAffineTransform *WlzAssign3DViewStruct(
+  WlzThreeDViewStruct *viewStr,
+  WlzErrorNum	*dstErr)
+{
+  WlzThreeDViewStruct	*rtnViewStr=NULL;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+
+  if( viewStr )
+  {
+    if(viewStr->linkcount < 0)
+    {
+      errNum = WLZ_ERR_LINKCOUNT_DATA;
+    }
+    else
+    {
+      rtnViewStr = viewStr;
+      ++(viewStr->linkcount);
+    }
+  }
+#ifdef WLZ_NO_NULL
+  else
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+#endif /* WLZ_NO_NULL */
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return rtnViewStr;
+}
+
+/*!
 * \return	Given boundary list with incremented linkcount or NULL on
 *		error.
 * \ingroup	WlzAllocation
