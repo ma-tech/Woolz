@@ -428,6 +428,7 @@ int main(int	argc,
   while((errNum == WLZ_ERR_NONE) &&
         ((obj = WlzReadObj(inFP, &errNum)) != NULL))
   {
+    obj = WlzAssignObject(obj, &errNum);
     switch( obj->type )
     {
       case WLZ_CONTOUR:
@@ -478,6 +479,13 @@ int main(int	argc,
   if(errNum == WLZ_ERR_READ_EOF)
   {
     errNum = WLZ_ERR_NONE;
+  }
+
+  if( viewStr ){
+    WlzFree3DViewStruct(viewStr);
+  }
+  if( subDomain ){
+    WlzFreeObj(subDomain);
   }
 
   return errNum;
