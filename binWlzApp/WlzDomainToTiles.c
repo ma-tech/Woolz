@@ -36,7 +36,7 @@
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
 * \ingroup      BinWlzApp
-* \brief        cut a woolz domain object into tiles as per the standard tiff tile algorithm.
+* \brief        Cut a woolz domain object into tiles or chips of equal size. With the tiff-tile option the object is reset to origin (0,0) and each tile has origin (0,0) and the tiles are ordered in the tiff-tile sequence.
 *               
 * \todo         -
 * \bug          None known
@@ -103,15 +103,21 @@ static void usage(
 {
   fprintf(stderr,
 	  "Usage:\n"
-	  "%s [-o <file>] [-t #,#] [-h] [-v]  [<input file>]\n"
+	  "%s [-o <file>] [-p #] [-t #,#,#] [-T] [-h] [-v]  [<input file>]\n"
 	  "\tRead in a woolz 2D domain object and generate a set of tile\n"
-	  "\timages using the same algorithm as for a tiled tiff. The image\n"
-	  "\torigin is set to 0,0 and tiles generated row-wise from top to\n"
-	  "\tbottom. The output is a copound object with the object order\n"
+	  "\timages. These will be a set of equal sized 2D or 3D tiles which\n"
+	  "\tcover the input domain. If the input object has values then these\n"
+	  "\twill also be transferred.\n"
+	  "\t\n"
+	  "\tWith option \"-T\" use the same algorithm as for a tiled tiff. The image\n"
+	  "\torigin is set to (0,0) and tiles generated row-wise from top to\n"
+	  "\tbottom. The output is a compound object with the object order\n"
 	  "\tin tile sequence order.\n"
 	  "Arguments:\n"
 	  "\t-o <file>         write object to given file, default stdout\n"
-	  "\t-t xsize,ysize    tile size, default 256x256\n"
+	  "\t-p percent     only generate tiles if intersect size is >= percent \n"
+	  "\t               of the maximum tile size.\n"
+	  "\t-t xsize,ysize,zsize    tile size, default 256x256 (2D), 16x16x16 (3D)\n"
 	  "\t-h                print this message\n"
 	  "\t-v                verbose operation\n"
 	  "\n",
@@ -124,24 +130,30 @@ int main(
   char  **argv)
 {
   FILE		*inFile, *outFile;
-  char 		optList[] = "o:t:hv";
+  char 		optList[] = "o:p:t:Thv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   const char	*errMsg;
-  int		verboseFlg=0;
+  int		verboseFlg;
   WlzObject	*inObj, *tileObj, *obj1, *obj2, *obj3;
   WlzCompoundArray	*cObj;
-  int		tileWidth, tileHeight, width, height;
-  int		i, tileIndx, row, col, numTiles;
-  WlzIBox2	bbox;
+  int		tileWidth, tileHeight, tileDepth, width, height, depth;
+  int		i, tileIndx, row, col, plane, numTiles;
+  int		tileDefaultFlg;
+  int		tiffFlg;
+  int		percent, minSize;
+  WlzIBox2	bbox2;
+  WlzIBox3	bbox3;
   WlzDomain	domain;
   WlzValues	values;
   WlzPixelV	bckgrnd;
 
   /* set defaults */
   outFile = stdout;
-  tileWidth = 256;
-  tileHeight = 256;
+  tileDefaultFlg = 1;
+  verboseFlg = 0;
+  tileWidth = tileHeight = tileDepth = 0;
+  percent = 0;
 
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -156,18 +168,33 @@ int main(
       }
       break;
 
+    case 'p':
+      percent = atoi(optarg);
+      if((percent < 0) || (percent > 100)){
+	fprintf(stderr, "%s: invalid size percentage: %d\n", argv[0], percent);
+	usage(argv[0]);
+	return 1;
+      }
+      break;
+
     case 't':
-      i = sscanf(optarg, "%d,%d", &tileWidth, &tileHeight);
-      if( i < 2 ){
+      i = sscanf(optarg, "%d,%d,%d", &tileWidth, &tileHeight, &tileDepth);
+      if( i < 3 ){
 	fprintf(stderr, "%s: couldn't read tile size\n", argv[0]);
 	usage(argv[0]);
 	return 1;
       }
-      if((tileWidth < 1) || (tileHeight < 1)){
-	fprintf(stderr, "%s: invalid tile size %dx%d\n", argv[0], tileWidth, tileHeight);
+      if((tileWidth < 1) || (tileHeight < 1) || (tileDepth < 1)){
+	fprintf(stderr, "%s: invalid tile size %dx%dx%d\n", argv[0],
+		tileWidth, tileHeight, tileDepth);
 	usage(argv[0]);
 	return 1;
       }
+      tileDefaultFlg = 0;
+      break;
+
+    case 'T':
+      tiffFlg = 1;
       break;
 
     case 'v':
@@ -197,48 +224,135 @@ int main(
     switch( inObj->type ){
 
     case WLZ_2D_DOMAINOBJ:
+      /* check tile default */
+      if( tileDefaultFlg ){
+	tileWidth = tileHeight = 256;
+      }
+      minSize = tileWidth * tileHeight * percent / 100;
+
       /* calculate number of tiles and set up compound object for output */
-      bbox = WlzBoundingBox2I(inObj, &errNum);
-      width = bbox.xMax - bbox.xMin + 1;
-      height = bbox.yMax - bbox.yMin + 1;
+      bbox2 = WlzBoundingBox2I(inObj, &errNum);
+      width = bbox2.xMax - bbox2.xMin + 1;
+      height = bbox2.yMax - bbox2.yMin + 1;
       row = width / tileWidth + ((width%tileWidth)?1:0);
       col = height / tileHeight + ((height%tileHeight)?1:0);
       numTiles = row * col;
       cObj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, numTiles, NULL,
 				  WLZ_2D_DOMAINOBJ, &errNum);
 
-      /* shift object bounding box to origin */
-      obj1 = WlzShiftObject(inObj, -bbox.xMin, -bbox.yMin, 0, &errNum);
-      WlzFreeObj(inObj);
-      inObj = obj1;
-
       /* create tiles shifting each to origin */
       domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 				       0, tileHeight-1, 0, tileWidth-1, &errNum);
       values.core = NULL;
       tileObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL, NULL, &errNum);
-      bckgrnd = WlzGetBackground(inObj, &errNum);
+
+      if( inObj->values.core ){
+	bckgrnd = WlzGetBackground(inObj, &errNum);
+      }
       tileIndx = 0;
-      for(row=0; row < height; row += tileHeight){
-	for(col=0; col < width; col += tileWidth){
+      for(row=bbox2.yMin; row <= bbox2.yMax; row += tileHeight){
+	for(col=bbox2.xMin; col <= bbox2.xMax; col += tileWidth){
 	  obj1 = WlzShiftObject(tileObj, col, row, 0, &errNum);
-	  obj2 = WlzIntersect2(inObj, obj1, &errNum);
-	  obj3 = WlzGreyTemplate(inObj, obj2, bckgrnd, &errNum);
-	  cObj->o[tileIndx] = WlzAssignObject(
-	    WlzShiftObject(obj3, -col, -row, 0, &errNum), NULL);
-	  WlzFreeObj(obj3);
-	  WlzFreeObj(obj2);
+	  if((obj2 = WlzIntersect2(inObj, obj1, &errNum))){
+	    if( WlzArea(obj2, &errNum) > minSize ){
+	      if( inObj->values.core ){
+		obj3 = WlzGreyTemplate(inObj, obj2, bckgrnd, &errNum);
+	      }
+	      else {
+		obj3 = WlzCopyObject(obj2, &errNum);
+	      }
+	      if( tiffFlg ){
+		cObj->o[tileIndx] = WlzAssignObject(
+		  WlzShiftObject(obj3, -col, -row, 0, &errNum), NULL);
+		WlzFreeObj(obj3);
+	      }
+	      else {
+		cObj->o[tileIndx] = WlzAssignObject(obj3, &errNum);
+	      }
+	      tileIndx++;
+	    }
+	    WlzFreeObj(obj2);
+	  }
 	  WlzFreeObj(obj1);
-	  tileIndx++;
+	}
+      }
+      cObj->n = tileIndx;
+      WlzFreeObj(tileObj);
+      break;
+
+    case WLZ_3D_DOMAINOBJ:
+      /* check tile default */
+      if( tileDefaultFlg ){
+	tileWidth = tileHeight = tileDepth = 16;
+      }
+      minSize = tileWidth * tileHeight *tileDepth * percent / 100;
+
+      /* calculate number of tiles and set up compound object for output */
+      bbox3 = WlzBoundingBox3I(inObj, &errNum);
+      width = bbox3.xMax - bbox3.xMin + 1;
+      height = bbox3.yMax - bbox3.yMin + 1;
+      depth = bbox3.zMax - bbox3.zMin + 1;
+      row = width / tileWidth + ((width%tileWidth)?1:0);
+      col = height / tileHeight + ((height%tileHeight)?1:0);
+      plane = depth / tileDepth + ((depth%tileDepth)?1:0);
+      numTiles = plane * row * col;
+      cObj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, numTiles, NULL,
+				  WLZ_3D_DOMAINOBJ, &errNum);
+
+      /* create tiles shifting each to origin if needed */
+      domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+				    0, tileDepth - 1,
+				    0, tileHeight-1,
+				    0, tileWidth-1, &errNum);
+      values.core = NULL;
+      tileObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values, NULL, NULL, &errNum);
+      for(plane=0; plane < tileDepth; plane++){
+	domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					 0, tileHeight-1, 0, tileWidth-1, &errNum);
+	tileObj->domain.p->domains[plane] = WlzAssignDomain(domain, &errNum);
+      }
+
+      /* get background if input object has grey-values */
+      if( inObj->values.core ){
+	bckgrnd = WlzGetBackground(inObj, &errNum);
+      }
+
+      tileIndx = 0;
+      for(plane=bbox3.zMin; plane <= bbox3.zMax; plane += tileDepth){
+	for(row=bbox3.yMin; row <= bbox3.yMax; row += tileHeight){
+	  for(col=bbox3.xMin; col <= bbox3.xMax; col += tileWidth){
+	    obj1 = WlzShiftObject(tileObj, col, row, plane, &errNum);
+	    if((obj2 = WlzIntersect2(inObj, obj1, &errNum))){
+	      if( WlzVolume(obj2, &errNum) > minSize ){
+		if( inObj->values.core ){
+		  obj3 = WlzGreyTemplate(inObj, obj2, bckgrnd, &errNum);
+		}
+		else {
+		  obj3 = WlzCopyObject(obj2, &errNum);
+		}
+		if( tiffFlg ){
+		  cObj->o[tileIndx] = WlzAssignObject(
+		    WlzShiftObject(obj3, -col, -row, -plane, &errNum), NULL);
+		  WlzFreeObj(obj3);
+		}
+		else {
+		  cObj->o[tileIndx] = WlzAssignObject(obj3, &errNum);
+		}
+		tileIndx++;
+	      }
+	      WlzFreeObj(obj2);
+	    }
+	    WlzFreeObj(obj1);
+	  }
 	}
       }
       WlzFreeObj(tileObj);
-
+      cObj->n = tileIndx;
       break;
 
     default:
       fprintf(stderr,
-	      "%s: invalid object type - only implmented for 2D domain objects.\n",
+	      "%s: invalid object type - only implmented for 2D & 3D domain objects.\n",
 	      argv[0]);
       return 1;
     }
