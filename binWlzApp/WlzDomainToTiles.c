@@ -152,6 +152,7 @@ int main(
   outFile = stdout;
   tileDefaultFlg = 1;
   verboseFlg = 0;
+  tiffFlg = 0;
   tileWidth = tileHeight = tileDepth = 0;
   percent = 0;
 
