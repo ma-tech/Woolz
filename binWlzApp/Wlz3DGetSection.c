@@ -444,7 +444,7 @@ int main(int	argc,
 					      NULL, &errNum);
 	    if( nobj != NULL){
 	      char	fileBuf[256];
-	      sprintf(fileBuf, "%s%04.4d.wlz", outFile, j);
+	      sprintf(fileBuf, "%s%06.6d.wlz", outFile, j);
 	      if((outFP = fopen(fileBuf, "w")) != NULL){
 		 WlzWriteObj(outFP, nobj);
 		 fclose(outFP);
