@@ -921,7 +921,7 @@ extern WlzPropertyList          *WlzAssignPropertyList(
 extern WlzAffineTransform	*WlzAssignAffineTransform(
 				  WlzAffineTransform *,
 				  WlzErrorNum *dstErr);
-extern WlzAffineTransform *WlzAssign3DViewStruct(
+extern WlzThreeDViewStruct	*WlzAssign3DViewStruct(
                                   WlzThreeDViewStruct *viewStr,
                                   WlzErrorNum	*dstErr);
 extern WlzBoundList 		*WlzAssignBoundList(

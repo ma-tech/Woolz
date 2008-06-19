@@ -287,7 +287,7 @@ WlzAffineTransform *WlzAssignAffineTransform(
 * \param	viewStr			Given 3D view structure.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzAffineTransform *WlzAssign3DViewStruct(
+WlzThreeDViewStruct *WlzAssign3DViewStruct(
   WlzThreeDViewStruct *viewStr,
   WlzErrorNum	*dstErr)
 {
