@@ -48,12 +48,14 @@ bin_PROGRAMS		= \
 			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
 			  WlzTstCMeshTransformObj \
+			  WlzTstGeomArcLength2D \
 			  WlzTstGeomTetraAffineSolve \
 			  WlzTstGeomTriangleAffineSolve \
 			  WlzTstItrSpiral \
 			  WlzTstLBTDomain \
 			  WlzTstRegCCor \
-			  WlzTstVxInSimplex
+			  WlzTstVxInSimplex \
+			  WlzTstGeomVtxOnLineSegment
 
 
 WlzTstAlgCrossCorr_LDADD		= $(LDADD)
@@ -66,6 +68,10 @@ WlzTstCMeshGen_LDFLAGS			= $(AM_LFLAGS)
 WlzTstCMeshTransformObj_SOURCES		= WlzTstCMeshTransformObj.c
 WlzTstCMeshTransformObj_LDADD		= $(LDADD)
 WlzTstCMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstGeomArcLength2D_SOURCES		= WlzTstGeomArcLength2D.c
+WlzTstGeomArcLength2D_LDADD		= $(LDADD)
+WlzTstGeomArcLength2D_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTstGeomTetraAffineSolve_SOURCES	= WlzTstGeomTetraAffineSolve.c
 WlzTstGeomTetraAffineSolve_LDADD	= $(LDADD)
@@ -90,4 +96,9 @@ WlzTstRegCCor_LDFLAGS			= $(AM_LFLAGS)
 WlzTstVxInSimplex_SOURCES		= WlzTstVxInSimplex.c
 WlzTstVxInSimplex_LDADD			= $(LDADD)
 WlzTstVxInSimplex_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstGeomVtxOnLineSegment_SOURCES	= WlzTstGeomVtxOnLineSegment.c
+WlzTstGeomVtxOnLineSegment_LDADD	= $(LDADD)
+WlzTstGeomVtxOnLineSegment_LDFLAGS	= $(AM_LFLAGS)
+
 
