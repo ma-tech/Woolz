@@ -45,8 +45,6 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
-/* #define WLZ_DEBUG_READOBJ */
-
 #if defined(_WIN32) && !defined(__x86)
 #define __x86
 #endif
@@ -3691,17 +3689,20 @@ WlzCMesh2D	*WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	nod[0] = WlzCMeshNewNod2D(mesh, pos, &errNum);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  nod[0]->flags = flags;
-	}
-	else
-	{
-	  break;
-	}
+        nod[0] = WlzCMeshAllocNod2D(mesh);
+	nod[0]->pos = pos;
+	nod[0]->flags = flags;
       }
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Update the bounding box. */
+    WlzCMeshUpdateBBox2D(mesh);
+    /* Compute a new bucket grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignBuckets2D(mesh, nNod);
+    /* Recompute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen2D(mesh);
   }
   /* Read elements and create them within the mesh using the already
    * created nodes. */
@@ -3752,6 +3753,12 @@ WlzCMesh2D	*WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
       }
     }
   }
+#ifdef WLZ_DEBUG_READOBJ
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+  }
+#endif /* WLZ_DEBUG_READOBJ */
   /* Clean up if errors. */
   if(errNum != WLZ_ERR_NONE)
   {
@@ -3843,17 +3850,25 @@ WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
       }
       if(errNum == WLZ_ERR_NONE)
       {
+
 	nod[0] = WlzCMeshNewNod3D(mesh, pos, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
+	  nod[0] = WlzCMeshAllocNod3D(mesh);
+	  nod[0]->pos = pos;
 	  nod[0]->flags = flags;
-	}
-	else
-	{
-	  break;
 	}
       }
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Update the bounding box. */
+    WlzCMeshUpdateBBox3D(mesh);
+    /* Compute a new bucket grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignBuckets3D(mesh, nNod);
+    /* Recompute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen3D(mesh);
   }
   /* Read elements and create them within the mesh using the already
    * created nodes. */
