@@ -3114,8 +3114,6 @@ typedef enum _WlzCMeshNodFlags
   						and is being processed. */
   WLZ_CMESH_NOD_FLAG_KNOWN	= (1<<4),  /*!< Property associated with
                                                 node is known. */
-  WLZ_CMESH_NOD_FLAG_ESTIMATED	= (1<<5),  /*!< Property associated with
-                                                node is estimated. */
   WLZ_CMESH_NOD_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
 } WlzCMeshNodFlags;
 
