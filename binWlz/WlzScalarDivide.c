@@ -155,7 +155,7 @@ int main(int	argc,
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
     case WLZ_TRANS_OBJ:
-      if((obj = WlzScalarDivide(obj, div, NULL)) == NULL ){
+      if((obj = WlzScalarDivide(obj, div, NULL)) != NULL ){
 	WlzWriteObj(stdout, obj);
       }
       break;
