@@ -2501,3 +2501,195 @@ double          WlzGeomPolar2D(WlzDVertex2 org, WlzDVertex2 dst,
   return(ang);
 }
 
+
+/*!
+* \return	Cosine of angle between line segments (v0, v1) and (v1, v2)
+* 		with value in the range [0-1].
+* \ingroup	WlzGeometry
+* \brief	Computes the cosine of angle between line segments (v0, v1)
+* 		and (v1, v2). If any of these vertices are coincident then
+* 		zero is returned.
+* \param	v0			First vertex.
+* \param	v1			Second vertex (the common one).
+* \param	v2			Third vertex.
+*/
+double		WlzGeomCos3V(WlzDVertex2 v0, WlzDVertex2 v1, WlzDVertex2 v2)
+{
+  double	c = 0.0,
+  		l0,
+  		l1,
+		l2;
+  WlzDVertex2	s0,
+  		s1,
+		s2;
+
+  WLZ_VTX_2_SUB(s0, v1, v2);
+  WLZ_VTX_2_SUB(s1, v2, v0);
+  WLZ_VTX_2_SUB(s2, v0, v1);
+  l0 = WLZ_VTX_2_SQRLEN(s0);
+  l1 = WLZ_VTX_2_SQRLEN(s1);
+  l2 = WLZ_VTX_2_SQRLEN(s2);
+  if((l0 > DBL_EPSILON) && (l2 > DBL_EPSILON))
+  {
+    c = (0.5 * (l0 + l2 - l1)) / sqrt(l0 * l2);
+  }
+  return(c);
+}
+
+/*!
+* \return	Non-zero value only if test vertex is on the line segment.
+* \ingroup	WlzGeometry
+* \brief	Tests whether the given test vertex is on the given line
+* 		segment.
+* 		If all three vertices are coincident then the test vertex
+* 		is considered to line on the line segment.
+* \param	tst				Test vertex.
+* \param	seg0				First vertex of line segment.
+* \param	seg1				Second vertex of line segment.
+* \param	tol				Tollerance.
+*/
+int             WlzGeomVtxOnLineSegment(WlzDVertex2 tst,
+                                        WlzDVertex2 seg0, WlzDVertex2 seg1,
+                                        double tol)
+{
+  int           onSeg = 0;
+  double        mS,
+                mT,
+                tolSq;
+  WlzDVertex2   delS,
+                delT;
+  WlzDBox2	box;
+
+  /* 1. Simple in box test. */
+  box.xMin = box.xMax = seg0.vtX;
+  box.yMin = box.yMax = seg0.vtY;
+  if(seg1.vtX < box.xMin)
+  {
+    box.xMin = seg1.vtX;
+  }
+  else if(seg1.vtX > box.xMax)
+  {
+    box.xMax = seg1.vtX;
+  }
+  if(seg1.vtY < box.yMin)
+  {
+    box.yMin = seg1.vtY;
+  }
+  else if(seg1.vtY > box.yMax)
+  {
+    box.yMax = seg1.vtY;
+  }
+  if(((tst.vtX - box.xMin) > -tol) && ((tst.vtY - box.yMin) > -tol) &&
+     ((box.xMax - tst.vtX) > -tol) && ((box.yMax - tst.vtY) > -tol))
+  {
+    /* 2. Test vertex coincident with either segment vertex. */
+    tolSq = tol * tol;
+    if(WlzGeomVtxEqual2D(seg0, tst, tolSq) ||
+       WlzGeomVtxEqual2D(seg1, tst, tolSq))
+    {
+      onSeg = 1;
+    }
+    else
+    {
+      /* 3. Test gradients of the lines (seg0, seg1) and (seg0, tst) are
+       * equal. */
+      WLZ_VTX_2_SUB(delS, seg1, seg0);
+      WLZ_VTX_2_SUB(delT, tst, seg0);
+      if(delS.vtX - delS.vtY > 0)
+      {
+	if(delT.vtX - delT.vtY > -tol)
+	{
+	  mS = delS.vtY / delS.vtX;
+	  mT = delT.vtY / delT.vtX;
+	  if(fabs(mS - mT) < tol)
+	  {
+	    onSeg = 1;
+	  }
+	}
+      }
+      else
+      {
+	if(delT.vtY - delT.vtX > -tol)
+	{
+	  mS = delS.vtX / delS.vtY;
+	  mT = delT.vtX / delT.vtY;
+	  if(fabs(mS - mT) < tol)
+	  {
+	    onSeg = 1;
+	  }
+	}
+      }
+    }
+  }
+  return(onSeg);
+}
+
+/*!
+* \return	The arc length.
+* \ingroup	WlzGeometry
+* \brief	Computes the arc length from a to b traveling CCW on a
+* 		circle with centre c.
+* \param	a			Start point.
+* \param	b			End point.
+* \param	c			Cirecle centre.
+*/
+double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
+{
+  int		qa,
+  		qb;
+  double	ang,
+  		angA,
+  		angB,
+		chordSq,
+  		r,
+		rSq,
+		len = 0.0;
+  WlzDVertex2	p,
+  		t;
+  int		quadTbl[4] = {2, 3, 1, 0};    /* o--> x  2|3
+                                               * |       -+-
+					       * v y     1|0
+					       */
+  double	quadEndX[4] = { 0.0, -1.0,  0.0,  1.0},
+  		quadEndY[4] = { 1.0,  0.0, -1.0,  0.0};
+
+  WLZ_VTX_2_SUB(t, a, c);
+  rSq = WLZ_VTX_2_SQRLEN(t);
+  if(rSq > DBL_EPSILON)
+  {
+    r = sqrt(rSq);
+    /* Compute the quadrants that contain points a and b. */
+    qa = quadTbl[((a.vtY > c.vtY) << 1) | (a.vtX > c.vtX)];
+    qb = quadTbl[((b.vtY > c.vtY) << 1) | (b.vtX > c.vtX)];
+    if(qa == qb)
+    {
+      /* Compute angle from point a to b. */
+      WLZ_VTX_2_SUB(t, a, b);
+      chordSq = WLZ_VTX_2_SQRLEN(t);
+      ang = acos(1.0 - (0.5 * chordSq / rSq));
+    }
+    else
+    {
+      /* Compute angle at centre from point a to the end of it's quadrant. */
+      p.vtX = c.vtX + r * quadEndX[qa];
+      p.vtY = c.vtY + r * quadEndY[qa];
+      WLZ_VTX_2_SUB(t, a, p);
+      chordSq = WLZ_VTX_2_SQRLEN(t);
+      angA = acos(1.0 - (0.5 * chordSq / rSq));
+      /* Compute angle at centre from point b to the start of it's quadrant. */
+      p.vtX = c.vtX + r * quadEndX[(qb + 3) % 4];
+      p.vtY = c.vtY + r * quadEndY[(qb + 3) % 4];
+      WLZ_VTX_2_SUB(t, b, p);
+      chordSq = WLZ_VTX_2_SQRLEN(t);
+      angB = acos(1.0 - (0.5 * chordSq / rSq));
+      /* Compute total CCW arc length from a to b. */
+      ang = angA + angB + ((3 + qb - qa) * ALG_M_PI_2);
+      while(ang > 2 * ALG_M_PI)
+      {
+        ang -= 2 * ALG_M_PI;
+      }
+    }
+    len = r * ang;
+  }
+  return(len);
+}
