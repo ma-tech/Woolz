@@ -2542,6 +2542,19 @@ extern double                   WlzGeomPolar2D(
                                   WlzDVertex2 org,
                                   WlzDVertex2 dst,
                                   double *dstRad);
+extern double			WlzGeomCos3V(
+				  WlzDVertex2 v0,
+				  WlzDVertex2 v1,
+				  WlzDVertex2 v2);
+extern int             		WlzGeomVtxOnLineSegment(
+				  WlzDVertex2 tst,
+                                  WlzDVertex2 seg0,
+				  WlzDVertex2 seg1,
+                                  double tol);
+extern double			WlzGeomArcLength2D(
+				  WlzDVertex2 a,
+				  WlzDVertex2 b,
+				  WlzDVertex2 c);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -3506,10 +3519,14 @@ extern WlzCMeshNod2D            *WlzCMeshNewNod2D(
 extern WlzCMeshNod2D            *WlzCMeshMatchNod2D(
                                   WlzCMesh2D *mesh,
                                   WlzDVertex2 pos);
+extern WlzCMeshNod2D		*WlzCMeshAllocNod2D(
+				  WlzCMesh2D *mesh);
 extern WlzCMeshNod3D            *WlzCMeshNewNod3D(
                                   WlzCMesh3D *mesh,
                                   WlzDVertex3 pos,
                                   WlzErrorNum *dstErr);
+extern WlzCMeshNod3D		*WlzCMeshAllocNod3D(
+				  WlzCMesh3D *mesh);
 extern WlzCMeshElm2D            *WlzCMeshNewElm2D(
                                   WlzCMesh2D *mesh,
                                   WlzCMeshNod2D *nod0,
