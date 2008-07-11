@@ -89,8 +89,6 @@ void WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
 }
 #endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
 
-/* #define WLZ_CMESH_DEBUG_MESH */
-
 static void			WlzCMeshAddNodToGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod);
@@ -334,10 +332,6 @@ static WlzIVertex2 		WlzCMeshBucketIdxVtx2D(
 static WlzIVertex3 		WlzCMeshBucketIdxVtx3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 vtx);
-static WlzCMeshNod2D 		*WlzCMeshAllocNod2D(
-				  WlzCMesh2D *mesh);
-static WlzCMeshNod3D 		*WlzCMeshAllocNod3D(
-				  WlzCMesh3D *mesh);
 static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
 				  WlzCMesh2D *mesh);
 static WlzCMeshElm3D 		*WlzCMeshAllocElm3D(
@@ -1004,7 +998,7 @@ WlzCMeshNod3D	*WlzCMeshNewNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
 * \param	mesh			Mesh with resources.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzCMeshNod2D *WlzCMeshAllocNod2D(WlzCMesh2D *mesh)
+WlzCMeshNod2D 	*WlzCMeshAllocNod2D(WlzCMesh2D *mesh)
 {
   WlzCMeshEntRes	*nRes;
   WlzCMeshNod2D	*nod = NULL;
@@ -1028,7 +1022,7 @@ static WlzCMeshNod2D *WlzCMeshAllocNod2D(WlzCMesh2D *mesh)
 * \param	mesh			Mesh with resources.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzCMeshNod3D *WlzCMeshAllocNod3D(WlzCMesh3D *mesh)
+WlzCMeshNod3D 	*WlzCMeshAllocNod3D(WlzCMesh3D *mesh)
 {
   WlzCMeshEntRes	*nRes;
   WlzCMeshNod3D	*nod = NULL;
