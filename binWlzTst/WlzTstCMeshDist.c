@@ -71,6 +71,7 @@ int		main(int argc, char *argv[])
   		nSeeds = 0,
   		ok = 1,
   		option,
+		repeats = 1,
   		usage = 0,
 		maxNod = 0,
 		seedType = WLZTST_SEED_SEEDS,
@@ -89,7 +90,7 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL;
   WlzCMeshP 	mesh;
-  static char   optList[] = "bhto:s:S:";
+  static char   optList[] = "bhto:s:R:S:";
   const char    inObjFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
 
@@ -153,6 +154,12 @@ int		main(int argc, char *argv[])
 	if(fP && strcmp(optarg, "-"))
 	{
 	  (void )fclose(fP); fP = NULL;
+	}
+	break;
+      case 'R':
+        if(sscanf(optarg, "%d", &repeats) != 1)
+	{
+	  usage = 1;
 	}
 	break;
       case 'o':
@@ -229,9 +236,18 @@ int		main(int argc, char *argv[])
 	maxNod = mesh.m3->res.nod.maxEnt;
 	break;
       default:
+        ok = 0;
 	errNum = WLZ_ERR_OBJECT_TYPE;
+        (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	(void )fprintf(stderr,
+		   "%s: Invalid object type, must be WLZ_CMESH_[23]D (%s),\n",
+		       argv[0],
+		       errMsgStr);
         break;
     }
+  }
+  if(ok)
+  {
     if((dist = AlcCalloc(maxNod, sizeof(double))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -296,15 +312,19 @@ int		main(int argc, char *argv[])
   (void )Alc2Free((void **)inSeeds);
   if(ok)
   {
-    errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, NULL, nSeeds, seeds.d2);
-    if(errNum != WLZ_ERR_NONE)
+    for(idN = 0; idN < repeats; ++idN)
     {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-		     "%s Failed to compute distances in mesh (%s).\n",
-		     argv[0],
-		     errMsgStr);
+      errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, NULL, nSeeds, seeds.d2);
+      if(errNum != WLZ_ERR_NONE)
+      {
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	(void )fprintf(stderr,
+		       "%s Failed to compute distances in mesh (%s).\n",
+		       argv[0],
+		       errMsgStr);
+        break;
+      }
     }
   }
   if(ok)
@@ -375,7 +395,7 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output file>]\n"
-    "       [-b] [-s<seed>] [-S<seed file>]\n"
+    "       [-b] [-s<seed>] [-R<repeats>] [-S<seed file>]\n"
     "       [-t] [<input cmesh object>]\n"
     "Reads a conforming mesh and then computes distances from the given\n"
     "seeds or the boundary nodes.\n"
@@ -397,6 +417,7 @@ int		main(int argc, char *argv[])
     "  -b  Compute distances from boundary nodes.\n"
     "  -s  Compute distances from given seed point, which must be within\n"
     "      the mesh.\n"
+    "  -R  number of times to repeat the computation.\n"
     "  -S  File of seed points, each as of which must be within the mesh.\n"
     "  -t  Output text data.\n",
     argv[0]);
