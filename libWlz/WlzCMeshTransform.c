@@ -47,8 +47,6 @@ static char _WlzCMeshTransform_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
-/* #define WLZ_CMESHTRANSFORM_DEBUG HACK */
-
 /*!
 * \enum		_WlzCMeshScanElmFlags
 * \ingroup	WlzTransform
@@ -2757,14 +2755,12 @@ static WlzObject *WlzCMeshTransformObjPDomain3D(WlzObject *srcObj,
   {
     dstObj = WlzCMeshScanObjPDomain3D(srcObj, mSWSp, &errNum); 
   }
-#define WLZ_CMESHTRANSFORM_DEBUG // HACK
 #ifdef WLZ_CMESHTRANSFORM_DEBUG
   if(errNum  == WLZ_ERR_NONE)
   {
     errNum = WlzCMeshVerifyWSp3D(srcObj, mSWSp);
   }
 #endif
-#undef WLZ_CMESHTRANSFORM_DEBUG
   /* Free workspace. */
   WlzCMeshScanWSpFree3D(mSWSp);
   if(dstErr)

@@ -42,10 +42,14 @@ static char _WlzCMeshFMar_c[] = "MRC HGU $Id$";
 */
 #include <limits.h>
 #include <float.h>
+#include <math.h>
 #include <Wlz.h>
 
 typedef struct _WlzCMeshFMarQEntry
 {
+#ifdef DEBUG
+  int			idx;		/* For debug only. */
+#endif
   int			next;		/* Index of next towards tail,
   					   -ve iff at tail. */
   int			prev;		/* Index of next towards head,
@@ -78,23 +82,19 @@ typedef struct _WlzCMeshFMarQ
 					   index. */
 } WlzCMeshFMarQ;
 
-static WlzCMeshFMarQ 		*WlzCMeshFMarQNew(
-				  int nEntries);
-static WlzErrorNum 		WlzCMeshFMarQRealloc(
-				  WlzCMeshFMarQ *queue,
-				  int minEnt);
+static int			WlzCMeshFMarQHashFn(
+				  int value,
+				  int maxVal);
+static double		   	WlzCMeshFMarQPriority(
+				  WlzCMeshNod2D *nod,
+				  double *times);
+static double			WlzCMeshFMarClampACos2D(
+				  double val);
 static void			WlzCMeshFMarQFree(
 				  WlzCMeshFMarQ *queue);
 static void			WlzCMeshFMarQEntryFree(
 				  WlzCMeshFMarQ *queue,
 				  WlzCMeshFMarQEntry *qEnt);
-static WlzErrorNum 		WlzCMeshFMarQInsert2D(
-				  WlzCMeshFMarQ *queue,
-				  double *times,
-				  WlzCMeshNod2D *nod);
-static WlzCMeshFMarQEntry 	*WlzCMeshFMarQNewEnt(
-				  WlzCMeshFMarQ *queue,
-				  WlzErrorNum *dstErr);
 static void			WlzCMeshFMarQUnlinkEntFromList(
 				  WlzCMeshFMarQ *queue,
 				  WlzCMeshFMarQEntry *ent);
@@ -103,22 +103,44 @@ static void			WlzCMeshFMarQUnlinkEntFromHash(
 				  WlzCMeshFMarQEntry *ent);
 static void			WlzCMeshFMarQRehash(
 				  WlzCMeshFMarQ *queue);
-static int			WlzCMeshFMarQHashFn(
-				  int value,
-				  int maxVal);
 static void			WlzCMeshFMarQInsertEnt(
 				  WlzCMeshFMarQ *queue,
 				  WlzCMeshFMarQEntry *gEnt);
-static WlzCMeshFMarQEntry 	*WlzCMeshFMarQPopTail(
-				  WlzCMeshFMarQ *queue);
 static void		 	WlzCMeshFMarCompute2D(
 				  WlzCMeshNod2D *nod0,
 				  WlzCMeshNod2D *nod1,
 				  double s2,
 				  double *times);
-static double		   	WlzCMeshFMarQPriority(
-				  WlzCMeshNod2D *nod,
+static void			WlzCMeshFMarComputeUniform2D(
+				  WlzCMeshNod2D *nod2,
+				  WlzCMeshNod2D *nod0,
 				  double *times);
+static WlzErrorNum 		WlzCMeshFMarQRealloc(
+				  WlzCMeshFMarQ *queue,
+				  int minEnt);
+static WlzErrorNum 		WlzCMeshFMarAddSeed2D(
+				  WlzCMeshFMarQ *queue,
+				  WlzCMesh2D *mesh, 
+				  double *times,
+				  double *speeds,
+				  WlzDVertex2 seedPos);
+static WlzErrorNum 		WlzCMeshFMarInsertSeed2D(
+				  WlzCMeshFMarQ *queue,
+				  WlzCMeshNod2D *nod,
+				  double *times,
+				  double *speeds,
+				  WlzDVertex2 seedPos);
+static WlzErrorNum 		WlzCMeshFMarQInsert2D(
+				  WlzCMeshFMarQ *queue,
+				  double *times,
+				  WlzCMeshNod2D *nod);
+static WlzCMeshFMarQ 		*WlzCMeshFMarQNew(
+				  int nEntries);
+static WlzCMeshFMarQEntry 	*WlzCMeshFMarQPopTail(
+				  WlzCMeshFMarQ *queue);
+static WlzCMeshFMarQEntry 	*WlzCMeshFMarQNewEnt(
+				  WlzCMeshFMarQ *queue,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	Woolz error code.
@@ -150,17 +172,14 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh,
 				double *times, double *speeds,
 				int nSeeds, WlzDVertex2 *seedPos)
 {
-  int		idE,
+  int		
   		idN,
   		idS,
 		nBnd;
-  WlzDVertex2	dsp;
-  WlzCMeshElm2D	*elm;
   WlzCMeshNod2D	*nod0,
   		*nod1;
   WlzCMeshEdgU2D *edu0,
   		*edu1;
-  WlzCMeshNod2D	*nodes[3];
   WlzCMeshFMarQ *queue = NULL;
   WlzCMeshFMarQEntry *qEnt;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -208,38 +227,8 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh,
       idS = 0;
       while((errNum == WLZ_ERR_NONE) && (idS < nSeeds))
       {
-        idE = WlzCMeshElmEnclosingPos2D(mesh, -1,
-	                                (seedPos + idS)->vtX,
-					(seedPos + idS)->vtY);
-	if(idE < 0)
-	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
-	  break;
-	}
-	else
-	{
-	  elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-	  if(elm->idx > 0)
-	  {
-	    WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
-	    for(idN = 0; idN < 3; ++idN)
-	    {
-	      nod0 = nodes[idN];
-	      if((nod0->flags & WLZ_CMESH_NOD_FLAG_KNOWN) == 0)
-	      {
-		WLZ_VTX_2_SUB(dsp, *(seedPos + idS), nod0->pos);
-		*(times + nod0->idx) = WLZ_VTX_2_LENGTH(dsp);
-		if(speeds != NULL)
-		{
-		  *(times + nod0->idx) /= *(speeds + nod0->idx);
-		}
-		nod0->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE |
-			       WLZ_CMESH_NOD_FLAG_KNOWN;
-		errNum = WlzCMeshFMarQInsert2D(queue, times, nod0);
-	      }
-	    }
-	  }
-	}
+	errNum = WlzCMeshFMarAddSeed2D(queue, mesh, times, speeds,
+				       seedPos[idS]);
         ++idS;
       }
     }
@@ -252,10 +241,8 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh,
 	if((nod0->idx >= 0) &&
 	   ((nod0->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0))
 	{
-          *(times + idN) = 0.0;
-	  nod0->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE |
-	                 WLZ_CMESH_NOD_FLAG_KNOWN;
-	  errNum = WlzCMeshFMarQInsert2D(queue, times, nod0);
+	  errNum = WlzCMeshFMarAddSeed2D(queue, mesh, times, speeds,
+					 nod0->pos);
 	}
         ++idN;
       }
@@ -270,6 +257,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh,
      * For each of these neighbouring nodes, compute their time, set
      * them to active and insert them into the queue.*/
     nod0 = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, qEnt->nodIdx);
+    nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN;
     edu0 = edu1 = nod0->edu;
     WlzCMeshFMarQEntryFree(queue, qEnt);
     do
@@ -277,12 +265,48 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh,
       nod1 = edu1->next->nod;
       if((nod1->flags & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
       {
-	/* Node may have known time if active or unknown time if downwind. */
-        WlzCMeshFMarCompute2D(nod1, nod0,
-	                      (speeds == NULL)? 1.0: *(speeds + nod1->idx),
-			      times);
-        nod1->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE;
+	if(speeds)
+	{
+	  WlzCMeshFMarCompute2D(nod1, nod0, *(speeds + nod1->idx), times);
+	}
+	else
+	{
+#ifdef WLZ_CMESH_FMAR_VP
+	  WlzCMeshFMarComputeUniform2D(nod1, nod0, times);
+#else /* WLZ_CMESH_FMAR_VP */
+	  WlzCMeshFMarCompute2D(nod1, nod0, 1.0, times);
+#endif /* WLZ_CMESH_FMAR_VP */
+	}
+        nod1->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE |
+	               WLZ_CMESH_NOD_FLAG_KNOWN;
         errNum = WlzCMeshFMarQInsert2D(queue, times, nod1);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Check for boundary edge where nnxt connectivity may miss a node. */
+        if((edu1->next->next->opp == NULL) ||
+	   (edu1->next->next->opp == edu1->next->next))
+        {
+	  nod1 = edu1->next->next->nod;
+	  if((nod1->flags & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
+	  {
+	    if(speeds)
+	    {
+	      WlzCMeshFMarCompute2D(nod1, nod0, *(speeds + nod1->idx), times);
+	    }
+	    else
+	    {
+#ifdef WLZ_CMESH_FMAR_VP
+	      WlzCMeshFMarComputeUniform2D(nod1, nod0, times);
+#else /* WLZ_CMESH_FMAR_VP */
+	      WlzCMeshFMarCompute2D(nod1, nod0, 1.0, times);
+#endif /* WLZ_CMESH_FMAR_VP */
+	    }
+	    nod1->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE |
+	                   WLZ_CMESH_NOD_FLAG_KNOWN;
+	    errNum = WlzCMeshFMarQInsert2D(queue, times, nod1);
+	  }
+	}
       }
       edu1 = edu1->nnxt;
     } while(edu1 != edu0);
@@ -373,6 +397,9 @@ static WlzCMeshFMarQ *WlzCMeshFMarQNew(int nEntries)
       for(idE = 0; idE < queue->max; ++idE)
       {
 	ent = queue->entries + idE;
+#ifdef DEBUG
+        ent->idx = idE;	 	/* For debug only. */
+#endif
 	ent->next = idE + 1;
 	ent->prev = idE - 1;
         ent->hashNxt = -1;
@@ -478,7 +505,7 @@ static void	WlzCMeshFMarQEntryFree(WlzCMeshFMarQ *queue,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Inserts the given  node from a 2D constraied mesh into
+* \brief	Inserts the given node from a 2D constraied mesh into
 * 		the given priority queue. The given times must be valid
 * 		for the given node and any upwind nodes.
 * \param	queue			Given constrained mesh node priority
@@ -576,6 +603,8 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEnt(WlzCMeshFMarQ *queue,
     idE = queue->free;
     ent = queue->entries + idE;
     queue->free = ent->next;
+    ent->next = ent->prev = ent->hashNxt = ent->nodIdx = -1;
+    ent->priority = 0.0;
     ++(queue->cnt);
   }
   if(dstErr)
@@ -598,22 +627,6 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQNewEnt(WlzCMeshFMarQ *queue,
 static void	WlzCMeshFMarQUnlinkEntFromList(WlzCMeshFMarQ *queue,
 				WlzCMeshFMarQEntry *ent)
 {
-  if(ent->prev >= 0)
-  {
-    (queue->entries + ent->prev)->next = ent->next;
-  }
-  else
-  {
-    queue->head = ent->next;
-  }
-  if(ent->next >= 0)
-  {
-    (queue->entries + ent->next)->prev = ent->prev;
-  }
-  else
-  {
-    queue->tail = ent->prev;
-  }
   /* If unlinked entry is the queue last entry set queue last entry to
    * next or previous entry. */
   if(queue->last == ent - queue->entries)
@@ -627,6 +640,25 @@ static void	WlzCMeshFMarQUnlinkEntFromList(WlzCMeshFMarQ *queue,
       queue->last = ent->prev;
     }
   }
+  /* Break prev link. */
+  if(ent->prev >= 0)
+  {
+    (queue->entries + ent->prev)->next = ent->next;
+  }
+  else
+  {
+    queue->head = ent->next;
+  }
+  /* Break next link. */
+  if(ent->next >= 0)
+  {
+    (queue->entries + ent->next)->prev = ent->prev;
+  }
+  else
+  {
+    queue->tail = ent->prev;
+  }
+  ent->prev = ent->next = -1;
 }
 
 /*!
@@ -745,7 +777,8 @@ static double	WlzCMeshFMarQPriority(WlzCMeshNod2D *nod, double *times)
 * \ingroup	WlzMesh
 * \brief	Inserts the given entry into the given queue, knowing
 * 		that the entry is valid and that it's not already in
-* 		the queue.
+* 		the queue. The queue is kept sorted with the highest
+* 		priority entry at the head and the lowest at the tail.
 * \param	queue			Given constrained mesh node priority
 * 					queue.
 * \param	ent0			Entry to insert.
@@ -753,9 +786,9 @@ static double	WlzCMeshFMarQPriority(WlzCMeshNod2D *nod, double *times)
 static void	WlzCMeshFMarQInsertEnt(WlzCMeshFMarQ *queue,
 				WlzCMeshFMarQEntry *gEnt)
 {
-  int		idE,
-  		idG;
-  WlzCMeshFMarQEntry *ent;
+  int		idG;
+  WlzCMeshFMarQEntry *ent0,
+  		*ent1;
 
   idG = gEnt - queue->entries;
   if(queue->last < 0)
@@ -766,58 +799,45 @@ static void	WlzCMeshFMarQInsertEnt(WlzCMeshFMarQ *queue,
   }
   else
   {
-    ent = queue->entries + queue->last;
-    if(gEnt->priority > ent->priority)
+    ent1 = ent0 = queue->entries + queue->last;
+    if(gEnt->priority > ent0->priority)
     {
-      /* Insert entry above last towards the head of the queue. */
-      while((gEnt->priority > ent->priority) && (ent->prev >= 0))
+      /* Insert entry above last, towards the head of the queue. */
+      while((gEnt->priority > ent1->priority) && (ent1->prev >= 0))
       {
-	ent = queue->entries + ent->prev;
+	ent0 = ent1;
+	ent1 = queue->entries + ent0->prev;
       }
-      idE = ent - queue->entries;
-      if(ent->prev >= 0)
+      gEnt->prev = ent0->prev;
+      gEnt->next = ent0 - queue->entries;
+      ent0->prev = idG;
+      if(gEnt->prev < 0)
       {
-	/* gEnt->priority <= ent->priority --GE--*/
-	gEnt->prev = ent->prev;
-	(queue->entries + gEnt->prev)->next = idG;
-	gEnt->next = ent->next;
-	ent->prev = idG;
+        queue->head = idG;
       }
       else
       {
-	/* gEnt->priority >= ent->priority */
-	gEnt->prev = -1;
-	if((gEnt->next = queue->head) >= 0)
-	{
-	  (queue->entries + gEnt->next)->prev = idG;
-	}
-	queue->head = idG;
+	(queue->entries + gEnt->prev)->next = idG;
       }
     }
     else
     {
-      /* Insert entry at or below last (towards the tail). */
-      while((gEnt->priority < ent->priority) && (ent->next >= 0))
+      /* Insert entry below last, towards the tail of the queue. */
+      while((gEnt->priority < ent1->priority) && (ent1->next >= 0))
       {
-	ent = queue->entries + ent->next;
+	ent0 = ent1;
+	ent1 = queue->entries + ent0->next;
       }
-      idE = ent - queue->entries;
-      if(ent->next >= 0)
+      gEnt->prev = ent0 - queue->entries;
+      gEnt->next = ent0->next;
+      ent0->next = idG;
+      if(gEnt->next < 0)
       {
-	/* gEnt->priority <= ent->priority: --EG-- */
-        gEnt->next = ent->next;
-	(queue->entries + gEnt->next)->prev = idG;
-	gEnt->prev = idE;
-	ent->next = idG;
+        queue->tail = idG;
       }
       else
       {
-	gEnt->next = -1;
-	if((gEnt->prev = queue->tail) >= 0)
-	{
-	  (queue->entries + gEnt->prev)->next = idG;
-	}
-	queue->tail = idG;
+        (queue->entries + gEnt->next)->prev = idG;
       }
     }
   }
@@ -858,7 +878,7 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQPopTail(WlzCMeshFMarQ *queue)
 * 		at the nodes of phi0, phi1 and ph2. Edge lengths opposite
 * 		to the similarly numbered nodes of len0, len1 and len2.
 * 		The solution is similar to that in "Fast Sweeping Methods
-* 		For Eikonal equations On triangular meshes", Jianliang Quian,
+* 		For Eikonal equations On triangular meshes", Jianliang Qian,
 * 		etal, SIAM journal on Mumerical Analysis, Vol 45, pp 83-107,
 * 		2007. But uses simple interpolation in the case of phi2
 * 		being obtuse.
@@ -875,8 +895,7 @@ static WlzCMeshFMarQEntry *WlzCMeshFMarQPopTail(WlzCMeshFMarQ *queue)
 static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod2, WlzCMeshNod2D *nod0,
 				double s2, double *times)
 {
-  int		idM,
-  		idN;
+  int		idN;
   double	d0,
 		d1,
 		is2,
@@ -891,6 +910,7 @@ static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod2, WlzCMeshNod2D *nod0,
 		*nod3;
   WlzCMeshEdgU2D *edu;
   WlzCMeshElm2D	*elm;
+  const double	maxCosAng = 0.996195; 		        /* Cosine 5 degrees. */
 
   /* Find an element which is common to both the given nodes. */
   edu = nod2->edu;
@@ -921,37 +941,28 @@ static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod2, WlzCMeshNod2D *nod0,
       break;
     }
   }
-  if(((nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) == 0) &&
-     (edu->opp != NULL) && (edu->opp != edu))
+  /* Check other nodes which are in an element that shares an edge with this
+   * one, selecting the one which has the minimum known time of those
+   * considered. */
+  for(idN = 0; idN < 3; ++idN)
   {
-    /* If nod1 has an unknown time then check for elm on opposite edge. */
-    for(idN = 0; idN < 3; ++idN)
+    edu = &(elm->edu[idN]);
+    if((edu->opp != NULL) && (edu->opp != edu))
     {
-      edu = elm->edu + idN;
-      if(((edu->nod == nod0) && (edu->next->nod == nod2)) ||
-         ((edu->nod == nod2) && (edu->next->nod == nod0)))
+      /* Find other node opposite this edge use and check for minimum
+       * time and that the nodes are not co-linear. */
+      nod3 = edu->opp->next->next->nod;
+      if(*(times + nod3->idx) < *(times + nod1->idx))
       {
-	if((edu->opp != NULL) && (edu->opp != edu))
+	d0 = WlzGeomCos3V(nod0->pos, nod3->pos, nod2->pos);
+	if(d0 < maxCosAng)
 	{
-          elm = edu->opp->elm;
-	  /* Get nod1 from element. */
-	  for(idM = 0; idM < 3; ++idM)
-	  {
-	    nod3 = elm->edu[idM].nod;
-	    if((nod3 != nod2) && (nod3 != nod0))
-	    {
-	      if((nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0)
-	      {
-		nod1 = nod3;
-	      }
-	      break;
-	    }
-	  }
+	  nod1 = nod3;
 	}
-        break;
       }
     }
   }
+  /* Compute time at nod2. */
   if((nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) == 0)
   {
     /* Only have one node with known time in this element. Compute the time
@@ -1048,4 +1059,400 @@ static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod2, WlzCMeshNod2D *nod0,
   {
     *(times + nod2->idx) = time[2];
   }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Computes wavefront propagation time for the given unknown
+* 		node.
+* 		Given a pair of nodes that are connected by a single edge
+* 		in a 2D conforming mesh, the first of which has an unknown
+* 		and the second a known wavefront propagation time, this
+* 		function computes the unknown time.
+* 		A mesh element is found which includes the two given nodes
+* 		and if possible has a third node for which the time is known.
+* 		This element has nodes nod0, nod1 and nod2. Internal angles
+* 		at the nodes of phi0, phi1 and ph2. Edge lengths opposite
+* 		to the similarly numbered nodes of len0, len1 and len2.
+* 		The solution relies on having a uniform speed and so is
+* 		perfect for computing distances. It is more accurate than
+* 		WlzCMeshFMarCompute2D().
+* \param	nod2			Unknown node.
+* \param	nod0			A known node directly connected to
+* 					the unknown node.
+* \param	times			Array of times indexed by the
+* 					mesh node indices, which will be
+* 					set for the unknown node on return.
+*/
+static void	WlzCMeshFMarComputeUniform2D(WlzCMeshNod2D *nod2,
+				WlzCMeshNod2D *nod0, double *times)
+{
+  int		idN,
+  		edgDst;
+  double	d0,
+		d0Sq,
+		d1,
+		d1Sq,
+		d2,
+		theta,
+		phi;
+  double	len[3],
+		lenSq[3],
+		time[3];
+  WlzDVertex2	del;
+  WlzCMeshNod2D	*nod1,
+		*nod3;
+  WlzCMeshEdgU2D *edu;
+  WlzCMeshElm2D	*elm;
+  const double	maxCosAng = 0.996195; 		        /* Cosine 5 degrees. */
+
+  time[0] = time[1] = DBL_MAX;
+  /* Find an element which is common to both the given nodes. */
+  edu = nod2->edu;
+  do
+  {
+    edu = edu->nnxt;
+  } while((edu != nod2->edu) && (edu->next->nod != nod0));
+  if(edu->next->nod != nod0)
+  {
+    /* Nodes are boundary and directed edge runs from nod0 to nod2
+     * so missed it when looking for directed edge from nod2 to nod0
+     * so look from nod0 to nod2 instead. */
+    edu = nod0->edu;
+    do
+    {
+      edu = edu->nnxt;
+    }
+    while((edu != nod0->edu) && (edu->next->nod != nod2));
+  }
+  elm = edu->elm;
+  /* Get nod1 from element. */
+  for(idN = 0; idN < 3; ++idN)
+  {
+    nod1 = elm->edu[idN].nod;
+    if((nod1 != nod2) && (nod1 != nod0))
+    {
+      break;
+    }
+  }
+  /* Check other nodes which are in an element that shares an edge with this
+   * one, selecting the one which has the minimum known time of those
+   * considered. */
+  for(idN = 0; idN < 3; ++idN)
+  {
+    edu = &(elm->edu[idN]);
+    if((edu->opp != NULL) && (edu->opp != edu))
+    {
+      /* Find other node opposite this edge use and check for minimum
+       * time and that the nodes are not co-linear. */
+      nod3 = edu->opp->next->next->nod;
+      if(*(times + nod3->idx) < *(times + nod1->idx))
+      {
+	d0 = WlzGeomCos3V(nod0->pos, nod3->pos, nod2->pos);
+	if(d0 < maxCosAng)
+	{
+	  nod1 = nod3;
+	}
+      }
+    }
+  }
+  /* Get distances. */
+  d0 = *(times + nod0->idx);
+  d1 = *(times + nod1->idx);
+  d0Sq = d0 * d0;
+  d1Sq = d1 * d1;
+  /* Compute element edge lengths. */
+  WLZ_VTX_2_SUB(del, nod1->pos, nod2->pos);
+  lenSq[0] = WLZ_VTX_2_SQRLEN(del);
+  len[0] = sqrt(lenSq[0]);
+  WLZ_VTX_2_SUB(del, nod2->pos, nod0->pos);
+  lenSq[1] = WLZ_VTX_2_SQRLEN(del);
+  len[1] = sqrt(lenSq[1]);
+  WLZ_VTX_2_SUB(del, nod0->pos, nod1->pos);
+  lenSq[2] = WLZ_VTX_2_SQRLEN(del);
+  len[2] = sqrt(lenSq[2]);
+  if(d0Sq < DBL_EPSILON)
+  {
+    time[2] = len[1];
+  }
+  else if(d1Sq < DBL_EPSILON)
+  {
+    time[2] = len[0];
+  }
+  else if((nod0->flags & nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0)
+  {
+    edgDst = 0;
+    /* Clamp values to avoid numerical errors giving parameters for acos()
+     * outside [-1,1]. */
+    /* Compute time at nod2 from time at nod0. */
+    d2 = (d0Sq + lenSq[2] - d1Sq)/(2 * d0 * len[2]);
+    theta = WlzCMeshFMarClampACos2D(d2);
+    d2 = (lenSq[2] + lenSq[1] - lenSq[0])/(2 * len[2] * len[1]);
+    phi = WlzCMeshFMarClampACos2D(d2);
+    if(theta + phi > ALG_M_PI)
+    {
+      edgDst = 1;
+      time[0] = *(times + nod0->idx) + len[1];
+    }
+    else
+    {
+      time[0] = sqrt(d0Sq + lenSq[1] - 2.0 * cos(theta + phi) * d0 * len[1]);
+    }
+    /* Compute time at nod2 from time at nod1. */
+    d2 = (d1Sq + lenSq[2] - d0Sq)/(2 * d1 * len[2]);
+    theta = WlzCMeshFMarClampACos2D(d2);
+    d2 = (lenSq[2] + lenSq[0] - lenSq[1])/(2 * len[0] * len[2]);
+    phi = WlzCMeshFMarClampACos2D(d2);
+    if(theta + phi > ALG_M_PI)
+    {
+      edgDst += 2;
+      time[1] = *(times + nod0->idx) + len[0];
+    }
+    else
+    {
+      time[1] = sqrt(d1Sq + lenSq[0] - 2.0 * cos(theta + phi) * d1 * len[0]);
+    }
+    switch(edgDst)
+    {
+      case 1:
+	time[2] = time[1];
+        break;
+      case 2:
+	time[2] = time[0];
+        break;
+      default:
+        time[2] = 0.5 * (time[0] + time[1]);
+	break;
+    }
+  }
+  else
+  {
+    /* Only have one node with known time in this element. Compute the time
+     * using just the edge length. */
+    time[2] = *(times + nod0->idx) + len[1];
+  }
+  if(time[2] < *(times + nod2->idx))
+  {
+    *(times + nod2->idx) = time[2];
+  }
+}
+
+/*!
+* \return	Arc cosine of given value.
+* \ingroup	WlzMesh
+* \brief	Clamps the given value and checks for frequently occuring
+* 		special values in calling acos().
+* \param	val			Given value.
+*/
+static double	WlzCMeshFMarClampACos2D(double val)
+{
+  double	ang = 0.0;
+
+  if(val < -1.0 + DBL_EPSILON)
+  {
+    ang = ALG_M_PI;
+  }
+  else if(val > 1.0 - DBL_EPSILON)
+  {
+    ang = 0;
+  }
+  else
+  {
+    ang = acos(val);
+  }
+  return(ang);  
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds the given node to the queue as part of the initial
+* 		seeding.
+* \param	queue			The queue.
+* \param	mesh			The constrained mesh.
+* \param	times			Array of wavefront arrival times
+* 					indexed by the mesh node indices,
+* 					which will be set on return.
+* \param	speeds			Array of wavefront propagation
+* 					speeds indexed by the mesh node
+* 					indices, may be NULL in which
+* 					case a constant speed of 1.0 is used.
+* 					Speeds must all be > zero.
+* \param	seedPos			Seed position.
+*/
+static WlzErrorNum WlzCMeshFMarAddSeed2D(WlzCMeshFMarQ *queue,
+				WlzCMesh2D *mesh, 
+				double *times, double *speeds,
+				WlzDVertex2 seedPos)
+{
+  int		cls = 0,
+  		idE,
+		idM;
+  WlzCMeshEdgU2D *edu0;
+  WlzCMeshNod2D	*nod0,
+  		*nod1;
+  WlzCMeshElm2D *elm0,
+  		*elm1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idM = WlzCMeshElmEnclosingPos2D(mesh, -1, seedPos.vtX, seedPos.vtY);
+  if(idM < 0)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    elm0 = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idM);
+    if(elm0->idx < 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Is seed coincident with a mesh node. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      nod0 = elm0->edu[idE].nod;
+      if(WlzGeomVtxEqual2D(nod0->pos, seedPos, WLZ_MESH_TOLERANCE_SQ))
+      {
+	cls = 1;
+        break;
+      }
+    }
+    if(cls == 0)
+    {
+      /* Does seed lie on an edge of the element. */
+      for(idE = 0; idE < 3; ++idE)
+      {
+        nod0 = elm0->edu[idE].nod;
+	nod1 = elm0->edu[(idE + 1) %3].nod;
+	if(WlzGeomVtxOnLineSegment(seedPos, nod0->pos, nod1->pos,
+			           WLZ_MESH_TOLERANCE))
+	{
+	  cls = 2;
+	  break;
+	}
+      }
+    }
+    switch(cls)
+    {
+      case 0:                           /* Seed is contained within element. */
+        /* Add each of the elements nodes and the nodes of the elements
+	 * face neighbours to the queue. */
+	idE = 0;
+	while((errNum == WLZ_ERR_NONE) && (idE < 3))
+        {
+	  edu0 = &(elm0->edu[idE]);
+	  errNum = WlzCMeshFMarInsertSeed2D(queue, edu0->nod,
+					times, speeds, seedPos);
+	  if((errNum == WLZ_ERR_NONE) &&
+	     (edu0->opp != NULL) && (edu0->opp != edu0))
+	  {
+	    errNum = WlzCMeshFMarInsertSeed2D(queue,
+				  edu0->opp->next->next->nod,
+				  times, speeds, seedPos);
+	  }
+	  ++idE;
+	}
+        break;
+      case 1:                          /* Seed is coincident with mesh node. */
+        /* Add the node and all nodes that it is directly connected to (by
+	 * an edge) to the queue. */
+	edu0 = nod0->edu;
+	do
+	{
+	  edu0 = edu0->nnxt;
+	  errNum = WlzCMeshFMarInsertSeed2D(queue,
+	  				edu0->next->nod,
+					times, speeds, seedPos);
+	}
+	while((errNum == WLZ_ERR_NONE) && (edu0 != nod0->edu));
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzCMeshFMarInsertSeed2D(queue, nod0,
+					times, speeds, seedPos);
+	}
+        break;
+      case 2:                          /* Seed is on an edge of the element. */
+	/* Add the nodes of this element and it's the edge neighbour (which
+	 * shares the edge on which the seed lies) then add all the nodes of
+	 * their edge neighbours (if they exist). */
+	edu0 = &(elm0->edu[idE]);
+	elm1 = elm0->edu[idE].opp->elm;
+	idE = 0;
+	while((errNum == WLZ_ERR_NONE) && (idE < 3))
+	{
+	  errNum = WlzCMeshFMarInsertSeed2D(queue,
+	                                    elm0->edu[idE].nod,
+					    times, speeds, seedPos);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    edu0 = &(elm0->edu[idE]);
+	    if((edu0->opp != NULL) && (edu0->opp != edu0))
+	    {
+	      errNum = WlzCMeshFMarInsertSeed2D(queue,
+						edu0->opp->next->next->nod,
+						times, speeds, seedPos);
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    edu0 = &(elm1->edu[idE]);
+	    if((edu0->opp != NULL) && (edu0->opp != edu0))
+	    {
+	      errNum = WlzCMeshFMarInsertSeed2D(queue,
+						edu0->opp->next->next->nod,
+						times, speeds, seedPos);
+	    }
+	  }
+	  ++idE;
+	}
+        break;
+      default:
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds the given node to the queue as part of the initial
+* 		seeding.
+* \param	queue			The queue.
+* \param	nod			Node to be added to the queue.
+* \param	times			Array of wavefront arrival times
+* 					indexed by the mesh node indices,
+* 					which will be set on return.
+* \param	speeds			Array of wavefront propagation
+* 					speeds indexed by the mesh node
+* 					indices, may be NULL in which
+* 					case a constant speed of 1.0 is used.
+* 					Speeds must all be > zero.
+* \param	seedPos			Seed position.
+*/
+static WlzErrorNum WlzCMeshFMarInsertSeed2D(WlzCMeshFMarQ *queue,
+				WlzCMeshNod2D *nod,
+				double *times, double *speeds,
+				WlzDVertex2 seedPos)
+{
+  double	newT;
+  WlzDVertex2	dsp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  WLZ_VTX_2_SUB(dsp, seedPos, nod->pos);
+  newT = WLZ_VTX_2_LENGTH(dsp);
+  if(speeds != NULL)
+  {
+    newT /= *(speeds + nod->idx);
+  }
+  if(newT < *(times + nod->idx))
+  {
+    *(times + nod->idx) = newT;
+    nod->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE | WLZ_CMESH_NOD_FLAG_KNOWN;
+    errNum = WlzCMeshFMarQInsert2D(queue, times, nod);
+  }
+  return(errNum);
 }

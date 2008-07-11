@@ -1243,12 +1243,15 @@ WlzErrorNum 	WlzCMeshVerify(WlzCMeshP mesh, void **dstElm,
 WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 				 int allErr, FILE *fP)
 {
-  int		cnt,
-  		idE,
+  int		cnt0,
+		cnt1,
+  		idE0,
+		idE1,
   		idN;
   WlzCMeshEdgU2D *edu0,
   		*edu1;
   WlzCMeshElm2D	*elm;
+  WlzCMeshNod2D	*nod;
   WlzErrorNum	errNum0,
   		errNum1 = WLZ_ERR_NONE;
   const int	nnxtLimit = 1000;
@@ -1264,12 +1267,12 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   }
   else
   {
-    idE = 0;
-    while((idE < mesh->res.elm.maxEnt) &&
+    idE0 = 0;
+    while((idE0 < mesh->res.elm.maxEnt) &&
           ((allErr == 0)  || (errNum1 == WLZ_ERR_NONE)))
     {
       /* Verify elements of mesh. */
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE0);
       if(elm->idx >= 0)
       {
 	idN = 0;
@@ -1284,7 +1287,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
 	                   "elm[%d]->edu[%d].next != &(elm[%d]->edu[%d])",
-			   idE, idN, idE, (idN + 1) % 3);
+			   idE0, idN, idE0, (idN + 1) % 3);
 	  }
 	  /* Verify that each edge is directed from a node. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
@@ -1292,7 +1295,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	  {
 	    (void )sprintf(msgBuf,
 	    		   "elm[%d]->edu[%d].nod == NULL",
-			   idE, idN);
+			   idE0, idN);
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	  }
 	  /* Verify that each edge's node has not been deleted. */
@@ -1302,7 +1305,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
 	    		   "elm[%d]->edu[%d].nod->idx < 0",
-			   idE, idN);
+			   idE0, idN);
 	  }
 	  /* Verify that the each edge's node is the node. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
@@ -1311,7 +1314,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
 		"elm[%d]->edu[%d].nod->edu->nod != elm[%d]->edu[%d].nod",
-		idE, idN, idE, idN);
+		idE0, idN, idE0, idN);
 	  }
 	  /* Verify that an opposite opposite edge is the edge. */
 	  if(((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)) &&
@@ -1321,25 +1324,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
 	    		   "elm[%d]->edu[%d].opp->opp != &(elm[%d]->edu[%d])",
-			   idE, idN, idE, idN);
-	  }
-	  /* Check the number of edges directed from a node is reasonable. */
-	  if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
-	  {
-	    cnt = 0;
-	    edu1 = edu0 = elm->edu[idN].nod->edu;
-	    do
-	    {
-	      edu1 = edu1->nnxt;
-	    }
-	    while((cnt++ < nnxtLimit) && (edu1 != edu0));
-	    if(cnt >= nnxtLimit)
-	    {
-	      errNum0 = WLZ_ERR_DOMAIN_DATA;
-	      (void )sprintf(msgBuf,
-			     "elm[%d]->edu[%d].nod->edu->nnxt cycle > %d",
-			     idE, idN, nnxtLimit);
-	    }
+			   idE0, idN, idE0, idN);
 	  }
 	  if(errNum1 == WLZ_ERR_NONE)
 	  {
@@ -1355,11 +1340,72 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
 	    		   "WlzCMeshElmSnArea22D(elm[%d]) < %g",
-			   idE, WLZ_MESH_TOLERANCE_SQ);
+			   idE0, WLZ_MESH_TOLERANCE_SQ);
 	  }
 	}
       }
-      ++idE;
+      ++idE0;
+    }
+  }
+  if(errNum1 == WLZ_ERR_NONE)
+  {
+    idN = 0;
+    while((idN < mesh->res.nod.maxEnt) &&
+          ((allErr == 0)  || (errNum1 == WLZ_ERR_NONE)))
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	/* Check that the number of edge uses of each node is reasonable. */
+	cnt0 = 0;
+        edu0 = edu1 = nod->edu;
+	do
+	{
+	  edu1 = edu1->nnxt;
+	}
+	while((cnt0++ < nnxtLimit) && (edu1 != edu0));
+	if(cnt0 >= nnxtLimit)
+	{
+	  errNum0 = WLZ_ERR_DOMAIN_DATA;
+	  (void )sprintf(msgBuf,
+			 "elm[%d]->edu[%d].nod->edu->nnxt cycle > %d",
+			 idE0, idN, nnxtLimit);
+	}
+	/* Check that the number of edge uses of each node is correct. */
+	if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
+	{
+	  cnt1 = 0;
+	  idE0 = 0;
+	  while((idE0 < mesh->res.elm.maxEnt) &&
+		((allErr == 0)  || (errNum0 == WLZ_ERR_NONE)))
+	  {
+	    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE0);
+	    if(elm->idx >= 0)
+	    {
+	      for(idE1 = 0; idE1 < 3; ++idE1)
+	      {
+	        if(elm->edu[idE1].nod == nod)
+		{
+		  ++cnt1;
+		}
+	      }
+	    }
+	    ++idE0;
+	  }
+	  if(cnt0 != cnt1)
+	  {
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+	                   "node %d edu->nnxt loop is inconsistant",
+			   idN);
+	  }
+	}
+	if(errNum1 == WLZ_ERR_NONE)
+	{
+	  errNum1 = errNum0;
+	}
+      }
+      ++idN;
     }
   }
   if(dstElm)
