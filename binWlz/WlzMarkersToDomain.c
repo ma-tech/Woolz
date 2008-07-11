@@ -352,8 +352,8 @@ static WlzVertexP 	WlzMTDReadVtxArray(FILE *fP, int dim, int *dstNVtx,
     {
       case 2:
 	vType = WLZ_VERTEX_I2;
-        if(sscanf(lnBuf, "%d %d",
-	          &(datV.i2.vtX), &(datV.i2.vtY)) != 2)
+        if(sscanf(lnBuf, "%lg %lg",
+	          &(datV.d2.vtX), &(datV.d2.vtY)) != 2)
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
@@ -371,13 +371,15 @@ static WlzVertexP 	WlzMTDReadVtxArray(FILE *fP, int dim, int *dstNVtx,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  *(datVP.i2 + datCnt++) = datV.i2;
+	  (datVP.i2 + datCnt)->vtX = ALG_NINT(datV.d2.vtX);
+	  (datVP.i2 + datCnt)->vtY = ALG_NINT(datV.d2.vtY);
+	  ++datCnt;
 	}
 	break;
       case 3:
 	vType = WLZ_VERTEX_I3;
-        if(sscanf(lnBuf, "%d %d %d",
-	          &(datV.i3.vtX), &(datV.i3.vtY), &(datV.i3.vtZ)) != 3)
+        if(sscanf(lnBuf, "%lg %lg %lg",
+	          &(datV.d3.vtX), &(datV.d3.vtY), &(datV.d3.vtZ)) != 3)
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
@@ -395,7 +397,10 @@ static WlzVertexP 	WlzMTDReadVtxArray(FILE *fP, int dim, int *dstNVtx,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  *(datVP.i3 + datCnt++) = datV.i3;
+	  (datVP.i3 + datCnt)->vtX = ALG_NINT(datV.d3.vtX);
+	  (datVP.i3 + datCnt)->vtY = ALG_NINT(datV.d3.vtY);
+	  (datVP.i3 + datCnt)->vtZ = ALG_NINT(datV.d3.vtZ);
+	  ++datCnt;
 	}
 	break;
       default:
