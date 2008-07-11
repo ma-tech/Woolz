@@ -53,11 +53,13 @@ USE_CTAGS=1
 USE_ETAGS=0
 ENABLE_EXTFF="no"
 HAVE_JPEG="no"
+JPEG_DIR="none"
 HAVE_TIFF="no"
+TIFF_DIR="none"
 ENABLE_JAVA="no"
 HAVE_JNI="no"
-JDK_DIR="NONE"
-JAVACC="NONE"
+JDK_DIR="none"
+JAVACC="none"
 AC_SUBST(ENABLE_EXTFF)
 
 # Check CPU type
@@ -235,22 +237,36 @@ AC_CONFIG_FILES([	Makefile \
 
 if test x${ENABLE_EXTFF} = "xyes"
 then
-  HAVE_TIFF=yes
-  LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
-  HAVE_JPEG=yes
-  LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
-#  AC_CHECK_HEADER(tiff.h,
-#                  AC_CHECK_LIB(tiff, TIFFOpen,
-#		               [
-#				 HAVE_TIFF=yes
-#				 LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
-#			       ]))
-#  AC_CHECK_HEADER(jpeglib.h,
-#                  AC_CHECK_LIB(jpeg, jpeg_CreateCompress,
-#		               [
-#				 HAVE_JPEG=yes
-#				 LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
-#			       ]))
+  AC_ARG_WITH(tiff, [  --with-tiff=DIR         Directory containing the tiff
+                          lib and include directories.],
+	      TIFF_DIR=$withval)
+  if test ${TIFF_DIR} == "none"
+  then
+    AC_CHECK_HEADER(tiff.h,
+		    AC_CHECK_LIB(tiff, TIFFOpen,
+				 [
+				   HAVE_TIFF=yes
+				   LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
+				 ]))
+  else
+    HAVE_TIFF=yes
+    LIBS_EXTFF="-L${TIFF_DIR} -ltiff ${LIBS_EXTFF}"
+  fi
+  AC_ARG_WITH(jpeg, [  --with-jpeg=DIR         Directory containing the jpeg
+                          lib and include directories.],
+	      JPEG_DIR=$withval)
+  if test ${JPEG_DIR} == "none"
+  then
+    AC_CHECK_HEADER(jpeglib.h,
+		    AC_CHECK_LIB(jpeg, jpeg_CreateCompress,
+				 [
+				   HAVE_JPEG=yes
+				   LIBS_EXTFF="-ljpeg ${LIBS_EXTFF}"
+				 ]))
+  else
+    HAVE_JPEG=yes
+    LIBS_EXTFF="-L${JPEG_DIR} -ljpeg ${LIBS_EXTFF}"
+  fi
   AC_CONFIG_FILES([	libbibfile/Makefile \
 			libhguDlpList/Makefile \
 			libReconstruct/Makefile \
@@ -264,8 +280,8 @@ then
   AC_ARG_WITH(jdk, [  --with-jdk=DIR          Directory with Java development
                           kit defaults to the value of the JAVA_HOME
 			  environment variable.],
-		     JDK_DIR=$withval, JDK_DIR=NONE)
-  if test ${JDK_DIR} = "NONE"
+		     JDK_DIR=$withval, JDK_DIR=none)
+  if test ${JDK_DIR} = "none"
   then
       # no --with-jdk argument given
       if test x${JAVA_HOME} = "x"
@@ -278,8 +294,8 @@ then
   AC_ARG_WITH(javacc, [  --with-javacc=PATH      Full path of the javacc
                           executable, by default the standard paths are
 			  searched.],
-		     JAVACC=$withval, JAVACC=NONE)
-  if test ${JAVACC} = "NONE"
+		     JAVACC=$withval, JAVACC=none)
+  if test ${JAVACC} = "none"
   then
     AC_PATH_PROG(JAVACC, javacc)
     if test x${JAVACC} = "x"
