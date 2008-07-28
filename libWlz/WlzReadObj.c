@@ -45,6 +45,8 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
+/* #define WLZ_DEBUG_READOBJ */
+
 #if defined(_WIN32) && !defined(__x86)
 #define __x86
 #endif
@@ -3787,6 +3789,7 @@ WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
 		nElm,
 		nNod;
   WlzDVertex3	pos;
+  WlzDVertex3	*posBuf = NULL;
   WlzCMeshElm3D	*elm;
   WlzCMesh3D	*mesh = NULL;
   int		idx[4];
@@ -3818,17 +3821,15 @@ WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
+    if(((posBuf = AlcMalloc(sizeof(WlzDVertex3) * nNod)) == NULL) ||
+       (AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
        (AlcVectorExtendAndGet(mesh->res.elm.vec, nElm) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
-    else
-    {
-      errNum = WlzCMeshReassignBuckets3D(mesh, nNod);
-    }
   }
-  /* Read nodes. */
+  /* Read node positionss into a temporary buffer and compute their bounding
+   * box. */
   if(errNum == WLZ_ERR_NONE)
   {
     for(idN = 0; idN < nNod; ++idN)
@@ -3848,28 +3849,62 @@ WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
         errNum = WLZ_ERR_READ_INCOMPLETE;
 	break;
       }
-      if(errNum == WLZ_ERR_NONE)
+      posBuf[idN] = pos;
+      if(idN == 0)
       {
-
-	nod[0] = WlzCMeshNewNod3D(mesh, pos, &errNum);
-	if(errNum == WLZ_ERR_NONE)
+	mesh->bBox.xMin = mesh->bBox.xMax = pos.vtX;
+	mesh->bBox.yMin = mesh->bBox.yMax = pos.vtY;
+	mesh->bBox.zMin = mesh->bBox.zMax = pos.vtZ;
+      }
+      else
+      {
+        if(pos.vtX < mesh->bBox.xMin)
 	{
-	  nod[0] = WlzCMeshAllocNod3D(mesh);
-	  nod[0]->pos = pos;
-	  nod[0]->flags = flags;
+	  mesh->bBox.xMin = pos.vtX;
+	}
+	else if(pos.vtX > mesh->bBox.xMax)
+	{
+	  mesh->bBox.xMax = pos.vtX;
+	}
+        if(pos.vtY < mesh->bBox.yMin)
+	{
+	  mesh->bBox.yMin = pos.vtY;
+	}
+	else if(pos.vtY > mesh->bBox.yMax)
+	{
+	  mesh->bBox.yMax = pos.vtY;
+	}
+        if(pos.vtZ < mesh->bBox.zMin)
+	{
+	  mesh->bBox.zMin = pos.vtZ;
+	}
+	else if(pos.vtZ > mesh->bBox.zMax)
+	{
+	  mesh->bBox.zMax = pos.vtZ;
 	}
       }
     }
   }
+  /* Setup the bucket grid using the bounding box of the node positions. */
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Update the bounding box. */
-    WlzCMeshUpdateBBox3D(mesh);
-    /* Compute a new bucket grid and reassign nodes to it. */
     errNum = WlzCMeshReassignBuckets3D(mesh, nNod);
-    /* Recompute maximum edge length. */
-    WlzCMeshUpdateMaxSqEdgLen3D(mesh);
   }
+  /* Create all nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < nNod; ++idN)
+    {
+      pos = posBuf[idN];
+      nod[0] = WlzCMeshNewNod3D(mesh, pos, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	nod[0]->pos = pos;
+	nod[0]->flags = flags;
+      }
+    }
+  }
+  AlcFree(posBuf);
   /* Read elements and create them within the mesh using the already
    * created nodes. */
   if(errNum == WLZ_ERR_NONE)
@@ -3919,6 +3954,11 @@ WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
         break;
       }
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen3D(mesh);
   }
   /* Clean up if errors. */
   if(errNum != WLZ_ERR_NONE)
