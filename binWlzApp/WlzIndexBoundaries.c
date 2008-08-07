@@ -101,7 +101,12 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s  [<input file>]\n"
+	  "Usage:\t%s  [-R] [-h] [-v] [<input file>]\n"
+	  "\tOptions are:\n"
+	  "\t  -R        Output polyline coordinates relative to\n"
+	  "\t            the image bounding box.\n"
+	  "\t  -h        Help - prints this usage message.\n"
+	  "\t  -v        Verbose operation.\n"
 	  "",
 	  proc_str);
   return;
@@ -194,21 +199,31 @@ int main(
   WlzPixelV	minG, maxG;
   WlzIVertex2	*vtxs;
   int		i, index;
-  int		verboseFlg=0;
+  int		relativeFlg;
+  int		verboseFlg;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "Rhv";
   int		option;
   AlcDLPList	*polyList;
   AlcDLPItem	*listItem;
   PolyListItem	*polyItem;
+  WlzIBox3	bBox3;
   AlcErrno	alcErr;
   const char	*errMsg;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* default values */
+  relativeFlg = 0;
+  verboseFlg = 0;
   
   /* check input arguments */
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+
+    case 'R':
+      relativeFlg = 1;
+      break;
 
     case 'v':
       verboseFlg = 1;
@@ -311,6 +326,9 @@ int main(
 
 	/* write polygon list to stdout */
 	if( AlcDLPListCount(polyList, &alcErr) > 0 ){
+	  if( relativeFlg ){
+	    bBox3 = WlzBoundingBox3I(obj, &errNum);
+	  }
 	  fprintf(stdout, " \"polylines\":[\n");
 	  listItem = polyList->head;
 	  do {
@@ -319,7 +337,14 @@ int main(
 
 	    vtxs = polyItem->poly->vtx;
 	    for(i=0; i < polyItem->poly->nvertices; i++, vtxs++){
-	      fprintf(stdout, "%d,%d", vtxs->vtX, vtxs->vtY);
+	      if( relativeFlg ){
+		fprintf(stdout, "%d,%d",
+			vtxs->vtX - bBox3.xMin,
+			vtxs->vtY - bBox3.yMin);
+	      }
+	      else {
+		fprintf(stdout, "%d,%d", vtxs->vtX, vtxs->vtY);
+	      }
 	      if( i < (polyItem->poly->nvertices - 1) ){
 		fprintf(stdout, ",");
 	      }
