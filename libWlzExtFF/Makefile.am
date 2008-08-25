@@ -67,4 +67,6 @@ libWlzExtFF_la_SOURCES 	= \
 #			  WlzExtFFRaw.c 
 
 include_HEADERS 	= \
-			  WlzExtFF.h
+			  WlzExtFF.h \
+			  WlzExtFFType.h \
+			  WlzExtFFProto.h
