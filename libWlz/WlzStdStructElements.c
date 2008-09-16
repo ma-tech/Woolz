@@ -1102,6 +1102,148 @@ WlzObject *WlzMakeCuboidObject(
 }
 
 /*!
+* \return       Object with quadrilateral domain.
+* \ingroup      WlzMorphologyOps
+* \brief        Generate 2D interval domain object corresponding to the
+*               arbitrarily oriented quadrilateral with the given ordered
+*               vertex coordinates. The ordering is such that the vertices
+*               allow the rectangle to be drawn by line segments conecting
+*               v[i] to v[(i + 1)%4], with i \$\in\f$ [0-3].
+* \param    x0                  Column coordinate of the first vertex.
+* \param    y0                  Row coordinate of the first vertex.
+* \param    x1                  Column coordinate of the second vertex.
+* \param    y1                  Row coordinate of the second vertex.
+* \param    x2                  Column coordinate of the third vertex.
+* \param    y2                  Row coordinate of the third vertex.
+* \param    x3                  Column coordinate of the forth vertex.
+* \param    y3                  Row coordinate of the forth vertex.
+* \param    dstErr              Destination error pointer, may be NULL.
+*/
+WlzObject 	*WlzMakeQuadrilateral(double x0, double y0,
+                                double x1, double y1,
+                                double x2, double y2,
+                                double x3, double y3,
+                                WlzErrorNum *dstErr)
+{
+  int           ln,
+                idL;
+  int           tI[4];
+  WlzIBox2      box;
+  WlzIVertex2   vI[4];
+  WlzDomain     dom;
+  WlzValues     val;
+  WlzInterval   *iPtr = NULL;
+  WlzObject     *obj = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  val.core = NULL;
+  /* Quantize the coordinates and find the line range. */
+  vI[0].vtX = (int )floor(x0 + 0.5);
+  vI[0].vtY = (int )floor(y0 + 0.5);
+  vI[1].vtX = (int )floor(x1 + 0.5);
+  vI[1].vtY = (int )floor(y1 + 0.5);
+  vI[2].vtX = (int )floor(x2 + 0.5);
+  vI[2].vtY = (int )floor(y2 + 0.5);
+  vI[3].vtX = (int )floor(x3 + 0.5);
+  vI[3].vtY = (int )floor(y3 + 0.5);
+  if(vI[0].vtX < vI[1].vtX)
+  {
+    tI[0] = vI[0].vtX;
+    tI[1] = vI[1].vtX;
+  }
+  else
+  {
+    tI[0] = vI[1].vtX;
+    tI[1] = vI[0].vtX;
+  }
+  if(vI[2].vtX < vI[3].vtX)
+  {
+    tI[2] = vI[2].vtX;
+    tI[3] = vI[3].vtX;
+  }
+  else
+  {
+    tI[2] = vI[3].vtX;
+    tI[3] = vI[2].vtX;
+  }
+  box.xMin = (tI[0] < tI[2])? tI[0]: tI[2];
+  box.xMax = (tI[1] > tI[3])? tI[1]: tI[3];
+  if(vI[0].vtY < vI[1].vtY)
+  {
+    tI[0] = vI[0].vtY;
+    tI[1] = vI[1].vtY;
+  }
+  else
+  {
+    tI[0] = vI[1].vtY;
+    tI[1] = vI[0].vtY;
+  }
+  if(vI[2].vtY < vI[3].vtY)
+  {
+    tI[2] = vI[2].vtY;
+    tI[3] = vI[3].vtY;
+  }
+  else
+  {
+    tI[2] = vI[3].vtY;
+    tI[3] = vI[2].vtY;
+  }
+  box.yMin = (tI[0] < tI[2])? tI[0]: tI[2];
+  box.yMax = (tI[1] > tI[3])? tI[1]: tI[3];
+  if((box.xMax - box.xMin == 0) && (box.yMax - box.yMin == 0))
+  {
+    obj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ,
+                                   box.xMin, box.yMin, 0,
+                                   &errNum);
+  }
+  else
+  {
+    dom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+                                  box.yMin, box.yMax, box.xMin, box.xMax,
+                                  &errNum);
+    if((iPtr = (WlzInterval *)AlcCalloc((box.yMax - box.yMin + 1),
+                                         sizeof(WlzInterval))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      dom.i->freeptr = AlcFreeStackPush(dom.i->freeptr, (void *)iPtr,
+                                        NULL);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      for(ln = box.yMin; ln <= box.yMax; ++ln)
+      {
+        idL = ln - box.yMin;
+        iPtr[idL].ileft = box.xMax - box.xMin;
+        iPtr[idL].iright = 0;
+        (void )WlzMakeInterval(ln, dom.i, 1, iPtr + idL);
+      }
+      for(idL = 0; idL < 4; ++idL)
+      {
+        vI[idL].vtX -= box.xMin;
+        vI[idL].vtY -= box.yMin;
+      }
+      WlzRasterLineSetItv2D(dom.i, vI[0], vI[1]);
+      WlzRasterLineSetItv2D(dom.i, vI[1], vI[2]);
+      WlzRasterLineSetItv2D(dom.i, vI[2], vI[3]);
+      WlzRasterLineSetItv2D(dom.i, vI[3], vI[0]);
+      if((obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom, val,
+                            NULL, NULL, &errNum)) == NULL)
+      {
+        (void )WlzFreeDomain(dom);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+
+/*!
 * \return
 * \ingroup	WlzMorphologyOps
 * \brief	Makes a standard structure element - basicaly a sphere
