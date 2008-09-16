@@ -1029,12 +1029,15 @@ static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod2, WlzCMeshNod2D *nod0,
 	              (2.0 * len[1] * len[2]));
 	phi[1] = acos((lenSq[2] + lenSq[0] - lenSq[1]) /
 	              (2.0 * len[2] * len[0]));
-	if(((theta > DBL_EPSILON) &&
+#ifdef WLZ_CMESH_FMAR_FABS
+	if((fabs(theta) > DBL_EPSILON) &&
 	    (theta > (phi[1] - ALG_M_PI_2)) && 
-	    ((ALG_M_PI_2 - phi[0]) > theta)) ||
-	   ((DBL_EPSILON > theta) &&
-	    (theta > phi[1] - ALG_M_PI_2) &&
-	    ((ALG_M_PI_2 - phi[0]) > theta)))
+	    ((ALG_M_PI_2 - phi[0]) > theta))
+#else
+	if((theta > DBL_EPSILON) &&
+	   (theta > (phi[1] - ALG_M_PI_2)) && 
+	   ((ALG_M_PI_2 - phi[0]) > theta))
+#endif
 	{
 	  d0 = len[0] * sin(phi[1] - theta); /* h0 */
 	  d1 = len[1] * sin(phi[0] + theta); /* h1 */
