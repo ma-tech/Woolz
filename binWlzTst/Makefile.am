@@ -49,6 +49,7 @@ bin_PROGRAMS		= \
 			  WlzTstCMeshGen \
 			  WlzTstCMeshTransformObj \
 			  WlzTstGeomArcLength2D \
+			  WlzTstGeomRectFromWideLine \
 			  WlzTstGeomTetraAffineSolve \
 			  WlzTstGeomTriangleAffineSolve \
 			  WlzTstItrSpiral \
@@ -72,6 +73,10 @@ WlzTstCMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
 WlzTstGeomArcLength2D_SOURCES		= WlzTstGeomArcLength2D.c
 WlzTstGeomArcLength2D_LDADD		= $(LDADD)
 WlzTstGeomArcLength2D_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstGeomRectFromWideLine_SOURCES	= WlzTstGeomRectFromWideLine.c
+WlzTstGeomRectFromWideLine_LDADD	= $(LDADD)
+WlzTstGeomRectFromWideLine_LDFLAGS	= $(AM_LFLAGS)
 
 WlzTstGeomTetraAffineSolve_SOURCES	= WlzTstGeomTetraAffineSolve.c
 WlzTstGeomTetraAffineSolve_LDADD	= $(LDADD)
