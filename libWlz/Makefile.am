@@ -90,6 +90,7 @@ libWlz_la_SOURCES 	= \
 			  WlzDistTransform.c \
 			  WlzDomainFill.c \
 			  WlzDomainUtils.c \
+			  WlzDrawDomain.c \
 			  WlzEmpty.c \
 			  WlzErosion4.c \
 			  WlzErosion.c \
