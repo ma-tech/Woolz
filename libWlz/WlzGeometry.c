@@ -2693,3 +2693,56 @@ double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
   }
   return(len);
 }
+
+/*!
+* \return	Non-zero if \(S\) and \(T\) are coincident.
+* \ingroup	WlzGeometry
+* \brief 	Given two vertices \f$S\f$, \f$T\f$ which define a line
+* 		segment and width \f$w\f$ perpendicular to the line segent,
+* 		this function computes the coordinates of the vertices
+* 		\f$V_i\f$, \f$i\in[0-3]\f$ of the rectangle. The vertices
+* 		are sorted such that the rectangle may be drawn using
+* 		the line segmants:
+* 		\f$(V_0,V_1)\f$, \f$(V_1,V_2)\f$, \f$(V_2,V_3)\f$,
+* 		\f$(V_3,V_0)\f$.
+* 		Given the line segment \f$(S,T)\$ it can be shown that
+* 		the vertices which share a line segment passing through
+* 		\f$S\f$ are:
+* 		\f[
+ 		V_i = S + (-\frac{r (T_x - S_x)}{l},  \frac{r (T_y - S_y)}{l})
+		\f]
+* 		and
+* 		\f[
+ 		V_j = S + ( \frac{r (T_x - S_x)}{l}, -\frac{r (T_x - S_y)}{l})
+		\f]
+*		where \f$l = ||T - S||\f$ and \f$r = w / 2\f$.
+*		Should  \(S\) and \(T\) be coincident then the
+*		destination rectangle vertices are left unmodified..
+* \param	s			First vertex of line segment.
+* \param	t			Second vertex of line segment.
+* \param	w			line width.
+* \param	v			Destination pointer for the four
+* 					vertices of the rectangle.
+*/
+int		WlzGeomRectFromWideLine(WlzDVertex2 s, WlzDVertex2 t,
+				        double w, WlzDVertex2 *v)
+{
+  int		coincident = 1;
+  double	len;
+  WlzDVertex2	del,
+  		f;
+
+  WLZ_VTX_2_SUB(del, t, s);
+  len = WLZ_VTX_2_LENGTH(del);
+  if(len > DBL_EPSILON)
+  {
+    coincident = 0;
+    f.vtX =   w * del.vtY / (2.0 * len);
+    f.vtY = -(w * del.vtX / (2.0 * len));
+    WLZ_VTX_2_ADD(v[0], s, f);
+    WLZ_VTX_2_SUB(v[1], s, f);
+    WLZ_VTX_2_SUB(v[2], t, f);
+    WLZ_VTX_2_ADD(v[3], t, f);
+  }
+  return(coincident);
+}
