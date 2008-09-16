@@ -1939,6 +1939,17 @@ extern WlzErrorNum		WlzFreeContour(
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzDrawDomain.c
+************************************************************************/
+extern WlzObject		*WlzDrawDomainObj(
+				  WlzDVertex3 org,
+				  WlzThreeDViewStruct *view,
+				  int keep2D,
+				  char *cmdStr,
+				  int *dstErrIdx,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzGauss.c								*
 ************************************************************************/
 extern WlzObject		*WlzGauss2(
@@ -2384,6 +2395,11 @@ extern int			WlzGeomTriangleCircumcentre(
 				  WlzDVertex2 vx0,
 				  WlzDVertex2 vx1,
 				  WlzDVertex2 vx2);
+extern int			WlzGeomRectFromWideLine(
+				  WlzDVertex2 s,
+				  WlzDVertex2 t,
+				  double width,
+				  WlzDVertex2 *v);
 #endif /* !WLZ_EXT_BIND */
 extern int			WlzGeomVxInTriangle(
 				  WlzDVertex2 vx0,
@@ -3911,6 +3927,10 @@ extern WlzErrorNum		WlzRankFilter(
 extern WlzObject		*WlzRasterObj(
 				  WlzObject *gObj,
 			          WlzErrorNum *dstErr);
+extern void            		WlzRasterLineSetItv2D(
+				  WlzIntervalDomain *iDom,
+                                  WlzIVertex2 v0,
+				  WlzIVertex2 v1);
 
 /************************************************************************
 * WlzReadObj.c								*
@@ -4322,14 +4342,22 @@ extern WlzObject 		*WlzMakeStdStructElement(
 				  WlzDistanceType dType,
 				  double radius,
 				  WlzErrorNum *dstErr);
-
 extern WlzObject                *WlzMakeRectangleObject(
 				  double radiusX,
 				  double radiusY,
 				  double x,
 				  double y,
 				  WlzErrorNum *dstErr);
-
+extern WlzObject 		*WlzMakeQuadrilateral(
+				  double x0,
+				  double y0,
+				  double x1,
+				  double y1,
+				  double x2,
+				  double y2,
+				  double x3,
+				  double y3,
+				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzMakeCuboidObject(
 				  WlzObjectType sOType,
 				  double radiusX,
