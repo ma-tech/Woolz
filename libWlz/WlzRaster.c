@@ -126,6 +126,85 @@ WlzObject 	*WlzRasterObj(WlzObject *gObj, WlzErrorNum *dstErr)
 }
 
 /*!
+* \ingroup	WlzRaster
+* \brief        Given an interval domain which has a single interval per
+*               line, which covers the line range of the two given vertices,
+*               this function updates the intervals by setting the left/right
+*               fields for a line drawn between the two given vertices.
+*               It may be used to set the intervals for any convex
+*               polygon simply by initialising the intervals to always
+*               false values (eg min = max of object and max = min of object)
+*               then calling this function for each ordered pair of boundary
+*               vertices.
+*               Both vertices must be relative to idom->(kol1,line1).
+* \param        iDom            Interval domain for which intervals
+*                               are to be set.
+* \param        v0              First vertex.
+* \param        v1              Second vertex.
+*/
+void            WlzRasterLineSetItv2D(WlzIntervalDomain *iDom,
+                                      WlzIVertex2 v0, WlzIVertex2 v1)
+{
+  int           i,
+                e,
+                steep = 1,
+                t;
+  WlzIVertex2   del,
+                pos,
+                step;
+  WlzInterval   *itv;
+
+#ifdef WLZ_RASTER_LINE_DEBUG
+    (void )fprintf(stderr, "\n");
+#endif
+  del.vtX = v1.vtX - v0.vtX;
+  del.vtY = v1.vtY - v0.vtY;
+  step.vtX = ((del.vtX > 0) << 1) - 1;
+  step.vtY = ((del.vtY > 0) << 1) - 1;
+  del.vtX = abs(del.vtX);
+  del.vtY = abs(del.vtY);
+  if(del.vtY > del.vtX)
+  {
+    steep = 0;
+    t = v0.vtX; v0.vtX = v0.vtY; v0.vtY = t;
+    t = del.vtX; del.vtX = del.vtY; del.vtY = t;
+    t = step.vtX; step.vtX = step.vtY; step.vtY = t;
+  }
+  e = (del.vtY << 1) - del.vtX;
+  for(i = 0; i < del.vtX; i++)
+  {
+    if(steep)
+    {
+      pos = v0;
+    }
+    else
+    {
+      pos.vtX = v0.vtY;
+      pos.vtY = v0.vtX;
+    }
+    itv = (iDom->intvlines + pos.vtY)->intvs;
+    if(itv->ileft > pos.vtX)
+    {
+      itv->ileft = pos.vtX;
+    }
+    if(itv->iright < pos.vtX)
+    {
+      itv->iright = pos.vtX;
+    }
+#ifdef WLZ_RASTER_LINE_DEBUG
+    (void )fprintf(stderr, "%d %d\n", pos.vtX, pos.vtY);
+#endif
+    while(e >= 0)
+    {
+      v0.vtY += step.vtY;
+      e -= (del.vtX << 1);
+    }
+    v0.vtX += step.vtX;
+    e += (del.vtY << 1);
+  }
+}
+
+/*!
 * \return	Woolz domain object, NULL on error.
 * \ingroup	WlzRaster
 * \brief	Rasterizes the given contour object, creating a new
