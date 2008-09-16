@@ -566,7 +566,7 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
 * 		The given histogram is smoothed using the given maximum
 * 		smoothing value and the minimum of the resulting histogram
 * 		is found. At successive itterations the smoothing value
-* 		is halved until it is \f$\f$ the given minimum smoothing
+* 		is halved until it is the given minimum smoothing
 * 		value or 1, which ever is greater. At each itteration
 * 		the minimum closest to that with the previous smoothing
 * 		value is selected. The result is the grey value for the

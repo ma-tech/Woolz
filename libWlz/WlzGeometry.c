@@ -2695,7 +2695,7 @@ double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
 }
 
 /*!
-* \return	Non-zero if \(S\) and \(T\) are coincident.
+* \return	Non-zero if \f$S\f$ and \f$T\f$ are coincident.
 * \ingroup	WlzGeometry
 * \brief 	Given two vertices \f$S\f$, \f$T\f$ which define a line
 * 		segment and width \f$w\f$ perpendicular to the line segent,
@@ -2705,7 +2705,7 @@ double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
 * 		the line segmants:
 * 		\f$(V_0,V_1)\f$, \f$(V_1,V_2)\f$, \f$(V_2,V_3)\f$,
 * 		\f$(V_3,V_0)\f$.
-* 		Given the line segment \f$(S,T)\$ it can be shown that
+* 		Given the line segment \f$(S,T)\f$ it can be shown that
 * 		the vertices which share a line segment passing through
 * 		\f$S\f$ are:
 * 		\f[
@@ -2716,7 +2716,7 @@ double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
  		V_j = S + ( \frac{r (T_x - S_x)}{l}, -\frac{r (T_x - S_y)}{l})
 		\f]
 *		where \f$l = ||T - S||\f$ and \f$r = w / 2\f$.
-*		Should  \(S\) and \(T\) be coincident then the
+*		Should  \f$S\f$ and \f$T\f$ be coincident then the
 *		destination rectangle vertices are left unmodified..
 * \param	s			First vertex of line segment.
 * \param	t			Second vertex of line segment.
