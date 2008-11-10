@@ -192,13 +192,14 @@ static WlzObject 		*WlzDrawDomain2D(
 *
 * 		The drawn domain is offset by the given origin before being
 * 		transformed to the section plane given by the view structure.
-* \param	org			Origin of the plane on which all
-* 					drawing is done when mapped into the
-* 					3D space using the view transform.
+* \param	org			Origin of the 2D drawing frame with
+* 					respect to the 2D Woolz object cut
+* 					using the given view transform.
 * \param	view			The section plane in 3D space on
 * 					which the domain is drawn. May be
-*					NULL, in which case the plane is
-*					z = 0.
+*					NULL, in which case the view transform
+*					is the default transform created by
+*					WlzMake3DViewStruct().
 * \param	keep2D			Ignore the view struct and keep the
 * 					object 2D if this flag is non-zero.
 * \param	cmdStr			String with drawing commands using the
@@ -208,7 +209,7 @@ static WlzObject 		*WlzDrawDomain2D(
 * 					May be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzDrawDomainObj(WlzDVertex3 org, WlzThreeDViewStruct *view,
+WlzObject	*WlzDrawDomainObj(WlzDVertex2 org, WlzThreeDViewStruct *view,
 				  int keep2D, char *cmdStr, int *dstErrIdx,
 				  WlzErrorNum *dstErr)
 {
@@ -257,44 +258,44 @@ WlzObject	*WlzDrawDomainObj(WlzDVertex3 org, WlzThreeDViewStruct *view,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    obj1 = WlzShiftObject(obj0, org.vtX, org.vtY, 0.0, &errNum);
+  }
+  (void )WlzFreeObj(obj0);
+  if(errNum == WLZ_ERR_NONE)
+  {
     if(keep2D)
     {
-      dwnObj = obj0;
-      obj0 = NULL;
+      dwnObj = obj1;
+      obj1 = NULL;
     }
     else
     {
-      (void )WlzAssignObject(obj0, NULL);
+      (void )WlzAssignObject(obj1, NULL);
       if(view == NULL)
       {
 	view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  view->dist = org.vtZ;
 	  view->view_mode = WLZ_UP_IS_UP_MODE;
-	  errNum = WlzInit3DViewStruct(view, obj0);
+	  errNum = WlzInit3DViewStruct(view, obj1);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dwnObj = Wlz3DViewTransformObj(obj0, view, &errNum);
+	  dwnObj = Wlz3DViewTransformObj(obj1, view, &errNum);
 	}
+        (void )WlzFree3DViewStruct(view); view = NULL;
       }
       else
       {
-	errNum = WlzInit3DViewStruct(view, obj0);
+	errNum = WlzInit3DViewStruct(view, obj1);
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  obj1 = Wlz3DViewTransformObj(obj0, view, &errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  dwnObj = WlzShiftObject(obj1, org.vtX, org.vtY, org.vtZ, &errNum);
+	  dwnObj = Wlz3DViewTransformObj(obj1, view, &errNum);
 	}
       }
     }
   }
   AlcFree(wSp.buf);
-  (void )WlzFreeObj(obj0);
   (void )WlzFreeObj(obj1);
   if(dstErr)
   {

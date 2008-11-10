@@ -98,6 +98,10 @@ extern int      optind,
                 opterr,
                 optopt;
 
+static int			WlzDrawDomObjScanPair(
+				  char *str,
+				  double *d0,
+				  double *d1);
 static int			WlzDrawDomObjScanTriple(
 				  char *str,
 				  double *d0,
@@ -119,8 +123,8 @@ int             main(int argc, char **argv)
 		keep2D = 0,
 		ok = 1,
 		usage = 0;
-  WlzDVertex3	org,
-  		upVector;
+  WlzDVertex2	org;
+  WlzDVertex3	upVector;
   WlzThreeDViewStruct *view = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*dwnObj = NULL;
@@ -136,7 +140,7 @@ int             main(int argc, char **argv)
 
   opterr = 0;
   errMsg = errMsg0 = "";
-  org.vtX = org.vtY = org.vtZ = 0.0;
+  org.vtX = org.vtY = 0.0;
   upVector.vtX = 0.0; upVector.vtY = 0.0; upVector.vtZ = 1.0;
   inFileStr = inFileStrDef;
   outFileStr = outFileStrDef;
@@ -211,8 +215,7 @@ int             main(int argc, char **argv)
 					  &(view->up.vtZ)) < 1;
 	  break;
 	case 'g':
-	  usage = WlzDrawDomObjScanTriple(optarg, &(org.vtX), &(org.vtY),
-					  &(org.vtZ)) < 1;
+	  usage = WlzDrawDomObjScanPair(optarg, &(org.vtX), &(org.vtY)) < 1;
 	  break;
 	case 'o':
 	  outFileStr = optarg;
@@ -314,7 +317,8 @@ int             main(int argc, char **argv)
     "  -m  Viewing mode, one of: up-is-up, statue or absolute, default\n"
     "      is up-is-up.\n"
     "  -u  Up vector, default 0.0,0.0,1.0.\n"
-    "  -g  Origin of the drawing plane in 3D, default 0.0,0.0,0.0.\n"
+    "  -g  Origin of the drawing with respect to the 2D Woolz object\n"
+    "      cut using the view transform, default 0.0,0.0.\n"
     "  -s  Drawing command string.\n"
     "  -h  Help, prints this usage message.\n"
     "  -o  Output file name.\n"
@@ -364,8 +368,70 @@ int             main(int argc, char **argv)
 * \return	Number of fields found, which will be -ve if there is a
 * 		parsing error.
 * \ingroup	BinWlzApp
+* \brief	Parses the input string for two coma seperated double
+* 		values, any of which may be missing, eg "4, " and
+* 		",1.0 " are both valid (white space is ignored).
+* \param	str			String to parse for double values.
+* \param	d0			Destination pointer for first value,
+* 					must not be NULL.
+* \param	d1			Destination pointer for second value,
+* 					must not be NULL.
+* \param	d2			Destination pointer for third value,
+* 					must not be NULL.
+*/
+static int	WlzDrawDomObjScanPair(char *str, double *d0, double *d1)
+{
+  int		idx,
+  		cnt = 0;
+  char		*subStr[2];
+  double	*dP[2];
+
+  if(str)
+  {
+    dP[0] = d0; dP[1] = d1;
+    while(*str && isspace(*str))
+    {
+      ++str;
+    }
+    if(*str == ',')
+    {
+      subStr[0] = NULL;
+      subStr[1] = strtok(str, ",");
+    }
+    else
+    {
+      subStr[0] = strtok(str, ",");
+      subStr[1] = strtok(NULL, ",");
+    }
+    if((subStr[0] == NULL) && (subStr[1] == NULL))
+    {
+      cnt = -1;
+    }
+    else
+    {
+      for(idx = 0; idx < 2; ++idx)
+      {
+	if(subStr[idx] && (sscanf(subStr[idx], "%lg", dP[idx]) == 1))
+	{
+	  ++cnt;
+	}
+	else
+	{
+	  cnt = -1;
+	  break;
+	}
+      }
+    }
+  }
+  return(cnt);
+}
+
+/*!
+* \return	Number of fields found, which will be -ve if there is a
+* 		parsing error.
+* \ingroup	BinWlzApp
 * \brief	Parses the input string for three coma seperated double
-* 		values, any of which may be missing, eg "4, ,2.367 " andi
+* 		values, any of which may be missing, eg "4, ,2.367 " and
 * 		",1.0 , " are both valid (white space is ignored).
 * \param	str			String to parse for double values.
 * \param	d0			Destination pointer for first value,
@@ -406,7 +472,7 @@ static int	WlzDrawDomObjScanTriple(char *str,
     }
     else
     {
-      for(idx = 0; idx < 2; ++idx)
+      for(idx = 0; idx < 3; ++idx)
       {
 	if(subStr[idx] && (sscanf(subStr[idx], "%lg", dP[idx]) == 1))
 	{

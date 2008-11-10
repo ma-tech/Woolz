@@ -1942,7 +1942,7 @@ extern WlzErrorNum		WlzFreeContour(
 * WlzDrawDomain.c
 ************************************************************************/
 extern WlzObject		*WlzDrawDomainObj(
-				  WlzDVertex3 org,
+				  WlzDVertex2 org,
 				  WlzThreeDViewStruct *view,
 				  int keep2D,
 				  char *cmdStr,
