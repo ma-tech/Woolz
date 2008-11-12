@@ -561,7 +561,7 @@ static WlzObject *WlzDistSample(WlzObject *obj, int dim, double scale,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    sObj = WlzAffineTransformObj(obj, tr, WLZ_INTERPOLATION_NEAREST,
+    sObj = WlzAffineTransformObj(obj, tr, WLZ_INTERPOLATION_LINEAR,
 				 &errNum);
   }
   (void )WlzFreeAffineTransform(tr);
