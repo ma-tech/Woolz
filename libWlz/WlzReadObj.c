@@ -301,6 +301,46 @@ static double 	getdouble(FILE *fp)
 }
 
 /*!
+* \return	Woolz object type as read from file.
+* \ingroup	WlzIO
+* \brief	Reads the type of an object from the given input file stream.
+* 		This type is returned as read from the file and may not be a
+* 		valid object type if the file is not a Woolz file or it is
+* 		corrupted.
+* \param	fP			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObjectType	WlzReadObjType(FILE *fP, WlzErrorNum *dstErr)
+{
+  WlzObjectType	type;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(fP == NULL )
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+#ifdef _WIN32
+  else if(_setmode(_fileno(fP), 0x8000) == -1)
+  {
+    errNum = WLZ_ERR_READ_EOF;
+  }
+#endif
+  else if(feof(fP) != 0)
+  {
+    errNum = WLZ_ERR_READ_EOF;
+  }
+  else
+  {
+    type = (WlzObjectType )getc(fP);
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(type);
+}
+
+/*!
 * \return	New Woolz object or NULL on error.
 * \ingroup	WlzIO
 * \brief	Reads a woolz object from the given input stream. For
@@ -319,33 +359,18 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   Wlz3DWarpTrans	*wtrans3d;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
+  obj = NULL;
+  domain.core = NULL;
+  values.core = NULL;
 #ifdef _OPENMP
   #pragma omp critical
   {
 #endif
-  /* check the stream pointer */
-  if( fp == NULL )
+  type = WlzReadObjType(fp, &errNum);
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-#ifdef _WIN32
-  else if(_setmode(_fileno(fp), 0x8000) == -1)
-  {
-    errNum = WLZ_ERR_READ_EOF;
-  }
-#endif
-  else if( feof(fp) != 0 )
-  {
-    errNum = WLZ_ERR_READ_EOF;
-  }
-  if(errNum == WLZ_ERR_NONE){
-    /* initialise the obj pointer and domain and values unions */
-    obj = NULL;
-    domain.core = NULL;
-    values.core = NULL;
-	type = (WlzObjectType)getc(fp);
-
-    switch( type ){
+    switch(type)
+    {
 
     case (WlzObjectType) EOF:
       errNum = WLZ_ERR_READ_EOF;
@@ -506,7 +531,7 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
     }
   }
 
-  if( dstErr ){
+  if(dstErr){
     *dstErr = errNum;
   }
 #ifdef _OPENMP
