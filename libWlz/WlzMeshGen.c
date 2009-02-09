@@ -156,10 +156,12 @@ static int			WlzCMeshElmWalkPos3D(
 				  WlzDVertex3 gPos);
 static int			WlzCMeshElmJumpPos2D(
 				  WlzCMesh2D *mesh,
-				  WlzDVertex2 gPos);
+				  WlzDVertex2 gPos,
+				  int *dstCloseNod);
 static int			WlzCMeshElmJumpPos3D(
 				  WlzCMesh3D *mesh,
-				  WlzDVertex3 gPos);
+				  WlzDVertex3 gPos,
+				  int *dstCloseNod);
 static double			WlzCMeshCompGridBSz2D(
 				  int tnn,
 				  double npb,
@@ -1148,7 +1150,7 @@ static WlzCMeshElm3D *WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
 * \return	Woolz error code.
 * \ingroup	WlzMesh
 * \brief	Sets up the edge and node connectivities within the given
-*		2D mesh element. No opposites are changed.
+*		2D mesh element.
 *		The geometry of the element is checked to make sure that
 *		it's area is greater than the mesh tolerance and that
 *		the nodes are in CCW order. If this test fails an error
@@ -1558,6 +1560,12 @@ WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 		*edu2;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+#ifdef WLZ_CMESH_DEBUG_VERIFY_DELETE
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+  }
+#endif
   if((mesh == NULL) || (elm == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -1570,8 +1578,11 @@ WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
   {
     for(idE = 0; idE < 3; ++idE)
     {
-      edu0 = &(elm->edu[idE]);
-      if(edu0->opp)
+      edu0 = elm->edu + idE;
+      /* Need to make sure that the opp - opp link is back to this
+       * element and not some other that will replace it. */
+      if((edu0->opp != NULL) && (edu0->opp->opp != NULL) &&
+         (edu0->opp->opp->elm == elm))
       {
         edu0->opp->opp = NULL;
       }
@@ -1595,6 +1606,12 @@ WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
     }
     WlzCMeshElmFree2D(mesh, elm);
   }
+#ifdef WLZ_CMESH_DEBUG_VERIFY_DELETE
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+  }
+#endif
   return(errNum);
 }
 
@@ -1641,8 +1658,10 @@ WlzErrorNum	WlzCMeshDelElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
 	edu1->nod->edu = edu1;
       }
     }
-    /* Unlink face. */
-    if(fce0->opp)
+    /* Unlink face. Need to make sure that the opp - opp link is back to
+     * this element and not some other that will replace it. */
+    if((fce0->opp != NULL) && (fce0->opp->opp != NULL) &&
+       (fce0->opp->opp->elm == elm))
     {
       fce0->opp->opp = NULL;
     }
@@ -1861,6 +1880,12 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
   /* Pass 0: Classify elements by whether their nodes are inside the
    * domain of the given object. */
   idM = mesh->res.elm.maxEnt;
+#ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+  }
+#endif
   while((errNum == WLZ_ERR_NONE) && (idE < idM))
   {
     elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
@@ -1921,6 +1946,12 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
 	  break;
       }
     }
+#ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+    }
+#endif
     ++idE;
   }
   /* Pass 1: Delete new elemets marked as boundary but outside the
@@ -1958,6 +1989,12 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
       ++idE;
     } 
   }
+#ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D(mesh, NULL, 1, stderr);
+  }
+#endif
   return(errNum);
 }
 
@@ -3436,10 +3473,14 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 * 					location. If negative this is ignored.
 * \param        pX			Column coordinate of position.
 * \param        pY			Line coordinate of position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
 */
 int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
                                         int lastElmIdx,
-                                        double pX, double pY)
+                                        double pX, double pY,
+					int *dstCloseNod)
 {
   WlzDVertex2	gPos;
   int           elmIdx = -1;
@@ -3452,7 +3493,7 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
   }
   if(elmIdx < 0)
   {
-    elmIdx = WlzCMeshElmJumpPos2D(mesh, gPos);
+    elmIdx = WlzCMeshElmJumpPos2D(mesh, gPos, dstCloseNod);
   }
   return(elmIdx);
 }
@@ -3477,10 +3518,14 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
 * \param        pX			Column coordinate of position.
 * \param        pY			Line coordinate of position.
 * \param        pZ			Plane coordinate of position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
 */
 int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
                                         int lastElmIdx,
-                                        double pX, double pY, double pZ)
+                                        double pX, double pY, double pZ,
+					int *dstCloseNod)
 {
   WlzDVertex3	gPos;
   int           elmIdx = -1;
@@ -3494,7 +3539,7 @@ int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
   }
   if(elmIdx < 0)
   {
-    elmIdx = WlzCMeshElmJumpPos3D(mesh, gPos);
+    elmIdx = WlzCMeshElmJumpPos3D(mesh, gPos, dstCloseNod);
   }
   return(elmIdx);
 }
@@ -3592,20 +3637,31 @@ static int	WlzCMeshElmWalkPos3D(WlzCMesh3D *mesh, int elmIdx,
 *		is found or when the maximum search distance is reached.
 * \param	mesh			The conforming  mesh.
 * \param	gPos			Given position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
 */
-static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos)
+static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
+				     int *dstCloseNod)
 {
   int		spiralCnt = 0,
   		elmIdx = -1;
   double	d0,
-  		d1;
-  WlzDVertex2	bPos;
+  		d1,
+		minDstSq;
+  WlzDVertex2	bPos,
+  		del;
   WlzIVertex2	idB;
   double	dstSq = 0.0;
   WlzCMeshNod2D	*nod;
   WlzCMeshEdgU2D *edu;
   WlzCMeshNod2D	**bktP;
 
+  if(dstCloseNod)
+  {
+    *dstCloseNod = -1;
+    minDstSq = DBL_MAX;
+  }
   /* Compute extra distance to allow for search within circle rather than
    * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
    * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
@@ -3618,28 +3674,42 @@ static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos)
   idB = WlzCMeshBucketIdxVtx2D(mesh, gPos);
   do
   {
-    bktP = *(mesh->bGrid.buckets + idB.vtY) + idB.vtX;
-    /* For each node in the grid bucket. */
-    nod = *bktP;
-    while(nod)
+    if((idB.vtX >= 0) && (idB.vtY >= 0) &&
+       (idB.vtX < mesh->bGrid.nB.vtX) && (idB.vtY < mesh->bGrid.nB.vtY))
     {
-      edu = nod->edu;
-      do
+      bktP = *(mesh->bGrid.buckets + idB.vtY) + idB.vtX;
+      /* For each node in the grid bucket. */
+      nod = *bktP;
+      while(nod)
       {
-	if(WlzCMeshElmEnclosesPos2D(edu->elm, gPos))
+	if(dstCloseNod)
 	{
-	  elmIdx = edu->elm->idx;
-	  goto FOUND;
+	  WLZ_VTX_2_SUB(del, gPos, nod->pos);
+	  d0 = WLZ_VTX_2_SQRLEN(del);
+	  if(d0 < minDstSq)
+	  {
+	    *dstCloseNod = nod->idx;
+	    minDstSq = d0;
+	  }
 	}
-	if(edu->opp && WlzCMeshElmEnclosesPos2D(edu->opp->elm, gPos))
+	edu = nod->edu;
+	do
 	{
-	  elmIdx = edu->opp->elm->idx;
-	  goto FOUND;
+	  if(WlzCMeshElmEnclosesPos2D(edu->elm, gPos))
+	  {
+	    elmIdx = edu->elm->idx;
+	    goto FOUND;
+	  }
+	  if(edu->opp && WlzCMeshElmEnclosesPos2D(edu->opp->elm, gPos))
+	  {
+	    elmIdx = edu->opp->elm->idx;
+	    goto FOUND;
+	  }
+	  edu = edu->nnxt;
 	}
-	edu = edu->nnxt;
+	while(edu != nod->edu);
+	nod = nod->next;
       }
-      while(edu != nod->edu);
-      nod = nod->next;
     }
     /* Spiral out from the initial grid bucket. */
     spiralCnt = WlzGeomItrSpiral2I(spiralCnt, &(idB.vtX), &(idB.vtY));
@@ -3690,14 +3760,20 @@ FOUND:
 *		is found or when the maximum search distance is reached.
 * \param	mesh			The conforming  mesh.
 * \param	gPos			Given position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
 */
-static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
+static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos,
+				     int *dstCloseNod)
 {
   int		spiralCnt,
   		elmIdx = -1;
   double	d0,
-  		d1;
-  WlzDVertex3	bPos;
+  		d1,
+		minDstSq;
+  WlzDVertex3	bPos,
+  		del;
   WlzIVertex3	idB,
 		idC,
                 idS;
@@ -3706,19 +3782,13 @@ static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
   WlzCMeshEdgU3D *edu;
   WlzCMeshNod3D	**bktP;
 
-  /* Compute extra distance to allow for search within circle rather than
-   * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
-   * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
-   * respectively. */
-
+  if(dstCloseNod)
+  {
+    *dstCloseNod = -1;
+    minDstSq = DBL_MAX;
+  }
   d0 = ALG_MAX3(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY,
-                mesh->bGrid.bSz.vtZ) * 0.5;
-  d1 = ALG_MIN3(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY,
-                mesh->bGrid.bSz.vtZ) * 0.5;
-  /* d0 is the extra distance. */
-  d0 = sqrt((mesh->bGrid.bSz.vtX * mesh->bGrid.bSz.vtX) +
-            (mesh->bGrid.bSz.vtY * mesh->bGrid.bSz.vtY) +
-	    (mesh->bGrid.bSz.vtZ * mesh->bGrid.bSz.vtZ)) - d1;
+                mesh->bGrid.bSz.vtZ) * ALG_M_SQRT3;
   /* Find the grid bucket which contains the position. */
   spiralCnt = 1;
   idB = idC = WlzCMeshBucketIdxVtx3D(mesh, gPos);
@@ -3740,6 +3810,15 @@ static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
       nod = *bktP;
       while(nod)
       {
+	if(dstCloseNod)
+	{
+	  WLZ_VTX_2_SUB(del, gPos, nod->pos);
+	  d0 = WLZ_VTX_2_SQRLEN(del);
+	  if(d0 < minDstSq)
+	  {
+	    *dstCloseNod = nod->idx;
+	  }
+	}
 	edu = nod->edu;
 	do
 	{
@@ -3797,7 +3876,7 @@ static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos)
     {
       dstSq = d1;
     }
-  } while((dstSq  - d0) < mesh->maxSqEdgLen);
+  } while(dstSq < (mesh->maxSqEdgLen + d0));
 FOUND:
   return(elmIdx);
 }
@@ -3816,8 +3895,8 @@ int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
 
   if(elm)
   {
-    inside = WlzGeomVxInTriangle(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
-				 elm->edu[2].nod->pos, gPos) >= 0;
+    inside = WlzGeomVxInTriangle2D(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
+				   elm->edu[2].nod->pos, gPos) >= 0;
   }
   return(inside);
 }
@@ -3915,7 +3994,8 @@ WlzCMeshP	WlzCMeshFromObj(WlzObject *obj,
 * \param	minElmSz		Minimum element size.
 * \param	maxElmSz		Minimum element size.
 * \param	dstDilObj		Destination pointer for the dilated
-*					object used to build the mesh.
+*					object used to build the mesh,
+*					may be NULL.
 * \param	conform			If non-zero make boundary elements
 * 					conform to the given domain by
 * 					decomposing them. Any elements with
@@ -3964,7 +4044,7 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
       minElmSz = 1.0;
     }
     scale = (int )ceil(minElmSz);
-    dilation = (scale + 1) / 2.0;
+    dilation = scale + 1.0;
     maxLBTNdSz = (int )ceil(maxElmSz / minElmSz);
     if(maxLBTNdSz < 1)
     {
@@ -4018,24 +4098,38 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
     (void )WlzAffineTransformScaleSet(tr, scale, scale, scale);
     errNum = WlzCMeshAffineTransformMesh2D(mesh, tr);
   }
-  WlzFreeObj(dilObj); dilObj = NULL;
-  if((errNum == WLZ_ERR_NONE) && dstDilObj)
-  {
-    dilObj = WlzAffineTransformObj(sclObj, tr, WLZ_INTERPOLATION_NEAREST,
-    				   &errNum);
-    *dstDilObj = dilObj;
-  }
   (void )WlzFreeObj(sclObj);
   (void )WlzFreeAffineTransform(tr);
+  WlzFreeObj(dilObj); dilObj = NULL;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dilation = 1.0;
+    strObj = WlzAssignObject(
+             WlzMakeCircleObject(dilation, 0.0, 0.0, &errNum), NULL);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dilObj = WlzAssignObject(
+    	     WlzStructDilation(obj, strObj, &errNum), NULL);
+  }
+  (void )WlzFreeObj(strObj);
   if((errNum == WLZ_ERR_NONE) && (conform != 0))
   {
-    errNum = WlzCMeshBoundConform2D(mesh, obj, 0.5);
+    errNum = WlzCMeshBoundConform2D(mesh, dilObj, 0.5);
   }
   if(errNum == WLZ_ERR_NONE)
   {
     WlzCMeshUpdateBBox2D(mesh);
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
     errNum = WlzCMeshReassignBuckets2D(mesh, 0);
+  }
+  if((errNum == WLZ_ERR_NONE) && dstDilObj)
+  {
+    *dstDilObj = dilObj;
+  }
+  else
+  {
+    WlzFreeObj(dilObj);
   }
   if(dstErr)
   {
@@ -4052,7 +4146,8 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
 * \param	minElmSz		Minimum element size.
 * \param	maxElmSz		Minimum element size.
 * \param	dstDilObj		Destination pointer for the dilated
-*					object used to build the mesh.
+*					object used to build the mesh,
+*					may be NULL.
 * \param	conform			If non-zero make boundary elements
 * 					conform to the given domain by
 * 					decomposing them. Any elements with
