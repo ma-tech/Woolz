@@ -229,8 +229,7 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		idx,
-  		nTiePP,
+  int		nTiePP,
 		option,
 		cdt = 0,
 		cMesh = 0,
@@ -287,7 +286,7 @@ int             main(int argc, char **argv)
         meshGenMth = WLZ_MESH_GENMETHOD_BLOCK;
 	break;
       case 'C':
-        cMesh = 1;
+	meshGenMth = WLZ_MESH_GENMETHOD_CONFORM;
 	break;
       case 'D':
 	if(1 != sscanf(optarg, "%d", &dbgFlg))
@@ -370,6 +369,7 @@ int             main(int argc, char **argv)
   {
     cMesh = 1;
     restrictToBasisFn = 1;
+    meshGenMth = WLZ_MESH_GENMETHOD_CONFORM;
   }
   if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
      (((tiePtFileStr == NULL) || (*tiePtFileStr == '\0')) &&
@@ -530,8 +530,9 @@ int             main(int argc, char **argv)
       if(errNum == WLZ_ERR_NONE)
       {
 	basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-					  nTiePP, vxVec0, nTiePP, vxVec1,
-					  (cdt)? dilObj: NULL, &errNum);
+					 nTiePP, vxVec0, nTiePP, vxVec1,
+					 (cdt)? meshTr.cMesh->mesh.m2: NULL,
+					 &errNum);
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  ok = 0;
@@ -549,16 +550,6 @@ int             main(int argc, char **argv)
       				nTiePP, vxVec0, nTiePP, vxVec1,
 				meshGenMth, meshMinDist, meshMaxDist,
 				&errNum);
-    }
-  }
-  if(ok)
-  {
-    if((dbgFlg & 2) && basisTr->basisFn->distMap)
-    {
-      for(idx = 0; idx < basisTr->basisFn->nVtx; ++idx)
-      {
-        (void )WlzWriteObj(stderr, basisTr->basisFn->distMap[idx]);
-      }
     }
   }
   if(ok)
